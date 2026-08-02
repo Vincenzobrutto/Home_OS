@@ -7,6 +7,7 @@ Questo file si applica a qualunque assistente AI (Claude Code, ChatGPT, altri) c
 1. Leggi [`README.md`](README.md) per orientarti nella struttura del repo.
 2. Leggi [`docs/domain-model.md`](docs/domain-model.md) e [`docs/decisions.md`](docs/decisions.md) prima di modificare qualunque cosa relativa ad Asset/Room/Document — molte scelte che sembrano arbitrarie (es. "perché il matching richiede nome simile e non solo tipo") sono decisioni deliberate con una motivazione già scritta lì.
 3. Leggi [`prompts/coding-guidelines.md`](prompts/coding-guidelines.md) — contiene i principi di dominio da non violare (es. "l'AI propone, l'utente conferma") e [`prompts/conventions.md`](prompts/conventions.md) per lo stile concreto.
+4. **Fai `git fetch origin` e confronta `main` con `origin/main`.** Più di un assistente AI lavora su questo repository (repo GitHub: https://github.com/Vincenzobrutto/Home_OS) — se `origin/main` è avanti rispetto al tuo checkout locale, un altro assistente ha pushato dopo l'ultima volta che hai lavorato qui. `git pull` prima di continuare, e ripassa con l'utente (`git log`, `git diff`) cosa è cambiato prima di toccare aree che potrebbero sovrapporsi — non procedere alla cieca su codice che non hai ancora visto.
 
 ## Durante lo sviluppo
 

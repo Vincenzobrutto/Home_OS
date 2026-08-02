@@ -1,6 +1,13 @@
 # Changelog
 
-Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` per quello (una volta inizializzato, vedi `backlog.md` B3) — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
+Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
+
+## 2026-08-02 (3) — repository pubblicato su GitHub
+
+- **Git inizializzato e pushato**: primo commit (135 file) su https://github.com/Vincenzobrutto/Home_OS, branch `main`. Trovato e rimosso prima del commit un problema reale: `.claude/settings.local.json` conteneva la password del database in chiaro in una riga di permessi salvata in una sessione precedente — ora escluso in `.gitignore` root. Vedi `decisions.md` #17.
+- **Identità Git locale**: impostata a `Vincenzo Brutto <bruttovincenzo@gmail.com>` (solo per questo repository, non globalmente).
+- **Protocollo di coordinamento multi-agente**: aggiunta una regola in `AGENTS.md` — ogni assistente fa `git fetch` e confronta con `origin/main` prima di iniziare a lavorare, per accorgersi se un altro assistente (es. Codex) ha pushato modifiche nel frattempo.
+- **Workflow di sincronizzazione concordato con l'utente**: commit + push automatici dopo ogni modifica rilevante, senza richiedere conferma ogni volta (preferenza esplicita, salvata anche nella memoria dell'assistente).
 
 ## 2026-08-02 (2) — preparazione al passaggio di consegne
 
