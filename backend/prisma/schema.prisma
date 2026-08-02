@@ -1,0 +1,328 @@
+// HomeOS — schema Prisma
+// Ricalca 1:1 il modello dati definito in homeos_architettura_tecnica.md (§3).
+// Stack di riferimento: NestJS + PostgreSQL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// ENUM — allineati 1:1 ai tipi già fissati nel prototipo React (ROOM_TYPES,
+// ASSET_TYPES). Se nel prototipo cambia un'etichetta, qui va aggiornato il
+// value corrispondente, non la chiave dell'enum.
+// ---------------------------------------------------------------------------
+
+enum RoomType {
+  CUCINA
+  SOGGIORNO
+  CAMERA
+  BAGNO
+}
+
+enum AssetType {
+  CALDAIA
+  ELETTRICO
+  IDRAULICO
+  FOTOVOLTAICO
+  CLIMA
+  TETTO
+  FINESTRE
+  ELETTRODOMESTICO
+}
+
+// Calcolato dall'applicazione (garanzie scadute, documenti mancanti), non
+// impostato manualmente dall'utente — vedi §6 del documento di architettura.
+enum AssetStatus {
+  OK
+  ATTENTION
+  DUE
+}
+
+enum FieldSource {
+  MANUAL
+  AI_EXTRACTED
+}
+
+enum DocumentStatus {
+  PENDING
+  ANALYZING
+  ANALYZED
+  CONFIRMED
+}
+
+enum DocumentSource {
+  UPLOAD
+  GMAIL
+  DRIVE
+}
+
+enum MembershipRole {
+  OWNER
+  MEMBER
+  VIEWER
+}
+
+// ---------------------------------------------------------------------------
+// MODELLI
+// ---------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ownedHouses     House[]           @relation("HouseOwner")
+  memberships     HouseMembership[]
+  gmailConnection GmailConnection?
+  driveConnection DriveConnection?
+
+  @@map("users")
+}
+
+// Un solo account Gmail collegato per utente (per l'MVP). Token salvati in
+// chiaro come DATABASE_URL in .env — coerente con la fase attuale del
+// progetto, da rivedere prima di un vero deploy multi-utente.
+model GmailConnection {
+  id           String   @id @default(uuid())
+  userId       String   @unique @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  googleEmail  String   @map("google_email")
+  accessToken  String   @map("access_token")
+  refreshToken String   @map("refresh_token")
+  expiryDate   DateTime @map("expiry_date")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("gmail_connections")
+}
+
+// Un solo account/cartella Google Drive collegato per utente (per l'MVP,
+// come GmailConnection sopra). Scope drive.readonly + selezione cartella
+// dalla nostra UI invece del Picker: più semplice, coerente con l'approccio
+// già validato per Gmail (redirect server-side, niente JS client-side).
+model DriveConnection {
+  id           String   @id @default(uuid())
+  userId       String   @unique @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  googleEmail  String   @map("google_email")
+  accessToken  String   @map("access_token")
+  refreshToken String   @map("refresh_token")
+  expiryDate   DateTime @map("expiry_date")
+  // null finché l'utente non ha scelto quale cartella scansionare.
+  folderId     String?  @map("folder_id")
+  folderName   String?  @map("folder_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("drive_connections")
+}
+
+model House {
+  id          String   @id @default(uuid())
+  ownerId     String   @map("owner_id")
+  owner       User     @relation("HouseOwner", fields: [ownerId], references: [id])
+  name        String
+  city        String?
+  surfaceSqm  Decimal? @map("surface_sqm")
+  roomsCount  Int?     @map("rooms_count")
+  buildYear   Int?     @map("build_year")
+  code        String   @unique
+  createdAt   DateTime @default(now()) @map("created_at")
+  // Rotazione (0/90/180/270) applicata alla vista mappa della planimetria —
+  // ambienti e asset vengono ruotati "sul serio" (le loro coordinate
+  // salvate) quando l'utente ruota la vista, così l'immagine di sfondo
+  // caricata dall'utente deve essere ruotata della stessa quantità per
+  // restare allineata; persistito qui perché il file di sfondo non cambia
+  // da solo tra un caricamento e l'altro. Vedi FloorPlan.tsx.
+  floorPlanRotation Int @default(0) @map("floor_plan_rotation")
+
+  rooms       Room[]
+  assets      Asset[]
+  documents   Document[]
+  memberships HouseMembership[]
+  contacts    Contact[]
+
+  @@map("houses")
+}
+
+model HouseMembership {
+  id        String         @id @default(uuid())
+  houseId   String         @map("house_id")
+  house     House          @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  userId    String         @map("user_id")
+  user      User           @relation(fields: [userId], references: [id])
+  role      MembershipRole @default(OWNER)
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  // Predisposta fin dall'MVP anche se oggi ogni casa ha un solo proprietario:
+  // evita una migrazione dolorosa quando arriverà la condivisione (coniuge,
+  // amministratore di condominio, artigiano) — vedi §3 dell'architettura.
+  @@unique([houseId, userId])
+  @@map("house_memberships")
+}
+
+model Room {
+  id           String   @id @default(uuid())
+  houseId      String   @map("house_id")
+  house        House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  type         RoomType
+  name         String
+  code         String   @unique
+  // Coordinate reali della stanza quando disponibili da una planimetria vera
+  // (nel prototipo è solo una griglia generata). Nullable finché non c'è.
+  planGeometry Json?    @map("plan_geometry")
+
+  assets Asset[]
+
+  @@map("rooms")
+}
+
+model Asset {
+  id             String      @id @default(uuid())
+  houseId        String      @map("house_id")
+  house          House       @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  // null = impianto di casa, non legato a una stanza specifica
+  roomId         String?     @map("room_id")
+  room           Room?       @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  type           AssetType
+  name           String
+  code           String      @unique
+  installedAt    DateTime?   @map("installed_at") @db.Date
+  warrantyUntil  DateTime?   @map("warranty_until") @db.Date
+  // Campi strutturati universali (validi per qualunque tipo di asset, a
+  // differenza di dati specifici come "potenza caldaia" che restano
+  // AssetCustomField). Popolati dal primo documento disponibile che li
+  // riporta e mai più sovrascritti — vedi applyFieldsToAsset in
+  // documents.service.ts: "riempi solo i vuoti", non aggiorna un valore
+  // già presente nemmeno se un documento successivo ne indica uno diverso.
+  serialNumber   String?     @map("serial_number")
+  manufacturer   String?
+  model          String?
+  purchasedAt    DateTime?   @map("purchased_at") @db.Date
+  supplier       String?
+  status         AssetStatus @default(ATTENTION)
+  // Posizione relativa (0–1) nella cella della planimetria generata
+  planPosX       Decimal?    @map("plan_pos_x")
+  planPosY       Decimal?    @map("plan_pos_y")
+  // Stato di ciclo vita impostato direttamente dall'utente (non calcolato,
+  // a differenza di "status" sopra): un asset dismesso esce dall'elenco
+  // attivo ma tiene tutti i suoi dati (campi, documenti, cronologia).
+  dismissedAt    DateTime?   @map("dismissed_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  customFields    AssetCustomField[]
+  documents       Document[]
+  timelineEvents  AssetTimelineEvent[]
+
+  @@map("assets")
+}
+
+model AssetCustomField {
+  id      String      @id @default(uuid())
+  assetId String      @map("asset_id")
+  asset   Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  label   String
+  value   String
+  source  FieldSource @default(MANUAL)
+
+  @@map("asset_custom_fields")
+}
+
+model Document {
+  id               String         @id @default(uuid())
+  // Nullable finché il documento è in Inbox e non ancora confermato/associato
+  assetId          String?        @map("asset_id")
+  asset            Asset?         @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  houseId          String         @map("house_id")
+  house            House          @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  fileUrl          String         @map("file_url")
+  originalFilename String         @map("original_filename")
+  docType          String?        @map("doc_type")
+  status           DocumentStatus @default(PENDING)
+  aiConfidence     Decimal?       @map("ai_confidence")
+  // Risultato grezzo dell'estrazione, prima della conferma utente —
+  // l'AI non scrive mai direttamente su Asset/AssetCustomField (vedi §5).
+  extractedFields  Json?          @map("extracted_fields")
+  uploadedAt       DateTime       @default(now()) @map("uploaded_at")
+  confirmedAt      DateTime?      @map("confirmed_at")
+  // true solo se confermato esplicitamente con "collega alla casa, non a un
+  // asset specifico" (es. APE, certificazione energetica generale) — non va
+  // dedotto da assetId nullo, perché un Asset cancellato lascia assetId null
+  // anche sui suoi documenti già confermati (onDelete: SetNull sopra) senza
+  // che quello sia mai stata una scelta "a livello casa".
+  houseLevel       Boolean        @default(false) @map("house_level")
+  source           DocumentSource @default(UPLOAD)
+  // Solo per source = GMAIL: da dove viene, per il dedup tra scansioni
+  // ripetute e per mostrare mittente/oggetto nella vista "Candidati Gmail".
+  gmailMessageId   String?        @map("gmail_message_id")
+  emailFrom        String?        @map("email_from")
+  emailSubject     String?        @map("email_subject")
+  emailDate        DateTime?      @map("email_date")
+  // Solo per source = DRIVE: id del file nella cartella collegata, per il
+  // dedup tra scansioni ripetute della stessa cartella.
+  driveFileId      String?        @map("drive_file_id")
+  driveModifiedAt  DateTime?      @map("drive_modified_at")
+  // null = candidato Gmail/Drive non ancora rivisto: non compare nell'Inbox
+  // normale, solo nella vista candidati della relativa integrazione.
+  // Valorizzato quando l'utente clicca "Importa" — da quel momento si
+  // comporta come un documento caricato normalmente (analyze già fatto,
+  // pronto per confirm).
+  importedAt       DateTime?      @map("imported_at")
+  // Candidato scartato ("Ignora", manualmente o automaticamente perché non
+  // pertinente): resta in DB solo per non riproporlo alle scansioni
+  // successive (dedup su gmailMessageId/driveFileId), non appare in nessuna vista.
+  ignoredAt        DateTime?      @map("ignored_at")
+
+  timelineEvents AssetTimelineEvent[]
+
+  @@unique([houseId, gmailMessageId])
+  @@unique([houseId, driveFileId])
+  @@map("documents")
+}
+
+model AssetTimelineEvent {
+  id         String    @id @default(uuid())
+  assetId    String    @map("asset_id")
+  asset      Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  eventDate  DateTime  @map("event_date") @db.Date
+  eventType  String    @map("event_type")
+  detail     String?
+  documentId String?   @map("document_id")
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  // Chi ha eseguito l'intervento, se noto — collegato dall'utente (Rubrica),
+  // mai popolato automaticamente dall'AI (vedi START_HERE.md, "l'AI propone,
+  // l'utente conferma").
+  contactId  String?   @map("contact_id")
+  contact    Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@map("asset_timeline_events")
+}
+
+// Rubrica: tecnici/aziende che hanno lavorato in casa (es. "Idrotermica
+// Bianchi"). Stessi nomi che compaiono nel campo "Fornitore" estratto dai
+// documenti (vedi documents.service.ts extractSupplier), ma per l'MVP il
+// collegamento è manuale — l'utente sceglie il contatto sull'intervento,
+// niente auto-popolamento da AI qui (rimandato a un secondo momento).
+model Contact {
+  id        String   @id @default(uuid())
+  houseId   String   @map("house_id")
+  house     House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  name      String
+  role      String?
+  phone     String?
+  email     String?
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  timelineEvents AssetTimelineEvent[]
+
+  @@map("contacts")
+}

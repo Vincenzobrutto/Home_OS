@@ -1,0 +1,17 @@
+# backend/ e frontend/ hanno i propri .gitignore (node_modules, dist, coverage,
+# .env, uploads/) perché sono due progetti Node indipendenti — vedi
+# docs/architecture.md §1. Questo file copre solo la root del repository.
+
+.DS_Store
+Thumbs.db
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Config locale di Claude Code: contiene la cronologia dei permessi
+# concessi in questa macchina, che può includere comandi con segreti
+# incollati inline (es. una DATABASE_URL completa di password). Mai
+# da condividere. .claude/launch.json invece è config di dev server
+# condivisibile e resta tracciato.
+.claude/settings.local.json

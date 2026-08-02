@@ -1,0 +1,133 @@
+# Handoff
+
+Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato l'ultima volta il 2026-08-02, in occasione di una sessione dedicata esplicitamente a preparare il repository per il passaggio di consegne. Per il dettaglio storico delle sessioni precedenti vedi [`changelog.md`](changelog.md).
+
+## Stato attuale del progetto
+
+MVP funzionante, uso locale/LAN (nessuna autenticazione, nessun deploy pubblico). Backend e frontend partono entrambi senza errori con i comandi documentati sotto — verificato in questa sessione, non solo dichiarato. Il repository **non è ancora un repository Git** (`git init` non è mai stato eseguito); `.gitignore` è comunque già pronto (root + `backend/` + `frontend/`) per quando lo si inizializzerà.
+
+Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi [`roadmap.md`](roadmap.md).
+
+## Funzionalità completate
+
+- Gestione Asset: CRUD, campi strutturati (marca/modello/seriale/date), campi liberi, dismissione/riattivazione, cronologia interventi.
+- Gestione Ambienti: vista a blocchi e planimetria interattiva (disegno forme libere/rettangoli, drag degli asset, rotazione a 90°).
+- Pipeline documentale: upload manuale, scansione automatica Gmail/Drive, estrazione AI (Claude), proposta con conferma utente, creazione automatica di nuovo Asset (con scelta ambiente) se non esiste quello corretto.
+- Documenti casa (non legati a un ambiente specifico, es. APE).
+- Rubrica contatti collegabile alla cronologia interventi.
+- Dashboard con promemoria cliccabili verso l'asset.
+- UI ottimizzata per mobile (sidebar a scomparsa, touch sulla planimetria, layout responsive).
+
+Dettaglio completo in [`vision.md`](vision.md) e [`roadmap.md`](roadmap.md).
+
+## Architettura e stack
+
+Due servizi Node indipendenti, nessun monorepo tool:
+
+| Livello | Scelta |
+|---|---|
+| Backend | NestJS 11 + TypeScript, moduli per risorsa |
+| ORM/DB | Prisma **6.19.3** (pinnato) + PostgreSQL |
+| Frontend | React 19 + Vite 8 + TypeScript, SPA senza router esterno |
+| Stile UI | Inline styles + token (`theme.ts`); unica eccezione `MOBILE_CSS` per le media query |
+| AI | Claude (Sonnet), chiamata `fetch` diretta, no SDK |
+| Integrazioni | Gmail API + Google Drive API (OAuth2 redirect server-side) |
+
+Motivazioni complete in [`architecture.md`](architecture.md); ogni scelta non ovvia con le sue alternative scartate è in [`decisions.md`](decisions.md).
+
+## File principali
+
+```
+backend/src/
+├── assets/       CRUD asset, campi liberi, cronologia, dismiss/reactivate
+├── documents/     pipeline documentale (analyze/confirm), estrazione Claude
+├── rooms/          CRUD ambienti + geometria planimetria
+├── gmail/, drive/    OAuth + scansione candidati
+├── houses/, contacts/, users/
+└── main.ts           bootstrap, CORS
+
+frontend/src/
+├── App.tsx           stato globale (house/rooms/assets/view) + composizione
+├── theme.ts            design token (T) + MOBILE_CSS
+├── geometry.ts           math planimetria (rotazione, forme stanza)
+├── api.ts                client fetch verso il backend
+└── components/            Sidebar, Dashboard, Inbox, RoomsHub/FloorPlan, Assets, HouseDocuments, Contacts
+
+backend/prisma/schema.prisma   fonte di verità del modello dati (vedi domain-model.md)
+```
+
+Riferimento completo: [`domain-model.md`](domain-model.md) (entità/regole), [`api.md`](api.md) (endpoint REST), [`ui-ux.md`](ui-ux.md) (navigazione/design system).
+
+## Comandi
+
+### Installazione e avvio
+
+```bash
+# backend — porta 3000
+cd backend
+npm install
+npx prisma migrate deploy
+npm run start:dev
+
+# frontend — porta 5173
+cd frontend
+npm install
+npm run dev
+```
+
+Verificato in questa sessione: `npx prisma migrate status` → "Database schema is up to date" (8 migrazioni); entrambi i server già in esecuzione hanno risposto `200` su `/`.
+
+### Lint, build, test — risultati verificati il 2026-08-02
+
+| Comando | Backend | Frontend |
+|---|---|---|
+| `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~760 kB, oltre soglia Vite — vedi `backlog.md` B16) |
+| `npm run lint` | ⚠️ 12 errori + 4 warning pre-esistenti, tutti in `src/documents/claude-extraction.service.ts` (risposta HTTP di Claude tipata `any`) + 1 warning in `main.ts` | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx) |
+| `npm run test` | ✅ 1/1 (solo scaffold NestJS di default, nessuna copertura reale) | ❌ nessuno script `test` configurato — nessun framework di test installato |
+
+Nessuno di questi errori impedisce build o avvio dell'app. Non sono stati corretti in questa sessione (vedi `decisions.md` #16 sul perché) — tracciati in `backlog.md` come B1, B1b, B14, B16.
+
+## Variabili d'ambiente necessarie
+
+**Backend** (`backend/.env`, vedi `backend/.env.example`):
+- `DATABASE_URL` — connessione PostgreSQL
+- `ANTHROPIC_API_KEY` — estrazione documenti
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `GOOGLE_DRIVE_REDIRECT_URI` — OAuth Gmail/Drive
+- `FRONTEND_ORIGIN` — opzionale, default `http://localhost:5173`
+
+**Frontend** (`frontend/.env`, vedi `frontend/.env.example`, nuovo in questa sessione):
+- `VITE_API_URL` — opzionale, default `http://<host della pagina>:3000`
+
+Nessun valore segreto è presente in questo documento o nei file `.env.example` — solo nomi di variabili e placeholder. I valori reali vivono solo in `backend/.env` (gitignored).
+
+## Problemi noti
+
+- OAuth Gmail/Drive non funziona se avviato da un cellulare in LAN (redirect URI pensato per `localhost`) — `backlog.md` B4.
+- Righe Ambienti sospette/corrotte (AMB-005–AMB-011) segnalate in una sessione precedente, mai verificate — `backlog.md` B6.
+- Un evento cronologia ("Daikin Perfera") dall'aspetto stale su un asset AC, mai chiarito con l'utente — `backlog.md` B7.
+- Contatto "Idrotermica Bianchi" potenzialmente collegato a eventi storici non pertinenti — `backlog.md` B8.
+- `backend/uploads/` contiene già file caricati da un utente reale durante lo sviluppo — è gitignored correttamente, ma chi clona il repo su un'altra macchina non li avrà (comportamento atteso, non un bug).
+
+## Debito tecnico
+
+- Nessuna autenticazione/sessione sulle API — `backlog.md` B2.
+- Token OAuth Gmail/Drive salvati in chiaro in DB — `backlog.md` B10.
+- Test automatici backend limitati allo scaffold, frontend assenti del tutto — `backlog.md` B1, B1b.
+- 12 errori di lint pre-esistenti da risposte Claude tipate `any` — `backlog.md` B14.
+- Repository non ancora inizializzato come progetto Git — `backlog.md` B3.
+- Navigazione senza URL reali (niente back/forward browser, niente link condivisibili) — `backlog.md` B11.
+- `backend/package.json#prisma` è una configurazione deprecata in vista di Prisma 7 — `backlog.md` B15.
+- Bundle frontend oltre la soglia di warning Vite (~760 kB) — `backlog.md` B16.
+
+Elenco completo con priorità e dipendenze in [`backlog.md`](backlog.md).
+
+## Attività successive consigliate
+
+In ordine di priorità suggerito (non vincolante):
+1. `git init` del repository (prerequisito per tutto il resto — senza versionamento ogni altra attività di collaborazione reale è più fragile).
+2. Autenticazione/sessione reale sulle API, prima di qualunque esposizione oltre la LAN locale.
+3. Test automatici — partire dalla pipeline documentale e dal calcolo dello `status` dell'Asset (le due aree con più logica di dominio e zero copertura oggi), poi introdurre un framework di test per il frontend (es. Vitest, già compatibile con Vite).
+4. Sistemare il redirect OAuth Gmail/Drive per funzionare anche da client mobile in LAN.
+5. Rivedere la conservazione in chiaro dei token OAuth prima di qualunque deploy esposto.
+
+Per iniziare a lavorare su questo repository, leggi anche [`AGENTS.md`](../AGENTS.md) (protocollo di aggiornamento documentazione e handoff di fine sessione) e [`prompts/coding-guidelines.md`](../prompts/coding-guidelines.md) (principi di dominio da non violare).

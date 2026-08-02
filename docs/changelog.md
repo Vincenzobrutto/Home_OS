@@ -1,0 +1,29 @@
+# Changelog
+
+Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` per quello (una volta inizializzato, vedi `backlog.md` B3) — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
+
+## 2026-08-02 (2) — preparazione al passaggio di consegne
+
+- **`docs/HANDOFF.md`**: nuovo documento di consegna (stato, funzionalità, comandi, problemi noti, debito tecnico, prossimi passi).
+- **`.gitignore`**: aggiunto `.gitignore` di root (era assente); `backend/.gitignore` esteso con `coverage/`, `.env.*`; `frontend/.gitignore` corretto — mancava del tutto `.env`/`.env.*` (bug reale: un `.env` frontend non sarebbe stato escluso dal futuro repository Git).
+- **`frontend/.env.example`**: nuovo file, documenta `VITE_API_URL` (opzionale, non esisteva prima nessun `.env.example` per il frontend).
+- **`backend/.env.example`**: aggiunta `FRONTEND_ORIGIN` (opzionale, era usata nel codice ma non documentata — chiudeva `backlog.md` B5).
+- **Verifica build/lint/test**: eseguiti su backend e frontend, nessuna modifica funzionale necessaria. Risultati: backend build ✅, test ✅ (solo scaffold), lint 12 errori pre-esistenti (`claude-extraction.service.ts`, risposta Claude tipata `any`); frontend build ✅, lint 3 warning (`exhaustive-deps`), nessuno script `test` configurato. Dettaglio completo in `docs/HANDOFF.md`.
+- **Verifica avvio da README**: confermato che `npm install && npx prisma migrate deploy && npm run start:dev` (backend) e `npm install && npm run dev` (frontend) funzionano come documentato — nessuna modifica necessaria al quickstart, solo aggiunta la sezione "Lint, build, test".
+- **Aggiornamento documentazione**: `README.md`, `architecture.md`, `roadmap.md`, `backlog.md` aggiornati per riflettere lo stato verificato (test frontend assenti, non solo "scaffold"; nuove voci di debito tecnico B14–B16 da lint/build).
+
+## 2026-08-02
+
+- **Documentazione di progetto per collaborazione multi-assistente**: creati `README.md`, `docs/` (vision, architecture, domain-model, api, ui-ux, roadmap, decisions, backlog, changelog), `prompts/` (coding-guidelines, conventions), `AGENTS.md` + `CLAUDE.md`.
+- **Dashboard → Asset**: cliccare un promemoria in Dashboard porta ora direttamente al dettaglio dell'asset corrispondente (`Dashboard.tsx`, `App.tsx`).
+- **Rotazione planimetria**: nuovo pulsante "Ruota" (90° per volta) in `FloorPlan.tsx`. Ruota le coordinate persistite di ambienti e asset (non solo la vista), mantenendo ogni asset nella stanza a cui è assegnato. Nuovo campo `House.floorPlanRotation` (migrazione `20260802142034_add_house_floor_plan_rotation`) usato per ri-ruotare l'immagine di sfondo raster in modo coerente. Vedi `decisions.md` #10.
+- **Fix selezione asset vicino ai vertici stanza**: corretto z-index dell'icona asset (`FloorPlan.tsx`) che veniva intercettata dagli handle di ridimensionamento. Vedi `decisions.md` #15.
+- **`createdAt`/`updatedAt` visibili in UI**: aggiunta riga "Creato il / ultima modifica il" nel dettaglio Asset (`Assets.tsx`) — i campi esistevano già nello schema, non erano solo esposti.
+- **App raggiungibile da cellulare in LAN**: CORS backend `origin: true`, base URL API calcolato da `window.location.hostname` nel frontend, Vite con `server.host: true`. Vedi `decisions.md` #12.
+- **Fix suggerimento asset da documento**: il matching documento→asset ora richiede tipo uguale **e** nome simile, non più "il primo asset di quel tipo" (causava il suggerimento sempre sbagliato con più elettrodomestici in casa). Sotto la soglia di confidenza (~50%), nessun suggerimento invece di uno arbitrario. Vedi `decisions.md` #7, #8.
+- **Ottimizzazione mobile**: sidebar a scomparsa (drawer) sotto 860px, griglie responsive, fix overflow modali, supporto touch (Pointer Events) sull'intera planimetria interattiva. Vedi `ui-ux.md`.
+- **Scelta ambiente alla creazione asset da Inbox**: il mini-form di creazione asset da documento non riconosciuto include ora la selezione dell'Ambiente, per non far finire ogni nuovo asset in "Documenti casa". Vedi `decisions.md` #9.
+
+## Prima di questa sessione
+
+Storia non tracciata in questo changelog (il repository non era ancora un progetto Git — vedi `backlog.md` B3). Per il contesto di progettazione originale vedi `START_HERE.md` e `architettura/homeos_architettura_tecnica.md`; il grosso del modello dati e delle feature elencate come "già implementate" in `roadmap.md` (M1) proviene da sessioni precedenti non documentate qui.
