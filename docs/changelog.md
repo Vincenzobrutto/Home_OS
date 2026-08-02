@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-03 — prima copertura delle regole di dominio backend
+
+- **Test Asset**: aggiunti test Jest per il calcolo deterministico di `DUE`, `ATTENTION` e `OK` e per la garanzia predefinita di 24 mesi senza mutare la data di acquisto.
+- **Test pipeline documentale**: aggiunti test per matching tipo+nome, assenza di suggerimenti quando il nome non coincide, nessuna scrittura durante la classificazione e applicazione dei campi solo dopo conferma esplicita.
+- **Protezione dati esistenti**: verificato che la conferma non sovrascrive un campo strutturato già valorizzato, non lo duplica come campo libero e applica la garanzia predefinita quando arriva la data di acquisto.
+- **Baseline verificata**: backend build e 8 test puliti; frontend build e lint puliti salvo i 3 warning già noti; restano i 12 errori e 4 warning lint backend pre-esistenti.
+
 ## 2026-08-02 (3) — repository pubblicato su GitHub
 
 - **Git inizializzato e pushato**: primo commit (135 file) su https://github.com/Vincenzobrutto/Home_OS, branch `main`. Trovato e rimosso prima del commit un problema reale: `.claude/settings.local.json` conteneva la password del database in chiaro in una riga di permessi salvata in una sessione precedente — ora escluso in `.gitignore` root. Vedi `decisions.md` #17.

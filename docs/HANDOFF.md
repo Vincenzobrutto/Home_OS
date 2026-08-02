@@ -1,10 +1,10 @@
 # Handoff
 
-Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato l'ultima volta il 2026-08-02, in occasione di una sessione dedicata esplicitamente a preparare il repository per il passaggio di consegne. Per il dettaglio storico delle sessioni precedenti vedi [`changelog.md`](changelog.md).
+Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato l'ultima volta il 2026-08-03 dopo l'introduzione della prima copertura backend delle regole di dominio. Per il dettaglio storico delle sessioni precedenti vedi [`changelog.md`](changelog.md).
 
 ## Stato attuale del progetto
 
-MVP funzionante, uso locale/LAN (nessuna autenticazione, nessun deploy pubblico). Backend e frontend partono entrambi senza errori con i comandi documentati sotto — verificato in questa sessione, non solo dichiarato. Il repository **non è ancora un repository Git** (`git init` non è mai stato eseguito); `.gitignore` è comunque già pronto (root + `backend/` + `frontend/`) per quando lo si inizializzerà.
+MVP funzionante, uso locale/LAN (nessuna autenticazione, nessun deploy pubblico). Backend e frontend compilano con i comandi documentati sotto — verificato in questa sessione, non solo dichiarato. Il repository è versionato su GitHub e il branch di riferimento è `main`.
 
 Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi [`roadmap.md`](roadmap.md).
 
@@ -83,7 +83,7 @@ Verificato in questa sessione: `npx prisma migrate status` → "Database schema 
 |---|---|---|
 | `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~760 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ⚠️ 12 errori + 4 warning pre-esistenti, tutti in `src/documents/claude-extraction.service.ts` (risposta HTTP di Claude tipata `any`) + 1 warning in `main.ts` | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx) |
-| `npm run test` | ✅ 1/1 (solo scaffold NestJS di default, nessuna copertura reale) | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 8/8: scaffold + stato/garanzia Asset + regole principali della pipeline documentale | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Nessuno di questi errori impedisce build o avvio dell'app. Non sono stati corretti in questa sessione (vedi `decisions.md` #16 sul perché) — tracciati in `backlog.md` come B1, B1b, B14, B16.
 
@@ -112,9 +112,8 @@ Nessun valore segreto è presente in questo documento o nei file `.env.example` 
 
 - Nessuna autenticazione/sessione sulle API — `backlog.md` B2.
 - Token OAuth Gmail/Drive salvati in chiaro in DB — `backlog.md` B10.
-- Test automatici backend limitati allo scaffold, frontend assenti del tutto — `backlog.md` B1, B1b.
+- Test automatici backend ancora parziali (prima copertura di dominio presente), frontend assenti del tutto — `backlog.md` B1, B1b.
 - 12 errori di lint pre-esistenti da risposte Claude tipate `any` — `backlog.md` B14.
-- Repository non ancora inizializzato come progetto Git — `backlog.md` B3.
 - Navigazione senza URL reali (niente back/forward browser, niente link condivisibili) — `backlog.md` B11.
 - `backend/package.json#prisma` è una configurazione deprecata in vista di Prisma 7 — `backlog.md` B15.
 - Bundle frontend oltre la soglia di warning Vite (~760 kB) — `backlog.md` B16.
@@ -124,9 +123,9 @@ Elenco completo con priorità e dipendenze in [`backlog.md`](backlog.md).
 ## Attività successive consigliate
 
 In ordine di priorità suggerito (non vincolante):
-1. `git init` del repository (prerequisito per tutto il resto — senza versionamento ogni altra attività di collaborazione reale è più fragile).
+1. Ampliare i test backend con error handling di `analyze`, creazione multipla, collegamento house-level ed e2e API; poi introdurre un framework di test frontend (es. Vitest).
 2. Autenticazione/sessione reale sulle API, prima di qualunque esposizione oltre la LAN locale.
-3. Test automatici — partire dalla pipeline documentale e dal calcolo dello `status` dell'Asset (le due aree con più logica di dominio e zero copertura oggi), poi introdurre un framework di test per il frontend (es. Vitest, già compatibile con Vite).
+3. Correggere l'ambiguità del matching per prodotti diversi della stessa marca (`backlog.md` B17) con un test di regressione.
 4. Sistemare il redirect OAuth Gmail/Drive per funzionare anche da client mobile in LAN.
 5. Rivedere la conservazione in chiaro dei token OAuth prima di qualunque deploy esposto.
 

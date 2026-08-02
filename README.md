@@ -16,9 +16,9 @@ homeos-project/
 
 **Nota sulla struttura**: questo repository non ha una cartella `/src` o `/tests` unica a livello di root. `backend/` e `frontend/` sono due progetti Node indipendenti (due `package.json`, due server di sviluppo) — il codice vive in `backend/src` e `frontend/src`. È una deviazione intenzionale da un template generico a cartella singola: unificare tutto sotto un `/src` comune avrebbe richiesto spostare centinaia di file e riscrivere ogni config (Vite, Nest CLI, Prisma, `.claude/launch.json`) senza un beneficio reale. Vedi [`docs/architecture.md`](docs/architecture.md) §1.
 
-**Test automatici**: il backend ha Jest configurato ma solo lo scaffold di default di NestJS (nessuna copertura reale); il frontend non ha alcun framework di test configurato. È debito tecnico tracciato in [`docs/backlog.md`](docs/backlog.md), non nascosto.
+**Test automatici**: il backend usa Jest e copre le prime regole di dominio su stato/garanzia Asset e pipeline documentale; la copertura resta parziale. Il frontend non ha alcun framework di test configurato. Il lavoro residuo è tracciato in [`docs/backlog.md`](docs/backlog.md).
 
-**Repository Git**: questa cartella non è ancora un repository Git inizializzato (`git init` non è stato eseguito) — vedi [`docs/backlog.md`](docs/backlog.md) B3. `.gitignore` è già pronto in root, `backend/` e `frontend/` per quando verrà fatto.
+**Repository Git**: il progetto è versionato su GitHub; i `.gitignore` di root, `backend/` e `frontend/` escludono dipendenze, build, file `.env` e upload locali.
 
 ## Documentazione
 

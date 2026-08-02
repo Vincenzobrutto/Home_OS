@@ -16,13 +16,13 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - App raggiungibile da cellulare sulla stessa rete (LAN) con UI ottimizzata per mobile (sidebar a scomparsa, touch sulla planimetria, layout responsive).
 - Documentazione di progetto per collaborazione multi-assistente (`docs/`, `prompts/`, `AGENTS.md`).
 - Repository verificato pronto per il passaggio di consegne: `.gitignore` root/backend/frontend confermati completi, build/lint/test eseguiti e documentati, `docs/HANDOFF.md` creato (2026-08-02).
+- Prima copertura backend delle regole di dominio: stato/garanzia Asset, matching documento→asset e conferma senza sovrascrittura dei dati esistenti (8 test totali, 2026-08-03).
 
 ## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)
 
 - Autenticazione/sessione reale (oggi zero auth sulle API, un solo utente bootstrap).
 - Multi-utente per casa (il modello `HouseMembership` è già pronto, manca tutta la UI/logica di invito e permessi).
-- Test automatici backend (Jest configurato ma senza copertura reale) e frontend (nessun framework installato).
-- `git init` del repository (finora sviluppato senza controllo di versione).
+- Ampliare i test automatici backend oltre la prima copertura di dominio e introdurre i test frontend (nessun framework installato).
 - OAuth Gmail/Drive funzionante anche da un client mobile in LAN (oggi il redirect è pensato per `localhost`).
 - Navigazione con URL reali (oggi `view` è solo stato in memoria, niente back/forward del browser né link condivisibili).
 - Rivedere la conservazione in chiaro dei token OAuth in DB prima di qualunque esposizione oltre la rete locale.

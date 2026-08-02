@@ -16,7 +16,7 @@ homeos-project/
 
 Non esiste una cartella `/src` o `/tests` a livello di repo: il codice vive dentro `backend/src` e `frontend/src` perché sono **due progetti Node indipendenti** (due `package.json`, due server di sviluppo, due deploy separati), non un unico pacchetto. Introdurre un `/src` comune avrebbe richiesto spostare centinaia di file e riscrivere path/config (Vite, Nest CLI, Prisma, `launch.json`) senza nessun beneficio reale — è la deviazione intenzionale dal template generico richiesto per questa riorganizzazione.
 
-**Test automatici: praticamente inesistenti.** Backend: Jest configurato e funzionante (`npm run test`), ma solo lo scaffold di default di NestJS (`src/app.controller.spec.ts` + `test/app.e2e-spec.ts`), mai scritto per davvero contro la logica di dominio. Frontend: nessun framework di test installato (`package.json` non ha nemmeno uno script `test`). È debito tecnico reale, tracciato in `backlog.md`, non qualcosa da nascondere dietro una cartella `/tests` vuota. Stato verificato eseguendo i comandi in data 2026-08-02 — dettaglio in `docs/HANDOFF.md`.
+**Test automatici: copertura ancora parziale.** Backend: Jest configurato e funzionante (`npm run test`), con prime suite sulle regole di stato/garanzia Asset e sulla pipeline documentale, oltre allo scaffold NestJS. Frontend: nessun framework di test installato (`package.json` non ha nemmeno uno script `test`). Il lavoro residuo è tracciato in `backlog.md`; stato verificato eseguendo i comandi in data 2026-08-02, con dettaglio in `docs/HANDOFF.md`.
 
 ## 2. Stack tecnologico
 
