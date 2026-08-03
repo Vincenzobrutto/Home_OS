@@ -39,6 +39,14 @@ const inputStyle: React.CSSProperties = {
   fontSize: 12.5,
 };
 
+const fieldLabelStyle: React.CSSProperties = {
+  display: "block",
+  marginBottom: 5,
+  color: T.slate,
+  fontFamily: "'Inter', sans-serif",
+  fontSize: 12,
+};
+
 const initialForm = {
   title: "",
   description: "",
@@ -363,42 +371,51 @@ export function MaintenanceSection({
               marginTop: 8,
             }}
           >
-            <select
-              style={inputStyle}
-              value={form.recurrenceUnit}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  recurrenceUnit: e.target.value as MaintenanceRecurrenceUnit,
-                })
-              }
-            >
-              <option value="NONE">Una tantum</option>
-              <option value="DAY">Ogni N giorni</option>
-              <option value="MONTH">Ogni N mesi</option>
-              <option value="YEAR">Ogni N anni</option>
-            </select>
-            <input
-              style={inputStyle}
-              type="number"
-              min={1}
-              disabled={form.recurrenceUnit === "NONE"}
-              value={form.recurrenceInterval}
-              onChange={(e) =>
-                setForm({ ...form, recurrenceInterval: e.target.value })
-              }
-            />
-            <input
-              style={inputStyle}
-              type="number"
-              min={0}
-              max={365}
-              title="Giorni di preavviso"
-              value={form.reminderDaysBefore}
-              onChange={(e) =>
-                setForm({ ...form, reminderDaysBefore: e.target.value })
-              }
-            />
+            <div>
+              <span style={fieldLabelStyle}>Ricorrenza</span>
+              <select
+                style={inputStyle}
+                value={form.recurrenceUnit}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    recurrenceUnit: e.target
+                      .value as MaintenanceRecurrenceUnit,
+                  })
+                }
+              >
+                <option value="NONE">Una tantum</option>
+                <option value="DAY">Ogni N giorni</option>
+                <option value="MONTH">Ogni N mesi</option>
+                <option value="YEAR">Ogni N anni</option>
+              </select>
+            </div>
+            <div>
+              <span style={fieldLabelStyle}>Ogni quanti</span>
+              <input
+                style={inputStyle}
+                type="number"
+                min={1}
+                disabled={form.recurrenceUnit === "NONE"}
+                value={form.recurrenceInterval}
+                onChange={(e) =>
+                  setForm({ ...form, recurrenceInterval: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <span style={fieldLabelStyle}>Preavviso (giorni)</span>
+              <input
+                style={inputStyle}
+                type="number"
+                min={0}
+                max={365}
+                value={form.reminderDaysBefore}
+                onChange={(e) =>
+                  setForm({ ...form, reminderDaysBefore: e.target.value })
+                }
+              />
+            </div>
           </div>
           <select
             style={{ ...inputStyle, marginTop: 8 }}
