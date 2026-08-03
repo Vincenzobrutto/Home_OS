@@ -1,9 +1,92 @@
 import { useEffect, useState } from 'react';
-import { DoorOpen, Building2, FileText, AlertTriangle, CalendarClock } from 'lucide-react';
-import { T } from '../theme';
+import { DoorOpen, Building2, FileText, AlertTriangle, CalendarClock, type LucideIcon } from 'lucide-react';
+import { iconForAsset } from '../theme';
 import { SectionLabel } from './Shared';
 import type { Asset, House, MaintenanceReminder, Room } from '../types';
 import { api, formatDateForDisplay } from '../api';
+
+// ANTEPRIMA nuova palette (blu/verde acqua, più moderna) — vive solo qui in
+// Dashboard.tsx per ora, non ancora promossa a theme.ts. Se approvata,
+// questi valori sostituiranno i token attuali (T.pine/T.ochre/T.rust...) e
+// verranno propagati al resto dell'app — vedi decisions.md quando succede.
+const PT = {
+  card: '#FFFFFF',
+  ink: '#0F172A',
+  ink70: '#0F172Aa8',
+  slate: '#64748B',
+  line: '#E1E7F0',
+  primary: '#2563EB',
+  teal: '#0D9488',
+  danger: '#DC2626',
+  warning: '#D97706',
+};
+
+// Un colore distinto per categoria di Asset — badge tondi nelle liste,
+// invece dei quattro toni ripetuti della palette precedente. Vive qui
+// insieme al resto dell'anteprima; se promossa, questa mappa sostituirà i
+// campi "color" di ASSET_TYPES in theme.ts.
+const CATEGORY_COLORS: Record<string, string> = {
+  CALDAIA: '#DC2626',
+  ELETTRICO: '#D97706',
+  IDRAULICO: '#2563EB',
+  FOTOVOLTAICO: '#CA8A04',
+  CLIMA: '#0891B2',
+  TETTO: '#78716C',
+  FINESTRE: '#64748B',
+  ELETTRODOMESTICO: '#7C3AED',
+};
+
+function categoryColor(type: string): string {
+  return CATEGORY_COLORS[type] ?? PT.slate;
+}
+
+function CategoryBadge({
+  type,
+  name,
+  size = 34,
+}: {
+  type: string;
+  name: string;
+  size?: number;
+}) {
+  const Icon = iconForAsset({ type, name });
+  const color = categoryColor(type);
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: `${color}1A`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}
+    >
+      <Icon size={Math.round(size * 0.52)} color={color} />
+    </div>
+  );
+}
+
+function StatBadge({ icon: Icon, color }: { icon: LucideIcon; color: string }) {
+  return (
+    <div
+      style={{
+        width: 48,
+        height: 48,
+        borderRadius: 12,
+        background: `${color}1A`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
+      }}
+    >
+      <Icon size={26} color={color} />
+    </div>
+  );
+}
 
 export function Dashboard({ house, rooms, assets, openAsset }: { house: House; rooms: Room[]; assets: Asset[]; openAsset: (id: string) => void }) {
   const dueSoon = assets.filter((a) => a.status === 'DUE' || a.status === 'ATTENTION').length;
@@ -22,7 +105,7 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
           fontFamily: "'Space Grotesk', sans-serif",
           fontWeight: 600,
           fontSize: 30,
-          color: T.ink,
+          color: PT.ink,
           margin: '0 0 6px 0',
           letterSpacing: '-0.01em',
         }}
@@ -33,7 +116,7 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
         style={{
           fontFamily: "'Inter', sans-serif",
           fontSize: 14,
-          color: T.ink70,
+          color: PT.ink70,
           margin: '0 0 30px 0',
         }}
       >
@@ -50,40 +133,53 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
         }}
       >
         {[
-          { label: 'Ambienti', value: rooms.length, icon: DoorOpen },
-          { label: 'Asset censiti', value: assets.length, icon: Building2 },
-          { label: 'Documenti collegati', value: totalDocs, icon: FileText },
+          { label: 'Ambienti', value: rooms.length, icon: DoorOpen, color: PT.primary },
+          { label: 'Asset censiti', value: assets.length, icon: Building2, color: PT.teal },
+          { label: 'Documenti collegati', value: totalDocs, icon: FileText, color: '#7C3AED' },
           {
             label: 'Da verificare',
             value: dueSoon + maintenance.length,
             icon: AlertTriangle,
+            color: PT.warning,
           },
         ].map((s) => (
           <div
             key={s.label}
             style={{
-              background: T.card,
-              border: `1px solid ${T.line}`,
-              borderRadius: 10,
-              padding: '16px 16px',
+              background: PT.card,
+              border: `1px solid ${PT.line}`,
+              borderRadius: 12,
+              padding: '20px 18px',
+              boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
             }}
           >
-            <s.icon size={16} color={T.pine} style={{ marginBottom: 10 }} />
             <div
               style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: 24,
-                fontWeight: 600,
-                color: T.ink,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                marginBottom: 10,
               }}
             >
-              {s.value}
+              <StatBadge icon={s.icon} color={s.color} />
+              <div
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontSize: 30,
+                  fontWeight: 600,
+                  color: PT.ink,
+                }}
+              >
+                {s.value}
+              </div>
             </div>
             <div
               style={{
                 fontFamily: "'Inter', sans-serif",
-                fontSize: 12,
-                color: T.slate,
+                fontSize: 18,
+                fontWeight: 600,
+                color: PT.ink,
+                lineHeight: 1.15,
               }}
             >
               {s.label}
@@ -99,7 +195,7 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
             style={{
               fontFamily: "'Inter', sans-serif",
               fontSize: 13,
-              color: T.slate,
+              color: PT.slate,
             }}
           >
             Nessun asset da verificare per ora.
@@ -115,22 +211,23 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
                 display: 'flex',
                 alignItems: 'center',
                 gap: 14,
-                background: T.card,
-                border: `1px solid ${T.line}`,
-                borderLeft: `3px solid ${a.status === 'DUE' ? T.rust : T.ochreDeep}`,
-                borderRadius: 8,
-                padding: '13px 16px',
+                background: PT.card,
+                border: `1px solid ${PT.line}`,
+                borderLeft: `3px solid ${a.status === 'DUE' ? PT.danger : PT.warning}`,
+                borderRadius: 10,
+                padding: '12px 16px',
                 cursor: 'pointer',
+                boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
               }}
             >
-              <AlertTriangle size={15} color={a.status === 'DUE' ? T.rust : T.ochreDeep} />
+              <CategoryBadge type={a.type} name={a.name} />
               <div style={{ flex: 1 }}>
                 <div
                   style={{
                     fontFamily: "'Inter', sans-serif",
                     fontSize: 13.5,
                     fontWeight: 500,
-                    color: T.ink,
+                    color: PT.ink,
                   }}
                 >
                   {a.name}
@@ -139,12 +236,13 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
                   style={{
                     fontFamily: "'Inter', sans-serif",
                     fontSize: 12,
-                    color: T.slate,
+                    color: PT.slate,
                   }}
                 >
                   {a.status === 'DUE' ? 'Garanzia scaduta' : 'Nessun documento collegato'}
                 </div>
               </div>
+              <AlertTriangle size={15} color={a.status === 'DUE' ? PT.danger : PT.warning} />
             </div>
           ))}
         {maintenance.map((plan) => (
@@ -155,22 +253,23 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
               display: 'flex',
               alignItems: 'center',
               gap: 14,
-              background: T.card,
-              border: `1px solid ${T.line}`,
-              borderLeft: `3px solid ${plan.status === 'OVERDUE' ? T.rust : T.ochre}`,
-              borderRadius: 8,
-              padding: '13px 16px',
+              background: PT.card,
+              border: `1px solid ${PT.line}`,
+              borderLeft: `3px solid ${plan.status === 'OVERDUE' ? PT.danger : PT.warning}`,
+              borderRadius: 10,
+              padding: '12px 16px',
               cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
             }}
           >
-            <CalendarClock size={15} color={plan.status === 'OVERDUE' ? T.rust : T.ochreDeep} />
+            <CategoryBadge type={plan.asset.type} name={plan.asset.name} />
             <div style={{ flex: 1 }}>
               <div
                 style={{
                   fontFamily: "'Inter', sans-serif",
                   fontSize: 13.5,
                   fontWeight: 500,
-                  color: T.ink,
+                  color: PT.ink,
                 }}
               >
                 {plan.title} · {plan.asset.name}
@@ -179,13 +278,14 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
                 style={{
                   fontFamily: "'Inter', sans-serif",
                   fontSize: 12,
-                  color: T.slate,
+                  color: PT.slate,
                 }}
               >
                 {plan.status === 'OVERDUE' ? 'Manutenzione scaduta' : 'Manutenzione imminente'} · {formatDateForDisplay(plan.nextDueAt)}
                 {plan.asset.room ? ` · ${plan.asset.room.name}` : ''}
               </div>
             </div>
+            <CalendarClock size={15} color={plan.status === 'OVERDUE' ? PT.danger : PT.warning} />
           </div>
         ))}
       </div>

@@ -164,6 +164,7 @@ export interface MaintenanceReminder extends MaintenancePlan {
     id: string;
     name: string;
     code: string;
+    type: string;
     room: { id: string; name: string } | null;
   };
 }

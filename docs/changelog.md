@@ -2,6 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-03 (7) — anteprima nuovo look&feel su Dashboard (placeholder)
+
+- **Dashboard**: nuova palette blu/verde acqua e badge circolari colorati per categoria (icona dell'Asset dentro un cerchio con tinta diversa per tipo), applicata SOLO qui come anteprima — il resto dell'app resta sullo stile "carta/inchiostro" attuale. Vive in un oggetto locale `PT`/`CATEGORY_COLORS` dentro `Dashboard.tsx`, non ancora in `theme.ts`.
+- **`GET /houses/:id/maintenance-reminders`**: la select dell'Asset ora include anche `type` (serviva per scegliere l'icona di categoria giusta nei promemoria di manutenzione in Dashboard).
+- Rimane un placeholder in attesa di ulteriore riflessione dell'utente prima di decidere se propagarlo al resto dell'app — vedi `backlog.md` B31.
+
 ## 2026-08-03 (6) — implementazione backlog, Fascia 1 completata
 
 - **B21**: aggiunte le label "Ricorrenza", "Ogni quanti", "Preavviso (giorni)" nel form piano di manutenzione — i campi erano numeri senza contesto.

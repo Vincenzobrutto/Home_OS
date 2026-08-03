@@ -120,6 +120,7 @@ export class MaintenanceService {
             id: true,
             name: true,
             code: true,
+            type: true,
             room: { select: { id: true, name: true } },
           },
         },
