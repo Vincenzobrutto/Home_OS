@@ -9,7 +9,10 @@ import {
   computeMaintenanceStatus,
   nextMaintenanceDueAt,
 } from '../common/maintenance';
-import { computeMaintenanceSuggestions } from '../common/maintenance-guidelines';
+import {
+  computeMaintenanceSuggestions,
+  MAINTENANCE_GUIDELINES,
+} from '../common/maintenance-guidelines';
 import { CreateMaintenancePlanDto } from './dto/create-maintenance-plan.dto';
 import { UpdateMaintenancePlanDto } from './dto/update-maintenance-plan.dto';
 import { CompleteMaintenancePlanDto } from './dto/complete-maintenance-plan.dto';
@@ -60,16 +63,42 @@ export class MaintenanceService {
   async suggestionsForAsset(assetId: string) {
     const asset = await this.assetOrThrow(assetId);
     if (asset.dismissedAt) return [];
-    const existingPlans = await this.prisma.maintenancePlan.findMany({
-      where: { assetId },
-      select: { title: true },
-    });
+    const [existingPlans, dismissed] = await Promise.all([
+      this.prisma.maintenancePlan.findMany({
+        where: { assetId },
+        select: { title: true },
+      }),
+      this.prisma.dismissedMaintenanceSuggestion.findMany({
+        where: { assetId },
+        select: { guidelineCode: true },
+      }),
+    ]);
     return computeMaintenanceSuggestions({
       assetType: asset.type,
       installedAt: asset.installedAt,
       purchasedAt: asset.purchasedAt,
       createdAt: asset.createdAt,
       existingPlanTitles: existingPlans.map((plan) => plan.title),
+      dismissedGuidelineCodes: dismissed.map((d) => d.guidelineCode),
+    });
+  }
+
+  // Persistito per non riproporre lo stesso suggerimento ad ogni apertura
+  // della scheda Asset (vedi decisions.md #22, correzione di #19). Nessuna
+  // UI di "ripristina" per ora — "Ignora" è definitivo finché non emerge un
+  // bisogno reale di tornare indietro (stesso principio MVP di decisions.md
+  // #19: non costruire in anticipo quello che non è ancora richiesto).
+  async dismissSuggestion(assetId: string, guidelineCode: string) {
+    await this.assetOrThrow(assetId);
+    if (!MAINTENANCE_GUIDELINES.some((g) => g.code === guidelineCode)) {
+      throw new NotFoundException(
+        `Linea guida di manutenzione "${guidelineCode}" non trovata`,
+      );
+    }
+    await this.prisma.dismissedMaintenanceSuggestion.upsert({
+      where: { assetId_guidelineCode: { assetId, guidelineCode } },
+      create: { assetId, guidelineCode },
+      update: {},
     });
   }
 

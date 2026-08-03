@@ -130,6 +130,7 @@ export function computeMaintenanceSuggestions(params: {
   purchasedAt: Date | null;
   createdAt: Date;
   existingPlanTitles: string[];
+  dismissedGuidelineCodes?: string[];
 }): MaintenanceSuggestion[] {
   const basisDate =
     params.installedAt ?? params.purchasedAt ?? params.createdAt;
@@ -141,6 +142,7 @@ export function computeMaintenanceSuggestions(params: {
   const existingTitles = new Set(
     params.existingPlanTitles.map((title) => title.trim().toLowerCase()),
   );
+  const dismissedCodes = new Set(params.dismissedGuidelineCodes ?? []);
 
   return MAINTENANCE_GUIDELINES.filter(
     (guideline) => guideline.assetType === params.assetType,
@@ -148,6 +150,7 @@ export function computeMaintenanceSuggestions(params: {
     .filter(
       (guideline) => !existingTitles.has(guideline.title.trim().toLowerCase()),
     )
+    .filter((guideline) => !dismissedCodes.has(guideline.code))
     .map((guideline) => ({
       ...guideline,
       suggestedNextDueAt: addInterval(

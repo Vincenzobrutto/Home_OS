@@ -38,6 +38,15 @@ export class MaintenanceController {
     return this.maintenance.suggestionsForAsset(assetId);
   }
 
+  @Post('assets/:assetId/maintenance-suggestions/:code/dismiss')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  dismissSuggestion(
+    @Param('assetId', ParseUUIDPipe) assetId: string,
+    @Param('code') code: string,
+  ) {
+    return this.maintenance.dismissSuggestion(assetId, code);
+  }
+
   @Get('houses/:houseId/maintenance-reminders')
   reminders(@Param('houseId', ParseUUIDPipe) houseId: string) {
     return this.maintenance.remindersForHouse(houseId);

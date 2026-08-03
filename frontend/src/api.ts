@@ -196,6 +196,8 @@ export const api = {
   maintenance: {
     listForAsset: (assetId: string) => request<MaintenancePlan[]>(`/assets/${assetId}/maintenance-plans`),
     suggestionsForAsset: (assetId: string) => request<MaintenanceSuggestion[]>(`/assets/${assetId}/maintenance-suggestions`),
+    dismissSuggestion: (assetId: string, code: string) =>
+      request<void>(`/assets/${assetId}/maintenance-suggestions/${code}/dismiss`, { method: 'POST' }),
     remindersForHouse: (houseId: string) => request<MaintenanceReminder[]>(`/houses/${houseId}/maintenance-reminders`),
     create: (
       assetId: string,

@@ -11,8 +11,9 @@ User ──< HouseMembership >── House ──< Room ──< Asset >── As
  └── DriveConnection (0..1)     └── Document            │        │
                                     (asset_id opz.) ─────┘        └── Document (opz.)
                                                      └── MaintenancePlan ──< MaintenanceOccurrence
-                                                            │                    ├── Contact (opz.)
-                                                            │                    └── Document (opz.)
+                                                     │      │                    ├── Contact (opz.)
+                                                     │      │                    └── Document (opz.)
+                                                     └── DismissedMaintenanceSuggestion
 ```
 
 Legenda: `──<` = "uno a molti" verso l'entità collegata. Tutte le relazioni verso `House` hanno `onDelete: Cascade`; `Asset.roomId` e `Document.assetId` hanno `onDelete: SetNull` (cancellare una stanza o un asset non cancella i documenti collegati, li scollega soltanto).
@@ -72,6 +73,9 @@ Lo stato (`SCHEDULED` / `UPCOMING` / `OVERDUE` / `COMPLETED` / `PAUSED`) è calc
 ### MaintenanceOccurrence
 Esecuzione storica e immutabile di un piano: conserva la scadenza prevista, la data effettiva, contatto, documento e note opzionali. Il completamento crea nella stessa transazione anche un `AssetTimelineEvent`. Per i piani ricorrenti la prossima data resta ancorata al calendario programmato e avanza alla prima ricorrenza successiva al completamento; per una tantum il piano diventa `COMPLETED`.
 
+### DismissedMaintenanceSuggestion
+"Ignora" persistito su un suggerimento di manutenzione (le linee guida stesse vivono nel codice, non in DB — vedi `maintenance-guidelines.ts`). Chiave unica `(assetId, guidelineCode)`: `guidelineCode` non è una foreign key, è lo slug stabile della linea guida (es. `clima-filtri`). Non c'è un'azione di "ripristina" — il dismiss è definitivo finché non emerge un bisogno reale di tornare indietro (vedi `decisions.md` #22).
+
 ### Contact (Rubrica)
 Tecnici/aziende che hanno lavorato in casa. Collegamento a un intervento in cronologia è manuale; niente auto-popolamento da AI anche se il nome compare identico nel campo "Fornitore" estratto da un documento (rimandato, vedi `backlog.md`).
 
@@ -90,3 +94,4 @@ Tecnici/aziende che hanno lavorato in casa. Collegamento a un intervento in cron
 8. I piani di manutenzione appartengono agli Asset; stato e promemoria sono calcolati e non modificano `Asset.status`.
 9. Completare una manutenzione è un'azione utente esplicita e atomica: occorrenza, cronologia e prossima scadenza vengono registrate insieme.
 10. I piani di manutenzione suggeriti (da linee guida statiche per tipo di Asset) non vengono mai creati automaticamente: il sistema pre-compila il form, l'utente deve comunque confermare — vedi `decisions.md` #19.
+11. Un suggerimento di manutenzione ignorato non ricompare: il dismiss è persistito per Asset+linea guida, non solo nello state del browser — vedi `decisions.md` #22.

@@ -224,11 +224,12 @@ model Asset {
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
 
-  customFields           AssetCustomField[]
-  documents              Document[]
-  timelineEvents         AssetTimelineEvent[]
-  maintenancePlans       MaintenancePlan[]
-  maintenanceOccurrences MaintenanceOccurrence[]
+  customFields                    AssetCustomField[]
+  documents                       Document[]
+  timelineEvents                  AssetTimelineEvent[]
+  maintenancePlans                MaintenancePlan[]
+  maintenanceOccurrences          MaintenanceOccurrence[]
+  dismissedMaintenanceSuggestions DismissedMaintenanceSuggestion[]
 
   @@map("assets")
 }
@@ -381,4 +382,19 @@ model MaintenanceOccurrence {
 
   @@index([maintenancePlanId, completedAt])
   @@map("maintenance_occurrences")
+}
+
+// "Ignora" su un suggerimento di manutenzione (vedi maintenance-guidelines.ts)
+// — persistito per non riproporre la stessa linea guida ad ogni apertura
+// della scheda Asset (vedi decisions.md #22, correzione di #19). guidelineCode
+// non è una foreign key: le linee guida sono definite nel codice, non in DB.
+model DismissedMaintenanceSuggestion {
+  id            String   @id @default(uuid())
+  assetId       String   @map("asset_id")
+  asset         Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  guidelineCode String   @map("guideline_code")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([assetId, guidelineCode])
+  @@map("dismissed_maintenance_suggestions")
 }

@@ -68,4 +68,16 @@ describe('maintenance suggestion guidelines', () => {
     });
     expect(suggestions.map((s) => s.code)).toEqual(['clima-tecnica']);
   });
+
+  it('omits a guideline whose code was dismissed, independently of the title check', () => {
+    const suggestions = computeMaintenanceSuggestions({
+      assetType: 'CLIMA',
+      installedAt: new Date('2026-01-10T00:00:00Z'),
+      purchasedAt: null,
+      createdAt: new Date('2026-01-10T00:00:00Z'),
+      existingPlanTitles: [],
+      dismissedGuidelineCodes: ['clima-tecnica'],
+    });
+    expect(suggestions.map((s) => s.code)).toEqual(['clima-filtri']);
+  });
 });

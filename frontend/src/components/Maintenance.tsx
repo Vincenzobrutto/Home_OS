@@ -94,7 +94,6 @@ export function MaintenanceSection({
 }) {
   const [plans, setPlans] = useState<MaintenancePlan[]>([]);
   const [suggestions, setSuggestions] = useState<MaintenanceSuggestion[]>([]);
-  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(initialForm);
@@ -272,9 +271,7 @@ export function MaintenanceSection({
       )}
 
       {!formOpen &&
-        suggestions
-          .filter((s) => !dismissedSuggestions.has(s.code))
-          .map((suggestion) => (
+        suggestions.map((suggestion) => (
             <div key={suggestion.code} style={suggestionCardStyle}>
               <div
                 style={{ display: "flex", alignItems: "flex-start", gap: 10 }}
@@ -320,11 +317,13 @@ export function MaintenanceSection({
                   Aggiungi
                 </button>
                 <button
-                  onClick={() =>
-                    setDismissedSuggestions(
-                      (prev) => new Set(prev).add(suggestion.code),
-                    )
-                  }
+                  onClick={async () => {
+                    await api.maintenance.dismissSuggestion(
+                      asset.id,
+                      suggestion.code,
+                    );
+                    await refresh();
+                  }}
                   style={{ ...smallButtonStyle, color: T.slate }}
                 >
                   Ignora
