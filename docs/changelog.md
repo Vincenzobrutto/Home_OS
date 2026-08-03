@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-03 (2) — piani di manutenzione programmata
+
+- **Piani per Asset**: creazione e modifica di manutenzioni una tantum o ricorrenti ogni N giorni/mesi/anni, con prima scadenza, preavviso, tecnico abituale, obbligatorietà, descrizione e note.
+- **Ciclo operativo**: completamento esplicito con data, contatto, documento e note; esecuzione e cronologia salvate atomicamente, prossima scadenza ancorata al calendario previsto. Sospensione, riattivazione ed eliminazione sicura senza perdita dello storico.
+- **Dashboard**: manutenzioni imminenti e scadute visibili insieme agli altri promemoria e cliccabili verso l'Asset; gli Asset dismessi non generano avvisi.
+- **Modello/API**: nuove entità `MaintenancePlan`/`MaintenanceOccurrence`, migrazione Prisma e modulo NestJS dedicato; riferimento REST aggiornato.
+- **Test e build**: 18/18 test backend e build backend/frontend pulite; frontend lint invariato con 3 warning pre-esistenti. Aggiunti 10 test sulle regole temporali, ricorrenza e fine mese.
+
 ## 2026-08-03 — prima copertura delle regole di dominio backend
 
 - **Test Asset**: aggiunti test Jest per il calcolo deterministico di `DUE`, `ATTENTION` e `OK` e per la garanzia predefinita di 24 mesi senza mutare la data di acquisto.

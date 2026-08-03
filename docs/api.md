@@ -69,6 +69,19 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | PATCH | `/contacts/:id` | |
 | DELETE | `/contacts/:id` | |
 
+## Maintenance
+| Metodo | Path | Note |
+|---|---|---|
+| GET | `/assets/:assetId/maintenance-plans` | piani dell'Asset con stato calcolato e conteggio esecuzioni |
+| POST | `/assets/:assetId/maintenance-plans` | crea piano una tantum o ricorrente |
+| PATCH | `/maintenance-plans/:id` | modifica il piano senza alterare lo storico |
+| DELETE | `/maintenance-plans/:id` | ammesso solo se non esistono esecuzioni; altrimenti sospendere |
+| POST | `/maintenance-plans/:id/complete` | registra esecuzione + evento cronologia e calcola la prossima scadenza in transazione |
+| POST | `/maintenance-plans/:id/pause` | sospende i promemoria preservando dati e storico |
+| POST | `/maintenance-plans/:id/reactivate` | riattiva con una nuova `nextDueAt` confermata dall'utente |
+| GET | `/maintenance-plans/:id/occurrences` | storico esecuzioni con contatto/documento opzionali |
+| GET | `/houses/:houseId/maintenance-reminders` | sole manutenzioni `UPCOMING`/`OVERDUE`, esclude Asset dismessi |
+
 ## Gmail (OAuth + scansione)
 | Metodo | Path | Note |
 |---|---|---|

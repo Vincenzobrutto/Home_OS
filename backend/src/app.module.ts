@@ -11,6 +11,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { GmailModule } from './gmail/gmail.module';
 import { DriveModule } from './drive/drive.module';
+import { MaintenanceModule } from './maintenance/maintenance.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { DriveModule } from './drive/drive.module';
     ContactsModule,
     GmailModule,
     DriveModule,
+    MaintenanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

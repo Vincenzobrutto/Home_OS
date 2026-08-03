@@ -4,6 +4,7 @@ import { T, ASSET_TYPES, iconForAsset } from '../theme';
 import { SectionLabel, StatusDot, Stamp } from './Shared';
 import { api, formatDateForDisplay, parseDateInput } from '../api';
 import type { Asset, Contact, CustomField, DocumentRecord, House, Room, TimelineEvent } from '../types';
+import { MaintenanceSection } from './Maintenance';
 
 const eventInputStyle: React.CSSProperties = {
   padding: '8px 10px',
@@ -17,29 +18,30 @@ const eventInputStyle: React.CSSProperties = {
   outline: 'none',
 };
 
-export function AssetsView({
-  house,
-  assets,
-  rooms,
-  openAsset,
-  onAddAsset,
-  onReactivate,
-}: {
-  house: House;
-  assets: Asset[];
-  rooms: Room[];
-  openAsset: (id: string) => void;
-  onAddAsset: () => void;
-  onReactivate: (asset: Asset) => void;
-}) {
+export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReactivate }: { house: House; assets: Asset[]; rooms: Room[]; openAsset: (id: string) => void; onAddAsset: () => void; onReactivate: (asset: Asset) => void }) {
   const activeAssets = assets.filter((a) => !a.dismissedAt);
   const dismissedAssets = assets.filter((a) => a.dismissedAt);
 
   return (
     <div style={{ padding: '36px 44px', maxWidth: 980 }}>
       <SectionLabel>{house.code}</SectionLabel>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 26, color: T.ink, margin: 0 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          marginBottom: 24,
+        }}
+      >
+        <h1
+          style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontWeight: 600,
+            fontSize: 26,
+            color: T.ink,
+            margin: 0,
+          }}
+        >
           Asset della casa
         </h1>
         <button
@@ -62,7 +64,14 @@ export function AssetsView({
           + Aggiungi asset
         </button>
       </div>
-      <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+      <div
+        className="grid-responsive"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 14,
+        }}
+      >
         {activeAssets.map((a) => {
           const meta = ASSET_TYPES[a.type];
           const Icon = iconForAsset(a);
@@ -80,13 +89,42 @@ export function AssetsView({
                 position: 'relative',
               }}
             >
-              <div style={{ position: 'absolute', top: 14, right: 14, fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: T.slate, letterSpacing: '0.04em' }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 14,
+                  right: 14,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 10,
+                  color: T.slate,
+                  letterSpacing: '0.04em',
+                }}
+              >
                 {a.code}
               </div>
-              <div style={{ width: 34, height: 34, borderRadius: 8, background: T.paper, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 8,
+                  background: T.paper,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 14,
+                }}
+              >
                 <Icon size={17} color={meta.color} />
               </div>
-              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, color: T.ink, marginBottom: 4 }}>
+              <div
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: T.ink,
+                  marginBottom: 4,
+                }}
+              >
                 {a.name}
               </div>
               <div style={{ marginBottom: 10 }}>
@@ -97,7 +135,15 @@ export function AssetsView({
                   <Stamp tone="slate">{room.name}</Stamp>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 14, fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 14,
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 11.5,
+                  color: T.slate,
+                }}
+              >
                 <span>{a.customFields?.length ?? 0} dati aggiuntivi</span>
               </div>
             </div>
@@ -130,11 +176,32 @@ export function AssetsView({
                 >
                   <div
                     onClick={() => openAsset(a.id)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      cursor: 'pointer',
+                    }}
                   >
                     <Icon size={15} color={meta.color} />
-                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: T.ink }}>{a.name}</span>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: T.slate }}>{a.code}</span>
+                    <span
+                      style={{
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: 13,
+                        color: T.ink,
+                      }}
+                    >
+                      {a.name}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: 10,
+                        color: T.slate,
+                      }}
+                    >
+                      {a.code}
+                    </span>
                   </div>
                   <button
                     onClick={() => onReactivate(a)}
@@ -212,9 +279,7 @@ export function AssetDetail({
   }, [asset.id]);
 
   function refreshDocuments() {
-    return api.documents.listForHouse(asset.houseId).then((docs) =>
-      setDocuments(docs.filter((d) => d.assetId === asset.id && d.status === 'CONFIRMED')),
-    );
+    return api.documents.listForHouse(asset.houseId).then((docs) => setDocuments(docs.filter((d) => d.assetId === asset.id && d.status === 'CONFIRMED')));
   }
 
   useEffect(() => {
@@ -277,17 +342,57 @@ export function AssetDetail({
         <ChevronLeft size={14} /> Tutti gli asset
       </button>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 8,
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: T.paper, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 10,
+              background: T.paper,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <Icon size={21} color={meta.color} />
           </div>
           <div>
-            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 24, color: T.ink, margin: 0 }}>
+            <h1
+              style={{
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 600,
+                fontSize: 24,
+                color: T.ink,
+                margin: 0,
+              }}
+            >
               {asset.name}
             </h1>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 3 }}>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: T.slate }}>{asset.code}</span>
+            <div
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'center',
+                marginTop: 3,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 11,
+                  color: T.slate,
+                }}
+              >
+                {asset.code}
+              </span>
               <StatusDot status={asset.status} />
             </div>
           </div>
@@ -368,14 +473,19 @@ export function AssetDetail({
       </div>
 
       <div style={{ display: 'flex', gap: 8, margin: '18px 0 30px 0' }}>
-        <Stamp tone={asset.status === 'OK' ? 'pine' : asset.status === 'DUE' ? 'rust' : 'ochre'}>
-          {asset.status === 'OK' ? 'Passaporto in regola' : asset.status === 'DUE' ? 'Azione richiesta' : 'Da completare'}
-        </Stamp>
+        <Stamp tone={asset.status === 'OK' ? 'pine' : asset.status === 'DUE' ? 'rust' : 'ochre'}>{asset.status === 'OK' ? 'Passaporto in regola' : asset.status === 'DUE' ? 'Azione richiesta' : 'Da completare'}</Stamp>
         {asset.warrantyUntil && <Stamp tone="slate">garanzia fino al {formatDateForDisplay(asset.warrantyUntil)}</Stamp>}
         {asset.dismissedAt && <Stamp tone="slate">dismesso il {formatDateForDisplay(asset.dismissedAt)}</Stamp>}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px', marginBottom: 34 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '10px 24px',
+          marginBottom: 34,
+        }}
+      >
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
           <span style={{ color: T.slate }}>Installato il: </span>
           <span style={{ color: T.ink, fontWeight: 500 }}>{formatDateForDisplay(asset.installedAt)}</span>
@@ -432,7 +542,15 @@ export function AssetDetail({
           {room && (
             <span
               onClick={() => openRoom(room.id)}
-              style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.pine, cursor: 'pointer', textDecoration: 'underline', marginTop: 5, display: 'inline-block' }}
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 11.5,
+                color: T.pine,
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                marginTop: 5,
+                display: 'inline-block',
+              }}
             >
               Apri scheda ambiente →
             </span>
@@ -465,6 +583,16 @@ export function AssetDetail({
         </>
       )}
 
+      <MaintenanceSection
+        asset={asset}
+        contacts={contacts}
+        documents={documents}
+        onChanged={async () => {
+          await refreshTimeline();
+          onContactsChanged();
+        }}
+      />
+
       <SectionLabel>Documenti</SectionLabel>
       {documents.length === 0 ? (
         <div
@@ -481,28 +609,53 @@ export function AssetDetail({
           Nessun documento collegato. Caricalo dall'Inbox (o da Gmail/Drive) e confermalo su questo asset.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 30 }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+            marginBottom: 30,
+          }}
+        >
           {documents.map((doc) => (
             <div
               key={doc.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, background: T.card, border: `1px solid ${T.line}`, borderRadius: 8, padding: '11px 14px' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                background: T.card,
+                border: `1px solid ${T.line}`,
+                borderRadius: 8,
+                padding: '11px 14px',
+              }}
             >
               <FileText size={16} color={T.slate} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 500, color: T.ink }}>
+                <div
+                  style={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: T.ink,
+                  }}
+                >
                   {doc.docType ?? doc.originalFilename}
                 </div>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div
+                  style={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: 11.5,
+                    color: T.slate,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {doc.originalFilename} · confermato {doc.confirmedAt ? formatDateForDisplay(doc.confirmedAt) : ''}
                 </div>
               </div>
-              <a
-                href={api.documents.fileUrl(doc.id)}
-                target="_blank"
-                rel="noreferrer"
-                title="Visualizza"
-                style={{ display: 'flex', color: T.slate, padding: 6 }}
-              >
+              <a href={api.documents.fileUrl(doc.id)} target="_blank" rel="noreferrer" title="Visualizza" style={{ display: 'flex', color: T.slate, padding: 6 }}>
                 <ExternalLink size={15} />
               </a>
               <a href={api.documents.downloadUrl(doc.id)} title="Scarica" style={{ display: 'flex', color: T.slate, padding: 6 }}>
@@ -511,7 +664,14 @@ export function AssetDetail({
               <button
                 onClick={() => moveDocumentToHouse(doc.id)}
                 title="Sposta in Documenti casa: scollega questo documento da questo asset, per documenti che in realtà riguardano la casa nel suo insieme (es. impianti senza un ambiente specifico)"
-                style={{ display: 'flex', color: T.slate, padding: 6, background: 'none', border: 'none', cursor: 'pointer' }}
+                style={{
+                  display: 'flex',
+                  color: T.slate,
+                  padding: 6,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
               >
                 <FileStack size={15} />
               </button>
@@ -520,12 +680,28 @@ export function AssetDetail({
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <SectionLabel>Cronologia</SectionLabel>
         {!addingEvent && (
           <button
             onClick={() => setAddingEvent(true)}
-            style={{ background: 'none', border: 'none', color: T.pine, cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 500, padding: 0, marginBottom: 10 }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: T.pine,
+              cursor: 'pointer',
+              fontFamily: "'Inter', sans-serif",
+              fontSize: 12,
+              fontWeight: 500,
+              padding: 0,
+              marginBottom: 10,
+            }}
           >
             + Nuovo intervento
           </button>
@@ -533,19 +709,34 @@ export function AssetDetail({
       </div>
 
       {addingEvent && (
-        <div style={{ background: T.card, border: `1px solid ${T.line}`, borderRadius: 8, padding: 14, marginBottom: 20 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 8, marginBottom: 8 }}>
+        <div
+          style={{
+            background: T.card,
+            border: `1px solid ${T.line}`,
+            borderRadius: 8,
+            padding: 14,
+            marginBottom: 20,
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1.4fr',
+              gap: 8,
+              marginBottom: 8,
+            }}
+          >
             <input style={eventInputStyle} placeholder="gg/mm/aaaa" value={newEventDate} onChange={(e) => setNewEventDate(e.target.value)} />
             <input style={eventInputStyle} placeholder="Tipo intervento (es. Manutenzione)" value={newEventType} onChange={(e) => setNewEventType(e.target.value)} />
           </div>
-          <input
-            style={{ ...eventInputStyle, width: '100%', marginBottom: 8 }}
-            placeholder="Dettaglio (facoltativo)"
-            value={newEventDetail}
-            onChange={(e) => setNewEventDetail(e.target.value)}
-          />
+          <input style={{ ...eventInputStyle, width: '100%', marginBottom: 8 }} placeholder="Dettaglio (facoltativo)" value={newEventDetail} onChange={(e) => setNewEventDetail(e.target.value)} />
           <select
-            style={{ ...eventInputStyle, width: '100%', marginBottom: 10, cursor: 'pointer' }}
+            style={{
+              ...eventInputStyle,
+              width: '100%',
+              marginBottom: 10,
+              cursor: 'pointer',
+            }}
             value={newEventContactId}
             onChange={(e) => setNewEventContactId(e.target.value)}
           >
@@ -559,14 +750,33 @@ export function AssetDetail({
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <button
               onClick={() => setAddingEvent(false)}
-              style={{ background: 'none', border: `1px solid ${T.line}`, color: T.ink, borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+              style={{
+                background: 'none',
+                border: `1px solid ${T.line}`,
+                color: T.ink,
+                borderRadius: 6,
+                padding: '7px 12px',
+                cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 12,
+              }}
             >
               Annulla
             </button>
             <button
               onClick={submitNewEvent}
               disabled={!newEventDate.trim() || !newEventType.trim() || savingEvent}
-              style={{ background: T.pine, color: '#F7F7F2', border: 'none', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 500 }}
+              style={{
+                background: T.pine,
+                color: '#F7F7F2',
+                border: 'none',
+                borderRadius: 6,
+                padding: '7px 14px',
+                cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 12,
+                fontWeight: 500,
+              }}
             >
               {savingEvent ? 'Salvataggio…' : 'Aggiungi'}
             </button>
@@ -575,22 +785,80 @@ export function AssetDetail({
       )}
 
       <div style={{ position: 'relative', paddingLeft: 18 }}>
-        <div style={{ position: 'absolute', left: 4, top: 4, bottom: 4, width: 1, background: T.line }} />
+        <div
+          style={{
+            position: 'absolute',
+            left: 4,
+            top: 4,
+            bottom: 4,
+            width: 1,
+            background: T.line,
+          }}
+        />
         {timeline.length === 0 && (
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: T.slate }}>Nessun evento ancora.</div>
+          <div
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: 13,
+              color: T.slate,
+            }}
+          >
+            Nessun evento ancora.
+          </div>
         )}
         {timeline.map((t) => (
           <div key={t.id} style={{ position: 'relative', marginBottom: 16 }}>
-            <div style={{ position: 'absolute', left: -18, top: 3, width: 8, height: 8, borderRadius: '50%', background: T.pine, border: `2px solid ${T.paper}` }} />
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: T.slate, marginBottom: 2 }}>
+            <div
+              style={{
+                position: 'absolute',
+                left: -18,
+                top: 3,
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: T.pine,
+                border: `2px solid ${T.paper}`,
+              }}
+            />
+            <div
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 10.5,
+                color: T.slate,
+                marginBottom: 2,
+              }}
+            >
               {formatDateForDisplay(t.eventDate)}
             </div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13.5, fontWeight: 500, color: T.ink }}>{t.eventType}</div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.ink70, marginBottom: 6 }}>{t.detail}</div>
+            <div
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 13.5,
+                fontWeight: 500,
+                color: T.ink,
+              }}
+            >
+              {t.eventType}
+            </div>
+            <div
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 12.5,
+                color: T.ink70,
+                marginBottom: 6,
+              }}
+            >
+              {t.detail}
+            </div>
             <select
               value={t.contactId ?? ''}
               onChange={(e) => assignContact(t.id, e.target.value)}
-              style={{ ...eventInputStyle, padding: '5px 8px', fontSize: 11.5, cursor: 'pointer' }}
+              style={{
+                ...eventInputStyle,
+                padding: '5px 8px',
+                fontSize: 11.5,
+                cursor: 'pointer',
+              }}
             >
               <option value="">Nessun contatto collegato</option>
               {contacts.map((c) => (
@@ -603,7 +871,16 @@ export function AssetDetail({
         ))}
       </div>
 
-      <div style={{ marginTop: 30, paddingTop: 14, borderTop: `1px solid ${T.line}`, fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate }}>
+      <div
+        style={{
+          marginTop: 30,
+          paddingTop: 14,
+          borderTop: `1px solid ${T.line}`,
+          fontFamily: "'Inter', sans-serif",
+          fontSize: 11.5,
+          color: T.slate,
+        }}
+      >
         Creato il {formatDateForDisplay(asset.createdAt)} · ultima modifica il {formatDateForDisplay(asset.updatedAt)}
       </div>
     </div>

@@ -109,6 +109,53 @@ export interface ContactDetail extends Contact {
   timelineEvents: ContactTimelineEvent[];
 }
 
+export type MaintenanceRecurrenceUnit = 'NONE' | 'DAY' | 'MONTH' | 'YEAR';
+export type MaintenanceStatus = 'SCHEDULED' | 'UPCOMING' | 'OVERDUE' | 'COMPLETED' | 'PAUSED';
+
+export interface MaintenancePlan {
+  id: string;
+  assetId: string;
+  title: string;
+  description: string | null;
+  recurrenceUnit: MaintenanceRecurrenceUnit;
+  recurrenceInterval: number;
+  nextDueAt: string;
+  reminderDaysBefore: number;
+  preferredContactId: string | null;
+  preferredContact?: ContactRef | null;
+  isMandatory: boolean;
+  notes: string | null;
+  pausedAt: string | null;
+  completedAt: string | null;
+  lastCompletedAt: string | null;
+  status: MaintenanceStatus;
+  _count: { occurrences: number };
+}
+
+export interface MaintenanceOccurrence {
+  id: string;
+  maintenancePlanId: string;
+  assetId: string;
+  scheduledFor: string;
+  completedAt: string;
+  notes: string | null;
+  contact?: ContactRef | null;
+  document?: {
+    id: string;
+    originalFilename: string;
+    docType: string | null;
+  } | null;
+}
+
+export interface MaintenanceReminder extends MaintenancePlan {
+  asset: {
+    id: string;
+    name: string;
+    code: string;
+    room: { id: string; name: string } | null;
+  };
+}
+
 export interface AssetDocumentFields {
   kind: 'asset_document';
   docType: string;

@@ -17,6 +17,7 @@ frontend/src/
     ├── Inbox.tsx               pipeline documentale (upload, candidati Gmail/Drive, conferma)
     ├── RoomsHub.tsx + FloorPlan.tsx   vista ambienti a blocchi / planimetria interattiva
     ├── Assets.tsx               elenco + dettaglio asset
+    ├── Maintenance.tsx          piani, completamento e storico manutenzioni nel dettaglio Asset
     ├── HouseDocuments.tsx        documenti non legati a un ambiente (houseLevel)
     ├── Contacts.tsx               rubrica
     └── Modals.tsx                   ModalShell condiviso
@@ -27,6 +28,12 @@ frontend/src/
 Nessun URL/router: `App.tsx` tiene `view: View` (`dashboard | inbox | rooms | room-detail | assets | asset-detail | house-documents | contacts | contact-detail`) e la passa a `Sidebar`, che chiama `setView`. Cambiare vista = re-render condizionale in `App.tsx`, non una navigazione del browser (niente back/forward, niente URL condivisibili — limite noto, vedi `backlog.md`).
 
 **Pattern "origine" per il dettaglio asset**: `openAsset(id, origin?: View)` salva `origin` in `assetDetailOrigin` prima di passare a `asset-detail`; il pulsante "indietro" nel dettaglio fa `setView(assetDetailOrigin)`. Serve perché un Asset può essere aperto da più punti (elenco Asset, Documenti casa, Dashboard, dettaglio Ambiente, Rubrica) e "indietro" deve tornare a quello giusto, non sempre all'elenco Asset. Ogni nuovo punto d'ingresso al dettaglio asset deve passare l'`origin` corretto — è l'errore più facile da introdurre aggiungendo una nuova card cliccabile.
+
+## Manutenzione nel dettaglio Asset
+
+`MaintenanceSection` vive nella scheda Asset e carica i piani separatamente dallo stato globale di `App.tsx`. Le card sono ordinate dal backend per scadenza e mostrano stato calcolato, ricorrenza, preavviso, obbligatorietà e tecnico abituale. Da ogni card si può completare, modificare, sospendere/riattivare, consultare lo storico o eliminare solo se non esistono esecuzioni. Il completamento permette di scegliere un documento già confermato sull'Asset e aggiorna anche la cronologia generale.
+
+La Dashboard interroga `/houses/:houseId/maintenance-reminders` quando viene aperta e unisce visivamente manutenzioni `UPCOMING`/`OVERDUE` agli altri promemoria. Il click usa lo stesso `openAsset(id, 'dashboard')`, quindi il ritorno conserva l'origine corretta.
 
 ## Design system (`theme.ts`)
 

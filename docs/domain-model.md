@@ -10,6 +10,9 @@ User ──< HouseMembership >── House ──< Room ──< Asset >── As
  ├── GmailConnection (0..1)     ├── Contact            ├── AssetTimelineEvent >── Contact (opz.)
  └── DriveConnection (0..1)     └── Document            │        │
                                     (asset_id opz.) ─────┘        └── Document (opz.)
+                                                     └── MaintenancePlan ──< MaintenanceOccurrence
+                                                            │                    ├── Contact (opz.)
+                                                            │                    └── Document (opz.)
 ```
 
 Legenda: `──<` = "uno a molti" verso l'entità collegata. Tutte le relazioni verso `House` hanno `onDelete: Cascade`; `Asset.roomId` e `Document.assetId` hanno `onDelete: SetNull` (cancellare una stanza o un asset non cancella i documenti collegati, li scollega soltanto).
@@ -61,6 +64,14 @@ Un file caricato, o candidato da Gmail/Drive. Stati (`status`): `PENDING → ANA
 ### AssetTimelineEvent
 Cronologia di un Asset (installazione, manutenzione, documento collegato...). `documentId` opzionale collega l'evento al documento che l'ha generato; `contactId` opzionale collega chi ha eseguito l'intervento — **mai popolato automaticamente dall'AI**, solo scelto dall'utente (stesso principio "AI propone, utente conferma").
 
+### MaintenancePlan
+Piano di manutenzione appartenente sempre a un Asset. Può essere una tantum oppure ricorrente ogni N giorni/mesi/anni (`MaintenanceRecurrenceUnit`). Conserva prossima scadenza, finestra di preavviso, contatto abituale opzionale, obbligatorietà, note e stato di sospensione/completamento.
+
+Lo stato (`SCHEDULED` / `UPCOMING` / `OVERDUE` / `COMPLETED` / `PAUSED`) è calcolato a runtime e non salvato. È distinto da `Asset.status`: una garanzia scaduta e una manutenzione scaduta sono segnali diversi. Gli Asset dismessi conservano i piani ma non generano promemoria.
+
+### MaintenanceOccurrence
+Esecuzione storica e immutabile di un piano: conserva la scadenza prevista, la data effettiva, contatto, documento e note opzionali. Il completamento crea nella stessa transazione anche un `AssetTimelineEvent`. Per i piani ricorrenti la prossima data resta ancorata al calendario programmato e avanza alla prima ricorrenza successiva al completamento; per una tantum il piano diventa `COMPLETED`.
+
 ### Contact (Rubrica)
 Tecnici/aziende che hanno lavorato in casa. Collegamento a un intervento in cronologia è manuale; niente auto-popolamento da AI anche se il nome compare identico nel campo "Fornitore" estratto da un documento (rimandato, vedi `backlog.md`).
 
@@ -76,3 +87,5 @@ Tecnici/aziende che hanno lavorato in casa. Collegamento a un intervento in cron
 5. Il matching "documento → asset esistente" richiede tipo **uguale** e nome **simile** (non solo tipo uguale — vedi `decisions.md`, bug corretto in sessione).
 6. `status` dell'Asset è sempre calcolato, mai un campo scrivibile dall'utente.
 7. Ruotare la planimetria ruota per davvero le coordinate salvate di stanze e asset (non solo la vista), così un asset resta nell'ambiente a cui è assegnato senza bisogno di ricalcolare l'assegnazione.
+8. I piani di manutenzione appartengono agli Asset; stato e promemoria sono calcolati e non modificano `Asset.status`.
+9. Completare una manutenzione è un'azione utente esplicita e atomica: occorrenza, cronologia e prossima scadenza vengono registrate insieme.

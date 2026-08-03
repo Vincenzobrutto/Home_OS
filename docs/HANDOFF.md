@@ -1,6 +1,6 @@
 # Handoff
 
-Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato l'ultima volta il 2026-08-03 dopo l'introduzione della prima copertura backend delle regole di dominio. Per il dettaglio storico delle sessioni precedenti vedi [`changelog.md`](changelog.md).
+Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato l'ultima volta il 2026-08-03 dopo l'introduzione dei piani di manutenzione programmata. Per il dettaglio storico delle sessioni precedenti vedi [`changelog.md`](changelog.md).
 
 ## Stato attuale del progetto
 
@@ -16,6 +16,7 @@ Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi 
 - Documenti casa (non legati a un ambiente specifico, es. APE).
 - Rubrica contatti collegabile alla cronologia interventi.
 - Dashboard con promemoria cliccabili verso l'asset.
+- Manutenzione programmata per Asset: ricorrenze, preavviso, tecnico/documento, completamento, storico, sospensione e promemoria Dashboard.
 - UI ottimizzata per mobile (sidebar a scomparsa, touch sulla planimetria, layout responsive).
 
 Dettaglio completo in [`vision.md`](vision.md) e [`roadmap.md`](roadmap.md).
@@ -41,6 +42,7 @@ Motivazioni complete in [`architecture.md`](architecture.md); ogni scelta non ov
 backend/src/
 ├── assets/       CRUD asset, campi liberi, cronologia, dismiss/reactivate
 ├── documents/     pipeline documentale (analyze/confirm), estrazione Claude
+├── maintenance/   piani ricorrenti, completamento, storico e promemoria
 ├── rooms/          CRUD ambienti + geometria planimetria
 ├── gmail/, drive/    OAuth + scansione candidati
 ├── houses/, contacts/, users/
@@ -51,7 +53,7 @@ frontend/src/
 ├── theme.ts            design token (T) + MOBILE_CSS
 ├── geometry.ts           math planimetria (rotazione, forme stanza)
 ├── api.ts                client fetch verso il backend
-└── components/            Sidebar, Dashboard, Inbox, RoomsHub/FloorPlan, Assets, HouseDocuments, Contacts
+└── components/            Sidebar, Dashboard, Inbox, RoomsHub/FloorPlan, Assets, Maintenance, HouseDocuments, Contacts
 
 backend/prisma/schema.prisma   fonte di verità del modello dati (vedi domain-model.md)
 ```
@@ -75,15 +77,15 @@ npm install
 npm run dev
 ```
 
-Verificato in questa sessione: `npx prisma migrate status` → "Database schema is up to date" (8 migrazioni); entrambi i server già in esecuzione hanno risposto `200` su `/`.
+L'ultima verifica DB precedente riportava 8 migrazioni applicate. Questa sessione aggiunge `20260803120000_add_maintenance_plans`: eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare la nuova funzionalità.
 
 ### Lint, build, test — risultati verificati il 2026-08-02
 
 | Comando | Backend | Frontend |
 |---|---|---|
-| `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~760 kB, oltre soglia Vite — vedi `backlog.md` B16) |
+| `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~773 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ⚠️ 12 errori + 4 warning pre-esistenti, tutti in `src/documents/claude-extraction.service.ts` (risposta HTTP di Claude tipata `any`) + 1 warning in `main.ts` | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx) |
-| `npm run test` | ✅ 8/8: scaffold + stato/garanzia Asset + regole principali della pipeline documentale | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 18/18: scaffold + stato/garanzia Asset + pipeline documentale + calendario manutenzioni | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Nessuno di questi errori impedisce build o avvio dell'app. Non sono stati corretti in questa sessione (vedi `decisions.md` #16 sul perché) — tracciati in `backlog.md` come B1, B1b, B14, B16.
 
@@ -116,14 +118,14 @@ Nessun valore segreto è presente in questo documento o nei file `.env.example` 
 - 12 errori di lint pre-esistenti da risposte Claude tipate `any` — `backlog.md` B14.
 - Navigazione senza URL reali (niente back/forward browser, niente link condivisibili) — `backlog.md` B11.
 - `backend/package.json#prisma` è una configurazione deprecata in vista di Prisma 7 — `backlog.md` B15.
-- Bundle frontend oltre la soglia di warning Vite (~760 kB) — `backlog.md` B16.
+- Bundle frontend oltre la soglia di warning Vite (~773 kB) — `backlog.md` B16.
 
 Elenco completo con priorità e dipendenze in [`backlog.md`](backlog.md).
 
 ## Attività successive consigliate
 
 In ordine di priorità suggerito (non vincolante):
-1. Ampliare i test backend con error handling di `analyze`, creazione multipla, collegamento house-level ed e2e API; poi introdurre un framework di test frontend (es. Vitest).
+1. Applicare la nuova migrazione con il `DATABASE_URL` reale e verificare end-to-end creazione/completamento di una manutenzione.
 2. Autenticazione/sessione reale sulle API, prima di qualunque esposizione oltre la LAN locale.
 3. Correggere l'ambiguità del matching per prodotti diversi della stessa marca (`backlog.md` B17) con un test di regressione.
 4. Sistemare il redirect OAuth Gmail/Drive per funzionare anche da client mobile in LAN.

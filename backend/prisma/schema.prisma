@@ -67,6 +67,13 @@ enum MembershipRole {
   VIEWER
 }
 
+enum MaintenanceRecurrenceUnit {
+  NONE
+  DAY
+  MONTH
+  YEAR
+}
+
 // ---------------------------------------------------------------------------
 // MODELLI
 // ---------------------------------------------------------------------------
@@ -124,23 +131,23 @@ model DriveConnection {
 }
 
 model House {
-  id          String   @id @default(uuid())
-  ownerId     String   @map("owner_id")
-  owner       User     @relation("HouseOwner", fields: [ownerId], references: [id])
-  name        String
-  city        String?
-  surfaceSqm  Decimal? @map("surface_sqm")
-  roomsCount  Int?     @map("rooms_count")
-  buildYear   Int?     @map("build_year")
-  code        String   @unique
-  createdAt   DateTime @default(now()) @map("created_at")
+  id                String   @id @default(uuid())
+  ownerId           String   @map("owner_id")
+  owner             User     @relation("HouseOwner", fields: [ownerId], references: [id])
+  name              String
+  city              String?
+  surfaceSqm        Decimal? @map("surface_sqm")
+  roomsCount        Int?     @map("rooms_count")
+  buildYear         Int?     @map("build_year")
+  code              String   @unique
+  createdAt         DateTime @default(now()) @map("created_at")
   // Rotazione (0/90/180/270) applicata alla vista mappa della planimetria —
   // ambienti e asset vengono ruotati "sul serio" (le loro coordinate
   // salvate) quando l'utente ruota la vista, così l'immagine di sfondo
   // caricata dall'utente deve essere ruotata della stessa quantità per
   // restare allineata; persistito qui perché il file di sfondo non cambia
   // da solo tra un caricamento e l'altro. Vedi FloorPlan.tsx.
-  floorPlanRotation Int @default(0) @map("floor_plan_rotation")
+  floorPlanRotation Int      @default(0) @map("floor_plan_rotation")
 
   rooms       Room[]
   assets      Asset[]
@@ -184,42 +191,44 @@ model Room {
 }
 
 model Asset {
-  id             String      @id @default(uuid())
-  houseId        String      @map("house_id")
-  house          House       @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  id            String      @id @default(uuid())
+  houseId       String      @map("house_id")
+  house         House       @relation(fields: [houseId], references: [id], onDelete: Cascade)
   // null = impianto di casa, non legato a una stanza specifica
-  roomId         String?     @map("room_id")
-  room           Room?       @relation(fields: [roomId], references: [id], onDelete: SetNull)
-  type           AssetType
-  name           String
-  code           String      @unique
-  installedAt    DateTime?   @map("installed_at") @db.Date
-  warrantyUntil  DateTime?   @map("warranty_until") @db.Date
+  roomId        String?     @map("room_id")
+  room          Room?       @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  type          AssetType
+  name          String
+  code          String      @unique
+  installedAt   DateTime?   @map("installed_at") @db.Date
+  warrantyUntil DateTime?   @map("warranty_until") @db.Date
   // Campi strutturati universali (validi per qualunque tipo di asset, a
   // differenza di dati specifici come "potenza caldaia" che restano
   // AssetCustomField). Popolati dal primo documento disponibile che li
   // riporta e mai più sovrascritti — vedi applyFieldsToAsset in
   // documents.service.ts: "riempi solo i vuoti", non aggiorna un valore
   // già presente nemmeno se un documento successivo ne indica uno diverso.
-  serialNumber   String?     @map("serial_number")
-  manufacturer   String?
-  model          String?
-  purchasedAt    DateTime?   @map("purchased_at") @db.Date
-  supplier       String?
-  status         AssetStatus @default(ATTENTION)
+  serialNumber  String?     @map("serial_number")
+  manufacturer  String?
+  model         String?
+  purchasedAt   DateTime?   @map("purchased_at") @db.Date
+  supplier      String?
+  status        AssetStatus @default(ATTENTION)
   // Posizione relativa (0–1) nella cella della planimetria generata
-  planPosX       Decimal?    @map("plan_pos_x")
-  planPosY       Decimal?    @map("plan_pos_y")
+  planPosX      Decimal?    @map("plan_pos_x")
+  planPosY      Decimal?    @map("plan_pos_y")
   // Stato di ciclo vita impostato direttamente dall'utente (non calcolato,
   // a differenza di "status" sopra): un asset dismesso esce dall'elenco
   // attivo ma tiene tutti i suoi dati (campi, documenti, cronologia).
-  dismissedAt    DateTime?   @map("dismissed_at")
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
+  dismissedAt   DateTime?   @map("dismissed_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
 
-  customFields    AssetCustomField[]
-  documents       Document[]
-  timelineEvents  AssetTimelineEvent[]
+  customFields           AssetCustomField[]
+  documents              Document[]
+  timelineEvents         AssetTimelineEvent[]
+  maintenancePlans       MaintenancePlan[]
+  maintenanceOccurrences MaintenanceOccurrence[]
 
   @@map("assets")
 }
@@ -280,7 +289,8 @@ model Document {
   // successive (dedup su gmailMessageId/driveFileId), non appare in nessuna vista.
   ignoredAt        DateTime?      @map("ignored_at")
 
-  timelineEvents AssetTimelineEvent[]
+  timelineEvents         AssetTimelineEvent[]
+  maintenanceOccurrences MaintenanceOccurrence[]
 
   @@unique([houseId, gmailMessageId])
   @@unique([houseId, driveFileId])
@@ -322,7 +332,53 @@ model Contact {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  timelineEvents AssetTimelineEvent[]
+  timelineEvents            AssetTimelineEvent[]
+  preferredMaintenancePlans MaintenancePlan[]
+  maintenanceOccurrences    MaintenanceOccurrence[]
 
   @@map("contacts")
+}
+
+model MaintenancePlan {
+  id                 String                    @id @default(uuid())
+  assetId            String                    @map("asset_id")
+  asset              Asset                     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  title              String
+  description        String?
+  recurrenceUnit     MaintenanceRecurrenceUnit @default(NONE) @map("recurrence_unit")
+  recurrenceInterval Int                       @default(1) @map("recurrence_interval")
+  nextDueAt          DateTime                  @map("next_due_at") @db.Date
+  reminderDaysBefore Int                       @default(30) @map("reminder_days_before")
+  preferredContactId String?                   @map("preferred_contact_id")
+  preferredContact   Contact?                  @relation(fields: [preferredContactId], references: [id], onDelete: SetNull)
+  isMandatory        Boolean                   @default(false) @map("is_mandatory")
+  notes              String?
+  pausedAt           DateTime?                 @map("paused_at")
+  completedAt        DateTime?                 @map("completed_at") @db.Date
+  lastCompletedAt    DateTime?                 @map("last_completed_at") @db.Date
+  createdAt          DateTime                  @default(now()) @map("created_at")
+  updatedAt          DateTime                  @updatedAt @map("updated_at")
+  occurrences        MaintenanceOccurrence[]
+
+  @@index([assetId, nextDueAt])
+  @@map("maintenance_plans")
+}
+
+model MaintenanceOccurrence {
+  id                String          @id @default(uuid())
+  maintenancePlanId String          @map("maintenance_plan_id")
+  maintenancePlan   MaintenancePlan @relation(fields: [maintenancePlanId], references: [id], onDelete: Cascade)
+  assetId           String          @map("asset_id")
+  asset             Asset           @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  scheduledFor      DateTime        @map("scheduled_for") @db.Date
+  completedAt       DateTime        @map("completed_at") @db.Date
+  contactId         String?         @map("contact_id")
+  contact           Contact?        @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  documentId        String?         @map("document_id")
+  document          Document?       @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  notes             String?
+  createdAt         DateTime        @default(now()) @map("created_at")
+
+  @@index([maintenancePlanId, completedAt])
+  @@map("maintenance_occurrences")
 }
