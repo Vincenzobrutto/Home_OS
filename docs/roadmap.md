@@ -28,5 +28,6 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - OAuth Gmail/Drive funzionante anche da un client mobile in LAN (oggi il redirect è pensato per `localhost`).
 - Navigazione con URL reali (oggi `view` è solo stato in memoria, niente back/forward del browser né link condivisibili).
 - Rivedere la conservazione in chiaro dei token OAuth in DB prima di qualunque esposizione oltre la rete locale.
+- Proporre il completamento di piani di manutenzione a partire da un documento caricato (es. fattura di un intervento), anche su più Asset collegati a un'unica fattura — specifica dettagliata in `backlog.md` B22.
 
 Per il dettaglio di ogni voce (dipendenze, priorità) vedi `backlog.md`. Per il ragionamento dietro le scelte già fatte vedi `decisions.md`.
