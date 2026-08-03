@@ -2,6 +2,10 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-03 (10) — B18 messa in standby
+
+- Su indicazione dell'utente, le notifiche esterne per manutenzioni/garanzie restano in roadmap ma non sono pianificate: nessuna scelta di provider, canale o frequenza è approvata e non va iniziata finché non viene riattivata.
+
 ## 2026-08-03 (9) — B22, manutenzioni completate da documento
 
 - Claude distingue gli interventi già eseguiti da preventivi, manuali e appuntamenti ed estrae attività, data, quantità e note.

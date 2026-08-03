@@ -128,7 +128,7 @@ Elenco completo con priorità e dipendenze in [`backlog.md`](backlog.md).
 In ordine di priorità suggerito (non vincolante):
 1. Applicare la nuova migrazione con il `DATABASE_URL` reale e verificare end-to-end creazione/completamento di una manutenzione.
 2. Autenticazione/sessione reale sulle API, prima di qualunque esposizione oltre la LAN locale.
-3. Requisitare e implementare notifiche manutenzione fuori app (`backlog.md` B18), iniziando dal canale email/digest.
+3. Non avviare B18: le notifiche fuori app sono state messe esplicitamente in standby dall'utente (`backlog.md` B18).
 4. Sistemare il redirect OAuth Gmail/Drive per funzionare anche da client mobile in LAN.
 5. Rivedere la conservazione in chiaro dei token OAuth prima di qualunque deploy esposto.
 
