@@ -103,17 +103,15 @@ function haveSimilarSuggestedName(
   return false;
 }
 
+interface AssetDocumentFields {
+  suggestedAssetType: string | null;
+  suggestedAssetName: string | null;
+  fields: [string, string][];
+}
+
 function areDocumentsCorrelated(
-  a: {
-    suggestedAssetType: string | null;
-    suggestedAssetName: string | null;
-    fields: [string, string][];
-  },
-  b: {
-    suggestedAssetType: string | null;
-    suggestedAssetName: string | null;
-    fields: [string, string][];
-  },
+  a: AssetDocumentFields,
+  b: AssetDocumentFields,
 ): boolean {
   if (!a.suggestedAssetType || a.suggestedAssetType !== b.suggestedAssetType) {
     return false;
@@ -209,7 +207,7 @@ export class DocumentsService {
           x,
         ): x is {
           doc: (typeof documents)[number];
-          fields: NonNullable<ReturnType<typeof this.assetDocumentFieldsOf>>;
+          fields: AssetDocumentFields;
         } => x.doc.status === DocumentStatus.ANALYZED && x.fields !== null,
       );
 
@@ -797,11 +795,9 @@ export class DocumentsService {
     return parsed?.kind ?? null;
   }
 
-  private assetDocumentFieldsOf(document: { extractedFields: unknown }): {
-    suggestedAssetType: string | null;
-    suggestedAssetName: string | null;
-    fields: [string, string][];
-  } | null {
+  private assetDocumentFieldsOf(document: {
+    extractedFields: unknown;
+  }): AssetDocumentFields | null {
     const parsed = document.extractedFields as {
       kind?: string;
       suggestedAssetType?: string | null;

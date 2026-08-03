@@ -111,6 +111,26 @@ export interface EnrichmentResult {
   fields: [string, string][];
 }
 
+// Forma minima della risposta di POST /v1/messages che questo servizio usa
+// davvero — non l'intero schema Anthropic, solo i campi letti sotto. Un
+// blocco di contenuto può essere testo, una chiamata al tool di ricerca web
+// o il suo risultato: qui interessa solo isolare quelli di tipo "text".
+interface AnthropicContentBlock {
+  type: string;
+  text?: string;
+}
+
+interface AnthropicMessagesResponse {
+  content: AnthropicContentBlock[];
+  stop_reason: string | null;
+}
+
+function isTextBlock(
+  block: AnthropicContentBlock,
+): block is AnthropicContentBlock & { text: string } {
+  return block.type === 'text' && typeof block.text === 'string';
+}
+
 // Il modello a volte commenta attorno al JSON nonostante le istruzioni
 // ("solo JSON") — soprattutto con la ricerca web, ma capita anche in
 // estrazioni normali. Isola l'oggetto JSON dal resto del testo invece di
@@ -126,7 +146,11 @@ function parseJsonResponse<T>(text: string): T {
     );
   }
   try {
-    return JSON.parse(withoutFences.slice(start, end + 1));
+    // Confine di fiducia esplicito: il resto del file tipizza tutto quello
+    // che arriva da Claude, ma il contenuto del JSON stesso non è validato
+    // a runtime — se il modello si discosta dallo schema richiesto nel
+    // prompt, l'errore emerge più a valle (es. un campo mancante), non qui.
+    return JSON.parse(withoutFences.slice(start, end + 1)) as T;
   } catch {
     throw new InternalServerErrorException(
       'Risposta del modello non era JSON valido.',
@@ -210,10 +234,8 @@ export class ClaudeExtractionService {
       );
     }
 
-    const data = await response.json();
-    const textBlock = data.content.find(
-      (b: { type: string }) => b.type === 'text',
-    );
+    const data = (await response.json()) as AnthropicMessagesResponse;
+    const textBlock = data.content.find(isTextBlock);
     if (!textBlock) {
       throw new InternalServerErrorException(
         `Nessuna risposta testuale ricevuta dal modello (stop_reason: ${data.stop_reason}, content: ${JSON.stringify(data.content)}).`,
@@ -285,13 +307,11 @@ Nei "fields" includi TUTTI i campi già noti sopra elencati, invariati, più eve
       );
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as AnthropicMessagesResponse;
     // Con la ricerca web la risposta contiene più blocchi (testo, chiamate
     // al tool, risultati) intervallati: il JSON finale è nell'ULTIMO blocco
     // di testo, non nel primo (che spesso è solo "Cerco informazioni...").
-    const textBlocks = (
-      data.content as Array<{ type: string; text?: string }>
-    ).filter((b) => b.type === 'text');
+    const textBlocks = data.content.filter(isTextBlock);
     const lastText = textBlocks[textBlocks.length - 1];
     if (!lastText) {
       throw new InternalServerErrorException(
@@ -299,6 +319,6 @@ Nei "fields" includi TUTTI i campi già noti sopra elencati, invariati, più eve
       );
     }
 
-    return parseJsonResponse(lastText.text!);
+    return parseJsonResponse(lastText.text);
   }
 }

@@ -6,6 +6,7 @@ Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un el
 
 - **B21**: aggiunte le label "Ricorrenza", "Ogni quanti", "Preavviso (giorni)" nel form piano di manutenzione — i campi erano numeri senza contesto.
 - **B19**: il dismiss di un suggerimento di manutenzione è ora persistito (nuova tabella `DismissedMaintenanceSuggestion`, endpoint `POST /assets/:id/maintenance-suggestions/:code/dismiss`) invece che solo nello state del browser — verificato che sopravvive a un reload della pagina. Vedi `decisions.md` #22.
+- **B14**: tipizzata la risposta di `/v1/messages` in `claude-extraction.service.ts` invece di lasciarla `any` — risolti tutti i 12 errori lint. Corretti "di rimbalzo" (stesso pattern) anche i 2 warning in `documents.service.ts` e 1 in `main.ts`. `npm run lint` backend ora 0 errori/0 warning.
 
 ## 2026-08-03 (5) — verifica web delle rimanenti linee guida di manutenzione
 

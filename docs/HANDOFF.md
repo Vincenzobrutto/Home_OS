@@ -80,13 +80,13 @@ npm run dev
 
 L'ultima verifica DB precedente riportava 8 migrazioni applicate. Questa sessione aggiunge `20260803120000_add_maintenance_plans`: eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare la nuova funzionalità.
 
-### Lint, build, test — risultati verificati il 2026-08-02
+### Lint, build, test — risultati verificati il 2026-08-03
 
 | Comando | Backend | Frontend |
 |---|---|---|
-| `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~773 kB, oltre soglia Vite — vedi `backlog.md` B16) |
-| `npm run lint` | ⚠️ 12 errori + 4 warning pre-esistenti, tutti in `src/documents/claude-extraction.service.ts` (risposta HTTP di Claude tipata `any`) + 1 warning in `main.ts` | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx) |
-| `npm run test` | ✅ 22/22: scaffold + stato/garanzia Asset + pipeline documentale + calendario manutenzioni + suggerimenti di manutenzione | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~775 kB, oltre soglia Vite — vedi `backlog.md` B16) |
+| `npm run lint` | ✅ 0 errori, 0 warning (risolti i 12 errori + 4 warning pre-esistenti — `backlog.md` B14, chiuso) | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx) |
+| `npm run test` | ✅ 23/23: scaffold + stato/garanzia Asset + pipeline documentale + calendario manutenzioni + suggerimenti (guideline + dismiss persistito) | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Nessuno di questi errori impedisce build o avvio dell'app. Non sono stati corretti in questa sessione (vedi `decisions.md` #16 sul perché) — tracciati in `backlog.md` come B1, B1b, B14, B16.
 
@@ -116,7 +116,6 @@ Nessun valore segreto è presente in questo documento o nei file `.env.example` 
 - Nessuna autenticazione/sessione sulle API — `backlog.md` B2.
 - Token OAuth Gmail/Drive salvati in chiaro in DB — `backlog.md` B10.
 - Test automatici backend ancora parziali (prima copertura di dominio presente), frontend assenti del tutto — `backlog.md` B1, B1b.
-- 12 errori di lint pre-esistenti da risposte Claude tipate `any` — `backlog.md` B14.
 - Navigazione senza URL reali (niente back/forward browser, niente link condivisibili) — `backlog.md` B11.
 - `backend/package.json#prisma` è una configurazione deprecata in vista di Prisma 7 — `backlog.md` B15.
 - Bundle frontend oltre la soglia di warning Vite (~773 kB) — `backlog.md` B16.
