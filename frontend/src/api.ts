@@ -268,6 +268,9 @@ export const api = {
       return upload<DocumentRecord>(`/houses/${houseId}/documents`, form);
     },
     analyze: (id: string) => request<DocumentRecord>(`/documents/${id}/analyze`, { method: 'POST' }),
+    maintenanceProposals: (id: string) => request<import('./types').DocumentMaintenanceProposal[]>(`/documents/${id}/maintenance-proposals`),
+    completeMaintenance: (id: string, items: Array<{ maintenancePlanId: string; completedAt: string; notes?: string }>) =>
+      request<{ completed: number }>(`/documents/${id}/complete-maintenance`, { method: 'POST', body: JSON.stringify({ items }) }),
     confirm: (
       id: string,
       data: {

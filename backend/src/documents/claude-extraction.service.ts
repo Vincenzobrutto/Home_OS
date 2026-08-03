@@ -45,6 +45,12 @@ Stima x/y/width/height dalla posizione e proporzione visibili nel disegno, anche
   "quantity": numero di unità identiche a cui il documento si riferisce (es. "fornitura e posa di n.3 climatizzatori split", "3x lampada da esterno") — 1 se il documento descrive un singolo oggetto o non specifica una quantità. Ogni unità diventa un asset separato (stanze e dati possono differire tra un'unità e l'altra), quindi non aggregarle mai in un'unica riga se il documento le conta esplicitamente come più di una,
   "confidence": numero 0-100 che rappresenta quanto sei sicuro dell'estrazione (bassa se il documento è manoscritto, sfocato, o ambiguo),
   "isHomeRelated": booleano — true se il documento riguarda plausibilmente la casa o i suoi impianti/elettrodomestici/servizi (fatture e ricevute di acquisto, installazione, manutenzione, garanzia, assicurazione casa, bollette utenze, certificazioni edilizie/impiantistiche); false se è chiaramente estraneo alla gestione della casa (materiale didattico o professionale, dispute legali non condominiali, abbonamenti a servizi digitali/software, corrispondenza personale, loghi o immagini senza contenuto documentale, acquisti non legati alla casa),
+  "maintenanceInterventions": [{
+    "title": "attività di manutenzione già eseguita, es. Pulizia filtri",
+    "completedAt": "data ISO YYYY-MM-DD oppure null",
+    "quantity": "numero di asset interessati, 1 se non indicato",
+    "notes": "dettagli utili dell'intervento oppure null"
+  }],
   "fields": [["Etichetta campo", "Valore"], ...]
 }
 
@@ -53,7 +59,8 @@ Regole per il caso 2:
 - Quando il documento permette di distinguere marca/produttore e modello (es. "De'Longhi Rivelia EXAM440.35.B"), riportali come due campi separati "Marca" e "Modello" invece di un'unica stringa combinata — servono a compilare due dati distinti dell'asset, non uno solo.
 - Se il documento sembra riferirsi a un tipo di asset non nella lista, imposta "suggestedAssetType" a null e descrivi comunque i campi trovati.
 - "confidence" deve riflettere onestamente la leggibilità del documento, non solo la sua completezza.
-- "isHomeRelated" è indipendente da "suggestedAssetType": un documento può riguardare la casa nel suo insieme (es. APE, assicurazione casa) senza corrispondere a un tipo di asset specifico — in quel caso resta true con suggestedAssetType null. Nel dubbio, preferisci true (falsi negativi nascondono documenti utili, falsi positivi vengono comunque scartati da una revisione umana).`;
+- "isHomeRelated" è indipendente da "suggestedAssetType": un documento può riguardare la casa nel suo insieme (es. APE, assicurazione casa) senza corrispondere a un tipo di asset specifico — in quel caso resta true con suggestedAssetType null. Nel dubbio, preferisci true (falsi negativi nascondono documenti utili, falsi positivi vengono comunque scartati da una revisione umana).
+- "maintenanceInterventions" contiene solo lavori dichiarati come GIÀ ESEGUITI (fattura, ricevuta, rapporto d'intervento). Deve essere [] per preventivi, appuntamenti, manuali, acquisti senza manutenzione e documenti che non attestano un lavoro concluso. Non inventare la data se manca.`;
 
 export interface AssetDocumentResult {
   kind: 'asset_document';
@@ -73,6 +80,12 @@ export interface AssetDocumentResult {
   // pertinenti prima di mostrarli): l'upload manuale in Inbox ignora questo
   // campo, dato che l'utente ha già scelto di caricare quel file.
   isHomeRelated: boolean;
+  maintenanceInterventions?: Array<{
+    title: string;
+    completedAt: string | null;
+    quantity: number;
+    notes: string | null;
+  }>;
   fields: [string, string][];
 }
 

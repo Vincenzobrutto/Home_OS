@@ -13,6 +13,7 @@ describe('DocumentsService domain rules', () => {
   const customFieldFindMany = jest.fn();
   const customFieldCreate = jest.fn();
   const timelineCreate = jest.fn();
+  const maintenancePlanFindMany = jest.fn();
   const transaction = jest.fn();
   const extract = jest.fn();
 
@@ -32,6 +33,7 @@ describe('DocumentsService domain rules', () => {
       create: customFieldCreate,
     },
     assetTimelineEvent: { create: timelineCreate },
+    maintenancePlan: { findMany: maintenancePlanFindMany },
     $transaction: transaction,
   };
   const claude = { extract };
@@ -139,6 +141,67 @@ describe('DocumentsService domain rules', () => {
     expect(result.data.extractedFields).toMatchObject({
       suggestedAssetId: null,
     });
+  });
+
+  it('proposes multiple compatible maintenance plans up to the extracted quantity', async () => {
+    documentFindUnique.mockResolvedValue({
+      id: 'document-id',
+      houseId: 'house-id',
+      extractedFields: {
+        kind: 'asset_document',
+        suggestedAssetType: 'CLIMA',
+        suggestedAssetId: null,
+        maintenanceInterventions: [
+          {
+            title: 'Pulizia filtri climatizzatori',
+            completedAt: '2026-07-28',
+            quantity: 2,
+            notes: null,
+          },
+        ],
+      },
+    });
+    maintenancePlanFindMany.mockResolvedValue([
+      {
+        id: 'plan-1',
+        assetId: 'asset-1',
+        title: 'Pulizia filtri',
+        description: null,
+        asset: { id: 'asset-1', name: 'Clima sala' },
+        occurrences: [],
+      },
+      {
+        id: 'plan-2',
+        assetId: 'asset-2',
+        title: 'Pulizia filtri',
+        description: null,
+        asset: { id: 'asset-2', name: 'Clima camera' },
+        occurrences: [],
+      },
+      {
+        id: 'plan-3',
+        assetId: 'asset-3',
+        title: 'Controllo gas refrigerante',
+        description: null,
+        asset: { id: 'asset-3', name: 'Clima studio' },
+        occurrences: [],
+      },
+    ]);
+
+    const proposals = await service.maintenanceProposals('document-id');
+
+    expect(proposals).toHaveLength(1);
+    expect(
+      proposals[0].candidates
+        .filter((candidate) => candidate.recommended)
+        .map((candidate) => candidate.maintenancePlanId),
+    ).toEqual(['plan-1', 'plan-2']);
+    expect(
+      proposals[0].candidates.some(
+        (candidate) => candidate.maintenancePlanId === 'plan-3',
+      ),
+    ).toBe(false);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it('fills only empty asset fields after explicit confirmation', async () => {

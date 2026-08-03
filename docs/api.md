@@ -74,6 +74,8 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 |---|---|---|
 | GET | `/assets/:assetId/maintenance-suggestions` | proposte di piani basate su linee guida statiche per tipo di Asset (nessuna scrittura — vedi `decisions.md` #19) |
 | POST | `/assets/:assetId/maintenance-suggestions/:code/dismiss` | ignora definitivamente una linea guida per quell'Asset (persistito, idempotente) — vedi `decisions.md` #22 |
+| GET | `/documents/:id/maintenance-proposals` | calcola interventi estratti e piani attivi compatibili, inclusi candidati multi-Asset |
+| POST | `/documents/:id/complete-maintenance` | conferma atomicamente i piani selezionati e li collega al documento |
 | GET | `/assets/:assetId/maintenance-plans` | piani dell'Asset con stato calcolato e conteggio esecuzioni |
 | POST | `/assets/:assetId/maintenance-plans` | crea piano una tantum o ricorrente |
 | PATCH | `/maintenance-plans/:id` | modifica il piano senza alterare lo storico |

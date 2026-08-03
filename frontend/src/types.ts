@@ -179,6 +179,29 @@ export interface AssetDocumentFields {
   // >1 se il documento descrive più unità identiche (es. 3 climatizzatori):
   // la creazione di un nuovo asset propone di crearne altrettanti separati.
   quantity: number;
+  maintenanceInterventions?: Array<{
+    title: string;
+    completedAt: string | null;
+    quantity: number;
+    notes: string | null;
+  }>;
+}
+
+export interface DocumentMaintenanceProposal {
+  interventionIndex: number;
+  title: string;
+  completedAt: string | null;
+  quantity: number;
+  notes: string | null;
+  candidates: Array<{
+    maintenancePlanId: string;
+    title: string;
+    score: number;
+    reason: string;
+    recommended: boolean;
+    alreadyCompleted: boolean;
+    asset: { id: string; name: string; code: string; room: { id: string; name: string } | null };
+  }>;
 }
 
 export interface FloorPlanRoomProposal {

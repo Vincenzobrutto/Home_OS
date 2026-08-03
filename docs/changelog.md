@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-03 (9) — B22, manutenzioni completate da documento
+
+- Claude distingue gli interventi già eseguiti da preventivi, manuali e appuntamenti ed estrae attività, data, quantità e note.
+- L'Inbox propone i piani compatibili su più Asset della stessa casa, preselezionati entro la quantità dichiarata; l'utente può correggere Asset e data prima di confermare.
+- La conferma multipla è atomica: crea occorrenze ed eventi cronologia, collega lo stesso documento e aggiorna le prossime scadenze. Duplicati e piani di un'altra casa vengono bloccati.
+- Aggiunti due endpoint e test backend; baseline aggiornata a 26 test verdi. Vedi `decisions.md` #24.
+
 ## 2026-08-03 (8) — design affinato: monitoraggio consumi elettrici
 
 - **B25 aggiornata** da spunto generico a design completo, dopo una sessione di discussione con l'utente (nessun codice scritto): entità dedicata `UtilityBill`, solo elettricità in v1, istogramma mensile con confronto anno-su-anno per rispettare la stagionalità, badge colorati per categoria sotto i mesi in cui è stato installato un nuovo Asset (correlazione visiva, non attribuzione numerica finta). Deciso esplicitamente di NON stimare un risparmio in € per Asset in v1 finché non ci sono numeri verificati con fonti reali (stessa lezione della caldaia, `decisions.md` #20/#21).

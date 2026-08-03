@@ -612,9 +612,126 @@ export class DocumentsService {
           suggestedAssetName: result.suggestedAssetName ?? null,
           quantity:
             result.quantity && result.quantity > 1 ? result.quantity : 1,
+          maintenanceInterventions: (result.maintenanceInterventions ?? [])
+            .filter((item) => item.title?.trim())
+            .map((item) => ({
+              title: item.title.trim(),
+              completedAt: item.completedAt ?? null,
+              quantity: item.quantity > 1 ? item.quantity : 1,
+              notes: item.notes?.trim() || null,
+            })),
         },
       },
     };
+  }
+
+  async maintenanceProposals(documentId: string) {
+    const document = await this.getDocumentOrThrow(documentId);
+    const extracted = document.extractedFields as {
+      kind?: string;
+      suggestedAssetType?: string | null;
+      suggestedAssetId?: string | null;
+      maintenanceInterventions?: Array<{
+        title: string;
+        completedAt: string | null;
+        quantity: number;
+        notes: string | null;
+      }>;
+    } | null;
+    if (extracted?.kind !== 'asset_document') return [];
+    const interventions = extracted.maintenanceInterventions ?? [];
+    if (!interventions.length) return [];
+    const plans = await this.prisma.maintenancePlan.findMany({
+      where: {
+        pausedAt: null,
+        completedAt: null,
+        asset: {
+          houseId: document.houseId,
+          dismissedAt: null,
+          ...(extracted.suggestedAssetType
+            ? { type: extracted.suggestedAssetType as never }
+            : {}),
+        },
+      },
+      include: {
+        asset: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            room: { select: { id: true, name: true } },
+          },
+        },
+        occurrences: {
+          where: { documentId: document.id },
+          select: { id: true },
+        },
+      },
+    });
+    return interventions.map((intervention, interventionIndex) => {
+      const titleWords = this.significantWords(intervention.title);
+      const candidates = plans
+        .map((plan) => {
+          const planWords = this.significantWords(
+            `${plan.title} ${plan.description ?? ''}`,
+          );
+          const shared = [...titleWords].filter((word) => planWords.has(word));
+          const exactAsset = plan.assetId === extracted.suggestedAssetId;
+          return {
+            maintenancePlanId: plan.id,
+            title: plan.title,
+            asset: plan.asset,
+            score: Math.min(
+              1,
+              (titleWords.size ? shared.length / titleWords.size : 0) +
+                (exactAsset ? 0.25 : 0),
+            ),
+            reason: exactAsset
+              ? 'Asset già suggerito per il documento'
+              : `Attività compatibile: ${shared.join(', ')}`,
+            alreadyCompleted: plan.occurrences.length > 0,
+          };
+        })
+        .filter((candidate) => candidate.score >= 0.34)
+        .sort((a, b) => b.score - a.score);
+      const selectable = candidates.filter(
+        (candidate) => !candidate.alreadyCompleted,
+      );
+      const selectedIds = new Set(
+        selectable
+          .slice(0, Math.min(intervention.quantity || 1, selectable.length))
+          .filter((candidate) => candidate.score >= 0.5)
+          .map((candidate) => candidate.maintenancePlanId),
+      );
+      return {
+        interventionIndex,
+        ...intervention,
+        candidates: candidates.map((candidate) => ({
+          ...candidate,
+          recommended: selectedIds.has(candidate.maintenancePlanId),
+        })),
+      };
+    });
+  }
+
+  private significantWords(value: string) {
+    const stopwords = new Set([
+      'della',
+      'delle',
+      'degli',
+      'intervento',
+      'manutenzione',
+      'ordinaria',
+      'eseguita',
+    ]);
+    return new Set(
+      value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .split(/[^a-z0-9]+/)
+        .filter((word) => word.length > 2 && !stopwords.has(word)),
+    );
   }
 
   async confirm(documentId: string, dto: ConfirmDocumentDto) {

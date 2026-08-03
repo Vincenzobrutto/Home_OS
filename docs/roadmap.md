@@ -15,10 +15,11 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Dashboard con promemoria (garanzie scadute, asset senza documenti) cliccabili verso l'asset.
 - Piani di manutenzione una tantum o ricorrenti sugli Asset: stati calcolati, preavviso, tecnico abituale, completamento transazionale, storico, sospensione e promemoria Dashboard.
 - Suggerimenti automatici di piani di manutenzione per tipi di Asset con cadenza nota (CLIMA/CALDAIA/FOTOVOLTAICO/ELETTRICO), con prima scadenza calcolata dalla data di installazione/acquisto — sempre da confermare, mai creati in automatico (2026-08-03).
+- Completamento di manutenzioni da fatture/rapporti già eseguiti: proposta AI, matching con piani attivi su più Asset, selezione esplicita e conferma transazionale collegata al documento (B22, 2026-08-03).
 - App raggiungibile da cellulare sulla stessa rete (LAN) con UI ottimizzata per mobile (sidebar a scomparsa, touch sulla planimetria, layout responsive).
 - Documentazione di progetto per collaborazione multi-assistente (`docs/`, `prompts/`, `AGENTS.md`).
 - Repository verificato pronto per il passaggio di consegne: `.gitignore` root/backend/frontend confermati completi, build/lint/test eseguiti e documentati, `docs/HANDOFF.md` creato (2026-08-02).
-- Copertura backend delle regole di dominio: stato/garanzia Asset, matching documento→asset, conferma senza sovrascrittura, calendario manutenzioni e suggerimenti di manutenzione (22 test totali, 2026-08-03).
+- Copertura backend delle regole di dominio: stato/garanzia Asset, pipeline documentale, calendario/suggerimenti manutenzione e completamento multiplo da documento (26 test totali, 2026-08-03).
 
 ## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)
 
@@ -28,7 +29,6 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - OAuth Gmail/Drive funzionante anche da un client mobile in LAN (oggi il redirect è pensato per `localhost`).
 - Navigazione con URL reali (oggi `view` è solo stato in memoria, niente back/forward del browser né link condivisibili).
 - Rivedere la conservazione in chiaro dei token OAuth in DB prima di qualunque esposizione oltre la rete locale.
-- Proporre il completamento di piani di manutenzione a partire da un documento caricato (es. fattura di un intervento), anche su più Asset collegati a un'unica fattura — specifica dettagliata in `backlog.md` B22.
 
 ## Idee di prodotto da valutare (engagement / monetizzazione)
 

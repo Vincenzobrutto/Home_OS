@@ -23,7 +23,7 @@ Il centro del sistema è l'**Asset** (caldaia, impianto elettrico, climatizzator
 
 - **Asset**: creazione, modifica, dismissione/riattivazione, campi strutturati (marca, modello, seriale, date di installazione/acquisto/garanzia con default di 24 mesi) + campi liberi per dati specifici del tipo di impianto.
 - **Ambienti**: vista a blocchi e vista planimetria (disegno forme libere o rettangoli, ritaglio automatico sull'area utile, rotazione a 90° con asset che restano nella stanza assegnata).
-- **Inbox documentale**: upload manuale, scatto foto da cellulare, scansione automatica di Gmail e Google Drive, estrazione AI (Claude), proposta di asset esistente o creazione di uno nuovo (con scelta dell'ambiente), rilevamento di documenti correlati allo stesso intervento, arricchimento dati via ricerca web su richiesta.
+- **Inbox documentale**: upload manuale, scatto foto da cellulare, scansione automatica di Gmail e Google Drive, estrazione AI (Claude), proposta di asset esistente o creazione di uno nuovo (con scelta dell'ambiente), rilevamento di documenti correlati allo stesso intervento, arricchimento dati via ricerca web su richiesta. Fatture e rapporti di lavori già eseguiti possono inoltre proporre il completamento di piani di manutenzione su uno o più Asset, sempre previa selezione e conferma dell'utente.
 - **Documenti casa**: documenti/impianti non legati a un ambiente specifico (es. APE, impianto elettrico condominiale), con ricerca per parola chiave.
 - **Rubrica**: contatti (tecnici, aziende) collegabili agli interventi in cronologia.
 - **Dashboard**: promemoria (garanzie scadute, asset senza documenti) cliccabili per andare dritti all'asset.

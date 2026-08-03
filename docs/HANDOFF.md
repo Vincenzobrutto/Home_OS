@@ -1,6 +1,6 @@
 # Handoff
 
-Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato l'ultima volta il 2026-08-03 dopo l'introduzione dei piani di manutenzione programmata. Per il dettaglio storico delle sessioni precedenti vedi [`changelog.md`](changelog.md).
+Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato l'ultima volta il 2026-08-03 dopo B22 (completamento manutenzioni da documento). Per il dettaglio storico delle sessioni precedenti vedi [`changelog.md`](changelog.md).
 
 ## Stato attuale del progetto
 
@@ -15,6 +15,7 @@ Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi 
 - Pipeline documentale: upload manuale, scansione automatica Gmail/Drive, estrazione AI (Claude), proposta con conferma utente, creazione automatica di nuovo Asset (con scelta ambiente) se non esiste quello corretto.
 - Documenti casa (non legati a un ambiente specifico, es. APE).
 - Piani di manutenzione (una tantum o ricorrenti) sugli Asset, con suggerimenti automatici da linee guida statiche per tipo (CLIMA/CALDAIA/FOTOVOLTAICO/ELETTRICO) — sempre da confermare, mai creati in automatico.
+- Fatture e rapporti di intervento possono proporre di completare piani compatibili su più Asset; l'utente corregge selezione/data e conferma atomicamente.
 - Rubrica contatti collegabile alla cronologia interventi.
 - Dashboard con promemoria cliccabili verso l'asset.
 - Manutenzione programmata per Asset: ricorrenze, preavviso, tecnico/documento, completamento, storico, sospensione e promemoria Dashboard.
@@ -127,7 +128,7 @@ Elenco completo con priorità e dipendenze in [`backlog.md`](backlog.md).
 In ordine di priorità suggerito (non vincolante):
 1. Applicare la nuova migrazione con il `DATABASE_URL` reale e verificare end-to-end creazione/completamento di una manutenzione.
 2. Autenticazione/sessione reale sulle API, prima di qualunque esposizione oltre la LAN locale.
-3. Correggere l'ambiguità del matching per prodotti diversi della stessa marca (`backlog.md` B17) con un test di regressione.
+3. Requisitare e implementare notifiche manutenzione fuori app (`backlog.md` B18), iniziando dal canale email/digest.
 4. Sistemare il redirect OAuth Gmail/Drive per funzionare anche da client mobile in LAN.
 5. Rivedere la conservazione in chiaro dei token OAuth prima di qualunque deploy esposto.
 

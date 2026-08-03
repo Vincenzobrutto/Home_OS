@@ -15,10 +15,19 @@ import { CreateMaintenancePlanDto } from './dto/create-maintenance-plan.dto';
 import { UpdateMaintenancePlanDto } from './dto/update-maintenance-plan.dto';
 import { CompleteMaintenancePlanDto } from './dto/complete-maintenance-plan.dto';
 import { ReactivateMaintenancePlanDto } from './dto/reactivate-maintenance-plan.dto';
+import { CompleteDocumentMaintenanceDto } from './dto/complete-document-maintenance.dto';
 
 @Controller()
 export class MaintenanceController {
   constructor(private readonly maintenance: MaintenanceService) {}
+
+  @Post('documents/:documentId/complete-maintenance')
+  completeFromDocument(
+    @Param('documentId', ParseUUIDPipe) documentId: string,
+    @Body() dto: CompleteDocumentMaintenanceDto,
+  ) {
+    return this.maintenance.completeFromDocument(documentId, dto);
+  }
 
   @Get('assets/:assetId/maintenance-plans')
   list(@Param('assetId', ParseUUIDPipe) assetId: string) {

@@ -61,6 +61,11 @@ export class DocumentsController {
     return this.documentsService.analyze(id);
   }
 
+  @Get('documents/:id/maintenance-proposals')
+  maintenanceProposals(@Param('id', ParseUUIDPipe) id: string) {
+    return this.documentsService.maintenanceProposals(id);
+  }
+
   @Post('documents/:id/confirm')
   confirm(
     @Param('id', ParseUUIDPipe) id: string,

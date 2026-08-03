@@ -3,7 +3,7 @@ import { Camera, CheckCircle2, FileText, Globe, Sparkles, Upload, XCircle } from
 import { T, ASSET_TYPES, ROOM_TYPES } from '../theme';
 import { SectionLabel, Stamp } from './Shared';
 import { api } from '../api';
-import type { Asset, DocumentRecord, FloorPlanRoomProposal, Room } from '../types';
+import type { Asset, DocumentMaintenanceProposal, DocumentRecord, FloorPlanRoomProposal, Room } from '../types';
 
 interface RoomDecision {
   action: 'create' | 'update' | 'skip';
@@ -480,11 +480,81 @@ export function InboxView({
                   onSearchOnline={() => searchOnline(doc.id)}
                 />
               )}
+              {doc.status === 'ANALYZED' && fields?.kind === 'asset_document' && (fields.maintenanceInterventions?.length ?? 0) > 0 && (
+                <MaintenanceFromDocument
+                  documentId={doc.id}
+                  busy={busy}
+                  onCompleted={async () => { await refresh(); onAssetLinked(); }}
+                />
+              )}
             </div>
             );
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+function MaintenanceFromDocument({ documentId, busy, onCompleted }: { documentId: string; busy: boolean; onCompleted: () => Promise<void> }) {
+  const [proposals, setProposals] = useState<DocumentMaintenanceProposal[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [dates, setDates] = useState<Record<number, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.documents.maintenanceProposals(documentId).then((items) => {
+      setProposals(items);
+      setSelected(new Set(items.flatMap((item) => item.candidates.filter((candidate) => candidate.recommended && !candidate.alreadyCompleted).map((candidate) => candidate.maintenancePlanId))));
+      setDates(Object.fromEntries(items.map((item) => [item.interventionIndex, item.completedAt ?? ''])));
+    }).catch((err: unknown) => setMessage(err instanceof Error ? err.message : 'Impossibile calcolare le proposte'));
+  }, [documentId]);
+
+  if (!proposals.length && !message) return null;
+  const selectedItems = proposals.flatMap((proposal) => proposal.candidates.filter((candidate) => selected.has(candidate.maintenancePlanId)).map((candidate) => ({ maintenancePlanId: candidate.maintenancePlanId, completedAt: dates[proposal.interventionIndex], notes: proposal.notes ?? undefined })));
+
+  async function complete() {
+    if (!selectedItems.length || selectedItems.some((item) => !item.completedAt)) {
+      setMessage('Seleziona almeno un piano e indica la data dell’intervento.');
+      return;
+    }
+    setSaving(true);
+    setMessage(null);
+    try {
+      const result = await api.documents.completeMaintenance(documentId, selectedItems);
+      setMessage(`${result.completed} manutenzioni completate e collegate al documento.`);
+      setSelected(new Set());
+      await onCompleted();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Errore durante la conferma');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 14, padding: 14, border: `1px solid ${T.ochre}`, borderRadius: 8, background: '#FFF9E9' }}>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 650, color: T.ink, marginBottom: 8 }}>Questo documento sembra attestare una manutenzione già eseguita</div>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.ink70, marginBottom: 12 }}>Controlla Asset, piano e data. Nessun aggiornamento avviene senza il tuo clic.</div>
+      {proposals.map((proposal) => (
+        <div key={proposal.interventionIndex} style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 6 }}>
+            <strong style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5 }}>{proposal.title}</strong>
+            <label style={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }}>Data <input type="date" value={dates[proposal.interventionIndex] ?? ''} onChange={(e) => setDates((current) => ({ ...current, [proposal.interventionIndex]: e.target.value }))} style={{ marginLeft: 5, border: `1px solid ${T.line}`, borderRadius: 5, padding: '4px 6px' }} /></label>
+          </div>
+          {proposal.candidates.length === 0 ? <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.slate }}>Nessun piano compatibile trovato.</div> : proposal.candidates.map((candidate) => (
+            <label key={candidate.maintenancePlanId} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '5px 0', fontFamily: "'Inter', sans-serif", fontSize: 12, color: candidate.alreadyCompleted ? T.slate : T.ink }}>
+              <input type="checkbox" disabled={candidate.alreadyCompleted} checked={selected.has(candidate.maintenancePlanId)} onChange={(e) => setSelected((current) => { const next = new Set(current); if (e.target.checked) next.add(candidate.maintenancePlanId); else next.delete(candidate.maintenancePlanId); return next; })} />
+              <span><strong>{candidate.asset.name}</strong>{candidate.asset.room ? ` · ${candidate.asset.room.name}` : ''} — {candidate.title} <span style={{ color: T.slate }}>({candidate.alreadyCompleted ? 'già collegata' : candidate.reason})</span></span>
+            </label>
+          ))}
+        </div>
+      ))}
+      {message && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.rust, marginBottom: 8 }}>{message}</div>}
+      <button onClick={complete} disabled={busy || saving || !selectedItems.length} style={{ background: T.pine, color: '#F7F7F2', border: 'none', borderRadius: 6, padding: '8px 13px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 500 }}>
+        {saving ? 'Conferma in corso…' : `Completa ${selectedItems.length} manutenzion${selectedItems.length === 1 ? 'e' : 'i'}`}
+      </button>
     </div>
   );
 }

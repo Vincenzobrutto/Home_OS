@@ -17,6 +17,7 @@ import { CreateMaintenancePlanDto } from './dto/create-maintenance-plan.dto';
 import { UpdateMaintenancePlanDto } from './dto/update-maintenance-plan.dto';
 import { CompleteMaintenancePlanDto } from './dto/complete-maintenance-plan.dto';
 import { ReactivateMaintenancePlanDto } from './dto/reactivate-maintenance-plan.dto';
+import { CompleteDocumentMaintenanceDto } from './dto/complete-document-maintenance.dto';
 
 const PLAN_INCLUDE = {
   preferredContact: { select: { id: true, name: true, role: true } },
@@ -26,6 +27,104 @@ const PLAN_INCLUDE = {
 @Injectable()
 export class MaintenanceService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async completeFromDocument(
+    documentId: string,
+    dto: CompleteDocumentMaintenanceDto,
+  ) {
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
+    if (!document)
+      throw new NotFoundException(`Documento ${documentId} non trovato`);
+    const uniquePlanIds = new Set(
+      dto.items.map((item) => item.maintenancePlanId),
+    );
+    if (uniquePlanIds.size !== dto.items.length)
+      throw new BadRequestException(
+        'Ogni piano può essere completato una sola volta per conferma.',
+      );
+    const plans = await this.prisma.maintenancePlan.findMany({
+      where: { id: { in: [...uniquePlanIds] } },
+      include: { asset: { select: { houseId: true } } },
+    });
+    if (
+      plans.length !== dto.items.length ||
+      plans.some((plan) => plan.asset.houseId !== document.houseId)
+    )
+      throw new BadRequestException(
+        'Uno o più piani non appartengono alla casa del documento.',
+      );
+    for (const item of dto.items) {
+      const plan = plans.find(
+        (candidate) => candidate.id === item.maintenancePlanId,
+      )!;
+      if (plan.pausedAt || plan.completedAt)
+        throw new BadRequestException(`Il piano "${plan.title}" non è attivo.`);
+      await this.ensureContactBelongsToHouse(item.contactId, document.houseId);
+    }
+    const duplicates = await this.prisma.maintenanceOccurrence.findMany({
+      where: {
+        documentId,
+        OR: dto.items.map((item) => ({
+          maintenancePlanId: item.maintenancePlanId,
+          completedAt: item.completedAt,
+        })),
+      },
+      select: { maintenancePlanId: true },
+    });
+    if (duplicates.length)
+      throw new BadRequestException(
+        'Una o più manutenzioni risultano già completate con questo documento.',
+      );
+    await this.prisma.$transaction(async (tx) => {
+      for (const item of dto.items) {
+        const plan = plans.find(
+          (candidate) => candidate.id === item.maintenancePlanId,
+        )!;
+        const nextDueAt = nextMaintenanceDueAt({
+          scheduledFor: plan.nextDueAt,
+          completedAt: item.completedAt,
+          recurrenceUnit: plan.recurrenceUnit,
+          recurrenceInterval: plan.recurrenceInterval,
+        });
+        await tx.maintenanceOccurrence.create({
+          data: {
+            maintenancePlanId: plan.id,
+            assetId: plan.assetId,
+            scheduledFor: plan.nextDueAt,
+            completedAt: item.completedAt,
+            contactId: item.contactId ?? null,
+            documentId,
+            notes: item.notes,
+          },
+        });
+        await tx.assetTimelineEvent.create({
+          data: {
+            assetId: plan.assetId,
+            eventDate: item.completedAt,
+            eventType: plan.title,
+            detail:
+              item.notes?.trim() || 'Manutenzione completata da documento',
+            contactId: item.contactId ?? null,
+            documentId,
+          },
+        });
+        await tx.maintenancePlan.update({
+          where: { id: plan.id },
+          data: {
+            lastCompletedAt: item.completedAt,
+            nextDueAt: nextDueAt ?? plan.nextDueAt,
+            completedAt:
+              plan.recurrenceUnit === MaintenanceRecurrenceUnit.NONE
+                ? item.completedAt
+                : null,
+          },
+        });
+      }
+    });
+    return { completed: dto.items.length };
+  }
 
   async create(assetId: string, dto: CreateMaintenancePlanDto) {
     const asset = await this.assetOrThrow(assetId);
