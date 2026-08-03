@@ -24,19 +24,35 @@ export const MAINTENANCE_GUIDELINES: MaintenanceGuideline[] = [
     code: 'clima-filtri',
     assetType: 'CLIMA',
     title: 'Pulizia filtri',
+    // Verificato via web search 2026-08-03. Non è una norma di legge: è
+    // indicazione dei produttori. Daikin consiglia ogni 1-2 mesi durante
+    // l'uso, Mitsubishi Electric almeno mensile; con uso intenso o allergie
+    // le associazioni consumatori (Altroconsumo) consigliano ogni 2
+    // settimane. "6 mesi" (valore originale, non verificato) era troppo
+    // rado: 2 mesi è più vicino alla fascia bassa consigliata dai
+    // produttori, restando un promemoria periodico e non una checklist
+    // settimanale — l'uso intenso resta da valutare a mano dall'utente.
     description:
-      'Pulizia o sanificazione dei filtri per mantenere resa ed efficienza — intervallo tipico, verifica le indicazioni del produttore.',
+      "Pulizia o sanificazione dei filtri per mantenere resa ed efficienza. I produttori (es. Daikin, Mitsubishi Electric) consigliano ogni 1-2 mesi durante l'uso stagionale, più spesso con uso intenso o allergie — non è un obbligo di legge, regolati l'intervallo sulla tua situazione reale.",
     recurrenceUnit: 'MONTH',
-    recurrenceInterval: 6,
-    reminderDaysBefore: 14,
+    recurrenceInterval: 2,
+    reminderDaysBefore: 7,
     isMandatory: false,
   },
   {
     code: 'clima-tecnica',
     assetType: 'CLIMA',
     title: 'Controllo tecnico e gas refrigerante',
+    // Verificato via web search 2026-08-03. Il Regolamento UE F-Gas
+    // 517/2014 impone il controllo periodico delle perdite solo sopra 5
+    // tonnellate di CO2 equivalente (10 t se ermeticamente sigillata) — un
+    // climatizzatore domestico con pochi kg di R32/R410A resta quasi
+    // sempre ben sotto soglia. La descrizione precedente lasciava intendere
+    // un obbligo quasi certo: corretto, per la maggior parte dei casi
+    // domestici NON c'è alcun obbligo legale, è un controllo tecnico
+    // consigliato.
     description:
-      'Controllo consigliato di funzionamento e tenuta del circuito frigorifero — la periodicità obbligatoria dipende dal tipo e dalla carica di gas refrigerante.',
+      "Controllo tecnico consigliato di funzionamento e tenuta del circuito frigorifero. Per la maggior parte dei climatizzatori domestici NON c'è un obbligo legale di controllo periodico delle perdite (Regolamento UE F-Gas 517/2014 si applica solo sopra 5 tonnellate di CO2 equivalente, soglia raramente raggiunta da un impianto domestico) — qui è manutenzione preventiva, non un adempimento normativo.",
     recurrenceUnit: 'YEAR',
     recurrenceInterval: 1,
     reminderDaysBefore: 30,
@@ -63,8 +79,14 @@ export const MAINTENANCE_GUIDELINES: MaintenanceGuideline[] = [
     code: 'fotovoltaico-pulizia',
     assetType: 'FOTOVOLTAICO',
     title: 'Pulizia pannelli e controllo inverter',
+    // Verificato via web search 2026-08-03. Nessun obbligo di pulizia per
+    // impianti residenziali; obbligo di legge (controllo interfaccia
+    // inverter-rete, Delibera ARERA 78/2016) solo sopra 11,08 kW, taglia
+    // superiore al tipico impianto domestico. "1 anno" per impianti piccoli
+    // residenziali è coerente con le fonti consultate (consigliato, non
+    // imposto) — in aree rurali/poco polverose può bastare meno spesso.
     description:
-      "Pulizia dei pannelli e controllo del funzionamento dell'inverter per mantenere la resa energetica.",
+      "Pulizia dei pannelli e controllo del funzionamento dell'inverter per mantenere la resa energetica — consigliata circa una volta l'anno per un impianto residenziale di piccola taglia (meno spesso in zone rurali poco polverose). Non è un obbligo di legge sotto gli 11,08 kW; sopra quella soglia la Delibera ARERA 78/2016 impone il controllo dell'interfaccia con la rete.",
     recurrenceUnit: 'YEAR',
     recurrenceInterval: 1,
     reminderDaysBefore: 21,
@@ -74,8 +96,15 @@ export const MAINTENANCE_GUIDELINES: MaintenanceGuideline[] = [
     code: 'elettrico-verifica',
     assetType: 'ELETTRICO',
     title: 'Verifica periodica impianto elettrico',
+    // Verificato via web search 2026-08-03. Il DPR 462/2001 impone verifiche
+    // periodiche (quinquennali, biennali in contesti a rischio) soprattutto
+    // a datori di lavoro/luoghi di lavoro — non si applica automaticamente
+    // a una comune abitazione privata. "5 anni" resta un default
+    // ragionevole per i contesti in cui l'obbligo si applica davvero (o
+    // come buona pratica generica), ma per la casa privata tipica non è
+    // un adempimento di legge.
     description:
-      "Verifica dello stato dell'impianto — intervallo tipico per un impianto domestico; gli obblighi normativi variano per contesto (es. condominiale, luoghi con messa a terra soggetta a denuncia).",
+      "Verifica dello stato dell'impianto elettrico. Il DPR 462/2001 impone verifiche periodiche (ogni 5 anni, ogni 2 in contesti a rischio) principalmente a luoghi di lavoro e contesti specifici (es. impianti condominiali soggetti a denuncia di messa a terra) — per una comune abitazione privata di solito NON è un obbligo di legge, qui è buona pratica consigliata con lo stesso intervallo.",
     recurrenceUnit: 'YEAR',
     recurrenceInterval: 5,
     reminderDaysBefore: 60,

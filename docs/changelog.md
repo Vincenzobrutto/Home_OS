@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-03 (5) — verifica web delle rimanenti linee guida di manutenzione
+
+- **`clima-filtri`**: intervallo corretto da 6 a **2 mesi** (preavviso 14→7 gg) — i produttori (Daikin, Mitsubishi Electric) consigliano 1-2 mesi durante l'uso, molto più frequente di quanto scritto inizialmente.
+- **`clima-tecnica`**: intervallo confermato (1 anno), ma corretta un'affermazione fuorviante — non è un obbligo di legge per la maggior parte dei climatizzatori domestici (soglia F-Gas 517/2014 raramente raggiunta), solo manutenzione consigliata.
+- **`fotovoltaico-pulizia`**: intervallo confermato (1 anno), aggiunta la soglia reale dell'unico obbligo esistente (Delibera ARERA 78/2016, sopra 11,08 kW, non riguarda la pulizia).
+- **`elettrico-verifica`**: intervallo confermato (5 anni), chiarito che il DPR 462/2001 riguarda soprattutto luoghi di lavoro/contesti specifici, non la casa privata tipica.
+- Test aggiornati (22/22 verdi), verificato via API sul climatizzatore reale usato nei test precedenti. Vedi `decisions.md` #21.
+
 ## 2026-08-03 (4) — verifica fonte linea guida caldaia
 
 - **Correzione dato non verificato**: la cadenza del "Controllo fumi ed efficienza energetica" per CALDAIA era ogni 1 anno, scritta da conoscenza generica senza fonte. Dopo una ricerca web esplicita, corretta a **ogni 2 anni** (DPR 74/2013, cadenza tipica per potenza domestica <35 kW secondo la normativa Lombardia — le altre regioni possono variare). Descrizione della linea guida aggiornata per citare la fonte invece di restare generica. Vedi `decisions.md` #20.

@@ -11,8 +11,10 @@ describe('maintenance suggestion guidelines', () => {
     });
     const filters = suggestions.find((s) => s.code === 'clima-filtri');
     expect(filters?.basedOn).toBe('installedAt');
+    // Pulizia filtri: ogni 2 mesi (indicazione produttori, vedi
+    // decisions.md #21).
     expect(filters?.suggestedNextDueAt).toEqual(
-      new Date('2026-07-10T00:00:00Z'),
+      new Date('2026-03-10T00:00:00Z'),
     );
   });
 
