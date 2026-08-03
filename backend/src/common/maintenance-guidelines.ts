@@ -46,11 +46,17 @@ export const MAINTENANCE_GUIDELINES: MaintenanceGuideline[] = [
     code: 'caldaia-controllo',
     assetType: 'CALDAIA',
     title: 'Controllo fumi ed efficienza energetica',
+    // Verificato via web search 2026-08-03 (non solo conoscenza generica):
+    // DPR 74/2013 rimanda la cadenza esatta alle regioni. In Lombardia
+    // (DGR XI/3502/2020) è ogni 2 anni sotto i 35 kW — la maggioranza delle
+    // caldaie domestiche — e annuale tra 35-350 kW; altre regioni possono
+    // avere soglie diverse. "2 anni" qui è il default più comune per un
+    // impianto domestico piccolo, non un valore uguale ovunque.
     description:
-      'Controllo periodico obbligatorio per legge — la cadenza esatta dipende da potenza, tipo di generatore e regione: verifica il libretto di impianto.',
+      'Controllo periodico obbligatorio per legge (DPR 74/2013, attuato a livello regionale) — 2 anni è la cadenza tipica per una caldaia domestica di piccola potenza, ma varia da regione a regione e per impianti più potenti: verifica il libretto di impianto e la normativa della tua regione.',
     recurrenceUnit: 'YEAR',
-    recurrenceInterval: 1,
-    reminderDaysBefore: 30,
+    recurrenceInterval: 2,
+    reminderDaysBefore: 45,
     isMandatory: true,
   },
   {

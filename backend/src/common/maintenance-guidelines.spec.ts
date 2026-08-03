@@ -25,8 +25,10 @@ describe('maintenance suggestion guidelines', () => {
       existingPlanTitles: [],
     });
     expect(byPurchase[0].basedOn).toBe('purchasedAt');
+    // Caldaia: ogni 2 anni (DPR 74/2013, cadenza tipica per potenze
+    // domestiche basse — vedi decisions.md #20).
     expect(byPurchase[0].suggestedNextDueAt).toEqual(
-      new Date('2027-02-01T00:00:00Z'),
+      new Date('2028-02-01T00:00:00Z'),
     );
 
     const byCreation = computeMaintenanceSuggestions({
@@ -38,7 +40,7 @@ describe('maintenance suggestion guidelines', () => {
     });
     expect(byCreation[0].basedOn).toBe('createdAt');
     expect(byCreation[0].suggestedNextDueAt).toEqual(
-      new Date('2027-03-01T00:00:00Z'),
+      new Date('2028-03-01T00:00:00Z'),
     );
   });
 

@@ -2,6 +2,11 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-03 (4) — verifica fonte linea guida caldaia
+
+- **Correzione dato non verificato**: la cadenza del "Controllo fumi ed efficienza energetica" per CALDAIA era ogni 1 anno, scritta da conoscenza generica senza fonte. Dopo una ricerca web esplicita, corretta a **ogni 2 anni** (DPR 74/2013, cadenza tipica per potenza domestica <35 kW secondo la normativa Lombardia — le altre regioni possono variare). Descrizione della linea guida aggiornata per citare la fonte invece di restare generica. Vedi `decisions.md` #20.
+- **Motivo**: l'utente ha chiesto esplicitamente affidabilità e fonte di ogni linea guida introdotta nella sessione precedente — nessuna era stata verificata con una ricerca reale, solo scritta con linguaggio prudente. Corretto solo il caso marcato obbligatorio (il più delicato); le altre linee guida (CLIMA, FOTOVOLTAICO, ELETTRICO) restano non verificate e dichiarate tali.
+
 ## 2026-08-03 (3) — suggerimenti automatici di manutenzione
 
 - **Nuovo endpoint** `GET /assets/:id/maintenance-suggestions`: propone piani di manutenzione basati su linee guida statiche per tipo di Asset (CLIMA, CALDAIA, FOTOVOLTAICO, ELETTRICO), con la prima scadenza calcolata da `installedAt` (fallback `purchasedAt`, poi data di creazione della scheda) + l'intervallo della linea guida — es. climatizzatore installato il 24/07/2025 con pulizia filtri ogni 6 mesi → prima scadenza proposta 24/01/2026.
