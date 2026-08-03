@@ -38,4 +38,18 @@ Non ancora decise né pianificate — pensate insieme all'utente il 2026-08-03, 
 - Export "libretto casa" in PDF, utile alla vendita dell'immobile o per l'assicurazione — B23. Valore concreto e puntuale, buon primo esperimento di monetizzazione perché non richiede prima un sistema di piani/abbonamenti.
 - Limite mensile di documenti analizzati dall'AI nel piano gratuito — B24. Leva freemium onesta (rispecchia il costo reale delle chiamate a Claude), ma dipende da un sistema di autenticazione/piani che oggi non esiste.
 
+### Cosa monitorare della casa (oltre garanzie/manutenzioni)
+
+Stessa origine (2026-08-03), dettaglio in `backlog.md`. Divise in due fasce per sforzo:
+
+**Solo dati caricati/estratti — si innestano su quello che c'è già:**
+- Bollette e consumi (luce/gas/acqua) con trend nel tempo — B25.
+- Rilevatori di sicurezza (fumo/CO/allagamento) come Asset con piano di manutenzione batteria — B26, sforzo quasi nullo perché riusa Asset+MaintenancePlan.
+- Scadenze generalizzate oltre l'Asset (polizza casa, APE, IMU/TARI) — B27, riusa il motore di promemoria già costruito.
+- Valore stimato del contenuto casa dai prezzi già estratti — B28, complementare al libretto PDF (B23).
+- "Punteggio salute casa" aggregato in Dashboard — B29, leva di engagement senza nuovo modello dati.
+
+**Integrazione con dispositivi reali (IoT) — molto più ambizioso:**
+- Stato reale dagli elettrodomestici smart connessi invece di calendario fisso — B30. Il più differenziante nel senso letterale di "digital twin", ma richiede integrazioni per piattaforma/marca — da valutare solo dopo le idee più semplici.
+
 Per il dettaglio di ogni voce (dipendenze, priorità) vedi `backlog.md`. Per il ragionamento dietro le scelte già fatte vedi `decisions.md`.
