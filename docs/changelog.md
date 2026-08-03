@@ -2,6 +2,11 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-03 (8) — design affinato: monitoraggio consumi elettrici
+
+- **B25 aggiornata** da spunto generico a design completo, dopo una sessione di discussione con l'utente (nessun codice scritto): entità dedicata `UtilityBill`, solo elettricità in v1, istogramma mensile con confronto anno-su-anno per rispettare la stagionalità, badge colorati per categoria sotto i mesi in cui è stato installato un nuovo Asset (correlazione visiva, non attribuzione numerica finta). Deciso esplicitamente di NON stimare un risparmio in € per Asset in v1 finché non ci sono numeri verificati con fonti reali (stessa lezione della caldaia, `decisions.md` #20/#21).
+- Validato un mockup visivo del grafico con l'utente prima di scrivere la specifica in `backlog.md`.
+
 ## 2026-08-03 (7) — anteprima nuovo look&feel su Dashboard (placeholder)
 
 - **Dashboard**: nuova palette blu/verde acqua e badge circolari colorati per categoria (icona dell'Asset dentro un cerchio con tinta diversa per tipo), applicata SOLO qui come anteprima — il resto dell'app resta sullo stile "carta/inchiostro" attuale. Vive in un oggetto locale `PT`/`CATEGORY_COLORS` dentro `Dashboard.tsx`, non ancora in `theme.ts`.

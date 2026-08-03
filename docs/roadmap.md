@@ -43,7 +43,7 @@ Non ancora decise né pianificate — pensate insieme all'utente il 2026-08-03, 
 Stessa origine (2026-08-03), dettaglio in `backlog.md`. Divise in due fasce per sforzo:
 
 **Solo dati caricati/estratti — si innestano su quello che c'è già:**
-- Bollette e consumi (luce/gas/acqua) con trend nel tempo — B25.
+- Monitoraggio consumi elettrici: bolletta caricata, istogramma mensile con confronto anno-su-anno (rispetta la stagionalità), correlazione visiva con gli Asset installati in quel periodo — design completo affinato con l'utente il 2026-08-03 — B25.
 - Rilevatori di sicurezza (fumo/CO/allagamento) come Asset con piano di manutenzione batteria — B26, sforzo quasi nullo perché riusa Asset+MaintenancePlan.
 - Scadenze generalizzate oltre l'Asset (polizza casa, APE, IMU/TARI) — B27, riusa il motore di promemoria già costruito.
 - Valore stimato del contenuto casa dai prezzi già estratti — B28, complementare al libretto PDF (B23).
