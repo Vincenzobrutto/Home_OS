@@ -89,6 +89,32 @@ describe('DocumentsService domain rules', () => {
     expect(customFieldCreate).not.toHaveBeenCalled();
   });
 
+  it('does not match on a shared brand name alone (different products)', async () => {
+    extract.mockResolvedValue({
+      kind: 'asset_document',
+      docType: 'Manuale',
+      suggestedAssetType: 'elettrodomestico',
+      suggestedAssetName: 'Forno Bosch Serie 8',
+      quantity: 1,
+      confidence: 92,
+      isHomeRelated: true,
+      fields: [],
+    });
+    assetFindMany.mockResolvedValue([
+      { id: 'fridge-id', name: 'Frigorifero Bosch' },
+    ]);
+
+    const result = await service.classifyBuffer(
+      Buffer.from('document'),
+      'manuale.pdf',
+      'house-id',
+    );
+
+    expect(result.data.extractedFields).toMatchObject({
+      suggestedAssetId: null,
+    });
+  });
+
   it('leaves the suggestion empty when names do not match', async () => {
     extract.mockResolvedValue({
       kind: 'asset_document',

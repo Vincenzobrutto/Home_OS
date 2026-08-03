@@ -77,6 +77,36 @@ const NAME_STOPWORDS = new Set([
   'impianto',
 ]);
 
+// Nomi di prodotto degli elettrodomestici/impianti domestici più comuni.
+// Lista corta e chiusa (categorie, non marche) — usata per evitare che
+// l'UNICA parola in comune tra due nomi sia il marchio (bug osservato:
+// "Frigorifero Bosch" e "Forno Bosch Serie 8" condividono solo "Bosch" e
+// venivano scambiati per lo stesso oggetto). Una lista di marche da
+// mantenere all'infinito sarebbe fragile; le categorie di elettrodomestici
+// domestici sono un insieme molto più stabile — vedi decisions.md #23.
+const PRODUCT_WORDS = new Set([
+  'frigorifero',
+  'frigo',
+  'congelatore',
+  'forno',
+  'microonde',
+  'lavatrice',
+  'lavasciuga',
+  'lavastoviglie',
+  'asciugatrice',
+  'piano',
+  'cottura',
+  'induzione',
+  'cappa',
+  'climatizzatore',
+  'condizionatore',
+  'caldaia',
+  'scaldabagno',
+  'televisore',
+  'aspirapolvere',
+  'friggitrice',
+]);
+
 // "elettrodomestico"/"clima" ecc. sono categorie ampie che raggruppano
 // oggetti fisici diversi in una stessa casa (un forno e un frigo sono
 // entrambi "elettrodomestico") — il tipo da solo non basta a dire che due
@@ -96,11 +126,11 @@ function haveSimilarSuggestedName(
         .filter((w) => w.length > 2 && !NAME_STOPWORDS.has(w)),
     );
   const wordsA = wordsOf(nameA);
-  const wordsB = wordsOf(nameB);
-  for (const w of wordsA) {
-    if (wordsB.has(w)) return true;
-  }
-  return false;
+  const sharedWords = [...wordsOf(nameB)].filter((w) => wordsA.has(w));
+  if (sharedWords.length > 1) return true;
+  // Con una sola parola in comune, basta solo se è un nome di prodotto
+  // (es. "forno") — probabile marca condivisa altrimenti (es. "Bosch").
+  return sharedWords.length === 1 && PRODUCT_WORDS.has(sharedWords[0]);
 }
 
 interface AssetDocumentFields {
