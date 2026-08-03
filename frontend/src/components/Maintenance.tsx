@@ -5,6 +5,7 @@ import {
   History,
   Pause,
   Play,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import { api, formatDateForDisplay, parseDateInput } from "../api";
@@ -16,8 +17,15 @@ import type {
   MaintenanceOccurrence,
   MaintenancePlan,
   MaintenanceRecurrenceUnit,
+  MaintenanceSuggestion,
 } from "../types";
 import { SectionLabel, Stamp } from "./Shared";
+
+const basedOnLabel: Record<MaintenanceSuggestion["basedOn"], string> = {
+  installedAt: "data di installazione",
+  purchasedAt: "data di acquisto",
+  createdAt: "data di creazione della scheda",
+};
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -51,15 +59,18 @@ const statusMeta = {
   PAUSED: { label: "Sospesa", tone: "slate" as const },
 };
 
-function recurrenceLabel(plan: MaintenancePlan): string {
-  if (plan.recurrenceUnit === "NONE") return "Una tantum";
+function recurrenceLabel(entry: {
+  recurrenceUnit: MaintenanceRecurrenceUnit;
+  recurrenceInterval: number;
+}): string {
+  if (entry.recurrenceUnit === "NONE") return "Una tantum";
   const unit =
-    plan.recurrenceUnit === "DAY"
+    entry.recurrenceUnit === "DAY"
       ? "giorni"
-      : plan.recurrenceUnit === "MONTH"
+      : entry.recurrenceUnit === "MONTH"
         ? "mesi"
         : "anni";
-  return `Ogni ${plan.recurrenceInterval} ${unit}`;
+  return `Ogni ${entry.recurrenceInterval} ${unit}`;
 }
 
 export function MaintenanceSection({
@@ -74,6 +85,8 @@ export function MaintenanceSection({
   onChanged: () => void | Promise<void>;
 }) {
   const [plans, setPlans] = useState<MaintenancePlan[]>([]);
+  const [suggestions, setSuggestions] = useState<MaintenanceSuggestion[]>([]);
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(initialForm);
@@ -90,7 +103,12 @@ export function MaintenanceSection({
   const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
-    setPlans(await api.maintenance.listForAsset(asset.id));
+    const [plansData, suggestionsData] = await Promise.all([
+      api.maintenance.listForAsset(asset.id),
+      api.maintenance.suggestionsForAsset(asset.id),
+    ]);
+    setPlans(plansData);
+    setSuggestions(suggestionsData);
   }
 
   useEffect(() => {
@@ -103,6 +121,23 @@ export function MaintenanceSection({
   function openCreate() {
     setEditingId(null);
     setForm(initialForm);
+    setFormOpen(true);
+    setError(null);
+  }
+
+  function openFromSuggestion(suggestion: MaintenanceSuggestion) {
+    setEditingId(null);
+    setForm({
+      title: suggestion.title,
+      description: suggestion.description ?? "",
+      recurrenceUnit: suggestion.recurrenceUnit,
+      recurrenceInterval: String(suggestion.recurrenceInterval),
+      nextDueAt: suggestion.suggestedNextDueAt.slice(0, 10),
+      reminderDaysBefore: String(suggestion.reminderDaysBefore),
+      preferredContactId: "",
+      isMandatory: suggestion.isMandatory,
+      notes: "",
+    });
     setFormOpen(true);
     setError(null);
   }
@@ -227,6 +262,68 @@ export function MaintenanceSection({
           {error}
         </div>
       )}
+
+      {!formOpen &&
+        suggestions
+          .filter((s) => !dismissedSuggestions.has(s.code))
+          .map((suggestion) => (
+            <div key={suggestion.code} style={suggestionCardStyle}>
+              <div
+                style={{ display: "flex", alignItems: "flex-start", gap: 10 }}
+              >
+                <Sparkles size={16} color={T.ochreDeep} style={{ marginTop: 2 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <strong style={{ fontSize: 13, color: T.ink }}>
+                      {suggestion.title}
+                    </strong>
+                    <Stamp tone="ochre">Suggerita</Stamp>
+                    {suggestion.isMandatory && (
+                      <Stamp tone="rust">Obbligatoria</Stamp>
+                    )}
+                  </div>
+                  {suggestion.description && (
+                    <div
+                      style={{ fontSize: 12, color: T.ink70, marginTop: 4 }}
+                    >
+                      {suggestion.description}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 12, color: T.slate, marginTop: 5 }}>
+                    Prima scadenza proposta{" "}
+                    {formatDateForDisplay(suggestion.suggestedNextDueAt)} ·{" "}
+                    {recurrenceLabel(suggestion)} · basata su{" "}
+                    {basedOnLabel[suggestion.basedOn]}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 7, marginTop: 10 }}>
+                <button
+                  onClick={() => openFromSuggestion(suggestion)}
+                  style={smallButtonStyle}
+                >
+                  Aggiungi
+                </button>
+                <button
+                  onClick={() =>
+                    setDismissedSuggestions(
+                      (prev) => new Set(prev).add(suggestion.code),
+                    )
+                  }
+                  style={{ ...smallButtonStyle, color: T.slate }}
+                >
+                  Ignora
+                </button>
+              </div>
+            </div>
+          ))}
 
       {formOpen && (
         <div style={formCardStyle}>
@@ -625,6 +722,13 @@ export function MaintenanceSection({
   );
 }
 
+const suggestionCardStyle: React.CSSProperties = {
+  background: T.paper,
+  border: `1px dashed ${T.ochreDeep}`,
+  borderRadius: 8,
+  padding: "12px 14px",
+  marginBottom: 10,
+};
 const formCardStyle: React.CSSProperties = {
   background: T.card,
   border: `1px solid ${T.line}`,

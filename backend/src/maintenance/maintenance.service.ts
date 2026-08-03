@@ -9,6 +9,7 @@ import {
   computeMaintenanceStatus,
   nextMaintenanceDueAt,
 } from '../common/maintenance';
+import { computeMaintenanceSuggestions } from '../common/maintenance-guidelines';
 import { CreateMaintenancePlanDto } from './dto/create-maintenance-plan.dto';
 import { UpdateMaintenancePlanDto } from './dto/update-maintenance-plan.dto';
 import { CompleteMaintenancePlanDto } from './dto/complete-maintenance-plan.dto';
@@ -54,6 +55,22 @@ export class MaintenanceService {
     return plans
       .map((plan) => this.withStatus(plan))
       .sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+  }
+
+  async suggestionsForAsset(assetId: string) {
+    const asset = await this.assetOrThrow(assetId);
+    if (asset.dismissedAt) return [];
+    const existingPlans = await this.prisma.maintenancePlan.findMany({
+      where: { assetId },
+      select: { title: true },
+    });
+    return computeMaintenanceSuggestions({
+      assetType: asset.type,
+      installedAt: asset.installedAt,
+      purchasedAt: asset.purchasedAt,
+      createdAt: asset.createdAt,
+      existingPlanTitles: existingPlans.map((plan) => plan.title),
+    });
   }
 
   async remindersForHouse(houseId: string) {

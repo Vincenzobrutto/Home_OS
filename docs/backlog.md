@@ -23,5 +23,7 @@ Attività aperte, non ancora pianificate in una milestone specifica. Priorità: 
 | B13 | `MOBILE_CSS` ha un solo breakpoint (860px), nessun trattamento dedicato per tablet | Bassa | da rivalutare solo se emerge un caso d'uso tablet reale |
 | B17 | Matching documento→asset: una singola parola condivisa può essere solo la marca e far scegliere il prodotto sbagliato (es. frigorifero Bosch vs forno Bosch) | Media | mantenere tipo+nome; valutare stopword di marca o un punteggio che richieda anche una parola di prodotto, con test di regressione prima di cambiare l'euristica |
 | B18 | Notifiche manutenzione fuori app (email/push/calendario) | Media | il dominio e i promemoria Dashboard sono pronti; definire canale, consenso e scheduling prima di introdurre job automatici |
+| B19 | Suggerimenti di manutenzione ignorati ricompaiono ad ogni apertura della scheda Asset (nessun "ignora per sempre" persistito) | Bassa | scelta deliberata per l'MVP (vedi `decisions.md` #19); aggiungere solo se si rivela fastidioso in uso reale, non preventivamente |
+| B20 | Linee guida di manutenzione coprono solo CLIMA/CALDAIA/FOTOVOLTAICO/ELETTRICO | Bassa | estendere `backend/src/common/maintenance-guidelines.ts` se emergono cadenze generiche affidabili per altri tipi (oggi TETTO/FINESTRE/ELETTRODOMESTICO ne sono privi deliberatamente) |
 
 Le decisioni di design già prese (comprese quelle che generano debito accettato consapevolmente, es. niente test, CORS aperto) sono in `decisions.md` — questo file è per il lavoro non ancora fatto, non per rispiegare perché.

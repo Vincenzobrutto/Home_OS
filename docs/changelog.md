@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-03 (3) — suggerimenti automatici di manutenzione
+
+- **Nuovo endpoint** `GET /assets/:id/maintenance-suggestions`: propone piani di manutenzione basati su linee guida statiche per tipo di Asset (CLIMA, CALDAIA, FOTOVOLTAICO, ELETTRICO), con la prima scadenza calcolata da `installedAt` (fallback `purchasedAt`, poi data di creazione della scheda) + l'intervallo della linea guida — es. climatizzatore installato il 24/07/2025 con pulizia filtri ogni 6 mesi → prima scadenza proposta 24/01/2026.
+- **UI**: nel dettaglio Asset, sezione "Manutenzione" mostra le proposte con badge "Suggerita", motivazione della data e due azioni — "Aggiungi" (apre il form già compilato, l'utente conferma o modifica prima di salvare) e "Ignora" (nasconde la proposta solo per la sessione corrente). Una proposta sparisce da sola una volta creato un piano con lo stesso titolo.
+- **Nessuna scrittura automatica**: coerente con "l'AI propone, l'utente conferma" — qui applicato a una regola fissa, non a un'estrazione AI. Vedi `decisions.md` #19.
+- **Test e build**: 22/22 test backend (5 nuovi sulla funzione pura di calcolo), build/lint puliti; verificato end-to-end nel browser su un climatizzatore reale (suggerimento → form pre-compilato → salvataggio → sparizione del suggerimento).
+
 ## 2026-08-03 (2) — piani di manutenzione programmata
 
 - **Piani per Asset**: creazione e modifica di manutenzioni una tantum o ricorrenti ogni N giorni/mesi/anni, con prima scadenza, preavviso, tecnico abituale, obbligatorietà, descrizione e note.

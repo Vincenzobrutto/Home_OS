@@ -14,10 +14,11 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Planimetria interattiva: disegno ambienti (rettangolo o forma libera), posizionamento asset via drag, rotazione a 90° con asset che restano nella stanza assegnata.
 - Dashboard con promemoria (garanzie scadute, asset senza documenti) cliccabili verso l'asset.
 - Piani di manutenzione una tantum o ricorrenti sugli Asset: stati calcolati, preavviso, tecnico abituale, completamento transazionale, storico, sospensione e promemoria Dashboard.
+- Suggerimenti automatici di piani di manutenzione per tipi di Asset con cadenza nota (CLIMA/CALDAIA/FOTOVOLTAICO/ELETTRICO), con prima scadenza calcolata dalla data di installazione/acquisto — sempre da confermare, mai creati in automatico (2026-08-03).
 - App raggiungibile da cellulare sulla stessa rete (LAN) con UI ottimizzata per mobile (sidebar a scomparsa, touch sulla planimetria, layout responsive).
 - Documentazione di progetto per collaborazione multi-assistente (`docs/`, `prompts/`, `AGENTS.md`).
 - Repository verificato pronto per il passaggio di consegne: `.gitignore` root/backend/frontend confermati completi, build/lint/test eseguiti e documentati, `docs/HANDOFF.md` creato (2026-08-02).
-- Copertura backend delle regole di dominio: stato/garanzia Asset, matching documento→asset, conferma senza sovrascrittura e calendario manutenzioni (18 test totali, 2026-08-03).
+- Copertura backend delle regole di dominio: stato/garanzia Asset, matching documento→asset, conferma senza sovrascrittura, calendario manutenzioni e suggerimenti di manutenzione (22 test totali, 2026-08-03).
 
 ## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)
 

@@ -65,7 +65,7 @@ export function nextMaintenanceDueAt(params: {
   return next;
 }
 
-function addCalendarMonths(date: Date, months: number): Date {
+export function addCalendarMonths(date: Date, months: number): Date {
   const targetMonthStart = new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1),
   );

@@ -33,6 +33,11 @@ export class MaintenanceController {
     return this.maintenance.create(assetId, dto);
   }
 
+  @Get('assets/:assetId/maintenance-suggestions')
+  suggestions(@Param('assetId', ParseUUIDPipe) assetId: string) {
+    return this.maintenance.suggestionsForAsset(assetId);
+  }
+
   @Get('houses/:houseId/maintenance-reminders')
   reminders(@Param('houseId', ParseUUIDPipe) houseId: string) {
     return this.maintenance.remindersForHouse(houseId);

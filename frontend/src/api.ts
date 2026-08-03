@@ -1,4 +1,4 @@
-import type { Asset, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, GmailCandidate, GmailScanResult, GmailStatus, House, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, Room, TimelineEvent, User } from './types';
+import type { Asset, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, GmailCandidate, GmailScanResult, GmailStatus, House, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, Room, TimelineEvent, User } from './types';
 import type { RoomGeometry } from './geometry';
 
 // Deriva l'host dal browser stesso invece di un "localhost" fisso: da
@@ -195,6 +195,7 @@ export const api = {
   },
   maintenance: {
     listForAsset: (assetId: string) => request<MaintenancePlan[]>(`/assets/${assetId}/maintenance-plans`),
+    suggestionsForAsset: (assetId: string) => request<MaintenanceSuggestion[]>(`/assets/${assetId}/maintenance-suggestions`),
     remindersForHouse: (houseId: string) => request<MaintenanceReminder[]>(`/houses/${houseId}/maintenance-reminders`),
     create: (
       assetId: string,

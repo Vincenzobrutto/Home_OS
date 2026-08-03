@@ -14,6 +14,7 @@ Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi 
 - Gestione Ambienti: vista a blocchi e planimetria interattiva (disegno forme libere/rettangoli, drag degli asset, rotazione a 90°).
 - Pipeline documentale: upload manuale, scansione automatica Gmail/Drive, estrazione AI (Claude), proposta con conferma utente, creazione automatica di nuovo Asset (con scelta ambiente) se non esiste quello corretto.
 - Documenti casa (non legati a un ambiente specifico, es. APE).
+- Piani di manutenzione (una tantum o ricorrenti) sugli Asset, con suggerimenti automatici da linee guida statiche per tipo (CLIMA/CALDAIA/FOTOVOLTAICO/ELETTRICO) — sempre da confermare, mai creati in automatico.
 - Rubrica contatti collegabile alla cronologia interventi.
 - Dashboard con promemoria cliccabili verso l'asset.
 - Manutenzione programmata per Asset: ricorrenze, preavviso, tecnico/documento, completamento, storico, sospensione e promemoria Dashboard.
@@ -85,7 +86,7 @@ L'ultima verifica DB precedente riportava 8 migrazioni applicate. Questa session
 |---|---|---|
 | `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~773 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ⚠️ 12 errori + 4 warning pre-esistenti, tutti in `src/documents/claude-extraction.service.ts` (risposta HTTP di Claude tipata `any`) + 1 warning in `main.ts` | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx) |
-| `npm run test` | ✅ 18/18: scaffold + stato/garanzia Asset + pipeline documentale + calendario manutenzioni | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 22/22: scaffold + stato/garanzia Asset + pipeline documentale + calendario manutenzioni + suggerimenti di manutenzione | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Nessuno di questi errori impedisce build o avvio dell'app. Non sono stati corretti in questa sessione (vedi `decisions.md` #16 sul perché) — tracciati in `backlog.md` come B1, B1b, B14, B16.
 

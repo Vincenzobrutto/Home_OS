@@ -89,3 +89,4 @@ Tecnici/aziende che hanno lavorato in casa. Collegamento a un intervento in cron
 7. Ruotare la planimetria ruota per davvero le coordinate salvate di stanze e asset (non solo la vista), così un asset resta nell'ambiente a cui è assegnato senza bisogno di ricalcolare l'assegnazione.
 8. I piani di manutenzione appartengono agli Asset; stato e promemoria sono calcolati e non modificano `Asset.status`.
 9. Completare una manutenzione è un'azione utente esplicita e atomica: occorrenza, cronologia e prossima scadenza vengono registrate insieme.
+10. I piani di manutenzione suggeriti (da linee guida statiche per tipo di Asset) non vengono mai creati automaticamente: il sistema pre-compila il form, l'utente deve comunque confermare — vedi `decisions.md` #19.

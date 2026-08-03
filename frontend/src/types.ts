@@ -147,6 +147,18 @@ export interface MaintenanceOccurrence {
   } | null;
 }
 
+export interface MaintenanceSuggestion {
+  code: string;
+  title: string;
+  description?: string;
+  recurrenceUnit: MaintenanceRecurrenceUnit;
+  recurrenceInterval: number;
+  reminderDaysBefore: number;
+  isMandatory: boolean;
+  suggestedNextDueAt: string;
+  basedOn: 'installedAt' | 'purchasedAt' | 'createdAt';
+}
+
 export interface MaintenanceReminder extends MaintenancePlan {
   asset: {
     id: string;
