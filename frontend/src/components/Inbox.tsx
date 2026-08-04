@@ -200,7 +200,7 @@ export function InboxView({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
+  const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [busyDocIds, setBusyDocIds] = useState<Set<string>>(new Set());
   const [pickingAssetFor, setPickingAssetFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -274,7 +274,7 @@ export function InboxView({
   }
 
   async function analyze(docId: string) {
-    setAnalyzingId(docId);
+    setAnalyzingIds((current) => new Set(current).add(docId));
     setError(null);
     try {
       await api.documents.analyze(docId);
@@ -282,7 +282,11 @@ export function InboxView({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore imprevisto');
     } finally {
-      setAnalyzingId(null);
+      setAnalyzingIds((current) => {
+        const next = new Set(current);
+        next.delete(docId);
+        return next;
+      });
     }
   }
 
@@ -483,7 +487,7 @@ export function InboxView({
                 {doc.status === 'PENDING' && (
                   <button
                     onClick={() => analyze(doc.id)}
-                    disabled={analyzingId === doc.id}
+                    disabled={analyzingIds.has(doc.id)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -499,7 +503,7 @@ export function InboxView({
                       fontWeight: 500,
                     }}
                   >
-                    <Sparkles size={13} /> {analyzingId === doc.id ? 'Analisi in corso…' : 'Analizza con AI'}
+                    <Sparkles size={13} /> {analyzingIds.has(doc.id) ? 'Analisi in corso…' : 'Analizza con AI'}
                   </button>
                 )}
                 <button

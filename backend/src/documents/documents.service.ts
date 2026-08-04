@@ -576,15 +576,24 @@ export class DocumentsService {
     }
 
     if (result.kind === 'utility_bill') {
+      // Il prompt chiede numeri JSON con il punto decimale, ma un modello può
+      // comunque restituire una stringa con la virgola italiana (es. "95,48"
+      // per un importo in euro): senza normalizzarla, Number() la trasforma
+      // in NaN e il filtro sotto scarta l'intero periodo pur avendo dati
+      // validi. toNumericValue tollera entrambi i formati.
+      const toNumericValue = (value: unknown): number =>
+        typeof value === 'string'
+          ? Number(value.replace(',', '.'))
+          : Number(value);
       const periods = (result.periods ?? [])
         .map((period) => ({
           periodStart: period.periodStart,
           periodEnd: period.periodEnd,
-          consumptionKwh: Number(period.consumptionKwh),
+          consumptionKwh: toNumericValue(period.consumptionKwh),
           amount:
             period.amount === null || period.amount === undefined
               ? null
-              : Number(period.amount),
+              : toNumericValue(period.amount),
         }))
         .filter(
           (period) =>

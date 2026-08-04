@@ -30,12 +30,13 @@ Analizza il documento e rispondi SOLO con un oggetto JSON valido, senza testo pr
   "periods": [{
     "periodStart": "data ISO YYYY-MM-DD",
     "periodEnd": "data ISO YYYY-MM-DD",
-    "consumptionKwh": numero positivo,
-    "amount": "importo totale in euro del periodo oppure null"
+    "consumptionKwh": numero positivo (JSON number con punto decimale, es. 260.8 — mai come stringa, mai con la virgola italiana),
+    "amount": numero positivo con punto decimale (JSON number, es. 95.48 — mai come stringa, mai con la virgola italiana) che rappresenta l'importo totale in euro del periodo, oppure null
   }],
   "fields": [["Etichetta campo", "Valore"], ...]
 }
-Se la bolletta riporta consumi mensili distinti, crea un periodo per ogni mese. Se riporta solo un totale bimestrale/plurimensile, crea un unico periodo con le date reali: HomeOS lo mostrerà come ripartizione stimata, non inventare dettagli mensili. Non confondere potenza impegnata (kW) ed energia consumata (kWh). Non includere letture cumulative del contatore come consumo del periodo. L'importo deve essere il totale dovuto, non una singola componente tariffaria.
+Cerca attivamente il periodo di fatturazione e il relativo consumo, che sulle bollette italiane sono quasi sempre etichettati esplicitamente (es. "Periodo di fatturazione", "Periodo di riferimento" + "Consumo totale del periodo fatturato", "Consumo fatturato") — sono il dato da usare per "periods", NON il "Consumo annuo"/"Consumo ultimi 12 mesi" (un riepilogo su base diversa, spesso riferito a un anno solare non coincidente con la bolletta: non usarlo mai come periodo, riportalo se vuoi solo in "fields"). Se la bolletta riporta consumi mensili distinti, crea un periodo per ogni mese. Se riporta solo un totale bimestrale/plurimensile, crea un unico periodo con le date reali: HomeOS lo mostrerà come ripartizione stimata, non inventare dettagli mensili. Non confondere potenza impegnata (kW) ed energia consumata (kWh). Non includere letture cumulative del contatore come consumo del periodo. L'importo deve essere il totale dovuto, non una singola componente tariffaria.
+Esempio concreto, frequente sulle bollette italiane: il documento riporta testualmente "Periodo di fatturazione: Settembre 2025" e "Consumo totale del periodo fatturato: 260,8 kWh". Anche se non compaiono date nel formato GG/MM/AAAA, questo È un periodo con data di inizio e fine precise: il mese stesso ne definisce i confini. Il valore corretto da produrre è "periods": [{"periodStart": "2025-09-01", "periodEnd": "2025-09-30", "consumptionKwh": 260.8, "amount": <totale bolletta>}] — calcolare primo e ultimo giorno del mese indicato non è un'invenzione, è l'unico modo corretto di rappresentare quel dato nello schema richiesto. Non lasciare "periods" vuoto in un caso come questo. "periods" deve restare vuoto solo se il documento non riporta davvero nessun dato di consumo per nessun periodo.
 
 1) Se il documento è una PLANIMETRIA (pianta/disegno che mostra la disposizione delle stanze di una casa):
 {
