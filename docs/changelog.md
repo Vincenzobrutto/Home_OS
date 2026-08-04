@@ -2,6 +2,19 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-04 (3) — Genesis: rifiniture usabilità dal walkthrough
+
+Seguito ai punti medi/bassi del walkthrough di usabilità (dopo B33):
+- **Stepper del wizard cliccabile all'indietro**: si può tornare a uno step già superato per correggere qualcosa, senza dover uscire dal percorso. Non si può saltare avanti a step non ancora raggiunti.
+- **Nome svuotato per errore durante la modifica**: non causa più un errore di validazione poco chiaro all'invio — ricade sul nome originariamente proposto, sia chiudendo la modifica col blur sia ricliccando la matita.
+- **Pannello "Dettagli"** per ogni elemento proposto nello step di revisione: categoria in italiano, e per i possibili duplicati il codice dell'elemento reale esistente (es. "AMB-004") per poterlo controllare nella sua scheda — la scansione resta dimostrativa, dichiarato esplicitamente che non ci sono foto reali da mostrare.
+- **Dashboard**: le card "Consigliato" ora sono cliccabili verso l'asset collegato (tramite l'Issue associata), come già le card "Da tenere d'occhio".
+- **Step "Documenti"**: nuovo pulsante per rimuovere un documento caricato per errore (riusa l'endpoint "scarta" già usato in Inbox) — nascosto per i documenti già `CONFIRMED`, che il backend non permette di scartare da qui. Aggiunto anche un indicatore di caricamento.
+- **Accessibilità**: le etichette del form "La tua casa" ora sono associate ai campi (`htmlFor`/`id`).
+- **Home Score card**: `flexWrap` per non stringere il layout su schermi molto stretti.
+
+Verificato live nel browser sulla casa reale: navigazione a ritroso funzionante, pannello Dettagli mostra correttamente categoria e codice del duplicato, pulsante rimuovi assente sui documenti già confermati. Backend 54/54 test invariati, build/lint puliti su entrambi i lati.
+
 ## 2026-08-04 (2) — Genesis: deduplica contro dati esistenti (B33)
 
 - Trovato durante un walkthrough di usabilità sul wizard Genesis appena mergeato: la conferma di una scansione demo su una casa con dati reali preesistenti duplicava sistematicamente ambienti/asset con nomi simili (verificato: tutti e 4 gli ambienti demo e diversi asset coincidevano con dati già censiti).

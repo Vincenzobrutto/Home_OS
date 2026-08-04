@@ -102,11 +102,11 @@ export class GenesisService {
       if (o.entityType === 'ROOM') {
         candidates = existingRooms
           .filter((r) => r.type === o.proposedCategory)
-          .map((r) => ({ id: r.id, name: r.name }));
+          .map((r) => ({ id: r.id, name: r.name, code: r.code }));
       } else {
         candidates = existingAssets
           .filter((a) => a.type === o.proposedCategory)
-          .map((a) => ({ id: a.id, name: a.name }));
+          .map((a) => ({ id: a.id, name: a.name, code: a.code }));
       }
       return {
         ...o,

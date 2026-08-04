@@ -35,6 +35,10 @@ function significantWords(name: string): Set<string> {
 export interface DuplicateCandidate {
   id: string;
   name: string;
+  // Facoltativo: portato attraverso invariato solo per essere mostrato
+  // all'utente (es. "AST-014") come riferimento per andare a controllare la
+  // scheda reale — non usato dal matching.
+  code?: string;
 }
 
 export function findPossibleDuplicate(

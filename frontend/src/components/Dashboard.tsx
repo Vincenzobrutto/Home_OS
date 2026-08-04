@@ -181,7 +181,7 @@ export function Dashboard({
       )}
 
       {genesisResults?.score && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 26, padding: '18px 20px', background: PT.card, border: `1px solid ${PT.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24, marginBottom: 26, padding: '18px 20px', background: PT.card, border: `1px solid ${PT.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
           <div>
             <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 40, color: PT.primary, lineHeight: 1 }}>{genesisResults.score.overallScore}</div>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: PT.slate, marginTop: 4 }}>Home Score /100</div>
@@ -241,12 +241,30 @@ export function Dashboard({
         <>
           <SectionLabel>Consigliato</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 26 }}>
-            {genesisResults.recommendations.map((rec) => (
-              <div key={rec.id} style={{ padding: '10px 14px', background: PT.card, border: `1px solid ${PT.line}`, borderRadius: 9, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 500, color: PT.ink }}>{rec.title}</div>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: PT.slate, marginTop: 2 }}>{rec.description}</div>
-              </div>
-            ))}
+            {genesisResults.recommendations.map((rec) => {
+              // Stessa Issue a cui la Recommendation è collegata (1:1 oggi,
+              // vedi genesis-architecture.md §6) — riusata solo per sapere se
+              // punta a un asset su cui navigare, coerente con le card "Da
+              // tenere d'occhio" sopra invece di restare non cliccabili.
+              const linkedAssetId = genesisResults.issues.find((i) => i.id === rec.issueId)?.assetId;
+              return (
+                <div
+                  key={rec.id}
+                  onClick={() => linkedAssetId && openAsset(linkedAssetId)}
+                  style={{
+                    padding: '10px 14px',
+                    background: PT.card,
+                    border: `1px solid ${PT.line}`,
+                    borderRadius: 9,
+                    cursor: linkedAssetId ? 'pointer' : 'default',
+                    boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                  }}
+                >
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 500, color: PT.ink }}>{rec.title}</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: PT.slate, marginTop: 2 }}>{rec.description}</div>
+                </div>
+              );
+            })}
           </div>
         </>
       )}

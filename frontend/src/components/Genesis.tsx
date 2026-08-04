@@ -103,21 +103,50 @@ export function GenesisWizard({
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 30, flexWrap: 'wrap' }}>
-        {STEPS.map((s, i) => (
-          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              {i < stepIndex ? (
-                <CheckCircle2 size={14} color={T.pine} />
-              ) : (
-                <Circle size={14} color={i === stepIndex ? T.pine : T.line} fill={i === stepIndex ? T.pine : 'none'} />
-              )}
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: i <= stepIndex ? T.ink : T.slate, fontWeight: i === stepIndex ? 600 : 400 }}>
-                {s.label}
-              </span>
+        {STEPS.map((s, i) => {
+          // Solo gli step già superati si possono riaprire — quello attuale
+          // e quelli non ancora raggiunti non sono cliccabili (non avrebbe
+          // senso "saltare avanti" a uno step di cui non c'è ancora stato).
+          const reachable = i < stepIndex;
+          return (
+            <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                onClick={reachable ? () => setStep(s.id) : undefined}
+                disabled={!reachable}
+                aria-current={i === stepIndex ? 'step' : undefined}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: reachable ? 'pointer' : 'default',
+                }}
+              >
+                {i < stepIndex ? (
+                  <CheckCircle2 size={14} color={T.pine} />
+                ) : (
+                  <Circle size={14} color={i === stepIndex ? T.pine : T.line} fill={i === stepIndex ? T.pine : 'none'} />
+                )}
+                <span
+                  style={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: 12,
+                    color: i <= stepIndex ? T.ink : T.slate,
+                    fontWeight: i === stepIndex ? 600 : 400,
+                    textDecoration: reachable ? 'underline' : 'none',
+                    textDecorationColor: T.line,
+                    textUnderlineOffset: 3,
+                  }}
+                >
+                  {s.label}
+                </span>
+              </button>
+              {i < STEPS.length - 1 && <div style={{ width: 16, height: 1, background: T.line }} />}
             </div>
-            {i < STEPS.length - 1 && <div style={{ width: 16, height: 1, background: T.line }} />}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {step === 'welcome' && (
@@ -266,23 +295,23 @@ function HouseInfoStep({ house, onSaved }: { house: House; onSaved: (house: Hous
         Informazioni essenziali, tutte facoltative — puoi completarle anche in seguito.
       </p>
       <div style={{ marginBottom: 14 }}>
-        <label style={labelStyle}>Indirizzo</label>
-        <input style={inputStyle} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Es. Via dei Glicini 14" autoFocus />
+        <label style={labelStyle} htmlFor="genesis-address">Indirizzo</label>
+        <input id="genesis-address" style={inputStyle} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Es. Via dei Glicini 14" autoFocus />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 14, marginBottom: 14 }}>
         <div>
-          <label style={labelStyle}>Città</label>
-          <input style={inputStyle} value={city} onChange={(e) => setCity(e.target.value)} />
+          <label style={labelStyle} htmlFor="genesis-city">Città</label>
+          <input id="genesis-city" style={inputStyle} value={city} onChange={(e) => setCity(e.target.value)} />
         </div>
         <div>
-          <label style={labelStyle}>CAP</label>
-          <input style={inputStyle} value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+          <label style={labelStyle} htmlFor="genesis-postal-code">CAP</label>
+          <input id="genesis-postal-code" style={inputStyle} value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
         <div>
-          <label style={labelStyle}>Tipo di immobile</label>
-          <select style={{ ...inputStyle, appearance: 'auto' }} value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
+          <label style={labelStyle} htmlFor="genesis-property-type">Tipo di immobile</label>
+          <select id="genesis-property-type" style={{ ...inputStyle, appearance: 'auto' }} value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
             <option value="">—</option>
             <option value="Appartamento">Appartamento</option>
             <option value="Villa">Villa</option>
@@ -292,18 +321,18 @@ function HouseInfoStep({ house, onSaved }: { house: House; onSaved: (house: Hous
           </select>
         </div>
         <div>
-          <label style={labelStyle}>Paese</label>
-          <input style={inputStyle} value={country} onChange={(e) => setCountry(e.target.value)} />
+          <label style={labelStyle} htmlFor="genesis-country">Paese</label>
+          <input id="genesis-country" style={inputStyle} value={country} onChange={(e) => setCountry(e.target.value)} />
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 24 }}>
         <div>
-          <label style={labelStyle}>Superficie (m²)</label>
-          <input style={inputStyle} type="number" min={1} value={surfaceSqm} onChange={(e) => setSurfaceSqm(e.target.value)} />
+          <label style={labelStyle} htmlFor="genesis-surface">Superficie (m²)</label>
+          <input id="genesis-surface" style={inputStyle} type="number" min={1} value={surfaceSqm} onChange={(e) => setSurfaceSqm(e.target.value)} />
         </div>
         <div>
-          <label style={labelStyle}>Anno di costruzione</label>
-          <input style={inputStyle} type="number" min={1800} max={2100} value={buildYear} onChange={(e) => setBuildYear(e.target.value)} />
+          <label style={labelStyle} htmlFor="genesis-build-year">Anno di costruzione</label>
+          <input id="genesis-build-year" style={inputStyle} type="number" min={1800} max={2100} value={buildYear} onChange={(e) => setBuildYear(e.target.value)} />
         </div>
       </div>
 
@@ -339,6 +368,18 @@ function DocumentsStep({ house, onContinue }: { house: House; onContinue: () => 
       setError(e instanceof Error ? e.message : 'Errore imprevisto');
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function removeDocument(id: string) {
+    // "Scarta" (stesso endpoint dell'Inbox, vedi B7): il documento resta in
+    // DB per non riproporlo mai più, semplicemente non compare più in nessuna
+    // vista — non c'è un'eliminazione definitiva per i documenti nell'API.
+    try {
+      await api.documents.ignoreDocument(id);
+      setDocuments((prev) => prev.filter((d) => d.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Errore imprevisto');
     }
   }
 
@@ -382,6 +423,13 @@ function DocumentsStep({ house, onContinue }: { house: House; onContinue: () => 
 
       {error && <div style={{ color: T.rust, fontFamily: "'Inter', sans-serif", fontSize: 12.5, marginBottom: 14 }}>{error}</div>}
 
+      {loading && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.slate, marginBottom: 18 }}>
+          <Loader2 size={14} className="spin" />
+          Caricamento documenti…
+        </div>
+      )}
+
       {!loading && documents.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 22 }}>
           {documents.map((d) => (
@@ -389,7 +437,9 @@ function DocumentsStep({ house, onContinue }: { house: House; onContinue: () => 
               key={d.id}
               style={{
                 display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'space-between',
+                gap: 10,
                 padding: '9px 12px',
                 background: T.card,
                 border: `1px solid ${T.line}`,
@@ -399,8 +449,22 @@ function DocumentsStep({ house, onContinue }: { house: House; onContinue: () => 
                 color: T.ink,
               }}
             >
-              <span>{d.originalFilename}</span>
-              <span style={{ color: T.slate, fontSize: 12 }}>{d.status}</span>
+              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.originalFilename}</span>
+              <span style={{ color: T.slate, fontSize: 12, flexShrink: 0 }}>{d.status}</span>
+              {/* Un documento CONFIRMED è già collegato a un asset — il
+                  backend rifiuta di scartarlo (vedi documents.service.ts
+                  ignoreDocument) e andrebbe rimosso dalla scheda asset, non
+                  da qui: niente pulsante per non promettere un'azione che poi
+                  fallisce con un errore poco chiaro. */}
+              {d.status !== 'CONFIRMED' && (
+                <button
+                  onClick={() => void removeDocument(d.id)}
+                  aria-label={`Rimuovi ${d.originalFilename}`}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.slate, flexShrink: 0, display: 'flex' }}
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -492,6 +556,30 @@ function ReviewStep({
   function setEdit(id: string, name: string) {
     setDecisions((prev) => ({ ...prev, [id]: { ...prev[id], observationId: id, action: 'edit', name } }));
   }
+  // Chiude la modifica in corso su una riga, sia che si esca cliccando via
+  // (blur dell'input) sia ricliccando la matita — un solo punto dove
+  // "chiudere la modifica" avviene, non due percorsi che possono divergere.
+  // Nome svuotato per errore e lasciato così: niente invio con un nome
+  // vuoto (il backend lo rifiuterebbe con un errore di validazione poco
+  // chiaro, senza dire quale elemento tra i tanti l'ha causato) — ricade sul
+  // nome proposto, come se non fosse mai stato modificato. La sanitizzazione
+  // avviene solo qui alla chiusura, non ad ogni tasto premuto: altrimenti il
+  // campo si "auto-ripristinerebbe" mentre l'utente sta ancora cancellando
+  // per scrivere un nome nuovo più corto.
+  function toggleEdit(id: string) {
+    if (editingId === id) {
+      setDecisions((prev) => {
+        const current = prev[id];
+        if (current?.action === 'edit' && !current.name?.trim()) {
+          return { ...prev, [id]: { ...current, name: undefined } };
+        }
+        return prev;
+      });
+      setEditingId(null);
+    } else {
+      setEditingId(id);
+    }
+  }
 
   async function submit() {
     setSubmitting(true);
@@ -528,7 +616,7 @@ function ReviewStep({
                 icon={ROOM_TYPES[o.proposedCategory ?? '']?.icon}
                 decision={decisions[o.id]}
                 editing={editingId === o.id}
-                onEditToggle={() => setEditingId(editingId === o.id ? null : o.id)}
+                onEditToggle={() => toggleEdit(o.id)}
                 onAction={(a) => setAction(o.id, a)}
                 onEditName={(name) => setEdit(o.id, name)}
                 possibleDuplicate={o.possibleDuplicate}
@@ -549,7 +637,7 @@ function ReviewStep({
                 icon={ASSET_TYPES[o.proposedCategory ?? '']?.icon ?? iconForAsset({ type: o.proposedCategory ?? '', name: o.proposedName })}
                 decision={decisions[o.id]}
                 editing={editingId === o.id}
-                onEditToggle={() => setEditingId(editingId === o.id ? null : o.id)}
+                onEditToggle={() => toggleEdit(o.id)}
                 onAction={(a) => setAction(o.id, a)}
                 onEditName={(name) => setEdit(o.id, name)}
                 roomHint={o.payload.roomName ?? null}
@@ -588,68 +676,87 @@ function ObservationRow({
   onAction: (action: ConfirmObservationItem['action']) => void;
   onEditName: (name: string) => void;
   roomHint?: string | null;
-  possibleDuplicate?: { id: string; name: string } | null;
+  possibleDuplicate?: { id: string; name: string; code?: string } | null;
 }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const rejected = decision?.action === 'reject';
   const displayName = decision?.action === 'edit' ? decision.name ?? observation.proposedName : observation.proposedName;
+  const categoryMeta = observation.entityType === 'ROOM' ? ROOM_TYPES[observation.proposedCategory ?? ''] : ASSET_TYPES[observation.proposedCategory ?? ''];
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
         background: T.card,
         border: `1px solid ${T.line}`,
         borderRadius: 9,
         opacity: rejected ? 0.5 : 1,
       }}
     >
-      {Icon && (
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${T.pine}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Icon size={16} color={T.pine} />
-        </div>
-      )}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {editing ? (
-          <input
-            style={{ ...inputStyle, padding: '6px 8px', fontSize: 13 }}
-            value={displayName}
-            autoFocus
-            onChange={(e) => onEditName(e.target.value)}
-            onBlur={onEditToggle}
-          />
-        ) : (
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13.5, fontWeight: 500, color: T.ink }}>{displayName}</div>
-        )}
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: T.slate }}>
-          confidenza {Math.round(observation.confidence * 100)}%{roomHint ? ` · ${roomHint}` : roomHint === null ? ' · impianto di casa' : ''}
-        </div>
-        {possibleDuplicate && (
-          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.ochreDeep, marginTop: 2 }}>
-            Sembra già esistere: "{possibleDuplicate.name}" — lasciato su Scarta, conferma solo se è un elemento diverso.
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px' }}>
+        {Icon && (
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${T.pine}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Icon size={16} color={T.pine} />
           </div>
         )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {editing ? (
+            <input
+              style={{ ...inputStyle, padding: '6px 8px', fontSize: 13 }}
+              value={displayName}
+              autoFocus
+              onChange={(e) => onEditName(e.target.value)}
+              onBlur={onEditToggle}
+            />
+          ) : (
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13.5, fontWeight: 500, color: T.ink }}>{displayName}</div>
+          )}
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: T.slate }}>
+            confidenza {Math.round(observation.confidence * 100)}%{roomHint ? ` · ${roomHint}` : roomHint === null ? ' · impianto di casa' : ''}
+          </div>
+          {possibleDuplicate && (
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.ochreDeep, marginTop: 2 }}>
+              Sembra già esistere: "{possibleDuplicate.name}" — lasciato su Scarta, conferma solo se è un elemento diverso.
+            </div>
+          )}
+          <button
+            onClick={() => setDetailsOpen((v) => !v)}
+            style={{ background: 'none', border: 'none', padding: 0, marginTop: 4, cursor: 'pointer', color: T.pine, fontFamily: "'Inter', sans-serif", fontSize: 11.5, textDecoration: 'underline' }}
+          >
+            {detailsOpen ? 'Nascondi dettagli' : 'Dettagli'}
+          </button>
+          {detailsOpen && (
+            <div style={{ marginTop: 6, padding: '8px 10px', background: T.paper, borderRadius: 6, fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.ink70, lineHeight: 1.6 }}>
+              <div>Categoria: {categoryMeta?.label ?? observation.proposedCategory ?? '—'}</div>
+              {possibleDuplicate && (
+                <div>
+                  Elemento esistente simile: "{possibleDuplicate.name}"{possibleDuplicate.code ? ` (${possibleDuplicate.code})` : ''} — controllalo nella sua scheda se vuoi confrontare prima di decidere.
+                </div>
+              )}
+              <div style={{ color: T.slate, marginTop: 4 }}>
+                Scansione dimostrativa: nessuna foto reale disponibile, solo dati di esempio — vedi nota nello step precedente.
+              </div>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={onEditToggle}
+          aria-label="Modifica nome"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: decision?.action === 'edit' ? T.pine : T.slate }}
+        >
+          <Pencil size={14} />
+        </button>
+        <button
+          onClick={() => onAction(rejected ? 'confirm' : 'reject')}
+          style={{
+            ...secondaryButtonStyle,
+            padding: '6px 12px',
+            fontSize: 12,
+            color: rejected ? T.pine : T.rust,
+            borderColor: rejected ? T.pine : T.line,
+          }}
+        >
+          {rejected ? 'Ripristina' : 'Scarta'}
+        </button>
       </div>
-      <button
-        onClick={onEditToggle}
-        aria-label="Modifica nome"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: decision?.action === 'edit' ? T.pine : T.slate }}
-      >
-        <Pencil size={14} />
-      </button>
-      <button
-        onClick={() => onAction(rejected ? 'confirm' : 'reject')}
-        style={{
-          ...secondaryButtonStyle,
-          padding: '6px 12px',
-          fontSize: 12,
-          color: rejected ? T.pine : T.rust,
-          borderColor: rejected ? T.pine : T.line,
-        }}
-      >
-        {rejected ? 'Ripristina' : 'Scarta'}
-      </button>
     </div>
   );
 }
@@ -700,7 +807,7 @@ function ResultsStep({
       </p>
 
       {score && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 26, padding: '18px 20px', background: T.card, border: `1px solid ${T.line}`, borderRadius: 12 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24, marginBottom: 26, padding: '18px 20px', background: T.card, border: `1px solid ${T.line}`, borderRadius: 12 }}>
           <div>
             <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 44, color: T.pine, lineHeight: 1 }}>{score.overallScore}</div>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: T.slate, marginTop: 4 }}>Home Score /100</div>

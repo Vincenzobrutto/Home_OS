@@ -50,7 +50,7 @@ export interface ObservationRecord {
   status: ObservationStatus;
   // Room/Asset già confermato in casa con nome simile e stesso tipo — solo
   // un avviso per l'utente, mai una fusione automatica. Vedi genesis-architecture.md.
-  possibleDuplicate: { id: string; name: string } | null;
+  possibleDuplicate: { id: string; name: string; code?: string } | null;
 }
 
 export type ConfirmObservationAction = 'confirm' | 'reject' | 'edit';
