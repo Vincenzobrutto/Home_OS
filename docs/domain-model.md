@@ -27,7 +27,7 @@ Legenda: `──<` = "uno a molti" verso l'entità collegata. Tutte le relazioni
 ## Entità
 
 ### House
-La casa. `code` (es. `CASA-0142`) generato automaticamente in sequenza. `floorPlanRotation` (0/90/180/270) è l'unico stato "di visualizzazione" persistito lato server — vedi `decisions.md` sul perché.
+La casa. `code` (es. `CASA-0142`) generato automaticamente in sequenza. `floorPlanRotation` conserva l'orientamento della planimetria. Per Genesis, `genesisStatus` rappresenta lo stato complessivo mentre `genesisStep` conserva lo step esatto (`WELCOME`, `HOUSE_INFO`, `DOCUMENTS`, `SCAN`, `REVIEW`, `RESULTS`) e permette la ripresa precisa.
 
 ### Room (Ambiente)
 Una stanza. `type` è un enum chiuso (`CUCINA`, `SOGGIORNO`, `CAMERA`, `BAGNO` — **non** uno per ogni possibile stanza, l'etichetta libera è nel campo `name`). `planGeometry` è JSON libero con due forme possibili (vedi `frontend/src/geometry.ts`):

@@ -11,6 +11,7 @@ import { GenesisService } from './genesis.service';
 import { SaveHouseInfoDto } from './dto/save-house-info.dto';
 import { StartScanDto } from './dto/start-scan.dto';
 import { ConfirmObservationsDto } from './dto/confirm-observations.dto';
+import { SaveGenesisStepDto } from './dto/save-genesis-step.dto';
 
 @Controller()
 export class GenesisController {
@@ -19,6 +20,19 @@ export class GenesisController {
   @Post('houses/:houseId/genesis/start')
   start(@Param('houseId', ParseUUIDPipe) houseId: string) {
     return this.genesisService.start(houseId);
+  }
+
+  @Get('houses/:houseId/genesis/resume')
+  resume(@Param('houseId', ParseUUIDPipe) houseId: string) {
+    return this.genesisService.resume(houseId);
+  }
+
+  @Patch('houses/:houseId/genesis/step')
+  saveStep(
+    @Param('houseId', ParseUUIDPipe) houseId: string,
+    @Body() dto: SaveGenesisStepDto,
+  ) {
+    return this.genesisService.saveStep(houseId, dto.step);
   }
 
   @Patch('houses/:houseId/genesis/house-info')

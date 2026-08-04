@@ -331,6 +331,12 @@ export const api = {
   },
   genesis: {
     start: (houseId: string) => request<House>(`/houses/${houseId}/genesis/start`, { method: 'POST' }),
+    resume: (houseId: string) => request<import('./types').GenesisResumeState>(`/houses/${houseId}/genesis/resume`),
+    saveStep: (houseId: string, step: import('./types').GenesisStep) =>
+      request<House>(`/houses/${houseId}/genesis/step`, {
+        method: 'PATCH',
+        body: JSON.stringify({ step }),
+      }),
     saveHouseInfo: (
       houseId: string,
       data: Partial<{

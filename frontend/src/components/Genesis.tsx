@@ -8,6 +8,7 @@ import type {
   DocumentRecord,
   GenesisDemoCatalog,
   GenesisResults,
+  GenesisStep as PersistedGenesisStep,
   House,
   ObservationRecord,
   ScanSessionRecord,
@@ -57,6 +58,18 @@ const secondaryButtonStyle: React.CSSProperties = {
 
 type GenesisStep = 'welcome' | 'house-info' | 'documents' | 'scan' | 'review' | 'results';
 
+const STEP_FROM_API: Record<PersistedGenesisStep, GenesisStep> = {
+  WELCOME: 'welcome',
+  HOUSE_INFO: 'house-info',
+  DOCUMENTS: 'documents',
+  SCAN: 'scan',
+  REVIEW: 'review',
+  RESULTS: 'results',
+};
+const STEP_TO_API = Object.fromEntries(
+  Object.entries(STEP_FROM_API).map(([apiStep, uiStep]) => [uiStep, apiStep]),
+) as Record<GenesisStep, PersistedGenesisStep>;
+
 const STEPS: { id: GenesisStep; label: string }[] = [
   { id: 'welcome', label: 'Benvenuto' },
   { id: 'house-info', label: 'La tua casa' },
@@ -66,11 +79,9 @@ const STEPS: { id: GenesisStep; label: string }[] = [
   { id: 'results', label: 'Risultato' },
 ];
 
-// Percorso guidato Genesis (vedi docs/genesis-architecture.md): stato
-// "grezzo" per step (scanSession, observations, decisioni di review) vive
-// solo qui, non persistito — riprendere a metà ricomincia dallo step
-// coerente con house.genesisStatus (4 valori grezzi, non uno per step),
-// una scelta MVP dichiarata nelle limitazioni note, non un bug.
+// Percorso guidato Genesis (vedi docs/genesis-architecture.md): lo step è
+// persistito su House. Quando si riprende Review, il backend restituisce
+// anche l'ultima ScanSession e le Observation da mostrare nuovamente.
 export function GenesisWizard({
   house,
   onHouseChanged,
@@ -82,15 +93,34 @@ export function GenesisWizard({
   onGenesisCompleted: () => Promise<void>;
   onExit: () => void;
 }) {
-  const [step, setStep] = useState<GenesisStep>(() => {
-    if (house.genesisStatus === 'COMPLETED') return 'results';
-    if (house.genesisStatus === 'PROCESSING') return 'scan';
-    if (house.genesisStatus === 'IN_PROGRESS') return 'house-info';
-    return 'welcome';
-  });
+  const [step, setStep] = useState<GenesisStep>(() => STEP_FROM_API[house.genesisStep]);
   const [scanSession, setScanSession] = useState<ScanSessionRecord | null>(null);
   const [observations, setObservations] = useState<ObservationRecord[]>([]);
   const [results, setResults] = useState<GenesisResults | null>(null);
+  const [resuming, setResuming] = useState(house.genesisStep === 'REVIEW');
+
+  useEffect(() => {
+    let active = true;
+    api.genesis.resume(house.id)
+      .then((state) => {
+        if (!active) return;
+        setStep(STEP_FROM_API[state.step]);
+        setScanSession(state.scanSession);
+        setObservations(state.observations);
+      })
+      .catch(() => {
+        // Mantiene lo step noto dalla House: il contenuto mostra il fallback
+        // già previsto se la sessione di Review non è recuperabile.
+      })
+      .finally(() => active && setResuming(false));
+    return () => { active = false; };
+  }, [house.id]);
+
+  async function goToStep(next: GenesisStep) {
+    const updated = await api.genesis.saveStep(house.id, STEP_TO_API[next]);
+    onHouseChanged(updated);
+    setStep(next);
+  }
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
 
@@ -112,7 +142,7 @@ export function GenesisWizard({
           return (
             <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <button
-                onClick={reachable ? () => setStep(s.id) : undefined}
+                onClick={reachable ? () => void goToStep(s.id) : undefined}
                 disabled={!reachable}
                 aria-current={i === stepIndex ? 'step' : undefined}
                 style={{
@@ -150,7 +180,12 @@ export function GenesisWizard({
         })}
       </div>
 
-      {step === 'welcome' && (
+      {resuming && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: T.slate }}>
+          <Loader2 size={15} className="spin" /> Ripristino del percorso…
+        </div>
+      )}
+      {!resuming && step === 'welcome' && (
         <WelcomeStep
           onStart={async () => {
             const updated = await api.genesis.start(house.id);
@@ -159,7 +194,7 @@ export function GenesisWizard({
           }}
         />
       )}
-      {step === 'house-info' && (
+      {!resuming && step === 'house-info' && (
         <HouseInfoStep
           house={house}
           onSaved={(updated) => {
@@ -168,8 +203,8 @@ export function GenesisWizard({
           }}
         />
       )}
-      {step === 'documents' && <DocumentsStep house={house} onContinue={() => setStep('scan')} />}
-      {step === 'scan' && (
+      {!resuming && step === 'documents' && <DocumentsStep house={house} onContinue={() => void goToStep('scan')} />}
+      {!resuming && step === 'scan' && (
         <ScanStep
           house={house}
           onScanned={(session, obs) => {
@@ -179,7 +214,7 @@ export function GenesisWizard({
           }}
         />
       )}
-      {step === 'review' && scanSession && (
+      {!resuming && step === 'review' && scanSession && (
         <ReviewStep
           house={house}
           scanSession={scanSession}
@@ -191,15 +226,15 @@ export function GenesisWizard({
           }}
         />
       )}
-      {step === 'review' && !scanSession && (
+      {!resuming && step === 'review' && !scanSession && (
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: T.slate }}>
           Nessuna scansione attiva in questa sessione.{' '}
-          <button onClick={() => setStep('scan')} style={{ color: T.pine, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+          <button onClick={() => void goToStep('scan')} style={{ color: T.pine, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
             Torna alla scansione
           </button>
         </div>
       )}
-      {step === 'results' && <ResultsStep house={house} initialResults={results} onDone={onExit} />}
+      {!resuming && step === 'results' && <ResultsStep house={house} initialResults={results} onDone={onExit} />}
     </div>
   );
 }

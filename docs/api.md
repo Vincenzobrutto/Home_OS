@@ -92,6 +92,8 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 |---|---|---|
 | GET | `/genesis/demo-catalog` | catalogo dimostrativo selezionabile di ambienti e Asset |
 | POST | `/houses/:houseId/genesis/scan` | avvia la demo con `type`, `roomNames[]` e `assetNames[]`; crea solo le Observation scelte |
+| GET | `/houses/:houseId/genesis/resume` | restituisce lo step persistito e, per Review, ultima sessione con Observation |
+| PATCH | `/houses/:houseId/genesis/step` | salva uno dei 6 step; consente ritorno indietro o avanzamento di un solo step |
 
 ## Gmail (OAuth + scansione)
 | Metodo | Path | Note |

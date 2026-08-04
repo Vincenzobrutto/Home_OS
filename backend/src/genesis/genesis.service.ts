@@ -4,7 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AssetType, GenesisStatus, RoomType } from '@prisma/client';
+import {
+  AssetType,
+  GenesisStatus,
+  GenesisStep,
+  RoomType,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RoomsService } from '../rooms/rooms.service';
 import { AssetsService } from '../assets/assets.service';
@@ -49,7 +54,10 @@ export class GenesisService {
     if (house.genesisStatus === GenesisStatus.NOT_STARTED) {
       await this.prisma.house.update({
         where: { id: houseId },
-        data: { genesisStatus: GenesisStatus.IN_PROGRESS },
+        data: {
+          genesisStatus: GenesisStatus.IN_PROGRESS,
+          genesisStep: GenesisStep.HOUSE_INFO,
+        },
       });
       await this.addTimelineEvent(houseId, {
         type: 'genesis_started',
@@ -63,7 +71,7 @@ export class GenesisService {
     await this.ensureHouseExists(houseId);
     await this.prisma.house.update({
       where: { id: houseId },
-      data: { ...dto },
+      data: { ...dto, genesisStep: GenesisStep.DOCUMENTS },
     });
     return this.getState(houseId);
   }
@@ -78,7 +86,10 @@ export class GenesisService {
     });
     await this.prisma.house.update({
       where: { id: houseId },
-      data: { genesisStatus: GenesisStatus.PROCESSING },
+      data: {
+        genesisStatus: GenesisStatus.PROCESSING,
+        genesisStep: GenesisStep.REVIEW,
+      },
     });
     await this.addTimelineEvent(houseId, {
       type: 'scan_completed',
@@ -90,6 +101,47 @@ export class GenesisService {
 
   getDemoCatalog() {
     return { rooms: GENESIS_DEMO_ROOMS, assets: GENESIS_DEMO_ASSETS };
+  }
+
+  async saveStep(houseId: string, requestedStep: GenesisStep) {
+    const house = await this.ensureHouseExists(houseId);
+    const steps = Object.values(GenesisStep);
+    const currentIndex = steps.indexOf(house.genesisStep);
+    const requestedIndex = steps.indexOf(requestedStep);
+
+    // Il client può tornare indietro liberamente, ma avanzare solo di uno
+    // step. Le transizioni che producono dati (house info, scan, complete)
+    // vengono invece persistite dai rispettivi comandi di dominio.
+    if (requestedIndex > currentIndex + 1) {
+      throw new BadRequestException('Cannot skip Genesis steps');
+    }
+
+    return this.prisma.house.update({
+      where: { id: houseId },
+      data: { genesisStep: requestedStep },
+    });
+  }
+
+  async resume(houseId: string) {
+    const house = await this.ensureHouseExists(houseId);
+    if (house.genesisStep !== GenesisStep.REVIEW) {
+      return { step: house.genesisStep, scanSession: null, observations: [] };
+    }
+
+    const scanSession = await this.prisma.scanSession.findFirst({
+      where: { houseId },
+      orderBy: { startedAt: 'desc' },
+    });
+    if (!scanSession) {
+      const updated = await this.prisma.house.update({
+        where: { id: houseId },
+        data: { genesisStep: GenesisStep.SCAN },
+      });
+      return { step: updated.genesisStep, scanSession: null, observations: [] };
+    }
+
+    const observations = await this.getScanResults(houseId, scanSession.id);
+    return { step: house.genesisStep, scanSession, observations };
   }
 
   // Arricchisce ogni Observation con un eventuale "possibleDuplicate": un
@@ -332,7 +384,10 @@ export class GenesisService {
 
     await this.prisma.house.update({
       where: { id: houseId },
-      data: { genesisStatus: GenesisStatus.COMPLETED },
+      data: {
+        genesisStatus: GenesisStatus.COMPLETED,
+        genesisStep: GenesisStep.RESULTS,
+      },
     });
 
     await this.addTimelineEvent(houseId, {

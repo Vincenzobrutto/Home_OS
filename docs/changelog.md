@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-04 (5) — B34, ripresa precisa del wizard Genesis
+
+- Tutti i 6 step sono ora persistiti in `House.genesisStep`, incluse le navigazioni all'indietro.
+- Chi chiude durante Documenti riparte da Documenti; chi chiude durante Revisione ritrova ultima `ScanSession` e relative `Observation`.
+- Il backend impedisce salti arbitrari in avanti e ripiega su Scansione se una Review non ha una sessione recuperabile.
+- Nuovi endpoint `resume`/`step`, migrazione additiva e 2 test backend; baseline 57/57.
+
 ## 2026-08-04 (4) — Genesis non più modellata su una sola casa
 
 - Il dataset dimostrativo passa da 4 a 14 ambienti e da 7 a 25 Asset/impianti comuni.

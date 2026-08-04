@@ -3,6 +3,81 @@ import { RoomsService } from '../rooms/rooms.service';
 import { AssetsService } from '../assets/assets.service';
 import { GenesisService } from './genesis.service';
 import type { HouseScanProvider } from './scan/house-scan-provider.interface';
+import { GenesisStep } from '@prisma/client';
+
+describe('GenesisService precise resume', () => {
+  it('restores the latest scan session and its observations when the saved step is REVIEW', async () => {
+    const session = { id: 'sess-2', houseId: 'house-1', startedAt: new Date() };
+    const observations = [
+      {
+        id: 'obs-1',
+        entityType: 'ROOM',
+        proposedName: 'Cucina',
+        proposedCategory: 'CUCINA',
+      },
+    ];
+    const prisma = {
+      house: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'house-1',
+          genesisStep: GenesisStep.REVIEW,
+        }),
+      },
+      scanSession: {
+        findFirst: jest.fn().mockResolvedValue(session),
+        findUnique: jest.fn().mockResolvedValue(session),
+      },
+      room: { findMany: jest.fn().mockResolvedValue([]) },
+      asset: { findMany: jest.fn().mockResolvedValue([]) },
+    };
+    const scanProvider: HouseScanProvider = {
+      startScan: jest.fn(),
+      getResults: jest.fn().mockResolvedValue(observations),
+    };
+    const service = new GenesisService(
+      prisma as unknown as PrismaService,
+      {} as RoomsService,
+      {} as AssetsService,
+      scanProvider,
+    );
+
+    const state = await service.resume('house-1');
+
+    expect(prisma.scanSession.findFirst).toHaveBeenCalledWith({
+      where: { houseId: 'house-1' },
+      orderBy: { startedAt: 'desc' },
+    });
+    expect(state).toMatchObject({
+      step: GenesisStep.REVIEW,
+      scanSession: session,
+    });
+    expect(state.observations[0]).toMatchObject({
+      id: 'obs-1',
+      possibleDuplicate: null,
+    });
+  });
+
+  it('does not allow a client to skip forward by more than one step', async () => {
+    const prisma = {
+      house: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'house-1',
+          genesisStep: GenesisStep.DOCUMENTS,
+        }),
+      },
+    };
+    const service = new GenesisService(
+      prisma as unknown as PrismaService,
+      {} as RoomsService,
+      {} as AssetsService,
+      {} as HouseScanProvider,
+    );
+
+    await expect(
+      service.saveStep('house-1', GenesisStep.REVIEW),
+    ).rejects.toThrow('Cannot skip Genesis steps');
+  });
+});
 
 describe('GenesisService.confirmObservations', () => {
   it('converts confirmed observations into real Room/Asset rows, skips rejected ones, and links the asset to the room confirmed in the same batch', async () => {

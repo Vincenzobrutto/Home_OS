@@ -6,7 +6,7 @@ Documento di consegna per chi riceve questo progetto (sviluppatore umano o assis
 
 MVP funzionante, uso locale/LAN (nessuna autenticazione, nessun deploy pubblico). Backend e frontend compilano con i comandi documentati sotto — verificato in questa sessione, non solo dichiarato. Il repository è versionato su GitHub e il branch di riferimento è `main`.
 
-**Novità 2026-08-04 — HomeOS Genesis è ora su `main`**: percorso guidato di onboarding (wizard 6 step) che porta una casa nuova a un primo Digital Twin con Home Score e osservazioni proattive in pochi minuti. Era stato temporaneamente isolato su un branch `genesis-mvp` (ora mergeato con fast-forward ed eliminato, era identico a `main`) proprio per non alterare il lavoro precedente finché non è stato deciso di promuoverlo. Un walkthrough di usabilità post-merge ha trovato e risolto lo stesso giorno un problema reale di deduplica (B33, vedi sotto). **Se stai riprendendo il lavoro dopo questa data, leggi prima [`genesis-architecture.md`](genesis-architecture.md) e [`decisions.md`](decisions.md) #25/#26** — coprono componenti, motori (Home Score/Home Detective), confine mock/reale, deduplica e limiti noti (nessuna autenticazione, ripresa del wizard a grana grossa — `backlog.md` B34).
+**Novità 2026-08-04 — HomeOS Genesis è ora su `main`**: percorso guidato di onboarding (wizard 6 step) che porta una casa nuova a un primo Digital Twin. B33 protegge dai duplicati e B34 persiste lo step preciso, ricaricando l'ultima scansione quando si riprende Review. **Prima di lavorarci leggi [`genesis-architecture.md`](genesis-architecture.md) e [`decisions.md`](decisions.md) #25-#28**.
 
 Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi [`roadmap.md`](roadmap.md); per le 10 epiche di prodotto vedi [`product-backlog.md`](product-backlog.md).
 
@@ -84,7 +84,7 @@ npm install
 npm run dev
 ```
 
-L'ultima verifica DB precedente riportava 11 migrazioni applicate, incluse quelle di Genesis (`20260804063159_add_genesis_mvp`, puramente additiva). Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare le nuove funzionalità.
+Il repository contiene ora 12 migrazioni, inclusa `20260804120000_add_genesis_step` (B34, additiva). Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare la ripresa precisa del wizard.
 
 ### Lint, build, test — risultati verificati il 2026-08-04
 
@@ -92,7 +92,7 @@ L'ultima verifica DB precedente riportava 11 migrazioni applicate, incluse quell
 |---|---|---|
 | `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~805 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ✅ 0 errori, 0 warning | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx), invariati |
-| `npm run test` | ✅ 55/55 (incluso filtro del catalogo Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 57/57 (inclusi catalogo e ripresa precisa Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Verificato anche **end-to-end nel browser** (non solo unit test): l'intero wizard Genesis eseguito sulla casa reale — creazione stanze/asset dalla scansione demo, calcolo Home Score, generazione Issue/Recommendation coerenti. Dettaglio in `changelog.md` (2026-08-04).
 
@@ -118,7 +118,6 @@ Nessun valore segreto è presente in questo documento o nei file `.env.example` 
 - Un evento cronologia ("Daikin Perfera") dall'aspetto stale su un asset AC, mai chiarito con l'utente — `backlog.md` B7.
 - Contatto "Idrotermica Bianchi" potenzialmente collegato a eventi storici non pertinenti — `backlog.md` B8.
 - `backend/uploads/` contiene già file caricati da un utente reale durante lo sviluppo — è gitignored correttamente, ma chi clona il repo su un'altra macchina non li avrà (comportamento atteso, non un bug).
-- **Genesis riprende solo a grana grossa**: 4 soli stati (`genesisStatus`), non uno per step del wizard — `backlog.md` B34.
 
 ## Debito tecnico
 
@@ -128,7 +127,7 @@ Nessun valore segreto è presente in questo documento o nei file `.env.example` 
 - Navigazione senza URL reali (niente back/forward browser, niente link condivisibili) — `backlog.md` B11.
 - `backend/package.json#prisma` è una configurazione deprecata in vista di Prisma 7 — `backlog.md` B15.
 - Bundle frontend oltre la soglia di warning Vite (~805 kB) — `backlog.md` B16.
-- Genesis: ripresa a grana grossa (B34), scansione solo mock (percorso verso il reale in `genesis-architecture.md` §10).
+- Genesis: scansione ancora solo mock (percorso verso il reale in `genesis-architecture.md` §10); la ripresa precisa B34 è completata.
 
 Elenco completo con priorità e dipendenze in [`backlog.md`](backlog.md).
 
@@ -140,6 +139,5 @@ In ordine di priorità suggerito (non vincolante):
 3. Sistemare il redirect OAuth Gmail/Drive per funzionare anche da client mobile in LAN.
 4. Rivedere la conservazione in chiaro dei token OAuth prima di qualunque deploy esposto.
 5. Valutare un provider di scansione reale per Genesis (foto/video), sostituendo `MockHouseScanProvider` dietro la stessa interfaccia — vedi `genesis-architecture.md` §10.
-6. Genesis: ripresa del wizard a grana fine (uno step preciso invece dei 4 stati grezzi di `genesisStatus`) — `backlog.md` B34.
 
 Per iniziare a lavorare su questo repository, leggi anche [`AGENTS.md`](../AGENTS.md) (protocollo di aggiornamento documentazione e handoff di fine sessione) e [`prompts/coding-guidelines.md`](../prompts/coding-guidelines.md) (principi di dominio da non violare).

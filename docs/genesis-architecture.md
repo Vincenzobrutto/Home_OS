@@ -105,7 +105,7 @@ GET /houses/:id/genesis                             risultati correnti (score, i
 GET /houses/:id/genesis/timeline                    HouseTimelineEvent, per la sezione "Cronologia casa" in Dashboard
 ```
 
-Il frontend (`Genesis.tsx`) è una macchina a stati a 6 step (Welcome, House Information, Documents, House Scan, Review Digital Twin, Genesis Results), con `GenesisStatus` (4 valori grezzi) usato per decidere da quale step riprendere se l'utente esce e rientra — vedi limiti al punto 9.
+Il frontend (`Genesis.tsx`) è una macchina a stati a 6 step (Welcome, House Information, Documents, House Scan, Review Digital Twin, Genesis Results). `House.genesisStep` persiste lo step esatto; `GET /houses/:id/genesis/resume` ricarica anche l'ultima `ScanSession` e le sue `Observation` quando lo step è Review. Le navigazioni all'indietro vengono persistite e il backend impedisce di saltare più di uno step in avanti.
 
 ## 8. Dashboard
 
@@ -115,7 +115,7 @@ Il frontend (`Genesis.tsx`) è una macchina a stati a 6 step (Welcome, House Inf
 
 - **Nessuna autenticazione**: dichiarato esplicitamente prima di iniziare, accettato dall'utente come parte dello scope (vedi `decisions.md` #25). Nessuna verifica di ownership sulla casa negli endpoint Genesis — stessa lacuna già presente nel resto dell'API (`backlog.md` B2), non introdotta da Genesis.
 - ~~Nessuna deduplica contro Asset/Room già esistenti~~ — risolto 2026-08-04, vedi §6bis e `decisions.md` #26: avviso + default "Scarta", mai fusione automatica.
-- **Ripresa del wizard solo a grana grossa**: `GenesisStatus` ha 4 soli valori (`NOT_STARTED`/`IN_PROGRESS`/`PROCESSING`/`COMPLETED`), non uno per step. Uscire a metà della Review e rientrare riparte dallo step "Scansione", non esattamente da dove si era interrotto — lo stato dettagliato del wizard (`ScanSession`/`Observation` già create) non va perso lato dati, ma il frontend non lo ripresenta automaticamente in questa iterazione.
+- ~~Ripresa del wizard solo a grana grossa~~ — risolta con B34: lo step esatto è persistito su `House` e Review ricostruisce la sessione di scansione dal backend.
 - **Efficienza con segnale debole**: `Asset.estimatedReplacementYear` esiste nello schema ma nessun flusso lo valorizza ancora automaticamente — la dimensione "Efficienza" dell'Home Score resta quindi quasi sempre 100 in pratica, dichiarato nel codice (`home-score.ts`) invece di nascosto.
 - **Scansione dimostrativa, non reale**: nessuna computer vision né analisi di foto/video. L'utente compone una proposta scegliendo da un catalogo fisso ampio; nomi e confidenze restano dimostrativi.
 
@@ -123,6 +123,6 @@ Il frontend (`Genesis.tsx`) è una macchina a stati a 6 step (Welcome, House Inf
 
 1. Implementare un `HouseScanProvider` reale (upload foto/video → job asincrono → popolamento `Observation` con `confidence` derivata da un modello, non fissa) e legarlo al posto di `MockHouseScanProvider` in `genesis.module.ts` — nessun altro file cambia per contratto.
 2. Aggiungere una fase di deduplica in `GenesisService.confirmObservations`, riusando/estendendo l'euristica di `documents.service.ts` (`haveSimilarSuggestedName`) prima di creare un nuovo Asset.
-3. Persistere uno step corrente esplicito su `ScanSession` o `House` per una ripresa a grana fine del wizard.
+3. ~~Persistere uno step corrente esplicito~~ — completato con B34 su `House`.
 4. Popolare `estimatedReplacementYear` da un flusso reale (es. estrazione documentale) prima di dare peso pieno alla dimensione Efficienza.
 5. Applicare l'isolamento per utente (dipende da B2, autenticazione reale) prima di qualunque esposizione del backend oltre l'uso locale/LAN.

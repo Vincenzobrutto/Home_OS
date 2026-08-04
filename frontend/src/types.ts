@@ -5,6 +5,7 @@ export interface User {
 }
 
 export type GenesisStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'PROCESSING' | 'COMPLETED';
+export type GenesisStep = 'WELCOME' | 'HOUSE_INFO' | 'DOCUMENTS' | 'SCAN' | 'REVIEW' | 'RESULTS';
 
 export interface House {
   id: string;
@@ -25,6 +26,7 @@ export interface House {
   propertyType: string | null;
   country: string | null;
   genesisStatus: GenesisStatus;
+  genesisStep: GenesisStep;
 }
 
 export interface ScanSessionRecord {
@@ -34,6 +36,12 @@ export interface ScanSessionRecord {
   status: string;
   startedAt: string;
   completedAt: string | null;
+}
+
+export interface GenesisResumeState {
+  step: GenesisStep;
+  scanSession: ScanSessionRecord | null;
+  observations: ObservationRecord[];
 }
 
 export interface GenesisDemoCatalog {

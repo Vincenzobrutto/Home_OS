@@ -87,6 +87,15 @@ enum GenesisStatus {
   COMPLETED
 }
 
+enum GenesisStep {
+  WELCOME
+  HOUSE_INFO
+  DOCUMENTS
+  SCAN
+  REVIEW
+  RESULTS
+}
+
 // Riusato sia da Room che da Asset: come si è arrivati a quella riga, non
 // solo "chi l'ha creata" — serve a distinguere ciò che l'utente ha inserito
 // a mano da ciò che viene da una scansione/documento e attende conferma.
@@ -226,6 +235,7 @@ model House {
   propertyType      String?       @map("property_type")
   country           String?
   genesisStatus     GenesisStatus @default(NOT_STARTED) @map("genesis_status")
+  genesisStep       GenesisStep   @default(WELCOME) @map("genesis_step")
 
   rooms           Room[]
   assets          Asset[]

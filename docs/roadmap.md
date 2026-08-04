@@ -22,7 +22,7 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Copertura backend delle regole di dominio: stato/garanzia Asset, pipeline documentale, calendario/suggerimenti manutenzione e completamento multiplo da documento (26 test totali, 2026-08-03).
 
 **M2 — HomeOS Genesis MVP (2026-08-04)**
-- Wizard di onboarding a 6 step (Benvenuto → Informazioni casa → Documenti → Scansione guidata → Revisione Digital Twin → Risultati), persistente e ripresumibile a grana grossa.
+- Wizard di onboarding a 6 step (Benvenuto → Informazioni casa → Documenti → Scansione guidata → Revisione Digital Twin → Risultati), con ripresa precisa dello step e ricostruzione della Review dall'ultima sessione (B34).
 - Scansione guidata dimostrativa con catalogo configurabile di 14 ambienti e 25 Asset/impianti: l'utente sceglie cosa assomiglia alla propria casa prima della proposta, poi conferma/modifica/scarta ogni elemento.
 - Home Score v1: punteggio 0-100 su 5 dimensioni pesate (documentazione, manutenzione, sicurezza, efficienza, completezza), ogni scostamento spiegato da una `reason` esplicita, versionato e persistito come storico (`ScoreSnapshot`).
 - Home Detective: 5 regole deterministiche (mai un LLM) che generano `Issue`/`Recommendation` idempotenti, riconciliate ad ogni completamento di Genesis.
@@ -39,7 +39,7 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - OAuth Gmail/Drive funzionante anche da un client mobile in LAN (oggi il redirect è pensato per `localhost`).
 - Navigazione con URL reali (oggi `view` è solo stato in memoria, niente back/forward del browser né link condivisibili).
 - Rivedere la conservazione in chiaro dei token OAuth in DB prima di qualunque esposizione oltre la rete locale.
-- Genesis: sostituire la scansione mock con un provider reale (foto/video), aggiungere deduplica contro Asset/Room esistenti, ripresa del wizard a grana fine — vedi `genesis-architecture.md` §9-10, `backlog.md` B33/B34.
+- Genesis: sostituire la scansione mock con un provider reale (foto/video); deduplica e ripresa a grana fine sono state completate con B33/B34 — vedi `genesis-architecture.md` §6bis-10.
 
 ## Idee di prodotto da valutare (engagement / monetizzazione)
 
