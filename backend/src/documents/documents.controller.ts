@@ -15,6 +15,7 @@ import { memoryStorage } from 'multer';
 import { DocumentsService } from './documents.service';
 import { ConfirmDocumentDto } from './dto/confirm-document.dto';
 import { ConfirmFloorPlanDto } from './dto/confirm-floor-plan.dto';
+import { ConfirmUtilityBillDto } from './dto/confirm-utility-bill.dto';
 
 @Controller()
 export class DocumentsController {
@@ -80,6 +81,14 @@ export class DocumentsController {
     @Body() dto: ConfirmFloorPlanDto,
   ) {
     return this.documentsService.confirmFloorPlan(id, dto);
+  }
+
+  @Post('documents/:id/confirm-utility-bill')
+  confirmUtilityBill(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ConfirmUtilityBillDto,
+  ) {
+    return this.documentsService.confirmUtilityBill(id, dto);
   }
 
   @Get('houses/:houseId/gmail-candidates')

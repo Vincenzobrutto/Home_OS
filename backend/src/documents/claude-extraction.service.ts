@@ -20,6 +20,23 @@ const SYSTEM_PROMPT = `Sei il motore di estrazione documentale di HomeOS, un'app
 
 Analizza il documento e rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo. La forma dipende dal tipo di documento:
 
+0) Se il documento è una BOLLETTA ELETTRICA (non gas o acqua):
+{
+  "kind": "utility_bill",
+  "docType": "Bolletta elettrica",
+  "supplier": "nome fornitore oppure null",
+  "confidence": numero 0-100,
+  "isHomeRelated": true,
+  "periods": [{
+    "periodStart": "data ISO YYYY-MM-DD",
+    "periodEnd": "data ISO YYYY-MM-DD",
+    "consumptionKwh": numero positivo,
+    "amount": "importo totale in euro del periodo oppure null"
+  }],
+  "fields": [["Etichetta campo", "Valore"], ...]
+}
+Se la bolletta riporta consumi mensili distinti, crea un periodo per ogni mese. Se riporta solo un totale bimestrale/plurimensile, crea un unico periodo con le date reali: HomeOS lo mostrerà come ripartizione stimata, non inventare dettagli mensili. Non confondere potenza impegnata (kW) ed energia consumata (kWh). Non includere letture cumulative del contatore come consumo del periodo. L'importo deve essere il totale dovuto, non una singola componente tariffaria.
+
 1) Se il documento è una PLANIMETRIA (pianta/disegno che mostra la disposizione delle stanze di una casa):
 {
   "kind": "floor_plan",
@@ -103,7 +120,23 @@ export interface FloorPlanResult {
   rooms: FloorPlanRoomProposal[];
 }
 
-export type ExtractionResult = AssetDocumentResult | FloorPlanResult;
+export interface UtilityBillResult {
+  kind: 'utility_bill';
+  docType: 'Bolletta elettrica';
+  supplier: string | null;
+  confidence: number;
+  isHomeRelated: boolean;
+  periods: Array<{
+    periodStart: string;
+    periodEnd: string;
+    consumptionKwh: number;
+    amount: number | null;
+  }>;
+  fields: [string, string][];
+}
+
+export type ExtractionResult =
+  AssetDocumentResult | FloorPlanResult | UtilityBillResult;
 
 // Input/output del solo arricchimento via ricerca online (pulsante "Cerca
 // online" in Inbox, su richiesta esplicita dell'utente — vedi

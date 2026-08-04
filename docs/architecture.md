@@ -48,7 +48,7 @@ Upload / Scatto foto / Scansione Gmail-Drive
   Document (status=PENDING o già ANALYZED per i candidati Gmail/Drive)
         │  POST /documents/:id/analyze
         ▼
-  Claude estrae: tipo documento, campi, asset-type suggerito, nome suggerito, quantità
+  Claude estrae uno dei kind: asset_document, floor_plan, utility_bill
         │
         ▼
   Matching: cerca un Asset esistente dello stesso tipo E con nome simile
@@ -65,6 +65,8 @@ Upload / Scatto foto / Scansione Gmail-Drive
 ```
 
 Il principio "l'AI propone, l'utente conferma" (vedi `decisions.md`) è la ragione per cui `analyze` e `confirm` sono due endpoint separati, non un'unica chiamata.
+
+Le bollette elettriche seguono lo stesso confine: `analyze` conserva periodi/kWh solo in `extractedFields`; `confirm-utility-bill` crea le righe interrogabili `UtilityBill` e conferma il documento in una transazione. Non vengono associate forzatamente a un Asset: sono dati della casa.
 
 ## 4bis. Modulo Genesis (onboarding guidato)
 

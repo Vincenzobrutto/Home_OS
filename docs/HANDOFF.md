@@ -23,6 +23,7 @@ Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi 
 - Manutenzione programmata per Asset: ricorrenze, preavviso, tecnico/documento, completamento, storico, sospensione e promemoria Dashboard.
 - UI ottimizzata per mobile (sidebar a scomparsa, touch sulla planimetria, layout responsive).
 - **HomeOS Genesis (2026-08-04)**: wizard di onboarding a 6 step; scansione dimostrativa con catalogo selezionabile, revisione esplicita, Home Score v1 e Home Detective. La Dashboard mostra anche il trend degli ultimi 12 mesi e consente il ricalcolo manuale senza snapshot duplicati. Dettaglio in [`genesis-architecture.md`](genesis-architecture.md).
+- **Consumi elettrici B25 (2026-08-04)**: bollette estratte da Claude e confermate dall'utente, periodi `UtilityBill`, vista Energia con confronto YoY e installazioni Asset per mese. I periodi plurimensili sono marcati come stimati.
 
 Dettaglio completo in [`vision.md`](vision.md) e [`roadmap.md`](roadmap.md).
 
@@ -84,7 +85,7 @@ npm install
 npm run dev
 ```
 
-Il repository contiene ora 12 migrazioni, inclusa `20260804120000_add_genesis_step` (B34, additiva). Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare la ripresa precisa del wizard.
+Il repository contiene ora 13 migrazioni, inclusa `20260804143000_add_utility_bills` (B25, additiva). Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare la vista Energia.
 
 ### Lint, build, test — risultati verificati il 2026-08-04
 
@@ -92,7 +93,7 @@ Il repository contiene ora 12 migrazioni, inclusa `20260804120000_add_genesis_st
 |---|---|---|
 | `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~805 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ✅ 0 errori, 0 warning | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx), invariati |
-| `npm run test` | ✅ 59/59 (inclusi catalogo, ripresa e storico Home Score) | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 64/64 (inclusi consumi, conferma bolletta e funzionalità Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Verificato anche **end-to-end nel browser** (non solo unit test): l'intero wizard Genesis eseguito sulla casa reale — creazione stanze/asset dalla scansione demo, calcolo Home Score, generazione Issue/Recommendation coerenti. Dettaglio in `changelog.md` (2026-08-04).
 

@@ -346,7 +346,39 @@ export interface FloorPlanFields {
   rooms: FloorPlanRoomProposal[];
 }
 
-export type ExtractedFields = AssetDocumentFields | FloorPlanFields;
+export interface UtilityBillFields {
+  kind: 'utility_bill';
+  docType: string;
+  supplier: string | null;
+  periods: Array<{
+    periodStart: string;
+    periodEnd: string;
+    consumptionKwh: number;
+    amount: number | null;
+  }>;
+  fields: [string, string][];
+}
+
+export type ExtractedFields = AssetDocumentFields | FloorPlanFields | UtilityBillFields;
+
+export interface EnergyConsumptionMonth {
+  month: number;
+  currentKwh: number | null;
+  previousKwh: number | null;
+  currentAmount: number | null;
+  previousAmount: number | null;
+  deltaPercent: number | null;
+  estimatedCurrent: boolean;
+  estimatedPrevious: boolean;
+  installations: Array<{ id: string; name: string; type: string; installedAt: string }>;
+}
+
+export interface EnergyConsumptionResponse {
+  year: number;
+  previousYear: number;
+  availableYears: number[];
+  months: EnergyConsumptionMonth[];
+}
 
 export interface DocumentRecord {
   id: string;

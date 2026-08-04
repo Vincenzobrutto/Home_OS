@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-04 (8) — B25, monitoraggio consumi elettrici YoY
+
+- Claude riconosce le bollette elettriche e propone fornitore, periodi, kWh e importi; l'utente corregge ogni valore prima della conferma.
+- Nuova entità `UtilityBill`, collegata a casa e documento originale; conferma dei periodi e del documento atomica.
+- Vista Energia con barre anno selezionato/precedente, variazione YoY e Asset installati nel mese cliccabili.
+- Periodi plurimensili ripartiti per giorni e marcati con `~`, mai presentati come misure mensili reali.
+- Nuova migrazione, 2 endpoint e 5 test; baseline backend 64/64.
+
 ## 2026-08-04 (7) — Sync con le evoluzioni di Codex + fix
 
 Recuperate da GitHub e verificate le 3 evoluzioni Genesis di Codex (catalogo demo ampliato/selezionabile, ripresa precisa B34, trend storico Home Score — vedi voci sotto): build/lint/test su entrambi i lati, 59/59 test, migrazione `20260804120000_add_genesis_step` applicata e verificata additiva. Nessuna regressione: la deduplica (B33) e le rifiniture di usabilità della sessione precedente sono state preservate ed estese, non riscritte.

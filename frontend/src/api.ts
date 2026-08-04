@@ -304,6 +304,10 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ decisions }),
       }),
+    confirmUtilityBill: (
+      id: string,
+      data: { supplier?: string | null; periods: Array<{ periodStart: string; periodEnd: string; consumptionKwh: number; amount?: number | null }> },
+    ) => request<DocumentRecord>(`/documents/${id}/confirm-utility-bill`, { method: 'POST', body: JSON.stringify(data) }),
     fileUrl: (id: string) => `${BASE_URL}/documents/${id}/file`,
     downloadUrl: (id: string) => `${BASE_URL}/documents/${id}/file?download=1`,
     uploadFloorPlanBackground: (houseId: string, file: File) => {
@@ -328,6 +332,10 @@ export const api = {
       request<DocumentRecord>(`/documents/${id}/search-online`, {
         method: 'POST',
       }),
+  },
+  energy: {
+    consumption: (houseId: string, year: number) =>
+      request<import('./types').EnergyConsumptionResponse>(`/houses/${houseId}/energy-consumption?year=${year}`),
   },
   genesis: {
     start: (houseId: string) => request<House>(`/houses/${houseId}/genesis/start`, { method: 'POST' }),

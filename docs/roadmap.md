@@ -30,6 +30,7 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Nuove entità: `Floor`, `ScanSession`, `Observation`, `Issue`, `Recommendation`, `ScoreSnapshot`, `HouseTimelineEvent`; `House`/`Room`/`Asset` estesi in modo retrocompatibile.
 - Verificato end-to-end nel browser il flusso Genesis originario; il nuovo catalogo selezionabile è coperto da test automatico del provider mock.
 - Dashboard con trend Home Score degli ultimi 12 mesi, selezione dimensione e ricalcolo manuale senza snapshot duplicati (B35).
+- Monitoraggio consumi elettrici da bollette confermate: confronto mensile YoY, variazione percentuale e installazioni Asset contestualizzate nel mese (B25).
 - **Blocco noto e accettato**: nessuna autenticazione, quindi l'isolamento per utente richiesto dalla specifica non è applicato (vedi `decisions.md` #25, `product-backlog.md` EPIC 7). Deduplica e ripresa precisa sono state completate con B33/B34.
 
 ## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)
@@ -55,7 +56,7 @@ Non ancora decise né pianificate — pensate insieme all'utente il 2026-08-03, 
 Stessa origine (2026-08-03), dettaglio in `backlog.md`. Divise in due fasce per sforzo:
 
 **Solo dati caricati/estratti — si innestano su quello che c'è già:**
-- Monitoraggio consumi elettrici: bolletta caricata, istogramma mensile con confronto anno-su-anno (rispetta la stagionalità), correlazione visiva con gli Asset installati in quel periodo — design completo affinato con l'utente il 2026-08-03 — B25.
+- ~~Monitoraggio consumi elettrici~~ — completato 2026-08-04 con B25: bollette confermate, confronto YoY e installazioni mensili.
 - Rilevatori di sicurezza (fumo/CO/allagamento) come Asset con piano di manutenzione batteria — B26, sforzo quasi nullo perché riusa Asset+MaintenancePlan.
 - Scadenze generalizzate oltre l'Asset (polizza casa, APE, IMU/TARI) — B27, riusa il motore di promemoria già costruito.
 - Valore stimato del contenuto casa dai prezzi già estratti — B28, complementare al libretto PDF (B23).

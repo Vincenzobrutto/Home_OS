@@ -11,6 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ClaudeExtractionService } from './claude-extraction.service';
 import { ConfirmDocumentDto } from './dto/confirm-document.dto';
 import { ConfirmFloorPlanDto } from './dto/confirm-floor-plan.dto';
+import { ConfirmUtilityBillDto } from './dto/confirm-utility-bill.dto';
 import { computeAssetStatus } from '../common/asset-status';
 import { parseFlexibleDate } from '../common/parse-date';
 import { computeDefaultWarrantyUntil } from '../common/warranty';
@@ -574,6 +575,41 @@ export class DocumentsService {
       };
     }
 
+    if (result.kind === 'utility_bill') {
+      const periods = (result.periods ?? [])
+        .map((period) => ({
+          periodStart: period.periodStart,
+          periodEnd: period.periodEnd,
+          consumptionKwh: Number(period.consumptionKwh),
+          amount:
+            period.amount === null || period.amount === undefined
+              ? null
+              : Number(period.amount),
+        }))
+        .filter(
+          (period) =>
+            Boolean(period.periodStart && period.periodEnd) &&
+            Number.isFinite(period.consumptionKwh) &&
+            period.consumptionKwh > 0 &&
+            (period.amount === null || Number.isFinite(period.amount)),
+        );
+      return {
+        isHomeRelated: result.isHomeRelated,
+        data: {
+          status: DocumentStatus.ANALYZED,
+          docType: result.docType,
+          aiConfidence: result.confidence,
+          extractedFields: {
+            kind: 'utility_bill',
+            docType: result.docType,
+            supplier: result.supplier,
+            periods,
+            fields: result.fields,
+          },
+        },
+      };
+    }
+
     // Matching per tipo + nome (architettura §5 punto 4): il tipo da solo
     // non basta a scegliere QUALE asset suggerire — "elettrodomestico" da
     // solo raggruppa forno, frigo, microonde, friggitrice ad aria ecc. nella
@@ -739,6 +775,11 @@ export class DocumentsService {
     if (this.kindOf(document) === 'floor_plan') {
       throw new BadRequestException(
         'Questo documento è stato riconosciuto come planimetria: usa /documents/:id/confirm-floorplan.',
+      );
+    }
+    if (this.kindOf(document) === 'utility_bill') {
+      throw new BadRequestException(
+        'Questo documento è una bolletta elettrica: usa /documents/:id/confirm-utility-bill.',
       );
     }
     if (!dto.assetId && !dto.createAssetType && !dto.linkToHouse) {
@@ -934,6 +975,64 @@ export class DocumentsService {
     return this.prisma.document.update({
       where: { id: documentId },
       data: { status: DocumentStatus.CONFIRMED, confirmedAt: new Date() },
+    });
+  }
+
+  async confirmUtilityBill(documentId: string, dto: ConfirmUtilityBillDto) {
+    const document = await this.getDocumentOrThrow(documentId);
+    if (
+      document.status !== DocumentStatus.ANALYZED ||
+      this.kindOf(document) !== 'utility_bill'
+    ) {
+      throw new BadRequestException(
+        'Questo documento non è una bolletta elettrica analizzata.',
+      );
+    }
+    const existing = await this.prisma.utilityBill.count({
+      where: { documentId },
+    });
+    if (existing > 0) {
+      throw new BadRequestException(
+        'I consumi di questa bolletta sono già stati confermati.',
+      );
+    }
+    for (const period of dto.periods) {
+      if (period.periodEnd < period.periodStart) {
+        throw new BadRequestException(
+          'La fine del periodo non può precedere l’inizio.',
+        );
+      }
+    }
+    const uniquePeriods = new Set(
+      dto.periods.map(
+        (period) =>
+          `${period.periodStart.toISOString()}-${period.periodEnd.toISOString()}`,
+      ),
+    );
+    if (uniquePeriods.size !== dto.periods.length) {
+      throw new BadRequestException('La bolletta contiene periodi duplicati.');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.utilityBill.createMany({
+        data: dto.periods.map((period) => ({
+          houseId: document.houseId,
+          documentId,
+          periodStart: period.periodStart,
+          periodEnd: period.periodEnd,
+          consumptionKwh: period.consumptionKwh,
+          amount: period.amount ?? null,
+          supplier: dto.supplier?.trim() || null,
+        })),
+      });
+      return tx.document.update({
+        where: { id: documentId },
+        data: {
+          status: DocumentStatus.CONFIRMED,
+          confirmedAt: new Date(),
+          houseLevel: true,
+        },
+      });
     });
   }
 

@@ -53,12 +53,18 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/documents/:id/analyze` | invoca Claude, popola `extractedFields`, status → `ANALYZED`. Nessuna scrittura su Asset. |
 | POST | `/documents/:id/confirm` | scrittura reale: `{ assetId }` **oppure** `{ createAssetType, assetName?, roomId? }` **oppure** `{ linkToHouse: true }` |
 | POST | `/documents/:id/confirm-floorplan` | conferma ambienti estratti da una planimetria caricata |
+| POST | `/documents/:id/confirm-utility-bill` | conferma periodi elettrici estratti e crea `UtilityBill` atomicamente |
 | GET | `/houses/:houseId/gmail-candidates` | documenti trovati su Gmail non ancora importati |
 | GET | `/houses/:houseId/drive-candidates` | idem per Google Drive |
 | POST | `/documents/:id/import-candidate` | promuove un candidato Gmail/Drive a documento normale (`importedAt`) |
 | POST | `/documents/:id/ignore` | imposta `ignoredAt`, il candidato non viene riproposto |
 | POST | `/documents/:id/move-to-house` | sposta un documento tra case (correzione errore utente) |
 | POST | `/documents/:id/search-online` | arricchimento dati via Claude + tool `web_search` |
+
+## Energy
+| Metodo | Path | Note |
+|---|---|---|
+| GET | `/houses/:houseId/energy-consumption?year=YYYY` | confronto mensile YoY, indicatori di stima e Asset installati nell'anno selezionato |
 
 ## Contacts
 | Metodo | Path | Note |

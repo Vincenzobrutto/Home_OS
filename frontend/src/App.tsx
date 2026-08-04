@@ -14,6 +14,7 @@ import { InboxHub, type InboxTab } from './components/InboxHub';
 import { BootstrapScreen } from './components/Bootstrap';
 import { HouseDocumentsView } from './components/HouseDocuments';
 import { GenesisWizard } from './components/Genesis';
+import { EnergyConsumption } from './components/EnergyConsumption';
 
 type AssetWithFields = Asset & { customFields: CustomField[] };
 
@@ -284,6 +285,13 @@ export default function App() {
               await loadHouseData(house.id);
             }}
             onExit={() => setView('dashboard')}
+          />
+        )}
+        {view === 'energy' && (
+          <EnergyConsumption
+            house={house}
+            openAsset={(id) => openAsset(id, 'energy')}
+            openInbox={() => setView('inbox')}
           />
         )}
         {view === 'inbox' && bootstrapUser && (

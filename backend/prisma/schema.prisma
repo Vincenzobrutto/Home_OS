@@ -248,6 +248,7 @@ model House {
   recommendations Recommendation[]
   scoreSnapshots  ScoreSnapshot[]
   timelineEvents  HouseTimelineEvent[]
+  utilityBills    UtilityBill[]
 
   @@map("houses")
 }
@@ -421,10 +422,32 @@ model Document {
 
   timelineEvents         AssetTimelineEvent[]
   maintenanceOccurrences MaintenanceOccurrence[]
+  utilityBills           UtilityBill[]
 
   @@unique([houseId, gmailMessageId])
   @@unique([houseId, driveFileId])
   @@map("documents")
+}
+
+// Periodo di consumo elettrico confermato dall'utente a partire da una
+// bolletta. Un documento può contenere più periodi/riepiloghi; nessuna riga
+// nasce direttamente dall'estrazione AI senza conferma esplicita.
+model UtilityBill {
+  id             String   @id @default(uuid())
+  houseId        String   @map("house_id")
+  house          House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  documentId     String   @map("document_id")
+  document       Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  periodStart    DateTime @map("period_start") @db.Date
+  periodEnd      DateTime @map("period_end") @db.Date
+  consumptionKwh Decimal  @map("consumption_kwh") @db.Decimal(12, 3)
+  amount         Decimal? @db.Decimal(12, 2)
+  supplier       String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@unique([documentId, periodStart, periodEnd])
+  @@index([houseId, periodStart, periodEnd])
+  @@map("utility_bills")
 }
 
 model AssetTimelineEvent {

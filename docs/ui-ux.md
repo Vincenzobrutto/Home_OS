@@ -19,13 +19,18 @@ frontend/src/
     ├── Assets.tsx               elenco + dettaglio asset
     ├── Maintenance.tsx          piani, completamento e storico manutenzioni nel dettaglio Asset
     ├── HouseDocuments.tsx        documenti non legati a un ambiente (houseLevel)
+    ├── EnergyConsumption.tsx     confronto consumi elettrici YoY + installazioni mensili
     ├── Contacts.tsx               rubrica
     └── Modals.tsx                   ModalShell condiviso
 ```
 
 ## Navigazione (pattern `view`)
 
-Nessun URL/router: `App.tsx` tiene `view: View` (`dashboard | inbox | rooms | room-detail | assets | asset-detail | house-documents | contacts | contact-detail`) e la passa a `Sidebar`, che chiama `setView`. Cambiare vista = re-render condizionale in `App.tsx`, non una navigazione del browser (niente back/forward, niente URL condivisibili — limite noto, vedi `backlog.md`).
+Nessun URL/router: `App.tsx` tiene `view: View` (`dashboard | inbox | rooms | room-detail | assets | asset-detail | house-documents | energy | contacts | contact-detail | genesis`) e la passa a `Sidebar`, che chiama `setView`. Cambiare vista = re-render condizionale in `App.tsx`, non una navigazione del browser (niente back/forward, niente URL condivisibili — limite noto, vedi `backlog.md`).
+
+## Energia
+
+`EnergyConsumption.tsx` mostra dodici coppie di barre (anno scelto e precedente), percentuale YoY e valori testuali sempre visibili anche senza hover. I periodi plurimensili ripartiti sono prefissati con `~`. Sotto il mese compaiono gli Asset con `installedAt` in quel mese; il click usa `openAsset(id, 'energy')`, quindi il ritorno conserva la vista Energia.
 
 **Pattern "origine" per il dettaglio asset**: `openAsset(id, origin?: View)` salva `origin` in `assetDetailOrigin` prima di passare a `asset-detail`; il pulsante "indietro" nel dettaglio fa `setView(assetDetailOrigin)`. Serve perché un Asset può essere aperto da più punti (elenco Asset, Documenti casa, Dashboard, dettaglio Ambiente, Rubrica) e "indietro" deve tornare a quello giusto, non sempre all'elenco Asset. Ogni nuovo punto d'ingresso al dettaglio asset deve passare l'`origin` corretto — è l'errore più facile da introdurre aggiungendo una nuova card cliccabile.
 

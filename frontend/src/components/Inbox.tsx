@@ -3,7 +3,7 @@ import { Camera, CheckCircle2, FileText, Globe, Sparkles, Upload, XCircle } from
 import { T, ASSET_TYPES, ROOM_TYPES } from '../theme';
 import { SectionLabel, Stamp } from './Shared';
 import { api } from '../api';
-import type { Asset, DocumentMaintenanceProposal, DocumentRecord, FloorPlanRoomProposal, Room } from '../types';
+import type { Asset, DocumentMaintenanceProposal, DocumentRecord, FloorPlanRoomProposal, Room, UtilityBillFields } from '../types';
 
 interface RoomDecision {
   action: 'create' | 'update' | 'skip';
@@ -118,6 +118,61 @@ function FloorPlanProposal({
       >
         <CheckCircle2 size={13} /> {busy ? 'Applico…' : 'Applica planimetria'}
       </button>
+    </div>
+  );
+}
+
+function UtilityBillProposal({
+  doc,
+  fields,
+  busy,
+  onConfirm,
+}: {
+  doc: DocumentRecord;
+  fields: UtilityBillFields;
+  busy: boolean;
+  onConfirm: (data: Parameters<typeof api.documents.confirmUtilityBill>[1]) => void;
+}) {
+  const [supplier, setSupplier] = useState(fields.supplier ?? '');
+  const [periods, setPeriods] = useState(() => fields.periods.map((period) => ({ ...period })));
+  const invalid = periods.length === 0 || periods.some((period) => !period.periodStart || !period.periodEnd || period.periodEnd < period.periodStart || !(period.consumptionKwh > 0));
+  const spansMonths = (start: string, end: string) => start.slice(0, 7) !== end.slice(0, 7);
+
+  function updatePeriod(index: number, patch: Partial<(typeof periods)[number]>) {
+    setPeriods((current) => current.map((period, i) => i === index ? { ...period, ...patch } : period));
+  }
+
+  return (
+    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${T.line}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+        <Stamp tone={doc.aiConfidence && Number(doc.aiConfidence) > 90 ? 'pine' : doc.aiConfidence && Number(doc.aiConfidence) > 80 ? 'ochre' : 'rust'}>confidenza {doc.aiConfidence}%</Stamp>
+        <strong style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: T.ink }}>Bolletta elettrica riconosciuta</strong>
+      </div>
+      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.ink70, lineHeight: 1.5, margin: '0 0 12px' }}>Controlla periodo, kWh e importo. I consumi entrano nel monitoraggio solo dopo la tua conferma.</p>
+      <label style={{ display: 'block', fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate, marginBottom: 12 }}>
+        Fornitore
+        <input value={supplier} onChange={(event) => setSupplier(event.target.value)} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: '7px 9px', border: `1px solid ${T.line}`, borderRadius: 6, fontFamily: "'Inter', sans-serif" }} />
+      </label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+        {periods.map((period, index) => (
+          <div key={index} style={{ padding: 10, border: `1px solid ${T.line}`, borderRadius: 7, background: T.paper }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(125px, 1fr))', gap: 8 }}>
+              <label style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate }}>Dal<input type="date" value={period.periodStart} onChange={(event) => updatePeriod(index, { periodStart: event.target.value })} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 3, padding: 6, border: `1px solid ${T.line}`, borderRadius: 5 }} /></label>
+              <label style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate }}>Al<input type="date" value={period.periodEnd} onChange={(event) => updatePeriod(index, { periodEnd: event.target.value })} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 3, padding: 6, border: `1px solid ${T.line}`, borderRadius: 5 }} /></label>
+              <label style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate }}>Consumo (kWh)<input type="number" min="0.001" step="0.001" value={period.consumptionKwh} onChange={(event) => updatePeriod(index, { consumptionKwh: Number(event.target.value) })} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 3, padding: 6, border: `1px solid ${T.line}`, borderRadius: 5 }} /></label>
+              <label style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate }}>Importo (€)<input type="number" min="0" step="0.01" value={period.amount ?? ''} onChange={(event) => updatePeriod(index, { amount: event.target.value === '' ? null : Number(event.target.value) })} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 3, padding: 6, border: `1px solid ${T.line}`, borderRadius: 5 }} /></label>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 7 }}>
+              {spansMonths(period.periodStart, period.periodEnd) ? <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10.5, color: T.ochreDeep }}>Il grafico ripartirà questo totale per giorni e lo indicherà con ~.</span> : <span />}
+              {periods.length > 1 && <button onClick={() => setPeriods((current) => current.filter((_, i) => i !== index))} style={{ border: 'none', background: 'none', color: T.rust, cursor: 'pointer', fontSize: 11 }}>Rimuovi</button>}
+            </div>
+          </div>
+        ))}
+      </div>
+      <button onClick={() => setPeriods((current) => [...current, { periodStart: '', periodEnd: '', consumptionKwh: 0, amount: null }])} style={{ marginTop: 9, border: 'none', background: 'none', color: T.pine, cursor: 'pointer', padding: 0, fontFamily: "'Inter', sans-serif", fontSize: 11.5 }}>+ Aggiungi periodo mensile</button>
+      <div style={{ marginTop: 12 }}>
+        <button disabled={busy || invalid} onClick={() => onConfirm({ supplier: supplier.trim() || null, periods })} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: T.pine, color: '#F7F7F2', border: 'none', borderRadius: 6, padding: '8px 13px', cursor: invalid ? 'default' : 'pointer', opacity: invalid ? 0.55 : 1, fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 500 }}><CheckCircle2 size={13} /> {busy ? 'Salvataggio…' : 'Conferma consumi elettrici'}</button>
+      </div>
     </div>
   );
 }
@@ -282,6 +337,19 @@ export function InboxView({
       await api.documents.confirmFloorPlan(docId, decisions);
       await refresh();
       onRoomsChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore imprevisto');
+    } finally {
+      setBusyDocIds(new Set());
+    }
+  }
+
+  async function confirmUtilityBill(docId: string, data: Parameters<typeof api.documents.confirmUtilityBill>[1]) {
+    setBusyDocIds(new Set([docId]));
+    setError(null);
+    try {
+      await api.documents.confirmUtilityBill(docId, data);
+      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore imprevisto');
     } finally {
@@ -462,6 +530,15 @@ export function InboxView({
                   rooms={rooms}
                   busy={busy}
                   onApply={(decisions) => confirmFloorPlan(doc.id, decisions)}
+                />
+              )}
+
+              {doc.status === 'ANALYZED' && fields?.kind === 'utility_bill' && (
+                <UtilityBillProposal
+                  doc={doc}
+                  fields={fields}
+                  busy={busy}
+                  onConfirm={(data) => confirmUtilityBill(doc.id, data)}
                 />
               )}
 

@@ -13,6 +13,7 @@ import { GmailModule } from './gmail/gmail.module';
 import { DriveModule } from './drive/drive.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { GenesisModule } from './genesis/genesis.module';
+import { UtilityBillsModule } from './utility-bills/utility-bills.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { GenesisModule } from './genesis/genesis.module';
     DriveModule,
     MaintenanceModule,
     GenesisModule,
+    UtilityBillsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

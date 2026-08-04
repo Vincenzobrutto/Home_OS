@@ -7,6 +7,7 @@ import {
   FileStack,
   Users,
   Sparkles,
+  Zap,
   X,
 } from 'lucide-react';
 import { T } from '../theme';
@@ -22,7 +23,8 @@ export type View =
   | 'house-documents'
   | 'contacts'
   | 'contact-detail'
-  | 'genesis';
+  | 'genesis'
+  | 'energy';
 
 export function Sidebar({
   view,
@@ -61,6 +63,7 @@ export function Sidebar({
     { id: 'rooms', label: 'Ambienti', icon: DoorOpen },
     { id: 'assets', label: 'Asset', icon: Building2 },
     { id: 'house-documents', label: 'Documenti casa', icon: FileStack },
+    { id: 'energy', label: 'Energia', icon: Zap },
     { id: 'contacts', label: 'Rubrica', icon: Users },
   ];
   // Voce visibile solo mentre un percorso Genesis è a metà — non NOT_STARTED

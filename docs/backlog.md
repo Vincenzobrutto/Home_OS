@@ -2,6 +2,8 @@
 
 Attività aperte, non ancora pianificate in una milestone specifica. Priorità: **Alta** (blocca o rischia dati/sicurezza) · **Media** (debito tecnico o friction reale) · **Bassa** (nice-to-have).
 
+**Aggiornamento B25 (2026-08-04): completata.** La riga dettagliata più sotto conserva lo scope concordato come specifica storica; non è più un'attività aperta. Implementati `UtilityBill`, estrazione/conferma, confronto YoY e installazioni mensili; vedi `decisions.md` #30.
+
 | # | Attività | Priorità | Dipendenze / note |
 |---|---|---|---|
 | B1 | Ampliare i test automatici backend (unit + e2e) — 18 test coprono stato/garanzia Asset, pipeline documentale e calendario manutenzioni | Alta | proseguire con error handling di `analyze`, transazione service manutenzioni, rami creazione multipla/house-level e test e2e API |

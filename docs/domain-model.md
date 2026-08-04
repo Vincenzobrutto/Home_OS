@@ -20,6 +20,7 @@ House ──< ScanSession ──< Observation (mai scritta su Room/Asset da sola
 House ──< Issue >── Recommendation (0..1, 1:1 oggi)
 House ──< ScoreSnapshot (fotografia nel tempo, mai ricalcolata "sul vecchio")
 House ──< HouseTimelineEvent (eventi a livello casa, distinti da AssetTimelineEvent)
+House ──< UtilityBill >── Document (uno o più periodi elettrici confermati per bolletta)
 ```
 
 Legenda: `──<` = "uno a molti" verso l'entità collegata. Tutte le relazioni verso `House` hanno `onDelete: Cascade`; `Asset.roomId` e `Document.assetId` hanno `onDelete: SetNull` (cancellare una stanza o un asset non cancella i documenti collegati, li scollega soltanto).
@@ -28,6 +29,9 @@ Legenda: `──<` = "uno a molti" verso l'entità collegata. Tutte le relazioni
 
 ### House
 La casa. `code` (es. `CASA-0142`) generato automaticamente in sequenza. `floorPlanRotation` conserva l'orientamento della planimetria. Per Genesis, `genesisStatus` rappresenta lo stato complessivo mentre `genesisStep` conserva lo step esatto (`WELCOME`, `HOUSE_INFO`, `DOCUMENTS`, `SCAN`, `REVIEW`, `RESULTS`) e permette la ripresa precisa.
+
+### UtilityBill
+Un periodo di consumo elettrico confermato dall'utente, sempre collegato alla casa e al `Document` sorgente. Contiene `periodStart`, `periodEnd`, `consumptionKwh`, importo e fornitore opzionali. Una bolletta può produrre più righe quando espone consumi mensili distinti. Periodi plurimensili restano tali nel dato sorgente: la ripartizione mensile è calcolata in lettura e marcata come stimata.
 
 ### Room (Ambiente)
 Una stanza. `type` è un enum chiuso (`CUCINA`, `SOGGIORNO`, `CAMERA`, `BAGNO` — **non** uno per ogni possibile stanza, l'etichetta libera è nel campo `name`). `planGeometry` è JSON libero con due forme possibili (vedi `frontend/src/geometry.ts`):
