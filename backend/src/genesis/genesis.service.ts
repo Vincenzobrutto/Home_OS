@@ -21,6 +21,10 @@ import {
   evaluateHomeDetectiveRules,
   type HomeDetectiveAssetInput,
 } from '../common/home-detective';
+import {
+  findPossibleDuplicate,
+  type DuplicateCandidate,
+} from './genesis-duplicate';
 
 // Orchestratore del percorso Genesis: non duplica logica di creazione già
 // esistente in RoomsService/AssetsService (nextAssetCode, calcolo warranty,
@@ -78,9 +82,37 @@ export class GenesisService {
     return session;
   }
 
+  // Arricchisce ogni Observation con un eventuale "possibleDuplicate": un
+  // Room/Asset già confermato in casa con nome simile e stesso tipo — solo
+  // per avvisare l'utente nello step di revisione (badge + default "Scarta"
+  // lato frontend), mai per fondere automaticamente. Vedi genesis-duplicate.ts.
   async getScanResults(houseId: string, scanSessionId: string) {
     await this.ensureScanSessionBelongsToHouse(scanSessionId, houseId);
-    return this.scanProvider.getResults(scanSessionId);
+    const observations = await this.scanProvider.getResults(scanSessionId);
+
+    const [existingRooms, existingAssets] = await Promise.all([
+      this.prisma.room.findMany({ where: { houseId, confirmed: true } }),
+      this.prisma.asset.findMany({
+        where: { houseId, confirmed: true, dismissedAt: null },
+      }),
+    ]);
+
+    return observations.map((o) => {
+      let candidates: DuplicateCandidate[];
+      if (o.entityType === 'ROOM') {
+        candidates = existingRooms
+          .filter((r) => r.type === o.proposedCategory)
+          .map((r) => ({ id: r.id, name: r.name }));
+      } else {
+        candidates = existingAssets
+          .filter((a) => a.type === o.proposedCategory)
+          .map((a) => ({ id: a.id, name: a.name }));
+      }
+      return {
+        ...o,
+        possibleDuplicate: findPossibleDuplicate(o.proposedName, candidates),
+      };
+    });
   }
 
   // Converte le Observation confermate/modificate in Room/Asset reali,
@@ -109,8 +141,14 @@ export class GenesisService {
       return obs && obs.entityType === 'ASSET';
     });
 
-    // proposedName della Room -> id reale appena creato in questo batch.
+    // proposedName della Room -> id reale (appena creato in questo batch, O
+    // di una Room già esistente trovata simile quando l'utente ha scartato
+    // il duplicato proposto — vedi sotto) a cui gli Asset osservati nello
+    // stesso giro devono collegarsi.
     const roomIdByProposedName = new Map<string, string>();
+    const existingConfirmedRooms = await this.prisma.room.findMany({
+      where: { houseId, confirmed: true },
+    });
 
     for (const item of roomItems) {
       const obs = observationById.get(item.observationId);
@@ -124,6 +162,18 @@ export class GenesisService {
           where: { id: obs.id },
           data: { status: 'REJECTED' },
         });
+        // Scartata perché duplicata di una Room reale già esistente (non
+        // per un altro motivo): gli Asset che la referenziano per nome nello
+        // stesso batch devono comunque collegarsi alla Room vera, non finire
+        // orfani come "impianto di casa" solo perché quella proposta da
+        // Genesis non è stata creata.
+        const duplicate = findPossibleDuplicate(
+          obs.proposedName,
+          existingConfirmedRooms.filter((r) => r.type === obs.proposedCategory),
+        );
+        if (duplicate) {
+          roomIdByProposedName.set(obs.proposedName, duplicate.id);
+        }
         continue;
       }
 
@@ -362,11 +412,26 @@ export class GenesisService {
     }
 
     // La Room osservata potrebbe essere stata confermata in una chiamata
-    // precedente (conferme parziali della Review), non solo nello stesso batch.
-    const existing = await this.prisma.room.findFirst({
-      where: { houseId, name: proposedRoomName, confirmed: true },
+    // precedente (conferme parziali della Review), non solo nello stesso
+    // batch — prima un match esatto case-insensitive (es. "Cucina" proposta
+    // vs "cucina" già in casa), poi la stessa euristica di somiglianza usata
+    // per il badge duplicati, per non perdere il collegamento anche quando
+    // il nome non coincide esattamente (es. "Bagno" vs "bagno_1").
+    const exact = await this.prisma.room.findFirst({
+      where: {
+        houseId,
+        confirmed: true,
+        name: { equals: proposedRoomName, mode: 'insensitive' },
+      },
     });
-    return existing?.id ?? null;
+    if (exact) {
+      return exact.id;
+    }
+    const candidateRooms = await this.prisma.room.findMany({
+      where: { houseId, confirmed: true },
+    });
+    const similar = findPossibleDuplicate(proposedRoomName, candidateRooms);
+    return similar?.id ?? null;
   }
 
   // Crea le nuove Issue non ancora aperte, risolve quelle non più valide,

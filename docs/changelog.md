@@ -2,6 +2,15 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-04 (2) — Genesis: deduplica contro dati esistenti (B33)
+
+- Trovato durante un walkthrough di usabilità sul wizard Genesis appena mergeato: la conferma di una scansione demo su una casa con dati reali preesistenti duplicava sistematicamente ambienti/asset con nomi simili (verificato: tutti e 4 gli ambienti demo e diversi asset coincidevano con dati già censiti).
+- **`genesis-duplicate.ts`** (nuovo, funzione pura testata): segnala un possibile duplicato (stesso tipo + nome simile) confrontando ogni Observation con i Room/Asset già confermati in casa.
+- **Step di revisione**: un elemento con un possibile duplicato mostra un avviso e parte su "Scarta" invece di "Conferma" — sempre annullabile con un click. Nessuna fusione automatica in nessun caso.
+- Quando una Room duplicata resta scartata, gli Asset dello stesso batch che la referenziano per nome si collegano comunque alla Room reale, non finiscono orfani come "impianto di casa".
+- Verificato live: scansione di prova sulla casa reale → 10/10 elementi correttamente segnalati (inclusi match su nomi specifici come "Forno a microonde Samsung MC28H5015AS"); rifiuto di tutti e 10 → nessuna riga creata; stato ripristinato identico a prima del test.
+- Vedi `decisions.md` #26. Backend: 54/54 test (3 nuovi + 3 di regressione aggiornati), build/lint puliti su backend e frontend.
+
 ## 2026-08-04 — HomeOS Genesis MVP
 
 - **Vertical slice completo**, su richiesta esplicita dell'utente dopo un'analisi di repository che ha flaggato il blocco reale (nessuna autenticazione, isolamento per utente non applicabile) e le sovrapposizioni con entità esistenti — utente ha accettato lo scope. Vedi `decisions.md` #25.

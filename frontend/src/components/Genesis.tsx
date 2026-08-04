@@ -467,8 +467,17 @@ function ReviewStep({
   observations: ObservationRecord[];
   onCompleted: (results: GenesisResults) => Promise<void>;
 }) {
+  // Un elemento che assomiglia a qualcosa già in casa parte scartato per
+  // default (l'utente può comunque confermarlo se è davvero un elemento
+  // diverso) — evita di duplicare ambienti/asset già censiti senza dover
+  // notare ogni volta l'avviso, vedi genesis-architecture.md.
   const [decisions, setDecisions] = useState<Record<string, ConfirmObservationItem>>(() =>
-    Object.fromEntries(observations.map((o) => [o.id, { observationId: o.id, action: 'confirm' as const }])),
+    Object.fromEntries(
+      observations.map((o) => [
+        o.id,
+        { observationId: o.id, action: o.possibleDuplicate ? ('reject' as const) : ('confirm' as const) },
+      ]),
+    ),
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -522,6 +531,7 @@ function ReviewStep({
                 onEditToggle={() => setEditingId(editingId === o.id ? null : o.id)}
                 onAction={(a) => setAction(o.id, a)}
                 onEditName={(name) => setEdit(o.id, name)}
+                possibleDuplicate={o.possibleDuplicate}
               />
             ))}
           </div>
@@ -543,6 +553,7 @@ function ReviewStep({
                 onAction={(a) => setAction(o.id, a)}
                 onEditName={(name) => setEdit(o.id, name)}
                 roomHint={o.payload.roomName ?? null}
+                possibleDuplicate={o.possibleDuplicate}
               />
             ))}
           </div>
@@ -567,6 +578,7 @@ function ObservationRow({
   onAction,
   onEditName,
   roomHint,
+  possibleDuplicate,
 }: {
   observation: ObservationRecord;
   icon?: React.ComponentType<{ size?: number; color?: string }>;
@@ -576,6 +588,7 @@ function ObservationRow({
   onAction: (action: ConfirmObservationItem['action']) => void;
   onEditName: (name: string) => void;
   roomHint?: string | null;
+  possibleDuplicate?: { id: string; name: string } | null;
 }) {
   const rejected = decision?.action === 'reject';
   const displayName = decision?.action === 'edit' ? decision.name ?? observation.proposedName : observation.proposedName;
@@ -612,6 +625,11 @@ function ObservationRow({
         <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: T.slate }}>
           confidenza {Math.round(observation.confidence * 100)}%{roomHint ? ` · ${roomHint}` : roomHint === null ? ' · impianto di casa' : ''}
         </div>
+        {possibleDuplicate && (
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.ochreDeep, marginTop: 2 }}>
+            Sembra già esistere: "{possibleDuplicate.name}" — lasciato su Scarta, conferma solo se è un elemento diverso.
+          </div>
+        )}
       </div>
       <button
         onClick={onEditToggle}

@@ -54,6 +54,9 @@ describe('GenesisService.confirmObservations', () => {
           ]),
         update: observationUpdate,
       },
+      // Nessun duplicato preesistente in questo scenario.
+      room: { findMany: jest.fn().mockResolvedValue([]) },
+      asset: { findMany: jest.fn().mockResolvedValue([]) },
     };
 
     const roomCreate = jest
@@ -103,6 +106,133 @@ describe('GenesisService.confirmObservations', () => {
     expect(observationUpdate).toHaveBeenCalledWith({
       where: { id: 'obs-asset-2' },
       data: { status: 'REJECTED' },
+    });
+  });
+});
+
+describe('GenesisService.confirmObservations — duplicate rooms', () => {
+  it('when a Room observation is rejected as a duplicate, an Asset observed in the same batch still links to the real pre-existing room instead of becoming house-level', async () => {
+    const roomObservation = {
+      id: 'obs-room-1',
+      scanSessionId: 'sess-1',
+      entityType: 'ROOM',
+      proposedName: 'Bagno',
+      proposedCategory: 'BAGNO',
+      confidence: 0.85,
+      payload: { roomType: 'BAGNO' },
+      status: 'PENDING',
+    };
+    const assetObservation = {
+      id: 'obs-asset-1',
+      scanSessionId: 'sess-1',
+      entityType: 'ASSET',
+      proposedName: 'Scaldabagno',
+      proposedCategory: 'CALDAIA',
+      confidence: 0.78,
+      payload: { assetType: 'CALDAIA', roomName: 'Bagno' },
+      status: 'PENDING',
+    };
+
+    const observationUpdate = jest.fn();
+    const preExistingBathroom = {
+      id: 'room-real-bagno-1',
+      name: 'bagno_1',
+      type: 'BAGNO',
+    };
+    const prisma = {
+      scanSession: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ id: 'sess-1', houseId: 'house-1' }),
+      },
+      observation: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([roomObservation, assetObservation]),
+        update: observationUpdate,
+      },
+      room: { findMany: jest.fn().mockResolvedValue([preExistingBathroom]) },
+      asset: { findMany: jest.fn().mockResolvedValue([]) },
+    };
+
+    const roomCreate = jest.fn();
+    const assetCreate = jest.fn().mockResolvedValue({ id: 'asset-real-1' });
+    const scanProvider: HouseScanProvider = {
+      startScan: jest.fn(),
+      getResults: jest.fn().mockResolvedValue([]),
+    };
+
+    const service = new GenesisService(
+      prisma as unknown as PrismaService,
+      { create: roomCreate } as unknown as RoomsService,
+      { create: assetCreate } as unknown as AssetsService,
+      scanProvider,
+    );
+
+    await service.confirmObservations('house-1', 'sess-1', {
+      items: [
+        // L'utente scarta "Bagno" perché assomiglia a "bagno_1" già in casa.
+        { observationId: 'obs-room-1', action: 'reject' },
+        { observationId: 'obs-asset-1', action: 'confirm' },
+      ],
+    });
+
+    expect(roomCreate).not.toHaveBeenCalled();
+    expect(assetCreate).toHaveBeenCalledWith('house-1', {
+      roomId: 'room-real-bagno-1',
+      type: 'CALDAIA',
+      name: 'Scaldabagno',
+      confidence: 0.78,
+      source: 'SCAN_MOCK',
+      confirmed: true,
+    });
+  });
+});
+
+describe('GenesisService.getScanResults — duplicate detection', () => {
+  it('flags an observation whose proposed name matches an existing confirmed Room of the same type', async () => {
+    const prisma = {
+      scanSession: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ id: 'sess-1', houseId: 'house-1' }),
+      },
+      room: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([
+            { id: 'room-1', name: 'cucina', type: 'CUCINA' },
+          ]),
+      },
+      asset: { findMany: jest.fn().mockResolvedValue([]) },
+    };
+    const scanProvider: HouseScanProvider = {
+      startScan: jest.fn(),
+      getResults: jest.fn().mockResolvedValue([
+        {
+          id: 'obs-1',
+          scanSessionId: 'sess-1',
+          entityType: 'ROOM',
+          proposedName: 'Cucina',
+          proposedCategory: 'CUCINA',
+          confidence: 0.9,
+          payload: {},
+          status: 'PENDING',
+        },
+      ]),
+    };
+    const service = new GenesisService(
+      prisma as unknown as PrismaService,
+      {} as unknown as RoomsService,
+      {} as unknown as AssetsService,
+      scanProvider,
+    );
+
+    const results = await service.getScanResults('house-1', 'sess-1');
+
+    expect(results[0].possibleDuplicate).toEqual({
+      id: 'room-1',
+      name: 'cucina',
     });
   });
 });

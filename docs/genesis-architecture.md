@@ -86,6 +86,10 @@ Ogni scostamento dal punteggio pieno produce una `reason` esplicita (`code`, `la
 
 Nessun vincolo unique DB per questa idempotenza: `assetId`/`documentId` nullable renderebbero un indice unique inaffidabile, e la query "esiste già una Issue OPEN con questa chiave" resta comunque necessaria per la semantica "riapri se torna a valere".
 
+## 6bis. Deduplica contro dati già esistenti (avviso, mai fusione automatica)
+
+`genesis-duplicate.ts` (funzione pura, `findPossibleDuplicate`) confronta il nome proposto da un'Observation con i Room/Asset già confermati in casa dello stesso tipo: nome identico case-insensitive, oppure almeno una parola significativa condivisa (stessa euristica di `haveSimilarSuggestedName` in `documents.service.ts`, senza la restrizione `PRODUCT_WORDS` — i nomi di ambiente non hanno lo stesso rischio "solo la marca in comune" dei nomi di elettrodomestici). `GenesisService.getScanResults` arricchisce ogni Observation con `possibleDuplicate: {id, name} | null`; il frontend lo mostra come avviso e fa partire quell'elemento su "Scarta" per default (annullabile). Quando una Room duplicata resta scartata, gli Asset dello stesso batch che la referenziano per nome si collegano comunque alla Room reale (mai orfani come "impianto di casa" solo per questo) — vedi `decisions.md` #26. **Mai una fusione automatica**: unire per errore due impianti realmente diversi sarebbe un danno peggiore di un duplicato lasciato lì, scartabile a mano.
+
 ## 7. Flusso end-to-end
 
 ```
@@ -109,7 +113,7 @@ Il frontend (`Genesis.tsx`) è una macchina a stati a 6 step (Welcome, House Inf
 ## 9. Limitazioni note del prototipo
 
 - **Nessuna autenticazione**: dichiarato esplicitamente prima di iniziare, accettato dall'utente come parte dello scope (vedi `decisions.md` #25). Nessuna verifica di ownership sulla casa negli endpoint Genesis — stessa lacuna già presente nel resto dell'API (`backlog.md` B2), non introdotta da Genesis.
-- **Nessuna deduplica contro Asset/Room già esistenti**: confermare una Observation crea sempre una riga nuova, anche se esiste già un Asset con nome/tipo molto simile. Osservato in verifica live: un secondo "Impianto elettrico" accanto a uno reale già censito. Farlo bene richiederebbe un'euristica di matching non banale (vedi `decisions.md` #23 sulla stessa difficoltà per documento→asset) — tracciato in `backlog.md`.
+- ~~Nessuna deduplica contro Asset/Room già esistenti~~ — risolto 2026-08-04, vedi §6bis e `decisions.md` #26: avviso + default "Scarta", mai fusione automatica.
 - **Ripresa del wizard solo a grana grossa**: `GenesisStatus` ha 4 soli valori (`NOT_STARTED`/`IN_PROGRESS`/`PROCESSING`/`COMPLETED`), non uno per step. Uscire a metà della Review e rientrare riparte dallo step "Scansione", non esattamente da dove si era interrotto — lo stato dettagliato del wizard (`ScanSession`/`Observation` già create) non va perso lato dati, ma il frontend non lo ripresenta automaticamente in questa iterazione.
 - **Efficienza con segnale debole**: `Asset.estimatedReplacementYear` esiste nello schema ma nessun flusso lo valorizza ancora automaticamente — la dimensione "Efficienza" dell'Home Score resta quindi quasi sempre 100 in pratica, dichiarato nel codice (`home-score.ts`) invece di nascosto.
 - **Scansione dimostrativa, non reale**: nessuna computer vision, nessuna analisi di foto/video — un dataset fisso di 4 stanze/7 asset tipici, sempre uguale. Sostituire il mock richiede solo una nuova implementazione di `HouseScanProvider` (vedi §3), non un redesign.
