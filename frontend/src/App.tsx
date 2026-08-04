@@ -13,6 +13,7 @@ import { AddAssetModal, EditAssetModal, AddContactModal, EditContactModal } from
 import { InboxHub, type InboxTab } from './components/InboxHub';
 import { BootstrapScreen } from './components/Bootstrap';
 import { HouseDocumentsView } from './components/HouseDocuments';
+import { GenesisWizard } from './components/Genesis';
 
 type AssetWithFields = Asset & { customFields: CustomField[] };
 
@@ -267,7 +268,23 @@ export default function App() {
           <span className="app-topbar-title">{house.code}</span>
         </div>
         {view === 'dashboard' && (
-          <Dashboard house={house} rooms={rooms} assets={assets} openAsset={(id) => openAsset(id, 'dashboard')} />
+          <Dashboard
+            house={house}
+            rooms={rooms}
+            assets={assets}
+            openAsset={(id) => openAsset(id, 'dashboard')}
+            onOpenGenesis={() => setView('genesis')}
+          />
+        )}
+        {view === 'genesis' && (
+          <GenesisWizard
+            house={house}
+            onHouseChanged={setHouse}
+            onGenesisCompleted={async () => {
+              await loadHouseData(house.id);
+            }}
+            onExit={() => setView('dashboard')}
+          />
         )}
         {view === 'inbox' && bootstrapUser && (
           <InboxHub

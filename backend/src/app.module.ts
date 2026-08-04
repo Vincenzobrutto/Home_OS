@@ -12,6 +12,7 @@ import { ContactsModule } from './contacts/contacts.module';
 import { GmailModule } from './gmail/gmail.module';
 import { DriveModule } from './drive/drive.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
+import { GenesisModule } from './genesis/genesis.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { MaintenanceModule } from './maintenance/maintenance.module';
     GmailModule,
     DriveModule,
     MaintenanceModule,
+    GenesisModule,
   ],
   controllers: [AppController],
   providers: [AppService],

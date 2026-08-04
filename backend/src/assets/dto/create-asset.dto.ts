@@ -1,7 +1,9 @@
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDate,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -10,7 +12,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { AssetType } from '@prisma/client';
+import { AcquisitionSource, AssetType } from '@prisma/client';
 
 export class CreateAssetDto {
   // null = impianto di casa, non legato a una stanza specifica
@@ -70,4 +72,27 @@ export class CreateAssetDto {
 
   // Niente campo "status": è calcolato dal server, non impostabile
   // dall'utente — vedi decisione di prodotto in START_HERE.md.
+
+  @IsOptional()
+  @IsInt()
+  @Min(1900)
+  @Max(2100)
+  estimatedReplacementYear?: number;
+
+  // Usati solo dal flusso Genesis (conferma di un'Observation) — assenti
+  // per un asset creato a mano dal form Asset, che resta MANUAL/
+  // confirmed=true come sempre, senza bisogno di specificarlo esplicitamente.
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  confidence?: number;
+
+  @IsOptional()
+  @IsEnum(AcquisitionSource)
+  source?: AcquisitionSource;
+
+  @IsOptional()
+  @IsBoolean()
+  confirmed?: boolean;
 }

@@ -2,6 +2,8 @@
 
 Digital twin di una casa: raccoglie i documenti che la riguardano (fatture, certificati, manuali, planimetrie) e li collega agli Asset fisici della casa (caldaia, impianto elettrico, elettrodomestici...), non li archivia genericamente. Vedi [`docs/vision.md`](docs/vision.md) per l'obiettivo completo.
 
+**HomeOS Genesis** (novità 2026-08-04) è il percorso guidato che porta una casa appena creata a un primo Digital Twin utile in pochi minuti: informazioni essenziali, documenti, una scansione guidata (oggi **dimostrativa**, non una vera analisi di foto/video), revisione/conferma di ciò che propone, un primo **Home Score** (0–100, motivato dimensione per dimensione) con osservazioni proattive. Vedi [`docs/genesis-architecture.md`](docs/genesis-architecture.md) per il dettaglio tecnico e le limitazioni note (nessuna autenticazione, nessuna deduplica automatica contro dati già esistenti).
+
 ## Struttura del repository
 
 ```
@@ -16,7 +18,9 @@ homeos-project/
 
 **Nota sulla struttura**: questo repository non ha una cartella `/src` o `/tests` unica a livello di root. `backend/` e `frontend/` sono due progetti Node indipendenti (due `package.json`, due server di sviluppo) — il codice vive in `backend/src` e `frontend/src`. È una deviazione intenzionale da un template generico a cartella singola: unificare tutto sotto un `/src` comune avrebbe richiesto spostare centinaia di file e riscrivere ogni config (Vite, Nest CLI, Prisma, `.claude/launch.json`) senza un beneficio reale. Vedi [`docs/architecture.md`](docs/architecture.md) §1.
 
-**Test automatici**: il backend usa Jest e copre le prime regole di dominio su stato/garanzia Asset e pipeline documentale; la copertura resta parziale. Il frontend non ha alcun framework di test configurato. Il lavoro residuo è tracciato in [`docs/backlog.md`](docs/backlog.md).
+**Test automatici**: il backend usa Jest e copre le prime regole di dominio su stato/garanzia Asset, pipeline documentale e percorso Genesis (Home Score, Home Detective); la copertura resta parziale. Il frontend non ha alcun framework di test configurato. Il lavoro residuo è tracciato in [`docs/backlog.md`](docs/backlog.md).
+
+**Limitazioni note**: nessuna autenticazione/sessione reale sulle API (un solo utente bootstrap, nessun isolamento tra case — vedi `backlog.md` B2); la scansione guidata Genesis è dimostrativa, non una vera analisi di foto/video (vedi `genesis-architecture.md` §9 per il dettaglio completo dei limiti del prototipo).
 
 **Repository Git**: il progetto è versionato su GitHub; i `.gitignore` di root, `backend/` e `frontend/` escludono dipendenze, build, file `.env` e upload locali.
 
@@ -30,6 +34,8 @@ homeos-project/
 | [`docs/api.md`](docs/api.md) | riferimento REST API |
 | [`docs/ui-ux.md`](docs/ui-ux.md) | struttura frontend, design system, comportamento mobile |
 | [`docs/roadmap.md`](docs/roadmap.md) | milestone, funzionalità completate, prossimi passi |
+| [`docs/genesis-architecture.md`](docs/genesis-architecture.md) | architettura del percorso guidato Genesis: componenti, motori Home Score/Home Detective, confine mock/reale, limitazioni |
+| [`docs/product-backlog.md`](docs/product-backlog.md) | 10 epiche di prodotto (EPIC 0–9), stato e dipendenze di ciascuna |
 | [`docs/decisions.md`](docs/decisions.md) | registro cronologico delle decisioni architetturali (ADR), con alternative scartate |
 | [`docs/backlog.md`](docs/backlog.md) | attività aperte, priorità, dipendenze |
 | [`docs/changelog.md`](docs/changelog.md) | modifiche rilevanti per sessione di sviluppo |

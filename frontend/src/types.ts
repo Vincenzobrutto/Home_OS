@@ -4,6 +4,8 @@ export interface User {
   name: string | null;
 }
 
+export type GenesisStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'PROCESSING' | 'COMPLETED';
+
 export interface House {
   id: string;
   ownerId: string;
@@ -17,6 +19,112 @@ export interface House {
   // alle coordinate di ambienti/asset, ruotate "sul serio" quando l'utente
   // gira la vista mappa. Vedi FloorPlan.tsx.
   floorPlanRotation: number;
+  // Campi aggiunti per il wizard Genesis — vedi Genesis.tsx.
+  address: string | null;
+  postalCode: string | null;
+  propertyType: string | null;
+  country: string | null;
+  genesisStatus: GenesisStatus;
+}
+
+export interface ScanSessionRecord {
+  id: string;
+  houseId: string;
+  type: string;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+}
+
+export type ObservationEntityType = 'ROOM' | 'ASSET';
+export type ObservationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'EDITED';
+
+export interface ObservationRecord {
+  id: string;
+  scanSessionId: string;
+  entityType: ObservationEntityType;
+  proposedName: string;
+  proposedCategory: string | null;
+  confidence: number;
+  payload: { roomType?: string; assetType?: string; roomName?: string | null };
+  status: ObservationStatus;
+}
+
+export type ConfirmObservationAction = 'confirm' | 'reject' | 'edit';
+
+export interface ConfirmObservationItem {
+  observationId: string;
+  action: ConfirmObservationAction;
+  name?: string;
+  type?: string;
+  roomId?: string | null;
+}
+
+export type IssueSeverity = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface IssueRecord {
+  id: string;
+  houseId: string;
+  assetId: string | null;
+  documentId: string | null;
+  category: string;
+  severity: IssueSeverity;
+  title: string;
+  description: string;
+  resolutionHint: string | null;
+  status: 'OPEN' | 'RESOLVED';
+  ruleCode: string;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export type RecommendationPriority = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface RecommendationRecord {
+  id: string;
+  houseId: string;
+  issueId: string | null;
+  category: string;
+  title: string;
+  description: string;
+  priority: RecommendationPriority;
+  estimatedImpact: string | null;
+  status: 'OPEN' | 'DISMISSED' | 'DONE';
+  createdAt: string;
+}
+
+export interface ScoreSnapshotRecord {
+  id: string;
+  houseId: string;
+  overallScore: number;
+  documentationScore: number;
+  maintenanceScore: number;
+  safetyScore: number;
+  efficiencyScore: number;
+  completenessScore: number;
+  calculationVersion: string;
+  calculatedAt: string;
+}
+
+export interface GenesisResults {
+  genesisStatus: GenesisStatus;
+  score: ScoreSnapshotRecord | null;
+  issues: IssueRecord[];
+  recommendations: RecommendationRecord[];
+  confirmedRoomsCount: number;
+  confirmedAssetsCount: number;
+}
+
+export interface HouseTimelineEventRecord {
+  id: string;
+  houseId: string;
+  assetId: string | null;
+  documentId: string | null;
+  type: string;
+  title: string;
+  description: string | null;
+  eventDate: string;
+  source: string;
 }
 
 export interface Room {

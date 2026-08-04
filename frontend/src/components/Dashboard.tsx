@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { DoorOpen, Building2, FileText, AlertTriangle, CalendarClock, type LucideIcon } from 'lucide-react';
+import { DoorOpen, Building2, FileText, AlertTriangle, CalendarClock, Sparkles, ArrowRight, Clock, type LucideIcon } from 'lucide-react';
 import { iconForAsset } from '../theme';
 import { SectionLabel } from './Shared';
-import type { Asset, House, MaintenanceReminder, Room } from '../types';
+import type { Asset, GenesisResults, House, HouseTimelineEventRecord, MaintenanceReminder, Room } from '../types';
 import { api, formatDateForDisplay } from '../api';
 
 // ANTEPRIMA nuova palette (blu/verde acqua, più moderna) — vive solo qui in
@@ -88,14 +88,39 @@ function StatBadge({ icon: Icon, color }: { icon: LucideIcon; color: string }) {
   );
 }
 
-export function Dashboard({ house, rooms, assets, openAsset }: { house: House; rooms: Room[]; assets: Asset[]; openAsset: (id: string) => void }) {
+export function Dashboard({
+  house,
+  rooms,
+  assets,
+  openAsset,
+  onOpenGenesis,
+}: {
+  house: House;
+  rooms: Room[];
+  assets: Asset[];
+  openAsset: (id: string) => void;
+  onOpenGenesis: () => void;
+}) {
   const dueSoon = assets.filter((a) => a.status === 'DUE' || a.status === 'ATTENTION').length;
   const [maintenance, setMaintenance] = useState<MaintenanceReminder[]>([]);
-  const totalDocs = 0; // Documents API non ancora costruita (vedi architettura §5)
+  const [documentsCount, setDocumentsCount] = useState(0);
+  const [genesisResults, setGenesisResults] = useState<GenesisResults | null>(null);
+  const [timeline, setTimeline] = useState<HouseTimelineEventRecord[]>([]);
 
   useEffect(() => {
     api.maintenance.remindersForHouse(house.id).then(setMaintenance);
+    api.documents.listForHouse(house.id).then((docs) => setDocumentsCount(docs.length));
   }, [house.id]);
+
+  useEffect(() => {
+    if (house.genesisStatus !== 'COMPLETED') {
+      setGenesisResults(null);
+      setTimeline([]);
+      return;
+    }
+    api.genesis.getResults(house.id).then(setGenesisResults);
+    api.genesis.getTimeline(house.id).then(setTimeline);
+  }, [house.id, house.genesisStatus]);
 
   return (
     <div style={{ padding: '36px 44px', maxWidth: 980 }}>
@@ -123,6 +148,109 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
         {house.surfaceSqm ?? '—'} m² · {house.roomsCount ?? rooms.length} locali · costruita nel {house.buildYear ?? '—'}
       </p>
 
+      {house.genesisStatus !== 'COMPLETED' && (
+        <div
+          onClick={onOpenGenesis}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            background: `${PT.primary}0D`,
+            border: `1px solid ${PT.primary}33`,
+            borderRadius: 12,
+            padding: '18px 20px',
+            marginBottom: 26,
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: `${PT.primary}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Sparkles size={20} color={PT.primary} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600, color: PT.ink }}>
+              {house.genesisStatus === 'NOT_STARTED' ? 'Costruisci il gemello digitale della tua casa' : 'Riprendi il percorso Genesis'}
+            </div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: PT.slate, marginTop: 2 }}>
+              {house.genesisStatus === 'NOT_STARTED'
+                ? 'In pochi minuti: informazioni casa, documenti, scansione guidata e primo Home Score.'
+                : 'Hai già iniziato: continua da dove eri rimasto.'}
+            </div>
+          </div>
+          <ArrowRight size={18} color={PT.primary} />
+        </div>
+      )}
+
+      {genesisResults?.score && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 26, padding: '18px 20px', background: PT.card, border: `1px solid ${PT.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
+          <div>
+            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 40, color: PT.primary, lineHeight: 1 }}>{genesisResults.score.overallScore}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: PT.slate, marginTop: 4 }}>Home Score /100</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: PT.slate, marginTop: 10 }}>
+              {genesisResults.confirmedRoomsCount} ambienti · {genesisResults.confirmedAssetsCount} asset
+            </div>
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+            {[
+              { label: 'Documentazione', value: genesisResults.score.documentationScore },
+              { label: 'Manutenzione', value: genesisResults.score.maintenanceScore },
+              { label: 'Sicurezza', value: genesisResults.score.safetyScore },
+              { label: 'Efficienza', value: genesisResults.score.efficiencyScore },
+              { label: 'Completezza (Digital Twin)', value: genesisResults.score.completenessScore },
+            ].map((d) => (
+              <div key={d.label}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'Inter', sans-serif", fontSize: 11, color: PT.slate, marginBottom: 2 }}>
+                  <span>{d.label}</span>
+                  <span>{d.value}</span>
+                </div>
+                <div style={{ height: 5, borderRadius: 3, background: PT.line }}>
+                  <div style={{ height: 5, borderRadius: 3, width: `${d.value}%`, background: PT.primary }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {genesisResults && genesisResults.issues.length > 0 && (
+        <>
+          <SectionLabel>Da tenere d'occhio</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 26 }}>
+            {genesisResults.issues.map((issue) => (
+              <div
+                key={issue.id}
+                onClick={() => issue.assetId && openAsset(issue.assetId)}
+                style={{
+                  padding: '10px 14px',
+                  background: PT.card,
+                  border: `1px solid ${PT.line}`,
+                  borderLeft: `3px solid ${issue.severity === 'HIGH' ? PT.danger : issue.severity === 'MEDIUM' ? PT.warning : PT.slate}`,
+                  borderRadius: 9,
+                  cursor: issue.assetId ? 'pointer' : 'default',
+                  boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                }}
+              >
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 500, color: PT.ink }}>{issue.title}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: PT.slate, marginTop: 2 }}>{issue.description}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {genesisResults && genesisResults.recommendations.length > 0 && (
+        <>
+          <SectionLabel>Consigliato</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 26 }}>
+            {genesisResults.recommendations.map((rec) => (
+              <div key={rec.id} style={{ padding: '10px 14px', background: PT.card, border: `1px solid ${PT.line}`, borderRadius: 9, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 500, color: PT.ink }}>{rec.title}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: PT.slate, marginTop: 2 }}>{rec.description}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       <div
         className="grid-responsive-2"
         style={{
@@ -135,7 +263,7 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
         {[
           { label: 'Ambienti', value: rooms.length, icon: DoorOpen, color: PT.primary },
           { label: 'Asset censiti', value: assets.length, icon: Building2, color: PT.teal },
-          { label: 'Documenti collegati', value: totalDocs, icon: FileText, color: '#7C3AED' },
+          { label: 'Documenti collegati', value: documentsCount, icon: FileText, color: '#7C3AED' },
           {
             label: 'Da verificare',
             value: dueSoon + maintenance.length,
@@ -289,6 +417,21 @@ export function Dashboard({ house, rooms, assets, openAsset }: { house: House; r
           </div>
         ))}
       </div>
+
+      {timeline.length > 0 && (
+        <>
+          <SectionLabel>Cronologia casa</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            {timeline.slice(0, 8).map((event) => (
+              <div key={event.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: PT.slate }}>
+                <Clock size={13} color={PT.slate} />
+                <span style={{ color: PT.ink }}>{event.title}</span>
+                <span>· {formatDateForDisplay(event.eventDate)}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -66,6 +66,10 @@ Upload / Scatto foto / Scansione Gmail-Drive
 
 Il principio "l'AI propone, l'utente conferma" (vedi `decisions.md`) è la ragione per cui `analyze` e `confirm` sono due endpoint separati, non un'unica chiamata.
 
+## 4bis. Modulo Genesis (onboarding guidato)
+
+`backend/src/genesis/` orchestra il percorso guidato di creazione del Digital Twin — vedi `docs/genesis-architecture.md` per il dettaglio completo (componenti, motore Home Score, motore Home Detective, confine mock/reale). In breve: `GenesisController`/`GenesisService` riusano `RoomsService`/`AssetsService` esistenti invece di duplicarne la logica di creazione; la scansione passa sempre attraverso l'interfaccia `HouseScanProvider`, oggi legata a un solo `MockHouseScanProvider` via token DI — nessun dato mock è mai presentato come reale in UI.
+
 ## 5. Ambiente di sviluppo
 
 - Backend: `cd backend && npm run start:dev` (porta 3000), variabili in `backend/.env` (vedi `backend/.env.example` per le chiavi richieste — DB, Anthropic, Google OAuth).

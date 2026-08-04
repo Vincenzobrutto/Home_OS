@@ -1,4 +1,4 @@
-import type { Asset, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, GmailCandidate, GmailScanResult, GmailStatus, House, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, Room, TimelineEvent, User } from './types';
+import type { Asset, ConfirmObservationItem, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, GenesisResults, GmailCandidate, GmailScanResult, GmailStatus, House, HouseTimelineEventRecord, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, ObservationRecord, Room, ScanSessionRecord, TimelineEvent, User } from './types';
 import type { RoomGeometry } from './geometry';
 
 // Deriva l'host dal browser stesso invece di un "localhost" fisso: da
@@ -328,6 +328,41 @@ export const api = {
       request<DocumentRecord>(`/documents/${id}/search-online`, {
         method: 'POST',
       }),
+  },
+  genesis: {
+    start: (houseId: string) => request<House>(`/houses/${houseId}/genesis/start`, { method: 'POST' }),
+    saveHouseInfo: (
+      houseId: string,
+      data: Partial<{
+        name: string;
+        address: string;
+        city: string;
+        postalCode: string;
+        propertyType: string;
+        country: string;
+        surfaceSqm: number;
+        buildYear: number;
+      }>,
+    ) =>
+      request<House>(`/houses/${houseId}/genesis/house-info`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    startScan: (houseId: string) =>
+      request<ScanSessionRecord>(`/houses/${houseId}/genesis/scan`, {
+        method: 'POST',
+        body: JSON.stringify({ type: 'GUIDED_MOCK' }),
+      }),
+    getScanResults: (houseId: string, scanSessionId: string) =>
+      request<ObservationRecord[]>(`/houses/${houseId}/genesis/scan/${scanSessionId}`),
+    confirmObservations: (houseId: string, scanSessionId: string, items: ConfirmObservationItem[]) =>
+      request<ObservationRecord[]>(`/houses/${houseId}/genesis/scan/${scanSessionId}/confirm`, {
+        method: 'POST',
+        body: JSON.stringify({ items }),
+      }),
+    complete: (houseId: string) => request<GenesisResults>(`/houses/${houseId}/genesis/complete`, { method: 'POST' }),
+    getResults: (houseId: string) => request<GenesisResults>(`/houses/${houseId}/genesis`),
+    getTimeline: (houseId: string) => request<HouseTimelineEventRecord[]>(`/houses/${houseId}/genesis/timeline`),
   },
   gmail: {
     // Navigazione diretta del browser, non fetch: il backend fa da redirect

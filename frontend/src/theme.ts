@@ -45,6 +45,15 @@ export const FONTS = `
 // volta in App.tsx. `!important` qui è deliberato: deve vincere sugli stessi
 // stili inline che le pagine già impostano per il desktop, non li duplica.
 export const MOBILE_CSS = `
+/* Spinner generico (es. scansione Genesis in corso) — un'unica keyframe
+   condivisa invece di ripeterla per ogni componente che ne ha bisogno. */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 0.8s linear infinite;
+}
 /* Rete di sicurezza contro lo scroll orizzontale: un singolo elemento più
    largo del previsto (una tabella, una card non ancora resa responsive)
    altrimenti farebbe scorrere l'intera pagina di lato invece di essere

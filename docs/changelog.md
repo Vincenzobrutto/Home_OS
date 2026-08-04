@@ -2,6 +2,22 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-04 — HomeOS Genesis MVP
+
+- **Vertical slice completo**, su richiesta esplicita dell'utente dopo un'analisi di repository che ha flaggato il blocco reale (nessuna autenticazione, isolamento per utente non applicabile) e le sovrapposizioni con entità esistenti — utente ha accettato lo scope. Vedi `decisions.md` #25.
+- **Schema**: `House`/`Room`/`Asset` estesi in modo retrocompatibile (`confidence`/`source`/`confirmed`, `address`/`postalCode`/`propertyType`/`country`/`genesisStatus`, `estimatedReplacementYear`); nuove tabelle `Floor`, `ScanSession`, `Observation`, `Issue`, `Recommendation`, `ScoreSnapshot`, `HouseTimelineEvent`. Migrazione `20260804063159_add_genesis_mvp`, puramente additiva.
+- **Home Score v1** (`common/home-score.ts`): 5 dimensioni pesate, ogni scostamento motivato da una `reason` esplicita, versionato e persistito come storico (`ScoreSnapshot`). 9 test.
+- **Home Detective** (`common/home-detective.ts`): 5 regole deterministiche (mai un LLM), `ASSET_WITHOUT_ROOM` adattata per rispettare la semantica esistente di `roomId: null` = "impianto di casa" (solo ELETTRODOMESTICO/CLIMA, non tutti i tipi). 8 test.
+- **`HouseScanProvider`/`MockHouseScanProvider`**: interfaccia sostituibile, dataset demo fisso e non casuale (4 stanze, 7 asset), mai presentato come reale in UI.
+- **Modulo backend Genesis**: `GenesisService` riusa `RoomsService`/`AssetsService` esistenti per creare Room/Asset da Observation confermate (nessuna duplicazione della generazione codice `AMB-###`/`AST-###`); riconciliazione idempotente di Issue/Recommendation per `ruleCode:assetId`. 8 endpoint REST, 3 test di servizio.
+- **Wizard frontend** (`Genesis.tsx`, 6 step): Benvenuto → Informazioni casa → Documenti (riusa l'upload esistente) → Scansione guidata → Revisione Digital Twin (conferma/modifica/scarta) → Risultati (Home Score + Issue + Recommendation).
+- **Dashboard**: card Home Score con le 5 barre dimensione, "Da tenere d'occhio" (Issue aperte), "Consigliato" (Recommendation aperte), conteggio documenti ora reale (era hardcoded a 0), "Cronologia casa". Banner di invito quando Genesis non è completato.
+- **Verifica end-to-end reale nel browser**, non solo unit test: eseguito l'intero percorso sulla casa reale dell'utente — 4 stanze e 7 asset creati dalla scansione demo, collegamento stanza↔asset corretto (incluso `roomId: null` per impianti di casa), Home Score calcolato (73/100), Issue "Caldaia senza documentazione tecnica" generata coerentemente con lo stato reale della caldaia esistente.
+- **Limite trovato durante la verifica**: la conferma non deduplica contro Asset esistenti — creato un secondo "Impianto elettrico" accanto a uno già censito. Non corretto in questa sessione, tracciato come `backlog.md` B33 (insieme a B34, ripresa del wizard a grana grossa).
+- **Nuovi documenti**: `docs/genesis-architecture.md` (componenti, motori, flusso, limitazioni, percorso verso il reale), `docs/product-backlog.md` (10 epiche EPIC 0–9). Aggiornati `domain-model.md`, `architecture.md`, `roadmap.md`, `backlog.md`, `decisions.md` (#25), `README.md`.
+- **Test e build**: backend 46/46 test verdi (da 26), build/lint puliti; frontend build/lint puliti (3 warning pre-esistenti invariati, non introdotti da Genesis).
+- **Non fatto in questa sessione**: push su GitHub (per istruzione esplicita della specifica, da confermare con l'utente prima del primo push Genesis).
+
 ## 2026-08-03 (10) — B18 messa in standby
 
 - Su indicazione dell'utente, le notifiche esterne per manutenzioni/garanzie restano in roadmap ma non sono pianificate: nessuna scelta di provider, canale o frequenza è approvata e non va iniziata finché non viene riattivata.

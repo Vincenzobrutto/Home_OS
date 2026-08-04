@@ -14,6 +14,12 @@ User ──< HouseMembership >── House ──< Room ──< Asset >── As
                                                      │      │                    ├── Contact (opz.)
                                                      │      │                    └── Document (opz.)
                                                      └── DismissedMaintenanceSuggestion
+
+House ──< Floor ──< Room (floorId opzionale)
+House ──< ScanSession ──< Observation (mai scritta su Room/Asset da sola, solo dopo conferma)
+House ──< Issue >── Recommendation (0..1, 1:1 oggi)
+House ──< ScoreSnapshot (fotografia nel tempo, mai ricalcolata "sul vecchio")
+House ──< HouseTimelineEvent (eventi a livello casa, distinti da AssetTimelineEvent)
 ```
 
 Legenda: `──<` = "uno a molti" verso l'entità collegata. Tutte le relazioni verso `House` hanno `onDelete: Cascade`; `Asset.roomId` e `Document.assetId` hanno `onDelete: SetNull` (cancellare una stanza o un asset non cancella i documenti collegati, li scollega soltanto).
@@ -81,6 +87,30 @@ Tecnici/aziende che hanno lavorato in casa. Collegamento a un intervento in cron
 
 ### User / HouseMembership / GmailConnection / DriveConnection
 `HouseMembership` predisposta fin dall'MVP (ogni casa oggi ha un solo proprietario) per non richiedere una migrazione dolorosa quando arriverà la condivisione multi-utente. `GmailConnection`/`DriveConnection`: un solo account collegato per utente, token in chiaro in DB (accettabile per l'MVP, da rivedere — vedi `architecture.md` §3).
+
+## Entità Genesis (vedi `docs/genesis-architecture.md` per il dettaglio completo)
+
+Aggiunte per il percorso guidato Genesis (2026-08-04) — dettaglio esteso, motivazioni e limiti noti in `docs/genesis-architecture.md` e `decisions.md` #25; qui solo un riassunto per restare coerenti col resto di questo documento.
+
+### Floor
+Piano dell'edificio (es. "Piano terra"). Concetto nuovo — le `Room` esistenti non ne avevano bisogno perché la planimetria era sempre a livello unico. `Room.floorId` è opzionale, quindi le stanze pre-Genesis restano valide senza modifiche.
+
+### ScanSession / Observation
+Una `ScanSession` rappresenta un'esecuzione della scansione guidata (oggi solo `type: GUIDED_MOCK`, tramite `HouseScanProvider`/`MockHouseScanProvider`). Contiene N `Observation`, ciascuna una proposta di Room o Asset (`entityType`), con `confidence` e un `payload` libero (per un Asset, include `roomName` per il collegamento alla Room osservata nello stesso giro). Un'Observation **non diventa mai** una Room/Asset reale da sola: solo la conferma esplicita dell'utente (`POST .../scan/:id/confirm`) crea la riga vera, con `source: SCAN_MOCK` e la stessa `confidence` salvata.
+
+### Issue / Recommendation
+Un'`Issue` è un problema rilevato da Home Detective (regole deterministiche, mai un LLM — vedi `common/home-detective.ts`), identificato da `ruleCode` + contesto (`assetId`/`documentId`). Idempotente a livello applicativo, non con un vincolo DB: ad ogni ricalcolo, le Issue non più valide vengono risolte (`status: RESOLVED`), quelle nuove create. Una `Recommendation` è l'azione consigliata derivata (oggi 1:1) da un'Issue aperta.
+
+### ScoreSnapshot
+Fotografia nel tempo del calcolo Home Score (`common/home-score.ts`, 5 dimensioni pesate: documentazione 25%, manutenzione 20%, sicurezza 25%, efficienza 15%, completezza 15%). Ogni calcolo crea uno snapshot nuovo, mai un aggiornamento in place — `calculationVersion` permette di riconoscere snapshot calcolati con pesi di una versione precedente.
+
+### HouseTimelineEvent
+Eventi a livello di **casa** (Genesis avviato/completato, scansione completata...) — modello nuovo, deliberatamente non una generalizzazione di `AssetTimelineEvent` (già in uso reale con `assetId` obbligatorio, vedi `decisions.md` #25).
+
+### Campi Genesis su House/Room/Asset
+- `House`: `address`, `postalCode`, `propertyType`, `country` (tutti opzionali), `genesisStatus` (`NOT_STARTED` → `IN_PROGRESS` → `PROCESSING` → `COMPLETED`).
+- `Room`/`Asset`: `confidence` (0–1, nullable), `source` (`MANUAL` di default, o `SCAN_MOCK`/`DOCUMENT`/`IMPORT`), `confirmed` (default `true` — solo le righe nate da una scansione non ancora confermata partono `false`). Le righe create prima di Genesis restano `MANUAL`/`confirmed: true` senza bisogno di alcuna migrazione dati.
+- `Asset`: `estimatedReplacementYear` (stima grezza per il segnale di efficienza dell'Home Score, non popolata automaticamente da nessun flusso in questo MVP).
 
 ## Regole di business (riassunto — dettaglio in `decisions.md`)
 

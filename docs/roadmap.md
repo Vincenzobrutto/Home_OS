@@ -21,6 +21,16 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Repository verificato pronto per il passaggio di consegne: `.gitignore` root/backend/frontend confermati completi, build/lint/test eseguiti e documentati, `docs/HANDOFF.md` creato (2026-08-02).
 - Copertura backend delle regole di dominio: stato/garanzia Asset, pipeline documentale, calendario/suggerimenti manutenzione e completamento multiplo da documento (26 test totali, 2026-08-03).
 
+**M2 — HomeOS Genesis MVP (2026-08-04)**
+- Wizard di onboarding a 6 step (Benvenuto → Informazioni casa → Documenti → Scansione guidata → Revisione Digital Twin → Risultati), persistente e ripresumibile a grana grossa.
+- Scansione guidata dimostrativa (`HouseScanProvider`/`MockHouseScanProvider`, dataset fisso e dichiarato come mock) che propone stanze e asset, confermabili/modificabili/scartabili prima di entrare nel Digital Twin.
+- Home Score v1: punteggio 0-100 su 5 dimensioni pesate (documentazione, manutenzione, sicurezza, efficienza, completezza), ogni scostamento spiegato da una `reason` esplicita, versionato e persistito come storico (`ScoreSnapshot`).
+- Home Detective: 5 regole deterministiche (mai un LLM) che generano `Issue`/`Recommendation` idempotenti, riconciliate ad ogni completamento di Genesis.
+- Dashboard aggiornata: card Home Score, sezione "Da tenere d'occhio", "Consigliato", conteggio documenti reale (non più hardcoded), cronologia casa.
+- Nuove entità: `Floor`, `ScanSession`, `Observation`, `Issue`, `Recommendation`, `ScoreSnapshot`, `HouseTimelineEvent`; `House`/`Room`/`Asset` estesi in modo retrocompatibile.
+- Verificato end-to-end nel browser sulla casa reale: creazione di 4 stanze e 7 asset via scansione demo, collegamento corretto stanza↔asset, calcolo Home Score, generazione Issue/Recommendation coerenti con lo stato reale della casa.
+- **Blocco noto e accettato**: nessuna autenticazione, quindi l'isolamento per utente richiesto dalla specifica non è applicato (vedi `decisions.md` #25, `product-backlog.md` EPIC 7). Limitazioni di dettaglio in `genesis-architecture.md` §9 (nessuna deduplica contro dati esistenti, ripresa del wizard a grana grossa).
+
 ## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)
 
 - Autenticazione/sessione reale (oggi zero auth sulle API, un solo utente bootstrap).
@@ -29,6 +39,7 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - OAuth Gmail/Drive funzionante anche da un client mobile in LAN (oggi il redirect è pensato per `localhost`).
 - Navigazione con URL reali (oggi `view` è solo stato in memoria, niente back/forward del browser né link condivisibili).
 - Rivedere la conservazione in chiaro dei token OAuth in DB prima di qualunque esposizione oltre la rete locale.
+- Genesis: sostituire la scansione mock con un provider reale (foto/video), aggiungere deduplica contro Asset/Room esistenti, ripresa del wizard a grana fine — vedi `genesis-architecture.md` §9-10, `backlog.md` B33/B34.
 
 ## Idee di prodotto da valutare (engagement / monetizzazione)
 

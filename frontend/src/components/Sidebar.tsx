@@ -6,6 +6,7 @@ import {
   Building2,
   FileStack,
   Users,
+  Sparkles,
   X,
 } from 'lucide-react';
 import { T } from '../theme';
@@ -20,7 +21,8 @@ export type View =
   | 'asset-detail'
   | 'house-documents'
   | 'contacts'
-  | 'contact-detail';
+  | 'contact-detail'
+  | 'genesis';
 
 export function Sidebar({
   view,
@@ -61,6 +63,12 @@ export function Sidebar({
     { id: 'house-documents', label: 'Documenti casa', icon: FileStack },
     { id: 'contacts', label: 'Rubrica', icon: Users },
   ];
+  // Voce visibile solo mentre un percorso Genesis è a metà — non NOT_STARTED
+  // (si avvia dalla Dashboard) né COMPLETED (i risultati vivono in Dashboard,
+  // non serve più una voce di menu dedicata a ripetere il wizard).
+  if (house.genesisStatus === 'IN_PROGRESS' || house.genesisStatus === 'PROCESSING') {
+    items.splice(1, 0, { id: 'genesis', label: 'Genesis', icon: Sparkles });
+  }
   return (
     <div
       className={`app-sidebar${open ? ' open' : ''}`}

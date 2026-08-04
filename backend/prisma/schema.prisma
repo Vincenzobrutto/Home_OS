@@ -75,6 +75,77 @@ enum MaintenanceRecurrenceUnit {
 }
 
 // ---------------------------------------------------------------------------
+// GENESIS — onboarding guidato "casa nuova, mai censita" (vedi
+// docs/genesis-architecture.md). Room/Asset esistenti restano il modello
+// primario: qui si estendono con provenienza/conferma invece di duplicarli.
+// ---------------------------------------------------------------------------
+
+enum GenesisStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PROCESSING
+  COMPLETED
+}
+
+// Riusato sia da Room che da Asset: come si è arrivati a quella riga, non
+// solo "chi l'ha creata" — serve a distinguere ciò che l'utente ha inserito
+// a mano da ciò che viene da una scansione/documento e attende conferma.
+enum AcquisitionSource {
+  MANUAL
+  SCAN_MOCK
+  DOCUMENT
+  IMPORT
+}
+
+enum ScanSessionType {
+  GUIDED_MOCK
+  PHOTO
+  VIDEO
+}
+
+enum ScanSessionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ObservationEntityType {
+  ROOM
+  ASSET
+}
+
+enum ObservationStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  EDITED
+}
+
+enum IssueSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum IssueStatus {
+  OPEN
+  RESOLVED
+}
+
+enum RecommendationPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RecommendationStatus {
+  OPEN
+  DISMISSED
+  DONE
+}
+
+// ---------------------------------------------------------------------------
 // MODELLI
 // ---------------------------------------------------------------------------
 
@@ -131,31 +202,62 @@ model DriveConnection {
 }
 
 model House {
-  id                String   @id @default(uuid())
-  ownerId           String   @map("owner_id")
-  owner             User     @relation("HouseOwner", fields: [ownerId], references: [id])
+  id                String        @id @default(uuid())
+  ownerId           String        @map("owner_id")
+  owner             User          @relation("HouseOwner", fields: [ownerId], references: [id])
   name              String
   city              String?
-  surfaceSqm        Decimal? @map("surface_sqm")
-  roomsCount        Int?     @map("rooms_count")
-  buildYear         Int?     @map("build_year")
-  code              String   @unique
-  createdAt         DateTime @default(now()) @map("created_at")
+  surfaceSqm        Decimal?      @map("surface_sqm")
+  roomsCount        Int?          @map("rooms_count")
+  buildYear         Int?          @map("build_year")
+  code              String        @unique
+  createdAt         DateTime      @default(now()) @map("created_at")
   // Rotazione (0/90/180/270) applicata alla vista mappa della planimetria —
   // ambienti e asset vengono ruotati "sul serio" (le loro coordinate
   // salvate) quando l'utente ruota la vista, così l'immagine di sfondo
   // caricata dall'utente deve essere ruotata della stessa quantità per
   // restare allineata; persistito qui perché il file di sfondo non cambia
   // da solo tra un caricamento e l'altro. Vedi FloorPlan.tsx.
-  floorPlanRotation Int      @default(0) @map("floor_plan_rotation")
+  floorPlanRotation Int           @default(0) @map("floor_plan_rotation")
+  // Campi aggiunti per il wizard Genesis (step "House Information") — tutti
+  // opzionali per non rompere le case già esistenti create prima di Genesis.
+  address           String?
+  postalCode        String?       @map("postal_code")
+  propertyType      String?       @map("property_type")
+  country           String?
+  genesisStatus     GenesisStatus @default(NOT_STARTED) @map("genesis_status")
 
-  rooms       Room[]
-  assets      Asset[]
-  documents   Document[]
-  memberships HouseMembership[]
-  contacts    Contact[]
+  rooms           Room[]
+  assets          Asset[]
+  documents       Document[]
+  memberships     HouseMembership[]
+  contacts        Contact[]
+  floors          Floor[]
+  scanSessions    ScanSession[]
+  issues          Issue[]
+  recommendations Recommendation[]
+  scoreSnapshots  ScoreSnapshot[]
+  timelineEvents  HouseTimelineEvent[]
 
   @@map("houses")
+}
+
+// Piano dell'edificio (es. "Piano terra", "Primo piano") — concetto nuovo,
+// prima non modellato: le Room esistenti non avevano bisogno di un piano
+// perché la planimetria era sempre a livello unico. Opzionale su Room per
+// non richiederlo alle case già esistenti.
+model Floor {
+  id        String   @id @default(uuid())
+  houseId   String   @map("house_id")
+  house     House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  name      String
+  level     Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  rooms Room[]
+
+  @@map("floors")
 }
 
 model HouseMembership {
@@ -175,15 +277,25 @@ model HouseMembership {
 }
 
 model Room {
-  id           String   @id @default(uuid())
-  houseId      String   @map("house_id")
-  house        House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  id           String            @id @default(uuid())
+  houseId      String            @map("house_id")
+  house        House             @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  floorId      String?           @map("floor_id")
+  floor        Floor?            @relation(fields: [floorId], references: [id], onDelete: SetNull)
   type         RoomType
   name         String
-  code         String   @unique
+  code         String            @unique
   // Coordinate reali della stanza quando disponibili da una planimetria vera
   // (nel prototipo è solo una griglia generata). Nullable finché non c'è.
-  planGeometry Json?    @map("plan_geometry")
+  planGeometry Json?             @map("plan_geometry")
+  // Provenienza + fiducia dell'osservazione che ha originato la riga (vedi
+  // Observation) — null/MANUAL per le stanze create a mano come sempre.
+  // `confirmed` di default true: solo le stanze nate da una scansione non
+  // ancora confermata partono false, così non serve toccare nulla per le
+  // stanze già esistenti prima di Genesis.
+  confidence   Float?
+  source       AcquisitionSource @default(MANUAL)
+  confirmed    Boolean           @default(true)
 
   assets Asset[]
 
@@ -191,38 +303,45 @@ model Room {
 }
 
 model Asset {
-  id            String      @id @default(uuid())
-  houseId       String      @map("house_id")
-  house         House       @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  id                       String            @id @default(uuid())
+  houseId                  String            @map("house_id")
+  house                    House             @relation(fields: [houseId], references: [id], onDelete: Cascade)
   // null = impianto di casa, non legato a una stanza specifica
-  roomId        String?     @map("room_id")
-  room          Room?       @relation(fields: [roomId], references: [id], onDelete: SetNull)
-  type          AssetType
-  name          String
-  code          String      @unique
-  installedAt   DateTime?   @map("installed_at") @db.Date
-  warrantyUntil DateTime?   @map("warranty_until") @db.Date
+  roomId                   String?           @map("room_id")
+  room                     Room?             @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  type                     AssetType
+  name                     String
+  code                     String            @unique
+  installedAt              DateTime?         @map("installed_at") @db.Date
+  warrantyUntil            DateTime?         @map("warranty_until") @db.Date
   // Campi strutturati universali (validi per qualunque tipo di asset, a
   // differenza di dati specifici come "potenza caldaia" che restano
   // AssetCustomField). Popolati dal primo documento disponibile che li
   // riporta e mai più sovrascritti — vedi applyFieldsToAsset in
   // documents.service.ts: "riempi solo i vuoti", non aggiorna un valore
   // già presente nemmeno se un documento successivo ne indica uno diverso.
-  serialNumber  String?     @map("serial_number")
-  manufacturer  String?
-  model         String?
-  purchasedAt   DateTime?   @map("purchased_at") @db.Date
-  supplier      String?
-  status        AssetStatus @default(ATTENTION)
+  serialNumber             String?           @map("serial_number")
+  manufacturer             String?
+  model                    String?
+  purchasedAt              DateTime?         @map("purchased_at") @db.Date
+  supplier                 String?
+  status                   AssetStatus       @default(ATTENTION)
   // Posizione relativa (0–1) nella cella della planimetria generata
-  planPosX      Decimal?    @map("plan_pos_x")
-  planPosY      Decimal?    @map("plan_pos_y")
+  planPosX                 Decimal?          @map("plan_pos_x")
+  planPosY                 Decimal?          @map("plan_pos_y")
   // Stato di ciclo vita impostato direttamente dall'utente (non calcolato,
   // a differenza di "status" sopra): un asset dismesso esce dall'elenco
   // attivo ma tiene tutti i suoi dati (campi, documenti, cronologia).
-  dismissedAt   DateTime?   @map("dismissed_at")
-  createdAt     DateTime    @default(now()) @map("created_at")
-  updatedAt     DateTime    @updatedAt @map("updated_at")
+  dismissedAt              DateTime?         @map("dismissed_at")
+  createdAt                DateTime          @default(now()) @map("created_at")
+  updatedAt                DateTime          @updatedAt @map("updated_at")
+  // Stima grezza per il calcolo di efficienza/Home Score — non una diagnosi,
+  // solo "tra quanti anni potrebbe aver senso valutare una sostituzione".
+  estimatedReplacementYear Int?              @map("estimated_replacement_year")
+  // Stessa semantica di Room.confidence/source/confirmed sopra.
+  confidence               Float?
+  source                   AcquisitionSource @default(MANUAL)
+  confirmed                Boolean           @default(true)
 
   customFields                    AssetCustomField[]
   documents                       Document[]
@@ -397,4 +516,152 @@ model DismissedMaintenanceSuggestion {
 
   @@unique([assetId, guidelineCode])
   @@map("dismissed_maintenance_suggestions")
+}
+
+// Una sessione di acquisizione Genesis (oggi solo GUIDED_MOCK: un dataset
+// demo deterministico, non una vera computer vision — vedi
+// docs/genesis-architecture.md sul confine mock/reale).
+model ScanSession {
+  id          String            @id @default(uuid())
+  houseId     String            @map("house_id")
+  house       House             @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  type        ScanSessionType
+  status      ScanSessionStatus @default(PENDING)
+  startedAt   DateTime          @default(now()) @map("started_at")
+  completedAt DateTime?         @map("completed_at")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  observations Observation[]
+
+  @@map("scan_sessions")
+}
+
+// Un elemento proposto da una ScanSession, in attesa di conferma — non
+// diventa mai Room/Asset da sola: solo quando l'utente conferma (vedi
+// GenesisService.confirmObservations) nasce la riga reale, con
+// source=SCAN_MOCK e la stessa confidence qui salvata.
+model Observation {
+  id               String                @id @default(uuid())
+  scanSessionId    String                @map("scan_session_id")
+  scanSession      ScanSession           @relation(fields: [scanSessionId], references: [id], onDelete: Cascade)
+  entityType       ObservationEntityType @map("entity_type")
+  proposedName     String                @map("proposed_name")
+  proposedCategory String?               @map("proposed_category")
+  confidence       Float
+  // Dati liberi specifici del tipo di osservazione — per ASSET include il
+  // nome della stanza proposta (payload.roomName), usato per collegare
+  // l'asset alla Room osservata nello stesso giro di scansione senza dover
+  // già avere un roomId reale (la Room potrebbe non essere ancora
+  // confermata quando l'Observation viene creata).
+  payload          Json
+  status           ObservationStatus     @default(PENDING)
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+
+  @@map("observations")
+}
+
+// Problema rilevato da Home Detective (regole deterministiche, vedi
+// common/home-detective.ts) — MAI da un LLM in questo MVP. Idempotenza per
+// (houseId, ruleCode, assetId, documentId) gestita a livello applicativo,
+// non con un vincolo unique: assetId/documentId nullable renderebbero un
+// indice unique poco affidabile tra database diversi, e la query "esiste
+// già una issue OPEN con questo ruleCode+contesto" è comunque necessaria
+// per decidere se riaprire una issue risolta.
+model Issue {
+  id             String        @id @default(uuid())
+  houseId        String        @map("house_id")
+  house          House         @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  assetId        String?       @map("asset_id")
+  documentId     String?       @map("document_id")
+  category       String
+  severity       IssueSeverity
+  title          String
+  description    String
+  resolutionHint String?       @map("resolution_hint")
+  status         IssueStatus   @default(OPEN)
+  // Codice della regola che l'ha generata (es. HEATING_SYSTEM_WITHOUT_DOCUMENTATION)
+  // — non una foreign key, le regole vivono nel codice, non in DB (stesso
+  // principio di DismissedMaintenanceSuggestion.guidelineCode).
+  ruleCode       String        @map("rule_code")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  resolvedAt     DateTime?     @map("resolved_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  recommendations Recommendation[]
+
+  @@index([houseId, ruleCode, status])
+  @@map("issues")
+}
+
+// Azione consigliata derivata (oggi 1:1) da una Issue aperta — separata
+// dalla Issue stessa perché una issue descrive un problema, una
+// recommendation descrive cosa fare: tenerle distinte permette in futuro
+// più raccomandazioni per lo stesso problema, o raccomandazioni senza una
+// issue collegata (es. ottimizzazioni non urgenti).
+model Recommendation {
+  id              String                 @id @default(uuid())
+  houseId         String                 @map("house_id")
+  house           House                  @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  issueId         String?                @map("issue_id")
+  issue           Issue?                 @relation(fields: [issueId], references: [id], onDelete: SetNull)
+  category        String
+  title           String
+  description     String
+  priority        RecommendationPriority
+  estimatedImpact String?                @map("estimated_impact")
+  status          RecommendationStatus   @default(OPEN)
+  createdAt       DateTime               @default(now()) @map("created_at")
+  updatedAt       DateTime               @updatedAt @map("updated_at")
+
+  @@map("recommendations")
+}
+
+// Fotografia nel tempo del calcolo Home Score (common/home-score.ts) — mai
+// ricalcolato "sul vecchio", ogni chiamata al servizio crea uno snapshot
+// nuovo, così la Dashboard può mostrare una variazione rispetto
+// all'ultimo. calculationVersion permette di riconoscere snapshot calcolati
+// con una versione precedente della formula se in futuro cambiano i pesi.
+model ScoreSnapshot {
+  id                 String   @id @default(uuid())
+  houseId            String   @map("house_id")
+  house              House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  overallScore       Int      @map("overall_score")
+  documentationScore Int      @map("documentation_score")
+  maintenanceScore   Int      @map("maintenance_score")
+  safetyScore        Int      @map("safety_score")
+  efficiencyScore    Int      @map("efficiency_score")
+  completenessScore  Int      @map("completeness_score")
+  calculationVersion String   @map("calculation_version")
+  calculatedAt       DateTime @default(now()) @map("calculated_at")
+
+  @@index([houseId, calculatedAt])
+  @@map("score_snapshots")
+}
+
+// Eventi a livello di CASA (creazione, scansione completata, Home Score
+// calcolato...) — distinto deliberatamente da AssetTimelineEvent invece di
+// generalizzare quest'ultimo: AssetTimelineEvent è già in uso reale con
+// assetId obbligatorio, e ha una semantica precisa (interventi su un
+// asset). Retrofittarlo per eventi che non riguardano nessun asset
+// specifico avrebbe richiesto rendere assetId opzionale su una tabella già
+// viva, con rischio di rompere query esistenti — più sicuro un modello
+// nuovo, piccolo, per un concetto genuinamente diverso.
+model HouseTimelineEvent {
+  id          String   @id @default(uuid())
+  houseId     String   @map("house_id")
+  house       House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  assetId     String?  @map("asset_id")
+  documentId  String?  @map("document_id")
+  type        String
+  title       String
+  description String?
+  eventDate   DateTime @default(now()) @map("event_date")
+  source      String   @default("system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([houseId, eventDate])
+  @@map("house_timeline_events")
 }
