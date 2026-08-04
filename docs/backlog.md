@@ -44,5 +44,6 @@ Attività aperte, non ancora pianificate in una milestone specifica. Priorità: 
 
 | B33 | ~~Genesis: la conferma di una Observation non verifica se esiste già un Asset/Room simile in casa~~ — risolto 2026-08-04: `genesis-duplicate.ts` segnala i possibili duplicati (stesso tipo + nome simile) nello step di revisione, che parte scartato per default (annullabile) | — | chiuso, vedi `decisions.md` #26 e `genesis-architecture.md` §6bis. Verificato live: 10/10 elementi di una scansione demo su dati reali correttamente segnalati, nessun duplicato creato dopo lo scarto |
 | B34 | ~~Genesis: ripresa precisa del wizard~~ — risolto 2026-08-04: `House.genesisStep` conserva tutti i 6 step; riaprendo Review vengono ricaricate ultima `ScanSession` e relative `Observation` | — | chiuso, vedi `decisions.md` #28 e `genesis-architecture.md` §7 |
+| B35 | ~~Trend storico Home Score~~ — risolto 2026-08-04: Dashboard con andamento a 6 metriche, ricalcolo manuale e storico degli ultimi 12 mesi | — | chiuso; nessuno snapshot duplicato se score/versione non cambiano, vedi `decisions.md` #29 |
 
 Le decisioni di design già prese (comprese quelle che generano debito accettato consapevolmente, es. niente test, CORS aperto) sono in `decisions.md` — questo file è per il lavoro non ancora fatto, non per rispiegare perché.

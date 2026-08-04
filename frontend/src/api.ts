@@ -369,6 +369,10 @@ export const api = {
       }),
     complete: (houseId: string) => request<GenesisResults>(`/houses/${houseId}/genesis/complete`, { method: 'POST' }),
     getResults: (houseId: string) => request<GenesisResults>(`/houses/${houseId}/genesis`),
+    scoreHistory: (houseId: string) =>
+      request<import('./types').ScoreSnapshotRecord[]>(`/houses/${houseId}/genesis/score-history`),
+    recalculateScore: (houseId: string) =>
+      request<import('./types').GenesisRecalculationResult>(`/houses/${houseId}/genesis/recalculate`, { method: 'POST' }),
     getTimeline: (houseId: string) => request<HouseTimelineEventRecord[]>(`/houses/${houseId}/genesis/timeline`),
   },
   gmail: {

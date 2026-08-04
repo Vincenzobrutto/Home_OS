@@ -27,6 +27,7 @@ Il centro del sistema è l'**Asset** (caldaia, impianto elettrico, climatizzator
 - **Documenti casa**: documenti/impianti non legati a un ambiente specifico (es. APE, impianto elettrico condominiale), con ricerca per parola chiave.
 - **Rubrica**: contatti (tecnici, aziende) collegabili agli interventi in cronologia.
 - **Dashboard**: promemoria (garanzie scadute, asset senza documenti) cliccabili per andare dritti all'asset.
+- **Genesis e Home Score**: onboarding guidato verso il primo Digital Twin, score trasparente su cinque dimensioni, Home Detective e andamento storico ricalcolabile sui dati correnti.
 - **Manutenzione programmata**: piani una tantum o ricorrenti per Asset, preavviso configurabile, tecnico abituale, sospensione/riattivazione, completamento con documento e storico; scadenze imminenti o superate visibili in Dashboard.
 - **Mobile**: sidebar a scomparsa, layout responsive, planimetria utilizzabile a touch.
 

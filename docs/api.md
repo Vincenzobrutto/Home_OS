@@ -94,6 +94,8 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/houses/:houseId/genesis/scan` | avvia la demo con `type`, `roomNames[]` e `assetNames[]`; crea solo le Observation scelte |
 | GET | `/houses/:houseId/genesis/resume` | restituisce lo step persistito e, per Review, ultima sessione con Observation |
 | PATCH | `/houses/:houseId/genesis/step` | salva uno dei 6 step; consente ritorno indietro o avanzamento di un solo step |
+| GET | `/houses/:houseId/genesis/score-history` | ScoreSnapshot degli ultimi 12 mesi, in ordine cronologico |
+| POST | `/houses/:houseId/genesis/recalculate` | ricalcola Score e Issue correnti; salva uno snapshot solo se valori/versione cambiano |
 
 ## Gmail (OAuth + scansione)
 | Metodo | Path | Note |

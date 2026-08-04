@@ -131,6 +131,10 @@ export interface GenesisResults {
   confirmedAssetsCount: number;
 }
 
+export interface GenesisRecalculationResult extends GenesisResults {
+  snapshotCreated: boolean;
+}
+
 export interface HouseTimelineEventRecord {
   id: string;
   houseId: string;

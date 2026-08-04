@@ -79,6 +79,86 @@ describe('GenesisService precise resume', () => {
   });
 });
 
+describe('GenesisService Home Score history', () => {
+  it('does not create a duplicate snapshot when recalculation has identical values and version', async () => {
+    const latest = {
+      id: 'score-1',
+      houseId: 'house-1',
+      overallScore: 82,
+      documentationScore: 70,
+      maintenanceScore: 100,
+      safetyScore: 100,
+      efficiencyScore: 100,
+      completenessScore: 30,
+      calculationVersion: 'v1',
+      calculatedAt: new Date(),
+    };
+    const snapshotCreate = jest.fn();
+    const prisma = {
+      house: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'house-1',
+          genesisStatus: 'COMPLETED',
+        }),
+      },
+      asset: {
+        findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(0),
+      },
+      document: { count: jest.fn().mockResolvedValue(0) },
+      room: { count: jest.fn().mockResolvedValue(0) },
+      observation: { count: jest.fn().mockResolvedValue(0) },
+      scoreSnapshot: {
+        findFirst: jest.fn().mockResolvedValue(latest),
+        create: snapshotCreate,
+      },
+      issue: {
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn().mockResolvedValue({ id: 'issue-1' }),
+      },
+      recommendation: {
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn(),
+      },
+    };
+    const service = new GenesisService(
+      prisma as unknown as PrismaService,
+      {} as RoomsService,
+      {} as AssetsService,
+      {} as HouseScanProvider,
+    );
+
+    const result = await service.recalculateScore('house-1');
+
+    expect(result.snapshotCreated).toBe(false);
+    expect(snapshotCreate).not.toHaveBeenCalled();
+  });
+
+  it('returns snapshots from the last twelve months in chronological order', async () => {
+    const findMany = jest.fn().mockResolvedValue([]);
+    const prisma = {
+      house: { findUnique: jest.fn().mockResolvedValue({ id: 'house-1' }) },
+      scoreSnapshot: { findMany },
+    };
+    const service = new GenesisService(
+      prisma as unknown as PrismaService,
+      {} as RoomsService,
+      {} as AssetsService,
+      {} as HouseScanProvider,
+    );
+
+    await service.getScoreHistory('house-1');
+
+    expect(findMany).toHaveBeenCalledWith({
+      where: {
+        houseId: 'house-1',
+        calculatedAt: { gte: expect.any(Date) as Date },
+      },
+      orderBy: { calculatedAt: 'asc' },
+    });
+  });
+});
+
 describe('GenesisService.confirmObservations', () => {
   it('converts confirmed observations into real Room/Asset rows, skips rejected ones, and links the asset to the room confirmed in the same batch', async () => {
     const roomObservation = {

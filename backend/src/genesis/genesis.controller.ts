@@ -83,6 +83,16 @@ export class GenesisController {
     return this.genesisService.getTimeline(houseId);
   }
 
+  @Get('houses/:houseId/genesis/score-history')
+  getScoreHistory(@Param('houseId', ParseUUIDPipe) houseId: string) {
+    return this.genesisService.getScoreHistory(houseId);
+  }
+
+  @Post('houses/:houseId/genesis/recalculate')
+  recalculateScore(@Param('houseId', ParseUUIDPipe) houseId: string) {
+    return this.genesisService.recalculateScore(houseId);
+  }
+
   @Get('genesis/demo-catalog')
   getDemoCatalog() {
     return this.genesisService.getDemoCatalog();

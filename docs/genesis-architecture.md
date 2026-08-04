@@ -111,6 +111,8 @@ Il frontend (`Genesis.tsx`) è una macchina a stati a 6 step (Welcome, House Inf
 
 `Dashboard.tsx` legge `GET /houses/:id/genesis` quando `genesisStatus === 'COMPLETED'` e mostra, in ordine: card Home Score (punteggio + 5 barre dimensione), sezione "Da tenere d'occhio" (Issue aperte), "Consigliato" (Recommendation aperte), poi la griglia statistiche esistente (con conteggio documenti ora reale, non più hardcoded a 0) e infine "Cronologia casa" (`HouseTimelineEvent`, ultimi 8). Prima del completamento, un banner invita a iniziare/riprendere Genesis.
 
+La card Home Score espone anche il trend degli ultimi 12 mesi (`GET .../score-history`) per totale e cinque dimensioni. Il ricalcolo è esplicito (`POST .../recalculate`): riconcilia anche Home Detective e salva un nuovo `ScoreSnapshot` solo quando cambia almeno un valore o `calculationVersion`, evitando rumore storico.
+
 ## 9. Limitazioni note del prototipo
 
 - **Nessuna autenticazione**: dichiarato esplicitamente prima di iniziare, accettato dall'utente come parte dello scope (vedi `decisions.md` #25). Nessuna verifica di ownership sulla casa negli endpoint Genesis — stessa lacuna già presente nel resto dell'API (`backlog.md` B2), non introdotta da Genesis.

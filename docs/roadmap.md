@@ -29,7 +29,8 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Dashboard aggiornata: card Home Score, sezione "Da tenere d'occhio", "Consigliato", conteggio documenti reale (non più hardcoded), cronologia casa.
 - Nuove entità: `Floor`, `ScanSession`, `Observation`, `Issue`, `Recommendation`, `ScoreSnapshot`, `HouseTimelineEvent`; `House`/`Room`/`Asset` estesi in modo retrocompatibile.
 - Verificato end-to-end nel browser il flusso Genesis originario; il nuovo catalogo selezionabile è coperto da test automatico del provider mock.
-- **Blocco noto e accettato**: nessuna autenticazione, quindi l'isolamento per utente richiesto dalla specifica non è applicato (vedi `decisions.md` #25, `product-backlog.md` EPIC 7). Limitazioni di dettaglio in `genesis-architecture.md` §9 (nessuna deduplica contro dati esistenti, ripresa del wizard a grana grossa).
+- Dashboard con trend Home Score degli ultimi 12 mesi, selezione dimensione e ricalcolo manuale senza snapshot duplicati (B35).
+- **Blocco noto e accettato**: nessuna autenticazione, quindi l'isolamento per utente richiesto dalla specifica non è applicato (vedi `decisions.md` #25, `product-backlog.md` EPIC 7). Deduplica e ripresa precisa sono state completate con B33/B34.
 
 ## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)
 

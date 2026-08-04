@@ -11,7 +11,7 @@
 **Stato**: ✅ MVP completo (2026-08-04) — wizard 6 step, `HouseScanProvider` mock, Home Score v1, Home Detective con 5 regole, Dashboard aggiornata. Vedi `genesis-architecture.md`.
 **Dipendenze**: nessuna verso le altre epiche per l'MVP; dipende da EPIC 1 (Digital Twin Engine) e riusa EPIC 2 (Knowledge Engine) per il caricamento documenti nello step "Documenti".
 **Dentro lo scope MVP**: wizard 6 step, scansione dimostrativa (dataset fisso, non vera computer vision), conferma/modifica/scarto delle proposte, calcolo Home Score e Issue al completamento.
-**Fuori scope (per ora)**: scansione reale da foto/video, deduplica automatica contro Asset/Room già esistenti, ripresa del wizard a grana fine (oggi solo 4 stati grezzi) — vedi limitazioni in `genesis-architecture.md` §9.
+**Fuori scope (per ora)**: scansione reale da foto/video. Deduplica assistita e ripresa a grana fine sono state completate con B33/B34 — vedi `genesis-architecture.md`.
 
 ## EPIC 1 — Digital Twin Engine (modello casa)
 
@@ -38,7 +38,7 @@
 **Stato**: ✅ MVP v1 (2026-08-04) — `common/home-score.ts`, versionato, testato, persistito come `ScoreSnapshot` ad ogni ricalcolo.
 **Dipendenze**: EPIC 0 (calcolato al completamento Genesis) e EPIC 1/2/6 (legge dati Asset, documenti, manutenzioni).
 **Dentro lo scope MVP**: 5 dimensioni (documentazione, manutenzione, sicurezza, efficienza, completezza), nessuna stima di valore immobiliare o risparmio.
-**Fuori scope (per ora)**: confronto con case simili (benchmark), trend storico del punteggio nel tempo in UI (i dati ci sono già in `ScoreSnapshot`, manca solo la vista).
+**Fuori scope (per ora)**: confronto con case simili (benchmark). Il trend storico è disponibile in Dashboard con ricalcolo manuale (B35, 2026-08-04).
 
 ## EPIC 4 — Home Detective (rilevamento proattivo)
 

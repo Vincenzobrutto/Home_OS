@@ -22,7 +22,7 @@ Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi 
 - Dashboard con promemoria cliccabili verso l'asset.
 - Manutenzione programmata per Asset: ricorrenze, preavviso, tecnico/documento, completamento, storico, sospensione e promemoria Dashboard.
 - UI ottimizzata per mobile (sidebar a scomparsa, touch sulla planimetria, layout responsive).
-- **HomeOS Genesis (2026-08-04)**: wizard di onboarding a 6 step; scansione dimostrativa con catalogo selezionabile di 14 ambienti e 25 Asset/impianti (solo gli elementi scelti vengono proposti), revisione esplicita, Home Score v1 e Home Detective. Dettaglio in [`genesis-architecture.md`](genesis-architecture.md).
+- **HomeOS Genesis (2026-08-04)**: wizard di onboarding a 6 step; scansione dimostrativa con catalogo selezionabile, revisione esplicita, Home Score v1 e Home Detective. La Dashboard mostra anche il trend degli ultimi 12 mesi e consente il ricalcolo manuale senza snapshot duplicati. Dettaglio in [`genesis-architecture.md`](genesis-architecture.md).
 
 Dettaglio completo in [`vision.md`](vision.md) e [`roadmap.md`](roadmap.md).
 
@@ -92,7 +92,7 @@ Il repository contiene ora 12 migrazioni, inclusa `20260804120000_add_genesis_st
 |---|---|---|
 | `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~805 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ✅ 0 errori, 0 warning | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx), invariati |
-| `npm run test` | ✅ 57/57 (inclusi catalogo e ripresa precisa Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 59/59 (inclusi catalogo, ripresa e storico Home Score) | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Verificato anche **end-to-end nel browser** (non solo unit test): l'intero wizard Genesis eseguito sulla casa reale — creazione stanze/asset dalla scansione demo, calcolo Home Score, generazione Issue/Recommendation coerenti. Dettaglio in `changelog.md` (2026-08-04).
 

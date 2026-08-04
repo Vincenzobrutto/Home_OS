@@ -25,10 +25,12 @@ import type { HouseScanProvider } from './scan/house-scan-provider.interface';
 import {
   computeHomeScore,
   type HomeScoreAssetInput,
+  type ScoreResult,
 } from '../common/home-score';
 import {
   evaluateHomeDetectiveRules,
   type HomeDetectiveAssetInput,
+  type IssueDraft,
 } from '../common/home-detective';
 import {
   findPossibleDuplicate,
@@ -310,77 +312,11 @@ export class GenesisService {
   // ancora valido, chiude ciò che non lo è più) e salva uno ScoreSnapshot.
   async completeGenesis(houseId: string) {
     await this.ensureHouseExists(houseId);
-
-    const [
-      assets,
-      houseDocumentsCount,
-      confirmedRoomsCount,
-      pendingObservationsCount,
-    ] = await Promise.all([
-      this.prisma.asset.findMany({
-        where: { houseId },
-        include: {
-          _count: { select: { documents: true, maintenancePlans: true } },
-        },
-      }),
-      this.prisma.document.count({ where: { houseId } }),
-      this.prisma.room.count({ where: { houseId, confirmed: true } }),
-      this.prisma.observation.count({
-        where: { scanSession: { houseId }, status: 'PENDING' },
-      }),
-    ]);
-
-    const houseHasAnyDocument = houseDocumentsCount > 0;
-
-    const scoreAssets: HomeScoreAssetInput[] = assets.map((a) => ({
-      id: a.id,
-      type: a.type,
-      confirmed: a.confirmed,
-      dismissed: a.dismissedAt !== null,
-      hasDocument: a._count.documents > 0,
-      hasMaintenancePlan: a._count.maintenancePlans > 0,
-      estimatedReplacementYear: a.estimatedReplacementYear,
-    }));
-    const detectiveAssets: HomeDetectiveAssetInput[] = assets.map((a) => ({
-      id: a.id,
-      type: a.type,
-      confirmed: a.confirmed,
-      dismissed: a.dismissedAt !== null,
-      hasDocument: a._count.documents > 0,
-      roomId: a.roomId,
-    }));
-
-    const score = computeHomeScore({
-      currentYear: new Date().getFullYear(),
-      houseHasAnyDocument,
-      assets: scoreAssets,
-      confirmedRoomsCount,
-      // Il completamento è quello che stiamo per impostare in questa stessa
-      // chiamata: la Digital Twin è considerata "completa" da questo punto.
-      genesisCompleted: true,
-    });
-
-    const drafts = evaluateHomeDetectiveRules({
-      houseHasAnyDocument,
-      genesisCompleted: true,
-      assets: detectiveAssets,
-      unconfirmedObservationsCount: pendingObservationsCount,
-    });
+    const { score, drafts } = await this.evaluateCurrentHome(houseId);
 
     await this.reconcileIssues(houseId, drafts);
 
-    await this.prisma.scoreSnapshot.create({
-      data: {
-        houseId,
-        overallScore: score.overall,
-        documentationScore: score.dimensions.documentation,
-        maintenanceScore: score.dimensions.maintenance,
-        safetyScore: score.dimensions.safety,
-        efficiencyScore: score.dimensions.efficiency,
-        completenessScore: score.dimensions.completeness,
-        calculationVersion: score.version,
-      },
-    });
+    await this.createScoreSnapshot(houseId, score);
 
     await this.prisma.house.update({
       where: { id: houseId },
@@ -397,6 +333,66 @@ export class GenesisService {
     });
 
     return this.getResults(houseId);
+  }
+
+  async getScoreHistory(houseId: string) {
+    await this.ensureHouseExists(houseId);
+    const since = new Date();
+    since.setFullYear(since.getFullYear() - 1);
+    return this.prisma.scoreSnapshot.findMany({
+      where: { houseId, calculatedAt: { gte: since } },
+      orderBy: { calculatedAt: 'asc' },
+    });
+  }
+
+  async recalculateScore(houseId: string) {
+    const house = await this.ensureHouseExists(houseId);
+    if (house.genesisStatus !== GenesisStatus.COMPLETED) {
+      throw new BadRequestException(
+        'Complete Genesis before recalculating the Home Score',
+      );
+    }
+
+    const { score, drafts } = await this.evaluateCurrentHome(houseId);
+    await this.reconcileIssues(houseId, drafts);
+
+    const latest = await this.prisma.scoreSnapshot.findFirst({
+      where: { houseId },
+      orderBy: { calculatedAt: 'desc' },
+    });
+    const values = [
+      score.overall,
+      score.dimensions.documentation,
+      score.dimensions.maintenance,
+      score.dimensions.safety,
+      score.dimensions.efficiency,
+      score.dimensions.completeness,
+    ];
+    const previousValues = latest
+      ? [
+          latest.overallScore,
+          latest.documentationScore,
+          latest.maintenanceScore,
+          latest.safetyScore,
+          latest.efficiencyScore,
+          latest.completenessScore,
+        ]
+      : [];
+    const snapshotCreated =
+      !latest ||
+      latest.calculationVersion !== score.version ||
+      values.some((value, index) => value !== previousValues[index]);
+
+    if (snapshotCreated) {
+      await this.createScoreSnapshot(houseId, score);
+      await this.addTimelineEvent(houseId, {
+        type: 'home_score_updated',
+        title: 'Home Score aggiornato',
+        description: `Home Score: ${score.overall}/100`,
+      });
+    }
+
+    return { ...(await this.getResults(houseId)), snapshotCreated };
   }
 
   async getResults(houseId: string) {
@@ -445,6 +441,78 @@ export class GenesisService {
   }
 
   // --- helper privati -------------------------------------------------
+
+  private async evaluateCurrentHome(
+    houseId: string,
+  ): Promise<{ score: ScoreResult; drafts: IssueDraft[] }> {
+    const [
+      assets,
+      houseDocumentsCount,
+      confirmedRoomsCount,
+      pendingObservationsCount,
+    ] = await Promise.all([
+      this.prisma.asset.findMany({
+        where: { houseId },
+        include: {
+          _count: { select: { documents: true, maintenancePlans: true } },
+        },
+      }),
+      this.prisma.document.count({ where: { houseId } }),
+      this.prisma.room.count({ where: { houseId, confirmed: true } }),
+      this.prisma.observation.count({
+        where: { scanSession: { houseId }, status: 'PENDING' },
+      }),
+    ]);
+    const houseHasAnyDocument = houseDocumentsCount > 0;
+    const scoreAssets: HomeScoreAssetInput[] = assets.map((asset) => ({
+      id: asset.id,
+      type: asset.type,
+      confirmed: asset.confirmed,
+      dismissed: asset.dismissedAt !== null,
+      hasDocument: asset._count.documents > 0,
+      hasMaintenancePlan: asset._count.maintenancePlans > 0,
+      estimatedReplacementYear: asset.estimatedReplacementYear,
+    }));
+    const detectiveAssets: HomeDetectiveAssetInput[] = assets.map((asset) => ({
+      id: asset.id,
+      type: asset.type,
+      confirmed: asset.confirmed,
+      dismissed: asset.dismissedAt !== null,
+      hasDocument: asset._count.documents > 0,
+      roomId: asset.roomId,
+    }));
+
+    return {
+      score: computeHomeScore({
+        currentYear: new Date().getFullYear(),
+        houseHasAnyDocument,
+        assets: scoreAssets,
+        confirmedRoomsCount,
+        genesisCompleted: true,
+      }),
+      drafts: evaluateHomeDetectiveRules({
+        houseHasAnyDocument,
+        genesisCompleted: true,
+        assets: detectiveAssets,
+        unconfirmedObservationsCount: pendingObservationsCount,
+      }),
+    };
+  }
+
+  private createScoreSnapshot(houseId: string, score: ScoreResult) {
+    return this.prisma.scoreSnapshot.create({
+      data: {
+        houseId,
+        overallScore: score.overall,
+        documentationScore: score.dimensions.documentation,
+        maintenanceScore: score.dimensions.maintenance,
+        safetyScore: score.dimensions.safety,
+        efficiencyScore: score.dimensions.efficiency,
+        completenessScore: score.dimensions.completeness,
+        calculationVersion: score.version,
+      },
+    });
+  }
 
   private async resolveAssetRoomId(
     houseId: string,

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { DoorOpen, Building2, FileText, AlertTriangle, CalendarClock, Sparkles, ArrowRight, Clock, type LucideIcon } from 'lucide-react';
+import { DoorOpen, Building2, FileText, AlertTriangle, CalendarClock, Sparkles, ArrowRight, Clock, RefreshCw, TrendingUp, type LucideIcon } from 'lucide-react';
 import { iconForAsset } from '../theme';
 import { SectionLabel } from './Shared';
-import type { Asset, GenesisResults, House, HouseTimelineEventRecord, MaintenanceReminder, Room } from '../types';
+import type { Asset, GenesisResults, House, HouseTimelineEventRecord, MaintenanceReminder, Room, ScoreSnapshotRecord } from '../types';
 import { api, formatDateForDisplay } from '../api';
 
 // ANTEPRIMA nuova palette (blu/verde acqua, più moderna) — vive solo qui in
@@ -88,6 +88,81 @@ function StatBadge({ icon: Icon, color }: { icon: LucideIcon; color: string }) {
   );
 }
 
+type ScoreMetric =
+  | 'overallScore'
+  | 'documentationScore'
+  | 'maintenanceScore'
+  | 'safetyScore'
+  | 'efficiencyScore'
+  | 'completenessScore';
+
+const SCORE_METRICS: Array<{ key: ScoreMetric; label: string }> = [
+  { key: 'overallScore', label: 'Totale' },
+  { key: 'documentationScore', label: 'Documentazione' },
+  { key: 'maintenanceScore', label: 'Manutenzione' },
+  { key: 'safetyScore', label: 'Sicurezza' },
+  { key: 'efficiencyScore', label: 'Efficienza' },
+  { key: 'completenessScore', label: 'Completezza' },
+];
+
+function ScoreTrend({ history }: { history: ScoreSnapshotRecord[] }) {
+  const [metric, setMetric] = useState<ScoreMetric>('overallScore');
+  const width = 620;
+  const height = 180;
+  const left = 34;
+  const right = 14;
+  const top = 12;
+  const bottom = 28;
+  const chartWidth = width - left - right;
+  const chartHeight = height - top - bottom;
+  const points = history.map((snapshot, index) => ({
+    x: left + (history.length === 1 ? chartWidth / 2 : (index / (history.length - 1)) * chartWidth),
+    y: top + ((100 - snapshot[metric]) / 100) * chartHeight,
+    snapshot,
+  }));
+  const latest = history.at(-1);
+  const previous = history.at(-2);
+  const delta = latest && previous ? latest[metric] - previous[metric] : null;
+  const versions = new Set(history.map((snapshot) => snapshot.calculationVersion));
+  const dateLabel = (date: string) => new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: 'short', year: '2-digit' }).format(new Date(date));
+
+  return (
+    <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${PT.line}` }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+        <div>
+          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 600, color: PT.ink }}>Andamento ultimi 12 mesi</div>
+          {delta !== null && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: delta > 0 ? PT.teal : delta < 0 ? PT.danger : PT.slate, marginTop: 2 }}>{delta > 0 ? '+' : ''}{delta} punti dall’ultima rilevazione</div>}
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+          {SCORE_METRICS.map((item) => <button key={item.key} onClick={() => setMetric(item.key)} aria-pressed={metric === item.key} style={{ border: `1px solid ${metric === item.key ? PT.primary : PT.line}`, background: metric === item.key ? `${PT.primary}12` : PT.card, color: metric === item.key ? PT.primary : PT.slate, borderRadius: 14, padding: '5px 8px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 10.5 }}>{item.label}</button>)}
+        </div>
+      </div>
+      {history.length < 2 ? (
+        <div style={{ padding: '18px 16px', borderRadius: 9, background: '#F8FAFC', fontFamily: "'Inter', sans-serif", fontSize: 12.5, lineHeight: 1.5, color: PT.slate }}>
+          Serve almeno una seconda rilevazione per mostrare il trend. Migliora i dati della casa e usa “Aggiorna Home Score”.
+        </div>
+      ) : (
+        <>
+          <div style={{ width: '100%', overflowX: 'auto' }}>
+            <svg role="img" aria-label={`Grafico storico ${SCORE_METRICS.find((item) => item.key === metric)?.label}`} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', width: '100%', minWidth: 520, height: 190 }}>
+              {[0, 25, 50, 75, 100].map((value) => {
+                const y = top + ((100 - value) / 100) * chartHeight;
+                return <g key={value}><line x1={left} y1={y} x2={width - right} y2={y} stroke={PT.line} strokeWidth="1" /><text x={left - 7} y={y + 4} textAnchor="end" fontSize="9" fill={PT.slate}>{value}</text></g>;
+              })}
+              <polyline points={points.map((point) => `${point.x},${point.y}`).join(' ')} fill="none" stroke={PT.primary} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+              {points.map((point) => <g key={point.snapshot.id}><circle cx={point.x} cy={point.y} r="5" fill={PT.card} stroke={PT.primary} strokeWidth="3"><title>{dateLabel(point.snapshot.calculatedAt)}: {point.snapshot[metric]}/100</title></circle><text x={point.x} y={height - 8} textAnchor="middle" fontSize="9" fill={PT.slate}>{dateLabel(point.snapshot.calculatedAt)}</text></g>)}
+            </svg>
+          </div>
+          <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: 3 }}>
+            {history.map((snapshot) => <div key={snapshot.id} style={{ minWidth: 104, padding: '7px 9px', border: `1px solid ${PT.line}`, borderRadius: 8, fontFamily: "'Inter', sans-serif" }}><div style={{ fontSize: 10, color: PT.slate }}>{dateLabel(snapshot.calculatedAt)}</div><div style={{ fontSize: 15, fontWeight: 700, color: PT.ink }}>{snapshot[metric]}<span style={{ fontSize: 9, fontWeight: 400, color: PT.slate }}>/100</span></div></div>)}
+          </div>
+        </>
+      )}
+      {versions.size > 1 && <div style={{ marginTop: 8, fontFamily: "'Inter', sans-serif", fontSize: 10.5, color: PT.warning }}>Il periodo include versioni diverse del calcolo: i punti restano storici, ma il confronto potrebbe riflettere anche il cambio di algoritmo.</div>}
+    </div>
+  );
+}
+
 export function Dashboard({
   house,
   rooms,
@@ -106,6 +181,10 @@ export function Dashboard({
   const [documentsCount, setDocumentsCount] = useState(0);
   const [genesisResults, setGenesisResults] = useState<GenesisResults | null>(null);
   const [timeline, setTimeline] = useState<HouseTimelineEventRecord[]>([]);
+  const [scoreHistory, setScoreHistory] = useState<ScoreSnapshotRecord[]>([]);
+  const [showScoreTrend, setShowScoreTrend] = useState(false);
+  const [recalculatingScore, setRecalculatingScore] = useState(false);
+  const [scoreMessage, setScoreMessage] = useState<string | null>(null);
 
   useEffect(() => {
     api.maintenance.remindersForHouse(house.id).then(setMaintenance);
@@ -116,11 +195,33 @@ export function Dashboard({
     if (house.genesisStatus !== 'COMPLETED') {
       setGenesisResults(null);
       setTimeline([]);
+      setScoreHistory([]);
       return;
     }
     api.genesis.getResults(house.id).then(setGenesisResults);
     api.genesis.getTimeline(house.id).then(setTimeline);
+    api.genesis.scoreHistory(house.id).then(setScoreHistory);
   }, [house.id, house.genesisStatus]);
+
+  async function recalculateScore() {
+    setRecalculatingScore(true);
+    setScoreMessage(null);
+    try {
+      const updated = await api.genesis.recalculateScore(house.id);
+      setGenesisResults(updated);
+      const [history, updatedTimeline] = await Promise.all([
+        api.genesis.scoreHistory(house.id),
+        api.genesis.getTimeline(house.id),
+      ]);
+      setScoreHistory(history);
+      setTimeline(updatedTimeline);
+      setScoreMessage(updated.snapshotCreated ? 'Nuova rilevazione salvata.' : 'Lo score non è cambiato: nessun duplicato creato.');
+    } catch (error) {
+      setScoreMessage(error instanceof Error ? error.message : 'Impossibile aggiornare lo score.');
+    } finally {
+      setRecalculatingScore(false);
+    }
+  }
 
   return (
     <div style={{ padding: '36px 44px', maxWidth: 980 }}>
@@ -181,7 +282,8 @@ export function Dashboard({
       )}
 
       {genesisResults?.score && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24, marginBottom: 26, padding: '18px 20px', background: PT.card, border: `1px solid ${PT.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
+        <div style={{ marginBottom: 26, padding: '18px 20px', background: PT.card, border: `1px solid ${PT.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24 }}>
           <div>
             <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 40, color: PT.primary, lineHeight: 1 }}>{genesisResults.score.overallScore}</div>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: PT.slate, marginTop: 4 }}>Home Score /100</div>
@@ -208,6 +310,17 @@ export function Dashboard({
               </div>
             ))}
           </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 16, paddingTop: 14, borderTop: `1px solid ${PT.line}` }}>
+            <button onClick={() => setShowScoreTrend((visible) => !visible)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: `1px solid ${PT.line}`, background: PT.card, color: PT.primary, borderRadius: 8, padding: '8px 11px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 600 }}>
+              <TrendingUp size={15} /> {showScoreTrend ? 'Nascondi andamento' : 'Vedi andamento'}
+            </button>
+            <button disabled={recalculatingScore} onClick={() => void recalculateScore()} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', background: PT.primary, color: '#fff', borderRadius: 8, padding: '9px 12px', cursor: recalculatingScore ? 'default' : 'pointer', opacity: recalculatingScore ? 0.65 : 1, fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 600 }}>
+              <RefreshCw size={15} className={recalculatingScore ? 'spin' : undefined} /> {recalculatingScore ? 'Ricalcolo…' : 'Aggiorna Home Score'}
+            </button>
+            {scoreMessage && <span role="status" style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: PT.slate }}>{scoreMessage}</span>}
+          </div>
+          {showScoreTrend && <ScoreTrend history={scoreHistory} />}
         </div>
       )}
 

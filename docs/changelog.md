@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-04 (6) — Trend storico Home Score
+
+- La Dashboard mostra l'andamento degli ultimi 12 mesi per score totale e cinque dimensioni, con valori sempre leggibili anche su mobile.
+- “Aggiorna Home Score” ricalcola score e Home Detective sui dati correnti; crea una nuova rilevazione solo se valori o versione cambiano.
+- Evidenziata la variazione dall'ultimo snapshot e segnalata la presenza di versioni diverse dell'algoritmo.
+- Due endpoint e due test backend; baseline 59/59.
+
 ## 2026-08-04 (5) — B34, ripresa precisa del wizard Genesis
 
 - Tutti i 6 step sono ora persistiti in `House.genesisStep`, incluse le navigazioni all'indietro.
