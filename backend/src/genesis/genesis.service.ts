@@ -10,6 +10,10 @@ import { RoomsService } from '../rooms/rooms.service';
 import { AssetsService } from '../assets/assets.service';
 import { SaveHouseInfoDto } from './dto/save-house-info.dto';
 import { StartScanDto } from './dto/start-scan.dto';
+import {
+  GENESIS_DEMO_ASSETS,
+  GENESIS_DEMO_ROOMS,
+} from './scan/genesis-demo-dataset';
 import { ConfirmObservationsDto } from './dto/confirm-observations.dto';
 import { HOUSE_SCAN_PROVIDER } from './scan/house-scan-provider.token';
 import type { HouseScanProvider } from './scan/house-scan-provider.interface';
@@ -69,6 +73,8 @@ export class GenesisService {
     const session = await this.scanProvider.startScan({
       houseId,
       type: dto.type,
+      roomNames: dto.roomNames,
+      assetNames: dto.assetNames,
     });
     await this.prisma.house.update({
       where: { id: houseId },
@@ -80,6 +86,10 @@ export class GenesisService {
       description: `${session.type}, sessione ${session.id}`,
     });
     return session;
+  }
+
+  getDemoCatalog() {
+    return { rooms: GENESIS_DEMO_ROOMS, assets: GENESIS_DEMO_ASSETS };
   }
 
   // Arricchisce ogni Observation con un eventuale "possibleDuplicate": un

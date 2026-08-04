@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-04 (4) — Genesis non più modellata su una sola casa
+
+- Il dataset dimostrativo passa da 4 a 14 ambienti e da 7 a 25 Asset/impianti comuni.
+- Lo step Scansione mostra un catalogo selezionabile: solo gli elementi scelti entrano nella proposta, evitando di imporre all'utente decine di dati finti da scartare.
+- Gli Asset legati a una stanza compaiono solo quando quella stanza è selezionata; gli impianti a livello casa restano sempre disponibili.
+- Nuovo endpoint catalogo e supporto a `roomNames`/`assetNames` nel comando di scansione. Aggiunto test sul filtro del provider mock; backend 55/55 test.
+
 ## 2026-08-04 (3) — Genesis: rifiniture usabilità dal walkthrough
 
 Seguito ai punti medi/bassi del walkthrough di usabilità (dopo B33):

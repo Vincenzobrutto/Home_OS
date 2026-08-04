@@ -68,4 +68,9 @@ export class GenesisController {
   getTimeline(@Param('houseId', ParseUUIDPipe) houseId: string) {
     return this.genesisService.getTimeline(houseId);
   }
+
+  @Get('genesis/demo-catalog')
+  getDemoCatalog() {
+    return this.genesisService.getDemoCatalog();
+  }
 }

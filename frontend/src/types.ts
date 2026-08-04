@@ -36,6 +36,11 @@ export interface ScanSessionRecord {
   completedAt: string | null;
 }
 
+export interface GenesisDemoCatalog {
+  rooms: Array<{ proposedName: string; roomType: string; confidence: number }>;
+  assets: Array<{ proposedName: string; assetType: string; roomName: string | null; confidence: number }>;
+}
+
 export type ObservationEntityType = 'ROOM' | 'ASSET';
 export type ObservationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'EDITED';
 

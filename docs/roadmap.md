@@ -23,12 +23,12 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 
 **M2 — HomeOS Genesis MVP (2026-08-04)**
 - Wizard di onboarding a 6 step (Benvenuto → Informazioni casa → Documenti → Scansione guidata → Revisione Digital Twin → Risultati), persistente e ripresumibile a grana grossa.
-- Scansione guidata dimostrativa (`HouseScanProvider`/`MockHouseScanProvider`, dataset fisso e dichiarato come mock) che propone stanze e asset, confermabili/modificabili/scartabili prima di entrare nel Digital Twin.
+- Scansione guidata dimostrativa con catalogo configurabile di 14 ambienti e 25 Asset/impianti: l'utente sceglie cosa assomiglia alla propria casa prima della proposta, poi conferma/modifica/scarta ogni elemento.
 - Home Score v1: punteggio 0-100 su 5 dimensioni pesate (documentazione, manutenzione, sicurezza, efficienza, completezza), ogni scostamento spiegato da una `reason` esplicita, versionato e persistito come storico (`ScoreSnapshot`).
 - Home Detective: 5 regole deterministiche (mai un LLM) che generano `Issue`/`Recommendation` idempotenti, riconciliate ad ogni completamento di Genesis.
 - Dashboard aggiornata: card Home Score, sezione "Da tenere d'occhio", "Consigliato", conteggio documenti reale (non più hardcoded), cronologia casa.
 - Nuove entità: `Floor`, `ScanSession`, `Observation`, `Issue`, `Recommendation`, `ScoreSnapshot`, `HouseTimelineEvent`; `House`/`Room`/`Asset` estesi in modo retrocompatibile.
-- Verificato end-to-end nel browser sulla casa reale: creazione di 4 stanze e 7 asset via scansione demo, collegamento corretto stanza↔asset, calcolo Home Score, generazione Issue/Recommendation coerenti con lo stato reale della casa.
+- Verificato end-to-end nel browser il flusso Genesis originario; il nuovo catalogo selezionabile è coperto da test automatico del provider mock.
 - **Blocco noto e accettato**: nessuna autenticazione, quindi l'isolamento per utente richiesto dalla specifica non è applicato (vedi `decisions.md` #25, `product-backlog.md` EPIC 7). Limitazioni di dettaglio in `genesis-architecture.md` §9 (nessuna deduplica contro dati esistenti, ripresa del wizard a grana grossa).
 
 ## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)

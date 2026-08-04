@@ -6,6 +6,7 @@ import { api } from '../api';
 import type {
   ConfirmObservationItem,
   DocumentRecord,
+  GenesisDemoCatalog,
   GenesisResults,
   House,
   ObservationRecord,
@@ -486,12 +487,46 @@ function ScanStep({
 }) {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [catalog, setCatalog] = useState<GenesisDemoCatalog | null>(null);
+  const [selectedRooms, setSelectedRooms] = useState<Set<string>>(new Set());
+  const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    api.genesis.demoCatalog().then((result) => {
+      setCatalog(result);
+      setSelectedRooms(new Set(['Cucina', 'Soggiorno', 'Camera da letto', 'Bagno']));
+      setSelectedAssets(new Set(['Frigorifero', 'Forno', 'Lavastoviglie', 'Climatizzatore', 'Scaldabagno', 'Impianto elettrico', 'Impianto fotovoltaico']));
+    }).catch((e: unknown) => setError(e instanceof Error ? e.message : 'Impossibile caricare il catalogo demo'));
+  }, []);
+
+  function toggleRoom(name: string) {
+    setSelectedRooms((current) => {
+      const next = new Set(current);
+      if (next.has(name)) {
+        next.delete(name);
+        setSelectedAssets((assets) => {
+          const filtered = new Set(assets);
+          catalog?.assets.filter((asset) => asset.roomName === name).forEach((asset) => filtered.delete(asset.proposedName));
+          return filtered;
+        });
+      } else next.add(name);
+      return next;
+    });
+  }
+
+  function toggleAsset(name: string) {
+    setSelectedAssets((current) => {
+      const next = new Set(current);
+      if (next.has(name)) next.delete(name); else next.add(name);
+      return next;
+    });
+  }
 
   async function startScan() {
     setScanning(true);
     setError(null);
     try {
-      const session = await api.genesis.startScan(house.id);
+      const session = await api.genesis.startScan(house.id, [...selectedRooms], [...selectedAssets]);
       const observations = await api.genesis.getScanResults(house.id, session.id);
       onScanned(session, observations);
     } catch (e) {
@@ -507,14 +542,40 @@ function ScanStep({
         Scansione guidata
       </h2>
       <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13.5, color: T.slate, margin: '0 0 8px 0', lineHeight: 1.6 }}>
-        Questa è una scansione <strong>dimostrativa</strong>: propone ambienti e impianti tipici di una casa a
-        titolo di esempio, non è una vera analisi di foto o video. Nella prossima schermata potrai rivedere,
-        modificare, confermare o scartare ogni elemento proposto prima che entri nel gemello digitale.
+        Questa è una configurazione <strong>dimostrativa</strong>, non una vera analisi di foto o video. Scegli
+        gli elementi che assomigliano alla tua casa: nella prossima schermata potrai ancora modificarli o scartarli.
       </p>
+      {!catalog ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.slate }}><Loader2 size={14} className="spin" /> Caricamento catalogo…</div>
+      ) : (
+        <div style={{ marginTop: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <SectionLabel>Quali ambienti hai?</SectionLabel>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: T.slate }}>{selectedRooms.size}/{catalog.rooms.length}</span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 20 }}>
+            {catalog.rooms.map((room) => {
+              const checked = selectedRooms.has(room.proposedName);
+              return <button key={room.proposedName} onClick={() => toggleRoom(room.proposedName)} style={{ border: `1px solid ${checked ? T.pine : T.line}`, background: checked ? '#E8F2ED' : T.card, color: T.ink, borderRadius: 18, padding: '7px 11px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12 }}>{checked ? '✓ ' : ''}{room.proposedName}</button>;
+            })}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <SectionLabel>Quali impianti e oggetti vuoi proporre?</SectionLabel>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: T.slate }}>{selectedAssets.size} selezionati</span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, maxHeight: 210, overflowY: 'auto', paddingRight: 4, marginBottom: 8 }}>
+            {catalog.assets.filter((asset) => !asset.roomName || selectedRooms.has(asset.roomName)).map((asset) => {
+              const checked = selectedAssets.has(asset.proposedName);
+              return <button key={asset.proposedName} onClick={() => toggleAsset(asset.proposedName)} title={asset.roomName ? `Ambiente: ${asset.roomName}` : 'Impianto della casa'} style={{ border: `1px solid ${checked ? T.pine : T.line}`, background: checked ? '#E8F2ED' : T.card, color: T.ink, borderRadius: 18, padding: '7px 11px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12 }}>{checked ? '✓ ' : ''}{asset.proposedName}{asset.roomName ? ` · ${asset.roomName}` : ''}</button>;
+            })}
+          </div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate }}>Gli Asset associati a un ambiente compaiono solo dopo aver selezionato quell’ambiente.</div>
+        </div>
+      )}
       {error && <div style={{ color: T.rust, fontFamily: "'Inter', sans-serif", fontSize: 12.5, margin: '12px 0' }}>{error}</div>}
-      <button style={{ ...primaryButtonStyle, marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8, opacity: scanning ? 0.7 : 1 }} disabled={scanning} onClick={startScan}>
+      <button style={{ ...primaryButtonStyle, marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8, opacity: scanning || !catalog || selectedRooms.size + selectedAssets.size === 0 ? 0.55 : 1 }} disabled={scanning || !catalog || selectedRooms.size + selectedAssets.size === 0} onClick={startScan}>
         {scanning && <Loader2 size={15} className="spin" />}
-        {scanning ? 'Scansione in corso…' : 'Avvia scansione guidata (demo)'}
+        {scanning ? 'Preparazione in corso…' : `Prepara proposta (${selectedRooms.size + selectedAssets.size} elementi)`}
       </button>
     </div>
   );

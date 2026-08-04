@@ -24,6 +24,20 @@ export class MockHouseScanProvider implements HouseScanProvider {
   constructor(private readonly prisma: PrismaService) {}
 
   async startScan(input: StartScanInput): Promise<ScanSessionResult> {
+    const selectedRoomNames = new Set(
+      input.roomNames ??
+        GENESIS_DEMO_ROOMS.slice(0, 4).map((room) => room.proposedName),
+    );
+    const selectedAssetNames = new Set(
+      input.assetNames ??
+        GENESIS_DEMO_ASSETS.slice(0, 7).map((asset) => asset.proposedName),
+    );
+    const rooms = GENESIS_DEMO_ROOMS.filter((room) =>
+      selectedRoomNames.has(room.proposedName),
+    );
+    const assets = GENESIS_DEMO_ASSETS.filter((asset) =>
+      selectedAssetNames.has(asset.proposedName),
+    );
     const session = await this.prisma.scanSession.create({
       data: {
         houseId: input.houseId,
@@ -34,7 +48,7 @@ export class MockHouseScanProvider implements HouseScanProvider {
 
     await this.prisma.observation.createMany({
       data: [
-        ...GENESIS_DEMO_ROOMS.map((room) => ({
+        ...rooms.map((room) => ({
           scanSessionId: session.id,
           entityType: 'ROOM' as const,
           proposedName: room.proposedName,
@@ -43,7 +57,7 @@ export class MockHouseScanProvider implements HouseScanProvider {
           payload: { roomType: room.roomType },
           status: 'PENDING' as const,
         })),
-        ...GENESIS_DEMO_ASSETS.map((asset) => ({
+        ...assets.map((asset) => ({
           scanSessionId: session.id,
           entityType: 'ASSET' as const,
           proposedName: asset.proposedName,

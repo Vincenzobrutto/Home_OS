@@ -86,6 +86,13 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | GET | `/maintenance-plans/:id/occurrences` | storico esecuzioni con contatto/documento opzionali |
 | GET | `/houses/:houseId/maintenance-reminders` | sole manutenzioni `UPCOMING`/`OVERDUE`, esclude Asset dismessi |
 
+## Genesis
+
+| Metodo | Endpoint | Descrizione |
+|---|---|---|
+| GET | `/genesis/demo-catalog` | catalogo dimostrativo selezionabile di ambienti e Asset |
+| POST | `/houses/:houseId/genesis/scan` | avvia la demo con `type`, `roomNames[]` e `assetNames[]`; crea solo le Observation scelte |
+
 ## Gmail (OAuth + scansione)
 | Metodo | Path | Note |
 |---|---|---|

@@ -22,7 +22,7 @@ Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi 
 - Dashboard con promemoria cliccabili verso l'asset.
 - Manutenzione programmata per Asset: ricorrenze, preavviso, tecnico/documento, completamento, storico, sospensione e promemoria Dashboard.
 - UI ottimizzata per mobile (sidebar a scomparsa, touch sulla planimetria, layout responsive).
-- **HomeOS Genesis (2026-08-04)**: wizard di onboarding a 6 step (Benvenuto → Informazioni casa → Documenti → Scansione guidata → Revisione Digital Twin → Risultati); scansione guidata dimostrativa (mock, dichiarato come tale in UI) che propone stanze/asset da confermare; Home Score v1 (5 dimensioni pesate, ogni scostamento motivato); Home Detective (5 regole deterministiche → Issue/Recommendation idempotenti); Dashboard con card Home Score, "Da tenere d'occhio", "Consigliato", cronologia casa. Dettaglio in [`genesis-architecture.md`](genesis-architecture.md).
+- **HomeOS Genesis (2026-08-04)**: wizard di onboarding a 6 step; scansione dimostrativa con catalogo selezionabile di 14 ambienti e 25 Asset/impianti (solo gli elementi scelti vengono proposti), revisione esplicita, Home Score v1 e Home Detective. Dettaglio in [`genesis-architecture.md`](genesis-architecture.md).
 
 Dettaglio completo in [`vision.md`](vision.md) e [`roadmap.md`](roadmap.md).
 
@@ -92,7 +92,7 @@ L'ultima verifica DB precedente riportava 11 migrazioni applicate, incluse quell
 |---|---|---|
 | `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~805 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ✅ 0 errori, 0 warning | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx), invariati |
-| `npm run test` | ✅ 54/54 (era 26 prima di Genesis: +9 Home Score, +8 Home Detective, +3 GenesisService, +6 genesis-duplicate.ts, +2 GenesisService dedup) | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 55/55 (incluso filtro del catalogo Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Verificato anche **end-to-end nel browser** (non solo unit test): l'intero wizard Genesis eseguito sulla casa reale — creazione stanze/asset dalla scansione demo, calcolo Home Score, generazione Issue/Recommendation coerenti. Dettaglio in `changelog.md` (2026-08-04).
 

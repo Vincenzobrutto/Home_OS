@@ -348,10 +348,11 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
-    startScan: (houseId: string) =>
+    demoCatalog: () => request<import('./types').GenesisDemoCatalog>('/genesis/demo-catalog'),
+    startScan: (houseId: string, roomNames: string[], assetNames: string[]) =>
       request<ScanSessionRecord>(`/houses/${houseId}/genesis/scan`, {
         method: 'POST',
-        body: JSON.stringify({ type: 'GUIDED_MOCK' }),
+        body: JSON.stringify({ type: 'GUIDED_MOCK', roomNames, assetNames }),
       }),
     getScanResults: (houseId: string, scanSessionId: string) =>
       request<ObservationRecord[]>(`/houses/${houseId}/genesis/scan/${scanSessionId}`),

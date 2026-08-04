@@ -5,6 +5,8 @@
 export interface StartScanInput {
   houseId: string;
   type: 'GUIDED_MOCK' | 'PHOTO' | 'VIDEO';
+  roomNames?: string[];
+  assetNames?: string[];
 }
 
 export interface ScanSessionResult {

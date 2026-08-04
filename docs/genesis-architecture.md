@@ -14,7 +14,7 @@ backend/src/genesis/
     ├── house-scan-provider.interface.ts   — StartScanInput/ScanSessionResult/ScanObservationResult/HouseScanProvider
     ├── house-scan-provider.token.ts       — Symbol per l'injection token
     ├── mock-house-scan-provider.ts        — unica implementazione oggi
-    └── genesis-demo-dataset.ts            — dataset fisso (4 stanze, 7 asset), non casuale
+    └── genesis-demo-dataset.ts            — catalogo fisso (14 ambienti, 25 asset), non casuale
 
 backend/src/common/
 ├── home-score.ts       — motore Home Score, funzione pura
@@ -40,7 +40,7 @@ interface HouseScanProvider {
 }
 ```
 
-`MockHouseScanProvider` è l'unica implementazione oggi, legata all'interfaccia tramite un token DI (`HOUSE_SCAN_PROVIDER`, `Symbol`) in `genesis.module.ts` — un unico punto da cambiare per introdurre un provider reale (foto/video + computer vision), senza toccare `GenesisService` né il frontend. Il dataset demo (`genesis-demo-dataset.ts`) è **fisso**, non generato casualmente: stessa scansione, stesso risultato, ogni volta — riproducibile e spiegabile all'utente ("perché questo elemento ha l'89% di confidenza" ha sempre la stessa risposta).
+`MockHouseScanProvider` è l'unica implementazione oggi, legata all'interfaccia tramite un token DI (`HOUSE_SCAN_PROVIDER`, `Symbol`). Il catalogo demo (`genesis-demo-dataset.ts`) è **fisso**, non casuale, ma la sessione contiene solo gli ambienti e Asset scelti dall'utente nello step Scansione. Questo mantiene risultati riproducibili senza imporre una casa-tipo unica.
 
 **Il confine mock/reale è dichiarato anche in UI**: lo step "Scansione" del wizard dice esplicitamente che è una scansione dimostrativa, non un'analisi reale di foto/video — nessun testo lascia intendere il contrario.
 
@@ -96,7 +96,8 @@ Nessun vincolo unique DB per questa idempotenza: `assetId`/`documentId` nullable
 POST /houses/:id/genesis/start                    genesisStatus: NOT_STARTED → IN_PROGRESS
 PATCH /houses/:id/genesis/house-info               salva indirizzo/città/tipo immobile/superficie/anno (tutto opzionale)
 POST /houses/:id/documents (esistente, riusato)     upload documenti — facoltativo, si può saltare
-POST /houses/:id/genesis/scan                       MockHouseScanProvider crea ScanSession + N Observation, genesisStatus → PROCESSING
+GET  /genesis/demo-catalog                          catalogo selezionabile di ambienti e Asset dimostrativi
+POST /houses/:id/genesis/scan                       riceve roomNames/assetNames; crea solo le Observation scelte
 GET /houses/:id/genesis/scan/:sessionId             legge le Observation proposte
 POST /houses/:id/genesis/scan/:sessionId/confirm    converte le Observation confermate/modificate in Room/Asset reali (riusa RoomsService/AssetsService)
 POST /houses/:id/genesis/complete                   home-detective + home-score, riconcilia Issue/Recommendation, salva ScoreSnapshot, genesisStatus → COMPLETED
@@ -116,7 +117,7 @@ Il frontend (`Genesis.tsx`) è una macchina a stati a 6 step (Welcome, House Inf
 - ~~Nessuna deduplica contro Asset/Room già esistenti~~ — risolto 2026-08-04, vedi §6bis e `decisions.md` #26: avviso + default "Scarta", mai fusione automatica.
 - **Ripresa del wizard solo a grana grossa**: `GenesisStatus` ha 4 soli valori (`NOT_STARTED`/`IN_PROGRESS`/`PROCESSING`/`COMPLETED`), non uno per step. Uscire a metà della Review e rientrare riparte dallo step "Scansione", non esattamente da dove si era interrotto — lo stato dettagliato del wizard (`ScanSession`/`Observation` già create) non va perso lato dati, ma il frontend non lo ripresenta automaticamente in questa iterazione.
 - **Efficienza con segnale debole**: `Asset.estimatedReplacementYear` esiste nello schema ma nessun flusso lo valorizza ancora automaticamente — la dimensione "Efficienza" dell'Home Score resta quindi quasi sempre 100 in pratica, dichiarato nel codice (`home-score.ts`) invece di nascosto.
-- **Scansione dimostrativa, non reale**: nessuna computer vision, nessuna analisi di foto/video — un dataset fisso di 4 stanze/7 asset tipici, sempre uguale. Sostituire il mock richiede solo una nuova implementazione di `HouseScanProvider` (vedi §3), non un redesign.
+- **Scansione dimostrativa, non reale**: nessuna computer vision né analisi di foto/video. L'utente compone una proposta scegliendo da un catalogo fisso ampio; nomi e confidenze restano dimostrativi.
 
 ## 10. Percorso verso il reale (path to replacing mocks)
 
