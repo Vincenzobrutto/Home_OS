@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-04 (7) — Sync con le evoluzioni di Codex + fix
+
+Recuperate da GitHub e verificate le 3 evoluzioni Genesis di Codex (catalogo demo ampliato/selezionabile, ripresa precisa B34, trend storico Home Score — vedi voci sotto): build/lint/test su entrambi i lati, 59/59 test, migrazione `20260804120000_add_genesis_step` applicata e verificata additiva. Nessuna regressione: la deduplica (B33) e le rifiniture di usabilità della sessione precedente sono state preservate ed estese, non riscritte.
+
+- **Fix trovato in verifica**: nello stepper del wizard, `textDecoration` (shorthand) mescolato con `textDecorationColor` (longhand) — React lo segnala come rischio di bug di stile. Sostituito con `textDecorationLine`, tutto longhand.
+- Verificato live: catalogo demo selezionabile, ripresa precisa dello step, grafico trend Home Score — tutti funzionanti sulla casa reale.
+
 ## 2026-08-04 (6) — Trend storico Home Score
 
 - La Dashboard mostra l'andamento degli ultimi 12 mesi per score totale e cinque dimensioni, con valori sempre leggibili anche su mobile.

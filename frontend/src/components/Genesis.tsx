@@ -166,7 +166,7 @@ export function GenesisWizard({
                     fontSize: 12,
                     color: i <= stepIndex ? T.ink : T.slate,
                     fontWeight: i === stepIndex ? 600 : 400,
-                    textDecoration: reachable ? 'underline' : 'none',
+                    textDecorationLine: reachable ? 'underline' : 'none',
                     textDecorationColor: T.line,
                     textUnderlineOffset: 3,
                   }}
