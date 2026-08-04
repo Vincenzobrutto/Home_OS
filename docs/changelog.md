@@ -2,6 +2,10 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-04 (9) — Verifica B25 (Codex)
+
+Recuperato e verificato da GitHub il commit di Codex che implementa B25 (monitoraggio consumi elettrici YoY, vedi voce sotto e `decisions.md` #30): build/lint/test su entrambi i lati, 64/64 test, migrazione `20260804143000_add_utility_bills` applicata (puramente additiva, FK con cascade coerenti). Revisione del codice: pipeline di estrazione/conferma bollette ben guardata (blocca doppie conferme, periodi sovrapposti, ordine date invertito), matematica di ripartizione pro-rata verificata dai test (bolletta bimestrale 16gen–14feb → 160+140 kWh), UI fedele al mockup validato in sessione precedente. Nessuna correzione necessaria. Verificato dal vivo lo stato vuoto della vista "Energia" (nessuna bolletta ancora confermata); non replicato un caricamento reale end-to-end per mancanza di un PDF bolletta di prova.
+
 ## 2026-08-04 (8) — B25, monitoraggio consumi elettrici YoY
 
 - Claude riconosce le bollette elettriche e propone fornitore, periodi, kWh e importi; l'utente corregge ogni valore prima della conferma.
