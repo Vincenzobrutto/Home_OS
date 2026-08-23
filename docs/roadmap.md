@@ -35,6 +35,18 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 
 ## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)
 
+### Allineamento Dimora / Property Digital Record
+
+Ordine consigliato prima di ampliare il prodotto:
+
+1. autenticazione e isolamento per utente — prerequisito di fiducia e di qualunque condivisione;
+2. Property Profile strutturato — dati identificativi, catastali ed energetici con fonte esplicita;
+3. decisione sul livello `System` — validare con casi reali se serve `House → System → Asset`, evitando una migrazione puramente nominale;
+4. provenienza campo-per-campo e livelli di affidabilità — distinguere dichiarato, estratto, confermato e attestato;
+5. progettazione legale e tecnica della trasferibilità — solo dopo identità, permessi e separazione dei dati personali.
+
+Queste attività allineano HomeOS al prodotto Dimora, ma **non sono tutte scope del prossimo sprint**. Sono epiche progressive con criteri di ingresso espliciti in `product-backlog.md` e attività B36–B39 in `backlog.md`.
+
 - Autenticazione/sessione reale (oggi zero auth sulle API, un solo utente bootstrap).
 - Multi-utente per casa (il modello `HouseMembership` è già pronto, manca tutta la UI/logica di invito e permessi).
 - Ampliare i test automatici backend oltre la prima copertura di dominio e introdurre i test frontend (nessun framework installato).

@@ -1,8 +1,23 @@
 # Vision
 
+## Identità di prodotto e fonti di verità
+
+**Dimora** è il nome e il posizionamento del prodotto destinato a utenti, partner e investitori. **HomeOS** resta il nome tecnico storico del repository e del prototipo applicativo. Non sono due prodotti distinti: HomeOS è la base software con cui viene costruita Dimora.
+
+La promessa centrale di Dimora è il **Property Digital Record**: la memoria digitale strutturata dell'immobile. Il Digital Twin, la planimetria, Home Score, manutenzioni, consumi e futuri agenti sono esperienze alimentate da quel record, non prodotti paralleli.
+
+Questa separazione evita due equivoci:
+
+- il documento venture `Dimora` è la fonte della verità su problema, posizionamento, segmenti, modello di business e ipotesi da validare;
+- repository, schema Prisma e documentazione tecnica sono la fonte della verità su ciò che è implementato, parziale o futuro.
+
+Nessun materiale esterno deve presentare come disponibile una capacità classificata qui o nel backlog come futura. In particolare, trasferibilità tra proprietari, record "verificato", accesso a fonti regolatorie e marketplace non sono funzionalità attuali.
+
 ## Obiettivo del prodotto
 
 HomeOS crea il **"digital twin" di una casa**: raccoglie i documenti che la riguardano (fatture, certificati, manuali, planimetrie) e li collega agli elementi fisici della casa — non li archivia genericamente in una cartella.
+
+Nel linguaggio di prodotto Dimora, questo nucleo è il **Property Digital Record**: `Property` + ambienti/piani + asset e impianti + eventi + documenti e relativa provenienza. Il termine "digital twin" descrive la rappresentazione navigabile che emerge dal record; non implica oggi un modello 3D, telemetria IoT continua o certificazione legale dei dati.
 
 Il centro del sistema è l'**Asset** (caldaia, impianto elettrico, climatizzatore, elettrodomestico...), non il documento. Un documento esiste per arricchire la conoscenza su un Asset o sulla casa nel suo insieme; non è mai un fine a sé stante.
 
@@ -33,3 +48,18 @@ Il centro del sistema è l'**Asset** (caldaia, impianto elettrico, climatizzator
 - **Mobile**: sidebar a scomparsa, layout responsive, planimetria utilizzabile a touch.
 
 Per lo stato dettagliato di cosa è fatto/in corso/pianificato vedi `roadmap.md` e `backlog.md`.
+
+## Confine della promessa Dimora
+
+| Capacità | Stato attuale |
+|---|---|
+| Asset, ambienti, documenti, eventi e manutenzioni collegati alla casa | Implementata |
+| Estrazione AI con conferma utente e acquisizione Gmail/Drive | Implementata nel prototipo; da rendere production-grade |
+| Home Score, Issue e Recommendation | Implementata in versione MVP |
+| Property Profile catastale/energetico strutturato | Parziale: alcuni dati casa e documenti house-level esistono, manca il profilo completo |
+| Entità `System` distinta dagli Asset | Da decidere e modellare; oggi gli impianti sono rappresentati come Asset/tipi di Asset |
+| Provenienza e livello di affidabilità per singolo dato | Parziale: esistono sorgente e conferma, non una catena di verifica completa |
+| Autenticazione, ruoli e isolamento multiutente | Non implementati |
+| Trasferimento del record al nuovo proprietario | Visione futura, subordinata a identità, permessi, separazione dati e verifica legale |
+| Record certificato/verificato per banche o assicurazioni | Non disponibile; usare "record strutturato con provenienza tracciabile" finché non esiste una verifica terza |
+| Integrazioni catastali, APE e renovation passport | Future e dipendenti da accessibilità normativa/tecnica delle fonti |

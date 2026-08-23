@@ -1,6 +1,6 @@
 # Product Backlog — Epiche
 
-10 epiche che coprono la visione completa di HomeOS (vedi `vision.md`), dallo stato attuale fino a differenziatori a lungo termine. Non tutte sono pianificate: `stato` indica cosa esiste oggi, `dipendenze` cosa serve prima di poter iniziare le epiche non ancora avviate. Per il lavoro operativo non ancora fatto vedi `backlog.md`; per le decisioni già prese vedi `decisions.md`.
+12 epiche che coprono la visione completa di HomeOS/Dimora (vedi `vision.md`), dallo stato attuale fino a differenziatori a lungo termine. Non tutte sono pianificate: `stato` indica cosa esiste oggi, `dipendenze` cosa serve prima di poter iniziare le epiche non ancora avviate. Per il lavoro operativo non ancora fatto vedi `backlog.md`; per le decisioni già prese vedi `decisions.md`.
 
 ---
 
@@ -93,3 +93,21 @@
 **Dipendenze**: EPIC 0 (il confine `HouseScanProvider` esiste già, va solo implementato per davvero), EPIC 7 (dati da dispositivi personali richiedono autenticazione).
 **Dentro lo scope MVP**: —
 **Fuori scope (per ora)**: tutto — è la direzione a più lungo termine, non pianificata con una data.
+
+## EPIC 10 — Dimora Property Record & Provenance
+
+**Obiettivo**: portare il modello esistente da digital twin operativo a Property Digital Record esplicito: profilo immobiliare strutturato, eventuale livello `System` validato e provenienza/affidabilità per i dati critici.
+**Valore utente**: comprendere non solo cosa il sistema sa della casa, ma da quale fonte lo sa e quanto il dato è affidabile.
+**Stato**: 🟡 Parziale — `House`, Asset, Document, timeline, `source` e `confidence` esistono; mancano Property Profile completo, provenance campo-per-campo e livelli di affidabilità. `System` non è oggi un'entità.
+**Dipendenze**: EPIC 1/2; EPIC 7 prima di esporre dati a terzi.
+**Dentro il prossimo discovery tecnico**: inventario dei campi Property, casi reali multi-asset per decidere `System`, tassonomia `DECLARED`/`EXTRACTED`/`CONFIRMED`/`ATTESTED` senza attribuire valore legale improprio.
+**Fuori scope (per ora)**: certificazione legale del record, accesso garantito a catasto/APE/renovation passport, blockchain o firma digitale introdotte senza un caso d'uso validato.
+
+## EPIC 11 — Ownership, Sharing & Record Transfer
+
+**Obiettivo**: consentire, in futuro, che la parte trasferibile del record accompagni l'immobile nel cambio di proprietario, separandola dai dati personali.
+**Valore utente**: ridurre la ricostruzione documentale in vendita e preservare lo storico utile della casa.
+**Stato**: ⛔ Non iniziato — `HouseMembership` è solo una predisposizione e non equivale a trasferimento.
+**Dipendenze**: EPIC 7 obbligatoria; EPIC 10 per provenienza e classificazione dei dati; assessment legale/GDPR prima del design definitivo.
+**Dentro il primo scope**: matrice dati `property-bound`/`owner-bound`, ruoli, consenso, audit trail, revoca e handover controllato.
+**Fuori scope (per ora)**: trasferimento automatico al rogito, accesso di notai/banche/assicurazioni, dichiarazioni di record certificato o verificato.

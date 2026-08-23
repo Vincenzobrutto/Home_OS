@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-23 — Allineamento strategico HomeOS → Dimora
+
+- Chiarito che Dimora è il nome/posizionamento di prodotto e HomeOS il nome tecnico storico del repository: un solo prodotto, due livelli di descrizione.
+- Definito il Property Digital Record come core; Digital Twin, Home Score, manutenzioni, consumi e futuri agenti sono esperienze alimentate dal record.
+- Separato esplicitamente ciò che è implementato, parziale e futuro, evitando di presentare trasferimento, record verificato e integrazioni regolatorie come capacità attuali.
+- Aggiunte EPIC 10 (Property Record & Provenance) ed EPIC 11 (Ownership & Transfer), con attività B36–B39.
+- Nessun cambiamento a codice, schema Prisma o comportamento applicativo in questa sessione.
+
 ## 2026-08-04 (10) — Fix bollette: race condition "Analizza con AI" e periodi non precompilati
 
 Due bug reali segnalati dall'utente dopo il primo utilizzo con bollette vere:

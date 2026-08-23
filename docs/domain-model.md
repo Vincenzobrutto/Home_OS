@@ -2,6 +2,17 @@
 
 Fonte di verità: `backend/prisma/schema.prisma`. Questo documento lo spiega in prosa e va aggiornato ogni volta che lo schema cambia — se sono in disaccordo, lo schema ha ragione.
 
+## Allineamento con il Property Digital Record di Dimora
+
+Il modello implementato rappresenta già gran parte del record (`House`, `Floor`, `Room`, `Asset`, `Document`, timeline e manutenzioni), ma non coincide ancora con l'ontologia completa descritta nel venture document Dimora.
+
+- `Property` corrisponde oggi a `House`, ma il profilo catastale ed energetico è solo parziale.
+- `System` **non è un'entità corrente**: impianto elettrico, termico, idrico o fotovoltaico sono modellati come Asset/tipi di Asset. Prima di introdurre `System` va validato se serve davvero una relazione gerarchica `House → System → Asset` o se basta una classificazione evoluta degli Asset.
+- `Event` è intenzionalmente diviso tra `AssetTimelineEvent`, `HouseTimelineEvent` e `MaintenanceOccurrence`; non esiste una tabella evento universale.
+- `Document` può alimentare la casa, un Asset, una bolletta o una manutenzione, ma non conserva ancora una provenienza campo-per-campo sufficiente per qualificare il record come "verificato".
+
+Finché questi gap non sono implementati, "Property Digital Record" indica il modello strutturato complessivo; non implica completezza catastale, validità certificativa o trasferibilità automatica.
+
 ## Diagramma testuale (entità e relazioni)
 
 ```
@@ -91,6 +102,14 @@ Tecnici/aziende che hanno lavorato in casa. Collegamento a un intervento in cron
 
 ### User / HouseMembership / GmailConnection / DriveConnection
 `HouseMembership` predisposta fin dall'MVP (ogni casa oggi ha un solo proprietario) per non richiedere una migrazione dolorosa quando arriverà la condivisione multi-utente. `GmailConnection`/`DriveConnection`: un solo account collegato per utente, token in chiaro in DB (accettabile per l'MVP, da rivedere — vedi `architecture.md` §3).
+
+### Provenienza, affidabilità e titolarità — gap esplicito
+
+La conferma dell'utente rende un dato **accettato nel proprio record**, non verificato da una fonte autorevole. `source`, `confidence`, `Document` sorgente e `AssetCustomField.source` sono fondamenta utili ma non costituiscono ancora un audit trail completo.
+
+Per supportare in futuro un record condivisibile con banche, assicurazioni o acquirenti serviranno almeno: provenienza per campo, identità del soggetto che conferma/attesta, timestamp, versione del dato, impronta del documento sorgente e un livello di affidabilità distinto dalla semplice confidenza AI.
+
+Il trasferimento della casa a un altro proprietario non è implementato. Dovrà separare dati propri dell'immobile (potenzialmente trasferibili) da dati personali del proprietario e richiederà autenticazione, ruoli, consenso, audit e una validazione legale dedicata. Non va dedotto dalla sola presenza di `HouseMembership`.
 
 ## Entità Genesis (vedi `docs/genesis-architecture.md` per il dettaglio completo)
 
