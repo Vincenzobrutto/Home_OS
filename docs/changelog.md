@@ -2,6 +2,17 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-24 — B2: autenticazione e sessione reale sulle API
+
+Chiude il buco di sicurezza aperto fin dall'MVP: prima ogni endpoint si fidava ciecamente di un `userId`/`houseId` passato dal client, `GET /users` elencava tutti gli utenti, e chiunque raggiungesse il backend poteva leggere/modificare qualunque casa.
+
+- **Login reale**: `LoginScreen` sostituisce il bootstrap automatico "prendi il primo utente" — email → login (account con password) / imposta password (account pre-esistenti senza, migrazione self-service) / registrazione (account nuovo). Sessione via cookie httpOnly `sid` + tabella `Session`, password con `crypto.scrypt` nativo di Node.
+- **Autorizzazione per-casa reale**: ogni rotta è protetta di default (`AuthGuard` globale); l'accesso a una casa verifica `HouseMembership` (non più solo `House.ownerId`), su rotte dirette e su quelle per id di risorsa (assets, documents, rooms, ecc. — risolvendo `houseId` dalla risorsa). Le case esistenti hanno ricevuto una `HouseMembership` `OWNER` retroattiva (backfill automatico al boot).
+- **OAuth Gmail/Drive legato alla sessione**: `connect`/`callback` usano l'utente della sessione invece di un `userId` in query — prima chiunque poteva agganciare il proprio account Google a un `userId` altrui. Il parametro `state` verso Google è ora un nonce CSRF, non più l'id in chiaro.
+- **Rimosso il modulo `users`**: `POST /users` (creava account senza password) e `GET /users` (elencava tutti gli utenti) non avevano più un caso d'uso legittimo — la creazione utenti vive ora in `AuthService`.
+- Nessuna perdita di dati: verificato dal vivo che la casa reale (73 Home Score, 15 ambienti, 23 asset) resti intatta e accessibile dopo il login con la nuova password.
+- Nuova migrazione (`User.passwordHash`, modello `Session`), nuova dipendenza `cookie-parser`, 64/64 test backend, build/lint puliti su entrambi i lati. Dettaglio completo delle scelte in `decisions.md` #32.
+
 ## 2026-08-23 — Allineamento strategico HomeOS → Dimora
 
 - Chiarito che Dimora è il nome/posizionamento di prodotto e HomeOS il nome tecnico storico del repository: un solo prodotto, due livelli di descrizione.

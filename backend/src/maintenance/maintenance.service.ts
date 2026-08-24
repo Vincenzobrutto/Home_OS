@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { MaintenanceRecurrenceUnit } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessControlService } from '../access-control/access-control.service';
 import {
   computeMaintenanceStatus,
   nextMaintenanceDueAt,
@@ -26,9 +27,13 @@ const PLAN_INCLUDE = {
 
 @Injectable()
 export class MaintenanceService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
+  ) {}
 
   async completeFromDocument(
+    userId: string,
     documentId: string,
     dto: CompleteDocumentMaintenanceDto,
   ) {
@@ -37,6 +42,7 @@ export class MaintenanceService {
     });
     if (!document)
       throw new NotFoundException(`Documento ${documentId} non trovato`);
+    await this.accessControl.assertHouseAccess(userId, document.houseId);
     const uniquePlanIds = new Set(
       dto.items.map((item) => item.maintenancePlanId),
     );
@@ -126,8 +132,8 @@ export class MaintenanceService {
     return { completed: dto.items.length };
   }
 
-  async create(assetId: string, dto: CreateMaintenancePlanDto) {
-    const asset = await this.assetOrThrow(assetId);
+  async create(userId: string, assetId: string, dto: CreateMaintenancePlanDto) {
+    const asset = await this.assetOrThrow(userId, assetId);
     this.validateRecurrence(dto.recurrenceUnit, dto.recurrenceInterval);
     await this.ensureContactBelongsToHouse(
       dto.preferredContactId,
@@ -140,8 +146,8 @@ export class MaintenanceService {
     return this.withStatus(plan);
   }
 
-  async listForAsset(assetId: string) {
-    await this.assetOrThrow(assetId);
+  async listForAsset(userId: string, assetId: string) {
+    await this.assetOrThrow(userId, assetId);
     const plans = await this.prisma.maintenancePlan.findMany({
       where: { assetId },
       include: PLAN_INCLUDE,
@@ -159,8 +165,8 @@ export class MaintenanceService {
       .sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
   }
 
-  async suggestionsForAsset(assetId: string) {
-    const asset = await this.assetOrThrow(assetId);
+  async suggestionsForAsset(userId: string, assetId: string) {
+    const asset = await this.assetOrThrow(userId, assetId);
     if (asset.dismissedAt) return [];
     const [existingPlans, dismissed] = await Promise.all([
       this.prisma.maintenancePlan.findMany({
@@ -187,8 +193,12 @@ export class MaintenanceService {
   // UI di "ripristina" per ora — "Ignora" è definitivo finché non emerge un
   // bisogno reale di tornare indietro (stesso principio MVP di decisions.md
   // #19: non costruire in anticipo quello che non è ancora richiesto).
-  async dismissSuggestion(assetId: string, guidelineCode: string) {
-    await this.assetOrThrow(assetId);
+  async dismissSuggestion(
+    userId: string,
+    assetId: string,
+    guidelineCode: string,
+  ) {
+    await this.assetOrThrow(userId, assetId);
     if (!MAINTENANCE_GUIDELINES.some((g) => g.code === guidelineCode)) {
       throw new NotFoundException(
         `Linea guida di manutenzione "${guidelineCode}" non trovata`,
@@ -201,11 +211,12 @@ export class MaintenanceService {
     });
   }
 
-  async remindersForHouse(houseId: string) {
+  async remindersForHouse(userId: string, houseId: string) {
     const house = await this.prisma.house.findUnique({
       where: { id: houseId },
     });
     if (!house) throw new NotFoundException(`House ${houseId} non trovata`);
+    await this.accessControl.assertHouseAccess(userId, houseId);
     const plans = await this.prisma.maintenancePlan.findMany({
       where: {
         pausedAt: null,
@@ -231,8 +242,8 @@ export class MaintenanceService {
       .filter((plan) => plan.status !== 'SCHEDULED');
   }
 
-  async update(id: string, dto: UpdateMaintenancePlanDto) {
-    const plan = await this.planOrThrow(id);
+  async update(userId: string, id: string, dto: UpdateMaintenancePlanDto) {
+    const plan = await this.planOrThrow(userId, id);
     const unit = dto.recurrenceUnit ?? plan.recurrenceUnit;
     const interval = dto.recurrenceInterval ?? plan.recurrenceInterval;
     this.validateRecurrence(unit, interval);
@@ -248,8 +259,8 @@ export class MaintenanceService {
     return this.withStatus(updated);
   }
 
-  async complete(id: string, dto: CompleteMaintenancePlanDto) {
-    const plan = await this.planOrThrow(id);
+  async complete(userId: string, id: string, dto: CompleteMaintenancePlanDto) {
+    const plan = await this.planOrThrow(userId, id);
     if (plan.pausedAt) {
       throw new BadRequestException('Riattiva il piano prima di completarlo.');
     }
@@ -303,8 +314,8 @@ export class MaintenanceService {
     return this.findOne(id);
   }
 
-  async pause(id: string) {
-    const existing = await this.planOrThrow(id);
+  async pause(userId: string, id: string) {
+    const existing = await this.planOrThrow(userId, id);
     if (existing.completedAt) {
       throw new BadRequestException(
         'Un piano una tantum completato non può essere sospeso.',
@@ -318,8 +329,12 @@ export class MaintenanceService {
     return this.withStatus(plan);
   }
 
-  async reactivate(id: string, dto: ReactivateMaintenancePlanDto) {
-    const existing = await this.planOrThrow(id);
+  async reactivate(
+    userId: string,
+    id: string,
+    dto: ReactivateMaintenancePlanDto,
+  ) {
+    const existing = await this.planOrThrow(userId, id);
     if (existing.completedAt) {
       throw new BadRequestException(
         'Un piano una tantum completato non può essere riattivato.',
@@ -333,8 +348,8 @@ export class MaintenanceService {
     return this.withStatus(plan);
   }
 
-  async occurrences(id: string) {
-    await this.planOrThrow(id);
+  async occurrences(userId: string, id: string) {
+    await this.planOrThrow(userId, id);
     return this.prisma.maintenanceOccurrence.findMany({
       where: { maintenancePlanId: id },
       include: {
@@ -347,8 +362,8 @@ export class MaintenanceService {
     });
   }
 
-  async remove(id: string) {
-    const plan = await this.planOrThrow(id);
+  async remove(userId: string, id: string) {
+    const plan = await this.planOrThrow(userId, id);
     if (plan._count.occurrences > 0) {
       throw new BadRequestException(
         'Il piano ha uno storico: sospendilo invece di eliminarlo.',
@@ -401,13 +416,14 @@ export class MaintenanceService {
     }
   }
 
-  private async assetOrThrow(id: string) {
+  private async assetOrThrow(userId: string, id: string) {
     const asset = await this.prisma.asset.findUnique({ where: { id } });
     if (!asset) throw new NotFoundException(`Asset ${id} non trovato`);
+    await this.accessControl.assertHouseAccess(userId, asset.houseId);
     return asset;
   }
 
-  private async planOrThrow(id: string) {
+  private async planOrThrow(userId: string, id: string) {
     const plan = await this.prisma.maintenancePlan.findUnique({
       where: { id },
       include: {
@@ -416,6 +432,7 @@ export class MaintenanceService {
       },
     });
     if (!plan) throw new NotFoundException(`Piano ${id} non trovato`);
+    await this.accessControl.assertHouseAccess(userId, plan.asset.houseId);
     return plan;
   }
 

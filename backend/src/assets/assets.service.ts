@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { FieldSource } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessControlService } from '../access-control/access-control.service';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 import { CreateCustomFieldDto } from './dto/create-custom-field.dto';
@@ -16,10 +17,13 @@ import { computeDefaultWarrantyUntil } from '../common/warranty';
 
 @Injectable()
 export class AssetsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
+  ) {}
 
-  async create(houseId: string, dto: CreateAssetDto) {
-    await this.ensureHouseExists(houseId);
+  async create(userId: string, houseId: string, dto: CreateAssetDto) {
+    await this.ensureHouseAccess(userId, houseId);
     if (dto.roomId) {
       await this.ensureRoomBelongsToHouse(dto.roomId, houseId);
     }
@@ -57,15 +61,15 @@ export class AssetsService {
     return `AST-${String(lastNumber + 1).padStart(3, '0')}`;
   }
 
-  async findAllForHouse(houseId: string) {
-    await this.ensureHouseExists(houseId);
+  async findAllForHouse(userId: string, houseId: string) {
+    await this.ensureHouseAccess(userId, houseId);
     return this.prisma.asset.findMany({
       where: { houseId },
       include: { customFields: true },
     });
   }
 
-  async update(id: string, dto: UpdateAssetDto) {
+  async update(userId: string, id: string, dto: UpdateAssetDto) {
     const existing = await this.prisma.asset.findUnique({
       where: { id },
       include: { _count: { select: { documents: true } } },
@@ -73,6 +77,7 @@ export class AssetsService {
     if (!existing) {
       throw new NotFoundException(`Asset ${id} non trovato`);
     }
+    await this.accessControl.assertHouseAccess(userId, existing.houseId);
     if (dto.roomId) {
       await this.ensureRoomBelongsToHouse(dto.roomId, existing.houseId);
     }
@@ -99,8 +104,12 @@ export class AssetsService {
     });
   }
 
-  async addCustomField(assetId: string, dto: CreateCustomFieldDto) {
-    await this.ensureAssetExists(assetId);
+  async addCustomField(
+    userId: string,
+    assetId: string,
+    dto: CreateCustomFieldDto,
+  ) {
+    await this.assetOrThrow(userId, assetId);
     // Sempre MANUAL: i campi con source AI_EXTRACTED vengono scritti solo
     // dal flusso /documents/:id/confirm (vedi architettura §5), mai da qui.
     return this.prisma.assetCustomField.create({
@@ -108,31 +117,25 @@ export class AssetsService {
     });
   }
 
-  async updateCustomField(customFieldId: string, dto: UpdateCustomFieldDto) {
-    const field = await this.prisma.assetCustomField.findUnique({
-      where: { id: customFieldId },
-    });
-    if (!field) {
-      throw new NotFoundException(`Custom field ${customFieldId} non trovato`);
-    }
+  async updateCustomField(
+    userId: string,
+    customFieldId: string,
+    dto: UpdateCustomFieldDto,
+  ) {
+    const field = await this.customFieldOrThrow(userId, customFieldId);
     return this.prisma.assetCustomField.update({
-      where: { id: customFieldId },
+      where: { id: field.id },
       data: dto,
     });
   }
 
-  async removeCustomField(customFieldId: string) {
-    const field = await this.prisma.assetCustomField.findUnique({
-      where: { id: customFieldId },
-    });
-    if (!field) {
-      throw new NotFoundException(`Custom field ${customFieldId} non trovato`);
-    }
-    await this.prisma.assetCustomField.delete({ where: { id: customFieldId } });
+  async removeCustomField(userId: string, customFieldId: string) {
+    const field = await this.customFieldOrThrow(userId, customFieldId);
+    await this.prisma.assetCustomField.delete({ where: { id: field.id } });
   }
 
-  async getTimeline(assetId: string) {
-    await this.ensureAssetExists(assetId);
+  async getTimeline(userId: string, assetId: string) {
+    await this.assetOrThrow(userId, assetId);
     return this.prisma.assetTimelineEvent.findMany({
       where: { assetId },
       orderBy: { eventDate: 'desc' },
@@ -144,13 +147,12 @@ export class AssetsService {
   // giustificarlo (es. una chiamata al tecnico senza fattura ancora
   // ricevuta) — a differenza degli eventi generati da /documents/:id/confirm,
   // qui il contatto lo sceglie subito l'utente, non c'è nulla da "confermare".
-  async addTimelineEvent(assetId: string, dto: CreateTimelineEventDto) {
-    const asset = await this.prisma.asset.findUnique({
-      where: { id: assetId },
-    });
-    if (!asset) {
-      throw new NotFoundException(`Asset ${assetId} non trovato`);
-    }
+  async addTimelineEvent(
+    userId: string,
+    assetId: string,
+    dto: CreateTimelineEventDto,
+  ) {
+    const asset = await this.assetOrThrow(userId, assetId);
     if (dto.contactId) {
       await this.ensureContactBelongsToHouse(dto.contactId, asset.houseId);
     }
@@ -162,6 +164,7 @@ export class AssetsService {
   }
 
   async updateTimelineEventContact(
+    userId: string,
     eventId: string,
     dto: UpdateTimelineEventDto,
   ) {
@@ -172,6 +175,7 @@ export class AssetsService {
     if (!event) {
       throw new NotFoundException(`Evento ${eventId} non trovato`);
     }
+    await this.accessControl.assertHouseAccess(userId, event.asset.houseId);
     if (dto.contactId) {
       await this.ensureContactBelongsToHouse(
         dto.contactId,
@@ -186,46 +190,61 @@ export class AssetsService {
     });
   }
 
-  async remove(id: string) {
-    await this.ensureAssetExists(id);
+  async remove(userId: string, id: string) {
+    await this.assetOrThrow(userId, id);
     // AssetCustomField e AssetTimelineEvent hanno onDelete: Cascade e vengono
     // rimossi con l'asset. I Document collegati hanno onDelete: SetNull:
     // restano nello storico documenti, solo scollegati dall'asset.
     await this.prisma.asset.delete({ where: { id } });
   }
 
-  async dismiss(id: string) {
-    await this.ensureAssetExists(id);
+  async dismiss(userId: string, id: string) {
+    await this.assetOrThrow(userId, id);
     return this.prisma.asset.update({
       where: { id },
       data: { dismissedAt: new Date() },
     });
   }
 
-  async reactivate(id: string) {
-    await this.ensureAssetExists(id);
+  async reactivate(userId: string, id: string) {
+    await this.assetOrThrow(userId, id);
     return this.prisma.asset.update({
       where: { id },
       data: { dismissedAt: null },
     });
   }
 
-  private async ensureAssetExists(assetId: string) {
+  private async assetOrThrow(userId: string, assetId: string) {
     const asset = await this.prisma.asset.findUnique({
       where: { id: assetId },
     });
     if (!asset) {
       throw new NotFoundException(`Asset ${assetId} non trovato`);
     }
+    await this.accessControl.assertHouseAccess(userId, asset.houseId);
+    return asset;
   }
 
-  private async ensureHouseExists(houseId: string) {
+  private async customFieldOrThrow(userId: string, customFieldId: string) {
+    const field = await this.prisma.assetCustomField.findUnique({
+      where: { id: customFieldId },
+      include: { asset: { select: { houseId: true } } },
+    });
+    if (!field) {
+      throw new NotFoundException(`Custom field ${customFieldId} non trovato`);
+    }
+    await this.accessControl.assertHouseAccess(userId, field.asset.houseId);
+    return field;
+  }
+
+  private async ensureHouseAccess(userId: string, houseId: string) {
     const house = await this.prisma.house.findUnique({
       where: { id: houseId },
     });
     if (!house) {
       throw new NotFoundException(`House ${houseId} non trovata`);
     }
+    await this.accessControl.assertHouseAccess(userId, houseId);
   }
 
   private async ensureRoomBelongsToHouse(roomId: string, houseId: string) {

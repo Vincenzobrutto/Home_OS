@@ -31,7 +31,7 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Verificato end-to-end nel browser il flusso Genesis originario; il nuovo catalogo selezionabile è coperto da test automatico del provider mock.
 - Dashboard con trend Home Score degli ultimi 12 mesi, selezione dimensione e ricalcolo manuale senza snapshot duplicati (B35).
 - Monitoraggio consumi elettrici da bollette confermate: confronto mensile YoY, variazione percentuale e installazioni Asset contestualizzate nel mese (B25).
-- **Blocco noto e accettato**: nessuna autenticazione, quindi l'isolamento per utente richiesto dalla specifica non è applicato (vedi `decisions.md` #25, `product-backlog.md` EPIC 7). Deduplica e ripresa precisa sono state completate con B33/B34.
+- **Blocco storico risolto**: l'autenticazione reale (B2, 2026-08-24) applica ora l'isolamento per utente richiesto dalla specifica Genesis — vedi `decisions.md` #32. Deduplica e ripresa precisa sono state completate con B33/B34.
 
 ## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)
 
@@ -39,7 +39,7 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 
 Ordine consigliato prima di ampliare il prodotto:
 
-1. autenticazione e isolamento per utente — prerequisito di fiducia e di qualunque condivisione;
+1. ~~autenticazione e isolamento per utente~~ — risolto 2026-08-24 (B2, `decisions.md` #32);
 2. Property Profile strutturato — dati identificativi, catastali ed energetici con fonte esplicita;
 3. decisione sul livello `System` — validare con casi reali se serve `House → System → Asset`, evitando una migrazione puramente nominale;
 4. provenienza campo-per-campo e livelli di affidabilità — distinguere dichiarato, estratto, confermato e attestato;
@@ -47,8 +47,7 @@ Ordine consigliato prima di ampliare il prodotto:
 
 Queste attività allineano HomeOS al prodotto Dimora, ma **non sono tutte scope del prossimo sprint**. Sono epiche progressive con criteri di ingresso espliciti in `product-backlog.md` e attività B36–B39 in `backlog.md`.
 
-- Autenticazione/sessione reale (oggi zero auth sulle API, un solo utente bootstrap).
-- Multi-utente per casa (il modello `HouseMembership` è già pronto, manca tutta la UI/logica di invito e permessi).
+- Multi-utente per casa: il modello `HouseMembership` è già il criterio di autorizzazione effettivo (B2), manca solo la UI/logica di invito di un secondo utente a una casa esistente (B12).
 - Ampliare i test automatici backend oltre la prima copertura di dominio e introdurre i test frontend (nessun framework installato).
 - OAuth Gmail/Drive funzionante anche da un client mobile in LAN (oggi il redirect è pensato per `localhost`).
 - Navigazione con URL reali (oggi `view` è solo stato in memoria, niente back/forward del browser né link condivisibili).

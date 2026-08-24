@@ -15,7 +15,6 @@ export type InboxTab = 'documents' | 'gmail' | 'drive';
 // confluiscono nello stesso tab "Documenti" una volta importati.
 export function InboxHub({
   houseId,
-  userId,
   assets,
   rooms,
   onAssetLinked,
@@ -31,7 +30,6 @@ export function InboxHub({
   onDriveNoticeShown,
 }: {
   houseId: string;
-  userId: string;
   assets: Asset[];
   rooms: Room[];
   onAssetLinked: () => void;
@@ -129,7 +127,6 @@ export function InboxHub({
       {tab === 'gmail' && (
         <GmailView
           houseId={houseId}
-          userId={userId}
           onCandidatesChanged={onGmailCandidatesChanged}
           notice={gmailNotice}
           onNoticeShown={onGmailNoticeShown}
@@ -139,7 +136,6 @@ export function InboxHub({
       {tab === 'drive' && (
         <DriveView
           houseId={houseId}
-          userId={userId}
           onCandidatesChanged={onDriveCandidatesChanged}
           notice={driveNotice}
           onNoticeShown={onDriveNoticeShown}

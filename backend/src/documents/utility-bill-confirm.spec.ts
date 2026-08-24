@@ -1,6 +1,11 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessControlService } from '../access-control/access-control.service';
 import { ClaudeExtractionService } from './claude-extraction.service';
 import { DocumentsService } from './documents.service';
+
+const accessControl = {
+  assertHouseAccess: jest.fn().mockResolvedValue(undefined),
+} as unknown as AccessControlService;
 
 describe('DocumentsService.confirmUtilityBill', () => {
   it('creates confirmed consumption periods and confirms the source document in one transaction', async () => {
@@ -29,9 +34,10 @@ describe('DocumentsService.confirmUtilityBill', () => {
     const service = new DocumentsService(
       prisma as unknown as PrismaService,
       {} as ClaudeExtractionService,
+      accessControl,
     );
 
-    await service.confirmUtilityBill('doc-1', {
+    await service.confirmUtilityBill('user-1', 'doc-1', {
       supplier: 'Energia Casa',
       periods: [
         {
@@ -83,10 +89,11 @@ describe('DocumentsService.confirmUtilityBill', () => {
     const service = new DocumentsService(
       prisma as unknown as PrismaService,
       {} as ClaudeExtractionService,
+      accessControl,
     );
 
     await expect(
-      service.confirmUtilityBill('doc-1', {
+      service.confirmUtilityBill('user-1', 'doc-1', {
         periods: [
           {
             periodStart: new Date('2026-02-01'),

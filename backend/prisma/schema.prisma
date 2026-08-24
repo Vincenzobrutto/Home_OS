@@ -162,14 +162,36 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String?
-  createdAt DateTime @default(now()) @map("created_at")
+  // Nullable: gli utenti creati prima dell'introduzione dell'autenticazione
+  // reale (B2) non hanno ancora una password. Il login riconosce questo
+  // caso e offre di impostarla, invece di richiedere una migrazione dati.
+  passwordHash String? @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   ownedHouses     House[]           @relation("HouseOwner")
   memberships     HouseMembership[]
   gmailConnection GmailConnection?
   driveConnection DriveConnection?
+  sessions        Session[]
 
   @@map("users")
+}
+
+// Sessione di login: il valore di `id` è il token stesso (32 byte random,
+// alta entropia) inviato al client come cookie httpOnly — non richiede una
+// firma/secret separata per essere sicuro, e la revoca è un semplice
+// `delete`. Preferito a JWT per semplicità (niente refresh token, niente
+// libreria in più) e a un provider esterno (Auth0/Clerk/Supabase) per non
+// introdurre un costo/vendor lock-in prima che serva davvero — vedi
+// `decisions.md`.
+model Session {
+  id        String   @id
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("sessions")
 }
 
 // Un solo account Gmail collegato per utente (per l'MVP). Token salvati in

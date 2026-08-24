@@ -6,7 +6,9 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Req,
 } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/authenticated-request';
 import { HousesService } from './houses.service';
 import { CreateHouseDto } from './dto/create-house.dto';
 import { UpdateHouseDto } from './dto/update-house.dto';
@@ -16,22 +18,32 @@ export class HousesController {
   constructor(private readonly housesService: HousesService) {}
 
   @Post('houses')
-  create(@Body() dto: CreateHouseDto) {
-    return this.housesService.create(dto);
+  create(@Req() req: AuthenticatedRequest, @Body() dto: CreateHouseDto) {
+    return this.housesService.create(req.user.id, dto);
   }
 
   @Get('houses/:id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.housesService.findOne(id);
+  findOne(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.housesService.findOne(req.user.id, id);
   }
 
   @Patch('houses/:id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateHouseDto) {
-    return this.housesService.update(id, dto);
+  update(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateHouseDto,
+  ) {
+    return this.housesService.update(req.user.id, id, dto);
   }
 
-  @Get('users/:userId/houses')
-  findAllForOwner(@Param('userId', ParseUUIDPipe) userId: string) {
-    return this.housesService.findAllForOwner(userId);
+  // Le case dell'utente della sessione corrente — non più
+  // "users/:userId/houses" con un userId lato client, per non far leggere
+  // a chiunque le case di un altro semplicemente indovinandone l'id.
+  @Get('houses')
+  findAllForCurrentUser(@Req() req: AuthenticatedRequest) {
+    return this.housesService.findAllForUser(req.user.id);
   }
 }

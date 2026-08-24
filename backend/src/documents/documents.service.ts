@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { DocumentStatus, FieldSource, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessControlService } from '../access-control/access-control.service';
 import { ClaudeExtractionService } from './claude-extraction.service';
 import { ConfirmDocumentDto } from './dto/confirm-document.dto';
 import { ConfirmFloorPlanDto } from './dto/confirm-floor-plan.dto';
@@ -167,10 +168,11 @@ export class DocumentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly claude: ClaudeExtractionService,
+    private readonly accessControl: AccessControlService,
   ) {}
 
-  async upload(houseId: string, file: Express.Multer.File) {
-    await this.ensureHouseExists(houseId);
+  async upload(userId: string, houseId: string, file: Express.Multer.File) {
+    await this.ensureHouseAccess(userId, houseId);
     const fileUrl = this.storeFile(file);
 
     return this.prisma.document.create({
@@ -188,8 +190,12 @@ export class DocumentsService {
   // disegno manuale delle stanze, lo sfondo serve solo da traccia visiva,
   // non deve per forza essere analizzato — permette anche di ricaricarlo
   // subito se un file precedente (es. un PDF) non si riesce a visualizzare.
-  async uploadFloorPlanBackground(houseId: string, file: Express.Multer.File) {
-    await this.ensureHouseExists(houseId);
+  async uploadFloorPlanBackground(
+    userId: string,
+    houseId: string,
+    file: Express.Multer.File,
+  ) {
+    await this.ensureHouseAccess(userId, houseId);
     const fileUrl = this.storeFile(file);
 
     return this.prisma.document.create({
@@ -211,8 +217,8 @@ export class DocumentsService {
     return `uploads/${storedName}`;
   }
 
-  async listForHouse(houseId: string) {
-    await this.ensureHouseExists(houseId);
+  async listForHouse(userId: string, houseId: string) {
+    await this.ensureHouseAccess(userId, houseId);
     const documents = await this.prisma.document.findMany({
       where: {
         houseId,
@@ -259,8 +265,8 @@ export class DocumentsService {
 
   // --- Candidati Gmail (vedi gmail.service.ts) --------------------------
 
-  async findGmailCandidates(houseId: string) {
-    await this.ensureHouseExists(houseId);
+  async findGmailCandidates(userId: string, houseId: string) {
+    await this.ensureHouseAccess(userId, houseId);
     return this.prisma.document.findMany({
       where: { houseId, source: 'GMAIL', importedAt: null, ignoredAt: null },
       orderBy: { emailDate: 'desc' },
@@ -323,8 +329,8 @@ export class DocumentsService {
 
   // --- Candidati Drive (vedi drive.service.ts) ---------------------------
 
-  async findDriveCandidates(houseId: string) {
-    await this.ensureHouseExists(houseId);
+  async findDriveCandidates(userId: string, houseId: string) {
+    await this.ensureHouseAccess(userId, houseId);
     return this.prisma.document.findMany({
       where: { houseId, source: 'DRIVE', importedAt: null, ignoredAt: null },
       orderBy: { driveModifiedAt: 'desc' },
@@ -375,8 +381,8 @@ export class DocumentsService {
 
   // --- Import candidati (Gmail o Drive) -----------------------------------
 
-  async importCandidate(id: string) {
-    const doc = await this.getDocumentOrThrow(id);
+  async importCandidate(userId: string, id: string) {
+    const doc = await this.getDocumentOrThrow(userId, id);
     if ((doc.source !== 'GMAIL' && doc.source !== 'DRIVE') || doc.importedAt) {
       throw new BadRequestException(
         `Document ${id} non è un candidato in attesa`,
@@ -393,8 +399,8 @@ export class DocumentsService {
   // già importato) di cui l'utente si accorge non essere riconducibile a
   // nessun asset della casa. Una volta CONFIRMED va rimosso dalla scheda
   // asset (Elimina), non scartato da qui: sono azioni con conseguenze diverse.
-  async ignoreDocument(id: string) {
-    const doc = await this.getDocumentOrThrow(id);
+  async ignoreDocument(userId: string, id: string) {
+    const doc = await this.getDocumentOrThrow(userId, id);
     if (doc.status === DocumentStatus.CONFIRMED) {
       throw new BadRequestException(
         `Document ${id} è già confermato — rimuovilo dalla scheda asset invece di scartarlo.`,
@@ -412,8 +418,8 @@ export class DocumentsService {
   // estratti, e usa la ricerca web di Claude per completarli — mai
   // sovrascrive un campo già noto, solo ne aggiunge di nuovi (stessa logica
   // "riempi solo i vuoti" del resto della pipeline).
-  async searchOnline(id: string) {
-    const doc = await this.getDocumentOrThrow(id);
+  async searchOnline(userId: string, id: string) {
+    const doc = await this.getDocumentOrThrow(userId, id);
     if (doc.status !== DocumentStatus.ANALYZED) {
       throw new BadRequestException(
         `Document ${id} non è stato ancora analizzato: analizzalo prima di cercare informazioni online.`,
@@ -471,8 +477,8 @@ export class DocumentsService {
   // dalla sua scheda, non compare in nessun'altra scheda: da qui in poi vive
   // solo in "Documenti casa". Diverso da confirm({linkToHouse}) che parte da
   // un documento non ancora confermato.
-  async moveToHouse(id: string) {
-    const doc = await this.getDocumentOrThrow(id);
+  async moveToHouse(userId: string, id: string) {
+    const doc = await this.getDocumentOrThrow(userId, id);
     if (doc.status !== DocumentStatus.CONFIRMED) {
       throw new BadRequestException(
         `Document ${id} non è confermato: non è collegato a nessun asset da cui spostarlo.`,
@@ -490,8 +496,8 @@ export class DocumentsService {
     return updated;
   }
 
-  async getFile(id: string) {
-    const document = await this.getDocumentOrThrow(id);
+  async getFile(userId: string, id: string) {
+    const document = await this.getDocumentOrThrow(userId, id);
     const buffer = fs.readFileSync(path.join(process.cwd(), document.fileUrl));
     const ext = document.originalFilename.toLowerCase().split('.').pop() ?? '';
     return {
@@ -501,8 +507,8 @@ export class DocumentsService {
     };
   }
 
-  async analyze(documentId: string) {
-    const document = await this.getDocumentOrThrow(documentId);
+  async analyze(userId: string, documentId: string) {
+    const document = await this.getDocumentOrThrow(userId, documentId);
     await this.prisma.document.update({
       where: { id: documentId },
       data: { status: DocumentStatus.ANALYZING },
@@ -670,8 +676,8 @@ export class DocumentsService {
     };
   }
 
-  async maintenanceProposals(documentId: string) {
-    const document = await this.getDocumentOrThrow(documentId);
+  async maintenanceProposals(userId: string, documentId: string) {
+    const document = await this.getDocumentOrThrow(userId, documentId);
     const extracted = document.extractedFields as {
       kind?: string;
       suggestedAssetType?: string | null;
@@ -779,8 +785,8 @@ export class DocumentsService {
     );
   }
 
-  async confirm(documentId: string, dto: ConfirmDocumentDto) {
-    const document = await this.getDocumentOrThrow(documentId);
+  async confirm(userId: string, documentId: string, dto: ConfirmDocumentDto) {
+    const document = await this.getDocumentOrThrow(userId, documentId);
     if (this.kindOf(document) === 'floor_plan') {
       throw new BadRequestException(
         'Questo documento è stato riconosciuto come planimetria: usa /documents/:id/confirm-floorplan.',
@@ -926,8 +932,12 @@ export class DocumentsService {
     return updatedDocument;
   }
 
-  async confirmFloorPlan(documentId: string, dto: ConfirmFloorPlanDto) {
-    const document = await this.getDocumentOrThrow(documentId);
+  async confirmFloorPlan(
+    userId: string,
+    documentId: string,
+    dto: ConfirmFloorPlanDto,
+  ) {
+    const document = await this.getDocumentOrThrow(userId, documentId);
     if (this.kindOf(document) !== 'floor_plan') {
       throw new BadRequestException(
         'Questo documento non è stato riconosciuto come planimetria.',
@@ -987,8 +997,12 @@ export class DocumentsService {
     });
   }
 
-  async confirmUtilityBill(documentId: string, dto: ConfirmUtilityBillDto) {
-    const document = await this.getDocumentOrThrow(documentId);
+  async confirmUtilityBill(
+    userId: string,
+    documentId: string,
+    dto: ConfirmUtilityBillDto,
+  ) {
+    const document = await this.getDocumentOrThrow(userId, documentId);
     if (
       document.status !== DocumentStatus.ANALYZED ||
       this.kindOf(document) !== 'utility_bill'
@@ -1228,12 +1242,18 @@ export class DocumentsService {
     return labels[type] ?? type;
   }
 
-  private async getDocumentOrThrow(id: string) {
+  private async getDocumentOrThrow(userId: string, id: string) {
     const document = await this.prisma.document.findUnique({ where: { id } });
     if (!document) {
       throw new NotFoundException(`Document ${id} non trovato`);
     }
+    await this.accessControl.assertHouseAccess(userId, document.houseId);
     return document;
+  }
+
+  private async ensureHouseAccess(userId: string, houseId: string) {
+    await this.ensureHouseExists(houseId);
+    await this.accessControl.assertHouseAccess(userId, houseId);
   }
 
   private async ensureHouseExists(houseId: string) {

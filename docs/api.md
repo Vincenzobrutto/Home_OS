@@ -1,23 +1,26 @@
 # API
 
-Base URL: `http://<host>:3000` (nessun prefisso globale). Nessuna autenticazione/sessione nell'MVP — tutte le route sono aperte, la separazione tra utenti/case è solo logica (`houseId`/`userId` nel path). Non esporre questo backend direttamente su internet senza aggiungere autenticazione.
+Base URL: `http://<host>:3000` (nessun prefisso globale). Sessione reale via cookie httpOnly `sid` (vedi `## Auth` sotto e `decisions.md`): ogni rotta richiede una sessione valida salvo quelle marcate `@Public()` (`/auth/register`, `/auth/login`, `/auth/set-password`, `/auth/account-status`). L'autorizzazione per-casa verifica `HouseMembership` (non solo `House.ownerId`), quindi 403 se la sessione è valida ma l'utente non ha accesso a quella casa specifica. Il client deve inviare le richieste con `credentials: 'include'` perché il cookie viaggi tra origin diversi (frontend/backend su porte diverse).
 
 Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `multipart/form-data`). Nessun envelope di risposta — gli endpoint restituiscono l'entità o l'array direttamente.
 
-## Users
+## Auth
 | Metodo | Path | Note |
 |---|---|---|
-| POST | `/users` | crea utente |
-| GET | `/users` | elenco |
-| GET | `/users/:id` | dettaglio |
+| POST | `/auth/account-status` | `{ email }` → `{ exists, hasPassword }`, usato dal login per decidere il passo successivo (accesso/imposta password/registrazione) |
+| POST | `/auth/register` | `{ email, password, name? }`, crea utente + sessione, imposta il cookie `sid` |
+| POST | `/auth/login` | `{ email, password }` |
+| POST | `/auth/set-password` | `{ email, password }` — solo per account creati prima dell'introduzione dell'autenticazione (`passwordHash` ancora null); non utilizzabile se una password è già impostata |
+| POST | `/auth/logout` | invalida la sessione corrente (cancella la riga `Session`) e il cookie |
+| GET | `/auth/me` | utente della sessione corrente, 401 se assente/scaduta |
 
 ## Houses
 | Metodo | Path | Note |
 |---|---|---|
-| POST | `/houses` | crea casa, genera `code` (`CASA-####`) |
+| POST | `/houses` | crea casa (owner = utente della sessione, non più un `ownerId` nel body), genera `code` (`CASA-####`) e la `HouseMembership` `OWNER` |
 | GET | `/houses/:id` | dettaglio |
 | PATCH | `/houses/:id` | anche `floorPlanRotation` |
-| GET | `/users/:userId/houses` | case dell'utente |
+| GET | `/houses` | case dell'utente della sessione corrente (era `/users/:userId/houses`) |
 
 ## Rooms
 | Metodo | Path | Note |
@@ -106,21 +109,21 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 ## Gmail (OAuth + scansione)
 | Metodo | Path | Note |
 |---|---|---|
-| GET | `/auth/gmail/connect` | avvia OAuth (redirect a Google) |
-| GET | `/auth/gmail/callback` | redirect URI registrato in Google Console |
-| GET | `/users/:userId/gmail-status` | connesso sì/no |
-| POST | `/users/:userId/gmail-disconnect` | |
+| GET | `/auth/gmail/connect` | avvia OAuth per l'utente della sessione corrente (redirect a Google, `state` = nonce CSRF legato alla sessione, non più un `userId` in query — vedi `decisions.md`) |
+| GET | `/auth/gmail/callback` | redirect URI registrato in Google Console; verifica il nonce prima di salvare i token |
+| GET | `/users/me/gmail-status` | connesso sì/no, per l'utente della sessione |
+| POST | `/users/me/gmail-disconnect` | |
 | POST | `/houses/:houseId/gmail-scan` | cerca nuove email con allegati, popola i candidati |
 
 ## Drive (OAuth + scansione)
 | Metodo | Path | Note |
 |---|---|---|
-| GET | `/auth/drive/connect` | |
+| GET | `/auth/drive/connect` | stesso schema di Gmail |
 | GET | `/auth/drive/callback` | |
-| GET | `/users/:userId/drive-status` | |
-| POST | `/users/:userId/drive-disconnect` | |
-| GET | `/users/:userId/drive-folders` | elenco cartelle per la scelta utente |
-| POST | `/users/:userId/drive-folder` | imposta cartella da scansionare |
+| GET | `/users/me/drive-status` | |
+| POST | `/users/me/drive-disconnect` | |
+| GET | `/users/me/drive-folders` | elenco cartelle per la scelta utente |
+| POST | `/users/me/drive-folder` | imposta cartella da scansionare |
 | POST | `/houses/:houseId/drive-scan` | |
 
 ## Nota

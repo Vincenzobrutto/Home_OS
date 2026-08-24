@@ -25,6 +25,10 @@ async function handleResponse<T>(res: Response): Promise<T> {
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
+    // Il cookie di sessione (httpOnly, vedi auth.controller.ts) viaggia tra
+    // origin diversi (frontend :5173, backend :3000): senza credentials il
+    // browser non lo invierebbe né lo salverebbe mai.
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
   });
   return handleResponse<T>(res);
@@ -35,6 +39,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 async function upload<T>(path: string, formData: FormData): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
+    credentials: 'include',
     body: formData,
   });
   return handleResponse<T>(res);
@@ -57,19 +62,40 @@ export function parseDateInput(text: string): string | undefined {
 }
 
 export const api = {
-  users: {
-    list: () => request<User[]>('/users'),
-    create: (data: { email: string; name?: string }) => request<User>('/users', { method: 'POST', body: JSON.stringify(data) }),
-    housesOf: (userId: string) => request<House[]>(`/users/${userId}/houses`),
+  auth: {
+    accountStatus: (email: string) =>
+      request<{ exists: boolean; hasPassword: boolean }>('/auth/account-status', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      }),
+    register: (data: { email: string; password: string; name?: string }) =>
+      request<User>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+    login: (data: { email: string; password: string }) =>
+      request<User>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+    setPassword: (data: { email: string; password: string }) =>
+      request<User>('/auth/set-password', { method: 'POST', body: JSON.stringify(data) }),
+    logout: () => request<{ success: boolean }>('/auth/logout', { method: 'POST' }),
+    // null quando non c'è una sessione valida (401), non un errore da
+    // propagare: è lo stato normale prima del login.
+    me: async (): Promise<User | null> => {
+      try {
+        return await request<User>('/auth/me');
+      } catch {
+        return null;
+      }
+    },
   },
   houses: {
     get: (id: string) => request<House & { rooms: Room[]; assets: Asset[] }>(`/houses/${id}`),
-    create: (data: { ownerId: string; name: string; city?: string; surfaceSqm?: number; roomsCount?: number; buildYear?: number }) => request<House>('/houses', { method: 'POST', body: JSON.stringify(data) }),
+    create: (data: { name: string; city?: string; surfaceSqm?: number; roomsCount?: number; buildYear?: number }) => request<House>('/houses', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: Partial<{ floorPlanRotation: number }>) =>
       request<House>(`/houses/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
+    // Le case dell'utente della sessione corrente — non più "di un userId"
+    // esplicito, vedi houses.controller.ts.
+    mine: () => request<House[]>('/houses'),
   },
   rooms: {
     listForHouse: (houseId: string) => request<Room[]>(`/houses/${houseId}/rooms`),
@@ -385,30 +411,31 @@ export const api = {
   },
   gmail: {
     // Navigazione diretta del browser, non fetch: il backend fa da redirect
-    // verso la pagina di consenso di Google, poi torna al frontend.
-    connectUrl: (userId: string) => `${BASE_URL}/auth/gmail/connect?userId=${userId}`,
-    status: (userId: string) => request<GmailStatus>(`/users/${userId}/gmail-status`),
-    disconnect: (userId: string) => request<void>(`/users/${userId}/gmail-disconnect`, { method: 'POST' }),
-    scan: (houseId: string, userId: string, months: number) =>
+    // verso la pagina di consenso di Google, poi torna al frontend. Nessun
+    // userId in query: il backend usa la sessione (cookie) per sapere chi
+    // sta collegando l'account.
+    connectUrl: () => `${BASE_URL}/auth/gmail/connect`,
+    status: () => request<GmailStatus>('/users/me/gmail-status'),
+    disconnect: () => request<void>('/users/me/gmail-disconnect', { method: 'POST' }),
+    scan: (houseId: string, months: number) =>
       request<GmailScanResult>(`/houses/${houseId}/gmail-scan`, {
         method: 'POST',
-        body: JSON.stringify({ userId, months }),
+        body: JSON.stringify({ months }),
       }),
   },
   drive: {
-    connectUrl: (userId: string) => `${BASE_URL}/auth/drive/connect?userId=${userId}`,
-    status: (userId: string) => request<DriveStatus>(`/users/${userId}/drive-status`),
-    disconnect: (userId: string) => request<void>(`/users/${userId}/drive-disconnect`, { method: 'POST' }),
-    listFolders: (userId: string) => request<DriveFolder[]>(`/users/${userId}/drive-folders`),
-    selectFolder: (userId: string, folderId: string, folderName: string) =>
-      request<void>(`/users/${userId}/drive-folder`, {
+    connectUrl: () => `${BASE_URL}/auth/drive/connect`,
+    status: () => request<DriveStatus>('/users/me/drive-status'),
+    disconnect: () => request<void>('/users/me/drive-disconnect', { method: 'POST' }),
+    listFolders: () => request<DriveFolder[]>('/users/me/drive-folders'),
+    selectFolder: (folderId: string, folderName: string) =>
+      request<void>('/users/me/drive-folder', {
         method: 'POST',
         body: JSON.stringify({ folderId, folderName }),
       }),
-    scan: (houseId: string, userId: string) =>
+    scan: (houseId: string) =>
       request<DriveScanResult>(`/houses/${houseId}/drive-scan`, {
         method: 'POST',
-        body: JSON.stringify({ userId }),
       }),
   },
 };

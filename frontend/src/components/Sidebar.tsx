@@ -9,6 +9,7 @@ import {
   Sparkles,
   Zap,
   X,
+  LogOut,
 } from 'lucide-react';
 import { T } from '../theme';
 import type { House } from '../types';
@@ -43,6 +44,7 @@ export function Sidebar({
   // questi restano semplicemente inutilizzati).
   open = false,
   onNavigate,
+  onLogout,
 }: {
   view: View;
   setView: (v: View) => void;
@@ -52,6 +54,7 @@ export function Sidebar({
   assetDetailOrigin?: View;
   open?: boolean;
   onNavigate?: () => void;
+  onLogout?: () => void;
 }) {
   // Gmail e Drive non hanno più voci proprie: sono tab dentro Inbox (vedi
   // InboxHub.tsx). Il badge qui somma i candidati in attesa da entrambe le
@@ -167,11 +170,36 @@ export function Sidebar({
       </div>
 
       <div style={{ marginTop: 'auto', paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#8A9089', letterSpacing: '0.05em' }}>
-          {house.code}
-        </div>
-        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: '#D5D8CE', marginTop: 2 }}>
-          {house.name}, {house.city}
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8 }}>
+          <div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#8A9089', letterSpacing: '0.05em' }}>
+              {house.code}
+            </div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: '#D5D8CE', marginTop: 2 }}>
+              {house.name}, {house.city}
+            </div>
+          </div>
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              title="Esci"
+              aria-label="Esci"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 26,
+                height: 26,
+                background: 'transparent',
+                border: 'none',
+                color: '#8A9089',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <LogOut size={15} />
+            </button>
+          )}
         </div>
       </div>
     </div>

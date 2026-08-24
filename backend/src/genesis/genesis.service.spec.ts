@@ -1,9 +1,14 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { RoomsService } from '../rooms/rooms.service';
 import { AssetsService } from '../assets/assets.service';
+import { AccessControlService } from '../access-control/access-control.service';
 import { GenesisService } from './genesis.service';
 import type { HouseScanProvider } from './scan/house-scan-provider.interface';
 import { GenesisStep } from '@prisma/client';
+
+const accessControl = {
+  assertHouseAccess: jest.fn().mockResolvedValue(undefined),
+} as unknown as AccessControlService;
 
 describe('GenesisService precise resume', () => {
   it('restores the latest scan session and its observations when the saved step is REVIEW', async () => {
@@ -38,10 +43,11 @@ describe('GenesisService precise resume', () => {
       prisma as unknown as PrismaService,
       {} as RoomsService,
       {} as AssetsService,
+      accessControl,
       scanProvider,
     );
 
-    const state = await service.resume('house-1');
+    const state = await service.resume('user-1', 'house-1');
 
     expect(prisma.scanSession.findFirst).toHaveBeenCalledWith({
       where: { houseId: 'house-1' },
@@ -70,11 +76,12 @@ describe('GenesisService precise resume', () => {
       prisma as unknown as PrismaService,
       {} as RoomsService,
       {} as AssetsService,
+      accessControl,
       {} as HouseScanProvider,
     );
 
     await expect(
-      service.saveStep('house-1', GenesisStep.REVIEW),
+      service.saveStep('user-1', 'house-1', GenesisStep.REVIEW),
     ).rejects.toThrow('Cannot skip Genesis steps');
   });
 });
@@ -125,10 +132,11 @@ describe('GenesisService Home Score history', () => {
       prisma as unknown as PrismaService,
       {} as RoomsService,
       {} as AssetsService,
+      accessControl,
       {} as HouseScanProvider,
     );
 
-    const result = await service.recalculateScore('house-1');
+    const result = await service.recalculateScore('user-1', 'house-1');
 
     expect(result.snapshotCreated).toBe(false);
     expect(snapshotCreate).not.toHaveBeenCalled();
@@ -144,10 +152,11 @@ describe('GenesisService Home Score history', () => {
       prisma as unknown as PrismaService,
       {} as RoomsService,
       {} as AssetsService,
+      accessControl,
       {} as HouseScanProvider,
     );
 
-    await service.getScoreHistory('house-1');
+    await service.getScoreHistory('user-1', 'house-1');
 
     expect(findMany).toHaveBeenCalledWith({
       where: {
@@ -194,6 +203,7 @@ describe('GenesisService.confirmObservations', () => {
 
     const observationUpdate = jest.fn();
     const prisma = {
+      house: { findUnique: jest.fn().mockResolvedValue({ id: 'house-1' }) },
       scanSession: {
         findUnique: jest
           .fn()
@@ -227,10 +237,11 @@ describe('GenesisService.confirmObservations', () => {
       prisma as unknown as PrismaService,
       { create: roomCreate } as unknown as RoomsService,
       { create: assetCreate } as unknown as AssetsService,
+      accessControl,
       scanProvider,
     );
 
-    await service.confirmObservations('house-1', 'sess-1', {
+    await service.confirmObservations('user-1', 'house-1', 'sess-1', {
       items: [
         { observationId: 'obs-room-1', action: 'confirm' },
         { observationId: 'obs-asset-1', action: 'confirm' },
@@ -239,7 +250,7 @@ describe('GenesisService.confirmObservations', () => {
     });
 
     expect(roomCreate).toHaveBeenCalledTimes(1);
-    expect(roomCreate).toHaveBeenCalledWith('house-1', {
+    expect(roomCreate).toHaveBeenCalledWith('user-1', 'house-1', {
       type: 'CUCINA',
       name: 'Cucina',
       confidence: 0.93,
@@ -248,7 +259,7 @@ describe('GenesisService.confirmObservations', () => {
     });
 
     expect(assetCreate).toHaveBeenCalledTimes(1);
-    expect(assetCreate).toHaveBeenCalledWith('house-1', {
+    expect(assetCreate).toHaveBeenCalledWith('user-1', 'house-1', {
       roomId: 'room-real-1',
       type: 'ELETTRODOMESTICO',
       name: 'Frigorifero',
@@ -295,6 +306,7 @@ describe('GenesisService.confirmObservations — duplicate rooms', () => {
       type: 'BAGNO',
     };
     const prisma = {
+      house: { findUnique: jest.fn().mockResolvedValue({ id: 'house-1' }) },
       scanSession: {
         findUnique: jest
           .fn()
@@ -321,10 +333,11 @@ describe('GenesisService.confirmObservations — duplicate rooms', () => {
       prisma as unknown as PrismaService,
       { create: roomCreate } as unknown as RoomsService,
       { create: assetCreate } as unknown as AssetsService,
+      accessControl,
       scanProvider,
     );
 
-    await service.confirmObservations('house-1', 'sess-1', {
+    await service.confirmObservations('user-1', 'house-1', 'sess-1', {
       items: [
         // L'utente scarta "Bagno" perché assomiglia a "bagno_1" già in casa.
         { observationId: 'obs-room-1', action: 'reject' },
@@ -333,7 +346,7 @@ describe('GenesisService.confirmObservations — duplicate rooms', () => {
     });
 
     expect(roomCreate).not.toHaveBeenCalled();
-    expect(assetCreate).toHaveBeenCalledWith('house-1', {
+    expect(assetCreate).toHaveBeenCalledWith('user-1', 'house-1', {
       roomId: 'room-real-bagno-1',
       type: 'CALDAIA',
       name: 'Scaldabagno',
@@ -347,6 +360,7 @@ describe('GenesisService.confirmObservations — duplicate rooms', () => {
 describe('GenesisService.getScanResults — duplicate detection', () => {
   it('flags an observation whose proposed name matches an existing confirmed Room of the same type', async () => {
     const prisma = {
+      house: { findUnique: jest.fn().mockResolvedValue({ id: 'house-1' }) },
       scanSession: {
         findUnique: jest
           .fn()
@@ -380,10 +394,11 @@ describe('GenesisService.getScanResults — duplicate detection', () => {
       prisma as unknown as PrismaService,
       {} as unknown as RoomsService,
       {} as unknown as AssetsService,
+      accessControl,
       scanProvider,
     );
 
-    const results = await service.getScanResults('house-1', 'sess-1');
+    const results = await service.getScanResults('user-1', 'house-1', 'sess-1');
 
     expect(results[0].possibleDuplicate).toEqual({
       id: 'room-1',
@@ -398,6 +413,7 @@ describe('GenesisService issue/recommendation reconciliation (idempotency)', () 
       prisma as unknown as PrismaService,
       {} as unknown as RoomsService,
       {} as unknown as AssetsService,
+      accessControl,
       {} as unknown as HouseScanProvider,
     );
   }

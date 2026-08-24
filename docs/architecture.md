@@ -6,8 +6,8 @@ Due servizi separati, nessun monorepo tool (no Nx/Turborepo) — struttura volut
 
 ```
 homeos-project/
-├── backend/     NestJS + Prisma + PostgreSQL — API REST, pipeline AI, integrazioni Gmail/Drive
-├── frontend/    React + Vite + TypeScript — SPA, un'unica casa per utente bootstrap
+├── backend/     NestJS + Prisma + PostgreSQL — API REST, autenticazione a sessione, pipeline AI, integrazioni Gmail/Drive
+├── frontend/    React + Vite + TypeScript — SPA, login reale + un'unica casa per utente autenticato
 ├── docs/        questa cartella
 ├── prompts/     convenzioni di stile/codice per chi (umano o AI) scrive codice qui
 ├── architettura/, prototipo/, ai-test/   materiale storico pre-implementazione (vedi nota sotto)
@@ -22,12 +22,13 @@ Non esiste una cartella `/src` o `/tests` a livello di repo: il codice vive dent
 
 | Livello | Scelta | Note |
 |---|---|---|
-| Backend | NestJS 11 + TypeScript | struttura a moduli (`assets`, `documents`, `rooms`, `contacts`, `houses`, `users`, `gmail`, `drive`), un controller/service/dto per modulo |
+| Backend | NestJS 11 + TypeScript | struttura a moduli (`auth`, `access-control`, `assets`, `documents`, `rooms`, `contacts`, `houses`, `gmail`, `drive`, `maintenance`, `genesis`, `utility-bills`), un controller/service/dto per modulo |
 | ORM / DB | Prisma **6.19.3** (pinnato, non v7) + PostgreSQL | schema in `backend/prisma/schema.prisma`, migrazioni in `backend/prisma/migrations/` |
 | Frontend | React 19 + Vite 8 + TypeScript | SPA, nessun router esterno — navigazione gestita a mano con uno stato `view` in `App.tsx` (vedi `ui-ux.md`) |
 | Stile UI | Inline styles + design token condivisi (`frontend/src/theme.ts`) | nessun CSS-in-JS/Tailwind; unica eccezione è `MOBILE_CSS`, un blocco di CSS vero iniettato via `<style>` per le media query, che gli style inline non possono esprimere |
 | AI estrazione documenti | Claude (famiglia Sonnet), chiamata diretta via `fetch` a `api.anthropic.com`, no SDK | vedi `backend/src/documents/claude-extraction.service.ts` |
-| Integrazioni | Gmail API + Google Drive API (OAuth2, redirect server-side) | token salvati in chiaro in DB — accettabile per la fase attuale (MVP mono-utente), da rivedere prima di un deploy multi-utente reale |
+| Autenticazione | Sessione in-house: cookie httpOnly + tabella `Session` in Postgres, password con `crypto.scrypt` nativo di Node | niente JWT/provider esterno (Auth0/Clerk/Supabase) — vedi `decisions.md`; ogni rotta è protetta di default (`AuthGuard` globale), l'autorizzazione per-casa verifica `HouseMembership` |
+| Integrazioni | Gmail API + Google Drive API (OAuth2, redirect server-side, richiede sessione) | token salvati in chiaro in DB — accettabile per la fase attuale, da rivedere (`backlog.md` B10) |
 | Rendering planimetrie | `pdfjs-dist` (client-side) per convertire la prima pagina di un PDF caricato in immagine di sfondo | |
 
 ## 3. Perché queste scelte
@@ -37,7 +38,8 @@ Non esiste una cartella `/src` o `/tests` a livello di repo: il codice vive dent
 - **Niente state manager esterno nel frontend** (no Redux/Zustand/React Query): lo stato vive in `App.tsx` e scende via props. Scelta deliberata per la dimensione attuale dell'app — vedi `decisions.md` se in futuro si valuta di introdurne uno quando la profondità del prop-drilling diventa un problema reale, non anticipata.
 - **Inline styles invece di un framework CSS**: il progetto nasce da un prototipo React con stile inline già validato con utenti reali (`prototipo/homeos_prototype.jsx`) — mantenere lo stesso approccio ha permesso di riusare la UI 1:1 invece di riscriverla. Il costo (niente pseudo-classi/media query native) è stato accettato finché non è servito il primo layout responsive, risolto con un singolo blocco CSS iniettato (`MOBILE_CSS`) invece di migrare tutto il progetto a un'altra tecnica.
 - **Claude via `fetch` diretto, non un SDK**: unico endpoint usato (`/v1/messages`), un SDK avrebbe aggiunto una dipendenza per poco beneficio. Include l'uso del tool lato server `web_search_20250305` per l'arricchimento dati su richiesta (vedi `documents.service.ts searchOnline`).
-- **OAuth Gmail/Drive redirect server-side, niente Google Picker/JS client-side**: più semplice da implementare e mantenere, coerente con l'assenza di un vero sistema di sessione/autenticazione lato frontend nell'MVP.
+- **OAuth Gmail/Drive redirect server-side, niente Google Picker/JS client-side**: più semplice da implementare e mantenere.
+- **Sessione in-house invece di JWT o un provider gestito (Auth0/Clerk/Supabase)**: coerente con lo stack minimale già scelto in questo repo — zero costi/vendor lock-in prima che servano davvero, zero dipendenze pesanti nuove (solo `cookie-parser`; l'hashing usa `crypto.scrypt` nativo di Node, non bcrypt/argon2). Il token di sessione è il valore casuale stesso salvato in DB (non firmato): la revoca è un semplice `delete`, non serve gestire un secret di firma né un flusso di refresh token. Da rivalutare se/quando servirà SSO, MFA o reset password via email — vedi `decisions.md`.
 
 ## 4. Flusso dati principale (pipeline documentale)
 

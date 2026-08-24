@@ -24,31 +24,27 @@ const labelStyle: React.CSSProperties = {
   display: 'block',
 };
 
-// Nessuna casa trovata per nessun utente: prima esecuzione senza seed, o DB
-// appena resettato. Non c'è ancora autenticazione (vedi architettura §2),
-// quindi qui creiamo davvero utente + casa invece di simulare un onboarding.
+// Utente già autenticato (vedi App.tsx/LoginScreen) ma senza ancora
+// nessuna casa: prima esecuzione dopo la registrazione, o account esistente
+// il cui unico scopo era finora l'accesso. Qui si crea solo la casa.
 export function BootstrapScreen({
   existingUser,
   onReady,
 }: {
-  existingUser: User | null;
+  existingUser: User;
   onReady: (house: House) => void;
 }) {
-  const [email, setEmail] = useState(existingUser?.email ?? '');
-  const [name, setName] = useState(existingUser?.name ?? '');
   const [houseName, setHouseName] = useState('');
   const [city, setCity] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
-    if (!houseName.trim() || (!existingUser && !email.trim())) return;
+    if (!houseName.trim()) return;
     setSaving(true);
     setError(null);
     try {
-      const user = existingUser ?? (await api.users.create({ email: email.trim(), name: name.trim() || undefined }));
       const house = await api.houses.create({
-        ownerId: user.id,
         name: houseName.trim(),
         city: city.trim() || undefined,
       });
@@ -64,26 +60,16 @@ export function BootstrapScreen({
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.paper }}>
       <div style={{ width: 420, background: T.card, border: `1px solid ${T.line}`, borderRadius: 14, padding: '30px 32px' }}>
         <SectionLabel>HomeOS</SectionLabel>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 22, color: T.ink, margin: '0 0 20px 0' }}>
+        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 22, color: T.ink, margin: '0 0 6px 0' }}>
           Crea la tua casa
         </h1>
-
-        {!existingUser && (
-          <>
-            <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Email</label>
-              <input style={inputStyle} value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
-            </div>
-            <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Nome (facoltativo)</label>
-              <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-          </>
-        )}
+        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.slate, margin: '0 0 20px 0' }}>
+          Accesso effettuato come {existingUser.email}.
+        </p>
 
         <div style={{ marginBottom: 14 }}>
           <label style={labelStyle}>Nome/indirizzo casa</label>
-          <input style={inputStyle} placeholder="Es. Via dei Glicini 14" value={houseName} onChange={(e) => setHouseName(e.target.value)} />
+          <input style={inputStyle} placeholder="Es. Via dei Glicini 14" value={houseName} onChange={(e) => setHouseName(e.target.value)} autoFocus />
         </div>
         <div style={{ marginBottom: 20 }}>
           <label style={labelStyle}>Città (facoltativo)</label>

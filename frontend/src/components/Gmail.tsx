@@ -7,14 +7,12 @@ import type { GmailCandidate, GmailScanResult, GmailStatus } from '../types';
 
 export function GmailView({
   houseId,
-  userId,
   onCandidatesChanged,
   notice,
   onNoticeShown,
   hideHeader,
 }: {
   houseId: string;
-  userId: string;
   onCandidatesChanged: () => void;
   notice?: 'connected' | 'error' | null;
   onNoticeShown?: () => void;
@@ -31,7 +29,7 @@ export function GmailView({
 
   async function refresh() {
     const [statusData, candidatesData] = await Promise.all([
-      api.gmail.status(userId),
+      api.gmail.status(),
       api.documents.gmailCandidates(houseId),
     ]);
     setStatus(statusData);
@@ -40,14 +38,14 @@ export function GmailView({
 
   useEffect(() => {
     refresh().finally(() => setLoading(false));
-  }, [houseId, userId]);
+  }, [houseId]);
 
   async function scan() {
     setScanning(true);
     setError(null);
     setScanResult(null);
     try {
-      const result = await api.gmail.scan(houseId, userId, scanMonths);
+      const result = await api.gmail.scan(houseId, scanMonths);
       setScanResult(result);
       await refresh();
     } catch (err) {
@@ -61,7 +59,7 @@ export function GmailView({
     if (!window.confirm('Scollegare l\'account Gmail? Le scansioni future non troveranno più nuovi documenti finché non lo ricolleghi.')) {
       return;
     }
-    await api.gmail.disconnect(userId);
+    await api.gmail.disconnect();
     setScanResult(null);
     await refresh();
   }
@@ -163,7 +161,7 @@ export function GmailView({
             documenti utili al censimento degli asset. Ogni documento trovato va approvato singolarmente prima di entrare in Inbox.
           </div>
           <a
-            href={api.gmail.connectUrl(userId)}
+            href={api.gmail.connectUrl()}
             style={{
               display: 'inline-flex',
               alignItems: 'center',

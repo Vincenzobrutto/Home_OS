@@ -4,13 +4,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessControlService } from '../access-control/access-control.service';
 import { allocateUtilityPeriods } from './energy-aggregation';
 
 @Injectable()
 export class UtilityBillsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
+  ) {}
 
-  async consumption(houseId: string, year: number) {
+  async consumption(userId: string, houseId: string, year: number) {
     if (!Number.isInteger(year) || year < 2000 || year > 2200) {
       throw new BadRequestException('Anno non valido');
     }
@@ -18,6 +22,7 @@ export class UtilityBillsService {
       where: { id: houseId },
     });
     if (!house) throw new NotFoundException(`House ${houseId} non trovata`);
+    await this.accessControl.assertHouseAccess(userId, houseId);
     const from = new Date(Date.UTC(year - 1, 0, 1));
     const to = new Date(Date.UTC(year, 11, 31));
     const [bills, installations, allPeriods] = await Promise.all([

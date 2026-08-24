@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { google, gmail_v1 } from 'googleapis';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessControlService } from '../access-control/access-control.service';
 import { DocumentsService } from '../documents/documents.service';
+import { createOAuthState, consumeOAuthState } from '../common/oauth-state';
 
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
 
@@ -48,6 +50,7 @@ export class GmailService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly documents: DocumentsService,
+    private readonly accessControl: AccessControlService,
   ) {}
 
   private oauthClient() {
@@ -70,11 +73,18 @@ export class GmailService {
       // se l'utente aveva già autorizzato l'app in passato.
       prompt: 'consent',
       scope: SCOPES,
-      state: userId,
+      // Nonce legato alla sessione che ha avviato il collegamento, non più
+      // l'userId in chiaro — vedi common/oauth-state.ts.
+      state: createOAuthState(userId),
     });
   }
 
-  async handleCallback(code: string, userId: string) {
+  async handleCallback(code: string, state: string, userId: string) {
+    if (!consumeOAuthState(state, userId)) {
+      throw new BadRequestException(
+        'Collegamento Gmail non valido o scaduto: riprova.',
+      );
+    }
     const client = this.oauthClient();
     const { tokens } = await client.getToken(code);
     client.setCredentials(tokens);
@@ -157,6 +167,7 @@ export class GmailService {
     userId: string,
     months: number = DEFAULT_SCAN_WINDOW_MONTHS,
   ) {
+    await this.accessControl.assertHouseAccess(userId, houseId);
     const client = await this.getAuthorizedClient(userId);
     const gmail = google.gmail({ version: 'v1', auth: client });
 

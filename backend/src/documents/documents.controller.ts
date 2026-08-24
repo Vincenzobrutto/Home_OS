@@ -6,12 +6,14 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  Req,
   StreamableFile,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import type { AuthenticatedRequest } from '../auth/authenticated-request';
 import { DocumentsService } from './documents.service';
 import { ConfirmDocumentDto } from './dto/confirm-document.dto';
 import { ConfirmFloorPlanDto } from './dto/confirm-floor-plan.dto';
@@ -24,33 +26,45 @@ export class DocumentsController {
   @Post('houses/:houseId/documents')
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   upload(
+    @Req() req: AuthenticatedRequest,
     @Param('houseId', ParseUUIDPipe) houseId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.documentsService.upload(houseId, file);
+    return this.documentsService.upload(req.user.id, houseId, file);
   }
 
   @Get('houses/:houseId/documents')
-  listForHouse(@Param('houseId', ParseUUIDPipe) houseId: string) {
-    return this.documentsService.listForHouse(houseId);
+  listForHouse(
+    @Req() req: AuthenticatedRequest,
+    @Param('houseId', ParseUUIDPipe) houseId: string,
+  ) {
+    return this.documentsService.listForHouse(req.user.id, houseId);
   }
 
   @Post('houses/:houseId/floorplan-background')
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   uploadFloorPlanBackground(
+    @Req() req: AuthenticatedRequest,
     @Param('houseId', ParseUUIDPipe) houseId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.documentsService.uploadFloorPlanBackground(houseId, file);
+    return this.documentsService.uploadFloorPlanBackground(
+      req.user.id,
+      houseId,
+      file,
+    );
   }
 
   @Get('documents/:id/file')
   async getFile(
+    @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
     @Query('download') download?: string,
   ) {
-    const { buffer, mediaType, filename } =
-      await this.documentsService.getFile(id);
+    const { buffer, mediaType, filename } = await this.documentsService.getFile(
+      req.user.id,
+      id,
+    );
     return new StreamableFile(buffer, {
       type: mediaType,
       disposition: `${download ? 'attachment' : 'inline'}; filename="${filename}"`,
@@ -58,71 +72,98 @@ export class DocumentsController {
   }
 
   @Post('documents/:id/analyze')
-  analyze(@Param('id', ParseUUIDPipe) id: string) {
-    return this.documentsService.analyze(id);
+  analyze(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.documentsService.analyze(req.user.id, id);
   }
 
   @Get('documents/:id/maintenance-proposals')
-  maintenanceProposals(@Param('id', ParseUUIDPipe) id: string) {
-    return this.documentsService.maintenanceProposals(id);
+  maintenanceProposals(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.documentsService.maintenanceProposals(req.user.id, id);
   }
 
   @Post('documents/:id/confirm')
   confirm(
+    @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ConfirmDocumentDto,
   ) {
-    return this.documentsService.confirm(id, dto);
+    return this.documentsService.confirm(req.user.id, id, dto);
   }
 
   @Post('documents/:id/confirm-floorplan')
   confirmFloorPlan(
+    @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ConfirmFloorPlanDto,
   ) {
-    return this.documentsService.confirmFloorPlan(id, dto);
+    return this.documentsService.confirmFloorPlan(req.user.id, id, dto);
   }
 
   @Post('documents/:id/confirm-utility-bill')
   confirmUtilityBill(
+    @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ConfirmUtilityBillDto,
   ) {
-    return this.documentsService.confirmUtilityBill(id, dto);
+    return this.documentsService.confirmUtilityBill(req.user.id, id, dto);
   }
 
   @Get('houses/:houseId/gmail-candidates')
-  findGmailCandidates(@Param('houseId', ParseUUIDPipe) houseId: string) {
-    return this.documentsService.findGmailCandidates(houseId);
+  findGmailCandidates(
+    @Req() req: AuthenticatedRequest,
+    @Param('houseId', ParseUUIDPipe) houseId: string,
+  ) {
+    return this.documentsService.findGmailCandidates(req.user.id, houseId);
   }
 
   @Get('houses/:houseId/drive-candidates')
-  findDriveCandidates(@Param('houseId', ParseUUIDPipe) houseId: string) {
-    return this.documentsService.findDriveCandidates(houseId);
+  findDriveCandidates(
+    @Req() req: AuthenticatedRequest,
+    @Param('houseId', ParseUUIDPipe) houseId: string,
+  ) {
+    return this.documentsService.findDriveCandidates(req.user.id, houseId);
   }
 
   // Endpoint condiviso da Gmail e Drive: entrambe le integrazioni producono
   // candidati con la stessa forma (source diverso), quindi l'import è
   // un'unica azione generica invece di duplicarla per integrazione.
   @Post('documents/:id/import-candidate')
-  importCandidate(@Param('id', ParseUUIDPipe) id: string) {
-    return this.documentsService.importCandidate(id);
+  importCandidate(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.documentsService.importCandidate(req.user.id, id);
   }
 
   // Generico: scarta un candidato Gmail/Drive in revisione, o un documento
   // già in Inbox non ancora confermato (vedi ignoreDocument).
   @Post('documents/:id/ignore')
-  ignoreDocument(@Param('id', ParseUUIDPipe) id: string) {
-    return this.documentsService.ignoreDocument(id);
+  ignoreDocument(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.documentsService.ignoreDocument(req.user.id, id);
   }
 
   @Post('documents/:id/move-to-house')
-  moveToHouse(@Param('id', ParseUUIDPipe) id: string) {
-    return this.documentsService.moveToHouse(id);
+  moveToHouse(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.documentsService.moveToHouse(req.user.id, id);
   }
 
   @Post('documents/:id/search-online')
-  searchOnline(@Param('id', ParseUUIDPipe) id: string) {
-    return this.documentsService.searchOnline(id);
+  searchOnline(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.documentsService.searchOnline(req.user.id, id);
   }
 }

@@ -100,8 +100,8 @@ Esecuzione storica e immutabile di un piano: conserva la scadenza prevista, la d
 ### Contact (Rubrica)
 Tecnici/aziende che hanno lavorato in casa. Collegamento a un intervento in cronologia è manuale; niente auto-popolamento da AI anche se il nome compare identico nel campo "Fornitore" estratto da un documento (rimandato, vedi `backlog.md`).
 
-### User / HouseMembership / GmailConnection / DriveConnection
-`HouseMembership` predisposta fin dall'MVP (ogni casa oggi ha un solo proprietario) per non richiedere una migrazione dolorosa quando arriverà la condivisione multi-utente. `GmailConnection`/`DriveConnection`: un solo account collegato per utente, token in chiaro in DB (accettabile per l'MVP, da rivedere — vedi `architecture.md` §3).
+### User / Session / HouseMembership / GmailConnection / DriveConnection
+`User.passwordHash` è nullable: gli account creati prima dell'introduzione dell'autenticazione (B2) non ne hanno ancora una — il login riconosce il caso e offre di impostarla, vedi `auth.service.ts`. `Session` è la sessione di login: `id` è il token stesso (32 byte random, inviato come cookie httpOnly `sid`), non un JWT — niente libreria in più, la revoca è un semplice `delete`. `HouseMembership`, predisposta fin dall'MVP per la futura condivisione multi-utente, è ora effettivamente il criterio di autorizzazione per-casa (`AccessControlService.assertHouseAccess`, non più solo `House.ownerId`) — ogni casa esistente ha ricevuto una `HouseMembership` `OWNER` retroattiva alla prima attivazione del controllo (backfill idempotente in `AccessControlService.onModuleInit`). `GmailConnection`/`DriveConnection`: un solo account collegato per utente, token in chiaro in DB (accettabile per l'MVP, da rivedere — vedi `architecture.md` §3); il collegamento OAuth ora richiede una sessione valida e usa un nonce CSRF effimero (in memoria di processo, non in DB) invece di fidarsi di un `userId` passato dal client.
 
 ### Provenienza, affidabilità e titolarità — gap esplicito
 

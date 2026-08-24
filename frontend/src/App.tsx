@@ -12,6 +12,7 @@ import { ContactsView, ContactDetailView } from './components/Contacts';
 import { AddAssetModal, EditAssetModal, AddContactModal, EditContactModal } from './components/Modals';
 import { InboxHub, type InboxTab } from './components/InboxHub';
 import { BootstrapScreen } from './components/Bootstrap';
+import { LoginScreen } from './components/LoginScreen';
 import { HouseDocumentsView } from './components/HouseDocuments';
 import { GenesisWizard } from './components/Genesis';
 import { EnergyConsumption } from './components/EnergyConsumption';
@@ -21,7 +22,7 @@ type AssetWithFields = Asset & { customFields: CustomField[] };
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [bootstrapUser, setBootstrapUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [needsBootstrap, setNeedsBootstrap] = useState(false);
 
   const [house, setHouse] = useState<House | null>(null);
@@ -71,14 +72,15 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const users = await api.users.list();
-        if (users.length === 0) {
-          setNeedsBootstrap(true);
+        const user = await api.auth.me();
+        if (!user) {
+          // Nessuna sessione valida: niente da caricare, LoginScreen prende
+          // il controllo (vedi render sotto) finché l'utente non accede.
+          setLoading(false);
           return;
         }
-        const user = users[0];
-        setBootstrapUser(user);
-        const houses = await api.users.housesOf(user.id);
+        setCurrentUser(user);
+        const houses = await api.houses.mine();
         if (houses.length === 0) {
           setNeedsBootstrap(true);
           return;
@@ -91,6 +93,32 @@ export default function App() {
       }
     })();
   }, []);
+
+  async function handleLogin(user: User) {
+    setLoading(true);
+    setError(null);
+    setCurrentUser(user);
+    try {
+      const houses = await api.houses.mine();
+      if (houses.length === 0) {
+        setNeedsBootstrap(true);
+      } else {
+        await loadHouseData(houses[0].id);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Errore imprevisto');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    await api.auth.logout();
+    setCurrentUser(null);
+    setHouse(null);
+    setNeedsBootstrap(false);
+    setView('dashboard');
+  }
 
   // Il redirect di ritorno da Google (auth/gmail|drive/callback) atterra qui
   // con ?gmail= o ?drive=connected|error: apriamo Inbox sul tab giusto e
@@ -226,10 +254,14 @@ export default function App() {
     );
   }
 
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
   if (needsBootstrap || !house) {
     return (
       <BootstrapScreen
-        existingUser={bootstrapUser}
+        existingUser={currentUser}
         onReady={async (newHouse) => {
           setNeedsBootstrap(false);
           await loadHouseData(newHouse.id);
@@ -260,6 +292,7 @@ export default function App() {
         assetDetailOrigin={assetDetailOrigin}
         open={mobileNavOpen}
         onNavigate={() => setMobileNavOpen(false)}
+        onLogout={handleLogout}
       />
       <div className="app-content" style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden' }}>
         <div className="app-topbar">
@@ -294,10 +327,9 @@ export default function App() {
             openInbox={() => setView('inbox')}
           />
         )}
-        {view === 'inbox' && bootstrapUser && (
+        {view === 'inbox' && (
           <InboxHub
             houseId={house.id}
-            userId={bootstrapUser.id}
             assets={assets}
             rooms={rooms}
             onAssetLinked={refreshAssets}

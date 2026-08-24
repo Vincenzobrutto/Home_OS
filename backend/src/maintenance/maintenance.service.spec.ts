@@ -1,6 +1,11 @@
 import { MaintenanceRecurrenceUnit } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessControlService } from '../access-control/access-control.service';
 import { MaintenanceService } from './maintenance.service';
+
+const accessControl = {
+  assertHouseAccess: jest.fn().mockResolvedValue(undefined),
+} as unknown as AccessControlService;
 
 describe('MaintenanceService document confirmation', () => {
   it('completes every selected plan in one transaction and links the document', async () => {
@@ -48,9 +53,12 @@ describe('MaintenanceService document confirmation', () => {
         }),
       ),
     };
-    const service = new MaintenanceService(prisma as unknown as PrismaService);
+    const service = new MaintenanceService(
+      prisma as unknown as PrismaService,
+      accessControl,
+    );
 
-    const result = await service.completeFromDocument('doc', {
+    const result = await service.completeFromDocument('user-1', 'doc', {
       items: [
         {
           maintenancePlanId: 'plan-1',

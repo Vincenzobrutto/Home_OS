@@ -2,6 +2,7 @@ import { AssetStatus, DocumentStatus } from '@prisma/client';
 import { ClaudeExtractionService } from './claude-extraction.service';
 import { DocumentsService } from './documents.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessControlService } from '../access-control/access-control.service';
 
 describe('DocumentsService domain rules', () => {
   const documentFindUnique = jest.fn();
@@ -38,6 +39,13 @@ describe('DocumentsService domain rules', () => {
   };
   const claude = { extract };
 
+  // Stub: questi test coprono le regole di dominio della pipeline
+  // documentale, non l'autorizzazione — vedi access-control.service.spec.ts
+  // (se presente) per quella.
+  const accessControl = {
+    assertHouseAccess: jest.fn().mockResolvedValue(undefined),
+  };
+
   let service: DocumentsService;
 
   beforeEach(() => {
@@ -46,6 +54,7 @@ describe('DocumentsService domain rules', () => {
     service = new DocumentsService(
       prisma as unknown as PrismaService,
       claude as unknown as ClaudeExtractionService,
+      accessControl as unknown as AccessControlService,
     );
   });
 
@@ -188,7 +197,10 @@ describe('DocumentsService domain rules', () => {
       },
     ]);
 
-    const proposals = await service.maintenanceProposals('document-id');
+    const proposals = await service.maintenanceProposals(
+      'user-id',
+      'document-id',
+    );
 
     expect(proposals).toHaveLength(1);
     expect(
@@ -243,7 +255,7 @@ describe('DocumentsService domain rules', () => {
     timelineCreate.mockResolvedValue({ id: 'event-id' });
     transaction.mockResolvedValue([document, { id: 'event-id' }, document]);
 
-    await service.confirm('document-id', {
+    await service.confirm('user-id', 'document-id', {
       assetId: 'asset-id',
       applyFields: true,
     });

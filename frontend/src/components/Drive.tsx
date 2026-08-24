@@ -7,14 +7,12 @@ import type { DriveCandidate, DriveFolder, DriveScanResult, DriveStatus } from '
 
 export function DriveView({
   houseId,
-  userId,
   onCandidatesChanged,
   notice,
   onNoticeShown,
   hideHeader,
 }: {
   houseId: string;
-  userId: string;
   onCandidatesChanged: () => void;
   notice?: 'connected' | 'error' | null;
   onNoticeShown?: () => void;
@@ -33,19 +31,19 @@ export function DriveView({
 
   async function refresh() {
     const [statusData, candidatesData] = await Promise.all([
-      api.drive.status(userId),
+      api.drive.status(),
       api.documents.driveCandidates(houseId),
     ]);
     setStatus(statusData);
     setCandidates(candidatesData);
     if (statusData.connected && !statusData.folderId) {
-      setFolders(await api.drive.listFolders(userId));
+      setFolders(await api.drive.listFolders());
     }
   }
 
   useEffect(() => {
     refresh().finally(() => setLoading(false));
-  }, [houseId, userId]);
+  }, [houseId]);
 
   async function confirmFolder() {
     const folder = folders.find((f) => f.id === selectedFolderId);
@@ -53,7 +51,7 @@ export function DriveView({
     setSavingFolder(true);
     setError(null);
     try {
-      await api.drive.selectFolder(userId, folder.id, folder.name);
+      await api.drive.selectFolder(folder.id, folder.name);
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore imprevisto');
@@ -67,7 +65,7 @@ export function DriveView({
     setError(null);
     setScanResult(null);
     try {
-      const result = await api.drive.scan(houseId, userId);
+      const result = await api.drive.scan(houseId);
       setScanResult(result);
       await refresh();
     } catch (err) {
@@ -81,7 +79,7 @@ export function DriveView({
     if (!window.confirm('Scollegare Google Drive? Dovrai ricollegarti e riscegliere la cartella per riprendere le scansioni.')) {
       return;
     }
-    await api.drive.disconnect(userId);
+    await api.drive.disconnect();
     setScanResult(null);
     await refresh();
   }
@@ -184,7 +182,7 @@ export function DriveView({
             approvato singolarmente prima di entrare in Inbox.
           </div>
           <a
-            href={api.drive.connectUrl(userId)}
+            href={api.drive.connectUrl()}
             style={{
               display: 'inline-flex',
               alignItems: 'center',

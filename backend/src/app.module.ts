@@ -3,7 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
-import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { AccessControlModule } from './access-control/access-control.module';
 import { HousesModule } from './houses/houses.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { AssetsModule } from './assets/assets.module';
@@ -19,7 +20,8 @@ import { UtilityBillsModule } from './utility-bills/utility-bills.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
-    UsersModule,
+    AuthModule,
+    AccessControlModule,
     HousesModule,
     RoomsModule,
     AssetsModule,

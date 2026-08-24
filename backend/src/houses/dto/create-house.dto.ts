@@ -4,13 +4,13 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
 } from 'class-validator';
 
+// ownerId non è più un campo del body: il proprietario è sempre l'utente
+// della sessione corrente (vedi houses.controller.ts) — prima si fidava di
+// un valore mandato dal client, chiunque poteva creare una casa intestata a
+// un altro userId.
 export class CreateHouseDto {
-  @IsUUID()
-  ownerId: string;
-
   @IsString()
   @IsNotEmpty()
   name: string;

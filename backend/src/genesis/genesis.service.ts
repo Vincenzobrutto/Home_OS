@@ -11,6 +11,7 @@ import {
   RoomType,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessControlService } from '../access-control/access-control.service';
 import { RoomsService } from '../rooms/rooms.service';
 import { AssetsService } from '../assets/assets.service';
 import { SaveHouseInfoDto } from './dto/save-house-info.dto';
@@ -47,12 +48,13 @@ export class GenesisService {
     private readonly prisma: PrismaService,
     private readonly roomsService: RoomsService,
     private readonly assetsService: AssetsService,
+    private readonly accessControl: AccessControlService,
     @Inject(HOUSE_SCAN_PROVIDER)
     private readonly scanProvider: HouseScanProvider,
   ) {}
 
-  async start(houseId: string) {
-    const house = await this.ensureHouseExists(houseId);
+  async start(userId: string, houseId: string) {
+    const house = await this.ensureHouseAccess(userId, houseId);
     if (house.genesisStatus === GenesisStatus.NOT_STARTED) {
       await this.prisma.house.update({
         where: { id: houseId },
@@ -69,8 +71,8 @@ export class GenesisService {
     return this.getState(houseId);
   }
 
-  async saveHouseInfo(houseId: string, dto: SaveHouseInfoDto) {
-    await this.ensureHouseExists(houseId);
+  async saveHouseInfo(userId: string, houseId: string, dto: SaveHouseInfoDto) {
+    await this.ensureHouseAccess(userId, houseId);
     await this.prisma.house.update({
       where: { id: houseId },
       data: { ...dto, genesisStep: GenesisStep.DOCUMENTS },
@@ -78,8 +80,8 @@ export class GenesisService {
     return this.getState(houseId);
   }
 
-  async startScan(houseId: string, dto: StartScanDto) {
-    await this.ensureHouseExists(houseId);
+  async startScan(userId: string, houseId: string, dto: StartScanDto) {
+    await this.ensureHouseAccess(userId, houseId);
     const session = await this.scanProvider.startScan({
       houseId,
       type: dto.type,
@@ -105,8 +107,8 @@ export class GenesisService {
     return { rooms: GENESIS_DEMO_ROOMS, assets: GENESIS_DEMO_ASSETS };
   }
 
-  async saveStep(houseId: string, requestedStep: GenesisStep) {
-    const house = await this.ensureHouseExists(houseId);
+  async saveStep(userId: string, houseId: string, requestedStep: GenesisStep) {
+    const house = await this.ensureHouseAccess(userId, houseId);
     const steps = Object.values(GenesisStep);
     const currentIndex = steps.indexOf(house.genesisStep);
     const requestedIndex = steps.indexOf(requestedStep);
@@ -124,8 +126,8 @@ export class GenesisService {
     });
   }
 
-  async resume(houseId: string) {
-    const house = await this.ensureHouseExists(houseId);
+  async resume(userId: string, houseId: string) {
+    const house = await this.ensureHouseAccess(userId, houseId);
     if (house.genesisStep !== GenesisStep.REVIEW) {
       return { step: house.genesisStep, scanSession: null, observations: [] };
     }
@@ -142,7 +144,11 @@ export class GenesisService {
       return { step: updated.genesisStep, scanSession: null, observations: [] };
     }
 
-    const observations = await this.getScanResults(houseId, scanSession.id);
+    const observations = await this.getScanResults(
+      userId,
+      houseId,
+      scanSession.id,
+    );
     return { step: house.genesisStep, scanSession, observations };
   }
 
@@ -150,7 +156,8 @@ export class GenesisService {
   // Room/Asset già confermato in casa con nome simile e stesso tipo — solo
   // per avvisare l'utente nello step di revisione (badge + default "Scarta"
   // lato frontend), mai per fondere automaticamente. Vedi genesis-duplicate.ts.
-  async getScanResults(houseId: string, scanSessionId: string) {
+  async getScanResults(userId: string, houseId: string, scanSessionId: string) {
+    await this.ensureHouseAccess(userId, houseId);
     await this.ensureScanSessionBelongsToHouse(scanSessionId, houseId);
     const observations = await this.scanProvider.getResults(scanSessionId);
 
@@ -185,10 +192,12 @@ export class GenesisService {
   // payload.roomName) una stanza confermata nello stesso batch, non ancora
   // in DB al momento in cui inizia la richiesta.
   async confirmObservations(
+    userId: string,
     houseId: string,
     scanSessionId: string,
     dto: ConfirmObservationsDto,
   ) {
+    await this.ensureHouseAccess(userId, houseId);
     await this.ensureScanSessionBelongsToHouse(scanSessionId, houseId);
 
     const observations = await this.prisma.observation.findMany({
@@ -246,7 +255,7 @@ export class GenesisService {
         item.type ?? obs.proposedCategory ?? undefined,
         'tipo ambiente',
       );
-      const room = await this.roomsService.create(houseId, {
+      const room = await this.roomsService.create(userId, houseId, {
         type: roomType,
         name: item.name ?? obs.proposedName,
         confidence: obs.confidence,
@@ -289,7 +298,7 @@ export class GenesisService {
         item.type ?? obs.proposedCategory ?? undefined,
         'tipo asset',
       );
-      await this.assetsService.create(houseId, {
+      await this.assetsService.create(userId, houseId, {
         roomId,
         type: assetType,
         name: item.name ?? obs.proposedName,
@@ -304,14 +313,14 @@ export class GenesisService {
       });
     }
 
-    return this.getScanResults(houseId, scanSessionId);
+    return this.getScanResults(userId, houseId, scanSessionId);
   }
 
   // Esegue Home Detective + Home Score sullo stato attuale della casa,
   // riconcilia le Issue/Recommendation (idempotente: riapre solo ciò che è
   // ancora valido, chiude ciò che non lo è più) e salva uno ScoreSnapshot.
-  async completeGenesis(houseId: string) {
-    await this.ensureHouseExists(houseId);
+  async completeGenesis(userId: string, houseId: string) {
+    await this.ensureHouseAccess(userId, houseId);
     const { score, drafts } = await this.evaluateCurrentHome(houseId);
 
     await this.reconcileIssues(houseId, drafts);
@@ -332,11 +341,11 @@ export class GenesisService {
       description: `Home Score: ${score.overall}/100`,
     });
 
-    return this.getResults(houseId);
+    return this.getResults(userId, houseId);
   }
 
-  async getScoreHistory(houseId: string) {
-    await this.ensureHouseExists(houseId);
+  async getScoreHistory(userId: string, houseId: string) {
+    await this.ensureHouseAccess(userId, houseId);
     const since = new Date();
     since.setFullYear(since.getFullYear() - 1);
     return this.prisma.scoreSnapshot.findMany({
@@ -345,8 +354,8 @@ export class GenesisService {
     });
   }
 
-  async recalculateScore(houseId: string) {
-    const house = await this.ensureHouseExists(houseId);
+  async recalculateScore(userId: string, houseId: string) {
+    const house = await this.ensureHouseAccess(userId, houseId);
     if (house.genesisStatus !== GenesisStatus.COMPLETED) {
       throw new BadRequestException(
         'Complete Genesis before recalculating the Home Score',
@@ -392,11 +401,11 @@ export class GenesisService {
       });
     }
 
-    return { ...(await this.getResults(houseId)), snapshotCreated };
+    return { ...(await this.getResults(userId, houseId)), snapshotCreated };
   }
 
-  async getResults(houseId: string) {
-    const house = await this.ensureHouseExists(houseId);
+  async getResults(userId: string, houseId: string) {
+    const house = await this.ensureHouseAccess(userId, houseId);
     const [
       latestScore,
       issues,
@@ -432,8 +441,8 @@ export class GenesisService {
     };
   }
 
-  async getTimeline(houseId: string) {
-    await this.ensureHouseExists(houseId);
+  async getTimeline(userId: string, houseId: string) {
+    await this.ensureHouseAccess(userId, houseId);
     return this.prisma.houseTimelineEvent.findMany({
       where: { houseId },
       orderBy: { eventDate: 'desc' },
@@ -677,6 +686,12 @@ export class GenesisService {
     if (!house) {
       throw new NotFoundException(`House ${houseId} non trovata`);
     }
+    return house;
+  }
+
+  private async ensureHouseAccess(userId: string, houseId: string) {
+    const house = await this.ensureHouseExists(houseId);
+    await this.accessControl.assertHouseAccess(userId, houseId);
     return house;
   }
 
