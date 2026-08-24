@@ -2,6 +2,15 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-24 (3) — Palette "Smeraldo": UI più vivida
+
+Su richiesta dell'utente di colori più vivaci, proposte 3 direzioni via artifact (mockup della Dashboard reale) — l'utente ha scelto "Smeraldo", evoluzione satura della palette esistente.
+
+- `theme.ts`: stessi token (`pine`/`ochre`/`rust`/`paper`/`card`/`slate`/`line`/`ink`), valori più saturi — verde smeraldo `#0E8A5F` (era `#2C5C4C`), marigold `#F2A93B` (era `#C4842A`), corallo `#E4572E` (era `#A94A2E`), sfondo quasi bianco `#F5F6EF` (era beige `#F1F1EC`). Propagato automaticamente a tutti i componenti, nessuna modifica oltre a `Dashboard.tsx`.
+- Trovato e rimosso un esperimento di palette isolato lasciato in `Dashboard.tsx` (blu/verde acqua, mai promosso a `theme.ts`) che avrebbe reso la Dashboard incoerente con il resto dell'app — vedi `decisions.md` #33.
+- Verificato dal vivo: Dashboard e Asset coerenti con la nuova palette, build/lint puliti.
+
+
 ## 2026-08-24 (2) — Nome utente-facing allineato a Dimora
 
 Esecuzione pratica di `decisions.md` #31 (Dimora = nome di prodotto, HomeOS = nome tecnico del repository): i punti dell'interfaccia dove il nome compare davvero all'utente ora dicono "Dimora" — titolo scheda browser, intestazione Sidebar, `LoginScreen`, `BootstrapScreen`, testo di benvenuto del wizard Genesis, messaggio a vuoto di Consumi elettrici. Commenti di codice, prompt di estrazione AI, README e nomi tecnici (repository, package, cartelle) restano "HomeOS" — non è un rename tecnico, solo del testo mostrato all'utente. Verificato dal vivo: titolo tab e sidebar mostrano "Dimora" dopo login, dati reali invariati.

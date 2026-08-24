@@ -1,30 +1,14 @@
 import { useEffect, useState } from 'react';
 import { DoorOpen, Building2, FileText, AlertTriangle, CalendarClock, Sparkles, ArrowRight, Clock, RefreshCw, TrendingUp, type LucideIcon } from 'lucide-react';
-import { iconForAsset } from '../theme';
+import { T, iconForAsset } from '../theme';
 import { SectionLabel } from './Shared';
 import type { Asset, GenesisResults, House, HouseTimelineEventRecord, MaintenanceReminder, Room, ScoreSnapshotRecord } from '../types';
 import { api, formatDateForDisplay } from '../api';
 
-// ANTEPRIMA nuova palette (blu/verde acqua, più moderna) — vive solo qui in
-// Dashboard.tsx per ora, non ancora promossa a theme.ts. Se approvata,
-// questi valori sostituiranno i token attuali (T.pine/T.ochre/T.rust...) e
-// verranno propagati al resto dell'app — vedi decisions.md quando succede.
-const PT = {
-  card: '#FFFFFF',
-  ink: '#0F172A',
-  ink70: '#0F172Aa8',
-  slate: '#64748B',
-  line: '#E1E7F0',
-  primary: '#2563EB',
-  teal: '#0D9488',
-  danger: '#DC2626',
-  warning: '#D97706',
-};
-
 // Un colore distinto per categoria di Asset — badge tondi nelle liste,
-// invece dei quattro toni ripetuti della palette precedente. Vive qui
-// insieme al resto dell'anteprima; se promossa, questa mappa sostituirà i
-// campi "color" di ASSET_TYPES in theme.ts.
+// invece dei quattro toni di T riusati su otto tipi. Resta locale a questo
+// file: nessun'altra vista mostra ancora badge per-categoria, quindi non
+// c'è (ancora) un motivo per promuoverla a theme.ts.
 const CATEGORY_COLORS: Record<string, string> = {
   CALDAIA: '#DC2626',
   ELETTRICO: '#D97706',
@@ -37,7 +21,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 function categoryColor(type: string): string {
-  return CATEGORY_COLORS[type] ?? PT.slate;
+  return CATEGORY_COLORS[type] ?? T.slate;
 }
 
 function CategoryBadge({
@@ -127,18 +111,18 @@ function ScoreTrend({ history }: { history: ScoreSnapshotRecord[] }) {
   const dateLabel = (date: string) => new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: 'short', year: '2-digit' }).format(new Date(date));
 
   return (
-    <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${PT.line}` }}>
+    <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.line}` }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
         <div>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 600, color: PT.ink }}>Andamento ultimi 12 mesi</div>
-          {delta !== null && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: delta > 0 ? PT.teal : delta < 0 ? PT.danger : PT.slate, marginTop: 2 }}>{delta > 0 ? '+' : ''}{delta} punti dall’ultima rilevazione</div>}
+          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 600, color: T.ink }}>Andamento ultimi 12 mesi</div>
+          {delta !== null && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: delta > 0 ? T.pine : delta < 0 ? T.rust : T.slate, marginTop: 2 }}>{delta > 0 ? '+' : ''}{delta} punti dall’ultima rilevazione</div>}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-          {SCORE_METRICS.map((item) => <button key={item.key} onClick={() => setMetric(item.key)} aria-pressed={metric === item.key} style={{ border: `1px solid ${metric === item.key ? PT.primary : PT.line}`, background: metric === item.key ? `${PT.primary}12` : PT.card, color: metric === item.key ? PT.primary : PT.slate, borderRadius: 14, padding: '5px 8px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 10.5 }}>{item.label}</button>)}
+          {SCORE_METRICS.map((item) => <button key={item.key} onClick={() => setMetric(item.key)} aria-pressed={metric === item.key} style={{ border: `1px solid ${metric === item.key ? T.pine : T.line}`, background: metric === item.key ? `${T.pine}12` : T.card, color: metric === item.key ? T.pine : T.slate, borderRadius: 14, padding: '5px 8px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 10.5 }}>{item.label}</button>)}
         </div>
       </div>
       {history.length < 2 ? (
-        <div style={{ padding: '18px 16px', borderRadius: 9, background: '#F8FAFC', fontFamily: "'Inter', sans-serif", fontSize: 12.5, lineHeight: 1.5, color: PT.slate }}>
+        <div style={{ padding: '18px 16px', borderRadius: 9, background: T.paper, fontFamily: "'Inter', sans-serif", fontSize: 12.5, lineHeight: 1.5, color: T.slate }}>
           Serve almeno una seconda rilevazione per mostrare il trend. Migliora i dati della casa e usa “Aggiorna Home Score”.
         </div>
       ) : (
@@ -147,18 +131,18 @@ function ScoreTrend({ history }: { history: ScoreSnapshotRecord[] }) {
             <svg role="img" aria-label={`Grafico storico ${SCORE_METRICS.find((item) => item.key === metric)?.label}`} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', width: '100%', minWidth: 520, height: 190 }}>
               {[0, 25, 50, 75, 100].map((value) => {
                 const y = top + ((100 - value) / 100) * chartHeight;
-                return <g key={value}><line x1={left} y1={y} x2={width - right} y2={y} stroke={PT.line} strokeWidth="1" /><text x={left - 7} y={y + 4} textAnchor="end" fontSize="9" fill={PT.slate}>{value}</text></g>;
+                return <g key={value}><line x1={left} y1={y} x2={width - right} y2={y} stroke={T.line} strokeWidth="1" /><text x={left - 7} y={y + 4} textAnchor="end" fontSize="9" fill={T.slate}>{value}</text></g>;
               })}
-              <polyline points={points.map((point) => `${point.x},${point.y}`).join(' ')} fill="none" stroke={PT.primary} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-              {points.map((point) => <g key={point.snapshot.id}><circle cx={point.x} cy={point.y} r="5" fill={PT.card} stroke={PT.primary} strokeWidth="3"><title>{dateLabel(point.snapshot.calculatedAt)}: {point.snapshot[metric]}/100</title></circle><text x={point.x} y={height - 8} textAnchor="middle" fontSize="9" fill={PT.slate}>{dateLabel(point.snapshot.calculatedAt)}</text></g>)}
+              <polyline points={points.map((point) => `${point.x},${point.y}`).join(' ')} fill="none" stroke={T.pine} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+              {points.map((point) => <g key={point.snapshot.id}><circle cx={point.x} cy={point.y} r="5" fill={T.card} stroke={T.pine} strokeWidth="3"><title>{dateLabel(point.snapshot.calculatedAt)}: {point.snapshot[metric]}/100</title></circle><text x={point.x} y={height - 8} textAnchor="middle" fontSize="9" fill={T.slate}>{dateLabel(point.snapshot.calculatedAt)}</text></g>)}
             </svg>
           </div>
           <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: 3 }}>
-            {history.map((snapshot) => <div key={snapshot.id} style={{ minWidth: 104, padding: '7px 9px', border: `1px solid ${PT.line}`, borderRadius: 8, fontFamily: "'Inter', sans-serif" }}><div style={{ fontSize: 10, color: PT.slate }}>{dateLabel(snapshot.calculatedAt)}</div><div style={{ fontSize: 15, fontWeight: 700, color: PT.ink }}>{snapshot[metric]}<span style={{ fontSize: 9, fontWeight: 400, color: PT.slate }}>/100</span></div></div>)}
+            {history.map((snapshot) => <div key={snapshot.id} style={{ minWidth: 104, padding: '7px 9px', border: `1px solid ${T.line}`, borderRadius: 8, fontFamily: "'Inter', sans-serif" }}><div style={{ fontSize: 10, color: T.slate }}>{dateLabel(snapshot.calculatedAt)}</div><div style={{ fontSize: 15, fontWeight: 700, color: T.ink }}>{snapshot[metric]}<span style={{ fontSize: 9, fontWeight: 400, color: T.slate }}>/100</span></div></div>)}
           </div>
         </>
       )}
-      {versions.size > 1 && <div style={{ marginTop: 8, fontFamily: "'Inter', sans-serif", fontSize: 10.5, color: PT.warning }}>Il periodo include versioni diverse del calcolo: i punti restano storici, ma il confronto potrebbe riflettere anche il cambio di algoritmo.</div>}
+      {versions.size > 1 && <div style={{ marginTop: 8, fontFamily: "'Inter', sans-serif", fontSize: 10.5, color: T.ochreDeep }}>Il periodo include versioni diverse del calcolo: i punti restano storici, ma il confronto potrebbe riflettere anche il cambio di algoritmo.</div>}
     </div>
   );
 }
@@ -231,7 +215,7 @@ export function Dashboard({
           fontFamily: "'Space Grotesk', sans-serif",
           fontWeight: 600,
           fontSize: 30,
-          color: PT.ink,
+          color: T.ink,
           margin: '0 0 6px 0',
           letterSpacing: '-0.01em',
         }}
@@ -242,7 +226,7 @@ export function Dashboard({
         style={{
           fontFamily: "'Inter', sans-serif",
           fontSize: 14,
-          color: PT.ink70,
+          color: T.ink70,
           margin: '0 0 30px 0',
         }}
       >
@@ -256,38 +240,38 @@ export function Dashboard({
             display: 'flex',
             alignItems: 'center',
             gap: 16,
-            background: `${PT.primary}0D`,
-            border: `1px solid ${PT.primary}33`,
+            background: `${T.pine}0D`,
+            border: `1px solid ${T.pine}33`,
             borderRadius: 12,
             padding: '18px 20px',
             marginBottom: 26,
             cursor: 'pointer',
           }}
         >
-          <div style={{ width: 40, height: 40, borderRadius: 10, background: `${PT.primary}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Sparkles size={20} color={PT.primary} />
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: `${T.pine}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Sparkles size={20} color={T.pine} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600, color: PT.ink }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600, color: T.ink }}>
               {house.genesisStatus === 'NOT_STARTED' ? 'Costruisci il gemello digitale della tua casa' : 'Riprendi il percorso Genesis'}
             </div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: PT.slate, marginTop: 2 }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.slate, marginTop: 2 }}>
               {house.genesisStatus === 'NOT_STARTED'
                 ? 'In pochi minuti: informazioni casa, documenti, scansione guidata e primo Home Score.'
                 : 'Hai già iniziato: continua da dove eri rimasto.'}
             </div>
           </div>
-          <ArrowRight size={18} color={PT.primary} />
+          <ArrowRight size={18} color={T.pine} />
         </div>
       )}
 
       {genesisResults?.score && (
-        <div style={{ marginBottom: 26, padding: '18px 20px', background: PT.card, border: `1px solid ${PT.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
+        <div style={{ marginBottom: 26, padding: '18px 20px', background: T.card, border: `1px solid ${T.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24 }}>
           <div>
-            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 40, color: PT.primary, lineHeight: 1 }}>{genesisResults.score.overallScore}</div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: PT.slate, marginTop: 4 }}>Home Score /100</div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: PT.slate, marginTop: 10 }}>
+            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 40, color: T.pine, lineHeight: 1 }}>{genesisResults.score.overallScore}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: T.slate, marginTop: 4 }}>Home Score /100</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate, marginTop: 10 }}>
               {genesisResults.confirmedRoomsCount} ambienti · {genesisResults.confirmedAssetsCount} asset
             </div>
           </div>
@@ -300,25 +284,25 @@ export function Dashboard({
               { label: 'Completezza (Digital Twin)', value: genesisResults.score.completenessScore },
             ].map((d) => (
               <div key={d.label}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'Inter', sans-serif", fontSize: 11, color: PT.slate, marginBottom: 2 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate, marginBottom: 2 }}>
                   <span>{d.label}</span>
                   <span>{d.value}</span>
                 </div>
-                <div style={{ height: 5, borderRadius: 3, background: PT.line }}>
-                  <div style={{ height: 5, borderRadius: 3, width: `${d.value}%`, background: PT.primary }} />
+                <div style={{ height: 5, borderRadius: 3, background: T.line }}>
+                  <div style={{ height: 5, borderRadius: 3, width: `${d.value}%`, background: T.pine }} />
                 </div>
               </div>
             ))}
           </div>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 16, paddingTop: 14, borderTop: `1px solid ${PT.line}` }}>
-            <button onClick={() => setShowScoreTrend((visible) => !visible)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: `1px solid ${PT.line}`, background: PT.card, color: PT.primary, borderRadius: 8, padding: '8px 11px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 600 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 16, paddingTop: 14, borderTop: `1px solid ${T.line}` }}>
+            <button onClick={() => setShowScoreTrend((visible) => !visible)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: `1px solid ${T.line}`, background: T.card, color: T.pine, borderRadius: 8, padding: '8px 11px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 600 }}>
               <TrendingUp size={15} /> {showScoreTrend ? 'Nascondi andamento' : 'Vedi andamento'}
             </button>
-            <button disabled={recalculatingScore} onClick={() => void recalculateScore()} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', background: PT.primary, color: '#fff', borderRadius: 8, padding: '9px 12px', cursor: recalculatingScore ? 'default' : 'pointer', opacity: recalculatingScore ? 0.65 : 1, fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 600 }}>
+            <button disabled={recalculatingScore} onClick={() => void recalculateScore()} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', background: T.pine, color: '#fff', borderRadius: 8, padding: '9px 12px', cursor: recalculatingScore ? 'default' : 'pointer', opacity: recalculatingScore ? 0.65 : 1, fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 600 }}>
               <RefreshCw size={15} className={recalculatingScore ? 'spin' : undefined} /> {recalculatingScore ? 'Ricalcolo…' : 'Aggiorna Home Score'}
             </button>
-            {scoreMessage && <span role="status" style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: PT.slate }}>{scoreMessage}</span>}
+            {scoreMessage && <span role="status" style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate }}>{scoreMessage}</span>}
           </div>
           {showScoreTrend && <ScoreTrend history={scoreHistory} />}
         </div>
@@ -334,16 +318,16 @@ export function Dashboard({
                 onClick={() => issue.assetId && openAsset(issue.assetId)}
                 style={{
                   padding: '10px 14px',
-                  background: PT.card,
-                  border: `1px solid ${PT.line}`,
-                  borderLeft: `3px solid ${issue.severity === 'HIGH' ? PT.danger : issue.severity === 'MEDIUM' ? PT.warning : PT.slate}`,
+                  background: T.card,
+                  border: `1px solid ${T.line}`,
+                  borderLeft: `3px solid ${issue.severity === 'HIGH' ? T.rust : issue.severity === 'MEDIUM' ? T.ochreDeep : T.slate}`,
                   borderRadius: 9,
                   cursor: issue.assetId ? 'pointer' : 'default',
                   boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
                 }}
               >
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 500, color: PT.ink }}>{issue.title}</div>
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: PT.slate, marginTop: 2 }}>{issue.description}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 500, color: T.ink }}>{issue.title}</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.slate, marginTop: 2 }}>{issue.description}</div>
               </div>
             ))}
           </div>
@@ -366,15 +350,15 @@ export function Dashboard({
                   onClick={() => linkedAssetId && openAsset(linkedAssetId)}
                   style={{
                     padding: '10px 14px',
-                    background: PT.card,
-                    border: `1px solid ${PT.line}`,
+                    background: T.card,
+                    border: `1px solid ${T.line}`,
                     borderRadius: 9,
                     cursor: linkedAssetId ? 'pointer' : 'default',
                     boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
                   }}
                 >
-                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 500, color: PT.ink }}>{rec.title}</div>
-                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: PT.slate, marginTop: 2 }}>{rec.description}</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 500, color: T.ink }}>{rec.title}</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.slate, marginTop: 2 }}>{rec.description}</div>
                 </div>
               );
             })}
@@ -392,21 +376,21 @@ export function Dashboard({
         }}
       >
         {[
-          { label: 'Ambienti', value: rooms.length, icon: DoorOpen, color: PT.primary },
-          { label: 'Asset censiti', value: assets.length, icon: Building2, color: PT.teal },
+          { label: 'Ambienti', value: rooms.length, icon: DoorOpen, color: T.pine },
+          { label: 'Asset censiti', value: assets.length, icon: Building2, color: T.pine },
           { label: 'Documenti collegati', value: documentsCount, icon: FileText, color: '#7C3AED' },
           {
             label: 'Da verificare',
             value: dueSoon + maintenance.length,
             icon: AlertTriangle,
-            color: PT.warning,
+            color: T.ochreDeep,
           },
         ].map((s) => (
           <div
             key={s.label}
             style={{
-              background: PT.card,
-              border: `1px solid ${PT.line}`,
+              background: T.card,
+              border: `1px solid ${T.line}`,
               borderRadius: 12,
               padding: '20px 18px',
               boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
@@ -426,7 +410,7 @@ export function Dashboard({
                   fontFamily: "'Space Grotesk', sans-serif",
                   fontSize: 30,
                   fontWeight: 600,
-                  color: PT.ink,
+                  color: T.ink,
                 }}
               >
                 {s.value}
@@ -437,7 +421,7 @@ export function Dashboard({
                 fontFamily: "'Inter', sans-serif",
                 fontSize: 18,
                 fontWeight: 600,
-                color: PT.ink,
+                color: T.ink,
                 lineHeight: 1.15,
               }}
             >
@@ -454,7 +438,7 @@ export function Dashboard({
             style={{
               fontFamily: "'Inter', sans-serif",
               fontSize: 13,
-              color: PT.slate,
+              color: T.slate,
             }}
           >
             Nessun asset da verificare per ora.
@@ -470,9 +454,9 @@ export function Dashboard({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 14,
-                background: PT.card,
-                border: `1px solid ${PT.line}`,
-                borderLeft: `3px solid ${a.status === 'DUE' ? PT.danger : PT.warning}`,
+                background: T.card,
+                border: `1px solid ${T.line}`,
+                borderLeft: `3px solid ${a.status === 'DUE' ? T.rust : T.ochreDeep}`,
                 borderRadius: 10,
                 padding: '12px 16px',
                 cursor: 'pointer',
@@ -486,7 +470,7 @@ export function Dashboard({
                     fontFamily: "'Inter', sans-serif",
                     fontSize: 13.5,
                     fontWeight: 500,
-                    color: PT.ink,
+                    color: T.ink,
                   }}
                 >
                   {a.name}
@@ -495,13 +479,13 @@ export function Dashboard({
                   style={{
                     fontFamily: "'Inter', sans-serif",
                     fontSize: 12,
-                    color: PT.slate,
+                    color: T.slate,
                   }}
                 >
                   {a.status === 'DUE' ? 'Garanzia scaduta' : 'Nessun documento collegato'}
                 </div>
               </div>
-              <AlertTriangle size={15} color={a.status === 'DUE' ? PT.danger : PT.warning} />
+              <AlertTriangle size={15} color={a.status === 'DUE' ? T.rust : T.ochreDeep} />
             </div>
           ))}
         {maintenance.map((plan) => (
@@ -512,9 +496,9 @@ export function Dashboard({
               display: 'flex',
               alignItems: 'center',
               gap: 14,
-              background: PT.card,
-              border: `1px solid ${PT.line}`,
-              borderLeft: `3px solid ${plan.status === 'OVERDUE' ? PT.danger : PT.warning}`,
+              background: T.card,
+              border: `1px solid ${T.line}`,
+              borderLeft: `3px solid ${plan.status === 'OVERDUE' ? T.rust : T.ochreDeep}`,
               borderRadius: 10,
               padding: '12px 16px',
               cursor: 'pointer',
@@ -528,7 +512,7 @@ export function Dashboard({
                   fontFamily: "'Inter', sans-serif",
                   fontSize: 13.5,
                   fontWeight: 500,
-                  color: PT.ink,
+                  color: T.ink,
                 }}
               >
                 {plan.title} · {plan.asset.name}
@@ -537,14 +521,14 @@ export function Dashboard({
                 style={{
                   fontFamily: "'Inter', sans-serif",
                   fontSize: 12,
-                  color: PT.slate,
+                  color: T.slate,
                 }}
               >
                 {plan.status === 'OVERDUE' ? 'Manutenzione scaduta' : 'Manutenzione imminente'} · {formatDateForDisplay(plan.nextDueAt)}
                 {plan.asset.room ? ` · ${plan.asset.room.name}` : ''}
               </div>
             </div>
-            <CalendarClock size={15} color={plan.status === 'OVERDUE' ? PT.danger : PT.warning} />
+            <CalendarClock size={15} color={plan.status === 'OVERDUE' ? T.rust : T.ochreDeep} />
           </div>
         ))}
       </div>
@@ -554,9 +538,9 @@ export function Dashboard({
           <SectionLabel>Cronologia casa</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
             {timeline.slice(0, 8).map((event) => (
-              <div key={event.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: PT.slate }}>
-                <Clock size={13} color={PT.slate} />
-                <span style={{ color: PT.ink }}>{event.title}</span>
+              <div key={event.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.slate }}>
+                <Clock size={13} color={T.slate} />
+                <span style={{ color: T.ink }}>{event.title}</span>
                 <span>· {formatDateForDisplay(event.eventDate)}</span>
               </div>
             ))}

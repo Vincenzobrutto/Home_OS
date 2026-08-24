@@ -20,19 +20,25 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+// Palette "Smeraldo" (2026-08-24, vedi decisions.md): stessa struttura e
+// stessi ruoli di sempre (un solo accento acceso per le azioni primarie,
+// rosso/arancio riservati agli stati "da controllare", il resto neutro),
+// ma toni più saturi e sfondo più chiaro — l'obiettivo era più energia
+// visiva senza perdere il riconoscimento già costruito con la palette
+// precedente (verde muto su beige).
 export const T = {
-  paper: '#F1F1EC',
-  paperDeep: '#E7E7DE',
-  ink: '#1B2420',
-  ink70: '#1B242099',
-  pine: '#2C5C4C',
-  pineDeep: '#1E4136',
-  ochre: '#C4842A',
-  ochreDeep: '#8F5F1C',
-  rust: '#A94A2E',
-  line: '#D6D6C9',
-  card: '#FAFAF6',
-  slate: '#5C6B66',
+  paper: '#F5F6EF',
+  paperDeep: '#E8EADF',
+  ink: '#141A16',
+  ink70: '#141A16B3',
+  pine: '#0E8A5F',
+  pineDeep: '#0A5A3D',
+  ochre: '#F2A93B',
+  ochreDeep: '#9C6412',
+  rust: '#E4572E',
+  line: '#DCDED2',
+  card: '#FFFFFF',
+  slate: '#5C6B62',
 };
 
 export const FONTS = `
