@@ -59,7 +59,7 @@ export function BootstrapScreen({
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.paper }}>
       <div style={{ width: 420, background: T.card, border: `1px solid ${T.line}`, borderRadius: 14, padding: '30px 32px' }}>
-        <SectionLabel>HomeOS</SectionLabel>
+        <SectionLabel>Dimora</SectionLabel>
         <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 22, color: T.ink, margin: '0 0 6px 0' }}>
           Crea la tua casa
         </h1>

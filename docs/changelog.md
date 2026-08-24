@@ -2,6 +2,10 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-24 (2) — Nome utente-facing allineato a Dimora
+
+Esecuzione pratica di `decisions.md` #31 (Dimora = nome di prodotto, HomeOS = nome tecnico del repository): i punti dell'interfaccia dove il nome compare davvero all'utente ora dicono "Dimora" — titolo scheda browser, intestazione Sidebar, `LoginScreen`, `BootstrapScreen`, testo di benvenuto del wizard Genesis, messaggio a vuoto di Consumi elettrici. Commenti di codice, prompt di estrazione AI, README e nomi tecnici (repository, package, cartelle) restano "HomeOS" — non è un rename tecnico, solo del testo mostrato all'utente. Verificato dal vivo: titolo tab e sidebar mostrano "Dimora" dopo login, dati reali invariati.
+
 ## 2026-08-24 — B2: autenticazione e sessione reale sulle API
 
 Chiude il buco di sicurezza aperto fin dall'MVP: prima ogni endpoint si fidava ciecamente di un `userId`/`houseId` passato dal client, `GET /users` elencava tutti gli utenti, e chiunque raggiungesse il backend poteva leggere/modificare qualunque casa.

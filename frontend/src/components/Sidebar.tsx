@@ -103,7 +103,7 @@ export function Sidebar({
           <Home size={15} color="#F1F1EC" />
         </div>
         <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '-0.01em', flex: 1 }}>
-          HomeOS
+          Dimora
         </span>
         <button
           onClick={onNavigate}

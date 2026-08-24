@@ -59,7 +59,7 @@ export function EnergyConsumption({
         <div style={{ border: `1px dashed ${T.line}`, borderRadius: 10, padding: '44px 20px', textAlign: 'center', background: T.card }}>
           <Zap size={25} color={T.ochreDeep} />
           <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 17, fontWeight: 600, color: T.ink, marginTop: 10 }}>Nessun consumo elettrico confermato</div>
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.slate, lineHeight: 1.5 }}>Carica una bolletta in Inbox: HomeOS estrae periodo e kWh, ma li salva solo dopo il tuo controllo.</p>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.slate, lineHeight: 1.5 }}>Carica una bolletta in Inbox: Dimora estrae periodo e kWh, ma li salva solo dopo il tuo controllo.</p>
           <button onClick={openInbox} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', borderRadius: 7, background: T.pine, color: '#fff', padding: '9px 14px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12.5 }}><FileText size={14} /> Apri Inbox</button>
         </div>
       )}

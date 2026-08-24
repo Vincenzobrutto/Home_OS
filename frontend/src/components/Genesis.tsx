@@ -261,7 +261,7 @@ function WelcomeStep({ onStart }: { onStart: () => Promise<void> }) {
         Costruiamo il gemello digitale della tua casa
       </h1>
       <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: T.ink70, lineHeight: 1.6, margin: '0 0 20px 0' }}>
-        In pochi minuti HomeOS raccoglie le informazioni essenziali sulla tua casa, i documenti che hai già
+        In pochi minuti Dimora raccoglie le informazioni essenziali sulla tua casa, i documenti che hai già
         e — con una scansione guidata dimostrativa — ambienti e impianti principali. Alla fine avrai una
         prima rappresentazione digitale della casa e un primo Home Score, spiegato voce per voce.
       </p>
