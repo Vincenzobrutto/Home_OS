@@ -58,8 +58,8 @@ Per lo stato dettagliato di cosa è fatto/in corso/pianificato vedi `roadmap.md`
 | Home Score, Issue e Recommendation | Implementata in versione MVP |
 | Property Profile catastale/energetico strutturato | Parziale: alcuni dati casa e documenti house-level esistono, manca il profilo completo |
 | Entità `System` distinta dagli Asset | Da decidere e modellare; oggi gli impianti sono rappresentati come Asset/tipi di Asset |
-| Provenienza e livello di affidabilità per singolo dato | Parziale: esistono sorgente e conferma, non una catena di verifica completa |
-| Autenticazione, ruoli e isolamento multiutente | Non implementati |
+| Provenienza e livello di affidabilità per singolo dato | Parziale: campo-per-campo per gli Asset da B38 (origine + chi/quando ha confermato + documento sorgente), non ancora per Room/House, nessuno storico multi-versione |
+| Autenticazione, ruoli e isolamento multiutente | Autenticazione reale implementata (B2); ruoli/isolamento oggi solo OWNER per casa, manca l'UI di invito multi-utente (B12) |
 | Trasferimento del record al nuovo proprietario | Visione futura, subordinata a identità, permessi, separazione dati e verifica legale |
 | Record certificato/verificato per banche o assicurazioni | Non disponibile; usare "record strutturato con provenienza tracciabile" finché non esiste una verifica terza |
 | Integrazioni catastali, APE e renovation passport | Future e dipendenti da accessibilità normativa/tecnica delle fonti |

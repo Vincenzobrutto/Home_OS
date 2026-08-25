@@ -13,6 +13,7 @@ describe('DocumentsService domain rules', () => {
   const assetUpdate = jest.fn();
   const customFieldFindMany = jest.fn();
   const customFieldCreate = jest.fn();
+  const fieldProvenanceUpsert = jest.fn();
   const timelineCreate = jest.fn();
   const maintenancePlanFindMany = jest.fn();
   const transaction = jest.fn();
@@ -33,6 +34,7 @@ describe('DocumentsService domain rules', () => {
       findMany: customFieldFindMany,
       create: customFieldCreate,
     },
+    assetFieldProvenance: { upsert: fieldProvenanceUpsert },
     assetTimelineEvent: { create: timelineCreate },
     maintenancePlan: { findMany: maintenancePlanFindMany },
     $transaction: transaction,
@@ -281,5 +283,30 @@ describe('DocumentsService domain rules', () => {
         confirmedAt: new Date('2026-08-02T12:00:00Z'),
       },
     });
+
+    // Provenienza (B38): solo i campi trovati davvero nel documento, non il
+    // default di garanzia calcolato a partire dalla data di acquisto — vedi
+    // decisions.md B38.
+    expect(fieldProvenanceUpsert).toHaveBeenCalledTimes(2);
+    expect(fieldProvenanceUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { assetId_fieldName: { assetId: 'asset-id', fieldName: 'serialNumber' } },
+        create: expect.objectContaining({
+          origin: 'EXTRACTED',
+          sourceDocumentId: 'document-id',
+          confirmedByUserId: 'user-id',
+        }),
+      }),
+    );
+    expect(fieldProvenanceUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { assetId_fieldName: { assetId: 'asset-id', fieldName: 'purchasedAt' } },
+      }),
+    );
+    expect(fieldProvenanceUpsert).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { assetId_fieldName: { assetId: 'asset-id', fieldName: 'warrantyUntil' } },
+      }),
+    );
   });
 });

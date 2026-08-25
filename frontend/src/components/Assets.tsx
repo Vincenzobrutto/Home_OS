@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, Download, ExternalLink, FileStack, FileText } from 'lucide-react';
 import { T, ASSET_TYPES, iconForAsset } from '../theme';
-import { SectionLabel, StatusDot, Stamp } from './Shared';
+import { SectionLabel, StatusDot, Stamp, ProvenanceBadge } from './Shared';
 import { api, formatDateForDisplay, parseDateInput } from '../api';
 import type { Asset, Contact, CustomField, DocumentRecord, House, Room, TimelineEvent } from '../types';
 import { MaintenanceSection } from './Maintenance';
@@ -226,6 +226,23 @@ export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReac
         </>
       )}
     </div>
+  );
+}
+
+// Badge di provenienza per uno dei 7 campi strutturati, o null se il campo
+// non ha (ancora) un record di provenienza — scritto prima di B38, vedi
+// decisions.md. Non per i campi liberi: quelli portano la provenienza
+// direttamente su se stessi (CustomField.source/sourceDocument/...).
+function StructuredFieldProvenance({ asset, fieldName }: { asset: Asset; fieldName: string }) {
+  const entry = asset.fieldProvenance?.find((p) => p.fieldName === fieldName);
+  if (!entry) return null;
+  return (
+    <ProvenanceBadge
+      origin={entry.origin}
+      sourceDocument={entry.sourceDocument}
+      confirmedByUser={entry.confirmedByUser}
+      confirmedAt={entry.confirmedAt}
+    />
   );
 }
 
@@ -474,7 +491,12 @@ export function AssetDetail({
 
       <div style={{ display: 'flex', gap: 8, margin: '18px 0 30px 0' }}>
         <Stamp tone={asset.status === 'OK' ? 'pine' : asset.status === 'DUE' ? 'rust' : 'ochre'}>{asset.status === 'OK' ? 'Passaporto in regola' : asset.status === 'DUE' ? 'Azione richiesta' : 'Da completare'}</Stamp>
-        {asset.warrantyUntil && <Stamp tone="slate">garanzia fino al {formatDateForDisplay(asset.warrantyUntil)}</Stamp>}
+        {asset.warrantyUntil && (
+          <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <Stamp tone="slate">garanzia fino al {formatDateForDisplay(asset.warrantyUntil)}</Stamp>
+            <StructuredFieldProvenance asset={asset} fieldName="warrantyUntil" />
+          </span>
+        )}
         {asset.dismissedAt && <Stamp tone="slate">dismesso il {formatDateForDisplay(asset.dismissedAt)}</Stamp>}
       </div>
 
@@ -489,6 +511,7 @@ export function AssetDetail({
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
           <span style={{ color: T.slate }}>Installato il: </span>
           <span style={{ color: T.ink, fontWeight: 500 }}>{formatDateForDisplay(asset.installedAt)}</span>
+          <StructuredFieldProvenance asset={asset} fieldName="installedAt" />
         </div>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
           <span style={{ color: T.slate }}>Categoria: </span>
@@ -497,22 +520,27 @@ export function AssetDetail({
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
           <span style={{ color: T.slate }}>Acquistato il: </span>
           <span style={{ color: T.ink, fontWeight: 500 }}>{formatDateForDisplay(asset.purchasedAt)}</span>
+          <StructuredFieldProvenance asset={asset} fieldName="purchasedAt" />
         </div>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
           <span style={{ color: T.slate }}>Fornitore: </span>
           <span style={{ color: T.ink, fontWeight: 500 }}>{asset.supplier || '—'}</span>
+          <StructuredFieldProvenance asset={asset} fieldName="supplier" />
         </div>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
           <span style={{ color: T.slate }}>Marca: </span>
           <span style={{ color: T.ink, fontWeight: 500 }}>{asset.manufacturer || '—'}</span>
+          <StructuredFieldProvenance asset={asset} fieldName="manufacturer" />
         </div>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
           <span style={{ color: T.slate }}>Modello: </span>
           <span style={{ color: T.ink, fontWeight: 500 }}>{asset.model || '—'}</span>
+          <StructuredFieldProvenance asset={asset} fieldName="model" />
         </div>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
           <span style={{ color: T.slate }}>Numero seriale: </span>
           <span style={{ color: T.ink, fontWeight: 500 }}>{asset.serialNumber || '—'}</span>
+          <StructuredFieldProvenance asset={asset} fieldName="serialNumber" />
         </div>
         <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
           <span style={{ color: T.slate, display: 'block', marginBottom: 5 }}>Ambiente</span>
@@ -577,6 +605,12 @@ export function AssetDetail({
               <div key={f.id} style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5 }}>
                 <span style={{ color: T.slate }}>{f.label}: </span>
                 <span style={{ color: T.ink, fontWeight: 500 }}>{f.value}</span>
+                <ProvenanceBadge
+                  origin={f.source}
+                  sourceDocument={f.sourceDocument}
+                  confirmedByUser={f.confirmedByUser}
+                  confirmedAt={f.confirmedAt}
+                />
               </div>
             ))}
           </div>

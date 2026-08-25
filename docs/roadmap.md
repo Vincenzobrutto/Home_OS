@@ -42,7 +42,7 @@ Ordine consigliato prima di ampliare il prodotto:
 1. ~~autenticazione e isolamento per utente~~ — risolto 2026-08-24 (B2, `decisions.md` #32);
 2. Property Profile strutturato — dati identificativi, catastali ed energetici con fonte esplicita;
 3. decisione sul livello `System` — validare con casi reali se serve `House → System → Asset`, evitando una migrazione puramente nominale;
-4. provenienza campo-per-campo e livelli di affidabilità — distinguere dichiarato, estratto, confermato e attestato;
+4. ~~provenienza campo-per-campo e livelli di affidabilità~~ — risolto 2026-08-25 per gli Asset (B38, `decisions.md` #34); Room/House restano fuori scope;
 5. progettazione legale e tecnica della trasferibilità — solo dopo identità, permessi e separazione dei dati personali.
 
 Queste attività allineano HomeOS al prodotto Dimora, ma **non sono tutte scope del prossimo sprint**. Sono epiche progressive con criteri di ingresso espliciti in `product-backlog.md` e attività B36–B39 in `backlog.md`.

@@ -14,6 +14,15 @@ import { CreateTimelineEventDto } from './dto/create-timeline-event.dto';
 import { UpdateTimelineEventDto } from './dto/update-timeline-event.dto';
 import { computeAssetStatus } from '../common/asset-status';
 import { computeDefaultWarrantyUntil } from '../common/warranty';
+import { recordDeclaredFields } from '../common/field-provenance';
+
+// Riusato sia per AssetCustomField che per AssetFieldProvenance: stessa
+// forma di relazione (sourceDocument/confirmedByUser) su entrambi — vedi
+// ProvenanceBadge nel frontend, che ne ha bisogno per il tooltip.
+const PROVENANCE_INCLUDE = {
+  sourceDocument: { select: { originalFilename: true } },
+  confirmedByUser: { select: { name: true, email: true } },
+} as const;
 
 @Injectable()
 export class AssetsService {
@@ -65,7 +74,10 @@ export class AssetsService {
     await this.ensureHouseAccess(userId, houseId);
     return this.prisma.asset.findMany({
       where: { houseId },
-      include: { customFields: true },
+      include: {
+        customFields: { include: PROVENANCE_INCLUDE },
+        fieldProvenance: { include: PROVENANCE_INCLUDE },
+      },
     });
   }
 
@@ -98,10 +110,16 @@ export class AssetsService {
       documentsCount: existing._count.documents,
     });
 
-    return this.prisma.asset.update({
+    const updated = await this.prisma.asset.update({
       where: { id },
       data: { ...dto, warrantyUntil, status },
     });
+    // Provenienza (B38): solo per i campi il cui valore è davvero cambiato,
+    // non per il default di garanzia calcolato sopra — vedi field-provenance.ts
+    // (il form di modifica rimanda sempre tutti i campi, anche quelli
+    // invariati, quindi "presente nel body" da solo non basta).
+    await recordDeclaredFields(this.prisma, id, userId, dto, existing);
+    return updated;
   }
 
   async addCustomField(
@@ -110,10 +128,16 @@ export class AssetsService {
     dto: CreateCustomFieldDto,
   ) {
     await this.assetOrThrow(userId, assetId);
-    // Sempre MANUAL: i campi con source AI_EXTRACTED vengono scritti solo
+    // Sempre DECLARED: i campi con origine EXTRACTED vengono scritti solo
     // dal flusso /documents/:id/confirm (vedi architettura §5), mai da qui.
     return this.prisma.assetCustomField.create({
-      data: { ...dto, assetId, source: FieldSource.MANUAL },
+      data: {
+        ...dto,
+        assetId,
+        source: FieldSource.DECLARED,
+        confirmedByUserId: userId,
+        confirmedAt: new Date(),
+      },
     });
   }
 

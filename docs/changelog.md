@@ -2,6 +2,18 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-25 — B38: provenienza campo-per-campo per gli Asset
+
+Priorità più alta rimasta nell'allineamento Dimora (sbloccata da B2), limitata in v1 agli **Asset** — Room/House restano fuori scope.
+
+- `FieldSource` rinominato `MANUAL`/`AI_EXTRACTED` → `DECLARED`/`EXTRACTED`/`ATTESTED` (terzo valore predisposto per una futura verifica terza, nessun flusso lo scrive ancora).
+- Nuova tabella `AssetFieldProvenance` per i 7 campi strutturati di Asset (marca, modello, seriale, date, fornitore); `AssetCustomField` estesa con documento sorgente, chi e quando ha confermato.
+- `documents.service.ts` (conferma documento) ed `assets.service.ts` (modifica manuale) scrivono la provenienza corretta ad ogni scrittura.
+- Nuovo badge `ProvenanceBadge` in `Assets.tsx`: icona + tooltip ("Dichiarato da...", "Estratto da [documento], confermato da... il...") su ogni campo che ha un record di provenienza — assente sui valori scritti prima di questa modifica (provenienza sconosciuta, non un errore).
+- **Bug trovato in verifica e corretto**: la prima versione ri-etichettava come "appena dichiarato" qualunque campo presente nel form di modifica, anche se invariato (il form rimanda sempre tutti i 7 campi) — ora scrive provenienza solo se il valore è davvero cambiato rispetto a quello esistente.
+- Migrazione additiva, nessun backfill dei valori già esistenti; test estesi in `documents.service.spec.ts`; verificato dal vivo (modifica manuale → badge "Dichiarato", pulizia degli asset di test usati per la verifica).
+
+
 ## 2026-08-24 (3) — Palette "Smeraldo": UI più vivida
 
 Su richiesta dell'utente di colori più vivaci, proposte 3 direzioni via artifact (mockup della Dashboard reale) — l'utente ha scelto "Smeraldo", evoluzione satura della palette esistente.

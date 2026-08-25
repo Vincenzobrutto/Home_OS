@@ -43,9 +43,15 @@ enum AssetStatus {
   DUE
 }
 
+// Origine del VALORE, non se qualcuno l'ha approvato — quello è un fatto a
+// parte (vedi AssetFieldProvenance.confirmedByUserId/confirmedAt sotto):
+// ogni riga in DB è già di fatto "confermata" nell'atto stesso di scriverla.
+// ATTESTED è predisposto per una futura verifica terza (banche/assicurazioni,
+// vedi vision.md) — nessun codice lo scrive ancora oggi.
 enum FieldSource {
-  MANUAL
-  AI_EXTRACTED
+  DECLARED
+  EXTRACTED
+  ATTESTED
 }
 
 enum DocumentStatus {
@@ -173,6 +179,11 @@ model User {
   gmailConnection GmailConnection?
   driveConnection DriveConnection?
   sessions        Session[]
+  // Provenienza (B38): campi di Asset che questo utente ha confermato
+  // (scritti a mano, o accettati confermando un documento) — vedi
+  // AssetFieldProvenance/AssetCustomField.
+  confirmedFieldProvenance AssetFieldProvenance[]
+  confirmedCustomFields    AssetCustomField[]
 
   @@map("users")
 }
@@ -377,6 +388,7 @@ model Asset {
   confirmed                Boolean           @default(true)
 
   customFields                    AssetCustomField[]
+  fieldProvenance                 AssetFieldProvenance[]
   documents                       Document[]
   timelineEvents                  AssetTimelineEvent[]
   maintenancePlans                MaintenancePlan[]
@@ -392,9 +404,44 @@ model AssetCustomField {
   asset   Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
   label   String
   value   String
-  source  FieldSource @default(MANUAL)
+  source  FieldSource @default(DECLARED)
+  // Provenienza (B38): nulli per i campi già esistenti prima di questa
+  // modifica (non conosciamo la loro vera origine) e per i campi creati a
+  // mano — valorizzati solo quando source = EXTRACTED, dal documento e
+  // dall'utente che ha confermato la scrittura.
+  sourceDocumentId  String?   @map("source_document_id")
+  sourceDocument    Document? @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  confirmedByUserId String?   @map("confirmed_by_user_id")
+  confirmedByUser   User?     @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+  confirmedAt       DateTime? @map("confirmed_at")
 
   @@map("asset_custom_fields")
+}
+
+// Provenienza dei 7 campi strutturati "universali" di Asset (vedi commento
+// su Asset sotto) — a differenza di AssetCustomField questi campi vivono
+// come colonne dirette su Asset (servono tipizzati per query/ordinamento),
+// quindi la loro provenienza vive in una tabella satellite dedicata invece
+// che come colonne parallele per ognuno dei 7 campi. Un solo record per
+// (assetId, fieldName): v1 traccia solo la provenienza dell'ultimo valore
+// scritto, non uno storico di versioni precedenti.
+model AssetFieldProvenance {
+  id                String      @id @default(uuid())
+  assetId           String      @map("asset_id")
+  asset             Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  // Uno tra: installedAt, warrantyUntil, purchasedAt, serialNumber,
+  // manufacturer, model, supplier — stringa e non enum perché è il nome di
+  // un campo di Asset, non un valore di dominio a sé.
+  fieldName         String      @map("field_name")
+  origin            FieldSource
+  sourceDocumentId  String?     @map("source_document_id")
+  sourceDocument    Document?   @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  confirmedByUserId String?     @map("confirmed_by_user_id")
+  confirmedByUser   User?       @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+  confirmedAt       DateTime    @map("confirmed_at")
+
+  @@unique([assetId, fieldName])
+  @@map("asset_field_provenance")
 }
 
 model Document {
@@ -445,6 +492,10 @@ model Document {
   timelineEvents         AssetTimelineEvent[]
   maintenanceOccurrences MaintenanceOccurrence[]
   utilityBills           UtilityBill[]
+  // Provenienza (B38): campi di Asset (strutturati o liberi) che citano
+  // questo documento come fonte — vedi AssetFieldProvenance/AssetCustomField.
+  sourcedFieldProvenance AssetFieldProvenance[]
+  sourcedCustomFields    AssetCustomField[]
 
   @@unique([houseId, gmailMessageId])
   @@unique([houseId, driveFileId])

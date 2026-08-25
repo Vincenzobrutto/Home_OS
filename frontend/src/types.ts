@@ -158,12 +158,36 @@ export interface Room {
   planGeometry?: unknown;
 }
 
+// Origine del valore, non se qualcuno l'ha approvato (quello è un fatto a
+// parte: confirmedBy/confirmedAt) — vedi decisions.md B38. ATTESTED è
+// predisposto per una futura verifica terza, nessun flusso lo produce oggi.
+export type FieldOrigin = 'DECLARED' | 'EXTRACTED' | 'ATTESTED';
+
 export interface CustomField {
   id: string;
   assetId: string;
   label: string;
   value: string;
-  source: 'MANUAL' | 'AI_EXTRACTED';
+  source: FieldOrigin;
+  // Presenti solo per source EXTRACTED — assenti sui campi creati prima di
+  // B38 o inseriti a mano, vedi ProvenanceBadge.
+  sourceDocument?: { originalFilename: string } | null;
+  confirmedByUser?: { name: string | null; email: string } | null;
+  confirmedAt?: string | null;
+}
+
+// Provenienza di uno dei 7 campi strutturati "universali" di Asset (marca,
+// modello, seriale, date, fornitore) — vive in una tabella satellite perché
+// quei campi sono colonne dirette su Asset, non righe come CustomField.
+// Assente per un campo = provenienza sconosciuta (valore scritto prima che
+// esistesse questo tracciamento, vedi decisions.md B38), non un errore.
+export interface FieldProvenance {
+  id: string;
+  fieldName: string;
+  origin: FieldOrigin;
+  sourceDocument?: { originalFilename: string } | null;
+  confirmedByUser?: { name: string | null; email: string } | null;
+  confirmedAt: string;
 }
 
 export interface Asset {
@@ -197,6 +221,7 @@ export interface Asset {
   createdAt: string;
   updatedAt: string;
   customFields?: CustomField[];
+  fieldProvenance?: FieldProvenance[];
 }
 
 export interface ContactRef {

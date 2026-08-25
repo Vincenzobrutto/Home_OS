@@ -16,6 +16,10 @@ import { ConfirmUtilityBillDto } from './dto/confirm-utility-bill.dto';
 import { computeAssetStatus } from '../common/asset-status';
 import { parseFlexibleDate } from '../common/parse-date';
 import { computeDefaultWarrantyUntil } from '../common/warranty';
+import {
+  upsertAssetFieldProvenance,
+  type TrackedAssetField,
+} from '../common/field-provenance';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 
@@ -888,10 +892,10 @@ export class DocumentsService {
     const fieldsApplied =
       dto.applyFields &&
       fields.length > 0 &&
-      (await this.applyFieldsToAsset(assetId!, fields));
+      (await this.applyFieldsToAsset(userId, documentId, assetId!, fields));
     for (const siblingId of siblingAssetIds) {
       if (dto.applyFields && fields.length > 0) {
-        await this.applyFieldsToAsset(siblingId, fields);
+        await this.applyFieldsToAsset(userId, documentId, siblingId, fields);
       }
       await this.prisma.assetTimelineEvent.create({
         data: {
@@ -1090,6 +1094,8 @@ export class DocumentsService {
   // Ritorna true solo se qualcosa è stato effettivamente riempito, per la
   // cronologia (vedi confirm()).
   private async applyFieldsToAsset(
+    userId: string,
+    documentId: string,
     assetId: string,
     fields: [string, string][],
   ): Promise<boolean> {
@@ -1108,6 +1114,10 @@ export class DocumentsService {
       model?: string;
       supplier?: string;
     } = {};
+    // Provenienza (B38): solo i campi trovati davvero nel documento, non il
+    // default di garanzia calcolato più sotto — quello non l'ha "estratto"
+    // il documento, l'ha dedotto il sistema dalla data di acquisto.
+    const extractedFields = new Set<TrackedAssetField>();
     let customFieldCreated = false;
 
     for (const [label, value] of fields) {
@@ -1126,40 +1136,59 @@ export class DocumentsService {
       if (INSTALL_DATE_HINTS.some((h) => lower.includes(h))) {
         if (!asset.installedAt && !patch.installedAt) {
           const parsed = parseFlexibleDate(value);
-          if (parsed) patch.installedAt = parsed;
+          if (parsed) {
+            patch.installedAt = parsed;
+            extractedFields.add('installedAt');
+          }
         }
         continue;
       }
       if (WARRANTY_HINTS.some((h) => lower.includes(h))) {
         if (!asset.warrantyUntil && !patch.warrantyUntil) {
           const parsed = parseFlexibleDate(value);
-          if (parsed) patch.warrantyUntil = parsed;
+          if (parsed) {
+            patch.warrantyUntil = parsed;
+            extractedFields.add('warrantyUntil');
+          }
         }
         continue;
       }
       if (PURCHASE_DATE_HINTS.some((h) => lower.includes(h))) {
         if (!asset.purchasedAt && !patch.purchasedAt) {
           const parsed = parseFlexibleDate(value);
-          if (parsed) patch.purchasedAt = parsed;
+          if (parsed) {
+            patch.purchasedAt = parsed;
+            extractedFields.add('purchasedAt');
+          }
         }
         continue;
       }
       if (SERIAL_HINTS.some((h) => lower.includes(h))) {
-        if (!asset.serialNumber && !patch.serialNumber)
+        if (!asset.serialNumber && !patch.serialNumber) {
           patch.serialNumber = trimmedValue;
+          extractedFields.add('serialNumber');
+        }
         continue;
       }
       if (MANUFACTURER_HINTS.some((h) => lower.includes(h))) {
-        if (!asset.manufacturer && !patch.manufacturer)
+        if (!asset.manufacturer && !patch.manufacturer) {
           patch.manufacturer = trimmedValue;
+          extractedFields.add('manufacturer');
+        }
         continue;
       }
       if (MODEL_HINTS.some((h) => lower.includes(h))) {
-        if (!asset.model && !patch.model) patch.model = trimmedValue;
+        if (!asset.model && !patch.model) {
+          patch.model = trimmedValue;
+          extractedFields.add('model');
+        }
         continue;
       }
       if (SUPPLIER_HINTS.some((h) => lower.includes(h))) {
-        if (!asset.supplier && !patch.supplier) patch.supplier = trimmedValue;
+        if (!asset.supplier && !patch.supplier) {
+          patch.supplier = trimmedValue;
+          extractedFields.add('supplier');
+        }
         continue;
       }
 
@@ -1168,7 +1197,15 @@ export class DocumentsService {
       );
       if (!existing) {
         await this.prisma.assetCustomField.create({
-          data: { assetId, label, value, source: FieldSource.AI_EXTRACTED },
+          data: {
+            assetId,
+            label,
+            value,
+            source: FieldSource.EXTRACTED,
+            sourceDocumentId: documentId,
+            confirmedByUserId: userId,
+            confirmedAt: new Date(),
+          },
         });
         customFieldCreated = true;
       }
@@ -1185,6 +1222,15 @@ export class DocumentsService {
 
     if (Object.keys(patch).length > 0) {
       await this.prisma.asset.update({ where: { id: assetId }, data: patch });
+    }
+    for (const fieldName of extractedFields) {
+      await upsertAssetFieldProvenance(this.prisma, {
+        assetId,
+        fieldName,
+        origin: FieldSource.EXTRACTED,
+        confirmedByUserId: userId,
+        sourceDocumentId: documentId,
+      });
     }
     return Object.keys(patch).length > 0 || customFieldCreated;
   }

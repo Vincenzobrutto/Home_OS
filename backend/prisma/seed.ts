@@ -208,7 +208,7 @@ async function main() {
           create: asset.customFields.map((f) => ({
             label: f.label,
             value: f.value,
-            source: FieldSource.MANUAL,
+            source: FieldSource.DECLARED,
           })),
         },
         timelineEvents: {
