@@ -2,6 +2,10 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-25 (4) — Verifica B36 (Codex)
+
+Recuperato e verificato da GitHub il commit di Codex che implementa B36 (Property Profile strutturato, vedi voce sotto): merge fast-forward pulito, `npx prisma generate` (necessario dopo il pull, il client generato non è nel repo), build/test puliti su entrambi i lati (65/65), migrazione `20260825160000_add_property_profile` applicata al DB reale — puramente additiva, dati esistenti della casa reale verificati intatti dopo l'applicazione. Revisione del codice: `HouseFieldProvenance`/`changedPropertyFields` seguono correttamente il pattern origine/conferma di B38, incluso il controllo "solo se il valore è davvero cambiato" (lo stesso bug corretto in B38 non si è ripetuto qui). Verificato dal vivo: vista "Profilo casa" con i dati reali già presenti, aggiornamento di un campo tramite l'endpoint `PATCH .../property-profile` con badge di provenienza corretto — valore di prova rimosso subito dopo la verifica.
+
 ## 2026-08-25 (3) — B36: Property Profile strutturato
 
 - Nuova vista **Profilo casa** con dati identificativi, fisici, catastali, APE e agibilità, organizzati per fonte tipica e modificabili dall'utente.
