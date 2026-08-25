@@ -32,6 +32,7 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Dashboard con trend Home Score degli ultimi 12 mesi, selezione dimensione e ricalcolo manuale senza snapshot duplicati (B35).
 - Monitoraggio consumi elettrici da bollette confermate: confronto mensile YoY, variazione percentuale e installazioni Asset contestualizzate nel mese (B25).
 - **Blocco storico risolto**: l'autenticazione reale (B2, 2026-08-24) applica ora l'isolamento per utente richiesto dalla specifica Genesis — vedi `decisions.md` #32. Deduplica e ripresa precisa sono state completate con B33/B34.
+- Property Profile B36: scheda catastale, fisica, energetica e di agibilità; completezza, provenienza campo-per-campo e proposte AI da documenti confermate senza sovrascrivere valori esistenti (2026-08-25).
 
 ## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)
 
@@ -40,7 +41,7 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 Ordine consigliato prima di ampliare il prodotto:
 
 1. ~~autenticazione e isolamento per utente~~ — risolto 2026-08-24 (B2, `decisions.md` #32);
-2. Property Profile strutturato — dati identificativi, catastali ed energetici con fonte esplicita;
+2. ~~Property Profile strutturato~~ — completato in v1 il 2026-08-25 (B36, `decisions.md` #36); integrazioni dirette con registri pubblici e verifica terza restano future;
 3. decisione sul livello `System` — validare con casi reali se serve `House → System → Asset`, evitando una migrazione puramente nominale;
 4. ~~provenienza campo-per-campo e livelli di affidabilità~~ — risolto 2026-08-25 per gli Asset (B38, `decisions.md` #34); Room/House restano fuori scope;
 5. progettazione legale e tecnica della trasferibilità — solo dopo identità, permessi e separazione dei dati personali.

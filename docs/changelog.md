@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-25 (3) — B36: Property Profile strutturato
+
+- Nuova vista **Profilo casa** con dati identificativi, fisici, catastali, APE e agibilità, organizzati per fonte tipica e modificabili dall'utente.
+- `House` estesa con campi tipizzati e migrazione additiva; completezza calcolata sui dati essenziali, senza confondere le diverse definizioni di superficie.
+- Nuova `HouseFieldProvenance`: modifiche manuali `DECLARED`, valori confermati da documenti `EXTRACTED`, con documento/utente/data visibili tramite badge.
+- Claude riconosce `property_profile` per visure, APE, atti, agibilità e relazioni tecniche. Inbox permette revisione/correzione; la conferma riempie solo campi vuoti e segnala i conflitti senza sovrascrivere.
+- Verifica: backend build/lint puliti e 65/65 test; frontend build pulita e lint senza errori (restano i 3 warning hook storici).
+
 ## 2026-08-25 (2) — B37: discovery su `System`, nessuna migrazione + un doppione corretto
 
 Discovery richiesta dal backlog prima di scrivere codice: nessuna entità `System` introdotta, il bisogno non è emerso sull'unico caso reale disponibile (fotovoltaico e climatizzatori confermati come Asset indipendenti, nessuna scomposizione necessaria) — dettaglio in `decisions.md` #35. Rimane una decisione provvisoria (n=1, non i ~10 casi auspicati), da riaprire con altri utenti reali.

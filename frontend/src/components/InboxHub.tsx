@@ -5,7 +5,7 @@ import { SectionLabel } from './Shared';
 import { InboxView } from './Inbox';
 import { GmailView } from './Gmail';
 import { DriveView } from './Drive';
-import type { Asset, Room } from '../types';
+import type { Asset, House, Room } from '../types';
 
 export type InboxTab = 'documents' | 'gmail' | 'drive';
 
@@ -15,10 +15,12 @@ export type InboxTab = 'documents' | 'gmail' | 'drive';
 // confluiscono nello stesso tab "Documenti" una volta importati.
 export function InboxHub({
   houseId,
+  house,
   assets,
   rooms,
   onAssetLinked,
   onRoomsChanged,
+  onPropertyProfileChanged,
   gmailCandidateCount,
   driveCandidateCount,
   onGmailCandidatesChanged,
@@ -30,10 +32,12 @@ export function InboxHub({
   onDriveNoticeShown,
 }: {
   houseId: string;
+  house: House;
   assets: Asset[];
   rooms: Room[];
   onAssetLinked: () => void;
   onRoomsChanged: () => void;
+  onPropertyProfileChanged: () => void;
   gmailCandidateCount: number;
   driveCandidateCount: number;
   onGmailCandidatesChanged: () => void;
@@ -117,10 +121,12 @@ export function InboxHub({
       {tab === 'documents' && (
         <InboxView
           houseId={houseId}
+          house={house}
           assets={assets}
           rooms={rooms}
           onAssetLinked={onAssetLinked}
           onRoomsChanged={onRoomsChanged}
+          onPropertyProfileChanged={onPropertyProfileChanged}
           hideHeader
         />
       )}

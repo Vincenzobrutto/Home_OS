@@ -184,6 +184,7 @@ model User {
   // AssetFieldProvenance/AssetCustomField.
   confirmedFieldProvenance AssetFieldProvenance[]
   confirmedCustomFields    AssetCustomField[]
+  confirmedHouseFieldProvenance HouseFieldProvenance[]
 
   @@map("users")
 }
@@ -249,6 +250,7 @@ model House {
   owner             User          @relation("HouseOwner", fields: [ownerId], references: [id])
   name              String
   city              String?
+  province          String?
   surfaceSqm        Decimal?      @map("surface_sqm")
   roomsCount        Int?          @map("rooms_count")
   buildYear         Int?          @map("build_year")
@@ -267,6 +269,33 @@ model House {
   postalCode        String?       @map("postal_code")
   propertyType      String?       @map("property_type")
   country           String?
+  cadastralMunicipality     String?  @map("cadastral_municipality")
+  cadastralMunicipalityCode String?  @map("cadastral_municipality_code")
+  cadastralSection          String?  @map("cadastral_section")
+  cadastralSheet            String?  @map("cadastral_sheet")
+  cadastralParcel           String?  @map("cadastral_parcel")
+  cadastralSubaltern        String?  @map("cadastral_subaltern")
+  cadastralCategory         String?  @map("cadastral_category")
+  cadastralClass            String?  @map("cadastral_class")
+  cadastralConsistency      String?  @map("cadastral_consistency")
+  cadastralSurfaceSqm       Decimal? @map("cadastral_surface_sqm") @db.Decimal(10, 2)
+  cadastralIncome           Decimal? @map("cadastral_income") @db.Decimal(12, 2)
+  floorsCount               Int?     @map("floors_count")
+  usableSurfaceSqm          Decimal? @map("usable_surface_sqm") @db.Decimal(10, 2)
+  heatedSurfaceSqm          Decimal? @map("heated_surface_sqm") @db.Decimal(10, 2)
+  renovationYear           Int?     @map("renovation_year")
+  apeCode                   String?  @map("ape_code")
+  apeIssuedAt               DateTime? @map("ape_issued_at") @db.Date
+  apeExpiresAt              DateTime? @map("ape_expires_at") @db.Date
+  energyClass               String?  @map("energy_class")
+  epglNren                  Decimal? @map("epgl_nren") @db.Decimal(12, 3)
+  epglRen                   Decimal? @map("epgl_ren") @db.Decimal(12, 3)
+  co2Emissions              Decimal? @map("co2_emissions") @db.Decimal(12, 3)
+  climateZone               String?  @map("climate_zone")
+  energyUseCategory         String?  @map("energy_use_category")
+  habitabilityStatus        String?  @map("habitability_status")
+  habitabilityDate          DateTime? @map("habitability_date") @db.Date
+  habitabilityProtocol      String?  @map("habitability_protocol")
   genesisStatus     GenesisStatus @default(NOT_STARTED) @map("genesis_status")
   genesisStep       GenesisStep   @default(WELCOME) @map("genesis_step")
 
@@ -282,8 +311,28 @@ model House {
   scoreSnapshots  ScoreSnapshot[]
   timelineEvents  HouseTimelineEvent[]
   utilityBills    UtilityBill[]
+  fieldProvenance HouseFieldProvenance[]
 
   @@map("houses")
+}
+
+// Provenienza dell'ultimo valore noto dei campi strutturati del Property
+// Profile. Come per AssetFieldProvenance, origine e conferma sono due assi
+// distinti e non viene inventato uno storico retroattivo per dati preesistenti.
+model HouseFieldProvenance {
+  id                String      @id @default(uuid())
+  houseId           String      @map("house_id")
+  house             House       @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  fieldName         String      @map("field_name")
+  origin            FieldSource
+  sourceDocumentId  String?     @map("source_document_id")
+  sourceDocument    Document?   @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  confirmedByUserId String?     @map("confirmed_by_user_id")
+  confirmedByUser   User?       @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+  confirmedAt       DateTime    @map("confirmed_at")
+
+  @@unique([houseId, fieldName])
+  @@map("house_field_provenance")
 }
 
 // Piano dell'edificio (es. "Piano terra", "Primo piano") — concetto nuovo,
@@ -496,6 +545,7 @@ model Document {
   // questo documento come fonte — vedi AssetFieldProvenance/AssetCustomField.
   sourcedFieldProvenance AssetFieldProvenance[]
   sourcedCustomFields    AssetCustomField[]
+  sourcedHouseFieldProvenance HouseFieldProvenance[]
 
   @@unique([houseId, gmailMessageId])
   @@unique([houseId, driveFileId])

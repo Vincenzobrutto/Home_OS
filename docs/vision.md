@@ -44,6 +44,7 @@ Il centro del sistema è l'**Asset** (caldaia, impianto elettrico, climatizzator
 - **Dashboard**: promemoria (garanzie scadute, asset senza documenti) cliccabili per andare dritti all'asset.
 - **Genesis e Home Score**: onboarding guidato verso il primo Digital Twin, score trasparente su cinque dimensioni, Home Detective e andamento storico ricalcolabile sui dati correnti.
 - **Consumi elettrici**: bollette trasformate, previa conferma, in periodi interrogabili; confronto mensile con l'anno precedente e contesto degli Asset installati nello stesso periodo, senza attribuzioni causali inventate.
+- **Profilo casa**: dati identificativi, fisici, catastali, APE e agibilità in una scheda strutturata con indicatore di completezza e provenienza visibile; APE, visure e atti possono proporre campi, applicati solo dopo conferma e mai sopra valori esistenti.
 - **Manutenzione programmata**: piani una tantum o ricorrenti per Asset, preavviso configurabile, tecnico abituale, sospensione/riattivazione, completamento con documento e storico; scadenze imminenti o superate visibili in Dashboard.
 - **Mobile**: sidebar a scomparsa, layout responsive, planimetria utilizzabile a touch.
 
@@ -56,9 +57,9 @@ Per lo stato dettagliato di cosa è fatto/in corso/pianificato vedi `roadmap.md`
 | Asset, ambienti, documenti, eventi e manutenzioni collegati alla casa | Implementata |
 | Estrazione AI con conferma utente e acquisizione Gmail/Drive | Implementata nel prototipo; da rendere production-grade |
 | Home Score, Issue e Recommendation | Implementata in versione MVP |
-| Property Profile catastale/energetico strutturato | Parziale: alcuni dati casa e documenti house-level esistono, manca il profilo completo |
+| Property Profile catastale/energetico strutturato | Implementato in v1 (B36); integrazioni dirette con registri pubblici e conformità/verifica terza restano future |
 | Entità `System` distinta dagli Asset | Da decidere e modellare; oggi gli impianti sono rappresentati come Asset/tipi di Asset |
-| Provenienza e livello di affidabilità per singolo dato | Parziale: campo-per-campo per gli Asset da B38 (origine + chi/quando ha confermato + documento sorgente), non ancora per Room/House, nessuno storico multi-versione |
+| Provenienza e livello di affidabilità per singolo dato | Campo-per-campo per Asset (B38) e House/Property Profile (B36); Room e storico multi-versione restano fuori scope, `ATTESTED` non è ancora prodotto da alcun flusso |
 | Autenticazione, ruoli e isolamento multiutente | Autenticazione reale implementata (B2); ruoli/isolamento oggi solo OWNER per casa, manca l'UI di invito multi-utente (B12) |
 | Trasferimento del record al nuovo proprietario | Visione futura, subordinata a identità, permessi, separazione dati e verifica legale |
 | Record certificato/verificato per banche o assicurazioni | Non disponibile; usare "record strutturato con provenienza tracciabile" finché non esiste una verifica terza |

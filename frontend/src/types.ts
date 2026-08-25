@@ -12,6 +12,7 @@ export interface House {
   ownerId: string;
   name: string;
   city: string | null;
+  province: string | null;
   surfaceSqm: string | null;
   roomsCount: number | null;
   buildYear: number | null;
@@ -25,6 +26,35 @@ export interface House {
   postalCode: string | null;
   propertyType: string | null;
   country: string | null;
+  cadastralMunicipality: string | null;
+  cadastralMunicipalityCode: string | null;
+  cadastralSection: string | null;
+  cadastralSheet: string | null;
+  cadastralParcel: string | null;
+  cadastralSubaltern: string | null;
+  cadastralCategory: string | null;
+  cadastralClass: string | null;
+  cadastralConsistency: string | null;
+  cadastralSurfaceSqm: string | null;
+  cadastralIncome: string | null;
+  floorsCount: number | null;
+  usableSurfaceSqm: string | null;
+  heatedSurfaceSqm: string | null;
+  renovationYear: number | null;
+  apeCode: string | null;
+  apeIssuedAt: string | null;
+  apeExpiresAt: string | null;
+  energyClass: string | null;
+  epglNren: string | null;
+  epglRen: string | null;
+  co2Emissions: string | null;
+  climateZone: string | null;
+  energyUseCategory: string | null;
+  habitabilityStatus: string | null;
+  habitabilityDate: string | null;
+  habitabilityProtocol: string | null;
+  propertyProfileCompleteness?: number;
+  fieldProvenance?: FieldProvenance[];
   genesisStatus: GenesisStatus;
   genesisStep: GenesisStep;
 }
@@ -384,7 +414,13 @@ export interface UtilityBillFields {
   fields: [string, string][];
 }
 
-export type ExtractedFields = AssetDocumentFields | FloorPlanFields | UtilityBillFields;
+export interface PropertyProfileFields {
+  kind: 'property_profile';
+  docType: string;
+  fields: Record<string, string | number | null>;
+}
+
+export type ExtractedFields = AssetDocumentFields | FloorPlanFields | UtilityBillFields | PropertyProfileFields;
 
 export interface EnergyConsumptionMonth {
   month: number;

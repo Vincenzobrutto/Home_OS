@@ -12,6 +12,7 @@ import type { AuthenticatedRequest } from '../auth/authenticated-request';
 import { HousesService } from './houses.service';
 import { CreateHouseDto } from './dto/create-house.dto';
 import { UpdateHouseDto } from './dto/update-house.dto';
+import { UpdatePropertyProfileDto } from './dto/update-property-profile.dto';
 
 @Controller()
 export class HousesController {
@@ -37,6 +38,15 @@ export class HousesController {
     @Body() dto: UpdateHouseDto,
   ) {
     return this.housesService.update(req.user.id, id, dto);
+  }
+
+  @Patch('houses/:id/property-profile')
+  updatePropertyProfile(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePropertyProfileDto,
+  ) {
+    return this.housesService.updatePropertyProfile(req.user.id, id, dto);
   }
 
   // Le case dell'utente della sessione corrente — non più

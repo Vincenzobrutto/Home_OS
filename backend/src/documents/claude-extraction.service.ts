@@ -54,7 +54,29 @@ Esempio concreto, frequente sulle bollette italiane: il documento riporta testua
 }
 Stima x/y/width/height dalla posizione e proporzione visibili nel disegno, anche approssimativamente — non serve precisione millimetrica, serve una disposizione relativa plausibile.
 
-2) Per ogni altro documento (fattura, certificato, manuale, ecc.):
+2) Se il documento descrive la CASA NEL SUO INSIEME (visura catastale, APE, atto, certificato/segnalazione di agibilità o relazione tecnica):
+{
+  "kind": "property_profile",
+  "docType": "Visura catastale | APE | Atto | Agibilità | Relazione tecnica",
+  "confidence": numero 0-100,
+  "isHomeRelated": true,
+  "fields": {
+    "address": "testo", "postalCode": "testo", "city": "testo", "province": "testo", "country": "testo",
+    "propertyType": "testo", "surfaceSqm": numero, "buildYear": numero, "renovationYear": numero,
+    "floorsCount": numero, "usableSurfaceSqm": numero, "heatedSurfaceSqm": numero,
+    "cadastralMunicipality": "testo", "cadastralMunicipalityCode": "testo", "cadastralSection": "testo",
+    "cadastralSheet": "testo", "cadastralParcel": "testo", "cadastralSubaltern": "testo",
+    "cadastralCategory": "testo", "cadastralClass": "testo", "cadastralConsistency": "testo",
+    "cadastralSurfaceSqm": numero, "cadastralIncome": numero,
+    "apeCode": "testo", "apeIssuedAt": "YYYY-MM-DD", "apeExpiresAt": "YYYY-MM-DD",
+    "energyClass": "testo", "epglNren": numero, "epglRen": numero, "co2Emissions": numero,
+    "climateZone": "testo", "energyUseCategory": "testo",
+    "habitabilityStatus": "Presente", "habitabilityDate": "YYYY-MM-DD", "habitabilityProtocol": "testo"
+  }
+}
+Includi in fields SOLO chiavi il cui valore compare realmente nel documento. Non equiparare superficie catastale, calpestabile, dichiarata e utile riscaldata. Una planimetria da sola non attesta conformità urbanistica o agibilità. Non estrarre intestatari, quote, ipoteche, prezzo d'acquisto, codici fiscali, POD/PDR o altri dati personali/economici non necessari al profilo fisico dell'immobile.
+
+3) Per ogni altro documento (fattura, certificato, manuale, ecc.):
 {
   "kind": "asset_document",
   "docType": "tipo di documento in italiano, es. Fattura, Certificato di conformità, Manuale",
@@ -72,7 +94,7 @@ Stima x/y/width/height dalla posizione e proporzione visibili nel disegno, anche
   "fields": [["Etichetta campo", "Valore"], ...]
 }
 
-Regole per il caso 2:
+Regole per il caso 3:
 - Nei "fields" includi solo dati realmente presenti nel documento: fornitore, date, importi, numeri di certificazione, modelli, garanzie. Non inventare mai un valore assente.
 - Quando il documento permette di distinguere marca/produttore e modello (es. "De'Longhi Rivelia EXAM440.35.B"), riportali come due campi separati "Marca" e "Modello" invece di un'unica stringa combinata — servono a compilare due dati distinti dell'asset, non uno solo.
 - Se il documento sembra riferirsi a un tipo di asset non nella lista, imposta "suggestedAssetType" a null e descrivi comunque i campi trovati.
@@ -136,8 +158,19 @@ export interface UtilityBillResult {
   fields: [string, string][];
 }
 
+export interface PropertyProfileResult {
+  kind: 'property_profile';
+  docType: string;
+  confidence: number;
+  isHomeRelated: boolean;
+  fields: Record<string, string | number | null>;
+}
+
 export type ExtractionResult =
-  AssetDocumentResult | FloorPlanResult | UtilityBillResult;
+  | AssetDocumentResult
+  | FloorPlanResult
+  | UtilityBillResult
+  | PropertyProfileResult;
 
 // Input/output del solo arricchimento via ricerca online (pulsante "Cerca
 // online" in Inbox, su richiesta esplicita dell'utente — vedi

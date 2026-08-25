@@ -11,6 +11,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AccessControlService } from '../access-control/access-control.service';
 import { ClaudeExtractionService } from './claude-extraction.service';
 import { ConfirmDocumentDto } from './dto/confirm-document.dto';
+import { ConfirmPropertyProfileDto } from './dto/confirm-property-profile.dto';
+import {
+  TRACKED_PROPERTY_FIELDS,
+  propertyProvenanceUpsert,
+  type TrackedPropertyField,
+} from '../common/property-profile';
 import { ConfirmFloorPlanDto } from './dto/confirm-floor-plan.dto';
 import { ConfirmUtilityBillDto } from './dto/confirm-utility-bill.dto';
 import { computeAssetStatus } from '../common/asset-status';
@@ -629,6 +635,28 @@ export class DocumentsService {
       };
     }
 
+    if (result.kind === 'property_profile') {
+      const allowed = new Set<string>(TRACKED_PROPERTY_FIELDS);
+      const fields = Object.fromEntries(
+        Object.entries(result.fields ?? {}).filter(
+          ([key, value]) => allowed.has(key) && value !== null && value !== '',
+        ),
+      );
+      return {
+        isHomeRelated: result.isHomeRelated,
+        data: {
+          status: DocumentStatus.ANALYZED,
+          docType: result.docType,
+          aiConfidence: result.confidence,
+          extractedFields: {
+            kind: 'property_profile',
+            docType: result.docType,
+            fields,
+          },
+        },
+      };
+    }
+
     // Matching per tipo + nome (architettura §5 punto 4): il tipo da solo
     // non basta a scegliere QUALE asset suggerire — "elettrodomestico" da
     // solo raggruppa forno, frigo, microonde, friggitrice ad aria ecc. nella
@@ -789,6 +817,86 @@ export class DocumentsService {
     );
   }
 
+  async confirmPropertyProfile(
+    userId: string,
+    documentId: string,
+    dto: ConfirmPropertyProfileDto,
+  ) {
+    const document = await this.getDocumentOrThrow(userId, documentId);
+    if (this.kindOf(document) !== 'property_profile') {
+      throw new BadRequestException(
+        'Il documento non contiene una proposta di Property Profile.',
+      );
+    }
+    const house = await this.prisma.house.findUnique({
+      where: { id: document.houseId },
+    });
+    if (!house)
+      throw new NotFoundException(`House ${document.houseId} non trovata`);
+
+    const requested = dto.fields as Partial<
+      Record<TrackedPropertyField, unknown>
+    >;
+    const updateData: Record<string, unknown> = {};
+    const appliedFields: TrackedPropertyField[] = [];
+    const conflicts: TrackedPropertyField[] = [];
+    const dateFields = new Set<TrackedPropertyField>([
+      'apeIssuedAt',
+      'apeExpiresAt',
+      'habitabilityDate',
+    ]);
+
+    for (const fieldName of TRACKED_PROPERTY_FIELDS) {
+      const proposed = requested[fieldName];
+      if (proposed === undefined || proposed === null || proposed === '')
+        continue;
+      const current = house[fieldName];
+      if (current !== null && current !== undefined && current !== '') {
+        conflicts.push(fieldName);
+        continue;
+      }
+      updateData[fieldName] = dateFields.has(fieldName)
+        ? new Date(typeof proposed === 'string' ? proposed : '')
+        : proposed;
+      appliedFields.push(fieldName);
+    }
+
+    const operations: Prisma.PrismaPromise<unknown>[] = [];
+    if (appliedFields.length > 0) {
+      operations.push(
+        this.prisma.house.update({
+          where: { id: document.houseId },
+          data: updateData,
+        }),
+      );
+      operations.push(
+        ...appliedFields.map((fieldName) =>
+          this.prisma.houseFieldProvenance.upsert(
+            propertyProvenanceUpsert(
+              fieldName,
+              document.houseId,
+              userId,
+              FieldSource.EXTRACTED,
+              documentId,
+            ),
+          ),
+        ),
+      );
+    }
+    operations.push(
+      this.prisma.document.update({
+        where: { id: documentId },
+        data: {
+          status: DocumentStatus.CONFIRMED,
+          confirmedAt: new Date(),
+          houseLevel: true,
+        },
+      }),
+    );
+    await this.prisma.$transaction(operations);
+    return { appliedFields, conflicts };
+  }
+
   async confirm(userId: string, documentId: string, dto: ConfirmDocumentDto) {
     const document = await this.getDocumentOrThrow(userId, documentId);
     if (this.kindOf(document) === 'floor_plan') {
@@ -799,6 +907,11 @@ export class DocumentsService {
     if (this.kindOf(document) === 'utility_bill') {
       throw new BadRequestException(
         'Questo documento è una bolletta elettrica: usa /documents/:id/confirm-utility-bill.',
+      );
+    }
+    if (this.kindOf(document) === 'property_profile') {
+      throw new BadRequestException(
+        'Questo documento contiene dati dell’immobile: usa /documents/:id/confirm-property-profile.',
       );
     }
     if (!dto.assetId && !dto.createAssetType && !dto.linkToHouse) {

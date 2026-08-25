@@ -2,7 +2,7 @@
 
 Digital twin di una casa: raccoglie i documenti che la riguardano (fatture, certificati, manuali, planimetrie) e li collega agli Asset fisici della casa (caldaia, impianto elettrico, elettrodomestici...), non li archivia genericamente. Vedi [`docs/vision.md`](docs/vision.md) per l'obiettivo completo.
 
-**HomeOS Genesis** (novità 2026-08-04) è il percorso guidato che porta una casa appena creata a un primo Digital Twin utile in pochi minuti: informazioni essenziali, documenti, una scansione guidata (oggi **dimostrativa**, non una vera analisi di foto/video), revisione/conferma di ciò che propone, un primo **Home Score** (0–100, motivato dimensione per dimensione) con osservazioni proattive. Vedi [`docs/genesis-architecture.md`](docs/genesis-architecture.md) per il dettaglio tecnico e le limitazioni note (nessuna autenticazione, nessuna deduplica automatica contro dati già esistenti).
+**HomeOS Genesis** (novità 2026-08-04) è il percorso guidato che porta una casa appena creata a un primo Digital Twin utile in pochi minuti: informazioni essenziali, documenti, una scansione guidata (oggi **dimostrativa**, non una vera analisi di foto/video), revisione/conferma di ciò che propone, un primo **Home Score** (0–100, motivato dimensione per dimensione) con osservazioni proattive. Vedi [`docs/genesis-architecture.md`](docs/genesis-architecture.md); autenticazione e deduplica assistita sono state aggiunte successivamente con B2/B33.
 
 ## Struttura del repository
 
@@ -20,7 +20,7 @@ homeos-project/
 
 **Test automatici**: il backend usa Jest e copre le prime regole di dominio su stato/garanzia Asset, pipeline documentale e percorso Genesis (Home Score, Home Detective); la copertura resta parziale. Il frontend non ha alcun framework di test configurato. Il lavoro residuo è tracciato in [`docs/backlog.md`](docs/backlog.md).
 
-**Limitazioni note**: nessuna autenticazione/sessione reale sulle API (un solo utente bootstrap, nessun isolamento tra case — vedi `backlog.md` B2); la scansione guidata Genesis è dimostrativa, non una vera analisi di foto/video (vedi `genesis-architecture.md` §9 per il dettaglio completo dei limiti del prototipo).
+**Limitazioni note**: la scansione guidata Genesis è dimostrativa, non una vera analisi di foto/video; i token OAuth Google sono ancora salvati in chiaro e vanno cifrati prima di un deploy pubblico (vedi `backlog.md` B10).
 
 **Repository Git**: il progetto è versionato su GitHub; i `.gitignore` di root, `backend/` e `frontend/` escludono dipendenze, build, file `.env` e upload locali.
 

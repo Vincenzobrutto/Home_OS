@@ -1,10 +1,10 @@
 # Handoff
 
-Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato l'ultima volta il 2026-08-04 dopo l'integrazione di **HomeOS Genesis MVP** su `main`. Per il dettaglio storico delle sessioni precedenti vedi [`changelog.md`](changelog.md).
+Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato il 2026-08-25 dopo autenticazione, provenienza e **Property Profile B36** su `main`. Per il dettaglio storico vedi [`changelog.md`](changelog.md).
 
 ## Stato attuale del progetto
 
-MVP funzionante, uso locale/LAN (nessuna autenticazione, nessun deploy pubblico). Backend e frontend compilano con i comandi documentati sotto — verificato in questa sessione, non solo dichiarato. Il repository è versionato su GitHub e il branch di riferimento è `main`.
+MVP funzionante, uso locale/LAN, con autenticazione a sessione e isolamento per casa; nessun deploy pubblico. Backend e frontend compilano con i comandi documentati sotto. Il repository è versionato su GitHub e il branch di riferimento è `main`.
 
 **Novità 2026-08-04 — HomeOS Genesis è ora su `main`**: percorso guidato di onboarding (wizard 6 step) che porta una casa nuova a un primo Digital Twin. B33 protegge dai duplicati e B34 persiste lo step preciso, ricaricando l'ultima scansione quando si riprende Review. **Prima di lavorarci leggi [`genesis-architecture.md`](genesis-architecture.md) e [`decisions.md`](decisions.md) #25-#28**.
 
@@ -85,15 +85,15 @@ npm install
 npm run dev
 ```
 
-Il repository contiene ora 13 migrazioni, inclusa `20260804143000_add_utility_bills` (B25, additiva). Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare la vista Energia.
+Il repository contiene ora 16 migrazioni, inclusa `20260825160000_add_property_profile` (B36, additiva). Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare Profilo casa.
 
-### Lint, build, test — risultati verificati il 2026-08-04
+### Lint, build, test — risultati verificati il 2026-08-25
 
 | Comando | Backend | Frontend |
 |---|---|---|
 | `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~805 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ✅ 0 errori, 0 warning | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx), invariati |
-| `npm run test` | ✅ 64/64 (inclusi consumi, conferma bolletta e funzionalità Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 65/65 (inclusi consumi, Property Profile e funzionalità Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Verificato anche **end-to-end nel browser** (non solo unit test): l'intero wizard Genesis eseguito sulla casa reale — creazione stanze/asset dalla scansione demo, calcolo Home Score, generazione Issue/Recommendation coerenti. Dettaglio in `changelog.md` (2026-08-04).
 
@@ -122,7 +122,7 @@ Nessun valore segreto è presente in questo documento o nei file `.env.example` 
 
 ## Debito tecnico
 
-- Nessuna autenticazione/sessione sulle API — `backlog.md` B2. **Blocca anche l'isolamento per utente di Genesis** (vedi `decisions.md` #25) — priorità alzata.
+- Autenticazione/sessione B2 completata; restano rate limiting del login e reset password via email come possibili evoluzioni.
 - Token OAuth Gmail/Drive salvati in chiaro in DB — `backlog.md` B10.
 - Test automatici backend ancora parziali (buona copertura di dominio, inclusi i motori Genesis), frontend assenti del tutto — `backlog.md` B1, B1b.
 - Navigazione senza URL reali (niente back/forward browser, niente link condivisibili) — `backlog.md` B11.

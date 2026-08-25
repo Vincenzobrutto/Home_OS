@@ -4,6 +4,7 @@ import {
   Inbox as InboxIcon,
   DoorOpen,
   Building2,
+  ClipboardList,
   FileStack,
   Users,
   Sparkles,
@@ -25,7 +26,8 @@ export type View =
   | 'contacts'
   | 'contact-detail'
   | 'genesis'
-  | 'energy';
+  | 'energy'
+  | 'property-profile';
 
 export function Sidebar({
   view,
@@ -62,6 +64,7 @@ export function Sidebar({
   // ricordare quale integrazione l'ha trovato.
   const items: { id: View; label: string; icon: typeof Home; badge?: number }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
+    { id: 'property-profile', label: 'Profilo casa', icon: ClipboardList },
     { id: 'inbox', label: 'Inbox', icon: InboxIcon, badge: (gmailCandidateCount + driveCandidateCount) || undefined },
     { id: 'rooms', label: 'Ambienti', icon: DoorOpen },
     { id: 'assets', label: 'Asset', icon: Building2 },

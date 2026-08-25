@@ -16,6 +16,7 @@ import { LoginScreen } from './components/LoginScreen';
 import { HouseDocumentsView } from './components/HouseDocuments';
 import { GenesisWizard } from './components/Genesis';
 import { EnergyConsumption } from './components/EnergyConsumption';
+import { PropertyProfile } from './components/PropertyProfile';
 
 type AssetWithFields = Asset & { customFields: CustomField[] };
 
@@ -327,13 +328,18 @@ export default function App() {
             openInbox={() => setView('inbox')}
           />
         )}
+        {view === 'property-profile' && (
+          <PropertyProfile house={house} onHouseChanged={setHouse} />
+        )}
         {view === 'inbox' && (
           <InboxHub
             houseId={house.id}
+            house={house}
             assets={assets}
             rooms={rooms}
             onAssetLinked={refreshAssets}
             onRoomsChanged={refreshRooms}
+            onPropertyProfileChanged={() => loadHouseData(house.id)}
             gmailCandidateCount={gmailCandidateCount}
             driveCandidateCount={driveCandidateCount}
             onGmailCandidatesChanged={refreshGmailCandidateCount}

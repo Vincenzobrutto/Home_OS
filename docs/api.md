@@ -20,6 +20,7 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/houses` | crea casa (owner = utente della sessione, non più un `ownerId` nel body), genera `code` (`CASA-####`) e la `HouseMembership` `OWNER` |
 | GET | `/houses/:id` | dettaglio |
 | PATCH | `/houses/:id` | anche `floorPlanRotation` |
+| PATCH | `/houses/:id/property-profile` | modifica esplicita del profilo; registra provenienza `DECLARED` solo per i valori realmente cambiati |
 | GET | `/houses` | case dell'utente della sessione corrente (era `/users/:userId/houses`) |
 
 ## Rooms
@@ -57,6 +58,7 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/documents/:id/confirm` | scrittura reale: `{ assetId }` **oppure** `{ createAssetType, assetName?, roomId? }` **oppure** `{ linkToHouse: true }` |
 | POST | `/documents/:id/confirm-floorplan` | conferma ambienti estratti da una planimetria caricata |
 | POST | `/documents/:id/confirm-utility-bill` | conferma periodi elettrici estratti e crea `UtilityBill` atomicamente |
+| POST | `/documents/:id/confirm-property-profile` | conferma i dati casa estratti; riempie solo campi vuoti, registra provenienza `EXTRACTED`, restituisce campi applicati/conflitti |
 | GET | `/houses/:houseId/gmail-candidates` | documenti trovati su Gmail non ancora importati |
 | GET | `/houses/:houseId/drive-candidates` | idem per Google Drive |
 | POST | `/documents/:id/import-candidate` | promuove un candidato Gmail/Drive a documento normale (`importedAt`) |

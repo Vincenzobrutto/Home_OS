@@ -1,8 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { FieldSource, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessControlService } from '../access-control/access-control.service';
 import { CreateHouseDto } from './dto/create-house.dto';
 import { UpdateHouseDto } from './dto/update-house.dto';
+import { UpdatePropertyProfileDto } from './dto/update-property-profile.dto';
+import {
+  changedPropertyFields,
+  propertyProfileCompleteness,
+  propertyProvenanceUpsert,
+} from '../common/property-profile';
+
+const PROPERTY_PROVENANCE_INCLUDE = {
+  sourceDocument: { select: { originalFilename: true } },
+  confirmedByUser: { select: { name: true, email: true } },
+} as const;
 
 @Injectable()
 export class HousesService {
@@ -42,16 +54,45 @@ export class HousesService {
     await this.accessControl.assertHouseAccess(userId, id);
     const house = await this.prisma.house.findUnique({
       where: { id },
-      include: { rooms: true, assets: true },
+      include: {
+        rooms: true,
+        assets: true,
+        fieldProvenance: { include: PROPERTY_PROVENANCE_INCLUDE },
+      },
     });
     if (!house) {
       throw new NotFoundException(`House ${id} non trovata`);
     }
-    return house;
+    return {
+      ...house,
+      propertyProfileCompleteness: propertyProfileCompleteness(house),
+    };
   }
 
   async update(userId: string, id: string, dto: UpdateHouseDto) {
     await this.findOne(userId, id);
     return this.prisma.house.update({ where: { id }, data: dto });
+  }
+
+  async updatePropertyProfile(
+    userId: string,
+    id: string,
+    dto: UpdatePropertyProfileDto,
+  ) {
+    await this.accessControl.assertHouseAccess(userId, id);
+    const existing = await this.prisma.house.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`House ${id} non trovata`);
+
+    const changed = changedPropertyFields(dto, existing);
+    const data: Prisma.HouseUpdateInput = { ...dto };
+    await this.prisma.$transaction([
+      this.prisma.house.update({ where: { id }, data }),
+      ...changed.map((fieldName) =>
+        this.prisma.houseFieldProvenance.upsert(
+          propertyProvenanceUpsert(fieldName, id, userId, FieldSource.DECLARED),
+        ),
+      ),
+    ]);
+    return this.findOne(userId, id);
   }
 }

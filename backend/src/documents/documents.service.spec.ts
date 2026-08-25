@@ -290,22 +290,31 @@ describe('DocumentsService domain rules', () => {
     expect(fieldProvenanceUpsert).toHaveBeenCalledTimes(2);
     expect(fieldProvenanceUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { assetId_fieldName: { assetId: 'asset-id', fieldName: 'serialNumber' } },
+        where: {
+          assetId_fieldName: { assetId: 'asset-id', fieldName: 'serialNumber' },
+        },
         create: expect.objectContaining({
           origin: 'EXTRACTED',
           sourceDocumentId: 'document-id',
           confirmedByUserId: 'user-id',
-        }),
+        }) as object,
       }),
     );
     expect(fieldProvenanceUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { assetId_fieldName: { assetId: 'asset-id', fieldName: 'purchasedAt' } },
+        where: {
+          assetId_fieldName: { assetId: 'asset-id', fieldName: 'purchasedAt' },
+        },
       }),
     );
     expect(fieldProvenanceUpsert).not.toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { assetId_fieldName: { assetId: 'asset-id', fieldName: 'warrantyUntil' } },
+        where: {
+          assetId_fieldName: {
+            assetId: 'asset-id',
+            fieldName: 'warrantyUntil',
+          },
+        },
       }),
     );
   });

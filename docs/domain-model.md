@@ -6,10 +6,10 @@ Fonte di verità: `backend/prisma/schema.prisma`. Questo documento lo spiega in 
 
 Il modello implementato rappresenta già gran parte del record (`House`, `Floor`, `Room`, `Asset`, `Document`, timeline e manutenzioni), ma non coincide ancora con l'ontologia completa descritta nel venture document Dimora.
 
-- `Property` corrisponde oggi a `House`, ma il profilo catastale ed energetico è solo parziale.
+- `Property` corrisponde a `House`; B36 aggiunge il profilo catastale, fisico, energetico e di agibilità v1 direttamente come campi tipizzati, con provenienza satellite.
 - `System` **non è un'entità corrente**: impianto elettrico, termico, idrico o fotovoltaico sono modellati come Asset/tipi di Asset. Prima di introdurre `System` va validato se serve davvero una relazione gerarchica `House → System → Asset` o se basta una classificazione evoluta degli Asset.
 - `Event` è intenzionalmente diviso tra `AssetTimelineEvent`, `HouseTimelineEvent` e `MaintenanceOccurrence`; non esiste una tabella evento universale.
-- `Document` può alimentare la casa, un Asset, una bolletta o una manutenzione, ma non conserva ancora una provenienza campo-per-campo sufficiente per qualificare il record come "verificato".
+- `Document` può alimentare la casa, un Asset, una bolletta o una manutenzione. Asset e Property Profile conservano la provenienza campo-per-campo, ma questo non equivale a una verifica terza.
 
 Finché questi gap non sono implementati, "Property Digital Record" indica il modello strutturato complessivo; non implica completezza catastale, validità certificativa o trasferibilità automatica.
 
@@ -32,6 +32,7 @@ House ──< Issue >── Recommendation (0..1, 1:1 oggi)
 House ──< ScoreSnapshot (fotografia nel tempo, mai ricalcolata "sul vecchio")
 House ──< HouseTimelineEvent (eventi a livello casa, distinti da AssetTimelineEvent)
 House ──< UtilityBill >── Document (uno o più periodi elettrici confermati per bolletta)
+House ──< HouseFieldProvenance >── Document/User (fonte e conferma dell'ultimo valore del profilo)
 ```
 
 Legenda: `──<` = "uno a molti" verso l'entità collegata. Tutte le relazioni verso `House` hanno `onDelete: Cascade`; `Asset.roomId` e `Document.assetId` hanno `onDelete: SetNull` (cancellare una stanza o un asset non cancella i documenti collegati, li scollega soltanto).
@@ -39,7 +40,9 @@ Legenda: `──<` = "uno a molti" verso l'entità collegata. Tutte le relazioni
 ## Entità
 
 ### House
-La casa. `code` (es. `CASA-0142`) generato automaticamente in sequenza. `floorPlanRotation` conserva l'orientamento della planimetria. Per Genesis, `genesisStatus` rappresenta lo stato complessivo mentre `genesisStep` conserva lo step esatto (`WELCOME`, `HOUSE_INFO`, `DOCUMENTS`, `SCAN`, `REVIEW`, `RESULTS`) e permette la ripresa precisa.
+La casa e il Property Profile. `code` (es. `CASA-0142`) è generato automaticamente in sequenza. Oltre ai dati Genesis, contiene campi tipizzati per identificazione/indirizzo, superfici distinte, riferimenti catastali, APE e agibilità. Definizioni diverse di superficie restano colonne diverse: dichiarata, calpestabile, catastale e utile riscaldata non sono intercambiabili. La percentuale di completezza è calcolata in lettura sui 16 dati essenziali, non persistita. `floorPlanRotation` conserva l'orientamento della planimetria; `genesisStatus` rappresenta lo stato complessivo e `genesisStep` lo step esatto.
+
+`HouseFieldProvenance` conserva l'origine dell'ultimo valore per `(houseId, fieldName)`, documento sorgente, utente e data di conferma. Una modifica dalla vista Profilo casa produce `DECLARED`; la conferma di un documento riconosciuto come `property_profile` produce `EXTRACTED`. Non esiste ancora un flusso `ATTESTED`.
 
 ### UtilityBill
 Un periodo di consumo elettrico confermato dall'utente, sempre collegato alla casa e al `Document` sorgente. Contiene `periodStart`, `periodEnd`, `consumptionKwh`, importo e fornitore opzionali. Una bolletta può produrre più righe quando espone consumi mensili distinti. Periodi plurimensili restano tali nel dato sorgente: la ripartizione mensile è calcolata in lettura e marcata come stimata.
@@ -81,7 +84,7 @@ Un file caricato, o candidato da Gmail/Drive. Stati (`status`): `PENDING → ANA
 - `source` (`UPLOAD` | `GMAIL` | `DRIVE`) + campi specifici per sorgente (`gmailMessageId`/`emailFrom`/... o `driveFileId`/`driveModifiedAt`) per il dedup tra scansioni ripetute.
 - `importedAt`: solo per Gmail/Drive — null finché l'utente non clicca "Importa" nella vista candidati; da quel momento si comporta come un documento caricato normalmente.
 - `ignoredAt`: documento scartato dall'utente. Resta in DB (per non riproporlo), non appare in nessuna vista.
-- `extractedFields`: JSON grezzo del risultato AI, forma `{ kind: 'asset_document', docType, fields: [[label,value],...], suggestedAssetType, suggestedAssetId, suggestedAssetName, quantity }` oppure `{ kind: 'floor_plan', rooms: [...] }` per le planimetrie.
+- `extractedFields`: JSON grezzo del risultato AI; oltre ad Asset, planimetrie e bollette può avere `{ kind: 'property_profile', docType, fields: {...} }`. Quest'ultima forma è solo una proposta finché l'utente non conferma.
 
 ### AssetTimelineEvent
 Cronologia di un Asset (installazione, manutenzione, documento collegato...). `documentId` opzionale collega l'evento al documento che l'ha generato; `contactId` opzionale collega chi ha eseguito l'intervento — **mai popolato automaticamente dall'AI**, solo scelto dall'utente (stesso principio "AI propone, utente conferma").
@@ -105,14 +108,15 @@ Tecnici/aziende che hanno lavorato in casa. Collegamento a un intervento in cron
 
 ### Provenienza, affidabilità e titolarità
 
-La conferma dell'utente rende un dato **accettato nel proprio record**, non verificato da una fonte autorevole. Da B38 (2026-08-25) questo è tracciato campo-per-campo per gli **Asset** (non ancora per Room/House, gap rimasto esplicito): `FieldSource` distingue solo l'origine del valore (`DECLARED`/`EXTRACTED`/`ATTESTED` — quest'ultimo predisposto, nessun flusso lo produce oggi), separata dal fatto di conferma (chi, quando), perché ogni valore scritto è già "confermato" nell'atto stesso di scriverlo.
+La conferma dell'utente rende un dato **accettato nel proprio record**, non verificato da una fonte autorevole. B38 lo traccia sugli Asset e B36 sul Property Profile della House. `FieldSource` distingue l'origine (`DECLARED`/`EXTRACTED`/`ATTESTED`), separata da chi/quando ha confermato; `ATTESTED` è predisposto ma nessun flusso lo produce oggi.
 
 - `AssetCustomField` (campi liberi): + `sourceDocumentId`, `confirmedByUserId`, `confirmedAt`.
 - `AssetFieldProvenance` (nuova tabella): provenienza dei 7 campi strutturati "universali" di Asset (`installedAt`/`warrantyUntil`/`purchasedAt`/`serialNumber`/`manufacturer`/`model`/`supplier`) — vivono come colonne dirette su `Asset` (serve tipizzato per query/ordinamento), quindi la provenienza vive in una tabella satellite, un record per `(assetId, fieldName)`. `AssetsService.update` scrive `DECLARED` solo se il valore è **davvero cambiato** rispetto a quello esistente (non basta comparire nel body: il form di modifica rimanda sempre tutti i campi anche quelli invariati). `DocumentsService.applyFieldsToAsset` scrive `EXTRACTED` con `sourceDocumentId`/`confirmedByUserId` del documento confermato.
+- `HouseFieldProvenance`: stesso pattern per i campi tipizzati del Property Profile; la conferma documentale riempie esclusivamente valori vuoti e segnala i conflitti senza sovrascriverli.
 - **Nessun backfill** dei valori già esistenti prima di B38: la provenienza è assente (non un errore) per ogni campo strutturato mai riscritto da allora — `ProvenanceBadge` in `Assets.tsx` semplicemente non compare in quel caso.
 - **v1 non fa audit trail multi-versione**: un solo record per campo, sovrascritto ad ogni riscrittura, non uno storico di versioni precedenti.
 
-Per un record condivisibile con banche, assicurazioni o acquirenti servirà comunque altro: `ATTESTED` realmente raggiungibile da una verifica terza, provenienza anche per Room/House (Property Profile, B36), e uno storico multi-versione — vedi `decisions.md` B38 e `product-backlog.md` EPIC 10.
+Per un record condivisibile con banche, assicurazioni o acquirenti servirà comunque altro: `ATTESTED` realmente raggiungibile da una verifica terza e uno storico multi-versione — vedi `decisions.md` B38/B36 e `product-backlog.md` EPIC 10.
 
 Il trasferimento della casa a un altro proprietario non è implementato. Dovrà separare dati propri dell'immobile (potenzialmente trasferibili) da dati personali del proprietario e richiederà ruoli, consenso, audit e una validazione legale dedicata. Non va dedotto dalla sola presenza di `HouseMembership`.
 

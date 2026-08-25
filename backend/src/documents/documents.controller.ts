@@ -18,6 +18,7 @@ import { DocumentsService } from './documents.service';
 import { ConfirmDocumentDto } from './dto/confirm-document.dto';
 import { ConfirmFloorPlanDto } from './dto/confirm-floor-plan.dto';
 import { ConfirmUtilityBillDto } from './dto/confirm-utility-bill.dto';
+import { ConfirmPropertyProfileDto } from './dto/confirm-property-profile.dto';
 
 @Controller()
 export class DocumentsController {
@@ -112,6 +113,15 @@ export class DocumentsController {
     @Body() dto: ConfirmUtilityBillDto,
   ) {
     return this.documentsService.confirmUtilityBill(req.user.id, id, dto);
+  }
+
+  @Post('documents/:id/confirm-property-profile')
+  confirmPropertyProfile(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ConfirmPropertyProfileDto,
+  ) {
+    return this.documentsService.confirmPropertyProfile(req.user.id, id, dto);
   }
 
   @Get('houses/:houseId/gmail-candidates')

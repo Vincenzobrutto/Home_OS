@@ -61,8 +61,18 @@ export function upsertAssetFieldProvenance(
 
 function valuesEqual(a: unknown, b: unknown): boolean {
   if (a instanceof Date || b instanceof Date) {
-    const aTime = a instanceof Date ? a.getTime() : a ? new Date(a as string).getTime() : null;
-    const bTime = b instanceof Date ? b.getTime() : b ? new Date(b as string).getTime() : null;
+    const aTime =
+      a instanceof Date
+        ? a.getTime()
+        : a
+          ? new Date(a as string).getTime()
+          : null;
+    const bTime =
+      b instanceof Date
+        ? b.getTime()
+        : b
+          ? new Date(b as string).getTime()
+          : null;
     return aTime === bTime;
   }
   return a === b;

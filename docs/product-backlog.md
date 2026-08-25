@@ -98,9 +98,9 @@
 
 **Obiettivo**: portare il modello esistente da digital twin operativo a Property Digital Record esplicito: profilo immobiliare strutturato, eventuale livello `System` validato e provenienza/affidabilità per i dati critici.
 **Valore utente**: comprendere non solo cosa il sistema sa della casa, ma da quale fonte lo sa e quanto il dato è affidabile.
-**Stato**: 🟡 Parziale — `House`, Asset, Document, timeline, `source` e `confidence` esistono; mancano Property Profile completo, provenance campo-per-campo e livelli di affidabilità. `System` non è oggi un'entità.
+**Stato**: 🟡 Parziale — Property Profile B36 e provenienza campo-per-campo per House/Asset sono implementati; `ATTESTED`, storico multi-versione, accessi a registri pubblici e trasferibilità non lo sono. `System` non è stato introdotto dopo discovery B37.
 **Dipendenze**: EPIC 1/2; EPIC 7 prima di esporre dati a terzi.
-**Dentro il prossimo discovery tecnico**: inventario dei campi Property, casi reali multi-asset per decidere `System`, tassonomia `DECLARED`/`EXTRACTED`/`CONFIRMED`/`ATTESTED` senza attribuire valore legale improprio.
+**Dentro il prossimo discovery tecnico**: casi reali aggiuntivi per rivalutare `System`; definizione di una vera verifica terza `ATTESTED` e dei requisiti di storico/versionamento senza attribuire valore legale improprio.
 **Fuori scope (per ora)**: certificazione legale del record, accesso garantito a catasto/APE/renovation passport, blockchain o firma digitale introdotte senza un caso d'uso validato.
 
 ## EPIC 11 — Ownership, Sharing & Record Transfer

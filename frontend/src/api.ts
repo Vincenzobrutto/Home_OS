@@ -93,6 +93,11 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
+    updatePropertyProfile: (id: string, data: Record<string, string | number | null>) =>
+      request<House>(`/houses/${id}/property-profile`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
     // Le case dell'utente della sessione corrente — non più "di un userId"
     // esplicito, vedi houses.controller.ts.
     mine: () => request<House[]>('/houses'),
@@ -334,6 +339,11 @@ export const api = {
       id: string,
       data: { supplier?: string | null; periods: Array<{ periodStart: string; periodEnd: string; consumptionKwh: number; amount?: number | null }> },
     ) => request<DocumentRecord>(`/documents/${id}/confirm-utility-bill`, { method: 'POST', body: JSON.stringify(data) }),
+    confirmPropertyProfile: (id: string, fields: Record<string, string | number | null>) =>
+      request<{ appliedFields: string[]; conflicts: string[] }>(`/documents/${id}/confirm-property-profile`, {
+        method: 'POST',
+        body: JSON.stringify({ fields }),
+      }),
     fileUrl: (id: string) => `${BASE_URL}/documents/${id}/file`,
     downloadUrl: (id: string) => `${BASE_URL}/documents/${id}/file?download=1`,
     uploadFloorPlanBackground: (houseId: string, file: File) => {

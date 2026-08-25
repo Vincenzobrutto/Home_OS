@@ -3,7 +3,7 @@ import { Camera, CheckCircle2, FileText, Globe, Sparkles, Upload, XCircle } from
 import { T, ASSET_TYPES, ROOM_TYPES } from '../theme';
 import { SectionLabel, Stamp } from './Shared';
 import { api } from '../api';
-import type { Asset, DocumentMaintenanceProposal, DocumentRecord, FloorPlanRoomProposal, Room, UtilityBillFields } from '../types';
+import type { Asset, DocumentMaintenanceProposal, DocumentRecord, FloorPlanRoomProposal, House, PropertyProfileFields, Room, UtilityBillFields } from '../types';
 
 interface RoomDecision {
   action: 'create' | 'update' | 'skip';
@@ -177,19 +177,66 @@ function UtilityBillProposal({
   );
 }
 
+const PROPERTY_LABELS: Record<string, string> = {
+  address: 'Indirizzo', postalCode: 'CAP', city: 'Comune', province: 'Provincia', country: 'Paese', propertyType: 'Tipologia abitazione',
+  surfaceSqm: 'Superficie dichiarata', buildYear: 'Anno di costruzione', renovationYear: 'Anno ristrutturazione', floorsCount: 'Numero livelli',
+  usableSurfaceSqm: 'Superficie calpestabile', heatedSurfaceSqm: 'Superficie utile riscaldata', cadastralMunicipality: 'Comune catastale',
+  cadastralMunicipalityCode: 'Codice catastale', cadastralSection: 'Sezione', cadastralSheet: 'Foglio', cadastralParcel: 'Particella',
+  cadastralSubaltern: 'Subalterno', cadastralCategory: 'Categoria catastale', cadastralClass: 'Classe catastale', cadastralConsistency: 'Consistenza',
+  cadastralSurfaceSqm: 'Superficie catastale', cadastralIncome: 'Rendita catastale', apeCode: 'Codice APE', apeIssuedAt: 'Emissione APE',
+  apeExpiresAt: 'Scadenza APE', energyClass: 'Classe energetica', epglNren: 'EPgl,nren', epglRen: 'EPgl,ren', co2Emissions: 'Emissioni CO₂',
+  climateZone: 'Zona climatica', energyUseCategory: 'Destinazione energetica', habitabilityStatus: 'Stato agibilità', habitabilityDate: 'Data agibilità', habitabilityProtocol: 'Protocollo agibilità',
+};
+const PROPERTY_NUMBER_FIELDS = new Set(['surfaceSqm', 'buildYear', 'renovationYear', 'floorsCount', 'usableSurfaceSqm', 'heatedSurfaceSqm', 'cadastralSurfaceSqm', 'cadastralIncome', 'epglNren', 'epglRen', 'co2Emissions']);
+const PROPERTY_DATE_FIELDS = new Set(['apeIssuedAt', 'apeExpiresAt', 'habitabilityDate']);
+
+function PropertyProfileProposal({ house, fields, busy, onConfirm }: { house: House; fields: PropertyProfileFields; busy: boolean; onConfirm: (fields: Record<string, string | number | null>) => void }) {
+  const entries = Object.entries(fields.fields).filter(([, value]) => value !== null && value !== '');
+  const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(entries.map(([key, value]) => [key, String(value)])));
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(entries.filter(([key]) => house[key as keyof House] == null || house[key as keyof House] === '').map(([key]) => key)));
+  function toggle(key: string) { setSelected((current) => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; }); }
+  const payload = Object.fromEntries([...selected].map((key) => [key, PROPERTY_NUMBER_FIELDS.has(key) ? Number(values[key]) : values[key]]));
+
+  return (
+    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${T.line}` }}>
+      <strong style={{ fontSize: 13, color: T.ink }}>Dati dell’immobile riconosciuti</strong>
+      <p style={{ fontSize: 12, color: T.ink70, lineHeight: 1.5 }}>Controlla i valori: sono applicati solo ai campi vuoti. I dati già presenti sono evidenziati e non vengono sovrascritti.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {entries.map(([key]) => {
+          const existing = house[key as keyof House];
+          const conflict = existing !== null && existing !== undefined && existing !== '';
+          return (
+            <label key={key} className="property-proposal-row" style={{ display: 'grid', gridTemplateColumns: '22px minmax(130px, .8fr) minmax(160px, 1.2fr)', gap: 8, alignItems: 'center', padding: 8, borderRadius: 6, background: conflict ? '#FFF7E6' : T.paper }}>
+              <input type="checkbox" checked={selected.has(key)} disabled={conflict} onChange={() => toggle(key)} />
+              <span style={{ fontSize: 11.5, color: T.slate }}>{PROPERTY_LABELS[key] ?? key}</span>
+              <input type={PROPERTY_DATE_FIELDS.has(key) ? 'date' : PROPERTY_NUMBER_FIELDS.has(key) ? 'number' : 'text'} step={PROPERTY_NUMBER_FIELDS.has(key) ? 'any' : undefined} value={values[key] ?? ''} disabled={conflict} onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))} style={{ border: `1px solid ${T.line}`, borderRadius: 5, padding: '6px 8px', minWidth: 0 }} />
+              {conflict && <span style={{ gridColumn: '2 / -1', fontSize: 10.5, color: T.ochreDeep }}>Già presente: {String(existing)}. Modificabile solo dal Profilo casa.</span>}
+            </label>
+          );
+        })}
+      </div>
+      <button disabled={busy} onClick={() => onConfirm(payload)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 12, background: T.pine, color: '#fff', border: 'none', borderRadius: 6, padding: '8px 13px', cursor: 'pointer', fontSize: 12.5, fontWeight: 500 }}><CheckCircle2 size={13} /> {busy ? 'Salvataggio…' : selected.size ? `Conferma ${selected.size} dati` : 'Archivia senza modificare il profilo'}</button>
+    </div>
+  );
+}
+
 export function InboxView({
   houseId,
+  house,
   assets,
   rooms,
   onAssetLinked,
   onRoomsChanged,
+  onPropertyProfileChanged,
   hideHeader,
 }: {
   houseId: string;
+  house: House;
   assets: Asset[];
   rooms: Room[];
   onAssetLinked: () => void;
   onRoomsChanged: () => void;
+  onPropertyProfileChanged: () => void;
   // Quando la vista è annidata dentro InboxHub (vedi InboxHub.tsx), l'intestazione
   // "Acquisizione documenti / Inbox" e il padding di pagina li fornisce l'hub —
   // qui resta solo il pulsante di upload, spostato sulla riga dei tab.
@@ -359,6 +406,13 @@ export function InboxView({
     } finally {
       setBusyDocIds(new Set());
     }
+  }
+
+  async function confirmPropertyProfile(docId: string, fields: Record<string, string | number | null>) {
+    setBusyDocIds(new Set([docId])); setError(null);
+    try { await api.documents.confirmPropertyProfile(docId, fields); await refresh(); onPropertyProfileChanged(); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Errore imprevisto'); }
+    finally { setBusyDocIds(new Set()); }
   }
 
   const visibleDocs = documents.filter((d) => d.status !== 'CONFIRMED');
@@ -544,6 +598,10 @@ export function InboxView({
                   busy={busy}
                   onConfirm={(data) => confirmUtilityBill(doc.id, data)}
                 />
+              )}
+
+              {doc.status === 'ANALYZED' && fields?.kind === 'property_profile' && (
+                <PropertyProfileProposal house={house} fields={fields} busy={busy} onConfirm={(data) => confirmPropertyProfile(doc.id, data)} />
               )}
 
               {doc.status === 'ANALYZED' && fields?.kind === 'asset_document' && (

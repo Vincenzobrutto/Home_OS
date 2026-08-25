@@ -160,6 +160,15 @@ html, body {
   .grid-responsive-2 {
     grid-template-columns: 1fr 1fr !important;
   }
+  .property-profile-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .property-proposal-row {
+    grid-template-columns: 22px 1fr !important;
+  }
+  .property-proposal-row > input:not([type='checkbox']) {
+    grid-column: 2;
+  }
 }
 `;
 
