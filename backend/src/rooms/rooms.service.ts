@@ -13,12 +13,25 @@ export class RoomsService {
 
   async create(userId: string, houseId: string, dto: CreateRoomDto) {
     await this.ensureHouseAccess(userId, houseId);
-    const count = await this.prisma.room.count({ where: { houseId } });
-    const code = `AMB-${String(count + 1).padStart(3, '0')}`;
+    const code = await this.nextRoomCode();
 
     return this.prisma.room.create({
       data: { ...dto, houseId, code },
     });
+  }
+
+  // "code" è unico globalmente (non per casa, vedi schema.prisma — stesso
+  // motivo/bug già corretto per Asset.code in assets.service.ts): un
+  // conteggio per-casa produce lo stesso "AMB-001" in ogni casa, andando in
+  // conflitto con la prima già esistente altrove. Bug rimasto latente finché
+  // non è mai esistita più di una casa nello stesso database.
+  private async nextRoomCode(): Promise<string> {
+    const last = await this.prisma.room.findFirst({
+      orderBy: { code: 'desc' },
+      select: { code: true },
+    });
+    const lastNumber = last ? parseInt(last.code.replace('AMB-', ''), 10) : 0;
+    return `AMB-${String(lastNumber + 1).padStart(3, '0')}`;
   }
 
   async findAllForHouse(userId: string, houseId: string) {
