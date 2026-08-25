@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-08-25 (2) — B37: discovery su `System`, nessuna migrazione + un doppione corretto
+
+Discovery richiesta dal backlog prima di scrivere codice: nessuna entità `System` introdotta, il bisogno non è emerso sull'unico caso reale disponibile (fotovoltaico e climatizzatori confermati come Asset indipendenti, nessuna scomposizione necessaria) — dettaglio in `decisions.md` #35. Rimane una decisione provvisoria (n=1, non i ~10 casi auspicati), da riaprire con altri utenti reali.
+
+- Trovato durante la discovery e corretto con conferma dell'utente: due Asset `ELETTRICO` "Impianto elettrico" sulla stessa casa erano un doppione, non due impianti reali — quello vuoto (0 campi/documenti/interventi, probabile artefatto di una scansione Genesis) è stato eliminato, nessun dato perso.
+- `backlog.md` B37 non chiuso ma riclassificato a priorità bassa, in attesa di altri casi.
+
+
 ## 2026-08-25 — B38: provenienza campo-per-campo per gli Asset
 
 Priorità più alta rimasta nell'allineamento Dimora (sbloccata da B2), limitata in v1 agli **Asset** — Room/House restano fuori scope.
