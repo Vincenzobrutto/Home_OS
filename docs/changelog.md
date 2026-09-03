@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-03 (2) — Verifica B41 (Codex)
+
+Recuperato e verificato da GitHub il commit di Codex che implementa le fondazioni tecniche del check-up adempimenti v6 (vedi voce sotto): revisione approfondita dello schema/migrazione (backfill `MaintenancePlan.houseId` sicuro, vincolo XOR e indice univoco "un solo libretto attivo" a livello database, nessun endpoint scrive ancora codici libretto in chiaro — cifratura correttamente rimandata), dei motori puri (`fgas.ts`/`ape-state.ts`, nessuna soglia normativa hardcoded, sempre passata da `RegulatoryRule`) e degli ADR registrati (#38-44, coerenti con `decisions.md` #35/#37).
+
+**Trovati e corretti 2 errori di build reali** (il changelog del commit dichiarava "build pulita" ma `nest build`/`tsc` falliva, a differenza di `npm test` che passava già): `ComplianceController` usava il tipo `Request` di Express invece di `AuthenticatedRequest` (introdotto in B2), rendendo `req.user` inesistente a livello di tipi; `MaintenanceService.planOrThrow` non restituiva un tipo con `assetId` non nullable nonostante il controllo a runtime lo garantisse, causando un mismatch in due scritture (`MaintenanceOccurrence`/`AssetTimelineEvent`, che richiedono `assetId` obbligatorio anche dopo la generalizzazione di `MaintenancePlan`).
+
+Migrazione applicata al database reale: nessun dato perso, l'unico `MaintenancePlan` esistente retrocompilato correttamente (`houseId` dalla propria casa, `subjectType: ASSET`, `origin: USER`). Verificato dal vivo `GET /houses/:houseId/compliance` sulla casa reale: risposta onesta (`UNKNOWN`, copertura 0/1, nessuna fonte, disclaimer obbligatorio presente) coerente con l'assenza di impianti termici/regole normative attive oggi. Build/lint puliti, 76/76 test.
+
 ## 2026-09-03 — Check-up adempimenti v6: primo incremento tecnico
 
 - Registrati gli ADR che aggiornano B37: `ThermalSystem` ristretto, libretto a livello impianto, resolver separati, regole versionate, piani generalizzati, Stato adempimenti separato dallo score e demo Genesis separata dal percorso reale.

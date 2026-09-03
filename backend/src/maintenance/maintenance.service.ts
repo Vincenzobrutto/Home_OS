@@ -460,7 +460,11 @@ export class MaintenanceService {
         'Questa operazione è disponibile solo per piani riferiti a un Asset.',
       );
     }
-    return plan;
+    // Il controllo sopra garantisce assetId/asset non nulli a runtime, ma il
+    // tipo restituito da Prisma resta `string | null` finché non lo si
+    // ricostruisce qui — altrimenti ogni chiamante dovrebbe ripetere lo
+    // stesso controllo solo per convincere TypeScript.
+    return { ...plan, assetId: plan.assetId, asset: plan.asset };
   }
 
   private async ensureContactBelongsToHouse(
