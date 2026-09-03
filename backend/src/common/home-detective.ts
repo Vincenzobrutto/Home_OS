@@ -29,11 +29,38 @@ export interface HomeDetectiveAssetInput {
   roomId: string | null;
 }
 
+// B49: un intervento/garanzia/contatto può generare al più un draft per
+// regola — niente conteggi ripetuti sullo stesso record.
+export interface HomeDetectiveInterventionInput {
+  id: string;
+  assetId: string | null;
+  contactId: string | null;
+  hasDocument: boolean;
+}
+
+export interface HomeDetectiveWarrantyInput {
+  id: string;
+  assetId: string;
+  hasProof: boolean;
+}
+
+export interface HomeDetectiveContactInput {
+  id: string;
+  phone: string | null;
+  email: string | null;
+  // Referenziato da almeno un Intervention/Warranty — un contatto in rubrica
+  // ma mai usato non è "da verificare", vedi decisions.md B49.
+  isUsed: boolean;
+}
+
 export interface HomeDetectiveInput {
   houseHasAnyDocument: boolean;
   genesisCompleted: boolean;
   assets: HomeDetectiveAssetInput[];
   unconfirmedObservationsCount: number;
+  interventions: HomeDetectiveInterventionInput[];
+  warranties: HomeDetectiveWarrantyInput[];
+  contacts: HomeDetectiveContactInput[];
 }
 
 export type IssueSeverityValue = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -46,6 +73,9 @@ export interface IssueDraft {
   description: string;
   resolutionHint: string;
   assetId: string | null;
+  interventionId: string | null;
+  warrantyId: string | null;
+  contactId: string | null;
 }
 
 export function evaluateHomeDetectiveRules(
@@ -67,6 +97,9 @@ export function evaluateHomeDetectiveRules(
         resolutionHint:
           'Carica il libretto di impianto, il manuale o la dichiarazione disponibile.',
         assetId: asset.id,
+        interventionId: null,
+        warrantyId: null,
+        contactId: null,
       });
     }
   }
@@ -83,6 +116,9 @@ export function evaluateHomeDetectiveRules(
         resolutionHint:
           "Completa la classificazione associando l'asset a un ambiente.",
         assetId: asset.id,
+        interventionId: null,
+        warrantyId: null,
+        contactId: null,
       });
     }
   }
@@ -97,6 +133,9 @@ export function evaluateHomeDetectiveRules(
       description: `${input.unconfirmedObservationsCount} elementi rilevati dalla scansione non sono ancora stati confermati.`,
       resolutionHint: 'Rivedi e conferma o rifiuta gli elementi rilevati.',
       assetId: null,
+      interventionId: null,
+      warrantyId: null,
+      contactId: null,
     });
   }
 
@@ -112,6 +151,9 @@ export function evaluateHomeDetectiveRules(
       resolutionHint:
         "Carica almeno un documento dell'immobile (es. APE, planimetria, rogito).",
       assetId: null,
+      interventionId: null,
+      warrantyId: null,
+      contactId: null,
     });
   }
 
@@ -126,7 +168,93 @@ export function evaluateHomeDetectiveRules(
         'Il percorso guidato di creazione del Digital Twin non è ancora stato completato.',
       resolutionHint: "Riprendi il percorso Genesis da dove l'avevi lasciato.",
       assetId: null,
+      interventionId: null,
+      warrantyId: null,
+      contactId: null,
     });
+  }
+
+  // INTERVENTION_WITHOUT_DOCUMENT — assetId (se noto) solo per il
+  // click-through in Dashboard, l'identità della issue resta interventionId.
+  for (const intervention of input.interventions) {
+    if (!intervention.hasDocument) {
+      drafts.push({
+        ruleCode: 'INTERVENTION_WITHOUT_DOCUMENT',
+        category: 'documentation',
+        severity: 'LOW',
+        title: 'Intervento senza documento collegato',
+        description:
+          'Questo intervento non ha nessuna fattura, rapporto o ricevuta collegata.',
+        resolutionHint:
+          'Carica il documento che prova il lavoro svolto, se disponibile.',
+        assetId: intervention.assetId,
+        interventionId: intervention.id,
+        warrantyId: null,
+        contactId: null,
+      });
+    }
+  }
+
+  // INTERVENTION_WITHOUT_CONTACT
+  for (const intervention of input.interventions) {
+    if (intervention.contactId === null) {
+      drafts.push({
+        ruleCode: 'INTERVENTION_WITHOUT_CONTACT',
+        category: 'completeness',
+        severity: 'LOW',
+        title: 'Intervento senza tecnico collegato',
+        description:
+          'Questo intervento non ha nessun contatto (tecnico o azienda) associato.',
+        resolutionHint:
+          "Collega il tecnico o l'azienda che ha eseguito il lavoro, se noto.",
+        assetId: intervention.assetId,
+        interventionId: intervention.id,
+        warrantyId: null,
+        contactId: null,
+      });
+    }
+  }
+
+  // WARRANTY_WITHOUT_PROOF — una garanzia non dimostrabile è meno utile
+  // quando serve davvero, severità MEDIUM come per la documentazione caldaia.
+  for (const warranty of input.warranties) {
+    if (!warranty.hasProof) {
+      drafts.push({
+        ruleCode: 'WARRANTY_WITHOUT_PROOF',
+        category: 'documentation',
+        severity: 'MEDIUM',
+        title: 'Garanzia senza prova documentale',
+        description:
+          'Questa garanzia non ha nessun documento di prova collegato (scontrino, fattura, certificato).',
+        resolutionHint:
+          'Carica il documento che prova questa garanzia, se disponibile.',
+        assetId: warranty.assetId,
+        interventionId: null,
+        warrantyId: warranty.id,
+        contactId: null,
+      });
+    }
+  }
+
+  // CONTACT_TO_VERIFY — solo contatti realmente usati (referenziati da
+  // almeno un Intervention/Warranty) e senza alcun modo di essere
+  // ricontattati: un contatto in rubrica ma mai usato non è "da verificare".
+  for (const contact of input.contacts) {
+    if (contact.isUsed && !contact.phone && !contact.email) {
+      drafts.push({
+        ruleCode: 'CONTACT_TO_VERIFY',
+        category: 'completeness',
+        severity: 'LOW',
+        title: 'Contatto da verificare',
+        description:
+          'Questo contatto è usato in almeno un intervento o garanzia ma non ha né telefono né email.',
+        resolutionHint: 'Aggiungi un recapito per poterlo ricontattare.',
+        assetId: null,
+        interventionId: null,
+        warrantyId: null,
+        contactId: contact.id,
+      });
+    }
   }
 
   return drafts;

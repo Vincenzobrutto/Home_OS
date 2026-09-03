@@ -224,6 +224,7 @@ export const api = {
   },
   warranties: {
     listForAsset: (assetId: string) => request<Warranty[]>(`/assets/${assetId}/warranties`),
+    listForHouse: (houseId: string) => request<Warranty[]>(`/houses/${houseId}/warranties`),
     create: (
       assetId: string,
       data: {

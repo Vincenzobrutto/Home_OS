@@ -4,8 +4,9 @@ import { AccessControlService } from '../access-control/access-control.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { WarrantiesService } from './warranties.service';
 
+const assertHouseAccess = jest.fn().mockResolvedValue(undefined);
 const accessControl = {
-  assertHouseAccess: jest.fn().mockResolvedValue(undefined),
+  assertHouseAccess,
 } as unknown as AccessControlService;
 
 function makeService(overrides: Record<string, unknown> = {}) {
@@ -119,6 +120,29 @@ describe('WarrantiesService', () => {
         providerContactId: 'contact-1',
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('lists warranties for a whole house, scoped via the asset relation, with asset info included', async () => {
+    const houseRow = {
+      id: 'warranty-1',
+      assetId: 'asset-1',
+      asset: { id: 'asset-1', name: 'Caldaia', code: 'AST-001' },
+      providerContact: null,
+      proofDocument: null,
+    };
+    const { prisma, service } = makeService({
+      warranty: { findMany: jest.fn().mockResolvedValue([houseRow]) },
+    });
+
+    const result = await service.listForHouse('user-1', 'house-1');
+
+    expect(assertHouseAccess).toHaveBeenCalledWith('user-1', 'house-1');
+    expect(prisma.warranty.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { asset: { houseId: 'house-1' } },
+      }),
+    );
+    expect(result[0].asset).toEqual(houseRow.asset);
   });
 
   it('updates the existing legacy-managed warranty instead of creating a duplicate', async () => {

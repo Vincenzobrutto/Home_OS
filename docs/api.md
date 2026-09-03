@@ -65,6 +65,7 @@ Un documento collegato forza `evidenceStatus = VERIFIED_PRESENT`; questo stato n
 | Metodo | Endpoint | Descrizione |
 |---|---|---|
 | GET | `/assets/:assetId/warranties` | elenco garanzie dell'Asset, più recenti prima |
+| GET | `/houses/:houseId/warranties` | elenco garanzie di tutta la casa (via relazione Asset→House), con l'Asset collegato incluso — usato dalla ricerca unificata (B49) |
 | POST | `/assets/:assetId/warranties` | crea garanzia (`expiresAt` obbligatoria, `startsAt`/`kind`/`providerContactId`/`proofDocumentId`/`notes` opzionali) |
 | PATCH | `/warranties/:id` | modifica esplicita; nessun `DELETE` (stessa convenzione di Intervention) |
 

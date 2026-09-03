@@ -176,12 +176,14 @@ export function Dashboard({
   rooms,
   assets,
   openAsset,
+  onOpenContact,
   onOpenGenesis,
 }: {
   house: House;
   rooms: Room[];
   assets: Asset[];
   openAsset: (id: string) => void;
+  onOpenContact: (id: string) => void;
   onOpenGenesis: () => void;
 }) {
   const dueSoon = assets.filter((a) => a.status === 'DUE' || a.status === 'ATTENTION').length;
@@ -365,14 +367,17 @@ export function Dashboard({
             {genesisResults.issues.map((issue) => (
               <div
                 key={issue.id}
-                onClick={() => issue.assetId && openAsset(issue.assetId)}
+                onClick={() => {
+                  if (issue.assetId) openAsset(issue.assetId);
+                  else if (issue.contactId) onOpenContact(issue.contactId);
+                }}
                 style={{
                   padding: '10px 14px',
                   background: T.card,
                   border: `1px solid ${T.line}`,
                   borderLeft: `3px solid ${issue.severity === 'HIGH' ? T.rust : issue.severity === 'MEDIUM' ? T.ochreDeep : T.slate}`,
                   borderRadius: 9,
-                  cursor: issue.assetId ? 'pointer' : 'default',
+                  cursor: issue.assetId || issue.contactId ? 'pointer' : 'default',
                   boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
                 }}
               >

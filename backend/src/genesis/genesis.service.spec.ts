@@ -115,6 +115,9 @@ describe('GenesisService Home Score history', () => {
       document: { count: jest.fn().mockResolvedValue(0) },
       room: { count: jest.fn().mockResolvedValue(0) },
       observation: { count: jest.fn().mockResolvedValue(0) },
+      intervention: { findMany: jest.fn().mockResolvedValue([]) },
+      warranty: { findMany: jest.fn().mockResolvedValue([]) },
+      contact: { findMany: jest.fn().mockResolvedValue([]) },
       scoreSnapshot: {
         findFirst: jest.fn().mockResolvedValue(latest),
         create: snapshotCreate,
@@ -517,5 +520,57 @@ describe('GenesisService issue/recommendation reconciliation (idempotency)', () 
       where: { id: 'rec-2' },
       data: { status: 'DONE' },
     });
+  });
+
+  it('B49: two drafts of the same rule with assetId null but different contactId create two distinct Issue rows, not one', async () => {
+    const issueCreate = jest
+      .fn()
+      .mockResolvedValueOnce({ id: 'issue-c1' })
+      .mockResolvedValueOnce({ id: 'issue-c2' });
+    const prisma = {
+      issue: {
+        findMany: jest.fn().mockResolvedValue([]),
+        create: issueCreate,
+        update: jest.fn(),
+      },
+      recommendation: { create: jest.fn(), update: jest.fn() },
+    };
+    const service = buildService(prisma);
+
+    await (
+      service as unknown as {
+        reconcileIssues: (houseId: string, drafts: unknown[]) => Promise<void>;
+      }
+    ).reconcileIssues('house-1', [
+      {
+        ruleCode: 'CONTACT_TO_VERIFY',
+        assetId: null,
+        interventionId: null,
+        warrantyId: null,
+        contactId: 'contact-1',
+        category: 'completeness',
+        severity: 'LOW',
+        title: 'Contatto da verificare',
+        description: 'desc',
+        resolutionHint: 'hint',
+      },
+      {
+        ruleCode: 'CONTACT_TO_VERIFY',
+        assetId: null,
+        interventionId: null,
+        warrantyId: null,
+        contactId: 'contact-2',
+        category: 'completeness',
+        severity: 'LOW',
+        title: 'Contatto da verificare',
+        description: 'desc',
+        resolutionHint: 'hint',
+      },
+    ]);
+
+    // Prima del fix la chiave era solo `ruleCode:assetId` (assetId sempre
+    // null qui): la seconda issue sarebbe stata scambiata per "già aperta"
+    // e mai creata.
+    expect(issueCreate).toHaveBeenCalledTimes(2);
   });
 });

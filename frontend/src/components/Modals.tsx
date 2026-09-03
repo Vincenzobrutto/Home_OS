@@ -25,7 +25,7 @@ const labelStyle: React.CSSProperties = {
   display: 'block',
 };
 
-function ModalShell({ children, onClose, width = 480 }: { children: React.ReactNode; onClose: () => void; width?: number }) {
+export function ModalShell({ children, onClose, width = 480 }: { children: React.ReactNode; onClose: () => void; width?: number }) {
   return (
     <div
       style={{

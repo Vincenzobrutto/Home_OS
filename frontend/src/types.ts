@@ -114,6 +114,9 @@ export interface IssueRecord {
   houseId: string;
   assetId: string | null;
   documentId: string | null;
+  interventionId: string | null;
+  warrantyId: string | null;
+  contactId: string | null;
   category: string;
   severity: IssueSeverity;
   title: string;
@@ -350,6 +353,8 @@ export interface Warranty {
   notes: string | null;
   confirmedByUserId: string | null;
   confirmedAt: string | null;
+  // Presente solo in GET /houses/:houseId/warranties (B49, ricerca unificata).
+  asset?: { id: string; name: string; code: string };
 }
 
 export interface Contact {

@@ -11,6 +11,7 @@ import {
   Zap,
   X,
   LogOut,
+  Search,
 } from 'lucide-react';
 import { T } from '../theme';
 import type { House } from '../types';
@@ -47,6 +48,7 @@ export function Sidebar({
   open = false,
   onNavigate,
   onLogout,
+  onOpenSearch,
 }: {
   view: View;
   setView: (v: View) => void;
@@ -57,6 +59,7 @@ export function Sidebar({
   open?: boolean;
   onNavigate?: () => void;
   onLogout?: () => void;
+  onOpenSearch: () => void;
 }) {
   // Gmail e Drive non hanno più voci proprie: sono tab dentro Inbox (vedi
   // InboxHub.tsx). Il badge qui somma i candidati in attesa da entrambe le
@@ -117,6 +120,32 @@ export function Sidebar({
           <X size={18} />
         </button>
       </div>
+
+      <button
+        onClick={() => {
+          onOpenSearch();
+          onNavigate?.();
+        }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '9px 10px',
+          borderRadius: 7,
+          border: `1px solid rgba(255,255,255,0.14)`,
+          cursor: 'pointer',
+          textAlign: 'left',
+          background: 'rgba(255,255,255,0.05)',
+          color: '#B9BFB6',
+          fontFamily: "'Inter', sans-serif",
+          fontSize: 13,
+          marginBottom: 14,
+        }}
+      >
+        <Search size={15} />
+        <span style={{ flex: 1 }}>Cerca…</span>
+        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: '#7C8479' }}>Ctrl K</span>
+      </button>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {items.map((it) => {

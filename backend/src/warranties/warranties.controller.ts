@@ -25,6 +25,14 @@ export class WarrantiesController {
     return this.warranties.list(req.user.id, assetId);
   }
 
+  @Get('houses/:houseId/warranties')
+  listForHouse(
+    @Req() req: AuthenticatedRequest,
+    @Param('houseId', ParseUUIDPipe) houseId: string,
+  ) {
+    return this.warranties.listForHouse(req.user.id, houseId);
+  }
+
   @Post('assets/:assetId/warranties')
   create(
     @Req() req: AuthenticatedRequest,

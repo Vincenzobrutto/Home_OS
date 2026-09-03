@@ -11,6 +11,9 @@ function baseInput(
     genesisCompleted: true,
     assets: [],
     unconfirmedObservationsCount: 0,
+    interventions: [],
+    warranties: [],
+    contacts: [],
     ...overrides,
   };
 }
@@ -139,6 +142,115 @@ describe('home detective rule engine', () => {
       'GENESIS_INCOMPLETE',
       'HOUSE_WITHOUT_DOCUMENTS',
     ]);
+  });
+
+  it('flags an intervention without a linked document, keeping the asset for click-through', () => {
+    const drafts = evaluateHomeDetectiveRules(
+      baseInput({
+        interventions: [
+          { id: 'i1', assetId: 'a1', contactId: 'c1', hasDocument: false },
+        ],
+      }),
+    );
+    expect(drafts).toEqual([
+      expect.objectContaining({
+        ruleCode: 'INTERVENTION_WITHOUT_DOCUMENT',
+        assetId: 'a1',
+        interventionId: 'i1',
+        contactId: null,
+      }),
+    ]);
+  });
+
+  it('flags an intervention without a linked contact', () => {
+    const drafts = evaluateHomeDetectiveRules(
+      baseInput({
+        interventions: [
+          { id: 'i1', assetId: 'a1', contactId: null, hasDocument: true },
+        ],
+      }),
+    );
+    expect(drafts).toEqual([
+      expect.objectContaining({
+        ruleCode: 'INTERVENTION_WITHOUT_CONTACT',
+        assetId: 'a1',
+        interventionId: 'i1',
+      }),
+    ]);
+  });
+
+  it('produces two distinct drafts (different interventionId) for two problematic interventions on the same asset', () => {
+    const drafts = evaluateHomeDetectiveRules(
+      baseInput({
+        interventions: [
+          { id: 'i1', assetId: 'a1', contactId: 'c1', hasDocument: false },
+          { id: 'i2', assetId: 'a1', contactId: 'c1', hasDocument: false },
+        ],
+      }),
+    );
+    const withRule = drafts.filter(
+      (d) => d.ruleCode === 'INTERVENTION_WITHOUT_DOCUMENT',
+    );
+    expect(withRule).toHaveLength(2);
+    expect(withRule.map((d) => d.interventionId).sort()).toEqual(['i1', 'i2']);
+  });
+
+  it('flags a warranty without proof', () => {
+    const drafts = evaluateHomeDetectiveRules(
+      baseInput({
+        warranties: [{ id: 'w1', assetId: 'a1', hasProof: false }],
+      }),
+    );
+    expect(drafts).toEqual([
+      expect.objectContaining({
+        ruleCode: 'WARRANTY_WITHOUT_PROOF',
+        assetId: 'a1',
+        warrantyId: 'w1',
+        severity: 'MEDIUM',
+      }),
+    ]);
+  });
+
+  it('does not flag a warranty that already has proof', () => {
+    const drafts = evaluateHomeDetectiveRules(
+      baseInput({
+        warranties: [{ id: 'w1', assetId: 'a1', hasProof: true }],
+      }),
+    );
+    expect(drafts).toEqual([]);
+  });
+
+  it('flags a used contact without phone or email', () => {
+    const drafts = evaluateHomeDetectiveRules(
+      baseInput({
+        contacts: [{ id: 'c1', phone: null, email: null, isUsed: true }],
+      }),
+    );
+    expect(drafts).toEqual([
+      expect.objectContaining({
+        ruleCode: 'CONTACT_TO_VERIFY',
+        contactId: 'c1',
+        assetId: null,
+      }),
+    ]);
+  });
+
+  it('does not flag an unused contact, even without phone or email', () => {
+    const drafts = evaluateHomeDetectiveRules(
+      baseInput({
+        contacts: [{ id: 'c1', phone: null, email: null, isUsed: false }],
+      }),
+    );
+    expect(drafts).toEqual([]);
+  });
+
+  it('does not flag a used contact that has at least a phone or email', () => {
+    const drafts = evaluateHomeDetectiveRules(
+      baseInput({
+        contacts: [{ id: 'c1', phone: '333123456', email: null, isUsed: true }],
+      }),
+    );
+    expect(drafts).toEqual([]);
   });
 
   it('is idempotent: the same input always produces the same drafts', () => {

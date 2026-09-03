@@ -1070,17 +1070,23 @@ model Observation {
 
 // Problema rilevato da Home Detective (regole deterministiche, vedi
 // common/home-detective.ts) — MAI da un LLM in questo MVP. Idempotenza per
-// (houseId, ruleCode, assetId, documentId) gestita a livello applicativo,
-// non con un vincolo unique: assetId/documentId nullable renderebbero un
-// indice unique poco affidabile tra database diversi, e la query "esiste
-// già una issue OPEN con questo ruleCode+contesto" è comunque necessaria
-// per decidere se riaprire una issue risolta.
+// (houseId, ruleCode, assetId, documentId, interventionId, warrantyId,
+// contactId) gestita a livello applicativo, non con un vincolo unique: sono
+// tutti nullable, renderebbero un indice unique poco affidabile tra database
+// diversi, e la query "esiste già una issue OPEN con questo ruleCode+contesto"
+// è comunque necessaria per decidere se riaprire una issue risolta.
+// interventionId/warrantyId/contactId (B49) seguono lo stesso riferimento
+// "morbido" di assetId/documentId: niente @relation/cascade, le regole
+// vivono nel codice non in DB.
 model Issue {
   id             String        @id @default(uuid())
   houseId        String        @map("house_id")
   house          House         @relation(fields: [houseId], references: [id], onDelete: Cascade)
   assetId        String?       @map("asset_id")
   documentId     String?       @map("document_id")
+  interventionId String?       @map("intervention_id")
+  warrantyId     String?       @map("warranty_id")
+  contactId      String?       @map("contact_id")
   category       String
   severity       IssueSeverity
   title          String

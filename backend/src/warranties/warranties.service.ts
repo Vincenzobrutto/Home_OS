@@ -26,6 +26,18 @@ type WarrantyWithRelations = Prisma.WarrantyGetPayload<{
   include: typeof WARRANTY_INCLUDE;
 }>;
 
+// Solo per la lista house-scoped (B49, ricerca unificata): serve sapere a
+// quale Asset appartiene ogni garanzia senza una lookup separata lato
+// frontend, cosa non necessaria nella lista per-Asset esistente.
+const WARRANTY_HOUSE_INCLUDE = {
+  ...WARRANTY_INCLUDE,
+  asset: { select: { id: true, name: true, code: true } },
+} as const;
+
+type WarrantyWithHouseRelations = Prisma.WarrantyGetPayload<{
+  include: typeof WARRANTY_HOUSE_INCLUDE;
+}>;
+
 @Injectable()
 export class WarrantiesService {
   constructor(
@@ -70,6 +82,16 @@ export class WarrantiesService {
       include: WARRANTY_INCLUDE,
     });
     return rows.map((row) => this.serialize(row));
+  }
+
+  async listForHouse(userId: string, houseId: string) {
+    await this.accessControl.assertHouseAccess(userId, houseId);
+    const rows = await this.prisma.warranty.findMany({
+      where: { asset: { houseId } },
+      orderBy: { expiresAt: 'desc' },
+      include: WARRANTY_HOUSE_INCLUDE,
+    });
+    return rows.map((row) => this.serializeWithAsset(row));
   }
 
   async update(userId: string, id: string, dto: UpdateWarrantyDto) {
@@ -189,6 +211,14 @@ export class WarrantiesService {
   }
 
   private serialize(row: WarrantyWithRelations) {
+    return {
+      ...row,
+      contact: row.providerContact,
+      document: row.proofDocument,
+    };
+  }
+
+  private serializeWithAsset(row: WarrantyWithHouseRelations) {
     return {
       ...row,
       contact: row.providerContact,

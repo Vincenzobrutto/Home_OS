@@ -2,6 +2,17 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-03 (6) — B49: Ricerca unificata, azioni rapide e nuove regole Home Detective
+
+- Ricerca globale client-side (Asset, Contatti, Documenti, Garanzie, Interventi): `frontend/src/search.ts` (funzione pura, nessuna richiesta di rete per keystroke) + overlay `GlobalSearch.tsx`, apribile dall'icona in Sidebar o `Ctrl/Cmd+K`.
+- **Bug reale trovato e corretto**: `GenesisService.reconcileIssues` usava `${ruleCode}:${assetId ?? ''}` come chiave di idempotenza — con `assetId: null` (necessario per regole non-Asset) tutte le occorrenze della stessa regola collidevano, quindi solo la prima veniva creata. La chiave ora include anche `interventionId`/`warrantyId`/`contactId`.
+- `Issue` (Prisma) estesa con `interventionId`/`warrantyId`/`contactId` (stesso riferimento "morbido" già usato per `assetId`/`documentId`, nessuna FK/cascade) — migrazione additiva applicata al database reale.
+- 4 nuove regole Home Detective in `common/home-detective.ts`: `INTERVENTION_WITHOUT_DOCUMENT`, `INTERVENTION_WITHOUT_CONTACT`, `WARRANTY_WITHOUT_PROOF`, `CONTACT_TO_VERIFY` (solo per contatti realmente usati e senza recapiti).
+- Nuovo `GET /houses/:houseId/warranties` (elenco garanzie dell'intera casa, con Asset collegato incluso) per alimentare la ricerca.
+- Azioni rapide in `AssetDetail`: manuale, ricevuta/fattura, garanzia, ultimo intervento, tecnico — ognuna condizionale sui dati già caricati, mai un bottone rotto.
+- Backend: build/lint puliti, 101/101 test (16 nuovi/estesi su `home-detective.spec.ts`, 1 nuovo su `genesis.service.spec.ts` per il fix del bug, 1 nuovo su `warranties.service.spec.ts`). Frontend: build/lint puliti, nessun nuovo warning.
+- Verificato dal vivo sulla casa reale: ricalcolo Home Score/Issue ha creato correttamente 7 nuove `WARRANTY_WITHOUT_PROOF` (una per ciascuna delle 7 garanzie legacy senza prova, tutte con `warrantyId` distinto — il fix del bug confermato sui dati reali) e nessuna regola su Intervention (0 interventi registrati oggi sulla casa reale). `GET /houses/:houseId/warranties` verificato con l'Asset collegato incluso nella risposta.
+
 ## 2026-09-03 (5) — B48: Affidabilità della memoria e copertura informativa
 
 - Nuovo endpoint `GET /houses/:houseId/memory-reliability` (`common/memory-reliability.ts` + modulo `reliability`, mirror di `compliance`): tre coperture oneste `{completed, total}` — Asset con documenti, campi "core" con provenienza, `Intervention`/`Warranty` con evidenza nota — combinate in una media pesata che esclude le dimensioni senza dati invece di azzerarle.

@@ -66,9 +66,7 @@ La sequenza di prodotto è **Memoria della casa → Fiducia → Recupero rapido 
 
 ### Fase 3 — Recupero rapido (P0)
 
-- Ricerca unificata per documento, Asset, tecnico, manuale, garanzia, seriale e fattura.
-- Azioni rapide per Asset: manuale, garanzia, ultimo intervento, tecnico e ricevuta.
-- Nuove regole Home Detective: `INTERVENTION_WITHOUT_DOCUMENT`, `INTERVENTION_WITHOUT_CONTACT`, `WARRANTY_WITHOUT_PROOF`, `CONTACT_TO_VERIFY` (B49).
+- ~~Ricerca unificata per documento, Asset, tecnico, manuale, garanzia, seriale e fattura; azioni rapide per Asset; nuove regole Home Detective~~: B49 completato il 2026-09-03 — ricerca client-side (`Ctrl/Cmd+K`), azioni rapide in AssetDetail, `INTERVENTION_WITHOUT_DOCUMENT`/`INTERVENTION_WITHOUT_CONTACT`/`WARRANTY_WITHOUT_PROOF`/`CONTACT_TO_VERIFY`, più un fix di un bug reale di collisione nell'idempotenza delle Issue.
 - Deliverable: trovare un'informazione utile in meno di 30 secondi.
 
 ### Fase 4 — Garanzie e storico interventi (P0)

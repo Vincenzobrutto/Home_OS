@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ChevronLeft, Download, ExternalLink, FileStack, FileText } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, Download, ExternalLink, FileStack, FileText, BookOpen, Receipt, ShieldCheck, Wrench, UserCheck } from 'lucide-react';
 import { T, ASSET_TYPES, iconForAsset, evidenceStatusLabel } from '../theme';
 import { SectionLabel, StatusDot, Stamp, ProvenanceBadge } from './Shared';
 import { api, formatDateForDisplay, parseDateInput } from '../api';
@@ -41,6 +41,77 @@ const eventInputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
   outline: 'none',
 };
+
+const quickActionButtonStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+  padding: '6px 10px',
+  borderRadius: 6,
+  border: `1px solid ${T.line}`,
+  background: T.card,
+  color: T.ink,
+  cursor: 'pointer',
+  fontFamily: "'Inter', sans-serif",
+  fontSize: 12,
+};
+
+// Azioni rapide (B49): un solo click verso manuale/ricevuta/garanzia/ultimo
+// intervento/tecnico, usando dati già caricati da AssetDetail — mai un
+// bottone per un dato che non esiste (nascosto, non disabilitato/rotto).
+function QuickActions({
+  documents,
+  warranties,
+  timeline,
+  onScrollToWarranties,
+  onScrollToTimeline,
+  openContact,
+}: {
+  documents: DocumentRecord[];
+  warranties: Warranty[];
+  timeline: TimelineEvent[];
+  onScrollToWarranties: () => void;
+  onScrollToTimeline: () => void;
+  openContact: (id: string) => void;
+}) {
+  const manual = documents.find((d) => d.docType && /manuale/i.test(d.docType));
+  const receipt = documents.find((d) => d.docType && /fattura|ricevuta/i.test(d.docType));
+  const lastContact = timeline[0]?.contact;
+
+  if (!manual && !receipt && warranties.length === 0 && timeline.length === 0 && !lastContact) {
+    return null;
+  }
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+      {manual && (
+        <a href={api.documents.fileUrl(manual.id)} target="_blank" rel="noreferrer" style={quickActionButtonStyle}>
+          <BookOpen size={13} /> Manuale
+        </a>
+      )}
+      {receipt && (
+        <a href={api.documents.fileUrl(receipt.id)} target="_blank" rel="noreferrer" style={quickActionButtonStyle}>
+          <Receipt size={13} /> Ricevuta
+        </a>
+      )}
+      {warranties.length > 0 && (
+        <button onClick={onScrollToWarranties} style={quickActionButtonStyle}>
+          <ShieldCheck size={13} /> Garanzia
+        </button>
+      )}
+      {timeline.length > 0 && (
+        <button onClick={onScrollToTimeline} style={quickActionButtonStyle}>
+          <Wrench size={13} /> Ultimo intervento
+        </button>
+      )}
+      {lastContact && (
+        <button onClick={() => openContact(lastContact.id)} style={quickActionButtonStyle}>
+          <UserCheck size={13} /> {lastContact.name}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReactivate }: { house: House; assets: Asset[]; rooms: Room[]; openAsset: (id: string) => void; onAddAsset: () => void; onReactivate: (asset: Asset) => void }) {
   const activeAssets = assets.filter((a) => !a.dismissedAt);
@@ -278,6 +349,7 @@ export function AssetDetail({
   contacts,
   back,
   openRoom,
+  openContact,
   onChangeRoom,
   onEdit,
   onDelete,
@@ -292,6 +364,7 @@ export function AssetDetail({
   contacts: Contact[];
   back: () => void;
   openRoom: (id: string) => void;
+  openContact: (id: string) => void;
   onChangeRoom: (assetId: string, roomId: string | null) => void;
   onEdit: () => void;
   onDelete: (asset: Asset) => void;
@@ -303,6 +376,8 @@ export function AssetDetail({
 }) {
   const meta = ASSET_TYPES[asset.type];
   const Icon = iconForAsset(asset);
+  const warrantiesSectionRef = useRef<HTMLDivElement>(null);
+  const timelineSectionRef = useRef<HTMLDivElement>(null);
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [availableInterventionDocuments, setAvailableInterventionDocuments] = useState<DocumentRecord[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
@@ -588,6 +663,15 @@ export function AssetDetail({
         {asset.dismissedAt && <Stamp tone="slate">dismesso il {formatDateForDisplay(asset.dismissedAt)}</Stamp>}
       </div>
 
+      <QuickActions
+        documents={documents}
+        warranties={warranties}
+        timeline={timeline}
+        onScrollToWarranties={() => warrantiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        onScrollToTimeline={() => timelineSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        openContact={openContact}
+      />
+
       <div
         style={{
           display: 'grid',
@@ -803,6 +887,7 @@ export function AssetDetail({
       )}
 
       <div
+        ref={warrantiesSectionRef}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -955,6 +1040,7 @@ export function AssetDetail({
       )}
 
       <div
+        ref={timelineSectionRef}
         style={{
           display: 'flex',
           alignItems: 'center',

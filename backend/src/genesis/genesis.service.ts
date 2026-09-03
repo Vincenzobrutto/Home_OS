@@ -31,6 +31,9 @@ import {
 import {
   evaluateHomeDetectiveRules,
   type HomeDetectiveAssetInput,
+  type HomeDetectiveContactInput,
+  type HomeDetectiveInterventionInput,
+  type HomeDetectiveWarrantyInput,
   type IssueDraft,
 } from '../common/home-detective';
 import {
@@ -459,6 +462,9 @@ export class GenesisService {
       houseDocumentsCount,
       confirmedRoomsCount,
       pendingObservationsCount,
+      interventions,
+      warranties,
+      contacts,
     ] = await Promise.all([
       this.prisma.asset.findMany({
         where: { houseId },
@@ -471,7 +477,52 @@ export class GenesisService {
       this.prisma.observation.count({
         where: { scanSession: { houseId }, status: 'PENDING' },
       }),
+      this.prisma.intervention.findMany({
+        where: { houseId },
+        select: {
+          id: true,
+          contactId: true,
+          assets: { select: { assetId: true }, take: 1 },
+          documents: { select: { documentId: true }, take: 1 },
+        },
+      }),
+      this.prisma.warranty.findMany({
+        where: { asset: { houseId } },
+        select: { id: true, assetId: true, proofDocumentId: true },
+      }),
+      this.prisma.contact.findMany({
+        where: { houseId },
+        select: {
+          id: true,
+          phone: true,
+          email: true,
+          _count: { select: { interventions: true, warrantiesProvided: true } },
+        },
+      }),
     ]);
+    const detectiveInterventions: HomeDetectiveInterventionInput[] =
+      interventions.map((intervention) => ({
+        id: intervention.id,
+        assetId: intervention.assets[0]?.assetId ?? null,
+        contactId: intervention.contactId,
+        hasDocument: intervention.documents.length > 0,
+      }));
+    const detectiveWarranties: HomeDetectiveWarrantyInput[] = warranties.map(
+      (warranty) => ({
+        id: warranty.id,
+        assetId: warranty.assetId,
+        hasProof: warranty.proofDocumentId !== null,
+      }),
+    );
+    const detectiveContacts: HomeDetectiveContactInput[] = contacts.map(
+      (contact) => ({
+        id: contact.id,
+        phone: contact.phone,
+        email: contact.email,
+        isUsed:
+          contact._count.interventions + contact._count.warrantiesProvided > 0,
+      }),
+    );
     const houseHasAnyDocument = houseDocumentsCount > 0;
     const scoreAssets: HomeScoreAssetInput[] = assets.map((asset) => ({
       id: asset.id,
@@ -504,6 +555,9 @@ export class GenesisService {
         genesisCompleted: true,
         assets: detectiveAssets,
         unconfirmedObservationsCount: pendingObservationsCount,
+        interventions: detectiveInterventions,
+        warranties: detectiveWarranties,
+        contacts: detectiveContacts,
       }),
     };
   }
@@ -584,6 +638,9 @@ export class GenesisService {
     drafts: {
       ruleCode: string;
       assetId: string | null;
+      interventionId: string | null;
+      warrantyId: string | null;
+      contactId: string | null;
       category: string;
       severity: string;
       title: string;
@@ -596,10 +653,21 @@ export class GenesisService {
       include: { recommendations: true },
     });
 
-    const draftKey = (d: { ruleCode: string; assetId: string | null }) =>
-      `${d.ruleCode}:${d.assetId ?? ''}`;
-    const openKey = (i: { ruleCode: string; assetId: string | null }) =>
-      `${i.ruleCode}:${i.assetId ?? ''}`;
+    // Chiave estesa a B49: assetId da solo collideva per ogni regola che si
+    // riferisce a Intervention/Warranty/Contact (assetId sempre null lì) —
+    // ogni draft imposta un solo riferimento non-null, quindi la
+    // concatenazione resta univoca per entità, non solo per regola+casa.
+    type IssueKeyParts = {
+      ruleCode: string;
+      assetId: string | null;
+      interventionId?: string | null;
+      warrantyId?: string | null;
+      contactId?: string | null;
+    };
+    const issueKey = (i: IssueKeyParts) =>
+      `${i.ruleCode}:${i.assetId ?? ''}:${i.interventionId ?? ''}:${i.warrantyId ?? ''}:${i.contactId ?? ''}`;
+    const draftKey = issueKey;
+    const openKey = issueKey;
 
     const draftsByKey = new Map(drafts.map((d) => [draftKey(d), d]));
     const openByKey = new Map(openIssues.map((i) => [openKey(i), i]));
@@ -631,6 +699,9 @@ export class GenesisService {
         data: {
           houseId,
           assetId: draft.assetId,
+          interventionId: draft.interventionId,
+          warrantyId: draft.warrantyId,
+          contactId: draft.contactId,
           category: draft.category,
           severity: draft.severity as never,
           title: draft.title,

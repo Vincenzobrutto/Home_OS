@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Menu } from 'lucide-react';
 import { T, FONTS, MOBILE_CSS } from './theme';
 import { api } from './api';
-import type { Asset, Contact, ContactDetail as ContactDetailType, CustomField, House, Room, User } from './types';
+import type { Asset, Contact, ContactDetail as ContactDetailType, CustomField, DocumentRecord, House, Intervention, Room, User, Warranty } from './types';
 import { Sidebar, type View } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { RoomDetail } from './components/Rooms';
@@ -17,6 +17,7 @@ import { HouseDocumentsView } from './components/HouseDocuments';
 import { GenesisWizard } from './components/Genesis';
 import { EnergyConsumption } from './components/EnergyConsumption';
 import { PropertyProfile } from './components/PropertyProfile';
+import { GlobalSearch } from './components/GlobalSearch';
 
 type AssetWithFields = Asset & { customFields: CustomField[] };
 
@@ -30,6 +31,11 @@ export default function App() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [assets, setAssets] = useState<AssetWithFields[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  // Caricati per la ricerca unificata (B49) — non altrimenti necessari a
+  // livello App, ogni vista che li usava prima li caricava per conto suo.
+  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
+  const [warranties, setWarranties] = useState<Warranty[]>([]);
+  const [interventions, setInterventions] = useState<Intervention[]>([]);
 
   const [view, setView] = useState<View>('dashboard');
   // Pannello sidebar a scomparsa sotto la soglia mobile (vedi MOBILE_CSS in
@@ -54,18 +60,38 @@ export default function App() {
   // Quale tab di InboxHub aprire al prossimo render — usato solo per il
   // deep-link di ritorno da un collegamento OAuth (vedi effect sotto).
   const [inboxInitialTab, setInboxInitialTab] = useState<InboxTab | undefined>(undefined);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Scorciatoia globale per la ricerca unificata (B49) — nessun listener da
+  // tastiera esisteva prima in tutto il frontend.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   async function loadHouseData(houseId: string) {
-    const [houseDetail, roomsData, assetsData, contactsData] = await Promise.all([
+    const [houseDetail, roomsData, assetsData, contactsData, documentsData, warrantiesData, interventionsData] = await Promise.all([
       api.houses.get(houseId),
       api.rooms.listForHouse(houseId),
       api.assets.listForHouse(houseId),
       api.contacts.listForHouse(houseId),
+      api.documents.listForHouse(houseId),
+      api.warranties.listForHouse(houseId),
+      api.interventions.list(houseId),
     ]);
     setHouse(houseDetail);
     setRooms(roomsData);
     setAssets(assetsData);
     setContacts(contactsData);
+    setDocuments(documentsData);
+    setWarranties(warrantiesData);
+    setInterventions(interventionsData);
     setGmailCandidateCount((await api.documents.gmailCandidates(houseId)).length);
     setDriveCandidateCount((await api.documents.driveCandidates(houseId)).length);
   }
@@ -294,7 +320,17 @@ export default function App() {
         open={mobileNavOpen}
         onNavigate={() => setMobileNavOpen(false)}
         onLogout={handleLogout}
+        onOpenSearch={() => setSearchOpen(true)}
       />
+      {searchOpen && (
+        <GlobalSearch
+          data={{ assets, contacts, documents, warranties, interventions }}
+          onClose={() => setSearchOpen(false)}
+          openAsset={(id) => openAsset(id, view)}
+          openContact={openContact}
+          onOpenHouseDocuments={() => setView('house-documents')}
+        />
+      )}
       <div className="app-content" style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden' }}>
         <div className="app-topbar">
           <button className="app-menu-btn" onClick={() => setMobileNavOpen(true)} aria-label="Apri menu">
@@ -308,6 +344,7 @@ export default function App() {
             rooms={rooms}
             assets={assets}
             openAsset={(id) => openAsset(id, 'dashboard')}
+            onOpenContact={openContact}
             onOpenGenesis={() => setView('genesis')}
           />
         )}
@@ -401,6 +438,7 @@ export default function App() {
             contacts={contacts}
             back={() => setView(assetDetailOrigin)}
             openRoom={openRoom}
+            openContact={openContact}
             onChangeRoom={changeAssetRoom}
             onEdit={() => setEditAssetId(selectedAsset.id)}
             onDelete={deleteAsset}
