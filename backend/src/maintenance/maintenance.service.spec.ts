@@ -95,9 +95,9 @@ describe('MaintenanceService document confirmation', () => {
             create: [{ assetId: 'asset-1' }, { assetId: 'asset-2' }],
           },
           documents: {
-            create: expect.objectContaining({ documentId: 'doc' }),
+            create: expect.objectContaining({ documentId: 'doc' }) as object,
           },
-        }),
+        }) as object,
       }),
     );
   });

@@ -2,6 +2,16 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-03 (3) — Verifica B47 Memory Core + roadmap v6 (Codex)
+
+Recuperati e verificati da GitHub i due commit di Codex: il riordino della roadmap v6 (solo documentazione, nessun rischio) e B47 Memory Core (vedi voce sotto). Revisione approfondita di schema/migrazione (backfill via `_b47_unambiguous_matches`: Occurrence collegata a `Intervention` solo con match univoco su Asset/data/documento/contatto, garanzie legacy create senza inventare prove, vincolo CHECK costo/valuta coerente), `interventions.service.ts`/`interventions.controller.ts` (autorizzazione via `AuthenticatedRequest`+`assertHouseAccess`, nessuna ripetizione del bug di tipizzazione B41) e del diff di `maintenance.service.ts` (rimossa la doppia scrittura Occurrence/AssetTimelineEvent, `Intervention` creato una sola volta per completamento multi-piano).
+
+**Trovati e corretti 2 errori di lint** (a differenza di B41, `nest build`/`tsc` e i 79 test erano già puliti al primo tentativo): `maintenance.service.spec.ts` aveva `@typescript-eslint/no-unsafe-assignment` su due `expect.objectContaining()` annidati non ancora trattati con `as object`, nonostante un terzo caso identico poco sopra fosse già corretto — allineati alla convenzione esistente nel codebase.
+
+Migrazione `20260903173000_add_memory_core` applicata al database reale dopo aver salvato uno snapshot pre-migrazione: 0 `MaintenanceOccurrence` preesistenti (nessun intervento da backfillare), 33 `AssetTimelineEvent` invariati, 7 Asset con `warrantyUntil` → 7 righe `Warranty` create correttamente con `evidenceStatus: UNKNOWN` (nessun documento di prova collegato, coerente con l'assenza di provenienza confermata su quel campo) e la nota "Importata dal campo garanzia preesistente dell'Asset". Nessuna riga legacy ambigua, nessun dato perso.
+
+Verificato dal vivo sulla casa reale (sessione temporanea creata ed eliminata subito dopo, nessuna password toccata): `GET /houses/:houseId/interventions` → `[]`; `POST /houses/:houseId/interventions` → crea correttamente un `Intervention` con Asset collegato (poi eliminato, era solo di test); `GET /assets/:id/timeline` → risposta unificata con `sourceKind: "LEGACY_EVENT"`/`sourceId` per gli eventi storici, come da contratto atteso; `GET /houses/:houseId/compliance` (B41) ancora funzionante. Frontend lint pulito (solo 3 warning preesistenti `react-hooks/exhaustive-deps`, non introdotti da B47).
+
 ## 2026-09-03 — B47 Memory Core: interventi canonici
 
 - Auditati schema, service, API e UI di `Contact`, `AssetTimelineEvent`, `MaintenanceOccurrence`, documenti, costi e garanzie.
