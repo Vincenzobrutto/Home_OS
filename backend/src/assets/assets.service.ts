@@ -20,6 +20,7 @@ import { computeAssetStatus } from '../common/asset-status';
 import { computeDefaultWarrantyUntil } from '../common/warranty';
 import { recordDeclaredFields } from '../common/field-provenance';
 import { InterventionsService } from '../interventions/interventions.service';
+import { WarrantiesService } from '../warranties/warranties.service';
 
 // Riusato sia per AssetCustomField che per AssetFieldProvenance: stessa
 // forma di relazione (sourceDocument/confirmedByUser) su entrambi — vedi
@@ -35,6 +36,7 @@ export class AssetsService {
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
     private readonly interventions: InterventionsService,
+    private readonly warranties: WarrantiesService,
   ) {}
 
   async create(userId: string, houseId: string, dto: CreateAssetDto) {
@@ -50,22 +52,29 @@ export class AssetsService {
     }
 
     const code = await this.nextAssetCode();
-    // Nessuna garanzia esplicita ma acquisto noto: applica il default di 24
-    // mesi (vedi common/warranty.ts) — modificabile subito con "Modifica"
-    // per prodotti con garanzia più lunga o più corta.
-    const warrantyUntil =
-      dto.warrantyUntil ??
-      (dto.purchasedAt
-        ? computeDefaultWarrantyUntil(dto.purchasedAt)
-        : undefined);
     const status = computeAssetStatus({
-      warrantyUntil: warrantyUntil ?? null,
+      warrantyUntil: null,
       documentsCount: 0,
     });
 
-    return this.prisma.asset.create({
-      data: { ...dto, warrantyUntil, houseId, code, status },
+    // warrantyUntil non è mai scritto qui: diventa una Warranty più sotto
+    // (Prisma ignora un campo `undefined` in create/update, vedi decisions.md #47).
+    const created = await this.prisma.asset.create({
+      data: { ...dto, warrantyUntil: undefined, houseId, code, status },
     });
+
+    // Garanzia esplicita o acquisto noto (default 24 mesi, vedi
+    // common/warranty.ts): registrata come Warranty, mai come scrittura
+    // diretta su Asset.warrantyUntil — vedi decisions.md #47.
+    if (dto.warrantyUntil || dto.purchasedAt) {
+      await this.warranties.create(userId, created.id, {
+        expiresAt:
+          dto.warrantyUntil ?? computeDefaultWarrantyUntil(dto.purchasedAt!),
+        startsAt: dto.purchasedAt,
+      });
+      return this.prisma.asset.findUniqueOrThrow({ where: { id: created.id } });
+    }
+    return created;
   }
 
   // "code" è unico globalmente (non per casa, vedi schema.prisma), quindi il
@@ -112,32 +121,51 @@ export class AssetsService {
       );
     }
 
-    const effectivePurchasedAt =
-      dto.purchasedAt !== undefined ? dto.purchasedAt : existing.purchasedAt;
-    let warrantyUntil =
-      dto.warrantyUntil !== undefined
-        ? dto.warrantyUntil
-        : existing.warrantyUntil;
-    // Stessa regola di default di create(): se ancora non c'è una garanzia
-    // esplicita ma ora è nota la data di acquisto, applicala automaticamente.
-    if (!warrantyUntil && effectivePurchasedAt) {
-      warrantyUntil = computeDefaultWarrantyUntil(effectivePurchasedAt);
-    }
-    const status = computeAssetStatus({
-      warrantyUntil,
-      documentsCount: existing._count.documents,
+    // warrantyUntil non è mai scritto qui: la sua gestione passa da Warranty
+    // più sotto (Prisma ignora un campo `undefined`, vedi decisions.md #47).
+    await this.prisma.asset.update({
+      where: { id },
+      data: { ...dto, warrantyUntil: undefined },
     });
 
-    const updated = await this.prisma.asset.update({
-      where: { id },
-      data: { ...dto, warrantyUntil, status },
-    });
+    const effectivePurchasedAt =
+      dto.purchasedAt !== undefined ? dto.purchasedAt : existing.purchasedAt;
+    const newWarrantyUntil = dto.warrantyUntil;
+    if (
+      newWarrantyUntil !== undefined &&
+      newWarrantyUntil.getTime() !== existing.warrantyUntil?.getTime()
+    ) {
+      // Correzione di un valore già dichiarato da questo stesso campo: se
+      // esiste già una Warranty "gestita da qui" (nessun contatto/documento/
+      // intervento d'origine) la aggiorna, altrimenti ne dichiara una nuova —
+      // evita una riga nuova a ogni salvataggio del form Modifica asset,
+      // stessa classe di bug già risolta in B38 per AssetFieldProvenance.
+      const legacyWarranty =
+        await this.warranties.findLegacyManagedWarranty(id);
+      if (legacyWarranty) {
+        await this.warranties.update(userId, legacyWarranty.id, {
+          expiresAt: newWarrantyUntil,
+        });
+      } else {
+        await this.warranties.create(userId, id, {
+          expiresAt: newWarrantyUntil,
+        });
+      }
+    } else if (!existing.warrantyUntil && effectivePurchasedAt) {
+      // Stessa regola di default di create(): se ancora non c'è una garanzia
+      // esplicita ma ora è nota la data di acquisto, applicala automaticamente.
+      await this.warranties.create(userId, id, {
+        expiresAt: computeDefaultWarrantyUntil(effectivePurchasedAt),
+        startsAt: effectivePurchasedAt,
+      });
+    }
+
     // Provenienza (B38): solo per i campi il cui valore è davvero cambiato,
     // non per il default di garanzia calcolato sopra — vedi field-provenance.ts
     // (il form di modifica rimanda sempre tutti i campi, anche quelli
     // invariati, quindi "presente nel body" da solo non basta).
     await recordDeclaredFields(this.prisma, id, userId, dto, existing);
-    return updated;
+    return this.prisma.asset.findUniqueOrThrow({ where: { id } });
   }
 
   async addCustomField(

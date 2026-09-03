@@ -73,7 +73,7 @@ La sequenza di prodotto è **Memoria della casa → Fiducia → Recupero rapido 
 
 ### Fase 4 — Garanzie e storico interventi (P0)
 
-- Garanzia strutturata con acquisto, durata/scadenza, prova documentale e stato evidenza.
+- ~~Garanzia strutturata con acquisto, durata/scadenza, prova documentale e stato evidenza~~: B50 completato il 2026-09-03, `Warranty` è ora l'unico writer del riepilogo su Asset, sezione Garanzie nella scheda Asset, colore per tipo di intervento in Cronologia.
 - Timeline dell'Asset leggibile come storia: installazione → manutenzione → guasto → riparazione → garanzia → costo (B50).
 - Deliverable: ogni Asset ha una propria “cartella clinica”.
 

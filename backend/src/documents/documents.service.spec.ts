@@ -16,6 +16,8 @@ describe('DocumentsService domain rules', () => {
   const fieldProvenanceUpsert = jest.fn();
   const timelineCreate = jest.fn();
   const maintenancePlanFindMany = jest.fn();
+  const warrantyCreate = jest.fn();
+  const warrantyFindMany = jest.fn().mockResolvedValue([]);
   const transaction = jest.fn();
   const extract = jest.fn();
 
@@ -37,6 +39,7 @@ describe('DocumentsService domain rules', () => {
     assetFieldProvenance: { upsert: fieldProvenanceUpsert },
     assetTimelineEvent: { create: timelineCreate },
     maintenancePlan: { findMany: maintenancePlanFindMany },
+    warranty: { create: warrantyCreate, findMany: warrantyFindMany },
     $transaction: transaction,
   };
   const claude = { extract };
@@ -245,14 +248,23 @@ describe('DocumentsService domain rules', () => {
     };
     documentFindUnique.mockResolvedValue(document);
     assetFindUnique.mockResolvedValue(asset);
-    assetFindUniqueOrThrow.mockResolvedValueOnce(asset).mockResolvedValueOnce({
-      ...asset,
-      purchasedAt: new Date('2024-03-15T00:00:00Z'),
-      warrantyUntil: new Date('2026-03-15T00:00:00Z'),
-      _count: { documents: 1 },
-    });
+    // 3 letture in sequenza: applyFieldsToAsset, recomputeAssetWarrantySummary
+    // (dopo la Warranty creata dal default acquisto), recomputeAssetStatus
+    // finale in confirm() — le ultime due leggono _count.documents.
+    assetFindUniqueOrThrow
+      .mockResolvedValueOnce(asset)
+      .mockResolvedValueOnce({ ...asset, _count: { documents: 0 } })
+      .mockResolvedValueOnce({
+        ...asset,
+        warrantyUntil: new Date('2026-03-15T00:00:00Z'),
+        _count: { documents: 1 },
+      });
+    warrantyFindMany.mockResolvedValueOnce([
+      { expiresAt: new Date('2026-03-15T00:00:00Z') },
+    ]);
     customFieldFindMany.mockResolvedValue([]);
     assetUpdate.mockResolvedValue(asset);
+    warrantyCreate.mockResolvedValue({ id: 'warranty-id' });
     documentUpdate.mockResolvedValue(document);
     timelineCreate.mockResolvedValue({ id: 'event-id' });
     transaction.mockResolvedValue([document, { id: 'event-id' }, document]);
@@ -267,7 +279,24 @@ describe('DocumentsService domain rules', () => {
       data: {
         serialNumber: 'SN-123',
         purchasedAt: new Date('2024-03-15T00:00:00Z'),
+      },
+    });
+    expect(warrantyCreate).toHaveBeenCalledWith({
+      data: {
+        assetId: 'asset-id',
+        expiresAt: new Date('2026-03-15T00:00:00Z'),
+        kind: 'PURCHASE',
+        proofDocumentId: null,
+        evidenceStatus: 'UNKNOWN',
+        confirmedByUserId: 'user-id',
+        confirmedAt: new Date('2026-08-02T12:00:00Z'),
+      },
+    });
+    expect(assetUpdate).toHaveBeenNthCalledWith(2, {
+      where: { id: 'asset-id' },
+      data: {
         warrantyUntil: new Date('2026-03-15T00:00:00Z'),
+        status: AssetStatus.DUE,
       },
     });
     expect(assetUpdate).toHaveBeenLastCalledWith({

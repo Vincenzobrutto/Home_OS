@@ -1,4 +1,4 @@
-import type { Asset, ConfirmObservationItem, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, EvidenceStatus, GenesisResults, GmailCandidate, GmailScanResult, GmailStatus, House, HouseTimelineEventRecord, Intervention, InterventionDocumentRole, InterventionKind, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, ObservationRecord, Room, ScanSessionRecord, TimelineEvent, User } from './types';
+import type { Asset, ConfirmObservationItem, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, EvidenceStatus, GenesisResults, GmailCandidate, GmailScanResult, GmailStatus, House, HouseTimelineEventRecord, Intervention, InterventionDocumentRole, InterventionKind, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, ObservationRecord, Room, ScanSessionRecord, TimelineEvent, User, Warranty, WarrantyKind } from './types';
 import type { RoomGeometry } from './geometry';
 
 // Deriva l'host dal browser stesso invece di un "localhost" fisso: da
@@ -221,6 +221,33 @@ export const api = {
         documents?: Array<{ documentId: string; role: InterventionDocumentRole }>;
       },
     ) => request<Intervention>(`/houses/${houseId}/interventions`, { method: 'POST', body: JSON.stringify(data) }),
+  },
+  warranties: {
+    listForAsset: (assetId: string) => request<Warranty[]>(`/assets/${assetId}/warranties`),
+    create: (
+      assetId: string,
+      data: {
+        expiresAt: string;
+        startsAt?: string;
+        kind?: WarrantyKind;
+        providerContactId?: string | null;
+        proofDocumentId?: string | null;
+        notes?: string | null;
+        evidenceStatus?: EvidenceStatus;
+      },
+    ) => request<Warranty>(`/assets/${assetId}/warranties`, { method: 'POST', body: JSON.stringify(data) }),
+    update: (
+      id: string,
+      data: Partial<{
+        expiresAt: string;
+        startsAt: string | null;
+        kind: WarrantyKind;
+        providerContactId: string | null;
+        proofDocumentId: string | null;
+        notes: string | null;
+        evidenceStatus: EvidenceStatus;
+      }>,
+    ) => request<Warranty>(`/warranties/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   },
   contacts: {
     listForHouse: (houseId: string) => request<Contact[]>(`/houses/${houseId}/contacts`),

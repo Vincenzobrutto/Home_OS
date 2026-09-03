@@ -316,6 +316,25 @@ export interface Intervention {
   }>;
 }
 
+export type WarrantyKind = 'PURCHASE' | 'REPAIR' | 'EXTENDED' | 'OTHER';
+
+export interface Warranty {
+  id: string;
+  assetId: string;
+  originInterventionId: string | null;
+  providerContactId: string | null;
+  contact?: ContactRef | null;
+  proofDocumentId: string | null;
+  document?: { id: string; originalFilename: string; docType: string | null } | null;
+  startsAt: string | null;
+  expiresAt: string;
+  kind: WarrantyKind;
+  evidenceStatus: EvidenceStatus;
+  notes: string | null;
+  confirmedByUserId: string | null;
+  confirmedAt: string | null;
+}
+
 export interface Contact {
   id: string;
   houseId: string;

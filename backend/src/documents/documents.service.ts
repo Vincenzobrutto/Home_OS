@@ -6,7 +6,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DocumentStatus, FieldSource, Prisma } from '@prisma/client';
+import {
+  DocumentStatus,
+  EvidenceStatus,
+  FieldSource,
+  Prisma,
+  WarrantyKind,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessControlService } from '../access-control/access-control.service';
 import { ClaudeExtractionService } from './claude-extraction.service';
@@ -21,7 +27,10 @@ import { ConfirmFloorPlanDto } from './dto/confirm-floor-plan.dto';
 import { ConfirmUtilityBillDto } from './dto/confirm-utility-bill.dto';
 import { computeAssetStatus } from '../common/asset-status';
 import { parseFlexibleDate } from '../common/parse-date';
-import { computeDefaultWarrantyUntil } from '../common/warranty';
+import {
+  computeDefaultWarrantyUntil,
+  recomputeAssetWarrantySummary,
+} from '../common/warranty';
 import {
   upsertAssetFieldProvenance,
   type TrackedAssetField,
@@ -1220,7 +1229,6 @@ export class DocumentsService {
     });
     const patch: {
       installedAt?: Date;
-      warrantyUntil?: Date;
       purchasedAt?: Date;
       serialNumber?: string;
       manufacturer?: string;
@@ -1232,6 +1240,13 @@ export class DocumentsService {
     // il documento, l'ha dedotto il sistema dalla data di acquisto.
     const extractedFields = new Set<TrackedAssetField>();
     let customFieldCreated = false;
+    // warrantyUntil non è più un campo Asset scritto qui (B50, decisions.md
+    // #47): un'evidenza dal documento crea una Warranty verificata, il
+    // default dedotto dall'acquisto ne crea una con evidenza UNKNOWN.
+    let warrantyToCreate: {
+      expiresAt: Date;
+      evidenceStatus: EvidenceStatus;
+    } | null = null;
 
     for (const [label, value] of fields) {
       const lower = label.toLowerCase();
@@ -1257,11 +1272,13 @@ export class DocumentsService {
         continue;
       }
       if (WARRANTY_HINTS.some((h) => lower.includes(h))) {
-        if (!asset.warrantyUntil && !patch.warrantyUntil) {
+        if (!asset.warrantyUntil && !warrantyToCreate) {
           const parsed = parseFlexibleDate(value);
           if (parsed) {
-            patch.warrantyUntil = parsed;
-            extractedFields.add('warrantyUntil');
+            warrantyToCreate = {
+              expiresAt: parsed,
+              evidenceStatus: EvidenceStatus.VERIFIED_PRESENT,
+            };
           }
         }
         continue;
@@ -1329,8 +1346,11 @@ export class DocumentsService {
     // sempre modificabile a mano dopo per prodotti con garanzia più lunga o
     // più corta — vedi common/warranty.ts.
     const effectivePurchasedAt = patch.purchasedAt ?? asset.purchasedAt;
-    if (!asset.warrantyUntil && !patch.warrantyUntil && effectivePurchasedAt) {
-      patch.warrantyUntil = computeDefaultWarrantyUntil(effectivePurchasedAt);
+    if (!asset.warrantyUntil && !warrantyToCreate && effectivePurchasedAt) {
+      warrantyToCreate = {
+        expiresAt: computeDefaultWarrantyUntil(effectivePurchasedAt),
+        evidenceStatus: EvidenceStatus.UNKNOWN,
+      };
     }
 
     if (Object.keys(patch).length > 0) {
@@ -1345,7 +1365,30 @@ export class DocumentsService {
         sourceDocumentId: documentId,
       });
     }
-    return Object.keys(patch).length > 0 || customFieldCreated;
+    if (warrantyToCreate) {
+      // proofDocumentId solo quando l'evidenza è VERIFIED_PRESENT: questo
+      // documento verrà marcato CONFIRMED pochi istanti dopo nella stessa
+      // richiesta (vedi confirm()), stesso precedente già in uso sopra per
+      // upsertAssetFieldProvenance con un documentId non ancora confermato.
+      await this.prisma.warranty.create({
+        data: {
+          assetId,
+          expiresAt: warrantyToCreate.expiresAt,
+          kind: WarrantyKind.PURCHASE,
+          proofDocumentId:
+            warrantyToCreate.evidenceStatus === EvidenceStatus.VERIFIED_PRESENT
+              ? documentId
+              : null,
+          evidenceStatus: warrantyToCreate.evidenceStatus,
+          confirmedByUserId: userId,
+          confirmedAt: new Date(),
+        },
+      });
+      await recomputeAssetWarrantySummary(this.prisma, assetId);
+    }
+    return (
+      Object.keys(patch).length > 0 || !!warrantyToCreate || customFieldCreated
+    );
   }
 
   private async recomputeAssetStatus(assetId: string) {

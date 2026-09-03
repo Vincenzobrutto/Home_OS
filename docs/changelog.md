@@ -2,6 +2,16 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-03 (4) — B50: Garanzie strutturate e cartella clinica dell'Asset
+
+- Nuovo modulo `warranties` (backend): `GET/POST /assets/:assetId/warranties`, `PATCH /warranties/:id`, stessa struttura di `Intervention` (autorizzazione per-casa, evidenza risolta lato server, nessun delete).
+- `Asset.warrantyUntil`/`status` diventano un riepilogo derivato: `recomputeAssetWarrantySummary` li ricalcola dopo ogni scrittura `Warranty`, ed è ora l'unico scrittore. `AssetsService.create/update` e `DocumentsService.applyFieldsToAsset` non scrivono più il campo direttamente: creano/aggiornano una `Warranty` (vedi `decisions.md` #47).
+- Il campo "Garanzia fino al" nel form Modifica asset resta, ma corregge in-place la stessa garanzia "gestita da qui" invece di crearne una nuova a ogni salvataggio — verificato dal vivo con due PATCH consecutivi sulla casa reale (stessa riga aggiornata, nessun duplicato).
+- `warrantyUntil` esce dal tracciamento provenienza (`TRACKED_ASSET_FIELDS`): vive ora su `Warranty.evidenceStatus`.
+- Nuova sezione "Garanzie" nella scheda Asset (creazione, evidenza, fornitore, documento di prova) e colore per tipo di intervento (`InterventionKind`) sui pallini della Cronologia, per la leggibilità "installazione → manutenzione → guasto → riparazione" richiesta dal backlog.
+- Backend: build/lint puliti, 84/84 test (5 nuovi per `WarrantiesService`, aggiornati i test di `DocumentsService` che coprivano il vecchio percorso di scrittura diretta). Frontend: build/lint puliti.
+- Verificato dal vivo sulla casa reale: creazione Asset con `purchasedAt` → Warranty automatica a 24 mesi e riepilogo Asset coerente; garanzia manuale con documento confermato → evidenza `VERIFIED_PRESENT`; nessuna riga duplicata su modifiche ripetute. Verifica visiva in browser non eseguita (sessione scaduta, nessuna credenziale disponibile in questa sessione per il login).
+
 ## 2026-09-03 (3) — Verifica B47 Memory Core + roadmap v6 (Codex)
 
 Recuperati e verificati da GitHub i due commit di Codex: il riordino della roadmap v6 (solo documentazione, nessun rischio) e B47 Memory Core (vedi voce sotto). Revisione approfondita di schema/migrazione (backfill via `_b47_unambiguous_matches`: Occurrence collegata a `Intervention` solo con match univoco su Asset/data/documento/contatto, garanzie legacy create senza inventare prove, vincolo CHECK costo/valuta coerente), `interventions.service.ts`/`interventions.controller.ts` (autorizzazione via `AuthenticatedRequest`+`assertHouseAccess`, nessuna ripetizione del bug di tipizzazione B41) e del diff di `maintenance.service.ts` (rimossa la doppia scrittura Occurrence/AssetTimelineEvent, `Intervention` creato una sola volta per completamento multi-piano).

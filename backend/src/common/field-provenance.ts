@@ -6,9 +6,11 @@ import { PrismaService } from '../prisma/prisma.service';
 // (DocumentsService.applyFieldsToAsset) senza lasciare traccia di chi/da
 // dove — vedi decisions.md B38. Elencati qui una sola volta: chi chiama
 // upsertAssetFieldProvenance non deve reinventare l'elenco.
+// warrantyUntil non è più tracciato qui da B50 in poi: la sua provenienza
+// vive su Warranty.evidenceStatus/confirmedByUserId/confirmedAt, l'Asset
+// riceve solo il valore derivato — vedi decisions.md #47 e common/warranty.ts.
 export const TRACKED_ASSET_FIELDS = [
   'installedAt',
-  'warrantyUntil',
   'purchasedAt',
   'serialNumber',
   'manufacturer',

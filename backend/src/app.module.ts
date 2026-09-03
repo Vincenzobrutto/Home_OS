@@ -17,6 +17,7 @@ import { GenesisModule } from './genesis/genesis.module';
 import { UtilityBillsModule } from './utility-bills/utility-bills.module';
 import { ComplianceModule } from './compliance/compliance.module';
 import { InterventionsModule } from './interventions/interventions.module';
+import { WarrantiesModule } from './warranties/warranties.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { InterventionsModule } from './interventions/interventions.module';
     UtilityBillsModule,
     ComplianceModule,
     InterventionsModule,
+    WarrantiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

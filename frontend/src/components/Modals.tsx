@@ -326,6 +326,9 @@ export function EditAssetModal({
         <div>
           <label style={labelStyle}>Garanzia fino al</label>
           <input style={inputStyle} placeholder="gg/mm/aaaa" value={warrantyUntil} onChange={(e) => setWarrantyUntil(e.target.value)} />
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10.5, color: T.slate, marginTop: 4 }}>
+            Puoi registrare più garanzie (acquisto, riparazione) nella sezione Garanzie della scheda Asset.
+          </div>
         </div>
         <div>
           <label style={labelStyle}>Data acquisto</label>
