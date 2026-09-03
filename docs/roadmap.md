@@ -55,7 +55,7 @@ La sequenza di prodotto è **Memoria della casa → Fiducia → Recupero rapido 
 ### Fase 1 — Fondazioni del dominio (P0)
 
 - Completare il dominio v6 già avviato: `EvidenceStatus`, `RegulatoryTerritory`, `ThermalSystem`, `PlantBooklet`, `RegulatoryRule`, resolver territoriali e `MaintenancePlan` generalizzato (B41).
-- Rafforzare il Memory Core: `Contact`, timeline, garanzie e costi degli interventi; ogni intervento deve poter collegare tecnico, documento, costo, garanzia e Asset (B47).
+- ~~Rafforzare il Memory Core~~: B47 completato il 2026-09-03 con interventi canonici multi-Asset/multi-documento, costi, evidenza, Occurrence collegate e fondazione Warranty; la cartella clinica completa resta B50.
 - Deliverable: schema dati stabile. Nessuna nuova esperienza compliance prima della stabilità di questi confini.
 
 ### Fase 2 — Affidabilità della memoria (P0)

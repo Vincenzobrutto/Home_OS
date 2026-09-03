@@ -4,10 +4,13 @@ import {
   ArrayMinSize,
   IsArray,
   IsDate,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
   MaxLength,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -36,4 +39,14 @@ export class CompleteDocumentMaintenanceDto {
   @ValidateNested({ each: true })
   @Type(() => CompleteDocumentMaintenanceItemDto)
   items: CompleteDocumentMaintenanceItemDto[];
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  costAmount?: number | null;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^[A-Z]{3}$/)
+  currency?: string | null;
 }

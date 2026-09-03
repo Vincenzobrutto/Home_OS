@@ -94,6 +94,14 @@ Un file caricato, o candidato da Gmail/Drive. Stati (`status`): `PENDING → ANA
 ### AssetTimelineEvent
 Cronologia di un Asset (installazione, manutenzione, documento collegato...). `documentId` opzionale collega l'evento al documento che l'ha generato; `contactId` opzionale collega chi ha eseguito l'intervento — **mai popolato automaticamente dall'AI**, solo scelto dall'utente (stesso principio "AI propone, utente conferma").
 
+Da B47 le nuove scritture tecniche usano `Intervention`; `AssetTimelineEvent` resta per notifiche documentali e righe legacy. Quando la migrazione riconosce un vecchio doppione in modo univoco, `interventionId` collega la riga legacy e la esclude dalla timeline composta.
+
+### Intervention / InterventionAsset / InterventionDocument
+`Intervention` è il fatto tecnico canonico: data, tipo chiuso, titolo/dettaglio, tecnico, costo complessivo con valuta ed EvidenceStatus. I join consentono 1..N Asset e 0..N documenti confermati della stessa casa. Il costo appartiene all'intervento, non viene copiato né ripartito automaticamente sugli Asset. La timeline Asset è una read model composta da Intervention e `AssetTimelineEvent` legacy/non tecnici.
+
+### Warranty
+Garanzia ripetibile per Asset con origine opzionale nell'Intervention, fornitore, prova, periodo, tipo ed evidenza. B47 introduce fondazione e backfill conservativo da `Asset.warrantyUntil`; la gestione utente completa e la cartella clinica sono B50.
+
 ### MaintenancePlan
 Piano appartenente sempre a una House e a un solo soggetto: House, ThermalSystem oppure Asset. `subjectType` e le due foreign key opzionali sono protetti da un vincolo XOR nel database. Può essere una tantum oppure ricorrente ogni N giorni/mesi/anni (`MaintenanceRecurrenceUnit`). Conserva prossima scadenza, finestra di preavviso, contatto abituale opzionale, obbligatorietà, note e stato di sospensione/completamento. `origin` distingue USER/GUIDELINE/REGULATORY; un piano normativo può conservare `regulatoryRuleId`, snapshot della fonte e `generatedKey` idempotente.
 
@@ -118,6 +126,8 @@ Lo stato (`SCHEDULED` / `UPCOMING` / `OVERDUE` / `COMPLETED` / `PAUSED`) è calc
 
 ### MaintenanceOccurrence
 Esecuzione storica e immutabile di un piano: conserva la scadenza prevista, la data effettiva, contatto, documento e note opzionali. Il completamento crea nella stessa transazione anche un `AssetTimelineEvent`. Per i piani ricorrenti la prossima data resta ancorata al calendario programmato e avanza alla prima ricorrenza successiva al completamento; per una tantum il piano diventa `COMPLETED`.
+
+Da B47 `interventionId` collega l'Occurrence al lavoro reale. Le nuove conferme non creano più una seconda riga tecnica scollegata in `AssetTimelineEvent`; uno stesso Intervention può soddisfare più Occurrence.
 
 ### DismissedMaintenanceSuggestion
 "Ignora" persistito su un suggerimento di manutenzione (le linee guida stesse vivono nel codice, non in DB — vedi `maintenance-guidelines.ts`). Chiave unica `(assetId, guidelineCode)`: `guidelineCode` non è una foreign key, è lo slug stabile della linea guida (es. `clima-filtri`). Non c'è un'azione di "ripristina" — il dismiss è definitivo finché non emerge un bisogno reale di tornare indietro (vedi `decisions.md` #22).

@@ -20,12 +20,21 @@ export class ContactsService {
     await this.ensureHouseAccess(userId, houseId);
     const contacts = await this.prisma.contact.findMany({
       where: { houseId },
-      include: { _count: { select: { timelineEvents: true } } },
+      include: {
+        _count: {
+          select: {
+            timelineEvents: { where: { interventionId: null } },
+            interventions: true,
+          },
+        },
+      },
       orderBy: { name: 'asc' },
     });
     return contacts.map(({ _count, ...contact }) => ({
       ...contact,
-      interventionsCount: _count.timelineEvents,
+      // Le righe timeline già collegate a un Intervention sono una
+      // proiezione legacy dello stesso fatto e non vanno ricontate.
+      interventionsCount: _count.interventions + _count.timelineEvents,
     }));
   }
 
@@ -34,9 +43,22 @@ export class ContactsService {
       where: { id },
       include: {
         timelineEvents: {
+          where: { interventionId: null },
           orderBy: { eventDate: 'desc' },
           include: {
             asset: { select: { id: true, name: true, code: true, type: true } },
+          },
+        },
+        interventions: {
+          orderBy: { occurredAt: 'desc' },
+          include: {
+            assets: {
+              include: {
+                asset: {
+                  select: { id: true, name: true, code: true, type: true },
+                },
+              },
+            },
           },
         },
       },
@@ -45,7 +67,39 @@ export class ContactsService {
       throw new NotFoundException(`Contatto ${id} non trovato`);
     }
     await this.accessControl.assertHouseAccess(userId, contact.houseId);
-    return contact;
+    const canonical = contact.interventions
+      .filter((item) => item.assets.length > 0)
+      .map((item) => ({
+        id: item.id,
+        sourceKind: 'INTERVENTION',
+        sourceId: item.id,
+        assetId: item.assets[0].assetId,
+        eventDate: item.occurredAt,
+        eventType: item.title,
+        detail: item.description,
+        contactId: item.contactId,
+        asset: item.assets[0].asset,
+        assets: item.assets.map((link) => link.asset),
+        costAmount: item.costAmount === null ? null : Number(item.costAmount),
+        currency: item.currency,
+      }));
+    const legacy = contact.timelineEvents.map((item) => ({
+      ...item,
+      sourceKind: 'LEGACY_EVENT',
+      sourceId: item.id,
+      assets: [item.asset],
+      costAmount: null,
+      currency: null,
+    }));
+    return {
+      ...contact,
+      interventions: undefined,
+      timelineEvents: [...canonical, ...legacy].sort(
+        (left, right) =>
+          new Date(right.eventDate).getTime() -
+          new Date(left.eventDate).getTime(),
+      ),
+    };
   }
 
   async update(userId: string, id: string, dto: UpdateContactDto) {

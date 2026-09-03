@@ -10,7 +10,9 @@ const accessControl = {
 describe('MaintenanceService document confirmation', () => {
   it('completes every selected plan in one transaction and links the document', async () => {
     const occurrenceCreate = jest.fn();
-    const timelineCreate = jest.fn();
+    const interventionCreate = jest
+      .fn()
+      .mockResolvedValue({ id: 'intervention-1' });
     const planUpdate = jest.fn();
     const prisma = {
       document: {
@@ -48,7 +50,7 @@ describe('MaintenanceService document confirmation', () => {
       $transaction: jest.fn(async (callback: (tx: unknown) => Promise<void>) =>
         callback({
           maintenanceOccurrence: { create: occurrenceCreate },
-          assetTimelineEvent: { create: timelineCreate },
+          intervention: { create: interventionCreate },
           maintenancePlan: { update: planUpdate },
         }),
       ),
@@ -71,7 +73,7 @@ describe('MaintenanceService document confirmation', () => {
 
     expect(result).toEqual({ completed: 2 });
     expect(occurrenceCreate).toHaveBeenCalledTimes(2);
-    expect(timelineCreate).toHaveBeenCalledTimes(2);
+    expect(interventionCreate).toHaveBeenCalledTimes(1);
     expect(planUpdate).toHaveBeenCalledTimes(2);
     expect(occurrenceCreate).toHaveBeenNthCalledWith(
       1,
@@ -81,6 +83,20 @@ describe('MaintenanceService document confirmation', () => {
         data: expect.objectContaining({
           documentId: 'doc',
           assetId: 'asset-1',
+          interventionId: 'intervention-1',
+        }),
+      }),
+    );
+    expect(interventionCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          houseId: 'house',
+          assets: {
+            create: [{ assetId: 'asset-1' }, { assetId: 'asset-2' }],
+          },
+          documents: {
+            create: expect.objectContaining({ documentId: 'doc' }),
+          },
         }),
       }),
     );

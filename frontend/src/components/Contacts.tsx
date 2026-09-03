@@ -233,7 +233,7 @@ export function ContactDetailView({
                 {AssetIcon && <AssetIcon size={16} color={assetMeta.color} />}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13.5, fontWeight: 500, color: T.ink }}>
-                    {ev.eventType} — {ev.asset.name}
+                    {ev.eventType} — {(ev.assets ?? [ev.asset]).map((item) => item.name).join(', ')}
                   </div>
                   <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: T.slate }}>
                     {formatDateForDisplay(ev.eventDate)}

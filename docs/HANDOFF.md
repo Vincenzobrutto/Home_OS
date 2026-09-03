@@ -10,6 +10,8 @@ MVP funzionante, uso locale/LAN, con autenticazione a sessione e isolamento per 
 
 Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi [`roadmap.md`](roadmap.md); per le 10 epiche di prodotto vedi [`product-backlog.md`](product-backlog.md).
 
+**B47 Memory Core è implementato**: prima di toccare timeline, manutenzioni, contatti, costi o garanzie leggere [`memory-core.md`](memory-core.md) e decisione #46. `Intervention` è canonico e multi-Asset/multi-documento; `HouseTimelineEvent` resta separato. La UI completa delle garanzie resta B50.
+
 ## Funzionalità completate
 
 - Gestione Asset: CRUD, campi strutturati (marca/modello/seriale/date), campi liberi, dismissione/riattivazione, cronologia interventi.
@@ -25,6 +27,7 @@ Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi 
 - **HomeOS Genesis (2026-08-04)**: wizard di onboarding a 6 step; scansione dimostrativa con catalogo selezionabile, revisione esplicita, Home Score v1 e Home Detective. La Dashboard mostra anche il trend degli ultimi 12 mesi e consente il ricalcolo manuale senza snapshot duplicati. Dettaglio in [`genesis-architecture.md`](genesis-architecture.md).
 - **Consumi elettrici B25 (2026-08-04)**: bollette estratte da Claude e confermate dall'utente, periodi `UtilityBill`, vista Energia con confronto YoY e installazioni Asset per mese. I periodi plurimensili sono marcati come stimati.
 - **Check-up adempimenti v6 — fondazioni (2026-09-03)**: schema per evidenza, impianti termici, libretti/rapporti, territori e regole versionate; `MaintenancePlan` generalizzato e motori puri iniziali. Nessuna regola regionale o UI compliance è ancora attiva: proseguire da B41–B45.
+- **Memory Core B47 (2026-09-03)**: interventi canonici multi-Asset/multi-documento, costo totale, evidenza, manutenzioni collegate, timeline composta e fondazione garanzie. Nuovo intervento utilizzabile dalla scheda Asset e dal completamento manutenzione.
 
 Dettaglio completo in [`vision.md`](vision.md) e [`roadmap.md`](roadmap.md).
 
@@ -48,6 +51,7 @@ Motivazioni complete in [`architecture.md`](architecture.md); ogni scelta non ov
 ```
 backend/src/
 ├── assets/       CRUD asset, campi liberi, cronologia, dismiss/reactivate
+├── interventions/ record canonico dei lavori, timeline composta, costo/evidenza
 ├── documents/     pipeline documentale (analyze/confirm), estrazione Claude
 ├── maintenance/   piani ricorrenti, completamento, storico e promemoria
 ├── rooms/          CRUD ambienti + geometria planimetria
@@ -86,15 +90,15 @@ npm install
 npm run dev
 ```
 
-Il repository contiene ora 17 migrazioni, inclusa `20260903120000_add_compliance_foundations`. Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare le nuove fondazioni; la migrazione retrocompila `MaintenancePlan.houseId` dai relativi Asset.
+Il repository contiene ora 18 migrazioni, incluse `20260903120000_add_compliance_foundations` e `20260903173000_add_memory_core`. Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale; B47 effettua solo backfill univoci e lascia le righe ambigue come legacy.
 
 ### Lint, build, test — risultati verificati il 2026-09-03
 
 | Comando | Backend | Frontend |
 |---|---|---|
-| `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~805 kB, oltre soglia Vite — vedi `backlog.md` B16) |
+| `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~856 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ✅ 0 errori, 0 warning | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx), invariati |
-| `npm run test` | ✅ 76/76 (inclusi motori compliance, consumi, Property Profile e Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 79/79 (inclusi Memory Core, compliance, consumi, Property Profile e Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Verificato anche **end-to-end nel browser** (non solo unit test): l'intero wizard Genesis eseguito sulla casa reale — creazione stanze/asset dalla scansione demo, calcolo Home Score, generazione Issue/Recommendation coerenti. Dettaglio in `changelog.md` (2026-08-04).
 
@@ -128,7 +132,7 @@ Nessun valore segreto è presente in questo documento o nei file `.env.example` 
 - Test automatici backend ancora parziali (buona copertura di dominio, inclusi i motori Genesis), frontend assenti del tutto — `backlog.md` B1, B1b.
 - Navigazione senza URL reali (niente back/forward browser, niente link condivisibili) — `backlog.md` B11.
 - `backend/package.json#prisma` è una configurazione deprecata in vista di Prisma 7 — `backlog.md` B15.
-- Bundle frontend oltre la soglia di warning Vite (~805 kB) — `backlog.md` B16.
+- Bundle frontend oltre la soglia di warning Vite (~856 kB) — `backlog.md` B16.
 - Genesis: scansione ancora solo mock (percorso verso il reale in `genesis-architecture.md` §10); la ripresa precisa B34 è completata.
 
 Elenco completo con priorità e dipendenze in [`backlog.md`](backlog.md).
@@ -137,8 +141,8 @@ Elenco completo con priorità e dipendenze in [`backlog.md`](backlog.md).
 
 Ordine corrente, deciso dopo il primo incremento B41:
 1. B46 — validazione continua del posizionamento “memoria digitale della casa” con 15–20 questionari e sintesi dei segnali.
-2. B47 — audit e requisitazione del Memory Core (`Contact`, timeline, garanzie, costi intervento) prima di una nuova migrazione.
-3. B48 — affidabilità della memoria e copertura informativa in Dashboard.
+2. ~~B47~~ — completato; verificare/applicare la migrazione sul database reale prima dell'uso.
+3. B48 — affidabilità della memoria e copertura informativa in Dashboard, ora sbloccata dal record canonico B47.
 4. B49 — ricerca unificata e azioni rapide; poi B50, garanzie e cartella clinica dell'Asset.
 5. Proseguire B41 come fondazione tecnica; non anticipare la UI compliance. Genesis 2.0 e pilota Lombardia/Piemonte vengono dopo i P0 della memoria.
 

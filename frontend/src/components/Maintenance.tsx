@@ -105,6 +105,7 @@ export function MaintenanceSection({
   const [completionContactId, setCompletionContactId] = useState("");
   const [completionDocumentId, setCompletionDocumentId] = useState("");
   const [completionNotes, setCompletionNotes] = useState("");
+  const [completionCost, setCompletionCost] = useState("");
   const [historyId, setHistoryId] = useState<string | null>(null);
   const [history, setHistory] = useState<MaintenanceOccurrence[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -205,11 +206,14 @@ export function MaintenanceSection({
         contactId: completionContactId || null,
         documentId: completionDocumentId || null,
         notes: completionNotes.trim() || undefined,
+        costAmount: completionCost === "" ? null : Number(completionCost),
+        currency: completionCost === "" ? null : "EUR",
       });
       setCompleting(null);
       setCompletionContactId("");
       setCompletionDocumentId("");
       setCompletionNotes("");
+      setCompletionCost("");
       await refresh();
       await onChanged();
     } catch (e) {
@@ -361,6 +365,17 @@ export function MaintenanceSection({
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
+          <label style={{ display: "block", marginTop: 8, fontSize: 11.5, color: T.slate }}>
+            Costo totale dell'intervento (€)
+            <input
+              style={{ ...inputStyle, marginTop: 3 }}
+              type="number"
+              min="0"
+              step="0.01"
+              value={completionCost}
+              onChange={(e) => setCompletionCost(e.target.value)}
+            />
+          </label>
           <div
             className="grid-responsive"
             style={{
@@ -647,6 +662,9 @@ export function MaintenanceSection({
                         {item.contact ? ` · ${item.contact.name}` : ""}
                         {item.document
                           ? ` · ${item.document.docType ?? item.document.originalFilename}`
+                          : ""}
+                        {item.intervention?.costAmount !== null && item.intervention?.costAmount !== undefined
+                          ? ` · ${new Intl.NumberFormat("it-IT", { style: "currency", currency: item.intervention.currency ?? "EUR" }).format(Number(item.intervention.costAmount))}`
                           : ""}
                         {item.notes ? ` — ${item.notes}` : ""}
                       </div>

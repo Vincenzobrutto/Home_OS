@@ -275,6 +275,45 @@ export interface TimelineEvent {
   detail: string | null;
   contactId: string | null;
   contact?: ContactRef | null;
+  sourceKind: 'INTERVENTION' | 'LEGACY_EVENT';
+  sourceId: string;
+  documentId?: string | null;
+  kind?: InterventionKind | null;
+  costAmount?: number | null;
+  currency?: string | null;
+  evidenceStatus?: EvidenceStatus;
+  assets?: Array<{ id: string; name: string; code: string; type: string }>;
+  documents?: Array<{
+    id: string;
+    originalFilename: string;
+    docType: string | null;
+    role: InterventionDocumentRole;
+  }>;
+}
+
+export type InterventionKind = 'INSTALLATION' | 'MAINTENANCE' | 'INSPECTION' | 'BREAKDOWN' | 'REPAIR' | 'REPLACEMENT' | 'OTHER';
+export type InterventionDocumentRole = 'INVOICE' | 'REPORT' | 'RECEIPT' | 'PHOTO' | 'WARRANTY_PROOF' | 'OTHER';
+export type EvidenceStatus = 'VERIFIED_PRESENT' | 'DECLARED_PRESENT' | 'DECLARED_ABSENT' | 'UNKNOWN' | 'NOT_APPLICABLE';
+
+export interface Intervention {
+  id: string;
+  houseId: string;
+  occurredAt: string;
+  kind: InterventionKind;
+  title: string;
+  description: string | null;
+  contactId: string | null;
+  contact?: ContactRef | null;
+  costAmount: number | null;
+  currency: string | null;
+  evidenceStatus: EvidenceStatus;
+  assets: Array<{ id: string; name: string; code: string; type: string }>;
+  documents: Array<{
+    id: string;
+    originalFilename: string;
+    docType: string | null;
+    role: InterventionDocumentRole;
+  }>;
 }
 
 export interface Contact {
@@ -293,6 +332,7 @@ export interface Contact {
 
 export interface ContactTimelineEvent extends TimelineEvent {
   asset: { id: string; name: string; code: string; type: string };
+  assets?: Array<{ id: string; name: string; code: string; type: string }>;
 }
 
 export interface ContactDetail extends Contact {
@@ -334,6 +374,11 @@ export interface MaintenanceOccurrence {
     id: string;
     originalFilename: string;
     docType: string | null;
+  } | null;
+  intervention?: {
+    id: string;
+    costAmount: number | string | null;
+    currency: string | null;
   } | null;
 }
 

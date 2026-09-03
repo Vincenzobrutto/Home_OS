@@ -88,6 +88,32 @@ enum EvidenceStatus {
   NOT_APPLICABLE
 }
 
+enum InterventionKind {
+  INSTALLATION
+  MAINTENANCE
+  INSPECTION
+  BREAKDOWN
+  REPAIR
+  REPLACEMENT
+  OTHER
+}
+
+enum InterventionDocumentRole {
+  INVOICE
+  REPORT
+  RECEIPT
+  PHOTO
+  WARRANTY_PROOF
+  OTHER
+}
+
+enum WarrantyKind {
+  PURCHASE
+  REPAIR
+  EXTENDED
+  OTHER
+}
+
 enum ThermalServiceType {
   HEATING
   COOLING
@@ -237,6 +263,8 @@ model User {
   confirmedThermalSystems       ThermalSystem[]
   confirmedPlantBooklets        PlantBooklet[]
   plantResponsibilities         PlantResponsibility[]
+  createdInterventions          Intervention[]         @relation("InterventionCreator")
+  confirmedWarranties           Warranty[]             @relation("WarrantyConfirmer")
 
   @@map("users")
 }
@@ -368,6 +396,7 @@ model House {
   thermalSystems        ThermalSystem[]
   maintenancePlans      MaintenancePlan[]
   plantResponsibilities PlantResponsibility[]
+  interventions         Intervention[]
 
   @@map("houses")
 }
@@ -507,6 +536,8 @@ model Asset {
   maintenanceOccurrences          MaintenanceOccurrence[]
   dismissedMaintenanceSuggestions DismissedMaintenanceSuggestion[]
   efficiencyControlReports        EfficiencyControlReport[]
+  interventionLinks               InterventionAsset[]
+  warranties                      Warranty[]
 
   @@map("assets")
 }
@@ -614,6 +645,8 @@ model Document {
   sourcedPlantBooklets        PlantBooklet[]
   efficiencyControlReports    EfficiencyControlReport[]
   plantResponsibilities       PlantResponsibility[]
+  interventionLinks           InterventionDocument[]
+  warrantyProofs              Warranty[]                @relation("WarrantyProofDocument")
 
   @@unique([houseId, gmailMessageId])
   @@unique([houseId, driveFileId])
@@ -642,19 +675,23 @@ model UtilityBill {
 }
 
 model AssetTimelineEvent {
-  id         String    @id @default(uuid())
-  assetId    String    @map("asset_id")
-  asset      Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  eventDate  DateTime  @map("event_date") @db.Date
-  eventType  String    @map("event_type")
-  detail     String?
-  documentId String?   @map("document_id")
-  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  id             String        @id @default(uuid())
+  assetId        String        @map("asset_id")
+  asset          Asset         @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  eventDate      DateTime      @map("event_date") @db.Date
+  eventType      String        @map("event_type")
+  detail         String?
+  documentId     String?       @map("document_id")
+  document       Document?     @relation(fields: [documentId], references: [id], onDelete: SetNull)
   // Chi ha eseguito l'intervento, se noto — collegato dall'utente (Rubrica),
   // mai popolato automaticamente dall'AI (vedi START_HERE.md, "l'AI propone,
   // l'utente conferma").
-  contactId  String?   @map("contact_id")
-  contact    Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  contactId      String?       @map("contact_id")
+  contact        Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  // Collegato solo quando l'audit/migrazione B47 ha riconosciuto in modo
+  // univoco che questa riga legacy rappresenta lo stesso fatto canonico.
+  interventionId String?       @map("intervention_id")
+  intervention   Intervention? @relation(fields: [interventionId], references: [id], onDelete: SetNull)
 
   @@map("asset_timeline_events")
 }
@@ -679,6 +716,8 @@ model Contact {
   timelineEvents            AssetTimelineEvent[]
   preferredMaintenancePlans MaintenancePlan[]
   maintenanceOccurrences    MaintenanceOccurrence[]
+  interventions             Intervention[]
+  warrantiesProvided        Warranty[]              @relation("WarrantyProvider")
 
   @@map("contacts")
 }
@@ -880,10 +919,94 @@ model MaintenanceOccurrence {
   documentId        String?         @map("document_id")
   document          Document?       @relation(fields: [documentId], references: [id], onDelete: SetNull)
   notes             String?
+  interventionId    String?         @map("intervention_id")
+  intervention      Intervention?   @relation(fields: [interventionId], references: [id], onDelete: SetNull)
   createdAt         DateTime        @default(now()) @map("created_at")
 
   @@index([maintenancePlanId, completedAt])
   @@map("maintenance_occurrences")
+}
+
+// Record canonico di un lavoro reale. Non sostituisce HouseTimelineEvent:
+// la timeline è una read model che compone interventi e righe informative
+// legacy, mentre l'intervento conserva il fatto tecnico interrogabile.
+model Intervention {
+  id              String           @id @default(uuid())
+  houseId         String           @map("house_id")
+  house           House            @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  occurredAt      DateTime         @map("occurred_at") @db.Date
+  kind            InterventionKind
+  title           String
+  description     String?
+  contactId       String?          @map("contact_id")
+  contact         Contact?         @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  costAmount      Decimal?         @map("cost_amount") @db.Decimal(12, 2)
+  currency        String?
+  evidenceStatus  EvidenceStatus   @default(UNKNOWN) @map("evidence_status")
+  createdByUserId String?          @map("created_by_user_id")
+  createdByUser   User?            @relation("InterventionCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  assets                 InterventionAsset[]
+  documents              InterventionDocument[]
+  maintenanceOccurrences MaintenanceOccurrence[]
+  warranties             Warranty[]
+  legacyTimelineEvents   AssetTimelineEvent[]
+
+  @@index([houseId, occurredAt])
+  @@index([contactId, occurredAt])
+  @@map("interventions")
+}
+
+model InterventionAsset {
+  interventionId String       @map("intervention_id")
+  intervention   Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  assetId        String       @map("asset_id")
+  asset          Asset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  role           String?
+  notes          String?
+
+  @@id([interventionId, assetId])
+  @@index([assetId])
+  @@map("intervention_assets")
+}
+
+model InterventionDocument {
+  interventionId String                   @map("intervention_id")
+  intervention   Intervention             @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  documentId     String                   @map("document_id")
+  document       Document                 @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  role           InterventionDocumentRole @default(OTHER)
+
+  @@id([interventionId, documentId])
+  @@index([documentId])
+  @@map("intervention_documents")
+}
+
+model Warranty {
+  id                   String         @id @default(uuid())
+  assetId              String         @map("asset_id")
+  asset                Asset          @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  originInterventionId String?        @map("origin_intervention_id")
+  originIntervention   Intervention?  @relation(fields: [originInterventionId], references: [id], onDelete: SetNull)
+  providerContactId    String?        @map("provider_contact_id")
+  providerContact      Contact?       @relation("WarrantyProvider", fields: [providerContactId], references: [id], onDelete: SetNull)
+  proofDocumentId      String?        @map("proof_document_id")
+  proofDocument        Document?      @relation("WarrantyProofDocument", fields: [proofDocumentId], references: [id], onDelete: SetNull)
+  startsAt             DateTime?      @map("starts_at") @db.Date
+  expiresAt            DateTime       @map("expires_at") @db.Date
+  kind                 WarrantyKind   @default(PURCHASE)
+  evidenceStatus       EvidenceStatus @default(UNKNOWN) @map("evidence_status")
+  notes                String?
+  confirmedByUserId    String?        @map("confirmed_by_user_id")
+  confirmedByUser      User?          @relation("WarrantyConfirmer", fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+  confirmedAt          DateTime?      @map("confirmed_at")
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
+
+  @@index([assetId, expiresAt])
+  @@map("warranties")
 }
 
 // "Ignora" su un suggerimento di manutenzione (vedi maintenance-guidelines.ts)

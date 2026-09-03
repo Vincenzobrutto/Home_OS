@@ -1,4 +1,4 @@
-import type { Asset, ConfirmObservationItem, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, GenesisResults, GmailCandidate, GmailScanResult, GmailStatus, House, HouseTimelineEventRecord, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, ObservationRecord, Room, ScanSessionRecord, TimelineEvent, User } from './types';
+import type { Asset, ConfirmObservationItem, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, EvidenceStatus, GenesisResults, GmailCandidate, GmailScanResult, GmailStatus, House, HouseTimelineEventRecord, Intervention, InterventionDocumentRole, InterventionKind, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, ObservationRecord, Room, ScanSessionRecord, TimelineEvent, User } from './types';
 import type { RoomGeometry } from './geometry';
 
 // Deriva l'host dal browser stesso invece di un "localhost" fisso: da
@@ -179,6 +179,12 @@ export const api = {
         eventType: string;
         detail?: string;
         contactId?: string | null;
+        kind?: InterventionKind;
+        costAmount?: number | null;
+        currency?: string | null;
+        evidenceStatus?: EvidenceStatus;
+        additionalAssetIds?: string[];
+        documentIds?: string[];
       },
     ) =>
       request<TimelineEvent>(`/assets/${id}/timeline-events`, {
@@ -190,6 +196,31 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify({ contactId }),
       }),
+  },
+  interventions: {
+    list: (houseId: string, params?: { assetId?: string; contactId?: string; text?: string }) => {
+      const query = new URLSearchParams();
+      if (params?.assetId) query.set('assetId', params.assetId);
+      if (params?.contactId) query.set('contactId', params.contactId);
+      if (params?.text) query.set('text', params.text);
+      const suffix = query.size ? `?${query.toString()}` : '';
+      return request<Intervention[]>(`/houses/${houseId}/interventions${suffix}`);
+    },
+    create: (
+      houseId: string,
+      data: {
+        occurredAt: string;
+        kind: InterventionKind;
+        title: string;
+        description?: string;
+        assetIds: string[];
+        contactId?: string | null;
+        costAmount?: number | null;
+        currency?: string | null;
+        evidenceStatus?: EvidenceStatus;
+        documents?: Array<{ documentId: string; role: InterventionDocumentRole }>;
+      },
+    ) => request<Intervention>(`/houses/${houseId}/interventions`, { method: 'POST', body: JSON.stringify(data) }),
   },
   contacts: {
     listForHouse: (houseId: string) => request<Contact[]>(`/houses/${houseId}/contacts`),
@@ -273,6 +304,8 @@ export const api = {
         contactId?: string | null;
         documentId?: string | null;
         notes?: string;
+        costAmount?: number | null;
+        currency?: string | null;
       },
     ) =>
       request<MaintenancePlan>(`/maintenance-plans/${id}/complete`, {
@@ -300,8 +333,8 @@ export const api = {
     },
     analyze: (id: string) => request<DocumentRecord>(`/documents/${id}/analyze`, { method: 'POST' }),
     maintenanceProposals: (id: string) => request<import('./types').DocumentMaintenanceProposal[]>(`/documents/${id}/maintenance-proposals`),
-    completeMaintenance: (id: string, items: Array<{ maintenancePlanId: string; completedAt: string; notes?: string }>) =>
-      request<{ completed: number }>(`/documents/${id}/complete-maintenance`, { method: 'POST', body: JSON.stringify({ items }) }),
+    completeMaintenance: (id: string, items: Array<{ maintenancePlanId: string; completedAt: string; notes?: string }>, costAmount?: number | null) =>
+      request<{ completed: number }>(`/documents/${id}/complete-maintenance`, { method: 'POST', body: JSON.stringify({ items, costAmount: costAmount ?? null, currency: costAmount === null || costAmount === undefined ? null : 'EUR' }) }),
     confirm: (
       id: string,
       data: {

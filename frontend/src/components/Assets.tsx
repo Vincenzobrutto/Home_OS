@@ -3,7 +3,7 @@ import { ChevronLeft, Download, ExternalLink, FileStack, FileText } from 'lucide
 import { T, ASSET_TYPES, iconForAsset } from '../theme';
 import { SectionLabel, StatusDot, Stamp, ProvenanceBadge } from './Shared';
 import { api, formatDateForDisplay, parseDateInput } from '../api';
-import type { Asset, Contact, CustomField, DocumentRecord, House, Room, TimelineEvent } from '../types';
+import type { Asset, Contact, CustomField, DocumentRecord, EvidenceStatus, House, InterventionKind, Room, TimelineEvent } from '../types';
 import { MaintenanceSection } from './Maintenance';
 
 const eventInputStyle: React.CSSProperties = {
@@ -248,6 +248,7 @@ function StructuredFieldProvenance({ asset, fieldName }: { asset: Asset; fieldNa
 
 export function AssetDetail({
   asset,
+  assets,
   room,
   rooms,
   contacts,
@@ -261,6 +262,7 @@ export function AssetDetail({
   onContactsChanged,
 }: {
   asset: Asset & { customFields?: CustomField[] };
+  assets: Asset[];
   room?: Room;
   rooms: Room[];
   contacts: Contact[];
@@ -278,12 +280,18 @@ export function AssetDetail({
   const meta = ASSET_TYPES[asset.type];
   const Icon = iconForAsset(asset);
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
+  const [availableInterventionDocuments, setAvailableInterventionDocuments] = useState<DocumentRecord[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [addingEvent, setAddingEvent] = useState(false);
   const [newEventDate, setNewEventDate] = useState('');
   const [newEventType, setNewEventType] = useState('');
+  const [newEventKind, setNewEventKind] = useState<InterventionKind>('MAINTENANCE');
   const [newEventDetail, setNewEventDetail] = useState('');
   const [newEventContactId, setNewEventContactId] = useState('');
+  const [newEventCost, setNewEventCost] = useState('');
+  const [newEventEvidenceStatus, setNewEventEvidenceStatus] = useState<EvidenceStatus>('UNKNOWN');
+  const [newEventAdditionalAssetIds, setNewEventAdditionalAssetIds] = useState<string[]>([]);
+  const [newEventDocumentIds, setNewEventDocumentIds] = useState<string[]>([]);
   const [savingEvent, setSavingEvent] = useState(false);
 
   function refreshTimeline() {
@@ -296,7 +304,11 @@ export function AssetDetail({
   }, [asset.id]);
 
   function refreshDocuments() {
-    return api.documents.listForHouse(asset.houseId).then((docs) => setDocuments(docs.filter((d) => d.assetId === asset.id && d.status === 'CONFIRMED')));
+    return api.documents.listForHouse(asset.houseId).then((docs) => {
+      const confirmed = docs.filter((d) => d.status === 'CONFIRMED');
+      setAvailableInterventionDocuments(confirmed);
+      setDocuments(confirmed.filter((d) => d.assetId === asset.id));
+    });
   }
 
   useEffect(() => {
@@ -323,14 +335,25 @@ export function AssetDetail({
       await api.assets.addTimelineEvent(asset.id, {
         eventDate,
         eventType: newEventType.trim(),
+        kind: newEventKind,
         detail: newEventDetail.trim() || undefined,
         contactId: newEventContactId || null,
+        costAmount: newEventCost === '' ? null : Number(newEventCost),
+        currency: newEventCost === '' ? null : 'EUR',
+        evidenceStatus: newEventDocumentIds.length ? 'VERIFIED_PRESENT' : newEventEvidenceStatus,
+        additionalAssetIds: newEventAdditionalAssetIds,
+        documentIds: newEventDocumentIds,
       });
       setAddingEvent(false);
       setNewEventDate('');
       setNewEventType('');
+      setNewEventKind('MAINTENANCE');
       setNewEventDetail('');
       setNewEventContactId('');
+      setNewEventCost('');
+      setNewEventEvidenceStatus('UNKNOWN');
+      setNewEventAdditionalAssetIds([]);
+      setNewEventDocumentIds([]);
       await refreshTimeline();
       if (newEventContactId) onContactsChanged();
     } finally {
@@ -761,9 +784,34 @@ export function AssetDetail({
             }}
           >
             <input style={eventInputStyle} placeholder="gg/mm/aaaa" value={newEventDate} onChange={(e) => setNewEventDate(e.target.value)} />
-            <input style={eventInputStyle} placeholder="Tipo intervento (es. Manutenzione)" value={newEventType} onChange={(e) => setNewEventType(e.target.value)} />
+            <select style={eventInputStyle} value={newEventKind} onChange={(e) => setNewEventKind(e.target.value as InterventionKind)}>
+              <option value="INSTALLATION">Installazione</option>
+              <option value="MAINTENANCE">Manutenzione</option>
+              <option value="INSPECTION">Controllo</option>
+              <option value="BREAKDOWN">Guasto</option>
+              <option value="REPAIR">Riparazione</option>
+              <option value="REPLACEMENT">Sostituzione</option>
+              <option value="OTHER">Altro</option>
+            </select>
           </div>
+          <input style={{ ...eventInputStyle, width: '100%', marginBottom: 8 }} placeholder="Titolo intervento" value={newEventType} onChange={(e) => setNewEventType(e.target.value)} />
           <input style={{ ...eventInputStyle, width: '100%', marginBottom: 8 }} placeholder="Dettaglio (facoltativo)" value={newEventDetail} onChange={(e) => setNewEventDetail(e.target.value)} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+            <label style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate }}>
+              Costo totale (€)
+              <input style={{ ...eventInputStyle, width: '100%', marginTop: 3 }} type="number" min="0" step="0.01" value={newEventCost} onChange={(e) => setNewEventCost(e.target.value)} />
+            </label>
+            <label style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate }}>
+              Prova documentale
+              <select disabled={newEventDocumentIds.length > 0} style={{ ...eventInputStyle, width: '100%', marginTop: 3 }} value={newEventDocumentIds.length ? 'VERIFIED_PRESENT' : newEventEvidenceStatus} onChange={(e) => setNewEventEvidenceStatus(e.target.value as EvidenceStatus)}>
+                {newEventDocumentIds.length > 0 && <option value="VERIFIED_PRESENT">Documento collegato</option>}
+                <option value="UNKNOWN">Non indicato</option>
+                <option value="DECLARED_PRESENT">Esiste, da caricare</option>
+                <option value="DECLARED_ABSENT">Non rilasciata</option>
+                <option value="NOT_APPLICABLE">Non applicabile</option>
+              </select>
+            </label>
+          </div>
           <select
             style={{
               ...eventInputStyle,
@@ -781,6 +829,30 @@ export function AssetDetail({
               </option>
             ))}
           </select>
+          {assets.filter((item) => item.id !== asset.id && !item.dismissedAt).length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate, marginBottom: 4 }}>Altri Asset coinvolti</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                {assets.filter((item) => item.id !== asset.id && !item.dismissedAt).map((item) => (
+                  <label key={item.id} style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.ink }}>
+                    <input type="checkbox" checked={newEventAdditionalAssetIds.includes(item.id)} onChange={(e) => setNewEventAdditionalAssetIds((current) => e.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id))} /> {item.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {availableInterventionDocuments.length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate, marginBottom: 4 }}>Documenti di prova</div>
+              <div style={{ maxHeight: 110, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {availableInterventionDocuments.map((doc) => (
+                  <label key={doc.id} style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.ink }}>
+                    <input type="checkbox" checked={newEventDocumentIds.includes(doc.id)} onChange={(e) => setNewEventDocumentIds((current) => e.target.checked ? [...current, doc.id] : current.filter((id) => id !== doc.id))} /> {doc.originalFilename}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <button
               onClick={() => setAddingEvent(false)}
@@ -884,6 +956,21 @@ export function AssetDetail({
             >
               {t.detail}
             </div>
+            {t.assets && t.assets.length > 1 && (
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate, marginBottom: 4 }}>
+                Asset: {t.assets.map((item) => item.name).join(', ')}
+              </div>
+            )}
+            {t.costAmount !== null && t.costAmount !== undefined && (
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: T.ink, marginBottom: 4 }}>
+                {new Intl.NumberFormat('it-IT', { style: 'currency', currency: t.currency ?? 'EUR' }).format(t.costAmount)}
+              </div>
+            )}
+            {t.documents && t.documents.length > 0 && (
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.pine, marginBottom: 5 }}>
+                {t.documents.length} {t.documents.length === 1 ? 'documento collegato' : 'documenti collegati'}
+              </div>
+            )}
             <select
               value={t.contactId ?? ''}
               onChange={(e) => assignContact(t.id, e.target.value)}

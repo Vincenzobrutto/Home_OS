@@ -641,6 +641,7 @@ function MaintenanceFromDocument({ documentId, busy, onCompleted }: { documentId
   const [dates, setDates] = useState<Record<number, string>>({});
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [costAmount, setCostAmount] = useState('');
 
   useEffect(() => {
     api.documents.maintenanceProposals(documentId).then((items) => {
@@ -661,7 +662,7 @@ function MaintenanceFromDocument({ documentId, busy, onCompleted }: { documentId
     setSaving(true);
     setMessage(null);
     try {
-      const result = await api.documents.completeMaintenance(documentId, selectedItems);
+      const result = await api.documents.completeMaintenance(documentId, selectedItems, costAmount === '' ? null : Number(costAmount));
       setMessage(`${result.completed} manutenzioni completate e collegate al documento.`);
       setSelected(new Set());
       await onCompleted();
@@ -690,6 +691,10 @@ function MaintenanceFromDocument({ documentId, busy, onCompleted }: { documentId
           ))}
         </div>
       ))}
+      <label style={{ display: 'block', fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.ink, margin: '4px 0 10px' }}>
+        Costo totale del documento (€)
+        <input type="number" min="0" step="0.01" value={costAmount} onChange={(event) => setCostAmount(event.target.value)} style={{ display: 'block', width: 180, marginTop: 4, border: `1px solid ${T.line}`, borderRadius: 5, padding: '5px 7px' }} />
+      </label>
       {message && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.rust, marginBottom: 8 }}>{message}</div>}
       <button onClick={complete} disabled={busy || saving || !selectedItems.length} style={{ background: T.pine, color: '#F7F7F2', border: 'none', borderRadius: 6, padding: '8px 13px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 500 }}>
         {saving ? 'Conferma in corso…' : `Completa ${selectedItems.length} manutenzion${selectedItems.length === 1 ? 'e' : 'i'}`}

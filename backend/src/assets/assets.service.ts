@@ -3,7 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { FieldSource } from '@prisma/client';
+import {
+  FieldSource,
+  InterventionDocumentRole,
+  InterventionKind,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessControlService } from '../access-control/access-control.service';
 import { CreateAssetDto } from './dto/create-asset.dto';
@@ -15,6 +19,7 @@ import { UpdateTimelineEventDto } from './dto/update-timeline-event.dto';
 import { computeAssetStatus } from '../common/asset-status';
 import { computeDefaultWarrantyUntil } from '../common/warranty';
 import { recordDeclaredFields } from '../common/field-provenance';
+import { InterventionsService } from '../interventions/interventions.service';
 
 // Riusato sia per AssetCustomField che per AssetFieldProvenance: stessa
 // forma di relazione (sourceDocument/confirmedByUser) su entrambi — vedi
@@ -29,6 +34,7 @@ export class AssetsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
+    private readonly interventions: InterventionsService,
   ) {}
 
   async create(userId: string, houseId: string, dto: CreateAssetDto) {
@@ -172,11 +178,7 @@ export class AssetsService {
 
   async getTimeline(userId: string, assetId: string) {
     await this.assetOrThrow(userId, assetId);
-    return this.prisma.assetTimelineEvent.findMany({
-      where: { assetId },
-      orderBy: { eventDate: 'desc' },
-      include: { contact: { select: { id: true, name: true, role: true } } },
-    });
+    return this.interventions.timelineForAsset(userId, assetId);
   }
 
   // Intervento aggiunto a mano dall'utente, senza un documento a
@@ -189,14 +191,39 @@ export class AssetsService {
     dto: CreateTimelineEventDto,
   ) {
     const asset = await this.assetOrThrow(userId, assetId);
-    if (dto.contactId) {
-      await this.ensureContactBelongsToHouse(dto.contactId, asset.houseId);
-    }
-
-    return this.prisma.assetTimelineEvent.create({
-      data: { ...dto, assetId },
-      include: { contact: { select: { id: true, name: true, role: true } } },
+    const created = await this.interventions.create(userId, asset.houseId, {
+      occurredAt: dto.eventDate,
+      kind: dto.kind ?? InterventionKind.OTHER,
+      title: dto.eventType,
+      description: dto.detail,
+      assetIds: [assetId, ...(dto.additionalAssetIds ?? [])],
+      contactId: dto.contactId,
+      costAmount: dto.costAmount,
+      currency: dto.currency,
+      evidenceStatus: dto.evidenceStatus,
+      documents: (dto.documentIds ?? []).map((documentId) => ({
+        documentId,
+        role: InterventionDocumentRole.OTHER,
+      })),
     });
+    return {
+      id: created.id,
+      sourceKind: 'INTERVENTION',
+      sourceId: created.id,
+      assetId,
+      eventDate: created.occurredAt,
+      eventType: created.title,
+      detail: created.description,
+      contactId: created.contactId,
+      contact: created.contact,
+      documentId: created.documents[0]?.id ?? null,
+      kind: created.kind,
+      costAmount: created.costAmount,
+      currency: created.currency,
+      evidenceStatus: created.evidenceStatus,
+      assets: created.assets,
+      documents: created.documents,
+    };
   }
 
   async updateTimelineEventContact(
@@ -204,6 +231,17 @@ export class AssetsService {
     eventId: string,
     dto: UpdateTimelineEventDto,
   ) {
+    const intervention = await this.prisma.intervention.findUnique({
+      where: { id: eventId },
+      select: { id: true },
+    });
+    if (intervention) {
+      return this.interventions.updateContact(
+        userId,
+        eventId,
+        dto.contactId ?? null,
+      );
+    }
     const event = await this.prisma.assetTimelineEvent.findUnique({
       where: { id: eventId },
       include: { asset: { select: { houseId: true } } },
@@ -219,11 +257,22 @@ export class AssetsService {
       );
     }
 
-    return this.prisma.assetTimelineEvent.update({
+    const updated = await this.prisma.assetTimelineEvent.update({
       where: { id: eventId },
       data: { contactId: dto.contactId ?? null },
       include: { contact: { select: { id: true, name: true, role: true } } },
     });
+    return {
+      ...updated,
+      sourceKind: 'LEGACY_EVENT',
+      sourceId: updated.id,
+      kind: null,
+      costAmount: null,
+      currency: null,
+      evidenceStatus: updated.documentId ? 'VERIFIED_PRESENT' : 'UNKNOWN',
+      documents: [],
+      assets: [],
+    };
   }
 
   async remove(userId: string, id: string) {

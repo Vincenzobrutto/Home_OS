@@ -47,6 +47,19 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/assets/:id/timeline-events` | evento manuale (`contactId`/`documentId` opzionali) |
 | PATCH | `/timeline-events/:id` | |
 
+Da B47 le rotte timeline restano compatibili ma `POST /assets/:id/timeline-events` crea un `Intervention` canonico; accetta tipo, costo, altri Asset, documenti ed evidenza. `GET /assets/:id/timeline` compone interventi e righe legacy non già collegate.
+
+### Interventi (Memory Core B47)
+
+| Metodo | Endpoint | Descrizione |
+|---|---|---|
+| GET | `/houses/:houseId/interventions` | lista filtrabile per Asset, contatto, testo e intervallo date |
+| POST | `/houses/:houseId/interventions` | crea intervento atomico con 1..N Asset e 0..N documenti confermati |
+| GET | `/interventions/:id` | dettaglio canonico |
+| PATCH | `/interventions/:id` | modifica esplicita con verifica di tutti i riferimenti nella stessa casa |
+
+Un documento collegato forza `evidenceStatus = VERIFIED_PRESENT`; questo stato non è accettato senza un documento confermato. Il costo è unico per intervento e richiede valuta ISO a tre lettere.
+
 ## Documents (pipeline documentale — vedi `architecture.md` §4)
 | Metodo | Path | Note |
 |---|---|---|

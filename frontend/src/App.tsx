@@ -395,6 +395,7 @@ export default function App() {
         {view === 'asset-detail' && selectedAsset && (
           <AssetDetail
             asset={selectedAsset}
+            assets={assets}
             room={rooms.find((r) => r.id === selectedAsset.roomId)}
             rooms={rooms}
             contacts={contacts}

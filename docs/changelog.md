@@ -2,6 +2,15 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-03 — B47 Memory Core: interventi canonici
+
+- Auditati schema, service, API e UI di `Contact`, `AssetTimelineEvent`, `MaintenanceOccurrence`, documenti, costi e garanzie.
+- Confermato che oggi il completamento manutenzione duplica lo stesso fatto in Occurrence e timeline senza relazione; gli eventi manuali non possono collegare documenti; i costi non sono tipizzati e la garanzia è una sola data su Asset.
+- Implementato `Intervention` canonico multi-Asset/multi-documento, costo complessivo non duplicato, EvidenceStatus, collegamento alle Occurrence e fondazione Warranty ripetibile.
+- Conservata la separazione da `HouseTimelineEvent`; nessuna tabella Event universale e nessuna reinterpretazione automatica ambigua dei dati storici.
+- Nuove API CRUD/lista, timeline Asset composta, Rubrica senza doppio conteggio, form “Nuovo intervento” con tipo/costo/altri Asset/documenti e costo anche nei completamenti manutenzione manuali o da documento.
+- Migrazione conservativa: collega solo Occurrence/eventi storici con match univoco, crea garanzie legacy senza inventare prove ed emette conteggi di backfill al deploy. Schema Prisma valido, build backend/frontend pulite e 79/79 test backend; applicazione al database reale ancora da eseguire.
+
 ## 2026-09-03 — Roadmap di prodotto v6: memoria prima della compliance
 
 - Confermate le fondazioni tecniche normative già avviate, ma riordinata la roadmap di prodotto: Memoria della casa → Fiducia → Recupero rapido → Check-up → Compliance.

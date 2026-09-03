@@ -4,6 +4,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  EvidenceStatus,
+  InterventionDocumentRole,
+  InterventionKind,
   MaintenanceRecurrenceUnit,
   MaintenanceSubjectType,
 } from '@prisma/client';
@@ -93,52 +96,96 @@ export class MaintenanceService {
       throw new BadRequestException(
         'Una o più manutenzioni risultano già completate con questo documento.',
       );
+    const groupedItems = new Map<string, typeof dto.items>();
+    for (const item of dto.items) {
+      const key = `${item.completedAt.toISOString().slice(0, 10)}:${item.contactId ?? ''}`;
+      groupedItems.set(key, [...(groupedItems.get(key) ?? []), item]);
+    }
+    if (
+      dto.costAmount !== null &&
+      dto.costAmount !== undefined &&
+      groupedItems.size > 1
+    )
+      throw new BadRequestException(
+        'Per registrare un costo totale, gli interventi devono avere la stessa data e lo stesso tecnico.',
+      );
+
     await this.prisma.$transaction(async (tx) => {
-      for (const item of dto.items) {
-        const plan = plans.find(
-          (candidate) => candidate.id === item.maintenancePlanId,
-        )!;
-        if (!plan.assetId)
-          throw new BadRequestException('Il piano non riguarda un Asset.');
-        const nextDueAt = nextMaintenanceDueAt({
-          scheduledFor: plan.nextDueAt,
-          completedAt: item.completedAt,
-          recurrenceUnit: plan.recurrenceUnit,
-          recurrenceInterval: plan.recurrenceInterval,
-        });
-        await tx.maintenanceOccurrence.create({
+      for (const group of groupedItems.values()) {
+        const groupPlans = group.map((item) =>
+          plans.find((candidate) => candidate.id === item.maintenancePlanId)!,
+        );
+        const assetIds = [...new Set(groupPlans.map((plan) => plan.assetId!))];
+        const titles = [...new Set(groupPlans.map((plan) => plan.title))];
+        const first = group[0];
+        const intervention = await tx.intervention.create({
           data: {
-            maintenancePlanId: plan.id,
-            assetId: plan.assetId,
+            houseId: document.houseId,
+            occurredAt: first.completedAt,
+            kind: InterventionKind.MAINTENANCE,
+            title:
+              titles.length === 1
+                ? titles[0]
+                : `Intervento su ${assetIds.length} asset`,
+            description:
+              group
+                .map((item) => item.notes?.trim())
+                .filter(Boolean)
+                .join('\n') || 'Manutenzione completata da documento',
+            contactId: first.contactId ?? null,
+            costAmount: dto.costAmount ?? null,
+            currency:
+              dto.costAmount === null || dto.costAmount === undefined
+                ? null
+                : (dto.currency ?? 'EUR'),
+            evidenceStatus: EvidenceStatus.VERIFIED_PRESENT,
+            createdByUserId: userId,
+            assets: { create: assetIds.map((assetId) => ({ assetId })) },
+            documents: {
+              create: {
+                documentId,
+                role: InterventionDocumentRole.OTHER,
+              },
+            },
+          },
+        });
+
+        for (const item of group) {
+          const plan = plans.find(
+            (candidate) => candidate.id === item.maintenancePlanId,
+          )!;
+          if (!plan.assetId)
+            throw new BadRequestException('Il piano non riguarda un Asset.');
+          const nextDueAt = nextMaintenanceDueAt({
             scheduledFor: plan.nextDueAt,
             completedAt: item.completedAt,
-            contactId: item.contactId ?? null,
-            documentId,
-            notes: item.notes,
-          },
-        });
-        await tx.assetTimelineEvent.create({
-          data: {
-            assetId: plan.assetId,
-            eventDate: item.completedAt,
-            eventType: plan.title,
-            detail:
-              item.notes?.trim() || 'Manutenzione completata da documento',
-            contactId: item.contactId ?? null,
-            documentId,
-          },
-        });
-        await tx.maintenancePlan.update({
-          where: { id: plan.id },
-          data: {
-            lastCompletedAt: item.completedAt,
-            nextDueAt: nextDueAt ?? plan.nextDueAt,
-            completedAt:
-              plan.recurrenceUnit === MaintenanceRecurrenceUnit.NONE
-                ? item.completedAt
-                : null,
-          },
-        });
+            recurrenceUnit: plan.recurrenceUnit,
+            recurrenceInterval: plan.recurrenceInterval,
+          });
+          await tx.maintenanceOccurrence.create({
+            data: {
+              maintenancePlanId: plan.id,
+              assetId: plan.assetId,
+              scheduledFor: plan.nextDueAt,
+              completedAt: item.completedAt,
+              contactId: item.contactId ?? null,
+              documentId,
+              notes: item.notes,
+              interventionId: intervention.id,
+            },
+          });
+          await tx.maintenancePlan.update({
+            where: { id: plan.id },
+            data: {
+              lastCompletedAt: item.completedAt,
+              nextDueAt: nextDueAt ?? plan.nextDueAt,
+              completedAt:
+                plan.recurrenceUnit === MaintenanceRecurrenceUnit.NONE
+                  ? item.completedAt
+                  : null,
+            },
+          });
+        }
       }
     });
     return { completed: dto.items.length };
@@ -296,6 +343,36 @@ export class MaintenanceService {
     });
 
     await this.prisma.$transaction(async (tx) => {
+      const intervention = await tx.intervention.create({
+        data: {
+          houseId: plan.houseId,
+          occurredAt: dto.completedAt,
+          kind: InterventionKind.MAINTENANCE,
+          title: plan.title,
+          description: dto.notes?.trim() || 'Manutenzione completata',
+          contactId: dto.contactId ?? null,
+          costAmount: dto.costAmount ?? null,
+          currency:
+            dto.costAmount === null || dto.costAmount === undefined
+              ? null
+              : (dto.currency ?? 'EUR'),
+          evidenceStatus: dto.documentId
+            ? EvidenceStatus.VERIFIED_PRESENT
+            : EvidenceStatus.UNKNOWN,
+          createdByUserId: userId,
+          assets: { create: { assetId: plan.assetId } },
+          ...(dto.documentId
+            ? {
+                documents: {
+                  create: {
+                    documentId: dto.documentId,
+                    role: InterventionDocumentRole.OTHER,
+                  },
+                },
+              }
+            : {}),
+        },
+      });
       await tx.maintenanceOccurrence.create({
         data: {
           maintenancePlanId: plan.id,
@@ -305,16 +382,7 @@ export class MaintenanceService {
           contactId: dto.contactId ?? null,
           documentId: dto.documentId ?? null,
           notes: dto.notes,
-        },
-      });
-      await tx.assetTimelineEvent.create({
-        data: {
-          assetId: plan.assetId,
-          eventDate: dto.completedAt,
-          eventType: plan.title,
-          detail: dto.notes?.trim() || 'Manutenzione completata',
-          contactId: dto.contactId ?? null,
-          documentId: dto.documentId ?? null,
+          interventionId: intervention.id,
         },
       });
       await tx.maintenancePlan.update({
@@ -374,6 +442,9 @@ export class MaintenanceService {
         contact: { select: { id: true, name: true, role: true } },
         document: {
           select: { id: true, originalFilename: true, docType: true },
+        },
+        intervention: {
+          select: { id: true, costAmount: true, currency: true },
         },
       },
       orderBy: { completedAt: 'desc' },

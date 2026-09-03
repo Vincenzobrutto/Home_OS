@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AssetsController } from './assets.controller';
 import { AssetsService } from './assets.service';
+import { InterventionsModule } from '../interventions/interventions.module';
 
 @Module({
+  imports: [InterventionsModule],
   controllers: [AssetsController],
   providers: [AssetsService],
   exports: [AssetsService],
