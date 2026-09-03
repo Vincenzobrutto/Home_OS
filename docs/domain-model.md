@@ -7,7 +7,7 @@ Fonte di verità: `backend/prisma/schema.prisma`. Questo documento lo spiega in 
 Il modello implementato rappresenta già gran parte del record (`House`, `Floor`, `Room`, `Asset`, `Document`, timeline e manutenzioni), ma non coincide ancora con l'ontologia completa descritta nel venture document Dimora.
 
 - `Property` corrisponde a `House`; B36 aggiunge il profilo catastale, fisico, energetico e di agibilità v1 direttamente come campi tipizzati, con provenienza satellite.
-- `System` **non è un'entità corrente**: impianto elettrico, termico, idrico o fotovoltaico sono modellati come Asset/tipi di Asset. Prima di introdurre `System` va validato se serve davvero una relazione gerarchica `House → System → Asset` o se basta una classificazione evoluta degli Asset.
+- Non esiste un `System` universale. La specifica Check-up v6 introduce esclusivamente `ThermalSystem`, perché le regole termiche devono sapere quali generatori condividono la distribuzione; elettrico, idrico e fotovoltaico restano Asset senza gerarchia generica.
 - `Event` è intenzionalmente diviso tra `AssetTimelineEvent`, `HouseTimelineEvent` e `MaintenanceOccurrence`; non esiste una tabella evento universale.
 - `Document` può alimentare la casa, un Asset, una bolletta o una manutenzione. Asset e Property Profile conservano la provenienza campo-per-campo, ma questo non equivale a una verifica terza.
 
@@ -33,6 +33,9 @@ House ──< ScoreSnapshot (fotografia nel tempo, mai ricalcolata "sul vecchio"
 House ──< HouseTimelineEvent (eventi a livello casa, distinti da AssetTimelineEvent)
 House ──< UtilityBill >── Document (uno o più periodi elettrici confermati per bolletta)
 House ──< HouseFieldProvenance >── Document/User (fonte e conferma dell'ultimo valore del profilo)
+House ──< ThermalSystem ──< Asset / PlantBooklet / EfficiencyControlReport
+House ──< MaintenancePlan >── Asset o ThermalSystem (uno solo, secondo subjectType)
+RegulatoryTerritory ──< RegulatoryRule ──< MaintenancePlan generato
 ```
 
 Legenda: `──<` = "uno a molti" verso l'entità collegata. Tutte le relazioni verso `House` hanno `onDelete: Cascade`; `Asset.roomId` e `Document.assetId` hanno `onDelete: SetNull` (cancellare una stanza o un asset non cancella i documenti collegati, li scollega soltanto).
@@ -73,6 +76,8 @@ OK         altrimenti
 
 `code` (es. `AST-007`) è **unico a livello globale**, non per casa — generato dal massimo codice esistente, non da un conteggio (un asset cancellato lascerebbe un buco che un conteggio rigenererebbe, causando conflitti).
 
+`thermalSystemId` è opzionale: collega solo generatori/macchine dichiarati o documentati come parte dello stesso impianto termico. Non viene dedotto da casa, stanza, combustibile o manutentore. I campi F-gas strutturati sono `refrigerant`, `refrigerantChargeKg`, `hermeticallySealed`, `sealedLabelPresent` e `leakDetectionSystem`; `null` significa non noto e non può produrre automaticamente un obbligo.
+
 ### AssetCustomField
 Coppia libera etichetta/valore. `source` (`MANUAL` | `AI_EXTRACTED`) distingue cosa ha scritto l'utente da cosa ha proposto un documento — utile per un futuro audit, non ancora usato in UI oltre alla scrittura.
 
@@ -90,7 +95,24 @@ Un file caricato, o candidato da Gmail/Drive. Stati (`status`): `PENDING → ANA
 Cronologia di un Asset (installazione, manutenzione, documento collegato...). `documentId` opzionale collega l'evento al documento che l'ha generato; `contactId` opzionale collega chi ha eseguito l'intervento — **mai popolato automaticamente dall'AI**, solo scelto dall'utente (stesso principio "AI propone, utente conferma").
 
 ### MaintenancePlan
-Piano di manutenzione appartenente sempre a un Asset. Può essere una tantum oppure ricorrente ogni N giorni/mesi/anni (`MaintenanceRecurrenceUnit`). Conserva prossima scadenza, finestra di preavviso, contatto abituale opzionale, obbligatorietà, note e stato di sospensione/completamento.
+Piano appartenente sempre a una House e a un solo soggetto: House, ThermalSystem oppure Asset. `subjectType` e le due foreign key opzionali sono protetti da un vincolo XOR nel database. Può essere una tantum oppure ricorrente ogni N giorni/mesi/anni (`MaintenanceRecurrenceUnit`). Conserva prossima scadenza, finestra di preavviso, contatto abituale opzionale, obbligatorietà, note e stato di sospensione/completamento. `origin` distingue USER/GUIDELINE/REGULATORY; un piano normativo può conservare `regulatoryRuleId`, snapshot della fonte e `generatedKey` idempotente.
+
+Le API correnti di creazione/completamento restano Asset-centriche per retrocompatibilità. I piani House/ThermalSystem saranno esposti dal modulo compliance e dalla vista Scadenze nei prossimi incrementi; non vengono forzati attraverso Asset fittizi.
+
+### ThermalSystem / PlantBooklet / EfficiencyControlReport
+`ThermalSystem` è il confine ristretto dell'impianto termico (`HEATING`/`COOLING`/`COMBINED`) e porta uno stato di evidenza. Un Asset può restare scollegato finché la relazione non è conosciuta.
+
+`PlantBooklet` appartiene all'impianto e conserva versioni attive/storiche. La migrazione consente un solo record attivo (`activeTo IS NULL`) per sistema. I codici tutelati sono riservati a valori cifrati; finché non è disponibile una chiave configurata e un servizio di cifratura non esistono endpoint che li accettino in chiaro.
+
+`EfficiencyControlReport` registra un controllo dell'impianto e, opzionalmente, il generatore specifico, mantenendo documento sorgente ed EvidenceStatus.
+
+### EvidenceStatus
+Enum comune: `VERIFIED_PRESENT`, `DECLARED_PRESENT`, `DECLARED_ABSENT`, `UNKNOWN`, `NOT_APPLICABLE`. Una riga mancante equivale sempre a `UNKNOWN`; solo una dichiarazione esplicita può produrre `DECLARED_ABSENT`. Le nuove entità riusano documento, utente e data di conferma senza introdurre una tassonomia concorrente a `FieldSource`.
+
+### RegulatoryTerritory / RegulatoryRule / PlantResponsibility
+I territori sono versionati per codice ISTAT, gerarchia, popolazione e periodo di validità; la House conserva `municipalityIstatCode`, non una popolazione immutabile. Le regole sono versionate per `(stableCode, version)` e tracciano fonte, verifica, decorrenza, territorio, condizioni/effetto e stato. Solo regole `ACTIVE` valide e validate sono eseguibili.
+
+`PlantResponsibility` registra la responsabilità dichiarata/documentata dell'impianto nel tempo; il ruolo dell'utente nella casa non viene convertito automaticamente in responsabilità legale.
 
 Lo stato (`SCHEDULED` / `UPCOMING` / `OVERDUE` / `COMPLETED` / `PAUSED`) è calcolato a runtime e non salvato. È distinto da `Asset.status`: una garanzia scaduta e una manutenzione scaduta sono segnali diversi. Gli Asset dismessi conservano i piani ma non generano promemoria.
 
@@ -153,7 +175,7 @@ Eventi a livello di **casa** (Genesis avviato/completato, scansione completata..
 5. Il matching "documento → asset esistente" richiede tipo **uguale** e nome **simile** (non solo tipo uguale — vedi `decisions.md`, bug corretto in sessione).
 6. `status` dell'Asset è sempre calcolato, mai un campo scrivibile dall'utente.
 7. Ruotare la planimetria ruota per davvero le coordinate salvate di stanze e asset (non solo la vista), così un asset resta nell'ambiente a cui è assegnato senza bisogno di ricalcolare l'assegnazione.
-8. I piani di manutenzione appartengono agli Asset; stato e promemoria sono calcolati e non modificano `Asset.status`.
+8. I piani di manutenzione appartengono alla casa e a un solo soggetto House/ThermalSystem/Asset; stato e promemoria sono calcolati e non modificano `Asset.status`.
 9. Completare una manutenzione è un'azione utente esplicita e atomica: occorrenza, cronologia e prossima scadenza vengono registrate insieme.
 10. I piani di manutenzione suggeriti (da linee guida statiche per tipo di Asset) non vengono mai creati automaticamente: il sistema pre-compila il form, l'utente deve comunque confermare — vedi `decisions.md` #19.
 11. Un suggerimento di manutenzione ignorato non ricompare: il dismiss è persistito per Asset+linea guida, non solo nello state del browser — vedi `decisions.md` #22.

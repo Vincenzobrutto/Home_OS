@@ -3,7 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { MaintenanceRecurrenceUnit } from '@prisma/client';
+import {
+  MaintenanceRecurrenceUnit,
+  MaintenanceSubjectType,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessControlService } from '../access-control/access-control.service';
 import {
@@ -51,12 +54,17 @@ export class MaintenanceService {
         'Ogni piano può essere completato una sola volta per conferma.',
       );
     const plans = await this.prisma.maintenancePlan.findMany({
-      where: { id: { in: [...uniquePlanIds] } },
+      where: {
+        id: { in: [...uniquePlanIds] },
+        subjectType: MaintenanceSubjectType.ASSET,
+      },
       include: { asset: { select: { houseId: true } } },
     });
     if (
       plans.length !== dto.items.length ||
-      plans.some((plan) => plan.asset.houseId !== document.houseId)
+      plans.some(
+        (plan) => !plan.asset || plan.asset.houseId !== document.houseId,
+      )
     )
       throw new BadRequestException(
         'Uno o più piani non appartengono alla casa del documento.',
@@ -65,6 +73,8 @@ export class MaintenanceService {
       const plan = plans.find(
         (candidate) => candidate.id === item.maintenancePlanId,
       )!;
+      if (!plan.assetId)
+        throw new BadRequestException('Il piano non riguarda un Asset.');
       if (plan.pausedAt || plan.completedAt)
         throw new BadRequestException(`Il piano "${plan.title}" non è attivo.`);
       await this.ensureContactBelongsToHouse(item.contactId, document.houseId);
@@ -88,6 +98,8 @@ export class MaintenanceService {
         const plan = plans.find(
           (candidate) => candidate.id === item.maintenancePlanId,
         )!;
+        if (!plan.assetId)
+          throw new BadRequestException('Il piano non riguarda un Asset.');
         const nextDueAt = nextMaintenanceDueAt({
           scheduledFor: plan.nextDueAt,
           completedAt: item.completedAt,
@@ -140,7 +152,12 @@ export class MaintenanceService {
       asset.houseId,
     );
     const plan = await this.prisma.maintenancePlan.create({
-      data: { ...dto, assetId },
+      data: {
+        ...dto,
+        houseId: asset.houseId,
+        assetId,
+        subjectType: MaintenanceSubjectType.ASSET,
+      },
       include: PLAN_INCLUDE,
     });
     return this.withStatus(plan);
@@ -221,6 +238,7 @@ export class MaintenanceService {
       where: {
         pausedAt: null,
         completedAt: null,
+        subjectType: MaintenanceSubjectType.ASSET,
         asset: { houseId, dismissedAt: null },
       },
       include: {
@@ -249,7 +267,7 @@ export class MaintenanceService {
     this.validateRecurrence(unit, interval);
     await this.ensureContactBelongsToHouse(
       dto.preferredContactId,
-      plan.asset.houseId,
+      plan.houseId,
     );
     const updated = await this.prisma.maintenancePlan.update({
       where: { id },
@@ -267,8 +285,8 @@ export class MaintenanceService {
     if (plan.completedAt) {
       throw new BadRequestException('Il piano una tantum è già completato.');
     }
-    await this.ensureContactBelongsToHouse(dto.contactId, plan.asset.houseId);
-    await this.ensureDocumentBelongsToHouse(dto.documentId, plan.asset.houseId);
+    await this.ensureContactBelongsToHouse(dto.contactId, plan.houseId);
+    await this.ensureDocumentBelongsToHouse(dto.documentId, plan.houseId);
 
     const nextDueAt = nextMaintenanceDueAt({
       scheduledFor: plan.nextDueAt,
@@ -432,7 +450,16 @@ export class MaintenanceService {
       },
     });
     if (!plan) throw new NotFoundException(`Piano ${id} non trovato`);
-    await this.accessControl.assertHouseAccess(userId, plan.asset.houseId);
+    await this.accessControl.assertHouseAccess(userId, plan.houseId);
+    if (
+      plan.subjectType !== MaintenanceSubjectType.ASSET ||
+      !plan.assetId ||
+      !plan.asset
+    ) {
+      throw new BadRequestException(
+        'Questa operazione è disponibile solo per piani riferiti a un Asset.',
+      );
+    }
     return plan;
   }
 

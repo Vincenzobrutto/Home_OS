@@ -33,6 +33,7 @@ Il centro del sistema è l'**Asset** (caldaia, impianto elettrico, climatizzator
 3. **La casa si vede, non solo si elenca.** Planimetria interattiva con ambienti disegnabili a mano libera e icone degli asset trascinabili nella stanza giusta, ruotabile per adattarsi all'orientamento reale.
 4. **Niente dato è mai perso o sovrascritto per errore.** Ogni campo si popola solo se vuoto (mai sovrascritto da un documento successivo), ogni scrittura importante passa da una conferma esplicita dell'utente — vedi il principio "l'AI propone, l'utente conferma" in `decisions.md`.
 5. **Accessibile da telefono**, non solo da scrivania — utile nel momento in cui serve davvero (in piedi davanti alla caldaia, con l'etichetta sotto gli occhi).
+6. **Check-up orientativo, non certificazione.** In base ai dati disponibili e a regole territoriali tracciate, Dimora mostra cosa può applicarsi, cosa è documentato e cosa va verificato con il professionista competente. Un dato assente nell'app non viene mai presentato come adempimento assente nel mondo reale.
 
 ## Funzionalità principali (stato: implementate)
 
@@ -58,7 +59,8 @@ Per lo stato dettagliato di cosa è fatto/in corso/pianificato vedi `roadmap.md`
 | Estrazione AI con conferma utente e acquisizione Gmail/Drive | Implementata nel prototipo; da rendere production-grade |
 | Home Score, Issue e Recommendation | Implementata in versione MVP |
 | Property Profile catastale/energetico strutturato | Implementato in v1 (B36); integrazioni dirette con registri pubblici e conformità/verifica terza restano future |
-| Entità `System` distinta dagli Asset | Da decidere e modellare; oggi gli impianti sono rappresentati come Asset/tipi di Asset |
+| Entità `System` distinta dagli Asset | Nessuna gerarchia universale; introdotto solo `ThermalSystem` per il caso normativo dei generatori che condividono la distribuzione |
+| Check-up adempimenti impianti termici | Fondazioni tecniche in sviluppo: `ThermalSystem`, evidenza, territori, regole versionate e piani generalizzati; nessuna regione o scadenza normativa è ancora attiva in UI |
 | Provenienza e livello di affidabilità per singolo dato | Campo-per-campo per Asset (B38) e House/Property Profile (B36); Room e storico multi-versione restano fuori scope, `ATTESTED` non è ancora prodotto da alcun flusso |
 | Autenticazione, ruoli e isolamento multiutente | Autenticazione reale implementata (B2); ruoli/isolamento oggi solo OWNER per casa, manca l'UI di invito multi-utente (B12) |
 | Trasferimento del record al nuovo proprietario | Visione futura, subordinata a identità, permessi, separazione dati e verifica legale |

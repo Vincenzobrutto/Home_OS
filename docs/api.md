@@ -36,7 +36,7 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 |---|---|---|
 | POST | `/houses/:houseId/assets` | `quantity > 1` crea più asset in un colpo solo (es. "3 termosifoni") |
 | GET | `/houses/:houseId/assets` | elenco (include dismessi, filtrare lato client) |
-| PATCH | `/assets/:id` | campi strutturati — **non** accetta `status` (calcolato) |
+| PATCH | `/assets/:id` | campi strutturati — include collegamento opzionale `thermalSystemId` e dati F-gas (`refrigerant`, `refrigerantChargeKg`, tre boolean nullable); **non** accetta `status` (calcolato) |
 | DELETE | `/assets/:id` | documenti collegati restano, `assetId` → null |
 | POST | `/assets/:id/dismiss` | imposta `dismissedAt` |
 | POST | `/assets/:id/reactivate` | azzera `dismissedAt` |
@@ -81,6 +81,8 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | DELETE | `/contacts/:id` | |
 
 ## Maintenance
+
+Lo schema sottostante supporta ora soggetti House/ThermalSystem/Asset, ma questi endpoint restano deliberatamente Asset-centrici finché il modulo compliance non espone riconciliazione e UI dedicate. I piani esistenti sono migrati come `subjectType=ASSET`, `origin=USER`.
 | Metodo | Path | Note |
 |---|---|---|
 | GET | `/assets/:assetId/maintenance-suggestions` | proposte di piani basate su linee guida statiche per tipo di Asset (nessuna scrittura — vedi `decisions.md` #19) |
@@ -96,6 +98,12 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/maintenance-plans/:id/reactivate` | riattiva con una nuova `nextDueAt` confermata dall'utente |
 | GET | `/maintenance-plans/:id/occurrences` | storico esecuzioni con contatto/documento opzionali |
 | GET | `/houses/:houseId/maintenance-reminders` | sole manutenzioni `UPCOMING`/`OVERDUE`, esclude Asset dismessi |
+
+## Compliance
+
+| Metodo | Path | Note |
+|---|---|---|
+| GET | `/houses/:houseId/compliance` | valutazione read-only con copertura, esiti conservativi, fonti e disclaimer. Senza regole territoriali `ACTIVE` restituisce `UNKNOWN` e non genera `MaintenancePlan` |
 
 ## Genesis
 

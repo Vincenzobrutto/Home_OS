@@ -2,6 +2,15 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-03 — Check-up adempimenti v6: primo incremento tecnico
+
+- Registrati gli ADR che aggiornano B37: `ThermalSystem` ristretto, libretto a livello impianto, resolver separati, regole versionate, piani generalizzati, Stato adempimenti separato dallo score e demo Genesis separata dal percorso reale.
+- Aggiunti `EvidenceStatus`, territori/regole normative versionate, `ThermalSystem`, `PlantBooklet`, `EfficiencyControlReport` e `PlantResponsibility`; Asset esteso con collegamento termico e dati F-gas.
+- `MaintenancePlan` ora appartiene sempre alla casa e a un solo soggetto House/ThermalSystem/Asset, con origine, regola, snapshot e chiave idempotente; migrazione retrocompila i piani esistenti come Asset/USER senza inventare provenienza.
+- Aggiunti motori puri conservativi per evidenza, F-gas, APE, validazione regole e conflitti territoriali. Regole non ACTIVE o incomplete non sono eseguibili; una riga evidenza mancante resta UNKNOWN.
+- Nuovo `GET /houses/:houseId/compliance`: valutazione read-only con copertura, controlli, fonti e disclaimer obbligatorio; non genera piani e resta UNKNOWN quando mancano dati o regole attive.
+- Nessun seed regionale o claim normativo attivato: Lombardia/Piemonte restano subordinati a fonti primarie aggiornate e revisione professionale. Verifica: schema Prisma valido, backend build pulita, 76/76 test.
+
 ## 2026-08-25 (5) — Fix: creare una seconda casa rompeva il completamento di Genesis
 
 Bug reale trovato creando la prima seconda casa mai esistita nel database (per simulare un nuovo utente riusando documenti già analizzati, senza consumare altro credito AI): `RoomsService.create()` generava `AMB-001` contando le stanze della sola casa nuova, ma `Room.code` è unico su tutta la tabella — collideva con l'`AMB-001` già esistente nella prima casa. Il wizard Genesis falliva con "Internal server error" al primissimo ambiente, sia per lui che per la creazione manuale di un ambiente. Corretto usando lo stesso pattern già in produzione per `Asset.code`: il prossimo numero si calcola dal massimo esistente su tutta la tabella, non da un conteggio per casa — vedi `decisions.md` #37. Nessuno stato parziale da riparare (l'errore fermava tutto al primo tentativo); verificato dal vivo completando con successo Genesis sulla seconda casa (11 ambienti, 16 asset, Home Score 80).

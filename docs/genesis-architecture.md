@@ -115,7 +115,7 @@ La card Home Score espone anche il trend degli ultimi 12 mesi (`GET .../score-hi
 
 ## 9. Limitazioni note del prototipo
 
-- **Nessuna autenticazione**: dichiarato esplicitamente prima di iniziare, accettato dall'utente come parte dello scope (vedi `decisions.md` #25). Nessuna verifica di ownership sulla casa negli endpoint Genesis — stessa lacuna già presente nel resto dell'API (`backlog.md` B2), non introdotta da Genesis.
+- ~~Nessuna autenticazione~~ — limite storico risolto da B2: gli endpoint Genesis usano la sessione e `AccessControlService` come il resto delle API.
 - ~~Nessuna deduplica contro Asset/Room già esistenti~~ — risolto 2026-08-04, vedi §6bis e `decisions.md` #26: avviso + default "Scarta", mai fusione automatica.
 - ~~Ripresa del wizard solo a grana grossa~~ — risolta con B34: lo step esatto è persistito su `House` e Review ricostruisce la sessione di scansione dal backend.
 - **Efficienza con segnale debole**: `Asset.estimatedReplacementYear` esiste nello schema ma nessun flusso lo valorizza ancora automaticamente — la dimensione "Efficienza" dell'Home Score resta quindi quasi sempre 100 in pratica, dichiarato nel codice (`home-score.ts`) invece di nascosto.
@@ -127,4 +127,10 @@ La card Home Score espone anche il trend degli ultimi 12 mesi (`GET .../score-hi
 2. Aggiungere una fase di deduplica in `GenesisService.confirmObservations`, riusando/estendendo l'euristica di `documents.service.ts` (`haveSimilarSuggestedName`) prima di creare un nuovo Asset.
 3. ~~Persistere uno step corrente esplicito~~ — completato con B34 su `House`.
 4. Popolare `estimatedReplacementYear` da un flusso reale (es. estrazione documentale) prima di dare peso pieno alla dimensione Efficienza.
-5. Applicare l'isolamento per utente (dipende da B2, autenticazione reale) prima di qualunque esposizione del backend oltre l'uso locale/LAN.
+5. ~~Applicare l'isolamento per utente~~ — completato con B2; restano da chiudere cifratura token e altri requisiti production-grade prima dell'esposizione pubblica.
+
+## 11. Destinazione Check-up v6 (incrementale, non ancora UI corrente)
+
+La specifica di settembre 2026 mantiene persistenza server e ripresa, ma ridisegna il percorso reale in cinque momenti: comune ISTAT e ruolo; foto reale della targhetta con proposta AI e conferma; stato dichiarato del libretto/ultimo controllo; primo valore orientativo con evidenza e fonti; una sola CTA contestuale. Il catalogo `GUIDED_MOCK` resta disponibile esclusivamente come demo esplicita.
+
+Questo documento continua a descrivere il wizard attualmente eseguibile finché il nuovo frontend non viene completato. Le fondazioni (`EvidenceStatus`, `ThermalSystem`, regole versionate e `MaintenancePlan` generalizzato) sono state introdotte prima della UI per evitare claim costruiti su costanti non governate. Nessun flusso reale deve incontrare il catalogo demo al termine della migrazione.

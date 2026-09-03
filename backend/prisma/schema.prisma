@@ -80,6 +80,55 @@ enum MaintenanceRecurrenceUnit {
   YEAR
 }
 
+enum EvidenceStatus {
+  VERIFIED_PRESENT
+  DECLARED_PRESENT
+  DECLARED_ABSENT
+  UNKNOWN
+  NOT_APPLICABLE
+}
+
+enum ThermalServiceType {
+  HEATING
+  COOLING
+  COMBINED
+}
+
+enum RegulatoryTerritoryKind {
+  REGION
+  METROPOLITAN_CITY
+  PROVINCE
+  MUNICIPALITY
+}
+
+enum PlantResponsibilityType {
+  OCCUPANT
+  OWNER
+  LANDLORD
+  CONDOMINIUM_ADMIN
+  THIRD_PARTY
+}
+
+enum RegulatoryRuleStatus {
+  DRAFT
+  ACTIVE
+  BLOCKED
+  SUPERSEDED
+  SUSPENDED
+}
+
+enum MaintenanceSubjectType {
+  HOUSE
+  THERMAL_SYSTEM
+  ASSET
+}
+
+enum MaintenanceOrigin {
+  USER
+  GUIDELINE
+  REGULATORY
+}
+
 // ---------------------------------------------------------------------------
 // GENESIS — onboarding guidato "casa nuova, mai censita" (vedi
 // docs/genesis-architecture.md). Room/Asset esistenti restano il modello
@@ -165,26 +214,29 @@ enum RecommendationStatus {
 // ---------------------------------------------------------------------------
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String?
   // Nullable: gli utenti creati prima dell'introduzione dell'autenticazione
   // reale (B2) non hanno ancora una password. Il login riconosce questo
   // caso e offre di impostarla, invece di richiedere una migrazione dati.
-  passwordHash String? @map("password_hash")
+  passwordHash String?  @map("password_hash")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  ownedHouses     House[]           @relation("HouseOwner")
-  memberships     HouseMembership[]
-  gmailConnection GmailConnection?
-  driveConnection DriveConnection?
-  sessions        Session[]
+  ownedHouses                   House[]                @relation("HouseOwner")
+  memberships                   HouseMembership[]
+  gmailConnection               GmailConnection?
+  driveConnection               DriveConnection?
+  sessions                      Session[]
   // Provenienza (B38): campi di Asset che questo utente ha confermato
   // (scritti a mano, o accettati confermando un documento) — vedi
   // AssetFieldProvenance/AssetCustomField.
-  confirmedFieldProvenance AssetFieldProvenance[]
-  confirmedCustomFields    AssetCustomField[]
+  confirmedFieldProvenance      AssetFieldProvenance[]
+  confirmedCustomFields         AssetCustomField[]
   confirmedHouseFieldProvenance HouseFieldProvenance[]
+  confirmedThermalSystems       ThermalSystem[]
+  confirmedPlantBooklets        PlantBooklet[]
+  plantResponsibilities         PlantResponsibility[]
 
   @@map("users")
 }
@@ -245,73 +297,77 @@ model DriveConnection {
 }
 
 model House {
-  id                String        @id @default(uuid())
-  ownerId           String        @map("owner_id")
-  owner             User          @relation("HouseOwner", fields: [ownerId], references: [id])
-  name              String
-  city              String?
-  province          String?
-  surfaceSqm        Decimal?      @map("surface_sqm")
-  roomsCount        Int?          @map("rooms_count")
-  buildYear         Int?          @map("build_year")
-  code              String        @unique
-  createdAt         DateTime      @default(now()) @map("created_at")
+  id                        String        @id @default(uuid())
+  ownerId                   String        @map("owner_id")
+  owner                     User          @relation("HouseOwner", fields: [ownerId], references: [id])
+  name                      String
+  city                      String?
+  province                  String?
+  surfaceSqm                Decimal?      @map("surface_sqm")
+  roomsCount                Int?          @map("rooms_count")
+  buildYear                 Int?          @map("build_year")
+  code                      String        @unique
+  createdAt                 DateTime      @default(now()) @map("created_at")
   // Rotazione (0/90/180/270) applicata alla vista mappa della planimetria —
   // ambienti e asset vengono ruotati "sul serio" (le loro coordinate
   // salvate) quando l'utente ruota la vista, così l'immagine di sfondo
   // caricata dall'utente deve essere ruotata della stessa quantità per
   // restare allineata; persistito qui perché il file di sfondo non cambia
   // da solo tra un caricamento e l'altro. Vedi FloorPlan.tsx.
-  floorPlanRotation Int           @default(0) @map("floor_plan_rotation")
+  floorPlanRotation         Int           @default(0) @map("floor_plan_rotation")
   // Campi aggiunti per il wizard Genesis (step "House Information") — tutti
   // opzionali per non rompere le case già esistenti create prima di Genesis.
-  address           String?
-  postalCode        String?       @map("postal_code")
-  propertyType      String?       @map("property_type")
-  country           String?
-  cadastralMunicipality     String?  @map("cadastral_municipality")
-  cadastralMunicipalityCode String?  @map("cadastral_municipality_code")
-  cadastralSection          String?  @map("cadastral_section")
-  cadastralSheet            String?  @map("cadastral_sheet")
-  cadastralParcel           String?  @map("cadastral_parcel")
-  cadastralSubaltern        String?  @map("cadastral_subaltern")
-  cadastralCategory         String?  @map("cadastral_category")
-  cadastralClass            String?  @map("cadastral_class")
-  cadastralConsistency      String?  @map("cadastral_consistency")
-  cadastralSurfaceSqm       Decimal? @map("cadastral_surface_sqm") @db.Decimal(10, 2)
-  cadastralIncome           Decimal? @map("cadastral_income") @db.Decimal(12, 2)
-  floorsCount               Int?     @map("floors_count")
-  usableSurfaceSqm          Decimal? @map("usable_surface_sqm") @db.Decimal(10, 2)
-  heatedSurfaceSqm          Decimal? @map("heated_surface_sqm") @db.Decimal(10, 2)
-  renovationYear           Int?     @map("renovation_year")
-  apeCode                   String?  @map("ape_code")
-  apeIssuedAt               DateTime? @map("ape_issued_at") @db.Date
-  apeExpiresAt              DateTime? @map("ape_expires_at") @db.Date
-  energyClass               String?  @map("energy_class")
-  epglNren                  Decimal? @map("epgl_nren") @db.Decimal(12, 3)
-  epglRen                   Decimal? @map("epgl_ren") @db.Decimal(12, 3)
-  co2Emissions              Decimal? @map("co2_emissions") @db.Decimal(12, 3)
-  climateZone               String?  @map("climate_zone")
-  energyUseCategory         String?  @map("energy_use_category")
-  habitabilityStatus        String?  @map("habitability_status")
-  habitabilityDate          DateTime? @map("habitability_date") @db.Date
-  habitabilityProtocol      String?  @map("habitability_protocol")
-  genesisStatus     GenesisStatus @default(NOT_STARTED) @map("genesis_status")
-  genesisStep       GenesisStep   @default(WELCOME) @map("genesis_step")
+  address                   String?
+  postalCode                String?       @map("postal_code")
+  propertyType              String?       @map("property_type")
+  country                   String?
+  cadastralMunicipality     String?       @map("cadastral_municipality")
+  cadastralMunicipalityCode String?       @map("cadastral_municipality_code")
+  municipalityIstatCode     String?       @map("municipality_istat_code")
+  cadastralSection          String?       @map("cadastral_section")
+  cadastralSheet            String?       @map("cadastral_sheet")
+  cadastralParcel           String?       @map("cadastral_parcel")
+  cadastralSubaltern        String?       @map("cadastral_subaltern")
+  cadastralCategory         String?       @map("cadastral_category")
+  cadastralClass            String?       @map("cadastral_class")
+  cadastralConsistency      String?       @map("cadastral_consistency")
+  cadastralSurfaceSqm       Decimal?      @map("cadastral_surface_sqm") @db.Decimal(10, 2)
+  cadastralIncome           Decimal?      @map("cadastral_income") @db.Decimal(12, 2)
+  floorsCount               Int?          @map("floors_count")
+  usableSurfaceSqm          Decimal?      @map("usable_surface_sqm") @db.Decimal(10, 2)
+  heatedSurfaceSqm          Decimal?      @map("heated_surface_sqm") @db.Decimal(10, 2)
+  renovationYear            Int?          @map("renovation_year")
+  apeCode                   String?       @map("ape_code")
+  apeIssuedAt               DateTime?     @map("ape_issued_at") @db.Date
+  apeExpiresAt              DateTime?     @map("ape_expires_at") @db.Date
+  energyClass               String?       @map("energy_class")
+  epglNren                  Decimal?      @map("epgl_nren") @db.Decimal(12, 3)
+  epglRen                   Decimal?      @map("epgl_ren") @db.Decimal(12, 3)
+  co2Emissions              Decimal?      @map("co2_emissions") @db.Decimal(12, 3)
+  climateZone               String?       @map("climate_zone")
+  energyUseCategory         String?       @map("energy_use_category")
+  habitabilityStatus        String?       @map("habitability_status")
+  habitabilityDate          DateTime?     @map("habitability_date") @db.Date
+  habitabilityProtocol      String?       @map("habitability_protocol")
+  genesisStatus             GenesisStatus @default(NOT_STARTED) @map("genesis_status")
+  genesisStep               GenesisStep   @default(WELCOME) @map("genesis_step")
 
-  rooms           Room[]
-  assets          Asset[]
-  documents       Document[]
-  memberships     HouseMembership[]
-  contacts        Contact[]
-  floors          Floor[]
-  scanSessions    ScanSession[]
-  issues          Issue[]
-  recommendations Recommendation[]
-  scoreSnapshots  ScoreSnapshot[]
-  timelineEvents  HouseTimelineEvent[]
-  utilityBills    UtilityBill[]
-  fieldProvenance HouseFieldProvenance[]
+  rooms                 Room[]
+  assets                Asset[]
+  documents             Document[]
+  memberships           HouseMembership[]
+  contacts              Contact[]
+  floors                Floor[]
+  scanSessions          ScanSession[]
+  issues                Issue[]
+  recommendations       Recommendation[]
+  scoreSnapshots        ScoreSnapshot[]
+  timelineEvents        HouseTimelineEvent[]
+  utilityBills          UtilityBill[]
+  fieldProvenance       HouseFieldProvenance[]
+  thermalSystems        ThermalSystem[]
+  maintenancePlans      MaintenancePlan[]
+  plantResponsibilities PlantResponsibility[]
 
   @@map("houses")
 }
@@ -402,6 +458,8 @@ model Asset {
   // null = impianto di casa, non legato a una stanza specifica
   roomId                   String?           @map("room_id")
   room                     Room?             @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  thermalSystemId          String?           @map("thermal_system_id")
+  thermalSystem            ThermalSystem?    @relation(fields: [thermalSystemId], references: [id], onDelete: SetNull)
   type                     AssetType
   name                     String
   code                     String            @unique
@@ -418,6 +476,11 @@ model Asset {
   model                    String?
   purchasedAt              DateTime?         @map("purchased_at") @db.Date
   supplier                 String?
+  refrigerant              String?
+  refrigerantChargeKg      Decimal?          @map("refrigerant_charge_kg") @db.Decimal(10, 3)
+  hermeticallySealed       Boolean?          @map("hermetically_sealed")
+  sealedLabelPresent       Boolean?          @map("sealed_label_present")
+  leakDetectionSystem      Boolean?          @map("leak_detection_system")
   status                   AssetStatus       @default(ATTENTION)
   // Posizione relativa (0–1) nella cella della planimetria generata
   planPosX                 Decimal?          @map("plan_pos_x")
@@ -443,26 +506,27 @@ model Asset {
   maintenancePlans                MaintenancePlan[]
   maintenanceOccurrences          MaintenanceOccurrence[]
   dismissedMaintenanceSuggestions DismissedMaintenanceSuggestion[]
+  efficiencyControlReports        EfficiencyControlReport[]
 
   @@map("assets")
 }
 
 model AssetCustomField {
-  id      String      @id @default(uuid())
-  assetId String      @map("asset_id")
-  asset   Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  label   String
-  value   String
-  source  FieldSource @default(DECLARED)
+  id                String      @id @default(uuid())
+  assetId           String      @map("asset_id")
+  asset             Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  label             String
+  value             String
+  source            FieldSource @default(DECLARED)
   // Provenienza (B38): nulli per i campi già esistenti prima di questa
   // modifica (non conosciamo la loro vera origine) e per i campi creati a
   // mano — valorizzati solo quando source = EXTRACTED, dal documento e
   // dall'utente che ha confermato la scrittura.
-  sourceDocumentId  String?   @map("source_document_id")
-  sourceDocument    Document? @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
-  confirmedByUserId String?   @map("confirmed_by_user_id")
-  confirmedByUser   User?     @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
-  confirmedAt       DateTime? @map("confirmed_at")
+  sourceDocumentId  String?     @map("source_document_id")
+  sourceDocument    Document?   @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  confirmedByUserId String?     @map("confirmed_by_user_id")
+  confirmedByUser   User?       @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+  confirmedAt       DateTime?   @map("confirmed_at")
 
   @@map("asset_custom_fields")
 }
@@ -538,14 +602,18 @@ model Document {
   // successive (dedup su gmailMessageId/driveFileId), non appare in nessuna vista.
   ignoredAt        DateTime?      @map("ignored_at")
 
-  timelineEvents         AssetTimelineEvent[]
-  maintenanceOccurrences MaintenanceOccurrence[]
-  utilityBills           UtilityBill[]
+  timelineEvents              AssetTimelineEvent[]
+  maintenanceOccurrences      MaintenanceOccurrence[]
+  utilityBills                UtilityBill[]
   // Provenienza (B38): campi di Asset (strutturati o liberi) che citano
   // questo documento come fonte — vedi AssetFieldProvenance/AssetCustomField.
-  sourcedFieldProvenance AssetFieldProvenance[]
-  sourcedCustomFields    AssetCustomField[]
+  sourcedFieldProvenance      AssetFieldProvenance[]
+  sourcedCustomFields         AssetCustomField[]
   sourcedHouseFieldProvenance HouseFieldProvenance[]
+  sourcedThermalSystems       ThermalSystem[]
+  sourcedPlantBooklets        PlantBooklet[]
+  efficiencyControlReports    EfficiencyControlReport[]
+  plantResponsibilities       PlantResponsibility[]
 
   @@unique([houseId, gmailMessageId])
   @@unique([houseId, driveFileId])
@@ -617,8 +685,19 @@ model Contact {
 
 model MaintenancePlan {
   id                 String                    @id @default(uuid())
-  assetId            String                    @map("asset_id")
-  asset              Asset                     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  houseId            String                    @map("house_id")
+  house              House                     @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  assetId            String?                   @map("asset_id")
+  asset              Asset?                    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  thermalSystemId    String?                   @map("thermal_system_id")
+  thermalSystem      ThermalSystem?            @relation(fields: [thermalSystemId], references: [id], onDelete: Cascade)
+  subjectType        MaintenanceSubjectType    @default(ASSET) @map("subject_type")
+  origin             MaintenanceOrigin         @default(USER)
+  regulatoryRuleId   String?                   @map("regulatory_rule_id")
+  regulatoryRule     RegulatoryRule?           @relation(fields: [regulatoryRuleId], references: [id], onDelete: SetNull)
+  generatedKey       String?                   @unique @map("generated_key")
+  evidenceStatus     EvidenceStatus?           @map("evidence_status")
+  sourceSnapshot     Json?                     @map("source_snapshot")
   title              String
   description        String?
   recurrenceUnit     MaintenanceRecurrenceUnit @default(NONE) @map("recurrence_unit")
@@ -637,7 +716,155 @@ model MaintenancePlan {
   occurrences        MaintenanceOccurrence[]
 
   @@index([assetId, nextDueAt])
+  @@index([houseId, nextDueAt])
+  @@index([thermalSystemId, nextDueAt])
   @@map("maintenance_plans")
+}
+
+model ThermalSystem {
+  id                      String             @id @default(uuid())
+  houseId                 String             @map("house_id")
+  house                   House              @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  name                    String
+  serviceType             ThermalServiceType @map("service_type")
+  distributionDescription String?            @map("distribution_description")
+  evidenceStatus          EvidenceStatus     @default(UNKNOWN) @map("evidence_status")
+  sourceDocumentId        String?            @map("source_document_id")
+  sourceDocument          Document?          @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  confirmedByUserId       String?            @map("confirmed_by_user_id")
+  confirmedByUser         User?              @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+  confirmedAt             DateTime?          @map("confirmed_at")
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+
+  assets                   Asset[]
+  plantBooklets            PlantBooklet[]
+  efficiencyControlReports EfficiencyControlReport[]
+  responsibilities         PlantResponsibility[]
+  maintenancePlans         MaintenancePlan[]
+
+  @@index([houseId])
+  @@map("thermal_systems")
+}
+
+model PlantBooklet {
+  id                    String         @id @default(uuid())
+  thermalSystemId       String         @map("thermal_system_id")
+  thermalSystem         ThermalSystem  @relation(fields: [thermalSystemId], references: [id], onDelete: Cascade)
+  evidenceStatus        EvidenceStatus @default(UNKNOWN) @map("evidence_status")
+  registryCodeEncrypted String?        @map("registry_code_encrypted")
+  registryKeyEncrypted  String?        @map("registry_key_encrypted")
+  plateCodeEncrypted    String?        @map("plate_code_encrypted")
+  registeredAt          DateTime?      @map("registered_at") @db.Date
+  activeFrom            DateTime?      @map("active_from") @db.Date
+  activeTo              DateTime?      @map("active_to") @db.Date
+  sourceDocumentId      String?        @map("source_document_id")
+  sourceDocument        Document?      @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  confirmedByUserId     String?        @map("confirmed_by_user_id")
+  confirmedByUser       User?          @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+  confirmedAt           DateTime?      @map("confirmed_at")
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+
+  @@index([thermalSystemId, activeTo])
+  @@map("plant_booklets")
+}
+
+model EfficiencyControlReport {
+  id                       String         @id @default(uuid())
+  thermalSystemId          String         @map("thermal_system_id")
+  thermalSystem            ThermalSystem  @relation(fields: [thermalSystemId], references: [id], onDelete: Cascade)
+  assetId                  String?        @map("asset_id")
+  asset                    Asset?         @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  controlDate              DateTime       @map("control_date") @db.Date
+  reportType               String         @map("report_type")
+  outcome                  String?
+  stickerCode              String?        @map("sticker_code")
+  registryTransmissionDate DateTime?      @map("registry_transmission_date") @db.Date
+  sourceDocumentId         String?        @map("source_document_id")
+  sourceDocument           Document?      @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  evidenceStatus           EvidenceStatus @default(UNKNOWN) @map("evidence_status")
+  createdAt                DateTime       @default(now()) @map("created_at")
+  updatedAt                DateTime       @updatedAt @map("updated_at")
+
+  @@index([thermalSystemId, controlDate])
+  @@map("efficiency_control_reports")
+}
+
+model RegulatoryTerritory {
+  id                      String                  @id @default(uuid())
+  kind                    RegulatoryTerritoryKind
+  istatCode               String                  @map("istat_code")
+  name                    String
+  parentId                String?                 @map("parent_id")
+  parent                  RegulatoryTerritory?    @relation("TerritoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children                RegulatoryTerritory[]   @relation("TerritoryHierarchy")
+  population              Int?
+  populationReferenceDate DateTime?               @map("population_reference_date") @db.Date
+  validFrom               DateTime                @map("valid_from") @db.Date
+  validTo                 DateTime?               @map("valid_to") @db.Date
+  createdAt               DateTime                @default(now()) @map("created_at")
+  updatedAt               DateTime                @updatedAt @map("updated_at")
+
+  rules RegulatoryRule[]
+
+  @@unique([istatCode, validFrom])
+  @@index([parentId])
+  @@map("regulatory_territories")
+}
+
+model PlantResponsibility {
+  id                 String                  @id @default(uuid())
+  houseId            String                  @map("house_id")
+  house              House                   @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  thermalSystemId    String                  @map("thermal_system_id")
+  thermalSystem      ThermalSystem           @relation(fields: [thermalSystemId], references: [id], onDelete: Cascade)
+  responsibilityType PlantResponsibilityType @map("responsibility_type")
+  userId             String?                 @map("user_id")
+  user               User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  displayName        String?                 @map("display_name")
+  validFrom          DateTime                @map("valid_from") @db.Date
+  validTo            DateTime?               @map("valid_to") @db.Date
+  evidenceStatus     EvidenceStatus          @default(UNKNOWN) @map("evidence_status")
+  sourceDocumentId   String?                 @map("source_document_id")
+  sourceDocument     Document?               @relation(fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+  createdAt          DateTime                @default(now()) @map("created_at")
+  updatedAt          DateTime                @updatedAt @map("updated_at")
+
+  @@index([thermalSystemId, validFrom])
+  @@map("plant_responsibilities")
+}
+
+model RegulatoryRule {
+  id                String               @id @default(uuid())
+  stableCode        String               @map("stable_code")
+  version           Int
+  family            String
+  territoryId       String?              @map("territory_id")
+  territory         RegulatoryTerritory? @relation(fields: [territoryId], references: [id], onDelete: SetNull)
+  scope             Json
+  conditions        Json
+  effect            Json
+  sourceTitle       String               @map("source_title")
+  sourceUrl         String               @map("source_url")
+  sourcePublishedAt DateTime?            @map("source_published_at") @db.Date
+  verifiedAt        DateTime             @map("verified_at")
+  verifiedBy        String?              @map("verified_by")
+  validFrom         DateTime             @map("valid_from") @db.Date
+  validTo           DateTime?            @map("valid_to") @db.Date
+  status            RegulatoryRuleStatus @default(DRAFT)
+  supersedesRuleId  String?              @map("supersedes_rule_id")
+  supersedesRule    RegulatoryRule?      @relation("RuleSupersession", fields: [supersedesRuleId], references: [id], onDelete: SetNull)
+  supersededBy      RegulatoryRule[]     @relation("RuleSupersession")
+  notes             String?
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+
+  maintenancePlans MaintenancePlan[]
+
+  @@unique([stableCode, version])
+  @@index([territoryId, family, status, validFrom])
+  @@map("regulatory_rules")
 }
 
 model MaintenanceOccurrence {

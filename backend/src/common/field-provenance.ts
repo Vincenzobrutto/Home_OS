@@ -1,7 +1,7 @@
 import { FieldSource } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
-// I 7 campi strutturati "universali" di Asset che oggi vengono scritti sia
+// Campi strutturati di Asset che oggi vengono scritti sia
 // a mano (AssetsService.update) sia dall'estrazione documentale
 // (DocumentsService.applyFieldsToAsset) senza lasciare traccia di chi/da
 // dove — vedi decisions.md B38. Elencati qui una sola volta: chi chiama
@@ -14,6 +14,11 @@ export const TRACKED_ASSET_FIELDS = [
   'manufacturer',
   'model',
   'supplier',
+  'refrigerant',
+  'refrigerantChargeKg',
+  'hermeticallySealed',
+  'sealedLabelPresent',
+  'leakDetectionSystem',
 ] as const;
 
 export type TrackedAssetField = (typeof TRACKED_ASSET_FIELDS)[number];

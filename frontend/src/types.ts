@@ -28,6 +28,7 @@ export interface House {
   country: string | null;
   cadastralMunicipality: string | null;
   cadastralMunicipalityCode: string | null;
+  municipalityIstatCode: string | null;
   cadastralSection: string | null;
   cadastralSheet: string | null;
   cadastralParcel: string | null;
@@ -224,6 +225,7 @@ export interface Asset {
   id: string;
   houseId: string;
   roomId: string | null;
+  thermalSystemId: string | null;
   type: string;
   name: string;
   code: string;
@@ -234,6 +236,11 @@ export interface Asset {
   model: string | null;
   purchasedAt: string | null;
   supplier: string | null;
+  refrigerant: string | null;
+  refrigerantChargeKg: string | null;
+  hermeticallySealed: boolean | null;
+  sealedLabelPresent: boolean | null;
+  leakDetectionSystem: boolean | null;
   status: 'OK' | 'ATTENTION' | 'DUE';
   // Impostato direttamente dall'utente (dismetti/riattiva), non calcolato
   // come "status" — vedi START_HERE.md.

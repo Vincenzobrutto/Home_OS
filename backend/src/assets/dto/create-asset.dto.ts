@@ -20,6 +20,10 @@ export class CreateAssetDto {
   @IsUUID()
   roomId?: string | null;
 
+  @IsOptional()
+  @IsUUID()
+  thermalSystemId?: string | null;
+
   @IsEnum(AssetType)
   type: AssetType;
 
@@ -57,6 +61,28 @@ export class CreateAssetDto {
   @IsOptional()
   @IsString()
   supplier?: string;
+
+  @IsOptional()
+  @IsString()
+  refrigerant?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  refrigerantChargeKg?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  hermeticallySealed?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  sealedLabelPresent?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  leakDetectionSystem?: boolean;
 
   @IsOptional()
   @IsNumber()

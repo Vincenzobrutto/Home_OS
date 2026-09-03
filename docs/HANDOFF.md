@@ -1,6 +1,6 @@
 # Handoff
 
-Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato il 2026-08-25 dopo autenticazione, provenienza e **Property Profile B36** su `main`. Per il dettaglio storico vedi [`changelog.md`](changelog.md).
+Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato il 2026-09-03 dopo il primo incremento tecnico del **Check-up adempimenti v6**. Per il dettaglio storico vedi [`changelog.md`](changelog.md).
 
 ## Stato attuale del progetto
 
@@ -24,6 +24,7 @@ Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi 
 - UI ottimizzata per mobile (sidebar a scomparsa, touch sulla planimetria, layout responsive).
 - **HomeOS Genesis (2026-08-04)**: wizard di onboarding a 6 step; scansione dimostrativa con catalogo selezionabile, revisione esplicita, Home Score v1 e Home Detective. La Dashboard mostra anche il trend degli ultimi 12 mesi e consente il ricalcolo manuale senza snapshot duplicati. Dettaglio in [`genesis-architecture.md`](genesis-architecture.md).
 - **Consumi elettrici B25 (2026-08-04)**: bollette estratte da Claude e confermate dall'utente, periodi `UtilityBill`, vista Energia con confronto YoY e installazioni Asset per mese. I periodi plurimensili sono marcati come stimati.
+- **Check-up adempimenti v6 — fondazioni (2026-09-03)**: schema per evidenza, impianti termici, libretti/rapporti, territori e regole versionate; `MaintenancePlan` generalizzato e motori puri iniziali. Nessuna regola regionale o UI compliance è ancora attiva: proseguire da B41–B45.
 
 Dettaglio completo in [`vision.md`](vision.md) e [`roadmap.md`](roadmap.md).
 
@@ -85,15 +86,15 @@ npm install
 npm run dev
 ```
 
-Il repository contiene ora 16 migrazioni, inclusa `20260825160000_add_property_profile` (B36, additiva). Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare Profilo casa.
+Il repository contiene ora 17 migrazioni, inclusa `20260903120000_add_compliance_foundations`. Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale prima di usare le nuove fondazioni; la migrazione retrocompila `MaintenancePlan.houseId` dai relativi Asset.
 
-### Lint, build, test — risultati verificati il 2026-08-25
+### Lint, build, test — risultati verificati il 2026-09-03
 
 | Comando | Backend | Frontend |
 |---|---|---|
 | `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~805 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ✅ 0 errori, 0 warning | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx), invariati |
-| `npm run test` | ✅ 65/65 (inclusi consumi, Property Profile e funzionalità Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 76/76 (inclusi motori compliance, consumi, Property Profile e Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Verificato anche **end-to-end nel browser** (non solo unit test): l'intero wizard Genesis eseguito sulla casa reale — creazione stanze/asset dalla scansione demo, calcolo Home Score, generazione Issue/Recommendation coerenti. Dettaglio in `changelog.md` (2026-08-04).
 

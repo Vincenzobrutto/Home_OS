@@ -15,6 +15,7 @@ import { DriveModule } from './drive/drive.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { GenesisModule } from './genesis/genesis.module';
 import { UtilityBillsModule } from './utility-bills/utility-bills.module';
+import { ComplianceModule } from './compliance/compliance.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { UtilityBillsModule } from './utility-bills/utility-bills.module';
     MaintenanceModule,
     GenesisModule,
     UtilityBillsModule,
+    ComplianceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

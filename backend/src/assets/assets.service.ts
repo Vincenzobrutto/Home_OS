@@ -36,6 +36,12 @@ export class AssetsService {
     if (dto.roomId) {
       await this.ensureRoomBelongsToHouse(dto.roomId, houseId);
     }
+    if (dto.thermalSystemId) {
+      await this.ensureThermalSystemBelongsToHouse(
+        dto.thermalSystemId,
+        houseId,
+      );
+    }
 
     const code = await this.nextAssetCode();
     // Nessuna garanzia esplicita ma acquisto noto: applica il default di 24
@@ -92,6 +98,12 @@ export class AssetsService {
     await this.accessControl.assertHouseAccess(userId, existing.houseId);
     if (dto.roomId) {
       await this.ensureRoomBelongsToHouse(dto.roomId, existing.houseId);
+    }
+    if (dto.thermalSystemId) {
+      await this.ensureThermalSystemBelongsToHouse(
+        dto.thermalSystemId,
+        existing.houseId,
+      );
     }
 
     const effectivePurchasedAt =
@@ -276,6 +288,21 @@ export class AssetsService {
     if (!room || room.houseId !== houseId) {
       throw new BadRequestException(
         `Room ${roomId} non appartiene alla casa ${houseId}`,
+      );
+    }
+  }
+
+  private async ensureThermalSystemBelongsToHouse(
+    thermalSystemId: string,
+    houseId: string,
+  ) {
+    const system = await this.prisma.thermalSystem.findUnique({
+      where: { id: thermalSystemId },
+      select: { houseId: true },
+    });
+    if (!system || system.houseId !== houseId) {
+      throw new BadRequestException(
+        `Impianto termico ${thermalSystemId} non appartiene alla casa ${houseId}.`,
       );
     }
   }

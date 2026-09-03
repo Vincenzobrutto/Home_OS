@@ -211,3 +211,38 @@ Registro cronologico. Ogni voce: contesto, decisione, motivazione, alternative s
 **Come è stato trovato**: creando la prima seconda casa reale nel database (simulazione di un nuovo utente per B36/B38, vedi sessione 2026-08-25) — il bug era latente da sempre ma invisibile con una sola casa. Il completamento del wizard Genesis falliva al primissimo ambiente proposto, senza scrivere nulla (l'errore ferma il ciclo `for` prima di qualunque `observation.update`), quindi nessuno stato parziale da riparare al ritentativo.
 **Motivazione**: stesso principio già scritto per `nextAssetCode` — un identificatore unico globale non può derivare da un conteggio scoped a un sottoinsieme delle righe.
 **Alternative scartate**: rendere `Room.code` unico solo per casa (`@@unique([houseId, code])`), scartata perché avrebbe richiesto una migrazione dello schema per un bug risolvibile senza toccare i dati; nessuna, dato che il fix mirror di un pattern già in produzione per `Asset` non ha alternative reali da valutare.
+
+### 38. Check-up v6: `ThermalSystem` ristretto sostituisce la chiusura provvisoria B37 solo per il dominio termico
+**Decisione**: introdurre `ThermalSystem` per rappresentare generatori e macchine che servono lo stesso sottosistema di distribuzione. `Asset.thermalSystemId` resta opzionale e il collegamento deve essere dichiarato o documentato; stessa casa, combustibile, serbatoio o manutentore non bastano. La decisione #35 resta valida contro una gerarchia `System` universale.
+**Motivazione**: le soglie di efficienza possono richiedere la somma delle potenze solo quando i generatori condividono realmente la distribuzione. Sommare a livello House produrrebbe falsi positivi.
+**Alternative scartate**: `House → System → Asset` per ogni dominio, non dimostrato; somma di tutti gli Asset termici della casa, normativamente inaffidabile.
+
+### 39. Il libretto appartiene all'impianto termico e conserva lo storico
+**Decisione**: `PlantBooklet` appartiene a `ThermalSystem`; può esistere uno storico ma la migrazione impone un solo libretto senza `activeTo` per impianto. Codice impianto, chiave e targa sono colonne cifrate, non valori in chiaro.
+**Motivazione**: un libretto può descrivere più generatori dello stesso impianto. La cifratura è un vincolo esplicito prima di rendere scrivibili quei campi.
+**Alternative scartate**: un libretto per ogni Asset-generatore; stringhe in chiaro affidandosi alla sola protezione del database.
+
+### 40. Manutenzione ordinaria e controllo di efficienza hanno resolver distinti
+**Decisione**: i due obblighi non condividono una cadenza implicita. La manutenzione segue installatore/fabbricante e prescrizioni applicabili; l'efficienza usa regole nazionali/territoriali versionate.
+**Motivazione**: una manutenzione annuale non rende automaticamente annuale il RCEE e una singola linea guida statica non può esprimere le differenze territoriali.
+**Alternative scartate**: continuare a usare `maintenance-guidelines.ts` come fonte normativa; dedurre una cadenza dall'altra.
+
+### 41. Le regole normative sono dati versionati e governati
+**Decisione**: `RegulatoryRule` conserva codice stabile/versione, famiglia, territorio, condizioni/effetto JSON, fonte, decorrenza, verifica e stato. Solo `ACTIVE`, valido alla data e superato dal validatore può essere eseguito; `DRAFT`, `BLOCKED`, `SUSPENDED` e `SUPERSEDED` non generano piani. Lo storico completato non viene ricalcolato retroattivamente.
+**Motivazione**: soglie, cadenze e competenze cambiano e devono restare tracciabili senza diventare costanti anonime nel codice.
+**Alternative scartate**: costanti TypeScript; modifica in place di una regola; seed non versionato come unica modalità di aggiornamento.
+
+### 42. `MaintenancePlan` è generalizzato per soggetto senza creare un calendario parallelo
+**Decisione**: ogni piano appartiene a una House e ha esattamente uno dei soggetti `HOUSE`, `THERMAL_SYSTEM`, `ASSET`, garantito anche da CHECK SQL. I piani esistenti vengono retrocompilati come `ASSET`/`USER`; i futuri piani normativi possono citare regola, snapshot e chiave deterministica unica.
+**Motivazione**: APE e adempimenti di impianto non sono proprietà di un singolo Asset, ma cronologia, promemoria e completamento esistenti vanno riusati.
+**Alternative scartate**: nuovo calendario compliance separato; Asset fittizi per rappresentare la casa o l'impianto.
+
+### 43. Stato adempimenti separato da Home Score nella prima release
+**Decisione**: il check-up avrà copertura, esiti noti e dati da verificare in una card separata. Home Score v2 rimuoverà Efficienza e la sostituirà preferibilmente con “Affidabilità del record”, non con una percentuale di conformità.
+**Motivazione**: UNKNOWN misura copertura insufficiente, non non-conformità; fonderli in un numero produrrebbe “100% conforme” senza evidenza.
+**Alternative scartate**: dimensione Conformità immediata nello score; mantenere Efficienza, oggi sostenuta da un segnale quasi sempre vuoto.
+
+### 44. Genesis reale e catalogo demo diventano percorsi separati
+**Decisione**: la macchina a stati e la ripresa server restano, ma la scansione a catalogo fisso sarà accessibile solo da una modalità demo esplicita. Il percorso reale userà foto targhetta con estrazione effettiva e conferma, più un fallback manuale senza potenza inventata.
+**Motivazione**: il catalogo è utile per demo riproducibili ma costringe un cliente reale a correggere dati finti e non può essere presentato come analisi.
+**Alternative scartate**: mantenere la demo nel flusso reale con un disclaimer; eliminare il provider mock e perdere la demo controllata.
