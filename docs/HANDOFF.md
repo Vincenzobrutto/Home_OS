@@ -1,6 +1,6 @@
 # Handoff
 
-Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato il 2026-09-03 dopo il primo incremento tecnico del **Check-up adempimenti v6**. Per il dettaglio storico vedi [`changelog.md`](changelog.md).
+Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato il 2026-09-03 dopo il primo incremento tecnico del **Check-up adempimenti v6** e il successivo riallineamento delle priorità di prodotto. Per il dettaglio storico vedi [`changelog.md`](changelog.md).
 
 ## Stato attuale del progetto
 
@@ -135,11 +135,13 @@ Elenco completo con priorità e dipendenze in [`backlog.md`](backlog.md).
 
 ## Attività successive consigliate
 
-In ordine di priorità suggerito (non vincolante):
-1. Autenticazione/sessione reale sulle API — ora blocca sia l'esposizione oltre la LAN sia l'isolamento per utente di Genesis.
-2. Non avviare B18: le notifiche fuori app sono state messe esplicitamente in standby dall'utente (`backlog.md` B18).
-3. Sistemare il redirect OAuth Gmail/Drive per funzionare anche da client mobile in LAN.
-4. Rivedere la conservazione in chiaro dei token OAuth prima di qualunque deploy esposto.
-5. Valutare un provider di scansione reale per Genesis (foto/video), sostituendo `MockHouseScanProvider` dietro la stessa interfaccia — vedi `genesis-architecture.md` §10.
+Ordine corrente, deciso dopo il primo incremento B41:
+1. B46 — validazione continua del posizionamento “memoria digitale della casa” con 15–20 questionari e sintesi dei segnali.
+2. B47 — audit e requisitazione del Memory Core (`Contact`, timeline, garanzie, costi intervento) prima di una nuova migrazione.
+3. B48 — affidabilità della memoria e copertura informativa in Dashboard.
+4. B49 — ricerca unificata e azioni rapide; poi B50, garanzie e cartella clinica dell'Asset.
+5. Proseguire B41 come fondazione tecnica; non anticipare la UI compliance. Genesis 2.0 e pilota Lombardia/Piemonte vengono dopo i P0 della memoria.
+
+Vincoli trasversali: non avviare B18 (standby); cifrare token OAuth e dati tutelati prima di un deploy esterno; mantenere separati Stato adempimenti e Home Score; non attivare regole regionali senza governance.
 
 Per iniziare a lavorare su questo repository, leggi anche [`AGENTS.md`](../AGENTS.md) (protocollo di aggiornamento documentazione e handoff di fine sessione) e [`prompts/coding-guidelines.md`](../prompts/coding-guidelines.md) (principi di dominio da non violare).

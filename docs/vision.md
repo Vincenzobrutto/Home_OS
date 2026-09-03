@@ -6,6 +6,8 @@
 
 La promessa centrale di Dimora è il **Property Digital Record**: la memoria digitale strutturata dell'immobile. Il Digital Twin, la planimetria, Home Score, manutenzioni, consumi e futuri agenti sono esperienze alimentate da quel record, non prodotti paralleli.
 
+La North Star della v6 è trasformare Dimora da archivio documentale evoluto a **memoria affidabile della casa**, usando il check-up normativo come attivatore e non come identità principale. L'ordine di prodotto è quindi: memoria della casa → fiducia → recupero rapido → check-up → compliance.
+
 Questa separazione evita due equivoci:
 
 - il documento venture `Dimora` è la fonte della verità su problema, posizionamento, segmenti, modello di business e ipotesi da validare;
@@ -34,6 +36,7 @@ Il centro del sistema è l'**Asset** (caldaia, impianto elettrico, climatizzator
 4. **Niente dato è mai perso o sovrascritto per errore.** Ogni campo si popola solo se vuoto (mai sovrascritto da un documento successivo), ogni scrittura importante passa da una conferma esplicita dell'utente — vedi il principio "l'AI propone, l'utente conferma" in `decisions.md`.
 5. **Accessibile da telefono**, non solo da scrivania — utile nel momento in cui serve davvero (in piedi davanti alla caldaia, con l'etichetta sotto gli occhi).
 6. **Check-up orientativo, non certificazione.** In base ai dati disponibili e a regole territoriali tracciate, Dimora mostra cosa può applicarsi, cosa è documentato e cosa va verificato con il professionista competente. Un dato assente nell'app non viene mai presentato come adempimento assente nel mondo reale.
+7. **Recupero rapido e fiducia prima della compliance.** Il valore quotidiano è ritrovare in pochi secondi manuale, garanzia, tecnico, ricevuta o ultimo intervento e capire da dove arriva ogni informazione. Gli adempimenti si innestano su questa memoria, non la sostituiscono.
 
 ## Funzionalità principali (stato: implementate)
 

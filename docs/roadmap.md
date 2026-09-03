@@ -42,26 +42,68 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Nessuna regola regionale attivata: Lombardia e Piemonte richiedono ancora verifica delle fonti primarie, revisione professionale e test di confine.
 - Restano da realizzare servizio/orchestrazione, seed governato, API/UI “Stato adempimenti”, Genesis reale, Home Score v2 e navigazione semplificata.
 
-## Prossimi passi (non ordinati per data — vedi priorità in `backlog.md`)
+## Roadmap prioritaria v6
 
-### Allineamento Dimora / Property Digital Record
+La sequenza di prodotto è **Memoria della casa → Fiducia → Recupero rapido → Check-up → Compliance**. Le fondazioni normative già avviate non vengono rimosse, ma il motore compliance non deve diventare l'identità principale del prodotto né anticipare i bisogni già osservati negli utenti.
 
-Ordine consigliato prima di ampliare il prodotto:
+### Fase 0 — Validazione continua (subito)
 
-1. ~~autenticazione e isolamento per utente~~ — risolto 2026-08-24 (B2, `decisions.md` #32);
-2. ~~Property Profile strutturato~~ — completato in v1 il 2026-08-25 (B36, `decisions.md` #36); integrazioni dirette con registri pubblici e verifica terza restano future;
-3. ~~decisione sul livello `System`~~ — risolta in modo ristretto: nessun System universale, solo `ThermalSystem` per il caso normativo (ADR #38);
-4. ~~provenienza campo-per-campo e livelli di affidabilità~~ — risolto 2026-08-25 per gli Asset (B38, `decisions.md` #34); Room/House restano fuori scope;
-5. progettazione legale e tecnica della trasferibilità — solo dopo identità, permessi e separazione dei dati personali.
+- Arrivare ad almeno 15–20 questionari completi, includendo proprietari, seconde case, locatori, over 60 e persone poco digitali.
+- Testare il posizionamento “memoria digitale della casa” e misurare interesse, disponibilità a caricare documenti/fotografare targhette e intenzione d'uso.
+- Deliverable: Executive Summary utenti, personas, top 10 bisogni e top 10 obiezioni (B46).
 
-Queste attività allineano HomeOS al prodotto Dimora, ma **non sono tutte scope del prossimo sprint**. Sono epiche progressive con criteri di ingresso espliciti in `product-backlog.md` e attività B36–B39 in `backlog.md`.
+### Fase 1 — Fondazioni del dominio (P0)
 
-- Multi-utente per casa: il modello `HouseMembership` è già il criterio di autorizzazione effettivo (B2), manca solo la UI/logica di invito di un secondo utente a una casa esistente (B12).
-- Ampliare i test automatici backend oltre la prima copertura di dominio e introdurre i test frontend (nessun framework installato).
-- OAuth Gmail/Drive funzionante anche da un client mobile in LAN (oggi il redirect è pensato per `localhost`).
-- Navigazione con URL reali (oggi `view` è solo stato in memoria, niente back/forward del browser né link condivisibili).
-- Rivedere la conservazione in chiaro dei token OAuth in DB prima di qualunque esposizione oltre la rete locale.
-- Genesis: sostituire la scansione mock con un provider reale (foto/video); deduplica e ripresa a grana fine sono state completate con B33/B34 — vedi `genesis-architecture.md` §6bis-10.
+- Completare il dominio v6 già avviato: `EvidenceStatus`, `RegulatoryTerritory`, `ThermalSystem`, `PlantBooklet`, `RegulatoryRule`, resolver territoriali e `MaintenancePlan` generalizzato (B41).
+- Rafforzare il Memory Core: `Contact`, timeline, garanzie e costi degli interventi; ogni intervento deve poter collegare tecnico, documento, costo, garanzia e Asset (B47).
+- Deliverable: schema dati stabile. Nessuna nuova esperienza compliance prima della stabilità di questi confini.
+
+### Fase 2 — Affidabilità della memoria (P0)
+
+- Applicare sistematicamente provenienza e stati `VERIFIED_PRESENT`, `DECLARED_PRESENT`, `DECLARED_ABSENT`, `UNKNOWN`, `NOT_APPLICABLE` ai dati per cui hanno significato.
+- Mostrare copertura informativa e qualità del record in una card “Affidabilità della memoria”, senza trasformare UNKNOWN in errore o assenza reale (B48).
+- Deliverable: prima Dashboard orientata alla memoria.
+
+### Fase 3 — Recupero rapido (P0)
+
+- Ricerca unificata per documento, Asset, tecnico, manuale, garanzia, seriale e fattura.
+- Azioni rapide per Asset: manuale, garanzia, ultimo intervento, tecnico e ricevuta.
+- Nuove regole Home Detective: `INTERVENTION_WITHOUT_DOCUMENT`, `INTERVENTION_WITHOUT_CONTACT`, `WARRANTY_WITHOUT_PROOF`, `CONTACT_TO_VERIFY` (B49).
+- Deliverable: trovare un'informazione utile in meno di 30 secondi.
+
+### Fase 4 — Garanzie e storico interventi (P0)
+
+- Garanzia strutturata con acquisto, durata/scadenza, prova documentale e stato evidenza.
+- Timeline dell'Asset leggibile come storia: installazione → manutenzione → guasto → riparazione → garanzia → costo (B50).
+- Deliverable: ogni Asset ha una propria “cartella clinica”.
+
+### Fase 5 — Genesis 2.0 (P1)
+
+- Mantenere il check-up termico v6, ma offrire tre ingressi distinti: “Controlla il mio impianto”, “Organizza i miei documenti”, “Ricostruisci la storia della mia casa”.
+- Primo risultato utile entro 3 minuti; catalogo mock confinato alla demo, foto targhetta reale con fallback manuale nel percorso reale (B43).
+
+### Fase 6 — Stato adempimenti (P1)
+
+- Attivare nazionale, manutenzione, efficienza energetica, APE e F-gas.
+- Primo pilota regionale solo Lombardia e Piemonte (B42), dopo governance, fonti primarie aggiornate, revisione professionale e test di confine.
+- Lazio, Veneto ed Emilia-Romagna restano non attivi fino al superamento degli stessi gate.
+
+### Fase 7 — Fiducia, privacy e portabilità (P1)
+
+- Export della casa: documenti, Asset, interventi, contatti, garanzie e scadenze.
+- Rendere visibile chi vede cosa, cosa viene inviato all'AI, come esportare e come eliminare i dati (B51).
+- Deliverable: nessun lock-in percepito.
+
+### Fase 8 — Home Score v2 (P2)
+
+- Sostituire “Efficienza” con “Affidabilità del record”, misurando completezza, documentazione, provenienza e aggiornamento (B44).
+- Lo score non misura conformità, rischio sanzioni o qualità tecnica.
+
+### Fase 9 — Standby (P3)
+
+- Non esporre finché non validati: marketplace/verifica tecnici, benchmark costi/prezzi, altre regioni e catasti, compliance avanzata, Smart Home/IoT e monitoraggio realtime.
+
+Debito tecnico e sicurezza restano vincoli trasversali: test frontend, copertura backend, token OAuth cifrati, OAuth mobile LAN, navigazione con URL reali e multi-utente non spariscono dalla pianificazione operativa. Il dettaglio e le dipendenze sono in `backlog.md`.
 
 ## Idee di prodotto da valutare (engagement / monetizzazione)
 

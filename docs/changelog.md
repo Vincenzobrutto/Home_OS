@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-03 — Roadmap di prodotto v6: memoria prima della compliance
+
+- Confermate le fondazioni tecniche normative già avviate, ma riordinata la roadmap di prodotto: Memoria della casa → Fiducia → Recupero rapido → Check-up → Compliance.
+- Definite dieci fasi operative (0–9), dalla validazione continua al pilota Lombardia/Piemonte, con marketplace, altre regioni, benchmark e IoT in standby.
+- Aggiunte B46–B51: validazione utenti, Memory Core, affidabilità della memoria, ricerca unificata, cartella clinica Asset ed export/privacy/portabilità.
+- Riposizionate B41–B44: B41 resta P0 come fondazione; Genesis 2.0 e Stato adempimenti sono P1; Home Score v2 è P2 e misura affidabilità del record, non conformità.
+- Nessuna modifica al codice o allo schema in questa voce; ADR #45 registra la priorità e impedisce che la compliance diventi l'identità principale di Dimora.
+
 ## 2026-09-03 (2) — Verifica B41 (Codex)
 
 Recuperato e verificato da GitHub il commit di Codex che implementa le fondazioni tecniche del check-up adempimenti v6 (vedi voce sotto): revisione approfondita dello schema/migrazione (backfill `MaintenancePlan.houseId` sicuro, vincolo XOR e indice univoco "un solo libretto attivo" a livello database, nessun endpoint scrive ancora codici libretto in chiaro — cifratura correttamente rimandata), dei motori puri (`fgas.ts`/`ape-state.ts`, nessuna soglia normativa hardcoded, sempre passata da `RegulatoryRule`) e degli ADR registrati (#38-44, coerenti con `decisions.md` #35/#37).

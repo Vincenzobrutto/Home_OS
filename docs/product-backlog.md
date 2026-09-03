@@ -2,6 +2,10 @@
 
 12 epiche che coprono la visione completa di HomeOS/Dimora (vedi `vision.md`), dallo stato attuale fino a differenziatori a lungo termine. Non tutte sono pianificate: `stato` indica cosa esiste oggi, `dipendenze` cosa serve prima di poter iniziare le epiche non ancora avviate. Per il lavoro operativo non ancora fatto vedi `backlog.md`; per le decisioni già prese vedi `decisions.md`.
 
+## Ordine di prodotto v6
+
+Le epiche non si eseguono in ordine numerico. La sequenza prioritaria è: **memoria della casa → fiducia → recupero rapido → check-up → compliance**. In pratica: validazione continua; stabilità del dominio/Memory Core; affidabilità e provenienza visibili; ricerca e storico/garanzie; Genesis 2.0; pilota adempimenti; export/privacy; Home Score v2. Le fondazioni normative possono avanzare in parallelo come infrastruttura, ma non devono anticipare l'esperienza di memoria affidabile. Vedi `roadmap.md` e decisione #45.
+
 ---
 
 ## EPIC 0 — HomeOS Genesis (onboarding guidato)
@@ -70,11 +74,11 @@
 ## EPIC 7 — Autenticazione, Multi-utente e Condivisione
 
 **Obiettivo**: isolamento reale per utente e possibilità di condividere una casa con altre persone (coniuge, amministratore di condominio, tecnico).
-**Valore utente**: prerequisito di fiducia per qualunque uso oltre il singolo utente locale — oggi chiunque raggiunga il backend vede tutte le case.
-**Stato**: ⛔ Non iniziato — `HouseMembership` esiste nello schema (predisposto) ma senza UI/logica di autorizzazione, nessuna autenticazione sulle API. Blocco esplicito e accettato per Genesis (vedi `decisions.md` #25).
-**Dipendenze**: nessuna verso le altre epiche, ma **è dipendenza bloccante** per EPIC 0 (isolamento per utente), EPIC 9 (multi-dispositivo) e qualunque esposizione oltre la LAN locale.
-**Dentro lo scope MVP**: —
-**Fuori scope (per ora)**: tutto — è la prossima epica architetturale prioritaria (B2 in `backlog.md`).
+**Valore utente**: l'isolamento già implementato crea una base di fiducia; inviti e ruoli permetteranno di condividere la casa senza condividere indiscriminatamente l'intero account.
+**Stato**: 🟡 Parziale — autenticazione a sessione e isolamento per casa tramite `HouseMembership` sono implementati (B2); manca la UI/logica di invito e gestione di altri membri (B12).
+**Dipendenze**: nessuna verso le altre epiche; condivisione e ruoli avanzati restano necessari prima di accessi terzi e trasferimento del record.
+**Dentro lo scope implementato**: login, sessione httpOnly, autorizzazione per-casa e ruolo OWNER.
+**Fuori scope (per ora)**: inviti, ruoli differenziati e accessi temporanei/limitati.
 
 ## EPIC 8 — Agente conversazionale (AI Agent)
 
