@@ -36,7 +36,7 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 |---|---|---|
 | POST | `/houses/:houseId/assets` | `quantity > 1` crea più asset in un colpo solo (es. "3 termosifoni") |
 | GET | `/houses/:houseId/assets` | elenco (include dismessi, filtrare lato client) |
-| PATCH | `/assets/:id` | campi strutturati — include collegamento opzionale `thermalSystemId` e dati F-gas (`refrigerant`, `refrigerantChargeKg`, tre boolean nullable); **non** accetta `status` (calcolato) |
+| PATCH | `/assets/:id` | campi strutturati — include collegamento opzionale `thermalSystemId` e dati F-gas (`refrigerant`, `refrigerantChargeKg`, tre boolean nullable); **non** accetta `status` (calcolato). Da B50 `warrantyUntil` non è più scritto direttamente: crea/aggiorna in-place la `Warranty` "gestita da qui" (vedi `decisions.md` #47) |
 | DELETE | `/assets/:id` | documenti collegati restano, `assetId` → null |
 | POST | `/assets/:id/dismiss` | imposta `dismissedAt` |
 | POST | `/assets/:id/reactivate` | azzera `dismissedAt` |
@@ -59,6 +59,16 @@ Da B47 le rotte timeline restano compatibili ma `POST /assets/:id/timeline-event
 | PATCH | `/interventions/:id` | modifica esplicita con verifica di tutti i riferimenti nella stessa casa |
 
 Un documento collegato forza `evidenceStatus = VERIFIED_PRESENT`; questo stato non è accettato senza un documento confermato. Il costo è unico per intervento e richiede valuta ISO a tre lettere.
+
+### Garanzie (B50)
+
+| Metodo | Endpoint | Descrizione |
+|---|---|---|
+| GET | `/assets/:assetId/warranties` | elenco garanzie dell'Asset, più recenti prima |
+| POST | `/assets/:assetId/warranties` | crea garanzia (`expiresAt` obbligatoria, `startsAt`/`kind`/`providerContactId`/`proofDocumentId`/`notes` opzionali) |
+| PATCH | `/warranties/:id` | modifica esplicita; nessun `DELETE` (stessa convenzione di Intervention) |
+
+Stessa regola di evidenza degli interventi: `proofDocumentId` forza `VERIFIED_PRESENT`, non accettato senza documento confermato. Dopo ogni scrittura, `Asset.warrantyUntil`/`status` vengono ricalcolati dalla garanzia con scadenza più lontana (vedi `decisions.md` #47) — non sono mai scritti altrove.
 
 ## Documents (pipeline documentale — vedi `architecture.md` §4)
 | Metodo | Path | Note |
@@ -117,6 +127,12 @@ Lo schema sottostante supporta ora soggetti House/ThermalSystem/Asset, ma questi
 | Metodo | Path | Note |
 |---|---|---|
 | GET | `/houses/:houseId/compliance` | valutazione read-only con copertura, esiti conservativi, fonti e disclaimer. Senza regole territoriali `ACTIVE` restituisce `UNKNOWN` e non genera `MaintenancePlan` |
+
+## Affidabilità della memoria (B48)
+
+| Metodo | Path | Note |
+|---|---|---|
+| GET | `/houses/:houseId/memory-reliability` | calcolo dal vivo (nessuno snapshot persistito): tre coperture `{completed, total}` — Asset con documenti, campi "core" con provenienza, Intervention/Warranty con evidenza nota — e media pesata che esclude le dimensioni senza dati. Distinto da Home Score e da Compliance, vedi `decisions.md` #48 |
 
 ## Genesis
 

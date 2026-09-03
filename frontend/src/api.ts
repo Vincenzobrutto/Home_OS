@@ -1,4 +1,4 @@
-import type { Asset, ConfirmObservationItem, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, EvidenceStatus, GenesisResults, GmailCandidate, GmailScanResult, GmailStatus, House, HouseTimelineEventRecord, Intervention, InterventionDocumentRole, InterventionKind, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, ObservationRecord, Room, ScanSessionRecord, TimelineEvent, User, Warranty, WarrantyKind } from './types';
+import type { Asset, ConfirmObservationItem, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, EvidenceStatus, GenesisResults, GmailCandidate, GmailScanResult, GmailStatus, House, HouseTimelineEventRecord, Intervention, InterventionDocumentRole, InterventionKind, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, MemoryReliability, ObservationRecord, Room, ScanSessionRecord, TimelineEvent, User, Warranty, WarrantyKind } from './types';
 import type { RoomGeometry } from './geometry';
 
 // Deriva l'host dal browser stesso invece di un "localhost" fisso: da
@@ -248,6 +248,9 @@ export const api = {
         evidenceStatus: EvidenceStatus;
       }>,
     ) => request<Warranty>(`/warranties/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  },
+  reliability: {
+    forHouse: (houseId: string) => request<MemoryReliability>(`/houses/${houseId}/memory-reliability`),
   },
   contacts: {
     listForHouse: (houseId: string) => request<Contact[]>(`/houses/${houseId}/contacts`),

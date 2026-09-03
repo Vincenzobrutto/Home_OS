@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { DoorOpen, Building2, FileText, AlertTriangle, CalendarClock, Sparkles, ArrowRight, Clock, RefreshCw, TrendingUp, type LucideIcon } from 'lucide-react';
 import { T, iconForAsset } from '../theme';
-import { SectionLabel } from './Shared';
-import type { Asset, GenesisResults, House, HouseTimelineEventRecord, MaintenanceReminder, Room, ScoreSnapshotRecord } from '../types';
+import { SectionLabel, Stamp } from './Shared';
+import type { Asset, CoverageMetric, GenesisResults, House, HouseTimelineEventRecord, MaintenanceReminder, MemoryReliability, Room, ScoreSnapshotRecord } from '../types';
 import { api, formatDateForDisplay } from '../api';
 
 // Un colore distinto per categoria di Asset — badge tondi nelle liste,
@@ -22,6 +22,30 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 function categoryColor(type: string): string {
   return CATEGORY_COLORS[type] ?? T.slate;
+}
+
+// Soglie riusate dalla card "Completezza del profilo" in PropertyProfile.tsx,
+// stesso linguaggio visivo per lo stesso concetto (percentuale di copertura).
+function coverageTone(pct: number): 'pine' | 'ochre' | 'rust' {
+  return pct >= 75 ? 'pine' : pct >= 40 ? 'ochre' : 'rust';
+}
+function coverageBarColor(pct: number): string {
+  return pct >= 75 ? T.pine : pct >= 40 ? T.ochreDeep : T.rust;
+}
+
+function CoverageBar({ label, metric }: { label: string; metric: CoverageMetric }) {
+  const pct = metric.total > 0 ? Math.round((metric.completed / metric.total) * 100) : null;
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate, marginBottom: 2 }}>
+        <span>{label}</span>
+        <span>{metric.total > 0 ? `${metric.completed}/${metric.total}` : 'n/d'}</span>
+      </div>
+      <div style={{ height: 5, borderRadius: 3, background: T.line }}>
+        <div style={{ height: 5, borderRadius: 3, width: `${pct ?? 0}%`, background: pct === null ? T.line : coverageBarColor(pct) }} />
+      </div>
+    </div>
+  );
 }
 
 function CategoryBadge({
@@ -169,10 +193,12 @@ export function Dashboard({
   const [showScoreTrend, setShowScoreTrend] = useState(false);
   const [recalculatingScore, setRecalculatingScore] = useState(false);
   const [scoreMessage, setScoreMessage] = useState<string | null>(null);
+  const [reliability, setReliability] = useState<MemoryReliability | null>(null);
 
   useEffect(() => {
     api.maintenance.remindersForHouse(house.id).then(setMaintenance);
     api.documents.listForHouse(house.id).then((docs) => setDocumentsCount(docs.length));
+    api.reliability.forHouse(house.id).then(setReliability);
   }, [house.id]);
 
   useEffect(() => {
@@ -305,6 +331,30 @@ export function Dashboard({
             {scoreMessage && <span role="status" style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate }}>{scoreMessage}</span>}
           </div>
           {showScoreTrend && <ScoreTrend history={scoreHistory} />}
+        </div>
+      )}
+
+      {reliability && (
+        <div style={{ marginBottom: 26, padding: '18px 20px', background: T.card, border: `1px solid ${T.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 13, color: T.ink }}>Affidabilità della memoria</div>
+                {reliability.overallCoverage !== null && <Stamp tone={coverageTone(reliability.overallCoverage)}>{reliability.overallCoverage}%</Stamp>}
+              </div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate, marginTop: 8, maxWidth: 220 }}>
+                {reliability.overallCoverage === null ? 'Non ancora calcolabile: servono più dati.' : 'Quanto di ciò che sappiamo sulla casa è documentato o verificato.'}
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <CoverageBar label="Asset con documenti collegati" metric={reliability.dimensions.assetDocumentation} />
+              <CoverageBar label="Campi confermati" metric={reliability.dimensions.fieldCoverage} />
+              <CoverageBar label="Fatti con evidenza (interventi, garanzie)" metric={reliability.dimensions.factEvidence} />
+            </div>
+          </div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate, marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.line}` }}>
+            {reliability.disclaimer}
+          </div>
         </div>
       )}
 

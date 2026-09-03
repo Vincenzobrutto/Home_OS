@@ -19,6 +19,7 @@ import {
   WashingMachine,
   type LucideIcon,
 } from 'lucide-react';
+import type { EvidenceStatus } from './types';
 
 // Palette "Smeraldo" (2026-08-24, vedi decisions.md): stessa struttura e
 // stessi ruoli di sempre (un solo accento acceso per le azioni primarie,
@@ -222,4 +223,22 @@ export function iconForAsset(asset: { type: string; name: string }): LucideIcon 
   const lower = asset.name.toLowerCase();
   const hint = APPLIANCE_ICON_HINTS.find(([keywords]) => keywords.some((k) => lower.includes(k)));
   return hint ? hint[1] : meta.icon;
+}
+
+// Esistenza/prova di un fatto (Intervention/Warranty) — vocabolario diverso
+// da FieldOrigin, che descrive invece l'origine di un valore su un campo
+// scalare. Tenuti volutamente separati, vedi decisions.md B38/#47.
+export function evidenceStatusLabel(status: EvidenceStatus): { label: string; color: string } {
+  switch (status) {
+    case 'VERIFIED_PRESENT':
+      return { label: 'Prova verificata', color: T.pine };
+    case 'DECLARED_PRESENT':
+      return { label: 'Dichiarata, da caricare', color: T.ochreDeep };
+    case 'DECLARED_ABSENT':
+      return { label: 'Dichiarata assente', color: T.rust };
+    case 'NOT_APPLICABLE':
+      return { label: 'Non applicabile', color: T.slate };
+    default:
+      return { label: 'Non verificata', color: T.slate };
+  }
 }

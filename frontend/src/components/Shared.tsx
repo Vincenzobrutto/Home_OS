@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { UserCheck, Sparkles, ShieldCheck } from 'lucide-react';
-import { T } from '../theme';
+import { T, evidenceStatusLabel } from '../theme';
 import { formatDateForDisplay } from '../api';
-import type { FieldOrigin } from '../types';
+import type { EvidenceStatus, FieldOrigin } from '../types';
 
 export function Stamp({
   children,
@@ -84,6 +84,11 @@ export function ProvenanceBadge({
       {icon}
     </span>
   );
+}
+
+export function EvidenceBadge({ status }: { status: EvidenceStatus }) {
+  const { label, color } = evidenceStatusLabel(status);
+  return <span style={{ color, fontFamily: "'Inter', sans-serif", fontSize: 11.5 }}>{label}</span>;
 }
 
 export function SectionLabel({ children }: { children: ReactNode }) {

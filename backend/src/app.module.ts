@@ -16,6 +16,7 @@ import { MaintenanceModule } from './maintenance/maintenance.module';
 import { GenesisModule } from './genesis/genesis.module';
 import { UtilityBillsModule } from './utility-bills/utility-bills.module';
 import { ComplianceModule } from './compliance/compliance.module';
+import { ReliabilityModule } from './reliability/reliability.module';
 import { InterventionsModule } from './interventions/interventions.module';
 import { WarrantiesModule } from './warranties/warranties.module';
 
@@ -36,6 +37,7 @@ import { WarrantiesModule } from './warranties/warranties.module';
     GenesisModule,
     UtilityBillsModule,
     ComplianceModule,
+    ReliabilityModule,
     InterventionsModule,
     WarrantiesModule,
   ],

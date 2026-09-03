@@ -40,12 +40,12 @@ Il centro del sistema è l'**Asset** (caldaia, impianto elettrico, climatizzator
 
 ## Funzionalità principali (stato: implementate)
 
-- **Asset**: creazione, modifica, dismissione/riattivazione, campi strutturati (marca, modello, seriale, date di installazione/acquisto/garanzia con default di 24 mesi) + campi liberi per dati specifici del tipo di impianto.
+- **Asset**: creazione, modifica, dismissione/riattivazione, campi strutturati (marca, modello, seriale, date di installazione/acquisto/garanzia con default di 24 mesi) + campi liberi per dati specifici del tipo di impianto. Cartella clinica per Asset: interventi canonici multi-Asset/multi-documento con costo ed evidenza, e garanzie ripetibili (acquisto, riparazione, estensione) con prova documentale e stato di evidenza.
 - **Ambienti**: vista a blocchi e vista planimetria (disegno forme libere o rettangoli, ritaglio automatico sull'area utile, rotazione a 90° con asset che restano nella stanza assegnata).
 - **Inbox documentale**: upload manuale, scatto foto da cellulare, scansione automatica di Gmail e Google Drive, estrazione AI (Claude), proposta di asset esistente o creazione di uno nuovo (con scelta dell'ambiente), rilevamento di documenti correlati allo stesso intervento, arricchimento dati via ricerca web su richiesta. Fatture e rapporti di lavori già eseguiti possono inoltre proporre il completamento di piani di manutenzione su uno o più Asset, sempre previa selezione e conferma dell'utente.
 - **Documenti casa**: documenti/impianti non legati a un ambiente specifico (es. APE, impianto elettrico condominiale), con ricerca per parola chiave.
 - **Rubrica**: contatti (tecnici, aziende) collegabili agli interventi in cronologia.
-- **Dashboard**: promemoria (garanzie scadute, asset senza documenti) cliccabili per andare dritti all'asset.
+- **Dashboard**: promemoria (garanzie scadute, asset senza documenti) cliccabili per andare dritti all'asset; card "Affidabilità della memoria" con copertura documentale, campi confermati e fatti con evidenza, distinta da Home Score e da Stato adempimenti.
 - **Genesis e Home Score**: onboarding guidato verso il primo Digital Twin, score trasparente su cinque dimensioni, Home Detective e andamento storico ricalcolabile sui dati correnti.
 - **Consumi elettrici**: bollette trasformate, previa conferma, in periodi interrogabili; confronto mensile con l'anno precedente e contesto degli Asset installati nello stesso periodo, senza attribuzioni causali inventate.
 - **Profilo casa**: dati identificativi, fisici, catastali, APE e agibilità in una scheda strutturata con indicatore di completezza e provenienza visibile; APE, visure e atti possono proporre campi, applicati solo dopo conferma e mai sopra valori esistenti.
@@ -64,7 +64,7 @@ Per lo stato dettagliato di cosa è fatto/in corso/pianificato vedi `roadmap.md`
 | Property Profile catastale/energetico strutturato | Implementato in v1 (B36); integrazioni dirette con registri pubblici e conformità/verifica terza restano future |
 | Entità `System` distinta dagli Asset | Nessuna gerarchia universale; introdotto solo `ThermalSystem` per il caso normativo dei generatori che condividono la distribuzione |
 | Check-up adempimenti impianti termici | Fondazioni tecniche in sviluppo: `ThermalSystem`, evidenza, territori, regole versionate e piani generalizzati; nessuna regione o scadenza normativa è ancora attiva in UI |
-| Provenienza e livello di affidabilità per singolo dato | Campo-per-campo per Asset (B38) e House/Property Profile (B36); Room e storico multi-versione restano fuori scope, `ATTESTED` non è ancora prodotto da alcun flusso |
+| Provenienza e livello di affidabilità per singolo dato | Campo-per-campo per Asset (B38) e House/Property Profile (B36); Room e storico multi-versione restano fuori scope, `ATTESTED` non è ancora prodotto da alcun flusso. Vista aggregata a livello casa in Dashboard (B48): copertura, non un giudizio di qualità del dato |
 | Autenticazione, ruoli e isolamento multiutente | Autenticazione reale implementata (B2); ruoli/isolamento oggi solo OWNER per casa, manca l'UI di invito multi-utente (B12) |
 | Trasferimento del record al nuovo proprietario | Visione futura, subordinata a identità, permessi, separazione dati e verifica legale |
 | Record certificato/verificato per banche o assicurazioni | Non disponibile; usare "record strutturato con provenienza tracciabile" finché non esiste una verifica terza |

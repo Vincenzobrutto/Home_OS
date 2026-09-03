@@ -25,6 +25,22 @@ export const TRACKED_ASSET_FIELDS = [
 
 export type TrackedAssetField = (typeof TRACKED_ASSET_FIELDS)[number];
 
+// Sottoinsieme usato da B48 (memory-reliability.ts) per la copertura "campi
+// confermati": solo i campi genericamente applicabili a qualunque Asset.
+// Gli altri 5 (refrigerant/refrigerantChargeKg/hermeticallySealed/
+// sealedLabelPresent/leakDetectionSystem) valgono solo per impianti
+// termici/clima — contarli per un forno o un frigorifero falserebbe la
+// copertura, stesso principio già seguito per F-gas/APE (mai inventare
+// applicabilità dove non c'è).
+export const CORE_TRACKED_FIELDS = [
+  'installedAt',
+  'purchasedAt',
+  'serialNumber',
+  'manufacturer',
+  'model',
+  'supplier',
+] as const satisfies readonly TrackedAssetField[];
+
 interface UpsertAssetFieldProvenanceParams {
   assetId: string;
   fieldName: TrackedAssetField;

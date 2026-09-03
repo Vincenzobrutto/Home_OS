@@ -61,7 +61,7 @@ La sequenza di prodotto è **Memoria della casa → Fiducia → Recupero rapido 
 ### Fase 2 — Affidabilità della memoria (P0)
 
 - Applicare sistematicamente provenienza e stati `VERIFIED_PRESENT`, `DECLARED_PRESENT`, `DECLARED_ABSENT`, `UNKNOWN`, `NOT_APPLICABLE` ai dati per cui hanno significato.
-- Mostrare copertura informativa e qualità del record in una card “Affidabilità della memoria”, senza trasformare UNKNOWN in errore o assenza reale (B48).
+- ~~Mostrare copertura informativa e qualità del record in una card "Affidabilità della memoria", senza trasformare UNKNOWN in errore o assenza reale~~: B48 completato il 2026-09-03, endpoint `memory-reliability` + card Dashboard distinta da Home Score.
 - Deliverable: prima Dashboard orientata alla memoria.
 
 ### Fase 3 — Recupero rapido (P0)

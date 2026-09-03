@@ -295,6 +295,23 @@ export type InterventionKind = 'INSTALLATION' | 'MAINTENANCE' | 'INSPECTION' | '
 export type InterventionDocumentRole = 'INVOICE' | 'REPORT' | 'RECEIPT' | 'PHOTO' | 'WARRANTY_PROOF' | 'OTHER';
 export type EvidenceStatus = 'VERIFIED_PRESENT' | 'DECLARED_PRESENT' | 'DECLARED_ABSENT' | 'UNKNOWN' | 'NOT_APPLICABLE';
 
+export interface CoverageMetric {
+  completed: number;
+  total: number;
+}
+
+export interface MemoryReliability {
+  overallCoverage: number | null;
+  dimensions: {
+    assetDocumentation: CoverageMetric;
+    fieldCoverage: CoverageMetric;
+    factEvidence: CoverageMetric;
+  };
+  version: string;
+  calculatedAt: string;
+  disclaimer: string;
+}
+
 export interface Intervention {
   id: string;
   houseId: string;

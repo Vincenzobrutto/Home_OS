@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, Download, ExternalLink, FileStack, FileText } from 'lucide-react';
-import { T, ASSET_TYPES, iconForAsset } from '../theme';
+import { T, ASSET_TYPES, iconForAsset, evidenceStatusLabel } from '../theme';
 import { SectionLabel, StatusDot, Stamp, ProvenanceBadge } from './Shared';
 import { api, formatDateForDisplay, parseDateInput } from '../api';
 import type { Asset, Contact, CustomField, DocumentRecord, EvidenceStatus, House, InterventionKind, Room, TimelineEvent, Warranty, WarrantyKind } from '../types';
@@ -12,21 +12,6 @@ const WARRANTY_KIND_LABELS: Record<WarrantyKind, string> = {
   EXTENDED: 'Estensione',
   OTHER: 'Altro',
 };
-
-function warrantyEvidenceLabel(status: EvidenceStatus): { label: string; color: string } {
-  switch (status) {
-    case 'VERIFIED_PRESENT':
-      return { label: 'Prova verificata', color: T.pine };
-    case 'DECLARED_PRESENT':
-      return { label: 'Dichiarata, da caricare', color: T.ochre };
-    case 'DECLARED_ABSENT':
-      return { label: 'Dichiarata assente', color: T.rust };
-    case 'NOT_APPLICABLE':
-      return { label: 'Non applicabile', color: T.slate };
-    default:
-      return { label: 'Non verificata', color: T.slate };
-  }
-}
 
 // Colore per tipo di intervento sui pallini della Cronologia — leggibilità
 // "installazione → manutenzione → guasto → riparazione" richiesta da B50.
@@ -936,7 +921,7 @@ export function AssetDetail({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 30 }}>
           {warranties.map((w) => {
             const expired = new Date(w.expiresAt).getTime() < Date.now();
-            const evidence = warrantyEvidenceLabel(w.evidenceStatus);
+            const evidence = evidenceStatusLabel(w.evidenceStatus);
             return (
               <div
                 key={w.id}

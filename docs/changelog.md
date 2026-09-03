@@ -2,6 +2,15 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-03 (5) — B48: Affidabilità della memoria e copertura informativa
+
+- Nuovo endpoint `GET /houses/:houseId/memory-reliability` (`common/memory-reliability.ts` + modulo `reliability`, mirror di `compliance`): tre coperture oneste `{completed, total}` — Asset con documenti, campi "core" con provenienza, `Intervention`/`Warranty` con evidenza nota — combinate in una media pesata che esclude le dimensioni senza dati invece di azzerarle.
+- Nuova card Dashboard "Affidabilità della memoria", distinta dalla card Home Score esistente (vedi `decisions.md` #48): percentuale complessiva con soglia colorata, tre barre di copertura con frazione esplicita, disclaimer "un dato non ancora verificato non è un dato assente o sbagliato".
+- `CORE_TRACKED_FIELDS` (sottoinsieme di 6 campi genericamente applicabili, `field-provenance.ts`) esclude i 5 campi F-gas dal calcolo di copertura — non pertinenti per Asset non termici.
+- Promossa `evidenceStatusLabel` da funzione locale di `Assets.tsx` a `theme.ts`, con nuovo componente condiviso `EvidenceBadge` in `Shared.tsx`.
+- Backend: build/lint puliti, 91/91 test (7 nuovi: 4 sul motore puro, 3 sul service). Frontend: build/lint puliti (nessun nuovo warning).
+- Verificato dal vivo sulla casa reale con una sessione temporanea: conteggi combacianti con query dirette (14/22 Asset con documenti, 0/7 fatti con evidenza nota — tutte le garanzie legacy da B50 sono `UNKNOWN`, corretto). `fieldCoverage` risulta 0/132: nessuna riga `AssetFieldProvenance` esiste ancora per la casa reale (il tracciamento B38 è più recente della maggior parte dei dati) — risultato atteso, non un bug, coerente con il principio "UNKNOWN non vale assente o errato" applicato anche ai dati pre-esistenti al tracciamento. Verifica visiva in browser non eseguita (nessuna credenziale disponibile in questa sessione per il login, come già in B50).
+
 ## 2026-09-03 (4) — B50: Garanzie strutturate e cartella clinica dell'Asset
 
 - Nuovo modulo `warranties` (backend): `GET/POST /assets/:assetId/warranties`, `PATCH /warranties/:id`, stessa struttura di `Intervention` (autorizzazione per-casa, evidenza risolta lato server, nessun delete).
