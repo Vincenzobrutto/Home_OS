@@ -2,6 +2,15 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-03 (7) — B44: Home Score v2 + Stato adempimenti separato
+
+- Home Score `HOME_SCORE_VERSION` → `v2`: la dimensione "Efficienza" (segnale debole, mai valorizzato da alcun flusso) è sostituita da "Affidabilità del record", che riusa `computeMemoryReliability` (B48) — stessa formula esatta della card "Affidabilità della memoria", mai una seconda definizione parallela.
+- `ScoreSnapshot.efficiencyScore` → `reliabilityScore`: migrazione con `RENAME COLUMN`, non drop+add — le 11 righe storiche reali mantengono il loro valore v1 originale, verificato con query diretta pre/post.
+- Nuova card Dashboard "Stato adempimenti", prima UI mai costruita per l'endpoint `/houses/:houseId/compliance` (esisteva da B41). Badge di copertura neutro (mai a soglia colorata): un numero basso qui significa "poco ancora tracciato", non "in pericolo".
+- Regola Home Detective `ASSET_WITHOUT_ROOM` rimossa (indicazione esplicita del backlog B44).
+- Backend: build/lint puliti, 101/101 test aggiornati. Frontend: build/lint puliti, nessun nuovo warning.
+- Verificato dal vivo sulla casa reale: `reliabilityScore: 25` dopo il ricalcolo, identico al valore già osservato da `/memory-reliability` — coerenza tra le due fonti confermata sui dati reali. Le 4 Issue `ASSET_WITHOUT_ROOM` aperte si sono auto-risolte al primo ricalcolo (nessun intervento manuale, meccanismo di riconciliazione già esistente). `GET /houses/:houseId/compliance` verificato invariato.
+
 ## 2026-09-03 (6) — B49: Ricerca unificata, azioni rapide e nuove regole Home Detective
 
 - Ricerca globale client-side (Asset, Contatti, Documenti, Garanzie, Interventi): `frontend/src/search.ts` (funzione pura, nessuna richiesta di rete per keystroke) + overlay `GlobalSearch.tsx`, apribile dall'icona in Sidebar o `Ctrl/Cmd+K`.

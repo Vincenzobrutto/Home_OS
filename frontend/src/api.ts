@@ -1,4 +1,4 @@
-import type { Asset, ConfirmObservationItem, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, EvidenceStatus, GenesisResults, GmailCandidate, GmailScanResult, GmailStatus, House, HouseTimelineEventRecord, Intervention, InterventionDocumentRole, InterventionKind, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, MemoryReliability, ObservationRecord, Room, ScanSessionRecord, TimelineEvent, User, Warranty, WarrantyKind } from './types';
+import type { Asset, ComplianceResult, ConfirmObservationItem, Contact, ContactDetail, CustomField, DocumentRecord, DriveCandidate, DriveFolder, DriveScanResult, DriveStatus, EvidenceStatus, GenesisResults, GmailCandidate, GmailScanResult, GmailStatus, House, HouseTimelineEventRecord, Intervention, InterventionDocumentRole, InterventionKind, MaintenanceOccurrence, MaintenancePlan, MaintenanceRecurrenceUnit, MaintenanceReminder, MaintenanceSuggestion, MemoryReliability, ObservationRecord, Room, ScanSessionRecord, TimelineEvent, User, Warranty, WarrantyKind } from './types';
 import type { RoomGeometry } from './geometry';
 
 // Deriva l'host dal browser stesso invece di un "localhost" fisso: da
@@ -252,6 +252,9 @@ export const api = {
   },
   reliability: {
     forHouse: (houseId: string) => request<MemoryReliability>(`/houses/${houseId}/memory-reliability`),
+  },
+  compliance: {
+    forHouse: (houseId: string) => request<ComplianceResult>(`/houses/${houseId}/compliance`),
   },
   contacts: {
     listForHouse: (houseId: string) => request<Contact[]>(`/houses/${houseId}/contacts`),

@@ -888,7 +888,7 @@ function ResultsStep({
         { label: 'Documentazione', value: score.documentationScore },
         { label: 'Manutenzione', value: score.maintenanceScore },
         { label: 'Sicurezza', value: score.safetyScore },
-        { label: 'Efficienza', value: score.efficiencyScore },
+        { label: 'Affidabilità del record', value: score.reliabilityScore },
         { label: 'Completezza', value: score.completenessScore },
       ]
     : [];

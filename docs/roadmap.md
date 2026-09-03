@@ -82,6 +82,7 @@ La sequenza di prodotto è **Memoria della casa → Fiducia → Recupero rapido 
 
 ### Fase 6 — Stato adempimenti (P1)
 
+- ~~Card "Stato adempimenti" in Dashboard~~: B44 completato il 2026-09-03, prima UI per l'endpoint `/houses/:houseId/compliance` (B41) — copertura/esiti/fonti con badge neutro, mai a soglia colorata come le altre card.
 - Attivare nazionale, manutenzione, efficienza energetica, APE e F-gas.
 - Primo pilota regionale solo Lombardia e Piemonte (B42), dopo governance, fonti primarie aggiornate, revisione professionale e test di confine.
 - Lazio, Veneto ed Emilia-Romagna restano non attivi fino al superamento degli stessi gate.
@@ -94,7 +95,7 @@ La sequenza di prodotto è **Memoria della casa → Fiducia → Recupero rapido 
 
 ### Fase 8 — Home Score v2 (P2)
 
-- Sostituire “Efficienza” con “Affidabilità del record”, misurando completezza, documentazione, provenienza e aggiornamento (B44).
+- ~~Sostituire "Efficienza" con "Affidabilità del record"~~: B44 completato il 2026-09-03 — `HOME_SCORE_VERSION` v2, la dimensione riusa `computeMemoryReliability` (B48), stessa formula della card "Affidabilità della memoria", mai una seconda definizione parallela.
 - Lo score non misura conformità, rischio sanzioni o qualità tecnica.
 
 ### Fase 9 — Standby (P3)

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import {
   AssetType,
+  EvidenceStatus,
   GenesisStatus,
   GenesisStep,
   RoomType,
@@ -36,6 +37,8 @@ import {
   type HomeDetectiveWarrantyInput,
   type IssueDraft,
 } from '../common/home-detective';
+import { computeMemoryReliability } from '../common/memory-reliability';
+import { CORE_TRACKED_FIELDS } from '../common/field-provenance';
 import {
   findPossibleDuplicate,
   type DuplicateCandidate,
@@ -377,7 +380,7 @@ export class GenesisService {
       score.dimensions.documentation,
       score.dimensions.maintenance,
       score.dimensions.safety,
-      score.dimensions.efficiency,
+      score.dimensions.reliability,
       score.dimensions.completeness,
     ];
     const previousValues = latest
@@ -386,7 +389,7 @@ export class GenesisService {
           latest.documentationScore,
           latest.maintenanceScore,
           latest.safetyScore,
-          latest.efficiencyScore,
+          latest.reliabilityScore,
           latest.completenessScore,
         ]
       : [];
@@ -470,6 +473,7 @@ export class GenesisService {
         where: { houseId },
         include: {
           _count: { select: { documents: true, maintenancePlans: true } },
+          fieldProvenance: { select: { fieldName: true } },
         },
       }),
       this.prisma.document.count({ where: { houseId } }),
@@ -482,13 +486,19 @@ export class GenesisService {
         select: {
           id: true,
           contactId: true,
+          evidenceStatus: true,
           assets: { select: { assetId: true }, take: 1 },
           documents: { select: { documentId: true }, take: 1 },
         },
       }),
       this.prisma.warranty.findMany({
         where: { asset: { houseId } },
-        select: { id: true, assetId: true, proofDocumentId: true },
+        select: {
+          id: true,
+          assetId: true,
+          proofDocumentId: true,
+          evidenceStatus: true,
+        },
       }),
       this.prisma.contact.findMany({
         where: { houseId },
@@ -531,7 +541,6 @@ export class GenesisService {
       dismissed: asset.dismissedAt !== null,
       hasDocument: asset._count.documents > 0,
       hasMaintenancePlan: asset._count.maintenancePlans > 0,
-      estimatedReplacementYear: asset.estimatedReplacementYear,
     }));
     const detectiveAssets: HomeDetectiveAssetInput[] = assets.map((asset) => ({
       id: asset.id,
@@ -539,8 +548,38 @@ export class GenesisService {
       confirmed: asset.confirmed,
       dismissed: asset.dismissedAt !== null,
       hasDocument: asset._count.documents > 0,
-      roomId: asset.roomId,
     }));
+
+    // Affidabilità del record (B44/B48): stessa formula di
+    // ReliabilityService.evaluateHouse (reliability.service.ts), qui
+    // riusata per alimentare la dimensione "Affidabilità del record" di
+    // Home Score v2 — mai una seconda formula parallela.
+    const activeAssetsForReliability = assets.filter(
+      (a) => a.dismissedAt === null,
+    );
+    const assetsWithDocuments = activeAssetsForReliability.filter(
+      (a) => a._count.documents > 0,
+    ).length;
+    const fieldsCompleted = activeAssetsForReliability.reduce((sum, asset) => {
+      const present = new Set(asset.fieldProvenance.map((f) => f.fieldName));
+      return (
+        sum + CORE_TRACKED_FIELDS.filter((field) => present.has(field)).length
+      );
+    }, 0);
+    const fieldsTotal =
+      activeAssetsForReliability.length * CORE_TRACKED_FIELDS.length;
+    const facts = [...interventions, ...warranties];
+    const factsKnown = facts.filter(
+      (f) => f.evidenceStatus !== EvidenceStatus.UNKNOWN,
+    ).length;
+    const memoryReliability = computeMemoryReliability({
+      assetDocumentation: {
+        completed: assetsWithDocuments,
+        total: activeAssetsForReliability.length,
+      },
+      fieldCoverage: { completed: fieldsCompleted, total: fieldsTotal },
+      factEvidence: { completed: factsKnown, total: facts.length },
+    });
 
     return {
       score: computeHomeScore({
@@ -549,6 +588,7 @@ export class GenesisService {
         assets: scoreAssets,
         confirmedRoomsCount,
         genesisCompleted: true,
+        recordReliability: memoryReliability.overallCoverage,
       }),
       drafts: evaluateHomeDetectiveRules({
         houseHasAnyDocument,
@@ -570,7 +610,7 @@ export class GenesisService {
         documentationScore: score.dimensions.documentation,
         maintenanceScore: score.dimensions.maintenance,
         safetyScore: score.dimensions.safety,
-        efficiencyScore: score.dimensions.efficiency,
+        reliabilityScore: score.dimensions.reliability,
         completenessScore: score.dimensions.completeness,
         calculationVersion: score.version,
       },

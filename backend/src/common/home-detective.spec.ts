@@ -33,7 +33,6 @@ describe('home detective rule engine', () => {
             confirmed: true,
             dismissed: false,
             hasDocument: false,
-            roomId: null,
           },
         ],
       }),
@@ -57,43 +56,11 @@ describe('home detective rule engine', () => {
             confirmed: true,
             dismissed: false,
             hasDocument: true,
-            roomId: null,
           },
         ],
       }),
     );
     expect(drafts).toEqual([]);
-  });
-
-  it('flags a room-bound asset type without a room, but not a house-level type', () => {
-    const drafts = evaluateHomeDetectiveRules(
-      baseInput({
-        assets: [
-          {
-            id: 'fridge',
-            type: 'ELETTRODOMESTICO',
-            confirmed: true,
-            dismissed: false,
-            hasDocument: true,
-            roomId: null,
-          },
-          {
-            id: 'wiring',
-            type: 'ELETTRICO',
-            confirmed: true,
-            dismissed: false,
-            hasDocument: true,
-            roomId: null,
-          },
-        ],
-      }),
-    );
-    expect(drafts).toEqual([
-      expect.objectContaining({
-        ruleCode: 'ASSET_WITHOUT_ROOM',
-        assetId: 'fridge',
-      }),
-    ]);
   });
 
   it('ignores unconfirmed and dismissed assets for every rule', () => {
@@ -106,7 +73,6 @@ describe('home detective rule engine', () => {
             confirmed: false,
             dismissed: false,
             hasDocument: false,
-            roomId: null,
           },
           {
             id: 'a2',
@@ -114,7 +80,6 @@ describe('home detective rule engine', () => {
             confirmed: true,
             dismissed: true,
             hasDocument: false,
-            roomId: null,
           },
         ],
       }),
@@ -264,7 +229,6 @@ describe('home detective rule engine', () => {
           confirmed: true,
           dismissed: false,
           hasDocument: false,
-          roomId: null,
         },
       ],
     });

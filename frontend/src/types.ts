@@ -150,7 +150,10 @@ export interface ScoreSnapshotRecord {
   documentationScore: number;
   maintenanceScore: number;
   safetyScore: number;
-  efficiencyScore: number;
+  // v2 (B44): era "efficiencyScore" — dalla versione v2 in poi rappresenta
+  // "Affidabilità del record" (computeMemoryReliability, B48), non più
+  // Efficienza. Vedi decisions.md.
+  reliabilityScore: number;
   completenessScore: number;
   calculationVersion: string;
   calculatedAt: string;
@@ -312,6 +315,36 @@ export interface MemoryReliability {
   };
   version: string;
   calculatedAt: string;
+  disclaimer: string;
+}
+
+// Stato adempimenti (B44/B41) — mirror di ComplianceService.evaluateHouse.
+// `status` ha vocabolari diversi per `code`: ApeState per APE_STATE,
+// EvidenceStatus per PLANT_BOOKLET/EFFICIENCY_CONTROL, un enum dedicato
+// (UNKNOWN|NOT_APPLICABLE|APPLICABLE) per FGAS_LEAK_CHECK — sempre stringa,
+// interpretata lato frontend in base al code.
+export interface ComplianceCheck {
+  code: string;
+  subjectType: 'HOUSE' | 'THERMAL_SYSTEM' | 'ASSET';
+  subjectId: string;
+  status: string;
+  evidenceStatus?: EvidenceStatus;
+  reason?: string;
+}
+
+export interface ComplianceSource {
+  stableCode: string;
+  version: number;
+  title: string | null;
+  url: string | null;
+  verifiedAt: string | null;
+}
+
+export interface ComplianceResult {
+  evaluatedAt: string;
+  coverage: CoverageMetric;
+  checks: ComplianceCheck[];
+  sources: ComplianceSource[];
   disclaimer: string;
 }
 

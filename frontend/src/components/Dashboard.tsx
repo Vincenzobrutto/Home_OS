@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { DoorOpen, Building2, FileText, AlertTriangle, CalendarClock, Sparkles, ArrowRight, Clock, RefreshCw, TrendingUp, type LucideIcon } from 'lucide-react';
 import { T, iconForAsset } from '../theme';
 import { SectionLabel, Stamp } from './Shared';
-import type { Asset, CoverageMetric, GenesisResults, House, HouseTimelineEventRecord, MaintenanceReminder, MemoryReliability, Room, ScoreSnapshotRecord } from '../types';
+import type { Asset, ComplianceCheck, ComplianceResult, CoverageMetric, GenesisResults, House, HouseTimelineEventRecord, MaintenanceReminder, MemoryReliability, Room, ScoreSnapshotRecord } from '../types';
 import { api, formatDateForDisplay } from '../api';
 
 // Un colore distinto per categoria di Asset — badge tondi nelle liste,
@@ -33,6 +33,41 @@ function coverageBarColor(pct: number): string {
   return pct >= 75 ? T.pine : pct >= 40 ? T.ochreDeep : T.rust;
 }
 
+// Titolo leggibile per ogni "code" di ComplianceService.evaluateHouse — il
+// backend usa codici tecnici stabili (RegulatoryRule.family/stableCode),
+// mai testo pensato per l'utente.
+const COMPLIANCE_CHECK_TITLES: Record<string, string> = {
+  APE_STATE: 'Attestato di Prestazione Energetica',
+  PLANT_BOOKLET: 'Libretto di impianto',
+  EFFICIENCY_CONTROL: 'Controllo di efficienza',
+  FGAS_LEAK_CHECK: 'Controllo perdite F-gas',
+};
+
+// `status` ha vocabolari diversi per code (ApeState, EvidenceStatus, l'enum
+// di FGasResult) — normalizzati qui in un'unica etichetta/colore. UNKNOWN
+// resta neutro (slate): non è un errore, è "non ancora tracciato" (vedi
+// disclaimer del backend).
+function complianceStatusMeta(status: string): { label: string; color: string } {
+  switch (status) {
+    case 'VALID':
+      return { label: 'In corso di validità', color: T.pine };
+    case 'AT_RISK':
+      return { label: 'A rischio', color: T.ochreDeep };
+    case 'EXPIRED':
+      return { label: 'Scaduto', color: T.rust };
+    case 'DECLARED_PRESENT':
+    case 'VERIFIED_PRESENT':
+    case 'APPLICABLE':
+      return { label: 'Presente', color: T.pine };
+    case 'DECLARED_ABSENT':
+      return { label: 'Dichiarato assente', color: T.rust };
+    case 'NOT_APPLICABLE':
+      return { label: 'Non applicabile', color: T.slate };
+    default:
+      return { label: 'Da verificare', color: T.slate };
+  }
+}
+
 function CoverageBar({ label, metric }: { label: string; metric: CoverageMetric }) {
   const pct = metric.total > 0 ? Math.round((metric.completed / metric.total) * 100) : null;
   return (
@@ -44,6 +79,27 @@ function CoverageBar({ label, metric }: { label: string; metric: CoverageMetric 
       <div style={{ height: 5, borderRadius: 3, background: T.line }}>
         <div style={{ height: 5, borderRadius: 3, width: `${pct ?? 0}%`, background: pct === null ? T.line : coverageBarColor(pct) }} />
       </div>
+    </div>
+  );
+}
+
+function ComplianceCheckRow({ check, openAsset }: { check: ComplianceCheck; openAsset: (id: string) => void }) {
+  const meta = complianceStatusMeta(check.status);
+  const clickable = check.subjectType === 'ASSET';
+  return (
+    <div
+      onClick={clickable ? () => openAsset(check.subjectId) : undefined}
+      style={{ display: 'flex', flexDirection: 'column', gap: 2, cursor: clickable ? 'pointer' : 'default' }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.ink }}>
+          {COMPLIANCE_CHECK_TITLES[check.code] ?? check.code}
+        </span>
+        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: meta.color, fontWeight: 500, whiteSpace: 'nowrap' }}>{meta.label}</span>
+      </div>
+      {check.reason && (
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate }}>{check.reason}</div>
+      )}
     </div>
   );
 }
@@ -101,7 +157,7 @@ type ScoreMetric =
   | 'documentationScore'
   | 'maintenanceScore'
   | 'safetyScore'
-  | 'efficiencyScore'
+  | 'reliabilityScore'
   | 'completenessScore';
 
 const SCORE_METRICS: Array<{ key: ScoreMetric; label: string }> = [
@@ -109,7 +165,7 @@ const SCORE_METRICS: Array<{ key: ScoreMetric; label: string }> = [
   { key: 'documentationScore', label: 'Documentazione' },
   { key: 'maintenanceScore', label: 'Manutenzione' },
   { key: 'safetyScore', label: 'Sicurezza' },
-  { key: 'efficiencyScore', label: 'Efficienza' },
+  { key: 'reliabilityScore', label: 'Affidabilità del record' },
   { key: 'completenessScore', label: 'Completezza' },
 ];
 
@@ -196,11 +252,13 @@ export function Dashboard({
   const [recalculatingScore, setRecalculatingScore] = useState(false);
   const [scoreMessage, setScoreMessage] = useState<string | null>(null);
   const [reliability, setReliability] = useState<MemoryReliability | null>(null);
+  const [compliance, setCompliance] = useState<ComplianceResult | null>(null);
 
   useEffect(() => {
     api.maintenance.remindersForHouse(house.id).then(setMaintenance);
     api.documents.listForHouse(house.id).then((docs) => setDocumentsCount(docs.length));
     api.reliability.forHouse(house.id).then(setReliability);
+    api.compliance.forHouse(house.id).then(setCompliance);
   }, [house.id]);
 
   useEffect(() => {
@@ -308,7 +366,7 @@ export function Dashboard({
               { label: 'Documentazione', value: genesisResults.score.documentationScore },
               { label: 'Manutenzione', value: genesisResults.score.maintenanceScore },
               { label: 'Sicurezza', value: genesisResults.score.safetyScore },
-              { label: 'Efficienza', value: genesisResults.score.efficiencyScore },
+              { label: 'Affidabilità del record', value: genesisResults.score.reliabilityScore },
               { label: 'Completezza (Digital Twin)', value: genesisResults.score.completenessScore },
             ].map((d) => (
               <div key={d.label}>
@@ -356,6 +414,34 @@ export function Dashboard({
           </div>
           <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate, marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.line}` }}>
             {reliability.disclaimer}
+          </div>
+        </div>
+      )}
+
+      {compliance && (
+        <div style={{ marginBottom: 26, padding: '18px 20px', background: T.card, border: `1px solid ${T.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 13, color: T.ink, flex: 1 }}>Stato adempimenti</div>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: T.slate, border: `1px solid ${T.line}`, borderRadius: 10, padding: '2px 8px' }}>
+              {compliance.coverage.completed}/{compliance.coverage.total} noti
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {compliance.checks.map((check, i) => (
+              <ComplianceCheckRow key={`${check.code}-${check.subjectId}-${i}`} check={check} openAsset={openAsset} />
+            ))}
+          </div>
+          {compliance.sources.length > 0 && (
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.line}`, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {compliance.sources.map((source) => (
+                <a key={source.stableCode} href={source.url ?? undefined} target="_blank" rel="noreferrer" style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate }}>
+                  {source.title ?? source.stableCode} (v{source.version})
+                </a>
+              ))}
+            </div>
+          )}
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.slate, marginTop: 14, paddingTop: 12, borderTop: `1px solid ${T.line}` }}>
+            {compliance.disclaimer}
           </div>
         </div>
       )}

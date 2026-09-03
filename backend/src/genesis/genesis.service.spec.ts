@@ -88,16 +88,22 @@ describe('GenesisService precise resume', () => {
 
 describe('GenesisService Home Score history', () => {
   it('does not create a duplicate snapshot when recalculation has identical values and version', async () => {
+    // Ricalcolato a mano per lo scenario di questo test (nessun asset,
+    // nessun documento, Genesis completato): documentation 70 (-30 senza
+    // documenti), maintenance/safety 100 (nessun asset critico),
+    // reliability 0 (recordReliability null su una casa vuota, stessa
+    // convenzione di completeness che parte da 0), completeness 30 (solo il
+    // bonus Genesis completato). Overall = 70*.25+100*.2+100*.25+0*.15+30*.15 = 67.
     const latest = {
       id: 'score-1',
       houseId: 'house-1',
-      overallScore: 82,
+      overallScore: 67,
       documentationScore: 70,
       maintenanceScore: 100,
       safetyScore: 100,
-      efficiencyScore: 100,
+      reliabilityScore: 0,
       completenessScore: 30,
-      calculationVersion: 'v1',
+      calculationVersion: 'v2',
       calculatedAt: new Date(),
     };
     const snapshotCreate = jest.fn();

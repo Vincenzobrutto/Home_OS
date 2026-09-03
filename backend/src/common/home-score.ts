@@ -5,18 +5,22 @@
 // tecnica certa — solo segnali osservabili dai dati già in HomeOS (asset
 // censiti, documenti collegati, piani di manutenzione, completezza Genesis).
 //
-// "Efficienza" oggi ha un segnale debole (solo `estimatedReplacementYear`,
-// un campo che nessun flusso valorizza ancora automaticamente in questo
-// MVP) — dichiarato esplicitamente come limitazione, non nascosto dietro un
-// numero che sembra più solido di quanto sia.
+// v2 (B44): "Efficienza" è stata rimossa — il suo unico segnale
+// (`Asset.estimatedReplacementYear`) non è mai valorizzato da alcun flusso
+// automatico, un numero che sembrava più solido di quanto fosse. Sostituita
+// da "Affidabilità del record": riusa `computeMemoryReliability` (B48),
+// calcolato dal chiamante (GenesisService) e passato già pronto come
+// `recordReliability` — stessa fonte di verità della card "Affidabilità
+// della memoria" (endpoint separato, mai fusa con questa card, vedi
+// docs/HANDOFF.md e decisions.md #48).
 
-export const HOME_SCORE_VERSION = 'v1';
+export const HOME_SCORE_VERSION = 'v2';
 
 const WEIGHTS = {
   documentation: 0.25,
   maintenance: 0.2,
   safety: 0.25,
-  efficiency: 0.15,
+  reliability: 0.15,
   completeness: 0.15,
 } as const;
 
@@ -37,7 +41,6 @@ export interface HomeScoreAssetInput {
   dismissed: boolean;
   hasDocument: boolean;
   hasMaintenancePlan: boolean;
-  estimatedReplacementYear: number | null;
 }
 
 export interface HomeScoreInput {
@@ -46,6 +49,11 @@ export interface HomeScoreInput {
   assets: HomeScoreAssetInput[];
   confirmedRoomsCount: number;
   genesisCompleted: boolean;
+  // overallCoverage di computeMemoryReliability (common/memory-reliability.ts)
+  // — null se nessuna delle sue tre dimensioni ha ancora dati, trattato come
+  // 0 qui (stessa convenzione di "Completezza", che parte da 0 per una casa
+  // nuova, non una penalità nascosta).
+  recordReliability: number | null;
 }
 
 export interface ScoreReason {
@@ -60,7 +68,7 @@ export interface ScoreResult {
     documentation: number;
     maintenance: number;
     safety: number;
-    efficiency: number;
+    reliability: number;
     completeness: number;
   };
   reasons: ScoreReason[];
@@ -133,22 +141,13 @@ export function computeHomeScore(input: HomeScoreInput): ScoreResult {
   }
   safety = clamp(safety);
 
-  // --- Efficienza ---------------------------------------------------------
-  let efficiency = 100;
-  for (const asset of activeAssets) {
-    if (
-      asset.estimatedReplacementYear !== null &&
-      asset.estimatedReplacementYear <= input.currentYear
-    ) {
-      efficiency -= 15;
-      reasons.push({
-        code: 'ASSET_PAST_REPLACEMENT_ESTIMATE',
-        label: `Asset oltre la vita utile stimata: ${asset.type}`,
-        impact: -15,
-      });
-    }
-  }
-  efficiency = clamp(efficiency);
+  // --- Affidabilità del record (v2) --------------------------------------
+  const reliability = clamp(input.recordReliability ?? 0);
+  reasons.push({
+    code: 'RECORD_RELIABILITY',
+    label: `Affidabilità del record: ${reliability}% di copertura`,
+    impact: reliability - 100,
+  });
 
   // --- Completezza Digital Twin --------------------------------------
   let completeness = 0;
@@ -184,7 +183,7 @@ export function computeHomeScore(input: HomeScoreInput): ScoreResult {
     documentation * WEIGHTS.documentation +
       maintenance * WEIGHTS.maintenance +
       safety * WEIGHTS.safety +
-      efficiency * WEIGHTS.efficiency +
+      reliability * WEIGHTS.reliability +
       completeness * WEIGHTS.completeness,
   );
 
@@ -194,7 +193,7 @@ export function computeHomeScore(input: HomeScoreInput): ScoreResult {
       documentation,
       maintenance,
       safety,
-      efficiency,
+      reliability,
       completeness,
     },
     reasons,

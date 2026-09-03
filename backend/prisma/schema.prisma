@@ -1143,7 +1143,13 @@ model ScoreSnapshot {
   documentationScore Int      @map("documentation_score")
   maintenanceScore   Int      @map("maintenance_score")
   safetyScore        Int      @map("safety_score")
-  efficiencyScore    Int      @map("efficiency_score")
+  // v2 (B44): era "efficiencyScore" — la colonna resta, ma dalla versione
+  // v2 in poi rappresenta "Affidabilità del record" (computeMemoryReliability,
+  // B48), non più la vecchia dimensione Efficienza. Le righe storiche
+  // restano con il loro valore v1 originale nella stessa colonna — la
+  // discontinuità è già gestita da ScoreTrend quando calculationVersion
+  // cambia, vedi common/home-score.ts.
+  reliabilityScore   Int      @map("reliability_score")
   completenessScore  Int      @map("completeness_score")
   calculationVersion String   @map("calculation_version")
   calculatedAt       DateTime @default(now()) @map("calculated_at")

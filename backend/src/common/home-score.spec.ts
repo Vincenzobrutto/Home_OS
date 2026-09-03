@@ -7,6 +7,7 @@ function baseInput(overrides: Partial<HomeScoreInput> = {}): HomeScoreInput {
     assets: [],
     confirmedRoomsCount: 0,
     genesisCompleted: false,
+    recordReliability: 100,
     ...overrides,
   };
 }
@@ -17,11 +18,11 @@ describe('home score engine', () => {
     expect(result.dimensions.documentation).toBe(100);
     expect(result.dimensions.maintenance).toBe(100);
     expect(result.dimensions.safety).toBe(100);
-    expect(result.dimensions.efficiency).toBe(100);
+    expect(result.dimensions.reliability).toBe(100);
     expect(result.dimensions.completeness).toBe(0);
     // 100*0.25 + 100*0.20 + 100*0.25 + 100*0.15 + 0*0.15 = 85
     expect(result.overall).toBe(85);
-    expect(result.version).toBe('v1');
+    expect(result.version).toBe('v2');
   });
 
   it('penalizes a house with zero documents', () => {
@@ -43,7 +44,6 @@ describe('home score engine', () => {
             dismissed: false,
             hasDocument: false,
             hasMaintenancePlan: false,
-            estimatedReplacementYear: null,
           },
         ],
       }),
@@ -69,7 +69,6 @@ describe('home score engine', () => {
             dismissed: false,
             hasDocument: true,
             hasMaintenancePlan: false,
-            estimatedReplacementYear: null,
           },
         ],
       }),
@@ -88,7 +87,6 @@ describe('home score engine', () => {
             dismissed: false,
             hasDocument: true,
             hasMaintenancePlan: false,
-            estimatedReplacementYear: null,
           },
         ],
       }),
@@ -107,7 +105,6 @@ describe('home score engine', () => {
             dismissed: false,
             hasDocument: false,
             hasMaintenancePlan: false,
-            estimatedReplacementYear: null,
           },
           {
             id: 'a2',
@@ -116,7 +113,6 @@ describe('home score engine', () => {
             dismissed: true,
             hasDocument: false,
             hasMaintenancePlan: false,
-            estimatedReplacementYear: null,
           },
         ],
       }),
@@ -134,7 +130,6 @@ describe('home score engine', () => {
       dismissed: false,
       hasDocument: true,
       hasMaintenancePlan: true,
-      estimatedReplacementYear: null,
     }));
     const result = computeHomeScore(
       baseInput({
@@ -155,10 +150,13 @@ describe('home score engine', () => {
       dismissed: false,
       hasDocument: false,
       hasMaintenancePlan: false,
-      estimatedReplacementYear: 2020,
     }));
     const result = computeHomeScore(
-      baseInput({ houseHasAnyDocument: false, assets: manyCriticalAssets }),
+      baseInput({
+        houseHasAnyDocument: false,
+        assets: manyCriticalAssets,
+        recordReliability: null,
+      }),
     );
     for (const value of Object.values(result.dimensions)) {
       expect(value).toBeGreaterThanOrEqual(0);
@@ -168,39 +166,19 @@ describe('home score engine', () => {
     expect(result.overall).toBeLessThanOrEqual(100);
   });
 
-  it('penalizes efficiency only once the estimated replacement year has passed', () => {
-    const future = computeHomeScore(
-      baseInput({
-        assets: [
-          {
-            id: 'a1',
-            type: 'ELETTRODOMESTICO',
-            confirmed: true,
-            dismissed: false,
-            hasDocument: true,
-            hasMaintenancePlan: true,
-            estimatedReplacementYear: 2030,
-          },
-        ],
-      }),
+  it('treats a null recordReliability as 0, the same way completeness starts at 0 for a new house', () => {
+    const result = computeHomeScore(baseInput({ recordReliability: null }));
+    expect(result.dimensions.reliability).toBe(0);
+    expect(result.reasons).toContainEqual(
+      expect.objectContaining({ code: 'RECORD_RELIABILITY', impact: -100 }),
     );
-    expect(future.dimensions.efficiency).toBe(100);
+  });
 
-    const past = computeHomeScore(
-      baseInput({
-        assets: [
-          {
-            id: 'a1',
-            type: 'ELETTRODOMESTICO',
-            confirmed: true,
-            dismissed: false,
-            hasDocument: true,
-            hasMaintenancePlan: true,
-            estimatedReplacementYear: 2020,
-          },
-        ],
-      }),
+  it('reflects the record reliability coverage percentage directly in the dimension', () => {
+    const result = computeHomeScore(baseInput({ recordReliability: 42 }));
+    expect(result.dimensions.reliability).toBe(42);
+    expect(result.reasons).toContainEqual(
+      expect.objectContaining({ code: 'RECORD_RELIABILITY', impact: -58 }),
     );
-    expect(past.dimensions.efficiency).toBe(85);
   });
 });

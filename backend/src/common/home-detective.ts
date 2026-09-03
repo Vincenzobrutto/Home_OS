@@ -9,16 +9,12 @@
 // confronta questo output con le Issue OPEN già in DB per creare solo le
 // nuove e risolvere quelle non più valide (vedi genesis.service.ts).
 //
-// ASSET_WITHOUT_ROOM è stata adattata rispetto alla richiesta originale:
-// nel modello dati di HomeOS `roomId: null` su un Asset è una scelta
-// deliberata ("impianto di casa", es. impianto elettrico condominiale — non
-// dato mancante, vedi domain-model.md). Applicare la regola a QUALUNQUE
-// asset senza stanza avrebbe generato falsi positivi sistematici sui tipi
-// tipicamente di casa (ELETTRICO, IDRAULICO, FOTOVOLTAICO, TETTO). La regola
-// scatta quindi solo per i tipi che tipicamente vivono in una stanza
-// specifica (elettrodomestici, climatizzatori) — per gli altri l'assenza di
-// stanza resta legittima.
-const ROOM_BOUND_ASSET_TYPES = new Set(['ELETTRODOMESTICO', 'CLIMA']);
+// ASSET_WITHOUT_ROOM (B44): spenta per decisione di prodotto (backlog B44) —
+// generava troppi falsi positivi percepiti anche dopo l'adattamento ai soli
+// tipi "da stanza" (elettrodomestici/climatizzatori). Le Issue OPEN
+// esistenti per questa regola si auto-risolvono al primo ricalcolo
+// successivo (reconcileIssues in genesis.service.ts già gestisce "regola
+// non più nei draft" come "non più valida").
 
 export interface HomeDetectiveAssetInput {
   id: string;
@@ -26,7 +22,6 @@ export interface HomeDetectiveAssetInput {
   confirmed: boolean;
   dismissed: boolean;
   hasDocument: boolean;
-  roomId: string | null;
 }
 
 // B49: un intervento/garanzia/contatto può generare al più un draft per
@@ -96,25 +91,6 @@ export function evaluateHomeDetectiveRules(
           'Non risulta nessun documento collegato alla caldaia (libretto, manuale, dichiarazione di conformità).',
         resolutionHint:
           'Carica il libretto di impianto, il manuale o la dichiarazione disponibile.',
-        assetId: asset.id,
-        interventionId: null,
-        warrantyId: null,
-        contactId: null,
-      });
-    }
-  }
-
-  // ASSET_WITHOUT_ROOM — solo per i tipi "da stanza", vedi commento in cima al file.
-  for (const asset of activeAssets) {
-    if (ROOM_BOUND_ASSET_TYPES.has(asset.type) && asset.roomId === null) {
-      drafts.push({
-        ruleCode: 'ASSET_WITHOUT_ROOM',
-        category: 'completeness',
-        severity: 'LOW',
-        title: 'Asset non collegato a un ambiente',
-        description: `L'asset di tipo ${asset.type} non è ancora associato a nessuna stanza.`,
-        resolutionHint:
-          "Completa la classificazione associando l'asset a un ambiente.",
         assetId: asset.id,
         interventionId: null,
         warrantyId: null,
