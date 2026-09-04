@@ -241,6 +241,7 @@ export function AddAssetModal({
       {addRoomOpen && (
         <AddRoomModal
           houseId={houseId}
+          rooms={rooms}
           onCreated={(room) => {
             setRoomId(room.id);
             setAddRoomOpen(false);
@@ -253,6 +254,46 @@ export function AddAssetModal({
   );
 }
 
+// Nomi suggeriti più ampi dei soli 4 valori dell'enum RoomType (che restano
+// solo icona/colore, non un vincolo sul nome): una casa reale ha quasi
+// sempre più di un bagno e spesso un corridoio, un ingresso, uno studio —
+// nomi diversi possono condividere lo stesso tipo sottostante. Stessa lista
+// (nomi e tipo più vicino) già usata per il dataset demo di Genesis
+// (backend/src/genesis/scan/genesis-demo-dataset.ts) — non importabile da lì
+// (pacchetto backend separato), ma tenuta coerente a mano.
+const ROOM_NAME_SUGGESTIONS: { name: string; type: string }[] = [
+  { name: 'Cucina', type: 'CUCINA' },
+  { name: 'Soggiorno', type: 'SOGGIORNO' },
+  { name: 'Camera da letto', type: 'CAMERA' },
+  { name: 'Cameretta', type: 'CAMERA' },
+  { name: 'Bagno', type: 'BAGNO' },
+  { name: 'Corridoio', type: 'SOGGIORNO' },
+  { name: 'Ingresso', type: 'SOGGIORNO' },
+  { name: 'Studio', type: 'CAMERA' },
+  { name: 'Lavanderia', type: 'BAGNO' },
+  { name: 'Ripostiglio', type: 'SOGGIORNO' },
+  { name: 'Cantina', type: 'SOGGIORNO' },
+  { name: 'Garage', type: 'SOGGIORNO' },
+  { name: 'Terrazzo', type: 'SOGGIORNO' },
+];
+
+// Room.name non è univoco nello schema (solo Room.code lo è, generato
+// automaticamente) — creare due ambienti con lo stesso nome è già permesso
+// dal backend, ma nei menu a tendina dove si sceglie l'ambiente di un asset
+// comparirebbero identici e indistinguibili. Se il nome scelto (da un
+// suggerimento o digitato a mano) coincide già con un ambiente esistente
+// della stessa casa, propone il prossimo numero libero invece di lasciarlo
+// invariato.
+function nextAvailableRoomName(base: string, existingRooms: Room[]): string {
+  const trimmed = base.trim();
+  if (!trimmed) return trimmed;
+  const names = new Set(existingRooms.map((r) => r.name));
+  if (!names.has(trimmed)) return trimmed;
+  let n = 2;
+  while (names.has(`${trimmed} ${n}`)) n++;
+  return `${trimmed} ${n}`;
+}
+
 // Nessun equivalente esisteva finché la creazione di un ambiente viveva solo
 // dentro la vista Mappa (FloorPlanView, che richiede di posizionarlo su una
 // planimetria): la vista a Blocchi (Rooms.tsx), unica raggiungibile in
@@ -262,10 +303,12 @@ export function AddAssetModal({
 // dal wizard Genesis prima che l'utente disegni la planimetria).
 export function AddRoomModal({
   houseId,
+  rooms,
   onCreated,
   onClose,
 }: {
   houseId: string;
+  rooms: Room[];
   onCreated: (room: Room) => void;
   onClose: () => void;
 }) {
@@ -297,20 +340,31 @@ export function AddRoomModal({
 
       <div style={{ marginBottom: 14 }}>
         <label style={labelStyle}>Nome</label>
-        <input style={inputStyle} placeholder="Es. Cucina" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        <input
+          style={inputStyle}
+          placeholder="Es. Cucina"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          // Solo all'uscita dal campo, non ad ogni tasto: correggere il testo
+          // mentre l'utente sta ancora scrivendo sposterebbe il cursore e
+          // sembrerebbe un bug, non un aiuto.
+          onBlur={() => setName((current) => nextAvailableRoomName(current, rooms))}
+          autoFocus
+        />
         {/* Suggerimenti, non una categorizzazione obbligatoria separata: un
             clic compila il nome (e imposta il tipo corrispondente in
-            automatico) — l'utente può comunque scrivere un nome libero senza
-            passare da qui, il tipo resta quello dell'ultimo suggerimento
-            scelto (o il default) anche in quel caso. */}
+            automatico) — se coincide con un ambiente già esistente propone
+            subito il numero successivo ("Bagno" → "Bagno 2"). L'utente può
+            comunque scrivere un nome libero senza passare da qui. */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-          {Object.entries(ROOM_TYPES).map(([key, meta]) => {
+          {ROOM_NAME_SUGGESTIONS.map(({ name: suggestionName, type: suggestionType }) => {
+            const meta = ROOM_TYPES[suggestionType];
             const Icon = meta.icon;
             return (
               <button
-                key={key}
+                key={suggestionName}
                 type="button"
-                onClick={() => { setType(key); setName(meta.label); }}
+                onClick={() => { setType(suggestionType); setName(nextAvailableRoomName(suggestionName, rooms)); }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -325,7 +379,7 @@ export function AddRoomModal({
                   color: T.ink70,
                 }}
               >
-                <Icon size={12} color={meta.color} /> {meta.label}
+                <Icon size={12} color={meta.color} /> {suggestionName}
               </button>
             );
           })}

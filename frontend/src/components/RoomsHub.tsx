@@ -116,6 +116,7 @@ export function RoomsHub({
       {addRoomOpen && (
         <AddRoomModal
           houseId={house.id}
+          rooms={rooms}
           onCreated={async () => {
             setAddRoomOpen(false);
             await onRoomsChanged();

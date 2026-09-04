@@ -874,6 +874,7 @@ function ManualClassifyProposal({
       {addRoomOpen && (
         <AddRoomModal
           houseId={houseId}
+          rooms={rooms}
           onCreated={(room) => {
             setNewRoomId(room.id);
             setAddRoomOpen(false);
@@ -1157,6 +1158,7 @@ function AssetDocumentProposal({
       {addRoomOpen && (
         <AddRoomModal
           houseId={houseId}
+          rooms={rooms}
           onCreated={(room) => {
             setNewRoomId(room.id);
             setAddRoomOpen(false);

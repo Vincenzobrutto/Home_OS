@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (9) — Suggerimenti ambiente ampliati, numerazione automatica sui duplicati
+
+- Su richiesta dell'utente: i suggerimenti in "Nuovo ambiente" passano da 4 a 13 nomi comuni (Cucina, Soggiorno, Camera da letto, Cameretta, Bagno, Corridoio, Ingresso, Studio, Lavanderia, Ripostiglio, Cantina, Garage, Terrazzo), ognuno mappato al tipo esistente più vicino — nessuna modifica allo schema.
+- Se il nome scelto (da suggerimento o digitato a mano) coincide con un ambiente già esistente, viene proposto automaticamente il numero successivo ("Bagno" → "Bagno 2" → "Bagno 3"), sia al clic sia all'uscita dal campo Nome.
+- Verificato dal vivo con un ottavo utente/casa usa-e-getta. Nessuna modifica al backend. Build/lint frontend puliti.
+- Vedi `decisions.md` #64.
+
 ## 2026-09-04 (8) — Fix: il "Tipo" ambiente diventa un suggerimento, non un passo separato
 
 - Segnalato dall'utente dopo aver provato il modal "Nuovo ambiente": la sezione "Tipo" (griglia di 4 card) sembrava un passo in più non necessario.
