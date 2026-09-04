@@ -92,7 +92,8 @@ describe('HousesService.exportArchive', () => {
       'house-1',
     );
     const chunks: Buffer[] = [];
-    for await (const chunk of archive) chunks.push(Buffer.from(chunk));
+    for await (const chunk of archive as AsyncIterable<Buffer>)
+      chunks.push(chunk);
     const zip = Buffer.concat(chunks).toString('latin1');
 
     expect(filename).toMatch(/^dimora-CASA-0001-\d{4}-\d{2}-\d{2}\.zip$/);

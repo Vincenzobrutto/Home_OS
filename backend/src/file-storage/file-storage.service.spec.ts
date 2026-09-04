@@ -20,9 +20,9 @@ describe('FileStorageService', () => {
     const absolutePath = path.resolve(process.cwd(), fileUrl);
     createdPaths.push(absolutePath);
 
-    await service.withFilesRemoved([fileUrl], async () => {
+    await service.withFilesRemoved([fileUrl], () => {
       expect(fs.existsSync(absolutePath)).toBe(false);
-      return undefined;
+      return Promise.resolve(undefined);
     });
 
     expect(fs.existsSync(absolutePath)).toBe(false);
@@ -37,9 +37,9 @@ describe('FileStorageService', () => {
     createdPaths.push(absolutePath);
 
     await expect(
-      service.withFilesRemoved([fileUrl], async () => {
-        throw new Error('DB non disponibile');
-      }),
+      service.withFilesRemoved([fileUrl], () =>
+        Promise.reject(new Error('DB non disponibile')),
+      ),
     ).rejects.toThrow('DB non disponibile');
 
     expect(fs.readFileSync(absolutePath, 'utf8')).toBe('contenuto');
@@ -58,9 +58,9 @@ describe('FileStorageService', () => {
     createdPaths.push(...absolutePaths);
 
     await expect(
-      service.withFilesRemoved(fileUrls, async () => {
-        throw new Error('rollback');
-      }),
+      service.withFilesRemoved(fileUrls, () =>
+        Promise.reject(new Error('rollback')),
+      ),
     ).rejects.toThrow('rollback');
 
     expect(absolutePaths.map((filePath) => fs.existsSync(filePath))).toEqual([

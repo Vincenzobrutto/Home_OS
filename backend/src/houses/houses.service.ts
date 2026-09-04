@@ -169,6 +169,7 @@ export class HousesService {
       rooms,
       assets,
       documents: archiveDocuments.map(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- omettiamo fileUrl dal manifest: è un dettaglio interno, non ha senso in un export.
         ({ fileUrl: _fileUrl, ...document }) => document,
       ),
       interventions,

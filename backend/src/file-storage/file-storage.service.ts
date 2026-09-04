@@ -17,6 +17,7 @@ export class FileStorageService {
     fs.mkdirSync(this.uploadDir, { recursive: true });
     const safeOriginalName = path
       .basename(file.originalname)
+      // eslint-disable-next-line no-control-regex -- range intenzionale: rimuove anche i caratteri di controllo (incluso il null byte) da un nome file non fidato, non solo i separatori di percorso.
       .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_');
     const storedName = `${randomUUID()}-${safeOriginalName || 'documento'}`;
     fs.writeFileSync(path.join(this.uploadDir, storedName), file.buffer);

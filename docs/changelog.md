@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (15) — Fix: build backend rotta dopo l'entry (14), `@types/archiver` disallineato dal runtime
+
+- `npm run build` falliva (`archiver(...)` "not callable") perché `@types/archiver` era pinnato a `^8.0.0` mentre il pacchetto runtime resta `archiver@^7.0.1`: la v8 dei tipi riscrive l'API a classi (`ZipArchive`/`TarArchive`, nessuna funzione factory esportata), incompatibile con l'uso `archiver('zip', opts)` già scritto in `HousesService.exportArchive` (entry (14), B62). La claim di quell'entry ("backend build... puliti") non era verificata: il comando non era mai stato rieseguito dopo l'ultimo commit di quella sessione.
+- Corretto pinnando `@types/archiver` a `^7.0.0` (stessa major del runtime, API a funzione factory) — nessuna modifica al codice applicativo, solo alla versione dei tipi.
+- Sistemati a cascata gli errori di lint scoperti nello stesso controllo: caratteri di controllo intenzionali nella regex di sanificazione nome file (`file-storage.service.ts`, disable mirato con commento), variabile omessa nel manifest export (`houses.service.ts`, stesso trattamento), 3 funzioni test `async` senza `await` (`file-storage.service.spec.ts`, riscritte come `Promise.resolve`/`Promise.reject` dirette) e un argomento non tipizzato in un test (`houses.service.spec.ts`).
+- Verificato: `npm run build`/`npm run test` (116/116)/`npm run lint` (0 errori, 0 warning) tutti puliti; frontend non toccato, build già verificata pulita in precedenza.
+
 ## 2026-09-04 (14) — Sicurezza dati alpha, portabilità e rifiniture questionario
 
 - **B61**: i file originali vengono ora eliminati fisicamente quando si elimina un documento, una casa o l'account. La staging area consente di ripristinarli se la cancellazione DB fallisce; aggiunti `DELETE /documents/:id`, conferma irreversibile e azioni UI sulle schede Asset/Documenti casa.
