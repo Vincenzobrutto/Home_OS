@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { T, ASSET_TYPES } from '../theme';
+import { T, ASSET_TYPES, ROOM_TYPES } from '../theme';
 import { SectionLabel } from './Shared';
 import { api, formatDateForDisplay, parseDateInput } from '../api';
 import type { Asset, Contact, CustomField, Room } from '../types';
@@ -221,6 +221,110 @@ export function AddAssetModal({
           }}
         >
           {saving ? 'Creazione…' : 'Crea asset'}
+        </button>
+      </div>
+    </ModalShell>
+  );
+}
+
+// Nessun equivalente esisteva finché la creazione di un ambiente viveva solo
+// dentro la vista Mappa (FloorPlanView, che richiede di posizionarlo su una
+// planimetria): la vista a Blocchi (Rooms.tsx), unica raggiungibile in
+// ALPHA_MODE (RoomsHub.tsx nasconde la Mappa), non aveva alcun modo di
+// crearne uno. planGeometry resta facoltativo nello schema — un ambiente
+// senza posizione sulla mappa è già uno stato valido (es. le stanze create
+// dal wizard Genesis prima che l'utente disegni la planimetria).
+export function AddRoomModal({
+  houseId,
+  onCreated,
+  onClose,
+}: {
+  houseId: string;
+  onCreated: (room: Room) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState('');
+  const [type, setType] = useState('SOGGIORNO');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!name.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const created = await api.rooms.create(houseId, { type, name: name.trim() });
+      onCreated(created);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Errore imprevisto');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <ModalShell onClose={onClose}>
+      <SectionLabel>Nuovo ambiente</SectionLabel>
+      <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 21, color: T.ink, margin: '0 0 20px 0' }}>
+        Aggiungi un ambiente
+      </h1>
+
+      <div style={{ marginBottom: 14 }}>
+        <label style={labelStyle}>Nome</label>
+        <input style={inputStyle} placeholder="Es. Cucina" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <label style={labelStyle}>Tipo</label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {Object.entries(ROOM_TYPES).map(([key, meta]) => {
+            const Icon = meta.icon;
+            const active = type === key;
+            return (
+              <div
+                key={key}
+                onClick={() => setType(key)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '9px 11px',
+                  borderRadius: 8,
+                  border: `1.5px solid ${active ? T.pine : T.line}`,
+                  background: active ? '#E4EEE9' : T.card,
+                  cursor: 'pointer',
+                }}
+              >
+                <Icon size={14} color={meta.color} />
+                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 500, color: T.ink }}>{meta.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {error && <div style={{ color: T.rust, fontFamily: "'Inter', sans-serif", fontSize: 12.5, marginBottom: 12 }}>{error}</div>}
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 14 }}>
+        <button onClick={onClose} style={{ background: 'none', border: `1px solid ${T.line}`, color: T.ink, borderRadius: 7, padding: '10px 16px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
+          Annulla
+        </button>
+        <button
+          onClick={submit}
+          disabled={!name.trim() || saving}
+          style={{
+            background: name.trim() ? T.pine : T.line,
+            color: name.trim() ? '#F7F7F2' : T.slate,
+            border: 'none',
+            borderRadius: 7,
+            padding: '10px 18px',
+            cursor: name.trim() ? 'pointer' : 'not-allowed',
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 13,
+            fontWeight: 500,
+          }}
+        >
+          {saving ? 'Creazione…' : 'Crea ambiente'}
         </button>
       </div>
     </ModalShell>

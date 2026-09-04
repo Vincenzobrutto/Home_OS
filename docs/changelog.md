@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (5) — Fix: creazione ambiente possibile anche in vista Blocchi
+
+- Trovato provando l'app end-to-end come un nuovo utente reale (due sessioni di test): in alpha non esisteva alcun modo di creare un Ambiente — "Nuovo ambiente" viveva solo nella vista Mappa, disattivata da B52. Ogni asset restava quindi senza ambiente, e di conseguenza invisibile nella vista "Asset" (che filtra apposta gli asset senza stanza).
+- Nuovo `AddRoomModal` (stesso schema di `AddAssetModal`) collegato a un pulsante "+ Nuovo ambiente" sempre visibile nell'header di `RoomsHub.tsx`, anche fuori alpha.
+- Verificato dal vivo con un terzo utente/casa usa-e-getta: ambiente creato dalla vista Blocchi, asset assegnato a quell'ambiente durante la classificazione manuale, comparso correttamente in "Asset della casa". Build/lint frontend puliti.
+- Vedi `decisions.md` #60.
+
 ## 2026-09-04 (4) — B54-B59: chiusura del backlog MVP pre-alpha
 
 - **B54** Export dati: `GET /houses/:id/export` (JSON con anagrafica, ambienti, Asset, documenti-metadati, interventi, garanzie, contatti), link "Esporta i miei dati" in Sidebar.

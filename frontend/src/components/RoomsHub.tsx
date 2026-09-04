@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { LayoutGrid, Map } from 'lucide-react';
+import { LayoutGrid, Map, Plus } from 'lucide-react';
 import { T } from '../theme';
 import { SectionLabel } from './Shared';
 import { RoomsView } from './Rooms';
 import { FloorPlanView } from './FloorPlan';
+import { AddRoomModal } from './Modals';
 import type { Asset, House, Room } from '../types';
 import { ALPHA_MODE } from '../config';
 
@@ -31,6 +32,7 @@ export function RoomsHub({
   onHouseChanged: (house: House) => void;
 }) {
   const [mode, setMode] = useState<RoomsMode>('blocks');
+  const [addRoomOpen, setAddRoomOpen] = useState(false);
 
   return (
     <div style={{ padding: '36px 44px', maxWidth: 980 }}>
@@ -39,6 +41,18 @@ export function RoomsHub({
         <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 26, color: T.ink, margin: 0 }}>
           Ambienti della casa
         </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Unico ingresso di creazione quando la Mappa (che aveva "Nuovo
+            ambiente" incorporato nel disegno) è nascosta in alpha — vedi
+            decisions.md sul buco lasciato da B52. Utile anche fuori alpha:
+            prima non c'era modo di aggiungere un ambiente restando in
+            vista Blocchi, serviva per forza passare alla Mappa. */}
+        <button
+          onClick={() => setAddRoomOpen(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, background: T.pine, color: '#F7F7F2', border: 'none', borderRadius: 7, padding: '9px 15px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 500 }}
+        >
+          <Plus size={15} /> Nuovo ambiente
+        </button>
         {!ALPHA_MODE && (
         <div style={{ display: 'flex', border: `1px solid ${T.line}`, borderRadius: 8, overflow: 'hidden' }}>
           <button
@@ -82,6 +96,7 @@ export function RoomsHub({
           </button>
         </div>
         )}
+        </div>
       </div>
 
       {ALPHA_MODE || mode === 'blocks' ? (
@@ -95,6 +110,17 @@ export function RoomsHub({
           onAssetsChanged={onAssetsChanged}
           onHouseChanged={onHouseChanged}
           hideHeader
+        />
+      )}
+
+      {addRoomOpen && (
+        <AddRoomModal
+          houseId={house.id}
+          onCreated={async () => {
+            setAddRoomOpen(false);
+            await onRoomsChanged();
+          }}
+          onClose={() => setAddRoomOpen(false)}
         />
       )}
     </div>
