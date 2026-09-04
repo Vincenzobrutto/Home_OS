@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (7) — Gmail/Drive/Rubrica visibili ma disattivate in alpha
+
+- Su richiesta dell'utente: invece di sparire del tutto in `ALPHA_MODE`, le tab Gmail/Drive (Documenti) e la voce Rubrica (Sidebar) restano visibili ma oscurate/non cliccabili, con una spiegazione al passaggio del mouse di cosa faranno quando disponibili.
+- Nessun nuovo componente: riusa l'attributo `title` nativo, stesso pattern già presente altrove nel codebase.
+- Ambito limitato a questi tre elementi (scelta esplicita tra le opzioni proposte) — Profilo casa/Energia/card Dashboard restano nascoste come prima.
+- Verificato dal vivo con un quinto utente/casa usa-e-getta. Build/lint frontend puliti.
+- Vedi `decisions.md` #62.
+
 ## 2026-09-04 (6) — Fix: "+ Nuovo ambiente" inline ovunque si assegna un asset a una stanza
 
 - Segnalato dall'utente dopo aver provato il fix precedente: creare il primo asset senza ambienti già censiti lo forzava comunque su "Documenti casa", scoprendo solo dopo di dover tornare indietro a creare la stanza e riassegnare l'asset.

@@ -70,7 +70,7 @@ export function Sidebar({
   // InboxHub.tsx). Il badge qui somma i candidati in attesa da entrambe le
   // fonti, così l'utente sa che c'è qualcosa da rivedere senza dover
   // ricordare quale integrazione l'ha trovato.
-  const items: { id: View; label: string; icon: typeof Home; badge?: number }[] = [
+  const items: { id: View; label: string; icon: typeof Home; badge?: number; disabled?: boolean; tooltip?: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
     ...(ALPHA_MODE ? [] : [{ id: 'property-profile' as const, label: 'Profilo casa', icon: ClipboardList }]),
     { id: 'inbox', label: ALPHA_MODE ? 'Documenti' : 'Inbox', icon: InboxIcon, badge: (gmailCandidateCount + driveCandidateCount) || undefined },
@@ -78,7 +78,20 @@ export function Sidebar({
     { id: 'assets', label: 'Asset', icon: Building2 },
     { id: 'house-documents', label: 'Documenti casa', icon: FileStack },
     ...(ALPHA_MODE ? [] : [{ id: 'energy' as const, label: 'Energia', icon: Zap }]),
-    ...(ALPHA_MODE ? [] : [{ id: 'contacts' as const, label: 'Rubrica', icon: Users }]),
+    // In alpha resta visibile ma disattivata invece di sparire del tutto: un
+    // pulsante oscurato con spiegazione al passaggio del mouse comunica che
+    // la funzionalità esiste ed è in arrivo, invece di far sembrare che non
+    // sia mai stata pensata. I contatti restano comunque creabili al volo
+    // dai form di intervento/garanzia (B58) — qui manca solo la vista elenco.
+    {
+      id: 'contacts' as const,
+      label: 'Rubrica',
+      icon: Users,
+      disabled: ALPHA_MODE,
+      tooltip: ALPHA_MODE
+        ? "In questa fase i contatti si aggiungono al volo quando confermi un intervento o una garanzia. L'elenco completo della rubrica arriva più avanti."
+        : undefined,
+    },
   ];
   // Voce visibile solo mentre un percorso Genesis è a metà — non NOT_STARTED
   // (si avvia dalla Dashboard) né COMPLETED (i risultati vivono in Dashboard,
@@ -165,7 +178,10 @@ export function Sidebar({
           return (
             <button
               key={it.id}
+              disabled={it.disabled}
+              title={it.tooltip}
               onClick={() => {
+                if (it.disabled) return;
                 setView(it.id);
                 onNavigate?.();
               }}
@@ -176,10 +192,11 @@ export function Sidebar({
                 padding: '9px 10px',
                 borderRadius: 7,
                 border: 'none',
-                cursor: 'pointer',
+                cursor: it.disabled ? 'default' : 'pointer',
                 textAlign: 'left',
                 background: active ? 'rgba(255,255,255,0.09)' : 'transparent',
-                color: active ? '#FAFAF6' : '#B9BFB6',
+                color: active ? '#FAFAF6' : it.disabled ? '#5C6259' : '#B9BFB6',
+                opacity: it.disabled ? 0.65 : 1,
                 fontFamily: "'Inter', sans-serif",
                 fontSize: 13.5,
                 fontWeight: 500,

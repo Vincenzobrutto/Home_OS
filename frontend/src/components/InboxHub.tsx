@@ -58,13 +58,33 @@ export function InboxHub({
     if (initialTab) setTab(initialTab);
   }, [initialTab]);
 
-  const tabs: { id: InboxTab; label: string; icon: typeof InboxIcon; badge?: number }[] = ALPHA_MODE
-    ? [{ id: 'documents', label: 'Documenti', icon: InboxIcon }]
-    : [
-        { id: 'documents', label: 'Documenti', icon: InboxIcon },
-        { id: 'gmail', label: 'Gmail', icon: Mail, badge: gmailCandidateCount || undefined },
-        { id: 'drive', label: 'Google Drive', icon: HardDrive, badge: driveCandidateCount || undefined },
-      ];
+  // In alpha Gmail/Drive restano visibili ma disattivate invece di sparire
+  // del tutto: un tab oscurato con spiegazione al passaggio del mouse
+  // comunica che l'integrazione esiste ed è in arrivo, invece di far
+  // sembrare che Dimora funzioni solo con l'upload manuale per sempre.
+  const tabs: { id: InboxTab; label: string; icon: typeof InboxIcon; badge?: number; disabled?: boolean; tooltip?: string }[] = [
+    { id: 'documents', label: 'Documenti', icon: InboxIcon },
+    {
+      id: 'gmail',
+      label: 'Gmail',
+      icon: Mail,
+      badge: gmailCandidateCount || undefined,
+      disabled: ALPHA_MODE,
+      tooltip: ALPHA_MODE
+        ? 'Collega la tua casella email: individueremo automaticamente le email con fatture, contratti o certificati della tua casa e te le proporremo da confermare. Disponibile a breve.'
+        : undefined,
+    },
+    {
+      id: 'drive',
+      label: 'Google Drive',
+      icon: HardDrive,
+      badge: driveCandidateCount || undefined,
+      disabled: ALPHA_MODE,
+      tooltip: ALPHA_MODE
+        ? 'Collega il tuo archivio Drive: troveremo i documenti della tua casa già salvati lì e te li proporremo da confermare. Disponibile a breve.'
+        : undefined,
+    },
+  ];
 
   return (
     <div style={{ padding: '36px 44px', maxWidth: 820 }}>
@@ -73,7 +93,6 @@ export function InboxHub({
         Documenti
       </h1>
 
-      {!ALPHA_MODE && (
       <div style={{ display: 'flex', gap: 4, marginBottom: 26, borderBottom: `1px solid ${T.line}` }}>
         {tabs.map((t) => {
           const Icon = t.icon;
@@ -81,7 +100,12 @@ export function InboxHub({
           return (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              disabled={t.disabled}
+              title={t.tooltip}
+              onClick={() => {
+                if (t.disabled) return;
+                setTab(t.id);
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -89,11 +113,12 @@ export function InboxHub({
                 background: 'none',
                 border: 'none',
                 borderBottom: `2px solid ${active ? T.pine : 'transparent'}`,
-                color: active ? T.ink : T.slate,
+                color: t.disabled ? T.line : active ? T.ink : T.slate,
+                opacity: t.disabled ? 0.7 : 1,
                 padding: '9px 4px',
                 marginRight: 22,
                 marginBottom: -1,
-                cursor: 'pointer',
+                cursor: t.disabled ? 'default' : 'pointer',
                 fontFamily: "'Inter', sans-serif",
                 fontSize: 13,
                 fontWeight: active ? 600 : 500,
@@ -121,7 +146,6 @@ export function InboxHub({
           );
         })}
       </div>
-      )}
 
       {tab === 'documents' && (
         <InboxView
