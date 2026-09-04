@@ -298,32 +298,35 @@ export function AddRoomModal({
       <div style={{ marginBottom: 14 }}>
         <label style={labelStyle}>Nome</label>
         <input style={inputStyle} placeholder="Es. Cucina" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-      </div>
-
-      <div style={{ marginBottom: 14 }}>
-        <label style={labelStyle}>Tipo</label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        {/* Suggerimenti, non una categorizzazione obbligatoria separata: un
+            clic compila il nome (e imposta il tipo corrispondente in
+            automatico) — l'utente può comunque scrivere un nome libero senza
+            passare da qui, il tipo resta quello dell'ultimo suggerimento
+            scelto (o il default) anche in quel caso. */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
           {Object.entries(ROOM_TYPES).map(([key, meta]) => {
             const Icon = meta.icon;
-            const active = type === key;
             return (
-              <div
+              <button
                 key={key}
-                onClick={() => setType(key)}
+                type="button"
+                onClick={() => { setType(key); setName(meta.label); }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
-                  padding: '9px 11px',
-                  borderRadius: 8,
-                  border: `1.5px solid ${active ? T.pine : T.line}`,
-                  background: active ? '#E4EEE9' : T.card,
+                  gap: 5,
+                  padding: '5px 10px',
+                  borderRadius: 20,
+                  border: `1px solid ${T.line}`,
+                  background: T.card,
                   cursor: 'pointer',
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 11.5,
+                  color: T.ink70,
                 }}
               >
-                <Icon size={14} color={meta.color} />
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 500, color: T.ink }}>{meta.label}</span>
-              </div>
+                <Icon size={12} color={meta.color} /> {meta.label}
+              </button>
             );
           })}
         </div>

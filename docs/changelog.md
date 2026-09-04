@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (8) — Fix: il "Tipo" ambiente diventa un suggerimento, non un passo separato
+
+- Segnalato dall'utente dopo aver provato il modal "Nuovo ambiente": la sezione "Tipo" (griglia di 4 card) sembrava un passo in più non necessario.
+- Sostituita con 4 pillole sotto il campo Nome ("Cucina", "Soggiorno", "Camera da letto", "Bagno"): un clic compila subito il nome e imposta il tipo corrispondente; l'utente può comunque scrivere un nome libero senza cliccarle.
+- Verificato dal vivo con un sesto utente/casa usa-e-getta. Nessuna modifica al backend. Build/lint frontend puliti.
+- Vedi `decisions.md` #63.
+
 ## 2026-09-04 (7) — Gmail/Drive/Rubrica visibili ma disattivate in alpha
 
 - Su richiesta dell'utente: invece di sparire del tutto in `ALPHA_MODE`, le tab Gmail/Drive (Documenti) e la voce Rubrica (Sidebar) restano visibili ma oscurate/non cliccabili, con una spiegazione al passaggio del mouse di cosa faranno quando disponibili.
