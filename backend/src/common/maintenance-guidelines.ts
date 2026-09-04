@@ -68,8 +68,8 @@ export const MAINTENANCE_GUIDELINES: MaintenanceGuideline[] = [
     // c.3, che recepisce l'Allegato A del DPR 74/2013). DPR 74/2013 rimanda
     // la cadenza esatta alle regioni, e i due esempi verificati DIVERGONO per
     // la stessa fascia di potenza tipica di una caldaia domestica: Lombardia
-    // (DGR XI/3502/2020) 2 anni sotto i 35 kW, 1 anno tra 35-350 kW; Lazio
-    // 4 anni tra 10-100 kW, 2 anni sopra i 100 kW. "2 anni" qui resta il
+    // (DGR XI/3502/2020) 2 anni tra 5-35 kW, 1 anno da 35 kW in su; Lazio
+    // 4 anni sopra 10 e sotto 100 kW, 2 anni da 100 kW. "2 anni" qui resta il
     // default più prudente (mai più frequente del vero in nessuno dei due
     // casi verificati), non un valore uguale ovunque — non esiste oggi un
     // singolo numero corretto per ogni regione, va sempre verificato o

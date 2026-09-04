@@ -14,6 +14,7 @@
 // cadenza che il proprietario deve rispettare.
 export interface BoilerIntervalBand {
   minKw: number;
+  minInclusive?: boolean;
   maxKw: number | null;
   years: number;
 }
@@ -33,7 +34,7 @@ export const BOILER_INSPECTION_INTERVALS: RegionalBoilerRule[] = [
       url: 'https://www.regione.lazio.it/regolamenti-regionali-testo-coordinato/regolamento-regionale-23-dicembre-2020-n-30/14052021',
     },
     bands: [
-      { minKw: 10, maxKw: 100, years: 4 },
+      { minKw: 10, minInclusive: false, maxKw: 100, years: 4 },
       { minKw: 100, maxKw: null, years: 2 },
     ],
   },
@@ -46,6 +47,7 @@ export const BOILER_INSPECTION_INTERVALS: RegionalBoilerRule[] = [
     bands: [
       { minKw: 5, maxKw: 35, years: 2 },
       { minKw: 35, maxKw: 350, years: 1 },
+      { minKw: 350, maxKw: null, years: 1 },
     ],
   },
 ];
@@ -58,7 +60,9 @@ export function lookupBoilerInterval(
   const rule = BOILER_INSPECTION_INTERVALS.find((r) => r.region === region);
   if (!rule) return null;
   const band = rule.bands.find(
-    (b) => powerKw >= b.minKw && (b.maxKw === null || powerKw < b.maxKw),
+    (b) =>
+      (b.minInclusive === false ? powerKw > b.minKw : powerKw >= b.minKw) &&
+      (b.maxKw === null || powerKw < b.maxKw),
   );
   return band ? { years: band.years, source: rule.source } : null;
 }

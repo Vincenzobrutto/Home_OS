@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Search } from 'lucide-react';
+import { FileText, Search, Trash2 } from 'lucide-react';
 import { T, ASSET_TYPES, iconForAsset } from '../theme';
 import { SectionLabel } from './Shared';
 import { api } from '../api';
@@ -16,6 +16,7 @@ function HouseCard({
   fields,
   onClick,
   href,
+  onDelete,
 }: {
   icon: React.ReactNode;
   title: string;
@@ -23,6 +24,7 @@ function HouseCard({
   fields?: [string, string][];
   onClick?: () => void;
   href?: string;
+  onDelete?: () => void;
 }) {
   const card = (
     <div
@@ -35,6 +37,19 @@ function HouseCard({
           <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13.5, fontWeight: 500, color: T.ink }}>{title}</div>
           <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate }}>{subtitle}</div>
         </div>
+        {onDelete && (
+          <button
+            type="button"
+            title="Elimina definitivamente documento e file originale"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete();
+            }}
+            style={{ display: 'flex', border: 'none', background: 'none', color: T.rust, cursor: 'pointer', padding: 6 }}
+          >
+            <Trash2 size={15} />
+          </button>
+        )}
       </div>
       {fields && fields.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px', background: T.paper, borderRadius: 7, padding: '10px 14px', marginTop: 12 }}>
@@ -77,13 +92,30 @@ export function HouseDocumentsView({
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
 
-  useEffect(() => {
+  function loadDocuments() {
     setLoading(true);
     api.documents
       .listForHouse(house.id)
       .then(setDocuments)
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [house.id]);
+
+  async function deleteDocument(document: DocumentRecord) {
+    if (
+      !window.confirm(
+        `Eliminare definitivamente "${document.originalFilename}"? Il file originale verrà cancellato e non sarà recuperabile.`,
+      )
+    ) {
+      return;
+    }
+    await api.documents.remove(document.id);
+    loadDocuments();
+  }
 
   // Documenti confermati esplicitamente "collega alla casa, non a un asset"
   // dall'Inbox (es. APE, certificazione energetica generale) — non impianti
@@ -206,7 +238,8 @@ export function HouseDocumentsView({
             title={doc.docType ?? doc.originalFilename}
             subtitle={`${doc.originalFilename} · confermato ${doc.confirmedAt ? new Date(doc.confirmedAt).toLocaleDateString('it-IT') : ''}`}
             fields={doc.extractedFields?.kind === 'asset_document' ? doc.extractedFields.fields : undefined}
-            href={api.documents.fileUrl(doc.id)}
+            onClick={() => window.open(api.documents.fileUrl(doc.id), '_blank', 'noopener,noreferrer')}
+            onDelete={() => void deleteDocument(doc)}
           />
         ))}
       </div>

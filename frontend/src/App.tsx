@@ -151,12 +151,11 @@ export default function App() {
 
   async function handleExportData() {
     if (!house) return;
-    const data = await api.houses.exportData(house.id);
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = await api.houses.exportArchive(house.id);
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `dimora-${house.code}-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `dimora-${house.code}-${new Date().toISOString().slice(0, 10)}.zip`;
     link.click();
     URL.revokeObjectURL(url);
   }

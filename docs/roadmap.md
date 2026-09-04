@@ -41,6 +41,7 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Endpoint read-only di valutazione con copertura, fonti e disclaimer; nessuna generazione di scadenze finché le regole non sono validate e attive.
 - Nessuna regola regionale attivata: Lombardia e Piemonte richiedono ancora verifica delle fonti primarie, revisione professionale e test di confine.
 - Restano da realizzare servizio/orchestrazione, seed governato, API/UI “Stato adempimenti”, Genesis reale, Home Score v2 e navigazione semplificata.
+- Private-alpha safety e portabilità completate (B61-B64): cancellazione fisica dei file, export ZIP completo, tecnico apribile da ogni intervento e una sola CTA per il primo documento.
 
 ## MVP v1 — Private alpha (priorità immediata, 2026-09-04)
 
@@ -54,6 +55,7 @@ La sequenza di prodotto è **Memoria della casa → Fiducia → Recupero rapido 
 
 - Arrivare ad almeno 15–20 questionari completi, includendo proprietari, seconde case, locatori, over 60 e persone poco digitali.
 - Testare il posizionamento “memoria digitale della casa” e misurare interesse, disponibilità a caricare documenti/fotografare targhette e intenzione d'uso.
+- Eseguire il protocollo B65 su almeno 30 foto di targhette/10 partecipanti (`alpha-ai-label-measurement.md`) prima di decidere un prompt dedicato.
 - Deliverable: Executive Summary utenti, personas, top 10 bisogni e top 10 obiezioni (B46).
 
 ### Fase 1 — Fondazioni del dominio (P0)

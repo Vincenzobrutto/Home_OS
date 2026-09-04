@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Req,
+  StreamableFile,
 } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/authenticated-request';
 import { HousesService } from './houses.service';
@@ -53,11 +54,18 @@ export class HousesController {
   }
 
   @Get('houses/:id/export')
-  exportData(
+  async exportData(
     @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.housesService.exportData(req.user.id, id);
+    const { archive, filename } = await this.housesService.exportArchive(
+      req.user.id,
+      id,
+    );
+    return new StreamableFile(archive, {
+      type: 'application/zip',
+      disposition: `attachment; filename="${filename}"`,
+    });
   }
 
   @Patch('houses/:id/property-profile')

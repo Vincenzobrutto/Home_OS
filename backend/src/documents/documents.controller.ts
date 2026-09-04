@@ -2,7 +2,9 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseFilePipeBuilder,
@@ -106,6 +108,15 @@ export class DocumentsController {
       type: mediaType,
       disposition: `${download ? 'attachment' : 'inline'}; filename="${filename}"`,
     });
+  }
+
+  @Delete('documents/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.documentsService.remove(req.user.id, id);
   }
 
   @Post('documents/:id/analyze')

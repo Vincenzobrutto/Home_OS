@@ -1,6 +1,3 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { randomUUID } from 'crypto';
 import {
   BadRequestException,
   Injectable,
@@ -35,8 +32,7 @@ import {
   upsertAssetFieldProvenance,
   type TrackedAssetField,
 } from '../common/field-provenance';
-
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+import { FileStorageService } from '../file-storage/file-storage.service';
 
 const MIME_BY_EXT: Record<string, string> = {
   pdf: 'application/pdf',
@@ -188,11 +184,12 @@ export class DocumentsService {
     private readonly prisma: PrismaService,
     private readonly claude: ClaudeExtractionService,
     private readonly accessControl: AccessControlService,
+    private readonly fileStorage: FileStorageService,
   ) {}
 
   async upload(userId: string, houseId: string, file: Express.Multer.File) {
     await this.ensureHouseAccess(userId, houseId);
-    const fileUrl = this.storeFile(file);
+    const fileUrl = this.fileStorage.store(file);
 
     return this.prisma.document.create({
       data: {
@@ -215,7 +212,7 @@ export class DocumentsService {
     file: Express.Multer.File,
   ) {
     await this.ensureHouseAccess(userId, houseId);
-    const fileUrl = this.storeFile(file);
+    const fileUrl = this.fileStorage.store(file);
 
     return this.prisma.document.create({
       data: {
@@ -227,13 +224,6 @@ export class DocumentsService {
         confirmedAt: new Date(),
       },
     });
-  }
-
-  private storeFile(file: Express.Multer.File): string {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    const storedName = `${randomUUID()}-${file.originalname}`;
-    fs.writeFileSync(path.join(UPLOAD_DIR, storedName), file.buffer);
-    return `uploads/${storedName}`;
   }
 
   async listForHouse(userId: string, houseId: string) {
@@ -317,10 +307,10 @@ export class DocumentsService {
       params.filename,
       params.houseId,
     );
-    const fileUrl = this.storeFile({
+    const fileUrl = this.fileStorage.store({
       buffer: params.buffer,
       originalname: params.filename,
-    } as Express.Multer.File);
+    });
 
     return this.prisma.document.create({
       data: {
@@ -371,10 +361,10 @@ export class DocumentsService {
       params.filename,
       params.houseId,
     );
-    const fileUrl = this.storeFile({
+    const fileUrl = this.fileStorage.store({
       buffer: params.buffer,
       originalname: params.filename,
-    } as Express.Multer.File);
+    });
 
     return this.prisma.document.create({
       data: {
@@ -429,6 +419,14 @@ export class DocumentsService {
       where: { id },
       data: { ignoredAt: new Date() },
     });
+  }
+
+  async remove(userId: string, id: string): Promise<void> {
+    const document = await this.getDocumentOrThrow(userId, id);
+    await this.fileStorage.withFilesRemoved([document.fileUrl], () =>
+      this.prisma.document.delete({ where: { id } }),
+    );
+    if (document.assetId) await this.recomputeAssetStatus(document.assetId);
   }
 
   // Arricchimento su richiesta esplicita dell'utente (pulsante "Cerca
@@ -517,7 +515,7 @@ export class DocumentsService {
 
   async getFile(userId: string, id: string) {
     const document = await this.getDocumentOrThrow(userId, id);
-    const buffer = fs.readFileSync(path.join(process.cwd(), document.fileUrl));
+    const buffer = this.fileStorage.read(document.fileUrl);
     const ext = document.originalFilename.toLowerCase().split('.').pop() ?? '';
     return {
       buffer,
@@ -538,9 +536,7 @@ export class DocumentsService {
     // sempre: torna a PENDING così "Analizza con AI" ricompare e l'utente
     // può riprovare, invece di un documento orfano senza più azioni possibili.
     try {
-      const fileBuffer = fs.readFileSync(
-        path.join(process.cwd(), document.fileUrl),
-      );
+      const fileBuffer = this.fileStorage.read(document.fileUrl);
       // isHomeRelated non è rilevante qui: l'utente ha già scelto di caricare
       // questo file in Inbox, quindi va sempre mostrato per la conferma.
       const { data } = await this.classifyBuffer(

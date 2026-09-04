@@ -33,6 +33,7 @@ describe('DocumentsService.confirmPropertyProfile', () => {
       prisma as unknown as PrismaService,
       {} as ClaudeExtractionService,
       { assertHouseAccess: jest.fn() } as unknown as AccessControlService,
+      {} as never,
     );
 
     const result = await service.confirmPropertyProfile('user-1', 'doc-1', {

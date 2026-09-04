@@ -35,6 +35,7 @@ describe('DocumentsService.confirmUtilityBill', () => {
       prisma as unknown as PrismaService,
       {} as ClaudeExtractionService,
       accessControl,
+      {} as never,
     );
 
     await service.confirmUtilityBill('user-1', 'doc-1', {
@@ -90,6 +91,7 @@ describe('DocumentsService.confirmUtilityBill', () => {
       prisma as unknown as PrismaService,
       {} as ClaudeExtractionService,
       accessControl,
+      {} as never,
     );
 
     await expect(

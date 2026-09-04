@@ -12,6 +12,7 @@ import { AccountStatusDto } from './dto/account-status.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { SetPasswordDto } from './dto/set-password.dto';
+import { FileStorageService } from '../file-storage/file-storage.service';
 
 const scrypt = promisify(scryptCallback);
 // 30 giorni: coerente con un'app personale a cui si accede da pochi
@@ -26,7 +27,10 @@ export interface AuthResult {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly fileStorage: FileStorageService,
+  ) {}
 
   // Formato "salt:hash", entrambi hex — scrypt nativo di Node invece di
   // bcrypt/argon2 per non aggiungere una dipendenza nuova: è la funzione
@@ -153,12 +157,20 @@ export class AuthService {
   // (17 tabelle con houseId diretto, tutte già Cascade/SetNull nello
   // schema — vedi decisions.md #53), quindi non serve altra pulizia.
   async deleteAccount(userId: string): Promise<void> {
-    await this.prisma.$transaction([
-      this.prisma.house.deleteMany({ where: { ownerId: userId } }),
-      // Difensivo: membership su case non possedute (condivisione B12,
-      // oggi sempre vuoto perché ogni casa ha un solo membro OWNER).
-      this.prisma.houseMembership.deleteMany({ where: { userId } }),
-      this.prisma.user.delete({ where: { id: userId } }),
-    ]);
+    const documents = await this.prisma.document.findMany({
+      where: { house: { ownerId: userId } },
+      select: { fileUrl: true },
+    });
+    await this.fileStorage.withFilesRemoved(
+      documents.map((document) => document.fileUrl),
+      () =>
+        this.prisma.$transaction([
+          this.prisma.house.deleteMany({ where: { ownerId: userId } }),
+          // Difensivo: membership su case non possedute (condivisione B12,
+          // oggi sempre vuoto perché ogni casa ha un solo membro OWNER).
+          this.prisma.houseMembership.deleteMany({ where: { userId } }),
+          this.prisma.user.delete({ where: { id: userId } }),
+        ]),
+    );
   }
 }

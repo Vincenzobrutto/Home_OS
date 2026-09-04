@@ -19,11 +19,13 @@ import { ComplianceModule } from './compliance/compliance.module';
 import { ReliabilityModule } from './reliability/reliability.module';
 import { InterventionsModule } from './interventions/interventions.module';
 import { WarrantiesModule } from './warranties/warranties.module';
+import { FileStorageModule } from './file-storage/file-storage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    FileStorageModule,
     AuthModule,
     AccessControlModule,
     HousesModule,

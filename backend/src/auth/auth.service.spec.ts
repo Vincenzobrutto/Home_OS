@@ -7,13 +7,28 @@ describe('AuthService.deleteAccount', () => {
     const membershipDeleteMany = jest.fn().mockReturnValue('op-memberships');
     const userDelete = jest.fn().mockReturnValue('op-user');
     const transaction = jest.fn().mockResolvedValue(undefined);
+    const documentFindMany = jest
+      .fn()
+      .mockResolvedValue([{ fileUrl: 'uploads/documento.pdf' }]);
+    const withFilesRemoved = jest.fn(
+      async (
+        _fileUrls: string[],
+        removeDatabaseRecords: () => Promise<unknown>,
+      ) => removeDatabaseRecords(),
+    );
     const prisma = {
       house: { deleteMany: houseDeleteMany },
+      document: { findMany: documentFindMany },
       houseMembership: { deleteMany: membershipDeleteMany },
       user: { delete: userDelete },
       $transaction: transaction,
     };
-    const service = new AuthService(prisma as unknown as PrismaService);
+    const service = new AuthService(
+      prisma as unknown as PrismaService,
+      {
+        withFilesRemoved,
+      } as never,
+    );
 
     await service.deleteAccount('user-1');
 
@@ -24,6 +39,14 @@ describe('AuthService.deleteAccount', () => {
       where: { userId: 'user-1' },
     });
     expect(userDelete).toHaveBeenCalledWith({ where: { id: 'user-1' } });
+    expect(documentFindMany).toHaveBeenCalledWith({
+      where: { house: { ownerId: 'user-1' } },
+      select: { fileUrl: true },
+    });
+    expect(withFilesRemoved).toHaveBeenCalledWith(
+      ['uploads/documento.pdf'],
+      expect.any(Function),
+    );
     // L'ordine conta: House.owner/HouseMembership.user sono Restrict verso
     // User, quindi le case vanno cancellate prima dell'utente (vedi
     // decisions.md #53) — verifichiamo la sequenza passata a $transaction,

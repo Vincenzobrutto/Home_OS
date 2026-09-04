@@ -45,6 +45,15 @@ async function upload<T>(path: string, formData: FormData): Promise<T> {
   return handleResponse<T>(res);
 }
 
+async function download(path: string): Promise<Blob> {
+  const res = await fetch(`${BASE_URL}${path}`, { credentials: 'include' });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || res.statusText);
+  }
+  return res.blob();
+}
+
 // gg/mm/aaaa (testo nei form, come nel prototipo) <-> yyyy-mm-dd (per l'API)
 export function formatDateForDisplay(iso: string | null): string {
   if (!iso) return '—';
@@ -96,8 +105,7 @@ export const api = {
         body: JSON.stringify(data),
       }),
     remove: (id: string) => request<void>(`/houses/${id}`, { method: 'DELETE' }),
-    // Export minimo dati (B54): metadati, non il contenuto dei file.
-    exportData: (id: string) => request<Record<string, unknown>>(`/houses/${id}/export`),
+    exportArchive: (id: string) => download(`/houses/${id}/export`),
     updatePropertyProfile: (id: string, data: Record<string, string | number | null>) =>
       request<House>(`/houses/${id}/property-profile`, {
         method: 'PATCH',
@@ -366,6 +374,7 @@ export const api = {
   },
   documents: {
     listForHouse: (houseId: string) => request<DocumentRecord[]>(`/houses/${houseId}/documents`),
+    remove: (id: string) => request<void>(`/documents/${id}`, { method: 'DELETE' }),
     upload: (houseId: string, file: File) => {
       const form = new FormData();
       form.append('file', file);

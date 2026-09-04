@@ -115,15 +115,15 @@ Verificati uno per uno nel repository (non un elenco generico) — quelli marcat
 | Requisito | Stato |
 |---|---|
 | Flusso mobile completo verificato | Da testare end-to-end sul percorso ridotto |
-| Gestione chiara degli errori AI | **Nuovo**: oggi un fallimento di parsing Claude risale come `InternalServerErrorException` tecnica ("Risposta del modello non era JSON valido"), non un messaggio comprensibile con percorso di correzione manuale |
-| Limite dimensione e formati upload | **Nuovo**: `FileInterceptor` oggi non ha alcun `limits`/filtro mimetype configurato |
-| Privacy informativa e consenso all'elaborazione AI | **Nuovo**: nessuno schermo, nessun campo di consenso esiste |
-| Eliminare documento e account | Documento: parzialmente presente (ignora/rimuovi collegamento). **Account/casa: nuovo** — nessun endpoint `DELETE` per `House`/`User` esiste; le relazioni da `User` sono miste `SetNull`/dirette, va progettato quale cancella cosa prima di esporre l'endpoint |
-| Export minimo dei propri dati | **Nuovo** — anticipa parte di B51 (P1) come prerequisito, non più rimandabile a dopo l'alpha |
+| Gestione chiara degli errori AI | Completato (B57): errore comprensibile e classificazione manuale |
+| Limite dimensione e formati upload | Completato (B56): 20MB, PDF/PNG/JPG/WEBP |
+| Privacy informativa e consenso all'elaborazione AI | Completato (B55): consenso persistito e schermata bloccante |
+| Eliminare documento, casa e account | Completato (B53+B61): record e file originali eliminati fisicamente con rollback su errore DB |
+| Export dei propri dati | Completato (B54+B62): ZIP con manifest JSON e file originali |
 | Backup database | Da verificare separatamente con l'infrastruttura di hosting scelta — non uno stato del codice applicativo |
 | Logging senza documenti, token o dati sensibili | Verificato ora: nessun logging esplicito di body/token/documenti trovato nel codice attuale — nessuna azione necessaria, solo da ricontrollare se si aggiunge logging futuro |
 | Token OAuth non coinvolti se Gmail/Drive restano disabilitati | Conseguenza automatica di §5 (Gmail/Drive dietro flag): nessun lavoro dedicato |
-| Test end-to-end del percorso principale | **Nuovo**: l'unico file `*.e2e-spec.ts` esistente è il boilerplate di default di NestJS ("Hello World"), non copre alcun flusso reale |
+| Test end-to-end del percorso principale | Completato (B59): login → casa → documento → conferma → isolamento |
 | Nessuna regressione dell'isolamento tra case | Già garantito da `AccessControlService.assertHouseAccess` su ogni rotta (B2) — da ri-verificare con test e2e, non da ricostruire |
 
 ## 9. Criteri di accettazione
@@ -136,4 +136,4 @@ Almeno 70% degli utenti carica il primo documento; almeno 60% conferma il primo 
 
 ## 11. Backlog tecnico derivato
 
-Vedi `docs/backlog.md` B52-B59 per le voci concrete di ridimensionamento (flag di navigazione, cancellazione account, export minimo, consenso privacy, limiti upload, gestione errori AI, ingresso contatto senza Rubrica, suite e2e).
+Vedi `docs/backlog.md` B52-B65: i prerequisiti tecnici sono chiusi; resta da eseguire la misurazione B65 durante l'alpha.

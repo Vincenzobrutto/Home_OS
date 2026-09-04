@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { FieldSource, Prisma } from '@prisma/client';
+import archiver, { type Archiver } from 'archiver';
+import * as path from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessControlService } from '../access-control/access-control.service';
 import { CreateHouseDto } from './dto/create-house.dto';
@@ -10,6 +12,7 @@ import {
   propertyProfileCompleteness,
   propertyProvenanceUpsert,
 } from '../common/property-profile';
+import { FileStorageService } from '../file-storage/file-storage.service';
 
 const PROPERTY_PROVENANCE_INCLUDE = {
   sourceDocument: { select: { originalFilename: true } },
@@ -21,6 +24,7 @@ export class HousesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
+    private readonly fileStorage: FileStorageService,
   ) {}
 
   async create(ownerId: string, dto: CreateHouseDto) {
@@ -74,21 +78,25 @@ export class HousesService {
     return this.prisma.house.update({ where: { id }, data: dto });
   }
 
-  // Nessuna pulizia preliminare necessaria: ogni tabella collegata a House
-  // (17 con houseId diretto, più le relazioni di secondo livello) ha già
-  // onDelete Cascade/SetNull a livello di schema — vedi decisions.md #53.
   async remove(userId: string, id: string): Promise<void> {
     await this.accessControl.assertHouseOwner(userId, id);
-    await this.prisma.house.delete({ where: { id } });
+    const documents = await this.prisma.document.findMany({
+      where: { houseId: id },
+      select: { fileUrl: true },
+    });
+    await this.fileStorage.withFilesRemoved(
+      documents.map((document) => document.fileUrl),
+      () => this.prisma.house.delete({ where: { id } }),
+    );
   }
 
-  // Export minimo per la portabilità dei dati (B51/B54, mvp-v1.md §8): un
-  // JSON scaricabile con tutto ciò che l'utente ha inserito o confermato per
-  // questa casa. Solo metadati dei documenti (mai il contenuto del file: non
-  // è un backup binario, e fileUrl è un dettaglio implementativo interno che
-  // non ha senso in un export). Diverso dal PDF "libretto casa" (B23), che è
-  // un output di presentazione, non un formato dati riutilizzabile altrove.
-  async exportData(userId: string, id: string) {
+  // Export portabile B62: un solo ZIP contiene il manifest JSON e ogni file
+  // originale. fileUrl resta un dettaglio interno e viene sostituito nel
+  // manifest dal percorso relativo dentro l'archivio.
+  async exportArchive(
+    userId: string,
+    id: string,
+  ): Promise<{ archive: Archiver; filename: string }> {
     await this.accessControl.assertHouseAccess(userId, id);
     const house = await this.prisma.house.findUnique({ where: { id } });
     if (!house) throw new NotFoundException(`House ${id} non trovata`);
@@ -115,6 +123,7 @@ export class HousesService {
           select: {
             id: true,
             assetId: true,
+            fileUrl: true,
             originalFilename: true,
             docType: true,
             status: true,
@@ -142,7 +151,11 @@ export class HousesService {
         this.prisma.contact.findMany({ where: { houseId: id } }),
       ]);
 
-    return {
+    const archiveDocuments = documents.map((document) => ({
+      ...document,
+      archivePath: `documents/${document.id}-${this.safeArchiveName(document.originalFilename)}`,
+    }));
+    const manifest = {
       exportedAt: new Date().toISOString(),
       house: {
         id: house.id,
@@ -155,11 +168,35 @@ export class HousesService {
       },
       rooms,
       assets,
-      documents,
+      documents: archiveDocuments.map(
+        ({ fileUrl: _fileUrl, ...document }) => document,
+      ),
       interventions,
       warranties,
       contacts,
     };
+
+    // Verifica prima di iniziare lo streaming: un export parziale è peggio
+    // di un errore esplicito, perché sembra un backup valido ma non lo è.
+    const files = archiveDocuments.map((document) => ({
+      path: this.fileStorage.resolveExisting(document.fileUrl),
+      name: document.archivePath,
+    }));
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.append(JSON.stringify(manifest, null, 2), {
+      name: 'dimora-data.json',
+    });
+    for (const file of files) archive.file(file.path, { name: file.name });
+    void archive.finalize();
+
+    return {
+      archive,
+      filename: `dimora-${this.safeArchiveName(house.code)}-${new Date().toISOString().slice(0, 10)}.zip`,
+    };
+  }
+
+  private safeArchiveName(filename: string): string {
+    return path.basename(filename).replace(/[^a-zA-Z0-9._-]+/g, '_');
   }
 
   async updatePropertyProfile(

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, Download, ExternalLink, FileStack, FileText, BookOpen, Receipt, ShieldCheck, Wrench, UserCheck } from 'lucide-react';
+import { ChevronLeft, Download, ExternalLink, FileStack, FileText, BookOpen, Receipt, ShieldCheck, Trash2, Wrench, UserCheck } from 'lucide-react';
 import { T, ASSET_TYPES, iconForAsset, evidenceStatusLabel } from '../theme';
 import { SectionLabel, StatusDot, Stamp, ProvenanceBadge } from './Shared';
 import { api, formatDateForDisplay, parseDateInput } from '../api';
@@ -497,6 +497,18 @@ export function AssetDetail({
     await refreshDocuments();
   }
 
+  async function deleteDocument(document: DocumentRecord) {
+    if (
+      !window.confirm(
+        `Eliminare definitivamente "${document.originalFilename}"? Il file originale verrà cancellato e non sarà recuperabile.`,
+      )
+    ) {
+      return;
+    }
+    await api.documents.remove(document.id);
+    await Promise.all([refreshDocuments(), refreshTimeline(), refreshWarranties()]);
+  }
+
   async function assignContact(eventId: string, contactId: string) {
     const updated = await api.assets.updateTimelineEventContact(eventId, contactId || null);
     setTimeline((prev) => prev.map((t) => (t.id === eventId ? updated : t)));
@@ -943,6 +955,20 @@ export function AssetDetail({
               >
                 <FileStack size={15} />
               </button>
+              <button
+                onClick={() => void deleteDocument(doc)}
+                title="Elimina definitivamente documento e file originale"
+                style={{
+                  display: 'flex',
+                  color: T.rust,
+                  padding: 6,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <Trash2 size={15} />
+              </button>
             </div>
           ))}
         </div>
@@ -1343,6 +1369,27 @@ export function AssetDetail({
               <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.pine, marginBottom: 5 }}>
                 {t.documents.length} {t.documents.length === 1 ? 'documento collegato' : 'documenti collegati'}
               </div>
+            )}
+            {t.contact && (
+              <button
+                type="button"
+                onClick={() => openContact(t.contact!.id)}
+                style={{
+                  display: 'block',
+                  border: 'none',
+                  background: 'none',
+                  color: T.pine,
+                  cursor: 'pointer',
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  padding: '0 0 5px 0',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: 2,
+                }}
+              >
+                Apri scheda tecnico · {t.contact.name}
+              </button>
             )}
             <select
               value={t.contactId ?? ''}

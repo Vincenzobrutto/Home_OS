@@ -60,6 +60,7 @@ describe('DocumentsService domain rules', () => {
       prisma as unknown as PrismaService,
       claude as unknown as ClaudeExtractionService,
       accessControl as unknown as AccessControlService,
+      {} as never,
     );
   });
 

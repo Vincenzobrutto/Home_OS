@@ -13,7 +13,7 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/auth/set-password` | `{ email, password }` — solo per account creati prima dell'introduzione dell'autenticazione (`passwordHash` ancora null); non utilizzabile se una password è già impostata |
 | POST | `/auth/logout` | invalida la sessione corrente (cancella la riga `Session`) e il cookie |
 | GET | `/auth/me` | utente della sessione corrente, 401 se assente/scaduta |
-| DELETE | `/auth/me` | cancella l'account: le case possedute (cascata su tutto il contenuto), le membership residue, poi l'utente (cascata `Session`/`GmailConnection`/`DriveConnection`); invalida il cookie. Irreversibile, vedi `decisions.md` #53 |
+| DELETE | `/auth/me` | cancella l'account: elimina fisicamente i file delle case possedute, poi case/membership/utente e invalida il cookie. Irreversibile, vedi `decisions.md` #53/#67 |
 | POST | `/auth/consent` | registra `consentedAt = now()` per l'utente della sessione corrente (B55) — idempotente |
 
 ## Houses
@@ -22,8 +22,8 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/houses` | crea casa (owner = utente della sessione, non più un `ownerId` nel body), genera `code` (`CASA-####`) e la `HouseMembership` `OWNER` |
 | GET | `/houses/:id` | dettaglio |
 | PATCH | `/houses/:id` | anche `floorPlanRotation` |
-| DELETE | `/houses/:id` | solo l'utente con ruolo `OWNER` (403 altrimenti); cancella la casa e tutto il contenuto via cascata già esistente a livello di schema, nessuna pulizia applicativa. Irreversibile, vedi `decisions.md` #53 |
-| GET | `/houses/:id/export` | export minimo dati (B54): anagrafica, ambienti, Asset, documenti (solo metadati, mai il file), interventi, garanzie, contatti. Chiunque abbia accesso alla casa (non solo OWNER) |
+| DELETE | `/houses/:id` | solo OWNER (403 altrimenti); elimina fisicamente tutti i file della casa e poi i record in cascata. Irreversibile, vedi `decisions.md` #53/#67 |
+| GET | `/houses/:id/export` | ZIP B62 con `dimora-data.json` e tutti i file originali in `documents/`. Chiunque abbia accesso alla casa |
 | PATCH | `/houses/:id/property-profile` | modifica esplicita del profilo; registra provenienza `DECLARED` solo per i valori realmente cambiati |
 | GET | `/houses` | case dell'utente della sessione corrente (era `/users/:userId/houses`) |
 
@@ -82,6 +82,7 @@ Stessa regola di evidenza degli interventi: `proofDocumentId` forza `VERIFIED_PR
 | GET | `/houses/:houseId/documents` | elenco; filtrare per `houseLevel`/`assetId` lato client per "Documenti casa" |
 | POST | `/houses/:houseId/floorplan-background` | upload immagine/PDF planimetria di sfondo |
 | GET | `/documents/:id/file` | streaming del file originale |
+| DELETE | `/documents/:id` | elimina definitivamente record e file originale; i riferimenti seguono le regole `Cascade`/`SetNull` dello schema |
 | POST | `/documents/:id/analyze` | invoca Claude, popola `extractedFields`, status → `ANALYZED`. Nessuna scrittura su Asset. |
 | POST | `/documents/:id/confirm` | scrittura reale: `{ assetId }` **oppure** `{ createAssetType, assetName?, roomId? }` **oppure** `{ linkToHouse: true }`. Funziona anche su un documento mai analizzato (`extractedFields` null) — percorso "classifica manualmente" (B57) |
 | POST | `/documents/:id/confirm-floorplan` | conferma ambienti estratti da una planimetria caricata |

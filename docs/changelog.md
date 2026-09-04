@@ -2,6 +2,15 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (14) — Sicurezza dati alpha, portabilità e rifiniture questionario
+
+- **B61**: i file originali vengono ora eliminati fisicamente quando si elimina un documento, una casa o l'account. La staging area consente di ripristinarli se la cancellazione DB fallisce; aggiunti `DELETE /documents/:id`, conferma irreversibile e azioni UI sulle schede Asset/Documenti casa.
+- **B62**: “Esporta i miei dati” scarica un ZIP con `dimora-data.json` e tutti i file originali nella cartella `documents/`; i percorsi interni del server non vengono esposti. Aggiunte `archiver@7.0.1` e relative tipizzazioni.
+- **B63/B64**: ogni evento di cronologia apre direttamente la scheda del tecnico collegato; in alpha la card “Aggiungi il primo documento” non viene più duplicata dall'Issue `HOUSE_WITHOUT_DOCUMENTS`.
+- **B65**: definito `alpha-ai-label-measurement.md` con campione, metrica primaria, scheda minima e soglie go/no-go; il prompt targhette resta invariato finché il test non viene eseguito.
+- Corretti i confini del lookup caldaia: Lazio esclude esattamente 10 kW dalla fascia `>10,<100`; Lombardia copre anche `>=350 kW`. Aggiunti test espliciti su 10/35/100/350/500 kW.
+- Verifica automatica: backend build/lint puliti e 116 test verdi; frontend build pulita (resta il warning noto sul bundle) e lint senza errori, con i 3 warning hooks già noti.
+
 ## 2026-09-04 (13) — Intervallo controllo caldaia calcolato automaticamente da regione + potenza
 
 - Aggiunte due colonne nullable `House.region` e `Asset.powerKw` (migrazione `20260904124000_add_house_region_and_asset_power_kw`) e una tabella di lookup sourced (`backend/src/common/boiler-inspection-intervals.ts`, oggi Lazio + Lombardia) che sostituisce il default fisso della guideline `caldaia-controllo` con l'intervallo corretto quando regione e potenza sono entrambe note.

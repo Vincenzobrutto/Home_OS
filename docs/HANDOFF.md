@@ -1,6 +1,6 @@
 # Handoff
 
-Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato il 2026-09-03 dopo il primo incremento tecnico del **Check-up adempimenti v6** e il successivo riallineamento delle priorità di prodotto. Per il dettaglio storico vedi [`changelog.md`](changelog.md).
+Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato il 2026-09-04 dopo la chiusura dei prerequisiti private-alpha B61-B64. Per il dettaglio storico vedi [`changelog.md`](changelog.md).
 
 ## Stato attuale del progetto
 
@@ -28,6 +28,7 @@ Per la visione di prodotto vedi [`vision.md`](vision.md); per le milestone vedi 
 - **Consumi elettrici B25 (2026-08-04)**: bollette estratte da Claude e confermate dall'utente, periodi `UtilityBill`, vista Energia con confronto YoY e installazioni Asset per mese. I periodi plurimensili sono marcati come stimati.
 - **Check-up adempimenti v6 — fondazioni (2026-09-03)**: schema per evidenza, impianti termici, libretti/rapporti, territori e regole versionate; `MaintenancePlan` generalizzato e motori puri iniziali. Nessuna regola regionale o UI compliance è ancora attiva: proseguire da B41–B45.
 - **Memory Core B47 (2026-09-03)**: interventi canonici multi-Asset/multi-documento, costo totale, evidenza, manutenzioni collegate, timeline composta e fondazione garanzie. Nuovo intervento utilizzabile dalla scheda Asset e dal completamento manutenzione.
+- **Safety/portabilità B61-B64 (2026-09-04)**: cancellazione fisica dei file per documento/casa/account con rollback su errore DB; export ZIP con manifest e originali; tecnico apribile da ogni riga cronologia; CTA primo documento non duplicata.
 
 Dettaglio completo in [`vision.md`](vision.md) e [`roadmap.md`](roadmap.md).
 
@@ -90,15 +91,15 @@ npm install
 npm run dev
 ```
 
-Il repository contiene ora 18 migrazioni, incluse `20260903120000_add_compliance_foundations` e `20260903173000_add_memory_core`. Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale; B47 effettua solo backfill univoci e lascia le righe ambigue come legacy.
+Il repository contiene ora 22 migrazioni, incluse `20260903120000_add_compliance_foundations`, `20260903173000_add_memory_core` e `20260904124000_add_house_region_and_asset_power_kw`. Eseguire `npx prisma migrate deploy` con il `DATABASE_URL` reale.
 
-### Lint, build, test — risultati verificati il 2026-09-03
+### Lint, build, test — risultati verificati il 2026-09-04
 
 | Comando | Backend | Frontend |
 |---|---|---|
 | `npm run build` | ✅ pulito | ✅ pulito (warning: bundle principale ~856 kB, oltre soglia Vite — vedi `backlog.md` B16) |
 | `npm run lint` | ✅ 0 errori, 0 warning | ⚠️ 3 warning `react-hooks/exhaustive-deps` (Drive.tsx, Inbox.tsx, Gmail.tsx), invariati |
-| `npm run test` | ✅ 79/79 (inclusi Memory Core, compliance, consumi, Property Profile e Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
+| `npm run test` | ✅ 116/116 (inclusi cancellazione file/rollback, export ZIP, limiti lookup caldaia, Memory Core, compliance, consumi, Property Profile e Genesis) | ❌ nessuno script `test` configurato — nessun framework di test installato |
 
 Verificato anche **end-to-end nel browser** (non solo unit test): l'intero wizard Genesis eseguito sulla casa reale — creazione stanze/asset dalla scansione demo, calcolo Home Score, generazione Issue/Recommendation coerenti. Dettaglio in `changelog.md` (2026-08-04).
 
@@ -123,7 +124,7 @@ Nessun valore segreto è presente in questo documento o nei file `.env.example` 
 - Righe Ambienti sospette/corrotte (AMB-005–AMB-011) segnalate in una sessione precedente, mai verificate — `backlog.md` B6.
 - Un evento cronologia ("Daikin Perfera") dall'aspetto stale su un asset AC, mai chiarito con l'utente — `backlog.md` B7.
 - Contatto "Idrotermica Bianchi" potenzialmente collegato a eventi storici non pertinenti — `backlog.md` B8.
-- `backend/uploads/` contiene già file caricati da un utente reale durante lo sviluppo — è gitignored correttamente, ma chi clona il repo su un'altra macchina non li avrà (comportamento atteso, non un bug).
+- `backend/uploads/` può contenere file caricati da utenti reali — è gitignored; da B61 le cancellazioni esplicite di documento/casa/account rimuovono anche gli originali, ma non esiste una bonifica retroattiva automatica di eventuali orfani creati prima di B61.
 
 ## Debito tecnico
 
@@ -140,11 +141,10 @@ Elenco completo con priorità e dipendenze in [`backlog.md`](backlog.md).
 ## Attività successive consigliate
 
 Ordine corrente, deciso dopo il primo incremento B41:
-1. B46 — validazione continua del posizionamento “memoria digitale della casa” con 15–20 questionari e sintesi dei segnali.
-2. ~~B47~~ — completato; verificare/applicare la migrazione sul database reale prima dell'uso.
-3. B48 — affidabilità della memoria e copertura informativa in Dashboard, ora sbloccata dal record canonico B47.
-4. B49 — ricerca unificata e azioni rapide; poi B50, garanzie e cartella clinica dell'Asset.
-5. Proseguire B41 come fondazione tecnica; non anticipare la UI compliance. Genesis 2.0 e pilota Lombardia/Piemonte vengono dopo i P0 della memoria.
+1. Eseguire B65 durante l'alpha: almeno 30 foto/10 partecipanti secondo `alpha-ai-label-measurement.md`; non specializzare prima il prompt.
+2. Verificare su dispositivo mobile reale il percorso ridotto e i nuovi flussi irreversibili/export ZIP.
+3. Decidere B60 (voce Ambienti) solo dopo il test di usabilità; B18 resta in standby.
+4. Proseguire B41/B42 solo con fonti primarie, governance e revisione professionale; il lookup rapido caldaia non sostituisce il motore normativo.
 
 Vincoli trasversali: non avviare B18 (standby); cifrare token OAuth e dati tutelati prima di un deploy esterno; mantenere separati Stato adempimenti e Home Score; non attivare regole regionali senza governance.
 

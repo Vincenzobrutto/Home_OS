@@ -307,7 +307,14 @@ export function Dashboard({
   // (mvp-v1.md §5) — le regole più recenti citano concetti (Rubrica,
   // interventi strutturati) che l'alpha nasconde altrove.
   const visibleIssues = ALPHA_MODE
-    ? (genesisResults?.issues.filter((i) => ALPHA_VISIBLE_RULE_CODES.has(i.ruleCode)) ?? [])
+    ? (genesisResults?.issues.filter(
+        (i) =>
+          ALPHA_VISIBLE_RULE_CODES.has(i.ruleCode) &&
+          // La CTA primaria sopra copre già il primo documento: mostrare
+          // subito sotto la stessa richiesta come issue sembrava un secondo
+          // compito distinto (B64).
+          !(documentsCount === 0 && i.ruleCode === 'HOUSE_WITHOUT_DOCUMENTS'),
+      ) ?? [])
     : (genesisResults?.issues ?? []);
   const visibleIssueIds = new Set(visibleIssues.map((i) => i.id));
   const visibleRecommendations = ALPHA_MODE
