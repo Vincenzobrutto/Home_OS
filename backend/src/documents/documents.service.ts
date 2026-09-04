@@ -558,7 +558,15 @@ export class DocumentsService {
         where: { id: documentId },
         data: { status: DocumentStatus.PENDING },
       });
-      throw err;
+      // Il messaggio tecnico (chiave API mancante, JSON non valido, timeout,
+      // errore di rete) resta nei log server per il debug, ma non deve
+      // risalire com'è all'utente (B57): un messaggio comprensibile con un
+      // percorso alternativo sempre disponibile ("Classifica manualmente" in
+      // Inbox.tsx), non un vicolo cieco tecnico.
+      console.error(`Analisi AI fallita per il documento ${documentId}:`, err);
+      throw new BadRequestException(
+        "Non siamo riusciti a leggere questo documento con l'AI. Puoi riprovare, oppure classificarlo manualmente.",
+      );
     }
   }
 

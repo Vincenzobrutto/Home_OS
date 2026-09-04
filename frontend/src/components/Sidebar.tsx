@@ -51,6 +51,7 @@ export function Sidebar({
   onLogout,
   onOpenSearch,
   onDeleteAccount,
+  onExportData,
 }: {
   view: View;
   setView: (v: View) => void;
@@ -63,6 +64,7 @@ export function Sidebar({
   onLogout?: () => void;
   onOpenSearch: () => void;
   onDeleteAccount?: () => void;
+  onExportData?: () => void;
 }) {
   // Gmail e Drive non hanno più voci proprie: sono tab dentro Inbox (vedi
   // InboxHub.tsx). Il badge qui somma i candidati in attesa da entrambe le
@@ -238,6 +240,24 @@ export function Sidebar({
             </button>
           )}
         </div>
+        {onExportData && (
+          <button
+            onClick={onExportData}
+            style={{
+              display: 'block',
+              marginTop: 10,
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              fontFamily: "'Inter', sans-serif",
+              fontSize: 11,
+              color: '#8A9089',
+            }}
+          >
+            Esporta i miei dati
+          </button>
+        )}
         {onDeleteAccount && (
           <button
             onClick={onDeleteAccount}

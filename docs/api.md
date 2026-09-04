@@ -14,6 +14,7 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/auth/logout` | invalida la sessione corrente (cancella la riga `Session`) e il cookie |
 | GET | `/auth/me` | utente della sessione corrente, 401 se assente/scaduta |
 | DELETE | `/auth/me` | cancella l'account: le case possedute (cascata su tutto il contenuto), le membership residue, poi l'utente (cascata `Session`/`GmailConnection`/`DriveConnection`); invalida il cookie. Irreversibile, vedi `decisions.md` #53 |
+| POST | `/auth/consent` | registra `consentedAt = now()` per l'utente della sessione corrente (B55) — idempotente |
 
 ## Houses
 | Metodo | Path | Note |
@@ -22,6 +23,7 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | GET | `/houses/:id` | dettaglio |
 | PATCH | `/houses/:id` | anche `floorPlanRotation` |
 | DELETE | `/houses/:id` | solo l'utente con ruolo `OWNER` (403 altrimenti); cancella la casa e tutto il contenuto via cascata già esistente a livello di schema, nessuna pulizia applicativa. Irreversibile, vedi `decisions.md` #53 |
+| GET | `/houses/:id/export` | export minimo dati (B54): anagrafica, ambienti, Asset, documenti (solo metadati, mai il file), interventi, garanzie, contatti. Chiunque abbia accesso alla casa (non solo OWNER) |
 | PATCH | `/houses/:id/property-profile` | modifica esplicita del profilo; registra provenienza `DECLARED` solo per i valori realmente cambiati |
 | GET | `/houses` | case dell'utente della sessione corrente (era `/users/:userId/houses`) |
 
@@ -76,12 +78,12 @@ Stessa regola di evidenza degli interventi: `proofDocumentId` forza `VERIFIED_PR
 ## Documents (pipeline documentale — vedi `architecture.md` §4)
 | Metodo | Path | Note |
 |---|---|---|
-| POST | `/houses/:houseId/documents` | upload (`multipart/form-data`), crea `Document` status `PENDING` |
+| POST | `/houses/:houseId/documents` | upload (`multipart/form-data`), crea `Document` status `PENDING`. Max 20MB, solo PDF/PNG/JPG/WEBP (B56, verifica sul Content-Type dichiarato) |
 | GET | `/houses/:houseId/documents` | elenco; filtrare per `houseLevel`/`assetId` lato client per "Documenti casa" |
 | POST | `/houses/:houseId/floorplan-background` | upload immagine/PDF planimetria di sfondo |
 | GET | `/documents/:id/file` | streaming del file originale |
 | POST | `/documents/:id/analyze` | invoca Claude, popola `extractedFields`, status → `ANALYZED`. Nessuna scrittura su Asset. |
-| POST | `/documents/:id/confirm` | scrittura reale: `{ assetId }` **oppure** `{ createAssetType, assetName?, roomId? }` **oppure** `{ linkToHouse: true }` |
+| POST | `/documents/:id/confirm` | scrittura reale: `{ assetId }` **oppure** `{ createAssetType, assetName?, roomId? }` **oppure** `{ linkToHouse: true }`. Funziona anche su un documento mai analizzato (`extractedFields` null) — percorso "classifica manualmente" (B57) |
 | POST | `/documents/:id/confirm-floorplan` | conferma ambienti estratti da una planimetria caricata |
 | POST | `/documents/:id/confirm-utility-bill` | conferma periodi elettrici estratti e crea `UtilityBill` atomicamente |
 | POST | `/documents/:id/confirm-property-profile` | conferma i dati casa estratti; riempie solo campi vuoti, registra provenienza `EXTRACTED`, restituisce campi applicati/conflitti |

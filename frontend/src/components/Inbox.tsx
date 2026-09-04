@@ -250,6 +250,9 @@ export function InboxView({
   const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
   const [busyDocIds, setBusyDocIds] = useState<Set<string>>(new Set());
   const [pickingAssetFor, setPickingAssetFor] = useState<string | null>(null);
+  // Percorso alternativo quando l'AI non riesce a leggere un documento
+  // (B57): mai un vicolo cieco, l'utente può sempre collegarlo a mano.
+  const [manualClassifyFor, setManualClassifyFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Input separato con `capture`: su mobile apre direttamente la fotocamera
@@ -560,6 +563,22 @@ export function InboxView({
                     <Sparkles size={13} /> {analyzingIds.has(doc.id) ? 'Analisi in corso…' : 'Analizza con AI'}
                   </button>
                 )}
+                {doc.status === 'PENDING' && (
+                  <button
+                    onClick={() => setManualClassifyFor((current) => (current === doc.id ? null : doc.id))}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: T.slate,
+                      cursor: 'pointer',
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: 12,
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Classifica manualmente
+                  </button>
+                )}
                 <button
                   onClick={() => discardDocument(doc.id)}
                   disabled={busy}
@@ -581,6 +600,16 @@ export function InboxView({
                   <XCircle size={13} /> Scarta
                 </button>
               </div>
+
+              {doc.status === 'PENDING' && manualClassifyFor === doc.id && (
+                <ManualClassifyProposal
+                  assets={assets}
+                  rooms={rooms}
+                  busy={busy}
+                  onConfirm={(data) => confirm(doc.id, data)}
+                  onCancel={() => setManualClassifyFor(null)}
+                />
+              )}
 
               {doc.status === 'ANALYZED' && fields?.kind === 'floor_plan' && (
                 <FloorPlanProposal
@@ -698,6 +727,126 @@ function MaintenanceFromDocument({ documentId, busy, onCompleted }: { documentId
       {message && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.rust, marginBottom: 8 }}>{message}</div>}
       <button onClick={complete} disabled={busy || saving || !selectedItems.length} style={{ background: T.pine, color: '#F7F7F2', border: 'none', borderRadius: 6, padding: '8px 13px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 500 }}>
         {saving ? 'Conferma in corso…' : `Completa ${selectedItems.length} manutenzion${selectedItems.length === 1 ? 'e' : 'i'}`}
+      </button>
+    </div>
+  );
+}
+
+// Percorso alternativo per un documento che l'AI non è riuscita a leggere
+// (B57): stessa API di conferma (POST /documents/:id/confirm) usata dal
+// percorso guidato, ma senza campi estratti da mostrare — l'utente sceglie
+// direttamente asset esistente, nuovo asset, o "documento casa".
+function ManualClassifyProposal({
+  assets,
+  rooms,
+  busy,
+  onConfirm,
+  onCancel,
+}: {
+  assets: Asset[];
+  rooms: Room[];
+  busy: boolean;
+  onConfirm: (data: { assetId?: string; createAssetType?: string; assetName?: string; roomId?: string; linkToHouse?: boolean; applyFields: boolean }) => void;
+  onCancel: () => void;
+}) {
+  const [mode, setMode] = useState<'existing' | 'new' | 'house'>('existing');
+  const [assetId, setAssetId] = useState('');
+  const [newAssetName, setNewAssetName] = useState('');
+  const [newAssetType, setNewAssetType] = useState('');
+  const [newRoomId, setNewRoomId] = useState('');
+  const activeAssets = assets.filter((a) => !a.dismissedAt);
+
+  const fieldStyle: React.CSSProperties = {
+    fontFamily: "'Inter', sans-serif",
+    fontSize: 12.5,
+    padding: '7px 10px',
+    borderRadius: 6,
+    border: `1px solid ${T.line}`,
+    background: T.card,
+  };
+  const modeButtonStyle = (active: boolean): React.CSSProperties => ({
+    fontFamily: "'Inter', sans-serif",
+    fontSize: 12,
+    padding: '6px 10px',
+    borderRadius: 6,
+    border: `1px solid ${active ? T.pine : T.line}`,
+    background: active ? T.pine : 'transparent',
+    color: active ? '#F7F7F2' : T.ink,
+    cursor: 'pointer',
+  });
+  const confirmButtonStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    background: T.pine,
+    color: '#F7F7F2',
+    border: 'none',
+    borderRadius: 6,
+    padding: '8px 13px',
+    cursor: 'pointer',
+    fontFamily: "'Inter', sans-serif",
+    fontSize: 12.5,
+    fontWeight: 500,
+  };
+
+  return (
+    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${T.line}` }}>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.ink70, marginBottom: 10 }}>
+        Collega questo documento a mano, senza aspettare l'AI:
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        <button onClick={() => setMode('existing')} style={modeButtonStyle(mode === 'existing')}>Asset esistente</button>
+        <button onClick={() => setMode('new')} style={modeButtonStyle(mode === 'new')}>Nuovo asset</button>
+        <button onClick={() => setMode('house')} style={modeButtonStyle(mode === 'house')}>Documento casa</button>
+      </div>
+
+      {mode === 'existing' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <select value={assetId} onChange={(e) => setAssetId(e.target.value)} style={fieldStyle}>
+            <option value="">— scegli asset —</option>
+            {activeAssets.map((a) => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ))}
+          </select>
+          <button disabled={busy || !assetId} onClick={() => onConfirm({ assetId, applyFields: false })} style={confirmButtonStyle}>
+            <CheckCircle2 size={13} /> Collega documento
+          </button>
+        </div>
+      )}
+
+      {mode === 'new' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input value={newAssetName} onChange={(e) => setNewAssetName(e.target.value)} placeholder="Nome asset, es. Caldaia" style={{ ...fieldStyle, minWidth: 180 }} />
+          <select value={newAssetType} onChange={(e) => setNewAssetType(e.target.value)} style={fieldStyle}>
+            <option value="">— tipo —</option>
+            {Object.entries(ASSET_TYPES).map(([key, meta]) => (
+              <option key={key} value={key}>{meta.label}</option>
+            ))}
+          </select>
+          <select value={newRoomId} onChange={(e) => setNewRoomId(e.target.value)} style={fieldStyle}>
+            <option value="">Nessuno — impianto di casa</option>
+            {rooms.map((r) => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </select>
+          <button
+            disabled={busy || !newAssetType || !newAssetName.trim()}
+            onClick={() => onConfirm({ createAssetType: newAssetType, assetName: newAssetName.trim(), roomId: newRoomId || undefined, applyFields: false })}
+            style={confirmButtonStyle}
+          >
+            <CheckCircle2 size={13} /> Crea e collega
+          </button>
+        </div>
+      )}
+
+      {mode === 'house' && (
+        <button disabled={busy} onClick={() => onConfirm({ linkToHouse: true, applyFields: false })} style={confirmButtonStyle}>
+          <CheckCircle2 size={13} /> Collega alla casa, non a un asset specifico
+        </button>
+      )}
+
+      <button onClick={onCancel} style={{ display: 'block', marginTop: 10, border: 'none', background: 'none', cursor: 'pointer', color: T.slate, fontFamily: "'Inter', sans-serif", fontSize: 12 }}>
+        Annulla
       </button>
     </div>
   );

@@ -85,6 +85,7 @@ export const api = {
       }
     },
     deleteAccount: () => request<{ success: boolean }>('/auth/me', { method: 'DELETE' }),
+    recordConsent: () => request<User>('/auth/consent', { method: 'POST' }),
   },
   houses: {
     get: (id: string) => request<House & { rooms: Room[]; assets: Asset[] }>(`/houses/${id}`),
@@ -95,6 +96,8 @@ export const api = {
         body: JSON.stringify(data),
       }),
     remove: (id: string) => request<void>(`/houses/${id}`, { method: 'DELETE' }),
+    // Export minimo dati (B54): metadati, non il contenuto dei file.
+    exportData: (id: string) => request<Record<string, unknown>>(`/houses/${id}/export`),
     updatePropertyProfile: (id: string, data: Record<string, string | number | null>) =>
       request<House>(`/houses/${id}/property-profile`, {
         method: 'PATCH',

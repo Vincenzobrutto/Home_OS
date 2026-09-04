@@ -2,6 +2,17 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (4) — B54-B59: chiusura del backlog MVP pre-alpha
+
+- **B54** Export dati: `GET /houses/:id/export` (JSON con anagrafica, ambienti, Asset, documenti-metadati, interventi, garanzie, contatti), link "Esporta i miei dati" in Sidebar.
+- **B55** Consenso privacy/AI: nuovo `User.consentedAt` (nullable, retroattivo su tutti gli account esistenti), `POST /auth/consent`, schermo bloccante `ConsentScreen.tsx` mostrato subito dopo login/registrazione finché non accettato.
+- **B56** Limiti upload: max 20MB, solo PDF/PNG/JPG/WEBP su entrambe le rotte di upload documenti, messaggio d'errore in italiano.
+- **B57** Errori AI comprensibili: un fallimento di analisi non risale più come errore tecnico; nuovo pulsante "Classifica manualmente" sempre disponibile in Inbox, che collega un documento senza passare dall'AI.
+- **B58** "+ Nuovo contatto" inline nei form Intervento/Garanzia/riassegnazione contatto in AssetDetail, riusando `AddContactModal` esistente — nessun nuovo componente.
+- **B59** Nuova suite `backend/test/main-flow.e2e-spec.ts` (login → crea casa → carica documento → conferma manuale → ritrovamento → isolamento tra case, 7 test), rimosso il boilerplate NestJS `app.e2e-spec.ts` che non copriva nulla di reale ed era già rotto (401 dall'AuthGuard globale).
+- Backend: build/106 test unitari/7 test e2e/lint puliti. Frontend: build/lint puliti. Verificato con utenti/case usa-e-getta (mai la casa reale né la demo) via script diretti per export/consenso; verificato dal vivo nel browser che lo schermo di consenso compare correttamente (anche sull'account reale, effetto voluto della migrazione retroattiva — non cliccato "Ho capito, continua" per conto dell'utente).
+- Chiude B54, B55, B56, B57, B58, B59 nel backlog MVP: nessun item P0 residuo prima dell'alpha.
+
 ## 2026-09-04 (3) — B53: Cancellazione account e casa
 
 - `DELETE /houses/:id` (204): nuovo `AccessControlService.assertHouseOwner` verifica il ruolo OWNER (non solo l'accesso), poi `prisma.house.delete` — nessuna pulizia preliminare, la cascata già esistente su tutte le tabelle collegate a `House` se ne occupa da sola.

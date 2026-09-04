@@ -13,6 +13,7 @@ import { AddAssetModal, EditAssetModal, AddContactModal, EditContactModal } from
 import { InboxHub, type InboxTab } from './components/InboxHub';
 import { BootstrapScreen } from './components/Bootstrap';
 import { LoginScreen } from './components/LoginScreen';
+import { ConsentScreen } from './components/ConsentScreen';
 import { HouseDocumentsView } from './components/HouseDocuments';
 import { GenesisWizard } from './components/Genesis';
 import { EnergyConsumption } from './components/EnergyConsumption';
@@ -146,6 +147,18 @@ export default function App() {
     setHouse(null);
     setNeedsBootstrap(false);
     setView('dashboard');
+  }
+
+  async function handleExportData() {
+    if (!house) return;
+    const data = await api.houses.exportData(house.id);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `dimora-${house.code}-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   async function handleDeleteAccount() {
@@ -308,6 +321,10 @@ export default function App() {
     return <LoginScreen onLogin={handleLogin} />;
   }
 
+  if (!currentUser.consentedAt) {
+    return <ConsentScreen onConsented={setCurrentUser} />;
+  }
+
   if (needsBootstrap || !house) {
     return (
       <BootstrapScreen
@@ -344,6 +361,7 @@ export default function App() {
         onNavigate={() => setMobileNavOpen(false)}
         onLogout={handleLogout}
         onOpenSearch={() => setSearchOpen(true)}
+        onExportData={handleExportData}
         onDeleteAccount={handleDeleteAccount}
       />
       {searchOpen && (

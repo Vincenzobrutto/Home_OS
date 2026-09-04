@@ -1,8 +1,11 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
+  HttpStatus,
   Param,
+  ParseFilePipeBuilder,
   ParseUUIDPipe,
   Post,
   Query,
@@ -20,6 +23,39 @@ import { ConfirmFloorPlanDto } from './dto/confirm-floor-plan.dto';
 import { ConfirmUtilityBillDto } from './dto/confirm-utility-bill.dto';
 import { ConfirmPropertyProfileDto } from './dto/confirm-property-profile.dto';
 
+// 20MB: sufficiente per una foto ad alta risoluzione o un PDF multipagina
+// scansionato, basso abbastanza da respingere in modo pulito un file
+// caricato per errore invece di un timeout silenzioso più a valle (upload
+// AI, storage). Stessi formati già gestiti da MIME_BY_EXT in
+// documents.service.ts — un tipo diverso non avrebbe comunque una pipeline
+// di lettura/anteprima.
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+const ALLOWED_FILE_TYPE = /^(application\/pdf|image\/(png|jpe?g|webp))$/;
+
+function documentUploadPipe() {
+  return (
+    new ParseFilePipeBuilder()
+      // skipMagicNumbersValidation: il validatore di default di Nest legge i
+      // byte reali del file per riconoscerne il tipo tramite il pacchetto
+      // "file-type" (ESM-only, richiede --experimental-vm-modules sotto Jest
+      // — non vale la complicazione per un'app a singolo utente per casa: qui
+      // basta un controllo pulito sul Content-Type dichiarato dal client per
+      // il caso comune, senza pretese antimalware).
+      .addFileTypeValidator({
+        fileType: ALLOWED_FILE_TYPE,
+        skipMagicNumbersValidation: true,
+      })
+      .addMaxSizeValidator({ maxSize: MAX_UPLOAD_BYTES })
+      .build({
+        errorHttpStatusCode: HttpStatus.BAD_REQUEST,
+        exceptionFactory: () =>
+          new BadRequestException(
+            `Formato non supportato o file troppo grande (massimo ${MAX_UPLOAD_BYTES / 1024 / 1024}MB). Formati accettati: PDF, PNG, JPG, WEBP.`,
+          ),
+      })
+  );
+}
+
 @Controller()
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
@@ -29,7 +65,7 @@ export class DocumentsController {
   upload(
     @Req() req: AuthenticatedRequest,
     @Param('houseId', ParseUUIDPipe) houseId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(documentUploadPipe()) file: Express.Multer.File,
   ) {
     return this.documentsService.upload(req.user.id, houseId, file);
   }
@@ -47,7 +83,7 @@ export class DocumentsController {
   uploadFloorPlanBackground(
     @Req() req: AuthenticatedRequest,
     @Param('houseId', ParseUUIDPipe) houseId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(documentUploadPipe()) file: Express.Multer.File,
   ) {
     return this.documentsService.uploadFloorPlanBackground(
       req.user.id,

@@ -136,6 +136,16 @@ export class AuthService {
     await this.prisma.session.deleteMany({ where: { id: sessionId } });
   }
 
+  // Registra l'accettazione esplicita dello schermo di consenso privacy/AI
+  // (B55): idempotente, una riaccettazione successiva non serve né è offerta
+  // dalla UI, ma non c'è motivo di rifiutarla se mai richiesta.
+  async recordConsent(userId: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { consentedAt: new Date() },
+    });
+  }
+
   // Ordine obbligato: House.owner/HouseMembership.user non hanno un
   // onDelete esplicito verso User (Restrict di default) — cancellare
   // l'utente prima fallirebbe con un vincolo di integrità finché possiede

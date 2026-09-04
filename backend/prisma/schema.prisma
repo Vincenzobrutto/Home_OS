@@ -248,6 +248,11 @@ model User {
   // caso e offre di impostarla, invece di richiedere una migrazione dati.
   passwordHash String?  @map("password_hash")
   createdAt    DateTime @default(now()) @map("created_at")
+  // Nullable = non ancora mostrato/accettato lo schermo di consenso privacy
+  // (B55, mvp-v1.md §8): gli account creati prima di questa modifica sono
+  // trattati come "da mostrare al prossimo accesso", non come già consentiti
+  // — nessun consenso può essere dedotto retroattivamente.
+  consentedAt  DateTime? @map("consented_at")
 
   ownedHouses                   House[]                @relation("HouseOwner")
   memberships                   HouseMembership[]

@@ -5,6 +5,7 @@ import { SectionLabel, StatusDot, Stamp, ProvenanceBadge } from './Shared';
 import { api, formatDateForDisplay, parseDateInput } from '../api';
 import type { Asset, Contact, CustomField, DocumentRecord, EvidenceStatus, House, InterventionKind, Room, TimelineEvent, Warranty, WarrantyKind } from '../types';
 import { MaintenanceSection } from './Maintenance';
+import { AddContactModal } from './Modals';
 
 const WARRANTY_KIND_LABELS: Record<WarrantyKind, string> = {
   PURCHASE: 'Acquisto',
@@ -401,6 +402,11 @@ export function AssetDetail({
   const [newWarrantyDocumentId, setNewWarrantyDocumentId] = useState('');
   const [newWarrantyNotes, setNewWarrantyNotes] = useState('');
   const [savingWarranty, setSavingWarranty] = useState(false);
+  // Ingresso per registrare un tecnico mai visto prima senza passare dalla
+  // voce Rubrica in nav (nascosta in alpha, vedi config.ts ALPHA_MODE): B58.
+  // 'event'/'warranty' per i due form di creazione, `assign:<eventId>` per
+  // l'assegnazione diretta su un evento di cronologia già esistente.
+  const [contactModalFor, setContactModalFor] = useState<string | null>(null);
 
   function refreshTimeline() {
     return api.assets.timeline(asset.id).then(setTimeline);
@@ -939,9 +945,13 @@ export function AssetDetail({
           <select
             style={{ ...eventInputStyle, width: '100%', marginBottom: 8, cursor: 'pointer' }}
             value={newWarrantyContactId}
-            onChange={(e) => setNewWarrantyContactId(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value === '__new__') { setContactModalFor('warranty'); return; }
+              setNewWarrantyContactId(e.target.value);
+            }}
           >
             <option value="">Nessun fornitore/tecnico</option>
+            <option value="__new__">+ Nuovo contatto…</option>
             {contacts.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -1123,9 +1133,13 @@ export function AssetDetail({
               cursor: 'pointer',
             }}
             value={newEventContactId}
-            onChange={(e) => setNewEventContactId(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value === '__new__') { setContactModalFor('event'); return; }
+              setNewEventContactId(e.target.value);
+            }}
           >
             <option value="">Nessun contatto</option>
+            <option value="__new__">+ Nuovo contatto…</option>
             {contacts.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -1276,7 +1290,10 @@ export function AssetDetail({
             )}
             <select
               value={t.contactId ?? ''}
-              onChange={(e) => assignContact(t.id, e.target.value)}
+              onChange={(e) => {
+                if (e.target.value === '__new__') { setContactModalFor(`assign:${t.id}`); return; }
+                assignContact(t.id, e.target.value);
+              }}
               style={{
                 ...eventInputStyle,
                 padding: '5px 8px',
@@ -1285,6 +1302,7 @@ export function AssetDetail({
               }}
             >
               <option value="">Nessun contatto collegato</option>
+              <option value="__new__">+ Nuovo contatto…</option>
               {contacts.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -1307,6 +1325,22 @@ export function AssetDetail({
       >
         Creato il {formatDateForDisplay(asset.createdAt)} · ultima modifica il {formatDateForDisplay(asset.updatedAt)}
       </div>
+
+      {contactModalFor && (
+        <AddContactModal
+          houseId={asset.houseId}
+          onCreated={(contact) => {
+            if (contactModalFor === 'event') setNewEventContactId(contact.id);
+            else if (contactModalFor === 'warranty') setNewWarrantyContactId(contact.id);
+            else if (contactModalFor.startsWith('assign:')) {
+              assignContact(contactModalFor.slice('assign:'.length), contact.id);
+            }
+            setContactModalFor(null);
+            onContactsChanged();
+          }}
+          onClose={() => setContactModalFor(null)}
+        />
+      )}
     </div>
   );
 }

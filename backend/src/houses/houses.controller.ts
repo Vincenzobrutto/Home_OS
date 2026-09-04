@@ -52,6 +52,14 @@ export class HousesController {
     return this.housesService.remove(req.user.id, id);
   }
 
+  @Get('houses/:id/export')
+  exportData(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.housesService.exportData(req.user.id, id);
+  }
+
   @Patch('houses/:id/property-profile')
   updatePropertyProfile(
     @Req() req: AuthenticatedRequest,

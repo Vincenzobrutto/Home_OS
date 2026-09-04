@@ -95,6 +95,12 @@ export class AuthController {
     return sanitizeUser(req.user);
   }
 
+  @Post('consent')
+  async recordConsent(@Req() req: AuthenticatedRequest) {
+    const updated = await this.authService.recordConsent(req.user.id);
+    return sanitizeUser(updated);
+  }
+
   @Delete('me')
   @HttpCode(HttpStatus.OK)
   async deleteAccount(

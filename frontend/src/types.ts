@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   name: string | null;
+  consentedAt: string | null;
 }
 
 export type GenesisStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'PROCESSING' | 'COMPLETED';
