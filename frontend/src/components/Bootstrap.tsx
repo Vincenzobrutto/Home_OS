@@ -3,6 +3,7 @@ import { T } from '../theme';
 import { SectionLabel } from './Shared';
 import { api } from '../api';
 import type { House, User } from '../types';
+import { ALPHA_MODE } from '../config';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -48,6 +49,18 @@ export function BootstrapScreen({
         name: houseName.trim(),
         city: city.trim() || undefined,
       });
+      if (ALPHA_MODE) {
+        // Niente wizard Genesis nel percorso reale dell'alpha (mvp-v1.md
+        // §4): completarlo in silenzio tiene comunque vivo Home Detective
+        // (le regole semplici in "Da tenere d'occhio"), che dipende da
+        // genesisStatus === COMPLETED. Un fallimento qui non deve bloccare
+        // l'accesso alla casa appena creata.
+        try {
+          await api.genesis.complete(house.id);
+        } catch {
+          // ignorato: la casa resta comunque utilizzabile
+        }
+      }
       onReady(house);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Errore imprevisto');

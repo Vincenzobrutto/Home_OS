@@ -4,6 +4,7 @@ import { T, iconForAsset } from '../theme';
 import { SectionLabel, Stamp } from './Shared';
 import type { Asset, ComplianceCheck, ComplianceResult, CoverageMetric, GenesisResults, House, HouseTimelineEventRecord, MaintenanceReminder, MemoryReliability, Room, ScoreSnapshotRecord } from '../types';
 import { api, formatDateForDisplay } from '../api';
+import { ALPHA_MODE, ALPHA_VISIBLE_RULE_CODES } from '../config';
 
 // Un colore distinto per categoria di Asset — badge tondi nelle liste,
 // invece dei quattro toni di T riusati su otto tipi. Resta locale a questo
@@ -234,6 +235,7 @@ export function Dashboard({
   openAsset,
   onOpenContact,
   onOpenGenesis,
+  onOpenDocuments,
 }: {
   house: House;
   rooms: Room[];
@@ -241,6 +243,7 @@ export function Dashboard({
   openAsset: (id: string) => void;
   onOpenContact: (id: string) => void;
   onOpenGenesis: () => void;
+  onOpenDocuments: () => void;
 }) {
   const dueSoon = assets.filter((a) => a.status === 'DUE' || a.status === 'ATTENTION').length;
   const [maintenance, setMaintenance] = useState<MaintenanceReminder[]>([]);
@@ -257,8 +260,12 @@ export function Dashboard({
   useEffect(() => {
     api.maintenance.remindersForHouse(house.id).then(setMaintenance);
     api.documents.listForHouse(house.id).then((docs) => setDocumentsCount(docs.length));
-    api.reliability.forHouse(house.id).then(setReliability);
-    api.compliance.forHouse(house.id).then(setCompliance);
+    // Card Affidabilità della memoria/Stato adempimenti nascoste in alpha
+    // (mvp-v1.md): non serve nemmeno chiamare i due endpoint.
+    if (!ALPHA_MODE) {
+      api.reliability.forHouse(house.id).then(setReliability);
+      api.compliance.forHouse(house.id).then(setCompliance);
+    }
   }, [house.id]);
 
   useEffect(() => {
@@ -270,7 +277,10 @@ export function Dashboard({
     }
     api.genesis.getResults(house.id).then(setGenesisResults);
     api.genesis.getTimeline(house.id).then(setTimeline);
-    api.genesis.scoreHistory(house.id).then(setScoreHistory);
+    // Storico Home Score/trend nascosto in alpha, nessun bisogno di caricarlo.
+    if (!ALPHA_MODE) {
+      api.genesis.scoreHistory(house.id).then(setScoreHistory);
+    }
   }, [house.id, house.genesisStatus]);
 
   async function recalculateScore() {
@@ -292,6 +302,17 @@ export function Dashboard({
       setRecalculatingScore(false);
     }
   }
+
+  // In alpha solo i suggerimenti "semplici e contestuali" restano visibili
+  // (mvp-v1.md §5) — le regole più recenti citano concetti (Rubrica,
+  // interventi strutturati) che l'alpha nasconde altrove.
+  const visibleIssues = ALPHA_MODE
+    ? (genesisResults?.issues.filter((i) => ALPHA_VISIBLE_RULE_CODES.has(i.ruleCode)) ?? [])
+    : (genesisResults?.issues ?? []);
+  const visibleIssueIds = new Set(visibleIssues.map((i) => i.id));
+  const visibleRecommendations = ALPHA_MODE
+    ? (genesisResults?.recommendations.filter((r) => r.issueId && visibleIssueIds.has(r.issueId)) ?? [])
+    : (genesisResults?.recommendations ?? []);
 
   return (
     <div style={{ padding: '36px 44px', maxWidth: 980 }}>
@@ -319,7 +340,37 @@ export function Dashboard({
         {house.surfaceSqm ?? '—'} m² · {house.roomsCount ?? rooms.length} locali · costruita nel {house.buildYear ?? '—'}
       </p>
 
-      {house.genesisStatus !== 'COMPLETED' && (
+      {ALPHA_MODE && documentsCount === 0 && (
+        <div
+          onClick={onOpenDocuments}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            background: `${T.pine}0D`,
+            border: `1px solid ${T.pine}33`,
+            borderRadius: 12,
+            padding: '18px 20px',
+            marginBottom: 26,
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: `${T.pine}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <FileText size={20} color={T.pine} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600, color: T.ink }}>
+              Aggiungi il primo documento
+            </div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: T.slate, marginTop: 2 }}>
+              Fotografa o carica una fattura, un manuale o un certificato: Dimora propone a cosa appartiene.
+            </div>
+          </div>
+          <ArrowRight size={18} color={T.pine} />
+        </div>
+      )}
+
+      {!ALPHA_MODE && house.genesisStatus !== 'COMPLETED' && (
         <div
           onClick={onOpenGenesis}
           style={{
@@ -351,7 +402,7 @@ export function Dashboard({
         </div>
       )}
 
-      {genesisResults?.score && (
+      {!ALPHA_MODE && genesisResults?.score && (
         <div style={{ marginBottom: 26, padding: '18px 20px', background: T.card, border: `1px solid ${T.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24 }}>
           <div>
@@ -394,7 +445,7 @@ export function Dashboard({
         </div>
       )}
 
-      {reliability && (
+      {!ALPHA_MODE && reliability && (
         <div style={{ marginBottom: 26, padding: '18px 20px', background: T.card, border: `1px solid ${T.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24 }}>
             <div>
@@ -418,7 +469,7 @@ export function Dashboard({
         </div>
       )}
 
-      {compliance && (
+      {!ALPHA_MODE && compliance && (
         <div style={{ marginBottom: 26, padding: '18px 20px', background: T.card, border: `1px solid ${T.line}`, borderRadius: 12, boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
             <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 13, color: T.ink, flex: 1 }}>Stato adempimenti</div>
@@ -446,11 +497,11 @@ export function Dashboard({
         </div>
       )}
 
-      {genesisResults && genesisResults.issues.length > 0 && (
+      {visibleIssues.length > 0 && (
         <>
           <SectionLabel>Da tenere d'occhio</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 26 }}>
-            {genesisResults.issues.map((issue) => (
+            {visibleIssues.map((issue) => (
               <div
                 key={issue.id}
                 onClick={() => {
@@ -475,16 +526,16 @@ export function Dashboard({
         </>
       )}
 
-      {genesisResults && genesisResults.recommendations.length > 0 && (
+      {visibleRecommendations.length > 0 && (
         <>
           <SectionLabel>Consigliato</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 26 }}>
-            {genesisResults.recommendations.map((rec) => {
+            {visibleRecommendations.map((rec) => {
               // Stessa Issue a cui la Recommendation è collegata (1:1 oggi,
               // vedi genesis-architecture.md §6) — riusata solo per sapere se
               // punta a un asset su cui navigare, coerente con le card "Da
               // tenere d'occhio" sopra invece di restare non cliccabili.
-              const linkedAssetId = genesisResults.issues.find((i) => i.id === rec.issueId)?.assetId;
+              const linkedAssetId = visibleIssues.find((i) => i.id === rec.issueId)?.assetId;
               return (
                 <div
                   key={rec.id}

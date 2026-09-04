@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (2) — B52: Flag di navigazione per la private alpha
+
+- Nuovo `frontend/src/config.ts` (`ALPHA_MODE`, `ALPHA_VISIBLE_RULE_CODES`): unica costante che nasconde Profilo casa, Energia, Rubrica (voce di nav), Planimetria, tab Gmail/Drive, Home Score/trend, Affidabilità della memoria, Stato adempimenti. "Inbox" rinominata "Documenti" in Sidebar e nel titolo della vista.
+- **Scoperta durante l'implementazione**: `GenesisService.recalculateScore` (Home Score + Home Detective) rifiuta di eseguire senza `genesisStatus === 'COMPLETED'`, raggiungibile solo completando il wizard a 6 step — che l'alpha salta. Risolto senza toccare il backend: `Bootstrap.tsx` chiama silenziosamente l'endpoint di completamento già esistente subito dopo la creazione casa; `App.tsx` richiama silenziosamente il ricalcolo dopo ogni conferma documento/modifica Asset, così "Da tenere d'occhio" resta viva senza il bottone "Aggiorna Home Score" (nascosto).
+- "Da tenere d'occhio"/"Consigliato" filtrate alle sole 3 regole Home Detective "semplici e contestuali" (`HEATING_SYSTEM_WITHOUT_DOCUMENTATION`, `UNCONFIRMED_SCAN_RESULTS`, `HOUSE_WITHOUT_DOCUMENTS`) — le 4 regole di B49 restano escluse in alpha.
+- Nessuna modifica al backend: tutto il lavoro è frontend, riducibile a zero riportando `ALPHA_MODE` a `false`.
+- Build/lint frontend puliti, nessun nuovo warning. Verificato dal vivo nel browser sulla casa reale: Sidebar/Dashboard/Ambienti/Documenti mostrano esattamente lo scope ridotto. Non verificata la creazione di una casa nuova end-to-end (nessun endpoint di cancellazione ancora disponibile per pulire un'eventuale casa di test, vedi B53).
+
 ## 2026-09-04 — MVP v1: private alpha su upload manuale, non sul wizard Genesis
 
 - Nuovo `docs/mvp-v1.md`: fonte di verità sullo scope di rilascio per una private alpha di 15-20 utenti reali, centrata sul percorso documento → conferma → ricerca (già costruito e verificato in B47-B50). Distinto da `vision.md` (prodotto completo, invariato) e `roadmap.md` (sequenza tecnica di lungo periodo, invariata).

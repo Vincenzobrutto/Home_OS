@@ -18,6 +18,7 @@ import { GenesisWizard } from './components/Genesis';
 import { EnergyConsumption } from './components/EnergyConsumption';
 import { PropertyProfile } from './components/PropertyProfile';
 import { GlobalSearch } from './components/GlobalSearch';
+import { ALPHA_MODE } from './config';
 
 type AssetWithFields = Asset & { customFields: CustomField[] };
 
@@ -200,6 +201,13 @@ export default function App() {
   async function refreshAssets() {
     if (!house) return;
     setAssets(await api.assets.listForHouse(house.id));
+    // In alpha Home Detective non ha un bottone "Aggiorna" visibile (la
+    // card Home Score è nascosta, vedi Dashboard.tsx) — il ricalcolo va
+    // quindi silenzioso, così "Da tenere d'occhio" resta aggiornata dopo
+    // ogni documento confermato senza un'azione esplicita dell'utente.
+    if (ALPHA_MODE) {
+      api.genesis.recalculateScore(house.id).catch(() => {});
+    }
   }
 
   async function refreshRooms() {
@@ -346,6 +354,7 @@ export default function App() {
             openAsset={(id) => openAsset(id, 'dashboard')}
             onOpenContact={openContact}
             onOpenGenesis={() => setView('genesis')}
+            onOpenDocuments={() => setView('inbox')}
           />
         )}
         {view === 'genesis' && (

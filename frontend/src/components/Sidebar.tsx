@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { T } from '../theme';
 import type { House } from '../types';
+import { ALPHA_MODE } from '../config';
 
 export type View =
   | 'dashboard'
@@ -67,18 +68,20 @@ export function Sidebar({
   // ricordare quale integrazione l'ha trovato.
   const items: { id: View; label: string; icon: typeof Home; badge?: number }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
-    { id: 'property-profile', label: 'Profilo casa', icon: ClipboardList },
-    { id: 'inbox', label: 'Inbox', icon: InboxIcon, badge: (gmailCandidateCount + driveCandidateCount) || undefined },
+    ...(ALPHA_MODE ? [] : [{ id: 'property-profile' as const, label: 'Profilo casa', icon: ClipboardList }]),
+    { id: 'inbox', label: ALPHA_MODE ? 'Documenti' : 'Inbox', icon: InboxIcon, badge: (gmailCandidateCount + driveCandidateCount) || undefined },
     { id: 'rooms', label: 'Ambienti', icon: DoorOpen },
     { id: 'assets', label: 'Asset', icon: Building2 },
     { id: 'house-documents', label: 'Documenti casa', icon: FileStack },
-    { id: 'energy', label: 'Energia', icon: Zap },
-    { id: 'contacts', label: 'Rubrica', icon: Users },
+    ...(ALPHA_MODE ? [] : [{ id: 'energy' as const, label: 'Energia', icon: Zap }]),
+    ...(ALPHA_MODE ? [] : [{ id: 'contacts' as const, label: 'Rubrica', icon: Users }]),
   ];
   // Voce visibile solo mentre un percorso Genesis è a metà — non NOT_STARTED
   // (si avvia dalla Dashboard) né COMPLETED (i risultati vivono in Dashboard,
-  // non serve più una voce di menu dedicata a ripetere il wizard).
-  if (house.genesisStatus === 'IN_PROGRESS' || house.genesisStatus === 'PROCESSING') {
+  // non serve più una voce di menu dedicata a ripetere il wizard). In alpha
+  // Genesis viene completato in automatico alla creazione casa (vedi
+  // Bootstrap.tsx) e non è mai un percorso di primo accesso — mai in nav.
+  if (!ALPHA_MODE && (house.genesisStatus === 'IN_PROGRESS' || house.genesisStatus === 'PROCESSING')) {
     items.splice(1, 0, { id: 'genesis', label: 'Genesis', icon: Sparkles });
   }
   return (

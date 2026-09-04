@@ -6,6 +6,7 @@ import { InboxView } from './Inbox';
 import { GmailView } from './Gmail';
 import { DriveView } from './Drive';
 import type { Asset, House, Room } from '../types';
+import { ALPHA_MODE } from '../config';
 
 export type InboxTab = 'documents' | 'gmail' | 'drive';
 
@@ -57,19 +58,22 @@ export function InboxHub({
     if (initialTab) setTab(initialTab);
   }, [initialTab]);
 
-  const tabs: { id: InboxTab; label: string; icon: typeof InboxIcon; badge?: number }[] = [
-    { id: 'documents', label: 'Documenti', icon: InboxIcon },
-    { id: 'gmail', label: 'Gmail', icon: Mail, badge: gmailCandidateCount || undefined },
-    { id: 'drive', label: 'Google Drive', icon: HardDrive, badge: driveCandidateCount || undefined },
-  ];
+  const tabs: { id: InboxTab; label: string; icon: typeof InboxIcon; badge?: number }[] = ALPHA_MODE
+    ? [{ id: 'documents', label: 'Documenti', icon: InboxIcon }]
+    : [
+        { id: 'documents', label: 'Documenti', icon: InboxIcon },
+        { id: 'gmail', label: 'Gmail', icon: Mail, badge: gmailCandidateCount || undefined },
+        { id: 'drive', label: 'Google Drive', icon: HardDrive, badge: driveCandidateCount || undefined },
+      ];
 
   return (
     <div style={{ padding: '36px 44px', maxWidth: 820 }}>
       <SectionLabel>Acquisizione documenti</SectionLabel>
       <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 26, color: T.ink, margin: '0 0 20px' }}>
-        Inbox
+        Documenti
       </h1>
 
+      {!ALPHA_MODE && (
       <div style={{ display: 'flex', gap: 4, marginBottom: 26, borderBottom: `1px solid ${T.line}` }}>
         {tabs.map((t) => {
           const Icon = t.icon;
@@ -117,6 +121,7 @@ export function InboxHub({
           );
         })}
       </div>
+      )}
 
       {tab === 'documents' && (
         <InboxView

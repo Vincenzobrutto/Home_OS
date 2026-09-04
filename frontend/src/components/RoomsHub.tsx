@@ -5,6 +5,7 @@ import { SectionLabel } from './Shared';
 import { RoomsView } from './Rooms';
 import { FloorPlanView } from './FloorPlan';
 import type { Asset, House, Room } from '../types';
+import { ALPHA_MODE } from '../config';
 
 type RoomsMode = 'blocks' | 'map';
 
@@ -38,6 +39,7 @@ export function RoomsHub({
         <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 26, color: T.ink, margin: 0 }}>
           Ambienti della casa
         </h1>
+        {!ALPHA_MODE && (
         <div style={{ display: 'flex', border: `1px solid ${T.line}`, borderRadius: 8, overflow: 'hidden' }}>
           <button
             onClick={() => setMode('blocks')}
@@ -79,9 +81,10 @@ export function RoomsHub({
             <Map size={14} /> Mappa
           </button>
         </div>
+        )}
       </div>
 
-      {mode === 'blocks' ? (
+      {ALPHA_MODE || mode === 'blocks' ? (
         <RoomsView house={house} rooms={rooms} assets={assets} openRoom={openRoom} hideHeader />
       ) : (
         <FloorPlanView
