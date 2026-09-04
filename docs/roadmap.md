@@ -42,6 +42,10 @@ UI validata con utenti reali su dati finti (`prototipo/homeos_prototype.jsx`), a
 - Nessuna regola regionale attivata: Lombardia e Piemonte richiedono ancora verifica delle fonti primarie, revisione professionale e test di confine.
 - Restano da realizzare servizio/orchestrazione, seed governato, API/UI “Stato adempimenti”, Genesis reale, Home Score v2 e navigazione semplificata.
 
+## MVP v1 — Private alpha (priorità immediata, 2026-09-04)
+
+Le Fasi 0-9 sotto restano la sequenza tecnica di lungo periodo — gran parte è già costruita, dalle Fasi 1-4 in poi (Memory Core, Affidabilità della memoria, Ricerca, Garanzie sono tutte chiuse). Ma **presentare tutto insieme a un utente reale renderebbe difficile capire quale problema Dimora risolve davvero**. Prima del prossimo lavoro tecnico secondo l'ordine di Fase, la priorità immediata è restringere cosa è *esposto* (non cosa è *costruito*) a una private alpha con 15-20 utenti reali, centrata sul flusso "carica un documento → conferma → ritrova" — vedi `docs/mvp-v1.md` per lo scope completo e `docs/backlog.md` B51-B59 per il lavoro tecnico derivato (tutto P0, gating per l'alpha). Nessuna funzionalità viene rimossa dal codice: viene nascosta dietro un flag di navigazione (B52) finché non è validata.
+
 ## Roadmap prioritaria v6
 
 La sequenza di prodotto è **Memoria della casa → Fiducia → Recupero rapido → Check-up → Compliance**. Le fondazioni normative già avviate non vengono rimosse, ma il motore compliance non deve diventare l'identità principale del prodotto né anticipare i bisogni già osservati negli utenti.

@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 — MVP v1: private alpha su upload manuale, non sul wizard Genesis
+
+- Nuovo `docs/mvp-v1.md`: fonte di verità sullo scope di rilascio per una private alpha di 15-20 utenti reali, centrata sul percorso documento → conferma → ricerca (già costruito e verificato in B47-B50). Distinto da `vision.md` (prodotto completo, invariato) e `roadmap.md` (sequenza tecnica di lungo periodo, invariata).
+- Navigazione alpha ridotta a Home · Documenti · Asset · Cerca; tutto il resto (Planimetria, Profilo casa, Energia, Rubrica come voce di nav, Home Score, Stato adempimenti, Gmail/Drive, Genesis wizard) resta nel codice ma non ancora nascosto dietro flag — quello è il lavoro tecnico derivato, non ancora iniziato.
+- Nuove voci di backlog B52-B59 (tutte P0, gating per l'alpha) e B51 anticipata da P1 a P0: flag di navigazione, cancellazione account/casa, export minimo dati, consenso privacy/AI, limiti upload, messaggi di errore AI, ingresso contatto senza Rubrica, suite e2e — ognuna verificata singolarmente nel codice attuale (non un elenco generico), vedi `decisions.md` #51.
+- Nessuna modifica al codice applicativo in questa sessione: solo documentazione di scope. L'implementazione di B52-B59 resta da fare.
+
 ## 2026-09-03 (7) — B44: Home Score v2 + Stato adempimenti separato
 
 - Home Score `HOME_SCORE_VERSION` → `v2`: la dimensione "Efficienza" (segnale debole, mai valorizzato da alcun flusso) è sostituita da "Affidabilità del record", che riusa `computeMemoryReliability` (B48) — stessa formula esatta della card "Affidabilità della memoria", mai una seconda definizione parallela.

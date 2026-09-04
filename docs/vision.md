@@ -15,6 +15,8 @@ Questa separazione evita due equivoci:
 
 Nessun materiale esterno deve presentare come disponibile una capacità classificata qui o nel backlog come futura. In particolare, trasferibilità tra proprietari, record "verificato", accesso a fonti regolatorie e marketplace non sono funzionalità attuali.
 
+**Scope di rilascio corrente**: questo documento descrive il prodotto completo così com'è costruito. Cosa viene effettivamente *mostrato* a un utente reale nella private alpha (2026-09-04) è più stretto — vedi `docs/mvp-v1.md`. Nessuna funzionalità qui descritta viene rimossa: molte restano dietro un flag di navigazione finché non validate con utenti reali sul percorso principale (documento → conferma → ritrovamento).
+
 ## Obiettivo del prodotto
 
 HomeOS crea il **"digital twin" di una casa**: raccoglie i documenti che la riguardano (fatture, certificati, manuali, planimetrie) e li collega agli elementi fisici della casa — non li archivia genericamente in una cartella.
