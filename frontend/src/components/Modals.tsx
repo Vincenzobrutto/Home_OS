@@ -69,17 +69,23 @@ export function AddAssetModal({
   rooms,
   defaultRoomId,
   onCreated,
+  onRoomsChanged,
   onClose,
 }: {
   houseId: string;
   rooms: Room[];
   defaultRoomId: string | null;
   onCreated: (asset: Asset) => void;
+  onRoomsChanged: () => void;
   onClose: () => void;
 }) {
   const [name, setName] = useState('');
   const [type, setType] = useState('ELETTRODOMESTICO');
   const [roomId, setRoomId] = useState(defaultRoomId || '');
+  // "+ Nuovo ambiente" inline, stesso principio di "+ Nuovo contatto" (B58) e
+  // di ManualClassifyProposal/AssetDocumentProposal in Inbox.tsx: non serve
+  // abbandonare la creazione dell'asset per censire prima l'ambiente altrove.
+  const [addRoomOpen, setAddRoomOpen] = useState(false);
   const [installedAt, setInstalledAt] = useState('');
   const [warrantyUntil, setWarrantyUntil] = useState('');
   const [purchasedAt, setPurchasedAt] = useState('');
@@ -158,8 +164,16 @@ export function AddAssetModal({
 
       <div style={{ marginBottom: 14 }}>
         <label style={labelStyle}>Ambiente (facoltativo)</label>
-        <select value={roomId} onChange={(e) => setRoomId(e.target.value)} style={{ ...inputStyle, appearance: 'auto' }}>
+        <select
+          value={roomId}
+          onChange={(e) => {
+            if (e.target.value === '__new__') { setAddRoomOpen(true); return; }
+            setRoomId(e.target.value);
+          }}
+          style={{ ...inputStyle, appearance: 'auto' }}
+        >
           <option value="">Nessuno — impianto di casa</option>
+          <option value="__new__">+ Nuovo ambiente…</option>
           {rooms.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name}
@@ -223,6 +237,18 @@ export function AddAssetModal({
           {saving ? 'Creazione…' : 'Crea asset'}
         </button>
       </div>
+
+      {addRoomOpen && (
+        <AddRoomModal
+          houseId={houseId}
+          onCreated={(room) => {
+            setRoomId(room.id);
+            setAddRoomOpen(false);
+            onRoomsChanged();
+          }}
+          onClose={() => setAddRoomOpen(false)}
+        />
+      )}
     </ModalShell>
   );
 }

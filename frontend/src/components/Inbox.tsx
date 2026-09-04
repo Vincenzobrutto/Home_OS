@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Camera, CheckCircle2, FileText, Globe, Sparkles, Upload, XCircle } from 'lucide-react';
 import { T, ASSET_TYPES, ROOM_TYPES } from '../theme';
 import { SectionLabel, Stamp } from './Shared';
+import { AddRoomModal } from './Modals';
 import { api } from '../api';
 import type { Asset, DocumentMaintenanceProposal, DocumentRecord, FloorPlanRoomProposal, House, PropertyProfileFields, Room, UtilityBillFields } from '../types';
 
@@ -603,11 +604,13 @@ export function InboxView({
 
               {doc.status === 'PENDING' && manualClassifyFor === doc.id && (
                 <ManualClassifyProposal
+                  houseId={houseId}
                   assets={assets}
                   rooms={rooms}
                   busy={busy}
                   onConfirm={(data) => confirm(doc.id, data)}
                   onCancel={() => setManualClassifyFor(null)}
+                  onRoomsChanged={onRoomsChanged}
                 />
               )}
 
@@ -635,6 +638,7 @@ export function InboxView({
 
               {doc.status === 'ANALYZED' && fields?.kind === 'asset_document' && (
                 <AssetDocumentProposal
+                  houseId={houseId}
                   doc={doc}
                   fields={fields}
                   assets={assets}
@@ -646,6 +650,7 @@ export function InboxView({
                   onCancelPickAsset={() => setPickingAssetFor(null)}
                   onConfirm={(data) => confirm(doc.id, data)}
                   onSearchOnline={() => searchOnline(doc.id)}
+                  onRoomsChanged={onRoomsChanged}
                 />
               )}
               {doc.status === 'ANALYZED' && fields?.kind === 'asset_document' && (fields.maintenanceInterventions?.length ?? 0) > 0 && (
@@ -737,23 +742,32 @@ function MaintenanceFromDocument({ documentId, busy, onCompleted }: { documentId
 // percorso guidato, ma senza campi estratti da mostrare — l'utente sceglie
 // direttamente asset esistente, nuovo asset, o "documento casa".
 function ManualClassifyProposal({
+  houseId,
   assets,
   rooms,
   busy,
   onConfirm,
   onCancel,
+  onRoomsChanged,
 }: {
+  houseId: string;
   assets: Asset[];
   rooms: Room[];
   busy: boolean;
   onConfirm: (data: { assetId?: string; createAssetType?: string; assetName?: string; roomId?: string; linkToHouse?: boolean; applyFields: boolean }) => void;
   onCancel: () => void;
+  onRoomsChanged: () => void;
 }) {
   const [mode, setMode] = useState<'existing' | 'new' | 'house'>('existing');
   const [assetId, setAssetId] = useState('');
   const [newAssetName, setNewAssetName] = useState('');
   const [newAssetType, setNewAssetType] = useState('');
   const [newRoomId, setNewRoomId] = useState('');
+  // "+ Nuovo ambiente" inline (stesso principio del "+ Nuovo contatto" B58):
+  // se la stanza giusta non esiste ancora, l'utente non deve abbandonare la
+  // creazione dell'asset per andare altrove — la crea qui e la ritrova già
+  // selezionata, e da quel momento compare anche in Ambienti.
+  const [addRoomOpen, setAddRoomOpen] = useState(false);
   const activeAssets = assets.filter((a) => !a.dismissedAt);
 
   const fieldStyle: React.CSSProperties = {
@@ -823,8 +837,16 @@ function ManualClassifyProposal({
               <option key={key} value={key}>{meta.label}</option>
             ))}
           </select>
-          <select value={newRoomId} onChange={(e) => setNewRoomId(e.target.value)} style={fieldStyle}>
+          <select
+            value={newRoomId}
+            onChange={(e) => {
+              if (e.target.value === '__new__') { setAddRoomOpen(true); return; }
+              setNewRoomId(e.target.value);
+            }}
+            style={fieldStyle}
+          >
             <option value="">Nessuno — impianto di casa</option>
+            <option value="__new__">+ Nuovo ambiente…</option>
             {rooms.map((r) => (
               <option key={r.id} value={r.id}>{r.name}</option>
             ))}
@@ -848,11 +870,24 @@ function ManualClassifyProposal({
       <button onClick={onCancel} style={{ display: 'block', marginTop: 10, border: 'none', background: 'none', cursor: 'pointer', color: T.slate, fontFamily: "'Inter', sans-serif", fontSize: 12 }}>
         Annulla
       </button>
+
+      {addRoomOpen && (
+        <AddRoomModal
+          houseId={houseId}
+          onCreated={(room) => {
+            setNewRoomId(room.id);
+            setAddRoomOpen(false);
+            onRoomsChanged();
+          }}
+          onClose={() => setAddRoomOpen(false)}
+        />
+      )}
     </div>
   );
 }
 
 function AssetDocumentProposal({
+  houseId,
   doc,
   fields,
   assets,
@@ -864,7 +899,9 @@ function AssetDocumentProposal({
   onCancelPickAsset,
   onConfirm,
   onSearchOnline,
+  onRoomsChanged,
 }: {
+  houseId: string;
   doc: DocumentRecord;
   fields: Extract<NonNullable<DocumentRecord['extractedFields']>, { kind: 'asset_document' }>;
   assets: Asset[];
@@ -876,6 +913,7 @@ function AssetDocumentProposal({
   onCancelPickAsset: () => void;
   onConfirm: (data: { assetId?: string; createAssetType?: string; assetName?: string; quantity?: number; roomId?: string; linkToHouse?: boolean; applyFields: boolean }) => void;
   onSearchOnline: () => void;
+  onRoomsChanged: () => void;
 }) {
   const suggestedAsset = fields.suggestedAssetId ? assets.find((a) => a.id === fields.suggestedAssetId) : null;
   const suggestedTypeMeta = fields.suggestedAssetType ? ASSET_TYPES[fields.suggestedAssetType] : null;
@@ -897,6 +935,10 @@ function AssetDocumentProposal({
   // qui evita quel giro in più per il caso comune di un elettrodomestico
   // che va chiaramente in una stanza precisa.
   const [newRoomId, setNewRoomId] = useState('');
+  // "+ Nuovo ambiente" inline, stesso principio del "+ Nuovo contatto" B58
+  // (vedi ManualClassifyProposal sopra): non serve abbandonare la creazione
+  // dell'asset per andare a censire prima l'ambiente altrove.
+  const [addRoomOpen, setAddRoomOpen] = useState(false);
 
   function startCreatingAsset() {
     setNewAssetName(fields.suggestedAssetName || suggestedTypeMeta?.label || '');
@@ -1001,11 +1043,15 @@ function AssetDocumentProposal({
             </select>
             <select
               value={newRoomId}
-              onChange={(e) => setNewRoomId(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value === '__new__') { setAddRoomOpen(true); return; }
+                setNewRoomId(e.target.value);
+              }}
               title="Ambiente in cui si trova questo elettrodomestico/impianto"
               style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, padding: '7px 10px', borderRadius: 6, border: `1px solid ${T.line}`, background: T.card }}
             >
               <option value="">Nessuno — impianto di casa</option>
+              <option value="__new__">+ Nuovo ambiente…</option>
               {rooms.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}
@@ -1106,6 +1152,18 @@ function AssetDocumentProposal({
             Collega alla casa, non a un asset
           </button>
         </div>
+      )}
+
+      {addRoomOpen && (
+        <AddRoomModal
+          houseId={houseId}
+          onCreated={(room) => {
+            setNewRoomId(room.id);
+            setAddRoomOpen(false);
+            onRoomsChanged();
+          }}
+          onClose={() => setAddRoomOpen(false)}
+        />
       )}
     </div>
   );

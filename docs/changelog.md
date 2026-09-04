@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (6) — Fix: "+ Nuovo ambiente" inline ovunque si assegna un asset a una stanza
+
+- Segnalato dall'utente dopo aver provato il fix precedente: creare il primo asset senza ambienti già censiti lo forzava comunque su "Documenti casa", scoprendo solo dopo di dover tornare indietro a creare la stanza e riassegnare l'asset.
+- Stessa opzione "+ Nuovo ambiente…" (pattern già usato per i contatti, B58) aggiunta in tutti e tre i punti dove si sceglie un ambiente per un asset: percorso manuale e percorso guidato AI in Inbox, e il form diretto "+ Aggiungi asset". Apre `AddRoomModal` sopra il form corrente, l'ambiente creato viene selezionato subito.
+- Verificato dal vivo con un quarto utente/casa usa-e-getta, incluso il caso più delicato (modal "Nuovo ambiente" annidato dentro il modal "Nuovo asset").
+- Vedi `decisions.md` #61.
+
 ## 2026-09-04 (5) — Fix: creazione ambiente possibile anche in vista Blocchi
 
 - Trovato provando l'app end-to-end come un nuovo utente reale (due sessioni di test): in alpha non esisteva alcun modo di creare un Ambiente — "Nuovo ambiente" viveva solo nella vista Mappa, disattivata da B52. Ogni asset restava quindi senza ambiente, e di conseguenza invisibile nella vista "Asset" (che filtra apposta gli asset senza stanza).

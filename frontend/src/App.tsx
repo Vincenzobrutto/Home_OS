@@ -524,6 +524,7 @@ export default function App() {
             setAddAssetOpen(false);
             await refreshAssets();
           }}
+          onRoomsChanged={refreshRooms}
           onClose={() => setAddAssetOpen(false)}
         />
       )}
