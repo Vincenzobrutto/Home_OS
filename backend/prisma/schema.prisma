@@ -359,6 +359,10 @@ model House {
   municipalityIstatCode     String?       @map("municipality_istat_code")
   cadastralSection          String?       @map("cadastral_section")
   cadastralSheet            String?       @map("cadastral_sheet")
+  // Nome regione in chiaro (es. "Lazio"), non codice ISTAT: basta per il
+  // confronto stringa in boiler-inspection-intervals.ts, niente gerarchia
+  // territoriale da costruire per questo scopo.
+  region                    String?       @map("region")
   cadastralParcel           String?       @map("cadastral_parcel")
   cadastralSubaltern        String?       @map("cadastral_subaltern")
   cadastralCategory         String?       @map("cadastral_category")
@@ -512,6 +516,10 @@ model Asset {
   supplier                 String?
   refrigerant              String?
   refrigerantChargeKg      Decimal?          @map("refrigerant_charge_kg") @db.Decimal(10, 3)
+  // Potenza in kW, significativa solo per CALDAIA (calcolo automatico
+  // dell'intervallo di controllo regionale — vedi boiler-inspection-intervals.ts),
+  // ma tenuta universale su Asset come refrigerantChargeKg sopra.
+  powerKw                  Decimal?          @map("power_kw") @db.Decimal(8, 2)
   hermeticallySealed       Boolean?          @map("hermetically_sealed")
   sealedLabelPresent       Boolean?          @map("sealed_label_present")
   leakDetectionSystem      Boolean?          @map("leak_detection_system")

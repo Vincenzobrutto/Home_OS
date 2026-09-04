@@ -14,12 +14,39 @@ import type {
   Asset,
   Contact,
   DocumentRecord,
+  House,
   MaintenanceOccurrence,
   MaintenancePlan,
   MaintenanceRecurrenceUnit,
   MaintenanceSuggestion,
 } from "../types";
 import { SectionLabel, Stamp } from "./Shared";
+
+// Stesso elenco di backend/src/houses/dto/create-house.dto.ts — deve
+// restare identico perché la regione è confrontata come stringa esatta nel
+// lookup regionale (vedi boiler-inspection-intervals.ts).
+const ITALIAN_REGIONS = [
+  "Abruzzo",
+  "Basilicata",
+  "Calabria",
+  "Campania",
+  "Emilia-Romagna",
+  "Friuli-Venezia Giulia",
+  "Lazio",
+  "Liguria",
+  "Lombardia",
+  "Marche",
+  "Molise",
+  "Piemonte",
+  "Puglia",
+  "Sardegna",
+  "Sicilia",
+  "Toscana",
+  "Trentino-Alto Adige",
+  "Umbria",
+  "Valle d'Aosta",
+  "Veneto",
+];
 
 const basedOnLabel: Record<MaintenanceSuggestion["basedOn"], string> = {
   installedAt: "data di installazione",
@@ -103,14 +130,20 @@ function recurrenceUnitLabel(unit: MaintenanceRecurrenceUnit): string {
 
 export function MaintenanceSection({
   asset,
+  house,
   contacts,
   documents,
   onChanged,
+  onAssetUpdated,
+  onHouseChanged,
 }: {
   asset: Asset;
+  house: House;
   contacts: Contact[];
   documents: DocumentRecord[];
   onChanged: () => void | Promise<void>;
+  onAssetUpdated: (asset: Asset) => void;
+  onHouseChanged: (house: House) => void;
 }) {
   const [plans, setPlans] = useState<MaintenancePlan[]>([]);
   const [suggestions, setSuggestions] = useState<MaintenanceSuggestion[]>([]);
@@ -126,6 +159,12 @@ export function MaintenanceSection({
   // il numero della guideline è solo un default prudente, non un fatto fisso,
   // quindi resta sempre modificabile qui invece che nascosto nel form finale.
   const [intervalOverrides, setIntervalOverrides] = useState<Record<string, string>>({});
+  // Regione della casa e potenza dell'impianto, per calcolare in automatico
+  // l'intervallo corretto (vedi boiler-inspection-intervals.ts) invece del
+  // default generico — precompilati con i valori già noti, se presenti.
+  const [regionInput, setRegionInput] = useState(house.region ?? "");
+  const [powerInput, setPowerInput] = useState(asset.powerKw ?? "");
+  const [savingRegional, setSavingRegional] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(initialForm);
@@ -157,6 +196,35 @@ export function MaintenanceSection({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asset.id]);
+
+  useEffect(() => {
+    setRegionInput(house.region ?? "");
+    setPowerInput(asset.powerKw ?? "");
+  }, [asset.id, house.region, asset.powerKw]);
+
+  async function resolveInterval() {
+    const powerNum = Number(powerInput);
+    if (!regionInput || !Number.isFinite(powerNum) || powerNum <= 0) return;
+    setSavingRegional(true);
+    setError(null);
+    try {
+      const [updatedHouse, updatedAsset] = await Promise.all([
+        regionInput !== house.region
+          ? api.houses.update(house.id, { region: regionInput })
+          : Promise.resolve(house),
+        String(powerNum) !== asset.powerKw
+          ? api.assets.update(asset.id, { powerKw: powerNum })
+          : Promise.resolve(asset),
+      ]);
+      onHouseChanged(updatedHouse);
+      onAssetUpdated(updatedAsset);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Salvataggio non riuscito");
+    } finally {
+      setSavingRegional(false);
+    }
+  }
 
   // L'intervallo corretto a mano dall'utente, se presente e valido — altrimenti
   // il default della guideline. Mai bloccante: un numero non valido ricade
@@ -394,10 +462,63 @@ export function MaintenanceSection({
                     />{" "}
                     {recurrenceUnitLabel(suggestion.recurrenceUnit)}
                   </div>
-                  {suggestion.isMandatory && (
-                    <div style={{ fontSize: 11.5, color: T.ink70, marginTop: 3 }}>
-                      La cadenza reale dipende da regione e potenza dell'impianto (es. Lazio: 4 anni tra 10-100kW, 2 anni sopra; Lombardia: 2 anni sotto i 35kW) — il numero sopra è solo un default, correggilo se conosci la normativa della tua zona.
-                    </div>
+                  {suggestion.regionalLookupAvailable ? (
+                    suggestion.resolvedIntervalSource ? (
+                      <div style={{ fontSize: 11.5, color: T.ink70, marginTop: 3 }}>
+                        Intervallo calcolato da:{" "}
+                        <a
+                          href={suggestion.resolvedIntervalSource.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: T.pine }}
+                        >
+                          {suggestion.resolvedIntervalSource.title}
+                        </a>
+                        . Resta comunque modificabile sopra se ritieni sia cambiato qualcosa.
+                      </div>
+                    ) : (
+                      <div style={{ marginTop: 6 }}>
+                        <div style={{ fontSize: 11.5, color: T.ink70, marginBottom: 5 }}>
+                          La cadenza reale dipende da regione e potenza dell'impianto — indicale per calcolare l'intervallo corretto (o correggi tu il numero sopra).
+                        </div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                          <select
+                            style={{ ...inputStyle, width: "auto", display: "inline-block" }}
+                            value={regionInput}
+                            onChange={(e) => setRegionInput(e.target.value)}
+                          >
+                            <option value="">Regione…</option>
+                            {ITALIAN_REGIONS.map((region) => (
+                              <option key={region} value={region}>
+                                {region}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.1"
+                            placeholder="Potenza kW"
+                            style={{ ...inputStyle, width: 90, display: "inline-block" }}
+                            value={powerInput}
+                            onChange={(e) => setPowerInput(e.target.value)}
+                          />
+                          <button
+                            onClick={resolveInterval}
+                            disabled={savingRegional || !regionInput || !powerInput}
+                            style={smallButtonStyle}
+                          >
+                            {savingRegional ? "Calcolo…" : "Calcola intervallo"}
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    suggestion.isMandatory && (
+                      <div style={{ fontSize: 11.5, color: T.ink70, marginTop: 3 }}>
+                        La cadenza reale può dipendere dalla normativa della tua regione — il numero sopra è solo un default, correggilo se conosci quello giusto.
+                      </div>
+                    )
                   )}
                   {suggestion.basedOn === "createdAt" ? (
                     <div style={{ marginTop: 8 }}>

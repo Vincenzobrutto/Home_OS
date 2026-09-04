@@ -2,6 +2,14 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (13) — Intervallo controllo caldaia calcolato automaticamente da regione + potenza
+
+- Aggiunte due colonne nullable `House.region` e `Asset.powerKw` (migrazione `20260904124000_add_house_region_and_asset_power_kw`) e una tabella di lookup sourced (`backend/src/common/boiler-inspection-intervals.ts`, oggi Lazio + Lombardia) che sostituisce il default fisso della guideline `caldaia-controllo` con l'intervallo corretto quando regione e potenza sono entrambe note.
+- Verificato su fonte primaria (DPR 74/2013, Allegato A, testo Bosetti & Gatti) che **l'età dell'impianto non è un fattore reale** per la cadenza ordinaria dei generatori a gas — l'unico riferimento all'anzianità nel decreto riguarda solo la priorità delle ispezioni straordinarie delle autorità, non la cadenza che il proprietario deve rispettare. Deliberatamente escluso dal calcolo.
+- `Maintenance.tsx`: quando il calcolo è disponibile ma non ancora risolto, la card mostra un selettore regione + input potenza (kW) + pulsante "Calcola intervallo"; una volta risolto, mostra la fonte normativa citata con link. Il campo "Ogni N anni" (già editabile, vedi entry (12)) resta sempre modificabile.
+- Nuovi campi DTO (`region` con `@IsIn` sulle 20 regioni italiane, `powerKw` stesso pattern di `refrigerantChargeKg`) e test in `maintenance-guidelines.spec.ts` (Lazio 24kW→4 anni, Lombardia 24kW→2 anni, fallback al default se regione/potenza mancanti). Vedi `decisions.md` #66.
+- Verificato dal vivo con un utente/casa/asset CALDAIA usa-e-getta: prompt iniziale, calcolo Lazio→4 anni con fonte citata, ricalcolo Lombardia→2 anni, campo intervallo rimasto modificabile.
+
 ## 2026-09-04 (12) — Intervallo di manutenzione modificabile, non più un numero fisso
 
 - Verificata la normativa Lazio reale (Regolamento regionale 23/12/2020 n. 30, art. 12 c.3): caldaie a gas 10-100kW ogni 4 anni, ≥100kW ogni 2 anni — diverge dalla Lombardia (2 anni sotto i 35kW) già citata nel codice. Le due fonti primarie divergono per la stessa fascia domestica tipica: non esiste un unico numero corretto senza sapere la regione.

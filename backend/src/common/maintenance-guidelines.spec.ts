@@ -80,4 +80,69 @@ describe('maintenance suggestion guidelines', () => {
     });
     expect(suggestions.map((s) => s.code)).toEqual(['clima-filtri']);
   });
+
+  it('resolves the boiler control interval from region + power when both are known (Lazio, 4 years)', () => {
+    const suggestions = computeMaintenanceSuggestions({
+      assetType: 'CALDAIA',
+      installedAt: new Date('2026-01-01T00:00:00Z'),
+      purchasedAt: null,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      existingPlanTitles: [],
+      region: 'Lazio',
+      powerKw: 24,
+    });
+    const boiler = suggestions.find((s) => s.code === 'caldaia-controllo');
+    expect(boiler?.recurrenceInterval).toBe(4);
+    expect(boiler?.regionalLookupAvailable).toBe(true);
+    expect(boiler?.resolvedIntervalSource?.title).toContain('Lazio');
+    expect(boiler?.suggestedNextDueAt).toEqual(
+      new Date('2030-01-01T00:00:00Z'),
+    );
+  });
+
+  it('resolves a different boiler control interval for the same power in Lombardia (2 years)', () => {
+    const suggestions = computeMaintenanceSuggestions({
+      assetType: 'CALDAIA',
+      installedAt: new Date('2026-01-01T00:00:00Z'),
+      purchasedAt: null,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      existingPlanTitles: [],
+      region: 'Lombardia',
+      powerKw: 24,
+    });
+    const boiler = suggestions.find((s) => s.code === 'caldaia-controllo');
+    expect(boiler?.recurrenceInterval).toBe(2);
+    expect(boiler?.resolvedIntervalSource?.title).toContain('Lombardia');
+  });
+
+  it('falls back to the generic default when region or power is unknown, without breaking other guidelines', () => {
+    const noPower = computeMaintenanceSuggestions({
+      assetType: 'CALDAIA',
+      installedAt: new Date('2026-01-01T00:00:00Z'),
+      purchasedAt: null,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      existingPlanTitles: [],
+      region: 'Lazio',
+      powerKw: null,
+    });
+    const boilerNoPower = noPower.find((s) => s.code === 'caldaia-controllo');
+    expect(boilerNoPower?.recurrenceInterval).toBe(2);
+    expect(boilerNoPower?.regionalLookupAvailable).toBe(true);
+    expect(boilerNoPower?.resolvedIntervalSource).toBeNull();
+
+    const unknownRegion = computeMaintenanceSuggestions({
+      assetType: 'CALDAIA',
+      installedAt: new Date('2026-01-01T00:00:00Z'),
+      purchasedAt: null,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      existingPlanTitles: [],
+      region: 'Toscana',
+      powerKw: 24,
+    });
+    const boilerUnknownRegion = unknownRegion.find(
+      (s) => s.code === 'caldaia-controllo',
+    );
+    expect(boilerUnknownRegion?.recurrenceInterval).toBe(2);
+    expect(boilerUnknownRegion?.resolvedIntervalSource).toBeNull();
+  });
 });

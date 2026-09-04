@@ -59,6 +59,9 @@ export interface House {
   fieldProvenance?: FieldProvenance[];
   genesisStatus: GenesisStatus;
   genesisStep: GenesisStep;
+  // Nome regione in chiaro (es. "Lazio") — usato per calcolare in automatico
+  // l'intervallo di controllo caldaia corretto. Vedi Maintenance.tsx.
+  region: string | null;
 }
 
 export interface ScanSessionRecord {
@@ -245,6 +248,9 @@ export interface Asset {
   supplier: string | null;
   refrigerant: string | null;
   refrigerantChargeKg: string | null;
+  // Potenza in kW, significativa solo per CALDAIA — usata per calcolare
+  // l'intervallo di controllo regionale. Vedi Maintenance.tsx.
+  powerKw: string | null;
   hermeticallySealed: boolean | null;
   sealedLabelPresent: boolean | null;
   leakDetectionSystem: boolean | null;
@@ -467,6 +473,13 @@ export interface MaintenanceSuggestion {
   isMandatory: boolean;
   suggestedNextDueAt: string;
   basedOn: 'installedAt' | 'purchasedAt' | 'createdAt';
+  // true solo per guideline con lookup regionale disponibile (oggi solo
+  // caldaia-controllo) — segnala che si può proporre regione/potenza per
+  // calcolare l'intervallo corretto invece del default generico.
+  regionalLookupAvailable?: boolean;
+  // Presente solo quando regione+potenza erano note e il calcolo è
+  // avvenuto: intervallo e descrizione sono già quelli calcolati.
+  resolvedIntervalSource?: { title: string; url: string } | null;
 }
 
 export interface MaintenanceReminder extends MaintenancePlan {

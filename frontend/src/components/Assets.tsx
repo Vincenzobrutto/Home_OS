@@ -390,6 +390,7 @@ function StructuredFieldProvenance({ asset, fieldName }: { asset: Asset; fieldNa
 export function AssetDetail({
   asset,
   assets,
+  house,
   room,
   rooms,
   contacts,
@@ -402,9 +403,12 @@ export function AssetDetail({
   onDismiss,
   onReactivate,
   onContactsChanged,
+  onAssetUpdated,
+  onHouseChanged,
 }: {
   asset: Asset & { customFields?: CustomField[] };
   assets: Asset[];
+  house: House;
   room?: Room;
   rooms: Room[];
   contacts: Contact[];
@@ -419,6 +423,10 @@ export function AssetDetail({
   // L'assegnazione di un contatto qui cambia il conteggio "N interventi"
   // mostrato in Rubrica: va rinfrescata lì, non solo nella timeline locale.
   onContactsChanged: () => void;
+  // Calcolo automatico dell'intervallo di controllo caldaia (regione+potenza)
+  // scrive su Asset/House: entrambe le callback aggiornano lo stato in App.tsx.
+  onAssetUpdated: (asset: Asset) => void;
+  onHouseChanged: (house: House) => void;
 }) {
   const meta = ASSET_TYPES[asset.type];
   const Icon = iconForAsset(asset);
@@ -842,12 +850,15 @@ export function AssetDetail({
 
       <MaintenanceSection
         asset={asset}
+        house={house}
         contacts={contacts}
         documents={documents}
         onChanged={async () => {
           await refreshTimeline();
           onContactsChanged();
         }}
+        onAssetUpdated={onAssetUpdated}
+        onHouseChanged={onHouseChanged}
       />
 
       <SectionLabel>Documenti</SectionLabel>

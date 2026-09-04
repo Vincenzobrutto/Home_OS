@@ -232,7 +232,7 @@ export class MaintenanceService {
   async suggestionsForAsset(userId: string, assetId: string) {
     const asset = await this.assetOrThrow(userId, assetId);
     if (asset.dismissedAt) return [];
-    const [existingPlans, dismissed] = await Promise.all([
+    const [existingPlans, dismissed, house] = await Promise.all([
       this.prisma.maintenancePlan.findMany({
         where: { assetId },
         select: { title: true },
@@ -240,6 +240,10 @@ export class MaintenanceService {
       this.prisma.dismissedMaintenanceSuggestion.findMany({
         where: { assetId },
         select: { guidelineCode: true },
+      }),
+      this.prisma.house.findUnique({
+        where: { id: asset.houseId },
+        select: { region: true },
       }),
     ]);
     return computeMaintenanceSuggestions({
@@ -249,6 +253,8 @@ export class MaintenanceService {
       createdAt: asset.createdAt,
       existingPlanTitles: existingPlans.map((plan) => plan.title),
       dismissedGuidelineCodes: dismissed.map((d) => d.guidelineCode),
+      region: house?.region,
+      powerKw: asset.powerKw != null ? Number(asset.powerKw) : null,
     });
   }
 

@@ -72,6 +72,14 @@ export class CreateAssetDto {
   @Min(0)
   refrigerantChargeKg?: number;
 
+  // Significativa solo per CALDAIA (calcolo automatico dell'intervallo di
+  // controllo regionale), ma universale su Asset come refrigerantChargeKg.
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  powerKw?: number;
+
   @IsOptional()
   @IsBoolean()
   hermeticallySealed?: boolean;

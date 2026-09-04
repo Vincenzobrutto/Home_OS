@@ -1,5 +1,6 @@
 import { AssetType, MaintenanceRecurrenceUnit } from '@prisma/client';
 import { addCalendarMonths } from './maintenance';
+import { lookupBoilerInterval } from './boiler-inspection-intervals';
 
 // Linee guida generiche per tipo di Asset — non sostituiscono il libretto
 // specifico del prodotto/impianto, sono un punto di partenza ragionevole
@@ -124,6 +125,15 @@ export type MaintenanceSuggestionBasis =
 export interface MaintenanceSuggestion extends MaintenanceGuideline {
   suggestedNextDueAt: Date;
   basedOn: MaintenanceSuggestionBasis;
+  // true solo per guideline che hanno una tabella di lookup regionale
+  // disponibile (oggi solo caldaia-controllo) — segnala al frontend che
+  // può proporre l'inserimento di regione/potenza per calcolare
+  // l'intervallo corretto invece del default generico.
+  regionalLookupAvailable?: boolean;
+  // Presente solo quando regione+potenza erano note e il lookup ha
+  // trovato una regola: intervallo e descrizione sono già quelli
+  // calcolati, non il default.
+  resolvedIntervalSource?: { title: string; url: string } | null;
 }
 
 // Confronto solo per titolo: stesso approccio "buono ma non perfetto" già
@@ -137,6 +147,8 @@ export function computeMaintenanceSuggestions(params: {
   createdAt: Date;
   existingPlanTitles: string[];
   dismissedGuidelineCodes?: string[];
+  region?: string | null;
+  powerKw?: number | null;
 }): MaintenanceSuggestion[] {
   const basisDate =
     params.installedAt ?? params.purchasedAt ?? params.createdAt;
@@ -157,15 +169,28 @@ export function computeMaintenanceSuggestions(params: {
       (guideline) => !existingTitles.has(guideline.title.trim().toLowerCase()),
     )
     .filter((guideline) => !dismissedCodes.has(guideline.code))
-    .map((guideline) => ({
-      ...guideline,
-      suggestedNextDueAt: addInterval(
-        basisDate,
-        guideline.recurrenceUnit,
-        guideline.recurrenceInterval,
-      ),
-      basedOn,
-    }));
+    .map((guideline) => {
+      const isBoilerControl = guideline.code === 'caldaia-controllo';
+      const resolved = isBoilerControl
+        ? lookupBoilerInterval(params.region, params.powerKw)
+        : null;
+      const recurrenceInterval = resolved
+        ? resolved.years
+        : guideline.recurrenceInterval;
+
+      return {
+        ...guideline,
+        recurrenceInterval,
+        suggestedNextDueAt: addInterval(
+          basisDate,
+          guideline.recurrenceUnit,
+          recurrenceInterval,
+        ),
+        basedOn,
+        regionalLookupAvailable: isBoilerControl,
+        resolvedIntervalSource: resolved ? resolved.source : null,
+      };
+    });
 }
 
 function addInterval(

@@ -90,7 +90,7 @@ export const api = {
   houses: {
     get: (id: string) => request<House & { rooms: Room[]; assets: Asset[] }>(`/houses/${id}`),
     create: (data: { name: string; city?: string; surfaceSqm?: number; roomsCount?: number; buildYear?: number }) => request<House>('/houses', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: Partial<{ floorPlanRotation: number }>) =>
+    update: (id: string, data: Partial<{ floorPlanRotation: number; region: string }>) =>
       request<House>(`/houses/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
@@ -156,6 +156,7 @@ export const api = {
         supplier: string;
         planPosX: number;
         planPosY: number;
+        powerKw: number;
       }>,
     ) =>
       request<Asset>(`/assets/${id}`, {

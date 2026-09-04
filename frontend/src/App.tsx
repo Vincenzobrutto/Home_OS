@@ -476,6 +476,7 @@ export default function App() {
           <AssetDetail
             asset={selectedAsset}
             assets={assets}
+            house={house}
             room={rooms.find((r) => r.id === selectedAsset.roomId)}
             rooms={rooms}
             contacts={contacts}
@@ -488,6 +489,10 @@ export default function App() {
             onDismiss={dismissAsset}
             onReactivate={reactivateAsset}
             onContactsChanged={refreshContacts}
+            onAssetUpdated={(updated) =>
+              setAssets((prev) => prev.map((a) => (a.id === updated.id ? { ...a, ...updated } : a)))
+            }
+            onHouseChanged={setHouse}
           />
         )}
         {view === 'asset-detail' && !selectedAsset && (
