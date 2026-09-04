@@ -2,6 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (11) — Manutenzione obbligatoria: data di riferimento onesta quando sconosciuta
+
+- Partendo da una richiesta di verifiche normative regionali (accantonata per ora, restava troppo lavoro per collegare `RegulatoryRule`/territorio — vedi ricognizione in questa sessione, B42 in backlog), ridotta all'esigenza reale: quando un asset (es. caldaia) non ha né data di installazione né di acquisto, il suggerimento di manutenzione obbligatoria usava silenziosamente "oggi" come base, mostrando una scadenza fittizia (es. "tra 2 anni" per un impianto che potrebbe già essere scaduto).
+- `Maintenance.tsx`: quando `basedOn === 'createdAt'`, la card mostra ora un messaggio esplicito e un campo per indicare a mano l'ultima manutenzione — la scadenza proposta si ricalcola dal vivo da quella data, non da "oggi". Nessuna scrittura su `Asset.installedAt` (sarebbe un dato diverso e falsato); il form di conferma resta comunque editabile come sempre.
+- Nessuna modifica a backend/schema. Verificato dal vivo con un utente/casa usa-e-getta.
+
 ## 2026-09-04 (10) — Card Asset/Ambienti più grafiche, sfondo a gradiente, filtro per ambiente
 
 - Su richiesta dell'utente (screenshot di riferimento di un'app smart-home, ambito scelto tra 4 opzioni proposte): nuovo sfondo a gradiente chiaro (`T.appBg`, stessa famiglia cromatica del brand) su App/Login/Bootstrap/Consenso; `T.paper` invariato altrove.

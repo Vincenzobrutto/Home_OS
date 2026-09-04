@@ -81,6 +81,22 @@ function recurrenceLabel(entry: {
   return `Ogni ${entry.recurrenceInterval} ${unit}`;
 }
 
+// Replica minimale di addInterval (backend/src/common/maintenance-guidelines.ts):
+// non importabile da qui (pacchetto frontend separato). Le guideline attuali
+// usano solo YEAR/MONTH con interi pieni, quindi setFullYear/setMonth bastano
+// — nessun edge case di overflow fine mese da gestire come nel backend.
+function addRecurrence(
+  date: Date,
+  unit: MaintenanceRecurrenceUnit,
+  interval: number,
+): Date {
+  const result = new Date(date);
+  if (unit === "DAY") result.setUTCDate(result.getUTCDate() + interval);
+  else if (unit === "MONTH") result.setUTCMonth(result.getUTCMonth() + interval);
+  else if (unit === "YEAR") result.setUTCFullYear(result.getUTCFullYear() + interval);
+  return result;
+}
+
 export function MaintenanceSection({
   asset,
   contacts,
@@ -94,6 +110,11 @@ export function MaintenanceSection({
 }) {
   const [plans, setPlans] = useState<MaintenancePlan[]>([]);
   const [suggestions, setSuggestions] = useState<MaintenanceSuggestion[]>([]);
+  // Data dell'ultima manutenzione inserita a mano, per suggerimento (chiave
+  // guideline.code) — solo quando basedOn è "createdAt", cioè quando non
+  // conosciamo davvero nessuna data e altrimenti proporremmo una scadenza
+  // calcolata da "oggi" come se fosse un dato reale.
+  const [manualBasisDates, setManualBasisDates] = useState<Record<string, string>>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(initialForm);
@@ -135,12 +156,23 @@ export function MaintenanceSection({
 
   function openFromSuggestion(suggestion: MaintenanceSuggestion) {
     setEditingId(null);
+    // Se l'utente ha indicato a mano l'ultima manutenzione (perché
+    // basedOn === "createdAt", vedi sotto), la scadenza proposta si calcola
+    // da quella data reale invece che dalla data di creazione della scheda.
+    const manualBasis = manualBasisDates[suggestion.code]
+      ? parseDateInput(manualBasisDates[suggestion.code])
+      : undefined;
+    const nextDueAt = manualBasis
+      ? addRecurrence(new Date(manualBasis), suggestion.recurrenceUnit, suggestion.recurrenceInterval)
+          .toISOString()
+          .slice(0, 10)
+      : suggestion.suggestedNextDueAt.slice(0, 10);
     setForm({
       title: suggestion.title,
       description: suggestion.description ?? "",
       recurrenceUnit: suggestion.recurrenceUnit,
       recurrenceInterval: String(suggestion.recurrenceInterval),
-      nextDueAt: suggestion.suggestedNextDueAt.slice(0, 10),
+      nextDueAt,
       reminderDaysBefore: String(suggestion.reminderDaysBefore),
       preferredContactId: "",
       isMandatory: suggestion.isMandatory,
@@ -305,12 +337,43 @@ export function MaintenanceSection({
                       {suggestion.description}
                     </div>
                   )}
-                  <div style={{ fontSize: 12, color: T.slate, marginTop: 5 }}>
-                    Prima scadenza proposta{" "}
-                    {formatDateForDisplay(suggestion.suggestedNextDueAt)} ·{" "}
-                    {recurrenceLabel(suggestion)} · basata su{" "}
-                    {basedOnLabel[suggestion.basedOn]}
-                  </div>
+                  {suggestion.basedOn === "createdAt" ? (
+                    <div style={{ marginTop: 8 }}>
+                      <div style={{ fontSize: 12, color: T.ochreDeep, marginBottom: 6 }}>
+                        Non conosciamo la data dell'ultima manutenzione (né quella di installazione): indicala per calcolare la scadenza corretta — {recurrenceLabel(suggestion)} da quella data.
+                      </div>
+                      <input
+                        style={{ ...inputStyle, maxWidth: 170, display: "inline-block" }}
+                        placeholder="gg/mm/aaaa ultima manutenzione"
+                        value={manualBasisDates[suggestion.code] ?? ""}
+                        onChange={(e) =>
+                          setManualBasisDates((current) => ({
+                            ...current,
+                            [suggestion.code]: e.target.value,
+                          }))
+                        }
+                      />
+                      {parseDateInput(manualBasisDates[suggestion.code] ?? "") && (
+                        <div style={{ fontSize: 12, color: T.slate, marginTop: 6 }}>
+                          Prossima scadenza:{" "}
+                          {formatDateForDisplay(
+                            addRecurrence(
+                              new Date(parseDateInput(manualBasisDates[suggestion.code] ?? "")!),
+                              suggestion.recurrenceUnit,
+                              suggestion.recurrenceInterval,
+                            ).toISOString(),
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 12, color: T.slate, marginTop: 5 }}>
+                      Prima scadenza proposta{" "}
+                      {formatDateForDisplay(suggestion.suggestedNextDueAt)} ·{" "}
+                      {recurrenceLabel(suggestion)} · basata su{" "}
+                      {basedOnLabel[suggestion.basedOn]}
+                    </div>
+                  )}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 7, marginTop: 10 }}>
