@@ -135,4 +135,20 @@ export class AuthService {
   async logout(sessionId: string): Promise<void> {
     await this.prisma.session.deleteMany({ where: { id: sessionId } });
   }
+
+  // Ordine obbligato: House.owner/HouseMembership.user non hanno un
+  // onDelete esplicito verso User (Restrict di default) — cancellare
+  // l'utente prima fallirebbe con un vincolo di integrità finché possiede
+  // ancora una casa. Le case possedute cascano su tutto il loro contenuto
+  // (17 tabelle con houseId diretto, tutte già Cascade/SetNull nello
+  // schema — vedi decisions.md #53), quindi non serve altra pulizia.
+  async deleteAccount(userId: string): Promise<void> {
+    await this.prisma.$transaction([
+      this.prisma.house.deleteMany({ where: { ownerId: userId } }),
+      // Difensivo: membership su case non possedute (condivisione B12,
+      // oggi sempre vuoto perché ogni casa ha un solo membro OWNER).
+      this.prisma.houseMembership.deleteMany({ where: { userId } }),
+      this.prisma.user.delete({ where: { id: userId } }),
+    ]);
+  }
 }

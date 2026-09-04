@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -38,6 +41,15 @@ export class HousesController {
     @Body() dto: UpdateHouseDto,
   ) {
     return this.housesService.update(req.user.id, id, dto);
+  }
+
+  @Delete('houses/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.housesService.remove(req.user.id, id);
   }
 
   @Patch('houses/:id/property-profile')

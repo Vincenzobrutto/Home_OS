@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService, type AuthResult } from './auth.service';
 import { AccountStatusDto } from './dto/account-status.dto';
@@ -83,5 +93,16 @@ export class AuthController {
   @Get('me')
   me(@Req() req: AuthenticatedRequest) {
     return sanitizeUser(req.user);
+  }
+
+  @Delete('me')
+  @HttpCode(HttpStatus.OK)
+  async deleteAccount(
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.deleteAccount(req.user.id);
+    res.clearCookie(SESSION_COOKIE, { path: '/' });
+    return { success: true };
   }
 }

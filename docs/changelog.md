@@ -2,6 +2,15 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (3) — B53: Cancellazione account e casa
+
+- `DELETE /houses/:id` (204): nuovo `AccessControlService.assertHouseOwner` verifica il ruolo OWNER (non solo l'accesso), poi `prisma.house.delete` — nessuna pulizia preliminare, la cascata già esistente su tutte le tabelle collegate a `House` se ne occupa da sola.
+- `DELETE /auth/me` (200): `AuthService.deleteAccount` cancella in una transazione le case possedute, le membership residue e infine l'utente, in quest'ordine (obbligato: `House.owner`/`HouseMembership.user` sono `Restrict` verso `User`, non `Cascade`).
+- Frontend: link "Elimina account" nel footer della Sidebar (stile destructive coerente con Asset/Contatto/Ambiente), `window.confirm` esplicito, nessuna nuova UI per "elimina solo la casa" (fuori scope, vedi `decisions.md` #53).
+- Test unitari nuovi: `access-control.service.spec.ts`, `houses.service.spec.ts`, `auth.service.spec.ts`. Backend build/test/lint puliti (106/106 test).
+- Verificato dal vivo con utenti/case usa-e-getta (mai la casa reale né la demo): cascata completa su `DELETE /houses/:id`, cascata account su `DELETE /auth/me`, 403 per un non-owner. Link "Elimina account" verificato presente sulla Sidebar reale senza cliccarlo.
+- Chiude B53 nel backlog MVP.
+
 ## 2026-09-04 (2) — B52: Flag di navigazione per la private alpha
 
 - Nuovo `frontend/src/config.ts` (`ALPHA_MODE`, `ALPHA_VISIBLE_RULE_CODES`): unica costante che nasconde Profilo casa, Energia, Rubrica (voce di nav), Planimetria, tab Gmail/Drive, Home Score/trend, Affidabilità della memoria, Stato adempimenti. "Inbox" rinominata "Documenti" in Sidebar e nel titolo della vista.

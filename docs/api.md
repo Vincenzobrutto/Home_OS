@@ -13,6 +13,7 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/auth/set-password` | `{ email, password }` — solo per account creati prima dell'introduzione dell'autenticazione (`passwordHash` ancora null); non utilizzabile se una password è già impostata |
 | POST | `/auth/logout` | invalida la sessione corrente (cancella la riga `Session`) e il cookie |
 | GET | `/auth/me` | utente della sessione corrente, 401 se assente/scaduta |
+| DELETE | `/auth/me` | cancella l'account: le case possedute (cascata su tutto il contenuto), le membership residue, poi l'utente (cascata `Session`/`GmailConnection`/`DriveConnection`); invalida il cookie. Irreversibile, vedi `decisions.md` #53 |
 
 ## Houses
 | Metodo | Path | Note |
@@ -20,6 +21,7 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 | POST | `/houses` | crea casa (owner = utente della sessione, non più un `ownerId` nel body), genera `code` (`CASA-####`) e la `HouseMembership` `OWNER` |
 | GET | `/houses/:id` | dettaglio |
 | PATCH | `/houses/:id` | anche `floorPlanRotation` |
+| DELETE | `/houses/:id` | solo l'utente con ruolo `OWNER` (403 altrimenti); cancella la casa e tutto il contenuto via cascata già esistente a livello di schema, nessuna pulizia applicativa. Irreversibile, vedi `decisions.md` #53 |
 | PATCH | `/houses/:id/property-profile` | modifica esplicita del profilo; registra provenienza `DECLARED` solo per i valori realmente cambiati |
 | GET | `/houses` | case dell'utente della sessione corrente (era `/users/:userId/houses`) |
 

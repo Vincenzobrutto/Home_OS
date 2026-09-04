@@ -35,4 +35,20 @@ export class AccessControlService implements OnModuleInit {
       throw new ForbiddenException('Non hai accesso a questa casa.');
     }
   }
+
+  // Per azioni distruttive (B53: cancellazione casa) serve più del semplice
+  // accesso: oggi ogni casa ha un solo membro con ruolo OWNER, ma il
+  // controllo esplicito evita un buco di sicurezza quando arriverà la
+  // condivisione multi-utente (B12) e un MEMBER/VIEWER non dovrà poter
+  // cancellare la casa di qualcun altro.
+  async assertHouseOwner(userId: string, houseId: string): Promise<void> {
+    const membership = await this.prisma.houseMembership.findUnique({
+      where: { houseId_userId: { houseId, userId } },
+    });
+    if (!membership || membership.role !== 'OWNER') {
+      throw new ForbiddenException(
+        'Solo il proprietario può eliminare questa casa.',
+      );
+    }
+  }
 }

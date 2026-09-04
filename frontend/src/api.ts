@@ -84,6 +84,7 @@ export const api = {
         return null;
       }
     },
+    deleteAccount: () => request<{ success: boolean }>('/auth/me', { method: 'DELETE' }),
   },
   houses: {
     get: (id: string) => request<House & { rooms: Room[]; assets: Asset[] }>(`/houses/${id}`),
@@ -93,6 +94,7 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
+    remove: (id: string) => request<void>(`/houses/${id}`, { method: 'DELETE' }),
     updatePropertyProfile: (id: string, data: Record<string, string | number | null>) =>
       request<House>(`/houses/${id}/property-profile`, {
         method: 'PATCH',

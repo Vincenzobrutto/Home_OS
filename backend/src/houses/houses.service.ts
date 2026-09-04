@@ -74,6 +74,14 @@ export class HousesService {
     return this.prisma.house.update({ where: { id }, data: dto });
   }
 
+  // Nessuna pulizia preliminare necessaria: ogni tabella collegata a House
+  // (17 con houseId diretto, più le relazioni di secondo livello) ha già
+  // onDelete Cascade/SetNull a livello di schema — vedi decisions.md #53.
+  async remove(userId: string, id: string): Promise<void> {
+    await this.accessControl.assertHouseOwner(userId, id);
+    await this.prisma.house.delete({ where: { id } });
+  }
+
   async updatePropertyProfile(
     userId: string,
     id: string,

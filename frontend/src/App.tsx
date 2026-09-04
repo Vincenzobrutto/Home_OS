@@ -148,6 +148,21 @@ export default function App() {
     setView('dashboard');
   }
 
+  async function handleDeleteAccount() {
+    if (
+      !window.confirm(
+        "Eliminare definitivamente il tuo account? Tutti i dati della tua casa (documenti, Asset, interventi, garanzie, cronologia) verranno cancellati. L'operazione non è reversibile.",
+      )
+    ) {
+      return;
+    }
+    await api.auth.deleteAccount();
+    setCurrentUser(null);
+    setHouse(null);
+    setNeedsBootstrap(false);
+    setView('dashboard');
+  }
+
   // Il redirect di ritorno da Google (auth/gmail|drive/callback) atterra qui
   // con ?gmail= o ?drive=connected|error: apriamo Inbox sul tab giusto e
   // ripuliamo l'URL così un refresh della pagina non ripete la stessa
@@ -329,6 +344,7 @@ export default function App() {
         onNavigate={() => setMobileNavOpen(false)}
         onLogout={handleLogout}
         onOpenSearch={() => setSearchOpen(true)}
+        onDeleteAccount={handleDeleteAccount}
       />
       {searchOpen && (
         <GlobalSearch
