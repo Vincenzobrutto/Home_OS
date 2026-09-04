@@ -26,7 +26,7 @@ export function ConsentScreen({ onConsented }: { onConsented: (user: User) => vo
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.paper, padding: 20 }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.appBg, padding: 20 }}>
       <div style={{ width: 480, maxWidth: '100%', background: T.card, border: `1px solid ${T.line}`, borderRadius: 14, padding: '30px 32px' }}>
         <SectionLabel>Prima di iniziare</SectionLabel>
         <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 22, color: T.ink, margin: '0 0 16px 0' }}>

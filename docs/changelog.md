@@ -2,6 +2,15 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (10) — Card Asset/Ambienti più grafiche, sfondo a gradiente, filtro per ambiente
+
+- Su richiesta dell'utente (screenshot di riferimento di un'app smart-home, ambito scelto tra 4 opzioni proposte): nuovo sfondo a gradiente chiaro (`T.appBg`, stessa famiglia cromatica del brand) su App/Login/Bootstrap/Consenso; `T.paper` invariato altrove.
+- Card Asset/Ambienti ridisegnate: icona più grande su tinta colorata dell'8%, stato mostrato come testo colorato in grassetto sotto il nome.
+- Nuova barra di filtro orizzontale per ambiente in "Asset della casa".
+- Esclusa esplicitamente dall'utente la nav in basso al posto della sidebar — non toccata.
+- Verificato dal vivo con un nono utente/casa usa-e-getta. Build/lint frontend puliti.
+- Vedi `decisions.md` #65.
+
 ## 2026-09-04 (9) — Suggerimenti ambiente ampliati, numerazione automatica sui duplicati
 
 - Su richiesta dell'utente: i suggerimenti in "Nuovo ambiente" passano da 4 a 13 nomi comuni (Cucina, Soggiorno, Camera da letto, Cameretta, Bagno, Corridoio, Ingresso, Studio, Lavanderia, Ripostiglio, Cantina, Garage, Terrazzo), ognuno mappato al tipo esistente più vicino — nessuna modifica allo schema.

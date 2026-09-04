@@ -40,6 +40,12 @@ export const T = {
   line: '#DCDED2',
   card: '#FFFFFF',
   slate: '#5C6B62',
+  // Sfondo dell'app: un gradiente chiaro (non lo sfondo scuro/saturo di app
+  // smart-home tipo Tuya/SmartThings) — il testo scuro (T.ink) usato ovunque
+  // nell'app deve restare leggibile anche fuori dalle card bianche, senza
+  // dover ribaltare i colori del testo in ogni vista per adattarlo. Stessa
+  // famiglia cromatica di T.pine/T.paper, solo più mossa di un colore piatto.
+  appBg: 'linear-gradient(135deg, #E3F1E7 0%, #DCEEE3 30%, #E9F0E1 65%, #F5F6EF 100%)',
 };
 
 export const FONTS = `

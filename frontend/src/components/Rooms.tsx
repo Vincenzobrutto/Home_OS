@@ -61,22 +61,23 @@ export function RoomsView({
               style={{
                 background: T.card,
                 border: `1px solid ${T.line}`,
-                borderRadius: 10,
-                padding: '16px 16px',
+                borderRadius: 14,
+                padding: '18px',
                 cursor: 'pointer',
                 position: 'relative',
+                boxShadow: '0 1px 2px rgba(20,26,22,0.04)',
               }}
             >
-              <div style={{ position: 'absolute', top: 14, right: 14, fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: T.slate, letterSpacing: '0.04em' }}>
+              <div style={{ position: 'absolute', top: 16, right: 16, fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: T.slate, letterSpacing: '0.04em' }}>
                 {r.code}
               </div>
-              <div style={{ width: 34, height: 34, borderRadius: 8, background: T.paper, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-                <Icon size={17} color={meta.color} />
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: `${meta.color}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                <Icon size={22} color={meta.color} />
               </div>
-              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, color: T.ink, marginBottom: 10 }}>
+              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15.5, fontWeight: 600, color: T.ink, marginBottom: 4 }}>
                 {r.name}
               </div>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 600, color: roomAssets.length > 0 ? T.pine : T.slate }}>
                 {roomAssets.length} asset collegat{roomAssets.length === 1 ? 'o' : 'i'}
               </div>
             </div>

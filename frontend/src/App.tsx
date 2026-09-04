@@ -302,7 +302,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.paper, fontFamily: "'Inter', sans-serif", color: T.slate }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.appBg, fontFamily: "'Inter', sans-serif", color: T.slate }}>
         Caricamento…
       </div>
     );
@@ -310,7 +310,7 @@ export default function App() {
 
   if (error) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.paper, fontFamily: "'Inter', sans-serif", color: T.rust, padding: 20, textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.appBg, fontFamily: "'Inter', sans-serif", color: T.rust, padding: 20, textAlign: 'center' }}>
         Impossibile contattare il backend ({import.meta.env.VITE_API_URL ?? 'http://localhost:3000'}).<br />
         {error}
       </div>
@@ -345,7 +345,7 @@ export default function App() {
     (contactDetail?.id === editContactId ? contactDetail : undefined);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: T.paper, fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: T.appBg, fontFamily: "'Inter', sans-serif" }}>
       <style>{FONTS}{MOBILE_CSS}</style>
       {mobileNavOpen && (
         <div className={`app-sidebar-backdrop${mobileNavOpen ? ' open' : ''}`} onClick={() => setMobileNavOpen(false)} />

@@ -114,9 +114,23 @@ function QuickActions({
   );
 }
 
+// Stessa mappa di StatusDot (Shared.tsx), qui esposta anche come colore
+// pieno per la card: lo stato deve leggersi a colpo d'occhio nella griglia,
+// non solo da un puntino piccolo accanto a un'etichetta grigia.
+const ASSET_STATUS_META: Record<Asset['status'], { color: string; label: string }> = {
+  OK: { color: T.pine, label: 'In regola' },
+  ATTENTION: { color: T.ochreDeep, label: 'Da verificare' },
+  DUE: { color: T.rust, label: 'In scadenza' },
+};
+
 export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReactivate }: { house: House; assets: Asset[]; rooms: Room[]; openAsset: (id: string) => void; onAddAsset: () => void; onReactivate: (asset: Asset) => void }) {
+  const [roomFilter, setRoomFilter] = useState<string>('all');
   const activeAssets = assets.filter((a) => !a.dismissedAt);
   const dismissedAssets = assets.filter((a) => a.dismissedAt);
+  const visibleAssets = roomFilter === 'all' ? activeAssets : activeAssets.filter((a) => a.roomId === roomFilter);
+  // Solo gli ambienti che hanno davvero almeno un asset attivo: un filtro per
+  // una stanza sempre vuota non aiuterebbe a filtrare nulla.
+  const roomsWithAssets = rooms.filter((r) => activeAssets.some((a) => a.roomId === r.id));
 
   return (
     <div style={{ padding: '36px 44px', maxWidth: 980 }}>
@@ -126,7 +140,7 @@ export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReac
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          marginBottom: 24,
+          marginBottom: 20,
         }}
       >
         <h1
@@ -160,6 +174,36 @@ export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReac
           + Aggiungi asset
         </button>
       </div>
+
+      {roomsWithAssets.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, marginBottom: 18 }}>
+          {[{ id: 'all', name: 'Tutti gli asset' }, ...roomsWithAssets].map((r) => {
+            const active = roomFilter === r.id;
+            return (
+              <button
+                key={r.id}
+                onClick={() => setRoomFilter(r.id)}
+                style={{
+                  flexShrink: 0,
+                  padding: '7px 14px',
+                  borderRadius: 20,
+                  border: `1px solid ${active ? T.pine : T.line}`,
+                  background: active ? T.pine : T.card,
+                  color: active ? '#F7F7F2' : T.ink70,
+                  cursor: 'pointer',
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {r.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div
         className="grid-responsive"
         style={{
@@ -168,10 +212,11 @@ export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReac
           gap: 14,
         }}
       >
-        {activeAssets.map((a) => {
+        {visibleAssets.map((a) => {
           const meta = ASSET_TYPES[a.type];
           const Icon = iconForAsset(a);
           const room = rooms.find((r) => r.id === a.roomId);
+          const status = ASSET_STATUS_META[a.status] ?? ASSET_STATUS_META.OK;
           return (
             <div
               key={a.id}
@@ -179,17 +224,18 @@ export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReac
               style={{
                 background: T.card,
                 border: `1px solid ${T.line}`,
-                borderRadius: 10,
-                padding: '16px 16px',
+                borderRadius: 14,
+                padding: '18px',
                 cursor: 'pointer',
                 position: 'relative',
+                boxShadow: '0 1px 2px rgba(20,26,22,0.04)',
               }}
             >
               <div
                 style={{
                   position: 'absolute',
-                  top: 14,
-                  right: 14,
+                  top: 16,
+                  right: 16,
                   fontFamily: "'IBM Plex Mono', monospace",
                   fontSize: 10,
                   color: T.slate,
@@ -200,22 +246,22 @@ export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReac
               </div>
               <div
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 8,
-                  background: T.paper,
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  background: `${meta.color}1A`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 14,
                 }}
               >
-                <Icon size={17} color={meta.color} />
+                <Icon size={22} color={meta.color} />
               </div>
               <div
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: 15,
+                  fontSize: 15.5,
                   fontWeight: 600,
                   color: T.ink,
                   marginBottom: 4,
@@ -223,29 +269,28 @@ export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReac
               >
                 {a.name}
               </div>
-              <div style={{ marginBottom: 10 }}>
-                <StatusDot status={a.status} />
-              </div>
-              {room && (
-                <div style={{ marginBottom: 10 }}>
-                  <Stamp tone="slate">{room.name}</Stamp>
-                </div>
-              )}
               <div
                 style={{
-                  display: 'flex',
-                  gap: 14,
                   fontFamily: "'Inter', sans-serif",
-                  fontSize: 11.5,
-                  color: T.slate,
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  color: status.color,
+                  marginBottom: room ? 10 : 0,
                 }}
               >
-                <span>{a.customFields?.length ?? 0} dati aggiuntivi</span>
+                {status.label}
               </div>
+              {room && <Stamp tone="slate">{room.name}</Stamp>}
             </div>
           );
         })}
       </div>
+
+      {visibleAssets.length === 0 && (
+        <div style={{ border: `1px dashed ${T.line}`, borderRadius: 10, padding: '40px 20px', textAlign: 'center', color: T.slate, fontFamily: "'Inter', sans-serif", fontSize: 13.5 }}>
+          Nessun asset in questo ambiente.
+        </div>
+      )}
 
       {dismissedAssets.length > 0 && (
         <>
