@@ -62,14 +62,20 @@ export const MAINTENANCE_GUIDELINES: MaintenanceGuideline[] = [
     code: 'caldaia-controllo',
     assetType: 'CALDAIA',
     title: 'Controllo fumi ed efficienza energetica',
-    // Verificato via web search 2026-08-03 (non solo conoscenza generica):
-    // DPR 74/2013 rimanda la cadenza esatta alle regioni. In Lombardia
-    // (DGR XI/3502/2020) è ogni 2 anni sotto i 35 kW — la maggioranza delle
-    // caldaie domestiche — e annuale tra 35-350 kW; altre regioni possono
-    // avere soglie diverse. "2 anni" qui è il default più comune per un
-    // impianto domestico piccolo, non un valore uguale ovunque.
+    // Verificato via web search 2026-08-03 (Lombardia) e 2026-09-04 (Lazio,
+    // fonte primaria: Regolamento regionale Lazio 23/12/2020 n. 30, art. 12
+    // c.3, che recepisce l'Allegato A del DPR 74/2013). DPR 74/2013 rimanda
+    // la cadenza esatta alle regioni, e i due esempi verificati DIVERGONO per
+    // la stessa fascia di potenza tipica di una caldaia domestica: Lombardia
+    // (DGR XI/3502/2020) 2 anni sotto i 35 kW, 1 anno tra 35-350 kW; Lazio
+    // 4 anni tra 10-100 kW, 2 anni sopra i 100 kW. "2 anni" qui resta il
+    // default più prudente (mai più frequente del vero in nessuno dei due
+    // casi verificati), non un valore uguale ovunque — non esiste oggi un
+    // singolo numero corretto per ogni regione, va sempre verificato o
+    // corretto dall'utente (vedi frontend/src/components/Maintenance.tsx,
+    // intervallo reso modificabile proprio per questo).
     description:
-      'Controllo periodico obbligatorio per legge (DPR 74/2013, attuato a livello regionale) — 2 anni è la cadenza tipica per una caldaia domestica di piccola potenza, ma varia da regione a regione e per impianti più potenti: verifica il libretto di impianto e la normativa della tua regione.',
+      'Controllo periodico obbligatorio per legge (DPR 74/2013, attuato a livello regionale). La cadenza varia per regione e potenza dell\'impianto anche per la stessa fascia domestica tipica: ad es. in Lombardia è ogni 2 anni sotto i 35 kW, nel Lazio ogni 4 anni tra 10-100 kW. "2 anni" qui è solo un default prudente — verifica il libretto di impianto e la normativa della tua regione, e correggi pure l\'intervallo qui sotto se conosci quello giusto.',
     recurrenceUnit: 'YEAR',
     recurrenceInterval: 2,
     reminderDaysBefore: 45,

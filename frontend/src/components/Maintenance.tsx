@@ -97,6 +97,10 @@ function addRecurrence(
   return result;
 }
 
+function recurrenceUnitLabel(unit: MaintenanceRecurrenceUnit): string {
+  return unit === "DAY" ? "giorni" : unit === "MONTH" ? "mesi" : "anni";
+}
+
 export function MaintenanceSection({
   asset,
   contacts,
@@ -115,6 +119,13 @@ export function MaintenanceSection({
   // conosciamo davvero nessuna data e altrimenti proporremmo una scadenza
   // calcolata da "oggi" come se fosse un dato reale.
   const [manualBasisDates, setManualBasisDates] = useState<Record<string, string>>({});
+  // Correzione dell'intervallo proposto, per suggerimento — la cadenza reale
+  // di un adempimento come "controllo caldaia" dipende da regione e potenza
+  // dell'impianto (es. Lazio: 4 anni tra 10-100kW, 2 sopra; Lombardia: 2 anni
+  // sotto i 35kW), dato che oggi non tracciamo (vedi maintenance-guidelines.ts):
+  // il numero della guideline è solo un default prudente, non un fatto fisso,
+  // quindi resta sempre modificabile qui invece che nascosto nel form finale.
+  const [intervalOverrides, setIntervalOverrides] = useState<Record<string, string>>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(initialForm);
@@ -147,6 +158,27 @@ export function MaintenanceSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asset.id]);
 
+  // L'intervallo corretto a mano dall'utente, se presente e valido — altrimenti
+  // il default della guideline. Mai bloccante: un numero non valido ricade
+  // silenziosamente sul default invece di impedire di procedere.
+  function effectiveInterval(suggestion: MaintenanceSuggestion): number {
+    const override = Number(intervalOverrides[suggestion.code]);
+    return Number.isFinite(override) && override > 0
+      ? override
+      : suggestion.recurrenceInterval;
+  }
+
+  // Data reale da cui ripartire per ricalcolare la scadenza con un intervallo
+  // corretto — solo per installedAt/purchasedAt (già un fatto sull'asset);
+  // il caso "createdAt" usa invece la data inserita a mano più sotto.
+  function basisDateFor(suggestion: MaintenanceSuggestion): Date | null {
+    if (suggestion.basedOn === "installedAt" && asset.installedAt)
+      return new Date(asset.installedAt);
+    if (suggestion.basedOn === "purchasedAt" && asset.purchasedAt)
+      return new Date(asset.purchasedAt);
+    return null;
+  }
+
   function openCreate() {
     setEditingId(null);
     setForm(initialForm);
@@ -156,22 +188,28 @@ export function MaintenanceSection({
 
   function openFromSuggestion(suggestion: MaintenanceSuggestion) {
     setEditingId(null);
+    const interval = effectiveInterval(suggestion);
     // Se l'utente ha indicato a mano l'ultima manutenzione (perché
     // basedOn === "createdAt", vedi sotto), la scadenza proposta si calcola
     // da quella data reale invece che dalla data di creazione della scheda.
     const manualBasis = manualBasisDates[suggestion.code]
       ? parseDateInput(manualBasisDates[suggestion.code])
       : undefined;
+    const knownBasis = basisDateFor(suggestion);
     const nextDueAt = manualBasis
-      ? addRecurrence(new Date(manualBasis), suggestion.recurrenceUnit, suggestion.recurrenceInterval)
+      ? addRecurrence(new Date(manualBasis), suggestion.recurrenceUnit, interval)
           .toISOString()
           .slice(0, 10)
-      : suggestion.suggestedNextDueAt.slice(0, 10);
+      : knownBasis
+        ? addRecurrence(knownBasis, suggestion.recurrenceUnit, interval)
+            .toISOString()
+            .slice(0, 10)
+        : suggestion.suggestedNextDueAt.slice(0, 10);
     setForm({
       title: suggestion.title,
       description: suggestion.description ?? "",
       recurrenceUnit: suggestion.recurrenceUnit,
-      recurrenceInterval: String(suggestion.recurrenceInterval),
+      recurrenceInterval: String(interval),
       nextDueAt,
       reminderDaysBefore: String(suggestion.reminderDaysBefore),
       preferredContactId: "",
@@ -337,10 +375,34 @@ export function MaintenanceSection({
                       {suggestion.description}
                     </div>
                   )}
+                  {/* La cadenza della guideline è un default prudente, non un fatto
+                      fisso (vedi commento su intervalOverrides sopra) — resta sempre
+                      un numero modificabile qui, in entrambi i rami sotto. */}
+                  <div style={{ fontSize: 12, color: T.slate, marginTop: 6, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
+                    Ogni{" "}
+                    <input
+                      type="number"
+                      min={1}
+                      style={{ ...inputStyle, width: 46, display: "inline-block", padding: "2px 5px", textAlign: "center" }}
+                      value={intervalOverrides[suggestion.code] ?? String(suggestion.recurrenceInterval)}
+                      onChange={(e) =>
+                        setIntervalOverrides((current) => ({
+                          ...current,
+                          [suggestion.code]: e.target.value,
+                        }))
+                      }
+                    />{" "}
+                    {recurrenceUnitLabel(suggestion.recurrenceUnit)}
+                  </div>
+                  {suggestion.isMandatory && (
+                    <div style={{ fontSize: 11.5, color: T.ink70, marginTop: 3 }}>
+                      La cadenza reale dipende da regione e potenza dell'impianto (es. Lazio: 4 anni tra 10-100kW, 2 anni sopra; Lombardia: 2 anni sotto i 35kW) — il numero sopra è solo un default, correggilo se conosci la normativa della tua zona.
+                    </div>
+                  )}
                   {suggestion.basedOn === "createdAt" ? (
                     <div style={{ marginTop: 8 }}>
                       <div style={{ fontSize: 12, color: T.ochreDeep, marginBottom: 6 }}>
-                        Non conosciamo la data dell'ultima manutenzione (né quella di installazione): indicala per calcolare la scadenza corretta — {recurrenceLabel(suggestion)} da quella data.
+                        Non conosciamo la data dell'ultima manutenzione (né quella di installazione): indicala per calcolare la scadenza corretta.
                       </div>
                       <input
                         style={{ ...inputStyle, maxWidth: 170, display: "inline-block" }}
@@ -360,7 +422,7 @@ export function MaintenanceSection({
                             addRecurrence(
                               new Date(parseDateInput(manualBasisDates[suggestion.code] ?? "")!),
                               suggestion.recurrenceUnit,
-                              suggestion.recurrenceInterval,
+                              effectiveInterval(suggestion),
                             ).toISOString(),
                           )}
                         </div>
@@ -369,9 +431,16 @@ export function MaintenanceSection({
                   ) : (
                     <div style={{ fontSize: 12, color: T.slate, marginTop: 5 }}>
                       Prima scadenza proposta{" "}
-                      {formatDateForDisplay(suggestion.suggestedNextDueAt)} ·{" "}
-                      {recurrenceLabel(suggestion)} · basata su{" "}
-                      {basedOnLabel[suggestion.basedOn]}
+                      {formatDateForDisplay(
+                        (() => {
+                          const basis = basisDateFor(suggestion);
+                          const interval = effectiveInterval(suggestion);
+                          return basis && interval !== suggestion.recurrenceInterval
+                            ? addRecurrence(basis, suggestion.recurrenceUnit, interval).toISOString()
+                            : suggestion.suggestedNextDueAt;
+                        })(),
+                      )}{" "}
+                      · basata su {basedOnLabel[suggestion.basedOn]}
                     </div>
                   )}
                 </div>

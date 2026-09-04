@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (12) — Intervallo di manutenzione modificabile, non più un numero fisso
+
+- Verificata la normativa Lazio reale (Regolamento regionale 23/12/2020 n. 30, art. 12 c.3): caldaie a gas 10-100kW ogni 4 anni, ≥100kW ogni 2 anni — diverge dalla Lombardia (2 anni sotto i 35kW) già citata nel codice. Le due fonti primarie divergono per la stessa fascia domestica tipica: non esiste un unico numero corretto senza sapere la regione.
+- La card di suggerimento manutenzione (`Maintenance.tsx`) mostra ora l'intervallo come campo modificabile ("Ogni [N] anni") invece di un numero fisso nel testo, con una nota che spiega la variabilità reale (Lazio/Lombardia) per gli adempimenti obbligatori. La scadenza proposta si ricalcola dal vivo con l'intervallo corretto.
+- Aggiornata la descrizione della guideline `caldaia-controllo` (`maintenance-guidelines.ts`) con il confronto sourced Lazio/Lombardia invece del solo riferimento generico.
+- Nessuna modifica a backend/schema oltre al testo della guideline. Verificato dal vivo con un utente/casa usa-e-getta.
+
 ## 2026-09-04 (11) — Manutenzione obbligatoria: data di riferimento onesta quando sconosciuta
 
 - Partendo da una richiesta di verifiche normative regionali (accantonata per ora, restava troppo lavoro per collegare `RegulatoryRule`/territorio — vedi ricognizione in questa sessione, B42 in backlog), ridotta all'esigenza reale: quando un asset (es. caldaia) non ha né data di installazione né di acquisto, il suggerimento di manutenzione obbligatoria usava silenziosamente "oggi" come base, mostrando una scadenza fittizia (es. "tra 2 anni" per un impianto che potrebbe già essere scaduto).
