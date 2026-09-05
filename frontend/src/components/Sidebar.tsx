@@ -233,7 +233,8 @@ export function Sidebar({
               {house.code}
             </div>
             <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, color: '#D5D8CE', marginTop: 2 }}>
-              {house.name}, {house.city}
+              {house.name}
+              {house.city ? `, ${house.city}` : ''}
             </div>
           </div>
           {onLogout && (

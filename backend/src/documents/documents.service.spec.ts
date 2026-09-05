@@ -348,4 +348,23 @@ describe('DocumentsService domain rules', () => {
       }),
     );
   });
+
+  it('refuses to re-analyze a document already confirmed', async () => {
+    documentFindUnique.mockResolvedValue({
+      id: 'document-id',
+      houseId: 'house-id',
+      status: DocumentStatus.CONFIRMED,
+    });
+
+    await expect(
+      service.analyze('user-id', 'document-id'),
+    ).rejects.toThrow('già stato confermato');
+
+    // Un fallimento successivo (es. errore Claude API) non deve mai poter
+    // riportare a PENDING lo stato di un documento già confermato, che
+    // avrebbe già scritto assetId/confirmedAt — vedi commento in
+    // documents.service.ts:analyze().
+    expect(documentUpdate).not.toHaveBeenCalled();
+    expect(extract).not.toHaveBeenCalled();
+  });
 });

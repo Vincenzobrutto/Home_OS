@@ -2,6 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-05 (2) — Fix da simulazione beta tester: rianalisi documento confermato, virgola residua
+
+- Trovato da un agente che ha simulato un percorso reale da beta tester (registrazione, upload, conferma, ricerca, export, cancellazione account su dati usa-e-getta): `DocumentsService.analyze()` non controllava se il documento fosse già `CONFIRMED` prima di rilanciare l'analisi AI — un fallimento successivo (es. chiave API non valida) riportava lo stato a `PENDING` pur avendo già `assetId` valorizzato, disallineando la sezione "Documenti" dell'Asset (filtrata su `CONFIRMED`) dalla cronologia (mai retrocessa). Nella UI reale il pulsante "Analizza con AI" è già nascosto una volta confermato (`Inbox.tsx`), quindi non raggiungibile da un utente che passa solo dai pulsanti — il fix blinda comunque il backend con un `BadRequestException` esplicito. Nuovo test di regressione in `documents.service.spec.ts`.
+- `Dashboard.tsx`/`Sidebar.tsx`: `{house.name}, {house.city}` lasciava una virgola residua ("Casa Test," ) quando la città è vuota — ora omessa se assente.
+- Durante la stessa verifica, scoperto (non un bug applicativo) che `ANTHROPIC_API_KEY` in uso restituiva 401 "API key is invalid" da Claude — chiave rigenerata dall'utente separatamente.
+
 ## 2026-09-05 — Guida per i beta user raggiungibile dalla Sidebar
 
 - Il PDF `dimora-guida-beta-user.pdf` (scritto dall'utente: cos'è Dimora, primo accesso, caricare un documento, cosa non c'è ancora, come segnalare problemi) è ora servito come asset statico da `frontend/public/` e raggiungibile da un link "Guida per i beta user" nel footer della Sidebar, sopra "Esporta i miei dati" — visibile a ogni utente, si apre in una nuova scheda.

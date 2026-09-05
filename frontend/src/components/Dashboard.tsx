@@ -334,7 +334,8 @@ export function Dashboard({
           letterSpacing: '-0.01em',
         }}
       >
-        {house.name}, {house.city}
+        {house.name}
+        {house.city ? `, ${house.city}` : ''}
       </h1>
       <p
         style={{

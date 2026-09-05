@@ -526,6 +526,16 @@ export class DocumentsService {
 
   async analyze(userId: string, documentId: string) {
     const document = await this.getDocumentOrThrow(userId, documentId);
+    // Un documento già confermato non va mai rianalizzato: un fallimento
+    // successivo (vedi catch sotto) riporterebbe lo stato a PENDING pur
+    // avendo già un assetId valorizzato, disallineando "Documenti"
+    // dell'Asset (filtrata su CONFIRMED) dalla cronologia (che non torna
+    // mai indietro) — trovato durante il test alpha con un beta tester.
+    if (document.status === DocumentStatus.CONFIRMED) {
+      throw new BadRequestException(
+        `Document ${documentId} è già stato confermato.`,
+      );
+    }
     await this.prisma.document.update({
       where: { id: documentId },
       data: { status: DocumentStatus.ANALYZING },
