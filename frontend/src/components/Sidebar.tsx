@@ -12,6 +12,7 @@ import {
   X,
   LogOut,
   Search,
+  BookOpen,
 } from 'lucide-react';
 import { T } from '../theme';
 import type { House } from '../types';
@@ -257,6 +258,23 @@ export function Sidebar({
             </button>
           )}
         </div>
+        <a
+          href="/dimora-guida-beta-user.pdf"
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            marginTop: 10,
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 11,
+            color: T.pine,
+            textDecoration: 'none',
+          }}
+        >
+          <BookOpen size={12} /> Guida per i beta user
+        </a>
         {onExportData && (
           <button
             onClick={onExportData}

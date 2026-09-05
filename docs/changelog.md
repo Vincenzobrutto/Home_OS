@@ -2,6 +2,11 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-05 — Guida per i beta user raggiungibile dalla Sidebar
+
+- Il PDF `dimora-guida-beta-user.pdf` (scritto dall'utente: cos'è Dimora, primo accesso, caricare un documento, cosa non c'è ancora, come segnalare problemi) è ora servito come asset statico da `frontend/public/` e raggiungibile da un link "Guida per i beta user" nel footer della Sidebar, sopra "Esporta i miei dati" — visibile a ogni utente, si apre in una nuova scheda.
+- Nessuna modifica al backend. Verificato dal vivo con un utente/casa usa-e-getta che il link compare ed è corretto.
+
 ## 2026-09-04 (16) — Test alpha con amici: tunnel pubblico e report di attività
 
 - `frontend/vite.config.ts`: aggiunto un proxy dev-server per i prefissi delle rotte backend (`API_PREFIXES`) verso `http://localhost:3000`, così frontend e backend restano sulla stessa origin agli occhi del browser. Necessario per esporre l'app tramite un tunnel pubblico (Cloudflare Tunnel, una sola porta esposta): senza, il cookie di sessione httpOnly (`SameSite=Lax`) non viaggerebbe tra un dominio frontend e uno backend separati, rompendo il login. `frontend/.env` (locale, gitignored) con `VITE_API_URL` vuoto per usare percorsi relativi. Nessun impatto sull'uso normale in locale/LAN.
