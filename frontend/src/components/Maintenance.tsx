@@ -22,32 +22,7 @@ import type {
   MaintenanceSuggestion,
 } from "../types";
 import { SectionLabel, Stamp } from "./Shared";
-
-// Stesso elenco di backend/src/houses/dto/create-house.dto.ts — deve
-// restare identico perché la regione è confrontata come stringa esatta nel
-// lookup regionale (vedi boiler-inspection-intervals.ts).
-const ITALIAN_REGIONS = [
-  "Abruzzo",
-  "Basilicata",
-  "Calabria",
-  "Campania",
-  "Emilia-Romagna",
-  "Friuli-Venezia Giulia",
-  "Lazio",
-  "Liguria",
-  "Lombardia",
-  "Marche",
-  "Molise",
-  "Piemonte",
-  "Puglia",
-  "Sardegna",
-  "Sicilia",
-  "Toscana",
-  "Trentino-Alto Adige",
-  "Umbria",
-  "Valle d'Aosta",
-  "Veneto",
-];
+import { ITALIAN_REGIONS } from "../italianRegions";
 
 const basedOnLabel: Record<MaintenanceSuggestion["basedOn"], string> = {
   installedAt: "data di installazione",
@@ -505,21 +480,29 @@ export function MaintenanceSection({
                     ) : (
                       <div style={{ marginTop: 6 }}>
                         <div style={{ fontSize: 11.5, color: T.ink70, marginBottom: 5 }}>
-                          La cadenza reale dipende da regione e potenza dell'impianto — indicale per calcolare l'intervallo corretto (o correggi tu il numero sopra).
+                          {house.region
+                            ? "La cadenza dipende anche dalla potenza dell'impianto — indicala per calcolare l'intervallo corretto (o correggi tu il numero sopra)."
+                            : "La cadenza reale dipende da regione e potenza dell'impianto — indicale per calcolare l'intervallo corretto (o correggi tu il numero sopra)."}
                         </div>
                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-                          <select
-                            style={{ ...inputStyle, width: "auto", display: "inline-block" }}
-                            value={regionInput}
-                            onChange={(e) => setRegionInput(e.target.value)}
-                          >
-                            <option value="">Regione…</option>
-                            {ITALIAN_REGIONS.map((region) => (
-                              <option key={region} value={region}>
-                                {region}
-                              </option>
-                            ))}
-                          </select>
+                          {/* La regione si chiede una sola volta, alla creazione della
+                              casa (Bootstrap.tsx) — questo select resta solo come
+                              ripiego per le case create prima di quel cambio, che non
+                              hanno ancora una regione salvata. */}
+                          {!house.region && (
+                            <select
+                              style={{ ...inputStyle, width: "auto", display: "inline-block" }}
+                              value={regionInput}
+                              onChange={(e) => setRegionInput(e.target.value)}
+                            >
+                              <option value="">Regione…</option>
+                              {ITALIAN_REGIONS.map((region) => (
+                                <option key={region} value={region}>
+                                  {region}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                           <input
                             type="number"
                             min={0}

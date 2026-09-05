@@ -2,6 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-05 (5) — Regione obbligatoria alla creazione casa; suggerimenti nome asset
+
+- `Bootstrap.tsx`: nuovo campo obbligatorio "Regione" (select, 20 regioni) nel form di creazione casa — serve solo al calcolo automatico dell'intervallo caldaia (vedi entry precedente su boiler-inspection-intervals), chiesta una volta sola invece che dentro la card manutenzione. `CreateHouseDto` backend reso coerente (region obbligatoria in creazione, resta opzionale in `UpdateHouseDto` per le case esistenti). `Maintenance.tsx` mostra il selettore regione solo come ripiego per le case create prima di questo cambio.
+- `AddAssetModal`, `ManualClassifyProposal` e `AssetDocumentProposal` (i tre punti di creazione di un nuovo asset): la griglia/select "Tipo" è sostituita da chip di nomi comuni (Caldaia, Lavatrice, Climatizzatore...) che compilano nome e tipo insieme con un clic — stesso pattern già usato per gli ambienti (B63/B64), inclusa la numerazione automatica sui nomi duplicati ("Caldaia" → "Caldaia 2"). Digitare un nome libero resta sempre possibile, senza dover scegliere un tipo a parte.
+- Verificato dal vivo con un utente/casa usa-e-getta attraverso il vero flusso di registrazione. Vedi `decisions.md` #70.
+
 ## 2026-09-05 (4) — Asset senza ambiente in "Asset"; scheda Asset con sezioni comprimibili
 
 - `AssetsView` (Assets.tsx): nuovo chip "Documenti casa" nella barra filtri già usata per gli ambienti (B65), mostra gli asset senza `roomId` invece di nasconderli. `HouseDocuments.tsx` perde la sezione "Impianti senza ambiente specifico" (ribalta una scelta precedente, vedi `decisions.md` #69) e resta solo con i documenti a livello casa non legati a nessun asset.

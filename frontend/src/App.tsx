@@ -522,6 +522,7 @@ export default function App() {
       {addAssetOpen && (
         <AddAssetModal
           houseId={house.id}
+          assets={assets}
           rooms={rooms}
           defaultRoomId={addAssetRoomId}
           onCreated={async () => {

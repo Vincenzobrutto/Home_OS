@@ -63,7 +63,10 @@ export class CreateHouseDto {
   @IsInt()
   floorPlanRotation?: number;
 
-  @IsOptional()
+  // Obbligatoria alla creazione (non più chiesta dentro la scheda
+  // manutenzione caldaia): raccoglierla una volta sola, subito, evita di
+  // dover chiedere all'utente la regione più volte in punti diversi
+  // dell'app — vedi decisions.md sul motivo del cambio.
   @IsIn(ITALIAN_REGIONS)
-  region?: string;
+  region: string;
 }

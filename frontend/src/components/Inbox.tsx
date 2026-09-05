@@ -3,6 +3,7 @@ import { Camera, CheckCircle2, FileText, Globe, Sparkles, Upload, XCircle } from
 import { T, ASSET_TYPES, ROOM_TYPES } from '../theme';
 import { SectionLabel, Stamp } from './Shared';
 import { AddRoomModal } from './Modals';
+import { ASSET_NAME_SUGGESTIONS, nextAvailableAssetName } from '../assetSuggestions';
 import { api } from '../api';
 import type { Asset, DocumentMaintenanceProposal, DocumentRecord, FloorPlanRoomProposal, House, PropertyProfileFields, Room, UtilityBillFields } from '../types';
 
@@ -761,7 +762,10 @@ function ManualClassifyProposal({
   const [mode, setMode] = useState<'existing' | 'new' | 'house'>('existing');
   const [assetId, setAssetId] = useState('');
   const [newAssetName, setNewAssetName] = useState('');
-  const [newAssetType, setNewAssetType] = useState('');
+  // Elettrodomestico come ripiego generico: il tipo si imposta soprattutto
+  // cliccando un suggerimento (vedi ASSET_NAME_SUGGESTIONS), non è più un
+  // passo di categorizzazione obbligatorio a parte.
+  const [newAssetType, setNewAssetType] = useState('ELETTRODOMESTICO');
   const [newRoomId, setNewRoomId] = useState('');
   // "+ Nuovo ambiente" inline (stesso principio del "+ Nuovo contatto" B58):
   // se la stanza giusta non esiste ancora, l'utente non deve abbandonare la
@@ -829,35 +833,56 @@ function ManualClassifyProposal({
       )}
 
       {mode === 'new' && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input value={newAssetName} onChange={(e) => setNewAssetName(e.target.value)} placeholder="Nome asset, es. Caldaia" style={{ ...fieldStyle, minWidth: 180 }} />
-          <select value={newAssetType} onChange={(e) => setNewAssetType(e.target.value)} style={fieldStyle}>
-            <option value="">— tipo —</option>
-            {Object.entries(ASSET_TYPES).map(([key, meta]) => (
-              <option key={key} value={key}>{meta.label}</option>
-            ))}
-          </select>
-          <select
-            value={newRoomId}
-            onChange={(e) => {
-              if (e.target.value === '__new__') { setAddRoomOpen(true); return; }
-              setNewRoomId(e.target.value);
-            }}
-            style={fieldStyle}
-          >
-            <option value="">Nessuno — impianto di casa</option>
-            <option value="__new__">+ Nuovo ambiente…</option>
-            {rooms.map((r) => (
-              <option key={r.id} value={r.id}>{r.name}</option>
-            ))}
-          </select>
-          <button
-            disabled={busy || !newAssetType || !newAssetName.trim()}
-            onClick={() => onConfirm({ createAssetType: newAssetType, assetName: newAssetName.trim(), roomId: newRoomId || undefined, applyFields: false })}
-            style={confirmButtonStyle}
-          >
-            <CheckCircle2 size={13} /> Crea e collega
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              value={newAssetName}
+              onChange={(e) => setNewAssetName(e.target.value)}
+              onBlur={() => setNewAssetName((current) => nextAvailableAssetName(current, activeAssets))}
+              placeholder="Nome asset, es. Caldaia"
+              style={{ ...fieldStyle, minWidth: 180 }}
+            />
+            <select
+              value={newRoomId}
+              onChange={(e) => {
+                if (e.target.value === '__new__') { setAddRoomOpen(true); return; }
+                setNewRoomId(e.target.value);
+              }}
+              style={fieldStyle}
+            >
+              <option value="">Nessuno — impianto di casa</option>
+              <option value="__new__">+ Nuovo ambiente…</option>
+              {rooms.map((r) => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+            <button
+              disabled={busy || !newAssetName.trim()}
+              onClick={() => onConfirm({ createAssetType: newAssetType, assetName: newAssetName.trim(), roomId: newRoomId || undefined, applyFields: false })}
+              style={confirmButtonStyle}
+            >
+              <CheckCircle2 size={13} /> Crea e collega
+            </button>
+          </div>
+          {/* Suggerimenti: un clic compila nome e tipo insieme, stesso
+              pattern di AddRoomModal/AddAssetModal — non un passo di
+              categorizzazione separato e obbligatorio. */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {ASSET_NAME_SUGGESTIONS.map(({ name: suggestionName, type: suggestionType }) => {
+              const meta = ASSET_TYPES[suggestionType];
+              const Icon = meta.icon;
+              return (
+                <button
+                  key={suggestionName}
+                  type="button"
+                  onClick={() => { setNewAssetType(suggestionType); setNewAssetName(nextAvailableAssetName(suggestionName, activeAssets)); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 20, border: `1px solid ${T.line}`, background: T.card, cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.ink70 }}
+                >
+                  <Icon size={11} color={meta.color} /> {suggestionName}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -925,7 +950,10 @@ function AssetDocumentProposal({
   // un dettaglio opzionale.
   const [creatingAsset, setCreatingAsset] = useState(false);
   const [newAssetName, setNewAssetName] = useState('');
-  const [newAssetType, setNewAssetType] = useState('');
+  // Ripiego generico se l'AI non ha proposto un tipo (vedi sotto, riga
+  // ~969): il tipo si può comunque correggere cliccando un suggerimento,
+  // non è più un passo di categorizzazione obbligatorio a parte.
+  const [newAssetType, setNewAssetType] = useState('ELETTRODOMESTICO');
   // >1 quando il documento descrive più unità identiche (es. 3
   // climatizzatori): crea altrettanti asset separati invece di uno
   // aggregato, perché ogni unità può finire in una stanza diversa e avere
@@ -943,7 +971,7 @@ function AssetDocumentProposal({
 
   function startCreatingAsset() {
     setNewAssetName(fields.suggestedAssetName || suggestedTypeMeta?.label || '');
-    setNewAssetType(fields.suggestedAssetType?.toUpperCase() ?? '');
+    setNewAssetType(fields.suggestedAssetType?.toUpperCase() ?? 'ELETTRODOMESTICO');
     setNewQuantity(fields.quantity && fields.quantity > 1 ? fields.quantity : 1);
     setNewRoomId('');
     setCreatingAsset(true);
@@ -1027,21 +1055,10 @@ function AssetDocumentProposal({
             <input
               value={newAssetName}
               onChange={(e) => setNewAssetName(e.target.value)}
+              onBlur={() => setNewAssetName((current) => nextAvailableAssetName(current, assets))}
               placeholder="Nome asset, es. Macchina del caffè"
               style={{ flex: 1, minWidth: 180, fontFamily: "'Inter', sans-serif", fontSize: 12.5, padding: '7px 10px', borderRadius: 6, border: `1px solid ${T.line}` }}
             />
-            <select
-              value={newAssetType}
-              onChange={(e) => setNewAssetType(e.target.value)}
-              style={{ fontFamily: "'Inter', sans-serif", fontSize: 12.5, padding: '7px 10px', borderRadius: 6, border: `1px solid ${T.line}`, background: T.card }}
-            >
-              <option value="">— tipo —</option>
-              {Object.entries(ASSET_TYPES).map(([key, meta]) => (
-                <option key={key} value={key}>
-                  {meta.label}
-                </option>
-              ))}
-            </select>
             <select
               value={newRoomId}
               onChange={(e) => {
@@ -1071,6 +1088,25 @@ function AssetDocumentProposal({
               />
             </label>
           </div>
+          {/* Suggerimenti: un clic compila nome e tipo insieme, stesso
+              pattern di AddRoomModal/AddAssetModal — utile anche per
+              correggere il tipo se l'AI l'ha proposto sbagliato. */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {ASSET_NAME_SUGGESTIONS.map(({ name: suggestionName, type: suggestionType }) => {
+              const meta = ASSET_TYPES[suggestionType];
+              const Icon = meta.icon;
+              return (
+                <button
+                  key={suggestionName}
+                  type="button"
+                  onClick={() => { setNewAssetType(suggestionType); setNewAssetName(nextAvailableAssetName(suggestionName, assets)); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 20, border: `1px solid ${T.line}`, background: T.card, cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 11, color: T.ink70 }}
+                >
+                  <Icon size={11} color={meta.color} /> {suggestionName}
+                </button>
+              );
+            })}
+          </div>
           {newQuantity > 1 && (
             <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.ochreDeep }}>
               Verranno creati {newQuantity} asset separati ("{newAssetName || '…'} 1", "{newAssetName || '…'} 2", …) — utile per assegnarli a stanze diverse o correggerne i dati singolarmente.
@@ -1079,14 +1115,14 @@ function AssetDocumentProposal({
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button
               onClick={() => onConfirm({ createAssetType: newAssetType, assetName: newAssetName.trim(), quantity: newQuantity, roomId: newRoomId || undefined, applyFields: true })}
-              disabled={busy || !newAssetType || !newAssetName.trim()}
+              disabled={busy || !newAssetName.trim()}
               style={{ display: 'flex', alignItems: 'center', gap: 6, background: T.pine, color: '#F7F7F2', border: 'none', borderRadius: 6, padding: '8px 13px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12.5, fontWeight: 500 }}
             >
               <CheckCircle2 size={13} /> {newQuantity > 1 ? `Crea ${newQuantity} asset e applica dati` : 'Crea asset e applica dati'}
             </button>
             <button
               onClick={() => onConfirm({ createAssetType: newAssetType, assetName: newAssetName.trim(), quantity: newQuantity, roomId: newRoomId || undefined, applyFields: false })}
-              disabled={busy || !newAssetType || !newAssetName.trim()}
+              disabled={busy || !newAssetName.trim()}
               style={{ background: 'transparent', border: `1px solid ${T.line}`, color: T.ink, borderRadius: 6, padding: '8px 13px', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12.5 }}
             >
               Crea e collega solo il documento

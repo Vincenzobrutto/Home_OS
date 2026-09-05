@@ -4,6 +4,7 @@ import { T, ASSET_TYPES, ROOM_TYPES } from '../theme';
 import { SectionLabel } from './Shared';
 import { api, formatDateForDisplay, parseDateInput } from '../api';
 import type { Asset, Contact, CustomField, Room } from '../types';
+import { ASSET_NAME_SUGGESTIONS, nextAvailableAssetName } from '../assetSuggestions';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -66,6 +67,7 @@ export function ModalShell({ children, onClose, width = 480 }: { children: React
 
 export function AddAssetModal({
   houseId,
+  assets,
   rooms,
   defaultRoomId,
   onCreated,
@@ -73,6 +75,8 @@ export function AddAssetModal({
   onClose,
 }: {
   houseId: string;
+  // Per la numerazione automatica sui nomi duplicati, vedi nextAvailableAssetName.
+  assets: Asset[];
   rooms: Room[];
   defaultRoomId: string | null;
   onCreated: (asset: Asset) => void;
@@ -130,33 +134,42 @@ export function AddAssetModal({
 
       <div style={{ marginBottom: 14 }}>
         <label style={labelStyle}>Nome</label>
-        <input style={inputStyle} placeholder="Es. Lavastoviglie Bosch" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-      </div>
-
-      <div style={{ marginBottom: 14 }}>
-        <label style={labelStyle}>Categoria</label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {Object.entries(ASSET_TYPES).map(([key, meta]) => {
+        <input
+          style={inputStyle}
+          placeholder="Es. Lavastoviglie Bosch"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={() => setName((current) => nextAvailableAssetName(current, assets))}
+          autoFocus
+        />
+        {/* Suggerimenti, non una categorizzazione obbligatoria separata: un
+            clic compila il nome (e imposta il tipo corrispondente in
+            automatico), stesso pattern di AddRoomModal sopra. */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+          {ASSET_NAME_SUGGESTIONS.map(({ name: suggestionName, type: suggestionType }) => {
+            const meta = ASSET_TYPES[suggestionType];
             const Icon = meta.icon;
-            const active = type === key;
             return (
-              <div
-                key={key}
-                onClick={() => setType(key)}
+              <button
+                key={suggestionName}
+                type="button"
+                onClick={() => { setType(suggestionType); setName(nextAvailableAssetName(suggestionName, assets)); }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
-                  padding: '9px 11px',
-                  borderRadius: 8,
-                  border: `1.5px solid ${active ? T.pine : T.line}`,
-                  background: active ? '#E4EEE9' : T.card,
+                  gap: 5,
+                  padding: '5px 10px',
+                  borderRadius: 20,
+                  border: `1px solid ${T.line}`,
+                  background: T.card,
                   cursor: 'pointer',
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 11.5,
+                  color: T.ink70,
                 }}
               >
-                <Icon size={14} color={meta.color} />
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 500, color: T.ink }}>{meta.label}</span>
-              </div>
+                <Icon size={12} color={meta.color} /> {suggestionName}
+              </button>
             );
           })}
         </div>
@@ -293,6 +306,7 @@ function nextAvailableRoomName(base: string, existingRooms: Room[]): string {
   while (names.has(`${trimmed} ${n}`)) n++;
   return `${trimmed} ${n}`;
 }
+
 
 // Nessun equivalente esisteva finché la creazione di un ambiente viveva solo
 // dentro la vista Mappa (FloorPlanView, che richiede di posizionarlo su una

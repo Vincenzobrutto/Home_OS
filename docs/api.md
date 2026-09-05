@@ -19,7 +19,7 @@ Convenzioni: JSON in richiesta/risposta salvo dove indicato (upload file = `mult
 ## Houses
 | Metodo | Path | Note |
 |---|---|---|
-| POST | `/houses` | crea casa (owner = utente della sessione, non più un `ownerId` nel body), genera `code` (`CASA-####`) e la `HouseMembership` `OWNER` |
+| POST | `/houses` | crea casa (owner = utente della sessione, non più un `ownerId` nel body), genera `code` (`CASA-####`) e la `HouseMembership` `OWNER`. `region` obbligatoria (una delle 20 regioni italiane), vedi `decisions.md` #70 |
 | GET | `/houses/:id` | dettaglio |
 | PATCH | `/houses/:id` | anche `floorPlanRotation` |
 | DELETE | `/houses/:id` | solo OWNER (403 altrimenti); elimina fisicamente tutti i file della casa e poi i record in cascata. Irreversibile, vedi `decisions.md` #53/#67 |

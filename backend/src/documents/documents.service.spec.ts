@@ -356,9 +356,9 @@ describe('DocumentsService domain rules', () => {
       status: DocumentStatus.CONFIRMED,
     });
 
-    await expect(
-      service.analyze('user-id', 'document-id'),
-    ).rejects.toThrow('già stato confermato');
+    await expect(service.analyze('user-id', 'document-id')).rejects.toThrow(
+      'già stato confermato',
+    );
 
     // Un fallimento successivo (es. errore Claude API) non deve mai poter
     // riportare a PENDING lo stato di un documento già confermato, che

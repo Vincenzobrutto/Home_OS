@@ -4,6 +4,7 @@ import { SectionLabel } from './Shared';
 import { api } from '../api';
 import type { House, User } from '../types';
 import { ALPHA_MODE } from '../config';
+import { ITALIAN_REGIONS } from '../italianRegions';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -37,16 +38,18 @@ export function BootstrapScreen({
 }) {
   const [houseName, setHouseName] = useState('');
   const [city, setCity] = useState('');
+  const [region, setRegion] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
-    if (!houseName.trim()) return;
+    if (!houseName.trim() || !region) return;
     setSaving(true);
     setError(null);
     try {
       const house = await api.houses.create({
         name: houseName.trim(),
+        region,
         city: city.trim() || undefined,
       });
       if (ALPHA_MODE) {
@@ -84,16 +87,31 @@ export function BootstrapScreen({
           <label style={labelStyle}>Nome/indirizzo casa</label>
           <input style={inputStyle} placeholder="Es. Via dei Glicini 14" value={houseName} onChange={(e) => setHouseName(e.target.value)} autoFocus />
         </div>
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 14 }}>
           <label style={labelStyle}>Città (facoltativo)</label>
           <input style={inputStyle} value={city} onChange={(e) => setCity(e.target.value)} />
+        </div>
+        <div style={{ marginBottom: 20 }}>
+          <label style={labelStyle}>Regione</label>
+          {/* Chiesta una sola volta, qui: serve a calcolare in automatico
+              l'intervallo di controllo caldaia corretto (varia da regione a
+              regione) senza doverla richiedere di nuovo nella scheda
+              manutenzione — vedi Maintenance.tsx. */}
+          <select style={{ ...inputStyle, appearance: 'auto' }} value={region} onChange={(e) => setRegion(e.target.value)}>
+            <option value="">— seleziona —</option>
+            {ITALIAN_REGIONS.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
         </div>
 
         {error && <div style={{ color: T.rust, fontFamily: "'Inter', sans-serif", fontSize: 12.5, marginBottom: 12 }}>{error}</div>}
 
         <button
           onClick={submit}
-          disabled={saving || !houseName.trim()}
+          disabled={saving || !houseName.trim() || !region}
           style={{
             width: '100%',
             background: T.pine,
