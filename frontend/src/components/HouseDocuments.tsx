@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { FileText, Search, Trash2 } from 'lucide-react';
-import { T, ASSET_TYPES, iconForAsset } from '../theme';
+import { T } from '../theme';
 import { SectionLabel } from './Shared';
 import { api } from '../api';
-import type { Asset, DocumentRecord, House } from '../types';
+import type { DocumentRecord, House } from '../types';
 
-// Stessa "forma" di card per impianti e documenti: prima gli impianti senza
-// ambiente usavano le card a griglia della sezione Asset, visivamente molto
-// diverse dalle card documento qui sotto — sulla stessa pagina risultava
-// incoerente, vedi richiesta utente "uniformare al formato APE".
+// Card per i documenti a livello casa (APE, atti, planimetrie...). Gli
+// asset senza ambiente (es. impianto elettrico condominiale) vivevano qui
+// come sezione separata; ora sono raggruppati nella pagina Asset sotto il
+// chip "Documenti casa" (vedi Assets.tsx AssetsView) — questa vista resta
+// solo per i documenti che non appartengono a nessun asset.
 function HouseCard({
   icon,
   title,
@@ -73,21 +74,7 @@ function HouseCard({
   return card;
 }
 
-export function HouseDocumentsView({
-  house,
-  assets,
-  openAsset,
-  onAddAsset,
-}: {
-  house: House;
-  // Asset senza un ambiente specifico (roomId nullo, es. "Impianto
-  // elettrico"): non sono impianti di una stanza ma di tutta la casa, quindi
-  // si gestiscono qui invece che nella sezione Asset generale — vedi scelta
-  // utente: restano SOLO qui, non anche nella griglia Asset.
-  assets: Asset[];
-  openAsset: (id: string) => void;
-  onAddAsset: () => void;
-}) {
+export function HouseDocumentsView({ house }: { house: House }) {
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -121,21 +108,11 @@ export function HouseDocumentsView({
   // dall'Inbox (es. APE, certificazione energetica generale) — non impianti
   // fisici, quindi non appartengono a nessun Asset. Vedi START_HERE.md.
   const houseDocs = documents.filter((d) => d.houseLevel && d.status === 'CONFIRMED');
-  const houseAssets = assets.filter((a) => !a.roomId && !a.dismissedAt);
 
-  // Utile quando i documenti/impianti diventano tanti: cerca su tutto
-  // quello che è già visibile in una card (nome, codice, tipo, filename,
-  // e i singoli campi estratti/dati aggiuntivi), non solo sul titolo — così
-  // "de'longhi" trova la macchina del caffè anche se non è nel nome.
+  // Utile quando i documenti diventano tanti: cerca su tutto quello che è
+  // già visibile in una card (tipo, filename, singoli campi estratti), non
+  // solo sul titolo.
   const q = query.trim().toLowerCase();
-  const filteredAssets = houseAssets.filter((a) => {
-    if (!q) return true;
-    const meta = ASSET_TYPES[a.type];
-    const haystack = [a.name, a.code, meta.label, ...(a.customFields ?? []).flatMap((f) => [f.label, f.value])]
-      .join(' ')
-      .toLowerCase();
-    return haystack.includes(q);
-  });
   const filteredDocs = houseDocs.filter((d) => {
     if (!q) return true;
     const fields = d.extractedFields?.kind === 'asset_document' ? d.extractedFields.fields : [];
@@ -152,7 +129,7 @@ export function HouseDocumentsView({
         Documenti casa
       </h1>
       <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: T.slate, marginBottom: 20 }}>
-        Impianti e documenti che riguardano la casa nel suo insieme e non un ambiente specifico.
+        Documenti che riguardano la casa nel suo insieme, non un ambiente o un impianto specifico (es. APE, atto, planimetria). Gli impianti senza un ambiente assegnato si trovano nella pagina Asset, sotto il filtro "Documenti casa".
       </div>
 
       <div style={{ position: 'relative', marginBottom: 26 }}>
@@ -160,7 +137,7 @@ export function HouseDocumentsView({
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Cerca per nome, marca, modello, tipo di documento…"
+          placeholder="Cerca per tipo di documento o nome file…"
           style={{
             width: '100%',
             boxSizing: 'border-box',
@@ -174,42 +151,6 @@ export function HouseDocumentsView({
             outline: 'none',
           }}
         />
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <SectionLabel>Impianti senza ambiente specifico</SectionLabel>
-        <button
-          onClick={onAddAsset}
-          style={{ background: 'none', border: 'none', color: T.pine, cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 500, padding: 0 }}
-        >
-          + Aggiungi asset
-        </button>
-      </div>
-
-      {filteredAssets.length === 0 ? (
-        <div style={{ border: `1px dashed ${T.line}`, borderRadius: 10, padding: '20px 16px', textAlign: 'center', color: T.slate, fontFamily: "'Inter', sans-serif", fontSize: 13, marginBottom: 34 }}>
-          {houseAssets.length === 0 ? 'Nessun impianto senza ambiente specifico.' : `Nessun impianto trovato per "${query.trim()}".`}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 34 }}>
-          {filteredAssets.map((a) => {
-            const meta = ASSET_TYPES[a.type];
-            const Icon = iconForAsset(a);
-            return (
-              <HouseCard
-                key={a.id}
-                icon={<Icon size={17} color={meta.color} />}
-                title={a.name}
-                subtitle={`${a.code} · ${meta.label} · ${a.customFields?.length ?? 0} dati aggiuntivi`}
-                onClick={() => openAsset(a.id)}
-              />
-            );
-          })}
-        </div>
-      )}
-
-      <div style={{ marginBottom: 12 }}>
-        <SectionLabel>Documenti generali (APE, certificazioni, ecc.)</SectionLabel>
       </div>
 
       {!loading && filteredDocs.length === 0 && (

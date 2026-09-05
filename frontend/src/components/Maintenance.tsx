@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   CalendarClock,
   Check,
+  ChevronDown,
   History,
   Pause,
   Play,
@@ -165,6 +166,11 @@ export function MaintenanceSection({
   const [regionInput, setRegionInput] = useState(house.region ?? "");
   const [powerInput, setPowerInput] = useState(asset.powerKw ?? "");
   const [savingRegional, setSavingRegional] = useState(false);
+  // Sezione chiusa di default: sulla scheda Asset "Manutenzione" precede
+  // Documenti/Garanzie/Cronologia, e con più piani/suggerimenti allungava la
+  // pagina prima ancora di arrivare a "+ Nuovo intervento" (segnalato da un
+  // beta tester). Titolo e azione restano comunque sempre visibili.
+  const [sectionOpen, setSectionOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(initialForm);
@@ -390,6 +396,11 @@ export function MaintenanceSection({
     }
   }
 
+  // Aperta comunque se una modifica è in corso, anche se l'utente aveva
+  // richiuso la sezione — non deve mai nascondere un form attivo.
+  const bodyOpen = sectionOpen || formOpen;
+  const itemCount = plans.length + suggestions.length;
+
   return (
     <>
       <div
@@ -397,21 +408,36 @@ export function MaintenanceSection({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          cursor: "pointer",
         }}
+        onClick={() => setSectionOpen((v) => !v)}
       >
-        <SectionLabel>Manutenzione</SectionLabel>
-        {!formOpen && (
-          <button onClick={openCreate} style={linkButtonStyle}>
-            + Nuovo piano
-          </button>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <SectionLabel>Manutenzione</SectionLabel>
+          {!bodyOpen && itemCount > 0 && <Stamp tone="slate">{itemCount}</Stamp>}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }} onClick={(e) => e.stopPropagation()}>
+          {!formOpen && (
+            <button onClick={() => { setSectionOpen(true); openCreate(); }} style={linkButtonStyle}>
+              + Nuovo piano
+            </button>
+          )}
+          <ChevronDown
+            size={16}
+            color={T.slate}
+            style={{ transform: bodyOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s", cursor: "pointer" }}
+            onClick={() => setSectionOpen((v) => !v)}
+          />
+        </div>
       </div>
       {error && (
-        <div style={{ color: T.rust, fontSize: 12.5, marginBottom: 10 }}>
+        <div style={{ color: T.rust, fontSize: 12.5, marginBottom: 10, marginTop: 10 }}>
           {error}
         </div>
       )}
 
+      {bodyOpen && (
+      <>
       {!formOpen &&
         suggestions.map((suggestion) => (
             <div key={suggestion.code} style={suggestionCardStyle}>
@@ -929,6 +955,8 @@ export function MaintenanceSection({
           );
         })}
       </div>
+      </>
+      )}
 
       {completing && (
         <div style={formCardStyle}>

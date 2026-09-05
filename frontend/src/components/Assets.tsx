@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, Download, ExternalLink, FileStack, FileText, BookOpen, Receipt, ShieldCheck, Trash2, Wrench, UserCheck } from 'lucide-react';
+import { ChevronDown, ChevronLeft, Download, ExternalLink, FileStack, FileText, BookOpen, Receipt, ShieldCheck, Trash2, Wrench, UserCheck } from 'lucide-react';
 import { T, ASSET_TYPES, iconForAsset, evidenceStatusLabel } from '../theme';
 import { SectionLabel, StatusDot, Stamp, ProvenanceBadge } from './Shared';
 import { api, formatDateForDisplay, parseDateInput } from '../api';
@@ -123,14 +123,27 @@ const ASSET_STATUS_META: Record<Asset['status'], { color: string; label: string 
   DUE: { color: T.rust, label: 'In scadenza' },
 };
 
+// Sentinella per il filtro "Documenti casa": stessa lista di chip degli
+// ambienti, ma raggruppa gli asset senza roomId (es. impianto elettrico
+// condominiale) invece di nasconderli — prima vivevano solo in
+// HouseDocuments.tsx, ora sono raggiungibili anche da qui.
+const HOUSE_ASSETS_FILTER = '__house__';
+
 export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReactivate }: { house: House; assets: Asset[]; rooms: Room[]; openAsset: (id: string) => void; onAddAsset: () => void; onReactivate: (asset: Asset) => void }) {
   const [roomFilter, setRoomFilter] = useState<string>('all');
   const activeAssets = assets.filter((a) => !a.dismissedAt);
   const dismissedAssets = assets.filter((a) => a.dismissedAt);
-  const visibleAssets = roomFilter === 'all' ? activeAssets : activeAssets.filter((a) => a.roomId === roomFilter);
+  const visibleAssets =
+    roomFilter === 'all'
+      ? activeAssets
+      : roomFilter === HOUSE_ASSETS_FILTER
+        ? activeAssets.filter((a) => !a.roomId)
+        : activeAssets.filter((a) => a.roomId === roomFilter);
   // Solo gli ambienti che hanno davvero almeno un asset attivo: un filtro per
-  // una stanza sempre vuota non aiuterebbe a filtrare nulla.
+  // una stanza sempre vuota non aiuterebbe a filtrare nulla. Stessa logica
+  // per il chip "Documenti casa".
   const roomsWithAssets = rooms.filter((r) => activeAssets.some((a) => a.roomId === r.id));
+  const hasHouseAssets = activeAssets.some((a) => !a.roomId);
 
   return (
     <div style={{ padding: '36px 44px', maxWidth: 980 }}>
@@ -175,9 +188,13 @@ export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReac
         </button>
       </div>
 
-      {roomsWithAssets.length > 0 && (
+      {(roomsWithAssets.length > 0 || hasHouseAssets) && (
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, marginBottom: 18 }}>
-          {[{ id: 'all', name: 'Tutti gli asset' }, ...roomsWithAssets].map((r) => {
+          {[
+            { id: 'all', name: 'Tutti gli asset' },
+            ...roomsWithAssets,
+            ...(hasHouseAssets ? [{ id: HOUSE_ASSETS_FILTER, name: 'Documenti casa' }] : []),
+          ].map((r) => {
             const active = roomFilter === r.id;
             return (
               <button
@@ -275,12 +292,12 @@ export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReac
                   fontSize: 12.5,
                   fontWeight: 600,
                   color: status.color,
-                  marginBottom: room ? 10 : 0,
+                  marginBottom: 10,
                 }}
               >
                 {status.label}
               </div>
-              {room && <Stamp tone="slate">{room.name}</Stamp>}
+              <Stamp tone="slate">{room ? room.name : 'Documenti casa'}</Stamp>
             </div>
           );
         })}
@@ -288,7 +305,11 @@ export function AssetsView({ house, assets, rooms, openAsset, onAddAsset, onReac
 
       {visibleAssets.length === 0 && (
         <div style={{ border: `1px dashed ${T.line}`, borderRadius: 10, padding: '40px 20px', textAlign: 'center', color: T.slate, fontFamily: "'Inter', sans-serif", fontSize: 13.5 }}>
-          Nessun asset in questo ambiente.
+          {roomFilter === 'all'
+            ? 'Nessun asset censito per ora.'
+            : roomFilter === HOUSE_ASSETS_FILTER
+              ? 'Nessun impianto senza ambiente specifico.'
+              : 'Nessun asset in questo ambiente.'}
         </div>
       )}
 
@@ -435,6 +456,11 @@ export function AssetDetail({
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [availableInterventionDocuments, setAvailableInterventionDocuments] = useState<DocumentRecord[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  // Chiusa di default: con più registrazioni allungava la pagina prima
+  // ancora di arrivare al form "+ Nuovo intervento" (segnalato da un beta
+  // tester) — titolo e azione restano comunque sempre visibili, e l'azione
+  // rapida "Ultimo intervento" la riapre da sola prima di scorrere qui.
+  const [timelineOpen, setTimelineOpen] = useState(false);
   const [addingEvent, setAddingEvent] = useState(false);
   const [newEventDate, setNewEventDate] = useState('');
   const [newEventType, setNewEventType] = useState('');
@@ -739,7 +765,10 @@ export function AssetDetail({
         warranties={warranties}
         timeline={timeline}
         onScrollToWarranties={() => warrantiesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-        onScrollToTimeline={() => timelineSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        onScrollToTimeline={() => {
+          setTimelineOpen(true);
+          timelineSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
         openContact={openContact}
       />
 
@@ -1137,29 +1166,42 @@ export function AssetDetail({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          cursor: 'pointer',
         }}
+        onClick={() => setTimelineOpen((v) => !v)}
       >
-        <SectionLabel>Cronologia</SectionLabel>
-        {!addingEvent && (
-          <button
-            onClick={() => setAddingEvent(true)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: T.pine,
-              cursor: 'pointer',
-              fontFamily: "'Inter', sans-serif",
-              fontSize: 12,
-              fontWeight: 500,
-              padding: 0,
-              marginBottom: 10,
-            }}
-          >
-            + Nuovo intervento
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <SectionLabel>Cronologia</SectionLabel>
+          {!(timelineOpen || addingEvent) && timeline.length > 0 && <Stamp tone="slate">{timeline.length}</Stamp>}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} onClick={(e) => e.stopPropagation()}>
+          {!addingEvent && (
+            <button
+              onClick={() => { setTimelineOpen(true); setAddingEvent(true); }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: T.pine,
+                cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 12,
+                fontWeight: 500,
+                padding: 0,
+              }}
+            >
+              + Nuovo intervento
+            </button>
+          )}
+          <ChevronDown
+            size={16}
+            color={T.slate}
+            style={{ transform: timelineOpen || addingEvent ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
+          />
+        </div>
       </div>
 
+      {(timelineOpen || addingEvent) && (
+      <>
       {addingEvent && (
         <div
           style={{
@@ -1415,6 +1457,8 @@ export function AssetDetail({
           </div>
         ))}
       </div>
+      </>
+      )}
 
       <div
         style={{

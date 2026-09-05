@@ -436,14 +436,7 @@ export default function App() {
             onDriveNoticeShown={() => setDriveNotice(null)}
           />
         )}
-        {view === 'house-documents' && (
-          <HouseDocumentsView
-            house={house}
-            assets={assets}
-            openAsset={(id) => openAsset(id, 'house-documents')}
-            onAddAsset={() => openAddAsset(null)}
-          />
-        )}
+        {view === 'house-documents' && <HouseDocumentsView house={house} />}
         {view === 'rooms' && (
           <RoomsHub
             house={house}
@@ -468,9 +461,10 @@ export default function App() {
         {view === 'assets' && (
           <AssetsView
             house={house}
-            // Gli asset senza ambiente (es. "Impianto elettrico") si
-            // gestiscono solo da Documenti casa, non qui — vedi HouseDocuments.tsx.
-            assets={assets.filter((a) => a.roomId)}
+            // Gli asset senza ambiente (es. "Impianto elettrico") sono
+            // raggruppati qui sotto il chip "Documenti casa" invece di
+            // vivere solo in HouseDocuments.tsx — vedi Assets.tsx AssetsView.
+            assets={assets}
             rooms={rooms}
             openAsset={openAsset}
             onAddAsset={() => openAddAsset(null)}

@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-05 (4) — Asset senza ambiente in "Asset"; scheda Asset con sezioni comprimibili
+
+- `AssetsView` (Assets.tsx): nuovo chip "Documenti casa" nella barra filtri già usata per gli ambienti (B65), mostra gli asset senza `roomId` invece di nasconderli. `HouseDocuments.tsx` perde la sezione "Impianti senza ambiente specifico" (ribalta una scelta precedente, vedi `decisions.md` #69) e resta solo con i documenti a livello casa non legati a nessun asset.
+- `AssetDetail`: "Manutenzione" e "Cronologia" sono ora sezioni comprimibili, chiuse di default con un badge che mostra il conteggio — riduce la densità della pagina segnalata da un beta tester. "Documenti" e "Garanzie" restano sempre visibili. Le azioni "+ Nuovo piano"/"+ Nuovo intervento" e l'azione rapida "Ultimo intervento" espandono automaticamente la sezione interessata; un form aperto forza comunque la sezione visibile.
+- Trovati e sistemati durante la stessa sessione (fix precedenti, vedi entry sopra): rianalisi di un documento già confermato, virgola residua nel titolo casa senza città, corsa tra conferma documento e ricalcolo delle Issue.
+- Verificato dal vivo con un utente/casa usa-e-getta (asset con e senza ambiente): chip e filtro funzionanti, sezioni comprimibili si espandono correttamente da header/azione/quick action.
+
 ## 2026-09-05 (3) — Fix: corsa tra conferma documento e ricalcolo "Da tenere d'occhio"
 
 - `App.tsx` (`refreshAssets`) chiamava `recalculateScore` in fire-and-forget (`.catch(() => {})` senza `await`) dopo la conferma di un documento; `Inbox.tsx` a sua volta non attendeva `onAssetLinked()`. Risultato osservato dal vivo (segnalato da un beta tester/agente): aprendo subito la Dashboard dopo aver confermato il primo documento, il contatore "Documenti collegati" era già a 1 ma il box "Da tenere d'occhio" mostrava ancora "Nessun documento caricato" (Issue `HOUSE_WITHOUT_DOCUMENTS` non ancora risolta). Ora `refreshAssets` attende il ricalcolo e `Inbox.tsx` attende `onAssetLinked()` in entrambi i punti di conferma (guidata AI e manuale) prima di considerare finita l'operazione.
