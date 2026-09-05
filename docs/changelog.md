@@ -2,6 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-04 (16) — Test alpha con amici: tunnel pubblico e report di attività
+
+- `frontend/vite.config.ts`: aggiunto un proxy dev-server per i prefissi delle rotte backend (`API_PREFIXES`) verso `http://localhost:3000`, così frontend e backend restano sulla stessa origin agli occhi del browser. Necessario per esporre l'app tramite un tunnel pubblico (Cloudflare Tunnel, una sola porta esposta): senza, il cookie di sessione httpOnly (`SameSite=Lax`) non viaggerebbe tra un dominio frontend e uno backend separati, rompendo il login. `frontend/.env` (locale, gitignored) con `VITE_API_URL` vuoto per usare percorsi relativi. Nessun impatto sull'uso normale in locale/LAN.
+- Nuovo `backend/scripts/alpha-activity-report.mjs`: script di sola lettura (nessun endpoint, nessuna UI) che stampa registrazioni e attività per utente (case, asset, documenti caricati/confermati, ultimo accesso) durante la finestra di test con amici. Pensato per essere rieseguito più volte, non una funzionalità di prodotto.
+- Pianificata (Task Scheduler di Windows, non nel repository) una chiusura di sicurezza del tunnel/dev server entro domenica sera, su richiesta esplicita dell'utente ("nel dubbio").
+
 ## 2026-09-04 (15) — Fix: build backend rotta dopo l'entry (14), `@types/archiver` disallineato dal runtime
 
 - `npm run build` falliva (`archiver(...)` "not callable") perché `@types/archiver` era pinnato a `^8.0.0` mentre il pacchetto runtime resta `archiver@^7.0.1`: la v8 dei tipi riscrive l'API a classi (`ZipArchive`/`TarArchive`, nessuna funzione factory esportata), incompatibile con l'uso `archiver('zip', opts)` già scritto in `HousesService.exportArchive` (entry (14), B62). La claim di quell'entry ("backend build... puliti") non era verificata: il comando non era mai stato rieseguito dopo l'ultimo commit di quella sessione.
