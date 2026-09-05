@@ -235,7 +235,7 @@ export function InboxView({
   house: House;
   assets: Asset[];
   rooms: Room[];
-  onAssetLinked: () => void;
+  onAssetLinked: () => void | Promise<void>;
   onRoomsChanged: () => void;
   onPropertyProfileChanged: () => void;
   // Quando la vista è annidata dentro InboxHub (vedi InboxHub.tsx), l'intestazione
@@ -377,7 +377,7 @@ export function InboxView({
       await api.documents.confirm(docId, data);
       setPickingAssetFor(null);
       await refresh();
-      onAssetLinked();
+      await onAssetLinked();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore imprevisto');
     } finally {
@@ -657,7 +657,7 @@ export function InboxView({
                 <MaintenanceFromDocument
                   documentId={doc.id}
                   busy={busy}
-                  onCompleted={async () => { await refresh(); onAssetLinked(); }}
+                  onCompleted={async () => { await refresh(); await onAssetLinked(); }}
                 />
               )}
             </div>

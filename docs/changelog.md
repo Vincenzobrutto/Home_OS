@@ -2,6 +2,11 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-05 (3) — Fix: corsa tra conferma documento e ricalcolo "Da tenere d'occhio"
+
+- `App.tsx` (`refreshAssets`) chiamava `recalculateScore` in fire-and-forget (`.catch(() => {})` senza `await`) dopo la conferma di un documento; `Inbox.tsx` a sua volta non attendeva `onAssetLinked()`. Risultato osservato dal vivo (segnalato da un beta tester/agente): aprendo subito la Dashboard dopo aver confermato il primo documento, il contatore "Documenti collegati" era già a 1 ma il box "Da tenere d'occhio" mostrava ancora "Nessun documento caricato" (Issue `HOUSE_WITHOUT_DOCUMENTS` non ancora risolta). Ora `refreshAssets` attende il ricalcolo e `Inbox.tsx` attende `onAssetLinked()` in entrambi i punti di conferma (guidata AI e manuale) prima di considerare finita l'operazione.
+- Verificato dal vivo con un utente/casa usa-e-getta: subito dopo la conferma del primo documento, Dashboard mostra "Documenti collegati: 1" senza alcun box residuo.
+
 ## 2026-09-05 (2) — Fix da simulazione beta tester: rianalisi documento confermato, virgola residua
 
 - Trovato da un agente che ha simulato un percorso reale da beta tester (registrazione, upload, conferma, ricerca, export, cancellazione account su dati usa-e-getta): `DocumentsService.analyze()` non controllava se il documento fosse già `CONFIRMED` prima di rilanciare l'analisi AI — un fallimento successivo (es. chiave API non valida) riportava lo stato a `PENDING` pur avendo già `assetId` valorizzato, disallineando la sezione "Documenti" dell'Asset (filtrata su `CONFIRMED`) dalla cronologia (mai retrocessa). Nella UI reale il pulsante "Analizza con AI" è già nascosto una volta confermato (`Inbox.tsx`), quindi non raggiungibile da un utente che passa solo dai pulsanti — il fix blinda comunque il backend con un `BadRequestException` esplicito. Nuovo test di regressione in `documents.service.spec.ts`.

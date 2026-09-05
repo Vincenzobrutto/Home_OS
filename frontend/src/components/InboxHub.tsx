@@ -36,7 +36,7 @@ export function InboxHub({
   house: House;
   assets: Asset[];
   rooms: Room[];
-  onAssetLinked: () => void;
+  onAssetLinked: () => void | Promise<void>;
   onRoomsChanged: () => void;
   onPropertyProfileChanged: () => void;
   gmailCandidateCount: number;

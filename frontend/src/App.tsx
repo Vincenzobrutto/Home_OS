@@ -232,8 +232,14 @@ export default function App() {
     // card Home Score è nascosta, vedi Dashboard.tsx) — il ricalcolo va
     // quindi silenzioso, così "Da tenere d'occhio" resta aggiornata dopo
     // ogni documento confermato senza un'azione esplicita dell'utente.
+    // Atteso (non fire-and-forget): se chi chiama refreshAssets aspetta
+    // questa promise prima di considerare finita la conferma, evita la
+    // corsa osservata dal vivo in cui la Dashboard, aperta subito dopo,
+    // mostrava già "Documenti collegati: 1" ma ancora l'avviso "Nessun
+    // documento caricato" perché il ricalcolo non aveva ancora scritto
+    // la risoluzione dell'Issue.
     if (ALPHA_MODE) {
-      api.genesis.recalculateScore(house.id).catch(() => {});
+      await api.genesis.recalculateScore(house.id).catch(() => {});
     }
   }
 
