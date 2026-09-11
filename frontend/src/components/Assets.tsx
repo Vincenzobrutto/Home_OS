@@ -873,6 +873,10 @@ export function AssetDetail({
             </span>
           )}
         </div>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
+          <span style={{ color: T.slate }}>Garanzia fino al: </span>
+          <span style={{ color: T.ink, fontWeight: 500 }}>{asset.warrantyUntil ? formatDateForDisplay(asset.warrantyUntil) : '—'}</span>
+        </div>
       </div>
 
       {!!asset.customFields?.length && (
