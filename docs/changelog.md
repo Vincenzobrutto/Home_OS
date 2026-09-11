@@ -2,7 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
-## 2026-09-11 — Fix: ricerca su un intervento non mostrava più la Cronologia
+## 2026-09-11 (2) — Fix: pulsante "Elimina" asset irraggiungibile su mobile
+
+- La riga di intestazione della scheda Asset (`Modifica`/`Dismetti`/`Elimina`) non andava mai a capo: su viewport stretto (375px) i tre pulsanti sforavano il bordo destro dello schermo senza scroll orizzontale, rendendo "Elimina" impossibile da toccare. Aggiunto `flexWrap: 'wrap'` alla riga di intestazione e alla riga pulsanti — su desktop restano affiancati come prima, su mobile vanno a capo sotto il titolo.
+- Trovato durante il test del layout mobile (viewport 375×812) nella revisione di usabilità/fruibilità (Fase 0) richiesta dall'utente.
+
+## 2026-09-11 (1) — Fix: ricerca su un intervento non mostrava più la Cronologia
 
 - Regressione introdotta dalle sezioni comprimibili (entry sotto, 2026-09-05 (4)): un risultato di ricerca globale su un intervento apriva la scheda Asset con "Cronologia" chiusa di default, nascondendo il contenuto appena cercato. `GlobalSearch.tsx` ora passa un segnale `focus: 'timeline'` fino ad `AssetDetail` (via `App.tsx`), che espande la sezione e ci scorre sopra automaticamente. La ricerca su una garanzia resta invariata: "Garanzie" non è comprimibile, non serve nessun segnale.
 - Trovato durante la revisione di usabilità/fruibilità (Fase 0) richiesta dall'utente, verificato dal vivo con l'account demo (`demo.completa@dimora.test`): cercando "Vaillant" e aprendo "Installazione caldaia" la Cronologia è ora visibile senza click aggiuntivi.

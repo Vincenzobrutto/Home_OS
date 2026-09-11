@@ -642,6 +642,8 @@ export function AssetDetail({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 10,
           marginBottom: 8,
         }}
       >
@@ -692,7 +694,7 @@ export function AssetDetail({
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           <button
             onClick={onEdit}
             style={{
