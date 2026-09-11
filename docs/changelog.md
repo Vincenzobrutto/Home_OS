@@ -2,6 +2,11 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-11 — Fix: ricerca su un intervento non mostrava più la Cronologia
+
+- Regressione introdotta dalle sezioni comprimibili (entry sotto, 2026-09-05 (4)): un risultato di ricerca globale su un intervento apriva la scheda Asset con "Cronologia" chiusa di default, nascondendo il contenuto appena cercato. `GlobalSearch.tsx` ora passa un segnale `focus: 'timeline'` fino ad `AssetDetail` (via `App.tsx`), che espande la sezione e ci scorre sopra automaticamente. La ricerca su una garanzia resta invariata: "Garanzie" non è comprimibile, non serve nessun segnale.
+- Trovato durante la revisione di usabilità/fruibilità (Fase 0) richiesta dall'utente, verificato dal vivo con l'account demo (`demo.completa@dimora.test`): cercando "Vaillant" e aprendo "Installazione caldaia" la Cronologia è ora visibile senza click aggiuntivi.
+
 ## 2026-09-05 (5) — Regione obbligatoria alla creazione casa; suggerimenti nome asset
 
 - `Bootstrap.tsx`: nuovo campo obbligatorio "Regione" (select, 20 regioni) nel form di creazione casa — serve solo al calcolo automatico dell'intervallo caldaia (vedi entry precedente su boiler-inspection-intervals), chiesta una volta sola invece che dentro la card manutenzione. `CreateHouseDto` backend reso coerente (region obbligatoria in creazione, resta opzionale in `UpdateHouseDto` per le case esistenti). `Maintenance.tsx` mostra il selettore regione solo come ripiego per le case create prima di questo cambio.

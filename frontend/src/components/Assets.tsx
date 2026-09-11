@@ -412,6 +412,7 @@ export function AssetDetail({
   asset,
   assets,
   house,
+  focusSection,
   room,
   rooms,
   contacts,
@@ -430,6 +431,9 @@ export function AssetDetail({
   asset: Asset & { customFields?: CustomField[] };
   assets: Asset[];
   house: House;
+  // Sezione da aprire subito arrivando qui (oggi solo dalla ricerca globale
+  // su un intervento) — le sezioni comprimibili sotto partono chiuse.
+  focusSection?: 'timeline' | null;
   room?: Room;
   rooms: Room[];
   contacts: Contact[];
@@ -517,6 +521,17 @@ export function AssetDetail({
     refreshDocuments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asset.id, asset.houseId]);
+
+  // Un risultato di ricerca su un intervento apre l'Asset con Cronologia
+  // ancora chiusa di default: senza questo, l'utente non vede quello che ha
+  // appena cercato senza un click in più.
+  useEffect(() => {
+    if (focusSection === 'timeline') {
+      setTimelineOpen(true);
+      timelineSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusSection, asset.id]);
 
   async function moveDocumentToHouse(docId: string) {
     await api.documents.moveToHouse(docId);

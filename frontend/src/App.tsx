@@ -48,6 +48,11 @@ export default function App() {
   // quando gli asset senza ambiente si aprono anche da Documenti casa.
   const [assetDetailOrigin, setAssetDetailOrigin] = useState<View>('assets');
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  // Quale sezione (altrimenti chiusa di default, vedi Assets.tsx) aprire
+  // subito arrivando sulla scheda Asset — oggi solo dalla ricerca globale
+  // su un intervento, così il risultato cercato è visibile senza un click
+  // in più. null per ogni altra navigazione verso un Asset.
+  const [assetDetailFocus, setAssetDetailFocus] = useState<'timeline' | null>(null);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [addAssetOpen, setAddAssetOpen] = useState(false);
   const [addAssetRoomId, setAddAssetRoomId] = useState<string | null>(null);
@@ -206,9 +211,10 @@ export default function App() {
     setDriveCandidateCount((await api.documents.driveCandidates(house.id)).length);
   }
 
-  function openAsset(id: string, origin: View = 'assets') {
+  function openAsset(id: string, origin: View = 'assets', focus?: 'timeline') {
     setSelectedAssetId(id);
     setAssetDetailOrigin(origin);
+    setAssetDetailFocus(focus ?? null);
     setView('asset-detail');
   }
   function openRoom(id: string) {
@@ -373,7 +379,7 @@ export default function App() {
         <GlobalSearch
           data={{ assets, contacts, documents, warranties, interventions }}
           onClose={() => setSearchOpen(false)}
-          openAsset={(id) => openAsset(id, view)}
+          openAsset={(id, focus) => openAsset(id, view, focus)}
           openContact={openContact}
           onOpenHouseDocuments={() => setView('house-documents')}
         />
@@ -476,6 +482,7 @@ export default function App() {
             asset={selectedAsset}
             assets={assets}
             house={house}
+            focusSection={assetDetailFocus}
             room={rooms.find((r) => r.id === selectedAsset.roomId)}
             rooms={rooms}
             contacts={contacts}

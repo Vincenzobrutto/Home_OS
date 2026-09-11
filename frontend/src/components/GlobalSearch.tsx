@@ -22,7 +22,11 @@ export function GlobalSearch({
 }: {
   data: SearchData;
   onClose: () => void;
-  openAsset: (id: string) => void;
+  // "focus" segnala ad AssetDetail di aprire subito una sezione altrimenti
+  // chiusa di default (Cronologia) — senza, un risultato di ricerca su un
+  // intervento/garanzia atterrerebbe sulla scheda Asset senza mostrare
+  // quello che l'utente stava cercando.
+  openAsset: (id: string, focus?: 'timeline') => void;
   openContact: (id: string) => void;
   onOpenHouseDocuments: () => void;
 }) {
@@ -50,12 +54,14 @@ export function GlobalSearch({
       else if (doc?.houseLevel) onOpenHouseDocuments();
       else window.open(api.documents.fileUrl(result.id), '_blank');
     } else if (result.kind === 'warranty') {
+      // Sezione Garanzie non è comprimibile: nessun focus necessario, la
+      // scheda Asset la mostra già per intero.
       const warranty = data.warranties.find((w) => w.id === result.id);
       if (warranty) openAsset(warranty.assetId);
     } else if (result.kind === 'intervention') {
       const intervention = data.interventions.find((i) => i.id === result.id);
       const firstAsset = intervention?.assets[0]?.id;
-      if (firstAsset) openAsset(firstAsset);
+      if (firstAsset) openAsset(firstAsset, 'timeline');
     }
   }
 
