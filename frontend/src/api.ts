@@ -246,6 +246,7 @@ export const api = {
         startsAt?: string;
         kind?: WarrantyKind;
         providerContactId?: string | null;
+        originInterventionId?: string | null;
         proofDocumentId?: string | null;
         notes?: string | null;
         evidenceStatus?: EvidenceStatus;
@@ -258,6 +259,7 @@ export const api = {
         startsAt: string | null;
         kind: WarrantyKind;
         providerContactId: string | null;
+        originInterventionId: string | null;
         proofDocumentId: string | null;
         notes: string | null;
         evidenceStatus: EvidenceStatus;

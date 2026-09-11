@@ -29,6 +29,10 @@ export class CreateWarrantyDto {
 
   @IsOptional()
   @IsUUID()
+  originInterventionId?: string | null;
+
+  @IsOptional()
+  @IsUUID()
   proofDocumentId?: string | null;
 
   @IsOptional()

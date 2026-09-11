@@ -37,6 +37,7 @@ function makeService(overrides: Record<string, unknown> = {}) {
       update: jest.fn(),
     },
     contact: { count: jest.fn().mockResolvedValue(1) },
+    intervention: { count: jest.fn().mockResolvedValue(1) },
     document: { count: jest.fn().mockResolvedValue(1) },
     warranty: {
       create: jest.fn().mockResolvedValue(created),
@@ -120,6 +121,37 @@ describe('WarrantiesService', () => {
         providerContactId: 'contact-1',
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects an origin intervention from a different house', async () => {
+    const { service } = makeService({
+      intervention: { count: jest.fn().mockResolvedValue(0) },
+    });
+
+    await expect(
+      service.create('user-1', 'asset-1', {
+        expiresAt: new Date('2027-01-01'),
+        originInterventionId: 'intervention-1',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('links a warranty to the intervention it originates from', async () => {
+    const { prisma, service } = makeService();
+
+    await service.create('user-1', 'asset-1', {
+      expiresAt: new Date('2027-01-01'),
+      kind: WarrantyKind.REPAIR,
+      originInterventionId: 'intervention-1',
+    });
+
+    expect(prisma.warranty.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          originInterventionId: 'intervention-1',
+        }) as object,
+      }),
+    );
   });
 
   it('lists warranties for a whole house, scoped via the asset relation, with asset info included', async () => {

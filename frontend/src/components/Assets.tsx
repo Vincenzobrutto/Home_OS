@@ -14,6 +14,16 @@ const WARRANTY_KIND_LABELS: Record<WarrantyKind, string> = {
   OTHER: 'Altro',
 };
 
+// Spiega la differenza tra i 4 tipi al momento della scelta: senza, "Acquisto"
+// vs "Riparazione" vs "Estensione" sono solo parole, non è chiaro quale
+// garanzia reale (produttore, negozio, tecnico) corrisponda a quale voce.
+const WARRANTY_KIND_HINTS: Record<WarrantyKind, string> = {
+  PURCHASE: 'La garanzia del produttore o del negozio, valida dall’acquisto.',
+  REPAIR: 'La copertura sul pezzo o sul lavoro dopo un intervento di un tecnico.',
+  EXTENDED: 'Una copertura aggiuntiva comprata a parte, oltre a quella di fabbrica.',
+  OTHER: 'Qualsiasi altra copertura che non rientra nei casi precedenti.',
+};
+
 // Colore per tipo di intervento sui pallini della Cronologia — leggibilità
 // "installazione → manutenzione → guasto → riparazione" richiesta da B50.
 function interventionKindColor(kind: InterventionKind | null | undefined): string {
@@ -479,6 +489,7 @@ export function AssetDetail({
   const [warranties, setWarranties] = useState<Warranty[]>([]);
   const [addingWarranty, setAddingWarranty] = useState(false);
   const [newWarrantyKind, setNewWarrantyKind] = useState<WarrantyKind>('PURCHASE');
+  const [newWarrantyOriginInterventionId, setNewWarrantyOriginInterventionId] = useState('');
   const [newWarrantyStartsAt, setNewWarrantyStartsAt] = useState('');
   const [newWarrantyExpiresAt, setNewWarrantyExpiresAt] = useState('');
   const [newWarrantyContactId, setNewWarrantyContactId] = useState('');
@@ -600,11 +611,13 @@ export function AssetDetail({
         startsAt: parseDateInput(newWarrantyStartsAt) || undefined,
         kind: newWarrantyKind,
         providerContactId: newWarrantyContactId || null,
+        originInterventionId: newWarrantyKind === 'REPAIR' ? newWarrantyOriginInterventionId || null : null,
         proofDocumentId: newWarrantyDocumentId || null,
         notes: newWarrantyNotes.trim() || null,
       });
       setAddingWarranty(false);
       setNewWarrantyKind('PURCHASE');
+      setNewWarrantyOriginInterventionId('');
       setNewWarrantyStartsAt('');
       setNewWarrantyExpiresAt('');
       setNewWarrantyContactId('');
@@ -1063,13 +1076,45 @@ export function AssetDetail({
             marginBottom: 20,
           }}
         >
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
-            <select style={eventInputStyle} value={newWarrantyKind} onChange={(e) => setNewWarrantyKind(e.target.value as WarrantyKind)}>
-              <option value="PURCHASE">Acquisto</option>
-              <option value="REPAIR">Riparazione</option>
-              <option value="EXTENDED">Estensione</option>
-              <option value="OTHER">Altro</option>
-            </select>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate, marginBottom: 4 }}>Tipo di garanzia</div>
+          <select
+            style={{ ...eventInputStyle, width: '100%', marginBottom: 4, cursor: 'pointer' }}
+            value={newWarrantyKind}
+            onChange={(e) => {
+              setNewWarrantyKind(e.target.value as WarrantyKind);
+              setNewWarrantyOriginInterventionId('');
+            }}
+          >
+            <option value="PURCHASE">Acquisto — garanzia produttore/negozio</option>
+            <option value="REPAIR">Riparazione — copertura dopo un intervento</option>
+            <option value="EXTENDED">Estensione — comprata a parte</option>
+            <option value="OTHER">Altro</option>
+          </select>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate, marginBottom: 8 }}>
+            {WARRANTY_KIND_HINTS[newWarrantyKind]}
+          </div>
+          {newWarrantyKind === 'REPAIR' && (
+            <>
+              <select
+                style={{ ...eventInputStyle, width: '100%', marginBottom: 4, cursor: 'pointer' }}
+                value={newWarrantyOriginInterventionId}
+                onChange={(e) => setNewWarrantyOriginInterventionId(e.target.value)}
+              >
+                <option value="">Nessun intervento collegato</option>
+                {timeline
+                  .filter((t) => t.sourceKind === 'INTERVENTION')
+                  .map((t) => (
+                    <option key={t.sourceId} value={t.sourceId}>
+                      {t.eventType} — {formatDateForDisplay(t.eventDate)}
+                    </option>
+                  ))}
+              </select>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11.5, color: T.slate, marginBottom: 8 }}>
+                Facoltativo: collega la garanzia all'intervento di riparazione da cui nasce, per ritrovarla dalla Cronologia.
+              </div>
+            </>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
             <input style={eventInputStyle} placeholder="Inizio gg/mm/aaaa" value={newWarrantyStartsAt} onChange={(e) => setNewWarrantyStartsAt(e.target.value)} />
             <input style={eventInputStyle} placeholder="Scadenza gg/mm/aaaa" value={newWarrantyExpiresAt} onChange={(e) => setNewWarrantyExpiresAt(e.target.value)} />
           </div>
@@ -1171,6 +1216,10 @@ export function AssetDetail({
                   <span style={{ color: evidence.color }}>{evidence.label}</span>
                   {w.contact && <span>Fornitore: {w.contact.name}</span>}
                   {w.document && <span>Prova: {w.document.originalFilename}</span>}
+                  {w.originInterventionId && (() => {
+                    const origin = timeline.find((t) => t.sourceId === w.originInterventionId);
+                    return origin ? <span>Da intervento: {origin.eventType} ({formatDateForDisplay(origin.eventDate)})</span> : null;
+                  })()}
                 </div>
                 {w.notes && (
                   <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: T.ink70, marginTop: 4 }}>{w.notes}</div>

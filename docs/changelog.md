@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-11 (4) — Collegamento garanzia-intervento; form garanzia più chiaro
+
+- `Warranty.originInterventionId` era già nello schema ma mai scrivibile: ora `CreateWarrantyDto`/`UpdateWarrantyDto` lo accettano (validato contro la casa) e il form "+ Aggiungi garanzia" lascia scegliere, solo per il tipo "Riparazione", quale intervento della Cronologia l'ha generata. La card garanzia mostra poi "Da intervento: ...".
+- Il tipo di garanzia (Acquisto/Riparazione/Estensione/Altro) esce dalla griglia condivisa con le date e diventa un blocco con etichetta, opzioni riformulate e una spiegazione che cambia in base alla scelta.
+- Trovato ragionando con l'utente sul perché lo stesso asset avesse due garanzie: il modello lo prevede correttamente (fatti commerciali distinti nel tempo), ma l'inserimento non lo spiegava. Vedi `decisions.md` #71.
+- Corretto anche un dato demo: eliminata dal DB una garanzia da seed con data sbagliata (scadenza precedente all'inizio) su Frigorifero Samsung.
+
 ## 2026-09-11 (3) — Data di scadenza garanzia anche nelle informazioni principali dell'Asset
 
 - La scadenza garanzia (`asset.warrantyUntil`) era visibile solo come badge accanto allo stato in alto; ora compare anche come campo nella griglia con Installato il/Acquistato il/Marca/Modello/ecc., più coerente con le altre date. Nessuna nuova logica: stesso campo già usato per il badge esistente.

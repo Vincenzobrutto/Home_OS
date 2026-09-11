@@ -61,6 +61,7 @@ export class WarrantiesService {
         startsAt: dto.startsAt ?? null,
         kind: dto.kind ?? WarrantyKind.PURCHASE,
         providerContactId: dto.providerContactId || null,
+        originInterventionId: dto.originInterventionId || null,
         proofDocumentId: dto.proofDocumentId || null,
         notes: dto.notes?.trim() || null,
         evidenceStatus,
@@ -108,6 +109,10 @@ export class WarrantiesService {
         dto.providerContactId === undefined
           ? existing.providerContactId
           : dto.providerContactId,
+      originInterventionId:
+        dto.originInterventionId === undefined
+          ? existing.originInterventionId
+          : dto.originInterventionId,
       proofDocumentId:
         dto.proofDocumentId === undefined
           ? existing.proofDocumentId
@@ -128,6 +133,7 @@ export class WarrantiesService {
         startsAt: merged.startsAt ?? null,
         kind: merged.kind ?? WarrantyKind.PURCHASE,
         providerContactId: merged.providerContactId || null,
+        originInterventionId: merged.originInterventionId || null,
         proofDocumentId: merged.proofDocumentId || null,
         notes: merged.notes?.trim() || null,
         evidenceStatus,
@@ -174,7 +180,10 @@ export class WarrantiesService {
 
   private async validateReferences(
     houseId: string,
-    dto: Pick<CreateWarrantyDto, 'providerContactId' | 'proofDocumentId'>,
+    dto: Pick<
+      CreateWarrantyDto,
+      'providerContactId' | 'proofDocumentId' | 'originInterventionId'
+    >,
   ) {
     if (dto.providerContactId) {
       const count = await this.prisma.contact.count({
@@ -182,6 +191,13 @@ export class WarrantiesService {
       });
       if (!count)
         throw new BadRequestException('Il contatto non appartiene alla casa.');
+    }
+    if (dto.originInterventionId) {
+      const count = await this.prisma.intervention.count({
+        where: { id: dto.originInterventionId, houseId },
+      });
+      if (!count)
+        throw new BadRequestException("L'intervento non appartiene alla casa.");
     }
     if (dto.proofDocumentId) {
       const count = await this.prisma.document.count({
