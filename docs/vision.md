@@ -71,3 +71,5 @@ Per lo stato dettagliato di cosa è fatto/in corso/pianificato vedi `roadmap.md`
 | Trasferimento del record al nuovo proprietario | Visione futura, subordinata a identità, permessi, separazione dati e verifica legale |
 | Record certificato/verificato per banche o assicurazioni | Non disponibile; usare "record strutturato con provenienza tracciabile" finché non esiste una verifica terza |
 | Integrazioni catastali, APE e renovation passport | Future e dipendenti da accessibilità normativa/tecnica delle fonti |
+
+Il contesto competitivo e normativo che giustifica questo confine è in `docs/market-landscape.md`. In particolare: il passaporto di ristrutturazione europeo potrebbe rendere pubblica una parte di ciò che Dimora costruisce, e il posizionamento scelto è di alimentarlo, non di competervi.

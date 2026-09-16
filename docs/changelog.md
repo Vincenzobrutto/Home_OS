@@ -2,6 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-16 — Analisi di mercato aggiunta al repo
+
+- Nuovo `docs/market-landscape.md`: panorama competitivo (Homer, HomeVaultHQ, Digs, ecc.), il precedente normativo francese (CIL), il passaporto di ristrutturazione europeo (EPBD IV) e 4 criteri operativi (C1–C4) per valutare se una feature è un differenziale o una commodity.
+- Applicate le tre appendici del documento: due nuove ADR in `decisions.md` (#72 differenziale = strato normativo territoriale, non la memoria in sé; #73 il canale come variabile di prodotto), 5 voci in `backlog.md` (B68-B72, domande di mercato ancora aperte), una riga di raccordo in `vision.md` §"Confine della promessa".
+- Nota: il documento cita più volte `docs/compliance-spec.md`, che non esiste ancora nel repo — riferimenti lasciati come sono (forward-looking), per scelta esplicita dell'utente.
+
 ## 2026-09-11 (4) — Collegamento garanzia-intervento; form garanzia più chiaro
 
 - `Warranty.originInterventionId` era già nello schema ma mai scrivibile: ora `CreateWarrantyDto`/`UpdateWarrantyDto` lo accettano (validato contro la casa) e il form "+ Aggiungi garanzia" lascia scegliere, solo per il tipo "Riparazione", quale intervento della Cronologia l'ha generata. La card garanzia mostra poi "Da intervento: ...".
