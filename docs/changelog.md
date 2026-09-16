@@ -2,6 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-16 (4) — DomiKeep verificato e ridimensionato (B73)
+
+- L'analisi approfondita di DomiKeep chiesta in B73 ha trovato che **non è un concorrente operativo verificabile**: è una landing page pre-lancio (waitlist/early access, nessun prodotto/app/social), zero presenza web indipendente, e cita un Business ID che non corrisponde a quello reale della società finlandese indicata come parent (verificato sui registri imprese).
+- Corretta la caratterizzazione data in ADR #74 (presa da `market-research-funding-2026.md` §6 senza verifica diretta) con una nuova ADR #75, seguendo la convenzione di non riscrivere voci passate. `market-strategy.md` §2 e `backlog.md` B73 aggiornati.
+- Lezione di metodo tenuta esplicita nell'ADR: un claim competitivo va verificato con una fonte indipendente prima di essere ripetuto in documentazione, non basta leggere il sito ufficiale del prodotto citato.
+
 ## 2026-09-16 (3) — Riorganizzazione del materiale di mercato: un documento di sintesi
 
 - Nuovo `docs/market-strategy.md`: concilia `market-landscape.md` e `market-research-funding-2026.md` in un'unica tesi di lavoro invece di lasciarle come due letture separate e in apparente tensione. Diventa il punto di ingresso primario per il contesto di mercato ("va riletto obbligatoriamente prima di..."); le due fonti restano per il dettaglio.

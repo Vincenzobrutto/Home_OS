@@ -44,7 +44,7 @@ Sintesi (dettaglio completo nelle due fonti):
 - **Normativo europeo**: Digital Building Logbook (progetto Demo-BLog, 4,5M unità coperte) ed EPBD IV (passaporto di ristrutturazione, recepimento italiano in ritardo) — entrambi rischiano di rendere pubblica una fetta del "database della casa".
 - **Italia**: gestionali B2B esistenti (AP-Evolution, MaintenUP...) sono sia canale potenziale sia concorrente laterale; nessun operatore consumer italiano rilevante mappato finora (ma vedi B69, da riverificare periodicamente).
 
-**Gap da colmare, trovato riconciliando le due fonti**: `market-research-funding-2026.md` §6 segnala **DomiKeep** (equipment index, warranty vault, OCR targhette, evoluzione verso EPBD/renovation) come il concorrente con **sovrapposizione molto alta** con Dimora — più vicino di Homer o HomeVaultHQ, che erano invece il riferimento principale in `market-landscape.md`. DomiKeep non è mai stato analizzato a fondo. Vedi B73.
+**DomiKeep — verificato e ridimensionato (2026-09-16, B73).** `market-research-funding-2026.md` §6 lo segnalava come il concorrente con "sovrapposizione molto alta". Verifica diretta (non solo lettura del sito): è una **landing page pre-lancio** (waitlist/early access, nessun prodotto funzionante, nessun link ad app o dashboard), con **zero presenza web indipendente** (nessuna stampa, Crunchbase, LinkedIn, app store) e un Business ID dichiarato (FI25488174) che **non corrisponde** a quello reale della società finlandese citata come parent ("Positive Productions Oy", Y-tunnus reale 2355279-9). Non va trattato come concorrente operativo reale, solo come segnale che l'idea attrae altri builder — con lo stesso vocabolario normativo EU (EPBD, DBL, BRP) usato in queste due ricerche, il che conferma che quel linguaggio risuona, non che DomiKeep sia una minaccia. Da monitorare, non da temere. Nessun'altra azione finché non emergono segnali concreti di lancio reale.
 
 ---
 
@@ -87,7 +87,7 @@ Le domande aperte delle due fonti sono già tracciate in `backlog.md`, per non d
 | `market-landscape.md` §5 (M4) | B70 | Monitoraggio recepimento EPBD IV |
 | `market-landscape.md` §5 (M6) | B71 | Canale "impresa di ristrutturazione" |
 | `market-landscape.md` §5 (M7) | B72 | Disponibilità a pagare di un proprietario italiano |
-| `market-research-funding-2026.md` §6 | B73 | Analisi approfondita di DomiKeep (nuovo, da questa sintesi) |
+| `market-research-funding-2026.md` §6 | B73 | ~~Analisi approfondita di DomiKeep~~ — fatta e chiusa: non è un concorrente operativo verificabile, solo una landing page pre-lancio, vedi §2 sopra |
 | `market-research-funding-2026.md` §19/§25/§26 | B74 | Eseguire i test di validazione dei 4 wedge B2B2C prima di ulteriori pivot (nuovo, da questa sintesi) |
 
 Non tracciate a parte perché già coperte da B72/Fase 0 esistente: `market-research-funding-2026.md` §26 Test 1 ("Value of Data") e Test 4 ("Distribution") si sovrappongono rispettivamente a M7/B72 e a M6/B71.
