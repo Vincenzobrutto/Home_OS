@@ -2,7 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
-## 2026-09-16 — Analisi di mercato aggiunta al repo
+## 2026-09-16 (2) — Seconda ricerca di mercato aggiunta al repo (solo salvataggio)
+
+- Nuovo `docs/market-research-funding-2026.md`: funding scan su Home/Property (Hint, Casa, Digs, Zero Homes, RenoFi, Nomos, ecc.), Digital Building Logbook/EPBD, tesi "Property Graph" e quattro wedge B2B2C da testare (renovation+financing, insurance, energy upgrade, transaction readiness).
+- Solo salvato come riferimento, su richiesta esplicita dell'utente — nessuna modifica a `vision.md`/`decisions.md`/`backlog.md` per ora, a differenza di `market-landscape.md` (voce precedente).
+
+## 2026-09-16 (1) — Analisi di mercato aggiunta al repo
 
 - Nuovo `docs/market-landscape.md`: panorama competitivo (Homer, HomeVaultHQ, Digs, ecc.), il precedente normativo francese (CIL), il passaporto di ristrutturazione europeo (EPBD IV) e 4 criteri operativi (C1–C4) per valutare se una feature è un differenziale o una commodity.
 - Applicate le tre appendici del documento: due nuove ADR in `decisions.md` (#72 differenziale = strato normativo territoriale, non la memoria in sé; #73 il canale come variabile di prodotto), 5 voci in `backlog.md` (B68-B72, domande di mercato ancora aperte), una riga di raccordo in `vision.md` §"Confine della promessa".
