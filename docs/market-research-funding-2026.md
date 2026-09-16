@@ -1,5 +1,7 @@
 # Dimora / HomeOS --- Market Research Home & Property
 
+**Fonte grezza --- la sintesi aggiornata è in [`docs/market-strategy.md`](market-strategy.md).** Questo file resta il riferimento per il dettaglio (funding scan, buyer analysis, Value-of-Data Matrix) del panorama Home/Property e delle ipotesi B2B2C; `market-strategy.md` lo concilia con `market-landscape.md` in un'unica tesi di lavoro.
+
 ## Funding scan, Digital Building Logbook, Property Graph e opportunità B2B2C
 
 **Stato:** documento di ricerca / strategia\

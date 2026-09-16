@@ -2,6 +2,13 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-16 (3) — Riorganizzazione del materiale di mercato: un documento di sintesi
+
+- Nuovo `docs/market-strategy.md`: concilia `market-landscape.md` e `market-research-funding-2026.md` in un'unica tesi di lavoro invece di lasciarle come due letture separate e in apparente tensione. Diventa il punto di ingresso primario per il contesto di mercato ("va riletto obbligatoriamente prima di..."); le due fonti restano per il dettaglio.
+- La tensione risolta: `market-landscape.md` indicava il differenziale nello strato normativo territoriale, `market-research-funding-2026.md` nella storia privata longitudinale (e valutava la Compliance come il wedge B2B2C più debole). Riconciliate come due livelli distinti — normativa = cuneo di acquisizione, storia = moat di ritenzione — vedi ADR #74 in `decisions.md`.
+- Trovato durante la riconciliazione: **DomiKeep**, segnalato in `market-research-funding-2026.md` §6 come il concorrente con sovrapposizione più alta, non era mai stato analizzato nella prima ricerca. Aggiunto B73. Aggiunto anche B74 (validare i 4 wedge B2B2C prima di ulteriori pivot).
+- `vision.md` e i riferimenti nelle due fonti aggiornati per puntare a `market-strategy.md` come riferimento primario.
+
 ## 2026-09-16 (2) — Seconda ricerca di mercato aggiunta al repo (solo salvataggio)
 
 - Nuovo `docs/market-research-funding-2026.md`: funding scan su Home/Property (Hint, Casa, Digs, Zero Homes, RenoFi, Nomos, ecc.), Digital Building Logbook/EPBD, tesi "Property Graph" e quattro wedge B2B2C da testare (renovation+financing, insurance, energy upgrade, transaction readiness).

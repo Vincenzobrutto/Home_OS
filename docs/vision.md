@@ -72,4 +72,4 @@ Per lo stato dettagliato di cosa è fatto/in corso/pianificato vedi `roadmap.md`
 | Record certificato/verificato per banche o assicurazioni | Non disponibile; usare "record strutturato con provenienza tracciabile" finché non esiste una verifica terza |
 | Integrazioni catastali, APE e renovation passport | Future e dipendenti da accessibilità normativa/tecnica delle fonti |
 
-Il contesto competitivo e normativo che giustifica questo confine è in `docs/market-landscape.md`. In particolare: il passaporto di ristrutturazione europeo potrebbe rendere pubblica una parte di ciò che Dimora costruisce, e il posizionamento scelto è di alimentarlo, non di competervi.
+Il contesto competitivo e normativo che giustifica questo confine è in `docs/market-strategy.md` (sintesi; fonti complete in `market-landscape.md` e `market-research-funding-2026.md`). In particolare: il passaporto di ristrutturazione europeo potrebbe rendere pubblica una parte di ciò che Dimora costruisce, e il posizionamento scelto è di alimentarlo, non di competervi.

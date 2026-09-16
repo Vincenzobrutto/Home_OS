@@ -1,20 +1,14 @@
 # Market Landscape
 
-**Percorso suggerito: `docs/market-landscape.md`**
+**Fonte grezza — la sintesi aggiornata è in [`docs/market-strategy.md`](market-strategy.md).** Questo file resta il riferimento per il dettaglio (tabelle, numeri, fonti) del panorama competitivo e del precedente normativo francese; non è più il punto di ingresso per capire "cosa pensiamo oggi del mercato" — quello si legge in `market-strategy.md`, che concilia questo documento con `market-research-funding-2026.md`.
+
 Ultimo aggiornamento: 16 settembre 2026 · Prossima revisione consigliata: dicembre 2026
 
 ---
 
 ## Perché questo documento esiste
 
-Questo file raccoglie ciò che sappiamo del mercato in cui Dimora si colloca. Non è materiale commerciale: è il contesto che deve essere riletto **prima** di prendere decisioni di posizionamento, di aprire una nuova direttrice di prodotto o di dare priorità a una feature.
-
-**Quando va riletto obbligatoriamente:**
-- prima di modificare `docs/vision.md`
-- prima di aprire un nuovo canale o un nuovo segmento di utenza
-- prima di decidere l'ordine della roadmap oltre la Fase 4
-- prima di preparare materiale per investitori o partner
-- quando si valuta se una feature è un differenziale o una commodity
+Questo file raccoglie ciò che sappiamo del mercato in cui Dimora si colloca. Non è materiale commerciale: è il contesto che deve essere riletto **prima** di prendere decisioni di posizionamento, di aprire una nuova direttrice di prodotto o di dare priorità a una feature (elenco completo degli obblighi di rilettura in `market-strategy.md`).
 
 **Natura delle informazioni.** Raccolte tramite ricerca pubblica a settembre 2026. Le cifre di raccolta e i prezzi sono dichiarati da fonti giornalistiche o dai siti dei prodotti, non verificati direttamente. Vanno riverificati prima di essere citati all'esterno.
 
