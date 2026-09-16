@@ -46,6 +46,12 @@ Sintesi (dettaglio completo nelle due fonti):
 
 **DomiKeep — verificato e ridimensionato (2026-09-16, B73).** `market-research-funding-2026.md` §6 lo segnalava come il concorrente con "sovrapposizione molto alta". Verifica diretta (non solo lettura del sito): è una **landing page pre-lancio** (waitlist/early access, nessun prodotto funzionante, nessun link ad app o dashboard), con **zero presenza web indipendente** (nessuna stampa, Crunchbase, LinkedIn, app store) e un Business ID dichiarato (FI25488174) che **non corrisponde** a quello reale della società finlandese citata come parent ("Positive Productions Oy", Y-tunnus reale 2355279-9). Non va trattato come concorrente operativo reale, solo come segnale che l'idea attrae altri builder — con lo stesso vocabolario normativo EU (EPBD, DBL, BRP) usato in queste due ricerche, il che conferma che quel linguaggio risuona, non che DomiKeep sia una minaccia. Da monitorare, non da temere. Nessun'altra azione finché non emergono segnali concreti di lancio reale.
 
+**Giro di verifica esteso a tutti gli altri (2026-09-16, ADR #76).** Su richiesta dell'utente, verificate con fonti indipendenti altre 16 aziende citate nelle due ricerche: Homer, HomeVaultHQ, Hint, Digs, Smart Bricks, Casa, Zero Homes, RenoFi, Nomos, Dwelly, Deutsche Sanierungsberatung, VARM, Axle Energy, Faura, Neural Earth, ScyAI, Struck, Uniti, Sesame, HomeDLBX. **14 confermate accurate** (round, importi e modello coerenti con stampa/fonti indipendenti). Due correzioni:
+- **Smart Bricks** (usata in ADR #73 come prova che "il capitale segue il canale"): raccolta reale, ma è underwriting immobiliare istituzionale — categoria sbagliata, non appartiene a questo confronto. Rimossa dal conteggio "canale" in `market-landscape.md` §1.2.
+- **ScyAI**: reale, ma è risk intelligence per portafogli enterprise/industriali, non per il singolo immobile residenziale — sfumatura da tenere presente, non un errore da correggere.
+
+Nessun'altra azienda mostra segnali come quelli di DomiKeep (landing page pre-lancio, business ID incongruente). Il quadro competitivo delle due fonti regge, con le due eccezioni sopra.
+
 ---
 
 ## 3. Criteri operativi unificati

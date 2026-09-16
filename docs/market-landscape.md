@@ -50,6 +50,8 @@ Il loro meccanismo di ritorno è la manutenzione preventiva basata sui prodotti 
 
 **Implicazione.** Su cinque aziende su cinque, il capitale segue chi ha un canale. La domanda che conta non è quanto paga un proprietario, ma **chi paga perché la memoria si formi**.
 
+**Correzione (2026-09-16, verifica indipendente — vedi ADR #76 in `decisions.md`).** Smart Bricks è stata verificata: la raccolta di 5 M$ pre-seed è reale (confermata da TechCrunch, a16z Speedrun), ma **non appartiene a questa categoria**. Il prodotto reale è un layer AI per underwriting e investimento immobiliare istituzionale (analisi/valutazione/esecuzione di deal in minuti), rivolto a capitale allocatore — non un canale di consegna della memoria della casa a un proprietario. Va rimossa dal confronto "capitale segue il canale"; l'implicazione sopra resta valida sulle altre quattro (Digs, Hint, House:ID, HomeKey Systems).
+
 ### 1.3 Italia — il software esiste, sull'altro lato del mercato
 
 Gestionali per centri di assistenza, installatori e manutentori (AP-Evolution, MaintenUP, EasyCloudPro, Infocad e altri) coprono già scadenziario, manutenzioni programmate e cicliche, storico impianti, documentazione tecnica e contratti, su caldaie, condizionamento, ascensori e antincendio.

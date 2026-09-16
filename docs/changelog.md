@@ -2,6 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-16 (5) — Verifica indipendente di tutti gli altri competitor citati
+
+- Su richiesta dell'utente ("e sugli altri competitor?"), stesso trattamento di DomiKeep esteso a 16 aziende citate in `market-landscape.md`/`market-research-funding-2026.md`: Homer, HomeVaultHQ, Hint, Digs, Smart Bricks, Casa, Zero Homes, RenoFi, Nomos, Dwelly, Deutsche Sanierungsberatung, VARM, Axle Energy, Faura, Neural Earth, ScyAI, Struck, Uniti, Sesame, HomeDLBX.
+- 14 confermate accurate su fonti indipendenti (stampa, App Store, registri). Due correzioni: **Smart Bricks** (raccolta reale ma categoria sbagliata — è underwriting immobiliare istituzionale, non un canale di consegna della memoria della casa, usata erroneamente in ADR #73); **ScyAI** (reale ma per portafogli enterprise/industriali, non per il singolo immobile residenziale).
+- B68 chiuso con questi risultati. Vedi ADR #76 in `decisions.md`, correzione in `market-landscape.md` §1.2, sintesi aggiornata in `market-strategy.md` §2.
+
 ## 2026-09-16 (4) — DomiKeep verificato e ridimensionato (B73)
 
 - L'analisi approfondita di DomiKeep chiesta in B73 ha trovato che **non è un concorrente operativo verificabile**: è una landing page pre-lancio (waitlist/early access, nessun prodotto/app/social), zero presenza web indipendente, e cita un Business ID che non corrisponde a quello reale della società finlandese indicata come parent (verificato sui registri imprese).
