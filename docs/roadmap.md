@@ -110,6 +110,12 @@ La sequenza di prodotto è **Memoria della casa → Fiducia → Recupero rapido 
 
 Debito tecnico e sicurezza restano vincoli trasversali: test frontend, copertura backend, token OAuth cifrati, OAuth mobile LAN, navigazione con URL reali e multi-utente non spariscono dalla pianificazione operativa. Il dettaglio e le dipendenze sono in `backlog.md`.
 
+## Direzione B2B2C — Renovation + Financing (Italia, dopo validazione)
+
+Decisa con l'utente il 2026-09-16 dopo il giro di verifica competitiva (`docs/market-strategy.md`, ADR #77 in `decisions.md`): se Dimora aprirà un layer di monetizzazione B2B2C, sarà **Renovation + Financing** (dato immobiliare che origina credito/lavori di ristrutturazione, come RenoFi) — non Insurance, Energy o Transaction Readiness. Deciso anche di **non costruire un layer di esecuzione fisica** (niente rete tecnici propria come Casa): Dimora resta software + referral.
+
+**Non ancora una fase della roadmap tecnica**: nessuno dei due punti è validato. Prima passo, non sviluppo: eseguire B74 (colloqui con banca/lender, operatore di ristrutturazione, rete installatori) durante/dopo i colloqui di Fase 0. Solo se validato, il passo successivo naturale è un "renovation opportunity model" che riusa dati già in gran parte presenti (Property Profile energetico, età/tipo Asset, storico interventi) estendendo le regole Home Detective esistenti (nuova `Issue`/`Recommendation`, non un secondo prodotto) — resta comunque dopo Fase 9, non salta davanti alla sequenza Fase 0-9 già in corso.
+
 ## Idee di prodotto da valutare (engagement / monetizzazione)
 
 Non ancora decise né pianificate — pensate insieme all'utente il 2026-08-03, dettaglio in `backlog.md`:

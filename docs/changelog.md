@@ -2,6 +2,12 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-09-16 (6) — Convergenza strategica: wedge Renovation+Financing, niente esecuzione fisica
+
+- Dopo il quadro competitivo verificato (voci precedenti), l'utente ha chiesto di "rimodellare Dimora prendendo il meglio da ognuno" per Italia poi Europa. Sintesi: nessun prodotto consumer-only tra i 20 verificati monetizza — chi monetizza vende a un buyer con soldi concreti in gioco (costruttore, lender, assicuratore, professionista con responsabilità, agenzia) o completa fisicamente il lavoro.
+- Convergenza con l'utente (ADR #77): wedge B2B2C prioritario per l'Italia = **Renovation + Financing** (modello RenoFi), non Insurance/Energy/Transaction. Nessun layer di esecuzione fisica (niente rete tecnici propria come Casa) — Dimora resta software + referral.
+- `roadmap.md` — nuova sezione "Direzione B2B2C" (non ancora una fase di sviluppo, solo la priorità dopo validazione). `backlog.md` B74 ristretto dal validare 4 wedge a validare specificamente questo. `market-strategy.md` §4 chiuso con l'esito.
+
 ## 2026-09-16 (5) — Verifica indipendente di tutti gli altri competitor citati
 
 - Su richiesta dell'utente ("e sugli altri competitor?"), stesso trattamento di DomiKeep esteso a 16 aziende citate in `market-landscape.md`/`market-research-funding-2026.md`: Homer, HomeVaultHQ, Hint, Digs, Smart Bricks, Casa, Zero Homes, RenoFi, Nomos, Dwelly, Deutsche Sanierungsberatung, VARM, Axle Energy, Faura, Neural Earth, ScyAI, Struck, Uniti, Sesame, HomeDLBX.

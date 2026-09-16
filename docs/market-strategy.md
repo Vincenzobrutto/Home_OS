@@ -74,11 +74,13 @@ E, simmetricamente, **da evitare per ora** (§27): marketplace proprietario di t
 
 ---
 
-## 4. Wedge B2B2C: dove punta la validazione, non ancora la roadmap
+## 4. Wedge B2B2C — scelto: Renovation + Financing (2026-09-16, ADR #77)
 
-`market-research-funding-2026.md` §19/§25 propone quattro wedge B2B2C (renovation+financing, insurance+prevention, energy upgrade, transaction readiness) con relativa "condizione di falsificazione" per ciascuno. **Nessuno di questi è stato validato**: sono ipotesi di ricerca, non direzione di prodotto decisa. Vanno trattati come tali finché non emergono dai colloqui utente già previsti in Fase 0 (roadmap) o da conversazioni dirette con i buyer indicati (banca, assicuratore, utility, agenzia).
+`market-research-funding-2026.md` §19/§25 proponeva quattro wedge B2B2C da testare (renovation+financing, insurance+prevention, energy upgrade, transaction readiness). Con il quadro competitivo verificato (§2 sopra, ADR #74-76), l'utente ha convergito su **Renovation + Financing** (modello RenoFi) come unico wedge prioritario per l'Italia — motivato dal contesto italiano (mutui verdi già spinti da Intesa Sanpaolo/UniCredit, eredità ecobonus/superbonus, canale costruttore assente in scala) e dal pattern verificato senza eccezioni sui 20 competitor analizzati: nessun prodotto puramente consumer monetizza, chi monetizza vende a un buyer con soldi concreti in gioco.
 
-Il layer B2B2C (chiamato "Dimora Intelligence" nel documento originale) resta un'estensione futura sopra il Property Graph consumer, non un secondo prodotto da costruire ora. Vedi B74 per il piano di validazione.
+Decisa anche l'assenza di un layer di esecuzione fisica (niente rete tecnici propria come Casa): Dimora resta software + referral.
+
+**Resta comunque non ancora validato, solo scelto come priorità**: prima B74 (colloqui con banca/lender, operatore di ristrutturazione, rete installatori), poi eventualmente un "renovation opportunity model" — non un secondo prodotto da costruire ora. Insurance/Energy/Transaction restano scartati per l'Italia, non necessariamente per un'espansione europea successiva — da riprendere quando si aprirà davvero quel mercato, non un'ipotesi da fissare oggi.
 
 ---
 
