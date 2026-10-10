@@ -2,6 +2,11 @@
 
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
+## 2026-10-10 — Prodotto completo in locale via VITE_ALPHA_MODE
+
+- `ALPHA_MODE` (frontend/src/config.ts) ora legge `VITE_ALPHA_MODE`: `false` in `frontend/.env` (gitignorato) riattiva in locale Energia (consumi), Mappa con planimetria in sottofondo, Profilo casa, Gmail/Drive e Home Score; il default resta `true`, quindi codice condiviso e coorte alpha non cambiano. Nessuna funzionalità era stata rimossa, solo nascosta dal flag.
+- Trovato avviando l'app: la porta 5173 era occupata da un Vite della copia Codex (`Documents\Codex\...\Home_OS`) che serviva codice vecchio; fermato su conferma dell'utente e sostituito col frontend di questo repo.
+
 ## 2026-09-16 (6) — Convergenza strategica: wedge Renovation+Financing, niente esecuzione fisica
 
 - Dopo il quadro competitivo verificato (voci precedenti), l'utente ha chiesto di "rimodellare Dimora prendendo il meglio da ognuno" per Italia poi Europa. Sintesi: nessun prodotto consumer-only tra i 20 verificati monetizza — chi monetizza vende a un buyer con soldi concreti in gioco (costruttore, lender, assicuratore, professionista con responsabilità, agenzia) o completa fisicamente il lavoro.

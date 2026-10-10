@@ -3,7 +3,11 @@
 // per-utente: sproporzionato per una coorte di 15-20 persone. Per tornare
 // al prodotto completo basta impostarla a false — nessuna funzionalità
 // nascosta viene rimossa dal codice.
-export const ALPHA_MODE = true;
+//
+// Sovrascrivibile in locale con VITE_ALPHA_MODE=false in frontend/.env
+// (gitignorato): il default resta true, così il codice condiviso e la
+// coorte alpha non cambiano mai per un'impostazione locale.
+export const ALPHA_MODE = import.meta.env.VITE_ALPHA_MODE !== 'false';
 
 // Le uniche 3 regole Home Detective che restano visibili in "Da tenere
 // d'occhio" durante l'alpha (vedi mvp-v1.md §5, tabella Home Detective).
