@@ -36,3 +36,11 @@ Durante le interviste mostrare prima le funzioni professionali, poi Gift e Home.
 6. Domanda economica (2 minuti): «In una pratica reale, per cosa pagheresti: pratica completata, Gift consegnato, canone con Gift inclusi oppure nulla?» Chiedi caso, budget e decisore, non accontentarti dell'interesse espresso.
 
 Limiti: non c'è ancora una relazione persistente e completa tra le due pratiche selezionabili e i dati del proprietario; sono esempi visuali non un database. Non raccogliere documenti di clienti reali in questa demo.
+
+## V4.2 — Pianificazione spese (simulazione)
+- Vista Amministratore: budget quinquennale con manutenzione ordinaria annuale, incremento costi, intervento straordinario selezionabile per anno, accantonamento ipotetico e grafico a barre per 2027–2031. **Nessuna stima professionale di vita residua o riparto millesimale**; saldo accantonamento semplificato e senza saldo iniziale.
+- Vista proprietario → **Spese e previsioni**: luce (kWh mensili, prezzo unitario, costi fissi), gas (Smc annuali, prezzo unitario, costi fissi), manutenzioni ricorrenti e una sostituzione futura. Campi modificabili con ricalcolo annuale e grafico quinquennale.
+- Tutti gli importi sono dati di esempio; nessuna bolletta, tariffa o misura collegata. Le tariffe devono essere introdotte in modo coerente per non duplicare oneri; non è consulenza energetica o previsione affidabile.
+- Entrambe le viste non persistono dati e non espongono informazioni della casa a partner.
+
+**Prossima validazione:** confrontare forecast con semplice elenco scadenze e chiedere a partner/proprietari se i dati esistono, chi li aggiorna e quale decisione il grafico migliora. I costi storici e i contratti veri non sono integrati in questa demo.
