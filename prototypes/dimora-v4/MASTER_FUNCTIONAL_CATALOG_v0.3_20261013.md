@@ -136,3 +136,25 @@ Per ogni journey: casi assenza dati, errore, quota esaurita, permesso negato, do
 - `DIMORA_UX_CICLO_1_HANDOFF_20261013.md`
 
 **Governo modifiche:** nuove proposte da utenti, colleghi o AI entrano come ipotesi e non annullano implicitamente le decisioni approvate. Questa versione è il riferimento funzionale integrale per iniziare Design System e prototipo V5; non è una specifica di engineering e non valida prezzi o risultati di mercato.
+
+## 11. Segnalazioni intelligenti — integrazione approvata (13 ottobre 2026)
+**Obiettivo:** ridurre le richieste informative ripetitive dei condòmini verso lo studio, senza ostacolare segnalazioni nuove e senza creare un secondo software di ticketing. Beneficio da validare, non riduzione già misurata.
+
+### 11.1 Perimetro di prodotto
+- **Livello 1 — prima release, consultazione:** nella sezione Condominio di Home mostrare, ai soli destinatari autorizzati, guasti noti, interventi programmati e aggiornamenti che l'amministratore ha effettivamente pubblicato. Nessuna risposta AI può inventare lo stato di un intervento.
+- **Livello 2 — prima release, se sostenibile tecnicamente/economicamente:** quando il proprietario intende segnalare un problema, cercare fra le informazioni pertinenti già pubblicate per edificio, scala, impianto e periodo; proporre il relativo aggiornamento **prima** dell'invio. Il proprietario può sempre procedere con una nuova segnalazione o contattare l'amministratore, soprattutto se il problema permane o è differente.
+- **Livello 3 — evoluzione futura:** ticketing completo, fornitori, SLA, assegnazioni, workflow di risoluzione e connettori ai gestionali. **Non inclusi nella V1**.
+
+### 11.2 Guardrail e processo
+- Distinguere chiaramente **comunicazione pubblicata**, **segnalazione del proprietario**, **presa in carico effettiva** e **risoluzione confermata**. Non presentare un guasto come risolto per inferenza.
+- Le informazioni sono filtrate per permessi, edificio/scala/unità e visibilità; una segnalazione privata non è automaticamente condivisa con altri condòmini.
+- Il suggerimento di una comunicazione esistente **non blocca** l'invio; per problemi di sicurezza o situazioni urgenti mostrare chiaramente i canali di emergenza appropriati senza attribuire a Dimora capacità di pronto intervento.
+- Per l'invio effettivo verso lo studio serve un canale di destinazione deliberato e verificato (ad esempio email configurata o integrazione); in mancanza, fornire contenuto pronto da inoltrare, senza dichiarare che l'amministratore sia stato avvisato.
+- Evitare elaborazioni AI obbligatorie per ogni richiesta: ricerca per categoria, entità e corrispondenza prima di eventuali spiegazioni AI con fonti. Nessun monitoraggio continuo gratuito senza limite di costo.
+- Distinguere dal **«Da rivedere»** documentale/AI dello studio: la segnalazione del condòmino non è automaticamente una verifica normativa o tecnica.
+
+### 11.3 UX di riferimento e misurazione
+Home → Condominio → «Segnala un problema» → descrizione/impianto/scala → eventuali comunicazioni pertinenti consultabili → «Ho trovato la risposta» oppure «Invia comunque la segnalazione» → esito veritiero del canale usato. Partner Amministratori → pubblicazione stato guasto/lavoro e destinatari → consultazione dei contenuti pubblicati, non ticketing completo.
+**Metriche di discovery:** visualizzazioni aggiornamenti, quota di sessioni che terminano con «Ho trovato la risposta», segnalazioni effettivamente inviate, feedback sul risultato, duplicati confermati e tempo operativo dello studio (misurato, non stimato come beneficio). Evitare di trattare la sola mancata trasmissione come segnalazione evitata con successo.
+
+**Stato:** direzione funzionale approvata; livello 2 condizionato a feasibility e scoping della prima release. Non sono stati modificati codice applicativo, ADR o backlog tecnico.
