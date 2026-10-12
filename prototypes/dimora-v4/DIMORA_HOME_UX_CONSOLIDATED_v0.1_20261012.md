@@ -1,3 +1,5 @@
+> **Aggiornamento decisionale (13 ottobre 2026).** Le decisioni approvate dopo la review UX/AI sono consolidate in [DIMORA_DECISIONI_CONSOLIDATE_POST_AI_REVIEW_v1.0_20261013.md](DIMORA_DECISIONI_CONSOLIDATE_POST_AI_REVIEW_v1.0_20261013.md). In caso di conflitto (D01–D10, tre esperienze parallele, bottom navigation, Inbox «Da rivedere», notifiche, Free/Pro senza crediti ed Event Pass V1, pricing Agenzie, economia B/C, planimetria, acquisizione email Pro), **prevale il consolidato**. Questo file resta riferimento storico e di dettaglio per quanto non modificato. Non implica modifica di codice, ADR o backlog.
+
 # Dimora Home — Consolidamento UX/UI v0.1
 Data: 12 ottobre 2026
 Stato: decisioni di concept confermate in intervista; non autorizza sviluppo né riapertura backlog.
