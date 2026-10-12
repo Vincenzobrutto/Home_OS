@@ -1,5 +1,8 @@
 # Dimora — Master Functional Catalog v0.2
 
+> **Decisioni aggiornate al 13 ottobre 2026:** il riferimento approvato per UX, ambito delle tre esperienze, monetizzazione e prototipo è [Dimora — Decisioni consolidate post AI Review v1.0](DIMORA_DECISIONI_CONSOLIDATE_POST_AI_REVIEW_v1.0_20261013.md). In caso di contrasto, prevale il consolidato; questo catalogo conserva lo storico delle decisioni precedenti.
+
+
 **Data:** 12 ottobre 2026. **Branch:** prototipo. **Stato:** consolidamento del concept, non implementazione.
 
 ## 1. Scopo e stato
