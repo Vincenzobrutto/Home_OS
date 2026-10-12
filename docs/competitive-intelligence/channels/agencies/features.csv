@@ -1,0 +1,32 @@
+feature_id,domain,feature,description,competitor,target,buyer,status,tier,evidence,source_url,checked_at,notes
+AG-CRM-01,crm,Anagrafiche e richieste,"Clienti, proprietari, richieste",Gestim,agenzie,titolare,available,tutti,pagina prezzi/funzioni,https://www.gestim.it/prezzi/,2026-10-12,
+AG-CRM-02,crm,Incroci automatici,Immobili incrociati con richieste e viceversa,Gestim,agenzie,titolare,available,tutti; email automatiche Platinum,panoramica funzioni,https://www.gestim.it/panoramica-delle-funzioni/,2026-10-12,
+AG-MKT-01,marketing,Pubblicazione portali,Portali italiani ed esteri,Gestim,agenzie,titolare,available,tutti,panoramica funzioni,https://www.gestim.it/panoramica-delle-funzioni/,2026-10-12,Immobiliare.it ha bloccato i nuovi clienti nel 2020; stato attuale unknown
+AG-DOC-01,documents,Allegati,"Allegati collegati a clienti, proprietari, immobili",Gestim,agenzie,titolare,available,1GB-100GB per piano,tabella comparativa,https://www.gestim.it/tabellacomparativa_rev1_2026.pdf,2026-10-12,
+AG-DOC-02,documents,Workflow documentale due diligence,Processo di inserimento documenti per due diligence,Gestim,agenzie,titolare,available,Platinum (limitato a 10 nei piani bassi),prezzi e tabella,https://www.gestim.it/prezzi/,2026-10-12,dettaglio funzionale non pubblico
+AG-OWN-01,owner,Area proprietari,Condivisione attivita ed esiti con il proprietario,Gestim,agenzie,titolare,available,limitata a 5 nei piani bassi,funzioni e tabella,https://www.gestim.it/panoramica-delle-funzioni/,2026-10-12,
+AG-SIGN-01,signature,FEA privacy,Firma elettronica avanzata per consensi privacy,Gestim,agenzie,titolare,available,Gold+,pagina prezzi,https://www.gestim.it/prezzi/,2026-10-12,
+AG-AI-01,ai,Descrizioni AI,Generazione descrizioni annunci,Gestim,agenzie,titolare,available,5/mese Personal - illimitate,tabella comparativa,https://www.gestim.it/tabellacomparativa_rev1_2026.pdf,2026-10-12,
+AG-API-01,integration,API pubblica,API documentata per terzi,Gestim,agenzie,titolare,unknown,-,non trovata; export Excel,https://www.gestim.it/sicurezza-dei-dati/,2026-10-12,
+AG-HAND-01,handover,Consegna fascicolo all'acquirente,Trasferimento documenti casa al nuovo proprietario,Gestim,agenzie,titolare,unknown,-,non trovato,https://www.gestim.it/panoramica-delle-funzioni/,2026-10-12,
+AG-CRM-01,crm,Anagrafiche e richieste,CRM e incroci,Getrix,agenzie,titolare,available,-,home Getrix,https://www.getrix.it,2026-10-12,
+AG-DOC-03,documents,Visure e atti ufficiali,"Visure, atti, dossier rischio, monitoraggio catastale",Youdomus,agenzie,titolare,available,-,home Youdomus,https://www.youdomus.it,2026-10-12,
+AG-DOC-04,documents,Estrazione AI documenti,Estrazione e validazione con integrazioni Catasto/AdE/InfoCamere,Genio Diligence,"banche, mediatori creditizi",banca,available,-,home Genio Diligence,https://www.geniodiligence.it/,2026-10-12,non rivolto ad agenzie oggi
+AG-CON-01,contracts,Modelli contratto,40+ modelli locazione/vendita,DokiCasa,agenzie e privati,agenzia,available,-,home,https://dokicasa.it,2026-10-12,
+AG-SIGN-01,signature,Firma elettronica,FES/FEA/FEQ,DokiCasa,agenzie e privati,agenzia,available,-,guida 2026,https://dokicasa.it/?p=5298,2026-10-12,
+AG-AML-01,compliance,Antiriciclaggio,Adempimenti antiriciclaggio agenzia,DokiCasa,agenzie,agenzia,available,-,home,https://dokicasa.it,2026-10-12,
+AG-DOC-05,documents,Dossier immobile guidato,Passi guidati per raccogliere documenti dell'incarico,Faloosa,agenzie,agenzia,available,LITE/PREMIUM,home,https://faloosa.it/,2026-10-12,
+AG-NOT-01,coordination,Istruttoria notarile,Professionista dedicato e prospetto spese rogito,Faloosa,agenzie,agenzia,available,-,home,https://faloosa.it/,2026-10-12,
+AG-AML-01,compliance,Antiriciclaggio e privacy,Modelli firmati via OTP FEA,Faloosa,agenzie,agenzia,available,-,home,https://faloosa.it/,2026-10-12,
+AG-FIX-01,services,Servizi per sanare difformita,E-commerce servizi tecnici,Faloosa,agenzie,agenzia/venditore,partial,solo Lombardia,home,https://faloosa.it/,2026-10-12,
+AG-DOC-06,documents,Fascicolo digitale con indice completezza,"Categorie, completezza, versioni",Immodoc,"proprietari, agenzie, notai",proprietario,available,base gratis primo immobile,pagina fascicolo,https://www.immodoc.it/fascicolo-digitale,2026-10-12,
+AG-SHARE-01,coordination,Condivisione con permessi,"Notaio, banca, tecnici, agenzia con link revocabili",Immodoc,proprietari,proprietario,available,-,pagina fascicolo,https://www.immodoc.it/fascicolo-digitale,2026-10-12,
+AG-HAND-01,handover,Consegna fascicolo all'acquirente,Passaggio al nuovo proprietario al rogito,Immodoc,proprietari,proprietario,available,-,dichiarato dal venditore,https://www.immodoc.it/fascicolo-digitale,2026-10-12,nessuna prova indipendente
+AG-FIX-01,services,Servizi tecnici,"39 servizi, rete 100+ tecnici; Salva Rogito 229 EUR+IVA",Immodoc,"proprietari, agenzie",proprietario,available,-,home,https://www.immodoc.it,2026-10-12,
+AG-ASSET-01,asset,Inventario impianti e manutenzioni,Gemello digitale con elettrodomestici e storico,Immodoc,proprietari,proprietario,announced,-,pagina fascicolo (in arrivo),https://www.immodoc.it/fascicolo-digitale,2026-10-12,
+AG-FIX-02,services,Verifica conformita urbanistica,Check Up agenzie,RogitoSubito,"agenzie, venditori",agenzia/venditore,available,-,home,https://rogitosubito.it/,2026-10-12,
+AG-UTIL-01,post-sale,Volture utenze,Cambio Casa gratuito,Switcho (via onOffice),acquirenti,fornitori,available,gratis,annuncio 08/04/2026,https://www.switcho.it/blog/news/partnership-switcho-onoffice/,2026-10-12,
+AG-HAND-01,handover,Record casa regalato,"Gift/Transfer 99 USD/immobile, Premium 1 anno",HomeZada PRO,agenti USA,agente,available,-,pagina prezzi,https://www.homezada.com/professionals/pricing,2026-10-12,
+AG-HAND-01,handover,Record casa regalato,Gratis per proprietario tramite partner,HomeBinder,ispettori/agenti/lender USA,partner,available,-,pagina,https://pages.homebinder.com/,2026-10-12,
+AG-DOC-06,documents,Fascicolo con lista di completezza per vendita,Proposta N1,Dimora,proprietari via agenzia,agenzia [ipotesi],unknown,-,non implementato; nucleo upload-AI-conferma implementato,docs/mvp-v1.md,2026-10-12,"stato Dimora: proposto, non in roadmap"
+AG-HAND-01,handover,Trasferimento record,Proposta N2,Dimora,acquirenti,agenzia [ipotesi],unknown,-,visione futura,docs/vision.md,2026-10-12,"stato Dimora: futuro, non implementato"
