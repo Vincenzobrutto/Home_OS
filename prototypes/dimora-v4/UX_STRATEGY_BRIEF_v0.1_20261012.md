@@ -1,3 +1,5 @@
+> **Aggiornamento decisionale (13 ottobre 2026).** Le decisioni approvate dopo la review UX/AI sono consolidate in [DIMORA_DECISIONI_CONSOLIDATE_POST_AI_REVIEW_v1.0_20261013.md](DIMORA_DECISIONI_CONSOLIDATE_POST_AI_REVIEW_v1.0_20261013.md). In caso di conflitto (D01–D10, tre esperienze parallele, bottom navigation, Inbox «Da rivedere», notifiche, Free/Pro senza crediti ed Event Pass V1, pricing Agenzie, economia B/C, planimetria, acquisizione email Pro), **prevale il consolidato**. Questo file resta riferimento storico e di dettaglio per quanto non modificato. Non implica modifica di codice, ADR o backlog.
+
 # Dimora — UX/UI Discovery Brief v0.1
 **Data:** 12 ottobre 2026. **Stato:** avvio UX Strategy, nessuna soluzione grafica approvata.
 **Input:** MASTER_FUNCTIONAL_CATALOG_v0.2_20261012.md; PROTOTYPE_EXPERIENCE_SELECTION_v0.1_20261012.md; Home scope e Amministratori questionnaire. La V4 è una demo funzionale, non design vincolante.
