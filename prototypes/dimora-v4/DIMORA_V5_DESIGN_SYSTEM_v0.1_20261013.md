@@ -40,3 +40,6 @@ Amministratore: dashboard → edificio → memoria impianti → pubblicazione gu
 
 ## 7. Implementazione successiva (da non dare per fatta)
 Tokens centralizzati CSS/React, libreria componenti condivisa, fixtures dati dimostrativi, routing navigabile, permessi simulati dichiarati e test multi-viewport. Prima verificare design visuale con l'utente. Valutare livelli accessibilità, componenti e dipendenze dello stack reale. Nessun cambio al backend o live notifications.
+
+## 8. Integrazione V5 — segnalazione end-to-end ora in scope V1
+Aggiungere a Home «Condominio → Segnala un problema → suggerimento casi noti → Invia comunque → conferma ricezione e dettaglio stato»; a Partner Amministratori «Segnalazioni → Inbox → dettaglio e associazione al caso comune → Presa in carico → Pubblica aggiornamento ai destinatari selezionati → Chiudi». Includere stati d'errore invio non riuscito, permesso negato, segnalazione duplicata non soppressa, aggiornamento visibile solo a destinatari autorizzati. Separare la demo interattiva da consegna e autorizzazioni reali: il primo HTML V5 non implementa ancora questo workflow.
