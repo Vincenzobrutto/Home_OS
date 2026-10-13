@@ -26,13 +26,21 @@ Vendita revoca accesso alla casa alla data, non chiude account. Agenzia ha 60 gi
 
 ## Stato
 
-M1 completata il 13 ottobre 2026: account/casa reali, API e DB dedicati, integrazione frontend e collaudo. Non presentare sezioni future come operative. M2 ha un contratto documents-v1 fissato, implementazione da iniziare.
+M1/M2 completate in locale il 13 ottobre 2026: account/casa e documenti reali, API/DB/storage dedicati e collaudo frontend integrato. Non presentare sezioni future come operative. M3 review-v1 ha contratto e fixture fissati, implementazione da iniziare.
 
 ## ADR-V5-05 — originali e riservatezza M2
 
 Originali immutabili PDF/JPEG/PNG; un file per richiesta, storage privato dedicato, upload idempotente, ZIP selettivo autorizzato. Visibilità default private (solo uploader con diritto Home valido), home soltanto con scelta esplicita. Il ruolo owner non supera la riservatezza di altri uploader. Niente AI, conferme tecniche, sostituzioni o cestino in M2: seguono contratti separati.
 
 Alternativa scartata: rendere ogni upload automaticamente leggibile a tutta la Home, incompatibile con documenti personali/finanziari riservati. Limiti 20 MiB/file e 100 MiB/ZIP sono limiti tecnici locali, non prezzi o quote commerciali. Dettagli in documents-api-contract.md. Antimalware e hardening prima del pilota, senza prometterli nel locale.
+
+## ADR-V5-07 — provider M3 e fonti verificabili
+
+Provider test_fixture_v1 riconosce solo hash dei tre PDF sintetici versionati in fixtures/m3. Etichetta simulazione obbligatoria; nessuna estrazione arbitraria da documenti sconosciuti né quote fittizie attribuite all'originale. Scartato un provider che genera dati standard su ogni upload, perché confonde simulazione con fonte reale. Pagina/estratto coerenti col PDF; zero chiamate AI a pagamento. Job/lease persistenti e pubblicazione atomica, worker separato dalle conferme.
+
+## ADR-V5-08 — conferme e riservatezza M3
+
+Derivati personali al creatore in M3, oltre alla membership Home e autorizzazione fonti. Scartata condivisione automatica della scheda ottenuta da private. Conferme per campo e potenza puntuale con denominazione; originale invariato, mai certificazione. Campi pieni richiedono sostituzione esplicita e nota; versioni/idempotenza proteggono concorrenza e retry. Identiche evidenze già risolte non riaprono la stessa verifica; nuova divergenza non sovrascrive un dato corretto dall'utente. A+B conserva due grandezze, A+C è conflitto della stessa grandezza. Dettagli operativi in review-api-contract.md.
 
 ## ADR-V5-06 — Storage e dipendenze M2
 Storage locale privato backend-v5/storage-private, nomi UUID, staging e rename prima della transazione DB; rollback rimuove file soltanto dopo verifica DB riuscita di assenza del riferimento. Commit incerto conserva il file; cleanup dopo 24 ore con lookup DB e nessuna cancellazione senza verifica. Nessun reset o pulizia di directory legacy. Originali verificati con hash anche prima del download/ZIP, membership e sessione ricontrollate prima della risposta binaria.

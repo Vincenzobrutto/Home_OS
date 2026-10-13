@@ -1,6 +1,6 @@
 # Contratto M2 — documents-v1
 
-13 ottobre 2026. Contratto fissato da Codex per V5-DEV-004/005. Le API documentali descritte qui **non sono ancora implementate**. Claude può sviluppare contro il contratto con mock esclusivamente nei test. L'accettazione finale richiede API, PostgreSQL e file reali. identity-v1.1 continua a valere.
+13 ottobre 2026. Contratto documents-v1 implementato e verificato in M2: API/PostgreSQL/file e frontend reale superano l'accettazione. Mock esclusivamente nei test. identity-v1.1 continua a valere. Proposte/conferme sono nel contratto M3 review-api-contract.md, ancora da implementare.
 
 ## Scopo
 
