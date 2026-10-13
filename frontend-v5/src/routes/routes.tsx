@@ -3,6 +3,8 @@ import { LoginPage, RegisterPage } from './AuthPages';
 import { AnonymousOnly, RequireAccount, RootLayout } from './guards';
 import { CasaPage, HomeLayout, NotFoundPage, SectionNotFound, UnavailableSection } from './HomePages';
 import { CreateHomePage, HomeEntry, HomesPage } from './HomesPages';
+import { DocumentsPage } from './DocumentsPages';
+import { DocumentDetailPage } from './DocumentDetailPage';
 
 // Mappa delle rotte V5 (prima verticale identity-v1).
 // Agenzie e Amministratori non hanno rotte: non sono ancora assegnate.
@@ -31,7 +33,8 @@ export const routes: RouteObject[] = [
               { index: true, element: <Navigate to="casa" replace /> },
               { path: 'casa', element: <CasaPage /> },
               { path: 'attivita', element: <UnavailableSection section="attivita" /> },
-              { path: 'documenti', element: <UnavailableSection section="documenti" /> },
+              { path: 'documenti', element: <DocumentsPage /> },
+              { path: 'documenti/:documentId', element: <DocumentDetailPage /> },
               { path: 'spese', element: <UnavailableSection section="spese" /> },
               { path: '*', element: <SectionNotFound /> },
             ],

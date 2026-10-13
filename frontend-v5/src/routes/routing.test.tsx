@@ -86,7 +86,13 @@ describe('[mock] routing e contesto casa via URL', () => {
     await app.user.click(within(nav).getByRole('link', { name: /Documenti/ }));
     expect(app.router.state.location.pathname).toBe(`/home/${homeA2.id}/documenti`);
     expect(await screen.findByRole('heading', { level: 1, name: 'Documenti' })).toBeInTheDocument();
+    // Attività e Spese restano non disponibili.
+    await app.user.click(within(nav).getByRole('link', { name: /Attività/ }));
+    expect(app.router.state.location.pathname).toBe(`/home/${homeA2.id}/attivita`);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Attività' })).toBeInTheDocument();
     expect(screen.getByText('Non ancora disponibile')).toBeInTheDocument();
+    expect(within(nav).getByRole('link', { name: /Spese/ })).toHaveTextContent('non ancora disponibile');
+    expect(within(nav).getByRole('link', { name: /Documenti/ })).not.toHaveTextContent('non ancora disponibile');
   });
 
   it('/home/:id senza sezione porta a Casa', async () => {
@@ -128,7 +134,7 @@ describe('[mock] routing e contesto casa via URL', () => {
     await app.user.type(screen.getByLabelText('Password'), PASSWORD_A);
     // login + GET /session passano, GET /homes fallisce come rete.
     const original = backend.handle.bind(backend);
-    backend.handle = (req) => (req.path === '/homes' ? { status: 503, body: { error: { code: 'down', message: 'giù' } } } : original(req));
+    backend.handle = async (req) => (req.path === '/homes' ? { status: 503, body: { error: { code: 'down', message: 'giù' } } } : original(req));
     await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('non è raggiungibile');
     expect(screen.queryByText('Crea la tua prima casa')).not.toBeInTheDocument();

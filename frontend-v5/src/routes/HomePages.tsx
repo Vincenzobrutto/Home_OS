@@ -136,16 +136,21 @@ export function CasaPage() {
             <p className={styles.muted}>Nessun permesso attivo su questa casa.</p>
           )}
           <p className={cx(styles.small, styles.muted, styles.spaced)}>
-          I permessi sono verificati dal servizio a ogni operazione. In questo primo incremento puoi consultare la casa; modifica, gestione accessi, esportazione e vendita saranno disponibili nei prossimi incrementi.
+            I permessi sono verificati dal servizio a ogni operazione. Oggi puoi consultare la casa e, in Documenti,
+            caricare ed esportare originali secondo il tuo ruolo; modifica dei dati, gestione accessi e vendita
+            arriveranno nei prossimi incrementi.
           </p>
         </section>
         <section className={cx(ui.card, ui.tint, styles.wide)} aria-labelledby="casa-prossime">
           <h2 id="casa-prossime" className={styles.cardTitle}>
-            Sezioni in arrivo
+            Documenti e sezioni in arrivo
           </h2>
           <p className={styles.muted}>
-            Attività, Documenti e Spese non sono ancora attive in questa versione. Nessun dato viene mostrato o salvato
-            in quelle sezioni.
+            In Documenti conservi gli originali della casa (PDF, JPEG, PNG).{' '}
+            <Link to={`/home/${encodeURIComponent(home.id)}/documenti`}>Apri i documenti</Link>
+          </p>
+          <p className={cx(styles.muted, styles.spaced)}>
+            Attività e Spese non sono ancora attive in questa versione: lì non viene mostrato né salvato alcun dato.
           </p>
         </section>
       </div>
@@ -153,7 +158,7 @@ export function CasaPage() {
   );
 }
 
-export function UnavailableSection({ section }: { section: Exclude<SectionId, 'casa'> }) {
+export function UnavailableSection({ section }: { section: Exclude<SectionId, 'casa' | 'documenti'> }) {
   const home = useCurrentHome();
   const meta = SECTIONS.find((s) => s.id === section)!;
   useDocumentTitle(`${meta.label} · ${home.name}`);

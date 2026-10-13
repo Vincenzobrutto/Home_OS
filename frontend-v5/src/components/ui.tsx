@@ -62,7 +62,14 @@ export function Loading({ label }: { label: string }) {
 }
 
 /** Errore di caricamento con retry manuale. Mai sostituito da dati dimostrativi. */
-export function ErrorState(props: { error: unknown; onRetry?: () => void; retrying?: boolean; title?: string }) {
+export function ErrorState(props: {
+  error: unknown;
+  onRetry?: () => void;
+  retrying?: boolean;
+  title?: string;
+  /** Messaggio specifico del contesto; altrimenti quello derivato dall'errore. */
+  message?: string;
+}) {
   const requestId = isApiError(props.error) ? props.error.requestId : undefined;
   return (
     <Banner
@@ -77,7 +84,7 @@ export function ErrorState(props: { error: unknown; onRetry?: () => void; retryi
         )
       }
     >
-      <p>{userMessage(props.error)}</p>
+      <p>{props.message ?? userMessage(props.error)}</p>
       {requestId && <p className={styles.requestId}>Codice richiesta: {requestId}</p>}
     </Banner>
   );

@@ -11,7 +11,7 @@ export type SectionId = 'casa' | 'attivita' | 'documenti' | 'spese';
 export const SECTIONS: Array<{ id: SectionId; label: string; icon: IconName; available: boolean }> = [
   { id: 'casa', label: 'Casa', icon: 'home', available: true },
   { id: 'attivita', label: 'Attività', icon: 'activity', available: false },
-  { id: 'documenti', label: 'Documenti', icon: 'document', available: false },
+  { id: 'documenti', label: 'Documenti', icon: 'document', available: true },
   { id: 'spese', label: 'Spese', icon: 'expenses', available: false },
 ];
 
