@@ -6,7 +6,7 @@ import { PrismaService } from './prisma.service';
 import type { Prisma, Session } from '../generated/client';
 const derive = promisify(scrypt);
 export const COOKIE = 'dimora_v5_session';
-export const digest = (value: string) => createHash('sha256').update(value).digest('hex');
+export const digest = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString('hex');
   return salt + ':' + (await derive(password, salt, 64) as Buffer).toString('hex');

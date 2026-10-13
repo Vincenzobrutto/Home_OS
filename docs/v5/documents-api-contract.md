@@ -74,3 +74,6 @@ Test di uscita: PDF/JPEG/PNG reali sintetici, hash e dimensioni identici dopo do
 ## Confini del prossimo incremento
 
 M2 non produce dati AI né schede «Da rivedere». M3 introdurrà proposte/campi/conferme/storia con contratto distinto. Nuove versioni, cestino, ricerca estesa, quote commerciali e link esterni seguono ticket dedicati. Le specifiche complete guidano il prodotto ma non rendono già operative queste funzioni.
+
+## Stato implementazione backend
+Codice M2 implementato da Codex con migrazione pronta e 31 test locali; runtime e 11 scenari API documentali da attivare con launcher -Documents -Test. Le forme di endpoint/tipi sopra sono invariate; frontend Claude procede sul contratto, niente dichiarazione di integrazione reale prima del collaudo.

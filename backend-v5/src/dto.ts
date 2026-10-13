@@ -2,7 +2,7 @@ import { Transform } from 'class-transformer';
 import { IsEmail, IsString, ValidateBy } from 'class-validator';
 const trim = ({ value }: { value: unknown }) => typeof value === 'string' ? value.trim() : value;
 const email = ({ value }: { value: unknown }) => typeof value === 'string' ? value.trim().toLowerCase() : value;
-function CodePointLength(min: number, max: number, label: string) {
+export function CodePointLength(min: number, max: number, label: string) {
   return ValidateBy({ name: 'codePointLength', validator: { validate: (value: unknown) => typeof value === 'string' && [...value].length >= min && [...value].length <= max, defaultMessage: () => `${label}: da ${min} a ${max} caratteri.` } });
 }
 export class LoginDto {

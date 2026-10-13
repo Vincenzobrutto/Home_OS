@@ -20,6 +20,8 @@ model Account {
   sessions Session[]
   memberships HomeMembership[]
   requests HomeRequest[]
+  documents Document[]
+  uploads UploadRequest[]
 }
 model Session {
   id String @id
@@ -38,6 +40,8 @@ model Home {
   createdAt DateTime @default(now())
   memberships HomeMembership[]
   requests HomeRequest[]
+  documents Document[]
+  uploads UploadRequest[]
 }
 model HomeMembership {
   id String @id @default(uuid())
@@ -61,4 +65,53 @@ model HomeRequest {
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
   home Home @relation(fields: [homeId], references: [id], onDelete: Cascade)
   @@unique([accountId, key])
+}
+
+enum DocumentVisibility {
+  private
+  home
+}
+model Document {
+  id String @id @default(uuid())
+  homeId String
+  uploaderId String
+  name String
+  visibility DocumentVisibility @default(private)
+  createdAt DateTime @default(now())
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  uploader Account @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  original DocumentVersion?
+  requests UploadRequest[]
+  @@index([homeId, createdAt, id])
+}
+model DocumentVersion {
+  id String @id @default(uuid())
+  documentId String @unique
+  version Int @default(1)
+  originalFilename String
+  mimeType String
+  byteSize Int
+  sha256 String
+  fileId String @unique
+  document Document @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  file StoredFile @relation(fields: [fileId], references: [id], onDelete: Restrict)
+}
+model StoredFile {
+  id String @id @default(uuid())
+  storageKey String @unique
+  createdAt DateTime @default(now())
+  original DocumentVersion?
+}
+model UploadRequest {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  key String
+  digest String
+  documentId String
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  @@unique([accountId, homeId, key])
 }

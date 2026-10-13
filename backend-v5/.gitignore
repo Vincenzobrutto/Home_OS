@@ -1,6 +1,8 @@
 node_modules/
 dist/
 generated/
+storage-private/
+test/.storage-tests/
 .env
 .env.*
 !.env.example
