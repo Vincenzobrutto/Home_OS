@@ -15,6 +15,7 @@ import type {
   HomeRole,
 } from '../api/types';
 import { FakeReview } from './fakeReview.ts';
+import { FakeActivities } from './fakeActivities.ts';
 
 export type FakeRequest = {
   method: string;
@@ -100,6 +101,14 @@ export class FakeBackend {
         : null;
     },
     perms: (accountId, homeId) => this.homePerms(accountId, homeId),
+  });
+  /** activities-v1 (H1): attività personali; caldaie lette con le regole M3/M4. */
+  activities = new FakeActivities({
+    perms: (accountId, homeId) => this.homePerms(accountId, homeId),
+    asset: (accountId, homeId, assetId) => {
+      const a = this.review.assets.get(assetId);
+      return a && a.accountId === accountId && a.homeId === homeId ? { id: a.id, name: a.name } : null;
+    },
   });
   /** false = backend senza endpoint M3 (404, come un backend solo M1/M2). */
   reviewEnabled = true;
@@ -188,6 +197,9 @@ export class FakeBackend {
       if (!this.documentsEnabled) return err(404, 'not_found', 'Risorsa non trovata.');
       return this.routeDocuments(req, account.id, decodeURIComponent(docMatch[1]!), docMatch[2], !!docMatch[3]);
     }
+
+    const h1 = /^\/homes\/([^/]+)\/((?:activity-capabilities|activity-summary|activities)(?:[/?].*)?)$/.exec(path);
+    if (h1) return this.activities.handle(req, account.id, decodeURIComponent(h1[1]!), h1[2]!);
 
     const m3 = /^\/homes\/([^/]+)\/((?:analysis-capabilities|analysis-jobs|assets|review)(?:[/?].*)?)$/.exec(path);
     if (m3) {
