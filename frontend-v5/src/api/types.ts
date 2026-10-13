@@ -63,14 +63,17 @@ export type UploadDocumentInput = { file: File; name: string; visibility: Docume
 /** Byte ricevuti da un endpoint binario (file originale o ZIP). */
 export type BinaryPayload = { blob: Blob; filename: string | null; contentType: string };
 
-// review-v1 (docs/v5/review-api-contract.md) — caso Caldaia M3
+// review-v1 (docs/v5/review-api-contract.md) — caso Caldaia M3,
+// ampliato da analysis-v2 (docs/v5/anthropic-api-contract.md) — M4.
+export type ProviderId = 'test_fixture_v1' | 'anthropic';
 export type FieldKey = 'brand' | 'model' | 'power';
 export type QuantityCode = 'useful_heating' | 'reported_nominal' | 'other';
 export type SourceRef = {
   documentId: string;
   documentVersion: 1;
   documentSha256: string;
-  page: 1;
+  /** Pagina fisica del PDF (analysis-v2: non più fissata a 1). */
+  page: number;
   excerpt: string;
 };
 export type Measurement = { value: string; unit: 'kW'; quantityCode: QuantityCode; quantityLabel: string };
@@ -99,8 +102,10 @@ export type ProposedField = {
   state: 'open' | 'accepted' | 'corrected' | 'discarded' | 'already_matches';
   candidates: Candidate[];
   currentConfirmed: ConfirmedField | null;
-  provider: 'test_fixture_v1';
-  isSimulation: true;
+  provider: ProviderId;
+  isSimulation: boolean;
+  /** null per il provider di test; assente nelle risposte M3. */
+  model?: string | null;
 };
 export type BoilerSummary = {
   id: string;
@@ -113,6 +118,9 @@ export type BoilerSummary = {
   openReviewCount: number;
   confirmedFields: ConfirmedField[];
   permissions: Array<'read' | 'edit'>;
+  /** analysis-v2: provider che hanno prodotto analisi; lista vuota per una scheda solo manuale. Assente in M3. */
+  analysisProviders?: ProviderId[];
+  isSimulation?: boolean;
 };
 export type BoilerDetail = BoilerSummary & { proposals: ProposedField[] };
 export type AnalysisJob = {
@@ -121,14 +129,23 @@ export type AnalysisJob = {
   assetId: string | null;
   parentJobId: string | null;
   state: 'queued' | 'running' | 'succeeded' | 'failed';
-  provider: 'test_fixture_v1';
-  isSimulation: true;
+  provider: ProviderId;
+  isSimulation: boolean;
+  model?: string | null;
   documentIds: string[];
   createdAt: string;
   finishedAt: string | null;
-  outcome: null | 'proposals_created' | 'no_changes';
+  outcome: null | 'proposals_created' | 'no_changes' | 'no_supported_data';
   openReviewCount: number | null;
   error: null | { code: string; message: string };
+  /** null per il provider di test; costi del collaudo per Anthropic, mai uno zero inventato. */
+  billing?: AnalysisBilling | null;
+};
+export type AnalysisBilling = {
+  currency: 'USD';
+  maxReservedUsd: string;
+  actualUsd: string | null;
+  state: 'reserved' | 'settled' | 'uncertain';
 };
 export type HistoryChange = {
   fieldKey: FieldKey;
@@ -143,18 +160,38 @@ export type HistoryEvent = {
   assetId: string;
   at: string;
   kind: 'analysis_published' | 'analysis_no_changes' | 'confirmation' | 'manual_confirmation';
-  origin: 'test_provider' | 'explicit_user';
+  origin: 'test_provider' | 'ai_provider' | 'explicit_user';
   confirmationId: string | null;
   note: string | null;
   changes: HistoryChange[];
 };
 export type ReviewItem = { id: string; assetId: string; assetName: string; assetVersion: number; proposal: ProposedField };
+export type ProviderCapability = {
+  id: ProviderId;
+  label: string;
+  isSimulation: boolean;
+  enabled: boolean;
+  disabledReason: string | null;
+  model: string | null;
+};
 export type AnalysisCapabilities = {
-  provider: 'test_fixture_v1';
-  isSimulation: true;
+  provider: ProviderId;
+  isSimulation: boolean;
   enabled: boolean;
   maxDocuments: number;
   formats: string[];
+  // analysis-v2 (assenti in una risposta M3)
+  apiVersion?: 'analysis-v2';
+  providers?: ProviderCapability[];
+  limits?: { maxFileBytes: number; maxTotalPages: number; maxExtractedCodePoints: number; maxInputTokens: number };
+  budget?: { currency: 'USD'; limitUsd: string; remainingUsd: string; uncertainUsd: string };
+};
+export type StartAnalysisInput = {
+  documentIds: string[];
+  targetAssetId?: string;
+  /** L'app lo invia sempre; omesso solo dai test di integrazione M3 (assenza = fixture, mai Anthropic). */
+  provider?: ProviderId;
+  consentToProviderTransfer?: true;
 };
 export type Page<T> = { items: T[]; nextCursor: string | null };
 export type ReviewPage = Page<ReviewItem> & { openCount: number };

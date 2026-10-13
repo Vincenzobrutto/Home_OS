@@ -15,6 +15,7 @@ import type {
   ManualConfirmationsInput,
   ReviewPage,
   SessionResponse,
+  StartAnalysisInput,
 } from '../api/types';
 import { useAccount, useApi } from '../session/session';
 
@@ -32,7 +33,8 @@ export function useCapabilities(homeId: string) {
   return useQuery({
     queryKey: queryKeys.capabilities(account.id, homeId),
     queryFn: ({ signal }) => api.getAnalysisCapabilities(homeId, signal, account.id),
-    staleTime: 5 * 60_000,
+    // Budget e provider cambiano con gli esiti: niente conservazione lunga.
+    staleTime: 0,
   });
 }
 
@@ -77,6 +79,7 @@ export function useJobProgress(homeId: string, jobId: string) {
         settled.current = true;
         // Esito definitivo: elenco job, schede e verifiche si rileggono dal server.
         void queryClient.invalidateQueries({ queryKey: queryKeys.jobs(account.id, homeId) });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.capabilities(account.id, homeId) });
         // Prefisso assets: elenco, dettaglio e storia (anche della scheda di destinazione).
         void queryClient.invalidateQueries({ queryKey: [...queryKeys.homeM3(account.id, homeId), 'assets'] });
         void queryClient.invalidateQueries({ queryKey: queryKeys.review(account.id, homeId) });
@@ -151,20 +154,18 @@ export function useStartAnalysis(homeId: string) {
   const account = useAccount();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { documentIds: string[]; targetAssetId?: string; idempotencyKey: string }) =>
-      api.createAnalysisJob(
-        homeId,
-        vars.targetAssetId
-          ? { documentIds: vars.documentIds, targetAssetId: vars.targetAssetId }
-          : { documentIds: vars.documentIds },
-        vars.idempotencyKey,
-        account.id,
-      ),
+    mutationFn: (vars: { input: StartAnalysisInput; idempotencyKey: string }) =>
+      api.createAnalysisJob(homeId, vars.input, vars.idempotencyKey, account.id),
     onSuccess: async (job) => {
       if (!sameAccount(queryClient, account.id)) return;
       queryClient.setQueryData(queryKeys.job(account.id, homeId, job.id), job);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.jobs(account.id, homeId) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs(account.id, homeId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.capabilities(account.id, homeId) }),
+      ]);
     },
+    // Un rifiuto (es. budget esaurito) può cambiare le capabilities.
+    onError: () => queryClient.invalidateQueries({ queryKey: queryKeys.capabilities(account.id, homeId) }),
   });
 }
 
@@ -173,13 +174,17 @@ export function useRetryJob(homeId: string) {
   const account = useAccount();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { jobId: string; idempotencyKey: string }) =>
-      api.retryAnalysisJob(homeId, vars.jobId, vars.idempotencyKey, account.id),
+    mutationFn: (vars: { jobId: string; idempotencyKey: string; consentToProviderTransfer?: boolean }) =>
+      api.retryAnalysisJob(homeId, vars.jobId, vars.idempotencyKey, account.id, vars.consentToProviderTransfer ?? false),
     onSuccess: async (job) => {
       if (!sameAccount(queryClient, account.id)) return;
       queryClient.setQueryData(queryKeys.job(account.id, homeId, job.id), job);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.jobs(account.id, homeId) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs(account.id, homeId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.capabilities(account.id, homeId) }),
+      ]);
     },
+    onError: () => queryClient.invalidateQueries({ queryKey: queryKeys.capabilities(account.id, homeId) }),
   });
 }
 

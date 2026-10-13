@@ -12,6 +12,7 @@ import type {
   ManualConfirmationsInput,
   Page,
   ReviewPage,
+  StartAnalysisInput,
   CreateHomeInput,
   DocumentDetail,
   DocumentsPage,
@@ -206,9 +207,10 @@ export class ApiClient {
     return data;
   }
 
+  /** analysis-v2: il client invia sempre il provider scelto; il consenso solo per Anthropic. */
   async createAnalysisJob(
     homeId: string,
-    input: { documentIds: string[]; targetAssetId?: string },
+    input: StartAnalysisInput,
     idempotencyKey: string,
     accountId: string,
   ): Promise<AnalysisJob> {
@@ -234,10 +236,21 @@ export class ApiClient {
     return data.job;
   }
 
-  async retryAnalysisJob(homeId: string, jobId: string, idempotencyKey: string, accountId: string) {
+  /** Retry: nuovo tentativo (può costare). Anthropic richiede di nuovo il consenso; fixture {}. */
+  async retryAnalysisJob(
+    homeId: string,
+    jobId: string,
+    idempotencyKey: string,
+    accountId: string,
+    consentToProviderTransfer = false,
+  ) {
     const data = await this.mutate<{ job: AnalysisJob }>(
       `${homePath(homeId)}/analysis-jobs/${encodeURIComponent(jobId)}/retry`,
-      { body: {}, headers: { 'Idempotency-Key': idempotencyKey }, accountId },
+      {
+        body: consentToProviderTransfer ? { consentToProviderTransfer: true } : {},
+        headers: { 'Idempotency-Key': idempotencyKey },
+        accountId,
+      },
     );
     if (!data || !data.job) throw serviceError(202);
     return data.job;

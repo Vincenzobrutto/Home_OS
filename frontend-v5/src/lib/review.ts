@@ -2,12 +2,15 @@ import { isApiError, userMessage } from '../api/errors';
 // Etichette e regole review-v1 lato client. Il server resta l'autorità su valori,
 // fonti e origini: il client non invia mai sources/origin.
 import type {
+  AnalysisBilling,
+  AnalysisCapabilities,
   AnalysisJob,
   BoilerSummary,
   FieldKey,
   FieldValue,
   HistoryEvent,
   Measurement,
+  ProviderId,
   QuantityCode,
   ValueOrigin,
 } from '../api/types';
@@ -46,6 +49,12 @@ export const HISTORY_KIND_LABEL: Record<HistoryEvent['kind'], string> = {
   analysis_no_changes: 'Analisi di test senza novità',
   confirmation: 'Conferma',
   manual_confirmation: 'Inserimento manuale',
+};
+
+export const HISTORY_ORIGIN_LABEL: Record<HistoryEvent['origin'], string> = {
+  test_provider: 'provider di test',
+  ai_provider: 'analisi AI (Anthropic)',
+  explicit_user: 'tua decisione',
 };
 
 export const HISTORY_ACTION_LABEL: Record<string, string> = {
@@ -142,4 +151,69 @@ export function m3ErrorMessage(error: unknown) {
     if (error.status === 403) return 'Non hai accesso a questi dati.';
   }
   return userMessage(error);
+}
+
+// ---- analysis-v2 (M4) ----
+
+export const AI_LABEL = 'Analisi AI con Anthropic';
+export const CONSENT_LABEL = 'Invia ad Anthropic il testo dei documenti selezionati per proporre i dati della caldaia';
+export const SOURCE_CHECK_NOTE =
+  'Verificato sulla fonte: pagina ed estratto controllati sul testo dell’originale. Non è una certificazione né una conferma.';
+
+/** Etichetta del provider effettivo di un'analisi (mai dedotta dalla configurazione corrente). */
+export function providerLabel(provider: ProviderId | undefined, model?: string | null) {
+  if (provider === 'anthropic') return model ? `${AI_LABEL} · modello ${model}` : AI_LABEL;
+  return SIMULATION_LABEL;
+}
+
+const usd = (v: string) => `${v} USD`;
+
+/** Costi del collaudo: riservato, effettivo o incerto. Mai uno zero non comunicato dal server. */
+export function billingText(billing: AnalysisBilling | null | undefined, provider: ProviderId | undefined) {
+  if (provider !== 'anthropic') return 'Nessun costo: analisi di test.';
+  if (!billing) return 'Costo non comunicato dal servizio.';
+  switch (billing.state) {
+    case 'reserved':
+      return `Costo in corso di calcolo: riservati fino a ${usd(billing.maxReservedUsd)}.`;
+    case 'settled':
+      return billing.actualUsd !== null
+        ? `Costo del tentativo: ${usd(billing.actualUsd)}.`
+        : `Costo concluso ma importo non comunicato (riservati ${usd(billing.maxReservedUsd)}).`;
+    case 'uncertain':
+      return `Costo incerto: il servizio non sa se la richiesta ad Anthropic è stata addebitata (fino a ${usd(billing.maxReservedUsd)}).`;
+  }
+}
+
+/** Errori all'avvio (HTTP) o nei job falliti dopo l'invio. Il messaggio del server ha la precedenza. */
+export const M4_ERROR_LABEL: Record<string, string> = {
+  ai_provider_unconfigured: 'Anthropic non è configurato su questo servizio: nessun dato è stato inviato.',
+  ai_provider_disabled: 'Anthropic è disattivato su questo servizio: nessun dato è stato inviato.',
+  ai_model_unavailable: 'Il modello previsto non è disponibile: l’analisi non è stata eseguita con un altro modello.',
+  ai_budget_exhausted: 'Il budget del collaudo è esaurito: nessuna nuova analisi AI può partire.',
+  provider_rate_limited: 'Anthropic ha limitato temporaneamente le richieste. Potrai riprovare più tardi.',
+  provider_auth_failed: 'Il servizio non è riuscito ad autenticarsi presso Anthropic.',
+  provider_unavailable: 'Anthropic non era raggiungibile.',
+  analysis_invalid_output: 'La risposta dell’AI non rispettava il formato atteso: nessun dato è stato pubblicato.',
+  evidence_unverified:
+    'Le citazioni proposte dall’AI non corrispondevano al testo della pagina indicata: nessun dato è stato pubblicato.',
+  pdf_text_unavailable: 'Il PDF non contiene testo estraibile (per esempio una scansione): l’analisi AI non è possibile.',
+  pdf_encrypted: 'Il PDF è protetto o cifrato: l’analisi non è possibile.',
+  pdf_invalid: 'Il PDF non è leggibile o è danneggiato.',
+  analysis_limits_exceeded: 'I documenti superano i limiti di questa versione (dimensione, pagine o testo).',
+  multi_assets_unsupported: 'Il documento descrive più caldaie o modelli diversi: non vengono fusi in una sola scheda.',
+  analysis_outcome_unknown: 'Non è noto se la richiesta ad Anthropic sia stata eseguita: il risultato non è stato pubblicato.',
+};
+
+/** Messaggio per un errore di avvio di analisi (HTTP), con i codici M4. */
+export function startErrorMessage(error: unknown) {
+  if (isApiError(error) && error.kind === 'http' && M4_ERROR_LABEL[error.code]) return M4_ERROR_LABEL[error.code]!;
+  if (isApiError(error) && error.kind === 'service' && M4_ERROR_LABEL[error.code]) return M4_ERROR_LABEL[error.code]!;
+  if (isApiError(error) && error.fieldErrors.consentToProviderTransfer) return error.fieldErrors.consentToProviderTransfer;
+  return m3ErrorMessage(error);
+}
+
+export function formatLimit(limits: NonNullable<AnalysisCapabilities['limits']>) {
+  const mib = Math.round((limits.maxFileBytes / (1024 * 1024)) * 10) / 10;
+  const n = new Intl.NumberFormat('it-IT');
+  return `PDF con testo estraibile, massimo ${n.format(mib)} MiB per file, ${n.format(limits.maxTotalPages)} pagine e ${n.format(limits.maxExtractedCodePoints)} caratteri di testo in totale, ${n.format(limits.maxInputTokens)} token di input.`;
 }
