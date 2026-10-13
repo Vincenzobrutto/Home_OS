@@ -1,5 +1,14 @@
 import { ApiError, isApiErrorBody, serviceError } from './errors';
 import type {
+  ActivitiesPage,
+  ActivityAction,
+  ActivityCapabilities,
+  ActivityFilters,
+  ActivityHistoryEvent,
+  ActivityResponse,
+  ActivitySummary,
+  CreateActivity,
+  UpdateActivity,
   Account,
   AnalysisCapabilities,
   AnalysisJob,
@@ -329,6 +338,89 @@ export class ApiClient {
   private async page<T>(path: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
     const data = await this.request<Page<T>>(`${path}${pageQuery(page)}`, { signal, accountId });
     if (!data || !Array.isArray(data.items) || !('nextCursor' in data)) throw serviceError(200);
+    return data;
+  }
+
+  // ---- activities-v1 (H1) ----
+
+  async getActivityCapabilities(homeId: string, signal: AbortSignal | undefined, accountId: string) {
+    const data = await this.request<ActivityCapabilities>(`${homePath(homeId)}/activity-capabilities`, { signal, accountId });
+    if (!data || data.apiVersion !== 'activities-v1' || typeof data.today !== 'string') throw serviceError(200);
+    return data;
+  }
+
+  async listActivities(
+    homeId: string,
+    filters: ActivityFilters,
+    page: PageParams,
+    signal: AbortSignal | undefined,
+    accountId: string,
+  ): Promise<ActivitiesPage> {
+    const params = new URLSearchParams();
+    params.set('state', filters.state);
+    params.set('due', filters.due);
+    if (filters.assetId) params.set('assetId', filters.assetId);
+    if (page.limit !== undefined) params.set('limit', String(page.limit));
+    if (page.cursor) params.set('cursor', page.cursor);
+    const data = await this.request<ActivitiesPage>(`${homePath(homeId)}/activities?${params.toString()}`, { signal, accountId });
+    if (!data || !Array.isArray(data.items) || !('nextCursor' in data) || typeof data.today !== 'string') throw serviceError(200);
+    return data;
+  }
+
+  async getActivity(homeId: string, activityId: string, signal: AbortSignal | undefined, accountId: string) {
+    return this.activityResponse(
+      await this.request<ActivityResponse>(`${homePath(homeId)}/activities/${encodeURIComponent(activityId)}`, { signal, accountId }),
+      200,
+    );
+  }
+
+  async createActivity(homeId: string, input: CreateActivity, idempotencyKey: string, accountId: string) {
+    return this.activityResponse(
+      await this.mutate<ActivityResponse>(`${homePath(homeId)}/activities`, {
+        body: input,
+        headers: { 'Idempotency-Key': idempotencyKey },
+        accountId,
+      }),
+      201,
+    );
+  }
+
+  /** updates/complete/cancel/reopen: sempre POST idempotenti, mai PATCH/DELETE. */
+  async activityMutation(
+    homeId: string,
+    activityId: string,
+    kind: 'updates' | 'complete' | 'cancel' | 'reopen',
+    body: UpdateActivity | ActivityAction,
+    idempotencyKey: string,
+    accountId: string,
+  ) {
+    return this.activityResponse(
+      await this.mutate<ActivityResponse>(`${homePath(homeId)}/activities/${encodeURIComponent(activityId)}/${kind}`, {
+        body,
+        headers: { 'Idempotency-Key': idempotencyKey },
+        accountId,
+      }),
+      200,
+    );
+  }
+
+  listActivityHistory(homeId: string, activityId: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    return this.page<ActivityHistoryEvent>(
+      `${homePath(homeId)}/activities/${encodeURIComponent(activityId)}/history`,
+      page,
+      signal,
+      accountId,
+    );
+  }
+
+  async getActivitySummary(homeId: string, signal: AbortSignal | undefined, accountId: string) {
+    const data = await this.request<ActivitySummary>(`${homePath(homeId)}/activity-summary`, { signal, accountId });
+    if (!data || !data.counts || !Array.isArray(data.nextItems) || typeof data.today !== 'string') throw serviceError(200);
+    return data;
+  }
+
+  private activityResponse(data: ActivityResponse | undefined, status: number) {
+    if (!data || !data.activity || typeof data.today !== 'string') throw serviceError(status);
     return data;
   }
 

@@ -222,3 +222,79 @@ export type ConfirmationResult = {
   resolvedProposalIds: string[];
   remainingOpenCount: number;
 };
+
+// activities-v1 (docs/v5/activities-api-contract.md) — H1 attività personali
+export type ActivityState = 'open' | 'completed' | 'cancelled';
+export type DueState = 'overdue' | 'today' | 'upcoming' | 'undated' | 'closed';
+export type AssetLink =
+  | { state: 'none'; asset: null }
+  | { state: 'linked'; asset: { id: string; name: string } }
+  | { state: 'unavailable'; asset: null };
+export type HomeActivity = {
+  id: string;
+  homeId: string;
+  title: string;
+  description: string | null;
+  /** Data di calendario YYYY-MM-DD, mai un timestamp. */
+  dueDate: string | null;
+  state: ActivityState;
+  dueState: DueState;
+  assetLink: AssetLink;
+  version: number;
+  origin: 'user_created';
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  permissions: Array<'read' | 'edit'>;
+};
+export type TemporalContext = { asOf: string; today: string; timeZone: 'Europe/Rome' };
+export type ActivityCapabilities = TemporalContext & {
+  apiVersion: 'activities-v1';
+  enabled: true;
+  isSimulation: false;
+  limits: {
+    titleMaxCodePoints: number;
+    descriptionMaxCodePoints: number;
+    noteMaxCodePoints: number;
+    soonDays: number;
+    maxHomePreviewItems: number;
+  };
+};
+export type CreateActivity = { title: string; description?: string | null; dueDate?: string | null; assetId?: string | null };
+export type UpdateActivity = {
+  expectedVersion: number;
+  title?: string;
+  description?: string | null;
+  dueDate?: string | null;
+  assetId?: string | null;
+};
+export type ActivityAction = { expectedVersion: number; note?: string };
+export type ActivityHistorySnapshot = {
+  title: string;
+  description: string | null;
+  dueDate: string | null;
+  state: ActivityState;
+  assetLink: AssetLink;
+};
+export type ActivityHistoryEvent = {
+  id: string;
+  activityId: string;
+  at: string;
+  kind: 'created' | 'updated' | 'completed' | 'cancelled' | 'reopened';
+  origin: 'explicit_user';
+  note: string | null;
+  before: ActivityHistorySnapshot | null;
+  after: ActivityHistorySnapshot;
+};
+export type ActivityFilters = {
+  state: ActivityState | 'all';
+  due: Exclude<DueState, 'closed'> | 'all';
+  assetId?: string;
+};
+export type ActivitiesPage = TemporalContext & Page<HomeActivity>;
+export type ActivityResponse = TemporalContext & { activity: HomeActivity };
+export type ActivitySummary = TemporalContext & {
+  counts: { overdue: number; today: number; upcoming: number; undated: number };
+  nextItems: HomeActivity[];
+};

@@ -25,6 +25,16 @@ export const queryKeys = {
   history: (accountId: string, homeId: string, assetId: string) =>
     ['account', accountId, 'home', homeId, 'm3', 'assets', assetId, 'history'] as const,
   review: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'm3', 'review'] as const,
+  // activities-v1 (H1): attività personali, separate dalle risorse M3/M4.
+  h1: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h1'] as const,
+  activityCapabilities: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h1', 'capabilities'] as const,
+  activities: (accountId: string, homeId: string, filters: { state: string; due: string; assetId?: string }) =>
+    ['account', accountId, 'home', homeId, 'h1', 'list', filters.state, filters.due, filters.assetId ?? '-'] as const,
+  activity: (accountId: string, homeId: string, activityId: string) =>
+    ['account', accountId, 'home', homeId, 'h1', 'activity', activityId, 'detail'] as const,
+  activityHistory: (accountId: string, homeId: string, activityId: string) =>
+    ['account', accountId, 'home', homeId, 'h1', 'activity', activityId, 'history'] as const,
+  activitySummary: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h1', 'summary'] as const,
 };
 
 export function newIdempotencyKey(): string {
