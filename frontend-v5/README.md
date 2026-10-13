@@ -1,8 +1,8 @@
 # Dimora V5 — nuovo frontend
 
-React 19 + TypeScript + Vite 7, React Router 7, TanStack Query 5, CSS Modules. Verticali: identity-v1.1 (accesso, case, shell Home), documents-v1 (Documenti M2: archivio, caricamento, dettaglio, download, ZIP) e review-v1 (M3 Caldaia: analisi di test, proposte, conferme, Da rivedere, storia). Nessun codice del frontend legacy.
+React 19 + TypeScript + Vite 7, React Router 7, TanStack Query 5, CSS Modules. Verticali: identity-v1.1 (accesso, case, shell Home), documents-v1 (Documenti M2: archivio, caricamento, dettaglio, download, ZIP) review-v1 (M3 Caldaia: analisi di test, proposte, conferme, Da rivedere, storia) e analysis-v2 (M4: scelta esplicita Analisi di test o Anthropic, consenso, costi del collaudo). Nessun codice del frontend legacy.
 
-Leggere AGENTS.md locale e root; contratti in `docs/v5/api-contract.md`, `docs/v5/documents-api-contract.md` e `docs/v5/review-api-contract.md`. Stato del lavoro e richieste a Codex in [HANDOFF.md](HANDOFF.md).
+Leggere AGENTS.md locale e root; contratti in `docs/v5/api-contract.md`, `docs/v5/documents-api-contract.md` , `docs/v5/review-api-contract.md` e `docs/v5/anthropic-api-contract.md`. Stato del lavoro e richieste a Codex in [HANDOFF.md](HANDOFF.md).
 
 ## Comandi
 
@@ -21,12 +21,15 @@ Integrazione reale (solo database/storage di sviluppo V5):
 V5_API_URL=http://127.0.0.1:3001/api/v5 npm run test:integration                     # identity
 V5_API_URL=http://127.0.0.1:3001/api/v5 V5_DOCUMENTS_API=1 npm run test:integration  # + documents
 V5_API_URL=http://127.0.0.1:3001/api/v5 V5_REVIEW_API=1 npm run test:integration     # + review M3
+V5_API_URL=http://127.0.0.1:3001/api/v5 V5_ANALYSIS_V2=1 npm run test:integration   # + M4 senza chiamate Anthropic
+# Solo Codex, consuma budget del collaudo (max 10 USD): aggiungere V5_ANTHROPIC_LIVE=1
 ```
 
 Harness manuale con backend SIMULATO, mai sulla porta reale 3001:
 
 ```bash
 npm run mock-api -- --seed                                       # 127.0.0.1:3101, con i PDF di esempio M3
+npm run mock-api -- --seed --anthropic-mock                      # + Anthropic SIMULATO (nessuna rete, nessuna chiave)
 DIMORA_API_TARGET=http://127.0.0.1:3101 npx vite --port 5175     # frontend verso il mock
 ```
 
