@@ -47,6 +47,14 @@ if (process.argv.includes('--seed')) {
     const bytes = new Uint8Array(readFileSync(new URL(`../public/m3-examples/${file}`, import.meta.url)));
     await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name, bytes, originalFilename: file, visibility: 'home' });
   }
+  // Attività H1 di prova (solo mock), orologio del simulatore: 2026-10-13.
+  for (const body of [
+    { title: 'Spurgare i radiatori', dueDate: '2026-10-12' },
+    { title: 'Chiamare il tecnico per la caldaia', dueDate: '2026-10-16', description: 'Chiedere un preventivo per il controllo annuale.' },
+    { title: 'Cercare il libretto della lavatrice' },
+  ]) {
+    await backend.activities.handle({ method: 'POST', path: '', headers: { 'idempotency-key': crypto.randomUUID() }, body }, a.id, roma.id, 'activities');
+  }
   console.log(
     'Account di prova (solo mock): a@example.test / password-di-prova-A, b@example.test / password-di-prova-B, ' +
       'v@example.test / password-di-prova-V (viewer di Appartamento Roma)',
