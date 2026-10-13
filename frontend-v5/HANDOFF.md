@@ -1,128 +1,127 @@
-# HANDOFF — V5-DEV-003 (frontend identity-v1)
+# HANDOFF — V5-DEV-005 Documenti M2 (frontend)
 
 Autore: Claude Code. Data: 13/10/2026. Destinatario: Codex (review, integrazione, test end-to-end).
+Stato: **frontend Documenti pronto per l'integrazione, verificato solo con backend simulato. M2 non è completata**: gli endpoint documents-v1 reali non erano disponibili e nessuna prova reale è stata eseguita.
 
-## Checkout
+## Checkout e commit
 
-- Percorso effettivo: `C:\Users\07704017\Documents\Codex\Dimora-V5-Claude` (checkout principale del repository dedicato, nessun worktree aggiuntivo).
-- Branch: `claude/dimora-v5-identity`.
-- Base concordata verificata: `101f053e0a9465ddca80563edacfd5370e125139` (HEAD all'avvio, albero pulito).
-- Commit di consegna (solo `frontend-v5/**`, sopra la base):
-  1. `b00f602edb678473b2f0a938973d768861d64e6e` — scaffold e prima verticale.
-  2. commit successivo — decisioni del committente (ingresso diretto con una sola casa, font). Lo SHA non può stare nel file che lo genera: `git log -2 -- frontend-v5`.
-- Remoto raggiungibile: eseguito solo `git fetch origin`. `origin/main` (cdbb318) non contiene la base V5; nessun pull/rebase/merge/push, come da ticket.
+- Percorso effettivo: `C:\Users\07704017\Documents\Codex\Dimora-V5-Claude` (nessun worktree aggiuntivo).
+- Branch: `claude/dimora-v5-identity`. Base verificata: `8dfc9673baa9501e7a2357e39286942000931ddb`, albero pulito salvo `docs/v5/backend-status.md` non tracciato (nota di Codex, non toccata né inclusa).
+- Commit, in ordine, tutti locali e non pushati:
+
+| Commit | Contenuto | Azione per Codex |
+|---|---|---|
+| `577d56c` chore(v5): sync Codex M1 review and M2 contract | Patch `Dimora-V5-sync-Claude-M1-M2.patch` applicata così com'è (`git apply --check` pulito), solo i 12 file della patch | **Non riapplicare**: riproduce correzioni già tue |
+| `8bf099e` feat(frontend-v5): client documents-v1 con multipart e risposte binarie | Tipi, client, errori, chiavi cache, regole file, backend simulato, test client | Integrare |
+| `d034c3a` feat(frontend-v5): sezione Documenti M2 | Pagine, rotte, navigazione, hook, test UI | Integrare |
+| `a9e7685` chore(frontend-v5): backend simulato su 3101 | `mock-api` mai su 3001; `DIMORA_API_TARGET` solo per l'harness | Integrare |
+| `8e7ad78` fix(frontend-v5): Documenti su schermi stretti | CSS emerso nella verifica a 320/390 px | Integrare |
+| `bd49ea5` test(frontend-v5): integrazione reale documents-v1 | Suite reale (saltata di default), PDF sintetico valido | Integrare |
+| commit successivo docs(frontend-v5) | Questo HANDOFF, README, screenshot | Integrare. Lo SHA non può stare nel file: `git log -1 -- frontend-v5/HANDOFF.md` |
+
+Dopo il sync ho scritto solo in `frontend-v5/**`. Nessun push, nessun merge, nessuna modifica a backend, contratti, schema, legacy o main.
 
 ## Cosa è stato fatto
 
-- Scaffold nuovo React 19 + TypeScript 5.9 + Vite 7, React Router 7 (library mode), TanStack Query 5, CSS Modules; CSS globale solo token (`src/styles/tokens.css`) e reset (`src/styles/global.css`). Nessun import da `frontend/`, `app.js`, `App.tsx`, `theme.ts`, `api.ts` (regola ESLint `no-restricted-imports`).
-- Vite: host `127.0.0.1`, porta `5174`, `strictPort`, proxy `/api/v5` → `http://127.0.0.1:3001` (`changeOrigin: false`, il server vede Origin/Host del frontend). Stesso per `vite preview`.
-- Client API tipizzato (`src/api/client.ts`) sui tipi del contratto (`src/api/types.ts`):
-  - URL relativi, `credentials: 'include'`, `cache: 'no-store'`; nessun token in storage.
-  - CSRF solo in memoria da `GET /session`; `X-CSRF-Token` su ogni POST (login/register/logout inclusi); se manca il token lo chiede prima della mutazione.
-  - Dopo login/register: pulizia cache privata e nuova `GET /session` (sessione/CSRF ruotati).
-  - Errori: busta del contratto → `ApiError{kind:'http', status, code, fieldErrors, requestId}`; rete rifiutata, risposta non-JSON, 2xx fuori forma, 502/503/504 → `kind:'service'`. Mai dati vuoti o demo.
-- Sessione e cache (`src/session/`):
-  - Chiavi `['account', accountId, 'homes']` e `['account', accountId, 'home', homeId, 'detail']`.
-  - 401 su richiesta protetta: annulla richieste pendenti, rimuove cache privata, sessione anonima, nuovo CSRF, ritorno al login con `next`; nessun retry automatico (nessun loop).
-  - Logout: 204 (o 401 = già scaduta) → login **senza** `next`, cache privata rimossa, nuova sessione/CSRF. Se il server non conferma, banner d'errore e sessione considerata ancora attiva.
-  - Cambio account rilevato anche da altra scheda (sessione riletta al focus della finestra) → cache privata rimossa.
-  - Stato locale (form, bozze) azzerato al cambio di account e di casa (`key` per account/casa); nessuna bozza persistente.
-  - Nessun retry automatico delle query; ogni errore di servizio ha «Riprova».
-- Rotte: `/` = ingresso (anonimo → `/accedi` senza `next`; con account legge le case: **una sola casa → `/home/:id/casa` direttamente**, zero o più → `/case`); dopo il login senza `next` si passa da `/`; `/accedi`, `/registrati` (solo anonimi); `/case` (elenco esplicito anche con una sola casa, raggiungibile da «Cambia casa»: 0 case = onboarding con form, ≥1 = scelta); `/case/nuova`; `/home/:homeId` → `/home/:homeId/casa`; `/home/:homeId/{casa,attivita,documenti,spese}`; 404. Il contesto casa viene solo dall'URL ed è sempre verificato con `GET /homes/:homeId`.
-- Casa: nome, indirizzo, ruolo, permessi in italiano. 403 → «Accesso non consentito» senza alcun dato della casa; mai trasformato in elenco vuoto.
-- Attività, Documenti, Spese: pagine «Non ancora disponibile» (lucchetto in nav laterale e inferiore, testo per lettori di schermo), nessun dato mostrato o salvato. Agenzie/Amministratori: voci non navigabili con lucchetto, nessuna rotta.
-- Registrazione: banner «Solo sviluppo locale», hint password 12–128 con spazi conservati, pulsante Mostra/Nascondi.
-- Creazione casa con `Idempotency-Key` (UUID in memoria): stessa chiave finché la richiesta non riesce, quindi «Riprova» dopo esito ignoto non duplica; se i dati cambiano e il server risponde 409, banner «Richiesta in conflitto» con «Controlla le mie case» o «Invia come nuova richiesta» (nuova chiave).
-- Accessibilità di base: skip link, label/hint/errori collegati (`aria-describedby`, `aria-invalid`), focus sul primo campo errato, focus sul titolo della pagina dopo ogni navigazione (attende il titolo definitivo, non quello provvisorio di caricamento), target ≥ 44 px, `prefers-reduced-motion`. Nessuna dichiarazione di conformità WCAG.
-- Layout: desktop con barra laterale; ≤ 800 px barra inferiore Casa/Attività/Documenti/Spese; verificato senza scroll orizzontale a 320 e 390 px.
+- **Navigazione**: Documenti attiva (nav laterale e inferiore, link dalla pagina Casa). Attività e Spese restano «Non ancora disponibile». Testi della pagina Casa aggiornati di conseguenza.
+- **Rotte**: `/home/:homeId/documenti` e `/home/:homeId/documenti/:documentId`, dentro il contesto casa già verificato con `GET /homes/:homeId`.
+- **Archivio**: elenco paginato (`limit=20`, cursore opaco, «Mostra altri documenti»). Ogni voce mostra titolo, nome file, formato, dimensione, data, «Originale caricato», visibilità («Solo io» / «Persone della casa») e fonte «Caricamento manuale». Stati di caricamento, vuoto e errore con «Riprova».
+  - Un 404 (backend senza endpoint documentali) diventa «L’archivio documenti non è ancora attivo su questo servizio», un 503 `storage_unavailable` un messaggio dedicato. Mai un archivio vuoto o finto.
+- **Caricamento** (solo con permesso Home `edit`):
+  - Pannello con file (PDF/JPEG/PNG, un file, 20 MiB), titolo proposto dal nome file con l'estensione (1–160 code point), visibilità «Solo io» predefinita e «Persone della casa» come scelta esplicita col testo del contratto. Mostra la casa di destinazione.
+  - Controlli locali: file mancante, vuoto, troppo grande, formato non ammesso. Il server resta l'autorità sui byte.
+  - Invio multipart con CSRF, `X-Account-Context` e `Idempotency-Key` (UUID); il boundary lo imposta il browser. Doppio invio impedito.
+  - **Esito ambiguo** (rete/servizio): campi bloccati, «Riprova invio» con stessa chiave e stesso file. «Modifica e invia come nuovo» avvia una nuova operazione esplicita.
+  - 409 `idempotency_conflict`: banner esplicito, nuova richiesta con nuova chiave. 413/415/422: errori sul campo; il prossimo invio usa una nuova chiave.
+  - Successo solo dopo il 201: aggiorna dettaglio in cache, invalida l'elenco, mostra un banner con il link al documento.
+  - File e bozza solo in memoria: azzerati alla chiusura, al cambio casa/account e al logout. Nessuna condivisione automatica.
+- **Dettaglio**: titolo, tag, nome file, formato, dimensione, data, versione 1, fonte, visibilità con spiegazione, stato «Originale caricato», SHA-256. Nota esplicita: caricare o scaricare non conferma né certifica nulla.
+  - Anteprima dai soli byte autorizzati (fetch autenticato con contesto → Blob → URL locale): `<img>` per JPEG/PNG, `<object>` per PDF con testo di ripiego.
+  - «Scarica originale» sempre visibile; riusa i byte dell'anteprima se già presenti. Nome sicuro da `Content-Disposition`, con ripiego su `originalFilename` ripulito.
+  - 403 → «Documento non disponibile» senza metadati; 422 → «Indirizzo non valido».
+- **Export ZIP** (solo con permesso Home `export`; la casella è disattivata se `doc.permissions` non include `export`):
+  - Selezione con contatore e peso. Limiti 1–50 documenti e 100 MiB dichiarati come «limite tecnico di questa versione»; pulsante disattivato con motivo se superati.
+  - Export solo al clic, mai al montaggio. Errori JSON gestiti prima del Blob. 403 → «Nessun file è stato esportato», nessun salvataggio parziale.
+- **Viewer**: consulta e scarica, nessun caricamento né ZIP. Le azioni seguono `Home.permissions` e `DocumentSummary.permissions`, mai il solo ruolo.
+- **Client**: JSON, multipart e binari passano dallo stesso metodo `send`: header, contesto, errori e 401 sono comuni. Nessun fetch parallelo.
+  - I byte dei file sono query TanStack (`gcTime 0`): un 401 annulla le richieste e pulisce anche loro.
+  - Chiavi: `[account, accountId, home, homeId, documents, list]`, `[…, documents, documentId, detail]`, `[…, documents, documentId, file]`.
+- **URL Blob**: creati e revocati dentro un effetto, quindi revocati allo smontaggio, al cambio documento, casa o account e al logout. Verificato nei test e nel browser.
+- **Conservato da M1/sync**: `X-Account-Context` catturato, sessione riletta sempre al focus, controllo account prima di scrivere in cache dopo una mutazione, logout, idempotenza case.
 
-## File principali
+## API utilizzate (documents-v1, nessun campo o endpoint inventato)
 
-- Config: `package.json`, `package-lock.json`, `vite.config.ts`, `tsconfig*.json`, `eslint.config.js`, `index.html`.
-- App: `src/main.tsx`, `src/api/*`, `src/session/*`, `src/routes/*`, `src/components/*`, `src/lib/validation.ts`, `src/styles/*`.
-- Test/harness: `src/**/*.test.ts(x)`, `src/test/{fakeBackend.ts,harness.tsx,setup.ts}`, `scripts/mock-api.ts`, `tests/integration/identity.int.test.ts`.
-- Documentazione: `README.md`, `HANDOFF.md`, `docs/screenshots/*`.
+`GET /homes/:homeId/documents?limit&cursor` · `POST /homes/:homeId/documents` (multipart `file`, `name`, `visibility` + `Idempotency-Key`) · `GET /homes/:homeId/documents/:documentId` · `GET /homes/:homeId/documents/:documentId/file` · `POST /homes/:homeId/documents/export` (`{documentIds}`). Codici gestiti: `file_too_large`, `unsupported_file_type`, `validation_error`, `export_too_large`, `storage_unavailable`, `idempotency_conflict`, `csrf_invalid`, `account_context_changed`.
 
-## Dipendenze (versioni esatte, lockfile, registry npmjs.org)
-
-react/react-dom 19.3.0, react-router 7.18.4, @tanstack/react-query 5.104.2; dev: vite 7.3.7, @vitejs/plugin-react 5.2.0, typescript 5.9.3, typescript-eslint 8.71.2, eslint 10.12.0, @eslint/js 10.0.1, eslint-plugin-react-hooks 7.1.1, globals 17.13.0, vitest 4.1.11, jsdom 27.4.0, @testing-library/{react 16.3.3, dom 10.4.2, user-event 14.6.8, jest-dom 6.9.1}, @types/*. `npm audit`: 0 vulnerabilità.
-
-Scelta (da registrare in `docs/decisions.md`): non sono state prese le major più recenti (react-router 8, vite 8, TypeScript 7, vitest 5) perché typescript-eslint richiede TypeScript < 6.1 e @vitejs/plugin-react 6 richiede Vite 8; si sono preferite major con API note e peer dependency coerenti. jest-dom 6.10.0 è deprecato (rilascio errato) → 6.9.1. L'aggiornamento è un'attività separata.
-
-npm segnala lo script `postinstall` di esbuild non approvato (allowScripts): non è stato approvato né serve; build, dev server e test funzionano con il binario della piattaforma.
-
-## Comandi eseguiti ed esiti (in `frontend-v5/`, Node 24.20.0, npm 11.19.0)
+## Prove realmente eseguite (in `frontend-v5/`, Node 24.20.0)
 
 | Comando | Esito |
 |---|---|
-| `npx tsc -b` | OK, nessun errore |
-| `npx eslint .` | OK, nessun errore/warning |
-| `npx vitest run` (`npm test` = progetto `mock`) | 6 file, **46 test superati**; progetto `integration` saltato (2 test) senza `V5_API_URL` |
-| `npx vite build` | OK (JS 384 kB, gzip 121 kB); il bundle non contiene il backend simulato (verificato con ricerca nel `dist`) |
+| `npx tsc -b` | OK |
+| `npx eslint .` | OK |
+| `npx vitest run` | **80 superati** (8 file), 6 saltati (integrazione). Ripetuto 3 volte, stabile |
+| `npx vite build` | OK (JS 408 kB, gzip 128 kB); backend simulato assente dal bundle (ricerca nel `dist`) |
 | `npm audit` | 0 vulnerabilità |
-| `V5_API_URL=http://127.0.0.1:3001/api/v5 npx vitest run --project integration` contro **backend simulato** | 2 superati — verifica solo che la suite di integrazione e il suo cookie jar funzionino; **non è integrazione reale** |
+| Suite di integrazione contro **backend simulato** su 3101 | 6/6: verifica solo il codice dei test, **non è integrazione reale** |
 
-### Prove mock (backend simulato, contratto e rendering)
+### Test con backend simulato (mock)
 
-- `src/api/client.test.ts` — URL/credentials/no-store; CSRF prima della prima mutazione e su login; CSRF vecchio rifiutato dopo rotazione; Idempotency-Key; busta errori, fieldErrors, requestId; rete rifiutata, non-JSON, 2xx fuori forma, 503 → servizio; logout senza body; nessun uso di localStorage/sessionStorage.
-- `src/lib/validation.test.ts` — limiti di lunghezza, trim, password non toccata, redirect `next` solo interno.
-- `src/routes/auth.test.tsx` — errori campo e focus; 401 generico con password svuotata; sequenza login → GET session → GET homes; mostra/nascondi password; 422/409 registrazione; onboarding dopo registrazione; backend spento → errore + Riprova, nessun form.
-- `src/routes/routing.test.tsx` — URL privato da anonimo → login con `next` → ritorno; scelta esplicita con più case e focus sul titolo; una sola casa → ingresso diretto dopo login e all'apertura con sessione attiva, «Cambia casa» mostra comunque l'elenco; radice anonima → login senza `next`; URL diretto e sezioni con casa nell'URL; redirect `/home/:id`; 403 senza contenuti; Agenzie/Admin non navigabili; 404; `/homes` in errore → errore e non onboarding.
-- `src/session/cacheIsolation.test.tsx` — logout A → login B senza dati/chiavi di A; chiavi `[account, casa, risorsa]`; 401 → cache pulita, login, nessun retry; ricarica con cookie su URL diretto; bozza nuova casa non passa da A a B.
-- `src/routes/createHome.test.tsx` — onboarding e creazione; errori locali; risposta persa + Riprova = stessa chiave, una sola casa; dati cambiati → 409 esplicito, poi nuova chiave; 422 server sul campo.
+- **Regressione M1**: 47 test (accesso, routing, isolamento cache, creazione casa, client identity, contesto account). Ho aggiornato un'asserzione: Documenti ora è attiva, e il test verifica Attività/Spese non disponibili.
+- **`src/api/documentsClient.test.ts`** (11): multipart senza Content-Type del client e con tutti gli header; lista con `limit`/`cursor`; Blob con byte identici e nome da Content-Disposition; errore JSON prima del Blob; JSON 200 su endpoint binario = errore; ZIP con firma `PK`; export con un documento vietato → 403; `storage_unavailable`; idempotenza (stesso id, poi 409); nomi file con traversal; limiti export.
+- **`src/routes/documents.test.tsx`** (22):
+  - nav attiva; archivio vuoto; campi di elenco; paginazione;
+  - backend senza endpoint e storage giù senza fallback; privato altrui assente anche per l'owner;
+  - default «Solo io» e casa di destinazione; scelta esplicita «Persone della casa»; file mancante/vuoto/troppo grande/formato; 415 dal server; doppio clic = un invio; esito ambiguo con stessa chiave e stesso file; conflitto 409 con nuova chiave; member senza ZIP; viewer senza caricamento né ZIP;
+  - dettaglio con metadati e SHA-256 e senza «Validato/Confermato/Certificato»; anteprima PDF e immagine; download riusando i byte; revoca URL Blob; 403/422 senza metadati; viewer scarica; ZIP esplicito con id corretti; 403 export senza file;
+  - 401 → login e cache documenti rimossa; logout dal dettaglio con URL revocati e bozza non trasferita; cambio casa senza bozza.
 
-### Integrazione reale
+### Verifica nel browser (backend simulato, non reale)
 
-**Non eseguita**: il backend V5 non esiste ancora. Pronta in `tests/integration/identity.int.test.ts` (scenari 1–4 del contratto, via lo stesso `ApiClient`, Origin `http://127.0.0.1:5174`, account con email casuale `@example.test` a ogni esecuzione: solo DB di sviluppo V5):
+Backend simulato `npm run mock-api -- --seed` su **3101**, Vite su **5175** con `DIMORA_API_TARGET`. Nel browser integrato ho provato:
+- a 320 e 390 px, senza scroll orizzontale: elenco, pannello di caricamento, caricamento multipart reale dal browser via proxy, banner di esito, dettaglio con anteprima immagine;
+- a desktop: anteprima PDF e selezione con export ZIP (file `documenti.zip`).
 
-```bash
-V5_API_URL=http://127.0.0.1:3001/api/v5 npm run test:integration
-```
+Il focus va sul titolo del pannello all'apertura e sull'h1 dopo ogni navigazione. Nessuna dichiarazione di conformità WCAG.
 
-Lo scenario 5 (backend spento) è verificato nel browser in modalità reale (screenshot 01) e nei test mock; lo scenario 3 lato UI (cache dopo logout/login) solo con mock.
+**Nota sui processi trovati attivi**: durante la verifica erano in ascolto `127.0.0.1:3001` (PID 8268, `node --env-file=.env dist/main.js`, presumibilmente backend V5 di Codex) e `127.0.0.1:5174` (PID 25924, Vite non avviato da me). Non li ho toccati né fermati. Il mio Vite su 5174 si è fermato per `strictPort`. Prima di accorgermene ho fatto **una sola `GET /api/v5/session` anonima** attraverso quel Vite verso il backend reale: nessun login, nessuna scrittura. Non ho eseguito prove sul backend reale.
 
 ## Screenshot (`docs/screenshots/`)
 
-| File | Modalità |
-|---|---|
-| `01-reale-backend-spento.jpg` | **reale**: `npm run dev`, nessun backend su 3001 → «Dimora non è raggiungibile» + Riprova |
-| `02-mock-login-errori-campo-390.jpg` | mock (`npm run mock-api -- --seed`), 390 px, errori di campo |
-| `03-mock-elenco-case-390.jpg` | mock, 390 px, scelta tra due case, Agenzie/Amministratori bloccati |
-| `04-mock-casa-390.jpg` | mock, 390 px, Casa con barra inferiore |
-| `05-mock-casa-320-nav-bloccata.jpg` | mock, 320 px, lucchetti su Attività/Documenti/Spese, nessuno scroll orizzontale |
+01–05 da M1 (01 modalità reale con backend spento, gli altri mock). Nuovi, **tutti con backend simulato**: `06-mock-documenti-elenco-390`, `07-mock-documenti-caricamento-320`, `08-mock-documenti-caricato-320`, `09-mock-documento-immagine-320`, `10-mock-documento-pdf-desktop` (la cattura non include il contenuto del visore PDF del browser), `11-mock-documenti-zip-desktop`.
 
-Verificati nel browser ma senza screenshot utilizzabile (lo strumento di cattura ha restituito immagini duplicate/ritagliate): pagina 403 dopo ricarica a 320 px, form «Aggiungi una casa» a desktop con focus sul primo campo errato, focus sul titolo dopo navigazione Casa ↔ Documenti. Il dev server è stato avviato da terminale (non tramite `.claude/launch.json`, che è fuori da `frontend-v5/`) e fermato a fine prova.
+## Richieste e lacune per Codex (nessun campo/endpoint inventato)
 
-## Richieste per Codex (contratto/backend) — nessun contratto alternativo implementato
+1. **Fonte «Caricato da te»**: il contratto la ammette «solo se il backend lo identifica», ma `DocumentSummary` non ha un campo per farlo. La UI mostra sempre «Caricamento manuale». Se serve, aggiungere un campo (es. booleano «caricato dall'account richiedente»).
+2. **Permesso di caricamento**: dedotto da `Home.permissions` che include `edit`, perché `DocumentSummary.permissions` contiene solo `read`/`export`. Confermare.
+3. **404 su rotte documentali assenti**: con un backend solo M1 la UI si aspetta un 404 con busta d'errore JSON. Se arrivasse non-JSON mostrerebbe l'errore di servizio generico (corretto ma meno preciso).
+4. **Nome dello ZIP**: la UI usa il nome da `Content-Disposition`, con ripiego su «Documenti <nome casa>.zip». Indicare se il server ne fornisce sempre uno.
+5. **Unità mostrate**: «20 MB» e «100 MB» sono MiB (1024²); i testi lo esplicitano nei messaggi di errore. Confermare la dicitura per il committente.
+6. **Memoria browser**: anteprima, download e ZIP (fino a 100 MiB) vivono come Blob in memoria, come chiede il contratto. Su dispositivi modesti uno ZIP grande può pesare; va valutato prima del pilota.
+7. **PDF su mobile**: molti browser mobili non mostrano PDF in `<object>` e non sempre attivano il testo di ripiego. «Scarica originale» resta sempre visibile sotto l'anteprima.
+8. **`account_context_changed` durante un upload**: porta al login come ogni 401. File e bozza vanno persi, per scelta: niente bozze private persistenti.
+9. **Integrazione reale**: quando gli endpoint esistono, eseguire `V5_API_URL=http://127.0.0.1:3001/api/v5 V5_DOCUMENTS_API=1 npm run test:integration`. Copre upload, idempotenza, elenco, dettaglio, byte e SHA-256 identici, ZIP, 415/422/413 e isolamento tra account. Restano da provare con dati reali: visibilità private/home tra membri e revoca, perché nessuna API consente di invitare membri in identity-v1.1.
 
-1. **Codice errore CSRF**: quale `code` (e stato, 403?) per token CSRF assente/scaduto? Oggi il client lo mostra come errore generico, senza rinnovo automatico. Proposta: codice stabile (es. `csrf_invalid`) per consentire una sola nuova `GET /session` + un solo nuovo invio.
-2. **Codice errore 409 su `POST /homes`**: distinguere «chiave riusata con body diverso» da altri 409 futuri (es. `idempotency_key_reused`). Oggi ogni 409 su quella rotta è trattato come conflitto di idempotenza.
-3. **Idempotency-Key**: formato accettato (il client invia UUID v4), ambito (per account o per sessione?), durata di conservazione, comportamento se la richiesta originale è ancora in corso.
-4. **Unità di misura delle lunghezze** (1–80, 1–200, 12–128, 254): il client conta i code point Unicode. Confermare (code point / UTF-16 / grafemi) e se l'email viene normalizzata (minuscole) lato server.
-5. **`GET /homes/:homeId` per id inesistente**: 403 come per casa altrui (consigliato, evita enumerazione) o 404? La UI gestisce entrambi senza mostrare dati.
-6. **Login tra schede**: le risposte di `/homes` non indicano l'account. Il client rilegge la sessione al focus della finestra, ma resta una piccola finestra in cui una scheda con cache di A può ricevere dati di B sotto la chiave di A se un'altra scheda ha cambiato account. Valutare un indicatore lato server (es. `accountId` nella risposta o header) — solo se Codex lo ritiene utile; il frontend non lo assume.
-7. **429**: presenza di `Retry-After` o di un messaggio con tempo d'attesa? Oggi si mostra il messaggio del server.
-8. **Origin/cookie per l'integrazione**: il proxy Vite lascia `Origin: http://127.0.0.1:5174` e `Host` del frontend; il server deve accettare quell'origine. Il cookie di sessione deve avere `Path` che copra `/api/v5` e niente `Domain` (host 127.0.0.1).
-9. **Logout con sessione già scaduta**: il client tratta il 401 di `POST /auth/logout` come uscita riuscita. Confermare che `GET /session` successivo crei una sessione anonima con nuovo CSRF.
+## Note per i documenti condivisi (le aggiorna Codex)
 
-## Limiti e note
+- **changelog**: frontend Documenti M2 (archivio paginato, caricamento con visibilità e idempotenza, dettaglio con anteprima/download autenticati, ZIP guidato dai permessi); solo prove mock, integrazione reale pendente.
+- **decisions**:
+  - un unico percorso client per JSON/multipart/binari;
+  - byte dei file come query con `gcTime 0`, così il 401 li pulisce;
+  - URL Blob gestiti da effetto;
+  - chiave idempotente per operazione, campi bloccati dopo un esito ambiguo, nuova chiave dopo un rifiuto definitivo;
+  - icona decorativa nascosta sotto 480 px;
+  - backend simulato su 3101 con `DIMORA_API_TARGET` solo per l'harness.
+- **backlog**: richieste 1–9; e2e browser sul backend reale; valutazione memoria ZIP e PDF su mobile.
+- **roadmap**: V5-DEV-005 frontend pronto per integrazione; M2 si chiude solo dopo API, PostgreSQL e storage reali e il collaudo UI reale.
 
-- Nessuna integrazione reale eseguita; l'app V5 reale non è funzionante finché il backend di Codex non è attivo.
-- Font: **decisione del committente (13/10/2026): font di sistema**, nessun caricamento esterno. DM Sans/Manrope restano primi nello stack solo se già installati sul dispositivo.
-- `scripts/mock-api.ts` usa lo stripping dei tipi di Node (Node ≥ 22.18 / 23.6; verificato con Node 24). Il backend simulato usa la porta 3001: non avviarlo con il backend reale (si ferma se la porta è occupata).
-- **Decisione del committente (13/10/2026): con una sola casa si entra direttamente.** Vale solo all'ingresso (`/`): `/case` resta l'elenco, altrimenti «Cambia casa» e «Aggiungi una casa» sarebbero irraggiungibili. Verificato anche nel browser con backend simulato (account con una casa → Casa; «Cambia casa» → elenco).
-- Le prove con screenshot desktop sono limitate dalla larghezza del pannello del browser integrato.
-- Il controllo di conformità WCAG non è stato fatto; sono state applicate solo pratiche di base (tastiera, focus, etichette).
+## Limiti
 
-## Note per i documenti condivisi (li aggiorna Codex)
-
-- **changelog**: nuovo `frontend-v5` con identity-v1 (accesso/uscita, registrazione di sviluppo, case, shell Home) contro contratto congelato; solo prove mock.
-- **decisions**: ingresso diretto con una sola casa (solo da `/`) e font di sistema, entrambe decise dal committente il 13/10/2026; versioni dipendenze (sopra); CSRF solo in memoria; nessun retry automatico; logout senza `next`; ciclo di vita Idempotency-Key; font di sistema; backend simulato condiviso tra test e `mock-api`, escluso dal bundle via ESLint.
-- **backlog**: richieste 1–9; aggiornamento futuro alle major React Router 8/Vite 8/TS 7 quando l'ecosistema lint è compatibile; font locali; integrazione reale + e2e browser.
-- **roadmap**: V5-DEV-003 frontend pronto per integrazione; restano backend identity-v1 e collaudo.
+- Nessuna prova sul backend reale: M2 **non** è completata.
+- Le prove nel browser usano il backend simulato. Il visore PDF del browser integrato non compare negli screenshot.
+- Nessuna funzione AI, «Da rivedere», conferma, sostituzione, cestino o condivisione: fuori ambito M2, nessuna appare operativa.
 
 ## Prossimi passi consigliati
 
-1. Codex: review del commit, risposte alle richieste 1–9, avvio backend su 3001, `npm run test:integration`, poi prova manuale con `npm run dev`.
-2. Eventuale adeguamento del client ai codici errore definitivi (CSRF, idempotenza).
-3. Test e2e nel browser (Playwright o simile) quando esiste il backend reale.
+1. Codex: review e integrazione dei commit da `8bf099e` in poi (non `577d56c`), risposte alle richieste 1–9.
+2. Con gli endpoint documents-v1 attivi: suite di integrazione reale, poi collaudo UI reale a 320/390 px e desktop, incluse le interruzioni.
+3. Eventuali adeguamenti del client richiesti dalla review in nuovi commit `frontend-v5/**`.
