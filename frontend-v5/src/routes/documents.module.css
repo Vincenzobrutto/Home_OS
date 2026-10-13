@@ -312,3 +312,73 @@
 .formFlush {
   margin-top: 0;
 }
+
+/* Ricerca H2 */
+.search {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.searchScope {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.searchFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.filter {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.select {
+  min-height: var(--tap-min);
+  padding: 8px 10px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.searchActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.resultsInfo {
+  margin-bottom: var(--space-3);
+  font-size: 14px;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .filter {
+    flex: 1 1 130px;
+  }
+
+  .select {
+    width: 100%;
+  }
+
+  .searchActions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .searchActions > * {
+    flex: 1 1 auto;
+  }
+}

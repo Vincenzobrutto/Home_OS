@@ -153,6 +153,8 @@ export function CasaPage() {
           <p className={styles.muted}>
             In Documenti conservi gli originali della casa (PDF, JPEG, PNG).{' '}
             <Link to={`/home/${encodeURIComponent(home.id)}/documenti`}>Apri i documenti</Link>
+            {' · '}
+            <Link to={`/home/${encodeURIComponent(home.id)}/documenti?ricerca=1`}>Cerca documenti</Link>
           </p>
           <p className={cx(styles.muted, styles.spaced)}>
             Spese non è ancora attiva in questa versione: lì non viene mostrato né salvato alcun dato.

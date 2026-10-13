@@ -1,12 +1,32 @@
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { safeFilename } from '../api/client';
 import { isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey } from '../api/queryKeys';
-import type { DocumentDetail, DocumentSummary, DocumentVisibility, Home } from '../api/types';
+import type { DocumentDetail, DocumentSearchFilters, DocumentSummary, DocumentVisibility, Home } from '../api/types';
 import { Icon } from '../components/Icon';
 import { Banner, ErrorState, Field, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
-import { useDocuments, useExportDocuments, useUploadDocument } from '../documents/hooks';
+import {
+  useDocumentSearch,
+  useDocumentSearchCapabilities,
+  useExportDocuments,
+  useForgetHomeDocuments,
+  useUploadDocument,
+} from '../documents/hooks';
+import { SearchForm } from '../documents/SearchForm';
+import {
+  EMPTY_FILTERS,
+  QUERY_MAX_CODE_POINTS,
+  SEARCH_SCOPE_NOTE,
+  describeFilters,
+  filtersFromParams,
+  filtersKey,
+  filtersToParams,
+  isFiltered,
+  isForbidden,
+  searchUnavailableMessage,
+  validateQuery,
+} from '../lib/documentSearch';
 import {
   ACCEPT_ATTRIBUTE,
   MAX_EXPORT_DOCUMENTS,
@@ -45,6 +65,13 @@ export function DocumentsPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploaded, setUploaded] = useState<DocumentDetail | null>(null);
   const panelId = useId();
+  const [params, setParams] = useSearchParams();
+  const applied = useMemo(() => filtersFromParams(params), [params]);
+  const appliedKey = filtersKey(applied);
+  const capabilities = useDocumentSearchCapabilities(home.id);
+  const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
+  // Solo q/format/visibility nell'indirizzo; ?ricerca=1 (ingresso da Casa) non va all'API e cade al primo Cerca.
+  const apply = (filters: DocumentSearchFilters) => setParams(filtersToParams(filters));
 
   return (
     <>
@@ -117,7 +144,47 @@ export function DocumentsPage() {
         </p>
       )}
 
-      <DocumentsArchive home={home} canExport={canExport} canUpload={canUpload && !uploadOpen} onUpload={() => setUploadOpen(true)} />
+      {capabilities.isSuccess ? (
+        <SearchForm
+          home={home}
+          applied={applied}
+          maxQuery={maxQuery}
+          autoFocus={params.get('ricerca') === '1'}
+          onApply={apply}
+        />
+      ) : capabilities.isError && !isForbidden(capabilities.error) ? (
+        <div className={docs.panel}>
+          <Banner
+            tone="warning"
+            title="Ricerca non attiva"
+            actions={
+              <button
+                type="button"
+                className={cx(ui.btn, ui.small)}
+                onClick={() => void capabilities.refetch()}
+                disabled={capabilities.isFetching}
+              >
+                {capabilities.isFetching ? 'Nuovo tentativo…' : 'Riprova'}
+              </button>
+            }
+          >
+            <p>{searchUnavailableMessage(capabilities.error)}</p>
+          </Banner>
+        </div>
+      ) : null}
+
+      {/* Archivio rimontato a ogni cambio dei filtri applicati: prima pagina e selezione ZIP vuota. */}
+      <DocumentsArchive
+        key={appliedKey}
+        home={home}
+        filters={applied}
+        searchState={capabilities.isSuccess ? 'ready' : capabilities.isError ? 'unavailable' : 'pending'}
+        maxQuery={maxQuery}
+        onReset={() => apply(EMPTY_FILTERS)}
+        canExport={canExport}
+        canUpload={canUpload && !uploadOpen}
+        onUpload={() => setUploadOpen(true)}
+      />
       {canUpload && (
         <div className={styles.spaced}>
           <ExamplePdfs homeId={home.id} />
@@ -127,10 +194,31 @@ export function DocumentsPage() {
   );
 }
 
-function DocumentsArchive(props: { home: Home; canExport: boolean; canUpload: boolean; onUpload: () => void }) {
-  const { home, canExport } = props;
-  const documents = useDocuments(home.id);
+function DocumentsArchive(props: {
+  home: Home;
+  filters: DocumentSearchFilters;
+  /** Stato delle capabilities H2: i filtri si applicano solo con la ricerca attiva. */
+  searchState: 'ready' | 'pending' | 'unavailable';
+  maxQuery: number;
+  onReset: () => void;
+  canExport: boolean;
+  canUpload: boolean;
+  onUpload: () => void;
+}) {
+  const { home, canExport, filters } = props;
+  const filtered = isFiltered(filters);
+  const queryProblem = filtered ? validateQuery(filters.q, props.maxQuery) : undefined;
+  // Senza filtri: lista M2, consultabile anche se la ricerca non è attiva.
+  // Con filtri: solo a ricerca attiva e query valida, mai una ricerca locale sulle pagine già caricate.
+  const runnable = !filtered || (props.searchState === 'ready' && !queryProblem);
+  const documents = useDocumentSearch(home.id, filters, runnable);
   const exporter = useExportDocuments(home.id);
+  const forget = useForgetHomeDocuments(home.id);
+  const forbidden = documents.isError && isForbidden(documents.error);
+  useEffect(() => {
+    if (forbidden) forget();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- una sola pulizia per ogni 403
+  }, [forbidden]);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [exported, setExported] = useState<number | null>(null);
 
@@ -139,17 +227,67 @@ function DocumentsArchive(props: { home: Home; canExport: boolean; canUpload: bo
   const problem = exportProblem(selectedDocs);
   const totalBytes = selectedDocs.reduce((sum, d) => sum + d.byteSize, 0);
 
-  if (documents.isPending) return <Loading label="Caricamento dei documenti…" />;
+  if (filtered && props.searchState === 'unavailable') {
+    return (
+      <div className={cx(ui.card, styles.unavailable)}>
+        <h2 className={styles.cardTitle}>Filtri non applicati</h2>
+        <p className={styles.muted}>
+          La ricerca non è attiva, quindi i filtri indicati nell’indirizzo ({describeFilters(filters)}) non sono stati
+          applicati. Nessun risultato è stato calcolato.
+        </p>
+        <button type="button" className={ui.btn} onClick={props.onReset}>
+          Mostra tutti i documenti
+        </button>
+      </div>
+    );
+  }
+  if (queryProblem) {
+    return (
+      <Banner
+        tone="error"
+        role="alert"
+        title="Ricerca non valida"
+        actions={
+          <button type="button" className={cx(ui.btn, ui.small)} onClick={props.onReset}>
+            Azzera filtri
+          </button>
+        }
+      >
+        <p>{queryProblem} Correggi il testo e premi «Cerca».</p>
+      </Banner>
+    );
+  }
+  if (documents.isPending) {
+    return <Loading label={filtered ? 'Ricerca in corso…' : 'Caricamento dei documenti…'} />;
+  }
+  // 403 (accesso revocato): nessun risultato resta visibile, nemmeno quelli già ottenuti.
+  if (forbidden) {
+    return <ErrorState title="Accesso non consentito" error={documents.error} message={documentsErrorMessage(documents.error)} />;
+  }
   // Errore senza pagine già caricate: niente elenco. Errore su "Mostra altri": elenco conservato.
   if (documents.isError && !documents.data) {
     return (
       <ErrorState
-        title="Archivio non disponibile"
+        title={filtered ? 'Ricerca non riuscita' : 'Archivio non disponibile'}
         error={documents.error}
         message={documentsErrorMessage(documents.error)}
         onRetry={() => void documents.refetch()}
         retrying={documents.isFetching}
       />
+    );
+  }
+
+  if (items.length === 0 && filtered) {
+    return (
+      <div className={cx(ui.card, styles.unavailable)}>
+        <h2 className={styles.cardTitle}>Nessun documento corrisponde ai filtri</h2>
+        <p className={styles.muted} role="status">
+          Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Modifica la ricerca o azzera i filtri.
+        </p>
+        <button type="button" className={ui.btn} onClick={props.onReset}>
+          Azzera filtri
+        </button>
+      </div>
     );
   }
 
@@ -257,12 +395,22 @@ function DocumentsArchive(props: { home: Home; canExport: boolean; canUpload: bo
         </div>
       )}
 
-      <ul className={docs.list} aria-label={`Documenti di ${home.name}`}>
+      {filtered && (
+        <p className={docs.resultsInfo} role="status">
+          Risultati per {describeFilters(filters)}
+          {documents.hasNextPage ? ' — ce ne sono altri' : ''}
+        </p>
+      )}
+      <ul
+        className={docs.list}
+        aria-label={filtered ? `Risultati della ricerca in ${home.name}` : `Documenti di ${home.name}`}
+      >
         {items.map((doc) => (
           <DocumentRow
             key={doc.id}
             doc={doc}
             homeId={home.id}
+            backSearch={filtered ? filtersToParams(filters).toString() : ''}
             selectable={canExport}
             selected={selected.has(doc.id)}
             onToggle={() => toggle(doc.id)}
@@ -309,6 +457,8 @@ function exportErrorMessage(error: unknown) {
 function DocumentRow(props: {
   doc: DocumentSummary;
   homeId: string;
+  /** Filtri applicati, per tornare dal dettaglio agli stessi risultati. */
+  backSearch: string;
   selectable: boolean;
   selected: boolean;
   onToggle: () => void;
@@ -335,6 +485,7 @@ function DocumentRow(props: {
         <Link
           className={docs.title}
           to={`/home/${encodeURIComponent(props.homeId)}/documenti/${encodeURIComponent(doc.id)}`}
+          state={props.backSearch ? { documentsSearch: props.backSearch } : undefined}
         >
           {doc.name}
         </Link>

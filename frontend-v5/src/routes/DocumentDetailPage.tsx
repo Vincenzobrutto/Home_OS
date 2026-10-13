@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useLocation, useParams } from 'react-router';
 import { safeFilename } from '../api/client';
 import { isApiError, userMessage } from '../api/errors';
 import type { DocumentDetail } from '../api/types';
@@ -16,6 +16,7 @@ import {
   isImage,
   saveBlob,
 } from '../lib/files';
+import { filtersFromParams, filtersToParams } from '../lib/documentSearch';
 import { documentsErrorMessage } from './DocumentsPages';
 import { useCurrentHome } from './HomePages';
 import styles from './pages.module.css';
@@ -25,7 +26,7 @@ export function DocumentDetailPage() {
   const home = useCurrentHome();
   const { documentId = '' } = useParams();
   const document = useDocument(home.id, documentId);
-  const archive = `/home/${encodeURIComponent(home.id)}/documenti`;
+  const archive = `/home/${encodeURIComponent(home.id)}/documenti${backSearch(useLocation().state)}`;
 
   const back = (
     <Link to={archive} className={docs.backLink}>
@@ -234,4 +235,15 @@ function Preview({ doc }: { doc: DocumentDetail }) {
       )}
     </>
   );
+}
+
+/**
+ * Filtri H2 con cui si è arrivati dai risultati (stato della navigazione, non
+ * l'URL): riletti e riscritti, così passano soltanto q/format/visibility.
+ */
+function backSearch(state: unknown) {
+  const raw = (state as { documentsSearch?: unknown } | null)?.documentsSearch;
+  if (typeof raw !== 'string') return '';
+  const params = filtersToParams(filtersFromParams(new URLSearchParams(raw))).toString();
+  return params ? `?${params}` : '';
 }
