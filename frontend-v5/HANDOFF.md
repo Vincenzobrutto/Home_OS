@@ -1,157 +1,161 @@
-# HANDOFF — M4 frontend Anthropic (analysis-v2)
+# HANDOFF — H1 frontend Attività e scadenze personali (activities-v1)
 
-Autore: Claude Code. Data: 13/10/2026. Destinatario: Codex (backend, provider, budget, integrazione, collaudo reale).
-Stato: **frontend M4 pronto per l'integrazione, verificato solo con backend e Anthropic simulati. M4 non è completata.** Gli endpoint analysis-v2 non sono ancora implementati. Claude non ha fatto nessuna chiamata Anthropic e non ha avuto accesso alla chiave del backend.
+Autore: Claude Code. Data: 13/10/2026. Destinatario: Codex (contratto, backend, DB, integrazione, collaudo reale).
+Stato: **frontend H1 pronto per l'integrazione, verificato solo con backend simulato e orologio controllato. H1 non è completata**: endpoint e schema activities-v1 non sono ancora implementati e nessuna prova API/DB/browser reale è stata eseguita.
+
+- Nessuna chiamata Anthropic.
+- Nessuna lettura o scrittura di chiavi, `.env`, ledger o configurazioni.
+- `V5_ANTHROPIC_LIVE` non abilitato.
 
 ## Checkout, sincronizzazione e commit
 
 - Percorso: `C:\Users\07704017\Documents\Codex\Dimora-V5-Claude`, branch `claude/dimora-v5-identity`.
-- Base verificata: `ea59724719dbbfde1d5ae2955551c7f89bc5b1e5`, albero pulito salvo `docs/v5/backend-status.md` non tracciato (preservato, non incluso).
-- Bundle `Dimora-V5-sync-Claude-M4.bundle`:
+- HEAD atteso e verificato: `34c31be62af85b6111bc4d37fe5d2c39f5aadee7`; albero tracciato pulito; `docs/v5/backend-status.md` non tracciato preservato e non incluso.
+- Bundle `Dimora-V5-sync-Claude-attivita.bundle`:
   - `git bundle verify`: okay;
-  - `git bundle unbundle`: oggetti importati senza spostare la branch;
-  - il commit indicato dal file di riferimento è `5403f47af65fe3ce7a861ff67c364e411da18001`, ref `dev/dimora-v5-local-20261013`.
-- Ripristinati con `git restore --source=5403f47` **solo** `frontend-v5/`, `docs/v5/{api,documents-api,review-api,anthropic-api}-contract.md`, `domain-model.md`, `implementation-decisions.md`, `docs/v5/fixture/m3/`.
-  - Non ripristinati: `backend-status.md` e `backend-v5`. Nessun checkout della branch Codex.
-  - Dopo il commit di sync, la differenza da `5403f47` su quei percorsi è vuota.
-- **SHA-256 verificati contro il manifest**: tutti coincidono, in `docs` e in `public` (il trasferimento via oggetti Git ha risolto la corruzione della vecchia patch).
+  - `git bundle unbundle`: oggetti importati senza cambiare branch;
+  - SHA di riferimento: `9f34ca21d3e23cbfe84bf3b8f20105f094a2e9cb`.
+- `git restore --source=9f34ca2 --staged --worktree`: prima i `.gitattributes` di fixture e esempi, poi **solo** questi percorsi:
+  - `frontend-v5/`;
+  - `docs/v5/{api,documents-api,review-api,anthropic-api,activities-api}-contract.md`, `domain-model.md`, `implementation-decisions.md`, `m4-integration-review.md`;
+  - `docs/v5/fixtures/m3/`, `docs/v5/fixtures/m4/`.
+  - Dopo il sync, la differenza da `9f34ca2` su quei percorsi è vuota.
+- **Byte dei PDF verificati**: zero difformità.
+  - M3: 3/3 in `docs/v5/fixtures/m3` e 3/3 in `public/m3-examples`, contro entrambi i manifest.
+  - M4: 4/4 in `docs/v5/fixtures/m4` (`.gitattributes` `*.pdf -text -diff`).
 
-| PDF | docs/v5/fixtures/m3 | public/m3-examples | manifest |
-|---|---|---|---|
-| libretto-caldaia-demo | `824b6de3…` | `824b6de3…` | `824b6de3…` |
-| scheda-tecnica-caldaia-demo | `da6b7340…` | `da6b7340…` | `da6b7340…` |
-| rapporto-caldaia-demo-conflitto | `e313f78f…` | `e313f78f…` | `e313f78f…` |
-
-Commit (locali, nessun push):
+Commit, in ordine (locali, nessun push):
 
 | Commit | Contenuto | Azione per Codex |
 |---|---|---|
-| `4d9205d` chore(v5): sync consolidated M3 and M4 contract | Copia della baseline `5403f47` sui percorsi autorizzati | **Escludere / non riapplicare** |
-| `350a399` feat(frontend-v5): client analysis-v2 (provider, consenso, costi) | Tipi, client, hook, etichette | Integrare |
-| `3d3019c` test(frontend-v5): backend simulato analysis-v2 | `fakeReview` con Anthropic simulato; timeout dei test | Integrare |
-| `af82af4` feat(frontend-v5): scelta esplicita Analisi di test o Anthropic | UI di avvio, esiti, retry, badge, regola `other`; test M3 adeguati | Integrare |
-| `4ff5537` test(frontend-v5): casi M4 con Anthropic simulato | 20 test M4; `jobErrorMessage` con etichette M4 | Integrare |
-| `8cd7a07` test(frontend-v5): integrazione analysis-v2 con flag espliciti | Suite reale (saltata di default) e `mock-api --anthropic-mock` | Integrare |
+| `c29fcaa` chore(v5): sync M4 consolidated and H1 activities contract | Copia della baseline `9f34ca2` sui percorsi autorizzati | **Escludere / non riapplicare** |
+| `9370037` feat(frontend-v5): client activities-v1 e cache H1 | Tipi, 10 metodi client, chiavi cache, regole su date e testi, hook | Integrare |
+| `b3ddd65` test(frontend-v5): backend simulato activities-v1 | `src/test/fakeActivities.ts` collegato a `FakeBackend` | Integrare |
+| `912503e` feat(frontend-v5): attività personali e scadenze H1 | Casa, sezione «Da fare», dettaglio, modulo, dialogo, promemoria da caldaia, rotta | Integrare |
+| `590d46c` test(frontend-v5): casi H1 con backend simulato e orologio controllato | 25 test; correzione del ritorno del focus; `seedBoiler` nel mock | Integrare |
+| `c426783` test(frontend-v5): integrazione reale activities-v1 con flag | Suite reale saltata di default; seed mock con 3 attività | Integrare |
+| `8afb52c` fix(frontend-v5): «Nessuna data scelta» | Dicitura doppia emersa a 390 px | Integrare |
 | commit successivo docs(frontend-v5) | Questo HANDOFF, README, screenshot | Integrare. SHA: `git log -1 -- frontend-v5/HANDOFF.md` |
 
-Rifiniture Codex del consolidato M3 conservate: fonti con il nome M2, Attività attiva anche su `/review` e `/impianti`, azioni della storia in italiano, testi «Analisi completata», test reale con PDF valido non nel manifest.
+Correzioni M4 di Codex conservate (capabilities client, storia AI, zero USD, motivi in italiano, consenso). Nessun file M3/M4 modificato, salvo l'aggiunta del link al promemoria nella scheda caldaia e del riquadro nella Casa.
 
 ## Cosa è stato fatto
 
-1. **Tipi e compatibilità**:
-   - `ProviderId`; `SourceRef.page: number`; `provider`, `isSimulation` e `model` su job e proposte;
-   - `analysisProviders`/`isSimulation` sulle schede; outcome `no_supported_data`; `billing` reserved/settled/uncertain; `HistoryEvent.origin` con `ai_provider`;
-   - capabilities v2 con `apiVersion`, `providers`, `limits` e `budget`.
-   - I campi v2 sono **facoltativi** nei tipi, così una risposta M3 continua a funzionare: senza `providers` la UI offre solo l'analisi di test, senza alcun Anthropic. I vecchi test M3 passano.
-2. **Scelta esplicita del provider**:
-   - radio «Analisi di test — nessuna AI reale» / «Analisi AI con Anthropic», **nessuna preselezione**;
-   - provider disattivato o non configurato mostrato con il `disabledReason` del server e non selezionabile;
-   - nessun campo o modulo per la chiave, nessun segreto nel bundle (verificato);
-   - con Anthropic: limiti leggibili dalle capabilities e budget del collaudo («non è un prezzo di Dimora né il saldo dell’account Anthropic»).
-3. **Consenso**:
-   - casella non preselezionata con il testo esatto del contratto, obbligatoria lato client prima della POST;
-   - body `{documentIds, targetAssetId?, provider:'anthropic', consentToProviderTransfer:true}`; per il test `{documentIds, provider:'test_fixture_v1'}`;
-   - cambio provider: consenso azzerato, nuova chiave, nessun invio;
-   - mai avvio al montaggio, al caricamento o al cambio provider; destinazione sempre visibile.
-4. **Limiti ed esiti**:
-   - con Anthropic, i documenti oltre `maxFileBytes` non sono selezionabili e restano consultabili;
-   - messaggi distinti per tutti i codici M4 (non configurato o disattivato, modello assente, budget, rate limit, autenticazione, provider assente, output non valido, evidenze non verificate, testo assente, PDF cifrato o invalido, limiti, più caldaie, esito sconosciuto);
-   - `no_supported_data`: «nessuna scheda è stata creata», oppure «la scheda resta invariata» se c'era una destinazione;
-   - manuale sempre indicato.
-5. **Risultati**:
-   - badge del provider **effettivo** su job, proposte e scheda (`analysisProviders`); scheda mista con entrambi i badge, scheda solo manuale senza etichette;
-   - fonti con nome M2, **pagina reale**, estratto, impronta, «Apri l’originale» (flusso M2 autenticato);
-   - nota «Verificato sulla fonte: … Non è una certificazione né una conferma»;
-   - nessun punteggio di confidenza; output sempre come testo React (nessun `dangerouslySetInnerHTML`; testato con HTML nell'estratto).
-6. **Costi e retry**:
-   - costo riservato, effettivo o incerto, mai uno zero non comunicato;
-   - il retry di un job Anthropic fallito apre un pannello con nota sul costo precedente (anche incerto), avviso di nuovo costo e consenso da ridare; body `{consentToProviderTransfer:true}`; per il test `{}`;
-   - esito ambiguo della POST di creazione o del retry: stessa chiave; nessun retry POST automatico.
-7. **Conferme M3 invariate**: scelta puntuale della potenza, sostituzione esplicita, manuale, inbox solo aperte, storia (origine «analisi AI (Anthropic)»).
-   - **Nuovo**: con una grandezza `other` non compare «Conserva le due grandezze»; il testo chiede interpretazione o correzione.
-8. **Cache**:
-   - capabilities con `staleTime 0`, rilette dopo avvio, retry, rifiuto ed esito del job (il budget si aggiorna);
-   - chiavi per account, casa, job, scheda e provider;
-   - bozze (provider, consenso, selezione) solo in memoria e azzerate al cambio di casa o account;
-   - polling fermato allo smontaggio; nessuna scrittura in cache dopo un cambio di account.
+1. **Client** (`src/api/client.ts`): i dieci endpoint H1 passano dal percorso comune `send`: cookie, CSRF, `X-Account-Context` catturato, Idempotency-Key, `no-store`, errori comuni.
+   - Solo GET e POST (`updates`/`complete`/`cancel`/`reopen`); nessun PATCH o DELETE.
+   - Risposte fuori forma → errore di servizio.
+2. **Cache**:
+   - chiavi `['account', id, 'home', id, 'h1', …]` per capabilities, liste per filtri (`state`/`due`/`assetId`), dettaglio, storia e riepilogo, separate da M3/M4;
+   - letture temporali con `staleTime 0` e rilettura **sempre** al ritorno sulla finestra;
+   - dopo ogni successo o replay: dettaglio dalla risposta, poi invalidazione di tutto il prefisso H1 (liste, riepilogo, storia);
+   - 401, logout e cambio account rimuovono la cache H1 (verificato); risposte tardive non scrivono se l'account è cambiato.
+3. **Casa — «Le tue scadenze»**: conteggi (scadute, oggi, in programma, senza data) e fino a 3 `nextItems` **dal server**.
+   - Vuoto: «Nessuna scadenza nei prossimi 7 giorni», più «N attività senza data» con link.
+   - Errore e endpoint assente distinti dal vuoto, mai mostrati come zero.
+   - Link «Tutte le attività» e «Nuova attività» (solo con `edit`).
+   - Il riquadro M3 «Impianti e verifiche» resta funzionante anche con H1 in errore (testato).
+4. **Attività — «Da fare»**: in testa alla pagina; «Nuova attività» distinta da «Nuova analisi».
+   - Filtro Stato (Aperte, Completate, Annullate, Tutte) e Scadenza (solo per le aperte, come da contratto).
+   - «Nessuna attività aperta» è diverso da «Nessuna attività corrisponde a questo filtro».
+   - Paginazione «Mostra altre attività»; riquadri M3/M4 invariati.
+5. **Creazione e modifica**:
+   - campi: titolo, descrizione facoltativa, data facoltativa («Data scelta da te», campo data con «Togli la data»), caldaia facoltativa;
+   - destinazione sempre visibile («promemoria personale in <Casa>, collegato a «…»»);
+   - testo esplicito: non è un obbligo né una scadenza di legge e non cambia i dati della caldaia; nessuna categoria, ricorrenza o notifica.
+   - **Creazione**: body con i soli campi valorizzati.
+   - **Modifica**: si inviano solo i campi cambiati. `assetId` **omesso** se il collegamento non è toccato, `null` solo con «Rimuovi il collegamento», ID per una nuova scelta. Un collegamento `unavailable` resta tale («Mantieni il collegamento attuale») senza rivelare nome o ID.
+   - Nessun campo cambiato → «Nessuna modifica da salvare», nessuna richiesta.
+6. **Date**: valori `YYYY-MM-DD` dal campo data, inviati così come sono. Formattazione con data costruita e letta in UTC: nessuno spostamento di giorno (29/02, 31/12, cambio ora legale). Lo stato temporale (`dueState`) e la data di oggi (`today`, Europe/Rome) vengono sempre dal server, mai dall'orologio del dispositivo.
+7. **Dettaglio** `/home/:homeId/attivita/:activityId`:
+   - mostra stato, badge temporale, data scelta da te, oggi, descrizione, collegamento alla caldaia (link se `linked`, testo italiano se `unavailable`), date di creazione, completamento o annullamento;
+   - le azioni seguono permessi e stato: «Completa» (pannello rapido con nota facoltativa), «Modifica», «Annulla attività» (dialogo con nota, **Escape** e ritorno del focus al pulsante d'origine, testo «non viene eliminata»), «Riapri attività»;
+   - storia separata dalla storia tecnica della caldaia, con prima/dopo per campo e note;
+   - 403 e 422 senza contenuti;
+   - tutto il testo dell'utente è reso come testo React (testato con HTML in titolo e descrizione).
+8. **Dalla scheda caldaia**: riquadro «Promemoria personale» con «Crea promemoria per questa caldaia» → `attivita?nuova-attivita=1&assetId=…`, anche per schede provvisorie. Parametri `analizza` e `scheda` M4 invariati.
+   - Un `assetId` dall'URL che non è tra le proprie schede non viene collegato e lo si dice.
+9. **Mutazioni pessimistiche** (`useActivityOperation`):
+   - doppio invio impedito;
+   - esito ambiguo: campi bloccati, «Riprova invio» con **stessa chiave e stesso payload**;
+   - esito definitivo: nuova chiave;
+   - 409 (versione, stato, idempotenza): messaggio e «Rileggi i dati», poi i dati del server sostituiscono la bozza;
+   - nessun retry automatico e nessun completamento locale in caso di rete assente o 503.
+10. **Bozze e ruoli**: bozze solo in memoria, azzerate al cambio casa o account. Viewer in sola consultazione (nessuna creazione né azione). H1 assente (404) o in errore (503) riguarda solo le sezioni H1.
 
-## API usate
+## API usate (activities-v1, nessun campo o endpoint inventato)
 
-Endpoint M3 invariati, con i campi analysis-v2: GET `analysis-capabilities` (v2), POST `analysis-jobs` con `provider` e `consentToProviderTransfer`, POST `analysis-jobs/:id/retry` con `{consentToProviderTransfer:true}` per Anthropic, e i campi nuovi in letture e storia. Nessun endpoint o campo fuori contratto.
+GET `activity-capabilities` · GET `activities?state&due[&assetId]&limit&cursor` · POST `activities` · GET `activities/:id` · POST `activities/:id/updates|complete|cancel|reopen` · GET `activities/:id/history` · GET `activity-summary` (tutti sotto `/homes/:homeId`). Il filtro `assetId` è supportato dal client ma non ancora usato dall'interfaccia.
 
 ## Prove realmente eseguite (Node 24.20.0, in `frontend-v5/`)
 
 | Comando | Esito |
 |---|---|
 | `npx tsc -b` / `npx eslint .` | OK |
-| `npx vitest run` | **125 superati** (11 file), 13 saltati (integrazione reale, nessuna senza flag). Ripetuto 2 volte, stabile. Nessuna chiamata di rete reale |
-| `npx vite build` | OK; il bundle non contiene chiavi né l'endpoint Anthropic, e non contiene il backend simulato |
-| Integrazione `V5_ANALYSIS_V2=1` contro **mock su 3101** | 3/3 non-live, live saltato: verifica solo il codice dei test, **non è integrazione reale** |
+| `npx vitest run` | **151 superati**, 19 saltati (integrazioni reali con flag). Ripetuto più volte, stabile |
+| `npx vite build` | OK; il bundle non contiene il backend simulato |
+| `V5_ACTIVITIES_API=1` contro **mock su 3101** | 3/3: verifica solo il codice dei test, **non è integrazione reale** |
 
-- **Composizione dei 125**: 105 regressioni M1/M2/M3 + 20 M4.
-- **Test M3 adeguati alla scelta esplicita**: clic sul radio del provider, titolo «Nuova analisi», body con `provider`.
-- **Nella baseline consolidata** un test M3 superava il limite predefinito di 5 s per test. Ho alzato il timeout del progetto mock a 20 s e quello di `findBy` a 3 s; nessuna logica cambiata.
+- **Composizione dei 151**: 126 regressioni M1–M4 (baseline) + 3 unitari H1 + 22 UI H1. Nessun test M1–M4 è stato modificato.
+- **Unitari** (`src/lib/activities.test.ts`): date bisestili e invalide, limiti 0001/9999, formattazione senza spostamento, titolo con code point/NFC, descrizione vuota → `null`, nota da 500.
+- **UI** (`src/routes/activities.test.tsx`, orologio controllato dal mock e mai `Date.now` del test):
+  - Casa vuota; errore ed endpoint assente non mostrati come zero, con M3 funzionante;
+  - creazione senza data con body minimo e storia; data 2028-02-29; promemoria da caldaia provvisoria senza effetti sulla scheda; caldaia non propria nell'URL;
+  - doppio clic e replay con stessa chiave e payload, un solo evento; 409 con rilettura; 503 senza completamento apparente;
+  - ieri/oggi/+7/+8/senza data con confine +7 incluso e ordine; filtri e vuoti distinti; completa e riapri con data passata di nuovo scaduta e storia;
+  - dialogo con Escape e ritorno del focus; rilettura al focus (nuovo giorno);
+  - modifica con `assetId` omesso o `null`; collegamento non leggibile senza nome né ID; escaping;
+  - attività di altro account (403) e owner che non vede il member; viewer; cursore su 25 senza duplicati; cambio casa e account; nessuna mutazione AI o caldaia.
+- **Integrazione reale** (`tests/integration/activities.int.test.ts`, solo `V5_API_URL` + `V5_ACTIVITIES_API=1`, da eseguire dopo l'attivazione di H1): capabilities e riepilogo vuoto; replay e conflitto di idempotenza; modifica, completa e riapri con versioni e storia; 409 di versione; 2028-02-29 valida e 2026-02-29 rifiutata; privacy tra account; 422. Nessun return anticipato.
 
-**Test M4** (`src/routes/anthropic.test.tsx`, Anthropic simulato nell'harness):
-- non configurato, senza campi per la chiave;
-- nessuna preselezione; limiti e budget; consenso obbligatorio e body corretto;
-- cambio provider senza invii; servizio M3 senza Anthropic; cambio casa;
-- pagine 2/3 con nome della fonte e apertura dell'originale; `no_supported_data`;
-- cinque errori distinti (testo assente, autenticazione, rate limit, citazioni rifiutate, più caldaie); escaping; grandezza `other`; scheda mista e scheda solo manuale;
-- budget esaurito (429) con capabilities rilette; provider disattivato dopo l'apertura (503) senza ripiego sul test;
-- costo incerto e retry con consenso; risposta persa con stessa chiave e una sola riserva; budget che scende del costo effettivo.
+**Browser (mock su 3101 con `--seed`, Vite su 5175)**:
+- Casa a 390 px con conteggi e anteprima;
+- dettaglio a 320 px senza scroll orizzontale;
+- dialogo di annullamento **da tastiera** (Invio apre con focus sulla nota, Escape chiude e riporta il focus su «Annulla attività»);
+- completamento da tastiera con nota e storia aggiornata;
+- «Da fare» a 390 px.
 
-**Integrazione reale** (`tests/integration/anthropic.int.test.ts`):
-- `V5_ANALYSIS_V2=1`: capabilities v2 senza segreti; rifiuto senza consenso prima del job e senza riserva; provider di test esplicito senza costi.
-- `V5_ANTHROPIC_LIVE=1`: **solo Codex, consuma budget**; un'analisi del PDF sintetico A.
-- Nessun `return` anticipato: un upload fallito fa fallire il test.
+I processi di Codex su 3001, 5174 e 55432 (e 5173) non sono stati interrogati né fermati; i miei su 3101 e 5175 sono stati fermati.
 
-**Browser (mock su 3101 con `--seed --anthropic-mock`, Vite su 5175)**:
-- modulo M4 completo;
-- consenso e invio **da tastiera** (Spazio, Invio);
-- esito AI con modello e costo `0.0123 USD`;
-- scheda con badge AI, fonte nominata, pagina e nota di verifica a 320 px senza scroll orizzontale;
-- secondo tentativo con esito incerto: «Costo incerto (fino a 0.25 USD)», pannello di retry con nota e «Conferma» disattivato finché il consenso non è dato.
+## Screenshot (`docs/screenshots/`, backend simulato)
 
-I processi di Codex su 3001 (ora PID 21712), 5174, 55432 e 5173 non sono stati toccati né interrogati; i miei processi su 3101 e 5175 sono stati fermati.
-
-## Screenshot (`docs/screenshots/`, backend e Anthropic simulati)
-
-- `16-mock-m4-scelta-provider-consenso-390`: scelta del provider, limiti, budget, consenso non selezionato.
-- `17-mock-m4-proposta-ai-320-cattura-duplicata`: proposta AI a 320 px. Lo strumento di cattura ha duplicato l'immagine 2×2; la pagina reale non è duplicata, e il contenuto è leggibile.
-
-Altre catture sono andate in timeout (pannello del browser non in primo piano); gli stati relativi sono stati verificati leggendo il testo della pagina.
+- `18-mock-h1-casa-scadenze-390`: Le tue scadenze.
+- `19-mock-h1-dialogo-annulla-320`: dialogo «Annulla attività».
+- `20-mock-h1-da-fare-390`: sezione «Da fare» con filtri, prima della correzione «Nessuna data scelta».
 
 Nessuna dichiarazione di conformità WCAG.
 
-## Richieste e lacune per Codex (nessun campo/endpoint inventato)
+## Domande contrattuali e lacune per Codex (nessun campo/endpoint inventato)
 
-1. **Billing dei fallimenti prima della chiamata** (testo assente, PDF cifrato, limiti): il contratto non dice se `billing` è `null`, `settled` con `actualUsd:'0.00'` o se la riserva viene registrata. La UI mostra quello che arriva («Costo non comunicato dal servizio» se `null`). Il mock usa `settled` a `0.00`, quindi conosciuto e non inventato.
-2. **Riserva per tentativo**: il contratto fissa 0,25 USD, ma le capabilities non lo espongono. La UI non lo scrive in anticipo: mostra `maxReservedUsd` dal job. Valutare un campo `limits.maxReservedUsdPerAttempt`, se utile prima dell'invio.
-3. **`disabledReason`**: la UI lo mostra così com'è; serve testo italiano per l'utente.
-4. **Errore di consenso assente**: codice e stato non sono specificati. La UI gestisce `fieldErrors.consentToProviderTransfer` e un 4xx generico; servirebbe un codice stabile.
-5. **`multi_assets_unsupported` / `analysis_outcome_unknown`**: confermare che arrivano solo come job `failed`, non come HTTP.
-6. **Nome della scheda creata da un'analisi AI**: come in M3, non specificato.
-7. **Budget incerto in capabilities**: la UI lo mostra se diverso da `0`/`0.00`. Confermare il formato delle stringhe USD (decimali).
-8. **Integrazione reale**: con gli endpoint attivi, eseguire `V5_ANALYSIS_V2=1` (gratuito), poi, solo se deciso, il live (`V5_ANTHROPIC_LIVE=1`) entro il cap.
-   - Restano da verificare dal vero: pagine multiple su un PDF sintetico non riconosciuto per hash, collaudo browser reale a 320/390 px, desktop e tastiera.
+1. **Passaggio della mezzanotte senza focus**: la UI rilegge lo stato temporale al focus e a ogni navigazione, ma non con un timer. Una pagina lasciata aperta oltre la mezzanotte senza interazioni mostra il `dueState` del giorno prima finché non torna il focus. Va bene così, o serve una rilettura periodica?
+2. **Codice e forma del 404/503 H1**: la UI si aspetta una busta d'errore JSON per le rotte H1 assenti (404) e `activity_unavailable` per il 503; un 503 senza busta diventa l'errore di servizio generico.
+3. **Descrizione svuotata in modifica**: la UI invia `description:null` quando il testo viene cancellato (coerente con «vuota → null»). Confermare che `''` e `null` sono equivalenti lato server.
+4. **Storia con collegamento redatto**: la UI mostra «Caldaia collegata non più disponibile» sia nel prima sia nel dopo; un evento di sola redazione non dovrebbe esistere. Confermare.
+5. **`asOf`**: ricevuto ma non mostrato; la UI usa `today`. Indicare se va esposto.
+6. **Viewer**: la UI richiede `edit` sia su `Home.permissions` sia su `activity.permissions`. Confermare che `activity.permissions` non concederà mai `edit` a un viewer.
+7. **Filtro per caldaia**: il client supporta `assetId`, ma la scheda caldaia non elenca ancora i propri promemoria. È un incremento futuro?
+8. **Errore di formato data dal server**: la UI usa i `fieldErrors.dueDate` del server se presenti. Con `<input type="date">` i browser non inviano date impossibili, ma il controllo resta anche lato client.
+
+## Limiti
+
+- Solo prove mock; H1 si chiude dopo backend, API, DB e browser reali di Codex.
+- Il dialogo gestisce Escape e ritorno del focus ma non intrappola il Tab al suo interno (l'overlay copre la pagina). Completa e riapri sono pannelli in pagina, non dialoghi.
+- Gli screenshot desktop restano limitati dal pannello del browser integrato.
 
 ## Note per i documenti condivisi (le aggiorna Codex)
 
-- **changelog**: frontend M4 (scelta esplicita del provider, consenso, limiti e budget del collaudo, esiti e costi, retry con consenso, badge per provider, pagine reali, regola `other`); solo prove mock.
+- **changelog**: frontend H1 (Le tue scadenze in Casa, Da fare in Attività, dettaglio con completa/annulla/riapri e storia, promemoria dalla caldaia); solo prove mock.
 - **decisions**:
-  - campi v2 facoltativi nei tipi, per compatibilità M3;
-  - nessuna preselezione del provider;
-  - consenso azzerato al cambio provider;
-  - documenti oltre il limite AI non selezionabili;
-  - capabilities senza cache;
-  - retry Anthropic con pannello di consenso;
-  - timeout dei test UI alzati.
-- **backlog**: richieste 1–8; e2e browser reale M4.
-- **roadmap**: frontend M4 pronto per integrazione; M4 si chiude dopo API/DB, collaudo con provider simulato, live limitato e browser reale.
+  - date formattate in UTC per non spostare il giorno;
+  - `dueState` e `today` solo dal server, con rilettura al focus;
+  - modifica che invia solo i campi cambiati e `assetId` omesso se non toccato;
+  - operazione idempotente con riprova esplicita;
+  - annullamento in dialogo, completamento rapido in pagina;
+  - «Da fare» in testa ad Attività.
+- **backlog**: domande 1–8; trap del focus nel dialogo; elenco dei promemoria nella scheda caldaia; e2e browser reale H1.
+- **roadmap**: frontend H1 pronto per integrazione; H1 si chiude dopo integrazione e verifica reale di Codex.
 
 ## Prossimi passi consigliati
 
-1. Codex: integrare i commit da `350a399` in poi (escludere `4d9205d`); rispondere alle richieste 1–7.
-2. Endpoint analysis-v2 attivi: suite `V5_ANALYSIS_V2=1`, collaudo browser con provider simulato, poi live entro 10 USD.
-3. Adeguamenti del client dalla review, in nuovi commit `frontend-v5/**`.
+1. Codex: backend H1, poi integrazione dei commit da `9370037` in poi (escludere `c29fcaa`); risposte alle domande 1–8.
+2. `V5_API_URL=http://127.0.0.1:3001/api/v5 V5_ACTIVITIES_API=1 npm run test:integration`, poi collaudo browser reale (crea → modifica → completa → storia → riapri) a 320/390 px, desktop e tastiera.
+3. Adeguamenti dalla review in nuovi commit `frontend-v5/**`.
