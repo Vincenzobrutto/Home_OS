@@ -126,4 +126,3 @@ ALTER TABLE "ReviewRequest" ADD CONSTRAINT "ReviewRequest_accountId_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "ReviewRequest" ADD CONSTRAINT "ReviewRequest_homeId_fkey" FOREIGN KEY ("homeId") REFERENCES "Home"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-

@@ -48,4 +48,3 @@ Archiver 7.0.1 e file-type 21.3.4, gia installati/verificati nel workspace, dich
 
 ## ADR-V5-09 — M3, esecuzione persistente
 Worker locale ogni 500 ms, claim CAS e lease 30 s/token; limite 120 s dal primo avvio anche dopo recupero. Transazione per risultato/job/storia, lock account/Home e diritti/fonti riletti in pubblicazione. DTO e validazione discriminata stretta, nessun sources/origin fidato dal client. Nessuna nuova dipendenza o provider a pagamento. Test reali ancora aperti.
-

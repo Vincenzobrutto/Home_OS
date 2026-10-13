@@ -26,4 +26,3 @@ M3 mantiene personali i derivati anche da fonti home: non condivide automaticame
 
 ### Implementazione M3
 Le entita M3 sono ora nello schema backend-v5 e nella migration 202610130003_review. JSON validato per candidati, conferme, snapshot e storia; unicita job/campo e ambito idempotente account/Home/operazione/target/chiave. Migrazione ancora da applicare sul runtime locale.
-
