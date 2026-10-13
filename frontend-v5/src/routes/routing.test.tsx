@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PASSWORD_A, renderApp, seededBackend } from '../test/harness';
+import { PASSWORD_A, PASSWORD_B, renderApp, seededBackend } from '../test/harness';
 import type { FakeBackend } from '../test/fakeBackend';
 import type { renderApp as RenderApp } from '../test/harness';
 
@@ -16,7 +16,8 @@ function withLoggedIn(backend: FakeBackend, path: string, email: string, passwor
   const app = renderApp({ path: '/accedi', backend });
   return { app, go: async () => {
     await loginAs(app, email, password);
-    await screen.findByRole('heading', { name: /Le mie case|Crea la tua prima casa/ });
+    // Attende la fine dell'ingresso ("/" reindirizza dopo aver letto le case).
+    await waitFor(() => expect(app.router.state.location.pathname).toMatch(/^\/(case|home\/)/));
     await app.router.navigate(path);
   } };
 }
@@ -46,6 +47,31 @@ describe('[mock] routing e contesto casa via URL', () => {
     // Focus sul titolo definitivo, non su quello provvisorio del caricamento.
     await waitFor(() => expect(heading).toHaveFocus());
     expect(app.router.state.location.pathname).toBe(`/home/${homeA1.id}/casa`);
+  });
+
+  it('una sola casa: dopo l’accesso si entra direttamente; "Cambia casa" mostra comunque l’elenco', async () => {
+    const { backend, homeB1 } = seededBackend();
+    const app = renderApp({ path: '/accedi', backend });
+    await loginAs(app, 'b@example.test', PASSWORD_B);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Casa di Marco' })).toBeInTheDocument();
+    expect(app.router.state.location.pathname).toBe(`/home/${homeB1.id}/casa`);
+    await app.user.click(screen.getByRole('link', { name: 'Cambia casa' }));
+    const list = await screen.findByRole('list', { name: 'Case disponibili' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(1);
+    expect(app.router.state.location.pathname).toBe('/case');
+    expect(screen.getByRole('link', { name: /Aggiungi una casa/ })).toBeInTheDocument();
+  });
+
+  it('una sola casa: anche aprendo l’app con sessione attiva si entra direttamente', async () => {
+    const { backend, homeB1 } = seededBackend();
+    const first = renderApp({ path: '/accedi', backend });
+    await loginAs(first, 'b@example.test', PASSWORD_B);
+    await screen.findByRole('heading', { level: 1, name: 'Casa di Marco' });
+    const cookie = first.control.cookie();
+    first.unmount();
+    const app = renderApp({ path: '/', backend, cookie });
+    expect(await screen.findByRole('heading', { level: 1, name: 'Casa di Marco' })).toBeInTheDocument();
+    expect(app.router.state.location.pathname).toBe(`/home/${homeB1.id}/casa`);
   });
 
   it('URL diretto di una casa: il contesto è quello dell’URL e il dettaglio viene dal server', async () => {

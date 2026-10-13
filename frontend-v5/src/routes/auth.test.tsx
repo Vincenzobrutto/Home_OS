@@ -7,6 +7,9 @@ describe('[mock] form di accesso e registrazione', () => {
     const { backend, router } = renderApp({ path: '/', backend: seededBackend().backend });
     expect(await screen.findByRole('heading', { name: 'Accedi' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/accedi');
+    // La radice non viene ricordata come "next" e non mostra «Accesso richiesto».
+    expect(router.state.location.search).toBe('');
+    expect(screen.queryByText('Accesso richiesto')).not.toBeInTheDocument();
     // Sessione anonima letta, nessuna chiamata protetta.
     expect(backend.log.map((r) => r.path)).toEqual(['/session']);
   });
@@ -40,7 +43,7 @@ describe('[mock] form di accesso e registrazione', () => {
     await user.type(screen.getByLabelText('Email'), '  a@example.test ');
     await user.type(screen.getByLabelText('Password'), PASSWORD_A);
     await user.click(screen.getByRole('button', { name: 'Accedi' }));
-    expect(await screen.findByRole('heading', { name: 'Le mie case' })).toBeInTheDocument();
+    expect(await screen.findByRole('list', { name: 'Case disponibili' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/case');
     const paths = backend.log.map((r) => `${r.method} ${r.path}`);
     expect(paths.slice(0, 4)).toEqual(['GET /session', 'POST /auth/login', 'GET /session', 'GET /homes']);

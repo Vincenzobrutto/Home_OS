@@ -68,7 +68,7 @@ export function hasErrors(errors: Record<string, string | undefined>) {
 }
 
 /** Rotta interna sicura per il redirect dopo login; mai URL esterni. */
-export function safeNextPath(next: string | null | undefined, fallback = '/case') {
+export function safeNextPath(next: string | null | undefined, fallback = '/') {
   if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) return fallback;
   if (next.startsWith('/accedi') || next.startsWith('/registrati')) return fallback;
   return next;

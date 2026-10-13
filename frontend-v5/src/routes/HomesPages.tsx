@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, Navigate, useNavigate } from 'react-router';
 import { isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey } from '../api/queryKeys';
 import type { Home, HomeRole } from '../api/types';
@@ -44,6 +44,39 @@ export function HomesPage() {
   );
 }
 
+/**
+ * Ingresso dopo l'accesso (rotta "/"): con una sola casa si entra direttamente,
+ * con zero o più case si va all'elenco (onboarding o scelta esplicita).
+ * /case resta raggiungibile da "Cambia casa" anche con una sola casa.
+ */
+export function HomeEntry() {
+  useDocumentTitle('Le mie case');
+  const account = useAccount();
+  const homes = useHomes();
+
+  if (homes.isSuccess) {
+    const only = homes.data.length === 1 ? homes.data[0] : undefined;
+    return <Navigate to={only ? `/home/${encodeURIComponent(only.id)}/casa` : '/case'} replace />;
+  }
+  return (
+    <AppShell account={account}>
+      {homes.isError ? (
+        <>
+          <PageHeading title="Le mie case" />
+          <ErrorState error={homes.error} onRetry={() => void homes.refetch()} retrying={homes.isFetching} />
+        </>
+      ) : (
+        <>
+          <h1 className="visually-hidden" data-pending="">
+            Le mie case
+          </h1>
+          <Loading label="Caricamento delle case…" />
+        </>
+      )}
+    </AppShell>
+  );
+}
+
 function PageHeading(props: { title: string; lead?: string; actions?: ReactNode }) {
   return (
     <div className={styles.heading}>
@@ -76,7 +109,7 @@ function HomeChooser({ homes }: { homes: Home[] }) {
     <>
       <PageHeading
         title="Le mie case"
-        lead={homes.length > 1 ? 'Scegli la casa da aprire.' : 'Apri la tua casa o aggiungine un’altra.'}
+        lead={homes.length > 1 ? 'Scegli la casa da aprire.' : 'La tua casa. Puoi aggiungerne un’altra.'}
         actions={
           <Link to="/case/nuova" className={cx(ui.btn, ui.primary)}>
             <Icon name="plus" />

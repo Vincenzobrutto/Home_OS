@@ -35,10 +35,10 @@ describe('validazioni identity-v1 (unitarie, senza rete)', () => {
 
   it('redirect dopo login solo verso percorsi interni', () => {
     expect(safeNextPath('/home/h1/casa')).toBe('/home/h1/casa');
-    expect(safeNextPath('//evil.example')).toBe('/case');
-    expect(safeNextPath('https://evil.example')).toBe('/case');
-    expect(safeNextPath('/\\evil.example')).toBe('/case');
-    expect(safeNextPath('/accedi')).toBe('/case');
-    expect(safeNextPath(null)).toBe('/case');
+    expect(safeNextPath('//evil.example')).toBe('/');
+    expect(safeNextPath('https://evil.example')).toBe('/');
+    expect(safeNextPath('/\\evil.example')).toBe('/');
+    expect(safeNextPath('/accedi')).toBe('/');
+    expect(safeNextPath(null)).toBe('/');
   });
 });

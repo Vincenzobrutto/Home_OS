@@ -7,7 +7,9 @@ Autore: Claude Code. Data: 13/10/2026. Destinatario: Codex (review, integrazione
 - Percorso effettivo: `C:\Users\07704017\Documents\Codex\Dimora-V5-Claude` (checkout principale del repository dedicato, nessun worktree aggiuntivo).
 - Branch: `claude/dimora-v5-identity`.
 - Base concordata verificata: `101f053e0a9465ddca80563edacfd5370e125139` (HEAD all'avvio, albero pulito).
-- Commit di consegna: un solo commit locale sopra la base, solo `frontend-v5/**`; lo SHA non può stare nel file che lo genera: `git log -1 -- frontend-v5` (riportato anche nel messaggio finale in chat).
+- Commit di consegna (solo `frontend-v5/**`, sopra la base):
+  1. `b00f602edb678473b2f0a938973d768861d64e6e` — scaffold e prima verticale.
+  2. commit successivo — decisioni del committente (ingresso diretto con una sola casa, font). Lo SHA non può stare nel file che lo genera: `git log -2 -- frontend-v5`.
 - Remoto raggiungibile: eseguito solo `git fetch origin`. `origin/main` (cdbb318) non contiene la base V5; nessun pull/rebase/merge/push, come da ticket.
 
 ## Cosa è stato fatto
@@ -26,7 +28,7 @@ Autore: Claude Code. Data: 13/10/2026. Destinatario: Codex (review, integrazione
   - Cambio account rilevato anche da altra scheda (sessione riletta al focus della finestra) → cache privata rimossa.
   - Stato locale (form, bozze) azzerato al cambio di account e di casa (`key` per account/casa); nessuna bozza persistente.
   - Nessun retry automatico delle query; ogni errore di servizio ha «Riprova».
-- Rotte: `/` → `/accedi` o `/case`; `/accedi`, `/registrati` (solo anonimi); `/case` (0 case = onboarding con form, ≥1 = scelta esplicita, nessuna selezione automatica); `/case/nuova`; `/home/:homeId` → `/home/:homeId/casa`; `/home/:homeId/{casa,attivita,documenti,spese}`; 404. Il contesto casa viene solo dall'URL ed è sempre verificato con `GET /homes/:homeId`.
+- Rotte: `/` = ingresso (anonimo → `/accedi` senza `next`; con account legge le case: **una sola casa → `/home/:id/casa` direttamente**, zero o più → `/case`); dopo il login senza `next` si passa da `/`; `/accedi`, `/registrati` (solo anonimi); `/case` (elenco esplicito anche con una sola casa, raggiungibile da «Cambia casa»: 0 case = onboarding con form, ≥1 = scelta); `/case/nuova`; `/home/:homeId` → `/home/:homeId/casa`; `/home/:homeId/{casa,attivita,documenti,spese}`; 404. Il contesto casa viene solo dall'URL ed è sempre verificato con `GET /homes/:homeId`.
 - Casa: nome, indirizzo, ruolo, permessi in italiano. 403 → «Accesso non consentito» senza alcun dato della casa; mai trasformato in elenco vuoto.
 - Attività, Documenti, Spese: pagine «Non ancora disponibile» (lucchetto in nav laterale e inferiore, testo per lettori di schermo), nessun dato mostrato o salvato. Agenzie/Amministratori: voci non navigabili con lucchetto, nessuna rotta.
 - Registrazione: banner «Solo sviluppo locale», hint password 12–128 con spazi conservati, pulsante Mostra/Nascondi.
@@ -55,7 +57,7 @@ npm segnala lo script `postinstall` di esbuild non approvato (allowScripts): non
 |---|---|
 | `npx tsc -b` | OK, nessun errore |
 | `npx eslint .` | OK, nessun errore/warning |
-| `npx vitest run` (`npm test` = progetto `mock`) | 6 file, **44 test superati**; progetto `integration` saltato (2 test) senza `V5_API_URL` |
+| `npx vitest run` (`npm test` = progetto `mock`) | 6 file, **46 test superati**; progetto `integration` saltato (2 test) senza `V5_API_URL` |
 | `npx vite build` | OK (JS 384 kB, gzip 121 kB); il bundle non contiene il backend simulato (verificato con ricerca nel `dist`) |
 | `npm audit` | 0 vulnerabilità |
 | `V5_API_URL=http://127.0.0.1:3001/api/v5 npx vitest run --project integration` contro **backend simulato** | 2 superati — verifica solo che la suite di integrazione e il suo cookie jar funzionino; **non è integrazione reale** |
@@ -65,7 +67,7 @@ npm segnala lo script `postinstall` di esbuild non approvato (allowScripts): non
 - `src/api/client.test.ts` — URL/credentials/no-store; CSRF prima della prima mutazione e su login; CSRF vecchio rifiutato dopo rotazione; Idempotency-Key; busta errori, fieldErrors, requestId; rete rifiutata, non-JSON, 2xx fuori forma, 503 → servizio; logout senza body; nessun uso di localStorage/sessionStorage.
 - `src/lib/validation.test.ts` — limiti di lunghezza, trim, password non toccata, redirect `next` solo interno.
 - `src/routes/auth.test.tsx` — errori campo e focus; 401 generico con password svuotata; sequenza login → GET session → GET homes; mostra/nascondi password; 422/409 registrazione; onboarding dopo registrazione; backend spento → errore + Riprova, nessun form.
-- `src/routes/routing.test.tsx` — URL privato da anonimo → login con `next` → ritorno; scelta esplicita con più case e focus sul titolo; URL diretto e sezioni con casa nell'URL; redirect `/home/:id`; 403 senza contenuti; Agenzie/Admin non navigabili; 404; `/homes` in errore → errore e non onboarding.
+- `src/routes/routing.test.tsx` — URL privato da anonimo → login con `next` → ritorno; scelta esplicita con più case e focus sul titolo; una sola casa → ingresso diretto dopo login e all'apertura con sessione attiva, «Cambia casa» mostra comunque l'elenco; radice anonima → login senza `next`; URL diretto e sezioni con casa nell'URL; redirect `/home/:id`; 403 senza contenuti; Agenzie/Admin non navigabili; 404; `/homes` in errore → errore e non onboarding.
 - `src/session/cacheIsolation.test.tsx` — logout A → login B senza dati/chiavi di A; chiavi `[account, casa, risorsa]`; 401 → cache pulita, login, nessun retry; ricarica con cookie su URL diretto; bozza nuova casa non passa da A a B.
 - `src/routes/createHome.test.tsx` — onboarding e creazione; errori locali; risposta persa + Riprova = stessa chiave, una sola casa; dati cambiati → 409 esplicito, poi nuova chiave; 422 server sul campo.
 
@@ -106,16 +108,16 @@ Verificati nel browser ma senza screenshot utilizzabile (lo strumento di cattura
 ## Limiti e note
 
 - Nessuna integrazione reale eseguita; l'app V5 reale non è funzionante finché il backend di Codex non è attivo.
-- Font: il prototipo carica DM Sans/Manrope da Google Fonts; qui nessuna risorsa esterna (privacy, offline) → font di sistema se quelli non sono installati. Decidere se ospitare i font localmente.
+- Font: **decisione del committente (13/10/2026): font di sistema**, nessun caricamento esterno. DM Sans/Manrope restano primi nello stack solo se già installati sul dispositivo.
 - `scripts/mock-api.ts` usa lo stripping dei tipi di Node (Node ≥ 22.18 / 23.6; verificato con Node 24). Il backend simulato usa la porta 3001: non avviarlo con il backend reale (si ferma se la porta è occupata).
-- Con una sola casa si mostra comunque l'elenco (nessun ingresso automatico): il contratto definisce solo 0 e «più case». Da confermare con il committente.
+- **Decisione del committente (13/10/2026): con una sola casa si entra direttamente.** Vale solo all'ingresso (`/`): `/case` resta l'elenco, altrimenti «Cambia casa» e «Aggiungi una casa» sarebbero irraggiungibili. Verificato anche nel browser con backend simulato (account con una casa → Casa; «Cambia casa» → elenco).
 - Le prove con screenshot desktop sono limitate dalla larghezza del pannello del browser integrato.
 - Il controllo di conformità WCAG non è stato fatto; sono state applicate solo pratiche di base (tastiera, focus, etichette).
 
 ## Note per i documenti condivisi (li aggiorna Codex)
 
 - **changelog**: nuovo `frontend-v5` con identity-v1 (accesso/uscita, registrazione di sviluppo, case, shell Home) contro contratto congelato; solo prove mock.
-- **decisions**: versioni dipendenze (sopra); CSRF solo in memoria; nessun retry automatico; logout senza `next`; ciclo di vita Idempotency-Key; font di sistema; backend simulato condiviso tra test e `mock-api`, escluso dal bundle via ESLint.
+- **decisions**: ingresso diretto con una sola casa (solo da `/`) e font di sistema, entrambe decise dal committente il 13/10/2026; versioni dipendenze (sopra); CSRF solo in memoria; nessun retry automatico; logout senza `next`; ciclo di vita Idempotency-Key; font di sistema; backend simulato condiviso tra test e `mock-api`, escluso dal bundle via ESLint.
 - **backlog**: richieste 1–9; aggiornamento futuro alle major React Router 8/Vite 8/TS 7 quando l'ecosistema lint è compatibile; font locali; integrazione reale + e2e browser.
 - **roadmap**: V5-DEV-003 frontend pronto per integrazione; restano backend identity-v1 e collaudo.
 

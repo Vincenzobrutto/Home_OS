@@ -1,8 +1,8 @@
 import { Navigate, type RouteObject } from 'react-router';
 import { LoginPage, RegisterPage } from './AuthPages';
-import { AnonymousOnly, IndexRedirect, RequireAccount, RootLayout } from './guards';
+import { AnonymousOnly, RequireAccount, RootLayout } from './guards';
 import { CasaPage, HomeLayout, NotFoundPage, SectionNotFound, UnavailableSection } from './HomePages';
-import { CreateHomePage, HomesPage } from './HomesPages';
+import { CreateHomePage, HomeEntry, HomesPage } from './HomesPages';
 
 // Mappa delle rotte V5 (prima verticale identity-v1).
 // Agenzie e Amministratori non hanno rotte: non sono ancora assegnate.
@@ -10,7 +10,6 @@ export const routes: RouteObject[] = [
   {
     element: <RootLayout />,
     children: [
-      { index: true, element: <IndexRedirect /> },
       {
         element: <AnonymousOnly />,
         children: [
@@ -21,6 +20,8 @@ export const routes: RouteObject[] = [
       {
         element: <RequireAccount />,
         children: [
+          // Ingresso: con una sola casa si entra direttamente; /case resta l'elenco esplicito.
+          { index: true, element: <HomeEntry /> },
           { path: 'case', element: <HomesPage /> },
           { path: 'case/nuova', element: <CreateHomePage /> },
           {

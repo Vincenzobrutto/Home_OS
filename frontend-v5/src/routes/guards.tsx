@@ -82,7 +82,8 @@ export function RequireAccount() {
   const account = session.data?.account;
   if (!account) {
     // Sessione assente/scaduta: dopo l'accesso si torna qui. Logout esplicito: nessun ritorno.
-    if (signals.explicitLogout) return <Navigate to="/accedi" replace />;
+    // L'ingresso "/" non è una destinazione da ricordare.
+    if (signals.explicitLogout || location.pathname === '/') return <Navigate to="/accedi" replace />;
     const next = `${location.pathname}${location.search}`;
     return <Navigate to={`/accedi?next=${encodeURIComponent(next)}`} replace />;
   }
@@ -111,15 +112,4 @@ export function AnonymousOnly() {
     return <Navigate to={safeNextPath(params.get('next'))} replace />;
   }
   return <Outlet />;
-}
-
-export function IndexRedirect() {
-  const session = useSession();
-  if (session.isPending) return <SessionLoading />;
-  if (session.isError && !session.data) {
-    return (
-      <SessionProblem error={session.error} onRetry={() => void session.refetch()} retrying={session.isFetching} />
-    );
-  }
-  return <Navigate to={session.data?.account ? '/case' : '/accedi'} replace />;
 }
