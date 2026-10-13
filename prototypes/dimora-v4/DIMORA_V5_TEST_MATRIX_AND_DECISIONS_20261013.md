@@ -19,3 +19,11 @@
 
 ## Controlli di qualità
 Test unitari su stati e regole, test integrati con organizzazioni distinte, percorsi end-to-end dei tre ruoli, tastiera e viewport mobile/desktop, regressione HomeOS, permessi su download/ricerca/condivisione e revoca. Solo dati sintetici.
+
+## Regole di visibilità da testare
+- Proprietario A: legge solo la propria segnalazione; B non la vede.
+- Amministratore: legge solo segnalazioni degli edifici assegnati.
+- Collaboratore: agisce soltanto entro delega.
+- Agenzia: non accede ai dati dello studio condominiale per il solo ruolo.
+- Ex proprietario: accessi riservati successivi revocati.
+- Utente anonimo: nessun accesso a segnalazioni o notice riservate.
