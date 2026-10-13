@@ -84,7 +84,7 @@ Endpoint M3 invariati, con i campi analysis-v2: GET `analysis-capabilities` (v2)
 | Comando | Esito |
 |---|---|
 | `npx tsc -b` / `npx eslint .` | OK |
-| `npx vitest run` | **125 superati** (11 file), 9 saltati (integrazione). Ripetuto 2 volte, stabile. Nessuna chiamata di rete reale |
+| `npx vitest run` | **125 superati** (11 file), 13 saltati (integrazione reale, nessuna senza flag). Ripetuto 2 volte, stabile. Nessuna chiamata di rete reale |
 | `npx vite build` | OK; il bundle non contiene chiavi né l'endpoint Anthropic, e non contiene il backend simulato |
 | Integrazione `V5_ANALYSIS_V2=1` contro **mock su 3101** | 3/3 non-live, live saltato: verifica solo il codice dei test, **non è integrazione reale** |
 
