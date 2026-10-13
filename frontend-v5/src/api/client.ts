@@ -203,7 +203,7 @@ export class ApiClient {
       signal,
       accountId,
     });
-    if (!data || typeof data.enabled !== 'boolean' || data.isSimulation !== true) throw serviceError(200);
+    if (!data || typeof data.enabled !== 'boolean' || typeof data.isSimulation !== 'boolean' || !['anthropic', 'test_fixture_v1'].includes(data.provider) || data.isSimulation !== (data.provider === 'test_fixture_v1')) throw serviceError(200);
     return data;
   }
 

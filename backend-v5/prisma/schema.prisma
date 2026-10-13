@@ -153,6 +153,10 @@ model AnalysisJob {
   outcome String?
   openReviewCount Int?
   error Json?
+  provider String @default("test_fixture_v1")
+  model String?
+  consentToProviderTransfer Boolean @default(false)
+  attempt AiAttempt?
   account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
   home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
   asset BoilerAsset? @relation(fields: [assetId], references: [id], onDelete: Restrict)
@@ -171,6 +175,8 @@ model FieldProposal {
   fingerprint String
   resolvedRevision Int?
   createdAt DateTime @default(now())
+  provider String @default("test_fixture_v1")
+  model String?
   asset BoilerAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
   job AnalysisJob @relation(fields: [jobId], references: [id], onDelete: Restrict)
   @@unique([jobId, fieldKey])
@@ -183,6 +189,8 @@ model AssetHistory {
   confirmationId String?
   note String?
   changes Json
+  provider String?
+  model String?
   createdAt DateTime @default(now())
   asset BoilerAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
   @@index([assetId, createdAt, id])
@@ -200,4 +208,34 @@ model ReviewRequest {
   account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
   home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
   @@unique([accountId, homeId, operation, target, key])
+}
+
+model AiCampaign {
+  id String @id
+  limitMicroUsd Int
+  maxCalls Int
+  attempts AiAttempt[]
+  createdAt DateTime @default(now())
+}
+model AiAttempt {
+  id String @id @default(uuid())
+  jobId String @unique
+  campaignId String
+  model String
+  promptVersion String
+  inputMicroUsdPerToken Int
+  outputMicroUsdPerToken Int
+  reservedMicroUsd Int
+  actualMicroUsd Int?
+  state String @default("reserved")
+  sentAt DateTime?
+  response Json?
+  responseAt DateTime?
+  providerRequestId String?
+  inputTokens Int?
+  outputTokens Int?
+  createdAt DateTime @default(now())
+  job AnalysisJob @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  campaign AiCampaign @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  @@index([campaignId, state])
 }

@@ -8,6 +8,13 @@ const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 describe('[mock] ApiClient — trasporto identity-v1', () => {
+  it('capabilities analysis-v2 accetta il provider reale e rifiuta etichette incoerenti', async () => {
+    const real = { enabled: true, provider: 'anthropic', isSimulation: false, apiVersion: 'analysis-v2' };
+    const api = new ApiClient({ fetch: async () => json(200, real) });
+    expect((await api.getAnalysisCapabilities('home-test', undefined, 'account-test')).isSimulation).toBe(false);
+    const invalid = new ApiClient({ fetch: async () => json(200, { ...real, isSimulation: true }) });
+    await expect(invalid.getAnalysisCapabilities('home-test', undefined, 'account-test')).rejects.toMatchObject({ kind: 'service' });
+  });
   it('contesto catturato dalla UI: cambio cookie in altra scheda non restituisce dati del nuovo account', async () => {
     const backend = new FakeBackend();
     const a = backend.seedAccount('A', 'a@example.test', 'password-lunga-1');

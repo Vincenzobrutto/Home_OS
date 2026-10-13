@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { digest } from '../security';
 
 export type FieldKey = 'brand' | 'model' | 'power';
-export type SourceRef = { documentId: string; documentVersion: 1; documentSha256: string; page: 1; excerpt: string };
+export type SourceRef = { documentId: string; documentVersion: 1; documentSha256: string; page: number; excerpt: string };
 export type Measurement = { value: string; unit: 'kW'; quantityCode: 'useful_heating' | 'reported_nominal' | 'other'; quantityLabel: string };
 export type Candidate = { id: string; value: string; sources: SourceRef[]; measurement?: Measurement };
 export type FieldValue = { kind: 'text'; text: string } | { kind: 'power'; measurements: Array<Measurement & { sources: SourceRef[]; origin: Origin }> };

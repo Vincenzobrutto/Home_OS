@@ -50,6 +50,11 @@ export const HISTORY_KIND_LABEL: Record<HistoryEvent['kind'], string> = {
   confirmation: 'Conferma',
   manual_confirmation: 'Inserimento manuale',
 };
+export function historyKindLabel(event: HistoryEvent) {
+  if (event.origin === 'ai_provider' && event.kind === 'analysis_published') return 'Analisi AI pubblicata';
+  if (event.origin === 'ai_provider' && event.kind === 'analysis_no_changes') return 'Analisi AI senza novità';
+  return HISTORY_KIND_LABEL[event.kind];
+}
 
 export const HISTORY_ORIGIN_LABEL: Record<HistoryEvent['origin'], string> = {
   test_provider: 'provider di test',
@@ -186,6 +191,7 @@ export function billingText(billing: AnalysisBilling | null | undefined, provide
 
 /** Errori all'avvio (HTTP) o nei job falliti dopo l'invio. Il messaggio del server ha la precedenza. */
 export const M4_ERROR_LABEL: Record<string, string> = {
+  ai_evaluation_limit_reached: 'Le sei chiamate del collaudo iniziale sono state utilizzate. Il budget monetario residuo resta disponibile per una fase successiva.',
   ai_provider_unconfigured: 'Anthropic non è configurato su questo servizio: nessun dato è stato inviato.',
   ai_provider_disabled: 'Anthropic è disattivato su questo servizio: nessun dato è stato inviato.',
   ai_model_unavailable: 'Il modello previsto non è disponibile: l’analisi non è stata eseguita con un altro modello.',

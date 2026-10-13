@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-13 — M4 Anthropic consolidata in locale
+
+Backend/parser/ledger e frontend Claude integrati; citazioni verificate, consenso e conferme esplicite. Build/lint, 67 test backend, 45 API/DB, 4 ledger, 126 frontend, 12 client/API e 7 nella suite live passano. Browser 320/390/desktop e tastiera: fonti pagina 2/3, conflitto A+C senza sovrascrittura, chiusura verifica e reload. Sei Messages, 0.041714 USD, nessun incerto. Le sei chiamate iniziali sono terminate; risultati navigabili e saldo 9.958286 USD conservato. Dettagli docs/v5/m4-integration-review.md.
+
+
 Modifiche rilevanti per sessione di sviluppo, più recenti in cima. Non è un elenco di ogni commit — vedi `git log` su https://github.com/Vincenzobrutto/Home_OS per quello — ma delle decisioni/feature che cambiano il comportamento dell'app o il modello dati.
 
 ## 2026-10-10 — Prodotto completo in locale via VITE_ALPHA_MODE

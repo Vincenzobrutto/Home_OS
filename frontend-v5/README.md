@@ -49,3 +49,6 @@ Modalità reale: l'app parla solo con `/api/v5`. Se il backend o un endpoint non
 - `src/test/` — harness, stub del browser e backend simulato (solo test).
 - `tests/fixtures/` — integrità dei PDF di esempio e riconoscimento sui byte reali (Node).
 - `tests/integration/` — prove contro il backend reale.
+
+## Integrazione Codex M4 — 13 ottobre 2026
+Frontend integrato con backend/DB/storage reali, sei chiamate Anthropic registrate entro il tetto 10 USD. Build/lint e 126 test mock/fixture passano; 12 client/API non-live e 7 della suite live (tre non-live, quattro live) passano. Browser 320/390/desktop e tastiera verificati. I dettagli del handoff Claude descrivono la fase precedente solo mock; lo stato consolidato e le correzioni sono in ../docs/v5/m4-integration-review.md. Budget utilizzato 0.041714 USD, nessun costo incerto. Chiamate iniziali terminate: non riattivare/ripetere live senza definire la fase successiva. Analisi di test sempre selezionabile; risultati AI reali restano navigabili e confermabili.

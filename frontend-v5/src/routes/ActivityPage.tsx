@@ -355,7 +355,7 @@ function StartAnalysisForm(props: {
               )}
               {!p.enabled && (
                 <span className={styles.small}>
-                  Non disponibile: {p.disabledReason ?? (p.id === 'anthropic' ? 'non configurato' : 'non attivo')}.
+                  Non disponibile: {(p.disabledReason && (M4_ERROR_LABEL[p.disabledReason] ?? (/^[a-z_]+$/.test(p.disabledReason) ? 'provider non attivo' : p.disabledReason))) ?? (p.id === 'anthropic' ? 'provider non attivo' : 'analisi di test non attiva')}.
                 </span>
               )}
             </span>
@@ -374,14 +374,14 @@ function StartAnalysisForm(props: {
           {caps.budget && (
             <span className={styles.small}>
               Budget del collaudo locale: {caps.budget.remainingUsd} USD disponibili su {caps.budget.limitUsd} USD
-              {caps.budget.uncertainUsd !== '0' && caps.budget.uncertainUsd !== '0.00'
+              {Number(caps.budget.uncertainUsd) > 0
                 ? ` (${caps.budget.uncertainUsd} USD con esito incerto)`
                 : ''}
               . È un controllo di collaudo: non è un prezzo di Dimora né il saldo dell’account Anthropic.
             </span>
           )}
           <label className={review.checkLine} htmlFor={consentId}>
-            <input id={consentId} type="checkbox" checked={consent} disabled={start.isPending} onChange={(e) => setConsent(e.target.checked)} />
+            <input id={consentId} type="checkbox" checked={consent} disabled={start.isPending} onChange={(e) => { setConsent(e.target.checked); setError(null); }} />
             <span>{CONSENT_LABEL}</span>
           </label>
         </div>

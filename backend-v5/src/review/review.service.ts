@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import type { Prisma, BoilerAsset, FieldProposal, AnalysisJob } from '../../generated/client';
+import type { Prisma, BoilerAsset, FieldProposal, AnalysisJob, AiAttempt } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { digest, validMembership } from '../security';
 import { DocumentsService } from '../documents/documents.service';
@@ -8,14 +8,26 @@ import { canReadDocument } from '../documents/access';
 import { Candidate, FieldKey, FieldValue, Fields, boolean, confirmation, conflict, decisions, fingerprint, ids, invalid, matchesConfirmed, measurements, object, proposalKind, resolveDecision, sourceList, text, uuid, version } from './domain';
 import { Snapshot } from './provider';
 import { ListDocumentsDto } from '../documents/dto';
+import { AiBudget, billing } from './ai-budget';
+import { AiConfig } from './ai-config';
+import { ANALYSIS_LIMITS } from './pdf-text';
 type Tx = Prisma.TransactionClient;
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 const fieldsOf = (asset: BoilerAsset) => asset.confirmed as unknown as Fields;
-export const publicJob = (job: AnalysisJob) => ({ id: job.id, homeId: job.homeId, assetId: job.assetId, parentJobId: job.parentJobId, state: job.state, provider: 'test_fixture_v1', isSimulation: true, documentIds: (job.documents as unknown as Snapshot[]).map(s => s.documentId), createdAt: job.createdAt.toISOString(), finishedAt: job.finishedAt?.toISOString() ?? null, outcome: job.outcome, openReviewCount: job.openReviewCount, error: job.error });
+export const publicJob = (job: AnalysisJob & { attempt?: AiAttempt | null }) => ({ id: job.id, homeId: job.homeId, assetId: job.assetId, parentJobId: job.parentJobId, state: job.state, provider: job.provider ?? 'test_fixture_v1', isSimulation: job.provider !== 'anthropic', model: job.model ?? null, documentIds: (job.documents as unknown as Snapshot[]).map(s => s.documentId), createdAt: job.createdAt.toISOString(), finishedAt: job.finishedAt?.toISOString() ?? null, outcome: job.outcome, openReviewCount: job.openReviewCount, error: job.error, billing: billing(job.attempt) });
 
 @Injectable()
 export class ReviewService {
-  constructor(private readonly db: PrismaService, private readonly documents: DocumentsService) {}
+  constructor(private readonly db: PrismaService, private readonly documents: DocumentsService, private readonly budget?: AiBudget, private readonly config: AiConfig = new AiConfig()) {}
+  async capabilities() {
+    const budget = await this.budget!.snapshot();
+    const enabled = this.config.configured && this.config.enabled && budget.available;
+    const provider = enabled ? 'anthropic' : 'test_fixture_v1';
+    return { apiVersion: 'analysis-v2', provider, isSimulation: provider !== 'anthropic', enabled: true, maxDocuments: 2, formats: ['application/pdf'], providers: [
+      { id: 'anthropic', label: 'Anthropic', isSimulation: false, enabled, disabledReason: !this.config.configured ? 'ai_provider_unconfigured' : !this.config.enabled ? 'ai_provider_disabled' : budget.disabledReason, model: this.config.model },
+      { id: 'test_fixture_v1', label: 'Analisi di test', isSimulation: true, enabled: true, disabledReason: null, model: null },
+    ], limits: ANALYSIS_LIMITS, budget: { currency: budget.currency, limitUsd: budget.limitUsd, remainingUsd: budget.remainingUsd, uncertainUsd: budget.uncertainUsd } };
+  }
   async require(tx: Tx, accountId: string, homeId: string, edit = false) {
     // Membership changes take an exclusive row lock and cannot race publication.
     await tx.$queryRaw`SELECT id FROM "HomeMembership" WHERE "accountId"=${accountId} AND "homeId"=${homeId} FOR SHARE`;
@@ -45,10 +57,11 @@ export class ReviewService {
     const proposals = await tx.fieldProposal.findMany({ where: { assetId: asset.id }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] });
     const fields = fieldsOf(asset), confirmedFields = Object.values(fields);
     const openReviewCount = proposals.filter(p => p.state === 'open').length;
-    return { id: asset.id, homeId: asset.homeId, name: asset.name, type: 'boiler', visibility: 'private', state: !confirmedFields.length ? 'provisional' : fields.brand && fields.model && fields.power && !openReviewCount ? 'confirmed' : 'partially_confirmed', version: asset.version, provider: 'test_fixture_v1', isSimulation: true, openReviewCount, confirmedFields, permissions: editing ? ['read', 'edit'] : ['read'], proposals: proposals.map(p => this.proposal(p, fields)) };
+    const analysisProviders = [...new Set(proposals.map(p => p.provider ?? 'test_fixture_v1'))];
+    return { id: asset.id, homeId: asset.homeId, name: asset.name, type: 'boiler', visibility: 'private', state: !confirmedFields.length ? 'provisional' : fields.brand && fields.model && fields.power && !openReviewCount ? 'confirmed' : 'partially_confirmed', version: asset.version, analysisProviders, isSimulation: analysisProviders.length > 0 && analysisProviders.every(p => p === 'test_fixture_v1'), openReviewCount, confirmedFields, permissions: editing ? ['read', 'edit'] : ['read'], proposals: proposals.map(p => this.proposal(p, fields)) };
   }
   proposal(proposal: FieldProposal, fields: Fields) {
-    return { id: proposal.id, assetId: proposal.assetId, jobId: proposal.jobId, fieldKey: proposal.fieldKey, kind: proposal.kind, state: proposal.state, candidates: proposal.candidates, currentConfirmed: fields[proposal.fieldKey as FieldKey] ?? null, provider: 'test_fixture_v1', isSimulation: true };
+    return { id: proposal.id, assetId: proposal.assetId, jobId: proposal.jobId, fieldKey: proposal.fieldKey, kind: proposal.kind, state: proposal.state, candidates: proposal.candidates, currentConfirmed: fields[proposal.fieldKey as FieldKey] ?? null, provider: proposal.provider ?? 'test_fixture_v1', model: proposal.model ?? null, isSimulation: proposal.provider !== 'anthropic' };
   }
   async mutate(accountId: string, homeId: string, operation: string, target: string, key: string | undefined, input: unknown, action: (tx: Tx) => Promise<unknown>) {
     if (!key || !/^[a-zA-Z0-9_-]{16,100}$/.test(key)) throw invalid('Chiave della richiesta non valida.');
@@ -80,29 +93,37 @@ export class ReviewService {
     }, { timeout: 15000, maxWait: 15000 });
   }
   async start(accountId: string, homeId: string, input: unknown, key?: string) {
-    const row = object(input, ['documentIds', 'targetAssetId']);
-    const body = { documentIds: ids(row.documentIds, 2), ...(row.targetAssetId !== undefined ? { targetAssetId: uuid(row.targetAssetId) } : {}) };
-    return this.mutate(accountId, homeId, 'analysis', body.targetAssetId ?? '', key, body, async tx => {
+    const row = object(input, ['documentIds', 'targetAssetId', 'provider', 'consentToProviderTransfer']);
+    const provider = row.provider ?? 'test_fixture_v1'; if (provider !== 'anthropic' && provider !== 'test_fixture_v1') throw invalid();
+    const consent = boolean(row.consentToProviderTransfer); if (provider === 'anthropic' && !consent) throw invalid('Autorizza l’invio del testo ad Anthropic.');
+    const body = { documentIds: ids(row.documentIds, 2), ...(row.targetAssetId !== undefined ? { targetAssetId: uuid(row.targetAssetId) } : {}), provider, consentToProviderTransfer: consent ?? false };
+    const requestBody = row.provider === undefined && row.consentToProviderTransfer === undefined ? { documentIds: body.documentIds, ...(body.targetAssetId ? { targetAssetId: body.targetAssetId } : {}) } : body;
+    return this.mutate(accountId, homeId, 'analysis', body.targetAssetId ?? '', key, requestBody, async tx => {
       const snapshots: Snapshot[] = [];
       for (const id of body.documentIds) {
         const doc = await tx.document.findUnique({ where: { id }, include: { original: true } });
         snapshots.push({ documentId: id, documentVersion: 1, documentSha256: doc!.original!.sha256 });
       }
-      const job = await tx.analysisJob.create({ data: { accountId, homeId, assetId: body.targetAssetId, documents: json(snapshots), createdAt: new Date() } });
-      return { job: publicJob(job) };
+      if (provider === 'anthropic') this.config.require();
+      const job = await tx.analysisJob.create({ data: { accountId, homeId, assetId: body.targetAssetId, documents: json(snapshots), provider, model: provider === 'anthropic' ? this.config.model : null, consentToProviderTransfer: body.consentToProviderTransfer, createdAt: new Date() } });
+      const attempt = provider === 'anthropic' ? await this.budget!.reserve(tx, job.id, job.model!) : null;
+      return { job: publicJob({ ...job, attempt }) };
     });
   }
   async job(tx: Tx, accountId: string, homeId: string, id: string) {
-    const job = await tx.analysisJob.findFirst({ where: { id: uuid(id), accountId, homeId } });
+    const job = await tx.analysisJob.findFirst({ where: { id: uuid(id), accountId, homeId }, include: { attempt: true } });
     if (!job) throw new ForbiddenException('Accesso non consentito.'); return job;
   }
   retry(accountId: string, homeId: string, jobId: string, input: unknown, key?: string) {
-    object(input, []); uuid(jobId);
-    return this.mutate(accountId, homeId, 'retry', jobId, key, {}, async tx => {
+    const row = object(input, ['consentToProviderTransfer']); const consent = boolean(row.consentToProviderTransfer); uuid(jobId);
+    return this.mutate(accountId, homeId, 'retry', jobId, key, consent === undefined ? {} : { consentToProviderTransfer: consent }, async tx => {
       const parent = await this.job(tx, accountId, homeId, jobId);
       if (parent.state !== 'failed') throw conflict('invalid_job_state', 'Puoi riprovare soltanto un’analisi fallita.');
       if (parent.assetId) await this.asset(tx, accountId, homeId, parent.assetId);
-      return { job: publicJob(await tx.analysisJob.create({ data: { accountId, homeId, documents: json(parent.documents), assetId: parent.assetId, parentJobId: parent.id, createdAt: new Date() } })) };
+      if (parent.provider === 'anthropic') { if (!consent) throw invalid('Autorizza il nuovo invio ad Anthropic.'); this.config.require(parent.model!); }
+      const job = await tx.analysisJob.create({ data: { accountId, homeId, documents: json(parent.documents), assetId: parent.assetId, parentJobId: parent.id, provider: parent.provider, model: parent.model, consentToProviderTransfer: consent ?? false, createdAt: new Date() } });
+      const attempt = parent.provider === 'anthropic' ? await this.budget!.reserve(tx, job.id, job.model!) : null;
+      return { job: publicJob({ ...job, attempt }) };
     });
   }
   create(accountId: string, homeId: string, input: unknown, key?: string) {
@@ -135,7 +156,7 @@ export class ReviewService {
       await this.lock(tx, accountId, homeId);
       const member = await this.require(tx, accountId, homeId); const sort = [{ createdAt: 'desc' as const }, { id: 'desc' as const }];
       if (resource === 'jobs') {
-        const rows = await tx.analysisJob.findMany({ where: { accountId, homeId, ...anchor }, orderBy: sort, take: query.limit + 1 });
+        const rows = await tx.analysisJob.findMany({ where: { accountId, homeId, ...anchor }, include: { attempt: true }, orderBy: sort, take: query.limit + 1 });
         for (const job of rows) await this.sources(tx, accountId, homeId, job.documents as unknown as Snapshot[]);
         return { items: rows.slice(0, query.limit).map(publicJob), nextCursor: this.cursor(rows, query, accountId, homeId, scope) };
       }
@@ -147,7 +168,7 @@ export class ReviewService {
       if (resource === 'history') {
         await this.asset(tx, accountId, homeId, assetId!); await this.assetSources(tx, accountId, homeId, assetId!);
         const rows = await tx.assetHistory.findMany({ where: { assetId, ...anchor }, orderBy: sort, take: query.limit + 1 });
-        return { items: rows.slice(0, query.limit).map(h => ({ id: h.id, assetId: h.assetId, at: h.createdAt.toISOString(), kind: h.kind, origin: h.kind.startsWith('analysis') ? 'test_provider' : 'explicit_user', confirmationId: h.confirmationId, note: h.note, changes: h.changes })), nextCursor: this.cursor(rows, query, accountId, homeId, scope) };
+        return { items: rows.slice(0, query.limit).map(h => ({ id: h.id, assetId: h.assetId, at: h.createdAt.toISOString(), kind: h.kind, origin: h.kind.startsWith('analysis') ? h.provider === 'anthropic' ? 'ai_provider' : 'test_provider' : 'explicit_user', provider: h.provider, model: h.model, isSimulation: h.kind.startsWith('analysis') && h.provider !== 'anthropic', confirmationId: h.confirmationId, note: h.note, changes: h.changes })), nextCursor: this.cursor(rows, query, accountId, homeId, scope) };
       }
       const where = { state: 'open', asset: { accountId, homeId } };
       const rows = await tx.fieldProposal.findMany({ where: { ...where, ...anchor }, include: { asset: true }, orderBy: sort, take: query.limit + 1 });
@@ -223,21 +244,26 @@ export class ReviewService {
   }
   async publish(tx: Tx, job: AnalysisJob, proposed: Record<FieldKey, Candidate[]>) {
     await this.lock(tx, job.accountId, job.homeId); await this.require(tx, job.accountId, job.homeId, true); await this.sources(tx, job.accountId, job.homeId, job.documents as unknown as Snapshot[]);
+    if (Object.values(proposed).every(c => c.length === 0)) {
+      if (job.assetId) { await this.asset(tx, job.accountId, job.homeId, job.assetId); await this.assetSources(tx, job.accountId, job.homeId, job.assetId); await tx.assetHistory.create({ data: { assetId: job.assetId, kind: 'analysis_no_changes', provider: job.provider, model: job.model, changes: [], createdAt: new Date() } }); }
+      return { assetId: job.assetId, outcome: 'no_supported_data', openReviewCount: job.assetId ? await tx.fieldProposal.count({ where: { assetId: job.assetId, state: 'open' } }) : 0 };
+    }
     let asset = job.assetId ? await this.asset(tx, job.accountId, job.homeId, job.assetId) : await tx.boilerAsset.create({ data: { homeId: job.homeId, accountId: job.accountId, name: 'Caldaia', createdAt: new Date() } });
     await this.assetSources(tx, job.accountId, job.homeId, asset.id);
     const fields = fieldsOf(asset); let added = 0;
     const changes = [];
     for (const field of ['brand', 'model', 'power'] as const) {
       const candidates = proposed[field], print = fingerprint(candidates), revision = fields[field]?.revision ?? 0;
+      if (!candidates.length) continue;
       const resolved = await tx.fieldProposal.findFirst({ where: { assetId: asset.id, fieldKey: field, fingerprint: print, state: { not: 'open' }, resolvedRevision: revision } });
       const existing = await tx.fieldProposal.findFirst({ where: { assetId: asset.id, fieldKey: field, fingerprint: print, state: 'open' } });
       const skipped = !!resolved || !!existing || matchesConfirmed(field, candidates, fields[field]);
-      const p = await tx.fieldProposal.create({ data: { assetId: asset.id, jobId: job.id, fieldKey: field, kind: proposalKind(field, candidates), state: skipped ? 'already_matches' : 'open', candidates: json(candidates), fingerprint: print, resolvedRevision: skipped ? revision : null, createdAt: new Date() } });
+      const p = await tx.fieldProposal.create({ data: { assetId: asset.id, jobId: job.id, fieldKey: field, kind: proposalKind(field, candidates), state: skipped ? 'already_matches' : 'open', candidates: json(candidates), fingerprint: print, resolvedRevision: skipped ? revision : null, provider: job.provider ?? 'test_fixture_v1', model: job.model, createdAt: new Date() } });
       if (!skipped) added++;
       changes.push({ fieldKey: field, before: fields[field]?.value ?? null, after: fields[field]?.value ?? null, proposalId: p.id, action: skipped ? 'already_matches' : 'proposed', sources: sourceList(candidates) });
     }
     if (added && job.assetId) asset = await tx.boilerAsset.update({ where: { id: asset.id }, data: { version: { increment: 1 } } });
-    await tx.assetHistory.create({ data: { assetId: asset.id, kind: added ? 'analysis_published' : 'analysis_no_changes', changes: json(changes), createdAt: new Date() } });
+    await tx.assetHistory.create({ data: { assetId: asset.id, kind: added ? 'analysis_published' : 'analysis_no_changes', provider: job.provider ?? 'test_fixture_v1', model: job.model, changes: json(changes), createdAt: new Date() } });
     return { assetId: asset.id, outcome: added ? 'proposals_created' : 'no_changes', openReviewCount: await tx.fieldProposal.count({ where: { assetId: asset.id, state: 'open' } }) };
   }
 }

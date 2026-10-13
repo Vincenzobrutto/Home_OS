@@ -98,3 +98,12 @@ Attività aperte. Le voci storiche usano **Alta/Media/Bassa** per urgenza tecnic
 | B74 | Validare il wedge B2B2C **Renovation + Financing** (scelto 2026-09-16, ADR #77 — non più tutti e 4 i wedge) prima di qualunque sviluppo | Media | Colloqui con i buyer indicati (banca/lender, operatore di ristrutturazione, rete installatori) — protocollo in `market-research-funding-2026.md` §26 (Value of Data, framing "cambieresti questa decisione?"), da eseguire durante/dopo i colloqui di Fase 0. Insurance/Energy/Transaction restano scartati per ora, vedi ADR #77. Non un lavoro di sviluppo. |
 
 Le decisioni di design già prese (comprese quelle che generano debito accettato consapevolmente, es. niente test, CORS aperto) sono in `decisions.md` — questo file è per il lavoro non ancora fatto, non per rispiegare perché.
+
+## Chiusura M4 locale — 13 ottobre 2026
+- [x] Parser testuale paginato, adapter Anthropic, consenso e ledger/recovery.
+- [x] Frontend provider/costi/errori/fonti integrato con API/DB reali.
+- [x] Collaudo offline, ledger concorrente, live sintetico e browser 320/390/desktop/tastiera.
+- [x] Sei chiamate iniziali registrate: 0.041714 USD; nessun costo incerto, saldo conservato.
+- [ ] Prossimo incremento da scegliere: OCR/vision oppure estensione del verticale.
+- [ ] Ulteriori prove AI: definire prima la nuova fase senza azzerare il ledger o cambiare automaticamente campagna/budget.
+Il limite delle sei chiamate protegge il collaudo e non è una quota commerciale. Hardening prima del pilota e funzioni fuori M4 restano aperti. Resoconto docs/v5/m4-integration-review.md.

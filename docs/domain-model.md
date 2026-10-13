@@ -189,3 +189,6 @@ Eventi a livello di **casa** (Genesis avviato/completato, scansione completata..
 9. Completare una manutenzione è un'azione utente esplicita e atomica: occorrenza, cronologia e prossima scadenza vengono registrate insieme.
 10. I piani di manutenzione suggeriti (da linee guida statiche per tipo di Asset) non vengono mai creati automaticamente: il sistema pre-compila il form, l'utente deve comunque confermare — vedi `decisions.md` #19.
 11. Un suggerimento di manutenzione ignorato non ricompare: il dismiss è persistito per Asset+linea guida, non solo nello state del browser — vedi `decisions.md` #22.
+
+## V5 M4 — modello persistente verificato (13 ottobre 2026)
+Migrazione additiva 202610130004_anthropic applicata nel solo database V5 dedicato. AnalysisJob: provider/model/consentToProviderTransfer; FieldProposal e AssetHistory: provider/model. AiCampaign: tetto microUSD e chiamate massime; AiAttempt unico per job: tariffa, riserva, costo effettivo, stato e risposta privata/usage. Sending incerto conserva riserva; risposta persistita recuperata senza rete. Nessuna chiave API nel DB. Fixture e conferme M3 preservati; dati AI non diventano campi confermati automaticamente. Dettagli docs/v5/m4-integration-review.md.

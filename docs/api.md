@@ -174,3 +174,6 @@ Lo schema sottostante supporta ora soggetti House/ThermalSystem/Asset, ma questi
 ## Nota
 
 Il flusso OAuth (Gmail/Drive) fa un redirect completo del browser: **non funziona se avviato da un cellulare connesso all'IP LAN del backend**, perché il redirect URI registrato in Google Console punta a `localhost` — tracciato in `backlog.md`.
+
+## V5 M4 — integrazione locale conclusa (13 ottobre 2026)
+Contratto analysis-v2 implementato sui percorsi review-v1, docs/v5/anthropic-api-contract.md. Provider/consenso, capabilities con budget, billing e origine per proposte/storia. Fixture default per client M3 senza provider; vecchie impronte idempotenti preservate. HTTP 422 validation_error senza consenso, nessun job; errori di analisi nel job failed. HTTP 429/disabledReason ai_evaluation_limit_reached distingue le sei chiamate iniziali dal tetto ai_budget_exhausted. No_supported_data non crea scheda vuota. API/DB/client/browser verificati; report docs/v5/m4-integration-review.md.

@@ -8,7 +8,7 @@ import { formatDate } from '../lib/files';
 import {
   BOILER_STATE_LABEL,
   FIELD_LABEL,
-  HISTORY_KIND_LABEL,
+  historyKindLabel,
   HISTORY_ACTION_LABEL,
   HISTORY_ORIGIN_LABEL,
   PERSONAL_LABEL,
@@ -526,7 +526,7 @@ function HistorySection({ homeId, assetId }: { homeId: string; assetId: string }
 function HistoryItem({ event, homeId }: { event: HistoryEvent; homeId: string }) {
   return (
     <li className={review.historyEvent}>
-      <strong>{HISTORY_KIND_LABEL[event.kind] ?? event.kind}</strong>
+      <strong>{historyKindLabel(event) ?? event.kind}</strong>
       <span className={styles.small}>
         {formatDate(event.at)} · {HISTORY_ORIGIN_LABEL[event.origin] ?? 'tua decisione'}
       </span>

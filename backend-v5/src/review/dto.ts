@@ -1,9 +1,11 @@
 import { Transform } from 'class-transformer';
-import { ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsIn, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 import { CodePointLength } from '../dto';
 export class StartAnalysisDto {
   @IsArray() @ArrayMinSize(1) @ArrayMaxSize(2) @ArrayUnique() @IsUUID('all', { each: true }) documentIds!: string[];
   @IsOptional() @IsUUID() targetAssetId?: string;
+  @IsOptional() @IsIn(['test_fixture_v1', 'anthropic']) provider?: 'test_fixture_v1' | 'anthropic';
+  @IsOptional() @IsBoolean() consentToProviderTransfer?: boolean;
 }
 export class CreateAssetDto {
   @IsIn(['boiler']) type!: 'boiler';
@@ -18,4 +20,4 @@ export class ManualDto {
   @IsInt() @Min(1) expectedVersion!: number;
   @IsArray() @ArrayMinSize(1) @ArrayMaxSize(3) fields!: unknown[];
 }
-export class EmptyDto {}
+export class RetryAnalysisDto { @IsOptional() @IsBoolean() consentToProviderTransfer?: boolean; }

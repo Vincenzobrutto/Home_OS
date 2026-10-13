@@ -1,0 +1,26 @@
+[
+  {
+    "filename": "caldaia-multipagina.pdf",
+    "sha256": "5e15f495d13eb76b6d27d23071f659a622c55a5156f6bc55d1704f40e07472f3",
+    "encrypted": false,
+    "pages": 3
+  },
+  {
+    "filename": "caldaia-protetta.pdf",
+    "sha256": "932d57dee9c193131ad9f89a7247409aa15a2fb64603a60eb24ba9da0ee37a88",
+    "encrypted": true,
+    "pages": null
+  },
+  {
+    "filename": "caldaia-solo-immagine.pdf",
+    "sha256": "8d20b9a4d88fa076dba8e0033a004072d916256e1050597f22241e1febb3f421",
+    "encrypted": false,
+    "pages": 1
+  },
+  {
+    "filename": "documento-senza-dati-caldera.pdf",
+    "sha256": "6336a39243861109cd55693501f7afb22be0ebaac7f9583ce846fc6dfc00bfef",
+    "encrypted": false,
+    "pages": 1
+  }
+]

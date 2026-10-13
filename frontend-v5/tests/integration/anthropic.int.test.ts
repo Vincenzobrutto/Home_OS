@@ -17,6 +17,7 @@ const ENABLED = !!BASE && process.env.V5_ANALYSIS_V2 === '1';
 const LIVE = ENABLED && process.env.V5_ANTHROPIC_LIVE === '1';
 const ORIGIN = process.env.V5_ORIGIN ?? 'http://127.0.0.1:5174';
 const EXAMPLES = join(import.meta.dirname, '..', '..', 'public', 'm3-examples');
+const M4_EXAMPLES = join(import.meta.dirname, '..', '..', '..', 'docs', 'v5', 'fixtures', 'm4');
 
 function clientWithJar() {
   const jar = new Map<string, string>();
@@ -47,10 +48,10 @@ async function setup() {
   await api.getSession();
   const home = await api.createHome({ name: 'Casa M4', address: 'Via Prova 4' }, crypto.randomUUID(), account.id);
   // Upload fallito = test fallito: nessun return anticipato che nasconda il caso.
-  const upload = (file: string) =>
+  const upload = (file: string, directory = EXAMPLES) =>
     api.uploadDocument(
       home.id,
-      { file: new File([readFileSync(join(EXAMPLES, file))], file, { type: 'application/pdf' }), name: file, visibility: 'private' },
+      { file: new File([readFileSync(join(directory, file))], file, { type: 'application/pdf' }), name: file, visibility: 'private' },
       crypto.randomUUID(),
       account.id,
     );
@@ -73,7 +74,8 @@ describe.skipIf(!ENABLED)('[integrazione reale] analysis-v2 senza chiamate Anthr
     expect(caps.apiVersion).toBe('analysis-v2');
     expect(caps.providers?.map((p) => p.id).sort()).toEqual(['anthropic', 'test_fixture_v1']);
     expect(caps.limits).toMatchObject({ maxTotalPages: 20, maxInputTokens: 50_000 });
-    expect(caps.budget).toMatchObject({ currency: 'USD', limitUsd: '10.00' });
+    expect(caps.budget?.currency).toBe('USD');
+    expect(Number(caps.budget?.limitUsd)).toBe(10);
     expect(JSON.stringify(caps)).not.toMatch(/sk-ant|api[_-]?key/i);
   });
 
@@ -118,12 +120,56 @@ describe.skipIf(!LIVE)('[integrazione reale LIVE] Anthropic — consuma budget d
     expect(job.isSimulation).toBe(false);
     expect(job.billing).not.toBeNull();
     if (job.billing!.state === 'settled') expect(job.billing!.actualUsd).not.toBeNull();
-    if (job.state === 'succeeded' && job.assetId) {
+    expect(job.state).toBe('succeeded');
+    expect(job.assetId).not.toBeNull();
+    if (job.assetId) {
       const asset = await api.getAsset(home.id, job.assetId, undefined, account.id);
+      expect(asset.proposals.length).toBeGreaterThan(0);
+      const original = await api.getDocument(home.id, doc.id, undefined, account.id);
       for (const p of asset.proposals) {
         expect(p.provider).toBe('anthropic');
-        for (const c of p.candidates) for (const s of c.sources) expect(s).toMatchObject({ documentId: doc.id, documentSha256: doc.sha256 });
+        for (const c of p.candidates) for (const s of c.sources) expect(s).toMatchObject({ documentId: doc.id, documentSha256: original.sha256 });
       }
+    }
+  }, 180_000);
+  it('PDF multipagina reale: pagina 2/3, nessuna conferma automatica, conferme esplicite chiudono inbox', async () => {
+    const { api, account, home, upload } = await setup();
+    const doc = await upload('caldaia-multipagina.pdf', M4_EXAMPLES);
+    const started = await api.createAnalysisJob(home.id, { documentIds: [doc.id], provider: 'anthropic', consentToProviderTransfer: true }, crypto.randomUUID(), account.id);
+    const job = await waitJob(api, home.id, started.id, account.id);
+    expect(job.state).toBe('succeeded'); expect(job.outcome).toBe('proposals_created');
+    let asset = await api.getAsset(home.id, job.assetId!, undefined, account.id);
+    expect(asset.confirmedFields).toEqual([]); expect(asset.proposals).toHaveLength(3);
+    for (const field of ['brand', 'model'] as const) {
+      const proposal = asset.proposals.find(p => p.fieldKey === field && p.state === 'open')!;
+      expect(proposal.candidates[0]!.sources[0]!.page).toBe(2);
+      asset = (await api.confirm(home.id, asset.id, { expectedVersion: asset.version, decisions: [{ proposalId: proposal.id, action: 'accept', candidateId: proposal.candidates[0]!.id }] }, crypto.randomUUID(), account.id)).asset;
+    }
+    const power = asset.proposals.find(p => p.fieldKey === 'power' && p.state === 'open')!;
+    expect(power.candidates.map(c => c.value).sort()).toEqual(['30', '34']);
+    expect(power.candidates.every(c => c.sources[0]!.page === 3)).toBe(true);
+    asset = (await api.confirm(home.id, asset.id, { expectedVersion: asset.version, decisions: [{ proposalId: power.id, action: 'resolve_power', mode: 'keep_distinct', note: 'Grandezza e fonti confrontate nel collaudo sintetico', measurements: power.candidates.map(c => ({ ...c.measurement!, candidateId: c.id })) }] }, crypto.randomUUID(), account.id)).asset;
+    expect(asset.state).toBe('confirmed'); expect((await api.listReview(home.id, {}, undefined, account.id)).openCount).toBe(0);
+    expect((await api.getAsset(home.id, asset.id, undefined, account.id)).confirmedFields).toHaveLength(3);
+    expect(Number(job.billing?.actualUsd)).toBeGreaterThan(0);
+  }, 180_000);
+  it('Documento estraneo: esito vuoto dichiarato senza scheda inventata', async () => {
+    const { api, account, home, upload } = await setup();
+    const doc = await upload('documento-senza-dati-caldera.pdf', M4_EXAMPLES);
+    const started = await api.createAnalysisJob(home.id, { documentIds: [doc.id], provider: 'anthropic', consentToProviderTransfer: true }, crypto.randomUUID(), account.id);
+    const job = await waitJob(api, home.id, started.id, account.id);
+    expect(job).toMatchObject({ state: 'succeeded', outcome: 'no_supported_data', assetId: null });
+    expect((await api.listAssets(home.id, {}, undefined, account.id)).items).toEqual([]);
+    expect(job.billing?.state).toBe('settled'); expect(Number(job.billing?.actualUsd)).toBeGreaterThan(0);
+  }, 180_000);
+  it('Scansione e PDF protetto: fallimenti espliciti prima di chiamare Anthropic, costo zero', async () => {
+    const { api, account, home, upload } = await setup();
+    for (const [filename, code] of [['caldaia-solo-immagine.pdf', 'pdf_text_unavailable'], ['caldaia-protetta.pdf', 'pdf_encrypted']]) {
+      const doc = await upload(filename!, M4_EXAMPLES);
+      const started = await api.createAnalysisJob(home.id, { documentIds: [doc.id], provider: 'anthropic', consentToProviderTransfer: true }, crypto.randomUUID(), account.id);
+      const job = await waitJob(api, home.id, started.id, account.id);
+      expect(job).toMatchObject({ state: 'failed', assetId: null, error: { code }, billing: { state: 'settled' } });
+      expect(Number(job.billing?.actualUsd)).toBe(0);
     }
   }, 180_000);
 });

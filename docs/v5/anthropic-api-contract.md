@@ -1,6 +1,6 @@
 # M4 — analysis-v2 con Anthropic
 
-13 ottobre 2026. Contratto di sviluppo, **non ancora implementato**. M3 completata in locale resta la baseline. Committente: chiave API Anthropic disponibile, **massimo 10 USD cumulativi per il collaudo M4**, nessuna ricarica o incremento implicito. Al momento della preparazione chiave assente in backend-v5/.env e nel processo; nessuna chiamata API effettuata.
+13 ottobre 2026. Contratto implementato e collaudato in locale sopra M3. **Massimo 10 USD cumulativi per il collaudo M4**, nessuna ricarica o incremento implicito. Sei chiamate Messages iniziali registrate: 0.041714 USD; due PDF non supportati rifiutati prima della chiamata a costo zero. Dettagli in m4-integration-review.md. La fine delle sei chiamate è distinta dal saldo monetario: `ai_evaluation_limit_reached` (HTTP 429 e disabledReason nelle capabilities) chiude il collaudo iniziale senza azzerare il saldo. Nessun cambio automatico di campagna o budget.
 
 ## Verticale e limiti
 

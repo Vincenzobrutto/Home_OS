@@ -7,4 +7,5 @@ export default ts.config(
   ...ts.configs.recommended,
   { languageOptions: { globals: globals.node } },
   { files: ['test/**/*.cjs'], rules: { '@typescript-eslint/no-require-imports': 'off' } },
+  { files: ['src/review/pdf-worker.cjs'], rules: { '@typescript-eslint/no-require-imports': 'off' } },
 );

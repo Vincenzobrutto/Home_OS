@@ -260,6 +260,9 @@ describe('[mock] M4 — risultati AI', () => {
     const modelli = screen.getAllByRole('article', { name: 'Modello' });
     expect(modelli.some((m) => m.textContent?.includes('Analisi AI con Anthropic'))).toBe(true);
     expect(modelli.some((m) => m.textContent?.includes('Analisi di test — nessuna AI reale'))).toBe(true);
+    const history = screen.getByRole('region', { name: 'Storia della scheda' });
+    expect(await within(history).findByText('Analisi AI pubblicata')).toBeInTheDocument();
+    expect(within(history).getByText('Analisi di test pubblicata')).toBeInTheDocument();
 
     await app.router.navigate(`/home/${home.id}/attivita`);
     await app.user.click(await screen.findByRole('button', { name: 'Crea una scheda caldaia a mano' }));
