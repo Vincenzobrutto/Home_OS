@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/client"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+enum HomeRole {
+  owner
+  member
+  viewer
+}
+model Account {
+  id String @id @default(uuid())
+  name String
+  email String @unique
+  passwordHash String
+  createdAt DateTime @default(now())
+  sessions Session[]
+  memberships HomeMembership[]
+  requests HomeRequest[]
+}
+model Session {
+  id String @id
+  accountId String?
+  account Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  csrfToken String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
+}
+model Home {
+  id String @id @default(uuid())
+  name String
+  address String
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  memberships HomeMembership[]
+  requests HomeRequest[]
+}
+model HomeMembership {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  role HomeRole @default(owner)
+  validFrom DateTime @default(now())
+  validUntil DateTime?
+  revokedAt DateTime?
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  @@unique([accountId, homeId])
+}
+model HomeRequest {
+  id String @id @default(uuid())
+  accountId String
+  key String
+  digest String
+  homeId String
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  @@unique([accountId, key])
+}

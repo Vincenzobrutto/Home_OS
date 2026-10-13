@@ -1,0 +1,33 @@
+import 'reflect-metadata';
+import { randomUUID } from 'node:crypto';
+import { NestFactory } from '@nestjs/core';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
+import type { Request, Response } from 'express';
+import { AppModule } from './app.module';
+@Catch()
+export class ApiErrorFilter implements ExceptionFilter {
+  catch(error: unknown, host: ArgumentsHost) {
+    const res = host.switchToHttp().getResponse<Response>();
+    let status = error instanceof HttpException ? error.getStatus() : 503;
+    if (status === 400) status = 422;
+    const detail = error instanceof HttpException ? error.getResponse() : null;
+    const info = typeof detail === 'object' && detail ? detail as { message?: string | string[]; fieldErrors?: Record<string, string> } : null;
+    const message = status === 503 ? 'Servizio temporaneamente non disponibile.' : typeof info?.message === 'string' ? info.message : 'Controlla i dati inseriti.';
+    const codes: Record<number, string> = { 401: 'UNAUTHENTICATED', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT', 422: 'VALIDATION_ERROR', 429: 'RATE_LIMITED', 503: 'SERVICE_UNAVAILABLE' };
+    res.status(status).json({ error: { code: codes[status] || 'REQUEST_ERROR', message, ...(info?.fieldErrors ? { fieldErrors: info.fieldErrors } : {}), requestId: randomUUID() } });
+  }
+}
+export async function bootstrap() {
+  const app = await NestFactory.create(AppModule, { logger: ['warn', 'error'] });
+  app.setGlobalPrefix('api/v5');
+  app.use(cookieParser());
+  app.use((_req: Request, res: Response, next: () => void) => { res.setHeader('Cache-Control', 'no-store'); res.setHeader('X-Content-Type-Options', 'nosniff'); next(); });
+  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true, exceptionFactory: errors => new UnprocessableEntityException({ message: 'Controlla i dati inseriti.', fieldErrors: Object.fromEntries(errors.map(e => [e.property, Object.values(e.constraints || {})[0] || 'Valore non valido.'])) }) }));
+  app.useGlobalFilters(new ApiErrorFilter());
+  app.enableShutdownHooks();
+  await app.listen(3001, '127.0.0.1');
+  console.log('Dimora V5 API identity-v1: http://127.0.0.1:3001/api/v5');
+  return app;
+}
+if (require.main === module) void bootstrap().catch(() => { console.error('Avvio V5 non riuscito: verifica database dedicato e configurazione locale.'); process.exitCode = 1; });
