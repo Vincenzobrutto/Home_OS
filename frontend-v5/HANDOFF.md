@@ -107,3 +107,15 @@ Nessuna dichiarazione di conformità WCAG.
 1. Codex: backend H2, poi integrazione dei commit da `c2d0e11` in poi (escludere `aa7268f`); risposte alle domande.
 2. `V5_API_URL=http://127.0.0.1:3001/api/v5 V5_DOCUMENT_SEARCH_API=1 npm run test:integration`, poi collaudo browser reale a 320/390 px, desktop e tastiera.
 3. Adeguamenti dalla review in nuovi commit `frontend-v5/**`.
+
+## Consegna notturna 14/10/2026 — revisione H2 e proposta H3 (nessun codice)
+
+Rapporto: [docs/H3-proposta-notturna-20261014.md](docs/H3-proposta-notturna-20261014.md).
+- **Rilievi H2 verificati sul percorso del codice, non eseguiti:**
+  - R1 (P1): i filtri di ricerca passano all'account successivo tramite `next` dopo un 401 o `account_context_changed`;
+  - R2 (P2): un 403 su «Mostra altri» o su una rilettura lascia i risultati nella cache fino al gc;
+  - R3–R5 (P3): stato di ritorno, «Cerca» dopo un errore, query non valida nell'URL;
+  - R6: lacune nei test.
+- **Proposta H3 «Spese essenziali»**: spese manuali o collegate a un documento, personali al creatore, collegamento facoltativo alla caldaia senza doppio costo, totale annuo dal server, modifica e rimozione logica con storia. Esclusi pagamenti, rate condominiali, AI e ricorrenti.
+- **Contratto `expenses-v1`**: bozza **non approvata**, più 10 decisioni per il committente.
+- Nessuna implementazione H3 prima del contratto congelato da Codex.
