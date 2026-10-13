@@ -1,6 +1,6 @@
 # H2 — document-search-v1: ricerca dei documenti della casa
 
-14 ottobre 2026. **Contratto fissato, backend/frontend H2 ancora da implementare.** Baseline H1 consolidata 26e45c9. Codex mantiene contratto/backend/test reali; Claude frontend-v5. La ricerca estende documents-v1, senza cambiare il significato degli originali o dei permessi.
+14 ottobre 2026. **Backend H2 implementato e verificato su PostgreSQL e harness HTTP reali. Caricamento nel processo API registrato e integrazione frontend ancora aperti.** Baseline H1 consolidata 26e45c9. Codex mantiene contratto/backend/test reali; Claude frontend-v5. La ricerca estende documents-v1, senza cambiare il significato degli originali o dei permessi. Esito corrente in h2-integration-review.md.
 
 ## Perimetro
 Ricerca dei soli documenti autorizzati della Home corrente, per titolo scelto dall'utente (name) oppure nome originale sicuro (originalFilename); filtri per formato e visibilità. Risultati aprono il dettaglio M2 e l'originale tramite il flusso autenticato esistente. Upload, download, ZIP, analisi M3/M4 e attività H1 restano operativi.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-14 — H2 backend ricerca verificato
+
+Implementate capabilities e ricerca documenti autorizzati con filtri MIME/visibilità, Unicode NFC e paginazione legata ai filtri. Build/lint, 73 test offline e 75 integrazione superati. Verifica HTTP H2 su harness Nest reale con PostgreSQL; riavvio del processo 3001 e integrazione frontend ancora aperti. Nessuna modifica schema o chiamata Anthropic. Dettagli in docs/v5/h2-integration-review.md.
+
+
 ## 2026-10-14 — H2 ricerca documenti, preparazione
 
 Fissati document-search-v1 e ADR-V5-13: ricerca server nei titoli/nomi dei documenti autorizzati della casa, formato MIME e visibilità, cursor legato ai filtri. Capabilities pianificata, pagina M2 invariata; nessun motore AI/OCR o nuova categoria finta. Incarichi Codex/Claude e bundle base H1 preparati. Implementazione H2 ancora da iniziare; nessuna modifica schema/runtime né chiamata Anthropic.

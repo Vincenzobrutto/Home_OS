@@ -204,3 +204,6 @@ Modello personale/versioni/storia e collegamenti caldaia verificati anche nell�
 
 ### H2 — ricerca metadata, nessuna nuova entità prevista
 Utilizza Document.name, visibility e DocumentVersion.originalFilename/mimeType. Confronto Unicode normalizzato senza riscrivere metadati o byte/hash originali. Query e filtri non producono categoria documentale, asset, attività o evidenze AI. Schema invariato; contratto docs/v5/document-search-api-contract.md.
+
+### H2 — backend realizzato a schema invariato
+Ricerca soltanto sui metadata autorizzati di Document/DocumentVersion. Query, filtri e cursor non creano entità o evidenze AI. Originali, hash e titoli legacy restano invariati; prove DB e HTTP in docs/v5/h2-integration-review.md.

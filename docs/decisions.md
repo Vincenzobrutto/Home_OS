@@ -462,3 +462,6 @@ Dialogo annullamento con Tab contenuto e focus restituito; chiusura/Escape blocc
 
 ## ADR-V5-13 — H2 ricerca documenti della casa
 Ricerca server-side dei soli documenti autorizzati per titolo/nome file, formato MIME e visibilità. Capabilities separata evita finto successo sul backend precedente; DTO M2 esteso solo per documents, non per query M3 riusate. Match letterale case-insensitive/NFC con accenti distinti, input bound/wildcard letterali. Keyset e digest filtri/account/Home; vecchi cursor solo senza filtri. Scartati ricerca sui venti risultati locali, categorie/fonte finta, full-text PDF/OCR/AI e nuovo motore. Cambiare filtri svuota selezione ZIP; paging invariato la mantiene. Contratto ancora da implementare.
+
+### ADR-V5-13 — riscontro implementazione backend
+Confronto parametrizzato NFC/ILIKE con collation und-x-icu, senza riscrivere metadata; caratteri wildcard trattati letteralmente. Anchor timestamp testuale evita conversione timestamptz del driver e ripetizione delle pagine nel fuso locale. Membership bloccata e riletta nella transazione. Nessuna dipendenza, schema o migrazione aggiunta. Frontend e processo utente ancora da integrare/verificare.

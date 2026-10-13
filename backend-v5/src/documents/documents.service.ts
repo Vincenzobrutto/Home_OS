@@ -1,12 +1,13 @@
 import { ConflictException, ForbiddenException, Injectable, OnModuleInit, PayloadTooLargeException, HttpException, UnprocessableEntityException } from '@nestjs/common';
-import { isUUID } from 'class-validator';
 import archiver from 'archiver';
-import type { Prisma } from '../../generated/client';
+import { Prisma } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { digest, validMembership } from '../security';
 import { DocumentPolicy, canReadDocument, canExport } from './access';
 import { LocalFileStorage, detectOriginal, safeFilename, storageUnavailable, MAX_EXPORT_BYTES } from './storage';
-import { UploadDocumentDto, ListDocumentsDto } from './dto';
+import { UploadDocumentDto, SearchDocumentsDto } from './dto';
+import { SEARCH_CAPABILITIES, literalPattern, searchAnchor, searchCursor, searchFilters } from './search';
+import { object } from '../review/domain';
 const includeOriginal = { original: { include: { file: true } } } as const;
 type OriginalDocument = Prisma.DocumentGetPayload<{ include: typeof includeOriginal }>;
 function readableWhere(accountId: string, homeId: string): Prisma.DocumentWhereInput { return { homeId, OR: [{ visibility: 'home' }, { uploaderId: accountId }] }; }
@@ -28,19 +29,35 @@ export class DocumentsService implements OnModuleInit {
     if (!doc || doc.homeId !== homeId || !canReadDocument(doc, accountId)) throw new ForbiddenException('Accesso non consentito.');
     return { doc, member };
   }
-  async list(accountId: string, homeId: string, query: ListDocumentsDto) {
-    const member = await this.policy.require(accountId, homeId);
-    let anchor: { createdAt: Date; id: string } | undefined;
-    if (query.cursor) {
-      try {
-        const data = JSON.parse(Buffer.from(query.cursor, 'base64url').toString('utf8')) as { t: string; id: string; h: string; a: string };
-        if (!isUUID(data.id) || data.h !== homeId || data.a !== accountId || !Number.isFinite(Date.parse(data.t))) throw new Error();
-        anchor = { createdAt: new Date(data.t), id: data.id };
-      } catch { throw new UnprocessableEntityException({ code: 'validation_error', message: 'Pagina non valida.' }); }
-    }
-    const docs = await this.db.document.findMany({ where: { AND: [readableWhere(accountId, homeId), ...(anchor ? [{ OR: [{ createdAt: { lt: anchor.createdAt } }, { createdAt: anchor.createdAt, id: { lt: anchor.id } }] }] : [])] }, include: includeOriginal, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: query.limit + 1 });
-    const page = docs.slice(0, query.limit); const last = page.at(-1);
-    return { items: page.map(doc => publicDocument(doc, canExport(member))), nextCursor: docs.length > query.limit && last ? Buffer.from(JSON.stringify({ t: last.createdAt.toISOString(), id: last.id, h: homeId, a: accountId })).toString('base64url') : null };
+  async searchCapabilities(accountId: string, homeId: string, query: unknown) {
+    object(query, []);
+    return this.db.$transaction(async tx => { await this.policy.requireLocked(tx, accountId, homeId); return SEARCH_CAPABILITIES; });
+  }
+  async list(accountId: string, homeId: string, query: SearchDocumentsDto) {
+    const filters = searchFilters(query), anchor = searchAnchor(query.cursor, accountId, homeId, filters);
+    // Prisma raw Date parameters are timestamptz; Document.createdAt is timestamp.
+    // Bind the cursor's exact stored wall value as text, avoiding session timezone
+    // conversion that would repeat a page in a non-UTC PostgreSQL session.
+    const anchorTime = anchor?.createdAt.toISOString().slice(0, -1);
+    const mime = { pdf: 'application/pdf', jpeg: 'image/jpeg', png: 'image/png' };
+    const pattern = literalPattern(filters.q);
+    return this.db.$transaction(async tx => {
+      await this.policy.requireLocked(tx, accountId, homeId);
+      // Use the installed deterministic Unicode ICU collation; the development
+      // database's default C collation only folds ASCII. Never rewrite originals.
+      const ids = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+        SELECT d.id FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
+        WHERE d."homeId"=${homeId} AND (d.visibility='home' OR d."uploaderId"=${accountId})
+        ${filters.visibility === 'all' ? Prisma.empty : Prisma.sql`AND d.visibility::text=${filters.visibility}`}
+        ${filters.format === 'all' ? Prisma.empty : Prisma.sql`AND v."mimeType"=${mime[filters.format]}`}
+        ${!filters.q ? Prisma.empty : Prisma.sql`AND (normalize(d.name,NFC) COLLATE "und-x-icu" ILIKE ${pattern} ESCAPE '\\' OR normalize(v."originalFilename",NFC) COLLATE "und-x-icu" ILIKE ${pattern} ESCAPE '\\')`}
+        ${!anchor ? Prisma.empty : Prisma.sql`AND (d."createdAt"<${anchorTime}::timestamp OR (d."createdAt"=${anchorTime}::timestamp AND d.id<${anchor.id}))`}
+        ORDER BY d."createdAt" DESC,d.id DESC LIMIT ${query.limit + 1}`);
+      const docs = await tx.document.findMany({ where: { ...readableWhere(accountId, homeId), id: { in: ids.map(row => row.id) } }, include: includeOriginal, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] });
+      const member = await this.policy.require(accountId, homeId, 'read', tx);
+      const page = docs.slice(0, query.limit), last = page.at(-1);
+      return { items: page.map(doc => publicDocument(doc, canExport(member))), nextCursor: docs.length > query.limit && last ? searchCursor(last, accountId, homeId, filters) : null };
+    }, { timeout: 15000, maxWait: 15000 });
   }
   async get(accountId: string, homeId: string, id: string) {
     const { doc, member } = await this.accessible(accountId, homeId, id);

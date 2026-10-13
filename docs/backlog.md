@@ -141,3 +141,10 @@ H1 completata in locale; nessuna nuova chiamata Anthropic, nessuna dichiarazione
 - [ ] Frontend ricerca/filtri/URL/ritorno originale, cache e selezione ZIP.
 - [ ] Test regressioni/API/DB/client e browser reale sui 14 criteri.
 Schema invariato; nessuna chiamata Anthropic. Non segnare H2 completa sui soli mock.
+
+### H2 — avanzamento backend
+- [x] Capabilities, ricerca autorizzata, filtri e compatibilità cursor.
+- [x] Build/lint e suite backend offline/DB/HTTP sul harness reale.
+- [ ] Attivazione e test H2 del processo API 3001.
+- [ ] Consegna Claude, revisione frontend, client/API e browser reale.
+H2 resta aperta; nessun consumo provider.

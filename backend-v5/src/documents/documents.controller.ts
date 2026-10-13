@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { DocumentsService } from './documents.service';
 import { DocumentAccessGuard, DocumentRequest } from './access';
-import { UploadDocumentDto, ListDocumentsDto, ExportDocumentsDto } from './dto';
+import { UploadDocumentDto, SearchDocumentsDto, ExportDocumentsDto } from './dto';
 import { MAX_FILE_BYTES } from './storage';
 import { SessionsService } from '../security';
 // Busboy emits partsLimit upon reaching the count, even for valid parts.
@@ -18,7 +18,7 @@ export function attachment(filename: string) {
 @UseGuards(DocumentAccessGuard)
 export class DocumentsController {
   constructor(private readonly documents: DocumentsService, private readonly sessions: SessionsService) {}
-  @Get() list(@Req() req: DocumentRequest, @Param('homeId') homeId: string, @Query() query: ListDocumentsDto) { return this.documents.list(req.documentAccountId, homeId, query); }
+  @Get() list(@Req() req: DocumentRequest, @Param('homeId') homeId: string, @Query() query: SearchDocumentsDto) { return this.documents.list(req.documentAccountId, homeId, query); }
   @Post()
   @UseInterceptors(FileInterceptor('file', { limits: DOCUMENT_UPLOAD_LIMITS }))
   upload(@Req() req: DocumentRequest, @Param('homeId') homeId: string, @Body() dto: UploadDocumentDto, @UploadedFile() file: { buffer: Buffer; originalname: string } | undefined, @Headers('idempotency-key') key?: string) { return this.documents.upload(req.documentAccountId, homeId, dto, file, key); }
@@ -35,4 +35,10 @@ export class DocumentsController {
     await this.sessions.require(req);
     res.setHeader('Content-Type', file.mimeType); res.setHeader('Content-Disposition', attachment(file.filename)); res.send(file.bytes);
   }
+}
+@Controller('homes/:homeId/document-search-capabilities')
+@UseGuards(DocumentAccessGuard)
+export class DocumentSearchController {
+  constructor(private readonly documents: DocumentsService) {}
+  @Get() capabilities(@Req() req: DocumentRequest, @Param('homeId') homeId: string, @Query() query: unknown) { return this.documents.searchCapabilities(req.documentAccountId, homeId, query); }
 }

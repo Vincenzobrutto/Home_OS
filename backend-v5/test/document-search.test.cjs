@@ -1,0 +1,24 @@
+require('reflect-metadata');
+const { test } = require('node:test'); const assert = require('node:assert/strict'); const { randomUUID } = require('node:crypto');
+const { plainToInstance } = require('class-transformer'); const { validateSync } = require('class-validator');
+const { SearchDocumentsDto, ListDocumentsDto } = require('../dist/documents/dto'); const s = require('../dist/documents/search');
+test('H2: query normalizzata, limiti Unicode e controlli anche prima del trim', () => {
+  assert.equal(s.normalizeSearchQuery('  Cafe\u0301  '), 'Café'); assert.equal(s.normalizeSearchQuery('  '), '');
+  assert.equal(s.normalizeSearchQuery('😀'.repeat(120)).length, 240);
+  for (const q of ['😀'.repeat(121), '\nmanuale', 'manuale\t', '\u0000', '\u007f', ['x'], null, 1]) assert.throws(() => s.normalizeSearchQuery(q));
+  const dto = plainToInstance(SearchDocumentsDto, { q: '  café  ', format: 'pdf', visibility: 'private' });
+  assert.equal(dto.q, 'café'); assert.equal(validateSync(dto).length, 0);
+  assert(validateSync(plainToInstance(SearchDocumentsDto, { format: ['pdf'], visibility: 'public' })).length);
+  assert(validateSync(plainToInstance(ListDocumentsDto, { q: 'x' }), { whitelist: true, forbidNonWhitelisted: true }).length);
+});
+test('H2: pattern letterale e cursori legati a filtri/contesto, non limit', () => {
+  assert.equal(s.literalPattern("100%_\\'"), "%100\\%\\_\\\\'%");
+  const a = randomUUID(), h = randomUUID(), row = { id: randomUUID(), createdAt: new Date('2026-10-14T00:00:00Z') }, filters = s.searchFilters({ limit: 20, q: 'Privato %' });
+  const cursor = s.searchCursor(row, a, h, filters); assert(cursor.length <= 512);
+  assert(!Buffer.from(cursor, 'base64url').toString('utf8').includes('Privato'));
+  assert.deepEqual(s.searchAnchor(cursor, a, h, s.searchFilters({ limit: 1, q: ' Privato % ' })), row);
+  for (const [account, home, f] of [[randomUUID(), h, filters], [a, randomUUID(), filters], [a, h, { ...filters, format: 'pdf' }], [a, h, { ...filters, q: 'altro' }]]) assert.throws(() => s.searchAnchor(cursor, account, home, f));
+  const legacy = Buffer.from(JSON.stringify({ a, h, id: row.id, t: row.createdAt.toISOString() })).toString('base64url');
+  assert.deepEqual(s.searchAnchor(legacy, a, h, s.searchFilters({ limit: 20 })), row); assert.throws(() => s.searchAnchor(legacy, a, h, filters));
+  for (const q of [{ limit: 20, cursor: '!' }, { limit: 51 }, { limit: 20, unknown: 'x' }]) assert.throws(() => s.searchFilters(q));
+});

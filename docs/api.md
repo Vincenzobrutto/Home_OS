@@ -189,3 +189,6 @@ Dieci endpoint activities-v1 integrati con il client reale, 15 prove frontend/AP
 
 ## H2 document-search-v1 — contratto, endpoint non ancora attivi
 GET /api/v5/homes/:homeId/document-search-capabilities pianificata; GET documents da estendere con q/format/visibility oltre limit/cursor. Risposta DocumentsPage M2 invariata; query class dedicata per non allargare le rotte M3/M4. Cursori nuovi legati al digest dei filtri, vecchi M2 accettabili solo senza filtri. Specifica docs/v5/document-search-api-contract.md; backend da implementare.
+
+## H2 document-search-v1 — backend implementato
+Capabilities e q/format/visibility della lista documenti implementati, risposta M2 invariata. DTO dedicato lascia rigorose le query M3/M4. Policy applicata prima di filtri e paging; cursori legati a account/Home/digest. Test HTTP su harness passano; attivazione del servizio 3001 ancora da verificare. Contratto e stato in docs/v5/document-search-api-contract.md e h2-integration-review.md.

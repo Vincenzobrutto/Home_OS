@@ -154,3 +154,6 @@ Attività personali e scadenze: schema/API/frontend integrati e verificati con t
 
 ### Prossimo H2 — ricerca documenti
 H1 chiusa in locale; contratto e incarichi H2 pronti. Codex backend/policy/test, Claude frontend/mock, poi integrazione e browser reali. Ricerca dei metadati della Home corrente; contenuto PDF, globale/attività e OCR fuori incremento. Dopo H2 restano spese essenziali e ciclo proprietario; Agenzie/Admin successivi.
+
+### H2 — backend pronto, integrazione aperta
+Backend verificato con 73 test offline e 75 integrazione. Prossimi passi: caricare nel servizio API registrato, integrare il frontend Claude e verificare ricerca su browser reale. Non chiudere H2 sui soli test backend o mock.
