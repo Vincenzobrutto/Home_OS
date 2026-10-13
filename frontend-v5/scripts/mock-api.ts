@@ -61,6 +61,24 @@ function samplePng() {
   return PNG_SIGNATURE.every((x, i) => bytes[i] === x) ? bytes : PNG_SIGNATURE;
 }
 
+if (process.argv.includes('--anthropic-mock')) {
+  // Anthropic SIMULATO: nessuna rete, nessuna chiave. Esiti fissi per le prove nel browser.
+  backend.review.anthropic.configured = true;
+  backend.review.anthropicScript.push(
+    {
+      kind: 'claims',
+      costUsd: '0.0123',
+      claims: [
+        { field: 'brand', value: 'Termica Demo', documentIndex: 0, page: 1, excerpt: 'Marca: Termica Demo' },
+        { field: 'model', value: 'TD-24', documentIndex: 0, page: 1, excerpt: 'Modello: TD-24' },
+        { field: 'power', value: '24', documentIndex: 0, page: 1, excerpt: 'Potenza utile al riscaldamento: 24 kW', measurement: { value: '24', unit: 'kW', quantityCode: 'useful_heating', quantityLabel: 'Potenza utile al riscaldamento' } },
+      ],
+    },
+    { kind: 'uncertain' },
+  );
+  console.log('Anthropic SIMULATO attivo (--anthropic-mock): nessuna chiamata reale.');
+}
+
 function readCookie(header: string | undefined) {
   const match = header?.split(';').map((c) => c.trim()).find((c) => c.startsWith(`${COOKIE}=`));
   return match ? decodeURIComponent(match.slice(COOKIE.length + 1)) : undefined;
