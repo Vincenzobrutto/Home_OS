@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-14 — H2 ricerca documenti, preparazione
+
+Fissati document-search-v1 e ADR-V5-13: ricerca server nei titoli/nomi dei documenti autorizzati della casa, formato MIME e visibilità, cursor legato ai filtri. Capabilities pianificata, pagina M2 invariata; nessun motore AI/OCR o nuova categoria finta. Incarichi Codex/Claude e bundle base H1 preparati. Implementazione H2 ancora da iniziare; nessuna modifica schema/runtime né chiamata Anthropic.
+
+
 ## 2026-10-14 — H1 attività e scadenze consolidata
 
 Integrati sette commit frontend Claude escludendo sync; Casa mostra Le tue scadenze, Attività Da fare, promemoria manuali/caldaia e completa/annulla/riapri con storia. Corretto focus trap e conservazione della chiave in caso ambiguo; nuove prove su risposta persa. Backend 71 offline/61 integrazione, frontend 152 mock/fixture, client/API 15 reali e browser 320/390/desktop/tastiera/reload/login verdi. Suite client distanziate per rispettare auth, live AI disabilitata nel runner normale. Zero nuove chiamate Anthropic; H1 chiusa solo in locale. Resoconto docs/v5/h1-integration-review.md.

@@ -151,3 +151,6 @@ Schema/migrazione e dieci endpoint reali verificati nel DB locale; regressioni M
 
 ### H1 chiusa in locale — 14 ottobre 2026
 Attività personali e scadenze: schema/API/frontend integrati e verificati con test e browser reali. Supera gli stati precedenti «frontend da integrare». Il primo sottoincremento Home utile è completato; ricerca, spese essenziali e ciclo proprietario restano successivi, prima delle esperienze Agenzie/Admin. Ricorrenze/condivisione/OCR/notifiche non incluse.
+
+### Prossimo H2 — ricerca documenti
+H1 chiusa in locale; contratto e incarichi H2 pronti. Codex backend/policy/test, Claude frontend/mock, poi integrazione e browser reali. Ricerca dei metadati della Home corrente; contenuto PDF, globale/attività e OCR fuori incremento. Dopo H2 restano spese essenziali e ciclo proprietario; Agenzie/Admin successivi.

@@ -186,3 +186,6 @@ Dieci endpoint sotto /api/v5/homes/:homeId: GET activity-capabilities, GET/POST 
 
 ### H1 — frontend/API verificati
 Dieci endpoint activities-v1 integrati con il client reale, 15 prove frontend/API (incluse regressioni M1–M4 non-live) superate. Crea, updates, complete, cancel, reopen, history e summary osservati nel browser con DB reale; nessun fallback demo. Il runner test:integration esclude le prove live a pagamento e rispetta il rate limit. Resoconto docs/v5/h1-integration-review.md.
+
+## H2 document-search-v1 — contratto, endpoint non ancora attivi
+GET /api/v5/homes/:homeId/document-search-capabilities pianificata; GET documents da estendere con q/format/visibility oltre limit/cursor. Risposta DocumentsPage M2 invariata; query class dedicata per non allargare le rotte M3/M4. Cursori nuovi legati al digest dei filtri, vecchi M2 accettabili solo senza filtri. Specifica docs/v5/document-search-api-contract.md; backend da implementare.

@@ -201,3 +201,6 @@ Migrazione 202610130005_activities applicata solo a dimora_v5_product_dev: HomeA
 
 ### H1 — integrazione conclusa il 14 ottobre
 Modello personale/versioni/storia e collegamenti caldaia verificati anche nell’interfaccia reale, dopo reload/logout/login. La caldaia non viene aggiornata completando un promemoria; dati tecnici e costo AI verificati invariati. Date utente conservate alla riapertura, riferimento non accessibile redatto alla lettura. Nessuna nuova entità o schema aggiunto nell’integrazione frontend.
+
+### H2 — ricerca metadata, nessuna nuova entità prevista
+Utilizza Document.name, visibility e DocumentVersion.originalFilename/mimeType. Confronto Unicode normalizzato senza riscrivere metadati o byte/hash originali. Query e filtri non producono categoria documentale, asset, attività o evidenze AI. Schema invariato; contratto docs/v5/document-search-api-contract.md.

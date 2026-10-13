@@ -133,3 +133,11 @@ Report docs/v5/h1-integration-review.md; H1 non ancora completa.
 - [ ] Elenco promemoria direttamente nella caldaia, ricorrenze, allegati e condivisione: incrementi successivi.
 - [ ] Prima del pilota: aggregazioni/paginazione per dataset ampi e lazy route per bundle oltre 500 kB (501.70 kB, build riuscita).
 H1 completata in locale; nessuna nuova chiamata Anthropic, nessuna dichiarazione di prodotto pronto per pubblico. Report docs/v5/h1-integration-review.md.
+
+### H2 — pronto da sviluppare
+- [x] Contratto document-search-v1, ADR-V5-13 e proprietà file.
+- [x] Incarichi separati e baseline H1 da sincronizzare.
+- [ ] Backend capabilities e lista documenti filtrata con privacy/paging/compatibilità.
+- [ ] Frontend ricerca/filtri/URL/ritorno originale, cache e selezione ZIP.
+- [ ] Test regressioni/API/DB/client e browser reale sui 14 criteri.
+Schema invariato; nessuna chiamata Anthropic. Non segnare H2 completa sui soli mock.

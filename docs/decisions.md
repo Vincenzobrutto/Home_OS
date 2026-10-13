@@ -459,3 +459,6 @@ Riutilizzate soltanto le policy V5 membership/asset/fonti tramite ReviewService 
 
 ### H1 — consolidamento frontend e collaudo
 Dialogo annullamento con Tab contenuto e focus restituito; chiusura/Escape bloccati durante invio o esito ambiguo per non perdere idempotenza. Date formattate senza spostamenti e dueState server; focus/navigazione rilegge, nessun timer di mezzanotte H1. Test client in due gruppi con pause di 61 s, protezione auth invariata, V5_ANTHROPIC_LIVE=0 nel runner ordinario. Risposte alle otto domande Claude in docs/v5/h1-integration-review.md; ADR-V5-12 aggiornato.
+
+## ADR-V5-13 — H2 ricerca documenti della casa
+Ricerca server-side dei soli documenti autorizzati per titolo/nome file, formato MIME e visibilità. Capabilities separata evita finto successo sul backend precedente; DTO M2 esteso solo per documents, non per query M3 riusate. Match letterale case-insensitive/NFC con accenti distinti, input bound/wildcard letterali. Keyset e digest filtri/account/Home; vecchi cursor solo senza filtri. Scartati ricerca sui venti risultati locali, categorie/fonte finta, full-text PDF/OCR/AI e nuovo motore. Cambiare filtri svuota selezione ZIP; paging invariato la mantiene. Contratto ancora da implementare.
