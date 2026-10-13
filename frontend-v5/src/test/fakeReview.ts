@@ -16,6 +16,7 @@ import type {
   ManualField,
   Measurement,
   ProposedField,
+  ProviderId,
   QuantityCode,
   SourceRef,
 } from '../api/types';
@@ -66,6 +67,28 @@ export type DocAccess = {
 };
 
 type StoredJob = { job: AnalysisJob; accountId: string; targetAssetId: string | null };
+
+/** Dato proposto con fonte: dalle fixture (pagina 1) o da una risposta Anthropic simulata. */
+type Claim = {
+  field: FieldKey;
+  value: string;
+  documentIndex: number;
+  page: number;
+  excerpt: string;
+  measurement?: Measurement;
+  doc: { id: string; sha256: string };
+};
+
+/** Esito scriptato dal test per il prossimo job Anthropic: nessuna chiamata reale. */
+export type AiOutcome =
+  | { kind: 'claims'; claims: Array<Omit<Claim, 'doc'>>; costUsd?: string }
+  | { kind: 'no_data'; costUsd?: string }
+  | { kind: 'fail'; code: string; message?: string; costUsd: string }
+  | { kind: 'uncertain' };
+
+const RESERVE_MICRO = 250_000;
+const microToUsd = (micro: number) => (micro / 1_000_000).toFixed(micro % 10_000 === 0 ? 2 : 6).replace(/(\.\d{2}\d*?)0+$/, '$1');
+const usdToMicro = (usd: string) => Math.round(Number(usd) * 1_000_000);
 type StoredAsset = {
   id: string;
   homeId: string;
@@ -77,6 +100,7 @@ type StoredAsset = {
   confirmed: Partial<Record<FieldKey, ConfirmedField>>;
   history: HistoryEvent[];
   resolved: Set<string>;
+  providers: Set<ProviderId>;
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -111,6 +135,14 @@ export class FakeReview {
   /** Il prossimo job fallisce con questo codice (guasto iniettato nel harness, non dal client). */
   failNextJob: string | null = null;
   capabilitiesEnabled = true;
+  /** Risposta capabilities nella forma M3 (senza providers/limits/budget). */
+  legacyCapabilities = false;
+  /** Anthropic simulato: nessuna chiave, nessuna rete. */
+  anthropic = { configured: false, enabled: true, model: 'claude-sonnet-5-5' };
+  /** Esiti dei prossimi job Anthropic, in ordine. */
+  anthropicScript: AiOutcome[] = [];
+  budgetRemainingMicro = 10_000_000;
+  budgetUncertainMicro = 0;
   /** Numero di GET su ciascun job (per verificare lo stop del polling). */
   jobReads = new Map<string, number>();
   private clock = Date.parse('2026-10-13T12:00:00Z');
@@ -136,16 +168,7 @@ export class FakeReview {
 
     switch (parts[0]) {
       case 'analysis-capabilities':
-        return {
-          status: 200,
-          body: {
-            provider: 'test_fixture_v1',
-            isSimulation: true,
-            enabled: this.capabilitiesEnabled,
-            maxDocuments: 2,
-            formats: ['application/pdf'],
-          },
-        };
+        return this.capabilities();
       case 'analysis-jobs':
         if (parts.length === 1) return isPost ? this.createJob(req, accountId, homeId) : this.listJobs(params, accountId, homeId);
         if (!UUID_RE.test(parts[1]!)) return err(422, 'validation_error', 'Identificativo non valido.');
@@ -229,6 +252,8 @@ export class FakeReview {
       openReviewCount: open,
       confirmedFields,
       permissions: (this.docs.perms(a.accountId, a.homeId) ?? []).includes('edit') ? ['read', 'edit'] : ['read'],
+      analysisProviders: [...a.providers],
+      isSimulation: a.providers.size > 0 && [...a.providers].every((p) => p === 'test_fixture_v1'),
       proposals: a.proposals.map((p) => this.proposalView(a, p)),
     };
   }
@@ -251,6 +276,7 @@ export class FakeReview {
       confirmed: {},
       history: [],
       resolved: new Set(),
+      providers: new Set(),
     };
     this.assets.set(a.id, a);
     return a;
@@ -258,39 +284,95 @@ export class FakeReview {
 
   // ---- job ----
 
+  private capabilities(): Res {
+    const m3 = {
+      provider: 'test_fixture_v1',
+      isSimulation: true,
+      enabled: this.capabilitiesEnabled,
+      maxDocuments: 2,
+      formats: ['application/pdf'],
+    };
+    if (this.legacyCapabilities) return { status: 200, body: m3 };
+    const ai = this.anthropic;
+    return {
+      status: 200,
+      body: {
+        ...m3,
+        apiVersion: 'analysis-v2',
+        providers: [
+          { id: 'test_fixture_v1', label: 'Analisi di test', isSimulation: true, enabled: this.capabilitiesEnabled, disabledReason: null, model: null },
+          {
+            id: 'anthropic',
+            label: 'Anthropic',
+            isSimulation: false,
+            enabled: ai.configured && ai.enabled,
+            disabledReason: !ai.configured ? 'chiave API non configurata sul server' : ai.enabled ? null : 'disattivato sul server',
+            model: ai.configured ? ai.model : null,
+          },
+        ],
+        limits: { maxFileBytes: 10 * 1024 * 1024, maxTotalPages: 20, maxExtractedCodePoints: 100_000, maxInputTokens: 50_000 },
+        budget: { currency: 'USD', limitUsd: '10.00', remainingUsd: microToUsd(this.budgetRemainingMicro), uncertainUsd: microToUsd(this.budgetUncertainMicro) },
+      },
+    };
+  }
+
   private createJob(req: Req, accountId: string, homeId: string): Res {
-    const body = (req.body ?? {}) as { documentIds?: unknown; targetAssetId?: unknown };
+    const body = (req.body ?? {}) as { documentIds?: unknown; targetAssetId?: unknown; provider?: unknown; consentToProviderTransfer?: unknown };
     const ids = body.documentIds;
     if (!Array.isArray(ids) || ids.length < 1 || ids.length > 2 || new Set(ids).size !== ids.length || !ids.every((x) => typeof x === 'string' && UUID_RE.test(x))) {
       return err(422, 'validation_error', 'Scegli da 1 a 2 documenti distinti.', { documentIds: 'Da 1 a 2 documenti.' });
     }
+    // Provider assente = comportamento M3 (fixture): non avvia mai Anthropic.
+    const provider: ProviderId = body.provider === undefined ? 'test_fixture_v1' : (body.provider as ProviderId);
+    if (provider !== 'test_fixture_v1' && provider !== 'anthropic') return err(422, 'validation_error', 'Provider non valido.');
     const target = typeof body.targetAssetId === 'string' ? body.targetAssetId : null;
     if (target && !this.ownAsset(target, accountId, homeId)) return err(403, 'forbidden', 'Accesso non consentito.');
     for (const id of ids as string[]) {
       if (!this.docs.find(homeId, accountId, id)) return err(403, 'forbidden', 'Accesso non consentito.');
     }
+    if (provider === 'anthropic') {
+      const blocked = this.anthropicGate(body.consentToProviderTransfer);
+      if (blocked) return blocked;
+    }
     return this.withIdem(req, `${accountId}:${homeId}:job:${target ?? '-'}`, () => {
-      const job = this.makeJob(homeId, ids as string[], null);
+      const job = this.makeJob(homeId, ids as string[], null, provider);
       this.jobs.set(job.id, { job, accountId, targetAssetId: target });
       return { status: 202, body: { job } };
     });
   }
 
-  private makeJob(homeId: string, documentIds: string[], parentJobId: string | null): AnalysisJob {
+  /** Controlli prima di creare un job Anthropic: configurazione, consenso, budget (riserva persistita). */
+  private anthropicGate(consent: unknown): Res | null {
+    if (!this.anthropic.configured) return err(503, 'ai_provider_unconfigured', 'Anthropic non è configurato sul server.');
+    if (!this.anthropic.enabled) return err(503, 'ai_provider_disabled', 'Anthropic è disattivato sul server.');
+    if (consent !== true) {
+      return err(422, 'validation_error', 'Serve il consenso esplicito.', {
+        consentToProviderTransfer: 'Per usare Anthropic devi autorizzare l’invio del testo dei documenti selezionati.',
+      });
+    }
+    if (this.budgetRemainingMicro < RESERVE_MICRO) return err(429, 'ai_budget_exhausted', 'Budget del collaudo esaurito.');
+    return null;
+  }
+
+  private makeJob(homeId: string, documentIds: string[], parentJobId: string | null, provider: ProviderId): AnalysisJob {
+    const ai = provider === 'anthropic';
+    if (ai) this.budgetRemainingMicro -= RESERVE_MICRO;
     return {
       id: uuid(),
       homeId,
       assetId: null,
       parentJobId,
       state: 'queued',
-      provider: 'test_fixture_v1',
-      isSimulation: true,
+      provider,
+      isSimulation: !ai,
+      model: ai ? this.anthropic.model : null,
       documentIds,
       createdAt: this.now(),
       finishedAt: null,
       outcome: null,
       openReviewCount: null,
       error: null,
+      billing: ai ? { currency: 'USD', maxReservedUsd: microToUsd(RESERVE_MICRO), actualUsd: null, state: 'reserved' } : null,
     };
   }
 
@@ -309,6 +391,18 @@ export class FakeReview {
     job.finishedAt = this.now();
   }
 
+  /** Chiude la contabilità del tentativo: costo noto (anche zero se il servizio lo sa) o incerto. */
+  private settle(job: AnalysisJob, actualMicro: number | null) {
+    if (!job.billing) return;
+    if (actualMicro === null) {
+      job.billing = { ...job.billing, state: 'uncertain', actualUsd: null };
+      this.budgetUncertainMicro += RESERVE_MICRO;
+      return;
+    }
+    this.budgetRemainingMicro += RESERVE_MICRO - actualMicro;
+    job.billing = { ...job.billing, state: 'settled', actualUsd: microToUsd(actualMicro) };
+  }
+
   /** Pubblicazione atomica: scheda, proposte, verifiche e successo del job insieme. */
   private finish(stored: StoredJob) {
     const { job, accountId } = stored;
@@ -316,42 +410,95 @@ export class FakeReview {
       const code = this.failNextJob;
       this.failNextJob = null;
       this.fail(job, code, code === 'analysis_unavailable' ? 'Servizio di analisi di test non disponibile.' : 'Analisi interrotta.');
+      this.settle(job, 0);
       return;
     }
     const perms = this.docs.perms(accountId, job.homeId);
     const docs = job.documentIds.map((id) => this.docs.find(job.homeId, accountId, id));
     if (!perms?.includes('edit') || docs.some((d) => !d)) {
       this.fail(job, 'access_revoked', 'L’accesso alla casa o ai documenti non è più valido.');
+      this.settle(job, 0);
       return;
     }
-    const fx = docs.map((d) => ({ doc: d!, fixture: FIXTURES[d!.sha256] }));
-    if (fx.some((x) => !x.fixture)) {
-      this.fail(
-        job,
-        'provider_fixture_unsupported',
-        'Il provider di test riconosce solo i tre PDF di esempio: nessun dato è stato estratto da questo documento.',
-      );
-      return;
+    const found = docs.map((d) => d!);
+    let claims: Claim[];
+    if (job.provider === 'anthropic') {
+      const outcome = this.anthropicScript.shift() ?? { kind: 'fail', code: 'provider_unavailable', costUsd: '0.00' };
+      if (outcome.kind === 'uncertain') {
+        this.fail(job, 'analysis_outcome_unknown', 'Esito della richiesta ad Anthropic sconosciuto: nessun dato pubblicato.');
+        this.settle(job, null);
+        return;
+      }
+      if (outcome.kind === 'fail') {
+        this.fail(job, outcome.code, outcome.message ?? '');
+        this.settle(job, usdToMicro(outcome.costUsd));
+        return;
+      }
+      this.settle(job, usdToMicro(outcome.costUsd ?? '0.0123'));
+      if (outcome.kind === 'no_data') {
+        this.noSupportedData(stored);
+        return;
+      }
+      claims = outcome.claims.map((c) => ({ ...c, doc: found[c.documentIndex]! }));
+      if (claims.some((c) => !c.doc)) {
+        this.fail(job, 'evidence_unverified', 'Citazione non verificabile.');
+        return;
+      }
+      if (claims.length === 0) {
+        this.noSupportedData(stored);
+        return;
+      }
+    } else {
+      const fx = found.map((doc) => ({ doc, fixture: FIXTURES[doc.sha256] }));
+      if (fx.some((x) => !x.fixture)) {
+        this.fail(
+          job,
+          'provider_fixture_unsupported',
+          'Il provider di test riconosce solo i tre PDF di esempio: nessun dato è stato estratto da questo documento.',
+        );
+        return;
+      }
+      claims = fx.flatMap(({ doc, fixture }) => [
+        { field: 'brand' as const, value: fixture!.brand, page: 1, excerpt: `Marca: ${fixture!.brand}`, doc, documentIndex: 0 },
+        { field: 'model' as const, value: fixture!.model, page: 1, excerpt: `Modello: ${fixture!.model}`, doc, documentIndex: 0 },
+        { field: 'power' as const, value: fixture!.power.value, page: 1, excerpt: fixture!.powerExcerpt, measurement: fixture!.power, doc, documentIndex: 0 },
+      ]);
     }
+    this.publish(stored, claims);
+  }
+
+  private noSupportedData(stored: StoredJob) {
+    const { job } = stored;
+    job.state = 'succeeded';
+    job.outcome = 'no_supported_data';
+    job.openReviewCount = 0;
+    job.finishedAt = this.now();
+    // Nessuna scheda vuota: con destinazione la scheda resta invariata.
+    job.assetId = stored.targetAssetId;
+  }
+
+  private publish(stored: StoredJob, claims: Claim[]) {
+    const { job, accountId } = stored;
     const asset = stored.targetAssetId ? this.assets.get(stored.targetAssetId)! : this.newAsset(accountId, job.homeId, 'Caldaia');
-    const src = (docId: string, sha: string, excerpt: string): SourceRef => ({
-      documentId: docId,
+    asset.providers.add(job.provider);
+    const src = (c: Claim): SourceRef => ({
+      documentId: c.doc.id,
       documentVersion: 1,
-      documentSha256: sha,
-      page: 1,
-      excerpt,
+      documentSha256: c.doc.sha256,
+      page: c.page,
+      excerpt: c.excerpt,
     });
     const created: StoredAsset['proposals'] = [];
     const at = this.now();
 
     for (const key of ['brand', 'model'] as const) {
       const byValue = new Map<string, SourceRef[]>();
-      for (const { doc, fixture } of fx) {
-        const value = fixture![key];
-        const list = byValue.get(value) ?? [];
-        list.push(src(doc.id, doc.sha256, `${key === 'brand' ? 'Marca' : 'Modello'}: ${value}`));
-        byValue.set(value, list);
+      for (const c of claims.filter((x) => x.field === key)) {
+        const list = byValue.get(c.value) ?? [];
+        list.push(src(c));
+        byValue.set(c.value, list);
       }
+      if (byValue.size === 0) continue; // dato assente: resta assente, nessun valore di ripiego
       const candidates: Candidate[] = [...byValue.entries()].map(([value, sources]) => ({ id: uuid(), value, sources }));
       const fingerprint = `${key}:` + [...byValue.entries()].map(([v, s]) => `${v}@${s.map((x) => x.documentSha256).sort().join(',')}`).sort().join('|');
       const current = asset.confirmed[key];
@@ -361,46 +508,54 @@ export class FakeReview {
     }
 
     const powerMap = new Map<string, { m: Measurement; sources: SourceRef[] }>();
-    for (const { doc, fixture } of fx) {
-      const m = fixture!.power;
-      const k = `${m.value}|${m.quantityCode}`;
+    for (const c of claims.filter((x) => x.field === 'power' && x.measurement)) {
+      const m = c.measurement!;
+      const k = `${m.value}|${m.quantityCode}|${m.quantityLabel}`;
       const entry = powerMap.get(k) ?? { m, sources: [] };
-      entry.sources.push(src(doc.id, doc.sha256, fixture!.powerExcerpt));
+      entry.sources.push(src(c));
       powerMap.set(k, entry);
     }
-    const powerCandidates: Candidate[] = [...powerMap.values()].map((e) => ({ id: uuid(), value: e.m.value, sources: e.sources, measurement: e.m }));
-    const codes = new Set(powerCandidates.map((c) => c.measurement!.quantityCode));
-    const powerKind =
-      powerCandidates.length === 1 ? 'single_value' : codes.size === powerCandidates.length ? 'quantity_interpretation' : 'value_conflict';
-    const powerFp = 'power:' + [...powerMap.keys()].sort().join('|');
-    const currentPower = asset.confirmed.power;
-    const sameAsConfirmed =
-      !!currentPower &&
-      currentPower.value.kind === 'power' &&
-      currentPower.value.measurements.map((m) => `${m.value}|${m.quantityCode}`).sort().join(';') === [...powerMap.keys()].sort().join(';');
-    if (!sameAsConfirmed && !asset.resolved.has(`${powerFp}#${currentPower?.revision ?? 0}`)) {
-      created.push(this.proposal(asset, job, 'power', powerKind, powerCandidates, powerFp, at));
+    if (powerMap.size > 0) {
+      const powerCandidates: Candidate[] = [...powerMap.values()].map((e) => ({ id: uuid(), value: e.m.value, sources: e.sources, measurement: e.m }));
+      const codes = powerCandidates.map((c) => c.measurement!.quantityCode);
+      const powerKind =
+        powerCandidates.length === 1
+          ? 'single_value'
+          : new Set(codes).size === codes.length
+            ? 'quantity_interpretation'
+            : 'value_conflict';
+      const powerFp = 'power:' + [...powerMap.keys()].sort().join('|');
+      const currentPower = asset.confirmed.power;
+      const sameAsConfirmed =
+        !!currentPower &&
+        currentPower.value.kind === 'power' &&
+        currentPower.value.measurements.map((m) => `${m.value}|${m.quantityCode}|${m.quantityLabel}`).sort().join(';') ===
+          [...powerMap.keys()].sort().join(';');
+      if (!sameAsConfirmed && !asset.resolved.has(`${powerFp}#${currentPower?.revision ?? 0}`)) {
+        created.push(this.proposal(asset, job, 'power', powerKind, powerCandidates, powerFp, at));
+      }
     }
 
+    const origin = job.provider === 'anthropic' ? 'ai_provider' : 'test_provider';
     job.assetId = asset.id;
     job.finishedAt = at;
     job.state = 'succeeded';
     if (created.length === 0) {
       job.outcome = 'no_changes';
       job.openReviewCount = 0;
-      asset.history.push({ id: uuid(), assetId: asset.id, at, kind: 'analysis_no_changes', origin: 'test_provider', confirmationId: null, note: null, changes: [] });
+      asset.history.push({ id: uuid(), assetId: asset.id, at, kind: 'analysis_no_changes', origin, confirmationId: null, note: null, changes: [] });
       return;
     }
     asset.proposals.push(...created);
     asset.version += 1;
     job.outcome = 'proposals_created';
-    job.openReviewCount = created.length;
+    job.openReviewCount = this.openOf(asset).length;
     asset.history.push({
       id: uuid(),
       assetId: asset.id,
       at,
       kind: 'analysis_published',
-      origin: 'test_provider',
+      origin,
       confirmationId: null,
       note: null,
       changes: created.map((p) => ({
@@ -432,8 +587,9 @@ export class FakeReview {
       state: 'open',
       candidates,
       currentConfirmed: null,
-      provider: 'test_fixture_v1',
-      isSimulation: true,
+      provider: job.provider,
+      isSimulation: job.provider !== 'anthropic',
+      model: job.model ?? null,
       fingerprint,
       createdAt,
     };
@@ -455,9 +611,14 @@ export class FakeReview {
   private retryJob(req: Req, jobId: string, accountId: string, homeId: string): Res {
     const stored = this.jobs.get(jobId);
     if (!stored || stored.accountId !== accountId || stored.job.homeId !== homeId) return err(403, 'forbidden', 'Accesso non consentito.');
+    const body = (req.body ?? {}) as { consentToProviderTransfer?: unknown };
+    if (stored.job.provider === 'anthropic' && stored.job.state === 'failed') {
+      const blocked = this.anthropicGate(body.consentToProviderTransfer);
+      if (blocked) return blocked;
+    }
     return this.withIdem(req, `${accountId}:${homeId}:retry:${jobId}`, () => {
       if (stored.job.state !== 'failed') return err(409, 'invalid_job_state', 'Solo un’analisi non riuscita può essere ripetuta.');
-      const job = this.makeJob(homeId, stored.job.documentIds, stored.job.id);
+      const job = this.makeJob(homeId, stored.job.documentIds, stored.job.id, stored.job.provider);
       this.jobs.set(job.id, { job, accountId, targetAssetId: stored.targetAssetId });
       return { status: 202, body: { job } };
     });

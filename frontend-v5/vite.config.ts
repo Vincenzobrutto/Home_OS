@@ -42,6 +42,8 @@ export default defineConfig({
           setupFiles: ['./src/test/setup.ts'],
           include: ['src/**/*.test.{ts,tsx}'],
           restoreMocks: true,
+          // Flussi UI completi (analisi, polling, conferme) superano i 5 s predefiniti sotto carico.
+          testTimeout: 20_000,
         },
       },
       {
