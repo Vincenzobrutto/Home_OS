@@ -1,0 +1,75 @@
+{
+  "provider": "test_fixture_v1",
+  "isSimulation": true,
+  "fixtures": [
+    {
+      "id": "boiler_booklet_v1",
+      "filename": "libretto-caldaia-demo.pdf",
+      "sha256": "824b6de359f70aa8c635c8cf91010e1352938031d3a6276867b78e63c23046fe",
+      "brand": {
+        "value": "Termica Demo",
+        "page": 1,
+        "excerpt": "Marca: Termica Demo"
+      },
+      "model": {
+        "value": "TD-24",
+        "page": 1,
+        "excerpt": "Modello: TD-24"
+      },
+      "power": {
+        "value": "24",
+        "unit": "kW",
+        "quantityCode": "useful_heating",
+        "quantityLabel": "Potenza utile al riscaldamento",
+        "page": 1,
+        "excerpt": "Potenza utile al riscaldamento: 24 kW"
+      }
+    },
+    {
+      "id": "boiler_datasheet_v1",
+      "filename": "scheda-tecnica-caldaia-demo.pdf",
+      "sha256": "da6b734094d37b6a07d7b58f381dde1d0259f7899c307183d163b40cb48bee90",
+      "brand": {
+        "value": "Termica Demo",
+        "page": 1,
+        "excerpt": "Marca: Termica Demo"
+      },
+      "model": {
+        "value": "TD-24",
+        "page": 1,
+        "excerpt": "Modello: TD-24"
+      },
+      "power": {
+        "value": "28",
+        "unit": "kW",
+        "quantityCode": "reported_nominal",
+        "quantityLabel": "Potenza nominale riportata",
+        "page": 1,
+        "excerpt": "Potenza nominale riportata: 28 kW"
+      }
+    },
+    {
+      "id": "boiler_conflict_v1",
+      "filename": "rapporto-caldaia-demo-conflitto.pdf",
+      "sha256": "e313f78f7b02d6802f0a795c2a395867a2873f48963bb053a9b54d525ecdcf92",
+      "brand": {
+        "value": "Termica Demo",
+        "page": 1,
+        "excerpt": "Marca: Termica Demo"
+      },
+      "model": {
+        "value": "TD-24",
+        "page": 1,
+        "excerpt": "Modello: TD-24"
+      },
+      "power": {
+        "value": "28",
+        "unit": "kW",
+        "quantityCode": "useful_heating",
+        "quantityLabel": "Potenza utile al riscaldamento",
+        "page": 1,
+        "excerpt": "Potenza utile al riscaldamento: 28 kW"
+      }
+    }
+  ]
+}

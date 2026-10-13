@@ -45,6 +45,14 @@ export default defineConfig({
         },
       },
       {
+        // Integrità dei PDF di esempio M3 e riconoscimento sui byte reali (Node, nessuna rete).
+        test: {
+          name: 'fixtures',
+          environment: 'node',
+          include: ['tests/fixtures/**/*.test.ts'],
+        },
+      },
+      {
         // Prove contro il backend V5 reale: richiedono V5_API_URL, altrimenti saltate.
         test: {
           name: 'integration',

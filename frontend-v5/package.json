@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
-    "test": "vitest run --project mock",
+    "test": "vitest run --project mock --project fixtures",
     "test:watch": "vitest --project mock",
     "test:integration": "vitest run --project integration",
     "mock-api": "node scripts/mock-api.ts"
