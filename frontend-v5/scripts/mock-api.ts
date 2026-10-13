@@ -1,10 +1,11 @@
 // BACKEND SIMULATO PER PROVE MANUALI E SCREENSHOT — NON È IL BACKEND V5.
-// Espone in memoria identity-v1.1 e documents-v1 su 127.0.0.1:3101 (mai sulla
+// Espone in memoria identity-v1.1, documents-v1 e review-v1 su 127.0.0.1:3101 (mai sulla
 // porta 3001 del backend reale). Si ferma se la porta è occupata.
 // Uso:
 //   npm run mock-api -- --seed                      (account, case e documenti di prova)
 //   DIMORA_API_TARGET=http://127.0.0.1:3101 npm run dev   (frontend verso il mock)
 // I dati spariscono alla chiusura. Nessuna persistenza, nessun legame con DB legacy.
+import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { FakeBackend, PNG_SIGNATURE } from '../src/test/fakeBackend.ts';
 
@@ -37,6 +38,15 @@ if (process.argv.includes('--seed')) {
     bytes: samplePng(),
     visibility: 'private',
   });
+  // PDF sintetici M3 con i loro byte reali: il provider di test li riconosce per hash.
+  for (const [file, name] of [
+    ['libretto-caldaia-demo.pdf', 'Esempio A — libretto caldaia'],
+    ['scheda-tecnica-caldaia-demo.pdf', 'Esempio B — scheda tecnica'],
+    ['rapporto-caldaia-demo-conflitto.pdf', 'Esempio C — rapporto in conflitto'],
+  ] as const) {
+    const bytes = new Uint8Array(readFileSync(new URL(`../public/m3-examples/${file}`, import.meta.url)));
+    await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name, bytes, originalFilename: file, visibility: 'home' });
+  }
   console.log(
     'Account di prova (solo mock): a@example.test / password-di-prova-A, b@example.test / password-di-prova-B, ' +
       'v@example.test / password-di-prova-V (viewer di Appartamento Roma)',

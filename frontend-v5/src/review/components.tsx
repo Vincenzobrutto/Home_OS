@@ -40,7 +40,8 @@ export function SourceList({ sources, homeId }: { sources: SourceRef[]; homeId: 
     <ul className={styles.sources}>
       {sources.map((s, i) => (
         <li key={`${s.documentId}-${i}`} className={styles.source}>
-          <q>{s.excerpt}</q> — pagina {s.page}, versione {s.documentVersion} ·{' '}
+          <q>{s.excerpt}</q> — pagina {s.page}, versione {s.documentVersion}, impronta{' '}
+          <span title={s.documentSha256}>{s.documentSha256.slice(0, 8)}…</span> ·{' '}
           <Link to={`/home/${encodeURIComponent(homeId)}/documenti/${encodeURIComponent(s.documentId)}`}>
             Apri l’originale
           </Link>
