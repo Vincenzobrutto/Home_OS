@@ -14,6 +14,7 @@ import type {
   HomePermission,
   HomeRole,
 } from '../api/types';
+import { FakeReview } from './fakeReview.ts';
 
 export type FakeRequest = {
   method: string;
@@ -89,6 +90,19 @@ export class FakeBackend {
   /** Simula storage non disponibile sulle operazioni documentali. */
   storageDown = false;
   private clock = Date.parse('2026-10-13T08:00:00Z');
+  /** review-v1 (M3): job, schede, proposte, conferme. Fonti lette con le regole M2. */
+  review = new FakeReview({
+    find: (homeId, accountId, documentId) => {
+      const perms = this.homePerms(accountId, homeId);
+      const d = this.documents.get(documentId);
+      return perms && d && d.homeId === homeId && this.canSee(d, accountId, perms)
+        ? { id: d.id, sha256: d.sha256, mimeType: d.mimeType }
+        : null;
+    },
+    perms: (accountId, homeId) => this.homePerms(accountId, homeId),
+  });
+  /** false = backend senza endpoint M3 (404, come un backend solo M1/M2). */
+  reviewEnabled = true;
 
   seedAccount(name: string, email: string, password: string): Account {
     const account: StoredAccount = { id: nextId('acc'), name, email: email.toLowerCase(), password };
@@ -173,6 +187,12 @@ export class FakeBackend {
     if (docMatch) {
       if (!this.documentsEnabled) return err(404, 'not_found', 'Risorsa non trovata.');
       return this.routeDocuments(req, account.id, decodeURIComponent(docMatch[1]!), docMatch[2], !!docMatch[3]);
+    }
+
+    const m3 = /^\/homes\/([^/]+)\/((?:analysis-capabilities|analysis-jobs|assets|review)(?:[/?].*)?)$/.exec(path);
+    if (m3) {
+      if (!this.reviewEnabled) return err(404, 'not_found', 'Risorsa non trovata.');
+      return this.review.handle(req, account.id, decodeURIComponent(m3[1]!), m3[2]!);
     }
 
     const match = /^\/homes\/([^/]+)$/.exec(path);
@@ -264,6 +284,8 @@ export class FakeBackend {
     mimeType?: DocumentMimeType;
     originalFilename?: string;
     visibility?: DocumentVisibility;
+    /** Solo test UI in jsdom: impronta dichiarata al posto di quella calcolata (le prove sui byte reali sono in tests/fixtures). */
+    sha256?: string;
   }): Promise<DocumentDetail> {
     const mimeType = opts.mimeType ?? 'application/pdf';
     const bytes = opts.bytes ?? samplePdf(opts.name);
@@ -276,7 +298,7 @@ export class FakeBackend {
       mimeType,
       bytes,
       createdAt: new Date((this.clock += 60_000)).toISOString(),
-      sha256: await sha256Hex(bytes),
+      sha256: opts.sha256 ?? (await sha256Hex(bytes)),
       visibility: opts.visibility ?? 'private',
     };
     this.documents.set(doc.id, doc);
