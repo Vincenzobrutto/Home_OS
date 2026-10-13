@@ -1,6 +1,6 @@
 # H3a — expenses-v1: spese essenziali personali della casa
 
-14 ottobre 2026. Contratto congelato da Codex per lo sviluppo locale autorizzato dal committente. La proposta indipendente Claude cfdd0b3 è un contributo valutato, non un ordine. **Non ancora implementato o attivo nel runtime.** Codex scrive backend, schema/test e frontend nel master; Claude ha concluso la revisione e non ha un incarico H3 di codice attivo.
+14 ottobre 2026. Contratto congelato da Codex per lo sviluppo locale autorizzato dal committente. La proposta indipendente Claude cfdd0b3 è un contributo valutato, non un ordine. **Endpoint e frontend non ancora implementati o attivi nel runtime.** Codex scrive backend/schema/test reali nel master; Claude implementa soltanto frontend-v5 nel checkout separato, su incarico H3 dedicato. Codex integra e verifica la consegna.
 
 ## Fonti e scelte
 Specifiche outputs/dimora-v5-round2/03_specifiche/DIMORA_HOME_UX_CONSOLIDATED_v0.1_20261012.md §5: dashboard sintetica, costi documentati/manuali/stime distinti; capitale residuo non spesa, nessuna seconda contabilità. DIMORA_DECISIONI_CONSOLIDATE_POST_AI_REVIEW_v1.0_20261013.md: Home memoria della casa, economia V1 opzione B. Consolidamento master M-05/M-12 e V5-020/021 richiamati dalla revisione Claude: costo unico riferito da documento e asset, modifica della spesa esistente. Ciclo di vita CV-01: perdita membership impedisce accesso anche alle spese.
@@ -53,6 +53,19 @@ Spese diventa operativa soltanto con capabilities reale. Vuoto globale, anno sen
 Lista per anno/stato, dettaglio/storia, aggiunta/modifica, dialogo archiviazione/ripristino. Parsing italiano decimale in centesimi senza float: 1.234,56 e 1234,5 validi, raggruppamenti errati/3 decimali/testo libero rifiutati. Importo rimane stringa nel form, il server è autorevole. Data UTC calendar e giornata Roma dal server, come H1.
 
 Ingressi da Casa (riepilogo anno e ultime tre), documento (documentId precompilato) e caldaia (assetId; costi collegati dalla stessa lista server). Nuovo record non copia fattura o dati tecnici. Cambi account/Home e 403 ripuliscono stato/cache; selezioni di riferimenti limitate alle risorse autorizzate, incluse tutte le pagine. Una ricerca o stato history non può attraversare account. Tastiera/focus/dialoghi, 320/390/desktop; nessuna dichiarazione WCAG.
+
+## Forme condivise per implementazione parallela
+Capabilities: {apiVersion:'expenses-v1', enabled:true, isSimulation:false, currency:'EUR', limits:{titleMaxCodePoints:120,noteMaxCodePoints:500,amountMaxCents:999999999,maxPageSize:50}, asOf:ISO, today:YYYY-MM-DD, timeZone:'Europe/Rome'}. today è il riferimento per i moduli; con servizio assente non usare una capabilities mock nella modalità reale.
+
+Lista: {items:HomeExpense[],nextCursor:string|null}. Dettaglio e tutti i POST: {expense:HomeExpense}. GET expense-summary: {year:YYYY,counts:{manual:number,document:number},totalsCents:{manual:number,document:number},totalCents:number,lastItems:HomeExpense[],asOf:ISO,today:YYYY-MM-DD,timeZone:'Europe/Rome'}. Query year opzionale, default anno server; riepilogo considera sempre active, non il filtro lista archived/all.
+
+HomeExpense: {id,homeId,title,amountCents,currency:'EUR',spentOn,note:string|null,origin:'manual'|'document',documentLink:{state:'none'|'linked'|'unavailable',document:null|{id,name}},assetLink:{state:'none'|'linked'|'unavailable',asset:null|{id,name}},state:'active'|'archived',version:number,createdAt:ISO,updatedAt:ISO,archivedAt:ISO|null,permissions:Array<'read'|'edit'>}.
+
+History: {items:Array<{id,kind:'created'|'updated'|'archived'|'restored',at:ISO,note:string|null,before:ExpenseSnapshot|null,after:ExpenseSnapshot}>,nextCursor:string|null}. Snapshot conserva soltanto title,amountCents,currency,spentOn,note,origin,documentLink,assetLink,state; no version/date tecniche/permissions. Fonte e asset redatti con diritti attuali anche negli snapshot. Nessun documentId/assetId interno fuori dal link autorizzato.
+
+Input create/updates non accetta currency/origin/state/accountId/homeId né link oggetti: soltanto campi tabella sopra (documentId/assetId UUID o null), il resto è derivato. action note distinta dalla nota persistente della spesa. Stato archived non editabile fino a restore.
+
+Rotte UI: /home/:homeId/spese, /spese/:expenseId. Creazione nella lista con ?nuova-spesa=1 e opzionali documentId/assetId; account deve poter leggere la risorsa e modificarla nella casa. I parametri sono una proposta di precompilazione, non autorizzazione: verificare via API prima di mostrare nomi/accettare salvataggio. Anno/stato lista facoltativamente URL; niente importi/note/body/chiavi idempotenti in URL o storage. Filtri e ritorni legati all'account come H2 corretta.
 
 ## Accettazione prima della chiusura
 1. Importi 0,01 / 1.234,56 / 1234,5 precisi; zero/negativi/frazioni di centesimo/overflow rifiutati. 0,10+0,20 = 30 centesimi.
