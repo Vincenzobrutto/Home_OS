@@ -41,6 +41,17 @@ export const queryKeys = {
   activityHistory: (accountId: string, homeId: string, activityId: string) =>
     ['account', accountId, 'home', homeId, 'h1', 'activity', activityId, 'history'] as const,
   activitySummary: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h1', 'summary'] as const,
+  // expenses-v1 (H3a): spese personali, separate da H1 e M3/M4.
+  h3: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h3'] as const,
+  expenseCapabilities: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h3', 'capabilities'] as const,
+  expenses: (accountId: string, homeId: string, f: { state: string; year: string | null; source: string; assetId?: string; documentId?: string }) =>
+    ['account', accountId, 'home', homeId, 'h3', 'list', f.state, f.year ?? '-', f.source, f.assetId ?? '-', f.documentId ?? '-'] as const,
+  expense: (accountId: string, homeId: string, expenseId: string) =>
+    ['account', accountId, 'home', homeId, 'h3', 'expense', expenseId, 'detail'] as const,
+  expenseHistory: (accountId: string, homeId: string, expenseId: string) =>
+    ['account', accountId, 'home', homeId, 'h3', 'expense', expenseId, 'history'] as const,
+  expenseSummary: (accountId: string, homeId: string, year: string | null) =>
+    ['account', accountId, 'home', homeId, 'h3', 'summary', year ?? '-'] as const,
 };
 
 export function newIdempotencyKey(): string {

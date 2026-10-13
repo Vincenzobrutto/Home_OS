@@ -314,3 +314,110 @@ export type ActivitySummary = TemporalContext & {
   counts: { overdue: number; today: number; upcoming: number; undated: number };
   nextItems: HomeActivity[];
 };
+
+// expenses-v1 (H3a, docs/v5/expenses-api-contract.md): costi sostenuti personali del creatore.
+export type ExpenseState = 'active' | 'archived';
+export type ExpenseOrigin = 'manual' | 'document';
+export type ExpenseDocumentLink =
+  | { state: 'none'; document: null }
+  | { state: 'linked'; document: { id: string; name: string } }
+  | { state: 'unavailable'; document: null };
+export type ExpenseAssetLink =
+  | { state: 'none'; asset: null }
+  | { state: 'linked'; asset: { id: string; name: string } }
+  | { state: 'unavailable'; asset: null };
+
+export type HomeExpense = {
+  id: string;
+  homeId: string;
+  title: string;
+  amountCents: number;
+  currency: 'EUR';
+  spentOn: string;
+  note: string | null;
+  origin: ExpenseOrigin;
+  documentLink: ExpenseDocumentLink;
+  assetLink: ExpenseAssetLink;
+  state: ExpenseState;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt: string | null;
+  permissions: Array<'read' | 'edit'>;
+};
+
+export type ExpenseCapabilities = {
+  apiVersion: 'expenses-v1';
+  enabled: true;
+  isSimulation: false;
+  currency: 'EUR';
+  limits: { titleMaxCodePoints: number; noteMaxCodePoints: number; amountMaxCents: number; maxPageSize: number };
+  asOf: string;
+  today: string;
+  timeZone: 'Europe/Rome';
+};
+
+export type ExpenseFilters = {
+  state: ExpenseState | 'all';
+  /** Anno YYYY oppure null = tutti gli anni. */
+  year: string | null;
+  source: ExpenseOrigin | 'all';
+  assetId?: string;
+  documentId?: string;
+};
+
+export type ExpenseResponse = { expense: HomeExpense };
+
+export type CreateExpense = {
+  title: string;
+  amountCents: number;
+  spentOn: string;
+  note?: string;
+  documentId?: string;
+  assetId?: string;
+};
+
+/** Solo i campi cambiati; null scollega riferimento o nota. */
+export type UpdateExpense = {
+  expectedVersion: number;
+  title?: string;
+  amountCents?: number;
+  spentOn?: string;
+  note?: string | null;
+  documentId?: string | null;
+  assetId?: string | null;
+};
+
+export type ExpenseAction = { expectedVersion: number; note?: string };
+
+export type ExpenseSnapshot = {
+  title: string;
+  amountCents: number;
+  currency: 'EUR';
+  spentOn: string;
+  note: string | null;
+  origin: ExpenseOrigin;
+  documentLink: ExpenseDocumentLink;
+  assetLink: ExpenseAssetLink;
+  state: ExpenseState;
+};
+
+export type ExpenseHistoryEvent = {
+  id: string;
+  kind: 'created' | 'updated' | 'archived' | 'restored';
+  at: string;
+  note: string | null;
+  before: ExpenseSnapshot | null;
+  after: ExpenseSnapshot;
+};
+
+export type ExpenseSummary = {
+  year: string;
+  counts: { manual: number; document: number };
+  totalsCents: { manual: number; document: number };
+  totalCents: number;
+  lastItems: HomeExpense[];
+  asOf: string;
+  today: string;
+  timeZone: 'Europe/Rome';
+};
