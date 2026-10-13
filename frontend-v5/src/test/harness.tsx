@@ -38,11 +38,12 @@ export function createFakeFetch(backend: FakeBackend, initialCookie?: string): F
       headers[key.toLowerCase()] = value;
     });
     const path = url.replace(/^\/api\/v5/, '');
-    const res = backend.handle({
+    const res = await backend.handle({
       method: init.method ?? 'GET',
       path,
       headers,
-      body: typeof init.body === 'string' ? JSON.parse(init.body) : undefined,
+      // JSON come oggetto; multipart passato così com'è (FormData del browser).
+      body: typeof init.body === 'string' ? JSON.parse(init.body) : init.body instanceof FormData ? init.body : undefined,
       cookie: init.credentials === 'include' ? cookie : undefined,
     });
     if (res.setCookie !== undefined) cookie = res.setCookie ?? undefined;
@@ -54,6 +55,15 @@ export function createFakeFetch(backend: FakeBackend, initialCookie?: string): F
     await new Promise((r) => setTimeout(r, 0));
     if (init.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
     if (res.status === 204) return new Response(null, { status: 204 });
+    if (res.binary) {
+      return new Response(res.binary.bytes as BodyInit, {
+        status: res.status,
+        headers: {
+          'Content-Type': res.binary.contentType,
+          'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(res.binary.filename)}`,
+        },
+      });
+    }
     return new Response(JSON.stringify(res.body), {
       status: res.status,
       headers: { 'Content-Type': 'application/json; charset=utf-8' },

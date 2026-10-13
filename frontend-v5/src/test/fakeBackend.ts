@@ -1,10 +1,19 @@
 // BACKEND SIMULATO — SOLO TEST E HARNESS LOCALE.
-// Implementa in memoria il contratto identity-v1 per verificare client e UI.
+// Implementa in memoria i contratti identity-v1.1 e documents-v1 per verificare client e UI.
 // Non è importabile dal codice dell'app (regola ESLint) e non è il backend V5 reale.
 // Deve restare autonomo e con sintassi TypeScript "erasable": viene eseguito
 // anche da Node (scripts/mock-api.ts) senza build.
 
-import type { Account, Home, HomePermission, HomeRole } from '../api/types';
+import type {
+  Account,
+  DocumentDetail,
+  DocumentMimeType,
+  DocumentSummary,
+  DocumentVisibility,
+  Home,
+  HomePermission,
+  HomeRole,
+} from '../api/types';
 
 export type FakeRequest = {
   method: string;
@@ -17,8 +26,31 @@ export type FakeRequest = {
 export type FakeResponse = {
   status: number;
   body?: unknown;
+  /** Risposta binaria (file originale o ZIP) al posto di body JSON. */
+  binary?: { bytes: Uint8Array; contentType: string; filename: string };
   setCookie?: string | null; // null = cancella
 };
+
+/** Parte "file" di un multipart: File del browser o Blob di Node. */
+type BlobLike = { size: number; name?: string; arrayBuffer?: () => Promise<ArrayBuffer> };
+type FormLike = { get: (name: string) => unknown };
+
+type StoredDocument = {
+  id: string;
+  homeId: string;
+  uploaderId: string;
+  name: string;
+  originalFilename: string;
+  mimeType: DocumentMimeType;
+  bytes: Uint8Array;
+  createdAt: string;
+  sha256: string;
+  visibility: DocumentVisibility;
+};
+
+export const FAKE_MAX_UPLOAD = 20 * 1024 * 1024;
+export const FAKE_MAX_EXPORT = 100 * 1024 * 1024;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Session = { id: string; csrf: string; accountId: string | null };
 type StoredAccount = Account & { password: string };
@@ -50,6 +82,13 @@ export class FakeBackend {
   log: FakeRequest[] = [];
   /** Se impostato, ogni richiesta risponde con questo stato (simula guasti). */
   outage: number | null = null;
+  documents = new Map<string, StoredDocument>();
+  uploads = new Map<string, { fingerprint: string; documentId: string }>();
+  /** false = backend senza endpoint documentali (404, come un backend solo M1). */
+  documentsEnabled = true;
+  /** Simula storage non disponibile sulle operazioni documentali. */
+  storageDown = false;
+  private clock = Date.parse('2026-10-13T08:00:00Z');
 
   seedAccount(name: string, email: string, password: string): Account {
     const account: StoredAccount = { id: nextId('acc'), name, email: email.toLowerCase(), password };
@@ -74,7 +113,7 @@ export class FakeBackend {
     return s;
   }
 
-  handle(req: FakeRequest): FakeResponse {
+  async handle(req: FakeRequest): Promise<FakeResponse> {
     this.log.push(req);
     if (this.outage) return err(this.outage, 'service_unavailable', 'Servizio non disponibile.');
 
@@ -84,12 +123,12 @@ export class FakeBackend {
       session = this.newSession(null);
       setCookie = session.id;
     }
-    const res = this.route(req, session);
+    const res = await this.route(req, session);
     if (res.setCookie === undefined && setCookie) res.setCookie = setCookie;
     return res;
   }
 
-  private route(req: FakeRequest, session: Session): FakeResponse {
+  private async route(req: FakeRequest, session: Session): Promise<FakeResponse> {
     const { method, path } = req;
     const isMutation = method !== 'GET';
     if (isMutation && req.headers['x-csrf-token'] !== session.csrf) {
@@ -129,6 +168,12 @@ export class FakeBackend {
       return { status: 200, body: { items } };
     }
     if (method === 'POST' && path === '/homes') return this.createHome(req, account.id);
+
+    const docMatch = /^\/homes\/([^/]+)\/documents(?:\/([^/]+))?(\/file)?$/.exec(path.split('?')[0]!);
+    if (docMatch) {
+      if (!this.documentsEnabled) return err(404, 'not_found', 'Risorsa non trovata.');
+      return this.routeDocuments(req, account.id, decodeURIComponent(docMatch[1]!), docMatch[2], !!docMatch[3]);
+    }
 
     const match = /^\/homes\/([^/]+)$/.exec(path);
     if (method === 'GET' && match) {
@@ -202,4 +247,309 @@ export class FakeBackend {
     this.idempotency.set(scoped, { bodyHash, homeId: home.id });
     return { status: 201, body: { home } };
   }
+
+  // ---- documents-v1 ----
+
+  /** Aggiunge un membro con ruolo (per i test di permessi/visibilità). */
+  addMember(accountId: string, homeId: string, role: HomeRole) {
+    this.memberships.push({ accountId, homeId, role });
+  }
+
+  /** Inserisce direttamente un documento (seed dei test). */
+  async seedDocument(opts: {
+    homeId: string;
+    uploaderId: string;
+    name: string;
+    bytes?: Uint8Array;
+    mimeType?: DocumentMimeType;
+    originalFilename?: string;
+    visibility?: DocumentVisibility;
+  }): Promise<DocumentDetail> {
+    const mimeType = opts.mimeType ?? 'application/pdf';
+    const bytes = opts.bytes ?? samplePdf(opts.name);
+    const doc: StoredDocument = {
+      id: globalThis.crypto.randomUUID(),
+      homeId: opts.homeId,
+      uploaderId: opts.uploaderId,
+      name: opts.name,
+      originalFilename: opts.originalFilename ?? `${opts.name}.${mimeType === 'application/pdf' ? 'pdf' : mimeType === 'image/png' ? 'png' : 'jpg'}`,
+      mimeType,
+      bytes,
+      createdAt: new Date((this.clock += 60_000)).toISOString(),
+      sha256: await sha256Hex(bytes),
+      visibility: opts.visibility ?? 'private',
+    };
+    this.documents.set(doc.id, doc);
+    return this.docDetail(doc, PERMS.owner);
+  }
+
+  private homePerms(accountId: string, homeId: string): HomePermission[] | null {
+    const m = this.memberships.find((x) => x.accountId === accountId && x.homeId === homeId);
+    return m ? PERMS[m.role] : null;
+  }
+
+  private canSee(doc: StoredDocument, accountId: string, perms: HomePermission[]) {
+    if (!perms.includes('read')) return false;
+    return doc.visibility === 'home' || doc.uploaderId === accountId;
+  }
+
+  private docSummary(doc: StoredDocument, perms: HomePermission[]): DocumentSummary {
+    return {
+      id: doc.id,
+      homeId: doc.homeId,
+      name: doc.name,
+      originalFilename: doc.originalFilename,
+      mimeType: doc.mimeType,
+      byteSize: doc.bytes.byteLength,
+      createdAt: doc.createdAt,
+      version: 1,
+      source: 'manual_upload',
+      status: 'stored',
+      visibility: doc.visibility,
+      permissions: perms.includes('export') ? ['read', 'export'] : ['read'],
+    };
+  }
+
+  private docDetail(doc: StoredDocument, perms: HomePermission[]): DocumentDetail {
+    return { ...this.docSummary(doc, perms), sha256: doc.sha256 };
+  }
+
+  private async routeDocuments(
+    req: FakeRequest,
+    accountId: string,
+    homeId: string,
+    documentId: string | undefined,
+    file: boolean,
+  ): Promise<FakeResponse> {
+    const perms = this.homePerms(accountId, homeId);
+    if (!perms) return err(403, 'forbidden', 'Accesso non consentito.');
+    if (this.storageDown) return err(503, 'storage_unavailable', 'Archivio non disponibile.');
+
+    if (documentId === 'export' && !file) {
+      if (req.method !== 'POST') return err(404, 'not_found', 'Risorsa non trovata.');
+      return this.exportZip(req, accountId, homeId, perms);
+    }
+    if (documentId === undefined) {
+      if (req.method === 'GET') return this.listDocs(req, accountId, homeId, perms);
+      if (req.method === 'POST') return this.upload(req, accountId, homeId, perms);
+      return err(404, 'not_found', 'Risorsa non trovata.');
+    }
+    if (req.method !== 'GET') return err(404, 'not_found', 'Risorsa non trovata.');
+    const id = decodeURIComponent(documentId);
+    if (!UUID_RE.test(id)) return err(422, 'validation_error', 'Identificativo non valido.');
+    const doc = this.documents.get(id);
+    if (!doc || doc.homeId !== homeId || !this.canSee(doc, accountId, perms)) {
+      return err(403, 'forbidden', 'Accesso non consentito.');
+    }
+    if (!file) return { status: 200, body: { document: this.docDetail(doc, perms) } };
+    return { status: 200, binary: { bytes: doc.bytes, contentType: doc.mimeType, filename: doc.originalFilename } };
+  }
+
+  private listDocs(req: FakeRequest, accountId: string, homeId: string, perms: HomePermission[]): FakeResponse {
+    const query = new URLSearchParams(req.path.split('?')[1] ?? '');
+    const limit = query.has('limit') ? Number(query.get('limit')) : 20;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) return err(422, 'validation_error', 'Limite non valido.');
+    const cursor = query.get('cursor');
+    const offset = cursor ? Number(cursor.replace(/^c/, '')) : 0;
+    if (!Number.isInteger(offset) || offset < 0) return err(422, 'validation_error', 'Cursore non valido.');
+    const visible = [...this.documents.values()]
+      .filter((d) => d.homeId === homeId && this.canSee(d, accountId, perms))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+    const items = visible.slice(offset, offset + limit).map((d) => this.docSummary(d, perms));
+    const nextCursor = offset + limit < visible.length ? `c${offset + limit}` : null;
+    return { status: 200, body: { items, nextCursor } };
+  }
+
+  private async upload(req: FakeRequest, accountId: string, homeId: string, perms: HomePermission[]): Promise<FakeResponse> {
+    if (!perms.includes('edit')) return err(403, 'forbidden', 'Il tuo ruolo non consente di caricare documenti.');
+    const key = req.headers['idempotency-key'];
+    if (!key || !/^[A-Za-z0-9_-]{16,100}$/.test(key)) {
+      return err(422, 'validation_error', 'Idempotency-Key non valida.');
+    }
+    if ((req.headers['content-type'] ?? '').includes('application/json')) {
+      return err(422, 'validation_error', 'Serve un invio multipart.');
+    }
+    const form = req.body as FormLike | undefined;
+    if (!form || typeof form.get !== 'function') return err(422, 'validation_error', 'Serve un invio multipart.');
+    const part = form.get('file') as BlobLike | null;
+    const name = String(form.get('name') ?? '').trim();
+    const visibility = String(form.get('visibility') ?? '');
+    const fieldErrors: Record<string, string> = {};
+    if (!part || typeof part !== 'object' || part.size === 0) fieldErrors.file = 'Il file è vuoto o mancante.';
+    if (len(name) < 1 || len(name) > 160) fieldErrors.name = 'Titolo da 1 a 160 caratteri.';
+    if (visibility !== 'private' && visibility !== 'home') fieldErrors.visibility = 'Visibilità non valida.';
+    if (Object.keys(fieldErrors).length) return err(422, 'validation_error', 'Controlla i campi.', fieldErrors);
+    if (part!.size > FAKE_MAX_UPLOAD) return err(413, 'file_too_large', 'Il file supera il limite di 20 MB.');
+    const bytes = await readBytes(part!);
+    const mimeType = sniff(bytes);
+    if (!mimeType) return err(415, 'unsupported_file_type', 'Formato non supportato: carica PDF, JPEG o PNG.');
+    const originalFilename = safeName(part!.name ?? 'documento');
+    const hash = await sha256Hex(bytes);
+    const fingerprint = JSON.stringify({ name, visibility, originalFilename, hash });
+    const scoped = `${accountId}:${homeId}:${key}`;
+    const previous = this.uploads.get(scoped);
+    if (previous) {
+      if (previous.fingerprint !== fingerprint) {
+        return err(409, 'idempotency_conflict', 'Chiave di idempotenza già usata con dati diversi.');
+      }
+      return { status: 201, body: { document: this.docDetail(this.documents.get(previous.documentId)!, perms) } };
+    }
+    const doc: StoredDocument = {
+      id: globalThis.crypto.randomUUID(),
+      homeId,
+      uploaderId: accountId,
+      name,
+      originalFilename,
+      mimeType,
+      bytes,
+      createdAt: new Date((this.clock += 60_000)).toISOString(),
+      sha256: hash,
+      visibility: visibility as DocumentVisibility,
+    };
+    this.documents.set(doc.id, doc);
+    this.uploads.set(scoped, { fingerprint, documentId: doc.id });
+    return { status: 201, body: { document: this.docDetail(doc, perms) } };
+  }
+
+  private exportZip(req: FakeRequest, accountId: string, homeId: string, perms: HomePermission[]): FakeResponse {
+    if (!perms.includes('export')) return err(403, 'forbidden', 'Il tuo ruolo non consente l’esportazione.');
+    const ids = (req.body as { documentIds?: unknown } | undefined)?.documentIds;
+    if (
+      !Array.isArray(ids) ||
+      ids.length < 1 ||
+      ids.length > 50 ||
+      new Set(ids).size !== ids.length ||
+      !ids.every((id) => typeof id === 'string' && UUID_RE.test(id))
+    ) {
+      return err(422, 'validation_error', 'Selezione non valida.', { documentIds: 'Da 1 a 50 documenti distinti.' });
+    }
+    const docs = ids.map((id) => this.documents.get(id as string));
+    // Un solo documento vietato o assente rifiuta l'intero ZIP: niente sottoinsiemi silenziosi.
+    if (docs.some((d) => !d || d.homeId !== homeId || !this.canSee(d, accountId, perms))) {
+      return err(403, 'forbidden', 'Accesso non consentito.');
+    }
+    const total = docs.reduce((sum, d) => sum + d!.bytes.byteLength, 0);
+    if (total > FAKE_MAX_EXPORT) return err(413, 'export_too_large', 'La selezione supera 100 MB.');
+    const used = new Set<string>();
+    const entries = docs.map((d) => {
+      let entryName = d!.originalFilename;
+      for (let i = 2; used.has(entryName); i++) entryName = `${i}-${d!.originalFilename}`;
+      used.add(entryName);
+      return { name: entryName, bytes: d!.bytes };
+    });
+    const manifest = docs.map((d) => ({
+      documentId: d!.id,
+      version: 1,
+      originalFilename: d!.originalFilename,
+      byteSize: d!.bytes.byteLength,
+      sha256: d!.sha256,
+      visibility: d!.visibility,
+    }));
+    entries.push({ name: 'manifest.json', bytes: new TextEncoder().encode(JSON.stringify(manifest, null, 2)) });
+    return { status: 200, binary: { bytes: zipStore(entries), contentType: 'application/zip', filename: 'documenti.zip' } };
+  }
+}
+
+// ---- utilità del backend simulato ----
+
+/** PDF minimo valido (intestazione %PDF) per i seed. */
+export function samplePdf(label: string): Uint8Array {
+  return new TextEncoder().encode(`%PDF-1.4\n% ${label}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
+}
+
+export const PNG_SIGNATURE = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+export const JPEG_SIGNATURE = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+
+/** Formato dai byte, non dal nome o dal MIME dichiarato. */
+function sniff(bytes: Uint8Array): DocumentMimeType | null {
+  const starts = (sig: number[]) => sig.every((b, i) => bytes[i] === b);
+  if (starts([0x25, 0x50, 0x44, 0x46])) return 'application/pdf';
+  if (starts([0xff, 0xd8, 0xff])) return 'image/jpeg';
+  if (starts([...PNG_SIGNATURE])) return 'image/png';
+  return null;
+}
+
+function safeName(name: string) {
+  const base = name.split(/[\\/]/).pop() ?? '';
+  return base.replace(/[^\p{L}\p{N} ._()-]/gu, '_').replace(/^\.+/, '').slice(0, 180) || 'documento';
+}
+
+async function readBytes(part: BlobLike): Promise<Uint8Array> {
+  if (typeof part.arrayBuffer === 'function') return new Uint8Array(await part.arrayBuffer());
+  // jsdom: File senza arrayBuffer → FileReader.
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(part as unknown as Blob);
+  });
+}
+
+async function sha256Hex(bytes: Uint8Array): Promise<string> {
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes as BufferSource);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+
+function crc32(bytes: Uint8Array) {
+  let c = 0xffffffff;
+  for (const b of bytes) c = CRC_TABLE[(c ^ b) & 0xff]! ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+/** ZIP minimo senza compressione (metodo store), sufficiente per verificare l'export. */
+export function zipStore(entries: Array<{ name: string; bytes: Uint8Array }>): Uint8Array {
+  const enc = new TextEncoder();
+  const chunks: Uint8Array[] = [];
+  const central: Uint8Array[] = [];
+  let offset = 0;
+  for (const e of entries) {
+    const name = enc.encode(e.name);
+    const crc = crc32(e.bytes);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);
+    local.setUint16(6, 0x0800, true); // nomi UTF-8
+    local.setUint32(14, crc, true);
+    local.setUint32(18, e.bytes.byteLength, true);
+    local.setUint32(22, e.bytes.byteLength, true);
+    local.setUint16(26, name.byteLength, true);
+    chunks.push(new Uint8Array(local.buffer), name, e.bytes);
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true);
+    cd.setUint16(4, 20, true);
+    cd.setUint16(6, 20, true);
+    cd.setUint16(8, 0x0800, true);
+    cd.setUint32(16, crc, true);
+    cd.setUint32(20, e.bytes.byteLength, true);
+    cd.setUint32(24, e.bytes.byteLength, true);
+    cd.setUint16(28, name.byteLength, true);
+    cd.setUint32(42, offset, true);
+    central.push(new Uint8Array(cd.buffer), name);
+    offset += 30 + name.byteLength + e.bytes.byteLength;
+  }
+  const centralSize = central.reduce((s, c) => s + c.byteLength, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, entries.length, true);
+  end.setUint16(10, entries.length, true);
+  end.setUint32(12, centralSize, true);
+  end.setUint32(16, offset, true);
+  const all = [...chunks, ...central, new Uint8Array(end.buffer)];
+  const out = new Uint8Array(all.reduce((s, c) => s + c.byteLength, 0));
+  let pos = 0;
+  for (const c of all) {
+    out.set(c, pos);
+    pos += c.byteLength;
+  }
+  return out;
 }

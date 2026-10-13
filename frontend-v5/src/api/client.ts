@@ -1,11 +1,15 @@
 import { ApiError, isApiErrorBody, serviceError } from './errors';
 import type {
   Account,
+  BinaryPayload,
   CreateHomeInput,
+  DocumentDetail,
+  DocumentsPage,
   Home,
   LoginInput,
   RegisterInput,
   SessionResponse,
+  UploadDocumentInput,
 } from './types';
 
 export const API_BASE = '/api/v5';
@@ -14,18 +18,23 @@ export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 
 type RequestOptions = {
   method?: 'GET' | 'POST';
+  /** Oggetto serializzato come JSON, oppure FormData (multipart, boundary impostato dal browser). */
   body?: unknown;
   signal?: AbortSignal;
   headers?: Record<string, string>;
   accountId?: string;
 };
 
+type ResponseKind = 'json' | 'binary';
+
 /**
- * Client tipizzato per identity-v1.
+ * Client tipizzato per identity-v1.1 e documents-v1.
  * - URL relativi e credentials 'include': la sessione è un cookie httpOnly
  *   gestito dal browser, mai letto o salvato dal frontend.
  * - Il token CSRF vive solo in memoria, ottenuto da GET /session, e viene
  *   inviato in X-CSRF-Token su ogni mutazione (login/register inclusi).
+ * - JSON, multipart e risposte binarie passano tutti da `send`: stessi header
+ *   di contesto, stessi errori, nessun percorso parallelo.
  * - Nessun fallback: errori di rete o risposte fuori contratto diventano
  *   ApiError di tipo 'service', mai dati vuoti o dimostrativi.
  */
@@ -95,11 +104,96 @@ export class ApiClient {
     return data.home;
   }
 
-  private async mutate<T>(path: string, opts: Omit<RequestOptions, 'method'>): Promise<T> {
+  // ---- documents-v1 ----
+
+  async listDocuments(
+    homeId: string,
+    page: { cursor?: string | null; limit?: number },
+    signal: AbortSignal | undefined,
+    accountId: string,
+  ): Promise<DocumentsPage> {
+    const params = new URLSearchParams();
+    if (page.limit !== undefined) params.set('limit', String(page.limit));
+    if (page.cursor) params.set('cursor', page.cursor);
+    const query = params.size ? `?${params.toString()}` : '';
+    const data = await this.request<DocumentsPage>(`${homePath(homeId)}/documents${query}`, {
+      signal,
+      accountId,
+    });
+    if (!data || !Array.isArray(data.items) || !('nextCursor' in data)) throw serviceError(200);
+    return data;
+  }
+
+  async getDocument(
+    homeId: string,
+    documentId: string,
+    signal: AbortSignal | undefined,
+    accountId: string,
+  ): Promise<DocumentDetail> {
+    const data = await this.request<{ document: DocumentDetail }>(
+      `${homePath(homeId)}/documents/${encodeURIComponent(documentId)}`,
+      { signal, accountId },
+    );
+    if (!data || !data.document) throw serviceError(200);
+    return data.document;
+  }
+
+  async uploadDocument(
+    homeId: string,
+    input: UploadDocumentInput,
+    idempotencyKey: string,
+    accountId: string,
+  ): Promise<DocumentDetail> {
+    const form = new FormData();
+    form.append('file', input.file, input.file.name);
+    form.append('name', input.name);
+    form.append('visibility', input.visibility);
+    const data = await this.mutate<{ document: DocumentDetail }>(`${homePath(homeId)}/documents`, {
+      body: form,
+      headers: { 'Idempotency-Key': idempotencyKey },
+      accountId,
+    });
+    if (!data || !data.document) throw serviceError(201);
+    return data.document;
+  }
+
+  /** Byte originali autenticati: mai aprire l'URL API direttamente nel browser. */
+  downloadDocumentFile(
+    homeId: string,
+    documentId: string,
+    signal: AbortSignal | undefined,
+    accountId: string,
+  ): Promise<BinaryPayload> {
+    return this.send<BinaryPayload>(
+      `${homePath(homeId)}/documents/${encodeURIComponent(documentId)}/file`,
+      { signal, accountId },
+      'binary',
+    );
+  }
+
+  async exportDocuments(homeId: string, documentIds: string[], accountId: string): Promise<BinaryPayload> {
+    await this.ensureCsrf();
+    return this.send<BinaryPayload>(
+      `${homePath(homeId)}/documents/export`,
+      {
+        method: 'POST',
+        body: { documentIds },
+        headers: { 'X-CSRF-Token': this.csrfToken ?? '' },
+        accountId,
+      },
+      'binary',
+    );
+  }
+
+  private async ensureCsrf() {
     if (!this.csrfToken) {
       // Nessun token in memoria (es. dopo logout): lo chiediamo al server.
       await this.getSession();
     }
+  }
+
+  private async mutate<T>(path: string, opts: Omit<RequestOptions, 'method'>): Promise<T> {
+    await this.ensureCsrf();
     return this.request<T>(path, {
       ...opts,
       method: 'POST',
@@ -107,11 +201,21 @@ export class ApiClient {
     });
   }
 
-  private async request<T>(path: string, opts: RequestOptions): Promise<T> {
-    const headers: Record<string, string> = { Accept: 'application/json', ...opts.headers };
+  private request<T>(path: string, opts: RequestOptions): Promise<T> {
+    return this.send<T>(path, opts, 'json');
+  }
+
+  private async send<T>(path: string, opts: RequestOptions, kind: ResponseKind): Promise<T> {
+    const headers: Record<string, string> = {
+      Accept: kind === 'json' ? 'application/json' : '*/*',
+      ...opts.headers,
+    };
     if (opts.accountId) headers['X-Account-Context'] = opts.accountId;
-    let body: string | undefined;
-    if (opts.body !== undefined) {
+    let body: BodyInit | undefined;
+    if (opts.body instanceof FormData) {
+      // Nessun Content-Type: il browser imposta multipart e boundary.
+      body = opts.body;
+    } else if (opts.body !== undefined) {
       headers['Content-Type'] = 'application/json';
       body = JSON.stringify(opts.body);
     }
@@ -131,9 +235,27 @@ export class ApiClient {
       throw serviceError(0);
     }
 
-    if (response.status === 204) return undefined as T;
+    if (kind === 'json' && response.status === 204) return undefined as T;
 
-    const isJson = (response.headers.get('content-type') ?? '').includes('application/json');
+    const contentType = response.headers.get('content-type') ?? '';
+    const isJson = contentType.includes('application/json');
+
+    // Successo binario: solo 200 con un corpo non-JSON.
+    if (kind === 'binary' && response.status === 200 && !isJson) {
+      let blob: Blob;
+      try {
+        blob = await response.blob();
+      } catch (err) {
+        if (opts.signal?.aborted) throw err;
+        throw serviceError(200);
+      }
+      return {
+        blob,
+        filename: filenameFromDisposition(response.headers.get('content-disposition')),
+        contentType: contentType.split(';')[0]!.trim(),
+      } as T;
+    }
+
     let parsed: unknown = undefined;
     if (isJson) {
       try {
@@ -144,8 +266,8 @@ export class ApiClient {
     }
 
     if (response.ok) {
-      // Una risposta 2xx non-JSON non è mai trattata come successo.
-      if (parsed === undefined) throw serviceError(response.status);
+      // 2xx non-JSON per un endpoint JSON, o JSON dove servivano byte: fuori contratto.
+      if (kind === 'binary' || parsed === undefined) throw serviceError(response.status);
       return parsed as T;
     }
 
@@ -163,9 +285,46 @@ export class ApiClient {
     }
 
     // 502/503/504 o errore senza corpo del contratto (es. proxy Vite con backend spento).
-    throw serviceError(
-      response.status,
-      isApiErrorBody(parsed) ? parsed.error.requestId : undefined,
-    );
+    // Il codice (es. storage_unavailable) resta disponibile per un messaggio più preciso.
+    const e = isApiErrorBody(parsed) ? parsed.error : undefined;
+    throw serviceError(response.status, e?.requestId, e?.code);
   }
+}
+
+function homePath(homeId: string) {
+  return `/homes/${encodeURIComponent(homeId)}`;
+}
+
+/**
+ * Nome file da Content-Disposition (filename* RFC 5987 o filename), ridotto a un
+ * nome sicuro: niente percorsi, caratteri di controllo o riservati.
+ */
+export function filenameFromDisposition(header: string | null): string | null {
+  if (!header) return null;
+  let raw: string | undefined;
+  const star = /filename\*\s*=\s*([^']*)'[^']*'([^;]+)/i.exec(header);
+  if (star) {
+    try {
+      raw = decodeURIComponent(star[2]!.trim().replace(/^"|"$/g, ''));
+    } catch {
+      raw = undefined;
+    }
+  }
+  if (!raw) {
+    const plain = /filename\s*=\s*("([^"]*)"|[^;]+)/i.exec(header);
+    raw = plain ? (plain[2] ?? plain[1])!.trim() : undefined;
+  }
+  return raw ? safeFilename(raw) : null;
+}
+
+export function safeFilename(name: string, fallback = 'documento'): string {
+  const base = name.split(/[\\/]/).pop() ?? '';
+  const cleaned = [...base]
+    .filter((c) => c.charCodeAt(0) >= 0x20 && c.charCodeAt(0) !== 0x7f)
+    .join('')
+    .replace(/[<>:"|?*]/g, '_')
+    .replace(/^[.\s]+|[.\s]+$/g, '')
+    .trim();
+  const limited = [...cleaned].slice(0, 180).join('');
+  return limited || fallback;
 }

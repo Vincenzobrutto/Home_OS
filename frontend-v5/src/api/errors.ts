@@ -36,12 +36,15 @@ export class ApiError extends Error {
 export const SERVICE_MESSAGE =
   'Il servizio Dimora non è raggiungibile in questo momento. Riprova tra poco.';
 
-export function serviceError(status = 0, requestId?: string) {
+export const STORAGE_MESSAGE =
+  'L’archivio dei documenti non è disponibile in questo momento. Nessun file è stato modificato: riprova tra poco.';
+
+export function serviceError(status = 0, requestId?: string, code = 'service_unavailable') {
   return new ApiError({
     kind: 'service',
     status,
-    code: 'service_unavailable',
-    message: SERVICE_MESSAGE,
+    code,
+    message: code === 'storage_unavailable' ? STORAGE_MESSAGE : SERVICE_MESSAGE,
     requestId,
   });
 }
@@ -67,7 +70,8 @@ export function isUnauthorized(value: unknown) {
 
 // Messaggio per l'utente: il server fornisce testi italiani; fallback per stato.
 export function userMessage(error: unknown): string {
-  if (!isApiError(error) || error.kind === 'service') return SERVICE_MESSAGE;
+  if (!isApiError(error)) return SERVICE_MESSAGE;
+  if (error.kind === 'service') return error.code === 'storage_unavailable' ? STORAGE_MESSAGE : SERVICE_MESSAGE;
   if (error.message) return error.message;
   switch (error.status) {
     case 401:

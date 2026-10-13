@@ -75,7 +75,7 @@ describe('[mock] creazione casa e idempotenza', () => {
   it('422 del server mostrato sul campo', async () => {
     const app = await startWithNoHomes();
     const original = app.backend.handle.bind(app.backend);
-    app.backend.handle = (req) =>
+    app.backend.handle = async (req) =>
       req.method === 'POST' && req.path === '/homes'
         ? { status: 422, body: { error: { code: 'validation_failed', message: 'Controlla i campi.', fieldErrors: { address: 'Indirizzo non accettato.' } } } }
         : original(req);

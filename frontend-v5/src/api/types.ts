@@ -33,3 +33,32 @@ export type ApiErrorBody = {
 export type LoginInput = { email: string; password: string };
 export type RegisterInput = { name: string; email: string; password: string };
 export type CreateHomeInput = { name: string; address: string };
+
+// documents-v1 (docs/v5/documents-api-contract.md)
+export type DocumentVisibility = 'private' | 'home';
+export type DocumentMimeType = 'application/pdf' | 'image/jpeg' | 'image/png';
+export type DocumentPermission = 'read' | 'export';
+
+export type DocumentSummary = {
+  id: string;
+  homeId: string;
+  name: string;
+  originalFilename: string;
+  mimeType: DocumentMimeType;
+  byteSize: number;
+  createdAt: string;
+  version: 1;
+  source: 'manual_upload';
+  status: 'stored';
+  visibility: DocumentVisibility;
+  permissions: DocumentPermission[];
+};
+
+export type DocumentDetail = DocumentSummary & { sha256: string };
+
+export type DocumentsPage = { items: DocumentSummary[]; nextCursor: string | null };
+
+export type UploadDocumentInput = { file: File; name: string; visibility: DocumentVisibility };
+
+/** Byte ricevuti da un endpoint binario (file originale o ZIP). */
+export type BinaryPayload = { blob: Blob; filename: string | null; contentType: string };
