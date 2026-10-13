@@ -1,127 +1,157 @@
-# HANDOFF — V5-DEV-005 Documenti M2 (frontend)
+# HANDOFF — M3 Caldaia, proposte e conferme (frontend)
 
-Autore: Claude Code. Data: 13/10/2026. Destinatario: Codex (review, integrazione, test end-to-end).
-Stato: **frontend Documenti pronto per l'integrazione, verificato solo con backend simulato. M2 non è completata**: gli endpoint documents-v1 reali non erano disponibili e nessuna prova reale è stata eseguita.
+Autore: Claude Code. Data: 13/10/2026. Destinatario: Codex (review, integrazione, collaudo reale).
+Stato: **frontend M3 pronto per l'integrazione, verificato solo con backend simulato. M3 non è completata**: gli endpoint review-v1 non erano disponibili e nessuna prova su job/API/DB reali è stata eseguita.
 
 ## Checkout e commit
 
-- Percorso effettivo: `C:\Users\07704017\Documents\Codex\Dimora-V5-Claude` (nessun worktree aggiuntivo).
-- Branch: `claude/dimora-v5-identity`. Base verificata: `8dfc9673baa9501e7a2357e39286942000931ddb`, albero pulito salvo `docs/v5/backend-status.md` non tracciato (nota di Codex, non toccata né inclusa).
-- Commit, in ordine, tutti locali e non pushati:
+- Percorso: `C:\Users\07704017\Documents\Codex\Dimora-V5-Claude`, branch `claude/dimora-v5-identity`.
+- Base verificata: `514a39d5f2356d2eb4d99e4e7393b34176fdc8af`, albero pulito salvo `docs/v5/backend-status.md` non tracciato (non toccato, non incluso).
+- Commit locali, non pushati, in ordine:
 
 | Commit | Contenuto | Azione per Codex |
 |---|---|---|
-| `577d56c` chore(v5): sync Codex M1 review and M2 contract | Patch `Dimora-V5-sync-Claude-M1-M2.patch` applicata così com'è (`git apply --check` pulito), solo i 12 file della patch | **Non riapplicare**: riproduce correzioni già tue |
-| `8bf099e` feat(frontend-v5): client documents-v1 con multipart e risposte binarie | Tipi, client, errori, chiavi cache, regole file, backend simulato, test client | Integrare |
-| `d034c3a` feat(frontend-v5): sezione Documenti M2 | Pagine, rotte, navigazione, hook, test UI | Integrare |
-| `a9e7685` chore(frontend-v5): backend simulato su 3101 | `mock-api` mai su 3001; `DIMORA_API_TARGET` solo per l'harness | Integrare |
-| `8e7ad78` fix(frontend-v5): Documenti su schermi stretti | CSS emerso nella verifica a 320/390 px | Integrare |
-| `bd49ea5` test(frontend-v5): integrazione reale documents-v1 | Suite reale (saltata di default), PDF sintetico valido | Integrare |
-| commit successivo docs(frontend-v5) | Questo HANDOFF, README, screenshot | Integrare. Lo SHA non può stare nel file: `git log -1 -- frontend-v5/HANDOFF.md` |
+| `29bb4c7` chore(v5): sync M2 review and M3 contract | Patch `Dimora-V5-sync-Claude-M2-M3.patch` applicata così com'è (`git apply --check` pulito), solo i 14 file della patch | **Non riapplicare** |
+| `5ed1334` chore(frontend-v5): PDF di esempio M3 con byte verificati | `public/m3-examples` (3 PDF + manifest, `.gitattributes` binary), test Node di integrità, progetto vitest `fixtures` | Integrare |
+| `18cb131` feat(frontend-v5): client review-v1 e cache M3 | Tipi, client, chiavi cache, etichette/regole, hook (polling, conferme) | Integrare |
+| `6a08d64` test(frontend-v5): backend simulato review-v1 | `src/test/fakeReview.ts` collegato al backend simulato; `npm test` include `fixtures` | Integrare |
+| `f1c2265` feat(frontend-v5): Attività, Da rivedere e scheda caldaia M3 | Pagine, rotte, navigazione, Casa, punti di avvio da Documenti, 21 test UI | Integrare |
+| `17ded53` fix(frontend-v5): fonti distinguibili e rifiniture M3 | Correzioni emerse nel browser; seed mock con i PDF reali | Integrare |
+| `b640b30` test(frontend-v5): integrazione reale review-v1 pronta | Suite reale, saltata di default | Integrare |
+| commit successivo docs(frontend-v5) | Questo HANDOFF, README, screenshot | Integrare. SHA: `git log -1 -- frontend-v5/HANDOFF.md` |
 
-Dopo il sync ho scritto solo in `frontend-v5/**`. Nessun push, nessun merge, nessuna modifica a backend, contratti, schema, legacy o main.
+Nota: il test di integrità in `5ed1334` importa `fakeReview`, che arriva in `6a08d64`. I test passano da `6a08d64` in poi; integrare la serie intera.
+
+Dopo il sync ho scritto solo in `frontend-v5/**`.
+
+## ⚠ Problema nella patch: PDF di fixture corrotti
+
+I tre PDF arrivati con la patch in `docs/v5/fixtures/m3/` **non hanno gli hash del manifest**. Sono gli originali con le fine riga LF convertite in CRLF: 92 per file, +92 byte. L'ho verificato ricostruendo la conversione su copie nello scratchpad, con hash identico.
+
+| File | Hash nel manifest | Hash in `docs/v5/fixtures/m3` (patch) |
+|---|---|---|
+| libretto-caldaia-demo.pdf | `824b6de3…` | `eb5f7d9e…` |
+| scheda-tecnica-caldaia-demo.pdf | `da6b7340…` | `8ec5c3fd…` |
+| rapporto-caldaia-demo-conflitto.pdf | `e313f78f…` | `ea82ee87…` |
+
+Non li ho modificati: sono file di Codex in `docs/v5`. Per `public/m3-examples` ho copiato i PDF da `outputs/Dimora-V5-M3-esempi/`, i cui hash coincidono col manifest; `tests/fixtures` lo verifica a ogni `npm test`.
+
+**Azione richiesta a Codex:**
+- controllare le copie nel tuo repository e rigenerare la patch in modalità binaria (`.gitattributes *.pdf binary` era nella patch, ma la conversione è avvenuta prima);
+- verificare che il provider reale legga i PDF con i byte del manifest. Un PDF corrotto caricato in M2 produrrebbe `provider_fixture_unsupported`.
 
 ## Cosa è stato fatto
 
-- **Navigazione**: Documenti attiva (nav laterale e inferiore, link dalla pagina Casa). Attività e Spese restano «Non ancora disponibile». Testi della pagina Casa aggiornati di conseguenza.
-- **Rotte**: `/home/:homeId/documenti` e `/home/:homeId/documenti/:documentId`, dentro il contesto casa già verificato con `GET /homes/:homeId`.
-- **Archivio**: elenco paginato (`limit=20`, cursore opaco, «Mostra altri documenti»). Ogni voce mostra titolo, nome file, formato, dimensione, data, «Originale caricato», visibilità («Solo io» / «Persone della casa») e fonte «Caricamento manuale». Stati di caricamento, vuoto e errore con «Riprova».
-  - Un 404 (backend senza endpoint documentali) diventa «L’archivio documenti non è ancora attivo su questo servizio», un 503 `storage_unavailable` un messaggio dedicato. Mai un archivio vuoto o finto.
-- **Caricamento** (solo con permesso Home `edit`):
-  - Pannello con file (PDF/JPEG/PNG, un file, 20 MiB), titolo proposto dal nome file con l'estensione (1–160 code point), visibilità «Solo io» predefinita e «Persone della casa» come scelta esplicita col testo del contratto. Mostra la casa di destinazione.
-  - Controlli locali: file mancante, vuoto, troppo grande, formato non ammesso. Il server resta l'autorità sui byte.
-  - Invio multipart con CSRF, `X-Account-Context` e `Idempotency-Key` (UUID); il boundary lo imposta il browser. Doppio invio impedito.
-  - **Esito ambiguo** (rete/servizio): campi bloccati, «Riprova invio» con stessa chiave e stesso file. «Modifica e invia come nuovo» avvia una nuova operazione esplicita.
-  - 409 `idempotency_conflict`: banner esplicito, nuova richiesta con nuova chiave. 413/415/422: errori sul campo; il prossimo invio usa una nuova chiave.
-  - Successo solo dopo il 201: aggiorna dettaglio in cache, invalida l'elenco, mostra un banner con il link al documento.
-  - File e bozza solo in memoria: azzerati alla chiusura, al cambio casa/account e al logout. Nessuna condivisione automatica.
-- **Dettaglio**: titolo, tag, nome file, formato, dimensione, data, versione 1, fonte, visibilità con spiegazione, stato «Originale caricato», SHA-256. Nota esplicita: caricare o scaricare non conferma né certifica nulla.
-  - Anteprima dai soli byte autorizzati (fetch autenticato con contesto → Blob → URL locale): `<img>` per JPEG/PNG, `<object>` per PDF con testo di ripiego.
-  - «Scarica originale» sempre visibile; riusa i byte dell'anteprima se già presenti. Nome sicuro da `Content-Disposition`, con ripiego su `originalFilename` ripulito.
-  - 403 → «Documento non disponibile» senza metadati; 422 → «Indirizzo non valido».
-- **Export ZIP** (solo con permesso Home `export`; la casella è disattivata se `doc.permissions` non include `export`):
-  - Selezione con contatore e peso. Limiti 1–50 documenti e 100 MiB dichiarati come «limite tecnico di questa versione»; pulsante disattivato con motivo se superati.
-  - Export solo al clic, mai al montaggio. Errori JSON gestiti prima del Blob. 403 → «Nessun file è stato esportato», nessun salvataggio parziale.
-- **Viewer**: consulta e scarica, nessun caricamento né ZIP. Le azioni seguono `Home.permissions` e `DocumentSummary.permissions`, mai il solo ruolo.
-- **Client**: JSON, multipart e binari passano dallo stesso metodo `send`: header, contesto, errori e 401 sono comuni. Nessun fetch parallelo.
-  - I byte dei file sono query TanStack (`gcTime 0`): un 401 annulla le richieste e pulisce anche loro.
-  - Chiavi: `[account, accountId, home, homeId, documents, list]`, `[…, documents, documentId, detail]`, `[…, documents, documentId, file]`.
-- **URL Blob**: creati e revocati dentro un effetto, quindi revocati allo smontaggio, al cambio documento, casa o account e al logout. Verificato nei test e nel browser.
-- **Conservato da M1/sync**: `X-Account-Context` catturato, sessione riletta sempre al focus, controllo account prima di scrivere in cache dopo una mutazione, logout, idempotenza case.
+- **Navigazione e rotte**: Attività attiva; Spese resta «Non ancora disponibile»; Agenzie/Amministratori invariati. Rotte nuove: `/home/:homeId/attivita`, `/home/:homeId/review`, `/home/:homeId/impianti/:assetId`. Parametri di Attività: `?analizza=<docId|1>`, `&scheda=<assetId>` (rianalisi con destinazione già scelta), `?job=<id>` (avanzamento).
+- **Casa**: riquadro «Impianti e verifiche» con il conteggio reale (`openCount` di GET review), le schede personali e il loro stato. Errore esplicito se gli endpoint mancano; nessun valore preinserito.
+- **Avvio esplicito**:
+  - da Documenti («Analizza documenti (test)») e dal dettaglio di un PDF («Analizza questo documento (test)»);
+  - capabilities lette dal server (enabled, maxDocuments, formats); scelta di 1–2 PDF leggibili; destinazione visibile («nuova scheda» o «scheda esistente», «Scheda personale in questa casa»); etichetta «Analisi di test — nessuna AI reale» prima dell'avvio e accanto ai risultati;
+  - richiede `edit`, separato da `export`;
+  - mai avvio al caricamento, al montaggio o all'apertura del PDF (verificato nei test).
+- **Job**:
+  - POST 202, poi polling GET del job ogni 1 s per al massimo 30 s a visita. Si ferma allo smontaggio, quindi anche al cambio pagina o casa e al logout.
+  - Allo scadere compare «Analisi in corso: puoi tornare più tardi» con «Aggiorna» manuale; nessun successo simulato.
+  - Attività elenca i job persistenti. «Nuovo tentativo» sui falliti usa una nuova chiave e crea un nuovo job; il vecchio errore resta visibile, con il suo codice.
+  - Su `provider_fixture_unsupported` resta l'originale e l'inserimento manuale.
+- **Da rivedere**: solo verifiche aperte, raggruppate per scheda, con `openCount`. «Conferma insieme» vale solo per marca e modello con un unico valore proposto e senza valore già confermato: un invio atomico per scheda e versione, potenza esclusa con spiegazione. A zero verifiche: stato vuoto, nessuna scheda disattivata.
+- **Scheda caldaia**:
+  - stato dei dati («Dati provvisori / parzialmente confermati / confermati», con la precisazione che non riguarda la regolarità tecnica);
+  - dati confermati con origine, nota e fonti per ogni misura; verifiche aperte; inserimento manuale; rianalisi con destinazione; storia.
+  - Fonti: estratto, pagina, versione, impronta abbreviata del documento e «Apri l’originale», che porta al dettaglio M2 autenticato.
+- **Decisioni** (componente `ProposalCard`):
+  - **Marca e modello**: si sceglie un candidato oppure si corregge (correzione con nota obbligatoria).
+  - **Potenza**: decisione sempre puntuale e con nota.
+    - **A+B** (grandezze distinte, `quantity_interpretation`): «Conserva le due grandezze» → `keep_distinct`, con le denominazioni esatte «24 kW — Potenza utile al riscaldamento» e «28 kW — Potenza nominale riportata».
+    - **A+C** (`value_conflict`): l'opzione «Conserva le due grandezze» non c'è; si sceglie un valore (`choose_one`) o si corregge con 1–2 misure con denominazione.
+  - **«Rimanda»**: nessuna richiesta, la verifica resta aperta.
+  - **«Non applicare»**: nota obbligatoria → `discard`.
+  - **Valore già confermato e diverso**: prima/dopo, casella esplicita «Sostituisci il valore confermato» e nota, poi `replaceConfirmed: true`.
+  - **Esiti di errore**:
+    - 409 (`asset_version_conflict`, `proposal_already_resolved`, `confirmed_value_exists`, `idempotency_conflict`): messaggio, rilettura, scelta azzerata, nuova chiave; mai reinvio automatico.
+    - Errore di rete o servizio: campi bloccati e «Riprova invio» con la stessa chiave.
+  - **Dopo il successo**: dalla cache delle verifiche spariscono solo i `resolvedProposalIds`, poi si rileggono verifiche, scheda, elenco e storia. Nessuna scrittura in cache se nel frattempo è cambiato l'account.
+- **Manuale**: «Crea una scheda caldaia a mano» (POST assets) e, sulla scheda, due moduli: marca/modello in un'unica richiesta, potenza da sola.
+  - Nota obbligatoria; sostituzione esplicita se il campo è già pieno.
+  - `proposalIdsToClose` vuoto di default: si chiudono solo le verifiche spuntate esplicitamente.
+  - Il client non invia mai `sources` o `origin`.
+- **Controlli M1/M2 riusati**: tutte le richieste via `send` comune (`X-Account-Context` catturato, CSRF, `no-store`); cache `[account, accountId, home, homeId, m3, …]`; pulizia al 401 e al logout; bozze solo in memoria, azzerate al cambio di account o casa; le risposte tardive non scrivono dati dopo un cambio di contesto.
 
-## API utilizzate (documents-v1, nessun campo o endpoint inventato)
+## API utilizzate (review-v1, nessun campo o endpoint inventato)
 
-`GET /homes/:homeId/documents?limit&cursor` · `POST /homes/:homeId/documents` (multipart `file`, `name`, `visibility` + `Idempotency-Key`) · `GET /homes/:homeId/documents/:documentId` · `GET /homes/:homeId/documents/:documentId/file` · `POST /homes/:homeId/documents/export` (`{documentIds}`). Codici gestiti: `file_too_large`, `unsupported_file_type`, `validation_error`, `export_too_large`, `storage_unavailable`, `idempotency_conflict`, `csrf_invalid`, `account_context_changed`.
+GET `analysis-capabilities` · POST/GET `analysis-jobs` · GET `analysis-jobs/:jobId` · POST `analysis-jobs/:jobId/retry` · GET/POST `assets` · GET `assets/:assetId` · GET `review` · POST `assets/:assetId/confirmations` · POST `assets/:assetId/manual-confirmations` · GET `assets/:assetId/history` (tutti sotto `/homes/:homeId`). M2 per i documenti e l'apertura delle fonti.
 
-## Prove realmente eseguite (in `frontend-v5/`, Node 24.20.0)
+## Prove realmente eseguite (Node 24.20.0, in `frontend-v5/`)
 
 | Comando | Esito |
 |---|---|
 | `npx tsc -b` | OK |
 | `npx eslint .` | OK |
-| `npx vitest run` | **80 superati** (8 file), 6 saltati (integrazione). Ripetuto 3 volte, stabile |
-| `npx vite build` | OK (JS 408 kB, gzip 128 kB); backend simulato assente dal bundle (ricerca nel `dist`) |
-| `npm audit` | 0 vulnerabilità |
-| Suite di integrazione contro **backend simulato** su 3101 | 6/6: verifica solo il codice dei test, **non è integrazione reale** |
+| `npx vitest run` | **105 superati** (10 file), 6 saltati (integrazione). Ripetuto 3 volte, stabile |
+| `npx vite build` | OK (JS 463 kB, gzip 142 kB); backend simulato assente dal bundle; `dist/m3-examples` presente |
+| Suite di integrazione contro **backend simulato** su 3101 (`V5_DOCUMENTS_API=1 V5_REVIEW_API=1`) | 9/9: verifica solo il codice dei test, **non è integrazione reale** |
 
-### Test con backend simulato (mock)
+Composizione dei 105: 81 regressioni M1/M2 (un'asserzione aggiornata: ora è Spese l'unica sezione bloccata), 21 test UI M3 con backend simulato, 3 test Node di integrità dei PDF.
 
-- **Regressione M1**: 47 test (accesso, routing, isolamento cache, creazione casa, client identity, contesto account). Ho aggiornato un'asserzione: Documenti ora è attiva, e il test verifica Attività/Spese non disponibili.
-- **`src/api/documentsClient.test.ts`** (11): multipart senza Content-Type del client e con tutti gli header; lista con `limit`/`cursor`; Blob con byte identici e nome da Content-Disposition; errore JSON prima del Blob; JSON 200 su endpoint binario = errore; ZIP con firma `PK`; export con un documento vietato → 403; `storage_unavailable`; idempotenza (stesso id, poi 409); nomi file con traversal; limiti export.
-- **`src/routes/documents.test.tsx`** (22):
-  - nav attiva; archivio vuoto; campi di elenco; paginazione;
-  - backend senza endpoint e storage giù senza fallback; privato altrui assente anche per l'owner;
-  - default «Solo io» e casa di destinazione; scelta esplicita «Persone della casa»; file mancante/vuoto/troppo grande/formato; 415 dal server; doppio clic = un invio; esito ambiguo con stessa chiave e stesso file; conflitto 409 con nuova chiave; member senza ZIP; viewer senza caricamento né ZIP;
-  - dettaglio con metadati e SHA-256 e senza «Validato/Confermato/Certificato»; anteprima PDF e immagine; download riusando i byte; revoca URL Blob; 403/422 senza metadati; viewer scarica; ZIP esplicito con id corretti; 403 export senza file;
-  - 401 → login e cache documenti rimossa; logout dal dettaglio con URL revocati e bozza non trasferita; cambio casa senza bozza.
+### Test M3 (`src/routes/review.test.tsx`, backend simulato)
 
-### Verifica nel browser (backend simulato, non reale)
+- **Endpoint e avvio**: backend senza M3 senza dati inventati; nessuna analisi al montaggio di Documenti, dettaglio o Attività; avvio esplicito con etichetta, destinazione, body/header, polling fino all'esito e scheda provvisoria; member può avviare (senza export), viewer no.
+- **Job**: documento sconosciuto fallito senza schede, retry con nuova chiave e vecchio errore conservato, manuale disponibile; limite del polling con «puoi tornare più tardi», letture ferme e «Aggiorna»; polling fermo lasciando la pagina e rientro da Attività.
+- **Decisioni**: conferma della sola marca (modello e potenza restano, conteggio riletto, storia); «Rimanda» senza richiesta; «Non applicare» con nota obbligatoria; conferma insieme senza potenza; A+B `keep_distinct` con fonti per ogni misura; A+C senza «Conserva le due grandezze», con `choose_one` e fonti conservate nella storia; sostituzione esplicita con prima/dopo; 409 di versione senza reinvio; esito ambiguo con stessa chiave e una sola conferma.
+- **Manuale, conteggi, riservatezza, contesto**: manuale senza fonti né chiusure implicite, potenza da sola con normalizzazione `24,0` → `24.0`; conteggi in Casa, stato vuoto e «Dati confermati»; schede personali (owner non vede né apre quella del member; 422 su id non valido); 401 → login e cache M3 rimossa; bozza di decisione non trasferita a un'altra casa; fonte aperta via M2; PDF di esempio etichettati come sintetici.
 
-Backend simulato `npm run mock-api -- --seed` su **3101**, Vite su **5175** con `DIMORA_API_TARGET`. Nel browser integrato ho provato:
-- a 320 e 390 px, senza scroll orizzontale: elenco, pannello di caricamento, caricamento multipart reale dal browser via proxy, banner di esito, dettaglio con anteprima immagine;
-- a desktop: anteprima PDF e selezione con export ZIP (file `documenti.zip`).
+Per velocità, nei test il polling usa 20 ms / 400 ms al posto di 1 s / 30 s; la logica è la stessa.
 
-Il focus va sul titolo del pannello all'apertura e sull'h1 dopo ogni navigazione. Nessuna dichiarazione di conformità WCAG.
+### Verifica nel browser (backend simulato su 3101, Vite su 5175)
 
-**Nota sui processi trovati attivi**: durante la verifica erano in ascolto `127.0.0.1:3001` (PID 8268, `node --env-file=.env dist/main.js`, presumibilmente backend V5 di Codex) e `127.0.0.1:5174` (PID 25924, Vite non avviato da me). Non li ho toccati né fermati. Il mio Vite su 5174 si è fermato per `strictPort`. Prima di accorgermene ho fatto **una sola `GET /api/v5/session` anonima** attraverso quel Vite verso il backend reale: nessun login, nessuna scrittura. Non ho eseguito prove sul backend reale.
+`mock-api --seed` carica i **byte reali** dei tre PDF di esempio, riconosciuti per hash dal provider simulato. Ho provato nel browser integrato:
+- Attività vuota, senza dati preinseriti;
+- avvio A+B con etichetta e destinazione, job completato con 3 verifiche;
+- scheda con la scelta A+B a 390 px, `keep_distinct` con nota e dati confermati con fonti a 320 px senza scroll orizzontale;
+- Da rivedere a desktop, con conferma insieme di marca e modello **solo da tastiera** (Spazio, Tab, Invio), fino allo stato vuoto.
 
-## Screenshot (`docs/screenshots/`)
+Ho corretto due cose emerse qui: fonti indistinguibili (ora c'è l'impronta) e un bordo grafico.
 
-01–05 da M1 (01 modalità reale con backend spento, gli altri mock). Nuovi, **tutti con backend simulato**: `06-mock-documenti-elenco-390`, `07-mock-documenti-caricamento-320`, `08-mock-documenti-caricato-320`, `09-mock-documento-immagine-320`, `10-mock-documento-pdf-desktop` (la cattura non include il contenuto del visore PDF del browser), `11-mock-documenti-zip-desktop`.
+Durante la sessione erano attivi `127.0.0.1:3001` (PID 3952) e `127.0.0.1:5174` (PID 5692), presumibilmente di Codex. **Non li ho toccati e non ho inviato loro richieste**: le mie prove sono andate solo su 3101/5175, processi fermati a fine prova.
+
+## Screenshot (`docs/screenshots/`, tutti con backend simulato)
+
+- `12-mock-m3-potenza-AB-390` — decisione A+B con le due denominazioni
+- `13-mock-m3-scheda-confermati-320` — potenze confermate con fonti per misura
+- `14-mock-m3-da-rivedere-desktop` — gruppo per scheda e conferma insieme
+- `15-mock-m3-da-rivedere-vuoto-390` — stato vuoto
+
+Nessuna dichiarazione di conformità WCAG.
 
 ## Richieste e lacune per Codex (nessun campo/endpoint inventato)
 
-1. **Fonte «Caricato da te»**: il contratto la ammette «solo se il backend lo identifica», ma `DocumentSummary` non ha un campo per farlo. La UI mostra sempre «Caricamento manuale». Se serve, aggiungere un campo (es. booleano «caricato dall'account richiedente»).
-2. **Permesso di caricamento**: dedotto da `Home.permissions` che include `edit`, perché `DocumentSummary.permissions` contiene solo `read`/`export`. Confermare.
-3. **404 su rotte documentali assenti**: con un backend solo M1 la UI si aspetta un 404 con busta d'errore JSON. Se arrivasse non-JSON mostrerebbe l'errore di servizio generico (corretto ma meno preciso).
-4. **Nome dello ZIP**: la UI usa il nome da `Content-Disposition`, con ripiego su «Documenti <nome casa>.zip». Indicare se il server ne fornisce sempre uno.
-5. **Unità mostrate**: «20 MB» e «100 MB» sono MiB (1024²); i testi lo esplicitano nei messaggi di errore. Confermare la dicitura per il committente.
-6. **Memoria browser**: anteprima, download e ZIP (fino a 100 MiB) vivono come Blob in memoria, come chiede il contratto. Su dispositivi modesti uno ZIP grande può pesare; va valutato prima del pilota.
-7. **PDF su mobile**: molti browser mobili non mostrano PDF in `<object>` e non sempre attivano il testo di ripiego. «Scarica originale» resta sempre visibile sotto l'anteprima.
-8. **`account_context_changed` durante un upload**: porta al login come ogni 401. File e bozza vanno persi, per scelta: niente bozze private persistenti.
-9. **Integrazione reale**: quando gli endpoint esistono, eseguire `V5_API_URL=http://127.0.0.1:3001/api/v5 V5_DOCUMENTS_API=1 npm run test:integration`. Copre upload, idempotenza, elenco, dettaglio, byte e SHA-256 identici, ZIP, 415/422/413 e isolamento tra account. Restano da provare con dati reali: visibilità private/home tra membri e revoca, perché nessuna API consente di invitare membri in identity-v1.1.
+1. **PDF di fixture corrotti nella patch**: vedi sezione dedicata sopra.
+2. **Nome del documento nelle fonti**: `SourceRef` ha solo `documentId` e hash. Due fonti con lo stesso estratto (A e B) si distinguono solo per l'impronta abbreviata. Valutare un campo descrittivo facoltativo (titolo M2) o confermare che basta il link.
+3. **`HistoryEvent.changes[].action`** è una stringa libera: la UI la mostra così com'è. Servono i valori ammessi (es. `accept`, `correct`, `resolve_power:keep_distinct`, `discard`, `manual`, `proposed`) per tradurli in italiano.
+4. **Nome della scheda creata da un job senza destinazione**: il contratto non dice come viene nominata (il mock usa «Caldaia»). Non esiste un endpoint per rinominarla.
+5. **Versione nella conferma insieme**: la UI usa `assetVersion` degli elementi di Da rivedere (il massimo nel gruppo). Confermare che gli elementi della stessa scheda riportano sempre la stessa versione.
+6. **Stato delle verifiche chiuse con `proposalIdsToClose`**: non è specificato (corrected?). La UI si limita a farle sparire.
+7. **Nota del modulo manuale marca/modello**: una sola nota applicata a entrambi i campi della richiesta. Confermare che va bene, oppure servono note per campo.
+8. **Navigazione**: su `/review` e `/impianti/:id` nessuna voce della barra risulta attiva (Attività non è evidenziata). Scelta di UX da confermare col committente.
+9. **Integrazione reale**: con gli endpoint attivi, eseguire `V5_API_URL=http://127.0.0.1:3001/api/v5 V5_REVIEW_API=1 npm run test:integration` (A+B, sconosciuto+retry, A+C), poi il collaudo UI reale a 320/390 px, desktop e tastiera.
+   - Il test sul PDF sconosciuto usa un PDF troncato. Se M2 lo rifiuta in upload, il caso viene saltato: va sostituito con un PDF valido non presente nel manifest.
 
 ## Note per i documenti condivisi (le aggiorna Codex)
 
-- **changelog**: frontend Documenti M2 (archivio paginato, caricamento con visibilità e idempotenza, dettaglio con anteprima/download autenticati, ZIP guidato dai permessi); solo prove mock, integrazione reale pendente.
+- **changelog**: frontend M3 Caldaia (avvio esplicito di analisi di test, job con polling limitato e retry, Da rivedere con sole aperte, decisioni per campo incluse A+B/A+C, sostituzione esplicita, manuale, storia, conteggi in Casa); solo prove mock; integrazione reale pendente.
 - **decisions**:
-  - un unico percorso client per JSON/multipart/binari;
-  - byte dei file come query con `gcTime 0`, così il 401 li pulisce;
-  - URL Blob gestiti da effetto;
-  - chiave idempotente per operazione, campi bloccati dopo un esito ambiguo, nuova chiave dopo un rifiuto definitivo;
-  - icona decorativa nascosta sotto 480 px;
-  - backend simulato su 3101 con `DIMORA_API_TARGET` solo per l'harness.
-- **backlog**: richieste 1–9; e2e browser sul backend reale; valutazione memoria ZIP e PDF su mobile.
-- **roadmap**: V5-DEV-005 frontend pronto per integrazione; M2 si chiude solo dopo API, PostgreSQL e storage reali e il collaudo UI reale.
-
-## Limiti
-
-- Nessuna prova sul backend reale: M2 **non** è completata.
-- Le prove nel browser usano il backend simulato. Il visore PDF del browser integrato non compare negli screenshot.
-- Nessuna funzione AI, «Da rivedere», conferma, sostituzione, cestino o condivisione: fuori ambito M2, nessuna appare operativa.
+  - PDF di esempio presi dalla cartella di Codex perché quelli della patch erano corrotti, con test di integrità;
+  - polling per visita con timer di stato e stop allo smontaggio;
+  - conferma insieme limitata a marca/modello con un solo candidato e senza valore confermato;
+  - «Rimanda» solo in UI;
+  - dopo una conferma: rimozione mirata dei `resolvedProposalIds` e rilettura;
+  - impronta abbreviata nelle fonti;
+  - `?analizza`/`&scheda` come punti d'ingresso da Documenti e dalla scheda.
+- **backlog**: richieste 1–9; e2e browser sul backend reale; evidenziare la sezione attiva anche su `/review` e `/impianti`.
+- **roadmap**: frontend M3 pronto per integrazione; M3 si chiude solo dopo API, PostgreSQL e job reali e la navigazione browser reale.
 
 ## Prossimi passi consigliati
 
-1. Codex: review e integrazione dei commit da `8bf099e` in poi (non `577d56c`), risposte alle richieste 1–9.
-2. Con gli endpoint documents-v1 attivi: suite di integrazione reale, poi collaudo UI reale a 320/390 px e desktop, incluse le interruzioni.
-3. Eventuali adeguamenti del client richiesti dalla review in nuovi commit `frontend-v5/**`.
+1. Codex: correggere o rigenerare i PDF di fixture (richiesta 1), review e integrazione dei commit da `5ed1334` in poi (non `29bb4c7`), risposte alle richieste 2–8.
+2. Endpoint review-v1 attivi: suite reale, poi collaudo UI reale.
+3. Eventuali adeguamenti del client dalla review, in nuovi commit `frontend-v5/**`.
