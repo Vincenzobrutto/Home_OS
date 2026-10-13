@@ -20,6 +20,8 @@ Verificati UTF8/NFC e collation ICU installata sul DB locale. Default locale C n
 Log: outputs/Dimora-V5-H2-backend-test.log e Dimora-V5-H2-backend-integrazione.log.
 
 ## Ancora aperto
-Attivazione nel processo API registrato 3001, nuova prova HTTP con V5_DOCUMENT_SEARCH_API=1; consegna/revisione/integrazione Claude, client/API e browser reali 320/390/desktop/tastiera. H2 non ancora chiusa, nessuna ricerca frontend reale dichiarata.
+Il 14 ottobre, dopo il cambio effettivo a Full access, il launcher -Restart ha identificato e riavviato soltanto l'API Dimora registrata (nuovo PID 8408), lasciando PostgreSQL attivo. La suite document-search.http.test.cjs con V5_DOCUMENT_SEARCH_API=1 ha verificato il servizio reale 3001: cinque test superati, zero fallimenti, nessuna analisi Anthropic. Autenticazione/context, capabilities, upload/ricerca/filtri, input 422 e query M3 rigorose, download/ZIP e revoca verificati sul processo aggiornato.
 
-Launcher esterno supporta -Search come build/riavvio, senza npm ci/generate/migrazione; flag H2 client quando la suite è presente. Il processo utente resta fuori dai permessi della chat: richiesto al committente di cambiare la modalità di accesso per permettere il riavvio diretto, come da sua preferenza. Non creati proxy/endpoint di gestione per aggirare la sandbox.
+Restano consegna/revisione/integrazione Claude, client/API e browser reali 320/390/desktop/tastiera. H2 non ancora chiusa, nessuna ricerca frontend reale dichiarata.
+
+Launcher esterno supporta -Search come build/riavvio, senza npm ci/generate/migrazione; flag H2 client quando la suite è presente. Il cambio effettivo dei permessi consente ora il riavvio diretto dalla chat. Non creati proxy/endpoint di gestione per aggirare la sandbox.
