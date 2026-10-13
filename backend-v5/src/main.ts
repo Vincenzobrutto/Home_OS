@@ -12,10 +12,10 @@ export class ApiErrorFilter implements ExceptionFilter {
     let status = error instanceof HttpException ? error.getStatus() : 503;
     if (status === 400) status = 422;
     const detail = error instanceof HttpException ? error.getResponse() : null;
-    const info = typeof detail === 'object' && detail ? detail as { message?: string | string[]; fieldErrors?: Record<string, string> } : null;
+    const info = typeof detail === 'object' && detail ? detail as { message?: string | string[]; code?: string; fieldErrors?: Record<string, string> } : null;
     const message = status === 503 ? 'Servizio temporaneamente non disponibile.' : typeof info?.message === 'string' ? info.message : 'Controlla i dati inseriti.';
     const codes: Record<number, string> = { 401: 'UNAUTHENTICATED', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT', 422: 'VALIDATION_ERROR', 429: 'RATE_LIMITED', 503: 'SERVICE_UNAVAILABLE' };
-    res.status(status).json({ error: { code: codes[status] || 'REQUEST_ERROR', message, ...(info?.fieldErrors ? { fieldErrors: info.fieldErrors } : {}), requestId: randomUUID() } });
+    res.status(status).json({ error: { code: info?.code || codes[status] || 'REQUEST_ERROR', message, ...(info?.fieldErrors ? { fieldErrors: info.fieldErrors } : {}), requestId: randomUUID() } });
   }
 }
 export async function bootstrap() {

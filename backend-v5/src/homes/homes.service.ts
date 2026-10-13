@@ -23,7 +23,7 @@ export class HomesService {
     const fingerprint = digest(JSON.stringify([dto.name, dto.address]));
     const prior = await this.db.homeRequest.findUnique({ where: { accountId_key: { accountId, key } } });
     if (prior) {
-      if (prior.digest !== fingerprint) throw new ConflictException('Questa chiave è già usata con altri dati.');
+      if (prior.digest !== fingerprint) throw new ConflictException({ code: 'idempotency_conflict', message: 'Questa chiave è già usata con altri dati.' });
       return this.get(accountId, prior.homeId);
     }
     try {
@@ -36,7 +36,7 @@ export class HomesService {
     } catch (e) {
       if ((e as { code?: string }).code !== 'P2002') throw e;
       const completed = await this.db.homeRequest.findUnique({ where: { accountId_key: { accountId, key } } });
-      if (!completed || completed.digest !== fingerprint) throw new ConflictException('Richiesta concorrente non compatibile.');
+      if (!completed || completed.digest !== fingerprint) throw new ConflictException({ code: 'idempotency_conflict', message: 'Richiesta concorrente non compatibile.' });
       return this.get(accountId, completed.homeId);
     }
   }

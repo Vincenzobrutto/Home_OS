@@ -17,6 +17,7 @@ type RequestOptions = {
   body?: unknown;
   signal?: AbortSignal;
   headers?: Record<string, string>;
+  accountId?: string;
 };
 
 /**
@@ -69,24 +70,26 @@ export class ApiClient {
     this.csrfToken = null;
   }
 
-  async listHomes(signal?: AbortSignal): Promise<Home[]> {
-    const data = await this.request<{ items: Home[] }>('/homes', { signal });
+  async listHomes(signal?: AbortSignal, accountId?: string): Promise<Home[]> {
+    const data = await this.request<{ items: Home[] }>('/homes', { signal, accountId });
     if (!data || !Array.isArray(data.items)) throw serviceError(200);
     return data.items;
   }
 
-  async getHome(homeId: string, signal?: AbortSignal): Promise<Home> {
+  async getHome(homeId: string, signal?: AbortSignal, accountId?: string): Promise<Home> {
     const data = await this.request<{ home: Home }>(`/homes/${encodeURIComponent(homeId)}`, {
       signal,
+      accountId,
     });
     if (!data || !data.home) throw serviceError(200);
     return data.home;
   }
 
-  async createHome(input: CreateHomeInput, idempotencyKey: string): Promise<Home> {
+  async createHome(input: CreateHomeInput, idempotencyKey: string, accountId?: string): Promise<Home> {
     const data = await this.mutate<{ home: Home }>('/homes', {
       body: input,
       headers: { 'Idempotency-Key': idempotencyKey },
+      accountId,
     });
     if (!data || !data.home) throw serviceError(201);
     return data.home;
@@ -106,6 +109,7 @@ export class ApiClient {
 
   private async request<T>(path: string, opts: RequestOptions): Promise<T> {
     const headers: Record<string, string> = { Accept: 'application/json', ...opts.headers };
+    if (opts.accountId) headers['X-Account-Context'] = opts.accountId;
     let body: string | undefined;
     if (opts.body !== undefined) {
       headers['Content-Type'] = 'application/json';

@@ -23,7 +23,7 @@ export function validMembership(member: { validFrom: Date; validUntil: Date | nu
 export function assertCsrf(req: Pick<Request, 'headers'>, csrf: string, expectedOrigin: string) {
   const token = req.headers['x-csrf-token'];
   if (req.headers.origin !== expectedOrigin || typeof token !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(token) || token.length !== csrf.length || !timingSafeEqual(Buffer.from(token), Buffer.from(csrf))) {
-    throw new ForbiddenException('Richiesta non autorizzata. Ricarica la sessione.');
+    throw new ForbiddenException({ code: 'csrf_invalid', message: 'Richiesta non autorizzata. Ricarica la sessione.' });
   }
 }
 @Injectable()
@@ -46,6 +46,10 @@ export class SessionsService {
   async require(req: Request, mutation = false) {
     const session = await this.current(req);
     if (!session?.accountId) throw new UnauthorizedException('Accedi per continuare.');
+    const context = req.headers['x-account-context'];
+    if (context !== undefined && context !== session.accountId) {
+      throw new UnauthorizedException({ code: 'account_context_changed', message: 'L’account è cambiato in un’altra scheda. Ricarica la sessione.' });
+    }
     if (mutation) assertCsrf(req, session.csrfToken, process.env.FRONTEND_ORIGIN || 'http://127.0.0.1:5174');
     return session as Session & { accountId: string };
   }

@@ -117,6 +117,10 @@ export class FakeBackend {
 
     const account = session.accountId ? this.accounts.get(session.accountId) : undefined;
     if (!account) return err(401, 'unauthenticated', 'Sessione assente o scaduta.');
+    const context = req.headers['x-account-context'];
+    if (context !== undefined && context !== account.id) {
+      return err(401, 'account_context_changed', 'Account cambiato in un’altra scheda.');
+    }
 
     if (method === 'GET' && path === '/homes') {
       const items = this.memberships

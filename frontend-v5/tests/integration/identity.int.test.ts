@@ -70,4 +70,17 @@ describe.skipIf(!BASE)('[integrazione reale] identity-v1', () => {
     await a.getSession();
     await expect(a.listHomes()).rejects.toMatchObject({ status: 401 });
   });
+  it('contesto della scheda A non riceve dati dopo il cambio del cookie all’account B', async () => {
+    const api = clientWithJar();
+    const tag = unique();
+    await api.getSession();
+    const a = await api.register({ name: 'Scheda A', email: `scheda-a-${tag}@example.test`, password: 'password-prova-scheda-A' });
+    await api.getSession();
+    await api.createHome({ name: 'Casa scheda A', address: 'Via A' }, crypto.randomUUID(), a.account.id);
+    const b = await api.register({ name: 'Scheda B', email: `scheda-b-${tag}@example.test`, password: 'password-prova-scheda-B' });
+    await api.getSession();
+    await expect(api.listHomes(undefined, a.account.id)).rejects.toMatchObject({ status: 401, code: 'account_context_changed' });
+    await expect(api.createHome({ name: 'Bozza scheda A', address: 'Via A' }, crypto.randomUUID(), a.account.id)).rejects.toMatchObject({ status: 401 });
+    expect(await api.listHomes(undefined, b.account.id)).toEqual([]);
+  });
 });

@@ -8,6 +8,21 @@ const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 describe('[mock] ApiClient — trasporto identity-v1', () => {
+  it('contesto catturato dalla UI: cambio cookie in altra scheda non restituisce dati del nuovo account', async () => {
+    const backend = new FakeBackend();
+    const a = backend.seedAccount('A', 'a@example.test', 'password-lunga-1');
+    const b = backend.seedAccount('B', 'b@example.test', 'password-lunga-2');
+    backend.seedHome(b.id, 'Casa privata B', 'Via B');
+    const ctl = createFakeFetch(backend);
+    const api = new ApiClient({ fetch: ctl.fetch });
+    await api.login({ email: a.email, password: 'password-lunga-1' });
+    await api.getSession();
+    await api.login({ email: b.email, password: 'password-lunga-2' });
+    await api.getSession();
+    await expect(api.listHomes(undefined, a.id)).rejects.toMatchObject({ status: 401, code: 'account_context_changed' });
+    await expect(api.createHome({ name: 'Bozza A', address: 'Via A' }, 'idempotent-key-A', a.id)).rejects.toMatchObject({ status: 401 });
+    expect((await api.listHomes(undefined, b.id)).map(h => h.name)).toEqual(['Casa privata B']);
+  });
   it('usa URL relativi /api/v5, credentials include e nessuna cache HTTP', async () => {
     const backend = new FakeBackend();
     const ctl = createFakeFetch(backend);

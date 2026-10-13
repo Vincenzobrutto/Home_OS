@@ -70,7 +70,7 @@ export function useHomes() {
   const account = useAccount();
   return useQuery({
     queryKey: queryKeys.homes(account.id),
-    queryFn: ({ signal }) => api.listHomes(signal),
+    queryFn: ({ signal }) => api.listHomes(signal, account.id),
   });
 }
 
@@ -79,7 +79,7 @@ export function useHome(homeId: string) {
   const account = useAccount();
   return useQuery({
     queryKey: queryKeys.home(account.id, homeId),
-    queryFn: ({ signal }) => api.getHome(homeId, signal),
+    queryFn: ({ signal }) => api.getHome(homeId, signal, account.id),
   });
 }
 
@@ -89,8 +89,10 @@ export function useCreateHome() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (vars: { input: CreateHomeInput; idempotencyKey: string }) =>
-      api.createHome(vars.input, vars.idempotencyKey),
+      api.createHome(vars.input, vars.idempotencyKey, account.id),
     onSuccess: async (home: Home) => {
+      const current = queryClient.getQueryData<SessionResponse>(queryKeys.session);
+      if (current?.account?.id !== account.id) return;
       queryClient.setQueryData(queryKeys.home(account.id, home.id), home);
       await queryClient.invalidateQueries({ queryKey: queryKeys.homes(account.id) });
     },

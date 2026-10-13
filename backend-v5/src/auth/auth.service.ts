@@ -1,4 +1,4 @@
-import { ConflictException, HttpException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, HttpException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { hashPassword, verifyPassword, SessionsService } from '../security';
 import type { Request, Response } from 'express';
@@ -50,8 +50,13 @@ export class AuthService {
     created.applyCookie(); return { account: publicAccount(account) };
   }
   async logout(req: Request, res: Response) {
-    const session = await this.sessions.requireCsrf(req);
-    await this.db.session.deleteMany({ where: { id: session.id } });
+    const current = await this.sessions.current(req);
+    if (current) {
+      const session = await this.sessions.requireCsrf(req);
+      await this.db.session.deleteMany({ where: { id: session.id } });
+    } else if (req.headers.origin !== (process.env.FRONTEND_ORIGIN || 'http://127.0.0.1:5174')) {
+      throw new ForbiddenException({ code: 'csrf_invalid', message: 'Richiesta non autorizzata.' });
+    }
     res.clearCookie('dimora_v5_session', { path: '/api/v5', httpOnly: true, sameSite: 'lax' });
   }
 }

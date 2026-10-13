@@ -206,7 +206,7 @@ function CreateHomeForm({ cancelTo }: { cancelTo?: string }) {
   };
 
   const error = create.error;
-  const isConflict = isApiError(error) && error.kind === 'http' && error.status === 409;
+  const isConflict = isApiError(error) && error.kind === 'http' && error.status === 409 && error.code === 'idempotency_conflict';
   const isService = isApiError(error) && error.kind === 'service';
 
   return (

@@ -59,7 +59,7 @@ export function useSession() {
     queryKey: queryKeys.session,
     queryFn: ({ signal }) => api.getSession(signal),
     // Ricontrolla al ritorno sulla finestra: rileva logout/login fatti in un'altra scheda.
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: 'always',
     staleTime: 60_000,
   });
 }

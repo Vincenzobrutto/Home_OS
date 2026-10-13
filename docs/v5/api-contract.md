@@ -1,6 +1,6 @@
 # Contratto API V5 — identity-v1
 
-Versione congelata per il ticket frontend V5-DEV-003. Il backend viene implementato da Codex: questi endpoint non sono ancora attivi. Modifiche solo concordate tramite Codex. Documenti/proposte fuori da questo contratto iniziale, seguiranno in un contratto successivo.
+identity-v1.1: endpoint invariati, estensioni concordate in review Codex del ticket frontend V5-DEV-003. La base v1 è attiva e verificata sul DB locale; v1.1 richiede riavvio del servizio e collaudo esteso. Documenti/proposte fuori da questo contratto iniziale, seguiranno in un contratto successivo.
 
 ## Trasporto
 
@@ -40,11 +40,23 @@ L'ID della casa è stabile. L'indirizzo non è identità né prova di proprietà
 
 Validazioni iniziali: name account 1–80 caratteri, nome casa 1–80, address 1–200, email valida fino a 254, password 12–128 caratteri; trim per nomi/indirizzo/email, mai trim silenzioso della password. Messaggi campo in italiano. Verifica email obbligatoria prima di utenti esterni; prima verticale solo account locali di sviluppo. Ruoli professionali arriveranno nel contratto successivo.
 
+Le lunghezze sono code point Unicode, non unità UTF-16 o grafemi. Il backend usa un validatore esplicito coerente con il frontend; i selettori di presentazione contano come code point. Email normalizzata in minuscolo sul server.
+
 Una mutazione login/register può ruotare la sessione: richiedere GET session dopo successo per il nuovo token CSRF. Se arriva 401 su una richiesta protetta, annullare richieste pendenti, pulire cache privata e tornare al login senza loop di retry. Un 403 non va trasformato in elenco vuoto.
 
 ## Selezione casa e cache
 
 Il frontend seleziona la casa via URL `/home/:homeId/casa`; non serve endpoint server per un puntatore globale alla casa corrente. Zero case = onboarding; più case = scelta esplicita. Verificare sempre i diritti sul server; il routing frontend non autorizza operazioni. Cache privata con chiavi almeno `[accountId, homeId, resource]`. Preferenze UI non sensibili possono essere locali; niente credenziali/documenti/bozze private persistenti in localStorage.
+
+## Chiarimenti identity-v1.1 dalla review
+
+- Le richieste UI protette inviano `X-Account-Context` con l'account catturato dalla relativa query o form. Il server confronta il valore con la sessione prima delle operazioni: mismatch = 401 `account_context_changed`, senza dati né scritture. Header aggiuntivo facoltativo a livello di trasporto per compatibilità con la suite v1; il frontend V5 lo invia sempre per homes. Il controllo non concede diritti: la membership resta necessaria. La sessione si rilegge sempre al focus e una mutazione tardiva non ripopola la cache di un account diverso.
+- CSRF/Origin errati: 403 `csrf_invalid`. Nessun retry automatico delle mutazioni; il client conserva la chiave idempotente e mostra il messaggio del server. Rinnovo automatico e retry di scritture non sono richiesti in questo incremento.
+- Chiave di creazione riusata con dati diversi: 409 `idempotency_conflict`. Non trattare altri 409 futuri come conflitto di idempotenza. Formato 16–100 caratteri ASCII alfanumerici, `_` o `-`; UUID v4 ammesso; ambito per account, non sessione. Record mantenuto finché esiste account/casa nel database di sviluppo; nessuna scadenza temporale silenziosa. Concorrenti con stessa chiave/payload convergono sulla stessa casa; revoca successiva impedisce il retry di consultazione.
+- ID casa inesistente e ID altrui: 403 generico; UUID sintatticamente invalido: 422. Nessuna esposizione di dati del proprietario.
+- 429: messaggio italiano con indicazione di attesa; Retry-After non ancora previsto. Prima del pilota sostituire rate limit in memoria con protezione adeguata all'ambiente ospitato.
+- Origin/proxy/cookie sono quelli sopra. Nessun Domain sul cookie; Path `/api/v5`.
+- Logout di sessione già scaduta: 204 idempotente con Origin corretto, cookie rimosso; GET session successivo crea un contesto anonimo con CSRF nuovo. Sessione ancora valida richiede CSRF corretto.
 
 ## Scenari di accettazione
 
