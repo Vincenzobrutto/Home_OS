@@ -154,29 +154,43 @@ export function OperationFeedback(props: {
 }
 
 /** Finestra di dialogo modale: focus iniziale, Escape per chiudere, focus restituito all'apertura. */
-export function Dialog(props: { title: string; onClose: () => void; children: ReactNode }) {
+export function Dialog(props: { title: string; onClose: () => void; dismissDisabled?: boolean; children: ReactNode }) {
   const titleId = useId();
   const ref = useRef<HTMLDivElement>(null);
-  const { onClose } = props;
+  const close = useRef(props.onClose);
+  const blocked = useRef(props.dismissDisabled);
+  useEffect(() => { close.current = props.onClose; blocked.current = props.dismissDisabled; }, [props.onClose, props.dismissDisabled]);
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
-    const first = ref.current?.querySelector<HTMLElement>('textarea, input, button');
-    first?.focus();
+    const focusable = () => [...(ref.current?.querySelectorAll<HTMLElement>('textarea:not([disabled]), input:not([disabled]), select:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])') ?? [])];
+    const focusFirst = () => (focusable()[0] ?? ref.current)?.focus();
+    focusFirst();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
         e.stopPropagation();
-        onClose();
+        if (!blocked.current) close.current();
+      } else if (e.key === 'Tab') {
+        const elements = focusable(), first = elements[0], last = elements.at(-1);
+        if (!first || !ref.current?.contains(document.activeElement) || (e.shiftKey ? document.activeElement === first : document.activeElement === last)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first)?.focus();
+          if (!first) ref.current?.focus();
+        }
       }
     };
-    document.addEventListener('keydown', onKey);
+    const containFocus = (e: FocusEvent) => { if (e.target instanceof Node && !ref.current?.contains(e.target)) focusFirst(); };
+    document.addEventListener('keydown', onKey, true);
+    document.addEventListener('focusin', containFocus);
     return () => {
-      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('focusin', containFocus);
       opener?.focus();
     };
-  }, [onClose]);
+  }, []);
   return (
     <div className={styles.backdrop}>
-      <div ref={ref} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <div ref={ref} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
         <h2 id={titleId}>{props.title}</h2>
         {props.children}
       </div>
@@ -419,7 +433,7 @@ export function ActivityForm(props: {
             {op.mutation.isPending ? 'Salvataggio…' : activity ? 'Salva modifiche' : 'Crea attività'}
           </button>
         )}
-        <button type="button" className={cx(ui.btn, ui.ghost)} onClick={props.onCancel} disabled={op.mutation.isPending}>
+        <button type="button" className={cx(ui.btn, ui.ghost)} onClick={props.onCancel} disabled={disabled}>
           Annulla
         </button>
       </div>

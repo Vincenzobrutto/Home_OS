@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-14 — H1 attività e scadenze consolidata
+
+Integrati sette commit frontend Claude escludendo sync; Casa mostra Le tue scadenze, Attività Da fare, promemoria manuali/caldaia e completa/annulla/riapri con storia. Corretto focus trap e conservazione della chiave in caso ambiguo; nuove prove su risposta persa. Backend 71 offline/61 integrazione, frontend 152 mock/fixture, client/API 15 reali e browser 320/390/desktop/tastiera/reload/login verdi. Suite client distanziate per rispettare auth, live AI disabilitata nel runner normale. Zero nuove chiamate Anthropic; H1 chiusa solo in locale. Resoconto docs/v5/h1-integration-review.md.
+
+
 ## 2026-10-13 — H1 backend attività personali verificato
 
 Implementati dieci endpoint activities-v1 e migrazione additiva nel DB locale V5. Promemoria personali con data calendario, completa/annulla/riapri, versioni e storia atomiche, retry idempotente autorizzato; collegamenti caldaia redatti se illeggibili senza perdere appunti. Build/lint, 71 test offline e 61 integrazione passano; cinque prove HTTP H1 passano anche sul runtime 3001 riavviato. Frontend Claude e browser ancora da integrare; zero chiamate Anthropic. Report docs/v5/h1-integration-review.md.

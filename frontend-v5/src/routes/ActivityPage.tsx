@@ -87,7 +87,7 @@ export function ActivityPage() {
           <span className={styles.eyebrow}>{home.name}</span>
           <h1 tabIndex={-1}>Attività</h1>
           <p className={styles.lead}>
-            Analisi dei documenti e verifiche da rivedere. Ogni analisi parte solo su tua richiesta e i dati proposti vanno confermati da te.
+            Promemoria personali, analisi dei documenti e verifiche da rivedere. Ogni analisi parte solo su tua richiesta e i dati proposti vanno confermati da te.
           </p>
         </div>
       </div>

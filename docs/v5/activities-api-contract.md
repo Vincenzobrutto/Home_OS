@@ -1,6 +1,6 @@
 # H1 — activities-v1: attività personali e scadenze
 
-13 ottobre 2026. **Backend e schema H1 implementati e verificati nel database dedicato; dieci endpoint attivi sul servizio locale 3001. Frontend e collaudo browser ancora da integrare.** M1–M4 sono la baseline locale verificata. H1 è il primo sottoincremento di Home utile: il numero M4 è stato usato per Anthropic e non implica che tutta la Home della roadmap originaria sia già costruita. Agenzie, Amministratori, spese, ricerca e vendita seguono separatamente.
+Contratto fissato il 13 ottobre 2026; consolidamento del 14 ottobre. **H1 integrata e verificata in locale: schema, dieci endpoint 3001, frontend 5174, client/API e browser reale.** M1–M4 sono la baseline locale verificata. H1 è il primo sottoincremento di Home utile: il numero M4 è stato usato per Anthropic e non implica che tutta la Home della roadmap originaria sia già costruita. Agenzie, Amministratori, spese, ricerca e vendita seguono separatamente. Esito in h1-integration-review.md.
 
 Riferimenti prodotto: DIMORA_V5_MASTER.md, regola M-11 (offline non completa modifiche); DIMORA_HOME_UX_CONSOLIDATED §4 (promemoria utente distinto dagli obblighi, completamento dichiarato, storia); decisioni V5 su privacy, AI e contesti. Codex mantiene questo contratto; Claude scrive solo frontend-v5.
 

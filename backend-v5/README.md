@@ -33,3 +33,5 @@ Questo stato supera le fotografie M2/M3 iniziali sopra: API, DB e frontend sono 
 
 ## H1 — backend attività personali verificato, frontend in integrazione
 Dieci endpoint activities-v1 e migrazione 202610130005_activities applicati al DB locale dedicato. Promemoria privati, data calendario scelta dall'utente, completa/annulla/riapri e storia; caldaia facoltativa, nessun campo tecnico o costo AI modificato. Build/lint, 71 test offline e 61 test integrazione (regressioni comprese) passano. La suite HTTP H1 avvia un harness Nest reale su porta effimera senza worker AI; con V5_ACTIVITIES_API=1 verifica invece il processo API registrato su 3001 (cinque prove passate dopo riavvio). `npm run test:activities-db` verifica le sole nuove regole con database dedicato. Questi test rimuovono soltanto i propri nuovi record sintetici. Contratto docs/v5/activities-api-contract.md; frontend/browser ancora aperti.
+
+Aggiornamento 14 ottobre: frontend H1 integrato, 152 test mock/fixture, 15 client/API reali e browser 320/390/desktop/tastiera/reload/login superati. H1 chiusa per sviluppo locale. Resoconto docs/v5/h1-integration-review.md; nessuna nuova chiamata Anthropic.

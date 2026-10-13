@@ -183,3 +183,6 @@ Contratto docs/v5/activities-api-contract.md: activity-capabilities, activities 
 
 ## H1 activities-v1 — backend locale attivo
 Dieci endpoint sotto /api/v5/homes/:homeId: GET activity-capabilities, GET/POST activities, GET activities/:id, POST activities/:id/updates|complete|cancel|reopen, GET activities/:id/history e GET activity-summary. POST richiede Origin/CSRF/Idempotency-Key; versione e dati privati controllati. today/dueState server, fuso Europe/Rome. Contratto docs/v5/activities-api-contract.md; runtime 3001 verificato, frontend/browser ancora aperti.
+
+### H1 — frontend/API verificati
+Dieci endpoint activities-v1 integrati con il client reale, 15 prove frontend/API (incluse regressioni M1–M4 non-live) superate. Crea, updates, complete, cancel, reopen, history e summary osservati nel browser con DB reale; nessun fallback demo. Il runner test:integration esclude le prove live a pagamento e rispetta il rate limit. Resoconto docs/v5/h1-integration-review.md.

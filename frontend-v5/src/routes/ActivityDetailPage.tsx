@@ -212,8 +212,8 @@ function ActivityView(props: { home: Home; activity: HomeActivity; today: string
           />
         )}
         {panel === 'cancel' && isOpen && (
-          <Dialog title="Annulla attività" onClose={() => setPanel('none')}>
             <ActionForm
+              modal
               home={home}
               activity={activity}
               kind="cancel"
@@ -224,7 +224,6 @@ function ActivityView(props: { home: Home; activity: HomeActivity; today: string
               onClose={() => setPanel('none')}
               backLabel="Torna indietro"
             />
-          </Dialog>
         )}
 
         <HistorySection homeId={home.id} activityId={activity.id} />
@@ -243,6 +242,7 @@ function ActionForm(props: {
   noteMax?: number;
   onClose: () => void;
   backLabel?: string;
+  modal?: boolean;
 }) {
   const id = useId();
   const op = useActivityOperation(props.home.id);
@@ -265,7 +265,7 @@ function ActionForm(props: {
     );
   };
 
-  return (
+  const form = (
     <form
       className={props.title ? styles.panel : undefined}
       noValidate
@@ -285,12 +285,13 @@ function ActionForm(props: {
             {op.mutation.isPending ? 'Invio…' : props.confirmLabel}
           </button>
         )}
-        <button type="button" className={cx(ui.btn, ui.ghost)} onClick={props.onClose} disabled={op.mutation.isPending}>
+        <button type="button" className={cx(ui.btn, ui.ghost)} onClick={props.onClose} disabled={disabled}>
           {props.backLabel ?? 'Chiudi'}
         </button>
       </div>
     </form>
   );
+  return props.modal ? <Dialog title={props.confirmLabel} onClose={props.onClose} dismissDisabled={disabled}>{form}</Dialog> : form;
 }
 
 function snapshotText(s: ActivityHistorySnapshot | null) {

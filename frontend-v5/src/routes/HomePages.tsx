@@ -140,7 +140,7 @@ export function CasaPage() {
           )}
           <p className={cx(styles.small, styles.muted, styles.spaced)}>
             I permessi sono verificati dal servizio a ogni operazione. Oggi puoi consultare la casa e, in Documenti,
-            caricare ed esportare originali secondo il tuo ruolo, creare schede caldaia e confermare i dati proposti dall’analisi di test; modifica dei dati della casa, gestione accessi e vendita
+            caricare ed esportare originali secondo il tuo ruolo, gestire promemoria personali, creare schede caldaia e confermare i dati proposti dalle analisi; modifica dei dati della casa, gestione accessi e vendita
             arriveranno nei prossimi incrementi.
           </p>
         </section>

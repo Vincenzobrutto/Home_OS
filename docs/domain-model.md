@@ -198,3 +198,6 @@ HomeActivity (account/Home, caldaia facoltativa, testo, data calendario, stato/v
 
 ## H1 — schema implementato
 Migrazione 202610130005_activities applicata solo a dimora_v5_product_dev: HomeActivity, ActivityHistory, ActivityRequest con FK Restrict. dueDate stringa calendario validata, distinta dai timestamp UTC; stato enum open/completed/cancelled. Snapshot storico interno conserva riferimento asset, proiezione pubblica redige se non autorizzato. Nessun campo BoilerAsset, documento o ledger modificato dalle attività. Dettagli in docs/v5/domain-model.md.
+
+### H1 — integrazione conclusa il 14 ottobre
+Modello personale/versioni/storia e collegamenti caldaia verificati anche nell’interfaccia reale, dopo reload/logout/login. La caldaia non viene aggiornata completando un promemoria; dati tecnici e costo AI verificati invariati. Date utente conservate alla riapertura, riferimento non accessibile redatto alla lettura. Nessuna nuova entità o schema aggiunto nell’integrazione frontend.

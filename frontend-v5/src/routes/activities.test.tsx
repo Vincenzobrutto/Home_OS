@@ -154,6 +154,7 @@ describe('[mock] H1 — invii, esiti ambigui e conflitti', () => {
     expect(await within(form).findByText('Esito non confermato')).toBeInTheDocument();
     expect(posts(backend, /\/activities$/)).toHaveLength(1);
     expect(within(form).getByLabelText('Titolo')).toBeDisabled();
+    expect(within(form).getByRole('button', { name: 'Annulla' })).toBeDisabled();
     expect(within(form).queryByRole('button', { name: 'Crea attività' })).not.toBeInTheDocument();
     await app.user.click(within(form).getByRole('button', { name: 'Riprova invio' }));
     await screen.findByRole('heading', { level: 1, name: 'Pulire griglie' });
@@ -162,6 +163,30 @@ describe('[mock] H1 — invii, esiti ambigui e conflitti', () => {
     expect(b!.body).toEqual(a!.body);
     expect(backend.activities.items.size).toBe(1);
     expect([...backend.activities.history.values()][0]).toHaveLength(1);
+  });
+
+  it('dialogo: Tab resta dentro, Escape non perde un invio incerto e la riprova non duplica la storia', async () => {
+    const { backend, owner, home } = world();
+    const act = await seedActivity(backend, owner.id, home.id, { title: 'Annullamento protetto' });
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita/${act.id}`);
+    await screen.findByRole('heading', { level: 1, name: 'Annullamento protetto' });
+    await app.user.click(screen.getByRole('button', { name: 'Annulla attività' }));
+    const dialog = screen.getByRole('dialog');
+    const note = within(dialog).getByLabelText('Nota (facoltativa)');
+    await app.user.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(within(dialog).getByRole('button', { name: 'Torna indietro' })).toHaveFocus();
+    await app.user.keyboard('{Tab}'); expect(note).toHaveFocus();
+    await app.user.type(note, 'Riprova protetta');
+    app.control.dropNextResponse();
+    await app.user.click(within(dialog).getByRole('button', { name: 'Annulla attività' }));
+    await within(dialog).findByText('Esito non confermato');
+    expect(within(dialog).getByRole('button', { name: 'Torna indietro' })).toBeDisabled();
+    await app.user.keyboard('{Escape}'); expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await app.user.click(within(dialog).getByRole('button', { name: 'Riprova invio' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    const attempts = posts(backend, /\/activities\/[^/]+\/cancel$/);
+    expect(attempts).toHaveLength(2); expect(attempts[1]!.headers['idempotency-key']).toBe(attempts[0]!.headers['idempotency-key']);
+    expect(backend.activities.history.get(act.id)).toHaveLength(2);
   });
 
   it('409 di versione (altra scheda): messaggio, nessun successo finto, «Rileggi i dati»', async () => {

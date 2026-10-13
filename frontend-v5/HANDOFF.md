@@ -159,3 +159,7 @@ Nessuna dichiarazione di conformità WCAG.
 1. Codex: backend H1, poi integrazione dei commit da `9370037` in poi (escludere `c29fcaa`); risposte alle domande 1–8.
 2. `V5_API_URL=http://127.0.0.1:3001/api/v5 V5_ACTIVITIES_API=1 npm run test:integration`, poi collaudo browser reale (crea → modifica → completa → storia → riapri) a 320/390 px, desktop e tastiera.
 3. Adeguamenti dalla review in nuovi commit `frontend-v5/**`.
+
+## Integrazione Codex conclusa — 14 ottobre 2026
+I sette commit H1 sono integrati nel branch dev/dimora-v5-local-20261013, escluso il sync c29fcaa. Backend e migrazione sono attivi su 3001/DB dedicato; le prove qui dichiarate mock sono state integrate con 15 client/API reali e navigazione reale 320/390/desktop, tastiera, reload/logout/login. Focus trap aggiunto, chiusura di dialogo/moduli bloccata se invio pendente o esito ambiguo; nuova regressione conserva chiave/payload e una sola storia. 152 test mock/fixture, build/lint passano.
+Le domande 1–8 sono risolte in docs/v5/h1-integration-review.md. Il runner ordinario test:integration ora divide le suite con pause auth di 61 secondi e disabilita V5_ANTHROPIC_LIVE; per nuove prove a pagamento servono un incarico esplicito e invocazione diretta di Vitest, mantenendo il ledger/cap. H1 chiusa in locale; ricorrenze, allegati, notifiche, condivisione e lista promemoria nella caldaia restano successivi.

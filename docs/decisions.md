@@ -456,3 +456,6 @@ H1 sono promemoria manuali personali: attività e verifiche AI separate, caldaia
 
 ### H1 — attuazione ADR-V5-12
 Riutilizzate soltanto le policy V5 membership/asset/fonti tramite ReviewService esportato; nuova attività personale separata dai derivati AI. Clock iniettabile, calendario gregoriano, snapshot interni con redazione dinamica e replay con riferimento riletto. Nessuna dipendenza nuova. Harness HTTP con controller/sessioni/DB reali su porta effimera senza worker; ripetuto sul runtime 3001. Alternative e confini in docs/v5/implementation-decisions.md.
+
+### H1 — consolidamento frontend e collaudo
+Dialogo annullamento con Tab contenuto e focus restituito; chiusura/Escape bloccati durante invio o esito ambiguo per non perdere idempotenza. Date formattate senza spostamenti e dueState server; focus/navigazione rilegge, nessun timer di mezzanotte H1. Test client in due gruppi con pause di 61 s, protezione auth invariata, V5_ANTHROPIC_LIVE=0 nel runner ordinario. Risposte alle otto domande Claude in docs/v5/h1-integration-review.md; ADR-V5-12 aggiornato.

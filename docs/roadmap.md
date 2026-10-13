@@ -148,3 +148,6 @@ M4 Anthropic chiusa; segue il primo sottoincremento Home utile della roadmap ori
 
 ### H1 — avanzamento backend
 Schema/migrazione e dieci endpoint reali verificati nel DB locale; regressioni M1–M4 offline/M1–M3 API passano. Restano consegna/revisione frontend Claude, integrazione client e browser reale prima di chiudere Home attività. Nessuna nuova chiamata Anthropic.
+
+### H1 chiusa in locale — 14 ottobre 2026
+Attività personali e scadenze: schema/API/frontend integrati e verificati con test e browser reali. Supera gli stati precedenti «frontend da integrare». Il primo sottoincremento Home utile è completato; ricerca, spese essenziali e ciclo proprietario restano successivi, prima delle esperienze Agenzie/Admin. Ricorrenze/condivisione/OCR/notifiche non incluse.

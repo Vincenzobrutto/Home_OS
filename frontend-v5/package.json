@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "test": "vitest run --project mock --project fixtures",
     "test:watch": "vitest --project mock",
-    "test:integration": "vitest run --project integration",
+    "test:integration": "node scripts/run-integration.mjs",
     "mock-api": "node scripts/mock-api.ts"
   },
   "dependencies": {

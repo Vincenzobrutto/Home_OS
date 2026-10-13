@@ -124,3 +124,12 @@ Riferimento docs/v5/activities-api-contract.md; H1 non consuma Anthropic e non r
 - [ ] Client/API reali e browser 320/390/desktop/tastiera, reload/login.
 - [ ] Prima del pilota: ottimizzare lista/summary/storia con query aggregate e paginazione keyset per dataset ampi, preservando policy e filtri. Oggi lettura personale e ordinamento in memoria nel runtime locale.
 Report docs/v5/h1-integration-review.md; H1 non ancora completa.
+
+### H1 — chiusura integrazione
+- [x] Sette commit frontend integrati, esclusa sincronizzazione.
+- [x] Client/API reale e browser 320/390/desktop/tastiera/reload/logout/login.
+- [x] Focus trap nel dialogo e protezione idempotenza in caso ambiguo.
+- [x] Otto domande Claude risolte nel report, date/permessi/redazione confermati.
+- [ ] Elenco promemoria direttamente nella caldaia, ricorrenze, allegati e condivisione: incrementi successivi.
+- [ ] Prima del pilota: aggregazioni/paginazione per dataset ampi e lazy route per bundle oltre 500 kB (501.70 kB, build riuscita).
+H1 completata in locale; nessuna nuova chiamata Anthropic, nessuna dichiarazione di prodotto pronto per pubblico. Report docs/v5/h1-integration-review.md.
