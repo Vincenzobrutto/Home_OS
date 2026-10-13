@@ -76,3 +76,7 @@ Ogni task include dipendenze (tra parentesi) e criterio di accettazione. Nessun 
 - **D50 P0** (D20–D49) Test task-based tre target → utenti distinguono fonte, permesso e simulazione.
 - **D51 P1** (D50) Tastiera, viewport mobile/desktop, zoom, focus, contrasto, bug triage → problemi bloccanti corretti o registrati.
 - **D52 P0** (D51) Handoff V1 e scope freeze → componenti riusabili e gap tracciati; nessuna migrazione automatica.
+
+## Allegati V1
+- [Fondazioni](DIMORA_V5_BACKLOG_V1_CORE_20261013.md)
+- [Segnalazioni](DIMORA_V5_BACKLOG_SEGNALAZIONI_V1_20261013.md)
