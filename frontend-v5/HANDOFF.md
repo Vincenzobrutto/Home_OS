@@ -1,121 +1,235 @@
-# HANDOFF — H2 frontend ricerca documenti della casa (document-search-v1)
+# HANDOFF — H3a frontend Spese essenziali (expenses-v1)
 
 Autore: Claude Code. Data: 14/10/2026. Destinatario: Codex (contratto, backend, DB, integrazione, collaudo reale).
-Stato: **frontend H2 pronto per l'integrazione, verificato solo con backend simulato. H2 non è completata**: il backend document-search-v1 non è ancora attivo e nessuna prova API/DB/browser reale è stata eseguita.
 
-- Nessuna chiamata Anthropic, nessuna AI/OCR: la ricerca riguarda solo titolo e nome originale del file.
-- Nessuna lettura o scrittura di chiavi, `.env`, ledger o configurazioni; `V5_ANTHROPIC_LIVE` non abilitato.
+**Stato: frontend H3a pronto per l'integrazione, verificato solo con backend simulato. H3a non è completata.** Il backend expenses-v1 non è attivo nel runtime e non ho eseguito alcuna prova API, DB o browser reale.
+
+- Nessuna chiamata Anthropic e nessun test live.
+- Nessuna lettura di `.env`, chiavi, ledger o configurazioni.
 - Nessuna nuova dipendenza.
+
+Il rapporto notturno precedente (`docs/H3-proposta-notturna-20261014.md`) è materiale storico: prevale `docs/v5/expenses-api-contract.md`.
 
 ## Checkout, sincronizzazione e commit
 
-- Percorso `C:\Users\07704017\Documents\Codex\Dimora-V5-Claude`, branch `claude/dimora-v5-identity`.
-- HEAD atteso e verificato: `83d4e83ebf26125b2373ced1558044f456ba422a`; albero tracciato pulito; `docs/v5/backend-status.md` non tracciato preservato e non incluso.
-- Bundle `Dimora-V5-sync-Claude-ricerca.bundle`: `git bundle verify` okay; `git bundle unbundle` senza cambiare branch; SHA di riferimento `534d6cff8c5db7e2b930d0b7285b8795e9115429`.
-- `git restore --source=534d6cf --staged --worktree` **solo** su: `frontend-v5/`; `docs/v5/{api,documents-api,review-api,anthropic-api,activities-api,document-search-api}-contract.md`, `domain-model.md`, `implementation-decisions.md`, `m4-integration-review.md`, `h1-integration-review.md`; `docs/v5/fixtures/m3/`, `docs/v5/fixtures/m4/`. Non esiste un `.gitattributes` di root nello SHA (quelli delle fixture sono sotto i percorsi ripristinati).
-- Dopo il sync `git diff 534d6cf` su quei percorsi è vuoto.
-- **Byte dei PDF verificati contro i manifest**: 10/10 (M3 3/3 in `docs/v5/fixtures/m3`, 3/3 in `public/m3-examples`; M4 4/4); attributi binari intatti.
-- Fix H1 di Codex conservati (focus trap del dialogo, riprova protetta, runner con pause, live AI disabilitata). Baseline prima di H2: 152 test.
-
-Commit, in ordine (locali, nessun push):
+- **Checkout**: `C:\Users\07704017\Documents\Codex\Dimora-V5-Claude`, branch `claude/dimora-v5-identity`.
+  - HEAD atteso e verificato: `cfdd0b324d656ffba48ba0c4808468cd841da0f5`.
+  - Albero tracciato pulito; `docs/v5/backend-status.md` non tracciato preservato.
+- **Bundle** `Dimora-V5-sync-Claude-spese.bundle`: `verify` ok, `unbundle` senza cambio di branch, SHA `076d5a9b95d99aafda457d768e4b68ebe8a06c8c`.
+- **Ripristino** solo sui percorsi autorizzati:
+  - `frontend-v5/`;
+  - `docs/v5/{api,documents-api,review-api,anthropic-api,activities-api,document-search-api,expenses-api}-contract.md`;
+  - `implementation-decisions.md`, `domain-model.md`, `h1-`, `h2-` e `m4-integration-review.md`;
+  - `docs/v5/fixtures/m3/` e `docs/v5/fixtures/m4/`.
+- **Verifiche dopo il sync**:
+  - `git diff 076d5a9` su quei percorsi è vuoto;
+  - byte dei PDF: 10/10 coincidono con i manifest, attributi binari intatti.
+- Ho conservato le correzioni di Codex R1–R3 (`next` con solo il pathname, `documentsAccountId`, pulizia della cache dopo il 403 della casa).
 
 | Commit | Contenuto | Azione per Codex |
 |---|---|---|
-| `aa7268f` chore(v5): sync H1 consolidated and H2 search contract | Copia della baseline `534d6cf` sui percorsi autorizzati | **Escludere / non riapplicare** |
-| `c2d0e11` feat(frontend-v5): client, chiavi cache e hook document-search-v1 (H2) | Tipi, `getDocumentSearchCapabilities`, `listDocuments` con filtri facoltativi, chiavi, regole, hook | Integrare |
-| `3de496f` test(frontend-v5): ricerca documenti nel backend simulato | `FakeBackend`: capabilities, filtri sul dataset completo, cursor legati ai filtri, 422 | Integrare |
-| `55e3416` feat(frontend-v5): ricerca nei documenti della casa H2 | Modulo di ricerca, stati, URL, ritorno dal dettaglio, link da Casa | Integrare |
-| `e638879` test(frontend-v5): casi H2 ricerca documenti con backend simulato | 23 test UI + 5 unitari/client | Integrare |
-| `ad08772` test(frontend-v5): integrazione reale document-search-v1 | Suite reale saltata di default; terzo gruppo nel runner | Integrare |
-| commit successivo docs(frontend-v5) | Seed mock H2, questo HANDOFF, README, screenshot | Integrare. SHA: `git log -1 -- frontend-v5/HANDOFF.md` |
+| `cacc8fc` chore(v5): sync H2 reviewed and H3 expenses contract | Copia della baseline `076d5a9` | **Escludere / non riapplicare** |
+| `19fc3ec` feat: client, chiavi cache, importi e hook expenses-v1 | Tipi, 8 metodi client, chiavi `h3`, `lib/expenses.ts`, hook | Integrare |
+| `1e33ba2` test: backend simulato expenses-v1 | `src/test/fakeExpenses.ts` collegato a `FakeBackend` | Integrare |
+| `5f93cbe` feat: Spese essenziali H3a e ingressi | Pagine Spese e dettaglio, Casa, documento, caldaia, shell; test di routing aggiornato | Integrare |
+| `d80ddce` test: casi H3a | 21 UI + 6 unitari + 3 client | Integrare |
+| `91d4727` test: integrazione reale, quarto gruppo, seed mock | `tests/integration/expenses.int.test.ts`, runner, `mock-api` | Integrare |
+| `a5f1c7c` fix: focus | Focus al modulo aperto e alla nuova azione dopo archivia/ripristina/modifica | Integrare |
+| commit successivo docs(frontend-v5) | README, questo HANDOFF, screenshot | Integrare. SHA: `git log -1 -- frontend-v5/HANDOFF.md` |
+
+**Test precedente modificato apposta**: in `src/routes/routing.test.tsx` le righe che si aspettavano «Spese — Non ancora disponibile» ora si aspettano la sezione attiva («Le tue spese della casa»). È il cambiamento richiesto dall'incarico, non una regressione nascosta.
 
 ## Cosa è stato fatto
 
-1. **Client e cache**:
-   - `GET /homes/:homeId/document-search-capabilities` sul trasporto comune (cookie, `X-Account-Context`, `no-store`, abort); risposta validata (`apiVersion`, `enabled`, `limits`), altrimenti errore di servizio.
-   - `listDocuments(homeId, page, signal, accountId, filters?)`: firma M2 invariata. Senza filtri attivi la richiesta è **identica a M2** (`?limit=20[&cursor]`); con filtri vanno solo i parametri attivi (`q` se non vuota, `format`/`visibility` se diversi da «all»). DocumentSummary/DocumentsPage invariati.
-   - Chiavi: lista M2 `[..., 'documents', 'list']` invariata; ricerche `[..., 'documents', 'list', 'search', q canonica, format, visibility]`, cursor nella pagina dell'infinite query. L'upload invalida il prefisso `list`: tutte le varianti filtrate e la lista M3 usata dall'analisi.
-   - `useDocuments` (M3/M4) non è cambiato e non riceve mai i nuovi parametri; jobs/assets/review/history non toccati.
-2. **Documenti**: modulo `role="search"` «Cerca nei documenti di <Casa>» con «Ricerca in: <Casa>», nota «La ricerca riguarda titoli e nomi dei file, non il contenuto», campo «Cerca nei documenti» (placeholder «Titolo o nome del file»), Formato (Tutti/PDF/JPEG/PNG), Visibilità (Tutti/Solo io/Condivisi nella casa), «Cerca» e «Azzera filtri».
-   - Bozza distinta dai filtri applicati: nessuna richiesta a ogni tasto; Invio o «Cerca» applicano tutto insieme. La bozza si riallinea se i filtri applicati cambiano (Azzera, indietro/avanti).
-   - Query normalizzata trim + NFC; >120 code point (o il limite delle capabilities) e caratteri di controllo: errore sul campo, focus e nessuna richiesta. Gli errori del server restano autorevoli.
-3. **URL**: solo `q`/`format`/`visibility` (mai cursor); valori sconosciuti di formato/visibilità valgono «Tutti». `?ricerca=1` da Casa porta il focus sul campo e non va all'API; cade al primo «Cerca». L'apertura normale lascia il focus al titolo.
-4. **Casa**: link «Cerca documenti» → `/home/:homeId/documenti?ricerca=1` accanto ad «Apri i documenti».
-5. **Ritorno dal dettaglio**: il link al dettaglio porta i filtri nello stato di navigazione; «← Documenti di <Casa>» li ricostruisce (riletti e riscritti, solo i tre parametri). Il refresh della lista o del dettaglio li conserva. Dettaglio, originale e download autenticato sono quelli M2.
-6. **Stati distinti**: caricamento («Ricerca in corso…»), casa senza documenti, «Nessun documento corrisponde ai filtri» con filtri applicati e «Azzera filtri», errore «Ricerca non riuscita» con «Riprova» (mai «nessun documento»). Testo dei filtri e della query reso come testo React.
-7. **Selezione ZIP**: l'archivio è rimontato a ogni cambio dei filtri applicati: prima pagina, selezione ed esito export azzerati; «Mostra altri documenti» con gli stessi filtri conserva la selezione. Si esportano solo documenti visibili e selezionati.
-8. **Capabilities assenti**: 404 → «La ricerca nei documenti non è ancora attiva su questo servizio…»; 503/rete → «non è disponibile in questo momento» con «Riprova». Il modulo non compare, la lista M2 senza filtri resta consultabile; con filtri nell'URL compare «Filtri non applicati» e nessuna richiesta parte, nessuna ricerca locale sulle pagine già caricate.
-9. **Permessi e contesto**: un 403 sulla lista blocca la vista anche se c'erano risultati, rimuove le varianti non osservate dalla cache e rilegge la casa (il guard mostra «Accesso non consentito»). Viewer cerca e apre, senza caricamento né selezione ZIP. Bozza, filtri, cache e selezione sono per account/casa: nulla in localStorage; cambio casa o account li azzera; le risposte tardive non popolano un altro account (chiavi per account + pulizia cache esistente).
-10. **Gare**: cambiando filtri la query precedente resta senza osservatori e TanStack annulla la richiesta (segnale abort verificato).
+### 1. Client e cache
 
-## API usate (document-search-v1, nessun campo o endpoint inventato)
+- **Trasporto**: 8 metodi sul percorso comune `send`, con cookie, CSRF sui POST, `X-Account-Context`, `Idempotency-Key`, `no-store` e AbortSignal.
+  - Metodi: `getExpenseCapabilities`, `listExpenses`, `getExpense`, `createExpense`, `expenseMutation` (`updates`/`archive`/`restore`), `listExpenseHistory`, `getExpenseSummary`.
+  - Solo GET e POST; una risposta fuori forma diventa errore di servizio.
+- **Chiavi della cache**:
+  - forma `['account', id, 'home', homeId, 'h3', …]`;
+  - liste per `state`/`year`/`source`/`assetId`/`documentId`, dettaglio, storia, riepilogo per anno.
+- **Invalidazione**: dopo successo o replay il dettaglio viene dalla risposta, poi viene riletto tutto il prefisso `h3`, compresi i costi collegati alla caldaia e al documento. Se l'account è cambiato nel frattempo, la cache non viene scritta.
+- **403 su elenco, riepilogo o capabilities**: rimuove dalla cache `h3` le query non osservate e rilegge la casa (poi interviene la pulizia di Codex sul 403 della casa).
 
-GET `/homes/:homeId/document-search-capabilities` · GET `/homes/:homeId/documents?q&format&visibility&limit&cursor`. Nessun POST nuovo; upload, file, ZIP invariati.
+### 2. Importi e date (`src/lib/expenses.ts`)
+
+- **Parsing con BigInt** sulle cifre scritte, mai float:
+  - `1.234,56` → 123456, `1234,5` → 123450, `0,01` → 1;
+  - rifiutati: zero, negativi, `+`, spazi interni, punto usato come decimale, raggruppamenti irregolari, più di due decimali, testo, oltre `amountMaxCents` delle capabilities (999 999 999).
+- **Formattazione** intera: `1.234,56 €`. Il campo resta una stringa fino all'invio.
+- **Date**: `spentOn` è obbligatoria, reale e non futura rispetto al `today` del server (Europe/Rome). Il campo data ha `max = today`. Formattazione in UTC come H1, senza spostamenti di giorno.
+
+### 3. Spese (`/home/:id/spese`), con la sezione attiva nella shell
+
+- «Le tue spese della casa» con nota personale.
+- **Riepilogo annuo dal server**: «Inserite da te», «Collegate a un documento» e «Totale registrato», con i conteggi; solo spese attive. Nessuna somma è fatta sul client.
+- **Filtri Anno / Stato / Origine** nell'URL (`anno`, `stato`, `origine`), validati. Mai importi, note o chiavi nell'URL.
+- Paginazione «Mostra altre spese».
+- **Stati distinti**:
+  - verifica del servizio in corso;
+  - 404 → «Spese non ancora attive» (nessun totale, nessun modulo);
+  - 503 o errore → errore con «Riprova»;
+  - vuoto globale;
+  - anno o filtri senza voci, con il pulsante di ritorno;
+  - errore dell'elenco, distinto dal vuoto.
+- Il viewer consulta senza pulsanti di modifica.
+
+### 4. Modulo (nuova spesa o modifica)
+
+- **Campi**: titolo, importo, data, nota, documento e caldaia facoltativi.
+- **Testo esplicito**: la spesa è un costo sostenuto, visibile solo a te; non è un pagamento, un incasso o una stima.
+- **Destinazione** sempre visibile.
+- **Selettori**:
+  - mostrano solo documenti M2 e caldaie autorizzati, con «Carica altri …» finché ci sono pagine;
+  - un ID arrivato dall'URL (`documentId`/`assetId`) viene verificato con una lettura autorizzata prima di mostrarne il nome; se non è leggibile compare un avviso e non viene inviato.
+- **Modifica**:
+  - invia solo i campi cambiati, più `expectedVersion`;
+  - un collegamento non toccato viene omesso, `null` lo scollega (anche uno `unavailable`, senza mai riproporre ID nascosti);
+  - nessun cambiamento → «Nessuna modifica da salvare», senza richiesta.
+- **Operazione pessimistica** come H1:
+  - doppio clic → un solo invio;
+  - risposta persa → campi e «Annulla» bloccati, «Riprova invio» con stessa chiave e stesso payload;
+  - 409 → «Rileggi i dati»;
+  - nessun retry automatico.
+- All'apertura il focus va al titolo del modulo.
+
+### 5. Dettaglio (`/spese/:id`)
+
+- Importo, data, origine, documento e caldaia (link se `linked`, testo redatto se `unavailable`), nota, date di registrazione e archiviazione.
+- **Archivia e Ripristina** in dialogo (focus trap ed Escape del dialogo H1). La chiusura è bloccata durante l'invio o con esito incerto. La nota dell'operazione è distinta da quella persistente.
+- Dopo l'operazione il focus va alla nuova azione.
+- Una spesa archiviata non è modificabile finché non viene ripristinata.
+- **Storia** con il prima/dopo per campo, collegamenti redatti anche nella storia.
+- 403/422 senza contenuto.
+- Il link «← Spese» ripristina i filtri solo se lo stato di navigazione appartiene allo stesso account.
+
+### 6. Ingressi
+
+- **Casa**: «Le tue spese del <anno>», con i totali del server e le ultime 3.
+- **Dettaglio documento**: «Spese collegate» e «Registra una spesa da questo documento».
+- **Scheda caldaia**: «Costi collegati», letti dalla stessa lista API con `assetId`, e «Registra un costo».
+- Il costo è un solo record, richiamato in questi contesti e mai copiato.
+- La storia tecnica della caldaia e i byte del documento non cambiano (verificato nei test).
+
+### 7. Backend simulato (solo harness)
+
+`FakeExpenses` copre:
+- permessi personali (owner non vede spese altrui; viewer legge, non scrive);
+- validazioni 422 (parametri sconosciuti o ripetuti, importo, data futura o inesistente, campi non ammessi);
+- 403 sui riferimenti non leggibili;
+- link `linked`/`unavailable` con origine `document` conservata;
+- idempotenza (replay riproiettato con i diritti attuali, body diverso → 409);
+- CAS con versione, no-op senza evento, archive/restore con stati 409;
+- storia con before/after;
+- cursor legati ai filtri ma non al limit;
+- riepilogo esatto in centesimi.
+
+Il seed `mock-api --seed` aggiunge 4 spese e la «Caldaia cucina». Il bundle di produzione non contiene il simulatore (verificato sul build).
+
+## API usate (expenses-v1, nessun campo o endpoint inventato)
+
+GET `expense-capabilities` · GET `expenses?state&year&source&assetId&documentId&limit&cursor` · POST `expenses` · GET `expenses/:id` · POST `expenses/:id/updates|archive|restore` · GET `expenses/:id/history?limit&cursor` · GET `expense-summary?year` (tutti sotto `/homes/:homeId`). Il client invia solo i filtri diversi dal default.
 
 ## Prove realmente eseguite (Node 24.20.0, in `frontend-v5/`)
 
 | Comando | Esito |
 |---|---|
 | `npm run typecheck` / `npm run lint` | OK |
-| `npm test` (mock + fixtures) | **180 superati** (15 file) |
-| `npm run build` | OK; il bundle non contiene il backend simulato; avviso Vite «chunk > 500 kB» |
-| `npx vitest run --project integration` senza flag | 21 saltati (6 file) |
-| `V5_DOCUMENT_SEARCH_API=1` contro **mock su 3101** | 2/2: verifica solo il codice dei test, **non è integrazione reale** |
+| `npm test` (mock + fixtures) | **213 superati**, 18 file |
+| `npm run build` | OK. Il simulatore non è nel bundle. Avviso Vite: chunk JS 543,59 kB (Codex ne aveva tracciati 509,54 prima di H3a) |
+| `npx vitest run --project integration` senza flag | 23 saltati (7 file) |
+| `V5_EXPENSES_API=1` contro il **mock su 3101** | 2/2: verifica solo il codice dei test, **non è integrazione reale** |
 
-- **Composizione dei 180**: 152 baseline (M1–M4, H1) senza modifiche + 5 in `src/lib/documentSearch.test.ts` (regole, URL, client: richiesta M2 invariata, parametri attivi, capabilities, simulatore con cursor legati ai filtri) + 23 in `src/routes/documentSearch.test.tsx`.
-- **UI (mock)**, per criterio del contratto: 1 casa vuota / zero risultati / errore con Riprova; 2 titolo e filename, maiuscole; 3 trim, solo spazi, NFC su titolo decomposto, accenti distinti, 120/121 code point, controlli dall'URL; 4 `%`, `_`, backslash, apostrofo, SQL-like, HTML non interpretato; 5 formato da MIME con estensione fuorviante; 6 privati altrui esclusi all'owner, Solo io / Condivisi nella casa; 7 viewer, 403 dopo revoca senza risultati in pagina o cache, cambio account; 8 risultato oltre la prima pagina M2, pagine filtrate 20+4 senza duplicati con cursor della ricerca; 10 Cerca/Invio/Azzera, filtri combinati in una sola richiesta, focus da Casa e non all'apertura normale, ritorno dal dettaglio e ricarica; 11 due ricerche (prima annullata), cambio account con risposta tardiva, selezione ZIP azzerata e conservata con «Mostra altri»; 12 upload che compare nella ricerca, export solo del selezionato visibile, analisi M3/M4 su lista non filtrata; 13 capabilities 404 e 503. Il 9 (cursor) è provato sul client contro il simulatore e nella suite reale.
-- **Integrazione reale** (`tests/integration/document-search.int.test.ts`, solo `V5_API_URL` + `V5_DOCUMENT_SEARCH_API=1`; terzo gruppo del runner dopo la pausa di 61 s; tre registrazioni): capabilities; titolo/filename; `%`, `_`, SQL-like; NFC e accenti; formato da MIME; visibilità; 121 e controlli → 422; pagine 2+limit diverso senza duplicati; cursor con altri filtri → 422; vecchio cursor M2 accettato solo senza filtri; account esterno 403 su lista e capabilities. **Non eseguita contro 3001.**
+**Composizione dei 213:**
+- 183 di baseline: i 180 indicati da Codex più 3 sue regressioni. Ne ho modificato uno solo, in `routing.test.tsx`, come spiegato sopra.
+- 6 unitari (`src/lib/expenses.test.ts`): importi validi e invalidi, 0,10 + 0,20 = 30 centesimi, formattazione, date, filtri URL, ritorno legato all'account.
+- 3 client (`src/api/expensesClient.test.ts`): parametri, idempotenza e conflitto, cursor di altri filtri → 422, riepilogo active.
+- 21 UI (`src/routes/expenses.test.tsx`).
 
-**Browser (mock 3101 con `--seed`, Vite 5175)**: da Casa a 390 px «Cerca documenti» con focus sul campo, `scan_0042` + Invio trova «Bolletta gas gennaio» dal nome file; dettaglio e ritorno con `?q=scan_0042`, anche dopo ricarica del dettaglio; 320 px con query SQL-like + PNG + Condivisi → zero risultati, nessuno scroll orizzontale; desktop con filtri PDF/Condivisi e focus sul titolo all'apertura normale.
+**Criteri del contratto nelle prove mock:**
+1. Importi esatti e rifiuti; 0,10 + 0,20 = 0,30 € in Spese e in Casa.
+2. Date: bisestile, 0001/9999 e futura nei test unitari; futura e inesistente nella UI. jsdom, come i browser, svuota il valore del campo data quando la data non esiste.
+3. Creazione, risposta persa con riprova (stessa chiave e payload, un record, un evento), doppio clic, conflitto 409, no-op.
+4. Archive/restore con storia e totali; hash del documento e versione della caldaia invariati.
+5. Owner non vede né conta le spese del member; viewer in sola lettura; ID altrui 403; revoca → 403 senza dati in pagina o in cache; cambio account e casa azzerano le bozze.
+6. Riferimenti dall'URL non autorizzati non inviati; documento `unavailable` redatto anche nella storia; costo della caldaia contato una volta.
+7. Paginazione 20 + 5 senza duplicati e selettore documenti oltre la prima pagina. I cursor rifiutati con altri filtri sono provati nei test client e nella suite reale.
+8. Vuoto, anno vuoto, errore e capabilities 404/503 distinti, senza totali inventati.
+9. Regressioni M1–M4, H1 e H2 verdi; nessuna AI.
+10. Nessun pulsante «pagata», «incassata» o «Ho pagato».
 
-I processi di Codex su 3001, 5174, 55432 e 5173 non sono stati interrogati né fermati; i miei su 3101 e 5175 sono stati fermati.
+**Suite reale** (`tests/integration/expenses.int.test.ts`):
+- Si esegue solo con `V5_API_URL` + `V5_EXPENSES_API=1`, nel quarto gruppo del runner dopo 61 s, con `--maxWorkers=1` e `V5_ANTHROPIC_LIVE=0`; tre registrazioni in tutto. **Non l'ho eseguita contro 3001.**
+- Copre:
+  - capabilities;
+  - riepilogo vuoto;
+  - 422 per zero, oltre soglia, frazione di centesimo, data futura o inesistente, valuta;
+  - replay e conflitto di idempotenza;
+  - collegamento a documento e caldaia;
+  - lista per `assetId`;
+  - hash del documento;
+  - no-op, CAS e 409;
+  - archive/restore e 409 di stato;
+  - storia;
+  - totali esatti;
+  - paginazione e cursor;
+  - privacy tra account (403) e 422 per ID non valido.
+
+**Browser (mock 3101 con `--seed`, Vite 5175):**
+- Riepilogo a 390 px: 225,00 + 84,30 = 309,30 €.
+- Creazione **da tastiera** (focus al titolo del modulo, Invio per inviare, focus al titolo del dettaglio, URL pulito); l'importo «0,10» entra nei totali (225,10 €).
+- Dialogo «Archivia» a 320 px: focus sulla nota, Escape con focus restituito, Tab che resta nel dialogo, conferma, storia con la nota; dopo il ripristino il focus va su «Modifica».
+- Elenco desktop.
+- Dal documento: precompilazione verificata, data futura rifiutata sul campo, spesa da 1.234,50 € collegata.
+- Costi della caldaia a 390 px.
+- Casa a 390 px con totale 1.543,90 €.
+- Viewer: nessun pulsante, totali a zero, spesa di Giulia → 403.
+- Nessuno scroll orizzontale a 320 e 390 px.
+- Non provati nel browser: riprova dopo risposta persa e 503, perché il mock non li espone dal browser; sono coperti nei test jsdom.
+
+**Due difetti trovati nel browser e corretti** (`a5f1c7c`): il pulsante che apre il modulo spariva e il focus finiva sul body; dopo archivia/ripristina il dettaglio si rimonta per la nuova versione e il focus si perdeva.
+
+**Processi:**
+- Avevo lasciato un mio Vite H2 orfano sulla 5175 (PID 16768, avviato alle 00:32 dal mio checkout): l'ho verificato e fermato.
+- A fine lavoro i miei 3101 e 5175 sono fermi; nessun processo `node` del mio checkout resta attivo.
+- 3001, 5174, 55432 e 5173 non sono stati toccati.
 
 ## Screenshot (`docs/screenshots/`, backend simulato)
 
-- `21-mock-h2-ricerca-da-casa-390`: modulo dopo l'ingresso da Casa.
-- `22-mock-h2-risultati-390`: risultato trovato dal nome file.
-- `23-mock-h2-zero-risultati-320`: zero risultati con filtri combinati e query SQL-like resa come testo.
-- `24-mock-h2-filtri-desktop`: filtri PDF + Condivisi nella casa (pannello del browser integrato, 800 px).
+- `25-mock-h3-spese-riepilogo-390`
+- `26-mock-h3-dialogo-archivia-320`
+- `27-mock-h3-elenco-desktop`
+- `28-mock-h3-modulo-data-futura-desktop`
+- `29-mock-h3-costi-caldaia-390`
+- `30-mock-h3-casa-spese-390`
 
 Nessuna dichiarazione di conformità WCAG.
 
-## Domande contrattuali e lacune per Codex
+## Domande e note per Codex
 
-1. **Etichetta di visibilità**: il filtro usa «Condivisi nella casa» (contratto), le righe e l'upload M2 continuano a dire «Persone della casa». Uniformare?
-2. **Valori non validi nell'URL**: formato/visibilità sconosciuti vengono trattati come «Tutti» senza avviso; una `q` non valida mostra «Ricerca non valida» senza richiesta. Va bene?
-3. **Capabilities 403**: non mostro il riquadro «Ricerca non attiva» (lo gestisce il 403 della casa/lista). Confermare che il 403 delle capabilities coincide con la membership.
-4. **`fieldErrors` del 422 di ricerca**: oggi il 422 del server appare come errore generico «Ricerca non riuscita» (la UI previene già 121/controlli). Serve mostrarlo sul campo?
-5. **Upload PNG nella suite reale**: uso un PNG minimale (firma + 4 byte). Se il backend valida l'immagine completa, va sostituito con una fixture.
-6. **Viewer nella suite reale**: senza API V5 per inviti/ruoli il frontend non può creare un viewer; la ricerca del viewer va provata da Codex nel DB.
-7. **Avviso build «chunk > 500 kB»**: presente nell'output; non ho verificato se esisteva già prima di H2 (H2 aggiunge poco codice). Code splitting in backlog?
+1. **Anni nel filtro**: «Tutti gli anni» più gli ultimi 10 anni a partire dal `today` del server; un anno più vecchio funziona solo dall'URL. Serve un elenco degli anni con voci? Il contratto non lo prevede e non l'ho inventato.
+2. **Riepilogo con «Tutti gli anni»**: mostra l'anno corrente del server (default del contratto), non un totale pluriennale. Confermare.
+3. **503 sui POST** trattato come esito ambiguo (riprova con la stessa chiave). Va bene anche per un 503 con busta `SERVICE_UNAVAILABLE` emesso prima della transazione?
+4. **Selettore documenti**: elenca i documenti M2 leggibili, compresi quelli «Persone della casa» caricati da altri membri. Il contratto dice «documento M2 leggibile»: confermare che collegarli sia ammesso.
+5. **Filtro `assetId`/`documentId` su un riferimento non più leggibile**: la UI lo usa solo dalle pagine della caldaia o del documento già autorizzate; un 403 lì viene mostrato come errore della sezione «Costi collegati».
+6. **Inviti e ruoli**: il frontend non ha un'API V5 per gli inviti, quindi owner, member, viewer e revoca nella stessa casa vanno provati da Codex in DB/HTTP; nel mock sono coperti.
+7. **Osservazione su H1 (non modificato)**: `ActivityDetailPage` probabilmente perde il focus dopo completa/annulla/riapri per lo stesso motivo corretto qui (vista con chiave di versione, pulsante d'origine smontato, callback di `mutate` non eseguite dopo lo smontaggio). Da verificare con Codex prima di toccare H1.
+8. **Bundle**: 543,59 kB. Il code splitting per rotta (Spese, Attività/M4, Documenti) è consigliato prima del pilota.
 
 ## Limiti
 
-- Solo prove mock; H2 si chiude dopo backend, API, DB e browser reali di Codex (criterio 14).
-- Nessun conteggio totale dei risultati (il contratto non lo prevede): la UI dice solo «ce ne sono altri».
-- Gli screenshot desktop sono limitati dal pannello del browser integrato.
+- Solo prove mock. H3a si chiude dopo backend, API, DB e browser reali di Codex.
+- Export delle spese prima della vendita (CV-01) e rate condominiali dell'amministratore restano futuri, come da contratto; H3b (ricorrenze, stime, proiezioni) non è iniziata.
+- Gli screenshot desktop sono limitati dal pannello del browser integrato (800 px).
 
 ## Note per i documenti condivisi (le aggiorna Codex)
 
-- **changelog**: frontend H2 (ricerca per titolo e nome file in Documenti, filtri formato/visibilità, link da Casa, ritorno dal dettaglio con gli stessi filtri); solo prove mock.
-- **decisions/ADR**: senza filtri attivi la richiesta resta M2 (stessa chiave e cursor `c…`); varianti filtrate sotto il prefisso della lista per l'invalidazione da upload; filtri nell'URL, cursor mai; archivio rimontato al cambio filtri (prima pagina e selezione ZIP vuota); 403 rimuove le varianti non osservate e rilegge la casa; capabilities assenti = nessuna ricerca, nessun ripiego locale.
-- **backlog**: domande 1–7; conteggio risultati se mai previsto dal contratto; e2e browser reale H2.
-- **roadmap**: frontend H2 pronto per integrazione; H2 si chiude dopo integrazione e verifica reale di Codex.
-
-## Prossimi passi consigliati
-
-1. Codex: backend H2, poi integrazione dei commit da `c2d0e11` in poi (escludere `aa7268f`); risposte alle domande.
-2. `V5_API_URL=http://127.0.0.1:3001/api/v5 V5_DOCUMENT_SEARCH_API=1 npm run test:integration`, poi collaudo browser reale a 320/390 px, desktop e tastiera.
-3. Adeguamenti dalla review in nuovi commit `frontend-v5/**`.
-
-## Consegna notturna 14/10/2026 — revisione H2 e proposta H3 (nessun codice)
-
-Rapporto: [docs/H3-proposta-notturna-20261014.md](docs/H3-proposta-notturna-20261014.md).
-- **Rilievi H2 verificati sul percorso del codice, non eseguiti:**
-  - R1 (P1): i filtri di ricerca passano all'account successivo tramite `next` dopo un 401 o `account_context_changed`;
-  - R2 (P2): un 403 su «Mostra altri» o su una rilettura lascia i risultati nella cache fino al gc;
-  - R3–R5 (P3): stato di ritorno, «Cerca» dopo un errore, query non valida nell'URL;
-  - R6: lacune nei test.
-- **Proposta H3 «Spese essenziali»**: spese manuali o collegate a un documento, personali al creatore, collegamento facoltativo alla caldaia senza doppio costo, totale annuo dal server, modifica e rimozione logica con storia. Esclusi pagamenti, rate condominiali, AI e ricorrenti.
-- **Contratto `expenses-v1`**: bozza **non approvata**, più 10 decisioni per il committente.
-- Nessuna implementazione H3 prima del contratto congelato da Codex.
+- **changelog**: frontend H3a. Spese personali con totali annui dal server, modulo con importi in centesimi interi, archivia/ripristina con storia, ingressi da Casa, documento e caldaia. Solo prove mock.
+- **decisions**:
+  - importi come stringa nel campo, convertiti in centesimi con BigInt e formattati con aritmetica intera;
+  - nessun totale calcolato sul client;
+  - riferimenti dall'URL verificati con una lettura autorizzata prima di mostrarne il nome;
+  - focus spostato per cambio di versione e non tramite le callback di `mutate`.
+- **backlog**: domande 1–8, code splitting, e2e browser reale H3a.
+- **roadmap**: frontend H3a pronto per integrazione; H3a si chiude dopo integrazione e verifica reale di Codex.
