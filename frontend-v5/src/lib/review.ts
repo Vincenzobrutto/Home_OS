@@ -80,7 +80,7 @@ export const JOB_ERROR_LABEL: Record<string, string> = {
 
 export function jobErrorMessage(job: AnalysisJob) {
   if (!job.error) return null;
-  return job.error.message || JOB_ERROR_LABEL[job.error.code] || 'Analisi non riuscita.';
+  return job.error.message || JOB_ERROR_LABEL[job.error.code] || M4_ERROR_LABEL[job.error.code] || 'Analisi non riuscita.';
 }
 
 export function measurementText(m: Measurement) {
