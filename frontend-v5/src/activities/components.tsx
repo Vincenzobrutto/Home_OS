@@ -36,7 +36,7 @@ export function DueBadge({ state }: { state: DueState }) {
 }
 
 export function dueText(activity: HomeActivity) {
-  return activity.dueDate ? `Data scelta da te: ${formatCalendarDate(activity.dueDate)}` : 'Senza data';
+  return activity.dueDate ? `Data scelta da te: ${formatCalendarDate(activity.dueDate)}` : 'Nessuna data scelta';
 }
 
 export function ActivityRow({ activity, homeId }: { activity: HomeActivity; homeId: string }) {

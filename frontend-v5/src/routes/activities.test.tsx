@@ -104,7 +104,7 @@ describe('[mock] H1 — Casa e creazione', () => {
     expect(req!.body).toEqual({ title: 'Cambiare filtro acqua' });
     expect(req!.headers['x-account-context']).toBe(owner.id);
     expect(req!.headers['idempotency-key']).toMatch(/^[A-Za-z0-9_-]{16,100}$/);
-    expect(screen.getByText('Senza data', { selector: 'dd' })).toBeInTheDocument();
+    expect(screen.getByText('Nessuna data scelta', { selector: 'dd' })).toBeInTheDocument();
     const storia = screen.getByRole('region', { name: 'Storia dell’attività' });
     await waitFor(() => expect(storia).toHaveTextContent('Creata'));
   });
