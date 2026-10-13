@@ -23,9 +23,10 @@ export const VISIBILITY_FILTER_OPTIONS: Array<{ value: DocumentVisibilityFilter;
 
 export const SEARCH_SCOPE_NOTE = 'La ricerca riguarda titoli e nomi dei file, non il contenuto.';
 
-/** trim + NFC, come il server: stringa vuota = nessuna ricerca testuale. */
+/** Conserva i controlli per rifiutarli prima che trim li cancelli, come il server. */
 export function normalizeQuery(raw: string) {
-  return raw.normalize('NFC').trim();
+  const normalized = raw.normalize('NFC');
+  return CONTROL_RE.test(raw) ? normalized : normalized.trim();
 }
 
 // eslint-disable-next-line no-control-regex -- i caratteri di controllo sono proprio ciò che va rifiutato

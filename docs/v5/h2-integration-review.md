@@ -1,4 +1,4 @@
-# H2 — ricerca documenti: backend verificato, integrazione aperta
+# H2 — ricerca documenti integrata e verificata in locale
 
 14 ottobre 2026. Baseline contratto 534d6cf; branch dev/dimora-v5-local-20261013. Solo backend-v5/doc condivisi; Claude sviluppa frontend nel checkout distinto. Nessun main/push/schema/migrazione/DB legacy modificato.
 
@@ -22,6 +22,12 @@ Log: outputs/Dimora-V5-H2-backend-test.log e Dimora-V5-H2-backend-integrazione.l
 ## Ancora aperto
 Il 14 ottobre, dopo il cambio effettivo a Full access, il launcher -Restart ha identificato e riavviato soltanto l'API Dimora registrata (nuovo PID 8408), lasciando PostgreSQL attivo. La suite document-search.http.test.cjs con V5_DOCUMENT_SEARCH_API=1 ha verificato il servizio reale 3001: cinque test superati, zero fallimenti, nessuna analisi Anthropic. Autenticazione/context, capabilities, upload/ricerca/filtri, input 422 e query M3 rigorose, download/ZIP e revoca verificati sul processo aggiornato.
 
-Restano consegna/revisione/integrazione Claude, client/API e browser reali 320/390/desktop/tastiera. H2 non ancora chiusa, nessuna ricerca frontend reale dichiarata.
+Frontend Claude 524d577 integrato in sei commit (escluso sync aa7268f). Build/lint e 180 test mock/fixture passano. Codex conserva i controlli ai margini prima del trim: 28 test H2 mirati passano dopo la correzione. Fixture PNG della suite client inizialmente rifiutata dal file-type reale: sostituita con PNG 1x1 completo senza indebolire il backend.
+
+Client/API reali: identity/documents/review 9 pass; anthropic/activities 6 pass e quattro live saltati. H2 prima interrotta da PostgreSQL (503), cluster recuperato con -Resume; poi fixture PNG corretta e due test H2 passati. Totale 17 client/API non-live verdi, nessuna chiamata Anthropic. La prima esecuzione interrotta non è conteggiata come verde.
+
+Browser con sessione e DB reali: ingresso da Casa a 390 porta focus al campo; Invio trova MULTIPAGINA; dettaglio/refresh/ritorno conservano ricerca; PNG produce zero risultati, Azzera restituisce archivio; cambio filtri azzera ZIP. 320 e desktop senza overflow. PDF/Solo io combinati funzionano. Screenshot outputs/Dimora-V5-H2-browser-reale.png. Paging, viewer/revoca e byte/ZIP sono verificati nelle suite DB/HTTP, non tutti ripetuti manualmente nel browser. Nessuna dichiarazione WCAG. H2 chiusa come incremento locale; produzione, OCR, spese e vendita restano successive.
+
+Questioni Claude: testi Condivisi nella casa/Persone della casa equivalenti, uniformazione editoriale futura; valori URL sconosciuti valgono Tutti nel client ma API rigorosa; 403 capabilities coincide con membership; 422 mostra errore, comuni query invalide intercettate sul campo; PNG completo corretto; viewer verificato DB/HTTP senza nuova API ruoli. Avviso Vite 509.54 kB tracciato: valutare code splitting prima del pilota, non nascondere aumentando la soglia.
 
 Launcher esterno supporta -Search come build/riavvio, senza npm ci/generate/migrazione; flag H2 client quando la suite è presente. Il cambio effettivo dei permessi consente ora il riavvio diretto dalla chat. Non creati proxy/endpoint di gestione per aggirare la sandbox.

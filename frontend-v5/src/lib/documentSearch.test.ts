@@ -12,6 +12,8 @@ describe('regole H2 (unitarie, senza rete)', () => {
     expect(validateQuery('🔥'.repeat(121))).toMatch(/120/);
     expect(validateQuery('a\tb')).toMatch(/non ammessi/);
     expect(validateQuery('a\u007fb')).toMatch(/non ammessi/);
+    expect(validateQuery(normalizeQuery('\tRogito'))).toMatch(/non ammessi/);
+    expect(validateQuery(filtersFromParams(new URLSearchParams('q=Rogito%0A')).q)).toMatch(/non ammessi/);
     expect(validateQuery("%_\\'()")).toBeUndefined();
   });
 

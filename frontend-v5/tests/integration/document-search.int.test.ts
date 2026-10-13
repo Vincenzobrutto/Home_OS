@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { ApiClient, type FetchLike } from '../../src/api/client';
 import type { DocumentSearchFilters } from '../../src/api/types';
-import { PNG_SIGNATURE, samplePdf } from '../../src/test/fakeBackend';
+import { samplePdf } from '../../src/test/fakeBackend';
 
 const BASE = process.env.V5_API_URL;
 const ENABLED = !!BASE && process.env.V5_DOCUMENT_SEARCH_API === '1';
@@ -44,6 +44,7 @@ async function register(label: string) {
 }
 
 const pdf = (filename: string) => new File([samplePdf(filename) as BlobPart], filename, { type: 'application/pdf' });
+const png = () => new Uint8Array(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64'));
 
 describe.skipIf(!ENABLED)('[integrazione reale] document-search-v1', () => {
   it('capabilities, titolo/filename, letterali, NFC/accenti, formato da MIME, paginazione e cursor legati ai filtri', async () => {
@@ -59,7 +60,7 @@ describe.skipIf(!ENABLED)('[integrazione reale] document-search-v1', () => {
     await up(pdf('filexa.pdf'), 'fileXa');
     const underscore = await up(pdf('file_a.pdf'), 'file_a');
     const nfd = await up(pdf('verbale.pdf'), 'Verbale caffé');
-    const image = await up(new File([new Uint8Array([...PNG_SIGNATURE, 0, 0, 0, 0]) as BlobPart], 'foto.pdf', { type: 'image/png' }), 'Foto', 'home');
+    const image = await up(new File([png() as BlobPart], 'foto.pdf', { type: 'image/png' }), 'Foto', 'home');
     for (let i = 1; i <= 3; i++) await up(pdf(`bolletta-${i}.pdf`), `Bolletta ${i}`);
 
     const find = async (f: Partial<DocumentSearchFilters>) =>
