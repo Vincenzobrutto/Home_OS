@@ -15,3 +15,6 @@
 ## Segnalazioni intelligenti
 
 Il modello deve distinguere segnalazione privata, problema comune, azioni dell'amministratore e comunicazione pubblicata. Nessuna presa in carico o risoluzione deve essere inferita dall'AI.
+
+## Sviluppo V1
+Il lavoro parte da R00 e procede solo dopo la verifica dei permessi.
