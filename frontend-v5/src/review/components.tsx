@@ -13,6 +13,7 @@ import type {
   SourceRef,
 } from '../api/types';
 import { Banner, Tag, cx, ui } from '../components/ui';
+import { useDocument } from '../documents/hooks';
 import {
   FIELD_LABEL,
   ORIGIN_LABEL,
@@ -33,6 +34,11 @@ export function SimulationBadge() {
   return <span className={styles.simulation}>{SIMULATION_LABEL}</span>;
 }
 
+function SourceName({ homeId, documentId }: { homeId: string; documentId: string }) {
+  const document = useDocument(homeId, documentId);
+  return <strong>{document.data?.name ?? 'Documento originale'}</strong>;
+}
+
 /** Fonti di un valore: estratto e pagina; l'originale si apre col flusso autenticato M2. */
 export function SourceList({ sources, homeId }: { sources: SourceRef[]; homeId: string }) {
   if (sources.length === 0) return <p className={styles.source}>Nessuna fonte documentale.</p>;
@@ -40,6 +46,7 @@ export function SourceList({ sources, homeId }: { sources: SourceRef[]; homeId: 
     <ul className={styles.sources}>
       {sources.map((s, i) => (
         <li key={`${s.documentId}-${i}`} className={styles.source}>
+          <SourceName homeId={homeId} documentId={s.documentId} /> ·{' '}
           <q>{s.excerpt}</q> — pagina {s.page}, versione {s.documentVersion}, impronta{' '}
           <span title={s.documentSha256}>{s.documentSha256.slice(0, 8)}…</span> ·{' '}
           <Link to={`/home/${encodeURIComponent(homeId)}/documenti/${encodeURIComponent(s.documentId)}`}>

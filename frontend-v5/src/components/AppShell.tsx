@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Link, NavLink } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import type { Account, Home } from '../api/types';
 import { useLogout } from '../session/hooks';
 import { Icon, type IconName } from './Icon';
@@ -125,6 +125,9 @@ export function AppShell(props: { account: Account; home?: Home; children: React
 }
 
 function SectionNav({ home, variant }: { home: Home; variant: 'side' | 'bottom' }) {
+  const { pathname } = useLocation();
+  const section = pathname.split('/')[3];
+  const activeSection = section === 'review' || section === 'impianti' ? 'attivita' : section;
   const linkClass = variant === 'side' ? styles.sideLink : styles.bottomLink;
   return (
     <nav
@@ -132,10 +135,11 @@ function SectionNav({ home, variant }: { home: Home; variant: 'side' | 'bottom' 
       aria-label={`Sezioni di ${home.name}`}
     >
       {SECTIONS.map((s) => (
-        <NavLink
+        <Link
           key={s.id}
           to={`/home/${encodeURIComponent(home.id)}/${s.id}`}
           className={cx(linkClass, !s.available && styles.unavailableLink)}
+          aria-current={activeSection === s.id ? 'page' : undefined}
         >
           <Icon name={s.icon} />
           <span>{s.label}</span>
@@ -147,7 +151,7 @@ function SectionNav({ home, variant }: { home: Home; variant: 'side' | 'bottom' 
               <span className="visually-hidden"> (non ancora disponibile)</span>
             </>
           )}
-        </NavLink>
+        </Link>
       ))}
     </nav>
   );

@@ -61,7 +61,7 @@ async function open(backend: FakeBackend, email: string, password: string, path:
 const posts = (backend: FakeBackend, suffix: RegExp) => backend.log.filter((r) => r.method === 'POST' && suffix.test(r.path));
 
 /** Avvia un'analisi dei documenti indicati dalla pagina Attività e attende l'esito. */
-async function analyze(app: App, homeId: string, docNames: string[], expected: RegExp = /Proposte create|Nessuna novità/) {
+async function analyze(app: App, homeId: string, docNames: string[], expected: RegExp = /Analisi completata|Nessuna novità/) {
   await app.router.navigate(`/home/${homeId}/attivita?analizza=1`);
   await screen.findByRole('heading', { name: 'Nuova analisi di test' });
   for (const n of docNames) await app.user.click(await screen.findByRole('checkbox', { name: new RegExp(n) }));
@@ -112,7 +112,7 @@ describe('[mock] M3 — endpoint assenti e avvio esplicito', () => {
     expect(form).toHaveTextContent('Destinazione: una nuova scheda caldaia in Casa Roma');
     await app.user.click(within(form).getByRole('button', { name: 'Avvia analisi di test' }));
     const progress = await screen.findByRole('region', { name: 'Analisi avviata' });
-    await waitFor(() => expect(progress).toHaveTextContent('Proposte create: 3 verifiche aperte'), { timeout: 3000 });
+    await waitFor(() => expect(progress).toHaveTextContent('Analisi completata: 3 verifiche aperte'), { timeout: 3000 });
     const [req] = posts(backend, /analysis-jobs$/);
     expect(req!.body).toEqual({ documentIds: [A.id] });
     expect(req!.headers['x-account-context']).toBe(owner.id);
@@ -167,7 +167,7 @@ describe('[mock] M3 — job: fallimento, retry, polling', () => {
     expect(progress).not.toHaveTextContent('Completata');
     backend.review.jobMode = 'auto';
     await app.user.click(within(progress).getByRole('button', { name: 'Aggiorna' }));
-    await waitFor(() => expect(progress).toHaveTextContent('Proposte create'), { timeout: 3000 });
+    await waitFor(() => expect(progress).toHaveTextContent('Analisi completata'), { timeout: 3000 });
   });
 
   it('polling interrotto lasciando la pagina; rientro da Attività con stato persistente', async () => {
@@ -189,7 +189,7 @@ describe('[mock] M3 — job: fallimento, retry, polling', () => {
     const followLink = await screen.findByRole('link', { name: 'Segui l’avanzamento' });
     await app.user.click(followLink);
     const progress = await screen.findByRole('region', { name: 'Analisi avviata' });
-    await waitFor(() => expect(progress).toHaveTextContent('Proposte create'), { timeout: 3000 });
+    await waitFor(() => expect(progress).toHaveTextContent('Analisi completata'), { timeout: 3000 });
   });
 });
 
@@ -216,7 +216,8 @@ describe('[mock] M3 — decisioni', () => {
     await screen.findByText('Dati parzialmente confermati');
     const storia = screen.getByRole('region', { name: 'Storia della scheda' });
     await waitFor(() => expect(storia).toHaveTextContent('Conferma'));
-    expect(storia).toHaveTextContent('Marca (accept): — → Termica Demo');
+    expect(storia).toHaveTextContent('Marca (Proposta confermata): — → Termica Demo');
+    expect(screen.getAllByRole('link', { name: 'Attività' }).every(link => link.getAttribute('aria-current') === 'page')).toBe(true);
   });
 
   it('Rimanda non invia nulla; Non applicare richiede una nota e chiude solo quella proposta', async () => {
@@ -324,7 +325,7 @@ describe('[mock] M3 — decisioni', () => {
     expect(screen.getByRole('combobox', { name: 'Destinazione dei risultati' })).toHaveValue(assetId);
     await app.user.click(screen.getByRole('button', { name: 'Avvia analisi di test' }));
     const progress = await screen.findByRole('region', { name: 'Analisi avviata' });
-    await waitFor(() => expect(progress).toHaveTextContent('Proposte create'), { timeout: 3000 });
+    await waitFor(() => expect(progress).toHaveTextContent('Analisi completata'), { timeout: 3000 });
     expect(backend.review.assets.size).toBe(1);
     await openBoilerFromProgress(app, progress);
     const marca = card('Marca');

@@ -407,7 +407,7 @@ function JobOutcome(props: { homeId: string; job: AnalysisJob; expired: boolean;
         <p>
           {job.outcome === 'no_changes'
             ? 'Nessuna novità: i dati coincidono con quelli già confermati o con decisioni già prese.'
-            : `Proposte create: ${job.openReviewCount ?? 0} ${job.openReviewCount === 1 ? 'verifica aperta' : 'verifiche aperte'}.`}{' '}
+            : `Analisi completata: ${job.openReviewCount ?? 0} ${job.openReviewCount === 1 ? 'verifica aperta' : 'verifiche aperte'} nella scheda.`}{' '}
           {job.assetId && (
             <Link to={`/home/${encodeURIComponent(homeId)}/impianti/${encodeURIComponent(job.assetId)}`}>Apri la scheda</Link>
           )}{' '}
@@ -477,7 +477,7 @@ function JobRow({ homeId, job, canEdit, onRetried }: { homeId: string; job: Anal
       )}
       {job.state === 'succeeded' && (
         <p className={styles.small}>
-          {job.outcome === 'no_changes' ? 'Nessuna novità.' : `Verifiche create: ${job.openReviewCount ?? 0}.`}
+          {job.outcome === 'no_changes' ? 'Nessuna novità.' : `Verifiche aperte nella scheda al termine dell’analisi: ${job.openReviewCount ?? 0}.`}
         </p>
       )}
       <div className={review.actions}>

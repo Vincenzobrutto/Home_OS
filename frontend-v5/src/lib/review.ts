@@ -48,6 +48,12 @@ export const HISTORY_KIND_LABEL: Record<HistoryEvent['kind'], string> = {
   manual_confirmation: 'Inserimento manuale',
 };
 
+export const HISTORY_ACTION_LABEL: Record<string, string> = {
+  accept: 'Proposta confermata', correct: 'Valore corretto', resolve_power: 'Potenza interpretata',
+  discard: 'Proposta non applicata', manual: 'Inserimento manuale', proposed: 'Dato proposto',
+  already_matches: 'Evidenza già gestita',
+};
+
 export const QUANTITY_OPTIONS: Array<{ code: QuantityCode; label: string }> = [
   { code: 'useful_heating', label: 'Potenza utile al riscaldamento' },
   { code: 'reported_nominal', label: 'Potenza nominale riportata' },

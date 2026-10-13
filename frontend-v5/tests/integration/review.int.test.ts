@@ -102,13 +102,15 @@ describe.skipIf(!ENABLED)('[integrazione reale] review-v1', () => {
 
   it('PDF non riconosciuto: job failed provider_fixture_unsupported, nessuna scheda; retry crea un nuovo job', async () => {
     const { api, account, home } = await setup(unique());
+    const sourcePdf = readFileSync(join(EXAMPLES, 'libretto-caldaia-demo.pdf'));
+    const eof = sourcePdf.lastIndexOf('%%EOF');
+    const unknownPdf = Buffer.concat([sourcePdf.subarray(0, eof), Buffer.from('% Documento sintetico di test non presente nel manifest\n'), sourcePdf.subarray(eof)]);
     const other = await api.uploadDocument(
       home.id,
-      { file: new File([readFileSync(join(EXAMPLES, 'libretto-caldaia-demo.pdf')).subarray(0, 1200), Buffer.from('\n%%EOF\n')], 'altro.pdf', { type: 'application/pdf' }), name: 'Altro', visibility: 'private' },
+      { file: new File([unknownPdf], 'altro.pdf', { type: 'application/pdf' }), name: 'Altro', visibility: 'private' },
       crypto.randomUUID(),
       account.id,
-    ).catch(() => null);
-    if (!other) return; // il backend può rifiutare un PDF troncato in upload: allora il caso non è applicabile
+    );
     const started = await api.createAnalysisJob(home.id, { documentIds: [other.id] }, crypto.randomUUID(), account.id);
     const job = await waitJob(api, home.id, started.id, account.id);
     expect(job.state).toBe('failed');

@@ -25,4 +25,4 @@ ConfirmedField conserva valore strutturato, revisione, origine e Confirmation. O
 M3 mantiene personali i derivati anche da fonti home: non condivide automaticamente dati provenienti da private. Visibilità di schede fra familiari/professionisti richiede policy successiva. Blueprint e forme API in review-api-contract.md; schema concreto/migrazione ancora di Codex, non vincolati a un'implementazione inventata dal frontend.
 
 ### Implementazione M3
-Le entita M3 sono ora nello schema backend-v5 e nella migration 202610130003_review. JSON validato per candidati, conferme, snapshot e storia; unicita job/campo e ambito idempotente account/Home/operazione/target/chiave. Migrazione ancora da applicare sul runtime locale.
+Le entita M3 sono ora nello schema backend-v5 e nella migration 202610130003_review. JSON validato per candidati, conferme, snapshot e storia; unicita job/campo e ambito idempotente account/Home/operazione/target/chiave. Migrazione applicata e verificata sul runtime locale con i test M3 API/PostgreSQL.

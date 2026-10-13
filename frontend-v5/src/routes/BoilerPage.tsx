@@ -9,6 +9,7 @@ import {
   BOILER_STATE_LABEL,
   FIELD_LABEL,
   HISTORY_KIND_LABEL,
+  HISTORY_ACTION_LABEL,
   PERSONAL_LABEL,
   confirmedFieldOf,
   fieldValueText,
@@ -527,7 +528,7 @@ function HistoryItem({ event, homeId }: { event: HistoryEvent; homeId: string })
       {event.note && <span className={styles.small}>Nota: {event.note}</span>}
       {event.changes.map((c, i) => (
         <div key={i} className={review.historyChange}>
-          <strong>{FIELD_LABEL[c.fieldKey]}</strong> ({c.action}): {fieldValueText(c.before)} → {fieldValueText(c.after)}
+          <strong>{FIELD_LABEL[c.fieldKey]}</strong> ({HISTORY_ACTION_LABEL[c.action] ?? 'Aggiornamento'}): {fieldValueText(c.before)} → {fieldValueText(c.after)}
           {c.sources.length > 0 && <SourceList sources={c.sources} homeId={homeId} />}
         </div>
       ))}
