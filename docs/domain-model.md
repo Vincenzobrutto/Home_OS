@@ -195,3 +195,6 @@ Migrazione additiva 202610130004_anthropic applicata nel solo database V5 dedica
 
 ## H1 — modello pianificato
 HomeActivity (account/Home, caldaia facoltativa, testo, data calendario, stato/versione), ActivityHistory (prima/dopo/nota/azione esplicita), ActivityRequest (idempotenza). Non ancora presenti in Prisma; futura migrazione soltanto V5. Link asset illeggibile redatto, note manuali personali conservate con diritto Home. Nessun riuso Issue Genesis/report Admin o completamento tecnico implicito. Contratto docs/v5/activities-api-contract.md.
+
+## H1 — schema implementato
+Migrazione 202610130005_activities applicata solo a dimora_v5_product_dev: HomeActivity, ActivityHistory, ActivityRequest con FK Restrict. dueDate stringa calendario validata, distinta dai timestamp UTC; stato enum open/completed/cancelled. Snapshot storico interno conserva riferimento asset, proiezione pubblica redige se non autorizzato. Nessun campo BoilerAsset, documento o ledger modificato dalle attività. Dettagli in docs/v5/domain-model.md.

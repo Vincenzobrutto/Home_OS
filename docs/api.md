@@ -180,3 +180,6 @@ Contratto analysis-v2 implementato sui percorsi review-v1, docs/v5/anthropic-api
 
 ## H1 activities-v1 — contratto, non endpoint attivi
 Contratto docs/v5/activities-api-contract.md: activity-capabilities, activities lista/creazione/dettaglio, updates/complete/cancel/reopen, history e activity-summary sotto /api/v5/homes/:homeId. Cookie/CSRF/Account-Context, idempotenza, versione e privacy personali. Date YYYY-MM-DD/Europe-Rome, today/dueState server. Implementazione da iniziare, non interrogare i mock come servizio reale.
+
+## H1 activities-v1 — backend locale attivo
+Dieci endpoint sotto /api/v5/homes/:homeId: GET activity-capabilities, GET/POST activities, GET activities/:id, POST activities/:id/updates|complete|cancel|reopen, GET activities/:id/history e GET activity-summary. POST richiede Origin/CSRF/Idempotency-Key; versione e dati privati controllati. today/dueState server, fuso Europe/Rome. Contratto docs/v5/activities-api-contract.md; runtime 3001 verificato, frontend/browser ancora aperti.

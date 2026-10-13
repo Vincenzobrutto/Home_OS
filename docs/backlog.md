@@ -116,3 +116,11 @@ Il limite delle sei chiamate protegge il collaudo e non è una quota commerciale
 - [ ] Test dominio/API/DB/client, privacy, date, idempotenza e browser reale.
 - [ ] Successivi sottoincrementi: ricorrenze, allegati completamento, calendario alternativo, condivisione personale e fuso configurabile. Nessuna funzionalità normativa promessa.
 Riferimento docs/v5/activities-api-contract.md; H1 non consuma Anthropic e non riapre il collaudo M4.
+
+### H1 — stato dopo backend
+- [x] Dieci endpoint, schema e migrazione additiva locale.
+- [x] Dominio, PostgreSQL, HTTP/sessioni reali, concorrenza/idempotenza/privacy/date.
+- [ ] Frontend Claude: integrare solo commit H1 dopo consegna finale, escludere sincronizzazione.
+- [ ] Client/API reali e browser 320/390/desktop/tastiera, reload/login.
+- [ ] Prima del pilota: ottimizzare lista/summary/storia con query aggregate e paginazione keyset per dataset ampi, preservando policy e filtri. Oggi lettura personale e ordinamento in memoria nel runtime locale.
+Report docs/v5/h1-integration-review.md; H1 non ancora completa.

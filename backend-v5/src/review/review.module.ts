@@ -9,5 +9,5 @@ import { AiBudget } from './ai-budget';
 import { PdfTextExtractor } from './pdf-text';
 import { AnthropicTransport } from './anthropic';
 import { AiAnalysis } from './ai-analysis';
-@Module({ imports: [DocumentsModule], controllers: [ReviewController], providers: [ReviewService, FixtureProvider, AnalysisWorker, AiConfig, AiBudget, PdfTextExtractor, AnthropicTransport, AiAnalysis] })
+@Module({ imports: [DocumentsModule], controllers: [ReviewController], providers: [ReviewService, FixtureProvider, AnalysisWorker, AiConfig, AiBudget, PdfTextExtractor, AnthropicTransport, AiAnalysis], exports: [ReviewService] })
 export class ReviewModule {}

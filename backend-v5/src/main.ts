@@ -11,6 +11,7 @@ export class ApiErrorFilter implements ExceptionFilter {
     const res = host.switchToHttp().getResponse<Response>();
     const documentRoute = host.switchToHttp().getRequest<Request>().path.includes('/documents');
     const reviewRoute = /\/homes\/[^/]+\/(analysis-capabilities|analysis-jobs|assets|review)(\/|$)/.test(host.switchToHttp().getRequest<Request>().path);
+    const activityRoute = /\/homes\/[^/]+\/(activity-capabilities|activity-summary|activities)(\/|$)/.test(host.switchToHttp().getRequest<Request>().path);
     let status = error instanceof HttpException ? error.getStatus() : 503;
     if (status === 400) status = 422;
     const detail = error instanceof HttpException ? error.getResponse() : null;
@@ -18,7 +19,7 @@ export class ApiErrorFilter implements ExceptionFilter {
     const message = status === 503 ? 'Servizio temporaneamente non disponibile.' : documentRoute && status === 413 && !info?.code ? 'Il file supera 20 MiB.' : documentRoute && status === 422 && !info?.code ? 'Controlla il file e i dati inseriti.' : typeof info?.message === 'string' ? info.message : 'Controlla i dati inseriti.';
     const codes: Record<number, string> = { 401: 'UNAUTHENTICATED', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT', 422: 'VALIDATION_ERROR', 429: 'RATE_LIMITED', 503: 'SERVICE_UNAVAILABLE' };
     const documentCodes: Record<number, string> = { 413: 'file_too_large', 415: 'unsupported_file_type', 422: 'validation_error' };
-    res.status(status).json({ error: { code: info?.code || (reviewRoute && status === 422 ? 'validation_error' : undefined) || (documentRoute ? documentCodes[status] : undefined) || codes[status] || 'REQUEST_ERROR', message, ...(info?.fieldErrors ? { fieldErrors: info.fieldErrors } : {}), requestId: randomUUID() } });
+    res.status(status).json({ error: { code: info?.code || ((reviewRoute || activityRoute) && status === 422 ? 'validation_error' : undefined) || (documentRoute ? documentCodes[status] : undefined) || codes[status] || 'REQUEST_ERROR', message, ...(info?.fieldErrors ? { fieldErrors: info.fieldErrors } : {}), requestId: randomUUID() } });
   }
 }
 export async function bootstrap() {

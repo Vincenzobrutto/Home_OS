@@ -453,3 +453,6 @@ PDF.js 6.4.299 paginato in processo senza chiave, limiti di memoria/tempo; non �
 
 ## ADR-V5-12 — primo incremento Home utile dopo Anthropic
 H1 sono promemoria manuali personali: attività e verifiche AI separate, caldaia facoltativa anche provvisoria, nessuna normativa/ricorrenza/AI automatica. Scartati riuso Issue/report condominiale, attività condivise per default e date UTC per giorni senza ora. YYYY-MM-DD, Europe/Rome esplicito, stati calcolati sul server; completa/annulla/riapri con audit e versioni atomici. Link privati redatti senza cancellare appunti. Contratto pianificato, API/schema non attivi. ADR e confini in docs/v5/implementation-decisions.md e activities-api-contract.md.
+
+### H1 — attuazione ADR-V5-12
+Riutilizzate soltanto le policy V5 membership/asset/fonti tramite ReviewService esportato; nuova attività personale separata dai derivati AI. Clock iniettabile, calendario gregoriano, snapshot interni con redazione dinamica e replay con riferimento riletto. Nessuna dipendenza nuova. Harness HTTP con controller/sessioni/DB reali su porta effimera senza worker; ripetuto sul runtime 3001. Alternative e confini in docs/v5/implementation-decisions.md.

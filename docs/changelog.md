@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-13 — H1 backend attività personali verificato
+
+Implementati dieci endpoint activities-v1 e migrazione additiva nel DB locale V5. Promemoria personali con data calendario, completa/annulla/riapri, versioni e storia atomiche, retry idempotente autorizzato; collegamenti caldaia redatti se illeggibili senza perdere appunti. Build/lint, 71 test offline e 61 integrazione passano; cinque prove HTTP H1 passano anche sul runtime 3001 riavviato. Frontend Claude e browser ancora da integrare; zero chiamate Anthropic. Report docs/v5/h1-integration-review.md.
+
+
 ## 2026-10-13 — H1 Attività, contratto pronto
 
 Fissati activities-v1 e ADR-V5-12 per il primo sottoincremento Home utile: promemoria manuali personali, date calendario, caldaia facoltativa, completa/annulla/riapri e storia. Dieci endpoint e prove di accettazione pianificati; nessun codice/schema/API H1 implementato o collaudato. Incarichi separati e bundle di sincronizzazione preparati per Codex/Claude. M1–M4 invariati, nessuna chiamata AI.

@@ -145,3 +145,6 @@ Parser testuale, Anthropic reale, fonti pagina 2/3, consenso, ledger e frontend 
 
 ## Prossimo H1 — Attività e scadenze personali
 M4 Anthropic chiusa; segue il primo sottoincremento Home utile della roadmap originaria, non ancora Agenzie. Contratto e incarichi pronti; Codex backend/model/test, Claude frontend/mock, poi integrazione e prove reali. Uscita: crea → modifica → completa → storia → riapri, privacy e date corrette dopo reload/login. Seguono ricerca/spese/ciclo proprietario e poi Agenzie/Admin; OCR separato. Non rinumerare il piano storico come se quelle funzioni fossero già implementate.
+
+### H1 — avanzamento backend
+Schema/migrazione e dieci endpoint reali verificati nel DB locale; regressioni M1–M4 offline/M1–M3 API passano. Restano consegna/revisione frontend Claude, integrazione client e browser reale prima di chiudere Home attività. Nessuna nuova chiamata Anthropic.

@@ -1,6 +1,6 @@
 # H1 — activities-v1: attività personali e scadenze
 
-13 ottobre 2026. **Contratto di sviluppo fissato; endpoint e schema H1 non ancora implementati.** M1–M4 sono la baseline locale verificata. H1 è il primo sottoincremento di Home utile: il numero M4 è stato usato per Anthropic e non implica che tutta la Home della roadmap originaria sia già costruita. Agenzie, Amministratori, spese, ricerca e vendita seguono separatamente.
+13 ottobre 2026. **Backend e schema H1 implementati e verificati nel database dedicato; dieci endpoint attivi sul servizio locale 3001. Frontend e collaudo browser ancora da integrare.** M1–M4 sono la baseline locale verificata. H1 è il primo sottoincremento di Home utile: il numero M4 è stato usato per Anthropic e non implica che tutta la Home della roadmap originaria sia già costruita. Agenzie, Amministratori, spese, ricerca e vendita seguono separatamente.
 
 Riferimenti prodotto: DIMORA_V5_MASTER.md, regola M-11 (offline non completa modifiche); DIMORA_HOME_UX_CONSOLIDATED §4 (promemoria utente distinto dagli obblighi, completamento dichiarato, storia); decisioni V5 su privacy, AI e contesti. Codex mantiene questo contratto; Claude scrive solo frontend-v5.
 
@@ -78,7 +78,7 @@ type ActivityHistorySnapshot = { title: string; description: string | null;
 
 description assente/null/vuota → null. Titolo trim/NFC, 1–120 code point; descrizione trim/NFC fino a 2000; nota trim/NFC fino a 500, vuota assente. Codici e valori fidati (state, version, origin, owner, timestamps, dueState) non accettati dal client. expectedVersion intero positivo obbligatorio; update deve contenere almeno un campo modificabile. Omissione di un campo conserva il valore; null azzera solo quelli nullable. Nessun nuovo import o dipendenza richiesto.
 
-## Endpoint pianificati
+## Endpoint implementati
 
 Base /api/v5; tutti sotto /homes/:homeId. Ogni POST richiede Idempotency-Key (stesso formato M3, ambito account/Home/operazione/target) e CSRF/Origin. Il client invia X-Account-Context catturato per tutte le richieste; il server lo verifica secondo identity-v1.1 (facoltativo soltanto per compatibilità di trasporto). Non usare PATCH/DELETE nascosti per aggirare l'idempotenza.
 
@@ -119,7 +119,7 @@ Errori: 401 UNAUTHENTICATED o account_context_changed; 403 FORBIDDEN generico co
 
 ## Schema previsto e criteri di uscita
 
-Entità HomeActivity (accountId/homeId/assetId nullable, campi/stato/versione/date), ActivityHistory (actor/origin/note/snapshot prima-dopo), ActivityRequest (idempotenza account/Home/operation/target/key/digest/response). Migrazione nuova solo V5, FK Restrict sui record personali e riferimenti; rimuovere collegamento non elimina asset. Non creare tabelle legacy o riusare Issue di Genesis/report condominiale. Questo modello è pianificato, non ancora presente in Prisma.
+Entità HomeActivity (accountId/homeId/assetId nullable, campi/stato/versione/date), ActivityHistory (actor/origin/note/snapshot prima-dopo), ActivityRequest (idempotenza account/Home/operation/target/key/digest/response). Migrazione 202610130005_activities applicata soltanto a dimora_v5_product_dev, FK Restrict sui record personali e riferimenti; rimuovere collegamento non elimina asset. Nessun riuso Issue Genesis/report condominiale. dueDate è una stringa calendario validata, distinta dai timestamp; origin è imposto dal servizio, non un input client. Lo snapshot storico interno conserva assetId; la proiezione pubblica lo rilegge e redige dinamicamente.
 
 Scenari minimi per backend/API/client/browser, con clock controllabile per prove di dominio:
 
