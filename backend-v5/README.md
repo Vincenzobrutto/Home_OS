@@ -1,6 +1,6 @@
-# Dimora V5 API — identity-v1
+# Dimora V5 API — backend locale Home
 
-API nuova NestJS/Prisma/PostgreSQL, senza import dell'AppModule o automatismi legacy. Prima verticale: sessione/CSRF, register/login/logout, elenco/creazione/dettaglio Home, membership temporali e idempotenza. Nessun endpoint documenti, agenzia o amministratore ancora implementato.
+API nuova NestJS/Prisma/PostgreSQL, senza import dell'AppModule o automatismi legacy. Implementati identity, documenti, analisi/conferme caldaia, attività, ricerca documenti e backend spese H3a. Agenzie e Amministratori seguono separatamente. Le sezioni iniziali riportano consegne storiche: lo stato corrente delle verticali è nei report docs/v5/*-integration-review.md.
 
 Contratto: `../docs/v5/api-contract.md`. Host 127.0.0.1:3001, prefisso /api/v5; Origin atteso 127.0.0.1:5174 via proxy Vite. Database accettato dal codice: soltanto ruolo dimora_v5_app e dimora_v5_product_dev su 127.0.0.1/localhost:55432. Nessuna migrazione automatica al bootstrap.
 
@@ -35,3 +35,6 @@ Questo stato supera le fotografie M2/M3 iniziali sopra: API, DB e frontend sono 
 Dieci endpoint activities-v1 e migrazione 202610130005_activities applicati al DB locale dedicato. Promemoria privati, data calendario scelta dall'utente, completa/annulla/riapri e storia; caldaia facoltativa, nessun campo tecnico o costo AI modificato. Build/lint, 71 test offline e 61 test integrazione (regressioni comprese) passano. La suite HTTP H1 avvia un harness Nest reale su porta effimera senza worker AI; con V5_ACTIVITIES_API=1 verifica invece il processo API registrato su 3001 (cinque prove passate dopo riavvio). `npm run test:activities-db` verifica le sole nuove regole con database dedicato. Questi test rimuovono soltanto i propri nuovi record sintetici. Contratto docs/v5/activities-api-contract.md; frontend/browser ancora aperti.
 
 Aggiornamento 14 ottobre: frontend H1 integrato, 152 test mock/fixture, 15 client/API reali e browser 320/390/desktop/tastiera/reload/login superati. H1 chiusa per sviluppo locale. Resoconto docs/v5/h1-integration-review.md; nessuna nuova chiamata Anthropic.
+
+## H2 e H3a — stato 14 ottobre
+H2 document-search-v1 integrata e verificata; ulteriori fix privacy della sessione/cache passano con 41 test mirati. H3a expenses-v1: nove endpoint attivi su 3001 e migrazione additiva applicata al solo DB dedicato, 77 offline/89 integrazione e cinque HTTP sul processo reale verdi. `npm run test:expenses-db` esegue le nuove prove DB/HTTP senza provider AI; V5_EXPENSES_API=1 fa usare alla suite HTTP il processo 3001 invece del harness. Personali al creatore, centesimi EUR, totali annui, archive/restore e storia, riferimenti redatti e chiavi idempotenti persistenti. Frontend H3 Claude in lavorazione: H3 non ancora chiusa. Nessun consumo Anthropic aggiuntivo.

@@ -6,7 +6,8 @@ import { HomesModule } from './homes/homes.module';
 import { DocumentsModule } from './documents/documents.module';
 import { ReviewModule } from './review/review.module';
 import { ActivitiesModule } from './activities/activities.module';
+import { ExpensesModule } from './expenses/expenses.module';
 @Global() @Module({ providers: [PrismaService, SessionsService], exports: [PrismaService, SessionsService] })
 export class InfrastructureModule {}
-@Module({ imports: [InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule] })
+@Module({ imports: [InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, ExpensesModule] })
 export class AppModule {}

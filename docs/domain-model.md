@@ -210,3 +210,6 @@ Ricerca soltanto sui metadata autorizzati di Document/DocumentVersion. Query, fi
 
 ### H3a — modello da implementare
 HomeExpense personale, ExpenseHistory ed ExpenseRequest proposti in expenses-api-contract.md. Centesimi EUR, data calendario, riferimenti facoltativi document/boiler autorizzati e redatti nelle letture. Un costo è un record, non copie per ogni riferimento. Nessuna migrazione ancora applicata in questa preparazione.
+
+### H3a — schema locale implementato
+HomeExpense, ExpenseHistory ed ExpenseRequest con FK Restrict e indici su account/Home/stato/data; migration202610140001_expenses applicata soltanto a dimora_v5_product_dev. Centesimi INTEGER, date calendar string, riferimenti opzionali, active/archived e versione. Ledger/eventi conservano snapshot interni, proiezioni pubbliche redatte con diritti attuali. Documenti e caldaie non duplicano costi.

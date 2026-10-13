@@ -195,3 +195,6 @@ Capabilities e q/format/visibility della lista documenti implementati, risposta 
 
 ## H3a expenses-v1 — contratto congelato, endpoint non ancora attivi
 Expense capabilities/list/detail/create/updates/archive/restore/history/summary sotto /api/v5/homes/:homeId, trasporto/policy/idempotenza V5. Contratto docs/v5/expenses-api-contract.md; non usare il mock come prova di disponibilità reale.
+
+## H3a expenses-v1 — backend locale attivo
+Nove rotte del contratto expenses-api-contract.md implementate su 3001: capabilities/list/create/detail/updates/archive/restore/history/summary. Query/input stretti, CSRF/AccountContext, no-store, membership personale e riferimenti redatti; replay rilegge i diritti correnti. GET summary calcola centesimi annui manual/document nel DB. Frontend e client/browser H3 ancora aperti.

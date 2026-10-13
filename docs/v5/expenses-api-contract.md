@@ -1,6 +1,6 @@
 # H3a — expenses-v1: spese essenziali personali della casa
 
-14 ottobre 2026. Contratto congelato da Codex per lo sviluppo locale autorizzato dal committente. La proposta indipendente Claude cfdd0b3 è un contributo valutato, non un ordine. **Endpoint e frontend non ancora implementati o attivi nel runtime.** Codex scrive backend/schema/test reali nel master; Claude implementa soltanto frontend-v5 nel checkout separato, su incarico H3 dedicato. Codex integra e verifica la consegna.
+14 ottobre 2026. Contratto congelato da Codex per lo sviluppo locale autorizzato dal committente. La proposta indipendente Claude cfdd0b3 è un contributo valutato, non un ordine. **Backend/schema implementati e verificati in locale; frontend Claude e integrazione aperti.** Codex scrive backend/schema/test reali nel master; Claude implementa soltanto frontend-v5 nel checkout separato, su incarico H3 dedicato. Codex integra e verifica la consegna. Esito in h3-integration-review.md.
 
 ## Fonti e scelte
 Specifiche outputs/dimora-v5-round2/03_specifiche/DIMORA_HOME_UX_CONSOLIDATED_v0.1_20261012.md §5: dashboard sintetica, costi documentati/manuali/stime distinti; capitale residuo non spesa, nessuna seconda contabilità. DIMORA_DECISIONI_CONSOLIDATE_POST_AI_REVIEW_v1.0_20261013.md: Home memoria della casa, economia V1 opzione B. Consolidamento master M-05/M-12 e V5-020/021 richiamati dalla revisione Claude: costo unico riferito da documento e asset, modifica della spesa esistente. Ciclo di vita CV-01: perdita membership impedisce accesso anche alle spese.

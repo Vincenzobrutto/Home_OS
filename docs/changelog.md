@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-14 — H3a backend spese verificato
+
+Schema additivo HomeExpense/ExpenseHistory/ExpenseRequest applicato al solo DB V5 locale; nove endpoint expenses-v1 attivi. Importi/totali in centesimi, costi personali, archive/restore, storia/idempotenza/CAS e riferimenti redatti. Build/lint, 77 offline, 89 integrazione e cinque HTTP sul processo3001 verdi. Frontend Claude ancora in lavorazione; nessuna chiamata Anthropic o modifica main/legacy. Esito docs/v5/h3-integration-review.md.
+
+
 ## 2026-10-14 — revisione indipendente H2 e avvio H3a
 
 Raccolta Claude cfdd0b3: corretti next fra sessioni, ritorno dal dettaglio fra account e cache dopo revoca in paginazione, con 41 test mirati/build/lint verdi. Contratto expenses-v1 congelato e validazioni backend iniziali; H3a non ancora operativo. Nessuna chiamata AI o modifica schema/DB in questa preparazione.

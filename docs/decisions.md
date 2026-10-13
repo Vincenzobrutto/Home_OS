@@ -468,3 +468,6 @@ Confronto parametrizzato NFC/ILIKE con collation und-x-icu, senza riscrivere met
 
 ## ADR-V5-14 — H3a spese essenziali personali
 Costi sostenuti EUR in centesimi, origine manuale/documentale, data non futura e totali personali annuali; archivio logico/ripristino/storia. Niente condivisione finanziaria implicita, float, nuove categorie, banca o pagamenti Admin. Stime e ricorrenze H3b. Contratto docs/v5/expenses-api-contract.md; codice di validazione iniziale, implementazione completa ancora aperta.
+
+### ADR-V5-14 — verifica backend H3a
+Advisory lock account/Home per serializzare chiavi idempotenti, membership/fonti con lock condivisi e CAS versione; snapshot replay ricostruito e redatto, non JSON pubblico obsoleto. Paging DB limit+1/keyset e somme aggregate, senza dataset intero in memoria. Somma oltre Int32 resta esatta; nessuna nuova dipendenza o provider AI. Stato dettagliato docs/v5/h3-integration-review.md.

@@ -160,3 +160,6 @@ Backend verificato con 73 test offline e 75 integrazione. Prossimi passi: carica
 
 ### H3a — sviluppo autonomo notturno autorizzato
 H2 integrata localmente; revisione indipendente raccolta, tre difetti di contesto/cache corretti. H3a Spese essenziali segue il contratto congelato: Codex implementa backend/test e frontend, senza attendere un nuovo incarico Claude. Validazioni iniziali pronte; non dichiarare Spese operativa prima di schema/API/DB/client/browser verdi.
+
+### H3a — backend attivo in locale
+Nove endpoint e DB spese verificati; Claude sviluppa il frontend nel checkout distinto, Codex raccoglie la consegna e completa client/API/browser. Non dichiarare Spese navigabile finché frontend non integrato. Nessuna chiamata AI live.

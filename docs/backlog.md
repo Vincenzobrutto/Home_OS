@@ -156,3 +156,10 @@ H2 resta aperta; nessun consumo provider.
 - [x] H3a contratto e validazioni iniziali.
 - [ ] H3a schema, backend DB/HTTP, frontend e collaudo completo.
 - [ ] H3b stime/ricorrenze; export delle spese nel ciclo di vita Home.
+
+### H3a — backend completato, integrazione aperta
+- [x] Schema/migrazione additiva e nove rotte backend.
+- [x] 77 offline, 89 integrazione, cinque HTTP sul servizio reale, build/lint.
+- [ ] Consegna frontend Claude (sync cacc8fc da escludere), review e integrazione.
+- [ ] Suite client/API non-live e browser reale320/390/desktop/tastiera.
+H3 non ancora chiusa. Stime/ricorrenti e export Home spese restano futuri.

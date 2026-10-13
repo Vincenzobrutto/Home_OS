@@ -28,6 +28,9 @@ model Account {
   activities HomeActivity[]
   activityRequests ActivityRequest[]
   activityHistory ActivityHistory[]
+  expenses HomeExpense[]
+  expenseRequests ExpenseRequest[]
+  expenseHistory ExpenseHistory[]
 }
 model Session {
   id String @id
@@ -53,6 +56,8 @@ model Home {
   reviewRequests ReviewRequest[]
   activities HomeActivity[]
   activityRequests ActivityRequest[]
+  expenses HomeExpense[]
+  expenseRequests ExpenseRequest[]
 }
 model HomeMembership {
   id String @id @default(uuid())
@@ -93,6 +98,7 @@ model Document {
   uploader Account @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
   original DocumentVersion?
   requests UploadRequest[]
+  expenses HomeExpense[]
   @@index([homeId, createdAt, id])
 }
 model DocumentVersion {
@@ -128,6 +134,7 @@ model UploadRequest {
 }
 
 model BoilerAsset {
+  expenses HomeExpense[]
   activities HomeActivity[]
   id String @id @default(uuid())
   homeId String
@@ -269,6 +276,61 @@ model ReviewRequest {
   @@unique([accountId, homeId, operation, target, key])
 }
 
+enum ExpenseState {
+  active
+  archived
+}
+model HomeExpense {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  documentId String?
+  assetId String?
+  title String
+  amountCents Int
+  spentOn String
+  note String?
+  state ExpenseState @default(active)
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  archivedAt DateTime?
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  document Document? @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  asset BoilerAsset? @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  history ExpenseHistory[]
+  @@index([accountId, homeId, state, spentOn, createdAt, id])
+  @@index([accountId, homeId, documentId])
+  @@index([accountId, homeId, assetId])
+}
+model ExpenseHistory {
+  id String @id @default(uuid())
+  expenseId String
+  accountId String
+  at DateTime @default(now())
+  kind String
+  note String?
+  before Json?
+  after Json
+  expense HomeExpense @relation(fields: [expenseId], references: [id], onDelete: Restrict)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  @@index([expenseId, at, id])
+}
+model ExpenseRequest {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  operation String
+  target String
+  key String
+  digest String
+  response Json
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  @@unique([accountId, homeId, operation, target, key])
+}
 model AiCampaign {
   id String @id
   limitMicroUsd Int
