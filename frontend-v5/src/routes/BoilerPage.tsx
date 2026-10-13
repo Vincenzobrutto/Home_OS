@@ -180,6 +180,26 @@ function BoilerView(props: { asset: BoilerDetail; homeId: string; homeName: stri
           </section>
         )}
 
+        {props.homeCanEdit && (
+          <section className={ui.card} aria-labelledby="promemoria-title">
+            <h2 id="promemoria-title" className={styles.cardTitle}>
+              Promemoria personale
+            </h2>
+            <p className={cx(styles.small, styles.muted)}>
+              Puoi ricordarti qualcosa su questa caldaia con una data scelta da te, anche se i dati della scheda sono
+              ancora provvisori. Il promemoria non è un obbligo né una scadenza di legge e non cambia i dati della scheda.
+            </p>
+            <p className={styles.spaced}>
+              <Link
+                to={`/home/${encodeURIComponent(homeId)}/attivita?nuova-attivita=1&assetId=${encodeURIComponent(asset.id)}`}
+                className={ui.btn}
+              >
+                Crea promemoria per questa caldaia
+              </Link>
+            </p>
+          </section>
+        )}
+
         <HistorySection homeId={homeId} assetId={asset.id} />
       </div>
     </>

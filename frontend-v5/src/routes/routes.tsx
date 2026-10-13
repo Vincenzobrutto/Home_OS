@@ -8,8 +8,9 @@ import { DocumentDetailPage } from './DocumentDetailPage';
 import { ActivityPage } from './ActivityPage';
 import { ReviewPage } from './ReviewPage';
 import { BoilerPage } from './BoilerPage';
+import { ActivityDetailPage } from './ActivityDetailPage';
 
-// Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3, caso Caldaia).
+// Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3/M4, caso Caldaia), activities-v1 (H1).
 // Agenzie e Amministratori non hanno rotte: non sono ancora assegnate.
 export const routes: RouteObject[] = [
   {
@@ -36,6 +37,7 @@ export const routes: RouteObject[] = [
               { index: true, element: <Navigate to="casa" replace /> },
               { path: 'casa', element: <CasaPage /> },
               { path: 'attivita', element: <ActivityPage /> },
+              { path: 'attivita/:activityId', element: <ActivityDetailPage /> },
               { path: 'review', element: <ReviewPage /> },
               { path: 'impianti/:assetId', element: <BoilerPage /> },
               { path: 'documenti', element: <DocumentsPage /> },

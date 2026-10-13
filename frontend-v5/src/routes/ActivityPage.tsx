@@ -38,6 +38,7 @@ import {
 import styles from './pages.module.css';
 import review from '../review/review.module.css';
 import { useCurrentHome } from './HomePages';
+import { ActivitiesSection } from './ActivitiesSection';
 
 
 export const EXAMPLE_PDFS = [
@@ -91,6 +92,7 @@ export function ActivityPage() {
         </div>
       </div>
       <div className={styles.stack}>
+        <ActivitiesSection home={home} />
         <ReviewSummary homeId={home.id} />
         {canEdit && (
           <StartAnalysis

@@ -8,6 +8,7 @@ import { Banner, ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../c
 import { useHome } from '../session/hooks';
 import { useAccount, useSession } from '../session/session';
 import { ROLE_LABEL } from './HomesPages';
+import { ScadenzeSummary } from './ScadenzeSummary';
 import { BOILER_STATE_LABEL, PERSONAL_LABEL, m3ErrorMessage } from '../lib/review';
 import { useAssets, useReview } from '../review/hooks';
 import styles from './pages.module.css';
@@ -143,6 +144,7 @@ export function CasaPage() {
             arriveranno nei prossimi incrementi.
           </p>
         </section>
+        <ScadenzeSummary home={home} />
         <ImpiantiSummary homeId={home.id} />
         <section className={cx(ui.card, ui.tint, styles.wide)} aria-labelledby="casa-prossime">
           <h2 id="casa-prossime" className={styles.cardTitle}>
