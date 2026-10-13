@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { newIdempotencyKey, queryKeys } from '../api/queryKeys';
@@ -224,6 +224,11 @@ export function ExpenseForm(props: {
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [nothing, setNothing] = useState(false);
   const disabled = op.mutation.isPending || op.locked;
+  // Il pulsante che apre il modulo scompare: il focus va al titolo del modulo, non al body.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
 
   // Proposte dall'URL: valgono solo se il server conferma la lettura.
   const presetDocOk = presetDoc.isSuccess && presetDoc.data.permissions.includes('read');
@@ -315,7 +320,7 @@ export function ExpenseForm(props: {
         submit();
       }}
     >
-      <h2 id={`${id}-t`} tabIndex={-1}>
+      <h2 id={`${id}-t`} ref={headingRef} tabIndex={-1}>
         {expense ? 'Modifica spesa' : 'Nuova spesa'}
       </h2>
       <p className={styles.meta}>

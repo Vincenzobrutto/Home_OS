@@ -129,6 +129,8 @@ describe('[mock] H3a Spese — registrazione, importi e idempotenza', () => {
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
     await app.user.click(await screen.findByRole('button', { name: /Aggiungi spesa/ }));
     const form = await screen.findByRole('form', { name: 'Nuova spesa' });
+    // Il pulsante sparisce: il focus va al titolo del modulo.
+    await waitFor(() => expect(within(form).getByRole('heading', { name: 'Nuova spesa' })).toHaveFocus());
     expect(within(form).getByText(/Destinazione:/)).toHaveTextContent('spesa personale in Casa Roma, senza documento.');
     expect(within(form).getByLabelText('Data della spesa')).toHaveAttribute('max', '2026-10-13');
     await fill(app, form, { title: 'Sostituzione rubinetto', amount: '1.234,56', date: '2026-10-02', note: 'Bagno' });
@@ -273,6 +275,8 @@ describe('[mock] H3a Spese — modifica, archiviazione e storia', () => {
     await app.user.click(within(again).getByRole('button', { name: 'Archivia spesa' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByRole('button', { name: 'Ripristina' })).toBeInTheDocument();
+    // La vista si rimonta con la nuova versione: il focus va alla nuova azione, non al body.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Ripristina' })).toHaveFocus());
     expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
     const history = screen.getByRole('region', { name: 'Storia della spesa' });
     await waitFor(() => expect(history).toHaveTextContent('Archiviata'));

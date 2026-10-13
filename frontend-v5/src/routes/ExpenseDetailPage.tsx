@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
 import { isApiError } from '../api/errors';
 import type { ExpenseCapabilities, ExpenseHistoryEvent, ExpenseSnapshot, Home, HomeExpense } from '../api/types';
@@ -38,6 +38,10 @@ export function ExpenseDetailPage() {
   const { expenseId = '' } = useParams();
   const query = useExpense(home.id, expenseId);
   const capabilities = useExpenseCapabilities(home.id);
+  // Prima versione vista: se cambia (operazione riuscita o rilettura) la vista si rimonta e il
+  // focus va alla nuova azione. Le callback di mutate non bastano: il dialogo è già smontato.
+  const [firstVersion, setFirstVersion] = useState<number | null>(null);
+  if (query.data && firstVersion === null) setFirstVersion(query.data.expense.version);
   const back = (
     <Link to={backToExpenses(home.id, location.state, account.id)} className={pages.spaced}>
       ← Spese
@@ -75,7 +79,16 @@ export function ExpenseDetailPage() {
     );
   }
   // Chiave sulla versione: dopo una rilettura con dati nuovi le bozze locali ripartono dai dati del server.
-  return <ExpenseView key={query.data.expense.version} home={home} expense={query.data.expense} capabilities={capabilities.data} back={back} />;
+  return (
+    <ExpenseView
+      key={query.data.expense.version}
+      home={home}
+      expense={query.data.expense}
+      capabilities={capabilities.data}
+      back={back}
+      focusActions={firstVersion !== null && query.data.expense.version !== firstVersion}
+    />
+  );
 }
 
 function Unavailable(props: { back: ReactNode; title: string; children: string }) {
@@ -95,10 +108,22 @@ function Unavailable(props: { back: ReactNode; title: string; children: string }
 
 type Panel = 'none' | 'edit' | 'archive' | 'restore';
 
-function ExpenseView(props: { home: Home; expense: HomeExpense; capabilities?: ExpenseCapabilities; back: ReactNode }) {
+function ExpenseView(props: {
+  home: Home;
+  expense: HomeExpense;
+  capabilities?: ExpenseCapabilities;
+  back: ReactNode;
+  focusActions: boolean;
+}) {
   const { home, expense } = props;
   useDocumentTitle(`${expense.title} · ${home.name}`);
   const [panel, setPanel] = useState<Panel>('none');
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const focusOnMount = useRef(props.focusActions);
+  useEffect(() => {
+    if (focusOnMount.current) actionsRef.current?.querySelector('button')?.focus();
+  }, []);
+  const done = () => setPanel('none');
   const canEdit = home.permissions.includes('edit') && expense.permissions.includes('edit') && !!props.capabilities;
   const active = expense.state === 'active';
   const base = `/home/${encodeURIComponent(home.id)}`;
@@ -165,7 +190,7 @@ function ExpenseView(props: { home: Home; expense: HomeExpense; capabilities?: E
 
         {/* Con il dialogo aperto i pulsanti restano: alla chiusura il focus torna al pulsante d'origine. */}
         {canEdit && panel !== 'edit' && (
-          <div className={styles.actions}>
+          <div ref={actionsRef} className={styles.actions}>
             {active ? (
               <>
                 <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => setPanel('edit')}>
@@ -189,7 +214,7 @@ function ExpenseView(props: { home: Home; expense: HomeExpense; capabilities?: E
         {!active && canEdit && <p className={pages.muted}>Una spesa archiviata non si modifica: ripristinala prima.</p>}
 
         {panel === 'edit' && active && props.capabilities && (
-          <ExpenseForm home={home} capabilities={props.capabilities} expense={expense} onCancel={() => setPanel('none')} onDone={() => setPanel('none')} />
+          <ExpenseForm home={home} capabilities={props.capabilities} expense={expense} onCancel={() => setPanel('none')} onDone={done} />
         )}
         {panel === 'archive' && active && (
           <ActionDialog
@@ -200,6 +225,7 @@ function ExpenseView(props: { home: Home; expense: HomeExpense; capabilities?: E
             hint="La spesa esce dall’elenco delle attive e dai totali. Non viene cancellata: resta con la sua storia e puoi ripristinarla."
             noteMax={props.capabilities?.limits.noteMaxCodePoints}
             onClose={() => setPanel('none')}
+            onDone={done}
           />
         )}
         {panel === 'restore' && !active && (
@@ -211,6 +237,7 @@ function ExpenseView(props: { home: Home; expense: HomeExpense; capabilities?: E
             hint="La spesa torna attiva con gli stessi dati e rientra nei totali dell’anno della sua data."
             noteMax={props.capabilities?.limits.noteMaxCodePoints}
             onClose={() => setPanel('none')}
+            onDone={done}
           />
         )}
 
@@ -228,6 +255,7 @@ function ActionDialog(props: {
   hint: string;
   noteMax?: number;
   onClose: () => void;
+  onDone: () => void;
 }) {
   const id = useId();
   const op = useExpenseOperation(props.home.id);
@@ -243,7 +271,7 @@ function ActionDialog(props: {
     const n = normalizeText(note);
     op.run(
       { kind: props.kind, expenseId: props.expense.id, body: { expectedVersion: props.expense.version, ...(n ? { note: n } : {}) } },
-      props.onClose,
+      props.onDone,
     );
   };
 
@@ -259,7 +287,7 @@ function ActionDialog(props: {
       >
         <p className={styles.meta}>{props.hint}</p>
         <NoteField id={`${id}-note`} value={note} onChange={setNote} error={error} disabled={disabled} label="Nota sull’operazione (facoltativa)" />
-        <OperationFeedback op={op} homeId={props.home.id} title="Operazione non eseguita" onRetry={() => op.retry(props.onClose)} />
+        <OperationFeedback op={op} homeId={props.home.id} title="Operazione non eseguita" onRetry={() => op.retry(props.onDone)} />
         <div className={styles.actions}>
           {!op.locked && (
             <button type="submit" className={cx(ui.btn, ui.primary)} disabled={op.mutation.isPending}>
