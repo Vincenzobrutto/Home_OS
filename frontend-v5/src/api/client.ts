@@ -1,7 +1,17 @@
 import { ApiError, isApiErrorBody, serviceError } from './errors';
 import type {
   Account,
+  AnalysisCapabilities,
+  AnalysisJob,
   BinaryPayload,
+  BoilerDetail,
+  BoilerSummary,
+  ConfirmationResult,
+  ConfirmationsInput,
+  HistoryEvent,
+  ManualConfirmationsInput,
+  Page,
+  ReviewPage,
   CreateHomeInput,
   DocumentDetail,
   DocumentsPage,
@@ -185,6 +195,130 @@ export class ApiClient {
     );
   }
 
+  // ---- review-v1 (M3) ----
+
+  async getAnalysisCapabilities(homeId: string, signal: AbortSignal | undefined, accountId: string) {
+    const data = await this.request<AnalysisCapabilities>(`${homePath(homeId)}/analysis-capabilities`, {
+      signal,
+      accountId,
+    });
+    if (!data || typeof data.enabled !== 'boolean' || data.isSimulation !== true) throw serviceError(200);
+    return data;
+  }
+
+  async createAnalysisJob(
+    homeId: string,
+    input: { documentIds: string[]; targetAssetId?: string },
+    idempotencyKey: string,
+    accountId: string,
+  ): Promise<AnalysisJob> {
+    const data = await this.mutate<{ job: AnalysisJob }>(`${homePath(homeId)}/analysis-jobs`, {
+      body: input,
+      headers: { 'Idempotency-Key': idempotencyKey },
+      accountId,
+    });
+    if (!data || !data.job) throw serviceError(202);
+    return data.job;
+  }
+
+  listAnalysisJobs(homeId: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    return this.page<AnalysisJob>(`${homePath(homeId)}/analysis-jobs`, page, signal, accountId);
+  }
+
+  async getAnalysisJob(homeId: string, jobId: string, signal: AbortSignal | undefined, accountId: string) {
+    const data = await this.request<{ job: AnalysisJob }>(
+      `${homePath(homeId)}/analysis-jobs/${encodeURIComponent(jobId)}`,
+      { signal, accountId },
+    );
+    if (!data || !data.job) throw serviceError(200);
+    return data.job;
+  }
+
+  async retryAnalysisJob(homeId: string, jobId: string, idempotencyKey: string, accountId: string) {
+    const data = await this.mutate<{ job: AnalysisJob }>(
+      `${homePath(homeId)}/analysis-jobs/${encodeURIComponent(jobId)}/retry`,
+      { body: {}, headers: { 'Idempotency-Key': idempotencyKey }, accountId },
+    );
+    if (!data || !data.job) throw serviceError(202);
+    return data.job;
+  }
+
+  listAssets(homeId: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    return this.page<BoilerSummary>(`${homePath(homeId)}/assets`, page, signal, accountId);
+  }
+
+  async createBoiler(homeId: string, name: string, idempotencyKey: string, accountId: string) {
+    const data = await this.mutate<{ asset: BoilerDetail }>(`${homePath(homeId)}/assets`, {
+      body: { type: 'boiler', name },
+      headers: { 'Idempotency-Key': idempotencyKey },
+      accountId,
+    });
+    if (!data || !data.asset) throw serviceError(201);
+    return data.asset;
+  }
+
+  async getAsset(homeId: string, assetId: string, signal: AbortSignal | undefined, accountId: string) {
+    const data = await this.request<{ asset: BoilerDetail }>(
+      `${homePath(homeId)}/assets/${encodeURIComponent(assetId)}`,
+      { signal, accountId },
+    );
+    if (!data || !data.asset || !Array.isArray(data.asset.proposals)) throw serviceError(200);
+    return data.asset;
+  }
+
+  async listReview(homeId: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    const data = await this.request<ReviewPage>(`${homePath(homeId)}/review${pageQuery(page)}`, {
+      signal,
+      accountId,
+    });
+    if (!data || !Array.isArray(data.items) || typeof data.openCount !== 'number') throw serviceError(200);
+    return data;
+  }
+
+  confirm(homeId: string, assetId: string, input: ConfirmationsInput, idempotencyKey: string, accountId: string) {
+    return this.confirmation(`${homePath(homeId)}/assets/${encodeURIComponent(assetId)}/confirmations`, input, idempotencyKey, accountId);
+  }
+
+  confirmManual(
+    homeId: string,
+    assetId: string,
+    input: ManualConfirmationsInput,
+    idempotencyKey: string,
+    accountId: string,
+  ) {
+    return this.confirmation(
+      `${homePath(homeId)}/assets/${encodeURIComponent(assetId)}/manual-confirmations`,
+      input,
+      idempotencyKey,
+      accountId,
+    );
+  }
+
+  listHistory(homeId: string, assetId: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    return this.page<HistoryEvent>(
+      `${homePath(homeId)}/assets/${encodeURIComponent(assetId)}/history`,
+      page,
+      signal,
+      accountId,
+    );
+  }
+
+  private async confirmation(path: string, body: unknown, idempotencyKey: string, accountId: string) {
+    const data = await this.mutate<ConfirmationResult>(path, {
+      body,
+      headers: { 'Idempotency-Key': idempotencyKey },
+      accountId,
+    });
+    if (!data || !data.asset || !Array.isArray(data.resolvedProposalIds)) throw serviceError(201);
+    return data;
+  }
+
+  private async page<T>(path: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    const data = await this.request<Page<T>>(`${path}${pageQuery(page)}`, { signal, accountId });
+    if (!data || !Array.isArray(data.items) || !('nextCursor' in data)) throw serviceError(200);
+    return data;
+  }
+
   private async ensureCsrf() {
     if (!this.csrfToken) {
       // Nessun token in memoria (es. dopo logout): lo chiediamo al server.
@@ -297,6 +431,15 @@ export class ApiClient {
 
 function homePath(homeId: string) {
   return `/homes/${encodeURIComponent(homeId)}`;
+}
+
+export type PageParams = { cursor?: string | null; limit?: number };
+
+function pageQuery(page: PageParams) {
+  const params = new URLSearchParams();
+  if (page.limit !== undefined) params.set('limit', String(page.limit));
+  if (page.cursor) params.set('cursor', page.cursor);
+  return params.size ? `?${params.toString()}` : '';
 }
 
 /**
