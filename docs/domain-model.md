@@ -192,3 +192,6 @@ Eventi a livello di **casa** (Genesis avviato/completato, scansione completata..
 
 ## V5 M4 — modello persistente verificato (13 ottobre 2026)
 Migrazione additiva 202610130004_anthropic applicata nel solo database V5 dedicato. AnalysisJob: provider/model/consentToProviderTransfer; FieldProposal e AssetHistory: provider/model. AiCampaign: tetto microUSD e chiamate massime; AiAttempt unico per job: tariffa, riserva, costo effettivo, stato e risposta privata/usage. Sending incerto conserva riserva; risposta persistita recuperata senza rete. Nessuna chiave API nel DB. Fixture e conferme M3 preservati; dati AI non diventano campi confermati automaticamente. Dettagli docs/v5/m4-integration-review.md.
+
+## H1 — modello pianificato
+HomeActivity (account/Home, caldaia facoltativa, testo, data calendario, stato/versione), ActivityHistory (prima/dopo/nota/azione esplicita), ActivityRequest (idempotenza). Non ancora presenti in Prisma; futura migrazione soltanto V5. Link asset illeggibile redatto, note manuali personali conservate con diritto Home. Nessun riuso Issue Genesis/report Admin o completamento tecnico implicito. Contratto docs/v5/activities-api-contract.md.

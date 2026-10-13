@@ -142,3 +142,6 @@ Per il dettaglio di ogni voce (dipendenze, priorità) vedi `backlog.md`. Per il 
 
 ## M4 raggiunta in locale — 13 ottobre 2026
 Parser testuale, Anthropic reale, fonti pagina 2/3, consenso, ledger e frontend integrati; conferme e privacy M3 conservate. Prove automatiche e browser concluse, sei chiamate per 0.041714 USD entro 10 USD. Le precedenti voci M4 da implementare/collaudare sono chiuse da questa integrazione. Resta da scegliere il prossimo incremento (OCR oppure estensione del verticale); Agenzie/Admin/Spese reali e hardening pilota restano futuri. Stato autorevole: docs/v5/m4-integration-review.md.
+
+## Prossimo H1 — Attività e scadenze personali
+M4 Anthropic chiusa; segue il primo sottoincremento Home utile della roadmap originaria, non ancora Agenzie. Contratto e incarichi pronti; Codex backend/model/test, Claude frontend/mock, poi integrazione e prove reali. Uscita: crea → modifica → completa → storia → riapri, privacy e date corrette dopo reload/login. Seguono ricerca/spese/ciclo proprietario e poi Agenzie/Admin; OCR separato. Non rinumerare il piano storico come se quelle funzioni fossero già implementate.

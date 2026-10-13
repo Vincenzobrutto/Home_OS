@@ -107,3 +107,12 @@ Le decisioni di design già prese (comprese quelle che generano debito accettato
 - [ ] Prossimo incremento da scegliere: OCR/vision oppure estensione del verticale.
 - [ ] Ulteriori prove AI: definire prima la nuova fase senza azzerare il ledger o cambiare automaticamente campagna/budget.
 Il limite delle sei chiamate protegge il collaudo e non è una quota commerciale. Hardening prima del pilota e funzioni fuori M4 restano aperti. Resoconto docs/v5/m4-integration-review.md.
+
+## H1 Attività — pronto da sviluppare
+- [x] Contratto activities-v1, ADR e proprietà file fissati.
+- [x] Incarichi Codex/Claude e base comune da sincronizzare preparati.
+- [ ] Backend/schema/migrazione V5 e dieci endpoint.
+- [ ] Frontend attività/summary Casa/dettaglio/storia, preservando M3/M4.
+- [ ] Test dominio/API/DB/client, privacy, date, idempotenza e browser reale.
+- [ ] Successivi sottoincrementi: ricorrenze, allegati completamento, calendario alternativo, condivisione personale e fuso configurabile. Nessuna funzionalità normativa promessa.
+Riferimento docs/v5/activities-api-contract.md; H1 non consuma Anthropic e non riapre il collaudo M4.

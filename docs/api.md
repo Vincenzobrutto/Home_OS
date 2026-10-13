@@ -177,3 +177,6 @@ Il flusso OAuth (Gmail/Drive) fa un redirect completo del browser: **non funzion
 
 ## V5 M4 — integrazione locale conclusa (13 ottobre 2026)
 Contratto analysis-v2 implementato sui percorsi review-v1, docs/v5/anthropic-api-contract.md. Provider/consenso, capabilities con budget, billing e origine per proposte/storia. Fixture default per client M3 senza provider; vecchie impronte idempotenti preservate. HTTP 422 validation_error senza consenso, nessun job; errori di analisi nel job failed. HTTP 429/disabledReason ai_evaluation_limit_reached distingue le sei chiamate iniziali dal tetto ai_budget_exhausted. No_supported_data non crea scheda vuota. API/DB/client/browser verificati; report docs/v5/m4-integration-review.md.
+
+## H1 activities-v1 — contratto, non endpoint attivi
+Contratto docs/v5/activities-api-contract.md: activity-capabilities, activities lista/creazione/dettaglio, updates/complete/cancel/reopen, history e activity-summary sotto /api/v5/homes/:homeId. Cookie/CSRF/Account-Context, idempotenza, versione e privacy personali. Date YYYY-MM-DD/Europe-Rome, today/dueState server. Implementazione da iniziare, non interrogare i mock come servizio reale.

@@ -26,3 +26,6 @@ M3 mantiene personali i derivati anche da fonti home: non condivide automaticame
 
 ### Implementazione M3
 Le entita M3 sono ora nello schema backend-v5 e nella migration 202610130003_review. JSON validato per candidati, conferme, snapshot e storia; unicita job/campo e ambito idempotente account/Home/operazione/target/chiave. Migrazione applicata e verificata sul runtime locale con i test M3 API/PostgreSQL.
+
+## H1 — modello pianificato, non ancora implementato
+HomeActivity: creatore/Home, collegamento BoilerAsset facoltativo, testo, dueDate calendario, stato open/completed/cancelled, versione e timestamp di chiusura. ActivityHistory conserva prima/dopo e note delle azioni esplicite; ActivityRequest protegge l'idempotenza. Tutti separati da proposte AI, storia tecnica della caldaia, Issue Genesis e report condominiale. Attività personale leggibile soltanto dal creatore con membership valida; collegamenti asset redatti se non più autorizzati. Non è ancora presente una migrazione H1. Contratto completo: activities-api-contract.md; ADR-V5-12 in implementation-decisions.md.
