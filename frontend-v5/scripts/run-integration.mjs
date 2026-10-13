@@ -6,6 +6,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 const groups = [
   ['identity', 'documents', 'review'],
   ['anthropic', 'activities'],
+  // H2 document search registers three more accounts: own group, after the same pause.
+  ['document-search'],
 ];
 const environment = { ...process.env, V5_ANTHROPIC_LIVE: '0' };
 const args = process.argv.slice(2);
