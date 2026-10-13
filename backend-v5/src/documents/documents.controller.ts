@@ -6,6 +6,9 @@ import { DocumentAccessGuard, DocumentRequest } from './access';
 import { UploadDocumentDto, ListDocumentsDto, ExportDocumentsDto } from './dto';
 import { MAX_FILE_BYTES } from './storage';
 import { SessionsService } from '../security';
+// Busboy emits partsLimit upon reaching the count, even for valid parts.
+// Independent file/field limits enforce one file and two metadata fields.
+export const DOCUMENT_UPLOAD_LIMITS = { fileSize: MAX_FILE_BYTES, files: 1, fields: 2, parts: 4, fieldSize: 2048, fieldNameSize: 100 };
 export function attachment(filename: string) {
   const ascii = filename.replace(/[^\x20-\x7e]/g, '_').replace(/["\\]/g, '_');
   const encoded = encodeURIComponent(filename).replace(/['()*]/g, char => '%' + char.charCodeAt(0).toString(16).toUpperCase());
@@ -17,7 +20,7 @@ export class DocumentsController {
   constructor(private readonly documents: DocumentsService, private readonly sessions: SessionsService) {}
   @Get() list(@Req() req: DocumentRequest, @Param('homeId') homeId: string, @Query() query: ListDocumentsDto) { return this.documents.list(req.documentAccountId, homeId, query); }
   @Post()
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_FILE_BYTES, files: 1, fields: 2, parts: 3, fieldSize: 2048, fieldNameSize: 100 } }))
+  @UseInterceptors(FileInterceptor('file', { limits: DOCUMENT_UPLOAD_LIMITS }))
   upload(@Req() req: DocumentRequest, @Param('homeId') homeId: string, @Body() dto: UploadDocumentDto, @UploadedFile() file: { buffer: Buffer; originalname: string } | undefined, @Headers('idempotency-key') key?: string) { return this.documents.upload(req.documentAccountId, homeId, dto, file, key); }
   @Post('export') @HttpCode(200)
   async export(@Req() req: DocumentRequest, @Param('homeId') homeId: string, @Body() dto: ExportDocumentsDto, @Res() res: Response) {
