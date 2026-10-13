@@ -86,13 +86,12 @@ describe('[mock] routing e contesto casa via URL', () => {
     await app.user.click(within(nav).getByRole('link', { name: /Documenti/ }));
     expect(app.router.state.location.pathname).toBe(`/home/${homeA2.id}/documenti`);
     expect(await screen.findByRole('heading', { level: 1, name: 'Documenti' })).toBeInTheDocument();
-    // Spese resta non disponibile; Attività è attiva da M3.
+    // Spese è attiva da H3a (prima: «non ancora disponibile»); Attività è attiva da M3.
     await app.user.click(within(nav).getByRole('link', { name: /Spese/ }));
     expect(app.router.state.location.pathname).toBe(`/home/${homeA2.id}/spese`);
-    expect(await screen.findByRole('heading', { level: 1, name: 'Spese' })).toBeInTheDocument();
-    expect(screen.getByText('Non ancora disponibile')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Le tue spese della casa' })).toBeInTheDocument();
     expect(within(nav).getByRole('link', { name: /Attività/ })).not.toHaveTextContent('non ancora disponibile');
-    expect(within(nav).getByRole('link', { name: /Spese/ })).toHaveTextContent('non ancora disponibile');
+    expect(within(nav).getByRole('link', { name: /Spese/ })).not.toHaveTextContent('non ancora disponibile');
     expect(within(nav).getByRole('link', { name: /Documenti/ })).not.toHaveTextContent('non ancora disponibile');
   });
 

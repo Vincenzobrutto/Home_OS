@@ -2,7 +2,7 @@ import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 import { isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey } from '../api/queryKeys';
-import type { BoilerDetail, FieldKey, FieldValue, HistoryEvent, ManualField, ProposedField } from '../api/types';
+import type { BoilerDetail, Home, FieldKey, FieldValue, HistoryEvent, ManualField, ProposedField } from '../api/types';
 import { Banner, ErrorState, Field, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import { formatDate } from '../lib/files';
 import {
@@ -33,6 +33,7 @@ import {
 } from '../review/components';
 import { useAsset, useHistory, useManualConfirm, useRefreshAsset } from '../review/hooks';
 import review from '../review/review.module.css';
+import { LinkedExpenses } from '../expenses/LinkedExpenses';
 import { useCurrentHome } from './HomePages';
 import styles from './pages.module.css';
 
@@ -78,7 +79,7 @@ export function BoilerPage() {
       </>
     );
   }
-  return <BoilerView asset={asset.data} homeId={home.id} homeName={home.name} homeCanEdit={home.permissions.includes('edit')} back={back} />;
+  return <BoilerView asset={asset.data} home={home} homeId={home.id} homeName={home.name} homeCanEdit={home.permissions.includes('edit')} back={back} />;
 }
 
 function Unavailable(props: { back: ReactNode; title: string; children: string }) {
@@ -98,7 +99,7 @@ function Unavailable(props: { back: ReactNode; title: string; children: string }
 
 const FIELD_ORDER: FieldKey[] = ['brand', 'model', 'power'];
 
-function BoilerView(props: { asset: BoilerDetail; homeId: string; homeName: string; homeCanEdit: boolean; back: ReactNode }) {
+function BoilerView(props: { asset: BoilerDetail; home: Home; homeId: string; homeName: string; homeCanEdit: boolean; back: ReactNode }) {
   const { asset, homeId } = props;
   useDocumentTitle(`${asset.name} · ${props.homeName}`);
   const canEdit = props.homeCanEdit && asset.permissions.includes('edit');
@@ -199,6 +200,8 @@ function BoilerView(props: { asset: BoilerDetail; homeId: string; homeName: stri
             </p>
           </section>
         )}
+
+        <LinkedExpenses home={props.home} by={{ assetId: asset.id }} title="Costi collegati" addLabel="Registra un costo" />
 
         <HistorySection homeId={homeId} assetId={asset.id} />
       </div>

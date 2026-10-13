@@ -10,6 +10,7 @@ import { useHome } from '../session/hooks';
 import { useAccount, useSession } from '../session/session';
 import { ROLE_LABEL } from './HomesPages';
 import { ScadenzeSummary } from './ScadenzeSummary';
+import { SpeseSummary } from './SpeseSummary';
 import { BOILER_STATE_LABEL, PERSONAL_LABEL, m3ErrorMessage } from '../lib/review';
 import { useAssets, useReview } from '../review/hooks';
 import styles from './pages.module.css';
@@ -153,19 +154,17 @@ export function CasaPage() {
           </p>
         </section>
         <ScadenzeSummary home={home} />
+        <SpeseSummary home={home} />
         <ImpiantiSummary homeId={home.id} />
         <section className={cx(ui.card, ui.tint, styles.wide)} aria-labelledby="casa-prossime">
           <h2 id="casa-prossime" className={styles.cardTitle}>
-            Documenti e sezioni in arrivo
+            Documenti
           </h2>
           <p className={styles.muted}>
             In Documenti conservi gli originali della casa (PDF, JPEG, PNG).{' '}
             <Link to={`/home/${encodeURIComponent(home.id)}/documenti`}>Apri i documenti</Link>
             {' · '}
             <Link to={`/home/${encodeURIComponent(home.id)}/documenti?ricerca=1`}>Cerca documenti</Link>
-          </p>
-          <p className={cx(styles.muted, styles.spaced)}>
-            Spese non è ancora attiva in questa versione: lì non viene mostrato né salvato alcun dato.
           </p>
         </section>
       </div>

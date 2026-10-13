@@ -1,7 +1,7 @@
 import { Navigate, type RouteObject } from 'react-router';
 import { LoginPage, RegisterPage } from './AuthPages';
 import { AnonymousOnly, RequireAccount, RootLayout } from './guards';
-import { CasaPage, HomeLayout, NotFoundPage, SectionNotFound, UnavailableSection } from './HomePages';
+import { CasaPage, HomeLayout, NotFoundPage, SectionNotFound } from './HomePages';
 import { CreateHomePage, HomeEntry, HomesPage } from './HomesPages';
 import { DocumentsPage } from './DocumentsPages';
 import { DocumentDetailPage } from './DocumentDetailPage';
@@ -9,8 +9,10 @@ import { ActivityPage } from './ActivityPage';
 import { ReviewPage } from './ReviewPage';
 import { BoilerPage } from './BoilerPage';
 import { ActivityDetailPage } from './ActivityDetailPage';
+import { ExpensesPage } from './ExpensesPage';
+import { ExpenseDetailPage } from './ExpenseDetailPage';
 
-// Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3/M4, caso Caldaia), activities-v1 (H1).
+// Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3/M4, caso Caldaia), activities-v1 (H1), expenses-v1 (H3a).
 // Agenzie e Amministratori non hanno rotte: non sono ancora assegnate.
 export const routes: RouteObject[] = [
   {
@@ -42,7 +44,8 @@ export const routes: RouteObject[] = [
               { path: 'impianti/:assetId', element: <BoilerPage /> },
               { path: 'documenti', element: <DocumentsPage /> },
               { path: 'documenti/:documentId', element: <DocumentDetailPage /> },
-              { path: 'spese', element: <UnavailableSection section="spese" /> },
+              { path: 'spese', element: <ExpensesPage /> },
+              { path: 'spese/:expenseId', element: <ExpenseDetailPage /> },
               { path: '*', element: <SectionNotFound /> },
             ],
           },

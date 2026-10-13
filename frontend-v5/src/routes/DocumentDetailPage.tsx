@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
 import { safeFilename } from '../api/client';
 import { isApiError, userMessage } from '../api/errors';
-import type { DocumentDetail } from '../api/types';
+import type { DocumentDetail, Home } from '../api/types';
 import { Banner, ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import { useDocument, useDocumentFile, useFetchDocumentFile, useObjectUrl } from '../documents/hooks';
 import {
@@ -17,6 +17,7 @@ import {
   saveBlob,
 } from '../lib/files';
 import { filtersFromParams, filtersToParams } from '../lib/documentSearch';
+import { LinkedExpenses } from '../expenses/LinkedExpenses';
 import { documentsErrorMessage } from './DocumentsPages';
 import { useCurrentHome } from './HomePages';
 import { useAccount } from '../session/session';
@@ -80,7 +81,7 @@ export function DocumentDetailPage() {
     home.permissions.includes('edit') && document.data.mimeType === 'application/pdf'
       ? `/home/${encodeURIComponent(home.id)}/attivita?analizza=${encodeURIComponent(document.data.id)}`
       : null;
-  return <DocumentView doc={document.data} homeName={home.name} back={back} analyzeHref={analyzeHref} />;
+  return <DocumentView doc={document.data} home={home} back={back} analyzeHref={analyzeHref} />;
 }
 
 function DocumentUnavailable(props: { back: ReactNode; title: string; children: string }) {
@@ -98,9 +99,10 @@ function DocumentUnavailable(props: { back: ReactNode; title: string; children: 
   );
 }
 
-function DocumentView(props: { doc: DocumentDetail; homeName: string; back: ReactNode; analyzeHref: string | null }) {
+function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode; analyzeHref: string | null }) {
+  const homeName = props.home.name;
   const { doc } = props;
-  useDocumentTitle(`${doc.name} · ${props.homeName}`);
+  useDocumentTitle(`${doc.name} · ${homeName}`);
   const canRead = doc.permissions.includes('read');
 
   return (
@@ -108,7 +110,7 @@ function DocumentView(props: { doc: DocumentDetail; homeName: string; back: Reac
       {props.back}
       <div className={styles.heading}>
         <div>
-          <span className={styles.eyebrow}>{props.homeName}</span>
+          <span className={styles.eyebrow}>{homeName}</span>
           <h1 tabIndex={-1}>{doc.name}</h1>
           <div className={docs.tags}>
             <Tag tone="blue">{STATUS_LABEL}</Tag>
@@ -170,6 +172,11 @@ function DocumentView(props: { doc: DocumentDetail; homeName: string; back: Reac
           </p>
         </section>
       </div>
+      {canRead && (
+        <div className={styles.spaced}>
+          <LinkedExpenses home={props.home} by={{ documentId: doc.id }} title="Spese collegate" addLabel="Registra una spesa da questo documento" />
+        </div>
+      )}
     </>
   );
 }
