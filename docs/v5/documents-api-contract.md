@@ -77,3 +77,6 @@ M2 non produce dati AI né schede «Da rivedere». M3 introdurrà proposte/campi
 
 ## Stato implementazione backend
 Codice M2 implementato da Codex con migrazione pronta e 31 test locali; runtime e 11 scenari API documentali da attivare con launcher -Documents -Test. Le forme di endpoint/tipi sopra sono invariate; frontend Claude procede sul contratto, niente dichiarazione di integrazione reale prima del collaudo.
+
+## Accettazione M2
+Backend e frontend integrati: 23 scenari API/DB/file e 6 frontend/API passano, collaudo browser completato il 13 ottobre 2026. Contratto documents-v1 attivo in locale. Dettagli nel report outputs/Dimora-V5-M2-esito-consolidato.md del workspace del committente.
