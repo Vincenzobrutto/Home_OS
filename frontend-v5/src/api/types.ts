@@ -60,6 +60,22 @@ export type DocumentsPage = { items: DocumentSummary[]; nextCursor: string | nul
 
 export type UploadDocumentInput = { file: File; name: string; visibility: DocumentVisibility };
 
+// document-search-v1 (H2, docs/v5/document-search-api-contract.md): estende la sola lista documenti.
+export type DocumentFormatFilter = 'all' | 'pdf' | 'jpeg' | 'png';
+export type DocumentVisibilityFilter = 'all' | DocumentVisibility;
+/** Filtri canonici: q già trim + NFC ('' = nessuna ricerca testuale). */
+export type DocumentSearchFilters = { q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter };
+
+export type DocumentSearchCapabilities = {
+  apiVersion: 'document-search-v1';
+  enabled: true;
+  isSimulation: false;
+  searchableFields: Array<'name' | 'originalFilename'>;
+  formats: Array<Exclude<DocumentFormatFilter, 'all'>>;
+  visibilities: DocumentVisibility[];
+  limits: { queryMaxCodePoints: number; maxPageSize: number };
+};
+
 /** Byte ricevuti da un endpoint binario (file originale o ZIP). */
 export type BinaryPayload = { blob: Blob; filename: string | null; contentType: string };
 

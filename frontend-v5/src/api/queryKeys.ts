@@ -7,6 +7,12 @@ export const queryKeys = {
     ['account', accountId, 'home', homeId, 'detail'] as const,
   documents: (accountId: string, homeId: string) =>
     ['account', accountId, 'home', homeId, 'documents', 'list'] as const,
+  // document-search-v1 (H2): varianti filtrate sotto la lista, così l'upload le invalida tutte.
+  documentSearch: (accountId: string, homeId: string, f: { q: string; format: string; visibility: string }) =>
+    ['account', accountId, 'home', homeId, 'documents', 'list', 'search', f.q, f.format, f.visibility] as const,
+  documentSearchCapabilities: (accountId: string, homeId: string) =>
+    ['account', accountId, 'home', homeId, 'documents', 'search-capabilities'] as const,
+  documentsAll: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'documents'] as const,
   document: (accountId: string, homeId: string, documentId: string) =>
     ['account', accountId, 'home', homeId, 'documents', documentId, 'detail'] as const,
   documentFile: (accountId: string, homeId: string, documentId: string) =>

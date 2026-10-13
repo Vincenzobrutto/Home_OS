@@ -24,6 +24,8 @@ import type {
   StartAnalysisInput,
   CreateHomeInput,
   DocumentDetail,
+  DocumentSearchCapabilities,
+  DocumentSearchFilters,
   DocumentsPage,
   Home,
   LoginInput,
@@ -131,8 +133,13 @@ export class ApiClient {
     page: { cursor?: string | null; limit?: number },
     signal: AbortSignal | undefined,
     accountId: string,
+    /** H2: solo i filtri attivi diventano parametri; senza filtri la richiesta resta quella M2. */
+    filters?: DocumentSearchFilters,
   ): Promise<DocumentsPage> {
     const params = new URLSearchParams();
+    if (filters?.q) params.set('q', filters.q);
+    if (filters && filters.format !== 'all') params.set('format', filters.format);
+    if (filters && filters.visibility !== 'all') params.set('visibility', filters.visibility);
     if (page.limit !== undefined) params.set('limit', String(page.limit));
     if (page.cursor) params.set('cursor', page.cursor);
     const query = params.size ? `?${params.toString()}` : '';
@@ -141,6 +148,21 @@ export class ApiClient {
       accountId,
     });
     if (!data || !Array.isArray(data.items) || !('nextCursor' in data)) throw serviceError(200);
+    return data;
+  }
+
+  async getDocumentSearchCapabilities(
+    homeId: string,
+    signal: AbortSignal | undefined,
+    accountId: string,
+  ): Promise<DocumentSearchCapabilities> {
+    const data = await this.request<DocumentSearchCapabilities>(`${homePath(homeId)}/document-search-capabilities`, {
+      signal,
+      accountId,
+    });
+    if (!data || data.apiVersion !== 'document-search-v1' || data.enabled !== true || !data.limits) {
+      throw serviceError(200);
+    }
     return data;
   }
 
