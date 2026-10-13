@@ -1,5 +1,5 @@
 // BACKEND SIMULATO PER PROVE MANUALI E SCREENSHOT — NON È IL BACKEND V5.
-// Espone in memoria identity-v1.1, documents-v1 e review-v1 su 127.0.0.1:3101 (mai sulla
+// Espone in memoria identity-v1.1, documents-v1, review-v1, activities-v1, document-search-v1 ed expenses-v1 su 127.0.0.1:3101 (mai sulla
 // porta 3001 del backend reale). Si ferma se la porta è occupata.
 // Uso:
 //   npm run mock-api -- --seed                      (account, case e documenti di prova)
@@ -39,7 +39,7 @@ if (process.argv.includes('--seed')) {
     visibility: 'private',
   });
   // H2 (solo mock): titolo diverso dal nome file e caratteri letterali per provare la ricerca.
-  await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name: 'Bolletta gas gennaio', originalFilename: 'SCAN_0042.pdf' });
+  const bolletta = await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name: 'Bolletta gas gennaio', originalFilename: 'SCAN_0042.pdf' });
   await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name: 'Sconto 50% condominio', visibility: 'home' });
   // PDF sintetici M3 con i loro byte reali: il provider di test li riconosce per hash.
   for (const [file, name] of [
@@ -49,6 +49,16 @@ if (process.argv.includes('--seed')) {
   ] as const) {
     const bytes = new Uint8Array(readFileSync(new URL(`../public/m3-examples/${file}`, import.meta.url)));
     await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name, bytes, originalFilename: file, visibility: 'home' });
+  }
+  // Spese H3a di prova (solo mock): manuale, da documento, da caldaia e una dell'anno precedente.
+  const caldaia = backend.review.seedBoiler(a.id, roma.id, 'Caldaia cucina');
+  for (const body of [
+    { title: 'Pulizia climatizzatore', amountCents: 10500, spentOn: '2026-08-05' },
+    { title: 'Gas gennaio', amountCents: 8430, spentOn: '2026-01-31', documentId: bolletta.id },
+    { title: 'Controllo fumi', amountCents: 12000, spentOn: '2026-06-07', assetId: caldaia.id, note: 'Tecnico di fiducia' },
+    { title: 'Sostituzione guarnizione', amountCents: 4500, spentOn: '2025-11-12' },
+  ]) {
+    await backend.expenses.handle({ method: 'POST', path: '', headers: { 'idempotency-key': crypto.randomUUID() }, body }, a.id, roma.id, 'expenses');
   }
   // Attività H1 di prova (solo mock), orologio del simulatore: 2026-10-13.
   for (const body of [
