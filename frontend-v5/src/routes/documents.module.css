@@ -297,3 +297,18 @@
     flex: 1 1 auto;
   }
 }
+
+@media (max-width: 480px) {
+  .item {
+    padding: 14px 12px;
+  }
+
+  /* Icona decorativa: su schermi stretti lo spazio va al titolo. */
+  .symbol {
+    display: none;
+  }
+}
+
+.formFlush {
+  margin-top: 0;
+}

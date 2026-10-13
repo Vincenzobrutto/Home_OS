@@ -440,7 +440,7 @@ function UploadForm(props: {
     upload.isError && !isService && !isConflict && !Object.values(errors).some(Boolean) ? userMessage(error) : null;
 
   return (
-    <form ref={formRef} className={styles.form} onSubmit={onSubmit} noValidate aria-labelledby={props.titleId}>
+    <form ref={formRef} className={cx(styles.form, docs.formFlush)} onSubmit={onSubmit} noValidate aria-labelledby={props.titleId}>
       <div>
         <h2 id={props.titleId} ref={titleRef} tabIndex={-1}>
           Carica documento
