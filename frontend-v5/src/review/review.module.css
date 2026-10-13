@@ -1,0 +1,311 @@
+.simulation {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.group {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.groupHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.groupHeader h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.proposal {
+  display: grid;
+  gap: var(--space-3);
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  min-width: 0;
+}
+
+.proposalHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.proposalHead h3 {
+  font-size: 16px;
+}
+
+.explain {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.options {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.options legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.option:has(input:checked) {
+  border-color: #74aebe;
+  background: var(--color-soft);
+}
+
+.option input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--color-accent);
+}
+
+.optionBody {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.value {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.sources {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.source {
+  font-size: 13px;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.source q {
+  color: var(--color-ink);
+  font-style: italic;
+}
+
+.beforeAfter {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  font-size: 14px;
+}
+
+.beforeAfter dt {
+  font-weight: 600;
+}
+
+.beforeAfter dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.checkLine {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.checkLine input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--color-accent);
+}
+
+.measureRow {
+  display: grid;
+  grid-template-columns: minmax(0, 120px) minmax(0, 1fr);
+  gap: var(--space-2) var(--space-3);
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.measureRow .wide {
+  grid-column: 1 / -1;
+}
+
+.select {
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 9px 10px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  min-width: 0;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  resize: vertical;
+}
+
+.textarea[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.batch {
+  display: grid;
+  gap: var(--space-2);
+  padding: 14px 16px;
+  border: 1px solid var(--color-soft-border);
+  border-radius: var(--radius-md);
+  background: var(--color-soft);
+}
+
+.fieldGrid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.confirmedField {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.confirmedField:first-child {
+  border-top: 0;
+}
+
+.fieldName {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.jobList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.job {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.jobHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.historyEvent {
+  display: grid;
+  gap: 6px;
+  padding-left: 14px;
+  border-left: 3px solid #d4e4eb;
+}
+
+.historyChange {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.examples {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.examples ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.examples li {
+  margin: 4px 0;
+}
+
+.counter {
+  font: 700 28px var(--font-display);
+  letter-spacing: -1px;
+}
+
+@media (max-width: 480px) {
+  .measureRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .beforeAfter {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

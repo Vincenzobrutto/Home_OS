@@ -73,7 +73,11 @@ export function DocumentDetailPage() {
     );
   }
 
-  return <DocumentView doc={document.data} homeName={home.name} back={back} />;
+  const analyzeHref =
+    home.permissions.includes('edit') && document.data.mimeType === 'application/pdf'
+      ? `/home/${encodeURIComponent(home.id)}/attivita?analizza=${encodeURIComponent(document.data.id)}`
+      : null;
+  return <DocumentView doc={document.data} homeName={home.name} back={back} analyzeHref={analyzeHref} />;
 }
 
 function DocumentUnavailable(props: { back: ReactNode; title: string; children: string }) {
@@ -91,7 +95,7 @@ function DocumentUnavailable(props: { back: ReactNode; title: string; children: 
   );
 }
 
-function DocumentView(props: { doc: DocumentDetail; homeName: string; back: ReactNode }) {
+function DocumentView(props: { doc: DocumentDetail; homeName: string; back: ReactNode; analyzeHref: string | null }) {
   const { doc } = props;
   useDocumentTitle(`${doc.name} · ${props.homeName}`);
   const canRead = doc.permissions.includes('read');
@@ -108,6 +112,14 @@ function DocumentView(props: { doc: DocumentDetail; homeName: string; back: Reac
             <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
             <Tag>Versione {doc.version}</Tag>
           </div>
+          {props.analyzeHref && (
+            <p className={styles.spaced}>
+              {/* Avvio esplicito: aprire o leggere il PDF non avvia mai un'analisi. */}
+              <Link to={props.analyzeHref} className={ui.btn}>
+                Analizza questo documento (test)
+              </Link>
+            </p>
+          )}
         </div>
       </div>
       <div className={docs.detailGrid}>

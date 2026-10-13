@@ -8,6 +8,8 @@ import { Banner, ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../c
 import { useHome } from '../session/hooks';
 import { useAccount, useSession } from '../session/session';
 import { ROLE_LABEL } from './HomesPages';
+import { BOILER_STATE_LABEL, PERSONAL_LABEL, m3ErrorMessage } from '../lib/review';
+import { useAssets, useReview } from '../review/hooks';
 import styles from './pages.module.css';
 
 type HomeContext = { home: Home };
@@ -141,6 +143,7 @@ export function CasaPage() {
             arriveranno nei prossimi incrementi.
           </p>
         </section>
+        <ImpiantiSummary homeId={home.id} />
         <section className={cx(ui.card, ui.tint, styles.wide)} aria-labelledby="casa-prossime">
           <h2 id="casa-prossime" className={styles.cardTitle}>
             Documenti e sezioni in arrivo
@@ -150,7 +153,7 @@ export function CasaPage() {
             <Link to={`/home/${encodeURIComponent(home.id)}/documenti`}>Apri i documenti</Link>
           </p>
           <p className={cx(styles.muted, styles.spaced)}>
-            Attività e Spese non sono ancora attive in questa versione: lì non viene mostrato né salvato alcun dato.
+            Spese non è ancora attiva in questa versione: lì non viene mostrato né salvato alcun dato.
           </p>
         </section>
       </div>
@@ -158,7 +161,7 @@ export function CasaPage() {
   );
 }
 
-export function UnavailableSection({ section }: { section: Exclude<SectionId, 'casa' | 'documenti'> }) {
+export function UnavailableSection({ section }: { section: Exclude<SectionId, 'casa' | 'documenti' | 'attivita'> }) {
   const home = useCurrentHome();
   const meta = SECTIONS.find((s) => s.id === section)!;
   useDocumentTitle(`${meta.label} · ${home.name}`);
@@ -214,5 +217,57 @@ export function NotFoundPage() {
         </p>
       </div>
     </PublicShell>
+  );
+}
+
+/** Caldaie personali e verifiche aperte: solo dati reali dal server, nessun valore preinserito. */
+function ImpiantiSummary({ homeId }: { homeId: string }) {
+  const assets = useAssets(homeId);
+  const reviewQuery = useReview(homeId);
+  const boilers = assets.data?.pages.flatMap((p) => p.items) ?? [];
+  const openCount = reviewQuery.data?.pages[0]?.openCount;
+  const base = `/home/${encodeURIComponent(homeId)}`;
+  return (
+    <section className={cx(ui.card, styles.wide)} aria-labelledby="casa-impianti">
+      <h2 id="casa-impianti" className={styles.cardTitle}>
+        Impianti e verifiche
+      </h2>
+      {assets.isPending || reviewQuery.isPending ? (
+        <Loading label="Caricamento delle schede…" />
+      ) : assets.isError || reviewQuery.isError ? (
+        <ErrorState
+          error={assets.error ?? reviewQuery.error}
+          message={m3ErrorMessage(assets.error ?? reviewQuery.error)}
+          onRetry={() => {
+            void assets.refetch();
+            void reviewQuery.refetch();
+          }}
+          retrying={assets.isFetching || reviewQuery.isFetching}
+        />
+      ) : (
+        <>
+          <p>
+            <Link to={`${base}/review`}>
+              {openCount === 1 ? '1 verifica da rivedere' : `${openCount} verifiche da rivedere`}
+            </Link>
+          </p>
+          {boilers.length === 0 ? (
+            <p className={cx(styles.muted, styles.spaced)}>
+              Nessuna scheda caldaia. Puoi crearne una da un’analisi di test o a mano in{' '}
+              <Link to={`${base}/attivita`}>Attività</Link>.
+            </p>
+          ) : (
+            <ul className={styles.list}>
+              {boilers.map((b) => (
+                <li key={b.id}>
+                  <Link to={`${base}/impianti/${encodeURIComponent(b.id)}`}>{b.name}</Link> — {BOILER_STATE_LABEL[b.state]}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className={cx(styles.small, styles.muted, styles.spaced)}>{PERSONAL_LABEL}: ogni scheda è visibile solo a chi l’ha creata.</p>
+        </>
+      )}
+    </section>
   );
 }

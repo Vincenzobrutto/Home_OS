@@ -5,8 +5,11 @@ import { CasaPage, HomeLayout, NotFoundPage, SectionNotFound, UnavailableSection
 import { CreateHomePage, HomeEntry, HomesPage } from './HomesPages';
 import { DocumentsPage } from './DocumentsPages';
 import { DocumentDetailPage } from './DocumentDetailPage';
+import { ActivityPage } from './ActivityPage';
+import { ReviewPage } from './ReviewPage';
+import { BoilerPage } from './BoilerPage';
 
-// Mappa delle rotte V5 (prima verticale identity-v1).
+// Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3, caso Caldaia).
 // Agenzie e Amministratori non hanno rotte: non sono ancora assegnate.
 export const routes: RouteObject[] = [
   {
@@ -32,7 +35,9 @@ export const routes: RouteObject[] = [
             children: [
               { index: true, element: <Navigate to="casa" replace /> },
               { path: 'casa', element: <CasaPage /> },
-              { path: 'attivita', element: <UnavailableSection section="attivita" /> },
+              { path: 'attivita', element: <ActivityPage /> },
+              { path: 'review', element: <ReviewPage /> },
+              { path: 'impianti/:assetId', element: <BoilerPage /> },
               { path: 'documenti', element: <DocumentsPage /> },
               { path: 'documenti/:documentId', element: <DocumentDetailPage /> },
               { path: 'spese', element: <UnavailableSection section="spese" /> },

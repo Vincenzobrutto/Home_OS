@@ -23,6 +23,7 @@ import {
   validateUploadFile,
 } from '../lib/files';
 import { useCurrentHome } from './HomePages';
+import { ExamplePdfs } from './ActivityPage';
 import styles from './pages.module.css';
 import docs from './documents.module.css';
 
@@ -56,7 +57,16 @@ export function DocumentsPage() {
             certificato.
           </p>
         </div>
-        {canUpload && !uploadOpen && (
+        {canUpload && (
+          <div className={docs.toolbarActions}>
+            <Link
+              to={`/home/${encodeURIComponent(home.id)}/attivita?analizza=1`}
+              className={ui.btn}
+              title="Analisi di test — nessuna AI reale"
+            >
+              Analizza documenti (test)
+            </Link>
+            {!uploadOpen && (
           <button
             type="button"
             className={cx(ui.btn, ui.primary)}
@@ -70,6 +80,8 @@ export function DocumentsPage() {
             <Icon name="plus" />
             Carica documento
           </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -107,6 +119,11 @@ export function DocumentsPage() {
       )}
 
       <DocumentsArchive home={home} canExport={canExport} canUpload={canUpload && !uploadOpen} onUpload={() => setUploadOpen(true)} />
+      {canUpload && (
+        <div className={styles.spaced}>
+          <ExamplePdfs homeId={home.id} />
+        </div>
+      )}
     </>
   );
 }
