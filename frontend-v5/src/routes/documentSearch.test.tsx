@@ -4,6 +4,7 @@ import { downloads } from '../test/browserStubs';
 import { FakeBackend, PNG_SIGNATURE, samplePdf } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
 import type { renderApp as RenderApp } from '../test/harness';
+import { queryKeys } from '../api/queryKeys';
 
 // H2 document-search-v1 — SOLO MOCK: backend simulato che cerca sull'intero
 // dataset autorizzato. Non prova API/DB reali (vedi tests/integration/document-search.int.test.ts).
@@ -59,6 +60,42 @@ const results = (home = 'Casa Roma') => screen.findByRole('list', { name: `Risul
 const names = (list: HTMLElement) => within(list).getAllByRole('listitem').map((li) => within(li).getByRole('link').textContent);
 
 const png = () => new Uint8Array([...PNG_SIGNATURE, 0, 0, 0, 0]);
+
+describe('[mock] H2 confini della sessione e revoca delle pagine', () => {
+  it('401 account_context_changed non trasferisce la ricerca al nuovo account', async () => {
+    const { backend, owner, member, home } = world();
+    await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Busta privata' });
+    const app = await open(backend, 'owner@example.test', PW.owner, home.id, '?q=busta&visibility=private');
+    await results();
+    const session = [...backend.sessions.values()].find(s => s.accountId === owner.id)!;
+    session.accountId = member.id;
+    await app.queryClient.invalidateQueries({ queryKey: queryKeys.documentsAll(owner.id, home.id) });
+    await waitFor(() => expect(app.router.state.location.pathname).toBe(`/home/${home.id}/documenti`));
+    await waitFor(() => expect(app.router.state.location.search).toBe(''));
+    expect(await field()).toHaveValue('');
+    expect(screen.queryByText('Busta privata')).not.toBeInTheDocument();
+  });
+
+  it('403 sulla pagina successiva elimina anche le pagine precedenti dalla cache', async () => {
+    const { backend, member, home } = world();
+    for (let i = 0; i < 24; i++) await backend.seedDocument({ homeId: home.id, uploaderId: member.id, name: `Privato ${i}` });
+    const app = await open(backend, 'member@example.test', PW.member, home.id, '?q=privato');
+    await results();
+    backend.memberships = backend.memberships.filter(m => !(m.accountId === member.id && m.homeId === home.id));
+    await app.user.click(screen.getByRole('button', { name: 'Mostra altri documenti' }));
+    await screen.findByRole('heading', { level: 1, name: 'Accesso non consentito' });
+    await waitFor(() => expect(app.queryClient.getQueryCache().getAll().filter(q => q.queryKey.includes('documents') && q.state.data !== undefined)).toHaveLength(0));
+  });
+
+  it('lo stato history di un altro account non conserva il link ai suoi filtri', async () => {
+    const { backend, owner, home } = world();
+    const doc = await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Condiviso', visibility: 'home' });
+    const app = await open(backend, 'viewer@example.test', PW.viewer, home.id);
+    await app.router.navigate(`/home/${home.id}/documenti/${doc.id}`, { state: { documentsSearch: 'q=busta&visibility=private', documentsAccountId: owner.id } });
+    await screen.findByRole('heading', { level: 1, name: 'Condiviso' });
+    expect(screen.getByRole('link', { name: '← Documenti di Casa Roma' })).toHaveAttribute('href', `/home/${home.id}/documenti`);
+  });
+});
 
 describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
   it('da Casa «Cerca documenti» porta a ?ricerca=1 e al campo; apertura normale non sposta il focus sul campo', async () => {

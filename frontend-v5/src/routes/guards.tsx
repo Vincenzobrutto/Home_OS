@@ -84,7 +84,8 @@ export function RequireAccount() {
     // Sessione assente/scaduta: dopo l'accesso si torna qui. Logout esplicito: nessun ritorno.
     // L'ingresso "/" non è una destinazione da ricordare.
     if (signals.explicitLogout || location.pathname === '/') return <Navigate to="/accedi" replace />;
-    const next = `${location.pathname}${location.search}`;
+    // La nuova sessione potrebbe appartenere a un altro account: nessuna ricerca o bozza nel ritorno.
+    const next = location.pathname;
     return <Navigate to={`/accedi?next=${encodeURIComponent(next)}`} replace />;
   }
   // La chiave per account azzera ogni stato locale (bozze, form) al cambio di account.

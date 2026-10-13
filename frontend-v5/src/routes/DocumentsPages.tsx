@@ -14,6 +14,7 @@ import {
   useUploadDocument,
 } from '../documents/hooks';
 import { SearchForm } from '../documents/SearchForm';
+import { useAccount } from '../session/session';
 import {
   EMPTY_FILTERS,
   QUERY_MAX_CODE_POINTS,
@@ -464,6 +465,7 @@ function DocumentRow(props: {
   onToggle: () => void;
 }) {
   const { doc } = props;
+  const account = useAccount();
   const exportable = doc.permissions.includes('export');
   return (
     <li className={cx(docs.item, props.selected && docs.itemSelected)}>
@@ -485,7 +487,7 @@ function DocumentRow(props: {
         <Link
           className={docs.title}
           to={`/home/${encodeURIComponent(props.homeId)}/documenti/${encodeURIComponent(doc.id)}`}
-          state={props.backSearch ? { documentsSearch: props.backSearch } : undefined}
+          state={props.backSearch ? { documentsSearch: props.backSearch, documentsAccountId: account.id } : undefined}
         >
           {doc.name}
         </Link>

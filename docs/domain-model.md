@@ -207,3 +207,6 @@ Utilizza Document.name, visibility e DocumentVersion.originalFilename/mimeType. 
 
 ### H2 — backend realizzato a schema invariato
 Ricerca soltanto sui metadata autorizzati di Document/DocumentVersion. Query, filtri e cursor non creano entità o evidenze AI. Originali, hash e titoli legacy restano invariati; prove DB e HTTP in docs/v5/h2-integration-review.md.
+
+### H3a — modello da implementare
+HomeExpense personale, ExpenseHistory ed ExpenseRequest proposti in expenses-api-contract.md. Centesimi EUR, data calendario, riferimenti facoltativi document/boiler autorizzati e redatti nelle letture. Un costo è un record, non copie per ogni riferimento. Nessuna migrazione ancora applicata in questa preparazione.

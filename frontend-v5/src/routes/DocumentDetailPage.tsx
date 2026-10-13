@@ -19,6 +19,7 @@ import {
 import { filtersFromParams, filtersToParams } from '../lib/documentSearch';
 import { documentsErrorMessage } from './DocumentsPages';
 import { useCurrentHome } from './HomePages';
+import { useAccount } from '../session/session';
 import styles from './pages.module.css';
 import docs from './documents.module.css';
 
@@ -26,7 +27,8 @@ export function DocumentDetailPage() {
   const home = useCurrentHome();
   const { documentId = '' } = useParams();
   const document = useDocument(home.id, documentId);
-  const archive = `/home/${encodeURIComponent(home.id)}/documenti${backSearch(useLocation().state)}`;
+  const account = useAccount();
+  const archive = `/home/${encodeURIComponent(home.id)}/documenti${backSearch(useLocation().state, account.id)}`;
 
   const back = (
     <Link to={archive} className={docs.backLink}>
@@ -241,8 +243,10 @@ function Preview({ doc }: { doc: DocumentDetail }) {
  * Filtri H2 con cui si è arrivati dai risultati (stato della navigazione, non
  * l'URL): riletti e riscritti, così passano soltanto q/format/visibility.
  */
-function backSearch(state: unknown) {
-  const raw = (state as { documentsSearch?: unknown } | null)?.documentsSearch;
+function backSearch(state: unknown, accountId: string) {
+  const saved = state as { documentsSearch?: unknown; documentsAccountId?: unknown } | null;
+  if (saved?.documentsAccountId !== accountId) return '';
+  const raw = saved.documentsSearch;
   if (typeof raw !== 'string') return '';
   const params = filtersToParams(filtersFromParams(new URLSearchParams(raw))).toString();
   return params ? `?${params}` : '';

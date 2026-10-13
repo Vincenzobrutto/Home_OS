@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-14 — revisione indipendente H2 e avvio H3a
+
+Raccolta Claude cfdd0b3: corretti next fra sessioni, ritorno dal dettaglio fra account e cache dopo revoca in paginazione, con 41 test mirati/build/lint verdi. Contratto expenses-v1 congelato e validazioni backend iniziali; H3a non ancora operativo. Nessuna chiamata AI o modifica schema/DB in questa preparazione.
+
+
 ## 2026-10-14 — H2 backend ricerca verificato
 
 Implementate capabilities e ricerca documenti autorizzati con filtri MIME/visibilità, Unicode NFC e paginazione legata ai filtri. Build/lint, 73 test offline e 75 integrazione superati. Verifica HTTP H2 su harness Nest reale con PostgreSQL; riavvio del processo 3001 e integrazione frontend ancora aperti. Nessuna modifica schema o chiamata Anthropic. Dettagli in docs/v5/h2-integration-review.md.

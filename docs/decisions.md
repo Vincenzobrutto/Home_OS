@@ -465,3 +465,6 @@ Ricerca server-side dei soli documenti autorizzati per titolo/nome file, formato
 
 ### ADR-V5-13 — riscontro implementazione backend
 Confronto parametrizzato NFC/ILIKE con collation und-x-icu, senza riscrivere metadata; caratteri wildcard trattati letteralmente. Anchor timestamp testuale evita conversione timestamptz del driver e ripetizione delle pagine nel fuso locale. Membership bloccata e riletta nella transazione. Nessuna dipendenza, schema o migrazione aggiunta. Frontend e processo utente ancora da integrare/verificare.
+
+## ADR-V5-14 — H3a spese essenziali personali
+Costi sostenuti EUR in centesimi, origine manuale/documentale, data non futura e totali personali annuali; archivio logico/ripristino/storia. Niente condivisione finanziaria implicita, float, nuove categorie, banca o pagamenti Admin. Stime e ricorrenze H3b. Contratto docs/v5/expenses-api-contract.md; codice di validazione iniziale, implementazione completa ancora aperta.

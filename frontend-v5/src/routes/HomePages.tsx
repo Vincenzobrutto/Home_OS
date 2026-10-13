@@ -1,4 +1,5 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useOutletContext, useParams } from 'react-router';
 import { isApiError } from '../api/errors';
 import type { Home, HomePermission } from '../api/types';
@@ -27,6 +28,13 @@ export function HomeLayout() {
   const { homeId = '' } = useParams();
   const account = useAccount();
   const home = useHome(homeId);
+  const queryClient = useQueryClient();
+  const forbidden = home.isError && isApiError(home.error) && home.error.kind === 'http' && home.error.status === 403;
+  useEffect(() => {
+    if (!forbidden) return;
+    // I figli protetti sono già smontati: rimuove anche le pagine prima osservate, senza cancellare il 403 del guard.
+    queryClient.removeQueries({ queryKey: ['account', account.id, 'home', homeId], predicate: q => q.getObserversCount() === 0 });
+  }, [forbidden, queryClient, account.id, homeId]);
 
   if (home.isPending) {
     return (

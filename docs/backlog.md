@@ -148,3 +148,11 @@ Schema invariato; nessuna chiamata Anthropic. Non segnare H2 completa sui soli m
 - [ ] Attivazione e test H2 del processo API 3001.
 - [ ] Consegna Claude, revisione frontend, client/API e browser reale.
 H2 resta aperta; nessun consumo provider.
+
+### H2 revisione / H3a avvio
+- [x] R1–R3 Claude: confini sessione/history e revoca paging corretti, tre regressioni.
+- [ ] H2 R4/R5: Cerca invariato dopo errore e annuncio iniziale di query URL invalida (UX minore).
+- [ ] Code splitting frontend prima del pilota (chunk 509.82 kB).
+- [x] H3a contratto e validazioni iniziali.
+- [ ] H3a schema, backend DB/HTTP, frontend e collaudo completo.
+- [ ] H3b stime/ricorrenze; export delle spese nel ciclo di vita Home.

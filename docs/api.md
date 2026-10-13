@@ -192,3 +192,6 @@ GET /api/v5/homes/:homeId/document-search-capabilities pianificata; GET document
 
 ## H2 document-search-v1 — backend implementato
 Capabilities e q/format/visibility della lista documenti implementati, risposta M2 invariata. DTO dedicato lascia rigorose le query M3/M4. Policy applicata prima di filtri e paging; cursori legati a account/Home/digest. Test HTTP su harness passano; attivazione del servizio 3001 ancora da verificare. Contratto e stato in docs/v5/document-search-api-contract.md e h2-integration-review.md.
+
+## H3a expenses-v1 — contratto congelato, endpoint non ancora attivi
+Expense capabilities/list/detail/create/updates/archive/restore/history/summary sotto /api/v5/homes/:homeId, trasporto/policy/idempotenza V5. Contratto docs/v5/expenses-api-contract.md; non usare il mock come prova di disponibilità reale.
