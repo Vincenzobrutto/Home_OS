@@ -1,0 +1,48 @@
+/* Token "Blu architettura" per Dimora V5. Ridefiniti da zero sul riferimento
+   visivo frontend/public/v5 (nessun file importato da lì). */
+:root {
+  --color-nav: #132e3e;
+  --color-nav-soft: #274958;
+  --color-nav-deep: #0e2431;
+  --color-nav-text: #c7dce7;
+  --color-nav-active: #b9f5fb;
+  --color-bg: #f2f6f8;
+  --color-surface: #ffffff;
+  --color-ink: #182f3d;
+  --color-muted: #536b79;
+  --color-accent: #0b6177;
+  --color-accent-ink: #ffffff;
+  --color-cyan: #99e5ef;
+  --color-soft: #e3f3f6;
+  --color-soft-border: #c9e4ea;
+  --color-border: #dce6eb;
+  --color-input-border: #9fb6c2;
+  --color-warning: #80520c;
+  --color-warning-bg: #fff4dc;
+  --color-warning-border: #ebdba8;
+  --color-error: #a43038;
+  --color-error-bg: #fdeced;
+  --color-error-border: #efc7cc;
+  --color-success: #24624b;
+  --color-success-bg: #e6f5ed;
+  --color-neutral-tag: #edf2f5;
+  --color-focus: #3a9ec0;
+
+  --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: Manrope, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --radius-sm: 9px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --tap-min: 44px;
+  --side-width: 216px;
+  --bottom-nav-height: 64px;
+}
