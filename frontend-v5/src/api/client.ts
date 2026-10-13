@@ -239,9 +239,13 @@ export class ApiClient {
 
     const contentType = response.headers.get('content-type') ?? '';
     const isJson = contentType.includes('application/json');
+    const mime = contentType.split(';')[0]!.trim().toLowerCase();
+    const binaryMimeAllowed = path.endsWith('/export')
+      ? mime === 'application/zip'
+      : ['application/pdf', 'image/jpeg', 'image/png'].includes(mime);
 
     // Successo binario: solo 200 con un corpo non-JSON.
-    if (kind === 'binary' && response.status === 200 && !isJson) {
+    if (kind === 'binary' && response.status === 200 && binaryMimeAllowed) {
       let blob: Blob;
       try {
         blob = await response.blob();

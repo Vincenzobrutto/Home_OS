@@ -38,8 +38,8 @@ const sizeFormat = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 1 });
 
 export function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
-  if (bytes < MiB) return `${sizeFormat.format(bytes / 1024)} KB`;
-  return `${sizeFormat.format(bytes / MiB)} MB`;
+  if (bytes < MiB) return `${sizeFormat.format(bytes / 1024)} KiB`;
+  return `${sizeFormat.format(bytes / MiB)} MiB`;
 }
 
 const dateFormat = new Intl.DateTimeFormat('it-IT', { dateStyle: 'medium', timeStyle: 'short' });
@@ -76,7 +76,7 @@ export function validateUploadFile(file: File | null): string | undefined {
   if (!declaredType(file)) return 'Formato non supportato: puoi caricare PDF, JPEG o PNG.';
   if (file.size === 0) return 'Il file è vuoto.';
   if (file.size > MAX_UPLOAD_BYTES) {
-    return `Il file pesa ${formatBytes(file.size)}: il limite per file è 20 MB (20 MiB).`;
+    return `Il file pesa ${formatBytes(file.size)}: il limite per file è 20 MiB.`;
   }
   return undefined;
 }
@@ -96,7 +96,7 @@ export function exportProblem(selected: DocumentSummary[]): string | undefined {
   }
   const total = selected.reduce((sum, d) => sum + d.byteSize, 0);
   if (total > MAX_EXPORT_BYTES) {
-    return `La selezione pesa ${formatBytes(total)}: il limite per uno ZIP è 100 MB (100 MiB).`;
+    return `La selezione pesa ${formatBytes(total)}: il limite per uno ZIP è 100 MiB.`;
   }
   return undefined;
 }

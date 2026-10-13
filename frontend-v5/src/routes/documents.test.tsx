@@ -166,7 +166,7 @@ describe('[mock] Documenti — caricamento', () => {
     const big = pdfFile('grande.pdf');
     Object.defineProperty(big, 'size', { value: 20 * MiB + 1 });
     await app.user.upload(screen.getByLabelText('File'), big);
-    expect(screen.getByLabelText('File')).toHaveAccessibleDescription(/limite per file è 20 MB/);
+    expect(screen.getByLabelText('File')).toHaveAccessibleDescription(/limite per file è 20 MiB/);
 
     const input = screen.getByLabelText('File') as HTMLInputElement;
     // Un browser può ignorare accept (es. «Tutti i file»): l'input riceve comunque un .txt.
