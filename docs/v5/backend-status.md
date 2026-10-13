@@ -39,3 +39,8 @@ Il collaudo reale del committente delle 19:57 ha passato 12 scenari identity e s
 
 ## M2 chiusa — 13 ottobre 2026
 Ultimo collaudo reale: 23 scenari API/PostgreSQL/file superati (25 con suite), 6 frontend/API superati alle 20:06. Browser: upload PNG private e PDF home esplicito, reload, dettaglio, anteprima immagine, download byte identici, export ZIP e manifesto, mobile 320/390 senza overflow. Logout finale. M2-UPLOAD-001 chiusa, nessun reset dati o modifica main. Esito completo outputs/Dimora-V5-M2-esito-consolidato.md; app reale 5174. Prossimo M3 proposte/confirm per campo, contratto da preparare prima del parallelo; nessuna AI reale attiva in M2.
+
+## Backend M3 — codice pronto, collaudo reale aperto
+Implementati i 12 endpoint review-v1, cinque nuove tabelle con migration additiva e worker con lease/token persistenti, timeout e pubblicazione atomica. Schede private del creatore; fonte/hash M2 verificati. Conferme per campo, potenze semanticamente distinte, sostituzione esplicita, versioni/idempotenza, compilazione manuale e storico. Provider solo test_fixture_v1, nessuna AI reale. Build/lint e 52 test locali superati (33 precedenti, 19 M3); 19 scenari M3 API/PostgreSQL preparati ma NON eseguiti. migrate status nella sandbox restituisce Schema engine error: nessuna applicazione della migration dichiarata. Client generato temporaneamente fuori dalla DLL in uso; launcher lo rigenera correttamente prima dell'attivazione.
+Il committente puo eseguire outputs/Dimora-V5-Dev.ps1 -Review -Test in PowerShell normale. Migra soltanto dimora_v5_product_dev su 55432 e riavvia solo il PID API registrato, senza reset. Claude frontend ancora in sviluppo; M3 non chiusa.
+

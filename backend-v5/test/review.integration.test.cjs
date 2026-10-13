@@ -1,0 +1,96 @@
+require('reflect-metadata');
+const {test}=require('node:test');const assert=require('node:assert/strict');const {randomUUID}=require('node:crypto');const {readFile}=require('node:fs/promises');const {resolve}=require('node:path');
+const {PrismaClient}=require('../generated/client');const {assertDevelopmentDatabase}=require('../dist/prisma.service');const {ReviewService}=require('../dist/review/review.service');const {FixtureProvider}=require('../dist/review/provider');
+const base='http://127.0.0.1:3001/api/v5',origin='http://127.0.0.1:5174';
+class Browser {
+  cookie='';csrf='';accountId='';
+  async request(path,method='GET',body,extra={}) {
+    const multipart=body instanceof FormData;const r=await fetch(base+path,{method,headers:{Origin:origin,...(this.cookie?{Cookie:this.cookie}:{}),...(this.accountId?{'X-Account-Context':this.accountId}:{}),...(method==='GET'?{}:{'X-CSRF-Token':this.csrf,...(!multipart?{'Content-Type':'application/json'}:{})}),...extra},body:body===undefined?undefined:multipart?body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});
+    if(r.headers.getSetCookie()[0])this.cookie=r.headers.getSetCookie()[0].split(';')[0];const data=r.status===204?null:(r.headers.get('content-type')||'').includes('application/json')?await r.json():Buffer.from(await r.arrayBuffer());
+    if(path==='/session'&&r.status===200)this.csrf=data.csrfToken;if(data?.account?.id)this.accountId=data.account.id;return{status:r.status,body:data};
+  }
+  post(path,body,key=randomUUID()){return this.request(path,'POST',body,{'Idempotency-Key':key});}
+  async upload(h,file,visibility='private') { const bytes=await readFile(resolve(__dirname,'../../docs/v5/fixtures/m3',file));const data=new FormData();data.set('name',file);data.set('visibility',visibility);data.set('file',new Blob([bytes],{type:'application/pdf'}),file);const result=await this.post(`/homes/${h}/documents`,data);assert.equal(result.status,201,JSON.stringify(result.body));return result.body.document; }
+}
+const ok=(r,status=200)=>{assert.equal(r.status,status,JSON.stringify(r.body));return r.body;};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function finished(browser,h,id){for(let n=0;n<50;n++){const job=ok(await browser.request(`/homes/${h}/analysis-jobs/${id}`)).job;if(['succeeded','failed'].includes(job.state))return job;await wait(200);}throw Error('Job non concluso in 10 secondi');}
+async function analyzed(browser,h,documentIds,targetAssetId){const job=ok(await browser.post(`/homes/${h}/analysis-jobs`,{documentIds,...(targetAssetId?{targetAssetId}:{})}),202).job;const done=await finished(browser,h,job.id);assert.equal(done.state,'succeeded',JSON.stringify(done));return done;}
+const query=(b,h,id)=>b.request(`/homes/${h}/assets/${id}`).then(r=>ok(r).asset);
+const powerChoice=(p,mode)=>({proposalId:p.id,action:'resolve_power',mode,measurements:p.candidates.map(c=>({...c.measurement,candidateId:c.id})),note:'Confronto esplicito fonti sintetiche'});
+
+test('review-v1 — API/PostgreSQL, job persistenti e conferme reali',{timeout:120000},async t=>{
+  assertDevelopmentDatabase(process.env.DATABASE_URL);const db=new PrismaClient();await db.$connect();t.after(()=>db.$disconnect());
+  const A=new Browser(),B=new Browser(),tag=randomUUID(),password='Password test M3 locale 123!';let h,otherH,docA,docB,docC,job,asset,confirmationKey,confirmationBody;
+  await t.test('Setup sintetico, tre originali M2 e capabilities di test esplicite',async()=>{
+    for(const [b,suffix]of[[A,'a'],[B,'b']]){ok(await b.request('/session'));ok(await b.post('/auth/register',{name:`Test M3 ${suffix}`,email:`m3-${tag}-${suffix}@example.test`,password}),201);ok(await b.request('/session'));}
+    h=ok(await A.post('/homes',{name:'Casa M3',address:'Via test 3'}),201).home.id;otherH=ok(await A.post('/homes',{name:'Altra casa M3',address:'Via test 4'}),201).home.id;
+    docA=await A.upload(h,'libretto-caldaia-demo.pdf');docB=await A.upload(h,'scheda-tecnica-caldaia-demo.pdf','home');docC=await A.upload(h,'rapporto-caldaia-demo-conflitto.pdf');
+    const cap=ok(await A.request(`/homes/${h}/analysis-capabilities`));assert.equal(cap.provider,'test_fixture_v1');assert.equal(cap.isSimulation,true);
+  });
+  await t.test('Avvio idempotente e job persistente: nessuna conferma automatica',async()=>{
+    const key=randomUUID(),body={documentIds:[docA.id,docB.id]};const one=ok(await A.post(`/homes/${h}/analysis-jobs`,body,key),202),two=ok(await A.post(`/homes/${h}/analysis-jobs`,{documentIds:[docB.id,docA.id]},key),202);assert.equal(one.job.id,two.job.id);assert.equal(two.job.state,one.job.state);
+    job=await finished(A,h,one.job.id);assert.equal(job.state,'succeeded',JSON.stringify(job));asset=await query(A,h,job.assetId);assert.equal(asset.state,'provisional');assert.equal(asset.openReviewCount,3);assert.equal(asset.confirmedFields.length,0);assert.equal(await db.analysisJob.count({where:{accountId:A.accountId,homeId:h}}),1);
+    const invalid=await A.post(`/homes/${h}/analysis-jobs`,{documentIds:[docA.id]},key);assert.equal(invalid.status,409);assert.equal(invalid.body.error.code,'idempotency_conflict');
+  });
+  await t.test('Marca sola: inbox scende a due, originale resta stored e storia esplicita',async()=>{
+    const p=asset.proposals.find(p=>p.fieldKey==='brand');confirmationKey=randomUUID();confirmationBody={expectedVersion:asset.version,decisions:[{proposalId:p.id,action:'accept',candidateId:p.candidates[0].id}]};
+    const result=ok(await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,confirmationBody,confirmationKey),201);asset=result.asset;assert.equal(result.resolvedProposalIds.length,1);assert.equal(asset.confirmedFields.length,1);assert.equal(result.remainingOpenCount,2);assert.equal(asset.state,'partially_confirmed');
+    const inbox=ok(await A.request(`/homes/${h}/review`));assert.equal(inbox.openCount,2);assert(inbox.items.every(i=>i.proposal.fieldKey!=='brand'&&i.proposal.state==='open'));
+    assert.equal(ok(await A.request(`/homes/${h}/documents/${docA.id}`)).document.status,'stored');const history=ok(await A.request(`/homes/${h}/assets/${asset.id}/history`));assert.equal(history.items[0].kind,'confirmation');
+  });
+  await t.test('Retry conferma perso nel trasporto precede expectedVersion; conflitto e azione stale rifiutati',async()=>{
+    const replay=ok(await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,confirmationBody,confirmationKey),201);assert.equal(replay.asset.version,asset.version);assert.equal(await db.assetHistory.count({where:{assetId:asset.id,kind:'confirmation'}}),1);
+    const wrong=await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,{...confirmationBody,expectedVersion:99},confirmationKey);assert.equal(wrong.status,409);assert.equal(wrong.body.error.code,'idempotency_conflict');
+    const stale=await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,confirmationBody);assert.equal(stale.status,409);assert.equal(stale.body.error.code,'asset_version_conflict');
+  });
+  await t.test('A+B due grandezze conservate, conferma modello completa e inbox vuota',async()=>{
+    let p=asset.proposals.find(p=>p.fieldKey==='power');asset=ok(await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,{expectedVersion:asset.version,decisions:[powerChoice(p,'keep_distinct')]}),201).asset;
+    const power=asset.confirmedFields.find(f=>f.fieldKey==='power');assert.deepEqual(new Set(power.value.measurements.map(m=>m.value)),new Set(['24','28']));assert(power.value.measurements.every(m=>m.sources.length===1&&m.origin==='proposal_accepted'));
+    p=asset.proposals.find(p=>p.fieldKey==='model');asset=ok(await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,{expectedVersion:asset.version,decisions:[{proposalId:p.id,action:'accept',candidateId:p.candidates[0].id}]}),201).asset;assert.equal(asset.state,'confirmed');assert.equal(ok(await A.request(`/homes/${h}/review`)).openCount,0);
+  });
+  await t.test('Rianalisi stessa evidenza non riapre schede né cambia valori o versione',async()=>{const version=asset.version,fields=asset.confirmedFields;const result=await analyzed(A,h,[docA.id,docB.id],asset.id);assert.equal(result.outcome,'no_changes');asset=await query(A,h,asset.id);assert.equal(asset.version,version);assert.deepEqual(asset.confirmedFields,fields);assert.equal(asset.openReviewCount,0);});
+  await t.test('Evidenza diversa A+C apre solo potenza, non sovrascrive confermato',async()=>{const result=await analyzed(A,h,[docA.id,docC.id],asset.id);assert.equal(result.openReviewCount,1);asset=await query(A,h,asset.id);const p=asset.proposals.find(p=>p.state==='open');assert.equal(p.fieldKey,'power');assert.equal(p.kind,'value_conflict');assert(p.currentConfirmed);assert.equal(asset.confirmedFields.find(f=>f.fieldKey==='power').value.measurements.length,2);});
+  await t.test('A+C keep_distinct, sostituzione non esplicita e dati fonte manipolati rifiutati',async()=>{
+    const p=asset.proposals.find(p=>p.state==='open'),decision=powerChoice(p,'keep_distinct');decision.replaceConfirmed=true;const wrong=await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,{expectedVersion:asset.version,decisions:[decision]});assert.equal(wrong.status,422);
+    const choose={...powerChoice(p,'choose_one'),measurements:[{...p.candidates[0].measurement,candidateId:p.candidates[0].id}]};const replace=await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,{expectedVersion:asset.version,decisions:[choose]});assert.equal(replace.status,409);assert.equal(replace.body.error.code,'confirmed_value_exists');
+    const altered={...choose,replaceConfirmed:true,measurements:[{...choose.measurements[0],value:'99'}]};assert.equal((await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,{expectedVersion:asset.version,decisions:[altered]})).status,422);assert.equal((await query(A,h,asset.id)).version,asset.version);
+  });
+  await t.test('Correzione potenza utente preserva fonte, reanalisi non la cancella',async()=>{const p=asset.proposals.find(p=>p.state==='open');const correction={proposalId:p.id,action:'resolve_power',mode:'correct',measurements:[{...p.candidates[0].measurement,value:'25',candidateId:p.candidates[0].id}],note:'Valore corretto esplicitamente nel test',replaceConfirmed:true};asset=ok(await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,{expectedVersion:asset.version,decisions:[correction]}),201).asset;const value=asset.confirmedFields.find(f=>f.fieldKey==='power');assert.equal(value.value.measurements[0].origin,'user_correction');assert.equal(value.value.measurements[0].value,'25');assert(value.sources[0].excerpt.includes('24')||value.sources[0].excerpt.includes('28'));const version=asset.version;const result=await analyzed(A,h,[docA.id,docC.id],asset.id);assert.equal(result.outcome,'no_changes');assert.equal((await query(A,h,asset.id)).version,version);});
+  await t.test('Account, Home, creator, source private e contesto: nessun leak derivato',async()=>{
+    await db.homeMembership.create({data:{accountId:B.accountId,homeId:h,role:'member',validFrom:new Date()}});
+    assert.equal((await B.request(`/homes/${h}/assets/${asset.id}`)).status,403);assert.equal((await B.request(`/homes/${h}/analysis-jobs/${job.id}`)).status,403);assert.equal(ok(await B.request(`/homes/${h}/assets`)).items.length,0);assert.equal(ok(await B.request(`/homes/${h}/review`)).openCount,0);
+    assert.equal((await B.post(`/homes/${h}/analysis-jobs`,{documentIds:[docA.id]})).status,403);assert.equal((await A.request(`/homes/${otherH}/assets/${asset.id}`)).status,403);
+    const context=await A.request(`/homes/${h}/review`,'GET',undefined,{'X-Account-Context':B.accountId});assert.equal(context.status,401);assert.equal(context.body.error.code,'account_context_changed');
+    const bJob=await analyzed(B,h,[docB.id]);assert.equal((await A.request(`/homes/${h}/assets/${bJob.assetId}`)).status,403);
+  });
+  await t.test('Viewer legge propria scheda ma non conferma; revoca blocca anche replay',async()=>{
+    await db.homeMembership.update({where:{accountId_homeId:{accountId:A.accountId,homeId:h}},data:{role:'viewer'}});assert.deepEqual((await query(A,h,asset.id)).permissions,['read']);assert.equal((await A.post(`/homes/${h}/assets`,{type:'boiler',name:'Non consentita'})).status,403);
+    await db.homeMembership.update({where:{accountId_homeId:{accountId:A.accountId,homeId:h}},data:{role:'owner',revokedAt:new Date()}});assert.equal((await A.post(`/homes/${h}/assets/${asset.id}/confirmations`,confirmationBody,confirmationKey)).status,403);assert.equal((await A.request(`/homes/${h}/review`)).status,403);
+    await db.homeMembership.update({where:{accountId_homeId:{accountId:A.accountId,homeId:h}},data:{revokedAt:null}});
+  });
+  await t.test('Compilazione manuale indipendente dal provider, nessuna fonte fittizia',async()=>{
+    let manual=ok(await A.post(`/homes/${h}/assets`,{type:'boiler',name:'Scheda manuale'}),201).asset;const body={expectedVersion:manual.version,fields:[{fieldKey:'brand',value:{kind:'text',text:'Marca manuale'},note:'Inserita da utente',proposalIdsToClose:[]},{fieldKey:'model',value:{kind:'text',text:'Modello manuale'},note:'Inserito da utente',proposalIdsToClose:[]}]};
+    manual=ok(await A.post(`/homes/${h}/assets/${manual.id}/manual-confirmations`,body),201).asset;assert(manual.confirmedFields.every(f=>f.origin==='manual'&&f.sources.length===0));assert.equal(manual.openReviewCount,0);assert.equal(manual.state,'partially_confirmed');
+    const bad=await A.post(`/homes/${h}/assets/${manual.id}/manual-confirmations`,{expectedVersion:manual.version,fields:[{fieldKey:'brand',value:{kind:'text',text:'Altra',sources:[]},note:'Test',proposalIdsToClose:[]}]});assert.equal(bad.status,422);
+  });
+  await t.test('Due conferme concorrenti stessa versione: una sola scrittura, altra 409',async()=>{
+    const fresh=ok(await A.post(`/homes/${h}/assets`,{type:'boiler',name:'Concorrenza'}),201).asset;const body={expectedVersion:fresh.version,fields:[{fieldKey:'brand',value:{kind:'text',text:'Test'},note:'Test concorrenza',proposalIdsToClose:[]}]};const results=await Promise.all([A.post(`/homes/${h}/assets/${fresh.id}/manual-confirmations`,body),A.post(`/homes/${h}/assets/${fresh.id}/manual-confirmations`,body)]);assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);assert.equal(await db.assetHistory.count({where:{assetId:fresh.id}}),1);
+  });
+  await t.test('Documento sconosciuto: job fallito senza scheda; retry crea tentativo nuovo',async()=>{
+    const form=new FormData();form.set('name','Sconosciuto');form.set('visibility','private');form.set('file',new Blob([Buffer.from('%PDF-1.4\nDocumento non fixture\n%%EOF\n')]),'sconosciuto.pdf');const doc=ok(await A.post(`/homes/${h}/documents`,form),201).document;const before=await db.boilerAsset.count({where:{accountId:A.accountId,homeId:h}});const started=ok(await A.post(`/homes/${h}/analysis-jobs`,{documentIds:[doc.id]}),202).job;const failed=await finished(A,h,started.id);assert.equal(failed.error.code,'provider_fixture_unsupported');assert.equal(failed.assetId,null);assert.equal(await db.boilerAsset.count({where:{accountId:A.accountId,homeId:h}}),before);
+    const retry=ok(await A.post(`/homes/${h}/analysis-jobs/${failed.id}/retry`,{}),202).job;assert.notEqual(retry.id,failed.id);assert.equal(retry.parentJobId,failed.id);assert.equal((await finished(A,h,retry.id)).state,'failed');assert.equal((await A.post(`/homes/${h}/analysis-jobs/${job.id}/retry`,{})).status,409);
+  });
+  await t.test('Cursor delle liste non riutilizzabile tra risorse o account',async()=>{const page=ok(await A.request(`/homes/${h}/analysis-jobs?limit=1`));assert(page.nextCursor);assert.equal((await A.request(`/homes/${h}/assets?cursor=${page.nextCursor}`)).status,422);assert.equal((await B.request(`/homes/${h}/analysis-jobs?cursor=${page.nextCursor}`)).status,422);assert(ok(await A.request(`/homes/${h}/analysis-jobs?limit=1&cursor=${page.nextCursor}`)).items.length);});
+  await t.test('Job running dopo crash recuperato da lease scaduta senza doppie proposte',async()=>{
+    const orphan=await db.analysisJob.create({data:{accountId:A.accountId,homeId:h,state:'running',firstStartedAt:new Date(Date.now()-1000),leaseUntil:new Date(Date.now()-500),leaseToken:randomUUID(),documents:[{documentId:docA.id,documentVersion:1,documentSha256:docA.sha256}]}});
+    const done=await finished(A,h,orphan.id);assert.equal(done.state,'succeeded',JSON.stringify(done));assert.equal(await db.fieldProposal.count({where:{jobId:orphan.id}}),3);assert.equal(await db.assetHistory.count({where:{assetId:done.assetId,kind:'analysis_published'}}),1);
+  });
+  await t.test('Timeout persistente diventa failed, non scheda vuota né attesa infinita',async()=>{const orphan=await db.analysisJob.create({data:{accountId:A.accountId,homeId:h,state:'running',firstStartedAt:new Date(Date.now()-121000),leaseUntil:new Date(Date.now()-1000),leaseToken:randomUUID(),documents:[{documentId:docA.id,documentVersion:1,documentSha256:docA.sha256}]}});const done=await finished(A,h,orphan.id);assert.equal(done.state,'failed');assert.equal(done.error.code,'analysis_timeout');assert.equal(done.assetId,null);});
+  await t.test('Revoca durante lavoro: pubblicazione transazionale non scrive asset o proposte',async()=>{
+    const snapshots=[{documentId:docA.id,documentVersion:1,documentSha256:docA.sha256}];const held=await db.analysisJob.create({data:{accountId:A.accountId,homeId:h,state:'running',firstStartedAt:new Date(),leaseUntil:new Date(Date.now()+60000),leaseToken:randomUUID(),documents:snapshots}});const proposed=await new FixtureProvider().analyze([{snapshot:snapshots[0],bytes:await readFile(resolve(__dirname,'../../docs/v5/fixtures/m3/libretto-caldaia-demo.pdf'))}]);
+    const before=await db.boilerAsset.count({where:{homeId:h,accountId:A.accountId}});await db.homeMembership.update({where:{accountId_homeId:{accountId:A.accountId,homeId:h}},data:{revokedAt:new Date()}});const service=new ReviewService(db,{});await assert.rejects(db.$transaction(tx=>service.publish(tx,held,proposed)),e=>e.getStatus()===403);assert.equal(await db.boilerAsset.count({where:{homeId:h,accountId:A.accountId}}),before);assert.equal(await db.fieldProposal.count({where:{jobId:held.id}}),0);
+    await db.analysisJob.update({where:{id:held.id},data:{leaseUntil:new Date(Date.now()-1000)}});let failed;for(let n=0;n<30;n++){failed=await db.analysisJob.findUnique({where:{id:held.id}});if(failed.state==='failed')break;await wait(200);}assert.equal(failed.state,'failed');assert.equal(failed.error.code,'access_revoked');await db.homeMembership.update({where:{accountId_homeId:{accountId:A.accountId,homeId:h}},data:{revokedAt:null}});
+  });
+  await t.test('Originali immutati, logout/login e risultati persistenti',async()=>{const original=ok(await A.request(`/homes/${h}/documents/${docA.id}`)).document;assert.equal(original.sha256,docA.sha256);assert.equal(original.status,'stored');const before=asset.id;ok(await A.request('/auth/logout','POST',{}),204);ok(await A.request('/session'));ok(await A.post('/auth/login',{email:`m3-${tag}-a@example.test`,password}),200);ok(await A.request('/session'));assert.equal((await query(A,h,before)).confirmedFields.find(f=>f.fieldKey==='power').value.measurements[0].value,'25');});
+});

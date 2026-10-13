@@ -22,6 +22,9 @@ model Account {
   requests HomeRequest[]
   documents Document[]
   uploads UploadRequest[]
+  analysisJobs AnalysisJob[]
+  boilerAssets BoilerAsset[]
+  reviewRequests ReviewRequest[]
 }
 model Session {
   id String @id
@@ -42,6 +45,9 @@ model Home {
   requests HomeRequest[]
   documents Document[]
   uploads UploadRequest[]
+  analysisJobs AnalysisJob[]
+  boilerAssets BoilerAsset[]
+  reviewRequests ReviewRequest[]
 }
 model HomeMembership {
   id String @id @default(uuid())
@@ -114,4 +120,84 @@ model UploadRequest {
   home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
   document Document @relation(fields: [documentId], references: [id], onDelete: Restrict)
   @@unique([accountId, homeId, key])
+}
+
+model BoilerAsset {
+  id String @id @default(uuid())
+  homeId String
+  accountId String
+  name String
+  version Int @default(1)
+  confirmed Json @default("{}")
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  jobs AnalysisJob[]
+  proposals FieldProposal[]
+  history AssetHistory[]
+  @@index([accountId, homeId, createdAt, id])
+}
+model AnalysisJob {
+  id String @id @default(uuid())
+  homeId String
+  accountId String
+  assetId String?
+  parentJobId String?
+  state String @default("queued")
+  documents Json
+  createdAt DateTime @default(now())
+  firstStartedAt DateTime?
+  finishedAt DateTime?
+  leaseUntil DateTime?
+  leaseToken String?
+  outcome String?
+  openReviewCount Int?
+  error Json?
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  asset BoilerAsset? @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  proposals FieldProposal[]
+  @@index([state, leaseUntil])
+  @@index([accountId, homeId, createdAt, id])
+}
+model FieldProposal {
+  id String @id @default(uuid())
+  assetId String
+  jobId String
+  fieldKey String
+  kind String
+  state String @default("open")
+  candidates Json
+  fingerprint String
+  resolvedRevision Int?
+  createdAt DateTime @default(now())
+  asset BoilerAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  job AnalysisJob @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  @@unique([jobId, fieldKey])
+  @@index([assetId, state, createdAt, id])
+}
+model AssetHistory {
+  id String @id @default(uuid())
+  assetId String
+  kind String
+  confirmationId String?
+  note String?
+  changes Json
+  createdAt DateTime @default(now())
+  asset BoilerAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  @@index([assetId, createdAt, id])
+}
+model ReviewRequest {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  operation String
+  target String
+  key String
+  digest String
+  response Json
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  @@unique([accountId, homeId, operation, target, key])
 }

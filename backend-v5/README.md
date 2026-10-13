@@ -23,3 +23,8 @@ Limiti: account locali di sviluppo, nessuna verifica email/reset password ancora
 
 ## Backend M2 documenti — codice consegnato, runtime da attivare
 Cinque endpoint documents-v1 implementati nel solo backend-v5; schema/migration autonomi e storage privato. Build/typecheck/lint e 31 test locali passano (DB/policy simulati, filesystem/ZIP reali). Pronti 11 scenari API documentali reali piu 12 identity; non ancora eseguiti. Launcher outputs/Dimora-V5-Dev.ps1 -Documents -Test applica soltanto migrazioni V5 dedicate e riavvia il PID registrato. Report outputs/Dimora-V5-backend-M2-documenti.md. Frontend Claude in sviluppo; nessuna dichiarazione M2 completa prima dell'integrazione reale.
+
+## Backend M3 — codice pronto, collaudo reale aperto
+Implementati i 12 endpoint review-v1, cinque nuove tabelle con migration additiva e worker con lease/token persistenti, timeout e pubblicazione atomica. Schede private del creatore; fonte/hash M2 verificati. Conferme per campo, potenze semanticamente distinte, sostituzione esplicita, versioni/idempotenza, compilazione manuale e storico. Provider solo test_fixture_v1, nessuna AI reale. Build/lint e 52 test locali superati (33 precedenti, 19 M3); 19 scenari M3 API/PostgreSQL preparati ma NON eseguiti. migrate status nella sandbox restituisce Schema engine error: nessuna applicazione della migration dichiarata. Client generato temporaneamente fuori dalla DLL in uso; launcher lo rigenera correttamente prima dell'attivazione.
+Il committente puo eseguire outputs/Dimora-V5-Dev.ps1 -Review -Test in PowerShell normale. Migra soltanto dimora_v5_product_dev su 55432 e riavvia solo il PID API registrato, senza reset. Claude frontend ancora in sviluppo; M3 non chiusa.
+

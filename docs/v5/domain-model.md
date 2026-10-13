@@ -23,3 +23,7 @@ AnalysisJob collega account/Home e snapshot di uno/due DocumentVersion; stato/le
 ConfirmedField conserva valore strutturato, revisione, origine e Confirmation. Ogni misura di potenza mantiene quantità/unità e proprie fonti; History/Audit conserva prima/dopo e decisioni, senza cancellare gli originali. Una conferma chiude soltanto le verifiche selezionate. Fingerprint delle evidenze e revisione del campo distinguono una verifica già risolta da un nuovo conflitto, evitando riaperture sul medesimo caso.
 
 M3 mantiene personali i derivati anche da fonti home: non condivide automaticamente dati provenienti da private. Visibilità di schede fra familiari/professionisti richiede policy successiva. Blueprint e forme API in review-api-contract.md; schema concreto/migrazione ancora di Codex, non vincolati a un'implementazione inventata dal frontend.
+
+### Implementazione M3
+Le entita M3 sono ora nello schema backend-v5 e nella migration 202610130003_review. JSON validato per candidati, conferme, snapshot e storia; unicita job/campo e ambito idempotente account/Home/operazione/target/chiave. Migrazione ancora da applicare sul runtime locale.
+

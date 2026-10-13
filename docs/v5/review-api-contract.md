@@ -1,6 +1,6 @@
 # M3 — review-v1, caso Caldaia
 
-13 ottobre 2026. Contratto fissato da Codex per sviluppo parallelo. **Endpoint M3 non ancora implementati.** Identity-v1.1 e documents-v1 rimangono attivi e invariati. M3 si considera conclusa soltanto dopo API/PostgreSQL/job e navigazione browser reali; i mock frontend da soli non bastano.
+13 ottobre 2026. Contratto fissato da Codex per sviluppo parallelo. **Codice backend M3 implementato; migrazione e collaudo reale ancora da eseguire. Gli endpoint non sono ancora attivi sul processo M2 acceso.** Identity-v1.1 e documents-v1 rimangono attivi e invariati. M3 si considera conclusa soltanto dopo API/PostgreSQL/job e navigazione browser reali; i mock frontend da soli non bastano.
 
 ## Scopo della verticale
 
