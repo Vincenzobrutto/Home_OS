@@ -264,6 +264,11 @@ export class FakeReview {
     return { ...rest, currentConfirmed: a.confirmed[p.fieldKey] ?? null };
   }
 
+  /** Solo test: scheda caldaia personale vuota (provvisoria). */
+  seedBoiler(accountId: string, homeId: string, name: string) {
+    return this.newAsset(accountId, homeId, name);
+  }
+
   private newAsset(accountId: string, homeId: string, name: string): StoredAsset {
     const a: StoredAsset = {
       id: uuid(),

@@ -154,7 +154,8 @@ function ActivityView(props: { home: Home; activity: HomeActivity; today: string
           </p>
         </section>
 
-        {canEdit && panel === 'none' && (
+        {/* Con il dialogo di annullamento aperto i pulsanti restano: alla chiusura il focus torna al pulsante d'origine. */}
+        {canEdit && (panel === 'none' || panel === 'cancel') && (
           <div className={styles.actions}>
             {isOpen ? (
               <>
