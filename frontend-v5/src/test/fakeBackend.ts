@@ -1,5 +1,5 @@
 // BACKEND SIMULATO — SOLO TEST E HARNESS LOCALE.
-// Implementa in memoria i contratti identity-v1.1 e documents-v1 per verificare client e UI.
+// Implementa in memoria i contratti identity-v1.1, documents-v1 e document-search-v1 per verificare client e UI.
 // Non è importabile dal codice dell'app (regola ESLint) e non è il backend V5 reale.
 // Deve restare autonomo e con sintassi TypeScript "erasable": viene eseguito
 // anche da Node (scripts/mock-api.ts) senza build.
@@ -90,6 +90,12 @@ export class FakeBackend {
   documentsEnabled = true;
   /** Simula storage non disponibile sulle operazioni documentali. */
   storageDown = false;
+  /** document-search-v1 (H2): false = backend senza ricerca (capabilities 404, parametri nuovi rifiutati). */
+  documentSearchEnabled = true;
+  /** H2: capabilities 503 (ricerca momentaneamente non disponibile). */
+  documentSearchDown = false;
+  /** Prova di gare/annullamenti: se impostato, ogni lista documenti attende questa promessa. */
+  listGate: ((query: URLSearchParams) => Promise<void>) | null = null;
   private clock = Date.parse('2026-10-13T08:00:00Z');
   /** review-v1 (M3): job, schede, proposte, conferme. Fonti lette con le regole M2. */
   review = new FakeReview({
@@ -191,6 +197,9 @@ export class FakeBackend {
       return { status: 200, body: { items } };
     }
     if (method === 'POST' && path === '/homes') return this.createHome(req, account.id);
+
+    const capsMatch = /^\/homes\/([^/]+)\/document-search-capabilities$/.exec(path);
+    if (capsMatch && method === 'GET') return this.searchCapabilities(account.id, decodeURIComponent(capsMatch[1]!));
 
     const docMatch = /^\/homes\/([^/]+)\/documents(?:\/([^/]+))?(\/file)?$/.exec(path.split('?')[0]!);
     if (docMatch) {
@@ -364,7 +373,13 @@ export class FakeBackend {
       return this.exportZip(req, accountId, homeId, perms);
     }
     if (documentId === undefined) {
-      if (req.method === 'GET') return this.listDocs(req, accountId, homeId, perms);
+      if (req.method === 'GET') {
+        if (this.listGate) await this.listGate(new URLSearchParams(req.path.split('?')[1] ?? ''));
+        // Permessi riletti dopo l'attesa, come farebbe una nuova richiesta al server.
+        const current = this.homePerms(accountId, homeId);
+        if (!current) return err(403, 'forbidden', 'Accesso non consentito.');
+        return this.listDocs(req, accountId, homeId, current);
+      }
       if (req.method === 'POST') return this.upload(req, accountId, homeId, perms);
       return err(404, 'not_found', 'Risorsa non trovata.');
     }
@@ -379,18 +394,78 @@ export class FakeBackend {
     return { status: 200, binary: { bytes: doc.bytes, contentType: doc.mimeType, filename: doc.originalFilename } };
   }
 
+  private searchCapabilities(accountId: string, homeId: string): FakeResponse {
+    if (!UUID_RE.test(homeId) && !this.homes.has(homeId)) return err(422, 'validation_error', 'Identificativo non valido.');
+    if (!this.homePerms(accountId, homeId)) return err(403, 'forbidden', 'Accesso non consentito.');
+    if (!this.documentSearchEnabled) return err(404, 'not_found', 'Risorsa non trovata.');
+    if (this.documentSearchDown) return err(503, 'service_unavailable', 'Servizio non disponibile.');
+    return {
+      status: 200,
+      body: {
+        apiVersion: 'document-search-v1',
+        enabled: true,
+        isSimulation: false,
+        searchableFields: ['name', 'originalFilename'],
+        formats: ['pdf', 'jpeg', 'png'],
+        visibilities: ['private', 'home'],
+        limits: { queryMaxCodePoints: 120, maxPageSize: 50 },
+      },
+    };
+  }
+
+  /**
+   * Lista M2 estesa da H2. Selezione autorizzata e filtri applicati sull'intero
+   * dataset prima dell'ordinamento e della paginazione (mai sulla sola pagina).
+   * Cursor senza filtri: «cN» come M2. Con filtri: «s.<impronta>.N», legato ad
+   * account/casa/filtri canonici ma non al limit; q mai in chiaro nel cursor.
+   */
   private listDocs(req: FakeRequest, accountId: string, homeId: string, perms: HomePermission[]): FakeResponse {
     const query = new URLSearchParams(req.path.split('?')[1] ?? '');
+    const allowed = this.documentSearchEnabled ? ['limit', 'cursor', 'q', 'format', 'visibility'] : ['limit', 'cursor'];
+    const fieldErrors: Record<string, string> = {};
+    for (const key of new Set(query.keys())) {
+      if (!allowed.includes(key)) fieldErrors[key] = 'Parametro non ammesso.';
+      else if (query.getAll(key).length > 1) fieldErrors[key] = 'Parametro ripetuto.';
+    }
+    const q = (query.get('q') ?? '').normalize('NFC').trim();
+    // eslint-disable-next-line no-control-regex -- caratteri di controllo rifiutati dal contratto
+    if (/[\u0000-\u001f\u007f]/.test(q)) fieldErrors.q = 'Caratteri di controllo non ammessi.';
+    else if (len(q) > 120) fieldErrors.q = 'Massimo 120 caratteri.';
+    const format = query.get('format') ?? 'all';
+    if (!['all', 'pdf', 'jpeg', 'png'].includes(format)) fieldErrors.format = 'Formato non valido.';
+    const visibility = query.get('visibility') ?? 'all';
+    if (!['all', 'private', 'home'].includes(visibility)) fieldErrors.visibility = 'Visibilità non valida.';
+    if (Object.keys(fieldErrors).length) return err(422, 'validation_error', 'Controlla la ricerca.', fieldErrors);
+
     const limit = query.has('limit') ? Number(query.get('limit')) : 20;
     if (!Number.isInteger(limit) || limit < 1 || limit > 50) return err(422, 'validation_error', 'Limite non valido.');
+    const filtered = q !== '' || format !== 'all' || visibility !== 'all';
+    const scope = fingerprint(`${accountId}|${homeId}|${q}|${format}|${visibility}`);
     const cursor = query.get('cursor');
-    const offset = cursor ? Number(cursor.replace(/^c/, '')) : 0;
-    if (!Number.isInteger(offset) || offset < 0) return err(422, 'validation_error', 'Cursore non valido.');
+    let offset = 0;
+    if (cursor) {
+      const legacy = /^c(\d+)$/.exec(cursor);
+      const search = /^s\.([0-9a-z]+)\.(\d+)$/.exec(cursor);
+      if (legacy && !filtered) offset = Number(legacy[1]);
+      else if (search && search[1] === scope) offset = Number(search[2]);
+      else return err(422, 'validation_error', 'Cursore non valido per questa ricerca.');
+    }
+    const mime = { pdf: 'application/pdf', jpeg: 'image/jpeg', png: 'image/png' } as Record<string, string>;
+    const needle = q.toLowerCase();
     const visible = [...this.documents.values()]
       .filter((d) => d.homeId === homeId && this.canSee(d, accountId, perms))
+      .filter((d) => format === 'all' || d.mimeType === mime[format])
+      .filter((d) => (visibility === 'all' ? true : visibility === 'home' ? d.visibility === 'home' : d.visibility === 'private'))
+      .filter(
+        (d) =>
+          !needle ||
+          d.name.normalize('NFC').toLowerCase().includes(needle) ||
+          d.originalFilename.normalize('NFC').toLowerCase().includes(needle),
+      )
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
     const items = visible.slice(offset, offset + limit).map((d) => this.docSummary(d, perms));
-    const nextCursor = offset + limit < visible.length ? `c${offset + limit}` : null;
+    const next = offset + limit;
+    const nextCursor = next < visible.length ? (filtered ? `s.${scope}.${next}` : `c${next}`) : null;
     return { status: 200, body: { items, nextCursor } };
   }
 
@@ -487,6 +562,16 @@ export class FakeBackend {
 // ---- utilità del backend simulato ----
 
 /** PDF sintetico di una pagina, strutturalmente valido (xref corretta), per i seed. */
+/** Impronta breve (FNV-1a) dei filtri per i cursor simulati: niente testo della ricerca in chiaro. */
+function fingerprint(text: string) {
+  let h = 0x811c9dc5;
+  for (const ch of text) {
+    h ^= ch.codePointAt(0)!;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(36);
+}
+
 export function samplePdf(label: string): Uint8Array {
   const text = `Documento di prova: ${label}`.replace(/[^\x20-\x7e]/g, '?').replace(/[()\\]/g, '');
   const stream = `BT /F1 18 Tf 72 720 Td (${text}) Tj ET`;
