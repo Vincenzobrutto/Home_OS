@@ -26,4 +26,13 @@ test('identity-v1 — API e database V5 reali, due account e revoche',{timeout:6
   await t.test('Logout revoca sessione sul DB e login successivo non riapre le case revocate',async()=>{const old=A.cookie;assert.equal((await A.request('/auth/logout','POST')).status,204);A.cookie=old;assert.equal((await A.request('/homes')).status,401);await A.request('/session');assert.equal((await A.request('/auth/login','POST',{email:`${tag}-a@example.test`,password:'Password errata 123!'})).status,401);assert.equal((await A.request('/auth/login','POST',{email:`${tag}-a@example.test`,password})).status,200);await A.request('/session');assert.equal((await A.request('/homes')).body.items.length,0);assert.equal((await A.request('/homes/'+home1.id)).status,403);});
   await t.test('Contesto A su cookie B: lettura e creazione rifiutate senza dati di B',async()=>{const read=await B.request('/homes','GET',undefined,{'X-Account-Context':aId});assert.equal(read.status,401);assert.equal(read.body.error.code,'account_context_changed');assert.equal(read.body.items,undefined);const write=await B.request('/homes','POST',{name:'Bozza A',address:'Via A'},{'X-Account-Context':aId,'Idempotency-Key':randomUUID()});assert.equal(write.status,401);assert.equal((await B.request('/homes')).body.items.length,1);});
   await t.test('Logout con sessione scaduta restituisce 204 e conserva anonimato',async()=>{const raw=A.cookie.slice(A.cookie.indexOf('=')+1);await db.session.update({where:{id:digest(raw)},data:{expiresAt:new Date(Date.now()-1000)}});assert.equal((await A.request('/auth/logout','POST')).status,204);assert.equal((await A.request('/homes')).status,401);assert.equal((await A.request('/session')).body.account,null);});
+  await t.test('Dieci case consecutive: risposta 201 e accesso immediato, senza attese o retry',async()=>{
+    const before=(await B.request('/homes')).body.items.length;
+    for(let i=0;i<10;i++){
+      const result=await B.request('/homes','POST',{name:`Prova precisione ${i}`,address:'Via Sintetica'},{'Idempotency-Key':randomUUID()});
+      assert.equal(result.status,201,JSON.stringify(result.body));
+      assert.equal((await B.request('/homes/'+result.body.home.id)).status,200);
+    }
+    assert.equal((await B.request('/homes')).body.items.length,before+10);
+  });
 });

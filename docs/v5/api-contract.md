@@ -66,3 +66,6 @@ Il frontend seleziona la casa via URL `/home/:homeId/casa`; non serve endpoint s
 4. Creazione ripetuta con stessa Idempotency-Key non duplica; retry con nuovo body esplicita il conflitto.
 5. Backend spento: errore comprensibile e retry manuale; nessun fallback a dati sintetici.
 6. Frontend mock nei test può verificare contratto/rendering; etichettare test con mock e integrazione reale separatamente.
+
+## Collaudo reale del 13 ottobre — aggiornamento finale
+11 scenari API/PostgreSQL e 3 frontend/API superati nei log delle 16:22. Collaudo browser reale eseguito: due account, case persistenti, logout/login, URL altrui negato, mobile 320/390 e sezioni future esplicite. M1-UI-001: seconda casa salvata ma risposta 403 intermittente; assegnato validFrom con Date applicativo per evitare arrotondamento futuro del default DB. Regressione di dominio superata, 18 test backend e 47 frontend mock passano, build/lint passano. Nuovo scenario reale con dieci creazioni consecutive pronto, ancora da eseguire dopo riavvio API. M1 non chiusa. Evidenze: outputs/Dimora-V5-collaudo-prima-app-reale.md. Nessun main o database legacy alterato.

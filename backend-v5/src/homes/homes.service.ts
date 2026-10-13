@@ -28,7 +28,9 @@ export class HomesService {
     }
     try {
       const home = await this.db.$transaction(async tx => {
-        const created = await tx.home.create({ data: { name: dto.name, address: dto.address, memberships: { create: { accountId, role: 'owner' } } } });
+        // Use the same millisecond clock as permission checks. PostgreSQL now()
+        // has microsecond precision and can round forward when read as JS Date.
+        const created = await tx.home.create({ data: { name: dto.name, address: dto.address, memberships: { create: { accountId, role: 'owner', validFrom: new Date() } } } });
         await tx.homeRequest.create({ data: { accountId, key, digest: fingerprint, homeId: created.id } });
         return created;
       });

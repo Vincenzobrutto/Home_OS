@@ -124,7 +124,7 @@ export function CasaPage() {
         </section>
         <section className={ui.card} aria-labelledby="casa-permessi">
           <h2 id="casa-permessi" className={styles.cardTitle}>
-            Cosa puoi fare
+            Permessi del tuo ruolo
           </h2>
           {home.permissions.length > 0 ? (
             <ul className={styles.list}>
@@ -136,7 +136,7 @@ export function CasaPage() {
             <p className={styles.muted}>Nessun permesso attivo su questa casa.</p>
           )}
           <p className={cx(styles.small, styles.muted, styles.spaced)}>
-            I permessi sono verificati dal servizio a ogni operazione.
+          I permessi sono verificati dal servizio a ogni operazione. In questo primo incremento puoi consultare la casa; modifica, gestione accessi, esportazione e vendita saranno disponibili nei prossimi incrementi.
           </p>
         </section>
         <section className={cx(ui.card, ui.tint, styles.wide)} aria-labelledby="casa-prossime">

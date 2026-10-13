@@ -10,6 +10,13 @@ const origin='http://127.0.0.1:5174';const csrf='x'.repeat(43);
 const member={accountId:'A',homeId:'H',role:'owner',validFrom:new Date('2026-01-01'),validUntil:null,revokedAt:null};
 const home={id:'H',name:'Casa',address:'Via Test',version:1};
 const req={headers:{origin,'x-csrf-token':csrf},cookies:{}};
+test('Casa appena creata immediatamente accessibile anche se il default DB arrotonda in avanti',async()=>{
+  let stored;
+  const db={homeRequest:{findUnique:async()=>null},homeMembership:{findUnique:async()=>({...stored,home})},$transaction:async fn=>fn({home:{create:async q=>{stored={...member,...q.data.memberships.create,validFrom:q.data.memberships.create.validFrom??new Date(Date.now()+1000)};return home}},homeRequest:{create:async()=>({})}})};
+  const service=new HomesService(db);
+  assert.equal((await service.create('A',{name:'Casa',address:'Via Test'},'test-key-clock-12345')).home.id,'H');
+  assert(validMembership(stored));
+});
 test('Cambio account tra schede rifiutato prima di leggere/scrivere dati privati',async()=>{const service=new SessionsService({session:{findUnique:async()=>({accountId:'B',expiresAt:new Date(Date.now()+60000),csrfToken:csrf})}});const r={headers:{...req.headers,'x-account-context':'A'},cookies:{[COOKIE]:'a'.repeat(43)}};await assert.rejects(service.require(r),e=>e.getStatus()===401&&e.getResponse().code==='account_context_changed');await assert.rejects(service.require(r,true),e=>e.getStatus()===401);r.headers['x-account-context']='B';assert.equal((await service.require(r,true)).accountId,'B');});
 test('Logout già scaduto idempotente, ma richiede Origin corretto',async()=>{let cleared=false;const auth=new AuthService({}, {current:async()=>null});await auth.logout({headers:{origin}},{clearCookie:()=>{cleared=true}});assert(cleared);await assert.rejects(auth.logout({headers:{origin:'https://evil.test'}},{}),e=>e.getStatus()===403);});
 test('Lunghezze Unicode uguali al frontend: code point inclusi selettori di presentazione',()=>{assert.equal(validateSync(plainToInstance(CreateHomeDto,{name:'😀'.repeat(80),address:'Via'})).length,0);assert(validateSync(plainToInstance(CreateHomeDto,{name:'☑️'.repeat(41),address:'Via'})).length);});
