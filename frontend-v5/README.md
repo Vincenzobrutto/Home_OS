@@ -1,8 +1,8 @@
 # Dimora V5 — nuovo frontend
 
-React 19 + TypeScript + Vite 7, React Router 7, TanStack Query 5, CSS Modules. Verticali: identity-v1.1 (accesso, case, shell Home), documents-v1 (Documenti M2: archivio, caricamento, dettaglio, download, ZIP), review-v1 (M3 Caldaia: analisi di test, proposte, conferme, Da rivedere, storia), analysis-v2 (M4: scelta esplicita Analisi di test o Anthropic, consenso, costi del collaudo) e activities-v1 (H1: attività personali e scadenze, nessuna AI). Nessun codice del frontend legacy.
+React 19 + TypeScript + Vite 7, React Router 7, TanStack Query 5, CSS Modules. Verticali: identity-v1.1 (accesso, case, shell Home), documents-v1 (Documenti M2: archivio, caricamento, dettaglio, download, ZIP), review-v1 (M3 Caldaia: analisi di test, proposte, conferme, Da rivedere, storia), analysis-v2 (M4: scelta esplicita Analisi di test o Anthropic, consenso, costi del collaudo) activities-v1 (H1: attività personali e scadenze, nessuna AI) e document-search-v1 (H2: ricerca nei titoli e nomi file dei documenti della casa, nessuna AI/OCR). Nessun codice del frontend legacy.
 
-Leggere AGENTS.md locale e root; contratti in `docs/v5/api-contract.md`, `docs/v5/documents-api-contract.md`, `docs/v5/review-api-contract.md`, `docs/v5/anthropic-api-contract.md` e `docs/v5/activities-api-contract.md`. Stato del lavoro e richieste a Codex in [HANDOFF.md](HANDOFF.md).
+Leggere AGENTS.md locale e root; contratti in `docs/v5/api-contract.md`, `docs/v5/documents-api-contract.md`, `docs/v5/review-api-contract.md`, `docs/v5/anthropic-api-contract.md`, `docs/v5/activities-api-contract.md` e `docs/v5/document-search-api-contract.md`. Stato del lavoro e richieste a Codex in [HANDOFF.md](HANDOFF.md).
 
 ## Comandi
 
@@ -22,7 +22,8 @@ V5_API_URL=http://127.0.0.1:3001/api/v5 npm run test:integration                
 V5_API_URL=http://127.0.0.1:3001/api/v5 V5_DOCUMENTS_API=1 npm run test:integration  # + documents
 V5_API_URL=http://127.0.0.1:3001/api/v5 V5_REVIEW_API=1 npm run test:integration     # + review M3
 V5_API_URL=http://127.0.0.1:3001/api/v5 V5_ANALYSIS_V2=1 npm run test:integration   # + M4 senza chiamate Anthropic
-V5_API_URL=http://127.0.0.1:3001/api/v5 V5_ACTIVITIES_API=1 npm run test:integration # + H1 attività (dopo attivazione di Codex)
+V5_API_URL=http://127.0.0.1:3001/api/v5 V5_ACTIVITIES_API=1 npm run test:integration # + H1 attività
+V5_API_URL=http://127.0.0.1:3001/api/v5 V5_DOCUMENT_SEARCH_API=1 npm run test:integration # + H2 ricerca (dopo attivazione di Codex)
 # Solo Codex, consuma budget del collaudo (max 10 USD): aggiungere V5_ANTHROPIC_LIVE=1
 ```
 
@@ -40,12 +41,12 @@ Modalità reale: l'app parla solo con `/api/v5`. Se il backend o un endpoint non
 
 - `src/api/` — tipi dei contratti, client tipizzato (JSON, multipart e binari su un unico percorso: CSRF in memoria, X-Account-Context, Idempotency-Key, errori), chiavi cache.
 - `src/session/` — QueryClient (gestione 401, pulizia cache), sessione/account, hook case.
-- `src/documents/` — hook documenti (elenco paginato, dettaglio, byte, upload, ZIP) e URL Blob.
+- `src/documents/` — hook documenti (elenco paginato, ricerca H2, dettaglio, byte, upload, ZIP), modulo di ricerca e URL Blob.
 - `src/activities/` — hook e componenti H1 (attività personali, operazioni idempotenti, dialogo di annullamento).
 - `src/review/` — hook M3 (capabilities, job con polling limitato, schede, Da rivedere, conferme, storia) e componenti di decisione.
 - `src/routes/` — rotte, guardie, pagine (Casa, Documenti, dettaglio documento, Attività, Da rivedere, scheda caldaia).
 - `src/components/` — shell, icone, primitive UI.
-- `src/lib/` — validazioni, regole file (limiti, formati, salvataggio sicuro), etichette e regole M3.
+- `src/lib/` — validazioni, regole file (limiti, formati, salvataggio sicuro), etichette e regole M3, regole H1 e della ricerca H2.
 - `public/m3-examples/` — tre PDF sintetici e manifest M3, byte identici al manifest (verificati da `tests/fixtures`).
 - `src/styles/` — solo token e reset globali.
 - `src/test/` — harness, stub del browser e backend simulato (solo test).

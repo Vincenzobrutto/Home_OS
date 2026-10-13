@@ -38,6 +38,9 @@ if (process.argv.includes('--seed')) {
     bytes: samplePng(),
     visibility: 'private',
   });
+  // H2 (solo mock): titolo diverso dal nome file e caratteri letterali per provare la ricerca.
+  await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name: 'Bolletta gas gennaio', originalFilename: 'SCAN_0042.pdf' });
+  await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name: 'Sconto 50% condominio', visibility: 'home' });
   // PDF sintetici M3 con i loro byte reali: il provider di test li riconosce per hash.
   for (const [file, name] of [
     ['libretto-caldaia-demo.pdf', 'Esempio A — libretto caldaia'],
