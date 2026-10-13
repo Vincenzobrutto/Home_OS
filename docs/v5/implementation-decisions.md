@@ -26,4 +26,10 @@ Vendita revoca accesso alla casa alla data, non chiude account. Agenzia ha 60 gi
 
 ## Stato
 
-Base documentale iniziale. Nessun backend V5, database o endpoint V5 è ancora implementato. Non presentare lo scaffold come prodotto funzionante.
+M1 completata il 13 ottobre 2026: account/casa reali, API e DB dedicati, integrazione frontend e collaudo. Non presentare sezioni future come operative. M2 ha un contratto documents-v1 fissato, implementazione da iniziare.
+
+## ADR-V5-05 — originali e riservatezza M2
+
+Originali immutabili PDF/JPEG/PNG; un file per richiesta, storage privato dedicato, upload idempotente, ZIP selettivo autorizzato. Visibilità default private (solo uploader con diritto Home valido), home soltanto con scelta esplicita. Il ruolo owner non supera la riservatezza di altri uploader. Niente AI, conferme tecniche, sostituzioni o cestino in M2: seguono contratti separati.
+
+Alternativa scartata: rendere ogni upload automaticamente leggibile a tutta la Home, incompatibile con documenti personali/finanziari riservati. Limiti 20 MiB/file e 100 MiB/ZIP sono limiti tecnici locali, non prezzi o quote commerciali. Dettagli in documents-api-contract.md. Antimalware e hardening prima del pilota, senza prometterli nel locale.

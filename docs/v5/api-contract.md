@@ -1,6 +1,6 @@
 # Contratto API V5 — identity-v1
 
-identity-v1.1: endpoint invariati, estensioni concordate in review Codex del ticket frontend V5-DEV-003. La base v1 è attiva e verificata sul DB locale; v1.1 richiede riavvio del servizio e collaudo esteso. Documenti/proposte fuori da questo contratto iniziale, seguiranno in un contratto successivo.
+identity-v1.1: endpoint invariati, estensioni concordate in review Codex del ticket frontend V5-DEV-003. M1 verificata: 12 scenari API/PostgreSQL, 3 client/API, 18 dominio e 47 frontend mock; collaudo browser reale e regressione creazione superati. Documenti seguono documents-api-contract.md; proposte restano fuori da entrambi i contratti.
 
 ## Trasporto
 
