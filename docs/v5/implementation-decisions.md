@@ -48,3 +48,6 @@ Archiver 7.0.1 e file-type 21.3.4, gia installati/verificati nel workspace, dich
 
 ## ADR-V5-09 — M3, esecuzione persistente
 Worker locale ogni 500 ms, claim CAS e lease 30 s/token; limite 120 s dal primo avvio anche dopo recupero. Transazione per risultato/job/storia, lock account/Home e diritti/fonti riletti in pubblicazione. DTO e validazione discriminata stretta, nessun sources/origin fidato dal client. Nessuna nuova dipendenza o provider a pagamento. Test reali ancora aperti.
+
+## ADR-V5-10 — M4 Anthropic e collaudo massimo 10 USD
+Scelta esplicita del committente: API Anthropic, plafon cumulativo 10 USD per il collaudo locale. Modello iniziale Sonnet 5.5 configurabile e da verificare nell'account; nessuna escalation o retry automatico. Primo incremento PDF testuali con JSON strutturato e riscontro locale pagina/citazione, non citazioni native incompatibili con structured outputs. Ledger persistente conserva costi incerti e impedisce ridispatch dopo crash. Scartati riuso integrale della pipeline legacy, fonte suggerita senza verifica e limite di spesa solo in memoria. Contratto analysis-v2 in docs/v5/anthropic-api-contract.md; implementazione/live test ancora da fare. Fonte primaria: https://platform.claude.com/docs/en/build-with-claude/citations e https://platform.claude.com/docs/en/models/overview .
