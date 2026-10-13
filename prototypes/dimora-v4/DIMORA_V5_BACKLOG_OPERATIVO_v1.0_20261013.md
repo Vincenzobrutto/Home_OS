@@ -24,3 +24,55 @@ React 19 + Vite 8 + TypeScript 6, navigazione a stato `view` in `App.tsx`, CSS i
 - **M8 Beta/go-no-go:** sicurezza, qualità, privacy, unit economics, feedback utenti.
 
 **Ordine critico:** M0 → M1 → M2 → M3 → M4 → M5; M6/M7 possono procedere in stream paralleli **dopo** M4. Nessun merge su main o migrazione implicita.
+
+## Backlog A — prototipo React navigabile [DEMO]
+
+Ogni task include dipendenze (tra parentesi) e criterio di accettazione. Nessun task DEMO deve invocare API live o dichiarare azioni reali.
+
+### A0 — Baseline e Design System
+- **D00 P0** (—) Verificare head branch, lavori concorrenti, `AGENTS.md`, convenzioni, componenti e schema → inventario riuso/gap, nessun merge.
+- **D01 P0** (D00) Baseline frontend build/lint e backend build/test se disponibile → exit code registrati; se non eseguiti dichiararlo.
+- **D02 P0** (D00) Audit `v5-preview.html` e `DimoraV5Preview.tsx` → entrypoint e TypeScript validati, nessun falso invio.
+- **D03 P0** (D00) Matrice DEMO/V1/FUTURO → ogni CTA mostra natura simulata o reale.
+- **D10 P0** (D00) Token premium B isolati, inline styles → non alterare `theme.ts` legacy, contrasti verificabili.
+- **D11 P1** (D10) Shell Home mobile con Casa/Attività/Documenti/Spese, Condominio dentro Casa, ricerca e «+» → navigazione da tastiera e touch.
+- **D12 P1** (D10) Shell Agenzie desktop con pratica/checklist/dossier/Gift → contesto e indietro coerenti.
+- **D13 P1** (D10) Shell Amministratori con edificio/memoria/pubblicazioni/segnalazioni → inbox segnalazioni distinta da «Da rivedere» AI.
+- **D14 P0** (D10) Componenti condivisi: DocumentoCard, AssetCard, EvidenceRow, ReviewItem, PermissionPreview, PublishManifest, IssueInfo → fonte/versione/permessi sempre visibili, nessun claim certificativo.
+- **D15 P0** (D11–D14) Fixture: almeno 2 edifici, 2 scale, 3 unità e utenti con permessi differenti → verifica visibilità demo e zero dati reali.
+- **D16 P1** (D14) Stati vuoto/caricamento/errore/403/quota/offline/duplicato → ogni journey ha errore recuperabile.
+
+### A1 — Home
+- **D20 P1** (D11,D15) Casa vuota/Gift prepopolata, ingresso document-first e alternativa manuale → nessun inventario obbligatorio.
+- **D21 P1** (D20) Import batch 20+ file, stati, hash duplicati, fallimento AI → riepilogo per oggetto, originale conservato nella simulazione.
+- **D22 P1** (D21) Asset provvisori «Da confermare» e «Da collocare» → non attivano scadenze normative.
+- **D23 P1** (D22) «Da rivedere» per proposte/conflitti, «Suggerimenti» separati → batch solo basso rischio; normative/permessi puntuali.
+- **D24 P1** (D23) Scheda caldaia con valori 24/28 kW e semantiche distinte → non scegliere automaticamente il numero.
+- **D25 P1** (D23) Riepilogo import con verifiche residue e prossima azione facoltativa → nessun elemento sparisce per conferma parziale.
+- **D26 P1** (D20) Documenti/Attività/Spese e Condominio autonomo/collegato → dati privati e pubblicati distinti, no overwrite.
+- **D27 P2** (D26) Free/Pro demo → nessun prezzo/limite inventato, no crediti AI/Event Pass V1.
+
+### A2 — Partner Agenzie
+- **D30 P1** (D12,D15) Scheda preliminare gratuita → attivazione operativa esplicita senza prezzi fittizi.
+- **D31 P1** (D30) Upload batch/link terzo nel fascicolo → «ricevuto» non «verificato» né automaticamente visibile all'acquirente.
+- **D32 P1** (D31) Checklist C+ dinamica, stati, assegnazioni e proposta template → approvazione agente; no learning cross-agenzia, no solleciti automatici venditori.
+- **D33 P1** (D32) Dossier anteprima/riservato/Gift → tre dataset e accessi differenti.
+- **D34 P1** (D33) Gift manifesto documenti+asset/storico → esclusione finanziari privati per default, nessun obbligo automatico.
+- **D35 P1** (D34) Invito nuovo/esistente/scaduto/revocato → non rivela esistenza account né crea account attivo.
+
+### A3 — Partner Amministratori e Segnalazioni (priorità alta)
+- **D40 P1** (D13,D15) Dashboard studio, edificio, import documenti/impianti e memoria tecnica → no secondo gestionale.
+- **D41 P0** (D15) Distinguere stato **report privato**, **incidente comune**, **evento amministratore**, **notice pubblicata** → niente riuso implicito di `Issue` Genesis.
+- **D42 P1** (D26,D41) Home «Segnala problema» con scala/impianto e suggerimento di comunicazioni pertinenti → invio mai bloccato dal matching.
+- **D43 P1** (D42) Invio simulato, ricevuta e stato del proprio report → errore rete e retry dimostrabili, nessuna conferma server falsa.
+- **D44 P1** (D43) Inbox Admin: leggere, chiedere dettagli, associare a caso noto → originali e identità segnalanti preservati ma privati.
+- **D45 P1** (D44) Presa in carico, aggiornamento, chiusura con motivazione → solo azione esplicita Admin, non AI.
+- **D46 P0** (D45) Anteprima audience scala/edificio/unità e conferma notice versionata → Scala B non vede notice Scala A, testo report privato non pubblicato.
+- **D47 P1** (D46) Home legge aggiornamento e stato proprio report, «Ho trovato risposta» → non conta automaticamente chiamate evitate.
+- **D48 P1** (D40) Invito unità/Home e cambio proprietario demo → vecchi accessi riservati revocati, dati privati non trasferiti.
+- **D49 P0** (D42–D48) Scenari 403, duplicato, errore invio, audience errata, revoca, urgenza → non promettere presidio h24.
+
+### A4 — Verifica demo
+- **D50 P0** (D20–D49) Test task-based tre target → utenti distinguono fonte, permesso e simulazione.
+- **D51 P1** (D50) Tastiera, viewport mobile/desktop, zoom, focus, contrasto, bug triage → problemi bloccanti corretti o registrati.
+- **D52 P0** (D51) Handoff V1 e scope freeze → componenti riusabili e gap tracciati; nessuna migrazione automatica.
