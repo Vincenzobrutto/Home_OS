@@ -16,6 +16,7 @@ import type {
 } from '../api/types';
 import { FakeReview } from './fakeReview.ts';
 import { FakeActivities } from './fakeActivities.ts';
+import { FakeExpenses } from './fakeExpenses.ts';
 
 export type FakeRequest = {
   method: string;
@@ -116,6 +117,19 @@ export class FakeBackend {
       return a && a.accountId === accountId && a.homeId === homeId ? { id: a.id, name: a.name } : null;
     },
   });
+  /** expenses-v1 (H3a): spese personali; documenti con le regole M2, caldaie con quelle M3/M4. */
+  expenses = new FakeExpenses({
+    perms: (accountId, homeId) => this.homePerms(accountId, homeId),
+    document: (accountId, homeId, documentId) => {
+      const perms = this.homePerms(accountId, homeId);
+      const d = this.documents.get(documentId);
+      return perms && d && d.homeId === homeId && this.canSee(d, accountId, perms) ? { id: d.id, name: d.name } : null;
+    },
+    asset: (accountId, homeId, assetId) => {
+      const a = this.review.assets.get(assetId);
+      return a && a.accountId === accountId && a.homeId === homeId ? { id: a.id, name: a.name } : null;
+    },
+  });
   /** false = backend senza endpoint M3 (404, come un backend solo M1/M2). */
   reviewEnabled = true;
 
@@ -206,6 +220,9 @@ export class FakeBackend {
       if (!this.documentsEnabled) return err(404, 'not_found', 'Risorsa non trovata.');
       return this.routeDocuments(req, account.id, decodeURIComponent(docMatch[1]!), docMatch[2], !!docMatch[3]);
     }
+
+    const h3 = /^\/homes\/([^/]+)\/((?:expense-capabilities|expense-summary|expenses)(?:[/?].*)?)$/.exec(path);
+    if (h3) return this.expenses.handle(req, account.id, decodeURIComponent(h3[1]!), h3[2]!);
 
     const h1 = /^\/homes\/([^/]+)\/((?:activity-capabilities|activity-summary|activities)(?:[/?].*)?)$/.exec(path);
     if (h1) return this.activities.handle(req, account.id, decodeURIComponent(h1[1]!), h1[2]!);
