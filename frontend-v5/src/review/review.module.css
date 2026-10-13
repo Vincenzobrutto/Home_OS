@@ -309,3 +309,20 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.ai {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: var(--color-soft);
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.aiModel {
+  font-weight: 500;
+}

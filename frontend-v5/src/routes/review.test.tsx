@@ -63,7 +63,9 @@ const posts = (backend: FakeBackend, suffix: RegExp) => backend.log.filter((r) =
 /** Avvia un'analisi dei documenti indicati dalla pagina Attività e attende l'esito. */
 async function analyze(app: App, homeId: string, docNames: string[], expected: RegExp = /Analisi completata|Nessuna novità/) {
   await app.router.navigate(`/home/${homeId}/attivita?analizza=1`);
-  await screen.findByRole('heading', { name: 'Nuova analisi di test' });
+  await screen.findByRole('heading', { name: 'Nuova analisi' });
+  // Provider scelto esplicitamente (analysis-v2): nessuna preselezione.
+  await app.user.click(await screen.findByRole('radio', { name: /Analisi di test — nessuna AI reale/ }));
   for (const n of docNames) await app.user.click(await screen.findByRole('checkbox', { name: new RegExp(n) }));
   await app.user.click(screen.getByRole('button', { name: 'Avvia analisi di test' }));
   const progress = await screen.findByRole('region', { name: 'Analisi avviata' });
@@ -92,9 +94,9 @@ describe('[mock] M3 — endpoint assenti e avvio esplicito', () => {
     const { backend, home, A } = await m3World();
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/documenti`);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
-    expect(screen.getByRole('link', { name: 'Analizza documenti (test)' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Analizza documenti' })).toBeInTheDocument();
     await app.router.navigate(`/home/${home.id}/documenti/${A.id}`);
-    expect(await screen.findByRole('link', { name: 'Analizza questo documento (test)' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Analizza questo documento' })).toBeInTheDocument();
     await app.router.navigate(`/home/${home.id}/attivita`);
     await screen.findByRole('heading', { level: 1, name: 'Attività' });
     await screen.findByText('Nessuna analisi avviata in questa casa.');
@@ -104,8 +106,10 @@ describe('[mock] M3 — endpoint assenti e avvio esplicito', () => {
   it('analisi di test esplicita: etichetta prima dell’avvio, destinazione, polling fino all’esito, scheda provvisoria', async () => {
     const { backend, owner, home, A } = await m3World();
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/documenti/${A.id}`);
-    await app.user.click(await screen.findByRole('link', { name: 'Analizza questo documento (test)' }));
-    const form = await screen.findByRole('form', { name: 'Nuova analisi di test' });
+    await app.user.click(await screen.findByRole('link', { name: 'Analizza questo documento' }));
+    const form = await screen.findByRole('form', { name: 'Nuova analisi' });
+    expect(within(form).getByRole('radio', { name: /Analisi di test — nessuna AI reale/ })).not.toBeChecked();
+    await app.user.click(await screen.findByRole('radio', { name: /Analisi di test — nessuna AI reale/ }));
     expect(within(form).getByText('Analisi di test — nessuna AI reale')).toBeInTheDocument();
     expect(within(form).getByRole('checkbox', { name: /Libretto A/ })).toBeChecked();
     expect(within(form).queryByRole('checkbox', { name: /Bolletta/ })).toBeInTheDocument();
@@ -114,7 +118,8 @@ describe('[mock] M3 — endpoint assenti e avvio esplicito', () => {
     const progress = await screen.findByRole('region', { name: 'Analisi avviata' });
     await waitFor(() => expect(progress).toHaveTextContent('Analisi completata: 3 verifiche aperte'), { timeout: 3000 });
     const [req] = posts(backend, /analysis-jobs$/);
-    expect(req!.body).toEqual({ documentIds: [A.id] });
+    // analysis-v2: provider sempre esplicito; nessun consenso/trasferimento per l'analisi di test.
+    expect(req!.body).toEqual({ documentIds: [A.id], provider: 'test_fixture_v1' });
     expect(req!.headers['x-account-context']).toBe(owner.id);
     expect(req!.headers['idempotency-key']).toMatch(/^[A-Za-z0-9_-]{16,100}$/);
     await openBoilerFromProgress(app, progress);
@@ -128,12 +133,12 @@ describe('[mock] M3 — endpoint assenti e avvio esplicito', () => {
   it('member avvia analisi senza permesso export; viewer non può avviarle', async () => {
     const { backend, home } = await m3World();
     const memberApp = await open(backend, 'member@example.test', PW.member, `/home/${home.id}/attivita`);
-    expect(await screen.findByRole('button', { name: 'Nuova analisi di test' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Nuova analisi' })).toBeInTheDocument();
     memberApp.unmount();
     await open(backend, 'viewer@example.test', PW.viewer, `/home/${home.id}/attivita`);
     await screen.findByRole('heading', { level: 1, name: 'Attività' });
     await screen.findByText('Nessuna analisi avviata in questa casa.');
-    expect(screen.queryByRole('button', { name: 'Nuova analisi di test' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Nuova analisi' })).not.toBeInTheDocument();
   });
 });
 
@@ -175,9 +180,10 @@ describe('[mock] M3 — job: fallimento, retry, polling', () => {
     backend.review.jobMode = 'hold';
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
     await app.router.navigate(`/home/${home.id}/attivita?analizza=1`);
+    await app.user.click(await screen.findByRole('radio', { name: /Analisi di test — nessuna AI reale/ }));
     await app.user.click(await screen.findByRole('checkbox', { name: /Libretto A/ }));
     await app.user.click(screen.getByRole('button', { name: 'Avvia analisi di test' }));
-    await screen.findByText('Analisi di test in corso…');
+    await screen.findByText('Analisi in corso…');
     await app.router.navigate(`/home/${home.id}/casa`);
     await screen.findByRole('heading', { level: 1, name: 'Casa Roma' });
     const jobId = [...backend.review.jobs.keys()][0]!;
@@ -321,6 +327,7 @@ describe('[mock] M3 — decisioni', () => {
     await within(form).findByText('Dati salvati nella scheda.');
     const assetId = [...backend.review.assets.keys()][0]!;
     await app.router.navigate(`/home/${home.id}/attivita?analizza=1&scheda=${assetId}`);
+    await app.user.click(await screen.findByRole('radio', { name: /Analisi di test — nessuna AI reale/ }));
     await app.user.click(await screen.findByRole('checkbox', { name: /Libretto A/ }));
     expect(screen.getByRole('combobox', { name: 'Destinazione dei risultati' })).toHaveValue(assetId);
     await app.user.click(screen.getByRole('button', { name: 'Avvia analisi di test' }));

@@ -62,9 +62,8 @@ export function DocumentsPage() {
             <Link
               to={`/home/${encodeURIComponent(home.id)}/attivita?analizza=1`}
               className={ui.btn}
-              title="Analisi di test — nessuna AI reale"
             >
-              Analizza documenti (test)
+              Analizza documenti
             </Link>
             {!uploadOpen && (
           <button

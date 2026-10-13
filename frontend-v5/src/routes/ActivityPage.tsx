@@ -2,21 +2,28 @@ import { useId, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { isApiError } from '../api/errors';
 import { newIdempotencyKey } from '../api/queryKeys';
-import type { AnalysisJob, Home } from '../api/types';
+import type { AnalysisCapabilities, AnalysisJob, Home, ProviderCapability, ProviderId } from '../api/types';
 import { Icon } from '../components/Icon';
 import { Banner, ErrorState, Field, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import { useDocuments } from '../documents/hooks';
-import { formatDate } from '../lib/files';
+import { formatBytes, formatDate } from '../lib/files';
 import {
+  AI_LABEL,
   BOILER_STATE_LABEL,
+  CONSENT_LABEL,
   JOB_STATE_LABEL,
+  M4_ERROR_LABEL,
   PERSONAL_LABEL,
   SIMULATION_LABEL,
+  billingText,
+  formatLimit,
   jobErrorMessage,
   m3ErrorMessage,
+  providerLabel,
+  startErrorMessage,
   validateBoilerName,
 } from '../lib/review';
-import { SimulationBadge } from '../review/components';
+import { ProviderBadge } from '../review/components';
 import {
   isActive,
   useAssets,
@@ -79,7 +86,7 @@ export function ActivityPage() {
           <span className={styles.eyebrow}>{home.name}</span>
           <h1 tabIndex={-1}>Attività</h1>
           <p className={styles.lead}>
-            Analisi dei documenti e verifiche da rivedere. Le analisi di questa versione sono di test: nessuna AI reale.
+            Analisi dei documenti e verifiche da rivedere. Ogni analisi parte solo su tua richiesta e i dati proposti vanno confermati da te.
           </p>
         </div>
       </div>
@@ -141,9 +148,10 @@ function ReviewSummary({ homeId }: { homeId: string }) {
 }
 
 /**
- * Avvio esplicito di un'analisi di test: 1–2 PDF leggibili della casa, scelti
- * dall'utente; destinazione visibile (nuova scheda o scheda esistente).
- * Mai avviata al caricamento, al montaggio o all'apertura di un PDF.
+ * Avvio esplicito di un'analisi: provider scelto dall'utente (Analisi di test o
+ * Anthropic, mai una preselezione o un cambio silenzioso), 1–2 PDF leggibili,
+ * destinazione sempre visibile. Per Anthropic serve la casella di consenso non
+ * preselezionata. Mai avviata al caricamento, al montaggio o all'apertura di un PDF.
  */
 function StartAnalysis(props: {
   home: Home;
@@ -167,7 +175,7 @@ function StartAnalysis(props: {
           onClick={() => setOpen(true)}
         >
           <Icon name="plus" />
-          Nuova analisi di test
+          Nuova analisi
         </button>
       </div>
     );
@@ -192,6 +200,21 @@ function StartAnalysis(props: {
   );
 }
 
+/** Provider disponibili: elenco analysis-v2 oppure, con un servizio M3, il solo provider di test. */
+function providerList(caps: AnalysisCapabilities): ProviderCapability[] {
+  if (caps.providers && caps.providers.length > 0) return caps.providers;
+  return [
+    {
+      id: caps.provider,
+      label: 'Analisi di test',
+      isSimulation: caps.isSimulation,
+      enabled: caps.enabled,
+      disabledReason: caps.enabled ? null : 'non attiva',
+      model: null,
+    },
+  ];
+}
+
 function StartAnalysisForm(props: {
   home: Home;
   titleId: string;
@@ -205,22 +228,27 @@ function StartAnalysisForm(props: {
   const documents = useDocuments(home.id);
   const assets = useAssets(home.id);
   const start = useStartAnalysis(home.id);
+  const [provider, setProvider] = useState<ProviderId | null>(null);
+  const [consent, setConsent] = useState(false);
   const [selected, setSelected] = useState<string[]>(() => (props.preselect ? [props.preselect] : []));
   // Una rianalisi della scheda passa sempre il suo target: mai una scheda ricreata per errore.
   const [target, setTarget] = useState(props.preTarget ?? '');
   const [key, setKey] = useState(newIdempotencyKey);
   const [error, setError] = useState<string | null>(null);
+  const consentId = useId();
 
-  const max = capabilities.data?.maxDocuments ?? 0;
+  const caps = capabilities.data;
+  const max = caps?.maxDocuments ?? 0;
+  const maxBytes = provider === 'anthropic' ? caps?.limits?.maxFileBytes : undefined;
   const docs = useMemo(() => {
-    const formats = capabilities.data?.formats ?? [];
+    const formats = caps?.formats ?? [];
     return (documents.data?.pages.flatMap((p) => p.items) ?? []).filter((d) => formats.includes(d.mimeType));
-  }, [documents.data, capabilities.data]);
+  }, [documents.data, caps]);
   const myBoilers = (assets.data?.pages.flatMap((p) => p.items) ?? []).filter((a) => a.permissions.includes('edit'));
   const targetName = myBoilers.find((b) => b.id === target)?.name;
 
   if (capabilities.isPending) return <Loading label="Verifica delle analisi disponibili…" />;
-  if (capabilities.isError) {
+  if (capabilities.isError || !caps) {
     return (
       <ErrorState
         title="Analisi non disponibili"
@@ -231,28 +259,56 @@ function StartAnalysisForm(props: {
       />
     );
   }
-  if (!capabilities.data.enabled) {
+  const providers = providerList(caps);
+  if (!providers.some((p) => p.enabled)) {
     return (
-      <Banner tone="warning" title="Analisi di test non attiva">
+      <Banner tone="warning" title="Nessuna analisi attiva">
         <p>Il servizio non consente ora di avviare analisi. Puoi sempre inserire i dati a mano in una scheda.</p>
       </Banner>
     );
   }
+  const chosen = providers.find((p) => p.id === provider) ?? null;
+  const isAi = provider === 'anthropic';
 
   const toggle = (id: string) => {
     setError(null);
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < max ? [...prev, id] : prev));
   };
 
+  const chooseProvider = (id: ProviderId) => {
+    // Cambio provider: nessun invio automatico, consenso da ridare, nuova operazione.
+    setProvider(id);
+    setConsent(false);
+    setError(null);
+    start.reset();
+    setKey(newIdempotencyKey());
+  };
+
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (start.isPending) return;
+    if (!chosen || !chosen.enabled) {
+      setError('Scegli come analizzare i documenti.');
+      return;
+    }
     if (selected.length < 1 || selected.length > max) {
       setError(`Scegli da 1 a ${max} documenti PDF.`);
       return;
     }
+    if (isAi && !consent) {
+      setError('Per usare Anthropic devi autorizzare l’invio del testo dei documenti selezionati.');
+      return;
+    }
     start.mutate(
-      { documentIds: selected, targetAssetId: target || undefined, idempotencyKey: key },
+      {
+        input: {
+          documentIds: selected,
+          ...(target ? { targetAssetId: target } : {}),
+          provider: chosen.id,
+          ...(isAi ? { consentToProviderTransfer: true as const } : {}),
+        },
+        idempotencyKey: key,
+      },
       {
         onSuccess: (job) => props.onStarted(job),
         onError: (err) => {
@@ -262,22 +318,75 @@ function StartAnalysisForm(props: {
     );
   };
 
-  const ambiguous = start.isError && isApiError(start.error) && start.error.kind === 'service';
+  const ambiguous = start.isError && isApiError(start.error) && start.error.kind === 'service' && !M4_ERROR_LABEL[start.error.code];
 
   return (
     <form className={cx(styles.form)} onSubmit={onSubmit} noValidate aria-labelledby={props.titleId}>
       <div>
         <h2 id={props.titleId} tabIndex={-1}>
-          Nuova analisi di test
+          Nuova analisi
         </h2>
-        <p className={styles.spaced}>
-          <SimulationBadge />
-        </p>
         <p className={cx(styles.small, styles.muted, styles.spaced)}>
-          Provider di test: riconosce solo i tre PDF di esempio. Su altri documenti l’analisi non produce dati e resta
-          l’inserimento manuale. Puoi scegliere fino a {max} PDF.
+          Scegli come analizzare, quali PDF e dove salvare le proposte. Puoi scegliere fino a {max} PDF. I dati proposti
+          vanno sempre confermati da te.
         </p>
       </div>
+
+      <fieldset className={review.options} disabled={start.isPending}>
+        <legend>Come analizzare</legend>
+        {providers.map((p) => (
+          <label key={p.id} className={review.option}>
+            <input
+              type="radio"
+              name={`${props.titleId}-provider`}
+              checked={provider === p.id}
+              disabled={!p.enabled}
+              onChange={() => chooseProvider(p.id)}
+            />
+            <span className={review.optionBody}>
+              <span className={review.value}>{p.id === 'anthropic' ? AI_LABEL : SIMULATION_LABEL}</span>
+              {p.id === 'anthropic' ? (
+                <span>
+                  Il testo dei PDF scelti viene inviato ad Anthropic per proporre marca, modello e potenza.
+                  {p.model ? ` Modello: ${p.model}.` : ''}
+                </span>
+              ) : (
+                <span>Riconosce solo i tre PDF di esempio. Nessun invio esterno, nessun costo.</span>
+              )}
+              {!p.enabled && (
+                <span className={styles.small}>
+                  Non disponibile: {p.disabledReason ?? (p.id === 'anthropic' ? 'non configurato' : 'non attivo')}.
+                </span>
+              )}
+            </span>
+          </label>
+        ))}
+      </fieldset>
+
+      {isAi && (
+        <div className={review.batch} aria-label="Limiti e costi del collaudo">
+          <strong>Prima di inviare ad Anthropic</strong>
+          {caps.limits && <span className={styles.small}>{formatLimit(caps.limits)}</span>}
+          <span className={styles.small}>
+            Scansioni senza testo, PDF cifrati o oltre i limiti non vengono inviati: l’esito lo dice esplicitamente e resta
+            l’inserimento manuale.
+          </span>
+          {caps.budget && (
+            <span className={styles.small}>
+              Budget del collaudo locale: {caps.budget.remainingUsd} USD disponibili su {caps.budget.limitUsd} USD
+              {caps.budget.uncertainUsd !== '0' && caps.budget.uncertainUsd !== '0.00'
+                ? ` (${caps.budget.uncertainUsd} USD con esito incerto)`
+                : ''}
+              . È un controllo di collaudo: non è un prezzo di Dimora né il saldo dell’account Anthropic.
+            </span>
+          )}
+          <label className={review.checkLine} htmlFor={consentId}>
+            <input id={consentId} type="checkbox" checked={consent} disabled={start.isPending} onChange={(e) => setConsent(e.target.checked)} />
+            <span>{CONSENT_LABEL}</span>
+          </label>
+        </div>
+      )}
+
       <fieldset className={review.options} disabled={start.isPending}>
         <legend>Documenti da analizzare</legend>
         {documents.isPending ? (
@@ -290,20 +399,26 @@ function StartAnalysisForm(props: {
             <Link to={`/home/${encodeURIComponent(home.id)}/documenti`}>Documenti</Link>.
           </p>
         ) : (
-          docs.map((d) => (
-            <label key={d.id} className={review.option}>
-              <input
-                type="checkbox"
-                checked={selected.includes(d.id)}
-                disabled={!selected.includes(d.id) && selected.length >= max}
-                onChange={() => toggle(d.id)}
-              />
-              <span className={review.optionBody}>
-                <span className={review.value}>{d.name}</span>
-                <span className={styles.small}>{d.originalFilename}</span>
-              </span>
-            </label>
-          ))
+          docs.map((d) => {
+            const tooBig = maxBytes !== undefined && d.byteSize > maxBytes;
+            return (
+              <label key={d.id} className={review.option}>
+                <input
+                  type="checkbox"
+                  checked={selected.includes(d.id) && !tooBig}
+                  disabled={tooBig || (!selected.includes(d.id) && selected.length >= max)}
+                  onChange={() => toggle(d.id)}
+                />
+                <span className={review.optionBody}>
+                  <span className={review.value}>{d.name}</span>
+                  <span className={styles.small}>
+                    {d.originalFilename} · {formatBytes(d.byteSize)}
+                    {tooBig ? ' · oltre il limite per l’analisi AI: resta consultabile ma non analizzabile' : ''}
+                  </span>
+                </span>
+              </label>
+            );
+          })
         )}
         {documents.hasNextPage && (
           <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void documents.fetchNextPage()}>
@@ -342,14 +457,14 @@ function StartAnalysisForm(props: {
       {start.isError && (
         <Banner tone="error" role="alert" title={ambiguous ? 'Esito non confermato' : 'Analisi non avviata'}>
           <p>
-            {m3ErrorMessage(start.error)}
+            {startErrorMessage(start.error)}
             {ambiguous ? ' Riprova: la stessa richiesta non avvia un’analisi doppia.' : ''}
           </p>
         </Banner>
       )}
       <div className={styles.formActions}>
-        <button type="submit" className={cx(ui.btn, ui.primary)} disabled={start.isPending || selected.length === 0}>
-          {start.isPending ? 'Avvio in corso…' : ambiguous ? 'Riprova avvio' : 'Avvia analisi di test'}
+        <button type="submit" className={cx(ui.btn, ui.primary)} disabled={start.isPending || selected.length === 0 || !chosen}>
+          {start.isPending ? 'Avvio in corso…' : ambiguous ? 'Riprova avvio' : isAi ? 'Invia ad Anthropic e analizza' : 'Avvia analisi di test'}
         </button>
         <button type="button" className={cx(ui.btn, ui.ghost)} onClick={props.onCancel} disabled={start.isPending}>
           Annulla
@@ -383,14 +498,29 @@ function JobProgress({ homeId, jobId }: { homeId: string; jobId: string }) {
   );
 }
 
+function succeededText(job: AnalysisJob, short: boolean) {
+  if (job.outcome === 'no_changes') {
+    return short ? 'Nessuna novità.' : 'Nessuna novità: i dati coincidono con quelli già confermati o con decisioni già prese.';
+  }
+  if (job.outcome === 'no_supported_data') {
+    return job.assetId
+      ? 'Nessun dato sostenuto dai documenti: la scheda resta invariata.'
+      : 'Nessun dato sostenuto dai documenti: nessuna scheda è stata creata.';
+  }
+  return short
+    ? `Verifiche aperte nella scheda al termine dell’analisi: ${job.openReviewCount ?? 0}.`
+    : `Analisi completata: ${job.openReviewCount ?? 0} ${job.openReviewCount === 1 ? 'verifica aperta' : 'verifiche aperte'} nella scheda.`;
+}
+
 function JobOutcome(props: { homeId: string; job: AnalysisJob; expired: boolean; onRefresh: () => void; refreshing: boolean }) {
   const { job, homeId } = props;
   return (
     <div className={styles.stack}>
       <p>
-        <Tag tone={job.state === 'failed' ? 'warn' : 'blue'}>{JOB_STATE_LABEL[job.state]}</Tag> <SimulationBadge />
+        <Tag tone={job.state === 'failed' ? 'warn' : 'blue'}>{JOB_STATE_LABEL[job.state]}</Tag>{' '}
+        <ProviderBadge provider={job.provider} model={job.model} />
       </p>
-      {isActive(job) && !props.expired && <Loading label="Analisi di test in corso…" />}
+      {isActive(job) && !props.expired && <Loading label="Analisi in corso…" />}
       {isActive(job) && props.expired && (
         <Banner title="Analisi in corso: puoi tornare più tardi">
           <p>Il risultato resta disponibile in Attività. Puoi aggiornare quando vuoi.</p>
@@ -405,9 +535,7 @@ function JobOutcome(props: { homeId: string; job: AnalysisJob; expired: boolean;
       )}
       {job.state === 'succeeded' && (
         <p>
-          {job.outcome === 'no_changes'
-            ? 'Nessuna novità: i dati coincidono con quelli già confermati o con decisioni già prese.'
-            : `Analisi completata: ${job.openReviewCount ?? 0} ${job.openReviewCount === 1 ? 'verifica aperta' : 'verifiche aperte'} nella scheda.`}{' '}
+          {succeededText(job, false)}{' '}
           {job.assetId && (
             <Link to={`/home/${encodeURIComponent(homeId)}/impianti/${encodeURIComponent(job.assetId)}`}>Apri la scheda</Link>
           )}{' '}
@@ -417,8 +545,10 @@ function JobOutcome(props: { homeId: string; job: AnalysisJob; expired: boolean;
       {job.state === 'failed' && (
         <Banner tone="warning" title="Analisi non riuscita">
           <p>{jobErrorMessage(job)}</p>
+          <p>L’originale resta disponibile e puoi sempre inserire i dati a mano in una scheda.</p>
         </Banner>
       )}
+      {job.provider === 'anthropic' && <p className={styles.small}>{billingText(job.billing, job.provider)}</p>}
     </div>
   );
 }
@@ -455,10 +585,35 @@ function JobsList({ homeId, canEdit, onRetried }: { homeId: string; canEdit: boo
   );
 }
 
+/**
+ * Riga di un'analisi. Il nuovo tentativo di un job fallito è una nuova richiesta:
+ * per Anthropic chiede di nuovo il consenso e ricorda che il tentativo precedente
+ * può avere avuto un costo (anche incerto) e che quello nuovo può costare.
+ */
 function JobRow({ homeId, job, canEdit, onRetried }: { homeId: string; job: AnalysisJob; canEdit: boolean; onRetried: (job: AnalysisJob) => void }) {
   const retry = useRetryJob(homeId);
   const [key, setKey] = useState(newIdempotencyKey);
-  const ambiguous = retry.isError && isApiError(retry.error) && retry.error.kind === 'service';
+  const [confirming, setConfirming] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const ambiguous = retry.isError && isApiError(retry.error) && retry.error.kind === 'service' && !M4_ERROR_LABEL[retry.error.code];
+  const isAi = job.provider === 'anthropic';
+
+  const send = () =>
+    retry.mutate(
+      { jobId: job.id, idempotencyKey: key, consentToProviderTransfer: isAi ? consent : undefined },
+      {
+        onSuccess: (newJob) => {
+          setKey(newIdempotencyKey());
+          setConfirming(false);
+          setConsent(false);
+          onRetried(newJob);
+        },
+        onError: (err) => {
+          if (isApiError(err) && err.kind === 'http') setKey(newIdempotencyKey());
+        },
+      },
+    );
+
   return (
     <li className={review.job}>
       <div className={review.jobHead}>
@@ -468,18 +623,15 @@ function JobRow({ homeId, job, canEdit, onRetried }: { homeId: string; job: Anal
           {job.finishedAt ? ` · conclusa ${formatDate(job.finishedAt)}` : ''}
         </span>
       </div>
-      <span className={styles.small}>{SIMULATION_LABEL}</span>
+      <span className={styles.small}>{providerLabel(job.provider, job.model)}</span>
       {job.parentJobId && <span className={styles.small}>Nuovo tentativo di un’analisi non riuscita.</span>}
       {job.state === 'failed' && (
         <p className={styles.small}>
           <strong>Errore:</strong> {jobErrorMessage(job)} <span className={styles.muted}>({job.error?.code})</span>
         </p>
       )}
-      {job.state === 'succeeded' && (
-        <p className={styles.small}>
-          {job.outcome === 'no_changes' ? 'Nessuna novità.' : `Verifiche aperte nella scheda al termine dell’analisi: ${job.openReviewCount ?? 0}.`}
-        </p>
-      )}
+      {job.state === 'succeeded' && <p className={styles.small}>{succeededText(job, true)}</p>}
+      {isAi && <p className={styles.small}>{billingText(job.billing, job.provider)}</p>}
       <div className={review.actions}>
         {job.assetId && (
           <Link to={`/home/${encodeURIComponent(homeId)}/impianti/${encodeURIComponent(job.assetId)}`} className={cx(ui.btn, ui.small)}>
@@ -491,33 +643,52 @@ function JobRow({ homeId, job, canEdit, onRetried }: { homeId: string; job: Anal
             Segui l’avanzamento
           </Link>
         )}
-        {job.state === 'failed' && canEdit && (
+        {job.state === 'failed' && canEdit && !(isAi && confirming) && (
           <button
             type="button"
             className={cx(ui.btn, ui.small)}
             disabled={retry.isPending}
-            onClick={() =>
-              retry.mutate(
-                { jobId: job.id, idempotencyKey: key },
-                {
-                  onSuccess: (newJob) => {
-                    setKey(newIdempotencyKey());
-                    onRetried(newJob);
-                  },
-                  onError: (err) => {
-                    if (isApiError(err) && err.kind === 'http') setKey(newIdempotencyKey());
-                  },
-                },
-              )
-            }
+            onClick={() => (isAi && !ambiguous ? setConfirming(true) : send())}
           >
             {retry.isPending ? 'Nuovo tentativo…' : ambiguous ? 'Riprova di nuovo' : 'Nuovo tentativo'}
           </button>
         )}
       </div>
+      {isAi && confirming && job.state === 'failed' && (
+        <div className={review.batch} role="group" aria-label="Nuovo tentativo con Anthropic">
+          <strong>Nuovo tentativo con Anthropic</strong>
+          <span className={styles.small}>
+            Il nuovo tentativo invia di nuovo il testo dei documenti ad Anthropic e può avere un nuovo costo, entro il
+            budget del collaudo. Tentativo precedente: {billingText(job.billing, job.provider)}
+          </span>
+          <label className={review.checkLine}>
+            <input type="checkbox" checked={consent} disabled={retry.isPending} onChange={(e) => setConsent(e.target.checked)} />
+            <span>{CONSENT_LABEL}</span>
+          </label>
+          <div className={review.actions}>
+            <button type="button" className={cx(ui.btn, ui.small, ui.dark)} disabled={!consent || retry.isPending} onClick={send}>
+              {retry.isPending ? 'Invio…' : 'Conferma nuovo tentativo'}
+            </button>
+            <button
+              type="button"
+              className={cx(ui.btn, ui.small, ui.ghost)}
+              disabled={retry.isPending}
+              onClick={() => {
+                setConfirming(false);
+                setConsent(false);
+              }}
+            >
+              Annulla
+            </button>
+          </div>
+        </div>
+      )}
       {retry.isError && (
-        <Banner tone="error" role="alert" title="Nuovo tentativo non avviato">
-          <p>{m3ErrorMessage(retry.error)}</p>
+        <Banner tone="error" role="alert" title={ambiguous ? 'Esito non confermato' : 'Nuovo tentativo non avviato'}>
+          <p>
+            {startErrorMessage(retry.error)}
+            {ambiguous ? ' «Riprova di nuovo» ripete la stessa richiesta senza duplicarla.' : ''}
+          </p>
         </Banner>
       )}
     </li>

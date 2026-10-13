@@ -10,6 +10,7 @@ import {
   FIELD_LABEL,
   HISTORY_KIND_LABEL,
   HISTORY_ACTION_LABEL,
+  HISTORY_ORIGIN_LABEL,
   PERSONAL_LABEL,
   confirmedFieldOf,
   fieldValueText,
@@ -25,7 +26,7 @@ import {
   ConfirmedFieldView,
   MeasurementEditor,
   ProposalCard,
-  SimulationBadge,
+  ProviderBadge,
   SourceList,
   emptyMeasure,
   type MeasureDraft,
@@ -102,7 +103,9 @@ function BoilerView(props: { asset: BoilerDetail; homeId: string; homeName: stri
   useDocumentTitle(`${asset.name} · ${props.homeName}`);
   const canEdit = props.homeCanEdit && asset.permissions.includes('edit');
   const open = asset.proposals.filter((p) => p.state === 'open');
-  const usesProvider = asset.proposals.length > 0 || asset.confirmedFields.some((f) => f.origin !== 'manual');
+  // Provider effettivi della scheda: analysis-v2 li elenca; con un servizio M3 si ricavano dalle proposte.
+  // Scheda solo manuale: nessuna etichetta di analisi.
+  const providers = asset.analysisProviders ?? [...new Set(asset.proposals.map((p) => p.provider))];
 
   return (
     <>
@@ -114,7 +117,9 @@ function BoilerView(props: { asset: BoilerDetail; homeId: string; homeName: stri
           <div className={review.actions}>
             <Tag tone="blue">{BOILER_STATE_LABEL[asset.state]}</Tag>
             <Tag>{PERSONAL_LABEL}</Tag>
-            {usesProvider && <SimulationBadge />}
+            {providers.map((p) => (
+              <ProviderBadge key={p} provider={p} />
+            ))}
           </div>
           <p className={cx(styles.small, styles.muted, styles.spaced)}>
             Lo stato riguarda i dati della scheda, non la regolarità tecnica della caldaia.
@@ -523,7 +528,7 @@ function HistoryItem({ event, homeId }: { event: HistoryEvent; homeId: string })
     <li className={review.historyEvent}>
       <strong>{HISTORY_KIND_LABEL[event.kind] ?? event.kind}</strong>
       <span className={styles.small}>
-        {formatDate(event.at)} · {event.origin === 'test_provider' ? 'provider di test' : 'tua decisione'}
+        {formatDate(event.at)} · {HISTORY_ORIGIN_LABEL[event.origin] ?? 'tua decisione'}
       </span>
       {event.note && <span className={styles.small}>Nota: {event.note}</span>}
       {event.changes.map((c, i) => (

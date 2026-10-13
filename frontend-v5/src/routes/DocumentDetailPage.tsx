@@ -116,7 +116,7 @@ function DocumentView(props: { doc: DocumentDetail; homeName: string; back: Reac
             <p className={styles.spaced}>
               {/* Avvio esplicito: aprire o leggere il PDF non avvia mai un'analisi. */}
               <Link to={props.analyzeHref} className={ui.btn}>
-                Analizza questo documento (test)
+                Analizza questo documento
               </Link>
             </p>
           )}

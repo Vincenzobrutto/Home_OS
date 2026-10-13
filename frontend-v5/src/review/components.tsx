@@ -9,6 +9,7 @@ import type {
   FieldValue,
   Measurement,
   ProposedField,
+  ProviderId,
   QuantityCode,
   SourceRef,
 } from '../api/types';
@@ -18,7 +19,9 @@ import {
   FIELD_LABEL,
   ORIGIN_LABEL,
   QUANTITY_OPTIONS,
+  AI_LABEL,
   SIMULATION_LABEL,
+  SOURCE_CHECK_NOTE,
   fieldValueText,
   measurementText,
   normalizePower,
@@ -29,6 +32,17 @@ import {
 } from '../lib/review';
 import { useConfirm, useRefreshAsset } from './hooks';
 import styles from './review.module.css';
+
+/** Provider effettivo di un'analisi o di una proposta: test o Anthropic, mai dedotto dalla configurazione. */
+export function ProviderBadge({ provider, model }: { provider: ProviderId | undefined; model?: string | null }) {
+  if (provider !== 'anthropic') return <SimulationBadge />;
+  return (
+    <span className={styles.ai}>
+      {AI_LABEL}
+      {model ? <span className={styles.aiModel}> · {model}</span> : null}
+    </span>
+  );
+}
 
 export function SimulationBadge() {
   return <span className={styles.simulation}>{SIMULATION_LABEL}</span>;
@@ -158,11 +172,16 @@ export function ProposalCard(props: {
 
   const isPower = proposal.fieldKey === 'power';
   const textKey = proposal.fieldKey === 'power' ? null : proposal.fieldKey;
+  // Una grandezza «other» è ambigua: non si presume che sia diversa dalle altre (analysis-v2).
+  const ambiguousQuantity = isPower && proposal.candidates.some((c) => c.measurement?.quantityCode === 'other');
   const distinctQuantities =
     isPower &&
+    !ambiguousQuantity &&
     proposal.kind === 'quantity_interpretation' &&
     new Set(proposal.candidates.map((c) => c.measurement?.quantityCode)).size === proposal.candidates.length &&
     proposal.candidates.length > 1;
+  const isAi = proposal.provider === 'anthropic';
+  const sourceName = isAi ? 'dall’analisi AI' : 'dall’analisi di test';
   const current = proposal.currentConfirmed;
 
   const reset = () => {
@@ -320,19 +339,22 @@ export function ProposalCard(props: {
     <article className={styles.proposal} aria-labelledby={`${baseId}-title`}>
       <div className={styles.proposalHead}>
         <h3 id={`${baseId}-title`}>{props.heading ?? FIELD_LABEL[proposal.fieldKey]}</h3>
-        <SimulationBadge />
+        <ProviderBadge provider={proposal.provider} model={proposal.model} />
       </div>
       <p className={styles.explain}>
-        {isPower
+        {isPower && ambiguousQuantity
+          ? 'Almeno una grandezza non è identificata con certezza: non viene trattata come diversa dalle altre. Scegli un valore o correggi indicando la denominazione.'
+          : isPower
           ? distinctQuantities
             ? 'I documenti riportano due grandezze diverse con denominazioni diverse. Puoi conservarle entrambe, ognuna con il suo nome, oppure usarne una sola.'
             : proposal.kind === 'value_conflict'
               ? 'I documenti riportano valori diversi per la stessa grandezza: scegli quale vale, con una motivazione, oppure correggi.'
-              : 'Valore proposto dall’analisi di test: confermalo con una nota o correggilo.'
+              : `Valore proposto ${sourceName}: confermalo con una nota o correggilo.`
           : proposal.kind === 'value_conflict'
             ? 'I documenti propongono valori diversi: scegli quello corretto o correggi.'
-            : 'Valore proposto dall’analisi di test.'}
+            : `Valore proposto ${sourceName}.`}
       </p>
+      {isAi && <p className={styles.explain}>{SOURCE_CHECK_NOTE}</p>}
       {current && (
         <p className={styles.explain}>
           Valore già confermato: <strong>{fieldValueText(current.value)}</strong>
