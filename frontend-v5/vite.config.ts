@@ -7,7 +7,8 @@ import react from '@vitejs/plugin-react';
 // /api/v5 è inoltrato al backend V5 di Codex su 127.0.0.1:3001.
 // changeOrigin resta false: il server vede Host/Origin del frontend
 // (127.0.0.1:5174) per i propri controlli Origin/CSRF.
-const API_TARGET = 'http://127.0.0.1:3001';
+// DIMORA_API_TARGET serve solo per l'harness con backend simulato (scripts/mock-api.ts, porta 3101).
+const API_TARGET = process.env.DIMORA_API_TARGET ?? 'http://127.0.0.1:3001';
 
 export default defineConfig({
   plugins: [react()],

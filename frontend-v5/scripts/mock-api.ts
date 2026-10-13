@@ -1,23 +1,54 @@
 // BACKEND SIMULATO PER PROVE MANUALI E SCREENSHOT — NON È IL BACKEND V5.
-// Espone il contratto identity-v1 in memoria su 127.0.0.1:3001 (stessa porta del
-// backend reale, che quindi non deve essere attivo). Si ferma se la porta è occupata.
-// Uso: npm run mock-api            (vuoto)
-//      npm run mock-api -- --seed  (account di prova A/B con case)
+// Espone in memoria identity-v1.1 e documents-v1 su 127.0.0.1:3101 (mai sulla
+// porta 3001 del backend reale). Si ferma se la porta è occupata.
+// Uso:
+//   npm run mock-api -- --seed                      (account, case e documenti di prova)
+//   DIMORA_API_TARGET=http://127.0.0.1:3101 npm run dev   (frontend verso il mock)
 // I dati spariscono alla chiusura. Nessuna persistenza, nessun legame con DB legacy.
 import { createServer } from 'node:http';
-import { FakeBackend } from '../src/test/fakeBackend.ts';
+import { FakeBackend, PNG_SIGNATURE } from '../src/test/fakeBackend.ts';
 
-const PORT = Number(process.env.MOCK_API_PORT ?? 3001);
+const REAL_API_PORT = 3001;
+const PORT = Number(process.env.MOCK_API_PORT ?? 3101);
 const COOKIE = 'v5_mock_session';
+
+if (PORT === REAL_API_PORT) {
+  console.error('La porta 3001 è riservata al backend V5 reale: il backend simulato non la usa.');
+  process.exit(1);
+}
+
 const backend = new FakeBackend();
 
 if (process.argv.includes('--seed')) {
   const a = backend.seedAccount('Giulia Prova', 'a@example.test', 'password-di-prova-A');
   const b = backend.seedAccount('Marco Prova', 'b@example.test', 'password-di-prova-B');
-  backend.seedHome(a.id, 'Appartamento Roma', 'Via Roma 12, Torino');
+  const v = backend.seedAccount('Vera Prova', 'v@example.test', 'password-di-prova-V');
+  const roma = backend.seedHome(a.id, 'Appartamento Roma', 'Via Roma 12, Torino');
   backend.seedHome(a.id, 'Casa al mare', 'Lungomare 3, Alassio', 'member');
   backend.seedHome(b.id, 'Casa di Marco', 'Via Verdi 8, Milano');
-  console.log('Account di prova (solo mock): a@example.test / password-di-prova-A, b@example.test / password-di-prova-B');
+  backend.addMember(v.id, roma.id, 'viewer');
+  await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name: 'Rogito 2019', visibility: 'home' });
+  await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name: 'Libretto caldaia', visibility: 'home' });
+  await backend.seedDocument({
+    homeId: roma.id,
+    uploaderId: a.id,
+    name: 'Planimetria',
+    mimeType: 'image/png',
+    bytes: samplePng(),
+    visibility: 'private',
+  });
+  console.log(
+    'Account di prova (solo mock): a@example.test / password-di-prova-A, b@example.test / password-di-prova-B, ' +
+      'v@example.test / password-di-prova-V (viewer di Appartamento Roma)',
+  );
+}
+
+/** PNG 2×2 valido, per l'anteprima immagine. */
+function samplePng() {
+  const b64 =
+    'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFklEQVR4nGNgYGD4z8DAwMDAwMAAAAwAAf8uaWGbAAAAAElFTkSuQmCC';
+  const bytes = Uint8Array.from(Buffer.from(b64, 'base64'));
+  return PNG_SIGNATURE.every((x, i) => bytes[i] === x) ? bytes : PNG_SIGNATURE;
 }
 
 function readCookie(header: string | undefined) {
@@ -33,19 +64,25 @@ const server = createServer((req, res) => {
   }
   const chunks: Buffer[] = [];
   req.on('data', (c: Buffer) => chunks.push(c));
-  req.on('end', () => {
+  req.on('end', async () => {
+    const raw = Buffer.concat(chunks);
+    const headers: Record<string, string | undefined> = {};
+    for (const [k, v] of Object.entries(req.headers)) headers[k.toLowerCase()] = Array.isArray(v) ? v[0] : v;
+    const contentType = headers['content-type'] ?? '';
     let body: unknown;
-    const raw = Buffer.concat(chunks).toString('utf8');
     try {
-      body = raw ? JSON.parse(raw) : undefined;
+      if (contentType.startsWith('multipart/form-data')) {
+        // Parsing multipart con il Request standard di Node.
+        body = await new Request(url, { method: 'POST', headers: { 'content-type': contentType }, body: raw }).formData();
+      } else if (raw.length) {
+        body = JSON.parse(raw.toString('utf8'));
+      }
     } catch {
       body = undefined;
     }
-    const headers: Record<string, string | undefined> = {};
-    for (const [k, v] of Object.entries(req.headers)) headers[k.toLowerCase()] = Array.isArray(v) ? v[0] : v;
-    const out = backend.handle({
+    const out = await backend.handle({
       method: req.method ?? 'GET',
-      path: url.pathname.replace(/^\/api\/v5/, ''),
+      path: url.pathname.replace(/^\/api\/v5/, '') + url.search,
       headers,
       body,
       cookie: readCookie(req.headers.cookie),
@@ -57,9 +94,15 @@ const server = createServer((req, res) => {
           ? `${COOKIE}=; Path=/api/v5; HttpOnly; SameSite=Lax; Max-Age=0`
           : `${COOKIE}=${encodeURIComponent(out.setCookie)}; Path=/api/v5; HttpOnly; SameSite=Lax`;
     }
-    console.log(`[mock] ${req.method} ${url.pathname} → ${out.status}`);
+    console.log(`[mock] ${req.method} ${url.pathname}${url.search} → ${out.status}`);
     if (out.status === 204) {
       res.writeHead(204, resHeaders).end();
+      return;
+    }
+    if (out.binary) {
+      resHeaders['Content-Type'] = out.binary.contentType;
+      resHeaders['Content-Disposition'] = `attachment; filename*=UTF-8''${encodeURIComponent(out.binary.filename)}`;
+      res.writeHead(out.status, resHeaders).end(Buffer.from(out.binary.bytes));
       return;
     }
     resHeaders['Content-Type'] = 'application/json; charset=utf-8';
