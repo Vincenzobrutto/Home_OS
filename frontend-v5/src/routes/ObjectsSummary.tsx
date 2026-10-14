@@ -3,7 +3,7 @@ import type { Home } from '../api/types';
 import { ErrorState, Loading, cx, ui } from '../components/ui';
 import { objectStyles as styles } from '../objects/components';
 import { useObjectCapabilities, useRooms } from '../objects/hooks';
-import { ROOM_TYPE_LABEL, UNPLACED_LABEL, isNotActive, objectPath, objectsErrorMessage, roomPath } from '../lib/objects';
+import { UNPLACED_LABEL, isNotActive, objectPath, objectsErrorMessage, roomMeta, roomPath } from '../lib/objects';
 import pages from './pages.module.css';
 
 const PREVIEW = 6;
@@ -46,7 +46,7 @@ export function ObjectsSummary({ home }: { home: Home }) {
                   <Link to={roomPath(home.id, r.id)} className={styles.title}>
                     {r.name}
                   </Link>
-                  <span className={styles.meta}>{ROOM_TYPE_LABEL[r.type] ?? r.type}</span>
+                  {roomMeta(r) && <span className={styles.meta}>{roomMeta(r)}</span>}
                 </li>
               ))}
             </ul>

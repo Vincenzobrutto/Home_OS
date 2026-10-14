@@ -6,7 +6,7 @@ import { Banner, ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../c
 import { G1History } from '../objects/History';
 import { RoomForm, StateDialog, objectStyles as styles, roomsText, typeLabel } from '../objects/components';
 import { useCatalog, useForgetObjects, useObjectCapabilities, useRoom, useRoomHistory, useRooms } from '../objects/hooks';
-import { ROOM_TYPE_LABEL, isForbidden, isNotActive, objectPath, objectsErrorMessage, roomPath } from '../lib/objects';
+import { ROOM_TYPE_LABEL, isForbidden, isNotActive, objectPath, objectsErrorMessage, roomMeta, roomPath } from '../lib/objects';
 import { isApiError } from '../api/errors';
 import { useCurrentHome } from './HomePages';
 import pages from './pages.module.css';
@@ -188,7 +188,7 @@ function RoomRow({ room, homeId }: { room: Room; homeId: string }) {
         </Link>
         {room.state === 'archived' && <span className={styles.due}>Archiviato</span>}
       </div>
-      <span className={styles.meta}>{ROOM_TYPE_LABEL[room.type] ?? room.type}</span>
+      {roomMeta(room) && <span className={styles.meta}>{roomMeta(room)}</span>}
     </li>
   );
 }

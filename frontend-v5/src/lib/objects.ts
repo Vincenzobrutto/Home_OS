@@ -165,3 +165,10 @@ export function isForbidden(error: unknown) {
 export function isNotActive(error: unknown) {
   return isApiError(error) && error.kind === 'http' && error.status === 404;
 }
+
+/** Riga descrittiva di un ambiente: tipo se diverso dal nome, poi la nota (distingue due «Bagno»). */
+export function roomMeta(room: { name: string; type: RoomType; note: string | null }) {
+  const label = ROOM_TYPE_LABEL[room.type] ?? room.type;
+  const parts = [label.toLowerCase() === room.name.trim().toLowerCase() ? null : label, room.note].filter(Boolean);
+  return parts.join(' · ');
+}
