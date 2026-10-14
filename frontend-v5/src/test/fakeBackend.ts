@@ -17,6 +17,7 @@ import type {
 import { FakeReview } from './fakeReview.ts';
 import { FakeActivities } from './fakeActivities.ts';
 import { FakeExpenses } from './fakeExpenses.ts';
+import { FakeObjects } from './fakeObjects.ts';
 
 export type FakeRequest = {
   method: string;
@@ -130,6 +131,41 @@ export class FakeBackend {
       return a && a.accountId === accountId && a.homeId === homeId ? { id: a.id, name: a.name } : null;
     },
   });
+  /** home-objects-v1 (G1): ambienti condivisi, oggetti personali, caldaie M3 e collegamenti. */
+  objects = new FakeObjects({
+    perms: (accountId, homeId) => this.homePerms(accountId, homeId),
+    boilers: (accountId, homeId) =>
+      [...this.review.assets.values()]
+        .filter((a) => a.accountId === accountId && a.homeId === homeId)
+        .map((a) => ({ id: a.id, name: a.name, createdAt: a.createdAt })),
+    boilerDocuments: (accountId, homeId, assetId) => {
+      const a = this.review.assets.get(assetId);
+      if (!a || a.accountId !== accountId || a.homeId !== homeId) return [];
+      const json = JSON.stringify([a.proposals, a.confirmed]);
+      return [...new Set([...json.matchAll(/"documentId":"([0-9a-f-]{36})"/g)].map((m) => m[1]!))];
+    },
+    document: (accountId, homeId, id) => {
+      const perms = this.homePerms(accountId, homeId);
+      const d = this.documents.get(id);
+      return perms && d && d.homeId === homeId && this.canSee(d, accountId, perms) ? { id: d.id, title: d.name } : null;
+    },
+    expense: (accountId, homeId, id) => {
+      const e = this.expenses.items.get(id);
+      return e && e.accountId === accountId && e.homeId === homeId ? { id: e.id, title: e.title, assetId: e.assetId } : null;
+    },
+    activity: (accountId, homeId, id) => {
+      const a = this.activities.items.get(id);
+      return a && a.accountId === accountId && a.homeId === homeId ? { id: a.id, title: a.title, assetId: a.assetId } : null;
+    },
+    native: (accountId, homeId, type, assetId) =>
+      type === 'expense'
+        ? [...this.expenses.items.values()]
+            .filter((e) => e.accountId === accountId && e.homeId === homeId && e.assetId === assetId)
+            .map((e) => ({ id: e.id, title: e.title, assetId }))
+        : [...this.activities.items.values()]
+            .filter((a) => a.accountId === accountId && a.homeId === homeId && a.assetId === assetId)
+            .map((a) => ({ id: a.id, title: a.title, assetId })),
+  });
   /** false = backend senza endpoint M3 (404, come un backend solo M1/M2). */
   reviewEnabled = true;
 
@@ -220,6 +256,9 @@ export class FakeBackend {
       if (!this.documentsEnabled) return err(404, 'not_found', 'Risorsa non trovata.');
       return this.routeDocuments(req, account.id, decodeURIComponent(docMatch[1]!), docMatch[2], !!docMatch[3]);
     }
+
+    const g1 = /^\/homes\/([^/]+)\/((?:object-capabilities|rooms|objects)(?:[/?].*)?)$/.exec(path);
+    if (g1) return this.objects.handle(req, account.id, decodeURIComponent(g1[1]!), g1[2]!);
 
     const h3 = /^\/homes\/([^/]+)\/((?:expense-capabilities|expense-summary|expenses)(?:[/?].*)?)$/.exec(path);
     if (h3) return this.expenses.handle(req, account.id, decodeURIComponent(h3[1]!), h3[2]!);
