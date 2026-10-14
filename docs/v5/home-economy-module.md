@@ -14,10 +14,10 @@ V1 include costi, ricorrenze semplici, scadenze, confronti e proiezioni determin
 
 ## 2. Esperienza principale
 
-La sezione resta Spese nella navigazione Casa / Attività / Documenti / Spese. Tre viste semplici:
+La sezione resta Spese nella navigazione Casa / Attività / Documenti / Spese. Tre viste semplici (revisione UX Claude accolta per il nome Impegni):
 
 1. **Sostenute**: storico già registrato, default anno corrente, confronto con periodo omogeneo precedente quando esiste. È la vista iniziale, coerente con H3a; non imporre un futuro vuoto a chi ha solo lo storico.
-2. **In programma**: scadenze e impegni, default prossimi 90 giorni; orizzonti 1/3/12 mesi. Importi confermati, stime e importi mancanti separati.
+2. **Impegni**: scadenze economiche, default prossimi 90 giorni; orizzonti 1/3/12 mesi. Importi confermati, stime e importi mancanti separati. Distinti da «In programma» delle attività H1.
 3. **Per oggetto e lavoro**: costi riferiti a oggetti/interventi; filtri per ambiente, nessuna contabilità autonoma della stanza.
 
 Sempre disponibili «Registra una spesa» e, quando attivo, «Aggiungi impegno». Dal documento si può registrare un costo o proporre una regola; dalla scheda oggetto si vedono gli stessi costi. Preferire riepiloghi leggibili a un cruscotto di grafici.

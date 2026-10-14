@@ -175,3 +175,8 @@ H3 non ancora chiusa. Stime/ricorrenti e export Home spese restano futuri.
 ## Economia V5 — definizione consolidata del 14 ottobre 2026
 
 EC-G1: congelare contratto ambienti/oggetti e conservare caldaia esistente, documenti/costi/attività senza copie. EC-S1: categorie/confronti e costi per oggetto/intervento. EC-C1: condivisione selettiva con economie escluse di default. EC-S2: regole/versioni/eccezioni/calendario e riconciliazione/pagamento singolo. EC-S3: proposte economiche con conferma per categoria. EC-S4: stime spiegate e rettifiche senza doppi conteggi. Tutte aperte; criteri EC-01..12 nel modulo. Nessuna nuova campagna AI autorizzata.
+
+
+## G1 — contratto e revisione UX raccolta (14 ottobre 2026)
+
+G1a/G1b aperti: implementare schema/API, autorizzazioni prima di paging e fonti boiler, CAS/versioni/replay redatto, collegamenti canonici e recupero seconda fase. EC-K7 focus H1 da riprodurre, non difetto browser confermato. G1 deve evitare rimontaggio che perde focus. Nessuna condivisione oggetti implicita o totale per ambiente.

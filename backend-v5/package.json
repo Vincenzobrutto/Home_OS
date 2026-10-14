@@ -7,7 +7,7 @@
     "lint": "eslint src test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "node --env-file=.env dist/main.js",
-    "test": "node --test test/domain.test.cjs test/documents.test.cjs test/multipart.test.cjs test/review.test.cjs test/anthropic.test.cjs test/activities.test.cjs test/document-search.test.cjs test/expenses.test.cjs",
+    "test": "node --test test/domain.test.cjs test/documents.test.cjs test/multipart.test.cjs test/review.test.cjs test/anthropic.test.cjs test/activities.test.cjs test/document-search.test.cjs test/expenses.test.cjs test/home-objects.test.cjs",
     "test:integration": "node --env-file=.env --test --test-concurrency=1 test/integration.test.cjs test/documents.integration.test.cjs test/review.integration.test.cjs test/activities.integration.test.cjs test/activities.http.test.cjs test/document-search.integration.test.cjs test/document-search.http.test.cjs test/expenses.integration.test.cjs test/expenses.http.test.cjs",
     "test:anthropic-offline-db": "node --env-file=.env --test test/anthropic.integration.test.cjs",
     "db:generate": "prisma generate",

@@ -171,3 +171,8 @@ Spese personali manuali/documentali con riepilogo annuo, originali/caldera refer
 ## Economia V5 — definizione consolidata del 14 ottobre 2026
 
 Priorità umana aggiornata: G1 ambienti/oggetti generici, C1 condivisione selettiva; evoluzione Spese S1 storico/categorie/oggetti, S2 ricorrenze/calendario, S3 estrazione confermata e S4 stime/rettifiche anticipata nel piano, con contratti separati. Vendita/cessazione accesso e rifinitura globale dopo. Controlli accesso/test inclusi in ogni incremento. H3a resta completata; le estensioni sono definite, NON operative. Fonte docs/v5/home-economy-module.md.
+
+
+## G1 — contratto e revisione UX raccolta (14 ottobre 2026)
+
+Claude UX27514fa integrato8d52b8f, contratto home-objects-v1 preparato/congelato e prime validazioni dominio verdi. G1a schema/API poi G1b links: entrambi necessari per chiudere G1. G1 frontend/DB non attivi, runtime H3a invariato. Economia futura si chiama Impegni, non In programma come H1.

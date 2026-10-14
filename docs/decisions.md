@@ -479,3 +479,8 @@ Importi come stringa nel form e parsing BigInt, totale esclusivamente server. An
 ## Economia V5 — definizione consolidata del 14 ottobre 2026
 
 ADR-V5-15: modulo Economia estende HomeExpense V5 con categorie e, in incrementi successivi, regole temporali/versioni/eccezioni e pagamenti dichiarati. Natura, fonte e pagamento sono dimensioni indipendenti; futuro e consuntivo non si sommano. Rata mutuo/premio polizza dichiarati ammessi come calendario semplice, senza ammortamento o rinnovi impliciti: precisazione di scope autorizzata nella definizione del modulo. No registro parallelo legacy, trasferimento economico implicito o AI paid. Ambienti/oggetti G1 prima e condivisione C1 poi; Spese S1-S4 progettata con questi collegamenti. Alternative e criteri in docs/v5/home-economy-module.md. Definizione, non attivazione runtime.
+
+
+## G1 — contratto e revisione UX raccolta (14 ottobre 2026)
+
+ADR-V5-16: ambienti condivisi Home, oggetti/posizioni personali fino a C1. Catalogo discriminato object/boiler conserva ID/versioni/fonti caldaia; nessuna copia tecnica. Reference links a documenti/attività/costi esistenti, un oggetto principale per costo/attività; due POST espliciti con recupero seconda fase, non atomicità inventata. Lock Home necessario fra membri per ambienti. Alternative e arbitrato K1..K10 in docs/v5/g1-design-review.md.

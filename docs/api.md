@@ -201,3 +201,8 @@ Nove rotte del contratto expenses-api-contract.md implementate su 3001: capabili
 
 ### H3a — client reale consolidato
 expenses-v1 consumata dal frontend reale5174 con context/CSRF/no-store/idempotenza;19 suite client/API non-live aggregate passano, quattro test Anthropic live saltati. Anno storico UI usa year dell’API esistente; non introdotto endpoint anni/facet. Contratto e forme restano quelli congelati in docs/v5/expenses-api-contract.md.
+
+
+## G1 — contratto e revisione UX raccolta (14 ottobre 2026)
+
+Contratto futuro home-objects-v1 in docs/v5/home-objects-api-contract.md: capabilities, ambienti, catalogo oggetti/boiler, posizioni/storia/reference links. Solo specifica: endpoint ancora NON attivi. Contratti H1/H3a restano invariati.

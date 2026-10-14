@@ -599,3 +599,8 @@ Storia non tracciata in questo changelog (il repository non era ancora un proget
 ## Economia V5 — definizione consolidata del 14 ottobre 2026
 
 Definiti obiettivi, UX, categorie, costo canonico, natura/fonte/pagamento separati, ricorrenze e rinnovi, copertura, privacy e criteri di collaudo. Scouting PDF trattato come spunti con correzioni rispetto al runtime V5. Preparato incarico Claude per revisione UX documentale; non ancora avviato. Nessuna modifica runtime/schema/servizi/rete o chiamata AI prodotto.
+
+
+## G1 — contratto e revisione UX raccolta (14 ottobre 2026)
+
+Raccolta e integrata revisione documentale Claude (senza browser); risolte dieci osservazioni con decisioni motivate. Contratto G1 e prime validazioni/test backend: build/lint e quattro scenari dominio verdi. Nessuno schema/migrazione/servizio/rete modificato; frontend nuovo non implementato, nessuna chiamata Anthropic.
