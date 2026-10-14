@@ -314,11 +314,14 @@ describe('[mock] G1 — collegamenti', () => {
     await waitFor(() => expect(within(docs).getByRole('link', { name: 'Manuale forno' })).toBeInTheDocument());
     expect(posts(backend, /\/links$/)[0]!.body).toEqual({ resourceType: 'document', resourceId: doc.id });
     expect(gets(backend, /\/documents(\?|$)/).some((q) => q.startsWith('q=manuale'))).toBe(true);
+    // Il pannello si chiude: il focus va al titolo della sezione, non al body.
+    await waitFor(() => expect(within(docs).getByRole('heading', { name: 'Documenti collegati' })).toHaveFocus());
     await app.user.click(within(docs).getByRole('button', { name: 'Rimuovi collegamento' }));
     const dialog = await screen.findByRole('dialog', { name: 'Rimuovi collegamento' });
     await app.user.click(within(dialog).getByRole('button', { name: 'Rimuovi collegamento' }));
     await waitFor(() => expect(within(docs).getByText('Nessun documento collegato.')).toBeInTheDocument());
     expect(posts(backend, /\/remove$/)[0]!.body).toEqual({ expectedVersion: 1 });
+    await waitFor(() => expect(within(docs).getByRole('heading', { name: 'Documenti collegati' })).toHaveFocus());
     expect(backend.documents.get(doc.id)!.sha256).toBe(doc.sha256);
   });
 
@@ -368,6 +371,7 @@ describe('[mock] G1 — collegamenti', () => {
     await app.user.click(within(costs).getByRole('button', { name: 'Completa il collegamento' }));
     await waitFor(() => expect(within(costs).getByRole('link', { name: 'Pulizia filtri' })).toBeInTheDocument());
     await waitFor(() => expect(within(costs).queryByText('Registrato, collegamento da completare')).not.toBeInTheDocument());
+    await waitFor(() => expect(within(costs).getByRole('heading', { name: 'I tuoi costi' })).toHaveFocus());
     const linkPosts = posts(backend, /\/links$/);
     expect(linkPosts).toHaveLength(2);
     expect(linkPosts[1]!.headers['idempotency-key']).toBe(linkPosts[0]!.headers['idempotency-key']);

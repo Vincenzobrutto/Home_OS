@@ -254,7 +254,7 @@ function CatalogRow({ item, homeId, state }: { item: CatalogItem; homeId: string
         <Link to={objectPath(homeId, item.ref)} state={state} className={styles.title}>
           {item.name}
         </Link>
-        <span className={styles.due}>{item.kindLabel || typeLabel(item)}</span>
+        <span className={styles.due}>{item.ref.kind === 'boiler' ? item.kindLabel || 'Caldaia' : typeLabel(item)}</span>
         {item.state === 'archived' && <span className={styles.due}>Archiviato</span>}
       </div>
       <span className={cx(styles.meta, own.position)}>
@@ -356,7 +356,7 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
           <span className={pages.eyebrow}>{home.name} · {isBoiler ? 'Scheda caldaia personale' : 'Oggetto personale'}</span>
           <h1 tabIndex={-1}>{object.name}</h1>
           <div className={styles.actions}>
-            <Tag tone="blue">{object.kindLabel || typeLabel(object)}</Tag>
+            <Tag tone="blue">{object.ref.kind === 'boiler' ? object.kindLabel || 'Caldaia' : typeLabel(object)}</Tag>
             {!active && <Tag>Archiviato</Tag>}
           </div>
         </div>

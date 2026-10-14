@@ -477,8 +477,11 @@ export function StateDialog(props: {
   hint: string;
   vars: OperationVars;
   onClose: () => void;
+  /** Dopo un successo; di default chiude. */
+  onDone?: () => void;
 }) {
   const op = useG1Operation(props.homeId);
+  const done = props.onDone ?? props.onClose;
   const disabled = op.mutation.isPending || op.locked;
   return (
     <Dialog title={props.title} onClose={props.onClose} dismissDisabled={disabled}>
@@ -487,11 +490,11 @@ export function StateDialog(props: {
         aria-label={props.title}
         onSubmit={(e) => {
           e.preventDefault();
-          op.run(props.vars, props.onClose);
+          op.run(props.vars, done);
         }}
       >
         <p className={styles.meta}>{props.hint}</p>
-        <G1Feedback op={op} homeId={props.homeId} title="Operazione non eseguita" onRetry={() => op.retry(props.onClose)} />
+        <G1Feedback op={op} homeId={props.homeId} title="Operazione non eseguita" onRetry={() => op.retry(done)} />
         <div className={styles.actions}>
           {!op.locked && (
             <button type="submit" className={cx(ui.btn, ui.primary)} disabled={op.mutation.isPending}>
@@ -555,10 +558,20 @@ export function LinksSection(props: {
   const [removing, setRemoving] = useState<LinkedResource | null>(null);
   const headingId = useId();
   const assetId = object.technicalLink?.assetId;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const [refocus, setRefocus] = useState(0);
+  useEffect(() => {
+    if (refocus) headingRef.current?.focus();
+  }, [refocus]);
+  const finished = () => {
+    setPanel('none');
+    setRemoving(null);
+    setRefocus((n) => n + 1);
+  };
 
   return (
     <section className={ui.card} aria-labelledby={headingId}>
-      <h2 id={headingId} className={own.sectionTitle}>
+      <h2 id={headingId} ref={headingRef} tabIndex={-1} className={own.sectionTitle}>
         {SECTION_TITLE[resourceType]}
       </h2>
       <p className={styles.meta}>{SECTION_NOTE[resourceType]}</p>
@@ -636,7 +649,7 @@ export function LinksSection(props: {
       )}
       {!active && <p className={styles.meta}>Oggetto archiviato: nessun nuovo collegamento finché non lo ripristini.</p>}
 
-      {panel === 'pick' && <LinkPicker home={home} object={object} resourceType={resourceType} onClose={() => setPanel('none')} />}
+      {panel === 'pick' && <LinkPicker home={home} object={object} resourceType={resourceType} onClose={() => setPanel('none')} onDone={finished} />}
       {panel === 'create' && !isBoiler && (
         <CreateAndLink
           home={home}
@@ -645,6 +658,7 @@ export function LinksSection(props: {
           expenseCapabilities={props.expenseCapabilities}
           activityCapabilities={props.activityCapabilities}
           onClose={() => setPanel('none')}
+          onDone={finished}
         />
       )}
       {removing && removing.linkId && removing.version !== null && (
@@ -654,6 +668,7 @@ export function LinksSection(props: {
           hint="Il collegamento con questo oggetto viene rimosso. La risorsa originale non cambia e non viene cancellata."
           vars={{ kind: 'unlink', ref: object.ref, linkId: removing.linkId, body: { expectedVersion: removing.version } }}
           onClose={() => setRemoving(null)}
+          onDone={finished}
         />
       )}
     </section>
@@ -668,7 +683,7 @@ function useLinkStep(homeId: string, object: CatalogItem, resourceType: G1Resour
 }
 
 /** Picker di risorse esistenti autorizzate, paginato; documenti con la ricerca server H2. */
-function LinkPicker(props: { home: Home; object: CatalogItem; resourceType: G1ResourceType; onClose: () => void }) {
+function LinkPicker(props: { home: Home; object: CatalogItem; resourceType: G1ResourceType; onClose: () => void; onDone: () => void }) {
   const { home, object, resourceType } = props;
   const heading = useFocusOnMount<HTMLHeadingElement>();
   const { op, link } = useLinkStep(home.id, object, resourceType);
@@ -676,7 +691,7 @@ function LinkPicker(props: { home: Home; object: CatalogItem; resourceType: G1Re
   const disabled = op.mutation.isPending || op.locked;
   const choose = (r: { id: string; title: string }) => {
     setChosen(r);
-    link(r.id, props.onClose);
+    link(r.id, props.onDone);
   };
   return (
     <div className={styles.panel} role="group" aria-labelledby={`${object.ref.id}-${resourceType}-pick`}>
@@ -687,7 +702,7 @@ function LinkPicker(props: { home: Home; object: CatalogItem; resourceType: G1Re
       {resourceType === 'expense' && <ExpenseChoices homeId={home.id} disabled={disabled} onChoose={choose} />}
       {resourceType === 'activity' && <ActivityChoices homeId={home.id} disabled={disabled} onChoose={choose} />}
       {chosen && op.mutation.isPending && <p className={styles.meta}>Collegamento di «{chosen.title}»…</p>}
-      <G1Feedback op={op} homeId={home.id} title="Collegamento non salvato" onRetry={() => op.retry(props.onClose)} />
+      <G1Feedback op={op} homeId={home.id} title="Collegamento non salvato" onRetry={() => op.retry(props.onDone)} />
       <div className={styles.actions}>
         <button type="button" className={cx(ui.btn, ui.ghost)} onClick={props.onClose} disabled={disabled}>
           Chiudi
@@ -832,6 +847,7 @@ function CreateAndLink(props: {
   expenseCapabilities?: ExpenseCapabilities;
   activityCapabilities?: ActivityCapabilities;
   onClose: () => void;
+  onDone: () => void;
 }) {
   const { home, object, resourceType } = props;
   const { op, link } = useLinkStep(home.id, object, resourceType);
@@ -840,7 +856,7 @@ function CreateAndLink(props: {
 
   const afterCreate = (resource: { id: string; title: string }) => {
     setCreated(resource);
-    link(resource.id, props.onClose);
+    link(resource.id, props.onDone);
   };
   useEffect(() => {
     if (created && op.mutation.isError) headingRef.current?.focus();
@@ -887,7 +903,7 @@ function CreateAndLink(props: {
                 type="button"
                 className={cx(ui.btn, ui.small)}
                 disabled={op.mutation.isPending}
-                onClick={() => (isAmbiguous(op.mutation.error) ? op.retry(props.onClose) : link(created.id, props.onClose))}
+                onClick={() => (isAmbiguous(op.mutation.error) ? op.retry(props.onDone) : link(created.id, props.onDone))}
               >
                 Completa il collegamento
               </button>
