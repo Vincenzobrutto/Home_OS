@@ -112,7 +112,7 @@ Lo screenshot mobile ha fatto emergere un difetto della mia prima stesura: titol
 
 ## 6. Cosa deve raccogliere Codex
 
-1. Lo **script di sostituzioni** (sezione 3), oppure direttamente il diff fra il mockup ufficiale e `dimora-owner-rifinitura.html`. Tutte le modifiche sono circoscritte:
+1. Lo **script di sostituzioni** `frontend-v5/docs/proposta-ux/script/rifinitura.mjs` (sezione 3; i percorsi sorgente/destinazione in testa allo script sono assoluti e vanno adattati), oppure direttamente il diff fra il mockup ufficiale e `dimora-owner-rifinitura.html`. Tutte le modifiche sono circoscritte:
    - blocco CSS in fondo allo stile;
    - funzioni `title`, `rows`, `history` (solo ordine), `money`;
    - classi `btn link` in `ownerHome`, `condoSummary`, `ownerObject`;
