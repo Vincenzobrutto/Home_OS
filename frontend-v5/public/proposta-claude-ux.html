@@ -1,4 +1,4 @@
-<title>Dimora proposta UX</title>
+<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dimora proposta UX · famiglie aggiornate</title>
 <style>
 /* Layout: stile «Blu architettura» del mockup attuale; barra laterale su desktop, barra in basso + pulsante «+» su telefono. */
 :root{
@@ -161,7 +161,7 @@ details.more>summary{padding:12px 0;font-weight:600;cursor:pointer;color:var(--a
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}}
 </style>
 
-<div class="demobar"><span><strong>Proposta UX di Claude</strong> · dati sintetici · nessun invio reale</span><span class="acts"><button type="button" id="btn-paths">Percorsi</button><button type="button" id="btn-reset">Ripristina</button></span></div>
+<div class="demobar"><span><strong>Proposta Claude · famiglie aggiornate da Codex</strong> · dati sintetici · nessun invio reale</span><span class="acts"><button type="button" id="btn-paths">Percorsi</button><button type="button" id="btn-reset">Ripristina</button></span></div>
 <header class="top">
   <span class="logo">dimora.</span>
   <button type="button" class="addr" id="btn-addr">Via Roma 12 · Milano · Unità A12</button>
@@ -181,8 +181,8 @@ details.more>summary{padding:12px 0;font-weight:600;cursor:pointer;color:var(--a
 const TODAY='2026-10-14', YEAR='2026', K='dimora-proposta-claude-v1';
 const MONTHS=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
 const CATS={electricity:'Energia elettrica',gas:'Gas',water:'Acqua',internet_services:'Internet e servizi',condominium_ordinary:'Condominio ordinario',condominium_extraordinary:'Condominio straordinario',insurance:'Assicurazione',taxes:'Tributi',maintenance:'Manutenzione',repairs_works:'Riparazioni e lavori',purchase_replacement:'Acquisti e sostituzioni',financing:'Finanziamento',other:'Altro'};
-const GROUPS={management:'Gestione',works:'Lavori e acquisti',financing:'Finanziamento',unclassified:'Non classificata'};
-const groupOf=c=>c==='financing'?'financing':['repairs_works','purchase_replacement','condominium_extraordinary'].includes(c)?'works':c?'management':'unclassified';
+const GROUPS={"utilities":"Bollette","condominium":"Condominio","taxes_insurance":"Tasse e assicurazioni","maintenance_repairs":"Manutenzione e riparazioni","works_purchases":"Lavori e acquisti","financing":"Mutuo e finanziamenti","unclassified":"Altro / Non classificata"};
+const groupOf=e=>['electricity','gas','water','internet_services'].includes(e.cat)?'utilities':e.cat==='condominium_ordinary'?'condominium':['taxes','insurance'].includes(e.cat)?'taxes_insurance':e.cat==='maintenance'?'maintenance_repairs':e.cat==='repairs_works'?(e.work?'works_purchases':'maintenance_repairs'):['condominium_extraordinary','purchase_replacement'].includes(e.cat)?'works_purchases':e.cat==='financing'?'financing':'unclassified';
 
 const I={
  home:'<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
@@ -254,6 +254,8 @@ function seed(){return{v:1,seq:100,imported:false,
 let st=null;
 try{st=JSON.parse(localStorage.getItem(K))}catch(e){st=null}
 if(!st||st.v!==1)st=seed();
+function ensureInsuranceExamples(){const examples=[{id:'demo-ins-casa',title:'Polizza casa · premio annuale',amount:18000,day:'2026-10-02',cat:'insurance',supplier:'Assicurazione Demo',object:'',work:'',source:'Inserita da te · esempio',document:''},{id:'demo-ins-mutuo',title:'Polizza collegata al mutuo · premio dichiarato',amount:12000,day:'2026-10-02',cat:'financing',supplier:'Assicurazione Demo',object:'',work:'',source:'Inserita da te · esempio',document:''}];for(const e of examples)if(!st.expenses.some(x=>x.id===e.id))st.expenses.push(e)}
+ensureInsuranceExamples();
 function save(){try{localStorage.setItem(K,JSON.stringify(st))}catch(e){}}
 function freshUi(){return{doc:{q:'',type:'',obj:'',vis:''},sp:{period:YEAR,seg:'elenco',f:{cat:'',obj:'',room:'',work:''}},att:'fare',hist:{},confirm:null}}
 let ui=freshUi();
@@ -445,15 +447,15 @@ V.spese=r=>{if(r.setF){ui.sp.f=Object.assign({cat:'',obj:'',room:'',work:''},r.s
  if(seg==='oggetti'){const l=spFiltered('obj');const m={};l.forEach(e=>{const k=e.object||'-';m[k]=(m[k]||0)+e.amount});
   body=`<section class="card">${Object.keys(m).sort((a,b)=>m[b]-m[a]).map(k=>act$('spObjSeg',k,`<span class="ico">${ic(k==='-'?'home':'obj')}</span><span class="row-body"><span class="row-title">${k==='-'?'Casa, senza oggetto':h(k)}</span><span class="row-sub">${plural(l.filter(e=>(e.object||'-')===k).length,'spesa','spese')}</span></span><span class="amount num">${eur(m[k])}</span>${ic('chev','i chev')}`,'row')).join('')||'<p class="empty">Nessuna spesa.</p>'}</section><p class="help">Ogni spesa conta una volta sola: qui è raggruppata per oggetto.</p>`}
  if(seg==='lavori')body=`<section class="card">${st.works.map(w=>{const es=liveExpenses().filter(e=>e.work===w);return row({v:'lavoro',id:w},'build',h(w),`${plural(es.length,'spesa','spese')} · tutti gli anni`,`<span class="amount num">${eur(es.reduce((s,e)=>s+e.amount,0))}</span>`)}).join('')||'<p class="empty">Nessun lavoro.</p>'}</section><p class="help">Un lavoro raggruppa più spese. Non è un progetto né un’attività.</p>`;
- if(seg==='riepilogo'){const g={};list.forEach(e=>{const k=groupOf(e.cat);g[k]=(g[k]||0)+e.amount});
-  let prev=null,pg={};if(period!=='tutto'){const py=String(+period-1);const save=ui.sp.period;ui.sp.period=py;prev=spFiltered();ui.sp.period=save;prev.forEach(e=>{const k=groupOf(e.cat);pg[k]=(pg[k]||0)+e.amount});prev={y:py,tot:prev.reduce((s,e)=>s+e.amount,0)}}
+ if(seg==='riepilogo'){const g={};list.forEach(e=>{const k=groupOf(e);g[k]=(g[k]||0)+e.amount});
+  let prev=null,pg={};if(period!=='tutto'){const py=String(+period-1);const save=ui.sp.period;ui.sp.period=py;prev=spFiltered();if(period===YEAR)prev=prev.filter(e=>e.day.slice(5)<=TODAY.slice(5));ui.sp.period=save;prev.forEach(e=>{const k=groupOf(e);pg[k]=(pg[k]||0)+e.amount});prev={y:py,tot:prev.reduce((s,e)=>s+e.amount,0)}}
   const max=Math.max(1,...Object.values(g),...Object.values(pg));
-  body=`<section class="card"><h2 style="margin-bottom:8px">Per gruppo · ${periodLabel(period)}</h2>${Object.keys(GROUPS).map(k=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;gap:10px"><span>${GROUPS[k]}</span><strong class="num">${eur(g[k]||0)}</strong></div><div class="bar" style="width:${(g[k]||0)/max*100}%;margin-top:6px"></div>${prev&&prev.tot?`<div style="display:flex;justify-content:space-between;gap:10px;margin-top:4px" class="help"><span>${prev.y}</span><span class="num">${eur(pg[k]||0)}</span></div><div class="bar prev" style="width:${(pg[k]||0)/max*100}%;margin-top:3px"></div>`:''}</div>`).join('')}
-  ${prev&&prev.tot?`<div class="kv" style="margin-top:6px"><span>Totale ${prev.y}</span><strong class="num">${eur(prev.tot)}</strong></div><p class="help" style="margin-top:8px">Il confronto usa solo le spese registrate nei due anni.</p>`:''}</section>`}
+  body=`<section class="card"><h2 style="margin-bottom:8px">Per famiglia · ${periodLabel(period)}</h2>${Object.keys(GROUPS).map(k=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;gap:10px"><span>${GROUPS[k]}</span><strong class="num">${eur(g[k]||0)}</strong></div><div class="bar" style="width:${(g[k]||0)/max*100}%;margin-top:6px"></div>${prev&&prev.tot?`<div style="display:flex;justify-content:space-between;gap:10px;margin-top:4px" class="help"><span>${prev.y}</span><span class="num">${eur(pg[k]||0)}</span></div><div class="bar prev" style="width:${(pg[k]||0)/max*100}%;margin-top:3px"></div>`:''}</div>`).join('')}
+  ${prev&&prev.tot?`<div class="kv" style="margin-top:6px"><span>Totale ${prev.y}</span><strong class="num">${eur(prev.tot)}</strong></div><p class="help" style="margin-top:8px">${period===YEAR?'Confronto fino al 14 ottobre in entrambi gli anni.':'Confronto delle registrazioni dei due anni.'} Non misura pagamenti o risparmi.</p>`:''}</section>`}
  return`<div class="page-head"><div class="t"><h1 tabindex="-1">Spese</h1></div>${act$('registraSheet',{},'Registra','btn primary small')}</div>${flashHtml()}
  <section class="card"><div class="card-head"><label class="help" for="sp-period">Periodo</label><select id="sp-period" class="chip" style="min-height:36px">${['tutto',...years].map(y=>`<option value="${y}"${y===period?' selected':''}>${y==='tutto'?'Tutti gli anni':y}</option>`).join('')}</select></div>
   <div class="help">${chips.length?'Totale filtrato':'Totale '+periodLabel(period)}</div><div class="big num">${eur(tot)}</div>
-  <p class="help">${plural(list.length,'spesa','spese')}${fin?` · include finanziamento ${eur(fin)}`:''}</p></section>
+  <p class="help">${plural(list.length,'spesa','spese')}${fin?` · include mutuo e finanziamenti ${eur(fin)}`:''}</p><div class="kv" style="margin-top:10px"><span>Senza mutuo e finanziamenti</span><strong class="num">${eur(tot-fin)}</strong></div></section>
  ${dr.length?`<section class="card tint">${row({v:'confermare'},'wallet',`Da confermare (${dr.length})`,'Bozze lette dai documenti, comprese quelle tenute da parte')}</section>`:''}
  <div class="seg" role="group" aria-label="Vista">${segs.map(([k,l])=>act$('spSeg',k,l,'',`id="sp-${k}" aria-pressed="${seg===k}"`)).join('')}</div>
  <div class="chips" style="margin-bottom:12px">${act$('filterSheet',0,`${ic('filter')}Filtri${fCount()?' · '+fCount():''}`,'chip','id="sp-filters"')}${chips.map(([k,l])=>act$('spUnset',k,`${h(l)} ${ic('x')}`,'chip filter',`aria-label="Togli filtro ${h(l)}" id="spx-${k}"`)).join('')}${chips.length>1?act$('spClear',0,'Azzera','link'):''}</div>
@@ -581,7 +583,7 @@ function shell(){
  document.getElementById('bottom').innerHTML=navs.map(([k,l,i])=>`<button type="button" data-tab="${k}" class="${section===k?'active':''}" ${section===k?'aria-current="page"':''}>${ic(i)}${l}${k==='attivita'&&rv?`<span class="badge">${rv}</span>`:''}</button>`).join('');
  document.getElementById('side').innerHTML=`<button type="button" class="add" data-shell="add">${ic('up').replace(I.up,'<path d="M12 5v14M5 12h14"/>')}Aggiungi</button>`+navs.map(([k,l,i])=>`<button type="button" data-tab="${k}" class="${section===k?'active':''}" ${section===k?'aria-current="page"':''}>${ic(i)}${l}${k==='attivita'&&rv?` <span class="tag warn" style="margin-left:auto">${rv}</span>`:''}</button>`).join('')+`<div class="cap">Altro della casa</div>`+[['condominio','Condominio'],['storia','Storia della casa'],['condivisioni','Condivisioni'],['impostazioni','Impostazioni']].map(([k,l])=>`<button type="button" data-more="${k}">${l}</button>`).join('');
 }
-function render(y,focus){R=[];post=[];closeSheet(true);main.innerHTML=V[cur.v](cur);shell();post.forEach(f=>f());
+function render(y,focus){ensureInsuranceExamples();R=[];post=[];closeSheet(true);main.innerHTML=V[cur.v](cur);shell();post.forEach(f=>f());
  if(cur.v==='scheda'&&cur.anchor&&y===0){const el=document.getElementById('sec-'+cur.anchor);if(el)el.scrollIntoView()}
  else if(y!=null)window.scrollTo(0,y);
  if(focus){const t=main.querySelector('.flash')||main.querySelector('h1');if(t){if(!t.hasAttribute('tabindex'))t.setAttribute('tabindex','-1');t.focus({preventScroll:true})}}}
