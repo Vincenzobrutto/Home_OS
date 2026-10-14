@@ -1,0 +1,719 @@
+<title>Dimora proposta UX</title>
+<style>
+/* Layout: stile «Blu architettura» del mockup attuale; barra laterale su desktop, barra in basso + pulsante «+» su telefono. */
+:root{
+  --nav:#132e3e;--nav-ink:#c7dce7;--nav-active:#274958;--hero-accent:#99e5ef;
+  --ink:#182f3d;--muted:#536b79;--bg:#f2f6f8;--card:#ffffff;
+  --accent:#0b6177;--accent-ink:#ffffff;--soft:#e3f3f6;--soft-b:#c9e4ea;
+  --border:#dce6eb;--field:#9fb6c2;
+  --success:#24624b;--success-bg:#e6f5ed;--warning:#80520c;--warning-bg:#fff4dc;--danger:#a43038;--danger-bg:#fdeced;
+  --paper:#fffefa;--paper-b:#e5dfd0;--paper-ink:#3b4246;--shadow:rgba(19,46,62,.18);--focus:#3a9ec0;--demo:#e3f3f6;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --nav:#0a1a23;--nav-ink:#b5cbd6;--nav-active:#1f3d4c;--hero-accent:#99e5ef;
+  --ink:#e3edf2;--muted:#9db3bf;--bg:#0f2230;--card:#152d3c;
+  --accent:#5cc3d9;--accent-ink:#06222c;--soft:#1c3c4c;--soft-b:#2a5265;
+  --border:#27455a;--field:#4d6c7d;
+  --success:#7fd1ad;--success-bg:#173a2e;--warning:#f0c27a;--warning-bg:#3a2e14;--danger:#f19aa1;--danger-bg:#3e1d22;
+  --paper:#1b2f3a;--paper-b:#30485a;--paper-ink:#d8e3e8;--shadow:rgba(0,0,0,.45);--focus:#7fd3e6;--demo:#1c3c4c;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --nav:#0a1a23;--nav-ink:#b5cbd6;--nav-active:#1f3d4c;--hero-accent:#99e5ef;
+  --ink:#e3edf2;--muted:#9db3bf;--bg:#0f2230;--card:#152d3c;
+  --accent:#5cc3d9;--accent-ink:#06222c;--soft:#1c3c4c;--soft-b:#2a5265;
+  --border:#27455a;--field:#4d6c7d;
+  --success:#7fd1ad;--success-bg:#173a2e;--warning:#f0c27a;--warning-bg:#3a2e14;--danger:#f19aa1;--danger-bg:#3e1d22;
+  --paper:#1b2f3a;--paper-b:#30485a;--paper-ink:#d8e3e8;--shadow:rgba(0,0,0,.45);--focus:#7fd3e6;--demo:#1c3c4c;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 'Segoe UI',system-ui,-apple-system,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+h1{font-size:30px;line-height:1.15;letter-spacing:-1px;margin:4px 0 6px;text-wrap:balance}
+h2{font-size:19px;letter-spacing:-.3px;margin:0;text-wrap:balance}
+h3{font-size:15px;margin:0}
+p{margin:0}
+.muted{color:var(--muted)}.small{font-size:12.5px}
+.eyebrow{font-size:11px;letter-spacing:1.6px;font-weight:700;text-transform:uppercase;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* barra prova */
+.demobar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--demo);padding:6px 16px;font-size:12px}
+.demobar span{min-width:0}
+.demobar .acts{display:flex;gap:6px;flex-shrink:0}
+.demobar button{border:1px solid var(--soft-b);background:var(--card);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;min-height:32px}
+
+/* testata */
+header.top{background:var(--nav);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 16px}
+.logo{font-size:23px;font-weight:800;letter-spacing:-1px;color:#fff}
+.addr{flex:1;min-width:0;background:none;border:0;color:var(--nav-ink);text-align:left;font-size:13px;padding:6px 4px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{background:none;border:1px solid transparent;color:#fff;border-radius:10px;min-width:44px;min-height:44px;display:grid;place-items:center}
+.iconbtn:hover{background:var(--nav-active)}
+
+.layout{display:block}
+aside.side{display:none}
+main{padding:20px 16px 120px;max-width:1080px;margin:0 auto}
+
+/* barra in basso */
+nav.bottom{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--border);z-index:20;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.bottom button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;font-size:11px;color:var(--muted);position:relative;min-height:56px}
+nav.bottom button.active{color:var(--accent);font-weight:700}
+.badge{position:absolute;top:5px;left:calc(50% + 6px);background:var(--warning);color:var(--card);font-size:10px;font-weight:700;border-radius:9px;padding:0 5px;line-height:16px}
+.fab{position:fixed;right:16px;bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:21;width:56px;height:56px;border-radius:18px;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 6px 18px var(--shadow)}
+
+/* blocchi */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:16px}
+.page-head .t{min-width:0}
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--accent);font-weight:600;padding:8px 0;margin-bottom:4px;min-height:40px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px}
+.card.tint{background:var(--soft);border-color:var(--soft-b)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--border);background:var(--card);color:var(--ink);border-radius:11px;padding:9px 14px;min-height:44px;font-weight:600;text-align:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.small{min-height:36px;padding:6px 11px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.link{background:none;border:0;color:var(--accent);font-weight:600;padding:8px 0;min-height:40px;text-align:left}
+.row{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-bottom:1px solid var(--border);padding:13px 0;text-align:left;color:var(--ink)}
+.row:last-child{border-bottom:0}
+button.row:hover .row-title{color:var(--accent)}
+.row-body{flex:1;min-width:0}
+.row-title{display:block;font-weight:650;overflow-wrap:anywhere}
+.row-sub{display:block;font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.row .amount{font-weight:700}
+.ico{width:38px;height:38px;border-radius:11px;background:var(--soft);color:var(--accent);display:grid;place-items:center;flex-shrink:0}
+.ico.warn{background:var(--warning-bg);color:var(--warning)}
+.ico.ok{background:var(--success-bg);color:var(--success)}
+.chev{color:var(--muted);flex-shrink:0}
+svg.i{width:20px;height:20px;flex-shrink:0}
+.tag{display:inline-flex;align-items:center;gap:4px;border-radius:6px;background:var(--soft);color:var(--accent);padding:2px 7px;font-size:11px;font-weight:650;white-space:nowrap}
+.tag.warn{background:var(--warning-bg);color:var(--warning)}
+.tag.ok{background:var(--success-bg);color:var(--success)}
+.tag.neutral{background:var(--bg);color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--soft);color:var(--ink);border:1px solid var(--soft-b);border-radius:999px;padding:7px 14px;min-height:40px;font-weight:600}
+.chip .n{color:var(--muted);font-weight:500;font-size:12px}
+.chip.warn{background:var(--warning-bg);border-color:transparent;color:var(--warning)}
+.chip.filter{background:var(--card);border-color:var(--accent);color:var(--accent);padding:5px 8px 5px 12px;min-height:36px;font-size:13px}
+.flash{display:flex;align-items:flex-start;gap:10px;background:var(--success-bg);color:var(--success);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px}
+.flash .link{padding:0;min-height:0;color:var(--success);text-decoration:underline}
+.note{background:var(--warning-bg);color:var(--warning);border-radius:10px;padding:11px 13px;font-size:13px}
+.help{font-size:12.5px;color:var(--muted)}
+.big{font-size:32px;font-weight:750;letter-spacing:-1px;line-height:1.2}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--border)}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.kv strong{text-align:right;overflow-wrap:anywhere;min-width:0}
+.seg{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin:0 -16px 12px;padding:0 16px}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex-shrink:0;background:none;border:1px solid transparent;border-radius:10px;padding:8px 12px;min-height:40px;color:var(--muted);font-weight:600;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--soft);color:var(--accent);border-color:var(--soft-b)}
+.anchors{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);margin:0 -16px 12px;padding:6px 16px;border-bottom:1px solid var(--border)}
+.anchors .seg{margin:0 -16px;}
+section.sec{scroll-margin-top:64px}
+.bar{height:8px;border-radius:4px;background:var(--accent);opacity:.8}
+.bar.prev{background:var(--muted);opacity:.45}
+.doc-paper{background:var(--paper);border:1px solid var(--paper-b);border-radius:10px;padding:18px;color:var(--paper-ink)}
+.choice{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--border);border-radius:12px;padding:13px;margin-top:8px;cursor:pointer;background:var(--card)}
+.choice:has(input:checked){border-color:var(--accent);background:var(--soft)}
+.choice input{margin-top:4px;accent-color:var(--accent);width:18px;height:18px;flex-shrink:0}
+.choice div{flex:1;min-width:0}
+.field{display:block;font-size:13px;font-weight:600;margin-top:12px}
+.field input,.field select,.field textarea{display:block;width:100%;margin-top:5px;background:var(--card);border:1px solid var(--field);border-radius:9px;padding:10px 12px;min-height:44px;font-weight:400;font-size:15px}
+.field textarea{min-height:80px;resize:vertical}
+.field .err{color:var(--danger);font-weight:600;font-size:12.5px;margin-top:4px}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:600;margin-top:12px;cursor:pointer}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent);flex-shrink:0}
+details.more{margin-top:14px;border-top:1px solid var(--border)}
+details.more>summary{padding:12px 0;font-weight:600;cursor:pointer;color:var(--accent)}
+.empty{padding:18px 4px;color:var(--muted)}
+.ctx{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.grid2{display:grid;gap:14px}
+
+/* foglio */
+.sheet-wrap{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(10,26,35,.45)}
+.sheet{background:var(--card);color:var(--ink);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:8px 18px calc(22px + env(safe-area-inset-bottom,0px))}
+.sheet .grip{width:40px;height:4px;border-radius:2px;background:var(--border);margin:6px auto 10px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.sheet-head h2{outline:none}
+
+@media (min-width:760px){
+  .layout{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:calc(100vh - 110px)}
+  aside.side{display:block;background:var(--nav);padding:20px 14px;color:var(--nav-ink)}
+  aside.side button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;color:var(--nav-ink);padding:11px 13px;border-radius:10px;margin:2px 0;text-align:left;min-height:44px}
+  aside.side button.active{background:var(--nav-active);color:#b9f5fb;font-weight:700}
+  aside.side .add{background:var(--hero-accent);color:#132e3e;font-weight:700;justify-content:center;margin-bottom:16px}
+  aside.side .add:hover{filter:brightness(.95)}
+  aside.side .cap{font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:16px 13px 6px;opacity:.75}
+  nav.bottom,.fab{display:none}
+  main{padding:28px 36px 60px;width:100%}
+  h1{font-size:34px}
+  .grid2{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);align-items:start}
+  .seg{margin:0 0 12px;padding:0}
+  .anchors{margin:0 0 12px;padding:6px 0}
+  .anchors .seg{margin:0}
+  .sheet-wrap{align-items:center}
+  .sheet{border-radius:18px;padding:12px 22px 22px}
+  .sheet .grip{display:none}
+}
+@media (max-width:350px){h1{font-size:26px}.big{font-size:28px}.card{padding:15px}}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+
+<div class="demobar"><span><strong>Proposta UX di Claude</strong> · dati sintetici · nessun invio reale</span><span class="acts"><button type="button" id="btn-paths">Percorsi</button><button type="button" id="btn-reset">Ripristina</button></span></div>
+<header class="top">
+  <span class="logo">dimora.</span>
+  <button type="button" class="addr" id="btn-addr">Via Roma 12 · Milano · Unità A12</button>
+  <button type="button" class="iconbtn" id="btn-more" aria-label="Altro della casa"><svg class="i" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+</header>
+<div class="layout">
+  <aside class="side" id="side"></aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+<button type="button" class="fab" id="fab" aria-label="Aggiungi"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+<nav class="bottom" id="bottom" aria-label="Sezioni"></nav>
+<div id="sheet-root"></div>
+
+<script>
+(function(){
+'use strict';
+const TODAY='2026-10-14', YEAR='2026', K='dimora-proposta-claude-v1';
+const MONTHS=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+const CATS={electricity:'Energia elettrica',gas:'Gas',water:'Acqua',internet_services:'Internet e servizi',condominium_ordinary:'Condominio ordinario',condominium_extraordinary:'Condominio straordinario',insurance:'Assicurazione',taxes:'Tributi',maintenance:'Manutenzione',repairs_works:'Riparazioni e lavori',purchase_replacement:'Acquisti e sostituzioni',financing:'Finanziamento',other:'Altro'};
+const GROUPS={management:'Gestione',works:'Lavori e acquisti',financing:'Finanziamento',unclassified:'Non classificata'};
+const groupOf=c=>c==='financing'?'financing':['repairs_works','purchase_replacement','condominium_extraordinary'].includes(c)?'works':c?'management':'unclassified';
+
+const I={
+ home:'<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+ check:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 12 3 3 5-6"/>',
+ doc:'<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M8 13h8M8 17h6"/>',
+ wallet:'<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2"/>',
+ alert:'<path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17.2v.1"/>',
+ task:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+ build:'<path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/>',
+ obj:'<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M8 6.5h.01M11 6.5h.01"/>',
+ room:'<path d="M4 20V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v15"/><path d="M2 20h20M14 12h1"/>',
+ up:'<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
+ back:'<path d="M15 6l-6 6 6 6"/>',
+ chev:'<path d="M9 6l6 6-6 6"/>',
+ x:'<path d="M6 6l12 12M18 6 6 18"/>',
+ lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+ users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c.5-3.5 3-5.5 6-5.5s5.5 2 6 5.5"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.7 2.8 2.4 3 5.2"/>',
+ ok:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+ filter:'<path d="M4 6h16M7 12h10M10 18h4"/>',
+ spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>'
+};
+const ic=(n,cls='i')=>`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+
+function seed(){return{v:1,seq:100,imported:false,
+ rooms:['Cucina','Ripostiglio','Bagno','Soggiorno'],
+ objects:[
+  {id:'Caldaia',type:'Impianto di riscaldamento',room:'Cucina',brand:'Termica Demo',model:'TD28',modelOk:false,power:null},
+  {id:'Lavatrice',type:'Elettrodomestico',room:'Ripostiglio',brand:'Elettro Demo',model:'LD8',modelOk:true,power:null},
+  {id:'Lavabo bagno',type:'Sanitario',room:'Bagno',brand:'',model:'',modelOk:true,power:null},
+  {id:'Deumidificatore',type:'Elettrodomestico',room:'',brand:'',model:'',modelOk:true,power:null}],
+ docs:[
+  {id:'d1',name:'Libretto impianto.pdf',type:'Libretto',object:'Caldaia',vis:'casa',text:'Termica Demo · modello TD28. Potenza utile al riscaldamento: 24 kW. Fonte sintetica.',day:'2026-10-02'},
+  {id:'d2',name:'Manuale caldaia.pdf',type:'Manuale',object:'Caldaia',vis:'casa',text:'Termica Demo, modello TD28. Potenza nominale: 28 kW. Istruzioni di uso e manutenzione. Fonte sintetica.',day:'2026-10-02'},
+  {id:'d3',name:'Manuale lavatrice.pdf',type:'Manuale',object:'Lavatrice',vis:'casa',text:'Lavatrice Elettro Demo LD8. Istruzioni di uso e cura. Esempio sintetico.',day:'2026-05-08'},
+  {id:'d4',name:'APE della casa.pdf',type:'Certificato',object:'',vis:'casa',text:'Attestato di prestazione energetica dimostrativo. Nessuna certificazione reale.',day:'2026-03-01'},
+  {id:'d5',name:'Contratto mutuo.pdf',type:'Finanziamento',object:'',vis:'io',text:'Documento personale dimostrativo. Nessun dato bancario reale.',day:'2025-06-20'},
+  {id:'d6',name:'Fattura piastrelle.pdf',type:'Fattura',object:'',vis:'io',text:'Fornitura e posa piastrelle: totale 1.035,00 €. Esempio sintetico.',day:'2026-09-10'}],
+ reviews:[{id:'power',open:true},{id:'model',open:true}],
+ tasks:[
+  {id:'a1',title:'Prenotare manutenzione annuale',day:'2026-11-10',object:'Caldaia',note:'Promemoria personale: la periodicità l’hai scelta tu.',done:null},
+  {id:'a2',title:'Pulire il filtro',day:'2026-10-25',object:'Lavatrice',note:'Controllare prima le istruzioni del manuale.',done:null},
+  {id:'a3',title:'Cambiare la guarnizione del lavabo',day:'2026-09-20',object:'Lavabo bagno',note:'',done:'2026-09-21'}],
+ comms:[
+  {id:'c1',title:'Ascensore Scala A · intervento programmato',body:'Il tecnico sarà presente il 20 ottobre dalle 9 alle 11.',kind:'scheduled',day:'2026-10-12'},
+  {id:'c2',title:'Luce ingresso · problema risolto',body:'La luce dell’ingresso Scala A è stata ripristinata.',kind:'resolved',day:'2026-10-14'}],
+ reports:[{id:'r1',title:'Luce ingresso',day:'2026-10-08',state:'Risolta'}],
+ works:['Rifacimento bagno'],
+ expenses:[
+  {id:'e1',title:'Bolletta luce · settembre',amount:7800,day:'2026-09-30',cat:'electricity',supplier:'Energia Demo',object:'',work:'',source:'Da documento, confermata da te',document:'d0'},
+  {id:'e2',title:'Gas · settembre',amount:8000,day:'2026-09-30',cat:'gas',supplier:'Gas Demo',object:'',work:'',source:'Inserita da te',document:''},
+  {id:'e3',title:'Internet · ottobre',amount:2990,day:'2026-10-01',cat:'internet_services',supplier:'Rete Demo',object:'',work:'',source:'Inserita da te',document:''},
+  {id:'e4',title:'Riparazione rubinetto',amount:8500,day:'2026-09-12',cat:'repairs_works',supplier:'Idraulico Demo',object:'Lavabo bagno',work:'Rifacimento bagno',source:'Inserita da te',document:''},
+  {id:'e5',title:'Piastrelle e posa',amount:103500,day:'2026-09-10',cat:'repairs_works',supplier:'Ceramiche Demo',object:'',work:'Rifacimento bagno',source:'Inserita da te · documento collegato',document:'d6'},
+  {id:'e6',title:'Acquisto lavatrice',amount:42000,day:'2026-05-08',cat:'purchase_replacement',supplier:'Elettrodomestici Demo',object:'Lavatrice',work:'',source:'Inserita da te',document:''},
+  {id:'e7',title:'Rata mutuo · ottobre',amount:45000,day:'2026-10-05',cat:'financing',supplier:'Banca Demo',object:'',work:'',source:'Inserita da te',document:''},
+  {id:'p1',title:'Bolletta luce · settembre',amount:10000,day:'2025-09-30',cat:'electricity',supplier:'Energia Demo',object:'',work:'',source:'Inserita da te',document:''},
+  {id:'p2',title:'Gas · settembre',amount:7400,day:'2025-09-30',cat:'gas',supplier:'Gas Demo',object:'',work:'',source:'Inserita da te',document:''},
+  {id:'p3',title:'Internet · ottobre',amount:2800,day:'2025-10-01',cat:'internet_services',supplier:'Rete Demo',object:'',work:'',source:'Inserita da te',document:''},
+  {id:'p4',title:'Intervento idraulico',amount:9500,day:'2025-09-12',cat:'repairs_works',supplier:'Idraulico Demo',object:'Lavabo bagno',work:'',source:'Inserita da te',document:''},
+  {id:'p5',title:'Rata mutuo · ottobre',amount:45000,day:'2025-10-05',cat:'financing',supplier:'Banca Demo',object:'',work:'',source:'Inserita da te',document:''},
+  {id:'p6',title:'Manutenzione annuale caldaia',amount:9000,day:'2025-11-12',cat:'maintenance',supplier:'Termotecnica Demo',object:'Caldaia',work:'',source:'Inserita da te',document:''}],
+ drafts:[],
+ events:[
+  {day:'2026-10-01',title:'Casa creata',detail:'Via Roma 12 · unità A12',obj:''},
+  {day:'2026-10-02',title:'Documenti importati',detail:'Libretto impianto.pdf, Manuale caldaia.pdf',obj:'Caldaia'},
+  {day:'2026-10-02',title:'Dati proposti da verificare',detail:'Modello e potenza, letti dal Libretto e dal Manuale',obj:'Caldaia'},
+  {day:'2026-09-21',title:'Attività completata',detail:'Cambiare la guarnizione del lavabo',obj:'Lavabo bagno'}]
+}}
+let st=null;
+try{st=JSON.parse(localStorage.getItem(K))}catch(e){st=null}
+if(!st||st.v!==1)st=seed();
+function save(){try{localStorage.setItem(K,JSON.stringify(st))}catch(e){}}
+function freshUi(){return{doc:{q:'',type:'',obj:'',vis:''},sp:{period:YEAR,seg:'elenco',f:{cat:'',obj:'',room:'',work:''}},att:'fare',hist:{},confirm:null}}
+let ui=freshUi();
+
+/* utilità */
+const h=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function eur(c){c=Math.round(c||0);const neg=c<0;c=Math.abs(c);const i=Math.floor(c/100),d=String(c%100).padStart(2,'0');return(neg?'−':'')+String(i).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+d+' €'}
+function parseEur(s){s=String(s||'').replace(/[\s€]/g,'');if(!s)return null;if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');if(!/^\d+(\.\d{1,2})?$/.test(s))return null;const n=Math.round(Number(s)*100);return n>0?n:null}
+function day(d){if(!d)return'';const[y,m,dd]=d.split('-');return`${+dd} ${MONTHS[+m-1]}`+(y!==YEAR?' '+y:'')}
+function dayFull(d){if(!d)return'';const[y,m,dd]=d.split('-');return`${+dd} ${MONTHS[+m-1]} ${y}`}
+function addDays(d,n){const t=new Date(d+'T12:00:00');t.setDate(t.getDate()+n);return t.toISOString().slice(0,10)}
+const obj=id=>st.objects.find(o=>o.id===id);
+const doc=id=>st.docs.find(d=>d.id===id);
+const exp=id=>st.expenses.find(e=>e.id===id);
+const roomOf=e=>{const o=obj(e.object);return o?o.room:''};
+const nid=p=>p+(++st.seq);
+const plural=(n,a,b)=>n+' '+(n===1?a:b);
+const openReviews=()=>st.reviews.filter(r=>r.open);
+const liveExpenses=()=>st.expenses.filter(e=>!e.archived);
+const openDrafts=()=>st.drafts.filter(d=>d.status==='open'||d.status==='parked');
+function event(title,detail,o){st.events.push({day:TODAY,title,detail,obj:o||''})}
+
+/* navigazione: pila con origine reale, sezione che segue il compito */
+let cur={v:'casa'},stack=[],section='casa',flash=null,R=[];
+const reg=x=>{R.push(x);return R.length-1};
+const go$=(route,inner,cls='',extra='')=>`<button type="button" class="${cls}" data-go="${reg(route)}" ${extra}>${inner}</button>`;
+const act$=(name,data,inner,cls='',extra='')=>`<button type="button" class="${cls}" data-act="${name}" data-a="${reg(data)}" ${extra}>${inner}</button>`;
+function go(r){stack.push({r:cur,y:window.scrollY});cur=r;flash=null;render(0,true)}
+function replace(r){cur=r;render(0,true)}
+function back(){flash=null;if(!stack.length){cur={v:section};render(0,true);return}const p=stack.pop();cur=p.r;render(p.y,true)}
+function tab(s){stack=[];section=s;cur={v:s};flash=null;render(0,true)}
+function startFlow(r){go(Object.assign(r,{origin:stack.length}))}
+function finish(msg,opt={}){const k=cur.origin;if(k==null||!stack[k]){flash={msg,...opt};cur={v:section};stack=[];render(0,true);return}const p=stack[k];stack=stack.slice(0,k);cur=p.r;flash={msg,...opt};render(p.y,true)}
+const LABEL={casa:()=>'Casa',ambiente:r=>r.id,oggetti:()=>'Tutti gli oggetti',scheda:r=>r.id,documenti:()=>'Documenti',documento:r=>(doc(r.id)||{}).name||'Documento',attivita:()=>'Attività',task:r=>((st.tasks.find(t=>t.id===r.id))||{}).title||'Attività',spese:()=>'Spese',confermare:()=>'Da confermare',spesa:r=>(exp(r.id)||{}).title||'Spesa',lavoro:r=>r.id,importa:()=>'Importa',esito:()=>'Documenti importati',analisi:()=>'Analisi',bozza:()=>'Bozza',registra:()=>'Registra',condominio:()=>'Condominio',segnala:()=>'Segnalazione',storia:()=>'Storia della casa',altro:r=>r.title,nuovoOggetto:()=>'Nuovo oggetto',nuovoAmbiente:()=>'Nuovo ambiente',nuovaAttivita:()=>'Nuova attività'};
+const backBtn=()=>stack.length?`<button type="button" class="back" data-act="back">${ic('back')}<span>${h(LABEL[stack[stack.length-1].r.v](stack[stack.length-1].r))}</span></button>`:'';
+function head(title,{eyebrow='',sub='',right=''}={}){return`${backBtn()}<div class="page-head"><div class="t">${eyebrow?`<div class="eyebrow">${eyebrow}</div>`:''}<h1 tabindex="-1">${h(title)}</h1>${sub?`<p class="muted">${sub}</p>`:''}</div>${right}</div>`}
+function flashHtml(sec){if(!flash||(flash.sec||'')!==(sec||''))return'';return`<div class="flash" role="status">${ic('ok')}<div>${h(flash.msg)}${flash.go?` ${go$(flash.go,h(flash.goLabel||'Apri'),'link')}`:''}</div></div>`}
+const row=(route,icon,title,sub,right='',icoCls='')=>go$(route,`${icon?`<span class="ico ${icoCls}">${ic(icon)}</span>`:''}<span class="row-body"><span class="row-title">${title}</span>${sub?`<span class="row-sub">${sub}</span>`:''}</span>${right}${ic('chev','i chev')}`,'row');
+
+/* ===== CASA ===== */
+const V={};
+V.casa=()=>{
+ const rv=openReviews().length;
+ const soon=st.tasks.filter(t=>!t.done&&t.day<=addDays(TODAY,14)).sort((a,b)=>a.day.localeCompare(b.day));
+ const comm=st.comms.filter(c=>c.kind==='scheduled');
+ const dr=openDrafts().length;
+ const pend=pendingEconDocs().length;
+ let items='';
+ if(rv)items+=row({v:'attivita',seg:'rivedi'},'alert',`${plural(rv,'dato','dati')} della caldaia da verificare`,'Proposti dal Libretto e dal Manuale','', 'warn');
+ soon.forEach(t=>items+=row({v:'task',id:t.id},'task',h(t.title),`${day(t.day)} · ${h(t.object||'Casa')}`));
+ comm.forEach(c=>items+=row({v:'condominio'},'build',h(c.title.split(' · ')[0])+': intervento il 20 ott',`9–11 · Studio Rossi`));
+ if(dr)items+=row({v:'confermare'},'wallet',`${plural(dr,'spesa','spese')} da confermare`,'Bozze lette dai documenti');
+ if(pend)items+=row({v:'esito'},'doc',`${plural(pend,'documento importato','documenti importati')} senza spesa`,'Puoi proporre i dati della spesa o inserirli a mano');
+ const rooms=st.rooms.map(r=>{const n=st.objects.filter(o=>o.room===r).length;return go$({v:'ambiente',id:r},`${ic('room')}${h(r)} <span class="n">${n}</span>`,'chip')}).join('');
+ const loose=st.objects.filter(o=>!o.room).length;
+ const yTot=liveExpenses().filter(e=>e.day.startsWith(YEAR)).reduce((s,e)=>s+e.amount,0);
+ const last=st.comms[st.comms.length-1];
+ return`<div class="eyebrow">La tua casa</div><h1 tabindex="-1">Via Roma 12</h1><p class="muted" style="margin-bottom:16px">Milano · Unità A12</p>${flashHtml()}
+ <div class="grid2"><div>
+ <section class="card"><div class="card-head"><h2>Da fare ora</h2><span class="help">prossimi 14 giorni</span></div>${items||'<p class="empty">Niente di urgente.</p>'}${go$({v:'attivita'},'Vedi tutte le attività','link')}</section>
+ <section class="card"><div class="card-head"><h2>La casa</h2></div><div class="chips">${rooms}${loose?go$({v:'oggetti',focus:'loose'},`Da collocare <span class="n">${loose}</span>`,'chip warn'):''}</div><div style="margin-top:6px">${go$({v:'oggetti'},`Tutti gli oggetti (${st.objects.length})`,'link')}</div></section>
+ </div><div>
+ <section class="card">${act$('tab','spese',`<span class="ico">${ic('wallet')}</span><span class="row-body"><span class="row-title">Spese ${YEAR}</span><span class="row-sub">${dr?plural(dr,'da confermare','da confermare'):'Nessuna bozza da confermare'}</span></span><span class="amount num">${eur(yTot)}</span>${ic('chev','i chev')}`,'row')}</section>
+ <section class="card"><div class="card-head"><h2>Condominio</h2><span class="help">Studio Rossi</span></div>${row({v:'condominio'},'build',h(last.title),h(last.body),'', last.kind==='resolved'?'ok':'')}<div class="actions" style="margin-top:8px">${startFlow$('segnala',{},'Segnala un problema','btn small')}</div></section>
+ </div></div>`};
+function startFlow$(v,extra,inner,cls){return act$('flow',Object.assign({v},extra),inner,cls)}
+
+/* ===== OGGETTI E AMBIENTI ===== */
+V.ambiente=r=>{const os=st.objects.filter(o=>o.room===r.id);
+ return head(r.id,{eyebrow:'Ambiente',sub:plural(os.length,'oggetto','oggetti')})+flashHtml()+`<section class="card">${os.map(o=>row({v:'scheda',id:o.id},'obj',h(o.id),h(o.type))).join('')||'<p class="empty">Nessun oggetto in questo ambiente.</p>'}<div class="actions">${startFlow$('nuovoOggetto',{room:r.id},'Aggiungi oggetto qui','btn')}</div></section><p class="help">Gli ambienti raggruppano gli oggetti. Documenti e spese stanno negli oggetti e nelle loro sezioni.</p>`};
+V.oggetti=()=>{const groups=[...st.rooms.map(r=>[r,st.objects.filter(o=>o.room===r)]),['Da collocare',st.objects.filter(o=>!o.room)]].filter(g=>g[1].length);
+ return head('Tutti gli oggetti',{sub:plural(st.objects.length,'oggetto','oggetti')})+flashHtml()+groups.map(([g,os])=>`<section class="card"><div class="card-head"><h2>${h(g)}</h2>${g==='Da collocare'?'<span class="tag warn">senza ambiente</span>':''}</div>${os.map(o=>row({v:'scheda',id:o.id},'obj',h(o.id),h(o.type))).join('')}</section>`).join('')+`<div class="actions">${startFlow$('nuovoOggetto',{},'Aggiungi oggetto','btn')}${startFlow$('nuovoAmbiente',{},'Aggiungi ambiente','btn')}</div>`};
+
+V.scheda=r=>{const o=obj(r.id);if(!o)return head('Oggetto non trovato');
+ const docs=st.docs.filter(d=>d.object===o.id);
+ const tasks=st.tasks.filter(t=>t.object===o.id);const openT=tasks.filter(t=>!t.done);
+ const rv=o.id==='Caldaia'?openReviews():[];
+ const es=liveExpenses().filter(e=>e.object===o.id);
+ const cy=es.filter(e=>e.day.startsWith(YEAR)).sort((a,b)=>b.day.localeCompare(a.day));
+ const years={};es.filter(e=>!e.day.startsWith(YEAR)).forEach(e=>{const y=e.day.slice(0,4);years[y]=(years[y]||0)+e.amount});
+ const ev=st.events.filter(e=>e.obj===o.id).slice().sort((a,b)=>b.day.localeCompare(a.day));
+ const allH=ui.hist[o.id];
+ const anchors=[['dati','Dati'],['documenti',`Documenti ${docs.length}`],['attivita',`Attività ${openT.length}`],['costi','Costi'],['storia','Storia']];
+ const power=o.power?`${h(o.power)} <span class="tag ok">confermato da te</span>`:(o.id==='Caldaia'?'<span class="tag warn">da verificare</span>':'—');
+ const model=o.model?`${h(o.model)} ${o.modelOk?(o.id==='Caldaia'?'<span class="tag ok">confermato da te</span>':''):'<span class="tag warn">proposto</span>'}`:'—';
+ return backBtn()+`<div class="eyebrow">${h(o.type)} · ${o.room?h(o.room):'Da collocare'}</div><h1 tabindex="-1">${h(o.id)}</h1>
+ <div class="anchors"><div class="seg" role="group" aria-label="Sezioni della scheda">${anchors.map(([k,l])=>act$('anchor',k,h(l),'', `id="anc-${k}" aria-pressed="${(r.anchor||'dati')===k}"`)).join('')}</div></div>
+ ${flashHtml()}
+ <section class="card sec" id="sec-dati"><h2 style="margin-bottom:6px">Dati essenziali</h2>
+  <div class="kv"><span>Tipo</span><strong>${h(o.type)}</strong></div>
+  <div class="kv"><span>Ambiente</span><strong>${o.room?h(o.room):act$('placeObj',o.id,'Scegli ambiente','link')}</strong></div>
+  ${o.brand?`<div class="kv"><span>Marca</span><strong>${h(o.brand)}</strong></div>`:''}
+  ${o.model?`<div class="kv"><span>Modello</span><strong>${model}</strong></div>`:''}
+  ${o.id==='Caldaia'?`<div class="kv"><span>Potenza</span><strong>${power}</strong></div>`:''}
+ </section>
+ ${rv.length?`<section class="card tint"><div class="card-head"><h2>Da verificare (${rv.length})</h2>${go$({v:'attivita',seg:'rivedi'},'Rivedi','btn small primary')}</div><p class="help">Dati proposti dai documenti. Restano «proposti» finché non li confermi.</p></section>`:''}
+ <section class="card sec" id="sec-documenti"><h2 style="margin-bottom:4px">Documenti</h2>${flashHtml('documenti')}${docs.map(d=>row({v:'documento',id:d.id},'doc',h(d.name),h(d.type)+(docHasReview(d)?' · <span class="tag warn">proposte da rivedere</span>':''))).join('')||'<p class="empty">Nessun documento collegato.</p>'}<div class="actions">${go$({v:'importa'},'Importa documenti','btn small')}</div></section>
+ <section class="card sec" id="sec-attivita"><h2 style="margin-bottom:4px">Attività</h2>${flashHtml('attivita')}${openT.map(t=>row({v:'task',id:t.id},'task',h(t.title),day(t.day))).join('')||'<p class="empty">Nessuna attività da fare.</p>'}${tasks.length>openT.length?`<p class="help">${plural(tasks.length-openT.length,'attività completata','attività completate')}</p>`:''}<div class="actions">${startFlow$('nuovaAttivita',{object:o.id,sec:'attivita'},'Nuova attività','btn small')}</div></section>
+ <section class="card sec" id="sec-costi"><div class="card-head"><h2>Costi</h2></div>${flashHtml('costi')}
+  <div class="kv"><span>Registrati nel ${YEAR}</span><strong class="num">${eur(cy.reduce((s,e)=>s+e.amount,0))}</strong></div>
+  ${cy.map(e=>row({v:'spesa',id:e.id},'',h(e.title),day(e.day),`<span class="amount num">${eur(e.amount)}</span>`)).join('')}
+  ${Object.keys(years).length?`<p class="help" style="margin-top:10px">Anni precedenti</p>${Object.keys(years).sort().reverse().map(y=>act$('spYear',{obj:o.id,year:y},`<span class="row-body"><span class="row-title">${y}</span></span><span class="amount num">${eur(years[y])}</span>${ic('chev','i chev')}`,'row')).join('')}`:''}
+  <div class="actions">${startFlow$('registra',{preset:{object:o.id},sec:'costi'},'Registra costo','btn small primary')}${act$('spObj',{obj:o.id},'Vedi in Spese','btn small')}</div>
+  <p class="help" style="margin-top:10px">Le bollette della casa non vengono attribuite agli oggetti, salvo tua scelta.</p></section>
+ <section class="card sec" id="sec-storia"><h2 style="margin-bottom:4px">Storia</h2>${(allH?ev:ev.slice(0,3)).map(e=>`<div class="kv"><span class="num">${day(e.day)}</span><strong style="text-align:left;flex:1;margin-left:12px;font-weight:600">${h(e.title)}<span class="row-sub">${h(e.detail)}</span></strong></div>`).join('')||'<p class="empty">Nessun evento.</p>'}${ev.length>3&&!allH?act$('histAll',o.id,`Vedi tutta (${ev.length})`,'link'):''}</section>`};
+function docHasReview(d){return(d.id==='d1'||d.id==='d2')&&openReviews().length>0}
+
+/* ===== DOCUMENTI ===== */
+V.documenti=()=>{const f=ui.doc;const types=[...new Set(st.docs.map(d=>d.type))];
+ const opt=(v,l,s)=>`<option value="${h(v)}"${v===s?' selected':''}>${h(l)}</option>`;
+ post.push(updateDocResults);
+ return head('Documenti',{right:startFlow$('importa',{},`${ic('up')}Importa`,'btn small')})+flashHtml()+`<label class="field" style="margin-top:0">Cerca<input id="doc-q" type="search" value="${h(f.q)}" placeholder="Nome, tipo o oggetto" autocomplete="off"></label>
+ <div class="chips" style="margin-top:10px">
+  <select id="doc-type" class="chip" aria-label="Tipo">${opt('','Tutti i tipi',f.type)}${types.map(t=>opt(t,t,f.type)).join('')}</select>
+  <select id="doc-obj" class="chip" aria-label="Oggetto">${opt('','Tutti gli oggetti',f.obj)}${opt('-','Casa, senza oggetto',f.obj)}${st.objects.map(o=>opt(o.id,o.id,f.obj)).join('')}</select>
+  <select id="doc-vis" class="chip" aria-label="Visibilità">${opt('','Ogni visibilità',f.vis)}${opt('io','Solo io',f.vis)}${opt('casa','Persone della casa',f.vis)}</select>
+ </div><div id="doc-results" aria-live="polite"></div>`};
+function docRows(){const f=ui.doc,q=f.q.trim().toLowerCase();
+ const list=st.docs.filter(d=>(!q||(d.name+' '+d.type+' '+(d.object||'casa')).toLowerCase().includes(q))&&(!f.type||d.type===f.type)&&(!f.obj||(f.obj==='-'?!d.object:d.object===f.obj))&&(!f.vis||d.vis===f.vis));
+ const active=q||f.type||f.obj||f.vis;
+ return`${active?`<p class="help" style="margin:12px 0 0">${plural(list.length,'risultato','risultati')} ${act$('docClear',0,'Azzera','link')}</p>`:''}<section class="card" style="margin-top:12px">${list.map(d=>row({v:'documento',id:d.id},'doc',h(d.name),`${h(d.type)} · ${h(d.object||'Casa')} · ${visLabel(d.vis,true)}${docHasReview(d)?' · <span class="tag warn">proposte da rivedere</span>':''}`)).join('')||'<p class="empty">Nessun documento trovato. Prova con meno filtri.</p>'}</section>`}
+function updateDocResults(){const el=document.getElementById('doc-results');if(!el)return;el.innerHTML=docRows()}
+const visLabel=(v,icon)=>(icon?(v==='io'?ic('lock','i'):ic('users','i')).replace('class="i"','class="i" style="width:13px;height:13px;vertical-align:-2px"')+' ':'')+(v==='io'?'Solo io':'Persone della casa');
+
+V.documento=r=>{const d=doc(r.id);if(!d)return head('Documento non trovato');
+ const linked=st.expenses.find(e=>e.document===d.id&&!e.archived);
+ const rv=docHasReview(d);
+ let primary='';
+ if(rv)primary=go$({v:'attivita',seg:'rivedi'},'Rivedi le proposte','btn primary');
+ else if(d.econ&&!linked&&!draftDone(d.id))primary=startFlow$('analisi',{doc:d.id},'Registra la spesa da questo documento','btn primary');
+ else if(d.object)primary=go$({v:'scheda',id:d.object},'Apri '+h(d.object),'btn primary');
+ return head(d.name,{eyebrow:h(d.type)+' · '+h(d.object||'Casa')})+flashHtml()+`<div class="actions" style="margin-top:0;margin-bottom:14px">${primary}${act$('docMore',d.id,'Altre azioni','btn')}</div>
+ <div class="grid2"><section class="card"><div class="doc-paper"><div class="eyebrow" style="color:inherit;opacity:.7">Originale · pagina 1</div><h3 style="margin:8px 0">${h(d.name)}</h3><p>${h(d.text)}</p></div><p class="help" style="margin-top:8px">Anteprima sintetica: nessun file reale.</p></section>
+ <section class="card"><h2 style="margin-bottom:6px">Informazioni</h2>
+  <div class="kv"><span>Tipo</span><strong>${h(d.type)}</strong></div>
+  <div class="kv"><span>Oggetto</span><strong>${d.object?go$({v:'scheda',id:d.object},h(d.object),'link'):'Casa'}</strong></div>
+  <div class="kv"><span>Visibilità</span><strong>${visLabel(d.vis,true)}</strong></div>
+  ${linked?`<div class="kv"><span>Spesa</span><strong>${go$({v:'spesa',id:linked.id},h(linked.title),'link')}</strong></div>`:''}
+  <div class="kv"><span>Aggiunto</span><strong>${dayFull(d.day)}</strong></div>
+  <p class="help" style="margin-top:10px">Nessuno fuori dalla casa vede il documento senza una condivisione esplicita.</p></section></div>`};
+const draftDone=docId=>st.drafts.some(x=>x.doc===docId&&x.status==='done');
+
+/* ===== ATTIVITÀ ===== */
+V.attivita=r=>{const seg=r.seg||ui.att;ui.att=seg;
+ const fare=st.tasks.filter(t=>!t.done).sort((a,b)=>a.day.localeCompare(b.day));
+ const done=st.tasks.filter(t=>t.done).sort((a,b)=>b.done.localeCompare(a.done));
+ const rv=openReviews();
+ const segs=[['fare',`Da fare ${fare.length}`],['rivedi',`Da rivedere ${rv.length}`],['fatte','Completate']];
+ let body='';
+ if(seg==='fare')body=`<section class="card">${fare.map(t=>row({v:'task',id:t.id},'task',h(t.title),`${day(t.day)} · ${h(t.object||'Casa')}`)).join('')||'<p class="empty">Nessuna attività da fare.</p>'}</section>`;
+ if(seg==='fatte')body=`<section class="card">${done.map(t=>row({v:'task',id:t.id},'ok',h(t.title),`Completata il ${day(t.done)} · ${h(t.object||'Casa')}`,'', 'ok')).join('')||'<p class="empty">Nessuna attività completata.</p>'}</section>`;
+ if(seg==='rivedi')body=rv.length?rv.map(reviewCard).join(''):`<section class="card"><p class="empty">Nessuna verifica aperta. Le conferme sono nella scheda e nella storia di ogni oggetto.</p></section>`;
+ return head('Attività',{right:startFlow$('nuovaAttivita',{},'Nuova','btn small')})+`<div class="seg" role="group" aria-label="Elenco">${segs.map(([k,l])=>act$('attSeg',k,h(l),'',`id="att-${k}" aria-pressed="${seg===k}"`)).join('')}</div>`+flashHtml()+body};
+function reviewCard(rv){
+ if(rv.id==='power')return`<section class="card"><div class="eyebrow">Caldaia · da rivedere</div><h2 style="margin:4px 0 8px">Due potenze diverse nei documenti</h2>
+  <div class="kv"><span>${go$({v:'documento',id:'d1'},'Libretto impianto.pdf','link')}</span><strong>24 kW utile</strong></div>
+  <div class="kv"><span>${go$({v:'documento',id:'d2'},'Manuale caldaia.pdf','link')}</span><strong>28 kW nominale</strong></div>
+  <fieldset style="border:0;padding:0;margin:8px 0 0"><legend class="help">Cosa vale per la tua caldaia?</legend>
+  ${[['both','Entrambe: sono grandezze diverse','24 kW utile e 28 kW nominale'],['24','Solo 24 kW',''],['28','Solo 28 kW','']].map(([v,l,s])=>`<label class="choice"><input type="radio" name="rv-power" value="${v}" id="rvp-${v}"><div><strong>${l}</strong>${s?`<div class="help">${s}</div>`:''}</div></label>`).join('')}</fieldset>
+  <div class="actions">${act$('rvPower',0,'Conferma','btn primary','id="rvp-ok"')}${act$('rvLater','power','Non ora','btn')}</div></section>`;
+ return`<section class="card"><div class="eyebrow">Caldaia · da rivedere</div><h2 style="margin:4px 0 8px">Modello proposto: TD28</h2>
+  <div class="kv"><span>${go$({v:'documento',id:'d1'},'Libretto impianto.pdf','link')}</span><strong>Termica Demo · TD28</strong></div>
+  <label class="field" id="rvm-fix" hidden>Modello corretto<input id="rvm-val" value="TD28"></label>
+  <div class="actions">${act$('rvModel',0,'Conferma TD28','btn primary','id="rvm-ok"')}${act$('rvModelFix',0,'Correggi','btn')}${act$('rvLater','model','Non ora','btn')}</div></section>`}
+
+V.task=r=>{const t=st.tasks.find(x=>x.id===r.id);if(!t)return head('Attività non trovata');
+ return head(t.title,{eyebrow:t.done?'Completata':'Da fare'})+flashHtml()+`<section class="card">
+  <div class="kv"><span>Data</span><strong>${dayFull(t.day)}</strong></div>
+  <div class="kv"><span>Oggetto</span><strong>${t.object?go$({v:'scheda',id:t.object},h(t.object),'link'):'Casa'}</strong></div>
+  ${t.done?`<div class="kv"><span>Completata il</span><strong>${dayFull(t.done)}</strong></div>`:''}
+  ${t.note?`<p class="help" style="margin-top:10px">${h(t.note)}</p>`:''}
+  <div class="actions">${t.done?act$('taskReopen',t.id,'Riapri','btn'):act$('taskDone',t.id,'Segna come completata','btn primary')}</div>
+  <p class="help" style="margin-top:10px">Completare un’attività non registra una spesa e non attesta un obbligo.</p>
+  ${t.done?`<div class="actions">${startFlow$('registra',{preset:{object:t.object,title:t.title}},'Registra una spesa per questa attività','btn small')}</div>`:''}</section>`};
+
+/* ===== SPESE ===== */
+function spFiltered(ignore){const {period,f}=ui.sp;return liveExpenses().filter(e=>(period==='tutto'||e.day.startsWith(period))&&(ignore==='cat'||!f.cat||e.cat===f.cat)&&(ignore==='obj'||!f.obj||(f.obj==='-'?!e.object:e.object===f.obj))&&(!f.room||roomOf(e)===f.room)&&(!f.work||e.work===f.work)).sort((a,b)=>b.day.localeCompare(a.day))}
+const fCount=()=>Object.values(ui.sp.f).filter(Boolean).length;
+const periodLabel=p=>p==='tutto'?'tutti gli anni':p;
+V.spese=r=>{if(r.setF){ui.sp.f=Object.assign({cat:'',obj:'',room:'',work:''},r.setF);ui.sp.period=r.period||ui.sp.period;ui.sp.seg='elenco';delete r.setF}
+ const {period,seg,f}=ui.sp;const list=spFiltered();const tot=list.reduce((s,e)=>s+e.amount,0);
+ const fin=list.filter(e=>e.cat==='financing').reduce((s,e)=>s+e.amount,0);
+ const dr=openDrafts();
+ const years=[...new Set(st.expenses.map(e=>e.day.slice(0,4)))].sort().reverse();
+ const chips=[f.cat&&['cat',CATS[f.cat]],f.obj&&['obj',f.obj==='-'?'Senza oggetto':f.obj],f.room&&['room','Ambiente: '+f.room],f.work&&['work',f.work]].filter(Boolean);
+ const segs=[['elenco','Elenco'],['oggetti','Per oggetto'],['lavori','Lavori'],['riepilogo','Riepilogo']];
+ let body='';
+ if(seg==='elenco')body=`<section class="card">${list.map(expRow).join('')||'<p class="empty">Nessuna spesa con questi filtri.</p>'}</section>`;
+ if(seg==='oggetti'){const l=spFiltered('obj');const m={};l.forEach(e=>{const k=e.object||'-';m[k]=(m[k]||0)+e.amount});
+  body=`<section class="card">${Object.keys(m).sort((a,b)=>m[b]-m[a]).map(k=>act$('spObjSeg',k,`<span class="ico">${ic(k==='-'?'home':'obj')}</span><span class="row-body"><span class="row-title">${k==='-'?'Casa, senza oggetto':h(k)}</span><span class="row-sub">${plural(l.filter(e=>(e.object||'-')===k).length,'spesa','spese')}</span></span><span class="amount num">${eur(m[k])}</span>${ic('chev','i chev')}`,'row')).join('')||'<p class="empty">Nessuna spesa.</p>'}</section><p class="help">Ogni spesa conta una volta sola: qui è raggruppata per oggetto.</p>`}
+ if(seg==='lavori')body=`<section class="card">${st.works.map(w=>{const es=liveExpenses().filter(e=>e.work===w);return row({v:'lavoro',id:w},'build',h(w),`${plural(es.length,'spesa','spese')} · tutti gli anni`,`<span class="amount num">${eur(es.reduce((s,e)=>s+e.amount,0))}</span>`)}).join('')||'<p class="empty">Nessun lavoro.</p>'}</section><p class="help">Un lavoro raggruppa più spese. Non è un progetto né un’attività.</p>`;
+ if(seg==='riepilogo'){const g={};list.forEach(e=>{const k=groupOf(e.cat);g[k]=(g[k]||0)+e.amount});
+  let prev=null,pg={};if(period!=='tutto'){const py=String(+period-1);const save=ui.sp.period;ui.sp.period=py;prev=spFiltered();ui.sp.period=save;prev.forEach(e=>{const k=groupOf(e.cat);pg[k]=(pg[k]||0)+e.amount});prev={y:py,tot:prev.reduce((s,e)=>s+e.amount,0)}}
+  const max=Math.max(1,...Object.values(g),...Object.values(pg));
+  body=`<section class="card"><h2 style="margin-bottom:8px">Per gruppo · ${periodLabel(period)}</h2>${Object.keys(GROUPS).map(k=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;gap:10px"><span>${GROUPS[k]}</span><strong class="num">${eur(g[k]||0)}</strong></div><div class="bar" style="width:${(g[k]||0)/max*100}%;margin-top:6px"></div>${prev&&prev.tot?`<div style="display:flex;justify-content:space-between;gap:10px;margin-top:4px" class="help"><span>${prev.y}</span><span class="num">${eur(pg[k]||0)}</span></div><div class="bar prev" style="width:${(pg[k]||0)/max*100}%;margin-top:3px"></div>`:''}</div>`).join('')}
+  ${prev&&prev.tot?`<div class="kv" style="margin-top:6px"><span>Totale ${prev.y}</span><strong class="num">${eur(prev.tot)}</strong></div><p class="help" style="margin-top:8px">Il confronto usa solo le spese registrate nei due anni.</p>`:''}</section>`}
+ return`<div class="page-head"><div class="t"><h1 tabindex="-1">Spese</h1></div>${act$('registraSheet',{},'Registra','btn primary small')}</div>${flashHtml()}
+ <section class="card"><div class="card-head"><label class="help" for="sp-period">Periodo</label><select id="sp-period" class="chip" style="min-height:36px">${['tutto',...years].map(y=>`<option value="${y}"${y===period?' selected':''}>${y==='tutto'?'Tutti gli anni':y}</option>`).join('')}</select></div>
+  <div class="help">${chips.length?'Totale filtrato':'Totale '+periodLabel(period)}</div><div class="big num">${eur(tot)}</div>
+  <p class="help">${plural(list.length,'spesa','spese')}${fin?` · include finanziamento ${eur(fin)}`:''}</p></section>
+ ${dr.length?`<section class="card tint">${row({v:'confermare'},'wallet',`Da confermare (${dr.length})`,'Bozze lette dai documenti, comprese quelle tenute da parte')}</section>`:''}
+ <div class="seg" role="group" aria-label="Vista">${segs.map(([k,l])=>act$('spSeg',k,l,'',`id="sp-${k}" aria-pressed="${seg===k}"`)).join('')}</div>
+ <div class="chips" style="margin-bottom:12px">${act$('filterSheet',0,`${ic('filter')}Filtri${fCount()?' · '+fCount():''}`,'chip','id="sp-filters"')}${chips.map(([k,l])=>act$('spUnset',k,`${h(l)} ${ic('x')}`,'chip filter',`aria-label="Togli filtro ${h(l)}" id="spx-${k}"`)).join('')}${chips.length>1?act$('spClear',0,'Azzera','link'):''}</div>
+ ${body}`};
+function expRow(e){return row({v:'spesa',id:e.id},'',h(e.title),[day(e.day),e.object,e.work,e.document?'documento':''].filter(Boolean).map(h).join(' · '),`<span class="amount num">${eur(e.amount)}</span>`)}
+
+V.spesa=r=>{const e=exp(r.id);if(!e)return head('Spesa non trovata');const d=doc(e.document);
+ const confirming=ui.confirm==='arch-'+e.id;
+ return head(e.title,{eyebrow:CATS[e.cat]||'Non classificata'})+flashHtml()+`<section class="card"><div class="big num">${eur(e.amount)}</div><p class="help">Importo registrato. Non è una conferma di pagamento.</p>
+  <div style="margin-top:10px"><div class="kv"><span>Data</span><strong>${dayFull(e.day)}</strong></div>
+  ${e.supplier?`<div class="kv"><span>Fornitore</span><strong>${h(e.supplier)}</strong></div>`:''}
+  <div class="kv"><span>Oggetto</span><strong>${e.object?go$({v:'scheda',id:e.object},h(e.object),'link'):'Casa'}</strong></div>
+  <div class="kv"><span>Lavoro</span><strong>${e.work?go$({v:'lavoro',id:e.work},h(e.work),'link'):'—'}</strong></div>
+  <div class="kv"><span>Documento</span><strong>${d?go$({v:'documento',id:d.id},h(d.name),'link'):(e.document==='d0'?'Bolletta luce settembre.pdf':'—')}</strong></div>
+  <div class="kv"><span>Origine</span><strong>${h(e.source)}</strong></div></div>
+  ${confirming?`<div class="note" style="margin-top:14px">Archiviare «${h(e.title)}»? Non conterà più nei totali. Puoi ripristinarla in seguito.</div><div class="actions">${act$('archive',e.id,'Archivia','btn danger')}${act$('cancelConfirm',0,'Annulla','btn')}</div>`:`<div class="actions">${startFlow$('registra',{edit:e.id},'Modifica','btn')}${act$('askArchive',e.id,'Archivia','btn')}</div>`}</section>`};
+
+V.lavoro=r=>{const es=liveExpenses().filter(e=>e.work===r.id).sort((a,b)=>a.day.localeCompare(b.day));const tot=es.reduce((s,e)=>s+e.amount,0);
+ const objs=[...new Set(es.map(e=>e.object).filter(Boolean))];
+ return head(r.id,{eyebrow:'Lavoro',sub:es.length?`${plural(es.length,'spesa','spese')} · dal ${day(es[0].day)} al ${day(es[es.length-1].day)}`:''})+flashHtml()+`<section class="card"><div class="help">Totale del lavoro</div><div class="big num">${eur(tot)}</div>${objs.length?`<p class="help">Oggetti coinvolti: ${objs.map(o=>go$({v:'scheda',id:o},h(o),'link')).join(', ')}</p>`:''}</section>
+ <section class="card">${es.map(e=>row({v:'spesa',id:e.id},'',h(e.title),[day(e.day),e.object||'nessun oggetto'].map(h).join(' · '),`<span class="amount num">${eur(e.amount)}</span>`)).join('')}<div class="actions">${startFlow$('registra',{preset:{work:r.id}},'Registra spesa per questo lavoro','btn small')}</div></section>
+ <p class="help">Il totale non viene ripartito fra gli oggetti.</p>`};
+
+/* registra: tre dati, il resto è facoltativo */
+V.registra=r=>{const e=r.edit?exp(r.edit):null;const p=r.preset||{};
+ if(!r.vals)r.vals=e?{amount:(e.amount/100).toFixed(2).replace('.',','),day:e.day,title:e.title,cat:e.cat,object:e.object,work:e.work,supplier:e.supplier,document:e.document,note:e.note||''}:{amount:'',day:TODAY,title:p.title||'',cat:'',object:p.object||'',work:p.work||'',supplier:'',document:p.doc||'',note:''};
+ const v=r.vals,err=r.err||{};
+ const opt=(val,l,s)=>`<option value="${h(val)}"${val===s?' selected':''}>${h(l)}</option>`;
+ const ctx=[v.object&&['Oggetto',v.object],v.work&&['Lavoro',v.work],v.document&&['Documento',(doc(v.document)||{}).name]].filter(Boolean);
+ const pdoc=doc(v.document);
+ return head(e?'Modifica spesa':'Registra una spesa',{sub:e?'':'Bastano importo, data e descrizione.'})+`<form class="card" data-form="registra" novalidate>
+ ${pdoc&&!e?`<p class="help" style="margin-bottom:6px">Dal documento ${h(pdoc.name)}: inserisci i dati che leggi.</p>`:''}
+ <label class="field" style="margin-top:0">Importo<input id="f-amount" inputmode="decimal" value="${h(v.amount)}" placeholder="0,00" aria-describedby="e-amount" ${err.amount?'aria-invalid="true"':''}>${err.amount?`<div class="err" id="e-amount">${err.amount}</div>`:''}</label>
+ <label class="field">Data della spesa<input id="f-day" type="date" value="${h(v.day)}">${err.day?`<div class="err">${err.day}</div>`:''}</label>
+ <label class="field">Descrizione<input id="f-title" value="${h(v.title)}" placeholder="Es. Riparazione lavatrice" maxlength="120">${err.title?`<div class="err">${err.title}</div>`:''}</label>
+ ${ctx.length?`<div class="ctx">${ctx.map(([k,l])=>`<span class="tag">${k}: ${h(l)}</span>`).join('')}</div>`:''}
+ <details class="more"${((v.cat||v.supplier||v.note)&&e)||err.work?' open':''}><summary>Altri dettagli (facoltativi)</summary>
+  <label class="field">Categoria<select id="f-cat">${opt('','Non classificata',v.cat)}${Object.entries(CATS).map(([k,l])=>opt(k,l,v.cat)).join('')}</select></label>
+  <label class="field">Oggetto<select id="f-object">${opt('','Nessun oggetto (casa)',v.object)}${st.objects.map(o=>opt(o.id,o.id,v.object)).join('')}</select></label>
+  <label class="field">Lavoro<select id="f-work">${opt('','Nessun lavoro',v.work)}${st.works.map(w=>opt(w,w,v.work)).join('')}${opt('+','Nuovo lavoro…',v.work)}</select></label>
+  <label class="field" id="f-newwork-l" ${v.work==='+'?'':'hidden'}>Nome del nuovo lavoro<input id="f-newwork" value="${h(v.newwork||'')}" placeholder="Es. Tinteggiatura soggiorno">${err.work?`<div class="err">${err.work}</div>`:''}</label>
+  <label class="field">Fornitore<input id="f-supplier" value="${h(v.supplier)}"></label>
+  <label class="field">Nota<textarea id="f-note">${h(v.note)}</textarea></label>
+ </details>
+ <div class="actions"><button class="btn primary" type="submit">${e?'Salva modifiche':'Salva spesa'}</button>${act$('back',0,'Annulla','btn')}</div></form>`};
+
+/* importazione, analisi, bozza */
+function pendingEconDocs(){return st.docs.filter(d=>d.econ&&!st.expenses.some(e=>e.document===d.id&&!e.archived)&&!st.drafts.some(x=>x.doc===d.id&&(x.status==='done'||x.status==='discarded')))}
+V.importa=()=>head('Importa documenti',{sub:'Conserviamo l’originale. Proporre dati è un passo separato, che decidi tu.'})+`<section class="card">${st.imported?`<p>Il pacchetto di prova è già stato importato.</p><div class="actions">${go$({v:'esito'},'Vedi i documenti importati','btn primary')}</div>`:`<p>In questa proposta non si caricano file veri. Puoi importare un pacchetto di prova con tre documenti: una bolletta del gas, una fattura dell’idraulico e una ricevuta scansionata.</p><div class="actions">${act$('doImport',0,`${ic('up')}Importa il pacchetto di prova`,'btn primary')}</div>`}</section>`;
+V.esito=()=>{const ids=['d7','d8','d9'];
+ return head('Documenti importati',{sub:'3 originali conservati. Nessun oggetto o spesa è stato creato automaticamente.'})+flashHtml()+ids.map(id=>{const d=doc(id);if(!d)return'';const dr=st.drafts.filter(x=>x.doc===id).pop();const linked=st.expenses.find(e=>e.document===id&&!e.archived);
+  let state,acts='';
+  if(linked){state=`<span class="tag ok">Spesa collegata</span> ${go$({v:'spesa',id:linked.id},h(linked.title),'link')}`}
+  else if(dr&&dr.status==='parked'){state='<span class="tag neutral">Tenuta da parte</span>';acts=startFlow$('bozza',{id:dr.id,resume:true},'Riprendi','btn small')}
+  else if(dr&&dr.status==='open'){state='<span class="tag warn">Bozza da completare</span>';acts=startFlow$('bozza',{id:dr.id},'Apri bozza','btn small primary')}
+  else if(dr&&dr.status==='discarded'){state='<span class="tag neutral">Bozza scartata</span>'}
+  else if(d.econ==='scan'){state='<span class="tag neutral">Testo non leggibile</span>';acts=startFlow$('registra',{preset:{doc:id}},'Inserisci la spesa a mano','btn small')}
+  else{state='<span class="tag">Dati di spesa proponibili</span>';acts=startFlow$('analisi',{doc:id},'Proponi la spesa','btn small primary')}
+  return`<section class="card"><div class="card-head"><h2 style="font-size:16px">${h(d.name)}</h2>${go$({v:'documento',id},'Apri','link')}</div><p class="help">${h(d.type)} · conservato · ${visLabel(d.vis)}</p><div style="margin-top:8px">${state}</div>${acts?`<div class="actions">${acts}</div>`:''}</section>`}).join('')};
+
+V.analisi=r=>{const d=doc(r.doc);if(!d)return head('Documento non trovato');
+ if(d.econ==='scan')return head(d.name,{eyebrow:'Compilazione assistita'})+`<section class="card"><p>Il testo di questo documento non è leggibile: è una scansione di bassa qualità.</p><p class="help" style="margin-top:6px">Puoi comunque registrare la spesa a mano. Il documento resta collegato.</p><div class="actions">${act$('toManual',d.id,'Inserisci a mano','btn primary')}</div></section>`;
+ return head(d.name,{eyebrow:'Compilazione assistita'})+`<section class="card"><p>Dimora può leggere questo documento e proporti importo, data e descrizione. Li controlli e li confermi tu.</p>
+ <label class="check"><input type="checkbox" id="consent"><span>Acconsento all’invio del testo di questo documento ad Anthropic per l’analisi</span></label>
+ <p class="help" style="margin:6px 0 0 30px">Vale solo per questo documento. In questa proposta l’analisi è simulata: nessun dato viene inviato.</p>
+ <div class="actions">${act$('analyze',d.id,'Analizza','btn primary','id="btn-analyze" disabled')}${act$('toManual',d.id,'Inserisci a mano','btn')}</div></section>`};
+
+function draftProposal(dr){
+ if(dr.kind==='gas')return{title:'Gas · settembre',day:'2026-09-30',supplier:'Gas Demo',cat:'gas',amounts:[[8000,'80,00 € · consumo del periodo','Bolletta di settembre'],[10000,'100,00 € · totale da pagare','Include 20,00 € di arretrati di agosto']],pre:null,cands:st.expenses.filter(e=>e.id==='e2'&&!e.archived&&!e.document).map(e=>({e,why:'Stesso fornitore, stesso periodo, stesso importo del consumo'}))};
+ return{title:'Riparazione scarico bagno',day:'2026-10-03',supplier:'Idraulico Demo',cat:'repairs_works',amounts:[[12200,'122,00 € · totale con IVA','100,00 € imponibile + 22,00 € IVA'],[10000,'100,00 € · solo imponibile','Senza IVA']],pre:12200,cands:st.expenses.filter(e=>e.id==='e4'&&!e.archived&&!e.document).map(e=>({e,why:'Stesso fornitore, ma importo e data diversi da questa fattura'}))};
+}
+V.bozza=r=>{const dr=st.drafts.find(x=>x.id===r.id);if(!dr)return head('Bozza non trovata');const d=doc(dr.doc);const P=draftProposal(dr);
+ if(dr.amount==null&&P.pre&&!dr.touched)dr.amount=P.pre;
+ if(!dr.f)dr.f={title:P.title,day:P.day,supplier:P.supplier,cat:P.cat,object:'',note:''};
+ const ex=dr.exist;const f=dr.f;const err=r.err||{};
+ const opt=(val,l,s)=>`<option value="${h(val)}"${val===s?' selected':''}>${h(l)}</option>`;
+ const candHtml=P.cands.length?P.cands.map(c=>`<label class="choice"><input type="radio" name="dr-exist" value="${c.e.id}" id="dre-${c.e.id}" ${ex===c.e.id?'checked':''}><div><strong>Sì: ${h(c.e.title)}</strong> <span class="num">${eur(c.e.amount)}</span><div class="help">${day(c.e.day)} · ${h(c.why)}</div></div></label>`).join(''):'';
+ return head(d.name,{eyebrow:'Bozza da documento',sub:'Dati proposti dal documento. Niente viene registrato finché non salvi.'})+`<div class="actions" style="margin:-4px 0 14px">${go$({v:'documento',id:d.id},'Vedi la fonte','btn small')}</div>
+ <section class="card"><h2>È già registrata?</h2>${P.cands.length?'':'<p class="help" style="margin-top:6px">Nessuna spesa simile trovata.</p>'}${candHtml}
+ <label class="choice"><input type="radio" name="dr-exist" value="new" id="dre-new" ${ex==='new'?'checked':''}><div><strong>No, è una nuova spesa</strong></div></label></section>
+ ${ex&&ex!=='new'?`<section class="card tint"><p>Il documento verrà collegato a <strong>${h(exp(ex).title)}</strong>. L’importo registrato resta <strong class="num">${eur(exp(ex).amount)}</strong>.</p><p class="help" style="margin-top:6px">Un documento collegato non certifica l’importo né il pagamento.</p><div class="actions">${act$('drLink',dr.id,'Collega il documento','btn primary')}${act$('drPark',dr.id,'Tienila da parte','btn')}</div></section>`:''}
+ ${ex==='new'?`<form class="card" data-form="bozza" data-id="${dr.id}" novalidate><h2>Quale importo registri?</h2>
+  ${P.amounts.map(([a,l,s])=>`<label class="choice"><input type="radio" name="dr-amt" value="${a}" id="dra-${a}" ${dr.amount===a?'checked':''}><div><strong class="num">${l}</strong><div class="help">${s}${a===P.pre?' · proposto':''}</div></div></label>`).join('')}
+  ${dr.kind==='gas'?'<p class="note" style="margin-top:10px">Gli arretrati potrebbero essere già registrati nella bolletta di agosto. Nessun importo è scelto per te.</p>':''}
+  ${err.amount?`<div class="err" style="color:var(--danger);font-weight:600;margin-top:8px">${err.amount}</div>`:''}
+  <label class="field">Data della spesa<input id="d-day" type="date" value="${h(f.day)}"><span class="help" style="display:block;font-weight:400">Proposta: data del documento.</span></label>
+  <label class="field">Descrizione<input id="d-title" value="${h(f.title)}">${err.title?`<div class="err">${err.title}</div>`:''}</label>
+  <details class="more"><summary>Altri dettagli (facoltativi)</summary>
+   <label class="field">Categoria<select id="d-cat">${opt('','Non classificata',f.cat)}${Object.entries(CATS).map(([k,l])=>opt(k,l,f.cat)).join('')}</select></label>
+   <label class="field">Oggetto<select id="d-object">${opt('','Nessun oggetto (casa)',f.object)}${st.objects.map(o=>opt(o.id,o.id,f.object)).join('')}</select></label>
+   <label class="field">Fornitore<input id="d-supplier" value="${h(f.supplier)}"></label>
+   <label class="field">Nota<textarea id="d-note">${h(f.note)}</textarea></label></details>
+  <div class="actions"><button class="btn primary" type="submit">Salva spesa</button>${act$('drPark',dr.id,'Tienila da parte','btn')}</div></form>`:''}
+ ${!ex?`<div class="actions">${act$('drPark',dr.id,'Tienila da parte','btn')}</div>`:''}`};
+
+V.confermare=()=>{const open=st.drafts.filter(d=>d.status==='open'),parked=st.drafts.filter(d=>d.status==='parked');
+ const line=(d,lab)=>{const x=doc(d.doc);const conf=ui.confirm==='disc-'+d.id;return`<div class="row" style="flex-wrap:wrap"><span class="ico">${ic('doc')}</span><span class="row-body"><span class="row-title">${h(x.name)}</span><span class="row-sub">${lab}</span></span>${conf?`<div style="width:100%" class="note">Scartare la bozza? Il documento resta in Documenti.</div><div class="actions" style="margin-top:6px">${act$('drDiscard',d.id,'Scarta','btn small danger')}${act$('cancelConfirm',0,'Annulla','btn small')}</div>`:`<span class="actions" style="margin:0">${startFlow$('bozza',{id:d.id,resume:true},d.status==='parked'?'Riprendi':'Apri','btn small primary')}${act$('askDiscard',d.id,'Scarta','btn small')}</span>`}</div>`};
+ return head('Da confermare',{sub:'Bozze lette dai documenti. Diventano spese solo quando le salvi.'})+flashHtml()+`<section class="card"><h2 style="margin-bottom:4px">Da completare</h2>${open.map(d=>line(d,'Bozza aperta')).join('')||'<p class="empty">Nessuna bozza aperta.</p>'}</section><section class="card"><h2 style="margin-bottom:4px">Tenute da parte (${parked.length})</h2>${parked.map(d=>line(d,'Tenuta da parte il '+day(d.parked))).join('')||'<p class="empty">Nessuna bozza tenuta da parte.</p>'}</section>`};
+
+/* condominio e pagine secondarie */
+V.condominio=()=>head('Condominio',{eyebrow:'Studio Rossi · Scala A',sub:'Comunicazioni dello studio e tue segnalazioni private.'})+flashHtml()+`<section class="card"><h2 style="margin-bottom:4px">Comunicazioni</h2>${st.comms.slice().reverse().map(c=>`<div class="row"><span class="ico ${c.kind==='resolved'?'ok':''}">${ic(c.kind==='resolved'?'ok':'build')}</span><span class="row-body"><span class="row-title">${h(c.title)}</span><span class="row-sub">${h(c.body)} · ${day(c.day)}</span></span></div>`).join('')}</section>
+<section class="card"><div class="card-head"><h2>Le tue segnalazioni</h2>${startFlow$('segnala',{},'Segnala un problema','btn small primary')}</div>${st.reports.slice().reverse().map(x=>`<div class="row"><span class="row-body"><span class="row-title">${h(x.title)}</span><span class="row-sub">${day(x.day)} · solo tu e lo studio</span></span><span class="tag ${x.state==='Risolta'?'ok':''}">${h(x.state)}</span></div>`).join('')}</section>`;
+V.segnala=r=>{const err=r.err||{};return head('Segnala un problema',{sub:'Lo vedete solo tu e lo studio.'})+`<form class="card" data-form="segnala" novalidate><label class="field" style="margin-top:0">Titolo<input id="s-title" value="${h(r.t||'')}" placeholder="Es. Citofono non suona">${err.t?`<div class="err">${err.t}</div>`:''}</label><label class="field">Descrizione<textarea id="s-body">${h(r.b||'')}</textarea></label><div class="actions"><button class="btn primary" type="submit">Invia allo studio</button>${act$('back',0,'Annulla','btn')}</div><p class="help" style="margin-top:8px">Invio simulato in questa proposta.</p></form>`};
+V.storia=()=>head('Storia della casa')+`<section class="card">${st.events.slice().sort((a,b)=>b.day.localeCompare(a.day)).map(e=>`<div class="kv"><span class="num">${day(e.day)}</span><strong style="text-align:left;flex:1;margin-left:12px;font-weight:600">${h(e.title)}${e.obj?' · '+h(e.obj):''}<span class="row-sub">${h(e.detail)}</span></strong></div>`).join('')}</section>`;
+V.altro=r=>head(r.title)+`<section class="card"><p>Non ridisegnata in questa proposta: resta come nel mockup attuale ed è raggiungibile da questo menu, fuori dalla navigazione quotidiana.</p></section>`;
+V.nuovoOggetto=r=>{const err=r.err||{};const v=r.vals||{name:'',type:'',room:r.room||''};const opt=(val,l,s)=>`<option value="${h(val)}"${val===s?' selected':''}>${h(l)}</option>`;
+ return head('Aggiungi oggetto')+`<form class="card" data-form="oggetto" novalidate><label class="field" style="margin-top:0">Nome<input id="o-name" value="${h(v.name)}" placeholder="Es. Frigorifero">${err.name?`<div class="err">${err.name}</div>`:''}</label>
+ <label class="field">Tipo<select id="o-type">${opt('','Scegli il tipo',v.type)}${['Elettrodomestico','Impianto','Arredo','Sanitario','Altro'].map(t=>opt(t,t,v.type)).join('')}</select>${err.type?`<div class="err">${err.type}</div>`:''}</label>
+ <label class="field">Ambiente<select id="o-room">${opt('','Da collocare (decidi dopo)',v.room)}${st.rooms.map(x=>opt(x,x,v.room)).join('')}</select></label>
+ <div class="actions"><button class="btn primary" type="submit">Aggiungi</button>${act$('back',0,'Annulla','btn')}</div></form>`};
+V.nuovoAmbiente=r=>{const err=r.err||{};return head('Aggiungi ambiente')+`<form class="card" data-form="ambiente" novalidate><label class="field" style="margin-top:0">Nome<input id="r-name" value="${h(r.n||'')}" placeholder="Es. Terrazzo">${err.n?`<div class="err">${err.n}</div>`:''}</label><div class="actions"><button class="btn primary" type="submit">Aggiungi</button>${act$('back',0,'Annulla','btn')}</div></form>`};
+V.nuovaAttivita=r=>{const err=r.err||{};const v=r.vals||{title:'',day:addDays(TODAY,7),object:r.object||'',note:''};const opt=(val,l,s)=>`<option value="${h(val)}"${val===s?' selected':''}>${h(l)}</option>`;
+ return head('Nuova attività')+`<form class="card" data-form="attivita" novalidate><label class="field" style="margin-top:0">Cosa devi fare<input id="t-title" value="${h(v.title)}" placeholder="Es. Sbrinare il frigorifero">${err.title?`<div class="err">${err.title}</div>`:''}</label>
+ <label class="field">Entro il<input id="t-day" type="date" value="${h(v.day)}"></label>
+ <label class="field">Oggetto<select id="t-object">${opt('','Nessuno (casa)',v.object)}${st.objects.map(o=>opt(o.id,o.id,v.object)).join('')}</select></label>
+ <label class="field">Nota<textarea id="t-note">${h(v.note)}</textarea></label>
+ <div class="actions"><button class="btn primary" type="submit">Salva</button>${act$('back',0,'Annulla','btn')}</div><p class="help" style="margin-top:8px">È un promemoria personale: non crea spese e non attesta obblighi.</p></form>`};
+
+/* ===== rendering ===== */
+const main=document.getElementById('main');let post=[];
+function shell(){
+ const rv=openReviews().length;
+ document.getElementById('fab').hidden=cur.origin!=null;
+ const navs=[['casa','Casa','home'],['attivita','Attività','check'],['documenti','Documenti','doc'],['spese','Spese','wallet']];
+ document.getElementById('bottom').innerHTML=navs.map(([k,l,i])=>`<button type="button" data-tab="${k}" class="${section===k?'active':''}" ${section===k?'aria-current="page"':''}>${ic(i)}${l}${k==='attivita'&&rv?`<span class="badge">${rv}</span>`:''}</button>`).join('');
+ document.getElementById('side').innerHTML=`<button type="button" class="add" data-shell="add">${ic('up').replace(I.up,'<path d="M12 5v14M5 12h14"/>')}Aggiungi</button>`+navs.map(([k,l,i])=>`<button type="button" data-tab="${k}" class="${section===k?'active':''}" ${section===k?'aria-current="page"':''}>${ic(i)}${l}${k==='attivita'&&rv?` <span class="tag warn" style="margin-left:auto">${rv}</span>`:''}</button>`).join('')+`<div class="cap">Altro della casa</div>`+[['condominio','Condominio'],['storia','Storia della casa'],['condivisioni','Condivisioni'],['impostazioni','Impostazioni']].map(([k,l])=>`<button type="button" data-more="${k}">${l}</button>`).join('');
+}
+function render(y,focus){R=[];post=[];closeSheet(true);main.innerHTML=V[cur.v](cur);shell();post.forEach(f=>f());
+ if(cur.v==='scheda'&&cur.anchor&&y===0){const el=document.getElementById('sec-'+cur.anchor);if(el)el.scrollIntoView()}
+ else if(y!=null)window.scrollTo(0,y);
+ if(focus){const t=main.querySelector('.flash')||main.querySelector('h1');if(t){if(!t.hasAttribute('tabindex'))t.setAttribute('tabindex','-1');t.focus({preventScroll:true})}}}
+function rerender(){const a=document.activeElement&&document.activeElement.id;const y=window.scrollY;render(y,false);if(a){const el=document.getElementById(a);if(el)el.focus({preventScroll:true})}}
+
+/* ===== fogli ===== */
+let lastFocus=null;
+const BG=()=>[document.querySelector('.demobar'),document.querySelector('header.top'),document.querySelector('.layout'),document.getElementById('bottom'),document.getElementById('fab')];
+function openSheet(title,html){lastFocus=document.activeElement;BG().forEach(el=>el&&el.setAttribute('inert',''));document.getElementById('sheet-root').innerHTML=`<div class="sheet-wrap" data-sheet-bg><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t"><div class="grip"></div><div class="sheet-head"><h2 id="sheet-t" tabindex="-1">${h(title)}</h2><button type="button" class="iconbtn" style="color:var(--ink)" data-sheet-close aria-label="Chiudi">${ic('x')}</button></div>${html}</div></div>`;document.getElementById('sheet-t').focus()}
+function closeSheet(silent){const r=document.getElementById('sheet-root');if(!r.innerHTML)return;r.innerHTML='';BG().forEach(el=>el&&el.removeAttribute('inert'));if(!silent&&lastFocus&&document.contains(lastFocus))lastFocus.focus()}
+function ctxPreset(){if(cur.v==='scheda')return{object:cur.id,sec:'costi'};if(cur.v==='lavoro')return{work:cur.id};return{}}
+function addSheet(){const p=ctxPreset();openSheet('Aggiungi',`<div class="stack">${[
+ ['importa',{}, 'up','Importa documenti','Conserva gli originali; poi scegli tu se proporre dati'],
+ ['registraSheet',null,'wallet','Registra una spesa','A mano o da un documento'],
+ ['nuovaAttivita',{object:p.object||'',sec:'attivita'},'task','Nuova attività','Un promemoria personale'],
+ ['nuovoOggetto',{room:cur.v==='ambiente'?cur.id:''},'obj','Aggiungi oggetto','Anche senza ambiente o documenti'],
+ ['nuovoAmbiente',{},'room','Aggiungi ambiente','']].map(([v,ex,i,l,s])=>v==='registraSheet'?act$('registraSheet',{},`<span class="ico">${ic(i)}</span><span class="row-body"><span class="row-title">${l}</span><span class="row-sub">${s}</span></span>`,'row'):act$('flowS',Object.assign({v},ex),`<span class="ico">${ic(i)}</span><span class="row-body"><span class="row-title">${l}</span>${s?`<span class="row-sub">${s}</span>`:''}</span>`,'row')).join('')}</div>`)}
+function registraSheet(){const p=ctxPreset();const docs=pendingEconDocs();
+ openSheet('Registra una spesa',`${act$('flowS',{v:'registra',preset:{object:p.object,work:p.work},sec:p.sec},`<span class="ico">${ic('wallet')}</span><span class="row-body"><span class="row-title">Inserisci a mano</span><span class="row-sub">Importo, data e descrizione</span></span>`,'row')}
+ <h3 style="margin:14px 0 4px">Da un documento</h3>${docs.length?docs.map(d=>act$('flowS',{v:'analisi',doc:d.id},`<span class="ico">${ic('doc')}</span><span class="row-body"><span class="row-title">${h(d.name)}</span><span class="row-sub">${d.econ==='scan'?'Testo non leggibile: inserimento a mano':'Dimora può proporti i dati'}</span></span>`,'row')).join(''):`<p class="help">Nessun documento con dati di spesa da proporre.</p>`}
+ <div class="actions">${act$('flowS',{v:'importa'},'Importa documenti','btn small')}</div>`)}
+function filterSheet(){const f=ui.sp.f;const opt=(val,l,s)=>`<option value="${h(val)}"${val===s?' selected':''}>${h(l)}</option>`;
+ openSheet('Filtri',`<label class="field" style="margin-top:0">Categoria<select id="ff-cat">${opt('','Tutte',f.cat)}${Object.entries(CATS).map(([k,l])=>opt(k,l,f.cat)).join('')}</select></label>
+ <label class="field">Oggetto<select id="ff-obj">${opt('','Tutti',f.obj)}${opt('-','Casa, senza oggetto',f.obj)}${st.objects.map(o=>opt(o.id,o.id,f.obj)).join('')}</select></label>
+ <label class="field">Ambiente<select id="ff-room">${opt('','Tutti',f.room)}${st.rooms.map(x=>opt(x,x,f.room)).join('')}</select></label>
+ <label class="field">Lavoro<select id="ff-work">${opt('','Tutti',f.work)}${st.works.map(w=>opt(w,w,f.work)).join('')}</select></label>
+ <div class="actions">${act$('applyFilters',0,'Applica','btn primary')}${act$('resetFilters',0,'Azzera','btn')}</div>`)}
+const PATHS=[
+ ['Trova il manuale della caldaia','casa','Casa → Cucina → Caldaia → Manuale. Poi torna indietro due volte.','Si torna a Caldaia e a Cucina, non a un catalogo. La barra resta su Casa.'],
+ ['Registra la riparazione da 85 € della lavatrice','casa','Casa → Ripostiglio → Lavatrice → Costi → Registra costo.','Tre dati bastano; dopo il salvataggio torni alla scheda, nella sezione Costi, con la conferma. La spesa compare una volta in Spese.'],
+ ['Importa una bolletta e registrala','casa','Pulsante + → Importa documenti → Bolletta gas → Proponi la spesa.','L’esito mostra i tuoi tre documenti; il consenso è una casella; la bozza chiede prima «È già registrata?».'],
+ ['Vedi i costi della caldaia del 2025','spese','Spese → Periodo 2025 → Filtri → Oggetto Caldaia → Applica.','Il foglio si chiude, il filtro diventa un’etichetta, il totale dice «filtrato».'],
+ ['Tieni da parte una bozza e riprendila','casa','Dopo il percorso 3, scegli «Tienila da parte». Poi Spese → Da confermare.','La bozza non sparisce: è fra quelle tenute da parte, con «Riprendi».'],
+ ['Conferma la potenza della caldaia','casa','Casa → Da fare ora → dati da verificare → scegli e conferma.','La card sparisce, il messaggio resta nella pagina; nella scheda la storia dice «confermato da te» con la data.'],
+ ['Fattura dell’idraulico 100 + IVA','casa','Dopo l’importazione: Fattura idraulico → Proponi la spesa.','Propone 122,00 €; mostra una spesa simile con il motivo della differenza invece di «nessuna coincidenza».'],
+ ['Lavoro «Rifacimento bagno»','spese','Spese → Lavori → Rifacimento bagno.','Un totale, le spese in ordine di data, nessuna ripartizione fra oggetti.'],
+ ['Spesa generale veloce','spese','Spese → Registra → Inserisci a mano.','Tre campi; i dettagli sono chiusi finché non servono.']];
+function pathsSheet(){openSheet('Percorsi da provare',`<p class="help">Ogni percorso parte dalla sezione indicata. «Ripristina» riporta i dati all’inizio.</p>${PATHS.map(([t,s,how,look],i)=>`<div class="row" style="flex-wrap:wrap;align-items:flex-start"><span class="row-body"><span class="row-title">${i+1}. ${h(t)}</span><span class="row-sub">${h(how)}</span><span class="row-sub" style="color:var(--ink);margin-top:4px">Da osservare: ${h(look)}</span></span>${act$('startPath',s,'Parti','btn small')}</div>`).join('')}`)}
+function moreSheet(){openSheet('Altro della casa',[['condominio','Condominio','build'],['storia','Storia della casa','task'],['condivisioni','Condivisioni','users'],['impostazioni','Impostazioni','home']].map(([k,l,i])=>act$('moreGo',k,`<span class="ico">${ic(i)}</span><span class="row-body"><span class="row-title">${l}</span></span>${ic('chev','i chev')}`,'row')).join(''))}
+function moreRoute(k){return k==='condominio'?{v:'condominio'}:k==='storia'?{v:'storia'}:{v:'altro',title:k==='condivisioni'?'Condivisioni':'Impostazioni'}}
+
+/* ===== azioni ===== */
+function val(id){const el=document.getElementById(id);return el?el.value:''}
+const ACT={
+ back:()=>back(),
+ tab:s=>tab(s),
+ flow:r=>startFlow(Object.assign({},r)),
+ flowS:r=>{closeSheet(true);startFlow(Object.assign({},r))},
+ anchor:k=>{cur.anchor=k;document.querySelectorAll('.anchors [aria-pressed]').forEach(b=>b.setAttribute('aria-pressed',String(b.id==='anc-'+k)));const el=document.getElementById('sec-'+k);if(el){el.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});const hd=el.querySelector('h2');if(hd){hd.setAttribute('tabindex','-1');hd.focus({preventScroll:true})}}},
+ histAll:id=>{ui.hist[id]=true;rerender()},
+ placeObj:id=>{openSheet('Scegli ambiente',st.rooms.map(x=>act$('placeDo',{id,room:x},`<span class="ico">${ic('room')}</span><span class="row-body"><span class="row-title">${h(x)}</span></span>`,'row')).join(''))},
+ placeDo:({id,room})=>{obj(id).room=room;event('Oggetto collocato',room,id);save();closeSheet(true);flash={msg:`${id} ora è in ${room}.`};rerender()},
+ spObj:({obj:o})=>go({v:'spese',setF:{obj:o},period:'tutto'}),
+ spYear:({obj:o,year})=>go({v:'spese',setF:{obj:o},period:year}),
+ spSeg:k=>{ui.sp.seg=k;rerender()},
+ spObjSeg:k=>{ui.sp.f.obj=k;ui.sp.seg='elenco';rerender()},
+ spUnset:k=>{ui.sp.f[k]='';rerender();const b=document.getElementById('sp-filters');if(b)b.focus()},
+ spClear:()=>{ui.sp.f={cat:'',obj:'',room:'',work:''};rerender()},
+ filterSheet:()=>filterSheet(),
+ applyFilters:()=>{ui.sp.f={cat:val('ff-cat'),obj:val('ff-obj'),room:val('ff-room'),work:val('ff-work')};ui.sp.seg='elenco';closeSheet(true);rerender();const b=document.getElementById('sp-filters');if(b)b.focus()},
+ resetFilters:()=>{ui.sp.f={cat:'',obj:'',room:'',work:''};closeSheet(true);rerender()},
+ registraSheet:()=>registraSheet(),
+ attSeg:k=>{cur.seg=k;ui.att=k;flash=null;rerender()},
+ docClear:()=>{ui.doc={q:'',type:'',obj:'',vis:''};rerender()},
+ docMore:id=>{const d=doc(id);const linked=st.expenses.find(e=>e.document===id&&!e.archived);
+  openSheet('Altre azioni',`${d.econ&&!linked?act$('flowS',{v:'analisi',doc:id},`<span class="ico">${ic('wallet')}</span><span class="row-body"><span class="row-title">Registra la spesa da questo documento</span></span>`,'row'):''}${act$('visSheet',id,`<span class="ico">${ic(d.vis==='io'?'lock':'users')}</span><span class="row-body"><span class="row-title">Cambia visibilità</span><span class="row-sub">Ora: ${visLabel(d.vis)}</span></span>`,'row')}${act$('shareInfo',id,`<span class="ico">${ic('up')}</span><span class="row-body"><span class="row-title">Condividi</span><span class="row-sub">Con persone fuori dalla casa</span></span>`,'row')}`)},
+ visSheet:id=>{const d=doc(id);openSheet('Chi vede il documento',`<label class="choice"><input type="radio" name="vis" value="io" id="vis-io" ${d.vis==='io'?'checked':''}><div><strong>Solo io</strong><div class="help">Lo vedi solo tu.</div></div></label><label class="choice"><input type="radio" name="vis" value="casa" id="vis-casa" ${d.vis==='casa'?'checked':''}><div><strong>Persone della casa</strong><div class="help">Lo vedono le persone che hanno accesso a questa casa.</div></div></label><p class="help" style="margin-top:10px">Nessuno fuori dalla casa vede il documento senza una condivisione esplicita.</p><div class="actions">${act$('visSave',id,'Salva','btn primary')}</div>`)},
+ visSave:id=>{const c=document.querySelector('input[name="vis"]:checked');const d=doc(id);if(c&&c.value!==d.vis){d.vis=c.value;event('Visibilità cambiata',`${d.name}: ${visLabel(d.vis)}`,d.object);save();flash={msg:`Visibilità salvata: ${visLabel(d.vis)}.`}}closeSheet(true);rerender()},
+ shareInfo:()=>openSheet('Condividi',`<p>La condivisione selettiva resta come nel mockup attuale: scegli destinatario e documenti, controlli il riepilogo, poi confermi.</p><p class="help" style="margin-top:8px">Proposta per quella schermata: avviso quando un documento contiene importi, conferma prima della revoca, elenco dei documenti di ogni condivisione.</p>`),
+ rvPower:()=>{const c=document.querySelector('input[name="rv-power"]:checked');if(!c){const b=document.getElementById('rvp-ok');openSheet('Scegli un’opzione','<p>Scegli cosa vale per la tua caldaia, oppure «Non ora».</p>');return}
+  const o=obj('Caldaia');o.power=c.value==='both'?'24 kW utile · 28 kW nominale':c.value+' kW';st.reviews.find(r=>r.id==='power').open=false;event('Potenza confermata da te',`${o.power} · fonti: Libretto impianto.pdf, Manuale caldaia.pdf`,'Caldaia');save();flash={msg:'Potenza salvata nella scheda Caldaia.',go:{v:'scheda',id:'Caldaia',anchor:'dati'},goLabel:'Apri la scheda'};rerender()},
+ rvModelFix:()=>{const l=document.getElementById('rvm-fix');l.hidden=false;document.getElementById('rvm-val').focus();document.getElementById('rvm-ok').textContent='Conferma'},
+ rvModel:()=>{const o=obj('Caldaia');const fx=document.getElementById('rvm-fix');const v=fx&&!fx.hidden?val('rvm-val').trim()||'TD28':'TD28';o.model=v;o.modelOk=true;st.reviews.find(r=>r.id==='model').open=false;event('Modello confermato da te',`${v} · fonte: Libretto impianto.pdf`,'Caldaia');save();flash={msg:`Modello ${v} salvato nella scheda Caldaia.`,go:{v:'scheda',id:'Caldaia',anchor:'dati'},goLabel:'Apri la scheda'};rerender()},
+ rvLater:()=>{flash={msg:'Resta in Da rivedere.'};rerender()},
+ taskDone:id=>{const t=st.tasks.find(x=>x.id===id);t.done=TODAY;event('Attività completata',t.title,t.object);save();flash={msg:'Completata oggi. Nessuna spesa registrata.'};rerender()},
+ taskReopen:id=>{const t=st.tasks.find(x=>x.id===id);t.done=null;event('Attività riaperta',t.title,t.object);save();flash={msg:'Attività riaperta.'};rerender()},
+ askArchive:id=>{ui.confirm='arch-'+id;rerender()},
+ cancelConfirm:()=>{ui.confirm=null;rerender()},
+ archive:id=>{const e=exp(id);e.archived=true;ui.confirm=null;save();const t=e.title;back();flash={msg:`«${t}» archiviata.`};rerender()},
+ doImport:()=>{st.docs.push({id:'d7',name:'Bolletta gas.pdf',type:'Bolletta',object:'',vis:'io',econ:'gas',day:TODAY,text:'Gas Demo · bolletta di settembre 2026. Consumo del periodo 80,00 €. Arretrati agosto 20,00 €. Totale da pagare 100,00 €. Esempio sintetico.'},{id:'d8',name:'Fattura idraulico.pdf',type:'Fattura',object:'',vis:'io',econ:'invoice',day:TODAY,text:'Idraulico Demo · 3 ottobre 2026. Riparazione scarico bagno. Imponibile 100,00 €, IVA 22% 22,00 €, totale 122,00 €. Esempio sintetico.'},{id:'d9',name:'Ricevuta scansionata.pdf',type:'Ricevuta',object:'',vis:'io',econ:'scan',day:TODAY,text:'Scansione poco leggibile. Esempio sintetico.'});st.imported=true;event('Documenti importati','Bolletta gas.pdf, Fattura idraulico.pdf, Ricevuta scansionata.pdf');save();replace({v:'esito',origin:cur.origin})},
+ toManual:id=>replace({v:'registra',preset:{doc:id},origin:cur.origin}),
+ analyze:(id,btn)=>{btn.disabled=true;btn.textContent='Lettura del documento…';setTimeout(()=>{const d=doc(id);const dr={id:nid('b'),doc:id,kind:d.econ,status:'open',exist:null,amount:null};st.drafts.push(dr);save();replace({v:'bozza',id:dr.id,origin:cur.origin})},700)},
+ drLink:id=>{const dr=st.drafts.find(x=>x.id===id);const e=exp(dr.exist);const d=doc(dr.doc);e.document=d.id;e.source+=' · documento collegato';dr.status='done';event('Documento collegato a una spesa',`${d.name} → ${e.title}`);save();finish(`Documento collegato a «${e.title}». L’importo resta ${eur(e.amount)}.`,{go:{v:'spesa',id:e.id},goLabel:'Apri la spesa'})},
+ drPark:id=>{const dr=st.drafts.find(x=>x.id===id);dr.status='parked';dr.parked=TODAY;save();finish('Bozza tenuta da parte: la trovi in Spese › Da confermare.',{go:{v:'confermare'},goLabel:'Apri'})},
+ askDiscard:id=>{ui.confirm='disc-'+id;rerender()},
+ drDiscard:id=>{const dr=st.drafts.find(x=>x.id===id);dr.status='discarded';ui.confirm=null;save();flash={msg:'Bozza scartata. Il documento resta in Documenti.'};rerender()},
+ startPath:s=>{closeSheet(true);tab(s)},
+ moreGo:k=>{closeSheet(true);go(moreRoute(k))},
+ doReset:()=>{st=seed();save();ui=freshUi();closeSheet(true);tab('casa')}
+};
+document.addEventListener('click',e=>{
+ const t=e.target;
+ if(t.closest('[data-sheet-close]')||t.matches('[data-sheet-bg]')){closeSheet();return}
+ const g=t.closest('[data-go]');if(g){const r=R[g.dataset.go];if(document.getElementById('sheet-root').innerHTML)closeSheet(true);go(Object.assign({},r));return}
+ const a=t.closest('[data-act]');if(a&&!a.disabled){ACT[a.dataset.act](R[a.dataset.a],a,e);return}
+ const tb=t.closest('[data-tab]');if(tb){tab(tb.dataset.tab);return}
+ const m=t.closest('[data-more]');if(m){go(moreRoute(m.dataset.more));return}
+ if(t.closest('[data-shell="add"]')||t.closest('#fab')){addSheet();return}
+ if(t.closest('#btn-more')){moreSheet();return}
+ if(t.closest('#btn-paths')){pathsSheet();return}
+ if(t.closest('#btn-addr')){openSheet('Le tue case','<p>In questa prova c’è una sola casa: Via Roma 12, Milano, unità A12.</p>');return}
+ if(t.closest('#btn-reset')){openSheet('Ripristinare la prova?',`<p>Torni ai dati iniziali di questa proposta. Le altre prove e l’app reale non cambiano.</p><div class="actions">${act$('doReset',0,'Ripristina dati di prova','btn primary')}${'<button type="button" class="btn" data-sheet-close>Annulla</button>'}</div>`);return}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('sheet-root').innerHTML)closeSheet()});
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.id==='sp-period'){ui.sp.period=t.value;rerender();return}
+ if(t.id==='consent'){const b=document.getElementById('btn-analyze');if(b)b.disabled=!t.checked;return}
+ if(t.name==='dr-exist'||t.name==='dr-amt'){const dr=st.drafts.find(x=>x.id===cur.id);if(!dr)return;captureDraft(dr);if(t.name==='dr-exist')dr.exist=t.value;else{dr.amount=+t.value;dr.touched=true}save();rerender();return}
+ if(t.id==='f-work'){const l=document.getElementById('f-newwork-l');if(l)l.hidden=t.value!=='+';return}
+ if(['doc-type','doc-obj','doc-vis'].includes(t.id)){ui.doc[t.id.slice(4)]=t.value;updateDocResults();return}
+});
+document.addEventListener('input',e=>{if(e.target.id==='doc-q'){ui.doc.q=e.target.value;updateDocResults()}});
+function captureDraft(dr){if(!dr.f)return;const m={title:'d-title',day:'d-day',cat:'d-cat',object:'d-object',supplier:'d-supplier',note:'d-note'};Object.entries(m).forEach(([k,id])=>{const el=document.getElementById(id);if(el)dr.f[k]=el.value})}
+document.addEventListener('submit',e=>{const f=e.target;const k=f.dataset.form;if(!k)return;e.preventDefault();
+ if(k==='registra'){const v={amount:val('f-amount'),day:val('f-day'),title:val('f-title').trim(),cat:val('f-cat'),object:val('f-object'),work:val('f-work'),newwork:val('f-newwork').trim(),supplier:val('f-supplier').trim(),note:val('f-note'),document:cur.vals.document};
+  const err={};const amt=parseEur(v.amount);if(!amt)err.amount='Scrivi un importo maggiore di zero, per esempio 85 oppure 85,50.';if(!v.day)err.day='Scegli una data.';if(!v.title)err.title='Scrivi una breve descrizione.';if(v.work==='+'&&!v.newwork)err.work='Scrivi il nome del nuovo lavoro.';
+  cur.vals=v;cur.err=err;if(Object.keys(err).length){rerender();const first=document.querySelector('[aria-invalid],.err');const inp=first&&first.closest('label')?first.closest('label').querySelector('input,select,textarea'):null;if(inp)inp.focus();return}
+  let work=v.work;if(work==='+'){work=v.newwork||'Nuovo lavoro';if(!st.works.includes(work))st.works.push(work)}
+  if(cur.edit){const ex=exp(cur.edit);Object.assign(ex,{amount:amt,day:v.day,title:v.title,cat:v.cat,object:v.object,work,supplier:v.supplier,note:v.note});save();finish('Modifiche salvate.');return}
+  const ne={id:nid('e'),title:v.title,amount:amt,day:v.day,cat:v.cat,supplier:v.supplier,object:v.object,work,note:v.note,document:v.document||'',source:v.document?'Inserita da te · documento collegato':'Inserita da te'};st.expenses.push(ne);event('Spesa registrata',`${ne.title} · ${eur(amt)}`,ne.object);save();
+  finish(`Registrata: ${ne.title} · ${eur(amt)}.`,{go:{v:'spesa',id:ne.id},goLabel:'Apri',sec:cur.sec||''});return}
+ if(k==='bozza'){const dr=st.drafts.find(x=>x.id===f.dataset.id);captureDraft(dr);const err={};if(dr.amount==null)err.amount='Scegli quale importo registrare.';if(!dr.f.title.trim())err.title='Scrivi una breve descrizione.';
+  if(Object.keys(err).length){cur.err=err;save();rerender();return}
+  const d=doc(dr.doc);const ne={id:nid('e'),title:dr.f.title.trim(),amount:dr.amount,day:dr.f.day||TODAY,cat:dr.f.cat,supplier:dr.f.supplier,object:dr.f.object,work:'',note:dr.f.note,document:d.id,source:'Da documento, confermata da te'};st.expenses.push(ne);dr.status='done';event('Spesa registrata da documento',`${ne.title} · ${eur(ne.amount)} · ${d.name}`,ne.object);save();
+  finish(`Registrata: ${ne.title} · ${eur(ne.amount)}.`,{go:{v:'spesa',id:ne.id},goLabel:'Apri'});return}
+ if(k==='segnala'){const t=val('s-title').trim(),b=val('s-body');if(!t){cur.t=t;cur.b=b;cur.err={t:'Scrivi un titolo.'};rerender();document.getElementById('s-title').focus();return}st.reports.push({id:nid('r'),title:t,day:TODAY,state:'Inviata'});event('Segnalazione inviata',t);save();finish('Segnalazione inviata allo studio (simulato).',{go:{v:'condominio'},goLabel:'Vedi'});return}
+ if(k==='oggetto'){const v={name:val('o-name').trim(),type:val('o-type'),room:val('o-room')};const err={};if(!v.name)err.name='Scrivi il nome.';else if(obj(v.name))err.name='Esiste già un oggetto con questo nome.';if(!v.type)err.type='Scegli il tipo.';
+  if(Object.keys(err).length){cur.vals=v;cur.err=err;rerender();return}st.objects.push({id:v.name,type:v.type,room:v.room,brand:'',model:'',modelOk:true,power:null});event('Oggetto aggiunto',v.room||'Da collocare',v.name);save();finish(`Aggiunto: ${v.name}${v.room?' in '+v.room:' (da collocare)'}.`,{go:{v:'scheda',id:v.name},goLabel:'Apri la scheda'});return}
+ if(k==='ambiente'){const n=val('r-name').trim();if(!n||st.rooms.includes(n)){cur.n=n;cur.err={n:n?'Esiste già.':'Scrivi il nome.'};rerender();return}st.rooms.push(n);event('Ambiente aggiunto',n);save();finish(`Ambiente aggiunto: ${n}.`,{go:{v:'ambiente',id:n},goLabel:'Apri'});return}
+ if(k==='attivita'){const v={title:val('t-title').trim(),day:val('t-day')||TODAY,object:val('t-object'),note:val('t-note')};if(!v.title){cur.vals=v;cur.err={title:'Scrivi cosa devi fare.'};rerender();return}st.tasks.push({id:nid('a'),title:v.title,day:v.day,object:v.object,note:v.note,done:null});event('Attività creata',v.title,v.object);save();finish(`Attività aggiunta: ${v.title}.`,{sec:cur.sec||''});return}
+});
+
+render(0,false);
+})();
+</script>
