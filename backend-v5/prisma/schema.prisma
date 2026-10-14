@@ -12,6 +12,9 @@ enum HomeRole {
   viewer
 }
 model Account {
+  economicWorks EconomicWork[]
+  economicWorkEvents EconomicWorkHistory[]
+  economicRequests EconomicRequest[]
   id String @id @default(uuid())
   name String
   email String @unique
@@ -47,6 +50,8 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  economicWorks EconomicWork[]
+  economicRequests EconomicRequest[]
   id String @id @default(uuid())
   name String
   address String
@@ -171,6 +176,7 @@ enum ActivityState {
   cancelled
 }
 model HomeActivity {
+  economicWorks EconomicWork[]
   objectLinks ObjectResourceLink[]
   id String @id @default(uuid())
   accountId String
@@ -296,6 +302,16 @@ enum ExpenseState {
   archived
 }
 model HomeExpense {
+  category String?
+  supplier String?
+  documentNumber String?
+  documentDate String?
+  competenceFrom String?
+  competenceTo String?
+  dueOn String?
+  amountOrigin String @default("user_declared")
+  workId String?
+  work EconomicWork? @relation(fields:[workId], references:[id], onDelete:Restrict)
   objectLinks ObjectResourceLink[]
   id String @id @default(uuid())
   accountId String
@@ -319,6 +335,54 @@ model HomeExpense {
   @@index([accountId, homeId, state, spentOn, createdAt, id])
   @@index([accountId, homeId, documentId])
   @@index([accountId, homeId, assetId])
+  @@index([accountId, homeId, category, state, spentOn])
+  @@index([accountId, homeId, workId])
+}
+
+model EconomicWork {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  name String
+  note String?
+  activityId String?
+  activity HomeActivity? @relation(fields:[activityId], references:[id], onDelete:Restrict)
+  state String @default("active")
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  archivedAt DateTime?
+  expenses HomeExpense[]
+  history EconomicWorkHistory[]
+  account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)
+  home Home @relation(fields:[homeId], references:[id], onDelete:Restrict)
+  @@index([accountId,homeId,state,createdAt,id])
+}
+model EconomicWorkHistory {
+  id String @id @default(uuid())
+  workId String
+  accountId String
+  kind String
+  at DateTime @default(now())
+  before Json?
+  after Json
+  work EconomicWork @relation(fields:[workId], references:[id], onDelete:Restrict)
+  account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)
+  @@index([workId,at,id])
+}
+model EconomicRequest {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  operation String
+  target String
+  key String
+  digest String
+  response Json
+  createdAt DateTime @default(now())
+  account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)
+  home Home @relation(fields:[homeId], references:[id], onDelete:Restrict)
+  @@unique([accountId,homeId,operation,target,key])
 }
 
 model HomeRoom {
