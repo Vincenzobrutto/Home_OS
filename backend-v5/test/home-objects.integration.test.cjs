@@ -29,6 +29,7 @@ test('G1: DB reale ambienti condivisi, oggetti personali, posizioni e riferiment
   const results=await Promise.allSettled([s.updateRoom(a,h,room.id,{expectedVersion:1,name:'Bagno A'},randomUUID()),s.updateRoom(b,h,room.id,{expectedVersion:1,name:'Bagno B'},randomUUID())]);
   assert.equal(results.filter(x=>x.status==='fulfilled').length,1);assert.equal(results.find(x=>x.status==='rejected').reason.getResponse().code,'room_version_conflict');
   room=(await s.getRoom(a,h,room.id,{})).room;const events=(await s.history(b,h,'room',room.id,{})).items.length;
+  const roomHistory=(await s.history(b,h,'room',room.id,{})).items;assert.equal(roomHistory[0].after.name,room.name);assert.equal(roomHistory[0].before.name,'Bagno');
   await s.updateRoom(a,h,room.id,{expectedVersion:room.version,name:room.name},randomUUID());assert.equal((await s.history(a,h,'room',room.id,{})).items.length,events);
   await rejected(s.createRoom(a,h,{...body,note:'altro'},key),409,'idempotency_conflict');
  });
@@ -36,6 +37,7 @@ test('G1: DB reale ambienti condivisi, oggetti personali, posizioni e riferiment
   initialObject={name:'Termosifoni',type:'heating',roomIds:[second.id,room.id]};const sameKey=randomUUID();
   const same=await Promise.all([s.createObject(a,h,initialObject,sameKey),s.createObject(a,h,{...initialObject,roomIds:[...initialObject.roomIds].reverse()},sameKey)]);assert.deepEqual(same[0],same[1]);obj=same[0].object;
   assert.equal(obj.position.rooms.length,2);assert.equal(obj.position.version,1);await rejected(s.getObject(b,h,'object',obj.ref.id,{}),403);
+  assert.equal((await s.history(a,h,'object',obj.ref.id,{})).items[0].after.position.rooms.length,2);
   assert(!(await s.objects(b,h,{})).items.some(x=>x.ref.id===obj.ref.id));obj2=(await s.createObject(a,h,{name:'Lavatrice',type:'appliance'},randomUUID())).object;
   assert.equal(obj2.position.version,0);assert((await s.objects(a,h,{placement:'unplaced'})).items.some(x=>x.ref.id===obj2.ref.id));
   const attempts=await Promise.allSettled([s.setPosition(a,h,'object',obj2.ref.id,{expectedVersion:0,roomIds:[room.id]},randomUUID()),s.setPosition(a,h,'object',obj2.ref.id,{expectedVersion:0,roomIds:[second.id]},randomUUID())]);

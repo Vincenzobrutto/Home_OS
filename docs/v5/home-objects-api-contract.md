@@ -69,7 +69,7 @@ Idempotenza su link consente stessa risorsa/target già collegati come no-op sen
 
 H1/H3a: aggiornamento assetId nativo rifiutato409 resource_already_linked se la risorsa ha già un riferimento G1 a oggetto diverso. Rimuovere prima il vecchio link esplicitamente; nessun nuovo DTO o riuso di assetId per oggetti generici. Impedisce di aggirare unicità tramite l'API precedente.
 
-Storia `{id,kind,at,before,after}` con snapshot Room/Object/Position/Link proiettati secondo policy correnti. Boiler tecnico non copiato nella storia G1. No-op non incrementa versione/evento. Position roomIds canonici ordinati (ordine utente non significativo); CAS0 per prima impostazione, versione1 dopo. Creazione object con roomIds assente o vuoto inizializza position0; non creare evento posizione vuota.
+Storia `{id,kind,at,before,after}` con snapshot Room/CatalogItem/LinkedResource proiettati secondo policy correnti, direttamente nel before/after (non wrapper `{room}`/`{object}`/`{link}`). Posizione inclusa in CatalogItem.position.rooms. Boiler tecnico non copiato nella storia G1. No-op non incrementa versione/evento. Position roomIds canonici ordinati (ordine utente non significativo); CAS0 per prima impostazione, versione1 dopo. Creazione object con roomIds assente o vuoto inizializza position0; non creare evento posizione vuota.
 
 ## Frontend e accettazione
 

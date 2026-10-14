@@ -25,6 +25,10 @@ Reference links a documenti leggibili e proprie attività/spese; native boiler d
 
 API riavviata direttamente con launcher registrato, PID22512 alla verifica; Vite5174 PID5692 e PG55432 PID23544 preservati. Nessun PowerShell richiesto al committente, main/push o rete/firewall modificati.
 
+### Precisazione storia per integrazione frontend
+
+La lettura preliminare del frontend Claude ha evidenziato l'utilità di snapshot diretti negli eventi: history ora proietta before/after come Room/CatalogItem/LinkedResource, senza wrapper di risposta endpoint. Note/nome/posizione diventano leggibili senza dipendere da JSON interno. Aggiunte asserzioni before/after room e position; build/lint mirato e13test G1 DB/HTTP verdi dopo la precisazione. Il frontend va ancora verificato sulla posizione annidata CatalogItem.position.rooms. Suite completa102 resta baseline precedente, non dichiarare ripetizione dopo questa correzione mirata.
+
 ## Da completare
 
 Consegna finale Claude, escludere sync26525c0, revisione frontend e build/lint/mock/fixture. Client/API reale con flagV5_OBJECTS_API e pause auth invariato; browser320/390/desktop/tastiera/refresh/logout. Due fasi costo->link: se seconda fallisce niente doppia registrazione o successo implicito. Nessun G1 frontend/client/browser reale ancora completato. S1/C1/S2 non avviati.

@@ -248,8 +248,12 @@ export class HomeObjectsService {
       if (kind === 'room') await this.room(tx, c, id); else await this.subject(tx, c, kind, id);
       const rows = await tx.objectEvent.findMany({ where: { homeId: h, targetKind: kind, targetId: id, ...(kind !== 'room' ? { accountId: a } : {}), ...(cur ? { OR: [{ at: { lt: new Date(cur.t) } }, { at: new Date(cur.t), id: { lt: cur.id } }] } : {}) }, orderBy: [{ at: 'desc' }, { id: 'desc' }], take: q.limit + 1 });
       const page = this.page(rows, q.limit, b, r => ({ t: r.at.toISOString(), id: r.id }));
+      const snapshot = async (saved: unknown) => {
+        const result = await this.projectSaved(tx, c, saved as Saved);
+        return 'room' in result ? result.room : 'object' in result ? result.object : result.link;
+      };
       return { ...page, items: await Promise.all(page.items.map(async r => ({ id: r.id, kind: r.kind, at: r.at.toISOString(),
-        before: r.before ? await this.projectSaved(tx, c, r.before as unknown as Saved) : null, after: await this.projectSaved(tx, c, r.after as unknown as Saved) }))) };
+        before: r.before ? await snapshot(r.before) : null, after: await snapshot(r.after) }))) };
     });
   }
   private async resource(tx: Tx, c: Context, type: ResourceType, id: string) {
