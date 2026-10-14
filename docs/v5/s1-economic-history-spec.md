@@ -48,6 +48,8 @@ Totali denominati «Costi registrati», non uscite effettive o debiti. Fonte man
 
 ## Oggetti, ambienti e lavori
 
+Precisazione UX approvata per prova mockup: «Costi per oggetto» è la vista economica, non la scheda completa. Il catalogo Oggetti apre schede complete con sintesi essenziale e accessi distinti a Documenti, Attività, Costi e Storia. La vista economica rimanda alla scheda completa; nessuna sostituzione delle funzioni G1/M3. Nel mockup schede e fonti complete sono esempi sintetici per valutare gerarchia, non una riscrittura del runtime esistente. Evitare tutti i dettagli in una sola pagina lunga; il totale economico non diventa titolo o informazione dominante dell'oggetto.
+
 Riutilizzare collegamenti G1, senza duplicare HomeExpense o caldaia. Scheda oggetto: lista, totale periodo e totale delle registrazioni disponibili, distinzione per categorie. Cambio posizione modifica il filtro ambiente corrente, non la storia della spesa: esplicitare che si usa la posizione attuale. Oggetto multiambiente: vista aggregata deduplica ID; nessuna quota stanza inventata.
 
 Lavoro personale semplice: nome, nota, stato attivo/archiviato, versione e storia; un costo appartiene al massimo a un lavoro. Oggetto principale del costo rimane unico G1. Facoltativo riferimento a una attività personale già autorizzata, senza attestare costo/pagamento o completare l'attività. Nessun preventivo/avanzamento/SLA in S1.
