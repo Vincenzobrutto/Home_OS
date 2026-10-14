@@ -34,3 +34,7 @@
 ## Prossimo passo
 
 Congelare DTO/esempi del contratto economy-v1, quindi Codex backend S1a/b e analisi economica fixture S1c; Claude frontend solo con nuovo incarico e baseline aggiornata. Nessuna scelta qui richiede modello di business/prezzo o nuove chiamate Anthropic; paid ancora disabilitato, collaudo live futuro distinto. Nessun runtime o DB modificato da questa revisione.
+
+
+## Aggiornamento approvato famiglie —14ottobre
+La decisione SPESE-FAMIGLIE-20261014.md prevale sulla suddivisione precedente di S1-08: sei famiglie + Altro/Non classificata; totale generale comprensivo mutuo e aggiunta totale senza mutuo/finanziamenti. Le categorie rimangono invariate. Codex adotta repairs_works derivata dal collegamento lavoro (archiviato ancora collegato) e polizza mutuo classificata esplicitamente financing. Nessuna migrazione categorie o modifica del runtime; spec/contratto aggiornati, ancora non congelati. Audit Home e mockup Claude sono materiale di arbitrato, non nuova navigazione adottata automaticamente.
