@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import type { ExpenseFilters, ExpenseSummary, Home } from '../api/types';
 import { Icon } from '../components/Icon';
@@ -126,6 +126,12 @@ function ExpensesContent(props: { home: Home; today: string; capabilities: NonNu
   const canEdit = home.permissions.includes('edit');
   const summaryYear = filters.year ?? today.slice(0, 4);
   const currentYear = Number(today.slice(0, 4));
+  const [choosingYear, setChoosingYear] = useState(false);
+  const [yearDraft, setYearDraft] = useState('');
+  const [yearError, setYearError] = useState<string>();
+  const yearSelect = useRef<HTMLSelectElement>(null);
+  const yearInput = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (choosingYear) yearInput.current?.focus(); }, [choosingYear]);
   const years = Array.from({ length: 10 }, (_, i) => String(currentYear - i).padStart(4, '0'));
   if (filters.year && !years.includes(filters.year)) years.push(filters.year);
 
@@ -180,7 +186,7 @@ function ExpensesContent(props: { home: Home; today: string; capabilities: NonNu
         <div className={styles.filters} role="group" aria-label="Filtri delle spese">
           <label className={styles.filter}>
             Anno
-            <select className={styles.select} value={filters.year ?? ''} onChange={(e) => setFilters({ ...filters, year: e.target.value || null })}>
+            <select ref={yearSelect} className={styles.select} value={filters.year ?? ''} onChange={(e) => setFilters({ ...filters, year: e.target.value || null })}>
               <option value="">Tutti gli anni</option>
               {years.map((y) => (
                 <option key={y} value={y}>
@@ -210,6 +216,24 @@ function ExpensesContent(props: { home: Home; today: string; capabilities: NonNu
             </select>
           </label>
         </div>
+        <button type="button" className={cx(ui.btn, ui.small)} onClick={() => { setChoosingYear(true); setYearError(undefined); }}>
+          Scegli un altro anno
+        </button>
+        {choosingYear && (
+          <form aria-label="Scegli un anno specifico" onSubmit={event => {
+            event.preventDefault();
+            const year = yearDraft.trim();
+            if (!/^\d{4}$/.test(year) || year === '0000') { setYearError('Inserisci un anno a quattro cifre, da 0001 a 9999.'); return; }
+            setYearError(undefined); setFilters({ ...filters, year }); setChoosingYear(false); yearSelect.current?.focus();
+          }}>
+            <label className={styles.filter}>
+              Anno specifico
+              <input ref={yearInput} className={ui.input} inputMode="numeric" maxLength={4} value={yearDraft} aria-invalid={!!yearError} aria-describedby={yearError ? 'anno-specifico-errore' : undefined} onChange={event => setYearDraft(event.target.value)} />
+            </label>
+            {yearError && <p id="anno-specifico-errore" role="alert">{yearError}</p>}
+            <button type="submit" className={cx(ui.btn, ui.small)}>Mostra anno</button>
+          </form>
+        )}
         <ExpenseList home={home} filters={filters} returnState={returnState} onReset={() => setFilters({ year: null, state: 'active', source: 'all' })} />
       </section>
       <p className={cx(pages.small, pages.muted)}>

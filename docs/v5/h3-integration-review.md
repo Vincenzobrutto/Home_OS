@@ -1,6 +1,6 @@
-# H3a — backend verificato, frontend in lavorazione
+# H3a — spese essenziali integrate e verificate in locale
 
-14 ottobre 2026. Base contratto/frontend Claude 076d5a9, master dev/dimora-v5-local-20261013. Il committente ha avviato Claude per frontend-v5 nel checkout separato. Codex mantiene backend/schema/test e docs condivisi. H3 non ancora chiusa: nessun frontend/browser reale delle spese dichiarato.
+14 ottobre 2026. Base contratto/frontend Claude 076d5a9, master dev/dimora-v5-local-20261013. Frontend del checkout separato raccolto, integrato e verificato da Codex con backend/schema/test e browser reali. H3a chiusa per lo sviluppo locale; i paragrafi backend descrivono la fase precedente al consolidamento frontend finale.
 
 ## Completato backend
 - Migrazione additiva 202610140001_expenses nel solo dimora_v5_product_dev 127.0.0.1:55432, con controllo assertDevelopmentDatabase. Nessun reset o DB legacy/reale. Ferma soltanto API registrata, Prisma 6.19.3 genera e deploya; API riavviata direttamente, senza interventi del committente.
@@ -20,4 +20,25 @@
 Log outputs/Dimora-V5-H3-backend-offline.log, Dimora-V5-H3-backend-integrazione.log, Dimora-V5-H3-API-reale.log. Nessuna chiamata Anthropic effettuata; suite AI live disabilitate.
 
 ## Ancora aperto
-Consegna frontend Claude su base076d5a9, commit sync da escludere (cacc8fc). Revisione e integrazione soltanto dopo tracciati finiti; preservare untracked backend-status.md. Test mock/fixtures/build/lint della consegna, client/API non-live in gruppo dedicato entro auth15/min, browser 320/390/desktop/tastiera e moduli/riprova/riassunti reali. I dati del mock non provano disponibilità backend. H3b stime/ricorrenti/export ciclo di vita restano fuori H3a.
+H3a chiusa come incremento locale. H3b stime/ricorrenti, export delle spese nel ciclo di vita, rate Admin e produzione restano fuori H3a. Non dichiarare conformità WCAG o readiness pubblica.
+
+## Integrazione frontend finale — 14 ottobre, notte
+Consegna Claude760804f raccolta autonomamente dal checkout distinto: sette commit integrati (1574440,d411b1e,a383353,bc04e2b,8c89fb3,8b939e9,edaa0b4), sync cacc8fc escluso. Nessun main/push o file estraneo modificato. Il handoff Claude descrive solo la fase mock precedente; questo report è lo stato consolidato.
+
+Build/lint e213 test mock/fixture della consegna passano. Codex corregge il testo503 (non si può garantire che un POST ambiguo non sia stato salvato) e rende selezionabili anni anteriori alle dieci opzioni, con validazione/focus. Un nuovo test copre anno2010 e0000 rifiutato; dopo le ultime modifiche build/lint e31 test H3 mirati passano. Non presentare214 come una suite completa rieseguita:213 baseline e31 mirati, con una nuova regressione.
+
+Client/API su3001: quattro gruppi (pausa61s, protezione auth15/min intatta),19 non-live passano (9 identity/documenti/review,6 M4/H1,2 H2,2 H3); quattro Anthropic live saltati. Nessuna nuova chiamata a pagamento.
+
+Browser reale su account sintetico ProvaM4/CasaM4: ingresso da Casa a390, creazione0,10 con caldaia; data13ottobre tramite tastiera nativa; modifica nota; dialogo archive a320 con Escape, restituzione focus e Tab contenuto; nota archivio/storia, restore e focus a Modifica. Dal PDF originale, secondo costo0,20 con documento e caldaia; due righe nella caldaia, totale server0,30 nella Home/Spese. Anno2010 da UI produce riepilogo vuoto corretto, refresh mantiene filtro e anno2026 ripristina totale; focus al campo e al selettore dopo scelta. Logout/login mantiene entrambi i costi. Nessun overflow a320/390/desktop, override viewport ripristinato.
+
+Fixture lasciate navigabili: f71cbb2d-5870-4a45-a959-5a075f7eedf8 (10cent,active,version4) e bf9516fe-06b8-4cf0-b1e7-4bb3b4676f8f (20cent,active,version1). Doc6a1ca2db-9047-47f3-8fe1-65f1f9cc98d5 rimane versione1/hash5e15f495d13eb76b6d27d23071f659a622c55a5156f6bc55d1704f40e07472f3; caldaia83f841c6-6f43-4296-bae3-2e58cf219df5 versione4. Ledger8 tentativi, somma41714microUSD invariati (0,041714USD M4). Screenshot outputs/Dimora-V5-H3-spese-reali-desktop.png e -390.png. Risposta persa/revoche/viewer e paging non tutti forzati manualmente nel browser: coperti da suite mock/DB/HTTP/client dichiarate.
+
+## Decisioni sulla consegna Claude
+1. Anni storici: risolto nel frontend con scelta esplicita, senza nuova API/catalogo anni.
+2. Tutti gli anni mostra lista pluriennale, riepilogo etichettato anno corrente: coerente col contratto, non totale pluriennale implicito.
+3. POST503 resta ambiguo e conserva chiave/body, anche se alcuni503 precedono il commit: riprova idempotente sicura. Testo corretto.
+4. Documento home leggibile di altro membro collegabile: contratto esplicito; spesa rimane personale, non condivisa con l'uploader.
+5. Filtro di riferimento non più leggibile403: nessun risultato o nome dedotto; fonti già registrate unavailable redatte. Privacy DB/HTTP verificata.
+6. Viewer/ruoli/revoca verificati DB/HTTP e mock, senza inventare API inviti.
+7. Possibile perdita focus H1 dopo azioni: osservazione sul codice, non riprodotta in questo giro; backlog prima del pilota, nessuna regressione H1 dichiarata senza verifica.
+8. Chunk finale545,03kB: code splitting tracciato prima del pilota; soglia non aumentata per nascondere l'avviso.

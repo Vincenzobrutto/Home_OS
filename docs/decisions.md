@@ -471,3 +471,6 @@ Costi sostenuti EUR in centesimi, origine manuale/documentale, data non futura e
 
 ### ADR-V5-14 — verifica backend H3a
 Advisory lock account/Home per serializzare chiavi idempotenti, membership/fonti con lock condivisi e CAS versione; snapshot replay ricostruito e redatto, non JSON pubblico obsoleto. Paging DB limit+1/keyset e somme aggregate, senza dataset intero in memoria. Somma oltre Int32 resta esatta; nessuna nuova dipendenza o provider AI. Stato dettagliato docs/v5/h3-integration-review.md.
+
+### ADR-V5-14 — integrazione finale H3a
+Importi come stringa nel form e parsing BigInt, totale esclusivamente server. Anno storico scegliibile senza API nuova, focus conservato. POST503 è ambiguo: stessa chiave/body in riprova, nessuna garanzia prematura di mancato salvataggio. Tutti gli anni riguarda elenco, riepilogo esplicitamente annuo. Documento home di altro membro può essere fonte leggibile di una spesa che resta personale. Nessuna condivisione o incasso impliciti.

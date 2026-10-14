@@ -138,7 +138,7 @@ export function expenseErrorMessage(error: unknown) {
       }
     }
     if (error.kind === 'service' && error.status === 503) {
-      return 'Le spese non sono disponibili in questo momento. Riprova tra poco: nessuna modifica è stata salvata da questa schermata.';
+      return 'Le spese non sono disponibili in questo momento. Se stavi salvando una modifica, l’esito non è confermato: usa «Riprova invio».';
     }
   }
   return userMessage(error);

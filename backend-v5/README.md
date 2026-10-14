@@ -1,5 +1,7 @@
 # Dimora V5 API — backend locale Home
 
+Stato consolidato14ottobre: H3a integrata anche con frontend e browser reali,19 client/API non-live verdi. Il report docs/v5/h3-integration-review.md prevale sulle consegne storiche sotto; H3b, export del ciclo di vita e Admin restano successivi. Nessuna nuova chiamata Anthropic.
+
 API nuova NestJS/Prisma/PostgreSQL, senza import dell'AppModule o automatismi legacy. Implementati identity, documenti, analisi/conferme caldaia, attività, ricerca documenti e backend spese H3a. Agenzie e Amministratori seguono separatamente. Le sezioni iniziali riportano consegne storiche: lo stato corrente delle verticali è nei report docs/v5/*-integration-review.md.
 
 Contratto: `../docs/v5/api-contract.md`. Host 127.0.0.1:3001, prefisso /api/v5; Origin atteso 127.0.0.1:5174 via proxy Vite. Database accettato dal codice: soltanto ruolo dimora_v5_app e dimora_v5_product_dev su 127.0.0.1/localhost:55432. Nessuna migrazione automatica al bootstrap.

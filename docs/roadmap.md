@@ -163,3 +163,6 @@ H2 integrata localmente; revisione indipendente raccolta, tre difetti di contest
 
 ### H3a — backend attivo in locale
 Nove endpoint e DB spese verificati; Claude sviluppa il frontend nel checkout distinto, Codex raccoglie la consegna e completa client/API/browser. Non dichiarare Spese navigabile finché frontend non integrato. Nessuna chiamata AI live.
+
+### H3a — raggiunta per sviluppo locale
+Spese personali manuali/documentali con riepilogo annuo, originali/caldera referenziati, storia/modifica/archive/restore e percorsi Casa/documento/caldaia verificati con backend/DB/frontend/client/browser reali. Successivi: H3b stime/ricorrenze ed export spese nel ciclo vendita; Agenzie/Admin separati. Nessuna pubblicazione o dichiarazione di prontezza produzione.

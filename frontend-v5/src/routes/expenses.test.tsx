@@ -7,6 +7,26 @@ import { renderApp } from '../test/harness';
 import type { renderApp as RenderApp } from '../test/harness';
 
 type App = ReturnType<typeof RenderApp>;
+
+describe('[mock] H3 anni storici dal filtro', () => {
+  it('un anno oltre le dieci opzioni resta selezionabile senza modificare l’URL a mano', async () => {
+    const { backend, owner, home } = world();
+    await seedExpense(backend, owner.id, home.id, { title: 'Costo del 2010', amountCents: 30, spentOn: '2010-01-01' });
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
+    await app.user.click(await screen.findByRole('button', { name: 'Scegli un altro anno' }));
+    expect(screen.getByRole('textbox', { name: 'Anno specifico' })).toHaveFocus();
+    await app.user.type(screen.getByRole('textbox', { name: 'Anno specifico' }), '0000');
+    await app.user.click(screen.getByRole('button', { name: 'Mostra anno' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('0001');
+    await app.user.clear(screen.getByRole('textbox', { name: 'Anno specifico' }));
+    await app.user.type(screen.getByRole('textbox', { name: 'Anno specifico' }), '2010');
+    await app.user.click(screen.getByRole('button', { name: 'Mostra anno' }));
+    await waitFor(() => expect(app.router.state.location.search).toBe('?anno=2010'));
+    expect(await screen.findByRole('heading', { name: 'Costi registrati da te nel 2010' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Costo del 2010' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Anno' })).toHaveFocus();
+  });
+});
 const PW = { owner: 'password-owner-001', member: 'password-member-01', viewer: 'password-viewer-01', other: 'password-other-001' };
 
 function world() {

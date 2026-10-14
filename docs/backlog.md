@@ -163,3 +163,10 @@ H2 resta aperta; nessun consumo provider.
 - [ ] Consegna frontend Claude (sync cacc8fc da escludere), review e integrazione.
 - [ ] Suite client/API non-live e browser reale320/390/desktop/tastiera.
 H3 non ancora chiusa. Stime/ricorrenti e export Home spese restano futuri.
+
+### H3a — chiusura e limiti finali
+- [x] Consegna frontend integrata, anno storico da UI e messaggio503 corretto.
+- [x] Build/lint,213 baseline frontend/31 H3 mirati,19 client/API non-live, browser reale320/390/desktop/tastiera/reload/login.
+- [ ] Prima del pilota: code splitting chunk545,03kB, senza nascondere avviso con soglia.
+- [ ] Riprodurre osservazione Claude focus H1 dopo completa/annulla/riapri; non ancora dimostrata in questo giro.
+- [ ] H2R4/R5 rifiniture UX; H3b stime/ricorrenti e export Home spese restano futuri.

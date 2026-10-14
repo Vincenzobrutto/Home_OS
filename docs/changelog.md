@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-14 — H3a integrazione finale notturna
+
+Frontend Claude760804f raccolto autonomamente, sette commit integrati escludendo sync. Spese attive: riepiloghi personali, moduli/documenti/caldaia, storia/archive/restore. Codex corregge anno storico e testo503 ambiguo; build/lint,213 baseline frontend e31 H3 mirati verdi,19 client/API non-live verdi/quattro live saltati. Browser320/390/desktop/tastiera/reload/login:0,10+0,20=0,30EUR, due soli record e fonti immutate. H3a chiusa localmente, nessun consumo AI aggiuntivo. Report docs/v5/h3-integration-review.md e outputs/Dimora-V5-rapporto-notturno-20261014.md.
+
+
 ## 2026-10-14 — H3a backend spese verificato
 
 Schema additivo HomeExpense/ExpenseHistory/ExpenseRequest applicato al solo DB V5 locale; nove endpoint expenses-v1 attivi. Importi/totali in centesimi, costi personali, archive/restore, storia/idempotenza/CAS e riferimenti redatti. Build/lint, 77 offline, 89 integrazione e cinque HTTP sul processo3001 verdi. Frontend Claude ancora in lavorazione; nessuna chiamata Anthropic o modifica main/legacy. Esito docs/v5/h3-integration-review.md.

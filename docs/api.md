@@ -198,3 +198,6 @@ Expense capabilities/list/detail/create/updates/archive/restore/history/summary 
 
 ## H3a expenses-v1 — backend locale attivo
 Nove rotte del contratto expenses-api-contract.md implementate su 3001: capabilities/list/create/detail/updates/archive/restore/history/summary. Query/input stretti, CSRF/AccountContext, no-store, membership personale e riferimenti redatti; replay rilegge i diritti correnti. GET summary calcola centesimi annui manual/document nel DB. Frontend e client/browser H3 ancora aperti.
+
+### H3a — client reale consolidato
+expenses-v1 consumata dal frontend reale5174 con context/CSRF/no-store/idempotenza;19 suite client/API non-live aggregate passano, quattro test Anthropic live saltati. Anno storico UI usa year dell’API esistente; non introdotto endpoint anni/facet. Contratto e forme restano quelli congelati in docs/v5/expenses-api-contract.md.

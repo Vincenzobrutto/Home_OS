@@ -213,3 +213,6 @@ HomeExpense personale, ExpenseHistory ed ExpenseRequest proposti in expenses-api
 
 ### H3a — schema locale implementato
 HomeExpense, ExpenseHistory ed ExpenseRequest con FK Restrict e indici su account/Home/stato/data; migration202610140001_expenses applicata soltanto a dimora_v5_product_dev. Centesimi INTEGER, date calendar string, riferimenti opzionali, active/archived e versione. Ledger/eventi conservano snapshot interni, proiezioni pubbliche redatte con diritti attuali. Documenti e caldaie non duplicano costi.
+
+### H3a — verifica end-to-end
+Due costi sintetici da10/20centesimi rimangono due record anche se referenziati nella caldaia/documento; totale30centesimi dal server. Archive/restore modifica stato/storia, non originale o conferme caldaia. Browser e query DB confermano persistenza/versioni/hash; dati sintetici lasciati navigabili nel solo DB V5 locale.
