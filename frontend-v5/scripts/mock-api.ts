@@ -60,6 +60,19 @@ if (process.argv.includes('--seed')) {
   ]) {
     await backend.expenses.handle({ method: 'POST', path: '', headers: { 'idempotency-key': crypto.randomUUID() }, body }, a.id, roma.id, 'expenses');
   }
+  // G1 di prova (solo mock): ambienti condivisi, un oggetto multiambiente, uno da collocare, caldaia posizionata.
+  const g1 = async (rest: string, body: Record<string, unknown>) =>
+    (await backend.objects.handle({ method: 'POST', path: '', headers: { 'idempotency-key': crypto.randomUUID() }, body }, a.id, roma.id, rest)).body as {
+      room?: { id: string };
+    };
+  const cucina = (await g1('rooms', { name: 'Cucina', type: 'kitchen' })).room!.id;
+  const soggiorno = (await g1('rooms', { name: 'Soggiorno', type: 'living' })).room!.id;
+  const camera = (await g1('rooms', { name: 'Camera', type: 'bedroom' })).room!.id;
+  await g1('rooms', { name: 'Bagno', type: 'bathroom' });
+  await g1('rooms', { name: 'Bagno', type: 'bathroom', note: 'Bagno di servizio' });
+  await g1('objects', { name: 'Termosifoni', type: 'heating', roomIds: [soggiorno, camera] });
+  await g1('objects', { name: 'Lavastoviglie', type: 'appliance' });
+  await g1(`objects/boiler/${caldaia.id}/position`, { expectedVersion: 0, roomIds: [cucina] });
   // Attività H1 di prova (solo mock), orologio del simulatore: 2026-10-13.
   for (const body of [
     { title: 'Spurgare i radiatori', dueDate: '2026-10-12' },

@@ -10,6 +10,8 @@ const groups = [
   ['document-search'],
   // H3a expenses registers three accounts: fourth group, after the same 61-second pause.
   ['expenses'],
+  // G1 home objects registers three accounts: fifth group, after the same 61-second pause.
+  ['home-objects'],
 ];
 const environment = { ...process.env, V5_ANTHROPIC_LIVE: '0' };
 const args = process.argv.slice(2);
