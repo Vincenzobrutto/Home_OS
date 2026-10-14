@@ -1,5 +1,7 @@
 # S1 — contratto tecnico economy-v1 (bozza per arbitrato UX)
 
+> Steering successivo del committente: modulo aggiuntivo, preservare funzionalità e percorsi esistenti; prima navigazione mockup, poi sviluppo. Il contratto resta BOZZA e non va usato per avviare frontend/backend operativo. I campi/metadati S1 sono opzionali senza migrare valori o categorie legacy; economy-v1 aggiuntiva e expenses-v1 invariata. Non cambiare etichette/percorsi H3a già concordati solo per uniformarli al nuovo mockup: chiarire i significati nella nuova area.
+
 14 ottobre 2026. Baseline prodotto a68f514. **Proposto, non congelato né implementato.** Il frontend operativo attende arbitrato della revisione Claude e congelamento con SHA. Spec vincolante s1-economic-history-spec.md; questa bozza dettaglia trasporto e compatibilità, non autorizza chiamate paid.
 
 ## Compatibilità e trasporto

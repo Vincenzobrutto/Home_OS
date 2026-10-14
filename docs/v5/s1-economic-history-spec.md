@@ -1,5 +1,7 @@
 # S1 — Storico economico evoluto e compilazione assistita
 
+> Vincolo esplicito del committente: Economia della casa è un modulo aggiuntivo. Non sostituisce o altera percorsi/comportamenti già definiti di Spese essenziali, Documenti, Attività, Oggetti e caldaia. Nuovo ingresso distinto all'area evoluta; registrazioni canoniche referenziate, nessuna duplicazione o riclassificazione automatica. Prima dello sviluppo il committente vuole navigare un mockup e valutare l'esperienza: backend e incarico frontend operativo sospesi fino a questa revisione UX. Mockup isolato mockup-economia-s1.html, nessuna API o DB reale.
+
 14 ottobre 2026. Definizione di prodotto consolidata dopo approvazione in chat. Non è una funzionalità già attiva. Prevale sui precedenti rinvii dell'intera estrazione economica a S3 e sull'ordine C1 prima di S1. G1 resta completato; nuovo ordine S1, C1, S2 e restante S3/S4.
 
 ## Obiettivo e uscite
