@@ -1,6 +1,6 @@
 # G1 — home-objects-v1: ambienti, oggetti e collegamenti
 
-14 ottobre 2026. Contratto congelato0b12d8a; backend G1 attivo e verificato nel DB/API locale, frontend Claude ancora in sviluppo. Esito autorevole g1-integration-review.md; G1 non chiusa prima di integrazione client/browser. Forme tecniche congelate conservate. Fonte prodotto home-economy-module.md. Preservare API H1/H3a e caldaie M3/M4.
+14 ottobre 2026. G1 integrata e verificata in locale: backend/schema, frontend Claude, client/API e browser reali. Contratto baseline0b12d8a con precisazioni history/importi dei riferimenti durante integrazione. Esito autorevole g1-integration-review.md. Fonte prodotto home-economy-module.md. API H1/H3a e caldaie M3/M4 conservate.
 
 ## Scelte
 
@@ -59,7 +59,7 @@ q: stringa NFC trim max80codepoint, vuota equivalente ad assenza; ricerca letter
 
 ## Collegamenti
 
-LinkedResource `{linkId:UUID|null,version:number|null,origin:'native'|'reference',state:'active'|'removed'|'unavailable',resourceType,resource:null|{id,title},objectRef}`. Fonte native non removibile da G1, usa dettaglio H1/H3a/M3. Risorsa unavailable redatta senza ID/title: linkId interno di associazione può restare per rimozione, non è resourceId. objectRef presente solo perché già autorizzato. Link rimosso solo nello storico, non nella lista attiva.
+LinkedResource `{linkId:UUID|null,version:number|null,origin:'native'|'reference',state:'active'|'removed'|'unavailable',resourceType,resource:null|{id,title},objectRef}`. Per expense autorizzata resource include anche `amountCents,currency:'EUR',spentOn`, dal record H3a corrente senza copie/sommatori; per document/activity assenti. Fonte native non removibile da G1, usa dettaglio H1/H3a/M3. Risorsa unavailable redatta interamente, inclusi importi/ID/title: linkId interno di associazione può restare per rimozione, non è resourceId. objectRef presente solo perché già autorizzato. Link rimosso solo nello storico, non nella lista attiva.
 
 GET links non duplica tra native e reference; spese/attività native richiedono creatore corrente. Documento home di altro uploader collegabile se leggibile; ciò non condivide oggetto o dati economici. Nuovo link richiede oggetto active; replay/rimozione possono leggere archivio. Rimozione reference archiviato ammessa se oggetto leggibile/edit, risorsa può essere unavailable.
 

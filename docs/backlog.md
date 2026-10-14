@@ -185,3 +185,8 @@ G1a/G1b aperti: implementare schema/API, autorizzazioni prima di paging e fonti 
 ## G1 — backend attivo e verificato (14 ottobre 2026)
 
 G1 backend/schema verificati; restano integrazione frontend Claude dopo consegna finale (escludi sync26525c0), client/API e browser320/390/desktop/tastiera/reload/login, due fasi costo->link con recupero e privacy. Nessuna dichiarazione G1 completa solo con test backend.
+
+
+## G1 — integrazione finale reale (14 ottobre 2026)
+
+G1 backend/frontend/client/browser chiusa. Restano C1, S1-S4, vendita/cessazione accesso, hardening pilota. Chunk600,88kB: code splitting per rotta prima del pilota senza aumentare soglia. Picker H1 attività senza riferimento nativo: eventuale filtro server futuro, paging/messaggio ora espliciti. Focus H1 dopo altre mutazioni K7 distinto dalla correzione G1 forObject. Nessun forecast o condivisione implicita aggiunti.

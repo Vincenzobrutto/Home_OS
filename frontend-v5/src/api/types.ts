@@ -487,7 +487,7 @@ export type LinkedResource = {
   origin: 'native' | 'reference';
   state: 'active' | 'removed' | 'unavailable';
   resourceType: G1ResourceType;
-  resource: null | { id: string; title: string };
+  resource: null | { id: string; title: string; amountCents?: number; currency?: 'EUR'; spentOn?: string };
   objectRef: ObjectRef;
 };
 

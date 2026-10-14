@@ -52,8 +52,8 @@ export function changeList(e: G1HistoryEvent) {
   if (a.type !== b.type && a.type !== undefined) out.push(`Tipo: ${typeText(b.type)} → ${typeText(a.type)}`);
   if (a.note !== b.note && 'note' in a) out.push(`Nota: ${text(b.note)} → ${text(a.note)}`);
   if (a.state !== b.state && a.state !== undefined) out.push(`Stato: ${text(b.state) === 'archived' ? 'archiviato' : 'attivo'} → ${a.state === 'archived' ? 'archiviato' : 'attivo'}`);
-  const br = roomNames(b.rooms);
-  const ar = roomNames(a.rooms);
+  const br = roomNames(asSnap(b.position)?.rooms ?? b.rooms);
+  const ar = roomNames(asSnap(a.position)?.rooms ?? a.rooms);
   if (ar !== null && ar !== br) out.push(`Posizione: ${br ?? '—'} → ${ar}`);
   return out;
 }

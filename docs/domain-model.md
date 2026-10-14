@@ -221,3 +221,8 @@ Due costi sintetici da10/20centesimi rimangono due record anche se referenziati 
 ## G1 — backend attivo e verificato (14 ottobre 2026)
 
 Modello V5 additivo HomeRoom/HomeObject/ObjectPosition/ObjectResourceLink/ObjectEvent/ObjectRequest, migrazioni202610140002/003 applicate solo al DB dedicato. Room shared, oggetto personale, posizione satellite boiler, link a risorse originali FK/check/unique principale, eventi/ledger proiettati con permessi correnti. Modello legacy invariato. Dettagli docs/v5/domain-model.md.
+
+
+## G1 — integrazione finale reale (14 ottobre 2026)
+
+G1 sei modelli additivi attivi e integrati; Room shared, Object/Position personali, caldaia non clonata. Record HomeExpense unico nelle schede e nei totali, Link originale autorizzato/read-snapshot. Audit sintetico conferma boiler v4/PDFv1/hash immutato e tre costi10+20+30=60cent, ledger8/41714microUSD invariato. Fonte docs/v5/g1-integration-review.md; schema legacy intatto.

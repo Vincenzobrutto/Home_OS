@@ -1,5 +1,7 @@
 # Dimora V5 API — backend locale Home
 
+G1 consolidata14ottobre: home-objects-v1/schema/frontend/client/browser reali verificati. Sei modelli additivi per ambienti/oggetti/posizioni/link/storia/ledger, API attive3001.81offline/102integrazione baseline,13G1 mirati finali e5HTTP runtime,21client/API non-live. Fonte docs/v5/g1-integration-review.md prevale sui resoconti precedenti. C1/S1-S4 restano futuri, zero nuovo consumo AI prodotto.
+
 Stato consolidato14ottobre: H3a integrata anche con frontend e browser reali,19 client/API non-live verdi. Il report docs/v5/h3-integration-review.md prevale sulle consegne storiche sotto; H3b, export del ciclo di vita e Admin restano successivi. Nessuna nuova chiamata Anthropic.
 
 API nuova NestJS/Prisma/PostgreSQL, senza import dell'AppModule o automatismi legacy. Implementati identity, documenti, analisi/conferme caldaia, attività, ricerca documenti e backend spese H3a. Agenzie e Amministratori seguono separatamente. Le sezioni iniziali riportano consegne storiche: lo stato corrente delle verticali è nei report docs/v5/*-integration-review.md.

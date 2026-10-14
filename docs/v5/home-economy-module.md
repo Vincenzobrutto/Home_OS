@@ -146,6 +146,6 @@ Ogni contratto con DTO/request/response/errori/paging/permessi/capabilities/idem
 
 ## 12. Stato e decisioni ancora separate
 
-Definizione v1 pronta; G1/S1/C1/S2/S3/S4 non implementati. H3a resta runtime reale. Date/sforzi del PDF non adottati come promessa.
+Definizione v1 pronta. Aggiornamento14ottobre: G1 ambienti/oggetti/collegamenti integrata e verificata sul runtime reale, report g1-integration-review.md. S1/C1/S2/S3/S4 non ancora implementati; H3a costi personali resta operativo. Date/sforzi del PDF non adottati come promessa.
 
 Prima di pilota esterno: controlli storage/upload, backup e ripristino, recupero account, retention/export, protezione documenti sensibili, qualità extraction misurata. Pricing Pro, acquisizione email, condivisibilità economica avanzata e obblighi legali richiedono decisioni specifiche; nessuna barriera artificiale allo sviluppo locale con fixture.

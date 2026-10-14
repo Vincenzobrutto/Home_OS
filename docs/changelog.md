@@ -609,3 +609,8 @@ Raccolta e integrata revisione documentale Claude (senza browser); risolte dieci
 ## G1 — backend attivo e verificato (14 ottobre 2026)
 
 Implementati sei modelli additivi e migrazioni202610140002/003 nel solo DB V5 guardato, endpoint home-objects-v1 e controllo compatibilità assetId H1/H3a. Backend verificato81offline/102integrazione/5HTTP processo reale; ulteriore8DBmirati per26link/storia multipagina. Originali e dati tecnici invariati, nessun paid AI/main/push. Frontend ancora in corso.
+
+
+## G1 — integrazione finale reale (14 ottobre 2026)
+
+Integrati8commit frontend Claude bf10356, escluso sync26525c0. Ambienti shared e oggetti personali/multiambiente, boiler originale, documenti/costi/attività canonici, archive/restore/storia. Correzioni finali history.position/importo diretto/focus promemoria G1 e testo destinazione. Build/lint,237mockbaseline+47mirati finali,81offline/102integrazionebaseline+13G1finali/5HTTP runtime,21clientAPI non-live veri (M4supplemento3), browser320/390/1280 e reload/login verdi. Nessun paid AI/main/push/DB reale/rete.

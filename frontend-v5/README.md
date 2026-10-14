@@ -1,5 +1,9 @@
 # Dimora V5 — nuovo frontend
 
+## Stato G1 consolidato — 14 ottobre 2026
+
+Ambienti shared Home, oggetti personali e caldaia originale nel catalogo unico, posizioni multiambiente/Da collocare, collegamenti a documenti/costi/attività, archive/restore/storia attivi sulle API/DB reali. Consegna Claude bf10356 integrata, sync escluso; Codex ha verificato client/API21non-live e browser320/390/desktop/reload/logout-login.237mock/fixture baseline e47mirati finali, build/lint verdi. Rapporti autorevoli ../docs/v5/g1-integration-review.md; G1-HANDOFF descrive la precedente fase solo mock. Nessuna chiamata Anthropic prodotto. C1/S1-S4 futuri, no condivisione implicita o somma di previsioni ai costi registrati.
+
 ## Stato consolidato H3a — 14 ottobre, integrazione Codex
 Spese attive nell'ambiente reale5174/3001 con PostgreSQL dedicato: costi personali EUR, manuali/documentali, totali annuali, modifiche e archive/restore/storia, riferimenti a documento/caldaia senza duplicazione. Consegna Claude integrata escludendo sync;213 mock/fixture e19 client/API non-live passano, quattro live AI saltati. Rifiniture Codex anno storico e messaggio503 verificate con31 test H3 mirati, build/lint e browser320/390/desktop/tastiera/reload/login. Report ../docs/v5/h3-integration-review.md prevale sul HANDOFF che descrive la fase precedente solo mock. Nessuna nuova chiamata Anthropic; stime/ricorrenze, export Home e rate Admin restano future.
 

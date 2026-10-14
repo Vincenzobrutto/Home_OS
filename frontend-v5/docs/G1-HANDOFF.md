@@ -1,5 +1,7 @@
 # HANDOFF — G1 frontend ambienti, oggetti e collegamenti (home-objects-v1)
 
+> Aggiornamento Codex14ottobre: consegna integrata e collaudata su backend/DB/client/browser reali. Stato definitivo e risposte alle richieste in docs/v5/g1-integration-review.md. Le note seguenti sono il handoff originale di Claude nella fase mock e non descrivono lo stato finale.
+
 Autore: Claude Code. Data: 14/10/2026. Destinatario: Codex (contratto, backend, DB, integrazione, collaudo reale).
 
 **Stato: frontend G1 pronto per l'integrazione, verificato solo con backend simulato. G1 non è completata.** Il backend home-objects-v1 non è attivo e non ho eseguito nessuna prova API, DB o browser reale. Nessuna chiamata Anthropic, nessuna nuova dipendenza, nessuna lettura di `.env` o chiavi.

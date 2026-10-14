@@ -51,6 +51,22 @@ const seedObject = async (b: FakeBackend, acc: string, home: string, name: strin
 const posts = (backend: FakeBackend, re: RegExp) => backend.log.filter((r) => r.method === 'POST' && re.test(r.path));
 const gets = (backend: FakeBackend, re: RegExp) => backend.log.filter((r) => r.method === 'GET' && re.test(r.path)).map((r) => r.path.split('?')[1] ?? '');
 
+describe('[mock] G1 — promemoria collegato e focus', () => {
+  it('apre con focus sul titolo e collega una sola attività all’oggetto', async () => {
+    const { backend, owner, home } = world();
+    const item = await seedObject(backend, owner.id, home.id, 'Termosifoni');
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/oggetti/object/${item.ref.id}`);
+    await app.user.click(await screen.findByRole('button', { name: 'Crea promemoria per questo oggetto' }));
+    const title = await screen.findByRole('heading', { name: 'Nuova attività' });
+    await waitFor(() => expect(title).toHaveFocus());
+    await app.user.type(screen.getByLabelText('Titolo'), 'Spurgo da programmare');
+    await app.user.click(screen.getByRole('button', { name: 'Crea attività' }));
+    await screen.findByRole('link', { name: 'Spurgo da programmare' });
+    expect(posts(backend, /\/activities$/)).toHaveLength(1);
+    expect(posts(backend, /\/objects\/object\/[^/]+\/links$/)).toHaveLength(1);
+  });
+});
+
 describe('[mock] G1 — ingresso, capabilities e ambienti', () => {
   it('Casa: ambienti condivisi e link, senza conteggi; Casa resta attiva nei sottopercorsi', async () => {
     const { backend, member, home } = world();

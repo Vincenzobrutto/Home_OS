@@ -599,6 +599,9 @@ export function LinksSection(props: {
                     : 'Collegamento originale: si gestisce dalla risorsa'
                   : 'Collegato da te a questo oggetto'}
               </span>
+              {resourceType === 'expense' && l.resource?.amountCents !== undefined && l.resource.currency === 'EUR' && (
+                <span className={styles.meta}>Costo registrato: {formatCents(l.resource.amountCents)}</span>
+              )}
               {canEdit && l.origin === 'reference' && l.linkId && l.version !== null && (
                 <span>
                   <button type="button" className={cx(ui.btn, ui.small)} onClick={() => setRemoving(l)}>

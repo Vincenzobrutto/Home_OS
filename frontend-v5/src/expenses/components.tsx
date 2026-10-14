@@ -448,7 +448,7 @@ export function ExpenseForm(props: {
               ? `, per «${assetName}»`
               : ''}
         .
-        {' '}Il costo resta un solo record, richiamato da documento e caldaia.
+        {' '}Il costo resta un solo record, richiamato da documento e {forObject ? 'oggetto' : 'caldaia'}.
       </p>
       {nothing && (
         <Banner role="status">

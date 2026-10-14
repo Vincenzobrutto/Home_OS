@@ -265,13 +265,17 @@ export class HomeObjectsService {
     }
     if (type === 'expense') await tx.$queryRaw`SELECT id FROM "HomeExpense" WHERE id=${id} FOR SHARE`;
     else await tx.$queryRaw`SELECT id FROM "HomeActivity" WHERE id=${id} FOR SHARE`;
-    const row = type === 'expense' ? await tx.homeExpense.findFirst({ where: { id, homeId: c.h, accountId: c.a } }) : await tx.homeActivity.findFirst({ where: { id, homeId: c.h, accountId: c.a } });
-    if (!row) throw deny();
-    return { id, title: row.title, assetId: row.assetId };
+    if (type === 'expense') {
+      const row = await tx.homeExpense.findFirst({ where: { id, homeId: c.h, accountId: c.a } });
+      if (!row) throw deny();
+      return { id, title: row.title, assetId: row.assetId, amountCents: row.amountCents, currency: 'EUR' as const, spentOn: row.spentOn };
+    }
+    const row = await tx.homeActivity.findFirst({ where: { id, homeId: c.h, accountId: c.a } });
+    if (!row) throw deny(); return { id, title: row.title, assetId: row.assetId };
   }
   private async linkView(tx: Tx, c: Context, row: ObjectResourceLink, kind: SubjectKind, id: string) {
-    let resource: { id: string; title: string } | null = null;
-    try { const found = await this.resource(tx, c, resourceType(row.resourceType), row.resourceId); resource = { id: found.id, title: found.title }; }
+    let resource: { id: string; title: string; amountCents?: number; currency?: 'EUR'; spentOn?: string } | null = null;
+    try { const found = await this.resource(tx, c, resourceType(row.resourceType), row.resourceId); resource = { id: found.id, title: found.title, ...('amountCents' in found ? { amountCents: found.amountCents, currency: found.currency, spentOn: found.spentOn } : {}) }; }
     catch (e) { if (!(e instanceof ForbiddenException)) throw e; }
     return { linkId: row.id, version: row.version, origin: 'reference', state: resource ? row.state : 'unavailable', resourceType: row.resourceType, resource, objectRef: { kind, id } };
   }
@@ -323,7 +327,12 @@ export class HomeObjectsService {
         ) x WHERE ${cur ? Prisma.sql`(x."createdAt",x.origin,x.id)<(${cur.t}::timestamp,${cur.k ?? ''},${cur.id})` : Prisma.sql`TRUE`}
         ORDER BY x."createdAt" DESC,x.origin DESC,x.id DESC LIMIT ${q.limit + 1}`);
       const page = this.page(rows, q.limit, b, r => ({ t: r.createdAt.toISOString(), k: r.origin, id: r.id }));
-      return { ...page, items: await Promise.all(page.items.map(async r => r.origin === 'native' ? { linkId: null, version: null, origin: 'native', state: 'active', resourceType: type, resource: { id: r.id, title: r.title }, objectRef: { kind, id } } : this.linkView(tx, c, (await tx.objectResourceLink.findUnique({ where: { id: r.id } }))!, kind, id))) };
+      return { ...page, items: await Promise.all(page.items.map(async r => {
+        if (r.origin === 'reference') return this.linkView(tx, c, (await tx.objectResourceLink.findUnique({ where: { id: r.id } }))!, kind, id);
+        const found = await this.resource(tx, c, type, r.id);
+        return { linkId: null, version: null, origin: 'native', state: 'active', resourceType: type,
+          resource: { id: r.id, title: r.title, ...('amountCents' in found ? { amountCents: found.amountCents, currency: found.currency, spentOn: found.spentOn } : {}) }, objectRef: { kind, id } };
+      })) };
     });
   }
 }

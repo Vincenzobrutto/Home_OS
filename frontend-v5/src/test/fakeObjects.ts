@@ -8,7 +8,8 @@ import type { CatalogItem, G1ResourceType, HomePermission, LinkedResource, Objec
 type Req = { method: string; path: string; headers: Record<string, string | undefined>; body: unknown };
 type Res = { status: number; body?: unknown };
 type Ref = { kind: ObjectKind; id: string };
-type Resource = { id: string; title: string; assetId?: string | null };
+type Resource = { id: string; title: string; assetId?: string | null; amountCents?: number; currency?: 'EUR'; spentOn?: string };
+const publicResource = (r: Resource) => ({ id: r.id, title: r.title, ...(r.amountCents !== undefined ? { amountCents: r.amountCents, currency: r.currency, spentOn: r.spentOn } : {}) });
 
 export type ObjectAccess = {
   perms(accountId: string, homeId: string): HomePermission[] | null;
@@ -168,7 +169,7 @@ export class FakeObjects {
       origin: 'reference',
       state: l.state === 'removed' ? 'removed' : r ? 'active' : 'unavailable',
       resourceType: l.resourceType,
-      resource: r && l.state === 'active' ? { id: r.id, title: r.title } : null,
+      resource: r && l.state === 'active' ? publicResource(r) : null,
       objectRef: l.ref,
     };
   }
@@ -335,7 +336,7 @@ export class FakeObjects {
           : this.access.native(accountId, homeId, type, ref.id);
       for (const r of native) {
         seen.add(r.id);
-        out.push({ linkId: null, version: null, origin: 'native', state: 'active', resourceType: type, resource: { id: r.id, title: r.title }, objectRef: ref });
+        out.push({ linkId: null, version: null, origin: 'native', state: 'active', resourceType: type, resource: publicResource(r), objectRef: ref });
       }
     }
     const refs = [...this.links.values()]

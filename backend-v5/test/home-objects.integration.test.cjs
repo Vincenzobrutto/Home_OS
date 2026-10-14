@@ -72,6 +72,7 @@ test('G1: DB reale ambienti condivisi, oggetti personali, posizioni e riferiment
   activity=(await activities.create(a,h,{title:'Spurgare',dueDate:'2026-10-15'},randomUUID())).activity;
   const beforeCost=await db.homeExpense.findUnique({where:{id:cost.id}}),beforeActivity=await db.homeActivity.findUnique({where:{id:activity.id}});
   const link=(await s.addLink(a,h,'object',obj.ref.id,{resourceType:'expense',resourceId:cost.id},randomUUID())).link;
+  assert.equal(link.resource.amountCents,30);assert.equal(link.resource.currency,'EUR');assert.equal(link.resource.spentOn,'2026-10-13');
   assert.equal((await s.addLink(a,h,'object',obj.ref.id,{resourceType:'expense',resourceId:cost.id},randomUUID())).link.linkId,link.linkId);
   await rejected(s.addLink(a,h,'object',obj2.ref.id,{resourceType:'expense',resourceId:cost.id},randomUUID()),409,'resource_already_linked');
   await s.addLink(a,h,'object',obj.ref.id,{resourceType:'activity',resourceId:activity.id},randomUUID());
@@ -81,6 +82,7 @@ test('G1: DB reale ambienti condivisi, oggetti personali, posizioni e riferiment
   assert.equal((await expenses.summary(a,h,{year:'2026'})).totalCents,30);assert.equal((await s.links(a,h,'object',obj.ref.id,{resourceType:'expense'})).items.length,1);
   const native=(await expenses.create(a,h,{title:'Nativo',amountCents:1,spentOn:'2026-10-13',assetId:boiler.id},randomUUID())).expense;
   const nativeList=(await s.links(a,h,'boiler',boiler.id,{resourceType:'expense'})).items;assert.equal(nativeList[0].origin,'native');assert.equal(nativeList[0].resource.id,native.id);
+  assert.equal(nativeList[0].resource.amountCents,1);
   await rejected(s.addLink(a,h,'object',obj.ref.id,{resourceType:'expense',resourceId:native.id},randomUUID()),409);
  });
  await t.test('Documenti multioggetto, replay/history redatti, rimozione senza cancellazione',async()=>{

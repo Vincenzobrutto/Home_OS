@@ -181,3 +181,8 @@ Claude UX27514fa integrato8d52b8f, contratto home-objects-v1 preparato/congelato
 ## G1 — backend attivo e verificato (14 ottobre 2026)
 
 G1 backend/schema/DB/API reali attivi: ambienti, oggetti manuali, posizione multiambiente, catalogo boiler, storia e link a documenti/attività/spese. Frontend Claude ancora in sviluppo; raccolta/review/client/API/browser mancanti, G1 non chiusa. Build/lint81offline/102integrazione/5HTTP runtime verdi. S1/C1 non avviati.
+
+
+## G1 — integrazione finale reale (14 ottobre 2026)
+
+G1 ambienti/oggetti/collegamenti CHIUSA in locale con frontend Claude raccolto,8commit integrati sync escluso. Backend/DB/HTTP/client/browser reali verdi, reload/logout-login e dati sintetici navigabili. C1 condivisione selettiva successiva secondo priorità umana; Spese S1-S4 definita ma non attiva, ciclo vendita dopo. Nessuna readiness pubblica dichiarata.

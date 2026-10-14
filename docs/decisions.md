@@ -489,3 +489,8 @@ ADR-V5-16: ambienti condivisi Home, oggetti/posizioni personali fino a C1. Catal
 ## G1 — backend attivo e verificato (14 ottobre 2026)
 
 ADR-V5-17: lock Home+account per ambienti shared, oggetti/posizioni personali finoC1, boiler catalogato senza copia di confirmed. Reference links canonici e unique parziale; H1/H3a rifiutano assetId incompatibile con link G1, non riciclano UUID generici. Replay interno redatto e autorizzazione fonti boiler prima di keyset/limit. Alternative e dettagli docs/v5/implementation-decisions.md e g1-integration-review.md.
+
+
+## G1 — integrazione finale reale (14 ottobre 2026)
+
+ADR-V5-18: frontend G1 pessimista, due POST costo/attività poi link con recupero senza ricreare risorsa; posizioni canoniche, nessun costo copiato su oggetto. Snapshot history diretti e posizione annidata; importo link expense letto dal record H3a autorizzato, senza N+1 HTTP/sommatori. Autofocus ActivityForm solo forObject dopo problema riprodotto nel browser. Scope personale conserva privacy finoC1. Precisazioni in docs/v5/g1-integration-review.md.

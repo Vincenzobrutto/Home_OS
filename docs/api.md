@@ -211,3 +211,8 @@ Contratto futuro home-objects-v1 in docs/v5/home-objects-api-contract.md: capabi
 ## G1 — backend attivo e verificato (14 ottobre 2026)
 
 home-objects-v1 ora attivo su API locale3001: object-capabilities, rooms CRUD logico/history, objects catalogo/create/detail/manualupdate/archive/restore/position/history/links/remove. Forme e policy in docs/v5/home-objects-api-contract.md. H1/H3a DTO invariati; assetId nuovo incoerente con link G1 attivo409 resource_already_linked.
+
+
+## G1 — integrazione finale reale (14 ottobre 2026)
+
+home-objects-v1 G1 integrato col frontend reale. CatalogItem ha note/versione/date per metadati; history before/after DTOdiretto e position.rooms. LinkedResource expense autorizzata include amountCents/currency EUR/spentOn da H3a; unavailable null intero senza importo/ID/titolo. Boiler updates/archive/restore G1 assenti404, nessuna azione UI. DTO/edgecompatibilità in docs/v5/home-objects-api-contract.md.

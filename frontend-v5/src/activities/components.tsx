@@ -242,6 +242,8 @@ export function ActivityForm(props: {
 }) {
   const { home, activity } = props;
   const forObject = !activity ? props.forObject : undefined;
+  const objectHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { if (forObject) objectHeading.current?.focus(); }, [forObject]);
   const id = useId();
   const op = useActivityOperation(home.id);
   const assets = useAssets(home.id);
@@ -323,7 +325,7 @@ export function ActivityForm(props: {
         submit();
       }}
     >
-      <h2 id={`${id}-t`} tabIndex={-1}>
+      <h2 id={`${id}-t`} ref={objectHeading} tabIndex={-1}>
         {activity ? 'Modifica attività' : 'Nuova attività'}
       </h2>
       <p className={styles.meta}>

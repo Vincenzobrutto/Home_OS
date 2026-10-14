@@ -53,6 +53,7 @@ test('G1: HTTP/controller/auth/CSRF/originali/DB reali, nessun worker AI',async 
   const form=new FormData();form.set('name','Fattura G1');form.set('visibility','home');form.set('file',new Blob([pdf]),'fattura-g1.pdf');doc=ok(await a.request(`/homes/${h}/documents`,'POST',form),201).document;
   expense=ok(await a.request(`/homes/${h}/expenses`,'POST',{title:'Acquisto lavatrice',amountCents:30,spentOn:'2026-01-01',documentId:doc.id}),201).expense;
   link=ok(await a.request(`/homes/${h}/objects/object/${obj.ref.id}/links`,'POST',{resourceType:'expense',resourceId:expense.id}),201).link;
+  assert.equal(link.resource.amountCents,30);assert.equal(link.resource.currency,'EUR');
   const docs=ok(await a.request(`/homes/${h}/objects/object/${obj.ref.id}/links`,'POST',{resourceType:'document',resourceId:doc.id}),201).link;
   assert.equal(ok(await a.request(`/homes/${h}/objects/object/${obj.ref.id}/links?resourceType=expense`)).items[0].resource.id,expense.id);
   assert.equal(ok(await a.request(`/homes/${h}/expense-summary?year=2026`)).totalCents,30);assert.deepEqual(ok(await a.request(`/homes/${h}/documents/${doc.id}/file`)),pdf);

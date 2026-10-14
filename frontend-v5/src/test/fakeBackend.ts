@@ -151,7 +151,7 @@ export class FakeBackend {
     },
     expense: (accountId, homeId, id) => {
       const e = this.expenses.items.get(id);
-      return e && e.accountId === accountId && e.homeId === homeId ? { id: e.id, title: e.title, assetId: e.assetId } : null;
+      return e && e.accountId === accountId && e.homeId === homeId ? { id: e.id, title: e.title, assetId: e.assetId, amountCents: e.amountCents, currency: 'EUR', spentOn: e.spentOn } : null;
     },
     activity: (accountId, homeId, id) => {
       const a = this.activities.items.get(id);
@@ -161,7 +161,7 @@ export class FakeBackend {
       type === 'expense'
         ? [...this.expenses.items.values()]
             .filter((e) => e.accountId === accountId && e.homeId === homeId && e.assetId === assetId)
-            .map((e) => ({ id: e.id, title: e.title, assetId }))
+            .map((e) => ({ id: e.id, title: e.title, assetId, amountCents: e.amountCents, currency: 'EUR', spentOn: e.spentOn }))
         : [...this.activities.items.values()]
             .filter((a) => a.accountId === accountId && a.homeId === homeId && a.assetId === assetId)
             .map((a) => ({ id: a.id, title: a.title, assetId })),
