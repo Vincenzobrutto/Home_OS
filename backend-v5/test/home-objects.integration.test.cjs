@@ -1,0 +1,104 @@
+require('reflect-metadata');
+const { test }=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
+const {PrismaClient}=require('../generated/client');const {assertDevelopmentDatabase}=require('../dist/prisma.service');
+const {HomeObjectsService}=require('../dist/home-objects/home-objects.service');const {ReviewService}=require('../dist/review/review.service');
+const {ExpensesService}=require('../dist/expenses/expenses.service');const {ActivitiesService}=require('../dist/activities/activities.service');
+test('G1: DB reale ambienti condivisi, oggetti personali, posizioni e riferimenti canonici',async t=>{
+ assertDevelopmentDatabase(process.env.DATABASE_URL);const db=new PrismaClient();await db.$connect();
+ const accounts=await Promise.all(['A','B'].map(name=>db.account.create({data:{name:'G1 '+name,email:randomUUID()+'@example.test',passwordHash:'not-login'}}))),[a,b]=accounts.map(x=>x.id);
+ const homes=await Promise.all(['G1','Altra G1'].map(name=>db.home.create({data:{name,address:'Via sintetica'}}))),[h,other]=homes.map(x=>x.id);
+ await db.homeMembership.createMany({data:[{accountId:a,homeId:h},{accountId:b,homeId:h},{accountId:a,homeId:other}].map(x=>({...x,role:'owner',validFrom:new Date(0)}))});
+ const doc=await db.document.create({data:{homeId:h,uploaderId:b,name:'Documento condiviso G1',visibility:'home',original:{create:{originalFilename:'g1.pdf',mimeType:'application/pdf',byteSize:10,sha256:'a'.repeat(64),file:{create:{storageKey:randomUUID()+'.bin'}}}}},include:{original:true}});
+ const boiler=await db.boilerAsset.create({data:{accountId:a,homeId:h,name:'Caldaia originale',confirmed:{brand:{value:'Invariata'}}}}),otherBoiler=await db.boilerAsset.create({data:{accountId:b,homeId:h,name:'Caldaia privata di B'}});
+ const s=new HomeObjectsService(db,new ReviewService(db,{})),clock={now:()=>new Date('2026-10-14T12:00:00Z')},expenses=new ExpensesService(db,new ReviewService(db,{}),clock),activities=new ActivitiesService(db,new ReviewService(db,{}),clock);
+ const aiBefore=await db.aiAttempt.count(),originalBoiler=await db.boilerAsset.findUnique({where:{id:boiler.id}}),originalDoc=await db.document.findUnique({where:{id:doc.id},include:{original:true}});
+ const rejected=(p,status,code)=>assert.rejects(p,e=>e.getStatus?.()===status&&(!code||e.getResponse().code===code));
+ let room,second,obj,obj2,cost,activity,docLink,linkKey,linkBody,initialObject;
+ t.after(async()=>{
+  await db.objectEvent.deleteMany({where:{homeId:{in:[h,other]}}});await db.objectRequest.deleteMany({where:{homeId:{in:[h,other]}}});await db.objectResourceLink.deleteMany({where:{homeId:{in:[h,other]}}});await db.objectPosition.deleteMany({where:{homeId:{in:[h,other]}}});await db.homeObject.deleteMany({where:{homeId:{in:[h,other]}}});await db.homeRoom.deleteMany({where:{homeId:{in:[h,other]}}});
+  await db.expenseHistory.deleteMany({where:{accountId:{in:[a,b]}}});await db.expenseRequest.deleteMany({where:{accountId:{in:[a,b]}}});await db.homeExpense.deleteMany({where:{homeId:{in:[h,other]}}});
+  await db.activityHistory.deleteMany({where:{accountId:{in:[a,b]}}});await db.activityRequest.deleteMany({where:{accountId:{in:[a,b]}}});await db.homeActivity.deleteMany({where:{homeId:{in:[h,other]}}});
+  await db.analysisJob.deleteMany({where:{homeId:{in:[h,other]}}});await db.boilerAsset.deleteMany({where:{homeId:{in:[h,other]}}});
+  await db.documentVersion.deleteMany({where:{documentId:doc.id}});await db.document.delete({where:{id:doc.id}});await db.storedFile.delete({where:{id:doc.original.fileId}});
+  await db.home.deleteMany({where:{id:{in:[h,other]}}});await db.account.deleteMany({where:{id:{in:[a,b]}}});await db.$disconnect();
+ });
+ await t.test('Due stanze uguali, visibilità shared, concorrenza fra membri e replay',async()=>{
+  assert.equal((await s.capabilities(a,h,{})).apiVersion,'home-objects-v1');const body={name:'Bagno',type:'bathroom'},key=randomUUID();
+  const created=await s.createRoom(a,h,body,key);room=created.room;assert.deepEqual(await s.createRoom(a,h,body,key),created);
+  second=(await s.createRoom(b,h,body,randomUUID())).room;assert.notEqual(room.id,second.id);assert.equal((await s.rooms(b,h,{})).items.length,2);
+  const results=await Promise.allSettled([s.updateRoom(a,h,room.id,{expectedVersion:1,name:'Bagno A'},randomUUID()),s.updateRoom(b,h,room.id,{expectedVersion:1,name:'Bagno B'},randomUUID())]);
+  assert.equal(results.filter(x=>x.status==='fulfilled').length,1);assert.equal(results.find(x=>x.status==='rejected').reason.getResponse().code,'room_version_conflict');
+  room=(await s.getRoom(a,h,room.id,{})).room;const events=(await s.history(b,h,'room',room.id,{})).items.length;
+  await s.updateRoom(a,h,room.id,{expectedVersion:room.version,name:room.name},randomUUID());assert.equal((await s.history(a,h,'room',room.id,{})).items.length,events);
+  await rejected(s.createRoom(a,h,{...body,note:'altro'},key),409,'idempotency_conflict');
+ });
+ await t.test('Oggetti privati, multiambiente atomico e archive/restore',async()=>{
+  initialObject={name:'Termosifoni',type:'heating',roomIds:[second.id,room.id]};const sameKey=randomUUID();
+  const same=await Promise.all([s.createObject(a,h,initialObject,sameKey),s.createObject(a,h,{...initialObject,roomIds:[...initialObject.roomIds].reverse()},sameKey)]);assert.deepEqual(same[0],same[1]);obj=same[0].object;
+  assert.equal(obj.position.rooms.length,2);assert.equal(obj.position.version,1);await rejected(s.getObject(b,h,'object',obj.ref.id,{}),403);
+  assert(!(await s.objects(b,h,{})).items.some(x=>x.ref.id===obj.ref.id));obj2=(await s.createObject(a,h,{name:'Lavatrice',type:'appliance'},randomUUID())).object;
+  assert.equal(obj2.position.version,0);assert((await s.objects(a,h,{placement:'unplaced'})).items.some(x=>x.ref.id===obj2.ref.id));
+  const attempts=await Promise.allSettled([s.setPosition(a,h,'object',obj2.ref.id,{expectedVersion:0,roomIds:[room.id]},randomUUID()),s.setPosition(a,h,'object',obj2.ref.id,{expectedVersion:0,roomIds:[second.id]},randomUUID())]);
+  assert.equal(attempts.filter(x=>x.status==='fulfilled').length,1);assert.equal(attempts.find(x=>x.status==='rejected').reason.getResponse().code,'placement_version_conflict');
+  obj= (await s.objectAction(a,h,obj.ref.id,'archive',{expectedVersion:1},randomUUID())).object;await rejected(s.updateObject(a,h,obj.ref.id,{expectedVersion:2,name:'X'},randomUUID()),409,'resource_state_conflict');
+  obj=(await s.objectAction(a,h,obj.ref.id,'restore',{expectedVersion:2},randomUUID())).object;assert.equal(obj.position.rooms.length,2);
+  room=(await s.roomAction(a,h,room.id,'archive',{expectedVersion:room.version},randomUUID())).room;
+  assert((await s.getObject(a,h,'object',obj.ref.id,{})).object.position.rooms.some(x=>x.id===room.id&&x.state==='archived'));
+  await rejected(s.createObject(a,h,{name:'Nuovo',type:'other',roomIds:[room.id]},randomUUID()),409,'resource_state_conflict');
+  const crossRoom=(await s.createRoom(a,other,{name:'Altra',type:'other'},randomUUID())).room;await rejected(s.setPosition(a,h,'object',obj.ref.id,{expectedVersion:1,roomIds:[crossRoom.id]},randomUUID()),403);
+ });
+ await t.test('Caldaia una riga, posizione satellite e fonte revocata prima della pagina',async()=>{
+  await s.setPosition(a,h,'boiler',boiler.id,{expectedVersion:0,roomIds:[second.id]},randomUUID());
+  assert.equal((await s.objects(a,h,{})).items.filter(x=>x.ref.id===boiler.id).length,1);
+  await rejected(s.getObject(a,h,'boiler',otherBoiler.id,{}),403);
+  assert.deepEqual(await db.boilerAsset.findUnique({where:{id:boiler.id}}),originalBoiler);
+  await db.analysisJob.create({data:{accountId:a,homeId:h,assetId:boiler.id,state:'succeeded',documents:[{documentId:doc.id,documentVersion:1,documentSha256:doc.original.sha256}]}});
+  await db.document.update({where:{id:doc.id},data:{visibility:'private'}});
+  assert.equal((await s.objects(a,h,{type:'boiler'})).items.length,0);await rejected(s.getObject(a,h,'boiler',boiler.id,{}),403);
+  await db.document.update({where:{id:doc.id},data:{visibility:'home'}});
+ });
+ await t.test('Keyset oltre prima pagina, timestamp uguali, ricerca letterale e cursor scope',async()=>{
+  const time=new Date('2020-01-01T00:00:00Z'),ids=Array.from({length:26},()=>randomUUID());
+  await db.homeObject.createMany({data:ids.map((id,i)=>({id,accountId:a,homeId:h,name:i===0?'CAFÉ 100%':'Paging '+i,type:'other',createdAt:time,updatedAt:time}))});
+  const found=await s.objects(a,h,{q:'café 100%',type:'other'});assert.equal(found.items.length,1);assert.equal((await s.objects(a,h,{q:'%'})).items.length,1);
+  const seen=new Set();let cursor,loops=0;do{const page=await s.objects(a,h,{limit:loops===0?'2':'7',...(cursor?{cursor}:{})});for(const item of page.items){assert(!seen.has(item.ref.id));seen.add(item.ref.id);}cursor=page.nextCursor;assert(++loops<20);}while(cursor);
+  assert.equal(seen.size,29);const first=await s.objects(a,h,{limit:'1'});await rejected(s.objects(a,h,{cursor:first.nextCursor,q:'altro'}),422);
+  await rejected(s.objects(b,h,{cursor:first.nextCursor}),422);const rooms=await s.rooms(a,h,{state:'all',limit:'1'});assert(rooms.nextCursor);assert.equal((await s.rooms(a,h,{state:'all',cursor:rooms.nextCursor})).items.length,1);
+ });
+ await t.test('Un costo canonico e un’attività, nessun doppio oggetto o assetId riciclato',async()=>{
+  cost=(await expenses.create(a,h,{title:'Spurgo G1',amountCents:30,spentOn:'2026-10-13'},randomUUID())).expense;
+  activity=(await activities.create(a,h,{title:'Spurgare',dueDate:'2026-10-15'},randomUUID())).activity;
+  const beforeCost=await db.homeExpense.findUnique({where:{id:cost.id}}),beforeActivity=await db.homeActivity.findUnique({where:{id:activity.id}});
+  const link=(await s.addLink(a,h,'object',obj.ref.id,{resourceType:'expense',resourceId:cost.id},randomUUID())).link;
+  assert.equal((await s.addLink(a,h,'object',obj.ref.id,{resourceType:'expense',resourceId:cost.id},randomUUID())).link.linkId,link.linkId);
+  await rejected(s.addLink(a,h,'object',obj2.ref.id,{resourceType:'expense',resourceId:cost.id},randomUUID()),409,'resource_already_linked');
+  await s.addLink(a,h,'object',obj.ref.id,{resourceType:'activity',resourceId:activity.id},randomUUID());
+  await rejected(expenses.update(a,h,cost.id,{expectedVersion:cost.version,assetId:boiler.id},randomUUID()),409,'resource_already_linked');
+  await rejected(activities.update(a,h,activity.id,{expectedVersion:activity.version,assetId:boiler.id},randomUUID()),409,'resource_already_linked');
+  assert.deepEqual(await db.homeExpense.findUnique({where:{id:cost.id}}),beforeCost);assert.deepEqual(await db.homeActivity.findUnique({where:{id:activity.id}}),beforeActivity);
+  assert.equal((await expenses.summary(a,h,{year:'2026'})).totalCents,30);assert.equal((await s.links(a,h,'object',obj.ref.id,{resourceType:'expense'})).items.length,1);
+  const native=(await expenses.create(a,h,{title:'Nativo',amountCents:1,spentOn:'2026-10-13',assetId:boiler.id},randomUUID())).expense;
+  const nativeList=(await s.links(a,h,'boiler',boiler.id,{resourceType:'expense'})).items;assert.equal(nativeList[0].origin,'native');assert.equal(nativeList[0].resource.id,native.id);
+  await rejected(s.addLink(a,h,'object',obj.ref.id,{resourceType:'expense',resourceId:native.id},randomUUID()),409);
+ });
+ await t.test('Documenti multioggetto, replay/history redatti, rimozione senza cancellazione',async()=>{
+  linkBody={resourceType:'document',resourceId:doc.id};linkKey=randomUUID();docLink=(await s.addLink(a,h,'object',obj.ref.id,linkBody,linkKey)).link;
+  await s.addLink(a,h,'object',obj2.ref.id,linkBody,randomUUID());await db.document.update({where:{id:doc.id},data:{visibility:'private'}});
+  const replay=(await s.addLink(a,h,'object',obj.ref.id,linkBody,linkKey)).link;assert.equal(replay.state,'unavailable');assert.equal(replay.resource,null);
+  assert(!JSON.stringify(await s.history(a,h,'object',obj.ref.id,{})).includes(doc.id));assert.equal((await s.links(a,h,'object',obj.ref.id,{resourceType:'document'})).items[0].resource,null);
+  await s.removeLink(a,h,'object',obj.ref.id,docLink.linkId,{expectedVersion:1},randomUUID());assert.equal((await s.links(a,h,'object',obj.ref.id,{resourceType:'document'})).items.length,0);
+  await db.document.update({where:{id:doc.id},data:{visibility:'home'}});assert.deepEqual(await db.document.findUnique({where:{id:doc.id},include:{original:true}}),originalDoc);
+  const moreIds=Array.from({length:26},()=>randomUUID());await db.homeExpense.createMany({data:moreIds.map(id=>({id,accountId:a,homeId:h,title:'Costo paging G1',amountCents:1,spentOn:'2026-10-13'}))});
+  await Promise.all(moreIds.map(resourceId=>s.addLink(a,h,'object',obj.ref.id,{resourceType:'expense',resourceId},randomUUID())));
+  await db.objectResourceLink.updateMany({where:{expenseId:{in:moreIds}},data:{createdAt:new Date('2020-01-01T00:00:00Z')}});
+  const resourceSeen=new Set();let cursor,loops=0;do{const page=await s.links(a,h,'object',obj.ref.id,{resourceType:'expense',limit:loops===0?'2':'7',...(cursor?{cursor}:{})});for(const item of page.items){assert(!resourceSeen.has(item.resource.id));resourceSeen.add(item.resource.id);}cursor=page.nextCursor;assert(++loops<20);}while(cursor);assert.equal(resourceSeen.size,27);
+  const historySeen=new Set();cursor=undefined;loops=0;do{const page=await s.history(a,h,'object',obj.ref.id,{limit:'7',...(cursor?{cursor}:{})});for(const item of page.items){assert(!historySeen.has(item.id));historySeen.add(item.id);}cursor=page.nextCursor;assert(++loops<20);}while(cursor);assert(historySeen.size>26);
+ });
+ await t.test('Viewer e membership revocata impediscono mutazioni/read/replay',async()=>{
+  await db.homeMembership.update({where:{accountId_homeId:{accountId:a,homeId:h}},data:{role:'viewer'}});
+  assert.deepEqual((await s.getObject(a,h,'object',obj.ref.id,{})).object.permissions,['read']);await rejected(s.createRoom(a,h,{name:'Negata',type:'other'},randomUUID()),403);
+  await db.homeMembership.update({where:{accountId_homeId:{accountId:a,homeId:h}},data:{revokedAt:new Date()}});
+  await rejected(s.objects(a,h,{}),403);await rejected(s.history(a,h,'object',obj.ref.id,{}),403);await rejected(s.addLink(a,h,'object',obj.ref.id,linkBody,linkKey),403);
+  assert.equal(await db.aiAttempt.count(),aiBefore);
+ });
+});

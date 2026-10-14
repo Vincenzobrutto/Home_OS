@@ -124,7 +124,13 @@ export class ExpensesService {
         const response = { expense: await this.project(tx, saved, true) }; await this.access.require(tx, a, h, true); return response;
       }
       if ('documentId' in body && body.documentId) await this.documentLink(tx, a, h, body.documentId, true);
-      if ('assetId' in body && body.assetId) await this.assetLink(tx, a, h, body.assetId, true);
+      if ('assetId' in body && body.assetId) {
+        await this.assetLink(tx, a, h, body.assetId, true);
+        if (target) {
+          const primary = await tx.objectResourceLink.findFirst({ where: { expenseId: target, accountId: a, homeId: h, state: 'active' } });
+          if (primary && primary.boilerId !== body.assetId) throw conflict('resource_already_linked', 'Rimuovi prima il collegamento all’oggetto attuale.');
+        }
+      }
       let row: HomeExpense, kind = operation === 'create' ? 'created' : operation === 'update' ? 'updated' : operation === 'archive' ? 'archived' : 'restored';
       if (!old) row = await tx.homeExpense.create({ data: { accountId: a, homeId: h, ...body as ReturnType<typeof createExpense>, createdAt: now, updatedAt: now } });
       else {

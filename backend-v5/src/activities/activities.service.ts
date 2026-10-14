@@ -68,7 +68,13 @@ export class ActivitiesService {
         if (response.activity.assetLink.asset) await this.link(tx, accountId, homeId, response.activity.assetLink.asset.id, true);
         return prior.response;
       }
-      if ('assetId' in body && body.assetId) await this.link(tx, accountId, homeId, body.assetId, true);
+      if ('assetId' in body && body.assetId) {
+        await this.link(tx, accountId, homeId, body.assetId, true);
+        if (target) {
+          const primary = await tx.objectResourceLink.findFirst({ where: { activityId: target, accountId, homeId, state: 'active' } });
+          if (primary && primary.boilerId !== body.assetId) throw conflict('resource_already_linked', 'Rimuovi prima il collegamento all’oggetto attuale.');
+        }
+      }
       const now = this.clock.now(), context = temporal(now);
       let row: HomeActivity, kind = operation === 'create' ? 'created' : operation === 'update' ? 'updated' : operation === 'complete' ? 'completed' : operation === 'cancel' ? 'cancelled' : 'reopened';
       if (!old) row = await tx.homeActivity.create({ data: { accountId, homeId, ...body as ReturnType<typeof createBody>, createdAt: now, updatedAt: now } });

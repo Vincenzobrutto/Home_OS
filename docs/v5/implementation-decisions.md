@@ -1,5 +1,11 @@
 # V5 — contratto di implementazione iniziale
 
+## ADR-V5-17 — G1 backend e compatibilità del costo canonico
+
+14 ottobre2026. HomeRoom shared richiede advisory lock Home oltre account/Home, altrimenti due membri possono vincere sulla stessa versione. Oggetti/posizioni personali finoC1; BoilerAsset originale letto nel catalogo discriminato, senza wrapper/copiedconfirmed. Reference links non scrivono costo/attività; unique parziale tutela un oggetto principale. H1/H3a rifiutano assetId nativo incompatibile con link G1 attivo, evitando doppia attribuzione. Scartati riuso UUID assetId per oggetto generico e pubblicazione implicita delle note personali.
+
+Ledger G1 snapshot interno proiettato con diritti correnti; SQL autorizza fonti boiler prima di paging e proiezione le ricontrolla. Nessun dataset integrale in memoria, ricerca letterale ICU come H2; roomIds JSON validato e nessun harddelete room. FK dei link a risorse, vincolo esattamente una risorsa del tipo corretto rafforzato in migrazione separata dopo prima applicazione. Nessuna dipendenza o paid AI. Build/lint81offline/102integrazione/5HTTP runtime verdi; frontend/client/browser G1 da completare. Dettagli g1-integration-review.md.
+
 13 ottobre 2026. Decisioni per la nuova V5, autorizzata dal committente; non modificano il frontend legacy.
 
 ## ADR-V5-01 — due progetti nuovi

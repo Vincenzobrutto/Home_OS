@@ -216,3 +216,8 @@ HomeExpense, ExpenseHistory ed ExpenseRequest con FK Restrict e indici su accoun
 
 ### H3a — verifica end-to-end
 Due costi sintetici da10/20centesimi rimangono due record anche se referenziati nella caldaia/documento; totale30centesimi dal server. Archive/restore modifica stato/storia, non originale o conferme caldaia. Browser e query DB confermano persistenza/versioni/hash; dati sintetici lasciati navigabili nel solo DB V5 locale.
+
+
+## G1 — backend attivo e verificato (14 ottobre 2026)
+
+Modello V5 additivo HomeRoom/HomeObject/ObjectPosition/ObjectResourceLink/ObjectEvent/ObjectRequest, migrazioni202610140002/003 applicate solo al DB dedicato. Room shared, oggetto personale, posizione satellite boiler, link a risorse originali FK/check/unique principale, eventi/ledger proiettati con permessi correnti. Modello legacy invariato. Dettagli docs/v5/domain-model.md.

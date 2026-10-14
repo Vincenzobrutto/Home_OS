@@ -176,3 +176,8 @@ Priorità umana aggiornata: G1 ambienti/oggetti generici, C1 condivisione selett
 ## G1 — contratto e revisione UX raccolta (14 ottobre 2026)
 
 Claude UX27514fa integrato8d52b8f, contratto home-objects-v1 preparato/congelato e prime validazioni dominio verdi. G1a schema/API poi G1b links: entrambi necessari per chiudere G1. G1 frontend/DB non attivi, runtime H3a invariato. Economia futura si chiama Impegni, non In programma come H1.
+
+
+## G1 — backend attivo e verificato (14 ottobre 2026)
+
+G1 backend/schema/DB/API reali attivi: ambienti, oggetti manuali, posizione multiambiente, catalogo boiler, storia e link a documenti/attività/spese. Frontend Claude ancora in sviluppo; raccolta/review/client/API/browser mancanti, G1 non chiusa. Build/lint81offline/102integrazione/5HTTP runtime verdi. S1/C1 non avviati.

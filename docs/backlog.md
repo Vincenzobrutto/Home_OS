@@ -180,3 +180,8 @@ EC-G1: congelare contratto ambienti/oggetti e conservare caldaia esistente, docu
 ## G1 — contratto e revisione UX raccolta (14 ottobre 2026)
 
 G1a/G1b aperti: implementare schema/API, autorizzazioni prima di paging e fonti boiler, CAS/versioni/replay redatto, collegamenti canonici e recupero seconda fase. EC-K7 focus H1 da riprodurre, non difetto browser confermato. G1 deve evitare rimontaggio che perde focus. Nessuna condivisione oggetti implicita o totale per ambiente.
+
+
+## G1 — backend attivo e verificato (14 ottobre 2026)
+
+G1 backend/schema verificati; restano integrazione frontend Claude dopo consegna finale (escludi sync26525c0), client/API e browser320/390/desktop/tastiera/reload/login, due fasi costo->link con recupero e privacy. Nessuna dichiarazione G1 completa solo con test backend.

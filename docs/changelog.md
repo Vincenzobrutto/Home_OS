@@ -604,3 +604,8 @@ Definiti obiettivi, UX, categorie, costo canonico, natura/fonte/pagamento separa
 ## G1 — contratto e revisione UX raccolta (14 ottobre 2026)
 
 Raccolta e integrata revisione documentale Claude (senza browser); risolte dieci osservazioni con decisioni motivate. Contratto G1 e prime validazioni/test backend: build/lint e quattro scenari dominio verdi. Nessuno schema/migrazione/servizio/rete modificato; frontend nuovo non implementato, nessuna chiamata Anthropic.
+
+
+## G1 — backend attivo e verificato (14 ottobre 2026)
+
+Implementati sei modelli additivi e migrazioni202610140002/003 nel solo DB V5 guardato, endpoint home-objects-v1 e controllo compatibilità assetId H1/H3a. Backend verificato81offline/102integrazione/5HTTP processo reale; ulteriore8DBmirati per26link/storia multipagina. Originali e dati tecnici invariati, nessun paid AI/main/push. Frontend ancora in corso.

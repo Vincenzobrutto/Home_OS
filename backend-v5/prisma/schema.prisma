@@ -31,6 +31,11 @@ model Account {
   expenses HomeExpense[]
   expenseRequests ExpenseRequest[]
   expenseHistory ExpenseHistory[]
+  objectRecords HomeObject[]
+  objectPositions ObjectPosition[]
+  objectLinks ObjectResourceLink[]
+  objectEvents ObjectEvent[]
+  objectRequests ObjectRequest[]
 }
 model Session {
   id String @id
@@ -58,6 +63,12 @@ model Home {
   activityRequests ActivityRequest[]
   expenses HomeExpense[]
   expenseRequests ExpenseRequest[]
+  rooms HomeRoom[]
+  objectRecords HomeObject[]
+  objectPositions ObjectPosition[]
+  objectLinks ObjectResourceLink[]
+  objectEvents ObjectEvent[]
+  objectRequests ObjectRequest[]
 }
 model HomeMembership {
   id String @id @default(uuid())
@@ -88,6 +99,7 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  objectLinks ObjectResourceLink[]
   id String @id @default(uuid())
   homeId String
   uploaderId String
@@ -134,6 +146,8 @@ model UploadRequest {
 }
 
 model BoilerAsset {
+  objectPosition ObjectPosition?
+  objectLinks ObjectResourceLink[]
   expenses HomeExpense[]
   activities HomeActivity[]
   id String @id @default(uuid())
@@ -157,6 +171,7 @@ enum ActivityState {
   cancelled
 }
 model HomeActivity {
+  objectLinks ObjectResourceLink[]
   id String @id @default(uuid())
   accountId String
   homeId String
@@ -281,6 +296,7 @@ enum ExpenseState {
   archived
 }
 model HomeExpense {
+  objectLinks ObjectResourceLink[]
   id String @id @default(uuid())
   accountId String
   homeId String
@@ -303,6 +319,101 @@ model HomeExpense {
   @@index([accountId, homeId, state, spentOn, createdAt, id])
   @@index([accountId, homeId, documentId])
   @@index([accountId, homeId, assetId])
+}
+
+model HomeRoom {
+  id String @id @default(uuid())
+  homeId String
+  name String
+  type String
+  note String?
+  state String @default("active")
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  home Home @relation(fields:[homeId], references:[id], onDelete:Restrict)
+  @@index([homeId,state,createdAt,id])
+}
+model HomeObject {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  name String
+  type String
+  note String?
+  state String @default("active")
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)
+  home Home @relation(fields:[homeId], references:[id], onDelete:Restrict)
+  position ObjectPosition?
+  links ObjectResourceLink[]
+  @@index([accountId,homeId,state,createdAt,id])
+}
+model ObjectPosition {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  objectId String? @unique
+  boilerId String? @unique
+  version Int @default(1)
+  roomIds Json
+  account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)
+  home Home @relation(fields:[homeId], references:[id], onDelete:Restrict)
+  object HomeObject? @relation(fields:[objectId], references:[id], onDelete:Restrict)
+  boiler BoilerAsset? @relation(fields:[boilerId], references:[id], onDelete:Restrict)
+}
+model ObjectResourceLink {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  objectId String?
+  boilerId String?
+  resourceType String
+  resourceId String
+  documentId String?
+  activityId String?
+  expenseId String?
+  state String @default("active")
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)
+  home Home @relation(fields:[homeId], references:[id], onDelete:Restrict)
+  object HomeObject? @relation(fields:[objectId], references:[id], onDelete:Restrict)
+  boiler BoilerAsset? @relation(fields:[boilerId], references:[id], onDelete:Restrict)
+  document Document? @relation(fields:[documentId], references:[id], onDelete:Restrict)
+  activity HomeActivity? @relation(fields:[activityId], references:[id], onDelete:Restrict)
+  expense HomeExpense? @relation(fields:[expenseId], references:[id], onDelete:Restrict)
+  @@index([accountId,homeId,resourceType,state,createdAt,id])
+}
+model ObjectEvent {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  targetKind String
+  targetId String
+  kind String
+  at DateTime @default(now())
+  before Json?
+  after Json
+  account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)
+  home Home @relation(fields:[homeId], references:[id], onDelete:Restrict)
+  @@index([homeId,targetKind,targetId,at,id])
+}
+model ObjectRequest {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  operation String
+  target String
+  key String
+  digest String
+  response Json
+  createdAt DateTime @default(now())
+  account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)
+  home Home @relation(fields:[homeId], references:[id], onDelete:Restrict)
+  @@unique([accountId,homeId,operation,target,key])
 }
 model ExpenseHistory {
   id String @id @default(uuid())

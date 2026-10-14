@@ -1,6 +1,6 @@
 # G1 — home-objects-v1: ambienti, oggetti e collegamenti
 
-14 ottobre 2026. Contratto tecnico preparato da Codex; backend e frontend NON attivi. Il report UX Claude potrà affinare interfacce e taglio senza cambiare implicitamente le forme tecniche. Prima dell'incarico frontend fissare SHA e sincronizzazione. Fonte prodotto home-economy-module.md. Preservare API H1/H3a e caldaie M3/M4.
+14 ottobre 2026. Contratto congelato0b12d8a; backend G1 attivo e verificato nel DB/API locale, frontend Claude ancora in sviluppo. Esito autorevole g1-integration-review.md; G1 non chiusa prima di integrazione client/browser. Forme tecniche congelate conservate. Fonte prodotto home-economy-module.md. Preservare API H1/H3a e caldaie M3/M4.
 
 ## Scelte
 
@@ -66,6 +66,8 @@ GET links non duplica tra native e reference; spese/attività native richiedono 
 La creazione costo/attività continua H3a/H1, poi collegamento G1 esplicito. Due operazioni, non una transazione promessa: se seconda fallisce il costo/attività esiste e UI dice «Registrato, collegamento da completare», conserva ID e consente riprova senza ricrearlo. Non considerare successo del collegamento quando ha salvato solo il costo. Lo stato del passaggio e la chiave di ogni POST restano in memoria legati account/Home; cambio contesto interrompe e pulisce bozze. Un endpoint atomico futuro richiede contratto distinto.
 
 Idempotenza su link consente stessa risorsa/target già collegati come no-op senza nuova storia; altro oggetto per stesso costo/attività409 resource_already_linked, modifica esplicita rimuovi/ricollega. Nessuna unique artificiale un-documento/un-importo. Collegamenti non alterano totale H3a; prima G1 nessun nuovo sommatorio oggetto: lista costi con importi letti autorizzati, riepilogo in S1.
+
+H1/H3a: aggiornamento assetId nativo rifiutato409 resource_already_linked se la risorsa ha già un riferimento G1 a oggetto diverso. Rimuovere prima il vecchio link esplicitamente; nessun nuovo DTO o riuso di assetId per oggetti generici. Impedisce di aggirare unicità tramite l'API precedente.
 
 Storia `{id,kind,at,before,after}` con snapshot Room/Object/Position/Link proiettati secondo policy correnti. Boiler tecnico non copiato nella storia G1. No-op non incrementa versione/evento. Position roomIds canonici ordinati (ordine utente non significativo); CAS0 per prima impostazione, versione1 dopo. Creazione object con roomIds assente o vuoto inizializza position0; non creare evento posizione vuota.
 

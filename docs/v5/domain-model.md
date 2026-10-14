@@ -1,4 +1,10 @@
-# Modello V5 — M1/M2 attive, contratto M3
+# Modello V5 — implementazione locale e incrementi
+
+## Aggiornamento G1 del 14 ottobre 2026
+
+H3a HomeExpense/ExpenseHistory/ExpenseRequest implementati e integrati, fatto economico canonico personale EUR, non pagamento bancario. G1 backend locale aggiunge HomeRoom sharedHome, HomeObject personale e ObjectPosition satellite con esattamente un object/boiler e0..20roomIds autorizzati. Boiler ID/fonti/versioni/conferme invariati. Room archiviata non eliminata; roomIds JSON validato dal server, nessun harddelete G1.
+
+ObjectResourceLink a un Document/HomeActivity/HomeExpense esistente, FKRestrict/check tipo; un oggetto principale attivo per costo/attività, documenti multioggetto. AssetId native H1/H3a non riciclato e rifiutato se incoerente con link G1. ObjectEvent snapshot interno/storia e ObjectRequest ledger account/Home/op/target/key con replay redatto. Sharedroom protetta da lock Home oltre account; CAS/versioni. Migrazioni202610140002/003 applicate solo al DB dedicato; test reali in g1-integration-review.md. Frontend G1 ancora in corso, non conclusa integrazione/browser.
 
 Account, Session, Home, HomeMembership sono entità differenti. Session appartiene a Account; membership collega Account a Home con ruolo, permessi derivati e validità temporale. Home contiene nome/indirizzo/versione, non una scorciatoia di autorizzazione tramite ownerId.
 

@@ -484,3 +484,8 @@ ADR-V5-15: modulo Economia estende HomeExpense V5 con categorie e, in incrementi
 ## G1 — contratto e revisione UX raccolta (14 ottobre 2026)
 
 ADR-V5-16: ambienti condivisi Home, oggetti/posizioni personali fino a C1. Catalogo discriminato object/boiler conserva ID/versioni/fonti caldaia; nessuna copia tecnica. Reference links a documenti/attività/costi esistenti, un oggetto principale per costo/attività; due POST espliciti con recupero seconda fase, non atomicità inventata. Lock Home necessario fra membri per ambienti. Alternative e arbitrato K1..K10 in docs/v5/g1-design-review.md.
+
+
+## G1 — backend attivo e verificato (14 ottobre 2026)
+
+ADR-V5-17: lock Home+account per ambienti shared, oggetti/posizioni personali finoC1, boiler catalogato senza copia di confirmed. Reference links canonici e unique parziale; H1/H3a rifiutano assetId incompatibile con link G1, non riciclano UUID generici. Replay interno redatto e autorizzazione fonti boiler prima di keyset/limit. Alternative e dettagli docs/v5/implementation-decisions.md e g1-integration-review.md.

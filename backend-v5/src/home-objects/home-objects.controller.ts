@@ -1,0 +1,26 @@
+import { Body, Controller, Get, Headers, HttpCode, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { DocumentAccessGuard, DocumentRequest } from '../documents/access';
+import { HomeObjectsService } from './home-objects.service';
+@Controller('homes/:homeId') @UseGuards(DocumentAccessGuard)
+export class HomeObjectsController {
+  constructor(private readonly service: HomeObjectsService) {}
+  @Get('object-capabilities') capabilities(@Req() r: DocumentRequest, @Param('homeId') h: string, @Query() q: unknown) { return this.service.capabilities(r.documentAccountId, h, q); }
+  @Get('rooms') rooms(@Req() r: DocumentRequest, @Param('homeId') h: string, @Query() q: unknown) { return this.service.rooms(r.documentAccountId, h, q); }
+  @Post('rooms') createRoom(@Req() r: DocumentRequest, @Param('homeId') h: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.createRoom(r.documentAccountId, h, b, k); }
+  @Get('rooms/:id') getRoom(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Query() q: unknown) { return this.service.getRoom(r.documentAccountId, h, id, q); }
+  @Get('rooms/:id/history') roomHistory(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Query() q: unknown) { return this.service.history(r.documentAccountId, h, 'room', id, q); }
+  @Post('rooms/:id/updates') @HttpCode(200) updateRoom(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.updateRoom(r.documentAccountId, h, id, b, k); }
+  @Post('rooms/:id/archive') @HttpCode(200) archiveRoom(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.roomAction(r.documentAccountId, h, id, 'archive', b, k); }
+  @Post('rooms/:id/restore') @HttpCode(200) restoreRoom(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.roomAction(r.documentAccountId, h, id, 'restore', b, k); }
+  @Get('objects') objects(@Req() r: DocumentRequest, @Param('homeId') h: string, @Query() q: unknown) { return this.service.objects(r.documentAccountId, h, q); }
+  @Post('objects') createObject(@Req() r: DocumentRequest, @Param('homeId') h: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.createObject(r.documentAccountId, h, b, k); }
+  @Get('objects/:kind/:id') getObject(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('kind') kind: string, @Param('id') id: string, @Query() q: unknown) { return this.service.getObject(r.documentAccountId, h, kind, id, q); }
+  @Get('objects/:kind/:id/history') objectHistory(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('kind') kind: string, @Param('id') id: string, @Query() q: unknown) { return this.service.history(r.documentAccountId, h, kind, id, q); }
+  @Post('objects/object/:id/updates') @HttpCode(200) updateObject(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.updateObject(r.documentAccountId, h, id, b, k); }
+  @Post('objects/object/:id/archive') @HttpCode(200) archiveObject(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.objectAction(r.documentAccountId, h, id, 'archive', b, k); }
+  @Post('objects/object/:id/restore') @HttpCode(200) restoreObject(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.objectAction(r.documentAccountId, h, id, 'restore', b, k); }
+  @Post('objects/:kind/:id/position') @HttpCode(200) position(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('kind') kind: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.setPosition(r.documentAccountId, h, kind, id, b, k); }
+  @Get('objects/:kind/:id/links') links(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('kind') kind: string, @Param('id') id: string, @Query() q: unknown) { return this.service.links(r.documentAccountId, h, kind, id, q); }
+  @Post('objects/:kind/:id/links') link(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('kind') kind: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.addLink(r.documentAccountId, h, kind, id, b, k); }
+  @Post('objects/:kind/:id/links/:linkId/remove') @HttpCode(200) unlink(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('kind') kind: string, @Param('id') id: string, @Param('linkId') linkId: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.removeLink(r.documentAccountId, h, kind, id, linkId, b, k); }
+}

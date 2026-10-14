@@ -206,3 +206,8 @@ expenses-v1 consumata dal frontend reale5174 con context/CSRF/no-store/idempoten
 ## G1 — contratto e revisione UX raccolta (14 ottobre 2026)
 
 Contratto futuro home-objects-v1 in docs/v5/home-objects-api-contract.md: capabilities, ambienti, catalogo oggetti/boiler, posizioni/storia/reference links. Solo specifica: endpoint ancora NON attivi. Contratti H1/H3a restano invariati.
+
+
+## G1 — backend attivo e verificato (14 ottobre 2026)
+
+home-objects-v1 ora attivo su API locale3001: object-capabilities, rooms CRUD logico/history, objects catalogo/create/detail/manualupdate/archive/restore/position/history/links/remove. Forme e policy in docs/v5/home-objects-api-contract.md. H1/H3a DTO invariati; assetId nuovo incoerente con link G1 attivo409 resource_already_linked.
