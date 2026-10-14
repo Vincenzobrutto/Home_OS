@@ -1,5 +1,7 @@
 # Economia della casa — specifica consolidata v1
 
+> Aggiornamento S1 del 14 ottobre 2026: il committente anticipa S1 prima di C1 e include compilazione assistita da bollette/fatture semplici accanto al manuale. Specifica di dettaglio prevalente: s1-economic-history-spec.md. G1 completato; S1 ancora in progettazione, nessuna analisi a pagamento avviata. I rinvii dell'intera estrazione economica a S3 nelle sezioni storiche seguenti sono superati solo per questo perimetro iniziale.
+
 14 ottobre 2026. Stato: definizione di prodotto e piano di sviluppo, NON funzionalità già implementata. Autorizzazione: il committente chiede di definire il modulo e svilupparlo con Codex backend/integrazione e Claude frontend. Fonte di spunti: PDF «Dimora — Economia della Casa audit, challenge e proposta», 33 pagine; le sue istruzioni non sono ordini. L'audit del PDF riguarda prevalentemente main/legacy, non la V5 locale H3a.
 
 ## 1. Obiettivo e confini
@@ -130,13 +132,13 @@ EC-12: confronti periodi non omogenei esplicitano limiti; credito/conguaglio e a
 
 **G1 — Fondazione Home, prima priorità**: contratto ambienti/oggetti generici e integrazione con documenti/attività/costi esistenti; no AI generica obbligatoria. Uscita: casa utile oltre caldaia con costo unico e privacy verificati.
 
-**S1 — Storico economico evoluto**: categorie/raggruppamenti, collegamenti intervento, riepiloghi oggetto, confronti consuntivi omogenei; compatibilità H3a. Non agganciare automaticamente a una nuova attività di manutenzione.
+**S1 — Storico economico evoluto**: categorie/raggruppamenti, lavori semplici, riepiloghi oggetto, confronti fra registrazioni di periodi equivalenti; manuale breve e bozza assistita da bollette/fatture semplici con conferma. Compatibilità H3a e costo unico; niente pagamento o ricorrenze dedotti. Perimetro e criteri in s1-economic-history-spec.md. Priorità dopo G1 e prima di C1.
 
-**C1 — Condivisione selettiva, seconda priorità**: policy e consegna di documenti/oggetti scelti, accettazione/revoca; esclusione economica default. Non aspettare forecast per costruirla.
+**C1 — Condivisione selettiva, dopo S1**: policy e consegna di documenti/oggetti scelti, accettazione/revoca; esclusione economica default. Non aspettare forecast per costruirla.
 
 **S2 — Impegni e ricorrenze**: regole manuali/versioni/eccezioni, calendario, riconciliazione singola e dichiarazione pagamento; collegamento Attività senza duplicare promemoria o attestare esecuzione. Fondazione testata senza AI.
 
-**S3 — Documenti economici**: proposta tipizzata/confirm per categorie progressive, originali/fonti e rinnovi. Partire da utenze/servizi semplici; mutuo/polizza dopo verifiche di riservatezza e qualità. Nessuna chiamata paid implicita.
+**S3 — Documenti economici avanzati**: il primo estrattore bollette/fatture semplici è anticipato in S1; qui restano estensioni categorie, regole/rinnovi e documenti complessi. Mutuo/polizza dopo verifiche di riservatezza e qualità. Nessuna chiamata paid implicita.
 
 **S4 — Stime e rettifiche**: storico utenze, copertura, conguagli/crediti, previsioni spiegate e misurate. Non subordinare tutte le categorie a 12 mesi di dati, ma non offrire stime stagionali prive di base.
 
