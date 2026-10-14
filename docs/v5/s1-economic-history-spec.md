@@ -38,6 +38,8 @@ Stati espliciti: pronto ad analizzare, elaborazione, bozza da confermare, nessun
 
 ## Storico e categorie
 
+Aggiornamento di navigazione richiesto dal committente: in Spese il livello principale è costituito dalle macro famiglie, con Tutte e Altro/Non classificata. Elenco, Per oggetto, Per lavoro e Riepilogo sono modalità secondarie «Visualizza», non voci concorrenti allo stesso livello. Famiglia selezionata filtra elenco, totali e tutte le modalità; periodo e altri filtri restano espliciti. Navigazione Casa/Attività/Documenti/Spese invariata. La proposta navigabile rappresenta questa scelta; non implica sviluppo del backend.
+
 Vista iniziale Sostenute, anno corrente server; anno diverso o intervallo personalizzato inclusivo. Filtri categoria, oggetto discriminato, ambiente, lavoro; ricerca descrizione/fornitore. Archivio distinto. Totali e conteggi applicano lo stesso ambito e filtri della vista, solo costi attivi; importi archivio non mescolati. Una voce personale resta tale anche con oggetto/ambiente condiviso.
 
 Categorie: energia elettrica, gas, acqua, internet/servizi, condominio ordinario, condominio straordinario, assicurazione, tributi, manutenzione, riparazione/lavori, acquisto/sostituzione oggetto, finanziamento, altro; più Non classificata per valore assente. Codici stabili nel contratto, etichette italiane nel client, nessuna categoria libera in S1.
