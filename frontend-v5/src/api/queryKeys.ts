@@ -41,6 +41,19 @@ export const queryKeys = {
   activityHistory: (accountId: string, homeId: string, activityId: string) =>
     ['account', accountId, 'home', homeId, 'h1', 'activity', activityId, 'history'] as const,
   activitySummary: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h1', 'summary'] as const,
+  // home-objects-v1 (G1): ambienti condivisi e oggetti personali, sotto la casa.
+  g1: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'g1'] as const,
+  objectCapabilities: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'g1', 'capabilities'] as const,
+  rooms: (accountId: string, homeId: string, state: string) => ['account', accountId, 'home', homeId, 'g1', 'rooms', 'list', state] as const,
+  room: (accountId: string, homeId: string, roomId: string) => ['account', accountId, 'home', homeId, 'g1', 'room', roomId, 'detail'] as const,
+  roomHistory: (accountId: string, homeId: string, roomId: string) => ['account', accountId, 'home', homeId, 'g1', 'room', roomId, 'history'] as const,
+  objects: (accountId: string, homeId: string, f: { state: string; q: string; type: string | null; roomId: string | null; placement: string }) =>
+    ['account', accountId, 'home', homeId, 'g1', 'objects', 'list', f.state, f.q, f.type ?? '-', f.roomId ?? '-', f.placement] as const,
+  object: (accountId: string, homeId: string, kind: string, id: string) => ['account', accountId, 'home', homeId, 'g1', 'object', kind, id, 'detail'] as const,
+  objectHistory: (accountId: string, homeId: string, kind: string, id: string) =>
+    ['account', accountId, 'home', homeId, 'g1', 'object', kind, id, 'history'] as const,
+  objectLinks: (accountId: string, homeId: string, kind: string, id: string, resourceType: string) =>
+    ['account', accountId, 'home', homeId, 'g1', 'object', kind, id, 'links', resourceType] as const,
   // expenses-v1 (H3a): spese personali, separate da H1 e M3/M4.
   h3: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h3'] as const,
   expenseCapabilities: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h3', 'capabilities'] as const,

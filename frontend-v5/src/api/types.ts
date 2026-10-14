@@ -421,3 +421,80 @@ export type ExpenseSummary = {
   today: string;
   timeZone: 'Europe/Rome';
 };
+
+// home-objects-v1 (G1, docs/v5/home-objects-api-contract.md): ambienti condivisi, oggetti personali, collegamenti.
+export type RoomType = 'kitchen' | 'living' | 'bedroom' | 'bathroom' | 'hall' | 'utility' | 'outdoor' | 'other';
+export type ObjectType = 'appliance' | 'heating' | 'cooling' | 'electrical' | 'plumbing' | 'security' | 'fixture' | 'other';
+export type G1State = 'active' | 'archived';
+export type G1Permission = 'read' | 'edit';
+
+export type Room = {
+  id: string;
+  homeId: string;
+  name: string;
+  type: RoomType;
+  note: string | null;
+  state: G1State;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  permissions: G1Permission[];
+};
+
+export type ObjectKind = 'object' | 'boiler';
+export type ObjectRef = { kind: ObjectKind; id: string };
+
+export type CatalogItem = {
+  ref: ObjectRef;
+  name: string;
+  type: ObjectType | 'boiler';
+  kindLabel: string;
+  state: G1State;
+  permissions: G1Permission[];
+  position: { version: number; rooms: Room[] };
+  technicalLink: null | { assetId: string };
+  /** Presenti per gli oggetti manuali (DTO Object); assenti per le caldaie. */
+  homeId?: string;
+  note?: string | null;
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type ObjectCapabilities = {
+  apiVersion: 'home-objects-v1';
+  enabled: true;
+  isSimulation: false;
+  limits: { nameMaxCodePoints: number; roomNameMaxCodePoints: number; noteMaxCodePoints: number; maxRoomsPerObject: number; maxPageSize: number };
+  types: ObjectType[];
+  roomTypes: RoomType[];
+};
+
+export type RoomFilters = { state: G1State | 'all' };
+export type CatalogFilters = {
+  state: G1State | 'all';
+  /** Nome già NFC/trim; '' = nessuna ricerca. */
+  q: string;
+  type: ObjectType | 'boiler' | null;
+  roomId: string | null;
+  placement: 'all' | 'unplaced';
+};
+
+export type G1ResourceType = 'document' | 'activity' | 'expense';
+export type LinkedResource = {
+  linkId: string | null;
+  version: number | null;
+  origin: 'native' | 'reference';
+  state: 'active' | 'removed' | 'unavailable';
+  resourceType: G1ResourceType;
+  resource: null | { id: string; title: string };
+  objectRef: ObjectRef;
+};
+
+/** Eventi di storia G1: forma comune, snapshot proiettati dal server. */
+export type G1HistoryEvent = { id: string; kind: string; at: string; before: unknown; after: unknown };
+
+export type CreateRoom = { name: string; type: RoomType; note?: string };
+export type UpdateRoom = { expectedVersion: number; name?: string; type?: RoomType; note?: string | null };
+export type CreateObject = { name: string; type: ObjectType; note?: string; roomIds?: string[] };
+export type UpdateObject = { expectedVersion: number; name?: string; type?: ObjectType; note?: string | null };
