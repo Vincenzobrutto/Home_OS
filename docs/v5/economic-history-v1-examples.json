@@ -1,0 +1,556 @@
+{
+  "summaries": {
+    "empty": {
+      "period": {
+        "from": "2026-01-01",
+        "to": "2026-10-14",
+        "basis": "reference_date"
+      },
+      "count": 0,
+      "totalCents": "0",
+      "totalWithoutFinancingCents": "0",
+      "byCategory": [
+        {
+          "category": "electricity",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "gas",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "water",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "internet_services",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "condominium_ordinary",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "condominium_extraordinary",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "insurance",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "taxes",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "maintenance",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "repairs_works",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "purchase_replacement",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "financing",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "other",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": null,
+          "count": 0,
+          "totalCents": "0"
+        }
+      ],
+      "byFamily": [
+        {
+          "family": "utilities",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "condominium",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "taxes_insurance",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "maintenance_repairs",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "works_purchases",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "financing",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "unclassified",
+          "count": 0,
+          "totalCents": "0"
+        }
+      ],
+      "asOf": "2026-10-14T18:00:00.000Z",
+      "today": "2026-10-14",
+      "timeZone": "Europe/Rome",
+      "comparison": {
+        "status": "no_previous_records",
+        "period": {
+          "from": "2025-01-01",
+          "to": "2025-10-14"
+        },
+        "count": 0,
+        "totalCents": "0",
+        "deltaCents": "0",
+        "deltaPercentHundredths": null,
+        "calendarAdjustment": "none"
+      }
+    },
+    "earliestYear": {
+      "period": {
+        "from": "0001-01-01",
+        "to": "0001-12-31",
+        "basis": "reference_date"
+      },
+      "count": 0,
+      "totalCents": "0",
+      "totalWithoutFinancingCents": "0",
+      "byCategory": [
+        {
+          "category": "electricity",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "gas",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "water",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "internet_services",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "condominium_ordinary",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "condominium_extraordinary",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "insurance",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "taxes",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "maintenance",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "repairs_works",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "purchase_replacement",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "financing",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "other",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": null,
+          "count": 0,
+          "totalCents": "0"
+        }
+      ],
+      "byFamily": [
+        {
+          "family": "utilities",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "condominium",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "taxes_insurance",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "maintenance_repairs",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "works_purchases",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "financing",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "unclassified",
+          "count": 0,
+          "totalCents": "0"
+        }
+      ],
+      "asOf": "2026-10-14T18:00:00.000Z",
+      "today": "2026-10-14",
+      "timeZone": "Europe/Rome",
+      "comparison": {
+        "status": "unavailable",
+        "period": null,
+        "count": null,
+        "totalCents": null,
+        "deltaCents": null,
+        "deltaPercentHundredths": null,
+        "calendarAdjustment": "none"
+      }
+    },
+    "comparable": {
+      "period": {
+        "from": "2026-01-01",
+        "to": "2026-10-14",
+        "basis": "reference_date"
+      },
+      "count": 1,
+      "totalCents": "8000",
+      "totalWithoutFinancingCents": "8000",
+      "byCategory": [
+        {
+          "category": "electricity",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "gas",
+          "count": 1,
+          "totalCents": "8000"
+        },
+        {
+          "category": "water",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "internet_services",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "condominium_ordinary",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "condominium_extraordinary",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "insurance",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "taxes",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "maintenance",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "repairs_works",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "purchase_replacement",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "financing",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": "other",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "category": null,
+          "count": 0,
+          "totalCents": "0"
+        }
+      ],
+      "byFamily": [
+        {
+          "family": "utilities",
+          "count": 1,
+          "totalCents": "8000"
+        },
+        {
+          "family": "condominium",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "taxes_insurance",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "maintenance_repairs",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "works_purchases",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "financing",
+          "count": 0,
+          "totalCents": "0"
+        },
+        {
+          "family": "unclassified",
+          "count": 0,
+          "totalCents": "0"
+        }
+      ],
+      "asOf": "2026-10-14T18:00:00.000Z",
+      "today": "2026-10-14",
+      "timeZone": "Europe/Rome",
+      "comparison": {
+        "status": "comparable",
+        "period": {
+          "from": "2025-01-01",
+          "to": "2025-10-14"
+        },
+        "count": 1,
+        "totalCents": "7400",
+        "deltaCents": "600",
+        "deltaPercentHundredths": "811",
+        "calendarAdjustment": "none"
+      }
+    }
+  },
+  "expensePage": {
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "homeId": "00000000-0000-4000-8000-000000000002",
+        "title": "Gas settembre",
+        "amountCents": 8000,
+        "currency": "EUR",
+        "spentOn": "2026-09-30",
+        "note": null,
+        "origin": "manual",
+        "documentLink": {
+          "state": "none",
+          "document": null
+        },
+        "assetLink": {
+          "state": "none",
+          "asset": null
+        },
+        "state": "active",
+        "category": "gas",
+        "family": "utilities",
+        "supplier": null,
+        "documentNumber": null,
+        "documentDate": null,
+        "competenceFrom": null,
+        "competenceTo": null,
+        "dueOn": null,
+        "amountOrigin": "user_declared",
+        "objectLink": {
+          "state": "none",
+          "value": null
+        },
+        "workLink": {
+          "state": "none",
+          "value": null
+        },
+        "analysisLink": {
+          "state": "none",
+          "value": null
+        },
+        "version": 1,
+        "createdAt": "2026-10-14T18:00:00.000Z",
+        "updatedAt": "2026-10-14T18:00:00.000Z",
+        "archivedAt": null,
+        "permissions": [
+          "read",
+          "edit"
+        ]
+      }
+    ],
+    "nextCursor": null
+  },
+  "expenseDetail": {
+    "expense": {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "homeId": "00000000-0000-4000-8000-000000000002",
+      "title": "Gas settembre",
+      "amountCents": 8000,
+      "currency": "EUR",
+      "spentOn": "2026-09-30",
+      "note": null,
+      "origin": "manual",
+      "documentLink": {
+        "state": "none",
+        "document": null
+      },
+      "assetLink": {
+        "state": "none",
+        "asset": null
+      },
+      "state": "active",
+      "category": "gas",
+      "family": "utilities",
+      "supplier": null,
+      "documentNumber": null,
+      "documentDate": null,
+      "competenceFrom": null,
+      "competenceTo": null,
+      "dueOn": null,
+      "amountOrigin": "user_declared",
+      "objectLink": {
+        "state": "none",
+        "value": null
+      },
+      "workLink": {
+        "state": "none",
+        "value": null
+      },
+      "analysisLink": {
+        "state": "none",
+        "value": null
+      },
+      "version": 1,
+      "createdAt": "2026-10-14T18:00:00.000Z",
+      "updatedAt": "2026-10-14T18:00:00.000Z",
+      "archivedAt": null,
+      "permissions": [
+        "read",
+        "edit"
+      ]
+    }
+  },
+  "workDetail": {
+    "work": {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "homeId": "00000000-0000-4000-8000-000000000002",
+      "name": "Rifacimento bagno",
+      "note": null,
+      "state": "active",
+      "version": 1,
+      "activityLink": {
+        "state": "none",
+        "value": null
+      },
+      "createdAt": "2026-10-14T18:00:00.000Z",
+      "updatedAt": "2026-10-14T18:00:00.000Z",
+      "archivedAt": null,
+      "permissions": [
+        "read",
+        "edit"
+      ]
+    }
+  },
+  "parkedDraft": {
+    "draft": {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "homeId": "00000000-0000-4000-8000-000000000002",
+      "version": 2,
+      "state": "parked",
+      "documentLink": {
+        "state": "unavailable",
+        "document": null
+      },
+      "provider": "test_fixture_v1",
+      "isSimulation": true,
+      "model": null,
+      "documentKind": "utility_bill",
+      "proposedFields": {},
+      "amountCandidates": [],
+      "amountSelectionRequired": true,
+      "expenseLink": {
+        "state": "none",
+        "value": null
+      },
+      "createdAt": "2026-10-14T18:00:00.000Z",
+      "updatedAt": "2026-10-14T18:00:00.000Z",
+      "permissions": [
+        "read",
+        "edit"
+      ]
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # S1 — Storico economico evoluto e compilazione assistita
 
-> Vincolo esplicito del committente: Economia della casa è un modulo aggiuntivo. Non sostituisce o altera percorsi/comportamenti già definiti di Spese essenziali, Documenti, Attività, Oggetti e caldaia. Nuovo ingresso distinto all'area evoluta; registrazioni canoniche referenziate, nessuna duplicazione o riclassificazione automatica. Prima dello sviluppo il committente vuole navigare un mockup e valutare l'esperienza: backend e incarico frontend operativo sospesi fino a questa revisione UX. Mockup isolato mockup-economia-s1.html, nessuna API o DB reale.
+> Vincolo aggiornato: modulo economico additivo nelle funzionalità, integrato in un unico ingresso Spese. La distinzione iniziale Spese/Economia e la sospensione per mockup sono superate dal consolidamento approvato. Casa/Attività/Documenti/Spese e schede complete preservate. Il committente autorizza la definizione finale S1; la dashboard Claude resta alternativa da valutare senza bloccare il contratto. Runtime non ancora implementato.
 
 14 ottobre 2026. Definizione di prodotto consolidata dopo approvazione in chat. Non è una funzionalità già attiva. Prevale sui precedenti rinvii dell'intera estrazione economica a S3 e sull'ordine C1 prima di S1. G1 resta completato; nuovo ordine S1, C1, S2 e restante S3/S4.
 
@@ -26,7 +26,7 @@ Importi positivi in centesimi esatti, stessi limiti H3a; zero/negativi/frazioni 
 
 Caricare tramite M2 o scegliere originale già autorizzato. Prima analisi economica: bollette luce/gas/acqua/internet e fatture semplici di manutenzione, riparazione o acquisto, PDF con testo estraibile. Non promettere lettura foto/scansioni: OCR/vision separato. Mutuo, polizza, tributi, documenti multi-fattura, note di credito e importi in altre valute non supportati da questo primo estrattore; restano archiviabili e il manuale è disponibile. Nessuna classificazione finta come fattura semplice.
 
-L'AI propone descrizione, fornitore, categoria, importo, numero/data documento, competenza, scadenza. Oggetto/lavoro solo suggerimenti fra riferimenti già autorizzati, nessuna creazione o collegamento automatico. Ogni valore estratto ha pagina ed estratto verificato della fonte originale/versione/hash. I valori assenti restano assenti; correzioni manuali sono distinguibili dalle proposte.
+L'AI propone descrizione, fornitore, categoria, importo, numero/data documento, competenza, scadenza. Oggetto/lavoro scelti dall’utente fra riferimenti già autorizzati; il primo estrattore non propone UUID né crea o collega entità automaticamente. Ogni valore estratto ha pagina ed estratto verificato della fonte originale/versione/hash. I valori assenti restano assenti; correzioni manuali sono distinguibili dalle proposte.
 
 Regola importo: per fattura semplice proporre totale lordo del documento, non imponibile, IVA o singola riga. Per bolletta distinguere totale corrente del documento, arretrati/saldi e importo da pagare. Non usare automaticamente l'importo da pagare se include arretrati già possibili nello storico. Se il totale corrente non è sostenuto chiaramente, mostrare candidati con denominazione e fonte e richiedere scelta/completamento. Un dato inferito non diventa importo confermato. S1 non scompone automaticamente una bolletta fra categorie né crea più costi da righe.
 
@@ -34,13 +34,13 @@ Bozza accanto a fonte, azione «Conferma e registra». Nessun costo nei totali p
 
 Costi esistenti dello stesso documento e candidati autorizzati per fornitore/numero/importo/date vengono proposti per «Collega alla spesa esistente» o «Registra nuova spesa». Non bloccare costi legittimi diversi nello stesso originale. Nessuna fusione o modifica automatica. Scegliere una spesa esistente mantiene importo/data/categoria; eventuali aggiornamenti richiedono distinta anteprima e conferma con versione attuale. Stessa conferma/retry non crea due costi.
 
-Stati espliciti: pronto ad analizzare, elaborazione, bozza da confermare, nessun dato utilizzabile, documento non supportato, errore, fonte non più disponibile, confermato. Riaprire una bozza confermata conduce al costo collegato. Ripetere analisi non sovrascrive un costo confermato. Consentire abbandono senza perdita dell'originale.
+Stati espliciti: pronto ad analizzare, elaborazione, bozza da confermare, nessun dato utilizzabile, documento non supportato, errore, fonte non più disponibile, confermato. Riaprire una bozza confermata conduce al costo collegato. Ripetere analisi non sovrascrive un costo confermato. Consentire accantonamento recuperabile senza perdita dell’originale o delle proposte. Stati bozza open/parked/confirmed: park/reopen non riavviano analisi, la conferma richiede open; nessuno scarto permanente in S1.
 
 ## Storico e categorie
 
 Aggiornamento di navigazione richiesto dal committente: in Spese il livello principale è costituito dalle macro famiglie, con Tutte e Altro/Non classificata. Elenco, Per oggetto, Per lavoro e Riepilogo sono modalità secondarie «Visualizza», non voci concorrenti allo stesso livello. Famiglia selezionata filtra elenco, totali e tutte le modalità; periodo e altri filtri restano espliciti. Navigazione Casa/Attività/Documenti/Spese invariata. La proposta navigabile rappresenta questa scelta; non implica sviluppo del backend.
 
-Vista iniziale Sostenute, anno corrente server; anno diverso o intervallo personalizzato inclusivo. Filtri categoria, oggetto discriminato, ambiente, lavoro; ricerca descrizione/fornitore. Archivio distinto. Totali e conteggi applicano lo stesso ambito e filtri della vista, solo costi attivi; importi archivio non mescolati. Una voce personale resta tale anche con oggetto/ambiente condiviso.
+Vista iniziale Elenco/Tutte, anno corrente server; anno diverso o intervallo personalizzato inclusivo. Filtri categoria, oggetto discriminato, ambiente, lavoro; ricerca descrizione/fornitore. Archivio distinto. Totali e conteggi applicano lo stesso ambito e filtri della vista, solo costi attivi; importi archivio non mescolati. Una voce personale resta tale anche con oggetto/ambiente condiviso.
 
 Categorie: energia elettrica, gas, acqua, internet/servizi, condominio ordinario, condominio straordinario, assicurazione, tributi, manutenzione, riparazione/lavori, acquisto/sostituzione oggetto, finanziamento, altro; più Non classificata per valore assente. Codici stabili nel contratto, etichette italiane nel client, nessuna categoria libera in S1.
 
@@ -91,4 +91,4 @@ Analisi economica è un nuovo verticale separato dalle proposte caldaia M3/M4; r
 
 ## Consegna e responsabilità
 
-Codex: contratto REST con DTO/esempi/errori/capabilities/paging/CAS/idempotenza e migrazioni, backend, integrazione e verifica. Claude: prima revisione UX documentale di questa specifica, poi frontend solo dopo incarico implementativo con baseline/contratto congelati. Nessun prompt di revisione autorizza già sviluppo runtime. C1 resta dopo S1; S2 e S3 avanzato/S4 successivi.
+Codex: contratto REST con DTO/esempi/errori/capabilities/paging/CAS/idempotenza e migrazioni, backend, integrazione e verifica. Claude: dashboard alternativa separata; nessun incarico implementativo frontend attivo. Codex può sviluppare anche il frontend quando la baseline è congelata, senza dipendere da crediti Claude. Nessun prompt di revisione autorizza già sviluppo runtime. C1 resta dopo S1; S2 e S3 avanzato/S4 successivi.
