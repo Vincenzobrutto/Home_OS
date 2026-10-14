@@ -235,10 +235,13 @@ export function ActivityForm(props: {
   activity?: HomeActivity;
   presetAssetId?: string | null;
   limits?: { titleMaxCodePoints: number; descriptionMaxCodePoints: number };
+  /** G1: promemoria per un oggetto manuale. Nessuna caldaia: il collegamento G1 segue la creazione. */
+  forObject?: string;
   onDone: (res: ActivityResponse) => void;
   onCancel: () => void;
 }) {
   const { home, activity } = props;
+  const forObject = !activity ? props.forObject : undefined;
   const id = useId();
   const op = useActivityOperation(home.id);
   const assets = useAssets(home.id);
@@ -261,7 +264,7 @@ export function ActivityForm(props: {
   // Caldaia indicata dall'URL ma non tra le proprie schede: nessuna destinazione implicita.
   const presetMissing =
     !activity && !!props.presetAssetId && assets.isSuccess && !boilers.some((b) => b.id === props.presetAssetId);
-  const effectiveAsset = presetMissing && assetChoice === props.presetAssetId ? '' : assetChoice;
+  const effectiveAsset = forObject || (presetMissing && assetChoice === props.presetAssetId) ? '' : assetChoice;
   const assetName =
     effectiveAsset === KEEP
       ? null
@@ -382,6 +385,7 @@ export function ActivityForm(props: {
           </span>
         )}
       </div>
+      {!forObject && (
       <div className={ui.field}>
         <label className={ui.label} htmlFor={`${id}-asset`}>
           Caldaia collegata (facoltativa)
@@ -407,6 +411,7 @@ export function ActivityForm(props: {
         </select>
         {assets.isError && <span className={ui.hint}>Le schede caldaia non sono disponibili ora: puoi creare il promemoria senza collegamento.</span>}
       </div>
+      )}
       {presetMissing && (
         <Banner tone="warning">
           <p>La caldaia indicata non è tra le tue schede: il promemoria non verrà collegato.</p>
@@ -414,7 +419,9 @@ export function ActivityForm(props: {
       )}
       <p className={styles.destination}>
         Destinazione: <strong>promemoria personale</strong> in <strong>{home.name}</strong>
-        {effectiveAsset === KEEP
+        {forObject
+          ? `, per l’oggetto «${forObject}» (il collegamento si salva subito dopo)`
+          : effectiveAsset === KEEP
           ? ', collegamento attuale non più disponibile'
           : assetName
             ? `, collegato a «${assetName}»`

@@ -127,7 +127,8 @@ export function AppShell(props: { account: Account; home?: Home; children: React
 function SectionNav({ home, variant }: { home: Home; variant: 'side' | 'bottom' }) {
   const { pathname } = useLocation();
   const section = pathname.split('/')[3];
-  const activeSection = section === 'review' || section === 'impianti' ? 'attivita' : section;
+  const activeSection =
+    section === 'review' || section === 'impianti' ? 'attivita' : section === 'ambienti' || section === 'oggetti' ? 'casa' : section;
   const linkClass = variant === 'side' ? styles.sideLink : styles.bottomLink;
   return (
     <nav

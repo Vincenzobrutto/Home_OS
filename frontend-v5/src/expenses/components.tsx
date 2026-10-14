@@ -201,10 +201,13 @@ export function ExpenseForm(props: {
   expense?: HomeExpense;
   presetDocumentId?: string | null;
   presetAssetId?: string | null;
+  /** G1: spesa per un oggetto manuale. Nessuna caldaia: il collegamento G1 segue la registrazione. */
+  forObject?: string;
   onDone: (res: ExpenseResponse) => void;
   onCancel: () => void;
 }) {
   const { home, expense, capabilities } = props;
+  const forObject = !expense ? props.forObject : undefined;
   const limits = capabilities.limits;
   const id = useId();
   const op = useExpenseOperation(home.id);
@@ -234,7 +237,7 @@ export function ExpenseForm(props: {
   const presetDocOk = presetDoc.isSuccess && presetDoc.data.permissions.includes('read');
   const presetAssetOk = presetAsset.isSuccess && presetAsset.data.permissions.includes('read');
   const effectiveDoc = docChoice ?? (presetDocOk ? presetDoc.data.id : docInit.choice);
-  const effectiveAsset = assetChoice ?? (presetAssetOk ? presetAsset.data.id : assetInit.choice);
+  const effectiveAsset = forObject ? '' : (assetChoice ?? (presetAssetOk ? presetAsset.data.id : assetInit.choice));
 
   const docItems = (documents.data?.pages.flatMap((p) => p.items) ?? []).filter((d) => d.permissions.includes('read'));
   const boilers = (assets.data?.pages.flatMap((p) => p.items) ?? []).filter((a) => a.permissions.includes('read'));
@@ -405,6 +408,7 @@ export function ExpenseForm(props: {
         </Banner>
       )}
 
+      {!forObject && (
       <div className={ui.field}>
         <label className={ui.label} htmlFor={`${id}-asset`}>
           Caldaia collegata (facoltativa)
@@ -426,6 +430,7 @@ export function ExpenseForm(props: {
         )}
         {assets.isError && <span className={ui.hint}>Le schede caldaia non sono disponibili ora: puoi registrare la spesa senza collegamento.</span>}
       </div>
+      )}
       {props.presetAssetId && !expense && presetAsset.isError && (
         <Banner tone="warning">
           <p>La caldaia indicata non è tra le tue schede: la spesa non verrà collegata.</p>
@@ -435,7 +440,14 @@ export function ExpenseForm(props: {
       <p className={styles.destination}>
         Destinazione: <strong>spesa personale</strong> in <strong>{home.name}</strong>
         {effectiveDoc === KEEP ? ', documento attuale non più disponibile' : docName ? `, dal documento «${docName}»` : ', senza documento'}
-        {effectiveAsset === KEEP ? ', caldaia attuale non più disponibile' : assetName ? `, per «${assetName}»` : ''}.
+        {forObject
+          ? `, per l’oggetto «${forObject}» (il collegamento si salva subito dopo)`
+          : effectiveAsset === KEEP
+            ? ', caldaia attuale non più disponibile'
+            : assetName
+              ? `, per «${assetName}»`
+              : ''}
+        .
         {' '}Il costo resta un solo record, richiamato da documento e caldaia.
       </p>
       {nothing && (
