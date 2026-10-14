@@ -170,3 +170,8 @@ H3 non ancora chiusa. Stime/ricorrenti e export Home spese restano futuri.
 - [ ] Prima del pilota: code splitting chunk545,03kB, senza nascondere avviso con soglia.
 - [ ] Riprodurre osservazione Claude focus H1 dopo completa/annulla/riapri; non ancora dimostrata in questo giro.
 - [ ] H2R4/R5 rifiniture UX; H3b stime/ricorrenti e export Home spese restano futuri.
+
+
+## Economia V5 — definizione consolidata del 14 ottobre 2026
+
+EC-G1: congelare contratto ambienti/oggetti e conservare caldaia esistente, documenti/costi/attività senza copie. EC-S1: categorie/confronti e costi per oggetto/intervento. EC-C1: condivisione selettiva con economie escluse di default. EC-S2: regole/versioni/eccezioni/calendario e riconciliazione/pagamento singolo. EC-S3: proposte economiche con conferma per categoria. EC-S4: stime spiegate e rettifiche senza doppi conteggi. Tutte aperte; criteri EC-01..12 nel modulo. Nessuna nuova campagna AI autorizzata.

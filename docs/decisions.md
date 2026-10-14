@@ -474,3 +474,8 @@ Advisory lock account/Home per serializzare chiavi idempotenti, membership/fonti
 
 ### ADR-V5-14 — integrazione finale H3a
 Importi come stringa nel form e parsing BigInt, totale esclusivamente server. Anno storico scegliibile senza API nuova, focus conservato. POST503 è ambiguo: stessa chiave/body in riprova, nessuna garanzia prematura di mancato salvataggio. Tutti gli anni riguarda elenco, riepilogo esplicitamente annuo. Documento home di altro membro può essere fonte leggibile di una spesa che resta personale. Nessuna condivisione o incasso impliciti.
+
+
+## Economia V5 — definizione consolidata del 14 ottobre 2026
+
+ADR-V5-15: modulo Economia estende HomeExpense V5 con categorie e, in incrementi successivi, regole temporali/versioni/eccezioni e pagamenti dichiarati. Natura, fonte e pagamento sono dimensioni indipendenti; futuro e consuntivo non si sommano. Rata mutuo/premio polizza dichiarati ammessi come calendario semplice, senza ammortamento o rinnovi impliciti: precisazione di scope autorizzata nella definizione del modulo. No registro parallelo legacy, trasferimento economico implicito o AI paid. Ambienti/oggetti G1 prima e condivisione C1 poi; Spese S1-S4 progettata con questi collegamenti. Alternative e criteri in docs/v5/home-economy-module.md. Definizione, non attivazione runtime.

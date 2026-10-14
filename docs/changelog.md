@@ -594,3 +594,8 @@ Verificato live nel browser sulla casa reale: navigazione a ritroso funzionante,
 ## Prima di questa sessione
 
 Storia non tracciata in questo changelog (il repository non era ancora un progetto Git — vedi `backlog.md` B3). Per il contesto di progettazione originale vedi `START_HERE.md` e `architettura/homeos_architettura_tecnica.md`; il grosso del modello dati e delle feature elencate come "già implementate" in `roadmap.md` (M1) proviene da sessioni precedenti non documentate qui.
+
+
+## Economia V5 — definizione consolidata del 14 ottobre 2026
+
+Definiti obiettivi, UX, categorie, costo canonico, natura/fonte/pagamento separati, ricorrenze e rinnovi, copertura, privacy e criteri di collaudo. Scouting PDF trattato come spunti con correzioni rispetto al runtime V5. Preparato incarico Claude per revisione UX documentale; non ancora avviato. Nessuna modifica runtime/schema/servizi/rete o chiamata AI prodotto.

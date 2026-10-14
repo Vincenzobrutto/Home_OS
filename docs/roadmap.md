@@ -166,3 +166,8 @@ Nove endpoint e DB spese verificati; Claude sviluppa il frontend nel checkout di
 
 ### H3a — raggiunta per sviluppo locale
 Spese personali manuali/documentali con riepilogo annuo, originali/caldera referenziati, storia/modifica/archive/restore e percorsi Casa/documento/caldaia verificati con backend/DB/frontend/client/browser reali. Successivi: H3b stime/ricorrenze ed export spese nel ciclo vendita; Agenzie/Admin separati. Nessuna pubblicazione o dichiarazione di prontezza produzione.
+
+
+## Economia V5 — definizione consolidata del 14 ottobre 2026
+
+Priorità umana aggiornata: G1 ambienti/oggetti generici, C1 condivisione selettiva; evoluzione Spese S1 storico/categorie/oggetti, S2 ricorrenze/calendario, S3 estrazione confermata e S4 stime/rettifiche anticipata nel piano, con contratti separati. Vendita/cessazione accesso e rifinitura globale dopo. Controlli accesso/test inclusi in ogni incremento. H3a resta completata; le estensioni sono definite, NON operative. Fonte docs/v5/home-economy-module.md.
