@@ -463,3 +463,31 @@ describe('[mock] C1a — stati finali, privacy e contesti', () => {
     expect(await screen.findByText(/non è ancora attiva su questo servizio/)).toBeInTheDocument();
   });
 });
+
+describe('[mock] C1a — istruzioni prima del codice di abbinamento (HOME-CONS-010)', () => {
+  it('l’aiuto compare prima di generare il codice (esterno e rigenerazione), non per la persona della casa; protocollo invariato', async () => {
+    const { backend, home } = await world();
+    const app = await open(backend, 'giulia@example.test', `/home/${home.id}/casa`);
+    // Persona esterna: aiuto subito prima di «Crea l’invito», con la durata del servizio.
+    const create = await prepare(app, home.id, { docs: ['Manuale caldaia'], to: 'external' });
+    const help = screen.getByText('Prima di generare il codice').closest('[class]')!.parentElement!;
+    expect(help).toHaveTextContent(/vale 15 minuti da quando premi «Crea l’invito»/);
+    expect(help).toHaveTextContent(/non deve creare una casa/);
+    expect(help.compareDocumentPosition(create) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(posts(backend, /\/shares$/)).toHaveLength(0); // l’aiuto non avvia nulla
+    await app.user.click(create);
+    await screen.findByRole('heading', { level: 1, name: 'Invito creato' });
+    // Rigenerazione: stesso aiuto nel dialogo, prima della conferma.
+    const shareId = [...backend.sharing.shares.keys()][0]!;
+    await app.router.navigate(`/home/${home.id}/condivisioni/${shareId}`);
+    await app.user.click(await screen.findByRole('button', { name: 'Genera un nuovo codice' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Generare un nuovo codice?' });
+    await waitFor(() => expect(dialog).toHaveTextContent(/vale 15 minuti da quando premi «Genera il codice»/));
+    expect(posts(backend, /rotate-code$/)).toHaveLength(0);
+    await app.user.click(within(dialog).getByRole('button', { name: 'Annulla' }));
+    expect(posts(backend, /rotate-code$/)).toHaveLength(0);
+    // Persona della casa: nessun codice, quindi nessun aiuto sul codice.
+    await prepare(app, home.id, { docs: ['Manuale caldaia'], to: /Marco Leone/ });
+    expect(screen.queryByText('Prima di generare il codice')).toBeNull();
+  });
+});

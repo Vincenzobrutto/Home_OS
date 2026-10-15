@@ -401,6 +401,7 @@ function ShareWizard({ home, caps }: { home: Home; caps: SharingCapabilities }) 
             )}
             <OperationFeedback op={previewOp} title="Controllo non preparato" />
             <OperationFeedback op={createOp} title="Invito non creato" />
+            {!preview.recipientPerson && <ExternalCodeHelp minutes={caps.limits.codeMinutes} action="Crea l’invito" />}
             {nav(
               !createOp.ambiguous && (
                 <button type="button" className={cx(ui.btn, ui.primary)} onClick={create} disabled={createOp.pending || expired || acks.length !== preview.items.length}>
@@ -509,6 +510,23 @@ function MemberPicker(props: { query: ReturnType<typeof useSharingRecipients>; v
   );
 }
 
+/**
+ * Aiuto mostrato prima che il codice di abbinamento esista: la validità parte alla generazione.
+ * Solo istruzioni: protocollo, durata, confronto e accettazione restano quelli del servizio.
+ */
+function ExternalCodeHelp({ minutes, action }: { minutes: number | null; action: string }) {
+  return (
+    <Banner title="Prima di generare il codice">
+      <p>
+        Il codice di abbinamento vale {minutes ? `${minutes} minuti` : 'pochi minuti'} da quando premi «{action}». Prima chiedi alla persona di
+        preparare il suo account Dimora (crearlo o accedere) e di aprire «Consegne ricevute» → «Ho ricevuto un codice»: non deve creare
+        una casa.
+      </p>
+      <p>Genera il codice quando è pronta a inserirlo. Dopo l’inserimento confronterete il codice di confronto tramite un recapito che già conosci.</p>
+    </Banner>
+  );
+}
+
 /** Codice iniziale: solo da create/rotate, nello stato del componente. Lasciata la pagina, non si recupera. */
 function PairingCode({ code, expiresAt }: { code: string | null; expiresAt: string | null }) {
   if (!code) {
@@ -543,6 +561,7 @@ function ShareDetail({ home, shareId }: { home: Home; shareId: string }) {
   const query = useShare(home.id, shareId);
   useDropOnForbidden(sharingKeys.share(account.id, home.id, shareId), query);
   const storeShare = useStoreShare(home.id);
+  const caps = useSharingCapabilities(home.id);
   const op = useSharingOperation<Share>();
   const [code, setCode] = useState<{ value: string | null; expiresAt: string | null } | null>(null);
   const [confirmRotate, setConfirmRotate] = useState(false);
@@ -642,6 +661,7 @@ function ShareDetail({ home, shareId }: { home: Home; shareId: string }) {
       {confirmRotate && (
         <Dialog title="Generare un nuovo codice?" onClose={() => setConfirmRotate(false)}>
           <p>Il codice precedente e l’eventuale abbinamento in corso smettono di funzionare. Il nuovo codice sarà mostrato una sola volta.</p>
+          <ExternalCodeHelp minutes={caps.data?.limits.codeMinutes ?? null} action="Genera il codice" />
           <p className={act.actions}>
             <button type="button" className={ui.btn} onClick={() => setConfirmRotate(false)}>Annulla</button>
             <button type="button" className={cx(ui.btn, ui.primary)} onClick={rotate}>Genera il codice</button>
