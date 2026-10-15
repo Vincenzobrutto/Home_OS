@@ -19,6 +19,7 @@ import { FakeActivities } from './fakeActivities.ts';
 import { FakeExpenses } from './fakeExpenses.ts';
 import { FakeObjects } from './fakeObjects.ts';
 import { FakeEconomy } from './fakeEconomy.ts';
+import { FakeSharing } from './fakeSharing.ts';
 
 export type FakeRequest = {
   method: string;
@@ -179,6 +180,16 @@ export class FakeBackend {
       return perms && d && d.homeId === homeId && this.canSee(d, accountId, perms) ? { id: d.id, name: d.name } : null;
     },
   });
+  /** sharing-v1 (C1a): disattivo per default (404), come un backend senza condivisione. */
+  sharing = new FakeSharing({
+    perms: (accountId, homeId) => this.homePerms(accountId, homeId),
+    members: (homeId) => this.memberships.filter((m) => m.homeId === homeId).map((m) => m.accountId),
+    account: (id) => {
+      const a = this.accounts.get(id);
+      return a ? { id: a.id, name: a.name, email: a.email } : undefined;
+    },
+    documents: (homeId) => [...this.documents.values()].filter((d) => d.homeId === homeId),
+  });
   /** false = backend senza endpoint M3 (404, come un backend solo M1/M2). */
   reviewEnabled = true;
 
@@ -252,6 +263,9 @@ export class FakeBackend {
     if (context !== undefined && context !== account.id) {
       return err(401, 'account_context_changed', 'Account cambiato in un’altra scheda.');
     }
+
+    const shared = this.sharing.handle(req, account.id);
+    if (shared) return shared;
 
     if (method === 'GET' && path === '/homes') {
       const items = this.memberships

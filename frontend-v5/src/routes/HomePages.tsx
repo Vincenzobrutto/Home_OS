@@ -169,6 +169,15 @@ export function CasaPage() {
             <Link to={`/home/${encodeURIComponent(home.id)}/documenti?ricerca=1`}>Cerca documenti</Link>
           </p>
         </section>
+        <section className={cx(ui.card, styles.wide)} aria-labelledby="casa-condivisioni">
+          <h2 id="casa-condivisioni" className={styles.cardTitle}>
+            Condivisioni
+          </h2>
+          <p className={styles.muted}>
+            Consegna originali scelti da te a una persona precisa, per un periodo limitato, senza darle accesso alla casa.{' '}
+            <Link to={`/home/${encodeURIComponent(home.id)}/condivisioni`}>Apri le condivisioni</Link>
+          </p>
+        </section>
       </div>
     </>
   );

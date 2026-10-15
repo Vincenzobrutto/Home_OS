@@ -117,6 +117,14 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
             <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
             <Tag>Versione {doc.version}</Tag>
           </div>
+          {props.home.permissions.includes('edit') && (
+            <p className={styles.spaced}>
+              {/* Scorciatoia: il documento è solo evidenziato nella scelta, mai selezionato; l'idoneità la decide il server. */}
+              <Link to={`/home/${encodeURIComponent(props.home.id)}/condivisioni/nuova?documento=${encodeURIComponent(doc.id)}`} className={ui.btn}>
+                Condividi…
+              </Link>
+            </p>
+          )}
           {props.analyzeHref && (
             <p className={styles.spaced}>
               {/* Avvio esplicito: aprire o leggere il PDF non avvia mai un'analisi. */}

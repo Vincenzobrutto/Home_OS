@@ -80,6 +80,11 @@ export function AppShell(props: { account: Account; home?: Home; children: React
           )}
         </ul>
         <div className={styles.account}>
+          {/* Consegne ricevute: livello account, raggiungibile anche senza case; non è una sezione della casa. */}
+          <Link to="/consegne" className={styles.logout}>
+            <Icon name="document" />
+            <span className={styles.logoutLabel}>Consegne ricevute</span>
+          </Link>
           <span className={styles.accountName} title={props.account.email}>
             {props.account.name}
           </span>

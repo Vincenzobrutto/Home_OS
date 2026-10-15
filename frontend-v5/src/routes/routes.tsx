@@ -24,6 +24,12 @@ const RoomsPage = lazyPage(() => import('./RoomsPages').then((m) => m.RoomsPage)
 const RoomDetailPage = lazyPage(() => import('./RoomsPages').then((m) => m.RoomDetailPage));
 const ObjectsPage = lazyPage(() => import('./ObjectsPages').then((m) => m.ObjectsPage));
 const ObjectDetailPage = lazyPage(() => import('./ObjectsPages').then((m) => m.ObjectDetailPage));
+const SharesPage = lazyPage(() => import('./SharingPages').then((m) => m.SharesPage));
+const NewSharePage = lazyPage(() => import('./SharingPages').then((m) => m.NewSharePage));
+const ShareDetailPage = lazyPage(() => import('./SharingPages').then((m) => m.ShareDetailPage));
+const ReceivedListPage = lazyPage(() => import('./ReceivedPages').then((m) => m.ReceivedListPage));
+const ClaimCodePage = lazyPage(() => import('./ReceivedPages').then((m) => m.ClaimCodePage));
+const ReceivedDetailPage = lazyPage(() => import('./ReceivedPages').then((m) => m.ReceivedDetailPage));
 
 // Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3/M4, caso Caldaia), activities-v1 (H1), expenses-v1 (H3a), home-objects-v1 (G1), economy-v1 (S1a/b, con ripiego H3a).
 // Agenzie e Amministratori non hanno rotte: non sono ancora assegnate.
@@ -45,6 +51,10 @@ export const routes: RouteObject[] = [
           { index: true, element: <HomeEntry /> },
           { path: 'case', element: <HomesPage /> },
           { path: 'case/nuova', element: <CreateHomePage /> },
+          // sharing-v1: consegne ricevute a livello account, anche senza case.
+          { path: 'consegne', element: <ReceivedListPage /> },
+          { path: 'consegne/codice', element: <ClaimCodePage /> },
+          { path: 'consegne/:shareId', element: <ReceivedDetailPage /> },
           {
             path: 'home/:homeId',
             element: <HomeLayout />,
@@ -69,6 +79,9 @@ export const routes: RouteObject[] = [
               { path: 'ambienti/:roomId', element: <RoomDetailPage /> },
               { path: 'oggetti', element: <ObjectsPage /> },
               { path: 'oggetti/:kind/:objectId', element: <ObjectDetailPage /> },
+              { path: 'condivisioni', element: <SharesPage /> },
+              { path: 'condivisioni/nuova', element: <NewSharePage /> },
+              { path: 'condivisioni/:shareId', element: <ShareDetailPage /> },
               { path: '*', element: <SectionNotFound /> },
             ],
           },

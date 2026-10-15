@@ -881,6 +881,24 @@ export class ApiClient {
     return data.work;
   }
 
+  // ---- Trasporto per moduli caricati in differita (sharing-v1) ----
+  // Stessi header di contesto, CSRF, errori e controlli binari di ogni altra chiamata: nessun percorso parallelo.
+
+  callJson<T>(path: string, opts: { method?: 'GET' | 'POST'; body?: unknown; idempotencyKey?: string; signal?: AbortSignal; accountId: string }): Promise<T> {
+    if (opts.method === 'POST') {
+      return this.mutate<T>(path, { body: opts.body, headers: opts.idempotencyKey ? { 'Idempotency-Key': opts.idempotencyKey } : undefined, accountId: opts.accountId });
+    }
+    return this.request<T>(path, { signal: opts.signal, accountId: opts.accountId });
+  }
+
+  callPage<T>(path: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    return this.page<T>(path, page, signal, accountId);
+  }
+
+  callBinary(path: string, signal: AbortSignal | undefined, accountId: string): Promise<BinaryPayload> {
+    return this.send<BinaryPayload>(path, { signal, accountId }, 'binary');
+  }
+
   private async ensureCsrf() {
     if (!this.csrfToken) {
       // Nessun token in memoria (es. dopo logout): lo chiediamo al server.

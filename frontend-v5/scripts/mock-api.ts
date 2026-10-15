@@ -112,6 +112,14 @@ if (process.argv.includes('--seed')) {
     backend.economy.fixtureDocs.set(invoice.id, 'invoice');
     console.log('S1c SIMULATO attivo (--s1c): prova fixture su gas.pdf e invoice.pdf sintetici, nessun modello AI.');
   }
+  // sharing-v1 (C1a) SIMULATO: Marco membro di Appartamento Roma con un suo documento, Luca esterno senza case.
+  if (process.argv.includes('--c1')) {
+    backend.sharing.enabled = true;
+    backend.addMember(b.id, roma.id, 'member');
+    await backend.seedDocument({ homeId: roma.id, uploaderId: b.id, name: 'Rapporto controllo fumi', visibility: 'home' });
+    backend.seedAccount('Luca Prova', 'l@example.test', 'password-di-prova-L');
+    console.log('C1a SIMULATO attivo (--c1): condivisioni e consegne su backend in memoria; l@example.test senza case.');
+  }
   // Provider reale SIMULATO (solo mock, solo per provare consenso e stati): nessuna chiamata esterna.
   // Il primo nuovo tentativo reale fallisce con provider_rate_limited per mostrare la riprova.
   if (process.argv.includes('--s1c-real')) {
