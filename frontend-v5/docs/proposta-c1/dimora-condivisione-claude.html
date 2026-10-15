@@ -241,9 +241,9 @@ function stepRecipient(d) {
   const members = `<fieldset style="border:0;padding:0;margin:0"><legend class="muted">Scegli dall’elenco delle persone di questa casa. Nome e recapito sono quelli che il servizio conosce per quell’account.</legend>
     ${MEMBERS.map((m) => `<label class="pick"><input type="radio" name="member" data-member="${m.id}" ${d.recipient?.kind === 'member' && d.recipient.id === m.id ? 'checked' : ''}><span class="row-body"><span class="row-title">${m.name}</span><span class="meta">${m.contact} · ${m.role}</span></span></label>`).join('')}</fieldset>
     <p class="help">Per una persona della casa la condivisione rende leggibili solo i file scelti, per il periodo scelto. Non cambia «Solo io / Persone della casa» e non dà altri diritti.</p>`;
-  const ext = `<div class="notice warn"><p><strong>Proposta, non attiva nella prima versione.</strong> Serve a valutare il percorso del tecnico: l’abbinamento con codice richiede un servizio che oggi non esiste.</p></div>
+  const ext = `<div class="notice warn"><p><strong>Proposta, non ancora sviluppata.</strong> Serve a valutare il percorso del tecnico: l’abbinamento con codice richiede un servizio che oggi non esiste.</p></div>
     <p>Dimora non si fida di un indirizzo email digitato: la registrazione attuale non lo verifica. Funziona così:</p>
-    <ol class="small"><li>Crei l’invito: Dimora mostra un <strong>codice monouso</strong> valido 24 ore.</li><li>Lo comunichi tu alla persona, a voce o di persona. Dimora non lo invia.</li><li>La persona accede con il suo account e inserisce il codice. Non vede ancora nulla.</li><li>Tu vedi nome e recapito di quell’account e confermi che è la persona giusta. Solo allora i file diventano leggibili.</li></ol>
+    <ol class="small"><li>Crei l’invito: Dimora mostra un <strong>codice monouso</strong> valido 15 minuti.</li><li>Lo comunichi tu alla persona, a voce o di persona. Dimora non lo invia.</li><li>La persona accede con il suo account e inserisce il codice. Non vede ancora nulla.</li><li>Confrontate la frase mostrata sui due schermi tramite un contatto che conosci già; confermi l’abbinamento.</li><li>Il destinatario accetta la consegna: solo allora può consultare gli elementi scelti.</li></ol>
     <label class="field">Come la riconosci (etichetta privata, solo per te)<input id="extlabel" maxlength="40" value="${esc(d.extLabel)}" placeholder="es. Tecnico caldaia"><span class="help">Non è una prova d’identità e il destinatario non la vede.</span></label>
     <label class="pick"><input type="radio" name="member" data-external ${d.recipient?.kind === 'external' ? 'checked' : ''}><span class="row-body"><span class="row-title">Persona esterna con abbinamento tramite codice</span><span class="meta">Nessun link pubblico ai file, nessuna email inviata da Dimora.</span></span></label>`;
   return `<div class="tabs" role="group" aria-label="Tipo di destinatario"><button type="button" data-rtab="member" aria-pressed="${tab === 'member'}">Persona di questa casa</button><button type="button" data-rtab="ext" aria-pressed="${tab === 'ext'}">Persona esterna</button></div>
@@ -266,16 +266,19 @@ function stepReview(d) {
   ${d.objectCard ? `<dt>Dati tecnici di Caldaia cucina</dt><dd>${OBJ.caldaia.fields.map(([k, v]) => `${k}: ${v}`).join(' · ')}</dd>` : ''}
   <dt>Permessi</dt><dd>Consultare e scaricare. Non può modificare, caricare né ricondividere dentro Dimora.</dd>
   <dt>Esclusi</dt><dd class="small">Spese, riepiloghi, bozze, pagamenti, attività, note, accesso alla casa, altri documenti.</dd></dl>
+  ${d.recipient.kind === 'member' && d.docs.some(id => doc(id).vis === 'Persone della casa') ? '<p class="help">Alcuni file sono già visibili alle persone della casa. Revocare questa consegna non elimina gli accessi già concessi tramite «Persone della casa».</p>' : ''}
   <div class="actions"><a class="btn small" href="#/condividi/contenuto">Modifica contenuto</a><a class="btn small" href="#/condividi/destinatario">Modifica destinatario</a><a class="btn small" href="#/condividi/durata">Modifica durata</a></div></section>
   ${d.wasConfirmed && !ok ? '<div class="notice warn" role="status"><p><strong>Hai modificato la consegna:</strong> la conferma precedente non vale più. Controlla di nuovo e conferma.</p></div>' : ''}
-  ${d.docs.length ? `<section class="card"><label class="pick" style="margin:0"><input type="checkbox" data-confirm ${ok ? 'checked' : ''} ${locked ? 'disabled' : ''}><span class="row-body"><span class="row-title">Ho controllato i file: ${d.recipient.kind === 'member' ? esc(recipientLabel(d.recipient)) : 'la persona'} vedrà i file completi, anche eventuali importi e dati personali al loro interno.</span><span class="meta">Dimora non oscura né rileva automaticamente importi, IBAN o dati personali nei file.</span></span></label></section>` : ''}
+  <section class="card"><label class="pick" style="margin:0"><input type="checkbox" data-confirm ${ok ? 'checked' : ''} ${locked ? 'disabled' : ''}><span class="row-body"><span class="row-title">${d.docs.length ? `Ho controllato i file e gli eventuali dati tecnici: ${d.recipient.kind === 'member' ? esc(recipientLabel(d.recipient)) : 'la persona'} vedrà i file completi, anche eventuali importi e dati personali al loro interno.` : 'Ho controllato i dati tecnici elencati: condivido soltanto questi campi con la persona indicata.'}</span>${d.docs.length ? '<span class="meta">Dimora non oscura né rileva automaticamente importi, IBAN o dati personali nei file.</span>' : ''}</span></label></section>
   ${err}
-  <div class="sticky"><div class="actions">${locked ? '' : `<button class="btn primary" type="button" data-create ${ok || !d.docs.length ? '' : 'disabled'}>Crea l’invito (simulato)</button>`}<a class="btn" href="#/condividi/durata">Indietro</a>%CANCEL%</div>
+  <div class="sticky"><div class="actions">${locked ? '' : `<button class="btn primary" type="button" data-create ${ok ? '' : 'disabled'}>Crea l’invito (simulato)</button>`}<a class="btn" href="#/condividi/durata">Indietro</a>%CANCEL%</div>
   <p class="help">Creare l’invito non invia nulla: ${d.recipient.kind === 'member' ? 'comparirà nella Dimora di ' + esc(recipientLabel(d.recipient)) + ', che dovrà accettarlo.' : 'ti mostreremo il codice da comunicare tu.'}</p></div>`;
 }
 
 // -------- shares (owner) --------
-const STATE_LABEL = { invited:['Invito preparato · da accettare','neutral'], pairing:['In attesa del codice','neutral'], check:['Da confermare: chi ha inserito il codice?','warn'], active:['Accettata · consultabile','ok'], expired:['Scaduta','neutral'], revoked:['Revocata','neutral'], unavailable:['Non più disponibile','err'] };
+const STATE_LABEL = { invited:['Invito preparato · da accettare','neutral'], pairing:['In attesa del codice','neutral'], check:['Da confermare: chi ha inserito il codice?','warn'], active:['Accettata · consultabile','ok'], expired:['Scaduta','neutral'], declined:['Rifiutata','neutral'], revoked:['Revocata','neutral'], unavailable:['Non più disponibile','err'] };
+// Synthetic comparison labels only: real pairing needs a server-generated, claim-bound challenge.
+const comparisonLabel = (s) => s.pairedTo === 'luca' ? 'LUNA 27' : 'PONTE 84';
 function sharesPage() {
   const list = state.shares.slice().reverse();
   return head('Casa di Giulia', 'Condivisioni', 'Consegne che hai preparato. Ogni persona vede solo la sua.') + `
@@ -287,12 +290,12 @@ function shareDetail(id) {
   const [lab, tone] = STATE_LABEL[s.state];
   const live = ['invited', 'pairing', 'check', 'active'].includes(s.state);
   const steps = s.recipient.kind === 'member'
-    ? [['Invito preparato', true], ['Accettato da ' + recipientLabel(s.recipient), s.state === 'active' || s.acceptedAt]]
-    : [['Invito preparato, codice mostrato a te', true], ['Codice inserito da un account', ['check', 'active'].includes(s.state) || s.acceptedAt], ['Confermato da te: file leggibili', s.state === 'active' || s.acceptedAt]];
+    ? [['Invito preparato', true], ['Accettazione di ' + recipientLabel(s.recipient), s.state === 'active' || s.acceptedAt]]
+    : [['Invito preparato, codice mostrato a te', true], ['Codice inserito da un account', !!s.pairedTo], ['Abbinamento confermato da te', !!s.pairConfirmed], ['Consegna accettata dal destinatario', !!s.acceptedAt]];
   return head('Condivisione', esc(recipientLabel(s.recipient, s.extLabel)), null, ['#/condivisioni', 'Condivisioni']) + `
   <p><span class="tag ${tone}">${lab}</span></p>
-  ${s.state === 'pairing' ? `<section class="card"><h2>Codice da comunicare tu</h2><p class="code" aria-label="Codice K 7 P 4 Q X">K7P-4QX</p><p class="help">Valido fino a ${fmtDate(plus(1))}, una sola volta. Dimora non lo invia: dillo alla persona a voce o di persona. Chi lo inserisce non vede nulla finché non confermi tu.</p></section>` : ''}
-  ${s.state === 'check' ? `<section class="card" style="border-color:var(--warning-border)"><h2>È la persona giusta?</h2><p>Un account ha inserito il codice alle 15:02:</p><p><strong>${esc(PEOPLE[s.pairedTo])}</strong> · ${s.pairedTo}.${s.pairedTo === 'luca' ? 'bassi' : 'neri'}@example.test <span class="small muted">(nome e indirizzo dichiarati dall’account, non verificati)</span></p><div class="actions"><button class="btn primary" type="button" data-pair-ok>Sì, è la persona giusta: rendi leggibili i file</button><button class="btn danger" type="button" data-pair-no>No, non è lei: annulla l’invito</button></div></section>` : ''}
+  ${s.state === 'pairing' ? `<section class="card"><h2>Codice da comunicare tu</h2><p class="code" aria-label="Codice K 7 P 4 Q X">K7P-4QX</p><p class="help">Valido 15 minuti, una sola volta. Dimora non lo invia: dillo alla persona a voce o di persona. Chi lo inserisce non vede nulla finché non confermi l’abbinamento e accetta la consegna.</p></section>` : ''}
+  ${s.state === 'check' ? `<section class="card" style="border-color:var(--warning-border)"><h2>È la persona giusta?</h2><p>Un account ha inserito il codice:</p><p><strong>${esc(PEOPLE[s.pairedTo])}</strong> · ${s.pairedTo}.${s.pairedTo === 'luca' ? 'bassi' : 'neri'}@example.test <span class="small muted">(nome e indirizzo dichiarati dall’account, non verificati)</span></p><p>Contatta la persona tramite un recapito che conosci già e chiedile di leggere la frase sul suo schermo. Nome ed email da soli non provano chi sia.</p><p>La frase da confrontare è <strong>${comparisonLabel(s)}</strong> (esempio sintetico).</p><label class="pick"><input type="checkbox" data-pair-compared><span>Ho confrontato la frase con la persona tramite il mio contatto conosciuto.</span></label><div class="actions"><button class="btn primary" type="button" data-pair-ok disabled>Conferma abbinamento</button><button class="btn danger" type="button" data-pair-no>No, non è lei: annulla l’invito</button></div></section>` : ''}
   ${s.state === 'unavailable' ? `<div class="notice err"><p>Non hai più i diritti sugli originali inclusi (per esempio dopo la vendita della casa): la consegna non è più consultabile. Non si trasferisce nulla tramite la condivisione.</p></div>` : ''}
   ${s.state === 'expired' ? `<div class="notice info"><p>Scaduta il ${fmtDate(s.expires)}. Per un nuovo accesso prepara una nuova condivisione.</p></div>` : ''}
   <section class="card"><h2>Stato</h2><ul class="timeline">${steps.map(([t, on]) => `<li class="${on ? 'on' : ''}">${t}</li>`).join('')}</ul><p class="help">Accettato non significa letto: Dimora non mostra se la persona ha aperto i file.</p></section>
@@ -312,8 +315,8 @@ function recipientView(parts, q) {
     return delivery(s);
   }
   const rows = mine.map((s) => {
-    const gone = ['expired', 'revoked', 'unavailable'].includes(s.state);
-    const label = s.state === 'invited' ? 'Invito da accettare' : s.state === 'check' ? 'In attesa della conferma di Giulia' : gone ? 'Non più disponibile' : 'Consultabile';
+    const gone = ['expired', 'revoked', 'declined', 'unavailable'].includes(s.state);
+    const label = s.state === 'invited' ? 'Invito da accettare' : s.state === 'check' ? 'In attesa della conferma di Giulia' : s.state === 'declined' ? 'Rifiutata' : gone ? 'Non più disponibile' : 'Consultabile';
     return `<div class="row"><div class="iconbox">${icon('share')}</div><div class="row-body"><a class="row-title" href="#/ricevute/${s.id}">Consegna da Giulia Leone</a><div class="small muted">${gone ? 'Contenuto non più disponibile' : s.state === 'active' ? `${s.docs.length} file · fino a ${fmtDate(s.expires)}` : 'Contenuto visibile dopo l’accettazione'}</div></div><span class="tag ${gone ? 'neutral' : s.state === 'active' ? 'ok' : 'warn'}">${label}</span></div>`;
   }).join('');
   return head(PEOPLE[me], 'Consegne ricevute', 'Solo ciò che qualcuno ha scelto di darti. Non è l’accesso a una casa.') + `
@@ -327,15 +330,15 @@ function codePage() {
   <section class="card"><form id="codeform" novalidate><label class="field">Codice<input id="code" autocomplete="off" inputmode="text" maxlength="7" ${state.codeTries >= 3 ? 'disabled' : ''} aria-describedby="codehelp"><span class="help" id="codehelp">Nella simulazione il codice è K7P-4QX${waiting ? '' : ' (prima Giulia deve preparare un invito per una persona esterna)'}.</span></label>${err}<button class="btn primary" ${state.codeTries >= 3 ? 'disabled' : ''}>Invia il codice</button></form></section>`;
 }
 function delivery(s) {
-  const gone = ['expired', 'revoked', 'unavailable'].includes(s.state);
+  const gone = ['expired', 'revoked', 'declined', 'unavailable'].includes(s.state);
   if (gone) return head('Consegna da Giulia Leone', 'Non più disponibile', s.state === 'expired' ? `Il periodo di consultazione è terminato il ${fmtDate(s.expires)}.` : 'Questa consegna non è più consultabile.', ['#/ricevute', 'Consegne ricevute']) + `<section class="card"><p class="muted">Le copie che hai già scaricato restano tue. Per altri documenti chiedi a chi te li aveva dati.</p></section>`;
-  if (s.state === 'invited') return head('Invito', 'Giulia Leone vuole darti dei documenti', 'Prima di accettare non vedi titoli, indirizzo o contenuti.', ['#/ricevute', 'Consegne ricevute']) + `
-    <section class="card"><p>Accettando potrai consultare e scaricare i file scelti per te fino a ${fmtDate(s.expires)}. Non entri nella casa e non vedi altro.</p><div class="actions"><button class="btn primary" type="button" data-accept="${s.id}">Accetta</button><button class="btn" type="button" data-decline="${s.id}">Rifiuta</button></div></section>`;
-  if (s.state === 'check') return head('Consegna', 'In attesa di conferma', 'Hai inserito il codice. Giulia Leone deve confermare che sei tu: poi vedrai i file.', ['#/ricevute', 'Consegne ricevute']);
-  return head('Consegna da Giulia Leone', `${s.docs.length} file per te`, `Consultabile fino a ${fmtDate(s.expires)} · solo lettura e download`, ['#/ricevute', 'Consegne ricevute']) + `
+  if (s.state === 'invited') return head('Invito', 'Giulia Leone vuole condividere con te', 'Prima di accettare non vedi titoli, indirizzo o contenuti.', ['#/ricevute', 'Consegne ricevute']) + `
+    <section class="card"><p>Accettando potrai consultare gli elementi scelti per te fino a ${fmtDate(s.expires)}. Non entri nella casa e non vedi altro.</p><div class="actions"><button class="btn primary" type="button" data-accept="${s.id}">Accetta</button><button class="btn" type="button" data-decline="${s.id}">Rifiuta</button></div></section>`;
+  if (s.state === 'check') return head('Consegna', 'In attesa di conferma', 'Hai inserito il codice. Giulia deve confermare l’abbinamento; poi potrai accettare la consegna.', ['#/ricevute', 'Consegne ricevute']) + `<section class="card"><p>Leggi a Giulia questa frase quando ti contatta tramite il recapito che già conosce:</p><p class="code">${comparisonLabel(s)}</p><p class="help">Esempio sintetico per confrontare le due schermate, non una verifica automatica dell’identità.</p></section>`;
+  return head('Consegna da Giulia Leone', s.docs.length ? `${s.docs.length} file per te${s.objectCard ? ' e dati tecnici' : ''}` : 'Dati tecnici per te', `Consultabile fino a ${fmtDate(s.expires)} · sola lettura${s.docs.length ? ' e download dei file' : ''}`, ['#/ricevute', 'Consegne ricevute']) + `
   <section class="card">${s.docs.map((x) => `<div class="row"><div class="iconbox">${icon('doc')}</div><div class="row-body"><span class="row-title">${esc(x.name)}</span><div class="small muted">${x.size} · ${x.ver}</div></div><button class="btn small" type="button" data-open>Apri</button><button class="btn small" type="button" data-open>Scarica</button></div>`).join('')}</section>
   ${s.objectCard ? `<section class="card"><h2>Dati tecnici: Caldaia cucina</h2><dl class="fields">${OBJ.caldaia.fields.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl><p class="help">Solo i dati scelti da Giulia.</p></section>` : ''}
-  <p class="help">Puoi scaricare i file. Non puoi inoltrare la consegna dentro Dimora.</p>`;
+  <p class="help">${s.docs.length ? 'Puoi scaricare i file. ' : ''}Non puoi inoltrare la consegna dentro Dimora.</p>`;
 }
 
 // -------- dialog / toast --------
@@ -372,13 +375,14 @@ function bind() {
     go(o.type === 'documento' ? `#/documenti/${o.id}` : o.type === 'oggetto' ? '#/oggetti/caldaia' : '#/condivisioni');
   }));
   $$('[data-create]').forEach((el) => el.onclick = create);
-  $$('[data-revoke]').forEach((el) => el.onclick = () => ask('Revocare la condivisione?', '<p>La persona non potrà più aprire né scaricare i file da Dimora. Le copie già scaricate non si possono ritirare.</p>', 'Revoca', 'Non revocare', () => { setShare(el.dataset.revoke, 'revoked'); toast('Revocata: nuovi accessi bloccati subito.'); }));
+  $$('[data-revoke]').forEach((el) => el.onclick = () => ask('Revocare la condivisione?', '<p>La persona non potrà più usare questa consegna. Eventuali altri accessi già concessi nella casa rimangono validi. Le copie già scaricate non si possono ritirare.</p>', 'Revoca', 'Non revocare', () => { setShare(el.dataset.revoke, 'revoked'); toast('Revocata: nuovi accessi tramite questa consegna bloccati.'); }));
   $$('[data-sim-expire]').forEach((el) => el.onclick = () => { setShare(el.dataset.simExpire, 'expired'); toast('Simulato: scadenza superata.'); });
   $$('[data-sim-lose]').forEach((el) => el.onclick = () => { setShare(el.dataset.simLose, 'unavailable'); toast('Simulato: Giulia non ha più diritti sugli originali.'); });
-  $$('[data-pair-ok]').forEach((el) => el.onclick = () => { const s = current(); s.state = 'active'; s.acceptedAt = true; render(); toast(`Confermato: i file sono leggibili per ${PEOPLE[s.pairedTo]}.`); });
+  $$('[data-pair-compared]').forEach((el) => el.onchange = () => { document.querySelector('[data-pair-ok]').disabled = !el.checked; });
+  $$('[data-pair-ok]').forEach((el) => el.onclick = () => { if (!document.querySelector('[data-pair-compared]')?.checked) return; const s = current(); s.state = 'invited'; s.pairConfirmed = true; render(); toast('Abbinamento confermato. Il destinatario deve ancora accettare la consegna.'); });
   $$('[data-pair-no]').forEach((el) => el.onclick = () => ask('Annullare l’invito?', '<p>L’account che ha inserito il codice non vedrà nulla. Il codice non è più valido.</p>', 'Annulla l’invito', 'Torna indietro', () => { setShare(current().id, 'revoked'); }));
   $$('[data-accept]').forEach((el) => el.onclick = () => { const s = state.shares.find((x) => x.id === el.dataset.accept); s.state = 'active'; s.acceptedAt = true; render(); toast('Accettata.'); });
-  $$('[data-decline]').forEach((el) => el.onclick = () => ask('Rifiutare l’invito?', '<p>Giulia vedrà che l’invito non è stato accettato.</p>', 'Rifiuta', 'Torna indietro', () => { setShare(el.dataset.decline, 'revoked'); go('#/ricevute'); }));
+  $$('[data-decline]').forEach((el) => el.onclick = () => ask('Rifiutare l’invito?', '<p>Giulia vedrà che l’invito non è stato accettato.</p>', 'Rifiuta', 'Torna indietro', () => { setShare(el.dataset.decline, 'declined'); go('#/ricevute'); }));
   $$('[data-open]').forEach((el) => el.onclick = () => toast('Simulazione: nessun file reale da aprire o scaricare.'));
   const cf = document.getElementById('codeform');
   if (cf) cf.onsubmit = (e) => {
@@ -399,7 +403,7 @@ const current = () => state.shares.find((x) => x.id === route().parts[1]);
 function setShare(id, st) { const s = state.shares.find((x) => x.id === id); if (s) { s.state = st; render(); } }
 function create() {
   const d = state.draft;
-  if (!d || !d.docs.length || !confirmed(d)) return;
+  if (!hasContent(d) || !confirmed(d)) return;
   // Stessa richiesta (stessa chiave) finché l'esito è ignoto: «Riprova invio» non duplica.
   if (!state.pendingCreate) state.pendingCreate = { key: 'k' + (++state.seq), sig: sig(d) };
   if (document.getElementById('simnet').checked) {

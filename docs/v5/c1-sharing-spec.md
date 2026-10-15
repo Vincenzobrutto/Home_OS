@@ -1,4 +1,19 @@
-# C1 — condivisione selettiva, proposta v0.1
+# C1 — condivisione selettiva, proposta v0.2
+
+## Arbitrato del 15 ottobre dopo consegna Claude
+
+Queste precisazioni prevalgono sulla sequenza v0.1 riportata sotto. Rapporto: c1-ux-arbitrato-20261015.md.
+
+- Primo rilascio utente raccomandato: originali selezionati anche a esterni con account; same-Home resta tappa tecnica, non limite definitivo del prodotto. Proiezione tecnica oggetti successiva, già simulabile nel mockup. C1 rimane non attivo.
+- Esterno: codice monouso breve e a scadenza 15 minuti, account autenticato, confronto di una frase/challenge legata alla singola richiesta tramite un contatto già conosciuto, approvazione esplicita del mittente e successiva accettazione del destinatario. Nome ed email dichiarati non sono una verifica d'identità. Nessun file prima di entrambe le azioni. Specifica del protocollo/anti-abuso da congelare prima del runtime.
+- Nessuna email/SMS inviata da Dimora in questo incremento. Il mittente comunica il codice autonomamente. Registrarsi non concede diritti: l'abbinamento punta all'account ID corrente.
+- Consenso azzerato da cambi a contenuto, destinatario, durata o versione. Anche una consegna di soli dati tecnici richiede conferma esplicita del manifesto.
+- Stato `declined`/Rifiutata distinto da Revocata. Accettazione distinta da lettura; nessuna conferma di apertura.
+- Consegne ricevute a livello account, senza una quinta sezione principale Home. Accessi preesistenti M2 non vengono revocati revocando C1: avviso esplicito nel manifesto e nel dialogo.
+- L'etichetta economica può usare solo una categoria già dichiarata dall'utente; non inferirla da nome/tipo/hash, non garantire assenza di dati personali negli altri file. Avviso sui file completi sempre.
+- Mockup C1 di riferimento: frontend-v5/docs/proposta-c1/dimora-condivisione-claude.html con correzioni Codex. Il vecchio flusso C1 in public/mockup-proprietario-v5.html è superato per questa funzione e non deve guidare il contratto.
+
+La policy offline attuale rimane deliberatamente limitata a same-Home: non dimostra ancora un'autorizzazione esterna. Disegno API precedente da estendere prima del congelamento; nessuna modifica implicita alla policy o concessione di permessi.
 
 15 ottobre 2026. Base: home-economy-module.md §9 e §11; separazione originali/derivati di M2/M3 e privacy personale di G1/S1. **Definizione in revisione, non funzione attiva né contratto REST congelato.**
 
