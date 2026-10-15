@@ -2,10 +2,10 @@ import { Link } from 'react-router';
 import type { Home } from '../api/types';
 import { isApiError } from '../api/errors';
 import { ErrorState, Loading, cx, ui } from '../components/ui';
-import { ExpenseRow, expensePath, expenseStyles as styles } from '../expenses/components';
+import type { ExpenseSummary } from '../api/types';
+import { ExpenseRow, expenseOwn as own, expensePath, expenseStyles as styles } from '../expenses/components';
 import { useExpenseSummary } from '../expenses/hooks';
-import { expenseErrorMessage } from '../lib/expenses';
-import { SummaryTotals } from './ExpensesPage';
+import { expenseErrorMessage, formatCents } from '../lib/expenses';
 import pages from './pages.module.css';
 
 /** Casa: riepilogo dell'anno corrente (server) e ultime tre spese; errore mai mostrato come zero. */
@@ -57,5 +57,25 @@ export function SpeseSummary({ home }: { home: Home }) {
         </>
       )}
     </section>
+  );
+}
+
+/** Totali annui H3a: condivisi da Casa e dalla pagina Spese, qui per non portare la pagina Spese nell'entry. */
+export function SummaryTotals({ data }: { data: ExpenseSummary }) {
+  return (
+    <div className={own.totals} aria-label={`Totali del ${data.year}`}>
+      <span className={own.total}>
+        <span className={own.totalLabel}>Inserite da te ({data.counts.manual})</span>
+        <span className={own.totalValue}>{formatCents(data.totalsCents.manual)}</span>
+      </span>
+      <span className={own.total}>
+        <span className={own.totalLabel}>Collegate a un documento ({data.counts.document})</span>
+        <span className={own.totalValue}>{formatCents(data.totalsCents.document)}</span>
+      </span>
+      <span className={cx(own.total, own.combined)}>
+        <span className={own.totalLabel}>Totale registrato</span>
+        <span className={own.totalValue}>{formatCents(data.totalCents)}</span>
+      </span>
+    </div>
   );
 }

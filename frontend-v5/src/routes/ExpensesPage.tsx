@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import type { ExpenseFilters, ExpenseSummary, Home } from '../api/types';
+import type { ExpenseFilters, Home } from '../api/types';
 import { Icon } from '../components/Icon';
 import { ErrorState, Loading, cx, ui, useDocumentTitle } from '../components/ui';
-import { ExpenseForm, ExpenseRow, expenseOwn as own, expensePath, expenseStyles as styles } from '../expenses/components';
+import { ExpenseForm, ExpenseRow, expensePath, expenseStyles as styles } from '../expenses/components';
 import { useExpenseCapabilities, useExpenseSummary, useExpenses, useForgetExpenses } from '../expenses/hooks';
 import { formatCalendarDate } from '../lib/activities';
-import { expenseErrorMessage, formatCents, isForbidden } from '../lib/expenses';
+import { expenseErrorMessage, isForbidden } from '../lib/expenses';
 import { isApiError } from '../api/errors';
 import { useAccount } from '../session/session';
 import { useCurrentHome } from './HomePages';
+import { SummaryTotals } from './SpeseSummary';
 import pages from './pages.module.css';
 
 const STATE_OPTIONS: Array<{ value: ExpenseFilters['state']; label: string }> = [
@@ -301,25 +302,6 @@ function ExpenseList(props: { home: Home; filters: ExpenseFilters; returnState: 
         </p>
       )}
     </>
-  );
-}
-
-export function SummaryTotals({ data }: { data: ExpenseSummary }) {
-  return (
-    <div className={own.totals} aria-label={`Totali del ${data.year}`}>
-      <span className={own.total}>
-        <span className={own.totalLabel}>Inserite da te ({data.counts.manual})</span>
-        <span className={own.totalValue}>{formatCents(data.totalsCents.manual)}</span>
-      </span>
-      <span className={own.total}>
-        <span className={own.totalLabel}>Collegate a un documento ({data.counts.document})</span>
-        <span className={own.totalValue}>{formatCents(data.totalsCents.document)}</span>
-      </span>
-      <span className={cx(own.total, own.combined)}>
-        <span className={own.totalLabel}>Totale registrato</span>
-        <span className={own.totalValue}>{formatCents(data.totalCents)}</span>
-      </span>
-    </div>
   );
 }
 
