@@ -333,7 +333,7 @@ describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
     await app.user.click(within(form).getByRole('button', { name: 'Registra spesa' }));
     await waitFor(() => expect(app.router.state.location.pathname).toBe(`/home/${home.id}/oggetti/object/${ref.id}`));
     // La lista G1 della scheda si rilegge al montaggio (prima mostra la cache): attesa più lunga sotto carico.
-    expect(await screen.findByRole('link', { name: 'Riparazione lavatrice' }, { timeout: 5000 })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Riparazione lavatrice' })).toBeInTheDocument(), { timeout: 5000 });
     expect(posts(backend, /\/economy\/expenses$/)[0]!.body).toMatchObject({ objectRef: { kind: 'object', id: ref.id } });
     expect(posts(backend, /\/objects\/object\/[^/]+\/links$/)).toHaveLength(0);
   });

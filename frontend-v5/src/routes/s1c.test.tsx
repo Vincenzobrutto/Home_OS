@@ -285,6 +285,30 @@ describe('[mock] S1c — accantonate, privacy e fonti', () => {
     expect(screen.queryByText(/Bolletta gas settembre/)).toBeNull();
   });
 
+  it('risposta di conferma dopo logout: nessuna navigazione privata tardiva', async () => {
+    const { backend, home } = await world();
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
+    await toDraft(app, home.id, 'invoice.pdf');
+    await app.user.click(screen.getByRole('button', { name: /Usa la data del documento/ }));
+    let release!: () => void;
+    const delayed = new Promise<void>((resolve) => { release = resolve; });
+    const handle = backend.handle.bind(backend);
+    backend.handle = async (request) => {
+      const result = await handle(request);
+      if (request.method === 'POST' && /\/confirm$/.test(request.path)) await delayed;
+      return result;
+    };
+    await app.user.click(screen.getByRole('button', { name: 'Conferma e registra il costo' }));
+    await waitFor(() => expect(posts(backend, /\/confirm$/)).toHaveLength(1));
+    await app.user.click(screen.getByRole('button', { name: /Esci dall/ }));
+    await screen.findByRole('heading', { name: 'Accedi' });
+    release();
+    await waitFor(() => expect(app.queryClient.isMutating()).toBe(0));
+    expect(app.router.state.location.pathname).toBe('/accedi');
+    expect(app.router.state.location.search).not.toContain('next');
+    expect(screen.queryByText('Fattura riparazione rubinetto')).toBeNull();
+  });
+
   it('bozza di un altro account: 403 generico, nessun dato mostrato', async () => {
     const { backend, home } = await world();
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
