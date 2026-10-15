@@ -4,13 +4,14 @@ import { ProviderFailure, type Snapshot } from '../review/provider';
 import { amountCents } from '../expenses/domain';
 import { calendar } from '../activities/domain';
 import { categories, category, expenseValues, text } from './domain';
+import { printedCents, printedDates } from './document-evidence';
 export type Citation={documentId:string;documentVersion:number;sha256:string;page:number;excerpt:string};
 export type Candidate={id:string;amountCents:number;role:string;label:string;sources:Citation[]};
 export type Proposed={value:string;sources:Citation[]};
 export type EconomicOutput={documentKind:'utility_bill'|'simple_invoice';proposedFields:Record<string,Proposed>;amountCandidates:Candidate[];amountSelectionRequired:boolean};
-const roles=['current_document_total','amount_due','arrears_balance','taxable','tax','line_total','other'];
+export const roles=['current_document_total','amount_due','arrears_balance','taxable','tax','line_total','other'];
 const dateKeys=['documentDate','competenceFrom','competenceTo','dueOn'];
-const keys=['title','supplier','category','documentNumber',...dateKeys];
+export const keys=['title','supplier','category','documentNumber',...dateKeys];
 const normalized=(s:string)=>s.normalize('NFC').replace(/\s+/g,' ').trim();
 export function citation(input:unknown,pages:string[],snapshot:Snapshot):Citation {
   const r=object(input,['documentId','documentVersion','sha256','page','excerpt']);
@@ -31,11 +32,11 @@ export function validateOutput(input:unknown,pages:string[],snapshot:Snapshot):E
       if(key==='category') {
         const labels:Record<string,RegExp>={electricity:/elettric|electric/,gas:/\bgas\b/,water:/acqua|water/,internet_services:/internet/,maintenance:/manutenzion/,repairs_works:/riparazion/,purchase_replacement:/acquisto|sostituzion/};
         if(!labels[value]?.test(claims))throw new ProviderFailure('evidence_unverified');
-      }else if(!claims.includes(normalized(value).toLocaleLowerCase('it')))throw new ProviderFailure('evidence_unverified');
+      }else if(dateKeys.includes(key)?!refs.some(s=>printedDates(s.excerpt).includes(value)):!claims.includes(normalized(value).toLocaleLowerCase('it')))throw new ProviderFailure('evidence_unverified');
       fields[key]={value,sources:refs};
     }
     if(!Array.isArray(r.amountCandidates)||!r.amountCandidates.length||r.amountCandidates.length>10)throw new ProviderFailure('no_supported_economic_data');
-    const ids=new Set<string>(),candidates=r.amountCandidates.map(raw=>{const row=object(raw,['id','amountCents','role','label','sources']);if(typeof row.id!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(row.id)||ids.has(row.id)||typeof row.role!=='string'||!roles.includes(row.role))throw invalid();ids.add(row.id);const amount=amountCents(row.amountCents),refs=sources(row.sources,pages,snapshot);const values=refs.flatMap(s=>[...s.excerpt.matchAll(/(?<![\d.,])([0-9]+)[.,]([0-9]{2})(?!\d)/g)].map(m=>BigInt(m[1])*100n+BigInt(m[2])));if(!values.includes(BigInt(amount)))throw new ProviderFailure('evidence_unverified');return {id:row.id,amountCents:amount,role:row.role,label:text(row.label,120)!,sources:refs};});
+    const ids=new Set<string>(),candidates=r.amountCandidates.map(raw=>{const row=object(raw,['id','amountCents','role','label','sources']);if(typeof row.id!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(row.id)||ids.has(row.id)||typeof row.role!=='string'||!roles.includes(row.role))throw invalid();ids.add(row.id);const amount=amountCents(row.amountCents),refs=sources(row.sources,pages,snapshot);const values=refs.flatMap(s=>printedCents(s.excerpt));if(!values.includes(amount))throw new ProviderFailure('evidence_unverified');return {id:row.id,amountCents:amount,role:row.role,label:text(row.label,120)!,sources:refs};});
     const current=candidates.filter(c=>c.role==='current_document_total');
     return {documentKind:r.documentKind,proposedFields:fields,amountCandidates:candidates,amountSelectionRequired:candidates.some(c=>c.role==='arrears_balance')||current.length!==1};
   }catch(e){if(e instanceof ProviderFailure)throw e;throw new ProviderFailure('analysis_invalid_output');}
