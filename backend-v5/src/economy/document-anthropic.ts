@@ -31,12 +31,12 @@ export type PreparedEconomicAnalysis = {request:PreparedRequest;document:TextDoc
 @Injectable()
 export class EconomicAnthropicProvider {
   constructor(private readonly parser:PdfTextExtractor,private readonly transport:AnthropicTransport){}
-  async prepare(input:InputDocument,model:string,signal:AbortSignal):Promise<PreparedEconomicAnalysis> {
+  async prepare(input:InputDocument,model:string,signal:AbortSignal,authorize?:()=>Promise<void>):Promise<PreparedEconomicAnalysis> {
     if(signal.aborted)throw new ProviderFailure('analysis_timeout');
     const [document]=await this.parser.extract([input]);
     if(signal.aborted)throw new ProviderFailure('analysis_timeout');
     const messages=[{role:'user',content:JSON.stringify({pages:document.pages.map((text,index)=>({page:index+1,text}))})}];
-    const request=await this.transport.prepareStructured(model,ECONOMIC_SYSTEM,messages,ECONOMIC_OUTPUT_SCHEMA,signal);
+    const request=await this.transport.prepareStructured(model,ECONOMIC_SYSTEM,messages,ECONOMIC_OUTPUT_SCHEMA,signal,authorize);
     return {request,document};
   }
   decode(response:ProviderResponse,prepared:PreparedEconomicAnalysis):{output:EconomicOutput;usage:{input:number;output:number}} {

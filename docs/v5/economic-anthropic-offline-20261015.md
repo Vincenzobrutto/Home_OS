@@ -1,5 +1,7 @@
 # Estrazione economica Anthropic — adapter offline
 
+Aggiornamento successivo: ledger economico e worker protetto implementati, ancora disabilitati nel runtime; vedere `economic-ai-ledger-worker-20261015.md`. Le limitazioni descritte sotto documentano lo stato al commit dell'adapter offline.
+
 15 ottobre 2026. Incremento autorizzato: sviluppo del backend e prove senza consumo API. Nessuna attivazione del provider, nessuna nuova campagna di spesa.
 
 ## Implementato

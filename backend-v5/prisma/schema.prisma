@@ -412,11 +412,41 @@ model EconomicAnalysisJob {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
   draft EconomicDraft?
+  aiAttempt EconomicAiAttempt?
   account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
   home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
   document Document @relation(fields:[documentId],references:[id],onDelete:Restrict)
   @@index([state,leaseUntil,createdAt,id])
   @@index([accountId,homeId,createdAt,id])
+}
+model EconomicAiCampaign {
+  id String @id
+  limitMicroUsd Int
+  maxCalls Int
+  createdAt DateTime @default(now())
+  attempts EconomicAiAttempt[]
+}
+model EconomicAiAttempt {
+  id String @id @default(uuid())
+  jobId String @unique
+  campaignId String
+  model String
+  promptVersion String
+  inputMicroUsdPerToken Int
+  outputMicroUsdPerToken Int
+  reservedMicroUsd Int
+  actualMicroUsd Int?
+  state String @default("reserved")
+  inputTokens Int?
+  outputTokens Int?
+  providerRequestId String?
+  response Json?
+  sentAt DateTime?
+  responseAt DateTime?
+  createdAt DateTime @default(now())
+  job EconomicAnalysisJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
+  campaign EconomicAiCampaign @relation(fields:[campaignId],references:[id],onDelete:Restrict)
+  @@index([campaignId,state])
 }
 model EconomicDraft {
   id String @id @default(uuid())

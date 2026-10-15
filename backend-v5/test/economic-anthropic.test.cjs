@@ -9,6 +9,7 @@ const {PdfTextExtractor}=require('../dist/review/pdf-text');
 const {economicFixturePdf}=require('../dist/economy/document-fixture');
 const {printedCents,printedDates}=require('../dist/economy/document-evidence');
 const {digest}=require('../dist/security');
+const {EconomicAiConfig,economicBilling,economicCommitted}=require('../dist/economy/ai-budget');
 const model='offline-model';
 const signal=()=>new AbortController().signal;
 const snapshot={documentId:randomUUID(),documentVersion:1,documentSha256:'local-hash'};
@@ -17,6 +18,15 @@ const answer=(data=raw(),extra={})=>({id:'msg_offline',model,stop_reason:'end_tu
 const prepared=(pages=['Bolletta gas settembre\nTotale corrente bolletta: 80,00 EUR\nSaldo precedenti bollette: 20,00 EUR'])=>({request:{model,max_tokens:4096},document:{snapshot,pages}});
 const provider=()=>new EconomicAnthropicProvider(new PdfTextExtractor(),{});
 const fails=(fn,code)=>assert.throws(fn,e=>e.code===code);
+
+test('Economic config requires a separate explicit campaign, budget, model and call cap',()=>{
+  let env={};const config=new class extends EconomicAiConfig{get environment(){return env;}}();
+  assert.throws(()=>config.settings(),e=>e.getResponse().code==='ai_provider_disabled');
+  env={ECONOMY_AI_ENABLED:'true',ANTHROPIC_API_KEY:'offline-placeholder',ECONOMY_AI_MODEL:'claude-sonnet-4-6',ECONOMY_AI_CAMPAIGN_ID:'economic-test',ECONOMY_AI_BUDGET_USD:'1.250001',ECONOMY_AI_MAX_CALLS:'3'};
+  assert.equal(config.settings().limitMicroUsd,1250001);
+  for(const patch of [{ECONOMY_AI_CAMPAIGN_ID:'m4-20261013'},{ECONOMY_AI_BUDGET_USD:'NaN'},{ECONOMY_AI_BUDGET_USD:'10.000001'},{ECONOMY_AI_MAX_CALLS:'0'},{ECONOMY_AI_MODEL:'unknown'}]){const before=env;env={...env,...patch};assert.throws(()=>config.settings());env=before;}
+  const uncertain={state:'uncertain',actualMicroUsd:null,reservedMicroUsd:250000};assert.equal(economicCommitted(uncertain),250000);assert.equal(economicBilling(uncertain).actualUsd,null);assert.equal(economicBilling(uncertain).state,'uncertain');
+});
 
 test('Economy adapter: real PDF parser, stubbed model/count/Messages; only pages transmitted',async()=>{
   const transport=new AnthropicTransport({headers:()=>({'content-type':'application/json'})});
