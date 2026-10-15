@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dimora · Guida al primo accesso · proposta</title>
+<style>
+:root{--nav:#132e3e;--nav-soft:#274958;--nav-text:#c7dce7;--nav-active:#b9f5fb;--ink:#182f3d;--muted:#536b79;--bg:#f2f6f8;--accent:#0b6177;--soft:#e3f3f6;--soft-border:#c9e4ea;--border:#dce6eb;--warning-bg:#fff4dc;--warning-border:#ebdba8;--warning:#80520c;--focus:#3a9ec0;--cyan:#99e5ef}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 'DM Sans','Segoe UI',system-ui,sans-serif}
+button,input,select{font:inherit}a{color:var(--accent)}:focus-visible{outline:3px solid var(--focus);outline-offset:3px}[tabindex="-1"]:focus{outline:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:9px 15px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--ink);font-weight:600;text-decoration:none;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.ghost{border-color:transparent;background:transparent;color:var(--accent)}.btn.small{min-height:36px;padding:5px 11px;font-size:14px}
+.demobar{background:var(--warning-bg);border-bottom:1px solid var(--warning-border);color:#5c3c08;font-size:13px;padding:6px 16px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.demobar strong{color:var(--warning)}.demobar select{min-height:32px;border:1px solid var(--warning-border);border-radius:7px;background:#fff}.demobar label{display:inline-flex;gap:6px;align-items:center}
+.demobar .pref{font-family:ui-monospace,Consolas,monospace;font-size:12px;background:#fff;border:1px solid var(--warning-border);border-radius:6px;padding:2px 6px}
+header{background:var(--nav);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 24px}
+.logo{font-size:23px;font-weight:800;letter-spacing:-1px;color:#fff;text-decoration:none}.logo span{color:var(--cyan)}
+.hd-actions{display:flex;gap:8px;align-items:center}.hd-actions .btn{background:#203f4e;border-color:#3e5b6a;color:#d6e7ee;min-height:40px;padding:6px 12px;font-size:14px}
+.layout{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:calc(100vh - 110px)}
+aside{background:var(--nav);padding:24px 14px;color:var(--nav-text)}aside .cap{font-size:10px;letter-spacing:2px;padding:0 14px 12px}
+aside a{display:flex;gap:10px;align-items:center;color:var(--nav-text);text-decoration:none;padding:12px 14px;border-radius:10px;margin:2px 0}aside a[aria-current="page"]{background:var(--nav-soft);color:var(--nav-active);font-weight:700}
+main{padding:28px 36px 100px;max-width:960px;width:100%}.narrow{max-width:680px;margin:0 auto}
+h1{font-size:30px;line-height:1.15;letter-spacing:-.8px;margin:2px 0 8px}h2{font-size:18px;margin:0 0 8px}h3{font-size:16px;margin:0 0 4px}
+.eyebrow{font-size:11px;letter-spacing:1.5px;font-weight:700;text-transform:uppercase;color:var(--muted)}.muted{color:var(--muted)}.small{font-size:14px}
+.card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:20px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}.row:last-child{border-bottom:0}
+.empty{color:var(--muted)}
+/* Guida: pannello in pagina, non modale */
+.guide{background:#fff;border:2px solid var(--soft-border);border-radius:18px;padding:20px 22px;margin:14px 0 18px;box-shadow:0 6px 24px #132e3e14}
+.guide-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px}
+.progress{font-size:13px;color:var(--muted);font-weight:600}.dots{display:inline-flex;gap:6px;margin-left:8px;vertical-align:middle}.dots i{width:8px;height:8px;border-radius:50%;background:var(--border);display:inline-block}.dots i.on{background:var(--accent)}
+.close{width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:#fff;font-size:22px;line-height:1;cursor:pointer;color:var(--muted)}
+.guide h2{font-size:21px;letter-spacing:-.3px;margin:6px 0 6px}.guide ul{padding-left:0;list-style:none;margin:8px 0}.guide li{padding:8px 0;border-top:1px solid var(--border)}.guide li:first-child{border-top:0}
+.choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
+.choice{text-align:left;border:1px solid var(--border);border-radius:14px;background:#fff;padding:14px;cursor:pointer;min-height:44px}.choice strong{display:block;color:var(--accent);margin-bottom:2px}.choice:hover{border-color:var(--accent)}
+.guide-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-top:12px}
+.tip{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:var(--soft);border:1px solid var(--soft-border);border-radius:14px;padding:12px 16px;margin:12px 0 16px}
+.notice{background:var(--warning-bg);border:1px solid var(--warning-border);border-radius:12px;padding:10px 14px;margin:10px 0;color:#5c3c08;font-size:14px}
+.field{display:block;font-weight:600;margin:10px 0}.field input{display:block;width:100%;margin-top:6px;min-height:44px;padding:10px 12px;border:1px solid #9fb6c2;border-radius:9px}
+.bottom{display:none}.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--nav);color:#fff;padding:12px 18px;border-radius:12px;max-width:92vw;z-index:20}.toast:empty{display:none}
+.help summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:no-preference){.guide{animation:in .18s ease-out}@keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}}
+@media(max-width:820px){.choices{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
+@media(max-width:650px){header{padding:10px 14px}.hd-actions .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.layout{display:block}aside{display:none}main{padding:18px 16px 96px}h1{font-size:26px}.guide{padding:16px;border-radius:16px}.guide h2{font-size:19px}
+ .bottom{display:flex;position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--border);z-index:10}.bottom a{flex:1;text-align:center;padding:10px 0;font-size:12px;color:var(--muted);text-decoration:none;min-height:54px}.bottom a[aria-current="page"]{color:var(--accent);font-weight:700}.toast{bottom:76px}
+ .guide-actions .btn{flex:1 1 auto}.demobar{font-size:12px}}
+</style></head><body>
+<div class="demobar" role="region" aria-label="Controlli della demo">
+  <span><strong>DEMO GUIDA</strong> · proposta da arbitrare · dati sintetici · nessuna API, nessun salvataggio reale</span>
+  <label>Stato <select id="scenario">
+    <option value="empty">Casa vuota, prima esperienza</option>
+    <option value="data">Casa con dati, guida mai vista</option>
+    <option value="returning">Utente di ritorno (guida già vista)</option>
+    <option value="recipient">Destinatario senza casa</option>
+  </select></label>
+  <label><input type="checkbox" id="dirty"> modulo non salvato aperto</label>
+  <span>Preferenza: <span class="pref" id="pref">—</span></span>
+  <button class="btn small" id="reset" type="button">Reimposta preferenze demo</button>
+</div>
+<div id="app"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+// Proposta di guida al primo accesso: nessuna lettura di dati o sessione del prodotto, nessuna rete.
+// Preferenza per «account» simulato, in localStorage di questo browser, con versione della guida.
+const GUIDE_VERSION = 1;
+const ACCOUNTS = { empty: 'demo-nuovo', data: 'demo-con-dati', returning: 'demo-ritorno', recipient: 'demo-destinatario' };
+const store = {
+  key: (acc) => `dimora-demo-guida:v${GUIDE_VERSION}:${acc}`,
+  get(acc) { try { return JSON.parse(localStorage.getItem(this.key(acc)) || 'null'); } catch { return null; } },
+  set(acc, state) { try { localStorage.setItem(this.key(acc), JSON.stringify({ state, version: GUIDE_VERSION, at: new Date().toISOString() })); } catch { /* storage non disponibile: la guida resta usabile */ } },
+  clear() { try { Object.values(ACCOUNTS).forEach((a) => localStorage.removeItem(this.key(a))); } catch { /* ignora */ } },
+};
+const S = { scenario: 'empty', guide: null /* {step, opener} */, help: false, toastT: 0, lastHash: '' };
+const acc = () => ACCOUNTS[S.scenario];
+const pref = () => store.get(acc())?.state ?? 'mai vista';
+const hasData = () => S.scenario === 'data' || S.scenario === 'returning';
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// Lo stato «ritorno» parte con la guida già completata, come se fosse stata vista in passato.
+function seedScenario() { if (S.scenario === 'returning' && !store.get(acc())) store.set(acc(), 'completed'); }
+
+/** Comparsa automatica: solo prima esperienza Home, mai durante lavoro non salvato, mai per il destinatario senza casa. */
+function autoMode() {
+  if (S.scenario === 'recipient') return 'none';
+  if (pref() !== 'mai vista') return 'none';
+  if (document.getElementById('dirty').checked) return 'none';
+  return hasData() ? 'tip' : 'panel';
+}
+
+const STEPS = [
+  {
+    title: 'Benvenuto su Dimora',
+    body: () => `<p>Qui tieni in ordine la tua casa: documenti originali, promemoria e spese. Non serve compilare tutto adesso: puoi iniziare da una sola cosa.</p><p class="muted small">Dimora può proporti dati letti dai documenti, ma li salva solo dopo la tua conferma.</p>`,
+  },
+  {
+    title: 'Quattro sezioni per orientarti',
+    body: () => `<ul>
+      <li><strong>Casa</strong> — il riepilogo, gli ambienti e gli oggetti come la caldaia o la lavatrice, con i loro documenti, promemoria e costi.</li>
+      <li><strong>Attività</strong> — i tuoi promemoria e le proposte lette dai documenti, da confermare o correggere.</li>
+      <li><strong>Documenti</strong> — gli originali: bollette, contratti, manuali. Restano visibili solo a te finché non scegli diversamente.</li>
+      <li><strong>Spese</strong> — i costi che registri, raggruppati in famiglie come Bollette o Mutuo. Non sono pagamenti.</li></ul>
+      <p class="muted small">Le trovi ${matchMedia('(max-width:650px)').matches ? 'nella barra in basso' : 'nel menu a sinistra'}.</p>`,
+  },
+  {
+    title: 'Da dove vuoi iniziare?',
+    body: () => `<p>Scegli una cosa: il resto aspetta. La guida non crea nulla al posto tuo.</p>
+      <div class="choices" role="group" aria-label="Prima azione">
+        <button type="button" class="choice" data-first="documenti"><strong>Conserva un documento</strong><span class="small muted">Carica un PDF o una foto: resta solo tuo.</span></button>
+        <button type="button" class="choice" data-first="spese"><strong>Registra una spesa</strong><span class="small muted">Bastano descrizione, importo e data.</span></button>
+        <button type="button" class="choice" data-first="casa"><strong>Esplora la casa</strong><span class="small muted">Chiudi la guida e guarda con calma.</span></button>
+      </div>`,
+  },
+];
+
+function guidePanel() {
+  const g = S.guide; const st = STEPS[g.step]; const last = g.step === STEPS.length - 1;
+  return `<section class="guide" role="region" aria-labelledby="guide-title" id="guide">
+    <div class="guide-top"><span class="progress" aria-live="polite">Passo ${g.step + 1} di ${STEPS.length}<span class="dots" aria-hidden="true">${STEPS.map((_, i) => `<i class="${i <= g.step ? 'on' : ''}"></i>`).join('')}</span></span>
+      <button type="button" class="close" data-guide="close" aria-label="Chiudi la guida">×</button></div>
+    <h2 id="guide-title" tabindex="-1">${st.title}</h2>${st.body()}
+    <div class="guide-actions">
+      <div>${g.step > 0 ? '<button type="button" class="btn" data-guide="back">Indietro</button>' : ''}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${last ? '<button type="button" class="btn ghost" data-guide="later">Lo farò dopo</button>' : '<button type="button" class="btn ghost" data-guide="skip">Salta la guida</button><button type="button" class="btn primary" data-guide="next">Avanti</button>'}</div>
+    </div>
+    <p class="muted small" style="margin:10px 0 0">Puoi riaprirla quando vuoi da «Guida», in alto.</p>
+  </section>`;
+}
+
+function shell(content, section) {
+  const nav = [['casa', 'Casa'], ['attivita', 'Attività'], ['documenti', 'Documenti'], ['spese', 'Spese']];
+  const recipient = S.scenario === 'recipient';
+  return `<header><a class="logo" href="#/${recipient ? 'case' : 'casa'}">Dimora<span>.</span></a>
+    <div class="hd-actions">
+      <button type="button" class="btn" id="open-guide" aria-label="${recipient ? 'Come funziona una consegna' : 'Apri la guida'}"><span aria-hidden="true">?</span><span class="lbl">${recipient ? 'Come funziona' : 'Guida'}</span></button>
+      <a class="btn" href="#/consegne"><span aria-hidden="true">✉</span><span class="lbl">Consegne ricevute</span></a>
+    </div></header>
+    ${recipient ? `<main id="main" class="narrow">${content}</main>` : `<div class="layout"><aside aria-label="Sezioni della casa"><div class="cap">LA TUA CASA</div>${nav.map(([k, l]) => `<a href="#/${k}" ${section === k ? 'aria-current="page"' : ''}>${l}</a>`).join('')}</aside><main id="main">${content}</main></div>
+    <nav class="bottom" aria-label="Sezioni della casa">${nav.map(([k, l]) => `<a href="#/${k}" ${section === k ? 'aria-current="page"' : ''}>${l}</a>`).join('')}</nav>`}`;
+}
+
+function casaPage() {
+  const tip = !S.guide && autoMode() === 'tip' ? `<div class="tip" role="region" aria-label="Guida disponibile"><span>Una guida di un minuto: le quattro sezioni e dove ritrovare le cose.</span><span><button type="button" class="btn small primary" data-tip="open">Apri la guida</button> <button type="button" class="btn small ghost" data-tip="later">Non ora</button></span></div>` : '';
+  const dirty = document.getElementById('dirty').checked ? `<div class="notice">Demo: hai un modulo non salvato aperto. La guida non si apre da sola; se la apri tu, compare in pagina e il modulo resta com’è.</div>` : '';
+  const body = hasData()
+    ? `<section class="card"><h2>Da fare ora</h2><div class="row"><span>Pulire il filtro della lavatrice</span><span class="muted small">sab 17 ottobre</span></div><div class="row"><span>1 proposta da rivedere · Caldaia</span><a href="#/attivita">Rivedi</a></div><div class="row"><span>1 condivisione da confermare</span><a href="#/casa">Apri</a></div></section>
+       <div class="grid"><section class="card"><h2>Spese del 2026</h2><p style="font-size:24px;font-weight:700;margin:4px 0">758,00 €</p><p class="muted small">4 registrazioni · non sono pagamenti</p></section><section class="card"><h2>Ambienti e oggetti</h2><p class="muted small">Caldaia · Lavatrice</p><a href="#/casa">Oggetti e impianti</a></section></div>`
+    : `<section class="card"><h2>La casa è vuota, per ora</h2><p class="empty">Quando aggiungi documenti, promemoria o spese li ritrovi qui in sintesi.</p></section>`;
+  return `<div class="eyebrow">Casa</div><h1 tabindex="-1">Casa Sintetica</h1><p class="muted">Via Esempio 1 · dati di prova</p>${dirty}${tip}${S.guide ? guidePanel() : ''}${body}
+    <p class="small muted" style="margin-top:20px">Hai saltato la guida? <a href="#" data-tip="open">Rivedi la guida</a></p>`;
+}
+const simple = (title, text, extra = '') => `<div class="eyebrow">Casa Sintetica</div><h1 tabindex="-1">${title}</h1>${S.guide ? guidePanel() : ''}<section class="card"><p>${text}</p>${extra}</section>`;
+function documentiPage(q) {
+  const upload = q.get('carica') === '1' ? `<section class="card" aria-labelledby="up"><h2 id="up">Carica documento</h2><p class="small muted">Demo: il caricamento non è simulato oltre questo punto e nulla viene salvato. Nell’app reale qui scegli il file e chi può vederlo (Solo io per impostazione).</p><label class="field">File<input type="file" disabled></label></section>` : '';
+  return simple('Documenti', hasData() ? 'Libretto caldaia · gas.pdf' : 'Nessun documento in questa casa.', '') + upload;
+}
+function spesePage(q) {
+  const form = q.get('nuova') === '1' ? `<section class="card" aria-labelledby="sp"><h2 id="sp">Registra una spesa</h2><p class="small muted">Demo: modulo illustrativo, non salva nulla. Bastano descrizione, importo e data.</p><label class="field">Descrizione<input disabled></label></section>` : '';
+  return simple('Spese', hasData() ? 'Totale 2026: 758,00 € · 4 registrazioni.' : 'Nessuna spesa registrata.') + form;
+}
+function onboardingPage() {
+  return `<div class="eyebrow">Dimora</div><h1 tabindex="-1">Benvenuto, Destinatario Sintetico</h1>
+    <section class="card" style="border-color:var(--soft-border);background:var(--soft)" aria-labelledby="code-q"><h2 id="code-q">Hai ricevuto un codice da qualcuno?</h2>
+      <p>Se una persona ti ha dato un codice per ricevere dei documenti, non serve creare una casa.</p>
+      <p><a class="btn primary" href="#/consegne?codice=1">Inserisci il codice</a></p>
+      <p class="small muted">In attesa: 1 invito da accettare. <a href="#/consegne">Apri le consegne</a></p></section>
+    <section class="card" aria-labelledby="new-home"><h2 id="new-home">Vuoi tenere in ordine una tua casa?</h2><p class="muted">Crea la tua prima casa: bastano nome e indirizzo.</p><label class="field">Nome della casa<input disabled placeholder="Demo: non attivo"></label></section>`;
+}
+function consegnePage(q) {
+  const help = `<details class="card help" id="help" ${S.help ? 'open' : ''}><summary>Come funziona una consegna</summary><ol>
+      <li>Inserisci il codice che ti hanno dato: da solo non mostra nulla.</li>
+      <li>Chi te l’ha dato ti contatta e confronta con te un secondo codice, che vedi sullo schermo.</li>
+      <li>Accetti l’invito e scarichi i file, fino alla scadenza indicata.</li></ol>
+      <p class="small muted">Una consegna non ti dà accesso alla casa di chi la invia. Se viene revocata non puoi più aprirla; le copie scaricate restano tue.</p></details>`;
+  const code = q.get('codice') === '1' ? `<section class="card"><h2>Inserisci il codice</h2><p class="small muted">Demo: nessun codice viene inviato.</p><label class="field">Codice<input disabled placeholder="10 caratteri"></label></section>` : '';
+  return `<p><a href="#/${S.scenario === 'recipient' ? 'case' : 'casa'}">← Indietro</a></p><h1 tabindex="-1">Consegne ricevute</h1><p class="muted">Solo ciò che qualcuno ha scelto di darti, per un periodo limitato.</p>${help}${code}<section class="card"><div class="row"><span>Consegna da Giulia Prova</span><span class="muted small">Invito da accettare</span></div></section>`;
+}
+
+function render() {
+  const [path, qs] = (location.hash || '#/').slice(2).split('?');
+  const q = new URLSearchParams(qs || '');
+  let section = path || (S.scenario === 'recipient' ? 'case' : 'casa');
+  if (S.scenario === 'recipient' && ['casa', 'attivita', 'documenti', 'spese'].includes(section)) section = 'case';
+  let html;
+  switch (section) {
+    case 'case': html = onboardingPage(); break;
+    case 'consegne': html = consegnePage(q); break;
+    case 'attivita': html = simple('Attività', hasData() ? '1 promemoria in programma · 1 proposta da rivedere.' : 'Nessuna attività aperta.'); break;
+    case 'documenti': html = documentiPage(q); break;
+    case 'spese': html = spesePage(q); break;
+    default: section = 'casa'; html = casaPage();
+  }
+  document.getElementById('app').innerHTML = shell(html, section);
+  document.getElementById('pref').textContent = pref();
+  bind();
+  if (S.lastHash !== location.hash) { S.lastHash = location.hash; if (!render.first) document.querySelector('main h1')?.focus(); }
+  // Guida aperta dall'utente da un'altra sezione: dopo il cambio pagina il focus va alla guida.
+  if (S.guide?.focus) { S.guide.focus = false; document.getElementById('guide-title')?.focus(); }
+  render.first = false;
+}
+render.first = true;
+
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; clearTimeout(S.toastT); S.toastT = setTimeout(() => (el.textContent = ''), 3200); }
+
+function openGuide(opener) {
+  if (S.scenario === 'recipient') { S.help = true; if (!location.hash.startsWith('#/consegne')) location.hash = '#/consegne'; else render(); setTimeout(() => document.querySelector('#help summary')?.focus(), 0); return; }
+  S.guide = { step: 0, opener: opener ?? null, focus: true };
+  if (!['', '#/', '#/casa'].includes(location.hash.split('?')[0])) { location.hash = '#/casa'; return; }
+  render(); focusGuide();
+}
+function focusGuide() { setTimeout(() => document.getElementById('guide-title')?.focus(), 0); }
+function closeGuide(state, msg) {
+  const opener = S.guide?.opener;
+  S.guide = null; store.set(acc(), state); render();
+  if (msg) toast(msg);
+  const back = opener && document.getElementById(opener);
+  (back ?? document.querySelector('main h1'))?.focus();
+}
+
+function bind() {
+  document.getElementById('open-guide').onclick = () => openGuide('open-guide');
+  document.querySelectorAll('[data-guide]').forEach((b) => b.onclick = () => {
+    const a = b.dataset.guide;
+    if (a === 'next') { S.guide.step++; render(); focusGuide(); }
+    else if (a === 'back') { S.guide.step--; render(); focusGuide(); }
+    else if (a === 'skip') closeGuide('skipped', 'Guida saltata. Puoi riaprirla da «Guida».');
+    else if (a === 'later') closeGuide('completed', 'Guida conclusa. Puoi riaprirla da «Guida».');
+    else if (a === 'close') closeGuide(S.guide.step === STEPS.length - 1 ? 'completed' : 'skipped');
+  });
+  document.querySelectorAll('[data-first]').forEach((b) => b.onclick = () => {
+    const to = b.dataset.first;
+    S.guide = null; store.set(acc(), 'completed');
+    location.hash = to === 'documenti' ? '#/documenti?carica=1' : to === 'spese' ? '#/spese?nuova=1' : '#/casa';
+    if (to === 'casa') { render(); document.querySelector('main h1')?.focus(); }
+    toast('Guida conclusa: nessun dato è stato creato.');
+  });
+  document.querySelectorAll('[data-tip]').forEach((b) => b.onclick = (e) => {
+    e.preventDefault();
+    if (b.dataset.tip === 'open') openGuide(null);
+    else { store.set(acc(), 'skipped'); render(); document.querySelector('main h1')?.focus(); }
+  });
+  const help = document.getElementById('help');
+  if (help) help.ontoggle = () => { S.help = help.open; };
+  const g = document.getElementById('guide');
+  if (g) g.onkeydown = (e) => { if (e.key === 'Escape') { e.preventDefault(); closeGuide(S.guide.step === STEPS.length - 1 ? 'completed' : 'skipped'); } };
+}
+
+function start() {
+  seedScenario();
+  S.guide = null; S.help = false;
+  const home = S.scenario === 'recipient' ? '#/case' : '#/casa';
+  if (location.hash !== home) location.hash = home; else render();
+  // Prima esperienza: il pannello compare in pagina senza rubare il focus (lettura naturale dopo il titolo).
+  if (autoMode() === 'panel') { S.guide = { step: 0, opener: null }; render(); }
+}
+document.getElementById('scenario').onchange = (e) => { S.scenario = e.target.value; start(); };
+document.getElementById('dirty').onchange = () => render();
+document.getElementById('reset').onclick = () => { store.clear(); start(); toast('Preferenze della demo azzerate.'); };
+window.addEventListener('hashchange', render);
+start();
+</script></body></html>
