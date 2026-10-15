@@ -329,8 +329,8 @@ export function ActivityForm(props: {
         {activity ? 'Modifica attività' : 'Nuova attività'}
       </h2>
       <p className={styles.meta}>
-        {PERSONAL_REMINDER}: visibile solo a te. Non è un obbligo né una scadenza di legge, e non cambia i dati della
-        caldaia.
+        {PERSONAL_REMINDER}: visibile solo a te. Non è un obbligo né una scadenza di legge, e non cambia i dati degli
+        oggetti o degli impianti.
       </p>
       <Field
         id={`${id}-title`}

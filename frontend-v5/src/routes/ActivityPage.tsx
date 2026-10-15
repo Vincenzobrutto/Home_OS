@@ -49,13 +49,19 @@ export const EXAMPLE_PDFS = [
 
 /** Download statici dei tre PDF sintetici; il caricamento passa sempre da Documenti (M2). */
 export function ExamplePdfs({ homeId }: { homeId: string }) {
+  const capabilities = useCapabilities(homeId);
+  const caps = capabilities.data;
+  const fixtureEnabled = caps?.providers
+    ? caps.providers.some((p) => p.id === 'test_fixture_v1' && p.isSimulation && p.enabled)
+    : caps?.isSimulation && caps.enabled;
+  if (!fixtureEnabled) return null;
   return (
     <section className={cx(ui.card, ui.tint, review.examples)} aria-labelledby="esempi-title">
       <h2 id="esempi-title" className={styles.cardTitle}>
-        Documenti di esempio per l’analisi di test
+        Documenti per la prova con esempi
       </h2>
       <p className={styles.small}>
-        PDF interamente sintetici, non documenti reali di produttori. Il provider di test riconosce solo questi tre file:
+        PDF con dati dimostrativi, non documenti reali di produttori. La prova con esempi riconosce solo questi tre file:
         scaricali e caricali in <Link to={`/home/${encodeURIComponent(homeId)}/documenti`}>Documenti</Link>.
       </p>
       <ul>
@@ -357,7 +363,7 @@ function StartAnalysisForm(props: {
               )}
               {!p.enabled && (
                 <span className={styles.small}>
-                  Non disponibile: {(p.disabledReason && (M4_ERROR_LABEL[p.disabledReason] ?? (/^[a-z_]+$/.test(p.disabledReason) ? 'provider non attivo' : p.disabledReason))) ?? (p.id === 'anthropic' ? 'provider non attivo' : 'analisi di test non attiva')}.
+                  {p.disabledReason && M4_ERROR_LABEL[p.disabledReason] ? M4_ERROR_LABEL[p.disabledReason] : p.id === 'anthropic' ? 'Analisi con AI non disponibile al momento. Puoi inserire i dati a mano.' : 'La prova con esempi non è disponibile al momento.'}
                 </span>
               )}
             </span>
@@ -366,7 +372,7 @@ function StartAnalysisForm(props: {
       </fieldset>
 
       {isAi && (
-        <div className={review.batch} aria-label="Limiti e costi del collaudo">
+        <div className={review.batch} aria-label="Limiti e costi dell’analisi">
           <strong>Prima di inviare ad Anthropic</strong>
           {caps.limits && <span className={styles.small}>{formatLimit(caps.limits)}</span>}
           <span className={styles.small}>
@@ -375,7 +381,7 @@ function StartAnalysisForm(props: {
           </span>
           {caps.budget && (
             <span className={styles.small}>
-              Budget del collaudo locale: {caps.budget.remainingUsd} USD disponibili su {caps.budget.limitUsd} USD
+              Disponibilità per le analisi: {caps.budget.remainingUsd} USD disponibili su {caps.budget.limitUsd} USD
               {Number(caps.budget.uncertainUsd) > 0
                 ? ` (${caps.budget.uncertainUsd} USD con esito incerto)`
                 : ''}

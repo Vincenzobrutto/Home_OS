@@ -55,6 +55,11 @@ export const PROVIDER_MESSAGES: Record<string, string> = {
   analysis_outcome_unknown: 'Non sappiamo se il provider abbia elaborato il documento: l’esito e l’eventuale costo dell’analisi non sono confermati. Non riprovare subito: il servizio deve prima chiarire l’esito.',
 };
 
+/** Capability reasons can contain internal diagnostics: never render unknown values. */
+export function providerAvailabilityMessage(reason: string | null | undefined) {
+  return reason && PROVIDER_MESSAGES[reason] ? PROVIDER_MESSAGES[reason]! : 'L’analisi non è disponibile al momento. Puoi inserire il costo a mano.';
+}
+
 const JOB_ERROR_FALLBACK: Record<string, string> = {
   provider_fixture_unsupported: 'La prova riconosce solo i PDF sintetici previsti. Per questo documento inserisci il costo a mano.',
   ...PROVIDER_MESSAGES,
@@ -106,11 +111,11 @@ export function analysisAvailability(caps: EconomyCapabilities): Availability {
   const providers = caps.analysis?.providers ?? [];
   const disabled = providers.filter((p) => !p.enabled);
   if (!caps.features.documentDrafts) return { mode: 'off', reason: 'Il servizio non propone ancora i dati dai documenti.', disabled };
-  if (!caps.analysis?.enabled) return { mode: 'off', reason: caps.analysis?.disabledReason ?? 'L’analisi dei documenti non è disponibile ora.', disabled };
+  if (!caps.analysis?.enabled) return { mode: 'off', reason: providerAvailabilityMessage(caps.analysis?.disabledReason), disabled };
   // Solo ciò che il servizio dichiara abilitato: nessun flag locale abilita un provider.
   const real = providers.filter((p) => p.enabled && !p.isSimulation && p.id !== 'test_fixture_v1');
   const fixture = providers.find((p) => p.enabled && p.isSimulation && p.id === 'test_fixture_v1') ?? null;
-  if (!real.length && !fixture) return { mode: 'off', reason: caps.analysis?.disabledReason ?? 'Nessun provider di analisi è disponibile ora.', disabled };
+  if (!real.length && !fixture) return { mode: 'off', reason: providerAvailabilityMessage(caps.analysis?.disabledReason), disabled };
   return { mode: 'on', fixture, real, disabled };
 }
 

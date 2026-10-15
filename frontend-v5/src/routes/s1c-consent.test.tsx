@@ -66,8 +66,9 @@ describe('[mock] consenso provider reale — disponibilità e scelta', () => {
   it('provider reale disabilitato e nessun altro provider: nessun avvio possibile, motivo mostrato', async () => {
     const { backend, home } = await world({ real: false, fixture: false });
     await open(backend, fromDoc(home.id));
-    expect(await screen.findByText('Nessun provider di analisi è disponibile ora.')).toBeInTheDocument();
-    expect(screen.getByText(/Anthropic: non disponibile — Nuova campagna non abilitata/)).toBeInTheDocument();
+    expect(await screen.findByText('L’analisi non è disponibile al momento. Puoi inserire il costo a mano.')).toBeInTheDocument();
+    expect(screen.getByText(/Anthropic: L’analisi non è disponibile al momento/)).toBeInTheDocument();
+    expect(screen.queryByText(/Nuova campagna non abilitata/)).toBeNull();
     expect(screen.queryByRole('button', { name: /Invia ad Anthropic|Avvia la prova/ })).toBeNull();
     expect(screen.queryByRole('checkbox')).toBeNull();
     expect(posts(backend, /document-analysis-jobs/)).toHaveLength(0);

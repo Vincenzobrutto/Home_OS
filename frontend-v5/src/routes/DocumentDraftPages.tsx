@@ -30,6 +30,7 @@ import {
   ROLE_LABEL,
   BILLING_STATE_LABEL,
   analysisAvailability,
+  providerAvailabilityMessage,
   formatUsd,
   isRealProvider,
   draftErrorMessage,
@@ -288,7 +289,7 @@ function FromDocument({ home, caps, back }: { home: Home; caps: EconomyCapabilit
                 <>
                   <p><Tag tone="warn">{SIMULATION_LABEL}</Tag></p>
                   <p className={act.meta}>
-                    Oggi è disponibile solo una prova tecnica: riconosce due PDF sintetici predisposti per il collaudo e propone valori preimpostati.
+                    Qui puoi provare il percorso con due PDF di esempio e valori preimpostati.
                     Non legge le tue bollette con un modello AI e non invia testo a servizi esterni. Per i documenti ordinari usa l’inserimento manuale.
                   </p>
                   <label className={act.meta} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8 }}>
@@ -319,7 +320,7 @@ function FromDocument({ home, caps, back }: { home: Home; caps: EconomyCapabilit
           {availability.disabled.length > 0 && (
             <ul className={act.meta}>
               {availability.disabled.map((p) => (
-                <li key={p.id}>{p.label}: non disponibile{p.disabledReason ? ` — ${p.disabledReason}` : ''}</li>
+                <li key={p.id}>{p.label}: {providerAvailabilityMessage(p.disabledReason)}</li>
               ))}
             </ul>
           )}

@@ -210,6 +210,7 @@ describe('[mock] M3 — decisioni', () => {
     await app.user.click(within(marca).getByRole('radio', { name: /Usa Termica Demo/ }));
     await app.user.click(within(marca).getByRole('button', { name: 'Salva decisione' }));
     await waitFor(() => expect(screen.queryByRole('article', { name: 'Marca' })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('status')).toHaveFocus());
     expect(card('Modello')).toBeInTheDocument();
     expect(card('Potenza')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('2', { selector: 'strong' })).toBeInTheDocument());
@@ -494,7 +495,7 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
     await app.router.navigate(`/home/${home.id}/review`);
     const marca = await screen.findByRole('article', { name: 'Marca' });
     await app.user.click(within(marca).getByRole('radio', { name: /Correggi/ }));
-    await app.user.type(within(marca).getByLabelText('Marca corretta'), 'Bozza privata');
+    await app.user.type(within(marca).getByLabelText('Marca: valore corretto'), 'Bozza privata');
     await app.router.navigate(`/home/${second.id}/review`);
     expect(await screen.findByRole('heading', { name: 'Nessuna verifica aperta' })).toBeInTheDocument();
     expect(screen.queryByDisplayValue('Bozza privata')).not.toBeInTheDocument();
@@ -506,8 +507,8 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
   it('fonte apribile con il flusso M2 autenticato; PDF di esempio etichettati come sintetici', async () => {
     const { backend, home, A } = await m3World();
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
-    const esempi = await screen.findByRole('region', { name: 'Documenti di esempio per l’analisi di test' });
-    expect(esempi).toHaveTextContent('interamente sintetici');
+    const esempi = await screen.findByRole('region', { name: 'Documenti per la prova con esempi' });
+    expect(esempi).toHaveTextContent('dati dimostrativi');
     expect(within(esempi).getByRole('link', { name: /A — Libretto caldaia/ })).toHaveAttribute('href', '/m3-examples/libretto-caldaia-demo.pdf');
     const progress = await analyze(app, home.id, ['Libretto A']);
     await openBoilerFromProgress(app, progress);

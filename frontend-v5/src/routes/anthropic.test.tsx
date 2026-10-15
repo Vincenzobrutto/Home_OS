@@ -75,12 +75,38 @@ const claims = (docIndex = 0): AiOutcome => ({
 });
 
 describe('[mock] M4 — scelta del provider e consenso', () => {
+  it('capabilities senza prova attiva: niente esempi o diagnostica interna, anche per motivi sconosciuti', async () => {
+    const { backend, home } = await world({ configured: false });
+    let fixtureEnabled = false;
+    const handle = backend.handle.bind(backend);
+    backend.handle = async (req) => {
+      const res = await handle(req);
+      if (req.path.endsWith('/analysis-capabilities') && res.status === 200) {
+        const caps = res.body as { providers: Array<{ id: string; enabled: boolean; disabledReason: string | null }> };
+        for (const p of caps.providers) { p.enabled = p.id === 'test_fixture_v1' && fixtureEnabled; p.disabledReason = 'Le sei chiamate del collaudo iniziale: dettaglio interno.'; }
+      }
+      return res;
+    };
+    const app = await open(backend, `/home/${home.id}/attivita?analizza=1`);
+    await screen.findByText('Nessuna analisi attiva');
+    expect(screen.queryByRole('region', { name: 'Documenti per la prova con esempi' })).toBeNull();
+    expect(screen.queryByText(/sei chiamate|dettaglio interno/)).toBeNull();
+    expect(jobPosts(backend)).toHaveLength(0);
+    await app.router.navigate(`/home/${home.id}/documenti`);
+    await screen.findByRole('heading', { level: 1, name: 'Documenti' });
+    expect(screen.queryByRole('region', { name: 'Documenti per la prova con esempi' })).toBeNull();
+    fixtureEnabled = true;
+    await app.router.navigate(`/home/${home.id}/attivita?analizza=1`);
+    await screen.findByText('Analisi con AI non disponibile al momento. Puoi inserire i dati a mano.');
+    expect(screen.queryByText(/sei chiamate|dettaglio interno/)).toBeNull();
+    expect(await screen.findByRole('region', { name: 'Documenti per la prova con esempi' })).toBeInTheDocument();
+  });
   it('Anthropic non configurato: opzione disattivata con il motivo, nessun campo per la chiave', async () => {
     const { backend, home } = await world({ configured: false });
     await open(backend, `/home/${home.id}/attivita?analizza=1`);
     const ai = await aiRadio();
     expect(ai).toBeDisabled();
-    expect(ai.closest('label')).toHaveTextContent('Non disponibile: chiave API non configurata sul server');
+    expect(ai.closest('label')).toHaveTextContent('Analisi con AI non disponibile al momento. Puoi inserire i dati a mano.');
     const fixture = screen.getByRole('radio', { name: /Analisi di test — nessuna AI reale/ });
     expect(fixture).toBeEnabled();
     expect(fixture).not.toBeChecked();
@@ -95,7 +121,7 @@ describe('[mock] M4 — scelta del provider e consenso', () => {
     expect(ai).not.toBeChecked();
     expect(screen.queryByRole('checkbox', { name: CONSENT })).not.toBeInTheDocument();
     await app.user.click(ai);
-    const box = screen.getByLabelText('Limiti e costi del collaudo');
+    const box = screen.getByLabelText('Limiti e costi dell’analisi');
     expect(box).toHaveTextContent('massimo 10 MiB per file, 20 pagine');
     expect(box).toHaveTextContent('10.00 USD disponibili su 10.00 USD');
     expect(box).toHaveTextContent('non è un prezzo di Dimora né il saldo dell’account Anthropic');
@@ -264,6 +290,12 @@ describe('[mock] M4 — risultati AI', () => {
     expect(await within(history).findByText('Analisi AI pubblicata')).toBeInTheDocument();
     expect(within(history).getByText('Analisi di test pubblicata')).toBeInTheDocument();
 
+    await app.router.navigate(`/home/${home.id}/review`);
+    await screen.findByRole('heading', { level: 1, name: 'Da rivedere' });
+    expect(screen.getByText(/Dati proposti dai documenti da confermare/)).toBeInTheDocument();
+    expect(screen.queryByText(/Proposte dell’analisi di test da confermare/)).toBeNull();
+    expect(screen.getAllByRole('article').some((card) => card.textContent?.includes('Analisi AI con Anthropic'))).toBe(true);
+
     await app.router.navigate(`/home/${home.id}/attivita`);
     await app.user.click(await screen.findByRole('button', { name: 'Crea una scheda caldaia a mano' }));
     await app.user.click(screen.getByRole('button', { name: 'Crea scheda' }));
@@ -285,10 +317,10 @@ describe('[mock] M4 — costi, errori di avvio, retry e idempotenza', () => {
     backend.review.budgetRemainingMicro = 100_000;
     const reads = backend.log.filter((r) => r.path.endsWith('analysis-capabilities')).length;
     await app.user.click(screen.getByRole('button', { name: 'Invia ad Anthropic e analizza' }));
-    expect(await screen.findByText('Il budget del collaudo è esaurito: nessuna nuova analisi AI può partire.')).toBeInTheDocument();
+    expect(await screen.findByText('Il limite di spesa per le analisi è stato raggiunto: nessuna nuova analisi AI può partire.')).toBeInTheDocument();
     expect(backend.review.jobs.size).toBe(0);
     await waitFor(() => expect(backend.log.filter((r) => r.path.endsWith('analysis-capabilities')).length).toBeGreaterThan(reads));
-    await waitFor(() => expect(screen.getByLabelText('Limiti e costi del collaudo')).toHaveTextContent('0.10 USD disponibili'));
+    await waitFor(() => expect(screen.getByLabelText('Limiti e costi dell’analisi')).toHaveTextContent('0.10 USD disponibili'));
   });
 
   it('provider disattivato dopo l’apertura del modulo: 503 esplicito, nessun fallback all’analisi di test', async () => {
@@ -354,6 +386,6 @@ describe('[mock] M4 — costi, errori di avvio, retry e idempotenza', () => {
     await waitFor(() => expect(progress).toHaveTextContent('Analisi completata'), { timeout: 3000 });
     await app.router.navigate(`/home/${home.id}/attivita?analizza=1`);
     await app.user.click(await aiRadio());
-    await waitFor(() => expect(screen.getByLabelText('Limiti e costi del collaudo')).toHaveTextContent('9.9877 USD disponibili su 10.00 USD'));
+    await waitFor(() => expect(screen.getByLabelText('Limiti e costi dell’analisi')).toHaveTextContent('9.9877 USD disponibili su 10.00 USD'));
   });
 });

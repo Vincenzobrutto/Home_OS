@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { formatCalendarDate } from '../lib/activities';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import type { EconomyCapabilities, Family } from '../api/economyTypes';
 import type { Home } from '../api/types';
@@ -365,7 +366,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
         {view === 'riepilogo' && summary.data && <Summary summary={summary.data} caps={caps} />}
 
         <p className={cx(pages.small, pages.muted)}>
-          Oggi è {caps.today} (Europe/Rome). Pagamenti, ricorrenze, budget e previsioni non fanno parte di questa versione.
+          Oggi è {formatCalendarDate(caps.today)}. Pagamenti, ricorrenze, budget e previsioni non fanno parte di questa versione.
         </p>
       </div>
     </>
@@ -623,7 +624,7 @@ function RecentCard(props: { home: Home; caps: EconomyCapabilities; filters: Eco
       <ExpenseList home={props.home} caps={props.caps} filters={{ ...props.filters, state: 'active' }} state={props.state} limit={5} single />
       {props.count > 0 && (
         <button type="button" className={styles.linkButton} onClick={props.onAll}>
-          Vedi tutte le {props.count} registrazioni
+          {props.count === 1 ? 'Vedi la registrazione' : `Vedi tutte le ${props.count} registrazioni`}
         </button>
       )}
     </section>

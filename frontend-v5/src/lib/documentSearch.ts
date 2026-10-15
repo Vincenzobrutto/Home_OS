@@ -18,7 +18,7 @@ export const FORMAT_OPTIONS: Array<{ value: DocumentFormatFilter; label: string 
 export const VISIBILITY_FILTER_OPTIONS: Array<{ value: DocumentVisibilityFilter; label: string }> = [
   { value: 'all', label: 'Tutti' },
   { value: 'private', label: 'Solo io' },
-  { value: 'home', label: 'Condivisi nella casa' },
+  { value: 'home', label: 'Persone della casa' },
 ];
 
 export const SEARCH_SCOPE_NOTE = 'La ricerca riguarda titoli e nomi dei file, non il contenuto.';

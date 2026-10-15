@@ -99,9 +99,9 @@ function HomeUnavailable({ status }: { status: number }) {
 
 const PERMISSION_LABEL: Record<HomePermission, string> = {
   read: 'Consultare la casa',
-  edit: 'Modificare i dati della casa',
+  edit: 'Aggiungere e aggiornare i tuoi contenuti',
   manage_members: 'Gestire le persone con accesso',
-  export: 'Esportare i dati',
+  export: 'Esportare gli originali autorizzati',
   sell: 'Avviare una vendita',
 };
 
@@ -141,7 +141,7 @@ export function CasaPage() {
           </h2>
           {home.permissions.length > 0 ? (
             <ul className={styles.list}>
-              {home.permissions.map((p) => (
+              {home.permissions.filter((p) => p === 'read' || p === 'edit' || p === 'export').map((p) => (
                 <li key={p}>{PERMISSION_LABEL[p] ?? p}</li>
               ))}
             </ul>
@@ -149,9 +149,8 @@ export function CasaPage() {
             <p className={styles.muted}>Nessun permesso attivo su questa casa.</p>
           )}
           <p className={cx(styles.small, styles.muted, styles.spaced)}>
-            I permessi sono verificati dal servizio a ogni operazione. Oggi puoi consultare la casa e, in Documenti,
-            caricare ed esportare originali secondo il tuo ruolo, gestire promemoria personali, creare schede caldaia e confermare i dati proposti dalle analisi; modifica dei dati della casa, gestione accessi e vendita
-            arriveranno nei prossimi incrementi.
+            Il servizio verifica i permessi a ogni operazione. Il ruolo nella casa non dà accesso ai documenti privati,
+            ai promemoria o alle spese personali di altre persone. Gestione degli accessi e vendita non sono ancora disponibili.
           </p>
         </section>
         <ScadenzeSummary home={home} />

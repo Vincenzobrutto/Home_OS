@@ -66,6 +66,10 @@ describe('[mock] H1 — Casa e creazione', () => {
     await waitFor(() => expect(region).toHaveTextContent('Nessuna scadenza nei prossimi 7 giorni.'));
     expect(within(region).getByLabelText('Conteggi delle attività aperte')).toHaveTextContent('0 scadute0 oggi0 in programma0 senza data');
     expect(within(region).getByRole('link', { name: 'Nuova attività' })).toHaveAttribute('href', `/home/${home.id}/attivita?nuova-attivita=1`);
+    const permissions = screen.getByRole('region', { name: 'Permessi del tuo ruolo' });
+    expect(permissions).not.toHaveTextContent('Avviare una vendita');
+    expect(permissions).not.toHaveTextContent('Gestire le persone con accesso');
+    expect(permissions).toHaveTextContent('Aggiungere e aggiornare i tuoi contenuti');
   });
 
   it('errore o endpoint assente: mai mostrato come zero; M3/M4 in Casa restano attivi', async () => {
@@ -224,6 +228,7 @@ describe('[mock] H1 — invii, esiti ambigui e conflitti', () => {
     backend.activities.unavailable = false;
     await app.user.click(screen.getByRole('button', { name: 'Riprova invio' }));
     await waitFor(() => expect(screen.getAllByText('Completata da te').length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Stato dell’attività' })).toHaveFocus());
   });
 });
 
@@ -340,7 +345,7 @@ describe('[mock] H1 — modifica e collegamenti', () => {
     form = screen.getByRole('form', { name: 'Modifica attività' });
     await app.user.selectOptions(within(form).getByLabelText(/Caldaia collegata/), 'Rimuovi il collegamento');
     await app.user.click(within(form).getByRole('button', { name: 'Salva modifiche' }));
-    await waitFor(() => expect(screen.getByText('Nessuna caldaia collegata', { selector: 'dd' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('Caldaia', { selector: 'dt' })).not.toBeInTheDocument());
     expect(posts(backend, /\/updates$/)[1]!.body).toEqual({ expectedVersion: 2, assetId: null });
   });
 

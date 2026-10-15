@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { useUpdateFocus } from '../components/useUpdateFocus';
 import { Link } from 'react-router';
 import { isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey } from '../api/queryKeys';
 import type { ReviewItem } from '../api/types';
 import { Banner, ErrorState, Loading, cx, ui, useDocumentTitle } from '../components/ui';
 import { FIELD_LABEL, PERSONAL_LABEL, m3ErrorMessage } from '../lib/review';
-import { ProposalCard, SimulationBadge } from '../review/components';
+import { ProposalCard } from '../review/components';
 import { useConfirm, useRefreshAsset, useReview } from '../review/hooks';
 import review from '../review/review.module.css';
 import { useCurrentHome } from './HomePages';
@@ -18,6 +19,7 @@ export function ReviewPage() {
   const query = useReview(home.id);
   const items = query.data?.pages.flatMap((p) => p.items) ?? [];
   const openCount = query.data?.pages[0]?.openCount ?? 0;
+  const statusRef = useUpdateFocus<HTMLParagraphElement>(home.id, query.data?.pages[0]?.openCount);
   const canEdit = home.permissions.includes('edit');
 
   const groups = new Map<string, ReviewItem[]>();
@@ -34,11 +36,14 @@ export function ReviewPage() {
           <span className={styles.eyebrow}>{home.name}</span>
           <h1 tabIndex={-1}>Da rivedere</h1>
           <p className={styles.lead}>
-            Proposte dell’analisi di test da confermare, correggere o non applicare. Confermare un dato non certifica il
+            Dati proposti dai documenti da confermare, correggere o non applicare. Confermare un dato non certifica il
             documento né l’impianto.
           </p>
         </div>
       </div>
+      {query.data && <p ref={statusRef} tabIndex={-1} role="status" className={styles.spaced}>
+        <strong>{openCount}</strong> {openCount === 1 ? 'verifica aperta' : 'verifiche aperte'}. Le decisioni salvate restano nelle schede e nella storia.
+      </p>}
       {query.isPending ? (
         <Loading label="Caricamento delle verifiche…" />
       ) : query.isError && !query.data ? (
@@ -53,9 +58,6 @@ export function ReviewPage() {
         </div>
       ) : (
         <>
-          <p className={styles.spaced} aria-live="polite">
-            <strong>{openCount}</strong> {openCount === 1 ? 'verifica aperta' : 'verifiche aperte'} · <SimulationBadge />
-          </p>
           <div className={styles.spaced}>
             {[...groups.entries()].map(([assetId, group]) => (
               <section key={assetId} className={review.group} aria-labelledby={`g-${assetId}`}>

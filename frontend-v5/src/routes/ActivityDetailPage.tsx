@@ -1,4 +1,5 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode, type RefObject } from 'react';
+import { useUpdateFocus } from '../components/useUpdateFocus';
 import { Link, useParams } from 'react-router';
 import { isApiError } from '../api/errors';
 import type { ActivityHistoryEvent, ActivityHistorySnapshot, Home, HomeActivity } from '../api/types';
@@ -32,6 +33,7 @@ export function ActivityDetailPage() {
   const home = useCurrentHome();
   const { activityId = '' } = useParams();
   const query = useActivity(home.id, activityId);
+  const statusRef = useUpdateFocus<HTMLDivElement>(`${home.id}:${activityId}`, query.data?.activity.version);
   const back = (
     <Link to={`/home/${encodeURIComponent(home.id)}/attivita`} className={pages.spaced}>
       ← Attività
@@ -69,7 +71,7 @@ export function ActivityDetailPage() {
     );
   }
   // Chiave sulla versione: dopo una rilettura con dati nuovi le bozze locali ripartono dai dati del server.
-  return <ActivityView key={query.data.activity.version} home={home} activity={query.data.activity} today={query.data.today} back={back} />;
+  return <ActivityView key={query.data.activity.version} home={home} activity={query.data.activity} today={query.data.today} back={back} statusRef={statusRef} />;
 }
 
 function Unavailable(props: { back: ReactNode; title: string; children: string }) {
@@ -89,8 +91,7 @@ function Unavailable(props: { back: ReactNode; title: string; children: string }
 
 type Panel = 'none' | 'edit' | 'complete' | 'cancel' | 'reopen';
 
-function ActivityView(props: { home: Home; activity: HomeActivity; today: string; back: ReactNode }) {
-  const { home, activity } = props;
+function ActivityView({ home, activity, today, back, statusRef }: { home: Home; activity: HomeActivity; today: string; back: ReactNode; statusRef: RefObject<HTMLDivElement | null> }) {
   useDocumentTitle(`${activity.title} · ${home.name}`);
   const capabilities = useActivityCapabilities(home.id);
   const [panel, setPanel] = useState<Panel>('none');
@@ -100,14 +101,14 @@ function ActivityView(props: { home: Home; activity: HomeActivity; today: string
 
   return (
     <>
-      {props.back}
+      {back}
       <div className={pages.heading}>
         <div>
           <span className={pages.eyebrow}>
             {home.name} · {PERSONAL_REMINDER}
           </span>
           <h1 tabIndex={-1}>{activity.title}</h1>
-          <div className={styles.actions}>
+          <div className={styles.actions} ref={statusRef} tabIndex={-1} role="status" aria-label="Stato dell’attività">
             <Tag tone="blue">{STATE_LABEL[activity.state]}</Tag>
             <DueBadge state={activity.dueState} />
           </div>
@@ -122,17 +123,17 @@ function ActivityView(props: { home: Home; activity: HomeActivity; today: string
             <dt>Data</dt>
             <dd>{dueText(activity)}</dd>
             <dt>Oggi</dt>
-            <dd>{formatCalendarDate(props.today)} (Europe/Rome)</dd>
+            <dd>{formatCalendarDate(today)} (Europe/Rome)</dd>
             <dt>Descrizione</dt>
             <dd className={styles.description}>{activity.description ?? '—'}</dd>
-            <dt>Caldaia</dt>
+            {activity.assetLink.state !== 'none' && <><dt>Caldaia</dt>
             <dd>
               {activity.assetLink.state === 'linked' ? (
                 <Link to={`${base}/impianti/${encodeURIComponent(activity.assetLink.asset.id)}`}>{activity.assetLink.asset.name}</Link>
               ) : (
                 assetLinkText(activity.assetLink)
               )}
-            </dd>
+            </dd></>}
             <dt>Creata</dt>
             <dd>{formatTimestamp(activity.createdAt)}</dd>
             {activity.completedAt && (
@@ -150,7 +151,7 @@ function ActivityView(props: { home: Home; activity: HomeActivity; today: string
           </dl>
           <p className={cx(pages.small, pages.muted, pages.spaced)}>
             Promemoria personale: completarlo registra quello che dichiari, non certifica un intervento e non cambia i dati
-            o le verifiche della caldaia.
+            o le verifiche degli oggetti o degli impianti.
           </p>
         </section>
 
@@ -325,7 +326,7 @@ function HistorySection({ homeId, activityId }: { homeId: string; activityId: st
       <h2 id="attivita-storia" className={pages.cardTitle}>
         Storia dell’attività
       </h2>
-      <p className={cx(pages.small, pages.muted)}>Separata dalla storia tecnica della caldaia.</p>
+      <p className={cx(pages.small, pages.muted)}>Registra le tue azioni sul promemoria, senza modificare i dati tecnici degli oggetti o degli impianti.</p>
       {history.isPending ? (
         <Loading label="Caricamento della storia…" />
       ) : history.isError && !history.data ? (

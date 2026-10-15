@@ -150,7 +150,7 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     expect(names(await results())).toEqual(['Foto caldaia']);
     expect(listQueries(backend).slice(before)).toEqual(['q=caldaia&format=png&visibility=home&limit=20']);
     expect(app.router.state.location.search).toBe('?q=caldaia&format=png&visibility=home');
-    expect(screen.getByText(/Risultati per «caldaia» · formato PNG · Condivisi nella casa/)).toBeInTheDocument();
+    expect(screen.getByText(/Risultati per «caldaia» · formato PNG · Persone della casa/)).toBeInTheDocument();
   });
 
   it('Azzera filtri: lista iniziale M2 e prima pagina, bozza vuota, focus sul campo', async () => {
@@ -423,7 +423,7 @@ describe('[mock] H2 ricerca — gare, contesto e permessi', () => {
     expect(keys.filter((k) => k[0] === 'account').every((k) => k[1] !== owner.id)).toBe(true);
   });
 
-  it('privati altrui esclusi anche all’owner; «Solo io» = propri privati; «Condivisi nella casa» = home', async () => {
+  it('privati altrui esclusi anche all’owner; «Solo io» = propri privati; «Persone della casa» = home', async () => {
     const { backend, owner, member, home } = world();
     await backend.seedDocument({ homeId: home.id, uploaderId: member.id, name: 'Caldaia privata di Mario' });
     await backend.seedDocument({ homeId: home.id, uploaderId: member.id, name: 'Caldaia condivisa', visibility: 'home' });

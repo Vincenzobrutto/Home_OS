@@ -261,7 +261,9 @@ export function Distribution(props: {
       <p className={styles.note}>
         {mode === 'family'
           ? 'Le famiglie raggruppano le categorie e sono calcolate dal servizio. '
-          : '«Altro» e «Non classificata» sono categorie diverse della stessa famiglia. '}
+          : props.family === 'unclassified' || positive.some((s) => s.key === 'other' || s.key === 'unclassified')
+            ? '«Altro» e «Non classificata» sono categorie diverse della stessa famiglia. '
+            : 'Le categorie mostrano come si distribuiscono i costi registrati. '}
         Tocca una voce per vedere le registrazioni.
       </p>
     </section>

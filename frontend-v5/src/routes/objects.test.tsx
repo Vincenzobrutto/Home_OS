@@ -59,6 +59,7 @@ describe('[mock] G1 — promemoria collegato e focus', () => {
     await app.user.click(await screen.findByRole('button', { name: 'Crea promemoria per questo oggetto' }));
     const title = await screen.findByRole('heading', { name: 'Nuova attività' });
     await waitFor(() => expect(title).toHaveFocus());
+    expect(screen.getByRole('form', { name: 'Nuova attività' })).not.toHaveTextContent(/caldaia/i);
     await app.user.type(screen.getByLabelText('Titolo'), 'Spurgo da programmare');
     await app.user.click(screen.getByRole('button', { name: 'Crea attività' }));
     await screen.findByRole('link', { name: 'Spurgo da programmare' });

@@ -1,4 +1,5 @@
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
+import { useUpdateFocus } from '../components/useUpdateFocus';
 import { Link, useParams } from 'react-router';
 import { isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey } from '../api/queryKeys';
@@ -104,6 +105,7 @@ function BoilerView(props: { asset: BoilerDetail; home: Home; homeId: string; ho
   useDocumentTitle(`${asset.name} · ${props.homeName}`);
   const canEdit = props.homeCanEdit && asset.permissions.includes('edit');
   const open = asset.proposals.filter((p) => p.state === 'open');
+  const statusRef = useUpdateFocus<HTMLHeadingElement>(`${homeId}:${asset.id}`, asset.version);
   // Provider effettivi della scheda: analysis-v2 li elenca; con un servizio M3 si ricavano dalle proposte.
   // Scheda solo manuale: nessuna etichetta di analisi.
   const providers = asset.analysisProviders ?? [...new Set(asset.proposals.map((p) => p.provider))];
@@ -146,7 +148,7 @@ function BoilerView(props: { asset: BoilerDetail; home: Home; homeId: string; ho
         </section>
 
         <section aria-labelledby="aperte-title">
-          <h2 id="aperte-title" className={styles.cardTitle}>
+          <h2 id="aperte-title" className={styles.cardTitle} ref={statusRef} tabIndex={-1} aria-live="polite">
             Verifiche aperte ({open.length})
           </h2>
           {open.length === 0 ? (

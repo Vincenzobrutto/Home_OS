@@ -102,7 +102,7 @@ export function formatTimestamp(iso: string) {
 export function assetLinkText(link: AssetLink) {
   if (link.state === 'linked') return link.asset.name;
   if (link.state === 'unavailable') return 'Caldaia collegata non più disponibile per il tuo account';
-  return 'Nessuna caldaia collegata';
+  return 'Nessun collegamento alla scheda di un impianto';
 }
 
 /** Messaggi per gli errori H1; 404/503 riguardano solo le attività, non M3/M4. */

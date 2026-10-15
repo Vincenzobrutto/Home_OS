@@ -191,11 +191,11 @@ export function billingText(billing: AnalysisBilling | null | undefined, provide
 
 /** Errori all'avvio (HTTP) o nei job falliti dopo l'invio. Il messaggio del server ha la precedenza. */
 export const M4_ERROR_LABEL: Record<string, string> = {
-  ai_evaluation_limit_reached: 'Le sei chiamate del collaudo iniziale sono state utilizzate. Il budget monetario residuo resta disponibile per una fase successiva.',
+  ai_evaluation_limit_reached: 'È stato raggiunto il numero massimo di analisi disponibili. Puoi continuare a inserire i dati a mano.',
   ai_provider_unconfigured: 'Anthropic non è configurato su questo servizio: nessun dato è stato inviato.',
   ai_provider_disabled: 'Anthropic è disattivato su questo servizio: nessun dato è stato inviato.',
   ai_model_unavailable: 'Il modello previsto non è disponibile: l’analisi non è stata eseguita con un altro modello.',
-  ai_budget_exhausted: 'Il budget del collaudo è esaurito: nessuna nuova analisi AI può partire.',
+  ai_budget_exhausted: 'Il limite di spesa per le analisi è stato raggiunto: nessuna nuova analisi AI può partire.',
   provider_rate_limited: 'Anthropic ha limitato temporaneamente le richieste. Potrai riprovare più tardi.',
   provider_auth_failed: 'Il servizio non è riuscito ad autenticarsi presso Anthropic.',
   provider_unavailable: 'Anthropic non era raggiungibile.',

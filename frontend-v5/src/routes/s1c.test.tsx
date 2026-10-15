@@ -61,7 +61,8 @@ describe('[mock] S1c — avvio esplicito e job', () => {
     const { backend, home } = await world();
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese/da-documento`);
     expect(await screen.findByText('Prova su PDF sintetici · nessun modello AI')).toBeInTheDocument();
-    expect(screen.getByText(/Anthropic: non disponibile — Nuova campagna non abilitata/)).toBeInTheDocument();
+    expect(screen.getByText(/Anthropic: L’analisi non è disponibile al momento/)).toBeInTheDocument();
+    expect(screen.queryByText(/Nuova campagna non abilitata|ai_provider_disabled/)).toBeNull();
     const start = screen.getByRole('button', { name: 'Avvia la prova sintetica' });
     expect(start).toBeDisabled();
     await app.user.click(await screen.findByRole('radio', { name: /gas\.pdf/ }));

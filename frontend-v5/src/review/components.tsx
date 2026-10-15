@@ -424,7 +424,7 @@ export function ProposalCard(props: {
       {choice?.mode === 'correct' && textKey && (
         <div className={ui.field}>
           <label className={ui.label} htmlFor={`${baseId}-correction`}>
-            {FIELD_LABEL[textKey]} corretta
+            {FIELD_LABEL[textKey]}: valore corretto
           </label>
           <input
             id={`${baseId}-correction`}
