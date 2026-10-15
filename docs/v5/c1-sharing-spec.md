@@ -1,6 +1,6 @@
 # C1 — condivisione selettiva, proposta v0.2
 
-Aggiornamento implementazione del 15 ottobre: percorso approvato dal committente; contratto **sharing-api-contract.md (sharing-v1)** congelato e backend documentale implementato/collaudato nel solo ambiente locale V5. Fonte definitiva per endpoint/stati/abbinamento. Frontend reale assegnato a Claude e ancora da integrare; schede tecniche successive. Il testo «non attivo» sotto descrive la fase di proposta storica, non lo stato del backend corrente. Prove e limiti: c1-backend-review-20261015.md.
+Stato consolidato del 15 ottobre: **C1a documentale integrato e verificato nel prodotto locale V5**, frontend e backend. Contratto definitivo **sharing-api-contract.md (sharing-v1)**. Provato nel browser reale: originale privato scelto, codice esterno, account senza case, confronto/approvazione del mittente, accettazione distinta, download integro, ricarica e revoca. Schede tecniche condivise successive, nessuna condivisione economica. Le frasi «non attivo», «backend mancante» e le assegnazioni sotto descrivono fasi storiche superate da questo stato; non sono istruzioni correnti. Prove e limiti: [integrazione C1](c1-frontend-integration-20261015.md) e [backend C1](c1-backend-review-20261015.md).
 
 ## Arbitrato del 15 ottobre dopo consegna Claude
 

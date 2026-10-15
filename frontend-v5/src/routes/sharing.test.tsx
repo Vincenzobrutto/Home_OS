@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { FakeBackend } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
 import { sharingApi } from '../api/sharingClient';
+import { downloads } from '../test/browserStubs';
 
 configure({ asyncUtilTimeout: 5000 });
 
@@ -36,7 +37,8 @@ async function login(app: App, email: string) {
   await app.user.type(screen.getByLabelText('Email'), email);
   await app.user.type(screen.getByLabelText('Password'), PW);
   await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
-  await waitFor(() => expect(app.router.state.location.pathname).not.toBe('/accedi'));
+  // Wait for HomeEntry's redirect too; navigating during the transient '/' can be overwritten by it.
+  await waitFor(() => expect(app.router.state.location.pathname).toMatch(/^\/(case(?:\/nuova)?|home\/[^/]+\/casa)$/));
 }
 
 async function open(backend: FakeBackend, email: string, path: string) {
@@ -53,6 +55,53 @@ async function switchTo(app: App, email: string, path: string) {
 }
 
 const posts = (b: FakeBackend, re: RegExp) => b.log.filter((r) => r.method === 'POST' && re.test(r.path));
+
+async function acceptedMemberDelivery() {
+  const w = await world();
+  const app = await open(w.backend, 'giulia@example.test', `/home/${w.home.id}/casa`);
+  await app.user.click(await prepare(app, w.home.id, { docs: ['Manuale caldaia'], to: /Marco Leone/ }));
+  await screen.findByText('Invito da accettare');
+  const s = [...w.backend.sharing.shares.values()][0]!;
+  await switchTo(app, 'marco@example.test', `/consegne/${s.id}`);
+  await app.user.click(await screen.findByRole('button', { name: 'Accetta' }));
+  await screen.findByRole('button', { name: /Scarica Manuale caldaia/ });
+  return { ...w, app, share: s };
+}
+
+describe('[mock] C1a — download e cambio contesto', () => {
+  it('un download terminato dopo logout e nuovo account non salva il file privato', async () => {
+    const { backend, app } = await acceptedMemberDelivery();
+    let release!: () => void;
+    const gate = new Promise<void>((r) => { release = r; });
+    const handle = backend.handle.bind(backend);
+    let delivered = false;
+    backend.handle = async (req) => {
+      const result = await handle(req);
+      if (req.method === 'GET' && /\/received-shares\/.*\/file$/.test(req.path)) { await gate; delivered = true; }
+      return result;
+    };
+    await app.user.click(screen.getByRole('button', { name: /Scarica Manuale caldaia/ }));
+    await waitFor(() => expect(backend.log.some(r => /\/received-shares\/.*\/file$/.test(r.path))).toBe(true));
+    await switchTo(app, 'luca@example.test', '/consegne');
+    await screen.findByRole('heading', { name: 'Consegne ricevute' });
+    release();
+    await waitFor(() => expect(delivered).toBe(true));
+    await new Promise(r => setTimeout(r, 0));
+    expect(downloads).toHaveLength(0);
+    expect(screen.queryByText(/Manuale caldaia/)).toBeNull();
+  });
+
+  it('403 al file azzera il dettaglio e non lascia nomi nella cache o nella pagina', async () => {
+    const { backend, app, share, marco } = await acceptedMemberDelivery();
+    backend.sharing.shares.get(share.id)!.state = 'revoked'; // other account's server-side revocation
+    await app.user.click(screen.getByRole('button', { name: /Scarica Manuale caldaia/ }));
+    await screen.findByRole('heading', { level: 1, name: 'Non più disponibile' });
+    expect(screen.queryByText(/Manuale caldaia/)).toBeNull();
+    expect(downloads).toHaveLength(0);
+    const cached = app.queryClient.getQueryCache().getAll().filter(q => q.queryKey[1] === marco.id && q.queryKey.includes('received-shares'));
+    expect(JSON.stringify(cached.map(q => q.state.data))).not.toContain('Manuale caldaia');
+  });
+});
 
 /** Percorso completo fino alla conferma; restituisce il pulsante «Crea l’invito» senza premerlo. */
 async function prepare(app: App, homeId: string, opts: { docs: string[]; to: 'external' | RegExp; days?: string | RegExp }) {

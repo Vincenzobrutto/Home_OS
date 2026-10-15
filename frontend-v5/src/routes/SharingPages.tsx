@@ -72,6 +72,8 @@ export function SharesPage() {
 
 function SharesList({ home, caps }: { home: Home; caps: SharingCapabilities }) {
   const list = useShares(home.id, true);
+  const account = useAccount();
+  useDropOnForbidden(sharingKeys.shares(account.id, home.id), list);
   const items = list.data?.pages.flatMap((p) => p.items) ?? [];
   return (
     <>
@@ -89,7 +91,7 @@ function SharesList({ home, caps }: { home: Home; caps: SharingCapabilities }) {
       <section className={ui.card} aria-label="Condivisioni preparate">
         {list.isPending ? (
           <Loading label="Caricamento delle condivisioni…" />
-        ) : list.isError && !list.data ? (
+        ) : list.isError && (!list.data || isShareUnavailableError(list.error)) ? (
           <ErrorState error={list.error} message={sharingErrorMessage(list.error)} onRetry={() => void list.refetch()} retrying={list.isFetching} />
         ) : items.length === 0 ? (
           <p className={pages.muted}>{caps.permissions.includes('prepare') ? 'Nessuna condivisione preparata.' : 'Nessuna condivisione. Con il tuo ruolo puoi consultare la casa ma non preparare condivisioni.'}</p>
@@ -434,7 +436,7 @@ function DocumentPicker(props: {
 }) {
   const { docs } = props;
   if (docs.isPending) return <Loading label="Caricamento dei documenti…" />;
-  if (docs.isError && !docs.data) return <ErrorState error={docs.error} message={sharingErrorMessage(docs.error)} onRetry={() => void docs.refetch()} retrying={docs.isFetching} />;
+  if (docs.isError && (!docs.data || isShareUnavailableError(docs.error))) return <ErrorState error={docs.error} message={sharingErrorMessage(docs.error)} onRetry={() => void docs.refetch()} retrying={docs.isFetching} />;
   const items = docs.data.pages.flatMap((p) => p.items);
   const originDoc = props.origin ? items.find((d) => d.documentId === props.origin) : undefined;
   return (

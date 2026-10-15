@@ -1,4 +1,7 @@
-import { useId, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../api/queryKeys';
+import type { SessionResponse } from '../api/types';
 import { Link, useNavigate, useParams } from 'react-router';
 import type { Share, ShareItem } from '../api/sharingTypes';
 import { sharingApi, sharingKeys } from '../api/sharingClient';
@@ -249,7 +252,7 @@ function ReceivedDetail({ shareId }: { shareId: string }) {
             )}
           </section>
         )}
-        {s.state === 'accepted' && <AcceptedFiles share={s} onUnavailable={() => void query.refetch()} />}
+        {s.state === 'accepted' && <AcceptedFiles share={s} />}
         {s.state === 'declined' && <Banner><p>Hai rifiutato questo invito: i file non sono consultabili.</p></Banner>}
         {gone && (
           <Banner>
@@ -270,9 +273,13 @@ function ReceivedDetail({ shareId }: { shareId: string }) {
   );
 }
 
-function AcceptedFiles({ share, onUnavailable }: { share: Share; onUnavailable: () => void }) {
+function AcceptedFiles({ share }: { share: Share }) {
   const api = useApi();
   const account = useAccount();
+  const queryClient = useQueryClient();
+  const alive = useRef(false);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  const current = () => alive.current && queryClient.getQueryData<SessionResponse>(queryKeys.session)?.account?.id === account.id;
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<{ item: ShareItem; error: unknown } | null>(null);
   const download = async (item: ShareItem) => {
@@ -280,12 +287,14 @@ function AcceptedFiles({ share, onUnavailable }: { share: Share; onUnavailable: 
     setError(null);
     try {
       const file = await sharingApi(api).file(share.id, item.documentId, undefined, account.id);
+      if (!current()) return;
       saveBlob(file.blob, file.filename ?? safeFilename(item.name));
     } catch (err) {
+      if (!current()) return;
       setError({ item, error: err });
-      if (isShareUnavailableError(err)) onUnavailable();
+      if (isShareUnavailableError(err)) void queryClient.resetQueries({ queryKey: sharingKeys.receivedShare(account.id, share.id), exact: true });
     } finally {
-      setBusy(null);
+      if (current()) setBusy(null);
     }
   };
   return (
@@ -294,11 +303,11 @@ function AcceptedFiles({ share, onUnavailable }: { share: Share; onUnavailable: 
       <p className={act.meta}>Consultabile fino a {formatDateTime(share.expiresAt)}. Puoi scaricare i file; non puoi inoltrare la consegna dentro Dimora.</p>
       {error && (
         <Banner tone={isAmbiguousShareError(error.error) ? 'error' : 'warning'} role="alert" title="Download non riuscito">
-          <p>«{error.item.name}»: {isShareUnavailableError(error.error) ? 'il file non è più disponibile per te.' : sharingErrorMessage(error.error)}</p>
+          <p>{isShareUnavailableError(error.error) ? 'Questa consegna non è più disponibile per te.' : `«${error.item.name}»: ${sharingErrorMessage(error.error)}`}</p>
         </Banner>
       )}
       <ul className={act.list} aria-label="File della consegna">
-        {share.items.map((it) => (
+        {(error && isShareUnavailableError(error.error) ? [] : share.items).map((it) => (
           <li key={it.documentId} className={act.item}>
             <div className={act.itemHead}>
               <strong>{it.name}</strong>
