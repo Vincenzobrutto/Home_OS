@@ -79,7 +79,7 @@ export function jobErrorText(job: EconomicAnalysisJob) {
  */
 const RETRYABLE = ['analysis_timeout', 'storage_unavailable', 'provider_rate_limited'];
 export function jobRetryUseful(job: EconomicAnalysisJob) {
-  return job.state === 'failed' && !!job.error && RETRYABLE.includes(job.error.code);
+  return job.state === 'failed' && job.billing?.state !== 'uncertain' && !!job.error && RETRYABLE.includes(job.error.code);
 }
 
 /** Provider reale (non simulato): richiede consenso esplicito a ogni avvio o nuovo tentativo. */

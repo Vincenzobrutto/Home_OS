@@ -312,6 +312,25 @@ describe('[mock] consenso provider reale — stato del job e nuovo tentativo', (
     expect(screen.getByRole('link', { name: 'Inserisci il costo a mano' })).toBeInTheDocument();
   });
 
+  it('timeout con fatturazione incerta: non propone un secondo invio a pagamento', async () => {
+    const { backend, home } = await world();
+    backend.economy.failNextJobWith = 'analysis_timeout';
+    const handle = backend.handle.bind(backend);
+    backend.handle = async (request) => {
+      const response = await handle(request);
+      if (request.method === 'GET' && /document-analysis-jobs\//.test(request.path)) {
+        const body = response.body as { job?: { state: string; billing: { currency: 'USD'; maxReservedUsd: string; actualUsd: string | null; state: 'uncertain' } } };
+        if (body.job?.state === 'failed') body.job.billing = { currency: 'USD', maxReservedUsd: '0.250000', actualUsd: null, state: 'uncertain' };
+      }
+      return response;
+    };
+    const app = await open(backend, `/home/${home.id}/spese`);
+    await startReal(app, home.id, 'gas.pdf');
+    expect(await screen.findByText('Stato: Costo non ancora confermato: non significa zero né rimborso', undefined, { timeout: 8000 })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Riprova l’analisi' })).toBeNull();
+    expect(posts(backend, /retries$/)).toHaveLength(0);
+  });
+
   it.each(['ai_budget_exhausted', 'ai_evaluation_limit_reached', 'provider_auth_failed', 'ai_model_unavailable', 'access_revoked'])(
     'job fallito con %s: nessun nuovo tentativo proposto',
     async (code) => {
