@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dimora · Condivisione selettiva · proposta Claude</title>
+<style>
+:root{--nav:#132e3e;--nav-soft:#274958;--nav-text:#c7dce7;--nav-active:#b9f5fb;--ink:#182f3d;--muted:#536b79;--bg:#f2f6f8;--accent:#0b6177;--soft:#e3f3f6;--soft-border:#c9e4ea;--border:#dce6eb;--input:#9fb6c2;--success:#24624b;--success-bg:#e6f5ed;--warning:#80520c;--warning-bg:#fff4dc;--warning-border:#ebdba8;--error:#a43038;--error-bg:#fdeced;--error-border:#efc7cc;--neutral:#edf2f5;--focus:#3a9ec0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 'DM Sans','Segoe UI',system-ui,sans-serif}
+button,input,select{font:inherit}a{color:var(--accent)}button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}h1[tabindex="-1"]:focus{outline:none}
+.btn,button.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--border);background:#fff;color:var(--ink);border-radius:10px;padding:9px 14px;min-height:44px;font-weight:600;text-decoration:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.danger{color:var(--error);border-color:var(--error-border)}.btn.link{border:0;background:none;color:var(--accent);padding:8px 2px}
+.btn:disabled{opacity:.5;cursor:not-allowed}.btn.small{min-height:36px;padding:5px 11px;font-size:13px}
+.demobar{background:#fff4dc;border-bottom:1px solid var(--warning-border);color:#5c3c08;padding:6px 16px;font-size:12.5px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.demobar strong{color:var(--warning)}.demobar label{display:inline-flex;align-items:center;gap:6px}.demobar select{min-height:32px;padding:2px 6px;border:1px solid var(--warning-border);border-radius:7px;background:#fff}
+.demobar .grow{flex:1}
+header{background:var(--nav);color:#fff;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.logo{font-size:23px;font-weight:800;letter-spacing:-1px;color:#fff;text-decoration:none}.logo small{font-size:11px;color:#99e5ef;letter-spacing:1px;margin-left:6px}
+header .account{font-size:12.5px;color:var(--nav-text);text-align:right;line-height:1.4}
+.layout{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:calc(100vh - 100px)}
+aside{background:var(--nav);padding:26px 14px;color:var(--nav-text)}aside .cap{font-size:10px;letter-spacing:2px;padding:0 14px 14px}
+aside a{display:flex;gap:11px;align-items:center;color:var(--nav-text);padding:12px 14px;border-radius:10px;text-decoration:none;margin:2px 0}
+aside a[aria-current="page"]{background:var(--nav-soft);color:var(--nav-active);font-weight:700}aside .more{margin-top:20px;border-top:1px solid var(--nav-soft);padding-top:12px}
+main{padding:28px 36px 90px;max-width:1000px;width:100%}
+.narrow main{max-width:720px;margin:0 auto}
+h1{font-size:30px;line-height:1.15;letter-spacing:-1px;margin:4px 0 8px;text-wrap:balance}h2{font-size:18px;letter-spacing:-.3px;margin:0 0 10px}h3{font-size:15px;margin:16px 0 6px}
+p{margin:6px 0 12px}.muted{color:var(--muted)}.small{font-size:12.5px}.eyebrow{font-size:10.5px;letter-spacing:1.5px;font-weight:700;text-transform:uppercase;color:var(--muted)}
+.back{display:inline-flex;gap:6px;font-weight:600;text-decoration:none;margin-bottom:6px;min-height:40px;align-items:center}
+.card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px;min-width:0}.card.tint{background:var(--soft);border-color:var(--soft-border)}
+.notice{border-radius:12px;padding:12px 14px;margin:12px 0;font-size:14px;border:1px solid}.notice p{margin:4px 0}
+.notice.warn{background:var(--warning-bg);border-color:var(--warning-border);color:#5c3c08}.notice.err{background:var(--error-bg);border-color:var(--error-border);color:var(--error)}.notice.ok{background:var(--success-bg);border-color:#bfe0cf;color:var(--success)}.notice.info{background:var(--soft);border-color:var(--soft-border)}
+.notice .actions{margin-top:8px}
+.tag{display:inline-flex;align-items:center;border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:650;background:var(--soft);color:var(--accent);white-space:nowrap}.tag.warn{background:var(--warning-bg);color:var(--warning)}.tag.ok{background:var(--success-bg);color:var(--success)}.tag.neutral{background:var(--neutral);color:var(--muted)}.tag.err{background:var(--error-bg);color:var(--error)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}.row:last-child{border-bottom:0}.row-body{flex:1;min-width:0}.row-title{font-weight:650;overflow-wrap:anywhere}
+.iconbox{width:38px;height:38px;border-radius:11px;background:var(--soft);color:var(--accent);display:grid;place-items:center;flex-shrink:0}.icon{width:20px;height:20px}
+.pick{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:8px 0;background:#fff;cursor:pointer}
+.pick:has(input:checked){border-color:var(--accent);background:var(--soft)}.pick input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent);flex-shrink:0}
+.pick.disabled{cursor:not-allowed;background:var(--neutral);color:var(--muted)}.pick .meta{display:block;font-size:12.5px;color:var(--muted)}.pick .row-title{display:block}
+.origin{border-left:3px solid #99e5ef;padding-left:10px}
+.stepper{list-style:none;display:flex;gap:6px;padding:0;margin:14px 0 18px;flex-wrap:wrap;counter-reset:s}
+.stepper li{counter-increment:s;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;background:#fff;border:1px solid var(--border)}
+.stepper li::before{content:counter(s);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--neutral);font-weight:700;font-size:12px}
+.stepper li.done::before{content:"✓";background:var(--success-bg);color:var(--success)}.stepper li[aria-current="step"]{border-color:var(--accent);color:var(--ink);font-weight:700}.stepper li[aria-current="step"]::before{background:var(--accent);color:#fff}
+.stepper a{color:inherit;text-decoration:none}
+.counter{font-weight:700}.sticky{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 22%);padding:16px 0 4px;margin-top:8px}
+.manifest dt{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:12px}.manifest dd{margin:4px 0 0}
+.manifest ul{margin:6px 0;padding-left:20px}
+.excluded{columns:2;font-size:13.5px;color:var(--muted);padding-left:18px;margin:6px 0}
+.field{display:block;font-weight:600;font-size:14px;margin:10px 0}.field input{display:block;width:100%;margin-top:6px;border:1px solid var(--input);border-radius:9px;padding:10px 12px;min-height:44px;font-weight:400}
+.help{font-size:12.5px;color:var(--muted);font-weight:400;margin:4px 0 0}
+.tabs{display:flex;gap:6px;margin:6px 0 10px;flex-wrap:wrap}.tabs button{border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;min-height:40px;font-weight:600;color:var(--muted)}.tabs button[aria-pressed="true"]{background:var(--soft);color:var(--accent);border-color:#9fd3de}
+.code{font:700 26px/1.2 ui-monospace,Consolas,monospace;letter-spacing:4px;background:var(--neutral);padding:10px 16px;border-radius:10px;display:inline-block}
+.timeline{list-style:none;padding:0;margin:8px 0}.timeline li{padding:6px 0 6px 22px;position:relative;font-size:14px}.timeline li::before{content:"";position:absolute;left:4px;top:13px;width:9px;height:9px;border-radius:50%;background:var(--border)}.timeline li.on::before{background:var(--accent)}
+.fields{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:8px 0}.fields dt{color:var(--muted)}.fields dd{margin:0;font-weight:600}
+dialog{border:0;border-radius:16px;padding:22px;max-width:min(460px,calc(100vw - 32px));box-shadow:0 10px 40px #132e3e40}dialog::backdrop{background:#132e3e66}dialog h2{margin-top:0}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--nav);color:#fff;padding:12px 18px;border-radius:12px;max-width:90vw;z-index:30}#toast:empty{display:none}
+.bottom{display:none}.guide{font-size:12.5px;color:var(--muted);border-top:1px solid var(--border);margin-top:28px;padding-top:14px}.guide a{display:inline-block;margin:3px 12px 3px 0}
+.recip-head{background:var(--nav);color:#fff}.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(max-width:860px){.layout{grid-template-columns:170px minmax(0,1fr)}main{padding:24px 22px 90px}}
+@media(max-width:650px){header{padding:10px 16px}header .account .more{display:none}.layout{display:block}aside{display:none}main{padding:18px 16px 100px}h1{font-size:26px}.card{padding:16px;border-radius:14px}
+ .bottom{display:flex;position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--border);z-index:10}.bottom a{flex:1;text-align:center;padding:10px 0;font-size:11.5px;color:var(--muted);text-decoration:none;min-height:52px}.bottom a[aria-current="page"]{color:var(--accent);font-weight:700}
+ .excluded{columns:1}.stepper li{font-size:12px}.stepper li span.lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.stepper li[aria-current="step"] span.lbl{position:static;width:auto;height:auto;overflow:visible;clip:auto}.actions .btn{flex:1 1 auto}.sticky .btn{width:100%}.demobar{font-size:12px}#toast{bottom:76px}.narrow main{padding-bottom:40px}}
+@media(max-width:350px){.code{font-size:21px;letter-spacing:2px}.fields{grid-template-columns:1fr}.fields dd{margin-bottom:6px}}
+</style></head><body>
+<div class="demobar" role="region" aria-label="Simulazione">
+  <span><strong>SIMULAZIONE</strong> · dati sintetici · nessun invio, nessun permesso reale, nessun servizio esterno</span>
+  <label>Vedi come <select id="persona"><option value="giulia">Giulia · proprietaria (mittente)</option><option value="marco">Marco · persona della casa</option><option value="luca">Luca · tecnico esterno</option><option value="paolo">Paolo · altro account</option></select></label>
+  <label><input type="checkbox" id="simnet"> rete assente al prossimo invio</label>
+  <span class="grow"></span><button class="btn small" id="reset" type="button">Ricomincia</button>
+</div>
+<div id="shell"></div>
+<dialog id="dlg" aria-labelledby="dlg-title"><h2 id="dlg-title"></h2><div id="dlg-body"></div><div class="actions" style="margin-top:14px"><button class="btn" id="dlg-no" type="button"></button><button class="btn primary" id="dlg-yes" type="button"></button></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+// Proposta C1 di Claude: mockup standalone, solo dati sintetici. Nessuna rete, nessuno storage, nessun invio.
+const NOW = new Date('2026-10-15T14:30:00');
+const ICON = {
+  doc:'<path d="M7 3h7l5 5v13H7zM14 3v5h5"/>', home:'<path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/>', list:'<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
+  euro:'<path d="M17 6.5A6.5 6.5 0 1 0 17 17.5M4 10.5h9M4 13.5h9"/>', share:'<path d="M15 5l4 4-4 4M19 9H9a5 5 0 0 0-5 5v4"/>', lock:'<path d="M6 11h12v10H6zM8 11V8a4 4 0 0 1 8 0v3"/>',
+  user:'<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"/>', clock:'<path d="M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/>', box:'<path d="M4 7l8-4 8 4v10l-8 4-8-4zM4 7l8 4 8-4M12 11v10"/>'
+};
+const icon = (n) => `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const fmtDate = (d) => d.toLocaleDateString('it-IT', { weekday:'short', day:'numeric', month:'long', year:'numeric' }) + ', ' + d.toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+const plus = (days) => new Date(NOW.getTime() + days * 86400000);
+
+const DOCS = [
+  { id:'d1', name:'Manuale caldaia TD28.pdf', cat:'Manuale', obj:'caldaia', by:'giulia', vis:'Persone della casa', size:'2,1 MB', ver:'versione del 12 mar 2024' },
+  { id:'d2', name:'Libretto impianto.pdf', cat:'Libretto', obj:'caldaia', by:'giulia', vis:'Persone della casa', size:'0,8 MB', ver:'versione del 3 feb 2025' },
+  { id:'d3', name:'Fattura manutenzione caldaia 2025.pdf', cat:'Fattura', econ:true, obj:'caldaia', by:'giulia', vis:'Solo io', size:'0,3 MB', ver:'versione del 21 ott 2025' },
+  { id:'d4', name:'Rapporto controllo fumi 2025.pdf', cat:'Rapporto tecnico', obj:'caldaia', by:'marco', vis:'Persone della casa', size:'0,5 MB', ver:'versione del 21 ott 2025' },
+  { id:'d7', name:'Manuale lavatrice LD8.pdf', cat:'Manuale', obj:'lavatrice', by:'giulia', vis:'Persone della casa', size:'1,4 MB', ver:'versione del 9 giu 2023' },
+  { id:'d8', name:'Planimetria.pdf', cat:'Planimetria', obj:null, by:'giulia', vis:'Persone della casa', size:'1,1 MB', ver:'versione del 2 gen 2022' },
+  { id:'d6', name:'Bolletta gas settembre 2026.pdf', cat:'Bolletta', econ:true, obj:null, by:'giulia', vis:'Solo io', size:'0,2 MB', ver:'versione del 6 ott 2026' },
+  { id:'d5', name:'Contratto di mutuo.pdf', cat:'Contratto', econ:true, obj:null, by:'giulia', vis:'Solo io', size:'3,6 MB', ver:'versione del 15 lug 2019' },
+];
+const OBJ = { caldaia: { name:'Caldaia cucina', fields:[['Tipo','Caldaia a condensazione'],['Marca','Termica Demo'],['Modello','TD28'],['Potenza nominale','28 kW']], unconfirmed:[['Anno di installazione','2019 (proposto da un documento, non confermato)']] } };
+const MEMBERS = [
+  { id:'marco', name:'Marco Leone', contact:'marco.leone@example.test', role:'Persona della casa · contitolare' },
+  { id:'sara', name:'Sara Leone', contact:'sara.l@example.test', role:'Persona della casa · lettura' },
+];
+const PEOPLE = { giulia:'Giulia Leone', marco:'Marco Leone', luca:'Luca Bassi', paolo:'Paolo Neri' };
+
+let state;
+function fresh() {
+  return { persona:'giulia', draft:null, lost:false, shares:[], seq:0, pendingCreate:null, lastAttempt:null,
+    codeTries:0 };
+}
+state = fresh();
+const doc = (id) => DOCS.find((d) => d.id === id);
+const shareable = (d) => d.by === 'giulia';
+
+// -------- draft --------
+function newDraft(origin) { return { origin, docs:[], objectCard:false, rtab:null, recipient:null, extLabel:'', duration:7, confirmedSig:null, wasConfirmed:false }; }
+const sig = (d) => JSON.stringify([d.docs.slice().sort(), d.objectCard, d.recipient, d.extLabel, d.duration]);
+const confirmed = (d) => d.confirmedSig !== null && d.confirmedSig === sig(d);
+function touch() { const d = state.draft; if (d.confirmedSig !== null && !confirmed(d)) { d.confirmedSig = null; d.wasConfirmed = true; } }
+const hasContent = (d) => d && (d.docs.length || d.objectCard);
+const recipientLabel = (r, extLabel) => !r ? null : r.kind === 'member' ? MEMBERS.find((m) => m.id === r.id).name : `Persona esterna${extLabel ? ` («${extLabel}», etichetta privata)` : ''}`;
+
+// -------- router --------
+const WIZ = ['contenuto','destinatario','durata','controllo'];
+function route() { const h = (location.hash || '#/casa').slice(2); const [path, q] = h.split('?'); return { parts: path.split('/'), q: new URLSearchParams(q || '') }; }
+function go(h) { location.hash = h; }
+
+function render() {
+  const { parts, q } = route();
+  const p = state.persona;
+  // Uscita dal percorso guidato senza invito: la selezione non è salvata e lo diciamo.
+  const inWizard = parts[0] === 'condividi';
+  if (!inWizard && hasContent(state.draft) && !state.pendingCreate) { state.lost = true; }
+  if (!inWizard && !state.pendingCreate) state.draft = null;
+  let html, nav = parts[0];
+  if (p !== 'giulia') html = recipientView(parts, q);
+  else switch (parts[0]) {
+    case 'documenti': html = parts[1] ? documentPage(parts[1]) : documentsPage(); break;
+    case 'oggetti': html = objectPage(); nav = 'casa'; break;
+    case 'condivisioni': html = parts[1] ? shareDetail(parts[1]) : sharesPage(); nav = 'condivisioni'; break;
+    case 'condividi': html = wizard(parts[1], q); nav = 'condivisioni'; break;
+    case 'attivita': case 'spese': html = placeholder(parts[0]); break;
+    default: html = casaPage(); nav = 'casa';
+  }
+  const lost = state.lost && !inWizard ? `<div class="notice warn" role="status"><p><strong>Preparazione interrotta.</strong> La selezione non è stata salvata e nessun invito è stato creato.</p></div>` : '';
+  if (!inWizard) state.lost = false;
+  document.getElementById('shell').innerHTML = p === 'giulia' ? ownerShell(lost + html, nav) : recipientShell(html);
+  bind();
+  // Focus sul titolo solo quando cambia la pagina, non a ogni aggiornamento della stessa.
+  const h1 = document.querySelector('main h1');
+  if (h1 && !render.first && render.last !== location.hash) { h1.setAttribute('tabindex', '-1'); h1.focus(); }
+  render.first = false; render.last = location.hash;
+}
+render.first = true;
+
+function ownerShell(content, nav) {
+  const link = (h, n, label, ic) => `<a href="#/${h}" ${nav === n ? 'aria-current="page"' : ''}>${icon(ic)}${label}</a>`;
+  return `<header><a class="logo" href="#/casa">dimora.<small>V5</small></a><span class="account">Casa di Giulia · Milano<span class="more"><br>Giulia Leone · proprietaria</span></span></header>
+  <div class="layout"><aside aria-label="Sezioni della casa"><div class="cap">LA TUA CASA</div>${link('casa','casa','Casa','home')}${link('attivita','attivita','Attività','list')}${link('documenti','documenti','Documenti','doc')}${link('spese','spese','Spese','euro')}
+  <div class="more">${link('condivisioni','condivisioni','Condivisioni','share')}</div></aside><main id="main">${content}${guide()}</main></div>
+  <nav class="bottom" aria-label="Sezioni della casa">${['casa','attivita','documenti','spese'].map((n) => `<a href="#/${n}" ${nav === n ? 'aria-current="page"' : ''}>${{ casa:'Casa', attivita:'Attività', documenti:'Documenti', spese:'Spese' }[n]}</a>`).join('')}</nav>`;
+}
+function recipientShell(content) {
+  return `<div class="narrow"><header><a class="logo" href="#/ricevute">dimora.<small>V5</small></a><span class="account">${esc(PEOPLE[state.persona])}<span class="more"><br>${state.persona === 'luca' ? 'account personale, nessuna casa in comune' : state.persona === 'paolo' ? 'account non destinatario' : 'persona della casa'}</span></span></header><main id="main">${content}${guide()}</main></div>`;
+}
+function guide() {
+  return `<div class="guide"><strong>Percorsi di prova:</strong> <a href="#/casa">Da Casa</a><a href="#/documenti/d1">Da documento</a><a href="#/oggetti/caldaia">Da oggetto</a><a href="#/condivisioni">Elenco condivisioni</a> · cambia «Vedi come» per il destinatario.</div>`;
+}
+const head = (eyebrow, title, lead, back) => `${back ? `<a class="back" href="${back[0]}">← ${back[1]}</a>` : ''}<div class="eyebrow">${eyebrow}</div><h1>${title}</h1>${lead ? `<p class="muted">${lead}</p>` : ''}`;
+
+// -------- owner pages --------
+function casaPage() {
+  return head('Casa di Giulia', 'Casa di Giulia', 'Via Roma 12 · Milano') + `
+  <section class="card"><h2>Oggi</h2><div class="row"><div class="iconbox">${icon('box')}</div><div class="row-body"><a class="row-title" href="#/oggetti/caldaia">Caldaia cucina</a><div class="small muted">Manutenzione annuale da prenotare entro il 10 novembre</div></div></div></section>
+  <section class="card tint"><h2>Condividi solo ciò che scegli</h2><p>Prepara una consegna per una persona precisa: vede soltanto i file che selezioni, per il tempo che decidi. Non entra nella casa e non vede spese, attività o note.</p>
+  <div class="actions"><a class="btn primary" href="#/condividi/nuova?da=casa">Prepara una condivisione</a><a class="btn" href="#/condivisioni">Condivisioni attive</a></div></section>`;
+}
+function placeholder(s) { return head('Casa di Giulia', s === 'spese' ? 'Spese' : 'Attività', 'Sezione esistente, invariata: qui non c’è nessuna azione di condivisione.') + `<section class="card"><p class="muted">Le registrazioni ${s === 'spese' ? 'economiche, i riepiloghi e le bozze' : 'e le scadenze'} non sono mai condivisibili in C1.</p></section>`; }
+function documentsPage() {
+  return head('Casa di Giulia', 'Documenti', 'Originali conservati. La visibilità nella casa non cambia condividendo.') + `<section class="card">${DOCS.map((d) => `<div class="row"><div class="iconbox">${icon('doc')}</div><div class="row-body"><a class="row-title" href="#/documenti/${d.id}">${esc(d.name)}</a><div class="small muted">${esc(d.cat)} · ${d.vis}${d.by === 'marco' ? ' · caricato da Marco' : ''}</div></div></div>`).join('')}</section>`;
+}
+function documentPage(id) {
+  const d = doc(id); if (!d) return documentsPage();
+  return head('Casa di Giulia · documento', esc(d.name), `${esc(d.cat)} · ${d.vis} · ${d.ver}`, ['#/documenti', 'Documenti']) + `
+  <section class="card"><p class="muted">Anteprima dell’originale (testo sintetico).</p>
+  ${shareable(d) ? `<div class="actions"><a class="btn" href="#/condividi/nuova?da=documento&id=${d.id}">${icon('share')}Condividi…</a></div><p class="help">Apre la preparazione con questo documento in evidenza, non selezionato.</p>`
+    : `<div class="notice info"><p>Caricato da Marco: in questa prima versione puoi leggerlo nella casa ma non condividerlo con altri.</p></div>`}</section>`;
+}
+function objectPage() {
+  const o = OBJ.caldaia;
+  return head('Casa di Giulia · oggetto', o.name, 'Termica Demo TD28 · Cucina', ['#/casa', 'Casa']) + `
+  <section class="card"><h2>Dati tecnici</h2><dl class="fields">${o.fields.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}${o.unconfirmed.map(([k, v]) => `<dt>${k}</dt><dd class="muted" style="font-weight:400">${v}</dd>`).join('')}</dl></section>
+  <section class="card"><h2>Documenti della caldaia</h2>${DOCS.filter((d) => d.obj === 'caldaia').map((d) => `<div class="row"><div class="iconbox">${icon('doc')}</div><div class="row-body"><a class="row-title" href="#/documenti/${d.id}">${esc(d.name)}</a><div class="small muted">${esc(d.cat)}</div></div></div>`).join('')}
+  <div class="actions" style="margin-top:10px"><a class="btn" href="#/condividi/nuova?da=oggetto&id=caldaia">${icon('share')}Condividi qualcosa di questa caldaia…</a></div><p class="help">Nessun documento viene selezionato in automatico.</p></section>`;
+}
+
+// -------- wizard --------
+function wizard(step, q) {
+  if (step === 'nuova') {
+    state.draft = newDraft({ type: q.get('da') || 'casa', id: q.get('id') });
+    history.replaceState(null, '', '#/condividi/contenuto');
+    step = 'contenuto';
+  }
+  const d = state.draft;
+  if (!d) return head('Condivisioni', 'Nessuna preparazione in corso', 'La selezione vive solo in questa pagina: tornando indietro dopo averla lasciata non viene ripristinata.', ['#/condivisioni', 'Condivisioni']) + `<a class="btn primary" href="#/condividi/nuova?da=casa">Prepara una condivisione</a>`;
+  const i = Math.max(0, WIZ.indexOf(step));
+  const reachable = (k) => k === 0 || (k <= 1 ? hasContent(d) : k === 2 ? hasContent(d) && !!d.recipient : hasContent(d) && !!d.recipient);
+  if (!reachable(i)) { history.replaceState(null, '', '#/condividi/contenuto'); return wizard('contenuto', q); }
+  const labels = ['Contenuto', 'Destinatario', 'Durata', 'Controllo'];
+  const stepper = `<ol class="stepper" aria-label="Passaggi">${labels.map((l, k) => `<li class="${k < i && reachable(k + 1) ? 'done' : ''}" ${k === i ? 'aria-current="step"' : ''}>${k !== i && reachable(k) ? `<a href="#/condividi/${WIZ[k]}"><span class="lbl">${l}</span></a>` : `<span class="lbl">${l}</span>`}</li>`).join('')}</ol>`;
+  const cancel = `<button class="btn link" type="button" data-cancel>Annulla</button>`;
+  const body = [stepContent, stepRecipient, stepDuration, stepReview][i](d);
+  return head('Nuova condivisione · simulazione', ['Cosa vuoi condividere?', 'Con chi?', 'Per quanto tempo?', 'Controlla prima di creare l’invito'][i], null) + stepper + body.replace('%CANCEL%', cancel);
+}
+function originNote(d) {
+  if (d.origin.type === 'documento') return `Sei partita da «${esc(doc(d.origin.id)?.name || '')}»: è in cima all’elenco ma non è selezionato.`;
+  if (d.origin.type === 'oggetto') return 'Sei partita da Caldaia cucina: i suoi documenti sono in cima, nessuno è selezionato.';
+  return 'Nessun elemento è selezionato: scegli tu cosa includere.';
+}
+function stepContent(d) {
+  const first = d.origin.type === 'documento' ? [d.origin.id] : d.origin.type === 'oggetto' ? DOCS.filter((x) => x.obj === 'caldaia').map((x) => x.id) : [];
+  const ordered = [...first.map(doc), ...DOCS.filter((x) => !first.includes(x.id))];
+  const item = (x) => {
+    const own = shareable(x);
+    return `<label class="pick ${own ? '' : 'disabled'} ${first.includes(x.id) ? 'origin' : ''}"><input type="checkbox" data-doc="${x.id}" ${d.docs.includes(x.id) ? 'checked' : ''} ${own ? '' : 'disabled'}><span class="row-body"><span class="row-title">${esc(x.name)}</span>
+      <span class="meta">${esc(x.cat)} · ${x.size} · ${x.ver}${x.vis === 'Solo io' ? ' · in Dimora: Solo io' : ''}</span>
+      ${own ? '' : '<span class="meta">Caricato da Marco: non puoi condividerlo tu. Può farlo lui.</span>'}
+      ${own && x.econ ? '<span class="meta"><span class="tag warn">Categoria economica (indicata da te)</span> Il file completo mostra gli importi scritti nel documento. Il costo registrato in Spese non viene condiviso.</span>' : ''}</span></label>`;
+  };
+  const objOpt = d.origin.type === 'oggetto' ? `<h3>Scheda della caldaia <span class="tag neutral">C1b · fase successiva</span></h3>
+    <label class="pick"><input type="checkbox" data-objcard ${d.objectCard ? 'checked' : ''}><span class="row-body"><span class="row-title">Dati tecnici confermati di Caldaia cucina</span>
+    <span class="meta">Solo questi campi:</span><dl class="fields">${OBJ.caldaia.fields.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+    <span class="meta">Mai inclusi: anno proposto non confermato, ambiente, attività, costi, note, storia tecnica. I documenti si scelgono uno per uno qui sopra.</span></span></label>` : '';
+  const n = d.docs.length + (d.objectCard ? 1 : 0);
+  return `<p class="muted">${originNote(d)}</p>
+  <fieldset style="border:0;padding:0;margin:0"><legend class="vh">Documenti da includere</legend><h3>I tuoi documenti</h3>${ordered.map(item).join('')}</fieldset>${objOpt}
+  <section class="card tint" style="margin-top:14px"><h2 style="font-size:15px">Mai inclusi, in nessun caso</h2><ul class="excluded"><li>Spese e costi registrati</li><li>Riepiloghi, grafici e confronti</li><li>Bozze da documento</li><li>Pagamenti e mutuo come dati</li><li>Attività e scadenze</li><li>Note personali</li><li>Accesso alla casa e agli altri documenti</li><li>Documenti caricati da altri</li></ul></section>
+  <div class="sticky"><p class="counter" aria-live="polite" id="counter">${n === 0 ? 'Nessun elemento selezionato' : n === 1 ? '1 elemento selezionato' : `${n} elementi selezionati`}</p>
+  <div class="actions"><button class="btn primary" type="button" data-next="destinatario" ${n ? '' : 'disabled'}>Continua</button>%CANCEL%</div></div>`;
+}
+function stepRecipient(d) {
+  const tab = d.rtab || (d.recipient?.kind === 'external' ? 'ext' : 'member');
+  const members = `<fieldset style="border:0;padding:0;margin:0"><legend class="muted">Scegli dall’elenco delle persone di questa casa. Nome e recapito sono quelli che il servizio conosce per quell’account.</legend>
+    ${MEMBERS.map((m) => `<label class="pick"><input type="radio" name="member" data-member="${m.id}" ${d.recipient?.kind === 'member' && d.recipient.id === m.id ? 'checked' : ''}><span class="row-body"><span class="row-title">${m.name}</span><span class="meta">${m.contact} · ${m.role}</span></span></label>`).join('')}</fieldset>
+    <p class="help">Per una persona della casa la condivisione rende leggibili solo i file scelti, per il periodo scelto. Non cambia «Solo io / Persone della casa» e non dà altri diritti.</p>`;
+  const ext = `<div class="notice warn"><p><strong>Proposta, non attiva nella prima versione.</strong> Serve a valutare il percorso del tecnico: l’abbinamento con codice richiede un servizio che oggi non esiste.</p></div>
+    <p>Dimora non si fida di un indirizzo email digitato: la registrazione attuale non lo verifica. Funziona così:</p>
+    <ol class="small"><li>Crei l’invito: Dimora mostra un <strong>codice monouso</strong> valido 24 ore.</li><li>Lo comunichi tu alla persona, a voce o di persona. Dimora non lo invia.</li><li>La persona accede con il suo account e inserisce il codice. Non vede ancora nulla.</li><li>Tu vedi nome e recapito di quell’account e confermi che è la persona giusta. Solo allora i file diventano leggibili.</li></ol>
+    <label class="field">Come la riconosci (etichetta privata, solo per te)<input id="extlabel" maxlength="40" value="${esc(d.extLabel)}" placeholder="es. Tecnico caldaia"><span class="help">Non è una prova d’identità e il destinatario non la vede.</span></label>
+    <label class="pick"><input type="radio" name="member" data-external ${d.recipient?.kind === 'external' ? 'checked' : ''}><span class="row-body"><span class="row-title">Persona esterna con abbinamento tramite codice</span><span class="meta">Nessun link pubblico ai file, nessuna email inviata da Dimora.</span></span></label>`;
+  return `<div class="tabs" role="group" aria-label="Tipo di destinatario"><button type="button" data-rtab="member" aria-pressed="${tab === 'member'}">Persona di questa casa</button><button type="button" data-rtab="ext" aria-pressed="${tab === 'ext'}">Persona esterna</button></div>
+  <section class="card">${tab === 'member' ? members : ext}</section>
+  <div class="sticky"><div class="actions"><a class="btn" href="#/condividi/contenuto">Indietro</a><button class="btn primary" type="button" data-next="durata" ${d.recipient ? '' : 'disabled'}>Continua</button>%CANCEL%</div></div>`;
+}
+function stepDuration(d) {
+  return `<fieldset class="card" style="margin:0 0 14px"><legend class="vh">Durata</legend>${[1, 7, 30].map((n) => `<label class="pick"><input type="radio" name="dur" data-dur="${n}" ${d.duration === n ? 'checked' : ''}><span class="row-body"><span class="row-title">${n === 1 ? '1 giorno' : `${n} giorni`}${n === 7 ? ' <span class="tag neutral">proposta</span>' : ''}</span><span class="meta">Fino a ${fmtDate(plus(n))} circa</span></span></label>`).join('')}
+  <p class="help">L’istante esatto lo calcola il servizio al momento della conferma e lo vedrai nel controllo. Puoi revocare prima: le copie già scaricate restano alla persona.</p></fieldset>
+  <div class="sticky"><div class="actions"><a class="btn" href="#/condividi/destinatario">Indietro</a><button class="btn primary" type="button" data-next="controllo">Continua</button>%CANCEL%</div></div>`;
+}
+function stepReview(d) {
+  const ok = confirmed(d);
+  const err = state.lastAttempt === 'unknown' ? `<div class="notice err" role="alert"><p><strong>Esito non confermato.</strong> La rete non ha risposto: non sappiamo se l’invito è stato creato. «Riprova invio» ripete la stessa richiesta e non crea un secondo invito.</p><div class="actions"><button class="btn small" type="button" data-create>Riprova invio</button></div></div>` : '';
+  const locked = state.lastAttempt === 'unknown';
+  return `<section class="card manifest"><h2>Manifesto della consegna</h2><p class="small muted">Questo è esattamente ciò che la persona potrà vedere. Nuovi caricamenti o nuove versioni non vengono aggiunti.</p>
+  <dl><dt>Destinatario</dt><dd>${esc(recipientLabel(d.recipient, d.extLabel))}${d.recipient.kind === 'member' ? ` · ${MEMBERS.find((m) => m.id === d.recipient.id).contact}` : ' · abbinamento con codice e tua conferma'}</dd>
+  <dt>Accessibile fino a</dt><dd>${fmtDate(plus(d.duration))} <span class="small muted">(${d.duration === 1 ? '1 giorno' : `${d.duration} giorni`}; nella versione reale l’istante lo calcola il servizio)</span></dd>
+  <dt>File completi inclusi (${d.docs.length})</dt><dd>${d.docs.length ? `<ul>${d.docs.map((id) => { const x = doc(id); return `<li><strong>${esc(x.name)}</strong> · ${x.ver} · ${x.size}${x.econ ? ' · <span class="tag warn">categoria economica</span>' : ''}</li>`; }).join('')}</ul>` : '<span class="muted">nessuno</span>'}</dd>
+  ${d.objectCard ? `<dt>Dati tecnici di Caldaia cucina</dt><dd>${OBJ.caldaia.fields.map(([k, v]) => `${k}: ${v}`).join(' · ')}</dd>` : ''}
+  <dt>Permessi</dt><dd>Consultare e scaricare. Non può modificare, caricare né ricondividere dentro Dimora.</dd>
+  <dt>Esclusi</dt><dd class="small">Spese, riepiloghi, bozze, pagamenti, attività, note, accesso alla casa, altri documenti.</dd></dl>
+  <div class="actions"><a class="btn small" href="#/condividi/contenuto">Modifica contenuto</a><a class="btn small" href="#/condividi/destinatario">Modifica destinatario</a><a class="btn small" href="#/condividi/durata">Modifica durata</a></div></section>
+  ${d.wasConfirmed && !ok ? '<div class="notice warn" role="status"><p><strong>Hai modificato la consegna:</strong> la conferma precedente non vale più. Controlla di nuovo e conferma.</p></div>' : ''}
+  ${d.docs.length ? `<section class="card"><label class="pick" style="margin:0"><input type="checkbox" data-confirm ${ok ? 'checked' : ''} ${locked ? 'disabled' : ''}><span class="row-body"><span class="row-title">Ho controllato i file: ${d.recipient.kind === 'member' ? esc(recipientLabel(d.recipient)) : 'la persona'} vedrà i file completi, anche eventuali importi e dati personali al loro interno.</span><span class="meta">Dimora non oscura né rileva automaticamente importi, IBAN o dati personali nei file.</span></span></label></section>` : ''}
+  ${err}
+  <div class="sticky"><div class="actions">${locked ? '' : `<button class="btn primary" type="button" data-create ${ok || !d.docs.length ? '' : 'disabled'}>Crea l’invito (simulato)</button>`}<a class="btn" href="#/condividi/durata">Indietro</a>%CANCEL%</div>
+  <p class="help">Creare l’invito non invia nulla: ${d.recipient.kind === 'member' ? 'comparirà nella Dimora di ' + esc(recipientLabel(d.recipient)) + ', che dovrà accettarlo.' : 'ti mostreremo il codice da comunicare tu.'}</p></div>`;
+}
+
+// -------- shares (owner) --------
+const STATE_LABEL = { invited:['Invito preparato · da accettare','neutral'], pairing:['In attesa del codice','neutral'], check:['Da confermare: chi ha inserito il codice?','warn'], active:['Accettata · consultabile','ok'], expired:['Scaduta','neutral'], revoked:['Revocata','neutral'], unavailable:['Non più disponibile','err'] };
+function sharesPage() {
+  const list = state.shares.slice().reverse();
+  return head('Casa di Giulia', 'Condivisioni', 'Consegne che hai preparato. Ogni persona vede solo la sua.') + `
+  <div class="actions" style="margin-bottom:14px"><a class="btn primary" href="#/condividi/nuova?da=casa">Prepara una condivisione</a></div>
+  <section class="card">${list.length ? list.map((s) => `<div class="row"><div class="iconbox">${icon(s.recipient.kind === 'member' ? 'user' : 'lock')}</div><div class="row-body"><a class="row-title" href="#/condivisioni/${s.id}">${esc(recipientLabel(s.recipient, s.extLabel))}</a><div class="small muted">${s.docs.length} file${s.objectCard ? ' + dati tecnici' : ''} · fino a ${fmtDate(s.expires)}</div></div><span class="tag ${STATE_LABEL[s.state][1]}">${STATE_LABEL[s.state][0]}</span></div>`).join('') : '<p class="muted">Nessuna condivisione. Le consegne preparate e accettate compaiono qui.</p>'}</section>`;
+}
+function shareDetail(id) {
+  const s = state.shares.find((x) => x.id === id); if (!s) return sharesPage();
+  const [lab, tone] = STATE_LABEL[s.state];
+  const live = ['invited', 'pairing', 'check', 'active'].includes(s.state);
+  const steps = s.recipient.kind === 'member'
+    ? [['Invito preparato', true], ['Accettato da ' + recipientLabel(s.recipient), s.state === 'active' || s.acceptedAt]]
+    : [['Invito preparato, codice mostrato a te', true], ['Codice inserito da un account', ['check', 'active'].includes(s.state) || s.acceptedAt], ['Confermato da te: file leggibili', s.state === 'active' || s.acceptedAt]];
+  return head('Condivisione', esc(recipientLabel(s.recipient, s.extLabel)), null, ['#/condivisioni', 'Condivisioni']) + `
+  <p><span class="tag ${tone}">${lab}</span></p>
+  ${s.state === 'pairing' ? `<section class="card"><h2>Codice da comunicare tu</h2><p class="code" aria-label="Codice K 7 P 4 Q X">K7P-4QX</p><p class="help">Valido fino a ${fmtDate(plus(1))}, una sola volta. Dimora non lo invia: dillo alla persona a voce o di persona. Chi lo inserisce non vede nulla finché non confermi tu.</p></section>` : ''}
+  ${s.state === 'check' ? `<section class="card" style="border-color:var(--warning-border)"><h2>È la persona giusta?</h2><p>Un account ha inserito il codice alle 15:02:</p><p><strong>${esc(PEOPLE[s.pairedTo])}</strong> · ${s.pairedTo}.${s.pairedTo === 'luca' ? 'bassi' : 'neri'}@example.test <span class="small muted">(nome e indirizzo dichiarati dall’account, non verificati)</span></p><div class="actions"><button class="btn primary" type="button" data-pair-ok>Sì, è la persona giusta: rendi leggibili i file</button><button class="btn danger" type="button" data-pair-no>No, non è lei: annulla l’invito</button></div></section>` : ''}
+  ${s.state === 'unavailable' ? `<div class="notice err"><p>Non hai più i diritti sugli originali inclusi (per esempio dopo la vendita della casa): la consegna non è più consultabile. Non si trasferisce nulla tramite la condivisione.</p></div>` : ''}
+  ${s.state === 'expired' ? `<div class="notice info"><p>Scaduta il ${fmtDate(s.expires)}. Per un nuovo accesso prepara una nuova condivisione.</p></div>` : ''}
+  <section class="card"><h2>Stato</h2><ul class="timeline">${steps.map(([t, on]) => `<li class="${on ? 'on' : ''}">${t}</li>`).join('')}</ul><p class="help">Accettato non significa letto: Dimora non mostra se la persona ha aperto i file.</p></section>
+  <section class="card manifest"><h2>Manifesto</h2><dl><dt>File completi</dt><dd><ul>${s.docs.map((x) => `<li>${esc(x.name)} · ${x.ver}</li>`).join('')}</ul></dd>${s.objectCard ? `<dt>Dati tecnici</dt><dd>${OBJ.caldaia.fields.map(([k, v]) => `${k}: ${v}`).join(' · ')}</dd>` : ''}<dt>Fino a</dt><dd>${fmtDate(s.expires)}</dd></dl></section>
+  ${live ? `<div class="actions"><button class="btn danger" type="button" data-revoke="${s.id}">Revoca</button></div>
+  <details class="card" style="margin-top:14px"><summary>Simula eventi (solo prova)</summary><div class="actions" style="margin-top:10px"><button class="btn small" type="button" data-sim-expire="${s.id}">Passa la scadenza</button><button class="btn small" type="button" data-sim-lose="${s.id}">Giulia perde i diritti sugli originali</button></div></details>` : ''}`;
+}
+
+// -------- recipient --------
+function recipientView(parts, q) {
+  const me = state.persona;
+  const mine = state.shares.filter((s) => (s.recipient.kind === 'member' && s.recipient.id === me) || (s.recipient.kind === 'external' && s.pairedTo === me));
+  if (parts[0] === 'ricevute' && parts[1] === 'codice') return codePage();
+  if (parts[0] === 'ricevute' && parts[1]) {
+    const s = state.shares.find((x) => x.id === parts[1]);
+    if (!s || !mine.includes(s)) return head('Consegna', 'Non disponibile', 'Questa consegna non esiste o non è destinata al tuo account.', ['#/ricevute', 'Consegne ricevute']);
+    return delivery(s);
+  }
+  const rows = mine.map((s) => {
+    const gone = ['expired', 'revoked', 'unavailable'].includes(s.state);
+    const label = s.state === 'invited' ? 'Invito da accettare' : s.state === 'check' ? 'In attesa della conferma di Giulia' : gone ? 'Non più disponibile' : 'Consultabile';
+    return `<div class="row"><div class="iconbox">${icon('share')}</div><div class="row-body"><a class="row-title" href="#/ricevute/${s.id}">Consegna da Giulia Leone</a><div class="small muted">${gone ? 'Contenuto non più disponibile' : s.state === 'active' ? `${s.docs.length} file · fino a ${fmtDate(s.expires)}` : 'Contenuto visibile dopo l’accettazione'}</div></div><span class="tag ${gone ? 'neutral' : s.state === 'active' ? 'ok' : 'warn'}">${label}</span></div>`;
+  }).join('');
+  return head(PEOPLE[me], 'Consegne ricevute', 'Solo ciò che qualcuno ha scelto di darti. Non è l’accesso a una casa.') + `
+  <section class="card">${rows || '<p class="muted">Nessuna consegna per questo account.</p>'}</section>
+  ${me === 'luca' || me === 'paolo' ? '<div class="actions"><a class="btn" href="#/ricevute/codice">Ho ricevuto un codice</a></div>' : ''}`;
+}
+function codePage() {
+  const err = state.codeTries > 0 ? (state.codeTries >= 3 ? '<div class="notice err" role="alert"><p>Troppi tentativi: riprova più tardi o chiedi un nuovo codice a chi te l’ha dato.</p></div>' : '<div class="notice err" role="alert"><p>Codice non valido o scaduto.</p></div>') : '';
+  const waiting = state.shares.some((s) => s.state === 'pairing');
+  return head('Consegna', 'Inserisci il codice', 'Ti è stato comunicato da chi vuole darti dei documenti. Da solo non mostra nulla: dopo la sua conferma vedrai la consegna.', ['#/ricevute', 'Consegne ricevute']) + `
+  <section class="card"><form id="codeform" novalidate><label class="field">Codice<input id="code" autocomplete="off" inputmode="text" maxlength="7" ${state.codeTries >= 3 ? 'disabled' : ''} aria-describedby="codehelp"><span class="help" id="codehelp">Nella simulazione il codice è K7P-4QX${waiting ? '' : ' (prima Giulia deve preparare un invito per una persona esterna)'}.</span></label>${err}<button class="btn primary" ${state.codeTries >= 3 ? 'disabled' : ''}>Invia il codice</button></form></section>`;
+}
+function delivery(s) {
+  const gone = ['expired', 'revoked', 'unavailable'].includes(s.state);
+  if (gone) return head('Consegna da Giulia Leone', 'Non più disponibile', s.state === 'expired' ? `Il periodo di consultazione è terminato il ${fmtDate(s.expires)}.` : 'Questa consegna non è più consultabile.', ['#/ricevute', 'Consegne ricevute']) + `<section class="card"><p class="muted">Le copie che hai già scaricato restano tue. Per altri documenti chiedi a chi te li aveva dati.</p></section>`;
+  if (s.state === 'invited') return head('Invito', 'Giulia Leone vuole darti dei documenti', 'Prima di accettare non vedi titoli, indirizzo o contenuti.', ['#/ricevute', 'Consegne ricevute']) + `
+    <section class="card"><p>Accettando potrai consultare e scaricare i file scelti per te fino a ${fmtDate(s.expires)}. Non entri nella casa e non vedi altro.</p><div class="actions"><button class="btn primary" type="button" data-accept="${s.id}">Accetta</button><button class="btn" type="button" data-decline="${s.id}">Rifiuta</button></div></section>`;
+  if (s.state === 'check') return head('Consegna', 'In attesa di conferma', 'Hai inserito il codice. Giulia Leone deve confermare che sei tu: poi vedrai i file.', ['#/ricevute', 'Consegne ricevute']);
+  return head('Consegna da Giulia Leone', `${s.docs.length} file per te`, `Consultabile fino a ${fmtDate(s.expires)} · solo lettura e download`, ['#/ricevute', 'Consegne ricevute']) + `
+  <section class="card">${s.docs.map((x) => `<div class="row"><div class="iconbox">${icon('doc')}</div><div class="row-body"><span class="row-title">${esc(x.name)}</span><div class="small muted">${x.size} · ${x.ver}</div></div><button class="btn small" type="button" data-open>Apri</button><button class="btn small" type="button" data-open>Scarica</button></div>`).join('')}</section>
+  ${s.objectCard ? `<section class="card"><h2>Dati tecnici: Caldaia cucina</h2><dl class="fields">${OBJ.caldaia.fields.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl><p class="help">Solo i dati scelti da Giulia.</p></section>` : ''}
+  <p class="help">Puoi scaricare i file. Non puoi inoltrare la consegna dentro Dimora.</p>`;
+}
+
+// -------- dialog / toast --------
+function ask(title, body, yes, no, onYes) {
+  const dlg = document.getElementById('dlg');
+  document.getElementById('dlg-title').textContent = title;
+  document.getElementById('dlg-body').innerHTML = body;
+  const y = document.getElementById('dlg-yes'), n = document.getElementById('dlg-no');
+  y.textContent = yes; n.textContent = no;
+  const opener = document.activeElement;
+  y.onclick = () => { dlg.close(); onYes(); };
+  n.onclick = () => dlg.close();
+  dlg.onclose = () => { if (document.contains(opener)) opener?.focus(); };
+  dlg.showModal(); n.focus();
+}
+let toastTimer;
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.textContent = ''; }, 3500); }
+
+// -------- events --------
+function bind() {
+  const d = state.draft;
+  const $$ = (sel) => document.querySelectorAll(sel);
+  $$('[data-doc]').forEach((el) => el.onchange = () => { const id = el.dataset.doc; d.docs = el.checked ? [...d.docs, id] : d.docs.filter((x) => x !== id); touch(); refreshContent(); });
+  $$('[data-objcard]').forEach((el) => el.onchange = () => { d.objectCard = el.checked; touch(); refreshContent(); });
+  $$('[data-rtab]').forEach((el) => el.onclick = () => { d.rtab = el.dataset.rtab; render(); document.querySelector(`[data-rtab="${d.rtab}"]`)?.focus(); });
+  $$('[data-member]').forEach((el) => el.onchange = () => { d.recipient = { kind:'member', id: el.dataset.member }; touch(); refreshNext(); });
+  $$('[data-external]').forEach((el) => el.onchange = () => { d.recipient = { kind:'external' }; touch(); refreshNext(); });
+  const ext = document.getElementById('extlabel'); if (ext) ext.oninput = () => { d.extLabel = ext.value.trim(); touch(); };
+  $$('[data-dur]').forEach((el) => el.onchange = () => { d.duration = Number(el.dataset.dur); touch(); });
+  $$('[data-next]').forEach((el) => el.onclick = () => go('#/condividi/' + el.dataset.next));
+  $$('[data-confirm]').forEach((el) => el.onchange = () => { d.confirmedSig = el.checked ? sig(d) : null; if (el.checked) d.wasConfirmed = false; const b = document.querySelector('button[data-create]'); if (b) b.disabled = !el.checked; });
+  $$('[data-cancel]').forEach((el) => el.onclick = () => ask('Annullare la preparazione?', '<p>La selezione non viene salvata. Nessun invito è stato creato.</p>', 'Annulla la preparazione', 'Continua a preparare', () => {
+    const o = d.origin; state.draft = null; state.lastAttempt = null; toast('Preparazione annullata. Nessun invito creato.');
+    go(o.type === 'documento' ? `#/documenti/${o.id}` : o.type === 'oggetto' ? '#/oggetti/caldaia' : '#/condivisioni');
+  }));
+  $$('[data-create]').forEach((el) => el.onclick = create);
+  $$('[data-revoke]').forEach((el) => el.onclick = () => ask('Revocare la condivisione?', '<p>La persona non potrà più aprire né scaricare i file da Dimora. Le copie già scaricate non si possono ritirare.</p>', 'Revoca', 'Non revocare', () => { setShare(el.dataset.revoke, 'revoked'); toast('Revocata: nuovi accessi bloccati subito.'); }));
+  $$('[data-sim-expire]').forEach((el) => el.onclick = () => { setShare(el.dataset.simExpire, 'expired'); toast('Simulato: scadenza superata.'); });
+  $$('[data-sim-lose]').forEach((el) => el.onclick = () => { setShare(el.dataset.simLose, 'unavailable'); toast('Simulato: Giulia non ha più diritti sugli originali.'); });
+  $$('[data-pair-ok]').forEach((el) => el.onclick = () => { const s = current(); s.state = 'active'; s.acceptedAt = true; render(); toast(`Confermato: i file sono leggibili per ${PEOPLE[s.pairedTo]}.`); });
+  $$('[data-pair-no]').forEach((el) => el.onclick = () => ask('Annullare l’invito?', '<p>L’account che ha inserito il codice non vedrà nulla. Il codice non è più valido.</p>', 'Annulla l’invito', 'Torna indietro', () => { setShare(current().id, 'revoked'); }));
+  $$('[data-accept]').forEach((el) => el.onclick = () => { const s = state.shares.find((x) => x.id === el.dataset.accept); s.state = 'active'; s.acceptedAt = true; render(); toast('Accettata.'); });
+  $$('[data-decline]').forEach((el) => el.onclick = () => ask('Rifiutare l’invito?', '<p>Giulia vedrà che l’invito non è stato accettato.</p>', 'Rifiuta', 'Torna indietro', () => { setShare(el.dataset.decline, 'revoked'); go('#/ricevute'); }));
+  $$('[data-open]').forEach((el) => el.onclick = () => toast('Simulazione: nessun file reale da aprire o scaricare.'));
+  const cf = document.getElementById('codeform');
+  if (cf) cf.onsubmit = (e) => {
+    e.preventDefault();
+    const v = document.getElementById('code').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const s = state.shares.find((x) => x.state === 'pairing');
+    if (v === 'K7P4QX' && s) { s.state = 'check'; s.pairedTo = state.persona; state.codeTries = 0; go(`#/ricevute/${s.id}`); }
+    else { state.codeTries += 1; render(); document.getElementById('code')?.focus(); }
+  };
+}
+function refreshContent() {
+  const d = state.draft, n = d.docs.length + (d.objectCard ? 1 : 0);
+  document.getElementById('counter').textContent = n === 0 ? 'Nessun elemento selezionato' : n === 1 ? '1 elemento selezionato' : `${n} elementi selezionati`;
+  refreshNext(n > 0);
+}
+function refreshNext(ok = !!state.draft.recipient) { const b = document.querySelector('[data-next]'); if (b) b.disabled = !ok; }
+const current = () => state.shares.find((x) => x.id === route().parts[1]);
+function setShare(id, st) { const s = state.shares.find((x) => x.id === id); if (s) { s.state = st; render(); } }
+function create() {
+  const d = state.draft;
+  if (!d || !d.docs.length || !confirmed(d)) return;
+  // Stessa richiesta (stessa chiave) finché l'esito è ignoto: «Riprova invio» non duplica.
+  if (!state.pendingCreate) state.pendingCreate = { key: 'k' + (++state.seq), sig: sig(d) };
+  if (document.getElementById('simnet').checked) {
+    document.getElementById('simnet').checked = false;
+    // La simulazione registra comunque l'invito: il client non lo sa finché non riprova.
+    if (!state.shares.some((s) => s.key === state.pendingCreate.key)) state.shares.push(makeShare(d, state.pendingCreate.key));
+    state.lastAttempt = 'unknown'; render(); document.querySelector('[role=alert]')?.focus?.(); return;
+  }
+  let s = state.shares.find((x) => x.key === state.pendingCreate.key);
+  if (!s) { s = makeShare(d, state.pendingCreate.key); state.shares.push(s); }
+  state.pendingCreate = null; state.lastAttempt = null; state.draft = null;
+  go('#/condivisioni/' + s.id);
+  toast(s.recipient.kind === 'member' ? 'Invito creato. Nessuna email inviata: comparirà nella Dimora del destinatario.' : 'Invito creato. Comunica tu il codice.');
+}
+function makeShare(d, key) {
+  return { id: 's' + (state.shares.length + 1), key, recipient: d.recipient, extLabel: d.extLabel, docs: d.docs.map(doc), objectCard: d.objectCard,
+    expires: plus(d.duration), state: d.recipient.kind === 'member' ? 'invited' : 'pairing' };
+}
+
+document.getElementById('persona').onchange = (e) => { state.persona = e.target.value; state.codeTries = 0; go(state.persona === 'giulia' ? '#/condivisioni' : '#/ricevute'); render(); };
+document.getElementById('reset').onclick = () => { state = fresh(); document.getElementById('persona').value = 'giulia'; document.getElementById('simnet').checked = false; go('#/casa'); render(); toast('Prova ricominciata.'); };
+window.addEventListener('hashchange', render);
+render();
+</script></body></html>
