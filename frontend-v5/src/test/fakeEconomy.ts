@@ -30,7 +30,24 @@ type Work = { id: string; homeId: string; accountId: string; name: string; note:
 type Snap = Record<string, unknown>;
 type Event = { id: string; kind: 'created' | 'updated' | 'archived' | 'restored'; at: string; note: string | null; before: Snap | null; after: Snap };
 
-export const CATEGORIES: Category[] = ['electricity', 'gas', 'water', 'internet_services', 'condominium_ordinary', 'condominium_extraordinary', 'insurance', 'taxes', 'maintenance', 'repairs_works', 'purchase_replacement', 'financing', 'other'];
+type Cite = { documentId: string; documentVersion: number; sha256: string; page: number; excerpt: string };
+type FakeJob = {
+  id: string; homeId: string; accountId: string; version: number; state: 'queued' | 'running' | 'succeeded' | 'failed';
+  documentId: string; draftId: string | null; errorCode: string | null; polls: number; forcedError: string | null; createdAt: string; updatedAt: string;
+};
+type FakeDraft = {
+  id: string; homeId: string; accountId: string; version: number; state: 'open' | 'parked' | 'confirmed'; documentId: string; kind: 'gas' | 'invoice';
+  proposed: Record<string, { value: string; sources: Cite[] }>;
+  candidates: Array<{ id: string; amountCents: number; role: string; label: string; sources: Cite[] }>;
+  required: boolean; expenseId: string | null; createdAt: string; updatedAt: string;
+};
+const JOB_MESSAGES: Record<string, string> = {
+  provider_fixture_unsupported: 'Analisi di test disponibile solo per i PDF sintetici indicati. Puoi inserire il costo manualmente.',
+  analysis_timeout: 'Analisi interrotta: puoi riprovare esplicitamente.',
+  no_supported_economic_data: 'Nessun dato economico utilizzabile.',
+};
+
+export const CATEGORIES: Category[] =['electricity', 'gas', 'water', 'internet_services', 'condominium_ordinary', 'condominium_extraordinary', 'insurance', 'taxes', 'maintenance', 'repairs_works', 'purchase_replacement', 'financing', 'other'];
 export const FAMILIES: Family[] = ['utilities', 'condominium', 'taxes_insurance', 'maintenance_repairs', 'works_purchases', 'financing', 'unclassified'];
 const FAMILY_LABELS: Record<Family, string> = {
   utilities: 'Bollette', condominium: 'Condominio', taxes_insurance: 'Tasse e assicurazioni', maintenance_repairs: 'Manutenzione e riparazioni',
@@ -174,6 +191,10 @@ export class FakeEconomy {
     for (const k of new Set(params.keys())) if (params.getAll(k).length > 1) return err(422, 'validation_error', 'Parametro ripetuto.');
 
     if (parts[0] === 'capabilities' && parts.length === 1 && !isPost) return { status: 200, body: this.capabilities() };
+    if (parts[0] === 'document-analysis-jobs' || parts[0] === 'drafts') {
+      if (!this.features.documentDrafts) return err(404, 'not_found', 'Risorsa non trovata.');
+      return this.s1c(req, parts, params, accountId, homeId, perms);
+    }
     if (parts[0] === 'summary' && parts.length === 1 && !isPost) return this.summary(params, accountId, homeId);
     if (parts[0] === 'expenses') {
       if (parts.length === 1) return isPost ? this.create(req, accountId, homeId, perms) : this.list(params, accountId, homeId, perms);
@@ -208,7 +229,16 @@ export class FakeEconomy {
       limits: { titleMaxCodePoints: 120, noteMaxCodePoints: 500, amountMaxCents: MAX, maxPageSize: 50 },
       categories: CATEGORIES.map((code) => ({ code, label: CATEGORY_LABELS[code], possibleFamilies: possibleFamilies(code) })),
       families: FAMILIES.map((code) => ({ code, label: FAMILY_LABELS[code] })),
-      analysis: { enabled: false, disabledReason: 'Analisi economica non ancora disponibile.', providers: [] },
+      analysis: this.features.documentDrafts
+        ? {
+            enabled: true,
+            disabledReason: null,
+            providers: [
+              { id: 'test_fixture_v1', label: 'Prova con PDF sintetici', enabled: true, disabledReason: null, isSimulation: true, model: null },
+              { id: 'anthropic', label: 'Anthropic', enabled: false, disabledReason: 'Nuova campagna non abilitata.', isSimulation: false, model: null },
+            ],
+          }
+        : { enabled: false, disabledReason: 'Analisi economica non ancora disponibile.', providers: [] },
     };
   }
 
@@ -579,6 +609,263 @@ export class FakeEconomy {
         this.event(s.id, kind === 'archive' ? 'archived' : 'restored', before, this.snapshot(s), actionNote);
       }
       const replay = () => ({ expense: this.view(s, perms) });
+      return { status: 200, body: replay(), replay };
+    });
+  }
+
+  // ---- S1c: job, bozze, candidati, conferma (fixture dichiarata, nessun modello) ----
+
+  jobs = new Map<string, FakeJob>();
+  drafts = new Map<string, FakeDraft>();
+  /** Documenti riconosciuti dalla fixture (nel backend reale: byte esatti dei PDF sintetici). */
+  fixtureDocs = new Map<string, 'gas' | 'invoice'>();
+  /** Documenti non PDF: avvio rifiutato con 422. */
+  nonPdfDocs = new Set<string>();
+  /** Originali revocati per il richiedente (fonte non disponibile). */
+  revokedDocs = new Set<string>();
+  /** Letture del job prima di uno stato terminale (queued → running → finale). */
+  jobSteps = 2;
+  /** Il prossimo job fallisce con questo codice anche se il documento è una fixture. */
+  failNextJobWith: string | null = null;
+
+  private doc(accountId: string, homeId: string, id: string) {
+    return this.revokedDocs.has(id) ? null : this.access.document(accountId, homeId, id);
+  }
+
+  private jobView(j: FakeJob, perms: HomePermission[]) {
+    const d = this.doc(j.accountId, j.homeId, j.documentId);
+    const draft = j.draftId ? this.drafts.get(j.draftId) : undefined;
+    return {
+      id: j.id, homeId: j.homeId, version: j.version, state: j.state, provider: 'test_fixture_v1', isSimulation: true, model: null,
+      documentLink: d ? { state: 'linked', document: d } : { state: 'unavailable', document: null },
+      draftId: draft && d ? draft.id : null,
+      error: j.errorCode ? { code: j.errorCode, message: JOB_MESSAGES[j.errorCode] ?? 'Analisi non disponibile. Nessuna spesa registrata.' } : null,
+      billing: null, createdAt: j.createdAt, updatedAt: j.updatedAt, permissions: perms.includes('edit') ? ['read', 'edit'] : ['read'],
+    };
+  }
+
+  private draftView(d: FakeDraft, perms: HomePermission[], list = false) {
+    const doc = this.doc(d.accountId, d.homeId, d.documentId);
+    const exp = d.expenseId ? this.expenses.items.get(d.expenseId) : undefined;
+    return {
+      id: d.id, homeId: d.homeId, version: d.version, state: d.state,
+      documentLink: doc ? { state: 'linked', document: doc } : { state: 'unavailable', document: null },
+      provider: 'test_fixture_v1', isSimulation: true,
+      ...(list ? {} : { model: null, proposedFields: doc ? d.proposed : {}, amountCandidates: doc ? d.candidates : [], amountSelectionRequired: doc ? d.required : true }),
+      documentKind: d.kind === 'gas' ? 'utility_bill' : 'simple_invoice',
+      expenseLink: d.expenseId ? (exp ? { state: 'linked', value: { id: exp.id, title: exp.title } } : { state: 'unavailable', value: null }) : { state: 'none', value: null },
+      createdAt: d.createdAt, updatedAt: d.updatedAt, permissions: perms.includes('edit') ? ['read', 'edit'] : ['read'],
+    };
+  }
+
+  private makeDraft(j: FakeJob, kind: 'gas' | 'invoice'): FakeDraft {
+    const cite = (excerpt: string) => [{ documentId: j.documentId, documentVersion: 1, sha256: 'a'.repeat(64), page: 1, excerpt }];
+    const field = (value: string, excerpt: string) => ({ value, sources: cite(excerpt) });
+    const gas = kind === 'gas';
+    const rows: Array<[string, number, string, string]> = gas
+      ? [['current', 8000, 'current_document_total', 'Totale corrente bolletta: 80,00 EUR'], ['arrears', 2000, 'arrears_balance', 'Saldo precedenti bollette: 20,00 EUR'], ['due', 10000, 'amount_due', 'Importo da pagare: 100,00 EUR']]
+      : [['gross', 12200, 'current_document_total', 'Totale documento: 122,00 EUR'], ['taxable', 10000, 'taxable', 'Imponibile: 100,00 EUR'], ['tax', 2200, 'tax', 'IVA: 22,00 EUR']];
+    const candidates = rows.map(([id, amountCents, role, excerpt]) => ({ id, amountCents, role, label: excerpt.split(':')[0]!, sources: cite(excerpt) }));
+    const at = this.stamp();
+    return {
+      id: uuid(), homeId: j.homeId, accountId: j.accountId, version: 1, state: 'open', documentId: j.documentId, kind,
+      proposed: {
+        title: field(gas ? 'Bolletta gas settembre' : 'Fattura riparazione rubinetto', gas ? 'Bolletta gas settembre' : 'Fattura riparazione rubinetto'),
+        supplier: field(gas ? 'Gas Demo' : 'Idraulico Demo', gas ? 'Fornitore: Gas Demo' : 'Fornitore: Idraulico Demo'),
+        category: field(gas ? 'gas' : 'repairs_works', gas ? 'Bolletta gas settembre' : 'Fattura riparazione rubinetto'),
+        documentNumber: field(gas ? 'G-2026-09' : '42', gas ? 'Numero: G-2026-09' : 'Numero: 42'),
+        documentDate: field('2026-09-30', 'Data documento: 2026-09-30'),
+        ...(gas ? { competenceFrom: field('2026-09-01', 'Competenza dal: 2026-09-01'), competenceTo: field('2026-09-30', 'Competenza al: 2026-09-30'), dueOn: field('2026-10-20', 'Scadenza: 2026-10-20') } : {}),
+      },
+      candidates,
+      required: candidates.some((c) => c.role === 'arrears_balance') || candidates.filter((c) => c.role === 'current_document_total').length !== 1,
+      expenseId: null, createdAt: at, updatedAt: at,
+    };
+  }
+
+  private s1c(req: Req, parts: string[], params: URLSearchParams, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const isPost = req.method === 'POST';
+    if (parts[0] === 'document-analysis-jobs') {
+      if (parts.length === 1 && isPost) return this.startJob(req, accountId, homeId, perms);
+      const j = parts[1] && UUID_RE.test(parts[1]) ? this.jobs.get(parts[1]) : undefined;
+      if (!parts[1] || !UUID_RE.test(parts[1])) return err(422, 'validation_error', 'Identificativo non valido.');
+      if (!j || j.accountId !== accountId || j.homeId !== homeId) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+      if (parts.length === 2 && !isPost) {
+        if (params.size) return err(422, 'validation_error', 'Parametro non ammesso.');
+        this.advance(j);
+        return { status: 200, body: { job: this.jobView(j, perms) } };
+      }
+      if (parts[2] === 'retries' && isPost) return this.retryJob(req, j, accountId, homeId, perms);
+      return err(404, 'not_found', 'Risorsa non trovata.');
+    }
+    // drafts
+    if (parts.length === 1 && !isPost) {
+      for (const k of params.keys()) if (!['state', 'limit', 'cursor'].includes(k)) return err(422, 'validation_error', 'Parametro non ammesso.');
+      const state = params.get('state') ?? 'open';
+      if (!['open', 'parked', 'confirmed', 'all'].includes(state)) return err(422, 'validation_error', 'Stato non valido.');
+      const rows = [...this.drafts.values()]
+        .filter((d) => d.accountId === accountId && d.homeId === homeId && (state === 'all' || d.state === state))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+      const pp = new URLSearchParams();
+      for (const k of ['limit', 'cursor']) if (params.has(k)) pp.set(k, params.get(k)!);
+      return this.page(rows.map((d) => this.draftView(d, perms, true)), pp, `d:${accountId}:${homeId}:${state}`, ['limit', 'cursor']);
+    }
+    if (!parts[1] || !UUID_RE.test(parts[1])) return err(422, 'validation_error', 'Identificativo non valido.');
+    const d = this.drafts.get(parts[1]);
+    if (!d || d.accountId !== accountId || d.homeId !== homeId) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    if (parts.length === 2 && !isPost) return { status: 200, body: { draft: this.draftView(d, perms) } };
+    if (parts[2] === 'candidates' && !isPost) return this.candidates(d, params, accountId, homeId, perms);
+    if (isPost && (parts[2] === 'park' || parts[2] === 'reopen')) return this.draftAction(req, d, parts[2], accountId, homeId, perms);
+    if (isPost && parts[2] === 'confirm') return this.confirm(req, d, accountId, homeId, perms);
+    return err(404, 'not_found', 'Risorsa non trovata.');
+  }
+
+  private advance(j: FakeJob) {
+    if (j.state === 'succeeded' || j.state === 'failed') return;
+    j.polls += 1;
+    const at = this.stamp();
+    if (j.state === 'queued' && j.polls >= 1) Object.assign(j, { state: 'running', version: j.version + 1, updatedAt: at });
+    if (j.state === 'running' && j.polls >= this.jobSteps) {
+      const kind = this.fixtureDocs.get(j.documentId);
+      if (j.forcedError) Object.assign(j, { state: 'failed', errorCode: j.forcedError });
+      else if (!kind) Object.assign(j, { state: 'failed', errorCode: 'provider_fixture_unsupported' });
+      else {
+        const draft = this.makeDraft(j, kind);
+        this.drafts.set(draft.id, draft);
+        Object.assign(j, { state: 'succeeded', draftId: draft.id });
+      }
+      Object.assign(j, { version: j.version + 1, updatedAt: at });
+    }
+  }
+
+  private startJob(req: Req, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    for (const k of Object.keys(body)) if (!['documentId', 'provider', 'consentToProviderTransfer'].includes(k)) return err(422, 'validation_error', 'Campo non ammesso.');
+    if (body.provider !== 'test_fixture_v1' && body.provider !== 'anthropic') return err(422, 'validation_error', 'Scegli esplicitamente il provider.');
+    if (typeof body.documentId !== 'string' || !UUID_RE.test(body.documentId)) return err(422, 'validation_error', 'Identificativo non valido.');
+    if (body.provider === 'anthropic' && body.consentToProviderTransfer !== true) return err(422, 'validation_error', 'Autorizza esplicitamente l’invio ad Anthropic.');
+    const documentId = body.documentId;
+    if (!this.doc(accountId, homeId, documentId)) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    return this.withIdem(req, `${accountId}:${homeId}:job-start`, () => {
+      if (body.provider === 'anthropic') return err(503, 'ai_provider_disabled', 'Nuova campagna Anthropic non abilitata. Nessun testo inviato.');
+      if (this.nonPdfDocs.has(documentId)) return err(422, 'economic_document_unsupported', 'Questa analisi richiede un PDF con testo.');
+      const at = this.stamp();
+      const j: FakeJob = { id: uuid(), homeId, accountId, version: 1, state: 'queued', documentId, draftId: null, errorCode: null, polls: 0, forcedError: this.failNextJobWith, createdAt: at, updatedAt: at };
+      this.failNextJobWith = null;
+      this.jobs.set(j.id, j);
+      const replay = () => ({ job: this.jobView(this.jobs.get(j.id)!, perms) });
+      return { status: 202, body: replay(), replay };
+    });
+  }
+
+  private retryJob(req: Req, j: FakeJob, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const ev = body.expectedVersion;
+    if (typeof ev !== 'number' || !Number.isInteger(ev) || ev < 1) return err(422, 'validation_error', 'Versione mancante.');
+    return this.withIdem(req, `${accountId}:${homeId}:job-retry:${j.id}`, () => {
+      if (ev !== j.version) return err(409, 'job_version_conflict', 'Rileggi il job.');
+      if (j.state !== 'failed') return err(409, 'job_state_conflict', 'Il job non è fallito.');
+      Object.assign(j, { state: 'queued', errorCode: null, forcedError: null, polls: 0, version: j.version + 1, updatedAt: this.stamp() });
+      const replay = () => ({ job: this.jobView(j, perms) });
+      return { status: 202, body: replay(), replay };
+    });
+  }
+
+  private candidates(d: FakeDraft, params: URLSearchParams, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    if (!this.doc(accountId, homeId, d.documentId)) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    const amounts = d.candidates.map((c) => c.amountCents);
+    const number = d.proposed.documentNumber?.value;
+    const supplier = d.proposed.supplier?.value;
+    const date = d.proposed.documentDate?.value;
+    const rows = this.mine(accountId, homeId)
+      .filter((s) => s.state === 'active')
+      .map((s) => {
+        const m = this.metaOf(s.id);
+        const reasons = [
+          ...(s.documentId === d.documentId ? ['same_document'] : []),
+          ...(m.documentNumber && m.documentNumber === number && m.supplier === supplier ? ['same_number_supplier'] : []),
+          ...(amounts.includes(s.amountCents) && s.spentOn === date ? ['same_amount_date'] : []),
+        ];
+        return { s, reasons };
+      })
+      .filter((r) => r.reasons.length)
+      .sort((a, b) => b.s.createdAt.localeCompare(a.s.createdAt));
+    return this.page(rows.map((r) => ({ expense: this.view(r.s, perms), reasons: r.reasons })), params, `c:${accountId}:${d.id}`, ['limit', 'cursor']);
+  }
+
+  private draftAction(req: Req, d: FakeDraft, op: 'park' | 'reopen', accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const ev = body.expectedVersion;
+    if (typeof ev !== 'number' || !Number.isInteger(ev) || ev < 1 || Object.keys(body).some((k) => k !== 'expectedVersion')) return err(422, 'validation_error', 'Versione mancante.');
+    return this.withIdem(req, `${accountId}:${homeId}:draft-${op}:${d.id}`, () => {
+      if (ev !== d.version) return err(409, 'draft_version_conflict', 'Rileggi la bozza.');
+      if (d.state !== (op === 'park' ? 'open' : 'parked')) return err(409, 'draft_state_conflict', 'Azione non consentita.');
+      Object.assign(d, { state: op === 'park' ? 'parked' : 'open', version: d.version + 1, updatedAt: this.stamp() });
+      const replay = () => ({ draft: this.draftView(d, perms) });
+      return { status: 200, body: replay(), replay };
+    });
+  }
+
+  private confirm(req: Req, d: FakeDraft, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const ev = body.expectedVersion;
+    if (typeof ev !== 'number' || !Number.isInteger(ev) || ev < 1) return err(422, 'validation_error', 'Versione mancante.');
+    const link = body.mode === 'link_existing';
+    if (!link && body.mode !== 'create') return err(422, 'validation_error', 'Modalità non valida.');
+    if (link && ('values' in body || 'amountSelection' in body)) return err(422, 'validation_error', 'Campi non ammessi.');
+    let parsed: ReturnType<FakeEconomy['parse']> | null = null;
+    let selection: { mode: string; candidateId?: string } | null = null;
+    if (!link) {
+      selection = body.amountSelection as { mode: string; candidateId?: string };
+      if (!selection || (selection.mode !== 'manual' && selection.mode !== 'candidate') || (selection.mode === 'candidate' && typeof selection.candidateId !== 'string')) return err(422, 'validation_error', 'Selezione importo non valida.');
+      const values = (body.values ?? {}) as Record<string, unknown>;
+      if ('documentId' in values) return err(422, 'validation_error', 'Il documento arriva dalla bozza.');
+      parsed = this.parse(values, accountId, homeId, true);
+      if (Object.keys(parsed.fe).length) return err(422, 'validation_error', 'Controlla i campi.', parsed.fe);
+      if (parsed.forbidden) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    }
+    if (!this.doc(accountId, homeId, d.documentId)) return err(403, 'FORBIDDEN', 'Originale non disponibile.');
+    return this.withIdem(req, `${accountId}:${homeId}:confirm:${d.id}`, () => {
+      if (d.state !== 'open') return err(409, 'draft_state_conflict', 'La bozza deve essere aperta.');
+      if (d.version !== ev) return err(409, 'draft_version_conflict', 'Rileggi la bozza.');
+      let s: Stored;
+      if (link) {
+        const id = body.expenseId;
+        const found = typeof id === 'string' ? this.expenses.items.get(id) : undefined;
+        if (!found || found.accountId !== accountId || found.homeId !== homeId) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+        if (found.version !== body.expectedExpenseVersion) return err(409, 'expense_version_conflict', 'Rileggi il costo.');
+        if (found.state !== 'active') return err(409, 'expense_state_conflict', 'Ripristina prima il costo.');
+        if (found.documentId && found.documentId !== d.documentId) return err(409, 'expense_document_conflict', 'Il costo ha un altro documento.');
+        if (!found.documentId) {
+          const before = this.snapshot(found);
+          Object.assign(found, { documentId: d.documentId, version: found.version + 1, updatedAt: this.stamp() });
+          this.event(found.id, 'updated', before, this.snapshot(found), null);
+        }
+        s = found;
+      } else {
+        const o = parsed!.out;
+        const cand = selection!.mode === 'candidate' ? d.candidates.find((c) => c.id === selection!.candidateId) : undefined;
+        if (selection!.mode === 'candidate' && (!cand || cand.amountCents !== o.amountCents)) return err(422, 'validation_error', 'Importo e candidato non corrispondono.');
+        if (parsed!.workConflict) return err(409, 'work_state_conflict', 'Lavoro archiviato.');
+        const at = this.stamp();
+        const ref = (o.objectRef as Ref | null) ?? null;
+        s = {
+          id: uuid(), homeId, accountId, title: o.title as string, amountCents: o.amountCents as number, spentOn: o.spentOn as string,
+          note: (o.note as string | null) ?? null, documentId: d.documentId, assetId: ref?.kind === 'boiler' ? ref.id : null,
+          state: 'active' as const, version: 1, createdAt: at, updatedAt: at, archivedAt: null,
+        };
+        this.expenses.items.set(s.id, s);
+        this.meta.set(s.id, {
+          category: (o.category as Category | null) ?? null, supplier: (o.supplier as string | null) ?? null, documentNumber: (o.documentNumber as string | null) ?? null,
+          documentDate: (o.documentDate as string | null) ?? null, competenceFrom: (o.competenceFrom as string | null) ?? null, competenceTo: (o.competenceTo as string | null) ?? null,
+          dueOn: (o.dueOn as string | null) ?? null, amountOrigin: cand ? 'extraction_confirmed' : 'user_declared', workId: (o.workId as string | null) ?? null,
+        });
+        if (ref?.kind === 'object') this.objects.attachExpense(accountId, homeId, ref, s.id);
+        this.event(s.id, 'created', null, this.snapshot(s), null);
+      }
+      Object.assign(d, { state: 'confirmed', expenseId: s.id, version: d.version + 1, updatedAt: this.stamp() });
+      const expenseId = s.id;
+      const replay = () => ({ draft: this.draftView(d, perms), expense: this.view(this.expenses.items.get(expenseId)!, perms) });
       return { status: 200, body: replay(), replay };
     });
   }

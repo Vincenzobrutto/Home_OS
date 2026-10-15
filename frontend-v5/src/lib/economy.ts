@@ -356,8 +356,11 @@ export function isEconomyConflict(error: unknown) {
 }
 
 /** Esito ignoto (rete, 5xx): stessa chiave e stesso body alla riprova. */
+/** Rifiuti espliciti del servizio anche se arrivano come 503: esito noto, non da ripetere con la stessa chiave. */
+const DEFINITE_SERVICE_CODES = ['ai_provider_disabled'];
+
 export function isAmbiguousError(error: unknown) {
-  return isApiError(error) && error.kind === 'service';
+  return isApiError(error) && error.kind === 'service' && !DEFINITE_SERVICE_CODES.includes(error.code ?? '');
 }
 
 export function isForbiddenError(error: unknown) {

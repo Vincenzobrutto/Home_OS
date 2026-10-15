@@ -82,6 +82,12 @@ export const queryKeys = {
   work: (accountId: string, homeId: string, workId: string) => ['account', accountId, 'home', homeId, 'economy', 'works', workId, 'detail'] as const,
   workHistory: (accountId: string, homeId: string, workId: string) =>
     ['account', accountId, 'home', homeId, 'economy', 'works', workId, 'history'] as const,
+  // S1c: job di analisi, bozze e candidati, sotto lo stesso prefisso economy (privacy e invalidazioni comuni).
+  economicJob: (accountId: string, homeId: string, jobId: string) => ['account', accountId, 'home', homeId, 'economy', 'jobs', jobId] as const,
+  drafts: (accountId: string, homeId: string, state: string) => ['account', accountId, 'home', homeId, 'economy', 'drafts', 'list', state] as const,
+  draft: (accountId: string, homeId: string, draftId: string) => ['account', accountId, 'home', homeId, 'economy', 'drafts', draftId, 'detail'] as const,
+  draftCandidates: (accountId: string, homeId: string, draftId: string) =>
+    ['account', accountId, 'home', homeId, 'economy', 'drafts', draftId, 'candidates'] as const,
 };
 
 export function newIdempotencyKey(): string {

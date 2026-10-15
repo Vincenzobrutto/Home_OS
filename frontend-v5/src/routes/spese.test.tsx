@@ -190,14 +190,13 @@ describe('[mock] S1 Spese — privacy, capabilities e ripiego', () => {
     expect(backend.log.some((r) => /drafts|document-analysis-jobs/.test(r.path))).toBe(false);
   });
 
-  it('documentDrafts true con il solo provider fixture: nessuna promessa di estrazione, nessuna rotta S1c, manuale disponibile', async () => {
+  it('documentDrafts true: «Da documento» apre il percorso S1c (dettagli in s1c.test.tsx), senza avviare analisi', async () => {
     const { backend, home } = world();
     backend.economy.features.documentDrafts = true;
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
-    await app.user.click(await screen.findByRole('button', { name: 'Da documento' }));
-    expect(await screen.findByText(/solo una simulazione di prova su documenti sintetici/)).toBeInTheDocument();
-    expect(screen.getByRole('form', { name: 'Registra una spesa' })).toBeInTheDocument();
-    expect(backend.log.some((r) => /drafts|document-analysis-jobs/.test(r.path))).toBe(false);
+    await app.user.click(await screen.findByRole('link', { name: 'Da documento' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Spesa da documento' })).toBeInTheDocument();
+    expect(backend.log.some((r) => r.method === 'POST' && /document-analysis-jobs/.test(r.path))).toBe(false);
   });
 
   it('economy-v1 assente (404): resta la pagina H3a, senza simulazioni', async () => {

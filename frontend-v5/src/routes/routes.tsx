@@ -12,6 +12,7 @@ import { ActivityDetailPage } from './ActivityDetailPage';
 import { ExpensesPage } from './SpesePage';
 import { ExpenseDetailRoute } from './EconomyExpensePage';
 import { WorkDetailPage, WorksPage } from './WorksPages';
+import { AnalysisJobPage, DraftPage, DraftsPage, FromDocumentPage } from './DocumentDraftPages';
 import { RoomDetailPage, RoomsPage } from './RoomsPages';
 import { ObjectDetailPage, ObjectsPage } from './ObjectsPages';
 
@@ -48,6 +49,10 @@ export const routes: RouteObject[] = [
               { path: 'documenti', element: <DocumentsPage /> },
               { path: 'documenti/:documentId', element: <DocumentDetailPage /> },
               { path: 'spese', element: <ExpensesPage /> },
+              { path: 'spese/da-documento', element: <FromDocumentPage /> },
+              { path: 'spese/analisi/:jobId', element: <AnalysisJobPage /> },
+              { path: 'spese/bozze', element: <DraftsPage /> },
+              { path: 'spese/bozze/:draftId', element: <DraftPage /> },
               { path: 'spese/lavori', element: <WorksPage /> },
               { path: 'spese/lavori/:workId', element: <WorkDetailPage /> },
               { path: 'spese/:expenseId', element: <ExpenseDetailRoute /> },

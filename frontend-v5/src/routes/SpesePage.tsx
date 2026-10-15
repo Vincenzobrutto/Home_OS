@@ -223,11 +223,24 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
               <Icon name="plus" />
               Registra una spesa
             </button>
-            <button type="button" className={ui.btn} onClick={() => startCreating(true)}>
-              Da documento
-            </button>
+            {caps.features.documentDrafts ? (
+              <Link to={`/home/${encodeURIComponent(home.id)}/spese/da-documento`} state={listState} className={ui.btn}>
+                Da documento
+              </Link>
+            ) : (
+              <button type="button" className={ui.btn} onClick={() => startCreating(true)}>
+                Da documento
+              </button>
+            )}
             <Link to={workPath(home.id)} className={ui.btn}>
               Lavori
+            </Link>
+          </p>
+        )}
+        {caps.features.documentDrafts && !creating && (
+          <p>
+            <Link to={`/home/${encodeURIComponent(home.id)}/spese/bozze`} state={listState}>
+              Bozze da documento: da confermare e accantonate
             </Link>
           </p>
         )}

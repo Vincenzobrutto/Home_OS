@@ -70,3 +70,28 @@ describe('[mock] ApiClient — economy-v1', () => {
     await expect(api.listEconomyExpenses(home.id, new URLSearchParams('year=2025'), { cursor: page.nextCursor, limit: 2 }, undefined, account.id)).rejects.toMatchObject({ status: 422 });
   });
 });
+
+describe('[mock] ApiClient — economy-v1 S1c', () => {
+  it('Anthropic disabilitato: 503 ai_provider_disabled è un rifiuto definito, non un esito ignoto; nessun job creato', async () => {
+    const { api, account, home, backend } = await setup();
+    backend.economy.features.documentDrafts = true;
+    const doc = await backend.seedDocument({ homeId: home.id, uploaderId: account.id, name: 'gas.pdf' });
+    const { isAmbiguousError } = await import('../lib/economy');
+    const error = await api.startEconomicAnalysis(home.id, { documentId: doc.id, provider: 'anthropic', consentToProviderTransfer: true }, 'chiave-analisi-00001', account.id).catch((e: unknown) => e);
+    expect(error).toMatchObject({ kind: 'service', status: 503, code: 'ai_provider_disabled' });
+    expect(isAmbiguousError(error)).toBe(false);
+    expect(backend.economy.jobs.size).toBe(0);
+  });
+
+  it('bozza fuori contratto (importo candidato non intero) → errore di servizio, mai dati', async () => {
+    const { account, home } = await setup();
+    const bad = new ApiClient({
+      fetch: async () =>
+        new Response(JSON.stringify({ draft: { id: 'x', version: 1, state: 'open', documentLink: { state: 'none', document: null }, expenseLink: { state: 'none', value: null }, proposedFields: {}, amountCandidates: [{ id: 'a', amountCents: 80.5, role: 'current_document_total', sources: [] }], amountSelectionRequired: false } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    });
+    await expect(bad.getEconomicDraft(home.id, 'x', undefined, account.id)).rejects.toMatchObject({ kind: 'service' });
+  });
+});

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { newIdempotencyKey, queryKeys } from '../api/queryKeys';
-import type { CreateExpense, EconomyExpense, EconomyWork, UpdateExpense } from '../api/economyTypes';
+import type { ConfirmDraft, CreateExpense, EconomicAnalysisJob, EconomicDraft, EconomyExpense, EconomyWork, Provider, UpdateExpense } from '../api/economyTypes';
 import type { SessionResponse } from '../api/types';
-import { economyQuery, filtersKey, isAmbiguousError, type EconomyFilters } from '../lib/economy';
+import { economyQuery, filtersKey, isAmbiguousError, isForbiddenError, type EconomyFilters } from '../lib/economy';
 import { useAccount, useApi } from '../session/session';
 
 // economy-v1: tutte le letture passano dal QueryClient comune, sotto ['account', id, 'home', id, 'economy'].
@@ -110,6 +110,69 @@ export function useWorkHistory(homeId: string, workId: string) {
   });
 }
 
+// ---- S1c ----
+
+const TERMINAL = ['succeeded', 'failed'];
+
+/**
+ * Job di analisi: polling ogni 1,5 s finché non è terminale. Si ferma da solo su stato
+ * finale, smontaggio, logout/cambio account (query rimossa) e 403. Un errore di lettura
+ * non è un fallimento dell'analisi: la lettura continua e l'utente può aggiornare.
+ */
+export function useEconomicJob(homeId: string, jobId: string) {
+  const api = useApi();
+  const account = useAccount();
+  return useQuery({
+    queryKey: queryKeys.economicJob(account.id, homeId, jobId),
+    queryFn: ({ signal }) => api.getEconomicJob(homeId, jobId, signal, account.id),
+    retry: false,
+    staleTime: 0,
+    refetchInterval: (q) => {
+      if (q.state.data && TERMINAL.includes(q.state.data.state)) return false;
+      if (q.state.error && isForbiddenError(q.state.error)) return false;
+      return q.state.error ? 4000 : 1500;
+    },
+    refetchIntervalInBackground: false,
+  });
+}
+
+export function useEconomicDrafts(homeId: string, state: 'open' | 'parked' | 'confirmed' | 'all', enabled = true) {
+  const api = useApi();
+  const account = useAccount();
+  return useInfiniteQuery({
+    queryKey: queryKeys.drafts(account.id, homeId, state),
+    queryFn: ({ pageParam, signal }) => api.listEconomicDrafts(homeId, state, { cursor: pageParam, limit: PAGE_SIZE }, signal, account.id),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor,
+    enabled,
+    staleTime: 0,
+  });
+}
+
+export function useEconomicDraft(homeId: string, draftId: string) {
+  const api = useApi();
+  const account = useAccount();
+  return useQuery({
+    queryKey: queryKeys.draft(account.id, homeId, draftId),
+    queryFn: ({ signal }) => api.getEconomicDraft(homeId, draftId, signal, account.id),
+    retry: false,
+    staleTime: 0,
+  });
+}
+
+export function useDraftCandidates(homeId: string, draftId: string, enabled: boolean) {
+  const api = useApi();
+  const account = useAccount();
+  return useInfiniteQuery({
+    queryKey: queryKeys.draftCandidates(account.id, homeId, draftId),
+    queryFn: ({ pageParam, signal }) => api.listDraftCandidates(homeId, draftId, { cursor: pageParam, limit: 10 }, signal, account.id),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor,
+    enabled,
+    staleTime: 0,
+  });
+}
+
 /**
  * Le capabilities non dipendono dai dati: rileggerle dopo una mutazione farebbe tornare
  * «in attesa» una query in errore (per esempio 404 senza S1) e smonterebbe la pagina.
@@ -125,9 +188,18 @@ export type EconomyVars =
   | { kind: 'updates'; expenseId: string; body: UpdateExpense }
   | { kind: 'archive' | 'restore'; expenseId: string; body: { expectedVersion: number; note?: string } }
   | { kind: 'workCreate'; body: { name: string; note?: string | null } }
-  | { kind: 'workUpdates' | 'workArchive' | 'workRestore'; workId: string; body: { expectedVersion: number; name?: string; note?: string | null } };
+  | { kind: 'workUpdates' | 'workArchive' | 'workRestore'; workId: string; body: { expectedVersion: number; name?: string; note?: string | null } }
+  | { kind: 'analysisStart'; body: { documentId: string; provider: Provider } }
+  | { kind: 'analysisRetry'; jobId: string; body: { expectedVersion: number } }
+  | { kind: 'draftPark' | 'draftReopen'; draftId: string; body: { expectedVersion: number } }
+  | { kind: 'draftConfirm'; draftId: string; body: ConfirmDraft };
 
-export type EconomyResult = { expense: EconomyExpense } | { work: EconomyWork };
+export type EconomyResult =
+  | { expense: EconomyExpense }
+  | { work: EconomyWork }
+  | { job: EconomicAnalysisJob }
+  | { draft: EconomicDraft }
+  | { draft: EconomicDraft; expense: EconomyExpense };
 
 /**
  * Mutazioni pessimistiche: nessun aggiornamento locale prima della risposta. Dopo il
@@ -150,6 +222,15 @@ export function useEconomyMutation(homeId: string) {
           return { expense: await api.economyExpenseMutation(homeId, vars.expenseId, vars.kind, vars.body, k, account.id) };
         case 'workCreate':
           return { work: await api.createWork(homeId, vars.body, k, account.id) };
+        case 'analysisStart':
+          return { job: await api.startEconomicAnalysis(homeId, vars.body, k, account.id) };
+        case 'analysisRetry':
+          return { job: await api.retryEconomicJob(homeId, vars.jobId, vars.body, k, account.id) };
+        case 'draftPark':
+        case 'draftReopen':
+          return { draft: await api.draftAction(homeId, vars.draftId, vars.kind === 'draftPark' ? 'park' : 'reopen', vars.body, k, account.id) };
+        case 'draftConfirm':
+          return api.confirmEconomicDraft(homeId, vars.draftId, vars.body, k, account.id);
         default: {
           const kind = vars.kind === 'workUpdates' ? 'updates' : vars.kind === 'workArchive' ? 'archive' : 'restore';
           return { work: await api.workMutation(homeId, vars.workId, kind, vars.body, k, account.id) };
@@ -160,6 +241,8 @@ export function useEconomyMutation(homeId: string) {
       if (!sameAccount(queryClient, account.id)) return;
       if ('expense' in res) queryClient.setQueryData(queryKeys.economyExpense(account.id, homeId, res.expense.id), res.expense);
       if ('work' in res) queryClient.setQueryData(queryKeys.work(account.id, homeId, res.work.id), res.work);
+      if ('job' in res) queryClient.setQueryData(queryKeys.economicJob(account.id, homeId, res.job.id), res.job);
+      if ('draft' in res) queryClient.setQueryData(queryKeys.draft(account.id, homeId, res.draft.id), res.draft);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.economy(account.id, homeId), predicate: notCapabilities }),
         queryClient.invalidateQueries({ queryKey: queryKeys.h3(account.id, homeId) }),
@@ -182,16 +265,19 @@ export function useEconomyOperation(homeId: string) {
   const run = (vars: EconomyVars, onSuccess?: (res: EconomyResult) => void) => {
     if (mutation.isPending) return;
     setPending(vars);
-    mutation.mutate({ ...vars, idempotencyKey: key }, {
-      onSuccess: (res) => {
+    // Promessa invece dei callback per chiamata: TanStack non li esegue se il componente si
+    // smonta (per esempio la vista della bozza rimontata sulla nuova versione), e il passo
+    // successivo (navigazione al costo confermato) andrebbe perso.
+    mutation
+      .mutateAsync({ ...vars, idempotencyKey: key })
+      .then((res) => {
         setKey(newIdempotencyKey());
         setPending(null);
         onSuccess?.(res);
-      },
-      onError: (err) => {
+      })
+      .catch((err: unknown) => {
         if (!isAmbiguousError(err)) setKey(newIdempotencyKey());
-      },
-    });
+      });
   };
   const retry = (onSuccess?: (res: EconomyResult) => void) => {
     if (pending) run(pending, onSuccess);

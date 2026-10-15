@@ -515,7 +515,8 @@ type UploadField = (typeof UPLOAD_FIELDS)[number];
  *   Cambiare i dati dopo un esito ambiguo richiede una nuova operazione esplicita.
  * - Un rifiuto definitivo (422/413/415) permette di correggere: nuova chiave al prossimo invio.
  */
-function UploadForm(props: {
+/** Esportato anche per «Da documento» in Spese: stesso caricamento M2, nessun secondo archivio. */
+export function UploadForm(props: {
   home: Home;
   titleId: string;
   onCancel: () => void;

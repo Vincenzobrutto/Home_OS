@@ -7,7 +7,7 @@ import act from '../activities/activities.module.css';
 import { Dialog, NoteField } from '../activities/components';
 import { Banner, ErrorState, Field, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import { EconomyExpenseRow, EconomyFeedback, economyExpensePath, workPath } from '../economy/components';
-import { useEconomyCapabilities, useEconomyExpenses, useEconomyOperation, useEconomySummary, useWork, useWorkHistory, useWorks } from '../economy/hooks';
+import { type EconomyResult, useEconomyCapabilities, useEconomyExpenses, useEconomyOperation, useEconomySummary, useWork, useWorkHistory, useWorks } from '../economy/hooks';
 import { formatTimestamp } from '../lib/activities';
 import { DEFAULT_FILTERS, economyErrorMessage, formatCentsString, isNotActiveError, type EconomyFilters } from '../lib/economy';
 import { HISTORY_KIND_LABEL, normalizeNote, normalizeText, validateNote, validateTitle } from '../lib/expenses';
@@ -136,7 +136,7 @@ function WorkForm(props: { home: Home; caps: EconomyCapabilities; work?: Economy
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
   const disabled = op.mutation.isPending || op.locked;
-  const done = (res: { work: EconomyWork } | { expense: unknown }) => {
+  const done = (res: EconomyResult) => {
     if ('work' in res) props.onDone(res.work);
   };
   return (

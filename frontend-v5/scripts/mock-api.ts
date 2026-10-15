@@ -102,6 +102,16 @@ if (process.argv.includes('--seed')) {
     }
     console.log('economy-v1 SIMULATO attivo (--s1): dati sintetici, documentDrafts false.');
   }
+  // S1c di prova (solo mock): bozze da documento con la sola fixture dichiarata su due PDF sintetici.
+  if (process.argv.includes('--s1c')) {
+    backend.economy.enabled = true;
+    backend.economy.features.documentDrafts = true;
+    const gas = await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name: 'gas.pdf', visibility: 'private' });
+    const invoice = await backend.seedDocument({ homeId: roma.id, uploaderId: a.id, name: 'invoice.pdf', visibility: 'private' });
+    backend.economy.fixtureDocs.set(gas.id, 'gas');
+    backend.economy.fixtureDocs.set(invoice.id, 'invoice');
+    console.log('S1c SIMULATO attivo (--s1c): prova fixture su gas.pdf e invoice.pdf sintetici, nessun modello AI.');
+  }
   console.log(
     'Account di prova (solo mock): a@example.test / password-di-prova-A, b@example.test / password-di-prova-B, ' +
       'v@example.test / password-di-prova-V (viewer di Appartamento Roma)',

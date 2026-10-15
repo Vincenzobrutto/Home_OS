@@ -56,6 +56,12 @@ import type {
   UploadDocumentInput,
 } from './types';
 import type {
+  CandidateExpense,
+  ConfirmDraft,
+  DraftListItem,
+  EconomicAnalysisJob,
+  EconomicDraft,
+  Provider,
   CreateExpense as EconomyCreateExpense,
   EconomyCapabilities,
   EconomyExpense,
@@ -789,6 +795,82 @@ export class ApiClient {
     return this.page<WorkHistoryEvent>(`${economyPath(homeId)}/works/${encodeURIComponent(workId)}/history`, page, signal, accountId);
   }
 
+  // ---- economy-v1 S1c: analisi da documento, bozze, candidati e conferma ----
+
+  /** Avvio esplicito. Il provider è sempre indicato; il consenso si invia solo se richiesto (mai per la fixture). */
+  async startEconomicAnalysis(homeId: string, input: { documentId: string; provider: Provider; consentToProviderTransfer?: boolean }, idempotencyKey: string, accountId: string) {
+    return this.jobResponse(
+      await this.mutate<{ job: EconomicAnalysisJob }>(`${economyPath(homeId)}/document-analysis-jobs`, { body: input, headers: { 'Idempotency-Key': idempotencyKey }, accountId }),
+      202,
+    );
+  }
+
+  async getEconomicJob(homeId: string, jobId: string, signal: AbortSignal | undefined, accountId: string) {
+    return this.jobResponse(await this.request<{ job: EconomicAnalysisJob }>(`${economyPath(homeId)}/document-analysis-jobs/${encodeURIComponent(jobId)}`, { signal, accountId }), 200);
+  }
+
+  /** Nuovo tentativo esplicito su un job fallito: mai usato per un errore di lettura. */
+  async retryEconomicJob(homeId: string, jobId: string, body: { expectedVersion: number }, idempotencyKey: string, accountId: string) {
+    return this.jobResponse(
+      await this.mutate<{ job: EconomicAnalysisJob }>(`${economyPath(homeId)}/document-analysis-jobs/${encodeURIComponent(jobId)}/retries`, {
+        body,
+        headers: { 'Idempotency-Key': idempotencyKey },
+        accountId,
+      }),
+      202,
+    );
+  }
+
+  listEconomicDrafts(homeId: string, state: 'open' | 'parked' | 'confirmed' | 'all', page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    const params = new URLSearchParams();
+    if (state !== 'open') params.set('state', state);
+    return this.page<DraftListItem>(`${economyPath(homeId)}/drafts${withPage(params, page)}`, {}, signal, accountId);
+  }
+
+  async getEconomicDraft(homeId: string, draftId: string, signal: AbortSignal | undefined, accountId: string) {
+    return this.draftResponse(await this.request<{ draft: EconomicDraft }>(`${economyPath(homeId)}/drafts/${encodeURIComponent(draftId)}`, { signal, accountId }), 200);
+  }
+
+  listDraftCandidates(homeId: string, draftId: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    return this.page<CandidateExpense>(`${economyPath(homeId)}/drafts/${encodeURIComponent(draftId)}/candidates`, page, signal, accountId).then((p) => {
+      if (!p.items.every((c) => c && isEconomyExpense(c.expense) && Array.isArray(c.reasons))) throw serviceError(200);
+      return p;
+    });
+  }
+
+  async draftAction(homeId: string, draftId: string, kind: 'park' | 'reopen', body: { expectedVersion: number }, idempotencyKey: string, accountId: string) {
+    return this.draftResponse(
+      await this.mutate<{ draft: EconomicDraft }>(`${economyPath(homeId)}/drafts/${encodeURIComponent(draftId)}/${kind}`, {
+        body,
+        headers: { 'Idempotency-Key': idempotencyKey },
+        accountId,
+      }),
+      200,
+    );
+  }
+
+  /** Conferma atomica sul backend (create o link_existing): risposta {draft, expense}. */
+  async confirmEconomicDraft(homeId: string, draftId: string, body: ConfirmDraft, idempotencyKey: string, accountId: string) {
+    const data = await this.mutate<{ draft: EconomicDraft; expense: EconomyExpense }>(`${economyPath(homeId)}/drafts/${encodeURIComponent(draftId)}/confirm`, {
+      body,
+      headers: { 'Idempotency-Key': idempotencyKey },
+      accountId,
+    });
+    if (!data || !isEconomicDraft(data.draft) || !isEconomyExpense(data.expense)) throw serviceError(200);
+    return data;
+  }
+
+  private jobResponse(data: { job: EconomicAnalysisJob } | undefined, status: number) {
+    const j = data?.job;
+    if (!j || typeof j.id !== 'string' || typeof j.version !== 'number' || !['queued', 'running', 'succeeded', 'failed'].includes(j.state)) throw serviceError(status);
+    return j;
+  }
+
+  private draftResponse(data: { draft: EconomicDraft } | undefined, status: number) {
+    if (!data || !isEconomicDraft(data.draft)) throw serviceError(status);
+    return data.draft;
+  }
+
   private economyExpenseResponse(data: { expense: EconomyExpense } | undefined, status: number) {
     if (!data || !isEconomyExpense(data.expense)) throw serviceError(status);
     return data.expense;
@@ -932,6 +1014,18 @@ function isEconomyExpense(e: unknown): e is EconomyExpense {
     !!x && typeof x.id === 'string' && typeof x.version === 'number' && typeof x.amountCents === 'number' &&
     Number.isInteger(x.amountCents) && typeof x.family === 'string' && isLinkShape(x.objectLink) &&
     isLinkShape(x.workLink) && isLinkShape(x.documentLink) && Array.isArray(x.permissions)
+  );
+}
+
+/** Bozza S1c: stato noto, candidati con importi interi e ruoli, proposte come oggetto. */
+function isEconomicDraft(d: unknown): d is EconomicDraft {
+  const x = d as EconomicDraft | null;
+  return (
+    !!x && typeof x.id === 'string' && typeof x.version === 'number' && ['open', 'parked', 'confirmed'].includes(x.state) &&
+    isLinkShape(x.documentLink) && isLinkShape(x.expenseLink) && !!x.proposedFields && typeof x.proposedFields === 'object' &&
+    Array.isArray(x.amountCandidates) &&
+    x.amountCandidates.every((c) => typeof c.id === 'string' && Number.isInteger(c.amountCents) && typeof c.role === 'string' && Array.isArray(c.sources)) &&
+    typeof x.amountSelectionRequired === 'boolean'
   );
 }
 
