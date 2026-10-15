@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../api/queryKeys';
+import { notCapabilities } from '../economy/hooks';
 import type {
   CreateExpense,
   ExpenseAction,
@@ -102,6 +103,8 @@ export function useExpenseMutation(homeId: string) {
       if (!sameAccount(queryClient, account.id)) return;
       queryClient.setQueryData(queryKeys.expense(account.id, homeId, res.expense.id), res);
       await queryClient.invalidateQueries({ queryKey: queryKeys.h3(account.id, homeId) });
+      // Stesso HomeExpense canonico: anche le proiezioni economy-v1 vanno rilette.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.economy(account.id, homeId), predicate: notCapabilities });
     },
   });
 }

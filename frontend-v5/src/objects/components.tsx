@@ -21,6 +21,7 @@ import { useDocumentSearch, useDocumentSearchCapabilities } from '../documents/h
 import { ExpenseForm } from '../expenses/components';
 import { useExpenses } from '../expenses/hooks';
 import { formatCents } from '../lib/expenses';
+import { useAccount } from '../session/session';
 import {
   OBJECT_TYPE_LABEL,
   RESOURCE_LABEL,
@@ -547,9 +548,14 @@ export function LinksSection(props: {
   resourceType: G1ResourceType;
   expenseCapabilities?: ExpenseCapabilities;
   activityCapabilities?: ActivityCapabilities;
+  /** economy-v1 attivo: registrazione atomica con objectRef e ritorno alla scheda. */
+  economyEnabled?: boolean;
 }) {
   const { home, object, resourceType } = props;
   const links = useObjectLinks(home.id, object.ref, resourceType);
+  const account = useAccount();
+  const objectPathHere = `/home/${encodeURIComponent(home.id)}/oggetti/${encodeURIComponent(object.ref.kind)}/${encodeURIComponent(object.ref.id)}`;
+  const refParam = encodeURIComponent(`${object.ref.kind}:${object.ref.id}`);
   const items = links.data?.pages.flatMap((p) => p.items) ?? [];
   const canEdit = home.permissions.includes('edit') && object.permissions.includes('edit');
   const isBoiler = object.ref.kind === 'boiler';
@@ -628,7 +634,16 @@ export function LinksSection(props: {
               {resourceType === 'document' ? 'Collega un documento' : resourceType === 'expense' ? 'Collega un costo esistente' : 'Collega un’attività esistente'}
             </button>
           )}
-          {resourceType === 'expense' &&
+          {resourceType === 'expense' && props.economyEnabled && (
+            <Link
+              to={`/home/${encodeURIComponent(home.id)}/spese?nuova-spesa=1&perOggetto=${refParam}`}
+              state={{ accountId: account.id, returnTo: { path: objectPathHere, label: object.name } }}
+              className={ui.btn}
+            >
+              Registra un costo per questo oggetto
+            </Link>
+          )}
+          {resourceType === 'expense' && !props.economyEnabled &&
             (isBoiler && assetId ? (
               <Link to={`/home/${encodeURIComponent(home.id)}/spese?nuova-spesa=1&assetId=${encodeURIComponent(assetId)}`} className={ui.btn}>
                 Registra un costo
@@ -648,6 +663,11 @@ export function LinksSection(props: {
                 Crea promemoria per questo oggetto
               </button>
             ) : null)}
+        </p>
+      )}
+      {resourceType === 'expense' && props.economyEnabled && (
+        <p className={own.spaced}>
+          <Link to={`/home/${encodeURIComponent(home.id)}/spese?vista=elenco&oggetto=${refParam}`}>Vedi i costi di questo oggetto in Spese, con totale e periodo</Link>
         </p>
       )}
       {!active && <p className={styles.meta}>Oggetto archiviato: nessun nuovo collegamento finché non lo ripristini.</p>}

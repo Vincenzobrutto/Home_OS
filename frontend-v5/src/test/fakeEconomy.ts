@@ -1,0 +1,671 @@
+// BACKEND SIMULATO economy-v1 (S1a/b) — SOLO TEST E HARNESS, NON È IL BACKEND REALE.
+// Usa gli stessi record HomeExpense di FakeExpenses (nessun secondo registro) più metadati S1,
+// e i collegamenti G1 di FakeObjects per objectLink. Somme con BigInt, proiettate come stringhe.
+// Non implementa S1c (bozze/job): documentDrafts è sempre false.
+// Sintassi "erasable": eseguito anche da Node in scripts/mock-api.ts.
+
+import type { HomePermission } from '../api/types';
+import type { FakeExpenses } from './fakeExpenses.ts';
+import type { FakeObjects } from './fakeObjects.ts';
+
+type Req = { method: string; path: string; headers: Record<string, string | undefined>; body: unknown };
+type Res = { status: number; body?: unknown };
+type Ref = { kind: 'object' | 'boiler'; id: string };
+type Stored = FakeExpenses['items'] extends Map<string, infer S> ? S : never;
+type Category = 'electricity' | 'gas' | 'water' | 'internet_services' | 'condominium_ordinary' | 'condominium_extraordinary' | 'insurance' | 'taxes' | 'maintenance' | 'repairs_works' | 'purchase_replacement' | 'financing' | 'other';
+type Family = 'utilities' | 'condominium' | 'taxes_insurance' | 'maintenance_repairs' | 'works_purchases' | 'financing' | 'unclassified';
+
+type Meta = {
+  category: Category | null;
+  supplier: string | null;
+  documentNumber: string | null;
+  documentDate: string | null;
+  competenceFrom: string | null;
+  competenceTo: string | null;
+  dueOn: string | null;
+  amountOrigin: 'user_declared' | 'extraction_confirmed';
+  workId: string | null;
+};
+type Work = { id: string; homeId: string; accountId: string; name: string; note: string | null; state: 'active' | 'archived'; version: number; createdAt: string; updatedAt: string; archivedAt: string | null };
+type Snap = Record<string, unknown>;
+type Event = { id: string; kind: 'created' | 'updated' | 'archived' | 'restored'; at: string; note: string | null; before: Snap | null; after: Snap };
+
+export const CATEGORIES: Category[] = ['electricity', 'gas', 'water', 'internet_services', 'condominium_ordinary', 'condominium_extraordinary', 'insurance', 'taxes', 'maintenance', 'repairs_works', 'purchase_replacement', 'financing', 'other'];
+export const FAMILIES: Family[] = ['utilities', 'condominium', 'taxes_insurance', 'maintenance_repairs', 'works_purchases', 'financing', 'unclassified'];
+const FAMILY_LABELS: Record<Family, string> = {
+  utilities: 'Bollette', condominium: 'Condominio', taxes_insurance: 'Tasse e assicurazioni', maintenance_repairs: 'Manutenzione e riparazioni',
+  works_purchases: 'Lavori e acquisti', financing: 'Mutuo e finanziamenti', unclassified: 'Altro / Non classificata',
+};
+const CATEGORY_LABELS: Record<Category, string> = {
+  electricity: 'Energia elettrica', gas: 'Gas', water: 'Acqua', internet_services: 'Internet e servizi', condominium_ordinary: 'Condominio ordinario',
+  condominium_extraordinary: 'Condominio straordinario', insurance: 'Assicurazione', taxes: 'Tributi', maintenance: 'Manutenzione',
+  repairs_works: 'Riparazioni e lavori', purchase_replacement: 'Acquisti e sostituzioni', financing: 'Finanziamento', other: 'Altro',
+};
+
+export function familyOf(category: Category | null, workId: string | null): Family {
+  if (category === null || category === 'other') return 'unclassified';
+  if (category === 'repairs_works') return workId ? 'works_purchases' : 'maintenance_repairs';
+  if (['electricity', 'gas', 'water', 'internet_services'].includes(category)) return 'utilities';
+  if (category === 'condominium_ordinary') return 'condominium';
+  if (category === 'taxes' || category === 'insurance') return 'taxes_insurance';
+  if (category === 'maintenance') return 'maintenance_repairs';
+  if (category === 'financing') return 'financing';
+  return 'works_purchases';
+}
+const possibleFamilies = (c: Category): Family[] => (c === 'repairs_works' ? ['maintenance_repairs', 'works_purchases'] : [familyOf(c, null)]);
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const KEY_RE = /^[A-Za-z0-9_-]{16,100}$/;
+const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+const cp = (s: string) => [...s].length;
+const uuid = () => globalThis.crypto.randomUUID();
+const MAX = 999_999_999;
+
+function err(status: number, code: string, message: string, fieldErrors?: Record<string, string>): Res {
+  return { status, body: { error: { code, message, fieldErrors, requestId: uuid() } } };
+}
+function validDate(v: unknown): v is string {
+  if (typeof v !== 'string') return false;
+  const m = DATE_RE.exec(v);
+  if (!m) return false;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
+  return y >= 1 && mo >= 1 && mo <= 12 && d >= 1 && days !== undefined && d <= days;
+}
+/** Stesso giorno un anno prima; 29 febbraio → 28 (calendarAdjustment). */
+function yearBefore(d: string): { date: string; clamped: boolean } | null {
+  const [y, m, day] = d.split('-');
+  const py = Number(y) - 1;
+  if (py < 1) return null;
+  const ys = String(py).padStart(4, '0');
+  if (m === '02' && day === '29' && !validDate(`${ys}-02-29`)) return { date: `${ys}-02-28`, clamped: true };
+  return { date: `${ys}-${m}-${day}`, clamped: false };
+}
+
+export type EconomyAccess = {
+  perms(accountId: string, homeId: string): HomePermission[] | null;
+  document(accountId: string, homeId: string, documentId: string): { id: string; name: string } | null;
+};
+
+export class FakeEconomy {
+  /** false = backend senza economy-v1 (404): il frontend usa la pagina H3a. */
+  enabled = false;
+  unavailable = false;
+  features = { history: true, works: true, documentDrafts: false };
+  meta = new Map<string, Meta>();
+  works = new Map<string, Work>();
+  events = new Map<string, Event[]>();
+  workEvents = new Map<string, Array<{ id: string; kind: Event['kind']; at: string; before: Snap | null; after: Snap }>>();
+  idem = new Map<string, { digest: string; status: number; replay: () => unknown }>();
+  applied: string[] = [];
+  private seq = 0;
+  private readonly expenses: FakeExpenses;
+  private readonly objects: FakeObjects;
+  private readonly access: EconomyAccess;
+
+  constructor(expenses: FakeExpenses, objects: FakeObjects, access: EconomyAccess) {
+    this.expenses = expenses;
+    this.objects = objects;
+    this.access = access;
+  }
+
+  private get today() {
+    return this.expenses.today;
+  }
+
+  private stamp() {
+    this.seq += 1;
+    return new Date(Date.parse(`${this.today}T12:00:00Z`) + this.seq * 1000).toISOString();
+  }
+
+  private metaOf(id: string): Meta {
+    return this.meta.get(id) ?? { category: null, supplier: null, documentNumber: null, documentDate: null, competenceFrom: null, competenceTo: null, dueOn: null, amountOrigin: 'user_declared', workId: null };
+  }
+
+  private objectRef(s: Stored): Ref | null {
+    if (s.assetId) return { kind: 'boiler', id: s.assetId };
+    return this.objects.expenseReference(s.accountId, s.homeId, s.id);
+  }
+
+  private snapshot(s: Stored): Snap {
+    const m = this.metaOf(s.id);
+    const ref = this.objectRef(s);
+    const obj = ref ? this.objects.objectSummary(s.accountId, s.homeId, ref) : null;
+    const work = m.workId ? this.works.get(m.workId) : undefined;
+    const doc = s.documentId ? this.access.document(s.accountId, s.homeId, s.documentId) : null;
+    return {
+      title: s.title, amountCents: s.amountCents, currency: 'EUR', spentOn: s.spentOn, note: s.note,
+      origin: s.documentId ? 'document' : 'manual',
+      documentLink: s.documentId ? (doc ? { state: 'linked', document: { id: doc.id, name: doc.name } } : { state: 'unavailable', document: null }) : { state: 'none', document: null },
+      assetLink: s.assetId ? (obj ? { state: 'linked', asset: { id: s.assetId, name: obj.name } } : { state: 'unavailable', asset: null }) : { state: 'none', asset: null },
+      state: s.state, category: m.category, family: familyOf(m.category, m.workId), supplier: m.supplier, documentNumber: m.documentNumber,
+      documentDate: m.documentDate, competenceFrom: m.competenceFrom, competenceTo: m.competenceTo, dueOn: m.dueOn, amountOrigin: m.amountOrigin,
+      objectLink: ref ? (obj ? { state: 'linked', value: obj } : { state: 'unavailable', value: null }) : { state: 'none', value: null },
+      workLink: work ? { state: 'linked', value: { id: work.id, name: work.name, state: work.state } } : m.workId ? { state: 'unavailable', value: null } : { state: 'none', value: null },
+      analysisLink: { state: 'none', value: null },
+    };
+  }
+
+  private view(s: Stored, perms: HomePermission[]) {
+    return {
+      ...this.snapshot(s), id: s.id, homeId: s.homeId, version: s.version, createdAt: s.createdAt, updatedAt: s.updatedAt, archivedAt: s.archivedAt,
+      permissions: perms.includes('edit') ? ['read', 'edit'] : ['read'],
+    };
+  }
+
+  private workView(w: Work, perms: HomePermission[]) {
+    return {
+      id: w.id, homeId: w.homeId, name: w.name, note: w.note, state: w.state, version: w.version, activityLink: { state: 'none', value: null },
+      createdAt: w.createdAt, updatedAt: w.updatedAt, archivedAt: w.archivedAt, permissions: perms.includes('edit') ? ['read', 'edit'] : ['read'],
+    };
+  }
+
+  async handle(req: Req, accountId: string, homeId: string, rest: string): Promise<Res> {
+    if (!this.enabled) return err(404, 'not_found', 'Risorsa non trovata.');
+    const perms = this.access.perms(accountId, homeId);
+    if (!perms || !perms.includes('read')) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    if (this.unavailable) return err(503, 'SERVICE_UNAVAILABLE', 'Servizio non disponibile.');
+    const [path, query = ''] = rest.split('?');
+    const parts = path!.split('/').filter(Boolean).map(decodeURIComponent);
+    const isPost = req.method === 'POST';
+    if (isPost && !perms.includes('edit')) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    const params = new URLSearchParams(query);
+    for (const k of new Set(params.keys())) if (params.getAll(k).length > 1) return err(422, 'validation_error', 'Parametro ripetuto.');
+
+    if (parts[0] === 'capabilities' && parts.length === 1 && !isPost) return { status: 200, body: this.capabilities() };
+    if (parts[0] === 'summary' && parts.length === 1 && !isPost) return this.summary(params, accountId, homeId);
+    if (parts[0] === 'expenses') {
+      if (parts.length === 1) return isPost ? this.create(req, accountId, homeId, perms) : this.list(params, accountId, homeId, perms);
+      const id = parts[1]!;
+      if (!UUID_RE.test(id)) return err(422, 'validation_error', 'Identificativo non valido.');
+      const s = this.expenses.items.get(id);
+      if (!s || s.accountId !== accountId || s.homeId !== homeId) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+      if (parts.length === 2 && !isPost) return { status: 200, body: { expense: this.view(s, perms) } };
+      if (parts[2] === 'history' && !isPost) {
+        const items = [...(this.events.get(id) ?? [])].reverse();
+        return this.page(items, params, `eh:${accountId}:${id}`, ['limit', 'cursor']);
+      }
+      if (isPost && ['updates', 'archive', 'restore'].includes(parts[2]!)) return this.mutate(req, parts[2] as 'updates', s, accountId, homeId, perms);
+    }
+    if (parts[0] === 'works' && this.features.works) {
+      if (parts.length === 1) return isPost ? this.createWork(req, accountId, homeId, perms) : this.listWorks(params, accountId, homeId, perms);
+      const id = parts[1]!;
+      if (!UUID_RE.test(id)) return err(422, 'validation_error', 'Identificativo non valido.');
+      const w = this.works.get(id);
+      if (!w || w.accountId !== accountId || w.homeId !== homeId) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+      if (parts.length === 2 && !isPost) return { status: 200, body: { work: this.workView(w, perms) } };
+      if (parts[2] === 'history' && !isPost) return this.page([...(this.workEvents.get(id) ?? [])].reverse(), params, `wh:${accountId}:${id}`, ['limit', 'cursor']);
+      if (isPost && ['updates', 'archive', 'restore'].includes(parts[2]!)) return this.mutateWork(req, parts[2] as 'updates', w, accountId, homeId, perms);
+    }
+    return err(404, 'not_found', 'Risorsa non trovata.');
+  }
+
+  private capabilities() {
+    return {
+      apiVersion: 'economy-v1', enabled: true, isSimulation: false, currency: 'EUR', today: this.today, asOf: this.stamp(), timeZone: 'Europe/Rome',
+      features: { ...this.features },
+      limits: { titleMaxCodePoints: 120, noteMaxCodePoints: 500, amountMaxCents: MAX, maxPageSize: 50 },
+      categories: CATEGORIES.map((code) => ({ code, label: CATEGORY_LABELS[code], possibleFamilies: possibleFamilies(code) })),
+      families: FAMILIES.map((code) => ({ code, label: FAMILY_LABELS[code] })),
+      analysis: { enabled: false, disabledReason: 'Analisi economica non ancora disponibile.', providers: [] },
+    };
+  }
+
+  private page<T>(items: T[], params: URLSearchParams, scope: string, allowed: string[]): Res {
+    for (const k of params.keys()) if (!allowed.includes(k)) return err(422, 'validation_error', 'Parametro non ammesso.');
+    const limit = params.has('limit') ? Number(params.get('limit')) : 20;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) return err(422, 'validation_error', 'Limite non valido.');
+    const cursor = params.get('cursor');
+    let offset = 0;
+    if (cursor) {
+      const [cScope, cOffset] = cursor.split('@');
+      if (cursor.length > 512 || cScope !== encodeURIComponent(scope) || !Number.isInteger(Number(cOffset))) return err(422, 'validation_error', 'Cursore non valido.');
+      offset = Number(cOffset);
+    }
+    const next = offset + limit < items.length ? `${encodeURIComponent(scope)}@${offset + limit}` : null;
+    return { status: 200, body: { items: items.slice(offset, offset + limit), nextCursor: next } };
+  }
+
+  // ---- filtri ----
+
+  private period(params: URLSearchParams): { from: string; to: string; kind: 'current' | 'year' | 'range' } | Res {
+    const year = params.get('year');
+    const from = params.get('from');
+    const to = params.get('to');
+    if (year !== null && (from !== null || to !== null)) return err(422, 'validation_error', 'Usa anno oppure intervallo.');
+    if ((from === null) !== (to === null)) return err(422, 'validation_error', 'Intervallo incompleto.');
+    if (from !== null && to !== null) {
+      if (!validDate(from) || !validDate(to) || from > to) return err(422, 'validation_error', 'Intervallo non valido.');
+      return { from, to, kind: 'range' };
+    }
+    const y = year ?? this.today.slice(0, 4);
+    if (!/^\d{4}$/.test(y) || y === '0000') return err(422, 'validation_error', 'Anno non valido.');
+    if (y === this.today.slice(0, 4)) return { from: `${y}-01-01`, to: this.today, kind: 'current' };
+    return { from: `${y}-01-01`, to: `${y}-12-31`, kind: 'year' };
+  }
+
+  private selector(params: URLSearchParams, accountId: string, homeId: string): ((s: Stored) => boolean) | Res {
+    const q = params.get('q');
+    const category = params.get('category');
+    const family = params.get('family');
+    const source = params.get('source') ?? 'all';
+    const objectKind = params.get('objectKind');
+    const objectId = params.get('objectId');
+    const roomId = params.get('roomId');
+    const workId = params.get('workId');
+    const documentId = params.get('documentId');
+    if (q !== null && cp(q.normalize('NFC').trim()) > 120) return err(422, 'validation_error', 'Ricerca troppo lunga.');
+    if (category !== null && category !== 'unclassified' && !CATEGORIES.includes(category as Category)) return err(422, 'validation_error', 'Categoria non valida.');
+    if (family !== null && !FAMILIES.includes(family as Family)) return err(422, 'validation_error', 'Famiglia non valida.');
+    if (category && family && category !== 'unclassified' && !possibleFamilies(category as Category).includes(family as Family)) return err(422, 'validation_error', 'Categoria e famiglia incompatibili.');
+    if (category === 'unclassified' && family && family !== 'unclassified') return err(422, 'validation_error', 'Categoria e famiglia incompatibili.');
+    if (!['all', 'manual', 'document'].includes(source)) return err(422, 'validation_error', 'Origine non valida.');
+    if ((objectKind === null) !== (objectId === null)) return err(422, 'validation_error', 'Oggetto incompleto.');
+    for (const v of [objectId, roomId, workId, documentId]) if (v !== null && !UUID_RE.test(v)) return err(422, 'validation_error', 'Identificativo non valido.');
+    if (objectKind && objectId) {
+      if (objectKind !== 'object' && objectKind !== 'boiler') return err(422, 'validation_error', 'Tipo oggetto non valido.');
+      if (!this.objects.objectSummary(accountId, homeId, { kind: objectKind, id: objectId })) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    }
+    if (workId) {
+      const w = this.works.get(workId);
+      if (!w || w.accountId !== accountId || w.homeId !== homeId) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    }
+    if (documentId && !this.access.document(accountId, homeId, documentId)) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    const needle = q?.normalize('NFC').trim().toLocaleLowerCase('it') ?? '';
+    return (s: Stored) => {
+      const m = this.metaOf(s.id);
+      const fam = familyOf(m.category, m.workId);
+      if (needle && !`${s.title}\u0000${m.supplier ?? ''}`.toLocaleLowerCase('it').includes(needle)) return false;
+      if (category === 'unclassified' && m.category !== null) return false;
+      if (category && category !== 'unclassified' && m.category !== category) return false;
+      if (family && fam !== family) return false;
+      if (source !== 'all' && (source === 'document') !== !!s.documentId) return false;
+      const ref = this.objectRef(s);
+      if (objectKind && objectId && !(ref && ref.kind === objectKind && ref.id === objectId)) return false;
+      if (roomId && !(ref && this.objects.roomIdsOf(accountId, ref).includes(roomId))) return false;
+      if (workId && m.workId !== workId) return false;
+      if (documentId && s.documentId !== documentId) return false;
+      return true;
+    };
+  }
+
+  private mine(accountId: string, homeId: string) {
+    return [...this.expenses.items.values()].filter((s) => s.accountId === accountId && s.homeId === homeId);
+  }
+
+  private list(params: URLSearchParams, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const allowed = ['year', 'from', 'to', 'state', 'q', 'category', 'family', 'source', 'objectKind', 'objectId', 'roomId', 'workId', 'documentId', 'limit', 'cursor'];
+    for (const k of params.keys()) if (!allowed.includes(k)) return err(422, 'validation_error', 'Parametro non ammesso.');
+    const state = params.get('state') ?? 'active';
+    if (!['active', 'archived', 'all'].includes(state)) return err(422, 'validation_error', 'Stato non valido.');
+    const period = this.period(params);
+    if ('status' in period) return period;
+    const sel = this.selector(params, accountId, homeId);
+    if (typeof sel !== 'function') return sel;
+    const rows = this.mine(accountId, homeId)
+      .filter((s) => (state === 'all' || s.state === state) && s.spentOn >= period.from && s.spentOn <= period.to && sel(s))
+      .sort((a, b) => b.spentOn.localeCompare(a.spentOn) || b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+    const scopeParams = new URLSearchParams(params);
+    scopeParams.delete('limit');
+    scopeParams.delete('cursor');
+    const pageParams = new URLSearchParams();
+    for (const k of ['limit', 'cursor']) if (params.has(k)) pageParams.set(k, params.get(k)!);
+    return this.page(rows.map((s) => this.view(s, perms)), pageParams, `l:${accountId}:${homeId}:${scopeParams.toString()}`, ['limit', 'cursor']);
+  }
+
+  private sums(rows: Stored[]) {
+    const byCategory = new Map<Category | null, { count: number; total: bigint }>();
+    const byFamily = new Map<Family, { count: number; total: bigint }>();
+    let total = 0n;
+    for (const s of rows) {
+      const m = this.metaOf(s.id);
+      const f = familyOf(m.category, m.workId);
+      const c = byCategory.get(m.category) ?? { count: 0, total: 0n };
+      byCategory.set(m.category, { count: c.count + 1, total: c.total + BigInt(s.amountCents) });
+      const g = byFamily.get(f) ?? { count: 0, total: 0n };
+      byFamily.set(f, { count: g.count + 1, total: g.total + BigInt(s.amountCents) });
+      total += BigInt(s.amountCents);
+    }
+    return { byCategory, byFamily, total };
+  }
+
+  private summary(params: URLSearchParams, accountId: string, homeId: string): Res {
+    const allowed = ['year', 'from', 'to', 'q', 'category', 'family', 'source', 'objectKind', 'objectId', 'roomId', 'workId', 'documentId'];
+    for (const k of params.keys()) if (!allowed.includes(k)) return err(422, 'validation_error', 'Parametro non ammesso.');
+    const period = this.period(params);
+    if ('status' in period) return period;
+    const sel = this.selector(params, accountId, homeId);
+    if (typeof sel !== 'function') return sel;
+    const active = this.mine(accountId, homeId).filter((s) => s.state === 'active' && sel(s));
+    const inRange = (from: string, to: string) => active.filter((s) => s.spentOn >= from && s.spentOn <= to);
+    const rows = inRange(period.from, period.to);
+    const cur = this.sums(rows);
+    const financing = cur.byFamily.get('financing')?.total ?? 0n;
+    // Confronto: stesso periodo dell'anno precedente; anno 0001 non confrontabile.
+    const pf = yearBefore(period.from);
+    const pt = period.kind === 'year' ? (pf ? { date: `${pf.date.slice(0, 4)}-12-31`, clamped: false } : null) : yearBefore(period.to);
+    let comparison: Record<string, unknown>;
+    if (!pf || !pt) {
+      comparison = { status: 'unavailable', period: null, count: null, totalCents: null, deltaCents: null, deltaPercentHundredths: null, calendarAdjustment: 'none' };
+    } else {
+      const prev = this.sums(inRange(pf.date, pt.date));
+      const count = [...prev.byFamily.values()].reduce((a, b) => a + b.count, 0);
+      const adj = pf.clamped || pt.clamped ? 'leap_day_clamped' : 'none';
+      const delta = cur.total - prev.total;
+      if (count === 0) {
+        comparison = { status: 'no_previous_records', period: { from: pf.date, to: pt.date }, count: 0, totalCents: '0', deltaCents: delta.toString(), deltaPercentHundredths: null, calendarAdjustment: adj };
+      } else {
+        // Metà lontano da zero, solo interi.
+        const num = delta * 10000n;
+        const abs = num < 0n ? -num : num;
+        let pct = (abs * 2n + prev.total) / (2n * prev.total);
+        if (num < 0n) pct = -pct;
+        comparison = { status: 'comparable', period: { from: pf.date, to: pt.date }, count, totalCents: prev.total.toString(), deltaCents: delta.toString(), deltaPercentHundredths: pct.toString(), calendarAdjustment: adj };
+      }
+    }
+    return {
+      status: 200,
+      body: {
+        period: { from: period.from, to: period.to, basis: 'reference_date' },
+        count: rows.length,
+        totalCents: cur.total.toString(),
+        totalWithoutFinancingCents: (cur.total - financing).toString(),
+        byCategory: [...CATEGORIES, null].map((c) => ({ category: c, count: cur.byCategory.get(c)?.count ?? 0, totalCents: (cur.byCategory.get(c)?.total ?? 0n).toString() })),
+        byFamily: FAMILIES.map((f) => ({ family: f, count: cur.byFamily.get(f)?.count ?? 0, totalCents: (cur.byFamily.get(f)?.total ?? 0n).toString() })),
+        comparison,
+        asOf: this.stamp(),
+        today: this.today,
+        timeZone: 'Europe/Rome',
+      },
+    };
+  }
+
+  // ---- scritture ----
+
+  private withIdem(req: Req, scope: string, run: () => Res & { replay?: () => unknown }): Res {
+    const key = req.headers['idempotency-key'];
+    if (!key || !KEY_RE.test(key)) return err(422, 'validation_error', 'Idempotency-Key non valida.');
+    const scoped = `${scope}:${key}`;
+    const digest = JSON.stringify(req.body ?? {});
+    const prev = this.idem.get(scoped);
+    if (prev) {
+      if (prev.digest !== digest) return err(409, 'idempotency_conflict', 'Chiave già usata con dati diversi.');
+      return { status: prev.status, body: prev.replay() };
+    }
+    const res = run();
+    if (res.replay) {
+      this.idem.set(scoped, { digest, status: res.status, replay: res.replay });
+      this.applied.push(scope);
+    }
+    return { status: res.status, body: res.body };
+  }
+
+  private parse(body: Record<string, unknown>, accountId: string, homeId: string, creating: boolean) {
+    const allowed = ['title', 'amountCents', 'spentOn', 'note', 'category', 'supplier', 'documentNumber', 'documentDate', 'competenceFrom', 'competenceTo', 'dueOn', 'objectRef', 'workId', 'documentId'];
+    const fe: Record<string, string> = {};
+    for (const k of Object.keys(body)) if (!allowed.includes(k) && k !== 'expectedVersion') fe[k] = 'Campo non ammesso.';
+    const out: Record<string, unknown> = {};
+    const text = (k: string, max: number, required: boolean) => {
+      if (!(k in body)) return;
+      const v = body[k];
+      if (v === null && !required) return void (out[k] = null);
+      const t = typeof v === 'string' ? v.normalize('NFC').trim() : null;
+      if (t === null || (required && cp(t) < 1) || cp(t) > max) fe[k] = 'Testo non valido.';
+      else out[k] = t || null;
+    };
+    text('title', 120, true);
+    text('note', 500, false);
+    text('supplier', 120, false);
+    text('documentNumber', 80, false);
+    if ('amountCents' in body) {
+      const a = body.amountCents;
+      if (typeof a !== 'number' || !Number.isInteger(a) || a < 1 || a > MAX) fe.amountCents = 'Importo non valido.';
+      else out.amountCents = a;
+    }
+    if ('spentOn' in body) {
+      if (!validDate(body.spentOn)) fe.spentOn = 'Data non valida.';
+      else if ((body.spentOn as string) > this.today) fe.spentOn = 'La data non può essere futura.';
+      else out.spentOn = body.spentOn;
+    }
+    for (const k of ['documentDate', 'competenceFrom', 'competenceTo', 'dueOn']) {
+      if (!(k in body)) continue;
+      if (body[k] === null) out[k] = null;
+      else if (!validDate(body[k])) fe[k] = 'Data non valida.';
+      else out[k] = body[k];
+    }
+    if ('category' in body) {
+      if (body.category === null) out.category = null;
+      else if (!CATEGORIES.includes(body.category as Category)) fe.category = 'Categoria non valida.';
+      else out.category = body.category;
+    }
+    let forbidden = false;
+    if ('documentId' in body) {
+      const v = body.documentId;
+      if (v === null) out.documentId = null;
+      else if (typeof v !== 'string' || !UUID_RE.test(v)) fe.documentId = 'Identificativo non valido.';
+      else if (!this.access.document(accountId, homeId, v)) forbidden = true;
+      else out.documentId = v;
+    }
+    let workConflict = false;
+    if ('workId' in body) {
+      const v = body.workId;
+      if (v === null) out.workId = null;
+      else if (typeof v !== 'string' || !UUID_RE.test(v)) fe.workId = 'Identificativo non valido.';
+      else {
+        const w = this.works.get(v);
+        if (!w || w.accountId !== accountId || w.homeId !== homeId) forbidden = true;
+        else {
+          if (w.state !== 'active') workConflict = true;
+          out.workId = v;
+        }
+      }
+    }
+    let objectConflict = false;
+    if ('objectRef' in body) {
+      const v = body.objectRef as Ref | null;
+      if (v === null) out.objectRef = null;
+      else if (!v || (v.kind !== 'object' && v.kind !== 'boiler') || typeof v.id !== 'string' || !UUID_RE.test(v.id)) fe.objectRef = 'Riferimento non valido.';
+      else {
+        const o = this.objects.objectSummary(accountId, homeId, v);
+        if (!o) forbidden = true;
+        else {
+          if (o.state !== 'active') objectConflict = true;
+          out.objectRef = { kind: v.kind, id: v.id };
+        }
+      }
+    }
+    if (creating) for (const k of ['title', 'amountCents', 'spentOn']) if (!(k in body)) fe[k] = 'Obbligatorio.';
+    return { out, fe, forbidden, workConflict, objectConflict };
+  }
+
+  private event(id: string, kind: Event['kind'], before: Snap | null, after: Snap, note: string | null) {
+    const list = this.events.get(id) ?? [];
+    list.push({ id: uuid(), kind, at: this.stamp(), note, before, after });
+    this.events.set(id, list);
+  }
+
+  private competenceError(m: Meta) {
+    if ((m.competenceFrom === null) !== (m.competenceTo === null)) return true;
+    return !!(m.competenceFrom && m.competenceTo && m.competenceFrom > m.competenceTo);
+  }
+
+  private create(req: Req, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const p = this.parse(body, accountId, homeId, true);
+    if (Object.keys(p.fe).length) return err(422, 'validation_error', 'Controlla i campi.', p.fe);
+    if (p.forbidden) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    if (p.workConflict) return err(409, 'work_state_conflict', 'Lavoro archiviato.');
+    if (p.objectConflict) return err(409, 'resource_state_conflict', 'Oggetto archiviato.');
+    const o = p.out;
+    const m: Meta = {
+      category: (o.category as Category | null) ?? null, supplier: (o.supplier as string | null) ?? null, documentNumber: (o.documentNumber as string | null) ?? null,
+      documentDate: (o.documentDate as string | null) ?? null, competenceFrom: (o.competenceFrom as string | null) ?? null, competenceTo: (o.competenceTo as string | null) ?? null,
+      dueOn: (o.dueOn as string | null) ?? null, amountOrigin: 'user_declared', workId: (o.workId as string | null) ?? null,
+    };
+    if (this.competenceError(m)) return err(422, 'validation_error', 'Competenza non valida.', { competenceFrom: 'Intervallo non valido.' });
+    return this.withIdem(req, `${accountId}:${homeId}:create`, () => {
+      const at = this.stamp();
+      const ref = (o.objectRef as Ref | null) ?? null;
+      const s = {
+        id: uuid(), homeId, accountId, title: o.title as string, amountCents: o.amountCents as number, spentOn: o.spentOn as string,
+        note: (o.note as string | null) ?? null, documentId: (o.documentId as string | null) ?? null, assetId: ref?.kind === 'boiler' ? ref.id : null,
+        state: 'active' as const, version: 1, createdAt: at, updatedAt: at, archivedAt: null,
+      };
+      this.expenses.items.set(s.id, s);
+      this.meta.set(s.id, m);
+      if (ref?.kind === 'object') this.objects.attachExpense(accountId, homeId, ref, s.id);
+      this.event(s.id, 'created', null, this.snapshot(s), null);
+      const replay = () => ({ expense: this.view(this.expenses.items.get(s.id)!, perms) });
+      return { status: 201, body: replay(), replay };
+    });
+  }
+
+  private mutate(req: Req, kind: 'updates' | 'archive' | 'restore', s: Stored, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const ev = body.expectedVersion;
+    if (typeof ev !== 'number' || !Number.isInteger(ev) || ev < 1) return err(422, 'validation_error', 'Versione mancante.', { expectedVersion: 'Obbligatoria.' });
+    let p: ReturnType<FakeEconomy['parse']> | null = null;
+    let actionNote: string | null = null;
+    if (kind === 'updates') {
+      p = this.parse(body, accountId, homeId, false);
+      if (Object.keys(p.out).length === 0 && !Object.keys(p.fe).length) return err(422, 'validation_error', 'Nessun campo da modificare.');
+      if (Object.keys(p.fe).length) return err(422, 'validation_error', 'Controlla i campi.', p.fe);
+      if (p.forbidden) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    } else {
+      for (const k of Object.keys(body)) if (k !== 'expectedVersion' && k !== 'note') return err(422, 'validation_error', 'Campo non ammesso.');
+      if (typeof body.note === 'string') actionNote = body.note.normalize('NFC').trim() || null;
+    }
+    return this.withIdem(req, `${accountId}:${homeId}:${kind}:${s.id}`, () => {
+      if (ev !== s.version) return err(409, 'expense_version_conflict', 'Il costo è cambiato: rileggi.');
+      if ((kind !== 'restore') !== (s.state === 'active')) return err(409, 'expense_state_conflict', 'Stato non compatibile.');
+      const before = this.snapshot(s);
+      const at = this.stamp();
+      if (kind === 'updates') {
+        const o = p!.out;
+        const m = { ...this.metaOf(s.id) };
+        const currentRef = this.objectRef(s);
+        if ('objectRef' in o) {
+          const next = o.objectRef as Ref | null;
+          const same = !!next && !!currentRef && next.kind === currentRef.kind && next.id === currentRef.id;
+          if (next && currentRef && !same) return err(409, 'resource_already_linked', 'Costo già collegato a un altro oggetto.');
+          if (next && !same && p!.objectConflict) return err(409, 'resource_state_conflict', 'Oggetto archiviato.');
+        }
+        if ('workId' in o && o.workId !== m.workId && p!.workConflict) return err(409, 'work_state_conflict', 'Lavoro archiviato.');
+        for (const k of ['category', 'supplier', 'documentNumber', 'documentDate', 'competenceFrom', 'competenceTo', 'dueOn', 'workId'] as const) {
+          if (k in o) (m as Record<string, unknown>)[k] = o[k];
+        }
+        if (this.competenceError(m)) return err(422, 'validation_error', 'Competenza non valida.', { competenceFrom: 'Intervallo non valido.' });
+        if ('amountCents' in o && o.amountCents !== s.amountCents) m.amountOrigin = 'user_declared';
+        for (const k of ['title', 'amountCents', 'spentOn', 'note', 'documentId'] as const) if (k in o) (s as Record<string, unknown>)[k] = o[k];
+        if ('objectRef' in o) {
+          const next = o.objectRef as Ref | null;
+          if (!next && currentRef) {
+            if (currentRef.kind === 'boiler') s.assetId = null;
+            else this.objects.detachExpense(accountId, homeId, s.id);
+          } else if (next && !currentRef) {
+            if (next.kind === 'boiler') s.assetId = next.id;
+            else this.objects.attachExpense(accountId, homeId, next, s.id);
+          }
+        }
+        this.meta.set(s.id, m);
+        const after = this.snapshot(s);
+        if (JSON.stringify(after) !== JSON.stringify(before)) {
+          Object.assign(s, { version: s.version + 1, updatedAt: at });
+          this.event(s.id, 'updated', before, after, null);
+        }
+      } else {
+        Object.assign(s, { state: kind === 'archive' ? 'archived' : 'active', archivedAt: kind === 'archive' ? at : null, version: s.version + 1, updatedAt: at });
+        this.event(s.id, kind === 'archive' ? 'archived' : 'restored', before, this.snapshot(s), actionNote);
+      }
+      const replay = () => ({ expense: this.view(s, perms) });
+      return { status: 200, body: replay(), replay };
+    });
+  }
+
+  // ---- lavori ----
+
+  private listWorks(params: URLSearchParams, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    for (const k of params.keys()) if (!['state', 'q', 'limit', 'cursor'].includes(k)) return err(422, 'validation_error', 'Parametro non ammesso.');
+    const state = params.get('state') ?? 'active';
+    if (!['active', 'archived', 'all'].includes(state)) return err(422, 'validation_error', 'Stato non valido.');
+    const q = (params.get('q') ?? '').normalize('NFC').trim().toLocaleLowerCase('it');
+    const rows = [...this.works.values()]
+      .filter((w) => w.accountId === accountId && w.homeId === homeId && (state === 'all' || w.state === state) && (!q || w.name.toLocaleLowerCase('it').includes(q)))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+    const pageParams = new URLSearchParams();
+    for (const k of ['limit', 'cursor']) if (params.has(k)) pageParams.set(k, params.get(k)!);
+    return this.page(rows.map((w) => this.workView(w, perms)), pageParams, `w:${accountId}:${homeId}:${state}:${q}`, ['limit', 'cursor']);
+  }
+
+  private workSnap(w: Work): Snap {
+    return { name: w.name, note: w.note, state: w.state, activityLink: { state: 'none', value: null } };
+  }
+
+  private workEvent(w: Work, kind: Event['kind'], before: Snap | null) {
+    const list = this.workEvents.get(w.id) ?? [];
+    list.push({ id: uuid(), kind, at: this.stamp(), before, after: this.workSnap(w) });
+    this.workEvents.set(w.id, list);
+  }
+
+  private workFields(body: Record<string, unknown>) {
+    const fe: Record<string, string> = {};
+    const out: { name?: string; note?: string | null } = {};
+    for (const k of Object.keys(body)) if (!['name', 'note', 'activityId', 'expectedVersion'].includes(k)) fe[k] = 'Campo non ammesso.';
+    if ('name' in body) {
+      const t = typeof body.name === 'string' ? body.name.normalize('NFC').trim() : '';
+      if (cp(t) < 1 || cp(t) > 120) fe.name = 'Nome da 1 a 120 caratteri.';
+      else out.name = t;
+    }
+    if ('note' in body) {
+      if (body.note === null) out.note = null;
+      else if (typeof body.note !== 'string' || cp(body.note.trim()) > 500) fe.note = 'Nota non valida.';
+      else out.note = body.note.normalize('NFC').trim() || null;
+    }
+    return { out, fe };
+  }
+
+  private createWork(req: Req, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const { out, fe } = this.workFields(body);
+    if (!('name' in body)) fe.name = 'Obbligatorio.';
+    if (Object.keys(fe).length) return err(422, 'validation_error', 'Controlla i campi.', fe);
+    return this.withIdem(req, `${accountId}:${homeId}:work-create`, () => {
+      const at = this.stamp();
+      const w: Work = { id: uuid(), homeId, accountId, name: out.name!, note: out.note ?? null, state: 'active', version: 1, createdAt: at, updatedAt: at, archivedAt: null };
+      this.works.set(w.id, w);
+      this.workEvent(w, 'created', null);
+      const replay = () => ({ work: this.workView(this.works.get(w.id)!, perms) });
+      return { status: 201, body: replay(), replay };
+    });
+  }
+
+  private mutateWork(req: Req, kind: 'updates' | 'archive' | 'restore', w: Work, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const ev = body.expectedVersion;
+    if (typeof ev !== 'number' || !Number.isInteger(ev) || ev < 1) return err(422, 'validation_error', 'Versione mancante.');
+    const { out, fe } = this.workFields(kind === 'updates' ? body : { expectedVersion: ev });
+    if (kind !== 'updates' && Object.keys(body).some((k) => k !== 'expectedVersion')) return err(422, 'validation_error', 'Campo non ammesso.');
+    if (Object.keys(fe).length) return err(422, 'validation_error', 'Controlla i campi.', fe);
+    if (kind === 'updates' && !('name' in out) && !('note' in out)) return err(422, 'validation_error', 'Nessun campo da modificare.');
+    return this.withIdem(req, `${accountId}:${homeId}:work-${kind}:${w.id}`, () => {
+      if (ev !== w.version) return err(409, 'work_version_conflict', 'Il lavoro è cambiato: rileggi.');
+      if ((kind !== 'restore') !== (w.state === 'active')) return err(409, 'work_state_conflict', 'Stato non compatibile.');
+      const before = this.workSnap(w);
+      const at = this.stamp();
+      if (kind === 'updates') {
+        const next = { name: out.name ?? w.name, note: 'note' in out ? (out.note ?? null) : w.note };
+        if (next.name !== w.name || next.note !== w.note) {
+          Object.assign(w, next, { version: w.version + 1, updatedAt: at });
+          this.workEvent(w, 'updated', before);
+        }
+      } else {
+        // L'archivio non modifica i costi collegati.
+        Object.assign(w, { state: kind === 'archive' ? 'archived' : 'active', archivedAt: kind === 'archive' ? at : null, version: w.version + 1, updatedAt: at });
+        this.workEvent(w, kind === 'archive' ? 'archived' : 'restored', before);
+      }
+      const replay = () => ({ work: this.workView(w, perms) });
+      return { status: 200, body: replay(), replay };
+    });
+  }
+}

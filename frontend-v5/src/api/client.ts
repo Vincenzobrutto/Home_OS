@@ -55,6 +55,16 @@ import type {
   SessionResponse,
   UploadDocumentInput,
 } from './types';
+import type {
+  CreateExpense as EconomyCreateExpense,
+  EconomyCapabilities,
+  EconomyExpense,
+  EconomySummary,
+  EconomyWork,
+  ExpenseHistoryEvent as EconomyExpenseHistoryEvent,
+  UpdateExpense as EconomyUpdateExpense,
+  WorkHistoryEvent,
+} from './economyTypes';
 
 export const API_BASE = '/api/v5';
 
@@ -668,6 +678,127 @@ export class ApiClient {
     return data;
   }
 
+  // ---- economy-v1 (S1a/b) ----
+  // Stesso trasporto di H3a; i JSON H3a restano invariati. Le somme sono stringhe di centesimi.
+
+  async getEconomyCapabilities(homeId: string, signal: AbortSignal | undefined, accountId: string) {
+    const data = await this.request<EconomyCapabilities>(`${economyPath(homeId)}/capabilities`, { signal, accountId });
+    if (
+      !data || data.apiVersion !== 'economy-v1' || typeof data.enabled !== 'boolean' || !data.features ||
+      typeof data.features.history !== 'boolean' || typeof data.features.works !== 'boolean' ||
+      typeof data.features.documentDrafts !== 'boolean' || !data.limits || typeof data.today !== 'string' ||
+      !Array.isArray(data.categories) || !Array.isArray(data.families)
+    ) {
+      throw serviceError(200);
+    }
+    return data;
+  }
+
+  listEconomyExpenses(homeId: string, query: URLSearchParams, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    return this.page<EconomyExpense>(`${economyPath(homeId)}/expenses${withPage(new URLSearchParams(query), page)}`, {}, signal, accountId).then((p) => {
+      if (!p.items.every(isEconomyExpense)) throw serviceError(200);
+      return p;
+    });
+  }
+
+  async getEconomySummary(homeId: string, query: URLSearchParams, signal: AbortSignal | undefined, accountId: string) {
+    const qs = query.size ? `?${query.toString()}` : '';
+    const data = await this.request<EconomySummary>(`${economyPath(homeId)}/summary${qs}`, { signal, accountId });
+    if (!isEconomySummary(data)) throw serviceError(200);
+    return data;
+  }
+
+  async getEconomyExpense(homeId: string, expenseId: string, signal: AbortSignal | undefined, accountId: string) {
+    const data = await this.request<{ expense: EconomyExpense }>(`${economyPath(homeId)}/expenses/${encodeURIComponent(expenseId)}`, { signal, accountId });
+    if (!data || !isEconomyExpense(data.expense)) throw serviceError(200);
+    return data.expense;
+  }
+
+  async createEconomyExpense(homeId: string, input: EconomyCreateExpense, idempotencyKey: string, accountId: string) {
+    return this.economyExpenseResponse(
+      await this.mutate<{ expense: EconomyExpense }>(`${economyPath(homeId)}/expenses`, {
+        body: input,
+        headers: { 'Idempotency-Key': idempotencyKey },
+        accountId,
+      }),
+      201,
+    );
+  }
+
+  async economyExpenseMutation(
+    homeId: string,
+    expenseId: string,
+    kind: 'updates' | 'archive' | 'restore',
+    body: EconomyUpdateExpense | { expectedVersion: number; note?: string },
+    idempotencyKey: string,
+    accountId: string,
+  ) {
+    return this.economyExpenseResponse(
+      await this.mutate<{ expense: EconomyExpense }>(`${economyPath(homeId)}/expenses/${encodeURIComponent(expenseId)}/${kind}`, {
+        body,
+        headers: { 'Idempotency-Key': idempotencyKey },
+        accountId,
+      }),
+      200,
+    );
+  }
+
+  listEconomyExpenseHistory(homeId: string, expenseId: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    return this.page<EconomyExpenseHistoryEvent>(`${economyPath(homeId)}/expenses/${encodeURIComponent(expenseId)}/history`, page, signal, accountId);
+  }
+
+  listWorks(homeId: string, filters: { state: 'active' | 'archived' | 'all'; q?: string }, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    const params = new URLSearchParams();
+    if (filters.state !== 'active') params.set('state', filters.state);
+    const q = filters.q?.normalize('NFC').trim();
+    if (q) params.set('q', q);
+    return this.page<EconomyWork>(`${economyPath(homeId)}/works${withPage(params, page)}`, {}, signal, accountId);
+  }
+
+  async getWork(homeId: string, workId: string, signal: AbortSignal | undefined, accountId: string) {
+    const data = await this.request<{ work: EconomyWork }>(`${economyPath(homeId)}/works/${encodeURIComponent(workId)}`, { signal, accountId });
+    return this.workResponse(data, 200);
+  }
+
+  async createWork(homeId: string, input: { name: string; note?: string | null; activityId?: string | null }, idempotencyKey: string, accountId: string) {
+    return this.workResponse(
+      await this.mutate<{ work: EconomyWork }>(`${economyPath(homeId)}/works`, { body: input, headers: { 'Idempotency-Key': idempotencyKey }, accountId }),
+      201,
+    );
+  }
+
+  async workMutation(
+    homeId: string,
+    workId: string,
+    kind: 'updates' | 'archive' | 'restore',
+    body: { expectedVersion: number; name?: string; note?: string | null; activityId?: string | null },
+    idempotencyKey: string,
+    accountId: string,
+  ) {
+    return this.workResponse(
+      await this.mutate<{ work: EconomyWork }>(`${economyPath(homeId)}/works/${encodeURIComponent(workId)}/${kind}`, {
+        body,
+        headers: { 'Idempotency-Key': idempotencyKey },
+        accountId,
+      }),
+      200,
+    );
+  }
+
+  listWorkHistory(homeId: string, workId: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+    return this.page<WorkHistoryEvent>(`${economyPath(homeId)}/works/${encodeURIComponent(workId)}/history`, page, signal, accountId);
+  }
+
+  private economyExpenseResponse(data: { expense: EconomyExpense } | undefined, status: number) {
+    if (!data || !isEconomyExpense(data.expense)) throw serviceError(status);
+    return data.expense;
+  }
+
+  private workResponse(data: { work: EconomyWork } | undefined, status: number) {
+    if (!data || !data.work || typeof data.work.version !== 'number' || typeof data.work.name !== 'string') throw serviceError(status);
+    return data.work;
+  }
+
   private async ensureCsrf() {
     if (!this.csrfToken) {
       // Nessun token in memoria (es. dopo logout): lo chiediamo al server.
@@ -780,6 +911,42 @@ export class ApiClient {
 
 function homePath(homeId: string) {
   return `/homes/${encodeURIComponent(homeId)}`;
+}
+
+function economyPath(homeId: string) {
+  return `${homePath(homeId)}/economy`;
+}
+
+const CENTS = /^\d+$/;
+const SIGNED_CENTS = /^-?\d+$/;
+
+function isLinkShape(l: unknown) {
+  const v = l as { state?: unknown } | null;
+  return !!v && (v.state === 'none' || v.state === 'unavailable' || v.state === 'linked');
+}
+
+/** Forma minima di un costo economy-v1: importo intero H3a e collegamenti S1 discriminati. */
+function isEconomyExpense(e: unknown): e is EconomyExpense {
+  const x = e as EconomyExpense | null;
+  return (
+    !!x && typeof x.id === 'string' && typeof x.version === 'number' && typeof x.amountCents === 'number' &&
+    Number.isInteger(x.amountCents) && typeof x.family === 'string' && isLinkShape(x.objectLink) &&
+    isLinkShape(x.workLink) && isLinkShape(x.documentLink) && Array.isArray(x.permissions)
+  );
+}
+
+/** Riepilogo: somme stringhe di centesimi intere, sette famiglie, confronto discriminato. */
+function isEconomySummary(s: unknown): s is EconomySummary {
+  const x = s as EconomySummary | null;
+  if (!x || !x.period || typeof x.count !== 'number' || !CENTS.test(String(x.totalCents)) || typeof x.totalCents !== 'string') return false;
+  if (typeof x.totalWithoutFinancingCents !== 'string' || !CENTS.test(x.totalWithoutFinancingCents)) return false;
+  if (!Array.isArray(x.byFamily) || !Array.isArray(x.byCategory)) return false;
+  if (![...x.byFamily, ...x.byCategory].every((r) => typeof r.totalCents === 'string' && CENTS.test(r.totalCents) && typeof r.count === 'number')) return false;
+  const c = x.comparison;
+  if (!c || !['unavailable', 'no_previous_records', 'comparable'].includes(c.status)) return false;
+  if (c.status !== 'unavailable' && (typeof c.deltaCents !== 'string' || !SIGNED_CENTS.test(c.deltaCents))) return false;
+  if (c.status === 'comparable' && (typeof c.deltaPercentHundredths !== 'string' || !SIGNED_CENTS.test(c.deltaPercentHundredths))) return false;
+  return typeof x.today === 'string';
 }
 
 export type PageParams = { cursor?: string | null; limit?: number };

@@ -49,7 +49,8 @@ function filtersToParams(f: ExpenseFilters) {
 
 const isDefault = (f: ExpenseFilters) => !f.year && f.state === 'active' && f.source === 'all';
 
-export function ExpensesPage() {
+/** Pagina H3a: usata quando il servizio non espone economy-v1 (404) o lo storico non è attivo. */
+export function LegacyExpensesPage() {
   const home = useCurrentHome();
   useDocumentTitle(`Spese · ${home.name}`);
   const capabilities = useExpenseCapabilities(home.id);

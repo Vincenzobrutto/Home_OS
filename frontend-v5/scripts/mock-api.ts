@@ -81,6 +81,27 @@ if (process.argv.includes('--seed')) {
   ]) {
     await backend.activities.handle({ method: 'POST', path: '', headers: { 'idempotency-key': crypto.randomUUID() }, body }, a.id, roma.id, 'activities');
   }
+  // economy-v1 S1a/b di prova (solo mock, dati sintetici): famiglie, lavoro e categorie sugli stessi costi H3a.
+  if (process.argv.includes('--s1')) {
+    backend.economy.enabled = true;
+    const s1 = async (rest: string, body: Record<string, unknown>) =>
+      (await backend.economy.handle({ method: 'POST', path: '', headers: { 'idempotency-key': crypto.randomUUID() }, body }, a.id, roma.id, rest)).body as { work?: { id: string } };
+    const bagno = (await s1('works', { name: 'Rifacimento bagno', note: 'Lavoro di prova' })).work!.id;
+    for (const body of [
+      { title: 'Bolletta luce · settembre', amountCents: 7800, spentOn: '2026-09-30', category: 'electricity', supplier: 'Energia Demo' },
+      { title: 'Internet · ottobre', amountCents: 2990, spentOn: '2026-10-01', category: 'internet_services' },
+      { title: 'Rata mutuo · ottobre', amountCents: 45000, spentOn: '2026-10-05', category: 'financing' },
+      { title: 'Polizza collegata al mutuo', amountCents: 12000, spentOn: '2026-10-02', category: 'financing' },
+      { title: 'Polizza casa · premio annuale', amountCents: 18000, spentOn: '2026-10-02', category: 'insurance' },
+      { title: 'Riparazione rubinetto', amountCents: 8500, spentOn: '2026-09-12', category: 'repairs_works', workId: bagno },
+      { title: 'Piastrelle e posa', amountCents: 103500, spentOn: '2026-09-10', category: 'repairs_works', workId: bagno },
+      { title: 'Gas · settembre 2025', amountCents: 7400, spentOn: '2025-09-30', category: 'gas' },
+      { title: 'Rata mutuo · ottobre 2025', amountCents: 45000, spentOn: '2025-10-05', category: 'financing' },
+    ]) {
+      await s1('expenses', body);
+    }
+    console.log('economy-v1 SIMULATO attivo (--s1): dati sintetici, documentDrafts false.');
+  }
   console.log(
     'Account di prova (solo mock): a@example.test / password-di-prova-A, b@example.test / password-di-prova-B, ' +
       'v@example.test / password-di-prova-V (viewer di Appartamento Roma)',

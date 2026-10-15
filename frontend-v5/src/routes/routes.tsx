@@ -9,12 +9,13 @@ import { ActivityPage } from './ActivityPage';
 import { ReviewPage } from './ReviewPage';
 import { BoilerPage } from './BoilerPage';
 import { ActivityDetailPage } from './ActivityDetailPage';
-import { ExpensesPage } from './ExpensesPage';
-import { ExpenseDetailPage } from './ExpenseDetailPage';
+import { ExpensesPage } from './SpesePage';
+import { ExpenseDetailRoute } from './EconomyExpensePage';
+import { WorkDetailPage, WorksPage } from './WorksPages';
 import { RoomDetailPage, RoomsPage } from './RoomsPages';
 import { ObjectDetailPage, ObjectsPage } from './ObjectsPages';
 
-// Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3/M4, caso Caldaia), activities-v1 (H1), expenses-v1 (H3a), home-objects-v1 (G1).
+// Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3/M4, caso Caldaia), activities-v1 (H1), expenses-v1 (H3a), home-objects-v1 (G1), economy-v1 (S1a/b, con ripiego H3a).
 // Agenzie e Amministratori non hanno rotte: non sono ancora assegnate.
 export const routes: RouteObject[] = [
   {
@@ -47,7 +48,9 @@ export const routes: RouteObject[] = [
               { path: 'documenti', element: <DocumentsPage /> },
               { path: 'documenti/:documentId', element: <DocumentDetailPage /> },
               { path: 'spese', element: <ExpensesPage /> },
-              { path: 'spese/:expenseId', element: <ExpenseDetailPage /> },
+              { path: 'spese/lavori', element: <WorksPage /> },
+              { path: 'spese/lavori/:workId', element: <WorkDetailPage /> },
+              { path: 'spese/:expenseId', element: <ExpenseDetailRoute /> },
               { path: 'ambienti', element: <RoomsPage /> },
               { path: 'ambienti/:roomId', element: <RoomDetailPage /> },
               { path: 'oggetti', element: <ObjectsPage /> },

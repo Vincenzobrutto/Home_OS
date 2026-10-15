@@ -18,6 +18,7 @@ import { FakeReview } from './fakeReview.ts';
 import { FakeActivities } from './fakeActivities.ts';
 import { FakeExpenses } from './fakeExpenses.ts';
 import { FakeObjects } from './fakeObjects.ts';
+import { FakeEconomy } from './fakeEconomy.ts';
 
 export type FakeRequest = {
   method: string;
@@ -166,6 +167,18 @@ export class FakeBackend {
             .filter((a) => a.accountId === accountId && a.homeId === homeId && a.assetId === assetId)
             .map((a) => ({ id: a.id, title: a.title, assetId })),
   });
+  /**
+   * economy-v1 (S1a/b) simulato sugli stessi costi H3a e collegamenti G1.
+   * Disattivo per default (404): le prove H3a restano quelle di un backend senza S1.
+   */
+  economy = new FakeEconomy(this.expenses, this.objects, {
+    perms: (accountId, homeId) => this.homePerms(accountId, homeId),
+    document: (accountId, homeId, documentId) => {
+      const perms = this.homePerms(accountId, homeId);
+      const d = this.documents.get(documentId);
+      return perms && d && d.homeId === homeId && this.canSee(d, accountId, perms) ? { id: d.id, name: d.name } : null;
+    },
+  });
   /** false = backend senza endpoint M3 (404, come un backend solo M1/M2). */
   reviewEnabled = true;
 
@@ -259,6 +272,9 @@ export class FakeBackend {
 
     const g1 = /^\/homes\/([^/]+)\/((?:object-capabilities|rooms|objects)(?:[/?].*)?)$/.exec(path);
     if (g1) return this.objects.handle(req, account.id, decodeURIComponent(g1[1]!), g1[2]!);
+
+    const s1 = /^\/homes\/([^/]+)\/economy\/(.*)$/.exec(path);
+    if (s1) return this.economy.handle(req, account.id, decodeURIComponent(s1[1]!), s1[2]!);
 
     const h3 = /^\/homes\/([^/]+)\/((?:expense-capabilities|expense-summary|expenses)(?:[/?].*)?)$/.exec(path);
     if (h3) return this.expenses.handle(req, account.id, decodeURIComponent(h3[1]!), h3[2]!);

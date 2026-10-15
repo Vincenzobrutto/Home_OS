@@ -65,6 +65,23 @@ export const queryKeys = {
     ['account', accountId, 'home', homeId, 'h3', 'expense', expenseId, 'history'] as const,
   expenseSummary: (accountId: string, homeId: string, year: string | null) =>
     ['account', accountId, 'home', homeId, 'h3', 'summary', year ?? '-'] as const,
+  // economy-v1 (S1a/b): stesso HomeExpense canonico di H3a, proiezioni separate.
+  // filters = chiave normalizzata dei filtri (in memoria, mai nell'URL).
+  economy: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'economy'] as const,
+  economyCapabilities: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'economy', 'capabilities'] as const,
+  economySummary: (accountId: string, homeId: string, filters: string) =>
+    ['account', accountId, 'home', homeId, 'economy', 'summary', filters] as const,
+  economyExpenses: (accountId: string, homeId: string, filters: string, limit: number) =>
+    ['account', accountId, 'home', homeId, 'economy', 'expenses', 'list', filters, limit] as const,
+  economyExpense: (accountId: string, homeId: string, expenseId: string) =>
+    ['account', accountId, 'home', homeId, 'economy', 'expenses', expenseId, 'detail'] as const,
+  economyExpenseHistory: (accountId: string, homeId: string, expenseId: string) =>
+    ['account', accountId, 'home', homeId, 'economy', 'expenses', expenseId, 'history'] as const,
+  works: (accountId: string, homeId: string, state: string, q: string) =>
+    ['account', accountId, 'home', homeId, 'economy', 'works', 'list', state, q] as const,
+  work: (accountId: string, homeId: string, workId: string) => ['account', accountId, 'home', homeId, 'economy', 'works', workId, 'detail'] as const,
+  workHistory: (accountId: string, homeId: string, workId: string) =>
+    ['account', accountId, 'home', homeId, 'economy', 'works', workId, 'history'] as const,
 };
 
 export function newIdempotencyKey(): string {

@@ -82,6 +82,41 @@ export class FakeObjects {
     this.access = access;
   }
 
+  // ---- accesso per economy-v1 simulato (S1): stessi collegamenti G1, nessuna copia ----
+
+  /** Oggetto manuale a cui il costo è collegato per riferimento (attivo), se c'è. */
+  expenseReference(accountId: string, homeId: string, expenseId: string): Ref | null {
+    const l = [...this.links.values()].find((x) => x.accountId === accountId && x.homeId === homeId && x.resourceType === 'expense' && x.resourceId === expenseId && x.state === 'active');
+    return l ? l.ref : null;
+  }
+
+  attachExpense(accountId: string, homeId: string, ref: Ref, expenseId: string) {
+    const l: StoredLink = { linkId: uuid(), accountId, homeId, ref, resourceType: 'expense', resourceId: expenseId, state: 'active', version: 1, createdAt: this.stamp() };
+    this.links.set(l.linkId, l);
+    this.event(`obj:${this.posKey(accountId, ref)}`, 'linked', null, { resourceType: 'expense' });
+  }
+
+  detachExpense(accountId: string, homeId: string, expenseId: string) {
+    for (const l of this.links.values()) {
+      if (l.accountId === accountId && l.homeId === homeId && l.resourceType === 'expense' && l.resourceId === expenseId && l.state === 'active') {
+        Object.assign(l, { state: 'removed', version: l.version + 1 });
+        this.event(`obj:${this.posKey(accountId, l.ref)}`, 'unlinked', { resourceType: 'expense' }, null);
+      }
+    }
+  }
+
+  /** Sintesi autorizzata (oggetto proprio o caldaia propria), con lo stato corrente. */
+  objectSummary(accountId: string, homeId: string, ref: Ref): { ref: Ref; name: string; state: 'active' | 'archived' } | null {
+    if (!this.access.perms(accountId, homeId)) return null;
+    const f = this.find(accountId, homeId, ref);
+    if (!f) return null;
+    return { ref, name: f.name, state: f.stored ? f.stored.state : 'active' };
+  }
+
+  roomIdsOf(accountId: string, ref: Ref): string[] {
+    return this.positions.get(this.posKey(accountId, ref))?.roomIds ?? [];
+  }
+
   private stamp() {
     this.seq += 1;
     return new Date(Date.parse('2026-10-13T10:00:00Z') + this.seq * 1000).toISOString();

@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../api/queryKeys';
+import { notCapabilities } from '../economy/hooks';
 import type {
   CatalogFilters,
   CatalogItem,
@@ -171,6 +172,8 @@ export function useG1Mutation(homeId: string) {
       if ('room' in res) queryClient.setQueryData(queryKeys.room(account.id, homeId, res.room.id), res.room);
       if ('object' in res) queryClient.setQueryData(queryKeys.object(account.id, homeId, res.object.ref.kind, res.object.ref.id), res.object);
       await queryClient.invalidateQueries({ queryKey: queryKeys.g1(account.id, homeId) });
+      // S1: objectLink e filtri per oggetto/ambiente dei costi dipendono dai collegamenti G1.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.economy(account.id, homeId), predicate: notCapabilities });
     },
   });
 }

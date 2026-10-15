@@ -6,6 +6,7 @@ import { useActivityCapabilities } from '../activities/hooks';
 import { Icon } from '../components/Icon';
 import { ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import { useExpenseCapabilities } from '../expenses/hooks';
+import { useEconomyCapabilities } from '../economy/hooks';
 import { G1History } from '../objects/History';
 import { LinksSection, ObjectForm, PositionEditor, StateDialog, objectOwn as own, objectStyles as styles, roomsText, typeLabel } from '../objects/components';
 import { useCatalog, useForgetObjects, useObject, useObjectHistory, useRooms } from '../objects/hooks';
@@ -344,6 +345,7 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
   const canEdit = home.permissions.includes('edit') && object.permissions.includes('edit');
   const history = useObjectHistory(home.id, object.ref);
   const expenseCaps = useExpenseCapabilities(home.id);
+  const economyCaps = useEconomyCapabilities(home.id);
   const activityCaps = useActivityCapabilities(home.id);
   const actionsRef = useFocusAfterVersion(props.focusActions);
   const base = `/home/${encodeURIComponent(home.id)}`;
@@ -433,7 +435,13 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
         )}
 
         <LinksSection home={home} object={object} resourceType="document" />
-        <LinksSection home={home} object={object} resourceType="expense" expenseCapabilities={expenseCaps.data} />
+        <LinksSection
+          home={home}
+          object={object}
+          resourceType="expense"
+          expenseCapabilities={expenseCaps.data}
+          economyEnabled={!!economyCaps.data?.enabled && !!economyCaps.data?.features.history}
+        />
         <LinksSection home={home} object={object} resourceType="activity" activityCapabilities={activityCaps.data} />
         <G1History
           title="Storia dell’oggetto"
