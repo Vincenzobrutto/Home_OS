@@ -112,6 +112,13 @@ if (process.argv.includes('--seed')) {
     backend.economy.fixtureDocs.set(invoice.id, 'invoice');
     console.log('S1c SIMULATO attivo (--s1c): prova fixture su gas.pdf e invoice.pdf sintetici, nessun modello AI.');
   }
+  // Provider reale SIMULATO (solo mock, solo per provare consenso e stati): nessuna chiamata esterna.
+  // Il primo nuovo tentativo reale fallisce con provider_rate_limited per mostrare la riprova.
+  if (process.argv.includes('--s1c-real')) {
+    backend.economy.realProvider = { model: 'modello-simulato' };
+    backend.economy.failNextJobWith = 'provider_rate_limited';
+    console.log('Provider reale SIMULATO (--s1c-real): nessuna chiamata Anthropic, esiti e costi sintetici.');
+  }
   console.log(
     'Account di prova (solo mock): a@example.test / password-di-prova-A, b@example.test / password-di-prova-B, ' +
       'v@example.test / password-di-prova-V (viewer di Appartamento Roma)',

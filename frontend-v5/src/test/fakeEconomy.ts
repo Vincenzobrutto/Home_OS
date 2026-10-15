@@ -34,12 +34,15 @@ type Cite = { documentId: string; documentVersion: number; sha256: string; page:
 type FakeJob = {
   id: string; homeId: string; accountId: string; version: number; state: 'queued' | 'running' | 'succeeded' | 'failed';
   documentId: string; draftId: string | null; errorCode: string | null; polls: number; forcedError: string | null; createdAt: string; updatedAt: string;
+  provider: 'test_fixture_v1' | 'anthropic'; model: string | null;
+  billing: { currency: 'USD'; maxReservedUsd: string; actualUsd: string | null; state: 'reserved' | 'settled' | 'uncertain' } | null;
 };
 type FakeDraft = {
   id: string; homeId: string; accountId: string; version: number; state: 'open' | 'parked' | 'confirmed'; documentId: string; kind: 'gas' | 'invoice';
   proposed: Record<string, { value: string; sources: Cite[] }>;
   candidates: Array<{ id: string; amountCents: number; role: string; label: string; sources: Cite[] }>;
   required: boolean; expenseId: string | null; createdAt: string; updatedAt: string;
+  provider?: 'test_fixture_v1' | 'anthropic'; model?: string | null;
 };
 const JOB_MESSAGES: Record<string, string> = {
   provider_fixture_unsupported: 'Analisi di test disponibile solo per i PDF sintetici indicati. Puoi inserire il costo manualmente.',
@@ -234,8 +237,10 @@ export class FakeEconomy {
             enabled: true,
             disabledReason: null,
             providers: [
-              { id: 'test_fixture_v1', label: 'Prova con PDF sintetici', enabled: true, disabledReason: null, isSimulation: true, model: null },
-              { id: 'anthropic', label: 'Anthropic', enabled: false, disabledReason: 'Nuova campagna non abilitata.', isSimulation: false, model: null },
+              { id: 'test_fixture_v1', label: 'Prova con PDF sintetici', enabled: !this.fixtureDisabled, disabledReason: null, isSimulation: true, model: null },
+              this.realProvider
+                ? { id: 'anthropic', label: 'Anthropic', enabled: true, disabledReason: null, isSimulation: false, model: this.realProvider.model }
+                : { id: 'anthropic', label: 'Anthropic', enabled: false, disabledReason: 'Nuova campagna non abilitata.', isSimulation: false, model: null },
             ],
           }
         : { enabled: false, disabledReason: 'Analisi economica non ancora disponibile.', providers: [] },
@@ -627,6 +632,15 @@ export class FakeEconomy {
   jobSteps = 2;
   /** Il prossimo job fallisce con questo codice anche se il documento è una fixture. */
   failNextJobWith: string | null = null;
+  /**
+   * SIMULAZIONE di un provider reale abilitato (solo prove del consenso): nessuna chiamata esterna,
+   * esiti e costi sono valori sintetici. Null = Anthropic disabilitato come nel runtime attuale.
+   */
+  realProvider: { model: string } | null = null;
+  /** Il prossimo avvio/nuovo tentativo reale viene rifiutato prima del dispatch con questo codice. */
+  rejectNextRealWith: string | null = null;
+  /** Prova sintetica non abilitata (per provare il provider reale come unica modalità). */
+  fixtureDisabled = false;
 
   private doc(accountId: string, homeId: string, id: string) {
     return this.revokedDocs.has(id) ? null : this.access.document(accountId, homeId, id);
@@ -636,11 +650,11 @@ export class FakeEconomy {
     const d = this.doc(j.accountId, j.homeId, j.documentId);
     const draft = j.draftId ? this.drafts.get(j.draftId) : undefined;
     return {
-      id: j.id, homeId: j.homeId, version: j.version, state: j.state, provider: 'test_fixture_v1', isSimulation: true, model: null,
+      id: j.id, homeId: j.homeId, version: j.version, state: j.state, provider: j.provider, isSimulation: j.provider === 'test_fixture_v1', model: j.model,
       documentLink: d ? { state: 'linked', document: d } : { state: 'unavailable', document: null },
       draftId: draft && d ? draft.id : null,
       error: j.errorCode ? { code: j.errorCode, message: JOB_MESSAGES[j.errorCode] ?? 'Analisi non disponibile. Nessuna spesa registrata.' } : null,
-      billing: null, createdAt: j.createdAt, updatedAt: j.updatedAt, permissions: perms.includes('edit') ? ['read', 'edit'] : ['read'],
+      billing: j.billing ? { ...j.billing } : null, createdAt: j.createdAt, updatedAt: j.updatedAt, permissions: perms.includes('edit') ? ['read', 'edit'] : ['read'],
     };
   }
 
@@ -650,8 +664,8 @@ export class FakeEconomy {
     return {
       id: d.id, homeId: d.homeId, version: d.version, state: d.state,
       documentLink: doc ? { state: 'linked', document: doc } : { state: 'unavailable', document: null },
-      provider: 'test_fixture_v1', isSimulation: true,
-      ...(list ? {} : { model: null, proposedFields: doc ? d.proposed : {}, amountCandidates: doc ? d.candidates : [], amountSelectionRequired: doc ? d.required : true }),
+      provider: d.provider ?? 'test_fixture_v1', isSimulation: (d.provider ?? 'test_fixture_v1') === 'test_fixture_v1',
+      ...(list ? {} : { model: d.model ?? null, proposedFields: doc ? d.proposed : {}, amountCandidates: doc ? d.candidates : [], amountSelectionRequired: doc ? d.required : true }),
       documentKind: d.kind === 'gas' ? 'utility_bill' : 'simple_invoice',
       expenseLink: d.expenseId ? (exp ? { state: 'linked', value: { id: exp.id, title: exp.title } } : { state: 'unavailable', value: null }) : { state: 'none', value: null },
       createdAt: d.createdAt, updatedAt: d.updatedAt, permissions: perms.includes('edit') ? ['read', 'edit'] : ['read'],
@@ -726,13 +740,20 @@ export class FakeEconomy {
     const at = this.stamp();
     if (j.state === 'queued' && j.polls >= 1) Object.assign(j, { state: 'running', version: j.version + 1, updatedAt: at });
     if (j.state === 'running' && j.polls >= this.jobSteps) {
-      const kind = this.fixtureDocs.get(j.documentId);
+      const real = j.provider === 'anthropic';
+      // Il provider reale simulato «legge» ogni PDF come fattura sintetica: nessun modello coinvolto.
+      const kind = this.fixtureDocs.get(j.documentId) ?? (real ? 'invoice' : undefined);
       if (j.forcedError) Object.assign(j, { state: 'failed', errorCode: j.forcedError });
       else if (!kind) Object.assign(j, { state: 'failed', errorCode: 'provider_fixture_unsupported' });
       else {
-        const draft = this.makeDraft(j, kind);
+        const draft = { ...this.makeDraft(j, kind), provider: j.provider, model: j.model };
         this.drafts.set(draft.id, draft);
         Object.assign(j, { state: 'succeeded', draftId: draft.id });
+      }
+      if (j.billing) {
+        j.billing = j.forcedError === 'analysis_outcome_unknown'
+          ? { ...j.billing, state: 'uncertain', actualUsd: null }
+          : { ...j.billing, state: 'settled', actualUsd: j.forcedError ? '0.000000' : '0.012345' };
       }
       Object.assign(j, { version: j.version + 1, updatedAt: at });
     }
@@ -747,15 +768,37 @@ export class FakeEconomy {
     const documentId = body.documentId;
     if (!this.doc(accountId, homeId, documentId)) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
     return this.withIdem(req, `${accountId}:${homeId}:job-start`, () => {
-      if (body.provider === 'anthropic') return err(503, 'ai_provider_disabled', 'Nuova campagna Anthropic non abilitata. Nessun testo inviato.');
+      if (body.provider === 'anthropic') {
+        const refused = this.refuseReal();
+        if (refused) return refused;
+      } else if (this.fixtureDisabled) return err(503, 'ai_provider_disabled', 'Prova sintetica non abilitata.');
       if (this.nonPdfDocs.has(documentId)) return err(422, 'economic_document_unsupported', 'Questa analisi richiede un PDF con testo.');
-      const at = this.stamp();
-      const j: FakeJob = { id: uuid(), homeId, accountId, version: 1, state: 'queued', documentId, draftId: null, errorCode: null, polls: 0, forcedError: this.failNextJobWith, createdAt: at, updatedAt: at };
-      this.failNextJobWith = null;
-      this.jobs.set(j.id, j);
+      const j = this.newJob(accountId, homeId, documentId, body.provider as FakeJob['provider']);
       const replay = () => ({ job: this.jobView(this.jobs.get(j.id)!, perms) });
       return { status: 202, body: replay(), replay };
     });
+  }
+
+  private refuseReal(): Res | null {
+    if (!this.realProvider) return err(503, 'ai_provider_disabled', 'Nuova campagna Anthropic non abilitata. Nessun testo inviato.');
+    const code = this.rejectNextRealWith;
+    if (!code) return null;
+    this.rejectNextRealWith = null;
+    const status = code === 'provider_rate_limited' ? 429 : code === 'ai_budget_exhausted' || code === 'ai_evaluation_limit_reached' ? 409 : 503;
+    return err(status, code, 'Rifiuto simulato prima dell’invio: nessun testo inviato.');
+  }
+
+  private newJob(accountId: string, homeId: string, documentId: string, provider: FakeJob['provider']) {
+    const at = this.stamp();
+    const real = provider === 'anthropic';
+    const j: FakeJob = {
+      id: uuid(), homeId, accountId, version: 1, state: 'queued', documentId, draftId: null, errorCode: null, polls: 0, forcedError: this.failNextJobWith, createdAt: at, updatedAt: at,
+      provider, model: real ? this.realProvider!.model : null,
+      billing: real ? { currency: 'USD', maxReservedUsd: '0.050000', actualUsd: null, state: 'reserved' } : null,
+    };
+    this.failNextJobWith = null;
+    this.jobs.set(j.id, j);
+    return j;
   }
 
   private retryJob(req: Req, j: FakeJob, accountId: string, homeId: string, perms: HomePermission[]): Res {
@@ -765,8 +808,14 @@ export class FakeEconomy {
     return this.withIdem(req, `${accountId}:${homeId}:job-retry:${j.id}`, () => {
       if (ev !== j.version) return err(409, 'job_version_conflict', 'Rileggi il job.');
       if (j.state !== 'failed') return err(409, 'job_state_conflict', 'Il job non è fallito.');
-      Object.assign(j, { state: 'queued', errorCode: null, forcedError: null, polls: 0, version: j.version + 1, updatedAt: this.stamp() });
-      const replay = () => ({ job: this.jobView(j, perms) });
+      if (j.provider === 'anthropic') {
+        if (body.consentToProviderTransfer !== true) return err(422, 'validation_error', 'Autorizza esplicitamente il nuovo invio ad Anthropic.');
+        const refused = this.refuseReal();
+        if (refused) return refused;
+      }
+      // Contratto: un nuovo tentativo crea un NUOVO job; quello fallito resta com'è.
+      const next = this.newJob(accountId, homeId, j.documentId, j.provider);
+      const replay = () => ({ job: this.jobView(this.jobs.get(next.id)!, perms) });
       return { status: 202, body: replay(), replay };
     });
   }

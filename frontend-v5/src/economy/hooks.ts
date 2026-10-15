@@ -189,8 +189,8 @@ export type EconomyVars =
   | { kind: 'archive' | 'restore'; expenseId: string; body: { expectedVersion: number; note?: string } }
   | { kind: 'workCreate'; body: { name: string; note?: string | null } }
   | { kind: 'workUpdates' | 'workArchive' | 'workRestore'; workId: string; body: { expectedVersion: number; name?: string; note?: string | null } }
-  | { kind: 'analysisStart'; body: { documentId: string; provider: Provider } }
-  | { kind: 'analysisRetry'; jobId: string; body: { expectedVersion: number } }
+  | { kind: 'analysisStart'; body: { documentId: string; provider: Provider; consentToProviderTransfer?: true } }
+  | { kind: 'analysisRetry'; jobId: string; body: { expectedVersion: number; consentToProviderTransfer?: true } }
   | { kind: 'draftPark' | 'draftReopen'; draftId: string; body: { expectedVersion: number } }
   | { kind: 'draftConfirm'; draftId: string; body: ConfirmDraft };
 
@@ -258,11 +258,18 @@ export function useEconomyMutation(homeId: string) {
  */
 export function useEconomyOperation(homeId: string) {
   const mutation = useEconomyMutation(homeId);
+  const account = useAccount();
+  const queryClient = useQueryClient();
   const [key, setKey] = useState(newIdempotencyKey);
   const [pending, setPending] = useState<EconomyVars | null>(null);
   const locked = mutation.isError && isAmbiguousError(mutation.error);
 
-  const run = (vars: EconomyVars, onSuccess?: (res: EconomyResult) => void) => {
+  /**
+   * onSuccess: passo successivo (navigazione) solo se l'account non è cambiato nel frattempo.
+   * onDefiniteError: esito noto (rifiuto, conflitto, validazione), per azzerare scelte locali
+   * come un consenso; mai chiamato per un esito di trasporto ignoto.
+   */
+  const run = (vars: EconomyVars, onSuccess?: (res: EconomyResult) => void, onDefiniteError?: (err: unknown) => void) => {
     if (mutation.isPending) return;
     setPending(vars);
     // Promessa invece dei callback per chiamata: TanStack non li esegue se il componente si
@@ -273,14 +280,17 @@ export function useEconomyOperation(homeId: string) {
       .then((res) => {
         setKey(newIdempotencyKey());
         setPending(null);
-        onSuccess?.(res);
+        if (sameAccount(queryClient, account.id)) onSuccess?.(res);
       })
       .catch((err: unknown) => {
-        if (!isAmbiguousError(err)) setKey(newIdempotencyKey());
+        if (!isAmbiguousError(err)) {
+          setKey(newIdempotencyKey());
+          onDefiniteError?.(err);
+        }
       });
   };
-  const retry = (onSuccess?: (res: EconomyResult) => void) => {
-    if (pending) run(pending, onSuccess);
+  const retry = (onSuccess?: (res: EconomyResult) => void, onDefiniteError?: (err: unknown) => void) => {
+    if (pending) run(pending, onSuccess, onDefiniteError);
   };
   const reset = () => {
     mutation.reset();

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
-import type { AmountCandidate, Category, CandidateExpense, ConfirmDraft, EconomicDraft, EconomyCapabilities, ExpenseValues, SourceCitation } from '../api/economyTypes';
+import type { AmountCandidate, Billing, Category, CandidateExpense, ConfirmDraft, EconomicDraft, EconomyCapabilities, ExpenseValues, Provider, SourceCitation } from '../api/economyTypes';
 import type { Home } from '../api/types';
 import act from '../activities/activities.module.css';
 import { Dialog, NoteField } from '../activities/components';
@@ -17,6 +17,7 @@ import {
   useForgetEconomy,
   useRefreshEconomy,
   useWorks,
+  type EconomyResult,
 } from '../economy/hooks';
 import { formatCalendarDate, formatTimestamp } from '../lib/activities';
 import {
@@ -27,7 +28,10 @@ import {
   REASON_LABEL,
   ROLE_HINT,
   ROLE_LABEL,
+  BILLING_STATE_LABEL,
   analysisAvailability,
+  formatUsd,
+  isRealProvider,
   draftErrorMessage,
   jobErrorText,
   jobRetryUseful,
@@ -46,6 +50,8 @@ import pages from './pages.module.css';
 // accantonamento e ripresa. Nessuna analisi automatica, nessun dato inventato.
 
 const SIMULATION_LABEL = 'Prova su PDF sintetici · nessun modello AI';
+/** «ad Anthropic», «a Mistral»: preposizione corretta davanti al nome del provider. */
+const toProvider = (label: string) => (/^[aeiou]/i.test(label) ? `ad ${label}` : `a ${label}`);
 
 /** Ritorno a Spese con vista/famiglia/periodo di partenza, solo se dello stesso account. */
 type Ret = { accountId?: string; expensesSearch?: string; economyQ?: string } | null;
@@ -126,12 +132,14 @@ function DraftFeedback(props: { op: ReturnType<typeof useEconomyOperation>; home
 
 export function FromDocumentPage() {
   const home = useCurrentHome();
+  const account = useAccount();
   const caps = useS1cCaps(home);
   const ret = useReturn();
   const back = <Link to={ret.spese} state={ret.backState} className={pages.spaced}>← Spese</Link>;
+  // Chiave per account e casa: scelte e consenso non sopravvivono a un cambio di contesto.
   return (
     <Gate home={home} title="Spesa da documento" caps={caps} back={back}>
-      {(c) => <FromDocument home={home} caps={c} back={back} />}
+      {(c) => <FromDocument key={`${account.id}:${home.id}`} home={home} caps={c} back={back} />}
     </Gate>
   );
 }
@@ -148,8 +156,21 @@ function FromDocument({ home, caps, back }: { home: Home; caps: EconomyCapabilit
   const [chosen, setChosen] = useState<string>(isUuid(preset) ? preset : '');
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadedName, setUploadedName] = useState<string | null>(null);
-  const [understood, setUnderstood] = useState(false);
+  const options = availability.mode === 'on' ? [...availability.real, ...(availability.fixture ? [availability.fixture] : [])] : [];
+  // Con un solo provider disponibile la scelta è implicita; con più provider resta vuota finché l'utente non sceglie.
+  const [providerChoice, setProviderChoice] = useState<Provider | ''>('');
+  const provider = options.length === 1 ? options[0]! : options.find((p) => p.id === providerChoice) ?? null;
+  // Consenso e presa d'atto valgono solo per la coppia documento/provider per cui sono stati dati:
+  // cambiando l'uno o l'altro la casella torna vuota. Solo stato locale, mai URL o storage.
+  const pair = `${chosen}|${provider?.id ?? ''}`;
+  const [consentFor, setConsentFor] = useState<string | null>(null);
+  const [understoodFor, setUnderstoodFor] = useState<string | null>(null);
+  const real = !!provider && !provider.isSimulation;
+  const consent = real && consentFor === pair;
+  const understood = !!provider && provider.isSimulation && understoodFor === pair;
   const op = useEconomyOperation(home.id);
+  // Durante l'invio o con esito ignoto la richiesta resta quella già spedita: scelte bloccate.
+  const frozen = op.mutation.isPending || op.locked;
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
   const canEdit = home.permissions.includes('edit');
@@ -157,11 +178,23 @@ function FromDocument({ home, caps, back }: { home: Home; caps: EconomyCapabilit
   const chosenName = chosenDoc?.name ?? (chosen && uploadedName) ?? null;
   const isPdf = !chosenDoc || chosenDoc.mimeType === 'application/pdf';
   const manualHref = `/home/${encodeURIComponent(home.id)}/spese?nuova-spesa=1${chosen ? `&documentId=${encodeURIComponent(chosen)}` : ''}`;
+  const toJob = (res: EconomyResult) => {
+    if ('job' in res) navigate(jobPath(home.id, res.job.id), { state: ret.state });
+  };
+  // Rifiuto definito: il consenso dato per quella richiesta non vale per un nuovo invio.
+  const forgetConsent = () => {
+    setConsentFor(null);
+    setUnderstoodFor(null);
+  };
+  // Ogni cambio di documento o provider richiede un consenso nuovo, anche tornando a una scelta precedente.
+  const pickDocument = (docId: string) => {
+    forgetConsent();
+    setChosen(docId);
+  };
   const start = () => {
-    if (!chosen || availability.mode === 'off') return;
-    op.run({ kind: 'analysisStart', body: { documentId: chosen, provider: availability.provider.id } }, (res) => {
-      if ('job' in res) navigate(jobPath(home.id, res.job.id), { state: ret.state });
-    });
+    if (!chosen || !provider || (real ? !consent : !understood)) return;
+    const body = real ? { documentId: chosen, provider: provider.id, consentToProviderTransfer: true as const } : { documentId: chosen, provider: provider.id };
+    op.run({ kind: 'analysisStart', body }, toJob, forgetConsent);
   };
   return (
     <>
@@ -181,14 +214,14 @@ function FromDocument({ home, caps, back }: { home: Home; caps: EconomyCapabilit
           ) : documents.isError ? (
             <ErrorState error={documents.error} onRetry={() => void documents.refetch()} title="Documenti non disponibili" />
           ) : (
-            <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+            <fieldset style={{ border: 0, padding: 0, margin: 0 }} disabled={frozen}>
               <legend className="visually-hidden">Documento da usare</legend>
               {docs.length === 0 && <p className={pages.muted}>Nessun documento nella casa: caricane uno.</p>}
               <ul className={act.list} aria-label="Documenti disponibili">
                 {docs.map((d) => (
                   <li key={d.id} className={act.item}>
                     <label style={{ display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer' }}>
-                      <input type="radio" name={`${id}-doc-choice`} value={d.id} checked={chosen === d.id} onChange={() => setChosen(d.id)} />
+                      <input type="radio" name={`${id}-doc-choice`} value={d.id} checked={chosen === d.id} onChange={() => pickDocument(d.id)} />
                       <span>
                         <strong>{d.name}</strong>
                         <span className={act.meta} style={{ display: 'block' }}>{d.mimeType === 'application/pdf' ? 'PDF' : 'Immagine: non analizzabile, solo inserimento manuale'} · caricato il {formatTimestamp(d.createdAt)}</span>
@@ -202,7 +235,7 @@ function FromDocument({ home, caps, back }: { home: Home; caps: EconomyCapabilit
               )}
             </fieldset>
           )}
-          {canEdit && !uploadOpen && (
+          {canEdit && !uploadOpen && !frozen && (
             <p className={pages.spaced}>
               <button type="button" className={ui.btn} onClick={() => setUploadOpen(true)}>Carica un nuovo documento</button>
             </p>
@@ -216,7 +249,7 @@ function FromDocument({ home, caps, back }: { home: Home; caps: EconomyCapabilit
                 onUploaded={(d) => {
                   setUploadOpen(false);
                   setUploadedName(d.name);
-                  setChosen(d.id);
+                  pickDocument(d.id);
                 }}
               />
               <p className={act.meta}>Il file viene conservato in Documenti come ogni altro originale. Il caricamento non avvia nessuna analisi.</p>
@@ -229,22 +262,61 @@ function FromDocument({ home, caps, back }: { home: Home; caps: EconomyCapabilit
           <h2 id={`${id}-how`} className={pages.cardTitle}>2. Come procedere</h2>
           {availability.mode === 'off' ? (
             <p className={pages.muted}>{availability.reason}</p>
-          ) : availability.mode === 'fixture' ? (
-            <>
-              <p><Tag tone="warn">{SIMULATION_LABEL}</Tag></p>
-              <p className={act.meta}>
-                Oggi è disponibile solo una prova tecnica: riconosce due PDF sintetici predisposti per il collaudo e propone valori preimpostati.
-                Non legge le tue bollette con un modello AI e non invia testo a servizi esterni. Per i documenti ordinari usa l’inserimento manuale.
-              </p>
-              <label className={act.meta} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8 }}>
-                <input type="checkbox" checked={understood} onChange={(e) => setUnderstood(e.target.checked)} />
-                <span>Voglio avviare la prova sintetica su questo documento, sapendo che non è un’analisi reale.</span>
-              </label>
-            </>
           ) : (
-            <p className={act.meta}>Analisi con {availability.provider.label}. I dati proposti restano da confermare.</p>
+            <>
+              {options.length > 1 && (
+                <fieldset style={{ border: 0, padding: 0, margin: 0 }} disabled={frozen}>
+                  <legend className={act.meta}>Scegli come leggere il documento:</legend>
+                  <ul className={act.list} aria-label="Modalità di analisi">
+                    {options.map((p) => (
+                      <li key={p.id} className={act.item}>
+                        <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
+                          <input type="radio" name={`${id}-provider`} value={p.id} checked={provider?.id === p.id} onChange={() => { forgetConsent(); setProviderChoice(p.id); }} />
+                          <span>
+                            <strong>{p.isSimulation ? SIMULATION_LABEL : `Analisi con ${p.label}`}</strong>
+                            <span className={act.meta} style={{ display: 'block' }}>
+                              {p.isSimulation ? 'Valori preimpostati, nessun invio a servizi esterni.' : `Il testo del documento viene inviato ${toProvider(p.label)}${p.model ? ` (modello ${p.model})` : ''}.`}
+                            </span>
+                          </span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </fieldset>
+              )}
+              {provider?.isSimulation && (
+                <>
+                  <p><Tag tone="warn">{SIMULATION_LABEL}</Tag></p>
+                  <p className={act.meta}>
+                    Oggi è disponibile solo una prova tecnica: riconosce due PDF sintetici predisposti per il collaudo e propone valori preimpostati.
+                    Non legge le tue bollette con un modello AI e non invia testo a servizi esterni. Per i documenti ordinari usa l’inserimento manuale.
+                  </p>
+                  <label className={act.meta} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8 }}>
+                    <input type="checkbox" checked={understood} disabled={frozen} onChange={(e) => setUnderstoodFor(e.target.checked ? pair : null)} />
+                    <span>Voglio avviare la prova sintetica su questo documento, sapendo che non è un’analisi reale.</span>
+                  </label>
+                </>
+              )}
+              {provider && !provider.isSimulation && (
+                <>
+                  <p className={act.meta}>
+                    Analisi con {provider.label}{provider.model ? ` · modello ${provider.model}` : ''}. Ogni analisi può avere un costo per il servizio: non è una spesa della casa e non entra nei totali.
+                  </p>
+                  {chosen && isPdf ? (
+                    <label className={act.meta} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8 }}>
+                      <input type="checkbox" checked={consent} disabled={frozen} onChange={(e) => setConsentFor(e.target.checked ? pair : null)} />
+                      <span>
+                        Invia {toProvider(provider.label)} il testo di «{chosenName ?? 'documento scelto'}» per proporre i dati della spesa. Le proposte non vengono registrate da sole: dovrò controllarle e confermarle io.
+                      </span>
+                    </label>
+                  ) : (
+                    <p className={act.meta}>Scegli un PDF: prima dell’invio ti chiederemo un consenso esplicito per quel documento.</p>
+                  )}
+                </>
+              )}
+            </>
           )}
-          {availability.mode !== 'off' && availability.disabled.length > 0 && (
+          {availability.disabled.length > 0 && (
             <ul className={act.meta}>
               {availability.disabled.map((p) => (
                 <li key={p.id}>{p.label}: non disponibile{p.disabledReason ? ` — ${p.disabledReason}` : ''}</li>
@@ -252,16 +324,16 @@ function FromDocument({ home, caps, back }: { home: Home; caps: EconomyCapabilit
             </ul>
           )}
           {!isPdf && <Banner tone="warning"><p>Il documento scelto non è un PDF: l’analisi non è possibile. Puoi inserire il costo a mano.</p></Banner>}
-          <DraftFeedback op={op} homeId={home.id} title="Analisi non avviata" onRetry={() => op.retry((res) => 'job' in res && navigate(jobPath(home.id, res.job.id), { state: ret.state }))} />
+          <DraftFeedback op={op} homeId={home.id} title="Analisi non avviata" onRetry={() => op.retry(toJob, forgetConsent)} />
           <p className={act.actions}>
-            {canEdit && availability.mode !== 'off' && !op.locked && (
+            {canEdit && provider && !op.locked && (
               <button
                 type="button"
                 className={cx(ui.btn, ui.primary)}
-                disabled={!chosen || !isPdf || op.mutation.isPending || (availability.mode === 'fixture' && !understood)}
+                disabled={!chosen || !isPdf || op.mutation.isPending || (real ? !consent : !understood)}
                 onClick={start}
               >
-                {op.mutation.isPending ? 'Avvio…' : availability.mode === 'fixture' ? 'Avvia la prova sintetica' : 'Proponi i dati'}
+                {op.mutation.isPending ? 'Avvio…' : real ? `Invia ${toProvider(provider.label)} e proponi i dati` : 'Avvia la prova sintetica'}
               </button>
             )}
             <Link to={manualHref} state={ret.state} className={ui.btn}>Inserisci il costo a mano{chosenName ? ` con «${chosenName}»` : ''}</Link>
@@ -278,15 +350,40 @@ function FromDocument({ home, caps, back }: { home: Home; caps: EconomyCapabilit
 // ---------------------------------------------------------------------------------
 
 const JOB_STATE = { queued: 'In coda', running: 'Lettura del documento in corso', succeeded: 'Proposta pronta', failed: 'Analisi non riuscita' } as const;
+const PROVIDER_LABEL: Record<string, string> = { anthropic: 'Anthropic', test_fixture_v1: 'Prova con PDF sintetici' };
 
 export function AnalysisJobPage() {
   const home = useCurrentHome();
+  const account = useAccount();
   const { jobId = '' } = useParams();
+  // Un nuovo tentativo crea un nuovo job: la pagina si rimonta e non conserva consenso o esiti del precedente.
+  return <AnalysisJob key={`${account.id}:${home.id}:${jobId}`} home={home} jobId={jobId} />;
+}
+
+/** Costo dell'analisi (servizio), mai una spesa della casa: nessuna somma con importi in euro. */
+function AnalysisBilling({ billing }: { billing: Billing }) {
+  const max = formatUsd(billing.maxReservedUsd);
+  const actual = formatUsd(billing.actualUsd);
+  return (
+    <div className={act.meta} role="group" aria-label="Costo dell’analisi">
+      <p><strong>Costo dell’analisi</strong> (servizio di lettura, non una spesa della casa: non entra in Spese, nei totali o nel grafico)</p>
+      <ul>
+        <li>Stato: {BILLING_STATE_LABEL[billing.state]}</li>
+        {max && <li>Riserva massima: {max}</li>}
+        <li>Costo effettivo: {actual ?? (billing.state === 'uncertain' ? 'non ancora confermato' : 'non ancora disponibile')}</li>
+      </ul>
+    </div>
+  );
+}
+
+function AnalysisJob({ home, jobId }: { home: Home; jobId: string }) {
   const ret = useReturn();
   const navigate = useNavigate();
   const job = useEconomicJob(home.id, jobId);
   const forget = useForgetEconomy(home.id);
   const op = useEconomyOperation(home.id);
+  const [retryOpen, setRetryOpen] = useState(false);
+  const [retryConsent, setRetryConsent] = useState(false);
   useDocumentTitle(`Analisi del documento · ${home.name}`);
   const forbidden = job.isError && isForbiddenError(job.error);
   useEffect(() => {
@@ -295,6 +392,21 @@ export function AnalysisJobPage() {
   }, [forbidden]);
   const back = <Link to={ret.spese} state={ret.backState} className={pages.spaced}>← Spese</Link>;
   const j = job.data;
+  const real = !!j && isRealProvider(j);
+  // Il nuovo tentativo crea un NUOVO job: si segue quello restituito, anche dopo «Riprova invio».
+  const toNewJob = (res: EconomyResult) => {
+    if ('job' in res) navigate(jobPath(home.id, res.job.id), { state: ret.state });
+  };
+  const retry = () => {
+    if (!j || (real && !retryConsent)) return;
+    const body = real ? { expectedVersion: j.version, consentToProviderTransfer: true as const } : { expectedVersion: j.version };
+    op.run({ kind: 'analysisRetry', jobId: j.id, body }, toNewJob, () => setRetryConsent(false));
+  };
+  const closeRetry = () => {
+    setRetryOpen(false);
+    setRetryConsent(false);
+  };
+  const docName = j?.documentLink.state === 'linked' ? j.documentLink.document.name : null;
   return (
     <>
       {back}
@@ -315,8 +427,12 @@ export function AnalysisJobPage() {
             <h2 id="job-stato" className={pages.cardTitle}>{JOB_STATE[j.state]}</h2>
             {j.isSimulation && <p><Tag tone="warn">{SIMULATION_LABEL}</Tag></p>}
             <p className={act.meta}>
-              Documento: {j.documentLink.state === 'linked' ? j.documentLink.document.name : 'non più disponibile per il tuo account'}
+              Documento: {docName ?? 'non più disponibile per il tuo account'}
             </p>
+            {real && (
+              <p className={act.meta}>Provider: {PROVIDER_LABEL[j.provider] ?? j.provider}{j.model ? ` · modello ${j.model}` : ''}</p>
+            )}
+            {j.billing && <AnalysisBilling billing={j.billing} />}
             {(j.state === 'queued' || j.state === 'running') && <Loading label="Aggiornamento automatico dello stato…" />}
             {job.isError && j && !forbidden && (
               <Banner tone="warning" role="status" actions={<button type="button" className={cx(ui.btn, ui.small)} onClick={() => void job.refetch()}>Aggiorna</button>}>
@@ -334,11 +450,16 @@ export function AnalysisJobPage() {
             )}
             {j.state === 'failed' && (
               <>
-                <Banner tone="warning" role="alert"><p>{jobErrorText(j)} Nessun costo è stato registrato.</p></Banner>
-                <DraftFeedback op={op} homeId={home.id} title="Nuovo tentativo non avviato" onRetry={() => op.retry()} />
+                <Banner tone="warning" role="alert"><p>{jobErrorText(j)} Nessuna spesa è stata registrata nella casa.</p></Banner>
+                {!retryOpen && <DraftFeedback op={op} homeId={home.id} title="Nuovo tentativo non avviato" onRetry={() => op.retry(toNewJob)} />}
                 <p className={act.actions}>
                   {jobRetryUseful(j) && home.permissions.includes('edit') && !op.locked && (
-                    <button type="button" className={ui.btn} disabled={op.mutation.isPending} onClick={() => op.run({ kind: 'analysisRetry', jobId: j.id, body: { expectedVersion: j.version } })}>
+                    <button
+                      type="button"
+                      className={ui.btn}
+                      disabled={op.mutation.isPending}
+                      onClick={() => (real ? setRetryOpen(true) : retry())}
+                    >
                       Riprova l’analisi
                     </button>
                   )}
@@ -356,6 +477,27 @@ export function AnalysisJobPage() {
           </section>
         )}
       </div>
+      {retryOpen && j && (
+        <Dialog title="Nuova analisi del documento" onClose={closeRetry} dismissDisabled={op.mutation.isPending}>
+          <p>
+            Sarà una <strong>nuova analisi</strong>, distinta da quella non riuscita: il testo di «{docName ?? 'documento'}» sarà inviato di nuovo {toProvider(PROVIDER_LABEL[j.provider] ?? j.provider)}
+            {j.model ? ` (modello ${j.model})` : ''} e l’analisi potrebbe avere un nuovo costo per il servizio, che non entra nelle spese della casa.
+          </p>
+          <label className={act.meta} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8 }}>
+            <input type="checkbox" checked={retryConsent} disabled={op.mutation.isPending || op.locked} onChange={(e) => setRetryConsent(e.target.checked)} />
+            <span>Invia di nuovo il testo del documento per proporre i dati della spesa. Le proposte andranno controllate e confermate da me.</span>
+          </label>
+          <DraftFeedback op={op} homeId={home.id} title="Nuovo tentativo non avviato" onRetry={() => op.retry(toNewJob, () => setRetryConsent(false))} />
+          <p className={act.actions}>
+            {!op.locked && (
+              <button type="button" className={cx(ui.btn, ui.primary)} disabled={!retryConsent || op.mutation.isPending} onClick={retry}>
+                {op.mutation.isPending ? 'Avvio…' : 'Avvia la nuova analisi'}
+              </button>
+            )}
+            <button type="button" className={ui.btn} onClick={closeRetry} disabled={op.mutation.isPending}>Annulla</button>
+          </p>
+        </Dialog>
+      )}
     </>
   );
 }

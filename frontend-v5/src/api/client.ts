@@ -809,8 +809,8 @@ export class ApiClient {
     return this.jobResponse(await this.request<{ job: EconomicAnalysisJob }>(`${economyPath(homeId)}/document-analysis-jobs/${encodeURIComponent(jobId)}`, { signal, accountId }), 200);
   }
 
-  /** Nuovo tentativo esplicito su un job fallito: mai usato per un errore di lettura. */
-  async retryEconomicJob(homeId: string, jobId: string, body: { expectedVersion: number }, idempotencyKey: string, accountId: string) {
+  /** Nuovo tentativo esplicito su un job fallito: crea un NUOVO job (si segue il suo id). Mai per un errore di lettura. */
+  async retryEconomicJob(homeId: string, jobId: string, body: { expectedVersion: number; consentToProviderTransfer?: boolean }, idempotencyKey: string, accountId: string) {
     return this.jobResponse(
       await this.mutate<{ job: EconomicAnalysisJob }>(`${economyPath(homeId)}/document-analysis-jobs/${encodeURIComponent(jobId)}/retries`, {
         body,
