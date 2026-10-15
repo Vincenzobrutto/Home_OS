@@ -1,4 +1,4 @@
-import { HttpException, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { HttpException, Injectable, ServiceUnavailableException, UnprocessableEntityException } from '@nestjs/common';
 import type { EconomicAiAttempt, Prisma } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { MODEL_PRICES, RESERVE_MICRO_USD, usd } from '../review/ai-config';
@@ -19,17 +19,20 @@ export class EconomicAiConfig {
     if(!this.environment.ANTHROPIC_API_KEY?.trim())throw economicAiUnavailable('ai_provider_unconfigured');
     if(!MODEL_PRICES[this.model])throw economicAiUnavailable('ai_model_unavailable');
     const amount=this.environment.ECONOMY_AI_BUDGET_USD??'',calls=this.environment.ECONOMY_AI_MAX_CALLS??'';
+    const allowedDocumentHashes=(this.environment.ECONOMY_AI_ALLOWED_SHA256??'').split(',').map(s=>s.trim()).filter(Boolean);
+    if(!allowedDocumentHashes.length||allowedDocumentHashes.length>10||allowedDocumentHashes.some(hash=>!/^\p{ASCII_Hex_Digit}{64}$/u.test(hash)))throw economicAiUnavailable('ai_provider_unconfigured');
     if(!/^economic-[A-Za-z0-9_-]{1,80}$/.test(this.campaign)||!/^\d+(?:\.\d{1,6})?$/.test(amount)||!/^\d+$/.test(calls))throw economicAiUnavailable('ai_provider_unconfigured');
     const [whole,fraction='']=amount.split('.'),micro=BigInt(whole)*1000000n+BigInt(fraction.padEnd(6,'0'));
     if(micro<=0n||micro>10000000n||Number(calls)<1||Number(calls)>50)throw economicAiUnavailable('ai_provider_unconfigured');
     const price=MODEL_PRICES[this.model];
     if(price.input*(50000-4096)+price.output*4096>RESERVE_MICRO_USD)throw economicAiUnavailable('ai_model_unavailable');
-    return {model:this.model,campaign:this.campaign,limitMicroUsd:Number(micro),maxCalls:Number(calls),price:MODEL_PRICES[this.model]};
+    return {model:this.model,campaign:this.campaign,limitMicroUsd:Number(micro),maxCalls:Number(calls),price:MODEL_PRICES[this.model],allowedDocumentHashes};
   }
 }
 @Injectable()
 export class EconomicAiBudget {
   constructor(private readonly db:PrismaService,readonly config:EconomicAiConfig){}
+  requireSource(hash:string){if(!this.config.settings().allowedDocumentHashes.includes(hash))throw new UnprocessableEntityException({code:'economic_document_not_authorized',message:'Questo collaudo consente solo i PDF sintetici autorizzati. Nessun testo inviato.'});}
   async reserve(tx:Prisma.TransactionClient,jobId:string){
     const s=this.config.settings();
     await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'economic-ai-budget:'+s.campaign},0))::text AS locked`;

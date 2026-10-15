@@ -15,7 +15,7 @@ test('Economic AI: isolated budget, atomic dispatch, authorization and crash rec
   await db.homeMembership.create({data:{homeId:h,accountId:a,role:'owner',validFrom:new Date(0)}});
   const bytes=economicFixturePdf('gas'),document=await db.document.create({data:{homeId:h,uploaderId:a,name:'gas.pdf',visibility:'private',original:{create:{originalFilename:'gas.pdf',mimeType:'application/pdf',byteSize:bytes.length,sha256:digest(bytes),file:{create:{storageKey:'economic-ai-test-'+randomUUID()}}}}},include:{original:true}});
   const campaigns=[],baseM4=await db.aiAttempt.count();let selected,behavior='success';const calls=[];
-  function campaign(limit=1000000,maxCalls=5){selected={campaign:'economic-test-'+randomUUID(),model:'claude-sonnet-4-6',limitMicroUsd:limit,maxCalls,price:{input:3,output:15}};campaigns.push(selected.campaign);}
+  function campaign(limit=1000000,maxCalls=5){selected={campaign:'economic-test-'+randomUUID(),model:'claude-sonnet-4-6',limitMicroUsd:limit,maxCalls,price:{input:3,output:15},allowedDocumentHashes:[digest(bytes)]};campaigns.push(selected.campaign);}
   campaign();
   const config={get model(){return selected.model;},settings:()=>selected};
   const budget=new EconomicAiBudget(db,config),access=new ReviewService(db,{}),expenses=new ExpensesService(db,access,{now:()=>new Date()}),service=new EconomicDocumentsService(expenses,access,{read:async()=>bytes},budget);
@@ -42,6 +42,9 @@ test('Economic AI: isolated budget, atomic dispatch, authorization and crash rec
     assert.throws(()=>new EconomicAiConfig().settings(),e=>e.getResponse().code==='ai_provider_disabled');
     await denied(service.start(a,h,{documentId:document.id,provider:'anthropic'},randomUUID()),422,'validation_error');
     assert.equal(await db.economicAiAttempt.count({where:{campaignId:selected.campaign}}),0);assert.equal(calls.length,0);
+    const hashes=selected.allowedDocumentHashes;selected.allowedDocumentHashes=[];
+    await denied(start(),422,'economic_document_not_authorized');
+    assert.equal(await db.economicAiAttempt.count({where:{campaignId:selected.campaign}}),0);assert.equal(calls.length,0);selected.allowedDocumentHashes=hashes;
   });
   await t.test('concurrent reservations enforce call quota; replay reserves once; campaign cannot be enlarged',async()=>{
     campaign(1000000,2);const key=randomUUID(),first=await start(key);await start(key);

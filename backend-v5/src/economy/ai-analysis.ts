@@ -25,12 +25,14 @@ export class EconomicAiAnalysis {
     const settings=this.budget.config.settings();
     if(settings.campaign!==attempt.campaignId||settings.model!==attempt.model)throw new ProviderFailure('ai_provider_disabled');
     const check=()=>authorized(async tx=>{
+      this.budget.requireSource(job.documentSha256);
       await tx.$queryRaw`SELECT id FROM "EconomicAnalysisJob" WHERE id=${job.id} FOR UPDATE`;
       const current=await tx.economicAnalysisJob.findUniqueOrThrow({where:{id:job.id}});
       if(signal.aborted||current.state!=='running'||current.leaseToken!==token)throw new ProviderFailure('analysis_timeout');
     });
     const prepared=await this.provider.prepare(input,attempt.model,signal,check);
     const dispatched=await authorized(async tx=>{
+      this.budget.requireSource(job.documentSha256);
       await tx.$queryRaw`SELECT id FROM "EconomicAnalysisJob" WHERE id=${job.id} FOR UPDATE`;
       const current=await tx.economicAnalysisJob.findUniqueOrThrow({where:{id:job.id}});
       if(signal.aborted||current.state!=='running'||current.leaseToken!==token)return false;

@@ -22,7 +22,7 @@ const fails=(fn,code)=>assert.throws(fn,e=>e.code===code);
 test('Economic config requires a separate explicit campaign, budget, model and call cap',()=>{
   let env={};const config=new class extends EconomicAiConfig{get environment(){return env;}}();
   assert.throws(()=>config.settings(),e=>e.getResponse().code==='ai_provider_disabled');
-  env={ECONOMY_AI_ENABLED:'true',ANTHROPIC_API_KEY:'offline-placeholder',ECONOMY_AI_MODEL:'claude-sonnet-4-6',ECONOMY_AI_CAMPAIGN_ID:'economic-test',ECONOMY_AI_BUDGET_USD:'1.250001',ECONOMY_AI_MAX_CALLS:'3'};
+  env={ECONOMY_AI_ENABLED:'true',ANTHROPIC_API_KEY:'offline-placeholder',ECONOMY_AI_MODEL:'claude-sonnet-4-6',ECONOMY_AI_CAMPAIGN_ID:'economic-test',ECONOMY_AI_BUDGET_USD:'1.250001',ECONOMY_AI_MAX_CALLS:'3',ECONOMY_AI_ALLOWED_SHA256:'a'.repeat(64)};
   assert.equal(config.settings().limitMicroUsd,1250001);
   for(const patch of [{ECONOMY_AI_CAMPAIGN_ID:'m4-20261013'},{ECONOMY_AI_BUDGET_USD:'NaN'},{ECONOMY_AI_BUDGET_USD:'10.000001'},{ECONOMY_AI_MAX_CALLS:'0'},{ECONOMY_AI_MODEL:'unknown'}]){const before=env;env={...env,...patch};assert.throws(()=>config.settings());env=before;}
   const uncertain={state:'uncertain',actualMicroUsd:null,reservedMicroUsd:250000};assert.equal(economicCommitted(uncertain),250000);assert.equal(economicBilling(uncertain).actualUsd,null);assert.equal(economicBilling(uncertain).state,'uncertain');
