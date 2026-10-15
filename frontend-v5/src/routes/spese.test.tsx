@@ -252,6 +252,10 @@ describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
     expect(body).not.toHaveProperty('family');
     expect(posts(backend, /\/economy\/expenses$/)[0]!.headers['idempotency-key']).toMatch(/^[A-Za-z0-9_-]{16,100}$/);
     expect(screen.getAllByText('Lavori e acquisti').length).toBeGreaterThan(0);
+    await app.user.click(screen.getByRole('link', { name: '← Spese' }));
+    expect(await screen.findByRole('button', { name: 'Registra una spesa' })).toBeInTheDocument();
+    expect(screen.queryByRole('form', { name: 'Registra una spesa' })).not.toBeInTheDocument();
+    expect(app.router.state.location.search).not.toMatch(/nuova-spesa|perLavoro/);
   });
 
   it('risposta persa: «Esito non confermato», riprova con stessa chiave e body, un solo costo', async () => {

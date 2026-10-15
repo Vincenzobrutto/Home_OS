@@ -211,7 +211,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
     for (const k of ['nuova-spesa', 'daDocumento', 'documentId', 'assetId', 'perOggetto', 'perLavoro']) p.delete(k);
     setParams(p, { replace: true, state: location.state });
   };
-  const listState = { accountId: account.id, economyQ: filters.q, expensesSearch: params.toString() };
+  const listState = { accountId: account.id, economyQ: filters.q, expensesSearch: filtersToParams(filters, { view, split: split === 'category' && !filters.family ? 'categorie' : null }).toString() };
 
   return (
     <>
