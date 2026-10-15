@@ -116,7 +116,10 @@ export class ExpensesService {
   async mutate(a: string, h: string, operation: 'create' | 'update' | 'archive' | 'restore', target: string, input: unknown, key?: string, economic = false) {
     if (!key || !/^[A-Za-z0-9_-]{16,100}$/.test(key)) throw invalid('Chiave della richiesta non valida.');
     if (target) uuid(target);
-    return this.db.$transaction(async tx => {
+    return this.db.$transaction(tx => this.mutateInTransaction(tx,a,h,operation,target,input,key,economic), {timeout:15000,maxWait:15000});
+  }
+  async mutateInTransaction(tx:Tx,a:string,h:string,operation:'create'|'update'|'archive'|'restore',target:string,input:unknown,key?:string,economic=false){
+    if(!key||!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw invalid();if(target)uuid(target);
       await this.access.lock(tx, a, h); await this.access.require(tx, a, h, true);
       const now = this.clock.now(), today = temporal(now).today;
       const body: Record<string, unknown> = economic && (operation === 'create' || operation === 'update') ? expenseValues(input, today, operation === 'update') : operation === 'create' ? createExpense(input, today) : operation === 'update' ? updateExpense(input, today) : expenseAction(input);
@@ -156,7 +159,7 @@ export class ExpensesService {
       if (kind) await tx.expenseHistory.create({ data: { expenseId: row.id, accountId: a, at: now, kind, note: operation === 'archive' || operation === 'restore' ? (body as ReturnType<typeof expenseAction>).note : null, before: before ? json(before) : Prisma.JsonNull, after: json(saved) } });
       await tx.expenseRequest.create({ data: { accountId: a, homeId: h, operation: economic ? 'economy:' + operation : operation, target, key, digest: hash, response: json(saved), createdAt: now } });
       const response = { expense: await this.project(tx, row, true, economic) }; await this.access.require(tx, a, h, true); return response;
-    }, { timeout: 15000, maxWait: 15000 });
+
   }
   create(a: string, h: string, body: unknown, key?: string) { return this.mutate(a, h, 'create', '', body, key); }
   update(a: string, h: string, id: string, body: unknown, key?: string) { return this.mutate(a, h, 'update', id, body, key); }

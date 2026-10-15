@@ -12,6 +12,8 @@ enum HomeRole {
   viewer
 }
 model Account {
+  economicJobs EconomicAnalysisJob[]
+  economicDrafts EconomicDraft[]
   economicWorks EconomicWork[]
   economicWorkEvents EconomicWorkHistory[]
   economicRequests EconomicRequest[]
@@ -50,6 +52,8 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  economicJobs EconomicAnalysisJob[]
+  economicDrafts EconomicDraft[]
   economicWorks EconomicWork[]
   economicRequests EconomicRequest[]
   id String @id @default(uuid())
@@ -104,6 +108,8 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  economicJobs EconomicAnalysisJob[]
+  economicDrafts EconomicDraft[]
   objectLinks ObjectResourceLink[]
   id String @id @default(uuid())
   homeId String
@@ -302,6 +308,10 @@ enum ExpenseState {
   archived
 }
 model HomeExpense {
+  analysisDraftId String?
+  economicProvenance Json?
+  analysisDraft EconomicDraft? @relation("amountSource",fields:[analysisDraftId],references:[id],onDelete:Restrict)
+  confirmedDrafts EconomicDraft[] @relation("confirmationExpense")
   category String?
   supplier String?
   documentNumber String?
@@ -383,6 +393,56 @@ model EconomicRequest {
   account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)
   home Home @relation(fields:[homeId], references:[id], onDelete:Restrict)
   @@unique([accountId,homeId,operation,target,key])
+}
+model EconomicAnalysisJob {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  documentId String
+  documentVersion Int
+  documentSha256 String
+  provider String
+  consentToProviderTransfer Boolean @default(false)
+  state String @default("queued")
+  version Int @default(1)
+  errorCode String?
+  leaseToken String?
+  leaseUntil DateTime?
+  firstStartedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  draft EconomicDraft?
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  document Document @relation(fields:[documentId],references:[id],onDelete:Restrict)
+  @@index([state,leaseUntil,createdAt,id])
+  @@index([accountId,homeId,createdAt,id])
+}
+model EconomicDraft {
+  id String @id @default(uuid())
+  jobId String @unique
+  accountId String
+  homeId String
+  documentId String
+  documentVersion Int
+  documentSha256 String
+  documentKind String
+  provider String
+  state String @default("open")
+  version Int @default(1)
+  proposedFields Json
+  amountCandidates Json
+  amountSelectionRequired Boolean
+  expenseId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  job EconomicAnalysisJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  document Document @relation(fields:[documentId],references:[id],onDelete:Restrict)
+  expense HomeExpense? @relation("confirmationExpense",fields:[expenseId],references:[id],onDelete:Restrict)
+  amountExpenses HomeExpense[] @relation("amountSource")
+  @@index([accountId,homeId,state,createdAt,id])
 }
 
 model HomeRoom {
