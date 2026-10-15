@@ -1,5 +1,7 @@
 # C1a — disegno API, da congelare dopo revisione UX
 
+**Superato dal contratto sharing-api-contract.md del 15 ottobre 2026**, dopo approvazione del percorso e inclusione degli esterni autenticati. Questo file conserva la proposta iniziale; non implementare le sue forme same-Home al posto del contratto definitivo. Backend in c1-backend-review-20261015.md, frontend reale ancora in consegna.
+
 15 ottobre 2026. **Non è un contratto attivo.** Nessun endpoint, tabella o permesso C1 è installato. Backend attuale: solo `src/sharing/policy.ts`, funzioni offline e relativi test. La prima verticale proposta riguarda originali propri condivisi con una persona già membro della stessa casa. Esterni e oggetti sono revisionati nel mockup di Claude prima di stabilire l'ordine finale.
 
 ## Confini

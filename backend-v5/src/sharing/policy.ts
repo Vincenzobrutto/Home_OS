@@ -2,7 +2,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import { ids, invalid, object, uuid } from '../review/domain';
 
-// Offline C1a foundation. No controller/module registers this policy yet.
+// Manifest helpers shared by C1 runtime; the same-Home wrapper remains an offline regression contract.
 export const sharingLimits = { documents: 20, bytes: 100 * 1024 * 1024, durationDays: [1, 7, 30] } as const;
 export type MembershipFact = {
   accountId: string; homeId: string; role: 'owner' | 'member' | 'viewer';
@@ -16,7 +16,7 @@ export type ManifestItem = {
   documentId: string; documentVersion: number; sha256: string; name: string; byteSize: number; mimeType: string;
 };
 export type Manifest = {
-  senderAccountId: string; recipientAccountId: string; homeId: string;
+  senderAccountId: string; recipientAccountId: string | null; homeId: string;
   expiresAt: string; items: ManifestItem[]; totalBytes: number;
 };
 export type Selection = { documentIds: string[]; recipientAccountId: string; durationDays: number };
@@ -45,7 +45,12 @@ export function previewShare(selection: Selection, context: {
   instant(now);
   if (!active(sender, senderAccountId, homeId, now) || sender.role === 'viewer' ||
       value.recipientAccountId === senderAccountId || !active(recipient, value.recipientAccountId, homeId, now)) throw deny();
-  const selected = value.documentIds.map(id => {
+  const {items:selected,totalBytes} = selectedOriginals(value.documentIds, documents, senderAccountId, homeId);
+  return { senderAccountId, recipientAccountId: value.recipientAccountId, homeId,
+    expiresAt: new Date(now.getTime() + value.durationDays * 86400_000).toISOString(), items: selected, totalBytes };
+}
+export function selectedOriginals(documentIds: string[], documents: DocumentFact[], senderAccountId:string,homeId:string) {
+  const selected = ids(documentIds,sharingLimits.documents).map(id => {
     const doc = documents.find(item => item.id === id);
     if (!doc || doc.homeId !== homeId || doc.uploaderId !== senderAccountId || !doc.original?.available) throw deny();
     const original = doc.original;
@@ -56,8 +61,7 @@ export function previewShare(selection: Selection, context: {
   });
   const totalBytes = selected.reduce((sum, doc) => sum + doc.byteSize, 0);
   if (!Number.isSafeInteger(totalBytes) || totalBytes > sharingLimits.bytes) throw invalid('La selezione supera il limite di dimensione consentito.');
-  return { senderAccountId, recipientAccountId: value.recipientAccountId, homeId,
-    expiresAt: new Date(now.getTime() + value.durationDays * 86400_000).toISOString(), items: selected, totalBytes };
+  return {items:selected,totalBytes};
 }
 
 /** Every original is acknowledged; no inferred financial/sensitive classifier can silently exempt a file. */

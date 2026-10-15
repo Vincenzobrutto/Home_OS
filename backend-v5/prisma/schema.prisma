@@ -12,6 +12,12 @@ enum HomeRole {
   viewer
 }
 model Account {
+  sharePreviews SharePreview[] @relation("SharePreviewSender")
+  sentShares ShareRecord[] @relation("ShareSender")
+  receivedShares ShareRecord[] @relation("ShareRecipient")
+  shareClaims ShareRecord[] @relation("ShareClaimant")
+  shareRequests ShareRequest[]
+  shareEvents ShareEvent[]
   economicJobs EconomicAnalysisJob[]
   economicDrafts EconomicDraft[]
   economicWorks EconomicWork[]
@@ -52,6 +58,8 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  sharePreviews SharePreview[]
+  shares ShareRecord[]
   economicJobs EconomicAnalysisJob[]
   economicDrafts EconomicDraft[]
   economicWorks EconomicWork[]
@@ -78,6 +86,79 @@ model Home {
   objectLinks ObjectResourceLink[]
   objectEvents ObjectEvent[]
   objectRequests ObjectRequest[]
+}
+
+model SharePreview {
+  id String @id @default(uuid())
+  senderId String
+  homeId String
+  recipientKind String
+  recipientId String?
+  manifest Json
+  fingerprint String
+  validUntil DateTime
+  createdAt DateTime @default(now())
+  consumedBy String? @unique
+  sender Account @relation("SharePreviewSender", fields: [senderId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  @@index([senderId, homeId, createdAt])
+}
+model ShareRecord {
+  id String @id @default(uuid())
+  senderId String
+  homeId String
+  recipientKind String
+  recipientId String?
+  state String
+  version Int @default(1)
+  manifest Json
+  expiresAt DateTime
+  codeHash String? @unique
+  codeExpiresAt DateTime?
+  claimId String? @unique
+  claimAccountId String?
+  comparisonCode String?
+  claimExpiresAt DateTime?
+  pairConfirmedAt DateTime?
+  acceptedAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  sender Account @relation("ShareSender", fields: [senderId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  recipient Account? @relation("ShareRecipient", fields: [recipientId], references: [id], onDelete: Restrict)
+  claimant Account? @relation("ShareClaimant", fields: [claimAccountId], references: [id], onDelete: Restrict)
+  events ShareEvent[]
+  @@index([senderId, homeId, createdAt, id])
+  @@index([recipientId, createdAt, id])
+  @@index([claimAccountId, createdAt, id])
+}
+model ShareRequest {
+  id String @id @default(uuid())
+  accountId String
+  key String
+  digest String
+  resourceKind String
+  resourceId String
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  @@unique([accountId, key])
+}
+model ShareEvent {
+  id String @id @default(uuid())
+  shareId String
+  actorId String
+  kind String
+  version Int
+  createdAt DateTime @default(now())
+  share ShareRecord @relation(fields: [shareId], references: [id], onDelete: Restrict)
+  actor Account @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  @@index([shareId, createdAt])
+}
+model ShareThrottle {
+  key String @id
+  windowStart DateTime
+  attempts Int
+  @@index([windowStart])
 }
 model HomeMembership {
   id String @id @default(uuid())
