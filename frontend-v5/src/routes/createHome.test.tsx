@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { FakeBackend } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
@@ -84,5 +84,83 @@ describe('[mock] creazione casa e idempotenza', () => {
     await app.user.click(screen.getByRole('button', { name: 'Crea casa' }));
     expect(await screen.findByText('Indirizzo non accettato.')).toBeInTheDocument();
     expect(screen.getByLabelText(/Indirizzo/)).toHaveAttribute('aria-invalid', 'true');
+  });
+});
+
+describe('[mock] pagina senza case: ingresso per chi ha ricevuto un codice (HOME-CONS-001)', () => {
+  it('zero case: «Hai ricevuto un codice?» prima del modulo; porta al percorso destinatario senza creare case', async () => {
+    const app = await startWithNoHomes();
+    expect(screen.getByRole('heading', { level: 1, name: 'Inizia con Dimora' })).toBeInTheDocument();
+    const codeCard = screen.getByRole('heading', { level: 2, name: 'Hai ricevuto un codice?' });
+    const form = screen.getByRole('form', { name: 'Nuova casa' });
+    expect(codeCard.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByText(/non serve creare una casa/)).toBeInTheDocument();
+    expect(screen.getByText(/Non ti dà accesso alla casa di chi li invia/)).toBeInTheDocument();
+    const card = codeCard.closest('section')!;
+    expect(within(card).getByRole('link', { name: 'Consegne ricevute' })).toHaveAttribute('href', '/consegne');
+    expect(within(card).getByRole('link', { name: 'Inserisci il codice' })).toHaveAttribute('href', '/consegne/codice');
+    const posts = () => app.backend.log.filter((r) => r.method === 'POST' && r.path !== '/auth/login');
+    expect(posts()).toHaveLength(0); // nessuna richiesta finché l'utente non sceglie
+    await app.user.click(within(card).getByRole('link', { name: 'Inserisci il codice' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Inserisci il codice' })).toBeInTheDocument();
+    expect(app.router.state.location.pathname).toBe('/consegne/codice');
+    expect(app.router.state.location.search).toBe('');
+    expect(homePosts(app.backend)).toHaveLength(0);
+    expect(posts()).toHaveLength(0);
+    expect(app.backend.homes.size).toBe(0);
+  });
+
+  it('errore nel caricamento delle case: nessuna scheda codice né modulo al posto dell’errore', async () => {
+    const backend = new FakeBackend();
+    backend.seedAccount('Zeta', 'z@example.test', PASSWORD);
+    const original = backend.handle.bind(backend);
+    backend.handle = async (req) => (req.method === 'GET' && req.path === '/homes' ? { status: 503 } : original(req));
+    const app = renderApp({ path: '/accedi', backend });
+    await screen.findByRole('heading', { name: 'Accedi' });
+    await app.user.type(screen.getByLabelText('Email'), 'z@example.test');
+    await app.user.type(screen.getByLabelText('Password'), PASSWORD);
+    await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
+    await app.router.navigate('/case');
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByText('Hai ricevuto un codice?')).toBeNull();
+    expect(screen.queryByRole('form', { name: 'Nuova casa' })).toBeNull();
+  });
+
+  it('elenco case in caricamento: la scheda compare solo quando il server conferma zero case', async () => {
+    const backend = new FakeBackend();
+    backend.seedAccount('Zeta', 'z@example.test', PASSWORD);
+    let release!: () => void;
+    const gate = new Promise<void>((r) => { release = r; });
+    const original = backend.handle.bind(backend);
+    backend.handle = async (req) => {
+      if (req.method === 'GET' && req.path === '/homes') await gate;
+      return original(req);
+    };
+    const app = renderApp({ path: '/accedi', backend });
+    await screen.findByRole('heading', { name: 'Accedi' });
+    await app.user.type(screen.getByLabelText('Email'), 'z@example.test');
+    await app.user.type(screen.getByLabelText('Password'), PASSWORD);
+    await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
+    await waitFor(() => expect(app.router.state.location.pathname).not.toBe('/accedi'));
+    await app.router.navigate('/case');
+    expect(await screen.findByText('Caricamento delle case…')).toBeInTheDocument();
+    expect(screen.queryByText('Hai ricevuto un codice?')).toBeNull();
+    expect(screen.queryByRole('form', { name: 'Nuova casa' })).toBeNull();
+    release();
+    expect(await screen.findByText('Hai ricevuto un codice?')).toBeInTheDocument();
+  });
+
+  it('con almeno una casa: nessuna scheda codice nel selettore', async () => {
+    const backend = new FakeBackend();
+    const acc = backend.seedAccount('Zeta', 'z@example.test', PASSWORD);
+    backend.seedHome(acc.id, 'Casa Uno', 'Via 1');
+    backend.seedHome(acc.id, 'Casa Due', 'Via 2');
+    const app = renderApp({ path: '/accedi', backend });
+    await screen.findByRole('heading', { name: 'Accedi' });
+    await app.user.type(screen.getByLabelText('Email'), 'z@example.test');
+    await app.user.type(screen.getByLabelText('Password'), PASSWORD);
+    await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Le mie case' })).toBeInTheDocument();
+    expect(screen.queryByText('Hai ricevuto un codice?')).toBeNull();
   });
 });

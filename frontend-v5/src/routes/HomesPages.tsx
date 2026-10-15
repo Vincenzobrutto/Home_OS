@@ -90,15 +90,49 @@ function PageHeading(props: { title: string; lead?: string; actions?: ReactNode 
   );
 }
 
+/**
+ * Zero case: due intenzioni distinte. Chi ha ricevuto un codice apre il percorso consegne già esistente
+ * (/consegne/codice) senza creare una casa; chi vuole gestire la propria casa usa il modulo qui sotto.
+ * Nessun reindirizzamento automatico e nessuna richiesta finché l'utente non sceglie.
+ */
 function Onboarding() {
   return (
     <>
       <PageHeading
-        title="Crea la tua prima casa"
-        lead="Non hai ancora case su Dimora. Inizia con un nome e un indirizzo: potrai completare il resto più avanti."
+        title="Inizia con Dimora"
+        lead="Non hai ancora case su Dimora. Puoi ricevere documenti da chi ti ha dato un codice, oppure creare la tua casa."
       />
-      <div className={cx(ui.card, styles.formNarrow)}>
-        <CreateHomeForm />
+      <div className={styles.stack}>
+        <section className={cx(ui.card, ui.tint, styles.formNarrow)} aria-labelledby="onboarding-codice">
+          <h2 id="onboarding-codice" className={styles.cardTitle}>
+            Hai ricevuto un codice?
+          </h2>
+          <p>
+            Se qualcuno ti ha dato un codice per consegnarti dei documenti, inseriscilo qui: non serve creare una casa.
+          </p>
+          <p className={styles.muted}>
+            La consegna ti mostra soltanto i file scelti per te, per un periodo limitato. Non ti dà accesso alla casa di
+            chi li invia.
+          </p>
+          <div className={styles.formActions}>
+            <Link to="/consegne/codice" className={cx(ui.btn, ui.primary)}>
+              Inserisci il codice
+            </Link>
+            <Link to="/consegne" className={cx(ui.btn, ui.ghost)}>
+              Consegne ricevute
+            </Link>
+          </div>
+        </section>
+        <section className={cx(ui.card, styles.formNarrow)} aria-labelledby="onboarding-casa">
+          <h2 id="onboarding-casa" className={styles.cardTitle}>
+            Crea la tua prima casa
+          </h2>
+          <p className={styles.muted}>
+            Per tenere in ordine documenti, scadenze e spese di una tua casa. Inizia con un nome e un indirizzo: potrai
+            completare il resto più avanti.
+          </p>
+          <CreateHomeForm />
+        </section>
       </div>
     </>
   );
