@@ -13,7 +13,11 @@ import { ScadenzeSummary } from './ScadenzeSummary';
 import { SpeseSummary } from './SpeseSummary';
 import { ObjectsSummary } from './ObjectsSummary';
 import { BOILER_STATE_LABEL, PERSONAL_LABEL, m3ErrorMessage } from '../lib/review';
-import { useAssets, useReview } from '../review/hooks';
+import { useAssets } from '../review/hooks';
+import { CasaReviewSummary } from './CasaTasksSummary';
+import { lazyPage } from './lazyPage';
+
+const CasaSharingSummary = lazyPage(() => import('./CasaSharingSummary').then(m => m.CasaSharingSummary));
 import styles from './pages.module.css';
 
 type HomeContext = { home: Home };
@@ -118,7 +122,38 @@ export function CasaPage() {
           <Tag tone="blue">{ROLE_LABEL[home.role] ?? home.role}</Tag>
         </div>
       </div>
+      <section className={cx(ui.card, styles.spaced)} aria-labelledby="casa-azioni">
+        <h2 id="casa-azioni" className={styles.cardTitle}>Da dove vuoi iniziare?</h2>
+        <div className={styles.formActions}>
+          <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/documenti`}>Documenti</Link>
+          {home.permissions.includes('edit') && <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/spese?nuova-spesa=1`}>Registra una spesa</Link>}
+          <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/oggetti`}>Oggetti e impianti</Link>
+        </div>
+      </section>
+      <h2 className={styles.spaced}>Da fare ora</h2>
       <div className={styles.grid}>
+        <ScadenzeSummary home={home} />
+        <CasaReviewSummary homeId={home.id} />
+        <CasaSharingSummary homeId={home.id} />
+      </div>
+      <h2 className={styles.spaced}>La tua casa</h2>
+      <div className={styles.grid}>
+        <SpeseSummary home={home} />
+        <ObjectsSummary home={home} />
+        <ImpiantiSummary homeId={home.id} />
+        <section className={cx(ui.card, ui.tint, styles.wide)} aria-labelledby="casa-prossime">
+          <h2 id="casa-prossime" className={styles.cardTitle}>
+            Documenti
+          </h2>
+          <p className={styles.muted}>
+            In Documenti conservi gli originali della casa (PDF, JPEG, PNG).{' '}
+            <Link to={`/home/${encodeURIComponent(home.id)}/documenti`}>Apri i documenti</Link>
+            {' · '}
+            <Link to={`/home/${encodeURIComponent(home.id)}/documenti?ricerca=1`}>Cerca documenti</Link>
+          </p>
+        </section>
+        <details className={cx(ui.card, styles.wide)}>
+          <summary className={styles.cardTitle}>Dettagli della casa e del tuo ruolo</summary>
         <section className={ui.card} aria-labelledby="casa-dati">
           <h2 id="casa-dati" className={styles.cardTitle}>
             Dati della casa
@@ -153,30 +188,7 @@ export function CasaPage() {
             ai promemoria o alle spese personali di altre persone. Gestione degli accessi e vendita non sono ancora disponibili.
           </p>
         </section>
-        <ScadenzeSummary home={home} />
-        <SpeseSummary home={home} />
-        <ObjectsSummary home={home} />
-        <ImpiantiSummary homeId={home.id} />
-        <section className={cx(ui.card, ui.tint, styles.wide)} aria-labelledby="casa-prossime">
-          <h2 id="casa-prossime" className={styles.cardTitle}>
-            Documenti
-          </h2>
-          <p className={styles.muted}>
-            In Documenti conservi gli originali della casa (PDF, JPEG, PNG).{' '}
-            <Link to={`/home/${encodeURIComponent(home.id)}/documenti`}>Apri i documenti</Link>
-            {' · '}
-            <Link to={`/home/${encodeURIComponent(home.id)}/documenti?ricerca=1`}>Cerca documenti</Link>
-          </p>
-        </section>
-        <section className={cx(ui.card, styles.wide)} aria-labelledby="casa-condivisioni">
-          <h2 id="casa-condivisioni" className={styles.cardTitle}>
-            Condivisioni
-          </h2>
-          <p className={styles.muted}>
-            Consegna originali scelti da te a una persona precisa, per un periodo limitato, senza darle accesso alla casa.{' '}
-            <Link to={`/home/${encodeURIComponent(home.id)}/condivisioni`}>Apri le condivisioni</Link>
-          </p>
-        </section>
+        </details>
       </div>
     </>
   );
@@ -241,40 +253,32 @@ export function NotFoundPage() {
   );
 }
 
-/** Caldaie personali e verifiche aperte: solo dati reali dal server, nessun valore preinserito. */
+/** Anteprima delle caldaie personali: nessun totale dedotto dalle pagine caricate. */
 function ImpiantiSummary({ homeId }: { homeId: string }) {
   const assets = useAssets(homeId);
-  const reviewQuery = useReview(homeId);
   const boilers = assets.data?.pages.flatMap((p) => p.items) ?? [];
-  const openCount = reviewQuery.data?.pages[0]?.openCount;
   const base = `/home/${encodeURIComponent(homeId)}`;
   return (
     <section className={cx(ui.card, styles.wide)} aria-labelledby="casa-impianti">
       <h2 id="casa-impianti" className={styles.cardTitle}>
         Impianti e verifiche
       </h2>
-      {assets.isPending || reviewQuery.isPending ? (
+      {assets.isPending ? (
         <Loading label="Caricamento delle schede…" />
-      ) : assets.isError || reviewQuery.isError ? (
+      ) : assets.isError ? (
         <ErrorState
-          error={assets.error ?? reviewQuery.error}
-          message={m3ErrorMessage(assets.error ?? reviewQuery.error)}
+          error={assets.error}
+          message={m3ErrorMessage(assets.error)}
           onRetry={() => {
             void assets.refetch();
-            void reviewQuery.refetch();
           }}
-          retrying={assets.isFetching || reviewQuery.isFetching}
+          retrying={assets.isFetching}
         />
       ) : (
         <>
-          <p>
-            <Link to={`${base}/review`}>
-              {openCount === 1 ? '1 verifica da rivedere' : `${openCount} verifiche da rivedere`}
-            </Link>
-          </p>
           {boilers.length === 0 ? (
             <p className={cx(styles.muted, styles.spaced)}>
-              Nessuna scheda caldaia. Puoi crearne una da un’analisi di test o a mano in{' '}
+              Nessuna scheda caldaia. Puoi crearne una dai documenti o a mano in{' '}
               <Link to={`${base}/attivita`}>Attività</Link>.
             </p>
           ) : (
