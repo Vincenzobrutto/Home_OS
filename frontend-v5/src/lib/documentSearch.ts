@@ -20,6 +20,16 @@ export const VISIBILITY_FILTER_OPTIONS: Array<{ value: DocumentVisibilityFilter;
   { value: 'private', label: 'Solo io' },
   { value: 'home', label: 'Persone della casa' },
 ];
+export const COLLECTION_OPTIONS = [
+  { value: 'all', label: 'Tutte le raccolte' },
+  { value: 'energy', label: 'Energia' },
+  { value: 'building', label: 'Pratiche edilizie' },
+  { value: 'technical', label: 'Impianti e documenti tecnici' },
+  { value: 'condominium', label: 'Condominio' },
+  { value: 'purchases', label: 'Acquisti e garanzie' },
+  { value: 'utilities', label: 'Bollette' },
+  { value: 'unclassified', label: 'Da organizzare' },
+] as const;
 
 export const SEARCH_SCOPE_NOTE = 'La ricerca riguarda titoli e nomi dei file, non il contenuto.';
 
@@ -40,7 +50,7 @@ export function validateQuery(q: string, max = QUERY_MAX_CODE_POINTS) {
 }
 
 export function isFiltered(f: DocumentSearchFilters) {
-  return f.q !== '' || f.format !== 'all' || f.visibility !== 'all';
+  return f.q !== '' || f.format !== 'all' || f.visibility !== 'all' || (f.collection !== undefined && f.collection !== 'all');
 }
 
 const FORMATS = new Set<string>(FORMAT_OPTIONS.map((o) => o.value));
@@ -57,6 +67,7 @@ export function filtersFromParams(params: URLSearchParams): DocumentSearchFilter
     q: normalizeQuery(params.get('q') ?? ''),
     format: (FORMATS.has(format) ? format : 'all') as DocumentFormatFilter,
     visibility: (VISIBILITIES.has(visibility) ? visibility : 'all') as DocumentVisibilityFilter,
+    ...(COLLECTION_OPTIONS.some(o => o.value === params.get('collection') && o.value !== 'all') ? { collection: params.get('collection') as DocumentSearchFilters['collection'] } : {}),
   };
 }
 
@@ -66,6 +77,7 @@ export function filtersToParams(f: DocumentSearchFilters) {
   if (f.q) params.set('q', f.q);
   if (f.format !== 'all') params.set('format', f.format);
   if (f.visibility !== 'all') params.set('visibility', f.visibility);
+  if (f.collection && f.collection !== 'all') params.set('collection', f.collection);
   return params;
 }
 
@@ -74,7 +86,7 @@ export function filtersKey(f: DocumentSearchFilters) {
 }
 
 export function sameFilters(a: DocumentSearchFilters, b: DocumentSearchFilters) {
-  return a.q === b.q && a.format === b.format && a.visibility === b.visibility;
+  return a.q === b.q && a.format === b.format && a.visibility === b.visibility && (a.collection ?? 'all') === (b.collection ?? 'all');
 }
 
 /** Descrizione testuale dei filtri applicati (resa come testo React, mai HTML). */
@@ -83,6 +95,7 @@ export function describeFilters(f: DocumentSearchFilters) {
   if (f.q) parts.push(`«${f.q}»`);
   if (f.format !== 'all') parts.push(`formato ${FORMAT_OPTIONS.find((o) => o.value === f.format)!.label}`);
   if (f.visibility !== 'all') parts.push(VISIBILITY_FILTER_OPTIONS.find((o) => o.value === f.visibility)!.label);
+  if (f.collection && f.collection !== 'all') parts.push(COLLECTION_OPTIONS.find(o => o.value === f.collection)!.label);
   return parts.join(' · ');
 }
 

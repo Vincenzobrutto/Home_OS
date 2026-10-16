@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma.service';
 import { DocumentPolicy, canReadDocument } from '../documents/access';
 import { EXPORT_LIMITS, ExportBudget, Projection, collect, list, record, scalars, tooLarge } from './projection';
 import { readableReceiptObjectIds, readableReceiptProofs, readableReceiptProofKeys, receiptProofKey } from '../receipt-assistance/access';
+import { organizationView } from '../document-intake/organization';
 
 type Tx = Prisma.TransactionClient;
 const unavailable = () => new ServiceUnavailableException({ code: 'personal_export_unavailable', message: 'Esportazione temporaneamente non disponibile.' });
@@ -41,6 +42,9 @@ export class PersonalExportService {
     const budget = new ExportBudget(), own = { accountId: a, homeId: h };
     const documents = await collect((take, after) => tx.document.findMany({ where: { homeId: h, uploaderId: a, ...pageWhere(after) }, select: { id: true, name: true, visibility: true, createdAt: true, original: { select: { version: true, originalFilename: true, mimeType: true, byteSize: true, sha256: true } } }, take, orderBy }), budget);
     if (documents.some(doc => !doc.original)) throw unavailable();
+    const organizationCandidates = await collect((take, after) => tx.documentOrganization.findMany({ where: { ...own, documentId: { in: documents.map(doc => doc.id) }, ...pageWhere(after) }, take, orderBy }), budget);
+    const organizations = new Map(organizationCandidates.filter(org => documents.some(doc => doc.id === org.documentId && doc.original?.version === org.documentVersion && doc.original?.sha256 === org.documentSha256)).map(org => [org.documentId, organizationView(org)]));
+    const organizationProofs = organizationCandidates.filter(org => organizations.has(org.documentId)).map(org => ({ documentId: org.documentId, documentVersion: org.documentVersion, documentSha256: org.documentSha256 }));
     const objectCandidates = await collect((take, after) => tx.homeObject.findMany({ where: { ...own, ...pageWhere(after) }, take, orderBy }), budget);
     const objectIds = await readableReceiptObjectIds(tx, a, h, objectCandidates.map(row => row.id));
     const objects = objectCandidates.filter(row => objectIds.has(row.id));
@@ -81,7 +85,7 @@ export class PersonalExportService {
       ...assetHistory.map(row => ({ ...scalars(row, ['id', 'kind', 'note']), at: row.createdAt.toISOString(), resource: { kind: 'boiler', id: row.assetId }, changes: projection.technicalChanges(row.changes) })),
     ].sort((left, right) => String(record(left).at).localeCompare(String(record(right).at)) || String(record(left).id).localeCompare(String(record(right).id)));
     const data = {
-      documents: documents.map(row => ({ ...scalars(row, ['id', 'name', 'visibility', 'createdAt']), original: scalars(row.original, ['version', 'originalFilename', 'mimeType', 'byteSize', 'sha256']) })),
+      documents: documents.map(row => ({ ...scalars(row, ['id', 'name', 'visibility', 'createdAt']), ...(organizations.has(row.id) ? { organization: organizations.get(row.id) } : {}), original: scalars(row.original, ['version', 'originalFilename', 'mimeType', 'byteSize', 'sha256']) })),
       objects: objects.map(row => projection.snapshot('object', row)),
       technicalAssets: assets.map(row => projection.snapshot('boiler', row)),
       rooms: rooms.map(row => scalars(row, ['id', 'name', 'type', 'state'])),
@@ -95,7 +99,7 @@ export class PersonalExportService {
     };
     const limitations = ['originals_not_included', 'sharing_and_ai_drafts_not_included', 'document_physical_availability_not_checked', ...(projection.refsExcluded || assets.length !== assetCandidates.length || objects.length !== objectCandidates.length || receiptFields.length !== receiptFieldCandidates.length || receiptComparisons.length !== comparisonCandidates.length ? ['some_references_excluded'] : []), ...(projection.historyLimited ? ['some_history_snapshots_unavailable'] : [])];
     if (receiptNames.length) limitations.push('receipt_object_history_uses_current_name');
-    return { envelope: { format: 'dimora-personal-home-export', formatVersion: 1, generatedAt: new Date().toISOString(), scope: { homeId: h, accountId: a }, account, home, data, limitations }, assetIds: [...assetIds], objectIds: [...objectIds], receiptProofs };
+    return { envelope: { format: 'dimora-personal-home-export', formatVersion: 1, generatedAt: new Date().toISOString(), scope: { homeId: h, accountId: a }, account, home, data, limitations }, assetIds: [...assetIds], objectIds: [...objectIds], receiptProofs: [...receiptProofs, ...organizationProofs] };
   }
   async export(a: string, h: string, authorize: () => Promise<unknown>) {
     if (this.running >= EXPORT_LIMITS.concurrent) throw new ServiceUnavailableException({ code: 'personal_export_busy', message: 'Un’esportazione è già in corso. Riprova più tardi.' });

@@ -12,6 +12,7 @@ enum HomeRole {
   viewer
 }
 model Account {
+  documentOrganizations DocumentOrganization[]
   documentIntakeBatches DocumentIntakeBatch[]
   receiptJobs ReceiptAnalysisJob[]
   receiptFields ReceiptObjectField[]
@@ -87,6 +88,7 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  documentOrganizations DocumentOrganization[]
   documentIntakeBatches DocumentIntakeBatch[]
   receiptJobs ReceiptAnalysisJob[]
   receiptFields ReceiptObjectField[]
@@ -224,6 +226,7 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  organizations DocumentOrganization[]
   intakeItems DocumentIntakeItem[]
   receiptJobs ReceiptAnalysisJob[]
   receiptFields ReceiptObjectField[]
@@ -897,6 +900,7 @@ model ReceiptAiAttempt {
 }
 
 model DocumentIntakeBatch {
+  requests DocumentIntakeRequest[]
   id String @id @default(uuid())
   accountId String
   homeId String
@@ -914,6 +918,8 @@ model DocumentIntakeBatch {
   @@index([accountId, homeId, createdAt, id])
 }
 model DocumentIntakeItem {
+  selection Json?
+  organizationVersion Int?
   uploadKey String?
   uploadDigest String?
   uploadLeaseToken String?
@@ -941,4 +947,37 @@ model DocumentIntakeItem {
   @@unique([batchId, clientItemId])
   @@unique([batchId, ordinal])
   @@index([uploadState, uploadLeaseUntil])
+}
+
+// Personal overlay: never changes the original or the shared document title.
+model DocumentOrganization {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  documentId String
+  documentVersion Int
+  documentSha256 String
+  version Int @default(1)
+  title String
+  parts Json
+  collections String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)
+  home Home @relation(fields:[homeId], references:[id], onDelete:Restrict)
+  document Document @relation(fields:[documentId], references:[id], onDelete:Restrict)
+  @@unique([accountId, homeId, documentId])
+  @@index([accountId, homeId])
+}
+model DocumentIntakeRequest {
+  id String @id @default(uuid())
+  batchId String
+  operation String
+  key String
+  digest String
+  body Json
+  results Json
+  createdAt DateTime @default(now())
+  batch DocumentIntakeBatch @relation(fields:[batchId], references:[id], onDelete:Restrict)
+  @@unique([batchId, operation, key])
 }

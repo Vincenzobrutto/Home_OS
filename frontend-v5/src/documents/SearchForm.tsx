@@ -12,6 +12,7 @@ import {
   validateQuery,
 } from '../lib/documentSearch';
 import docs from '../routes/documents.module.css';
+import { DocumentCollectionFilters } from '../document-intake/DocumentCollectionFilters';
 
 /**
  * Ricerca H2 nei documenti della casa.
@@ -25,6 +26,7 @@ export function SearchForm(props: {
   home: Home;
   applied: DocumentSearchFilters;
   maxQuery: number;
+  collectionsEnabled?: boolean;
   /** Solo dall'ingresso esplicito «Cerca documenti» (?ricerca=1). */
   autoFocus: boolean;
   onApply: (filters: DocumentSearchFilters) => void;
@@ -104,6 +106,10 @@ export function SearchForm(props: {
           </span>
         )}
       </div>
+      {props.collectionsEnabled && <div>
+        <DocumentCollectionFilters current={draft.collection ?? 'all'} onChange={collection => setDraft({ ...draft, collection })} label="Raccolte personali" />
+        <p className={ui.hint}>Scegli una raccolta e premi Cerca. I documenti mantengono la loro visibilità.</p>
+      </div>}
       <div className={docs.searchFilters}>
         <label className={docs.filter}>
           Formato

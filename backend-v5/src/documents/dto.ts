@@ -2,6 +2,7 @@ import { Transform, Type } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsIn, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 import { CodePointLength } from '../dto';
 import { normalizeSearchQuery } from './search';
+import { DOCUMENT_COLLECTIONS, type DocumentCollection } from '../document-intake/domain';
 export class UploadDocumentDto {
   @Transform(({ value }: { value: unknown }) => typeof value === 'string' ? value.trim() : value)
   @IsString() @CodePointLength(1, 160, 'Titolo') name!: string;
@@ -13,6 +14,7 @@ export class ListDocumentsDto {
 }
 // H2 only: Review controllers continue to use the strict M2 ListDocumentsDto.
 export class SearchDocumentsDto extends ListDocumentsDto {
+  @IsOptional() @IsString() @IsIn(['all', ...Object.keys(DOCUMENT_COLLECTIONS)]) collection?: 'all' | DocumentCollection;
   @Transform(({ value }: { value: unknown }) => value === undefined ? undefined : normalizeSearchQuery(value))
   @IsOptional() @IsString() @CodePointLength(0, 120, 'Ricerca') q?: string;
   @IsOptional() @IsString() @IsIn(['all', 'pdf', 'jpeg', 'png']) format?: 'all' | 'pdf' | 'jpeg' | 'png';

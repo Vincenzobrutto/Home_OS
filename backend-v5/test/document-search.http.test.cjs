@@ -45,7 +45,7 @@ test('H2: HTTP reale, upload/originali/ZIP e ricerca autenticata; nessuna analis
   const ok = (r, status = 200) => { assert.equal(r.status, status, JSON.stringify(r.data)); return r.data; };
   const a = new Browser(), b = new Browser(); let h, own, picture, photo, secret, shared;
   await t.test('Sessione, Home e capabilities reali, anonimo e account-context rifiutati', async () => {
-    for (const client of [a, b]) { ok(await client.request('/session')); ok(await client.request('/auth/register', 'POST', { name: 'Prova H2 HTTP', email: randomUUID() + '@example.test', password: 'Password H2 locale test 123!' }), 201); accounts.push(client.id); ok(await client.request('/session')); }
+    for (const client of [a, b]) { ok(await client.request('/session')); ok(await client.request('/auth/register', 'POST', { name: 'Prova H2 HTTP', email: randomUUID() + '@example.test', password: 'Password H2 locale test 123!' }), 201); accounts.push(client.id); await db.account.update({ where: { id: client.id }, data: { emailVerifiedAt: new Date() } }); ok(await client.request('/session')); }
     h = ok(await a.request('/homes', 'POST', { name: 'Casa H2 HTTP', address: 'Via test' }), 201).home.id; homes.push(h);
     assert.equal(ok(await a.request(`/homes/${h}/document-search-capabilities`)).apiVersion, 'document-search-v1'); assert.equal((await new Browser().request(`/homes/${h}/document-search-capabilities`)).status, 401);
     const r = await a.request(`/homes/${h}/documents?q=test`, 'GET', undefined, { 'X-Account-Context': b.id }); assert.equal(r.status, 401); assert.equal(r.data.error.code, 'account_context_changed');

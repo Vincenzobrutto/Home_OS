@@ -19,6 +19,10 @@ test('H2: pattern letterale e cursori legati a filtri/contesto, non limit', () =
   assert.deepEqual(s.searchAnchor(cursor, a, h, s.searchFilters({ limit: 1, q: ' Privato % ' })), row);
   for (const [account, home, f] of [[randomUUID(), h, filters], [a, randomUUID(), filters], [a, h, { ...filters, format: 'pdf' }], [a, h, { ...filters, q: 'altro' }]]) assert.throws(() => s.searchAnchor(cursor, account, home, f));
   const legacy = Buffer.from(JSON.stringify({ a, h, id: row.id, t: row.createdAt.toISOString() })).toString('base64url');
+  const collected = s.searchFilters({ limit: 20, collection: 'energy' });
+  assert.throws(() => s.searchAnchor(legacy, a, h, collected));
+  assert.throws(() => s.searchAnchor(s.searchCursor(row, a, h, collected), a, h, s.searchFilters({ limit: 20, collection: 'building' })));
+  for (const collection of ['__proto__', 'constructor', ['energy'], 'not-a-collection']) assert.throws(() => s.searchFilters({ limit: 20, collection }));
   assert.deepEqual(s.searchAnchor(legacy, a, h, s.searchFilters({ limit: 20 })), row); assert.throws(() => s.searchAnchor(legacy, a, h, filters));
   for (const q of [{ limit: 20, cursor: '!' }, { limit: 51 }, { limit: 20, unknown: 'x' }]) assert.throws(() => s.searchFilters(q));
 });

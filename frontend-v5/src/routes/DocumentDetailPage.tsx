@@ -17,6 +17,7 @@ import {
   saveBlob,
 } from '../lib/files';
 import { filtersFromParams, filtersToParams } from '../lib/documentSearch';
+import { KIND_LABEL } from '../document-intake/model';
 import { LinkedExpenses } from '../expenses/LinkedExpenses';
 import { ReceiptEntry } from '../receipt-integration/Surfaces';
 import { documentsErrorMessage } from './DocumentsPages';
@@ -155,6 +156,10 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
           <dl className={styles.detailList}>
             <dt>Nome del file</dt>
             <dd>{doc.originalFilename}</dd>
+            {doc.organization && <>
+              <dt>Organizzazione personale</dt><dd>{doc.organization.title}<br />Scelta da te · versione {doc.organization.version}</dd>
+              <dt>Parti del documento</dt><dd>{doc.organization.parts.map((part, i) => <div key={i}>{KIND_LABEL[part.kind as keyof typeof KIND_LABEL] ?? part.kind}{part.pageFrom === null ? ' · documento intero' : ` · pagine ${part.pageFrom}–${part.pageTo}`}</div>)}</dd>
+            </>}
             <dt>Formato</dt>
             <dd>{formatLabel(doc.mimeType)}</dd>
             <dt>Dimensione</dt>

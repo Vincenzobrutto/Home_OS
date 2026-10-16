@@ -182,6 +182,7 @@ export class ApiClient {
     if (filters?.q) params.set('q', filters.q);
     if (filters && filters.format !== 'all') params.set('format', filters.format);
     if (filters && filters.visibility !== 'all') params.set('visibility', filters.visibility);
+    if (filters?.collection && filters.collection !== 'all') params.set('collection', filters.collection);
     if (page.limit !== undefined) params.set('limit', String(page.limit));
     if (page.cursor) params.set('cursor', page.cursor);
     const query = params.size ? `?${params.toString()}` : '';

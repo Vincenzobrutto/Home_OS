@@ -87,3 +87,6 @@ Viewer cerca/apre originali leggibili, senza export/upload; revoca/403 blocca e 
 14. Build/lint/test regressioni verdi, client/API/DB reali e browser 320/390/desktop/tastiera prima di dichiarare H2 finita. Tutti i test live AI disabilitati.
 
 Il contratto non richiede produzione/cloud, motori esterni o pagamenti. Aggiornare ADR/docs nella stessa sessione di implementazione e documentare eventuali limiti reali; non dichiarare attivi endpoint solo perché esistono nel mock.
+
+## Estensione B2 archivio assistito16ott2026
+Raccolte personali confermate, filtro collection e title personale, cache/cursor/export coerenti. Firme e regole vincolanti: document-intake-api-contract.md sezione B2. Nessuna classificazione automatica dei documenti pregressi; gli originali senza metadati personali correnti sono in Da organizzare. UI e schema additivi, visibilità invariata.

@@ -18,6 +18,7 @@ import { PersonalExportPanel } from '../documents/PersonalExportPanel';
 import { useAccount, useSession } from '../session/session';
 import {
   EMPTY_FILTERS,
+  COLLECTION_OPTIONS,
   QUERY_MAX_CODE_POINTS,
   SEARCH_SCOPE_NOTE,
   describeFilters,
@@ -155,6 +156,7 @@ export function DocumentsPage() {
           home={home}
           applied={applied}
           maxQuery={maxQuery}
+          collectionsEnabled={!!capabilities.data.collections}
           autoFocus={params.get('ricerca') === '1'}
           onApply={apply}
         />
@@ -500,6 +502,7 @@ function DocumentRow(props: {
         </Link>
         <span className={docs.meta}>
           {doc.originalFilename} · {formatLabel(doc.mimeType)} · {formatBytes(doc.byteSize)} · {formatDate(doc.createdAt)}
+          {doc.organization && <span> · {doc.organization.collections.map(c => COLLECTION_OPTIONS.find(o => o.value === c)?.label ?? c).join(' · ')}</span>}
         </span>
         <span className={docs.tags}>
           <Tag tone="blue">{STATUS_LABEL}</Tag>

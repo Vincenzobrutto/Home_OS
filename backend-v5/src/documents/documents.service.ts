@@ -8,6 +8,8 @@ import { LocalFileStorage, detectOriginal, safeFilename, storageUnavailable, MAX
 import { UploadDocumentDto, SearchDocumentsDto } from './dto';
 import { SEARCH_CAPABILITIES, literalPattern, searchAnchor, searchCursor, searchFilters } from './search';
 import { object } from '../review/domain';
+import { currentOrganization, organizationView } from '../document-intake/organization';
+import { DOCUMENT_COLLECTIONS } from '../document-intake/domain';
 const includeOriginal = { original: { include: { file: true } } } as const;
 type OriginalDocument = Prisma.DocumentGetPayload<{ include: typeof includeOriginal }>;
 function readableWhere(accountId: string, homeId: string): Prisma.DocumentWhereInput { return { homeId, OR: [{ visibility: 'home' }, { uploaderId: accountId }] }; }
@@ -31,7 +33,7 @@ export class DocumentsService implements OnModuleInit {
   }
   async searchCapabilities(accountId: string, homeId: string, query: unknown) {
     object(query, []);
-    return this.db.$transaction(async tx => { await this.policy.requireLocked(tx, accountId, homeId); return SEARCH_CAPABILITIES; });
+    return this.db.$transaction(async tx => { await this.policy.requireLocked(tx, accountId, homeId); return { ...SEARCH_CAPABILITIES, collections: DOCUMENT_COLLECTIONS }; });
   }
   async list(accountId: string, homeId: string, query: SearchDocumentsDto) {
     const filters = searchFilters(query), anchor = searchAnchor(query.cursor, accountId, homeId, filters);
@@ -47,21 +49,34 @@ export class DocumentsService implements OnModuleInit {
       // database's default C collation only folds ASCII. Never rewrite originals.
       const ids = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`
         SELECT d.id FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
+        LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${accountId} AND o."homeId"=${homeId} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256
         WHERE d."homeId"=${homeId} AND (d.visibility='home' OR d."uploaderId"=${accountId})
         ${filters.visibility === 'all' ? Prisma.empty : Prisma.sql`AND d.visibility::text=${filters.visibility}`}
         ${filters.format === 'all' ? Prisma.empty : Prisma.sql`AND v."mimeType"=${mime[filters.format]}`}
-        ${!filters.q ? Prisma.empty : Prisma.sql`AND (normalize(d.name,NFC) COLLATE "und-x-icu" ILIKE ${pattern} ESCAPE '\\' OR normalize(v."originalFilename",NFC) COLLATE "und-x-icu" ILIKE ${pattern} ESCAPE '\\')`}
+        ${filters.collection === 'all' ? Prisma.empty : filters.collection === 'unclassified' ? Prisma.sql`AND (o.id IS NULL OR ${filters.collection}=ANY(o.collections))` : Prisma.sql`AND ${filters.collection}=ANY(o.collections)`}
+        ${!filters.q ? Prisma.empty : Prisma.sql`AND (normalize(COALESCE(o.title,d.name),NFC) COLLATE "und-x-icu" ILIKE ${pattern} ESCAPE '\\' OR normalize(v."originalFilename",NFC) COLLATE "und-x-icu" ILIKE ${pattern} ESCAPE '\\')`}
         ${!anchor ? Prisma.empty : Prisma.sql`AND (d."createdAt"<${anchorTime}::timestamp OR (d."createdAt"=${anchorTime}::timestamp AND d.id<${anchor.id}))`}
-        ORDER BY d."createdAt" DESC,d.id DESC LIMIT ${query.limit + 1}`);
+        ORDER BY d."createdAt" DESC,d.id DESC LIMIT ${query.limit + 1} FOR SHARE OF d`);
+      if (ids.length) await tx.$queryRaw(Prisma.sql`SELECT id FROM "DocumentVersion" WHERE "documentId" IN (${Prisma.join(ids.map(row => row.id))}) ORDER BY id FOR SHARE`);
       const docs = await tx.document.findMany({ where: { ...readableWhere(accountId, homeId), id: { in: ids.map(row => row.id) } }, include: includeOriginal, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] });
       const member = await this.policy.require(accountId, homeId, 'read', tx);
       const page = docs.slice(0, query.limit), last = page.at(-1);
-      return { items: page.map(doc => publicDocument(doc, canExport(member))), nextCursor: docs.length > query.limit && last ? searchCursor(last, accountId, homeId, filters) : null };
-    }, { timeout: 15000, maxWait: 15000 });
+      return { items: await Promise.all(page.map(async doc => {
+        const org = await currentOrganization(tx, accountId, homeId, doc);
+        return { ...publicDocument(doc, canExport(member)), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null };
+      })), nextCursor: docs.length > query.limit && last ? searchCursor(last, accountId, homeId, filters) : null };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 15000, maxWait: 15000 });
   }
   async get(accountId: string, homeId: string, id: string) {
-    const { doc, member } = await this.accessible(accountId, homeId, id);
-    return { document: publicDocument(doc, canExport(member), true) };
+    return this.db.$transaction(async tx => {
+      const member = await this.policy.requireLocked(tx, accountId, homeId);
+      await tx.$queryRaw`SELECT id FROM "Document" WHERE id=${id} FOR SHARE`;
+      await tx.$queryRaw`SELECT id FROM "DocumentVersion" WHERE "documentId"=${id} FOR SHARE`;
+      const current = await tx.document.findUnique({ where: { id }, include: includeOriginal });
+      if (!current || current.homeId !== homeId || !canReadDocument(current, accountId)) throw new ForbiddenException();
+      const org = await currentOrganization(tx, accountId, homeId, current);
+      return { document: { ...publicDocument(current, canExport(member), true), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null } };
+    });
   }
   async upload(accountId: string, homeId: string, dto: UploadDocumentDto, file: { buffer: Buffer; originalname: string } | undefined, key?: string) {
     await this.policy.require(accountId, homeId, 'edit');
@@ -124,14 +139,25 @@ export class DocumentsService implements OnModuleInit {
     try {
       const files = [];
       for (const doc of docs) files.push({ doc, bytes: await this.originalBytes(doc) });
+      const organizations = await this.db.$transaction(async tx => {
+        await this.policy.requireLocked(tx, accountId, homeId);
+        return new Map(await Promise.all(docs.map(async doc => {
+          const org = await currentOrganization(tx, accountId, homeId, doc);
+          return [doc.id, org ? organizationView(org) : null] as const;
+        })));
+      });
       const archive = archiver('zip', { store: true });
       const chunks: Buffer[] = [];
       const completed = new Promise<Buffer>((resolve, reject) => { archive.on('data', (chunk: Buffer) => chunks.push(chunk)); archive.on('error', reject); archive.on('warning', reject); archive.on('end', () => resolve(Buffer.concat(chunks))); });
       for (const { doc, bytes } of files) archive.append(bytes, { name: `${doc.id}-${doc.original!.originalFilename}` });
-      archive.append(JSON.stringify({ documents: files.map(({ doc }) => ({ documentId: doc.id, version: doc.original!.version, originalFilename: doc.original!.originalFilename, byteSize: doc.original!.byteSize, sha256: doc.original!.sha256, visibility: doc.visibility })) }, null, 2), { name: 'manifest.json' });
+      archive.append(JSON.stringify({ documents: files.map(({ doc }) => ({ documentId: doc.id, version: doc.original!.version, originalFilename: doc.original!.originalFilename, byteSize: doc.original!.byteSize, sha256: doc.original!.sha256, visibility: doc.visibility, organization: organizations.get(doc.id) })) }, null, 2), { name: 'manifest.json' });
       void archive.finalize().catch(error => { archive.emit('error', error); archive.abort(); });
       const bytes = await completed.catch(() => { throw storageUnavailable(); });
       await this.policy.require(accountId, homeId, 'export');
+      for (const doc of docs) {
+        const current = await this.accessible(accountId, homeId, doc.id);
+        if (current.doc.original?.version !== doc.original!.version || current.doc.original?.sha256 !== doc.original!.sha256) throw new ForbiddenException();
+      }
       return bytes;
     } finally { this.exportsRunning--; }
   }

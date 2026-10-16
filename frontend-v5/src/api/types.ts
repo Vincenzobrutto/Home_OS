@@ -41,6 +41,7 @@ export type DocumentMimeType = 'application/pdf' | 'image/jpeg' | 'image/png';
 export type DocumentPermission = 'read' | 'export';
 
 export type DocumentSummary = {
+  organization?: { version: number; title: string; parts: Array<{ kind: string; pageFrom: number | null; pageTo: number | null }>; collections: DocumentCollection[]; origin: 'user_declared'; updatedAt: string } | null;
   id: string;
   homeId: string;
   name: string;
@@ -65,9 +66,11 @@ export type UploadDocumentInput = { file: File; name: string; visibility: Docume
 export type DocumentFormatFilter = 'all' | 'pdf' | 'jpeg' | 'png';
 export type DocumentVisibilityFilter = 'all' | DocumentVisibility;
 /** Filtri canonici: q già trim + NFC ('' = nessuna ricerca testuale). */
-export type DocumentSearchFilters = { q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter };
+export type DocumentCollection = 'energy' | 'building' | 'technical' | 'condominium' | 'purchases' | 'utilities' | 'unclassified';
+export type DocumentSearchFilters = { q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter; collection?: 'all' | DocumentCollection };
 
 export type DocumentSearchCapabilities = {
+  collections?: Record<DocumentCollection, string>;
   apiVersion: 'document-search-v1';
   enabled: true;
   isSimulation: false;

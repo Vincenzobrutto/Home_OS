@@ -46,3 +46,6 @@ Lotto misto approvato nel mockup: APE, CILA+agibilità, schema ambiguo, regolame
 
 ### Stato B1b16ott2026
 Upload per elemento e deduplica controllata implementati e collaudati in modulo isolato; migrazione22V5 applicata.13HTTP/DB storageesplicitamentestub +1testfisico scannerreale verdi, build/lint verdi; dettagli e DTO redatti in document-intake-api-contract.md B1b. Non ancora attivo nell’app, nessuna classificazione AI o organizzazione confermata implementata. NextB2metadati/filtri e poi B3B4.
+
+### Stato corrente B2,16ottobre2026 — prevale sul precedente stato B1b
+Organizzazione personale confermata, parti/pagine, target esistenti, review/defer/ripresa e conferma parziale persistenti implementati; migrazione23 sul solo DB V5. Firme vincolanti in document-intake-api-contract.md B2: consenso sostituzione, recupero richieste, riuso duplicato. Documenti usa raccolte/query/cursor/cache e metadati correnti in elenco/dettaglio/export, nessuna riclassificazione automatica pregressa. Claude C1/C2/C3 raccolto, filtri collegati; assistente non ancora agganciato. Restano B3 classificazione/worker/budget e B4 client/container/API/browser completo. Nessuna AI o mutazione dei documenti personali in B2.
