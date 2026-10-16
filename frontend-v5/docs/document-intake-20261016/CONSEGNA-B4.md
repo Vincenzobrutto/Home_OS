@@ -15,7 +15,7 @@ Componenti **non integrati**: nessun fetch e nessun fallback demo. Nessun push.
 |---|---|---|
 | B4-1 Consenso alla sostituzione | PRONTA | `19124eb` |
 | B4-2 Revisione robusta | PRONTA | `713f51b` |
-| B4-3 Test mirati, mobile e tastiera | PRONTA | commit «archivio B4-3» (vedi `git log`) |
+| B4-3 Test mirati, mobile e tastiera | PRONTA | `6bd3715` |
 
 ## B4-1 — Consenso alla sostituzione · PRONTA
 
@@ -91,7 +91,7 @@ Commit: `713f51b` «test(frontend-v5): archivio B4-2, revisione robusta». Il co
 
 ## B4-3 — Test mirati, mobile e tastiera · PRONTA
 
-Commit: quello di questa fase (messaggio «archivio B4-3»).
+Commit: `6bd3715` «feat(frontend-v5): archivio B4-3…».
 
 **Correzioni trovate scrivendo i test** (nel contratto delle props, nessuna callback nuova):
 - **Riuso incerto della copia:** il dialogo mostrava «Verifica l'esito», ma `recoverReview` non aveva un payload per quel percorso, quindi il pulsante non faceva nulla e l'elemento restava bloccato per sempre. Ora lo stato incerto ha `reloadOnly: { version }`:
