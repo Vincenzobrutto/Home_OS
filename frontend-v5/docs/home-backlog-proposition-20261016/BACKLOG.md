@@ -24,10 +24,11 @@ Proposta Claude, condivisa con il committente nella sessione del 16/10. Serve a 
 - **BL-03 Storia della casa:** si fa **prima di Agenzie**.
 - **BL-07 Persone della casa:** rientra nel **ciclo Home**, prima di Agenzie.
 - **Fase 4 (BL-12…BL-16):** restano **placeholder non pianificati**. Ognuna richiede prima una fase di progettazione; solo dopo entra nel backlog di sviluppo con stime e criteri definitivi.
-- **Ordine:** la fase 3 si fa prima di Agenzie, così la Home si chiude per intero.
+- **Ordine:** la Home si chiude prima di Agenzie con la release corrente; le voci rinviate alla release successiva non bloccano Agenzie.
 - **BL-07:** invita solo il proprietario; quello che è privato resta privato.
 - **BL-08:** attivazione su richiesta, settimanale; nell'email titoli e date.
 - **BL-10:** mini-rubrica riusabile, al posto della versione minima.
+- **Piano di release:** il committente adotta la proposta Claude; vedi «Piano di release». BL-08 e BL-09 vanno alla release successiva. BL-07 entra nella release corrente solo se la prova reale coinvolge famiglie o persone che vivono insieme. Le decisioni di prodotto su BL-07 e BL-08 restano valide quando le voci verranno sviluppate.
 
 ## Principi validi per tutte le voci
 
@@ -80,7 +81,7 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - documento di supporto collegabile;
   - proposta di un promemoria prima della scadenza.
 
-  In seguito il dato può arrivare dall'analisi di una fattura come dato proposto da confermare.
+  La lettura automatica della garanzia dalla fattura, come dato proposto da confermare, va nella release successiva.
 - **Perché.** Il «ritrovo la garanzia quando serve» degli spunti §5 è un beneficio concreto e facile da comunicare. Oggi non esiste nessun campo garanzia.
 - **Accettazione.**
   - Il dato è marcato dichiarato oppure documentato, se c'è un documento collegato.
@@ -88,6 +89,7 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - Il promemoria è una proposta confermata dall'utente.
   - Privacy identica a quella dell'oggetto.
 - **Effort indicativo.** M: estensione degli oggetti nel contratto e nel backend.
+- **Release.** Corrente, solo versione manuale.
 
 ## Fase 2 — Ciclo Home
 
@@ -105,17 +107,18 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - Ogni voce mostra data dell'evento, fonte (dichiarato o documento) e collegamenti.
   - La data dell'evento è distinta da quella di caricamento.
   - Le voci personali sono visibili solo a chi le ha create.
-  - Filtro per anno e per oggetto.
+  - Filtro per anno. Il filtro per oggetto e altri filtri vanno nella release successiva.
   - Nessun registro tecnico: entrano solo eventi significativi, non ogni modifica.
   - Il ritorno dalla voce alla risorsa mantiene il contesto.
 - **Effort indicativo.** M–L: nuova lettura aggregata lato server, più l'entità «evento manuale».
 - **Decisione del committente (16/10).** Prima di Agenzie.
+- **Release.** Corrente, in **versione essenziale**: eventi già esistenti più eventi manuali, filtro per anno. Estensioni nella release successiva.
 
 ### BL-07 · Persone della casa
 - **Cosa.** Invitare familiari e coinquilini con ruolo membro o sola lettura. I ruoli esistono già nel server, ma la UI dice «gestione degli accessi non disponibile».
 - **Prerequisiti.** Progettazione di inviti, revoca e privacy al livello della C1. La progettazione va fatta dentro questo ciclo.
 - **Decisioni del committente (16/10).**
-  - Rientra nel ciclo Home, prima di Agenzie.
+  - **Release condizionata:** corrente solo se la prova reale coinvolge famiglie o persone che vivono insieme; altrimenti release successiva. È la voce più delicata per sicurezza e privacy.
   - **Invita solo il proprietario**, con ruolo membro o sola lettura. I membri non possono invitare.
   - **Il privato resta privato.** Gli invitati vedono solo i contenuti marcati «Persone della casa», per esempio i documenti con quella visibilità. Promemoria, spese e oggetti personali restano visibili solo a chi li crea, come oggi.
   - Nessuna spesa condivisibile in questo incremento.
@@ -125,7 +128,7 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - Revoca immediata.
   - Il ruolo e i permessi sono spiegati prima della conferma, sia a chi invita sia a chi accetta.
 
-## Fase 3 — Chiusura della Home, prima di Agenzie
+## Fase 3 — Professionisti, ricorrenze, email
 
 ### BL-08 · Riepilogo via email delle scadenze
 - **Cosa.** Riepilogo periodico facoltativo delle scadenze personali. Con BL-05 escluso, è l'unico canale «push» previsto.
@@ -143,10 +146,12 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - L'email contiene solo scadenze personali dell'utente.
   - Il collegamento richiede l'accesso: nessun token di accesso nell'URL.
 - **Effort indicativo.** M.
+- **Release.** Successiva. Prima conviene osservare nella prova reale se gli utenti dimenticano davvero le scadenze; BL-01 copre già in parte il ritorno nell'app.
 
 ### BL-09 · Impegni e spese ricorrenti
 - **Cosa.** Rate, polizze e condominio come regole ricorrenti. È già pianificato come **S2 «Impegni e ricorrenze»** in `home-economy-module.md` §6.
 - **Nota.** È la base dati necessaria per BL-15.
+- **Release.** Successiva. S2 è grande (regole, eccezioni, revisioni, riconciliazione) e il suo valore pieno arriva con le previsioni, oggi ferme.
 
 ### BL-10 · Mini-rubrica dei professionisti
 - **Cosa.** Un elenco dei professionisti della casa (nome, mestiere, recapito, nota) da scegliere su lavori e spese, e facoltativamente su attività e oggetti. Serve a ritrovare insieme intervento, fattura, garanzia e professionista (spunti §6).
@@ -163,6 +168,7 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - Archiviare un professionista non cancella i collegamenti storici.
   - Nessun professionista o recapito appare a membri o invitati.
 - **Effort indicativo.** M: nuova entità con collegamenti, contratto e backend.
+- **Release.** Corrente.
 
 ### BL-10b · Professionista e oggetto proposti dal documento (seconda tappa di BL-10)
 - **Cosa.** Quando l'utente analizza una fattura o un rapporto d'intervento, la bozza economica esistente propone, oltre alla spesa:
@@ -184,6 +190,7 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - Con un professionista già presente con la stessa P.IVA non si crea un doppione.
   - Una bolletta non propone un professionista.
 - **Effort indicativo.** M: contratto della bozza, estrazione e UI della bozza.
+- **Release.** Corrente, subito dopo BL-10. La qualità di estrazione va misurata nella fase 0.
 
 ## Fase 4 — Placeholder: non pianificare
 
@@ -269,21 +276,34 @@ Le note qui sotto sono il punto di partenza per quella progettazione, non requis
 | Marketplace e tecnici, avvisi meteo, modelli per unità simili | Fuori dal modello attuale |
 | Punteggio unico della casa | Escluso dal Master |
 
-## Ordine proposto
+## Piano di release (decisione del committente, 16/10)
 
-1. Fase 0: prerequisiti del pilota.
-2. Fase 1: BL-04 → BL-01 → BL-02.
-3. Fase 2: BL-03 Storia della casa e BL-07 Persone della casa. Codex sceglie l'ordine fra le due.
-4. Fase 3: BL-09, BL-10 → BL-10b, BL-08. Decisione del committente (16/10): **si chiude la Home prima di passare ad Agenzie**.
-5. Agenzie.
+### Release corrente, poi Agenzie
 
-Fase 3 e Agenzie non hanno dipendenze bloccanti in nessuna direzione.
-- **Decisioni di prodotto della fase 3:** prese il 16/10 (vedi BL-08 e BL-10).
-- **Da approvare dal committente:** il costo del fornitore email proposto da Codex.
-- **BL-08 non deve bloccare Agenzie.** Se resta in attesa del fornitore, la Home si chiude con BL-09 e BL-10 e BL-08 prosegue in parallelo.
-- **Servizio email riusabile.** Il servizio costruito per BL-08 servirà probabilmente anche ad Agenzie (per esempio gli inviti ai proprietari): progettarlo riusabile.
+| Ordine | Voce | Note |
+|---|---|---|
+| 1 | Fase 0: prerequisiti del pilota reale | Obbligatoria prima della prova con persone reali |
+| 2 | BL-04 Scatta una foto | |
+| 3 | BL-01 Promemoria che si ripete | |
+| 4 | BL-02 Garanzie | Solo versione manuale |
+| 5 | BL-03 Storia della casa | Versione essenziale |
+| 6 | BL-10 Mini-rubrica | |
+| 7 | BL-10b Professionista e oggetto dal documento | Dopo BL-10 |
+| — | BL-07 Persone della casa | Solo se la prova reale coinvolge famiglie o persone che vivono insieme. Codex chiede conferma al committente prima di iniziarla |
 
-La fase 4 (BL-12…BL-16) non è in sequenza: si progetta su richiesta del committente.
+Poi **Agenzie**.
+
+### Release successiva
+
+- BL-09 Spese ricorrenti (S2).
+- BL-08 Riepilogo email: decisioni di prodotto già prese; il costo del fornitore va approvato dal committente. Progettare il servizio email riusabile anche per Agenzie, per esempio per gli inviti ai proprietari.
+- BL-02: lettura automatica della garanzia dalla fattura.
+- BL-03: estensioni (filtro per oggetto, altri tipi di evento).
+- BL-07, se non fatta nella release corrente.
+
+### Future release, dopo la progettazione
+
+BL-12…BL-16 (fase 4): non pianificati. Si progettano dopo Agenzie su richiesta del committente, partendo da BL-12, BL-13 e BL-14 insieme perché condividono dati e catalogo delle regole.
 
 ## Nota fuori backlog
 
