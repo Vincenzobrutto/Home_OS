@@ -13,7 +13,7 @@
 
 ## Fase 1 — Area di lavoro unica e revisione individuale · PRONTA per integrazione
 
-Commit: quello di questa fase (messaggio «documenti semplificati fase 1»; hash in `git log`).
+Commit: `e9db445` «feat(frontend-v5): documenti semplificati fase 1, area unica e conferma diretta individuale».
 
 **Interfaccia:**
 - **Area di lavoro unica.**
@@ -104,6 +104,57 @@ Risultato: 43/43, `tsc` pulito, lint pulito.
 | K5 | `renderOutcomeLinks(results)` ora è nell'intestazione dell'area di lavoro, con i risultati accumulati (anche vuoti): adatto a «Vai ai Documenti» |
 | K6 | Messaggi del container che parlano di «lotto» o «Riapri il lotto dal server»: da allineare al linguaggio V2. È fuori dalla mia ownership |
 
-## Fase 2 — Selezione multipla diretta · IN_CORSO
+## Fase 2 — Selezione multipla diretta · PRONTA per integrazione
+
+Commit: quello di questa fase (messaggio «documenti semplificati fase 2»). Il codice è in `e9db445` (vedi la nota sul taglio dei commit); qui entrano i test, che hanno verificato il comportamento senza richiedere correzioni.
+
+**Comportamento:**
+- **Caselle e barra.**
+  - Le caselle sono vuote e compaiono solo con 2 o più documenti, e solo sulle proposte chiare (`bulkEligible`), con una scrittura non in corso o non incerta e `onOrganize` presente.
+  - Tipo e destinazione si leggono nella riga **prima** di selezionare.
+  - «Seleziona le N proposte disponibili» (quelle visibili nel filtro) è sempre un'azione esplicita; c'è anche «Annulla selezione».
+  - La barra fissa in basso mostra «N documenti selezionati» e «Organizza N documenti selezionati», che chiama `onOrganize` con `mode: 'multiple'` (da 1 a 20 elementi) **senza altro dialogo**.
+  - Ogni elemento porta **esattamente** la proposta mostrata, destinazione casa, `replaceOrganization: false` e la versione dell'organizzazione letta.
+- **Esclusi** (revisione individuale):
+  - copie;
+  - documenti con organizzazione già confermata;
+  - classificazione manuale (scansioni, nessuna proposta);
+  - `needs_choice`;
+  - rinviati;
+  - legacy `saved`;
+  - fonti indisponibili;
+  - letture in corso;
+  - scritture in corso o incerte;
+  - completati;
+  - `selectionStale`.
+- **Reset della selezione:**
+  - cambio di filtro;
+  - nuova versione dell'elemento: la selezione di quell'elemento cade, le altre restano;
+  - cambio di account, casa o lotto: rimontaggio;
+  - reload: lo stato è solo in memoria.
+  - Nessuna selezione nascosta da filtri: vale solo per gli elementi visibili.
+- **Esiti:**
+  - per file: gli applicati vanno in Completati; i rifiutati restano «Da rivedere» con «Non applicato: …», sono elencati nel riepilogo con nome e motivo e restano selezionabili;
+  - **rifiuto dell'intera richiesta:** nessuno applicato, messaggio, elementi ancora selezionabili;
+  - **incerto:**
+    - banner «Esito non confermato», elementi bloccati («Esito non noto», senza casella), barra disabilitata, nessun reinvio;
+    - «Verifica l'esito» chiama `onRecoverOrganization` con lo **stesso** payload;
+    - registrata solo in parte (risultati mancanti): resta da chiarire, con una nuova verifica sullo stesso payload;
+    - `not_found`: «Invia di nuovo la stessa richiesta» con il payload identico.
+- Nessuna distinzione «Scelte salvate / Da rivedere».
+
+**Test (`BulkSelection.test.tsx`, 8):**
+- caselle solo sulle 4 proposte chiare del lotto misto e payload multiplo esatto;
+- 10 casi esclusi;
+- reset per filtro, versione e contesto;
+- errore di un elemento con esito per file;
+- incerto con verifica e risultato parziale;
+- `not_found` con reinvio identico;
+- rifiuto dell'intera richiesta;
+- documento singolo senza caselle.
+
+**Comandi:** gli stessi della fase 1. Risultato: **51/51** in 6 file, `tsc` e lint puliti.
+
+**Differenze per il container:** nessuna oltre K1–K6. Per K2: una ricevuta GET che riporta solo una parte dei risultati va restituita come `done` con i risultati presenti (il componente chiede un'altra verifica) oppure come `uncertain`, mai come successo completo.
 
 ## Fase 3 — Test, tastiera e mobile 320/390 · IN_CORSO
