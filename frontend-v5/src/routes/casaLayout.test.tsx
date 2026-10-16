@@ -13,6 +13,7 @@ it('[mock] Casa mette le azioni prima dei dettagli e aprire il ruolo non scrive 
   const actions = screen.getByRole('region', { name: 'Da dove vuoi iniziare?' });
   expect(within(actions).getByRole('link', { name: 'Documenti' })).toHaveAttribute('href', `/home/${homeB1.id}/documenti`);
   expect(within(actions).getByRole('link', { name: 'Registra una spesa' })).toHaveAttribute('href', `/home/${homeB1.id}/spese?nuova-spesa=1`);
+  expect(await screen.findByRole('link', { name: 'Apri le condivisioni' })).toHaveAttribute('href', `/home/${homeB1.id}/condivisioni`);
   const summary = screen.getByText('Dettagli della casa e del tuo ruolo');
   const details = summary.closest('details')!;
   expect(details).not.toHaveAttribute('open');

@@ -17,7 +17,10 @@ import { useAssets } from '../review/hooks';
 import { CasaReviewSummary } from './CasaTasksSummary';
 import { lazyPage } from './lazyPage';
 
-const CasaSharingSummary = lazyPage(() => import('./CasaSharingSummary').then(m => m.CasaSharingSummary));
+const CasaSharingSummary = lazyPage(() => import('./CasaSharingSummary').then(m => function HomeSharing() {
+  const home = useCurrentHome();
+  return <m.CasaSharingSummary homeId={home.id} />;
+}));
 import styles from './pages.module.css';
 
 type HomeContext = { home: Home };
@@ -134,7 +137,7 @@ export function CasaPage() {
       <div className={styles.grid}>
         <ScadenzeSummary home={home} />
         <CasaReviewSummary homeId={home.id} />
-        <CasaSharingSummary homeId={home.id} />
+        <CasaSharingSummary />
       </div>
       <h2 className={styles.spaced}>La tua casa</h2>
       <div className={styles.grid}>
