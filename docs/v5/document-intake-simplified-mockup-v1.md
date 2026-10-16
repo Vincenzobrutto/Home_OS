@@ -20,6 +20,7 @@ Non è l'implementazione definitiva, non prova API/DB/idempotenza o classificazi
 - Tipo e destinazione risultante prima dell'originale; fonte accanto su desktop, sezione apribile dopo i campi su telefono. Collegamento al PDF sintetico disponibile.
 - Copie: nessuna scelta preselezionata; Mantieni lascia un solo documento e dati invariati. Aggiorna chiede consenso se cambia dati confermati.
 - Conflitti: confronto attuale/proposto, mantenimento o proposta; consenso specifico alla sostituzione non preselezionato e invalidato se si cambiano i valori.
+- Dopo feedback del committente: riquadro con badge scuro «DATI ATTUALI» e testo «Già confermati da te», distinto da «PROPOSTA DAL DOCUMENTO». Verificato nel browser su esempio sintetico separato; nessuna decisione o stato del caso utente cambiati. Screenshot `09-label-dati-attuali.png`.
 - Chiusura con modifiche non salvate chiede se scartarle; salvataggio è un'azione esplicita distinta.
 - Modifica dal dettaglio/elenco del mockup, senza dover cercare un vecchio caricamento.
 
