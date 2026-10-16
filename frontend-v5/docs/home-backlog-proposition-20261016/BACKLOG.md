@@ -85,7 +85,7 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - Privacy identica a quella dell'oggetto.
 - **Effort indicativo.** M: estensione degli oggetti nel contratto e nel backend.
 
-## Fase 2 — Ciclo Home, prima di Agenzie
+## Fase 2 — Ciclo Home
 
 ### BL-03 · Storia della casa
 - **Cosa.** Una cronologia unica della casa (Master §6, «Property Timeline»), accessibile da Casa. Riunisce eventi già presenti:
@@ -116,7 +116,7 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - Il ruolo e i permessi sono spiegati prima della conferma.
 - **Decisione del committente (16/10).** Rientra nel ciclo Home, prima di Agenzie.
 
-## Fase 3 — Dopo, con decisioni o prerequisiti
+## Fase 3 — Chiusura della Home, prima di Agenzie
 
 ### BL-08 · Riepilogo via email delle scadenze
 - **Cosa.** Riepilogo periodico facoltativo delle scadenze personali. Con BL-05 escluso, è l'unico canale «push» previsto.
@@ -219,9 +219,16 @@ Le note qui sotto sono il punto di partenza per quella progettazione, non requis
 
 1. Fase 0: prerequisiti del pilota.
 2. Fase 1: BL-04 → BL-01 → BL-02.
-3. Fase 2, prima di Agenzie: BL-03 Storia della casa e BL-07 Persone della casa. Codex sceglie l'ordine fra le due.
-4. Agenzie.
-5. Fase 3: BL-08, BL-09, BL-10, secondo le decisioni del committente.
+3. Fase 2: BL-03 Storia della casa e BL-07 Persone della casa. Codex sceglie l'ordine fra le due.
+4. Fase 3: BL-09, BL-10, BL-08. Decisione del committente (16/10): **si chiude la Home prima di passare ad Agenzie**.
+5. Agenzie.
+
+Fase 3 e Agenzie non hanno dipendenze bloccanti in nessuna direzione.
+- **Decisioni da prendere prima di iniziare la fase 3:**
+  - fornitore email e modello di consenso per BL-08;
+  - se per BL-10 basta la versione minima.
+- **BL-08 non deve bloccare Agenzie.** Se resta in attesa di fornitore o consenso, la Home si chiude con BL-09 e BL-10 e BL-08 prosegue in parallelo.
+- **Servizio email riusabile.** Il servizio costruito per BL-08 servirà probabilmente anche ad Agenzie (per esempio gli inviti ai proprietari): progettarlo riusabile.
 
 La fase 4 (BL-12…BL-16) non è in sequenza: si progetta su richiesta del committente.
 
