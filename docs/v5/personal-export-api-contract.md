@@ -58,3 +58,7 @@ Prima della prova personale restano distinti: custodia chiave backup fuori PC, p
 
 ## Precisazioni implementative
 Link non ha updatedAt nello schema corrente: il formato1 esporta createdAt e version, senza inventare una data. Provenienza economica inclusa con origin e sole citazioni ammesse (sha256 normalizzato in documentSha256), nessun draftId. Budget conservativo10MiB anche sui record interni letti, query a blocchi100. Membership/export corrente riutilizzata senza nuova capability commerciale. UI in Documenti, con formato1 validato e nuova lettura sessione/Home prima del salvataggio; risposta tardiva dopo smontaggio scartata. Vedi personal-export-esito-20261016.md per prove reali/harness e limiti.
+
+
+### Estensione ricevuta assistita — privacy dei nomi (R5a, 16 ottobre)
+Un oggetto il cui nome deriva da un documento richiede ancora fonte leggibile e versione/hash validi; in caso contrario oggetto, collegamenti e storia sono esclusi. I proof dello snapshot sono verificati nuovamente prima della consegna. Per i soli oggetti con nome ricevuta, gli snapshot storici usano il nome corrente autorizzato; limitations include receipt_object_history_uses_current_name. Il formato resta v1; nuovi campi e confronti ricevuta non ancora esportati in R5a.

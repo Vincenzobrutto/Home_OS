@@ -93,7 +93,7 @@ export class Projection {
     this.historyLimited = true; return null;
   }
   history(kind: string, event: string, value: unknown, objectEvent = false): Row | null {
-    const recognized = objectEvent ? ['created', 'updated', 'archived', 'restored', 'position_updated', 'linked', 'unlinked'] : kind === 'activity' ? ['created', 'updated', 'completed', 'cancelled', 'reopened'] : ['created', 'updated', 'archived', 'restored'];
+    const recognized = objectEvent ? ['created', 'updated', 'archived', 'restored', 'position_updated', 'linked', 'unlinked', 'receipt_fields_confirmed'] : kind === 'activity' ? ['created', 'updated', 'completed', 'cancelled', 'reopened'] : ['created', 'updated', 'archived', 'restored'];
     if (!recognized.includes(event)) { this.historyLimited = true; return null; }
     return objectEvent ? this.objectSnapshot(value) : this.snapshot(kind, value);
   }

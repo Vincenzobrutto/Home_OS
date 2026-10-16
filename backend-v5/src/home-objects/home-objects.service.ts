@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma.service';
 import { ReviewService } from '../review/review.service';
 import { digest } from '../security';
 import { canReadDocument } from '../documents/access';
+import { readableReceiptName, readableReceiptObjectIds } from '../receipt-assistance/access';
 import { conflict, invalid, object, uuid, version } from '../review/domain';
 import { createHomeObject, objectAction, objectLimits, objectsQuery, objectTypes, positionBody, roomTypes, subjectKind, updateHomeObject, type SubjectKind } from './domain';
 
@@ -46,7 +47,7 @@ export class HomeObjectsService {
     uuid(id);
     if (kind === 'object') {
       const row = await tx.homeObject.findFirst({ where: { id, homeId: c.h, accountId: c.a } });
-      if (!row) throw deny(); return row;
+      if (!row || !(await readableReceiptObjectIds(tx, c.a, c.h, [id])).has(id)) throw deny(); return row;
     }
     await tx.$queryRaw`SELECT id FROM "BoilerAsset" WHERE id=${id} FOR SHARE`;
     const row = await this.access.asset(tx, c.a, c.h, id);
@@ -82,8 +83,11 @@ export class HomeObjectsService {
       if (!link) throw deny();
       return { link: await this.linkView(tx, c, saved.row, saved.subjectKind, saved.subjectId) };
     }
-    await this.subject(tx, c, saved.kind, saved.row.id);
-    return { object: await this.catalogView(tx, c, saved.kind, revive(saved.row), saved.position) };
+    const current = await this.subject(tx, c, saved.kind, saved.row.id);
+    // Receipt-derived names have no per-event source proof. Historical snapshots
+    // therefore show the currently authorized name, never a stale extracted value.
+    const receiptName = saved.kind === 'object' && await tx.receiptObjectField.findUnique({ where: { objectId_fieldKey: { objectId: saved.row.id, fieldKey: 'name' } }, select: { id: true } });
+    return { object: await this.catalogView(tx, c, saved.kind, revive({ ...saved.row, ...(receiptName ? { name: current.name } : {}) }), saved.position) };
   }
   private async mutate(a: string, h: string, op: string, target: string, body: unknown, key: string | undefined, action: (tx: Tx, c: Context) => Promise<Saved>) {
     if (!key || !/^[A-Za-z0-9_-]{16,100}$/.test(key)) throw invalid('Chiave della richiesta non valida.');
@@ -188,6 +192,7 @@ export class HomeObjectsService {
       const data = Object.fromEntries(Object.entries(body).filter(([k]) => k !== 'expectedVersion'));
       if (Object.entries(data).every(([k, v]) => before.row[k as keyof HomeObject] === v)) return before;
       await tx.homeObject.update({ where: { id }, data: { ...data, version: { increment: 1 }, updatedAt: new Date() } });
+      if (body.name !== undefined && body.name !== before.row.name) await tx.receiptObjectField.updateMany({ where: { objectId: id, accountId: a, homeId: h, fieldKey: 'name' }, data: { value: body.name, origin: 'user_declared', sources: [], documentId: null, documentVersion: null, documentSha256: null, version: { increment: 1 }, updatedAt: new Date() } });
       const after = await this.saveSubject(tx, c, 'object', id); await this.event(tx, c, 'object', id, 'updated', before, after); return after;
     });
   }
@@ -224,7 +229,7 @@ export class HomeObjectsService {
       // All boiler source permissions are applied before paging, not after LIMIT.
       const rows = await tx.$queryRaw<Array<{ id: string; kind: SubjectKind; createdAt: Date }>>(Prisma.sql`
         SELECT x.id,x.kind,x."createdAt" FROM (
-          SELECT o.id,'object'::text AS kind,o.name,o.type,o.state,o."createdAt" FROM "HomeObject" o WHERE o."accountId"=${a} AND o."homeId"=${h}
+          SELECT o.id,'object'::text AS kind,o.name,o.type,o.state,o."createdAt" FROM "HomeObject" o WHERE o."accountId"=${a} AND o."homeId"=${h} AND ${readableReceiptName(a, h)}
           UNION ALL
           SELECT o.id,'boiler'::text,o.name,'boiler'::text,'active'::text,o."createdAt" FROM "BoilerAsset" o WHERE o."accountId"=${a} AND o."homeId"=${h}
           AND NOT EXISTS (SELECT 1 FROM "AnalysisJob" j CROSS JOIN LATERAL jsonb_array_elements(j.documents) s LEFT JOIN "Document" d ON d.id=s->>'documentId' LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id

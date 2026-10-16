@@ -11,6 +11,10 @@ const { PrismaService, assertDevelopmentDatabase } = require('../dist/prisma.ser
 const { ReceiptAssistanceController } = require('../dist/receipt-assistance/receipt.controller');
 const { ReceiptAssistanceService } = require('../dist/receipt-assistance/receipt.service');
 const { ReviewService } = require('../dist/review/review.service');
+const { HomeObjectsService } = require('../dist/home-objects/home-objects.service');
+const { EconomyPolicy } = require('../dist/economy/policy');
+const { PersonalExportService } = require('../dist/personal-export/personal-export.service');
+const { DocumentPolicy } = require('../dist/documents/access');
 const { ApiErrorFilter } = require('../dist/main');
 const { digest, COOKIE } = require('../dist/security');
 class ReceiptHarness {}
@@ -29,7 +33,7 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
   const accounts = [], homes = [], files = [];
   t.after(async () => {
     const where = { accountId: { in: accounts } };
-    await db.objectEvent.deleteMany({ where }); await db.objectResourceLink.deleteMany({ where });
+    await db.objectEvent.deleteMany({ where }); await db.objectRequest.deleteMany({ where }); await db.objectResourceLink.deleteMany({ where });
     await db.expenseHistory.deleteMany({ where }); await db.expenseRequest.deleteMany({ where }); await db.homeExpense.deleteMany({ where });
     await db.receiptComparison.deleteMany({ where }); await db.receiptObjectField.deleteMany({ where });
     await db.receiptRequest.deleteMany({ where }); await db.receiptDraft.deleteMany({ where });
@@ -265,6 +269,60 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     assert.equal((await confirmation(row.id, { ...selection(), expense: { action: 'reuse', targetId: unrelated.id, targetVersion: 1 } })).status, 409);
     assert.equal(await db.objectResourceLink.count({ where: { documentId: doc.id } }), 0);
     assert.equal((await db.receiptDraft.findUnique({ where: { id: row.id } })).confirmation, null);
+  });
+  await t.test('Receipt-derived names obey revocation in G1 search, details, history, S1 links and export', async () => {
+    const source = await document(b, 'Shared naming evidence', 'home');
+    const object = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Derived confidential name', type: 'other' } });
+    await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: object.id, fieldKey: 'name', value: object.name, origin: 'extraction_confirmed', documentId: source.id, documentVersion: 1, documentSha256: source.original.sha256, sources: [{ documentId: source.id, page: 1, excerpt: "Synthetic evidence" }] } });
+    const access = new ReviewService(db, {}), g1 = new HomeObjectsService(db, access), economy = new EconomyPolicy(access);
+    const exporter = new PersonalExportService(db, new DocumentPolicy(db));
+    const getExport = async () => JSON.parse((await exporter.export(a.id, home, async () => {})).toString());
+    assert.equal((await g1.getObject(a.id, home, 'object', object.id, {})).object.name, object.name);
+    assert.equal((await g1.objects(a.id, home, { q: 'Derived confidential', limit: '1' })).items[0].ref.id, object.id);
+    assert((await getExport()).data.objects.some(row => row.id === object.id));
+    const renamed = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Old derived secret', type: 'other' } });
+    await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: renamed.id, fieldKey: 'name', value: renamed.name, origin: 'extraction_confirmed', documentId: source.id, documentVersion: 1, documentSha256: source.original.sha256, sources: [{ documentId: source.id, page: 1, excerpt: renamed.name }] } });
+    const renameKey = randomUUID(), renameBody = { expectedVersion: 1, name: 'My manual name' };
+    await g1.updateObject(a.id, home, renamed.id, renameBody, renameKey);
+    await db.document.update({ where: { id: source.id }, data: { visibility: 'private' } });
+    const page = await g1.objects(a.id, home, { q: 'Derived confidential', limit: '1' });
+    assert.deepEqual(page, { items: [], nextCursor: null });
+    for (const read of [() => g1.getObject(a.id, home, 'object', object.id, {}), () => g1.history(a.id, home, 'object', object.id, {}), () => g1.links(a.id, home, 'object', object.id, { resourceType: 'document' })]) await assert.rejects(read, e => e.getStatus() === 403);
+    assert.equal(await db.$transaction(tx => economy.subject(tx, a.id, home, { kind: 'object', id: object.id })), null);
+    const result = await getExport();
+    assert(!JSON.stringify(result).includes(object.name)); assert(!result.data.objects.some(row => row.id === object.id));
+    assert(result.limitations.includes('some_references_excluded'));
+    assert(!JSON.stringify(result).includes(renamed.name));
+    assert.equal((await g1.getObject(a.id, home, 'object', renamed.id, {})).object.name, 'My manual name');
+    assert(!JSON.stringify(await g1.history(a.id, home, 'object', renamed.id, {})).includes(renamed.name));
+    assert.equal((await g1.updateObject(a.id, home, renamed.id, renameBody, renameKey)).object.name, 'My manual name');
+    const nameField = await db.receiptObjectField.findUnique({ where: { objectId_fieldKey: { objectId: renamed.id, fieldKey: 'name' } } });
+    assert.equal(nameField.origin, 'user_declared'); assert.equal(nameField.documentId, null); assert.deepEqual(nameField.sources, []);
+    // A manually named object remains readable even when only its extracted brand loses its source.
+    const manual = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Manual safe name', type: 'other' } });
+    await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: manual.id, fieldKey: 'brand', value: 'Hidden brand', origin: 'extraction_confirmed', documentId: source.id, documentVersion: 1, documentSha256: source.original.sha256, sources: [{ documentId: source.id, page: 1, excerpt: "Synthetic evidence" }] } });
+    assert.equal((await g1.getObject(a.id, home, 'object', manual.id, {})).object.name, manual.name);
+    await db.document.update({ where: { id: source.id }, data: { visibility: 'home' } });
+    await db.documentVersion.update({ where: { documentId: source.id }, data: { sha256: 'c'.repeat(64) } });
+    await assert.rejects(() => g1.getObject(a.id, home, 'object', object.id, {}), e => e.getStatus() === 403);
+  });
+  await t.test('Export rechecks receipt name source after its RepeatableRead snapshot', async () => {
+    const source = await document(b, 'Export race evidence', 'home');
+    const object = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Race protected name', type: 'other' } });
+    await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: object.id, fieldKey: 'name', value: object.name, origin: 'extraction_confirmed', documentId: source.id, documentVersion: 1, documentSha256: source.original.sha256, sources: [{ documentId: source.id, page: 1, excerpt: "Synthetic evidence" }] } });
+    let first = true;
+    const facade = { $transaction: async (fn, options) => {
+      const result = await db.$transaction(fn, options);
+      if (first) {
+        first = false;
+        // Replacing the current field cannot authorize a stale captured value.
+        await db.receiptObjectField.update({ where: { objectId_fieldKey: { objectId: object.id, fieldKey: 'name' } }, data: { origin: 'user_declared', sources: [], documentId: null, documentVersion: null, documentSha256: null } });
+        await db.document.update({ where: { id: source.id }, data: { visibility: 'private' } });
+      }
+      return result;
+    } };
+    const exporter = new PersonalExportService(facade, new DocumentPolicy(db));
+    await assert.rejects(() => exporter.export(a.id, home, async () => {}), e => e.getStatus() === 403);
   });
   await t.test('Changed original and viewer write denied; membership revocation blocks old requests', async () => {
     await db.documentVersion.update({ where: { documentId: own.id }, data: { version: { increment: 1 }, sha256: 'b'.repeat(64) } });

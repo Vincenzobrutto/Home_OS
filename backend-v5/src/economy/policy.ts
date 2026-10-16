@@ -3,6 +3,7 @@ import { Prisma, type HomeExpense, type EconomicWork } from '../../generated/cli
 import { ReviewService } from '../review/review.service';
 import { conflict } from '../review/domain';
 import { competence, family, type Category, type ObjectRef } from './domain';
+import { readableReceiptObjectIds } from '../receipt-assistance/access';
 
 type Tx = Prisma.TransactionClient;
 export type HistoricExpense = HomeExpense & {economicObjectRef?:ObjectRef|null};
@@ -16,7 +17,7 @@ export class EconomyPolicy {
     try {
       if(ref.kind==='object') {
         const row=await tx.homeObject.findFirst({where:{id:ref.id,accountId:a,homeId:h}});
-        if(!row)throw deny();
+        if(!row||!(await readableReceiptObjectIds(tx,a,h,[ref.id])).has(ref.id))throw deny();
         if(strict&&row.state!=='active')throw conflict('resource_state_conflict','Ripristina prima l’oggetto.');
         return {ref,name:row.name,state:row.state};
       }
