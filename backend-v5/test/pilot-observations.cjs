@@ -32,8 +32,9 @@ const sha = (v) => typeof v === 'string' && /^[a-f0-9]{64}$/.test(v);
 /** Citation from a validated output, bound to the observed document hash when it carries one. */
 function source(raw, documentSha256, where) {
   const s = keys(raw, ['documentId', 'documentVersion', 'sha256', 'documentSha256', 'page', 'excerpt'], where);
-  const bound = s.sha256 ?? s.documentSha256;
-  if (bound !== undefined && bound !== documentSha256) fail('source_hash_mismatch', where);
+  for (const bound of [s.sha256, s.documentSha256]) {
+    if (bound !== undefined && bound !== documentSha256) fail('source_hash_mismatch', where);
+  }
   if (!Number.isSafeInteger(s.page) || typeof s.excerpt !== 'string') fail('invalid_source', where);
   return { page: s.page, excerpt: s.excerpt };
 }

@@ -20,6 +20,15 @@ const obs = (caseId, extra = {}) => ({ caseId, pipeline: corpus.cases.find(c => 
 const code = (fn) => { try { fn(); return 'ok'; } catch (e) { return e.code ?? e.message; } };
 const parse = (d) => parseObservations(d, corpus, hashes);
 
+test('Due alias hash presenti devono entrambi coincidere, senza precedenza permissiva', async () => {
+  await ready;
+  for (const alias of ['sha256', 'documentSha256']) {
+    const e = p07Economic();
+    Object.assign(e.amountCandidates[0].sources[0], { sha256: hashes.get('P07'), documentSha256: hashes.get('P07'), [alias]: 'a'.repeat(64) });
+    assert.equal(code(() => parse(doc([obs('P07', { outcome: 'proposal', economic: e })]))), 'source_hash_mismatch');
+  }
+});
+
 test('Formato v2 valido: normalizza l’output economico validato e segnala i casi mancanti', async () => {
   await ready;
   const { byCase, missing, provenance } = parse(doc([obs('P07', { outcome: 'proposal', economic: p07Economic() }), obs('P17', { outcome: 'pdf_text_unavailable' })]));

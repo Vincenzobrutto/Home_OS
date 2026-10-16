@@ -9,7 +9,7 @@ Avvio approvato dal committente il 16 ottobre 2026. Questa matrice distingue cap
 | Upload/privacy/integrità | Controllo nuovo file bloccante Defender, riserva disco, formati/limiti, idempotenza, hash/ZIP e isolamento verificati; percorso UI reale PDF/PNG verificato | Limite politica cloud Windows dichiarato, nessuna sicurezza generale certificata |
 | Export personale | JSON Home/account e ZIP originali verificati anche nel browser reale con account QA separato, desktop/mobile | Gate visivo chiuso nel perimetro di fase0-browser-collaudo-20261016.md; nessun reimport o eliminazione implicita |
 | UX file ed export | Claude raccolto/arbitrato, rifiuti certi503 e messaggi corretti;32test frontend mirati/build/lint verdi | Nessuna riprogettazione generale; dettagli in fase0-chiusura-arbitrato-20261016.md |
-| Qualità AI | Revisione indipendente conclusa, difetti gold/scorer riprodotti offline | Correggere E1…E8 e versione2; poi campagna rappresentativa con nuovo budget/consenso, senza chiamate implicite |
+| Qualità AI | Corpus/scorer v2 raccolti, E1…E8 implementati e verificati;27test mirati verdi incluse tre regressioni Codex, lint verde | Misuratore offline chiuso nel perimetro; campagna rappresentativa ancora da congelare/eseguire con nuovo budget/consenso. Nessuna accuratezza Anthropic misurata qui |
 | Conservazione/cancellazione | Regole consolidate in prova-personale-conservazione-20261016.md: conservare per proseguire la casa, nessuna scadenza automatica, rimozione solo esplicita | Eliminazione tecnica e ciclo delle copie ancora da implementare/verificare; non sono azioni da eseguire sui dati personali adesso |
 ## Perimetro della prova personale
 
@@ -17,7 +17,7 @@ Account personale distinto dai fixture, pochi file iniziali non delicati, origin
 
 ## Lavoro Codex e Claude
 
-Codex possiede contratti, implementazione e verifiche di integrazione. Le prime consegne Claude UX/corpus sono raccolte e arbitrate in fase0-chiusura-arbitrato-20261016.md. Il committente ha confermato Claude partito sul nuovo incarico corpus/scorer v2 offline; consegna non ancora raccolta, nessuna sovrapposizione ai suoi file. Guida in sovraimpressione rinviata. BL-04 e successive restano nell'ordine approvato, senza avvio implicito.
+Codex possiede contratti, implementazione e verifiche di integrazione. Le prime consegne Claude UX/corpus sono raccolte e arbitrate in fase0-chiusura-arbitrato-20261016.md. Nuova consegna corpus/scorer v2 conclusa e raccolta:59f6438/d0e2e16, verifiche e correzioni in fase0-corpus-v2-integrazione-20261016.md. Nessun ulteriore incarico Claude avviato. Guida in sovraimpressione rinviata. BL-04 e successive restano nell'ordine approvato, senza avvio implicito.
 
 ## Export e conservazione: stato corrente
 

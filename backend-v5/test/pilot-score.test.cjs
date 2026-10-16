@@ -126,3 +126,19 @@ test('Aggregato: astensione totale non produce conclusioni; mancanti espliciti; 
   assert.equal(summary.requiredCoverage, 0); assert.match(summary.warnings[0], /Nessun fatto proposto/);
   assert.ok(summary.warnings.some(w => /non accuratezza del provider/.test(w)));
 });
+
+test('Ripetere una potenza o una fonte non crea un falso conflitto fra grandezze', () => {
+  const c = item('P14');
+  const facts = c.required.map(g => ({ ...g, sources: src(g.excerpt) }));
+  const r = score('P14', proposal([...facts, structuredClone(facts[0])]));
+  assert.equal(r.counts.duplicate, 1); assert.equal(r.counts.requiredMatched, 2);
+  assert.equal(r.criticals.length, 0);
+});
+
+test('Un documentKind errato resta visibile nel riepilogo anche con tutti i valori corretti', () => {
+  const r = score('P07', { ...P07_FIXTURE, documentKind: 'utility_bill' });
+  const summary = aggregate([r], { kind: 'hand_built' });
+  assert.equal(summary.agreementWithAnnotations, 1); // Agreement for facts alone.
+  assert.equal(summary.propertyMismatches.length, 1);
+  assert.equal(summary.propertyMismatches[0].property, 'documentKind');
+});

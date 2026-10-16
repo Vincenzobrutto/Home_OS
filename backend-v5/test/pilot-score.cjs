@@ -25,14 +25,14 @@ function calendarValid(value) {
 /** Copy of document-evidence.printedCents: printed two-decimal non-negative amounts in cents. */
 function printedCents(excerpt) {
   const values = [];
-  for (const match of excerpt.matchAll(/(?<![\d.,])[-−+]?\d(?:[\d.,   ]*\d)?[.,]\d{2}(?![\d.,])/gu)) {
+  for (const match of excerpt.matchAll(/(?<![\d.,])[-−+]?\d(?:[\d.,\u00a0\u202f ]*\d)?[.,]\d{2}(?![\d.,])/gu)) {
     const [raw] = match;
     if (/^[-−]/u.test(raw) || /[-−(]\s*$/u.test(excerpt.slice(0, match.index))) continue;
     const value = raw.replace(/^\+/, ''), decimal = value.at(-3);
     const whole = value.slice(0, -3), fraction = value.slice(-2);
     const escaped = decimal === ',' ? '\\.' : ',';
-    if (!/^\d+$/.test(whole) && !new RegExp('^\\d{1,3}(?:' + escaped + '\\d{3})+$').test(whole) && !/^\d{1,3}(?:[   ]\d{3})+$/.test(whole)) continue;
-    const cents = BigInt(whole.replace(/[.,   ]/gu, '')) * 100n + BigInt(fraction);
+    if (!/^\d+$/.test(whole) && !new RegExp('^\\d{1,3}(?:' + escaped + '\\d{3})+$').test(whole) && !/^\d{1,3}(?:[\u00a0\u202f ]\d{3})+$/.test(whole)) continue;
+    const cents = BigInt(whole.replace(/[.,\u00a0\u202f ]/gu, '')) * 100n + BigInt(fraction);
     if (cents <= 999999999n) values.push(Number(cents));
   }
   return values;
@@ -104,7 +104,8 @@ const NOT_EVALUABLE = ['provider_unavailable', 'provider_rate_limited', 'provide
 const CRITICAL_KINDS = ['quantity_interpretation', 'value_conflict'];
 
 function proposalKind(field, facts) {
-  const list = facts.filter(f => f.field === field);
+  // Like validateEvidence: repeated claims/sources do not create new candidates.
+  const list = [...new Map(facts.filter(f => f.field === field).map(f => [JSON.stringify([f.value, f.quantityCode ?? null, f.quantityLabel ?? null]), f])).values()];
   if (!list.length) return 'none';
   if (list.length === 1) return 'single_value';
   return field === 'power' && new Set(list.map(f => f.quantityCode)).size === list.length ? 'quantity_interpretation' : 'value_conflict';
@@ -190,6 +191,7 @@ function aggregate(results, provenance) {
     requiredCoverage: totals.required ? totals.requiredMatched / totals.required : null,
     outcomes: evaluated.map(r => ({ caseId: r.caseId, expected: r.expectedOutcome, actual: r.actualOutcome, outcomeMatch: r.outcomeMatch, systemSafe: r.systemSafe, positiveRejected: !!r.positiveRejected, blockedBySystem: !!r.blockedBySystem })),
     criticals: evaluated.flatMap(r => r.criticals.map(c => ({ caseId: r.caseId, ...c }))),
+    propertyMismatches: evaluated.flatMap(r => r.details.filter(d => d.verdict === 'property_mismatch').map(d => ({ caseId: r.caseId, ...d }))),
     warnings: [
       ...(proposed === 0 && evaluated.length ? ['Nessun fatto proposto: nessuna conclusione sull’utilità o sull’affidabilità può essere tratta.'] : []),
       `Campione di ${results.length} casi sintetici: nessuna soglia statistica; ogni rapporto è accordo con le annotazioni, non accuratezza del provider.`,
