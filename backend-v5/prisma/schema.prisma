@@ -12,6 +12,8 @@ enum HomeRole {
   viewer
 }
 model Account {
+  receiptDrafts ReceiptDraft[]
+  receiptRequests ReceiptRequest[]
   authChallenges AuthChallenge[]
   emailVerifiedAt DateTime?
   requiresEmailVerification Boolean @default(false)
@@ -81,6 +83,8 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  receiptDrafts ReceiptDraft[]
+  receiptRequests ReceiptRequest[]
   sharePreviews SharePreview[]
   shares ShareRecord[]
   economicJobs EconomicAnalysisJob[]
@@ -212,6 +216,7 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  receiptDrafts ReceiptDraft[]
   economicJobs EconomicAnalysisJob[]
   economicDrafts EconomicDraft[]
   objectLinks ObjectResourceLink[]
@@ -731,4 +736,41 @@ model AiAttempt {
   job AnalysisJob @relation(fields: [jobId], references: [id], onDelete: Restrict)
   campaign AiCampaign @relation(fields: [campaignId], references: [id], onDelete: Restrict)
   @@index([campaignId, state])
+}
+
+model ReceiptDraft {
+  requests ReceiptRequest[]
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  documentId String
+  documentVersion Int
+  documentSha256 String
+  mode String
+  state String @default("open")
+  version Int @default(1)
+  fields Json @default("{}")
+  total Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  document Document @relation(fields:[documentId],references:[id],onDelete:Restrict)
+  @@index([accountId,homeId,state,createdAt,id])
+  @@index([accountId,homeId,documentId,documentVersion,documentSha256])
+}
+model ReceiptRequest {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  operation String
+  target String
+  key String
+  digest String
+  draftId String
+  draft ReceiptDraft @relation(fields:[draftId],references:[id],onDelete:Restrict)
+  createdAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  @@unique([accountId,homeId,operation,target,key])
 }
