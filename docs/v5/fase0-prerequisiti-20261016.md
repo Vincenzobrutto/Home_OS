@@ -5,11 +5,11 @@ Avvio approvato dal committente il 16 ottobre 2026. Questa matrice distingue cap
 | Area | Stato e base | Criterio per chiudere |
 |---|---|---|
 | Backup DB e originali | Verificato: backup-verifica-20261016.md, 41 tabelle e 255 originali, restore isolato spento | Copia valida conservata; prima di nuovi dati personali concordare seconda destinazione distinta dal PC. Il backup locale non protegge dalla perdita del PC |
-| Recupero account | Assente nel runtime; proposta fase0-recovery-design-20261016.md | UX, contratto, email transazionale scelta, implementazione e prova completa senza accesso basato su email dichiarata |
+| Recupero account | Assente nel runtime; proposta fase0-recovery-design-20261016.md; adapter Brevo non collegato, 6 test offline verdi | UX, contratto, servizio/mittente da confermare, challenge/API/frontend e prova completa senza accesso basato su email dichiarata |
 | Upload e integrità | Codice: PDF/JPEG/PNG rilevati dai byte, 20 MiB/file, idempotenza; hash e dimensione al download/ZIP; errore storage senza falso successo | Prove mirate e procedura spazio disponibile; limiti cumulativi non presenti, non pubblicizzare quota utente |
 | Privacy documenti | Default private; owner non legge automaticamente il privato altrui; guard e revoca; no-store/nosniff e allegato, listener API loopback | Prove di isolamento/sessione già documentate, nuovi controlli mirati; nessuna attestazione di sicurezza generale |
 | Export e conservazione | ZIP selettivo originali e manifesto, fino a 100 MiB; non include tutti i dati strutturati | Definire export completo e confini account/Home/condivisioni. Nessuna cancellazione automatica, nessun termine legale inventato |
-| Qualità AI | Due esempi live economici già provati, insufficienti a rappresentare tutti i documenti | Corpus sintetico annotato, metriche e confronto errori; ulteriori chiamate live solo con file e budget autorizzati |
+| Qualità AI | Due esempi live economici insufficienti; corpus24 casi materializzato e controllato dal parser, scorer offline disponibile | Revisione indipendente annotazioni e campagna rappresentativa, metriche ed errori; ulteriori chiamate live solo con file e budget autorizzati |
 | File potenzialmente dannosi | documents-api-contract.md richiede hardening antimalware prima del pilota; rilevare il formato non è una scansione | Definire controllo locale/quarantena ed esiti prima dei file personali. Nessuno scanner installato o impostazione Windows modificata |
 
 ## Perimetro della prova personale
@@ -31,6 +31,8 @@ Separare pacchetto utente JSON versionato (dati propri, provenienza e collegamen
 Per ogni caso: SHA, formato, testo estraibile sì/no, valori attesi/assenti, pagina/evidenza, proposta ammessa e astensione richiesta. Misurare precisione per campo, omissioni, falsi positivi e provenienza, non solo «JSON valido». Nessuna conferma automatica, nessuna creazione da documento non pertinente; casi limite con errore esplicito. Congelare soglie prima della campagna; il passaggio dei test con risposte simulate non misura accuratezza del provider reale.
 
 ## Verifiche eseguite in questo avvio
+
+Aggiornamento dopo avvio Claude: componente email preparatorio, corpus e controllo locale ripetibile in fase0-avanzamento-tecnico-20261016.md. Pacchetto personale proposto in fase0-export-design-20261016.md; nessun endpoint nuovo. Claude confermato al lavoro sulla sola UX. Controllo backup ha riletto hash del dump/255copie, non ha rifatto il restore né aggiornato lo snapshot. Le condizioni ancora aperte restano tali.
 
 - 18/18 test documenti e multipart verdi, inclusi tre nuovi casi: corruzione a dimensione invariata, ZIP oltre 100 MiB senza letture e due export concorrenti falliti che liberano gli slot per il retry. La prima esecuzione aveva 17/18: il nuovo doppio di storage generava un Error grezzo anziché il 503 previsto dal suo contratto; corretta la fixture, nessuna modifica runtime. Log outputs/Dimora-V5-Fase0-storage-test-20261016.log.
 - Lint backend verde. Nessun codice applicativo modificato, nessuna nuova build o suite completa necessaria per questi soli test/documenti.

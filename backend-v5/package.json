@@ -7,7 +7,7 @@
     "lint": "eslint src test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "node --env-file=.env dist/main.js",
-    "test": "node --test test/domain.test.cjs test/documents.test.cjs test/multipart.test.cjs test/review.test.cjs test/anthropic.test.cjs test/activities.test.cjs test/document-search.test.cjs test/expenses.test.cjs test/home-objects.test.cjs test/economy.test.cjs test/economic-documents.test.cjs test/economic-anthropic.test.cjs test/sharing-policy.test.cjs",
+    "test": "node --test test/domain.test.cjs test/documents.test.cjs test/multipart.test.cjs test/review.test.cjs test/anthropic.test.cjs test/activities.test.cjs test/document-search.test.cjs test/expenses.test.cjs test/home-objects.test.cjs test/economy.test.cjs test/economic-documents.test.cjs test/economic-anthropic.test.cjs test/sharing-policy.test.cjs test/recovery-mail.test.cjs test/pilot-corpus.test.cjs",
     "test:sharing-policy": "node --test test/sharing-policy.test.cjs",
     "test:sharing-db": "node --env-file=.env --test test/sharing.http.test.cjs",
     "test:integration": "node --env-file=.env --test --test-concurrency=1 test/integration.test.cjs test/documents.integration.test.cjs test/review.integration.test.cjs test/activities.integration.test.cjs test/activities.http.test.cjs test/document-search.integration.test.cjs test/document-search.http.test.cjs test/expenses.integration.test.cjs test/expenses.http.test.cjs test/home-objects.integration.test.cjs test/home-objects.http.test.cjs test/economy.integration.test.cjs test/economy.http.test.cjs test/economic-documents.integration.test.cjs test/economic-documents.http.test.cjs test/economic-ai.integration.test.cjs",
