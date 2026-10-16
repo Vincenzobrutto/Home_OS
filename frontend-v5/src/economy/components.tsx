@@ -423,6 +423,10 @@ export function EconomyExpenseForm(props: {
   const effObject = objectChoice ?? (presetObjOk ? refKey(presets.object!) : refKey(initObject));
   const effWork = workChoice ?? (presetWorkOk ? presets.workId! : initWork);
   const effDoc = docChoice ?? (presetDocOk ? presets.documentId! : initDoc);
+  const checkingPresets =
+    (!!presets.object && objectChoice === null && presetObj.isFetching) ||
+    (!!presets.documentId && docChoice === null && presetDoc.isFetching) ||
+    (!!presets.workId && workChoice === null && presetWork.isFetching);
 
   const catalog = useCatalog(home.id, { state: 'active', q: '', type: null, roomId: null, placement: 'all' });
   const works = useWorks(home.id, { state: 'active', q: '' });
@@ -446,6 +450,8 @@ export function EconomyExpenseForm(props: {
   const preview = previewFamily(category ? (category as Category) : null, !!effWork);
 
   const submit = () => {
+    // Non perdere il contesto se si compila prima che la lettura autorizzata termini.
+    if (checkingPresets) return;
     const parsed = parseAmount(amount, limits.amountMaxCents);
     const errs: Record<string, string | undefined> = {
       title: validateTitle(title, limits.titleMaxCodePoints),
@@ -587,6 +593,8 @@ export function EconomyExpenseForm(props: {
         {expense ? 'Modifica costo' : 'Registra una spesa'}
       </h2>
       <p className={act.meta}>Bastano descrizione, importo e data. Il costo è visibile solo a te e non attesta un pagamento.</p>
+      {checkingPresets && <p role="status">Verifica dei collegamenti di partenza in corso… Attendi prima di salvare.</p>}
+      {presets.object && presetObjOk && objectChoice === null && <p className={act.meta}>Oggetto preselezionato: <strong>{presetObj.data.name}</strong>. Puoi cambiarlo nel campo Oggetto.</p>}
       <Field id={`${id}-title`} label="Descrizione" autoComplete="off" value={title} disabled={disabled} onChange={(e) => setTitle(e.target.value)} error={errors.title} />
       <div className={ui.field}>
         <label className={ui.label} htmlFor={`${id}-amount`}>
@@ -748,7 +756,7 @@ export function EconomyExpenseForm(props: {
       <EconomyFeedback op={op} homeId={home.id} title={expense ? 'Modifica non salvata' : 'Costo non registrato'} onRetry={() => op.retry((res) => 'expense' in res && props.onDone(res.expense))} />
       <div className={act.actions}>
         {!op.locked && (
-          <button type="submit" className={cx(ui.btn, ui.primary)} disabled={op.mutation.isPending}>
+          <button type="submit" className={cx(ui.btn, ui.primary)} disabled={op.mutation.isPending || checkingPresets}>
             {op.mutation.isPending ? 'Salvataggio…' : expense ? 'Salva modifiche' : 'Registra spesa'}
           </button>
         )}

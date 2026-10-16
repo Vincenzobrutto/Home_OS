@@ -339,4 +339,53 @@ describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
   });
 });
 
+describe('[mock] S1 contesto della nuova spesa', () => {
+  it('deep link con lettura lenta: attende, preseleziona senza ricompilare e invia objectRef', async () => {
+    const { backend, owner, home } = world();
+    const created = await backend.objects.handle({ method: 'POST', path: '', headers: { 'idempotency-key': crypto.randomUUID() }, body: { name: 'Macchina caffè sintetica', type: 'appliance' } }, owner.id, home.id, 'objects');
+    const ref = (created.body as { object: { ref: { kind: string; id: string } } }).object.ref;
+    let release!: () => void;
+    const gate = new Promise<void>((r) => { release = r; });
+    const original = backend.objects.handle.bind(backend.objects);
+    backend.objects.handle = async (req, acc, homeId, rest) => {
+      if (req.method === 'GET' && rest === `objects/object/${ref.id}`) await gate;
+      return original(req, acc, homeId, rest);
+    };
+    const app = await open(backend, owner.email, PW.owner, `/home/${home.id}/spese?nuova-spesa=1&perOggetto=object%3A${ref.id}`);
+    const form = await screen.findByRole('form', { name: 'Registra una spesa' });
+    const save = within(form).getByRole('button', { name: 'Registra spesa' });
+    expect(await within(form).findByRole('status')).toHaveTextContent('Verifica dei collegamenti');
+    expect(save).toBeDisabled();
+    await app.user.type(within(form).getByLabelText('Descrizione'), 'Costo sintetico');
+    await app.user.type(within(form).getByLabelText('Importo in euro'), '10');
+    fireEvent.change(within(form).getByLabelText(/Data di riferimento/), { target: { value: '2026-10-01' } });
+    fireEvent.submit(form); // Anche un invio diretto non deve perdere il riferimento.
+    expect(posts(backend, /\/economy\/expenses$/)).toHaveLength(0);
+    release();
+    await waitFor(() => expect(within(form).getByLabelText('Oggetto (facoltativo)')).toHaveValue(`object:${ref.id}`));
+    expect(within(form).getByText(/Oggetto preselezionato:/)).toHaveTextContent('Macchina caffè sintetica');
+    expect(within(form).getByLabelText('Descrizione')).toHaveValue('Costo sintetico');
+    await waitFor(() => expect(save).toBeEnabled());
+    await app.user.click(save);
+    await waitFor(() => expect(posts(backend, /\/economy\/expenses$/)).toHaveLength(1));
+    expect(posts(backend, /\/economy\/expenses$/)[0]!.body).toMatchObject({ objectRef: { kind: 'object', id: ref.id } });
+  });
+
+  it('un riferimento non disponibile non è selezionato; una scelta esplicita resta modificabile', async () => {
+    const { backend, owner, home } = world();
+    const created = await backend.objects.handle({ method: 'POST', path: '', headers: { 'idempotency-key': crypto.randomUUID() }, body: { name: 'Forno sintetico', type: 'appliance' } }, owner.id, home.id, 'objects');
+    const ref = (created.body as { object: { ref: { kind: string; id: string } } }).object.ref;
+    const app = await open(backend, owner.email, PW.owner, `/home/${home.id}/spese?nuova-spesa=1&perOggetto=object%3A${crypto.randomUUID()}`);
+    const form = await screen.findByRole('form', { name: 'Registra una spesa' });
+    expect(await within(form).findByText(/L’oggetto indicato non è disponibile/)).toBeInTheDocument();
+    const select = within(form).getByLabelText('Oggetto (facoltativo)');
+    expect(select).toHaveValue('');
+    await waitFor(() => expect(within(select).getByRole('option', { name: 'Forno sintetico' })).toBeInTheDocument());
+    await app.user.selectOptions(select, `object:${ref.id}`);
+    expect(select).toHaveValue(`object:${ref.id}`);
+    await app.user.selectOptions(select, '');
+    expect(select).toHaveValue('');
+  });
+});
+
 export type { App };

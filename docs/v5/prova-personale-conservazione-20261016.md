@@ -33,6 +33,8 @@ Verifiche tecniche obbligatorie prima di rilasciare l'eliminazione: fonti JSON e
 
 ## Backup e conservazione delle copie
 
+Aggiornamento del committente successivo al primo lotto: backup aggiornato rinviato in questa fase. Conserva gli originali e accetta di doverli ricaricare in caso di perdita dei dati successivi allo snapshot. Il passaggio raccomandato sotto non è quindi un blocco della prova o un'operazione da avviare automaticamente. La copia già verificata resta disponibile al suo precedente punto nel tempo.
+
 La copia locale e quella cifrata in Drive già verificate sono punti di ripristino: non includono automaticamente i caricamenti successivi. Dopo il primo piccolo lotto personale, e prima di aumentare il volume, creare e verificare un nuovo punto di ripristino con la procedura esistente; l'eventuale copia in Drive resta cifrata, nella destinazione privata concordata e senza la chiave. È un passaggio operativo da eseguire, non un'automazione già attiva.
 
 Non viene attivata una rotazione automatica e non si inventa oggi un termine di 30/60/90 giorni. Le copie esistenti restano conservate finché non viene definito e applicato il loro ciclo di sostituzione/rimozione. Di conseguenza oggi non si promette un termine massimo di permanenza nei backup dopo una futura cancellazione.
