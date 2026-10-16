@@ -1,0 +1,273 @@
+{
+  "format": "dimora-v5-pilot-observations",
+  "formatVersion": 2,
+  "corpusFormat": "dimora-v5-pilot-corpus",
+  "corpusVersion": 2,
+  "provenance": {
+    "kind": "hand_built",
+    "providerCalled": false,
+    "stage": "forma di EconomicOutput dopo validateOutput e di Candidate[] dopo validateEvidence, scritta a mano",
+    "description": "Esempio sintetico per illustrare il formato v2 e le categorie del misuratore. Non è un risultato di modello."
+  },
+  "observations": [
+    {
+      "caseId": "P07",
+      "pipeline": "economic",
+      "documentSha256": "a2bf4033d3fe882bab682b5f1675e4bde91c7ab770b2b01f0bc095472a628e6a",
+      "outcome": "proposal",
+      "economic": {
+        "documentKind": "simple_invoice",
+        "amountSelectionRequired": false,
+        "proposedFields": {
+          "title": {
+            "value": "Fattura riparazione rubinetto",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "a2bf4033d3fe882bab682b5f1675e4bde91c7ab770b2b01f0bc095472a628e6a",
+                "page": 1,
+                "excerpt": "Fattura riparazione rubinetto"
+              }
+            ]
+          },
+          "supplier": {
+            "value": "Idraulico Demo",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "a2bf4033d3fe882bab682b5f1675e4bde91c7ab770b2b01f0bc095472a628e6a",
+                "page": 1,
+                "excerpt": "Fornitore: Idraulico Demo"
+              }
+            ]
+          },
+          "category": {
+            "value": "repairs_works",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "a2bf4033d3fe882bab682b5f1675e4bde91c7ab770b2b01f0bc095472a628e6a",
+                "page": 1,
+                "excerpt": "Fattura riparazione rubinetto"
+              }
+            ]
+          },
+          "documentNumber": {
+            "value": "42",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "a2bf4033d3fe882bab682b5f1675e4bde91c7ab770b2b01f0bc095472a628e6a",
+                "page": 1,
+                "excerpt": "Numero: 42"
+              }
+            ]
+          },
+          "documentDate": {
+            "value": "2026-09-30",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "a2bf4033d3fe882bab682b5f1675e4bde91c7ab770b2b01f0bc095472a628e6a",
+                "page": 1,
+                "excerpt": "Data documento: 2026-09-30"
+              }
+            ]
+          }
+        },
+        "amountCandidates": [
+          {
+            "id": "gross",
+            "amountCents": 12200,
+            "role": "current_document_total",
+            "label": "Totale documento",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "a2bf4033d3fe882bab682b5f1675e4bde91c7ab770b2b01f0bc095472a628e6a",
+                "page": 1,
+                "excerpt": "Totale documento: 122,00 EUR"
+              }
+            ]
+          },
+          {
+            "id": "taxable",
+            "amountCents": 10000,
+            "role": "taxable",
+            "label": "Imponibile",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "a2bf4033d3fe882bab682b5f1675e4bde91c7ab770b2b01f0bc095472a628e6a",
+                "page": 1,
+                "excerpt": "Imponibile: 100,00 EUR"
+              }
+            ]
+          },
+          {
+            "id": "tax",
+            "amountCents": 2200,
+            "role": "tax",
+            "label": "IVA",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "a2bf4033d3fe882bab682b5f1675e4bde91c7ab770b2b01f0bc095472a628e6a",
+                "page": 1,
+                "excerpt": "IVA: 22,00 EUR"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "P10",
+      "pipeline": "economic",
+      "documentSha256": "1c14abad882326dcd876ef125996d28e7b9cabc259a958f770bf9113248e57d0",
+      "outcome": "proposal",
+      "economic": {
+        "documentKind": "simple_invoice",
+        "amountSelectionRequired": true,
+        "proposedFields": {},
+        "amountCandidates": [
+          {
+            "id": "a",
+            "amountCents": 50000,
+            "role": "current_document_total",
+            "label": "Acconto fatturato",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "1c14abad882326dcd876ef125996d28e7b9cabc259a958f770bf9113248e57d0",
+                "page": 1,
+                "excerpt": "Acconto fatturato: 500,00 EUR"
+              }
+            ]
+          },
+          {
+            "id": "b",
+            "amountCents": 200000,
+            "role": "current_document_total",
+            "label": "Valore preventivo",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "1c14abad882326dcd876ef125996d28e7b9cabc259a958f770bf9113248e57d0",
+                "page": 1,
+                "excerpt": "Valore preventivo: 2000,00 EUR"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "P03",
+      "pipeline": "economic",
+      "documentSha256": "358497bac2d0370b468e2346af7c1a857ba6f3d7ba375c5c13e08a32f5a5b960",
+      "outcome": "proposal",
+      "economic": {
+        "documentKind": "utility_bill",
+        "amountSelectionRequired": false,
+        "proposedFields": {
+          "category": {
+            "value": "water",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "358497bac2d0370b468e2346af7c1a857ba6f3d7ba375c5c13e08a32f5a5b960",
+                "page": 1,
+                "excerpt": "Bolletta acqua"
+              }
+            ]
+          }
+        },
+        "amountCandidates": [
+          {
+            "id": "t",
+            "amountCents": 3520,
+            "role": "current_document_total",
+            "label": "Totale documento",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "sha256": "358497bac2d0370b468e2346af7c1a857ba6f3d7ba375c5c13e08a32f5a5b960",
+                "page": 2,
+                "excerpt": "Totale documento: 35,20 EUR"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "P16",
+      "pipeline": "technical",
+      "documentSha256": "e50cc77ca97dce738e7ff39d19c4c9ae8aa4e64d7b1842ae9b565b3231a51f1f",
+      "outcome": "proposal",
+      "technical": {
+        "brand": [],
+        "power": [],
+        "model": [
+          {
+            "id": "m1",
+            "value": "TD-24",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "documentSha256": "e50cc77ca97dce738e7ff39d19c4c9ae8aa4e64d7b1842ae9b565b3231a51f1f",
+                "page": 1,
+                "excerpt": "Modello riportato nel libretto: TD-24"
+              }
+            ]
+          },
+          {
+            "id": "m2",
+            "value": "TD-28",
+            "sources": [
+              {
+                "documentId": "00000000-0000-4000-8000-0000000000aa",
+                "documentVersion": 1,
+                "documentSha256": "e50cc77ca97dce738e7ff39d19c4c9ae8aa4e64d7b1842ae9b565b3231a51f1f",
+                "page": 1,
+                "excerpt": "Scheda allegata - modello: TD-28"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "P17",
+      "pipeline": "parser",
+      "documentSha256": "8d20b9a4d88fa076dba8e0033a004072d916256e1050597f22241e1febb3f421",
+      "outcome": "pdf_text_unavailable"
+    },
+    {
+      "caseId": "P22",
+      "pipeline": "economic",
+      "documentSha256": "5011f3e3f433b6d0494a5f7792aee42c0beaf92fc74993a3e5c5ac1dc0ac8621",
+      "outcome": "evidence_unverified"
+    },
+    {
+      "caseId": "P02",
+      "pipeline": "economic",
+      "documentSha256": "304e4216c7ed135646ce91dc886fcaf331489358cb29bd5c07935ac558a9869c",
+      "outcome": "evidence_unverified"
+    }
+  ]
+}

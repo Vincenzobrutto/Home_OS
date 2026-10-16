@@ -1,0 +1,1548 @@
+{
+  "format": "dimora-v5-pilot-corpus-report",
+  "formatVersion": 2,
+  "corpus": {
+    "format": "dimora-v5-pilot-corpus",
+    "version": 2,
+    "synthetic": true
+  },
+  "observationFormat": {
+    "format": "dimora-v5-pilot-observations",
+    "version": 2
+  },
+  "cases": [
+    {
+      "id": "P01",
+      "group": "utility",
+      "pipeline": "economic",
+      "sha256": "0ebb316b1e5dba5a6e038b68bcf3ea488d3cb167179a15f01dbfd6258fbc2acb",
+      "byteSize": 966,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "utility_bill",
+        "amountSelectionRequired": true
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 8000,
+          "page": 1,
+          "excerpt": "Totale corrente bolletta: 80,00 EUR"
+        },
+        {
+          "field": "amount",
+          "role": "arrears_balance",
+          "value": 2000,
+          "page": 1,
+          "excerpt": "Saldo precedenti bollette: 20,00 EUR"
+        },
+        {
+          "field": "amount",
+          "role": "amount_due",
+          "value": 10000,
+          "page": 1,
+          "excerpt": "Importo da pagare: 100,00 EUR"
+        },
+        {
+          "field": "category",
+          "value": "gas",
+          "page": 1,
+          "excerpt": "Bolletta gas settembre"
+        },
+        {
+          "field": "supplier",
+          "value": "Gas Demo",
+          "page": 1,
+          "excerpt": "Fornitore: Gas Demo"
+        },
+        {
+          "field": "documentNumber",
+          "value": "G-2026-09",
+          "page": 1,
+          "excerpt": "Numero: G-2026-09"
+        },
+        {
+          "field": "documentDate",
+          "value": "2026-09-30",
+          "page": 1,
+          "excerpt": "Data documento: 2026-09-30"
+        },
+        {
+          "field": "competenceFrom",
+          "value": "2026-09-01",
+          "page": 1,
+          "excerpt": "Competenza dal: 2026-09-01"
+        },
+        {
+          "field": "competenceTo",
+          "value": "2026-09-30",
+          "page": 1,
+          "excerpt": "Competenza al: 2026-09-30"
+        },
+        {
+          "field": "dueOn",
+          "value": "2026-10-20",
+          "page": 1,
+          "excerpt": "Scadenza: 2026-10-20"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "title",
+          "value": "Bolletta gas settembre",
+          "page": 1,
+          "excerpt": "Bolletta gas settembre"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P02",
+      "group": "utility",
+      "pipeline": "economic",
+      "sha256": "304e4216c7ed135646ce91dc886fcaf331489358cb29bd5c07935ac558a9869c",
+      "byteSize": 685,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "utility_bill",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 6450,
+          "page": 1,
+          "excerpt": "Totale documento: 64,50 EUR"
+        },
+        {
+          "field": "category",
+          "value": "electricity",
+          "page": 1,
+          "excerpt": "Bolletta energia elettrica"
+        },
+        {
+          "field": "documentDate",
+          "value": "2026-09-30",
+          "page": 1,
+          "excerpt": "Data documento: 2026-09-30"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "title",
+          "value": "Bolletta energia elettrica",
+          "page": 1,
+          "excerpt": "Bolletta energia elettrica"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P03",
+      "group": "utility",
+      "pipeline": "economic",
+      "sha256": "358497bac2d0370b468e2346af7c1a857ba6f3d7ba375c5c13e08a32f5a5b960",
+      "byteSize": 631,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "utility_bill",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 3520,
+          "page": 1,
+          "excerpt": "Totale documento: 35,20 EUR"
+        },
+        {
+          "field": "category",
+          "value": "water",
+          "page": 1,
+          "excerpt": "Bolletta acqua"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "title",
+          "value": "Bolletta acqua",
+          "page": 1,
+          "excerpt": "Bolletta acqua"
+        }
+      ],
+      "absent": [
+        "dueOn"
+      ],
+      "notMeasurable": []
+    },
+    {
+      "id": "P04",
+      "group": "utility",
+      "pipeline": "economic",
+      "sha256": "ccc7262b69a90ae90ab8828b0a8de4e2c7109e76441fd9ce2194be4d8b2bdd80",
+      "byteSize": 713,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "utility_bill",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 8000,
+          "page": 1,
+          "excerpt": "Totale corrente: 80,00 EUR"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "category",
+          "value": "gas",
+          "page": 1,
+          "excerpt": "Bolletta gas con conguaglio"
+        },
+        {
+          "field": "title",
+          "value": "Bolletta gas con conguaglio",
+          "page": 1,
+          "excerpt": "Bolletta gas con conguaglio"
+        },
+        {
+          "field": "amount",
+          "role": "other",
+          "value": 6000,
+          "page": 1,
+          "excerpt": "Consumi: 60,00 EUR",
+          "anchor": "Consumi"
+        },
+        {
+          "field": "amount",
+          "role": "other",
+          "value": 2000,
+          "page": 1,
+          "excerpt": "Conguaglio: 20,00 EUR",
+          "anchor": "Conguaglio"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P05",
+      "group": "utility",
+      "pipeline": "economic",
+      "sha256": "e7549caacd1d7014e0085f86488cbb08a6c4ac2037f6563fadf812bd2baa74cd",
+      "byteSize": 675,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "utility_bill",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 4500,
+          "page": 1,
+          "excerpt": "Totale documento: 45,00 EUR"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "category",
+          "value": "gas",
+          "page": 1,
+          "excerpt": "Bolletta gas"
+        },
+        {
+          "field": "title",
+          "value": "Bolletta gas",
+          "page": 1,
+          "excerpt": "Bolletta gas"
+        }
+      ],
+      "absent": [
+        "competenceFrom",
+        "competenceTo"
+      ],
+      "notMeasurable": []
+    },
+    {
+      "id": "P06",
+      "group": "utility",
+      "pipeline": "economic",
+      "sha256": "1208cf538333474a729fbf821317f5e96dbc1fd504a51c1740011e77a4fe7fa1",
+      "byteSize": 723,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "utility_bill",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 12000,
+          "page": 1,
+          "excerpt": "Totale corrente: 120,00 EUR"
+        },
+        {
+          "field": "amount",
+          "role": "amount_due",
+          "value": 9000,
+          "page": 1,
+          "excerpt": "Da pagare: 90,00 EUR"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "category",
+          "value": "electricity",
+          "page": 1,
+          "excerpt": "Bolletta energia elettrica"
+        },
+        {
+          "field": "title",
+          "value": "Bolletta energia elettrica",
+          "page": 1,
+          "excerpt": "Bolletta energia elettrica"
+        },
+        {
+          "field": "amount",
+          "role": "other",
+          "value": 3000,
+          "page": 1,
+          "excerpt": "Credito precedente: 30,00 EUR",
+          "anchor": "Credito precedente"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P07",
+      "group": "invoice",
+      "pipeline": "economic",
+      "sha256": "a2bf4033d3fe882bab682b5f1675e4bde91c7ab770b2b01f0bc095472a628e6a",
+      "byteSize": 820,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "simple_invoice",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 12200,
+          "page": 1,
+          "excerpt": "Totale documento: 122,00 EUR"
+        },
+        {
+          "field": "amount",
+          "role": "taxable",
+          "value": 10000,
+          "page": 1,
+          "excerpt": "Imponibile: 100,00 EUR"
+        },
+        {
+          "field": "amount",
+          "role": "tax",
+          "value": 2200,
+          "page": 1,
+          "excerpt": "IVA: 22,00 EUR"
+        },
+        {
+          "field": "supplier",
+          "value": "Idraulico Demo",
+          "page": 1,
+          "excerpt": "Fornitore: Idraulico Demo"
+        },
+        {
+          "field": "category",
+          "value": "repairs_works",
+          "page": 1,
+          "excerpt": "Fattura riparazione rubinetto"
+        },
+        {
+          "field": "documentNumber",
+          "value": "42",
+          "page": 1,
+          "excerpt": "Numero: 42"
+        },
+        {
+          "field": "documentDate",
+          "value": "2026-09-30",
+          "page": 1,
+          "excerpt": "Data documento: 2026-09-30"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "title",
+          "value": "Fattura riparazione rubinetto",
+          "page": 1,
+          "excerpt": "Fattura riparazione rubinetto"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P08",
+      "group": "invoice",
+      "pipeline": "economic",
+      "sha256": "b8795f2c43e5320cb3db02193dbd1fdb50b108c9056d5597a2194ef8b1a6ca14",
+      "byteSize": 676,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "simple_invoice",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 350000,
+          "page": 1,
+          "excerpt": "Totale fattura: 3500,00 EUR"
+        },
+        {
+          "field": "supplier",
+          "value": "Impresa Demo",
+          "page": 1,
+          "excerpt": "Fornitore: Impresa Demo"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "title",
+          "value": "Fattura lavori bagno",
+          "page": 1,
+          "excerpt": "Fattura lavori bagno"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P09",
+      "group": "invoice",
+      "pipeline": "economic",
+      "sha256": "6a333c58f8fd29343f4e0ede3c0ca46eb9f09143b112665ea02da836b61b2c4a",
+      "byteSize": 673,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "simple_invoice",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 49999,
+          "page": 1,
+          "excerpt": "Totale documento: 499,99 EUR"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "category",
+          "value": "purchase_replacement",
+          "page": 1,
+          "excerpt": "Fattura acquisto lavatrice"
+        },
+        {
+          "field": "title",
+          "value": "Fattura acquisto lavatrice",
+          "page": 1,
+          "excerpt": "Fattura acquisto lavatrice"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": [
+        "warrantyEndsOn"
+      ]
+    },
+    {
+      "id": "P10",
+      "group": "invoice",
+      "pipeline": "economic",
+      "sha256": "1c14abad882326dcd876ef125996d28e7b9cabc259a958f770bf9113248e57d0",
+      "byteSize": 687,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "simple_invoice",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 50000,
+          "page": 1,
+          "excerpt": "Acconto fatturato: 500,00 EUR"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "amount",
+          "role": "other",
+          "value": 200000,
+          "page": 1,
+          "excerpt": "Valore preventivo: 2000,00 EUR",
+          "anchor": "Valore preventivo"
+        },
+        {
+          "field": "title",
+          "value": "Fattura acconto lavori",
+          "page": 1,
+          "excerpt": "Fattura acconto lavori"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P11",
+      "group": "invoice",
+      "pipeline": "economic",
+      "sha256": "d19668dc8717f8f0dceec1f8d31b3dd660b315becf676abca7491cf3507abc9c",
+      "byteSize": 630,
+      "format": "pdf",
+      "expected": {
+        "outcome": "no_supported_economic_data"
+      },
+      "required": [],
+      "allowed": [],
+      "absent": [
+        "amount"
+      ],
+      "notMeasurable": []
+    },
+    {
+      "id": "P12",
+      "group": "invoice",
+      "pipeline": "economic",
+      "sha256": "38d8858a2f37e991e00904932a9d6c311e4ef9289ab001dd733faac80b60c195",
+      "byteSize": 721,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "simple_invoice",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 80000,
+          "page": 1,
+          "excerpt": "Totale documento: 800,00 EUR"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "amount",
+          "role": "line_total",
+          "value": 30000,
+          "page": 1,
+          "excerpt": "Forno: 300,00 EUR",
+          "anchor": "Forno"
+        },
+        {
+          "field": "amount",
+          "role": "line_total",
+          "value": 50000,
+          "page": 1,
+          "excerpt": "Lavatrice: 500,00 EUR",
+          "anchor": "Lavatrice"
+        },
+        {
+          "field": "category",
+          "value": "purchase_replacement",
+          "page": 1,
+          "excerpt": "Fattura acquisto forno e lavatrice"
+        },
+        {
+          "field": "title",
+          "value": "Fattura acquisto forno e lavatrice",
+          "page": 1,
+          "excerpt": "Fattura acquisto forno e lavatrice"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": [
+        "singleObjectId"
+      ]
+    },
+    {
+      "id": "P13",
+      "group": "technical",
+      "pipeline": "technical",
+      "sha256": "734ac4bcdb11357d9f32995811a6e28f40a2dec5e2e2549cab1bdd71e3a456b3",
+      "byteSize": 653,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "proposalKinds": {
+          "brand": "single_value",
+          "model": "single_value"
+        }
+      },
+      "required": [
+        {
+          "field": "brand",
+          "value": "Termica Demo",
+          "page": 1,
+          "excerpt": "Marca: Termica Demo"
+        },
+        {
+          "field": "model",
+          "value": "TD-24",
+          "page": 1,
+          "excerpt": "Modello: TD-24"
+        }
+      ],
+      "allowed": [],
+      "absent": [
+        "power"
+      ],
+      "notMeasurable": []
+    },
+    {
+      "id": "P14",
+      "group": "technical",
+      "pipeline": "technical",
+      "sha256": "e43a4aa64582c71cd7b0905ab2115f67e1c89c560d5ab32481dd9968671ef092",
+      "byteSize": 690,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "proposalKinds": {
+          "power": "quantity_interpretation"
+        }
+      },
+      "required": [
+        {
+          "field": "power",
+          "quantityCode": "useful_heating",
+          "quantityLabel": "Potenza utile al riscaldamento",
+          "value": "24",
+          "page": 1,
+          "excerpt": "Potenza utile al riscaldamento: 24 kW"
+        },
+        {
+          "field": "power",
+          "quantityCode": "reported_nominal",
+          "quantityLabel": "Potenza nominale riportata",
+          "value": "28",
+          "page": 1,
+          "excerpt": "Potenza nominale riportata: 28 kW"
+        }
+      ],
+      "allowed": [],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P15",
+      "group": "technical",
+      "pipeline": "technical",
+      "sha256": "aa0cdc4214b5019381b58740403f2dedbdffb63aa14773736a4a2fdc79f76304",
+      "byteSize": 663,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "proposalKinds": {
+          "brand": "single_value"
+        }
+      },
+      "required": [
+        {
+          "field": "brand",
+          "value": "Termica Demo",
+          "page": 1,
+          "excerpt": "Marca: Termica Demo"
+        }
+      ],
+      "allowed": [],
+      "absent": [
+        "power",
+        "model"
+      ],
+      "notMeasurable": []
+    },
+    {
+      "id": "P16",
+      "group": "technical",
+      "pipeline": "technical",
+      "sha256": "e50cc77ca97dce738e7ff39d19c4c9ae8aa4e64d7b1842ae9b565b3231a51f1f",
+      "byteSize": 709,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "proposalKinds": {
+          "model": "value_conflict"
+        }
+      },
+      "required": [
+        {
+          "field": "model",
+          "value": "TD-24",
+          "page": 1,
+          "excerpt": "Modello riportato nel libretto: TD-24"
+        },
+        {
+          "field": "model",
+          "value": "TD-28",
+          "page": 1,
+          "excerpt": "Scheda allegata - modello: TD-28"
+        }
+      ],
+      "allowed": [],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P17",
+      "group": "negative",
+      "pipeline": "parser",
+      "sha256": "8d20b9a4d88fa076dba8e0033a004072d916256e1050597f22241e1febb3f421",
+      "byteSize": 4589,
+      "format": "pdf",
+      "expected": {
+        "outcome": "pdf_text_unavailable"
+      },
+      "required": [],
+      "allowed": [],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P18",
+      "group": "negative",
+      "pipeline": "parser",
+      "sha256": "bd1aa7c52716f309efeaf38652f5d760ccf14dc4b3e3ba4bed61edfb278cf8f4",
+      "byteSize": 286,
+      "format": "jpeg",
+      "expected": {
+        "outcome": "pdf_invalid"
+      },
+      "required": [],
+      "allowed": [],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P19",
+      "group": "negative",
+      "pipeline": "parser",
+      "sha256": "932d57dee9c193131ad9f89a7247409aa15a2fb64603a60eb24ba9da0ee37a88",
+      "byteSize": 3126,
+      "format": "pdf",
+      "expected": {
+        "outcome": "pdf_encrypted"
+      },
+      "required": [],
+      "allowed": [],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P20",
+      "group": "negative",
+      "pipeline": "economic",
+      "sha256": "90db617817a3dcc5bd2c93d0cd789be6337ddb60478028528b9eb9d214bfedf7",
+      "byteSize": 652,
+      "format": "pdf",
+      "expected": {
+        "outcome": "no_supported_economic_data"
+      },
+      "required": [],
+      "allowed": [],
+      "absent": [
+        "amount"
+      ],
+      "notMeasurable": []
+    },
+    {
+      "id": "P21",
+      "group": "ambiguous",
+      "pipeline": "economic",
+      "sha256": "5f08efe357a533cb370215027764079950161955c36116367ba04d75f51a0e2c",
+      "byteSize": 714,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "simple_invoice",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "documentDate",
+          "value": "2026-04-03",
+          "page": 1,
+          "excerpt": "Data documento: 03/04/2026"
+        },
+        {
+          "field": "dueOn",
+          "value": "2026-04-30",
+          "page": 1,
+          "excerpt": "Scadenza: 30/04/2026"
+        },
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 8000,
+          "page": 1,
+          "excerpt": "Totale documento: 80,00 EUR"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "category",
+          "value": "maintenance",
+          "page": 1,
+          "excerpt": "Fattura manutenzione"
+        },
+        {
+          "field": "title",
+          "value": "Fattura manutenzione",
+          "page": 1,
+          "excerpt": "Fattura manutenzione"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": [
+        "paidOn"
+      ]
+    },
+    {
+      "id": "P22",
+      "group": "ambiguous",
+      "pipeline": "economic",
+      "sha256": "5011f3e3f433b6d0494a5f7792aee42c0beaf92fc74993a3e5c5ac1dc0ac8621",
+      "byteSize": 626,
+      "format": "pdf",
+      "expected": {
+        "outcome": "no_supported_economic_data"
+      },
+      "required": [],
+      "allowed": [],
+      "absent": [
+        "amount"
+      ],
+      "notMeasurable": []
+    },
+    {
+      "id": "P23",
+      "group": "ambiguous",
+      "pipeline": "economic",
+      "sha256": "f00d6b88b6bbe27827f9812b36798ce4fb5981ca7e170fc8e3533060460b4ad6",
+      "byteSize": 704,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "simple_invoice",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 122000,
+          "page": 1,
+          "excerpt": "Totale documento: 1.220,00 EUR"
+        },
+        {
+          "field": "amount",
+          "role": "taxable",
+          "value": 100000,
+          "page": 1,
+          "excerpt": "Imponibile: 1.000,00 EUR"
+        },
+        {
+          "field": "amount",
+          "role": "tax",
+          "value": 22000,
+          "page": 1,
+          "excerpt": "IVA: 220,00 EUR"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "title",
+          "value": "Fattura lavori",
+          "page": 1,
+          "excerpt": "Fattura lavori"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": []
+    },
+    {
+      "id": "P24",
+      "group": "ambiguous",
+      "pipeline": "economic",
+      "sha256": "8d4b883de402ccdafd74edbd16ecfabdf3cccefa727286677df8504e30ebab05",
+      "byteSize": 679,
+      "format": "pdf",
+      "expected": {
+        "outcome": "proposal",
+        "documentKind": "simple_invoice",
+        "amountSelectionRequired": false
+      },
+      "required": [
+        {
+          "field": "amount",
+          "role": "current_document_total",
+          "value": 1500,
+          "page": 1,
+          "excerpt": "Totale documento: 15,00 EUR"
+        },
+        {
+          "field": "supplier",
+          "value": "Negozio Demo",
+          "page": 1,
+          "excerpt": "Venditore: Negozio Demo"
+        }
+      ],
+      "allowed": [
+        {
+          "field": "category",
+          "value": "purchase_replacement",
+          "page": 1,
+          "excerpt": "Fattura acquisto filtro"
+        },
+        {
+          "field": "title",
+          "value": "Fattura acquisto filtro",
+          "page": 1,
+          "excerpt": "Fattura acquisto filtro"
+        }
+      ],
+      "absent": [],
+      "notMeasurable": [
+        "professionalId",
+        "professionalPhone"
+      ]
+    }
+  ],
+  "observations": {
+    "provenance": {
+      "kind": "hand_built",
+      "providerCalled": false,
+      "stage": "forma di EconomicOutput dopo validateOutput e di Candidate[] dopo validateEvidence, scritta a mano",
+      "description": "Esempio sintetico per illustrare il formato v2 e le categorie del misuratore. Non è un risultato di modello."
+    },
+    "providerAccuracy": null,
+    "summary": {
+      "measurerOnly": true,
+      "sample": {
+        "cases": 24,
+        "evaluated": 7,
+        "missing": [
+          "P01",
+          "P04",
+          "P05",
+          "P06",
+          "P08",
+          "P09",
+          "P11",
+          "P12",
+          "P13",
+          "P14",
+          "P15",
+          "P18",
+          "P19",
+          "P20",
+          "P21",
+          "P23",
+          "P24"
+        ],
+        "notEvaluable": []
+      },
+      "totals": {
+        "required": 15,
+        "requiredMatched": 11,
+        "allowedMatched": 1,
+        "wrong": 1,
+        "unexpected": 0,
+        "unsupported": 1,
+        "duplicate": 0,
+        "forbidden": 0,
+        "omitted": 4
+      },
+      "agreementWithAnnotations": 0.8571428571428571,
+      "requiredCoverage": 0.7333333333333333,
+      "outcomes": [
+        {
+          "caseId": "P02",
+          "expected": "proposal",
+          "actual": "evidence_unverified",
+          "outcomeMatch": false,
+          "systemSafe": true,
+          "positiveRejected": true,
+          "blockedBySystem": false
+        },
+        {
+          "caseId": "P03",
+          "expected": "proposal",
+          "actual": "proposal",
+          "outcomeMatch": true,
+          "systemSafe": null,
+          "positiveRejected": false,
+          "blockedBySystem": false
+        },
+        {
+          "caseId": "P07",
+          "expected": "proposal",
+          "actual": "proposal",
+          "outcomeMatch": true,
+          "systemSafe": null,
+          "positiveRejected": false,
+          "blockedBySystem": false
+        },
+        {
+          "caseId": "P10",
+          "expected": "proposal",
+          "actual": "proposal",
+          "outcomeMatch": true,
+          "systemSafe": null,
+          "positiveRejected": false,
+          "blockedBySystem": false
+        },
+        {
+          "caseId": "P16",
+          "expected": "proposal",
+          "actual": "proposal",
+          "outcomeMatch": true,
+          "systemSafe": null,
+          "positiveRejected": false,
+          "blockedBySystem": false
+        },
+        {
+          "caseId": "P17",
+          "expected": "pdf_text_unavailable",
+          "actual": "pdf_text_unavailable",
+          "outcomeMatch": true,
+          "systemSafe": true,
+          "positiveRejected": false,
+          "blockedBySystem": false
+        },
+        {
+          "caseId": "P22",
+          "expected": "no_supported_economic_data",
+          "actual": "evidence_unverified",
+          "outcomeMatch": false,
+          "systemSafe": true,
+          "positiveRejected": false,
+          "blockedBySystem": true
+        }
+      ],
+      "criticals": [
+        {
+          "caseId": "P10",
+          "kind": "amount_role_swap",
+          "role": "current_document_total",
+          "value": 200000
+        },
+        {
+          "caseId": "P10",
+          "kind": "amount_selection_flag",
+          "expected": false,
+          "actual": true
+        }
+      ],
+      "warnings": [
+        "Campione di 24 casi sintetici: nessuna soglia statistica; ogni rapporto è accordo con le annotazioni, non accuratezza del provider."
+      ]
+    },
+    "perCase": [
+      {
+        "caseId": "P01",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P02",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": false,
+        "actualOutcome": "evidence_unverified",
+        "counts": {
+          "required": 3,
+          "requiredMatched": 0,
+          "allowedMatched": 0,
+          "wrong": 0,
+          "unexpected": 0,
+          "unsupported": 0,
+          "duplicate": 0,
+          "forbidden": 0,
+          "omitted": 3
+        },
+        "criticals": [],
+        "details": [],
+        "outcomeMatch": false,
+        "positiveRejected": true,
+        "systemSafe": true
+      },
+      {
+        "caseId": "P03",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": false,
+        "actualOutcome": "proposal",
+        "counts": {
+          "required": 2,
+          "requiredMatched": 1,
+          "allowedMatched": 0,
+          "wrong": 0,
+          "unexpected": 0,
+          "unsupported": 1,
+          "duplicate": 0,
+          "forbidden": 0,
+          "omitted": 1
+        },
+        "criticals": [],
+        "details": [
+          {
+            "fact": {
+              "field": "category",
+              "value": "water",
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Bolletta acqua"
+                }
+              ]
+            },
+            "verdict": "required"
+          },
+          {
+            "fact": {
+              "field": "amount",
+              "role": "current_document_total",
+              "value": 3520,
+              "sources": [
+                {
+                  "page": 2,
+                  "excerpt": "Totale documento: 35,20 EUR"
+                }
+              ]
+            },
+            "verdict": "unsupported",
+            "reason": "page_out_of_range"
+          }
+        ],
+        "outcomeMatch": true,
+        "positiveRejected": false,
+        "systemSafe": null
+      },
+      {
+        "caseId": "P04",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P05",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P06",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P07",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": false,
+        "actualOutcome": "proposal",
+        "counts": {
+          "required": 7,
+          "requiredMatched": 7,
+          "allowedMatched": 1,
+          "wrong": 0,
+          "unexpected": 0,
+          "unsupported": 0,
+          "duplicate": 0,
+          "forbidden": 0,
+          "omitted": 0
+        },
+        "criticals": [],
+        "details": [
+          {
+            "fact": {
+              "field": "title",
+              "value": "Fattura riparazione rubinetto",
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Fattura riparazione rubinetto"
+                }
+              ]
+            },
+            "verdict": "allowed"
+          },
+          {
+            "fact": {
+              "field": "supplier",
+              "value": "Idraulico Demo",
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Fornitore: Idraulico Demo"
+                }
+              ]
+            },
+            "verdict": "required"
+          },
+          {
+            "fact": {
+              "field": "category",
+              "value": "repairs_works",
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Fattura riparazione rubinetto"
+                }
+              ]
+            },
+            "verdict": "required"
+          },
+          {
+            "fact": {
+              "field": "documentNumber",
+              "value": "42",
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Numero: 42"
+                }
+              ]
+            },
+            "verdict": "required"
+          },
+          {
+            "fact": {
+              "field": "documentDate",
+              "value": "2026-09-30",
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Data documento: 2026-09-30"
+                }
+              ]
+            },
+            "verdict": "required"
+          },
+          {
+            "fact": {
+              "field": "amount",
+              "role": "current_document_total",
+              "value": 12200,
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Totale documento: 122,00 EUR"
+                }
+              ]
+            },
+            "verdict": "required"
+          },
+          {
+            "fact": {
+              "field": "amount",
+              "role": "taxable",
+              "value": 10000,
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Imponibile: 100,00 EUR"
+                }
+              ]
+            },
+            "verdict": "required"
+          },
+          {
+            "fact": {
+              "field": "amount",
+              "role": "tax",
+              "value": 2200,
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "IVA: 22,00 EUR"
+                }
+              ]
+            },
+            "verdict": "required"
+          }
+        ],
+        "outcomeMatch": true,
+        "positiveRejected": false,
+        "systemSafe": null
+      },
+      {
+        "caseId": "P08",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P09",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P10",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": false,
+        "actualOutcome": "proposal",
+        "counts": {
+          "required": 1,
+          "requiredMatched": 1,
+          "allowedMatched": 0,
+          "wrong": 1,
+          "unexpected": 0,
+          "unsupported": 0,
+          "duplicate": 0,
+          "forbidden": 0,
+          "omitted": 0
+        },
+        "criticals": [
+          {
+            "kind": "amount_role_swap",
+            "role": "current_document_total",
+            "value": 200000
+          },
+          {
+            "kind": "amount_selection_flag",
+            "expected": false,
+            "actual": true
+          }
+        ],
+        "details": [
+          {
+            "fact": {
+              "field": "amount",
+              "role": "current_document_total",
+              "value": 50000,
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Acconto fatturato: 500,00 EUR"
+                }
+              ]
+            },
+            "verdict": "required"
+          },
+          {
+            "fact": {
+              "field": "amount",
+              "role": "current_document_total",
+              "value": 200000,
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Valore preventivo: 2000,00 EUR"
+                }
+              ]
+            },
+            "verdict": "wrong",
+            "proven": true
+          }
+        ],
+        "outcomeMatch": true,
+        "positiveRejected": false,
+        "systemSafe": null
+      },
+      {
+        "caseId": "P11",
+        "pipeline": "economic",
+        "expectedOutcome": "no_supported_economic_data",
+        "missing": true
+      },
+      {
+        "caseId": "P12",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P13",
+        "pipeline": "technical",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P14",
+        "pipeline": "technical",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P15",
+        "pipeline": "technical",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P16",
+        "pipeline": "technical",
+        "expectedOutcome": "proposal",
+        "missing": false,
+        "actualOutcome": "proposal",
+        "counts": {
+          "required": 2,
+          "requiredMatched": 2,
+          "allowedMatched": 0,
+          "wrong": 0,
+          "unexpected": 0,
+          "unsupported": 0,
+          "duplicate": 0,
+          "forbidden": 0,
+          "omitted": 0
+        },
+        "criticals": [],
+        "details": [
+          {
+            "fact": {
+              "field": "model",
+              "value": "TD-24",
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Modello riportato nel libretto: TD-24"
+                }
+              ]
+            },
+            "verdict": "required"
+          },
+          {
+            "fact": {
+              "field": "model",
+              "value": "TD-28",
+              "sources": [
+                {
+                  "page": 1,
+                  "excerpt": "Scheda allegata - modello: TD-28"
+                }
+              ]
+            },
+            "verdict": "required"
+          }
+        ],
+        "outcomeMatch": true,
+        "positiveRejected": false,
+        "systemSafe": null
+      },
+      {
+        "caseId": "P17",
+        "pipeline": "parser",
+        "expectedOutcome": "pdf_text_unavailable",
+        "missing": false,
+        "actualOutcome": "pdf_text_unavailable",
+        "counts": {
+          "required": 0,
+          "requiredMatched": 0,
+          "allowedMatched": 0,
+          "wrong": 0,
+          "unexpected": 0,
+          "unsupported": 0,
+          "duplicate": 0,
+          "forbidden": 0,
+          "omitted": 0
+        },
+        "criticals": [],
+        "details": [],
+        "outcomeMatch": true,
+        "systemSafe": true
+      },
+      {
+        "caseId": "P18",
+        "pipeline": "parser",
+        "expectedOutcome": "pdf_invalid",
+        "missing": true
+      },
+      {
+        "caseId": "P19",
+        "pipeline": "parser",
+        "expectedOutcome": "pdf_encrypted",
+        "missing": true
+      },
+      {
+        "caseId": "P20",
+        "pipeline": "economic",
+        "expectedOutcome": "no_supported_economic_data",
+        "missing": true
+      },
+      {
+        "caseId": "P21",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P22",
+        "pipeline": "economic",
+        "expectedOutcome": "no_supported_economic_data",
+        "missing": false,
+        "actualOutcome": "evidence_unverified",
+        "counts": {
+          "required": 0,
+          "requiredMatched": 0,
+          "allowedMatched": 0,
+          "wrong": 0,
+          "unexpected": 0,
+          "unsupported": 0,
+          "duplicate": 0,
+          "forbidden": 0,
+          "omitted": 0
+        },
+        "criticals": [],
+        "details": [],
+        "outcomeMatch": false,
+        "systemSafe": true,
+        "blockedBySystem": true
+      },
+      {
+        "caseId": "P23",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": true
+      },
+      {
+        "caseId": "P24",
+        "pipeline": "economic",
+        "expectedOutcome": "proposal",
+        "missing": true
+      }
+    ]
+  }
+}
