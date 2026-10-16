@@ -32,3 +32,6 @@ Se si includono originali, non riusare ciecamente gli id del JSON: ricontrollare
 ## Accettazione prima del frontend
 
 Due persone nella stessa casa non si esportano dati privati a vicenda; altro account/contesto errato e membership revocata negati; risorse archiviate conservate quando autorizzate; risorsa collegata vietata senza nome; date/importi identici al canonico; nessun campo di sicurezza nel JSON; errore storage senza ZIP parziale; export concorrenti e oversize gestiti; ritorno da logout senza dati residui. Verifica con fixture sintetiche, non con dati personali. Il pacchetto non è una dichiarazione di adempimento legale né una politica di retention.
+
+## Contratto per implementazione
+Il dettaglio tecnico è ora in personal-export-api-contract.md: formato1 personale per Home, JSON separato da originali ZIP, mapper allowlist, fonti e storia filtrate, budget righe/byte, lettura fresca autorizzazioni dopo snapshot. L'endpoint resta non attivo. Nessuna API o politica di cancellazione introdotta da questo documento.
