@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recupero accesso Dimora</title>
+<style>
+  :root {
+    --navy: #13293d; --navy-2: #1d3a52; --teal: #0e5f73; --teal-d: #0a4a5a;
+    --bg: #f1f5f7; --card: #ffffff; --line: #d5dee4; --ink: #17232d; --muted: #4f5f6b;
+    --tint: #e3f1f4; --warn-bg: #fff4dc; --warn-line: #e9c46a; --err-bg: #fdeceb; --err-line: #d9837b; --ok-bg: #e6f4ea; --ok-line: #7fbf8f;
+    --demo: #6b4fa0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; color: var(--ink); background: #dfe6ea; }
+  .tool { display: grid; grid-template-columns: 290px 1fr; min-height: 100vh; }
+  .side { background: #fff; border-right: 1px solid var(--line); padding: 16px; overflow-y: auto; max-height: 100vh; position: sticky; top: 0; }
+  .side h1 { font-size: 16px; margin: 0 0 4px; }
+  .side p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+  .side h2 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; }
+  .side button.nav { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 6px 8px; border-radius: 6px; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; }
+  .side button.nav[aria-current="true"] { background: var(--tint); color: var(--teal-d); font-weight: 600; }
+  .side button.nav:hover { background: #eef3f5; }
+  .seg { display: flex; gap: 4px; margin: 8px 0 4px; }
+  .seg button { flex: 1; border: 1px solid var(--line); background: #fff; padding: 6px; border-radius: 6px; font: inherit; font-size: 13px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .stage { padding: 24px 16px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .note { max-width: 960px; width: 100%; background: #fff; border: 1px dashed var(--demo); color: #3d2d5c; border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+  .note strong { color: var(--demo); }
+  .frame { width: 100%; max-width: 1100px; background: var(--bg); border-radius: 10px; overflow: hidden; box-shadow: 0 6px 24px rgba(19,41,61,.15); transition: max-width .2s; }
+  .frame.phone { max-width: 390px; }
+  .frame.phone320 { max-width: 320px; }
+  .top { background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; gap: 12px; }
+  .brand { font-weight: 800; font-size: 22px; letter-spacing: -.02em; }
+  .brand span { color: #4fb3c8; }
+  .top .acc { font-size: 13px; opacity: .9; }
+  .page { padding: 28px 20px 36px; }
+  .wrap { max-width: 440px; margin: 0 auto; }
+  .eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  h2.h1 { font-size: 28px; line-height: 1.2; margin: 4px 0 8px; }
+  .lead { color: var(--muted); margin: 0 0 16px; }
+  .field { display: flex; flex-direction: column; gap: 4px; margin: 14px 0; }
+  .field label { font-weight: 600; font-size: 14px; }
+  .hint { font-size: 12.5px; color: var(--muted); }
+  .input { display: flex; gap: 6px; }
+  .input input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #9fb1bd; border-radius: 8px; font: inherit; background: #fff; }
+  .input input[aria-invalid="true"] { border-color: #b3261e; }
+  .ferr { color: #b3261e; font-size: 13px; font-weight: 600; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+  .btn.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .btn.small { padding: 6px 10px; font-size: 13px; }
+  .btn.link { border: 0; background: none; color: var(--teal-d); text-decoration: underline; padding: 4px 0; font-weight: 500; }
+  .btn[disabled] { opacity: .55; cursor: not-allowed; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
+  .frame.phone .actions .btn:not(.link), .frame.phone320 .actions .btn:not(.link) { width: 100%; }
+  .banner { border: 1px solid var(--line); border-left-width: 4px; border-radius: 8px; padding: 10px 14px; margin: 12px 0; background: #fff; }
+  .banner b { display: block; margin-bottom: 2px; }
+  .banner p { margin: 4px 0; }
+  .banner.info { background: var(--tint); border-color: #9ccfda; }
+  .banner.warn { background: var(--warn-bg); border-color: var(--warn-line); }
+  .banner.err { background: var(--err-bg); border-color: var(--err-line); }
+  .banner.ok { background: var(--ok-bg); border-color: var(--ok-line); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 14px 0; }
+  .alt { margin-top: 18px; font-size: 14px; color: var(--muted); }
+  details { margin-top: 14px; font-size: 14px; }
+  summary { cursor: pointer; color: var(--teal-d); font-weight: 600; }
+  .mail { background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .mail .hdr { background: #f6f8fa; border-bottom: 1px solid var(--line); padding: 10px 14px; font-size: 13px; color: var(--muted); }
+  .mail .hdr div { margin: 2px 0; }
+  .mail .body { padding: 16px; }
+  .demo-tag { display: inline-block; background: var(--demo); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; letter-spacing: .04em; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  .nav-bottom { display: none; }
+  table.mx { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+  table.mx th, table.mx td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+  table.mx th { background: #eef3f5; }
+  .mxwrap { overflow-x: auto; }
+  .doclist li { margin: 6px 0; }
+  .upload-note { font-size: 13px; color: var(--muted); }
+  .radio { display: flex; gap: 8px; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 6px 0; background: #fff; }
+  .radio.sel { border-color: var(--teal); background: var(--tint); }
+  @media (max-width: 760px) { .tool { grid-template-columns: 1fr; } .side { position: static; max-height: none; } }
+  :focus-visible { outline: 3px solid #f0a202; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="tool">
+  <aside class="side" aria-label="Schermate del mockup">
+    <h1>Recupero accesso · mockup</h1>
+    <p>Proposta Claude, Fase 0, 16/10/2026. <strong>Nessuna di queste schermate esiste nel prodotto.</strong> Dati sintetici; nessuna email viene inviata.</p>
+    <div class="seg" role="group" aria-label="Larghezza">
+      <button type="button" data-w="desk" aria-pressed="true">Desktop</button>
+      <button type="button" data-w="phone" aria-pressed="false">390 px</button>
+      <button type="button" data-w="phone320" aria-pressed="false">320 px</button>
+    </div>
+    <div id="navlist"></div>
+  </aside>
+  <main class="stage">
+    <div class="note" id="note"></div>
+    <div class="frame" id="frame">
+      <header class="top"><div class="brand">Dimora<span>.</span></div><div class="acc" id="acc"></div></header>
+      <div class="page"><div class="wrap" id="screen" tabindex="-1"></div></div>
+    </div>
+  </main>
+</div>
+<script>
+const EMAIL = 'giulia.esempio@example.test';
+const state = { email: '', cooldown: 0, w: 'desk' };
+const GROUPS = [
+  ['Percorso principale', ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']],
+  ['Stati e errori', ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10']],
+  ['Verifica email (nuovi account)', ['V1', 'V2', 'V3', 'V4', 'V5']],
+  ['Prova personale', ['P1', 'P2']],
+  ['Riferimento', ['MX']],
+];
+const S = {};
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const go = (id) => render(id);
+const pw = (id, label, hint, err) => `
+  <div class="field"><label for="${id}">${label}</label>${hint ? `<span class="hint" id="${id}-h">${hint}</span>` : ''}
+  <div class="input"><input id="${id}" type="password" autocomplete="${id === 'np' ? 'new-password' : 'current-password'}" ${err ? 'aria-invalid="true"' : ''} aria-describedby="${hint ? id + '-h' : ''}${err ? ' ' + id + '-e' : ''}">
+  <button type="button" class="btn small" aria-pressed="false" onclick="const i=document.getElementById('${id}');const v=i.type==='password';i.type=v?'text':'password';this.textContent=v?'Nascondi':'Mostra';this.setAttribute('aria-pressed',v)">Mostra</button></div>
+  ${err ? `<span class="ferr" id="${id}-e">${err}</span>` : ''}</div>`;
+const emailField = (err, val = '') => `
+  <div class="field"><label for="em">Email</label>
+  <div class="input"><input id="em" type="email" autocomplete="email" inputmode="email" value="${esc(val)}" ${err ? 'aria-invalid="true" aria-describedby="em-e"' : ''}></div>
+  ${err ? `<span class="ferr" id="em-e">${err}</span>` : ''}</div>`;
+
+S.R1 = { t: 'Accedi (con il nuovo collegamento)', note: 'Modifica alla pagina esistente «Accedi»: si aggiunge solo il collegamento sotto la password. Oggi la pagina non offre alcun recupero (osservato nel prodotto reale, screenshot 01).', h: () => `
+  <span class="eyebrow">Dimora Home</span><h2 class="h1">Accedi</h2><p class="lead">Entra per vedere le tue case.</p>
+  ${emailField('', EMAIL)}${pw('lp', 'Password')}
+  <p style="margin:-6px 0 0"><button class="btn link" onclick="go('R2')">Hai dimenticato la password?</button></p>
+  <div class="actions"><button class="btn primary" onclick="go('E1')">Accedi</button></div>
+  <p class="alt">Non hai un account? <a href="#" onclick="return false">Crea un account</a></p>` };
+
+S.R2 = { t: 'Recupera l’accesso: richiesta', note: 'Nessuna informazione sull’esistenza dell’account. L’email si precompila solo se l’utente l’aveva già scritta nel login (resta nel browser, non in URL).', h: () => `
+  <span class="eyebrow">Dimora Home</span><h2 class="h1">Recupera l’accesso</h2>
+  <p class="lead">Scrivi l’email con cui hai creato l’account. Se è associata a un account Dimora, ti invieremo un link per scegliere una nuova password.</p>
+  ${emailField('', state.email || EMAIL)}
+  <div class="actions"><button class="btn primary" onclick="state.email=document.getElementById('em').value||EMAIL;state.cooldown=60;go('R3')">Invia il link</button>
+  <button class="btn link" onclick="go('R1')">Torna all’accesso</button></div>
+  ${lostMailbox()}` };
+
+const lostMailbox = () => `<details><summary>Non hai più accesso a questa email?</summary>
+  <p>In questa versione il recupero avviene solo tramite la casella email dell’account. Dimora non può riattivarlo con un nome, un altro indirizzo o documenti della casa.</p>
+  <p class="muted small">Se crei un nuovo account, i dati del vecchio non vengono trasferiti.</p></details>`;
+
+S.R3 = { t: 'Controlla la tua email (risposta neutra)', note: 'Stesso testo che l’account esista o no. Non diciamo «email inviata»: diciamo cosa succede se l’indirizzo è associato. L’indirizzo mostrato è quello scritto dall’utente.', h: () => `
+  <span class="eyebrow">Recupero accesso</span><h2 class="h1">Controlla la tua email</h2>
+  <p>Se <strong>${esc(state.email || EMAIL)}</strong> è associata a un account Dimora, a breve riceverai un’email con un link per scegliere una nuova password.</p>
+  <div class="banner info"><b>Il link vale 30 minuti e si usa una volta sola.</b><p>Se richiedi più link, usa quello arrivato per ultimo.</p></div>
+  <div class="card"><b>Non arriva?</b>
+    <ul class="small" style="margin:6px 0 0;padding-left:18px">
+      <li>Controlla la cartella spam o promozioni.</li>
+      <li>Verifica di aver scritto l’indirizzo giusto.</li>
+      <li>Aspetta qualche minuto prima di chiederne un altro.</li>
+    </ul>
+    <div class="actions">
+      <button class="btn" ${state.cooldown ? 'disabled' : ''} onclick="go('E4')">${state.cooldown ? 'Invia di nuovo tra 0:' + String(state.cooldown).padStart(2, '0') : 'Invia di nuovo'}</button>
+      <button class="btn link" onclick="state.email='';go('R2')">Usa un altro indirizzo</button>
+    </div></div>
+  <div class="actions"><button class="btn primary" onclick="go('R4')">Apri l’email dimostrativa →</button><button class="btn link" onclick="go('R1')">Torna all’accesso</button></div>
+  ${lostMailbox()}` };
+
+S.R4 = { t: 'Email dimostrativa', note: 'Simulazione della casella: nessun invio reale. Nessun nome di casa, nessun documento, nessun dato oltre all’indirizzo. Il link porta il token nel frammento (#), non nella query.', h: () => `
+  <p><span class="demo-tag">EMAIL DIMOSTRATIVA</span></p>
+  <div class="mail"><div class="hdr"><div><b>Da:</b> Dimora &lt;no-reply@dimora.example&gt;</div><div><b>A:</b> ${esc(state.email || EMAIL)}</div><div><b>Oggetto:</b> Scegli una nuova password per Dimora</div></div>
+  <div class="body">
+    <p>Ciao,</p>
+    <p>abbiamo ricevuto una richiesta per recuperare l’accesso a Dimora con questo indirizzo.</p>
+    <p><button class="btn primary" onclick="go('R5')">Scegli una nuova password</button></p>
+    <p class="small muted">Il link vale 30 minuti e si può usare una volta sola. Aprirlo non cambia nulla: la password cambia solo quando la salvi.</p>
+    <p class="small">Se non hai chiesto tu il recupero, ignora questa email: la tua password attuale resta valida.</p>
+    <p class="small muted">Questa email è stata inviata automaticamente, non rispondere.</p>
+  </div></div>
+  <div class="actions"><button class="btn link" onclick="go('E2')">Simula: link scaduto o già usato</button><button class="btn link" onclick="go('E8')">Simula: aperto mentre sei connesso con un altro account</button></div>` };
+
+S.R5 = { t: 'Scegli una nuova password', note: 'Aprire la pagina non consuma il link (gli scanner email non lo invalidano). Stesse regole della registrazione: 12–128 caratteri, spazi conservati, pulsante Mostra.', h: () => `
+  <span class="eyebrow">Recupero accesso</span><h2 class="h1">Scegli una nuova password</h2>
+  ${pw('np', 'Nuova password', 'Da 12 a 128 caratteri. Gli spazi contano e non vengono rimossi.')}
+  <div class="banner warn"><b>Dopo il salvataggio dovrai accedere di nuovo.</b><p>Per sicurezza chiudiamo l’accesso a Dimora su tutti i dispositivi, compreso questo.</p></div>
+  <div class="actions"><button class="btn primary" onclick="go('R6')">Salva la nuova password</button></div>
+  <div class="actions"><button class="btn link" onclick="go('E6')">Simula: password troppo corta</button><button class="btn link" onclick="go('E7')">Simula: esito non confermato</button></div>` };
+
+S.R6 = { t: 'Password aggiornata', note: 'Nessun accesso automatico: si torna al login normale. Il campo email non è precompilato (il client conosce solo il token, non l’indirizzo).', h: () => `
+  <span class="eyebrow">Recupero accesso</span><h2 class="h1">Password aggiornata</h2>
+  <div class="banner ok" role="status"><b>La nuova password è attiva.</b><p>Abbiamo chiuso l’accesso su tutti i dispositivi. Accedi con la nuova password.</p></div>
+  <div class="actions"><button class="btn primary" onclick="go('R7')">Vai all’accesso</button></div>` };
+
+S.R7 = { t: 'Accesso normale', note: 'Pagina «Accedi» esistente, con un messaggio di contesto dopo il cambio password. Poi si entra come sempre.', h: () => `
+  <span class="eyebrow">Dimora Home</span><h2 class="h1">Accedi</h2>
+  <div class="banner info"><b>Password cambiata</b><p>Accedi con la nuova password.</p></div>
+  ${emailField('')}${pw('lp', 'Password')}
+  <p style="margin:-6px 0 0"><button class="btn link" onclick="go('R2')">Hai dimenticato la password?</button></p>
+  <div class="actions"><button class="btn primary">Accedi</button></div>` };
+
+S.E1 = { t: 'Credenziali errate → recupero', note: 'Il messaggio attuale «Email o password non validi.» resta neutro; si aggiunge l’uscita verso il recupero. L’email scritta passa alla pagina di recupero.', h: () => `
+  <span class="eyebrow">Dimora Home</span><h2 class="h1">Accedi</h2>
+  <div class="banner err" role="alert"><b>Accesso non riuscito</b><p>Email o password non validi.</p><p><button class="btn link" onclick="state.email=EMAIL;go('R2')">Hai dimenticato la password? Recupera l’accesso</button></p></div>
+  ${emailField('', EMAIL)}${pw('lp', 'Password')}
+  <div class="actions"><button class="btn primary">Accedi</button></div>` };
+
+S.E2 = { t: 'Link scaduto, già usato o non valido', note: 'Un solo messaggio per scaduto/usato/revocato/inesistente (recovery_invalid): non rivela nulla sull’account.', h: () => `
+  <span class="eyebrow">Recupero accesso</span><h2 class="h1">Link non più valido</h2>
+  <p>Il link è scaduto, è già stato usato oppure non è completo. Puoi chiederne uno nuovo.</p>
+  <p class="muted small">Se hai già scelto una nuova password, prova ad accedere con quella.</p>
+  <div class="actions"><button class="btn primary" onclick="go('R2')">Chiedi un nuovo link</button><button class="btn link" onclick="go('R1')">Torna all’accesso</button></div>` };
+
+S.E3 = { t: 'Servizio di invio non disponibile', note: 'Guasto globale del canale: stesso messaggio per qualunque indirizzo. L’email resta nel campo.', h: () => `
+  <span class="eyebrow">Dimora Home</span><h2 class="h1">Recupera l’accesso</h2>
+  <div class="banner err" role="alert"><b>Richiesta non completata</b><p>In questo momento non riusciamo a inviare le istruzioni. Riprova tra qualche minuto.</p></div>
+  ${emailField('', EMAIL)}
+  <div class="actions"><button class="btn primary" onclick="state.email=EMAIL;state.cooldown=60;go('R3')">Riprova</button><button class="btn link" onclick="go('R1')">Torna all’accesso</button></div>` };
+
+S.E4 = { t: 'Invio ripetuto', note: 'Dopo «Invia di nuovo»: stessa risposta neutra. Il limite per indirizzo resta silenzioso (nessun messaggio diverso); il link precedente non viene invalidato da una richiesta soppressa.', h: () => `
+  <span class="eyebrow">Recupero accesso</span><h2 class="h1">Controlla la tua email</h2>
+  <div class="banner info" role="status"><b>Richiesta registrata</b><p>Se l’indirizzo è associato a un account, riceverai un nuovo link. Usa quello arrivato per ultimo.</p></div>
+  <p class="small muted">Puoi chiederne un altro tra qualche minuto.</p>
+  <div class="actions"><button class="btn link" onclick="go('R2')">Usa un altro indirizzo</button><button class="btn link" onclick="go('R1')">Torna all’accesso</button></div>` };
+
+S.E5 = { t: 'Email scritta male / troppe richieste', note: 'Formato non valido: errore sul campo, nessuna richiesta. Troppe richieste dalla stessa connessione (429 per IP): messaggio generico con attesa.', h: () => `
+  <span class="eyebrow">Dimora Home</span><h2 class="h1">Recupera l’accesso</h2>
+  ${emailField('Scrivi un indirizzo email completo, per esempio nome@esempio.it.', 'giulia.esempio@')}
+  <div class="actions"><button class="btn primary">Invia il link</button></div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+  <div class="banner err" role="alert"><b>Troppe richieste</b><p>Abbiamo ricevuto troppe richieste da questa connessione. Attendi qualche minuto e riprova.</p></div>` };
+
+S.E6 = { t: 'Nuova password non valida', note: 'Errore sul campo, focus sul campo; il link resta valido finché non si salva con successo.', h: () => `
+  <span class="eyebrow">Recupero accesso</span><h2 class="h1">Scegli una nuova password</h2>
+  ${pw('np', 'Nuova password', 'Da 12 a 128 caratteri. Gli spazi contano e non vengono rimossi.', 'Usa almeno 12 caratteri.')}
+  <div class="actions"><button class="btn primary" onclick="go('R6')">Salva la nuova password</button></div>` };
+
+S.E7 = { t: 'Esito non confermato al salvataggio', note: 'Errore di rete dopo l’invio: non sappiamo se il link è stato consumato. Se il secondo tentativo risponde «link non valido», mostrare E2 con il suggerimento di provare la nuova password.', h: () => `
+  <span class="eyebrow">Recupero accesso</span><h2 class="h1">Scegli una nuova password</h2>
+  <div class="banner err" role="alert"><b>Esito non confermato</b><p>La connessione si è interrotta: la password potrebbe essere già cambiata. Riprova con lo stesso pulsante; se il link risulta non più valido, prova ad accedere con la nuova password.</p></div>
+  ${pw('np', 'Nuova password', 'Da 12 a 128 caratteri.')}
+  <div class="actions"><button class="btn primary" onclick="go('E2')">Riprova</button><button class="btn link" onclick="go('R1')">Vai all’accesso</button></div>` };
+
+S.E8 = { t: 'Link aperto con un altro account connesso', note: 'Il link non viene consumato. Chiediamo di uscire per evitare di cambiare la password di un account mentre si è dentro un altro. Non mostriamo a quale account appartiene il link.', acc: 'Marco Prova · Esci', h: () => `
+  <span class="eyebrow">Recupero accesso</span><h2 class="h1">Sei già connesso</h2>
+  <p>Stai usando Dimora come <strong>Marco Prova</strong>. Per scegliere una nuova password con questo link, esci prima da questo account.</p>
+  <div class="actions"><button class="btn primary" onclick="go('R5')">Esci e continua</button><button class="btn link">Resta connesso</button></div>
+  <p class="small muted">Il link resta valido per il tempo indicato nell’email.</p>` };
+
+S.E9 = { t: 'Sessione terminata su un altro dispositivo', note: 'Dopo il cambio password le altre sessioni sono revocate. Alla prossima azione: ritorno all’accesso con un messaggio neutro (non diciamo perché, non mostriamo dati). Le bozze non salvate si perdono.', h: () => `
+  <span class="eyebrow">Dimora Home</span><h2 class="h1">Accedi</h2>
+  <div class="banner info"><b>Accesso richiesto</b><p>La sessione su questo dispositivo è terminata, per esempio dopo un cambio password. Accedi di nuovo per continuare.</p></div>
+  ${emailField('')}${pw('lp', 'Password')}
+  <p style="margin:-6px 0 0"><button class="btn link" onclick="go('R2')">Hai dimenticato la password?</button></p>
+  <div class="actions"><button class="btn primary">Accedi</button></div>` };
+
+S.E10 = { t: 'Registrazione con email già usata', note: 'Il testo attuale («Registrazione non completabile con questi dati.») resta neutro; si aggiunge l’uscita verso accesso e recupero, senza confermare che l’account esiste.', h: () => `
+  <span class="eyebrow">Dimora Home</span><h2 class="h1">Crea un account</h2>
+  <div class="banner err" role="alert"><b>Registrazione non completata</b><p>Registrazione non completabile con questi dati.</p><p>Se hai già un account, <button class="btn link" onclick="go('R1')">accedi</button> oppure <button class="btn link" onclick="go('R2')">recupera l’accesso</button>.</p></div>
+  <div class="field"><label>Nome</label><div class="input"><input value="Giulia Esempio"></div></div>${emailField('', EMAIL)}${pw('rp', 'Password', 'Da 12 a 128 caratteri.')}
+  <div class="actions"><button class="btn primary">Crea account</button></div>` };
+
+S.V1 = { t: 'Nuovo account: conferma l’email', note: 'Per gli account del pilota. L’utente è autenticato: mostrare il SUO indirizzo è corretto. Si può usare Casa, Attività e Spese; i caricamenti attendono la conferma.', acc: 'Giulia Esempio · Esci', h: () => `
+  <span class="eyebrow">Dimora Home</span><h2 class="h1">Inizia con Dimora</h2>
+  <div class="banner warn" role="status"><b>Conferma la tua email</b><p>Ti abbiamo chiesto di confermare <strong>${EMAIL}</strong>: apri il link che riceverai. Serve per recuperare l’accesso se dimentichi la password e per caricare documenti.</p>
+  <div class="actions" style="margin-top:8px"><button class="btn small" onclick="go('V3')">Invia di nuovo il link</button><button class="btn link" onclick="go('V4')">Apri l’email dimostrativa →</button></div></div>
+  <div class="card"><b>Crea la tua prima casa</b><p class="small muted">Puoi farlo anche prima di confermare l’email.</p></div>` };
+
+S.V2 = { t: 'Documenti: caricamento in attesa della conferma', note: 'Il pulsante «Carica documento» resta visibile ma porta a questa spiegazione invece del modulo. Nessun blocco silenzioso, nessun errore 403 generico.', acc: 'Giulia Esempio · Esci', h: () => `
+  <span class="eyebrow">Casa prova</span><h2 class="h1">Documenti</h2>
+  <div class="banner warn"><b>Prima conferma la tua email</b><p>Per caricare documenti apri il link che abbiamo chiesto di inviare a <strong>${EMAIL}</strong>.</p>
+  <div class="actions" style="margin-top:8px"><button class="btn small" onclick="go('V3')">Invia di nuovo il link</button></div></div>
+  <p class="muted small">Nessun documento in questa casa.</p>` };
+
+S.V3 = { t: 'Verifica: invio ripetuto', note: 'Risposta neutra anche qui: non promettiamo che l’email sia partita.', acc: 'Giulia Esempio · Esci', h: () => `
+  <span class="eyebrow">Dimora Home</span><h2 class="h1">Conferma la tua email</h2>
+  <div class="banner info" role="status"><b>Richiesta registrata</b><p>Se non trovi l’email entro qualche minuto, controlla lo spam. Il link vale 24 ore.</p></div>
+  <details><summary>L’indirizzo è sbagliato?</summary><p>In questa versione l’indirizzo non si può cambiare. Crea un nuovo account con l’indirizzo corretto: i dati di questo account non vengono trasferiti.</p></details>` };
+
+S.V4 = { t: 'Email di conferma e esito', note: 'Il link conferma l’indirizzo, non cambia la password e non crea una sessione nuova. Se l’utente era già connesso nello stesso browser, continua normalmente.', h: () => `
+  <p><span class="demo-tag">EMAIL DIMOSTRATIVA</span></p>
+  <div class="mail"><div class="hdr"><div><b>A:</b> ${EMAIL}</div><div><b>Oggetto:</b> Conferma la tua email per Dimora</div></div>
+  <div class="body"><p>Per confermare questo indirizzo apri il link qui sotto. Vale 24 ore.</p><p><button class="btn primary" onclick="document.getElementById('vok').hidden=false">Conferma l’email</button></p><p class="small">Se non hai creato un account Dimora, ignora questa email.</p></div></div>
+  <div id="vok" hidden><div class="banner ok" role="status"><b>Email confermata</b><p>Ora puoi caricare documenti e, se servirà, recuperare l’accesso con questo indirizzo.</p></div>
+  <div class="actions"><button class="btn primary">Vai a Dimora</button></div></div>
+  <p class="small muted">Link scaduto o già usato: «Link non più valido. Accedi e chiedi un nuovo link di conferma.»</p>` };
+
+S.V5 = { t: 'Account esistente non verificato', note: 'Account creati prima della verifica: nessun badge «verificato» inventato, nessun blocco retroattivo. Il limite è detto dove conta (prima di caricare).', acc: 'Giulia Esempio · Esci', h: () => `
+  <span class="eyebrow">Casa prova</span><h2 class="h1">Carica documento</h2>
+  <div class="banner info"><b>Email non ancora confermata</b><p>Se dimentichi la password, il recupero funziona solo se l’indirizzo dell’account è corretto e lo ricevi. <button class="btn link" onclick="go('V3')">Conferma ora</button></p></div>
+  <div class="field"><label>File</label><span class="hint">PDF, JPEG o PNG, massimo 20 MiB.</span><div class="input"><input type="file" disabled></div></div>` };
+
+S.P1 = { t: 'Prova personale: modulo di caricamento', note: 'Proposta di testi al punto d’uso (raccomandazioni 5 e 6). Il resto del modulo è quello esistente, osservato nel prodotto reale (screenshot 02).', acc: 'Giulia Esempio · Esci', h: () => `
+  <span class="eyebrow">Casa prova</span><h2 class="h1">Carica documento</h2>
+  <div class="banner warn"><b>Prova personale: inizia da documenti non delicati</b><p>Per esempio un manuale, una garanzia o una fattura di manutenzione. Evita documenti d’identità, sanitari o bancari.</p><p>In questa versione un documento caricato <strong>non si può eliminare</strong> da Dimora. Conserva sempre anche il tuo originale.</p></div>
+  <div class="field"><label>File</label><span class="hint">PDF, JPEG o PNG, massimo 20 MiB.</span><div class="input"><input type="file"></div>
+  <span class="ferr">Formato non supportato: puoi caricare PDF, JPEG o PNG. Le foto di iPhone in formato HEIC vanno prima salvate come JPEG.</span></div>
+  <div class="field"><label>Chi può vederlo</label>
+  <div class="radio sel"><input type="radio" checked id="r1" name="v"><label for="r1"><b>Solo io</b><br><span class="hint">Solo tu puoi vedere e scaricare questo documento, finché hai accesso alla casa.</span></label></div>
+  <div class="radio"><input type="radio" id="r2" name="v"><label for="r2"><b>Persone della casa</b><br><span class="hint">Visibile alle persone che hanno accesso a questa casa.</span></label></div></div>
+  <p class="upload-note">Le foto e i PDF scansionati vengono conservati, ma Dimora non ne legge il contenuto.</p>
+  <div class="actions"><button class="btn primary">Carica</button><button class="btn">Annulla</button></div>` };
+
+S.P2 = { t: 'Prova personale: esportazione', note: 'Distingue l’export esistente (ZIP degli originali selezionati) dall’esportazione completa dei dati, che oggi non esiste.', acc: 'Giulia Esempio · Esci', h: () => `
+  <span class="eyebrow">Casa prova</span><h2 class="h1">Documenti</h2>
+  <div class="card"><b>Esporta ZIP</b><p class="small">Lo ZIP contiene <strong>solo gli originali che selezioni</strong> (fino a 50 documenti e 100 MiB). Non contiene attività, spese, oggetti né i collegamenti fra loro.</p>
+  <p class="small muted">L’esportazione di tutti i tuoi dati non è ancora disponibile.</p>
+  <div class="actions"><button class="btn primary">Esporta ZIP</button></div></div>` };
+
+S.MX = { t: 'Matrice degli stati (sintesi)', note: 'Versione completa nel REPORT.md.', h: () => `
+  <h2 class="h1" style="font-size:22px">Matrice degli stati</h2><div class="mxwrap"><table class="mx">
+  <tr><th>Situazione</th><th>Risposta server (proposta)</th><th>Schermata</th></tr>
+  <tr><td>Richiesta, account esistente o no</td><td>202 neutro</td><td>R3</td></tr>
+  <tr><td>Email malformata</td><td>— (client) / 422</td><td>E5</td></tr>
+  <tr><td>Limite per indirizzo</td><td>202 neutro, nessun invio</td><td>R3/E4</td></tr>
+  <tr><td>Limite per connessione</td><td>429</td><td>E5</td></tr>
+  <tr><td>Canale email guasto</td><td>503 uniforme</td><td>E3</td></tr>
+  <tr><td>Link aperto</td><td>nessuna chiamata che consumi</td><td>R5 o E8</td></tr>
+  <tr><td>Password non valida</td><td>422 campo</td><td>E6</td></tr>
+  <tr><td>Link scaduto/usato/invalido</td><td>recovery_invalid</td><td>E2</td></tr>
+  <tr><td>Rete persa al salvataggio</td><td>sconosciuto</td><td>E7</td></tr>
+  <tr><td>Reset riuscito</td><td>204, sessioni revocate</td><td>R6 → R7</td></tr>
+  <tr><td>Altro dispositivo dopo reset</td><td>401</td><td>E9</td></tr>
+  </table></div>` };
+
+const nav = document.getElementById('navlist');
+nav.innerHTML = GROUPS.map(([g, ids]) => `<h2>${g}</h2>` + ids.map((id) => `<button class="nav" data-id="${id}" type="button">${id} · ${S[id].t}</button>`).join('')).join('');
+nav.addEventListener('click', (e) => { const b = e.target.closest('button.nav'); if (b) go(b.dataset.id); });
+document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+  state.w = b.dataset.w; document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  document.getElementById('frame').className = 'frame' + (state.w === 'desk' ? '' : ' ' + state.w);
+}));
+let timer;
+function render(id) {
+  const s = S[id];
+  document.getElementById('screen').innerHTML = s.h();
+  document.getElementById('note').innerHTML = `<strong>${id}</strong> · ${s.note}`;
+  document.getElementById('acc').textContent = s.acc || '';
+  document.querySelectorAll('button.nav').forEach((b) => b.setAttribute('aria-current', b.dataset.id === id));
+  document.getElementById('screen').focus();
+  clearInterval(timer);
+  if (id === 'R3' && state.cooldown) timer = setInterval(() => { state.cooldown = Math.max(0, state.cooldown - 1); const b = [...document.querySelectorAll('#screen .card button')][0]; if (b) { b.disabled = !!state.cooldown; b.textContent = state.cooldown ? 'Invia di nuovo tra 0:' + String(state.cooldown).padStart(2, '0') : 'Invia di nuovo'; } if (!state.cooldown) clearInterval(timer); }, 1000);
+}
+render('R1');
+</script>
+</body>
+</html>
