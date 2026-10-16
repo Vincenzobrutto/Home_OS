@@ -159,7 +159,7 @@ Commit: `c04b291` «test(frontend-v5): documenti semplificati fase 2, selezione 
 
 ## Fase 3 — Test, tastiera e mobile 320/390 · PRONTA per integrazione
 
-Commit: quello di questa fase (messaggio «documenti semplificati fase 3»).
+Commit: `8351a98` «feat(frontend-v5): documenti semplificati fase 3, harness V2, prove mobile e tastiera».
 
 **Harness (`demo/IntakeDemo.tsx`, solo dimostrativo, mai importato dall'app):**
 - nuovo scenario predefinito «V2: proposte, copia e conflitto»: APE, CILA+agibilità, regolamento, ricevuta, scansione, copia di un documento organizzato, visura in conflitto con un «Altro» confermato;
@@ -230,7 +230,7 @@ Nessun mock nel runtime reale: il componente non ha fallback, e senza `onOrganiz
 - **Commit, in ordine:**
   - `e9db445` (fase 1);
   - `c04b291` (fase 2);
-  - il commit della fase 3;
-  - il commit finale dell'indice (vedi `git log --oneline e769abf..HEAD`).
+  - `8351a98` (fase 3);
+  - il commit finale dell'indice (solo questo file, vedi `git log --oneline e769abf..HEAD`).
 - **Raccolta:** dal branch `claude/documenti-semplificati-20261016`, cherry-pick dei soli commit elencati.
 - **Prove:** `cd frontend-v5`, poi `npx vitest run --project mock src/document-intake`, `npx tsc -b --noEmit`, `npx eslint src/document-intake`.
