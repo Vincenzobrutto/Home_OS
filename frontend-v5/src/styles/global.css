@@ -11,7 +11,8 @@ html {
 
 body {
   margin: 0;
-  min-width: 320px;
+  /* Include lo spazio occupato dalle scrollbar classiche nei viewport stretti. */
+  min-width: 0;
   background: var(--color-bg);
   color: var(--color-ink);
   font: 15px/1.55 var(--font-body);
