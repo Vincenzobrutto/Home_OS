@@ -6,6 +6,7 @@ import { useCurrentHome } from '../routes/HomePages';
 import { DocumentIntakeAssistant } from '../document-intake/DocumentIntakeAssistant';
 import { canonical, type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type ReviewPayload, type WriteOutcome } from '../document-intake/model';
 import { IntakeClient, toUiBatch, type BatchWire } from './client';
+import { localAnalysisCandidates, organizeDocuments, type OrganizationPayload } from './organization';
 import { isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey, queryKeys } from '../api/queryKeys';
 import { Banner, ErrorState, Loading, ui, useDocumentTitle } from '../components/ui';
@@ -39,6 +40,24 @@ function IntakeContainer() {
   const current = useRef(wire); useEffect(() => { current.current = wire; }, [wire]);
   const stableKey = (op: string, body: unknown) => { const k = op + ':' + canonical(body); if (!keys.current.has(k)) keys.current.set(k, newIdempotencyKey()); return keys.current.get(k)!; };
   const adopt = (value: BatchWire) => { const target = [...prefix, 'batch', value.id]; if (alive.current && active.current === value.id && !denied(cache.getQueryState(target)?.error)) { cache.setQueryData<BatchWire>(target, prior => prior && Number(prior.version) > Number(value.version) ? prior : value); void cache.invalidateQueries({ queryKey: [...prefix, 'list'] }); } };
+  const analysisAttempts = useRef(new Set<string>());
+  useEffect(() => {
+    const items = localAnalysisCandidates(cap.isError ? undefined : cap.data, wire, analysisAttempts.current);
+    if (!wire || active.current !== wire.id || !items.length) return;
+    const batchId = wire.id, target = ['account', account.id, 'home', home.id, 'intake', 'batch', batchId];
+    for (const item of items) analysisAttempts.current.add(batchId + ':' + item.id);
+    const body = { provider: 'local_text_v1', items }, keyId = 'analysis:' + batchId + ':' + canonical(body);
+    if (!keys.current.has(keyId)) keys.current.set(keyId, newIdempotencyKey());
+    void client.post(batchId, '/analyses', body, keys.current.get(keyId)!).then(response => {
+      if (!alive.current || active.current !== batchId || denied(cache.getQueryState(target)?.error)) return;
+      cache.setQueryData<BatchWire>(target, prior => prior && Number(prior.version) > Number(response.wire.version) ? prior : response.wire);
+    }).catch(async error => {
+      if (!alive.current || active.current !== batchId) return;
+      if (isApiError(error) && error.status === 401) { await handleUnauthorized(cache); return; }
+      setProblem('La lettura locale non è stata confermata. I file restano caricati: rileggi il caricamento prima di riprovare.');
+      void cache.invalidateQueries({ queryKey: target });
+    });
+  }, [cap.data, cap.isError, wire, account.id, home.id, client, cache]);
   async function upload(value: BatchWire, itemId: string): Promise<WriteOutcome> {
     const file = files.current.get(itemId);
     if (!file) { retryItem.current = itemId; picker.current?.click(); return { status: 'rejected', code: 'validation', message: 'Seleziona di nuovo l’originale per questo file. I file già caricati restano disponibili.' }; }
@@ -101,6 +120,25 @@ function IntakeContainer() {
       return { status: 'done', results: p.items.map(i => ({ itemId: i.id, status: results[i.id]?.state === 'confirmed' ? 'confirmed' : 'rejected', ...(results[i.id]?.state !== 'confirmed' ? { message: 'Rileggi questo file: dati o permessi sono cambiati.' } : {}) })) };
     } catch (e) { if (recover && isApiError(e) && e.status === 404) return { status: 'not_found' }; const r = rejected(e); return r.status === 'confirmed' ? { status: 'done', results: [] } : r.status === 'rejected' ? { ...r, code: r.code === 'stale' ? 'conflict' : r.code } : r; }
   }
+  async function organize(p: OrganizationPayload, recover = false): Promise<ConfirmBatchOutcome | { status: 'not_found' }> {
+    if (!alive.current || active.current !== p.batchId || current.current?.id !== p.batchId) return { status: 'rejected', code: 'unavailable', message: 'Rileggi il caricamento corrente.' };
+    const key = stableKey('organize:' + p.batchId, p);
+    try {
+      const response = await organizeDocuments(client, p, key, recover);
+      adopt(response.wire);
+      if (alive.current && active.current === p.batchId) void cache.invalidateQueries({ queryKey: queryKeys.documentsAll(account.id, home.id) });
+      return response.outcome;
+    } catch (e) {
+      if (recover && isApiError(e) && e.status === 404 && e.code === 'intake_request_not_found') return { status: 'not_found' };
+      if (isApiError(e) && e.status === 401 && alive.current && active.current === p.batchId) await handleUnauthorized(cache);
+      if (alive.current && active.current === p.batchId) void cache.invalidateQueries({ queryKey: [...prefix, 'batch', p.batchId] });
+      const r = rejected(e); return r.status === 'rejected' ? { ...r, code: r.code === 'stale' ? 'conflict' : r.code } : { status: 'uncertain', message: userMessage(e) };
+    }
+  }
+  const directOrganizationActions = {
+    onOrganize: async (p: OrganizationPayload): Promise<ConfirmBatchOutcome> => { const result = await organize(p); return result.status === 'not_found' ? { status: 'uncertain' } : result; },
+    onRecoverOrganization: (p: OrganizationPayload) => organize(p, true),
+  };
   async function loadCandidates(itemId: string, more: boolean) {
     const batchId = active.current, previous = candidates[itemId]; setCandidates(p => ({ ...p, [itemId]: { items: more ? p[itemId]?.items ?? [] : [], hasMore: false, status: 'loading' } }));
     try {
@@ -119,7 +157,7 @@ function IntakeContainer() {
     {waiting && <p role="status">Caricamento dei file, al massimo due alla volta…</p>}
     {wire?.items.some(i => i.documentLink.state === 'linked' && i.analysisState === 'ready' && !i.proposal && i.reviewState === 'unreviewed') && <Banner><p>Per alcuni file il testo non identifica un tipo con sufficiente chiarezza. Puoi consultare l’originale, scegliere il tipo manualmente o decidere più avanti.</p></Banner>}
     {!id && <details><summary>PDF sintetici per provare il percorso</summary><p>Documenti di esempio, senza dati personali. Scaricali e selezionali nel caricamento.</p><ul>{['ape-sintetico.pdf', 'pratica-mista-sintetica.pdf', 'regolamento-sintetico.pdf', 'ricevuta-sintetica.pdf', 'senza-testo-sintetico.pdf'].map(name => <li key={name}><a href={'/intake-examples/' + name} download>{name}</a></li>)}</ul></details>}
-    <DocumentIntakeAssistant key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
+    <DocumentIntakeAssistant {...directOrganizationActions} key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
       load={unavailable ? { status: 'unavailable' } : cap.isPending || !!id && batch.isPending ? { status: 'loading' } : error ? { status: 'error', message: userMessage(error), retryable: true } : { status: 'ready' }}
       candidates={candidates} loadCandidates={(itemId, more) => void loadCandidates(itemId, more)} onSelectFiles={selected => void create(selected)} addingFiles={waiting}
       onReorganizeDocument={reorganize}

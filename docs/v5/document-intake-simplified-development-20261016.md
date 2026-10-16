@@ -24,3 +24,15 @@ Nessuna migrazione, modifica dei vecchi caricamenti o degli originali, creazione
 ## Prossimi passi
 
 Codex: collegare nuove callback, chiavi/ricevute nel container; avvio automatico della sola classificazione locale dopo acquisizione; test mirati del collegamento. Claude: area di lavoro e conferma diretta, selezione multipla, copie/conflitti, recupero, mobile e test componenti. Quindi integrazione dei soli commit pertinenti, build/lint frontend, regressioni mirate e collaudo browser con dati sintetici prima della prova del committente.
+
+## Aggiornamento notturno — collegamento Codex
+
+Il committente conferma Claude avviato e autorizza controllo ogni 30 minuti, raccolta e integrazione autonoma. Attivata nella chat l'automazione `dimora-v5-raccogli-claude-e-integra-documenti-v2`, da mettere PAUSED a integrazione/verifiche concluse. Piano operativo nel workspace `outputs/Dimora-V5-documenti-semplificati-piano-autonomo-20261016.md`. Non riattivate le automazioni precedenti.
+
+Adapter `src/intake-integration/organization.ts` collega POST/GET organizations: conserva corpo e chiave, riconosce ricevute parziali, completa con lo stesso POST, non converte esiti mancanti o malformati in successo. Callback additive passate dal container; l'interfaccia V1 attuale le ignora finché arriva il componente V2 di Claude. Nessuna modifica ai file di sua proprietà.
+
+Il container avvia automaticamente SOLO local_text_v1, con capability abilitata e externalTransmission false, su originali acquisiti e leggibili, con permessi edit, non ancora analizzati e senza decisioni saved/deferred/confirmed. Un tentativo automatico per file durante il montaggio: un errore/risposta ignota causa rilettura del server e avviso, non un ciclo di richieste. Reload rilegge prima lo stato del server; nessun replay di organizzazione con chiave nuova per recuperare una richiesta pendente nell'interfaccia. Avvio analisi non implica conferma delle proposte.
+
+Verifiche: build frontend TypeScript+Vite passata; ESLint src/intake-integration passato; 9/9 test in 3 file verdi. Coprono upload aggiunto nello stesso caricamento e autoanalisi del solo file nuovo conservando quello rimandato; autoanalisi da deep link con versioni correnti; errore con refetch senza loop; ricevuta parziale e key/corpo identici; esito completo senza altre scritture; errori/mancanze senza falsi successi; esclusione fonti perse, decisioni precedenti, capability esterna o senza permessi. Si tratta di test harness/componenti/trasporto simulato, non collaudo browser/API reale del nuovo frontend.
+
+Ultimo controllo Claude: modifiche in corso a model.ts, nessuna fase pronta ancora osservata. Il prossimo controllo deve leggere CONSEGNA.md e status/log, senza toccare il suo checkout né dedurre completamento dal dirty o da un solo commit. L'app aperta è ancora da portare al nuovo componente e il servizio API resta da aggiornare tramite launcher registrato, prima della prova reale sintetica.
