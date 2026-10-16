@@ -164,6 +164,27 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - Nessun professionista o recapito appare a membri o invitati.
 - **Effort indicativo.** M: nuova entità con collegamenti, contratto e backend.
 
+### BL-10b · Professionista e oggetto proposti dal documento (seconda tappa di BL-10)
+- **Cosa.** Quando l'utente analizza una fattura o un rapporto d'intervento, la bozza economica esistente propone, oltre alla spesa:
+  - **il professionista:** emittente letto dal documento (ragione sociale, P.IVA, telefono, email), da salvare nella mini-rubrica, oppure un professionista già esistente se coincide;
+  - **l'oggetto:** quello su cui è avvenuto l'intervento.
+
+  L'utente conferma tutto in un unico passaggio.
+- **Decisione del committente (16/10).** Caso d'uso reale da coprire: caricare il documento e ottenere insieme spesa, scheda del tecnico e collegamento all'oggetto.
+- **Prerequisito.** BL-10 (la mini-rubrica deve esistere). Estensione del contratto della bozza economica (S1) da parte di Codex.
+- **Guardrail.**
+  - Nulla viene creato senza conferma: ogni elemento proposto (spesa, professionista, collegamento) si può correggere o scartare singolarmente.
+  - Emittente non significa tecnico: negozi, utenze e bollette non diventano professionisti per default. La proposta mostra da dove ha letto il dato.
+  - Niente doppioni: confronto con i professionisti esistenti su P.IVA e nome, con unione decisa dall'utente.
+  - Il collegamento all'oggetto è proposto solo con un indizio: oggetto nominato nel documento, oppure analisi avviata dalla scheda dell'oggetto. Altrimenti resta vuoto.
+  - Privacy e provenienza come nel resto della Home: il dato confermato mostra il documento di origine.
+- **Accettazione.**
+  - Da una fattura sintetica di un tecnico si ottengono, con una sola conferma, la spesa, il professionista nuovo o esistente e il collegamento all'oggetto. Sulla scheda dell'oggetto compaiono spesa e professionista.
+  - Scartando il professionista si crea solo la spesa.
+  - Con un professionista già presente con la stessa P.IVA non si crea un doppione.
+  - Una bolletta non propone un professionista.
+- **Effort indicativo.** M: contratto della bozza, estrazione e UI della bozza.
+
 ## Fase 4 — Placeholder: non pianificare
 
 Il committente le considera di valore, ma per ora **non vanno pianificate né stimate**. Hanno rischi di dichiarazioni eccessive e di manutenzione: ognuna richiede **prima una fase di progettazione** dedicata. Solo dopo entrerà nel backlog di sviluppo con stime e criteri definitivi.
@@ -253,7 +274,7 @@ Le note qui sotto sono il punto di partenza per quella progettazione, non requis
 1. Fase 0: prerequisiti del pilota.
 2. Fase 1: BL-04 → BL-01 → BL-02.
 3. Fase 2: BL-03 Storia della casa e BL-07 Persone della casa. Codex sceglie l'ordine fra le due.
-4. Fase 3: BL-09, BL-10, BL-08. Decisione del committente (16/10): **si chiude la Home prima di passare ad Agenzie**.
+4. Fase 3: BL-09, BL-10 → BL-10b, BL-08. Decisione del committente (16/10): **si chiude la Home prima di passare ad Agenzie**.
 5. Agenzie.
 
 Fase 3 e Agenzie non hanno dipendenze bloccanti in nessuna direzione.
