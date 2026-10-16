@@ -24,6 +24,10 @@ Proposta Claude, condivisa con il committente nella sessione del 16/10. Serve a 
 - **BL-03 Storia della casa:** si fa **prima di Agenzie**.
 - **BL-07 Persone della casa:** rientra nel **ciclo Home**, prima di Agenzie.
 - **Fase 4 (BL-12…BL-16):** restano **placeholder non pianificati**. Ognuna richiede prima una fase di progettazione; solo dopo entra nel backlog di sviluppo con stime e criteri definitivi.
+- **Ordine:** la fase 3 si fa prima di Agenzie, così la Home si chiude per intero.
+- **BL-07:** invita solo il proprietario; quello che è privato resta privato.
+- **BL-08:** attivazione su richiesta, settimanale; nell'email titoli e date.
+- **BL-10:** mini-rubrica riusabile, al posto della versione minima.
 
 ## Principi validi per tutte le voci
 
@@ -110,26 +114,55 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
 ### BL-07 · Persone della casa
 - **Cosa.** Invitare familiari e coinquilini con ruolo membro o sola lettura. I ruoli esistono già nel server, ma la UI dice «gestione degli accessi non disponibile».
 - **Prerequisiti.** Progettazione di inviti, revoca e privacy al livello della C1. La progettazione va fatta dentro questo ciclo.
+- **Decisioni del committente (16/10).**
+  - Rientra nel ciclo Home, prima di Agenzie.
+  - **Invita solo il proprietario**, con ruolo membro o sola lettura. I membri non possono invitare.
+  - **Il privato resta privato.** Gli invitati vedono solo i contenuti marcati «Persone della casa», per esempio i documenti con quella visibilità. Promemoria, spese e oggetti personali restano visibili solo a chi li crea, come oggi.
+  - Nessuna spesa condivisibile in questo incremento.
 - **Accettazione.**
-  - Nessun dato personale di un membro diventa visibile ad altri.
+  - Solo il proprietario vede i comandi per invitare e revocare; per membro e sola lettura il server rifiuta queste operazioni.
+  - Nessun dato personale di un membro diventa visibile ad altri: liste, totali, conteggi, storia della casa (BL-03) ed esportazioni.
   - Revoca immediata.
-  - Il ruolo e i permessi sono spiegati prima della conferma.
-- **Decisione del committente (16/10).** Rientra nel ciclo Home, prima di Agenzie.
+  - Il ruolo e i permessi sono spiegati prima della conferma, sia a chi invita sia a chi accetta.
 
 ## Fase 3 — Chiusura della Home, prima di Agenzie
 
 ### BL-08 · Riepilogo via email delle scadenze
 - **Cosa.** Riepilogo periodico facoltativo delle scadenze personali. Con BL-05 escluso, è l'unico canale «push» previsto.
-- **Prerequisiti.** Fornitore email, consenso esplicito, preferenze e disiscrizione; nessun dato sensibile nel testo dell'email.
+- **Decisioni del committente (16/10).**
+  - **Su richiesta:** spento di default, lo attiva l'utente nelle preferenze (consenso esplicito).
+  - **Settimanale:** un'email solo se ci sono scadenze nel periodo coperto; nessuna email vuota.
+  - **Contenuto: titoli e date** delle proprie scadenze, più il collegamento a Dimora.
+  - **Escluso dall'email:** importi, documenti, nomi di altre persone, indirizzo e nome della casa.
+- **Prerequisiti.**
+  - Fornitore email: Codex propone un fornitore con trattamento dati nell'UE, il committente approva il costo.
+  - Disiscrizione con un clic e preferenza modificabile in qualunque momento.
+- **Accettazione.**
+  - Nessuna email senza attivazione esplicita.
+  - Dopo la disiscrizione non parte più nulla.
+  - L'email contiene solo scadenze personali dell'utente.
+  - Il collegamento richiede l'accesso: nessun token di accesso nell'URL.
 - **Effort indicativo.** M.
 
 ### BL-09 · Impegni e spese ricorrenti
 - **Cosa.** Rate, polizze e condominio come regole ricorrenti. È già pianificato come **S2 «Impegni e ricorrenze»** in `home-economy-module.md` §6.
 - **Nota.** È la base dati necessaria per BL-15.
 
-### BL-10 · Professionista collegato all'intervento
-- **Cosa.** Versione minima: nome e recapito facoltativi su lavoro e spesa, per ritrovare insieme intervento, fattura, garanzia e professionista (spunti §6).
-- **Nota.** La rubrica completa resta rinviata. Il committente decide se questa versione minima basta.
+### BL-10 · Mini-rubrica dei professionisti
+- **Cosa.** Un elenco dei professionisti della casa (nome, mestiere, recapito, nota) da scegliere su lavori e spese, e facoltativamente su attività e oggetti. Serve a ritrovare insieme intervento, fattura, garanzia e professionista (spunti §6).
+- **Decisione del committente (16/10).** Mini-rubrica riusabile, invece dei soli campi testo.
+- **Perimetro.** È una parte della rubrica «chi chiamare», che resta rinviata. Escluso:
+  - suggerimenti su chi chiamare;
+  - valutazioni o recensioni;
+  - marketplace o contatto automatico;
+  - import della rubrica del telefono.
+- **Privacy.** Come gli altri contenuti personali: ogni voce è visibile solo a chi l'ha creata. La condivisione con le persone della casa è eventualmente un incremento successivo.
+- **Accettazione.**
+  - Creare un professionista dalla scheda di un lavoro o di una spesa, senza uscire dal modulo, e riusarlo altrove.
+  - Dalla scheda del professionista si vedono i lavori, le spese e le attività collegate.
+  - Archiviare un professionista non cancella i collegamenti storici.
+  - Nessun professionista o recapito appare a membri o invitati.
+- **Effort indicativo.** M: nuova entità con collegamenti, contratto e backend.
 
 ## Fase 4 — Placeholder: non pianificare
 
@@ -224,10 +257,9 @@ Le note qui sotto sono il punto di partenza per quella progettazione, non requis
 5. Agenzie.
 
 Fase 3 e Agenzie non hanno dipendenze bloccanti in nessuna direzione.
-- **Decisioni da prendere prima di iniziare la fase 3:**
-  - fornitore email e modello di consenso per BL-08;
-  - se per BL-10 basta la versione minima.
-- **BL-08 non deve bloccare Agenzie.** Se resta in attesa di fornitore o consenso, la Home si chiude con BL-09 e BL-10 e BL-08 prosegue in parallelo.
+- **Decisioni di prodotto della fase 3:** prese il 16/10 (vedi BL-08 e BL-10).
+- **Da approvare dal committente:** il costo del fornitore email proposto da Codex.
+- **BL-08 non deve bloccare Agenzie.** Se resta in attesa del fornitore, la Home si chiude con BL-09 e BL-10 e BL-08 prosegue in parallelo.
 - **Servizio email riusabile.** Il servizio costruito per BL-08 servirà probabilmente anche ad Agenzie (per esempio gli inviti ai proprietari): progettarlo riusabile.
 
 La fase 4 (BL-12…BL-16) non è in sequenza: si progetta su richiesta del committente.
