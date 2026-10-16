@@ -256,7 +256,7 @@ describe('errori, contesto e privacy', () => {
 
   it('sola lettura e capacità disattivata: stati espliciti, nessun fallback', () => {
     const { unmount } = renderIntake(intakeProps({ batch: null, capabilities: { enabled: false, limits: mixedBatch().limits } }));
-    expect(screen.getByText(/non è ancora attivo su questo servizio/)).toBeInTheDocument();
+    expect(screen.getByText(/non è disponibile su questo servizio/)).toBeInTheDocument();
     expect(screen.queryByLabelText('File')).not.toBeInTheDocument();
     unmount();
     renderIntake(intakeProps({ batch: batchOf([corpus.ape()], { permissions: { upload: false, review: false, confirm: false } }) }));

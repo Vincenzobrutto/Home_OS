@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { intakeProps, renderIntake } from './testing/renderIntake';
@@ -25,5 +25,17 @@ describe('archivio assistito: navigazione di base (C1)', () => {
     const files = [new File(['a'], 'a.pdf', { type: 'application/pdf' }), new File(['b'], 'b.png', { type: 'image/png' })];
     await user.upload(screen.getByLabelText('File'), files);
     expect(props.onSelectFiles).toHaveBeenCalledWith(files);
+  });
+
+  it('lo stesso ingresso accetta un file singolo o più file trascinati', () => {
+    const props = intakeProps({ batch: null });
+    renderIntake(props);
+    const region = screen.getByRole('region', { name: 'Carica documenti' });
+    const one = new File(['a'], 'ape.pdf', { type: 'application/pdf' });
+    const two = new File(['b'], 'ricevuta.pdf', { type: 'application/pdf' });
+    fireEvent.drop(region, { dataTransfer: { files: [one] } });
+    expect(props.onSelectFiles).toHaveBeenLastCalledWith([one]);
+    fireEvent.drop(region, { dataTransfer: { files: [one, two] } });
+    expect(props.onSelectFiles).toHaveBeenLastCalledWith([one, two]);
   });
 });

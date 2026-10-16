@@ -12,6 +12,7 @@ async function open() {
   const app = renderApp({ path: '/accedi', backend });
   await screen.findByRole('heading', { name: 'Accedi' }); await app.user.type(screen.getByLabelText('Email'), account.email); await app.user.type(screen.getByLabelText('Password'), 'password-di-prova-001'); await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
   await waitFor(() => expect(app.router.state.location.pathname).toMatch(/^\/(case|home\/)/)); await app.router.navigate(`/home/${home.id}/documenti`); await screen.findByRole('heading', { name: 'Documenti', level: 1 });
+  await app.user.click(await screen.findByRole('button', { name: 'Esporta ZIP' }));
   await app.user.click(screen.getByText('Esporta i miei dati di questa casa'));
   return { app, backend, account, home };
 }

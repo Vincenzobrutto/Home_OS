@@ -2,7 +2,7 @@
 // con un cookie jar che imita il cookie httpOnly del browser.
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { RouterProvider, createMemoryRouter } from 'react-router';
+import { RouterProvider, createMemoryRouter, type RouteObject } from 'react-router';
 import { ApiClient, type FetchLike } from '../api/client';
 import { routes } from '../routes/routes';
 import { createQueryClient } from '../session/queryClient';
@@ -83,13 +83,18 @@ export function createFakeFetch(backend: FakeBackend, initialCookie?: string): F
   };
 }
 
-export function renderApp(opts: { path: string; backend?: FakeBackend; fetch?: FetchLike; cookie?: string }) {
+export function renderApp(opts: { path: string; backend?: FakeBackend; fetch?: FetchLike; cookie?: string; homeTestRoutes?: RouteObject[] }) {
   const backend = opts.backend ?? new FakeBackend();
   // Un cookie iniziale simula il ricaricamento della pagina con una sessione già attiva.
   const control = createFakeFetch(backend, opts.cookie);
   const api = new ApiClient({ fetch: opts.fetch ?? control.fetch });
   const queryClient = createQueryClient();
-  const router = createMemoryRouter(routes, { initialEntries: [opts.path] });
+  // Solo harness: collauda componenti riusati (es. uploader singolo in Spese)
+  // senza reintrodurre ingressi obsoleti nella navigazione prodotto.
+  const extend = (rows: RouteObject[]): RouteObject[] => rows.map(row => row.children ? {
+    ...row, children: [...extend(row.children), ...(row.path === 'home/:homeId' ? opts.homeTestRoutes ?? [] : [])],
+  } : row);
+  const router = createMemoryRouter(opts.homeTestRoutes ? extend(routes) : routes, { initialEntries: [opts.path] });
   const user = userEvent.setup();
   const utils = render(
     <AppProviders api={api} queryClient={queryClient}>

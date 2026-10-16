@@ -286,18 +286,25 @@ function Inner(props: DocumentIntakeAssistantProps) {
     const limits = batch?.limits ?? capabilities?.limits;
     return (
       <div className={styles.stack}>
-        <p className={styles.crumb}>Documenti / Organizza più documenti</p>
+        <p className={styles.crumb}>Documenti / Carica documenti</p>
         {steps}
-        {heading('Tutti i tuoi documenti. Ognuno al suo posto.', 'Carica un gruppo di file della casa: ti aiutiamo a riconoscerli e a trovare i collegamenti giusti, senza ricopiare tutto a mano.')}
+        {heading('Tutti i tuoi documenti. Ognuno al suo posto.', 'Carica uno o più file della casa: dopo il caricamento puoi rivedere le proposte e decidere come organizzarli.')}
         <div className={styles.layout}>
           <section className={ui.card}>
             {!capabilities?.enabled ? (
-              <Banner><p>Il caricamento di più documenti non è ancora attivo su questo servizio. Puoi continuare a caricare un file per volta da Documenti.</p></Banner>
+              <Banner><p>Il caricamento documenti non è disponibile su questo servizio. I documenti già presenti restano consultabili.</p></Banner>
             ) : !canUpload ? (
               <Banner><p>Con il tuo ruolo puoi consultare i documenti, ma non caricarne di nuovi.</p></Banner>
             ) : (
-              <div className={styles.drop}>
-                <h2>Scegli i documenti da caricare</h2>
+              <div className={styles.drop} role="region" aria-label="Carica documenti"
+                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
+                onDrop={e => {
+                  e.preventDefault();
+                  const files = Array.from(e.dataTransfer.files);
+                  if (files.length) props.onSelectFiles(files);
+                }}>
+                <h2>Trascina qui uno o più documenti</h2>
+                <p>Oppure selezionali da una cartella del tuo dispositivo.</p>
                 <label htmlFor={inputId} className={styles.legend}>File</label>
                 <input id={inputId} className={styles.fileInput} type="file" multiple accept={limits?.acceptedMimeTypes.join(',')}
                   onChange={(e) => { const files = e.target.files ? Array.from(e.target.files) : []; if (files.length) props.onSelectFiles(files); e.target.value = ''; }} />
@@ -324,7 +331,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
     const analyzable = items.filter(i => i.uploadState === 'stored' && i.analysisState === 'not_started').map(i => i.id);
     return (
       <div className={styles.stack}>
-        <p className={styles.crumb}>Documenti / Organizza più documenti</p>
+        <p className={styles.crumb}>Documenti / Carica documenti</p>
         {steps}
         {heading('Il lotto è pronto da organizzare.', 'Il caricamento conserva gli originali. L’analisi propone come organizzarli; le scelte vengono dopo.')}
         <div className={styles.layout}>

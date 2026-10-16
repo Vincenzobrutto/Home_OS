@@ -4,6 +4,7 @@ import { MiB } from '../lib/files';
 import { blobUrls, downloads } from '../test/browserStubs';
 import { FakeBackend, PNG_SIGNATURE, samplePdf } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
+import { SingleUploadHarness } from '../test/SingleUploadHarness';
 import type { renderApp as RenderApp } from '../test/harness';
 
 type App = ReturnType<typeof RenderApp>;
@@ -34,7 +35,7 @@ async function login(app: App, email: string, password: string) {
 }
 
 async function openDocuments(backend: FakeBackend, email: string, password: string, homeId: string) {
-  const app = renderApp({ path: '/accedi', backend });
+  const app = renderApp({ path: '/accedi', backend, homeTestRoutes: [{ path: 'single-upload-test', element: <SingleUploadHarness /> }] });
   await login(app, email, password);
   await app.router.navigate(`/home/${homeId}/documenti`);
   await screen.findByRole('heading', { level: 1, name: 'Documenti' });
@@ -45,7 +46,8 @@ const pdfFile = (name = 'rogito.pdf') => new File([samplePdf(name) as BlobPart],
 const posts = (backend: FakeBackend) => backend.log.filter((r) => r.method === 'POST' && /\/documents$/.test(r.path));
 
 async function openUpload(app: App) {
-  await app.user.click(screen.getByRole('button', { name: 'Carica documento' }));
+  await app.router.navigate(app.router.state.location.pathname.replace(/\/documenti$/, '/single-upload-test'));
+  await app.user.click(await screen.findByRole('button', { name: 'Apri uploader singolo di prova' }));
   return screen.findByRole('heading', { name: 'Carica documento' });
 }
 
@@ -55,7 +57,7 @@ describe('[mock] Documenti — archivio', () => {
     await openDocuments(backend, 'owner@example.test', PW.owner, home.id);
     expect(await screen.findByRole('heading', { name: 'Nessun documento in questa casa' })).toBeInTheDocument();
     const exportButton = screen.getByRole('button', { name: 'Esporta ZIP' });
-    expect(exportButton).toBeDisabled();
+    expect(exportButton).toBeEnabled();
     expect(screen.getByRole('heading', { name: 'Documenti', level: 1 }).parentElement).toContainElement(exportButton);
     const nav = screen.getAllByRole('navigation', { name: 'Sezioni di Casa Roma' })[0]!;
     expect(within(nav).getByRole('link', { name: /Documenti/ })).toHaveAttribute('aria-current', 'page');
@@ -70,6 +72,9 @@ describe('[mock] Documenti — archivio', () => {
     const app = await openDocuments(backend, 'owner@example.test', PW.owner, home.id);
     const list = await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(20);
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Carica documenti' })).toHaveAttribute('href', `/home/${home.id}/documenti/organizza`);
+    expect(screen.queryByRole('link', { name: 'Organizza più documenti' })).not.toBeInTheDocument();
     const first = within(list).getAllByRole('listitem')[0]!;
     expect(first).toHaveTextContent('Documento 25');
     expect(first).toHaveTextContent(/PDF · \d+ B/);
@@ -298,14 +303,14 @@ describe('[mock] Documenti — caricamento', () => {
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Regolamento', visibility: 'home' });
     const memberApp = await openDocuments(backend, 'member@example.test', PW.member, home.id);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
-    expect(screen.getByRole('button', { name: 'Carica documento' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Carica documenti' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Esporta ZIP' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     memberApp.unmount();
 
     await openDocuments(backend, 'viewer@example.test', PW.viewer, home.id);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
-    expect(screen.queryByRole('button', { name: 'Carica documento' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Carica documenti' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Esporta ZIP' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.getByText(/puoi consultare e scaricare i documenti visibili, non caricarne/)).toBeInTheDocument();
@@ -384,6 +389,21 @@ describe('[mock] Documenti — dettaglio, download ed export', () => {
     await waitFor(() => expect(downloads.map((d) => d.filename)).toEqual(['regolamento.pdf']));
   });
 
+  it('annullare la modalità export nasconde le caselle e non invia alcun file', async () => {
+    const { backend, owner, home } = documentsWorld();
+    await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Documento di prova' });
+    const app = await openDocuments(backend, 'owner@example.test', PW.owner, home.id);
+    await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    await app.user.click(screen.getByRole('button', { name: 'Esporta ZIP' }));
+    await app.user.click(screen.getByRole('checkbox', { name: /Documento di prova/ }));
+    await app.user.click(screen.getByRole('button', { name: 'Annulla selezione' }));
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(backend.log.some(row => row.path.endsWith('/export'))).toBe(false);
+    await app.user.click(screen.getByRole('button', { name: 'Esporta ZIP' }));
+    expect(screen.getByRole('checkbox', { name: /Documento di prova/ })).not.toBeChecked();
+  });
+
   it('export ZIP solo su richiesta esplicita: selezione, POST con gli id, file .zip salvato', async () => {
     const { backend, owner, home } = documentsWorld();
     const d1 = await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Uno' });
@@ -392,6 +412,8 @@ describe('[mock] Documenti — dettaglio, download ed export', () => {
     const app = await openDocuments(backend, 'owner@example.test', PW.owner, home.id);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
     expect(backend.log.some((r) => r.path.endsWith('/export'))).toBe(false);
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    await app.user.click(screen.getByRole('button', { name: 'Esporta ZIP' }));
     expect(screen.getByRole('button', { name: 'Esporta ZIP' })).toBeDisabled();
     expect(screen.getByText(/limite tecnico di questa versione/)).toBeInTheDocument();
     await app.user.click(screen.getByRole('checkbox', { name: /Seleziona «Uno»/ }));
@@ -403,6 +425,7 @@ describe('[mock] Documenti — dettaglio, download ed export', () => {
     const req = backend.log.find((r) => r.path.endsWith('/export'))!;
     expect(new Set((req.body as { documentIds: string[] }).documentIds)).toEqual(new Set([d1.id, d2.id]));
     expect(await screen.findByText('ZIP pronto')).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 
   it('export rifiutato (403): nessun file salvato, nessun export parziale', async () => {
@@ -412,6 +435,8 @@ describe('[mock] Documenti — dettaglio, download ed export', () => {
     const original = backend.handle.bind(backend);
     backend.handle = async (req) =>
       req.path.endsWith('/export') ? { status: 403, body: { error: { code: 'forbidden', message: 'Accesso non consentito.' } } } : original(req);
+    await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
+    await app.user.click(screen.getByRole('button', { name: 'Esporta ZIP' }));
     await app.user.click(await screen.findByRole('checkbox', { name: /Seleziona «Uno»/ }));
     await app.user.click(screen.getByRole('button', { name: 'Esporta ZIP' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Nessun file è stato esportato.');

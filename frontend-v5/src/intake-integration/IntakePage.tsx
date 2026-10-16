@@ -23,7 +23,7 @@ export function IntakePage() {
 }
 function IntakeContainer() {
   const home = useCurrentHome(), account = useAccount(), api = useApi(), cache = useQueryClient(), navigate = useNavigate(), [params, setParams] = useSearchParams();
-  useDocumentTitle('Organizza documenti · ' + home.name);
+  useDocumentTitle('Carica documenti · ' + home.name);
   const id = params.get('lotto'), client = useMemo(() => new IntakeClient(api, account.id, home.id), [api, account.id, home.id]);
   const prefix = ['account', account.id, 'home', home.id, 'intake'] as const, key = [...prefix, 'batch', id];
   const cap = useQuery({ queryKey: [...prefix, 'capabilities'], queryFn: ({ signal }) => client.capability(signal), retry: false });

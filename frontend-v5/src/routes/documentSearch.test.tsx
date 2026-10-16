@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { downloads } from '../test/browserStubs';
 import { FakeBackend, PNG_SIGNATURE, samplePdf } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
+import { SingleUploadHarness } from '../test/SingleUploadHarness';
 import type { renderApp as RenderApp } from '../test/harness';
 import { queryKeys } from '../api/queryKeys';
 
@@ -36,7 +37,7 @@ async function login(app: App, email: string, password: string) {
 }
 
 async function open(backend: FakeBackend, email: string, password: string, homeId: string, search = '') {
-  const app = renderApp({ path: '/accedi', backend });
+  const app = renderApp({ path: '/accedi', backend, homeTestRoutes: [{ path: 'single-upload-test', element: <SingleUploadHarness /> }] });
   await login(app, email, password);
   await app.router.navigate(`/home/${homeId}/documenti${search}`);
   await screen.findByRole('heading', { level: 1, name: 'Documenti' });
@@ -143,6 +144,7 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     const app = await open(backend, 'owner@example.test', PW.owner, home.id);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
     const before = listQueries(backend).length;
+    await app.user.click(screen.getByText('Filtri aggiuntivi'));
     fireEvent.change(screen.getByLabelText('Formato'), { target: { value: 'png' } });
     fireEvent.change(screen.getByLabelText('Visibilità'), { target: { value: 'home' } });
     expect(listQueries(backend)).toHaveLength(before);
@@ -309,6 +311,7 @@ describe('[mock] H2 ricerca — stati, paginazione e selezione', () => {
     const app = await open(backend, 'owner@example.test', PW.owner, home.id);
     await search(app, 'bolletta');
     await results();
+    await app.user.click(screen.getByRole('button', { name: 'Esporta ZIP' }));
     await app.user.click(screen.getByRole('checkbox', { name: /Seleziona «Bolletta 22»/ }));
     expect(screen.getByText(/1 selezionato/)).toBeInTheDocument();
     await app.user.click(screen.getByRole('button', { name: 'Mostra altri documenti' }));
@@ -317,6 +320,9 @@ describe('[mock] H2 ricerca — stati, paginazione e selezione', () => {
     expect(screen.getByText(/1 selezionato/)).toBeInTheDocument();
 
     await search(app, 'rogito');
+    await results();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    await app.user.click(screen.getByRole('button', { name: 'Esporta ZIP' }));
     await app.user.click(await screen.findByRole('checkbox', { name: /Seleziona «Rogito»/ }));
     expect(screen.getByText(/1 selezionato/)).toBeInTheDocument();
     await app.user.click(screen.getByRole('button', { name: 'Esporta ZIP' }));
@@ -347,11 +353,12 @@ describe('[mock] H2 ricerca — stati, paginazione e selezione', () => {
     expect(reloaded.router.state.location.search).toBe('?q=rogito');
   });
 
-  it('upload durante una ricerca: la variante filtrata viene riletta e trova il nuovo originale', async () => {
+  it('upload dal componente singolo riusato: la ricerca viene invalidata e trova il nuovo originale', async () => {
     const { backend, home } = world();
     const app = await open(backend, 'owner@example.test', PW.owner, home.id, '?q=rogito');
     await screen.findByRole('heading', { name: 'Nessun documento corrisponde ai filtri' });
-    await app.user.click(screen.getByRole('button', { name: 'Carica documento' }));
+    await app.router.navigate(`/home/${home.id}/single-upload-test?q=rogito`);
+    await app.user.click(await screen.findByRole('button', { name: 'Apri uploader singolo di prova' }));
     await screen.findByRole('heading', { name: 'Carica documento' });
     const file = new File([samplePdf('rogito') as BlobPart], 'Rogito 2020.pdf', { type: 'application/pdf' });
     await app.user.upload(screen.getByLabelText('File'), file);

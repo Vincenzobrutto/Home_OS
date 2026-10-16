@@ -67,14 +67,7 @@ export function DocumentsPage() {
   useDocumentTitle(`Documenti · ${home.name}`);
   const canUpload = home.permissions.includes('edit');
   const canExport = home.permissions.includes('export');
-  const [uploadOpen, setUploadOpen] = useState(false);
-  const [uploaded, setUploaded] = useState<DocumentDetail | null>(null);
   const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
-  const uploadResult = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (uploaded && document.activeElement === document.body) uploadResult.current?.focus();
-  }, [uploaded]);
-  const panelId = useId();
   const [params, setParams] = useSearchParams();
   const applied = useMemo(() => filtersFromParams(params), [params]);
   const appliedKey = filtersKey(applied);
@@ -99,59 +92,15 @@ export function DocumentsPage() {
         </div>
         {canUpload && (
           <div className={docs.toolbarActions}>
-            <Link to={`/home/${encodeURIComponent(home.id)}/documenti/organizza`} className={ui.btn}>Organizza più documenti</Link>
-            <Link
-              to={`/home/${encodeURIComponent(home.id)}/attivita?analizza=1`}
-              className={ui.btn}
-            >
+            <Link to={`/home/${encodeURIComponent(home.id)}/documenti/organizza`} className={cx(ui.btn, ui.primary)}>
+              <Icon name="plus" /> Carica documenti
+            </Link>
+            <Link to={`/home/${encodeURIComponent(home.id)}/attivita?analizza=1`} className={ui.btn}>
               Analizza documenti
             </Link>
-            {!uploadOpen && (
-          <button
-            type="button"
-            className={cx(ui.btn, ui.primary)}
-            aria-expanded={false}
-            aria-controls={panelId}
-            onClick={() => {
-              setUploaded(null);
-              setUploadOpen(true);
-            }}
-          >
-            <Icon name="plus" />
-            Carica documento
-          </button>
-            )}
           </div>
         )}
       </div>
-
-      {uploaded && (
-        <div className={docs.panel} role="status" tabIndex={-1} ref={uploadResult}>
-          <Banner title="Documento caricato">
-            <p>
-              «{uploaded.name}» è stato salvato in {home.name}.{' '}
-              <Link to={`/home/${encodeURIComponent(home.id)}/documenti/${encodeURIComponent(uploaded.id)}`}>
-                Apri il documento
-              </Link>
-            </p>
-          </Banner>
-        </div>
-      )}
-
-      {uploadOpen && (
-        <section id={panelId} className={cx(ui.card, docs.panel)} aria-labelledby={`${panelId}-title`}>
-          <UploadForm
-            home={home}
-            titleId={`${panelId}-title`}
-            onCancel={() => setUploadOpen(false)}
-            onUploaded={(doc) => {
-              setUploadOpen(false);
-              setUploaded(doc);
-            }}
-          />
-        </section>
-      )}
-
       {!canUpload && (
         <p className={cx(docs.note, docs.panel)}>
           Con il tuo ruolo puoi consultare e scaricare i documenti visibili, non caricarne di nuovi.
@@ -198,10 +147,8 @@ export function DocumentsPage() {
         onReset={() => apply(EMPTY_FILTERS)}
         canExport={canExport}
         exportSlot={exportSlot}
-        canUpload={canUpload && !uploadOpen}
-        onUpload={() => setUploadOpen(true)}
+        canUpload={canUpload}
       />
-      {canExport && <PersonalExportPanel key={`${home.id}-personal-export`} homeId={home.id} />}
       {canUpload && (
         <div className={styles.spaced}>
           <ExamplePdfs homeId={home.id} />
@@ -221,7 +168,6 @@ function DocumentsArchive(props: {
   canExport: boolean;
   exportSlot: HTMLSpanElement | null;
   canUpload: boolean;
-  onUpload: () => void;
 }) {
   const { home, canExport, filters } = props;
   const filtered = isFiltered(filters);
@@ -238,6 +184,7 @@ function DocumentsArchive(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- una sola pulizia per ogni 403
   }, [forbidden]);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [selecting, setSelecting] = useState(false);
   const [exported, setExported] = useState<number | null>(null);
 
   const items = useMemo(() => documents.data?.pages.flatMap((p) => p.items) ?? [], [documents.data]);
@@ -298,7 +245,11 @@ function DocumentsArchive(props: {
   if (items.length === 0 && filtered) {
     return (
       <div className={cx(ui.card, styles.unavailable)}>
-        {canExport && props.exportSlot && createPortal(<ExportIconButton label="Esporta ZIP" disabled hint="Nessun documento in questa raccolta da esportare" />, props.exportSlot)}
+        {canExport && props.exportSlot && createPortal(<ExportIconButton label="Esporta ZIP" disabled={selecting} onClick={() => setSelecting(true)} hint={selecting ? 'Nessun documento in questa raccolta da esportare' : 'Apri le opzioni di esportazione'} />, props.exportSlot)}
+        {canExport && selecting && <>
+          <button type="button" className={ui.btn} onClick={() => setSelecting(false)}>Annulla selezione</button>
+          <PersonalExportPanel homeId={home.id} />
+        </>}
         <h2 className={styles.cardTitle}>Nessun documento corrisponde ai filtri</h2>
         <p className={styles.muted} role="status">
           Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Modifica la ricerca o azzera i filtri.
@@ -313,19 +264,17 @@ function DocumentsArchive(props: {
   if (items.length === 0) {
     return (
       <div className={cx(ui.card, styles.unavailable)}>
-        {canExport && props.exportSlot && createPortal(<ExportIconButton label="Esporta ZIP" disabled hint="Nessun documento da esportare" />, props.exportSlot)}
+        {canExport && props.exportSlot && createPortal(<ExportIconButton label="Esporta ZIP" disabled={selecting} onClick={() => setSelecting(true)} hint={selecting ? 'Nessun documento da esportare' : 'Apri le opzioni di esportazione'} />, props.exportSlot)}
+        {canExport && selecting && <>
+          <button type="button" className={ui.btn} onClick={() => setSelecting(false)}>Annulla selezione</button>
+          <PersonalExportPanel homeId={home.id} />
+        </>}
         <h2 className={styles.cardTitle}>Nessun documento in questa casa</h2>
         <p className={styles.muted}>
           {props.canUpload
             ? 'Carica il primo originale: PDF, JPEG o PNG fino a 20 MiB.'
             : 'Non ci sono documenti visibili per il tuo account.'}
         </p>
-        {props.canUpload && (
-          <button type="button" className={cx(ui.btn, ui.primary)} onClick={props.onUpload}>
-            <Icon name="plus" />
-            Carica documento
-          </button>
-        )}
       </div>
     );
   }
@@ -348,6 +297,8 @@ function DocumentsArchive(props: {
       onSuccess: (zip) => {
         saveBlob(zip.blob, zip.filename ?? safeFilename(`Documenti ${home.name}.zip`));
         setExported(chosen.length);
+        setSelected(new Set());
+        setSelecting(false);
       },
     });
   };
@@ -356,12 +307,13 @@ function DocumentsArchive(props: {
     <section aria-labelledby="archivio-title">
       {canExport && props.exportSlot && createPortal(
         <ExportIconButton label={exporter.isPending ? 'Preparazione ZIP…' : 'Esporta ZIP'}
-          hint={exporter.isPending ? 'Preparazione ZIP…' : problem || 'Esporta i documenti selezionati in ZIP'}
-          onClick={runExport} disabled={!!problem} busy={exporter.isPending} />, props.exportSlot)}
+          hint={exporter.isPending ? 'Preparazione ZIP…' : selecting ? problem || 'Scarica i documenti selezionati in ZIP' : 'Seleziona i documenti da esportare'}
+          onClick={() => { if (selecting) runExport(); else { setExported(null); setSelecting(true); } }}
+          disabled={selecting && !!problem} busy={exporter.isPending} />, props.exportSlot)}
       <h2 id="archivio-title" className="visually-hidden">
         Archivio
       </h2>
-      {canExport && (
+      {canExport && selecting && (
         <div className={docs.toolbar}>
           <div className={docs.toolbarInfo} aria-live="polite">
             <strong>
@@ -377,6 +329,9 @@ function DocumentsArchive(props: {
             {selected.size > 0 && problem && <span className={docs.problem}>{problem}</span>}
           </div>
           <div className={docs.toolbarActions}>
+            <button type="button" className={cx(ui.btn, ui.small)} disabled={exporter.isPending} onClick={() => {
+              setSelecting(false); setSelected(new Set()); setExported(null); exporter.reset();
+            }}>Annulla selezione</button>
             {selected.size > 0 && (
               <button
                 type="button"
@@ -393,6 +348,7 @@ function DocumentsArchive(props: {
           </div>
         </div>
       )}
+      {canExport && selecting && <PersonalExportPanel homeId={home.id} />}
 
       {exporter.isError && (
         <div className={docs.panel}>
@@ -428,7 +384,7 @@ function DocumentsArchive(props: {
             doc={doc}
             homeId={home.id}
             backSearch={filtered ? filtersToParams(filters).toString() : ''}
-            selectable={canExport}
+            selectable={canExport && selecting}
             selected={selected.has(doc.id)}
             onToggle={() => toggle(doc.id)}
           />

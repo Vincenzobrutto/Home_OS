@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { expect, it, vi } from 'vitest';
 import { SearchForm } from './SearchForm';
 import { EMPTY_FILTERS, filtersFromParams, filtersToParams, sameFilters } from '../lib/documentSearch';
@@ -28,4 +29,17 @@ it('client sends collection with its page cursor; no collection param for all', 
   expect(urls[0]).toContain('collection=condominium'); expect(urls[0]).toContain('cursor=scoped-page');
   await api.listDocuments(home.id, {}, undefined, 'account-test', { ...EMPTY_FILTERS, collection: 'all' });
   expect(urls[1]).not.toContain('collection=');
+});
+
+it('additional filters collapse by default and open for applied filters', async () => {
+  const user = userEvent.setup();
+  const view = render(<SearchForm home={home} applied={EMPTY_FILTERS} maxQuery={120} autoFocus={false} onApply={vi.fn()} />);
+  expect(screen.getByLabelText('Formato')).not.toBeVisible();
+  await user.click(screen.getByText('Filtri aggiuntivi'));
+  expect(screen.getByRole('combobox', { name: 'Formato' })).toBeVisible();
+  await user.click(screen.getByText('Filtri aggiuntivi'));
+  expect(screen.getByLabelText('Formato')).not.toBeVisible();
+  view.rerender(<SearchForm home={home} applied={{ ...EMPTY_FILTERS, format: 'pdf' }} maxQuery={120} autoFocus={false} onApply={vi.fn()} />);
+  expect(screen.getByRole('combobox', { name: 'Formato' })).toHaveValue('pdf');
+  expect(screen.getByText('Filtri aggiuntivi · 1')).toBeInTheDocument();
 });

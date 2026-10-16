@@ -82,14 +82,16 @@ export function SearchForm(props: {
         <p className={ui.hint}>Tutti insieme oppure per raccolta. Ogni documento mantiene la sua visibilità.</p>
       </section>}
     <form role="search" aria-label={`Cerca nei documenti di ${props.home.name}`} className={cx(ui.card, docs.search)} onSubmit={onSubmit} noValidate>
-      <p className={docs.searchScope}>
+      <h2 className={docs.collectionTitle}>Cerca documenti</h2>
+      <p className="visually-hidden">
         Ricerca in: <strong>{props.home.name}</strong>
       </p>
-      <div className={ui.field}>
-        <label className={ui.label} htmlFor={`${id}-q`}>
+      <div className={docs.searchMain}>
+      <div className={cx(ui.field, docs.searchQuery)}>
+        <label className="visually-hidden" htmlFor={`${id}-q`}>
           Cerca nei documenti
         </label>
-        <span id={hintId} className={ui.hint}>
+        <span id={hintId} className="visually-hidden">
           {SEARCH_SCOPE_NOTE}
         </span>
         <input
@@ -112,6 +114,13 @@ export function SearchForm(props: {
           </span>
         )}
       </div>
+      <div className={docs.searchActions}>
+        <button type="submit" className={cx(ui.btn, ui.primary)}>Cerca</button>
+        <button type="button" className={ui.btn} onClick={reset} disabled={!canReset}>Azzera filtri</button>
+      </div>
+      </div>
+      <details className={docs.extraFilters} open={draft.format !== 'all' || draft.visibility !== 'all' || undefined}>
+      <summary>Filtri aggiuntivi{(draft.format !== 'all' || draft.visibility !== 'all') && ` · ${Number(draft.format !== 'all') + Number(draft.visibility !== 'all')}`}</summary>
       <div className={docs.searchFilters}>
         <label className={docs.filter}>
           Formato
@@ -143,15 +152,8 @@ export function SearchForm(props: {
             ))}
           </select>
         </label>
-        <div className={docs.searchActions}>
-          <button type="submit" className={cx(ui.btn, ui.primary)}>
-            Cerca
-          </button>
-          <button type="button" className={ui.btn} onClick={reset} disabled={!canReset}>
-            Azzera filtri
-          </button>
-        </div>
       </div>
+      </details>
     </form>
     </>
   );
