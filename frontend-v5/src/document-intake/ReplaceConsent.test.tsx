@@ -1,114 +1,136 @@
-import { act, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { buildReviewPayload, initialReviewDraft, replacesConfirmed, sameParts, type IntakeItem, type ReviewPayload, type WriteOutcome } from './model';
-import { batchOf, corpus } from './testing/fixtures';
+import { buildReviewPayload, chooseUpdate, initialReviewDraft, needsKeepOrUpdate, replacesConfirmed, sameParts, type IntakeItem, type OrganizeBatchPayload } from './model';
+import { batchOf, copyOfOrganized, corpus } from './testing/fixtures';
 import { intakeProps, renderIntake } from './testing/renderIntake';
 
 type User = ReturnType<typeof userEvent.setup>;
-const open = async (user: User, filename: string) => {
-  await user.click(screen.getByRole('button', { name: 'Rivedi le proposte →' }));
-  await user.click(screen.getByRole('button', { name: new RegExp(`^Rivedi ${filename.replace('.', '\\.')}`) }));
-  return screen.getByRole('dialog');
-};
-const consent = () => within(screen.getByRole('dialog')).queryByRole('checkbox', { name: /Sostituisci l’organizzazione confermata/ });
-const save = (user: User) => user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usa questa organizzazione' }));
-const sent = (fn: unknown) => vi.mocked(fn as (p: ReviewPayload) => Promise<WriteOutcome>).mock.calls.map(c => c[0]);
+const dlg = () => screen.getByRole('dialog');
+const open = (user: User, filename: string) => user.click(screen.getByRole('button', { name: new RegExp(`^Rivedi ${filename.replace('.', '\\.')}`) }));
+const consent = () => within(dlg()).queryByRole('checkbox', { name: /Sostituisci i dati già confermati/ });
+const primary = () => within(dlg()).getByRole('button', { name: /^(Conferma e organizza|Mantieni invariato|Mantieni i dati attuali|Scegli come procedere)$/ });
+const organized = (fn: unknown) => vi.mocked(fn as (p: OrganizeBatchPayload) => Promise<unknown>).mock.calls.map(c => c[0]);
 
-/** APE già organizzato dall'account con un titolo diverso dalla proposta corrente. */
+/** APE già organizzato dall'account con un titolo diverso dalla proposta corrente: conflitto. */
 const apeConfirmed = (over: Partial<IntakeItem> = {}): IntakeItem => ({
   ...corpus.ape(), organizationVersion: 3,
   confirmedOrganization: { title: 'APE appartamento', parts: [{ kind: 'ape', pageFrom: 1, pageTo: 8 }] }, ...over,
 });
 
-describe('B4-1 · consenso alla sostituzione di dati confermati', () => {
-  it('confronto visibile, casella non preselezionata, salvataggio bloccato finché non si sceglie', async () => {
+describe('V2 · conflitto con dati già confermati', () => {
+  it('DATI ATTUALI distinti dalla PROPOSTA DAL DOCUMENTO; nessuna scelta preselezionata, conferma bloccata', async () => {
     const user = userEvent.setup();
-    const props = intakeProps({ batch: batchOf([apeConfirmed()]) });
+    const props = intakeProps({ batch: batchOf([apeConfirmed(), corpus.rules()]) });
     renderIntake(props);
-    const d = await open(user, 'APE_Casa.pdf');
-    expect(within(d).getByText('Organizzazione già confermata')).toBeInTheDocument();
-    expect(within(d).getByText(/APE appartamento · APE · pagine 1–8/)).toBeInTheDocument();
-    expect(consent()).not.toBeChecked();
-    await save(user);
-    expect(within(d).getByRole('alert')).toHaveTextContent(/conferma la sostituzione oppure mantieni/);
-    expect(props.onSaveReview).not.toHaveBeenCalled();
-    await user.click(consent()!);
-    await save(user);
-    expect(sent(props.onSaveReview)[0]).toMatchObject({ expectedOrganizationVersion: 3, replaceOrganization: true, selection: { title: 'Attestato di prestazione energetica' } });
+    expect(screen.getByText('Dati diversi')).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /Seleziona APE appartamento|Seleziona Attestato/ })).not.toBeInTheDocument();
+    await open(user, 'APE_Casa.pdf');
+    expect(within(dlg()).getByRole('heading', { name: 'Controlla i dati diversi' })).toBeInTheDocument();
+    expect(within(dlg()).getByText('Dati attuali')).toBeInTheDocument();
+    expect(within(dlg()).getByText('Già confermati da te')).toBeInTheDocument();
+    expect(within(dlg()).getByText('Proposta dal documento')).toBeInTheDocument();
+    expect(within(dlg()).getByText('APE appartamento')).toBeInTheDocument();
+    for (const r of within(dlg()).getAllByRole('radio')) expect(r).not.toBeChecked();
+    expect(primary()).toHaveTextContent('Scegli come procedere');
+    expect(primary()).toBeDisabled();
   });
 
-  it('«Mantieni l’organizzazione confermata»: nessuna sostituzione, flag false con la versione letta', async () => {
+  it('«Mantieni i dati attuali»: applica i dati confermati, replace false con la versione letta', async () => {
     const user = userEvent.setup();
     const props = intakeProps({ batch: batchOf([apeConfirmed()]) });
     renderIntake(props);
-    const d = await open(user, 'APE_Casa.pdf');
-    await user.click(within(d).getByRole('button', { name: 'Mantieni l’organizzazione confermata' }));
+    await open(user, 'APE_Casa.pdf');
+    await user.click(within(dlg()).getByRole('radio', { name: /Mantieni i dati attuali/ }));
     expect(consent()).toBeNull();
-    expect(within(d).getByText(/coincide: nessuna sostituzione/)).toBeInTheDocument();
-    await save(user);
-    expect(sent(props.onSaveReview)[0]).toMatchObject({ expectedOrganizationVersion: 3, replaceOrganization: false, selection: { title: 'APE appartamento', parts: [{ kind: 'ape', pageFrom: 1, pageTo: 8 }] } });
+    await user.click(primary());
+    expect(organized(props.onOrganize)[0]!.items[0]).toMatchObject({ expectedOrganizationVersion: 3, replaceOrganization: false, selection: { title: 'APE appartamento', parts: [{ kind: 'ape', pageFrom: 1, pageTo: 8 }] } });
   });
 
-  it('il consenso decade se cambia il contenuto o se arriva una nuova versione dell’organizzazione', async () => {
+  it('«Usa la proposta»: consenso non preselezionato, necessario, poi replace true con la versione 3', async () => {
+    const user = userEvent.setup();
+    const props = intakeProps({ batch: batchOf([apeConfirmed()]) });
+    renderIntake(props);
+    await open(user, 'APE_Casa.pdf');
+    await user.click(within(dlg()).getByRole('radio', { name: /Usa la proposta/ }));
+    expect(within(dlg()).getByRole('textbox', { name: 'Titolo del documento' })).toHaveValue('Attestato di prestazione energetica');
+    expect(consent()).not.toBeChecked();
+    await user.click(primary());
+    expect(within(dlg()).getByRole('alert')).toHaveTextContent(/conferma la sostituzione/);
+    expect(props.onOrganize).not.toHaveBeenCalled();
+    await user.click(consent()!);
+    await user.click(primary());
+    expect(organized(props.onOrganize)[0]!.items[0]).toMatchObject({ expectedOrganizationVersion: 3, replaceOrganization: true, selection: { title: 'Attestato di prestazione energetica' } });
+  });
+
+  it('il consenso decade se cambia la proposta scelta o arriva una nuova versione dell’organizzazione', async () => {
     const user = userEvent.setup();
     const props = intakeProps({ batch: batchOf([apeConfirmed()]) });
     const view = renderIntake(props);
-    const d = await open(user, 'APE_Casa.pdf');
+    await open(user, 'APE_Casa.pdf');
+    await user.click(within(dlg()).getByRole('radio', { name: /Usa la proposta/ }));
     await user.click(consent()!);
-    await user.type(within(d).getByRole('textbox', { name: 'Nome da mostrare' }), ' 2026');
+    await user.type(within(dlg()).getByRole('textbox', { name: 'Titolo del documento' }), ' 2026');
     expect(consent()).not.toBeChecked();
     await user.click(consent()!);
     expect(consent()).toBeChecked();
-    // Risposta tardiva / altro dispositivo: l'organizzazione confermata passa alla versione 4.
     view.rerenderWith({ ...props, batch: batchOf([apeConfirmed({ organizationVersion: 4 })]) });
     expect(consent()).not.toBeChecked();
-    await save(user);
-    expect(props.onSaveReview).not.toHaveBeenCalled();
-  });
-
-  it('rimandare non sostituisce nulla: replace false con la versione letta', async () => {
-    const user = userEvent.setup();
-    const props = intakeProps({ batch: batchOf([apeConfirmed()]) });
-    renderIntake(props);
-    const d = await open(user, 'APE_Casa.pdf');
-    await user.click(within(d).getByRole('button', { name: 'Decidi più avanti' }));
-    expect(sent(props.onSaveReview)[0]).toEqual({ itemId: 'ape', expectedVersion: 1, expectedOrganizationVersion: 3, replaceOrganization: false, selection: { action: 'defer' } });
-  });
-
-  it('esito incerto dopo il consenso: payload congelato con replace true, solo verifica esplicita', async () => {
-    const user = userEvent.setup();
-    const onSaveReview = vi.fn(async (): Promise<WriteOutcome> => ({ status: 'uncertain' }));
-    const onRecoverReview = vi.fn(async () => ({ status: 'confirmed' as const }));
-    renderIntake(intakeProps({ batch: batchOf([apeConfirmed()]), onSaveReview, onRecoverReview }));
-    const d = await open(user, 'APE_Casa.pdf');
-    await user.click(consent()!);
-    await save(user);
-    expect(consent()).toBeDisabled();
-    await act(async () => { await user.click(within(d).getByRole('button', { name: 'Verifica l’esito' })); });
-    expect(onRecoverReview).toHaveBeenCalledWith(expect.objectContaining({ replaceOrganization: true, expectedOrganizationVersion: 3 }));
-    expect(onSaveReview).toHaveBeenCalledTimes(1);
+    await user.click(primary());
+    expect(props.onOrganize).not.toHaveBeenCalled();
   });
 });
 
-describe('B4-1 · confronto delle parti per tipo e intervallo', () => {
-  it('una copia riusa la proposta, ma conserva titolo e contenuti già confermati', () => {
-    const item: IntakeItem = { ...corpus.ape(), uploadState: 'duplicate', confirmedOrganization: null };
-    const draft = initialReviewDraft(item);
-    expect(draft.title).toBe(item.proposal!.title);
-    expect(draft.partIndexes).toEqual([0]);
-    expect(draft.duplicateMode).toBeNull();
-    const existing: IntakeItem = { ...item, confirmedOrganization: { title: 'Nome già scelto da me', parts: [{ kind: 'ape', pageFrom: null, pageTo: null }] } };
-    expect(initialReviewDraft(existing)).toMatchObject({ title: 'Nome già scelto da me', manualParts: existing.confirmedOrganization!.parts, replaceConsent: null, duplicateMode: null });
-    const unclassified: IntakeItem = { ...existing, confirmedOrganization: { ...existing.confirmedOrganization!, parts: [{ kind: 'other', pageFrom: null, pageTo: null }] } };
-    expect(initialReviewDraft(unclassified)).toMatchObject({ title: 'Nome già scelto da me', partIndexes: [0], manualParts: null, replaceConsent: null, duplicateMode: null });
+describe('V2 · copia già presente', () => {
+  it('Mantieni invariato: onResolveDuplicate, nessuna riclassificazione né secondo originale; esito «Mantenuto invariato»', async () => {
+    const user = userEvent.setup();
+    const props = intakeProps({ batch: batchOf([copyOfOrganized(), corpus.rules()]) });
+    renderIntake(props);
+    expect(screen.getByText('File già presente')).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /Seleziona APE appartamento/ })).not.toBeInTheDocument();
+    await open(user, 'APE_Casa_copia.pdf');
+    expect(within(dlg()).getByText(/Questo file è già nei tuoi Documenti/)).toBeInTheDocument();
+    expect(within(dlg()).getByText('Dati attuali')).toBeInTheDocument();
+    expect(primary()).toBeDisabled();
+    await user.click(within(dlg()).getByRole('radio', { name: /Mantieni invariato/ }));
+    await user.click(primary());
+    expect(props.onResolveDuplicate).toHaveBeenCalledWith('copia', 1);
+    expect(props.onOrganize).not.toHaveBeenCalled();
+    expect(screen.getByText(/mantenuto invariato\. Non è stato creato un secondo originale/)).toBeInTheDocument();
   });
-  it('ordine diverso delle stesse parti: nessuna sostituzione richiesta', () => {
+
+  it('Aggiorna: un solo originale, organizzazione diretta sulla copia con consenso se cambia dati confermati', async () => {
+    const user = userEvent.setup();
+    const props = intakeProps({ batch: batchOf([copyOfOrganized()]) });
+    renderIntake(props);
+    await open(user, 'APE_Casa_copia.pdf');
+    await user.click(within(dlg()).getByRole('radio', { name: /Aggiorna titolo o tipo/ }));
+    const title = within(dlg()).getByRole('textbox', { name: 'Titolo del documento' });
+    expect(title).toHaveValue('APE appartamento');
+    await user.type(title, ' 2026');
+    await user.click(within(dlg()).getByRole('radio', { name: /Solo alla casa/ }));
+    await user.click(primary());
+    expect(props.onOrganize).not.toHaveBeenCalled();
+    await user.click(consent()!);
+    await user.click(primary());
+    expect(organized(props.onOrganize)[0]).toMatchObject({ mode: 'single', items: [{ itemId: 'copia', expectedOrganizationVersion: 2, replaceOrganization: true, selection: { title: 'APE appartamento 2026' } }] });
+    expect(props.onResolveDuplicate).not.toHaveBeenCalled();
+  });
+});
+
+describe('V2 · modello per copie e conflitti', () => {
+  it('copie e conflitti richiedono la scelta; Aggiorna riparte dalla proposta; stesse parti in ordine diverso non sono un conflitto', () => {
+    const copy: IntakeItem = { ...corpus.ape(), uploadState: 'duplicate', confirmedOrganization: null };
+    expect(needsKeepOrUpdate(copy)).toBe(true);
+    expect(initialReviewDraft(copy).duplicateMode).toBeNull();
+    const unclassified: IntakeItem = { ...copy, confirmedOrganization: { title: 'Nome già scelto da me', parts: [{ kind: 'other', pageFrom: null, pageTo: null }] } };
+    expect(initialReviewDraft(unclassified)).toMatchObject({ title: 'Nome già scelto da me', duplicateMode: null });
+    expect(chooseUpdate(unclassified)).toMatchObject({ title: copy.proposal!.title, partIndexes: [0], manualParts: null, duplicateMode: 'organize' });
     expect(sameParts([{ kind: 'cila', pageFrom: 1, pageTo: 10 }, { kind: 'agibility', pageFrom: 11, pageTo: 14 }], [{ kind: 'agibility', pageFrom: 11, pageTo: 14 }, { kind: 'cila', pageFrom: 1, pageTo: 10 }])).toBe(true);
-    expect(sameParts([{ kind: 'cila', pageFrom: 1, pageTo: 10 }], [{ kind: 'cila', pageFrom: 1, pageTo: 9 }])).toBe(false);
-    const item: IntakeItem = { ...corpus.building(), organizationVersion: 2, confirmedOrganization: { title: 'Pratica edilizia con più contenuti', parts: [{ kind: 'agibility', pageFrom: 11, pageTo: 14 }, { kind: 'cila', pageFrom: 1, pageTo: 10 }] } };
-    const draft = { ...initialReviewDraft(item), partIndexes: [0, 1] };
-    expect(replacesConfirmed(draft, item)).toBe(false);
-    expect(buildReviewPayload(draft, item, [])).toMatchObject({ replaceOrganization: false, expectedOrganizationVersion: 2 });
+    const same: IntakeItem = { ...corpus.building(), organizationVersion: 2, confirmedOrganization: { title: 'Pratica edilizia con più contenuti', parts: [{ kind: 'agibility', pageFrom: 11, pageTo: 14 }, { kind: 'cila', pageFrom: 1, pageTo: 10 }] } };
+    expect(needsKeepOrUpdate(same)).toBe(false);
+    const draft = initialReviewDraft(same);
+    expect(replacesConfirmed(draft, same)).toBe(false);
+    expect(buildReviewPayload(draft, same, [])).toMatchObject({ replaceOrganization: false, expectedOrganizationVersion: 2 });
   });
 });

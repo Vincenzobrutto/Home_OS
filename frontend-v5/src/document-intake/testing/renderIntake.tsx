@@ -2,7 +2,7 @@
 import { render } from '@testing-library/react';
 import { vi } from 'vitest';
 import { DocumentIntakeAssistant, type DocumentIntakeAssistantProps } from '../DocumentIntakeAssistant';
-import type { ConfirmBatchOutcome, ConfirmBatchPayload, WriteOutcome } from '../model';
+import type { ConfirmBatchOutcome, ConfirmBatchPayload, OrganizeBatchPayload, WriteOutcome } from '../model';
 import { CONTEXT, LIMITS, mixedBatch } from './fixtures';
 
 export function intakeProps(over: Partial<DocumentIntakeAssistantProps> = {}): DocumentIntakeAssistantProps {
@@ -23,6 +23,9 @@ export function intakeProps(over: Partial<DocumentIntakeAssistantProps> = {}): D
     onResolveDuplicate: vi.fn(async (): Promise<WriteOutcome> => ({ status: 'confirmed' })),
     onConfirm: vi.fn(async (p: ConfirmBatchPayload): Promise<ConfirmBatchOutcome> => ({ status: 'done', results: p.items.map(i => ({ itemId: i.id, status: 'confirmed' as const })) })),
     onRecoverConfirmation: vi.fn(async () => ({ status: 'not_found' as const })),
+    // V2: applicazione diretta; di default ogni elemento risulta applicato. Nessun trasporto reale.
+    onOrganize: vi.fn(async (p: OrganizeBatchPayload): Promise<ConfirmBatchOutcome> => ({ status: 'done', results: p.items.map(i => ({ itemId: i.itemId, status: 'confirmed' as const })) })),
+    onRecoverOrganization: vi.fn(async () => ({ status: 'not_found' as const })),
     openOriginal: vi.fn(async () => {}),
     ...over,
   };

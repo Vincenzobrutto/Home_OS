@@ -1,249 +1,239 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { DocumentCollectionFilters, type CollectionFilter } from './DocumentCollectionFilters';
-import type { ConfirmBatchOutcome, ConfirmBatchPayload, IntakeBatch, ItemConfirmResult, ReviewPayload, WriteOutcome } from './model';
+import type { ConfirmBatchOutcome, OrganizeBatchPayload } from './model';
 import { CONTEXT, batchOf, corpus, diagramCandidates, mixedBatch } from './testing/fixtures';
 import { intakeProps, renderIntake } from './testing/renderIntake';
+import { withServer } from './testing/server';
 
 type User = ReturnType<typeof userEvent.setup>;
-const toProposals = (user: User) => user.click(screen.getByRole('button', { name: 'Rivedi le proposte →' }));
-const reviewButton = (filename: string) => screen.getByRole('button', { name: new RegExp(`(Rivedi|Modifica scelta) ${filename.replace('.', '\\.')}`) });
 const dialog = () => screen.getByRole('dialog');
-const saveIn = (user: User) => user.click(within(dialog()).getByRole('button', { name: 'Usa questa organizzazione' }));
-const reviewCalls = (fn: unknown) => vi.mocked(fn as (p: ReviewPayload) => Promise<WriteOutcome>).mock.calls.map(c => c[0]);
-/** Container finto: applica il salvataggio della decisione al lotto (come farebbe il server), nient'altro. */
-function withSaving(initial: IntakeBatch) {
-  let batch = initial;
-  const props = intakeProps({ batch });
-  const view = renderIntake(props);
-  props.onSaveReview = vi.fn(async (p: ReviewPayload): Promise<WriteOutcome> => {
-    batch = { ...batch, items: batch.items.map(i => i.id === p.itemId ? { ...i, version: Number(i.version) + 1, selection: p.selection, reviewState: p.selection.action === 'defer' ? 'deferred' : 'saved' } : i) };
-    view.rerenderWith({ ...props, batch });
-    return { status: 'confirmed' };
-  });
-  view.rerenderWith({ ...props });
-  return { props, view, get batch() { return batch; } };
-}
+const open = (user: User, action: string, filename: string) => user.click(screen.getByRole('button', { name: new RegExp(`^${action} ${filename.replace('.', '\\.')}`) }));
+const confirmIn = (user: User) => user.click(within(dialog()).getByRole('button', { name: 'Conferma e organizza' }));
+const organized = (fn: unknown) => vi.mocked(fn as (p: OrganizeBatchPayload) => Promise<unknown>).mock.calls.map(c => c[0]);
 
-describe('casi del mockup approvato', () => {
-  it('APE: organizzazione a livello casa senza oggetto né spesa; la revisione salva solo la decisione', async () => {
+describe('V2 · revisione individuale con Conferma e organizza', () => {
+  it('APE: un solo passaggio applica direttamente, a livello casa, senza oggetti o spese', async () => {
     const user = userEvent.setup();
-    const { props } = withSaving(batchOf([corpus.ape()]));
-    await toProposals(user);
-    await user.click(reviewButton('APE_Casa.pdf'));
-    expect(within(dialog()).getByRole('radio', { name: /Solo alla casa/ })).toBeChecked();
-    await saveIn(user);
-    expect(reviewCalls(props.onSaveReview)[0]).toEqual({ itemId: 'ape', expectedVersion: 1, expectedOrganizationVersion: 0, replaceOrganization: false, selection: { action: 'organize', title: 'Attestato di prestazione energetica', parts: [{ kind: 'ape', pageFrom: 1, pageTo: 8 }], target: { kind: 'home' } } });
-    expect(props.onConfirm).not.toHaveBeenCalled();
-    expect(screen.getByText('Scelta pronta')).toBeInTheDocument();
+    const s = withServer(batchOf([corpus.ape()]));
+    expect(screen.getByRole('heading', { level: 1, name: 'Controlla e organizza.' })).toBeInTheDocument();
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
+    expect(within(dialog()).getByRole('heading', { name: 'Controlla la proposta' })).toBeInTheDocument();
+    expect(within(dialog()).getByText('Energia')).toBeInTheDocument();
+    await confirmIn(user);
+    expect(organized(s.props.onOrganize)).toEqual([{
+      batchId: 'batch-demo', expectedVersion: 1, mode: 'single',
+      items: [{ itemId: 'ape', expectedVersion: 1, expectedOrganizationVersion: 0, replaceOrganization: false, selection: { action: 'organize', title: 'Attestato di prestazione energetica', parts: [{ kind: 'ape', pageFrom: 1, pageTo: 8 }], target: { kind: 'home' } } }],
+    }]);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByText('Documento organizzato in Energia.')).toBeInTheDocument();
+    expect(screen.getByText('In Energia')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Hai finito questo caricamento.' })).toBeInTheDocument();
+    for (const fn of [s.props.onSaveReview, s.props.onConfirm]) expect(fn).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Scelta pronta|riepilogo|Scelte salvate/i)).not.toBeInTheDocument();
   });
 
-  it('CILA e agibilità: contenuti proposti preselezionati, correggibili prima della conferma', async () => {
+  it('CILA e agibilità: contenuti proposti preselezionati, correggibili, un solo originale', async () => {
     const user = userEvent.setup();
-    const { props } = withSaving(batchOf([corpus.building()]));
-    await toProposals(user);
-    await user.click(reviewButton('Pratica_CILA_e_agibilita.pdf'));
-    const boxes = within(dialog()).getAllByRole('checkbox');
-    expect(boxes.map(b => (b as HTMLInputElement).checked)).toEqual([true, true]);
-    await user.click(within(dialog()).getByRole('checkbox', { name: /CILA · pagine 1–10/ }));
-    await saveIn(user);
-    expect(reviewCalls(props.onSaveReview)[0]!.selection).toMatchObject({ parts: [{ kind: 'agibility', pageFrom: 11, pageTo: 14 }] });
+    const s = withServer(batchOf([corpus.building()]));
+    await open(user, 'Rivedi', 'Pratica_CILA_e_agibilita.pdf');
+    expect(within(dialog()).getByRole('checkbox', { name: /CILA · pagine 1–10/ })).toBeChecked();
+    await user.click(within(dialog()).getByRole('checkbox', { name: /Agibilità · pagine 11–14/ }));
+    expect(within(dialog()).getByText('Pratiche edilizie')).toBeInTheDocument();
+    await confirmIn(user);
+    expect(organized(s.props.onOrganize)[0]!.items[0]!.selection.parts).toEqual([{ kind: 'cila', pageFrom: 1, pageTo: 10 }]);
   });
 
-  it('schema ambiguo: nessuna scheda preselezionata; la scelta porta id e versione attesa', async () => {
+  it('il tipo di una proposta con un solo contenuto si cambia con un menu, senza perdere le pagine', async () => {
     const user = userEvent.setup();
-    const { props, view } = withSaving(batchOf([corpus.diagram()]));
-    await toProposals(user);
-    await user.click(reviewButton('Schema_impianto.pdf'));
-    expect(within(dialog()).getAllByRole('radio').every(r => !(r as HTMLInputElement).checked)).toBe(true);
-    await saveIn(user);
-    expect(within(dialog()).getByRole('alert')).toHaveTextContent(/Scegli una scheda esistente/);
-    await user.click(within(dialog()).getByRole('button', { name: 'Mostra le schede esistenti' }));
-    expect(props.loadCandidates).toHaveBeenCalledWith('schema', false);
-    view.rerenderWith({ ...props, candidates: { schema: diagramCandidates } });
+    const s = withServer(batchOf([corpus.ape()]));
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
+    await user.selectOptions(within(dialog()).getByRole('combobox', { name: 'Tipo di documento' }), 'energy_certificate');
+    await confirmIn(user);
+    expect(organized(s.props.onOrganize)[0]!.items[0]!.selection.parts).toEqual([{ kind: 'energy_certificate', pageFrom: 1, pageTo: 8 }]);
+  });
+
+  it('schema con destinazione ambigua: nessuna scheda preselezionata; la scelta porta id e versione attesa', async () => {
+    const user = userEvent.setup();
+    const s = withServer(batchOf([corpus.diagram(), corpus.ape()]), { candidates: { schema: diagramCandidates } });
+    await open(user, 'Rivedi', 'Schema_impianto.pdf');
+    expect(within(dialog()).getByRole('radio', { name: /Solo alla casa/ })).not.toBeChecked();
+    await confirmIn(user);
+    expect(within(dialog()).getByRole('alert')).toHaveTextContent('Scegli una scheda esistente');
     await user.click(within(dialog()).getByRole('radio', { name: /Caldaia · Locale tecnico/ }));
-    await saveIn(user);
-    expect(reviewCalls(props.onSaveReview)[0]!.selection).toMatchObject({ target: { kind: 'boiler', id: 'boiler-1', expectedVersion: 5 } });
+    await confirmIn(user);
+    expect(organized(s.props.onOrganize)[0]!.items[0]!.selection.target).toEqual({ kind: 'boiler', id: 'boiler-1', expectedVersion: 5 });
   });
 
-  it('regolamento condominiale: resta Solo io; ricevuta già collegata: nessun doppione, percorso ricevuta solo su richiesta', async () => {
+  it('regolamento: resta Solo io; ricevuta: si archivia soltanto, percorso dedicato solo su richiesta', async () => {
     const user = userEvent.setup();
     const onOpenReceiptFlow = vi.fn();
-    renderIntake(intakeProps({ batch: batchOf([corpus.rules(), corpus.receipt()]), onOpenReceiptFlow }));
-    await toProposals(user);
-    expect(screen.getAllByText(/Solo io/).length).toBe(2);
-    await user.click(reviewButton('Ricevuta_macchina_caffe.pdf'));
-    expect(within(dialog()).getByText(/Già collegata a Macchina del caffè · Cucina e alla spesa 179,90/)).toBeInTheDocument();
-    expect(within(dialog()).getByText(/non crea oggetti né spese/)).toBeInTheDocument();
+    const s = withServer(batchOf([corpus.rules(), corpus.receipt()]), { onOpenReceiptFlow });
+    expect(screen.getByText('Archivi soltanto la ricevuta: non viene creata una spesa.')).toBeInTheDocument();
+    await open(user, 'Rivedi', 'Regolamento_condominio.pdf');
+    expect(within(dialog()).getByText(/Solo io · Classificare non condivide/)).toBeInTheDocument();
+    await user.click(within(dialog()).getByRole('button', { name: 'Chiudi' }));
+    await open(user, 'Rivedi', 'Ricevuta_macchina_caffe.pdf');
+    expect(within(dialog()).getByText(/Già collegata a Macchina del caffè · Cucina e alla spesa/)).toBeInTheDocument();
     await user.click(within(dialog()).getByRole('button', { name: 'Apri nella ricevuta assistita' }));
     expect(onOpenReceiptFlow).toHaveBeenCalledWith('ricevuta');
+    expect(s.props.onOrganize).not.toHaveBeenCalled();
   });
 
-  it('copia identica: si riusa l’originale, nessuna analisi e nessuna eliminazione', async () => {
+  it('scansione senza testo: tipo da indicare, nessun tipo preselezionato («Altro» non è un default), nessuna fonte', async () => {
     const user = userEvent.setup();
-    const props = intakeProps({ batch: batchOf([corpus.ape(), corpus.copy()]) });
-    renderIntake(props);
-    expect(screen.getByText(/Stesso contenuto di «APE_Casa.pdf»\. Nessun originale viene eliminato/)).toBeInTheDocument();
-    await toProposals(user);
-    await user.click(reviewButton('APE_Casa_copia.pdf'));
-    await user.click(within(dialog()).getByRole('button', { name: 'Usa questa organizzazione' }));
-    expect(within(dialog()).getByRole('alert')).toHaveTextContent(/Scegli se usare solo il riferimento/);
-    await user.click(within(dialog()).getByRole('radio', { name: /Usa solo il riferimento/ }));
-    expect(within(dialog()).getByText(/nessuna eliminazione/)).toBeInTheDocument();
-    await user.click(within(dialog()).getByRole('button', { name: 'Usa l’originale esistente' }));
-    expect(props.onResolveDuplicate).toHaveBeenCalledWith('copia', 1);
-    expect(props.onSaveReview).not.toHaveBeenCalled();
+    const s = withServer(batchOf([corpus.scan()]));
+    expect(screen.getByText('Tipo da indicare')).toBeInTheDocument();
+    await open(user, 'Indica il tipo', 'Scansione_documento.pdf');
+    expect(within(dialog()).getByRole('heading', { name: 'Indica il tipo di documento' })).toBeInTheDocument();
+    expect((within(dialog()).getByRole('combobox', { name: 'Tipo di documento' }) as HTMLSelectElement).value).toBe('');
+    await user.type(within(dialog()).getByRole('textbox', { name: 'Titolo del documento' }), 'SCIA cucina');
+    await confirmIn(user);
+    expect(within(dialog()).getByRole('alert')).toHaveTextContent(/Aggiungi almeno un contenuto/);
+    await user.selectOptions(within(dialog()).getByRole('combobox', { name: 'Tipo di documento' }), 'scia');
+    expect(within(dialog()).getByText('Pratiche edilizie')).toBeInTheDocument();
+    await confirmIn(user);
+    expect(organized(s.props.onOrganize)[0]!.items[0]!.selection).toEqual({ action: 'organize', title: 'SCIA cucina', parts: [{ kind: 'scia', pageFrom: null, pageTo: null }], target: { kind: 'home' } });
+    expect(screen.queryByText(/Fonte · pagina/)).not.toBeInTheDocument();
   });
 
-  it('scansione non leggibile: classificazione manuale dell’intero documento, senza citazioni', async () => {
+  it('le decisioni vengono prima dell’anteprima: l’originale si apre su richiesta e solo allora si carica', async () => {
     const user = userEvent.setup();
-    const { props } = withSaving(batchOf([corpus.scan()]));
-    await toProposals(user);
-    await user.click(reviewButton('Scansione_documento.pdf'));
-    expect(within(dialog()).getByText(/nessun testo estratto e nessun dato ricostruito/)).toBeInTheDocument();
-    expect(within(dialog()).queryByText(/Fonte · pagina/)).not.toBeInTheDocument();
-    await user.type(within(dialog()).getByRole('textbox', { name: 'Nome da mostrare' }), 'Vecchio contratto caldaia');
-    await user.click(within(dialog()).getByRole('button', { name: 'Aggiungi un contenuto' }));
-    await user.selectOptions(within(dialog()).getByRole('combobox', { name: 'Tipo del contenuto 1' }), 'conformity_declaration');
-    await user.click(within(dialog()).getByRole('radio', { name: /Solo alla casa/ }));
-    await saveIn(user);
-    expect(reviewCalls(props.onSaveReview)[0]!.selection).toEqual({ action: 'organize', title: 'Vecchio contratto caldaia', parts: [{ kind: 'conformity_declaration', pageFrom: null, pageTo: null }], target: { kind: 'home' } });
+    const renderPreview = vi.fn(() => <p>ANTEPRIMA</p>);
+    renderIntake(intakeProps({ batch: batchOf([corpus.ape()]), renderPreview }));
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
+    const decision = within(dialog()).getByRole('region', { name: 'La tua scelta' });
+    const summary = within(dialog()).getByText('Vedi documento e fonte');
+    expect(decision.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(renderPreview).not.toHaveBeenCalled();
+    await user.click(summary);
+    expect(within(dialog()).getByText('ANTEPRIMA')).toBeInTheDocument();
+    expect(renderPreview).toHaveBeenCalledWith('ape', 1);
   });
 });
 
-describe('scelte, riepilogo e conferma parziale', () => {
-  it('chiudere e riaprire conserva la bozza; rimandare non entra nel riepilogo', async () => {
+describe('V2 · rinvio, chiusura e assenza della callback diretta', () => {
+  it('Decidi più avanti: persiste con onSaveReview (defer) e il documento passa in «Più tardi», riprendibile', async () => {
     const user = userEvent.setup();
-    const { props } = withSaving(batchOf([corpus.ape(), corpus.rules()]));
-    await toProposals(user);
-    await user.click(reviewButton('APE_Casa.pdf'));
-    const title = within(dialog()).getByRole('textbox', { name: 'Nome da mostrare' });
-    await user.clear(title); await user.type(title, 'APE 2026');
-    await user.click(within(dialog()).getByRole('button', { name: 'Chiudi senza modificare' }));
-    await user.click(reviewButton('APE_Casa.pdf'));
-    expect(within(dialog()).getByRole('textbox', { name: 'Nome da mostrare' })).toHaveValue('APE 2026');
-    await saveIn(user);
-    await user.click(reviewButton('Regolamento_condominio.pdf'));
+    const s = withServer(batchOf([corpus.ape(), corpus.rules()]));
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
     await user.click(within(dialog()).getByRole('button', { name: 'Decidi più avanti' }));
-    expect(reviewCalls(props.onSaveReview)[1]).toMatchObject({ itemId: 'condominio', selection: { action: 'defer' } });
-    await user.click(screen.getByRole('button', { name: 'Controlla il riepilogo →' }));
-    expect(screen.getByRole('heading', { level: 2, name: '1 decisione pronta' })).toBeInTheDocument();
-    expect(screen.queryByText('Regolamento del condominio')).not.toBeInTheDocument();
+    expect(vi.mocked(s.props.onSaveReview).mock.calls[0]![0]).toEqual({ itemId: 'ape', expectedVersion: 1, expectedOrganizationVersion: 0, replaceOrganization: false, selection: { action: 'defer' } });
+    expect(screen.getByText(/spostato in «Più tardi»/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Più tardi · 1' }));
+    expect(screen.getByText('Da riprendere')).toBeInTheDocument();
+    await open(user, 'Riprendi', 'APE_Casa.pdf');
+    expect(within(dialog()).getByRole('button', { name: 'Conferma e organizza' })).toBeEnabled();
+    expect(s.props.onOrganize).not.toHaveBeenCalled();
   });
 
-  it('conferma parziale: solo le decisioni incluse; esito per file e resto da rivedere', async () => {
-    const user = userEvent.setup();
-    const saved = (f: () => ReturnType<typeof corpus.ape>, title: string) => ({ ...f(), reviewState: 'saved' as const, selection: { action: 'organize' as const, title, parts: f().proposal!.parts, target: { kind: 'home' as const } } });
-    const onConfirm = vi.fn(async (p: ConfirmBatchPayload): Promise<ConfirmBatchOutcome> => ({ status: 'done', results: ([{ itemId: p.items[0]!.id, status: 'confirmed' }, { itemId: 'condominio', status: 'rejected', message: 'scelta cambiata' }] satisfies ItemConfirmResult[]).slice(0, p.items.length) }));
-    renderIntake(intakeProps({ batch: batchOf([saved(corpus.ape, 'APE'), saved(corpus.rules, 'Regolamento'), corpus.scan()]), onConfirm }));
-    await toProposals(user);
-    await user.click(screen.getByRole('button', { name: 'Controlla il riepilogo →' }));
-    await user.click(screen.getByRole('checkbox', { name: /Regolamento/ }));
-    const confirm = screen.getByRole('button', { name: 'Conferma le scelte' });
-    expect(confirm).toBeDisabled();
-    await user.click(screen.getByRole('checkbox', { name: /Ho controllato/ }));
-    await user.click(confirm);
-    expect(onConfirm.mock.calls[0]![0]).toEqual({ batchId: 'batch-demo', expectedVersion: 1, items: [{ id: 'ape', expectedVersion: 1 }] });
-    expect(await screen.findByRole('heading', { level: 1, name: /Più ordine/ })).toBeInTheDocument();
-    expect(screen.getByText(/2 file restano da rivedere/)).toBeInTheDocument();
+  it('una scelta legacy «saved» torna da rivedere: mai completata senza applicazione', () => {
+    const saved = { ...corpus.ape(), reviewState: 'saved' as const, selection: { action: 'organize' as const, title: 'APE', parts: corpus.ape().proposal!.parts, target: { kind: 'home' as const } } };
+    renderIntake(intakeProps({ batch: batchOf([saved, corpus.rules()]) }));
+    expect(screen.getByRole('button', { name: 'Da rivedere · 2' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Completati · 0' })).toBeInTheDocument();
+    expect(screen.queryByText(/Scelta pronta|Organizzato/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Rivedi APE_Casa\.pdf/ })).toBeInTheDocument();
   });
 
-  it('esito incerto: nessuna doppia conferma, scelte bloccate, recupero esplicito con lo stesso payload', async () => {
+  it('chiudere con modifiche chiede di scartarle; senza modifiche chiude subito; la bozza non resta in silenzio', async () => {
     const user = userEvent.setup();
-    let resolve!: (o: ConfirmBatchOutcome) => void;
-    const onConfirm = vi.fn<(p: ConfirmBatchPayload) => Promise<ConfirmBatchOutcome>>(() => new Promise(r => { resolve = r; }));
-    const onRecoverConfirmation = vi.fn(async (p: ConfirmBatchPayload) => ({ status: 'done' as const, results: p.items.map(i => ({ itemId: i.id, status: 'confirmed' as const })) }));
-    const item = { ...corpus.ape(), reviewState: 'saved' as const, selection: { action: 'organize' as const, title: 'APE', parts: corpus.ape().proposal!.parts, target: { kind: 'home' as const } } };
-    renderIntake(intakeProps({ batch: batchOf([item]), onConfirm, onRecoverConfirmation }));
-    await toProposals(user);
-    await user.click(screen.getByRole('button', { name: 'Controlla il riepilogo →' }));
-    await user.click(screen.getByRole('checkbox', { name: /Ho controllato/ }));
-    await user.dblClick(screen.getByRole('button', { name: 'Conferma le scelte' }));
-    expect(onConfirm).toHaveBeenCalledTimes(1);
-    await act(async () => resolve({ status: 'uncertain' }));
-    expect(screen.getByText('Esito non confermato')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '← Modifica le scelte' })).toBeDisabled();
-    expect(screen.getByRole('checkbox', { name: /APE/ })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Verifica l’esito' }));
-    expect(onRecoverConfirmation).toHaveBeenCalledWith(onConfirm.mock.calls[0]![0]);
-    expect(onConfirm).toHaveBeenCalledTimes(1);
-    expect(await screen.findByRole('heading', { level: 1, name: /Più ordine/ })).toBeInTheDocument();
+    renderIntake(intakeProps({ batch: batchOf([corpus.ape()]) }));
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
+    await user.click(within(dialog()).getByRole('button', { name: 'Chiudi' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
+    const title = within(dialog()).getByRole('textbox', { name: 'Titolo del documento' });
+    await user.clear(title); await user.type(title, 'APE mio');
+    await user.keyboard('{Escape}');
+    expect(within(dialog()).getByRole('alert')).toHaveTextContent('Hai modifiche non confermate');
+    expect(within(dialog()).getByRole('button', { name: 'Scarta le modifiche' })).toHaveFocus();
+    await user.click(within(dialog()).getByRole('button', { name: 'Continua a modificare' }));
+    expect(within(dialog()).getByRole('textbox', { name: 'Titolo del documento' })).toHaveValue('APE mio');
+    await user.click(within(dialog()).getByRole('button', { name: 'Chiudi' }));
+    await user.click(within(dialog()).getByRole('button', { name: 'Scarta le modifiche' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
+    expect(within(dialog()).getByRole('textbox', { name: 'Titolo del documento' })).toHaveValue('Attestato di prestazione energetica');
   });
 
-  it('salvataggio di una scelta con esito incerto: scelta bloccata e verificata, mai reinviata da sola', async () => {
+  it('callback diretta assente: azione disabilitata con il motivo, nessun percorso V1 né successo simulato', async () => {
     const user = userEvent.setup();
-    const props = intakeProps({ batch: batchOf([corpus.ape()]), onSaveReview: vi.fn(async (): Promise<WriteOutcome> => ({ status: 'uncertain' })) });
+    const props = intakeProps({ batch: mixedBatch(), onOrganize: undefined, onRecoverOrganization: undefined });
     renderIntake(props);
-    await toProposals(user);
-    await user.click(reviewButton('APE_Casa.pdf'));
-    await saveIn(user);
-    expect(within(dialog()).getByText('Esito non confermato')).toBeInTheDocument();
-    expect(within(dialog()).getByRole('textbox', { name: 'Nome da mostrare' })).toBeDisabled();
-    await user.click(within(dialog()).getByRole('button', { name: 'Verifica l’esito' }));
-    expect(props.onRecoverReview).toHaveBeenCalledWith(vi.mocked(props.onSaveReview).mock.calls[0]![0]);
-    expect(await within(dialog()).findByText(/non risulta salvata/)).toBeInTheDocument();
-    expect(props.onSaveReview).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByText(/La conferma diretta non è ancora disponibile/).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('checkbox', { name: /^Seleziona/ })).not.toBeInTheDocument();
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
+    expect(within(dialog()).getByRole('button', { name: 'Conferma e organizza' })).toBeDisabled();
+    expect(within(dialog()).getByRole('button', { name: 'Decidi più avanti' })).toBeEnabled();
+    for (const fn of [props.onConfirm, props.onSaveReview]) expect(fn).not.toHaveBeenCalled();
   });
 });
 
-describe('errori, contesto e privacy', () => {
+describe('V2 · errori, contesto, privacy e tastiera', () => {
+  it('rifiuto del singolo: resta nel dialogo con la scelta, nessun esito di successo', async () => {
+    const user = userEvent.setup();
+    const onOrganize = vi.fn(async (p: OrganizeBatchPayload) => ({ status: 'done' as const, results: [{ itemId: p.items[0]!.itemId, status: 'rejected' as const, message: 'La versione è cambiata: rileggi il documento.' }] }));
+    renderIntake(intakeProps({ batch: batchOf([corpus.ape()]), onOrganize }));
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
+    await confirmIn(user);
+    expect(within(dialog()).getByRole('alert')).toHaveTextContent('Non applicato: La versione è cambiata');
+    expect(screen.queryByText(/Documento organizzato/)).not.toBeInTheDocument();
+    expect(within(dialog()).getByRole('button', { name: 'Conferma e organizza' })).toBeEnabled();
+  });
+
   it('upload fallito: si riprova solo quel file; l’errore degli altri non blocca nulla', async () => {
     const user = userEvent.setup();
     const failed = { ...corpus.rules(), uploadState: 'failed' as const, analysisState: 'not_started' as const, error: { code: 'storage_unavailable', message: 'Caricamento interrotto.' } };
-    const props = intakeProps({ batch: batchOf([corpus.ape(), failed]), onRetryUpload: vi.fn(async (): Promise<WriteOutcome> => ({ status: 'uncertain' })) });
+    const props = intakeProps({ batch: batchOf([corpus.ape(), failed]), onRetryUpload: vi.fn(async () => ({ status: 'uncertain' as const })) });
     renderIntake(props);
-    expect(screen.getAllByRole('button', { name: 'Riprova questo file' })).toHaveLength(1);
     await user.click(screen.getByRole('button', { name: 'Riprova questo file' }));
     expect(props.onRetryUpload).toHaveBeenCalledWith('condominio');
-    expect(await screen.findByText(/Esito non noto: ricarica il lotto/)).toBeInTheDocument();
-    await toProposals(user);
-    expect(reviewButton('APE_Casa.pdf')).toBeEnabled();
+    expect(await screen.findByText(/Esito non noto: ricarica la pagina/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Rivedi APE_Casa\.pdf/ })).toBeEnabled();
   });
 
-  it('cambio di contesto e risposta tardiva: nessuna bozza o esito passa al nuovo account', async () => {
+  it('cambio di account con risposta tardiva: nessuna bozza, selezione o esito passa al nuovo contesto', async () => {
     const user = userEvent.setup();
-    let late!: (o: WriteOutcome) => void;
-    const props = intakeProps({ batch: batchOf([corpus.ape()]), onSaveReview: vi.fn(() => new Promise<WriteOutcome>(r => { late = r; })) });
+    let late!: (o: { status: 'done'; results: Array<{ itemId: string; status: 'confirmed' }> }) => void;
+    const props = intakeProps({ batch: batchOf([corpus.ape(), corpus.rules()]), onOrganize: vi.fn(() => new Promise<ConfirmBatchOutcome>(r => { late = r; })) });
     const view = renderIntake(props);
-    await toProposals(user);
-    await user.click(reviewButton('APE_Casa.pdf'));
-    const title = within(dialog()).getByRole('textbox', { name: 'Nome da mostrare' });
+    await user.click(screen.getByRole('checkbox', { name: 'Seleziona Regolamento del condominio' }));
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
+    const title = within(dialog()).getByRole('textbox', { name: 'Titolo del documento' });
     await user.clear(title); await user.type(title, 'Titolo privato A');
-    await saveIn(user);
-    view.rerenderWith({ ...props, contextKey: { ...CONTEXT, accountId: 'acc-B' }, batch: batchOf([corpus.ape()]) });
-    await act(async () => late({ status: 'rejected', code: 'conflict', message: 'Risposta tardiva per A' }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(document.body).not.toHaveTextContent(/Titolo privato A|Risposta tardiva per A/);
-    expect(screen.getByRole('heading', { level: 1, name: 'Il lotto è pronto da organizzare.' })).toBeInTheDocument();
+    await confirmIn(user);
+    view.rerenderWith({ ...props, contextKey: { ...CONTEXT, accountId: 'acc-B' }, batch: batchOf([corpus.ape(), corpus.rules()]) });
+    late({ status: 'done', results: [{ itemId: 'ape', status: 'confirmed' }] });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(document.body).not.toHaveTextContent(/Titolo privato A|Documento organizzato/);
+    expect(screen.getByRole('checkbox', { name: 'Seleziona Regolamento del condominio' })).not.toBeChecked();
   });
 
-  it('fonte revocata: titolo, estratti e scelta in cache spariscono; l’elemento esce dal riepilogo', async () => {
+  it('fonte revocata: titolo, estratti e scelta in cache spariscono; dialogo chiuso; non selezionabile', async () => {
     const user = userEvent.setup();
-    const saved = { ...corpus.ape(), reviewState: 'saved' as const, selection: { action: 'organize' as const, title: 'APE segreto', parts: corpus.ape().proposal!.parts, target: { kind: 'home' as const } } };
-    const props = intakeProps({ batch: batchOf([saved, corpus.rules()]) });
+    const props = intakeProps({ batch: batchOf([corpus.ape(), corpus.rules()]) });
     const view = renderIntake(props);
-    await toProposals(user);
-    expect(screen.getByText(/Attestato di prestazione energetica/)).toBeInTheDocument();
-    const revoked = { ...saved, documentLink: { state: 'unavailable' as const, document: { id: 'doc-ape', name: 'APE_Casa.pdf' } } };
+    await open(user, 'Rivedi', 'APE_Casa.pdf');
+    const revoked = { ...corpus.ape(), documentLink: { state: 'unavailable' as const, document: null } };
     view.rerenderWith({ ...props, batch: batchOf([revoked, corpus.rules()]) });
-    expect(document.body).not.toHaveTextContent(/Attestato di prestazione energetica|APE segreto|CLASSE ENERGETICA/i);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(/Attestato di prestazione|APE_Casa|CLASSE ENERGETICA/i);
     expect(screen.getByText('Non più disponibile')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Rivedi APE_Casa/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Controlla il riepilogo →' })).toBeDisabled();
+    expect(screen.queryByRole('checkbox', { name: /Seleziona Documento non disponibile/ })).not.toBeInTheDocument();
   });
 
-  it('tastiera: il dialogo prende il focus, confina Tab, Esc chiude e restituisce il focus', async () => {
+  it('tastiera: focus su Chiudi, Tab confinato fra Chiudi e la conferma, Esc chiude e restituisce il focus', async () => {
     const user = userEvent.setup();
     renderIntake(intakeProps({ batch: batchOf([corpus.ape()]) }));
-    await toProposals(user);
-    const trigger = reviewButton('APE_Casa.pdf');
+    const trigger = screen.getByRole('button', { name: /^Rivedi APE_Casa\.pdf/ });
     trigger.focus();
     await user.keyboard('{Enter}');
     expect(within(dialog()).getByRole('button', { name: 'Chiudi' })).toHaveFocus();
     await user.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(within(dialog()).getByRole('button', { name: 'Usa questa organizzazione' })).toHaveFocus();
+    expect(within(dialog()).getByRole('button', { name: 'Conferma e organizza' })).toHaveFocus();
     await user.keyboard('{Tab}');
     expect(within(dialog()).getByRole('button', { name: 'Chiudi' })).toHaveFocus();
     await user.keyboard('{Escape}');
@@ -256,8 +246,9 @@ describe('errori, contesto e privacy', () => {
     expect(screen.getByText(/non è disponibile su questo servizio/)).toBeInTheDocument();
     expect(screen.queryByLabelText('File')).not.toBeInTheDocument();
     unmount();
-    renderIntake(intakeProps({ batch: batchOf([corpus.ape()], { permissions: { upload: false, review: false, confirm: false } }) }));
-    expect(screen.queryByRole('button', { name: /Avvia/ })).not.toBeInTheDocument();
+    renderIntake(intakeProps({ batch: batchOf([corpus.ape(), corpus.rules()], { permissions: { upload: false, review: false, confirm: false } }) }));
+    expect(screen.getByText(/puoi consultare i documenti caricati, ma non organizzarli/)).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 });
 

@@ -200,15 +200,16 @@ export function itemStatus(raw: IntakeItem): ItemStatus {
 }
 
 export const STATUS_LABEL: Record<ItemStatus, string> = {
-  pending: 'In attesa', uploading: 'Caricamento…', upload_failed: 'Caricamento non riuscito', duplicate: 'Copia identica', stored: 'Originale acquisito',
-  analysis_waiting: 'Analisi in attesa', analysis_running: 'Analisi in corso', ready: 'Pronto da rivedere', needs_choice: 'Serve una scelta',
-  unreadable: 'Testo non leggibile', unsupported: 'Formato non analizzabile', analysis_failed: 'Analisi non riuscita', uncertain: 'Esito non noto',
-  saved: 'Scelta pronta', deferred: 'Rimandato', confirmed: 'Organizzato', unavailable: 'Non più disponibile',
+  pending: 'In attesa', uploading: 'Caricamento…', upload_failed: 'Caricamento non riuscito', duplicate: 'File già presente', stored: 'Caricato',
+  analysis_waiting: 'Lettura in attesa', analysis_running: 'Lettura in corso', ready: 'Proposta pronta', needs_choice: 'Destinazione da scegliere',
+  unreadable: 'Tipo da indicare', unsupported: 'Tipo da indicare', analysis_failed: 'Lettura non riuscita', uncertain: 'Esito non noto',
+  // `saved` legacy: decisione mai applicata, torna da rivedere (V2). Nessuno stato «Scelta pronta».
+  saved: 'Da rivedere', deferred: 'Da riprendere', confirmed: 'Organizzato', unavailable: 'Non più disponibile',
 };
 export const STATUS_TONE: Record<ItemStatus, 'ok' | 'warn' | 'neutral' | 'error'> = {
   pending: 'neutral', uploading: 'neutral', upload_failed: 'error', duplicate: 'warn', stored: 'ok',
-  analysis_waiting: 'neutral', analysis_running: 'neutral', ready: 'ok', needs_choice: 'warn', unreadable: 'neutral', unsupported: 'neutral',
-  analysis_failed: 'error', uncertain: 'warn', saved: 'ok', deferred: 'neutral', confirmed: 'ok', unavailable: 'neutral',
+  analysis_waiting: 'neutral', analysis_running: 'neutral', ready: 'ok', needs_choice: 'warn', unreadable: 'warn', unsupported: 'warn',
+  analysis_failed: 'error', uncertain: 'warn', saved: 'warn', deferred: 'warn', confirmed: 'ok', unavailable: 'neutral',
 };
 
 /** Filtri della revisione (conteggi esatti sul lotto in memoria: al massimo 20 elementi, nessuna paginazione). */
@@ -278,11 +279,8 @@ export function initialReviewDraft(raw: IntakeItem): ReviewDraft {
       duplicateMode: item.uploadState === 'duplicate' ? 'organize' : null,
     };
   }
-  if (item.uploadState === 'duplicate') {
-    const org = item.confirmedOrganization;
-    const suggestedUpgrade = !!org && org.parts.every(p => p.kind === 'other') && proposalParts.some(p => p.kind !== 'other');
-    return { title: org?.title ?? item.proposal?.title ?? '', partIndexes: org && !suggestedUpgrade ? [] : proposalParts.map((_, index) => index), manualParts: org && !suggestedUpgrade ? org.parts.map(p => ({ ...p })) : item.proposal ? null : [], target: null, replaceConsent: null, duplicateMode: null };
-  }
+  // Copia o conflitto (V2): nessuna scelta preselezionata fra «mantieni» e «aggiorna»; la bozza parte dai dati attuali.
+  if (needsKeepOrUpdate(item)) return { ...chooseKeep(item), duplicateMode: null };
   return {
     title: item.proposal?.title ?? item.confirmedOrganization?.title ?? '',
     // Proposte già selezionate per ridurre la compilazione; l'utente può correggerle
@@ -290,9 +288,27 @@ export function initialReviewDraft(raw: IntakeItem): ReviewDraft {
     partIndexes: proposalParts.map((_, index) => index),
     manualParts: item.proposal ? null : item.confirmedOrganization?.parts.map(p => ({ ...p })) ?? [],
     // Caso ambiguo: nessuna associazione preselezionata.
-    target: item.analysisState === 'needs_choice' ? null : item.proposal || item.confirmedOrganization ? { kind: 'home' } : null,
+    // Solo il caso ambiguo resta senza destinazione; altrimenti «Solo alla casa» (V2, anche per la classificazione manuale).
+    target: item.analysisState === 'needs_choice' ? null : { kind: 'home' },
     replaceConsent: null,
     duplicateMode: null,
+  };
+}
+
+/** «Mantieni i dati attuali»: titolo e parti già confermati (vuoti se la copia non è mai stata organizzata). */
+export function chooseKeep(raw: IntakeItem): ReviewDraft {
+  const org = visibleItem(raw).confirmedOrganization;
+  return { title: org?.title ?? '', partIndexes: [], manualParts: org ? org.parts.map(p => ({ ...p })) : [], target: { kind: 'home' }, replaceConsent: null, duplicateMode: 'reuse' };
+}
+/** «Aggiorna»: si riparte dalla proposta del documento (o dai dati attuali se non c'è proposta), da controllare. */
+export function chooseUpdate(raw: IntakeItem): ReviewDraft {
+  const item = visibleItem(raw);
+  const org = item.confirmedOrganization;
+  return {
+    title: item.proposal?.title ?? org?.title ?? '',
+    partIndexes: (item.proposal?.parts ?? []).map((_, index) => index),
+    manualParts: item.proposal ? null : org ? org.parts.map(p => ({ ...p })) : [],
+    target: item.analysisState === 'needs_choice' ? null : { kind: 'home' }, replaceConsent: null, duplicateMode: 'organize',
   };
 }
 
@@ -322,10 +338,12 @@ export type ReviewErrors = Partial<Record<'title' | 'parts' | 'target' | 'replac
 export function validateReviewDraft(draft: ReviewDraft, raw: IntakeItem): ReviewErrors {
   const item = visibleItem(raw);
   const errors: ReviewErrors = {};
-  if (item.uploadState === 'duplicate' && draft.duplicateMode !== 'organize') {
-    if (draft.duplicateMode === null) errors.duplicate = 'Scegli se usare solo il riferimento all’originale esistente oppure organizzarlo.';
+  if (needsKeepOrUpdate(item) && draft.duplicateMode === null) {
+    errors.duplicate = 'Scegli se mantenere i dati attuali oppure aggiornarli.';
     return errors;
   }
+  // Copia mantenuta invariata: nessuna classificazione, si usa l'originale già presente.
+  if (item.uploadState === 'duplicate' && draft.duplicateMode === 'reuse') return errors;
   const n = [...normalized(draft.title)].length;
   if (n === 0) errors.title = 'Inserisci un nome da mostrare.';
   else if (n > TITLE_MAX) errors.title = `Massimo ${TITLE_MAX} caratteri.`;
@@ -372,6 +390,91 @@ export function buildReviewPayload(draft: ReviewDraft, raw: IntakeItem, candidat
     replaceOrganization: replacesConfirmed(draft, item) && hasReplaceConsent(draft, item),
     selection,
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// V2 — organizzazione diretta (docs/v5/document-intake-simplified-spec-v2.md)
+
+/**
+ * Applicazione diretta: `single` con esattamente un elemento (revisione individuale), `multiple` da 1 a 20
+ * proposte chiare selezionate. `batchId` serve al container per la rotta ed è escluso dal corpo HTTP.
+ * Ogni elemento porta sempre `expectedOrganizationVersion` e `replaceOrganization` (0/false ammessi).
+ */
+export type OrganizeItemPayload = ReviewPayload & {
+  expectedOrganizationVersion: number;
+  replaceOrganization: boolean;
+  selection: Extract<OrganizationSelection, { action: 'organize' }>;
+};
+export type OrganizeBatchPayload = { batchId: OpaqueId; expectedVersion: OpaqueVersion; mode: 'single' | 'multiple'; items: OrganizeItemPayload[] };
+export const MAX_ORGANIZE_ITEMS = 20;
+
+/** Gruppi dell'area di lavoro unica. `saved` legacy resta interno e torna «Da rivedere». */
+export type WorkGroup = 'review' | 'later' | 'done';
+export type WorkFilter = 'all' | WorkGroup;
+export function workGroup(raw: IntakeItem): WorkGroup {
+  if (raw.reviewState === 'confirmed') return 'done';
+  if (raw.reviewState === 'deferred') return 'later';
+  return 'review';
+}
+export const matchesWorkFilter = (item: IntakeItem, filter: WorkFilter) => filter === 'all' || workGroup(item) === filter;
+
+/** Proposta diversa da dati già confermati dall'account. */
+export function hasConflict(raw: IntakeItem): boolean {
+  const item = visibleItem(raw);
+  const org = item.confirmedOrganization;
+  if (!org || !item.proposal) return false;
+  return normalized(org.title) !== normalized(item.proposal.title) || !sameParts(org.parts, item.proposal.parts);
+}
+
+/** Copie e conflitti: scelta esplicita fra «mantieni» e «aggiorna», sempre in revisione individuale. */
+export function needsKeepOrUpdate(raw: IntakeItem): boolean {
+  return raw.uploadState === 'duplicate' || hasConflict(raw);
+}
+
+/**
+ * Proposta chiara selezionabile in gruppo. Esclusi: copie, organizzazioni già confermate, classificazione
+ * manuale, destinazione ambigua, rinviati, fonti indisponibili, letture in corso, completati e scelte legacy
+ * (`saved`), che si rivedono singolarmente. Le scritture in corso o incerte le esclude il componente.
+ */
+export function bulkEligible(raw: IntakeItem): boolean {
+  const item = visibleItem(raw);
+  if (item.documentLink.state !== 'linked' || sourceLost(raw) || !item.permissions.review) return false;
+  if (item.uploadState !== 'stored' || item.analysisState !== 'ready' || item.reviewState !== 'unreviewed') return false;
+  if (item.confirmedOrganization || item.selectionStale) return false;
+  const p = item.proposal;
+  if (!p || p.parts.length === 0) return false;
+  const n = [...normalized(p.title)].length;
+  return n > 0 && n <= TITLE_MAX;
+}
+
+/** Elemento del payload multiplo: esattamente la proposta mostrata, destinazione casa, nessuna sostituzione. */
+export function bulkItem(raw: IntakeItem): OrganizeItemPayload | null {
+  const item = visibleItem(raw);
+  if (!bulkEligible(item) || !item.proposal) return null;
+  return {
+    itemId: item.id, expectedVersion: item.version, expectedOrganizationVersion: item.organizationVersion ?? 0, replaceOrganization: false,
+    selection: { action: 'organize', title: normalized(item.proposal.title), parts: item.proposal.parts.map(p => ({ ...p })), target: { kind: 'home' } },
+  };
+}
+
+/** Payload diretto completo: single con esattamente un elemento, multiple da 1 a 20; mai `defer`. */
+export function buildOrganizePayload(batch: Pick<IntakeBatch, 'id' | 'version'>, mode: 'single' | 'multiple', items: ReviewPayload[]): OrganizeBatchPayload | null {
+  const full: OrganizeItemPayload[] = items.flatMap(p => p.selection.action === 'organize'
+    ? [{ ...p, expectedOrganizationVersion: p.expectedOrganizationVersion ?? 0, replaceOrganization: p.replaceOrganization ?? false, selection: p.selection }]
+    : []);
+  if (full.length === 0 || full.length !== items.length) return null;
+  if (mode === 'single' ? full.length !== 1 : full.length > MAX_ORGANIZE_ITEMS) return null;
+  return { batchId: batch.id, expectedVersion: batch.version, mode, items: full };
+}
+
+/** Modifiche effettive rispetto allo stato di partenza del dialogo: chiudere chiede di scartarle. */
+export const draftChanged = (draft: ReviewDraft, raw: IntakeItem) => canonical(draft) !== canonical(initialReviewDraft(raw));
+
+/** Titolo da mostrare in elenco: proposta, scelta o organizzazione attuale, altrimenti il nome del file. */
+export function rowTitle(raw: IntakeItem): string {
+  const item = visibleItem(raw);
+  if (item.reviewState === 'confirmed' && item.selection?.action === 'organize') return item.selection.title;
+  return item.proposal?.title ?? item.confirmedOrganization?.title ?? displayName(item);
 }
 
 export const deferPayload = (raw: IntakeItem): ReviewPayload => {

@@ -2,11 +2,12 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 import { Banner, Loading, cx, ui } from '../components/ui';
 import { ReviewDialog, type ReviewWriteState } from './ReviewDialog';
 import {
-  STATUS_LABEL, STATUS_TONE, buildConfirmPayload, buildReviewPayload, buildSummary, collectionLabel, contextKeyString, deferPayload, displayName, formatBytes, sourceLost,
-  initialReviewDraft, itemStatus, matchesReviewFilter, partLabel, reviewable, visibleItem,
+  STATUS_LABEL, STATUS_TONE, buildOrganizePayload, buildReviewPayload, bulkEligible, bulkItem, canonical, collectionLabel, contextKeyString,
+  deferPayload, displayName, draftChanged, formatBytes, hasConflict, initialReviewDraft, itemStatus, kindCollection, matchesWorkFilter, partLabel,
+  reviewable, rowTitle, selectionCollections, sourceLost, visibleItem, workGroup,
   type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type IntakeAnalysisPanel, type IntakeBatch, type IntakeCapabilities,
-  type IntakeContextKey, type IntakeItem, type IntakeLoadState, type ItemConfirmResult, type ItemStatus, type OpaqueId,
-  type RecoverBatchOutcome, type ReviewDraft, type ReviewFilter, type ReviewPayload, type WriteOutcome,
+  type IntakeContextKey, type IntakeItem, type IntakeLoadState, type ItemConfirmResult, type ItemStatus, type OpaqueId, type OpaqueVersion,
+  type OrganizeBatchPayload, type RecoverBatchOutcome, type ReviewDraft, type ReviewPayload, type WorkFilter, type WriteOutcome,
 } from './model';
 import styles from './intake.module.css';
 
@@ -19,7 +20,9 @@ export type DocumentIntakeAssistantProps = {
   /** Permesso di scrittura sulla casa (oltre ai permessi del lotto). */
   canEdit: boolean;
   homeName: string;
+  /** V1, non più mostrato: la lettura locale parte dal container dopo ogni acquisizione (V2, nessun pulsante Analizza). */
   analysis?: IntakeAnalysisPanel;
+  /** V1, non più usato dall'interfaccia V2. Conservato per la compatibilità del container. */
   onStartAnalysis?: (itemIds: OpaqueId[]) => void;
   candidates: Readonly<Record<OpaqueId, CandidatePage | undefined>>;
   loadCandidates: (itemId: OpaqueId, more: boolean) => void;
@@ -29,11 +32,22 @@ export type DocumentIntakeAssistantProps = {
   onReorganizeDocument?: (itemId: OpaqueId) => Promise<void>;
   onRetryUpload: (itemId: OpaqueId) => Promise<WriteOutcome>;
   onCancelUpload: (itemId: OpaqueId) => Promise<WriteOutcome>;
+  /** V2: usato solo per «Decidi più avanti» (action defer). */
   onSaveReview: (payload: ReviewPayload) => Promise<WriteOutcome>;
   onRecoverReview: (payload: ReviewPayload) => Promise<WriteOutcome | { status: 'not_found' }>;
+  /** V2: «Mantieni invariato» per una copia già presente. */
   onResolveDuplicate: (itemId: OpaqueId, expectedVersion: IntakeItem['version']) => Promise<WriteOutcome>;
+  /** V1, non più esposto nell'interfaccia V2 (nessun riepilogo supplementare). Conservato per compatibilità. */
   onConfirm: (payload: ConfirmBatchPayload) => Promise<ConfirmBatchOutcome>;
+  /** V1, come sopra. */
   onRecoverConfirmation: (payload: ConfirmBatchPayload) => Promise<RecoverBatchOutcome>;
+  /**
+   * V2: applicazione diretta (singolo o selezione multipla). Il container conserva chiave stabile e corpo.
+   * Assente: le azioni di organizzazione restano disabilitate con il motivo, nessun successo simulato.
+   */
+  onOrganize?: (payload: OrganizeBatchPayload) => Promise<ConfirmBatchOutcome>;
+  /** V2: recupero dell'esito di una richiesta diretta con lo stesso payload (GET della ricevuta). */
+  onRecoverOrganization?: (payload: OrganizeBatchPayload) => Promise<RecoverBatchOutcome>;
   openOriginal: (itemId: OpaqueId, page: number | null) => Promise<void>;
   renderPreview?: (itemId: OpaqueId, page: number | null) => ReactNode;
   onOpenReceiptFlow?: (itemId: OpaqueId) => void;
@@ -41,61 +55,66 @@ export type DocumentIntakeAssistantProps = {
   onRetryLoad?: () => void;
 };
 
-/** Cambio di account/casa/lotto: rimontaggio completo, nessuna scelta o risposta tardiva passa di contesto. */
+/** Cambio di account/casa/lotto: rimontaggio completo, nessuna scelta, selezione o risposta tardiva passa di contesto. */
 export function DocumentIntakeAssistant(props: DocumentIntakeAssistantProps) {
   return <Inner key={contextKeyString(props.contextKey)} {...props} />;
 }
 
-type Step = 'ingresso' | 'lotto' | 'proposte' | 'riepilogo' | 'esito';
-type ConfirmState =
-  | { status: 'idle' } | { status: 'submitting'; payload: ConfirmBatchPayload } | { status: 'rejected'; message: string }
-  | { status: 'uncertain'; payload: ConfirmBatchPayload; message: string } | { status: 'recovering'; payload: ConfirmBatchPayload }
-  | { status: 'not_found'; payload: ConfirmBatchPayload };
+type View = 'ingresso' | 'lavoro';
 type Dialog = { itemId: OpaqueId; onlyOriginal: boolean } | null;
+/** Una richiesta diretta in volo o con esito da chiarire. Il payload resta congelato per recupero e reinvio. */
+type OrganizeOp = { key: string; payload: OrganizeBatchPayload; status: 'submitting' | 'uncertain' | 'recovering' | 'not_found'; message?: string };
+type Notice = { tone: 'success' | 'warning'; text: string; failures: Array<{ id: OpaqueId; name: string; message: string }> } | null;
 
 const TONE_CLASS = { ok: styles.badgeOk, warn: styles.badgeWarn, neutral: styles.badgeNeutral, error: styles.badgeError } as const;
 export function StatusBadge({ status }: { status: ItemStatus }) {
   return <span className={cx(styles.badge, TONE_CLASS[STATUS_TONE[status]])}>{STATUS_LABEL[status]}</span>;
 }
+function Badge({ tone, children }: { tone: keyof typeof TONE_CLASS; children: ReactNode }) {
+  return <span className={cx(styles.badge, TONE_CLASS[tone])}>{children}</span>;
+}
 
-const FILTERS: Array<[ReviewFilter, string]> = [['all', 'Tutti'], ['ready', 'Pronti'], ['needs_choice', 'Da scegliere'], ['duplicate', 'Copie'], ['unreadable', 'Non leggibili'], ['decided', 'Decisi']];
+const FILTERS: Array<[WorkFilter, string]> = [['all', 'Tutti'], ['review', 'Da rivedere'], ['later', 'Più tardi'], ['done', 'Completati']];
+export const ORGANIZE_UNAVAILABLE = 'La conferma diretta non è ancora disponibile in questo servizio: puoi decidere più avanti.';
+const IN_FLIGHT: ReadonlyArray<ReviewWriteState['status']> = ['saving', 'uncertain', 'recovering'];
 
 function Inner(props: DocumentIntakeAssistantProps) {
   const { batch, load, capabilities } = props;
-  const [stepChoice, setStep] = useState<Step | null>(null);
-  const step: Step = stepChoice ?? (batch ? 'lotto' : 'ingresso');
-  const [filter, setFilter] = useState<ReviewFilter>('all');
+  const [viewChoice, setView] = useState<View | null>(null);
+  const view: View = viewChoice ?? (batch ? 'lavoro' : 'ingresso');
+  const [filter, setFilter] = useState<WorkFilter>('all');
   const [dialog, setDialog] = useState<Dialog>(null);
-  const [drafts, setDrafts] = useState<Record<OpaqueId, ReviewDraft>>({});
+  const [drafts, setDrafts] = useState<Record<string, ReviewDraft>>({});
   const [writes, setWrites] = useState<Record<OpaqueId, ReviewWriteState>>({});
   const [pendingReview, setPendingReview] = useState<Record<OpaqueId, ReviewPayload>>({});
+  const [ops, setOps] = useState<OrganizeOp[]>([]);
+  const [itemErrors, setItemErrors] = useState<Record<OpaqueId, { version: OpaqueVersion; message: string }>>({});
+  // Selezione multipla: id → versione vista. Vale solo finché versione, filtro e idoneità restano gli stessi.
+  const [picked, setPicked] = useState<Record<OpaqueId, OpaqueVersion>>({});
+  const [notice, setNotice] = useState<Notice>(null);
+  const [results, setResults] = useState<ItemConfirmResult[]>([]);
   const [uploadMessages, setUploadMessages] = useState<Record<OpaqueId, string>>({});
   const [openState, setOpenState] = useState<{ status: 'idle' | 'opening' } | { status: 'error'; message: string }>({ status: 'idle' });
-  const [excluded, setExcluded] = useState<ReadonlySet<OpaqueId>>(new Set());
-  const [checked, setChecked] = useState(false);
-  const [confirm, setConfirm] = useState<ConfirmState>({ status: 'idle' });
-  const [results, setResults] = useState<ItemConfirmResult[] | null>(null);
-  const inFlight = useRef(false);
+  const inFlight = useRef(new Set<string>());
   const alive = useRef(true);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const inputId = useId();
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
-  useEffect(() => { headingRef.current?.focus(); }, [step]);
+  useEffect(() => { headingRef.current?.focus(); }, [view]);
   const items = useMemo(() => (batch?.items ?? []).map(visibleItem), [batch]);
-  const summary = useMemo(() => (batch ? buildSummary(batch, excluded) : null), [batch, excluded]);
 
-  if (load.status === 'loading') return <Loading label="Caricamento del lotto…" />;
+  if (load.status === 'loading') return <Loading label="Caricamento dei documenti…" />;
   if (load.status === 'unavailable') {
     return (
       <div className={styles.stack}>
-        <h1 tabIndex={-1}>Lotto non disponibile</h1>
-        <Banner tone="warning" role="alert"><p>Questo account non ha accesso al lotto richiesto, oppure non è più disponibile.</p></Banner>
+        <h1 tabIndex={-1}>Caricamento non disponibile</h1>
+        <Banner tone="warning" role="alert"><p>Questo account non ha accesso a questo caricamento, oppure non è più disponibile.</p></Banner>
       </div>
     );
   }
   if (load.status === 'error') {
     return (
-      <Banner tone="error" role="alert" title="Impossibile caricare il lotto"
+      <Banner tone="error" role="alert" title="Impossibile caricare i documenti"
         actions={load.retryable && props.onRetryLoad && <button type="button" className={ui.btn} onClick={props.onRetryLoad}>Riprova</button>}>
         <p>{load.message}</p>
       </Banner>
@@ -104,26 +123,49 @@ function Inner(props: DocumentIntakeAssistantProps) {
 
   const canUpload = props.canEdit && !!capabilities?.enabled && (batch ? batch.permissions.upload : true);
   const canReview = props.canEdit && (batch?.permissions.review ?? false);
-  const canConfirm = props.canEdit && (batch?.permissions.confirm ?? false);
+  const canOrganize = canReview && !!props.onOrganize;
   const safe = <T,>(fn: () => T) => { if (alive.current) fn(); };
   // La bozza è legata al documento letto: con la fonte persa non si mostra (né riappare per un altro documento).
   const draftKey = (item: IntakeItem) => `${item.id}|${item.documentLink.document?.id ?? ''}`;
   const getDraft = (item: IntakeItem) => (sourceLost(item) ? initialReviewDraft(item) : drafts[draftKey(item)] ?? initialReviewDraft(item));
+  const dropDraft = (item: IntakeItem) => setDrafts(prev => { const next = { ...prev }; delete next[draftKey(item)]; return next; });
   const setWrite = (id: OpaqueId, w: ReviewWriteState) => safe(() => setWrites(prev => ({ ...prev, [id]: w })));
-  // Riuso di una copia con esito incerto: non esiste un recupero dedicato, quindi resta bloccato finché il container
-  // non ricarica l'elemento con una versione nuova (lo stato reale); mai reinviato da solo.
+  const versionOf = (id: OpaqueId) => items.find(i => i.id === id)?.version;
+  const opOf = (id: OpaqueId) => ops.find(o => o.payload.items.some(i => i.itemId === id));
+  /** Stato di scrittura visibile per elemento: richiesta diretta, poi rinvio/copia, poi rifiuto del singolo. */
   const writeOf = (id: OpaqueId): ReviewWriteState => {
+    const op = opOf(id);
+    if (op) {
+      if (op.status === 'submitting') return { status: 'saving' };
+      if (op.status === 'recovering') return { status: 'recovering' };
+      if (op.status === 'not_found') return { status: 'not_found', resend: true };
+      const message = op.message ?? 'Non sappiamo se il documento è stato organizzato.';
+      return props.onRecoverOrganization ? { status: 'uncertain', message } : { status: 'uncertain', message, reloadOnly: { version: versionOf(id) ?? '' } };
+    }
     const w = writes[id];
-    if (w?.status === 'uncertain' && w.reloadOnly && items.find(i => i.id === id)?.version !== w.reloadOnly.version) return { status: 'idle' };
-    return w ?? { status: 'idle' };
+    // Riuso di una copia con esito incerto: resta bloccato finché il container non porta una versione nuova.
+    if (w?.status === 'uncertain' && w.reloadOnly && versionOf(id) !== w.reloadOnly.version) return { status: 'idle' };
+    if (w && w.status !== 'idle') return w;
+    const err = itemErrors[id];
+    if (err && versionOf(id) === err.version) return { status: 'rejected', message: err.message };
+    return { status: 'idle' };
   };
-  const lockedItems = new Set(Object.keys(writes).filter(id => ['uncertain', 'recovering', 'saving'].includes(writeOf(id).status)));
-  const busy = confirm.status === 'submitting' || confirm.status === 'uncertain' || confirm.status === 'recovering';
+  /** Nessuna nuova scrittura su un elemento con richiesta in volo o esito da chiarire. */
+  const locked = (id: OpaqueId) => !!opOf(id) || IN_FLIGHT.includes(writeOf(id).status);
+  const selectable = (item: IntakeItem) => canOrganize && bulkEligible(item) && !locked(item.id);
+  const visible = items.filter(i => matchesWorkFilter(i, filter));
+  // Selezione valida soltanto per elementi visibili nel filtro, idonei e alla stessa versione vista.
+  const selected = visible.filter(i => picked[i.id] !== undefined && picked[i.id] === i.version && selectable(i));
+  const available = visible.filter(selectable);
 
+  // ------------------------------------------------------------------ scritture
   const applyWrite = (id: OpaqueId, outcome: WriteOutcome | { status: 'not_found' }, closeOnSuccess: boolean) => {
     if (outcome.status === 'confirmed') {
       setWrite(id, { status: 'idle' });
-      safe(() => { setPendingReview(prev => { const next = { ...prev }; delete next[id]; return next; }); if (closeOnSuccess) setDialog(null); });
+      safe(() => {
+        setPendingReview(prev => { const next = { ...prev }; delete next[id]; return next; });
+        if (closeOnSuccess) { const it = items.find(i => i.id === id); if (it) dropDraft(it); setDialog(null); }
+      });
     } else if (outcome.status === 'rejected') setWrite(id, { status: 'rejected', message: outcome.message });
     else if (outcome.status === 'not_found') setWrite(id, { status: 'not_found' });
     else setWrite(id, { status: 'uncertain', message: outcome.message ?? 'Non sappiamo se la scelta è stata salvata.' });
@@ -131,8 +173,12 @@ function Inner(props: DocumentIntakeAssistantProps) {
   const sendReview = async (payload: ReviewPayload) => {
     setWrite(payload.itemId, { status: 'saving' });
     setPendingReview(prev => ({ ...prev, [payload.itemId]: payload }));
-    try { applyWrite(payload.itemId, await props.onSaveReview(payload), true); }
-    catch { applyWrite(payload.itemId, { status: 'uncertain' }, true); }
+    let outcome: WriteOutcome;
+    try { outcome = await props.onSaveReview(payload); } catch { outcome = { status: 'uncertain' }; }
+    applyWrite(payload.itemId, outcome, true);
+    if (outcome.status === 'confirmed' && payload.selection.action === 'defer') {
+      safe(() => setNotice({ tone: 'success', text: 'Documento spostato in «Più tardi». Potrai riprendere la scelta da questa lista.', failures: [] }));
+    }
   };
   const recoverReview = async (id: OpaqueId) => {
     const payload = pendingReview[id]; if (!payload) return;
@@ -145,7 +191,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
     let outcome: WriteOutcome;
     try { outcome = await action(id); } catch { outcome = { status: 'uncertain' }; }
     if (outcome.status === 'rejected') safe(() => setUploadMessages(prev => ({ ...prev, [id]: outcome.message })));
-    if (outcome.status === 'uncertain') safe(() => setUploadMessages(prev => ({ ...prev, [id]: 'Esito non noto: ricarica il lotto per vedere lo stato reale di questo file.' })));
+    if (outcome.status === 'uncertain') safe(() => setUploadMessages(prev => ({ ...prev, [id]: 'Esito non noto: ricarica la pagina per vedere lo stato reale di questo file.' })));
   };
   const openOriginal = async (id: OpaqueId, page: number | null) => {
     setOpenState({ status: 'opening' });
@@ -153,48 +199,90 @@ function Inner(props: DocumentIntakeAssistantProps) {
     catch { safe(() => setOpenState({ status: 'error', message: 'Non è stato possibile aprire l’originale. Riprova tra poco.' })); }
   };
 
-  const applyConfirm = (outcome: ConfirmBatchOutcome | RecoverBatchOutcome, sent: ConfirmBatchPayload) => safe(() => {
-    if (outcome.status === 'done') { setResults(outcome.results); setConfirm({ status: 'idle' }); setStep('esito'); }
-    else if (outcome.status === 'rejected') setConfirm({ status: 'rejected', message: outcome.message });
-    else if (outcome.status === 'not_found') setConfirm({ status: 'not_found', payload: sent });
-    else setConfirm({ status: 'uncertain', payload: sent, message: outcome.message ?? 'Non sappiamo se la conferma è stata registrata.' });
+  /** Esito di una richiesta diretta: per file, mai un successo implicito; i non applicati restano da rivedere. */
+  const applyOrganize = (key: string, payload: OrganizeBatchPayload, outcome: ConfirmBatchOutcome | RecoverBatchOutcome) => safe(() => {
+    const ids = payload.items.map(i => i.itemId);
+    const nameOf = (id: OpaqueId) => { const it = items.find(i => i.id === id); return it ? rowTitle(it) : 'Documento non disponibile'; };
+    if (outcome.status === 'uncertain') {
+      setOps(prev => prev.map(o => (o.key === key ? { ...o, status: 'uncertain', message: outcome.message ?? 'Non sappiamo se la richiesta è stata registrata.' } : o)));
+      return;
+    }
+    if (outcome.status === 'not_found') { setOps(prev => prev.map(o => (o.key === key ? { ...o, status: 'not_found' } : o))); return; }
+    if (outcome.status === 'rejected') {
+      setOps(prev => prev.filter(o => o.key !== key));
+      setItemErrors(prev => ({ ...prev, ...Object.fromEntries(payload.items.map(i => [i.itemId, { version: i.expectedVersion, message: outcome.message }])) }));
+      if (payload.mode === 'multiple') setNotice({ tone: 'warning', text: `Nessun documento organizzato: ${outcome.message}`, failures: [] });
+      return;
+    }
+    const byId = new Map(outcome.results.map(r => [r.itemId, r]));
+    if (ids.some(id => !byId.has(id))) {
+      // Registrata solo in parte: si chiarisce con lo stesso payload, nessun nuovo invio con un'altra chiave.
+      setOps(prev => prev.map(o => (o.key === key ? { ...o, status: 'uncertain', message: 'Una parte è registrata. Verifica l’esito per riprendere gli elementi restanti.' } : o)));
+      return;
+    }
+    setOps(prev => prev.filter(o => o.key !== key));
+    const done = outcome.results.filter(r => r.status === 'confirmed');
+    const failed = outcome.results.filter(r => r.status === 'rejected');
+    setResults(prev => [...prev.filter(r => !byId.has(r.itemId)), ...outcome.results]);
+    setPicked(prev => { const next = { ...prev }; for (const id of ids) delete next[id]; return next; });
+    setItemErrors(prev => {
+      const next = { ...prev };
+      for (const r of done) delete next[r.itemId];
+      for (const r of failed) {
+        const sent = payload.items.find(i => i.itemId === r.itemId);
+        if (sent) next[r.itemId] = { version: sent.expectedVersion, message: r.message ?? 'Non applicato: rileggi questo documento.' };
+      }
+      return next;
+    });
+    if (done.length) {
+      setDialog(prev => (prev && done.some(r => r.itemId === prev.itemId) ? null : prev));
+      setDrafts(prev => Object.fromEntries(Object.entries(prev).filter(([k]) => !done.some(r => k.startsWith(`${r.itemId}|`)))));
+    }
+    const one = payload.mode === 'single' ? payload.items[0] : undefined;
+    if (one && !done.length) return; // rifiuto del singolo: resta nel dialogo come errore dell'elemento
+    setNotice({
+      tone: failed.length ? 'warning' : 'success',
+      text: one
+        ? `Documento organizzato in ${selectionCollections(one.selection).map(collectionLabel).join(' e ')}.`
+        : done.length
+          ? `${done.length} ${done.length === 1 ? 'documento organizzato' : 'documenti organizzati'}.${failed.length ? ` ${failed.length} non ${failed.length === 1 ? 'applicato: resta' : 'applicati: restano'} da rivedere.` : ''}`
+          : 'Nessun documento organizzato: restano da rivedere.',
+      failures: failed.map(r => ({ id: r.itemId, name: nameOf(r.itemId), message: r.message ?? 'Non applicato.' })),
+    });
   });
-  const submit = async (payload: ConfirmBatchPayload) => {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    setConfirm({ status: 'submitting', payload });
-    try { applyConfirm(await props.onConfirm(payload), payload); } catch { applyConfirm({ status: 'uncertain' }, payload); } finally { inFlight.current = false; }
-  };
-  const recover = async (payload: ConfirmBatchPayload) => {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    setConfirm({ status: 'recovering', payload });
-    try { applyConfirm(await props.onRecoverConfirmation(payload), payload); } catch { applyConfirm({ status: 'uncertain' }, payload); } finally { inFlight.current = false; }
+  const runOrganize = async (payload: OrganizeBatchPayload, recover = false) => {
+    const key = canonical(payload);
+    const call = recover ? props.onRecoverOrganization : props.onOrganize;
+    if (!call || inFlight.current.has(key)) return;
+    inFlight.current.add(key);
+    setNotice(null);
+    setOps(prev => [...prev.filter(o => o.key !== key), { key, payload, status: recover ? 'recovering' : 'submitting' }]);
+    let outcome: ConfirmBatchOutcome | RecoverBatchOutcome;
+    try { outcome = await call(payload); } catch { outcome = { status: 'uncertain' }; }
+    inFlight.current.delete(key);
+    applyOrganize(key, payload, outcome);
   };
 
-  const heading = (text: ReactNode, lead?: string) => (<><h1 ref={headingRef} tabIndex={-1}>{text}</h1>{lead && <p className={styles.lead}>{lead}</p>}</>);
-  const steps = (
-    <ol className={styles.steps} aria-label="Passaggi">
-      {([['Carica', ['ingresso', 'lotto']], ['Rivedi le proposte', ['proposte']], ['Conferma', ['riepilogo', 'esito']]] as const).map(([label, s], i) => (
-        <li key={label} className={cx(styles.step, (s as readonly Step[]).includes(step) && styles.stepActive)} aria-current={(s as readonly Step[]).includes(step) ? 'step' : undefined}>
-          <span className={styles.stepNum} aria-hidden="true">{i + 1}</span>{label}
-        </li>
-      ))}
-    </ol>
-  );
+  const heading = (text: ReactNode, lead?: ReactNode) => (<><h1 ref={headingRef} tabIndex={-1}>{text}</h1>{lead && <p className={styles.lead}>{lead}</p>}</>);
   const found = dialog ? items.find(i => i.id === dialog.itemId) : undefined;
   // Fonte revocata a dialogo aperto: il dialogo non si mostra più, nessun dato della cache resta a schermo.
   const dialogItem = found && !sourceLost(found) && found.documentLink.state === 'linked' ? found : undefined;
-  const reviewDialog = dialog && dialogItem && (
+  const closeDialog = () => { if (dialogItem) dropDraft(dialogItem); setDialog(null); setOpenState({ status: 'idle' }); };
+  const reviewDialog = dialog && dialogItem && batch && (
     <ReviewDialog
       item={dialogItem} draft={getDraft(dialogItem)} candidates={props.candidates[dialogItem.id]} write={writeOf(dialogItem.id)} onlyOriginal={dialog.onlyOriginal || !canReview}
+      dirty={draftChanged(getDraft(dialogItem), dialogItem)} organizeAvailable={!!props.onOrganize} unavailableReason={ORGANIZE_UNAVAILABLE}
       preview={(page) => props.renderPreview?.(dialogItem.id, page)} openState={openState}
       onOpenOriginal={(page) => void openOriginal(dialogItem.id, page)}
       onDraft={(d) => setDrafts(prev => ({ ...prev, [draftKey(dialogItem)]: d }))}
       onLoadCandidates={(more) => props.loadCandidates(dialogItem.id, more)}
       onSave={() => {
-        const payload = buildReviewPayload(getDraft(dialogItem), dialogItem, props.candidates[dialogItem.id]?.items ?? []);
-        if (payload) void sendReview(payload);
+        const review = buildReviewPayload(getDraft(dialogItem), dialogItem, props.candidates[dialogItem.id]?.items ?? []);
+        const payload = review && buildOrganizePayload(batch, 'single', [review]);
+        if (payload) {
+          setItemErrors(prev => { const next = { ...prev }; delete next[dialogItem.id]; return next; });
+          void runOrganize(payload);
+        }
       }}
       onDefer={() => void sendReview(deferPayload(dialogItem))}
       onResolveDuplicate={async () => {
@@ -202,96 +290,29 @@ function Inner(props: DocumentIntakeAssistantProps) {
         const { id, version } = dialogItem;
         let outcome: WriteOutcome;
         try { outcome = await props.onResolveDuplicate(id, version); } catch { outcome = { status: 'uncertain' }; }
-        if (outcome.status === 'uncertain') setWrite(id, { status: 'uncertain', reloadOnly: { version }, message: 'Non sappiamo se l’originale esistente è stato collegato. Ricarica il lotto per vedere lo stato reale: la scelta non viene inviata di nuovo.' });
-        else applyWrite(id, outcome, true);
+        if (outcome.status === 'uncertain') setWrite(id, { status: 'uncertain', reloadOnly: { version }, message: 'Non sappiamo se il file è stato mantenuto. Ricarica la pagina per vedere lo stato reale: la scelta non viene inviata di nuovo.' });
+        else {
+          applyWrite(id, outcome, true);
+          if (outcome.status === 'confirmed') safe(() => setNotice({ tone: 'success', text: 'Documento mantenuto invariato. Non è stato creato un secondo originale.', failures: [] }));
+        }
       }}
-      onRecover={() => void recoverReview(dialogItem.id)}
+      onRecover={() => { const op = opOf(dialogItem.id); if (op) void runOrganize(op.payload, true); else void recoverReview(dialogItem.id); }}
+      onResend={() => { const op = opOf(dialogItem.id); if (op) void runOrganize(op.payload); }}
       onOpenReceiptFlow={props.onOpenReceiptFlow ? () => props.onOpenReceiptFlow?.(dialogItem.id) : undefined}
-      onClose={() => { setDialog(null); setOpenState({ status: 'idle' }); }}
+      onClose={closeDialog}
     />
   );
 
-  const row = (item: IntakeItem, mode: 'lotto' | 'proposte') => {
-    const raw = itemStatus(item);
-    const write = writeOf(item.id);
-    const status: ItemStatus = write.status === 'uncertain' || write.status === 'recovering' ? 'uncertain' : raw;
-    const decision = item.selection?.action === 'organize' ? item.selection : null;
-    return (
-      <article key={item.id} className={styles.row}>
-        <span className={styles.fileIcon} aria-hidden="true">{item.mimeType === 'application/pdf' ? 'PDF' : item.mimeType ? 'IMG' : '—'}</span>
-        <div className={styles.rowMain}>
-          <h3>{mode === 'proposte' && item.proposal ? item.proposal.title : displayName(item)}</h3>
-          {raw !== 'unavailable' && (
-            <p>
-              {mode === 'proposte' && item.proposal ? `${displayName(item)} · ` : ''}
-              {item.byteSize !== null ? formatBytes(item.byteSize) : ''}{item.pageCount ? ` · ${item.pageCount} ${item.pageCount === 1 ? 'pagina' : 'pagine'}` : ''} · Solo io
-            </p>
-          )}
-          <p>{raw === 'confirmed' && item.uploadState === 'duplicate' && !decision ? <span className={cx(styles.badge, styles.badgeNeutral)}>Originale riusato · organizzazione invariata</span> : <StatusBadge status={status} />}</p>
-          {decision && <p>{decision.parts.map(partLabel).join(' + ')} · {decision.target.kind === 'home' ? 'solo casa' : 'scheda esistente'}</p>}
-          {raw === 'duplicate' && <p>{item.duplicate?.document ? `Stesso contenuto di «${item.duplicate.document.name}».` : 'Stesso contenuto di un altro file.'} Nessun originale viene eliminato.</p>}
-          {raw === 'unavailable' && <p>Il documento non è più accessibile con questo account.</p>}
-          {item.error && raw === 'upload_failed' && <p role="status">{item.error.message}</p>}
-          {uploadMessages[item.id] && <p role="alert">{uploadMessages[item.id]}</p>}
-        </div>
-        <div className={styles.rowActions}>
-          {raw === 'confirmed' && canReview && item.permissions.review && props.onReorganizeDocument && <button type="button" className={cx(ui.btn, ui.small)} disabled={props.addingFiles} onClick={() => void props.onReorganizeDocument?.(item.id)}>Riorganizza senza ricaricare</button>}
-          {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
-          {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
-          {mode === 'proposte' && reviewable(item) && (
-            <button type="button" className={cx(ui.btn, ui.small)} aria-label={`${raw === 'saved' || raw === 'deferred' ? 'Modifica scelta' : 'Rivedi'} ${displayName(item)}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>
-              {raw === 'saved' || raw === 'deferred' ? 'Modifica scelta' : 'Rivedi'}
-            </button>
-          )}
-          {mode === 'proposte' && raw === 'confirmed' && (
-            <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Vedi originale ${displayName(item)}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale</button>
-          )}
-        </div>
-      </article>
-    );
-  };
-
-  // ------------------------------------------------------------------ Esito
-  if (step === 'esito' && results && batch) {
-    const done = results.filter(r => r.status === 'confirmed');
-    const failed = results.filter(r => r.status === 'rejected');
-    const remaining = items.filter(i => i.reviewState !== 'confirmed' && !done.some(r => r.itemId === i.id)).length;
-    return (
-      <div className={styles.stack}>
-        {heading(done.length ? 'Più ordine, senza moltiplicare le schede.' : 'Nessuna decisione applicata.', `${done.length} ${done.length === 1 ? 'decisione applicata' : 'decisioni applicate'}. Nessun nuovo oggetto e nessuna nuova spesa.`)}
-        <div className={styles.layout}>
-          <section className={ui.card}>
-            <h2>Esito per file</h2>
-            {results.map(r => {
-              const item = items.find(i => i.id === r.itemId);
-              return (
-                <div key={r.itemId} className={styles.summaryLine}>
-                  <span>{item?.selection?.action === 'organize' ? item.selection.title : item?.filename ?? 'File non più disponibile'}</span>
-                  <strong>{r.status === 'confirmed' ? item?.uploadState === 'duplicate' && !item.selection ? 'Riusato · organizzazione invariata' : 'Organizzato' : `Non applicato${r.message ? `: ${r.message}` : ''}`}</strong>
-                </div>
-              );
-            })}
-            {props.renderOutcomeLinks && <div className={styles.actions}>{props.renderOutcomeLinks(results)}</div>}
-          </section>
-          <section className={ui.card}>
-            <h2>Il resto non si perde</h2>
-            <p>{remaining} {remaining === 1 ? 'file resta' : 'file restano'} da rivedere nel lotto{failed.length ? `, compresi ${failed.length} non applicati` : ''}.</p>
-            <p className={styles.note}>Gli originali restano disponibili. Classificare non condivide i documenti e non ne certifica validità o regolarità.</p>
-            <button type="button" className={ui.btn} onClick={() => { setResults(null); setChecked(false); setStep('proposte'); }}>Riprendi le decisioni rimaste</button>
-          </section>
-        </div>
-      </div>
-    );
-  }
-
   // ------------------------------------------------------------------ Ingresso
-  if (step === 'ingresso' || !batch) {
+  if (view === 'ingresso' || !batch) {
     const limits = batch?.limits ?? capabilities?.limits;
+    const choose = (files: File[]) => { if (files.length) { props.onSelectFiles(files); if (batch) setView('lavoro'); } };
     return (
       <div className={styles.stack}>
         <p className={styles.crumb}>Documenti / Carica documenti</p>
-        {steps}
-        {heading(batch ? 'Aggiungi documenti al lotto.' : 'Tutti i tuoi documenti. Ognuno al suo posto.', batch ? `${batch.items.length} file già present${batch.items.length === 1 ? 'e' : 'i'}. I nuovi documenti si aggiungono qui, mantenendo quelli caricati e le scelte salvate.` : 'Carica uno o più file della casa: dopo il caricamento puoi rivedere le proposte e decidere come organizzarli.')}
+        {heading(batch ? 'Aggiungi documenti.' : 'Carica i documenti della casa.', batch
+          ? `${batch.items.length} ${batch.items.length === 1 ? 'documento già presente' : 'documenti già presenti'}: restano qui con i risultati già ottenuti.`
+          : 'Scegli uno o più file: la lettura locale propone titolo e tipo, e i documenti si organizzano soltanto quando confermi.')}
         <div className={styles.layout}>
           <section className={ui.card}>
             {!capabilities?.enabled ? (
@@ -299,31 +320,24 @@ function Inner(props: DocumentIntakeAssistantProps) {
             ) : !canUpload ? (
               <Banner><p>Con il tuo ruolo puoi consultare i documenti, ma non caricarne di nuovi.</p></Banner>
             ) : (
-              <div className={styles.drop} role="region" aria-label="Carica documenti"
-                aria-busy={props.addingFiles || undefined}
+              <div className={styles.drop} role="region" aria-label="Carica documenti" aria-busy={props.addingFiles || undefined}
                 onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = props.addingFiles ? 'none' : 'copy'; }}
-                onDrop={e => {
-                  e.preventDefault();
-                  if (props.addingFiles) return;
-                  const files = Array.from(e.dataTransfer.files);
-                  if (files.length) { props.onSelectFiles(files); if (batch) setStep('lotto'); }
-                }}>
+                onDrop={e => { e.preventDefault(); if (!props.addingFiles) choose(Array.from(e.dataTransfer.files)); }}>
                 <h2>Trascina qui uno o più documenti</h2>
                 <p>Oppure selezionali da una cartella del tuo dispositivo.</p>
                 <label htmlFor={inputId} className={styles.legend}>File</label>
                 <input id={inputId} className={styles.fileInput} type="file" multiple disabled={props.addingFiles} accept={limits?.acceptedMimeTypes.join(',')}
-                  onChange={(e) => { const files = e.target.files ? Array.from(e.target.files) : []; if (files.length) { props.onSelectFiles(files); if (batch) setStep('lotto'); } e.target.value = ''; }} />
+                  onChange={(e) => { choose(e.target.files ? Array.from(e.target.files) : []); e.target.value = ''; }} />
                 {limits && <p className={styles.note}>Fino a {limits.maxFiles} file, {formatBytes(limits.maxFileBytes)} ciascuno e {formatBytes(limits.maxTotalBytes)} in totale. PDF, JPEG o PNG.</p>}
               </div>
             )}
-            <p className={styles.note}>Un file può contenere più documenti; più file possono riguardare la stessa scheda.</p>
-            {batch && <div className={styles.actions}><span /><button type="button" className={ui.btn} onClick={() => setStep('lotto')}>Vedi il lotto →</button></div>}
+            {batch && <div className={styles.actions}><span /><button type="button" className={ui.btn} onClick={() => setView('lavoro')}>Torna ai documenti caricati</button></div>}
           </section>
           <aside className={styles.aside}>
             <section className={cx(ui.card, ui.tint)}>
-              <h2>Prima di iniziare</h2>
-              <p><strong>{props.homeName}</strong><br /><span className={styles.note}>Destinazione del lotto</span></p>
-              <p><strong>Solo io</strong><br /><span className={styles.note}>Classificare un documento come condominiale non lo condivide con nessuno.</span></p>
+              <h2>Tu mantieni il controllo</h2>
+              <p><strong>{props.homeName}</strong><br /><span className={styles.note}>Casa di destinazione</span></p>
+              <p className={styles.note}>Solo io · Classificare un documento non lo condivide e non crea schede o spese.</p>
             </section>
           </aside>
         </div>
@@ -331,174 +345,178 @@ function Inner(props: DocumentIntakeAssistantProps) {
     );
   }
 
-  // ------------------------------------------------------------------ Lotto
-  if (step === 'lotto') {
-    const analyzable = items.filter(i => ['stored', 'duplicate'].includes(i.uploadState) && (i.analysisState === 'not_started' || i.analysisState === 'ready' && !i.proposal) && i.reviewState === 'unreviewed' && i.permissions.review && !sourceLost(i)).map(i => i.id);
-    return (
-      <div className={styles.stack}>
-        <p className={styles.crumb}>Documenti / Carica documenti</p>
-        {steps}
-        {heading('Il lotto è pronto da organizzare.', 'Il caricamento conserva gli originali. L’analisi propone come organizzarli; le scelte vengono dopo.')}
-        <div className={styles.layout}>
-          <section className={ui.card} aria-label="File del lotto">
-            <h2>{items.length} {items.length === 1 ? 'file' : 'file'} nel lotto</h2>
-            <div className={styles.rows}>{items.map(i => row(i, 'lotto'))}</div>
-            {canUpload && <div className={styles.actions}>
-              <button type="button" className={ui.btn} disabled={props.addingFiles} onClick={() => setStep('ingresso')}>+ Aggiungi documenti</button>
-            </div>}
-          </section>
-          <aside className={styles.aside}>
-            {props.analysis && props.onStartAnalysis ? (
-              <AnalysisPanel panel={props.analysis} disabled={!canReview || analyzable.length === 0} count={analyzable.length} onStart={() => props.onStartAnalysis?.(analyzable)} />
-            ) : (
-              <section className={ui.card}><h2>Organizzazione</h2><p className={styles.note}>L’analisi assistita non è attiva: puoi organizzare ogni file manualmente.</p></section>
-            )}
-            <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => setStep('proposte')}>Rivedi le proposte →</button>
-          </aside>
-        </div>
-        {reviewDialog}
-      </div>
-    );
-  }
+  // ------------------------------------------------------------------ Area di lavoro unica
+  const count = (f: WorkFilter) => items.filter(i => matchesWorkFilter(i, f)).length;
+  const reading = items.some(i => i.analysisState === 'queued' || i.analysisState === 'running');
+  const complete = items.length > 0 && items.every(i => workGroup(i) === 'done');
+  const multi = items.length > 1;
+  const doneCount = count('done');
+  const bulkOps = ops.filter(o => o.payload.mode === 'multiple');
+  const showBulk = multi && canReview && !complete && (available.length > 0 || selected.length > 0 || bulkOps.length > 0);
+  const bulkPayload = selected.length ? buildOrganizePayload(batch, 'multiple', selected.flatMap(i => { const b = bulkItem(i); return b ? [b] : []; })) : null;
 
-  // ------------------------------------------------------------------ Riepilogo
-  if (step === 'riepilogo' && summary) {
-    const payload = buildConfirmPayload(batch, summary);
-    const saved = [...summary.included, ...summary.excluded];
+  const row = (item: IntakeItem) => {
+    const raw = itemStatus(item);
+    const write = writeOf(item.id);
+    const group = workGroup(item);
+    const copy = item.uploadState === 'duplicate';
+    const conflict = hasConflict(item);
+    const decision = item.selection?.action === 'organize' ? item.selection : null;
+    const manual = !copy && !item.proposal && !decision && ['stored', 'ready', 'unreadable', 'unsupported', 'analysis_failed'].includes(raw);
+    const canSelect = multi && selectable(item);
+    const checked = canSelect && picked[item.id] === item.version;
+    const name = displayName(item);
+    const title = rowTitle(item);
+    let badge: ReactNode;
+    if (write.status === 'uncertain' || write.status === 'recovering') badge = <Badge tone="warn">Esito non noto</Badge>;
+    else if (group === 'done') badge = <Badge tone="ok">{copy && !decision ? 'Mantenuto invariato' : decision ? `In ${selectionCollections(decision).map(collectionLabel).join(' e ')}` : 'Organizzato'}</Badge>;
+    else if (group === 'later') badge = <Badge tone="warn">Da riprendere</Badge>;
+    else if (['unavailable', 'pending', 'uploading', 'upload_failed', 'analysis_waiting', 'analysis_running'].includes(raw)) badge = <StatusBadge status={raw} />;
+    else if (copy) badge = <Badge tone="warn">File già presente</Badge>;
+    else if (conflict) badge = <Badge tone="warn">Dati diversi</Badge>;
+    else if (manual) badge = <Badge tone="warn">Tipo da indicare</Badge>;
+    else badge = <StatusBadge status={raw} />;
+    const proposal = group === 'review' && !copy && !conflict && raw !== 'unavailable' ? item.proposal : null;
+    const actionLabel = group === 'later' ? 'Riprendi' : manual ? 'Indica il tipo' : 'Rivedi';
     return (
-      <div className={styles.stack}>
-        {steps}
-        {heading('Applichiamo solo le tue scelte.', 'Solo le decisioni salvate e incluse qui verranno applicate. Le altre restano da rivedere.')}
-        <div className={styles.layout}>
-          <section className={ui.card} aria-label="Decisioni pronte">
-            <h2>{summary.included.length} {summary.included.length === 1 ? 'decisione pronta' : 'decisioni pronte'}</h2>
-            {saved.length === 0 && <p>Nessuna decisione pronta. Torna alle proposte.</p>}
-            {saved.map(item => {
-              const sel = item.selection?.action === 'organize' ? item.selection : null;
-              const included = !summary.excluded.includes(item);
-              return (
-                <label key={item.id} className={styles.check}>
-                  <input type="checkbox" checked={included} disabled={busy} onChange={(e) => {
-                    setExcluded(prev => { const next = new Set(prev); if (e.target.checked) next.delete(item.id); else next.add(item.id); return next; });
-                  }} />
-                  <span><strong>{sel?.title}</strong>
-                    <span className={styles.hint}>{sel?.parts.map(partLabel).join(' + ')} · {sel?.target.kind === 'home' ? 'solo casa' : 'scheda esistente'} · Solo io</span>
-                  </span>
-                </label>
-              );
-            })}
-          </section>
-          <section className={ui.card}>
-            <h2>Il risultato</h2>
-            {summary.byCollection.map(c => <div key={c.collection} className={styles.summaryLine}><span>{collectionLabel(c.collection)}</span><strong>{c.count}</strong></div>)}
-            <div className={styles.summaryLine}><span>Nuovi oggetti / spese</span><strong>0 / 0</strong></div>
-            <div className={styles.summaryLine}><span>Da rivedere più avanti</span><strong>{summary.remaining}</strong></div>
-            <p className={styles.note}>Gli originali restano disponibili anche per i file rimandati.</p>
-            <ConfirmStatus state={confirm} onRecover={(p) => void recover(p)} onResend={(p) => void submit(p)} />
-            {canConfirm && (
-              <>
-                <label className={styles.check}>
-                  <input type="checkbox" checked={checked} disabled={busy} onChange={(e) => setChecked(e.target.checked)} />
-                  <span>Ho controllato queste decisioni e voglio applicarle.</span>
-                </label>
-                <div className={styles.actions}>
-                  <button type="button" className={cx(ui.btn, ui.primary)} disabled={!payload || !checked || busy || confirm.status === 'not_found'}
-                    onClick={() => {
-                      const frozen = confirm.status === 'rejected' || confirm.status === 'idle' ? payload : null;
-                      if (frozen) void submit(frozen);
-                    }}>
-                    {confirm.status === 'submitting' ? 'Conferma in corso…' : 'Conferma le scelte'}
-                  </button>
-                </div>
-              </>
-            )}
-          </section>
+      <article key={item.id} className={cx(styles.row, checked && styles.rowSelected)}>
+        <span className={styles.rowCheck}>
+          {canSelect && <input type="checkbox" checked={checked} aria-label={`Seleziona ${title}`}
+            onChange={(e) => { const on = e.target.checked; setPicked(prev => { const next = { ...prev }; if (on) next[item.id] = item.version; else delete next[item.id]; return next; }); }} />}
+        </span>
+        <div className={styles.rowMain}>
+          <h3>{title}</h3>
+          {raw !== 'unavailable' && (
+            <p>{title !== name ? `${name} · ` : ''}{item.byteSize !== null ? formatBytes(item.byteSize) : ''}{item.pageCount ? ` · ${item.pageCount} ${item.pageCount === 1 ? 'pagina' : 'pagine'}` : ''} · Solo io</p>
+          )}
+          <p>{badge}</p>
+          {proposal && (
+            <>
+              <p>Tipo: <strong>{proposal.parts.map(partLabel).join(' + ')}</strong></p>
+              <p>Destinazione: <strong>{[...new Set(proposal.parts.map(p => collectionLabel(kindCollection(p.kind))))].join(' + ')}</strong>{item.analysisState === 'needs_choice' ? ' · scheda da scegliere' : ' · Solo alla casa'}</p>
+              {proposal.parts.some(p => p.kind === 'receipt' || p.kind === 'invoice') && <p>Archivi soltanto la ricevuta: non viene creata una spesa.</p>}
+            </>
+          )}
+          {group === 'done' && decision && <p>{decision.parts.map(partLabel).join(' + ')} · {decision.target.kind === 'home' ? 'solo casa' : 'scheda esistente'}</p>}
+          {group === 'review' && copy && raw !== 'unavailable' && <p>{item.duplicate?.document ? `Stesso contenuto di «${item.duplicate.document.name}». ` : ''}Apri il documento per scegliere quali dati mantenere.</p>}
+          {group === 'review' && conflict && !copy && <p>La proposta è diversa dai dati già confermati: apri il documento per scegliere.</p>}
+          {group === 'review' && manual && raw !== 'unavailable' && <p>{raw === 'unreadable' || raw === 'unsupported' ? 'Il testo non è leggibile: indica il tipo consultando l’originale.' : 'Nessuna proposta: indica il tipo consultando l’originale.'}</p>}
+          {raw === 'unavailable' && <p>Il documento non è più accessibile con questo account.</p>}
+          {item.error && raw === 'upload_failed' && <p role="status">{item.error.message}</p>}
+          {write.status === 'rejected' && <p className={styles.formError}>Non applicato: {write.message}</p>}
+          {uploadMessages[item.id] && <p role="alert">{uploadMessages[item.id]}</p>}
         </div>
-        <div className={styles.actions}><button type="button" className={ui.btn} onClick={() => setStep('proposte')} disabled={busy}>← Modifica le scelte</button></div>
-      </div>
+        <div className={styles.rowActions}>
+          {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
+          {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
+          {group !== 'done' && reviewable(item) && (
+            <button type="button" className={cx(ui.btn, ui.small, ui.primary)} aria-label={`${actionLabel} ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>{actionLabel}</button>
+          )}
+          {group === 'done' && raw !== 'unavailable' && (canReview && item.permissions.review && props.onReorganizeDocument
+            ? <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Modifica ${name}`} disabled={props.addingFiles} onClick={() => void props.onReorganizeDocument?.(item.id)}>Modifica</button>
+            : <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Vedi originale ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale</button>)}
+        </div>
+      </article>
     );
-  }
+  };
 
-  // ------------------------------------------------------------------ Proposte
-  const visible = items.filter(i => matchesReviewFilter(i, filter));
-  const savedCount = summary?.included.length ?? 0;
   return (
-    <div className={styles.stack}>
-      {steps}
-      {heading('Una casa, documenti diversi.', 'Controlla i casi chiari e scegli come gestire gli altri: niente viene applicato finché non confermi.')}
-      {!canReview && <Banner><p>Con il tuo ruolo puoi consultare le proposte, ma non salvare decisioni.</p></Banner>}
-      <div className={styles.toolbar} role="group" aria-label="Filtra i file">
+    <div className={cx(styles.stack, showBulk && styles.withBar)}>
+      <p className={styles.crumb}>Documenti / Carica documenti</p>
+      <div className={styles.pageHead}>
+        <div>
+          {heading(reading ? 'Stiamo preparando le proposte…' : complete ? 'Hai finito questo caricamento.' : 'Controlla e organizza.',
+            reading ? 'Lettura locale dei PDF con testo: nessun file viene inviato all’esterno. Puoi già iniziare dai documenti pronti.'
+              : complete ? `${doneCount} ${doneCount === 1 ? 'documento completato' : 'documenti completati'}. Gli originali restano privati.`
+                : multi ? 'Controlla le proposte qui sotto, seleziona quelle corrette e organizzale con una sola conferma.'
+                  : 'Apri la proposta e conferma: il documento sarà subito organizzato.')}
+        </div>
+        {props.renderOutcomeLinks && <div className={styles.headActions}>{props.renderOutcomeLinks(results)}</div>}
+      </div>
+      {!canReview && <Banner><p>Con il tuo ruolo puoi consultare i documenti caricati, ma non organizzarli.</p></Banner>}
+      {canReview && !props.onOrganize && <Banner tone="warning"><p>{ORGANIZE_UNAVAILABLE}</p></Banner>}
+      <div role="status" aria-live="polite">
+        {notice && (
+          <Banner tone={notice.tone === 'success' ? 'info' : 'warning'}>
+            <p>{notice.text}</p>
+            {notice.failures.length > 0 && <ul className={styles.failures}>{notice.failures.map(f => <li key={f.id}><strong>{f.name}</strong>: {f.message}</li>)}</ul>}
+          </Banner>
+        )}
+      </div>
+      {bulkOps.map(op => <OrganizeStatus key={op.key} op={op} canRecover={!!props.onRecoverOrganization} onRecover={() => void runOrganize(op.payload, true)} onResend={() => void runOrganize(op.payload)} />)}
+      <div className={styles.toolbar} role="group" aria-label="Stato dei documenti">
         {FILTERS.map(([f, label]) => (
-          <button key={f} type="button" className={styles.filter} aria-pressed={filter === f} onClick={() => setFilter(f)}>
-            {label} · {items.filter(i => matchesReviewFilter(i, f)).length}
+          <button key={f} type="button" className={styles.filter} aria-pressed={filter === f} onClick={() => { setFilter(f); setPicked({}); }}>
+            {label} · {count(f)}
           </button>
         ))}
       </div>
+      {showBulk && (
+        <div className={styles.bulkTools}>
+          <p className={styles.note}>Copie, dati diversi e tipi da indicare si rivedono singolarmente.</p>
+          {available.length > 0 && selected.length < available.length && (
+            <button type="button" className={styles.linkButton} onClick={() => setPicked(prev => ({ ...prev, ...Object.fromEntries(available.map(i => [i.id, i.version])) }))}>
+              {available.length === 1 ? 'Seleziona la proposta disponibile' : `Seleziona le ${available.length} proposte disponibili`}
+            </button>
+          )}
+          {selected.length > 0 && <button type="button" className={styles.linkButton} onClick={() => setPicked({})}>Annulla selezione</button>}
+        </div>
+      )}
       <div className={styles.layout}>
-        <section className={ui.card} aria-label="Proposte">
-          {visible.length ? <div className={styles.rows}>{visible.map(i => row(i, 'proposte'))}</div> : <p>Nessun file in questo filtro.</p>}
+        <section className={ui.card} aria-label="Documenti caricati">
+          {visible.length ? <div className={styles.rows}>{visible.map(row)}</div> : <p>Nessun documento in questo filtro.</p>}
+          {canUpload && (
+            <div className={styles.addBox}>
+              <button type="button" className={ui.btn} disabled={props.addingFiles} onClick={() => setView('ingresso')}>+ Aggiungi documenti</button>
+              <p className={styles.note}>Resti qui: documenti e risultati già presenti vengono mantenuti.</p>
+            </div>
+          )}
         </section>
         <aside className={styles.aside}>
           <section className={ui.card}>
-            <h2>Le tue scelte</h2>
-            <div className={styles.stat}>{savedCount}<span className={styles.note}> / {items.length}</span></div>
-            <p className={styles.note}>File con una decisione pronta. Il resto può rimanere da rivedere.</p>
-            {lockedItems.size > 0 && <p className={styles.formError}>{lockedItems.size === 1 ? 'Una scelta ha' : `${lockedItems.size} scelte hanno`} un esito da verificare.</p>}
-            <div className={styles.actions}>
-              <button type="button" className={cx(ui.btn, ui.primary)} disabled={!savedCount} onClick={() => setStep('riepilogo')}>Controlla il riepilogo →</button>
-            </div>
+            <h2>Questo caricamento</h2>
+            <div className={styles.stat}>{doneCount}<span className={styles.note}> / {items.length}</span></div>
+            <p className={styles.note}>Documenti completati</p>
+            <div className={styles.summaryLine}><span>Da rivedere</span><strong>{count('review')}</strong></div>
+            <div className={styles.summaryLine}><span>Più tardi</span><strong>{count('later')}</strong></div>
+            <p className={styles.note}>Le caselle servono a scegliere cosa organizzare. I documenti cambiano solo quando confermi.</p>
           </section>
-          <button type="button" className={ui.btn} onClick={() => setStep('lotto')}>← Vedi il lotto</button>
         </aside>
       </div>
+      {showBulk && (
+        <div className={styles.bulkBar} role="region" aria-label="Documenti selezionati">
+          <div>
+            <strong>{selected.length} {selected.length === 1 ? 'documento selezionato' : 'documenti selezionati'}</strong>
+            <p className={styles.note}>{selected.length ? 'La conferma li organizza subito. Gli altri restano da rivedere.' : 'Seleziona nell’elenco le proposte che vuoi organizzare.'}</p>
+          </div>
+          <button type="button" className={cx(ui.btn, ui.primary)} disabled={!bulkPayload || bulkOps.length > 0}
+            onClick={() => { if (bulkPayload) void runOrganize(bulkPayload); }}>
+            {selected.length ? `Organizza ${selected.length} ${selected.length === 1 ? 'documento selezionato' : 'documenti selezionati'}` : 'Organizza selezionati'}
+          </button>
+        </div>
+      )}
       {reviewDialog}
     </div>
   );
 }
 
-function AnalysisPanel(props: { panel: IntakeAnalysisPanel; disabled: boolean; count: number; onStart: () => void }) {
-  const [consent, setConsent] = useState(false);
-  const { panel } = props;
+function OrganizeStatus(props: { op: OrganizeOp; canRecover: boolean; onRecover: () => void; onResend: () => void }) {
+  const { op } = props;
+  const n = op.payload.items.length;
+  const what = `${n} ${n === 1 ? 'documento' : 'documenti'}`;
+  if (op.status === 'submitting') return <p role="status" className={styles.note}>Organizzazione di {what} in corso…</p>;
+  if (op.status === 'not_found') {
+    return (
+      <Banner tone="warning" role="alert" title="Richiesta non registrata"
+        actions={<button type="button" className={ui.btn} onClick={props.onResend}>Invia di nuovo la stessa richiesta</button>}>
+        <p>Il servizio non ha registrato l’organizzazione di {what}. Puoi inviarla di nuovo con le stesse scelte.</p>
+      </Banner>
+    );
+  }
   return (
-    <section className={ui.card}>
-      <h2>Analisi del lotto</h2>
-      <p className={styles.note}>{panel.consentText}</p>
-      {panel.costText && <p className={styles.note}>{panel.costText}</p>}
-      {panel.limitsText && <p className={styles.note}>{panel.limitsText}</p>}
-      {panel.state.status === 'blocked' && <Banner tone="warning"><p>{panel.state.message}</p></Banner>}
-      {panel.state.status === 'running' ? <Loading label="Analisi in corso…" /> : (
-        <>
-          <label className={styles.check}>
-            <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} disabled={props.disabled || panel.state.status === 'blocked'} />
-            <span>Autorizzo l’analisi dei {props.count} file indicati.</span>
-          </label>
-          <div className={styles.actions}>
-            <button type="button" className={cx(ui.btn, ui.primary)} disabled={!consent || props.disabled || panel.state.status === 'blocked'} onClick={props.onStart}>Avvia l’analisi</button>
-          </div>
-        </>
-      )}
-    </section>
+    <Banner tone="warning" role="alert" title="Esito non confermato"
+      actions={props.canRecover && <button type="button" className={ui.btn} disabled={op.status === 'recovering'} onClick={props.onRecover}>{op.status === 'recovering' ? 'Verifica in corso…' : 'Verifica l’esito'}</button>}>
+      <p>{op.status === 'uncertain' ? op.message : 'Verifica in corso.'} I documenti coinvolti ({what}) restano bloccati e la richiesta non viene inviata di nuovo automaticamente.{props.canRecover ? '' : ' Ricarica la pagina per vedere lo stato reale.'}</p>
+    </Banner>
   );
-}
-
-function ConfirmStatus(props: { state: ConfirmState; onRecover: (p: ConfirmBatchPayload) => void; onResend: (p: ConfirmBatchPayload) => void }) {
-  const s = props.state;
-  if (s.status === 'rejected') return <Banner tone="error" role="alert" title="Conferma non registrata"><p>{s.message} Le tue scelte sono ancora qui.</p></Banner>;
-  if (s.status === 'uncertain' || s.status === 'recovering') {
-    return (
-      <Banner tone="warning" role="alert" title="Esito non confermato"
-        actions={<button type="button" className={ui.btn} disabled={s.status === 'recovering'} onClick={() => props.onRecover(s.payload)}>{s.status === 'recovering' ? 'Verifica in corso…' : 'Verifica l’esito'}</button>}>
-        <p>{s.status === 'uncertain' ? s.message : 'Verifica in corso.'} Le scelte restano bloccate e non vengono inviate di nuovo automaticamente.</p>
-      </Banner>
-    );
-  }
-  if (s.status === 'not_found') {
-    return (
-      <Banner tone="warning" role="alert" title="Conferma non trovata"
-        actions={<button type="button" className={ui.btn} onClick={() => props.onResend(s.payload)}>Invia di nuovo la stessa conferma</button>}>
-        <p>Il servizio non ha registrato la conferma. Puoi inviarla di nuovo con le stesse scelte.</p>
-      </Banner>
-    );
-  }
-  return null;
 }
