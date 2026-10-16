@@ -4,7 +4,7 @@
 .aside { position: sticky; top: var(--space-4); display: grid; gap: var(--space-3); min-width: 0; }
 .crumb { font-size: 13px; color: var(--color-muted); margin: 0; }
 .lead { color: var(--color-muted); margin: 0; max-width: 680px; }
-.note { color: var(--color-muted); font-size: 13px; margin: var(--space-2) 0 0; }
+.note { color: var(--color-muted); font-size: 13px; margin: var(--space-2) 0 0; overflow-wrap: anywhere; }
 .formError { color: var(--color-error); font-size: 14px; margin: var(--space-2) 0 0; }
 
 .steps { list-style: none; display: flex; gap: var(--space-2); padding: 0; margin: 0; flex-wrap: wrap; }
@@ -54,6 +54,7 @@
 .backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 12px; background: rgb(16 43 59 / 55%); }
 .dialog { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); width: min(920px, 100%); max-height: calc(100vh - 24px); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; color: var(--color-ink); }
 .dialogHead { display: flex; justify-content: space-between; gap: var(--space-3); align-items: flex-start; padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border); }
+.dialogHead > div { min-width: 0; }
 .dialogHead h2 { margin: 2px 0 0; font-size: 19px; overflow-wrap: anywhere; }
 .dialogBody { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-5); padding: var(--space-4) var(--space-5); overflow: auto; }
 .dialogFoot { display: flex; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; align-items: center; padding: var(--space-3) var(--space-5); border-top: 1px solid var(--color-border); }

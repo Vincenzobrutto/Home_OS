@@ -79,7 +79,7 @@ Callback:
 
 ## C2 — Casi approvati e test significativi · PRONTA
 
-Commit: quello di questa fase (hash in `git log`, messaggio «archivio assistito C2»). C1 non è stato riscritto.
+Commit: `539e94a`. C1 non è stato riscritto.
 
 **File nuovi o modificati:**
 
@@ -139,4 +139,55 @@ Opzioni: «Tutti» più le 7 raccolte del contratto, con `unclassified` = «Da o
 
 **Limiti:** «schermo piccolo» non si misura in jsdom; è verificato nel browser in C3.
 
-## C3 — Rifinitura e consegna · IN_CORSO
+## C3 — Rifinitura e consegna · PRONTA
+
+Commit: quello di questa fase (hash in `git log`, messaggio «archivio assistito C3»). C1 e C2 non sono stati riscritti.
+
+**File:**
+
+| File | Ruolo |
+|---|---|
+| `src/document-intake/intake.module.css` | Correzione per i nomi lunghi nel dialogo (vedi sotto) |
+| `src/document-intake/demo/IntakeDemo.tsx` | **Harness demo**: lotto sintetico e container finto in memoria, banner «HARNESS DEMO · dati sintetici, nessun upload, API o AI». Non è importato dall'app |
+| `docs/document-intake-20261016/HANDOFF.md` | Agganci, richieste R1–R7 al contratto, rilievi |
+| `docs/document-intake-20261016/screenshots/` | 6 immagini dell'harness |
+
+**Browser: harness statico, nessun server.** La porta 5174 era del master. Ho impacchettato `demo/IntakeDemo.tsx` con l'esbuild già presente in `node_modules`, usando uno script nello scratchpad della sessione (non versionato), e l'ho aperto come file locale in Chrome headless con profilo separato.
+
+| Verifica | Esito |
+|---|---|
+| 4 scenari (lotto misto, nomi lunghi, caricamento non riuscito, ingresso) a 1280, 390 e 320 px, su lotto e proposte | Nessuno scorrimento orizzontale |
+| Dialogo di revisione | Sta nella viewport. Piè di pagina visibile con «Chiudi senza modificare», «Decidi più avanti» e «Usa questa organizzazione» raggiungibili. Focus iniziale su «Chiudi». Esc lo chiude e restituisce il focus a «Rivedi …» |
+| **Difetto trovato e corretto** | Con un nome file lunghissimo il dialogo superava la viewport a 390 e 320 px. Corretto con `min-width: 0` sul titolo e `overflow-wrap` sulle note; riverificato a 1280, 390 e 320 |
+| Percorso completo a 320 | Salvate APE e CILA (una sola parte), regolamento rimandato. Riepilogo «2 decisioni pronte», Energia 1 / Pratiche edilizie 1, 0/0 nuovi oggetti e spese, 5 da rivedere. Conferma, poi esito «5 file restano da rivedere» |
+| Tastiera a 1280 | Invio su «Rivedi» apre il dialogo; 14 Tab restano dentro il dialogo, poi tornano a «Chiudi» |
+| Console | Nessun errore |
+
+**Screenshot dell'harness, sintetici:**
+
+| File | Contenuto |
+|---|---|
+| `01-proposte-320.png` | Proposte dopo le scelte |
+| `02-dialogo-multiparte-390.png` | Dialogo CILA e agibilità |
+| `03-riepilogo-320.png` | Riepilogo |
+| `04-esito-320.png` | Esito |
+| `05-lotto-errore-390.png` | Lotto con un file non caricato |
+| `06-dialogo-1280.png` | Dialogo su desktop |
+
+**Build, lint e test** (una volta, dopo l'ultima modifica):
+- `npm run build`: OK. Entry `index-BpqoPYEJ.js` 493,11 kB (gzip 150,12). I componenti non sono importati dall'app.
+- `npm run lint`: OK.
+- `npx vitest run --project mock src/document-intake`: 18/18.
+
+Ho chiuso Chrome. Nessun server avviato; 5174, 3001 e 55432 non toccati.
+
+**Limiti:**
+- **Non verificati:** upload reale, API, DB, deduplica sul server, AI e provider. L'harness non è il prodotto.
+- **Accessibilità:** nessuna dichiarazione WCAG e nessuna prova con screen reader o dispositivo fisico.
+- **Agganci:** i componenti vanno collegati dal container Codex (HANDOFF §1). Le richieste R1–R7 vanno decise prima.
+
+## Stato finale
+
+**C1, C2 e C3 sono PRONTE.**
+- Commit: `27994f0` (C1), `539e94a` (C2), commit C3, e il commit finale di questo indice (hash in `git log`).
+- Worktree pulito dopo l'ultimo commit. Nessun push e nessuna integrazione nel master.

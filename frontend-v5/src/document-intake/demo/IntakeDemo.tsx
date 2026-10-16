@@ -1,0 +1,66 @@
+/**
+ * HARNESS DIMOSTRATIVO — lotto sintetico del mockup e container finto in memoria. Non è una prova di upload,
+ * API, AI o DB e non è importato dall'app. Serve solo a verificare layout, dialoghi e focus nel browser.
+ */
+import { StrictMode, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import '../../styles/tokens.css';
+import '../../styles/global.css';
+import { DocumentIntakeAssistant } from '../DocumentIntakeAssistant';
+import type { CandidatePage, ConfirmBatchOutcome, IntakeBatch, IntakeItem, WriteOutcome } from '../model';
+import { CONTEXT, LIMITS, batchOf, corpus, diagramCandidates, mixedBatch } from '../testing/fixtures';
+
+const LONG = 'Relazione_tecnica_impianto_termico_centralizzato_con_contabilizzazione_del_calore_e_valvole_termostatiche_2026_versione_definitiva.pdf';
+const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+function initial(name: string): IntakeBatch | null {
+  if (name === 'empty') return null;
+  if (name === 'long') return batchOf([{ ...corpus.diagram(), id: 'lungo', filename: LONG, proposal: { ...corpus.diagram().proposal!, title: 'Relazione tecnica dell’impianto termico centralizzato con contabilizzazione del calore' } }, ...mixedBatch().items]);
+  if (name === 'failed') return batchOf([corpus.ape(), { ...corpus.rules(), uploadState: 'failed', analysisState: 'not_started', error: { code: 'x', message: 'Caricamento interrotto: riprova questo file.' } }, { ...corpus.scan(), uploadState: 'uploading', analysisState: 'not_started' }]);
+  return mixedBatch();
+}
+
+function Demo() {
+  const [name, setName] = useState('mixed');
+  const [batch, setBatch] = useState<IntakeBatch | null>(initial('mixed'));
+  const [candidates, setCandidates] = useState<Record<string, CandidatePage>>({});
+  const [run, setRun] = useState(0);
+  const update = (id: string, patch: Partial<IntakeItem>) => setBatch(b => b && { ...b, version: Number(b.version) + 1, items: b.items.map(i => i.id === id ? { ...i, version: Number(i.version) + 1, ...patch } : i) });
+  return (
+    <>
+      <div style={{ background: '#fff4dc', color: '#63450f', padding: '8px 16px', fontSize: 13, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <strong>HARNESS DEMO · dati sintetici, nessun upload, API o AI</strong>
+        <label>Scenario{' '}
+          <select value={name} onChange={(e) => { setName(e.target.value); setBatch(initial(e.target.value)); setCandidates({}); setRun(r => r + 1); }}>
+            <option value="mixed">Lotto misto del mockup</option>
+            <option value="long">Nomi lunghi</option>
+            <option value="failed">Caricamento non riuscito</option>
+            <option value="empty">Ingresso</option>
+          </select>
+        </label>
+      </div>
+      <main style={{ padding: '24px 16px', maxWidth: 1180, margin: '0 auto' }}>
+        <DocumentIntakeAssistant
+          contextKey={{ ...CONTEXT, batchId: `${CONTEXT.batchId}-${run}` }}
+          load={{ status: 'ready' }}
+          capabilities={{ enabled: true, limits: LIMITS }}
+          batch={batch} canEdit homeName="Casa esempio" candidates={candidates}
+          loadCandidates={(id) => setCandidates(c => ({ ...c, [id]: diagramCandidates }))}
+          onSelectFiles={() => setBatch(mixedBatch())}
+          onRetryUpload={async (id): Promise<WriteOutcome> => { await wait(200); update(id, { uploadState: 'stored', analysisState: 'ready', error: null }); return { status: 'confirmed' }; }}
+          onCancelUpload={async (): Promise<WriteOutcome> => ({ status: 'rejected', code: 'unavailable', message: 'Nella demo non si annulla.' })}
+          onSaveReview={async (p): Promise<WriteOutcome> => { await wait(150); update(p.itemId, { selection: p.selection, reviewState: p.selection.action === 'defer' ? 'deferred' : 'saved' }); return { status: 'confirmed' }; }}
+          onRecoverReview={async () => ({ status: 'not_found' })}
+          onResolveDuplicate={async (id): Promise<WriteOutcome> => { update(id, { reviewState: 'confirmed' }); return { status: 'confirmed' }; }}
+          onConfirm={async (p): Promise<ConfirmBatchOutcome> => { await wait(250); p.items.forEach(i => update(i.id, { reviewState: 'confirmed' })); return { status: 'done', results: p.items.map(i => ({ itemId: i.id, status: 'confirmed' })) }; }}
+          onRecoverConfirmation={async () => ({ status: 'not_found' })}
+          openOriginal={async () => { await wait(150); }}
+          renderPreview={(id, page) => <p style={{ fontFamily: 'ui-monospace, monospace', background: '#fffef9', border: '1px solid #e3dfd1', padding: 12, margin: '0 0 8px', overflowWrap: 'anywhere' }}>DOCUMENTO SINTETICO · {id} · {page ? `pagina ${page}` : 'prima pagina'} · NON VALIDO</p>}
+          onOpenReceiptFlow={() => {}}
+        />
+      </main>
+    </>
+  );
+}
+
+createRoot(document.getElementById('root')!).render(<StrictMode><Demo /></StrictMode>);
