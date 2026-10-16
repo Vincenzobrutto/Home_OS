@@ -341,6 +341,9 @@ function Inner(props: DocumentIntakeAssistantProps) {
           <section className={ui.card} aria-label="File del lotto">
             <h2>{items.length} {items.length === 1 ? 'file' : 'file'} nel lotto</h2>
             <div className={styles.rows}>{items.map(i => row(i, 'lotto'))}</div>
+            {canUpload && <div className={styles.actions}>
+              <button type="button" className={ui.btn} disabled={props.addingFiles} onClick={() => setStep('ingresso')}>+ Aggiungi documenti</button>
+            </div>}
           </section>
           <aside className={styles.aside}>
             {props.analysis && props.onStartAnalysis ? (
@@ -349,7 +352,6 @@ function Inner(props: DocumentIntakeAssistantProps) {
               <section className={ui.card}><h2>Organizzazione</h2><p className={styles.note}>L’analisi assistita non è attiva: puoi organizzare ogni file manualmente.</p></section>
             )}
             <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => setStep('proposte')}>Rivedi le proposte →</button>
-            {canUpload && <button type="button" className={ui.btn} disabled={props.addingFiles} onClick={() => setStep('ingresso')}>+ Aggiungi documenti</button>}
           </aside>
         </div>
         {reviewDialog}
