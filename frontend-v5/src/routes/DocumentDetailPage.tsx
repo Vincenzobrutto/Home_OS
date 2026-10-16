@@ -21,6 +21,7 @@ import { filtersFromParams, filtersToParams } from '../lib/documentSearch';
 import { KIND_LABEL } from '../document-intake/model';
 import { LinkedExpenses } from '../expenses/LinkedExpenses';
 import { ReceiptEntry } from '../receipt-integration/Surfaces';
+import { OrganizeDocumentButton } from '../intake-integration/OrganizeDocumentButton';
 import { documentsErrorMessage } from './DocumentsPages';
 import { useCurrentHome } from './HomePages';
 import { useAccount } from '../session/session';
@@ -126,6 +127,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
               <Link to={`/home/${encodeURIComponent(props.home.id)}/condivisioni/nuova?documento=${encodeURIComponent(doc.id)}`} className={ui.btn}>
                 Condividi…
               </Link>
+              {canRead && ['application/pdf', 'image/jpeg', 'image/png'].includes(doc.mimeType) && <OrganizeDocumentButton homeId={props.home.id} documentId={doc.id} />}
             </p>
           )}
           {props.analyzeHref && (

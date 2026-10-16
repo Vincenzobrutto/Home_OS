@@ -55,6 +55,8 @@ Props additive opzionali `onOrganize?(payload: OrganizeBatchPayload): Promise<Co
 
 Rinvio usa onSaveReview con action defer; Mantieni copia usa onResolveDuplicate. Esiti incerti bloccano ulteriori scritture sull'elemento, offrono recupero e non mostrano successo. Fonte persa e cambio account/casa invalidano anteprima, selezione e contenuti sensibili in cache.
 
+Arbitrato d'integrazione: anche Mantieni i dati attuali su un conflitto stored usa onResolveDuplicate (nome conservato per compatibilità), con stesso endpoint di mantenimento e controlli fonte/organizzazione corrente. Il completamento è Mantenuto invariato, selection nulla, titolo attuale conservato. Nessuna riscrittura dell'organizzazione e nessun nuovo collegamento. Modifica titolo e tipo dal dettaglio prepara una revisione dell'originale esistente, senza upload.
+
 ## Criteri di chiusura
 
 Test componenti e HTTP/DB sintetici su singolo, selezione parziale multipla, rinvio/reload, copia invariata/aggiornata, consenso mancante, versione cambiata, sorgente revocata, errore parziale, risposta persa e replay. Build/lint mirati; browser sull'app integrata con dati sintetici, desktop e mobile. Le prove del mockup non valgono come collaudo del prodotto. Nessun provider a pagamento per questa implementazione.

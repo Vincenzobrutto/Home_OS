@@ -214,8 +214,12 @@ export class IntakeBatchesService {
       if (!item) throw new ForbiddenException();
       const prior = await tx.documentIntakeRequest.findUnique({ where: { batchId_operation_key: { batchId: id, operation: 'duplicate:' + itemId, key: key! } } });
       if (prior) { if (prior.digest !== fingerprint) throw conflict('idempotency_conflict', 'Chiave già utilizzata.'); return { batch: await this.view(tx, batch, edit) }; }
-      if (item.version !== expectedVersion || item.reviewState === 'confirmed' || item.uploadState !== 'duplicate') throw conflict('item_version_conflict', 'Rileggi questo elemento prima di continuare.');
+      if (item.version !== expectedVersion || item.reviewState === 'confirmed' || !['duplicate', 'stored'].includes(item.uploadState) || ['queued', 'running'].includes(item.analysisState)) throw conflict('item_version_conflict', 'Rileggi questo elemento prima di continuare.');
       await this.source(tx, a, h, item);
+      if (item.uploadState !== 'duplicate') {
+        const org = await tx.documentOrganization.findUnique({ where: { accountId_homeId_documentId: { accountId: a, homeId: h, documentId: item.documentId! } } });
+        if (!org || org.documentVersion !== item.documentVersion || org.documentSha256 !== item.documentSha256) throw conflict('organization_version_conflict', 'Non ci sono dati attuali da mantenere. Rivedi questo documento.');
+      }
       await tx.documentIntakeItem.update({ where: { id: itemId }, data: { reviewState: 'confirmed', selection: Prisma.DbNull, version: { increment: 1 }, updatedAt: new Date() } });
       const remaining = await tx.documentIntakeItem.count({ where: { batchId: id, reviewState: { not: 'confirmed' } } });
       await tx.documentIntakeBatch.update({ where: { id }, data: { state: remaining ? 'open' : 'completed', version: { increment: 1 }, updatedAt: new Date() } });

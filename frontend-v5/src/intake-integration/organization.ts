@@ -1,8 +1,7 @@
-import type { ConfirmBatchOutcome, OpaqueId, OpaqueVersion, ReviewPayload } from '../document-intake/model';
+import type { ConfirmBatchOutcome, OrganizeBatchPayload } from '../document-intake/model';
 import type { IntakeClient, BatchWire, CapabilityWire } from './client';
 
-// Structural match of the additive component contract; Claude owns model.ts.
-export type OrganizationPayload = { batchId: OpaqueId; expectedVersion: OpaqueVersion; mode: 'single' | 'multiple'; items: ReviewPayload[] };
+export type OrganizationPayload = OrganizeBatchPayload;
 
 function receiptResults(raw: Record<string, unknown>, ids: string[]) {
   const value = raw.results;

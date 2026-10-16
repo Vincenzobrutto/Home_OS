@@ -36,3 +36,45 @@ Il container avvia automaticamente SOLO local_text_v1, con capability abilitata 
 Verifiche: build frontend TypeScript+Vite passata; ESLint src/intake-integration passato; 9/9 test in 3 file verdi. Coprono upload aggiunto nello stesso caricamento e autoanalisi del solo file nuovo conservando quello rimandato; autoanalisi da deep link con versioni correnti; errore con refetch senza loop; ricevuta parziale e key/corpo identici; esito completo senza altre scritture; errori/mancanze senza falsi successi; esclusione fonti perse, decisioni precedenti, capability esterna o senza permessi. Si tratta di test harness/componenti/trasporto simulato, non collaudo browser/API reale del nuovo frontend.
 
 Ultimo controllo Claude: modifiche in corso a model.ts, nessuna fase pronta ancora osservata. Il prossimo controllo deve leggere CONSEGNA.md e status/log, senza toccare il suo checkout né dedurre completamento dal dirty o da un solo commit. L'app aperta è ancora da portare al nuovo componente e il servizio API resta da aggiornare tramite launcher registrato, prima della prova reale sintetica.
+
+## Integrazione e collaudo conclusi — notte del 16 ottobre
+
+### Raccolta e arbitrato
+
+CONSEGNA.md di Claude dichiara pronte tutte e tre le fasi; checkout pulito e proprietà dei file rispettata. Integrati senza sync i commit e9db445, c04b291, 8351a98, 0232845, diventati sul master 1507cbb, 1a71f25, f883e5f, 4285326. Nessun push e nessuna modifica al checkout Claude.
+
+Codex ha collegato le callback reali, aggiornato i test e i testi del container al percorso V2, aggiunto «Modifica titolo e tipo» nel dettaglio (prepareExisting, niente upload). Per mantenere i dati attuali di un conflitto senza riscriverli, il mantenimento già usato per le copie ora accetta anche stored con organizzazione attuale e proof valide: API/versione item/permessi verificati, analisi in corso esclusa; selection nulla e nessuna nuova organizzazione/link. Il componente usa questa azione anche per il conflitto non duplicato. Il titolo di un mantenimento completato proviene dai dati conservati, non dalla proposta scartata. Test aggiunti per entrambe le protezioni.
+
+Recepito il dubbio del committente sulle caselle: l'elenco spiega che sono disponibili soltanto sulle proposte chiare; copie, dati diversi e rinviati richiedono Rivedi/Riprendi. La ricevuta esplicita che non crea una spesa.
+
+### Verifiche di codice e contratto
+
+- TypeScript backend e frontend, Vite production build e lint mirati: verdi. Ultimo passaggio solo tipi/lint dell'alias del payload, senza modifica JS.
+- Componenti + container: 61 test in 9 file verdi dopo integrazione iniziale. Dopo l'arbitrato del mantenimento eseguita la suite pertinente ReplaceConsent + intake-integration + routes/documents + routes/documentSearch: 69 test in 6 file verdi. I numeri si sovrappongono, non sono 130 casi distinti.
+- HTTP Nest + DB V5 dedicato, suite organizzazione: 17/17 verdi; include la compatibilità V1, conferma diretta, selezione parziale, consenso/versioni, fonte persa/ruoli, risposta persa e replay same-key, mantenimento stored dall'archivio senza riscrittura. Test con metadati sintetici, non parser fisico.
+- Nessuna suite generale ripetuta, nessun reset o migrazione. Servizio API aggiornato usando soltanto `outputs/Dimora-V5-Dev.ps1 -Restart`, terminato con API V5 pronta.
+
+### Browser reale con file fisici sintetici
+
+Chrome non disponibile in questa esecuzione. Usato il browser integrato già autenticato, in una scheda separata, senza cambiare account o aprire documenti personali. Creata via UI una casa chiaramente denominata «COLLAUDO V2 — soli documenti sintetici», indirizzo fittizio, id 604f1dea-5e33-42ef-8f3f-ae3e75cb88dd. La casa reale non è stata modificata. La casa di prova e i suoi soli cinque originali sono conservati per ispezione, non eliminati silenziosamente.
+
+Percorsi osservati nell'app con API/DB reali:
+
+1. Selezione fisica di cinque PDF sintetici dal file chooser. Due upload contemporanei al massimo; analisi locale automatica senza consenso/avvio separato. Quattro proposte pronte, scansione senza testo manuale.
+2. Selezione APE + CILA/agibilità: un solo Organizza 2, nessun ulteriore dialogo, due completati e tre non applicati. Collezioni Energia e Pratiche edilizie.
+3. Regolamento rimandato: Più tardi 1 e Riprendi ancora presenti dopo reload. Non selezionato in blocco e non riclassificato implicitamente.
+4. Scansione: originale espandibile, titolo e SCIA manuali, singola conferma in Pratiche edilizie; nessuna fonte inventata. Modifica successiva dal dettaglio ritrova titolo/tipo, blocca la sostituzione senza consenso e applica dopo consenso, stesso originale.
+5. Ricevuta selezionata da sola nell'elenco, archiviata in Acquisti e garanzie; zero spese/oggetti/collegamenti creati.
+6. Aggiunta dello stesso APE nello stesso caricamento: copia riconosciuta, nessuna scelta preselezionata, mantenimento invariato. Sei elementi nel manifest ma soltanto cinque documenti canonici nell'archivio.
+7. Modifica del titolo personale APE con consenso; nuova revisione confronta DATI ATTUALI e PROPOSTA DAL DOCUMENTO, nessuna scelta preselezionata. Mantieni i dati attuali conserva il titolo personale, stato Mantenuto invariato e versione organizzazione 2 (nessuna ulteriore riscrittura).
+8. Download effettivo dell'originale della scansione dopo la modifica: 570 byte e SHA-256 identico alla fixture. L'embed PDF espone un contenitore opaco nel browser integrato: non si dichiara una verifica visuale del motore PDF o OCR.
+
+Viewport reali 390×844 e 320×740: nessun overflow orizzontale osservato (scrollWidth 375/305); primario del dialogo a bottom 819/844 e barra selezione bottom 727/740. Fonte apribile dopo i campi. Override viewport ripristinato; console senza errori osservati.
+
+Prove in `outputs/documenti-v2-collaudo-20261016/`: screenshot 01–04, `db-state.json`, script read-only `verify-synthetic-state.cjs` circoscritto per database e nome/id della casa. Il controllo DB verifica cinque originali private/versione 1 con hash uguali alle fixture e quattro organizzazioni (regolamento ancora rimandato), zero spese, oggetti e link impliciti. Non sono state inviate email né richieste AI o a pagamento.
+
+### Limiti e prossimo passo
+
+Non sono prove con telefono fisico, lettore di schermo o partecipanti non guidati; errori di rete/permessi e recupero sono coperti da harness e HTTP/DB, non indotti nel browser sull'account del committente. Nessun provider esterno abilitato. Rimangono rifiniture non bloccanti da valutare: chiamare Rivedi la correzione di una scansione già classificata (oggi Indica il tipo, campi corretti) e rendere contestuali i link legacy di analisi/ricevuta mostrati anche su documenti tecnici. Non sviluppate fuori scope.
+
+Il flusso V2 è disponibile nell'app locale. Prossimo passo con il committente: provare il nuovo caricamento nella propria casa, con pochi documenti scelti da lui, senza confonderlo con la casa sintetica. Dopo registrazione dello stato e del rapporto, automazione di raccolta da mettere PAUSED perché consegna integrata e collaudo concluso.

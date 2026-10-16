@@ -59,7 +59,7 @@ type Props = {
   /** Conferma e organizza (applicazione diretta, singolo). */
   onSave: () => void;
   onDefer: () => void;
-  /** Copia: mantieni invariato (stesso originale, nessuna riclassificazione). */
+  /** Copia o conflitto: mantieni invariato, senza riscrivere organizzazione o collegamenti. */
   onResolveDuplicate: () => void;
   onRecover: () => void;
   onResend?: () => void;
@@ -199,7 +199,7 @@ export function ReviewDialog(props: Props) {
   const save = () => {
     setShowErrors(true);
     if (Object.keys(validateReviewDraft(draft, item)).length) { document.getElementById(`${group}-err`)?.focus(); return; }
-    if (isCopy && keeping) props.onResolveDuplicate(); else props.onSave();
+    if (keeping) props.onResolveDuplicate(); else props.onSave();
   };
   const sources = item.proposal?.sources ?? [];
   const candidates = props.candidates;

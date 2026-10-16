@@ -474,6 +474,7 @@ export const draftChanged = (draft: ReviewDraft, raw: IntakeItem) => canonical(d
 export function rowTitle(raw: IntakeItem): string {
   const item = visibleItem(raw);
   if (item.reviewState === 'confirmed' && item.selection?.action === 'organize') return item.selection.title;
+  if (item.reviewState === 'confirmed') return item.confirmedOrganization?.title ?? displayName(item);
   return item.proposal?.title ?? item.confirmedOrganization?.title ?? displayName(item);
 }
 

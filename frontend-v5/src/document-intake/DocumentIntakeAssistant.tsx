@@ -369,7 +369,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
     const title = rowTitle(item);
     let badge: ReactNode;
     if (write.status === 'uncertain' || write.status === 'recovering') badge = <Badge tone="warn">Esito non noto</Badge>;
-    else if (group === 'done') badge = <Badge tone="ok">{copy && !decision ? 'Mantenuto invariato' : decision ? `In ${selectionCollections(decision).map(collectionLabel).join(' e ')}` : 'Organizzato'}</Badge>;
+    else if (group === 'done') badge = <Badge tone="ok">{decision ? `In ${selectionCollections(decision).map(collectionLabel).join(' e ')}` : 'Mantenuto invariato'}</Badge>;
     else if (group === 'later') badge = <Badge tone="warn">Da riprendere</Badge>;
     else if (['unavailable', 'pending', 'uploading', 'upload_failed', 'analysis_waiting', 'analysis_running'].includes(raw)) badge = <StatusBadge status={raw} />;
     else if (copy) badge = <Badge tone="warn">File già presente</Badge>;
@@ -444,6 +444,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
         )}
       </div>
       {bulkOps.map(op => <OrganizeStatus key={op.key} op={op} canRecover={!!props.onRecoverOrganization} onRecover={() => void runOrganize(op.payload, true)} onResend={() => void runOrganize(op.payload)} />)}
+      {multi && !complete && canReview && <p className={styles.note}>Le caselle compaiono solo sulle proposte pronte da organizzare insieme. Per copie, dati diversi o documenti rimandati, usa «Rivedi» o «Riprendi».</p>}
       <div className={styles.toolbar} role="group" aria-label="Stato dei documenti">
         {FILTERS.map(([f, label]) => (
           <button key={f} type="button" className={styles.filter} aria-pressed={filter === f} onClick={() => { setFilter(f); setPicked({}); }}>

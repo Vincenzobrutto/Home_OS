@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { buildReviewPayload, chooseUpdate, initialReviewDraft, needsKeepOrUpdate, replacesConfirmed, sameParts, type IntakeItem, type OrganizeBatchPayload } from './model';
+import { buildReviewPayload, chooseUpdate, initialReviewDraft, needsKeepOrUpdate, replacesConfirmed, rowTitle, sameParts, type IntakeItem, type OrganizeBatchPayload } from './model';
 import { batchOf, copyOfOrganized, corpus } from './testing/fixtures';
 import { intakeProps, renderIntake } from './testing/renderIntake';
 
@@ -36,7 +36,7 @@ describe('V2 · conflitto con dati già confermati', () => {
     expect(primary()).toBeDisabled();
   });
 
-  it('«Mantieni i dati attuali»: applica i dati confermati, replace false con la versione letta', async () => {
+  it('«Mantieni i dati attuali»: completa senza riscrivere organizzazione o applicare la proposta', async () => {
     const user = userEvent.setup();
     const props = intakeProps({ batch: batchOf([apeConfirmed()]) });
     renderIntake(props);
@@ -44,7 +44,8 @@ describe('V2 · conflitto con dati già confermati', () => {
     await user.click(within(dlg()).getByRole('radio', { name: /Mantieni i dati attuali/ }));
     expect(consent()).toBeNull();
     await user.click(primary());
-    expect(organized(props.onOrganize)[0]!.items[0]).toMatchObject({ expectedOrganizationVersion: 3, replaceOrganization: false, selection: { title: 'APE appartamento', parts: [{ kind: 'ape', pageFrom: 1, pageTo: 8 }] } });
+    expect(props.onResolveDuplicate).toHaveBeenCalledWith(props.batch!.items[0]!.id, props.batch!.items[0]!.version);
+    expect(props.onOrganize).not.toHaveBeenCalled();
   });
 
   it('«Usa la proposta»: consenso non preselezionato, necessario, poi replace true con la versione 3', async () => {
@@ -119,6 +120,11 @@ describe('V2 · copia già presente', () => {
 });
 
 describe('V2 · modello per copie e conflitti', () => {
+  it('a kept document displays the confirmed title rather than the rejected proposal, including after reload', () => {
+    const kept: IntakeItem = { ...corpus.ape(), reviewState: 'confirmed', selection: null, confirmedOrganization: { title: 'Titolo conservato', parts: [{ kind: 'other', pageFrom: null, pageTo: null }] } };
+    expect(rowTitle(kept)).toBe('Titolo conservato');
+    expect(rowTitle({ ...kept, confirmedOrganization: null })).toBe(kept.filename);
+  });
   it('copie e conflitti richiedono la scelta; Aggiorna riparte dalla proposta; stesse parti in ordine diverso non sono un conflitto', () => {
     const copy: IntakeItem = { ...corpus.ape(), uploadState: 'duplicate', confirmedOrganization: null };
     expect(needsKeepOrUpdate(copy)).toBe(true);

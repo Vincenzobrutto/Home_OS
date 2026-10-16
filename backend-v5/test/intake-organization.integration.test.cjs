@@ -201,5 +201,17 @@ test('B2 durable personal organization, recoverable partial confirmation and doc
     try { await db.homeMembership.update({ where, data: { role: 'viewer' } }); await assert.rejects(service.organize(A.a, h, other.id, directBody(other), randomUUID()), e => e.getStatus() === 403); }
     finally { await db.homeMembership.update({ where, data: { role: 'owner' } }); }
   });
+  await t.test('V2 keep current organization also works from archive edit without a duplicate or metadata rewrite', async () => {
+    const first = await fixture(); await service.organize(A.a, h, first.id, directBody(first), randomUUID());
+    const documentId = first.items[0].documentLink.document.id;
+    const batch = (await service.prepareExisting(A.a, h, { documentIds: [documentId] }, randomUUID())).batch;
+    assert.equal(batch.items[0].uploadState, 'stored');
+    const beforeOrg = await db.documentOrganization.findFirst({ where: { documentId } }), key = randomUUID(), body = { expectedVersion: batch.items[0].version, action: 'reuse_reference' };
+    const result = await service.reuseDuplicate(A.a, h, batch.id, batch.items[0].id, body, key);
+    assert.equal(result.batch.items[0].reviewState, 'confirmed'); assert.equal(result.batch.items[0].selection, null);
+    assert.deepEqual(await db.documentOrganization.findFirst({ where: { documentId } }), beforeOrg);
+    assert.equal((await service.reuseDuplicate(A.a, h, batch.id, batch.items[0].id, body, key)).batch.items[0].version, result.batch.items[0].version);
+    const unorganized = await fixture(); await reject(service.reuseDuplicate(A.a, h, unorganized.id, unorganized.items[0].id, { expectedVersion: unorganized.items[0].version, action: 'reuse_reference' }, randomUUID()), 'organization_version_conflict');
+  });
   assert.deepEqual(await ledgers(), before);
 });

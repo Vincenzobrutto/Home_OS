@@ -72,7 +72,7 @@ function IntakeContainer() {
   }
   async function create(selected?: File[]) {
     if (creating.current) return;
-    if (selected && creation.current) { setProblem('Recupera prima l’esito del lotto precedente oppure riapri un lotto salvato.'); return; }
+    if (selected && creation.current) { setProblem('Recupera prima l’esito del caricamento precedente oppure riapri un caricamento salvato.'); return; }
     if (selected) {
       if (!selected.length || selected.length > 20 || selected.some(f => f.size < 1 || f.size > 20 * 1024 * 1024) || selected.reduce((n, f) => n + f.size, 0) > 200 * 1024 * 1024) { setProblem('Scegli fino a 20 file, 20 MiB per file e 200 MiB complessivi.'); return; }
       creation.current = { files: selected, ids: selected.map(() => crypto.randomUUID()), key: newIdempotencyKey(), batchId: active.current };
@@ -86,8 +86,8 @@ function IntakeContainer() {
     finally { creating.current = false; if (alive.current) setWaiting(false); }
   }
   const post = async (suffix: string, body: unknown, op: string): Promise<WriteOutcome> => {
-    const value = current.current; if (!value) return { status: 'rejected', code: 'unavailable', message: 'Rileggi il lotto.' };
-    try { adopt((await client.post(value.id, suffix, body, stableKey(op, body))).wire); return { status: 'confirmed' }; } catch (e) { if (isApiError(e) && e.status === 401) await handleUnauthorized(cache); const result = rejected(e); if (result.status === 'uncertain' && alive.current) setProblem('Esito non noto: verifica o riapri il lotto dal server prima di cambiare le scelte.'); return result; }
+    const value = current.current; if (!value) return { status: 'rejected', code: 'unavailable', message: 'Rileggi il caricamento.' };
+    try { adopt((await client.post(value.id, suffix, body, stableKey(op, body))).wire); return { status: 'confirmed' }; } catch (e) { if (isApiError(e) && e.status === 401) await handleUnauthorized(cache); const result = rejected(e); if (result.status === 'uncertain' && alive.current) setProblem('Esito non noto: verifica o riapri il caricamento dal server prima di cambiare le scelte.'); return result; }
   };
   const reviewBody = (p: ReviewPayload & { expectedOrganizationVersion?: number; replaceOrganization?: boolean }) => ({ expectedVersion: p.expectedVersion, expectedOrganizationVersion: p.expectedOrganizationVersion ?? current.current?.items.find(i => i.id === p.itemId)?.organizationVersion ?? 0, replaceOrganization: p.replaceOrganization === true, selection: p.selection });
   const saveReview = (p: ReviewPayload) => post(`/items/${encodeURIComponent(p.itemId)}/review`, reviewBody(p), 'review:' + p.itemId);
@@ -152,8 +152,8 @@ function IntakeContainer() {
   const error = cap.error ?? batch.error, unavailable = denied(error), busyAnalysis = wire?.items.some(i => ['queued', 'running'].includes(i.analysisState));
   return <>
     <p><Link to={`/home/${home.id}/documenti`}>← Documenti</Link></p>
-    {problem && <Banner tone="warning" title="Controlla l’esito"><p>{problem}</p>{recoverCreation && <button className={ui.btn} disabled={waiting} onClick={() => void create()}>Recupera il lotto</button>}</Banner>}
-    {problem && id && <p><button className={ui.btn} onClick={() => window.location.reload()}>Riapri il lotto dal server</button> <span>Solo per i file non ancora acquisiti potrà essere necessario scegliere di nuovo l’originale.</span></p>}
+    {problem && <Banner tone="warning" title="Controlla l’esito"><p>{problem}</p>{recoverCreation && <button className={ui.btn} disabled={waiting} onClick={() => void create()}>Recupera il caricamento</button>}</Banner>}
+    {problem && id && <p><button className={ui.btn} onClick={() => window.location.reload()}>Riapri il caricamento dal server</button> <span>Solo per i file non ancora acquisiti potrà essere necessario scegliere di nuovo l’originale.</span></p>}
     {waiting && <p role="status">Caricamento dei file, al massimo due alla volta…</p>}
     {wire?.items.some(i => i.documentLink.state === 'linked' && i.analysisState === 'ready' && !i.proposal && i.reviewState === 'unreviewed') && <Banner><p>Per alcuni file il testo non identifica un tipo con sufficiente chiarezza. Puoi consultare l’originale, scegliere il tipo manualmente o decidere più avanti.</p></Banner>}
     {!id && <details><summary>PDF sintetici per provare il percorso</summary><p>Documenti di esempio, senza dati personali. Scaricali e selezionali nel caricamento.</p><ul>{['ape-sintetico.pdf', 'pratica-mista-sintetica.pdf', 'regolamento-sintetico.pdf', 'ricevuta-sintetica.pdf', 'senza-testo-sintetico.pdf'].map(name => <li key={name}><a href={'/intake-examples/' + name} download>{name}</a></li>)}</ul></details>}
@@ -161,22 +161,22 @@ function IntakeContainer() {
       load={unavailable ? { status: 'unavailable' } : cap.isPending || !!id && batch.isPending ? { status: 'loading' } : error ? { status: 'error', message: userMessage(error), retryable: true } : { status: 'ready' }}
       candidates={candidates} loadCandidates={(itemId, more) => void loadCandidates(itemId, more)} onSelectFiles={selected => void create(selected)} addingFiles={waiting}
       onReorganizeDocument={reorganize}
-      onRetryUpload={async itemId => current.current ? upload(current.current, itemId) : { status: 'rejected', code: 'unavailable', message: 'Rileggi il lotto.' }}
+      onRetryUpload={async itemId => current.current ? upload(current.current, itemId) : { status: 'rejected', code: 'unavailable', message: 'Rileggi il caricamento.' }}
       onCancelUpload={itemId => post(`/items/${itemId}/upload-cancellation`, { expectedVersion: current.current?.items.find(i => i.id === itemId)?.version }, 'cancel:' + itemId)}
       onSaveReview={saveReview} onRecoverReview={recoverReview} onResolveDuplicate={(itemId, expectedVersion) => post(`/items/${itemId}/duplicate-resolution`, { expectedVersion, action: 'reuse_reference' }, 'duplicate:' + itemId)}
       onConfirm={async p => { const r = await confirm(p); return r.status === 'not_found' ? { status: 'uncertain' } : r; }} onRecoverConfirmation={p => confirm(p, true)}
       analysis={cap.data?.analysis.enabled ? { consentText: 'Classificazione locale: cerca possibili tipi nel testo del PDF e mostra le pagine da controllare. Non usa Anthropic e non invia file all’esterno. Tu confermi le proposte.', costText: 'Nessun costo API.', limitsText: 'PDF con testo: massimo 10 MiB e 20 pagine. Scansioni e immagini si organizzano manualmente.', state: busyAnalysis ? { status: 'running' } : { status: 'idle' } } : undefined}
-      onStartAnalysis={ids => { const items = current.current?.items.filter(i => ids.includes(i.id)).map(i => ({ id: i.id, expectedVersion: i.version })) ?? []; void post('/analyses', { provider: 'local_text_v1', items }, 'analysis').then(r => { if (r.status !== 'confirmed') setProblem(r.status === 'rejected' ? r.message : 'Esito incerto: rileggi il lotto prima di riprovare.'); }); }}
+      onStartAnalysis={ids => { const items = current.current?.items.filter(i => ids.includes(i.id)).map(i => ({ id: i.id, expectedVersion: i.version })) ?? []; void post('/analyses', { provider: 'local_text_v1', items }, 'analysis').then(r => { if (r.status !== 'confirmed') setProblem(r.status === 'rejected' ? r.message : 'Esito incerto: rileggi il caricamento prima di riprovare.'); }); }}
       openOriginal={async itemId => { const source = current.current?.items.find(i => i.id === itemId)?.documentLink.document; if (!source) throw Error('Originale non disponibile.'); const file = await api.downloadDocumentFile(home.id, source.id, undefined, account.id); saveBlob(file.blob, file.filename ?? 'originale.pdf'); }}
       renderPreview={(itemId, page) => { const source = wire?.items.find(i => i.id === itemId)?.documentLink.document; return source ? <OriginalPreview homeId={home.id} id={source.id} page={page} /> : <p>Originale non disponibile.</p>; }}
       onOpenReceiptFlow={itemId => { const doc = current.current?.items.find(i => i.id === itemId)?.documentLink.document; if (doc) void navigate(`/home/${home.id}/documenti/${doc.id}/ricevuta`); }}
       renderOutcomeLinks={() => <Link className={ui.btn} to={`/home/${home.id}/documenti`}>Vai ai Documenti</Link>}
       onRetryLoad={() => { void cap.refetch(); if (id) void batch.refetch(); }} />
     <input ref={picker} hidden type="file" accept="application/pdf,image/jpeg,image/png" aria-label="Originale da ricaricare" onChange={e => { const file = e.target.files?.[0], itemId = retryItem.current; if (file && itemId && current.current) { files.current.set(itemId, file); void upload(current.current, itemId); } e.target.value = ''; }} />
-    <section className={`${ui.card} ${styles.history}`} aria-label="Lotti salvati"><h2>Lotti salvati</h2>
-      {history.isPending ? <Loading label="Caricamento lotti…" /> : history.isError ? <ErrorState error={history.error} onRetry={() => void history.refetch()} /> : <ul>{history.data?.pages.flatMap(p => p.items).map(b => <li key={b.id}><Link to={`?lotto=${b.id}`}>{new Date(b.createdAt).toLocaleString('it-IT')} · {b.itemCount} file · {b.state === 'completed' ? 'Completato' : 'Da completare'}</Link></li>)}</ul>}
-      {history.hasNextPage && <button className={ui.btn} disabled={history.isFetchingNextPage} onClick={() => void history.fetchNextPage()}>Altri lotti</button>}
-      {id && <Link className={ui.btn} to="?">Nuovo lotto</Link>}
+    <section className={`${ui.card} ${styles.history}`} aria-label="Caricamenti precedenti"><h2>Caricamenti precedenti</h2>
+      {history.isPending ? <Loading label="Caricamento della cronologia…" /> : history.isError ? <ErrorState error={history.error} onRetry={() => void history.refetch()} /> : <ul>{history.data?.pages.flatMap(p => p.items).map(b => <li key={b.id}><Link to={`?lotto=${b.id}`}>{new Date(b.createdAt).toLocaleString('it-IT')} · {b.itemCount} file · {b.state === 'completed' ? 'Completato' : 'Da completare'}</Link></li>)}</ul>}
+      {history.hasNextPage && <button className={ui.btn} disabled={history.isFetchingNextPage} onClick={() => void history.fetchNextPage()}>Altri caricamenti</button>}
+      {id && <Link className={ui.btn} to="?">Nuovo caricamento</Link>}
     </section>
   </>;
 }
