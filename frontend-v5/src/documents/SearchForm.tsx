@@ -75,6 +75,12 @@ export function SearchForm(props: {
   const errorId = `${id}-error`;
 
   return (
+    <>
+      {props.collectionsEnabled && <section aria-label="Sezioni documenti" className={docs.collectionSections}>
+        <h2 className={docs.collectionTitle}>Esplora i documenti</h2>
+        <DocumentCollectionFilters current={applied.collection ?? 'all'} onChange={collection => props.onApply({ ...applied, collection })} label="Tipologie di documenti" />
+        <p className={ui.hint}>Tutti insieme oppure per raccolta. Ogni documento mantiene la sua visibilità.</p>
+      </section>}
     <form role="search" aria-label={`Cerca nei documenti di ${props.home.name}`} className={cx(ui.card, docs.search)} onSubmit={onSubmit} noValidate>
       <p className={docs.searchScope}>
         Ricerca in: <strong>{props.home.name}</strong>
@@ -106,10 +112,6 @@ export function SearchForm(props: {
           </span>
         )}
       </div>
-      {props.collectionsEnabled && <div>
-        <DocumentCollectionFilters current={draft.collection ?? 'all'} onChange={collection => setDraft({ ...draft, collection })} label="Raccolte personali" />
-        <p className={ui.hint}>Scegli una raccolta e premi Cerca. I documenti mantengono la loro visibilità.</p>
-      </div>}
       <div className={docs.searchFilters}>
         <label className={docs.filter}>
           Formato
@@ -151,5 +153,6 @@ export function SearchForm(props: {
         </div>
       </div>
     </form>
+    </>
   );
 }

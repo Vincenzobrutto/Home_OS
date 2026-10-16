@@ -382,3 +382,11 @@
     flex: 1 1 auto;
   }
 }
+.collectionSections {
+  margin-bottom: var(--space-4);
+}
+
+.collectionTitle {
+  font-size: 18px;
+  margin: 0 0 var(--space-2);
+}

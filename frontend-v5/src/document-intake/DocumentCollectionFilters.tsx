@@ -1,5 +1,5 @@
 import { COLLECTIONS, type Collection } from './model';
-import styles from './intake.module.css';
+import styles from '../economy/economy.module.css';
 
 export type CollectionFilter = 'all' | Collection;
 
@@ -16,15 +16,15 @@ export function DocumentCollectionFilters(props: {
 }) {
   const options: Array<{ id: CollectionFilter; label: string }> = [{ id: 'all', label: 'Tutti' }, ...COLLECTIONS];
   return (
-    <div className={styles.toolbar} role="group" aria-label={props.label ?? 'Raccolte'}>
+    <nav className={styles.families} aria-label={props.label ?? 'Raccolte'}>
       {options.map(o => {
         const count = props.countsExact ? props.counts?.[o.id] : undefined;
         return (
-          <button key={o.id} type="button" className={styles.filter} aria-pressed={props.current === o.id} onClick={() => props.onChange(o.id)}>
+          <button key={o.id} type="button" className={styles.family} aria-pressed={props.current === o.id} onClick={() => props.onChange(o.id)}>
             {o.label}{typeof count === 'number' ? ` · ${count}` : ''}
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }

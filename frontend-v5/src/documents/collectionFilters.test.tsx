@@ -6,10 +6,13 @@ import { ApiClient } from '../api/client';
 import type { Home } from '../api/types';
 import { queryKeys } from '../api/queryKeys';
 const home: Home = { id: 'home-synthetic', name: 'Casa test', address: 'Via test', version: 1, role: 'owner', permissions: ['read', 'edit'] };
-it('personal collection draft applies explicitly, reset clears it, URL/cursor keep distinct scopes', () => {
-  const apply = vi.fn(); render(<SearchForm home={home} applied={EMPTY_FILTERS} maxQuery={120} autoFocus={false} collectionsEnabled onApply={apply} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Energia' })); expect(apply).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Cerca' })); expect(apply).toHaveBeenLastCalledWith({ ...EMPTY_FILTERS, collection: 'energy' });
+it('collection sections apply immediately, preserve other filters and let users return to all documents', () => {
+  const apply = vi.fn(); const applied = { ...EMPTY_FILTERS, q: 'APE', format: 'pdf' as const };
+  const view = render(<SearchForm home={home} applied={applied} maxQuery={120} autoFocus={false} collectionsEnabled onApply={apply} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Energia' })); expect(apply).toHaveBeenLastCalledWith({ ...applied, collection: 'energy' });
+  view.rerender(<SearchForm home={home} applied={{ ...applied, collection: 'energy' }} maxQuery={120} autoFocus={false} collectionsEnabled onApply={apply} />);
+  expect(screen.getByRole('button', { name: 'Energia' })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: /^Tutti$/ })); expect(apply).toHaveBeenLastCalledWith({ ...applied, collection: 'all' });
   const filters = filtersFromParams(new URLSearchParams('collection=building&cursor=old&q=APE'));
   expect(filtersToParams(filters).toString()).toBe('q=APE&collection=building');
   expect(sameFilters(filters, { ...filters, collection: 'energy' })).toBe(false);
