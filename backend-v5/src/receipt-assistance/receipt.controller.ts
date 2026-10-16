@@ -11,4 +11,8 @@ export class ReceiptAssistanceController {
   @Get('drafts/:id') get(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Query() q: unknown) { return this.service.get(r.documentAccountId, h, id, q); }
   @Post('drafts/:id/park') @HttpCode(200) park(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.action(r.documentAccountId, h, id, 'park', b, k); }
   @Post('drafts/:id/reopen') @HttpCode(200) reopen(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.action(r.documentAccountId, h, id, 'reopen', b, k); }
+  @Get('object-fields/:id') fields(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Query() q: unknown) { return this.service.objectFields(r.documentAccountId, h, id, q); }
+  @Get('comparisons') comparisons(@Req() r: DocumentRequest, @Param('homeId') h: string, @Query() q: unknown) { return this.service.comparisons(r.documentAccountId, h, q); }
+  @Get('comparisons/:id') comparison(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Query() q: unknown) { return this.service.getComparison(r.documentAccountId, h, id, q); }
+  @Post('comparisons/:id/resolutions') @HttpCode(200) resolve(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.resolveComparison(r.documentAccountId, h, id, b, k); }
 }

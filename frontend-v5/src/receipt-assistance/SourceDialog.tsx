@@ -19,14 +19,24 @@ export function SourceDialog(props: {
 }) {
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const returnTo = useRef<Element | null>(null);
   const onClose = useRef(props.onClose);
   useEffect(() => { onClose.current = props.onClose; });
   useEffect(() => {
     returnTo.current = document.activeElement;
     closeRef.current?.focus();
-    // Esc ascoltato sul documento: chiude anche se il focus è uscito dal dialogo.
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); onClose.current(); } };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose.current(); return; }
+      if (e.key !== 'Tab') return;
+      const items = [...(panelRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])') ?? [])]
+        .filter(el => !el.closest('[hidden],[inert]') && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden');
+      const first = items[0], last = items.at(-1);
+      const outside = !panelRef.current?.contains(document.activeElement);
+      if (first && (outside || e.shiftKey && document.activeElement === first || !e.shiftKey && document.activeElement === last)) {
+        e.preventDefault(); (e.shiftKey ? last : first)?.focus();
+      }
+    };
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
@@ -37,7 +47,7 @@ export function SourceDialog(props: {
   const opening = props.openState.status === 'opening';
   return (
     <div className={styles.backdrop}>
-      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={styles.dialog}>
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby={titleId} className={styles.dialog}>
         <div className={styles.dialogHead}>
           <h2 id={titleId}>{request.kind === 'original' ? 'Documento originale' : `Fonte · ${request.label}`}</h2>
           <button ref={closeRef} type="button" className={cx(ui.btn, ui.small)} onClick={props.onClose}>Chiudi</button>

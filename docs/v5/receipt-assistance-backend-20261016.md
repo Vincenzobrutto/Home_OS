@@ -36,3 +36,18 @@ Transazione con lock account/Home e membership come servizi esistenti. Ledger re
 ### Prossimo incremento e limiti
 
 Marca/modello/provenienza degli oggetti generici, confronti persistenti, decisioni e loro riapertura, matching paginato, conferma transazionale che riusa costo/oggetto e storia; nessuno di questi risulta già implementato da R2. Poi job/fixture validata, integrazione frontend Claude e contenitori, policy/fonti/proiezioni/export. Solo dopo gate DB/HTTP/browser si importa il modulo nell'app e si annuncia capabilities. Anthropic reale resta disabilitato: nessuna campagna personale o budget precedente riutilizzati.
+
+
+## R3 — campi e confronti persistenti, raccolta Claude
+
+Consegna Claude completa verificata tramite indice finale e worktree pulito. Integrati esclusivamente636b96a→6403a81,65602ff→856e598,22baab1→f6c2cce,2490a45→de459bb. Tutti i file nelle directory assegnate, nessun sync.34test originali rieseguiti nel master verdi; componenti non ancora agganciati a route/API. Demo e screenshot sono harness sintetici, non prova del prodotto.
+
+Aggiunte tabelle ReceiptObjectField (nome/marca/modello, origine, fonti/snapshot/versione) e ReceiptComparison (confronto brand/model, target versionato, fingerprint univoco per non duplicare la stessa differenza, stato open/resolved). Migrazione20261016121000_receipt_fields_comparisons solo additiva, applicata al DB V5 verificato; client generato fermando soltanto API registrata e poi launcher/health ripristinati. CHECK su chiavi, origine e presenza/assenza fonti, versioni e valori.
+
+Nel modulo ancora isolato: GET object-fields/:id; GET comparisons con state open/resolved/all, filtri objectId/draftId, limit1–50, cursor legato ad account/Home/filtri; GET comparisons/:id; POST comparisons/:id/resolutions con expectedVersion e action keep_existing/defer, Idempotency-Key. La risposta POST è {draft} aggiornato, confronto riletto con GET. Nessuna sostituzione del valore dell'oggetto. Chiusura dell'ultimo confronto porta partially_resolved→confirmed; rinvio riapre e conserva il valore. Target cambiato409; confronto/fonte/valore non autorizzato redatti oppure mutazione403. Anche nome estratto oscurato se fonte non più leggibile.
+
+Sono implementate lettura e risoluzione dei confronti: creazione di oggetti/campi e confronti attraverso conferma atomica è il prossimo incremento, NON già attiva. La fixture DB costruisce questi dati sinteticamente. AppModule resta senza ReceiptAssistanceModule, capabilities false, nessun provider reale. Tutte le proiezioni G1/S1/storia/export dei futuri dati derivati devono ancora essere allineate prima di attivare la creazione.
+
+Verifiche:9test HTTP/DB (padre+8subtest) verdi con paginazione, cursor cross-account rifiutato, chiusura/rinvio persistenti, CAS, nessuna sovrascrittura, revoca fonte e nomi/campi/confronti oscurati, mutazione negata. Ripetuti dopo ulteriore caso revoca della fonte del campo. Backend build/lint verdi.
+
+Revisione Codex frontend: chiuso focus loop Tab/Shift+Tab nel dialogo; parser importi rifiuta «1 2»/«1€2» invece di concatenarli; selezione di oggetto o spesa scomparsi blocca il payload senza crash anche con arricchimento disattivo.38test mirati verdi e typecheck/lint verdi dopo le correzioni. Build completa verde prima dell'ultima guardia target; entry492,67kB immutata perché componenti non referenziati. Non ripetere build finché non cambia integrazione: typecheck finale è già verde. Nessun collaudo browser/API del nuovo frontend ancora svolto.

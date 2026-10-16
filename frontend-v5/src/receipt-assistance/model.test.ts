@@ -123,3 +123,15 @@ describe('payload UI di conferma', () => {
     expect(canonicalPayload(b)).toBe(canonicalPayload(a));
   });
 });
+
+
+it('blocks a vanished reused object even when enrichment is disabled', () => {
+  const { state, draft, expenses } = setup('existing');
+  const edited = { ...state, enrich: false };
+  expect(buildConfirmationPayload(edited, draft, [], expenses, TODAY)).toBeNull();
+});
+it('blocks a vanished reused expense without throwing during render', () => {
+  const { state, draft, objects } = setup('existing');
+  expect(buildConfirmationPayload(state, draft, objects, [], TODAY)).toBeNull();
+  expect(validateForm(state, draft, objects, TODAY, []).errors.expense).toMatch(/non è più disponibile/);
+});

@@ -201,7 +201,8 @@ export function initialFormState(draft: ReceiptDraft, objectCandidates: ObjectRe
 
 /** «179,90», «1.234,56», «85», «85.5» → centesimi interi sicuri; null se non valido. */
 export function parseEuroToCents(input: string): number | null {
-  const s = input.trim().replace(/\s|€/g, '');
+  const raw = input.trim();
+  const s = raw.startsWith('€') ? raw.slice(1).trim() : raw.endsWith('€') ? raw.slice(0, -1).trim() : raw;
   const comma = /^(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d{1,2}))?$/.exec(s);
   const match = comma ?? /^(\d+)\.(\d{1,2})$/.exec(s);
   if (!match) return null;
@@ -279,7 +280,7 @@ function textError(value: string, max: number, required: boolean, label: string)
 }
 
 /** Valida solo ciò che verrà salvato: i campi delle scelte escluse non bloccano la conferma. */
-export function validateForm(state: ReceiptFormState, draft: ReceiptDraft, objects: ObjectRef[], today: string): ValidationResult {
+export function validateForm(state: ReceiptFormState, draft: ReceiptDraft, objects: ObjectRef[], today: string, expenses?: ExpenseRef[]): ValidationResult {
   const errors: ValidationResult['errors'] = {};
   const set = (key: keyof ValidationResult['errors'], message: string | undefined) => { if (message) errors[key] = message; };
   if (state.object.kind === 'unset') errors.object = 'Scegli l’oggetto corretto, crea un nuovo oggetto oppure non associarlo.';
@@ -288,12 +289,16 @@ export function validateForm(state: ReceiptFormState, draft: ReceiptDraft, objec
     set('brand', textError(state.values.brand, LIMITS.brand, false, ''));
     set('model', textError(state.values.model, LIMITS.model, false, ''));
   }
-  if (state.object.kind === 'reuse' && state.enrich) {
+  if (state.object.kind === 'reuse') {
     const reuseId = state.object.id;
     const target = objects.find(o => o.id === reuseId);
     if (!target) errors.object = 'L’oggetto scelto non è più disponibile: scegline un altro.';
-    else for (const field of ['brand', 'model'] as const) if (!target[field]) set(field, textError(state.values[field], LIMITS[field], false, ''));
-    if (pendingComparisons(state, draft, objects).some(c => !state.decisions[c.key])) errors.comparisons = 'Per ogni differenza scegli se mantenere il dato confermato o decidere più avanti.';
+    else if (state.enrich) for (const field of ['brand', 'model'] as const) if (!target[field]) set(field, textError(state.values[field], LIMITS[field], false, ''));
+    if (state.enrich && pendingComparisons(state, draft, objects).some(c => !state.decisions[c.key])) errors.comparisons = 'Per ogni differenza scegli se mantenere il dato confermato o decidere più avanti.';
+  }
+  if (state.expense.kind === 'reuse' && expenses) {
+    const id = state.expense.id;
+    if (!expenses.some(e => e.id === id)) errors.expense = 'La spesa scelta non è più disponibile: scegline un’altra.';
   }
   if (state.expense.kind === 'unset') errors.expense = 'Scegli la spesa da mantenere, registrane una nuova oppure non intervenire.';
   if (state.expense.kind === 'create') {
@@ -397,7 +402,7 @@ export type ConfirmationPayload = {
 
 /** Restituisce il payload solo se il form è valido; altrimenti null (il container non deve inviare nulla). */
 export function buildConfirmationPayload(state: ReceiptFormState, draft: ReceiptDraft, objects: ObjectRef[], expenses: ExpenseRef[], today: string): ConfirmationPayload | null {
-  if (!validateForm(state, draft, objects, today).valid) return null;
+  if (!validateForm(state, draft, objects, today, expenses).valid) return null;
   const v = state.values;
   const origin = (field: FormField) => { const o = fieldOrigin(state, draft, field); return o === 'document' ? 'extraction' as const : o === 'empty' ? null : 'manual' as const; };
   let object: ConfirmationPayload['object'];

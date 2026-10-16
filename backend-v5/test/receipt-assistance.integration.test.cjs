@@ -29,11 +29,13 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
   const accounts = [], homes = [], files = [];
   t.after(async () => {
     const where = { accountId: { in: accounts } };
+    await db.receiptComparison.deleteMany({ where }); await db.receiptObjectField.deleteMany({ where });
     await db.receiptRequest.deleteMany({ where }); await db.receiptDraft.deleteMany({ where });
     await db.session.deleteMany({ where });
     await db.documentVersion.deleteMany({ where: { document: { uploaderId: { in: accounts } } } });
     await db.document.deleteMany({ where: { uploaderId: { in: accounts } } });
     await db.storedFile.deleteMany({ where: { id: { in: files } } });
+    await db.homeObject.deleteMany({ where: { accountId: { in: accounts } } });
     await db.homeMembership.deleteMany({ where: { homeId: { in: homes } } });
     await db.home.deleteMany({ where: { id: { in: homes } } });
     await db.account.deleteMany({ where: { id: { in: accounts } } });
@@ -108,6 +110,57 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     assert.deepEqual(result.body.draft.fields, {}); assert.equal(result.body.draft.snapshot, null); assert.equal(result.body.draft.total, null);
     for (const secret of ['Secret brand', 'Private evidence', shared.id, shared.name]) assert(!JSON.stringify(result.body).includes(secret));
     assert.equal((await call(A, path('manual-drafts'), 'POST', { documentId: shared.id }, key)).status, 403);
+  });
+  await t.test('Object fields and deferred comparisons persist, paginate and resolve without overwrite', async () => {
+    const obj = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Coffee fixture', type: 'appliance' } });
+    for (const [fieldKey, value] of [['brand', 'Aurora'], ['model', 'Classica 30']]) await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: obj.id, fieldKey, value, origin: 'user_declared' } });
+    const refs = [];
+    for (const [fieldKey, value] of [['brand', 'Lume'], ['model', 'Mini 90']]) refs.push(await db.receiptComparison.create({ data: { accountId: a.id, homeId: home, draftId: draft.id, objectId: obj.id, fieldKey, targetVersion: 1, fingerprint: digest(fieldKey + value), proposed: { value, sources: [{ documentId: own.id, page: 1, excerpt: value }] } } }));
+    await db.receiptDraft.update({ where: { id: draft.id }, data: { state: 'partially_resolved' } });
+    const fields = await call(A, path('object-fields/' + obj.id));
+    assert.equal(fields.status, 200); assert.equal(fields.body.fields.brand.value, 'Aurora');
+    assert.equal((await call(B, path('object-fields/' + obj.id))).status, 403);
+    const page = await call(A, path('comparisons?limit=1'));
+    assert.equal(page.body.items.length, 1); assert(page.body.nextCursor);
+    const next = await call(A, path('comparisons?limit=1&cursor=' + page.body.nextCursor));
+    assert.equal(next.body.items.length, 1); assert.notEqual(next.body.items[0].id, page.body.items[0].id);
+    assert.equal((await call(B, path('comparisons?limit=1&cursor=' + page.body.nextCursor))).status, 422);
+    assert.equal((await call(A, path('comparisons?limit=0'))).status, 422);
+    const key = randomUUID(), body = { expectedVersion: 1, action: 'keep_existing' };
+    const resolved = await call(A, path('comparisons/' + refs[0].id + '/resolutions'), 'POST', body, key);
+    assert.equal(resolved.status, 200); assert.equal(resolved.body.draft.state, 'partially_resolved');
+    assert.equal((await call(A, path('comparisons/' + refs[0].id))).body.comparison.state, 'resolved');
+    assert.equal((await call(A, path('comparisons/' + refs[0].id + '/resolutions'), 'POST', body, key)).status, 200);
+    assert.equal((await call(A, path('comparisons/' + refs[0].id + '/resolutions'), 'POST', body)).status, 409);
+    const deferred = await call(A, path('comparisons/' + refs[0].id + '/resolutions'), 'POST', { expectedVersion: 2, action: 'defer' });
+    assert.equal(deferred.status, 200);
+    for (const ref of refs) {
+      const current = await db.receiptComparison.findUnique({ where: { id: ref.id } });
+      assert.equal((await call(A, path('comparisons/' + ref.id + '/resolutions'), 'POST', { expectedVersion: current.version, action: 'keep_existing' })).status, 200);
+    }
+    assert.equal((await db.receiptDraft.findUnique({ where: { id: draft.id } })).state, 'confirmed');
+    const persisted = await db.receiptObjectField.findMany({ where: { objectId: obj.id }, orderBy: { fieldKey: 'asc' } });
+    assert.deepEqual(persisted.map(f => f.value), ['Aurora', 'Classica 30']);
+    assert(persisted.every(f => f.origin === 'user_declared' && f.version === 1));
+    assert.equal((await call(B, path('comparisons/' + refs[0].id))).status, 403);
+    await db.homeObject.update({ where: { id: obj.id }, data: { version: { increment: 1 } } });
+    const stale = await db.receiptComparison.findUnique({ where: { id: refs[0].id } });
+    assert.equal((await call(A, path('comparisons/' + stale.id + '/resolutions'), 'POST', { expectedVersion: stale.version, action: 'defer' })).status, 409);
+  });
+  await t.test('Extracted fields and names are hidden when their source becomes private', async () => {
+    const readable = await document(b, 'Field source secret', 'home');
+    const obj = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Secret derived name', type: 'appliance' } });
+    for (const [fieldKey, value] of [['name', 'Secret derived name'], ['brand', 'Secret extracted brand']]) await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: obj.id, fieldKey, value, origin: 'extraction_confirmed', documentId: readable.id, documentVersion: 1, documentSha256: readable.original.sha256, sources: [{ documentId: readable.id, page: 1, excerpt: value }] } });
+    const comparison = await db.receiptComparison.create({ data: { accountId: a.id, homeId: home, draftId: draft.id, objectId: obj.id, fieldKey: 'brand', targetVersion: 1, fingerprint: digest(obj.id), proposed: { value: 'Public receipt proposal', sources: [] } } });
+    assert.equal((await call(A, path('comparisons/' + comparison.id))).body.comparison.state, 'open');
+    assert.equal((await call(A, path('object-fields/' + obj.id))).body.fields.brand.value, 'Secret extracted brand');
+    await db.document.update({ where: { id: readable.id }, data: { visibility: 'private' } });
+    const hidden = await call(A, path('object-fields/' + obj.id));
+    assert.equal(hidden.body.object.name, null); assert.equal(hidden.body.fields.brand.state, 'unavailable');
+    for (const secret of ['Secret derived name', 'Secret extracted brand', readable.id, readable.original.sha256]) assert(!JSON.stringify(hidden.body).includes(secret));
+    const hiddenComparison = await call(A, path('comparisons/' + comparison.id));
+    assert.equal(hiddenComparison.body.comparison.state, 'unavailable'); assert.equal(hiddenComparison.body.comparison.existing, null); assert.equal(hiddenComparison.body.comparison.proposed, null); assert.equal(hiddenComparison.body.comparison.object, null);
+    assert.equal((await call(A, path('comparisons/' + comparison.id + '/resolutions'), 'POST', { expectedVersion: 1, action: 'keep_existing' })).status, 403);
   });
   await t.test('Changed original and viewer write denied; membership revocation blocks old requests', async () => {
     await db.documentVersion.update({ where: { documentId: own.id }, data: { version: { increment: 1 }, sha256: 'b'.repeat(64) } });

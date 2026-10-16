@@ -104,7 +104,7 @@ function AssistantInner(props: ReceiptAssistantProps) {
     );
   }
 
-  const validation = draft && form ? validateForm(form, draft, objects, today) : null;
+  const validation = draft && form ? validateForm(form, draft, objects, today, expenses) : null;
   const payload = draft && form ? buildConfirmationPayload(form, draft, objects, expenses, today) : null;
   const locked = confirm.status === 'submitting' || confirm.status === 'unknown' || confirm.status === 'recovering';
 

@@ -12,6 +12,8 @@ enum HomeRole {
   viewer
 }
 model Account {
+  receiptFields ReceiptObjectField[]
+  receiptComparisons ReceiptComparison[]
   receiptDrafts ReceiptDraft[]
   receiptRequests ReceiptRequest[]
   authChallenges AuthChallenge[]
@@ -83,6 +85,8 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  receiptFields ReceiptObjectField[]
+  receiptComparisons ReceiptComparison[]
   receiptDrafts ReceiptDraft[]
   receiptRequests ReceiptRequest[]
   sharePreviews SharePreview[]
@@ -216,6 +220,7 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  receiptFields ReceiptObjectField[]
   receiptDrafts ReceiptDraft[]
   economicJobs EconomicAnalysisJob[]
   economicDrafts EconomicDraft[]
@@ -601,6 +606,8 @@ model HomeRoom {
   @@index([homeId,state,createdAt,id])
 }
 model HomeObject {
+  receiptFields ReceiptObjectField[]
+  receiptComparisons ReceiptComparison[]
   id String @id @default(uuid())
   accountId String
   homeId String
@@ -739,6 +746,7 @@ model AiAttempt {
 }
 
 model ReceiptDraft {
+  comparisons ReceiptComparison[]
   requests ReceiptRequest[]
   id String @id @default(uuid())
   accountId String
@@ -773,4 +781,48 @@ model ReceiptRequest {
   account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
   home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
   @@unique([accountId,homeId,operation,target,key])
+}
+
+model ReceiptObjectField {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  objectId String
+  fieldKey String
+  value String
+  origin String
+  sources Json @default("[]")
+  version Int @default(1)
+  documentId String?
+  documentVersion Int?
+  documentSha256 String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  object HomeObject @relation(fields:[objectId],references:[id],onDelete:Restrict)
+  document Document? @relation(fields:[documentId],references:[id],onDelete:Restrict)
+  @@unique([objectId,fieldKey])
+  @@index([accountId,homeId,objectId])
+}
+model ReceiptComparison {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  draftId String
+  objectId String
+  fieldKey String
+  targetVersion Int
+  fingerprint String
+  proposed Json
+  state String @default("open")
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  draft ReceiptDraft @relation(fields:[draftId],references:[id],onDelete:Restrict)
+  object HomeObject @relation(fields:[objectId],references:[id],onDelete:Restrict)
+  @@unique([accountId,homeId,objectId,fieldKey,fingerprint])
+  @@index([accountId,homeId,state,createdAt,id])
 }
