@@ -35,6 +35,7 @@ describe('[mock] attenzione Casa, senza deduzioni dalle pagine parziali', () => 
     hooks.shares.mockReturnValue(ready({ pages: [{ items: [{ permissions: ['confirm_pairing'], recipient: { name: 'Nome privato' }, pairing: { code: 'SEGRETO' } }] }] }));
     show(<CasaSharingSummary homeId="casa-a" />);
     expect(screen.getByText('Hai condivisioni da confermare')).toBeInTheDocument();
+    expect(screen.getByText(/confronta il codice di confronto/)).toBeInTheDocument();
     expect(screen.queryByText(/Nome privato|SEGRETO/)).toBeNull();
   });
 

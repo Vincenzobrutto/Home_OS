@@ -112,6 +112,26 @@ describe('[mock] Documenti — archivio', () => {
 });
 
 describe('[mock] Documenti — caricamento', () => {
+  it('la risposta di upload non sottrae il focus a un altro controllo già attivo', async () => {
+    const { backend, home } = documentsWorld();
+    let release!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const original = backend.handle.bind(backend);
+    backend.handle = async req => {
+      if (req.method === 'POST' && req.path.endsWith('/documents')) await gate;
+      return original(req);
+    };
+    const app = await openDocuments(backend, 'owner@example.test', PW.owner, home.id);
+    await openUpload(app);
+    await app.user.upload(screen.getByLabelText('File'), pdfFile());
+    await app.user.click(screen.getByRole('button', { name: 'Carica' }));
+    const otherControl = screen.getByRole('link', { name: 'Consegne ricevute' });
+    otherControl.focus();
+    release();
+    await screen.findByText('Documento caricato');
+    expect(otherControl).toHaveFocus();
+  });
+
   it('default «Solo io», destinazione con nome casa, titolo dal file; multipart con CSRF, contesto e chiave', async () => {
     const { backend, owner, home } = documentsWorld();
     const app = await openDocuments(backend, 'owner@example.test', PW.owner, home.id);
@@ -125,6 +145,7 @@ describe('[mock] Documenti — caricamento', () => {
     expect(screen.getByLabelText(/^Titolo/)).toHaveValue('Rogito 2019.pdf');
     await app.user.click(screen.getByRole('button', { name: 'Carica' }));
     expect(await screen.findByText('Documento caricato')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Documento caricato').closest('[role="status"]')).toHaveFocus());
     const [req] = posts(backend);
     expect(req!.headers['x-account-context']).toBe(owner.id);
     expect(req!.headers['x-csrf-token']).toBeTruthy();

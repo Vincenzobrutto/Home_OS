@@ -8,6 +8,7 @@ import { sharingApi, sharingKeys } from '../api/sharingClient';
 import act from '../activities/activities.module.css';
 import { Dialog } from '../activities/components';
 import { AppShell } from '../components/AppShell';
+import { useUpdateFocus } from '../components/useUpdateFocus';
 import { Banner, ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import { isNotActiveError } from '../lib/economy';
 import { safeFilename } from '../api/client';
@@ -119,6 +120,14 @@ function ClaimCode() {
   const [fieldError, setFieldError] = useState<string | null>(null);
   const op = useSharingOperation<Share>();
   const locked = op.pending || op.ambiguous;
+  const codeInput = useRef<HTMLInputElement>(null);
+  const errorResult = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!op.pending && op.error && document.activeElement === document.body) {
+      if (!locked) codeInput.current?.focus();
+      else errorResult.current?.focus();
+    }
+  }, [op.pending, op.error, locked]);
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (locked) return;
@@ -146,6 +155,7 @@ function ClaimCode() {
             <label className={ui.label} htmlFor={`${id}-code`}>Codice</label>
             <input
               id={`${id}-code`}
+              ref={codeInput}
               className={ui.input}
               value={code}
               onChange={(e) => { setCode(e.target.value); setFieldError(null); }}
@@ -155,7 +165,7 @@ function ClaimCode() {
               maxLength={16}
               disabled={locked}
               aria-invalid={fieldError ? true : undefined}
-              aria-describedby={`${id}-hint${fieldError ? ` ${id}-err` : ''}`}
+              aria-describedby={`${id}-hint${fieldError ? ` ${id}-err` : ''}${op.error ? ` ${id}-server-error` : ''}`}
             />
             <span className={ui.hint} id={`${id}-hint`}>10 caratteri; spazi e trattini sono ammessi.</span>
             {fieldError && <span className={ui.fieldError} id={`${id}-err`} role="alert">{fieldError}</span>}
@@ -164,11 +174,13 @@ function ClaimCode() {
             <input type="checkbox" checked={disclose} onChange={(e) => setDisclose(e.target.checked)} disabled={locked} />
             <span>Il mittente vedrà il nome e l’email del mio account (dichiarati, non verificati) per riconoscermi.</span>
           </label>
+          <div id={`${id}-server-error`} ref={errorResult} tabIndex={-1}>
           <OperationFeedback
             op={op}
             title="Codice non accettato"
             extra={isShareUnavailableError(op.error) ? <p>Controlla il codice o chiedine uno nuovo a chi te l’ha dato.</p> : undefined}
           />
+          </div>
           {!op.ambiguous && (
             <button type="submit" className={cx(ui.btn, ui.primary)} disabled={op.pending || !disclose}>{op.pending ? 'Invio…' : 'Invia il codice'}</button>
           )}
@@ -192,6 +204,7 @@ function ReceivedDetail({ shareId }: { shareId: string }) {
   const api = useApi();
   const account = useAccount();
   const query = useReceivedShare(shareId);
+  const resultFocus = useUpdateFocus<HTMLHeadingElement>(shareId, query.data?.version);
   useDropOnForbidden(sharingKeys.receivedShare(account.id, shareId), query);
   const store = useStoreReceived();
   const op = useSharingOperation<Share>();
@@ -218,7 +231,7 @@ function ReceivedDetail({ shareId }: { shareId: string }) {
   return (
     <Shell title={`Consegna da ${sender(s)}`}>
       {back}
-      <h1 tabIndex={-1}>
+      <h1 tabIndex={-1} ref={resultFocus}>
         {s.state === 'pending' ? `${sender(s)} vuole darti dei documenti` : s.state === 'awaiting_confirmation' ? 'In attesa del mittente' : gone ? 'Non più disponibile' : `Consegna da ${sender(s)}`}
       </h1>
       {query.isError && (

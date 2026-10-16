@@ -32,6 +32,7 @@ import {
 } from '../sharing/hooks';
 import { useAccount, useApi } from '../session/session';
 import { useCurrentHome } from './HomePages';
+import { useUpdateFocus } from '../components/useUpdateFocus';
 import pages from './pages.module.css';
 
 // C1a lato mittente: elenco, preparazione in quattro passaggi con manifesto del server, dettaglio con
@@ -564,6 +565,7 @@ function ShareDetail({ home, shareId }: { home: Home; shareId: string }) {
   const caps = useSharingCapabilities(home.id);
   const op = useSharingOperation<Share>();
   const [code, setCode] = useState<{ value: string | null; expiresAt: string | null } | null>(null);
+  const resultFocus = useUpdateFocus<HTMLHeadingElement>(`${home.id}:${shareId}`, query.data?.version);
   const [confirmRotate, setConfirmRotate] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState(false);
   useDocumentTitle(`Condivisione · ${home.name}`);
@@ -602,7 +604,7 @@ function ShareDetail({ home, shareId }: { home: Home; shareId: string }) {
     <>
       {back}
       <span className={pages.eyebrow} style={{ display: 'block' }}>{home.name} · Condivisione</span>
-      <h1 tabIndex={-1}>{recipientTitle(s)}</h1>
+      <h1 tabIndex={-1} ref={resultFocus}>{recipientTitle(s)}</h1>
       <p><Tag tone={shareTone(s.state)}>{SHARE_STATE_LABEL[s.state]}</Tag></p>
       {query.isError && (
         <Banner tone="warning" role="status" actions={<button type="button" className={cx(ui.btn, ui.small)} onClick={() => void query.refetch()}>Aggiorna</button>}>

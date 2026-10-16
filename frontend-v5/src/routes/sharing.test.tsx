@@ -11,6 +11,22 @@ configure({ asyncUtilTimeout: 5000 });
 
 const PW = 'password-di-prova-001';
 
+/** Risposta trattenuta per simulare il focus perso dal controllo disabilitato nel browser. */
+function holdPost(backend: FakeBackend, path: RegExp) {
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  const original = backend.handle.bind(backend);
+  let held = false;
+  backend.handle = async req => {
+    if (!held && req.method === 'POST' && path.test(req.path)) {
+      held = true;
+      await gate;
+    }
+    return original(req);
+  };
+  return release;
+}
+
 async function world(opts: { docs?: number } = {}) {
   const backend = new FakeBackend();
   backend.sharing.enabled = true;
@@ -283,16 +299,28 @@ describe('[mock] C1a — persona esterna, codice e abbinamento', () => {
     expect(compared).not.toBeChecked();
     expect(screen.getByRole('button', { name: 'Conferma la persona' })).toBeDisabled();
     await app.user.click(compared);
-    await app.user.click(screen.getByRole('button', { name: 'Conferma la persona' }));
+    const finishConfirm = holdPost(backend, /confirm-pairing$/);
+    const confirmPerson = screen.getByRole('button', { name: 'Conferma la persona' });
+    await app.user.click(confirmPerson);
+    await waitFor(() => expect(confirmPerson).toBeDisabled());
+    confirmPerson.blur();
+    finishConfirm();
     expect(await screen.findByText('Invito da accettare')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Luca Bassi' })).toHaveFocus());
     const claimId = [...backend.sharing.shares.values()][0]!.claim!.id;
     expect(posts(backend, /confirm-pairing$/)[0]!.body).toEqual({ expectedVersion: 2, claimId, comparisonCode: comparison, confirmRecipient: true });
 
     await switchTo(app, 'luca@example.test', `/consegne/${shareId}`);
     expect(await screen.findByRole('heading', { level: 1, name: 'Giulia Leone vuole darti dei documenti' })).toBeInTheDocument();
     expect(screen.queryByText(/Manuale caldaia|Via Roma|Casa Roma/)).toBeNull();
-    await app.user.click(screen.getByRole('button', { name: 'Accetta' }));
+    const finishAccept = holdPost(backend, /\/accept$/);
+    const acceptButton = screen.getByRole('button', { name: 'Accetta' });
+    await app.user.click(acceptButton);
+    await waitFor(() => expect(acceptButton).toBeDisabled());
+    acceptButton.blur();
+    finishAccept();
     expect(await screen.findByRole('button', { name: 'Scarica Manuale caldaia' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Consegna da Giulia Leone' })).toHaveFocus());
     expect(screen.queryByText(/Via Roma|Casa Roma|Spese|Attività/)).toBeNull();
     await app.user.click(screen.getByRole('button', { name: 'Scarica Manuale caldaia' }));
     await waitFor(() => expect(backend.log.some((r) => r.method === 'GET' && /\/received-shares\/.+\/documents\/.+\/file$/.test(r.path))).toBe(true));
@@ -340,8 +368,17 @@ describe('[mock] C1a — persona esterna, codice e abbinamento', () => {
     expect(posts(backend, /code-claims$/)).toHaveLength(0);
     await app.user.clear(screen.getByLabelText('Codice'));
     await app.user.type(screen.getByLabelText('Codice'), 'ZZZZZ ZZZZZ');
-    await app.user.click(screen.getByRole('button', { name: 'Invia il codice' }));
+    const finishClaim = holdPost(backend, /code-claims$/);
+    const sendCode = screen.getByRole('button', { name: 'Invia il codice' });
+    await app.user.click(sendCode);
+    await waitFor(() => expect(sendCode).toBeDisabled());
+    // jsdom conserva il focus sul button disabilitato; simula il body osservato nel browser.
+    document.body.tabIndex = -1;
+    document.body.focus();
+    document.body.removeAttribute('tabindex');
+    finishClaim();
     expect(await screen.findByText(/non sono validi per il tuo account/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByLabelText('Codice')).toHaveFocus());
     for (let i = 0; i < 10; i++) {
       await app.user.click(screen.getByRole('button', { name: 'Invia il codice' }));
       await waitFor(() => expect(posts(backend, /code-claims$/)).toHaveLength(2 + i));

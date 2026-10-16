@@ -31,7 +31,7 @@ function SharingAttention({ homeId }: { homeId: string }) {
   return needsConfirmation ? (
     <div className={styles.spaced}>
       <Banner tone="warning" title="Hai condivisioni da confermare">
-        <p>Una persona ha inserito il codice. Prima di approvare, confronta il codice di verifica con lei tramite un contatto che conosci.</p>
+        <p>Una persona ha inserito il codice. Prima di approvare, confronta il codice di confronto con lei tramite un recapito che conosci già.</p>
       </Banner>
     </div>
   ) : shares.hasNextPage ? <p className={cx(styles.small, styles.muted, styles.spaced)}>Apri l’elenco completo per controllare anche le altre condivisioni.</p> : null;

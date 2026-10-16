@@ -65,6 +65,10 @@ export function DocumentsPage() {
   const canExport = home.permissions.includes('export');
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploaded, setUploaded] = useState<DocumentDetail | null>(null);
+  const uploadResult = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (uploaded && document.activeElement === document.body) uploadResult.current?.focus();
+  }, [uploaded]);
   const panelId = useId();
   const [params, setParams] = useSearchParams();
   const applied = useMemo(() => filtersFromParams(params), [params]);
@@ -113,7 +117,7 @@ export function DocumentsPage() {
       </div>
 
       {uploaded && (
-        <div className={docs.panel} role="status">
+        <div className={docs.panel} role="status" tabIndex={-1} ref={uploadResult}>
           <Banner title="Documento caricato">
             <p>
               «{uploaded.name}» è stato salvato in {home.name}.{' '}
