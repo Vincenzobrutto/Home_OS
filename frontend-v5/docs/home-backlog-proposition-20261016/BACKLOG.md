@@ -22,13 +22,13 @@ Proposta Claude, condivisa con il committente nella sessione del 16/10. Serve a 
   - previsioni, budget e accantonamenti;
   - valore dell'immobile.
 - **BL-03 Storia della casa:** si fa **prima di Agenzie**.
-- **BL-07 Persone della casa:** rientra nel **ciclo Home**, prima di Agenzie.
+- **BL-07 Persone della casa:** inizialmente nel ciclo Home; poi spostata alla **release successiva** (non serve subito).
 - **Fase 4 (BL-12…BL-16):** restano **placeholder non pianificati**. Ognuna richiede prima una fase di progettazione; solo dopo entra nel backlog di sviluppo con stime e criteri definitivi.
 - **Ordine:** la Home si chiude prima di Agenzie con la release corrente; le voci rinviate alla release successiva non bloccano Agenzie.
 - **BL-07:** invita solo il proprietario; quello che è privato resta privato.
 - **BL-08:** attivazione su richiesta, settimanale; nell'email titoli e date.
 - **BL-10:** mini-rubrica riusabile, al posto della versione minima.
-- **Piano di release:** il committente adotta la proposta Claude; vedi «Piano di release». BL-08 e BL-09 vanno alla release successiva. BL-07 entra nella release corrente solo se la prova reale coinvolge famiglie o persone che vivono insieme. Le decisioni di prodotto su BL-07 e BL-08 restano valide quando le voci verranno sviluppate.
+- **Piano di release:** il committente adotta la proposta Claude; vedi «Piano di release». BL-08 e BL-09 vanno alla release successiva. BL-07 va alla release successiva: il committente ha confermato che non serve subito. Le decisioni di prodotto su BL-07 e BL-08 restano valide quando le voci verranno sviluppate.
 
 ## Principi validi per tutte le voci
 
@@ -118,7 +118,7 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
 - **Cosa.** Invitare familiari e coinquilini con ruolo membro o sola lettura. I ruoli esistono già nel server, ma la UI dice «gestione degli accessi non disponibile».
 - **Prerequisiti.** Progettazione di inviti, revoca e privacy al livello della C1. La progettazione va fatta dentro questo ciclo.
 - **Decisioni del committente (16/10).**
-  - **Release condizionata:** corrente solo se la prova reale coinvolge famiglie o persone che vivono insieme; altrimenti release successiva. È la voce più delicata per sicurezza e privacy.
+  - **Release successiva:** il committente ha confermato (16/10) che non serve subito. È la voce più delicata per sicurezza e privacy.
   - **Invita solo il proprietario**, con ruolo membro o sola lettura. I membri non possono invitare.
   - **Il privato resta privato.** Gli invitati vedono solo i contenuti marcati «Persone della casa», per esempio i documenti con quella visibilità. Promemoria, spese e oggetti personali restano visibili solo a chi li crea, come oggi.
   - Nessuna spesa condivisibile in questo incremento.
@@ -289,7 +289,6 @@ Le note qui sotto sono il punto di partenza per quella progettazione, non requis
 | 5 | BL-03 Storia della casa | Versione essenziale |
 | 6 | BL-10 Mini-rubrica | |
 | 7 | BL-10b Professionista e oggetto dal documento | Dopo BL-10 |
-| — | BL-07 Persone della casa | Solo se la prova reale coinvolge famiglie o persone che vivono insieme. Codex chiede conferma al committente prima di iniziarla |
 
 Poi **Agenzie**.
 
@@ -299,7 +298,7 @@ Poi **Agenzie**.
 - BL-08 Riepilogo email: decisioni di prodotto già prese; il costo del fornitore va approvato dal committente. Progettare il servizio email riusabile anche per Agenzie, per esempio per gli inviti ai proprietari.
 - BL-02: lettura automatica della garanzia dalla fattura.
 - BL-03: estensioni (filtro per oggetto, altri tipi di evento).
-- BL-07, se non fatta nella release corrente.
+- BL-07 Persone della casa (confermato dal committente il 16/10: non serve subito).
 
 ### Future release, dopo la progettazione
 
