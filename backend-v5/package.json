@@ -7,7 +7,7 @@
     "lint": "eslint src test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "node --env-file=.env dist/main.js",
-    "test": "node --test test/domain.test.cjs test/documents.test.cjs test/file-control.test.cjs test/personal-export.test.cjs test/multipart.test.cjs test/review.test.cjs test/anthropic.test.cjs test/activities.test.cjs test/document-search.test.cjs test/expenses.test.cjs test/home-objects.test.cjs test/economy.test.cjs test/economic-documents.test.cjs test/economic-anthropic.test.cjs test/sharing-policy.test.cjs test/recovery-mail.test.cjs test/pilot-corpus.test.cjs test/pilot-score.test.cjs test/pilot-observations.test.cjs test/receipt-assistance.test.cjs",
+    "test": "node --test test/domain.test.cjs test/documents.test.cjs test/file-control.test.cjs test/personal-export.test.cjs test/multipart.test.cjs test/review.test.cjs test/anthropic.test.cjs test/activities.test.cjs test/document-search.test.cjs test/expenses.test.cjs test/home-objects.test.cjs test/economy.test.cjs test/economic-documents.test.cjs test/economic-anthropic.test.cjs test/sharing-policy.test.cjs test/recovery-mail.test.cjs test/pilot-corpus.test.cjs test/pilot-score.test.cjs test/pilot-observations.test.cjs test/receipt-assistance.test.cjs test/receipt-fixture.test.cjs",
     "test:personal-export-db": "node --env-file=.env --test test/personal-export.integration.test.cjs",
     "test:sharing-policy": "node --test test/sharing-policy.test.cjs",
     "test:recovery-db": "node --env-file=.env --test test/recovery.integration.test.cjs",
@@ -22,7 +22,8 @@
     "test:objects-db": "node --env-file=.env --test --test-concurrency=1 test/home-objects.integration.test.cjs test/home-objects.http.test.cjs",
     "test:economy-db": "node --env-file=.env --test --test-concurrency=1 test/economy.integration.test.cjs test/economy.http.test.cjs",
     "test:economy-documents-db": "node --env-file=.env --test --test-concurrency=1 test/economic-documents.integration.test.cjs test/economic-documents.http.test.cjs test/economic-ai.integration.test.cjs",
-    "test:receipt-db": "node --env-file=.env --test test/receipt-assistance.integration.test.cjs"
+    "test:receipt-db": "node --env-file=.env --test test/receipt-assistance.integration.test.cjs",
+    "test:receipt-fixture": "node --test test/receipt-fixture.test.cjs"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",

@@ -1,0 +1,31 @@
+{
+  "isSimulation": true,
+  "containsPersonalData": false,
+  "provider": "receipt_fixture_v1",
+  "fixtures": [
+    {
+      "kind": "purchase",
+      "file": "purchase.pdf",
+      "sha256": "a5efd504328f4cdeebbc8a139b85b4f7065632fa8a61631e5133f8992d7849e1",
+      "byteSize": 858
+    },
+    {
+      "kind": "multiple",
+      "file": "multiple.pdf",
+      "sha256": "b09048384b4eff9fa41dd9e16113b0dc691eb90f6d364ed2d6925d7579f1106d",
+      "byteSize": 905
+    },
+    {
+      "kind": "unreadable",
+      "file": "unreadable.pdf",
+      "sha256": "53895ec6c2c0835e2c69c2530ae24ed540e904c38d812785ca048207ae9b000e",
+      "byteSize": 570
+    },
+    {
+      "kind": "unsupported",
+      "file": "unsupported.pdf",
+      "sha256": "a100bef6edc223eba9720a992b7a28552da111faa4f3cfcc9213e0759edf47ab",
+      "byteSize": 682
+    }
+  ]
+}
