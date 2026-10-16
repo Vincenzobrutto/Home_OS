@@ -73,10 +73,10 @@ export function declaredType(file: File): DocumentMimeType | null {
 
 export function validateUploadFile(file: File | null): string | undefined {
   if (!file) return 'Scegli un file da caricare.';
-  if (!declaredType(file)) return 'Formato non supportato: puoi caricare PDF, JPEG o PNG.';
-  if (file.size === 0) return 'Il file è vuoto.';
+  if (!declaredType(file)) return /\.heic$/i.test(file.name) ? 'Formato non supportato: puoi caricare PDF, JPEG o PNG. Esporta o salva questa foto come JPEG e seleziona la nuova copia.' : 'Formato non supportato: puoi caricare PDF, JPEG o PNG. Salva una copia in uno di questi formati.';
+  if (file.size === 0) return 'Il file è vuoto. Seleziona una copia completa del documento.';
   if (file.size > MAX_UPLOAD_BYTES) {
-    return `Il file pesa ${formatBytes(file.size)}: il limite per file è 20 MiB.`;
+    return `Il file pesa ${formatBytes(file.size)}: il limite per file è 20 MiB. Riducilo o dividilo prima di caricarlo.`;
   }
   return undefined;
 }

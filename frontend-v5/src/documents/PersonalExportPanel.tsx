@@ -38,6 +38,7 @@ export function PersonalExportPanel({ homeId }: { homeId: string }) {
   const error = mutation.error;
   const problem = isApiError(error) && error.code === 'personal_export_too_large' ? 'I dati superano il limite di esportazione. Nessun file è stato scaricato.'
     : isApiError(error) && error.code === 'personal_export_busy' ? 'Sono già in corso altre esportazioni. Riprova tra poco.'
+    : isApiError(error) && error.code === 'personal_export_unavailable' ? 'Non è stato possibile preparare il file. Nessun download è stato avviato: riprova più tardi.'
     : isApiError(error) && error.status === 403 ? 'Non hai più accesso all’esportazione di questa casa.'
     : isApiError(error) && error.status === 404 ? 'L’esportazione dei dati personali non è ancora attiva su questo servizio.'
     : userMessage(error);
@@ -46,6 +47,7 @@ export function PersonalExportPanel({ homeId }: { homeId: string }) {
       <summary>Esporta i miei dati di questa casa</summary>
       <p>Scarica un file JSON con i tuoi dati: oggetti, attività, spese, lavori, dati confermati, cronologia e riferimenti autorizzati. Include anche i tuoi elementi archiviati.</p>
       <p>Gli originali dei documenti si scaricano separatamente in ZIP dall’archivio. Questo export non include dati privati altrui, condivisioni o bozze AI e non cancella i dati da Dimora.</p>
+      <p>Non è un backup ripristinabile e non trasferisce la casa. Il file non può essere reimportato; se perderai l’accesso alla casa, non potrai più esportarne i dati.</p>
       <button type="button" className={ui.btn} disabled={mutation.isPending} onClick={() => {
         if (busy.current || !generation.current) return;
         busy.current = true; setSaved(false); mutation.mutate(generation.current);

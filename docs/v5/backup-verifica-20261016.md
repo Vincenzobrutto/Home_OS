@@ -50,3 +50,6 @@ Backup/ripristino della Fase0 verificati. Gli altri prerequisiti del nuovo piano
 
 ## Snapshot 085607Z e seconda copia cifrata
 43 tabelle,267 originali, restore isolato verificato e spento. Copia cifrata AES256 su Drive privata, ricevuta e limiti in fase0-file-control-esito-20261016.md. Ancora necessaria custodia chiave separata dal PC. Nessun restore sul DB attivo.
+
+## Chiusura seconda copia
+Committente conferma chiave custodita fuori PC. Copia Drive cifrata riscaricata via connettore autenticato:542877byte eSHA256 identici al file locale già decifrato/verificato. Dettagli in fase0-chiusura-arbitrato-20261016.md; verifica workspace work/backup-roundtrip-20261016/verification.json. Nessun ulteriore restoreDB ripetuto, nessuna chiave trasferita.

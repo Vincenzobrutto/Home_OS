@@ -4,6 +4,7 @@ import { FakeBackend } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
 import { downloads } from '../test/browserStubs';
 import { queryKeys } from '../api/queryKeys';
+import { ApiError } from '../api/errors';
 
 function envelope(homeId: string, accountId: string) { return { format: 'dimora-personal-home-export', formatVersion: 1, generatedAt: '2026-10-16T10:00:00.000Z', scope: { homeId, accountId }, account: { id: accountId }, home: { id: homeId }, data: { documents: [], objects: [], technicalAssets: [], rooms: [], positions: [], activities: [], expenses: [], works: [], links: [], history: [] }, limitations: [] }; }
 async function open() {
@@ -15,6 +16,13 @@ async function open() {
   return { app, backend, account, home };
 }
 describe('[mock] personal export UI', () => {
+  for (const code of ['personal_export_busy', 'personal_export_unavailable']) it(`known ${code} has its own message and never downloads an error file`, async () => {
+    const { app } = await open(); const original = app.api.callJson.bind(app.api);
+    app.api.callJson = async <T,>(path: string, opts: Parameters<typeof app.api.callJson>[1]) => { if (path.endsWith('/personal-export')) throw new ApiError({ kind: 'service', status: 503, code, message: 'Generic unreachable service message' }); return original<T>(path, opts); };
+    await app.user.click(screen.getByRole('button', { name: 'Scarica i miei dati (JSON)' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(code === 'personal_export_busy' ? 'Sono già in corso altre esportazioni' : 'Non è stato possibile preparare il file');
+    expect(screen.getByRole('alert')).not.toHaveTextContent('Generic unreachable'); expect(downloads).toHaveLength(0);
+  });
   it('no automatic export; one explicit JSON download, separate from originals ZIP', async () => {
     const { app, home, account } = await open(); let calls = 0;
     const original = app.api.callJson.bind(app.api); app.api.callJson = async <T,>(path: string, opts: Parameters<typeof app.api.callJson>[1]) => { if (path.endsWith('/personal-export')) { calls++; return envelope(home.id, account.id) as T; } return original<T>(path, opts); };

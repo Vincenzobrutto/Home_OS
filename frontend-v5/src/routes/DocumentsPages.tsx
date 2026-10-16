@@ -355,6 +355,7 @@ function DocumentsArchive(props: {
             <span className={docs.limits}>
               ZIP con al massimo {MAX_EXPORT_DOCUMENTS} documenti e 100 MiB complessivi: limite tecnico di questa
               versione.
+              {' '}Lo ZIP contiene solo gli originali selezionati e un elenco con le loro impronte; attività, spese e oggetti si esportano separatamente dal riquadro dei dati personali qui sotto.
             </span>
             {selected.size > 0 && problem && <span className={docs.problem}>{problem}</span>}
           </div>
@@ -511,6 +512,7 @@ function DocumentRow(props: {
 }
 
 const UPLOAD_FIELDS = ['file', 'name', 'visibility'] as const;
+const admissionRefused = (error: unknown) => isApiError(error) && error.status === 503 && ['file_check_unavailable', 'storage_capacity_low'].includes(error.code);
 type UploadField = (typeof UPLOAD_FIELDS)[number];
 
 /**
@@ -548,7 +550,8 @@ export function UploadForm(props: {
   }, []);
 
   const error = upload.error;
-  const isService = isApiError(error) && error.kind === 'service';
+  const refused = admissionRefused(error);
+  const isService = isApiError(error) && error.kind === 'service' && !refused;
   const isConflict = isApiError(error) && error.status === 409 && error.code === 'idempotency_conflict';
 
   const focusField = (field: UploadField) => {
@@ -573,6 +576,12 @@ export function UploadForm(props: {
         onSuccess: (doc) => props.onUploaded(doc),
         onError: (err) => {
           if (!isApiError(err)) return;
+          if (admissionRefused(err)) {
+            // These codes prove admission failed before a document/ledger commit.
+            setLocked(false);
+            setErrors({});
+            return;
+          }
           if (err.kind === 'service') {
             // Esito sconosciuto: il documento potrebbe essere stato salvato.
             setLocked(true);
@@ -615,7 +624,7 @@ export function UploadForm(props: {
 
   const disabled = locked || upload.isPending;
   const formError =
-    upload.isError && !isService && !isConflict && !Object.values(errors).some(Boolean) ? userMessage(error) : null;
+    upload.isError && !isService && !refused && !isConflict && !Object.values(errors).some(Boolean) ? userMessage(error) : null;
 
   if (uploadAccount.requiresEmailVerification && !uploadAccount.emailVerifiedAt) return <Banner tone="warning" title="Conferma la tua email prima di caricare"><p>{verificationEnabled?'Richiedi il link di conferma dal riquadro «Conferma la tua email» in questa pagina. Casa, Attività e Spese restano disponibili.':'La verifica email non è disponibile in questo momento. Nessun file è stato caricato. Riprova più tardi.'}</p><button className={ui.btn} onClick={props.onCancel}>Chiudi</button></Banner>;
   return (
@@ -629,6 +638,16 @@ export function UploadForm(props: {
       <p className={docs.destination}>
         Destinazione: <strong>{home.name}</strong>
       </p>
+      <p className={docs.note}>
+        Prova personale: usa inizialmente documenti non delicati e conserva gli originali. In questa versione non puoi eliminare i documenti caricati.
+        {' '}I nuovi file vengono controllati con Microsoft Defender di questo PC: secondo le impostazioni di Windows, Microsoft può ricevere informazioni o campioni dei file.
+      </p>
+
+      {refused && <Banner tone="warning" role="alert" title="Documento non salvato">
+        <p>{isApiError(error) && error.code === 'storage_capacity_low'
+          ? 'L’archivio non ha spazio sufficiente in questo momento. Il documento non è stato salvato: riprova più tardi.'
+          : 'Non è stato possibile completare il controllo del file. Il documento non è stato salvato: riprova tra qualche minuto.'}</p>
+      </Banner>}
 
       {isService && (
         <Banner
@@ -647,7 +666,7 @@ export function UploadForm(props: {
           }
         >
           <p>
-            {userMessage(error)} Il documento potrebbe essere già stato salvato. «Riprova invio» ripete la stessa
+            Non è stato possibile confermare l’esito dell’invio. Il documento potrebbe essere già stato salvato. «Riprova invio» ripete la stessa
             richiesta senza creare doppioni; per cambiare file o dati controlla prima l’archivio.
           </p>
         </Banner>
@@ -689,7 +708,7 @@ export function UploadForm(props: {
           File
         </label>
         <span id={`${fileInputId}-hint`} className={ui.hint}>
-          PDF, JPEG o PNG, massimo 20 MiB.
+          PDF, JPEG o PNG, massimo 20 MiB. Le foto vengono archiviate; l’analisi legge solo il testo presente nei PDF.
         </span>
         <input
           id={fileInputId}
@@ -751,7 +770,7 @@ export function UploadForm(props: {
       <div className={styles.formActions}>
         {!locked && (
           <button type="submit" className={cx(ui.btn, ui.primary)} disabled={upload.isPending || isConflict}>
-            {upload.isPending ? 'Caricamento in corso…' : 'Carica'}
+            {upload.isPending ? 'Caricamento e controllo del file…' : refused ? 'Riprova' : 'Carica'}
           </button>
         )}
         <button type="button" className={cx(ui.btn, ui.ghost)} onClick={props.onCancel} disabled={upload.isPending}>

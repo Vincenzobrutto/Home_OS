@@ -218,6 +218,31 @@ describe('[mock] Documenti — caricamento', () => {
     expect(backend.documents.size).toBe(1);
   });
 
+  for (const code of ['file_check_unavailable', 'storage_capacity_low']) it(`rifiuto certo ${code}: nessun successo, campi editabili e retry con la stessa chiave`, async () => {
+    const { backend, home } = documentsWorld();
+    const app = await openDocuments(backend, 'owner@example.test', PW.owner, home.id);
+    const original = backend.handle.bind(backend); let first = true;
+    backend.handle = async req => {
+      if (first && req.method === 'POST' && /\/documents$/.test(req.path)) {
+        first = false; backend.log.push(req);
+        return { status: 503, body: { error: { code, message: 'Nessun documento salvato.' } } };
+      }
+      return original(req);
+    };
+    await openUpload(app); await app.user.upload(screen.getByLabelText('File'), pdfFile());
+    await app.user.click(screen.getByRole('button', { name: 'Carica' }));
+    expect(await screen.findByText('Documento non salvato')).toBeInTheDocument();
+    expect(screen.queryByText('Esito non confermato')).not.toBeInTheDocument();
+    expect(screen.queryByText('Documento caricato')).not.toBeInTheDocument();
+    expect(backend.documents.size).toBe(0);
+    expect(screen.getByLabelText('File')).toBeEnabled(); expect(screen.getByLabelText(/^Titolo/)).toBeEnabled();
+    expect(screen.getByLabelText(/^Titolo/)).toHaveValue('rogito.pdf');
+    await app.user.click(screen.getByRole('button', { name: 'Riprova' }));
+    await screen.findByText('Documento caricato');
+    const [a, b] = posts(backend); expect(a!.headers['idempotency-key']).toBe(b!.headers['idempotency-key']);
+    expect((a!.body as FormData).get('file')).toEqual((b!.body as FormData).get('file')); expect(backend.documents.size).toBe(1);
+  });
+
   it('esito ambiguo: campi bloccati, «Riprova invio» con stessa chiave e stesso file, nessun doppione', async () => {
     const { backend, home } = documentsWorld();
     const app = await openDocuments(backend, 'owner@example.test', PW.owner, home.id);
@@ -226,6 +251,8 @@ describe('[mock] Documenti — caricamento', () => {
     app.control.dropNextResponse();
     await app.user.click(screen.getByRole('button', { name: 'Carica' }));
     expect(await screen.findByText('Esito non confermato')).toBeInTheDocument();
+    expect(screen.queryByText('Documento non salvato')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).not.toHaveTextContent('Nessun file è stato modificato');
     expect(screen.getByLabelText(/^Titolo/)).toBeDisabled();
     expect(screen.getByLabelText('File')).toBeDisabled();
     expect(screen.getByRole('radio', { name: /Solo io/ })).toBeDisabled();

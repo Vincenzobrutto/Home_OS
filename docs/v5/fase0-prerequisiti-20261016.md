@@ -2,23 +2,22 @@
 
 Avvio approvato dal committente il 16 ottobre 2026. Questa matrice distingue capacità esistenti, verifiche e lavoro residuo; la Fase 0 non è ancora chiusa. Nessun documento personale è stato caricato in questa sessione.
 
-| Area | Stato e base | Criterio per chiudere |
+| Area | Stato attuale | Criterio residuo |
 |---|---|---|
-| Backup DB e originali | Verificato: backup-verifica-20261016.md, 43 tabelle e 262 originali (snapshot 083531Z, anteriore al controllo file), restore isolato spento | Copia valida conservata; prima di nuovi dati personali concordare seconda destinazione distinta dal PC. Il backup locale non protegge dalla perdita del PC |
-| Recupero account | Concluso localmente: account-recovery-esito-20261016.md; canale attivo, verifica email e reset con login nuovo confermati dall'utente e metadati DB | Gate del recupero chiuso per pilota locale; nessun reset amministrativo o account basato su email dichiarata |
-| Upload e integrità | Codice: PDF/JPEG/PNG rilevati dai byte, 20 MiB/file, idempotenza; hash e dimensione al download/ZIP; errore storage senza falso successo | Prove mirate e procedura spazio disponibile; limiti cumulativi non presenti, non pubblicizzare quota utente |
-| Privacy documenti | Default private; owner non legge automaticamente il privato altrui; guard e revoca; no-store/nosniff e allegato, listener API loopback | Prove di isolamento/sessione già documentate, nuovi controlli mirati; nessuna attestazione di sicurezza generale |
-| Export e conservazione | JSON personale per Home personal-export-v1 attivo, separato da ZIP selettivo originali e manifesto fino a100MiB | Contratto/esito personal-export-v1 verificati su API/DB sintetici e UI harness; collaudo visivo ancora aperto. Conservazione/cancellazione da definire, senza termini legali inventati |
-| Qualità AI | Due esempi live economici insufficienti; corpus24 casi materializzato e controllato dal parser, scorer offline disponibile | Revisione indipendente annotazioni e campagna rappresentativa, metriche ed errori; ulteriori chiamate live solo con file e budget autorizzati |
-| File potenzialmente dannosi | documents-api-contract.md richiede hardening antimalware prima del pilota; rilevare il formato non è una scansione | Definire controllo locale/quarantena ed esiti prima dei file personali. Controllo nuovi upload attivo: fase0-file-control-esito-20261016.md; Defender esistente, nessuna impostazione Windows modificata |
-
+| Recupero account | Chiuso locale: verifica email, recupero e nuovo login reali confermati | Nessun nuovo invio necessario |
+| Backup | Snapshot085607Z verificato43tabelle267originali, restore isolato spento, copia cifrata Drive riscaricata conSHA identico; chiave fuori PC confermata dall'utente | Gate chiuso per il pilota locale; copia a un punto nel tempo, non DB continuamente aggiornato |
+| Upload/privacy/integrità | Controllo nuovo file bloccante Defender, riserva disco, formati/limiti, idempotenza, hash/ZIP e isolamento verificati | Verifica visiva reale comune all'export; limite politica cloud Windows dichiarato, nessuna sicurezza generale certificata |
+| Export personale | JSON Home/account attivo, ZIP originali separato; test API/DB reali sintetici e UI harness | Collaudo visivo reale desktop/mobile con account QA separato |
+| UX file ed export | Claude raccolto/arbitrato, rifiuti certi503 e messaggi corretti;32test frontend mirati/build/lint verdi | Nessuna riprogettazione generale; dettagli in fase0-chiusura-arbitrato-20261016.md |
+| Qualità AI | Revisione indipendente conclusa, difetti gold/scorer riprodotti offline | Correggere E1…E8 e versione2; poi campagna rappresentativa con nuovo budget/consenso, senza chiamate implicite |
+| Conservazione/cancellazione | Export disponibile, eliminazione e retention automatica assenti | Regola operativa/procedura del pilota ancora da definire; nessuna promessa legale o cancellazione silenziosa |
 ## Perimetro della prova personale
 
 Proposta: account separato, pochi file iniziali non delicati, originali conservati dall'utente, visibilità Solo io, nessuna analisi esterna automatica. Non chiamare questo percorso «pronto» finché recupero accesso e destinazione backup non sono risolti. Foto JPEG/PNG archiviabili; l'estrattore attuale legge testo PDF, non equivale a OCR di immagini/scansioni. HEIC non ammesso. PDF con firma riconoscibile non sono per questo validati come leggibili, innocui o testuali.
 
 ## Lavoro Codex e Claude
 
-Codex possiede contratti, backend, test e verifica storage/export. Claude prepara solo UX recupero e copione prova personale nel nuovo frontend-v5/docs/fase0-ux-20261016, senza sovrapposizioni o implementazioni. Guida in sovraimpressione rinviata. BL-04 e successive restano nell'ordine approvato, senza avvio implicito.
+Codex possiede contratti, implementazione e verifiche di integrazione. Le consegne Claude UX/corpus sono raccolte e arbitrate in fase0-chiusura-arbitrato-20261016.md. Il prossimo incarico separato può coprire solo corpus/scorer offline; nessuna sovrapposizione ai sorgenti del prodotto. Guida in sovraimpressione rinviata. BL-04 e successive restano nell'ordine approvato, senza avvio implicito.
 
 ## Export completo da specificare
 
