@@ -13,7 +13,7 @@ Componenti **non integrati**: nessun fetch e nessun fallback demo. Nessun push.
 
 ## B4-1 — Consenso alla sostituzione · PRONTA
 
-Commit: quello di questa fase (hash in `git log`, messaggio «archivio B4-1»).
+Commit: `19124eb` «feat(frontend-v5): archivio B4-1, consenso esplicito alla sostituzione».
 
 **Nota sincera sul taglio dei commit.** Le modifiche del punto 2 (parti manuali multiple, redazione delle fonti perse, doppia scelta per le copie) toccano gli stessi `model.ts` e `ReviewDialog.tsx` del consenso. Il loro **codice** è entrato in questo commit; i **test e le fixture** del punto 2 sono nella consegna B4-2.
 
@@ -58,6 +58,29 @@ Commit: quello di questa fase (hash in `git log`, messaggio «archivio B4-1»).
 - `organizationVersion` → `organizationVersion` (null o 0);
 - `replaceOrganization` va inoltrato **così com'è**, mai impostato dall'adapter.
 
-## B4-2 — Revisione robusta · IN_CORSO
+## B4-2 — Revisione robusta · PRONTA
+
+Commit: quello di questa fase (messaggio «archivio B4-2»). Il codice è in `19124eb` (vedi nota sopra); qui entrano fixture e test.
+
+**Differenze richieste al container (segnalate prima di PRONTA):**
+
+| # | Differenza | Perché |
+|---|---|---|
+| D1 | **Organizzare una copia identica** passa da `onSaveReview` con `itemId` della copia, `selection.action: 'organize'`, `expectedOrganizationVersion` e `replaceOrganization` letti dal documento esistente. Codex deve confermare che l'endpoint review B2 accetti una selezione su un elemento `duplicate` e la applichi al documento **esistente**, senza nuovo originale, schede o spese. Se non la accetta, l'adapter deve rifiutare (`rejected`) e la UI resta sul solo riferimento. | Il contratto B2 documenta solo `reuse_reference` per i duplicati |
+| D2 | Con fonte persa il DTO B2 restituisce `null` per filename, byteSize, mimeType, pageCount, proposal, selection, duplicate, cost, error: l'adapter li passa **così come sono** (i tipi ora li ammettono). | Il componente redige comunque, ma non deve ricevere valori inventati |
+| D3 | `permissions: []` del DTO → `permissions: { review: false }`; la presenza di `review` nell'array → `true`. | Il componente usa booleani |
+| D4 | Per una copia identica il container fornisce `organization`/`organizationVersion` del documento **esistente** (non della copia). | Base del confronto e del consenso |
+
+**Comportamento coperto:**
+- riaprendo una scelta manuale si ritrovano **tutte** le parti con i loro intervalli, anche senza proposta; una scelta non coperta dalla proposta corrente passa in modalità manuale con tutte le parti, mai ridotta a un solo tipo;
+- editor manuale: pagine fuori intervallo, intervallo a metà e contenuto ripetuto bloccano il salvataggio con messaggio;
+- fonte persa (anche su copia `duplicate`): stato «Non più disponibile», nome «Documento non disponibile», nessun nome file, dimensione, MIME, nome del duplicato o «Rivedi», anche se il container ha ancora valori vecchi in cache;
+- elemento `pending` senza originale: il manifest resta visibile, «In attesa», annullabile;
+- revoca a dialogo aperto: il dialogo si chiude e la bozza non riappare;
+- copia identica: scelta obbligatoria tra «Usa solo il riferimento all'originale esistente» (`onResolveDuplicate`, invariato) e «Organizza il documento esistente» (precompilato dai dati confermati, consenso esplicito se cambiano, `onResolveDuplicate` non chiamato).
+
+**Test (`RobustReview.test.tsx`, 8) e fixture nuove** in `testing/fixtures.ts`: `multiPartScan`, `lostCopyRedacted`, `lostCopyStaleCache`, `pendingManifest`, `copyOfOrganized`.
+
+**Prove:** `npx vitest run --project mock src/document-intake` **32/32**; `tsc -b --noEmit` e `eslint src/document-intake` OK.
 
 ## B4-3 — Test mirati, mobile e tastiera · IN_CORSO

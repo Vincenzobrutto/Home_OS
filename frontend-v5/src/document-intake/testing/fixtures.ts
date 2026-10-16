@@ -40,3 +40,34 @@ export const diagramCandidates: CandidatePage = {
   ],
   hasMore: false, status: 'idle',
 };
+
+// ---------------------------------------------------------------------------------------------
+// B4: scelte manuali multiple, fonti perse, manifest in attesa, copia di un documento già organizzato
+
+/** Scansione già decisa a mano con tre contenuti e intervalli, senza proposta corrente. */
+export const multiPartScan = (): IntakeItem => ({
+  ...corpus.scan(), pageCount: 12, reviewState: 'saved',
+  selection: { action: 'organize', title: 'Faldone pratiche casa', target: { kind: 'home' }, parts: [
+    { kind: 'cila', pageFrom: 1, pageTo: 4 }, { kind: 'conformity_declaration', pageFrom: 5, pageTo: 9 }, { kind: 'warranty', pageFrom: 10, pageTo: 12 },
+  ] },
+});
+
+/** DTO redatto dal server (B1b): fonte persa su una copia identica. */
+export const lostCopyRedacted = (): IntakeItem => ({
+  ...corpus.copy(), filename: null, byteSize: null, mimeType: null, pageCount: null,
+  documentLink: { state: 'unavailable', document: null }, duplicate: null, permissions: { review: false },
+});
+/** Stesso caso ma con valori vecchi rimasti in cache nel container: il componente non deve mostrarli. */
+export const lostCopyStaleCache = (): IntakeItem => ({ ...corpus.copy(), documentLink: { state: 'unavailable', document: null } });
+
+/** Elemento ancora senza originale: il manifest dell'utente resta visibile. */
+export const pendingManifest = (): IntakeItem => ({
+  ...corpus.rules(), id: 'attesa', filename: 'Verbale_assemblea.pdf', uploadState: 'pending', analysisState: 'not_started', proposal: null,
+  documentLink: { state: 'unavailable', document: null },
+});
+
+/** Copia identica di un APE già archiviato e organizzato dall'account. */
+export const copyOfOrganized = (): IntakeItem => ({
+  ...corpus.copy(), organizationVersion: 2,
+  confirmedOrganization: { title: 'APE appartamento', parts: [{ kind: 'ape', pageFrom: 1, pageTo: 8 }] },
+});
