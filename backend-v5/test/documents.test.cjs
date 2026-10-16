@@ -3,7 +3,7 @@ const {test}=require('node:test');const assert=require('node:assert/strict');
 const {mkdir,mkdtemp,writeFile,utimes,lstat}=require('node:fs/promises');const {join}=require('node:path');
 const {randomUUID}=require('node:crypto');
 const {plainToInstance}=require('class-transformer');const {validateSync}=require('class-validator');
-const {LocalFileStorage,safeFilename,detectOriginal,MAX_FILE_BYTES}=require('../dist/documents/storage');
+const {LocalFileStorage,safeFilename,detectOriginal,MAX_FILE_BYTES,storageUnavailable}=require('../dist/documents/storage');
 const {DocumentPolicy,canReadDocument}=require('../dist/documents/access');
 const {DocumentsService}=require('../dist/documents/documents.service');
 const {UploadDocumentDto,ExportDocumentsDto,ListDocumentsDto}=require('../dist/documents/dto');
@@ -26,3 +26,32 @@ test('Upload con storage guasto non avvia una scrittura DB',async()=>{let writes
 test('Errore transazione: cleanup soltanto se il DB prova che il file non è referenziato',async()=>{let removed=0;const db={uploadRequest:{findUnique:async()=>null},storedFile:{findUnique:async()=>null},$transaction:async()=>{throw Error('rollback')}};const service=new DocumentsService(db,{write:async()=>id+'.bin',remove:async()=>removed++},{require:async()=>owner});const run=()=>service.upload('A',homeId,{name:'x',visibility:'private'},{buffer:png,originalname:'x.png'},randomUUID());await assert.rejects(run());assert.equal(removed,1);db.storedFile.findUnique=async()=>{throw Error('commit incerto')};await assert.rejects(run());assert.equal(removed,1);});
 test('Export misto vietato: nessuna lettura file né ZIP parziale',async()=>{let reads=0;const service=new DocumentsService({document:{findMany:async()=>[doc()]}},{read:async()=>{reads++;return png;}},{require:async()=>owner});await assert.rejects(service.export('A',homeId,[id,randomUUID()]),e=>e.getStatus()===403);assert.equal(reads,0);});
 test('ZIP reale include originale integro e manifesto senza chiavi storage',async()=>{const document=doc();const service=new DocumentsService({document:{findMany:async()=>[document]}},{read:async()=>png},{require:async()=>owner});const zip=await service.export('A',homeId,[id]);assert.equal(zip.readUInt32LE(0),0x04034b50);assert(zip.includes(png));assert(zip.includes(Buffer.from('manifest.json')));assert(zip.includes(Buffer.from(digest(png))));assert(!zip.includes(Buffer.from(document.original.file.storageKey)));});
+
+test('Corruzione a dimensione invariata: hash blocca download e intero ZIP',async()=>{
+  const corrupt=Buffer.from(png);corrupt[corrupt.length-1]^=1;
+  const service=new DocumentsService({document:{findMany:async()=>[doc()]}},{read:async()=>corrupt},{require:async()=>owner});
+  const unavailable=e=>e.getStatus()===503&&e.getResponse().code==='storage_unavailable';
+  await assert.rejects(service.originalBytes(doc()),unavailable);
+  await assert.rejects(service.export('A',homeId,[id]),unavailable);
+});
+
+test('Export oltre limite rifiutato prima di leggere file',async()=>{
+  let reads=0;const document=doc();document.original.byteSize=100*1024*1024+1;
+  const service=new DocumentsService({document:{findMany:async()=>[document]}},{read:async()=>{reads++;return png;}},{require:async()=>owner});
+  await assert.rejects(service.export('A',homeId,[id]),e=>e.getStatus()===413&&e.getResponse().code==='export_too_large');
+  assert.equal(reads,0);
+});
+
+test('Export concorrenti limitati: guasto libera entrambi gli slot per un nuovo tentativo',async()=>{
+  const pending=[];let fail=true;
+  const service=new DocumentsService({document:{findMany:async()=>[doc()]}},{read:()=>fail?new Promise((resolve,reject)=>pending.push({resolve,reject})):Promise.resolve(png)},{require:async()=>owner});
+  const first=service.export('A',homeId,[id]),second=service.export('A',homeId,[id]);
+  const checks=[assert.rejects(first,e=>e.getStatus()===503),assert.rejects(second,e=>e.getStatus()===503)];
+  // Wait for both requests to hold a slot at the IO boundary.
+  for(let turn=0;pending.length<2&&turn<10;turn++)await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(pending.length,2);
+  await assert.rejects(service.export('A',homeId,[id]),e=>e.getStatus()===429);
+  for(const item of pending)item.reject(storageUnavailable());
+  await Promise.all(checks);fail=false;
+  assert.equal((await service.export('A',homeId,[id])).readUInt32LE(0),0x04034b50);
+});
