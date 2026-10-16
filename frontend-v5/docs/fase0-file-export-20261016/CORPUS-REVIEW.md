@@ -2,6 +2,8 @@
 
 Consegna B dell'incarico `Dimora-V5-incarico-Claude-Fase0-file-export-20261016.md`.
 
+**Baseline.** Revisione fatta alla baseline `1e13e43` del worktree. Ho verificato con `git diff` sul master che fra `1e13e43` e la nuova baseline dell'incarico `9aafd79` **non cambia nessuno** dei file del corpus, del report o dei test, né `src/economy` e `src/review`. La revisione vale quindi anche per `9aafd79`.
+
 **Cosa ho letto, in sola lettura, alla baseline `1e13e43`:**
 - il corpus: `backend-v5/test/pilot-corpus.cjs`, `backend-v5/tools/pilot-corpus-report.cjs`, `backend-v5/test/pilot-corpus.test.cjs`;
 - i contratti attuali S1c/M4 economici: `src/economy/document-domain.ts`, `document-anthropic.ts`, `document-evidence.ts`, `document-fixture.ts`;

@@ -98,7 +98,7 @@
 <div class="tool">
   <aside class="side" aria-label="Schermate del mockup">
     <h1>Documenti ed esportazione · mockup</h1>
-    <p>Proposta Claude, Fase 0, 16/10/2026. Il controllo dei file e «Esporta i miei dati di questa casa» <strong>non esistono nel prodotto</strong>: sono proposte da congelare. Dati sintetici.</p>
+    <p>Proposta Claude, Fase 0, 16/10/2026, allineata alla baseline <code>9aafd79</code>. Il controllo dei nuovi file <strong>è attivo nel backend</strong> (f4efb57), ma il frontend non ne gestisce ancora i codici. «Esporta i miei dati di questa casa» ha un contratto documentale <strong>non attivo</strong>. Dati sintetici.</p>
     <div class="seg" role="group" aria-label="Larghezza">
       <button type="button" data-w="desk" aria-pressed="true">Desktop</button>
       <button type="button" data-w="phone" aria-pressed="false">390 px</button>
@@ -119,13 +119,13 @@ const HOME = 'Casa di prova';
 const GROUPS = [
   ['Caricamento e controllo', ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7']],
   ['Lettura del contenuto e dettaglio', ['D8', 'D9']],
-  ['Esportazione', ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9']],
+  ['Esportazione', ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9', 'X10']],
   ['Riferimento', ['MX']],
 ];
 const S = {};
 const go = (id) => render(id);
 const head = (title, eyebrow = HOME) => `<span class="eyebrow">${eyebrow}</span><h2 class="h1">${title}</h2>`;
-const pilot = `<div class="pilot" role="note"><b>Prova personale:</b> usa documenti non delicati. Un documento caricato <b>non si può eliminare</b> in questa versione: conserva anche il tuo originale.</div>`;
+const pilot = `<div class="pilot" role="note"><b>Prova personale:</b> usa documenti non delicati. Un documento caricato <b>non si può eliminare</b> in questa versione: conserva anche il tuo originale. I nuovi file vengono controllati con Microsoft Defender di questo computer: secondo le impostazioni di Windows, Microsoft può ricevere informazioni o campioni dei file.</div>`;
 const fileField = (err = '', chosen = '') => `
   <div class="field"><label for="f">File</label><span class="hint" id="f-h">PDF, JPEG o PNG, massimo 20 MiB. Foto e PDF scansionati vengono conservati, ma Dimora non ne legge il contenuto.</span>
   <div class="input"><input id="f" type="file" aria-describedby="f-h${err ? ' f-e' : ''}" ${err ? 'aria-invalid="true"' : ''}></div>
@@ -141,20 +141,19 @@ const form = (inner, btn = '<button class="btn primary" onclick="go(\'D2\')">Car
 
 S.D1 = { t: 'Modulo di caricamento', note: 'Base esistente (osservata il 16/10 su 5174): un file per volta, PDF/JPEG/PNG fino a 20 MiB, «Solo io» predefinito. Proposte: avviso pilota compatto (FE-UX-04) e frase su foto/scansioni nell’aiuto del campo (FE-UX-05).', h: () => head('Documenti') + form(pilot + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField() + visibility) };
 
-S.D2 = { t: 'Invio e controllo in corso', note: 'Proposta: controllo sincrono durante l’invio (FE-UX-01). Il pulsante è disattivato per evitare il doppio invio; nessuna percentuale inventata. Il testo non dice «sicuro».', h: () => head('Documenti') + form(`<p class="small" role="status"><span class="spinner" aria-hidden="true"></span>Caricamento e controllo del file in corso…</p><p class="hint">Dimora verifica il formato e controlla il file prima di salvarlo.</p>` + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField(), '<button class="btn primary" disabled>Caricamento…</button>') };
+S.D2 = { t: 'Invio e controllo in corso', note: 'Comportamento attivo dal backend f4efb57: staging privato, controllo Defender, ammissione solo dopo esito valido e hash invariato. Pulsante disattivato (nessun doppio invio). Testo proposto: oggi il frontend dice solo «Caricamento…».', h: () => head('Documenti') + form(`<p class="small" role="status"><span class="spinner" aria-hidden="true"></span>Caricamento e controllo del file in corso…</p><p class="hint">Dimora controlla il nuovo file prima di salvarlo. Può richiedere qualche secondo.</p>` + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField(), '<button class="btn primary" disabled>Caricamento…</button>') };
 
-S.D3 = { t: 'Caricato', note: 'Esito esistente più una riga sul controllo, senza promessa di innocuità. Il documento entra in archivio solo dopo il controllo superato: nessuno stato intermedio visibile.', h: () => head('Documenti') + `
-  <div class="banner ok" role="status"><b>Documento caricato</b><p>«manuale-lavatrice.pdf» è stato salvato in ${HOME}. <a href="#" onclick="go('D9');return false">Apri il documento</a></p>
-  <p class="small muted">Controllo automatico superato. Non è una garanzia che il file sia privo di rischi.</p></div>
+S.D3 = { t: 'Caricato', note: 'Esito esistente. Il contratto pubblico NON espone lo stato del controllo per documento: la ricevuta è interna e i documenti precedenti non sono stati controllati. Nessuna etichetta «controllato» in lista o nel dettaglio.', h: () => head('Documenti') + `
+  <div class="banner ok" role="status"><b>Documento caricato</b><p>«manuale-lavatrice.pdf» è stato salvato in ${HOME}. <a href="#" onclick="go('D9');return false">Apri il documento</a></p></div>
   <div class="card"><div class="doc"><div><b>manuale-lavatrice.pdf</b><div class="meta">PDF · 688 B · 16 ott 2026 · <span class="tag">Solo io</span></div></div></div></div>` };
 
-S.D4 = { t: 'File non accettato dal controllo', note: 'Rifiuto definitivo: niente in archivio, nessun dettaglio tecnico sul motivo (nome della minaccia, regola). Il prossimo invio è una nuova operazione.', h: () => head('Documenti') + form(`
-  <div class="banner err" role="alert"><b>File non accettato</b><p>Il controllo automatico ha segnalato questo file e non lo ha salvato.</p><p class="small">Se pensi sia un errore, controlla il file sul tuo dispositivo con il tuo antivirus, oppure prova con un’altra copia (per esempio salvata di nuovo in PDF).</p></div>` + fileField('', '') + titleField('')) };
+S.D4 = { t: 'Controllo non completato', note: 'Codice attivo 503 file_check_unavailable: timeout, scanner non disponibile, firme vecchie, errore o esito non zero. Defender non distingue in modo affidabile rilevamento ed errore: NON diciamo «file infetto» né «segnalato». Nessun documento creato: rifiuto certo, non esito incerto. Retry esplicito con la stessa chiave, come da contratto.', h: () => head('Documenti') + form(`
+  <div class="banner err" role="alert"><b>Documento non salvato</b><p>Non è stato possibile completare il controllo del file, quindi il documento non è stato salvato.</p><p class="small">Riprova tra qualche minuto. Se succede ancora con lo stesso file, prova con un’altra copia (per esempio salvata di nuovo in PDF).</p></div>` + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField(), '<button class="btn primary" onclick="go(\'D2\')">Riprova</button><button class="btn">Annulla</button>') };
 
-S.D5 = { t: 'Controllo non disponibile', note: 'Fail-closed: se il controllo non può essere eseguito, il file NON viene salvato e lo diciamo con certezza. Serve un codice distinto dal 503 generico: oggi ogni 503 diventa «esito non confermato» (FE-UX-02).', h: () => head('Documenti') + form(`
-  <div class="banner err" role="alert"><b>Documento non salvato</b><p>Il controllo dei file non è disponibile in questo momento, quindi il documento non è stato salvato. Riprova tra qualche minuto.</p></div>` + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField(), '<button class="btn primary" onclick="go(\'D2\')">Riprova</button><button class="btn">Annulla</button>') };
+S.D5 = { t: 'Spazio insufficiente', note: 'Codice attivo 503 storage_capacity_low (riserva di 1 GiB più il file). Nessun documento creato. Nessun dettaglio su disco o percorsi.', h: () => head('Documenti') + form(`
+  <div class="banner err" role="alert"><b>Documento non salvato</b><p>L’archivio non ha spazio sufficiente in questo momento, quindi il documento non è stato salvato. Riprova più tardi.</p></div>` + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField(), '<button class="btn primary" onclick="go(\'D2\')">Riprova</button><button class="btn">Annulla</button>') };
 
-S.D6 = { t: 'Esito non confermato', note: 'Connessione persa o errore del servizio dopo l’invio. Banner esistente, con testo corretto: oggi con storage_unavailable mostra insieme «Nessun file è stato modificato» e «potrebbe essere già stato salvato» (FE-UX-02). «Riprova invio» usa la stessa chiave: nessun doppione.', h: () => head('Documenti') + form(`
+S.D6 = { t: 'Esito non confermato', note: 'Solo quando l’esito è davvero ignoto: connessione persa, 502/504, 503 senza codice noto. Banner esistente con testo corretto. Oggi anche file_check_unavailable e storage_capacity_low finiscono qui, con «Il servizio Dimora non è raggiungibile… potrebbe essere già stato salvato» (FE-UX-02). «Riprova invio» usa la stessa chiave: nessun doppione.', h: () => head('Documenti') + form(`
   <div class="banner err" role="alert"><b>Esito non confermato</b><p>Non sappiamo se il documento è stato salvato: la connessione con l’archivio si è interrotta.</p><p>«Riprova invio» ripete la stessa richiesta senza creare doppioni. Per cambiare file o dati, controlla prima l’archivio.</p>
   <div class="actions" style="margin-top:6px"><button class="btn small" onclick="go('D3')">Riprova invio</button><button class="btn small">Modifica e invia come nuovo</button></div></div>` + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField(), '<button class="btn primary" disabled>Carica</button>') };
 
@@ -172,10 +171,10 @@ S.D8 = { t: 'Archiviare non è leggere', note: 'Distinzione al punto d’uso. Fo
     <div class="card"><h3>PDF protetto da password</h3><p class="small">Conservato così com’è. Dimora non può aprirlo né leggerlo.</p><p class="hint">Esito esistente: «Il PDF è protetto o cifrato: l’analisi non è possibile.»</p></div>
   </div>` };
 
-S.D9 = { t: 'Dettaglio documento', note: 'Dettaglio esistente con due righe nuove: stato del controllo e avviso sulla mancata eliminazione, una sola volta e compatto.', h: () => `<a href="#" class="small" onclick="go('D3');return false">← Documenti di ${HOME}</a>` + head('manuale-lavatrice.pdf') + `
+S.D9 = { t: 'Dettaglio documento', note: 'Dettaglio esistente con una sola riga nuova: l’avviso sulla mancata eliminazione. Nessuno stato del controllo, perché non è un campo pubblico.', h: () => `<a href="#" class="small" onclick="go('D3');return false">← Documenti di ${HOME}</a>` + head('manuale-lavatrice.pdf') + `
   <p><span class="tag">Originale caricato</span> <span class="tag">Solo io</span></p>
   <div class="actions"><button class="btn primary">Scarica originale</button><button class="btn">Condividi…</button></div>
-  <div class="card"><h3>Dati del file</h3><dl class="dl"><dt>Formato</dt><dd>PDF · 688 B</dd><dt>Caricato il</dt><dd>16 ott 2026, 09:56</dd><dt>Chi può vederlo</dt><dd>Solo io</dd><dt>Controllo file</dt><dd>Controllo automatico superato · non è una garanzia</dd><dt>Impronta SHA-256</dt><dd>c0c31e2ab1823e98a8b05495be9265d1…</dd></dl>
+  <div class="card"><h3>Dati del file</h3><dl class="dl"><dt>Formato</dt><dd>PDF · 688 B</dd><dt>Caricato il</dt><dd>16 ott 2026, 09:56</dd><dt>Chi può vederlo</dt><dd>Solo io</dd><dt>Impronta SHA-256</dt><dd>c0c31e2ab1823e98a8b05495be9265d1…</dd></dl>
   <p class="small muted">In questa versione il documento non si può eliminare. Conserva anche il tuo originale.</p></div>` };
 
 S.X1 = { t: 'ZIP degli originali (esistente)', note: 'Funzione esistente: fino a 50 originali e 100 MiB, manifesto con SHA. Proposta: frase su cosa contiene e rimando all’export dei dati, senza un secondo archivio (FE-UX-08).', h: () => head('Documenti') + `
@@ -192,65 +191,74 @@ S.X2 = { t: 'Dove si trova «Esporta i miei dati»', note: 'Nessuna nuova voce d
   <div class="card"><h3>I tuoi dati in questa casa</h3><p class="small">Scarica in un file ciò che hai inserito tu in questa casa: oggetti, attività, spese, lavori e i riferimenti ai tuoi documenti.</p>
   <div class="actions"><button class="btn" onclick="go('X3')">Esporta i miei dati di questa casa</button></div></div></details>` };
 
-S.X3 = { t: 'Conferma: cosa contiene', note: 'Prima del file: casa, ambito personale, inclusi ed esclusi. Nessuna promessa di export dell’account, conservazione perpetua, cancellazione o trasferimento.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
+S.X3 = { t: 'Conferma: cosa contiene', note: 'Contenuti allineati a personal-export-v1 (contratto documentale, endpoint NON attivo). Nessuna promessa di export dell’account, conservazione perpetua, cancellazione, trasferimento o reimportazione.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
   <div class="banner info"><b>Casa: ${HOME}</b><p>Per un’altra casa, apri quella casa e ripeti l’esportazione. <a href="#" onclick="return false">Cambia casa</a></p></div>
   <div class="cols">
     <div class="card"><h3>Contiene</h3><ul class="tight small">
-      <li>Oggetti, attività, spese e lavori che hai creato tu, anche archiviati se puoi ancora leggerli</li>
-      <li>Dati tecnici che hai confermato, con la loro fonte</li>
-      <li>Titolo, formato e impronta dei documenti caricati da te</li>
-      <li>Collegamenti fra queste risorse</li></ul></div>
+      <li>Il tuo nome ed email, nome e indirizzo della casa</li>
+      <li>Oggetti, attività, spese e lavori che hai creato tu, anche archiviati</li>
+      <li>Dati tecnici che hai confermato sulle tue schede</li>
+      <li>Titolo, formato, dimensione e impronta dei documenti caricati da te</li>
+      <li>Collegamenti fra queste risorse e la loro storia</li></ul></div>
     <div class="card"><h3>Non contiene</h3><ul class="tight small">
       <li>I file originali: si esportano con lo ZIP in Documenti</li>
-      <li>Dati di altre persone e l’elenco di chi ha accesso</li>
-      <li>Documenti o dati caricati da altri</li>
-      <li>Risorse che non puoi più leggere: restano indicate come «riferimento escluso», senza nome</li></ul></div>
+      <li>Dati di altre persone, documenti caricati da altri e le loro fonti</li>
+      <li>Condivisioni, documenti ricevuti, proposte e bozze dell’AI</li>
+      <li>Riferimenti a risorse che non puoi più leggere: sono esclusi, senza nome né numero</li></ul></div>
   </div>
-  <p class="small muted">È una copia dei tuoi dati di oggi. Non cancella nulla, non trasferisce la casa e non sostituisce un backup. Se perderai l’accesso a questa casa, non potrai più esportarli.</p>
-  <div class="actions"><button class="btn primary" onclick="go('X4')">Prepara il file</button><button class="btn" onclick="go('X2')">Annulla</button></div>` };
+  <p class="small muted">È una copia dei tuoi dati di questa casa al momento del download. Non cancella nulla, non trasferisce la casa, non sostituisce un backup e non si può reimportare. Se perderai l’accesso a questa casa, non potrai più esportarli.</p>
+  <div class="actions"><button class="btn primary" onclick="go('X4')">Scarica il file</button><button class="btn" onclick="go('X2')">Annulla</button></div>` };
 
-S.X4 = { t: 'Preparazione', note: 'Nessuna barra di avanzamento finta; il file non parte da solo all’apertura della pagina.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
-  <p role="status"><span class="spinner" aria-hidden="true"></span>Preparazione del file in corso…</p><p class="small muted">Può richiedere qualche istante. Puoi restare su questa pagina.</p>
+S.X4 = { t: 'Preparazione e download', note: 'Il contratto restituisce direttamente il file (POST, poi 200 allegato JSON): nessun passaggio «pronto» separato, nessun job in background, nessun retry automatico. Pulsante disattivato durante la richiesta.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
+  <p role="status"><span class="spinner" aria-hidden="true"></span>Preparazione del file in corso…</p><p class="small muted">Il download parte appena il file è pronto.</p>
   <div class="actions"><button class="btn primary" disabled>Preparazione…</button></div>` };
 
-S.X5 = { t: 'Pronto: riepilogo', note: 'Riepilogo con conteggi (sintetici) prima del download esplicito. I riferimenti esclusi sono contati senza nomi. Il nome del file include casa e data.', h: () => head('Il file è pronto', 'Casa') + `
-  <div class="banner ok" role="status"><b>File pronto</b><p>dimora-${'casa-di-prova'}-2026-10-16.json</p></div>
-  <div class="card"><dl class="dl"><dt>Oggetti</dt><dd>3 (1 archiviato)</dd><dt>Attività</dt><dd>4</dd><dt>Spese</dt><dd>6</dd><dt>Lavori</dt><dd>1</dd><dt>Documenti (solo dati)</dt><dd>2</dd><dt>Riferimenti esclusi</dt><dd>1 collegamento a una risorsa che non puoi più leggere</dd></dl></div>
-  <p class="small muted">Il file è in formato JSON, leggibile da un programma. Una volta scaricato resta sul tuo dispositivo.</p>
-  <div class="actions"><button class="btn primary">Scarica il file</button><button class="btn link" onclick="go('X2')">Torna a Casa</button></div>` };
+S.X5 = { t: 'Scaricato', note: 'Conferma dopo il download con il nome generato dal server (dimora-casa-<UUID>-dati.json). Nessun conteggio di risorse escluse: il contratto vieta conteggi dei dati altrui; le esclusioni sono descritte in «limitations» nel file.', h: () => head('File scaricato', 'Casa') + `
+  <div class="banner ok" role="status"><b>Esportazione completata</b><p>dimora-casa-3f2a…-dati.json</p></div>
+  <p class="small">Il file è in formato JSON, leggibile da un programma. Alcuni riferimenti possono essere esclusi perché non hai più accesso alle risorse collegate: il file lo indica, senza nomi.</p>
+  <p class="small muted">Una volta scaricato, il file resta sul tuo dispositivo: Dimora non lo controlla più.</p>
+  <div class="actions"><button class="btn link" onclick="go('X2')">Torna a Casa</button></div>` };
 
-S.X6 = { t: 'Troppo grande', note: 'Limite esplicito, nessun file parziale o troncato.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
+S.X6 = { t: 'Troppo grande', note: '413 personal_export_too_large (oltre 10 000 righe o 10 MiB). Nessun file parziale o troncato.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
   <div class="banner err" role="alert"><b>Esportazione non completata</b><p>I tuoi dati di questa casa superano il limite di questa versione. <b>Nessun file è stato creato</b>: non esportiamo una parte dei dati.</p></div>
   <div class="actions"><button class="btn" onclick="go('X2')">Torna a Casa</button></div>` };
 
-S.X7 = { t: 'Esito non noto', note: 'L’esportazione è una lettura: riprovare non crea nulla e non cambia i dati.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
-  <div class="banner err" role="alert"><b>Esito non confermato</b><p>La connessione si è interrotta: nessun file è stato scaricato. Puoi riprovare, i tuoi dati non sono cambiati.</p></div>
+S.X7 = { t: 'Occupato, non disponibile, esito ignoto', note: '503 personal_export_busy (al massimo due esportazioni contemporanee) e 503 personal_export_unavailable: nessun file, esito certo. Diverso dall’esito di rete ignoto (terzo banner). È una lettura: riprovare non cambia i dati.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
+  <div class="banner err" role="alert"><b>Esportazione non avviata</b><p>Il servizio sta già preparando altre esportazioni. Riprova tra qualche istante.</p></div>
+  <div class="banner err" role="alert"><b>Esportazione non completata</b><p>Non è stato possibile preparare il file. Nessun file è stato creato: riprova più tardi.</p></div>
+  <div class="banner err" role="alert"><b>Esito non confermato</b><p>La connessione si è interrotta prima del download. I tuoi dati non sono cambiati: puoi riprovare.</p></div>
   <div class="actions"><button class="btn primary" onclick="go('X4')">Riprova</button><button class="btn link" onclick="go('X2')">Torna a Casa</button></div>` };
 
 S.X8 = { t: 'ZIP: originale non disponibile', note: 'Regola esistente M2: se un originale manca o non è più accessibile, tutto lo ZIP viene rifiutato. Il messaggio non nomina il documento se non è più leggibile.', h: () => head('Documenti') + `
   <div class="banner err" role="alert"><b>ZIP non creato</b><p>Uno dei documenti selezionati non è disponibile in questo momento o non è più accessibile. <b>Nessun file è stato esportato</b>: togli la selezione e riprova.</p></div>
   <div class="banner err" role="alert"><b>Selezione troppo grande</b><p>La selezione pesa 128 MiB: il limite per uno ZIP è 100 MiB. Nessun file è stato esportato.</p></div>` };
 
-S.X9 = { t: 'Accesso alla casa non più valido', note: 'Membership revocata o scaduta tra l’apertura e la consegna: nessun file, nessun dettaglio sulla casa.', h: () => head('Accesso non consentito', 'Dimora') + `
+S.X9 = { t: 'Accesso non più valido', note: 'Membership revocata, contesto account cambiato o sessione scaduta durante la preparazione: il server ricontrolla con una lettura fresca prima di consegnare. Nessun file e nessun dettaglio sulla casa.', h: () => head('Accesso non consentito', 'Dimora') + `
   <div class="banner warn" role="alert"><p>Questo account non ha più accesso alla casa richiesta. Nessun file è stato creato.</p></div>
   <div class="actions"><button class="btn primary">Vai alle mie case</button></div>` };
 
-S.MX = { t: 'Matrice degli stati', note: 'Codici esistenti (documents-v1) e proposti (da congelare con Codex).', h: () => `
+S.X10 = { t: 'Ruolo sola lettura', note: 'Il permesso export è solo di proprietario e membro. Chi ha sola lettura vede una spiegazione invece del pulsante, non un 403 dopo il clic.', h: () => head(HOME, 'Casa') + `
+  <details class="box" open><summary>Dettagli della casa e del tuo ruolo</summary>
+  <div class="card"><h3>I tuoi dati in questa casa</h3><p class="small muted">Con il ruolo «Sola lettura» non puoi esportare dati da questa casa.</p></div></details>` };
+
+S.MX = { t: 'Matrice degli stati', note: 'Codici attivi (documents-v1 e controllo file f4efb57) e del contratto personal-export-v1, non ancora attivo.', h: () => `
   <h2 class="h1" style="font-size:22px">Matrice degli stati</h2><div class="mxwrap"><table class="mx">
   <tr><th>Situazione</th><th>Codice</th><th>Salvato?</th><th>Schermata</th></tr>
   <tr><td>Formato o byte non supportati</td><td>415 unsupported_file_type (esistente)</td><td>No</td><td>D7</td></tr>
   <tr><td>Oltre 20 MiB</td><td>413 file_too_large (esistente; anche nel browser)</td><td>No</td><td>D7</td></tr>
   <tr><td>File vuoto</td><td>422 (esistente; anche nel browser)</td><td>No</td><td>D7</td></tr>
-  <tr><td>Controllo: file segnalato</td><td>proposto, rifiuto definitivo</td><td>No</td><td>D4</td></tr>
-  <tr><td>Controllo non disponibile</td><td>proposto, distinto dal 503 generico</td><td>No (certo)</td><td>D5</td></tr>
-  <tr><td>Rete o servizio dopo l’invio</td><td>503 / rete (esistente)</td><td>Non noto</td><td>D6</td></tr>
+  <tr><td>Controllo non completato (qualsiasi causa)</td><td>503 file_check_unavailable (attivo)</td><td>No (certo)</td><td>D4</td></tr>
+  <tr><td>Spazio insufficiente</td><td>503 storage_capacity_low (attivo)</td><td>No (certo)</td><td>D5</td></tr>
+  <tr><td>Rete, 502/504, 503 senza codice noto</td><td>esistente</td><td>Non noto</td><td>D6</td></tr>
   <tr><td>Stessa chiave, stesso file</td><td>201 stesso documento (esistente)</td><td>Sì, una volta</td><td>D3</td></tr>
   <tr><td>Stessa chiave, dati diversi</td><td>409 idempotency_conflict (esistente)</td><td>—</td><td>banner esistente</td></tr>
   <tr><td>ZIP oltre 100 MiB / oltre 50</td><td>413 export_too_large / 422 (esistenti)</td><td>Nessun file</td><td>X8</td></tr>
   <tr><td>ZIP con originale mancante o vietato</td><td>403 / 503 (esistente, ZIP intero)</td><td>Nessun file</td><td>X8</td></tr>
-  <tr><td>Export dati: oltre il limite</td><td>proposto</td><td>Nessun file</td><td>X6</td></tr>
-  <tr><td>Export dati: esito non noto</td><td>rete</td><td>Nessun file</td><td>X7</td></tr>
-  <tr><td>Export dati: accesso revocato</td><td>403 (proposto)</td><td>Nessun file</td><td>X9</td></tr>
+  <tr><td>Export dati: oltre il limite</td><td>413 personal_export_too_large (contratto, non attivo)</td><td>Nessun file</td><td>X6</td></tr>
+  <tr><td>Export dati: occupato / non disponibile</td><td>503 personal_export_busy / _unavailable (contratto)</td><td>Nessun file</td><td>X7</td></tr>
+  <tr><td>Export dati: esito di rete ignoto</td><td>rete</td><td>Nessun file</td><td>X7</td></tr>
+  <tr><td>Export dati: accesso revocato o contesto cambiato</td><td>401/403 (contratto)</td><td>Nessun file</td><td>X9</td></tr>
+  <tr><td>Export dati: sola lettura</td><td>403 (contratto)</td><td>—</td><td>X10</td></tr>
   </table></div>` };
 
 const nav = document.getElementById('navlist');
