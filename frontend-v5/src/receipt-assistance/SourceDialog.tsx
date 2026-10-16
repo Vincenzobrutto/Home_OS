@@ -20,14 +20,23 @@ export function SourceDialog(props: {
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
   const returnTo = useRef<Element | null>(null);
+  const onClose = useRef(props.onClose);
+  useEffect(() => { onClose.current = props.onClose; });
   useEffect(() => {
     returnTo.current = document.activeElement;
     closeRef.current?.focus();
-    return () => { if (returnTo.current instanceof HTMLElement) returnTo.current.focus(); };
+    // Esc ascoltato sul documento: chiude anche se il focus è uscito dal dialogo.
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); onClose.current(); } };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      if (returnTo.current instanceof HTMLElement) returnTo.current.focus();
+    };
   }, []);
   const { request, original } = props;
+  const opening = props.openState.status === 'opening';
   return (
-    <div className={styles.backdrop} onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); props.onClose(); } }}>
+    <div className={styles.backdrop}>
       <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={styles.dialog}>
         <div className={styles.dialogHead}>
           <h2 id={titleId}>{request.kind === 'original' ? 'Documento originale' : `Fonte · ${request.label}`}</h2>
@@ -47,8 +56,9 @@ export function SourceDialog(props: {
         )}
         {props.preview}
         {original.status === 'available' ? (
-          <button type="button" className={cx(ui.btn, styles.dialogAction)} onClick={props.onOpenOriginal} disabled={props.openState.status === 'opening'}>
-            {props.openState.status === 'opening' ? 'Apertura…' : 'Apri l’originale'}
+          // aria-disabled invece di disabled: il pulsante resta focalizzabile durante l'apertura.
+          <button type="button" className={cx(ui.btn, styles.dialogAction)} aria-disabled={opening || undefined} onClick={() => { if (!opening) props.onOpenOriginal(); }}>
+            {opening ? 'Apertura…' : 'Apri l’originale'}
           </button>
         ) : (
           <p className={styles.note}>L’originale non è disponibile in questo momento.</p>

@@ -73,4 +73,23 @@ describe('ricevuta assistita: shell', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(screen.getByRole('button', { name: 'Compila a mano' })).toBeEnabled();
   });
+
+  it('regressione browser: durante l’apertura il pulsante resta focalizzabile ed Esc chiude anche con il focus fuori dal dialogo', async () => {
+    const user = userEvent.setup();
+    const openOriginal = vi.fn(() => new Promise<void>(() => {}));
+    renderAssistant(assistantProps('fresh', { openOriginal }));
+    await user.click(screen.getAllByRole('button', { name: /^Vedi fonte/ })[0]!);
+    const dialog = screen.getByRole('dialog', { name: 'Fonte · Nome dell’oggetto' });
+    expect(within(dialog).getByText('Macchina del caffè Lume')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Apri l’originale' }));
+    const opening = within(dialog).getByRole('button', { name: 'Apertura…' });
+    expect(opening).toHaveAttribute('aria-disabled', 'true');
+    expect(opening).not.toBeDisabled();
+    await user.click(opening);
+    expect(openOriginal).toHaveBeenCalledTimes(1);
+    (document.activeElement as HTMLElement | null)?.blur();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('textbox', { name: 'Nome dell’oggetto' })).toHaveValue('Macchina del caffè');
+  });
 });
