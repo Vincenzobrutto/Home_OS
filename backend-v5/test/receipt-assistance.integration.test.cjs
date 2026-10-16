@@ -63,8 +63,8 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     sessions.push({ account, raw, csrf });
   }
   const [A, B] = sessions;
-  const document = async (account, name, visibility = 'private') => {
-    const row = await db.document.create({ data: { homeId: home, uploaderId: account.id, name, visibility, original: { create: { originalFilename: 'synthetic.pdf', mimeType: 'application/pdf', byteSize: 16, sha256: 'a'.repeat(64), file: { create: { storageKey: randomUUID() + '.bin' } } } } }, include: { original: true } });
+  const document = async (account, name, visibility = 'private', sha256 = digest(randomUUID())) => {
+    const row = await db.document.create({ data: { homeId: home, uploaderId: account.id, name, visibility, original: { create: { originalFilename: 'synthetic.pdf', mimeType: 'application/pdf', byteSize: 16, sha256, file: { create: { storageKey: randomUUID() + '.bin' } } } } }, include: { original: true } });
     files.push(row.original.fileId); return row;
   };
   const own = await document(a, 'Receipt own'), foreign = await document(b, 'Foreign secret receipt'), shared = await document(b, 'Shared secret receipt', 'home');
@@ -353,6 +353,105 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     const changed = JSON.parse((await exporter.export(a.id, home, async () => {})).toString());
     assert(!changed.data.receiptFields.some(f => f.id === field.id)); assert(!changed.data.receiptComparisons.some(c => c.id === comparison.id));
     assert(changed.data.objects.some(o => o.id === obj.id));
+  });
+  await t.test('Candidate pages prioritize explicit links, preserve ambiguity and bind cursors to account/draft/kind', async () => {
+    const source = await document(a, 'Candidate receipt'), row = await manualDraft(source);
+    const linked = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Existing explicit coffee', type: 'other' } });
+    const room = await db.homeRoom.create({ data: { homeId: home, name: 'Candidate kitchen', type: 'kitchen' } });
+    await db.objectPosition.create({ data: { accountId: a.id, homeId: home, objectId: linked.id, roomIds: [room.id] } });
+    await db.objectResourceLink.create({ data: { accountId: a.id, homeId: home, objectId: linked.id, documentId: source.id, resourceType: 'document', resourceId: source.id } });
+    const matches = [];
+    for (let i = 0; i < 2; i++) {
+      const obj = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Ambiguous coffee ' + i, type: 'other' } }); matches.push(obj);
+      for (const [fieldKey, value] of [['brand', 'Lume'], ['model', 'Mini 90']]) await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: obj.id, fieldKey, value, origin: 'user_declared' } });
+    }
+    const nameOnly = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Same proposed name', type: 'other' } });
+    const foreignObject = await db.homeObject.create({ data: { accountId: b.id, homeId: home, name: 'Candidate foreign secret', type: 'other' } });
+    const archived = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Candidate archived', type: 'other', state: 'archived' } });
+    await db.receiptDraft.update({ where: { id: row.id }, data: { mode: 'extraction', fields: { name: { value: nameOnly.name, sources: [] }, brand: { value: ' lume ', sources: [] }, model: { value: 'Mini 90', sources: [] } } } });
+    const first = await call(A, path('drafts/' + row.id + '/object-candidates?limit=1'));
+    assert.equal(first.status, 200); assert.equal(first.body.linkedCount, 1); assert.equal(first.body.items[0].id, linked.id); assert.equal(first.body.items[0].roomName, room.name); assert.deepEqual(first.body.items[0].reasons, ['same_document']); assert(first.body.nextCursor);
+    const seen = [...first.body.items]; let cursor = first.body.nextCursor;
+    while (cursor) {
+      const next = await call(A, path('drafts/' + row.id + '/object-candidates?limit=2&cursor=' + cursor));
+      assert.equal(next.status, 200); seen.push(...next.body.items); cursor = next.body.nextCursor;
+    }
+    assert.equal(new Set(seen.map(item => item.id)).size, seen.length);
+    for (const match of matches) {
+      const index = seen.findIndex(item => item.id === match.id);
+      assert(index > 0 && index < seen.findIndex(item => item.id === nameOnly.id));
+    }
+    assert(seen.filter(item => matches.some(match => match.id === item.id)).every(item => item.reasons.includes('same_brand_model') && !item.linkedToDocument));
+    assert.deepEqual(seen.find(item => item.id === nameOnly.id).reasons, []);
+    assert(!seen.some(item => [foreignObject.id, archived.id].includes(item.id))); assert(!JSON.stringify(seen).includes(foreignObject.name));
+    for (const secret of ['Secret derived name', 'Derived confidential name', 'Secret extracted brand', 'Hidden brand']) assert(!JSON.stringify(seen).includes(secret));
+    const secondLinked = matches[0];
+    await db.objectResourceLink.create({ data: { accountId: a.id, homeId: home, objectId: secondLinked.id, documentId: source.id, resourceType: 'document', resourceId: source.id } });
+    const partialLinkedPage = await call(A, path('drafts/' + row.id + '/object-candidates?limit=1'));
+    assert.equal(partialLinkedPage.body.items.length, 1); assert.equal(partialLinkedPage.body.linkedCount, 2); assert(partialLinkedPage.body.nextCursor);
+    assert.equal((await call(B, path('drafts/' + row.id + '/object-candidates?cursor=' + first.body.nextCursor))).status, 403);
+    assert.equal((await call(A, path('drafts/' + row.id + '/expense-candidates?cursor=' + first.body.nextCursor))).status, 422);
+    assert.equal((await call(A, path('drafts/' + row.id + '/object-candidates?limit=51'))).status, 422);
+    assert.equal((await call(A, path('drafts/' + row.id + '/object-candidates?accountId=' + b.id))).status, 422);
+    await db.receiptDraft.update({ where: { id: row.id }, data: { version: { increment: 1 } } });
+    assert.equal((await call(A, path('drafts/' + row.id + '/object-candidates?cursor=' + first.body.nextCursor))).status, 422);
+  });
+  await t.test('Identical readable originals under different Document IDs reuse one object and cost', async () => {
+    const original = await document(a, 'Original duplicate receipt'), row = await manualDraft(original);
+    const first = await confirmation(row.id, selection()); assert.equal(first.status, 200);
+    const saved = first.body.draft.confirmation;
+    const duplicate = await document(a, 'Same original uploaded again', 'private', original.original.sha256), second = await manualDraft(duplicate);
+    const objects = await call(A, path('drafts/' + second.id + '/object-candidates?limit=1'));
+    const costs = await call(A, path('drafts/' + second.id + '/expense-candidates?limit=1'));
+    assert.equal(objects.status, 200); assert.equal(costs.status, 200);
+    assert.equal(objects.body.items[0].id, saved.object.id); assert.equal(costs.body.items[0].id, saved.expense.id);
+    assert.equal(objects.body.linkedCount, 1); assert.equal(costs.body.linkedCount, 1);
+    assert.deepEqual(objects.body.items[0].reasons, ['same_original']); assert.equal(costs.body.items[0].linkedToDocument, true);
+    assert.equal((await confirmation(second.id, selection())).body.error.code, 'receipt_object_already_linked');
+    assert.equal((await confirmation(second.id, { ...selection(), object: { action: 'skip' } })).body.error.code, 'receipt_expense_already_linked');
+    const target = await db.homeObject.findUnique({ where: { id: saved.object.id } }), expense = await db.homeExpense.findUnique({ where: { id: saved.expense.id } });
+    const body = { expectedVersion: 1, object: { action: 'reuse', targetId: target.id, targetVersion: target.version, fields: [] }, expense: { action: 'reuse', targetId: expense.id, targetVersion: expense.version } };
+    const result = await confirmation(second.id, body); assert.equal(result.status, 200); assert.equal(result.body.draft.confirmation.newObjects, 0); assert.equal(result.body.draft.confirmation.newExpenses, 0);
+    assert.equal(await db.homeExpense.count({ where: { accountId: a.id, documentId: { in: [original.id, duplicate.id] } } }), 1);
+    const unchanged = await db.homeExpense.findUnique({ where: { id: expense.id } }); assert.deepEqual(unchanged, expense);
+    assert.equal(await db.objectResourceLink.count({ where: { objectId: target.id, documentId: duplicate.id, state: 'active' } }), 1);
+    assert.equal((await call(A, path('drafts/' + second.id + '/object-candidates?limit=1'))).body.items[0].reasons[0], 'same_document');
+  });
+  await t.test('Concurrent copies serialize to one purchase and copied evidence never reopens a resolved comparison', async () => {
+    const original = await document(a, 'Concurrent duplicate original'), duplicate = await document(a, 'Concurrent duplicate copy', 'private', original.original.sha256);
+    const drafts = await Promise.all([manualDraft(original), manualDraft(duplicate)]);
+    const results = await Promise.all(drafts.map(row => confirmation(row.id, selection())));
+    assert.deepEqual(results.map(result => result.status).sort(), [200, 409]);
+    assert.equal(await db.homeExpense.count({ where: { accountId: a.id, documentId: { in: [original.id, duplicate.id] } } }), 1);
+    const evidence = await document(a, 'Resolved evidence original'), copy = await document(a, 'Resolved evidence copy', 'private', evidence.original.sha256);
+    const target = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Conflict copy coffee', type: 'other' } });
+    await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: target.id, fieldKey: 'brand', value: 'Aurora', origin: 'user_declared' } });
+    for (const [index, doc] of [evidence, copy].entries()) {
+      const row = await manualDraft(doc);
+      await db.receiptDraft.update({ where: { id: row.id }, data: { mode: 'extraction', fields: { brand: { value: 'Lume', sources: [{ documentId: doc.id, page: 1, excerpt: 'Lume' }] } } } });
+      const result = await confirmation(row.id, { expectedVersion: 1, object: { action: 'reuse', targetId: target.id, targetVersion: 1, fields: [{ field: 'brand', action: index ? 'defer' : 'keep_existing' }] }, expense: { action: 'skip' } });
+      assert.equal(result.status, 200); assert.equal(result.body.draft.confirmation.openComparisons, 0); assert.equal(result.body.draft.state, 'confirmed');
+    }
+    assert.equal(await db.receiptComparison.count({ where: { objectId: target.id } }), 1);
+    assert.equal(await db.receiptComparison.count({ where: { objectId: target.id, state: 'resolved' } }), 1);
+  });
+  await t.test('Private unrelated original with matching hash does not reveal or block another account’s records', async () => {
+    const hidden = await document(b, 'Hidden same hash source'), visible = await document(a, 'Own independent source', 'private', hidden.original.sha256);
+    const hiddenObject = await db.homeObject.create({ data: { accountId: b.id, homeId: home, name: 'Hidden same hash object', type: 'other' } });
+    await db.objectResourceLink.create({ data: { accountId: b.id, homeId: home, objectId: hiddenObject.id, documentId: hidden.id, resourceType: 'document', resourceId: hidden.id } });
+    const hiddenCost = await db.homeExpense.create({ data: { accountId: b.id, homeId: home, title: 'Hidden same hash cost', amountCents: 17990, spentOn: '2026-09-15', documentId: hidden.id } });
+    const row = await manualDraft(visible);
+    for (const kind of ['object', 'expense']) {
+      const result = await call(A, path('drafts/' + row.id + '/' + kind + '-candidates'));
+      assert.equal(result.status, 200);
+      for (const secret of [hidden.id, hiddenObject.id, hiddenCost.id, hiddenObject.name, hiddenCost.title]) assert(!JSON.stringify(result.body).includes(secret));
+    }
+    assert.equal((await confirmation(row.id, selection())).status, 200);
+    // A revoked source cannot be used to enumerate candidates, even with an old draft.
+    const shared = await document(b, 'Candidate revoked source', 'home'), old = await manualDraft(shared);
+    await db.document.update({ where: { id: shared.id }, data: { visibility: 'private' } });
+    assert.equal((await call(A, path('drafts/' + old.id + '/object-candidates'))).status, 403);
+    assert.equal((await call(A, path('drafts/' + old.id + '/expense-candidates'))).status, 403);
   });
   await t.test('Changed original and viewer write denied; membership revocation blocks old requests', async () => {
     await db.documentVersion.update({ where: { documentId: own.id }, data: { version: { increment: 1 }, sha256: 'b'.repeat(64) } });

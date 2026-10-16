@@ -10,6 +10,7 @@ import { ExpensesService } from '../expenses/expenses.service';
 import { EconomyPolicy } from '../economy/policy';
 import { receiptConfirmation, type ReceiptOrigin, type FieldPlan } from './confirmation';
 import { resolveReceiptField, type ReceiptExtraction, type ReceiptProposal } from './domain';
+import { candidateQuery, candidatePagination, equivalentReceiptDocuments, objectCandidatesSql, expenseCandidatesSql, type CandidateKind, type CandidateAnchor } from './candidates';
 
 type Tx = Prisma.TransactionClient;
 const deny = () => new ForbiddenException('Accesso non consentito.');
@@ -99,6 +100,39 @@ export class ReceiptAssistanceService {
   get(a: string, h: string, id: string, query: unknown) {
     object(query, []);
     return this.transaction(a, h, false, async (tx, edit) => ({ draft: await this.project(tx, a, h, await this.record(tx, a, h, id), edit) }));
+  }
+
+  candidates(a: string, h: string, id: string, kind: CandidateKind, query: unknown) {
+    uuid(id); const q = candidateQuery(query);
+    return this.transaction(a, h, false, async tx => {
+      const draft = await this.record(tx, a, h, id);
+      if (!await this.source(tx, a, h, draft.documentId, draft)) throw deny();
+      const { anchor, encode } = candidatePagination(a, h, kind, draft, q.cursor);
+      const rows = await tx.$queryRaw<CandidateAnchor[]>(kind === 'object' ? objectCandidatesSql(a, h, draft, q.limit, anchor) : expenseCandidatesSql(a, h, draft, q.limit, anchor));
+      const page = rows.slice(0, q.limit);
+      const items = await Promise.all(page.map(async row => {
+        const reasons = row.rank === 3 ? ['same_document'] : row.rank === 2 ? ['same_original'] : [];
+        if (kind === 'expense') {
+          const expense = await tx.homeExpense.findFirst({ where: { id: row.id, accountId: a, homeId: h, state: 'active' } });
+          if (!expense) throw conflict('receipt_candidates_changed', 'Le spese sono cambiate. Ricarica i candidati.');
+          return { id: expense.id, version: expense.version, title: expense.title, amountCents: expense.amountCents, spentOn: expense.spentOn, linkedToDocument: row.rank >= 2, reasons };
+        }
+        const target = await this.target(tx, a, h, row.id), fields = await this.fields(tx, a, h, row.id);
+        if ((fields.name as { state: string } | null)?.state === 'unavailable') throw deny();
+        const value = (field: string) => { const stored = fields[field] as { state: string; value: string; origin: string } | null; return stored?.state === 'confirmed' ? { value: stored.value, origin: stored.origin } : null; };
+        const brand = value('brand'), model = value('model'), proposals = draft.fields as ReceiptExtraction['fields'];
+        const norm = (input: string | undefined) => input?.normalize('NFC').replace(/\s+/gu, ' ').trim().toLocaleLowerCase('it');
+        if (brand && model && norm(brand.value) === norm(proposals.brand?.value) && norm(model.value) === norm(proposals.model?.value)) reasons.push('same_brand_model');
+        const position = await tx.objectPosition.findFirst({ where: { accountId: a, homeId: h, objectId: row.id } });
+        const roomIds = position?.roomIds as string[] | undefined;
+        const rooms = roomIds?.length ? await tx.homeRoom.findMany({ where: { id: { in: roomIds }, homeId: h }, select: { name: true }, orderBy: { id: 'asc' } }) : [];
+        return { id: target.id, version: target.version, name: target.name, roomName: rooms.length ? rooms.map(room => room.name).join(', ') : null, brand, model, linkedToDocument: row.rank >= 2, reasons };
+      }));
+      const counts = await tx.$queryRaw<Array<{ linkedCount: string }>>(kind === 'object' ? objectCandidatesSql(a, h, draft, q.limit, null, true) : expenseCandidatesSql(a, h, draft, q.limit, null, true));
+      const linkedCount = Number(counts[0].linkedCount);
+      if (!Number.isSafeInteger(linkedCount)) throw invalid('Conteggio fuori limite.');
+      return { items, linkedCount, nextCursor: rows.length > q.limit ? encode(page.at(-1)!) : null };
+    });
   }
 
   action(a: string, h: string, id: string, op: 'park' | 'reopen', input: unknown, key?: string) {
@@ -272,7 +306,7 @@ export class ReceiptAssistanceService {
     for (const plan of plans.filter(p => p.action === 'keep_existing' || p.action === 'defer')) {
       const proposed = proposals[plan.field];
       if (!proposed) continue;
-      const fingerprint = digest(JSON.stringify([draft.documentId, draft.documentVersion, draft.documentSha256, plan.field, proposed.value.normalize('NFC').replace(/\s+/gu, ' ').trim()]));
+      const fingerprint = digest(JSON.stringify(['receipt_evidence_v2', draft.documentSha256, plan.field, proposed.value.normalize('NFC').replace(/\s+/gu, ' ').trim()]));
       const lookup = { accountId_homeId_objectId_fieldKey_fingerprint: { accountId: a, homeId: h, objectId, fieldKey: plan.field, fingerprint } };
       const prior = await tx.receiptComparison.findUnique({ where: lookup });
       // Resolved evidence is never reopened just because the same receipt was analyzed again.
@@ -296,10 +330,12 @@ export class ReceiptAssistanceService {
       let target: Awaited<ReturnType<ReceiptAssistanceService['target']>> | null = null;
       const newObject = body.object.action === 'create', newExpense = body.expense.action === 'create';
       if (body.object.action === 'create') {
-        const linked = await tx.objectResourceLink.findFirst({ where: { accountId: a, homeId: h, resourceType: 'document', documentId: draft.documentId, state: 'active' } });
-        const costLink = await tx.objectResourceLink.findFirst({ where: { accountId: a, homeId: h, resourceType: 'expense', state: 'active', expense: { accountId: a, homeId: h, documentId: draft.documentId } } });
-        const nativeLink = await tx.homeExpense.findFirst({ where: { accountId: a, homeId: h, documentId: draft.documentId, assetId: { not: null } } });
-        if (linked || costLink || nativeLink) throw conflict('receipt_object_already_linked', 'La ricevuta è già collegata: scegli la scheda esistente.');
+        const linked = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`SELECT l.id FROM "ObjectResourceLink" l
+          LEFT JOIN "HomeExpense" e ON e.id=l."expenseId" AND e."accountId"=${a} AND e."homeId"=${h}
+          WHERE l."accountId"=${a} AND l."homeId"=${h} AND l.state='active'
+            AND (l."documentId" IN (${equivalentReceiptDocuments(a, h, draft)}) OR e."documentId" IN (${equivalentReceiptDocuments(a, h, draft)})) LIMIT 1`);
+        const nativeLink = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`SELECT e.id FROM "HomeExpense" e WHERE e."accountId"=${a} AND e."homeId"=${h} AND e."assetId" IS NOT NULL AND e."documentId" IN (${equivalentReceiptDocuments(a, h, draft)}) LIMIT 1`);
+        if (linked.length || nativeLink.length) throw conflict('receipt_object_already_linked', 'La ricevuta è già collegata: scegli la scheda esistente.');
         target = await tx.homeObject.create({ data: { accountId: a, homeId: h, name: body.object.values.name, type: 'other', createdAt: now, updatedAt: now } });
         for (const field of ['name', 'brand', 'model'] as const) {
           const value = body.object.values[field];
@@ -320,7 +356,8 @@ export class ReceiptAssistanceService {
       const expenses = new ExpensesService(this.db, this.access, this.clock), policy = new EconomyPolicy(this.access);
       let expenseId: string | null = null;
       if (body.expense.action === 'create') {
-        if (await tx.homeExpense.findFirst({ where: { accountId: a, homeId: h, documentId: draft.documentId } })) throw conflict('receipt_expense_already_linked', 'La ricevuta ha già un costo: scegli la registrazione esistente.');
+        const linkedCost = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`SELECT e.id FROM "HomeExpense" e WHERE e."accountId"=${a} AND e."homeId"=${h} AND e."documentId" IN (${equivalentReceiptDocuments(a, h, draft)}) LIMIT 1`);
+        if (linkedCost.length) throw conflict('receipt_expense_already_linked', 'La ricevuta ha già un costo: scegli la registrazione esistente.');
         const value = body.expense.values, provenance: Record<string, unknown> = {};
         for (const [field, wire] of [['title', 'title'], ['amount', 'amountCents'], ['date', 'spentOn'], ['supplier', 'supplier']] as const) {
           provenance[wire] = this.proposalOrigin(draft, field === 'date' ? 'documentDate' : field, value[wire], body.expense.origins[field]);
@@ -336,7 +373,10 @@ export class ReceiptAssistanceService {
         const row = await expenses.record(tx, a, h, body.expense.targetId);
         if (row.version !== body.expense.targetVersion) throw conflict('expense_version_conflict', 'La spesa è cambiata. Rileggila.');
         if (row.state !== 'active') throw conflict('expense_state_conflict', 'Ripristina prima la spesa.');
-        if (row.documentId && row.documentId !== draft.documentId) throw conflict('expense_document_conflict', 'La spesa ha un altro documento.');
+        if (row.documentId && row.documentId !== draft.documentId) {
+          const priorDocument = await this.source(tx, a, h, row.documentId);
+          if (!priorDocument || priorDocument.original!.sha256 !== draft.documentSha256) throw conflict('expense_document_conflict', 'La spesa ha un altro documento.');
+        }
         const ref = await policy.currentRef(tx, row);
         if (target && ref && (ref.kind !== 'object' || ref.id !== target.id)) throw conflict('expense_object_conflict', 'La spesa appartiene a un altro oggetto.');
         if (!row.documentId || target && !ref) await expenses.mutateInTransaction(tx, a, h, 'update', row.id, { expectedVersion: row.version, ...(!row.documentId ? { documentId: draft.documentId } : {}), ...(target && !ref ? { objectRef: { kind: 'object', id: target.id } } : {}) }, 'receipt_' + digest(JSON.stringify([id, key])), true);

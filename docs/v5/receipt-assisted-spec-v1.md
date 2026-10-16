@@ -55,3 +55,7 @@ Le forme concrete JSON/API restano di Codex: primo incarico Claude riceve un mod
 ## Ripartizione approvata per il pomeriggio
 
 Codex: contratti/schema/backend/policy/test DB-HTTP, documenti condivisi, container/rotte/client comuni e integrazione finale. Claude: nuovi componenti isolati frontend-v5/src/receipt-assistance/**, loro modello UI e test, consegne progressive; non tocca le pagine/router/client comuni. Fonte operativa e ownership in outputs/Dimora-V5-ricevuta-piano-autonomo-20261016.md. Nessuna funzione cloud/email/drag-and-drop in questo incremento.
+
+
+### Dettaglio R5c: copie e pagine
+Candidati GET object-candidates/expense-candidates: limit1–50/cursor, risposta items/linkedCount/nextCursor. linkedCount considera tutte le corrispondenze già collegate leggibili, non solo la pagina; nessuna preselezione se più di una. Le altre schede personali sono selezionabili manualmente con reasons vuote, non definite compatibili. same_original significa SHA256 identico di un documento leggibile nella stessa Home, mai confronto su fonti private altrui. Riuso del costo conserva il suo documentId canonico; la copia viene collegata alla scheda senza ricreare costo/oggetto. Fingerprint receipt_evidence_v2 per hash/campo/valore, scoped oggetto/account/Home: la copia identica non riapre il conflitto risolto. Nessuna estrazione reale/route attiva ancora annunciata.
