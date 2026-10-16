@@ -106,7 +106,7 @@ Risultato: 43/43, `tsc` pulito, lint pulito.
 
 ## Fase 2 — Selezione multipla diretta · PRONTA per integrazione
 
-Commit: quello di questa fase (messaggio «documenti semplificati fase 2»). Il codice è in `e9db445` (vedi la nota sul taglio dei commit); qui entrano i test, che hanno verificato il comportamento senza richiedere correzioni.
+Commit: `c04b291` «test(frontend-v5): documenti semplificati fase 2, selezione multipla diretta e esiti per file». Il codice è in `e9db445` (vedi la nota sul taglio dei commit); qui entrano i test, che hanno verificato il comportamento senza richiedere correzioni.
 
 **Comportamento:**
 - **Caselle e barra.**
@@ -157,4 +157,80 @@ Commit: quello di questa fase (messaggio «documenti semplificati fase 2»). Il 
 
 **Differenze per il container:** nessuna oltre K1–K6. Per K2: una ricevuta GET che riporta solo una parte dei risultati va restituita come `done` con i risultati presenti (il componente chiede un'altra verifica) oppure come `uncertain`, mai come successo completo.
 
-## Fase 3 — Test, tastiera e mobile 320/390 · IN_CORSO
+## Fase 3 — Test, tastiera e mobile 320/390 · PRONTA per integrazione
+
+Commit: quello di questa fase (messaggio «documenti semplificati fase 3»).
+
+**Harness (`demo/IntakeDemo.tsx`, solo dimostrativo, mai importato dall'app):**
+- nuovo scenario predefinito «V2: proposte, copia e conflitto»: APE, CILA+agibilità, regolamento, ricevuta, scansione, copia di un documento organizzato, visura in conflitto con un «Altro» confermato;
+- callback V2 in memoria (`onOrganize` che applica, `onRecoverOrganization` → `not_found`).
+
+Nessun mock nel runtime reale: il componente non ha fallback, e senza `onOrganize` disabilita l'azione con il motivo.
+
+**Prova browser:**
+- Modalità:
+  - bundle statico esbuild su `file://` compilato da questo checkout, Chrome headless via CDP;
+  - nessun server avviato: la porta 5174 e i servizi non sono stati toccati;
+  - solo dati sintetici.
+- Misure a 1280, 390 e 320:
+
+  | Controllo | Esito |
+  |---|---|
+  | Overflow orizzontale (area, dialoghi, esito) | Nessuno |
+  | Caselle | 4, solo sulle proposte chiare |
+  | Barra «Organizza N documenti selezionati» | Visibile in fondo alla schermata senza scorrere, anche a 320 |
+  | Dialogo APE e dialogo conflitto | Entrano nella larghezza; il pulsante primario è visibile all'apertura |
+  | Anteprima | Chiusa all'apertura |
+  | Ordine delle decisioni (390 e 320) | Sopra «Vedi documento e fonte». A 1280 le due colonne sono affiancate e la misura «prima» vale `false` per pari altezza; nel DOM le decisioni restano prima |
+  | Conflitto | Mostra «Dati attuali», nessun radio preselezionato, primario «Scegli come procedere» disabilitato |
+  | Selezione e Organizza | Esito «4 documenti organizzati.», Completati · 4 |
+  | Corpo del dialogo APE a 320 | 1,8 altezze visibili (2,0 per il conflitto); a 390 e 1280 entra in una schermata |
+
+- Tastiera a 1280:
+  - 8 Tab da «Chiudi» a «Conferma e organizza»: titolo, tipo, «Indica tu contenuti e pagine», destinazione, «Collega a una scheda esistente», «Vedi documento e fonte», «Decidi più avanti», conferma;
+  - il Tab successivo torna su «Chiudi»;
+  - dopo una modifica, Esc porta il focus su «Scarta le modifiche»; Invio chiude e il focus torna su «Rivedi APE_Casa.pdf».
+- Errori in console: nessuno.
+- Screenshot in `screenshots/`:
+  - `v2-area-390.png`, `v2-area-320.png`;
+  - `v2-dialogo-ape-390.png`, `v2-dialogo-ape-320.png`;
+  - `v2-conflitto-390.png`;
+  - `v2-selezione-390.png`;
+  - `v2-esito-320.png`.
+
+**Test richiesti dall'incarico, dove si trovano:**
+
+| Richiesta | Test |
+|---|---|
+| Callback diretta | APE single esatto, multiparte, scansione (`DocumentIntakeAssistant.test.tsx`); multiplo esatto (`BulkSelection.test.tsx`) |
+| Esclusioni dalla selezione | 10 casi (`BulkSelection.test.tsx`) |
+| Copie e conflitti | `ReplaceConsent.test.tsx` |
+| Rinvio | Defer persistente e «Riprendi» |
+| Errore parziale e incerto | Per file, incerto, risultato parziale, `not_found`, promessa rifiutata (`BulkSelection`, `LateAndUncertain`) |
+| Cambio contesto | Account con risposta tardiva (`DocumentIntakeAssistant.test.tsx`, `LateAndUncertain`); casa con selezione (`BulkSelection`) |
+| Fonti indisponibili redatte | Fonte revocata, copia persa anche con cache vecchia |
+
+**Prove finali (una volta):**
+- `npx vitest run --project mock src/document-intake`: **51/51** in 6 file;
+- `npx tsc -b --noEmit` e `npx eslint src/document-intake`: puliti;
+- `npm run build`: OK (chunk `IntakePage` 58,45 kB, gzip 18,25);
+- `npx vitest run --project mock src/intake-integration`: **2 falliti su 4**, attesi e documentati in K4 (testi V1 nei test del container, fuori dalla mia ownership).
+
+## Limiti reali
+
+- **Non è un prodotto integrato.**
+  - Le prove sono su jsdom e sull'harness sintetico, non sull'app con il container, l'API organizations e il DB.
+  - La specifica chiede il collaudo browser dell'app integrata con dati sintetici: spetta all'integrazione di Codex (K1–K6). Le prove del mockup e dell'harness non valgono come collaudo del prodotto.
+- **Ancora da fare lato container:** l'avvio automatico della lettura locale (K3) e la correzione dal documento già in archivio senza ritrovare il caricamento. Il componente espone solo `onReorganizeDocument` («Modifica» sui completati); l'ingresso da Documenti è del container.
+- **Selezione multipla:** finché una richiesta multipla ha esito da chiarire, la barra resta disabilitata anche per altri documenti. È una scelta prudente.
+- **Fuori perimetro:** nessuna chiamata AI, email o a pagamento; nessuna modifica a permessi, privacy, originali, export, oggetti, spese o altre sezioni; nessuna dichiarazione WCAG.
+
+## Per Codex: commit e comandi
+
+- **Commit, in ordine:**
+  - `e9db445` (fase 1);
+  - `c04b291` (fase 2);
+  - il commit della fase 3;
+  - il commit finale dell'indice (vedi `git log --oneline e769abf..HEAD`).
+- **Raccolta:** dal branch `claude/documenti-semplificati-20261016`, cherry-pick dei soli commit elencati.
+- **Prove:** `cd frontend-v5`, poi `npx vitest run --project mock src/document-intake`, `npx tsc -b --noEmit`, `npx eslint src/document-intake`.
