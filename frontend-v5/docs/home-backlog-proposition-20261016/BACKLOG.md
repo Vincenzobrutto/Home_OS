@@ -21,7 +21,9 @@ Proposta Claude, condivisa con il committente nella sessione del 16/10. Serve a 
   - consigli e incentivi, collegati alle scadenze perché anch'essi localizzati;
   - previsioni, budget e accantonamenti;
   - valore dell'immobile.
-- **Ancora aperte:** il momento di BL-03 rispetto ad Agenzie e l'inclusione di BL-07 nel ciclo Home. Il committente non ha escluso nessuna delle due.
+- **BL-03 Storia della casa:** si fa **prima di Agenzie**.
+- **BL-07 Persone della casa:** rientra nel **ciclo Home**, prima di Agenzie.
+- **Fase 4 (BL-12…BL-16):** restano **placeholder non pianificati**. Ognuna richiede prima una fase di progettazione; solo dopo entra nel backlog di sviluppo con stime e criteri definitivi.
 
 ## Principi validi per tutte le voci
 
@@ -83,7 +85,7 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - Privacy identica a quella dell'oggetto.
 - **Effort indicativo.** M: estensione degli oggetti nel contratto e nel backend.
 
-## Fase 2 — La promessa centrale
+## Fase 2 — Ciclo Home, prima di Agenzie
 
 ### BL-03 · Storia della casa
 - **Cosa.** Una cronologia unica della casa (Master §6, «Property Timeline»), accessibile da Casa. Riunisce eventi già presenti:
@@ -103,18 +105,18 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
   - Nessun registro tecnico: entrano solo eventi significativi, non ogni modifica.
   - Il ritorno dalla voce alla risorsa mantiene il contesto.
 - **Effort indicativo.** M–L: nuova lettura aggregata lato server, più l'entità «evento manuale».
-- **Aperto.** Il committente deve decidere se va prima o dopo Agenzie.
-
-## Fase 3 — Dopo, con decisioni o prerequisiti
+- **Decisione del committente (16/10).** Prima di Agenzie.
 
 ### BL-07 · Persone della casa
 - **Cosa.** Invitare familiari e coinquilini con ruolo membro o sola lettura. I ruoli esistono già nel server, ma la UI dice «gestione degli accessi non disponibile».
-- **Prerequisiti.** Progettazione di inviti, revoca e privacy al livello della C1.
+- **Prerequisiti.** Progettazione di inviti, revoca e privacy al livello della C1. La progettazione va fatta dentro questo ciclo.
 - **Accettazione.**
   - Nessun dato personale di un membro diventa visibile ad altri.
   - Revoca immediata.
   - Il ruolo e i permessi sono spiegati prima della conferma.
-- **Aperto.** Il committente deve decidere se rientra nel ciclo Home.
+- **Decisione del committente (16/10).** Rientra nel ciclo Home, prima di Agenzie.
+
+## Fase 3 — Dopo, con decisioni o prerequisiti
 
 ### BL-08 · Riepilogo via email delle scadenze
 - **Cosa.** Riepilogo periodico facoltativo delle scadenze personali. Con BL-05 escluso, è l'unico canale «push» previsto.
@@ -129,9 +131,11 @@ Da `home-economy-module.md`, «Prima di pilota esterno»:
 - **Cosa.** Versione minima: nome e recapito facoltativi su lavoro e spesa, per ritrovare insieme intervento, fattura, garanzia e professionista (spunti §6).
 - **Nota.** La rubrica completa resta rinviata. Il committente decide se questa versione minima basta.
 
-## Fase 4 — Da fare a seguire (approvate dal committente come valore)
+## Fase 4 — Placeholder: non pianificare
 
-Sono funzioni ad alto valore ma con rischi di dichiarazioni eccessive e di manutenzione. Per ognuna serve **prima una specifica di progettazione**, e solo dopo lo sviluppo.
+Il committente le considera di valore, ma per ora **non vanno pianificate né stimate**. Hanno rischi di dichiarazioni eccessive e di manutenzione: ognuna richiede **prima una fase di progettazione** dedicata. Solo dopo entrerà nel backlog di sviluppo con stime e criteri definitivi.
+
+Le note qui sotto sono il punto di partenza per quella progettazione, non requisiti approvati. BL-12 serve solo a BL-13 e BL-14, quindi resta anch'esso placeholder.
 
 ### BL-12 · Posizione strutturata della casa (prerequisito di BL-13 e BL-14)
 - **Cosa.** Regione, provincia e comune strutturati, in aggiunta all'indirizzo libero di oggi. Facoltativi, con dichiarazione dell'utente.
@@ -214,12 +218,12 @@ Sono funzioni ad alto valore ma con rischi di dichiarazioni eccessive e di manut
 ## Ordine proposto
 
 1. Fase 0: prerequisiti del pilota.
-2. BL-04 → BL-01 → BL-02.
-3. BL-03, in un momento da decidere rispetto ad Agenzie.
-4. BL-07, BL-08, BL-09, BL-10, secondo le decisioni del committente.
-5. BL-12, che abilita BL-13 e BL-14 (progettazione congiunta).
-6. BL-15, dopo BL-09.
-7. BL-16.
+2. Fase 1: BL-04 → BL-01 → BL-02.
+3. Fase 2, prima di Agenzie: BL-03 Storia della casa e BL-07 Persone della casa. Codex sceglie l'ordine fra le due.
+4. Agenzie.
+5. Fase 3: BL-08, BL-09, BL-10, secondo le decisioni del committente.
+
+La fase 4 (BL-12…BL-16) non è in sequenza: si progetta su richiesta del committente.
 
 ## Nota fuori backlog
 
