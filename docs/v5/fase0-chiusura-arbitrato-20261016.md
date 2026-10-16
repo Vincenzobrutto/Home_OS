@@ -74,3 +74,9 @@ Risultato work/backup-roundtrip-20261016/verification.json nel workspace, nessun
 Quindi restano TRE blocchi: (1) misurazione/qualità AI, (2) collaudo visivo reale e (3) conservazione/cancellazione. Per un servizio pubblico serviranno ulteriori verifiche operative; non si trasformano qui in nuove funzionalità di Home. La guida, BL04 e Agenzie restano rinviati. Non diciamo «Fase0 completata» oggi.
 
 Nessun backend/schema/.env o dato reale modificato in questa raccolta. UI corretta con test, originali Claude preservati e arbitrati. Fonte del metodo: rapporto e codice locale; nessuna consulenza legale o dichiarazione di conformità. Root documenti già misti aggiornati senza includere dirty estraneo nei commit.
+
+## Chiarimento successivo: conservare la casa reale
+
+Il committente chiarisce che la prova serve a costruire progressivamente la propria casa, senza cancellarla al termine. Regole consolidate in prova-personale-conservazione-20261016.md: nessuna scadenza automatica, archiviazione distinta da eliminazione, rimozione solo esplicita con impatto spiegato, copie di backup trattate separatamente. Regole definite; eliminazione tecnica e ciclo delle copie restano aperti, nessuna cancellazione eseguita. L'avviso attuale rimane veritiero.
+
+Per il primo lotto come archivio distinguere la QA visiva reale ancora necessaria dalla futura analisi AI: qualità AI/campagna richiedono ancora corpus corretto e nuovo budget/consenso, ma non sono una dipendenza tecnica del solo salvataggio degli originali. Nessuna dichiarazione di Fase0 completa o di eliminazione già disponibile. Claude avviato dal committente su corpus/scorer v2 offline, non ancora raccolto.

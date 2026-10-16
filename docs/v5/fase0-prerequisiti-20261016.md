@@ -10,18 +10,18 @@ Avvio approvato dal committente il 16 ottobre 2026. Questa matrice distingue cap
 | Export personale | JSON Home/account attivo, ZIP originali separato; test API/DB reali sintetici e UI harness | Collaudo visivo reale desktop/mobile con account QA separato |
 | UX file ed export | Claude raccolto/arbitrato, rifiuti certi503 e messaggi corretti;32test frontend mirati/build/lint verdi | Nessuna riprogettazione generale; dettagli in fase0-chiusura-arbitrato-20261016.md |
 | Qualità AI | Revisione indipendente conclusa, difetti gold/scorer riprodotti offline | Correggere E1…E8 e versione2; poi campagna rappresentativa con nuovo budget/consenso, senza chiamate implicite |
-| Conservazione/cancellazione | Export disponibile, eliminazione e retention automatica assenti | Regola operativa/procedura del pilota ancora da definire; nessuna promessa legale o cancellazione silenziosa |
+| Conservazione/cancellazione | Regole consolidate in prova-personale-conservazione-20261016.md: conservare per proseguire la casa, nessuna scadenza automatica, rimozione solo esplicita | Eliminazione tecnica e ciclo delle copie ancora da implementare/verificare; non sono azioni da eseguire sui dati personali adesso |
 ## Perimetro della prova personale
 
-Proposta: account separato, pochi file iniziali non delicati, originali conservati dall'utente, visibilità Solo io, nessuna analisi esterna automatica. Non chiamare questo percorso «pronto» finché recupero accesso e destinazione backup non sono risolti. Foto JPEG/PNG archiviabili; l'estrattore attuale legge testo PDF, non equivale a OCR di immagini/scansioni. HEIC non ammesso. PDF con firma riconoscibile non sono per questo validati come leggibili, innocui o testuali.
+Account personale distinto dai fixture, pochi file iniziali non delicati, originali conservati dall'utente, visibilità Solo io, nessuna analisi esterna automatica. Recupero accesso e seconda copia backup sono risolti per la prova locale. Per iniziare come archivio manca il collaudo visivo reale upload/apertura/ZIP/JSON su account QA separato e va mantenuto esplicito il limite attuale di eliminazione. Qualità AI e consenso/budget della nuova campagna restano un percorso separato, necessario prima di passare alle analisi personali. Non dichiarare Fase0 complessivamente chiusa. Foto JPEG/PNG archiviabili; l'estrattore attuale legge testo PDF, non equivale a OCR di immagini/scansioni. HEIC non ammesso. PDF con firma riconoscibile non sono per questo validati come leggibili, innocui o testuali.
 
 ## Lavoro Codex e Claude
 
-Codex possiede contratti, implementazione e verifiche di integrazione. Le consegne Claude UX/corpus sono raccolte e arbitrate in fase0-chiusura-arbitrato-20261016.md. Il prossimo incarico separato può coprire solo corpus/scorer offline; nessuna sovrapposizione ai sorgenti del prodotto. Guida in sovraimpressione rinviata. BL-04 e successive restano nell'ordine approvato, senza avvio implicito.
+Codex possiede contratti, implementazione e verifiche di integrazione. Le prime consegne Claude UX/corpus sono raccolte e arbitrate in fase0-chiusura-arbitrato-20261016.md. Il committente ha confermato Claude partito sul nuovo incarico corpus/scorer v2 offline; consegna non ancora raccolta, nessuna sovrapposizione ai suoi file. Guida in sovraimpressione rinviata. BL-04 e successive restano nell'ordine approvato, senza avvio implicito.
 
-## Export completo da specificare
+## Export e conservazione: stato corrente
 
-Separare pacchetto utente JSON versionato (dati propri, provenienza e collegamenti ancora leggibili) da selezione originali ZIP. Escludere hash password, sessioni, token, dati privati altrui e dati ricevuti non più autorizzati. Per risorse Home comuni, esplicitare proprietà/autorizzazione e comportamento dopo uscita; non equiparare accesso corrente a diritto di esportazione indiscriminata. Archivio di risorse, chiusura casa e cancellazione account non sono la stessa operazione. Il pilota non promette ancora un export completo self-service né retention definita.
+JSON personale Home/account e ZIP originali sono implementati e separati; riferimenti e limiti in personal-export-api-contract.md. Non equivalgono a reimport o dump totale account. Archiviazione di risorse, chiusura casa e cancellazione account non sono la stessa operazione. Le regole approvate e la procedura di richiesta sono in prova-personale-conservazione-20261016.md; l'eliminazione tecnica resta assente. Le sezioni di avanzamento sottostanti sono storiche: la matrice iniziale e questa sezione descrivono lo stato corrente.
 
 ## Campione AI da preparare senza provider
 
