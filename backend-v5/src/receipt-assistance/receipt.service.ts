@@ -13,6 +13,7 @@ import { resolveReceiptField, type ReceiptExtraction, type ReceiptProposal } fro
 import { candidateQuery, candidatePagination, equivalentReceiptDocuments, objectCandidatesSql, expenseCandidatesSql, type CandidateKind, type CandidateAnchor } from './candidates';
 import { reviewedForm, type SavedReceiptSelection } from './review';
 import { readableReceiptObjectIds } from './access';
+import { ReceiptReleasePolicy } from './release-policy';
 
 type Tx = Prisma.TransactionClient;
 const deny = () => new ForbiddenException('Accesso non consentito.');
@@ -20,7 +21,7 @@ const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.Inp
 
 @Injectable()
 export class ReceiptAssistanceService {
-  constructor(private readonly db: PrismaService, private readonly access: ReviewService, private readonly clock: ActivityClock) {}
+  constructor(private readonly db: PrismaService, private readonly access: ReviewService, private readonly clock: ActivityClock, private readonly release: ReceiptReleasePolicy) {}
 
   authorized<T>(a: string, h: string, write: boolean, action: (tx: Tx, edit: boolean) => Promise<T>) {
     return this.transaction(a, h, write, action);
@@ -72,11 +73,13 @@ export class ReceiptAssistanceService {
   capabilities(a: string, h: string, query: unknown) {
     const q = object(query, ['documentId']);
     const documentId = q.documentId === undefined ? null : uuid(q.documentId);
-    return this.transaction(a, h, false, async tx => {
-      if (documentId && !await this.source(tx, a, h, documentId)) throw deny();
+    return this.transaction(a, h, false, async (tx, edit) => {
+      const source = documentId ? await this.source(tx, a, h, documentId) : null;
+      if (documentId && !source) throw deny();
+      const enabled = edit && !!this.release?.allows(source);
       return {
-      apiVersion: 'receipt-assistance-v1', enabled: false, manualEnabled: false, providers: [],
-      disabledReason: 'receipt_assistance_in_development', ...temporal(this.clock.now()),
+      apiVersion: 'receipt-assistance-v1', enabled, manualEnabled: enabled, providers: enabled ? this.release.providers() : [],
+      disabledReason: enabled ? null : 'receipt_assistance_in_development', ...temporal(this.clock.now()),
       };
     });
   }
@@ -89,10 +92,15 @@ export class ReceiptAssistanceService {
       if (prior) {
         if (prior.digest !== hash) throw conflict('idempotency_conflict', 'Chiave già usata con dati diversi.');
         const row = await this.record(tx, a, h, prior.draftId);
-        if (!await this.source(tx, a, h, row.documentId, row)) throw deny();
+        const source = await this.source(tx, a, h, row.documentId, row);
+        if (!source) throw deny();
+        this.release?.require(source);
         return { draft: await this.project(tx, a, h, row, true) };
       }
       const row = await action(tx);
+      const source = await this.source(tx, a, h, row.documentId, row);
+      if (!source) throw deny();
+      this.release?.require(source);
       await tx.receiptRequest.create({ data: { ...lookup.accountId_homeId_operation_target_key, digest: hash, draftId: row.id } });
       return { draft: await this.project(tx, a, h, row, true) };
     });
@@ -103,6 +111,7 @@ export class ReceiptAssistanceService {
     return this.request(a, h, 'manual', '', body, key, async tx => {
       const doc = await this.source(tx, a, h, body.documentId);
       if (!doc) throw deny();
+      this.release?.require(doc);
       const source = { documentId: doc.id, documentVersion: doc.original!.version, documentSha256: doc.original!.sha256 };
       const existing = await tx.receiptDraft.findFirst({ where: { accountId: a, homeId: h, ...source, mode: 'manual', state: { in: ['open', 'parked'] } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] });
       if (existing) return existing;
@@ -120,7 +129,8 @@ export class ReceiptAssistanceService {
     uuid(id); const q = candidateQuery(query);
     return this.transaction(a, h, false, async tx => {
       const draft = await this.record(tx, a, h, id);
-      if (!await this.source(tx, a, h, draft.documentId, draft)) throw deny();
+      const source = await this.source(tx, a, h, draft.documentId, draft);
+      if (!source) throw deny();
       const { anchor, encode } = candidatePagination(a, h, kind, draft, q.cursor);
       const rows = await tx.$queryRaw<CandidateAnchor[]>(kind === 'object' ? objectCandidatesSql(a, h, draft, q.limit, anchor) : expenseCandidatesSql(a, h, draft, q.limit, anchor));
       const page = rows.slice(0, q.limit);
@@ -378,7 +388,9 @@ export class ReceiptAssistanceService {
     const body = receiptConfirmation(input, temporal(this.clock.now()).today);
     return this.request(a, h, 'confirm', id, body, key, async tx => {
       const draft = await this.record(tx, a, h, id);
-      if (!await this.source(tx, a, h, draft.documentId, draft)) throw deny();
+      const source = await this.source(tx, a, h, draft.documentId, draft);
+      if (!source) throw deny();
+      this.release?.require(source);
       if (draft.version !== body.expectedVersion) throw conflict('receipt_draft_version_conflict', 'La bozza è cambiata. Rileggila.');
       if (draft.state !== 'open' || draft.confirmation) throw conflict('receipt_draft_state_conflict', 'La bozza non è confermabile.');
       const now = this.clock.now();

@@ -10,6 +10,8 @@ const { DocumentsModule } = require('../dist/documents/documents.module');
 const { PrismaService, assertDevelopmentDatabase } = require('../dist/prisma.service');
 const { ReceiptAssistanceController } = require('../dist/receipt-assistance/receipt.controller');
 const { ReceiptAssistanceService } = require('../dist/receipt-assistance/receipt.service');
+const { ReceiptReleasePolicy } = require('../dist/receipt-assistance/release-policy');
+const { receiptFixturePdf } = require('../dist/receipt-assistance/fixture-provider');
 const { ReviewService } = require('../dist/review/review.service');
 const { HomeObjectsService } = require('../dist/home-objects/home-objects.service');
 const { EconomyPolicy } = require('../dist/economy/policy');
@@ -97,6 +99,21 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     const changed = await call(A, path('manual-drafts'), 'POST', { documentId: shared.id }, key);
     assert.equal(changed.status, 409); assert.equal(changed.body.error.code, 'idempotency_conflict');
     assert.deepEqual((await call(A, path('drafts/' + draft.id))).body.draft, draft);
+  });
+  await t.test('Browser release gate limits capability and writes to known synthetic originals without partial side effects', async () => {
+    const limited = new ReceiptAssistanceService(db, new ReviewService(db, {}), { now: () => new Date('2026-10-16T12:00:00Z') }, new ReceiptReleasePolicy());
+    const fixture = await document(a, 'Approved synthetic receipt', 'private', digest(receiptFixturePdf('purchase')));
+    const cap = await limited.capabilities(a.id, home, { documentId: fixture.id });
+    assert.equal(cap.enabled, true); assert.equal(cap.manualEnabled, true); assert.equal(cap.providers[0].id, 'receipt_fixture_v1');
+    assert.equal((await limited.capabilities(a.id, home, {})).enabled, false);
+    assert.equal((await limited.capabilities(a.id, home, { documentId: own.id })).manualEnabled, false);
+    const before = await db.receiptDraft.count({ where: { accountId: a.id } });
+    await assert.rejects(() => limited.manual(a.id, home, { documentId: own.id }, randomUUID()), e => e.getStatus() === 503);
+    assert.equal(await db.receiptDraft.count({ where: { accountId: a.id } }), before);
+    await assert.rejects(() => limited.confirm(a.id, home, draft.id, { expectedVersion: draft.version, object: { action: 'skip' }, expense: { action: 'skip' } }, randomUUID()), e => e.getStatus() === 503);
+    assert.equal((await db.receiptDraft.findUnique({ where: { id: draft.id } })).state, 'open');
+    assert.equal((await limited.manual(a.id, home, { documentId: fixture.id }, randomUUID())).draft.mode, 'manual');
+    await assert.rejects(() => limited.capabilities(b.id, home, { documentId: fixture.id }), e => e.getStatus() === 403);
   });
   await t.test('Foreign account/home and private document never leak names or IDs', async () => {
     const forbidden = [await call(B, path('drafts/' + draft.id)), await call(A, `/homes/${otherHome}/receipt-assistance/drafts/${draft.id}`), await call(A, path('manual-drafts'), 'POST', { documentId: foreign.id })];
