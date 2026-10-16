@@ -95,9 +95,6 @@ export function DocumentsPage() {
             <Link to={`/home/${encodeURIComponent(home.id)}/documenti/organizza`} className={cx(ui.btn, ui.primary)}>
               <Icon name="plus" /> Carica documenti
             </Link>
-            <Link to={`/home/${encodeURIComponent(home.id)}/attivita?analizza=1`} className={ui.btn}>
-              Analizza documenti
-            </Link>
           </div>
         )}
       </div>

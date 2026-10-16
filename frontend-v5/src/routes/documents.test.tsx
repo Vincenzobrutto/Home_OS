@@ -75,6 +75,7 @@ describe('[mock] Documenti — archivio', () => {
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Carica documenti' })).toHaveAttribute('href', `/home/${home.id}/documenti/organizza`);
     expect(screen.queryByRole('link', { name: 'Organizza più documenti' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Analizza documenti' })).not.toBeInTheDocument();
     const first = within(list).getAllByRole('listitem')[0]!;
     expect(first).toHaveTextContent('Documento 25');
     expect(first).toHaveTextContent(/PDF · \d+ B/);
