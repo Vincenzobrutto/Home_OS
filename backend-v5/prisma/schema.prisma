@@ -914,6 +914,11 @@ model DocumentIntakeBatch {
   @@index([accountId, homeId, createdAt, id])
 }
 model DocumentIntakeItem {
+  uploadKey String?
+  uploadDigest String?
+  uploadLeaseToken String?
+  uploadLeaseUntil DateTime?
+  uploadError String?
   id String @id @default(uuid())
   batchId String
   clientItemId String
@@ -935,4 +940,5 @@ model DocumentIntakeItem {
   document Document? @relation(fields: [documentId], references: [id], onDelete: Restrict)
   @@unique([batchId, clientItemId])
   @@unique([batchId, ordinal])
+  @@index([uploadState, uploadLeaseUntil])
 }

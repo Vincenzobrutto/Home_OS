@@ -10,7 +10,7 @@ export class ApiErrorFilter implements ExceptionFilter {
   catch(error: unknown, host: ArgumentsHost) {
     const res = host.switchToHttp().getResponse<Response>();
     const path = host.switchToHttp().getRequest<Request>().path;
-    const documentRoute = path.includes('/documents') || /\/homes\/[^/]+\/document-search-capabilities$/.test(path);
+    const documentRoute = path.includes('/documents') || /\/homes\/[^/]+\/(document-search-capabilities$|document-intake(?:\/|$))/.test(path);
     const reviewRoute = /\/homes\/[^/]+\/(analysis-capabilities|analysis-jobs|assets|review)(\/|$)/.test(host.switchToHttp().getRequest<Request>().path);
     const activityRoute = /\/homes\/[^/]+\/(activity-capabilities|activity-summary|activities)(\/|$)/.test(host.switchToHttp().getRequest<Request>().path);
     const expenseRoute = /\/homes\/[^/]+\/(expense-capabilities|expense-summary|expenses)(\/|$)/.test(path);

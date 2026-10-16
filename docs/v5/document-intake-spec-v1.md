@@ -43,3 +43,6 @@ Provider del lotto separato da campagne ricevuta/M4/S1. Nessuna attivazione in q
 ## Criteri di accettazione
 
 Lotto misto approvato nel mockup: APE, CILA+agibilità, schema ambiguo, regolamento, ricevuta già collegata, copia e scansione. Dimostrare: nessuna perdita di originali, niente duplicati o scritture prima conferma, una fonte per PDF multiparte, selezioni puntuali fedeli, privacy invariata, nessuna certificazione implicita, ripresa reale dopo reload, retry soltanto dello stesso elemento fallito, fonte/target revocati redatti, costo non duplicato. Distinguere sempre prove UI/mock, parser, DB, HTTP, file fisici e provider reale.
+
+### Stato B1b16ott2026
+Upload per elemento e deduplica controllata implementati e collaudati in modulo isolato; migrazione22V5 applicata.13HTTP/DB storageesplicitamentestub +1testfisico scannerreale verdi, build/lint verdi; dettagli e DTO redatti in document-intake-api-contract.md B1b. Non ancora attivo nell’app, nessuna classificazione AI o organizzazione confermata implementata. NextB2metadati/filtri e poi B3B4.

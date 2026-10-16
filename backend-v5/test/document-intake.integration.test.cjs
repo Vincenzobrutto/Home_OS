@@ -4,13 +4,14 @@ const { Module } = require('@nestjs/common'), { NestFactory } = require('@nestjs
 const { InfrastructureModule } = require('../dist/app.module'), { PrismaService, assertDevelopmentDatabase } = require('../dist/prisma.service');
 const { DocumentPolicy, DocumentAccessGuard } = require('../dist/documents/access');
 const { IntakeBatchesService } = require('../dist/document-intake/batches.service'), { DocumentIntakeController } = require('../dist/document-intake/intake.module');
+const { IntakeUploadsService } = require('../dist/document-intake/uploads.service');
 const { ApiErrorFilter } = require('../dist/main'), { COOKIE, digest } = require('../dist/security');
 
 test('Intake B1: actual HTTP/DB manifest persistence, no files/AI and no production module registration', { timeout: 30000 }, async t => {
   assertDevelopmentDatabase(process.env.DATABASE_URL);
   class Harness {}
   // Deliberately no DocumentsService/storage module: no cleanup or personal original IO.
-  Module({ imports: [InfrastructureModule], controllers: [DocumentIntakeController], providers: [DocumentPolicy, DocumentAccessGuard, IntakeBatchesService] })(Harness);
+  Module({ imports: [InfrastructureModule], controllers: [DocumentIntakeController], providers: [DocumentPolicy, DocumentAccessGuard, IntakeBatchesService, { provide: IntakeUploadsService, useValue: { upload: () => { throw Error('No file upload in manifest-only harness'); } } }] })(Harness);
   const app = await NestFactory.create(Harness, { logger: false }); app.setGlobalPrefix('api/v5'); app.use(cookieParser()); app.useGlobalFilters(new ApiErrorFilter()); await app.listen(0, '127.0.0.1');
   const db = app.get(PrismaService), base = await app.getUrl(), accounts = [], homes = [], users = [];
   t.after(async () => {
