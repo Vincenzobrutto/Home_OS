@@ -1,6 +1,6 @@
 # Ricevuta assistita — specifica consolidata V1
 
-> Stato16ottobre2026 R8b: percorso sintetico R7c operativo; adattatore Anthropic, ledger dedicato, orchestrazione e UI costo/uncertain implementati e verificati offline/DB con HTTP stub. Migrazione20 applicata al solo DB V5 e API riavviata. Anthropic NON abilitato: nessuna campagna/trasmissione reale autorizzata o eseguita. Documenti personali esclusi per default. Questo stato e gli ultimi dettagli R8b prevalgono sulle sezioni storiche sotto.
+> Stato16ottobre2026 R8c: adattatore Anthropic, ledger dedicato, orchestrazione e UI costo/uncertain implementati. Prova reale autorizzata conclusa sul SOLO purchase.pdf sintetico: UNA Messages, costo0.008250USD entro0.25, riuso/conferma0oggetti0spese senza duplicati, costo persistente dopo reload. Provider nuovamente DISABILITATO; nessun documento personale inviato. Migrazione20 V5 e API aggiornate. Questo stato e i dettagli R8c prevalgono sulle sezioni storiche sotto.
 
 16 ottobre 2026. Flusso UX approvato dal committente dopo navigazione del mockup. Autorizzato lo sviluppo; non autorizzata da questo documento alcuna chiamata esterna o analisi dei documenti personali. Il resoconto del mockup è storico in receipt-assisted-flow-mockup-20261016.md.
 
