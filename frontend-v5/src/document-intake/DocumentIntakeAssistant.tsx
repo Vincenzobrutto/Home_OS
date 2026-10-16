@@ -26,6 +26,7 @@ export type DocumentIntakeAssistantProps = {
   /** Solo i File scelti: il componente non legge né invia contenuti. */
   onSelectFiles: (files: File[]) => void;
   addingFiles?: boolean;
+  onReorganizeDocument?: (itemId: OpaqueId) => Promise<void>;
   onRetryUpload: (itemId: OpaqueId) => Promise<WriteOutcome>;
   onCancelUpload: (itemId: OpaqueId) => Promise<WriteOutcome>;
   onSaveReview: (payload: ReviewPayload) => Promise<WriteOutcome>;
@@ -226,7 +227,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
               {item.byteSize !== null ? formatBytes(item.byteSize) : ''}{item.pageCount ? ` · ${item.pageCount} ${item.pageCount === 1 ? 'pagina' : 'pagine'}` : ''} · Solo io
             </p>
           )}
-          <p><StatusBadge status={status} /></p>
+          <p>{raw === 'confirmed' && item.uploadState === 'duplicate' && !decision ? <span className={cx(styles.badge, styles.badgeNeutral)}>Originale riusato · organizzazione invariata</span> : <StatusBadge status={status} />}</p>
           {decision && <p>{decision.parts.map(partLabel).join(' + ')} · {decision.target.kind === 'home' ? 'solo casa' : 'scheda esistente'}</p>}
           {raw === 'duplicate' && <p>{item.duplicate?.document ? `Stesso contenuto di «${item.duplicate.document.name}».` : 'Stesso contenuto di un altro file.'} Nessun originale viene eliminato.</p>}
           {raw === 'unavailable' && <p>Il documento non è più accessibile con questo account.</p>}
@@ -234,6 +235,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
           {uploadMessages[item.id] && <p role="alert">{uploadMessages[item.id]}</p>}
         </div>
         <div className={styles.rowActions}>
+          {raw === 'confirmed' && canReview && item.permissions.review && props.onReorganizeDocument && <button type="button" className={cx(ui.btn, ui.small)} disabled={props.addingFiles} onClick={() => void props.onReorganizeDocument?.(item.id)}>Riorganizza senza ricaricare</button>}
           {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
           {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
           {mode === 'proposte' && reviewable(item) && (
@@ -265,7 +267,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
               return (
                 <div key={r.itemId} className={styles.summaryLine}>
                   <span>{item?.selection?.action === 'organize' ? item.selection.title : item?.filename ?? 'File non più disponibile'}</span>
-                  <strong>{r.status === 'confirmed' ? 'Organizzato' : `Non applicato${r.message ? `: ${r.message}` : ''}`}</strong>
+                  <strong>{r.status === 'confirmed' ? item?.uploadState === 'duplicate' && !item.selection ? 'Riusato · organizzazione invariata' : 'Organizzato' : `Non applicato${r.message ? `: ${r.message}` : ''}`}</strong>
                 </div>
               );
             })}

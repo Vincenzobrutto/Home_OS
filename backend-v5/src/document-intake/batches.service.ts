@@ -217,6 +217,31 @@ export class IntakeBatchesService {
       return { batch: await this.view(tx, batch, edit) };
     });
   }
+  prepareExisting(a: string, h: string, input: unknown, key?: string) {
+    key = requestKey(key); const body = object(input, ['documentIds']);
+    if (!Array.isArray(body.documentIds) || !body.documentIds.length || body.documentIds.length > INTAKE_LIMITS.maxFiles) throw invalid();
+    const ids = body.documentIds.map(uuid); if (new Set(ids).size !== ids.length) throw invalid();
+    const fingerprint = digest(JSON.stringify({ existingDocuments: ids }));
+    return this.authorized(a, h, true, async (tx, edit) => {
+      const account = await tx.account.findUniqueOrThrow({ where: { id: a } });
+      if (account.requiresEmailVerification && !account.emailVerifiedAt) throw new ForbiddenException({ code: 'email_verification_required', message: 'Conferma la tua email prima di organizzare i documenti.' });
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'intake-create:' + a + ':' + h + ':' + key},0))::text AS locked`;
+      const prior = await tx.documentIntakeBatch.findUnique({ where: { accountId_homeId_key: { accountId: a, homeId: h, key: key! } }, include: { items: { orderBy: { ordinal: 'asc' } } } });
+      if (prior) { if (prior.digest !== fingerprint) throw conflict('idempotency_conflict', 'Chiave già utilizzata.'); return { batch: await this.view(tx, prior, edit) }; }
+      const items = [];
+      for (const documentId of ids) {
+        await tx.$queryRaw`SELECT id FROM "Document" WHERE id=${documentId} FOR SHARE`;
+        await tx.$queryRaw`SELECT id FROM "DocumentVersion" WHERE "documentId"=${documentId} FOR SHARE`;
+        const doc = await tx.document.findUnique({ where: { id: documentId }, include: { original: true } });
+        if (!doc || doc.homeId !== h || !canReadDocument(doc, a) || !doc.original) throw new ForbiddenException();
+        const previous = await tx.documentIntakeItem.findFirst({ where: { documentId, documentVersion: doc.original.version, documentSha256: doc.original.sha256, batch: { accountId: a, homeId: h }, analysisState: { in: ['ready', 'needs_choice'] }, proposal: { not: Prisma.DbNull } }, orderBy: { updatedAt: 'desc' } });
+        items.push({ clientItemId: documentId, filename: doc.original.originalFilename, byteSize: doc.original.byteSize, mimeType: doc.original.mimeType, documentId, documentVersion: doc.original.version, documentSha256: doc.original.sha256, uploadState: 'stored', analysisState: previous?.analysisState ?? 'not_started', proposal: previous?.proposal ? json(previous.proposal) : Prisma.DbNull, pageCount: previous?.pageCount ?? null });
+      }
+      intakeManifest({ items: items.map(({ clientItemId, filename, byteSize, mimeType }) => ({ clientItemId, filename, byteSize, mimeType })) });
+      const batch = await tx.documentIntakeBatch.create({ data: { accountId: a, homeId: h, key: key!, digest: fingerprint, totalBytes: items.reduce((n, i) => n + i.byteSize, 0), items: { create: items.map((item, ordinal) => ({ ...item, ordinal })) } }, include: { items: { orderBy: { ordinal: 'asc' } } } });
+      return { batch: await this.view(tx, batch, edit) };
+    });
+  }
   get(a: string, h: string, id: string, query: unknown) {
     uuid(id); object(query, []);
     return this.authorized(a, h, false, async (tx, edit) => {

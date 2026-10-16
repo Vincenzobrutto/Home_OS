@@ -1,9 +1,19 @@
 import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { batchOf, corpus } from './testing/fixtures';
 import { intakeProps, renderIntake } from './testing/renderIntake';
 
 describe('archivio assistito: navigazione di base (C1)', () => {
+  it('una copia già riusata è distinta da organizzata e permette una nuova revisione senza upload', async () => {
+    const user = userEvent.setup(), onReorganizeDocument = vi.fn(async () => undefined);
+    const props = intakeProps({ batch: batchOf([{ ...corpus.copy(), reviewState: 'confirmed' }]), onReorganizeDocument });
+    renderIntake(props);
+    expect(screen.getByText('Originale riusato · organizzazione invariata')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Riorganizza senza ricaricare' }));
+    expect(onReorganizeDocument).toHaveBeenCalledWith('copia');
+    expect(props.onSelectFiles).not.toHaveBeenCalled(); expect(props.onSaveReview).not.toHaveBeenCalled();
+  });
   it('dal lotto alle proposte e ritorno, senza scritture all’apertura', async () => {
     const user = userEvent.setup();
     const props = intakeProps();

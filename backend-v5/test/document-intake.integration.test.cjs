@@ -44,6 +44,9 @@ test('Intake manifest persistence: real HTTP/DB, scoped access and local-only ca
     const caps = await call(A, path + '/capabilities'); assert.equal(caps.body.enabled, true); assert.equal(caps.body.analysis.provider, 'local_text_v1'); assert.equal(caps.body.analysis.externalTransmission, false); assert.equal(caps.body.collections.energy, 'Energia');
     assert.equal((await call(A, path + '/batches', 'POST', manifest, undefined, 'wrong')).status, 403);
     assert.equal((await call(C, path + '/batches', 'POST', manifest)).body.error.code, 'email_verification_required');
+    assert.equal((await call(null, path + '/batches/from-documents', 'POST', { documentIds: [randomUUID()] })).status, 401);
+    assert.equal((await call(A, path + '/batches/from-documents', 'POST', { documentIds: [randomUUID()] }, undefined, 'wrong')).status, 403);
+    assert.equal((await call(A, path + '/batches/from-documents', 'POST', { documentIds: [randomUUID()] })).status, 403);
     assert.equal(await db.documentIntakeBatch.count({ where: { accountId: { in: accounts } } }), 0);
   });
   await t.test('Concurrent replay creates one persistent ordered batch; new service reads the same state', async () => {

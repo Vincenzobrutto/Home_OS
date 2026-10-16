@@ -15,6 +15,7 @@ export class DocumentIntakeController {
   constructor(private readonly batches: IntakeBatchesService, private readonly uploads: IntakeUploadsService, @Optional() private readonly analysis?: IntakeAnalysisService) {}
   @Get('capabilities') capabilities(@Req() req: DocumentRequest, @Param('homeId') home: string, @Query() q: unknown) { return this.batches.capabilities(req.documentAccountId, home, q); }
   @Post('batches') create(@Req() req: DocumentRequest, @Param('homeId') home: string, @Body() body: unknown, @Headers('idempotency-key') key?: string) { return this.batches.create(req.documentAccountId, home, body, key); }
+  @Post('batches/from-documents') prepareExisting(@Req() req: DocumentRequest, @Param('homeId') home: string, @Body() body: unknown, @Headers('idempotency-key') key?: string) { return this.batches.prepareExisting(req.documentAccountId, home, body, key); }
   @Post('batches/:batchId/items') append(@Req() req: DocumentRequest, @Param('homeId') home: string, @Param('batchId') id: string, @Body() body: unknown, @Headers('idempotency-key') key?: string) { return this.batches.append(req.documentAccountId, home, id, body, key); }
   @Get('batches/:batchId') get(@Req() req: DocumentRequest, @Param('homeId') home: string, @Param('batchId') id: string, @Query() q: unknown) { return this.batches.get(req.documentAccountId, home, id, q); }
   @Get('batches') list(@Req() req: DocumentRequest, @Param('homeId') home: string, @Query() q: unknown) { return this.batches.list(req.documentAccountId, home, q); }

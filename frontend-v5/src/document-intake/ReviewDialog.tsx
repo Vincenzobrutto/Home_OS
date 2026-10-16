@@ -188,7 +188,7 @@ export function ReviewDialog(props: Props) {
                   <p>{item.duplicate?.document ? `«${item.duplicate.document.name}» ha gli stessi byte di questo file.` : 'Un altro file del lotto ha gli stessi byte di questo file.'}</p>
                   <label className={styles.choice}>
                     <input type="radio" name={`${group}-d`} checked={draft.duplicateMode === 'reuse'} disabled={locked} onChange={() => set({ duplicateMode: 'reuse' })} />
-                    <span><strong>Usa solo il riferimento all’originale esistente</strong><span className={styles.hint}>Nessuna seconda copia, nessuna eliminazione. L’organizzazione del documento esistente non cambia.</span></span>
+                    <span><strong>Usa solo il riferimento all’originale esistente</strong><span className={styles.hint}>Non applica il titolo o la categoria proposti. L’organizzazione esistente resta invariata, anche se è «Altro documento». Nessuna seconda copia, nessuna eliminazione.</span></span>
                   </label>
                   <label className={styles.choice}>
                     <input type="radio" name={`${group}-d`} checked={draft.duplicateMode === 'organize'} disabled={locked} onChange={() => set({ duplicateMode: 'organize' })} />

@@ -48,6 +48,25 @@ test('B3 local persisted jobs use real PDF text, source locks, recovery and zero
     assert.equal(result.documentLink.document.id, docId); assert.equal(result.selection, null);
     assert.equal(await db.documentOrganization.count({ where: { documentId: docId } }), 0);
   });
+  await t.test('Reorganizing an existing original creates only a recoverable draft; classification changes only after explicit replacement and confirmation', async () => {
+    const original = await fixture('pratica-mista-sintetica.pdf'); await start(original); await worker.workOne();
+    const before = (await get(original)).items[0], documentId = before.documentLink.document.id;
+    const source = await db.documentIntakeItem.findUniqueOrThrow({ where: { id: before.id } });
+    await db.documentOrganization.create({ data: { accountId: a.id, homeId: h.id, documentId, documentVersion: source.documentVersion, documentSha256: source.documentSha256, title: 'Nome confermato', parts: [{ kind: 'other', pageFrom: null, pageTo: null }], collections: ['unclassified'] } });
+    const count = await db.document.count(), key = randomUUID();
+    const [one, replay] = await Promise.all([batches.prepareExisting(a.id, h.id, { documentIds: [documentId] }, key), batches.prepareExisting(a.id, h.id, { documentIds: [documentId] }, key)]);
+    assert.deepEqual(one, replay); assert.equal(await db.document.count(), count);
+    const prepared = one.batch, item = prepared.items[0]; assert.equal(item.documentLink.document.id, documentId); assert(item.proposal.parts.some(p => p.kind === 'cila'));
+    assert.equal(item.reviewState, 'unreviewed'); assert.equal((await db.documentOrganization.findFirst({ where: { documentId } })).collections[0], 'unclassified');
+    await assert.rejects(batches.prepareExisting(b.id, h.id, { documentIds: [documentId] }, randomUUID()), e => e.getStatus() === 403);
+    const body = { expectedVersion: item.version, expectedOrganizationVersion: 1, replaceOrganization: false, selection: { action: 'organize', title: 'Pratica edilizia', parts: item.proposal.parts, target: { kind: 'home' } } };
+    await assert.rejects(batches.review(a.id, h.id, prepared.id, item.id, body, randomUUID()), e => e.getStatus() === 409);
+    const saved = (await batches.review(a.id, h.id, prepared.id, item.id, { ...body, replaceOrganization: true }, randomUUID())).batch;
+    assert.equal((await db.documentOrganization.findFirst({ where: { documentId } })).collections[0], 'unclassified');
+    await batches.confirm(a.id, h.id, saved.id, { expectedVersion: saved.version, items: [{ id: item.id, expectedVersion: saved.items[0].version }] }, randomUUID());
+    assert.deepEqual((await db.documentOrganization.findFirst({ where: { documentId } })).collections, ['building']);
+    assert.equal(await db.document.count(), count);
+  });
   await t.test('Unreadable or non-PDF originals stay manual, independently of a previous successful file', async () => {
     corpus['other-test-only.pdf'] = require('./intake-fixtures.cjs').pdf(['DIMORA SYNTHETIC ONLY', 'Appunti vari della casa, nessun tipo riconoscibile.']);
     const unknown = await fixture('other-test-only.pdf'); await start(unknown); await worker.workOne(); assert.equal((await get(unknown)).items[0].analysisState, 'ready'); assert.equal((await get(unknown)).items[0].proposal, null); assert.equal((await get(unknown)).items[0].pageCount, 1);

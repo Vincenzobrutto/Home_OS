@@ -72,6 +72,17 @@ function IntakeContainer() {
   };
   const reviewBody = (p: ReviewPayload & { expectedOrganizationVersion?: number; replaceOrganization?: boolean }) => ({ expectedVersion: p.expectedVersion, expectedOrganizationVersion: p.expectedOrganizationVersion ?? current.current?.items.find(i => i.id === p.itemId)?.organizationVersion ?? 0, replaceOrganization: p.replaceOrganization === true, selection: p.selection });
   const saveReview = (p: ReviewPayload) => post(`/items/${encodeURIComponent(p.itemId)}/review`, reviewBody(p), 'review:' + p.itemId);
+  async function reorganize(itemId: string) {
+    const value = current.current, item = value?.items.find(i => i.id === itemId), doc = item?.documentLink.document;
+    if (!value || !item || !doc || creating.current) return;
+    creating.current = true; setWaiting(true); setProblem(null);
+    try {
+      const next = await client.prepareExisting([doc.id], stableKey('reorganize:' + item.id + ':' + item.version, [doc.id]));
+      if (!alive.current || active.current !== value.id) return;
+      active.current = next.id; adopt(next); setParams({ lotto: next.id });
+    } catch (e) { if (alive.current && active.current === value.id) setProblem(userMessage(e)); }
+    finally { creating.current = false; if (alive.current) setWaiting(false); }
+  }
   async function recoverReview(p: ReviewPayload): Promise<WriteOutcome | { status: 'not_found' }> {
     const value = current.current; if (!value) return { status: 'not_found' };
     const body = reviewBody(p), key = stableKey('review:' + p.itemId, body);
@@ -111,6 +122,7 @@ function IntakeContainer() {
     <DocumentIntakeAssistant key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
       load={unavailable ? { status: 'unavailable' } : cap.isPending || !!id && batch.isPending ? { status: 'loading' } : error ? { status: 'error', message: userMessage(error), retryable: true } : { status: 'ready' }}
       candidates={candidates} loadCandidates={(itemId, more) => void loadCandidates(itemId, more)} onSelectFiles={selected => void create(selected)} addingFiles={waiting}
+      onReorganizeDocument={reorganize}
       onRetryUpload={async itemId => current.current ? upload(current.current, itemId) : { status: 'rejected', code: 'unavailable', message: 'Rileggi il lotto.' }}
       onCancelUpload={itemId => post(`/items/${itemId}/upload-cancellation`, { expectedVersion: current.current?.items.find(i => i.id === itemId)?.version }, 'cancel:' + itemId)}
       onSaveReview={saveReview} onRecoverReview={recoverReview} onResolveDuplicate={(itemId, expectedVersion) => post(`/items/${itemId}/duplicate-resolution`, { expectedVersion, action: 'reuse_reference' }, 'duplicate:' + itemId)}

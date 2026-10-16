@@ -280,16 +280,17 @@ export function initialReviewDraft(raw: IntakeItem): ReviewDraft {
   }
   if (item.uploadState === 'duplicate') {
     const org = item.confirmedOrganization;
-    return { title: org?.title ?? item.proposal?.title ?? '', partIndexes: org ? [] : proposalParts.map((_, index) => index), manualParts: org ? org.parts.map(p => ({ ...p })) : item.proposal ? null : [], target: null, replaceConsent: null, duplicateMode: null };
+    const suggestedUpgrade = !!org && org.parts.every(p => p.kind === 'other') && proposalParts.some(p => p.kind !== 'other');
+    return { title: org?.title ?? item.proposal?.title ?? '', partIndexes: org && !suggestedUpgrade ? [] : proposalParts.map((_, index) => index), manualParts: org && !suggestedUpgrade ? org.parts.map(p => ({ ...p })) : item.proposal ? null : [], target: null, replaceConsent: null, duplicateMode: null };
   }
   return {
-    title: item.proposal?.title ?? '',
+    title: item.proposal?.title ?? item.confirmedOrganization?.title ?? '',
     // Proposte già selezionate per ridurre la compilazione; l'utente può correggerle
     // e deve comunque salvare e confermare. Le scelte esistenti sopra prevalgono.
     partIndexes: proposalParts.map((_, index) => index),
-    manualParts: item.proposal ? null : [],
+    manualParts: item.proposal ? null : item.confirmedOrganization?.parts.map(p => ({ ...p })) ?? [],
     // Caso ambiguo: nessuna associazione preselezionata.
-    target: item.analysisState === 'needs_choice' ? null : item.proposal ? { kind: 'home' } : null,
+    target: item.analysisState === 'needs_choice' ? null : item.proposal || item.confirmedOrganization ? { kind: 'home' } : null,
     replaceConsent: null,
     duplicateMode: null,
   };
