@@ -225,6 +225,30 @@ export class IntakeBatchesService {
       return { batch: await this.view(tx, batch, edit) };
     });
   }
+  append(a: string, h: string, id: string, input: unknown, key?: string) {
+    uuid(id); key = requestKey(key);
+    const manifest = intakeManifest(input), fingerprint = digest(JSON.stringify(manifest));
+    // Append è commutativo: nessuna scelta esistente è sostituita. Il lock del lotto
+    // serializza quote/ordinali senza conflitti fittizi con l'avanzamento del parser.
+    return this.authorized(a, h, true, async (tx, edit) => {
+      const batch = await this.locked(tx, a, h, id);
+      const account = await tx.account.findUniqueOrThrow({ where: { id: a } });
+      if (account.requiresEmailVerification && !account.emailVerifiedAt) throw new ForbiddenException({ code: 'email_verification_required', message: 'Conferma la tua email prima di aggiungere documenti.' });
+      const prior = await tx.documentIntakeRequest.findUnique({ where: { batchId_operation_key: { batchId: id, operation: 'append', key: key! } } });
+      if (prior) {
+        if (prior.digest !== fingerprint) throw conflict('idempotency_conflict', 'Chiave già utilizzata per altri file.');
+        return { batch: await this.view(tx, batch, edit) };
+      }
+      const addedBytes = manifest.items.reduce((sum, item) => sum + item.byteSize, 0);
+      if (batch.items.length + manifest.items.length > INTAKE_LIMITS.maxFiles || batch.totalBytes + addedBytes > INTAKE_LIMITS.maxTotalBytes) throw invalid('Il lotto può contenere al massimo 20 file e 200 MiB complessivi. I file già presenti restano disponibili.');
+      if (manifest.items.some(item => batch.items.some(old => old.clientItemId === item.clientItemId))) throw conflict('intake_item_exists', 'Uno dei file è già presente nel lotto. Rileggi il caricamento.');
+      const offset = Math.max(-1, ...batch.items.map(item => item.ordinal)) + 1;
+      await tx.documentIntakeItem.createMany({ data: manifest.items.map((item, index) => ({ ...item, batchId: id, ordinal: offset + index })) });
+      await tx.documentIntakeBatch.update({ where: { id }, data: { totalBytes: { increment: addedBytes }, version: { increment: 1 }, state: 'open', updatedAt: new Date() } });
+      await tx.documentIntakeRequest.create({ data: { batchId: id, operation: 'append', key: key!, digest: fingerprint, body: json(manifest), results: {} } });
+      return { batch: await this.view(tx, await this.locked(tx, a, h, id), edit) };
+    });
+  }
   list(a: string, h: string, query: unknown) {
     const q = object(query, ['cursor']), binding = digest(JSON.stringify([a, h, 'intake-list-v1']));
     let anchor: { id: string; t: string } | undefined;

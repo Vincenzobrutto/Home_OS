@@ -15,6 +15,7 @@ test('Intake manifest persistence: real HTTP/DB, scoped access and local-only ca
   const app = await NestFactory.create(Harness, { logger: false }); app.setGlobalPrefix('api/v5'); app.use(cookieParser()); app.useGlobalFilters(new ApiErrorFilter()); await app.listen(0, '127.0.0.1');
   const db = app.get(PrismaService), base = await app.getUrl(), accounts = [], homes = [], users = [];
   t.after(async () => {
+    await db.documentIntakeRequest.deleteMany({ where: { batch: { accountId: { in: accounts } } } });
     await db.documentIntakeItem.deleteMany({ where: { batch: { accountId: { in: accounts } } } });
     await db.documentIntakeBatch.deleteMany({ where: { accountId: { in: accounts } } });
     await db.session.deleteMany({ where: { accountId: { in: accounts } } });
@@ -68,10 +69,38 @@ test('Intake manifest persistence: real HTTP/DB, scoped access and local-only ca
     await assert.rejects(db.documentIntakeItem.update({ where: { id: batch.items[0].id }, data: { uploadState: 'stored' } }));
     assert.equal((await call(A, path + '/batches/' + batch.id)).body.batch.items[0].uploadState, 'pending');
   });
+  await t.test('Append keeps the batch and saved decisions, replay is idempotent and foreign append denied', async () => {
+    const created = await call(A, path + '/batches', 'POST', manifest, randomUUID()), id = created.body.batch.id;
+    const first = created.body.batch.items[0];
+    await db.documentIntakeItem.update({ where: { id: first.id }, data: { reviewState: 'deferred', selection: { action: 'defer' }, version: 3 } });
+    await db.documentIntakeBatch.update({ where: { id }, data: { state: 'completed' } });
+    const saved = (await call(A, path + '/batches/' + id)).body.batch.items[0];
+    const body = { items: [{ ...manifest.items[0], clientItemId: randomUUID(), filename: 'Altro.pdf' }] }, key = randomUUID();
+    const results = await Promise.all([call(A, path + '/batches/' + id + '/items', 'POST', body, key), call(A, path + '/batches/' + id + '/items', 'POST', body, key)]);
+    assert(results.every(r => r.status === 201)); assert.deepEqual(results[0].body, results[1].body);
+    assert.equal(results[0].body.batch.id, id); assert.equal(results[0].body.batch.state, 'open'); assert.equal(results[0].body.batch.items.length, 4);
+    assert.deepEqual(results[0].body.batch.items[0], saved);
+    assert.equal((await call(A, path + '/batches/' + id + '/items', 'POST', { items: [{ ...body.items[0], filename: 'Changed.pdf' }] }, key)).status, 409);
+    assert.equal((await call(A, path + '/batches/' + id + '/items', 'POST', body)).status, 409);
+    assert.equal((await call(B, path + '/batches/' + id + '/items', 'POST', body)).status, 403);
+    assert.equal((await call(A, path.replace(home, other) + '/batches/' + id + '/items', 'POST', body)).status, 403);
+    assert.equal((await call(A, path + '/batches/' + id + '/items', 'POST', body, randomUUID(), 'wrong')).status, 403);
+  });
+  await t.test('Concurrent append obeys the complete batch count and byte limits atomically', async () => {
+    const item = n => ({ clientItemId: randomUUID(), filename: 'Append-' + n + '.pdf', byteSize: 100, mimeType: 'application/pdf' });
+    const almost = (await call(A, path + '/batches', 'POST', { items: Array.from({ length: 19 }, (_, n) => item(n)) })).body.batch;
+    const results = await Promise.all([1, 2].map(n => call(A, path + '/batches/' + almost.id + '/items', 'POST', { items: [item(n)] })));
+    assert.deepEqual(results.map(r => r.status).sort(), [201, 422]);
+    assert.equal((await call(A, path + '/batches/' + almost.id)).body.batch.items.length, 20);
+    const full = (await call(A, path + '/batches', 'POST', { items: Array.from({ length: 10 }, (_, n) => ({ ...item(n), byteSize: 20 * 1024 * 1024 })) })).body.batch;
+    assert.equal((await call(A, path + '/batches/' + full.id + '/items', 'POST', { items: [item(11)] })).status, 422);
+    assert.equal((await call(A, path + '/batches/' + full.id)).body.batch.items.length, 10);
+  });
   await t.test('Role/membership revocation applies to recovered batches, not only initial creation', async () => {
     await db.homeMembership.update({ where: { accountId_homeId: { accountId: A.account.id, homeId: home } }, data: { role: 'viewer' } });
     assert.deepEqual((await call(A, path + '/batches/' + batch.id)).body.batch.permissions, ['read']);
     assert.equal((await call(A, path + '/batches', 'POST', manifest)).status, 403);
+    assert.equal((await call(A, path + '/batches/' + batch.id + '/items', 'POST', manifest)).status, 403);
     await db.homeMembership.delete({ where: { accountId_homeId: { accountId: A.account.id, homeId: home } } });
     assert.equal((await call(A, path + '/batches/' + batch.id)).status, 403);
     assert.deepEqual({ docs: await db.document.count(), ai: await db.aiAttempt.count(), economic: await db.economicAiAttempt.count(), receipt: await db.receiptAiAttempt.count() }, before);

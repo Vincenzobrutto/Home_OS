@@ -31,7 +31,7 @@ function IntakeContainer() {
   const history = useInfiniteQuery({ queryKey: [...prefix, 'list'], queryFn: ({ pageParam, signal }) => client.list(pageParam ?? undefined, signal), initialPageParam: null as string | null, getNextPageParam: p => p.nextCursor, retry: false });
   const files = useRef(new Map<string, File>()), keys = useRef(new Map<string, string>()), controls = useRef(new Set<AbortController>()), alive = useRef(true), active = useRef(id);
   useEffect(() => { active.current = id; }, [id]);
-  const creation = useRef<{ files: File[]; ids: string[]; key: string } | null>(null), creating = useRef(false);
+  const creation = useRef<{ files: File[]; ids: string[]; key: string; batchId: string | null } | null>(null), creating = useRef(false);
   const [problem, setProblem] = useState<string | null>(null), [waiting, setWaiting] = useState(false), [recoverCreation, setRecoverCreation] = useState(false), [candidates, setCandidates] = useState<Record<string, CandidatePage>>({});
   const cursors = useRef(new Map<string, string | null>()), retryItem = useRef<string | null>(null), picker = useRef<HTMLInputElement>(null);
   useEffect(() => { const pending = controls.current; alive.current = true; return () => { alive.current = false; for (const ctl of pending) ctl.abort(); }; }, []);
@@ -47,8 +47,8 @@ function IntakeContainer() {
     catch (e) { if (alive.current && active.current === value.id) { void cache.invalidateQueries({ queryKey: [...prefix, 'batch', value.id] }); setProblem(userMessage(e)); } return rejected(e); }
     finally { controls.current.delete(ctl); }
   }
-  async function pool(value: BatchWire) {
-    const queue = value.items.filter(i => ['pending', 'failed'].includes(i.uploadState) && files.current.has(i.id)); let next = 0;
+  async function pool(value: BatchWire, clientIds: string[]) {
+    const queue = value.items.filter(i => clientIds.includes(i.clientItemId) && ['pending', 'failed'].includes(i.uploadState) && files.current.has(i.id)); let next = 0;
     await Promise.all([0, 1].map(async () => { while (next < queue.length && alive.current && active.current === value.id) { const item = queue[next++]; if (item) await upload(value, item.id); } }));
   }
   async function create(selected?: File[]) {
@@ -56,13 +56,13 @@ function IntakeContainer() {
     if (selected && creation.current) { setProblem('Recupera prima l’esito del lotto precedente oppure riapri un lotto salvato.'); return; }
     if (selected) {
       if (!selected.length || selected.length > 20 || selected.some(f => f.size < 1 || f.size > 20 * 1024 * 1024) || selected.reduce((n, f) => n + f.size, 0) > 200 * 1024 * 1024) { setProblem('Scegli fino a 20 file, 20 MiB per file e 200 MiB complessivi.'); return; }
-      creation.current = { files: selected, ids: selected.map(() => crypto.randomUUID()), key: newIdempotencyKey() };
+      creation.current = { files: selected, ids: selected.map(() => crypto.randomUUID()), key: newIdempotencyKey(), batchId: active.current };
     }
     const pending = creation.current; if (!pending) return; creating.current = true; setWaiting(true); setProblem(null);
     try {
-      const value = await client.create(pending.files, pending.ids, pending.key); if (!alive.current) return;
+      const value = pending.batchId ? await client.append(pending.batchId, pending.files, pending.ids, pending.key) : await client.create(pending.files, pending.ids, pending.key); if (!alive.current || active.current !== pending.batchId) return;
       for (let i = 0; i < pending.ids.length; i++) { const item = value.items.find(r => r.clientItemId === pending.ids[i]), file = pending.files[i]; if (item && file) files.current.set(item.id, file); }
-      creation.current = null; setRecoverCreation(false); active.current = value.id; cache.setQueryData([...prefix, 'batch', value.id], value); setParams({ lotto: value.id }); await pool(value);
+      creation.current = null; setRecoverCreation(false); active.current = value.id; adopt(value); setParams({ lotto: value.id }); await pool(value, pending.ids);
     } catch (e) { if (alive.current) { setProblem(userMessage(e)); if (rejected(e).status === 'rejected') creation.current = null; else setRecoverCreation(true); } }
     finally { creating.current = false; if (alive.current) setWaiting(false); }
   }
@@ -110,7 +110,7 @@ function IntakeContainer() {
     {!id && <details><summary>PDF sintetici per provare il percorso</summary><p>Documenti di esempio, senza dati personali. Scaricali e selezionali nel caricamento.</p><ul>{['ape-sintetico.pdf', 'pratica-mista-sintetica.pdf', 'regolamento-sintetico.pdf', 'ricevuta-sintetica.pdf', 'senza-testo-sintetico.pdf'].map(name => <li key={name}><a href={'/intake-examples/' + name} download>{name}</a></li>)}</ul></details>}
     <DocumentIntakeAssistant key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
       load={unavailable ? { status: 'unavailable' } : cap.isPending || !!id && batch.isPending ? { status: 'loading' } : error ? { status: 'error', message: userMessage(error), retryable: true } : { status: 'ready' }}
-      candidates={candidates} loadCandidates={(itemId, more) => void loadCandidates(itemId, more)} onSelectFiles={selected => void create(selected)}
+      candidates={candidates} loadCandidates={(itemId, more) => void loadCandidates(itemId, more)} onSelectFiles={selected => void create(selected)} addingFiles={waiting}
       onRetryUpload={async itemId => current.current ? upload(current.current, itemId) : { status: 'rejected', code: 'unavailable', message: 'Rileggi il lotto.' }}
       onCancelUpload={itemId => post(`/items/${itemId}/upload-cancellation`, { expectedVersion: current.current?.items.find(i => i.id === itemId)?.version }, 'cancel:' + itemId)}
       onSaveReview={saveReview} onRecoverReview={recoverReview} onResolveDuplicate={(itemId, expectedVersion) => post(`/items/${itemId}/duplicate-resolution`, { expectedVersion, action: 'reuse_reference' }, 'duplicate:' + itemId)}

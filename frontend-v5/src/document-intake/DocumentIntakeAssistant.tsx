@@ -25,6 +25,7 @@ export type DocumentIntakeAssistantProps = {
   loadCandidates: (itemId: OpaqueId, more: boolean) => void;
   /** Solo i File scelti: il componente non legge né invia contenuti. */
   onSelectFiles: (files: File[]) => void;
+  addingFiles?: boolean;
   onRetryUpload: (itemId: OpaqueId) => Promise<WriteOutcome>;
   onCancelUpload: (itemId: OpaqueId) => Promise<WriteOutcome>;
   onSaveReview: (payload: ReviewPayload) => Promise<WriteOutcome>;
@@ -288,7 +289,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
       <div className={styles.stack}>
         <p className={styles.crumb}>Documenti / Carica documenti</p>
         {steps}
-        {heading('Tutti i tuoi documenti. Ognuno al suo posto.', 'Carica uno o più file della casa: dopo il caricamento puoi rivedere le proposte e decidere come organizzarli.')}
+        {heading(batch ? 'Aggiungi documenti al lotto.' : 'Tutti i tuoi documenti. Ognuno al suo posto.', batch ? `${batch.items.length} file già present${batch.items.length === 1 ? 'e' : 'i'}. I nuovi documenti si aggiungono qui, mantenendo quelli caricati e le scelte salvate.` : 'Carica uno o più file della casa: dopo il caricamento puoi rivedere le proposte e decidere come organizzarli.')}
         <div className={styles.layout}>
           <section className={ui.card}>
             {!capabilities?.enabled ? (
@@ -297,17 +298,19 @@ function Inner(props: DocumentIntakeAssistantProps) {
               <Banner><p>Con il tuo ruolo puoi consultare i documenti, ma non caricarne di nuovi.</p></Banner>
             ) : (
               <div className={styles.drop} role="region" aria-label="Carica documenti"
-                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
+                aria-busy={props.addingFiles || undefined}
+                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = props.addingFiles ? 'none' : 'copy'; }}
                 onDrop={e => {
                   e.preventDefault();
+                  if (props.addingFiles) return;
                   const files = Array.from(e.dataTransfer.files);
-                  if (files.length) props.onSelectFiles(files);
+                  if (files.length) { props.onSelectFiles(files); if (batch) setStep('lotto'); }
                 }}>
                 <h2>Trascina qui uno o più documenti</h2>
                 <p>Oppure selezionali da una cartella del tuo dispositivo.</p>
                 <label htmlFor={inputId} className={styles.legend}>File</label>
-                <input id={inputId} className={styles.fileInput} type="file" multiple accept={limits?.acceptedMimeTypes.join(',')}
-                  onChange={(e) => { const files = e.target.files ? Array.from(e.target.files) : []; if (files.length) props.onSelectFiles(files); e.target.value = ''; }} />
+                <input id={inputId} className={styles.fileInput} type="file" multiple disabled={props.addingFiles} accept={limits?.acceptedMimeTypes.join(',')}
+                  onChange={(e) => { const files = e.target.files ? Array.from(e.target.files) : []; if (files.length) { props.onSelectFiles(files); if (batch) setStep('lotto'); } e.target.value = ''; }} />
                 {limits && <p className={styles.note}>Fino a {limits.maxFiles} file, {formatBytes(limits.maxFileBytes)} ciascuno e {formatBytes(limits.maxTotalBytes)} in totale. PDF, JPEG o PNG.</p>}
               </div>
             )}
@@ -346,7 +349,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
               <section className={ui.card}><h2>Organizzazione</h2><p className={styles.note}>L’analisi assistita non è attiva: puoi organizzare ogni file manualmente.</p></section>
             )}
             <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => setStep('proposte')}>Rivedi le proposte →</button>
-            <button type="button" className={ui.btn} onClick={() => setStep('ingresso')}>← Aggiungi altri file</button>
+            {canUpload && <button type="button" className={ui.btn} disabled={props.addingFiles} onClick={() => setStep('ingresso')}>+ Aggiungi documenti</button>}
           </aside>
         </div>
         {reviewDialog}

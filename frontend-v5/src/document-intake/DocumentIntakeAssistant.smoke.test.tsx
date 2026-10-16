@@ -38,4 +38,14 @@ describe('archivio assistito: navigazione di base (C1)', () => {
     fireEvent.drop(region, { dataTransfer: { files: [one, two] } });
     expect(props.onSelectFiles).toHaveBeenLastCalledWith([one, two]);
   });
+  it('aggiunge altri documenti dal lotto senza nascondere o sostituire i precedenti', async () => {
+    const user = userEvent.setup(), props = intakeProps();
+    renderIntake(props);
+    await user.click(screen.getByRole('button', { name: '+ Aggiungi documenti' }));
+    const next = new File(['a'], 'aggiunto.pdf', { type: 'application/pdf' });
+    await user.upload(screen.getByLabelText('File'), next);
+    expect(props.onSelectFiles).toHaveBeenCalledWith([next]);
+    expect(screen.getByRole('heading', { name: 'Il lotto è pronto da organizzare.' })).toBeInTheDocument();
+    expect(screen.getByText('7 file nel lotto')).toBeInTheDocument();
+  });
 });
