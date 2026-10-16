@@ -918,6 +918,8 @@ model DocumentIntakeBatch {
   @@index([accountId, homeId, createdAt, id])
 }
 model DocumentIntakeItem {
+  proposal Json?
+  analyses DocumentIntakeAnalysis[]
   selection Json?
   organizationVersion Int?
   uploadKey String?
@@ -947,6 +949,21 @@ model DocumentIntakeItem {
   @@unique([batchId, clientItemId])
   @@unique([batchId, ordinal])
   @@index([uploadState, uploadLeaseUntil])
+}
+model DocumentIntakeAnalysis {
+  id String @id @default(uuid())
+  itemId String
+  key String
+  digest String
+  state String @default("queued")
+  leaseToken String?
+  leaseUntil DateTime?
+  error String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  item DocumentIntakeItem @relation(fields:[itemId], references:[id], onDelete:Restrict)
+  @@unique([itemId,key])
+  @@index([state,leaseUntil,createdAt])
 }
 
 // Personal overlay: never changes the original or the shared document title.

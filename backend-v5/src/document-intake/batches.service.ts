@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpException, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, type DocumentIntakeBatch, type DocumentIntakeItem } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { DocumentPolicy, canReadDocument } from '../documents/access';
@@ -6,11 +6,13 @@ import { digest } from '../security';
 import { conflict, invalid, object, uuid, version } from '../review/domain';
 import { DOCUMENT_COLLECTIONS, DOCUMENT_KINDS, INTAKE_LIMITS, intakeManifest, organizationSelection, collectionsFor } from './domain';
 import { intakeTarget, organizationView, sameParts } from './organization';
+import { LOCAL_CLASSIFIER } from './classifier';
+import { ANALYSIS_LIMITS } from '../review/pdf-text';
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 const canonical = (value: unknown): string => JSON.stringify(value, function (_key, row: unknown) { return row && typeof row === 'object' && !Array.isArray(row) ? Object.fromEntries(Object.entries(row).sort(([a], [b]) => a.localeCompare(b))) : row; });
 const requestKey = (key: string | undefined) => { if (!key || !/^[A-Za-z0-9_-]{16,100}$/.test(key)) throw invalid('Chiave della richiesta non valida.'); return key; };
 
-/** Isolated upload/review orchestration. Not imported in AppModule; no AI jobs. */
+/** Authenticated upload/review orchestration. Local classification only; no external AI calls. */
 @Injectable()
 export class IntakeBatchesService {
   constructor(private readonly db: PrismaService, private readonly policy: DocumentPolicy) {}
@@ -26,7 +28,7 @@ export class IntakeBatchesService {
   }
   capabilities(a: string, h: string, query: unknown) {
     object(query, []);
-    return this.authorized(a, h, false, async () => ({ apiVersion: 'document-intake-v1', enabled: false, disabledReason: 'document_intake_in_development', limits: INTAKE_LIMITS, collections: DOCUMENT_COLLECTIONS, kinds: DOCUMENT_KINDS }));
+    return this.authorized(a, h, false, async () => ({ apiVersion: 'document-intake-v1', enabled: true, limits: { ...INTAKE_LIMITS, acceptedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png'] }, collections: DOCUMENT_COLLECTIONS, kinds: DOCUMENT_KINDS, analysis: { ...LOCAL_CLASSIFIER, enabled: true, limits: ANALYSIS_LIMITS } }));
   }
   private async view(tx: Prisma.TransactionClient, batch: DocumentIntakeBatch & { items: DocumentIntakeItem[] }, edit: boolean) {
     const items = [];
@@ -44,18 +46,33 @@ export class IntakeBatchesService {
       if (selection) { try { await intakeTarget(tx, batch.accountId, batch.homeId, selection); } catch (e) { if (!(e instanceof HttpException) || e.getStatus() !== 409) throw e; targetStale = true; } }
       const organization = source ? await tx.documentOrganization.findUnique({ where: { accountId_homeId_documentId: { accountId: batch.accountId, homeId: batch.homeId, documentId: source.id } } }) : null;
       const current = organization?.documentVersion === item.documentVersion && organization?.documentSha256 === item.documentSha256 ? organization : null;
+      const existingLinks = source ? await this.links(tx, batch.accountId, batch.homeId, source.id) : null;
       const expired = item.uploadState === 'uploading' && !!item.uploadLeaseUntil && item.uploadLeaseUntil.getTime() <= Date.now();
-      items.push({ id: item.id, clientItemId: item.clientItemId, version: item.version, filename: hidden ? null : item.filename, byteSize: hidden ? null : item.byteSize, mimeType: hidden ? null : item.mimeType, uploadState: expired ? 'failed' : item.uploadState, analysisState: hidden ? 'not_started' : item.analysisState, reviewState: hidden ? 'unreviewed' : item.reviewState, documentLink: { state: source ? 'linked' : 'unavailable', document: source }, pageCount: hidden ? null : item.pageCount, proposal: null, selection, selectionStale: !hidden && item.reviewState === 'saved' && (targetStale || !selection || (organization?.version ?? 0) !== item.organizationVersion), organization: current ? organizationView(current) : null, organizationVersion: hidden ? null : organization?.version ?? 0, duplicate: !hidden && source && item.uploadState === 'duplicate' ? { itemId: batch.items.find(other => other.id !== item.id && other.documentId === item.documentId && other.uploadState === 'stored')?.id ?? null, document: source } : null, error: hidden ? null : item.uploadError || expired ? { code: item.uploadError ?? 'intake_upload_interrupted', message: 'Il caricamento di questo file non è completato. Puoi riprovare lo stesso elemento.' } : null, permissions: hidden ? [] : edit ? ['read', 'edit'] : ['read'] });
+      items.push({ id: item.id, clientItemId: item.clientItemId, version: item.version, filename: hidden ? null : item.filename, byteSize: hidden ? null : item.byteSize, mimeType: hidden ? null : item.mimeType, uploadState: expired ? 'failed' : item.uploadState, analysisState: hidden ? 'not_started' : item.analysisState, reviewState: hidden ? 'unreviewed' : item.reviewState, documentLink: { state: source ? 'linked' : 'unavailable', document: source }, pageCount: hidden ? null : item.pageCount, proposal: hidden ? null : item.proposal, existingLinks, selection, selectionStale: !hidden && item.reviewState === 'saved' && (targetStale || !selection || (organization?.version ?? 0) !== item.organizationVersion), organization: current ? organizationView(current) : null, organizationVersion: hidden ? null : organization?.version ?? 0, duplicate: !hidden && source && item.uploadState === 'duplicate' ? { itemId: batch.items.find(other => other.id !== item.id && other.documentId === item.documentId && other.uploadState === 'stored')?.id ?? null, document: source } : null, error: hidden ? null : item.uploadError || expired ? { code: item.uploadError ?? 'intake_upload_interrupted', message: 'Il caricamento di questo file non è completato. Puoi riprovare lo stesso elemento.' } : null, permissions: hidden ? [] : edit ? ['read', 'edit'] : ['read'] });
     }
     return { id: batch.id, version: batch.version, homeId: batch.homeId, state: batch.state, limits: INTAKE_LIMITS, permissions: edit ? ['read', 'edit'] : ['read'], createdAt: batch.createdAt.toISOString(), updatedAt: batch.updatedAt.toISOString(), items };
   }
-  private async locked(tx: Prisma.TransactionClient, a: string, h: string, id: string) {
+  private async links(tx: Prisma.TransactionClient, a: string, h: string, documentId: string) {
+    const refs = await tx.objectResourceLink.findMany({ where: { accountId: a, homeId: h, documentId, resourceType: 'document', state: 'active' }, take: 20, orderBy: { id: 'asc' } });
+    const objects: Array<{ name: string; roomName: null }> = [];
+    for (const ref of refs) {
+      const kind = ref.objectId ? 'object' : 'boiler', id = ref.objectId ?? ref.boilerId; if (!id) continue;
+      try {
+        await intakeTarget(tx, a, h, { action: 'organize', title: 'Riferimento', parts: [{ kind: 'other', pageFrom: null, pageTo: null }], target: { kind, id, expectedVersion: 1 } }, false);
+        const row = kind === 'object' ? await tx.homeObject.findUnique({ where: { id }, select: { name: true } }) : await tx.boilerAsset.findUnique({ where: { id }, select: { name: true } });
+        if (row) objects.push({ name: row.name, roomName: null });
+      } catch (e) { if (!(e instanceof ForbiddenException)) throw e; }
+    }
+    const expenses = await tx.homeExpense.findMany({ where: { accountId: a, homeId: h, documentId, state: 'active' }, select: { title: true, amountCents: true, spentOn: true }, take: 20, orderBy: { id: 'asc' } });
+    return { objects, expenses };
+  }
+  async locked(tx: Prisma.TransactionClient, a: string, h: string, id: string) {
     await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'g1:' + h},0))::text AS locked`;
     await tx.$queryRaw`SELECT id FROM "DocumentIntakeBatch" WHERE id=${id} FOR UPDATE`;
     const batch = await tx.documentIntakeBatch.findFirst({ where: { id, accountId: a, homeId: h }, include: { items: { orderBy: { ordinal: 'asc' } } } });
     if (!batch) throw new ForbiddenException(); return batch;
   }
-  private async source(tx: Prisma.TransactionClient, a: string, h: string, item: DocumentIntakeItem) {
+  async source(tx: Prisma.TransactionClient, a: string, h: string, item: DocumentIntakeItem) {
     if (!item.documentId || !['stored', 'duplicate'].includes(item.uploadState)) throw conflict('intake_file_not_ready', 'Carica prima questo file.');
     await tx.$queryRaw`SELECT id FROM "Document" WHERE id=${item.documentId} FOR SHARE`;
     await tx.$queryRaw`SELECT id FROM "DocumentVersion" WHERE "documentId"=${item.documentId} FOR SHARE`;
@@ -74,6 +91,7 @@ export class IntakeBatchesService {
       if (prior) { if (prior.digest !== fingerprint) throw conflict('idempotency_conflict', 'Chiave già utilizzata.'); return { batch: await this.view(tx, batch, edit) }; }
       if (item.version !== body.expectedVersion) throw conflict('item_version_conflict', 'Il file è cambiato. Rileggi prima di continuare.');
       if (item.reviewState === 'confirmed') throw conflict('intake_already_confirmed', 'Questo elemento è già confermato.');
+      if (['queued', 'running'].includes(item.analysisState)) throw conflict('intake_analysis_running', 'Attendi la classificazione prima di salvare la scelta.');
       const doc = await this.source(tx, a, h, item), selection = organizationSelection(body.selection, item.pageCount);
       await intakeTarget(tx, a, h, selection);
       const org = await tx.documentOrganization.findUnique({ where: { accountId_homeId_documentId: { accountId: a, homeId: h, documentId: doc.id } } });
@@ -151,7 +169,7 @@ export class IntakeBatchesService {
       const batch = await tx.documentIntakeBatch.findFirst({ where: { id, accountId: a, homeId: h } });
       if (!batch) throw new ForbiddenException();
       const request = await tx.documentIntakeRequest.findUnique({ where: { batchId_operation_key: { batchId: id, operation: 'confirm', key } } });
-      if (!request) throw new ForbiddenException();
+      if (!request) throw new NotFoundException({ code: 'intake_request_not_found', message: 'La conferma non risulta ancora ricevuta.' });
       return request.results;
     });
     return { ...await this.get(a, h, id, {}), results: result };
@@ -205,6 +223,36 @@ export class IntakeBatchesService {
       const batch = await tx.documentIntakeBatch.findFirst({ where: { id, accountId: a, homeId: h }, include: { items: { orderBy: { ordinal: 'asc' } } } });
       if (!batch) throw new ForbiddenException('Accesso non consentito.');
       return { batch: await this.view(tx, batch, edit) };
+    });
+  }
+  list(a: string, h: string, query: unknown) {
+    const q = object(query, ['cursor']), binding = digest(JSON.stringify([a, h, 'intake-list-v1']));
+    let anchor: { id: string; t: string } | undefined;
+    if (q.cursor !== undefined) {
+      try {
+        if (typeof q.cursor !== 'string' || !/^[A-Za-z0-9_-]{1,512}$/.test(q.cursor)) throw invalid();
+        const c = JSON.parse(Buffer.from(q.cursor, 'base64url').toString()) as Record<string, unknown>;
+        object(c, ['id', 't', 'b']); uuid(c.id); if (c.b !== binding || typeof c.t !== 'string' || new Date(c.t).toISOString() !== c.t) throw invalid(); anchor = { id: c.id as string, t: c.t };
+      } catch { throw invalid('Pagina non valida.'); }
+    }
+    return this.authorized(a, h, false, async tx => {
+      const rows = await tx.documentIntakeBatch.findMany({ where: { accountId: a, homeId: h, ...(anchor ? { OR: [{ createdAt: { lt: new Date(anchor.t) } }, { createdAt: new Date(anchor.t), id: { lt: anchor.id } }] } : {}) }, include: { _count: { select: { items: true } } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 11 });
+      const page = rows.slice(0, 10), last = page.at(-1);
+      return { items: page.map(row => ({ id: row.id, state: row.state, createdAt: row.createdAt.toISOString(), itemCount: row._count.items })), nextCursor: rows.length > 10 && last ? Buffer.from(JSON.stringify({ id: last.id, t: last.createdAt.toISOString(), b: binding })).toString('base64url') : null };
+    });
+  }
+  cancelUpload(a: string, h: string, id: string, itemId: string, input: unknown, key?: string) {
+    uuid(id); uuid(itemId); key = requestKey(key); const r = object(input, ['expectedVersion']), expectedVersion = version(r.expectedVersion);
+    return this.authorized(a, h, true, async (tx, edit) => {
+      const batch = await this.locked(tx, a, h, id), item = batch.items.find(i => i.id === itemId); if (!item) throw new ForbiddenException();
+      const prior = await tx.documentIntakeRequest.findUnique({ where: { batchId_operation_key: { batchId: id, operation: 'cancel:' + itemId, key: key! } } });
+      const fingerprint = digest(String(expectedVersion));
+      if (prior) { if (prior.digest !== fingerprint) throw conflict('idempotency_conflict', 'Chiave già utilizzata.'); return { batch: await this.view(tx, batch, edit) }; }
+      if (item.version !== expectedVersion || item.documentId) throw conflict('item_version_conflict', 'Il file è già cambiato o acquisito. Rileggi il lotto.');
+      await tx.documentIntakeItem.update({ where: { id: itemId }, data: { uploadState: 'failed', uploadLeaseToken: null, uploadLeaseUntil: null, uploadError: 'intake_upload_cancelled', version: { increment: 1 }, updatedAt: new Date() } });
+      await tx.documentIntakeBatch.update({ where: { id }, data: { version: { increment: 1 }, updatedAt: new Date() } });
+      await tx.documentIntakeRequest.create({ data: { batchId: id, operation: 'cancel:' + itemId, key: key!, digest: fingerprint, body: { expectedVersion }, results: {} } });
+      return { batch: await this.view(tx, await this.locked(tx, a, h, id), edit) };
     });
   }
 }

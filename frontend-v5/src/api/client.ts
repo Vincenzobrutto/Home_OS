@@ -891,7 +891,7 @@ export class ApiClient {
 
   callJson<T>(path: string, opts: { method?: 'GET' | 'POST'; body?: unknown; idempotencyKey?: string; signal?: AbortSignal; accountId: string }): Promise<T> {
     if (opts.method === 'POST') {
-      return this.mutate<T>(path, { body: opts.body, headers: opts.idempotencyKey ? { 'Idempotency-Key': opts.idempotencyKey } : undefined, accountId: opts.accountId });
+      return this.mutate<T>(path, { body: opts.body, signal: opts.signal, headers: opts.idempotencyKey ? { 'Idempotency-Key': opts.idempotencyKey } : undefined, accountId: opts.accountId });
     }
     return this.request<T>(path, { signal: opts.signal, accountId: opts.accountId, headers: opts.idempotencyKey ? { 'Idempotency-Key': opts.idempotencyKey } : undefined });
   }

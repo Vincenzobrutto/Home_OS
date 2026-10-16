@@ -93,6 +93,7 @@ export function DocumentsPage() {
         </div>
         {canUpload && (
           <div className={docs.toolbarActions}>
+            <Link to={`/home/${encodeURIComponent(home.id)}/documenti/organizza`} className={ui.btn}>Organizza più documenti</Link>
             <Link
               to={`/home/${encodeURIComponent(home.id)}/attivita?analizza=1`}
               className={ui.btn}

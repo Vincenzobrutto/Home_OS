@@ -7,7 +7,7 @@ const { IntakeBatchesService } = require('../dist/document-intake/batches.servic
 const { IntakeUploadsService } = require('../dist/document-intake/uploads.service');
 const { ApiErrorFilter } = require('../dist/main'), { COOKIE, digest } = require('../dist/security');
 
-test('Intake B1: actual HTTP/DB manifest persistence, no files/AI and no production module registration', { timeout: 30000 }, async t => {
+test('Intake manifest persistence: real HTTP/DB, scoped access and local-only capability', { timeout: 30000 }, async t => {
   assertDevelopmentDatabase(process.env.DATABASE_URL);
   class Harness {}
   // Deliberately no DocumentsService/storage module: no cleanup or personal original IO.
@@ -38,9 +38,9 @@ test('Intake B1: actual HTTP/DB manifest persistence, no files/AI and no product
   }
   const before = { docs: await db.document.count(), ai: await db.aiAttempt.count(), economic: await db.economicAiAttempt.count(), receipt: await db.receiptAiAttempt.count() };
   let batch;
-  await t.test('Auth, CSRF, email and explicit disabled capability, with no premature module release', async () => {
+  await t.test('Auth, CSRF, email and explicit local-only capability', async () => {
     assert.equal((await call(null, path + '/capabilities')).status, 401);
-    const caps = await call(A, path + '/capabilities'); assert.equal(caps.body.enabled, false); assert.equal(caps.body.collections.energy, 'Energia');
+    const caps = await call(A, path + '/capabilities'); assert.equal(caps.body.enabled, true); assert.equal(caps.body.analysis.provider, 'local_text_v1'); assert.equal(caps.body.analysis.externalTransmission, false); assert.equal(caps.body.collections.energy, 'Energia');
     assert.equal((await call(A, path + '/batches', 'POST', manifest, undefined, 'wrong')).status, 403);
     assert.equal((await call(C, path + '/batches', 'POST', manifest)).body.error.code, 'email_verification_required');
     assert.equal(await db.documentIntakeBatch.count({ where: { accountId: { in: accounts } } }), 0);

@@ -1,7 +1,7 @@
 import { invalid, object, text, uuid, version } from '../review/domain';
 import { MAX_FILE_BYTES } from '../documents/storage';
 
-export const INTAKE_LIMITS = { maxFiles: 20, maxTotalBytes: 200 * 1024 * 1024, maxFileBytes: MAX_FILE_BYTES, uploadConcurrency: 2, maxParts: 12 } as const;
+export const INTAKE_LIMITS = { maxFiles: 20, maxTotalBytes: 200 * 1024 * 1024, maxFileBytes: MAX_FILE_BYTES, uploadConcurrency: 2, maxParts: 12, acceptedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png'] } as const;
 export const DOCUMENT_COLLECTIONS = { energy: 'Energia', building: 'Pratiche edilizie', technical: 'Impianti e documenti tecnici', condominium: 'Condominio', purchases: 'Acquisti e garanzie', utilities: 'Bollette', unclassified: 'Da organizzare' } as const;
 export type DocumentCollection = keyof typeof DOCUMENT_COLLECTIONS;
 export const DOCUMENT_KINDS = {

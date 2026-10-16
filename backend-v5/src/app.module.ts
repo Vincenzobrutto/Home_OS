@@ -11,7 +11,8 @@ import { HomeObjectsModule } from './home-objects/home-objects.module';
 import { SharingModule } from './sharing/sharing.module';
 import { PersonalExportModule } from './personal-export/personal-export.module';
 import { ReceiptAssistanceModule } from './receipt-assistance/receipt.module';
+import { DocumentIntakeModule } from './document-intake/intake.module';
 @Global() @Module({ providers: [PrismaService, SessionsService], exports: [PrismaService, SessionsService] })
 export class InfrastructureModule {}
-@Module({ imports: [InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, ExpensesModule, HomeObjectsModule, SharingModule, PersonalExportModule, ReceiptAssistanceModule] })
+@Module({ imports: [InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, ExpensesModule, HomeObjectsModule, SharingModule, PersonalExportModule, ReceiptAssistanceModule, DocumentIntakeModule] })
 export class AppModule {}
