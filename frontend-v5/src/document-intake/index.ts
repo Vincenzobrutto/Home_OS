@@ -3,3 +3,4 @@
 export * from './model';
 export { DocumentIntakeAssistant, StatusBadge, type DocumentIntakeAssistantProps } from './DocumentIntakeAssistant';
 export { ReviewDialog, Modal, type ReviewWriteState } from './ReviewDialog';
+export { DocumentCollectionFilters, type CollectionFilter } from './DocumentCollectionFilters';

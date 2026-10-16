@@ -221,12 +221,12 @@ function Inner(props: DocumentIntakeAssistantProps) {
           {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
           {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
           {mode === 'proposte' && reviewable(item) && (
-            <button type="button" className={cx(ui.btn, ui.small)} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>
-              {raw === 'saved' || raw === 'deferred' ? 'Modifica scelta' : 'Rivedi'}<span className="visually-hidden"> {item.filename}</span>
+            <button type="button" className={cx(ui.btn, ui.small)} aria-label={`${raw === 'saved' || raw === 'deferred' ? 'Modifica scelta' : 'Rivedi'} ${item.filename}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>
+              {raw === 'saved' || raw === 'deferred' ? 'Modifica scelta' : 'Rivedi'}
             </button>
           )}
           {mode === 'proposte' && raw === 'confirmed' && (
-            <button type="button" className={cx(ui.btn, ui.small)} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale<span className="visually-hidden"> {item.filename}</span></button>
+            <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Vedi originale ${item.filename}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale</button>
           )}
         </div>
       </article>
