@@ -15,4 +15,6 @@ export class ReceiptAssistanceController {
   @Get('comparisons') comparisons(@Req() r: DocumentRequest, @Param('homeId') h: string, @Query() q: unknown) { return this.service.comparisons(r.documentAccountId, h, q); }
   @Get('comparisons/:id') comparison(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Query() q: unknown) { return this.service.getComparison(r.documentAccountId, h, id, q); }
   @Post('comparisons/:id/resolutions') @HttpCode(200) resolve(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.resolveComparison(r.documentAccountId, h, id, b, k); }
+  @Post('drafts/:id/confirmations') @HttpCode(200) confirm(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.confirm(r.documentAccountId, h, id, b, k); }
+  @Get('drafts/:id/confirmation') recover(@Req() r: DocumentRequest, @Param('homeId') h: string, @Param('id') id: string, @Query() q: unknown, @Headers('idempotency-key') k?: string) { return this.service.recoverConfirmation(r.documentAccountId, h, id, q, k); }
 }

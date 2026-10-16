@@ -1,14 +1,19 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { type Prisma, type ReceiptDraft, type ReceiptComparison } from '../../generated/client';
+import { Prisma, type ReceiptDraft, type ReceiptComparison } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { ReviewService } from '../review/review.service';
 import { canReadDocument } from '../documents/access';
 import { digest } from '../security';
 import { conflict, invalid, object, uuid, version } from '../review/domain';
 import { ActivityClock, temporal } from '../activities/domain';
+import { ExpensesService } from '../expenses/expenses.service';
+import { EconomyPolicy } from '../economy/policy';
+import { receiptConfirmation, type ReceiptOrigin, type FieldPlan } from './confirmation';
+import { resolveReceiptField, type ReceiptExtraction, type ReceiptProposal } from './domain';
 
 type Tx = Prisma.TransactionClient;
 const deny = () => new ForbiddenException('Accesso non consentito.');
+const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 
 @Injectable()
 export class ReceiptAssistanceService {
@@ -47,6 +52,7 @@ export class ReceiptAssistanceService {
       documentLink: { state: doc ? 'linked' : 'unavailable', document: doc ? { id: doc.id, name: doc.name } : null },
       snapshot: doc ? { documentId: doc.id, documentVersion: row.documentVersion, sha256: row.documentSha256 } : null,
       fields: doc ? row.fields : {}, total: doc ? row.total : null,
+      confirmation: doc ? await this.confirmedResult(tx, a, h, row.confirmation) : null,
       permissions: edit && doc ? ['read', 'edit'] : ['read'],
       createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString(),
     };
@@ -200,7 +206,157 @@ export class ReceiptAssistanceService {
       await tx.receiptComparison.update({ where: { id }, data: { state, version: { increment: 1 }, updatedAt: this.clock.now() } });
       const remaining = await tx.receiptComparison.count({ where: { accountId: a, homeId: h, draftId: draft.id, state: 'open' } });
       const nextState = draft.state === 'partially_resolved' && !remaining ? 'confirmed' : draft.state === 'confirmed' && remaining ? 'partially_resolved' : draft.state;
-      return tx.receiptDraft.update({ where: { id: draft.id }, data: { state: nextState, version: { increment: 1 }, updatedAt: this.clock.now() } });
+      await tx.receiptDraft.update({ where: { id: draft.id }, data: { state: nextState, version: { increment: 1 }, updatedAt: this.clock.now() } });
+      await this.closeResolvedDrafts(tx, a, h, old.objectId);
+      return this.record(tx, a, h, draft.id);
+    });
+  }
+
+  private async confirmedResult(tx: Tx, a: string, h: string, input: unknown) {
+    if (!input) return null;
+    const saved = input as { newObjects: 0 | 1; newExpenses: 0 | 1; objectId: string | null; expenseId: string | null };
+    let subject: { id: string; name: string } | null = null;
+    if (saved.objectId) {
+      const row = await tx.homeObject.findFirst({ where: { id: saved.objectId, accountId: a, homeId: h, state: 'active' } });
+      if (row) {
+        const fields = await this.fields(tx, a, h, row.id), name = fields.name as { state: string } | null;
+        if (name?.state !== 'unavailable') subject = { id: row.id, name: row.name };
+      }
+    }
+    const expense = saved.expenseId ? await tx.homeExpense.findFirst({ where: { id: saved.expenseId, accountId: a, homeId: h, state: 'active' } }) : null;
+    const openComparisons = saved.objectId ? await tx.receiptComparison.count({ where: { accountId: a, homeId: h, objectId: saved.objectId, state: 'open' } }) : 0;
+    return { newObjects: saved.newObjects, newExpenses: saved.newExpenses, object: subject, expense: expense ? { id: expense.id, title: expense.title, amountCents: expense.amountCents } : null, openComparisons };
+  }
+
+  private async closeResolvedDrafts(tx: Tx, a: string, h: string, objectId: string) {
+    if (!await tx.receiptComparison.count({ where: { accountId: a, homeId: h, objectId, state: 'open' } })) {
+      await tx.receiptDraft.updateMany({ where: { accountId: a, homeId: h, state: 'partially_resolved', confirmation: { path: ['objectId'], equals: objectId } }, data: { state: 'confirmed', version: { increment: 1 }, updatedAt: this.clock.now() } });
+    }
+  }
+
+  private proposalOrigin(draft: ReceiptDraft, field: string, value: string | number | null, origin: ReceiptOrigin) {
+    if (value === null || origin !== 'extraction') return { origin: 'user_declared', sources: [] };
+    const fields = draft.fields as ReceiptExtraction['fields'];
+    const proposed = field === 'amount' ? draft.total as ReceiptExtraction['total'] : fields[field as keyof typeof fields];
+    const sourceValue = field === 'amount' ? (proposed as ReceiptExtraction['total'])?.amountCents : (proposed as ReceiptProposal)?.value;
+    if (draft.mode !== 'extraction' || sourceValue !== value || !proposed?.sources?.length) throw invalid('Il dato non corrisponde alla proposta verificata.');
+    return { origin: 'extraction_confirmed', sources: proposed.sources };
+  }
+
+  private async storeField(tx: Tx, a: string, h: string, objectId: string, fieldKey: string, value: string, provenance: { origin: string; sources: unknown[] }, draft: ReceiptDraft) {
+    return tx.receiptObjectField.create({ data: {
+      accountId: a, homeId: h, objectId, fieldKey, value, origin: provenance.origin, sources: json(provenance.sources),
+      ...(provenance.origin === 'extraction_confirmed' ? { documentId: draft.documentId, documentVersion: draft.documentVersion, documentSha256: draft.documentSha256 } : {}),
+      createdAt: this.clock.now(), updatedAt: this.clock.now(),
+    } });
+  }
+
+  private async documentObjectLink(tx: Tx, a: string, h: string, objectId: string, documentId: string) {
+    if (await tx.objectResourceLink.findFirst({ where: { accountId: a, homeId: h, objectId, documentId, resourceType: 'document', state: 'active' } })) return;
+    const link = await tx.objectResourceLink.create({ data: { accountId: a, homeId: h, objectId, documentId, resourceType: 'document', resourceId: documentId } });
+    await tx.objectEvent.create({ data: { accountId: a, homeId: h, targetKind: 'object', targetId: objectId, kind: 'linked', before: Prisma.JsonNull, after: json({ kind: 'link', row: link, subjectKind: 'object', subjectId: objectId }) } });
+  }
+
+  private async decideFields(tx: Tx, a: string, h: string, draft: ReceiptDraft, objectId: string, plans: FieldPlan[]) {
+    const proposals = draft.fields as ReceiptExtraction['fields'];
+    let filled = false;
+    for (const plan of plans) {
+      const old = await tx.receiptObjectField.findUnique({ where: { objectId_fieldKey: { objectId, fieldKey: plan.field } } });
+      if (old && (old.accountId !== a || old.homeId !== h)) throw deny();
+      if (old?.documentId && !await this.source(tx, a, h, old.documentId, { documentVersion: old.documentVersion!, documentSha256: old.documentSha256! })) throw deny();
+      const existing = old ? { value: old.value, origin: old.origin, sources: old.sources as unknown as ReceiptProposal['sources'] } : null;
+      const result = resolveReceiptField(plan.field, existing, proposals[plan.field] ?? null, { action: plan.action, ...(plan.value !== undefined ? { value: plan.value } : {}) });
+      if (result.state === 'filled') { await this.storeField(tx, a, h, objectId, plan.field, result.value!.value, result.value!, draft); filled = true; }
+    }
+    const target = filled ? await tx.homeObject.update({ where: { id: objectId }, data: { version: { increment: 1 }, updatedAt: this.clock.now() } }) : await this.target(tx, a, h, objectId);
+    for (const plan of plans.filter(p => p.action === 'keep_existing' || p.action === 'defer')) {
+      const proposed = proposals[plan.field];
+      if (!proposed) continue;
+      const fingerprint = digest(JSON.stringify([draft.documentId, draft.documentVersion, draft.documentSha256, plan.field, proposed.value.normalize('NFC').replace(/\s+/gu, ' ').trim()]));
+      const lookup = { accountId_homeId_objectId_fieldKey_fingerprint: { accountId: a, homeId: h, objectId, fieldKey: plan.field, fingerprint } };
+      const prior = await tx.receiptComparison.findUnique({ where: lookup });
+      // Resolved evidence is never reopened just because the same receipt was analyzed again.
+      if (prior?.state === 'resolved') continue;
+      const state = plan.action === 'defer' ? 'open' : 'resolved';
+      if (prior) await tx.receiptComparison.update({ where: { id: prior.id }, data: { state, targetVersion: target.version, version: { increment: 1 }, updatedAt: this.clock.now() } });
+      else await tx.receiptComparison.create({ data: { ...lookup.accountId_homeId_objectId_fieldKey_fingerprint, draftId: draft.id, targetVersion: target.version, proposed: json(proposed), state } });
+    }
+    return target;
+  }
+
+  confirm(a: string, h: string, id: string, input: unknown, key?: string) {
+    uuid(id);
+    const body = receiptConfirmation(input, temporal(this.clock.now()).today);
+    return this.request(a, h, 'confirm', id, body, key, async tx => {
+      const draft = await this.record(tx, a, h, id);
+      if (!await this.source(tx, a, h, draft.documentId, draft)) throw deny();
+      if (draft.version !== body.expectedVersion) throw conflict('receipt_draft_version_conflict', 'La bozza è cambiata. Rileggila.');
+      if (draft.state !== 'open' || draft.confirmation) throw conflict('receipt_draft_state_conflict', 'La bozza non è confermabile.');
+      const now = this.clock.now();
+      let target: Awaited<ReturnType<ReceiptAssistanceService['target']>> | null = null;
+      const newObject = body.object.action === 'create', newExpense = body.expense.action === 'create';
+      if (body.object.action === 'create') {
+        const linked = await tx.objectResourceLink.findFirst({ where: { accountId: a, homeId: h, resourceType: 'document', documentId: draft.documentId, state: 'active' } });
+        const costLink = await tx.objectResourceLink.findFirst({ where: { accountId: a, homeId: h, resourceType: 'expense', state: 'active', expense: { accountId: a, homeId: h, documentId: draft.documentId } } });
+        const nativeLink = await tx.homeExpense.findFirst({ where: { accountId: a, homeId: h, documentId: draft.documentId, assetId: { not: null } } });
+        if (linked || costLink || nativeLink) throw conflict('receipt_object_already_linked', 'La ricevuta è già collegata: scegli la scheda esistente.');
+        target = await tx.homeObject.create({ data: { accountId: a, homeId: h, name: body.object.values.name, type: 'other', createdAt: now, updatedAt: now } });
+        for (const field of ['name', 'brand', 'model'] as const) {
+          const value = body.object.values[field];
+          if (value !== null) await this.storeField(tx, a, h, target.id, field, value, this.proposalOrigin(draft, field, value, body.object.origins[field]), draft);
+        }
+        await tx.objectEvent.create({ data: { accountId: a, homeId: h, targetKind: 'object', targetId: target.id, kind: 'created', before: Prisma.JsonNull, after: json({ kind: 'object', row: target, position: null }) } });
+      } else if (body.object.action === 'reuse') {
+        target = await this.target(tx, a, h, body.object.targetId);
+        if (target.state !== 'active') throw conflict('resource_state_conflict', 'Ripristina prima la scheda.');
+        if (target.version !== body.object.targetVersion) throw conflict('receipt_target_version_conflict', 'La scheda è cambiata. Rileggila.');
+        const fields = await this.fields(tx, a, h, target.id), name = fields.name as { state: string } | null;
+        if (name?.state === 'unavailable') throw deny();
+        const before = target;
+        target = await this.decideFields(tx, a, h, draft, target.id, body.object.fields);
+        if (target.version !== before.version) await tx.objectEvent.create({ data: { accountId: a, homeId: h, targetKind: 'object', targetId: target.id, kind: 'receipt_fields_confirmed', before: json({ kind: 'object', row: before, position: null }), after: json({ kind: 'object', row: target, position: null }) } });
+      }
+      if (target) await this.documentObjectLink(tx, a, h, target.id, draft.documentId);
+      const expenses = new ExpensesService(this.db, this.access, this.clock), policy = new EconomyPolicy(this.access);
+      let expenseId: string | null = null;
+      if (body.expense.action === 'create') {
+        if (await tx.homeExpense.findFirst({ where: { accountId: a, homeId: h, documentId: draft.documentId } })) throw conflict('receipt_expense_already_linked', 'La ricevuta ha già un costo: scegli la registrazione esistente.');
+        const value = body.expense.values, provenance: Record<string, unknown> = {};
+        for (const [field, wire] of [['title', 'title'], ['amount', 'amountCents'], ['date', 'spentOn'], ['supplier', 'supplier']] as const) {
+          provenance[wire] = this.proposalOrigin(draft, field === 'date' ? 'documentDate' : field, value[wire], body.expense.origins[field]);
+        }
+        const innerKey = 'receipt_' + digest(JSON.stringify([id, key]));
+        const result = await expenses.mutateInTransaction(tx, a, h, 'create', '', { ...value, category: 'purchase_replacement', documentId: draft.documentId, objectRef: target ? { kind: 'object', id: target.id } : null }, innerKey, true);
+        expenseId = result.expense.id;
+        const updated = await tx.homeExpense.update({ where: { id: expenseId }, data: { amountOrigin: body.expense.origins.amount === 'extraction' ? 'extraction_confirmed' : 'user_declared', economicProvenance: json(provenance) } });
+        const saved = await policy.saved(tx, updated);
+        await tx.expenseHistory.updateMany({ where: { expenseId, kind: 'created' }, data: { after: json(saved) } });
+        await tx.expenseRequest.updateMany({ where: { accountId: a, homeId: h, operation: 'economy:create', key: innerKey }, data: { response: json(saved) } });
+      } else if (body.expense.action === 'reuse') {
+        const row = await expenses.record(tx, a, h, body.expense.targetId);
+        if (row.version !== body.expense.targetVersion) throw conflict('expense_version_conflict', 'La spesa è cambiata. Rileggila.');
+        if (row.state !== 'active') throw conflict('expense_state_conflict', 'Ripristina prima la spesa.');
+        if (row.documentId && row.documentId !== draft.documentId) throw conflict('expense_document_conflict', 'La spesa ha un altro documento.');
+        const ref = await policy.currentRef(tx, row);
+        if (target && ref && (ref.kind !== 'object' || ref.id !== target.id)) throw conflict('expense_object_conflict', 'La spesa appartiene a un altro oggetto.');
+        if (!row.documentId || target && !ref) await expenses.mutateInTransaction(tx, a, h, 'update', row.id, { expectedVersion: row.version, ...(!row.documentId ? { documentId: draft.documentId } : {}), ...(target && !ref ? { objectRef: { kind: 'object', id: target.id } } : {}) }, 'receipt_' + digest(JSON.stringify([id, key])), true);
+        expenseId = row.id;
+      }
+      const result = { newObjects: Number(newObject), newExpenses: Number(newExpense), objectId: target?.id ?? null, expenseId };
+      const open = target ? await tx.receiptComparison.count({ where: { accountId: a, homeId: h, objectId: target.id, state: 'open' } }) : 0;
+      if (target) await this.closeResolvedDrafts(tx, a, h, target.id);
+      return tx.receiptDraft.update({ where: { id }, data: { confirmation: json(result), state: open ? 'partially_resolved' : 'confirmed', version: { increment: 1 }, updatedAt: now } });
+    });
+  }
+
+  recoverConfirmation(a: string, h: string, id: string, query: unknown, key?: string) {
+    object(query, []); uuid(id);
+    if (!key || !/^[A-Za-z0-9_-]{16,100}$/.test(key)) throw invalid();
+    return this.transaction(a, h, false, async (tx, edit) => {
+      const draft = await this.record(tx, a, h, id);
+      if (!await this.source(tx, a, h, draft.documentId, draft)) throw deny();
+      const request = await tx.receiptRequest.findUnique({ where: { accountId_homeId_operation_target_key: { accountId: a, homeId: h, operation: 'confirm', target: id, key } } });
+      return request ? { status: 'confirmed', draft: await this.project(tx, a, h, draft, edit) } : { status: 'not_found' };
     });
   }
 }

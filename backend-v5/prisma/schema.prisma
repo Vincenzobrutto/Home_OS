@@ -746,6 +746,7 @@ model AiAttempt {
 }
 
 model ReceiptDraft {
+  confirmation Json?
   comparisons ReceiptComparison[]
   requests ReceiptRequest[]
   id String @id @default(uuid())

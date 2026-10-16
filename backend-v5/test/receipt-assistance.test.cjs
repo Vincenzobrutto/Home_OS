@@ -72,3 +72,19 @@ test('receipt: multiple authorized explicit candidates remain a choice, not the 
   const row = { id: 'kitchen', accountId: 'a', homeId: 'h', state: 'active', name: 'Macchina', brand: null, model: null, documentIds: [scope.documentId] };
   assert.equal(d.receiptObjectCandidates([row, { ...row, id: 'studio' }], scope, parse(input())).length, 2);
 });
+
+const { receiptConfirmation } = require('../dist/receipt-assistance/confirmation');
+const manualChoice = () => ({ expectedVersion: 1, object: { action: 'create', values: { name: 'Coffee', brand: null, model: null }, origins: { name: 'manual', brand: null, model: null } }, expense: { action: 'skip' } });
+test('receipt confirmation: strict actions, canonical names and no injected citations/counts', () => {
+  const base = manualChoice();
+  assert.equal(receiptConfirmation({ ...base, object: { ...base.object, values: { ...base.object.values, name: ' Cafe\u0301  prova ' } } }, '2026-10-16').object.values.name, 'Café prova');
+  for (const body of [{ ...base, accountId: 'foreign' }, { ...base, sources: [] }, { ...base, newObjects: 1 }, { ...base, object: { action: 'skip', targetId: snapshot.documentId } }]) assert.throws(() => receiptConfirmation(body, '2026-10-16'));
+  assert.throws(() => receiptConfirmation({ ...base, object: { ...base.object, origins: { ...base.object.origins, brand: 'extraction' } } }, '2026-10-16'));
+  assert.throws(() => receiptConfirmation({ ...base, object: { action: 'reuse', targetId: snapshot.documentId, targetVersion: 1, fields: [{ field: 'brand', action: 'skip' }, { field: 'brand', action: 'defer' }] } }, '2026-10-16'));
+});
+test('receipt confirmation: bounded cost, calendar and reuse versions authoritative', () => {
+  const base = manualChoice(), expense = { action: 'create', values: { title: 'Coffee', amountCents: 100, spentOn: '2026-09-15', supplier: null }, origins: { title: 'manual', amount: 'manual', date: 'manual', supplier: null } };
+  assert.equal(receiptConfirmation({ ...base, expense }, '2026-10-16').expense.values.amountCents, 100);
+  for (const values of [{ ...expense.values, amountCents: 0 }, { ...expense.values, spentOn: '2026-02-30' }, { ...expense.values, spentOn: '2026-10-17' }]) assert.throws(() => receiptConfirmation({ ...base, expense: { ...expense, values } }, '2026-10-16'));
+  assert.throws(() => receiptConfirmation({ ...base, expense: { action: 'reuse', targetId: snapshot.documentId, targetVersion: '1' } }, '2026-10-16'));
+});

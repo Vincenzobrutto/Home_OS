@@ -29,6 +29,8 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
   const accounts = [], homes = [], files = [];
   t.after(async () => {
     const where = { accountId: { in: accounts } };
+    await db.objectEvent.deleteMany({ where }); await db.objectResourceLink.deleteMany({ where });
+    await db.expenseHistory.deleteMany({ where }); await db.expenseRequest.deleteMany({ where }); await db.homeExpense.deleteMany({ where });
     await db.receiptComparison.deleteMany({ where }); await db.receiptObjectField.deleteMany({ where });
     await db.receiptRequest.deleteMany({ where }); await db.receiptDraft.deleteMany({ where });
     await db.session.deleteMany({ where });
@@ -161,6 +163,108 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     const hiddenComparison = await call(A, path('comparisons/' + comparison.id));
     assert.equal(hiddenComparison.body.comparison.state, 'unavailable'); assert.equal(hiddenComparison.body.comparison.existing, null); assert.equal(hiddenComparison.body.comparison.proposed, null); assert.equal(hiddenComparison.body.comparison.object, null);
     assert.equal((await call(A, path('comparisons/' + comparison.id + '/resolutions'), 'POST', { expectedVersion: 1, action: 'keep_existing' })).status, 403);
+  });
+  const selection = () => ({ expectedVersion: 1, object: { action: 'create', values: { name: 'Manual coffee fixture', brand: 'Lume', model: 'Mini 90' }, origins: { name: 'manual', brand: 'manual', model: 'manual' } }, expense: { action: 'create', values: { title: 'Manual purchase fixture', amountCents: 17990, spentOn: '2026-09-15', supplier: 'Synthetic shop' }, origins: { title: 'manual', amount: 'manual', date: 'manual', supplier: 'manual' } } });
+  const manualDraft = async doc => (await call(A, path('manual-drafts'), 'POST', { documentId: doc.id })).body.draft;
+  const confirmation = (id, body, key) => call(A, path('drafts/' + id + '/confirmations'), 'POST', body, key);
+  await t.test('Atomic 1/1 confirmation, concurrent replay and explicit outcome recovery', async () => {
+    const doc = await document(a, 'Atomic receipt'), row = await manualDraft(doc), body = selection(), key = randomUUID();
+    const sent = await Promise.all([confirmation(row.id, body, key), confirmation(row.id, body, key)]);
+    assert(sent.every(r => r.status === 200)); assert.deepEqual(sent[0].body, sent[1].body);
+    const result = sent[0].body.draft.confirmation;
+    assert.equal(result.newObjects, 1); assert.equal(result.newExpenses, 1); assert.equal(result.openComparisons, 0);
+    assert.equal(await db.homeExpense.count({ where: { accountId: a.id, documentId: doc.id } }), 1);
+    assert.equal(await db.objectResourceLink.count({ where: { accountId: a.id, objectId: result.object.id, documentId: doc.id, state: 'active' } }), 1);
+    assert.equal(await db.objectResourceLink.count({ where: { accountId: a.id, objectId: result.object.id, expenseId: result.expense.id, state: 'active' } }), 1);
+    const fields = await db.receiptObjectField.findMany({ where: { objectId: result.object.id } });
+    assert.equal(fields.length, 3); assert(fields.every(f => f.origin === 'user_declared' && f.documentId === null));
+    assert.equal((await call(A, path('drafts/' + row.id + '/confirmation'), 'GET', undefined, key, { 'Idempotency-Key': key })).body.status, 'confirmed');
+    assert.equal((await call(A, path('drafts/' + row.id + '/confirmation'), 'GET', undefined, randomUUID(), { 'Idempotency-Key': randomUUID() })).body.status, 'not_found');
+    assert.equal((await confirmation(row.id, { ...body, expense: { action: 'skip' } }, key)).status, 409);
+    assert.equal((await confirmation(row.id, body)).status, 409);
+    assert.equal(await db.expenseHistory.count({ where: { expenseId: result.expense.id, kind: 'created' } }), 1);
+    assert.equal((await call(B, path('drafts/' + row.id + '/confirmation'), 'GET', undefined, key, { 'Idempotency-Key': key })).status, 403);
+  });
+  await t.test('Late expense conflict rolls back object, fields, links and ledger', async () => {
+    const doc = await document(a, 'Rollback receipt'), row = await manualDraft(doc), body = selection();
+    const prior = await db.homeExpense.create({ data: { accountId: a.id, homeId: home, documentId: doc.id, title: 'Already registered', amountCents: 49900, spentOn: '2026-06-16' } });
+    const before = await db.homeObject.count({ where: { accountId: a.id, homeId: home } }), key = randomUUID();
+    const rejected = await confirmation(row.id, body, key);
+    assert.equal(rejected.status, 409); assert.equal(rejected.body.error.code, 'receipt_expense_already_linked');
+    assert.equal(await db.homeObject.count({ where: { accountId: a.id, homeId: home } }), before);
+    assert.equal(await db.objectResourceLink.count({ where: { documentId: doc.id } }), 0);
+    assert.equal(await db.receiptRequest.count({ where: { accountId: a.id, operation: 'confirm', key } }), 0);
+    assert.equal((await db.receiptDraft.findUnique({ where: { id: row.id } })).state, 'open');
+    const reused = await confirmation(row.id, { ...body, expense: { action: 'reuse', targetId: prior.id, targetVersion: prior.version } });
+    assert.equal(reused.status, 200); assert.equal(reused.body.draft.confirmation.newExpenses, 0);
+    const kept = await db.homeExpense.findUnique({ where: { id: prior.id } });
+    assert.equal(kept.amountCents, 49900); assert.equal(kept.spentOn, '2026-06-16'); assert.equal(kept.title, 'Already registered');
+    const retryDraft = await manualDraft(doc), existingObject = await db.homeObject.findUnique({ where: { id: reused.body.draft.confirmation.object.id } });
+    const stable = { expectedVersion: 1, object: { action: 'reuse', targetId: existingObject.id, targetVersion: existingObject.version, fields: [] }, expense: { action: 'reuse', targetId: kept.id, targetVersion: prior.version } };
+    assert.equal((await confirmation(retryDraft.id, stable)).status, 409);
+    stable.expense.targetVersion = kept.version;
+    const same = await confirmation(retryDraft.id, stable); assert.equal(same.status, 200); assert.equal(same.body.draft.confirmation.newObjects, 0); assert.equal(same.body.draft.confirmation.newExpenses, 0);
+  });
+  await t.test('Independent object/expense choices and both skipped preserve exact counts', async () => {
+    for (const [objects, expenses] of [[1, 0], [0, 1], [0, 0]]) {
+      const doc = await document(a, 'Independent receipt ' + objects + expenses), row = await manualDraft(doc), body = selection();
+      if (!objects) body.object = { action: 'skip' }; if (!expenses) body.expense = { action: 'skip' };
+      const sent = await confirmation(row.id, body);
+      assert.equal(sent.status, 200); const result = sent.body.draft.confirmation;
+      assert.equal(result.newObjects, objects); assert.equal(result.newExpenses, expenses);
+      if (!objects) assert.equal(result.object, null); if (!expenses) assert.equal(result.expense, null);
+      assert.equal(await db.homeExpense.count({ where: { documentId: doc.id } }), expenses);
+    }
+  });
+  await t.test('Existing object conflicts persist, resolve on reanalysis and never overwrite', async () => {
+    const doc = await document(a, 'Conflict receipt'), row = await manualDraft(doc);
+    const object = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Existing coffee', type: 'appliance' } });
+    for (const [fieldKey, value] of [['brand', 'Aurora'], ['model', 'Classica 30']]) await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: object.id, fieldKey, value, origin: 'user_declared' } });
+    // Trusted worker output is seeded, not a claim of PDF/provider extraction quality.
+    const fields = { brand: { value: 'Lume', sources: [{ documentId: doc.id, page: 1, excerpt: 'Lume' }] }, model: { value: 'Mini 90', sources: [{ documentId: doc.id, page: 1, excerpt: 'Mini 90' }] } };
+    await db.receiptDraft.update({ where: { id: row.id }, data: { mode: 'extraction', fields } });
+    const body = { expectedVersion: 1, object: { action: 'reuse', targetId: object.id, targetVersion: 1, fields: [{ field: 'brand', action: 'defer' }, { field: 'model', action: 'keep_existing' }] }, expense: { action: 'skip' } };
+    const first = await confirmation(row.id, body);
+    assert.equal(first.status, 200); assert.equal(first.body.draft.state, 'partially_resolved'); assert.equal(first.body.draft.confirmation.openComparisons, 1);
+    assert.equal(await db.receiptComparison.count({ where: { objectId: object.id } }), 2);
+    const next = await manualDraft(doc); await db.receiptDraft.update({ where: { id: next.id }, data: { mode: 'extraction', fields } });
+    const second = await confirmation(next.id, { ...body, object: { ...body.object, fields: [{ field: 'brand', action: 'keep_existing' }, { field: 'model', action: 'keep_existing' }] } });
+    assert.equal(second.status, 200); assert.equal(second.body.draft.confirmation.openComparisons, 0);
+    assert.equal((await db.receiptDraft.findUnique({ where: { id: row.id } })).state, 'confirmed');
+    const again = await manualDraft(doc); await db.receiptDraft.update({ where: { id: again.id }, data: { mode: 'extraction', fields } });
+    assert.equal((await confirmation(again.id, body)).status, 200);
+    assert.equal(await db.receiptComparison.count({ where: { objectId: object.id } }), 2);
+    assert.equal(await db.receiptComparison.count({ where: { objectId: object.id, state: 'open' } }), 0);
+    const saved = await db.receiptObjectField.findMany({ where: { objectId: object.id }, orderBy: { fieldKey: 'asc' } });
+    assert.deepEqual(saved.map(f => f.value), ['Aurora', 'Classica 30']);
+    const noOverwrite = await manualDraft(doc);
+    assert.equal((await confirmation(noOverwrite.id, { ...body, object: { ...body.object, fields: [{ field: 'brand', action: 'manual', value: 'Override' }] } })).status, 422);
+  });
+  await t.test('Source, target versions and claimed extraction origin are checked before publication', async () => {
+    const doc = await document(a, 'Guard receipt'), row = await manualDraft(doc), body = selection();
+    body.object.origins.brand = 'extraction';
+    assert.equal((await confirmation(row.id, body)).status, 422);
+    assert.equal(await db.objectResourceLink.count({ where: { documentId: doc.id } }), 0);
+    const obj = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Stale coffee', type: 'appliance', version: 2 } });
+    const reuse = { expectedVersion: 1, object: { action: 'reuse', targetId: obj.id, targetVersion: 1, fields: [] }, expense: { action: 'skip' } };
+    assert.equal((await confirmation(row.id, reuse)).status, 409);
+    await db.documentVersion.update({ where: { documentId: doc.id }, data: { sha256: 'b'.repeat(64) } });
+    assert.equal((await confirmation(row.id, selection())).status, 403);
+  });
+  await t.test('Foreign targets and expense relinking fail without partial writes', async () => {
+    const doc = await document(a, 'Cross-target receipt'), row = await manualDraft(doc);
+    const obj = await db.homeObject.create({ data: { accountId: b.id, homeId: home, name: 'Foreign object secret', type: 'appliance' } });
+    const foreignCost = await db.homeExpense.create({ data: { accountId: b.id, homeId: home, title: 'Foreign cost secret', amountCents: 100, spentOn: '2026-09-15' } });
+    const ownObjectCount = await db.homeObject.count({ where: { accountId: a.id, homeId: home } });
+    const denied = await confirmation(row.id, { expectedVersion: 1, object: { action: 'reuse', targetId: obj.id, targetVersion: 1, fields: [] }, expense: { action: 'skip' } });
+    assert.equal(denied.status, 403); assert(!JSON.stringify(denied.body).includes('Foreign object secret'));
+    const costDenied = await confirmation(row.id, { ...selection(), expense: { action: 'reuse', targetId: foreignCost.id, targetVersion: 1 } });
+    assert.equal(costDenied.status, 403); assert.equal(await db.homeObject.count({ where: { accountId: a.id, homeId: home } }), ownObjectCount);
+    const otherDoc = await document(a, 'Other receipt for conflict');
+    const unrelated = await db.homeExpense.create({ data: { accountId: a.id, homeId: home, documentId: otherDoc.id, title: 'Other registered cost', amountCents: 100, spentOn: '2026-09-15' } });
+    assert.equal((await confirmation(row.id, { ...selection(), expense: { action: 'reuse', targetId: unrelated.id, targetVersion: 1 } })).status, 409);
+    assert.equal(await db.objectResourceLink.count({ where: { documentId: doc.id } }), 0);
+    assert.equal((await db.receiptDraft.findUnique({ where: { id: row.id } })).confirmation, null);
   });
   await t.test('Changed original and viewer write denied; membership revocation blocks old requests', async () => {
     await db.documentVersion.update({ where: { documentId: own.id }, data: { version: { increment: 1 }, sha256: 'b'.repeat(64) } });
