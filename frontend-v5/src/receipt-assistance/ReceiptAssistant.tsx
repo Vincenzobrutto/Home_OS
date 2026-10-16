@@ -361,6 +361,7 @@ function DocumentStep(props: ReceiptAssistantProps & { onOpenOriginalDialog: () 
   const provider = providers.find(p => p.id === providerId);
   const job = props.job;
   const busy = job.status === 'starting' || job.status === 'queued' || job.status === 'running';
+  const recovering = job.status === 'uncertain' && job.retryStart === true;
   const canAnalyze = props.canEdit && !!provider && (!provider.requiresConsent || consent) && !busy && (job.status !== 'uncertain' || job.retryStart === true) && props.original.status === 'available';
   return (
     <>
@@ -384,7 +385,7 @@ function DocumentStep(props: ReceiptAssistantProps & { onOpenOriginalDialog: () 
               <legend className={styles.legend}>Servizio di analisi</legend>
               {providers.map(p => (
                 <label key={p.id} className={styles.choice}>
-                  <input type="radio" name={`${name}-p`} checked={providerId === p.id} onChange={() => { setProviderId(p.id); setConsent(false); }} />
+                  <input type="radio" name={`${name}-p`} checked={providerId === p.id} disabled={busy || recovering} onChange={() => { setProviderId(p.id); setConsent(false); }} />
                   <span><strong>{p.label}</strong></span>
                 </label>
               ))}
@@ -396,7 +397,7 @@ function DocumentStep(props: ReceiptAssistantProps & { onOpenOriginalDialog: () 
               {provider.costNote && <p className={styles.note}>{provider.costNote}</p>}
               {provider.requiresConsent && (
                 <label className={styles.check}>
-                  <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+                  <input type="checkbox" checked={consent} disabled={busy || recovering} onChange={(e) => setConsent(e.target.checked)} />
                   <span>Autorizzo l’invio del contenuto necessario del documento a {provider.label} per l’analisi.</span>
                 </label>
               )}
@@ -406,7 +407,7 @@ function DocumentStep(props: ReceiptAssistantProps & { onOpenOriginalDialog: () 
             <span className={styles.note}>Nessun salvataggio automatico.</span>
             <button type="button" className={cx(ui.btn, ui.primary)} disabled={!canAnalyze}
               onClick={() => provider && props.onStartAnalysis({ providerId: provider.id, consentToProviderTransfer: provider.requiresConsent ? consent : false })}>
-              Avvia l’analisi
+              {recovering ? 'Recupera l’avvio' : 'Avvia l’analisi'}
             </button>
           </div>
         </section>

@@ -111,7 +111,7 @@ function ReceiptPageContext({ documentId }: { documentId: string }) {
     if (starting.current || job.data?.state === 'queued' || job.data?.state === 'running' || job.data?.state === 'uncertain' || !snapshot?.capabilities.enabled) return;
     starting.current = true; setStartState({ status: 'starting' }); setActionError(null);
     const prior = analysisRequest.current;
-    const request = prior && prior.provider === input.providerId && prior.consent === input.consentToProviderTransfer ? prior : { key: newIdempotencyKey(), provider: input.providerId, consent: input.consentToProviderTransfer };
+    const request = prior && (startState.status === 'uncertain' || prior.provider === input.providerId && prior.consent === input.consentToProviderTransfer) ? prior : { key: newIdempotencyKey(), provider: input.providerId, consent: input.consentToProviderTransfer };
     analysisRequest.current = request;
     try {
       const result = await client.start(documentId, request.provider, request.consent, request.key);

@@ -102,6 +102,7 @@ test('Receipt AI jobs / budget / evidence / privacy: no real provider calls', { 
     assert.equal(done.state, 'failed'); assert.equal(done.errorCode, 'evidence_unverified'); assert.equal(done.billing.actualUsd, '0.005400');
     assert.equal(await db.receiptDraft.count({ where: { documentId: doc.id } }), 0);
     const attempt = await db.receiptAiAttempt.findUnique({ where: { jobId: done.id } }); assert.equal(attempt.output, null);
+    assert.equal((await receipts.capabilities(A.id, H.id, { documentId: doc.id })).resume.jobId, done.id);
   });
   await t.test('Ambiguous transmission is durably reserved, blocks another key and permits manual review', async () => {
     reset(); mode = 'lost'; const doc = await document(), before = messages, done = await run(doc);

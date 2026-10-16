@@ -86,7 +86,7 @@ export class ReceiptAssistanceService {
       const scope = source ? { accountId: a, homeId: h, documentId: source.id, documentVersion: source.original!.version, documentSha256: source.original!.sha256 } : null;
       const draft = manualEnabled && scope ? await tx.receiptDraft.findFirst({ where: { ...scope, state: { in: ['open', 'parked'] } }, orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }], select: { id: true } }) : null;
       let job = manualEnabled && scope ? await tx.receiptAnalysisJob.findFirst({ where: { ...scope, state: { in: ['queued', 'running'] } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } }) : null;
-      if (!job && !draft && manualEnabled && scope) job = await tx.receiptAnalysisJob.findFirst({ where: { ...scope, state: 'uncertain' }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } });
+      if (!job && !draft && manualEnabled && scope) job = await tx.receiptAnalysisJob.findFirst({ where: { ...scope, provider: 'anthropic', state: { in: ['failed', 'uncertain'] } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } });
       return {
       apiVersion: 'receipt-assistance-v1', enabled, manualEnabled, providers,
       resume: { draftId: job ? null : draft?.id ?? null, jobId: job?.id ?? null },

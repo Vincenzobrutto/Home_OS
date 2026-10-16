@@ -18,7 +18,8 @@ describe('ricevuta assistita: shell', () => {
     expect(screen.getByRole('button', { name: 'Avvia l’analisi' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Compila a mano' })).toBeEnabled();
     view.rerenderWith({ ...props, job: { status: 'uncertain', message: 'Recupera la stessa richiesta', retryStart: true } });
-    expect(screen.getByRole('button', { name: 'Avvia l’analisi' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Recupera l’avvio' })).toBeEnabled();
+    expect(screen.getByRole('checkbox')).toBeDisabled();
     expect(props.onStartAnalysis).not.toHaveBeenCalled();
   });
   it('primo acquisto: crea oggetto e spesa, conferma con payload UI senza dati di contesto', async () => {

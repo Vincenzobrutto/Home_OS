@@ -60,7 +60,8 @@ describe('[mock] receipt route integration', () => {
     await w.user.click(screen.getByRole('button', { name: 'Avvia l’analisi' }));
     await screen.findByText(/Riprova lo stesso avvio/);
     expect(w.counts().starts).toBe(1);
-    await w.user.click(screen.getByRole('button', { name: 'Avvia l’analisi' }));
+    expect(screen.getByRole('checkbox')).toBeDisabled();
+    await w.user.click(screen.getByRole('button', { name: 'Recupera l’avvio' }));
     await screen.findByText('Costo dell’analisi: 0.005400 USD.');
     await screen.findByLabelText('Nome dell’oggetto');
     const posts = w.calls.filter(call => call.path === '/jobs'); expect(posts).toHaveLength(2);
