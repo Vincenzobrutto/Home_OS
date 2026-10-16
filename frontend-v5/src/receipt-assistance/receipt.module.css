@@ -250,18 +250,35 @@
   margin: var(--space-2) 0 0;
 }
 
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: rgb(16 43 59 / 55%);
+}
+
 .dialog {
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
-  width: min(560px, calc(100% - 24px));
-  max-height: 90vh;
+  width: min(560px, 100%);
+  max-height: calc(100vh - 24px);
   overflow: auto;
   color: var(--color-ink);
 }
 
-.dialog::backdrop {
-  background: rgb(16 43 59 / 55%);
+.dialog h2 {
+  font-size: 18px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.dialogAction {
+  margin-top: var(--space-3);
 }
 
 .dialogHead {
@@ -336,4 +353,10 @@
   .fact strong {
     text-align: left;
   }
+}
+
+.actionGroup {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }

@@ -9,6 +9,6 @@
 
 | Fase | Stato | Consegna |
 |---|---|---|
-| 1 — Modello UI e componenti a props | **Pronta** | `CONSEGNA-1.md`, commit della fase 1 (hash in `git log`) |
-| 2 — Esperienza completa | **In corso** | — |
-| 3 — Collaudo e rifinitura | Da fare | — |
+| 1 — Modello UI e componenti a props | **Pronta** | `CONSEGNA-1.md`, commit `636b96a` |
+| 2 — Esperienza completa | **Pronta** | `CONSEGNA-2.md`, commit della fase 2 (hash in `git log`) |
+| 3 — Collaudo e rifinitura | **In corso** | — |
