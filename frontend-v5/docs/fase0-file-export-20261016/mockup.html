@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documenti ed esportazione</title>
+<style>
+  :root {
+    --navy: #13293d; --teal: #0e5f73; --teal-d: #0a4a5a;
+    --bg: #f1f5f7; --card: #ffffff; --line: #d5dee4; --ink: #17232d; --muted: #4f5f6b;
+    --tint: #e3f1f4; --warn-bg: #fff4dc; --warn-line: #e9c46a; --err-bg: #fdeceb; --err-line: #d9837b; --ok-bg: #e6f4ea; --ok-line: #7fbf8f;
+    --demo: #6b4fa0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; color: var(--ink); background: #dfe6ea; }
+  .tool { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+  .side { background: #fff; border-right: 1px solid var(--line); padding: 16px; overflow-y: auto; max-height: 100vh; position: sticky; top: 0; }
+  .side h1 { font-size: 16px; margin: 0 0 4px; }
+  .side p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+  .side h2 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; }
+  .side button.nav { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 6px 8px; border-radius: 6px; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; }
+  .side button.nav[aria-current="true"] { background: var(--tint); color: var(--teal-d); font-weight: 600; }
+  .side button.nav:hover { background: #eef3f5; }
+  .seg { display: flex; gap: 4px; margin: 8px 0 4px; }
+  .seg button { flex: 1; border: 1px solid var(--line); background: #fff; padding: 6px; border-radius: 6px; font: inherit; font-size: 13px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .stage { padding: 24px 16px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .note { max-width: 1100px; width: 100%; background: #fff; border: 1px dashed var(--demo); color: #3d2d5c; border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+  .note strong { color: var(--demo); }
+  .frame { width: 100%; max-width: 1100px; background: var(--bg); border-radius: 10px; overflow: hidden; box-shadow: 0 6px 24px rgba(19,41,61,.15); }
+  .frame.phone { max-width: 390px; }
+  .frame.phone320 { max-width: 320px; }
+  .top { background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; gap: 12px; }
+  .brand { font-weight: 800; font-size: 22px; letter-spacing: -.02em; }
+  .brand span { color: #4fb3c8; }
+  .top .acc { font-size: 13px; opacity: .9; }
+  .page { padding: 24px 20px 36px; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  h2.h1 { font-size: 28px; line-height: 1.2; margin: 4px 0 8px; }
+  h3 { font-size: 18px; margin: 0 0 6px; }
+  .lead { color: var(--muted); margin: 0 0 16px; }
+  .field { display: flex; flex-direction: column; gap: 4px; margin: 14px 0; }
+  .field > label, .field > .lbl { font-weight: 600; font-size: 14px; }
+  .hint { font-size: 12.5px; color: var(--muted); }
+  .input input { width: 100%; padding: 10px 12px; border: 1px solid #9fb1bd; border-radius: 8px; font: inherit; background: #fff; }
+  .input input[aria-invalid="true"] { border-color: #b3261e; }
+  .ferr { color: #b3261e; font-size: 13px; font-weight: 600; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+  .btn.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .btn.small { padding: 6px 10px; font-size: 13px; }
+  .btn.link { border: 0; background: none; color: var(--teal-d); text-decoration: underline; padding: 4px 0; font-weight: 500; }
+  .btn[disabled] { opacity: .6; cursor: not-allowed; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+  .frame.phone .actions .btn:not(.link), .frame.phone320 .actions .btn:not(.link) { width: 100%; }
+  .banner { border: 1px solid var(--line); border-left-width: 4px; border-radius: 8px; padding: 10px 14px; margin: 12px 0; background: #fff; }
+  .banner b { display: block; margin-bottom: 2px; }
+  .banner p { margin: 4px 0; }
+  .banner.info { background: var(--tint); border-color: #9ccfda; }
+  .banner.warn { background: var(--warn-bg); border-color: var(--warn-line); }
+  .banner.err { background: var(--err-bg); border-color: var(--err-line); }
+  .banner.ok { background: var(--ok-bg); border-color: var(--ok-line); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 14px 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  .radio { display: flex; gap: 8px; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 6px 0; background: #fff; }
+  .radio.sel { border-color: var(--teal); background: var(--tint); }
+  .pilot { border: 1px solid var(--warn-line); background: var(--warn-bg); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; }
+  .pilot b { display: inline; }
+  ul.tight { margin: 6px 0; padding-left: 18px; }
+  ul.tight li { margin: 3px 0; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .frame.phone .cols, .frame.phone320 .cols { grid-template-columns: 1fr; }
+  .cols .card { margin: 0; }
+  .doc { display: flex; gap: 10px; align-items: flex-start; border-bottom: 1px solid var(--line); padding: 8px 0; }
+  .doc:last-child { border-bottom: 0; }
+  .doc .meta { font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 99px; background: #e8eef2; color: var(--ink); }
+  dl.dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 8px 0; font-size: 14px; }
+  .frame.phone320 dl.dl { grid-template-columns: 1fr; gap: 0 0; }
+  .frame.phone320 dl.dl dd { margin: 0 0 8px; }
+  dl.dl dt { color: var(--muted); }
+  dl.dl dd { margin: 0; overflow-wrap: anywhere; }
+  details.box { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 18px; margin: 14px 0; }
+  details.box > summary { cursor: pointer; font-weight: 600; font-size: 16px; }
+  table.mx { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+  table.mx th, table.mx td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+  table.mx th { background: #eef3f5; }
+  .mxwrap { overflow-x: auto; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #9fb1bd; border-top-color: var(--teal); border-radius: 50%; animation: s 1s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+  @media (max-width: 760px) { .tool { grid-template-columns: 1fr; } .side { position: static; max-height: none; } }
+  :focus-visible { outline: 3px solid #f0a202; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="tool">
+  <aside class="side" aria-label="Schermate del mockup">
+    <h1>Documenti ed esportazione · mockup</h1>
+    <p>Proposta Claude, Fase 0, 16/10/2026. Il controllo dei file e «Esporta i miei dati di questa casa» <strong>non esistono nel prodotto</strong>: sono proposte da congelare. Dati sintetici.</p>
+    <div class="seg" role="group" aria-label="Larghezza">
+      <button type="button" data-w="desk" aria-pressed="true">Desktop</button>
+      <button type="button" data-w="phone" aria-pressed="false">390 px</button>
+      <button type="button" data-w="phone320" aria-pressed="false">320 px</button>
+    </div>
+    <div id="navlist"></div>
+  </aside>
+  <main class="stage">
+    <div class="note" id="note" aria-live="polite"></div>
+    <div class="frame" id="frame">
+      <header class="top"><div class="brand">Dimora<span>.</span></div><div class="acc">Giulia Esempio · Esci</div></header>
+      <div class="page"><div class="wrap" id="screen" tabindex="-1"></div></div>
+    </div>
+  </main>
+</div>
+<script>
+const HOME = 'Casa di prova';
+const GROUPS = [
+  ['Caricamento e controllo', ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7']],
+  ['Lettura del contenuto e dettaglio', ['D8', 'D9']],
+  ['Esportazione', ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9']],
+  ['Riferimento', ['MX']],
+];
+const S = {};
+const go = (id) => render(id);
+const head = (title, eyebrow = HOME) => `<span class="eyebrow">${eyebrow}</span><h2 class="h1">${title}</h2>`;
+const pilot = `<div class="pilot" role="note"><b>Prova personale:</b> usa documenti non delicati. Un documento caricato <b>non si può eliminare</b> in questa versione: conserva anche il tuo originale.</div>`;
+const fileField = (err = '', chosen = '') => `
+  <div class="field"><label for="f">File</label><span class="hint" id="f-h">PDF, JPEG o PNG, massimo 20 MiB. Foto e PDF scansionati vengono conservati, ma Dimora non ne legge il contenuto.</span>
+  <div class="input"><input id="f" type="file" aria-describedby="f-h${err ? ' f-e' : ''}" ${err ? 'aria-invalid="true"' : ''}></div>
+  ${chosen ? `<span class="small">Selezionato: ${chosen}</span>` : ''}
+  ${err ? `<span class="ferr" id="f-e">${err}</span>` : ''}</div>`;
+const visibility = `
+  <fieldset class="field" style="border:0;padding:0;margin:14px 0"><legend class="lbl" style="font-weight:600;font-size:14px;padding:0">Chi può vederlo</legend>
+  <div class="radio sel"><input type="radio" checked id="v1" name="v"><label for="v1"><b>Solo io</b><br><span class="hint">Solo tu puoi vedere e scaricare questo documento, finché hai accesso alla casa.</span></label></div>
+  <div class="radio"><input type="radio" id="v2" name="v"><label for="v2"><b>Persone della casa</b><br><span class="hint">Visibile alle persone che hanno accesso a questa casa.</span></label></div></fieldset>`;
+const titleField = (v = 'manuale-lavatrice.pdf') => `<div class="field"><label for="t">Titolo</label><span class="hint">Proposto dal nome del file, puoi cambiarlo. Massimo 160 caratteri.</span><div class="input"><input id="t" value="${v}"></div></div>`;
+const form = (inner, btn = '<button class="btn primary" onclick="go(\'D2\')">Carica</button><button class="btn">Annulla</button>') => `
+  <div class="card"><h3>Carica documento</h3><p class="small muted" style="margin:0 0 10px">Destinazione: <strong>${HOME}</strong></p>${inner}<div class="actions">${btn}</div></div>`;
+
+S.D1 = { t: 'Modulo di caricamento', note: 'Base esistente (osservata il 16/10 su 5174): un file per volta, PDF/JPEG/PNG fino a 20 MiB, «Solo io» predefinito. Proposte: avviso pilota compatto (FE-UX-04) e frase su foto/scansioni nell’aiuto del campo (FE-UX-05).', h: () => head('Documenti') + form(pilot + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField() + visibility) };
+
+S.D2 = { t: 'Invio e controllo in corso', note: 'Proposta: controllo sincrono durante l’invio (FE-UX-01). Il pulsante è disattivato per evitare il doppio invio; nessuna percentuale inventata. Il testo non dice «sicuro».', h: () => head('Documenti') + form(`<p class="small" role="status"><span class="spinner" aria-hidden="true"></span>Caricamento e controllo del file in corso…</p><p class="hint">Dimora verifica il formato e controlla il file prima di salvarlo.</p>` + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField(), '<button class="btn primary" disabled>Caricamento…</button>') };
+
+S.D3 = { t: 'Caricato', note: 'Esito esistente più una riga sul controllo, senza promessa di innocuità. Il documento entra in archivio solo dopo il controllo superato: nessuno stato intermedio visibile.', h: () => head('Documenti') + `
+  <div class="banner ok" role="status"><b>Documento caricato</b><p>«manuale-lavatrice.pdf» è stato salvato in ${HOME}. <a href="#" onclick="go('D9');return false">Apri il documento</a></p>
+  <p class="small muted">Controllo automatico superato. Non è una garanzia che il file sia privo di rischi.</p></div>
+  <div class="card"><div class="doc"><div><b>manuale-lavatrice.pdf</b><div class="meta">PDF · 688 B · 16 ott 2026 · <span class="tag">Solo io</span></div></div></div></div>` };
+
+S.D4 = { t: 'File non accettato dal controllo', note: 'Rifiuto definitivo: niente in archivio, nessun dettaglio tecnico sul motivo (nome della minaccia, regola). Il prossimo invio è una nuova operazione.', h: () => head('Documenti') + form(`
+  <div class="banner err" role="alert"><b>File non accettato</b><p>Il controllo automatico ha segnalato questo file e non lo ha salvato.</p><p class="small">Se pensi sia un errore, controlla il file sul tuo dispositivo con il tuo antivirus, oppure prova con un’altra copia (per esempio salvata di nuovo in PDF).</p></div>` + fileField('', '') + titleField('')) };
+
+S.D5 = { t: 'Controllo non disponibile', note: 'Fail-closed: se il controllo non può essere eseguito, il file NON viene salvato e lo diciamo con certezza. Serve un codice distinto dal 503 generico: oggi ogni 503 diventa «esito non confermato» (FE-UX-02).', h: () => head('Documenti') + form(`
+  <div class="banner err" role="alert"><b>Documento non salvato</b><p>Il controllo dei file non è disponibile in questo momento, quindi il documento non è stato salvato. Riprova tra qualche minuto.</p></div>` + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField(), '<button class="btn primary" onclick="go(\'D2\')">Riprova</button><button class="btn">Annulla</button>') };
+
+S.D6 = { t: 'Esito non confermato', note: 'Connessione persa o errore del servizio dopo l’invio. Banner esistente, con testo corretto: oggi con storage_unavailable mostra insieme «Nessun file è stato modificato» e «potrebbe essere già stato salvato» (FE-UX-02). «Riprova invio» usa la stessa chiave: nessun doppione.', h: () => head('Documenti') + form(`
+  <div class="banner err" role="alert"><b>Esito non confermato</b><p>Non sappiamo se il documento è stato salvato: la connessione con l’archivio si è interrotta.</p><p>«Riprova invio» ripete la stessa richiesta senza creare doppioni. Per cambiare file o dati, controlla prima l’archivio.</p>
+  <div class="actions" style="margin-top:6px"><button class="btn small" onclick="go('D3')">Riprova invio</button><button class="btn small">Modifica e invia come nuovo</button></div></div>` + fileField('', 'manuale-lavatrice.pdf · 688 B') + titleField(), '<button class="btn primary" disabled>Carica</button>') };
+
+S.D7 = { t: 'File rifiutati prima del salvataggio', note: 'Messaggi esistenti (osservati o nel codice) più il rimedio. Il file da 20 MiB e l’HEIC sono rifiutati già nel browser; contenuto non corrispondente (415) e file vuoto arrivano dal server o dal controllo locale.', h: () => head('Documenti') + `
+  <div class="card"><h3>HEIC (foto di iPhone)</h3>${fileField('Formato non supportato: puoi caricare PDF, JPEG o PNG. Le foto di iPhone in formato HEIC vanno prima salvate come JPEG (sull’iPhone: Impostazioni › Fotocamera › Formati › Più compatibile).')}</div>
+  <div class="card"><h3>Oltre 20 MiB</h3>${fileField('Il file pesa 21 MiB: il limite per file è 20 MiB. Puoi dividerlo o ridurlo prima di caricarlo.')}</div>
+  <div class="card"><h3>Contenuto non corrispondente</h3>${fileField('Il contenuto del file non è un PDF, JPEG o PNG valido, anche se il nome lo indica.')}</div>
+  <div class="card"><h3>File vuoto</h3>${fileField('Il file è vuoto.')}</div>` };
+
+S.D8 = { t: 'Archiviare non è leggere', note: 'Distinzione al punto d’uso. Foto: nessuna analisi offerta (osservato sul PNG). PDF scansionato o protetto: si archivia; se si prova l’analisi, i messaggi esistenti di lib/review.ts spiegano il limite. Proposta: avviso prima di avviare l’analisi di un PDF.', h: () => head('Leggere il contenuto') + `
+  <div class="cols">
+    <div class="card"><h3>Foto JPEG/PNG</h3><p class="small">Conservata come originale. <b>Dimora non ne legge il contenuto</b>: nessuna analisi disponibile.</p></div>
+    <div class="card"><h3>PDF con testo</h3><p class="small">Conservato. Puoi chiedere un’analisi: i dati letti restano proposte da confermare.</p></div>
+    <div class="card"><h3>PDF scansionato</h3><p class="small">Conservato. Prima dell’analisi: «Se il PDF è una scansione, Dimora potrebbe non leggerne il contenuto.»</p><p class="hint">Esito esistente: «Il PDF non contiene testo estraibile (per esempio una scansione): l’analisi AI non è possibile.»</p></div>
+    <div class="card"><h3>PDF protetto da password</h3><p class="small">Conservato così com’è. Dimora non può aprirlo né leggerlo.</p><p class="hint">Esito esistente: «Il PDF è protetto o cifrato: l’analisi non è possibile.»</p></div>
+  </div>` };
+
+S.D9 = { t: 'Dettaglio documento', note: 'Dettaglio esistente con due righe nuove: stato del controllo e avviso sulla mancata eliminazione, una sola volta e compatto.', h: () => `<a href="#" class="small" onclick="go('D3');return false">← Documenti di ${HOME}</a>` + head('manuale-lavatrice.pdf') + `
+  <p><span class="tag">Originale caricato</span> <span class="tag">Solo io</span></p>
+  <div class="actions"><button class="btn primary">Scarica originale</button><button class="btn">Condividi…</button></div>
+  <div class="card"><h3>Dati del file</h3><dl class="dl"><dt>Formato</dt><dd>PDF · 688 B</dd><dt>Caricato il</dt><dd>16 ott 2026, 09:56</dd><dt>Chi può vederlo</dt><dd>Solo io</dd><dt>Controllo file</dt><dd>Controllo automatico superato · non è una garanzia</dd><dt>Impronta SHA-256</dt><dd>c0c31e2ab1823e98a8b05495be9265d1…</dd></dl>
+  <p class="small muted">In questa versione il documento non si può eliminare. Conserva anche il tuo originale.</p></div>` };
+
+S.X1 = { t: 'ZIP degli originali (esistente)', note: 'Funzione esistente: fino a 50 originali e 100 MiB, manifesto con SHA. Proposta: frase su cosa contiene e rimando all’export dei dati, senza un secondo archivio (FE-UX-08).', h: () => head('Documenti') + `
+  <div class="card"><h3>Esporta originali</h3><p class="small">Seleziona i documenti: lo ZIP contiene <b>solo questi originali</b> e un elenco con le loro impronte. Non contiene attività, spese, oggetti né collegamenti.</p>
+  <p class="small muted">I tuoi dati di questa casa si esportano da Casa › Dettagli della casa.</p>
+  <div class="doc"><input type="checkbox" checked aria-label="Seleziona manuale-lavatrice.pdf"><div><b>manuale-lavatrice.pdf</b><div class="meta">PDF · 688 B · Solo io</div></div></div>
+  <div class="doc"><input type="checkbox" aria-label="Seleziona etichetta.png"><div><b>etichetta.png</b><div class="meta">PNG · 70 B · Solo io</div></div></div>
+  <div class="actions"><button class="btn primary">Esporta ZIP (1)</button></div></div>` };
+
+S.X2 = { t: 'Dove si trova «Esporta i miei dati»', note: 'Nessuna nuova voce di menu: l’azione vive in Casa, nei dettagli richiudibili già esistenti in fondo alla pagina, perché riguarda questa casa e non solo i documenti.', h: () => head(HOME, 'Casa') + `
+  <p class="muted small">… schede di Casa …</p>
+  <details class="box" open><summary>Dettagli della casa e del tuo ruolo</summary>
+  <div class="card"><h3>Dati della casa</h3><dl class="dl"><dt>Nome</dt><dd>${HOME}</dd><dt>Il tuo ruolo</dt><dd>Proprietario</dd></dl></div>
+  <div class="card"><h3>I tuoi dati in questa casa</h3><p class="small">Scarica in un file ciò che hai inserito tu in questa casa: oggetti, attività, spese, lavori e i riferimenti ai tuoi documenti.</p>
+  <div class="actions"><button class="btn" onclick="go('X3')">Esporta i miei dati di questa casa</button></div></div></details>` };
+
+S.X3 = { t: 'Conferma: cosa contiene', note: 'Prima del file: casa, ambito personale, inclusi ed esclusi. Nessuna promessa di export dell’account, conservazione perpetua, cancellazione o trasferimento.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
+  <div class="banner info"><b>Casa: ${HOME}</b><p>Per un’altra casa, apri quella casa e ripeti l’esportazione. <a href="#" onclick="return false">Cambia casa</a></p></div>
+  <div class="cols">
+    <div class="card"><h3>Contiene</h3><ul class="tight small">
+      <li>Oggetti, attività, spese e lavori che hai creato tu, anche archiviati se puoi ancora leggerli</li>
+      <li>Dati tecnici che hai confermato, con la loro fonte</li>
+      <li>Titolo, formato e impronta dei documenti caricati da te</li>
+      <li>Collegamenti fra queste risorse</li></ul></div>
+    <div class="card"><h3>Non contiene</h3><ul class="tight small">
+      <li>I file originali: si esportano con lo ZIP in Documenti</li>
+      <li>Dati di altre persone e l’elenco di chi ha accesso</li>
+      <li>Documenti o dati caricati da altri</li>
+      <li>Risorse che non puoi più leggere: restano indicate come «riferimento escluso», senza nome</li></ul></div>
+  </div>
+  <p class="small muted">È una copia dei tuoi dati di oggi. Non cancella nulla, non trasferisce la casa e non sostituisce un backup. Se perderai l’accesso a questa casa, non potrai più esportarli.</p>
+  <div class="actions"><button class="btn primary" onclick="go('X4')">Prepara il file</button><button class="btn" onclick="go('X2')">Annulla</button></div>` };
+
+S.X4 = { t: 'Preparazione', note: 'Nessuna barra di avanzamento finta; il file non parte da solo all’apertura della pagina.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
+  <p role="status"><span class="spinner" aria-hidden="true"></span>Preparazione del file in corso…</p><p class="small muted">Può richiedere qualche istante. Puoi restare su questa pagina.</p>
+  <div class="actions"><button class="btn primary" disabled>Preparazione…</button></div>` };
+
+S.X5 = { t: 'Pronto: riepilogo', note: 'Riepilogo con conteggi (sintetici) prima del download esplicito. I riferimenti esclusi sono contati senza nomi. Il nome del file include casa e data.', h: () => head('Il file è pronto', 'Casa') + `
+  <div class="banner ok" role="status"><b>File pronto</b><p>dimora-${'casa-di-prova'}-2026-10-16.json</p></div>
+  <div class="card"><dl class="dl"><dt>Oggetti</dt><dd>3 (1 archiviato)</dd><dt>Attività</dt><dd>4</dd><dt>Spese</dt><dd>6</dd><dt>Lavori</dt><dd>1</dd><dt>Documenti (solo dati)</dt><dd>2</dd><dt>Riferimenti esclusi</dt><dd>1 collegamento a una risorsa che non puoi più leggere</dd></dl></div>
+  <p class="small muted">Il file è in formato JSON, leggibile da un programma. Una volta scaricato resta sul tuo dispositivo.</p>
+  <div class="actions"><button class="btn primary">Scarica il file</button><button class="btn link" onclick="go('X2')">Torna a Casa</button></div>` };
+
+S.X6 = { t: 'Troppo grande', note: 'Limite esplicito, nessun file parziale o troncato.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
+  <div class="banner err" role="alert"><b>Esportazione non completata</b><p>I tuoi dati di questa casa superano il limite di questa versione. <b>Nessun file è stato creato</b>: non esportiamo una parte dei dati.</p></div>
+  <div class="actions"><button class="btn" onclick="go('X2')">Torna a Casa</button></div>` };
+
+S.X7 = { t: 'Esito non noto', note: 'L’esportazione è una lettura: riprovare non crea nulla e non cambia i dati.', h: () => head('Esporta i miei dati di questa casa', 'Casa') + `
+  <div class="banner err" role="alert"><b>Esito non confermato</b><p>La connessione si è interrotta: nessun file è stato scaricato. Puoi riprovare, i tuoi dati non sono cambiati.</p></div>
+  <div class="actions"><button class="btn primary" onclick="go('X4')">Riprova</button><button class="btn link" onclick="go('X2')">Torna a Casa</button></div>` };
+
+S.X8 = { t: 'ZIP: originale non disponibile', note: 'Regola esistente M2: se un originale manca o non è più accessibile, tutto lo ZIP viene rifiutato. Il messaggio non nomina il documento se non è più leggibile.', h: () => head('Documenti') + `
+  <div class="banner err" role="alert"><b>ZIP non creato</b><p>Uno dei documenti selezionati non è disponibile in questo momento o non è più accessibile. <b>Nessun file è stato esportato</b>: togli la selezione e riprova.</p></div>
+  <div class="banner err" role="alert"><b>Selezione troppo grande</b><p>La selezione pesa 128 MiB: il limite per uno ZIP è 100 MiB. Nessun file è stato esportato.</p></div>` };
+
+S.X9 = { t: 'Accesso alla casa non più valido', note: 'Membership revocata o scaduta tra l’apertura e la consegna: nessun file, nessun dettaglio sulla casa.', h: () => head('Accesso non consentito', 'Dimora') + `
+  <div class="banner warn" role="alert"><p>Questo account non ha più accesso alla casa richiesta. Nessun file è stato creato.</p></div>
+  <div class="actions"><button class="btn primary">Vai alle mie case</button></div>` };
+
+S.MX = { t: 'Matrice degli stati', note: 'Codici esistenti (documents-v1) e proposti (da congelare con Codex).', h: () => `
+  <h2 class="h1" style="font-size:22px">Matrice degli stati</h2><div class="mxwrap"><table class="mx">
+  <tr><th>Situazione</th><th>Codice</th><th>Salvato?</th><th>Schermata</th></tr>
+  <tr><td>Formato o byte non supportati</td><td>415 unsupported_file_type (esistente)</td><td>No</td><td>D7</td></tr>
+  <tr><td>Oltre 20 MiB</td><td>413 file_too_large (esistente; anche nel browser)</td><td>No</td><td>D7</td></tr>
+  <tr><td>File vuoto</td><td>422 (esistente; anche nel browser)</td><td>No</td><td>D7</td></tr>
+  <tr><td>Controllo: file segnalato</td><td>proposto, rifiuto definitivo</td><td>No</td><td>D4</td></tr>
+  <tr><td>Controllo non disponibile</td><td>proposto, distinto dal 503 generico</td><td>No (certo)</td><td>D5</td></tr>
+  <tr><td>Rete o servizio dopo l’invio</td><td>503 / rete (esistente)</td><td>Non noto</td><td>D6</td></tr>
+  <tr><td>Stessa chiave, stesso file</td><td>201 stesso documento (esistente)</td><td>Sì, una volta</td><td>D3</td></tr>
+  <tr><td>Stessa chiave, dati diversi</td><td>409 idempotency_conflict (esistente)</td><td>—</td><td>banner esistente</td></tr>
+  <tr><td>ZIP oltre 100 MiB / oltre 50</td><td>413 export_too_large / 422 (esistenti)</td><td>Nessun file</td><td>X8</td></tr>
+  <tr><td>ZIP con originale mancante o vietato</td><td>403 / 503 (esistente, ZIP intero)</td><td>Nessun file</td><td>X8</td></tr>
+  <tr><td>Export dati: oltre il limite</td><td>proposto</td><td>Nessun file</td><td>X6</td></tr>
+  <tr><td>Export dati: esito non noto</td><td>rete</td><td>Nessun file</td><td>X7</td></tr>
+  <tr><td>Export dati: accesso revocato</td><td>403 (proposto)</td><td>Nessun file</td><td>X9</td></tr>
+  </table></div>` };
+
+const nav = document.getElementById('navlist');
+nav.innerHTML = GROUPS.map(([g, ids]) => `<h2>${g}</h2>` + ids.map((id) => `<button class="nav" data-id="${id}" type="button">${id} · ${S[id].t}</button>`).join('')).join('');
+nav.addEventListener('click', (e) => { const b = e.target.closest('button.nav'); if (b) go(b.dataset.id); });
+document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  document.getElementById('frame').className = 'frame' + (b.dataset.w === 'desk' ? '' : ' ' + b.dataset.w);
+}));
+function render(id) {
+  const s = S[id];
+  document.getElementById('screen').innerHTML = s.h();
+  document.getElementById('note').innerHTML = `<strong>${id}</strong> · ${s.note}`;
+  document.querySelectorAll('button.nav').forEach((b) => b.setAttribute('aria-current', b.dataset.id === id));
+  document.getElementById('screen').focus();
+}
+render('D1');
+</script>
+</body>
+</html>
