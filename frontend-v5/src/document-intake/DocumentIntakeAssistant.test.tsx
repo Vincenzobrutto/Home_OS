@@ -35,7 +35,7 @@ describe('casi del mockup approvato', () => {
     await user.click(reviewButton('APE_Casa.pdf'));
     expect(within(dialog()).getByRole('radio', { name: /Solo alla casa/ })).toBeChecked();
     await saveIn(user);
-    expect(reviewCalls(props.onSaveReview)[0]).toEqual({ itemId: 'ape', expectedVersion: 1, selection: { action: 'organize', title: 'Attestato di prestazione energetica', parts: [{ kind: 'ape', pageFrom: 1, pageTo: 8 }], target: { kind: 'home' } } });
+    expect(reviewCalls(props.onSaveReview)[0]).toEqual({ itemId: 'ape', expectedVersion: 1, expectedOrganizationVersion: 0, replaceOrganization: false, selection: { action: 'organize', title: 'Attestato di prestazione energetica', parts: [{ kind: 'ape', pageFrom: 1, pageTo: 8 }], target: { kind: 'home' } } });
     expect(props.onConfirm).not.toHaveBeenCalled();
     expect(screen.getByText('Scelta pronta')).toBeInTheDocument();
   });
@@ -91,7 +91,10 @@ describe('casi del mockup approvato', () => {
     expect(screen.getByText(/Stesso contenuto di «APE_Casa.pdf»\. Nessun originale viene eliminato/)).toBeInTheDocument();
     await toProposals(user);
     await user.click(reviewButton('APE_Casa_copia.pdf'));
-    expect(within(dialog()).getByText(/non elimina nulla/)).toBeInTheDocument();
+    await user.click(within(dialog()).getByRole('button', { name: 'Usa questa organizzazione' }));
+    expect(within(dialog()).getByRole('alert')).toHaveTextContent(/Scegli se usare solo il riferimento/);
+    await user.click(within(dialog()).getByRole('radio', { name: /Usa solo il riferimento/ }));
+    expect(within(dialog()).getByText(/nessuna eliminazione/)).toBeInTheDocument();
     await user.click(within(dialog()).getByRole('button', { name: 'Usa l’originale esistente' }));
     expect(props.onResolveDuplicate).toHaveBeenCalledWith('copia', 1);
     expect(props.onSaveReview).not.toHaveBeenCalled();
@@ -105,7 +108,8 @@ describe('casi del mockup approvato', () => {
     expect(within(dialog()).getByText(/nessun testo estratto e nessun dato ricostruito/)).toBeInTheDocument();
     expect(within(dialog()).queryByText(/Fonte · pagina/)).not.toBeInTheDocument();
     await user.type(within(dialog()).getByRole('textbox', { name: 'Nome da mostrare' }), 'Vecchio contratto caldaia');
-    await user.selectOptions(within(dialog()).getByRole('combobox', { name: 'Tipo di documento' }), 'conformity_declaration');
+    await user.click(within(dialog()).getByRole('button', { name: 'Aggiungi un contenuto' }));
+    await user.selectOptions(within(dialog()).getByRole('combobox', { name: 'Tipo del contenuto 1' }), 'conformity_declaration');
     await user.click(within(dialog()).getByRole('radio', { name: /Solo alla casa/ }));
     await saveIn(user);
     expect(reviewCalls(props.onSaveReview)[0]!.selection).toEqual({ action: 'organize', title: 'Vecchio contratto caldaia', parts: [{ kind: 'conformity_declaration', pageFrom: null, pageTo: null }], target: { kind: 'home' } });

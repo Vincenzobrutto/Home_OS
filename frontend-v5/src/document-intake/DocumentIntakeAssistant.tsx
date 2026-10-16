@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 import { Banner, Loading, cx, ui } from '../components/ui';
 import { ReviewDialog, type ReviewWriteState } from './ReviewDialog';
 import {
-  STATUS_LABEL, STATUS_TONE, buildConfirmPayload, buildSelection, buildSummary, collectionLabel, contextKeyString, formatBytes,
+  STATUS_LABEL, STATUS_TONE, buildConfirmPayload, buildReviewPayload, buildSummary, collectionLabel, contextKeyString, deferPayload, displayName, formatBytes, sourceLost,
   initialReviewDraft, itemStatus, matchesReviewFilter, partLabel, reviewable, visibleItem,
   type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type IntakeAnalysisPanel, type IntakeBatch, type IntakeCapabilities,
   type IntakeContextKey, type IntakeItem, type IntakeLoadState, type ItemConfirmResult, type ItemStatus, type OpaqueId,
@@ -104,7 +104,9 @@ function Inner(props: DocumentIntakeAssistantProps) {
   const canReview = props.canEdit && (batch?.permissions.review ?? false);
   const canConfirm = props.canEdit && (batch?.permissions.confirm ?? false);
   const safe = <T,>(fn: () => T) => { if (alive.current) fn(); };
-  const getDraft = (item: IntakeItem) => drafts[item.id] ?? initialReviewDraft(item);
+  // La bozza è legata al documento letto: con la fonte persa non si mostra (né riappare per un altro documento).
+  const draftKey = (item: IntakeItem) => `${item.id}|${item.documentLink.document?.id ?? ''}`;
+  const getDraft = (item: IntakeItem) => (sourceLost(item) ? initialReviewDraft(item) : drafts[draftKey(item)] ?? initialReviewDraft(item));
   const setWrite = (id: OpaqueId, w: ReviewWriteState) => safe(() => setWrites(prev => ({ ...prev, [id]: w })));
   const writeOf = (id: OpaqueId): ReviewWriteState => writes[id] ?? { status: 'idle' };
   const lockedItems = new Set(Object.entries(writes).filter(([, w]) => w.status === 'uncertain' || w.status === 'recovering' || w.status === 'saving').map(([id]) => id));
@@ -172,19 +174,21 @@ function Inner(props: DocumentIntakeAssistantProps) {
       ))}
     </ol>
   );
-  const dialogItem = dialog ? items.find(i => i.id === dialog.itemId) : undefined;
+  const found = dialog ? items.find(i => i.id === dialog.itemId) : undefined;
+  // Fonte revocata a dialogo aperto: il dialogo non si mostra più, nessun dato della cache resta a schermo.
+  const dialogItem = found && !sourceLost(found) && found.documentLink.state === 'linked' ? found : undefined;
   const reviewDialog = dialog && dialogItem && (
     <ReviewDialog
       item={dialogItem} draft={getDraft(dialogItem)} candidates={props.candidates[dialogItem.id]} write={writeOf(dialogItem.id)} onlyOriginal={dialog.onlyOriginal || !canReview}
       preview={(page) => props.renderPreview?.(dialogItem.id, page)} openState={openState}
       onOpenOriginal={(page) => void openOriginal(dialogItem.id, page)}
-      onDraft={(d) => setDrafts(prev => ({ ...prev, [dialogItem.id]: d }))}
+      onDraft={(d) => setDrafts(prev => ({ ...prev, [draftKey(dialogItem)]: d }))}
       onLoadCandidates={(more) => props.loadCandidates(dialogItem.id, more)}
       onSave={() => {
-        const selection = buildSelection(getDraft(dialogItem), dialogItem, props.candidates[dialogItem.id]?.items ?? []);
-        if (selection) void sendReview({ itemId: dialogItem.id, expectedVersion: dialogItem.version, selection });
+        const payload = buildReviewPayload(getDraft(dialogItem), dialogItem, props.candidates[dialogItem.id]?.items ?? []);
+        if (payload) void sendReview(payload);
       }}
-      onDefer={() => void sendReview({ itemId: dialogItem.id, expectedVersion: dialogItem.version, selection: { action: 'defer' } })}
+      onDefer={() => void sendReview(deferPayload(dialogItem))}
       onResolveDuplicate={async () => {
         setWrite(dialogItem.id, { status: 'saving' });
         try { applyWrite(dialogItem.id, await props.onResolveDuplicate(dialogItem.id, dialogItem.version), true); }
@@ -203,13 +207,15 @@ function Inner(props: DocumentIntakeAssistantProps) {
     const decision = item.selection?.action === 'organize' ? item.selection : null;
     return (
       <article key={item.id} className={styles.row}>
-        <span className={styles.fileIcon} aria-hidden="true">{item.mimeType === 'application/pdf' ? 'PDF' : 'IMG'}</span>
+        <span className={styles.fileIcon} aria-hidden="true">{item.mimeType === 'application/pdf' ? 'PDF' : item.mimeType ? 'IMG' : '—'}</span>
         <div className={styles.rowMain}>
-          <h3>{mode === 'proposte' && item.proposal ? item.proposal.title : item.filename}</h3>
-          <p>
-            {mode === 'proposte' && item.proposal ? `${item.filename} · ` : ''}
-            {formatBytes(item.byteSize)}{item.pageCount ? ` · ${item.pageCount} ${item.pageCount === 1 ? 'pagina' : 'pagine'}` : ''} · Solo io
-          </p>
+          <h3>{mode === 'proposte' && item.proposal ? item.proposal.title : displayName(item)}</h3>
+          {raw !== 'unavailable' && (
+            <p>
+              {mode === 'proposte' && item.proposal ? `${displayName(item)} · ` : ''}
+              {item.byteSize !== null ? formatBytes(item.byteSize) : ''}{item.pageCount ? ` · ${item.pageCount} ${item.pageCount === 1 ? 'pagina' : 'pagine'}` : ''} · Solo io
+            </p>
+          )}
           <p><StatusBadge status={status} /></p>
           {decision && <p>{decision.parts.map(partLabel).join(' + ')} · {decision.target.kind === 'home' ? 'solo casa' : 'scheda esistente'}</p>}
           {raw === 'duplicate' && <p>{item.duplicate?.document ? `Stesso contenuto di «${item.duplicate.document.name}».` : 'Stesso contenuto di un altro file.'} Nessun originale viene eliminato.</p>}
@@ -221,12 +227,12 @@ function Inner(props: DocumentIntakeAssistantProps) {
           {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
           {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
           {mode === 'proposte' && reviewable(item) && (
-            <button type="button" className={cx(ui.btn, ui.small)} aria-label={`${raw === 'saved' || raw === 'deferred' ? 'Modifica scelta' : 'Rivedi'} ${item.filename}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>
+            <button type="button" className={cx(ui.btn, ui.small)} aria-label={`${raw === 'saved' || raw === 'deferred' ? 'Modifica scelta' : 'Rivedi'} ${displayName(item)}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>
               {raw === 'saved' || raw === 'deferred' ? 'Modifica scelta' : 'Rivedi'}
             </button>
           )}
           {mode === 'proposte' && raw === 'confirmed' && (
-            <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Vedi originale ${item.filename}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale</button>
+            <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Vedi originale ${displayName(item)}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale</button>
           )}
         </div>
       </article>

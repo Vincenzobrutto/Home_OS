@@ -73,9 +73,10 @@ export type IntakeItem = {
   id: OpaqueId;
   clientItemId: string;
   version: OpaqueVersion;
-  filename: string;
-  byteSize: number;
-  mimeType: string;
+  /** Null quando la fonte non è più leggibile (DTO redatto): mai ripopolati dalla cache. */
+  filename: string | null;
+  byteSize: number | null;
+  mimeType: string | null;
   uploadState: 'pending' | 'uploading' | 'stored' | 'duplicate' | 'failed';
   analysisState: 'not_started' | 'queued' | 'running' | 'ready' | 'needs_choice' | 'unreadable' | 'unsupported' | 'failed' | 'uncertain';
   reviewState: 'unreviewed' | 'saved' | 'deferred' | 'confirmed';
@@ -86,8 +87,10 @@ export type IntakeItem = {
   duplicate: null | { itemId: OpaqueId | null; document: { id: OpaqueId; name: string } | null };
   error: null | { code: string; message: string };
   permissions: { review: boolean };
-  /** Estensioni UI (richieste in HANDOFF): organizzazione già confermata, scelta da rivedere, collegamenti esistenti. */
+  /** B2: `organization` del DTO mappata qui dal container (titolo e parti già confermati dall'account). */
   confirmedOrganization?: { title: string; parts: ClassificationPart[] } | null;
+  /** B2: versione dell'organizzazione letta (0 o null se assente). Va restituita nel salvataggio. */
+  organizationVersion?: number | null;
   selectionStale?: boolean;
   existingLinks?: { objects: Array<{ name: string; roomName: string | null }>; expenses: Array<{ title: string; amountCents: number; spentOn: string }> } | null;
 };
@@ -133,20 +136,40 @@ export type ConfirmBatchOutcome =
 export type RecoverBatchOutcome = ConfirmBatchOutcome | { status: 'not_found' };
 
 export type ConfirmBatchPayload = { batchId: OpaqueId; expectedVersion: OpaqueVersion; items: Array<{ id: OpaqueId; expectedVersion: OpaqueVersion }> };
-export type ReviewPayload = { itemId: OpaqueId; expectedVersion: OpaqueVersion; selection: OrganizationSelection };
+/**
+ * Salvataggio di una decisione. `expectedOrganizationVersion` è la versione letta (0 se assente);
+ * `replaceOrganization` è true SOLO dopo il consenso esplicito alla sostituzione di dati confermati diversi.
+ */
+export type ReviewPayload = {
+  itemId: OpaqueId;
+  expectedVersion: OpaqueVersion;
+  expectedOrganizationVersion?: number;
+  replaceOrganization?: boolean;
+  selection: OrganizationSelection;
+};
 
 // ---------------------------------------------------------------------------------------------
 // Redazione e stato visibile
 
-/** Fonte o documento non più leggibili: nessun titolo, citazione, scelta o nome di duplicato dalla cache. */
+/** Originale acquisito ma non più leggibile (fonte revocata o cambiata), anche per una copia identica. */
+export const sourceLost = (item: IntakeItem) =>
+  item.documentLink.state === 'unavailable' && (item.uploadState === 'stored' || item.uploadState === 'duplicate');
+
+/**
+ * Fonte non più leggibile: nessun nome, dimensione, MIME, pagine, titolo, citazione, scelta, organizzazione,
+ * nome del duplicato o costo dalla cache. Un elemento ancora in caricamento conserva invece il proprio manifest.
+ */
 export function visibleItem(item: IntakeItem): IntakeItem {
   if (item.documentLink.state === 'linked') return item;
-  return {
-    ...item, proposal: null, selection: null, confirmedOrganization: null, existingLinks: null,
+  const base: IntakeItem = {
+    ...item, proposal: null, selection: null, confirmedOrganization: null, organizationVersion: null, existingLinks: null,
     duplicate: item.duplicate ? { itemId: null, document: null } : null,
     documentLink: { state: 'unavailable', document: null },
   };
+  return sourceLost(item) ? { ...base, filename: null, byteSize: null, mimeType: null, pageCount: null, error: null } : base;
 }
+
+export const displayName = (item: IntakeItem) => visibleItem(item).filename ?? 'Documento non disponibile';
 
 export type ItemStatus =
   | 'pending' | 'uploading' | 'upload_failed' | 'duplicate' | 'stored'
@@ -155,7 +178,7 @@ export type ItemStatus =
 
 export function itemStatus(raw: IntakeItem): ItemStatus {
   const item = visibleItem(raw);
-  if (item.documentLink.state === 'unavailable' && item.uploadState === 'stored') return 'unavailable';
+  if (sourceLost(raw)) return 'unavailable';
   if (item.uploadState === 'pending') return 'pending';
   if (item.uploadState === 'uploading') return 'uploading';
   if (item.uploadState === 'failed') return 'upload_failed';
@@ -207,59 +230,125 @@ export function reviewable(item: IntakeItem): boolean {
 // ---------------------------------------------------------------------------------------------
 // Bozza di revisione per singolo file
 
+export type DraftTarget = { kind: 'home' } | { kind: 'object' | 'boiler'; id: OpaqueId };
+
 export type ReviewDraft = {
   title: string;
-  /** Parti proposte scelte (indici in proposal.parts). */
+  /** Parti proposte scelte (indici in proposal.parts). Ignorate se `manualParts` è valorizzato. */
   partIndexes: number[];
-  /** Classificazione manuale dell'intero documento (senza proposta o quando l'utente la preferisce). */
-  manualKind: DocumentKind | null;
-  target: { kind: 'home' } | { kind: 'object' | 'boiler'; id: OpaqueId } | null;
+  /**
+   * Classificazione inserita dall'utente: una o più parti con tipo e intervallo facoltativo.
+   * Riaprendo una scelta salvata che non coincide con la proposta corrente, si conservano TUTTE le parti.
+   */
+  manualParts: ClassificationPart[] | null;
+  target: DraftTarget | null;
+  /** Consenso alla sostituzione, legato al contenuto e alla versione letta: cambiando uno dei due decade. */
+  replaceConsent: string | null;
+  /** Solo per una copia identica: usare il riferimento oppure organizzare esplicitamente il documento esistente. */
+  duplicateMode: 'reuse' | 'organize' | null;
 };
 
 const normalized = (v: string) => v.normalize('NFC').replace(/\s+/gu, ' ').trim();
 export const TITLE_MAX = 120;
+export const MAX_PARTS = 12;
+
+const samePart = (a: ClassificationPart, b: ClassificationPart) => a.kind === b.kind && a.pageFrom === b.pageFrom && a.pageTo === b.pageTo;
+const partKey = (p: ClassificationPart) => `${p.kind}|${p.pageFrom ?? ''}|${p.pageTo ?? ''}`;
+/** Stesse parti per tipo e intervallo, indipendentemente dall'ordine (come il confronto semantico di B2). */
+export function sameParts(a: ClassificationPart[], b: ClassificationPart[]): boolean {
+  const ka = a.map(partKey).sort(), kb = b.map(partKey).sort();
+  return ka.length === kb.length && ka.every((k, i) => k === kb[i]);
+}
+
+const targetOf = (t: IntakeTarget): DraftTarget => (t.kind === 'home' ? { kind: 'home' } : { kind: t.kind, id: t.id });
 
 export function initialReviewDraft(raw: IntakeItem): ReviewDraft {
   const item = visibleItem(raw);
   const sel = item.selection;
+  const proposalParts = item.proposal?.parts ?? [];
   if (sel && sel.action === 'organize') {
-    const fromProposal = (item.proposal?.parts ?? []).map((p, i) => [p, i] as const).filter(([p]) => sel.parts.some(s => s.kind === p.kind && s.pageFrom === p.pageFrom && s.pageTo === p.pageTo)).map(([, i]) => i);
-    const manual = sel.parts.length === 1 && fromProposal.length === 0 && sel.parts[0] ? sel.parts[0].kind : null;
-    return { title: sel.title, partIndexes: fromProposal, manualKind: manual, target: sel.target.kind === 'home' ? { kind: 'home' } : { kind: sel.target.kind, id: sel.target.id } };
+    const covered = sel.parts.every(s => proposalParts.some(p => samePart(p, s)));
+    return {
+      title: sel.title,
+      partIndexes: covered ? proposalParts.map((p, i) => [p, i] as const).filter(([p]) => sel.parts.some(s => samePart(p, s))).map(([, i]) => i) : [],
+      // Parti non riconducibili alla proposta corrente: si conservano tutte, con i loro intervalli.
+      manualParts: covered ? null : sel.parts.map(p => ({ ...p })),
+      target: targetOf(sel.target),
+      replaceConsent: null,
+      duplicateMode: item.uploadState === 'duplicate' ? 'organize' : null,
+    };
   }
-  const parts = item.proposal?.parts ?? [];
+  if (item.uploadState === 'duplicate') {
+    const org = item.confirmedOrganization;
+    return { title: org?.title ?? '', partIndexes: [], manualParts: org ? org.parts.map(p => ({ ...p })) : [], target: null, replaceConsent: null, duplicateMode: null };
+  }
   return {
     title: item.proposal?.title ?? '',
     // Una sola parte è preselezionata; più contenuti nello stesso PDF vanno scelti dopo aver visto l'originale.
-    partIndexes: parts.length === 1 ? [0] : [],
-    manualKind: null,
+    partIndexes: proposalParts.length === 1 ? [0] : [],
+    manualParts: item.proposal ? null : [],
     // Caso ambiguo: nessuna associazione preselezionata.
     target: item.analysisState === 'needs_choice' ? null : item.proposal ? { kind: 'home' } : null,
+    replaceConsent: null,
+    duplicateMode: null,
   };
 }
 
-export type ReviewErrors = Partial<Record<'title' | 'parts' | 'target', string>>;
+/** Parti risultanti dalla bozza, nell'ordine scelto. */
+export function draftParts(draft: ReviewDraft, raw: IntakeItem): ClassificationPart[] {
+  const item = visibleItem(raw);
+  if (draft.manualParts) return draft.manualParts;
+  return draft.partIndexes.slice().sort((a, b) => a - b).flatMap(i => (item.proposal?.parts[i] ? [item.proposal.parts[i]] : []));
+}
+
+/** Differenza rispetto ai dati già confermati: titolo o parti (per tipo/intervallo). */
+export function replacesConfirmed(draft: ReviewDraft, raw: IntakeItem): boolean {
+  const org = visibleItem(raw).confirmedOrganization;
+  if (!org) return false;
+  return normalized(draft.title) !== normalized(org.title) || !sameParts(draftParts(draft, raw), org.parts);
+}
+
+/** Firma del consenso: contenuto scelto + versione dell'organizzazione letta. */
+export function consentSignature(draft: ReviewDraft, raw: IntakeItem): string {
+  const item = visibleItem(raw);
+  return JSON.stringify([normalized(draft.title), draftParts(draft, item).map(partKey).sort(), item.organizationVersion ?? 0]);
+}
+export const hasReplaceConsent = (draft: ReviewDraft, raw: IntakeItem) => draft.replaceConsent !== null && draft.replaceConsent === consentSignature(draft, raw);
+
+export type ReviewErrors = Partial<Record<'title' | 'parts' | 'target' | 'replace' | 'duplicate', string>>;
 
 export function validateReviewDraft(draft: ReviewDraft, raw: IntakeItem): ReviewErrors {
   const item = visibleItem(raw);
   const errors: ReviewErrors = {};
+  if (item.uploadState === 'duplicate' && draft.duplicateMode !== 'organize') {
+    if (draft.duplicateMode === null) errors.duplicate = 'Scegli se usare solo il riferimento all’originale esistente oppure organizzarlo.';
+    return errors;
+  }
   const n = [...normalized(draft.title)].length;
   if (n === 0) errors.title = 'Inserisci un nome da mostrare.';
   else if (n > TITLE_MAX) errors.title = `Massimo ${TITLE_MAX} caratteri.`;
-  const hasProposal = (item.proposal?.parts.length ?? 0) > 0;
-  if (draft.manualKind === null && (!hasProposal || draft.partIndexes.length === 0)) {
-    errors.parts = hasProposal ? 'Seleziona almeno un contenuto dopo aver consultato l’originale.' : 'Scegli il tipo di documento oppure rimanda la decisione.';
+  if (draft.manualParts) {
+    const parts = draft.manualParts;
+    if (parts.length === 0) errors.parts = 'Aggiungi almeno un contenuto con il suo tipo, oppure rimanda la decisione.';
+    else if (parts.length > MAX_PARTS) errors.parts = `Al massimo ${MAX_PARTS} contenuti per documento.`;
+    else if (parts.some(p => !KINDS.includes(p.kind))) errors.parts = 'Scegli il tipo di ogni contenuto.';
+    else if (parts.some(p => (p.pageFrom === null) !== (p.pageTo === null))) errors.parts = 'Indica entrambe le pagine dell’intervallo, oppure nessuna per l’intero documento.';
+    else if (parts.some(p => p.pageFrom !== null && p.pageTo !== null && (!Number.isInteger(p.pageFrom) || !Number.isInteger(p.pageTo) || p.pageFrom < 1 || p.pageTo < p.pageFrom || (item.pageCount !== null && p.pageTo > item.pageCount)))) {
+      errors.parts = item.pageCount ? `Le pagine vanno da 1 a ${item.pageCount}, con la prima non oltre l’ultima.` : 'Pagine non valide: la prima deve essere almeno 1 e non oltre l’ultima.';
+    } else if (new Set(parts.map(partKey)).size !== parts.length) errors.parts = 'Lo stesso contenuto è indicato due volte.';
+  } else if ((item.proposal?.parts.length ?? 0) === 0 || draft.partIndexes.length === 0) {
+    errors.parts = item.proposal ? 'Seleziona almeno un contenuto dopo aver consultato l’originale.' : 'Aggiungi almeno un contenuto con il suo tipo, oppure rimanda la decisione.';
   }
   if (!draft.target) errors.target = 'Scegli una scheda esistente oppure conserva il documento solo a livello casa.';
+  if (!errors.title && !errors.parts && replacesConfirmed(draft, item) && !hasReplaceConsent(draft, item)) {
+    errors.replace = 'La scelta cambia un’organizzazione già confermata: conferma la sostituzione oppure mantieni quella attuale.';
+  }
   return errors;
 }
 
 export function buildSelection(draft: ReviewDraft, raw: IntakeItem, candidates: TargetCandidate[]): OrganizationSelection | null {
   const item = visibleItem(raw);
   if (Object.keys(validateReviewDraft(draft, item)).length) return null;
-  const parts: ClassificationPart[] = draft.manualKind
-    ? [{ kind: draft.manualKind, pageFrom: null, pageTo: null }]
-    : draft.partIndexes.slice().sort((a, b) => a - b).flatMap(i => (item.proposal?.parts[i] ? [item.proposal.parts[i]] : []));
   let target: IntakeTarget;
   if (!draft.target || draft.target.kind === 'home') target = { kind: 'home' };
   else {
@@ -268,8 +357,25 @@ export function buildSelection(draft: ReviewDraft, raw: IntakeItem, candidates: 
     if (!c) return null;
     target = { kind: c.kind, id: c.id, expectedVersion: c.version };
   }
-  return { action: 'organize', title: normalized(draft.title), parts, target };
+  return { action: 'organize', title: normalized(draft.title), parts: draftParts(draft, item).map(p => ({ ...p })), target };
 }
+
+/** Payload di salvataggio con la versione letta; sostituzione solo con consenso esplicito e attuale. */
+export function buildReviewPayload(draft: ReviewDraft, raw: IntakeItem, candidates: TargetCandidate[]): ReviewPayload | null {
+  const item = visibleItem(raw);
+  const selection = buildSelection(draft, item, candidates);
+  if (!selection) return null;
+  return {
+    itemId: item.id, expectedVersion: item.version, expectedOrganizationVersion: item.organizationVersion ?? 0,
+    replaceOrganization: replacesConfirmed(draft, item) && hasReplaceConsent(draft, item),
+    selection,
+  };
+}
+
+export const deferPayload = (raw: IntakeItem): ReviewPayload => {
+  const item = visibleItem(raw);
+  return { itemId: item.id, expectedVersion: item.version, expectedOrganizationVersion: item.organizationVersion ?? 0, replaceOrganization: false, selection: { action: 'defer' } };
+};
 
 export const partLabel = (p: ClassificationPart) =>
   `${KIND_LABEL[p.kind]}${p.pageFrom !== null && p.pageTo !== null ? ` · ${p.pageFrom === p.pageTo ? `pagina ${p.pageFrom}` : `pagine ${p.pageFrom}–${p.pageTo}`}` : ''}`;
