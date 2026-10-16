@@ -92,6 +92,18 @@ export class Projection {
     }
     this.historyLimited = true; return null;
   }
+  receiptField(input: unknown) {
+    const row = record(input), objectId = this.ref(row.objectId, this.objects);
+    if (!objectId || !['name', 'brand', 'model'].includes(String(row.fieldKey)) || !['user_declared', 'extraction_confirmed'].includes(String(row.origin))) return null;
+    const sources = list(row.sources).map(source => ({ ...record(source), documentId: row.documentId, documentVersion: row.documentVersion, documentSha256: row.documentSha256 }));
+    return { ...scalars(row, ['id', 'fieldKey', 'value', 'origin', 'version', 'createdAt', 'updatedAt']), objectId, sources: row.origin === 'user_declared' ? [] : this.sources(sources) };
+  }
+  receiptComparison(input: unknown) {
+    const row = record(input), objectId = this.ref(row.objectId, this.objects), proposed = record(row.proposed), draft = record(row.draft);
+    if (!objectId || !['brand', 'model'].includes(String(row.fieldKey)) || !['open', 'resolved'].includes(String(row.state)) || typeof proposed.value !== 'string') return null;
+    const sources = list(proposed.sources).map(source => ({ ...record(source), documentId: draft.documentId, documentVersion: draft.documentVersion, documentSha256: draft.documentSha256 }));
+    return { ...scalars(row, ['id', 'fieldKey', 'targetVersion', 'state', 'version', 'createdAt', 'updatedAt']), objectId, proposed: { value: proposed.value, sources: this.sources(sources) } };
+  }
   history(kind: string, event: string, value: unknown, objectEvent = false): Row | null {
     const recognized = objectEvent ? ['created', 'updated', 'archived', 'restored', 'position_updated', 'linked', 'unlinked', 'receipt_fields_confirmed'] : kind === 'activity' ? ['created', 'updated', 'completed', 'cancelled', 'reopened'] : ['created', 'updated', 'archived', 'restored'];
     if (!recognized.includes(event)) { this.historyLimited = true; return null; }

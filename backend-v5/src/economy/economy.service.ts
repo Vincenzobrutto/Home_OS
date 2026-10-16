@@ -8,6 +8,7 @@ import { invalid, object, uuid, version, conflict } from '../review/domain';
 import { categories, categoryLabels, comparisonPeriod, economyQuery, families, family, familyLabels, pageQuery, percent, text, workBody, type Category } from './domain';
 import { EconomyPolicy } from './policy';
 import { EconomicAiBudget } from './ai-budget';
+import { readableReceiptName } from '../receipt-assistance/access';
 type Tx=Prisma.TransactionClient;
 type Query=ReturnType<typeof economyQuery>;
 type Anchor={b:string;i:string;t:string;d?:string};
@@ -57,7 +58,7 @@ export class EconomyService {
     if(q.documentId)parts.push(Prisma.sql`e."documentId"=${q.documentId}`);
     if(q.objectRef){const r=q.objectRef;parts.push(Prisma.sql`(${r.kind==='boiler'?Prisma.sql`e."assetId"=${r.id}`:Prisma.sql`FALSE`} OR EXISTS(SELECT 1 FROM "ObjectResourceLink" l WHERE l."expenseId"=e.id AND l."accountId"=${a} AND l."homeId"=${h} AND l.state='active' AND ${r.kind==='object'?Prisma.sql`l."objectId"=${r.id}`:Prisma.sql`l."boilerId"=${r.id}`}))`);}
     if(q.roomId)parts.push(Prisma.sql`EXISTS(SELECT 1 FROM "ObjectPosition" p WHERE p."accountId"=${a} AND p."homeId"=${h} AND p."roomIds" ? ${q.roomId} AND (
-      (p."boilerId"=e."assetId" AND ${this.readableBoiler(a,h,Prisma.sql`p."boilerId"`)}) OR EXISTS(SELECT 1 FROM "ObjectResourceLink" l WHERE l."expenseId"=e.id AND l."accountId"=${a} AND l."homeId"=${h} AND l.state='active' AND ((l."objectId"=p."objectId" AND EXISTS(SELECT 1 FROM "HomeObject" o WHERE o.id=p."objectId" AND o."accountId"=${a} AND o."homeId"=${h})) OR (l."boilerId"=p."boilerId" AND ${this.readableBoiler(a,h,Prisma.sql`p."boilerId"`)})))
+      (p."boilerId"=e."assetId" AND ${this.readableBoiler(a,h,Prisma.sql`p."boilerId"`)}) OR EXISTS(SELECT 1 FROM "ObjectResourceLink" l WHERE l."expenseId"=e.id AND l."accountId"=${a} AND l."homeId"=${h} AND l.state='active' AND ((l."objectId"=p."objectId" AND EXISTS(SELECT 1 FROM "HomeObject" o WHERE o.id=p."objectId" AND o."accountId"=${a} AND o."homeId"=${h} AND ${readableReceiptName(a,h)})) OR (l."boilerId"=p."boilerId" AND ${this.readableBoiler(a,h,Prisma.sql`p."boilerId"`)})))
     ))`);
     return Prisma.join(parts,' AND ');
   }

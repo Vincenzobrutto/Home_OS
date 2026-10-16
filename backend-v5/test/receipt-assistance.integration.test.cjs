@@ -13,6 +13,8 @@ const { ReceiptAssistanceService } = require('../dist/receipt-assistance/receipt
 const { ReviewService } = require('../dist/review/review.service');
 const { HomeObjectsService } = require('../dist/home-objects/home-objects.service');
 const { EconomyPolicy } = require('../dist/economy/policy');
+const { EconomyService } = require('../dist/economy/economy.service');
+const { ExpensesService } = require('../dist/expenses/expenses.service');
 const { PersonalExportService } = require('../dist/personal-export/personal-export.service');
 const { DocumentPolicy } = require('../dist/documents/access');
 const { ApiErrorFilter } = require('../dist/main');
@@ -41,7 +43,9 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     await db.documentVersion.deleteMany({ where: { document: { uploaderId: { in: accounts } } } });
     await db.document.deleteMany({ where: { uploaderId: { in: accounts } } });
     await db.storedFile.deleteMany({ where: { id: { in: files } } });
+    await db.objectPosition.deleteMany({ where });
     await db.homeObject.deleteMany({ where: { accountId: { in: accounts } } });
+    await db.homeRoom.deleteMany({ where: { homeId: { in: homes } } });
     await db.homeMembership.deleteMany({ where: { homeId: { in: homes } } });
     await db.home.deleteMany({ where: { id: { in: homes } } });
     await db.account.deleteMany({ where: { id: { in: accounts } } });
@@ -275,6 +279,13 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     const object = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Derived confidential name', type: 'other' } });
     await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: object.id, fieldKey: 'name', value: object.name, origin: 'extraction_confirmed', documentId: source.id, documentVersion: 1, documentSha256: source.original.sha256, sources: [{ documentId: source.id, page: 1, excerpt: "Synthetic evidence" }] } });
     const access = new ReviewService(db, {}), g1 = new HomeObjectsService(db, access), economy = new EconomyPolicy(access);
+    const s1 = new EconomyService(new ExpensesService(db, access, { now: () => new Date('2026-10-16T12:00:00Z') }), access);
+    const room = await db.homeRoom.create({ data: { homeId: home, name: 'Receipt privacy room', type: 'other' } });
+    await db.objectPosition.create({ data: { accountId: a.id, homeId: home, objectId: object.id, roomIds: [room.id] } });
+    const cost = await db.homeExpense.create({ data: { accountId: a.id, homeId: home, title: 'Manual own cost', amountCents: 123, spentOn: '2026-10-16' } });
+    await db.objectResourceLink.create({ data: { accountId: a.id, homeId: home, objectId: object.id, expenseId: cost.id, resourceType: 'expense', resourceId: cost.id } });
+    const roomQuery = { from: '2026-10-01', to: '2026-10-31', roomId: room.id };
+    assert.equal((await s1.summary(a.id, home, roomQuery)).totalCents, '123');
     const exporter = new PersonalExportService(db, new DocumentPolicy(db));
     const getExport = async () => JSON.parse((await exporter.export(a.id, home, async () => {})).toString());
     assert.equal((await g1.getObject(a.id, home, 'object', object.id, {})).object.name, object.name);
@@ -289,6 +300,8 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     assert.deepEqual(page, { items: [], nextCursor: null });
     for (const read of [() => g1.getObject(a.id, home, 'object', object.id, {}), () => g1.history(a.id, home, 'object', object.id, {}), () => g1.links(a.id, home, 'object', object.id, { resourceType: 'document' })]) await assert.rejects(read, e => e.getStatus() === 403);
     assert.equal(await db.$transaction(tx => economy.subject(tx, a.id, home, { kind: 'object', id: object.id })), null);
+    assert.equal((await s1.summary(a.id, home, roomQuery)).totalCents, '0');
+    assert.equal((await s1.get(a.id, home, cost.id, {})).expense.amountCents, 123);
     const result = await getExport();
     assert(!JSON.stringify(result).includes(object.name)); assert(!result.data.objects.some(row => row.id === object.id));
     assert(result.limitations.includes('some_references_excluded'));
@@ -302,6 +315,7 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     const manual = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Manual safe name', type: 'other' } });
     await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: manual.id, fieldKey: 'brand', value: 'Hidden brand', origin: 'extraction_confirmed', documentId: source.id, documentVersion: 1, documentSha256: source.original.sha256, sources: [{ documentId: source.id, page: 1, excerpt: "Synthetic evidence" }] } });
     assert.equal((await g1.getObject(a.id, home, 'object', manual.id, {})).object.name, manual.name);
+    assert(!JSON.stringify(await getExport()).includes('Hidden brand'));
     await db.document.update({ where: { id: source.id }, data: { visibility: 'home' } });
     await db.documentVersion.update({ where: { documentId: source.id }, data: { sha256: 'c'.repeat(64) } });
     await assert.rejects(() => g1.getObject(a.id, home, 'object', object.id, {}), e => e.getStatus() === 403);
@@ -323,6 +337,22 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     } };
     const exporter = new PersonalExportService(facade, new DocumentPolicy(db));
     await assert.rejects(() => exporter.export(a.id, home, async () => {}), e => e.getStatus() === 403);
+  });
+  await t.test('Personal JSON exports receipt fields and deferred comparisons through explicit allowlists', async () => {
+    const source = await document(a, 'Receipt export own evidence'), row = await manualDraft(source);
+    const obj = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Receipt export object', type: 'other' } });
+    const field = await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: obj.id, fieldKey: 'brand', value: 'Exported brand', origin: 'extraction_confirmed', documentId: source.id, documentVersion: 1, documentSha256: source.original.sha256, sources: [{ documentId: source.id, page: 1, excerpt: 'Exported brand', privateToken: 'Forbidden export raw token' }] } });
+    const comparison = await db.receiptComparison.create({ data: { accountId: a.id, homeId: home, objectId: obj.id, draftId: row.id, fieldKey: 'brand', targetVersion: 1, fingerprint: digest(randomUUID()), proposed: { value: 'Different brand', privateToken: 'Forbidden export raw token', sources: [{ page: 1, excerpt: 'Different brand' }] } } });
+    const exporter = new PersonalExportService(db, new DocumentPolicy(db));
+    const exported = JSON.parse((await exporter.export(a.id, home, async () => {})).toString());
+    const savedField = exported.data.receiptFields.find(f => f.id === field.id), savedComparison = exported.data.receiptComparisons.find(c => c.id === comparison.id);
+    assert.equal(savedField.value, 'Exported brand'); assert.equal(savedField.sources[0].documentVersion, 1); assert.equal(savedField.sources[0].documentSha256, source.original.sha256);
+    assert.equal(savedComparison.objectId, obj.id); assert.equal(savedComparison.state, 'open'); assert.equal(savedComparison.proposed.value, 'Different brand'); assert.equal(savedComparison.proposed.sources[0].documentId, source.id);
+    assert(!JSON.stringify(exported).includes('Forbidden export raw token')); assert(!Object.hasOwn(savedComparison, 'fingerprint')); assert(!Object.hasOwn(savedComparison, 'draftId'));
+    await db.documentVersion.update({ where: { documentId: source.id }, data: { sha256: 'd'.repeat(64) } });
+    const changed = JSON.parse((await exporter.export(a.id, home, async () => {})).toString());
+    assert(!changed.data.receiptFields.some(f => f.id === field.id)); assert(!changed.data.receiptComparisons.some(c => c.id === comparison.id));
+    assert(changed.data.objects.some(o => o.id === obj.id));
   });
   await t.test('Changed original and viewer write denied; membership revocation blocks old requests', async () => {
     await db.documentVersion.update({ where: { documentId: own.id }, data: { version: { increment: 1 }, sha256: 'b'.repeat(64) } });

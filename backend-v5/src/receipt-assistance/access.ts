@@ -23,14 +23,20 @@ export async function readableReceiptObjectIds(tx: Prisma.TransactionClient, a: 
 }
 
 export type ReceiptSourceProof = { documentId: string | null; documentVersion: number | null; documentSha256: string | null };
+export const receiptProofKey = (proof: ReceiptSourceProof) => JSON.stringify([proof.documentId, proof.documentVersion, proof.documentSha256]);
 /** Checks captured proofs, rather than current field rows which may have been edited. */
-export async function readableReceiptProofs(tx: Prisma.TransactionClient, a: string, h: string, proofs: ReceiptSourceProof[]) {
-  if (!proofs.length) return true;
+export async function readableReceiptProofKeys(tx: Prisma.TransactionClient, a: string, h: string, proofs: ReceiptSourceProof[], accountRows?: (rows: unknown[]) => void) {
+  if (!proofs.length) return new Set<string>();
   const ids = [...new Set(proofs.flatMap(proof => proof.documentId ? [proof.documentId] : []))];
   const rows = await tx.document.findMany({ where: { id: { in: ids }, homeId: h }, select: { id: true, uploaderId: true, visibility: true, original: { select: { version: true, sha256: true } } } });
+  accountRows?.(rows);
   const docs = new Map(rows.map(row => [row.id, row]));
-  return proofs.every(proof => {
+  return new Set(proofs.flatMap(proof => {
     const doc = proof.documentId ? docs.get(proof.documentId) : undefined;
-    return doc && (doc.visibility === 'home' || doc.uploaderId === a) && doc.original && doc.original.version === proof.documentVersion && doc.original.sha256 === proof.documentSha256;
-  });
+    return doc && (doc.visibility === 'home' || doc.uploaderId === a) && doc.original && doc.original.version === proof.documentVersion && doc.original.sha256 === proof.documentSha256 ? [receiptProofKey(proof)] : [];
+  }));
+}
+export async function readableReceiptProofs(tx: Prisma.TransactionClient, a: string, h: string, proofs: ReceiptSourceProof[]) {
+  const readable = await readableReceiptProofKeys(tx, a, h, proofs);
+  return proofs.every(proof => readable.has(receiptProofKey(proof)));
 }

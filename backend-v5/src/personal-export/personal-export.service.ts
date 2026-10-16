@@ -3,7 +3,7 @@ import { Prisma } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { DocumentPolicy, canReadDocument } from '../documents/access';
 import { EXPORT_LIMITS, ExportBudget, Projection, collect, list, record, scalars, tooLarge } from './projection';
-import { readableReceiptObjectIds, readableReceiptProofs } from '../receipt-assistance/access';
+import { readableReceiptObjectIds, readableReceiptProofs, readableReceiptProofKeys, receiptProofKey } from '../receipt-assistance/access';
 
 type Tx = Prisma.TransactionClient;
 const unavailable = () => new ServiceUnavailableException({ code: 'personal_export_unavailable', message: 'Esportazione temporaneamente non disponibile.' });
@@ -44,10 +44,16 @@ export class PersonalExportService {
     const objectCandidates = await collect((take, after) => tx.homeObject.findMany({ where: { ...own, ...pageWhere(after) }, take, orderBy }), budget);
     const objectIds = await readableReceiptObjectIds(tx, a, h, objectCandidates.map(row => row.id));
     const objects = objectCandidates.filter(row => objectIds.has(row.id));
-    const receiptNames = await collect((take, after) => tx.receiptObjectField.findMany({ where: { ...own, objectId: { in: [...objectIds] }, fieldKey: 'name', ...pageWhere(after) }, take, orderBy }), budget);
+    const receiptFieldCandidates = await collect((take, after) => tx.receiptObjectField.findMany({ where: { ...own, objectId: { in: [...objectIds] }, ...pageWhere(after) }, take, orderBy }), budget);
+    const comparisonCandidates = await collect((take, after) => tx.receiptComparison.findMany({ where: { ...own, objectId: { in: [...objectIds] }, draft: own, ...pageWhere(after) }, include: { draft: { select: { documentId: true, documentVersion: true, documentSha256: true } } }, take, orderBy }), budget);
+    const fieldProofs = receiptFieldCandidates.filter(row => row.origin === 'extraction_confirmed');
+    const proofKeys = await readableReceiptProofKeys(tx, a, h, [...fieldProofs, ...comparisonCandidates.map(row => row.draft)], rows => budget.add(rows));
+    const receiptFields = receiptFieldCandidates.filter(row => row.origin === 'user_declared' || proofKeys.has(receiptProofKey(row)));
+    const receiptComparisons = comparisonCandidates.filter(row => proofKeys.has(receiptProofKey(row.draft)));
+    const receiptNames = receiptFields.filter(row => row.fieldKey === 'name');
     const receiptNameIds = new Set(receiptNames.map(row => row.objectId));
     const currentNames = new Map(objects.filter(row => receiptNameIds.has(row.id)).map(row => [row.id, row.name]));
-    const receiptProofs = receiptNames.filter(row => row.origin === 'extraction_confirmed').map(row => ({ documentId: row.documentId, documentVersion: row.documentVersion, documentSha256: row.documentSha256 }));
+    const receiptProofs = [...receiptFields.filter(row => row.origin === 'extraction_confirmed'), ...receiptComparisons.map(row => row.draft)].map(row => ({ documentId: row.documentId, documentVersion: row.documentVersion, documentSha256: row.documentSha256 }));
     const assetCandidates = await collect((take, after) => tx.boilerAsset.findMany({ where: { ...own, ...pageWhere(after) }, take, orderBy }), budget);
     const assetIds = await this.readableAssets(tx, a, h, assetCandidates.map(row => row.id), budget), assets = assetCandidates.filter(row => assetIds.has(row.id));
     const activities = await collect((take, after) => tx.homeActivity.findMany({ where: { ...own, ...pageWhere(after) }, take, orderBy }), budget);
@@ -84,8 +90,10 @@ export class PersonalExportService {
       expenses: expenses.map(row => projection.snapshot('expense', row)),
       works: works.map(row => projection.snapshot('work', row)),
       links: links.flatMap(row => { const link = projection.link(row); return link ? [link] : []; }), history,
+      receiptFields: receiptFields.flatMap(row => { const field = projection.receiptField(row); return field ? [field] : []; }),
+      receiptComparisons: receiptComparisons.flatMap(row => { const comparison = projection.receiptComparison(row); return comparison ? [comparison] : []; }),
     };
-    const limitations = ['originals_not_included', 'sharing_and_ai_drafts_not_included', 'document_physical_availability_not_checked', ...(projection.refsExcluded || assets.length !== assetCandidates.length || objects.length !== objectCandidates.length ? ['some_references_excluded'] : []), ...(projection.historyLimited ? ['some_history_snapshots_unavailable'] : [])];
+    const limitations = ['originals_not_included', 'sharing_and_ai_drafts_not_included', 'document_physical_availability_not_checked', ...(projection.refsExcluded || assets.length !== assetCandidates.length || objects.length !== objectCandidates.length || receiptFields.length !== receiptFieldCandidates.length || receiptComparisons.length !== comparisonCandidates.length ? ['some_references_excluded'] : []), ...(projection.historyLimited ? ['some_history_snapshots_unavailable'] : [])];
     if (receiptNames.length) limitations.push('receipt_object_history_uses_current_name');
     return { envelope: { format: 'dimora-personal-home-export', formatVersion: 1, generatedAt: new Date().toISOString(), scope: { homeId: h, accountId: a }, account, home, data, limitations }, assetIds: [...assetIds], objectIds: [...objectIds], receiptProofs };
   }

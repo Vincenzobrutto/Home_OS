@@ -62,3 +62,7 @@ Link non ha updatedAt nello schema corrente: il formato1 esporta createdAt e ver
 
 ### Estensione ricevuta assistita — privacy dei nomi (R5a, 16 ottobre)
 Un oggetto il cui nome deriva da un documento richiede ancora fonte leggibile e versione/hash validi; in caso contrario oggetto, collegamenti e storia sono esclusi. I proof dello snapshot sono verificati nuovamente prima della consegna. Per i soli oggetti con nome ricevuta, gli snapshot storici usano il nome corrente autorizzato; limitations include receipt_object_history_uses_current_name. Il formato resta v1; nuovi campi e confronti ricevuta non ancora esportati in R5a.
+
+
+### Estensione ricevuta assistita — dati confermati e confronti (R5b)
+Due array additivi v1: data.receiptFields e data.receiptComparisons. Campi: id/objectId/fieldKey/value/origin/version/createdAt/updatedAt/sources. Confronti: id/objectId/fieldKey/targetVersion/state/version/createdAt/updatedAt/proposed{value,sources}. Fonti controllate su proof corrente; citazioni solo per documenti propri inclusi nel JSON. Confronti e campi da fonti revocate/stale esclusi, proof della risposta ricontrollati prima consegna. Bozze AI/ledger/fingerprint non esportati, limitazione sharing_and_ai_drafts_not_included resta. Budget cumulativo righe/byte anche per nuove letture, nessuna modifica a importi o categorie.
