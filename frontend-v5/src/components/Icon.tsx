@@ -6,6 +6,7 @@ const paths = {
   document: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
   expenses: 'M17 6.5A6.5 6.5 0 1 0 17 17.5M4 10.5h9M4 13.5h9',
   plus: 'M12 5v14M5 12h14',
+  export: 'M12 3v12M7 10l5 5 5-5M4 15v6h16v-6',
   logout: 'M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10',
   alert: 'M12 4 3 20h18zM12 10v4M12 17h.01',
   lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',

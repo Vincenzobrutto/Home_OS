@@ -1,3 +1,4 @@
+import { ExportIconButton } from '../components/ExportIconButton';
 import { useState, type ReactNode } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
 import { safeFilename } from '../api/client';
@@ -219,9 +220,7 @@ function Preview({ doc }: { doc: DocumentDetail }) {
   };
 
   const downloadButton = (
-    <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => void download()} disabled={downloading}>
-      {downloading ? 'Download in corso…' : 'Scarica originale'}
-    </button>
+    <ExportIconButton label={downloading ? 'Download in corso…' : 'Scarica originale'} onClick={() => void download()} busy={downloading} />
   );
 
   return (

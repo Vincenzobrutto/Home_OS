@@ -5,6 +5,8 @@ import { exportPersonalHome } from '../api/personalExportClient';
 import { useAccount, useApi, refreshSession } from '../session/session';
 import { saveBlob } from '../lib/files';
 import { Banner, cx, ui } from '../components/ui';
+import { Icon } from '../components/Icon';
+import { ExportIconButton } from '../components/ExportIconButton';
 import { useForgetHomeDocuments } from './hooks';
 import docs from '../routes/documents.module.css';
 
@@ -44,14 +46,14 @@ export function PersonalExportPanel({ homeId }: { homeId: string }) {
     : userMessage(error);
   return (
     <details className={cx(ui.card, docs.panel)}>
-      <summary>Esporta i miei dati di questa casa</summary>
+      <summary><Icon name="export" /> Esporta i miei dati di questa casa</summary>
       <p>Scarica un file JSON con i tuoi dati: oggetti, attività, spese, lavori, dati confermati, cronologia e riferimenti autorizzati. Include anche i tuoi elementi archiviati.</p>
       <p>Gli originali dei documenti si scaricano separatamente in ZIP dall’archivio. Questo export non include dati privati altrui, condivisioni o bozze AI e non cancella i dati da Dimora.</p>
       <p>Non è un backup ripristinabile e non trasferisce la casa. Il file non può essere reimportato; se perderai l’accesso alla casa, non potrai più esportarne i dati.</p>
-      <button type="button" className={ui.btn} disabled={mutation.isPending} onClick={() => {
+      <ExportIconButton label={mutation.isPending ? 'Preparazione dei dati…' : 'Scarica i miei dati (JSON)'} busy={mutation.isPending} onClick={() => {
         if (busy.current || !generation.current) return;
         busy.current = true; setSaved(false); mutation.mutate(generation.current);
-      }}>{mutation.isPending ? 'Preparazione dei dati…' : 'Scarica i miei dati (JSON)'}</button>
+      }} />
       {(saved || mutation.isError) && <div ref={result} tabIndex={-1} role={mutation.isError ? 'alert' : 'status'}>
         <Banner title={mutation.isError ? 'Esportazione non completata' : 'File pronto per il download'} tone={mutation.isError ? 'warning' : undefined}>
           <p>{mutation.isError ? problem : 'Il download è stato avviato. Conserva questo file in un luogo privato: contiene dati personali.'}</p>

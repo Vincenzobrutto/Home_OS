@@ -54,6 +54,9 @@ describe('[mock] Documenti — archivio', () => {
     const { backend, home } = documentsWorld();
     await openDocuments(backend, 'owner@example.test', PW.owner, home.id);
     expect(await screen.findByRole('heading', { name: 'Nessun documento in questa casa' })).toBeInTheDocument();
+    const exportButton = screen.getByRole('button', { name: 'Esporta ZIP' });
+    expect(exportButton).toBeDisabled();
+    expect(screen.getByRole('heading', { name: 'Documenti', level: 1 }).parentElement).toContainElement(exportButton);
     const nav = screen.getAllByRole('navigation', { name: 'Sezioni di Casa Roma' })[0]!;
     expect(within(nav).getByRole('link', { name: /Documenti/ })).toHaveAttribute('aria-current', 'page');
     expect(within(nav).getByRole('link', { name: /Documenti/ })).not.toHaveTextContent('non ancora disponibile');

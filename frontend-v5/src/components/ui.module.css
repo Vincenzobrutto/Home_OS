@@ -209,3 +209,9 @@
   color: var(--color-muted);
   word-break: break-all;
 }
+.exportIcon {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+}

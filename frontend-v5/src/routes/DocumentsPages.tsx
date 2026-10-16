@@ -1,10 +1,12 @@
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
+import { createPortal } from 'react-dom';
 import { safeFilename } from '../api/client';
 import { isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey } from '../api/queryKeys';
 import type { DocumentDetail, DocumentSearchFilters, DocumentSummary, DocumentVisibility, Home } from '../api/types';
 import { Icon } from '../components/Icon';
+import { ExportIconButton } from '../components/ExportIconButton';
 import { Banner, ErrorState, Field, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import {
   useDocumentSearch,
@@ -67,6 +69,7 @@ export function DocumentsPage() {
   const canExport = home.permissions.includes('export');
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploaded, setUploaded] = useState<DocumentDetail | null>(null);
+  const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
   const uploadResult = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (uploaded && document.activeElement === document.body) uploadResult.current?.focus();
@@ -85,7 +88,10 @@ export function DocumentsPage() {
       <div className={styles.heading}>
         <div>
           <span className={styles.eyebrow}>{home.name}</span>
-          <h1 tabIndex={-1}>Documenti</h1>
+          <div className={docs.titleActions}>
+            <h1 tabIndex={-1}>Documenti</h1>
+            <span ref={setExportSlot} />
+          </div>
           <p className={styles.lead}>
             Gli originali dei documenti della casa. Un originale caricato è conservato così com’è: non è verificato né
             certificato.
@@ -191,6 +197,7 @@ export function DocumentsPage() {
         maxQuery={maxQuery}
         onReset={() => apply(EMPTY_FILTERS)}
         canExport={canExport}
+        exportSlot={exportSlot}
         canUpload={canUpload && !uploadOpen}
         onUpload={() => setUploadOpen(true)}
       />
@@ -212,6 +219,7 @@ function DocumentsArchive(props: {
   maxQuery: number;
   onReset: () => void;
   canExport: boolean;
+  exportSlot: HTMLSpanElement | null;
   canUpload: boolean;
   onUpload: () => void;
 }) {
@@ -290,6 +298,7 @@ function DocumentsArchive(props: {
   if (items.length === 0 && filtered) {
     return (
       <div className={cx(ui.card, styles.unavailable)}>
+        {canExport && props.exportSlot && createPortal(<ExportIconButton label="Esporta ZIP" disabled hint="Nessun documento in questa raccolta da esportare" />, props.exportSlot)}
         <h2 className={styles.cardTitle}>Nessun documento corrisponde ai filtri</h2>
         <p className={styles.muted} role="status">
           Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Modifica la ricerca o azzera i filtri.
@@ -304,6 +313,7 @@ function DocumentsArchive(props: {
   if (items.length === 0) {
     return (
       <div className={cx(ui.card, styles.unavailable)}>
+        {canExport && props.exportSlot && createPortal(<ExportIconButton label="Esporta ZIP" disabled hint="Nessun documento da esportare" />, props.exportSlot)}
         <h2 className={styles.cardTitle}>Nessun documento in questa casa</h2>
         <p className={styles.muted}>
           {props.canUpload
@@ -344,6 +354,10 @@ function DocumentsArchive(props: {
 
   return (
     <section aria-labelledby="archivio-title">
+      {canExport && props.exportSlot && createPortal(
+        <ExportIconButton label={exporter.isPending ? 'Preparazione ZIP…' : 'Esporta ZIP'}
+          hint={exporter.isPending ? 'Preparazione ZIP…' : problem || 'Esporta i documenti selezionati in ZIP'}
+          onClick={runExport} disabled={!!problem} busy={exporter.isPending} />, props.exportSlot)}
       <h2 id="archivio-title" className="visually-hidden">
         Archivio
       </h2>
@@ -376,14 +390,6 @@ function DocumentsArchive(props: {
                 Deseleziona
               </button>
             )}
-            <button
-              type="button"
-              className={cx(ui.btn, ui.small, ui.dark)}
-              onClick={runExport}
-              disabled={!!problem || exporter.isPending}
-            >
-              {exporter.isPending ? 'Preparazione ZIP…' : 'Esporta ZIP'}
-            </button>
           </div>
         </div>
       )}
