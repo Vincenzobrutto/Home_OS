@@ -12,6 +12,7 @@ enum HomeRole {
   viewer
 }
 model Account {
+  receiptJobs ReceiptAnalysisJob[]
   receiptFields ReceiptObjectField[]
   receiptComparisons ReceiptComparison[]
   receiptDrafts ReceiptDraft[]
@@ -85,6 +86,7 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  receiptJobs ReceiptAnalysisJob[]
   receiptFields ReceiptObjectField[]
   receiptComparisons ReceiptComparison[]
   receiptDrafts ReceiptDraft[]
@@ -220,6 +222,7 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  receiptJobs ReceiptAnalysisJob[]
   receiptFields ReceiptObjectField[]
   receiptDrafts ReceiptDraft[]
   economicJobs EconomicAnalysisJob[]
@@ -746,6 +749,7 @@ model AiAttempt {
 }
 
 model ReceiptDraft {
+  analysisJob ReceiptAnalysisJob?
   confirmation Json?
   comparisons ReceiptComparison[]
   requests ReceiptRequest[]
@@ -826,4 +830,33 @@ model ReceiptComparison {
   object HomeObject @relation(fields:[objectId],references:[id],onDelete:Restrict)
   @@unique([accountId,homeId,objectId,fieldKey,fingerprint])
   @@index([accountId,homeId,state,createdAt,id])
+}
+
+model ReceiptAnalysisJob {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  documentId String
+  documentVersion Int
+  documentSha256 String
+  provider String
+  consentToProviderTransfer Boolean @default(false)
+  key String
+  digest String
+  state String @default("queued")
+  version Int @default(1)
+  draftId String? @unique
+  errorCode String?
+  leaseToken String?
+  leaseUntil DateTime?
+  firstStartedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  document Document @relation(fields:[documentId],references:[id],onDelete:Restrict)
+  draft ReceiptDraft? @relation(fields:[draftId],references:[id],onDelete:Restrict)
+  @@unique([accountId,homeId,key])
+  @@index([state,leaseUntil,createdAt,id])
+  @@index([accountId,homeId,documentId,createdAt,id])
 }

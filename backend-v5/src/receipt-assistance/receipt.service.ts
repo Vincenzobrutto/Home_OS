@@ -20,6 +20,13 @@ const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.Inp
 export class ReceiptAssistanceService {
   constructor(private readonly db: PrismaService, private readonly access: ReviewService, private readonly clock: ActivityClock) {}
 
+  authorized<T>(a: string, h: string, write: boolean, action: (tx: Tx, edit: boolean) => Promise<T>) {
+    return this.transaction(a, h, write, action);
+  }
+  authorizedSource(tx: Tx, a: string, h: string, id: string, snapshot?: Pick<ReceiptDraft, 'documentVersion' | 'documentSha256'>) {
+    return this.source(tx, a, h, id, snapshot);
+  }
+
   private async transaction<T>(a: string, h: string, write: boolean, action: (tx: Tx, edit: boolean) => Promise<T>) {
     uuid(h);
     return this.db.$transaction(async tx => {
