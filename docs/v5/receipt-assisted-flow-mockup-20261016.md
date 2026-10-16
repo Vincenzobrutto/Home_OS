@@ -58,3 +58,27 @@ Nessun codice del prodotto o contratto modificato. Nessun dato personale, DB, .e
 Confermati in navigazione i casi esistente (0 oggetti/0 spese), primo acquisto (1/1) e ambiguità con scelta Studio (0/1). Nel caso di estrazione fallita il documento deve restare consultabile: aggiunti pulsante «Vedi documento originale» nel messaggio di errore e nel modulo manuale, anteprima laterale e ingrandimento. Il documento della demo resta un facsimile sintetico; impossibilità di estrazione non significa impossibilità di consultazione.
 
 Verifica browser su scheda temporanea: apertura/chiusura dal messaggio di errore e dal modulo manuale; nome e importo compilati conservati dopo la chiusura. A 320px clientWidth e scrollWidth entrambi 305: nessun overflow orizzontale. Override ripristinato, prova del committente preservata. Evidenza: outputs/ricevuta-assistita-mockup-20261016/manuale-originale-desktop.jpg. Solo mockup, nessuna analisi o scrittura sulla casa reale.
+
+
+## Verifiche 2–4 e scenario conflitti (16 ottobre, successivo affinamento)
+
+Eseguiti nel browser integrato, in scheda sintetica separata dalla prova del committente:
+
+| Verifica | Risultato osservato |
+| --- | --- |
+| Solo oggetto | Riepilogo/esito 1/0; elenco Spese vuoto. |
+| Solo spesa | Riepilogo/esito 0/1; costo con ricevuta e senza oggetto. |
+| Entrambe escluse | Riepilogo/esito 0/0; documento conservato, nessun costo. |
+| Modifiche e ritorno | Nome e importo modificati conservati tornando alle proposte; marca/modello/venditore svuotati restano vuoti. |
+| Dati necessari | Nome oggetto assente, descrizione spesa assente, importo zero/negativo, data assente/futura bloccano il riepilogo. |
+| Dati facoltativi | Marca/modello/venditore vuoti non vengono inventati e non impediscono il riepilogo. |
+
+Corretti anche i testi dell'esito che prima rimandavano indistintamente a oggetto e costo: ora rispettano le operazioni scelte. Il pulsante di apertura oggetto non compare se non è stato selezionato un oggetto. Guardia di validazione anche sulla conferma locale.
+
+### Conflitto: proposta UX da valutare con il committente
+
+Nuovo scenario «Valori diversi da quelli confermati»: scheda già collegata con marca Aurora/modello Classica 30, ricevuta con Lume/Mini 90; spesa già collegata riusata. Confronto per campo con fonte consultabile, nessuna opzione preselezionata. Possibili scelte: mantenere il dato confermato o decidere più avanti. La scelta «Non modificare la scheda» resta disponibile. Nessuna sostituzione dei valori esistenti attraverso questa analisi, in coerenza con coding-guidelines: eventuale correzione esplicita dalla scheda è distinta e non simulata qui. Questo affinamento non introduce un nuovo contratto di scrittura/sovrascrittura.
+
+Verificato: senza scelte, o con sola marca risolta, riepilogo bloccato; marca mantenuta e modello rinviato producono 0/0, valori Aurora/Classica 30 conservati, provenienza «Già confermato da te» e modello segnalato da rivedere sulla scheda demo. Fonte della marca aperta/chiusa correttamente. Il rinvio è solo stato in memoria della demo: riapertura/risoluzione persistente da specificare prima dello sviluppo. Non è una coda backend implementata.
+
+Confronto a320px: clientWidth/scrollWidth305, nessun overflow orizzontale. Screenshot desktop completo e mobile in outputs/ricevuta-assistita-mockup-20261016/conflitto-desktop.jpg e conflitto-320.jpg. Viewport ripristinato, nuova scheda lasciata sulle proposte con confronti ancora senza scelta per la valutazione insieme. Nessun dato reale modificato né inviato; nessuna chiamata API/AI, build o suite generale non necessaria. Sintassi script e diff check verificati. Rimane da validare insieme questa UX e poi congelare contratto/criteri prima dello sviluppo del prodotto.
