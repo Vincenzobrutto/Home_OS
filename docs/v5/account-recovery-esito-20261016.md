@@ -30,6 +30,8 @@ Nuova copia backups/dimora-v5-20261016T083531Z: database V5 e262originali, snaps
 
 Questo backup aggiorna lo snapshot precedente alla migrazione e include i nuovi metadati/account; non copia recovery-mail.local.json o .env. Conservazione ancora sullo stesso PC: resta da scegliere la seconda destinazione. Nessuna dichiarazione di protezione da perdita fisica del PC.
 
+Preflight aggiornato sul nuovo backup: hash262copie e dump corretti, API200 e recoveryEnabledtrue. Il tool non considera più recovery un gate aperto se il canale è attivo; il collaudo live resta attestato separatamente qui. Descritto come non distruttivo, non come lettura pura: GET /session può creare un record anonimo. Output outputs/Dimora-V5-Fase0-preflight-post-recovery-20261016.json, nessuna modifica ai dati delle Home o invio email dal controllo.
+
 ## Limiti e prossimi passi
 
 Recupero e verifica conclusi per il pilota locale. Nessuna nuova chiamata Anthropic o modifica a suoi flag/budget, main, legacy o push. API V5 registrata riavviata da Codex, PostgreSQL e frontend preservati. Configurazione email ricaricata a ogni richiesta, nessun riavvio necessario per chiave/mittente/enabled.
