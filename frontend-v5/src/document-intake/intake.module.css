@@ -86,3 +86,12 @@
   .partRow { grid-template-columns: 1fr; }
   .partPages input { width: 100%; }
 }
+.partPageOptions {
+  grid-column: 1 / -1;
+}
+.partPageOptions summary {
+  cursor: pointer;
+  color: var(--color-accent);
+  padding: 8px 0;
+  font-size: 13px;
+}

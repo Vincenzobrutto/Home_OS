@@ -37,6 +37,17 @@ test('B3 local persisted jobs use real PDF text, source locks, recovery and zero
     const technical = await fixture('technical-test-only.pdf'); await start(technical); await worker.workOne(); const needsChoice = await get(technical); assert.equal(needsChoice.items[0].analysisState, 'needs_choice'); assert.equal(needsChoice.items[0].selection, null);
     const doc = await db.document.findUnique({ where: { id: ready.items[0].documentLink.document.id } }); assert.equal(doc.name, 'pratica-mista-sintetica.pdf'); assert.equal(doc.visibility, 'private');
   });
+  await t.test('An accessible identical copy can get a proposal without replacing its original or organization', async () => {
+    corpus['visura-test-only.pdf'] = require('./intake-fixtures.cjs').pdf(["VISURA AGIBILITA'", 'NON COSTITUISCE CERTIFICAZIONE', 'Dati sintetici']);
+    const batch = await fixture('visura-test-only.pdf'), itemId = batch.items[0].id, docId = batch.items[0].documentLink.document.id;
+    await db.documentIntakeItem.update({ where: { id: itemId }, data: { uploadState: 'duplicate' } });
+    const copy = await get(batch); await start(copy); await worker.workOne();
+    const result = (await get(batch)).items[0];
+    assert.equal(result.uploadState, 'duplicate'); assert.equal(result.analysisState, 'ready');
+    assert.match(result.proposal.title, /^VISURA AGIBILITA['’]$/u); assert.equal(result.proposal.parts[0].kind, 'agibility_record');
+    assert.equal(result.documentLink.document.id, docId); assert.equal(result.selection, null);
+    assert.equal(await db.documentOrganization.count({ where: { documentId: docId } }), 0);
+  });
   await t.test('Unreadable or non-PDF originals stay manual, independently of a previous successful file', async () => {
     corpus['other-test-only.pdf'] = require('./intake-fixtures.cjs').pdf(['DIMORA SYNTHETIC ONLY', 'Appunti vari della casa, nessun tipo riconoscibile.']);
     const unknown = await fixture('other-test-only.pdf'); await start(unknown); await worker.workOne(); assert.equal((await get(unknown)).items[0].analysisState, 'ready'); assert.equal((await get(unknown)).items[0].proposal, null); assert.equal((await get(unknown)).items[0].pageCount, 1);

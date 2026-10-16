@@ -90,6 +90,8 @@ function ManualParts(props: { parts: ClassificationPart[]; pageCount: number | n
               ))}
             </select>
           </div>
+          <details className={styles.partPageOptions} open={p.pageFrom !== null || p.pageTo !== null || undefined}>
+            <summary>Pagine (facoltative)</summary>
           <div className={styles.partPages}>
             <label className={styles.hint}>Da pagina
               <input className={styles.select} type="number" min={1} max={props.pageCount ?? undefined} inputMode="numeric" value={p.pageFrom ?? ''} disabled={props.disabled}
@@ -100,6 +102,7 @@ function ManualParts(props: { parts: ClassificationPart[]; pageCount: number | n
                 aria-label={`Contenuto ${i + 1}: a pagina`} onChange={(e) => set(i, { pageTo: pageValue(e.target.value) })} />
             </label>
           </div>
+          </details>
           <button type="button" className={styles.linkButton} disabled={props.disabled} onClick={() => remove(i)}>
             Rimuovi il contenuto {i + 1}
           </button>
@@ -198,7 +201,7 @@ export function ReviewDialog(props: Props) {
                   <h3>{manual ? 'Organizza manualmente' : 'La proposta da controllare'}</h3>
                   {item.selectionStale && <p className={styles.formError}>Il documento o la scheda sono cambiati dopo la tua scelta: rivedila prima di salvarla di nuovo.</p>}
                   <Field label="Nome da mostrare" name="title" value={draft.title} maxLength={TITLE_MAX * 2} disabled={locked} error={errors.title}
-                    hint={`Massimo ${TITLE_MAX} caratteri. Vale solo per te: non rinomina il file per altri.`} onChange={(e) => set({ title: e.target.value })} />
+                    hint={`${item.proposal && !org ? 'Titolo proposto dal testo: puoi correggerlo. ' : ''}Massimo ${TITLE_MAX} caratteri. Vale solo per te: non rinomina il file per altri.`} onChange={(e) => set({ title: e.target.value })} />
 
                   {!manual && item.proposal && (
                     <fieldset className={styles.fieldset}>

@@ -9,6 +9,7 @@ const rules: Array<[DocumentKind, RegExp, string]> = [
   ['building_permit', /licenza\s+edilizia|permesso\s+di\s+costruire|concessione\s+edilizia/iu, 'Titolo edilizio'],
   ['habitability', /certificato\s+(?:di\s+)?abitabilit[àa]/iu, 'Abitabilità'],
   ['agibility', /(?:certificato|segnalazione\s+certificata)\s+(?:di\s+)?agibilit[àa]/iu, 'Agibilità'],
+  ['agibility_record', /visura\s+(?:di\s+)?agibilit[àa]['’]?/iu, 'Visura agibilità'],
   ['system_diagram', /schema\s+(?:(?:dell[’']?|di)\s*)?(?:impianto|elettrico|idraulico|termico)/iu, 'Schema di impianto'],
   ['conformity_declaration', /dichiarazione\s+(?:di\s+)?conformit[àa]/iu, 'Dichiarazione di conformità'],
   ['system_booklet', /libretto\s+(?:di\s+)?impianto/iu, 'Libretto di impianto'],
@@ -24,10 +25,17 @@ const rules: Array<[DocumentKind, RegExp, string]> = [
 export function classifyText(pages: string[]) {
   const matches = rules.flatMap(([kind, pattern, label]) => {
     for (let i = 0; i < pages.length; i++) {
+      // Una visura che cita il certificato non diventa essa stessa un certificato.
+      if (['agibility', 'habitability'].includes(kind) && /visura\s+(?:di\s+)?agibilit[àa]|non\s+costituisce\s+certificazion/iu.test(pages[i])) continue;
       const match = pattern.exec(pages[i]);
       if (match) {
         const start = Math.max(0, match.index - 40), end = Math.min(pages[i].length, match.index + match[0].length + 100);
-        return [{ kind, pageFrom: i + 1, pageTo: i + 1, label, excerpt: pages[i].slice(start, end) }];
+        const line = pages[i].slice(0, match.index).split('\n').at(-1)! + pages[i].slice(match.index).split('\n')[0];
+        const heading = line.trim().replace(/\s+/gu, ' ');
+        // Solo una riga breve che comincia con il segnale riconosciuto, non prosa
+        // circostante, nomi di file o intestazioni istituzionali non correlate.
+        const literalTitle = heading.search(pattern) === 0 && [...heading].length <= 120 ? heading : null;
+        return [{ kind, pageFrom: i + 1, pageTo: i + 1, label, literalTitle, excerpt: pages[i].slice(start, end) }];
       }
     }
     return [];
@@ -35,7 +43,7 @@ export function classifyText(pages: string[]) {
   // Too many meanings, or no explicit signal: ask the user, never guess from filename.
   if (!matches.length || matches.length > 12) return null;
   const parts = classificationParts(matches.map(({ kind, pageFrom, pageTo }) => ({ kind, pageFrom, pageTo })), pages.length, 'extraction');
-  const title = matches.slice(0, 3).map(m => m.label).join(' + ');
+  const title = matches.length === 1 ? matches[0].literalTitle ?? matches[0].label : matches.slice(0, 3).map(m => m.label).join(' + ');
   return { title, parts, collections: collectionsFor(parts), sources: matches.map(m => ({ page: m.pageFrom, excerpt: m.excerpt })), method: LOCAL_CLASSIFIER.provider, note: 'Possibili tipi riconosciuti nel testo. Controlla l’originale: non è una verifica di validità o regolarità.' };
 }
 export const localKinds = Object.keys(DOCUMENT_KINDS);

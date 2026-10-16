@@ -12,7 +12,7 @@
 export type Collection = 'energy' | 'building' | 'technical' | 'condominium' | 'purchases' | 'utilities' | 'unclassified';
 export type DocumentKind =
   | 'ape' | 'energy_certificate'
-  | 'cila' | 'scia' | 'building_permit' | 'habitability' | 'agibility'
+  | 'cila' | 'scia' | 'building_permit' | 'habitability' | 'agibility' | 'agibility_record'
   | 'system_diagram' | 'conformity_declaration' | 'system_booklet'
   | 'condominium_rules' | 'condominium_minutes' | 'millesimal_tables'
   | 'receipt' | 'invoice' | 'warranty' | 'manual'
@@ -32,7 +32,7 @@ export const collectionLabel = (c: Collection) => COLLECTIONS.find(x => x.id ===
 
 const KIND_COLLECTION: Record<DocumentKind, Collection> = {
   ape: 'energy', energy_certificate: 'energy',
-  cila: 'building', scia: 'building', building_permit: 'building', habitability: 'building', agibility: 'building',
+  cila: 'building', scia: 'building', building_permit: 'building', habitability: 'building', agibility: 'building', agibility_record: 'building',
   system_diagram: 'technical', conformity_declaration: 'technical', system_booklet: 'technical',
   condominium_rules: 'condominium', condominium_minutes: 'condominium', millesimal_tables: 'condominium',
   receipt: 'purchases', invoice: 'purchases', warranty: 'purchases', manual: 'purchases',
@@ -41,7 +41,7 @@ const KIND_COLLECTION: Record<DocumentKind, Collection> = {
 };
 export const KIND_LABEL: Record<DocumentKind, string> = {
   ape: 'APE', energy_certificate: 'Certificato energetico',
-  cila: 'CILA', scia: 'SCIA', building_permit: 'Titolo edilizio', habitability: 'Abitabilità', agibility: 'Agibilità',
+  cila: 'CILA', scia: 'SCIA', building_permit: 'Titolo edilizio', habitability: 'Abitabilità', agibility: 'Agibilità', agibility_record: 'Visura agibilità (non certificato)',
   system_diagram: 'Schema di impianto', conformity_declaration: 'Dichiarazione di conformità', system_booklet: 'Libretto di impianto',
   condominium_rules: 'Regolamento condominiale', condominium_minutes: 'Verbale di assemblea', millesimal_tables: 'Tabelle millesimali',
   receipt: 'Ricevuta', invoice: 'Fattura', warranty: 'Garanzia', manual: 'Manuale d’uso',
@@ -280,12 +280,13 @@ export function initialReviewDraft(raw: IntakeItem): ReviewDraft {
   }
   if (item.uploadState === 'duplicate') {
     const org = item.confirmedOrganization;
-    return { title: org?.title ?? '', partIndexes: [], manualParts: org ? org.parts.map(p => ({ ...p })) : [], target: null, replaceConsent: null, duplicateMode: null };
+    return { title: org?.title ?? item.proposal?.title ?? '', partIndexes: org ? [] : proposalParts.map((_, index) => index), manualParts: org ? org.parts.map(p => ({ ...p })) : item.proposal ? null : [], target: null, replaceConsent: null, duplicateMode: null };
   }
   return {
     title: item.proposal?.title ?? '',
-    // Una sola parte è preselezionata; più contenuti nello stesso PDF vanno scelti dopo aver visto l'originale.
-    partIndexes: proposalParts.length === 1 ? [0] : [],
+    // Proposte già selezionate per ridurre la compilazione; l'utente può correggerle
+    // e deve comunque salvare e confermare. Le scelte esistenti sopra prevalgono.
+    partIndexes: proposalParts.map((_, index) => index),
     manualParts: item.proposal ? null : [],
     // Caso ambiguo: nessuna associazione preselezionata.
     target: item.analysisState === 'needs_choice' ? null : item.proposal ? { kind: 'home' } : null,

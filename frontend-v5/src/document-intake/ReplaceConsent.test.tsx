@@ -92,6 +92,15 @@ describe('B4-1 · consenso alla sostituzione di dati confermati', () => {
 });
 
 describe('B4-1 · confronto delle parti per tipo e intervallo', () => {
+  it('una copia riusa la proposta, ma conserva titolo e contenuti già confermati', () => {
+    const item: IntakeItem = { ...corpus.ape(), uploadState: 'duplicate', confirmedOrganization: null };
+    const draft = initialReviewDraft(item);
+    expect(draft.title).toBe(item.proposal!.title);
+    expect(draft.partIndexes).toEqual([0]);
+    expect(draft.duplicateMode).toBeNull();
+    const existing: IntakeItem = { ...item, confirmedOrganization: { title: 'Nome già scelto da me', parts: [{ kind: 'other', pageFrom: null, pageTo: null }] } };
+    expect(initialReviewDraft(existing)).toMatchObject({ title: 'Nome già scelto da me', manualParts: existing.confirmedOrganization!.parts, replaceConsent: null, duplicateMode: null });
+  });
   it('ordine diverso delle stesse parti: nessuna sostituzione richiesta', () => {
     expect(sameParts([{ kind: 'cila', pageFrom: 1, pageTo: 10 }, { kind: 'agibility', pageFrom: 11, pageTo: 14 }], [{ kind: 'agibility', pageFrom: 11, pageTo: 14 }, { kind: 'cila', pageFrom: 1, pageTo: 10 }])).toBe(true);
     expect(sameParts([{ kind: 'cila', pageFrom: 1, pageTo: 10 }], [{ kind: 'cila', pageFrom: 1, pageTo: 9 }])).toBe(false);

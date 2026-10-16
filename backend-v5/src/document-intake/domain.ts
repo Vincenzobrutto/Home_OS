@@ -5,7 +5,7 @@ export const INTAKE_LIMITS = { maxFiles: 20, maxTotalBytes: 200 * 1024 * 1024, m
 export const DOCUMENT_COLLECTIONS = { energy: 'Energia', building: 'Pratiche edilizie', technical: 'Impianti e documenti tecnici', condominium: 'Condominio', purchases: 'Acquisti e garanzie', utilities: 'Bollette', unclassified: 'Da organizzare' } as const;
 export type DocumentCollection = keyof typeof DOCUMENT_COLLECTIONS;
 export const DOCUMENT_KINDS = {
-  ape: 'energy', energy_certificate: 'energy', cila: 'building', scia: 'building', building_permit: 'building', habitability: 'building', agibility: 'building',
+  ape: 'energy', energy_certificate: 'energy', cila: 'building', scia: 'building', building_permit: 'building', habitability: 'building', agibility: 'building', agibility_record: 'building',
   system_diagram: 'technical', conformity_declaration: 'technical', system_booklet: 'technical',
   condominium_rules: 'condominium', condominium_minutes: 'condominium', millesimal_tables: 'condominium',
   receipt: 'purchases', invoice: 'purchases', warranty: 'purchases', manual: 'purchases', utility_bill: 'utilities', other: 'unclassified',

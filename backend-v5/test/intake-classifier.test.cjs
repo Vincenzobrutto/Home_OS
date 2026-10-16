@@ -17,3 +17,15 @@ test('Synthetic ordinary PDFs traverse the actual bounded PDF parser; scanned or
     const [text] = await parser.extract(input); const result = classifyText(text.pages); assert(result, name); for (const s of result.sources) assert(text.pages[s.page - 1].includes(s.excerpt));
   }
 });
+
+test('A title is taken from a short recognized heading; an agibility record is not a certificate', () => {
+  const page = "ROMA\nDirezione Edilizia\nVISURA AGIBILITA'\nNON COSTITUISCE CERTIFICAZIONE\nIl certificato di agibilita e il certificato di abitabilita sono indicati nel registro.";
+  const result = classifyText([page]);
+  assert.equal(result.title, "VISURA AGIBILITA'");
+  assert.deepEqual(result.parts.map(p => p.kind), ['agibility_record']);
+  assert.deepEqual(result.collections, ['building']);
+  assert(page.includes(result.sources[0].excerpt));
+  const heading = classifyText(['CERTIFICATO DI ABITABILITA\nDati sintetici']);
+  assert.equal(heading.title, 'CERTIFICATO DI ABITABILITA');
+  assert.equal(classifyText(['La relazione fa riferimento al certificato di abitabilita citato in precedenza.']).title, 'Abitabilità');
+});

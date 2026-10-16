@@ -40,17 +40,14 @@ describe('casi del mockup approvato', () => {
     expect(screen.getByText('Scelta pronta')).toBeInTheDocument();
   });
 
-  it('CILA e agibilità: un originale, contenuti non preselezionati, pagine fedeli alla scelta', async () => {
+  it('CILA e agibilità: contenuti proposti preselezionati, correggibili prima della conferma', async () => {
     const user = userEvent.setup();
     const { props } = withSaving(batchOf([corpus.building()]));
     await toProposals(user);
     await user.click(reviewButton('Pratica_CILA_e_agibilita.pdf'));
     const boxes = within(dialog()).getAllByRole('checkbox');
-    expect(boxes.map(b => (b as HTMLInputElement).checked)).toEqual([false, false]);
-    await saveIn(user);
-    expect(within(dialog()).getByRole('alert')).toHaveTextContent(/almeno un contenuto/);
-    expect(props.onSaveReview).not.toHaveBeenCalled();
-    await user.click(within(dialog()).getByRole('checkbox', { name: /Agibilità · pagine 11–14/ }));
+    expect(boxes.map(b => (b as HTMLInputElement).checked)).toEqual([true, true]);
+    await user.click(within(dialog()).getByRole('checkbox', { name: /CILA · pagine 1–10/ }));
     await saveIn(user);
     expect(reviewCalls(props.onSaveReview)[0]!.selection).toMatchObject({ parts: [{ kind: 'agibility', pageFrom: 11, pageTo: 14 }] });
   });

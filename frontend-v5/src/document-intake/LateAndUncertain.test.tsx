@@ -81,6 +81,7 @@ describe('B4-3 · editor dei contenuti solo da tastiera', () => {
     add.focus(); await user.keyboard('{Enter}');
     expect(within(dlg()).getByRole('combobox', { name: 'Tipo del contenuto 1' })).toHaveFocus();
     await user.selectOptions(within(dlg()).getByRole('combobox', { name: 'Tipo del contenuto 1' }), 'warranty');
+    await user.tab(); await user.keyboard('{Enter}'); // apre le pagine facoltative
     await user.tab(); await user.keyboard('1'); await user.tab(); await user.keyboard('12');
     within(dlg()).getByRole('button', { name: 'Aggiungi un contenuto' }).focus(); await user.keyboard('{Enter}');
     expect(within(dlg()).getByRole('combobox', { name: 'Tipo del contenuto 2' })).toHaveFocus();

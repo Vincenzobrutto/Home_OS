@@ -331,7 +331,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
 
   // ------------------------------------------------------------------ Lotto
   if (step === 'lotto') {
-    const analyzable = items.filter(i => i.uploadState === 'stored' && i.analysisState === 'not_started').map(i => i.id);
+    const analyzable = items.filter(i => ['stored', 'duplicate'].includes(i.uploadState) && (i.analysisState === 'not_started' || i.analysisState === 'ready' && !i.proposal) && i.reviewState === 'unreviewed' && i.permissions.review && !sourceLost(i)).map(i => i.id);
     return (
       <div className={styles.stack}>
         <p className={styles.crumb}>Documenti / Carica documenti</p>
