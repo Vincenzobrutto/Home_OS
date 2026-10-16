@@ -435,8 +435,9 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
     await analyze(app, home.id, ['Libretto A']);
     await app.router.navigate(`/home/${home.id}/casa`);
-    const impianti = await screen.findByRole('region', { name: 'Impianti e verifiche' });
-    await waitFor(() => expect(impianti).toHaveTextContent('3 verifiche da rivedere'));
+    await screen.findByRole('heading', { level: 1, name: home.name });
+    const verifiche = await screen.findByRole('region', { name: 'Da rivedere' });
+    await waitFor(() => expect(verifiche).toHaveTextContent('3 verifiche da rivedere'));
     await app.router.navigate(`/home/${home.id}/review`);
     const batch = await screen.findByRole('group', { name: 'Conferma insieme marca e modello' });
     await app.user.click(within(batch).getByRole('checkbox', { name: /Marca/ }));
@@ -454,7 +455,7 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
     await app.router.navigate(`/home/${home.id}/casa`);
     const after = await screen.findByRole('region', { name: 'Impianti e verifiche' });
     await waitFor(() => {
-      expect(after).toHaveTextContent('0 verifiche da rivedere');
+      expect(screen.getByRole('region', { name: 'Da rivedere' })).toHaveTextContent('Nessuna verifica aperta.');
       expect(after).toHaveTextContent('Dati confermati');
     });
   });

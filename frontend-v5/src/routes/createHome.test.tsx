@@ -120,6 +120,8 @@ describe('[mock] pagina senza case: ingresso per chi ha ricevuto un codice (HOME
     await app.user.type(screen.getByLabelText('Email'), 'z@example.test');
     await app.user.type(screen.getByLabelText('Password'), PASSWORD);
     await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
+    // Aspetta l'esito dell'ingresso prima di avviare una seconda navigazione.
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
     await app.router.navigate('/case');
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(screen.queryByText('Hai ricevuto un codice?')).toBeNull();
