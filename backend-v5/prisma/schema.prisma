@@ -12,6 +12,7 @@ enum HomeRole {
   viewer
 }
 model Account {
+  documentIntakeBatches DocumentIntakeBatch[]
   receiptJobs ReceiptAnalysisJob[]
   receiptFields ReceiptObjectField[]
   receiptComparisons ReceiptComparison[]
@@ -86,6 +87,7 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  documentIntakeBatches DocumentIntakeBatch[]
   receiptJobs ReceiptAnalysisJob[]
   receiptFields ReceiptObjectField[]
   receiptComparisons ReceiptComparison[]
@@ -222,6 +224,7 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  intakeItems DocumentIntakeItem[]
   receiptJobs ReceiptAnalysisJob[]
   receiptFields ReceiptObjectField[]
   receiptDrafts ReceiptDraft[]
@@ -891,4 +894,45 @@ model ReceiptAiAttempt {
   job ReceiptAnalysisJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
   campaign ReceiptAiCampaign @relation(fields:[campaignId],references:[id],onDelete:Restrict)
   @@index([campaignId,state])
+}
+
+model DocumentIntakeBatch {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  key String
+  digest String
+  version Int @default(1)
+  state String @default("open")
+  totalBytes Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  items DocumentIntakeItem[]
+  @@unique([accountId, homeId, key])
+  @@index([accountId, homeId, createdAt, id])
+}
+model DocumentIntakeItem {
+  id String @id @default(uuid())
+  batchId String
+  clientItemId String
+  ordinal Int
+  version Int @default(1)
+  filename String
+  byteSize Int
+  mimeType String
+  uploadState String @default("pending")
+  analysisState String @default("not_started")
+  reviewState String @default("unreviewed")
+  documentId String?
+  documentVersion Int?
+  documentSha256 String?
+  pageCount Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  batch DocumentIntakeBatch @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  document Document? @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  @@unique([batchId, clientItemId])
+  @@unique([batchId, ordinal])
 }
