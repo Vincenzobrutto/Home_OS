@@ -1,6 +1,6 @@
 # personal-export-v1 — contratto per implementazione Fase 0
 
-16 ottobre 2026. Specifica tecnica: endpoint NON implementato/attivo. Completa fase0-export-design-20261016.md senza modificare documents-v1 o introdurre cancellazione/trasferimento. Codex possiede implementazione e test; Claude valuta UX e corpus in parallelo, senza sorgenti runtime.
+16 ottobre 2026. Implementato e attivo nel servizio locale: esito e limiti in personal-export-esito-20261016.md. Completa fase0-export-design-20261016.md senza modificare documents-v1 o introdurre cancellazione/trasferimento. Codex possiede implementazione e test; Claude valuta UX e corpus in parallelo, senza sorgenti runtime.
 
 ## Azione e confini
 
@@ -55,3 +55,6 @@ Errori: identity-v1.1 per401/403/422; 413 personal_export_too_large per budget r
 7. HTTP su sole fixture sintetiche: allegato JSON/versione/header corretti, nessuna scrittura dei dati esportati; ZIP M2 e controlli upload invariati. Nessuna chiamata provider o email.
 
 Prima della prova personale restano distinti: custodia chiave backup fuori PC, politica cloud Defender, limiti di conservazione e accuratezza AI. Nessuna attivazione implicita di provider per completare l'export.
+
+## Precisazioni implementative
+Link non ha updatedAt nello schema corrente: il formato1 esporta createdAt e version, senza inventare una data. Provenienza economica inclusa con origin e sole citazioni ammesse (sha256 normalizzato in documentSha256), nessun draftId. Budget conservativo10MiB anche sui record interni letti, query a blocchi100. Membership/export corrente riutilizzata senza nuova capability commerciale. UI in Documenti, con formato1 validato e nuova lettura sessione/Home prima del salvataggio; risposta tardiva dopo smontaggio scartata. Vedi personal-export-esito-20261016.md per prove reali/harness e limiti.

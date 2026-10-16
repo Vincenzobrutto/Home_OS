@@ -1,6 +1,6 @@
 # Esportazione personale prima del pilota Home
 
-Proposta tecnica Fase 0, non endpoint implementato. Il download ZIP M2 rimane invariato: selezione di originali leggibili, manifesto SHA, massimo 50 documenti e 100 MiB. Quel download non esporta spese, attività o collegamenti.
+Documento di progettazione Fase 0; implementazione corrente e limiti in personal-export-api-contract.md e personal-export-esito-20261016.md. Il download ZIP M2 rimane invariato: selezione di originali leggibili, manifesto SHA, massimo 50 documenti e 100 MiB. Quel download non esporta spese, attività o collegamenti.
 
 ## Pacchetto personale proposto
 
@@ -35,3 +35,6 @@ Due persone nella stessa casa non si esportano dati privati a vicenda; altro acc
 
 ## Contratto per implementazione
 Il dettaglio tecnico è ora in personal-export-api-contract.md: formato1 personale per Home, JSON separato da originali ZIP, mapper allowlist, fonti e storia filtrate, budget righe/byte, lettura fresca autorizzazioni dopo snapshot. L'endpoint resta non attivo. Nessuna API o politica di cancellazione introdotta da questo documento.
+
+## Stato implementato
+personal-export-v1 attivo in locale con pannello Documenti. Le parti storiche indicate come proposta sono superate dal contratto e dall'esito sopra. Non implementate cancellazione, retention o reimport; ZIP originali invariato. Nessun endpoint capability aggiuntivo: permesso Home export e verifica esplicita del formato/contesto del pacchetto.

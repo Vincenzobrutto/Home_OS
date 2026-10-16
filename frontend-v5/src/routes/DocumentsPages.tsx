@@ -14,6 +14,7 @@ import {
   useUploadDocument,
 } from '../documents/hooks';
 import { SearchForm } from '../documents/SearchForm';
+import { PersonalExportPanel } from '../documents/PersonalExportPanel';
 import { useAccount, useSession } from '../session/session';
 import {
   EMPTY_FILTERS,
@@ -190,6 +191,7 @@ export function DocumentsPage() {
         canUpload={canUpload && !uploadOpen}
         onUpload={() => setUploadOpen(true)}
       />
+      {canExport && <PersonalExportPanel key={`${home.id}-personal-export`} homeId={home.id} />}
       {canUpload && (
         <div className={styles.spaced}>
           <ExamplePdfs homeId={home.id} />
