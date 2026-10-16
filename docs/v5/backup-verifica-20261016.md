@@ -47,3 +47,6 @@ Provato il ripristino SQL e la coerenza di tutti gli originali, non un avvio com
 Dal workspace, `node outputs/Dimora-V5-backup-verify.mjs` crea una nuova destinazione senza sovrascrivere le precedenti e ripete il controllo isolato. Rifiuta DB diverso dal dedicato e porta temporanea occupata. Prima di carichi reali voluminosi andranno ricalibrati spazio, timeout e durata dei blocchi; l'esito attuale riguarda il dataset locale esistente. Nessun servizio pianificato o automazione aggiunti.
 
 Backup/ripristino della Fase0 verificati. Gli altri prerequisiti del nuovo piano di release non sono per questo automaticamente conclusi.
+
+## Snapshot 085607Z e seconda copia cifrata
+43 tabelle,267 originali, restore isolato verificato e spento. Copia cifrata AES256 su Drive privata, ricevuta e limiti in fase0-file-control-esito-20261016.md. Ancora necessaria custodia chiave separata dal PC. Nessun restore sul DB attivo.

@@ -4,13 +4,13 @@ Avvio approvato dal committente il 16 ottobre 2026. Questa matrice distingue cap
 
 | Area | Stato e base | Criterio per chiudere |
 |---|---|---|
-| Backup DB e originali | Verificato: backup-verifica-20261016.md, 41 tabelle e 255 originali, restore isolato spento | Copia valida conservata; prima di nuovi dati personali concordare seconda destinazione distinta dal PC. Il backup locale non protegge dalla perdita del PC |
+| Backup DB e originali | Verificato: backup-verifica-20261016.md, 43 tabelle e 262 originali (snapshot 083531Z, anteriore al controllo file), restore isolato spento | Copia valida conservata; prima di nuovi dati personali concordare seconda destinazione distinta dal PC. Il backup locale non protegge dalla perdita del PC |
 | Recupero account | Concluso localmente: account-recovery-esito-20261016.md; canale attivo, verifica email e reset con login nuovo confermati dall'utente e metadati DB | Gate del recupero chiuso per pilota locale; nessun reset amministrativo o account basato su email dichiarata |
 | Upload e integrità | Codice: PDF/JPEG/PNG rilevati dai byte, 20 MiB/file, idempotenza; hash e dimensione al download/ZIP; errore storage senza falso successo | Prove mirate e procedura spazio disponibile; limiti cumulativi non presenti, non pubblicizzare quota utente |
 | Privacy documenti | Default private; owner non legge automaticamente il privato altrui; guard e revoca; no-store/nosniff e allegato, listener API loopback | Prove di isolamento/sessione già documentate, nuovi controlli mirati; nessuna attestazione di sicurezza generale |
 | Export e conservazione | ZIP selettivo originali e manifesto, fino a 100 MiB; non include tutti i dati strutturati | Definire export completo e confini account/Home/condivisioni. Nessuna cancellazione automatica, nessun termine legale inventato |
 | Qualità AI | Due esempi live economici insufficienti; corpus24 casi materializzato e controllato dal parser, scorer offline disponibile | Revisione indipendente annotazioni e campagna rappresentativa, metriche ed errori; ulteriori chiamate live solo con file e budget autorizzati |
-| File potenzialmente dannosi | documents-api-contract.md richiede hardening antimalware prima del pilota; rilevare il formato non è una scansione | Definire controllo locale/quarantena ed esiti prima dei file personali. Nessuno scanner installato o impostazione Windows modificata |
+| File potenzialmente dannosi | documents-api-contract.md richiede hardening antimalware prima del pilota; rilevare il formato non è una scansione | Definire controllo locale/quarantena ed esiti prima dei file personali. Controllo nuovi upload attivo: fase0-file-control-esito-20261016.md; Defender esistente, nessuna impostazione Windows modificata |
 
 ## Perimetro della prova personale
 
@@ -39,3 +39,9 @@ Aggiornamento dopo avvio Claude: componente email preparatorio, corpus e control
 - HTTP reale: GET /api/v5/session 200 e percorso non esistente /api/v5/storage-private/probe.bin 404, entrambi Cache-Control no-store e X-Content-Type-Options nosniff. Il 404 di un percorso fittizio non prova da solo l'inaccessibilità di ogni file; assenza di servizio statico verificata nel bootstrap, isolamento completo già descritto nei collaudi precedenti.
 - Spazio libero C al controllo: 245650272256 byte, circa 229 GiB. È una misura puntuale, non un limite cumulativo o un monitor di spazio. Non è stato saturato il disco per simulare ENOSPC; il guasto di scrittura è coperto con filesystem temporaneo non scrivibile come directory e il comportamento servizio con doppio controllato.
 - Nuovi test offline senza DB e provider; nessun originale attivo alterato. Nessuna email inviata, account/password o impostazione di sicurezza cambiati. Prossimo: arbitrato UX Claude, congelamento recupero e implementazione; parallelamente definire export e controllo locale dei file. La prova personale non è ancora dichiarata pronta.
+
+## Aggiornamento controllo file e seconda destinazione
+
+Controllo bloccante nuovi upload attivo e verificato su API/DB/storage reali sintetici: fase0-file-control-esito-20261016.md. Restano limiti della politica cloud Microsoft esistente, export personale/retention, revisione corpus e seconda copia. Google Drive scelto, cartella privata backup SW DIMORA individuata; nessun trasferimento eseguito. Il pilota non è ancora dichiarato pronto.
+
+Seconda copia: snapshot 085607Z aggiornato (43 tabelle,267 originali), cifrato e caricato su Drive privata. Metadati remoti verificati, decifratura locale verificata; manca custodia della chiave fuori PC e non è stato collaudato un restore da file riscaricato. Vedi fase0-file-control-esito-20261016.md.

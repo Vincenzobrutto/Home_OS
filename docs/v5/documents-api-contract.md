@@ -80,3 +80,7 @@ Codice M2 implementato da Codex con migrazione pronta e 31 test locali; runtime 
 
 ## Accettazione M2
 Backend e frontend integrati: 23 scenari API/DB/file e 6 frontend/API passano, collaudo browser completato il 13 ottobre 2026. Contratto documents-v1 attivo in locale. Dettagli nel report outputs/Dimora-V5-M2-esito-consolidato.md del workspace del committente.
+
+## Fase 0 — controllo nuovi upload (16 ottobre 2026)
+
+Staging privato e ammissione dopo scansione Defender/hash invariato. 503 file_check_unavailable se il controllo non conclude con esito valido; 503 storage_capacity_low per riserva spazio insufficiente. Nessun documento creato in entrambi i casi; retry esplicito con stessa chiave/payload. Ricevuta DB interna, nessun nuovo campo pubblico. Originali precedenti non riclassificati. Prove e limiti in fase0-file-control-esito-20261016.md.

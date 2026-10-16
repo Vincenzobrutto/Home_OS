@@ -3,5 +3,6 @@ import { DocumentsController, DocumentSearchController } from './documents.contr
 import { DocumentsService } from './documents.service';
 import { DocumentPolicy, DocumentAccessGuard } from './access';
 import { LocalFileStorage } from './storage';
-@Module({ controllers: [DocumentsController, DocumentSearchController], providers: [DocumentsService, DocumentPolicy, DocumentAccessGuard, LocalFileStorage], exports: [DocumentsService, DocumentPolicy, DocumentAccessGuard, LocalFileStorage] })
+import { WindowsDefenderScanner } from './file-control';
+@Module({ controllers: [DocumentsController, DocumentSearchController], providers: [DocumentsService, DocumentPolicy, DocumentAccessGuard, LocalFileStorage, WindowsDefenderScanner], exports: [DocumentsService, DocumentPolicy, DocumentAccessGuard, LocalFileStorage] })
 export class DocumentsModule {}

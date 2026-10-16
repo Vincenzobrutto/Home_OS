@@ -33,9 +33,14 @@ test('documents-v1 — API/PostgreSQL/storage reali, originali e privacy',{timeo
     for(const [browser,name] of [[A,'A'],[B,'B']]){await browser.request('/session');assert.equal((await browser.request('/auth/register','POST',{name:`Documenti ${name}`,email:`${tag}-${name}@example.test`,password})).status,201);await browser.request('/session');}
     async function home(browser,name){const r=await browser.request('/homes','POST',{name,address:'Via Sintetica'},{'Idempotency-Key':randomUUID()});assert.equal(r.status,201);return r.body.home.id;}
     homeA=await home(A,'Documenti Casa A');otherA=await home(A,'Documenti Altra A');homeB=await home(B,'Documenti Casa B');
+    // Only these new synthetic fixtures: exercise the gate, then establish verified email in test setup.
+    const verification=await db.account.findUnique({where:{id:A.accountId},select:{requiresEmailVerification:true,emailVerifiedAt:true}});
+    if(verification.requiresEmailVerification&&!verification.emailVerifiedAt) assert.equal((await A.upload(homeA,png)).status,403);
+    for(const browser of [A,B]) await db.account.update({where:{id:browser.accountId},data:{emailVerifiedAt:new Date()}});
   });
   await t.test('Upload private e retry idempotente: un originale integro, fonte e hash',async()=>{
     key=randomUUID();const r=await A.upload(homeA,png,'Immagine privata','private',key);assert.equal(r.status,201,JSON.stringify(r.body));privateDoc=r.body.document;
+    const checked=await db.documentVersion.findUnique({where:{documentId:privateDoc.id}});assert.equal(checked.fileControlEngine,'microsoft_defender');assert(checked.fileControlCheckedAt instanceof Date);assert(checked.fileControlSignature);
     assert.equal(privateDoc.sha256,digest(png));assert.equal(privateDoc.mimeType,'image/png');assert.equal(privateDoc.status,'stored');assert.equal(privateDoc.visibility,'private');assert.equal(privateDoc.storageKey,undefined);
     const again=await A.upload(homeA,png,'Immagine privata','private',key);assert.equal(again.status,201);assert.equal(again.body.document.id,privateDoc.id);
     const conflict=await A.upload(homeA,png,'Titolo diverso','private',key);assert.equal(conflict.status,409);assert.equal(conflict.body.error.code,'idempotency_conflict');

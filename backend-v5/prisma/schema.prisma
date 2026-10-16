@@ -229,6 +229,9 @@ model Document {
   @@index([homeId, createdAt, id])
 }
 model DocumentVersion {
+  fileControlEngine String?
+  fileControlCheckedAt DateTime?
+  fileControlSignature String?
   id String @id @default(uuid())
   documentId String @unique
   version Int @default(1)

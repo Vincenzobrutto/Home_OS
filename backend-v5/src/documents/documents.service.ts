@@ -76,13 +76,13 @@ export class DocumentsService implements OnModuleInit {
     const lookup = { accountId_homeId_key: { accountId, homeId, key } };
     const prior = await this.db.uploadRequest.findUnique({ where: lookup });
     if (prior) return this.prior(accountId, homeId, prior, fingerprint);
-    const storageKey = await this.storage.write(file.buffer);
+    const stored = await this.storage.writeVerified(file.buffer), storageKey=stored.key;
     try {
       const doc = await this.db.$transaction(async tx => {
         // Recheck membership inside the transaction, after multipart and file IO.
         const member = await tx.homeMembership.findUnique({ where: { accountId_homeId: { accountId, homeId } } });
         if (!member || !validMembership(member) || member.role === 'viewer') throw new ForbiddenException('Accesso non consentito.');
-        const created = await tx.document.create({ data: { homeId, uploaderId: accountId, name: dto.name, visibility: dto.visibility, original: { create: { originalFilename, mimeType, byteSize: file.buffer.length, sha256, file: { create: { storageKey } } } } }, include: includeOriginal });
+        const created = await tx.document.create({ data: { homeId, uploaderId: accountId, name: dto.name, visibility: dto.visibility, original: { create: { originalFilename, mimeType, byteSize: file.buffer.length, sha256, fileControlEngine:stored.control.engine,fileControlCheckedAt:stored.control.checkedAt,fileControlSignature:stored.control.signatureVersion, file: { create: { storageKey } } } } }, include: includeOriginal });
         await tx.uploadRequest.create({ data: { accountId, homeId, key, digest: fingerprint, documentId: created.id } });
         return created;
       });

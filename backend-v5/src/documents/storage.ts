@@ -1,8 +1,10 @@
-import { Injectable, ServiceUnavailableException, UnsupportedMediaTypeException, UnprocessableEntityException, PayloadTooLargeException } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException, UnsupportedMediaTypeException, UnprocessableEntityException, PayloadTooLargeException, HttpException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile, rename, unlink, readFile, lstat, readdir } from 'node:fs/promises';
+import { mkdir, writeFile, rename, unlink, readFile, lstat, readdir, statfs } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileTypeFromBuffer } from 'file-type';
+import { WindowsDefenderScanner } from './file-control';
+import { digest } from '../security';
 export const MAX_FILE_BYTES = 20 * 1024 * 1024;
 export const MAX_EXPORT_BYTES = 100 * 1024 * 1024;
 export function storageUnavailable() { return new ServiceUnavailableException({ code: 'storage_unavailable', message: 'Originale temporaneamente non disponibile.' }); }
@@ -29,21 +31,27 @@ export async function detectOriginal(buffer: Buffer) {
 }
 @Injectable()
 export class LocalFileStorage {
+  constructor(private readonly scanner: WindowsDefenderScanner = new WindowsDefenderScanner()) {}
   root = resolve(__dirname, '../../storage-private');
   path(key: string) {
     if (!/^[a-f0-9-]{36}\.bin$/.test(key)) throw storageUnavailable();
     return join(this.root, key);
   }
-  async write(buffer: Buffer) {
+  protected async availableBytes() { const space=await statfs(this.root,{bigint:true});return space.bavail*space.bsize; }
+  async write(buffer: Buffer) { return (await this.writeVerified(buffer)).key; }
+  async writeVerified(buffer: Buffer) {
     const key = randomUUID() + '.bin';
     const stage = join(this.root, key + '.part');
     try {
       await mkdir(this.root, { recursive: true });
+      if(await this.availableBytes()<1073741824n+BigInt(buffer.length))throw new ServiceUnavailableException({code:'storage_capacity_low',message:'Spazio temporaneamente insufficiente. Nessun documento salvato.'});
       await writeFile(stage, buffer, { flag: 'wx', mode: 0o600 });
+      const control=await this.scanner.scan(stage,digest(buffer));
       await rename(stage, this.path(key));
-      return key;
-    } catch {
+      return {key,control};
+    } catch (error) {
       await unlink(stage).catch(() => undefined);
+      if(error instanceof HttpException)throw error;
       throw storageUnavailable();
     }
   }
