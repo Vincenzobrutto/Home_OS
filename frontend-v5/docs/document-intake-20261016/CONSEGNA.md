@@ -141,7 +141,7 @@ Opzioni: «Tutti» più le 7 raccolte del contratto, con `unclassified` = «Da o
 
 ## C3 — Rifinitura e consegna · PRONTA
 
-Commit: quello di questa fase (hash in `git log`, messaggio «archivio assistito C3»). C1 e C2 non sono stati riscritti.
+Commit: `42c9fdc`. C1 e C2 non sono stati riscritti.
 
 **File:**
 
@@ -189,5 +189,5 @@ Ho chiuso Chrome. Nessun server avviato; 5174, 3001 e 55432 non toccati.
 ## Stato finale
 
 **C1, C2 e C3 sono PRONTE.**
-- Commit: `27994f0` (C1), `539e94a` (C2), commit C3, e il commit finale di questo indice (hash in `git log`).
+- Commit: `27994f0` (C1), `539e94a` (C2), `42c9fdc` (C3), più il commit finale di questo indice.
 - Worktree pulito dopo l'ultimo commit. Nessun push e nessuna integrazione nel master.
