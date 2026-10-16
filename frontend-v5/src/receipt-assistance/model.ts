@@ -113,7 +113,7 @@ export type ReceiptJobState =
   | { status: 'none' }
   | { status: 'starting' | 'queued' | 'running' }
   | { status: 'failed'; reason: 'read_failed' | 'no_supported_data' | 'multiple_items' | 'service' | 'other'; message: string }
-  | { status: 'uncertain'; message: string };
+  | { status: 'uncertain'; message: string; retryStart?: boolean };
 
 // ---------------------------------------------------------------------------------------------
 // Esiti delle azioni (forniti dalle callback del container)

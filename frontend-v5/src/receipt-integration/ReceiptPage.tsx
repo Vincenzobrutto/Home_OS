@@ -99,7 +99,7 @@ function ReceiptPageContext({ documentId }: { documentId: string }) {
   const sourceUnavailable = blocked || (snapshot?.wire?.documentLink.state === 'unavailable') || job.data?.state === 'unavailable' || denied(query.error) || denied(job.error);
   const error = query.error ?? job.error;
   const load = sourceUnavailable ? { status: 'unavailable' as const } : query.isPending ? { status: 'loading' as const } : error ? { status: 'error' as const, message: userMessage(error), retryable: true } : { status: 'ready' as const };
-  const effectiveJob: ReceiptJobState = job.isError ? { status: 'uncertain', message: 'Impossibile leggere lo stato. Usa Riprova: nessuna nuova analisi verrà avviata.' } : job.data?.state === 'failed' ? { status: 'failed', reason: job.data.errorCode === 'receipt_multiple_items_unsupported' ? 'multiple_items' : 'read_failed', message: job.data.errorCode === 'receipt_multiple_items_unsupported' ? 'Le ricevute con più articoli non sono ancora supportate.' : 'Il documento non contiene dati supportati o non è stato possibile leggerlo. Puoi continuare manualmente.' } : job.data?.state === 'queued' || job.data?.state === 'running' ? { status: job.data.state } : startState;
+  const effectiveJob: ReceiptJobState = job.isError ? { status: 'uncertain', message: 'Impossibile leggere lo stato. Usa Riprova: nessuna nuova analisi verrà avviata.' } : job.data?.state === 'uncertain' ? { status: 'uncertain', message: 'Il servizio potrebbe avere ricevuto la richiesta. Un altro invio a pagamento è bloccato; puoi compilare a mano.' } : job.data?.state === 'failed' ? { status: 'failed', reason: job.data.errorCode === 'receipt_multiple_items_unsupported' ? 'multiple_items' : 'read_failed', message: job.data.errorCode === 'receipt_multiple_items_unsupported' ? 'Le ricevute con più articoli non sono ancora supportate.' : 'Il documento non contiene dati supportati o non è stato possibile leggerlo. Puoi continuare manualmente.' } : job.data?.state === 'queued' || job.data?.state === 'running' ? { status: job.data.state } : startState;
   const startManual = async () => {
     if (starting.current || !snapshot?.capabilities.manualEnabled) return;
     starting.current = true; setBusy(true); setActionError(null);
@@ -108,7 +108,7 @@ function ReceiptPageContext({ documentId }: { documentId: string }) {
     finally { starting.current = false; if (isCurrent()) setBusy(false); }
   };
   const startAnalysis = async (input: { providerId: string; consentToProviderTransfer: boolean }) => {
-    if (starting.current || job.data?.state === 'queued' || job.data?.state === 'running' || !snapshot?.capabilities.enabled) return;
+    if (starting.current || job.data?.state === 'queued' || job.data?.state === 'running' || job.data?.state === 'uncertain' || !snapshot?.capabilities.enabled) return;
     starting.current = true; setStartState({ status: 'starting' }); setActionError(null);
     const prior = analysisRequest.current;
     const request = prior && prior.provider === input.providerId && prior.consent === input.consentToProviderTransfer ? prior : { key: newIdempotencyKey(), provider: input.providerId, consent: input.consentToProviderTransfer };
@@ -118,7 +118,7 @@ function ReceiptPageContext({ documentId }: { documentId: string }) {
       if (isCurrent()) { setParams({ analisi: result.id }); setStartState({ status: 'none' }); analysisRequest.current = null; }
     } catch (error) {
       await onError(error);
-      if (isCurrent()) setStartState(isApiError(error) && error.kind === 'http' ? { status: 'failed', reason: 'service', message: userMessage(error) } : { status: 'uncertain', message: 'Riprova lo stesso avvio per recuperare la richiesta con la stessa chiave.' });
+      if (isCurrent()) setStartState(isApiError(error) && error.kind === 'http' ? { status: 'failed', reason: 'service', message: userMessage(error) } : { status: 'uncertain', retryStart: true, message: 'Riprova lo stesso avvio per recuperare la richiesta con la stessa chiave.' });
     } finally { starting.current = false; }
   };
   const confirmError = async (error: unknown): Promise<ConfirmOutcome> => {
@@ -153,9 +153,11 @@ function ReceiptPageContext({ documentId }: { documentId: string }) {
   const fetchOriginal = useFetchDocumentFile(home.id, documentId);
   const candidates = <T,>(page: CandidateWire<T> | undefined, kind: 'object' | 'expense'): CandidatePage<T> => ({ items: page?.items ?? [], hasMore: !!page?.nextCursor, status: candidateStatus[kind] });
   const receipt = snapshot?.wire ? toReceiptDraft(snapshot.wire, snapshot.objects, snapshot.expenses, snapshot.comparisons) : null;
+  const billing = sourceUnavailable ? null : (snapshot?.wire?.analysis?.billing ?? job.data?.billing);
   return <div className={pages.stack}>
     <Link to={documentPath}>← Torna al documento</Link>
     {actionError && <Banner tone="error" role="alert"><p>{actionError}</p></Banner>}
+    {billing && <Banner><p>{billing.actualUsd !== null ? `Costo dell’analisi: ${billing.actualUsd} USD.` : billing.state === 'uncertain' ? `Costo non ancora verificabile. Restano riservati al massimo ${billing.maxReservedUsd} USD; nessun reinvio automatico.` : `Analisi: riservati al massimo ${billing.maxReservedUsd} USD del budget autorizzato.`}</p></Banner>}
     {snapshot && !snapshot.capabilities.enabled && !snapshot.capabilities.manualEnabled && <Banner><p>La ricevuta assistita è ancora in collaudo e non è attiva. Il documento originale resta disponibile.</p></Banner>}
     <ReceiptAssistant contextKey={{ accountId: account.id, homeId: home.id, documentId, draftId }} load={load} capabilities={snapshot?.capabilities ?? null}
       original={{ status: sourceUnavailable || !snapshot ? 'unavailable' : 'available', name: sourceUnavailable ? '' : snapshot?.doc.name ?? '', pageCount: null }}

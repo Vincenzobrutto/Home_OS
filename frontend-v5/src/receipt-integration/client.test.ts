@@ -21,6 +21,20 @@ function client(reply: (url: string, init: RequestInit) => Response | Promise<Re
 }
 
 describe('[mock] receipt wire and transport', () => {
+  it('validates receipt billing, paid uncertainty and redaction instead of displaying untrusted costs', async () => {
+    const billing = { currency: 'USD', maxReservedUsd: '0.250000', actualUsd: null, state: 'uncertain' };
+    const value = { id: 'job1', version: 1, provider: 'anthropic', isSimulation: false, state: 'uncertain', draftId: null, errorCode: 'analysis_outcome_unknown', model: 'claude-sonnet-5-5', billing, documentLink: wireDraft().documentLink };
+    const w = client(() => Response.json({ job: value }));
+    expect((await w.client.job('job1')).billing?.state).toBe('uncertain');
+    for (const patch of [{ maxReservedUsd: '10.000000' }, { actualUsd: '0.100000' }, { currency: 'EUR' }]) {
+      Object.assign(billing, patch); await expect(w.client.job('job1')).rejects.toMatchObject({ kind: 'service' });
+      Object.assign(billing, { currency: 'USD', maxReservedUsd: '0.250000', actualUsd: null });
+    }
+    value.isSimulation = true; await expect(w.client.job('job1')).rejects.toMatchObject({ kind: 'service' });
+    const hidden = { ...wireDraft(), fields: {}, total: null, review: null, documentLink: { state: 'unavailable', document: null }, analysis: { provider: 'anthropic', isSimulation: false, model: value.model, billing } };
+    expect(() => decodeDraft({ draft: hidden }, h)).toThrow();
+    expect(decodeDraft({ draft: { ...wireDraft(), analysis: hidden.analysis } }, h).analysis?.billing?.state).toBe('uncertain');
+  });
   it('keeps verified text, EUR cents and citations but never passes raw draft fields to manual proposals', () => {
     const wire = decodeDraft({ draft: wireDraft() }, h, d);
     const extraction = toReceiptDraft(wire, emptyPage, emptyPage, []);

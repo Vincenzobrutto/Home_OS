@@ -6,7 +6,7 @@ import { createFakeFetch, renderApp } from '../test/harness';
 import { scenarios } from '../receipt-assistance/testing/fixtures';
 import { selectedCandidatePage } from './ReceiptPage';
 
-async function world(options: { draft?: boolean; redacted?: boolean; drop?: boolean; loggedOut?: boolean; job?: boolean; resume?: boolean } = {}) {
+async function world(options: { draft?: boolean; redacted?: boolean; drop?: boolean; loggedOut?: boolean; job?: boolean; resume?: boolean; paid?: boolean; uncertain?: boolean; lostStart?: boolean } = {}) {
   const backend = new FakeBackend(), password = 'password-qa-receipt-2026';
   const account = backend.seedAccount('Collaudo', 'receipt@example.test', password), home = backend.seedHome(account.id, 'Casa ricevuta', 'Via sintetica 1');
   const doc = await backend.seedDocument({ homeId: home.id, uploaderId: account.id, name: 'Ricevuta prova' });
@@ -18,15 +18,16 @@ async function world(options: { draft?: boolean; redacted?: boolean; drop?: bool
   let confirmations = 0, recoveries = 0, starts = 0, jobReads = 0;
   let hasDraft = !!options.draft || !!options.resume || !!options.job;
   const calls: Array<{ path: string; init: RequestInit }> = [];
+  const analysis = options.paid ? { provider: 'anthropic', isSimulation: false, model: 'claude-sonnet-5-5', billing: { currency: 'USD', maxReservedUsd: '0.250000', actualUsd: options.uncertain ? null : '0.005400', state: options.uncertain ? 'uncertain' : 'settled' } } : { provider: 'receipt_fixture_v1', isSimulation: true };
   const comparisons = [{ id: 'comparison1', version: 1, state: 'open', object: { id: 'object1', version: 1, name: 'Macchina del caffè Studio' }, fieldKey: 'brand', existing: 'Aurora', proposed: { value: 'Lume', sources: [{ page: 1, excerpt: 'Lume' }] }, permissions: ['read', 'edit'], draftId: wire.id, documentLink: wire.documentLink }];
   const fetch = async (url: string, init: RequestInit) => {
     if (!url.includes('/receipt-assistance')) return control.fetch(url, init);
     const path = url.split('/receipt-assistance')[1]!; calls.push({ path, init });
-    if (path.startsWith('/capabilities')) return Response.json({ apiVersion: 'receipt-assistance-v1', enabled: true, manualEnabled: true, today: '2026-10-16', resume: { draftId: hasDraft && ['open', 'parked'].includes(wire.state) ? wire.id : null, jobId: null }, providers: [{ id: 'receipt_fixture_v1', label: 'Simulazione locale', requiresConsent: false, consentText: 'Solo dati sintetici. Nessun invio esterno.', costNote: null }] });
+    if (path.startsWith('/capabilities')) return Response.json({ apiVersion: 'receipt-assistance-v1', enabled: true, manualEnabled: true, today: '2026-10-16', resume: { draftId: hasDraft && ['open', 'parked'].includes(wire.state) ? wire.id : null, jobId: null }, providers: [{ id: analysis.provider, label: options.paid ? 'Anthropic' : 'Simulazione locale', requiresConsent: !!options.paid, consentText: options.paid ? 'Il testo sarà inviato ad Anthropic.' : 'Solo dati sintetici. Nessun invio esterno.', costNote: null }] });
     if (path.endsWith('/confirmations')) { confirmations++; wire.confirmation = { newObjects: 1, newExpenses: 1, object: { id: 'new-object', name: 'Macchina del caffè' }, expense: { id: 'new-cost', title: 'Acquisto', amountCents: 17990 }, openComparisons: 0 }; wire.state = 'confirmed'; if (options.drop) throw new TypeError('response lost'); }
     if (path.endsWith('/confirmation')) { recoveries++; return Response.json({ status: wire.confirmation ? 'confirmed' : 'not_found', draft: wire }); }
-    if (path.startsWith('/jobs/')) { jobReads++; return Response.json({ job: { id: 'job1', version: 2, provider: 'receipt_fixture_v1', isSimulation: true, state: 'succeeded', draftId: wire.id, errorCode: null, documentLink: wire.documentLink } }); }
-    if (path === '/jobs') { starts++; return Response.json({ job: { id: 'job1', version: 1, provider: 'receipt_fixture_v1', isSimulation: true, state: 'queued', draftId: null, errorCode: null, documentLink: wire.documentLink } }, { status: 202 }); }
+    if (path.startsWith('/jobs/')) { jobReads++; return Response.json({ job: { id: 'job1', version: 2, ...analysis, state: options.uncertain ? 'uncertain' : 'succeeded', draftId: options.uncertain ? null : wire.id, errorCode: options.uncertain ? 'analysis_outcome_unknown' : null, documentLink: wire.documentLink } }); }
+    if (path === '/jobs') { starts++; if (options.lostStart && starts === 1) throw new TypeError('Lost start response'); return Response.json({ job: { id: 'job1', version: 1, ...analysis, state: 'queued', draftId: null, errorCode: null, documentLink: wire.documentLink } }, { status: 202 }); }
     if (path.includes('candidates')) return Response.json({ items: [], linkedCount: 0, nextCursor: null });
     if (path === '/comparisons/comparison1/resolutions') { comparisons[0]!.state = 'resolved'; comparisons[0]!.version++; return Response.json({ comparison: comparisons[0] }); }
     if (path.startsWith('/comparisons')) return Response.json({ items: comparisons.filter(item => item.state === 'open' && !path.includes('draftId=')), nextCursor: null });
@@ -36,7 +37,7 @@ async function world(options: { draft?: boolean; redacted?: boolean; drop?: bool
     }
     if (path.endsWith('/reopen')) { wire.state = 'open'; wire.version++; }
     if (path === '/manual-drafts') { hasDraft = true; wire.mode = 'manual'; wire.fields = {}; wire.total = undefined; }
-    if (path.startsWith('/drafts/') || path === '/manual-drafts') return Response.json({ draft: { ...wire, total: wire.total ?? null } });
+    if (path.startsWith('/drafts/') || path === '/manual-drafts') return Response.json({ draft: { ...wire, total: wire.total ?? null, analysis: options.paid && wire.mode === 'extraction' ? analysis : null } });
     return Response.json({ error: { code: 'not_found', message: 'Not found' } }, { status: 404 });
   };
   const path = `/home/${home.id}/documenti/${doc.id}/ricevuta${options.draft ? '?bozza=receipt-draft' : options.job ? '?analisi=job1' : ''}`;
@@ -45,6 +46,27 @@ async function world(options: { draft?: boolean; redacted?: boolean; drop?: bool
 }
 
 describe('[mock] receipt route integration', () => {
+  it('paid uncertainty blocks a new POST, shows reserved cost and keeps manual available', async () => {
+    const w = await world({ job: true, paid: true, uncertain: true });
+    await screen.findByText(/Costo non ancora verificabile/);
+    await w.user.click(screen.getByRole('checkbox'));
+    expect(screen.getByRole('button', { name: 'Avvia l’analisi' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Compila a mano' })).toBeEnabled();
+    expect(w.counts().starts).toBe(0);
+  });
+  it('lost paid start response explicitly recovers the same idempotency key and retains cost in the draft', async () => {
+    const w = await world({ paid: true, lostStart: true });
+    await w.user.click(await screen.findByRole('checkbox'));
+    await w.user.click(screen.getByRole('button', { name: 'Avvia l’analisi' }));
+    await screen.findByText(/Riprova lo stesso avvio/);
+    expect(w.counts().starts).toBe(1);
+    await w.user.click(screen.getByRole('button', { name: 'Avvia l’analisi' }));
+    await screen.findByText('Costo dell’analisi: 0.005400 USD.');
+    await screen.findByLabelText('Nome dell’oggetto');
+    const posts = w.calls.filter(call => call.path === '/jobs'); expect(posts).toHaveLength(2);
+    expect(new Headers(posts[0]!.init.headers).get('Idempotency-Key')).toBe(new Headers(posts[1]!.init.headers).get('Idempotency-Key'));
+    expect(JSON.parse(String(posts[1]!.init.body))).toMatchObject({ provider: 'anthropic', consentToProviderTransfer: true });
+  });
   it('deep link goes through login and preserves the intended path', async () => {
     const w = await world({ draft: true, loggedOut: true });
     await screen.findByRole('heading', { name: /Accedi/ });

@@ -857,7 +857,38 @@ model ReceiptAnalysisJob {
   home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
   document Document @relation(fields:[documentId],references:[id],onDelete:Restrict)
   draft ReceiptDraft? @relation(fields:[draftId],references:[id],onDelete:Restrict)
+  aiAttempt ReceiptAiAttempt?
   @@unique([accountId,homeId,key])
   @@index([state,leaseUntil,createdAt,id])
   @@index([accountId,homeId,documentId,createdAt,id])
+}
+
+model ReceiptAiCampaign {
+  id String @id
+  limitMicroUsd Int
+  maxCalls Int
+  createdAt DateTime @default(now())
+  attempts ReceiptAiAttempt[]
+}
+model ReceiptAiAttempt {
+  id String @id @default(uuid())
+  jobId String @unique
+  campaignId String
+  model String
+  promptVersion String
+  inputMicroUsdPerToken Int
+  outputMicroUsdPerToken Int
+  reservedMicroUsd Int
+  actualMicroUsd Int?
+  state String @default("reserved")
+  inputTokens Int?
+  outputTokens Int?
+  providerRequestId String?
+  output Json?
+  sentAt DateTime?
+  responseAt DateTime?
+  createdAt DateTime @default(now())
+  job ReceiptAnalysisJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
+  campaign ReceiptAiCampaign @relation(fields:[campaignId],references:[id],onDelete:Restrict)
+  @@index([campaignId,state])
 }

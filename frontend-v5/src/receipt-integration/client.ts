@@ -27,10 +27,23 @@ function confirmation(input: unknown): ConfirmationResult | null {
   if (v.expense !== null) { const target = row(v.expense); check(str(target.id) && str(target.title) && positive(target.amountCents)); }
   return v as ConfirmationResult;
 }
+export type ReceiptAnalysisInfo = { provider: 'receipt_fixture_v1' | 'anthropic'; isSimulation: boolean; model?: string | null; billing?: { currency: 'USD'; maxReservedUsd: string; actualUsd: string | null; state: 'reserved' | 'settled' | 'uncertain' } | null };
+function analysisInfo(input: unknown): ReceiptAnalysisInfo {
+  const v = row(input);
+  check(['receipt_fixture_v1', 'anthropic'].includes(String(v.provider)) && v.isSimulation === (v.provider === 'receipt_fixture_v1'));
+  if (v.model !== undefined) check(nullableString(v.model));
+  if (v.billing !== undefined && v.billing !== null) {
+    const bill = row(v.billing), money = (value: unknown) => str(value) && /^\d+\.\d{6}$/.test(value);
+    check(v.provider === 'anthropic' && bill.currency === 'USD' && money(bill.maxReservedUsd) && (bill.actualUsd === null || money(bill.actualUsd)) && ['reserved', 'settled', 'uncertain'].includes(String(bill.state)));
+    check(Number(bill.maxReservedUsd) > 0 && Number(bill.maxReservedUsd) <= 0.25 && (bill.actualUsd === null || Number(bill.actualUsd) <= Number(bill.maxReservedUsd)) && (bill.state === 'settled' ? bill.actualUsd !== null : bill.actualUsd === null));
+  }
+  return v as ReceiptAnalysisInfo;
+}
 export type DraftWire = Omit<ReceiptDraft, 'origin' | 'proposals' | 'linkedObjects' | 'linkedExpenses' | 'openComparisons'> & {
   homeId: string; mode: 'manual' | 'extraction'; fields: ReceiptProposals; total: ReceiptProposals['total'];
   documentLink: { state: 'linked' | 'unavailable'; document: { id: string; name: string } | null };
   permissions: string[];
+  analysis?: ReceiptAnalysisInfo | null;
 };
 export function decodeDraft(input: unknown, homeId: string, id?: string): DraftWire {
   const v = row(row(input).draft); identity(v);
@@ -45,6 +58,7 @@ export function decodeDraft(input: unknown, homeId: string, id?: string): DraftW
   let total: ReceiptProposals['total'] = null;
   if (v.total !== null) { const amount = row(v.total); check(positive(amount.amountCents)); total = { amountCents: amount.amountCents, sources: citations(amount.sources) }; }
   const result = confirmation(v.confirmation);
+  if (v.analysis !== undefined && v.analysis !== null) analysisInfo(v.analysis);
   if (v.review !== null) {
     const review = row(v.review), form = row(review.form), values = row(form.values), versions = row(review.targetVersions);
     check(['name', 'brand', 'model', 'title', 'supplier', 'date', 'amount'].every(key => str(values[key])) && typeof form.enrich === 'boolean');
@@ -52,7 +66,7 @@ export function decodeDraft(input: unknown, homeId: string, id?: string): DraftW
     check(strings(review.staleTargets) && (versions.object === null || positive(versions.object)) && (versions.expense === null || positive(versions.expense)));
   }
   // A redacted source must never carry cached values into an editable form.
-  check(link.state !== 'unavailable' || (!Object.keys(fields).length && total === null && v.review === null && result === null));
+  check(link.state !== 'unavailable' || (!Object.keys(fields).length && total === null && v.review === null && result === null && (v.analysis === undefined || v.analysis === null)));
   return { ...v, fields, total, confirmation: result } as DraftWire;
 }
 export type CandidateWire<T> = { items: T[]; linkedCount: number; nextCursor: string | null };
@@ -91,12 +105,14 @@ export function openComparison(v: ComparisonWire): PersistedComparison | null {
 export function toReceiptDraft(wire: DraftWire, objects: CandidateWire<ObjectRef>, expenses: CandidateWire<ExpenseRef>, comparisons: ComparisonWire[]): ReceiptDraft {
   return { id: wire.id, version: wire.version, state: wire.state, origin: wire.mode, proposals: wire.mode === 'manual' ? {} : { ...wire.fields, total: wire.total }, linkedObjects: objects.items.filter(item => item.linkedToDocument), linkedExpenses: expenses.items.filter(item => item.linkedToDocument), linkedObjectsCount: objects.linkedCount, linkedExpensesCount: expenses.linkedCount, openComparisons: comparisons.flatMap(item => { const open = openComparison(item); return open ? [open] : []; }), confirmation: wire.confirmation, review: wire.review };
 }
-export type JobWire = { id: string; version: number; provider: string; isSimulation: boolean; state: 'queued' | 'running' | 'succeeded' | 'failed' | 'unavailable'; draftId: string | null; errorCode: string | null; documentLink: DraftWire['documentLink'] };
+export type JobWire = ReceiptAnalysisInfo & { id: string; version: number; state: 'queued' | 'running' | 'succeeded' | 'failed' | 'uncertain' | 'unavailable'; draftId: string | null; errorCode: string | null; documentLink: DraftWire['documentLink'] };
 function decodeJob(input: unknown, id?: string): JobWire {
-  const v = row(row(input).job); identity(v); check((!id || v.id === id) && str(v.provider) && typeof v.isSimulation === 'boolean' && ['queued', 'running', 'succeeded', 'failed', 'unavailable'].includes(String(v.state)) && nullableString(v.draftId) && nullableString(v.errorCode));
+  const v = row(row(input).job); identity(v); analysisInfo(v); check((!id || v.id === id) && ['queued', 'running', 'succeeded', 'failed', 'uncertain', 'unavailable'].includes(String(v.state)) && nullableString(v.draftId) && nullableString(v.errorCode));
   const link = row(v.documentLink); check(['linked', 'unavailable'].includes(String(link.state)));
   if (link.state === 'linked') { const doc = row(link.document); check(str(doc.id) && str(doc.name)); } else check(link.document === null && v.state === 'unavailable' && v.draftId === null && v.errorCode === null);
   check(v.state !== 'succeeded' || str(v.draftId));
+  check(v.state !== 'uncertain' || (v.provider === 'anthropic' && v.errorCode === 'analysis_outcome_unknown' && v.draftId === null));
+  check(v.state !== 'unavailable' || ((v.model === undefined || v.model === null) && (v.billing === undefined || v.billing === null)));
   return v as JobWire;
 }
 export type ReceiptCapabilityWire = ReceiptCapabilities & { today: string; apiVersion: 'receipt-assistance-v1'; resume?: { draftId: string | null; jobId: string | null } };

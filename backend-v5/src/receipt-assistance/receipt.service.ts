@@ -14,6 +14,7 @@ import { candidateQuery, candidatePagination, equivalentReceiptDocuments, object
 import { reviewedForm, type SavedReceiptSelection } from './review';
 import { readableReceiptObjectIds } from './access';
 import { ReceiptReleasePolicy } from './release-policy';
+import { ReceiptAiBudget, receiptBilling } from './ai-budget';
 
 type Tx = Prisma.TransactionClient;
 const deny = () => new ForbiddenException('Accesso non consentito.');
@@ -21,7 +22,7 @@ const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.Inp
 
 @Injectable()
 export class ReceiptAssistanceService {
-  constructor(private readonly db: PrismaService, private readonly access: ReviewService, private readonly clock: ActivityClock, private readonly release: ReceiptReleasePolicy) {}
+  constructor(private readonly db: PrismaService, private readonly access: ReviewService, private readonly clock: ActivityClock, private readonly release: ReceiptReleasePolicy, private readonly ai: ReceiptAiBudget) {}
 
   authorized<T>(a: string, h: string, write: boolean, action: (tx: Tx, edit: boolean) => Promise<T>) {
     return this.transaction(a, h, write, action);
@@ -58,6 +59,7 @@ export class ReceiptAssistanceService {
 
   private async project(tx: Tx, a: string, h: string, row: ReceiptDraft, edit: boolean) {
     const doc = await this.source(tx, a, h, row.documentId, row);
+    const job = doc ? await tx.receiptAnalysisJob.findFirst({ where: { draftId: row.id, accountId: a, homeId: h }, include: { aiAttempt: true } }) : null;
     return {
       id: row.id, homeId: row.homeId, version: row.version, mode: row.mode, state: row.state,
       documentLink: { state: doc ? 'linked' : 'unavailable', document: doc ? { id: doc.id, name: doc.name } : null },
@@ -65,6 +67,7 @@ export class ReceiptAssistanceService {
       fields: doc ? row.fields : {}, total: doc ? row.total : null,
       review: doc ? await this.reviewView(tx, a, h, row) : null,
       confirmation: doc ? await this.confirmedResult(tx, a, h, row.confirmation) : null,
+      analysis: job ? { provider: job.provider, isSimulation: job.provider === 'receipt_fixture_v1', model: job.aiAttempt?.model ?? null, billing: receiptBilling(job.aiAttempt) } : null,
       permissions: edit && doc ? ['read', 'edit'] : ['read'],
       createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString(),
     };
@@ -76,12 +79,16 @@ export class ReceiptAssistanceService {
     return this.transaction(a, h, false, async (tx, edit) => {
       const source = documentId ? await this.source(tx, a, h, documentId) : null;
       if (documentId && !source) throw deny();
-      const enabled = edit && !!this.release?.allows(source);
+      const manualEnabled = edit && !!this.release?.allows(source);
+      const paid = manualEnabled && source && this.ai ? await this.ai.available(tx, source.original!.sha256) : false;
+      const providers = manualEnabled ? this.release.providers(source, paid) : [];
+      const enabled = providers.length > 0;
       const scope = source ? { accountId: a, homeId: h, documentId: source.id, documentVersion: source.original!.version, documentSha256: source.original!.sha256 } : null;
-      const draft = enabled && scope ? await tx.receiptDraft.findFirst({ where: { ...scope, state: { in: ['open', 'parked'] } }, orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }], select: { id: true } }) : null;
-      const job = enabled && scope ? await tx.receiptAnalysisJob.findFirst({ where: { ...scope, state: { in: ['queued', 'running'] } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } }) : null;
+      const draft = manualEnabled && scope ? await tx.receiptDraft.findFirst({ where: { ...scope, state: { in: ['open', 'parked'] } }, orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }], select: { id: true } }) : null;
+      let job = manualEnabled && scope ? await tx.receiptAnalysisJob.findFirst({ where: { ...scope, state: { in: ['queued', 'running'] } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } }) : null;
+      if (!job && !draft && manualEnabled && scope) job = await tx.receiptAnalysisJob.findFirst({ where: { ...scope, state: 'uncertain' }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } });
       return {
-      apiVersion: 'receipt-assistance-v1', enabled, manualEnabled: enabled, providers: enabled ? this.release.providers() : [],
+      apiVersion: 'receipt-assistance-v1', enabled, manualEnabled, providers,
       resume: { draftId: job ? null : draft?.id ?? null, jobId: job?.id ?? null },
       disabledReason: enabled ? null : 'receipt_assistance_in_development', ...temporal(this.clock.now()),
       };

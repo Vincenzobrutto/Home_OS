@@ -361,7 +361,7 @@ function DocumentStep(props: ReceiptAssistantProps & { onOpenOriginalDialog: () 
   const provider = providers.find(p => p.id === providerId);
   const job = props.job;
   const busy = job.status === 'starting' || job.status === 'queued' || job.status === 'running';
-  const canAnalyze = props.canEdit && !!provider && (!provider.requiresConsent || consent) && !busy && props.original.status === 'available';
+  const canAnalyze = props.canEdit && !!provider && (!provider.requiresConsent || consent) && !busy && (job.status !== 'uncertain' || job.retryStart === true) && props.original.status === 'available';
   return (
     <>
       {busy && <Loading label={job.status === 'starting' ? 'Avvio dell’analisi…' : 'Analisi in corso…'} />}

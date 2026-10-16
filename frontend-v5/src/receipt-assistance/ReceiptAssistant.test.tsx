@@ -11,6 +11,16 @@ const toSummary = async (user: ReturnType<typeof userEvent.setup>) => {
 };
 
 describe('ricevuta assistita: shell', () => {
+  it('paid outcome unknown blocks a second analysis while keeping manual available; same-key recovery is explicit', async () => {
+    const user = userEvent.setup(), props = assistantProps('fresh', { draft: null, job: { status: 'uncertain', message: 'Invio non verificabile' } });
+    const view = renderAssistant(props);
+    await user.click(screen.getByRole('checkbox'));
+    expect(screen.getByRole('button', { name: 'Avvia l’analisi' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Compila a mano' })).toBeEnabled();
+    view.rerenderWith({ ...props, job: { status: 'uncertain', message: 'Recupera la stessa richiesta', retryStart: true } });
+    expect(screen.getByRole('button', { name: 'Avvia l’analisi' })).toBeEnabled();
+    expect(props.onStartAnalysis).not.toHaveBeenCalled();
+  });
   it('primo acquisto: crea oggetto e spesa, conferma con payload UI senza dati di contesto', async () => {
     const user = userEvent.setup();
     const props = assistantProps('fresh', { onConfirm: vi.fn(async (): Promise<ConfirmOutcome> => ({ status: 'confirmed', result: { newObjects: 1, newExpenses: 1, object: { id: 'o', name: 'Macchina del caffè' }, expense: null, openComparisons: 0 } })) });

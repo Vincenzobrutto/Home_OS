@@ -10,7 +10,12 @@ import { ReceiptJobService } from './jobs.service';
 import { ReceiptJobsController } from './jobs.controller';
 import { ReceiptJobWorker } from './jobs.worker';
 import { ReceiptReleasePolicy } from './release-policy';
+import { ReceiptAiBudget, ReceiptAiConfig } from './ai-budget';
+import { ReceiptAiAnalysis, ReceiptAnthropicTransport } from './ai-analysis';
+import { ReceiptAnthropicProvider } from './anthropic-provider';
 
-// The release policy restricts this browser trial to exact synthetic originals.
-@Module({ imports: [DocumentsModule, ReviewModule], controllers: [ReceiptAssistanceController, ReceiptJobsController], providers: [ReceiptAssistanceService, ReceiptReleasePolicy, ActivityClock, ReceiptFixtureProvider, PdfTextExtractor, ReceiptJobService, ReceiptJobWorker], exports: [ReceiptAssistanceService] })
+// Anthropic is opt-in, with a receipt-specific campaign and exact source allowlist.
+@Module({ imports: [DocumentsModule, ReviewModule], controllers: [ReceiptAssistanceController, ReceiptJobsController], providers: [ReceiptAssistanceService, ReceiptReleasePolicy, ReceiptAiConfig, ReceiptAiBudget, ReceiptAiAnalysis, ReceiptAnthropicTransport,
+  { provide: ReceiptAnthropicProvider, useFactory: (parser: PdfTextExtractor, transport: ReceiptAnthropicTransport) => new ReceiptAnthropicProvider(parser, transport), inject: [PdfTextExtractor, ReceiptAnthropicTransport] },
+  ActivityClock, ReceiptFixtureProvider, PdfTextExtractor, ReceiptJobService, ReceiptJobWorker], exports: [ReceiptAssistanceService] })
 export class ReceiptAssistanceModule {}
