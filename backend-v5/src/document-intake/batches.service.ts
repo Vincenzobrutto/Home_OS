@@ -104,34 +104,53 @@ export class IntakeBatchesService {
     });
   }
   async confirm(a: string, h: string, id: string, input: unknown, key?: string) {
-    uuid(id); key = requestKey(key); const row = object(input, ['expectedVersion', 'items']);
+    return this.applyOrganization(a, h, id, input, key, false);
+  }
+  async organize(a: string, h: string, id: string, input: unknown, key?: string) {
+    return this.applyOrganization(a, h, id, input, key, true);
+  }
+  private async applyOrganization(a: string, h: string, id: string, input: unknown, key: string | undefined, direct: boolean) {
+    uuid(id); key = requestKey(key); const row = object(input, direct ? ['expectedVersion', 'mode', 'items'] : ['expectedVersion', 'items']);
     const expectedVersion = version(row.expectedVersion);
     if (!Array.isArray(row.items) || !row.items.length || row.items.length > INTAKE_LIMITS.maxFiles) throw invalid();
-    const items = row.items.map(value => { const i = object(value, ['id', 'expectedVersion']); return { id: uuid(i.id), expectedVersion: version(i.expectedVersion) }; });
+    if (direct && (row.mode !== 'single' && row.mode !== 'multiple' || row.mode === 'single' && row.items.length !== 1)) throw invalid();
+    const items = row.items.map(value => {
+      const i = object(value, direct ? ['itemId', 'expectedVersion', 'expectedOrganizationVersion', 'replaceOrganization', 'selection'] : ['id', 'expectedVersion']);
+      if (direct && (!Number.isSafeInteger(i.expectedOrganizationVersion) || Number(i.expectedOrganizationVersion) < 0 || typeof i.replaceOrganization !== 'boolean')) throw invalid();
+      const selection = direct ? organizationSelection(i.selection, null) : null;
+      if (selection?.action === 'defer') throw invalid();
+      return { id: uuid(direct ? i.itemId : i.id), expectedVersion: version(i.expectedVersion), ...(direct ? { decision: { expectedOrganizationVersion: Number(i.expectedOrganizationVersion), replaceOrganization: i.replaceOrganization === true, selection } } : {}) };
+    });
     if (new Set(items.map(i => i.id)).size !== items.length) throw invalid();
-    const body = { expectedVersion, items }, fingerprint = digest(canonical(body));
+    const operation = direct ? 'organize' : 'confirm';
+    const body = { expectedVersion, items, ...(direct ? { mode: row.mode } : {}) }, fingerprint = digest(canonical(body));
     await this.authorized(a, h, true, async tx => {
       const batch = await this.locked(tx, a, h, id);
-      const prior = await tx.documentIntakeRequest.findUnique({ where: { batchId_operation_key: { batchId: id, operation: 'confirm', key: key! } } });
+      const prior = await tx.documentIntakeRequest.findUnique({ where: { batchId_operation_key: { batchId: id, operation, key: key! } } });
       if (prior) { if (prior.digest !== fingerprint) throw conflict('idempotency_conflict', 'Chiave già utilizzata.'); return; }
       if (batch.version !== expectedVersion) throw conflict('batch_version_conflict', 'Il lotto è cambiato. Rileggi prima di confermare.');
       if (items.some(i => !batch.items.some(x => x.id === i.id))) throw new ForbiddenException();
-      await tx.documentIntakeRequest.create({ data: { batchId: id, operation: 'confirm', key: key!, digest: fingerprint, body: json(body), results: {} } });
+      await tx.documentIntakeRequest.create({ data: { batchId: id, operation, key: key!, digest: fingerprint, body: json(body), results: {} } });
     });
     for (const selected of items) {
       try {
         await this.authorized(a, h, true, async tx => {
           const batch = await this.locked(tx, a, h, id);
-          const request = await tx.documentIntakeRequest.findUniqueOrThrow({ where: { batchId_operation_key: { batchId: id, operation: 'confirm', key: key! } } });
+          const request = await tx.documentIntakeRequest.findUniqueOrThrow({ where: { batchId_operation_key: { batchId: id, operation, key: key! } } });
           const results = request.results as Record<string, unknown>; if (results[selected.id]) return;
           const item = batch.items.find(i => i.id === selected.id)!;
-          if (item.version !== selected.expectedVersion || item.reviewState !== 'saved' || !item.selection) throw conflict('item_version_conflict', 'Rivedi questo elemento prima di confermarlo.');
-          const doc = await this.source(tx, a, h, item), selection = organizationSelection(item.selection, item.pageCount);
+          if (item.version !== selected.expectedVersion || (direct ? item.reviewState === 'confirmed' || ['queued', 'running'].includes(item.analysisState) : item.reviewState !== 'saved' || !item.selection)) throw conflict('item_version_conflict', 'Rivedi questo elemento prima di confermarlo.');
+          const doc = await this.source(tx, a, h, item), selection = organizationSelection(selected.decision?.selection ?? item.selection, item.pageCount);
           if (selection.action !== 'organize') throw invalid();
           await intakeTarget(tx, a, h, selection);
           const where = { accountId_homeId_documentId: { accountId: a, homeId: h, documentId: doc.id } };
           const org = await tx.documentOrganization.findUnique({ where });
-          if ((org?.version ?? 0) !== item.organizationVersion) throw conflict('organization_version_conflict', 'L’organizzazione è cambiata. Rivedi questo elemento.');
+          if ((org?.version ?? 0) !== (selected.decision?.expectedOrganizationVersion ?? item.organizationVersion)) throw conflict('organization_version_conflict', 'L’organizzazione è cambiata. Rivedi questo elemento.');
+          if (direct && org && (org.title !== selection.title || !sameParts(org.parts, selection.parts)) && !selected.decision?.replaceOrganization) throw conflict('organization_replace_required', 'Conferma la sostituzione dei dati attuali.');
+          if (direct && row.mode === 'multiple') {
+            const proposal = item.proposal as { title?: unknown; parts?: unknown } | null;
+            if (item.uploadState !== 'stored' || item.reviewState !== 'unreviewed' || item.analysisState !== 'ready' || org || selection.target.kind !== 'home' || !proposal || proposal.title !== selection.title || !sameParts(proposal.parts, selection.parts)) throw conflict('intake_individual_review_required', 'Questo documento richiede una revisione individuale.');
+          }
           const data = { title: selection.title, parts: json(selection.parts), collections: collectionsFor(selection.parts), documentVersion: item.documentVersion!, documentSha256: item.documentSha256!, updatedAt: new Date() };
           const same = org && org.title === data.title && sameParts(org.parts, selection.parts) && org.documentVersion === data.documentVersion && org.documentSha256 === data.documentSha256;
           if (!same) await tx.documentOrganization.upsert({ where, create: { ...data, accountId: a, homeId: h, documentId: doc.id }, update: { ...data, version: { increment: 1 } } });
@@ -143,7 +162,7 @@ export class IntakeBatchesService {
               await tx.objectEvent.create({ data: { accountId: a, homeId: h, targetKind: selection.target.kind, targetId: selection.target.id, kind: 'linked', after: json({ kind: 'link', row: link, subjectKind: selection.target.kind, subjectId: selection.target.id }) } });
             }
           }
-          await tx.documentIntakeItem.update({ where: { id: item.id }, data: { reviewState: 'confirmed', version: { increment: 1 }, updatedAt: new Date() } });
+          await tx.documentIntakeItem.update({ where: { id: item.id }, data: { ...(direct ? { selection: json(selection), organizationVersion: org?.version ?? 0 } : {}), reviewState: 'confirmed', version: { increment: 1 }, updatedAt: new Date() } });
           const remaining = await tx.documentIntakeItem.count({ where: { batchId: id, reviewState: { not: 'confirmed' } } });
           await tx.documentIntakeBatch.update({ where: { id }, data: { state: remaining ? 'open' : 'completed', version: { increment: 1 }, updatedAt: new Date() } });
           await tx.documentIntakeRequest.update({ where: { id: request.id }, data: { results: json({ ...results, [item.id]: { state: 'confirmed' } }) } });
@@ -155,20 +174,23 @@ export class IntakeBatchesService {
         const response = error.getResponse(), code = typeof response === 'object' && 'code' in response ? String(response.code) : 'intake_item_unavailable';
         await this.authorized(a, h, true, async tx => {
           await this.locked(tx, a, h, id);
-          const request = await tx.documentIntakeRequest.findUniqueOrThrow({ where: { batchId_operation_key: { batchId: id, operation: 'confirm', key: key! } } });
+          const request = await tx.documentIntakeRequest.findUniqueOrThrow({ where: { batchId_operation_key: { batchId: id, operation, key: key! } } });
           const results = request.results as Record<string, unknown>;
           if (!results[selected.id]) await tx.documentIntakeRequest.update({ where: { id: request.id }, data: { results: json({ ...results, [selected.id]: { state: 'rejected', code } }) } });
         });
       }
     }
-    return this.confirmation(a, h, id, key, {});
+    return this.confirmation(a, h, id, key, {}, operation);
   }
-  async confirmation(a: string, h: string, id: string, key: string, query: unknown) {
+  async organizationReceipt(a: string, h: string, id: string, key: string, query: unknown) {
+    return this.confirmation(a, h, id, key, query, 'organize');
+  }
+  async confirmation(a: string, h: string, id: string, key: string, query: unknown, operation = 'confirm') {
     uuid(id); requestKey(key); object(query, []);
     const result = await this.authorized(a, h, false, async tx => {
       const batch = await tx.documentIntakeBatch.findFirst({ where: { id, accountId: a, homeId: h } });
       if (!batch) throw new ForbiddenException();
-      const request = await tx.documentIntakeRequest.findUnique({ where: { batchId_operation_key: { batchId: id, operation: 'confirm', key } } });
+      const request = await tx.documentIntakeRequest.findUnique({ where: { batchId_operation_key: { batchId: id, operation, key } } });
       if (!request) throw new NotFoundException({ code: 'intake_request_not_found', message: 'La conferma non risulta ancora ricevuta.' });
       return request.results;
     });

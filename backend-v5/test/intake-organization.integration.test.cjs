@@ -136,5 +136,70 @@ test('B2 durable personal organization, recoverable partial confirmation and doc
     } finally { await db.homeMembership.update({ where, data: { role: 'owner', revokedAt: null } }); }
     assert.equal(await db.documentOrganization.count({ where: { documentId: batch.items[0].documentLink.document.id } }), 0);
   });
+  const directBody = (batch, mode = 'single', indexes = [0], selection = organize()) => ({ expectedVersion: batch.version, mode, items: indexes.map(i => ({ itemId: batch.items[i].id, expectedVersion: batch.items[i].version, expectedOrganizationVersion: batch.items[i].organizationVersion, replaceOrganization: false, selection })) });
+  async function ready(batch) {
+    for (const item of batch.items) await db.documentIntakeItem.update({ where: { id: item.id }, data: { analysisState: 'ready', proposal: { title: 'APE sintetico', parts: organize().parts } } });
+    return get(batch);
+  }
+  await t.test('V2 direct HTTP requires scope/CSRF/strict body; manual single applies without saved intermediate state', async () => {
+    const batch = await fixture(), body = directBody(batch), route = '/batches/' + batch.id + '/organizations';
+    assert.equal((await call(B, route, body)).status, 403); assert.equal((await call(A, route, body, 'bad')).status, 403);
+    assert.equal((await call(A, route, { ...body, visibility: 'home' })).status, 422);
+    assert.equal((await call(A, route, { ...body, items: [body.items[0], body.items[0]] })).status, 422);
+    const response = await call(A, route, body); assert.equal(response.status, 201); assert.equal(response.body.results[batch.items[0].id].state, 'confirmed');
+    assert.equal(response.body.batch.items[0].reviewState, 'confirmed');
+    const doc = await db.document.findUnique({ where: { id: batch.items[0].documentLink.document.id } }); assert.equal(doc.visibility, 'private'); assert.equal(doc.name, 'Titolo originale');
+    assert.equal(await db.documentIntakeRequest.count({ where: { batchId: batch.id, operation: { startsWith: 'review:' } } }), 0);
+  });
+  await t.test('V2 selected-only multiple applies two, leaves third untouched and same-key replay is immutable', async () => {
+    const batch = await ready(await fixture(3)), body = directBody(batch, 'multiple', [0, 1]), key = randomUUID();
+    const result = await service.organize(A.a, h, batch.id, body, key);
+    assert.deepEqual(result.batch.items.map(i => i.reviewState), ['confirmed', 'confirmed', 'unreviewed']);
+    assert.equal(result.batch.state, 'open'); assert.deepEqual((await service.organize(A.a, h, batch.id, body, key)).results, result.results);
+    await reject(service.organize(A.a, h, batch.id, { ...body, mode: 'single', items: [body.items[0]] }, key), 'idempotency_conflict');
+    assert.equal(await db.documentOrganization.count({ where: { documentId: { in: batch.items.map(i => i.documentLink.document.id) } } }), 2);
+  });
+  await t.test('V2 bulk rejects duplicate/deferred/manual/modified proposals, without rolling back eligible documents', async () => {
+    let batch = await ready(await fixture(5));
+    await db.documentIntakeItem.update({ where: { id: batch.items[1].id }, data: { uploadState: 'duplicate' } });
+    await db.documentIntakeItem.update({ where: { id: batch.items[2].id }, data: { reviewState: 'deferred' } });
+    await db.documentIntakeItem.update({ where: { id: batch.items[3].id }, data: { analysisState: 'unreadable', proposal: null } });
+    batch = await get(batch); const body = directBody(batch, 'multiple', [0, 1, 2, 3, 4]); body.items[4].selection = organize('Modified title');
+    const result = await service.organize(A.a, h, batch.id, body, randomUUID());
+    assert.equal(result.results[batch.items[0].id].state, 'confirmed');
+    for (const item of batch.items.slice(1)) assert.equal(result.results[item.id].code, 'intake_individual_review_required');
+    assert.equal(result.batch.items[2].reviewState, 'deferred');
+  });
+  await t.test('V2 conflict requires current organization version and explicit replacement, retaining one original', async () => {
+    const first = await fixture(); await service.organize(A.a, h, first.id, directBody(first), randomUUID());
+    const id = first.items[0].documentLink.document.id, batch = await fixture(1, id), body = directBody(batch, 'single', [0], organize('SCIA aggiornata', ['scia']));
+    const rejected = await service.organize(A.a, h, batch.id, body, randomUUID()); assert.equal(rejected.results[batch.items[0].id].code, 'organization_replace_required');
+    const stale = structuredClone(body); stale.items[0].expectedOrganizationVersion = 0; stale.items[0].replaceOrganization = true;
+    assert.equal((await service.organize(A.a, h, batch.id, stale, randomUUID())).results[batch.items[0].id].code, 'organization_version_conflict');
+    body.items[0].replaceOrganization = true; const result = await service.organize(A.a, h, batch.id, body, randomUUID()); assert.equal(result.results[batch.items[0].id].state, 'confirmed');
+    const org = await db.documentOrganization.findFirst({ where: { documentId: id } }); assert.deepEqual(org.collections, ['building']); assert.equal(org.version, 2);
+    assert.equal(await db.document.count({ where: { id } }), 1);
+  });
+  await t.test('V2 lost response after first per-item commit recovers partial receipt and completes same request once', async () => {
+    const batch = await ready(await fixture(2)), body = directBody(batch, 'multiple', [0, 1]), key = randomUUID(), authorize = service.authorized.bind(service); let dropped = false;
+    await assert.rejects(service.organizationReceipt(A.a, h, batch.id, key, {}), e => e.getStatus() === 404);
+    service.authorized = async (...args) => { const r = await authorize(...args); if (!dropped && await db.documentIntakeItem.count({ where: { batchId: batch.id, reviewState: 'confirmed' } })) { dropped = true; throw Error('Synthetic V2 lost acknowledgement'); } return r; };
+    try { await assert.rejects(service.organize(A.a, h, batch.id, body, key), /V2 lost acknowledgement/); } finally { service.authorized = authorize; }
+    const partial = await service.organizationReceipt(A.a, h, batch.id, key, {}); assert.equal(Object.keys(partial.results).length, 1);
+    await assert.rejects(service.organizationReceipt(B.a, h, batch.id, key, {}), e => e.getStatus() === 403);
+    const result = await service.organize(A.a, h, batch.id, body, key); assert.equal(result.batch.state, 'completed');
+    for (const item of batch.items) assert.equal((await db.documentOrganization.findFirst({ where: { documentId: item.documentLink.document.id } })).version, 1);
+  });
+  await t.test('V2 stale item and source proof fail independently; viewer cannot apply a write', async () => {
+    const batch = await ready(await fixture(3)), body = directBody(batch, 'multiple', [0, 1, 2]);
+    await db.documentIntakeItem.update({ where: { id: batch.items[0].id }, data: { version: { increment: 1 } } });
+    await db.documentVersion.update({ where: { documentId: batch.items[1].documentLink.document.id }, data: { sha256: 'f'.repeat(64) } });
+    const result = await service.organize(A.a, h, batch.id, body, randomUUID());
+    assert.equal(result.results[batch.items[0].id].state, 'rejected'); assert.equal(result.results[batch.items[1].id].state, 'rejected'); assert.equal(result.results[batch.items[2].id].state, 'confirmed');
+    assert.equal(result.batch.items[1].filename, null);
+    const other = await fixture(), where = { accountId_homeId: { accountId: A.a, homeId: h } };
+    try { await db.homeMembership.update({ where, data: { role: 'viewer' } }); await assert.rejects(service.organize(A.a, h, other.id, directBody(other), randomUUID()), e => e.getStatus() === 403); }
+    finally { await db.homeMembership.update({ where, data: { role: 'owner' } }); }
+  });
   assert.deepEqual(await ledgers(), before);
 });

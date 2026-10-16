@@ -109,4 +109,4 @@ Il comando Riorganizza senza ricaricare sui file confermati prepara quel lotto e
 
 ## Organizzazione diretta V2 — 16 ottobre 2026
 
-Contratto e criteri in `document-intake-simplified-spec-v2.md`, sezione Contratto diretto: POST/GET `batches/:batchId/organizations[/ :key]` (senza spazio nella rotta), ledger distinto dalle conferme V1, selezioni esplicite e applicazione atomica per elemento. Implementazione in corso; non dichiarato già disponibile nel servizio avviato. Conferme e revisioni V1 restano compatibili.
+Contratto e criteri in `document-intake-simplified-spec-v2.md`, sezione Contratto diretto: POST `batches/:batchId/organizations` e GET `batches/:batchId/organizations/:key`, ledger distinto dalle conferme V1, selezioni esplicite e applicazione atomica per elemento. Backend implementato e verificato con HTTP/DB sintetici; collegamento UI e caricamento nel servizio avviato ancora da completare. Conferme e revisioni V1 restano compatibili.
