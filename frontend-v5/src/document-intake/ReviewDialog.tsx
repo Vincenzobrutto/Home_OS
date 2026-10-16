@@ -9,7 +9,7 @@ import styles from './intake.module.css';
 
 export type ReviewWriteState =
   | { status: 'idle' } | { status: 'saving' } | { status: 'rejected'; message: string }
-  | { status: 'uncertain'; message: string } | { status: 'recovering' } | { status: 'not_found' };
+  | { status: 'uncertain'; message: string; reloadOnly?: { version: IntakeItem['version'] } } | { status: 'recovering' } | { status: 'not_found' };
 
 /** Contenitore modale: Esc sul documento, Tab confinato, focus iniziale e restituzione al controllo di partenza. */
 export function Modal(props: { labelledBy: string; onClose: () => void; children: ReactNode }) {
@@ -64,6 +64,17 @@ const pageValue = (v: string): number | null => (v.trim() === '' ? null : Number
 function ManualParts(props: { parts: ClassificationPart[]; pageCount: number | null; disabled: boolean; onChange: (parts: ClassificationPart[]) => void }) {
   const id = useId();
   const set = (i: number, patch: Partial<ClassificationPart>) => props.onChange(props.parts.map((p, j) => (j === i ? { ...p, ...patch } : p)));
+  // Da tastiera il focus segue l'azione: sul contenuto aggiunto, oppure sul contenuto vicino (o su «Aggiungi») dopo una rimozione.
+  const focusNext = useRef<string | null>(null);
+  useEffect(() => {
+    if (focusNext.current) { document.getElementById(focusNext.current)?.focus(); focusNext.current = null; }
+  }, [props.parts.length]);
+  const remove = (i: number) => {
+    const rest = props.parts.filter((_, j) => j !== i);
+    focusNext.current = rest.length ? `${id}-k${Math.min(i, rest.length - 1)}` : `${id}-add`;
+    props.onChange(rest);
+  };
+  const add = () => { focusNext.current = `${id}-k${props.parts.length}`; props.onChange([...props.parts, { kind: 'other', pageFrom: null, pageTo: null }]); };
   return (
     <fieldset className={styles.fieldset}>
       <legend className={styles.legend}>Contenuti del documento</legend>
@@ -89,13 +100,13 @@ function ManualParts(props: { parts: ClassificationPart[]; pageCount: number | n
                 aria-label={`Contenuto ${i + 1}: a pagina`} onChange={(e) => set(i, { pageTo: pageValue(e.target.value) })} />
             </label>
           </div>
-          <button type="button" className={styles.linkButton} disabled={props.disabled} onClick={() => props.onChange(props.parts.filter((_, j) => j !== i))}>
+          <button type="button" className={styles.linkButton} disabled={props.disabled} onClick={() => remove(i)}>
             Rimuovi il contenuto {i + 1}
           </button>
         </div>
       ))}
       {props.parts.length < MAX_PARTS && (
-        <button type="button" className={cx(ui.btn, ui.small)} disabled={props.disabled} onClick={() => props.onChange([...props.parts, { kind: 'other', pageFrom: null, pageTo: null }])}>
+        <button type="button" id={`${id}-add`} className={cx(ui.btn, ui.small)} disabled={props.disabled} onClick={add}>
           Aggiungi un contenuto
         </button>
       )}
@@ -300,7 +311,7 @@ function WriteStatus(props: { state: ReviewWriteState; onRecover: () => void }) 
       <div className={styles.conflict} role="alert">
         <strong>Esito non confermato</strong>
         <p className={styles.note}>{s.status === 'uncertain' ? s.message : 'Verifica in corso.'} La scelta non viene inviata di nuovo automaticamente.</p>
-        <button type="button" className={cx(ui.btn, ui.small)} onClick={props.onRecover} disabled={s.status === 'recovering'}>{s.status === 'recovering' ? 'Verifica…' : 'Verifica l’esito'}</button>
+        {!(s.status === 'uncertain' && s.reloadOnly) && <button type="button" className={cx(ui.btn, ui.small)} onClick={props.onRecover} disabled={s.status === 'recovering'}>{s.status === 'recovering' ? 'Verifica…' : 'Verifica l’esito'}</button>}
       </div>
     );
   }

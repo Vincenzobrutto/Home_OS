@@ -11,6 +11,12 @@
 
 Componenti **non integrati**: nessun fetch e nessun fallback demo. Nessun push.
 
+| Consegna | Stato | Commit |
+|---|---|---|
+| B4-1 Consenso alla sostituzione | PRONTA | `19124eb` |
+| B4-2 Revisione robusta | PRONTA | `713f51b` |
+| B4-3 Test mirati, mobile e tastiera | PRONTA | commit «archivio B4-3» (vedi `git log`) |
+
 ## B4-1 — Consenso alla sostituzione · PRONTA
 
 Commit: `19124eb` «feat(frontend-v5): archivio B4-1, consenso esplicito alla sostituzione».
@@ -60,7 +66,7 @@ Commit: `19124eb` «feat(frontend-v5): archivio B4-1, consenso esplicito alla so
 
 ## B4-2 — Revisione robusta · PRONTA
 
-Commit: quello di questa fase (messaggio «archivio B4-2»). Il codice è in `19124eb` (vedi nota sopra); qui entrano fixture e test.
+Commit: `713f51b` «test(frontend-v5): archivio B4-2, revisione robusta». Il codice è in `19124eb` (vedi nota sopra); qui entrano fixture e test.
 
 **Differenze richieste al container (segnalate prima di PRONTA):**
 
@@ -83,4 +89,49 @@ Commit: quello di questa fase (messaggio «archivio B4-2»). Il codice è in `19
 
 **Prove:** `npx vitest run --project mock src/document-intake` **32/32**; `tsc -b --noEmit` e `eslint src/document-intake` OK.
 
-## B4-3 — Test mirati, mobile e tastiera · IN_CORSO
+## B4-3 — Test mirati, mobile e tastiera · PRONTA
+
+Commit: quello di questa fase (messaggio «archivio B4-3»).
+
+**Correzioni trovate scrivendo i test** (nel contratto delle props, nessuna callback nuova):
+- **Riuso incerto della copia:** il dialogo mostrava «Verifica l'esito», ma `recoverReview` non aveva un payload per quel percorso, quindi il pulsante non faceva nulla e l'elemento restava bloccato per sempre. Ora lo stato incerto ha `reloadOnly: { version }`:
+  - nessun pulsante di verifica, solo il messaggio «Ricarica il lotto…»;
+  - nessun reinvio;
+  - il blocco cade quando il container porta l'elemento con una versione diversa.
+- **Editor dei contenuti da tastiera:** dopo «Aggiungi un contenuto» il focus va sul tipo del nuovo contenuto; dopo «Rimuovi» va sul contenuto vicino, oppure su «Aggiungi».
+
+**Test (`LateAndUncertain.test.tsx`, 4):**
+- riuso incerto: un solo invio anche col doppio clic, nessuna verifica finta, nessun `onSaveReview` o `onRetryUpload`, sblocco con la versione nuova;
+- risposta tardiva del riuso dopo il cambio di account: nessun esito o dato del contesto precedente;
+- organizzazione della copia con risposta tardiva `stale` dopo l'arrivo della versione 3: errore mostrato, consenso decaduto, nessun reinvio;
+- editor solo da tastiera: aggiunge, compila e rimuove, focus corretto, payload con gli intervalli scelti.
+
+Non rifatti, perché già verdi e invariati: cambio di contesto e risposta tardiva della revisione, conferma incerta, revisione incerta, upload incerto senza retry automatico, focus del dialogo.
+
+**Harness:**
+- `demo/IntakeDemo.tsx` ha lo scenario «Rifinitura B4»: APE con organizzazione confermata (v3), copia di un documento organizzato, scansione con tre contenuti manuali, copia con fonte persa e cache vecchia, manifest in attesa;
+- l'etichetta lunga dello scenario allargava la **barra dell'harness** a 320 px (373 px): accorciata e `maxWidth: 100%`. Il componente non era coinvolto.
+
+**Prova browser:**
+- bundle statico esbuild su `file://`, Chrome headless via CDP; nessun server, API o AI; la porta 5174 non è stata toccata;
+- su 1280, 390 e 320, nel lotto, nelle proposte e nei tre dialoghi: overflow assente, dialogo e controlli nella larghezza;
+- il consenso parte non selezionato e il salvataggio resta bloccato con il messaggio;
+- «Organizza il documento esistente» precompila «APE appartamento» e mostra «nessuna sostituzione»;
+- la fonte persa mostra «Documento non disponibile» e il nome della copia compare una sola volta;
+- il manifest in attesa resta visibile;
+- tastiera (1280): dopo Aggiungi il focus va su «Tipo del contenuto 4», dopo Rimuovi su «Tipo del contenuto 3», Tab resta nel dialogo, Esc riporta il focus su «Modifica scelta Scansione_documento.pdf»;
+- errori in console: nessuno.
+
+Screenshot nuovi in `screenshots/`: `b4-consenso-390.png`, `b4-consenso-320.png`, `b4-copia-organizza-390.png`, `b4-parti-manuali-320.png`.
+
+**Prove finali (una volta):**
+- `npx vitest run --project mock src/document-intake`: **36/36** in 5 file;
+- `tsc -b --noEmit`, `eslint src/document-intake` e `npm run build`: OK.
+
+**Limiti reali:**
+- i componenti **non sono un prodotto integrato**: nessun container, router o fetch;
+- le prove sono su jsdom e su un harness sintetico, non sul backend B2;
+- D1 (organizzare la copia attraverso l'endpoint review) non è verificato sul server;
+- il motore di analisi resta fuori: nessuna chiamata AI, a pagamento o a un provider, e nessuna dichiarazione Anthropic;
+- nessuna affermazione di conformità WCAG;
+- Guida, Agenzie e previsioni sono fuori perimetro.

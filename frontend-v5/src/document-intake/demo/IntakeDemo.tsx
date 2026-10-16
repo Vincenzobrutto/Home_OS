@@ -8,7 +8,7 @@ import '../../styles/tokens.css';
 import '../../styles/global.css';
 import { DocumentIntakeAssistant } from '../DocumentIntakeAssistant';
 import type { CandidatePage, ConfirmBatchOutcome, IntakeBatch, IntakeItem, WriteOutcome } from '../model';
-import { CONTEXT, LIMITS, batchOf, corpus, diagramCandidates, mixedBatch } from '../testing/fixtures';
+import { CONTEXT, LIMITS, batchOf, copyOfOrganized, corpus, diagramCandidates, lostCopyStaleCache, mixedBatch, multiPartScan, pendingManifest } from '../testing/fixtures';
 
 const LONG = 'Relazione_tecnica_impianto_termico_centralizzato_con_contabilizzazione_del_calore_e_valvole_termostatiche_2026_versione_definitiva.pdf';
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -17,6 +17,10 @@ function initial(name: string): IntakeBatch | null {
   if (name === 'empty') return null;
   if (name === 'long') return batchOf([{ ...corpus.diagram(), id: 'lungo', filename: LONG, proposal: { ...corpus.diagram().proposal!, title: 'Relazione tecnica dell’impianto termico centralizzato con contabilizzazione del calore' } }, ...mixedBatch().items]);
   if (name === 'failed') return batchOf([corpus.ape(), { ...corpus.rules(), uploadState: 'failed', analysisState: 'not_started', error: { code: 'x', message: 'Caricamento interrotto: riprova questo file.' } }, { ...corpus.scan(), uploadState: 'uploading', analysisState: 'not_started' }]);
+  if (name === 'b4') return batchOf([
+    { ...corpus.ape(), organizationVersion: 3, confirmedOrganization: { title: 'APE appartamento', parts: [{ kind: 'ape', pageFrom: 1, pageTo: 8 }] } },
+    copyOfOrganized(), multiPartScan(), { ...lostCopyStaleCache(), id: 'persa' }, pendingManifest(),
+  ]);
   return mixedBatch();
 }
 
@@ -31,11 +35,12 @@ function Demo() {
       <div style={{ background: '#fff4dc', color: '#63450f', padding: '8px 16px', fontSize: 13, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <strong>HARNESS DEMO · dati sintetici, nessun upload, API o AI</strong>
         <label>Scenario{' '}
-          <select value={name} onChange={(e) => { setName(e.target.value); setBatch(initial(e.target.value)); setCandidates({}); setRun(r => r + 1); }}>
+          <select style={{ maxWidth: "100%" }} value={name} onChange={(e) => { setName(e.target.value); setBatch(initial(e.target.value)); setCandidates({}); setRun(r => r + 1); }}>
             <option value="mixed">Lotto misto del mockup</option>
             <option value="long">Nomi lunghi</option>
             <option value="failed">Caricamento non riuscito</option>
             <option value="empty">Ingresso</option>
+            <option value="b4">Rifinitura B4</option>
           </select>
         </label>
       </div>

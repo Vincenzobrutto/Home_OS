@@ -108,8 +108,14 @@ function Inner(props: DocumentIntakeAssistantProps) {
   const draftKey = (item: IntakeItem) => `${item.id}|${item.documentLink.document?.id ?? ''}`;
   const getDraft = (item: IntakeItem) => (sourceLost(item) ? initialReviewDraft(item) : drafts[draftKey(item)] ?? initialReviewDraft(item));
   const setWrite = (id: OpaqueId, w: ReviewWriteState) => safe(() => setWrites(prev => ({ ...prev, [id]: w })));
-  const writeOf = (id: OpaqueId): ReviewWriteState => writes[id] ?? { status: 'idle' };
-  const lockedItems = new Set(Object.entries(writes).filter(([, w]) => w.status === 'uncertain' || w.status === 'recovering' || w.status === 'saving').map(([id]) => id));
+  // Riuso di una copia con esito incerto: non esiste un recupero dedicato, quindi resta bloccato finché il container
+  // non ricarica l'elemento con una versione nuova (lo stato reale); mai reinviato da solo.
+  const writeOf = (id: OpaqueId): ReviewWriteState => {
+    const w = writes[id];
+    if (w?.status === 'uncertain' && w.reloadOnly && items.find(i => i.id === id)?.version !== w.reloadOnly.version) return { status: 'idle' };
+    return w ?? { status: 'idle' };
+  };
+  const lockedItems = new Set(Object.keys(writes).filter(id => ['uncertain', 'recovering', 'saving'].includes(writeOf(id).status)));
   const busy = confirm.status === 'submitting' || confirm.status === 'uncertain' || confirm.status === 'recovering';
 
   const applyWrite = (id: OpaqueId, outcome: WriteOutcome | { status: 'not_found' }, closeOnSuccess: boolean) => {
@@ -191,8 +197,11 @@ function Inner(props: DocumentIntakeAssistantProps) {
       onDefer={() => void sendReview(deferPayload(dialogItem))}
       onResolveDuplicate={async () => {
         setWrite(dialogItem.id, { status: 'saving' });
-        try { applyWrite(dialogItem.id, await props.onResolveDuplicate(dialogItem.id, dialogItem.version), true); }
-        catch { applyWrite(dialogItem.id, { status: 'uncertain' }, true); }
+        const { id, version } = dialogItem;
+        let outcome: WriteOutcome;
+        try { outcome = await props.onResolveDuplicate(id, version); } catch { outcome = { status: 'uncertain' }; }
+        if (outcome.status === 'uncertain') setWrite(id, { status: 'uncertain', reloadOnly: { version }, message: 'Non sappiamo se l’originale esistente è stato collegato. Ricarica il lotto per vedere lo stato reale: la scelta non viene inviata di nuovo.' });
+        else applyWrite(id, outcome, true);
       }}
       onRecover={() => void recoverReview(dialogItem.id)}
       onOpenReceiptFlow={props.onOpenReceiptFlow ? () => props.onOpenReceiptFlow?.(dialogItem.id) : undefined}
