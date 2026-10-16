@@ -11,6 +11,8 @@ import { EconomyPolicy } from '../economy/policy';
 import { receiptConfirmation, type ReceiptOrigin, type FieldPlan } from './confirmation';
 import { resolveReceiptField, type ReceiptExtraction, type ReceiptProposal } from './domain';
 import { candidateQuery, candidatePagination, equivalentReceiptDocuments, objectCandidatesSql, expenseCandidatesSql, type CandidateKind, type CandidateAnchor } from './candidates';
+import { reviewedForm, type SavedReceiptSelection } from './review';
+import { readableReceiptObjectIds } from './access';
 
 type Tx = Prisma.TransactionClient;
 const deny = () => new ForbiddenException('Accesso non consentito.');
@@ -60,6 +62,7 @@ export class ReceiptAssistanceService {
       documentLink: { state: doc ? 'linked' : 'unavailable', document: doc ? { id: doc.id, name: doc.name } : null },
       snapshot: doc ? { documentId: doc.id, documentVersion: row.documentVersion, sha256: row.documentSha256 } : null,
       fields: doc ? row.fields : {}, total: doc ? row.total : null,
+      review: doc ? await this.reviewView(tx, a, h, row) : null,
       confirmation: doc ? await this.confirmedResult(tx, a, h, row.confirmation) : null,
       permissions: edit && doc ? ['read', 'edit'] : ['read'],
       createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString(),
@@ -144,14 +147,52 @@ export class ReceiptAssistanceService {
 
   action(a: string, h: string, id: string, op: 'park' | 'reopen', input: unknown, key?: string) {
     uuid(id);
-    const body = { expectedVersion: version(object(input, ['expectedVersion']).expectedVersion) };
+    const row = object(input, op === 'park' ? ['expectedVersion', 'selection'] : ['expectedVersion']);
+    const expectedVersion = version(row.expectedVersion);
+    const selection = row.selection === undefined ? undefined : receiptConfirmation({ ...object(row.selection, ['object', 'expense']), expectedVersion }, temporal(this.clock.now()).today);
+    const body = { expectedVersion, ...(selection ? { selection: { object: selection.object, expense: selection.expense } } : {}) };
     return this.request(a, h, op, id, body, key, async tx => {
       const old = await this.record(tx, a, h, id);
       if (!await this.source(tx, a, h, old.documentId, old)) throw deny();
       if (old.version !== body.expectedVersion) throw conflict('receipt_draft_version_conflict', 'La bozza è cambiata. Rileggila prima di continuare.');
       if (old.state !== (op === 'park' ? 'open' : 'parked')) throw conflict('receipt_draft_state_conflict', 'Azione non consentita nello stato attuale.');
-      return tx.receiptDraft.update({ where: { id }, data: { state: op === 'park' ? 'parked' : 'open', version: { increment: 1 }, updatedAt: this.clock.now() } });
+      if (body.selection) await this.validateReview(tx, a, h, old, body.selection);
+      return tx.receiptDraft.update({ where: { id }, data: { state: op === 'park' ? 'parked' : 'open', ...(body.selection ? { review: json(body.selection) } : {}), version: { increment: 1 }, updatedAt: this.clock.now() } });
     });
+  }
+
+  private async reviewView(tx: Tx, a: string, h: string, draft: ReceiptDraft) {
+    if (!draft.review) return null;
+    let selection: SavedReceiptSelection;
+    try { selection = receiptConfirmation({ ...object(draft.review, ['object', 'expense']), expectedVersion: draft.version }, temporal(this.clock.now()).today); }
+    catch { return null; }
+    const target = selection.object.action === 'reuse' ? await tx.homeObject.findFirst({ where: { id: selection.object.targetId, accountId: a, homeId: h, state: 'active' }, select: { id: true, version: true } }) : null;
+    const readableObject = target && (await readableReceiptObjectIds(tx, a, h, [target.id])).has(target.id) ? target : null;
+    const expense = selection.expense.action === 'reuse' ? await tx.homeExpense.findFirst({ where: { id: selection.expense.targetId, accountId: a, homeId: h, state: 'active' }, select: { id: true, version: true } }) : null;
+    return reviewedForm(selection, { fields: draft.fields as ReceiptExtraction['fields'], total: draft.total as ReceiptExtraction['total'] }, { object: readableObject, expense });
+  }
+  private async validateReview(tx: Tx, a: string, h: string, draft: ReceiptDraft, selection: SavedReceiptSelection) {
+    if (selection.object.action === 'create') for (const field of ['name', 'brand', 'model'] as const) this.proposalOrigin(draft, field, selection.object.values[field], selection.object.origins[field]);
+    if (selection.object.action === 'reuse') {
+      const target = await this.target(tx, a, h, selection.object.targetId);
+      if (!(await readableReceiptObjectIds(tx, a, h, [target.id])).has(target.id)) throw deny();
+      if (target.state !== 'active' || target.version !== selection.object.targetVersion) throw conflict('receipt_target_version_conflict', 'La scheda è cambiata. Rivedi le scelte prima di rimandare.');
+      const proposals = draft.fields as ReceiptExtraction['fields'];
+      for (const plan of selection.object.fields) {
+        const old = await tx.receiptObjectField.findUnique({ where: { objectId_fieldKey: { objectId: target.id, fieldKey: plan.field } } });
+        if (old && (old.accountId !== a || old.homeId !== h || old.documentId && !await this.source(tx, a, h, old.documentId, { documentVersion: old.documentVersion!, documentSha256: old.documentSha256! }))) throw deny();
+        resolveReceiptField(plan.field, old ? { value: old.value, origin: old.origin, sources: old.sources as unknown as ReceiptProposal['sources'] } : null, proposals[plan.field] ?? null, { action: plan.action, ...(plan.value !== undefined ? { value: plan.value } : {}) });
+      }
+    }
+    if (selection.expense.action === 'create') {
+      const plan = selection.expense;
+      for (const [field, wire] of [['title', 'title'], ['amount', 'amountCents'], ['date', 'spentOn'], ['supplier', 'supplier']] as const) this.proposalOrigin(draft, field === 'date' ? 'documentDate' : field, plan.values[wire], plan.origins[field]);
+    }
+    if (selection.expense.action === 'reuse') {
+      const expense = await tx.homeExpense.findFirst({ where: { id: selection.expense.targetId, accountId: a, homeId: h } });
+      if (!expense) throw deny();
+      if (expense.state !== 'active' || expense.version !== selection.expense.targetVersion) throw conflict('expense_version_conflict', 'La spesa è cambiata. Rivedi le scelte prima di rimandare.');
+    }
   }
 
   private async target(tx: Tx, a: string, h: string, id: string) {

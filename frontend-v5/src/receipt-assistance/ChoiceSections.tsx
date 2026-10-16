@@ -11,6 +11,7 @@ import styles from './receipt.module.css';
 const REASON: Record<string, string> = {
   same_document: 'Questa ricevuta è già collegata alla scheda.',
   same_brand_model: 'Stessa marca e modello letti nella ricevuta.',
+  same_original: 'Una copia dello stesso originale è già collegata.',
 };
 const reasonText = (reasons: CandidateReason[]) => reasons.map(r => REASON[r] ?? 'Possibile corrispondenza: controlla che sia lo stesso.').join(' ');
 
@@ -69,7 +70,7 @@ export function ObjectSection(props: SectionProps & { objects: ObjectRef[]; cand
         <h2 id={`${name}-title`}>1. A quale oggetto appartiene?</h2>
         <Tag tone={linked.length ? 'blue' : ambiguous ? 'warn' : 'neutral'}>{tag}</Tag>
       </div>
-      {ambiguous && <p className={styles.note}>Ci sono più oggetti compatibili. Il nome da solo non basta: scegli tu quale usare.</p>}
+      {ambiguous && <p className={styles.note}>Puoi scegliere una scheda già presente. Il nome da solo non basta: collegala soltanto se riguarda questo acquisto.</p>}
       <fieldset className={styles.fieldset} aria-invalid={errors.object ? true : undefined} aria-describedby={errors.object ? `${name}-err` : undefined}>
         <legend className="visually-hidden">Oggetto</legend>
         {props.objects.map(o => (

@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { ConfirmOutcome, ConfirmationPayload, ReceiptDraft } from './model';
+import { initialFormState, type ConfirmOutcome, type ConfirmationPayload, type ReceiptDraft } from './model';
 import { scenarios } from './testing/fixtures';
 import { assistantProps, renderAssistant } from './testing/renderAssistant';
 
@@ -193,6 +193,30 @@ describe('ruoli, errori e rete', () => {
     await user.click(screen.getByRole('button', { name: 'Rimanda' }));
     expect(await screen.findByText(/Non sappiamo se la bozza è stata rimandata/)).toBeInTheDocument();
     expect(screen.queryByText(/Bozza rimandata:/)).not.toBeInTheDocument();
+  });
+  it('rimandare invia le scelte effettive del riepilogo, inclusi valori modificati a mano', async () => {
+    const user = userEvent.setup(), onPark = vi.fn(async () => ({ status: 'parked' as const })), onReview = vi.fn();
+    renderAssistant(assistantProps('fresh', { onPark, onReview }));
+    const input = screen.getByRole('textbox', { name: 'Nome dell’oggetto' });
+    await user.clear(input); await user.type(input, 'Caffe salvato'); await next(user);
+    await user.click(screen.getByRole('button', { name: 'Rimanda' }));
+    expect(await screen.findByText(/Bozza rimandata:/)).toBeInTheDocument();
+    expect(onPark).toHaveBeenCalledWith(onReview.mock.calls[0]![0]);
+    expect(onReview.mock.calls[0]![0].object.values.name).toBe('Caffe salvato');
+    expect(screen.getByRole('button', { name: 'Conferma' })).toBeDisabled();
+  });
+  it('bozza in pausa: valori conservati e modifiche disabilitate fino a ripresa esplicita', async () => {
+    const user = userEvent.setup(), s = scenarios.fresh(), form = initialFormState(s.draft);
+    form.values.name = 'Oggetto ripreso'; form.values.amount = '215,00';
+    const draft: ReceiptDraft = { ...s.draft, state: 'parked', review: { form, staleTargets: [], targetVersions: { object: null, expense: null } } };
+    const onResumeDraft = vi.fn(async () => ({ status: 'resumed' as const })), props = assistantProps('fresh', { draft, onResumeDraft });
+    const view = renderAssistant(props);
+    expect(screen.getByRole('textbox', { name: 'Nome dell’oggetto' })).toHaveValue('Oggetto ripreso');
+    expect(screen.getByRole('textbox', { name: 'Nome dell’oggetto' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Riprendi le scelte salvate' })); expect(onResumeDraft).toHaveBeenCalledTimes(1);
+    view.rerenderWith({ ...props, draft: { ...draft, state: 'open', version: 3 } });
+    expect(screen.getByRole('textbox', { name: 'Nome dell’oggetto' })).toBeEnabled();
+    await next(user); expect(screen.getByText('215,00 €')).toBeInTheDocument();
   });
 
   it('confronti già rinviati mostrati dalle props e riapribili; altri candidati caricati su richiesta', async () => {

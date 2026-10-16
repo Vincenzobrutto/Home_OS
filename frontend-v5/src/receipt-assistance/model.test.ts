@@ -26,6 +26,21 @@ describe('stato iniziale', () => {
     const draft: ReceiptDraft = { ...s.draft, linkedObjects: [...s.draft.linkedObjects, kitchen({ id: 'obj-2', linkedToDocument: true })] };
     expect(initialFormState(draft).object).toEqual({ kind: 'unset' });
   });
+  it('un solo collegamento nella pagina non prova unicità se il server ne conta due', () => {
+    const s = scenarios.existing();
+    expect(initialFormState({ ...s.draft, linkedObjectsCount: 2, linkedExpensesCount: 2 }).object).toEqual({ kind: 'unset' });
+    expect(initialFormState({ ...s.draft, linkedObjectsCount: 2, linkedExpensesCount: 2 }).expense).toEqual({ kind: 'unset' });
+  });
+  it('riprende i valori salvati ma richiede nuova scelta se la versione del target è cambiata', () => {
+    const s = scenarios.existing(), form = initialFormState(s.draft);
+    form.values.title = 'Costo rivisto'; form.values.amount = '215,00'; form.decisions['obj-kitchen:brand'] = 'defer';
+    const draft: ReceiptDraft = { ...s.draft, review: { form, staleTargets: [], targetVersions: { object: 3, expense: 2 } } };
+    expect(initialFormState(draft)).toEqual(form);
+    const changed = initialFormState({ ...draft, linkedObjects: [kitchen({ version: 4 })] });
+    expect(changed.object).toEqual({ kind: 'unset' }); expect(changed.decisions).toEqual({});
+    expect(changed.values.title).toBe('Costo rivisto'); expect(changed.values.amount).toBe('215,00');
+    expect(initialFormState({ ...draft, linkedObjects: [] }).object).toEqual({ kind: 'unset' });
+  });
   it('la chiave di contesto cambia con account, casa, documento o bozza', () => {
     const keys = new Set([CONTEXT, { ...CONTEXT, accountId: 'x' }, { ...CONTEXT, homeId: 'x' }, { ...CONTEXT, documentId: 'x' }, { ...CONTEXT, draftId: null }].map(contextKeyString));
     expect(keys.size).toBe(5);

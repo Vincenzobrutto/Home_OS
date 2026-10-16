@@ -453,6 +453,49 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     assert.equal((await call(A, path('drafts/' + old.id + '/object-candidates'))).status, 403);
     assert.equal((await call(A, path('drafts/' + old.id + '/expense-candidates'))).status, 403);
   });
+  await t.test('Park persists reviewed manual choices and replay; reopen restores them without canonical side effects', async () => {
+    const doc = await document(a, 'Saved manual review'), row = await manualDraft(doc), chosen = selection();
+    chosen.object.values.name = 'My saved coffee'; chosen.expense.values.title = 'My saved purchase'; chosen.expense.values.amountCents = 21500;
+    const key = randomUUID(), body = { expectedVersion: 1, selection: { object: chosen.object, expense: chosen.expense } };
+    const before = [await db.homeObject.count({ where: { accountId: a.id } }), await db.homeExpense.count({ where: { accountId: a.id } })];
+    const parked = await call(A, path('drafts/' + row.id + '/park'), 'POST', body, key); assert.equal(parked.status, 200); assert.equal(parked.body.draft.state, 'parked');
+    assert.deepEqual((await call(A, path('drafts/' + row.id + '/park'), 'POST', body, key)).body, parked.body);
+    const saved = (await call(A, path('drafts/' + row.id))).body.draft;
+    assert.equal(saved.review.form.values.name, 'My saved coffee'); assert.equal(saved.review.form.values.title, 'My saved purchase'); assert.equal(saved.review.form.values.amount, '215,00'); assert.equal(saved.review.form.values.date, '2026-09-15');
+    assert.equal(saved.review.form.object.kind, 'create'); assert.equal(saved.review.form.expense.kind, 'create'); assert.deepEqual(saved.fields, {}); assert.equal(saved.total, null);
+    assert.deepEqual([await db.homeObject.count({ where: { accountId: a.id } }), await db.homeExpense.count({ where: { accountId: a.id } })], before);
+    assert.equal((await confirmation(row.id, { ...chosen, expectedVersion: 2 })).status, 409);
+    const reopened = await call(A, path('drafts/' + row.id + '/reopen'), 'POST', { expectedVersion: 2 }); assert.equal(reopened.status, 200); assert.equal(reopened.body.draft.version, 3); assert.deepEqual(reopened.body.draft.review, saved.review);
+    const done = await confirmation(row.id, { ...chosen, expectedVersion: 3 }); assert.equal(done.status, 200); assert.equal(done.body.draft.confirmation.expense.amountCents, 21500);
+    assert.equal((await db.homeObject.findUnique({ where: { id: done.body.draft.confirmation.object.id } })).name, 'My saved coffee');
+  });
+  await t.test('Saved target changes reset selection and decisions, preserving manually reviewed cost values', async () => {
+    const doc = await document(a, 'Saved target review'), row = await manualDraft(doc), target = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Selected own object', type: 'other' } });
+    const chosen = selection(); chosen.object = { action: 'reuse', targetId: target.id, targetVersion: 1, fields: [] };
+    const parked = await call(A, path('drafts/' + row.id + '/park'), 'POST', { expectedVersion: 1, selection: { object: chosen.object, expense: chosen.expense } }); assert.equal(parked.status, 200);
+    assert.equal(parked.body.draft.review.form.object.id, target.id); assert.equal(parked.body.draft.review.targetVersions.object, 1);
+    await db.homeObject.update({ where: { id: target.id }, data: { version: { increment: 1 }, name: 'Changed object name' } });
+    const changed = (await call(A, path('drafts/' + row.id))).body.draft.review;
+    assert.deepEqual(changed.form.object, { kind: 'unset' }); assert.deepEqual(changed.form.decisions, {}); assert.deepEqual(changed.staleTargets, ['object']); assert.equal(changed.targetVersions.object, null);
+    assert.equal(changed.form.values.amount, '179,90'); assert.equal(changed.form.values.title, 'Manual purchase fixture'); assert(!JSON.stringify(changed).includes(target.id));
+    const foreign = await db.homeObject.create({ data: { accountId: b.id, homeId: home, name: 'Foreign review target', type: 'other' } }), next = await manualDraft(await document(a, 'Forbidden review source'));
+    const denied = await call(A, path('drafts/' + next.id + '/park'), 'POST', { expectedVersion: 1, selection: { object: { action: 'reuse', targetId: foreign.id, targetVersion: 1, fields: [] }, expense: { action: 'skip' } } }); assert.equal(denied.status, 403); assert(!JSON.stringify(denied).includes(foreign.name));
+  });
+  await t.test('Park stores only validated choices, not fake extraction or early comparisons; source revocation redacts the saved form', async () => {
+    const doc = await document(a, 'Review validation'), row = await manualDraft(doc), forged = selection(); forged.object.origins.name = 'extraction';
+    assert.equal((await call(A, path('drafts/' + row.id + '/park'), 'POST', { expectedVersion: 1, selection: { object: forged.object, expense: forged.expense } })).status, 422);
+    assert.equal((await call(A, path('drafts/' + row.id + '/park'), 'POST', { expectedVersion: 1, selection: { object: { action: 'skip' }, expense: { action: 'skip' }, sources: [{ token: 'No raw review sources' }] } })).status, 422);
+    assert.equal((await db.receiptDraft.findUnique({ where: { id: row.id } })).review, null);
+    const target = await db.homeObject.create({ data: { accountId: a.id, homeId: home, name: 'Review conflict object', type: 'other' } });
+    await db.receiptObjectField.create({ data: { accountId: a.id, homeId: home, objectId: target.id, fieldKey: 'brand', value: 'Aurora', origin: 'user_declared' } });
+    await db.receiptDraft.update({ where: { id: row.id }, data: { mode: 'extraction', fields: { brand: { value: 'Lume', sources: [{ documentId: doc.id, page: 1, excerpt: 'Lume' }] } } } });
+    const parked = await call(A, path('drafts/' + row.id + '/park'), 'POST', { expectedVersion: 1, selection: { object: { action: 'reuse', targetId: target.id, targetVersion: 1, fields: [{ field: 'brand', action: 'defer' }] }, expense: { action: 'skip' } } });
+    assert.equal(parked.status, 200); assert.equal(parked.body.draft.review.form.decisions[target.id + ':brand'], 'defer'); assert.equal(await db.receiptComparison.count({ where: { objectId: target.id } }), 0);
+    const shared = await document(b, 'Shared saved review', 'home'), privateDraft = await manualDraft(shared), chosen = selection(); chosen.object.values.name = 'Private reviewed text';
+    assert.equal((await call(A, path('drafts/' + privateDraft.id + '/park'), 'POST', { expectedVersion: 1, selection: { object: chosen.object, expense: chosen.expense } })).status, 200);
+    await db.document.update({ where: { id: shared.id }, data: { visibility: 'private' } });
+    const hidden = await call(A, path('drafts/' + privateDraft.id)); assert.equal(hidden.body.draft.review, null); assert(!JSON.stringify(hidden).includes('Private reviewed text'));
+  });
   await t.test('Changed original and viewer write denied; membership revocation blocks old requests', async () => {
     await db.documentVersion.update({ where: { documentId: own.id }, data: { version: { increment: 1 }, sha256: 'b'.repeat(64) } });
     const changed = await call(A, path('drafts/' + draft.id));

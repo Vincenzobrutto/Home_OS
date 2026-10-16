@@ -63,3 +63,6 @@ Candidati GET object-candidates/expense-candidates: limit1–50/cursor, risposta
 
 ### Trasporto job R6b (ancora isolato)
 POST jobs:202 {job}, provider receipt_fixture_v1 e consentToProviderTransfer:false, key stabile. GET jobs/:id: query vuota. Job id/version/provider/isSimulation/state/draftId/errorCode/documentLink/date; nessun lease/key/digest/storage. Fonte stale/revocata → unavailable con riferimenti/errori null. Coda8globale/2account, worker2, lease/deadline30s anche storage; timeout necessita retry esplicito. Soltanto hash dei4PDF sintetici receipt riconosciuti prima di leggere storage, nessun fallback su documenti reali. Schema provider fixture-only; Anthropic richiederà incremento separato autorizzato. Modulo/capabilities rimangono inattivi fino integrazione/browser.
+
+### Park/review R7a
+POST park accetta {expectedVersion,selection:{object,expense}}, con le stesse scelte validate del riepilogo conferma. Persiste soltanto la bozza, nessuna risorsa confermata; GETdraft restituisce review.form/staleTargets/targetVersions autorizzati. Target cambiati richiedono nuova scelta, fonte non disponibile redige anche review. Bozza parked in sola lettura fino POSTreopen esplicito. GET non riapre né conferma.

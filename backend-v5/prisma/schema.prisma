@@ -749,6 +749,7 @@ model AiAttempt {
 }
 
 model ReceiptDraft {
+  review Json?
   analysisJob ReceiptAnalysisJob?
   confirmation Json?
   comparisons ReceiptComparison[]

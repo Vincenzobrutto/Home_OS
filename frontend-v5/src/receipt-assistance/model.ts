@@ -84,6 +84,10 @@ export type ReceiptDraft = {
   linkedObjects: ObjectRef[];
   linkedExpenses: ExpenseRef[];
   openComparisons: PersistedComparison[];
+  linkedObjectsCount?: number;
+  linkedExpensesCount?: number;
+  confirmation?: ConfirmationResult | null;
+  review?: { form: ReceiptFormState; staleTargets: string[]; targetVersions: { object: OpaqueVersion | null; expense: OpaqueVersion | null } } | null;
 };
 
 export type CandidatePage<T> = { items: T[]; hasMore: boolean; status: 'idle' | 'loading' | 'error' };
@@ -185,12 +189,22 @@ export function allExpenses(draft: ReceiptDraft, candidates: ExpenseRef[]): Expe
  */
 export function initialFormState(draft: ReceiptDraft, objectCandidates: ObjectRef[] = [], expenseCandidates: ExpenseRef[] = []): ReceiptFormState {
   const values = Object.fromEntries([...OBJECT_FIELDS, ...EXPENSE_FIELDS].map(f => [f, proposalText(draft, f)])) as Record<FormField, string>;
-  const pick = <T extends { id: OpaqueId }>(linked: T[], candidates: T[]) =>
-    linked.length === 1 && linked[0] ? { kind: 'reuse' as const, id: linked[0].id } : linked.length > 1 || candidates.length ? { kind: 'unset' as const } : { kind: 'create' as const };
+  const pick = <T extends { id: OpaqueId }>(linked: T[], candidates: T[], count = linked.length) =>
+    count === 1 && linked.length === 1 && linked[0] ? { kind: 'reuse' as const, id: linked[0].id } : count > 0 || linked.length || candidates.length ? { kind: 'unset' as const } : { kind: 'create' as const };
+  if (draft.review) {
+    const saved = draft.review.form, objects = allObjects(draft, objectCandidates), expenses = allExpenses(draft, expenseCandidates);
+    const check = (kind: 'object' | 'expense', choice: ObjectChoice, rows: Array<{ id: OpaqueId; version: OpaqueVersion }>, linkedCount: number): ObjectChoice => {
+      if (choice.kind === 'create' && linkedCount > 0) return { kind: 'unset' };
+      if (choice.kind !== 'reuse') return { ...choice };
+      return rows.some(row => row.id === choice.id && row.version === draft.review!.targetVersions[kind]) ? { ...choice } : { kind: 'unset' };
+    };
+    const object = check('object', saved.object, objects, draft.linkedObjectsCount ?? draft.linkedObjects.length);
+    return { values: { ...saved.values }, object, expense: check('expense', saved.expense, expenses, draft.linkedExpensesCount ?? draft.linkedExpenses.length), enrich: saved.enrich, decisions: object.kind === 'reuse' ? { ...saved.decisions } : {} };
+  }
   return {
     values,
-    object: pick(draft.linkedObjects, objectCandidates.filter(c => !draft.linkedObjects.some(l => l.id === c.id))),
-    expense: pick(draft.linkedExpenses, expenseCandidates.filter(c => !draft.linkedExpenses.some(l => l.id === c.id))),
+    object: pick(draft.linkedObjects, objectCandidates.filter(c => !draft.linkedObjects.some(l => l.id === c.id)), draft.linkedObjectsCount),
+    expense: pick(draft.linkedExpenses, expenseCandidates.filter(c => !draft.linkedExpenses.some(l => l.id === c.id)), draft.linkedExpensesCount),
     enrich: true,
     decisions: {},
   };

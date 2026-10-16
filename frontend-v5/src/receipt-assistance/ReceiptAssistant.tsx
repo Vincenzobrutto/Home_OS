@@ -37,7 +37,8 @@ export type ReceiptAssistantProps = {
   /** Il container gestisce Idempotency-Key e trasporto; una promessa rifiutata vale come esito non noto. */
   onConfirm: (payload: ConfirmationPayload) => Promise<ConfirmOutcome>;
   onRecoverOutcome: (payload: ConfirmationPayload) => Promise<RecoverOutcome>;
-  onPark: () => Promise<ParkOutcome>;
+  onPark: (payload: ConfirmationPayload) => Promise<ParkOutcome>;
+  onResumeDraft?: () => Promise<{ status: 'resumed' } | { status: 'rejected'; message: string }>;
   onReopenComparison?: (comparison: PersistedComparison) => void;
   onRetryLoad?: () => void;
   /** Collegamenti di navigazione dopo l'esito (forniti dal container con il router dell'app). */
@@ -61,17 +62,20 @@ type ConfirmState =
 const STEP_TITLE: Record<Step, string> = { documento: 'Documento', proposte: 'Proposte', riepilogo: 'Riepilogo', esito: 'Esito' };
 
 function AssistantInner(props: ReceiptAssistantProps) {
-  const { draft, load, original, today, canEdit } = props;
+  const { draft, load, original, today } = props;
+  const canEdit = props.canEdit && draft?.state !== 'parked';
   // Passo scelto dall'utente; senza scelta, una bozza aperta porta alle proposte.
   const [stepChoice, setStep] = useState<Step | null>(null);
-  const step: Step = stepChoice ?? (draft && draft.state !== 'confirmed' ? 'proposte' : 'documento');
+  const step: Step = stepChoice ?? (draft?.confirmation && ['confirmed', 'partially_resolved'].includes(draft.state) ? 'esito' : draft && draft.state !== 'confirmed' ? 'proposte' : 'documento');
   // Form modificato dall'utente; finché è null il form segue bozza e candidati (nessuna preselezione).
   const [userForm, setUserForm] = useState<ReceiptFormState | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [source, setSource] = useState<SourceRequest | null>(null);
   const [openState, setOpenState] = useState<{ status: 'idle' | 'opening' } | { status: 'error'; message: string }>({ status: 'idle' });
   const [confirm, setConfirm] = useState<ConfirmState>({ status: 'idle' });
-  const [result, setResult] = useState<ConfirmationResult | null>(null);
+  const [localResult, setResult] = useState<ConfirmationResult | null>(null);
+  const result = localResult ?? draft?.confirmation ?? null;
+  const [resume, setResume] = useState<{ status: 'idle' | 'resuming' } | { status: 'error'; message: string }>({ status: 'idle' });
   const [park, setPark] = useState<{ status: 'idle' | 'parking' | 'parked' } | { status: 'error'; message: string }>({ status: 'idle' });
   const inFlight = useRef(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -106,7 +110,7 @@ function AssistantInner(props: ReceiptAssistantProps) {
 
   const validation = draft && form ? validateForm(form, draft, objects, today, expenses) : null;
   const payload = draft && form ? buildConfirmationPayload(form, draft, objects, expenses, today) : null;
-  const locked = confirm.status === 'submitting' || confirm.status === 'unknown' || confirm.status === 'recovering';
+  const locked = confirm.status === 'submitting' || confirm.status === 'unknown' || confirm.status === 'recovering' || park.status === 'parking' || resume.status === 'resuming';
 
   const openOriginal = async () => {
     setOpenState({ status: 'opening' });
@@ -156,11 +160,24 @@ function AssistantInner(props: ReceiptAssistantProps) {
     finally { inFlight.current = false; }
   };
   const doPark = async () => {
+    if (!payload || inFlight.current) return;
+    inFlight.current = true;
     setPark({ status: 'parking' });
     try {
-      const outcome = await props.onPark();
+      const outcome = await props.onPark(payload);
       setPark(outcome.status === 'parked' ? { status: 'parked' } : { status: 'error', message: outcome.message });
     } catch { setPark({ status: 'error', message: 'Non sappiamo se la bozza è stata rimandata. Ricarica la pagina per verificarlo.' }); }
+    finally { inFlight.current = false; }
+  };
+  const doResume = async () => {
+    if (!props.onResumeDraft || inFlight.current) return;
+    inFlight.current = true; setResume({ status: 'resuming' });
+    try {
+      const outcome = await props.onResumeDraft();
+      if (outcome.status === 'resumed') { setResume({ status: 'idle' }); setPark({ status: 'idle' }); }
+      else setResume({ status: 'error', message: outcome.message });
+    } catch { setResume({ status: 'error', message: 'Non sappiamo se la bozza è stata ripresa. Ricarica per verificarlo.' }); }
+    finally { inFlight.current = false; }
   };
 
   const heading = (text: string, lead?: string) => (
@@ -225,7 +242,7 @@ function AssistantInner(props: ReceiptAssistantProps) {
         {heading('Una ricevuta, il resto in ordine.', 'Dalla ricevuta puoi registrare l’acquisto e collegarlo all’oggetto, senza ricopiare i dati.')}
         <div className={styles.layout}>
           <div className={styles.stack}>
-            <DocumentStep {...props} onOpenOriginalDialog={() => setSource({ kind: 'original' })} />
+            <DocumentStep {...props} canEdit={canEdit} onOpenOriginalDialog={() => setSource({ kind: 'original' })} />
           </div>
           <aside className={styles.aside}>{originalCard}</aside>
         </div>
@@ -251,7 +268,7 @@ function AssistantInner(props: ReceiptAssistantProps) {
               <button type="button" className={ui.btn} onClick={() => setStep('proposte')} disabled={locked}>← Modifica le scelte</button>
               {canEdit && (
                 <div className={styles.actionGroup}>
-                  <button type="button" className={ui.btn} onClick={() => void doPark()} disabled={locked || park.status === 'parking' || park.status === 'parked'}>
+                  <button type="button" className={ui.btn} onClick={() => void doPark()} disabled={!payload || locked || park.status === 'parking' || park.status === 'parked'}>
                     {park.status === 'parking' ? 'Rinvio…' : 'Rimanda'}
                   </button>
                   <button type="button" className={cx(ui.btn, ui.primary)} disabled={!payload || locked || confirm.status === 'not_found' || park.status === 'parked'}
@@ -277,7 +294,9 @@ function AssistantInner(props: ReceiptAssistantProps) {
       {steps}
       {heading(draft.origin === 'manual' ? 'Inserisci quello che conosci.' : 'Abbiamo trovato un acquisto per la casa.',
         draft.origin === 'manual' ? 'Compilazione manuale: nessun dato è stato estratto.' : 'Controlla oggetto e spesa: puoi decidere separatamente che cosa salvare.')}
-      {!canEdit && <Banner><p>Con il tuo ruolo puoi consultare le proposte, ma non salvarle.</p></Banner>}
+      {draft.state === 'parked' ? <Banner title="Bozza in pausa" actions={props.canEdit && props.onResumeDraft ? <button type="button" className={ui.btn} disabled={resume.status === 'resuming'} onClick={() => void doResume()}>{resume.status === 'resuming' ? 'Ripresa…' : 'Riprendi le scelte salvate'}</button> : undefined}><p>Le scelte del riepilogo sono conservate. Riprendi la bozza prima di modificarle o confermarle.</p></Banner> : !canEdit && <Banner><p>Con il tuo ruolo puoi consultare le proposte, ma non salvarle.</p></Banner>}
+      {resume.status === 'error' && <Banner tone="error" role="alert"><p>{resume.message}</p></Banner>}
+      {draft.review && draft.state !== 'parked' && <Banner tone={draft.review.staleTargets.length ? 'warning' : 'info'}><p>{draft.review.staleTargets.length ? 'Alcuni elementi sono cambiati: scegli nuovamente a cosa collegare la ricevuta. I valori inseriti sono conservati.' : 'Abbiamo ripreso le scelte salvate. Controllale prima di confermare.'}</p></Banner>}
       {draft.openComparisons.length > 0 && (
         <Banner tone="warning" title="Confronti rimandati">
           <ul>
@@ -301,7 +320,7 @@ function AssistantInner(props: ReceiptAssistantProps) {
           </p>
           <div className={styles.actions}>
             <button type="button" className={ui.btn} onClick={() => setStep('documento')}>← Documento</button>
-            <button type="button" className={cx(ui.btn, ui.primary)} onClick={goSummary}>Controlla il riepilogo →</button>
+            <button type="button" className={cx(ui.btn, ui.primary)} disabled={draft.state === 'parked'} onClick={goSummary}>Controlla il riepilogo →</button>
           </div>
         </div>
         <aside className={styles.aside}>{originalCard}</aside>
