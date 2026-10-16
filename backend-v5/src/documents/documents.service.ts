@@ -65,6 +65,8 @@ export class DocumentsService implements OnModuleInit {
   }
   async upload(accountId: string, homeId: string, dto: UploadDocumentDto, file: { buffer: Buffer; originalname: string } | undefined, key?: string) {
     await this.policy.require(accountId, homeId, 'edit');
+    const account = await this.db.account.findUnique({where:{id:accountId}});
+    if (account?.requiresEmailVerification && !account.emailVerifiedAt) throw new ForbiddenException({code:'email_verification_required',message:'Conferma la tua email prima di caricare documenti.'});
     if (!key || !/^[a-zA-Z0-9_-]{16,100}$/.test(key)) throw new UnprocessableEntityException({ code: 'validation_error', message: 'Chiave di caricamento non valida.' });
     if (!file) throw new UnprocessableEntityException({ code: 'validation_error', message: 'Seleziona un originale.', fieldErrors: { file: 'File richiesto.' } });
     const mimeType = await detectOriginal(file.buffer);

@@ -5,7 +5,7 @@ Avvio approvato dal committente il 16 ottobre 2026. Questa matrice distingue cap
 | Area | Stato e base | Criterio per chiudere |
 |---|---|---|
 | Backup DB e originali | Verificato: backup-verifica-20261016.md, 41 tabelle e 255 originali, restore isolato spento | Copia valida conservata; prima di nuovi dati personali concordare seconda destinazione distinta dal PC. Il backup locale non protegge dalla perdita del PC |
-| Recupero account | Assente nel runtime; proposta fase0-recovery-design-20261016.md; adapter Brevo non collegato, 6 test offline verdi | UX, contratto, servizio/mittente da confermare, challenge/API/frontend e prova completa senza accesso basato su email dichiarata |
+| Recupero account | Concluso localmente: account-recovery-esito-20261016.md; canale attivo, verifica email e reset con login nuovo confermati dall'utente e metadati DB | Gate del recupero chiuso per pilota locale; nessun reset amministrativo o account basato su email dichiarata |
 | Upload e integrità | Codice: PDF/JPEG/PNG rilevati dai byte, 20 MiB/file, idempotenza; hash e dimensione al download/ZIP; errore storage senza falso successo | Prove mirate e procedura spazio disponibile; limiti cumulativi non presenti, non pubblicizzare quota utente |
 | Privacy documenti | Default private; owner non legge automaticamente il privato altrui; guard e revoca; no-store/nosniff e allegato, listener API loopback | Prove di isolamento/sessione già documentate, nuovi controlli mirati; nessuna attestazione di sicurezza generale |
 | Export e conservazione | ZIP selettivo originali e manifesto, fino a 100 MiB; non include tutti i dati strutturati | Definire export completo e confini account/Home/condivisioni. Nessuna cancellazione automatica, nessun termine legale inventato |

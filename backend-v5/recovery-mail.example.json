@@ -1,0 +1,9 @@
+{
+  "enabled": false,
+  "apiKey": "",
+  "senderEmail": "",
+  "senderName": "Dimora",
+  "publicOrigin": "http://127.0.0.1:5174",
+  "allowLocalLinks": true,
+  "throttleSecret": ""
+}

@@ -12,6 +12,9 @@ enum HomeRole {
   viewer
 }
 model Account {
+  authChallenges AuthChallenge[]
+  emailVerifiedAt DateTime?
+  requiresEmailVerification Boolean @default(false)
   sharePreviews SharePreview[] @relation("SharePreviewSender")
   sentShares ShareRecord[] @relation("ShareSender")
   receivedShares ShareRecord[] @relation("ShareRecipient")
@@ -47,6 +50,26 @@ model Account {
   objectLinks ObjectResourceLink[]
   objectEvents ObjectEvent[]
   objectRequests ObjectRequest[]
+}
+model AuthChallenge {
+  id String @id @default(uuid())
+  accountId String
+  purpose String
+  tokenHash String @unique
+  emailFingerprint String
+  expiresAt DateTime
+  consumedAt DateTime?
+  deliveryState String @default("queued")
+  createdAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Cascade)
+  @@index([accountId,purpose,expiresAt])
+  @@index([expiresAt])
+}
+model AuthThrottle {
+  key String @id
+  count Int
+  expiresAt DateTime
+  @@index([expiresAt])
 }
 model Session {
   id String @id

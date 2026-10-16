@@ -5,6 +5,7 @@ import { PublicShell } from '../components/AppShell';
 import { Banner, Field, cx, ui, useDocumentTitle } from '../components/ui';
 import { hasErrors, validateLogin, validateRegister, type FieldErrors } from '../lib/validation';
 import { useLogin, useRegister } from '../session/hooks';
+import { useSession } from '../session/session';
 import styles from './pages.module.css';
 
 /** Porta il focus sul primo campo con errore, nell'ordine del form. */
@@ -125,6 +126,7 @@ export function LoginPage() {
             </button>
           </div>
         </form>
+        <p><Link to="/recupera-accesso" state={{email:values.email}}>Hai dimenticato la password?</Link></p>
         <p className={styles.altLink}>
           Non hai un account? <Link to="/registrati">Crea un account locale di sviluppo</Link>
         </p>
@@ -137,6 +139,7 @@ const REGISTER_FIELDS = ['name', 'email', 'password'] as const;
 
 export function RegisterPage() {
   useDocumentTitle('Crea account');
+  const recoveryEnabled = useSession().data?.authRecovery?.enabled === true;
   const register = useRegister();
   const formRef = useRef<HTMLFormElement>(null);
   const [values, setValues] = useState({ name: '', email: '', password: '' });
@@ -171,8 +174,7 @@ export function RegisterPage() {
         <div className={styles.spaced}>
           <Banner tone="warning" title="Solo sviluppo locale">
             <p>
-              Questa registrazione crea un account locale di sviluppo. La verifica dell’email non è ancora attiva:
-              non usare dati personali reali.
+              {recoveryEnabled ? 'Questa registrazione crea un account del pilota locale. Conferma la tua email prima di caricare documenti. Il pilota completo è ancora in preparazione: usa dati sintetici.' : 'Questa registrazione crea un account locale di sviluppo. La verifica dell’email non è ancora attiva: non usare dati personali reali.'}
             </p>
           </Banner>
         </div>
@@ -180,6 +182,7 @@ export function RegisterPage() {
           {formError && (
             <Banner tone="error" role="alert" title="Registrazione non completata">
               <p>{formError}</p>
+              <p><Link to="/recupera-accesso" state={{email:values.email}}>Se hai già un account, recupera l’accesso</Link></p>
             </Banner>
           )}
           <Field

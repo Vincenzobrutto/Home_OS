@@ -5,6 +5,7 @@ import { useLogout } from '../session/hooks';
 import { Icon, type IconName } from './Icon';
 import { Banner, cx } from './ui';
 import styles from './AppShell.module.css';
+import { EmailVerificationNotice } from './EmailVerificationNotice';
 
 export type SectionId = 'casa' | 'attivita' | 'documenti' | 'spese';
 
@@ -121,6 +122,7 @@ export function AppShell(props: { account: Account; home?: Home; children: React
               </Banner>
             )}
             <div>{props.children}</div>
+            <EmailVerificationNotice key={props.account.id} />
           </div>
         </main>
       </div>

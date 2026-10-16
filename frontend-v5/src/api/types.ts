@@ -1,7 +1,7 @@
 // Tipi del contratto identity-v1 (docs/v5/api-contract.md). Non estendere qui
 // senza un cambio di contratto concordato con Codex.
 
-export type Account = { id: string; name: string; email: string };
+export type Account = { id: string; name: string; email: string; emailVerifiedAt?: string | null; requiresEmailVerification?: boolean };
 
 export type HomeRole = 'owner' | 'member' | 'viewer';
 
@@ -17,6 +17,7 @@ export type Home = {
 };
 
 export type SessionResponse = {
+  authRecovery?: { enabled: boolean };
   account: Account | null;
   csrfToken: string;
 };

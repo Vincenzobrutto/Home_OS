@@ -1,6 +1,6 @@
 # Recupero account per il pilota Home
 
-Proposta tecnica del 16 ottobre 2026. Stato: da congelare dopo confronto UX e scelta del canale di consegna. Non aggiunge endpoint, schema o capacità al runtime. Il prodotto attuale offre sessione, registrazione, login e logout; non verifica la disponibilità dell'email e non permette recupero password.
+Design iniziale del 16 ottobre 2026, conservato come antecedente. Il contratto implementato e le precisazioni dopo arbitrato UX sono in account-recovery-api-contract.md: quello prevale, in particolare per il dispatch senza outbox persistente e i reinvii che non invalidano i link precedenti. La configurazione/invio reale sono verificati separatamente dall'implementazione locale.
 
 ## Comportamento proposto
 

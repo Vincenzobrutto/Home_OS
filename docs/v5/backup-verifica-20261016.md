@@ -1,5 +1,9 @@
 # Backup locale V5 — verifica del 16 ottobre 2026
 
+## Ultima copia dopo recupero account
+
+`backups/dimora-v5-20261016T083531Z/` è la copia più recente verificata:43tabelle,262originali, conteggi e SHA/dimensioni identici dopo ripristino isolato. Include migrazione13 e nuovo account del committente dopo verifica/reset riusciti. Dump SHA256 `c6af56e2eed5c0503803518f171443f7844ca869e7719428ef392727df2b47da`. Cluster55439 fermato; API non collegata al restore. Log `outputs/Dimora-V5-backup-post-recovery-20261016.log`, dettagli `account-recovery-esito-20261016.md`. Configurazione Brevo e .env non copiate; nessuna email inviata dal restore. Le sezioni successive descrivono la copia precedente073731Z, ancora valida per il suo snapshot.
+
 ## Copia verificata
 
 Workspace: `C:\Users\07704017\Documents\Codex\2026-10-13\referenced-chatgpt-conversation-this-is-an`.

@@ -8,3 +8,4 @@ test/.storage-tests/
 !.env.example
 *.log
 *.tsbuildinfo
+recovery-mail.local.json

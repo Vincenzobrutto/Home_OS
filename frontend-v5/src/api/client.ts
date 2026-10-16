@@ -132,6 +132,10 @@ export class ApiClient {
   login(input: LoginInput): Promise<{ account: Account }> {
     return this.mutate<{ account: Account }>('/auth/login', { body: input });
   }
+  requestRecovery(email: string) { return this.mutate<{message:string}>('/auth/password-recovery',{body:{email}}); }
+  completeRecovery(token: string, password: string) { return this.mutate<void>('/auth/password-recovery/complete',{body:{token,password}}); }
+  requestEmailVerification(accountId: string) { return this.mutate<{message:string}>('/auth/email-verification',{body:{},accountId}); }
+  completeEmailVerification(token: string) { return this.mutate<void>('/auth/email-verification/complete',{body:{token}}); }
 
   async logout(): Promise<void> {
     await this.mutate<void>('/auth/logout', {});

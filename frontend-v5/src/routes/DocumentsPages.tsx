@@ -14,7 +14,7 @@ import {
   useUploadDocument,
 } from '../documents/hooks';
 import { SearchForm } from '../documents/SearchForm';
-import { useAccount } from '../session/session';
+import { useAccount, useSession } from '../session/session';
 import {
   EMPTY_FILTERS,
   QUERY_MAX_CODE_POINTS,
@@ -527,6 +527,8 @@ export function UploadForm(props: {
   onUploaded: (doc: DocumentDetail) => void;
 }) {
   const { home } = props;
+  const uploadAccount = useAccount();
+  const verificationEnabled = useSession().data?.authRecovery?.enabled === true;
   const upload = useUploadDocument(home.id);
   const formRef = useRef<HTMLFormElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -613,6 +615,7 @@ export function UploadForm(props: {
   const formError =
     upload.isError && !isService && !isConflict && !Object.values(errors).some(Boolean) ? userMessage(error) : null;
 
+  if (uploadAccount.requiresEmailVerification && !uploadAccount.emailVerifiedAt) return <Banner tone="warning" title="Conferma la tua email prima di caricare"><p>{verificationEnabled?'Richiedi il link di conferma dal riquadro «Conferma la tua email» in questa pagina. Casa, Attività e Spese restano disponibili.':'La verifica email non è disponibile in questo momento. Nessun file è stato caricato. Riprova più tardi.'}</p><button className={ui.btn} onClick={props.onCancel}>Chiudi</button></Banner>;
   return (
     <form ref={formRef} className={cx(styles.form, docs.formFlush)} onSubmit={onSubmit} noValidate aria-labelledby={props.titleId}>
       <div>

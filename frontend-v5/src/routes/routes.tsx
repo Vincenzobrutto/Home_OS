@@ -30,6 +30,9 @@ const ShareDetailPage = lazyPage(() => import('./SharingPages').then((m) => m.Sh
 const ReceivedListPage = lazyPage(() => import('./ReceivedPages').then((m) => m.ReceivedListPage));
 const ClaimCodePage = lazyPage(() => import('./ReceivedPages').then((m) => m.ClaimCodePage));
 const ReceivedDetailPage = lazyPage(() => import('./ReceivedPages').then((m) => m.ReceivedDetailPage));
+const RecoveryRequestPage = lazyPage(() => import('./RecoveryPages').then((m) => m.RecoveryRequestPage));
+const RecoveryLinkPage = lazyPage(() => import('./RecoveryPages').then((m) => m.RecoveryLinkPage));
+const VerificationLinkPage = lazyPage(() => import('./RecoveryPages').then((m) => m.VerificationLinkPage));
 
 // Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3/M4, caso Caldaia), activities-v1 (H1), expenses-v1 (H3a), home-objects-v1 (G1), economy-v1 (S1a/b, con ripiego H3a).
 // Agenzie e Amministratori non hanno rotte: non sono ancora assegnate.
@@ -37,6 +40,9 @@ export const routes: RouteObject[] = [
   {
     element: <RootLayout />,
     children: [
+      { path:'recupera-accesso',element:<RecoveryRequestPage /> },
+      { path:'recupera-password',element:<RecoveryLinkPage /> },
+      { path:'verifica-email',element:<VerificationLinkPage /> },
       {
         element: <AnonymousOnly />,
         children: [
