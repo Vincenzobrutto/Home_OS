@@ -51,3 +51,10 @@ Browser integrato reale, scheda separata dalla casa del committente: caso esiste
 Responsive390 e320px: nessun overflow orizzontale nelle proposte e nell'esito misurati; a320 viewport clientWidth e scrollWidth305, con scrollbar classica. Conferma nel caso esistente riuscita anche a320. Non un test su smartphone fisico. Override del viewport ripristinato. Evidenze locali in outputs/ricevuta-assistita-mockup-20261016/. Sintassi dello script verificata senza eseguirlo fuori dal browser. Nessuna build/suite generale ripetuta per questo file statico separato; nessuna dichiarazione WCAG o di qualità AI.
 
 Nessun codice del prodotto o contratto modificato. Nessun dato personale, DB, .env, email, impostazione di sicurezza o servizio modificato; nessun push. Nessun nuovo incarico Claude o attività automatica dopo il turno. Prima di implementare: feedback sul mockup, contratto aggiornato e criteri/campagna AI con budget/consenso nuovi, separati da questa navigazione.
+
+
+## Affinamento dopo navigazione del committente
+
+Confermati in navigazione i casi esistente (0 oggetti/0 spese), primo acquisto (1/1) e ambiguità con scelta Studio (0/1). Nel caso di estrazione fallita il documento deve restare consultabile: aggiunti pulsante «Vedi documento originale» nel messaggio di errore e nel modulo manuale, anteprima laterale e ingrandimento. Il documento della demo resta un facsimile sintetico; impossibilità di estrazione non significa impossibilità di consultazione.
+
+Verifica browser su scheda temporanea: apertura/chiusura dal messaggio di errore e dal modulo manuale; nome e importo compilati conservati dopo la chiusura. A 320px clientWidth e scrollWidth entrambi 305: nessun overflow orizzontale. Override ripristinato, prova del committente preservata. Evidenza: outputs/ricevuta-assistita-mockup-20261016/manuale-originale-desktop.jpg. Solo mockup, nessuna analisi o scrittura sulla casa reale.
