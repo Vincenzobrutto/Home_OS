@@ -18,6 +18,7 @@ import {
 } from '../lib/files';
 import { filtersFromParams, filtersToParams } from '../lib/documentSearch';
 import { LinkedExpenses } from '../expenses/LinkedExpenses';
+import { ReceiptEntry } from '../receipt-integration/Surfaces';
 import { documentsErrorMessage } from './DocumentsPages';
 import { useCurrentHome } from './HomePages';
 import { useAccount } from '../session/session';
@@ -135,6 +136,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
           )}
         </div>
       </div>
+      <ReceiptEntry documentId={doc.id} />
       <div className={docs.detailGrid}>
         <section className={cx(ui.card, docs.preview)} aria-labelledby="doc-anteprima">
           <h2 id="doc-anteprima" className={styles.cardTitle}>

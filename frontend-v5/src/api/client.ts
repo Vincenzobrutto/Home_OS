@@ -892,7 +892,7 @@ export class ApiClient {
     if (opts.method === 'POST') {
       return this.mutate<T>(path, { body: opts.body, headers: opts.idempotencyKey ? { 'Idempotency-Key': opts.idempotencyKey } : undefined, accountId: opts.accountId });
     }
-    return this.request<T>(path, { signal: opts.signal, accountId: opts.accountId });
+    return this.request<T>(path, { signal: opts.signal, accountId: opts.accountId, headers: opts.idempotencyKey ? { 'Idempotency-Key': opts.idempotencyKey } : undefined });
   }
 
   callPage<T>(path: string, page: PageParams, signal: AbortSignal | undefined, accountId: string) {

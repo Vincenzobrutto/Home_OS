@@ -70,11 +70,15 @@ export class ReceiptAssistanceService {
   }
 
   capabilities(a: string, h: string, query: unknown) {
-    object(query, []);
-    return this.transaction(a, h, false, async () => ({
+    const q = object(query, ['documentId']);
+    const documentId = q.documentId === undefined ? null : uuid(q.documentId);
+    return this.transaction(a, h, false, async tx => {
+      if (documentId && !await this.source(tx, a, h, documentId)) throw deny();
+      return {
       apiVersion: 'receipt-assistance-v1', enabled: false, manualEnabled: false, providers: [],
       disabledReason: 'receipt_assistance_in_development', ...temporal(this.clock.now()),
-    }));
+      };
+    });
   }
 
   private async request(a: string, h: string, operation: string, target: string, body: unknown, key: string | undefined, action: (tx: Tx) => Promise<ReceiptDraft>) {
@@ -232,9 +236,12 @@ export class ReceiptAssistanceService {
     const fields = await this.fields(tx, a, h, row.objectId);
     const nameField = fields.name as { state: string } | null;
     const current = fields[row.fieldKey] as { state: string; value: string } | null;
-    const available = nameField?.state !== 'unavailable' && target.state === 'active' && current?.state === 'confirmed' && await this.source(tx, a, h, draft.documentId, draft);
+    const source = await this.source(tx, a, h, draft.documentId, draft);
+    const available = nameField?.state !== 'unavailable' && target.state === 'active' && current?.state === 'confirmed' && source;
     return {
       id: row.id, version: row.version, state: available ? row.state : 'unavailable',
+      draftId: available ? draft.id : null,
+      documentLink: { state: available ? 'linked' : 'unavailable', document: available ? { id: source!.id, name: source!.name } : null },
       object: available ? { id: target.id, name: target.name, version: target.version } : null,
       fieldKey: available ? row.fieldKey : null, existing: available ? current!.value : null,
       proposed: available ? row.proposed : null,

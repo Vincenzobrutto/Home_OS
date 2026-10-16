@@ -17,6 +17,14 @@ async function setup(reply: (homeId: string, accountId: string) => Response) {
   return { api, home, account, request: () => request };
 }
 describe('[mock] personal-export client', () => {
+  it('accepts additive receipt sections, rejects unknown collections and malformed receipt data', async () => {
+    const valid = await setup((h, a) => { const fixture = exportFixture(h, a); return Response.json({ ...fixture, data: { ...fixture.data, receiptFields: [], receiptComparisons: [] } }); });
+    await expect(exportPersonalHome(valid.api, valid.home.id, valid.account.id)).resolves.toHaveProperty('blob');
+    for (const extra of [{ receiptFields: 'invalid' }, { receiptComparisons: null }, { rawReceiptDrafts: [] }]) {
+      const invalid = await setup((h, a) => { const fixture = exportFixture(h, a); return Response.json({ ...fixture, data: { ...fixture.data, ...extra } }); });
+      await expect(exportPersonalHome(invalid.api, invalid.home.id, invalid.account.id)).rejects.toBeInstanceOf(ApiError);
+    }
+  });
   it('explicit authenticated JSON POST, valid envelope becomes private JSON download', async () => {
     const world = await setup((h, a) => Response.json(exportFixture(h, a)));
     const result = await exportPersonalHome(world.api, world.home.id, world.account.id);

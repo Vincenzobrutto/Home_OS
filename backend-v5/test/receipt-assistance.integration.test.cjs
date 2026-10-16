@@ -81,6 +81,9 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     const cap = await call(A, path('capabilities'));
     assert.equal(cap.status, 200); assert.equal(cap.body.enabled, false); assert.equal(cap.body.manualEnabled, false);
     assert.equal(cap.body.today, '2026-10-16'); assert.equal(cap.headers.get('cache-control'), 'no-store');
+    assert.equal((await call(A, path('capabilities?documentId=' + own.id))).status, 200);
+    assert.equal((await call(A, path('capabilities?documentId=' + randomUUID()))).status, 403);
+    assert.equal((await call(A, path('capabilities?documentId=invalid'))).status, 422);
   });
   await t.test('Manual draft empty and persistent; replay and new key do not duplicate', async () => {
     const key = randomUUID(), body = { documentId: own.id };
@@ -131,6 +134,8 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     assert.equal(fields.status, 200); assert.equal(fields.body.fields.brand.value, 'Aurora');
     assert.equal((await call(B, path('object-fields/' + obj.id))).status, 403);
     const page = await call(A, path('comparisons?limit=1'));
+    assert.equal(page.body.items[0].documentLink.document.id, own.id);
+    assert.equal(page.body.items[0].draftId, draft.id);
     assert.equal(page.body.items.length, 1); assert(page.body.nextCursor);
     const next = await call(A, path('comparisons?limit=1&cursor=' + page.body.nextCursor));
     assert.equal(next.body.items.length, 1); assert.notEqual(next.body.items[0].id, page.body.items[0].id);
@@ -169,6 +174,8 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     assert.equal(hidden.body.object.name, null); assert.equal(hidden.body.fields.brand.state, 'unavailable');
     for (const secret of ['Secret derived name', 'Secret extracted brand', readable.id, readable.original.sha256]) assert(!JSON.stringify(hidden.body).includes(secret));
     const hiddenComparison = await call(A, path('comparisons/' + comparison.id));
+    assert.equal(hiddenComparison.body.comparison.draftId, null);
+    assert.deepEqual(hiddenComparison.body.comparison.documentLink, { state: 'unavailable', document: null });
     assert.equal(hiddenComparison.body.comparison.state, 'unavailable'); assert.equal(hiddenComparison.body.comparison.existing, null); assert.equal(hiddenComparison.body.comparison.proposed, null); assert.equal(hiddenComparison.body.comparison.object, null);
     assert.equal((await call(A, path('comparisons/' + comparison.id + '/resolutions'), 'POST', { expectedVersion: 1, action: 'keep_existing' })).status, 403);
   });

@@ -25,6 +25,7 @@ import { useAccount } from '../session/session';
 import { BackToCasa, ObjectsGate, Unavailable, useFocusAfterVersion } from './RoomsPages';
 import { useCurrentHome } from './HomePages';
 import pages from './pages.module.css';
+import { ReceiptComparisons, ReceiptObjectFields } from '../receipt-integration/Surfaces';
 
 const STATE_OPTIONS: Array<{ value: CatalogFilters['state']; label: string }> = [
   { value: 'active', label: 'Attivi' },
@@ -394,6 +395,7 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
           </p>
         </section>
 
+        {!isBoiler && <><ReceiptObjectFields objectId={object.ref.id} /><ReceiptComparisons objectId={object.ref.id} /></>}
         {canEdit && panel !== 'edit' && panel !== 'position' && (
           <div ref={actionsRef} className={styles.actions}>
             {!isBoiler && active && (

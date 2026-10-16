@@ -8,6 +8,7 @@ import { lazyPage } from './lazyPage';
 // Sezioni a caricamento differito: definite una volta qui, fuori dal rendering.
 const DocumentsPage = lazyPage(() => import('./DocumentsPages').then((m) => m.DocumentsPage));
 const DocumentDetailPage = lazyPage(() => import('./DocumentDetailPage').then((m) => m.DocumentDetailPage));
+const ReceiptPage = lazyPage(() => import('../receipt-integration/ReceiptPage').then((m) => m.ReceiptPage));
 const ActivityPage = lazyPage(() => import('./ActivityPage').then((m) => m.ActivityPage));
 const ActivityDetailPage = lazyPage(() => import('./ActivityDetailPage').then((m) => m.ActivityDetailPage));
 const ReviewPage = lazyPage(() => import('./ReviewPage').then((m) => m.ReviewPage));
@@ -73,6 +74,7 @@ export const routes: RouteObject[] = [
               { path: 'impianti/:assetId', element: <BoilerPage /> },
               { path: 'documenti', element: <DocumentsPage /> },
               { path: 'documenti/:documentId', element: <DocumentDetailPage /> },
+              { path: 'documenti/:documentId/ricevuta', element: <ReceiptPage /> },
               { path: 'spese', element: <ExpensesPage /> },
               { path: 'spese/da-documento', element: <FromDocumentPage /> },
               { path: 'spese/analisi/:jobId', element: <AnalysisJobPage /> },

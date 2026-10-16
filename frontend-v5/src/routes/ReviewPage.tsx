@@ -11,6 +11,7 @@ import { useConfirm, useRefreshAsset, useReview } from '../review/hooks';
 import review from '../review/review.module.css';
 import { useCurrentHome } from './HomePages';
 import styles from './pages.module.css';
+import { ReceiptComparisons } from '../receipt-integration/Surfaces';
 
 /** Da rivedere: soltanto verifiche aperte, raggruppate per scheda. */
 export function ReviewPage() {
@@ -41,6 +42,7 @@ export function ReviewPage() {
           </p>
         </div>
       </div>
+      <ReceiptComparisons />
       {query.data && <p ref={statusRef} tabIndex={-1} role="status" className={styles.spaced}>
         <strong>{openCount}</strong> {openCount === 1 ? 'verifica aperta' : 'verifiche aperte'}. Le decisioni salvate restano nelle schede e nella storia.
       </p>}

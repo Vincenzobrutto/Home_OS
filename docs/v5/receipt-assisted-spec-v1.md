@@ -66,3 +66,6 @@ POST jobs:202 {job}, provider receipt_fixture_v1 e consentToProviderTransfer:fal
 
 ### Park/review R7a
 POST park accetta {expectedVersion,selection:{object,expense}}, con le stesse scelte validate del riepilogo conferma. Persiste soltanto la bozza, nessuna risorsa confermata; GETdraft restituisce review.form/staleTargets/targetVersions autorizzati. Target cambiati richiedono nuova scelta, fonte non disponibile redige anche review. Bozza parked in sola lettura fino POSTreopen esplicito. GET non riapre né conferma.
+
+### Integrazione R7b, non attiva
+GETcapabilities ammette documentId opzionale e controlla il documento. ComparisonsDTO include draftId e documentLink autorizzati, null/unavailable se fonte non corrente. Route lazy documenti/:documentId/ricevuta, query bozza o analisi, trasporto comune con GETrecupero e Idempotency-Key. Marca/modello e confronti da scheda/Da rivedere implementati. Gate browser reale ancora aperto: modulo NON importato e capabilities false.
