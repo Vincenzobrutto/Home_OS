@@ -88,6 +88,12 @@ function ReceiptPageContext({ documentId }: { documentId: string }) {
   });
   const completedDraft = job.data?.state === 'succeeded' ? job.data.draftId : null;
   useEffect(() => { if (completedDraft) setParams({ bozza: completedDraft }, { replace: true }); }, [completedDraft, setParams]);
+  const resume = query.data?.capabilities.resume;
+  useEffect(() => {
+    if (draftId || jobId) return;
+    if (resume?.draftId) setParams({ bozza: resume.draftId }, { replace: true });
+    else if (resume?.jobId) setParams({ analisi: resume.jobId }, { replace: true });
+  }, [draftId, jobId, resume?.draftId, resume?.jobId, setParams]);
   useDocumentTitle(`Ricevuta assistita · ${home.name}`);
   const snapshot = query.data;
   const sourceUnavailable = blocked || (snapshot?.wire?.documentLink.state === 'unavailable') || job.data?.state === 'unavailable' || denied(query.error) || denied(job.error);
@@ -120,7 +126,7 @@ function ReceiptPageContext({ documentId }: { documentId: string }) {
     if (isApiError(error) && error.kind === 'http') return { status: 'rejected', code: denied(error) ? 'forbidden' : error.status === 409 ? 'conflict' : 'validation', message: userMessage(error) };
     return { status: 'unknown', message: 'La risposta non è arrivata. Recupera l’esito prima di un nuovo invio.' };
   };
-  const invalidate = () => { void cache.invalidateQueries({ queryKey: ['account', account.id, 'home', home.id], predicate: q => !q.queryKey.includes('receipt') }); };
+  const invalidate = () => { void cache.invalidateQueries({ queryKey: ['account', account.id, 'home', home.id], predicate: q => !q.queryKey.includes('receipt') || q.queryKey.includes('capabilities') }); };
   const confirm = async (payload: ConfirmationPayload): Promise<ConfirmOutcome> => {
     try { const wire = await client.confirm(payload, stableKey('confirm', payload)); if (!isCurrent() || !wire.confirmation) return { status: 'unknown' }; invalidate(); return { status: 'confirmed', result: wire.confirmation }; }
     catch (error) { return confirmError(error); }

@@ -1,5 +1,7 @@
 # Ricevuta assistita — specifica consolidata V1
 
+> Stato16ottobre2026 R7c: percorso reale attivo SOLO per4PDF sintetici riconosciuti (ReceiptReleasePolicy), collaudato in Chrome/viewport320-390. Documenti personali esclusi. Anthropic ricevute non implementato. Le sezioni tecniche originarie sotto descrivono anche il piano: questo stato e gli ultimi dettagli di trasporto prevalgono.
+
 16 ottobre 2026. Flusso UX approvato dal committente dopo navigazione del mockup. Autorizzato lo sviluppo; non autorizzata da questo documento alcuna chiamata esterna o analisi dei documenti personali. Il resoconto del mockup è storico in receipt-assisted-flow-mockup-20261016.md.
 
 ## Perimetro e comportamento
@@ -69,3 +71,6 @@ POST park accetta {expectedVersion,selection:{object,expense}}, con le stesse sc
 
 ### Integrazione R7b, non attiva
 GETcapabilities ammette documentId opzionale e controlla il documento. ComparisonsDTO include draftId e documentLink autorizzati, null/unavailable se fonte non corrente. Route lazy documenti/:documentId/ricevuta, query bozza o analisi, trasporto comune con GETrecupero e Idempotency-Key. Marca/modello e confronti da scheda/Da rivedere implementati. Gate browser reale ancora aperto: modulo NON importato e capabilities false.
+
+### Ripresa dal documento R7c
+GETcapabilities?documentId proietta resume {draftId,jobId} entrambi null oppure uno solo: priorità jobqueued/running, poi bozzaopen/parked corrente peraccount/Home/doc/versione/hash. Nessun riferimento se fonte negata o gate non abilitato. Entrata scopre bozza esistente senza avviare nuova analisi. Conferma invalida capability; esito concluso non diventa bozza aperta.

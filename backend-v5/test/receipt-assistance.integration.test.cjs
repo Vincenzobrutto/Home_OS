@@ -112,7 +112,9 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     assert.equal(await db.receiptDraft.count({ where: { accountId: a.id } }), before);
     await assert.rejects(() => limited.confirm(a.id, home, draft.id, { expectedVersion: draft.version, object: { action: 'skip' }, expense: { action: 'skip' } }, randomUUID()), e => e.getStatus() === 503);
     assert.equal((await db.receiptDraft.findUnique({ where: { id: draft.id } })).state, 'open');
-    assert.equal((await limited.manual(a.id, home, { documentId: fixture.id }, randomUUID())).draft.mode, 'manual');
+    const saved = (await limited.manual(a.id, home, { documentId: fixture.id }, randomUUID())).draft;
+    assert.equal(saved.mode, 'manual');
+    assert.deepEqual((await limited.capabilities(a.id, home, { documentId: fixture.id })).resume, { draftId: saved.id, jobId: null });
     await assert.rejects(() => limited.capabilities(b.id, home, { documentId: fixture.id }), e => e.getStatus() === 403);
   });
   await t.test('Foreign account/home and private document never leak names or IDs', async () => {

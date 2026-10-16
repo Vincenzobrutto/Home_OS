@@ -19,7 +19,9 @@ export function ReceiptEntry({ documentId }: { documentId: string }) {
   const home = useCurrentHome(), client = useReceiptClient();
   const capability = useQuery({ queryKey: ['account', client.accountId, 'home', home.id, 'receipt', documentId, 'capabilities'], queryFn: ({ signal }) => client.capabilities(signal, documentId), retry: false });
   if (!home.permissions.includes('edit') || capability.isError || !capability.data || !capability.data.manualEnabled && !capability.data.enabled) return null;
-  return <p className={pages.spaced}><Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/documenti/${encodeURIComponent(documentId)}/ricevuta`}>Oggetto e spesa da questa ricevuta</Link></p>;
+  const resume = capability.data.resume;
+  const search = resume?.draftId ? `?bozza=${encodeURIComponent(resume.draftId)}` : resume?.jobId ? `?analisi=${encodeURIComponent(resume.jobId)}` : '';
+  return <p className={pages.spaced}><Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/documenti/${encodeURIComponent(documentId)}/ricevuta${search}`}>{resume?.draftId ? 'Riprendi oggetto e spesa dalla ricevuta' : resume?.jobId ? 'Segui analisi ricevuta' : 'Oggetto e spesa da questa ricevuta'}</Link></p>;
 }
 export function ReceiptObjectFields({ objectId }: { objectId: string }) {
   const client = useReceiptClient();

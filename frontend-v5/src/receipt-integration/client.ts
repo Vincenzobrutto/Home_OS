@@ -99,7 +99,7 @@ function decodeJob(input: unknown, id?: string): JobWire {
   check(v.state !== 'succeeded' || str(v.draftId));
   return v as JobWire;
 }
-export type ReceiptCapabilityWire = ReceiptCapabilities & { today: string; apiVersion: 'receipt-assistance-v1' };
+export type ReceiptCapabilityWire = ReceiptCapabilities & { today: string; apiVersion: 'receipt-assistance-v1'; resume?: { draftId: string | null; jobId: string | null } };
 export class ReceiptClient {
   private readonly base: string;
   private readonly api: ApiClient;
@@ -117,6 +117,7 @@ export class ReceiptClient {
   async capabilities(signal?: AbortSignal, documentId?: string): Promise<ReceiptCapabilityWire> {
     const v = row(await this.get(`/capabilities${documentId ? `?documentId=${encodeURIComponent(documentId)}` : ''}`, signal));
     check(v.apiVersion === 'receipt-assistance-v1' && typeof v.enabled === 'boolean' && typeof v.manualEnabled === 'boolean' && str(v.today) && /^\d{4}-\d{2}-\d{2}$/.test(v.today));
+    if (v.resume !== undefined) { const resume = row(v.resume); check(nullableString(resume.draftId) && nullableString(resume.jobId) && !(resume.draftId && resume.jobId)); }
     for (const input of list(v.providers)) { const p = row(input); check(str(p.id) && str(p.label) && typeof p.requiresConsent === 'boolean' && str(p.consentText) && nullableString(p.costNote)); }
     return v as ReceiptCapabilityWire;
   }

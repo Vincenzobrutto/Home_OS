@@ -10,7 +10,8 @@ import { ExpensesModule } from './expenses/expenses.module';
 import { HomeObjectsModule } from './home-objects/home-objects.module';
 import { SharingModule } from './sharing/sharing.module';
 import { PersonalExportModule } from './personal-export/personal-export.module';
+import { ReceiptAssistanceModule } from './receipt-assistance/receipt.module';
 @Global() @Module({ providers: [PrismaService, SessionsService], exports: [PrismaService, SessionsService] })
 export class InfrastructureModule {}
-@Module({ imports: [InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, ExpensesModule, HomeObjectsModule, SharingModule, PersonalExportModule] })
+@Module({ imports: [InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, ExpensesModule, HomeObjectsModule, SharingModule, PersonalExportModule, ReceiptAssistanceModule] })
 export class AppModule {}

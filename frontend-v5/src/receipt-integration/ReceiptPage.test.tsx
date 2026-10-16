@@ -6,7 +6,7 @@ import { createFakeFetch, renderApp } from '../test/harness';
 import { scenarios } from '../receipt-assistance/testing/fixtures';
 import { selectedCandidatePage } from './ReceiptPage';
 
-async function world(options: { draft?: boolean; redacted?: boolean; drop?: boolean; loggedOut?: boolean; job?: boolean } = {}) {
+async function world(options: { draft?: boolean; redacted?: boolean; drop?: boolean; loggedOut?: boolean; job?: boolean; resume?: boolean } = {}) {
   const backend = new FakeBackend(), password = 'password-qa-receipt-2026';
   const account = backend.seedAccount('Collaudo', 'receipt@example.test', password), home = backend.seedHome(account.id, 'Casa ricevuta', 'Via sintetica 1');
   const doc = await backend.seedDocument({ homeId: home.id, uploaderId: account.id, name: 'Ricevuta prova' });
@@ -16,12 +16,13 @@ async function world(options: { draft?: boolean; redacted?: boolean; drop?: bool
   const wire = { id: 'receipt-draft', homeId: home.id, version: 1, mode: 'extraction', state: 'open', fields, total, review: null as null | Record<string, unknown>, confirmation: null as null | Record<string, unknown>, permissions: ['read', 'edit'], documentLink: options.redacted ? { state: 'unavailable', document: null } : { state: 'linked', document: { id: doc.id, name: doc.name } } };
   if (options.redacted) { wire.fields = {}; wire.total = undefined; }
   let confirmations = 0, recoveries = 0, starts = 0, jobReads = 0;
+  let hasDraft = !!options.draft || !!options.resume || !!options.job;
   const calls: Array<{ path: string; init: RequestInit }> = [];
   const comparisons = [{ id: 'comparison1', version: 1, state: 'open', object: { id: 'object1', version: 1, name: 'Macchina del caffè Studio' }, fieldKey: 'brand', existing: 'Aurora', proposed: { value: 'Lume', sources: [{ page: 1, excerpt: 'Lume' }] }, permissions: ['read', 'edit'], draftId: wire.id, documentLink: wire.documentLink }];
   const fetch = async (url: string, init: RequestInit) => {
     if (!url.includes('/receipt-assistance')) return control.fetch(url, init);
     const path = url.split('/receipt-assistance')[1]!; calls.push({ path, init });
-    if (path.startsWith('/capabilities')) return Response.json({ apiVersion: 'receipt-assistance-v1', enabled: true, manualEnabled: true, today: '2026-10-16', providers: [{ id: 'receipt_fixture_v1', label: 'Simulazione locale', requiresConsent: false, consentText: 'Solo dati sintetici. Nessun invio esterno.', costNote: null }] });
+    if (path.startsWith('/capabilities')) return Response.json({ apiVersion: 'receipt-assistance-v1', enabled: true, manualEnabled: true, today: '2026-10-16', resume: { draftId: hasDraft && ['open', 'parked'].includes(wire.state) ? wire.id : null, jobId: null }, providers: [{ id: 'receipt_fixture_v1', label: 'Simulazione locale', requiresConsent: false, consentText: 'Solo dati sintetici. Nessun invio esterno.', costNote: null }] });
     if (path.endsWith('/confirmations')) { confirmations++; wire.confirmation = { newObjects: 1, newExpenses: 1, object: { id: 'new-object', name: 'Macchina del caffè' }, expense: { id: 'new-cost', title: 'Acquisto', amountCents: 17990 }, openComparisons: 0 }; wire.state = 'confirmed'; if (options.drop) throw new TypeError('response lost'); }
     if (path.endsWith('/confirmation')) { recoveries++; return Response.json({ status: wire.confirmation ? 'confirmed' : 'not_found', draft: wire }); }
     if (path.startsWith('/jobs/')) { jobReads++; return Response.json({ job: { id: 'job1', version: 2, provider: 'receipt_fixture_v1', isSimulation: true, state: 'succeeded', draftId: wire.id, errorCode: null, documentLink: wire.documentLink } }); }
@@ -34,7 +35,7 @@ async function world(options: { draft?: boolean; redacted?: boolean; drop?: bool
       wire.review = { form: { values: { name: 'Acquisto rivisto', brand: 'Lume', model: 'Mini 90', title: 'Acquisto macchina del caffè', supplier: 'Emporio Casa Demo', date: '2026-09-15', amount: '210,00' }, object: { kind: 'create' }, expense: { kind: 'create' }, enrich: false, decisions: {} }, staleTargets: [], targetVersions: { object: null, expense: null } };
     }
     if (path.endsWith('/reopen')) { wire.state = 'open'; wire.version++; }
-    if (path === '/manual-drafts') { wire.mode = 'manual'; wire.fields = {}; wire.total = undefined; }
+    if (path === '/manual-drafts') { hasDraft = true; wire.mode = 'manual'; wire.fields = {}; wire.total = undefined; }
     if (path.startsWith('/drafts/') || path === '/manual-drafts') return Response.json({ draft: { ...wire, total: wire.total ?? null } });
     return Response.json({ error: { code: 'not_found', message: 'Not found' } }, { status: 404 });
   };
@@ -103,9 +104,8 @@ describe('[mock] receipt route integration', () => {
     await w.user.click(screen.getByRole('button', { name: /Controlla il riepilogo/ }));
     await w.user.click(screen.getByRole('button', { name: 'Rimanda' }));
     await screen.findByText(/Bozza rimandata: la ritrovi/);
-    const receiptPath = w.router.state.location.pathname + w.router.state.location.search;
-    await act(async () => { await w.router.navigate(`/home/${w.home.id}/casa`); });
-    await act(async () => { await w.router.navigate(receiptPath); });
+    await act(async () => { await w.router.navigate(`/home/${w.home.id}/documenti/${w.doc.id}`); });
+    await w.user.click(await screen.findByRole('link', { name: 'Riprendi oggetto e spesa dalla ricevuta' }));
     expect(await screen.findByLabelText('Nome dell’oggetto')).toHaveValue('Acquisto rivisto');
     expect(screen.getByLabelText('Importo in euro')).toHaveValue('210,00');
     expect(screen.getByLabelText('Nome dell’oggetto')).toBeDisabled();
@@ -114,6 +114,12 @@ describe('[mock] receipt route integration', () => {
     expect(screen.getByLabelText('Nome dell’oggetto')).toBeEnabled();
     expect(w.calls.filter(c => c.path.endsWith('/reopen'))).toHaveLength(1);
     expect(w.counts().confirmations).toBe(0);
+  });
+  it('generic document entry discovers an existing draft without starting a second analysis', async () => {
+    const w = await world({ resume: true });
+    await screen.findByLabelText('Nome dell’oggetto');
+    expect(w.router.state.location.search).toBe('?bozza=receipt-draft');
+    expect(w.counts()).toMatchObject({ starts: 0, confirmations: 0 });
   });
   it('Da rivedere exposes source and conservative resolution, without overwriting the confirmed value', async () => {
     const w = await world();

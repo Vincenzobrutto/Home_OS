@@ -77,8 +77,12 @@ export class ReceiptAssistanceService {
       const source = documentId ? await this.source(tx, a, h, documentId) : null;
       if (documentId && !source) throw deny();
       const enabled = edit && !!this.release?.allows(source);
+      const scope = source ? { accountId: a, homeId: h, documentId: source.id, documentVersion: source.original!.version, documentSha256: source.original!.sha256 } : null;
+      const draft = enabled && scope ? await tx.receiptDraft.findFirst({ where: { ...scope, state: { in: ['open', 'parked'] } }, orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }], select: { id: true } }) : null;
+      const job = enabled && scope ? await tx.receiptAnalysisJob.findFirst({ where: { ...scope, state: { in: ['queued', 'running'] } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } }) : null;
       return {
       apiVersion: 'receipt-assistance-v1', enabled, manualEnabled: enabled, providers: enabled ? this.release.providers() : [],
+      resume: { draftId: job ? null : draft?.id ?? null, jobId: job?.id ?? null },
       disabledReason: enabled ? null : 'receipt_assistance_in_development', ...temporal(this.clock.now()),
       };
     });
