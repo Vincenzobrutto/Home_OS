@@ -32,3 +32,9 @@ Prezzo sulla scheda oggetto, posizione Ambienti e oggetti e revisione generale d
 ## Ripetizione dopo esito incerto
 
 Il default resta blocco di un nuovo invio. Una nuova azione volontaria nell’app può aggiungere acknowledgePreviousUncertainAnalysis=true e un nuovo consenso che esplicita la riserva aggiuntiva nel medesimo budget. Le vecchie riserve non si rilasciano, la campagna e i contatori non cambiano. Il pulsante del lotto distingue la chiave del nuovo tentativo tramite ID del precedente job; la riemissione HTTP dello stesso tentativo riusa la medesima chiave. Non autorizza retry del provider in background.
+
+## Validazione parziale bollette e riepilogo
+
+Se una singola proposta di campo/importo non supera la verifica sull’originale viene esclusa e segnalata con un codice senza contenuto personale; i dati verificati restano utilizzabili. Non sostituire con valori inventati o con il semplice output del modello. Il totale corrente unico verificato resta la proposta; assenza di totale, più totali o arretrati richiedono scelta. La proiezione ricalcola questa regola dai candidati verificati, anche per bozze salvate con la precedente regola più rigida.
+
+Dati completi: riepilogo compatto e conferma diretta, Modifica dati apre i campi. Dati incompleti/doppioni: mostrare i campi necessari. Dettaglio bollette con una sola azione di revisione spesa e nessun percorso oggetto obbligatorio. Le correzioni finanziarie finali restano scelte esplicite dell’utente.

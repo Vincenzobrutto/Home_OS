@@ -106,6 +106,7 @@ function DocumentUnavailable(props: { back: ReactNode; title: string; children: 
 function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode; analyzeHref: string | null }) {
   const homeName = props.home.name;
   const { doc } = props;
+  const bill=doc.organization?.parts.some(part=>part.kind==='utility_bill')??false;
   useDocumentTitle(`${doc.name} · ${homeName}`);
   const canRead = doc.permissions.includes('read');
 
@@ -130,7 +131,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
               {canRead && ['application/pdf', 'image/jpeg', 'image/png'].includes(doc.mimeType) && <OrganizeDocumentButton homeId={props.home.id} documentId={doc.id} />}
             </p>
           )}
-          {props.analyzeHref && (
+          {props.analyzeHref && !bill && (
             <p className={styles.spaced}>
               {/* Avvio esplicito: aprire o leggere il PDF non avvia mai un'analisi. */}
               <Link to={props.analyzeHref} className={ui.btn}>
@@ -140,8 +141,8 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
           )}
         </div>
       </div>
-      <section className={ui.card}><h2>Oggetti presenti nel documento</h2><p>Riconosci uno o più prodotti, completa le schede e collega questo originale. Le proposte richiedono la tua conferma.</p><Link className={ui.btnPrimary} to={'/home/'+props.home.id+'/documenti/'+doc.id+'/oggetti'}>Organizza gli oggetti dal documento</Link></section>
-      <details><summary>Percorso ricevuta precedente</summary><ReceiptEntry documentId={doc.id} /></details>
+      <section className={ui.card}><h2>{bill?'Spesa della bolletta':'Oggetti presenti nel documento'}</h2><p>{bill?'Controlla fornitore, importo e date proposti. La spesa riguarda la casa, senza oggetti.':'Riconosci uno o più prodotti, completa le schede e collega questo originale. Le proposte richiedono la tua conferma.'}</p><Link className={ui.btnPrimary} to={'/home/'+props.home.id+'/documenti/'+doc.id+'/oggetti'}>{bill?'Rivedi la spesa proposta':'Organizza gli oggetti dal documento'}</Link></section>
+      {!bill&&<details><summary>Percorso ricevuta precedente</summary><ReceiptEntry documentId={doc.id} /></details>}
       <div className={docs.detailGrid}>
         <section className={cx(ui.card, docs.preview)} aria-labelledby="doc-anteprima">
           <h2 id="doc-anteprima" className={styles.cardTitle}>
