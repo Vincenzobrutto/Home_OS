@@ -1,4 +1,4 @@
-import { citation, type Citation } from '../economy/document-domain';
+import { citation, type Citation, type EconomicOutput } from '../economy/document-domain';
 import { object, text, invalid, uuid, version } from '../review/domain';
 import { ProviderFailure, type Snapshot } from '../review/provider';
 import { digest } from '../security';
@@ -19,8 +19,10 @@ export type ProductItem = {
   nameTruncated: boolean;
   disposition: 'household_object' | 'consumable' | 'uncertain';
 };
+export type HouseExpense = EconomicOutput & {id:string;fingerprint:string};
 export type ProductExtraction = {
-  documentKind: 'delivery_notice' | 'order_confirmation' | 'purchase_document' | 'product_document' | 'device_label' | 'unsupported';
+  houseExpenses?:HouseExpense[];
+  documentKind: 'delivery_notice' | 'order_confirmation' | 'purchase_document' | 'product_document' | 'device_label' | 'utility_bill' | 'unsupported';
   items: ProductItem[];
   needsReview: boolean;
   purchaseTotal: { amountCents: number; source: ProductSource } | null;
@@ -58,10 +60,10 @@ function evidence(input: unknown, context: ProductEvidenceContext): ProductSourc
 /** Validates provider output, not truth of visual observations. No DB writes. */
 export function productExtraction(input: unknown, context: ProductEvidenceContext): ProductExtraction {
   try {
-    const row = object(input, ['documentKind', 'items', 'hasMoreItems', 'purchaseTotal', 'requiresHumanReview']);
-    if (!['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'device_label', 'unsupported'].includes(String(row.documentKind)) || typeof row.hasMoreItems !== 'boolean' || !Array.isArray(row.items) || row.items.length > onboardingLimits.maxItems) throw invalid();
+    const row = object(input, ['documentKind', 'items', 'hasMoreItems', 'purchaseTotal', 'requiresHumanReview', 'houseExpenses']);
+    if (!['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'device_label', 'utility_bill', 'unsupported'].includes(String(row.documentKind)) || typeof row.hasMoreItems !== 'boolean' || !Array.isArray(row.items) || row.items.length > onboardingLimits.maxItems) throw invalid();
     if (row.hasMoreItems) throw new ProviderFailure('object_onboarding_too_many_items');
-    if (row.documentKind === 'unsupported' && row.items.length) throw invalid();
+    if (['unsupported','utility_bill'].includes(String(row.documentKind)) && row.items.length) throw invalid();
     const fingerprints = new Set<string>();
     if (row.requiresHumanReview !== undefined && typeof row.requiresHumanReview !== 'boolean') throw invalid();
     let needsReview = row.requiresHumanReview === true;
@@ -117,7 +119,9 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       if (row.documentKind !== 'purchase_document' || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo))?\s*[:=]?\s*(?:EUR|€)?\s*\d[\d., ]*\s*(?:EUR|€)?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
       purchaseTotal = { amountCents: Number(total.amountCents), source };
     }
-    return { documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview, purchaseTotal };
+    const houseExpenses=readHouseExpenses(row.houseExpenses,context);
+    if(houseExpenses.length&&row.documentKind!=='utility_bill')throw invalid();
+    return { documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview, purchaseTotal,...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
   } catch (error) {
     if (error instanceof ProviderFailure) throw error;
     throw new ProviderFailure('analysis_invalid_output');
@@ -185,4 +189,25 @@ export function productConfirmation(input: unknown, extraction: ProductExtractio
   const source = object(row.source, ['documentId', 'documentVersion', 'sha256']);
   if (source.documentId !== snapshot.documentId || source.documentVersion !== snapshot.documentVersion || source.sha256 !== snapshot.documentSha256) throw invalid('Il documento è cambiato: ricarica la proposta.');
   return { expectedVersion: version(row.expectedVersion), ...productChoices(row.choices, extraction) };
+}
+
+
+const billKeys=['title','supplier','category','documentNumber','documentDate','competenceFrom','competenceTo','dueOn'];
+const billRoles=['current_document_total','amount_due','arrears_balance','taxable','tax','line_total','other'];
+function readHouseExpenses(input:unknown,context:ProductEvidenceContext):HouseExpense[]{
+ if(input===undefined)return [];if(!Array.isArray(input)||input.length>10)throw invalid();const fingerprints=new Set<string>();
+ return input.map(raw=>{const r=object(raw,['fields','amountCandidates']),fields:HouseExpense['proposedFields']={};
+  for(const [key,rawField]of Object.entries(object(r.fields,billKeys))){const field=object(rawField,['value','evidence']),value=text(field.value,key==='documentNumber'?80:120),source=evidence(field.evidence,context);
+   if(['documentDate','competenceFrom','competenceTo','dueOn'].includes(key)){calendar(value);if(!printedDates(source.excerpt).includes(value))throw new ProductEvidenceFailure('purchaseDate','date');}
+   else if(key==='category'){const matches:Record<string,RegExp>={electricity:/elettric|electric/iu,gas:/\bgas\b/iu,water:/acqua|water/iu,internet_services:/internet/iu};if(!matches[value]?.test(source.excerpt))throw invalid();}
+   else if(!normalize(source.excerpt).toLocaleLowerCase('it').includes(normalize(value).toLocaleLowerCase('it')))throw invalid();fields[key]={value,sources:[source]};
+  }
+  if(!Array.isArray(r.amountCandidates)||r.amountCandidates.length>10)throw invalid();const seen=new Set<string>();
+  const amounts=r.amountCandidates.map(rawAmount=>{const x=object(rawAmount,['id','amountCents','role','label','evidence']),id=text(x.id,80),role=text(x.role,40),source=evidence(x.evidence,context);if(!/^[A-Za-z0-9_-]{1,80}$/.test(id)||seen.has(id)||!billRoles.includes(role)||!Number.isSafeInteger(x.amountCents)||Number(x.amountCents)<=0||Number(x.amountCents)>999999999||!printedCents(source.excerpt).includes(Number(x.amountCents)))throw invalid();seen.add(id);
+   if(!/(?:€|\bEUR\b|euro)/iu.test(source.excerpt))throw invalid();
+   if(['current_document_total','amount_due'].includes(role)&&!/(?:totale|importo|da\s+pagare|da\s+versare)/iu.test(source.excerpt))throw invalid();
+   return {id,amountCents:Number(x.amountCents),role,label:text(x.label,120),sources:[source]};});
+  const fingerprint=digest(JSON.stringify([context.snapshot.documentSha256,fields.supplier?.value??null,fields.documentNumber?.value??null,fields.documentDate?.value??null,amounts[0]?.sources[0].page??fields.title?.sources[0].page??1]));if(fingerprints.has(fingerprint))throw invalid();fingerprints.add(fingerprint);
+  return {id:digest(context.snapshot.documentId+':bill:'+fingerprint),fingerprint,documentKind:'utility_bill' as const,proposedFields:fields,amountCandidates:amounts,amountSelectionRequired:amounts.some(a=>a.role==='arrears_balance')||amounts.filter(a=>a.role==='current_document_total').length!==1};
+ });
 }

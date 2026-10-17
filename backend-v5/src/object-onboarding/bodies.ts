@@ -1,3 +1,4 @@
+import {confirmBody} from '../economy/document-domain';
 import { object, text, uuid, version, invalid } from '../review/domain';
 import { objectTypes, roomIds } from '../home-objects/domain';
 import { manualSelection } from '../home-objects/manuals';
@@ -27,9 +28,9 @@ function expense(input: unknown, today: string): OnboardingExpense {
   return { ...(r.manualItemAmount!==undefined?{manualItemAmount:r.manualItemAmount}:{}),...(r.acknowledgePossibleDuplicate !== undefined ? { acknowledgePossibleDuplicate: r.acknowledgePossibleDuplicate } : {}), action: 'create', title: text(r.title, 120), amountCents: amountCents(r.amountCents), spentOn: spentOn(r.spentOn, today), supplier: r.supplier === undefined || r.supplier === null ? null : text(r.supplier, 120) };
 }
 export function onboardingConfirmation(input: unknown, today: string) {
-  const r = object(input, ['expectedVersion', 'source', 'choices']);
+  const r = object(input, ['expectedVersion', 'source', 'choices', 'houseExpenses']);
   const source = object(r.source, ['documentId', 'documentVersion', 'sha256']);
-  if (typeof source.sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(source.sha256) || !Array.isArray(r.choices) || !r.choices.length || r.choices.length > 20) throw invalid();
+  if (typeof source.sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(source.sha256) || !Array.isArray(r.choices) || (!r.choices.length&&!Array.isArray(r.houseExpenses)) || r.choices.length > 20) throw invalid();
   const choices: OnboardingChoice[] = r.choices.map(raw => {
     const c = object(raw, ['itemId', 'action', 'name', 'type', 'unitNames', 'roomIds', 'fields', 'manual', 'confirmHouseholdObject', 'acknowledgeExistingSource', 'targets', 'expense']);
     const itemId = text(c.itemId, 80);
@@ -52,5 +53,19 @@ export function onboardingConfirmation(input: unknown, today: string) {
     return { itemId, action: 'create', name: text(c.name, 120), type: c.type, unitNames, roomIds: roomIds(c.roomIds ?? []), fields, manual, confirmHouseholdObject: c.confirmHouseholdObject === true, acknowledgeExistingSource: c.acknowledgeExistingSource === true, expense: cost };
   });
   if (new Set(choices.map(c => c.itemId)).size !== choices.length) throw invalid();
-  return { expectedVersion: version(r.expectedVersion), source: { documentId: uuid(source.documentId), documentVersion: version(source.documentVersion), sha256: source.sha256 }, choices };
+  const houseExpenses=houseChoices(r.houseExpenses,r.expectedVersion,today);if(!choices.length&&!houseExpenses.length)throw invalid();
+  return {...(houseExpenses.length?{houseExpenses}:{}), expectedVersion: version(r.expectedVersion), source: { documentId: uuid(source.documentId), documentVersion: version(source.documentVersion), sha256: source.sha256 }, choices };
 }
+
+function houseChoices(input:unknown,expectedVersion:unknown,today:string){
+ if(input===undefined)return [];if(!Array.isArray(input)||input.length>10)throw invalid();const ids=new Set<string>();
+ return input.map(raw=>{const r=object(raw,['itemId','action','values','amountSelection','expenseId','expectedExpenseVersion','acknowledgePossibleDuplicate']),itemId=text(r.itemId,80);if(!/^[A-Za-z0-9_-]{1,80}$/.test(itemId)||ids.has(itemId))throw invalid();ids.add(itemId);
+  if(r.action==='skip'||r.action==='defer'){object(r,['itemId','action']);return {itemId,action:r.action as 'skip'|'defer',confirmation:null,acknowledgePossibleDuplicate:false};}
+  if(r.action!=='create'&&r.action!=='link_existing'||r.acknowledgePossibleDuplicate!==undefined&&typeof r.acknowledgePossibleDuplicate!=='boolean')throw invalid();
+  object(r,r.action==='create'?['itemId','action','values','amountSelection','acknowledgePossibleDuplicate']:['itemId','action','expenseId','expectedExpenseVersion']);
+  const confirmation=confirmBody({expectedVersion,mode:r.action,...(r.action==='create'?{values:r.values,amountSelection:r.amountSelection}:{expenseId:r.expenseId,expectedExpenseVersion:r.expectedExpenseVersion})},today);
+  if(confirmation.mode==='create'&&(confirmation.values.objectRef||confirmation.values.workId||!['electricity','gas','water','internet_services'].includes(String(confirmation.values.category))))throw invalid('Una bolletta riguarda la casa, senza oggetti o lavori.');
+  return {itemId,action:r.action as 'create'|'link_existing',confirmation,acknowledgePossibleDuplicate:r.acknowledgePossibleDuplicate===true};
+ });
+}
+export type HouseExpenseChoice=NonNullable<ReturnType<typeof onboardingConfirmation>['houseExpenses']>[number];

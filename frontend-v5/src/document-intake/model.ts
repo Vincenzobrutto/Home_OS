@@ -540,5 +540,5 @@ export const formatCents = (cents: number) => euro.format(cents / 100);
 
 /** Only an entry to review: classification never authorizes a provider transfer. */
 export function supportsObjectProposals(item:IntakeItem):boolean {
- return !sourceLost(item)&&item.documentLink.state==='linked'&&item.permissions.review&&(!!item.mimeType?.startsWith('image/')||[...(item.proposal?.parts??[]),...(item.selection?.action==='organize'?item.selection.parts:[]),...(item.confirmedOrganization?.parts??[])].some(p=>['receipt','invoice','warranty','manual','purchase_order','delivery_notice','product_label','purchase_document'].includes(p.kind)));
+ return !sourceLost(item)&&item.documentLink.state==='linked'&&item.permissions.review&&(!!item.mimeType?.startsWith('image/')||[...(item.proposal?.parts??[]),...(item.selection?.action==='organize'?item.selection.parts:[]),...(item.confirmedOrganization?.parts??[])].some(p=>['utility_bill','receipt','invoice','warranty','manual','purchase_order','delivery_notice','product_label','purchase_document'].includes(p.kind)));
 }

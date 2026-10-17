@@ -6,11 +6,11 @@ import { ObjectOnboardingAccess, objectProfileView, onboardingDenied } from './a
 import { proposedProfile } from './profile';
 import type { ProductExtraction } from './domain';
 
-function pageQuery(input: unknown, withItem: boolean) {
-  const q = object(input, ['limit', 'cursor', 'q', ...(withItem ? ['itemId'] : [])]);
+function pageQuery(input: unknown, withItem: boolean, optionalItem=false) {
+  const q = object(input, ['limit', 'cursor', 'q', ...(withItem||optionalItem ? ['itemId'] : [])]);
   if (q.limit !== undefined && (typeof q.limit !== 'string' || !/^(?:[1-9]|[1-4][0-9]|50)$/u.test(q.limit))) throw invalid();
   if (q.cursor !== undefined && (typeof q.cursor !== 'string' || !/^[A-Za-z0-9_-]{1,512}$/u.test(q.cursor))) throw invalid();
-  return { limit: Number(q.limit ?? 10), cursor: q.cursor as string | undefined, q: q.q === undefined ? '' : text(q.q, 80), itemId: withItem ? text(q.itemId, 80) : null };
+  return { limit: Number(q.limit ?? 10), cursor: q.cursor as string | undefined, q: q.q === undefined ? '' : text(q.q, 80), itemId: withItem||optionalItem&&q.itemId!==undefined ? text(q.itemId, 80) : null };
 }
 function pagination(binding: string, cursor?: string) {
   let after: { id: string; rank: number } | null = null;
@@ -64,16 +64,18 @@ export function onboardingCandidates(access: ObjectOnboardingAccess, a: string, 
   });
 }
 export function onboardingExpenseCandidates(access: ObjectOnboardingAccess, a: string, h: string, id: string, query: unknown) {
-  const q = pageQuery(query, false);
+  const q = pageQuery(query, false,true);
   return access.run(a, h, false, async tx => {
     const draft = await access.draft(tx, a, h, id); if (!await access.source(tx, a, h, draft.documentId, draft)) throw onboardingDenied();
     const output = draft.output as unknown as ProductExtraction;
-    const purchaseDate = output.items.length === 1 ? output.items[0].fields.purchaseDate?.value ?? null : null;
-    const amount = output.purchaseTotal?.amountCents ?? null;
-    const p = pagination(digest(JSON.stringify([a, h, id, 'expenses', q.q])), q.cursor), escaped = q.q.replace(/[\\%_]/gu, '\\$&');
+    const bill=q.itemId?output.houseExpenses?.find(x=>x.id===q.itemId):null;if(q.itemId&&!bill)throw invalid();
+    const purchaseDate = bill?bill.proposedFields.documentDate?.value??null:output.items.length === 1 ? output.items[0].fields.purchaseDate?.value ?? null : null;
+    const amount = bill?bill.amountCandidates.find(x=>x.role==='current_document_total')?.amountCents??null:output.purchaseTotal?.amountCents ?? null;
+    const billNumber=bill?.proposedFields.documentNumber?.value??null,billSupplier=bill?.proposedFields.supplier?.value??null;
+    const p = pagination(digest(JSON.stringify([a, h, id, 'expenses', q.itemId,q.q])), q.cursor), escaped = q.q.replace(/[\\%_]/gu, '\\$&');
     const rows = await tx.$queryRaw<Array<{ id: string; rank: number; title: string; amountCents: number; spentOn: string; version: number }>>(Prisma.sql`
-      WITH candidates AS (SELECT e.id,e.title,e."amountCents",e."spentOn",e.version,CASE WHEN v.sha256=${draft.documentSha256} THEN 2 WHEN ${amount}::int IS NOT NULL AND e."amountCents"=${amount} AND e."spentOn"=${purchaseDate}::text THEN 1 ELSE 0 END AS rank FROM "HomeExpense" e LEFT JOIN "Document" d ON d.id=e."documentId" LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
-      WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND (e."documentId" IS NULL OR (d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}))) AND ${escaped ? Prisma.sql`e.title ILIKE ${'%' + escaped + '%'}` : Prisma.sql`TRUE`})
+      WITH candidates AS (SELECT e.id,e.title,e."amountCents",e."spentOn",e.version,CASE WHEN v.sha256=${draft.documentSha256} THEN 2 WHEN ${billNumber}::text IS NOT NULL AND ${billSupplier}::text IS NOT NULL AND e."documentNumber"=${billNumber} AND lower(e.supplier)=lower(${billSupplier}::text) THEN 1 WHEN ${amount}::int IS NOT NULL AND e."amountCents"=${amount} AND e."spentOn"=${purchaseDate}::text THEN 1 ELSE 0 END AS rank FROM "HomeExpense" e LEFT JOIN "Document" d ON d.id=e."documentId" LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
+      WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND ${bill?Prisma.sql`e."assetId" IS NULL AND e."workId" IS NULL AND NOT EXISTS(SELECT 1 FROM "ObjectResourceLink" l WHERE l."expenseId"=e.id AND l.state='active')`:Prisma.sql`TRUE`} AND (e."documentId" IS NULL OR (d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}))) AND ${escaped ? Prisma.sql`e.title ILIKE ${'%' + escaped + '%'}` : Prisma.sql`TRUE`})
       SELECT * FROM candidates WHERE ${p.after ? Prisma.sql`(rank<${p.after.rank} OR (rank=${p.after.rank} AND id>${p.after.id}))` : Prisma.sql`TRUE`} ORDER BY rank DESC,id ASC LIMIT ${q.limit + 1}`);
     const items = rows.slice(0, q.limit);
     return { items, nextCursor: rows.length > q.limit ? p.encode(items.at(-1)!) : null };

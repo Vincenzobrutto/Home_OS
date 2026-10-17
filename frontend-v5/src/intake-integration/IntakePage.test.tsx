@@ -112,8 +112,9 @@ it.each(['local','unknown','draftkind'])('upload proposals stay inline and recov
  };
  const app=renderApp({path:'/accedi',backend,fetch});await screen.findByRole('heading',{name:'Accedi'});await app.user.type(screen.getByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));
  const path=`/home/${homeA1.id}/documenti/organizza`;await app.router.navigate(path+'?lotto=inline-batch&filtro=conserva');
- await screen.findByRole('heading',{name:'Oggetti e spesa proposti'});expect(starts).toBe(0);expect(screen.getByRole('button',{name:'Analizza e proponi gli oggetti'})).toBeDisabled();
- await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Analizza e proponi gli oggetti'}));await screen.findByRole('heading',{name:'Lampada demo'});
+ await app.user.click(await screen.findByRole('button',{name:/Riconosci gli oggetti in/}));
+ await screen.findByRole('heading',{name:'Proposta del documento'});expect(starts).toBe(0);expect(screen.getByRole('button',{name:'Prepara le proposte'})).toBeDisabled();
+ await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Prepara le proposte'}));await screen.findByRole('heading',{name:'Lampada demo'});
  expect(starts).toBe(1);expect(bodies[0]).toMatchObject({documentId:doc.id,consentToProviderTransfer:true});expect(app.router.state.location.pathname).toBe(path);
  const params=new URLSearchParams(app.router.state.location.search);expect(params.get('lotto')).toBe('inline-batch');expect(params.get('filtro')).toBe('conserva');expect(params.get('oggetti-bozza')).toBe('inline-draft');expect(params.get('bozza')).toBeNull();
  await app.user.click(screen.getByRole('button',{name:'Rivedi Lampada demo'}));

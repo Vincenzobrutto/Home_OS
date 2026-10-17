@@ -4,12 +4,13 @@ import { randomUUID } from 'node:crypto';
 import { digest } from '../security';
 import { object, uuid, version, invalid, conflict } from '../review/domain';
 import { ActivityClock, temporal } from '../activities/domain';
+import { EconomyPolicy } from '../economy/policy';
 import { ExpensesService } from '../expenses/expenses.service';
 import { ReviewService } from '../review/review.service';
 import { HomeObjectsService } from '../home-objects/home-objects.service';
 import { manualLookup } from '../home-objects/manuals';
 import { ObjectOnboardingAccess, objectProfileView, onboardingDenied, type OnboardingTx } from './access';
-import { onboardingConfirmation, requestKey, type OnboardingChoice } from './bodies';
+import { onboardingConfirmation, requestKey, type OnboardingChoice, type HouseExpenseChoice } from './bodies';
 import { proposedProfile, resolveProfile, type ObjectProfile } from './profile';
 import type { ProductExtraction, ProductItem } from './domain';
 
@@ -36,7 +37,7 @@ export class ObjectOnboardingService {
       return { ...item, profile: { ...output.enrichments?.[item.id]?.profile, ...proposedProfile(item) }, enrichment: output.enrichments?.[item.id] ?? null, decision: choice ? { ...choice, expenseId:undefined, objectIds: undefined, objects: targets } : null };
     }));
     const review=await this.safeReview(tx,a,h,draft);
-    return { id: draft.id, version: draft.version, state: draft.state, mode: draft.mode, snapshot: { documentId: draft.documentId, documentVersion: draft.documentVersion, sha256: draft.documentSha256 }, document: { id: source.id, name: source.name, mimeType: source.original!.mimeType }, documentKind: output.documentKind, items, needsReview: output.needsReview, purchaseTotal: output.purchaseTotal, review, permissions: edit ? ['read', 'edit'] : ['read'] };
+    return { id: draft.id, version: draft.version, state: draft.state, mode: draft.mode, snapshot: { documentId: draft.documentId, documentVersion: draft.documentVersion, sha256: draft.documentSha256 }, document: { id: source.id, name: source.name, mimeType: source.original!.mimeType }, documentKind: output.documentKind, items, needsReview: output.needsReview, purchaseTotal: output.purchaseTotal, houseExpenses:(output.houseExpenses??[]).map(item=>({...item,decision:decisions[item.id]?{state:decisions[item.id].state,newExpenses:decisions[item.id].newExpenses}:null})), review, permissions: edit ? ['read', 'edit'] : ['read'] };
   }
   private async safeReview(tx:OnboardingTx,a:string,h:string,draft:ObjectOnboardingDraft){
     if(!draft.review)return null;
@@ -52,7 +53,8 @@ export class ObjectOnboardingService {
       if(pending.path!=='/drafts/'+draft.id+'/confirmations')throw invalid();requestKey(pending.key);
       const body=onboardingConfirmation(pending.body,temporal(this.clock.now()).today);
       for(const c of body.choices)if(c.action==='link')for(const target of c.targets)await this.access.target(tx,a,h,target.id);
-      pending={...pending,body};
+      for(const c of body.houseExpenses??[])if(c.confirmation?.mode==='link_existing')await new ExpensesService(this.access.db,this.reviewAccess,this.clock).record(tx,a,h,c.confirmation.expenseId);
+      pending={...pending,body:pending.body};
     }catch{pending=undefined;}}
     return {forms,...(pending?{pending}:{})};
   }
@@ -218,6 +220,31 @@ export class ObjectOnboardingService {
     return { expenseId: result.expense.id, newExpenses: 1, ...(split?{allocation:'manual_item' as const}:{}) };
   }
 
+  private async houseCost(tx:OnboardingTx,a:string,h:string,draft:ObjectOnboardingDraft,item:NonNullable<ProductExtraction['houseExpenses']>[number],selected:HouseExpenseChoice){
+    const c=selected.confirmation;if(!c)throw invalid();const expenses=new ExpensesService(this.access.db,this.reviewAccess,this.clock);
+    if(c.mode==='link_existing'){
+      const row=await expenses.record(tx,a,h,c.expenseId);if(row.version!==c.expectedExpenseVersion||row.state!=='active')throw conflict('expense_version_conflict','Rileggi la spesa.');
+      if(row.assetId||row.workId||await tx.objectResourceLink.count({where:{expenseId:row.id,state:'active'}}))throw invalid('Questa spesa è già collegata a un oggetto.');
+      if(row.documentId){await expenses.documentLink(tx,a,h,row.documentId,true);if(row.documentId!==draft.documentId){const original=await tx.documentVersion.findFirst({where:{documentId:row.documentId,sha256:draft.documentSha256}});if(!original)throw conflict('expense_document_conflict','La spesa ha già un altro documento.');}}
+      else await expenses.mutateInTransaction(tx,a,h,'update',row.id,{expectedVersion:row.version,documentId:draft.documentId},'onboarding_'+digest(draft.id+':'+item.id+':home-link'),true);
+      return {expenseId:row.id,newExpenses:0};
+    }
+    const candidate=c.amountSelection.mode==='candidate'?item.amountCandidates.find(x=>x.id===c.amountSelection.candidateId):null;
+    if(c.amountSelection.mode==='candidate'&&(!candidate||candidate.amountCents!==c.values.amountCents||!['current_document_total','amount_due'].includes(candidate.role)))throw invalid('Controlla il totale di questa bolletta.');
+    const sameSource=await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE e."accountId"=${a} AND e."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}) AND v.sha256=${draft.documentSha256} AND (e."documentNumber" IS NOT DISTINCT FROM ${c.values.documentNumber??null}::text OR e."amountCents"=${c.values.amountCents}) LIMIT 1`;
+    if(sameSource.length)throw conflict('onboarding_expense_exists','Questo documento ha già una spesa: collega quella esistente.');
+    const similar=await tx.homeExpense.findMany({where:{accountId:a,homeId:h,state:'active',OR:[{amountCents:Number(c.values.amountCents),spentOn:String(c.values.spentOn)},...(c.values.documentNumber&&c.values.supplier?[{documentNumber:c.values.documentNumber,supplier:c.values.supplier}]:[])]},select:{id:true,documentId:true}});
+    let duplicate=false;for(const row of similar){if(!row.documentId||(await expenses.documentLink(tx,a,h,row.documentId)).state==='linked')duplicate=true;}
+    if(duplicate&&!selected.acknowledgePossibleDuplicate)throw conflict('onboarding_possible_expense_duplicate','C’è una spesa simile: controlla prima di registrare un costo distinto.');
+    const created=await expenses.mutateInTransaction(tx,a,h,'create','',{...c.values,objectRef:null,workId:null,documentId:draft.documentId},'onboarding_'+digest(draft.id+':'+item.id+':home-create'),true);
+    const provenance=Object.fromEntries(Object.entries(c.values).filter(([key])=>!['objectRef','workId'].includes(key)).map(([key,value])=>[key,{origin:key==='amountCents'&&candidate||item.proposedFields[key]?.value===value?'extraction_confirmed':'user_declared',sources:key==='amountCents'&&candidate?candidate.sources:item.proposedFields[key]?.value===value?item.proposedFields[key].sources:[]} ]));
+    const expense=await tx.homeExpense.update({where:{id:created.expense.id},data:{amountOrigin:candidate?'extraction_confirmed':'user_declared',economicProvenance:onboardingJson(provenance)}});
+    const saved=await new EconomyPolicy(this.reviewAccess).saved(tx,expense);
+    await tx.expenseHistory.updateMany({where:{expenseId:expense.id,kind:'created'},data:{after:onboardingJson(saved)}});
+    await tx.expenseRequest.updateMany({where:{accountId:a,homeId:h,operation:'economy:create',key:'onboarding_'+digest(draft.id+':'+item.id+':home-create')},data:{response:onboardingJson(saved)}});
+    return {expenseId:created.expense.id,newExpenses:1};
+  }
+
   confirm(a: string, h: string, id: string, input: unknown, key?: string) {
     const body = onboardingConfirmation(input, temporal(this.clock.now()).today);
     return this.request(a, h, 'confirm', uuid(id), body, key, async tx => {
@@ -281,7 +308,12 @@ export class ObjectOnboardingService {
         const cost = await this.cost(tx, a, h, draft, output, choice, objectIds[0], decisions); newExpenses += cost.newExpenses;
         decisions[item.id] = { state: 'confirmed', objectIds, ...cost, newObjects: choice.action === 'create' ? quantity : 0 };
       }
-      const complete = output.items.every(item => ['confirmed', 'skipped'].includes(decisions[item.id]?.state));
+      for(const selected of body.houseExpenses??[]){
+        const item=output.houseExpenses?.find(x=>x.id===selected.itemId);if(!item||['confirmed','skipped'].includes(decisions[selected.itemId]?.state))throw conflict('onboarding_item_resolved','Questa proposta è già stata gestita.');
+        if(selected.action==='skip'||selected.action==='defer'){decisions[item.id]={state:selected.action==='skip'?'skipped':'deferred',objectIds:[],expenseId:null,newObjects:0,newExpenses:0};continue;}
+        const result=await this.houseCost(tx,a,h,draft,item,selected);newExpenses+=result.newExpenses;decisions[item.id]={state:'confirmed',objectIds:[],newObjects:0,...result};
+      }
+      const complete = [...output.items,...(output.houseExpenses??[])].every(item => ['confirmed', 'skipped'].includes(decisions[item.id]?.state));
       return { draft: await tx.objectOnboardingDraft.update({ where: { id }, data: { decisions: onboardingJson(decisions), review: onboardingJson({forms:Object.fromEntries(Object.entries((draft.review as {forms?:Record<string,unknown>}|null)?.forms??{}).filter(([key])=>!body.choices.some(c=>c.itemId===key&&c.action!=='defer')))}), state: complete ? 'confirmed' : 'open', version: { increment: 1 } } }), result: { newObjects, newExpenses } };
     });
   }

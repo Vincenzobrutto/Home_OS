@@ -5,7 +5,7 @@ export type OrganizationPayload = OrganizeBatchPayload;
 
 /** A user-confirmed type from the already-read object draft, never fabricated extraction evidence. */
 export function organizationFromObjectKind(item: IntakeItem, hint?: string): OrganizeItemPayload | null {
-  const kinds: Record<string, DocumentKind> = { purchase_document: 'purchase_document', delivery_notice: 'delivery_notice', appliance_label: 'product_label', device_label:'product_label',order_confirmation:'purchase_order' };
+  const kinds: Record<string, DocumentKind> = { utility_bill:'utility_bill', purchase_document: 'purchase_document', delivery_notice: 'delivery_notice', appliance_label: 'product_label', device_label:'product_label',order_confirmation:'purchase_order' };
   const kind = hint ? kinds[hint] : undefined;
   if (!kind || !item.permissions.review || item.uploadState !== 'stored' || item.documentLink.state !== 'linked' || !item.documentLink.document || item.reviewState !== 'unreviewed' || item.confirmedOrganization || item.organizationVersion || item.duplicate || item.proposal || item.selection || item.selectionStale || ['queued', 'running', 'uncertain'].includes(item.analysisState)) return null;
   const title = (item.filename || item.documentLink.document.name).normalize('NFC').trim().slice(0, 120);

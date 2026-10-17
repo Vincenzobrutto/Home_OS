@@ -1,3 +1,4 @@
+import {BatchProposals} from './BatchProposals';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router';
@@ -152,13 +153,14 @@ function IntakeContainer() {
   }
   const productItems=wire?toUiBatch(wire).items.filter(supportsObjectProposals):[];
   const requestedDocument=params.get('oggetti-documento');
-  const productItem=requestedDocument?productItems.find(i=>i.documentLink.document?.id===requestedDocument):productItems[0];
+  const productItem=requestedDocument?productItems.find(i=>i.documentLink.document?.id===requestedDocument):undefined;
   const preparationError=(message:string)=>new ApiError({kind:'http',status:422,code:'intake_preparation_required',message});
   async function prepareDocumentForObject(itemId:string,kind?:string){
     const value=current.current;if(!value||active.current!==value.id)throw preparationError('Rileggi il caricamento corrente.');
     const item=toUiBatch(value).items.find(i=>i.id===itemId);if(!item)throw preparationError('Documento non disponibile.');
     if(item.reviewState==='confirmed'&&item.confirmedOrganization)return;
-    const proposal=bulkItem(item)??organizationFromObjectKind(item,kind);if(!proposal)throw preparationError('Prima completa la classificazione del documento: scegli il tipo o risolvi la copia o il conflitto. Usa «Rivedi documento» qui sotto; i dati dell’articolo restano conservati.');
+    let proposal=bulkItem(item)??organizationFromObjectKind(item,kind);
+    if(proposal&&['utility_bill','purchase_document'].includes(kind??'')&&item.reviewState==='unreviewed'&&!item.organizationVersion&&!item.duplicate)proposal={...proposal,selection:{...proposal.selection,parts:[{kind:kind as 'utility_bill'|'purchase_document',pageFrom:null,pageTo:null}]}};if(!proposal)throw preparationError('Prima completa la classificazione del documento: scegli il tipo o risolvi la copia o il conflitto. Usa «Rivedi documento» qui sotto; i dati dell’articolo restano conservati.');
     const outcome=await organize({batchId:value.id,expectedVersion:value.version,mode:'single',items:[proposal]});
     if(outcome.status!=='done'||outcome.results.some(r=>r.status!=='confirmed'))throw preparationError('Archiviazione del documento da verificare. Nessun oggetto o costo è stato creato: controlla il documento e riprendi qui.');
   }
@@ -170,6 +172,7 @@ function IntakeContainer() {
     {waiting && <p role="status">Caricamento dei file, al massimo due alla volta…</p>}
     {wire?.items.some(i => i.documentLink.state === 'linked' && i.analysisState === 'ready' && !i.proposal && i.reviewState === 'unreviewed') && <Banner><p>Per alcuni file il testo non identifica un tipo con sufficiente chiarezza. Puoi consultare l’originale, scegliere il tipo manualmente o decidere più avanti.</p></Banner>}
     {!id && <details><summary>PDF sintetici per provare il percorso</summary><p>Documenti di esempio, senza dati personali. Scaricali e selezionali nel caricamento.</p><ul>{['ape-sintetico.pdf', 'pratica-mista-sintetica.pdf', 'regolamento-sintetico.pdf', 'ricevuta-sintetica.pdf', 'senza-testo-sintetico.pdf'].map(name => <li key={name}><a href={'/intake-examples/' + name} download>{name}</a></li>)}</ul></details>}
+    {wire&&<BatchProposals key={wire.id} batchId={wire.id} items={productItems}/>}
     <DocumentIntakeAssistant {...directOrganizationActions} key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
       load={unavailable ? { status: 'unavailable' } : cap.isPending || !!id && batch.isPending ? { status: 'loading' } : error ? { status: 'error', message: userMessage(error), retryable: true } : { status: 'ready' }}
       candidates={candidates} loadCandidates={(itemId, more) => void loadCandidates(itemId, more)} onSelectFiles={selected => void create(selected)} addingFiles={waiting}

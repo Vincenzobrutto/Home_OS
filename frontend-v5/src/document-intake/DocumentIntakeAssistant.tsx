@@ -396,7 +396,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
             <>
               <p>Tipo: <strong>{proposal.parts.map(partLabel).join(' + ')}</strong></p>
               <p>Destinazione: <strong>{[...new Set(proposal.parts.map(p => collectionLabel(kindCollection(p.kind))))].join(' + ')}</strong>{item.analysisState === 'needs_choice' ? ' · scheda da scegliere' : ' · Solo alla casa'}</p>
-              {proposal.parts.some(p => p.kind === 'receipt' || p.kind === 'invoice') && <p>{props.renderObjectProposals?'Conferma come archiviare il documento. Oggetti e spesa si controllano qui sotto, senza crearli automaticamente.':'Archivi soltanto la ricevuta: non viene creata una spesa.'}</p>}
+              {proposal.parts.some(p => p.kind === 'receipt' || p.kind === 'invoice') && <p>{props.renderObjectProposals?'':'Archivi soltanto la ricevuta: non viene creata una spesa.'}</p>}
             </>
           )}
           {group === 'done' && decision && <p>{decision.parts.map(partLabel).join(' + ')} · {decision.target.kind === 'home' ? 'solo casa' : 'scheda esistente'}</p>}
@@ -411,8 +411,8 @@ function Inner(props: DocumentIntakeAssistantProps) {
         <div className={styles.rowActions}>
           {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
           {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
-          {canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && supportsObjectProposals(item) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>{props.renderObjectProposals?'Rivedi oggetti e spesa':'Riconosci gli oggetti'}</button>}
-          {group !== 'done' && reviewable(item) && (
+          {canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && supportsObjectProposals(item) && !(props.renderObjectProposals&&(copy||conflict)) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>{props.renderObjectProposals?'Rivedi proposta':'Riconosci gli oggetti'}</button>}
+          {group !== 'done' && reviewable(item) && !(props.renderObjectProposals&&props.onOpenReceiptFlow&&supportsObjectProposals(item)&&!copy&&!conflict) && (
             <button type="button" className={cx(ui.btn, ui.small, ui.primary)} aria-label={`${actionLabel} ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>{actionLabel}</button>
           )}
           {group === 'done' && raw !== 'unavailable' && (canReview && item.permissions.review && props.onReorganizeDocument
