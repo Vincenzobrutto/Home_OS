@@ -1,3 +1,4 @@
+import { PurchaseSummary } from '../objects/PurchaseSummary';
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { isApiError } from '../api/errors';
@@ -372,14 +373,12 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
             Dettagli
           </h2>
           <dl className={pages.detailList}>
-            <dt>Tipo</dt>
-            <dd>{typeLabel(object)}</dd>
             <dt>Dove si trova</dt>
-            <dd className={own.position}>{roomsText(object.position.rooms)}</dd>
-            {!isBoiler && (
+            <dd className={own.position}>{object.position.rooms.length ? object.position.rooms.map((room, index) => <span key={room.id}>{index > 0 && ", "}<Link to={`${base}/ambienti/${encodeURIComponent(room.id)}`}>{roomsText([room])}</Link></span>) : roomsText(object.position.rooms)}</dd>
+            {!isBoiler && object.note && (
               <>
                 <dt>Nota</dt>
-                <dd className={styles.description}>{object.note ?? '—'}</dd>
+                <dd className={styles.description}>{object.note}</dd>
               </>
             )}
           </dl>
@@ -393,11 +392,23 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
           <p className={cx(pages.small, pages.muted, pages.spaced)}>
             {isBoiler
               ? 'Proposte, conferme e storia tecnica restano nella scheda caldaia originale: qui ne vedi posizione e collegamenti.'
-              : 'Oggetto personale, visibile solo a te. Non contiene dati tecnici verificati.'}
+              : 'Visibile solo a te.'}
           </p>
         </section>
 
-        {!isBoiler && <>{object.profile ? <ProfileSection object={object} homeId={home.id} canEdit={canEdit} /> : <ReceiptObjectFields objectId={object.ref.id} />}<ReceiptComparisons objectId={object.ref.id} /></>}
+        {!isBoiler && <PurchaseSummary homeId={home.id} object={object} enabled={!!economyCaps.data?.enabled} />}
+        {!isBoiler && <>{object.profile ? <ProfileSection object={object} homeId={home.id} canEdit={canEdit} compact /> : <ReceiptObjectFields objectId={object.ref.id} />}<ReceiptComparisons objectId={object.ref.id} /></>}
+        <LinksSection home={home} object={object} resourceType="document" />
+        {!isBoiler && <ManualSection homeId={home.id} object={object} canEdit={canEdit} />}
+        <LinksSection
+          home={home}
+          object={object}
+          resourceType="expense"
+          expenseCapabilities={expenseCaps.data}
+          economyEnabled={!!economyCaps.data?.enabled && !!economyCaps.data?.features.history}
+        />
+        <LinksSection home={home} object={object} resourceType="activity" activityCapabilities={activityCaps.data} />
+
         {canEdit && panel !== 'edit' && panel !== 'position' && (
           <div ref={actionsRef} className={styles.actions}>
             {!isBoiler && active && (
@@ -438,22 +449,14 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
           />
         )}
 
-        <LinksSection home={home} object={object} resourceType="document" />
-        {!isBoiler && <ManualSection homeId={home.id} object={object} canEdit={canEdit} />}
-        <LinksSection
-          home={home}
-          object={object}
-          resourceType="expense"
-          expenseCapabilities={expenseCaps.data}
-          economyEnabled={!!economyCaps.data?.enabled && !!economyCaps.data?.features.history}
-        />
-        <LinksSection home={home} object={object} resourceType="activity" activityCapabilities={activityCaps.data} />
+        <details><summary className={ui.btn}>Storia dell’oggetto</summary>
         <G1History
           title="Storia dell’oggetto"
           id="oggetto-storia"
           query={history}
           note={isBoiler ? 'Solo posizione e collegamenti: la storia tecnica è nella scheda caldaia.' : undefined}
         />
+        </details>
       </div>
     </>
   );

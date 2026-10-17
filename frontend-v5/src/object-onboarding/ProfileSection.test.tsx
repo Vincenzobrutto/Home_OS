@@ -16,3 +16,12 @@ it('uncertain update freezes edits and explicitly replays same body/key',async()
 it('an unavailable source prevents editing and is not presented as verified evidence',()=>{setup({...object,profile:{fields:{},unavailable:true}});expect(screen.getByText(/Alcuni dati dipendono da una fonte non più disponibile/)).toBeInTheDocument();expect(screen.queryByText('Lume')).not.toBeInTheDocument();expect(screen.queryByRole('button',{name:'Modifica dati e garanzia'})).not.toBeInTheDocument();});
 
 it('native date input events preserve an explicitly extended warranty on save',async()=>{const u=setup();await u.click(screen.getByRole('button',{name:'Modifica dati e garanzia'}));fireEvent.input(screen.getByLabelText('Inizio garanzia'),{target:{value:'2025-01-01'}});fireEvent.input(screen.getByLabelText('Scadenza garanzia'),{target:{value:'2029-01-01'}});await u.click(screen.getByRole('button',{name:'Salva modifiche'}));await waitFor(()=>expect(mocks.callJson.mock.calls.some(c=>c[1].method==='POST')).toBe(true));expect(mocks.callJson.mock.calls.find(c=>c[1].method==='POST')![1].body).toEqual({expectedVersion:2,values:{warrantyStart:'2025-01-01',warrantyEnd:'2029-01-01'}});});
+
+it('compact profile keeps warranty visible and technical details available on demand',async()=>{
+ const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});const u=userEvent.setup();
+ const item:CatalogItem={...object,profile:{...object.profile!,fields:{...object.profile!.fields,serialNumber:{value:'SERIAL-TEST',origin:'user_declared',sources:[]}}}};
+ render(<QueryClientProvider client={cache}><ProfileSection object={item} homeId="h" canEdit compact/></QueryClientProvider>);
+ expect(screen.getByText('2027-01-01')).toBeVisible();expect(screen.getByText('SERIAL-TEST')).not.toBeVisible();
+ await u.click(screen.getByText('Dati tecnici',{exact:true}));expect(screen.getByText('SERIAL-TEST')).toBeVisible();
+ expect(mocks.callJson.mock.calls.some(c=>c[1].method==='POST')).toBe(false);
+});

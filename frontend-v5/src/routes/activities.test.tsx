@@ -59,13 +59,14 @@ async function createViaUi(app: App, homeId: string, title: string, opts: { date
 }
 
 describe('[mock] H1 — Casa e creazione', () => {
-  it('Casa senza attività: anteprima vuota con conteggi a zero e creazione disponibile', async () => {
+  it('Casa senza attività: riepilogo compatto e creazione disponibile', async () => {
     const { backend, home } = world();
-    await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/casa`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/casa`);
     const region = await screen.findByRole('region', { name: 'Le tue scadenze' });
-    await waitFor(() => expect(region).toHaveTextContent('Nessuna scadenza nei prossimi 7 giorni.'));
-    expect(within(region).getByLabelText('Conteggi delle attività aperte')).toHaveTextContent('0 scadute0 oggi0 in programma0 senza data');
+    await waitFor(() => expect(region).toHaveTextContent('Nessuna attività aperta.'));
+    expect(within(region).queryByLabelText('Conteggi delle attività aperte')).not.toBeInTheDocument();
     expect(within(region).getByRole('link', { name: 'Nuova attività' })).toHaveAttribute('href', `/home/${home.id}/attivita?nuova-attivita=1`);
+    await app.user.click(screen.getByText('Dettagli della casa e del tuo ruolo'));
     const permissions = screen.getByRole('region', { name: 'Permessi del tuo ruolo' });
     expect(permissions).not.toHaveTextContent('Avviare una vendita');
     expect(permissions).not.toHaveTextContent('Gestire le persone con accesso');

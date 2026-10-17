@@ -7,6 +7,7 @@ import styles from './pages.module.css';
 export function CasaReviewSummary({ homeId }: { homeId: string }) {
   const review = useReview(homeId);
   const count = review.data?.pages[0]?.openCount;
+  if (review.isSuccess && count === 0) return <section className={cx(ui.card, styles.quietSummary)} aria-labelledby="casa-verifiche"><h2 id="casa-verifiche" className={styles.cardTitle}>Da rivedere</h2><p>Nessuna verifica aperta. <Link to={`/home/${encodeURIComponent(homeId)}/review`}>Apri verifiche</Link></p></section>;
   return (
     <section className={cx(ui.card, styles.wide)} aria-labelledby="casa-verifiche">
       <h2 id="casa-verifiche" className={styles.cardTitle}>Da rivedere</h2>

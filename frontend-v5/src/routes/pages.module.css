@@ -29,7 +29,7 @@
 
 .hero {
   margin: -32px -40px var(--space-5);
-  padding: 30px 40px 34px;
+  padding: 16px 40px 18px;
   background: var(--color-nav);
   color: #fff;
 }
@@ -202,7 +202,7 @@
 
   .hero {
     margin: -22px -16px var(--space-5);
-    padding: 24px 16px 26px;
+    padding: 14px 16px 16px;
   }
 
   .formActions > * {
@@ -225,4 +225,19 @@
 
 .wide {
   grid-column: 1 / -1;
+}
+
+.quickActions {
+  margin-bottom: var(--space-4);
+}
+
+.quietSummary {
+  padding: 10px 14px;
+}
+.quietSummary h2 {
+  font-size: 15px;
+  margin-bottom: 3px;
+}
+.quietSummary p {
+  font-size: 14px;
 }

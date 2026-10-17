@@ -125,24 +125,24 @@ export function CasaPage() {
           <Tag tone="blue">{ROLE_LABEL[home.role] ?? home.role}</Tag>
         </div>
       </div>
-      <section className={cx(ui.card, styles.spaced)} aria-labelledby="casa-azioni">
-        <h2 id="casa-azioni" className={styles.cardTitle}>Da dove vuoi iniziare?</h2>
+      <section className={styles.quickActions} aria-labelledby="casa-azioni">
+        <h2 id="casa-azioni" className="visually-hidden">Azioni rapide</h2>
         <div className={styles.formActions}>
           <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/documenti`}>Documenti</Link>
           {home.permissions.includes('edit') && <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/spese?nuova-spesa=1`}>Registra una spesa</Link>}
           <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/oggetti`}>Oggetti e impianti</Link>
         </div>
       </section>
-      <h2 className={styles.spaced}>Da fare ora</h2>
+      <h2 className="visually-hidden">Da fare ora</h2>
       <div className={styles.grid}>
         <ScadenzeSummary home={home} />
         <CasaReviewSummary homeId={home.id} />
-        <CasaSharingSummary />
       </div>
       <h2 className={styles.spaced}>La tua casa</h2>
       <div className={styles.grid}>
         <ObjectsSummary home={home} />
         <SpeseSummary home={home} />
+        <CasaSharingSummary />
         <ImpiantiSummary homeId={home.id} />
         <section className={cx(ui.card, ui.tint, styles.wide)} aria-labelledby="casa-prossime">
           <h2 id="casa-prossime" className={styles.cardTitle}>

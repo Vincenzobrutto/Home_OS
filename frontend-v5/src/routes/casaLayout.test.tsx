@@ -10,10 +10,14 @@ it('[mock] Casa mette le azioni prima dei dettagli e aprire il ruolo non scrive 
   await app.user.type(screen.getByLabelText('Password'), PASSWORD_B);
   await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
   await screen.findByRole('heading', { level: 1, name: homeB1.name });
-  const actions = screen.getByRole('region', { name: 'Da dove vuoi iniziare?' });
+  const actions = screen.getByRole('region', { name: 'Azioni rapide' });
   expect(within(actions).getByRole('link', { name: 'Documenti' })).toHaveAttribute('href', `/home/${homeB1.id}/documenti`);
   expect(within(actions).getByRole('link', { name: 'Registra una spesa' })).toHaveAttribute('href', `/home/${homeB1.id}/spese?nuova-spesa=1`);
   expect(await screen.findByRole('link', { name: 'Apri le condivisioni' })).toHaveAttribute('href', `/home/${homeB1.id}/condivisioni`);
+  await screen.findByText('Nessuna attività aperta.', { exact: false });
+  const rooms = screen.getByRole('heading', { name: 'Ambienti e oggetti' });
+  expect(rooms.compareDocumentPosition(screen.getByRole('heading', { name: 'Condivisioni' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.queryByText('Agenzie')).not.toBeInTheDocument();
   const summary = screen.getByText('Dettagli della casa e del tuo ruolo');
   const details = summary.closest('details')!;
   expect(details).not.toHaveAttribute('open');

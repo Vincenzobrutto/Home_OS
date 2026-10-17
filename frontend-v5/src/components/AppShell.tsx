@@ -16,12 +16,6 @@ export const SECTIONS: Array<{ id: SectionId; label: string; icon: IconName; ava
   { id: 'spese', label: 'Spese', icon: 'expenses', available: true },
 ];
 
-// Esperienze future: visibili ma non navigabili finché non esiste il loro contratto.
-const EXPERIENCES = [
-  { label: 'Home', available: true },
-  { label: 'Agenzie', available: false },
-  { label: 'Amministratori', available: false },
-];
 
 export function Brand() {
   return (
@@ -61,25 +55,6 @@ export function AppShell(props: { account: Account; home?: Home; children: React
         <Link to="/case" className={styles.brand} aria-label="Dimora, le mie case">
           Dimora<span>.</span>
         </Link>
-        <ul className={styles.experiences} aria-label="Esperienze Dimora">
-          {EXPERIENCES.map((exp) =>
-            exp.available ? (
-              <li key={exp.label} className={cx(styles.experience, styles.experienceActive)} aria-current="true">
-                {exp.label}
-              </li>
-            ) : (
-              <li
-                key={exp.label}
-                className={cx(styles.experience, styles.experienceDisabled)}
-                title="Non ancora disponibile"
-              >
-                <Icon name="lock" />
-                {exp.label}
-                <span className="visually-hidden"> (non ancora disponibile)</span>
-              </li>
-            ),
-          )}
-        </ul>
         <div className={styles.account}>
           {/* Consegne ricevute: livello account, raggiungibile anche senza case; non è una sezione della casa. */}
           <Link to="/consegne" className={styles.logout}>

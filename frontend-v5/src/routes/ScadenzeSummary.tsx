@@ -12,6 +12,12 @@ export function ScadenzeSummary({ home }: { home: Home }) {
   const base = `/home/${encodeURIComponent(home.id)}`;
   const canEdit = home.permissions.includes('edit');
   const data = summary.data;
+  if (summary.isSuccess && data && Object.values(data.counts).every(count => count === 0) && data.nextItems.length === 0) {
+    return <section className={cx(ui.card, pages.wide, pages.quietSummary)} aria-labelledby="casa-scadenze">
+      <h2 id="casa-scadenze" className={pages.cardTitle}>Le tue scadenze</h2>
+      <p>Nessuna attività aperta. <Link to={`${base}/attivita`}>Apri attività</Link>{canEdit && <> · <Link to={`${base}/attivita?nuova-attivita=1`}>Nuova attività</Link></>}</p>
+    </section>;
+  }
   return (
     <section className={cx(ui.card, pages.wide)} aria-labelledby="casa-scadenze">
       <h2 id="casa-scadenze" className={pages.cardTitle}>

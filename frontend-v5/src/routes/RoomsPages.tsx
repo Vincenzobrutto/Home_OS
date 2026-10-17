@@ -293,49 +293,6 @@ function RoomView(props: { home: Home; room: Room; caps: ObjectCapabilities; bac
         </div>
       </div>
       <div className={pages.stack}>
-        <section className={ui.card} aria-labelledby="ambiente-dati">
-          <h2 id="ambiente-dati" className={pages.cardTitle}>
-            Dettagli
-          </h2>
-          <dl className={pages.detailList}>
-            <dt>Tipo</dt>
-            <dd>{ROOM_TYPE_LABEL[room.type] ?? room.type}</dd>
-            <dt>Nota</dt>
-            <dd className={styles.description}>{room.note ?? '—'}</dd>
-          </dl>
-          <p className={cx(pages.small, pages.muted, pages.spaced)}>
-            L’ambiente non ha documenti o costi propri: raccoglie gli oggetti, che restano gli unici a cui collegarli.
-          </p>
-        </section>
-        {canEdit && panel !== 'edit' && (
-          <div ref={actionsRef} className={styles.actions}>
-            {active && (
-              <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => setPanel('edit')}>
-                Modifica
-              </button>
-            )}
-            <button type="button" className={ui.btn} onClick={() => setPanel('state')}>
-              {active ? 'Archivia' : 'Ripristina'}
-            </button>
-          </div>
-        )}
-        {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare questo ambiente, non modificarlo.</p>}
-        {panel === 'edit' && active && (
-          <RoomForm home={home} capabilities={props.caps} room={room} onCancel={() => setPanel('none')} onDone={() => setPanel('none')} />
-        )}
-        {panel === 'state' && (
-          <StateDialog
-            homeId={home.id}
-            title={active ? 'Archivia ambiente' : 'Ripristina ambiente'}
-            hint={
-              active
-                ? 'L’ambiente esce dalle scelte per nuove posizioni. Non viene cancellato: oggetti e posizioni esistenti restano, con l’ambiente indicato come archiviato.'
-                : 'L’ambiente torna disponibile per nuove posizioni, con gli stessi dati e la sua storia.'
-            }
-            vars={{ kind: active ? 'roomArchive' : 'roomRestore', roomId: room.id, body: { expectedVersion: room.version } }}
-            onClose={() => setPanel('none')}
-          />
-        )}
         <section className={ui.card} aria-labelledby="ambiente-oggetti">
           <h2 id="ambiente-oggetti" className={pages.cardTitle}>
             I tuoi oggetti in questo ambiente
@@ -371,7 +328,47 @@ function RoomView(props: { home: Home; room: Room; caps: ObjectCapabilities; bac
             </p>
           )}
         </section>
-        <G1History title="Storia dell’ambiente" id="ambiente-storia" query={history} />
+        <details className={ui.card}><summary className={pages.cardTitle}>Dettagli dell’ambiente</summary>
+          <dl className={pages.detailList}>
+            <dt>Tipo</dt>
+            <dd>{ROOM_TYPE_LABEL[room.type] ?? room.type}</dd>
+            {room.note && <><dt>Nota</dt><dd className={styles.description}>{room.note}</dd></>}
+          </dl>
+          <p className={cx(pages.small, pages.muted, pages.spaced)}>
+            L’ambiente raccoglie i tuoi oggetti e i loro collegamenti.
+          </p>
+        </details>
+        {canEdit && panel !== 'edit' && (
+          <div ref={actionsRef} className={styles.actions}>
+            {active && (
+              <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => setPanel('edit')}>
+                Modifica
+              </button>
+            )}
+            <button type="button" className={ui.btn} onClick={() => setPanel('state')}>
+              {active ? 'Archivia' : 'Ripristina'}
+            </button>
+          </div>
+        )}
+        {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare questo ambiente, non modificarlo.</p>}
+        {panel === 'edit' && active && (
+          <RoomForm home={home} capabilities={props.caps} room={room} onCancel={() => setPanel('none')} onDone={() => setPanel('none')} />
+        )}
+        {panel === 'state' && (
+          <StateDialog
+            homeId={home.id}
+            title={active ? 'Archivia ambiente' : 'Ripristina ambiente'}
+            hint={
+              active
+                ? 'L’ambiente esce dalle scelte per nuove posizioni. Non viene cancellato: oggetti e posizioni esistenti restano, con l’ambiente indicato come archiviato.'
+                : 'L’ambiente torna disponibile per nuove posizioni, con gli stessi dati e la sua storia.'
+            }
+            vars={{ kind: active ? 'roomArchive' : 'roomRestore', roomId: room.id, body: { expectedVersion: room.version } }}
+            onClose={() => setPanel('none')}
+          />
+        )}
+
+        <details><summary className={ui.btn}>Storia dell’ambiente</summary><G1History title="Storia dell’ambiente" id="ambiente-storia" query={history} /></details>
       </div>
     </>
   );
