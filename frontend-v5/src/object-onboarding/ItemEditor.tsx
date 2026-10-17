@@ -16,6 +16,7 @@ export function ItemEditor({api,accountId,base,draft,item,form,disabled,change,e
  const patch=(value:Partial<Form>)=>change({...form,...value});
  const quantity=item.quantity?.value??1;
  const rows=[...(candidates.data?.items??[]),...extra.filter(x=>!candidates.data?.items.some(y=>x.id===y.id))];
+ const plausible=rows.filter(row=>row.reason!=='manual_selection');
  const selected=form.targets[0];
  const current=form.action==='link'?selected?.profile.fields??{}:{};
  async function more(){setMoreError('');try{const result=await api.callJson<CandidatePage>(root+'/candidates?itemId='+encodeURIComponent(item.id)+(q?'&q='+encodeURIComponent(q):'')+'&cursor='+encodeURIComponent(cursor??candidates.data?.nextCursor??''),{accountId});setExtra(old=>[...old,...result.items]);setCursor(result.nextCursor??'');}catch(e){setMoreError(userMessage(e));}}
@@ -25,10 +26,11 @@ export function ItemEditor({api,accountId,base,draft,item,form,disabled,change,e
  return <div className={styles.stack}>
   <p>{quantity>1?quantity+' esemplari indicati nel documento':'Un articolo'}{item.nameTruncated?' · Nome parziale: verifica la descrizione completa':''}</p>
   {item.disposition!=='household_object'&&<Banner tone="warning"><p>Potrebbe essere un accessorio o un materiale di consumo. Scegli se vuoi censirlo come oggetto di casa.</p></Banner>}
+  {plausible.length>0&&<Banner tone="warning"><p>Ci sono schede che potrebbero corrispondere a questo articolo. Controllale prima di creare una nuova scheda; nessuna è selezionata automaticamente.</p></Banner>}
   <fieldset disabled={disabled} className={styles.stack}><legend>Cosa vuoi fare?</legend>
    <label className={styles.check}><input type="radio" checked={form.action==='create'} onChange={()=>patch({action:'create',targets:[]})}/>Crea una nuova scheda</label>
    <label className={styles.check}><input type="radio" checked={form.action==='link'} onChange={()=>patch({action:'link'})}/>Collega a un oggetto già in casa</label>
-   <details><summary>Controlla le schede esistenti</summary><div className={styles.stack}>
+   <details open={plausible.length>0}><summary>Controlla le schede esistenti</summary><div className={styles.stack}>
     <div className={styles.row}><label className={styles.field}>Cerca un oggetto<input className={ui.input} value={search} onChange={e=>setSearch(e.target.value)} maxLength={80}/></label><button type="button" className={ui.btn} onClick={()=>{setQ(search);setExtra([]);setCursor(null);}}>Cerca</button></div>
     {candidates.isPending?<p>Caricamento schede…</p>:candidates.isError?<Banner tone="error"><p>{userMessage(candidates.error)}</p><button type="button" onClick={()=>void candidates.refetch()}>Riprova</button></Banner>:rows.length?<ul>{rows.map(t=><li key={t.id}>{t.name} {t.rooms.join(', ')} · {t.reason==='confirmed_item'?'Articolo già censito':t.reason==='manual_selection'?'Scelta manuale':'Corrispondenza da verificare'}</li>)}</ul>:<p>Nessuna scheda in questa ricerca.</p>}
     {(cursor!==''&&(cursor||candidates.data?.nextCursor))&&<button type="button" className={ui.btn} onClick={()=>void more()}>Altre schede</button>}{moreError&&<p role="alert">{moreError}</p>}

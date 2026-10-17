@@ -536,3 +536,9 @@ export function formatBytes(bytes: number): string {
 }
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' });
 export const formatCents = (cents: number) => euro.format(cents / 100);
+
+
+/** Only an entry to review: classification never authorizes a provider transfer. */
+export function supportsObjectProposals(item:IntakeItem):boolean {
+ return !sourceLost(item)&&item.documentLink.state==='linked'&&item.permissions.review&&(!!item.mimeType?.startsWith('image/')||[...(item.proposal?.parts??[]),...(item.selection?.action==='organize'?item.selection.parts:[]),...(item.confirmedOrganization?.parts??[])].some(p=>['receipt','invoice','warranty','manual'].includes(p.kind)));
+}

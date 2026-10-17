@@ -284,3 +284,13 @@ describe('ingresso oggetti dal caricamento', () => {
   expect(screen.queryByRole('button',{name:/Riconosci gli oggetti/})).not.toBeInTheDocument();
  });
 });
+
+
+it('inline object proposals do not organize copies, change privacy or render inaccessible sources',()=>{
+ const receipt=corpus.receipt(),renderObjectProposals=vi.fn(()=> <p>Proposte oggetti inline</p>);
+ const {rerender}=renderIntake(intakeProps({batch:batchOf([receipt]),objectProposalItemId:receipt.id,renderObjectProposals}));
+ expect(screen.getByText('Proposte oggetti inline')).toBeInTheDocument();
+ rerender(<></>);
+ renderIntake(intakeProps({batch:batchOf([{...receipt,documentLink:{state:'unavailable',document:null}}]),objectProposalItemId:receipt.id,renderObjectProposals}));
+ expect(screen.queryByText('Proposte oggetti inline')).not.toBeInTheDocument();
+});

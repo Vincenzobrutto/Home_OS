@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { useAccount, useApi } from '../session/session';
 import { useCurrentHome } from '../routes/HomePages';
 import { DocumentIntakeAssistant } from '../document-intake/DocumentIntakeAssistant';
-import { canonical, type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type ReviewPayload, type WriteOutcome } from '../document-intake/model';
+import { supportsObjectProposals, bulkItem, canonical, type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type ReviewPayload, type WriteOutcome } from '../document-intake/model';
+import { DocumentObjectProposals } from '../object-onboarding/OnboardingPage';
 import { IntakeClient, toUiBatch, type BatchWire } from './client';
 import { localAnalysisCandidates, organizeDocuments, type OrganizationPayload } from './organization';
-import { isApiError, userMessage } from '../api/errors';
+import { ApiError, isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey, queryKeys } from '../api/queryKeys';
 import { Banner, ErrorState, Loading, ui, useDocumentTitle } from '../components/ui';
 import { useDocumentFile, useObjectUrl } from '../documents/hooks';
@@ -23,7 +24,7 @@ export function IntakePage() {
   return <IntakeContainer key={account.id + ':' + home.id} />;
 }
 function IntakeContainer() {
-  const home = useCurrentHome(), account = useAccount(), api = useApi(), cache = useQueryClient(), navigate = useNavigate(), [params, setParams] = useSearchParams();
+  const home = useCurrentHome(), account = useAccount(), api = useApi(), cache = useQueryClient(), [params, setParams] = useSearchParams();
   useDocumentTitle('Carica documenti · ' + home.name);
   const id = params.get('lotto'), client = useMemo(() => new IntakeClient(api, account.id, home.id), [api, account.id, home.id]);
   const prefix = ['account', account.id, 'home', home.id, 'intake'] as const, key = [...prefix, 'batch', id];
@@ -149,6 +150,18 @@ function IntakeContainer() {
       setCandidates(p => ({ ...p, [itemId]: { items: [...(more ? previous?.items ?? [] : []), ...items], hasMore: !!result.nextCursor, status: 'idle' } }));
     } catch { if (alive.current && active.current === batchId) setCandidates(p => ({ ...p, [itemId]: { items: [], hasMore: false, status: 'error' } })); }
   }
+  const productItems=wire?toUiBatch(wire).items.filter(supportsObjectProposals):[];
+  const requestedDocument=params.get('oggetti-documento');
+  const productItem=requestedDocument?productItems.find(i=>i.documentLink.document?.id===requestedDocument):productItems[0];
+  const preparationError=(message:string)=>new ApiError({kind:'http',status:422,code:'intake_preparation_required',message});
+  async function prepareDocumentForObject(itemId:string){
+    const value=current.current;if(!value||active.current!==value.id)throw preparationError('Rileggi il caricamento corrente.');
+    const item=toUiBatch(value).items.find(i=>i.id===itemId);if(!item)throw preparationError('Documento non disponibile.');
+    if(item.reviewState==='confirmed'&&item.confirmedOrganization)return;
+    const proposal=bulkItem(item);if(!proposal)throw preparationError('Rivedi prima il documento: copia, conflitto o tipo da scegliere richiedono una decisione. Le proposte oggetto restano disponibili qui.');
+    const outcome=await organize({batchId:value.id,expectedVersion:value.version,mode:'single',items:[proposal]});
+    if(outcome.status!=='done'||outcome.results.some(r=>r.status!=='confirmed'))throw preparationError('Archiviazione del documento da verificare. Nessun oggetto o costo è stato creato: controlla il documento e riprendi qui.');
+  }
   const error = cap.error ?? batch.error, unavailable = denied(error), busyAnalysis = wire?.items.some(i => ['queued', 'running'].includes(i.analysisState));
   return <>
     <p><Link to={`/home/${home.id}/documenti`}>← Documenti</Link></p>
@@ -169,7 +182,9 @@ function IntakeContainer() {
       onStartAnalysis={ids => { const items = current.current?.items.filter(i => ids.includes(i.id)).map(i => ({ id: i.id, expectedVersion: i.version })) ?? []; void post('/analyses', { provider: 'local_text_v1', items }, 'analysis').then(r => { if (r.status !== 'confirmed') setProblem(r.status === 'rejected' ? r.message : 'Esito incerto: rileggi il caricamento prima di riprovare.'); }); }}
       openOriginal={async itemId => { const source = current.current?.items.find(i => i.id === itemId)?.documentLink.document; if (!source) throw Error('Originale non disponibile.'); const file = await api.downloadDocumentFile(home.id, source.id, undefined, account.id); saveBlob(file.blob, file.filename ?? 'originale.pdf'); }}
       renderPreview={(itemId, page) => { const source = wire?.items.find(i => i.id === itemId)?.documentLink.document; return source ? <OriginalPreview homeId={home.id} id={source.id} page={page} /> : <p>Originale non disponibile.</p>; }}
-      onOpenReceiptFlow={itemId => { const doc = current.current?.items.find(i => i.id === itemId)?.documentLink.document; if (doc) void navigate(`/home/${home.id}/documenti/${doc.id}/oggetti`); }}
+      onOpenReceiptFlow={itemId => { const doc = current.current?.items.find(i => i.id === itemId)?.documentLink.document; if(doc)setParams(previous=>{const next=new URLSearchParams(previous);next.set('oggetti-documento',doc.id);next.delete('oggetti-bozza');next.delete('oggetti-analisi');return next;}); }}
+      objectProposalItemId={productItem?.id}
+      renderObjectProposals={itemId=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentObjectProposals documentId={source.id} beforeConfirm={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'&&wire?.items.find(i=>i.id===itemId)?.organization?undefined:()=>prepareDocumentForObject(itemId)} confirmLabel={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?'Conferma questo articolo':'Conferma documento e articolo'}/>:null;}}
       renderOutcomeLinks={() => <Link className={ui.btn} to={`/home/${home.id}/documenti`}>Vai ai Documenti</Link>}
       onRetryLoad={() => { void cap.refetch(); if (id) void batch.refetch(); }} />
     <input ref={picker} hidden type="file" accept="application/pdf,image/jpeg,image/png" aria-label="Originale da ricaricare" onChange={e => { const file = e.target.files?.[0], itemId = retryItem.current; if (file && itemId && current.current) { files.current.set(itemId, file); void upload(current.current, itemId); } e.target.value = ''; }} />

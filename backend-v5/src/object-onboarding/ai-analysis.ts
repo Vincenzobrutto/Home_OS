@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma.service';
 import { AnthropicTransport, responseUsage } from '../review/anthropic';
 import type { InputDocument } from '../review/pdf-text';
 import { ProviderFailure } from '../review/provider';
-import type { ProductExtraction } from './domain';
+import { ProductEvidenceFailure, type ProductExtraction } from './domain';
 import { OnboardingAiBudget, OnboardingAiConfig } from './ai-budget';
 import { ObjectOnboardingAnthropicProvider } from './anthropic-provider';
 
@@ -19,6 +19,7 @@ export class ObjectOnboardingAnthropicTransport extends AnthropicTransport {
 }
 @Injectable()
 export class OnboardingAiAnalysis {
+  private readonly logger = new Logger(OnboardingAiAnalysis.name);
   constructor(private readonly db: PrismaService, private readonly provider: ObjectOnboardingAnthropicProvider, private readonly transport: ObjectOnboardingAnthropicTransport, readonly budget: OnboardingAiBudget) {}
   async analyze(job: ObjectOnboardingJob, input: InputDocument & { mimeType: string }, signal: AbortSignal, authorize: Authorized): Promise<ProductExtraction> {
     const attempt = await this.db.objectOnboardingAttempt.findUnique({ where: { jobId: job.id } });
@@ -58,6 +59,6 @@ export class OnboardingAiAnalysis {
       await check();
       await this.db.objectOnboardingAttempt.updateMany({ where: { id: attempt.id, state: 'settled' }, data: { output: JSON.parse(JSON.stringify(output)) as Prisma.InputJsonValue } });
       return output;
-    } catch (error) { await this.budget.fail(job.id); throw error; }
+    } catch (error) { if(error instanceof ProductEvidenceFailure)this.logger.warn(JSON.stringify({event:'onboarding_evidence_rejected',field:error.field,reason:error.reason})); await this.budget.fail(job.id); throw error; }
   }
 }

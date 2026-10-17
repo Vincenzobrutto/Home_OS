@@ -4,7 +4,7 @@ import { ReviewDialog, type ReviewWriteState } from './ReviewDialog';
 import {
   STATUS_LABEL, STATUS_TONE, buildOrganizePayload, buildReviewPayload, bulkEligible, bulkItem, canonical, collectionLabel, contextKeyString,
   deferPayload, displayName, draftChanged, formatBytes, hasConflict, initialReviewDraft, itemStatus, kindCollection, matchesWorkFilter, partLabel,
-  reviewable, rowTitle, selectionCollections, sourceLost, visibleItem, workGroup,
+  supportsObjectProposals, reviewable, rowTitle, selectionCollections, sourceLost, visibleItem, workGroup,
   type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type IntakeAnalysisPanel, type IntakeBatch, type IntakeCapabilities,
   type IntakeContextKey, type IntakeItem, type IntakeLoadState, type ItemConfirmResult, type ItemStatus, type OpaqueId, type OpaqueVersion,
   type OrganizeBatchPayload, type RecoverBatchOutcome, type ReviewDraft, type ReviewPayload, type WorkFilter, type WriteOutcome,
@@ -51,6 +51,8 @@ export type DocumentIntakeAssistantProps = {
   openOriginal: (itemId: OpaqueId, page: number | null) => Promise<void>;
   renderPreview?: (itemId: OpaqueId, page: number | null) => ReactNode;
   onOpenReceiptFlow?: (itemId: OpaqueId) => void;
+  objectProposalItemId?:string|null;
+  renderObjectProposals?:(itemId:string)=>ReactNode;
   renderOutcomeLinks?: (results: ItemConfirmResult[]) => ReactNode;
   onRetryLoad?: () => void;
 };
@@ -298,7 +300,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
       }}
       onRecover={() => { const op = opOf(dialogItem.id); if (op) void runOrganize(op.payload, true); else void recoverReview(dialogItem.id); }}
       onResend={() => { const op = opOf(dialogItem.id); if (op) void runOrganize(op.payload); }}
-      onOpenReceiptFlow={props.onOpenReceiptFlow ? () => props.onOpenReceiptFlow?.(dialogItem.id) : undefined}
+      onOpenReceiptFlow={!props.renderObjectProposals&&props.onOpenReceiptFlow ? () => props.onOpenReceiptFlow?.(dialogItem.id) : undefined}
       onClose={closeDialog}
     />
   );
@@ -394,7 +396,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
             <>
               <p>Tipo: <strong>{proposal.parts.map(partLabel).join(' + ')}</strong></p>
               <p>Destinazione: <strong>{[...new Set(proposal.parts.map(p => collectionLabel(kindCollection(p.kind))))].join(' + ')}</strong>{item.analysisState === 'needs_choice' ? ' · scheda da scegliere' : ' · Solo alla casa'}</p>
-              {proposal.parts.some(p => p.kind === 'receipt' || p.kind === 'invoice') && <p>Archivi soltanto la ricevuta: non viene creata una spesa.</p>}
+              {proposal.parts.some(p => p.kind === 'receipt' || p.kind === 'invoice') && <p>{props.renderObjectProposals?'Conferma come archiviare il documento. Oggetti e spesa si controllano qui sotto, senza crearli automaticamente.':'Archivi soltanto la ricevuta: non viene creata una spesa.'}</p>}
             </>
           )}
           {group === 'done' && decision && <p>{decision.parts.map(partLabel).join(' + ')} · {decision.target.kind === 'home' ? 'solo casa' : 'scheda esistente'}</p>}
@@ -409,7 +411,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
         <div className={styles.rowActions}>
           {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
           {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
-          {canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && (item.mimeType?.startsWith('image/') || [...(item.proposal?.parts??[]),...(decision?.parts??[])].some(p=>['receipt','invoice','warranty','manual'].includes(p.kind))) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>Riconosci gli oggetti</button>}
+          {canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && supportsObjectProposals(item) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>{props.renderObjectProposals?'Rivedi oggetti e spesa':'Riconosci gli oggetti'}</button>}
           {group !== 'done' && reviewable(item) && (
             <button type="button" className={cx(ui.btn, ui.small, ui.primary)} aria-label={`${actionLabel} ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>{actionLabel}</button>
           )}
@@ -417,6 +419,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
             ? <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Modifica ${name}`} disabled={props.addingFiles} onClick={() => void props.onReorganizeDocument?.(item.id)}>Modifica</button>
             : <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Vedi originale ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale</button>)}
         </div>
+      {canReview&&supportsObjectProposals(item)&&props.objectProposalItemId===item.id&&props.renderObjectProposals&&<section className={styles.objectProposals} aria-label={'Proposte oggetti e spesa per '+name}>{props.renderObjectProposals(item.id)}</section>}
       </article>
     );
   };
@@ -426,7 +429,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
       <p className={styles.crumb}>Documenti / Carica documenti</p>
       <div className={styles.pageHead}>
         <div>
-          {heading(reading ? 'Stiamo preparando le proposte…' : complete ? 'Hai finito questo caricamento.' : 'Controlla e organizza.',
+          {heading(reading ? 'Stiamo preparando le proposte…' : complete ? (props.renderObjectProposals&&props.batch?.items.some(supportsObjectProposals)?'Documenti archiviati. Controlla oggetti e spesa.':'Hai finito questo caricamento.') : 'Controlla e organizza.',
             reading ? 'Lettura locale dei PDF con testo: nessun file viene inviato all’esterno. Puoi già iniziare dai documenti pronti.'
               : complete ? `${doneCount} ${doneCount === 1 ? 'documento completato' : 'documenti completati'}. Gli originali restano privati.`
                 : multi ? 'Controlla le proposte qui sotto, seleziona quelle corrette e organizzale con una sola conferma.'

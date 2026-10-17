@@ -5,7 +5,7 @@ import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { Draft, Form } from './model';
 import { choice, initialForm } from './model';
-async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;derivedIdentity?:boolean}={}){
+async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;derivedIdentity?:boolean;savedDraft?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
  if(options.login!==false){await api.login({email:account.email,password});await api.getSession();}
@@ -15,7 +15,7 @@ async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:bo
  const fetch=async(url:string,init:RequestInit)=>{
   if(!url.includes('/object-onboarding'))return control.fetch(url,init);
   const path=url.split('/object-onboarding')[1]!,body=init.body?JSON.parse(String(init.body)):undefined;calls.push({path,body,key:new Headers(init.headers).get('Idempotency-Key')});
-  if(path.startsWith('/capabilities'))return Response.json({manualAvailable:true,aiAvailable:!!options.ai,requiresConsent:true,drafts:[],canStartAnalysis:options.newAuthorization?true:undefined,job:options.newAuthorization?{id:"old-job",state:"uncertain",draftId:null,errorCode:"analysis_outcome_unknown"}:null});
+  if(path.startsWith('/capabilities'))return Response.json({manualAvailable:true,aiAvailable:!!options.ai,requiresConsent:true,drafts:options.savedDraft?[{id:wire.id,state:'open'}]:[],canStartAnalysis:options.newAuthorization?true:undefined,job:options.newAuthorization?{id:"old-job",state:"uncertain",draftId:null,errorCode:"analysis_outcome_unknown"}:null});
   if(path==='/jobs'){starts++;if(options.lostStart&&starts===1)throw new TypeError('lost');return Response.json({job:{id:'job1',state:'queued',draftId:null,errorCode:null}},{status:202});}
   if(path.startsWith('/jobs/'))return Response.json({job:{id:'job1',state:'succeeded',draftId:wire.id,errorCode:null}});
   if(path.includes('/candidates'))return Response.json({items:[{id:'existing1',name:'Speaker Studio',version:3,profile:{fields:{brand:{value:'Confirmed',origin:'user_declared',sources:[]}},unavailable:false},rooms:['Studio'],reason:'same_brand_model'}],nextCursor:null});
@@ -63,4 +63,8 @@ it('identity derived from title is visibly a proposal and sends separate explici
  await screen.findByText('Confermato: 1 nuovi oggetti e 0 nuove spese.');
  const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:Array<{fields:Record<string,{action:string}>}>};
  expect(body.choices[0]!.fields.brand).toEqual({action:'accept'});expect(body.choices[0]!.fields.model).toEqual({action:'accept'});
+});
+
+it('stored proposals reopen automatically without a new provider job or a separate resume step',async()=>{
+ const w=await world({start:true,savedDraft:true});await screen.findByRole('heading',{name:'Router demo'});expect(w.counts().starts).toBe(0);expect(screen.queryByRole('button',{name:'Analizza e proponi gli oggetti'})).not.toBeInTheDocument();
 });

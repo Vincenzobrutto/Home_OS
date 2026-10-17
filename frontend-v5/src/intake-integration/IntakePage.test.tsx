@@ -80,3 +80,44 @@ it('adding a second file appends to the same persisted batch and uploads only th
   expect(wire.batch.items[0]).toEqual(original);
   expect(original.reviewState).toBe('deferred');
 });
+
+
+it('upload proposals stay inline, require transfer consent, and preserve batch URL through job and draft resume',async()=>{
+ const {backend,homeA1,a}=seededBackend(),control=createFakeFetch(backend);
+ const doc=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'Ricevuta sintetica'});
+ const limits={maxFiles:20,maxFileBytes:20971520,maxTotalBytes:209715200,acceptedMimeTypes:['application/pdf']};
+ const item={id:'inline-item',clientItemId:'inline-client',version:1,filename:'Ricevuta_demo.pdf',byteSize:100,mimeType:'application/pdf',uploadState:'stored',analysisState:'ready',reviewState:'unreviewed',documentLink:{state:'linked',document:{id:doc.id,name:doc.name}},pageCount:1,proposal:{title:'Ricevuta demo',parts:[{kind:'receipt',pageFrom:1,pageTo:1}],sources:[]},selection:null,organization:null,organizationVersion:0,duplicate:null,error:null,permissions:['read','edit']};
+ const draft={id:'inline-draft',version:1,state:'open',mode:'extraction',snapshot:{documentId:doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:'purchase_document',items:[{id:'inline-product',nameTruncated:false,disposition:'household_object',fields:{name:{value:'Lampada demo',source:{documentId:doc.id,page:1,excerpt:'Lampada demo'}}},quantity:{value:1},profile:{purchaseDate:{value:'2025-05-12',origin:'extraction_confirmed',sources:[]}},enrichment:null,decision:null}],needsReview:false,purchaseTotal:{amountCents:9950},review:null,permissions:['read','edit']};
+ let starts=0,organizationWrites=0,objectWrites=0;const order:string[]=[],organizationKeys:Array<string|null>=[],bodies:unknown[]=[];let finalDraft:unknown=draft;
+ const fetch:FetchLike=async(url,init)=>{
+  if(url.includes('/object-onboarding')){
+   if(url.includes('/capabilities'))return Response.json({manualAvailable:true,aiAvailable:true,canStartAnalysis:true,requiresConsent:true,drafts:[],job:null});
+   if(url.endsWith('/jobs')&&init.method==='POST'){starts++;bodies.push(JSON.parse(String(init.body)));return Response.json({job:{id:'inline-job',state:'queued',draftId:null,errorCode:null}});}
+   if(url.includes('/jobs/'))return Response.json({job:{id:'inline-job',state:'succeeded',draftId:draft.id,errorCode:null}});
+   if(url.includes('/candidates'))return Response.json({items:[],nextCursor:null});
+   if(url.endsWith('/review')){order.push('review');draft.version++;return Response.json({draft});}
+   if(url.endsWith('/confirmations')){objectWrites++;order.push('object');finalDraft={...draft,state:'confirmed',version:3,items:draft.items.map(i=>({...i,decision:{state:'confirmed',newObjects:1,newExpenses:0,objects:[]}}))};return Response.json({draft:finalDraft,result:{newObjects:1,newExpenses:0}});}
+   return Response.json({draft:finalDraft});
+  }
+  if(url.includes('/document-intake')&&url.endsWith('/organizations')&&init.method==='POST'){
+   organizationWrites++;order.push('document');organizationKeys.push(new Headers(init.headers).get('Idempotency-Key'));
+   if(organizationWrites===1)return Response.json({error:{code:'service_unavailable',message:'Synthetic lost outcome'}},{status:503});
+   item.reviewState='confirmed';(item as {organization:unknown}).organization={title:'Ricevuta demo',parts:item.proposal.parts,version:1};
+   return Response.json({batch:{id:'inline-batch',homeId:homeA1.id,version:2,state:'completed',limits,items:[item],permissions:['read','edit']},results:{[item.id]:{state:'confirmed'}}});
+  }
+  if(url.includes('/document-intake'))return Response.json(url.endsWith('/capabilities')?{apiVersion:'document-intake-v1',enabled:true,limits,analysis:{provider:'local_text_v1',enabled:true,label:'Locale',costUsd:'0.000000',externalTransmission:false}}:url.endsWith('/batches')?{items:[],nextCursor:null}:{batch:{id:'inline-batch',homeId:homeA1.id,version:1,state:'open',limits,items:[item],permissions:['read','edit']}});
+  return control.fetch(url,init);
+ };
+ const app=renderApp({path:'/accedi',backend,fetch});await screen.findByRole('heading',{name:'Accedi'});await app.user.type(screen.getByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));
+ const path=`/home/${homeA1.id}/documenti/organizza`;await app.router.navigate(path+'?lotto=inline-batch&filtro=conserva');
+ await screen.findByRole('heading',{name:'Oggetti e spesa proposti'});expect(starts).toBe(0);expect(screen.getByRole('button',{name:'Analizza e proponi gli oggetti'})).toBeDisabled();
+ await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Analizza e proponi gli oggetti'}));await screen.findByRole('heading',{name:'Lampada demo'});
+ expect(starts).toBe(1);expect(bodies[0]).toMatchObject({documentId:doc.id,consentToProviderTransfer:true});expect(app.router.state.location.pathname).toBe(path);
+ const params=new URLSearchParams(app.router.state.location.search);expect(params.get('lotto')).toBe('inline-batch');expect(params.get('filtro')).toBe('conserva');expect(params.get('oggetti-bozza')).toBe('inline-draft');expect(params.get('bozza')).toBeNull();
+ expect(screen.getByText('Spesa di acquisto (facoltativa)')).toBeInTheDocument();
+ await app.user.click(screen.getByRole('button',{name:'Conferma documento e articolo'}));
+ await screen.findByText(/Archiviazione del documento da verificare/);expect(objectWrites).toBe(0);
+ await app.user.click(screen.getByRole('button',{name:'Conferma documento e articolo'}));
+ await screen.findByText('Confermato: 1 nuovi oggetti e 0 nuove spese.');expect(objectWrites).toBe(1);expect(order).toEqual(['document','document','review','object']);expect(organizationKeys[0]).toBeTruthy();expect(organizationKeys[0]).toBe(organizationKeys[1]);
+ expect(new URLSearchParams(app.router.state.location.search).get('lotto')).toBe('inline-batch');app.unmount();
+});
