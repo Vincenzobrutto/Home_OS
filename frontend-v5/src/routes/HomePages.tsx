@@ -141,8 +141,8 @@ export function CasaPage() {
       </div>
       <h2 className={styles.spaced}>La tua casa</h2>
       <div className={styles.grid}>
-        <SpeseSummary home={home} />
         <ObjectsSummary home={home} />
+        <SpeseSummary home={home} />
         <ImpiantiSummary homeId={home.id} />
         <section className={cx(ui.card, ui.tint, styles.wide)} aria-labelledby="casa-prossime">
           <h2 id="casa-prossime" className={styles.cardTitle}>
