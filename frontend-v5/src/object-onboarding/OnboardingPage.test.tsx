@@ -5,7 +5,7 @@ import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { Draft, Form } from './model';
 import { choice, initialForm } from './model';
-async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean}={}){
+async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
  if(options.login!==false){await api.login({email:account.email,password});await api.getSession();}
@@ -14,7 +14,7 @@ async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:bo
  const fetch=async(url:string,init:RequestInit)=>{
   if(!url.includes('/object-onboarding'))return control.fetch(url,init);
   const path=url.split('/object-onboarding')[1]!,body=init.body?JSON.parse(String(init.body)):undefined;calls.push({path,body,key:new Headers(init.headers).get('Idempotency-Key')});
-  if(path.startsWith('/capabilities'))return Response.json({manualAvailable:true,aiAvailable:!!options.ai,requiresConsent:true,drafts:[],job:null});
+  if(path.startsWith('/capabilities'))return Response.json({manualAvailable:true,aiAvailable:!!options.ai,requiresConsent:true,drafts:[],canStartAnalysis:options.newAuthorization?true:undefined,job:options.newAuthorization?{id:"old-job",state:"uncertain",draftId:null,errorCode:"analysis_outcome_unknown"}:null});
   if(path==='/jobs'){starts++;if(options.lostStart&&starts===1)throw new TypeError('lost');return Response.json({job:{id:'job1',state:'queued',draftId:null,errorCode:null}},{status:202});}
   if(path.startsWith('/jobs/'))return Response.json({job:{id:'job1',state:'succeeded',draftId:wire.id,errorCode:null}});
   if(path.includes('/candidates'))return Response.json({items:[{id:'existing1',name:'Speaker Studio',version:3,profile:{fields:{brand:{value:'Confirmed',origin:'user_declared',sources:[]}},unavailable:false},rooms:['Studio'],reason:'same_brand_model'}],nextCursor:null});
@@ -44,4 +44,12 @@ describe('Onboarding reale nel router, API simulate e nessun invio esterno',()=>
  it('errore di validazione libera i campi e non lascia la conferma incerta',async()=>{const w=await world({invalid:true});await screen.findByRole('heading',{name:'Router demo'});await w.user.click(screen.getAllByRole('button',{name:'Conferma questo articolo'})[0]!);await screen.findByText('Controlla la scelta');await waitFor(()=>expect(screen.getAllByRole('button',{name:'Conferma questo articolo'})[0]).toBeEnabled());expect(screen.queryByRole('button',{name:'Controlla l’esito'})).not.toBeInTheDocument();});
  it('non mescola originale e bozza di due documenti diversi',async()=>{await world({foreign:true});await screen.findByText(/Queste proposte appartengono a un altro documento/);expect(screen.queryByLabelText('Nome dell’oggetto')).not.toBeInTheDocument();});
  it('payload confermato include solo scelte esplicite, non campi o fonti inseriti dal client',()=>{const draft={purchaseTotal:null} as Draft,item={id:'x',profile:{},fields:{name:{value:'Router'}},enrichment:null} as Draft['items'][number];const form:Form=initialForm(item,draft);const result=choice(item,form);expect(result).toMatchObject({action:'create',itemId:'x',name:'Router',expense:{action:'skip'},fields:{},manual:null});expect(result).not.toHaveProperty('profile');});
+});
+
+it('separate operator authorization permits a new start but still requires fresh consent',async()=>{
+ const w=await world({start:true,ai:true,newAuthorization:true});
+ const button=await screen.findByRole('button',{name:'Analizza e proponi gli oggetti'});
+ expect(button).toBeDisabled();
+ await w.user.click(screen.getByRole('checkbox',{name:/Autorizzo/}));
+ expect(button).toBeEnabled();
 });

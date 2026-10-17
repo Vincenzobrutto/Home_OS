@@ -1,5 +1,16 @@
 # Oggetti dai documenti — consegna implementazione, 17 ottobre 2026
 
+## Aggiornamento: collaudo reale v3 riuscito
+
+Nuova autorizzazione esplicita del committente per stesso screenshot Amazon Echo Dot Max verso Anthropic, ulteriori0.25USD (massimo complessivo autorizzato0.50USD). Campagna onboarding-live-20261017-amazon-r2, maxCalls1/hash esatto. Un primo preflight è scaduto prima di Messages (job1c89402c-80d3-4d13-b337-6be002288ff2), riserva rilasciata/costo0. Modello GET successivo200 senza documento; secondo avvio nella stessa campagna, nessun reset contatori, unico Messages effettivo di r2.
+
+Job ce123048-70d0-429c-b978-9b1e5d1e8382 succeeded, draft0026cc5d-a3a6-4583-8940-3f6a51156e4f open. sentAt2026-10-17T07:16:36.410Z, responseAt07:16:42.651Z, usage5474input/261output, msg_011Cg7Q9r2oCkW1ijCbPiZ8j. Costo registrato13558microUSD =0.013558USD, inferiore a0.25USD. R1 resta uncertain/reserved250000microUSD: totale prudenziale impegnato0.263558USD, NON costo totale certo.
+
+Output: delivery_notice,1articolo/quantità1, solo nome visibile troncato con avviso. Nessuna marca/modello/dato tecnico/date/garanzia inferiti, purchaseTotal null. Browser reale mostra proposta compilata da Anthropic, non fixture o inserimento manuale; fonte originale privata invariata, decisions{}, binding0, nessun oggetto o spesa creati. Screenshot outputs/onboarding-oggetti-20261017/06-amazon-proposta-reale.png senza originale personale visibile. Proposta conservata per revisione del committente; provider nuovamente disabilitato con launcher registrato.
+
+Per rispettare la nuova autorizzazione senza azzerare r1, guard delle analisi incerte ora limitato alla stessa campagna; nuova campagna/hash/budget operatore + consenso nuovo richiesti. `canStartAnalysis` rende esplicita la disponibilità del nuovo avvio in UI.11DBtest rieseguiti, esteso caso incerto a nuova campagna con riserva precedente invariata;10FEtest (1nuovo) e lint/build verdi. Nessuna automatizzazione di retry. I paragrafi sotto descrivono la consegna precedente e i suoi limiti storici.
+
+
 ## Comportamento disponibile
 
 Modulo reale registrato, route lazy Documenti → «Riconosci gli oggetti» dal caricamento per foto e documenti prodotto, oppure dettaglio documento → oggetti. Un originale può proporre più articoli, quantità e schede; creazione/collegamento/rinvio/esclusione separati, conferma parziale e ripresa. L’analisi non crea oggetti o costi. Il percorso manuale resta disponibile quando il provider non è abilitato.
@@ -37,7 +48,7 @@ Campagna disabilitata riavviando la sola API registrata tramite launcher Telefon
 ## Prossimi passi e limiti
 
 1. Diagnostica HTTP sanitizzata ora implementata: solo status/endpoint fisso/request-id validato nei log onboarding, mai corpo provider/prompt.47test provider/dominio/regressioni verdi (1nuovo). La chiamata passata resta incerta perché non aveva questa diagnostica.
-2. Nuovo singolo collaudo esterno dello schema v3, previa autorizzazione dedicata; solo dopo questo si può dichiarare verificato il riconoscimento reale dello screenshot.
+2. Chiuso nel successivo collaudo r2 descritto in testa: riconoscimento reale dello screenshot verificato; altri documenti personali non ancora testati.
 3. Verifica fisica Safari e successivamente casi reali multiarticolo/etichetta/PDF con consenso separato. Nei test questi casi sono coperti con dati sintetici, non dimostrano riconoscimento dei file personali.
 
 Nessun push/deploy, reset DB, cambiamento .env/firewall/sicurezza, automazione riattivata, messaggio a Claude o chiamata email. Originali personali conservati privati. Modifiche estranee lasciate fuori dal commit.

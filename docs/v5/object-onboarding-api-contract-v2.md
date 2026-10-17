@@ -20,3 +20,10 @@ Persistenza dedicata: draft/output/review/decisions, job+lease, request ledger, 
 Lettura locale e lettura esterna distinte: l'upload continua ad archiviare/classificare localmente senza costi. L'analisi multimodale richiede consenso dedicato e non parte come fallback nascosto. Nessuna campagna precedente riattivata. Consenso ricevuto per il solo screenshot Amazon Echo Dot Max, una analisi entro0.25USD: esito incerto, nessuna proposta pubblicata e nessun reinvio. Vedere rapporto di sviluppo.
 
 Ordine operativo: O2 dominio/schema/autorizzazioni → O3 conferme/versioni/replay/conflitti → O4 job/provider/budget e arricchimento → O5 UI/integrazione upload/schede → O6 regressioni/browser sintetico. Aggiornare il rapporto a ogni checkpoint; non dichiarare completamento dell'intero flusso dal solo nucleo o manuale.
+
+
+## Collaudo reale v3 e nuova autorizzazione separata (17 ottobre)
+
+`capabilities` include `canStartAnalysis`: un esito incerto blocca ulteriori avvii nella stessa campagna. Una diversa campagna configurata dall’operatore, con hash/limite propri e consenso separato esplicito, può consentire il nuovo avvio autorizzato senza modificare né liberare la riserva precedente. La UI conserva il vecchio esito, non lo ripete automaticamente e richiede di nuovo il consenso. Job attivi sul medesimo originale restano bloccanti anche fra campagne.
+
+Campagna r2 autorizzata dal committente max0.25USD: primo preflight scaduto prima di Messages, riserva rilasciata; successivo avvio nella medesima campagna ha eseguito l’unico Messages pagato e pubblicato una proposta valida. Costo0.013558USD. Provider disabilitato al termine. R1 resta incerta e riservata; nessuna alterazione delle quote.
