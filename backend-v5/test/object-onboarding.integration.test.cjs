@@ -74,4 +74,30 @@ test('Full onboarding: DB, real PDF parser, fake provider; atomicity, replay, pr
  const priorAttempt=await db.objectOnboardingAttempt.findUniqueOrThrow({where:{jobId:started.job.id}});assert.equal(priorAttempt.state,'uncertain');assert.equal(priorAttempt.actualMicroUsd,null);
  config.environment.ONBOARDING_AI_CAMPAIGN_ID=originalCampaign;
  });
+ await t.test('pilot manual item costs enforce consent, cumulative total and atomic rollback',async()=>{
+  const source=await document(Buffer.concat([bytes,Buffer.from('\n%allocation-'+randomUUID())]));let draft=await extracted(source);
+  const make=(item,cents,ack=false)=>({...create(item),acknowledgeExistingSource:ack,expense:{action:'create',title:'Manual item quota',amountCents:cents,spentOn:'2026-01-01',supplier:null,manualItemAmount:true}});
+  const missing=make(draft.items[0],9900);delete missing.expense.manualItemAmount;await assert.rejects(async()=>confirm(draft,[missing]));
+  await assert.rejects(async()=>confirm(draft,[make(draft.items[0],9900),make(draft.items[1],14000)]));assert.equal(await db.homeExpense.count({where:{documentId:source.id}}),0);
+  await confirm(draft,[make(draft.items[0],9900)]);draft=(await service.getDraft(a,h,draft.id,{})).draft;
+  await assert.rejects(async()=>confirm(draft,[make(draft.items[1],14000,true)]));assert.equal(await db.homeExpense.count({where:{documentId:source.id}}),1);
+  const key=randomUUID(),body={expectedVersion:draft.version,source:draft.snapshot,choices:[make(draft.items[1],13090,true)]};await service.confirm(a,h,draft.id,body,key);await service.confirm(a,h,draft.id,body,key);
+  const costs=await db.homeExpense.findMany({where:{documentId:source.id}});assert.equal(costs.length,2);assert.equal(costs.reduce((n,c)=>n+c.amountCents,0),22990);
+ });
+ await t.test('pilot replacement is versioned, explicit and updates both profile and basic model',async()=>{
+  const source=await document(Buffer.concat([bytes,Buffer.from('\n%replace-'+randomUUID())]));const draft=await extracted(source),target=(await objects.createObject(a,h,{name:'SYNTHETIC previous model',type:'appliance',roomIds:[]},randomUUID())).object;
+  await db.homeObject.update({where:{id:target.ref.id},data:{profile:{model:{value:'Previous 80',origin:'user_declared',sources:[]}}}});
+  await db.receiptObjectField.create({data:{accountId:a,homeId:h,objectId:target.ref.id,fieldKey:'model',value:'Previous 80',origin:'user_declared',sources:[]}});
+  const link={itemId:draft.items[0].id,action:'link',targets:[{id:target.ref.id,expectedVersion:target.version}],manual:null,fields:{model:{action:'replace',expectedValue:'Previous 80',consent:true}},expense:{action:'skip'}};
+  await assert.rejects(async()=>confirm(draft,[{...link,fields:{model:{action:'replace',expectedValue:'Previous 80'}}}]));
+  await assert.rejects(async()=>confirm(draft,[{...link,fields:{model:{action:'replace',expectedValue:'stale',consent:true}}}]));
+  await confirm(draft,[link]);assert.equal((await db.homeObject.findUnique({where:{id:target.ref.id}})).profile.model.value,'Mini 90');assert.equal((await db.receiptObjectField.findUnique({where:{objectId_fieldKey:{objectId:target.ref.id,fieldKey:'model'}}})).value,'Mini 90');
+ });
+
+ await t.test('multiple manual allocations confirm together within the same atomic request',async()=>{
+  const doc=await document(Buffer.concat([bytes,Buffer.from('\n%multi-allocation-'+randomUUID())]));const output=raw();
+  const d=await extracted(doc,output);const choices=d.items.map((item,i)=>({...create(item,'Quota simultanea '+i),expense:{action:'create',title:'Quota simultanea '+i,amountCents:i?13090:9900,spentOn:'2025-06-13',supplier:null,manualItemAmount:true}}));
+  const result=await confirm(d,choices);assert.equal(result.result.newExpenses,2);assert.equal(await db.homeExpense.count({where:{documentId:doc.id}}),2);
+ });
+
 });

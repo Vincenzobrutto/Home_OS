@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { choice, expenseNeedsReview, editProfileField, initialForm, type Draft, type Item } from './model';
+import { choice, profileNeedsReview, expenseNeedsReview, editProfileField, initialForm, type Draft, type Item } from './model';
 const item={id:'x',profile:{},fields:{name:{value:'Demo'}},enrichment:null} as Item;
 const form=()=>initialForm(item,{purchaseTotal:null} as Draft);
 it('manual purchase proposes 24 calendar months and clamps leap-day',()=>{const r=editProfileField(form(),'purchaseDate',{action:'manual',value:'2024-02-29'},{},{});expect(r.fields.warrantyStart).toEqual({action:'manual',value:'2024-02-29'});expect(r.fields.warrantyEnd?.value).toBe('2026-02-28');});
@@ -17,4 +17,14 @@ it('automatic expense requires one supported item, verified amount/date and no r
 it('excluded item never carries stale amounts, expense links, profile fields or manual selections',()=>{
  const f={...form(),action:'skip' as const,expense:'create' as const,amount:'500',expenseId:'stale',expenseAutoState:'pending' as const};
  expect(choice(item,f)).toEqual({itemId:'x',action:'skip'});expect(expenseNeedsReview(f)).toBe(false);
+});
+
+it('replacement requires current value and explicit consent, never a client supplied replacement value',()=>{
+ const f=form();f.fields.brand={action:'replace',expectedValue:'Old',consent:false};expect(profileNeedsReview(f)).toBe(true);
+ f.fields.brand.consent=true;expect(profileNeedsReview(f)).toBe(false);expect(choice(item,f)).toMatchObject({fields:{brand:{action:'replace',expectedValue:'Old',consent:true}}});
+});
+it('multi-item purchases never prefill the total as an item price and require item-only consent',()=>{
+ const d={purchaseTotal:{amountCents:22990},items:[item,item]} as Draft;const f=initialForm(item,d);expect(f.amount).toBe('');expect(f.expense).toBe('skip');
+ f.expense='create';f.amount='99';f.spentOn='2025-06-13';expect(expenseNeedsReview(f)).toBe(true);f.manualItemAmount=true;expect(expenseNeedsReview(f)).toBe(false);
+ expect(choice(item,f)).toMatchObject({expense:{action:'create',amountCents:9900,manualItemAmount:true}});
 });

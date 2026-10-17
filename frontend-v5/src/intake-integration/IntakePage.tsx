@@ -7,7 +7,7 @@ import { DocumentIntakeAssistant } from '../document-intake/DocumentIntakeAssist
 import { supportsObjectProposals, bulkItem, canonical, type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type ReviewPayload, type WriteOutcome } from '../document-intake/model';
 import { DocumentObjectProposals } from '../object-onboarding/OnboardingPage';
 import { IntakeClient, toUiBatch, type BatchWire } from './client';
-import { localAnalysisCandidates, organizeDocuments, type OrganizationPayload } from './organization';
+import { localAnalysisCandidates, organizationFromObjectKind, organizeDocuments, type OrganizationPayload } from './organization';
 import { ApiError, isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey, queryKeys } from '../api/queryKeys';
 import { Banner, ErrorState, Loading, ui, useDocumentTitle } from '../components/ui';
@@ -154,11 +154,11 @@ function IntakeContainer() {
   const requestedDocument=params.get('oggetti-documento');
   const productItem=requestedDocument?productItems.find(i=>i.documentLink.document?.id===requestedDocument):productItems[0];
   const preparationError=(message:string)=>new ApiError({kind:'http',status:422,code:'intake_preparation_required',message});
-  async function prepareDocumentForObject(itemId:string){
+  async function prepareDocumentForObject(itemId:string,kind?:string){
     const value=current.current;if(!value||active.current!==value.id)throw preparationError('Rileggi il caricamento corrente.');
     const item=toUiBatch(value).items.find(i=>i.id===itemId);if(!item)throw preparationError('Documento non disponibile.');
     if(item.reviewState==='confirmed'&&item.confirmedOrganization)return;
-    const proposal=bulkItem(item);if(!proposal)throw preparationError('Prima completa la classificazione del documento: scegli il tipo o risolvi la copia o il conflitto. Usa «Rivedi documento» qui sotto; i dati dell’articolo restano conservati.');
+    const proposal=bulkItem(item)??organizationFromObjectKind(item,kind);if(!proposal)throw preparationError('Prima completa la classificazione del documento: scegli il tipo o risolvi la copia o il conflitto. Usa «Rivedi documento» qui sotto; i dati dell’articolo restano conservati.');
     const outcome=await organize({batchId:value.id,expectedVersion:value.version,mode:'single',items:[proposal]});
     if(outcome.status!=='done'||outcome.results.some(r=>r.status!=='confirmed'))throw preparationError('Archiviazione del documento da verificare. Nessun oggetto o costo è stato creato: controlla il documento e riprendi qui.');
   }
@@ -184,7 +184,7 @@ function IntakeContainer() {
       renderPreview={(itemId, page) => { const source = wire?.items.find(i => i.id === itemId)?.documentLink.document; return source ? <OriginalPreview homeId={home.id} id={source.id} page={page} /> : <p>Originale non disponibile.</p>; }}
       onOpenReceiptFlow={itemId => { const doc = current.current?.items.find(i => i.id === itemId)?.documentLink.document; if(doc)setParams(previous=>{const next=new URLSearchParams(previous);next.set('oggetti-documento',doc.id);next.delete('oggetti-bozza');next.delete('oggetti-analisi');return next;}); }}
       objectProposalItemId={productItem?.id}
-      renderObjectProposals={(itemId,reviewDocument)=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentObjectProposals documentId={source.id} onReviewDocument={reviewDocument} beforeConfirm={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'&&wire?.items.find(i=>i.id===itemId)?.organization?undefined:()=>prepareDocumentForObject(itemId)} confirmLabel={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?'Conferma questo articolo':'Conferma documento e articolo'}/>:null;}}
+      renderObjectProposals={(itemId,reviewDocument)=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentObjectProposals documentId={source.id} onReviewDocument={reviewDocument} beforeConfirm={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'&&wire?.items.find(i=>i.id===itemId)?.organization?undefined:kind=>prepareDocumentForObject(itemId,kind)} confirmLabel={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?'Conferma questo articolo':'Conferma documento e articolo'}/>:null;}}
       renderOutcomeLinks={() => <Link className={ui.btn} to={`/home/${home.id}/documenti`}>Vai ai Documenti</Link>}
       onRetryLoad={() => { void cap.refetch(); if (id) void batch.refetch(); }} />
     <input ref={picker} hidden type="file" accept="application/pdf,image/jpeg,image/png" aria-label="Originale da ricaricare" onChange={e => { const file = e.target.files?.[0], itemId = retryItem.current; if (file && itemId && current.current) { files.current.set(itemId, file); void upload(current.current, itemId); } e.target.value = ''; }} />

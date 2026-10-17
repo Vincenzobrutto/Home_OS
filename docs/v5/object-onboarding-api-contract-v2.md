@@ -69,3 +69,14 @@ Nessun endpoint/schema/backendruntime modificato: uso del comando skip già esis
 MarcaStrong derivata localmente dal titolo router, con origine derived_from_product_name e fonte originale; descrizioni router/modem/ripetitore non diventano modelli precisi anche se non troncate. Identità esplicite e scelte utente protette. Nessuna nuova estrazione/provider: stessa bozza reale150a815d, nuove proposte proiettate dal nome già acquisito. Menu accettazione mostra direttamente il valore proposto (Strong, modello noto, date ecc.), preselezione accept già prevista per i nuovi campi; valori non identificati facoltativi restano vuoti. Fonti/origini restano visibili, selezioni salvate intenzionali non sovrascritte automaticamente.
 
 12 testBEprofilo+19FErouter verdi, buildBE/FE e lint mirati verdi. TestaggiuntoStrong titolotroncato/generico/accessori/contraddizione, menu con dato e accept iniziale verificato. Sistemato mock old-job della prova consenso: prima rispondeva succeeded con altra id e smontava il pulsante; ora restituisce il vero stato uncertain dello scenario, nessun comportamento runtime modificato. Browser personale: salvataggio bozza conserva nome/checkboxutente e due esclusioni; selezionata proposta Strong come richiesto e salvata SOLO bozza. Nessun oggetto/costo confermato. Screenshot17-strong-precompilato.png, menuvalueaccept/labelStrong verificati. API aggiornata via launcherTelefono senza campagna; zeroAI/paid/env. Prossimo classificare documento ancora tipo da indicare, poi conferma router dautente.
+
+
+## Consolidamento pilota — 17 ottobre 2026
+
+Estensioni additive, senza migrazione. Fonte/versioni/idempotenza e autorizzazioni esistenti restano obbligatorie.
+
+`fields.<key>` accetta `{action:"replace",expectedValue:string,consent:true}` esclusivamente con proposta server e valore corrente corrispondente. Nessun `value` client in replace. Controllati expectedVersion dell'oggetto, origine e vincoli di data/garanzia; marca/modello sincronizzati con campi base.
+
+`expense.action=create` ammette `manualItemAmount:boolean`. Per documenti purchase_document multiarticolo richiede true, totale validato e quantità unitaria. Quote registrate come manual_item nelle decisioni JSON; contatore cumulativo per account/Home/hash in centesimi, lock transazionale Home condiviso con Spese. La somma non supera il totale, anche per più scelte della stessa richiesta. Costi già esistenti non riconosciuti come quote e quota già collegata allo stesso oggetto bloccano la nuova registrazione. Esclusioni non inviano dati economici. Single item conserva proposta e protezione del costo già presente. Nessuna distribuzione automatica o estrazione nuovi prezzi di riga.
+
+UI: una conferma oggetto/costo, con eventuale preparazione documento precedente. Questo non rende atomici i due endpoint: documento archiviato e articolo ancora da completare restano esiti distinti. Recupero del corpo/chiave originali invariato.

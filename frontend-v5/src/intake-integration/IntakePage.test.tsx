@@ -82,13 +82,14 @@ it('adding a second file appends to the same persisted batch and uploads only th
 });
 
 
-it.each([false,true])('upload proposals stay inline and guide missing document type (unknown=%s)',async(unknownType)=>{
+it.each(['local','unknown','draftkind'])('upload proposals stay inline and recover document organization (%s)',async(mode)=>{
+ const unknownType=mode!=='local';
  const {backend,homeA1,a}=seededBackend(),control=createFakeFetch(backend);
  const doc=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'Ricevuta sintetica'});
  const limits={maxFiles:20,maxFileBytes:20971520,maxTotalBytes:209715200,acceptedMimeTypes:['application/pdf']};
  const item={id:'inline-item',clientItemId:'inline-client',version:1,filename:'Ricevuta_demo.pdf',byteSize:100,mimeType:'application/pdf',uploadState:'stored',analysisState:'ready',reviewState:'unreviewed',documentLink:{state:'linked',document:{id:doc.id,name:doc.name}},pageCount:1,proposal:{title:'Ricevuta demo',parts:[{kind:'receipt',pageFrom:1,pageTo:1}],sources:[]},selection:null,organization:null,organizationVersion:0,duplicate:null,error:null,permissions:['read','edit']};
  if(unknownType){item.mimeType='image/jpeg';(item as {proposal:unknown}).proposal=null;}
- const draft={id:'inline-draft',version:1,state:'open',mode:'extraction',snapshot:{documentId:doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:'purchase_document',items:[{id:'inline-product',nameTruncated:false,disposition:'household_object',fields:{name:{value:'Lampada demo',source:{documentId:doc.id,page:1,excerpt:'Lampada demo'}}},quantity:{value:1},profile:{purchaseDate:{value:'2025-05-12',origin:'extraction_confirmed',sources:[]}},enrichment:null,decision:null}],needsReview:false,purchaseTotal:{amountCents:9950},review:null,permissions:['read','edit']};
+ const draft={id:'inline-draft',version:1,state:'open',mode:'extraction',snapshot:{documentId:doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:mode==='unknown'?'other':mode==='draftkind'?'delivery_notice':'purchase_document',items:[{id:'inline-product',nameTruncated:false,disposition:'household_object',fields:{name:{value:'Lampada demo',source:{documentId:doc.id,page:1,excerpt:'Lampada demo'}}},quantity:{value:1},profile:{purchaseDate:{value:'2025-05-12',origin:'extraction_confirmed',sources:[]}},enrichment:null,decision:null}],needsReview:false,purchaseTotal:{amountCents:9950},review:null,permissions:['read','edit']};
  let starts=0,organizationWrites=0,objectWrites=0;const order:string[]=[],organizationKeys:Array<string|null>=[],bodies:unknown[]=[];let finalDraft:unknown=draft;
  const fetch:FetchLike=async(url,init)=>{
   if(url.includes('/object-onboarding')){
@@ -103,7 +104,7 @@ it.each([false,true])('upload proposals stay inline and guide missing document t
   if(url.includes('/document-intake')&&url.endsWith('/organizations')&&init.method==='POST'){
    organizationWrites++;order.push('document');organizationKeys.push(new Headers(init.headers).get('Idempotency-Key'));
    if(organizationWrites===1)return Response.json({error:{code:'service_unavailable',message:'Synthetic lost outcome'}},{status:503});
-   item.reviewState='confirmed';(item as {organization:unknown}).organization={title:'Ricevuta demo',parts:item.proposal.parts,version:1};
+   item.reviewState='confirmed';(item as {organization:unknown}).organization={title:'Ricevuta demo',parts:JSON.parse(String(init.body)).items[0].selection.parts,version:1};
    return Response.json({batch:{id:'inline-batch',homeId:homeA1.id,version:2,state:'completed',limits,items:[item],permissions:['read','edit']},results:{[item.id]:{state:'confirmed'}}});
   }
   if(url.includes('/document-intake'))return Response.json(url.endsWith('/capabilities')?{apiVersion:'document-intake-v1',enabled:true,limits,analysis:{provider:'local_text_v1',enabled:true,label:'Locale',costUsd:'0.000000',externalTransmission:false}}:url.endsWith('/batches')?{items:[],nextCursor:null}:{batch:{id:'inline-batch',homeId:homeA1.id,version:1,state:'open',limits,items:[item],permissions:['read','edit']}});
@@ -116,16 +117,16 @@ it.each([false,true])('upload proposals stay inline and guide missing document t
  expect(starts).toBe(1);expect(bodies[0]).toMatchObject({documentId:doc.id,consentToProviderTransfer:true});expect(app.router.state.location.pathname).toBe(path);
  const params=new URLSearchParams(app.router.state.location.search);expect(params.get('lotto')).toBe('inline-batch');expect(params.get('filtro')).toBe('conserva');expect(params.get('oggetti-bozza')).toBe('inline-draft');expect(params.get('bozza')).toBeNull();
  await app.user.click(screen.getByRole('button',{name:'Rivedi Lampada demo'}));
- expect(screen.getByText('Spesa di acquisto (facoltativa)')).toBeInTheDocument();
- if(unknownType){
-  await app.user.click(screen.getByRole('button',{name:'Conferma documento e articolo'}));
+ if(mode==='local')expect(screen.getByText('Spesa di acquisto (facoltativa)')).toBeInTheDocument();
+ if(mode==='unknown'){
+  await app.user.click(screen.getByRole('button',{name:/^Conferma (documento e articolo|questo articolo|oggetto e spesa)$/}));
   const error=await screen.findByRole('alert');expect(error).toHaveTextContent('Prima completa la classificazione');expect(error).toHaveFocus();expect(objectWrites).toBe(0);expect(organizationWrites).toBe(0);
   await app.user.click(screen.getByRole('button',{name:'Rivedi documento'}));expect(screen.getByRole('dialog')).toBeVisible();await app.user.click(screen.getByRole('button',{name:'Chiudi'}));await app.user.click(screen.getByRole('button',{name:'Rivedi Lampada demo'}));expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Lampada demo');app.unmount();return;
  }
 
- await app.user.click(screen.getByRole('button',{name:'Conferma documento e articolo'}));
+ await app.user.click(screen.getByRole('button',{name:/^Conferma (documento e articolo|questo articolo|oggetto e spesa)$/}));
  await screen.findByText(/Archiviazione del documento da verificare/);expect(objectWrites).toBe(0);
- await app.user.click(screen.getByRole('button',{name:'Conferma documento e articolo'}));
+ await app.user.click(screen.getByRole('button',{name:/^Conferma (documento e articolo|questo articolo|oggetto e spesa)$/}));
  await screen.findByText('Confermato: 1 nuovi oggetti e 0 nuove spese.');expect(objectWrites).toBe(1);expect(order).toEqual(['document','document','review','object']);expect(organizationKeys[0]).toBeTruthy();expect(organizationKeys[0]).toBe(organizationKeys[1]);
  expect(new URLSearchParams(app.router.state.location.search).get('lotto')).toBe('inline-batch');app.unmount();
 });

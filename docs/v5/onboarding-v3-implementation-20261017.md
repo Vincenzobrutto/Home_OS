@@ -1,3 +1,5 @@
+> Aggiornamento: le tre estensioni sotto indicate sono ora implementate. Stato e limiti correnti in onboarding-pilot-consolidation-20261017.md.
+
 # Prima integrazione UX onboarding V3 — 17 ottobre 2026
 
 ## Completato

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import type { ApiClient } from '../api/client';
 import { ui } from '../components/ui';
-import { expenseNeedsReview, type CandidatePage, type Draft, type Form, type Item } from './model';
+import { expenseNeedsReview, profileNeedsReview, type CandidatePage, type Draft, type Form, type Item } from './model';
 import { useExpenseCandidates } from './useExpenseCandidates';
 import styles from './onboarding.module.css';
 
@@ -16,7 +16,7 @@ export function ItemProposalRow({api,accountId,base,root,draft,item,form,disable
  const fieldValue=(key:'brand'|'model')=>form.fields[key]?.action==='manual'?form.fields[key]?.value:form.fields[key]?.action==='skip'?null:item.profile[key]?.value;
  const plausible=candidates.data?.items.some(c=>c.reason!=='manual_selection');
  const amount=form.amount.replace(',','.');
- const ready=form.action==='skip'||!expenseNeedsReview(form)&&candidates.isSuccess&&(form.action==='create'?!!name.trim()&&(item.disposition==='household_object'||form.confirmHouseholdObject)&&(!plausible||form.acknowledgeExistingSource):form.targets.length===quantity&&form.targets.every(t=>!t.profile.unavailable))&&(form.expense==='skip'||form.expense==='link'&&!!form.expenseId||form.expense==='create'&&/^\d+(\.\d{1,2})?$/.test(amount)&&Number(amount)>0&&!!form.spentOn);
+ const ready=form.action==='skip'||!expenseNeedsReview(form)&&!profileNeedsReview(form)&&candidates.isSuccess&&(form.action==='create'?!!name.trim()&&(item.disposition==='household_object'||form.confirmHouseholdObject)&&(!plausible||form.acknowledgeExistingSource):form.targets.length===quantity&&form.targets.every(t=>!t.profile.unavailable))&&(form.expense==='skip'||form.expense==='link'&&!!form.expenseId||form.expense==='create'&&/^\d+(\.\d{1,2})?$/.test(amount)&&Number(amount)>0&&!!form.spentOn);
  useEffect(()=>{if(!ready||deferred||finished)select(false);},[ready,deferred,finished,select]);
  const status=finished?item.decision?.state==='skipped'?'Escluso dalla casa':'Confermato':deferred?'Da riprendere':candidates.isPending||form.expenseAutoState==='pending'?'Controllo in corso':ready?'Proposta pronta':'Da rivedere';
  return <article className={styles.proposalRow} aria-label={name}>

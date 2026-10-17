@@ -14,7 +14,7 @@ import { proposedProfile, resolveProfile, type ObjectProfile } from './profile';
 import type { ProductExtraction, ProductItem } from './domain';
 
 export const onboardingJson = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
-type Decision = { state: 'confirmed' | 'skipped' | 'deferred'; objectIds: string[]; expenseId: string | null; newObjects: number; newExpenses: number };
+type Decision = { state: 'confirmed' | 'skipped' | 'deferred'; objectIds: string[]; expenseId: string | null; newObjects: number; newExpenses: number; allocation?: 'manual_item' };
 type Decisions = Record<string, Decision>;
 type Enrichment = { brand:string; reference:string; name: string | null; profile: ObjectProfile; candidate: { manual: unknown; token: string } | null };
 type Output = ProductExtraction & { enrichments?: Record<string, Enrichment> };
@@ -170,9 +170,9 @@ export class ObjectOnboardingService {
   private async storeBasicFields(tx: OnboardingTx, a: string, h: string, objectId: string, fields: ObjectProfile) {
     for (const fieldKey of ['brand', 'model'] as const) {
       const field = fields[fieldKey]; if (!field) continue;
-      const existing = await tx.receiptObjectField.findUnique({ where: { objectId_fieldKey: { objectId, fieldKey } } }); if (existing) continue;
+      const existing = await tx.receiptObjectField.findUnique({ where: { objectId_fieldKey: { objectId, fieldKey } } }); if (existing&&existing.value===field.value) continue;
       const source = field.sources[0];
-      await tx.receiptObjectField.create({ data: { accountId: a, homeId: h, objectId, fieldKey, value: field.value, origin: field.origin === 'user_declared' ? 'user_declared' : 'extraction_confirmed', sources: onboardingJson(field.sources), ...(source ? { documentId: source.documentId, documentVersion: source.documentVersion, documentSha256: source.sha256 } : {}) } });
+      await tx.receiptObjectField.upsert({where:{objectId_fieldKey:{objectId,fieldKey}},update:{value:field.value,origin:field.origin==='user_declared'?'user_declared':'extraction_confirmed',sources:onboardingJson(field.sources),documentId:source?.documentId??null,documentVersion:source?.documentVersion??null,documentSha256:source?.sha256??null},create: { accountId: a, homeId: h, objectId, fieldKey, value: field.value, origin: field.origin === 'user_declared' ? 'user_declared' : 'extraction_confirmed', sources: onboardingJson(field.sources), ...(source ? { documentId: source.documentId, documentVersion: source.documentVersion, documentSha256: source.sha256 } : {}) } });
     }
   }
   private async comparisons(tx: OnboardingTx, a: string, h: string, draft: ObjectOnboardingDraft, objectId: string, deferred: ObjectProfile) {
@@ -183,9 +183,9 @@ export class ObjectOnboardingService {
       await tx.objectOnboardingComparison.create({ data: { ...lookup.accountId_homeId_objectId_fieldKey_fingerprint, draftId: draft.id, documentId: draft.documentId, documentVersion: draft.documentVersion, documentSha256: draft.documentSha256, proposed: onboardingJson(proposed) } });
     }
   }
-  private async cost(tx: OnboardingTx, a: string, h: string, draft: ObjectOnboardingDraft, output: Output, choice: Extract<OnboardingChoice, { action: 'create' | 'link' }>, targetId: string) {
+  private async cost(tx: OnboardingTx, a: string, h: string, draft: ObjectOnboardingDraft, output: Output, choice: Extract<OnboardingChoice, { action: 'create' | 'link' }>, targetId: string, currentDecisions: Decisions) {
     if (choice.expense.action === 'skip') return { expenseId: null, newExpenses: 0 };
-    if (output.documentKind !== 'purchase_document' || output.items.length !== 1) throw invalid('I costi di questo documento richiedono una scelta separata in Spese. Nessun importo viene distribuito automaticamente.');
+    if (output.documentKind !== 'purchase_document') throw invalid('I costi di questo documento richiedono una scelta separata in Spese. Nessun importo viene distribuito automaticamente.');
     const expenses = new ExpensesService(this.access.db, this.reviewAccess, this.clock);
     if (choice.expense.action === 'link') {
       const value = await expenses.record(tx, a, h, choice.expense.id);
@@ -200,13 +200,22 @@ export class ObjectOnboardingService {
       await expenses.mutateInTransaction(tx, a, h, 'update', value.id, { expectedVersion: value.version, documentId: value.documentId ?? draft.documentId, objectRef: { kind: 'object', id: targetId } }, 'onboarding_' + digest(draft.id + ':' + choice.itemId + ':expense-link'), true);
       return { expenseId: value.id, newExpenses: 0 };
     }
+    const split=output.items.length>1;
+    if(split&&(!choice.expense.manualItemAmount||!output.purchaseTotal))throw invalid('Indica e conferma il prezzo del solo articolo. Il totale documento deve essere disponibile.');
     const existing = await tx.$queryRaw<Array<{ id: string }>>`SELECT e.id FROM "HomeExpense" e JOIN "DocumentVersion" v ON v."documentId"=e."documentId" JOIN "Document" d ON d.id=v."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;
-    if (existing.length) throw conflict('onboarding_expense_exists', 'Esiste già un costo per questa ricevuta: scegli quello esistente.');
+    if (existing.length&&!split) throw conflict('onboarding_expense_exists', 'Esiste già un costo per questa ricevuta: scegli quello esistente.');
+    if(split){
+      const costs=await tx.$queryRaw<Array<{id:string;amountCents:number;sameTarget:boolean}>>`SELECT DISTINCT e.id,e."amountCents",EXISTS(SELECT 1 FROM "ObjectResourceLink" l WHERE l."expenseId"=e.id AND l."objectId"=${targetId} AND l.state='active') AS "sameTarget" FROM "HomeExpense" e JOIN "DocumentVersion" v ON v."documentId"=e."documentId" JOIN "Document" d ON d.id=v."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a})`;
+      const prior=await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentSha256:draft.documentSha256},select:{decisions:true}});
+      const allocated=new Set([...prior.flatMap(row=>Object.values(row.decisions as Decisions)),...Object.values(currentDecisions)].filter(d=>d.allocation==='manual_item').map(d=>d.expenseId));
+      if(costs.some(c=>c.sameTarget||!allocated.has(c.id)))throw conflict('onboarding_expense_exists','Questo documento ha già un costo per l’oggetto oppure un totale non ripartito. Collega la spesa esistente.');
+      if(costs.reduce((n,c)=>n+c.amountCents,0)+choice.expense.amountCents>output.purchaseTotal!.amountCents)throw invalid('La somma delle quote supera il totale del documento. Nessun importo viene attribuito automaticamente.');
+    }
     const possible = await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e LEFT JOIN "Document" d ON d.id=e."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND e."amountCents"=${choice.expense.amountCents} AND e."spentOn"=${choice.expense.spentOn} AND (e."documentId" IS NULL OR (d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}))) LIMIT 1`;
     if (possible.length && !choice.expense.acknowledgePossibleDuplicate) throw conflict('onboarding_possible_expense_duplicate', 'Esiste una spesa con lo stesso importo e data: collegala oppure verifica che sia un acquisto distinto.');
     const values = {title:choice.expense.title,amountCents:choice.expense.amountCents,spentOn:choice.expense.spentOn,supplier:choice.expense.supplier};
     const result = await expenses.mutateInTransaction(tx, a, h, 'create', '', { ...values, category: 'purchase_replacement', documentId: draft.documentId, objectRef: { kind: 'object', id: targetId } }, 'onboarding_' + digest(draft.id + ':' + choice.itemId + ':expense-create'), true);
-    return { expenseId: result.expense.id, newExpenses: 1 };
+    return { expenseId: result.expense.id, newExpenses: 1, ...(split?{allocation:'manual_item' as const}:{}) };
   }
 
   confirm(a: string, h: string, id: string, input: unknown, key?: string) {
@@ -247,7 +256,7 @@ export class ObjectOnboardingService {
           if (current.unavailable) throw onboardingDenied();
           const resolved = resolveProfile(current.fields, proposals, choice.fields), changed = JSON.stringify(resolved.fields) !== JSON.stringify(current.fields);
           const enriched=output.enrichments?.[item.id];
-          if(enriched&&Object.entries(choice.fields).some(([key,decision])=>decision.action==='accept'&&proposals[key as keyof ObjectProfile]?.origin==='manufacturer_page')&&(!eq(resolved.fields.brand?.value??'',enriched.brand)||!eq(resolved.fields.reference?.value??resolved.fields.model?.value??'',enriched.reference)))throw invalid('I dati ufficiali riguardano un altro riferimento. Controlla marca e riferimento prima di accettarli.');
+          if(enriched&&Object.entries(choice.fields).some(([key,decision])=>['accept','replace'].includes(decision.action)&&proposals[key as keyof ObjectProfile]?.origin==='manufacturer_page')&&(!eq(resolved.fields.brand?.value??'',enriched.brand)||!eq(resolved.fields.reference?.value??resolved.fields.model?.value??'',enriched.reference)))throw invalid('I dati ufficiali riguardano un altro riferimento. Controlla marca e riferimento prima di accettarli.');
           let manual = target.manual;
           if (choice.manual && choice.manual.mode !== 'remove') {
             const selected = choice.manual.mode === 'manual' ? choice.manual.manual : this.objects.manuals.accept(choice.manual.token, JSON.stringify([a, h, id, item.id, draft.documentSha256]));
@@ -269,7 +278,7 @@ export class ObjectOnboardingService {
           await tx.objectEvent.create({ data: { accountId: a, homeId: h, targetKind: 'object', targetId: target.id, kind: choice.action === 'create' ? 'created' : 'onboarding_confirmed', before: choice.action === 'create' ? Prisma.JsonNull : onboardingJson({ kind: 'object', row: before, position }), after: onboardingJson({ kind: 'object', row: target, position }) } });
           objectIds.push(target.id);
         }
-        const cost = await this.cost(tx, a, h, draft, output, choice, objectIds[0]); newExpenses += cost.newExpenses;
+        const cost = await this.cost(tx, a, h, draft, output, choice, objectIds[0], decisions); newExpenses += cost.newExpenses;
         decisions[item.id] = { state: 'confirmed', objectIds, ...cost, newObjects: choice.action === 'create' ? quantity : 0 };
       }
       const complete = output.items.every(item => ['confirmed', 'skipped'].includes(decisions[item.id]?.state));

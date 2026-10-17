@@ -1,7 +1,18 @@
-import type { ConfirmBatchOutcome, OrganizeBatchPayload } from '../document-intake/model';
+import type { ConfirmBatchOutcome, DocumentKind, IntakeItem, OrganizeItemPayload, OrganizeBatchPayload } from '../document-intake/model';
 import type { IntakeClient, BatchWire, CapabilityWire } from './client';
 
 export type OrganizationPayload = OrganizeBatchPayload;
+
+/** A user-confirmed type from the already-read object draft, never fabricated extraction evidence. */
+export function organizationFromObjectKind(item: IntakeItem, hint?: string): OrganizeItemPayload | null {
+  const kinds: Record<string, DocumentKind> = { purchase_document: 'purchase_document', delivery_notice: 'delivery_notice', appliance_label: 'product_label' };
+  const kind = hint ? kinds[hint] : undefined;
+  if (!kind || !item.permissions.review || item.uploadState !== 'stored' || item.documentLink.state !== 'linked' || !item.documentLink.document || item.reviewState !== 'unreviewed' || item.confirmedOrganization || item.organizationVersion || item.duplicate || item.proposal || item.selection || item.selectionStale || ['queued', 'running', 'uncertain'].includes(item.analysisState)) return null;
+  const title = (item.filename || item.documentLink.document.name).normalize('NFC').trim().slice(0, 120);
+  if (!title) return null;
+  return { itemId: item.id, expectedVersion: item.version, expectedOrganizationVersion: 0, replaceOrganization: false,
+    selection: { action: 'organize', title, parts: [{ kind, pageFrom: null, pageTo: null }], target: { kind: 'home' } } };
+}
 
 function receiptResults(raw: Record<string, unknown>, ids: string[]) {
   const value = raw.results;

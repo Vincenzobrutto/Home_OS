@@ -38,13 +38,15 @@ export function proposedProfile(item: ProductItem): ObjectProfile {
   return result;
 }
 
-export type ProfileDecisions = Partial<Record<ProfileKey, { action: 'accept' | 'manual' | 'keep' | 'defer' | 'skip'; value?: string }>>;
+export type ProfileDecisions = Partial<Record<ProfileKey, { action: 'accept' | 'manual' | 'keep' | 'defer' | 'skip' | 'replace'; value?: string; expectedValue?: string; consent?: boolean }>>;
 export function profileDecisions(input: unknown): ProfileDecisions {
   const row = object(input ?? {}, [...profileFields]), result: ProfileDecisions = {};
   for (const [key, raw] of Object.entries(row)) {
-    const field = key as ProfileKey, decision = object(raw, ['action', 'value']);
-    if (!['accept', 'manual', 'keep', 'defer', 'skip'].includes(String(decision.action))) throw invalid();
+    const field = key as ProfileKey, decision = object(raw, ['action', 'value', 'expectedValue', 'consent']);
+    if (!['accept', 'manual', 'keep', 'defer', 'skip', 'replace'].includes(String(decision.action))) throw invalid();
     if (decision.action !== 'manual' && decision.value !== undefined) throw invalid();
+    if(decision.action==='replace'){if(decision.consent!==true)throw invalid('Conferma esplicitamente la sostituzione del dato.');result[field]={action:'replace',expectedValue:profileValue(field,decision.expectedValue),consent:true};continue;}
+    if(decision.expectedValue!==undefined||decision.consent!==undefined)throw invalid();
     result[field] = { action: decision.action as NonNullable<ProfileDecisions[ProfileKey]>['action'], ...(decision.action === 'manual' ? { value: profileValue(field, decision.value) } : {}) };
   }
   return result;
@@ -57,11 +59,12 @@ export function resolveProfile(existing: ObjectProfile, proposals: ObjectProfile
     if (decision.action === 'defer') { if (old && proposal && old.value !== proposal.value) deferred[key] = proposal; continue; }
     const value = decision.action === 'manual' ? decision.value! : proposal?.value;
     if (!value) throw invalid('Nessun valore proposto da accettare.');
+    if(decision.action==='replace'){if(!old||!proposal||decision.consent!==true||old.value!==decision.expectedValue)throw invalid('Il dato attuale è cambiato: rileggi il confronto prima di sostituirlo.');fields[key]=proposal;continue;}
     if (old) { if (old.value !== value) throw invalid('Il dato è già confermato. Mantienilo o decidi più avanti.'); continue; }
     fields[key] = decision.action === 'manual' ? { value, origin: 'user_declared', sources: [] } : proposal!;
   }
-  if(decisions.warrantyStart?.action==='accept'&&proposals.warrantyStart?.origin.startsWith('derived_from_')){const base=proposals.warrantyStart.origin==='derived_from_delivery'?fields.deliveredDate:fields.purchaseDate;if(base&&base.value!==fields.warrantyStart?.value)throw invalid('Hai cambiato una data: controlla anche l’inizio garanzia proposto.');}
-  if(decisions.warrantyEnd?.action==='accept'&&proposals.warrantyEnd?.origin==='default_24_months'&&fields.warrantyStart&&addCalendarMonths(fields.warrantyStart.value,24)!==fields.warrantyEnd?.value)throw invalid('Hai cambiato l’inizio garanzia: controlla anche la scadenza proposta.');
+  if(['accept','replace'].includes(decisions.warrantyStart?.action??'')&&proposals.warrantyStart?.origin.startsWith('derived_from_')){const base=proposals.warrantyStart.origin==='derived_from_delivery'?fields.deliveredDate:fields.purchaseDate;if(base&&base.value!==fields.warrantyStart?.value)throw invalid('Hai cambiato una data: controlla anche l’inizio garanzia proposto.');}
+  if(['accept','replace'].includes(decisions.warrantyEnd?.action??'')&&proposals.warrantyEnd?.origin==='default_24_months'&&fields.warrantyStart&&addCalendarMonths(fields.warrantyStart.value,24)!==fields.warrantyEnd?.value)throw invalid('Hai cambiato l’inizio garanzia: controlla anche la scadenza proposta.');
   const start = fields.warrantyStart?.value, end = fields.warrantyEnd?.value;
   if (start && end && end < start) throw invalid('La fine garanzia non può precedere l’inizio.');
   return { fields, deferred };

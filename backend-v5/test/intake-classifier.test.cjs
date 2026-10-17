@@ -29,3 +29,9 @@ test('A title is taken from a short recognized heading; an agibility record is n
   assert.equal(heading.title, 'CERTIFICATO DI ABITABILITA');
   assert.equal(classifyText(['La relazione fa riferimento al certificato di abitabilita citato in precedenza.']).title, 'Abitabilità');
 });
+
+test('orders, shipment notices and product labels retain their type without becoming invoices',()=>{
+ for(const [text,kind] of [['Conferma ordine\nEsempio','purchase_order'],['Il pacco è in consegna!\nEsempio','delivery_notice'],['Etichetta prodotto\nEsempio','product_label']]){
+  const result=classifyText([text]);assert.deepEqual(result.parts.map(p=>p.kind),[kind]);assert.deepEqual(result.collections,['purchases']);
+ }
+});

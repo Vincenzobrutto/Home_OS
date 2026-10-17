@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import type { BatchWire, CapabilityWire, IntakeClient } from './client';
-import { localAnalysisCandidates, organizeDocuments, type OrganizationPayload } from './organization';
+import { localAnalysisCandidates, organizationFromObjectKind, organizeDocuments, type OrganizationPayload } from './organization';
 
 const capability = { enabled: true, analysis: { enabled: true, provider: 'local_text_v1', externalTransmission: false } } as CapabilityWire;
 const wire = (): BatchWire => ({ id: 'batch', homeId: 'home', version: 1, state: 'open', permissions: ['read', 'edit'], limits: { maxFiles: 20, maxFileBytes: 20971520, maxTotalBytes: 209715200, acceptedMimeTypes: ['application/pdf'] }, items: [
@@ -47,4 +47,14 @@ it('automatic local candidates exclude lost sources, saved/deferred decisions, p
   expect(localAnalysisCandidates({ ...capability, enabled: false }, batch, new Set())).toEqual([]);
   expect(localAnalysisCandidates({ ...capability, analysis: { ...capability.analysis, externalTransmission: true } } as unknown as CapabilityWire, batch, new Set())).toEqual([]);
   batch.permissions = ['read']; expect(localAnalysisCandidates(capability, batch, new Set())).toEqual([]);
+});
+
+import type { IntakeItem } from '../document-intake/model';
+it('object type can propose a home-only purchase classification, never overwrite copies or confirmed data',()=>{
+ const base={...wire().items[0],permissions:{review:true},confirmedOrganization:null,organizationVersion:0} as unknown as IntakeItem;
+ expect(organizationFromObjectKind(base,'delivery_notice')).toMatchObject({replaceOrganization:false,selection:{parts:[{kind:'delivery_notice',pageFrom:null,pageTo:null}],target:{kind:'home'}}});
+ expect(organizationFromObjectKind(base,'appliance_label')?.selection.parts[0]?.kind).toBe('product_label');
+ expect(organizationFromObjectKind(base,'purchase_document')?.selection.parts[0]?.kind).toBe('purchase_document');
+ for(const patch of [{uploadState:'duplicate'},{reviewState:'deferred'},{reviewState:'saved'},{analysisState:'uncertain'},{organizationVersion:1},{permissions:{review:false}},{documentLink:{state:'unavailable',document:null}}])expect(organizationFromObjectKind({...base,...patch} as IntakeItem,'delivery_notice')).toBeNull();
+ expect(organizationFromObjectKind(base,'other')).toBeNull();
 });

@@ -5,12 +5,13 @@ import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { Draft, Form } from './model';
 import { choice, initialForm } from './model';
-async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
+async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
  if(options.login!==false){await api.login({email:account.email,password});await api.getSession();}
  const wire:Draft={id:'draft-onboarding',version:1,state:'open',mode:'extraction',snapshot:{documentId:options.foreign?'other-document':doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:'delivery_notice',items:['Router demo','Speaker demo'].map((name,i)=>({id:'item'+i,nameTruncated:false,disposition:'household_object',fields:{name:{value:name,source:{documentId:doc.id,page:1,excerpt:name}}},quantity:null,profile:{brand:{value:'Lume',origin:'extraction_confirmed',sources:[{documentId:doc.id,page:1,excerpt:'Lume'}]}},enrichment:null,decision:null})),needsReview:false,purchaseTotal:null,review:null,permissions:['read','edit']};
  if(options.purchase){wire.documentKind='purchase_document';wire.items=wire.items.slice(0,1);wire.items[0]!.profile.purchaseDate={value:'2025-06-13',origin:'extraction_confirmed',sources:[]};wire.purchaseTotal={amountCents:9999};}
+ if(options.multiPurchase){wire.documentKind='purchase_document';wire.purchaseTotal={amountCents:22990};}
  if(options.savedExpenseSkip)wire.review={forms:{item0:initialForm(wire.items[0]!,{...wire,mode:'manual'})}};
  if(options.derivedIdentity)for(const item of wire.items)item.profile={brand:{value:'Amazon',origin:'derived_from_product_name',sources:[{documentId:doc.id,page:1,excerpt:'Amazon Echo Dot Max'}]},model:{value:'Echo Dot Max',origin:'derived_from_product_name',sources:[{documentId:doc.id,page:1,excerpt:'Amazon Echo Dot Max'}]}};
  const calls:Array<{path:string;body:unknown;key:string|null}>=[];let confirmations=0,starts=0,saved=false;
@@ -145,4 +146,20 @@ it('official enrichment preserves edits in the open review and prefills new supp
  await w.user.click(screen.getByRole('button',{name:'Aggiungi altri dati, seriale o garanzia'}));await w.user.type(screen.getByRole('textbox',{name:'Riferimento prodotto'}),'AL4018F0');
  await w.user.click(screen.getByText('Completa dal sito del produttore e cerca il manuale'));await w.user.click(screen.getByRole('button',{name:'Cerca dati e manuale ufficiali'}));
  await waitFor(()=>expect(screen.getByRole('textbox',{name:'Capacità (litri)'})).toHaveValue('3.2'));expect(screen.getByRole('textbox',{name:'Marca'})).toHaveValue('Moulinex');expect(w.counts()).toEqual({confirmations:0,starts:0});
+});
+
+it('existing confirmed brand requires explicit replacement consent and carries the observed value',async()=>{
+ const w=await world();const dialog=screen.getByRole('dialog',{name:'Rivedi l’articolo'});const d=within(dialog);
+ await w.user.click(d.getByLabelText('Collega a un oggetto già in casa'));await w.user.selectOptions(d.getByLabelText('Scheda da collegare'),'existing1');
+ await w.user.selectOptions(d.getByLabelText('Scelta per Marca'),'replace');const button=d.getByRole('button',{name:'Conferma questo articolo'});expect(button).toBeDisabled();
+ await w.user.click(d.getByRole('checkbox',{name:/Autorizzo la sostituzione di Marca/}));expect(button).toBeEnabled();await w.user.click(button);
+ await waitFor(()=>expect(w.counts().confirmations).toBe(1));expect(w.calls.find(c=>c.path.endsWith('/confirmations'))?.body).toMatchObject({choices:[{fields:{brand:{action:'replace',expectedValue:'Confirmed',consent:true}}}]});
+});
+it('multi-item purchase asks only for this item amount and never copies the grand total',async()=>{
+ const w=await world({multiPurchase:true});await w.user.click(screen.getByText('Spesa di acquisto (facoltativa)'));
+ await w.user.selectOptions(screen.getByLabelText('Cosa fare con il costo'),'create');expect(screen.getByLabelText('Importo (€)')).toHaveValue('');
+ const button=screen.getByRole('button',{name:'Conferma oggetto e spesa'});expect(button).toBeDisabled();
+ await w.user.type(screen.getByLabelText('Importo (€)'),'99');await w.user.type(screen.getByLabelText('Data della spesa'),'2025-06-13');
+ await w.user.click(screen.getByRole('checkbox',{name:/Confermo che questo importo riguarda soltanto/}));await w.user.click(button);
+ await waitFor(()=>expect(w.counts().confirmations).toBe(1));expect(w.calls.find(c=>c.path.endsWith('/confirmations'))?.body).toMatchObject({choices:[{expense:{action:'create',amountCents:9900,manualItemAmount:true}}]});
 });

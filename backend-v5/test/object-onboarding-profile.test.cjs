@@ -42,3 +42,13 @@ test('Strong router title prepopulates brand only, never a generic or cropped mo
  for(const name of ['Strong adhesive tape','Custodia per Strong Router','Strong Router compatibile con Philips'])assert.equal(proposedProfile(parse({name:field(name)},'delivery_notice').items[0]).brand,undefined);
  const explicit=proposedProfile(parse({name:field('Strong Router 4G LTE'),brand:field('Other brand')},'delivery_notice').items[0]);assert.equal(explicit.brand.value,'Other brand');
 });
+
+const replacementApi=require('../dist/object-onboarding/profile');
+test('replacement needs explicit consent and the exact current value',()=>{
+ const old={model:{value:'Old',origin:'user_declared',sources:[]}},proposed={model:{value:'New',origin:'extraction_confirmed',sources:[]}};
+ assert.throws(()=>replacementApi.profileDecisions({model:{action:'replace',expectedValue:'Old'}}));
+ assert.throws(()=>replacementApi.resolveProfile(old,proposed,{model:{action:'replace',expectedValue:'stale',consent:true}}));
+ const decision=replacementApi.profileDecisions({model:{action:'replace',expectedValue:'Old',consent:true}});
+ assert.equal(replacementApi.resolveProfile(old,proposed,decision).fields.model.value,'New');
+ assert.throws(()=>replacementApi.profileDecisions({model:{action:'keep',consent:true}}));
+});

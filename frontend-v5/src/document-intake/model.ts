@@ -15,7 +15,7 @@ export type DocumentKind =
   | 'cila' | 'scia' | 'building_permit' | 'habitability' | 'agibility' | 'agibility_record'
   | 'system_diagram' | 'conformity_declaration' | 'system_booklet'
   | 'condominium_rules' | 'condominium_minutes' | 'millesimal_tables'
-  | 'receipt' | 'invoice' | 'warranty' | 'manual'
+  | 'purchase_order' | 'delivery_notice' | 'product_label' | 'purchase_document' | 'receipt' | 'invoice' | 'warranty' | 'manual'
   | 'utility_bill'
   | 'other';
 
@@ -35,7 +35,7 @@ const KIND_COLLECTION: Record<DocumentKind, Collection> = {
   cila: 'building', scia: 'building', building_permit: 'building', habitability: 'building', agibility: 'building', agibility_record: 'building',
   system_diagram: 'technical', conformity_declaration: 'technical', system_booklet: 'technical',
   condominium_rules: 'condominium', condominium_minutes: 'condominium', millesimal_tables: 'condominium',
-  receipt: 'purchases', invoice: 'purchases', warranty: 'purchases', manual: 'purchases',
+  purchase_order:'purchases',delivery_notice:'purchases',product_label:'purchases',purchase_document:'purchases',receipt: 'purchases', invoice: 'purchases', warranty: 'purchases', manual: 'purchases',
   utility_bill: 'utilities',
   other: 'unclassified',
 };
@@ -44,7 +44,7 @@ export const KIND_LABEL: Record<DocumentKind, string> = {
   cila: 'CILA', scia: 'SCIA', building_permit: 'Titolo edilizio', habitability: 'Abitabilità', agibility: 'Agibilità', agibility_record: 'Visura agibilità (non certificato)',
   system_diagram: 'Schema di impianto', conformity_declaration: 'Dichiarazione di conformità', system_booklet: 'Libretto di impianto',
   condominium_rules: 'Regolamento condominiale', condominium_minutes: 'Verbale di assemblea', millesimal_tables: 'Tabelle millesimali',
-  receipt: 'Ricevuta', invoice: 'Fattura', warranty: 'Garanzia', manual: 'Manuale d’uso',
+  purchase_order:'Ordine di acquisto',delivery_notice:'Conferma di consegna / spedizione',product_label:'Etichetta prodotto',purchase_document:'Documento di acquisto',receipt: 'Ricevuta', invoice: 'Fattura', warranty: 'Garanzia', manual: 'Manuale d’uso',
   utility_bill: 'Bolletta',
   other: 'Altro documento',
 };
@@ -540,5 +540,5 @@ export const formatCents = (cents: number) => euro.format(cents / 100);
 
 /** Only an entry to review: classification never authorizes a provider transfer. */
 export function supportsObjectProposals(item:IntakeItem):boolean {
- return !sourceLost(item)&&item.documentLink.state==='linked'&&item.permissions.review&&(!!item.mimeType?.startsWith('image/')||[...(item.proposal?.parts??[]),...(item.selection?.action==='organize'?item.selection.parts:[]),...(item.confirmedOrganization?.parts??[])].some(p=>['receipt','invoice','warranty','manual'].includes(p.kind)));
+ return !sourceLost(item)&&item.documentLink.state==='linked'&&item.permissions.review&&(!!item.mimeType?.startsWith('image/')||[...(item.proposal?.parts??[]),...(item.selection?.action==='organize'?item.selection.parts:[]),...(item.confirmedOrganization?.parts??[])].some(p=>['receipt','invoice','warranty','manual','purchase_order','delivery_notice','product_label','purchase_document'].includes(p.kind)));
 }
