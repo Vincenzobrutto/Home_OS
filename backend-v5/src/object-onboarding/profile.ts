@@ -1,10 +1,11 @@
+import { productNameIdentity } from './product-name';
 import { calendar } from '../activities/domain';
 import { invalid, object, text } from '../review/domain';
 import type { ProductItem, ProductSource } from './domain';
 
 export const profileFields = ['brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
 export type ProfileKey = typeof profileFields[number];
-export type ProfileOrigin = 'user_declared' | 'extraction_confirmed' | 'derived_from_purchase' | 'derived_from_delivery' | 'default_24_months' | 'manufacturer_page';
+export type ProfileOrigin = 'user_declared' | 'extraction_confirmed' | 'derived_from_purchase' | 'derived_from_delivery' | 'default_24_months' | 'manufacturer_page' | 'derived_from_product_name';
 export type ProfileField = { value: string; origin: ProfileOrigin; sources: ProductSource[]; externalSource?: { url: string; checkedAt: string } };
 export type ObjectProfile = Partial<Record<ProfileKey, ProfileField>>;
 
@@ -24,6 +25,11 @@ export function profileValue(key: ProfileKey, input: unknown): string {
 export function proposedProfile(item: ProductItem): ObjectProfile {
   const result: ObjectProfile = {};
   for (const key of profileFields) if (item.fields[key]) result[key] = { value: profileValue(key, item.fields[key]!.value), origin: 'extraction_confirmed', sources: [item.fields[key]!.source] };
+  const inferred=productNameIdentity(item);
+  const equal=(a:string,b:string)=>a.normalize('NFC').toLocaleLowerCase('it')===b.normalize('NFC').toLocaleLowerCase('it');
+  const contradicts=(['brand','model'] as const).some(key=>result[key]&&inferred[key]&&!equal(result[key]!.value,inferred[key]!));
+  const identity=contradicts?{}:inferred;
+  for(const key of ['brand','model'] as const) if(!result[key]&&identity[key]&&item.fields.name) result[key]={value:profileValue(key,identity[key]),origin:'derived_from_product_name',sources:[item.fields.name.source]};
   if (!result.warrantyStart && (result.deliveredDate || result.purchaseDate)) {
     const base = result.deliveredDate ?? result.purchaseDate!;
     result.warrantyStart = { value: base.value, origin: result.deliveredDate ? 'derived_from_delivery' : 'derived_from_purchase', sources: base.sources };

@@ -3,7 +3,7 @@ export const labels = {brand:'Marca',model:'Modello',reference:'Riferimento prod
 export type FieldKey=keyof typeof labels;
 export type Field={value:string;origin:string;sources:Array<{documentId:string;page:number;excerpt:string;basis?:string}>;externalSource?:{url:string;checkedAt:string}};
 export type Profile=Partial<Record<FieldKey,Field>>;
-export const originLabel=(origin:string)=>({user_declared:'Inserito da te',extraction_confirmed:'Letto dal documento',derived_from_purchase:'Proposta dalla data di acquisto: verifica la consegna',derived_from_delivery:'Proposta dalla consegna effettiva',default_24_months:'Proposta: 24 mesi, modificabile',manufacturer_page:'Pagina ufficiale del produttore'}[origin]??'Da verificare');
+export const originLabel=(origin:string)=>({user_declared:'Inserito da te',extraction_confirmed:'Letto dal documento',derived_from_product_name:'Ricavato dal nome del prodotto',derived_from_purchase:'Proposta dalla data di acquisto: verifica la consegna',derived_from_delivery:'Proposta dalla consegna effettiva',default_24_months:'Proposta: 24 mesi, modificabile',manufacturer_page:'Pagina ufficiale del produttore'}[origin]??'Da verificare');
 export type Candidate={id:string;name:string;version:number;profile:{fields:Profile;unavailable:boolean};rooms:string[];reason:string};
 export type CandidatePage={items:Candidate[];nextCursor:string|null};
 export type ExpenseCandidate={id:string;title:string;amountCents:number;spentOn:string;version:number;rank:number};

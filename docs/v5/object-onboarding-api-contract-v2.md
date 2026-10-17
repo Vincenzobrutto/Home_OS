@@ -27,3 +27,12 @@ Ordine operativo: O2 dominio/schema/autorizzazioni → O3 conferme/versioni/repl
 `capabilities` include `canStartAnalysis`: un esito incerto blocca ulteriori avvii nella stessa campagna. Una diversa campagna configurata dall’operatore, con hash/limite propri e consenso separato esplicito, può consentire il nuovo avvio autorizzato senza modificare né liberare la riserva precedente. La UI conserva il vecchio esito, non lo ripete automaticamente e richiede di nuovo il consenso. Job attivi sul medesimo originale restano bloccanti anche fra campagne.
 
 Campagna r2 autorizzata dal committente max0.25USD: primo preflight scaduto prima di Messages, riserva rilasciata; successivo avvio nella medesima campagna ha eseguito l’unico Messages pagato e pubblicato una proposta valida. Costo0.013558USD. Provider disabilitato al termine. R1 resta incerta e riservata; nessuna alterazione delle quote.
+
+
+## Marca e modello ricavati dal nome (17 ottobre 2026)
+
+`profile.brand/model` possono avere origine `derived_from_product_name`: proposta locale ottenuta dal titolo già estratto, con le stesse fonti autorizzate. Nessun reinvio al provider, modifica dell’output grezzo/fingerprint, scrittura sulla scheda o inferenza di codice prodotto/seriale/date/prezzo. Stessa derivazione in proiezione e conferma; candidati possono usare la coppia proposta senza preselezione. Valori espliciti e valori già confermati hanno precedenza; se dati espliciti contraddicono il titolo non si mescolano identità diverse.
+
+Prima versione: prefissi di marche riconosciute, titoli con identità distinguibile; sconosciuti/accessori/marche multiple o modello tagliato restano incompleti. Un qualificatore marketing troncato tra parentesi non impedisce la proposta del nome commerciale completo che lo precede (Amazon Echo Dot Max). Non è lookup di catalogo o identificazione di variante. Etichetta UI «Ricavato dal nome del prodotto · Da confermare»; dopo conferma origine preservata.
+
+Riferimento prodotto resta facoltativo e distinto dal modello commerciale, ordine e seriale. Recupero online da marca/modello con disambiguazione e miglioramento della descrizione campo rinviati su richiesta del committente; mai trasformare automaticamente il nome o un numero d’ordine in riferimento.

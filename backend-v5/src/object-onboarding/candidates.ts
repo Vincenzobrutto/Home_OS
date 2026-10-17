@@ -3,6 +3,7 @@ import { digest } from '../security';
 import { object, uuid, text, invalid } from '../review/domain';
 import { readableReceiptName } from '../receipt-assistance/access';
 import { ObjectOnboardingAccess, objectProfileView, onboardingDenied } from './access';
+import { proposedProfile } from './profile';
 import type { ProductExtraction } from './domain';
 
 function pageQuery(input: unknown, withItem: boolean) {
@@ -37,7 +38,8 @@ export function onboardingCandidates(access: ObjectOnboardingAccess, a: string, 
     const draft = await access.draft(tx, a, h, id);
     if (!await access.source(tx, a, h, draft.documentId, draft)) throw onboardingDenied();
     const item = (draft.output as unknown as ProductExtraction).items.find(item => item.id === q.itemId); if (!item) throw invalid();
-    const brand = norm(item.fields.brand?.value), model = norm(item.fields.model?.value), reference = norm(item.fields.reference?.value), name = item.nameTruncated ? null : norm(item.fields.name?.value);
+    const profile=proposedProfile(item);
+    const brand = norm(profile.brand?.value), model = norm(profile.model?.value), reference = norm(item.fields.reference?.value), name = item.nameTruncated ? null : norm(item.fields.name?.value);
     const p = pagination(digest(JSON.stringify([a, h, id, draft.version, q.itemId, q.q])), q.cursor), escaped = q.q.replace(/[\\%_]/gu, '\\$&');
     const rows = await tx.$queryRaw<Array<{ id: string; rank: number }>>(Prisma.sql`
       WITH fields AS (SELECT f.* FROM "ReceiptObjectField" f WHERE f."accountId"=${a} AND f."homeId"=${h} AND f."fieldKey" IN ('brand','model') AND

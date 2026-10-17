@@ -1,5 +1,14 @@
 # Oggetti dai documenti — consegna implementazione, 17 ottobre 2026
 
+## Aggiornamento: proposte locali dal nome del prodotto
+
+Il committente approva marca/modello ricavati dal titolo, da confermare; recupero del riferimento preciso e chiarezza del relativo campo rinviati. Implementata derivazione locale su prefissi riconoscibili, con origine `derived_from_product_name`, fonte originale e nessun cambiamento a output AI/fingerprint/identificatori. Usata sia in proiezione sia in conferma e ricerca candidati. Nessun valore esplicito o confermato sovrascritto, nessuna unione di identità esplicita contraddittoria con titolo; sconosciuti, accessori/compatibilità, marche multiple e modelli tagliati non completati. Regole iniziali estensibili, non lookup universale di catalogo.
+
+Bozza reale Echo0026cc5d-a3a6-4583-8940-3f6a51156e4f: marcaAmazon/modelloEcho Dot Max da nome già letto; titolo marketing fra parentesi troncato escluso, riferimento vuoto. Nessuna chiamata provider. Salvato il nome corretto già inserito dal committente tramite normale UI, poi reload: nome conservato, proposte visibili «Ricavato dal nome del prodotto · Da confermare», entrambe Usa la proposta. Non confermato articolo né creato oggetto/costo. Screenshot outputs/onboarding-oggetti-20261017/07-identita-dal-nome.png.
+
+11test profilo offline (3nuovi),11DB di regressione e16FE (1nuovo) verdi; build backend/frontend e lint mirati verdi. API registrata aggiornata con launcherTelefono, provider resta disabilitato, nessuna .env/quote/firewall modificata. Backlog: codice esatto da marca/modello con disambiguazione del produttore e revisione del testo di aiuto del campo, da affrontare successivamente.
+
+
 ## Aggiornamento: collaudo reale v3 riuscito
 
 Nuova autorizzazione esplicita del committente per stesso screenshot Amazon Echo Dot Max verso Anthropic, ulteriori0.25USD (massimo complessivo autorizzato0.50USD). Campagna onboarding-live-20261017-amazon-r2, maxCalls1/hash esatto. Un primo preflight è scaduto prima di Messages (job1c89402c-80d3-4d13-b337-6be002288ff2), riserva rilasciata/costo0. Modello GET successivo200 senza documento; secondo avvio nella stessa campagna, nessun reset contatori, unico Messages effettivo di r2.

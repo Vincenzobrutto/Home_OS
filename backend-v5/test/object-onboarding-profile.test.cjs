@@ -17,3 +17,20 @@ test('totals never enter a delivery notice; no inferred multiple-item allocation
 test('profile export strips unknowns, revoked proof values and preserves manual values',()=>{const {Projection}=require('../dist/personal-export/projection');const p=new Projection(new Map([[snapshot.documentId,{version:1,sha256:snapshot.documentSha256}]]),new Set(['o']),new Set(),new Set(),new Set(),new Set(),new Set());const source={...snapshot,sha256:snapshot.documentSha256,page:1,excerpt:'Lume'};const row={id:'o',profile:{brand:{value:'Lume',origin:'extraction_confirmed',sources:[source]},serialNumber:{value:'Personal input',origin:'user_declared',sources:[]},internalToken:{value:'secret',origin:'user_declared',sources:[]}}};assert.equal(p.snapshot('object',row).profile.brand.value,'Lume');assert.equal(p.snapshot('object',row).profile.internalToken,undefined);p.documents.clear();assert.equal(p.snapshot('object',row).profile.brand,undefined);assert.equal(p.snapshot('object',row).profile.serialNumber.value,'Personal input');});
 
 test('disabled runtime never claims a different process queue or touches its database',async()=>{const {OnboardingJobService}=require('../dist/object-onboarding/jobs.service'),{ServiceUnavailableException}=require('@nestjs/common');const jobs=new OnboardingJobService({$transaction:()=>{throw Error('DB must not be touched');}},null,null,{budget:{config:{settings:()=>{throw new ServiceUnavailableException();}}}},null);assert.equal(await jobs.claim(),null);});
+
+
+test('product title proposes brand/model without another provider call or changing extraction identity',()=>{
+ const x=parse({name:field('Amazon Echo Dot Max (ultimo model...')},'delivery_notice');const item=x.items[0],before=JSON.stringify(item);item.nameTruncated=true;
+ const p=proposedProfile(item);assert.equal(p.brand.value,'Amazon');assert.equal(p.model.value,'Echo Dot Max');assert.equal(p.brand.origin,'derived_from_product_name');assert.deepEqual(p.model.sources,[item.fields.name.source]);assert.equal(p.reference,undefined);assert.equal(p.purchaseDate,undefined);assert.equal(p.warrantyStart,undefined);item.nameTruncated=false;assert.equal(JSON.stringify(item),before);
+});
+test('explicit identity wins; empty ambiguous accessory and cut model titles are not completed',()=>{
+ const explicit=parse({name:field('Amazon Echo Dot Max'),brand:field('Printed brand'),model:field('Printed model')},'delivery_notice');assert.equal(proposedProfile(explicit.items[0]).brand.value,'Printed brand');assert.equal(proposedProfile(explicit.items[0]).model.value,'Printed model');
+ for(const name of ['Unknown Speaker Mini','Amazon consegna Philips lampada','Custodia per Apple AirPods','Samsung compatibile con Apple','Amazon Echo Dot Max e Philips Lamp']){const p=proposedProfile(parse({name:field(name)},'delivery_notice').items[0]);assert.equal(p.brand,undefined,name);assert.equal(p.model,undefined,name);}
+ const cut=parse({name:field('Amazon Echo Do...')},'delivery_notice').items[0];cut.nameTruncated=true;assert.equal(proposedProfile(cut).model,undefined);
+ const descriptive=proposedProfile(parse({name:field('Moulinex Friggitrice ad aria 5L')},'delivery_notice').items[0]);assert.equal(descriptive.brand.value,'Moulinex');assert.equal(descriptive.model,undefined);
+ const next=proposedProfile(parse({name:field('Dyson V15 Detect (nuovo)')},'delivery_notice').items[0]);assert.equal(next.model.value,'V15 Detect');
+});
+
+test('title derivation does not mix a conflicting explicit brand with its inferred model',()=>{
+ const p=proposedProfile(parse({name:field('Amazon Echo Dot Max'),brand:field('Other printed brand')},'delivery_notice').items[0]);assert.equal(p.brand.value,'Other printed brand');assert.equal(p.model,undefined);
+});
