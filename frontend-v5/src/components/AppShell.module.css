@@ -203,6 +203,9 @@
 
 .mainStack {
   display: grid;
+  /* A nowrap category strip must scroll inside its page, not size the page's
+     implicit grid track to its min-content width (Safari then zooms everything out). */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
