@@ -60,10 +60,12 @@ it('separate operator authorization permits a new start but still requires fresh
 });
 
 it('identity derived from title is visibly a proposal and sends separate explicit acceptance',async()=>{
- const w=await world({derivedIdentity:true});await screen.findAllByText('Ricavato dal nome del prodotto · Da confermare');
- expect(screen.getAllByText('Proposta: Amazon')).toHaveLength(2);
+ const w=await world({derivedIdentity:true});await screen.findByRole('heading',{name:'Router demo'});
+ expect(screen.queryByText('Ricavato dal nome del prodotto · Da confermare')).not.toBeInTheDocument();
  expect(screen.getAllByLabelText('Scelta per Marca')[0]).toHaveValue('accept');expect(screen.getAllByRole('option',{name:'Amazon'})).toHaveLength(2);
- expect(screen.getAllByText('Proposta: Echo Dot Max')).toHaveLength(2);
+ await w.user.click(screen.getAllByRole('button',{name:'Informazioni su Marca'})[0]!);
+ const dialog=screen.getByRole('dialog',{name:'Marca'});expect(within(dialog).getByText('Proposta: Amazon')).toBeVisible();expect(within(dialog).getByText('Ricavato dal nome del prodotto · Da confermare')).toBeVisible();
+ await w.user.keyboard('{Escape}');expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(screen.getAllByRole('button',{name:'Informazioni su Marca'})[0]).toHaveFocus();
  await w.user.click(screen.getAllByRole('button',{name:'Conferma questo articolo'})[0]!);
  await screen.findByText('Confermato: 1 nuovi oggetti e 0 nuove spese.');
  const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:Array<{fields:Record<string,{action:string}>}>};

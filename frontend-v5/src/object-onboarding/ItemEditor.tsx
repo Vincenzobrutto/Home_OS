@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ApiClient } from '../api/client';
 import { userMessage } from '../api/errors';
+import { FieldInfo } from '../components/FieldInfo';
 import { Banner, ui } from '../components/ui';
 import { automaticExpenseEligible, editProfileField, labels, originLabel, type Candidate, type CandidatePage, type Draft, type ExpenseCandidate, type FieldKey, type Form, type Item } from './model';
 import styles from './onboarding.module.css';
@@ -53,16 +54,17 @@ export function ItemEditor({api,accountId,base,draft,item,form,disabled,change,e
     {quantity>1&&<p className={styles.source}>I dati confermati di ogni esemplare sono protetti: per differenze tra schede, completa un articolo alla volta dalla scheda.</p>}
    </>}
    <h3>Dati da aggiungere alla scheda</h3><p className={styles.source}>Correggi le proposte prima di confermare. I valori già confermati non vengono sovrascritti.</p>
-   <div className={styles.values}>{(Object.keys(labels) as FieldKey[]).filter(key=>allFields||item.profile[key]||current[key]||form.fields[key]?.action==='manual'||['brand','model','reference'].includes(key)).map(key=>{const proposal=item.profile[key],old=current[key],decision=form.fields[key],different=old&&proposal&&old.value!==proposal.value;return <div className={styles.card} key={key}>
-    <strong>{labels[key]}</strong>{old&&<p><strong>Attuale confermato: {old.value}</strong></p>}
-    {proposal&&<><p>Proposta: {proposal.value}</p><p className={styles.source}>{originLabel(proposal.origin)}{proposal.origin==='derived_from_product_name'?' · Da confermare':''}</p>{proposal.sources.map((source,i)=><p className={styles.source} key={i}>Pagina {source.page}: «{source.excerpt}»{source.basis==='provider_observed_image'?' · Lettura visiva da verificare':''}</p>)}{proposal.externalSource&&<a href={proposal.externalSource.url} target="_blank" rel="noopener noreferrer">Fonte ufficiale</a>}</>}
+   <div className={styles.values}>{(Object.keys(labels) as FieldKey[]).filter(key=>allFields||item.profile[key]||current[key]||form.fields[key]?.action==='manual'||['brand','model','reference'].includes(key)).map(key=>{const proposal=item.profile[key],old=current[key],decision=form.fields[key],different=old&&proposal&&old.value!==proposal.value;return <div className={styles.card+(key==='reference'?' '+styles.wideCard:'')} key={key}>
+    <div className={styles.fieldHead}><strong>{labels[key]}</strong><FieldInfo label={labels[key]}>
+     {proposal?<><p>Proposta: {proposal.value}</p><p>{originLabel(proposal.origin)}{proposal.origin==='derived_from_product_name'?' · Da confermare':''}</p>{proposal.sources.map((source,i)=><p key={i}>Pagina {source.page}: «{source.excerpt}»{source.basis==='provider_observed_image'?' · Lettura visiva da verificare':''}</p>)}{proposal.externalSource&&<a href={proposal.externalSource.url} target="_blank" rel="noopener noreferrer">Fonte ufficiale</a>}</>:<p>Nessun dato identificato con sufficiente certezza. Puoi lasciarlo vuoto o inserirlo tu.</p>}
+     {key.startsWith('warranty')&&<p>Garanzia proposta per acquisto nuovo come consumatore: controlla decorrenza, condizioni ed eventuali estensioni. Una data di consegna prevista non prova la consegna effettiva.</p>}
+    </FieldInfo></div>{old&&<p><strong>Attuale confermato: {old.value}</strong></p>}
     <label className={styles.field}>Scelta per {labels[key]}<select className={ui.input} value={decision?.action??(old?'keep':'skip')} onChange={e=>change(editProfileField(form,key,{action:e.target.value as NonNullable<Form['fields'][FieldKey]>['action'],...(e.target.value==='manual'?{value:proposal?.value??''}:{})},item.profile,current))}>
      {old?<><option value="keep">Mantieni l’attuale</option>{different&&<option value="defer">Decidi più avanti sulla differenza</option>}</>:<>{proposal&&<option value="accept">{proposal.value}</option>}<option value="manual">Inserisci o correggi tu</option><option value="skip">Lascia vuoto</option></>}
     </select></label>
     {decision?.action==='manual'&&!old&&<label className={styles.field}>Valore per {labels[key]}<input className={ui.input} type={key.endsWith('Date')||key.startsWith('warranty')?'date':'text'} value={decision.value??''} maxLength={key==='brand'||key==='serialNumber'?80:120} onInput={e=>{if(key.endsWith('Date')||key.startsWith('warranty'))change(editProfileField(form,key,{action:'manual',value:e.currentTarget.value},item.profile,current));}} onChange={e=>change(editProfileField(form,key,{action:'manual',value:e.target.value},item.profile,current))}/></label>}
    </div>;})}</div>
    <button type="button" className={ui.btn} onClick={()=>setAllFields(old=>!old)}>{allFields?'Mostra solo i dati principali':'Aggiungi altri dati, seriale o garanzia'}</button>
-   {(item.profile.warrantyStart||item.profile.warrantyEnd)&&<p className={styles.source}>Garanzia proposta per acquisto nuovo come consumatore: controlla decorrenza, condizioni ed eventuali estensioni. Una data di consegna prevista non prova la consegna effettiva.</p>}
    <details><summary>Completa dal sito del produttore e cerca il manuale</summary><div className={styles.stack}>
     <p>La ricerca automatica verifica il riferimento esatto sulle pagine Moulinex supportate. Per altri produttori puoi aggiungere il link dalla scheda dell’oggetto.</p>
     <label className={styles.field}>Pagina prodotto ufficiale (se necessaria)<input className={ui.input} value={productUrl} onChange={e=>setProductUrl(e.target.value)} placeholder="https://www.moulinex.it/p/…"/></label>
