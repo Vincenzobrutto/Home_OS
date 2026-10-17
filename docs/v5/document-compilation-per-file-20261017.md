@@ -26,3 +26,11 @@ Documento cc39e342-ff55-483b-8939-bf77604b50ca, bozza manuale 5f868d77-4e76-48f0
 ## Limiti
 
 Restano i limiti di estrazione e budget già implementati. Questo intervento cambia ingresso e revisione; non promette un’identificazione completa di ogni documento. Non è stata invocata una nuova analisi a pagamento per collaudare la diversa disposizione della UI. Il documento conserva il proprio titolo confermato, distinto dal nome dell’oggetto. Le ricerche del catalogo per nome non sono state estese ai campi marca/modello: l’oggetto Dreame si trova sotto il nome manuale «Robot aspirapolvere».
+
+## Correzione Samsung: copia già presente
+
+Il blocco segnalato per la scheda Samsung non riguardava i dati prodotto: il lotto 3b4e7e90 rimandava al documento già presente fd9bef9f. L’archiviazione della copia richiedeva una scelta che era rimasta nel dialogo separato del documento.
+
+Ora l’editor articolo espone «Usa il documento già presente senza modificarlo», inizialmente non selezionato. La conferma finale esegue il riuso versionato/idempotente già previsto dal backend, poi conferma l’articolo. Senza scelta esplicita non vengono scritti né documento né oggetto. Originale, titolo e tipo restano invariati; modifiche e sostituzioni richiedono ancora il percorso di revisione. Se il riuso fallisce o è incerto, nessun articolo viene confermato prima del recupero. Gli articoli successivi riusano lo stato del documento già confermato anche quando non esiste un overlay di classificazione.
+
+40 test frontend mirati verdi, inclusi due nuovi casi copia e riuso con risposta persa, stessa chiave e nessuna conferma prematura. Build/lint verdi. Browser reale: verificata la scelta inline, riportato il nome visibile nello screenshot dell’utente «Samsung Asciugatrice» nel modulo aperto; marca Samsung e modello DV80T5220TT/S3 presenti. Checkbox lasciato non selezionato e conferma finale al committente: nessuna creazione o nuova analisi personale eseguita in questa correzione. Screenshot outputs/samsung-copia-scelta-inline-20261017.png.

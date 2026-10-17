@@ -155,10 +155,16 @@ function IntakeContainer() {
   const requestedDocument=params.get('oggetti-documento');
   const productItem=requestedDocument?productItems.find(i=>i.documentLink.document?.id===requestedDocument):undefined;
   const preparationError=(message:string)=>new ApiError({kind:'http',status:422,code:'intake_preparation_required',message});
-  async function prepareDocumentForObject(itemId:string,kind?:string){
+  async function prepareDocumentForObject(itemId:string,kind?:string,reuseCopy=false){
     const value=current.current;if(!value||active.current!==value.id)throw preparationError('Rileggi il caricamento corrente.');
     const item=toUiBatch(value).items.find(i=>i.id===itemId);if(!item)throw preparationError('Documento non disponibile.');
-    if(item.reviewState==='confirmed'&&item.confirmedOrganization)return;
+    if(item.reviewState==='confirmed')return;
+    if(item.uploadState==='duplicate'){
+      if(!reuseCopy)throw preparationError('Il file è già presente: seleziona «Usa il documento già presente senza modificarlo» nella scheda, oppure scegli «Rivedi documento» per cambiarne titolo o tipo.');
+      const result=await post(`/items/${encodeURIComponent(item.id)}/duplicate-resolution`,{expectedVersion:item.version,action:'reuse_reference'},'duplicate:'+item.id);
+      if(result.status!=='confirmed')throw preparationError(result.status==='rejected'?result.message:'L’esito del riuso del documento è da verificare. Rileggi il caricamento prima di confermare l’articolo.');
+      return;
+    }
     let proposal=bulkItem(item)??organizationFromObjectKind(item,kind);
     if(proposal&&['utility_bill','purchase_document'].includes(kind??'')&&item.reviewState==='unreviewed'&&!item.organizationVersion&&!item.duplicate)proposal={...proposal,selection:{...proposal.selection,parts:[{kind:kind as 'utility_bill'|'purchase_document',pageFrom:null,pageTo:null}]}};if(!proposal)throw preparationError('Prima completa la classificazione del documento: scegli il tipo o risolvi la copia o il conflitto. Usa «Rivedi documento» qui sotto; i dati dell’articolo restano conservati.');
     const outcome=await organize({batchId:value.id,expectedVersion:value.version,mode:'single',items:[proposal]});
@@ -187,7 +193,7 @@ function IntakeContainer() {
       onOpenReceiptFlow={itemId => { const doc = current.current?.items.find(i => i.id === itemId)?.documentLink.document; if(doc)setParams(previous=>{const next=new URLSearchParams(previous);next.set('oggetti-documento',doc.id);next.delete('oggetti-bozza');next.delete('oggetti-analisi');return next;}); }}
       objectProposalItemId={productItem?.id}
       renderCompilationActions={itemId=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentCompilationActions homeId={home.id} documentId={source.id} onOpen={(mode,draftId)=>setParams(previous=>{const next=new URLSearchParams(previous);next.set('oggetti-documento',source.id);next.set('compila',mode);next.delete('oggetti-bozza');next.delete('oggetti-analisi');if(draftId)next.set('oggetti-bozza',draftId);return next;})}/>:null;}}
-      renderObjectProposals={(itemId,reviewDocument)=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentObjectProposals documentId={source.id} onReviewDocument={reviewDocument} beforeConfirm={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'&&wire?.items.find(i=>i.id===itemId)?.organization?undefined:kind=>prepareDocumentForObject(itemId,kind)} confirmLabel={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?'Conferma questo articolo':'Conferma documento e articolo'}/>:null;}}
+      renderObjectProposals={(itemId,reviewDocument)=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentObjectProposals documentId={source.id} documentCopy={wire?.items.find(i=>i.id===itemId)?.uploadState==='duplicate'} onReviewDocument={reviewDocument} beforeConfirm={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?undefined:(kind,reuseCopy)=>prepareDocumentForObject(itemId,kind,reuseCopy)} confirmLabel={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?'Conferma questo articolo':'Conferma documento e articolo'}/>:null;}}
       renderOutcomeLinks={() => <Link className={ui.btn} to={`/home/${home.id}/documenti`}>Vai ai Documenti</Link>}
       onRetryLoad={() => { void cap.refetch(); if (id) void batch.refetch(); }} />
     <input ref={picker} hidden type="file" accept="application/pdf,image/jpeg,image/png" aria-label="Originale da ricaricare" onChange={e => { const file = e.target.files?.[0], itemId = retryItem.current; if (file && itemId && current.current) { files.current.set(itemId, file); void upload(current.current, itemId); } e.target.value = ''; }} />
