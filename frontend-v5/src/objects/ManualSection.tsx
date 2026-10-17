@@ -13,7 +13,7 @@ type Candidate = { manual: ObjectManual; token: string };
 type Selection = { mode: 'candidate'; token: string } | { mode: 'remove' } | { mode: 'manual'; url: string; brand: string; reference: string; kind: 'manual' | 'support' };
 export function ManualSection({ homeId, object, canEdit }: { homeId: string; object: CatalogItem; canEdit: boolean }) {
   const api = useApi(), account = useAccount(), cache = useQueryClient(), id = useId();
-  const [editing, setEditing] = useState(false), [brand, setBrand] = useState(object.manual?.brand ?? ''), [reference, setReference] = useState(object.manual?.reference ?? '');
+  const [editing, setEditing] = useState(false), [brand, setBrand] = useState(object.manual?.brand ?? object.profile?.fields.brand?.value ?? ''), [reference, setReference] = useState(object.manual?.reference ?? object.profile?.fields.reference?.value ?? object.profile?.fields.model?.value ?? '');
   const [productUrl, setProductUrl] = useState(''), [url, setUrl] = useState(object.manual?.url ?? ''), [kind, setKind] = useState<'manual' | 'support'>(object.manual?.kind ?? 'manual');
   const [candidate, setCandidate] = useState<Candidate | null>(null), [message, setMessage] = useState(''), [error, setError] = useState('');
   const [busy, setBusy] = useState(false), [uncertain, setUncertain] = useState(false);

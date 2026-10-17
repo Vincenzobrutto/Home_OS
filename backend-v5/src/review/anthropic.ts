@@ -4,17 +4,23 @@ import { ProviderFailure } from './provider';
 import { OUTPUT_SCHEMA } from './ai-evidence';
 import { TextDocument } from './pdf-text';
 export type ProviderResponse = { id: string; model: string; stop_reason: string; content: Array<{ type: string; text?: string }>; usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number } };
-export type MessageBlock = { type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg' | 'image/png'; data: string } };
+export type MessageBlock = { type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg' | 'image/png'; data: string } } | { type: 'document'; source: { type: 'base64'; media_type: 'application/pdf'; data: string } };
 export type PreparedRequest = { model: string; max_tokens: number; system: string; messages: Array<{ role: string; content: string | MessageBlock[] }>; output_config: { format: { type: string; schema: Record<string, unknown> } } };
 @Injectable()
 export class AnthropicTransport {
   fetchImpl: typeof fetch = fetch;
   constructor(private readonly config: AiConfig) {}
+  protected onHttpFailure(_diagnostic: { status: number; endpoint: string; requestId: string | null }): void { void _diagnostic; }
   private async call(path: string, method: 'GET' | 'POST', body: unknown, signal: AbortSignal): Promise<unknown> {
     let response: Response;
     try { response = await this.fetchImpl('https://api.anthropic.com/v1/' + path, { method, headers: this.config.headers(), ...(body ? { body: JSON.stringify(body) } : {}), signal }); }
     catch { throw new ProviderFailure(signal.aborted ? 'analysis_timeout' : 'provider_unavailable'); }
-    if (!response.ok) throw new ProviderFailure(response.status === 401 || response.status === 403 ? 'provider_auth_failed' : response.status === 429 ? 'provider_rate_limited' : response.status === 404 && method === 'GET' ? 'ai_model_unavailable' : 'provider_unavailable');
+    if (!response.ok) {
+      const rawRequestId = response.headers.get('request-id');
+      // Never read/log the provider error body: it can echo document text or prompts.
+      this.onHttpFailure({ status: response.status, endpoint: path === 'messages' ? 'messages' : path === 'messages/count_tokens' ? 'count_tokens' : 'models', requestId: rawRequestId && /^req_[A-Za-z0-9_-]{1,190}$/.test(rawRequestId) ? rawRequestId : null });
+      throw new ProviderFailure(response.status === 401 || response.status === 403 ? 'provider_auth_failed' : response.status === 429 ? 'provider_rate_limited' : response.status === 404 && method === 'GET' ? 'ai_model_unavailable' : 'provider_unavailable');
+    }
     try { const encoded = await response.text(); if (encoded.length > 2 * 1024 * 1024) throw new Error(); return JSON.parse(encoded); }
     catch { throw new ProviderFailure('analysis_invalid_output'); }
   }

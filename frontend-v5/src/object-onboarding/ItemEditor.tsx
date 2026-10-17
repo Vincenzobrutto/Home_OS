@@ -1,0 +1,71 @@
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import type { ApiClient } from '../api/client';
+import { userMessage } from '../api/errors';
+import { Banner, ui } from '../components/ui';
+import { editProfileField, labels, originLabel, type Candidate, type CandidatePage, type Draft, type ExpenseCandidate, type FieldKey, type Form, type Item } from './model';
+import styles from './onboarding.module.css';
+
+type Props={api:ApiClient;accountId:string;base:string;draft:Draft;item:Item;form:Form;disabled:boolean;change:(value:Form)=>void;enrich:(body:{brand:string;reference:string;productUrl?:string})=>Promise<void>};
+export function ItemEditor({api,accountId,base,draft,item,form,disabled,change,enrich}:Props){
+ const [search,setSearch]=useState(''),[q,setQ]=useState(''),[extra,setExtra]=useState<Candidate[]>([]),[cursor,setCursor]=useState<string|null>(null),[moreError,setMoreError]=useState('');
+ const [productUrl,setProductUrl]=useState(''),[allFields,setAllFields]=useState(false);
+ const root=base+'/drafts/'+encodeURIComponent(draft.id);
+ const candidates=useQuery({queryKey:['account',accountId,'onboarding',draft.id,'candidates',item.id,q,draft.version],queryFn:({signal})=>api.callJson<CandidatePage>(root+'/candidates?itemId='+encodeURIComponent(item.id)+(q?'&q='+encodeURIComponent(q):''),{accountId,signal}),retry:false,gcTime:0});
+ const expense=useQuery({queryKey:['account',accountId,'onboarding',draft.id,'expenses',draft.version],queryFn:({signal})=>api.callJson<{items:ExpenseCandidate[];nextCursor:string|null}>(root+'/expense-candidates?limit=50',{accountId,signal}),enabled:form.expense==='link',retry:false,gcTime:0});
+ const patch=(value:Partial<Form>)=>change({...form,...value});
+ const quantity=item.quantity?.value??1;
+ const rows=[...(candidates.data?.items??[]),...extra.filter(x=>!candidates.data?.items.some(y=>x.id===y.id))];
+ const selected=form.targets[0];
+ const current=form.action==='link'?selected?.profile.fields??{}:{};
+ async function more(){setMoreError('');try{const result=await api.callJson<CandidatePage>(root+'/candidates?itemId='+encodeURIComponent(item.id)+(q?'&q='+encodeURIComponent(q):'')+'&cursor='+encodeURIComponent(cursor??candidates.data?.nextCursor??''),{accountId});setExtra(old=>[...old,...result.items]);setCursor(result.nextCursor??'');}catch(e){setMoreError(userMessage(e));}}
+ function select(target:Candidate,index:number){const targets=[...form.targets];targets[index]=target;const fields={...form.fields};if(index===0)for(const key of Object.keys(item.profile) as FieldKey[])if(target.profile.fields[key])fields[key]={action:'keep'};patch({targets,fields});}
+ const brand=form.fields.brand?.action==='manual'?form.fields.brand.value:item.profile.brand?.value;
+ const reference=form.fields.reference?.action==='manual'?form.fields.reference.value:item.profile.reference?.value??item.profile.model?.value;
+ return <div className={styles.stack}>
+  <p>{quantity>1?quantity+' esemplari indicati nel documento':'Un articolo'}{item.nameTruncated?' · Nome parziale: verifica la descrizione completa':''}</p>
+  {item.disposition!=='household_object'&&<Banner tone="warning"><p>Potrebbe essere un accessorio o un materiale di consumo. Scegli se vuoi censirlo come oggetto di casa.</p></Banner>}
+  <fieldset disabled={disabled} className={styles.stack}><legend>Cosa vuoi fare?</legend>
+   <label className={styles.check}><input type="radio" checked={form.action==='create'} onChange={()=>patch({action:'create',targets:[]})}/>Crea una nuova scheda</label>
+   <label className={styles.check}><input type="radio" checked={form.action==='link'} onChange={()=>patch({action:'link'})}/>Collega a un oggetto già in casa</label>
+   <details><summary>Controlla le schede esistenti</summary><div className={styles.stack}>
+    <div className={styles.row}><label className={styles.field}>Cerca un oggetto<input className={ui.input} value={search} onChange={e=>setSearch(e.target.value)} maxLength={80}/></label><button type="button" className={ui.btn} onClick={()=>{setQ(search);setExtra([]);setCursor(null);}}>Cerca</button></div>
+    {candidates.isPending?<p>Caricamento schede…</p>:candidates.isError?<Banner tone="error"><p>{userMessage(candidates.error)}</p><button type="button" onClick={()=>void candidates.refetch()}>Riprova</button></Banner>:rows.length?<ul>{rows.map(t=><li key={t.id}>{t.name} {t.rooms.join(', ')} · {t.reason==='confirmed_item'?'Articolo già censito':t.reason==='manual_selection'?'Scelta manuale':'Corrispondenza da verificare'}</li>)}</ul>:<p>Nessuna scheda in questa ricerca.</p>}
+    {(cursor!==''&&(cursor||candidates.data?.nextCursor))&&<button type="button" className={ui.btn} onClick={()=>void more()}>Altre schede</button>}{moreError&&<p role="alert">{moreError}</p>}
+   </div></details>
+   {form.action==='create'?<>
+    <label className={styles.field}>Nome dell’oggetto<input className={ui.input} value={form.name} maxLength={120} onChange={e=>patch({name:e.target.value})} required/></label>
+    <label className={styles.field}>Tipo<select className={ui.input} value={form.type} onChange={e=>patch({type:e.target.value})}><option value="appliance">Elettrodomestico</option><option value="heating">Riscaldamento</option><option value="cooling">Climatizzazione</option><option value="electrical">Elettrico</option><option value="plumbing">Idraulica</option><option value="security">Sicurezza</option><option value="fixture">Dotazione fissa</option><option value="other">Altro oggetto</option></select></label>
+    {quantity>1&&Array.from({length:quantity},(_,index)=><label className={styles.field} key={index}>Nome esemplare {index+1}<input className={ui.input} maxLength={120} value={form.unitNames[index]??''} placeholder={form.name+' ('+(index+1)+'/'+quantity+')'} onChange={e=>{const names=Array.from({length:quantity},(_,i)=>form.unitNames[i]||form.name+' ('+(i+1)+'/'+quantity+')');names[index]=e.target.value;patch({unitNames:names});}}/></label>)}
+    {item.disposition!=='household_object'&&<label className={styles.check}><input type="checkbox" checked={form.confirmHouseholdObject} onChange={e=>patch({confirmHouseholdObject:e.target.checked})}/>Voglio creare una scheda per questo articolo</label>}
+    <label className={styles.check}><input type="checkbox" checked={form.acknowledgeExistingSource} onChange={e=>patch({acknowledgeExistingSource:e.target.checked})}/>Ho controllato le schede già presenti: questo è un nuovo articolo, anche se la fonte è già collegata ad altri oggetti.</label>
+   </>:<>
+    {Array.from({length:quantity},(_,index)=><label className={styles.field} key={index}>{quantity>1?'Scheda per esemplare '+(index+1):'Scheda da collegare'}<select className={ui.input} value={form.targets[index]?.id??''} onChange={e=>{const target=rows.find(t=>t.id===e.target.value)??form.targets.find(t=>t.id===e.target.value);if(target)select(target,index);}}><option value="">Scegli tu: nessuna associazione automatica</option>{[...rows,...form.targets.filter(t=>!rows.some(r=>r.id===t.id))].map(t=><option key={t.id} value={t.id}>{t.name}{t.rooms.length?' — '+t.rooms.join(', '):''}</option>)}</select></label>)}
+    {quantity>1&&<p className={styles.source}>I dati confermati di ogni esemplare sono protetti: per differenze tra schede, completa un articolo alla volta dalla scheda.</p>}
+   </>}
+   <h3>Dati da aggiungere alla scheda</h3><p className={styles.source}>Correggi le proposte prima di confermare. I valori già confermati non vengono sovrascritti.</p>
+   <div className={styles.values}>{(Object.keys(labels) as FieldKey[]).filter(key=>allFields||item.profile[key]||current[key]||form.fields[key]?.action==='manual'||['brand','model','reference'].includes(key)).map(key=>{const proposal=item.profile[key],old=current[key],decision=form.fields[key],different=old&&proposal&&old.value!==proposal.value;return <div className={styles.card} key={key}>
+    <strong>{labels[key]}</strong>{old&&<p><strong>Attuale confermato: {old.value}</strong></p>}
+    {proposal&&<><p>Proposta: {proposal.value}</p><p className={styles.source}>{originLabel(proposal.origin)}</p>{proposal.sources.map((source,i)=><p className={styles.source} key={i}>Pagina {source.page}: «{source.excerpt}»{source.basis==='provider_observed_image'?' · Lettura visiva da verificare':''}</p>)}{proposal.externalSource&&<a href={proposal.externalSource.url} target="_blank" rel="noopener noreferrer">Fonte ufficiale</a>}</>}
+    <label className={styles.field}>Scelta per {labels[key]}<select className={ui.input} value={decision?.action??(old?'keep':'skip')} onChange={e=>change(editProfileField(form,key,{action:e.target.value as NonNullable<Form['fields'][FieldKey]>['action'],...(e.target.value==='manual'?{value:proposal?.value??''}:{})},item.profile,current))}>
+     {old?<><option value="keep">Mantieni l’attuale</option>{different&&<option value="defer">Decidi più avanti sulla differenza</option>}</>:<>{proposal&&<option value="accept">Usa la proposta</option>}<option value="manual">Inserisci o correggi tu</option><option value="skip">Lascia vuoto</option></>}
+    </select></label>
+    {decision?.action==='manual'&&!old&&<label className={styles.field}>Valore per {labels[key]}<input className={ui.input} type={key.endsWith('Date')||key.startsWith('warranty')?'date':'text'} value={decision.value??''} maxLength={key==='brand'||key==='serialNumber'?80:120} onInput={e=>{if(key.endsWith('Date')||key.startsWith('warranty'))change(editProfileField(form,key,{action:'manual',value:e.currentTarget.value},item.profile,current));}} onChange={e=>change(editProfileField(form,key,{action:'manual',value:e.target.value},item.profile,current))}/></label>}
+   </div>;})}</div>
+   <button type="button" className={ui.btn} onClick={()=>setAllFields(old=>!old)}>{allFields?'Mostra solo i dati principali':'Aggiungi altri dati, seriale o garanzia'}</button>
+   {(item.profile.warrantyStart||item.profile.warrantyEnd)&&<p className={styles.source}>Garanzia proposta per acquisto nuovo come consumatore: controlla decorrenza, condizioni ed eventuali estensioni. Una data di consegna prevista non prova la consegna effettiva.</p>}
+   <details><summary>Completa dal sito del produttore e cerca il manuale</summary><div className={styles.stack}>
+    <p>La ricerca automatica verifica il riferimento esatto sulle pagine Moulinex supportate. Per altri produttori puoi aggiungere il link dalla scheda dell’oggetto.</p>
+    <label className={styles.field}>Pagina prodotto ufficiale (se necessaria)<input className={ui.input} value={productUrl} onChange={e=>setProductUrl(e.target.value)} placeholder="https://www.moulinex.it/p/…"/></label>
+    <button type="button" className={ui.btn} disabled={!brand||!reference} onClick={()=>brand&&reference&&void enrich({brand,reference,...(productUrl?{productUrl}:{})})}>Cerca dati e manuale ufficiali</button>
+    {item.enrichment?.name&&<p>Nome sul sito ufficiale: {item.enrichment.name} <button type="button" className={ui.btn} onClick={()=>patch({name:item.enrichment!.name!})}>Usa questo nome</button></p>}
+    {item.enrichment?.profile&&Object.entries(item.enrichment.profile).map(([key,field])=><p className={styles.source} key={key}>Dal sito ufficiale — {labels[key as FieldKey]}: {field.value}. {field.externalSource&&<a href={field.externalSource.url} target="_blank" rel="noopener noreferrer">Verifica la fonte</a>}</p>)}
+    {item.enrichment?.candidate?<label className={styles.check}><input type="checkbox" checked={form.manual} onChange={e=>patch({manual:e.target.checked})}/>Collega il manuale ufficiale a questo riferimento <a href={item.enrichment.candidate.manual.url} target="_blank" rel="noopener noreferrer">Apri per verificare</a></label>:item.enrichment&&<p>Nessun manuale univoco trovato. Potrai aggiungere un link dalla scheda.</p>}
+   </div></details>
+   {draft.documentKind==='purchase_document'&&draft.items.length===1&&quantity===1?<details><summary>Spesa di acquisto (facoltativa)</summary><div className={styles.stack}><p>Il documento resta uno solo. Controlla se la spesa è già registrata prima di crearne una.</p><label className={styles.field}>Cosa fare con il costo<select className={ui.input} value={form.expense} onChange={e=>patch({expense:e.target.value as Form['expense']})}><option value="skip">Non creare una spesa</option><option value="link">Mantieni una spesa già registrata e collegala</option><option value="create">Registra una nuova spesa</option></select></label>
+    {form.expense==='link'&&<>{expense.isError?<p role="alert">{userMessage(expense.error)}</p>:<label className={styles.field}>Spesa esistente<select className={ui.input} value={form.expenseId} onChange={e=>{const row=expense.data?.items.find(x=>x.id===e.target.value);if(row)patch({expenseId:row.id,expenseVersion:row.version});}}><option value="">Scegli una spesa</option>{expense.data?.items.map(x=><option key={x.id} value={x.id}>{x.title} · {(x.amountCents/100).toFixed(2)} € · {x.spentOn}{x.rank?' · stessa fonte':''}</option>)}</select></label>}{expense.data?.nextCursor&&<p>Usa Spese per cercare tra gli altri risultati e collegare il costo dalla scheda.</p>}</>}
+    {form.expense==='create'&&<div className={styles.values}><label className={styles.field}>Importo (€)<input className={ui.input} inputMode="decimal" value={form.amount} onChange={e=>patch({amount:e.target.value})}/></label><label className={styles.field}>Data della spesa<input className={ui.input} type="date" value={form.spentOn} onInput={e=>patch({spentOn:e.currentTarget.value})} onChange={e=>patch({spentOn:e.target.value})}/></label><label className={styles.field}>Venditore<input className={ui.input} maxLength={120} value={form.supplier} onChange={e=>patch({supplier:e.target.value})}/></label></div>}
+   </div></details>:<p className={styles.source}>{draft.mode==='manual'?'Dopo aver controllato prezzo e acquisto, puoi aggiungere un costo dalla scheda o da Spese.':'Qui non creiamo costi: una consegna o un’etichetta non prova il prezzo. I totali di più articoli si controllano separatamente in Spese.'}</p>}
+  </fieldset>
+ </div>;
+}

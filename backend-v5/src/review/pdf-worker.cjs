@@ -6,7 +6,7 @@ process.stdin.on('data', chunk => { body += chunk; if (body.length > 15 * 1024 *
 process.stdin.on('end', async () => {
   let loading;
   try {
-    const { bytes } = JSON.parse(body);
+    const { bytes, metadataOnly } = JSON.parse(body);
     console.warn = () => {}; console.log = () => {};
     const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs');
     loading = getDocument({ data: Uint8Array.from(Buffer.from(bytes, 'base64')), verbosity: 0, isEvalSupported: false, disableFontFace: true, useWorkerFetch: false, stopAtErrors: true });
@@ -14,6 +14,7 @@ process.stdin.on('end', async () => {
     const metadata = await doc.getMetadata();
     if (metadata.info?.EncryptFilterName) { emit({ error: 'pdf_encrypted' }); return; }
     if (doc.numPages > 20) { emit({ error: 'analysis_limits_exceeded' }); return; }
+    if (metadataOnly === true) { emit({ pageCount: doc.numPages }); return; }
     const pages = []; let length = 0;
     for (let page = 1; page <= doc.numPages; page++) {
       const item = await doc.getPage(page);

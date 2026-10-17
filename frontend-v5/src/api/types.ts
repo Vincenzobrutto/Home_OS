@@ -449,6 +449,7 @@ export type ObjectKind = 'object' | 'boiler';
 export type ObjectRef = { kind: ObjectKind; id: string };
 
 export type CatalogItem = {
+  profile?: { fields: import('../object-onboarding/model').Profile; unavailable: boolean } | null;
   manual?: ObjectManual | null;
   ref: ObjectRef;
   name: string;

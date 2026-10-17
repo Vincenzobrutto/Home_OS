@@ -18,6 +18,8 @@ const KIND_LABEL: Record<string, string> = {
   unlinked: 'Collegamento rimosso',
   link_removed: 'Collegamento rimosso',
   manual_updated: 'Manuale collegato o aggiornato',
+  profile_updated: 'Dati e garanzia aggiornati',
+  onboarding_confirmed: 'Dati e documento confermati',
   manual_removed: 'Collegamento al manuale rimosso',
 };
 

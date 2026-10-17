@@ -3,7 +3,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
 const { productExtraction, productCandidates, productChoices, productConfirmation } = require('../dist/object-onboarding/domain');
-const { ObjectOnboardingAnthropicProvider } = require('../dist/object-onboarding/anthropic-provider');
+const { ObjectOnboardingAnthropicProvider, OBJECT_ONBOARDING_SCHEMA, onboardingWireOutput } = require('../dist/object-onboarding/anthropic-provider');
 const { AnthropicTransport } = require('../dist/review/anthropic');
 const { PdfTextExtractor } = require('../dist/review/pdf-text');
 const { receiptFixturePdf } = require('../dist/receipt-assistance/fixture-provider');
@@ -22,7 +22,7 @@ test('delivery without price proposes an object, never a cost or delivered statu
   assert.equal(result.items.length, 1);
   assert.equal(result.items[0].fields.name.value, label);
   assert.equal(result.items[0].fields.name.source.basis, 'verified_text');
-  assert.deepEqual(Object.keys(result).sort(), ['documentKind', 'items', 'needsReview']);
+  assert.deepEqual(Object.keys(result).sort(), ['documentKind', 'items', 'needsReview', 'purchaseTotal']);
   const plan = productChoices([{ itemId: result.items[0].id, action: 'create', name: label, units: 1 }], result);
   assert.equal(plan.newObjects, 1); assert.equal(plan.expenses, 0);
 });
@@ -170,9 +170,41 @@ test('PDF path really extracts text but transmits neither PDF bytes nor local id
 test('decoder preserves visual origin, rejects malformed output and invalid usage', () => {
   const provider = new ObjectOnboardingAnthropicProvider(new PdfTextExtractor(), {});
   const prepared = { request: { model, max_tokens: 4096 }, context: imageContext };
-  const response = { id: 'msg_offline', model, stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(raw(true)) }], usage: { input_tokens: 1000, output_tokens: 100 } };
+  const response = { id: 'msg_offline', model, stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(wire(raw(true))) }], usage: { input_tokens: 1000, output_tokens: 100 } };
   assert.equal(provider.decode(response, prepared).output.items.length, 1);
   fails(() => provider.decode({ ...response, stop_reason: 'max_tokens' }, prepared), 'analysis_invalid_output');
   fails(() => provider.decode({ ...response, usage: { input_tokens: 1000, output_tokens: -1 } }, prepared), 'analysis_invalid_output');
   fails(() => provider.decode({ ...response, content: [{ type: 'text', text: '{}' }] }, prepared), 'analysis_invalid_output');
+});
+
+test('scan-only PDF becomes a native visual PDF request after page bounds, not a text fallback',async()=>{
+ const bytes=receiptFixturePdf('unreadable'),source={snapshot:{...snapshot,documentSha256:digest(bytes)},bytes,mimeType:'application/pdf'};
+ let authorized=0,content;
+ const transport={prepareStructured:async(model,_system,messages,_schema,_signal,check)=>{await check();content=messages[0].content;return {model,messages,max_tokens:4096};}};
+ const provider=new ObjectOnboardingAnthropicProvider(new PdfTextExtractor(),transport);
+ const prepared=await provider.prepare(source,'offline-model',new AbortController().signal,async()=>{authorized++;});
+ assert.equal(prepared.context.kind,'visual_pdf');assert.equal(prepared.context.pageCount,1);assert.equal(content[0].type,'document');assert.equal(content[0].source.media_type,'application/pdf');assert.equal(content[0].source.data,bytes.toString('base64'));assert.equal(authorized,2);
+});
+
+function wire(data) { return { ...data, items: data.items.map(item => ({ ...item, fields: Object.entries(item.fields).map(([field, value]) => ({ field, ...value })) })) }; }
+test('wire schema avoids unsupported constraints and stays below union complexity limit', () => {
+ let unions=0;
+ function visit(value) { if (!value || typeof value !== 'object') return; for (const [key, child] of Object.entries(value)) { assert(!['minimum','maximum','minLength','maxLength','minItems','maxItems','multipleOf'].includes(key),key); if(key==='anyOf') unions++; visit(child); } }
+ visit(OBJECT_ONBOARDING_SCHEMA); assert(unions<=16); assert.equal(OBJECT_ONBOARDING_SCHEMA.properties.items.items.properties.fields.type,'array');
+});
+test('compact wire fields normalize without weakening evidence or duplicate checks', () => {
+ const data=wire(raw(true)); assert.equal(productExtraction(onboardingWireOutput(data),imageContext).items.length,1);
+ data.items[0].fields.push(data.items[0].fields[0]); fails(()=>onboardingWireOutput(data),'analysis_invalid_output');
+ const invented=wire(raw()); invented.items[0].fields[0].value='Invented'; fails(()=>productExtraction(onboardingWireOutput(invented),textContext),'evidence_unverified');
+ const unknown=wire(raw()); unknown.items[0].fields[0].field='address'; fails(()=>onboardingWireOutput(unknown),'analysis_invalid_output');
+});
+
+test('HTTP diagnostics keep only status, fixed endpoint and a validated request-id, never provider body', async()=>{
+ class Observed extends AnthropicTransport { diagnostics=[]; onHttpFailure(value){this.diagnostics.push(value);} }
+ const transport=new Observed({headers:()=>({})}); let reads=0;
+ transport.fetchImpl=async()=>({ok:false,status:400,headers:new Headers({'request-id':'req_offline_123'}),text:async()=>{reads++;return 'PRIVATE DOCUMENT CONTENT';}});
+ await assert.rejects(transport.send({},new AbortController().signal),error=>error.code==='provider_unavailable');
+ assert.deepEqual(transport.diagnostics,[{status:400,endpoint:'messages',requestId:'req_offline_123'}]); assert.equal(reads,0);
+ transport.fetchImpl=async()=>({ok:false,status:400,headers:new Headers({'request-id':'personal@example.com'}),text:async()=>{reads++;return 'SECRET';}});
+ await assert.rejects(transport.send({},new AbortController().signal)); assert.equal(transport.diagnostics[1].requestId,null); assert.equal(reads,0);
 });

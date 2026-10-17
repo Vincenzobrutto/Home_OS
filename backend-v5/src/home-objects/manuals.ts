@@ -7,6 +7,7 @@ export type ObjectManual = {
   origin: 'manufacturer_page' | 'user_provided'; sourceUrl: string | null;
   checkedAt: string | null; boundVersion: number;
 };
+export type ManualLookupResult = { candidate: { manual: Omit<ObjectManual, 'boundVersion'>; token: string } | null; reason: string | null; product?: { name: string | null; reference: string; brand: string; sourceUrl: string; checkedAt: string; capacityLitres: string | null } };
 export function externalManualUrl(value: unknown): string {
   const raw = text(value, 2000);
   let url: URL;
@@ -53,7 +54,7 @@ export class ManufacturerManuals {
     return url.href;
   }
 
-  async lookup(input: ReturnType<typeof manualLookup>, binding: string) {
+  async lookup(input: ReturnType<typeof manualLookup>, binding: string): Promise<ManualLookupResult> {
     const productUrl = this.productPage(input);
     if (!productUrl) return { candidate: null, reason: 'product_page_needed' };
     const signal = AbortSignal.timeout(10000);
@@ -81,6 +82,10 @@ export class ManufacturerManuals {
       } catch { /* A page may contain unrelated malformed structured data. */ }
     }
     if (products.length !== 1 || typeof products[0].mpn !== 'string' || norm(products[0].mpn) !== norm(input.reference)) return { candidate: null, reason: 'reference_not_matched' };
+    const description = typeof products[0].description === 'string' ? products[0].description.replace(/<[^>]*>/gu, ' ') : '';
+    const capacities = new Set([...description.matchAll(/capacit[aàéy][^.!?]{0,80}?(\d+(?:[.,]\d+)?)\s*L\b/giu)].map(match => match[1]));
+    const checkedAt = new Date(this.now()).toISOString();
+    const product = { name: typeof products[0].name === 'string' ? [...products[0].name].slice(0, 120).join('') : null, reference: input.reference, brand: input.brand, sourceUrl: productUrl, checkedAt, capacityLitres: capacities.size === 1 ? [...capacities][0] : null };
     const urls = new Set<string>();
     for (const match of html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/giu)) {
       const label = decodeHtml(match[2].replace(/<[^>]*>/gu, ' ')).replace(/\s+/gu, ' ').trim();
@@ -90,11 +95,11 @@ export class ManufacturerManuals {
         if (url.protocol === 'https:' && url.hostname === 'dam.groupeseb.com' && /^\/m\/[^/]+\/original\/[^/]+\.pdf$/iu.test(url.pathname) && !url.username && !url.password && !url.port) urls.add(url.href);
       } catch { /* Unusable links are never returned as manuals. */ }
     }
-    if (urls.size !== 1) return { candidate: null, reason: urls.size ? 'ambiguous_manuals' : 'manual_not_found' };
+    if (urls.size !== 1) return { candidate: null, reason: urls.size ? 'ambiguous_manuals' : 'manual_not_found', product };
     const manual: Omit<ObjectManual, 'boundVersion'> = { url: [...urls][0], kind: 'manual', brand: input.brand, reference: input.reference, origin: 'manufacturer_page', sourceUrl: productUrl, checkedAt: new Date(this.now()).toISOString() };
     const payload = Buffer.from(JSON.stringify({ binding, expires: this.now() + 15 * 60000, manual })).toString('base64url');
     const token = payload + '.' + createHmac('sha256', this.signingKey).update(payload).digest('base64url');
-    return { candidate: { manual, token }, reason: null };
+    return { candidate: { manual, token }, reason: null, product };
   }
 
   accept(token: string, binding: string): Omit<ObjectManual, 'boundVersion'> {

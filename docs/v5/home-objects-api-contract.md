@@ -83,3 +83,8 @@ G1a: Room + Object manuale + posizione + boiler nel catalogo + storia, dominio/s
 # Aggiornamento additivo17ottobre2026: manuali online
 
 Il DTO CatalogItem può includere `manual` nullable (URL, kind manual/support, brand/reference, origin, sourceUrl/checkedAt, boundVersion/needsReview). Solo HomeObject generico personale, originale e privacy invariati. POST `/homes/:homeId/objects/object/:id/manual-proposals` ricerca senza salvare; POST stesso prefisso `/manual` salva/rimuove con expectedVersion, selection e Idempotency-Key. Contratto completo, copertura produttori e prove in [object-manuals-20261017.md](object-manuals-20261017.md). L'onboarding da foto resta un incremento separato, non attivato da questi endpoint.
+
+
+## 17 ottobre 2026 — profilo oggetto e onboarding additivi
+
+Catalogo/dettaglio HomeObject includono `profile` con versione, campi tipizzati/origini e segnale di fonti indisponibili. Una fonte revocata non espone il suo valore. POST `/homes/:homeId/objects/object/:id/profile` modifica i campi dichiarati dall’utente con expectedVersion e Idempotency-Key, senza cambiare posizione o visibilità. Brand/model legacy restano compatibili. Date future acquisto/consegna rifiutate; default garanzia solo proposta modificabile. Confronti rinviati e flusso dal documento: vedere `object-onboarding-api-contract-v2.md`. Manuale resta link esterno con propria conferma.

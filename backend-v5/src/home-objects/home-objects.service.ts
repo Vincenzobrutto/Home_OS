@@ -8,10 +8,13 @@ import { readableReceiptName, readableReceiptObjectIds } from '../receipt-assist
 import { conflict, invalid, object, uuid, version } from '../review/domain';
 import { createHomeObject, objectAction, objectLimits, objectsQuery, objectTypes, positionBody, roomTypes, subjectKind, updateHomeObject, type SubjectKind } from './domain';
 import { ManufacturerManuals, manualLookup, manualSelection, type ObjectManual } from './manuals';
+import { objectProfileView } from '../object-onboarding/access';
+import { profileFields, profileValue, type ProfileKey, type ObjectProfile } from '../object-onboarding/profile';
+import { temporal } from '../activities/domain';
 
 type Tx = Prisma.TransactionClient;
 type Context = { a: string; h: string; edit: boolean };
-type Subject = { id: string; homeId: string; accountId: string; name: string; type: string; note: string | null; manual?: Prisma.JsonValue | null; state: string; version: number; createdAt: Date; updatedAt: Date };
+type Subject = { id: string; homeId: string; accountId: string; name: string; type: string; note: string | null; manual?: Prisma.JsonValue | null; profile?: Prisma.JsonValue | null; state: string; version: number; createdAt: Date; updatedAt: Date };
 type Saved = { kind: 'room'; row: HomeRoom } | { kind: SubjectKind; row: Subject; position: ObjectPosition | null } | { kind: 'link'; row: ObjectResourceLink; subjectKind: SubjectKind; subjectId: string };
 type Cursor = { b: string; t: string; id: string; k?: string };
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
@@ -67,8 +70,10 @@ export class HomeObjectsService {
     const pos = position === undefined ? await this.position(tx, c, kind, row.id) : position;
     const rooms = pos ? await tx.homeRoom.findMany({ where: { homeId: c.h, id: { in: pos.roomIds as string[] } }, orderBy: { id: 'asc' } }) : [];
     const manual = kind === 'object' ? (row as HomeObject).manual as ObjectManual | null : null;
+    const profile = kind === 'object' ? await objectProfileView(tx, c.a, c.h, row.id, row.profile) : null;
     return { ref: { kind, id: row.id }, homeId: row.homeId, name: row.name, type: row.type, note: row.note, state: row.state,
       manual: manual ? { ...manual, needsReview: manual.boundVersion !== row.version } : null,
+      profile,
       version: row.version, createdAt: new Date(row.createdAt).toISOString(), updatedAt: new Date(row.updatedAt).toISOString(),
       kindLabel: kind === 'boiler' ? 'Scheda caldaia personale' : 'Oggetto personale', permissions: c.edit ? ['read', 'edit'] : ['read'],
       position: { version: pos?.version ?? 0, rooms: rooms.map(r => this.roomView(r, c)) }, technicalLink: kind === 'boiler' ? { assetId: row.id } : null };
@@ -194,6 +199,32 @@ export class HomeObjectsService {
       await tx.homeObject.update({ where: { id }, data: { manual: manual ? json(manual) : Prisma.DbNull, version: { increment: 1 }, updatedAt: new Date() } });
       const after = await this.saveSubject(tx, c, 'object', id);
       await this.event(tx, c, 'object', id, manual ? 'manual_updated' : 'manual_removed', before, after); return after;
+    });
+  }
+  async setProfile(a: string, h: string, id: string, input: unknown, key?: string) {
+    uuid(id); const r = object(input, ['expectedVersion', 'values']), expectedVersion = version(r.expectedVersion);
+    const values = object(r.values, [...profileFields]);
+    if (!Object.keys(values).length) throw invalid();
+    const normalized = Object.fromEntries(Object.entries(values).map(([k, v]) => [k, v === null ? null : profileValue(k as ProfileKey, v)]));
+    const today = temporal(new Date()).today;
+    for (const field of ['purchaseDate', 'deliveredDate']) if (normalized[field] && normalized[field]! > today) throw invalid('La data effettiva non può essere futura.');
+    return this.mutate(a, h, 'object:profile', id, { expectedVersion, values: normalized }, key, async (tx, c) => {
+      const before = await this.saveSubject(tx, c, 'object', id); if (before.kind !== 'object') throw deny();
+      this.active(before.row.state); this.checkVersion(before.row.version, expectedVersion, 'object');
+      const current = await objectProfileView(tx, a, h, id, before.row.profile); if (current.unavailable) throw deny();
+      const fields: ObjectProfile = { ...current.fields };
+      for (const [k, value] of Object.entries(normalized)) {
+        const field = k as ProfileKey;
+        if (value === null) delete fields[field]; else fields[field] = { value, origin: 'user_declared', sources: [] };
+        if (field === 'brand' || field === 'model') {
+          if (value === null) await tx.receiptObjectField.deleteMany({ where: { objectId: id, accountId: a, homeId: h, fieldKey: field } });
+          else await tx.receiptObjectField.upsert({ where: { objectId_fieldKey: { objectId: id, fieldKey: field } }, create: { objectId: id, accountId: a, homeId: h, fieldKey: field, value, origin: 'user_declared', sources: [] }, update: { value, origin: 'user_declared', sources: [], documentId: null, documentVersion: null, documentSha256: null, version: { increment: 1 } } });
+        }
+      }
+      if (fields.warrantyStart && fields.warrantyEnd && fields.warrantyEnd.value < fields.warrantyStart.value) throw invalid('La scadenza non può precedere l’inizio garanzia.');
+      await tx.homeObject.update({ where: { id }, data: { profile: json(fields), version: { increment: 1 } } });
+      await tx.objectOnboardingComparison.updateMany({ where: { accountId: a, homeId: h, objectId: id, fieldKey: { in: Object.keys(normalized) }, state: 'open' }, data: { state: 'resolved', version: { increment: 1 } } });
+      const after = await this.saveSubject(tx, c, 'object', id); await this.event(tx, c, 'object', id, 'profile_updated', before, after); return after;
     });
   }
   private async checkRooms(tx: Tx, c: Context, ids: string[], existing: string[] = []) {

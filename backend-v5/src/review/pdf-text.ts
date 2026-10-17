@@ -8,6 +8,25 @@ export type InputDocument = { snapshot: Snapshot; bytes: Buffer };
 export type TextDocument = { snapshot: Snapshot; pages: string[] };
 @Injectable()
 export class PdfTextExtractor {
+  async pageCount(input: InputDocument): Promise<number> {
+    if (input.bytes.length > ANALYSIS_LIMITS.maxFileBytes || digest(input.bytes) !== input.snapshot.documentSha256) throw new ProviderFailure('analysis_limits_exceeded');
+    return new Promise((resolveResult, reject) => {
+      const child = execFile(process.execPath, ['--max-old-space-size=256', resolve(__dirname, '../../src/review/pdf-worker.cjs')], {
+        timeout: 10000, maxBuffer: 1024 * 1024, windowsHide: true,
+        env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, TEMP: process.env.TEMP, TMP: process.env.TMP },
+      }, (error, stdout) => {
+        if (error) { reject(new ProviderFailure('pdf_invalid')); return; }
+        try {
+          const data = JSON.parse(stdout);
+          if (data.error) throw new ProviderFailure(data.error);
+          if (!Number.isSafeInteger(data.pageCount) || data.pageCount < 1 || data.pageCount > 20) throw new ProviderFailure('pdf_invalid');
+          resolveResult(data.pageCount);
+        } catch (failure) { reject(failure instanceof ProviderFailure ? failure : new ProviderFailure('pdf_invalid')); }
+      });
+      child.stdin?.on('error', () => reject(new ProviderFailure('pdf_invalid')));
+      child.stdin?.end(JSON.stringify({ bytes: input.bytes.toString('base64'), metadataOnly: true }));
+    });
+  }
   async extract(inputs: InputDocument[]): Promise<TextDocument[]> {
     const documents: TextDocument[] = []; let pages = 0, characters = 0;
     for (const input of inputs) {

@@ -268,3 +268,19 @@ describe('DocumentCollectionFilters', () => {
     expect(screen.getByRole('button', { name: 'Energia · 2' })).toBeInTheDocument();
   });
 });
+
+
+describe('ingresso oggetti dal caricamento', () => {
+ it('foto senza testo: offre riconoscimento senza imporre una classificazione manuale', async () => {
+  const user=userEvent.setup(), onOpenReceiptFlow=vi.fn();
+  const photo={...corpus.scan(),filename:'Etichetta.jpg',mimeType:'image/jpeg'};
+  const s=withServer(batchOf([photo]),{onOpenReceiptFlow});
+  await user.click(screen.getByRole('button',{name:'Riconosci gli oggetti in Etichetta.jpg'}));
+  expect(onOpenReceiptFlow).toHaveBeenCalledWith(photo.id);
+  expect(s.props.onOrganize).not.toHaveBeenCalled();
+ });
+ it('APE non propone oggetti e non forza il percorso dedicato', () => {
+  withServer(batchOf([corpus.ape()]),{onOpenReceiptFlow:vi.fn()});
+  expect(screen.queryByRole('button',{name:/Riconosci gli oggetti/})).not.toBeInTheDocument();
+ });
+});

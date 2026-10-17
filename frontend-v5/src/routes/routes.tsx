@@ -9,6 +9,7 @@ import { lazyPage } from './lazyPage';
 const DocumentsPage = lazyPage(() => import('./DocumentsPages').then((m) => m.DocumentsPage));
 const IntakePage = lazyPage(() => import('../intake-integration/IntakePage').then(m => m.IntakePage));
 const DocumentDetailPage = lazyPage(() => import('./DocumentDetailPage').then((m) => m.DocumentDetailPage));
+const OnboardingPage = lazyPage(() => import('../object-onboarding/OnboardingPage').then(m => m.OnboardingPage));
 const ReceiptPage = lazyPage(() => import('../receipt-integration/ReceiptPage').then((m) => m.ReceiptPage));
 const ActivityPage = lazyPage(() => import('./ActivityPage').then((m) => m.ActivityPage));
 const ActivityDetailPage = lazyPage(() => import('./ActivityDetailPage').then((m) => m.ActivityDetailPage));
@@ -76,6 +77,7 @@ export const routes: RouteObject[] = [
               { path: 'documenti', element: <DocumentsPage /> },
               { path: 'documenti/organizza', element: <IntakePage /> },
               { path: 'documenti/:documentId', element: <DocumentDetailPage /> },
+              { path: 'documenti/:documentId/oggetti', element: <OnboardingPage /> },
               { path: 'documenti/:documentId/ricevuta', element: <ReceiptPage /> },
               { path: 'spese', element: <ExpensesPage /> },
               { path: 'spese/da-documento', element: <FromDocumentPage /> },

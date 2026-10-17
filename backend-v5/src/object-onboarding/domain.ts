@@ -2,27 +2,30 @@ import { citation, type Citation } from '../economy/document-domain';
 import { object, text, invalid, uuid, version } from '../review/domain';
 import { ProviderFailure, type Snapshot } from '../review/provider';
 import { digest } from '../security';
+import { printedCents, printedDates } from '../economy/document-evidence';
+import { calendar } from '../activities/domain';
 
 export const onboardingLimits = { maxItems: 20, maxUnits: 20, maxImageBytes: 5 * 1024 * 1024 } as const;
-export const productFields = ['name', 'brand', 'model'] as const;
+export const productFields = ['name', 'brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
 export type ProductField = typeof productFields[number];
 export type Region = { x: number; y: number; width: number; height: number };
 export type ProductSource = Citation & { basis: 'verified_text' | 'provider_observed_image'; region: Region | null };
 export type ProductValue = { value: string; source: ProductSource };
 export type ProductItem = {
   id: string; fingerprint: string;
-  fields: Partial<Record<ProductField, ProductValue>> & { name: ProductValue };
+  fields: Partial<Record<ProductField, ProductValue>>;
   quantity: { value: number; source: ProductSource } | null;
   nameTruncated: boolean;
   disposition: 'household_object' | 'consumable' | 'uncertain';
 };
 export type ProductExtraction = {
-  documentKind: 'delivery_notice' | 'order_confirmation' | 'purchase_document' | 'product_document' | 'unsupported';
+  documentKind: 'delivery_notice' | 'order_confirmation' | 'purchase_document' | 'product_document' | 'device_label' | 'unsupported';
   items: ProductItem[];
   needsReview: boolean;
+  purchaseTotal: { amountCents: number; source: ProductSource } | null;
 };
 export type ProductEvidenceContext = { snapshot: Snapshot } & (
-  { kind: 'text'; pages: string[] } | { kind: 'image' }
+  { kind: 'text'; pages: string[] } | { kind: 'image' } | { kind: 'visual_pdf'; pageCount: number }
 );
 const normalize = (value: string) => value.normalize('NFC').replace(/\s+/gu, ' ').trim();
 const equal = (a: string | null | undefined, b: string | null | undefined) => !!a && !!b && normalize(a).toLocaleLowerCase('it') === normalize(b).toLocaleLowerCase('it');
@@ -44,49 +47,66 @@ function evidence(input: unknown, context: ProductEvidenceContext): ProductSourc
     if (r.region !== null) throw invalid();
     return { ...citation(bound, context.pages, context.snapshot), basis: 'verified_text', region: null };
   }
-  if (r.page !== 1) throw invalid();
+  if (context.kind === 'image' ? r.page !== 1 : Number(r.page) > context.pageCount) throw invalid();
   return { ...bound, basis: 'provider_observed_image', region: region(r.region) };
 }
 
 /** Validates provider output, not truth of visual observations. No DB writes. */
 export function productExtraction(input: unknown, context: ProductEvidenceContext): ProductExtraction {
   try {
-    const row = object(input, ['documentKind', 'items', 'hasMoreItems']);
-    if (!['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'unsupported'].includes(String(row.documentKind)) || typeof row.hasMoreItems !== 'boolean' || !Array.isArray(row.items) || row.items.length > onboardingLimits.maxItems) throw invalid();
+    const row = object(input, ['documentKind', 'items', 'hasMoreItems', 'purchaseTotal', 'requiresHumanReview']);
+    if (!['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'device_label', 'unsupported'].includes(String(row.documentKind)) || typeof row.hasMoreItems !== 'boolean' || !Array.isArray(row.items) || row.items.length > onboardingLimits.maxItems) throw invalid();
     if (row.hasMoreItems) throw new ProviderFailure('object_onboarding_too_many_items');
     if (row.documentKind === 'unsupported' && row.items.length) throw invalid();
     const fingerprints = new Set<string>();
-    let needsReview = false;
+    if (row.requiresHumanReview !== undefined && typeof row.requiresHumanReview !== 'boolean') throw invalid();
+    let needsReview = row.requiresHumanReview === true;
     const items: ProductItem[] = [];
     for (const raw of row.items) {
       const r = object(raw, ['fields', 'quantity', 'nameTruncated', 'disposition', 'confidence']);
       if (typeof r.nameTruncated !== 'boolean' || !['household_object', 'consumable', 'uncertain'].includes(String(r.disposition)) || !['high', 'low'].includes(String(r.confidence))) throw invalid();
       const fields: Partial<Record<ProductField, ProductValue>> = {};
       for (const [key, rawField] of Object.entries(object(r.fields, [...productFields]))) {
+        if (rawField === null) continue;
         const field = object(rawField, ['value', 'evidence']);
-        const value = normalize(text(field.value, key === 'brand' ? 80 : 120));
+        const value = normalize(text(field.value, key === 'brand' || key === 'serialNumber' ? 80 : 120));
         const source = evidence(field.evidence, context);
-        if (!normalize(source.excerpt).includes(value)) throw new ProviderFailure('evidence_unverified');
+        if (['purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'].includes(key)) {
+          calendar(value);
+          const dateMeaning = ({purchaseDate: /(?:data.{0,12}(?:acquisto|ordine|fattura)|purchase.{0,8}date|order.{0,8}date|acquistato.{0,5}il)/iu,deliveredDate: /(?:consegnato.{0,8}il|consegna.{0,8}effettiva|delivered.{0,8}on)/iu,warrantyStart: /(?:inizio.{0,10}garanzia|garanzia.{0,10}(?:dal|decorrenza)|warranty.{0,10}start)/iu,warrantyEnd: /(?:scadenza.{0,10}garanzia|garanzia.{0,10}(?:al|fino)|warranty.{0,10}(?:end|expir))/iu} as Record<string,RegExp>)[key];
+          if ((key==='purchaseDate'||key==='deliveredDate')&&value>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}))throw new ProviderFailure('evidence_unverified');
+          if (!dateMeaning.test(source.excerpt) || !printedDates(source.excerpt).includes(value)) throw new ProviderFailure('evidence_unverified');
+        } else if (!normalize(source.excerpt).includes(value)) throw new ProviderFailure('evidence_unverified');
+        const unit = ({ powerWatts: 'W', voltageVolts: 'V', frequencyHz: 'Hz', capacityLitres: '(?:L|litri|litres?|liters?)' } as Record<string, string>)[key];
+        if (unit && (!/^\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?$/u.test(value) || !new RegExp(value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&') + '\\s*' + unit + '\\b', 'iu').test(source.excerpt))) throw new ProviderFailure('evidence_unverified');
         fields[key as ProductField] = { value, source };
       }
-      if (!fields.name) throw invalid();
+      const primary = fields.name ?? fields.reference ?? fields.model;
+      if (!primary || !fields.name && row.documentKind !== 'device_label') throw invalid();
       let quantity: ProductItem['quantity'] = null;
       if (r.quantity !== null) {
         const q = object(r.quantity, ['value', 'evidence']);
         if (!Number.isSafeInteger(q.value) || Number(q.value) < 1 || Number(q.value) > onboardingLimits.maxUnits) throw invalid();
         const source = evidence(q.evidence, context);
-        const printed = [...source.excerpt.matchAll(/(?:quantit[aà]|quantity|qty)\s*[:x×]?\s*(\d+)\b/giu)].map(match => Number(match[1]));
-        if (printed.length !== 1 || printed[0] !== q.value || source.page !== fields.name.source.page) throw new ProviderFailure('evidence_unverified');
+        const printed = [...source.excerpt.matchAll(/(?:quantit[aà]|quantity|qty|qt[aà])\s*[:x×]?\s*(\d+)\b/giu)].map(match => Number(match[1]));
+        if (printed.length !== 1 || printed[0] !== q.value || source.page !== primary.source.page) throw new ProviderFailure('evidence_unverified');
         quantity = { value: Number(q.value), source };
       }
       if (r.confidence === 'low') { needsReview = true; continue; }
-      const fingerprint = digest(JSON.stringify([context.snapshot.documentSha256, fields.name.value, fields.brand?.value ?? null, fields.model?.value ?? null, fields.name.source.page, fields.name.source.region, quantity?.value ?? null]));
+      const fingerprint = digest(JSON.stringify([context.snapshot.documentSha256, normalize(primary.value).toLocaleLowerCase('it'), fields.brand?.value?.toLocaleLowerCase('it') ?? null, fields.model?.value?.toLocaleLowerCase('it') ?? fields.reference?.value?.toLocaleLowerCase('it') ?? null, primary.source.page, quantity?.value ?? null]));
       if (fingerprints.has(fingerprint)) throw new ProviderFailure('object_onboarding_repeated_item');
       fingerprints.add(fingerprint);
       const id = digest(JSON.stringify([context.snapshot.documentId, fingerprint]));
-      items.push({ id, fingerprint, fields: { ...fields, name: fields.name }, quantity, nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
+      items.push({ id, fingerprint, fields, quantity, nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
     }
-    return { documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview };
+    let purchaseTotal: ProductExtraction['purchaseTotal'] = null;
+    if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {
+      const total = object(row.purchaseTotal, ['amountCents', 'evidence']);
+      const source = evidence(total.evidence, context);
+      if (row.documentKind !== 'purchase_document' || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo))?\s*[:=]?\s*(?:EUR|€)?\s*\d[\d., ]*\s*(?:EUR|€)?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProviderFailure('evidence_unverified');
+      purchaseTotal = { amountCents: Number(total.amountCents), source };
+    }
+    return { documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview, purchaseTotal };
   } catch (error) {
     if (error instanceof ProviderFailure) throw error;
     throw new ProviderFailure('analysis_invalid_output');
@@ -109,7 +129,7 @@ export function productCandidates(item: ProductItem, rows: OnboardingObjectCandi
     const brand = item.fields.brand?.value, model = item.fields.model?.value;
     const contradicts = (!!brand && !!row.brand && !equal(brand, row.brand)) || (!!model && !!row.model && !equal(model, row.model));
     if (equal(brand, row.brand) && equal(model, row.model)) reasons.push('same_brand_model');
-    if (!item.nameTruncated && !contradicts && equal(item.fields.name.value, row.name)) reasons.push('same_complete_name');
+    if (!item.nameTruncated && !contradicts && equal(item.fields.name?.value, row.name)) reasons.push('same_complete_name');
     return reasons.length ? [{ id: row.id, version: row.version, reasons }] : [];
   }).sort((a, b) => Number(b.reasons.includes('confirmed_item')) - Number(a.reasons.includes('confirmed_item')) || a.id.localeCompare(b.id));
 }

@@ -12,6 +12,11 @@ enum HomeRole {
   viewer
 }
 model Account {
+  onboardingComparisons ObjectOnboardingComparison[]
+  onboardingDrafts ObjectOnboardingDraft[]
+  onboardingJobs ObjectOnboardingJob[]
+  onboardingRequests ObjectOnboardingRequest[]
+  onboardingBindings ObjectOnboardingBinding[]
   documentOrganizations DocumentOrganization[]
   documentIntakeBatches DocumentIntakeBatch[]
   receiptJobs ReceiptAnalysisJob[]
@@ -88,6 +93,11 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  onboardingComparisons ObjectOnboardingComparison[]
+  onboardingDrafts ObjectOnboardingDraft[]
+  onboardingJobs ObjectOnboardingJob[]
+  onboardingRequests ObjectOnboardingRequest[]
+  onboardingBindings ObjectOnboardingBinding[]
   documentOrganizations DocumentOrganization[]
   documentIntakeBatches DocumentIntakeBatch[]
   receiptJobs ReceiptAnalysisJob[]
@@ -226,6 +236,10 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  onboardingComparisons ObjectOnboardingComparison[]
+  onboardingDrafts ObjectOnboardingDraft[]
+  onboardingJobs ObjectOnboardingJob[]
+  onboardingBindings ObjectOnboardingBinding[]
   organizations DocumentOrganization[]
   intakeItems DocumentIntakeItem[]
   receiptJobs ReceiptAnalysisJob[]
@@ -615,6 +629,9 @@ model HomeRoom {
   @@index([homeId,state,createdAt,id])
 }
 model HomeObject {
+  onboardingComparisons ObjectOnboardingComparison[]
+  profile Json?
+  onboardingBindings ObjectOnboardingBinding[]
   manual Json?
   receiptFields ReceiptObjectField[]
   receiptComparisons ReceiptComparison[]
@@ -633,6 +650,142 @@ model HomeObject {
   position ObjectPosition?
   links ObjectResourceLink[]
   @@index([accountId,homeId,state,createdAt,id])
+}
+
+model ObjectOnboardingDraft {
+  comparisons ObjectOnboardingComparison[]
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  documentId String
+  documentVersion Int
+  documentSha256 String
+  mode String
+  state String @default("open")
+  version Int @default(1)
+  output Json
+  review Json?
+  decisions Json @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  document Document @relation(fields:[documentId],references:[id],onDelete:Restrict)
+  job ObjectOnboardingJob?
+  @@index([accountId,homeId,documentId,documentVersion,documentSha256])
+  @@index([accountId,homeId,state,updatedAt,id])
+}
+model ObjectOnboardingJob {
+  key String
+  digest String
+  firstStartedAt DateTime?
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  documentId String
+  documentVersion Int
+  documentSha256 String
+  mimeType String
+  provider String
+  consentToProviderTransfer Boolean
+  state String @default("queued")
+  version Int @default(1)
+  draftId String? @unique
+  leaseToken String?
+  leaseUntil DateTime?
+  errorCode String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  document Document @relation(fields:[documentId],references:[id],onDelete:Restrict)
+  draft ObjectOnboardingDraft? @relation(fields:[draftId],references:[id],onDelete:Restrict)
+  attempt ObjectOnboardingAttempt?
+  @@index([state,createdAt,id])
+  @@index([accountId,homeId,documentId,documentVersion,documentSha256])
+  @@unique([accountId, homeId, key])
+}
+model ObjectOnboardingRequest {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  operation String
+  target String
+  key String
+  digest String
+  response Json
+  createdAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  @@unique([accountId,homeId,operation,target,key])
+}
+model ObjectOnboardingBinding {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  documentId String
+  documentVersion Int
+  documentSha256 String
+  fingerprint String
+  unitIndex Int
+  objectId String
+  createdAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  document Document @relation(fields:[documentId],references:[id],onDelete:Restrict)
+  object HomeObject @relation(fields:[objectId],references:[id],onDelete:Restrict)
+  @@unique([accountId,homeId,fingerprint,unitIndex])
+  @@index([accountId,homeId,objectId])
+}
+model ObjectOnboardingCampaign {
+  id String @id
+  limitMicroUsd Int
+  maxCalls Int
+  attempts ObjectOnboardingAttempt[]
+}
+model ObjectOnboardingComparison {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  objectId String
+  draftId String
+  documentId String
+  documentVersion Int
+  documentSha256 String
+  fieldKey String
+  proposed Json
+  fingerprint String
+  state String @default("open")
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+  object HomeObject @relation(fields:[objectId],references:[id],onDelete:Restrict)
+  draft ObjectOnboardingDraft @relation(fields:[draftId],references:[id],onDelete:Restrict)
+  document Document @relation(fields:[documentId],references:[id],onDelete:Restrict)
+  @@unique([accountId,homeId,objectId,fieldKey,fingerprint])
+  @@index([accountId,homeId,state,objectId])
+}
+model ObjectOnboardingAttempt {
+  id String @id @default(uuid())
+  jobId String @unique
+  campaignId String
+  model String
+  promptVersion String
+  state String @default("reserved")
+  reservedMicroUsd Int
+  actualMicroUsd Int?
+  inputMicroUsdPerToken Int
+  outputMicroUsdPerToken Int
+  inputTokens Int?
+  outputTokens Int?
+  providerRequestId String?
+  output Json?
+  sentAt DateTime?
+  responseAt DateTime?
+  job ObjectOnboardingJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
+  campaign ObjectOnboardingCampaign @relation(fields:[campaignId],references:[id],onDelete:Restrict)
 }
 model ObjectPosition {
   id String @id @default(uuid())

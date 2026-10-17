@@ -25,6 +25,7 @@ import { useAccount } from '../session/session';
 import { BackToCasa, ObjectsGate, Unavailable, useFocusAfterVersion } from './RoomsPages';
 import { useCurrentHome } from './HomePages';
 import pages from './pages.module.css';
+import { ProfileSection } from '../object-onboarding/ProfileSection';
 import { ReceiptComparisons, ReceiptObjectFields } from '../receipt-integration/Surfaces';
 import { ManualSection } from '../objects/ManualSection';
 
@@ -396,7 +397,7 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
           </p>
         </section>
 
-        {!isBoiler && <><ReceiptObjectFields objectId={object.ref.id} /><ReceiptComparisons objectId={object.ref.id} /></>}
+        {!isBoiler && <>{object.profile ? <ProfileSection object={object} homeId={home.id} canEdit={canEdit} /> : <ReceiptObjectFields objectId={object.ref.id} />}<ReceiptComparisons objectId={object.ref.id} /></>}
         {canEdit && panel !== 'edit' && panel !== 'position' && (
           <div ref={actionsRef} className={styles.actions}>
             {!isBoiler && active && (

@@ -1,32 +1,43 @@
-# Oggetti dai documenti — avanzamento 17 ottobre 2026
+# Oggetti dai documenti — consegna implementazione, 17 ottobre 2026
 
-## O1 — contratto e nucleo offline
+## Comportamento disponibile
 
-Implementati, non registrati nell'app:
+Modulo reale registrato, route lazy Documenti → «Riconosci gli oggetti» dal caricamento per foto e documenti prodotto, oppure dettaglio documento → oggetti. Un originale può proporre più articoli, quantità e schede; creazione/collegamento/rinvio/esclusione separati, conferma parziale e ripresa. L’analisi non crea oggetti o costi. Il percorso manuale resta disponibile quando il provider non è abilitato.
 
-- `backend-v5/src/object-onboarding/domain.ts`: output multiarticolo vincolato alla fonte; testo verificato sul parser e immagini esplicitamente osservate dal provider. Quantità etichettate, titoli troncati, consumabili/incertezza, righe duplicate e limiti. Matching per singolo articolo con difesa su account/casa/stato, nessuna preselezione. Piano create/link/skip, conteggio unità esplicito, zero spese, snapshot e versione di conferma.
-- `anthropic-provider.ts`: preparazione PDF testuale o JPEG/PNG originali, SHA e formato/limiti; consenso ricontrollato prima del count_tokens. Prompt senza inferenza di proprietà, consegna, pagamento o marca dal negozio; nessun catalogo o ID locale inviato. Preparazione/decodifica senza worker, budget o dispatch Messages proprio. **Il modulo non viene importato da nessuna rotta/worker.**
-- `review/anthropic.ts`: sola estensione TypeScript del tipo content per blocchi immagine/testo; i percorsi esistenti continuano a inviare stringhe.
-- `npm run test:object-onboarding` per le prove mirate dopo build.
+Dati confermati nella scheda: marca/modello/riferimento/seriale, potenza/tensione/frequenza/capacità, acquisto/consegna effettiva e garanzia, ciascuno con origine. Default garanzia da consegna effettiva o acquisto, +24mesi di calendario modificabili; nessuna data ricavata da una semplice etichetta o da «in arrivo oggi». Nessuna sovrascrittura implicita dei valori esistenti: confronto e mantieni/rinvia. Date manuali verificate anche nel browser dopo correzione dell’evento input.
 
-Le immagini non hanno testo OCR verificato indipendentemente. Un riquadro strutturalmente valido non prova che il provider abbia letto correttamente; la UI dovrà esporre originale e «Letto dall'immagine · da controllare». Il riconoscimento formato tramite file-type non è una prova di completa decodificabilità: il provider deve rifiutare immagini corrotte; l'eventuale validatore dimensioni/render è ancora da aggiungere prima del rilascio.
+Costo facoltativo solo da ricevuta di acquisto con un articolo/una unità e totale EUR provato; costo canonico riusabile senza duplicati. Ordini/consegne/etichette e totali multiarticolo non creano spese né ripartizioni automatiche. Documento collegato una sola volta a ogni scheda.
 
-## Prove e limiti
+Manuali: link esterno ufficiale Moulinex con riferimento esatto, pagina nota AL4018F0 riscaricata e verificata; altri riferimenti richiedono URL produttore. Altri marchi: link dichiarato manualmente. Arricchimento tecnico solo quando il dato è presente e attribuibile nella fonte ufficiale, senza inventare nome/capacità. Non è una ricerca universale di manuali.
 
-Build TypeScript verde. Prima esecuzione:41/41 test (16 nuovi,10 ricevuta,15 Anthropic già esistenti) e lint mirato verdi, tutte HTTP Anthropic sostituite con stub. Aggiunte poi due verifiche di snapshot/target ripetuto: build e soli18 test del file modificato rieseguiti verdi, lint finale verde. Totale distinto43, non59. Il test PDF usa parser reale su fixture sintetica; il test immagine usa un PNG1px tecnico per il trasporto e output finto per la decodifica. Non dimostra qualità visiva o OCR né riconoscimento dell'immagine personale Amazon. Nessun browser, DB, migrazione, API riavviata o dato personale modificato.
+## Dati, protezioni e compatibilità
 
-## Da completare prima della prova nell'app
+Migrazione26 additiva applicata esclusivamente a dimora_v5_product_dev su127.0.0.1:55432. HomeObject.profile, bozze/job/richieste/binding/campagne/tentativi/confronti dedicati. Conferma transazionale con key/body/versioni/snapshot e recupero ricevuta; una risposta persa non provoca un secondo invio o doppioni. Fonti/target ricontrollati e dati revocati rimossi dalle proiezioni, candidati, revisioni salvate ed export personale. Receipt V1 resta accessibile come percorso precedente.
 
-O2: schema e migrazione additiva per job/bozza/righe/scelte/esiti dedicati, autorizzazioni alla lettura e conferma, worker/budget di campagna distinto, origine disponibile/versione e recupero esiti incerti. Non riciclare ReceiptDraft V1 o campagne pagate concluse. Matching SQL deve filtrare provenienze revocate prima di ordinare/paginare; il filtro del nucleo non sostituisce policy DB.
+PDF testuali tramite parser reale; scansioni con PDF visuale, JPEG/PNG originali con limiti e SHA. Consenso e budget ricontrollati prima di count_tokens e Messages. Nessun modello finto nel runtime; trasporti finti solo nei test. Worker isolato per campagna/modello/SHA correnti, evitando che l’API reale reclami un job del collaudo offline. Prenotazione conservativa, nessun reinvio automatico.
 
-O3: conferma atomica che riusa/crea le unità, collega originale e conserva confronti sui dati già confermati. Mai inserire nuovi costi da questo incremento. Conservare contesto articolo nel link per non associare automaticamente tutti i prodotti dello stesso documento a una sola scheda. Versioni e ricevuta stabili, rollback e anti-duplicazione da provare DB/HTTP.
+## Verifiche
 
-O4: componenti reali e container dall'upload/rientro in Documenti V2, anteprima e consenso immagini, riga per articolo, ricerca esistenti paginata, scelta delle unità e ambiente facoltativo, rinvio/ripresa. Nessun mock fallback né nuovo pulsante di analisi obbligatorio separato dal caricamento. Collaudo desktop/mobile320/390 con soli sintetici.
+Build backend/frontend e lint mirato verdi. Base verificata:66test BEoffline,23DB/HTTP e40FE distinti (inclusi contenitori, non sommare le riesecuzioni). Dopo lo schema v3:29test mirati provider/dominio/profilo (2nuovi) e11DB di integrazione rieseguiti verdi. Dopo l’ingresso inline foto:41FE su5file verdi (2nuovi e18regressioni di DocumentIntakeAssistant non comprese nel run precedente). Non sommare i run sovrapposti:69BEoffline/23DBHTTP/60FE distinti. I test con provider sostituito non dimostrano la qualità dell’analisi reale.
 
-O5: prova provider reale separata con campagna/consenso/budget autorizzati e fonte limitata. Richiesta in chat se autorizzare screenshot Amazon personale entro0.25USD; nessuna risposta ancora assunta. Fino ad allora: niente invio, neppure count_tokens. Screenshot non copiato nel repo/fixture.
+DB/HTTP: atomicità/rollback, chiavi duplicate e body diversi, replay, fonte/target revocati, filtri prima della paginazione, isolamento account/casa, consenso/hash, nessuna risorsa dalla sola analisi, quantità/multiarticolo, conferma parziale, conflitti persistenti, costo canonico, esito incerto senza retry, worker con campagna diversa non reclama il job. I provider sono sostituiti solo qui.
 
-Specifica di riferimento: `docs/v5/object-onboarding-spec-v1.md`. Lo stato O1 non va presentato come funzione già provabile nell'app.
+Browser reale IAB: casa sintetica604f1dea-5e33-42ef-8f3f-ae3e75cb88dd, due articoli compilati manualmente da originale sintetico; revisione→reload→conferma solo A, B rinviato. Oggetto17da33c8-c9b9-4d1e-8973-c1702ba9b97d con originale collegato, dati/garanzia modificati e persistiti, nessun costo. Mobile390:375/375; mobile320:305/305 senza overflow. Screenshot in outputs/onboarding-oggetti-20261017; viewport ripristinato. Non è prova della qualità OCR/visione né Safari fisico.
 
-## Riferimento di implementazione
+## Prova esterna autorizzata: risultato NON verificato
 
-Formato dei blocchi base64 verificato nella documentazione ufficiale [Anthropic Vision](https://platform.claude.com/docs/en/build-with-claude/vision). Nessuna chiamata reale usata per questa verifica.
+Autorizzazione esplicita del committente: solo screenshot Amazon Echo Dot Max allegato, massimo0.25USD e un invio. File privato caricato attraverso normale UI nella casa personale, nessun altro documento personale trasmesso. Documento e4cca478-2424-4a45-921c-3d378d0deb17; job bc2818bc-dd44-49f1-aba3-abf010d41960; campagna onboarding-live-20261017-amazon-r1.
+
+Unico marker Messages sentAt2026-10-17T06:23:04.063Z. Count_tokens/preflight hanno risposto, ma non c’è risposta Messages verificabile, usage o request-id: stato uncertain/analysis_outcome_unknown, riserva250000microUSD trattenuta, costo effettivo sconosciuto. Nessun draft pubblicato, oggetto o spesa creati nella casa personale. Non dedurre costo zero né lettura riuscita.
+
+Successivamente individuata incompatibilità certa dello schema v2: vincoli minimum/maximum/maxLength/maxItems non supportati e troppi campi union annidati. Causa della chiamata precedente non dimostrabile perché mancava diagnostica HTTP. Corretto schema v3 ad array compatto e aggiunti test contro vincoli non supportati/complessità, duplicati e dati inventati; DB con trasporto finto rieseguito verde. Riferimento ufficiale: https://platform.claude.com/docs/en/build-with-claude/structured-outputs . Non effettuato un nuovo invio reale.
+
+Campagna disabilitata riavviando la sola API registrata tramite launcher Telefono senza variabili ONBOARDING_AI; .env e quote precedenti invariati, contatori non azzerati. Browser mostra esito incerto e percorso manuale. Qualunque nuova prova esterna richiede nuova autorizzazione/campagna concreta, non riutilizzare la riserva incerta.
+
+## Prossimi passi e limiti
+
+1. Diagnostica HTTP sanitizzata ora implementata: solo status/endpoint fisso/request-id validato nei log onboarding, mai corpo provider/prompt.47test provider/dominio/regressioni verdi (1nuovo). La chiamata passata resta incerta perché non aveva questa diagnostica.
+2. Nuovo singolo collaudo esterno dello schema v3, previa autorizzazione dedicata; solo dopo questo si può dichiarare verificato il riconoscimento reale dello screenshot.
+3. Verifica fisica Safari e successivamente casi reali multiarticolo/etichetta/PDF con consenso separato. Nei test questi casi sono coperti con dati sintetici, non dimostrano riconoscimento dei file personali.
+
+Nessun push/deploy, reset DB, cambiamento .env/firewall/sicurezza, automazione riattivata, messaggio a Claude o chiamata email. Originali personali conservati privati. Modifiche estranee lasciate fuori dal commit.

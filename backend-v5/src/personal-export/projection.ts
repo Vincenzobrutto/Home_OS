@@ -61,12 +61,22 @@ export class Projection {
     const id = this.ref(row.resourceId, refs);
     return subject && id ? { ...scalars(row, ['id', 'state', 'version', 'createdAt']), subject, resource: { kind: row.resourceType, id } } : null;
   }
+  profile(value: unknown) {
+    const result:Row={};
+    for(const key of ['brand','model','reference','serialNumber','powerWatts','voltageVolts','frequencyHz','capacityLitres','purchaseDate','deliveredDate','warrantyStart','warrantyEnd']){
+      const field=record(record(value)[key]); if(typeof field.value!=='string')continue;
+      const sources=this.sources(field.sources);
+      if(field.origin!=='user_declared'&&(!sources.length||sources.length!==list(field.sources).length))continue;
+      result[key]={...scalars(field,['value','origin']),sources,...(field.externalSource?{externalSource:scalars(field.externalSource,['url','checkedAt'])}:{})};
+    }
+    return result;
+  }
   snapshot(kind: string, value: unknown): Row | null {
     if (value === null || value === undefined) return null;
     const row = record(value);
     const allowed = kind === 'object' ? this.objects : kind === 'boiler' ? this.assets : kind === 'room' ? this.rooms : kind === 'activity' ? this.activities : kind === 'expense' ? this.expenses : kind === 'work' ? this.works : new Set<string>();
     if (row.id !== undefined && !this.ref(row.id, allowed)) return null;
-    if (kind === 'object') return { ...scalars(row, fields.object), ...(row.manual ? { manual: scalars(row.manual, ['url', 'kind', 'brand', 'reference', 'origin', 'sourceUrl', 'checkedAt', 'boundVersion']) } : {}) };
+    if (kind === 'object') return { ...scalars(row, fields.object), profile:this.profile(row.profile), ...(row.manual ? { manual: scalars(row.manual, ['url', 'kind', 'brand', 'reference', 'origin', 'sourceUrl', 'checkedAt', 'boundVersion']) } : {}) };
     if (kind === 'room') return scalars(row, fields.room);
     if (kind === 'boiler') return { ...scalars(row, ['id', 'name', 'version', 'createdAt']), confirmed: this.confirmed(row.confirmed) };
     if (kind === 'activity') return { ...scalars(row, fields.activity), assetId: this.ref(row.assetId, this.assets) };

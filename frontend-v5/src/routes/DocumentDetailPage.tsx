@@ -140,7 +140,8 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
           )}
         </div>
       </div>
-      <ReceiptEntry documentId={doc.id} />
+      <section className={ui.card}><h2>Oggetti presenti nel documento</h2><p>Riconosci uno o più prodotti, completa le schede e collega questo originale. Le proposte richiedono la tua conferma.</p><Link className={ui.btnPrimary} to={'/home/'+props.home.id+'/documenti/'+doc.id+'/oggetti'}>Organizza gli oggetti dal documento</Link></section>
+      <details><summary>Percorso ricevuta precedente</summary><ReceiptEntry documentId={doc.id} /></details>
       <div className={docs.detailGrid}>
         <section className={cx(ui.card, docs.preview)} aria-labelledby="doc-anteprima">
           <h2 id="doc-anteprima" className={styles.cardTitle}>

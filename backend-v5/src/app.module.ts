@@ -1,3 +1,4 @@
+import { ObjectOnboardingModule } from './object-onboarding/onboarding.module';
 import { Global, Module } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { SessionsService } from './security';
@@ -14,5 +15,5 @@ import { ReceiptAssistanceModule } from './receipt-assistance/receipt.module';
 import { DocumentIntakeModule } from './document-intake/intake.module';
 @Global() @Module({ providers: [PrismaService, SessionsService], exports: [PrismaService, SessionsService] })
 export class InfrastructureModule {}
-@Module({ imports: [InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, ExpensesModule, HomeObjectsModule, SharingModule, PersonalExportModule, ReceiptAssistanceModule, DocumentIntakeModule] })
+@Module({ imports: [ObjectOnboardingModule, InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, ExpensesModule, HomeObjectsModule, SharingModule, PersonalExportModule, ReceiptAssistanceModule, DocumentIntakeModule] })
 export class AppModule {}
