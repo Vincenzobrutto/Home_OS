@@ -3,7 +3,7 @@ import { object, text, invalid, uuid, version } from '../review/domain';
 import { ProviderFailure, type Snapshot } from '../review/provider';
 import { digest } from '../security';
 import { printedCents, printedDates } from '../economy/document-evidence';
-import { receiptPurchaseDate, tableQuantity } from './invoice-evidence';
+import { purchaseDateSource, tableQuantity } from './invoice-evidence';
 import { calendar } from '../activities/domain';
 
 export const onboardingLimits = { maxItems: 20, maxUnits: 20, maxImageBytes: 5 * 1024 * 1024 } as const;
@@ -79,7 +79,13 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
           calendar(value);
           const dateMeaning = ({purchaseDate: /(?:data.{0,12}(?:acquisto|ordine|fattura)|purchase.{0,8}date|order.{0,8}date|acquistato.{0,5}il)/iu,deliveredDate: /(?:consegnato.{0,8}il|consegna.{0,8}effettiva|delivered.{0,8}on)/iu,warrantyStart: /(?:inizio.{0,10}garanzia|garanzia.{0,10}(?:dal|decorrenza)|warranty.{0,10}start)/iu,warrantyEnd: /(?:scadenza.{0,10}garanzia|garanzia.{0,10}(?:al|fino)|warranty.{0,10}(?:end|expir))/iu} as Record<string,RegExp>)[key];
           if ((key==='purchaseDate'||key==='deliveredDate')&&value>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}))throw new ProviderFailure('evidence_unverified');
-          if (!(dateMeaning.test(source.excerpt)&&printedDates(source.excerpt).length===1&&printedDates(source.excerpt).includes(value)) && !(key==='purchaseDate'&&row.documentKind==='purchase_document'&&receiptPurchaseDate(source.excerpt,value))) throw new ProductEvidenceFailure(key as ProductField,'date');
+          const purchaseSource = key === 'purchaseDate' && row.documentKind === 'purchase_document'
+            ? purchaseDateSource(source.excerpt, value, context.kind === 'text' ? context.pages[source.page - 1] : undefined) : null;
+          const dateVerified = key === 'purchaseDate' && row.documentKind === 'purchase_document'
+            ? purchaseSource !== null
+            : dateMeaning.test(source.excerpt) && printedDates(source.excerpt).length === 1 && printedDates(source.excerpt).includes(value);
+          if (!dateVerified) throw new ProductEvidenceFailure(key as ProductField, 'date');
+          if (purchaseSource) source = { ...source, excerpt: purchaseSource };
         } else if (!normalize(source.excerpt).includes(value)) throw new ProductEvidenceFailure(key as ProductField,'value');
         const unit = ({ powerWatts: 'W', voltageVolts: 'V', frequencyHz: 'Hz', capacityLitres: '(?:L|litri|litres?|liters?)' } as Record<string, string>)[key];
         if (unit && (!/^\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?$/u.test(value) || !new RegExp(value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&') + '\\s*' + unit + '\\b', 'iu').test(source.excerpt))) throw new ProductEvidenceFailure(key as ProductField,'unit');

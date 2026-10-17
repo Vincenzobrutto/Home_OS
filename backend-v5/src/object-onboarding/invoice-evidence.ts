@@ -1,9 +1,39 @@
 import { printedDates } from '../economy/document-evidence';
 
-/** Purchase receipt heading is evidence of purchase, never a manufacturing or expected date. */
+const normalized = (text: string) => text.normalize('NFC').replace(/\s+/gu, ' ').trim();
+const purchaseLabel = /^(?:(?:il tuo )?ordine\s+(?:del|effettuato il)|ricevuta\s+d[’']acquisto|data\s*(?:(?:di|d[’'])\s*)?(?:acquisto|ordine|fattura)|acquistato il|purchase date|order date)\s*[:–-]?\s*/iu;
+const conflictingLabel = /(?:consegna|consegnato|prevista|previsto|produzione|prodotto il|scadenza|pagamento|spedizione|manufactur|delivery|payment|due date)/iu;
+
+/** Date-only citations need an unambiguous purchase label on the same original page. */
+export function purchaseDateSource(excerpt: string, value: string, page?: string): string | null {
+  const dates = printedDates(excerpt);
+  if (dates.length !== 1 || dates[0] !== value || conflictingLabel.test(excerpt)) return null;
+  const valid = (candidate: string) => {
+    const compact = normalized(candidate), label = purchaseLabel.exec(compact);
+    if (!label || conflictingLabel.test(compact)) return false;
+    const printed = printedDates(compact.slice(label[0].length));
+    return printed.length === 1 && printed[0] === value;
+  };
+  if (valid(excerpt)) return excerpt;
+  // Do not borrow a label from elsewhere on the page or from a different date occurrence.
+  if (!page || !/^(?:\d{4}-\d{2}-\d{2}|\d{1,2}([/.-])\d{1,2}\1\d{4}|\d{1,2}\s+[a-zà]+\s+\d{4})$/iu.test(normalized(excerpt))) return null;
+  const lines = page.split(/\r?\n/u).map(line => line.trim());
+  const occurrences: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (!normalized(lines[i]).includes(normalized(excerpt))) continue;
+    let candidate = lines[i];
+    if (!valid(candidate) && normalized(lines[i]) === normalized(excerpt) && i > 0) {
+      const previous = lines[i - 1], label = purchaseLabel.exec(normalized(previous));
+      if (label && !normalized(previous).slice(label[0].length)) candidate = previous + '\n' + lines[i];
+    }
+    if (!valid(candidate)) return null;
+    occurrences.push(candidate);
+  }
+  return occurrences.length ? occurrences[0] : null;
+}
+
 export function receiptPurchaseDate(excerpt: string, value: string): boolean {
- const lines=excerpt.split(/\r?\n/u).map(line=>line.trim());
- return lines.some(line=>/^ricevuta\s+d[’']acquisto\s*[:–-]?\s+/iu.test(line)&&printedDates(line).length===1&&printedDates(line)[0]===value);
+  return purchaseDateSource(excerpt, value) !== null;
 }
 /** A quantity column is usable only when a unique product row can be attributed. */
 export function tableQuantity(excerpt:string, productName:string):number|null {
