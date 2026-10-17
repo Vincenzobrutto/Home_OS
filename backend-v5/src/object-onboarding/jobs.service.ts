@@ -100,7 +100,7 @@ export class OnboardingJobService {
   async claim(id?: string) {
     if (id) uuid(id);
     let settings;try{settings=this.ai.budget.config.settings();}catch(error){if(error instanceof ServiceUnavailableException)return null;throw error;}
-    const eligible={provider:'anthropic',documentSha256:{in:settings.allowedDocumentHashes},attempt:{is:{campaignId:settings.campaign,model:settings.model}}};
+    const eligible={provider:'anthropic',consentToProviderTransfer:true,...(settings.scope?{accountId:settings.scope.accountId,homeId:settings.scope.homeId}:{documentSha256:{in:settings.allowedDocumentHashes}}),attempt:{is:{campaignId:settings.campaign,model:settings.model}}};
     return this.db.$transaction(async tx => {
       await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended('onboarding:queue',0))::text AS locked`;
       const now = new Date();
@@ -119,7 +119,7 @@ export class OnboardingJobService {
     }, { timeout: 15000, maxWait: 15000 });
   }
   private async input(job: ObjectOnboardingJob) {
-    if (job.provider === 'anthropic') this.ai.budget.requireSource(job.documentSha256);
+    if (job.provider === 'anthropic') this.ai.budget.requireSource(job.documentSha256,job.accountId,job.homeId);
     const key = await this.receipts.run(job.accountId, job.homeId, true, async tx => {
       const source = await this.receipts.source(tx, job.accountId, job.homeId, job.documentId, job);
       if (!source) throw deny();

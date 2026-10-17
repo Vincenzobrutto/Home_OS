@@ -124,4 +124,16 @@ test('Full onboarding: DB, real PDF parser, fake provider; atomicity, replay, pr
   }
  });
 
+ await t.test('home pilot processes the same consented job end to end without a hash allowlist',async()=>{
+  const cfg=new OfflineConfig();Object.assign(cfg.env,{ONBOARDING_AI_SCOPE:'home',ONBOARDING_AI_ACCOUNT_ID:a,ONBOARDING_AI_HOME_ID:h,ONBOARDING_AI_ALLOWED_SHA256:'',ONBOARDING_AI_BUDGET_USD:'5',ONBOARDING_AI_MAX_CALLS:'40'});campaigns.push(cfg.campaign);
+  const budget=new OnboardingAiBudget(db,cfg),tr=new ObjectOnboardingAnthropicTransport(cfg);mode='ok';tr.fetchImpl=transport.fetchImpl;
+  const analysis=new OnboardingAiAnalysis(db,new ObjectOnboardingAnthropicProvider(new PdfTextExtractor(),tr),tr,budget),workerJobs=new OnboardingJobService(db,access,{read:async key=>content.get(key)},analysis,objects);
+  const doc=await document(Buffer.concat([bytes,Buffer.from('\n%home-worker-'+randomUUID())])),started=await workerJobs.start(a,h,{documentId:doc.id,provider:'anthropic',consentToProviderTransfer:true},randomUUID()),sentBefore=sent;
+  cfg.env.ONBOARDING_AI_ACCOUNT_ID=b;assert.equal(await workerJobs.claim(started.job.id),null);cfg.env.ONBOARDING_AI_ACCOUNT_ID=a;
+  cfg.env.ONBOARDING_AI_HOME_ID=randomUUID();assert.equal(await workerJobs.claim(started.job.id),null);cfg.env.ONBOARDING_AI_HOME_ID=h;
+  const claimed=await workerJobs.claim(started.job.id);assert.equal(claimed.id,started.job.id);await workerJobs.run(claimed);
+  const completed=await db.objectOnboardingJob.findUnique({where:{id:started.job.id}});assert.equal(completed.state,'succeeded');assert(completed.draftId);assert.equal(sent-sentBefore,1);
+  assert.equal((await service.getDraft(a,h,completed.draftId,{})).draft.items.length,2);assert.equal(await workerJobs.claim(started.job.id),null);assert.equal(sent-sentBefore,1);assert.equal(await db.objectOnboardingAttempt.count({where:{campaignId:cfg.campaign}}),1);
+ });
+
 });

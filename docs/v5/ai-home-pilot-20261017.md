@@ -19,3 +19,12 @@ Il committente ha confermato la cancellazione definitiva di10 documenti,3 oggett
 I ledger dei vecchi collaudi collegati ai documenti sono rimossi con le analisi; conservato riepilogo contabile senza contenuti dei documenti nel rapporto locale di esecuzione e chiuse a limite0 le sole vecchie campagne coinvolte (nessun credito reso nuovamente spendibile). Nuova campagna5USD/40 integra, zero invii. Questo è uno svuotamento operativo una tantum autorizzato, non una funzione generale di cancellazione rilasciata nell'app. Altre case e account preservati. Script e ricevuta locale: outputs/Dimora-V5-Svuota-Roma-20261017.cjs e outputs/Dimora-V5-Roma-svuotamento-20261017.json, fuori dal repository.
 
 Nessun push/deploy, nuove dipendenze o migrazioni. La conferma oggetti/costi resta sempre distinta dal consenso al provider.
+
+
+## Correzione worker pilota — 17 ottobre 2026
+
+Difetto segnalato nel primo uso: la creazione della richiesta accettava lo scope account/casa, ma claim filtrava ancora soltanto l'allowlist hash del collaudo (vuota nello scope home); inoltre input(job) non trasmetteva account/home al controllo della fonte. Job quindi fermo queued, nessun Messages inviato e sola riserva0,25 USD impegnata. È una lacuna dell'attivazione611e5e7.
+
+Claim ora seleziona account/home nel modo home, conserva l'allowlist esatta nel collaudo e richiede consenso; input mantiene lo stesso contesto anche prima della lettura locale. Restano filtro campagna/modello, permessi e controllo prima di ogni trasmissione. Nessun contatore, job, riserva o chiave ricreati. Nessuna modifica grafica o del flusso, ancora in raccolta feedback.
+
+Nuova prova DB con parser reale e trasporto simulato copre start→claim→input→provider→bozza: senza allowlist, contesti estranei non prelevati, una sola chiamata simulata, risultato disponibile e nessun secondo prelievo.19 test integrazione verdi, build verde. Prima prova nuova ereditava il modo di simulazione risposta persa da uno scenario precedente: isolato il modo del provider della fixture, senza indebolire il runtime.
