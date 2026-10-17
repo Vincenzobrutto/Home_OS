@@ -43,3 +43,25 @@ Nuovo PurchaseSummary legge solo le spese attive purchase_replacement riferite a
 - Screenshot ispezionati: outputs/casa-compatta-mobile-20261017.png, casa-compatta-desktop-20261017.png, ambiente-compatto-mobile-20261017.png, oggetto-compatto-mobile-20261017.png nel workspace.
 
 Limiti: simulazione di viewport, nessun collaudo su telefono fisico né certificazione WCAG. Le attività reali, gli errori, le differenze del profilo e gli avvisi di fonte indisponibile restano espliciti; gli stati vuoti compatti si applicano solo dopo letture riuscite. Nessun deploy, reset, nuova analisi o modifica budget.
+
+
+## Esiti confermati e lotti completati — consegna 17 ottobre 2026
+
+Interventi autorizzati dopo il secondo audit di fruibilità:
+
+- Proiezione comune proposalStatus per distinguere proposta aperta, analisi in corso e scelte accettate. Lo stato di archiviazione del documento non viene usato come prova della conferma di oggetti/spese.
+- Lotto con tutte le proposte confermate: riepilogo Proposte accettate e collegamenti ai dettagli, senza checkbox o pulsante Prepara disabilitato. Lotti misti mantengono selezionabili i soli documenti idonei; risultati già disponibili consultabili separatamente. Errori e consensi preservati.
+- Archivio: stato accettato anche per fatture/acquisti e identificazione leggibile da dati già disponibili (nome oggetto oppure fornitore/data bolletta). Nessuna rinomina automatica dei titoli confermati o degli originali.
+- Documento: esito confermato, link agli oggetti disponibili e spese canoniche spostati prima dell’originale e dei metadati. Analisi legacy raccolte in Altri strumenti di analisi. APE e documenti di solo archivio senza proposte non richiedono creazione di oggetti.
+- Esito di conferma: elenco canonico delle spese collegate al documento, di tutti gli anni, con accesso diretto al record. Nessun importo duplicato né nuovo filtro temporale da ricordare.
+- Ritorno contestuale stanza→oggetto→documento→oggetto→stanza. Continuazione limitata a percorsi locali di oggetti/ambienti della stessa casa e account; route arbitrarie, query, segmenti di evasione e contesti estranei scartati.
+- Caricamento: testi brevi adatti anche al telefono, etichetta Documenti da caricare, esempi sotto l’ingresso. Nessuna modifica ai formati, limiti o al consenso al provider.
+- Nomi accessibili delle azioni del lotto allineati al testo neutro Rivedi proposta, anche per bollette.
+
+### Verifica
+
+Test mirati verdi su sette file: BatchProposals, DocumentBillEntry, DocumentIntakeAssistant, IntakePage, OnboardingPage, objects e contextReturn. Casi nuovi: lotto interamente accettato senza avvio, fattura con oggetto confermato, fonte proposta non corrispondente, documento solo archivio, ritorno attraverso documento e stanza senza POST. Regrediscono anche copie, conferme, consenso e recupero delle richieste incerte. L’ultima regressione di navigazione attende esplicitamente il caricamento del documento prima di azionare il ritorno, per evitare un click su un elemento di loading già sostituito.
+
+Build produzione e lint frontend completati. Verifica browser con i dati esistenti esclusivamente in lettura: esiti delle due bollette e della fattura, oggetto99,99, ritorno contestuale completo. Mobile390×844 e320×740: lotto concluso senza overflow orizzontale e senza pulsanti Prepara; controllo desktop in scheda separata. Screenshot salvati e ispezionati nel workspace: lotto-concluso-mobile-20261017.png, lotto-concluso-desktop-20261017.png, esito-fattura-mobile-20261017.png.
+
+Nessuna nuova analisi provider, scrittura sui dati personali, cambio di budget, segreti, schema, database, push o deploy. I dati identificativi sono presentazioni di risultati già accettati; non sono nuovi titoli persistiti. Dashboard generale Spese conservata: la riduzione dei passaggi si ottiene dai collegamenti diretti all’esito e alle registrazioni. Limite: viewport simulati, non test su telefono fisico né certificazione di accessibilità.

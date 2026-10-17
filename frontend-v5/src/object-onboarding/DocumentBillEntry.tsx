@@ -2,10 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { useAccount, useApi } from '../session/session';
 import { ui } from '../components/ui';
-import type { Capabilities } from './model';
+import type { Capabilities, Draft } from './model';
+import { proposalStatus, proposalIdentity } from './proposalStatus';
 
 /** Read-only entry: rendering or opening this link never starts an analysis. */
-export function DocumentBillEntry({ homeId, documentId, compact = false }: { homeId: string; documentId: string; compact?: boolean }) {
+export function DocumentBillEntry({ homeId, documentId, compact = false, bill = true, allowPrepare = true }: { homeId: string; documentId: string; compact?: boolean; bill?: boolean; allowPrepare?: boolean }) {
   const account = useAccount(), api = useApi();
   const caps = useQuery({
     queryKey: ['account', account.id, 'home', homeId, 'onboarding', 'capabilities', documentId],
@@ -13,15 +14,28 @@ export function DocumentBillEntry({ homeId, documentId, compact = false }: { hom
     retry: false, gcTime: 0,
   });
   const root = `/home/${encodeURIComponent(homeId)}/documenti/${encodeURIComponent(documentId)}/oggetti`;
-  const draft = caps.data?.drafts.find(d => d.state === 'open');
-  const running = ['queued', 'running'].includes(caps.data?.job?.state ?? '');
-  const previous = caps.data?.drafts[0];
-  const label = caps.isPending ? 'Controllo proposta…' : caps.isError ? 'Controlla la proposta di spesa' : draft ? 'Rivedi e conferma la spesa' : running ? 'Vedi analisi in corso' : previous?.state === 'confirmed' ? 'Proposta accettata · Vedi dettaglio' : previous ? 'Vedi esito della proposta' : 'Prepara la proposta di spesa';
-  const href = draft ? `${root}?bozza=${encodeURIComponent(draft.id)}` : previous && !running ? `${root}?bozza=${encodeURIComponent(previous.id)}` : root;
+  const status = proposalStatus(caps.data);
+  const draft = status.state === 'review', running = status.state === 'running', completed = status.state === 'confirmed';
+  const label = caps.isPending ? 'Controllo proposta…' : caps.isError ? 'Controlla la proposta' : completed ? 'Proposta accettata · Vedi dettaglio' : draft ? (bill ? 'Rivedi e conferma la spesa' : 'Rivedi la proposta') : running ? 'Vedi analisi in corso' : bill ? 'Prepara la proposta di spesa' : 'Prepara oggetti e spese';
+  const href = status.draftId ? `${root}?bozza=${encodeURIComponent(status.draftId)}` : root;
+  const result = useQuery({
+    queryKey: ['account', account.id, 'home', homeId, 'onboarding', 'draft', status.draftId],
+    queryFn: async ({ signal }) => {
+      const reply = await api.callJson<{draft: Draft}>(`/homes/${encodeURIComponent(homeId)}/object-onboarding/drafts/${encodeURIComponent(status.draftId!)}`, { accountId: account.id, signal });
+      if (reply.draft?.snapshot && reply.draft.snapshot.documentId !== documentId) throw new Error('Proposta non disponibile per questo documento.');
+      return reply;
+    }, enabled: completed && !caps.isError, retry: false, gcTime: 0,
+  });
+  const objects = caps.isError || result.isError ? [] : result.data?.draft?.items?.flatMap(item => item.decision?.objects ?? []).filter(obj => obj.id && obj.state === 'active') ?? [];
+  const identity = caps.isError || result.isError ? '' : proposalIdentity(result.data?.draft);
+  if (!allowPrepare && caps.isSuccess && status.state === 'empty' && !caps.data.job) return <p>Documento archiviato.</p>;
   return <div>
-    {!compact && <><h2>Spesa della bolletta</h2><p>{caps.isPending ? 'Controllo dello stato della proposta…' : caps.isError ? 'Non è stato possibile verificare lo stato. Apri il percorso per riprovare.' : draft ? 'La proposta è pronta da controllare. La spesa sarà registrata solo alla conferma.' : running ? 'L’analisi è in corso: puoi riaprire il suo stato.' : previous ? 'Apri la proposta per controllare il suo esito.' : 'La spesa non ha ancora una proposta pronta da confermare.'}</p></>}
-    {compact && draft && <p><strong>Proposta di spesa pronta</strong></p>}
-    {compact && !draft && !caps.isPending && !caps.isError && !previous && !running && <p>Spesa da preparare</p>}
+    {compact && identity && <p><strong>{identity}</strong></p>}
+    {!compact && <><h2>{identity || (bill ? 'Spesa della bolletta' : 'Oggetti e spese')}</h2><p>{caps.isPending ? 'Controllo dello stato della proposta…' : caps.isError ? 'Non è stato possibile verificare lo stato. Apri il percorso per riprovare.' : draft ? 'La proposta è pronta da controllare. La spesa sarà registrata solo alla conferma.' : running ? 'L’analisi è in corso: puoi riaprire il suo stato.' : completed ? 'Le scelte sono già state registrate. Puoi consultare il dettaglio.' : (bill ? 'La spesa non ha ancora una proposta pronta da confermare.' : 'Prepara una proposta per gli oggetti e gli eventuali costi del documento.')}</p></>}
+    {compact && draft && <p><strong>{bill ? 'Proposta di spesa pronta' : 'Proposta pronta da confermare'}</strong></p>}
+    {compact && !draft && !caps.isPending && !caps.isError && !completed && !running && <p>{bill ? 'Spesa da preparare' : 'Proposta da preparare'}</p>}
+    {!compact && !!objects.length && <ul aria-label="Oggetti confermati">{objects.filter((obj,index,all)=>all.findIndex(other=>other.id===obj.id)===index).map(obj=><li key={obj.id}><Link to={`/home/${encodeURIComponent(homeId)}/oggetti/object/${encodeURIComponent(obj.id!)}`}>Apri {obj.name ?? 'oggetto'}</Link></li>)}</ul>}
+    {result.isError && <p role="alert">Impossibile leggere gli oggetti collegati. Riapri il dettaglio.</p>}
     <Link className={draft ? ui.btnPrimary : ui.btn} to={href}>{label}</Link>
   </div>;
 }

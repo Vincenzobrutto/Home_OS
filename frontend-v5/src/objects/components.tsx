@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
+import { contextReturn } from '../lib/contextReturn';
 import { newIdempotencyKey } from '../api/queryKeys';
 import type {
   ActivityCapabilities,
@@ -554,6 +555,7 @@ export function LinksSection(props: {
   const { home, object, resourceType } = props;
   const links = useObjectLinks(home.id, object.ref, resourceType);
   const account = useAccount();
+  const returnContext = contextReturn(useLocation().state, account.id, home.id);
   const objectPathHere = `/home/${encodeURIComponent(home.id)}/oggetti/${encodeURIComponent(object.ref.kind)}/${encodeURIComponent(object.ref.id)}`;
   const refParam = encodeURIComponent(`${object.ref.kind}:${object.ref.id}`);
   const items = links.data?.pages.flatMap((p) => p.items) ?? [];
@@ -594,7 +596,7 @@ export function LinksSection(props: {
               {l.state === 'unavailable' || !l.resource ? (
                 <span className={styles.meta}>{RESOURCE_LABEL[resourceType]} non più disponibile per il tuo account</span>
               ) : (
-                <Link to={resourceHref(home.id, resourceType, l.resource.id)} className={styles.title}>
+                <Link to={resourceHref(home.id, resourceType, l.resource.id)} state={resourceType === 'document' ? {accountId:account.id,returnTo:{path:objectPathHere,label:object.name},returnState:returnContext?{accountId:account.id,returnTo:returnContext}:undefined} : undefined} className={styles.title}>
                   {l.resource.title}
                 </Link>
               )}

@@ -1,3 +1,4 @@
+import { contextReturn } from '../lib/contextReturn';
 import { PurchaseSummary } from '../objects/PurchaseSummary';
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
@@ -277,9 +278,10 @@ export function ObjectDetailPage() {
   const account = useAccount();
   const location = useLocation();
   const { kind = '', objectId = '' } = useParams();
+  const origin = contextReturn(location.state, account.id, home.id);
   const back = (
-    <Link to={backToCatalog(home.id, location.state, account.id)} className={pages.spaced}>
-      ← Oggetti e impianti
+    <Link to={origin?.path ?? backToCatalog(home.id, location.state, account.id)} className={pages.spaced}>
+      ← {origin?.label ?? 'Oggetti e impianti'}
     </Link>
   );
   // Tipo di riferimento non valido: nessuna richiesta, come un ID non valido (422).

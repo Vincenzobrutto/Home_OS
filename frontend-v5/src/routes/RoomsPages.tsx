@@ -1,3 +1,4 @@
+import { useAccount } from '../session/session';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import type { Home, ObjectCapabilities, Room, RoomFilters } from '../api/types';
@@ -270,6 +271,7 @@ export function Unavailable(props: { back: ReactNode; title: string; children: s
 
 function RoomView(props: { home: Home; room: Room; caps: ObjectCapabilities; back: ReactNode; focusActions: boolean }) {
   const { home, room } = props;
+  const account = useAccount();
   useDocumentTitle(`${room.name} · ${home.name}`);
   const [panel, setPanel] = useState<'none' | 'edit' | 'state'>('none');
   const canEdit = home.permissions.includes('edit') && room.permissions.includes('edit');
@@ -308,7 +310,7 @@ function RoomView(props: { home: Home; room: Room; caps: ObjectCapabilities; bac
             <ul className={styles.list} aria-label="Oggetti in questo ambiente">
               {objectItems.map((o) => (
                 <li key={`${o.ref.kind}:${o.ref.id}`} className={styles.item}>
-                  <Link to={objectPath(home.id, o.ref)} className={styles.title}>
+                  <Link to={objectPath(home.id, o.ref)} state={{accountId: account.id, returnTo: {path: roomPath(home.id, room.id), label: room.name}}} className={styles.title}>
                     {o.name}
                   </Link>
                   <span className={styles.meta}>

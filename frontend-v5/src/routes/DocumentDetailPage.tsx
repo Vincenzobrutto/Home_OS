@@ -1,3 +1,4 @@
+import { contextReturn } from '../lib/contextReturn';
 import { DocumentBillEntry } from '../object-onboarding/DocumentBillEntry';
 import { ExportIconButton } from '../components/ExportIconButton';
 import { useState, type ReactNode } from 'react';
@@ -34,11 +35,14 @@ export function DocumentDetailPage() {
   const { documentId = '' } = useParams();
   const document = useDocument(home.id, documentId);
   const account = useAccount();
-  const archive = `/home/${encodeURIComponent(home.id)}/documenti${backSearch(useLocation().state, account.id)}`;
+  const navigationState = useLocation().state;
+  const origin = contextReturn(navigationState, account.id, home.id);
+  const continuation = contextReturn((navigationState as {returnState?:unknown}|null)?.returnState, account.id, home.id);
+  const archive = `/home/${encodeURIComponent(home.id)}/documenti${backSearch(navigationState, account.id)}`;
 
   const back = (
-    <Link to={archive} className={docs.backLink}>
-      ← Documenti di {home.name}
+    <Link to={origin?.path ?? archive} state={origin && continuation ? {accountId:account.id,returnTo:continuation} : undefined} className={docs.backLink}>
+      ← {origin?.label ?? 'Documenti di ' + home.name}
     </Link>
   );
 
@@ -132,18 +136,13 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
               {canRead && ['application/pdf', 'image/jpeg', 'image/png'].includes(doc.mimeType) && <OrganizeDocumentButton homeId={props.home.id} documentId={doc.id} />}
             </p>
           )}
-          {props.analyzeHref && !bill && (
-            <p className={styles.spaced}>
-              {/* Avvio esplicito: aprire o leggere il PDF non avvia mai un'analisi. */}
-              <Link to={props.analyzeHref} className={ui.btn}>
-                Analizza questo documento
-              </Link>
-            </p>
-          )}
+
         </div>
       </div>
-      <section className={ui.card}>{bill ? <DocumentBillEntry homeId={props.home.id} documentId={doc.id} /> : <><h2>Oggetti presenti nel documento</h2><p>Riconosci uno o più prodotti, completa le schede e collega questo originale. Le proposte richiedono la tua conferma.</p><Link className={ui.btnPrimary} to={'/home/'+props.home.id+'/documenti/'+doc.id+'/oggetti'}>Organizza gli oggetti dal documento</Link></>}</section>
-      {!bill&&<details><summary>Percorso ricevuta precedente</summary><ReceiptEntry documentId={doc.id} /></details>}
+      {canRead && <section className={ui.card}><DocumentBillEntry homeId={props.home.id} documentId={doc.id} bill={bill} allowPrepare={bill || doc.mimeType.startsWith('image/') || !!doc.organization?.collections.includes('purchases')} /></section>}
+      {canRead && <LinkedExpenses home={props.home} by={{ documentId: doc.id }} title="Spese collegate" addLabel="Registra una spesa da questo documento" />}
+      {!bill&&<details><summary>Altri strumenti di analisi</summary>{props.analyzeHref&&<Link to={props.analyzeHref} className={ui.btn}>Analizza questo documento</Link>}<ReceiptEntry documentId={doc.id} /></details>}
+
       <div className={docs.detailGrid}>
         <section className={cx(ui.card, docs.preview)} aria-labelledby="doc-anteprima">
           <h2 id="doc-anteprima" className={styles.cardTitle}>
@@ -193,11 +192,6 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
           </p>
         </section>
       </div>
-      {canRead && (
-        <div className={styles.spaced}>
-          <LinkedExpenses home={props.home} by={{ documentId: doc.id }} title="Spese collegate" addLabel="Registra una spesa da questo documento" />
-        </div>
-      )}
     </>
   );
 }

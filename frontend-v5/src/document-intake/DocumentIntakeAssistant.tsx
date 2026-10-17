@@ -314,7 +314,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
         <p className={styles.crumb}>Documenti / Carica documenti</p>
         {heading(batch ? 'Aggiungi documenti.' : 'Carica i documenti della casa.', batch
           ? `${batch.items.length} ${batch.items.length === 1 ? 'documento già presente' : 'documenti già presenti'}: restano qui con i risultati già ottenuti.`
-          : 'Scegli uno o più file: la lettura locale propone titolo e tipo, e i documenti si organizzano soltanto quando confermi.')}
+          : 'Fatture, bollette e foto: ti proponiamo come organizzarle.')}
         <div className={styles.layout}>
           <section className={ui.card}>
             {!capabilities?.enabled ? (
@@ -325,9 +325,9 @@ function Inner(props: DocumentIntakeAssistantProps) {
               <div className={styles.drop} role="region" aria-label="Carica documenti" aria-busy={props.addingFiles || undefined}
                 onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = props.addingFiles ? 'none' : 'copy'; }}
                 onDrop={e => { e.preventDefault(); if (!props.addingFiles) choose(Array.from(e.dataTransfer.files)); }}>
-                <h2>Trascina qui uno o più documenti</h2>
-                <p>Oppure selezionali da una cartella del tuo dispositivo.</p>
-                <label htmlFor={inputId} className={styles.legend}>File</label>
+                <h2>Scegli uno o più documenti</h2>
+                <p>Seleziona i file dal dispositivo oppure trascinali qui.</p>
+                <label htmlFor={inputId} className={styles.legend}>Documenti da caricare</label>
                 <input id={inputId} className={styles.fileInput} type="file" multiple disabled={props.addingFiles} accept={limits?.acceptedMimeTypes.join(',')}
                   onChange={(e) => { choose(e.target.files ? Array.from(e.target.files) : []); e.target.value = ''; }} />
                 {limits && <p className={styles.note}>Fino a {limits.maxFiles} file, {formatBytes(limits.maxFileBytes)} ciascuno e {formatBytes(limits.maxTotalBytes)} in totale. PDF, JPEG o PNG.</p>}
@@ -411,7 +411,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
         <div className={styles.rowActions}>
           {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
           {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
-          {canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && supportsObjectProposals(item) && !(props.renderObjectProposals&&(copy||conflict)) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>{props.renderObjectProposals?'Rivedi proposta':'Riconosci gli oggetti'}</button>}
+          {canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && supportsObjectProposals(item) && !(props.renderObjectProposals&&(copy||conflict)) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={props.renderObjectProposals?`Rivedi proposta per ${name}`:`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>{props.renderObjectProposals?'Rivedi proposta':'Riconosci gli oggetti'}</button>}
           {group !== 'done' && reviewable(item) && !(props.renderObjectProposals&&props.onOpenReceiptFlow&&supportsObjectProposals(item)&&!copy&&!conflict) && (
             <button type="button" className={cx(ui.btn, ui.small, ui.primary)} aria-label={`${actionLabel} ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>{actionLabel}</button>
           )}
@@ -429,7 +429,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
       <p className={styles.crumb}>Documenti / Carica documenti</p>
       <div className={styles.pageHead}>
         <div>
-          {heading(reading ? 'Stiamo preparando le proposte…' : complete ? (props.renderObjectProposals&&props.batch?.items.some(supportsObjectProposals)?'Documenti archiviati. Controlla oggetti e spesa.':'Hai finito questo caricamento.') : 'Controlla e organizza.',
+          {heading(reading ? 'Stiamo preparando le proposte…' : complete ? (props.renderObjectProposals&&props.batch?.items.some(supportsObjectProposals)?'Documenti archiviati.':'Hai finito questo caricamento.') : 'Controlla e organizza.',
             reading ? 'Lettura locale dei PDF con testo: nessun file viene inviato all’esterno. Puoi già iniziare dai documenti pronti.'
               : complete ? `${doneCount} ${doneCount === 1 ? 'documento completato' : 'documenti completati'}. Gli originali restano privati.`
                 : multi ? 'Controlla le proposte qui sotto, seleziona quelle corrette e organizzale con una sola conferma.'

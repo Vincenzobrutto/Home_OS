@@ -1,3 +1,4 @@
+import { LinkedExpenses } from '../expenses/LinkedExpenses';
 import {HouseExpenseProposal} from './HouseExpenseProposal';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -71,6 +72,7 @@ function Container({documentId,embedded=false,beforeConfirm,confirmLabel,onRevie
    {!!caps.data?.drafts.length&&<><h3>Riprendi un percorso</h3><ul>{caps.data.drafts.map(d=><li key={d.id}><Link to={resumeSearch('bozza',d.id)}>{d.state==='confirmed'?'Vedi l’esito confermato':'Riprendi le proposte'}</Link></li>)}</ul></>}
   </section>}
   {draft.data&&<DraftEditor key={draft.data.draft.id} draft={draft.data.draft} beforeConfirm={beforeConfirm?()=>beforeConfirm(draft.data.draft.documentKind):undefined} confirmLabel={confirmLabel} onReviewDocument={onReviewDocument} busy={busy} locked={uncertain} clearPending={()=>{pending.current=null;setUncertain(false);setPendingView(null);setError('');}} write={write} refresh={async()=>{await draft.refetch();await invalidate();}} base={base} root={root} onFailure={fail} api={api} accountId={account.id}/>}
+  {draft.data?.draft.state==='confirmed'&&<LinkedExpenses home={home} by={{documentId}} title="Spese collegate" addLabel="Registra un’altra spesa da questo documento"/>}
   <details className={ui.card}><summary>Vedi il documento originale</summary><Original doc={source} homeId={home.id}/></details>
  </div>;
 }

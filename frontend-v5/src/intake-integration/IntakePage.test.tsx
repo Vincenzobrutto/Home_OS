@@ -70,7 +70,7 @@ it('adding a second file appends to the same persisted batch and uploads only th
   await waitFor(() => expect(app.router.state.location.pathname).toBe('/case'));
   await app.router.navigate(`/home/${homeA1.id}/documenti/organizza?lotto=same-batch-test`);
   await app.user.click(await screen.findByRole('button', { name: '+ Aggiungi documenti' }));
-  await app.user.upload(screen.getByLabelText('File'), new File(['new file'], 'Seconda.pdf', { type: 'application/pdf' }));
+  await app.user.upload(screen.getByLabelText('Documenti da caricare'), new File(['new file'], 'Seconda.pdf', { type: 'application/pdf' }));
   await screen.findByRole('button', { name: 'Tutti · 2' });
   await waitFor(() => expect(calls).toHaveLength(3));
   expect(calls[0]).toMatch(/\/batches\/same-batch-test\/items$/);
@@ -112,7 +112,7 @@ it.each(['local','unknown','draftkind'])('upload proposals stay inline and recov
  };
  const app=renderApp({path:'/accedi',backend,fetch});await screen.findByRole('heading',{name:'Accedi'});await app.user.type(screen.getByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));
  const path=`/home/${homeA1.id}/documenti/organizza`;await app.router.navigate(path+'?lotto=inline-batch&filtro=conserva');
- await app.user.click(await screen.findByRole('button',{name:/Riconosci gli oggetti in/}));
+ await app.user.click(await screen.findByRole('button',{name:/Rivedi proposta per/}));
  await screen.findByRole('heading',{name:'Proposta del documento'});expect(starts).toBe(0);expect(screen.getByRole('button',{name:'Prepara le proposte'})).toBeDisabled();
  await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Prepara le proposte'}));await screen.findByRole('heading',{name:'Lampada demo'});
  expect(starts).toBe(1);expect(bodies[0]).toMatchObject({documentId:doc.id,consentToProviderTransfer:true});expect(app.router.state.location.pathname).toBe(path);

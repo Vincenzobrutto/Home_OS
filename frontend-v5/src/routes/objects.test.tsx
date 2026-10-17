@@ -485,3 +485,21 @@ describe('[mock] G1 — privacy e contesto', () => {
     expect(backend.objects.applied).toHaveLength(1);
   });
 });
+
+it('room → object → document → object preserves the original room without writes', async () => {
+ const {backend,owner,home}=world();const room=await seedRoom(backend,owner.id,home.id,'Cucina','kitchen');
+ const item=await seedObject(backend,owner.id,home.id,'Lampada',{roomIds:[room.id]});
+ const doc=await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Ricevuta test'});
+ await g1(backend,owner.id,home.id,`objects/object/${item.ref.id}/links`,{resourceType:'document',resourceId:doc.id});
+ const app=await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/ambienti/${room.id}`);
+ const before=backend.log.filter(r=>r.method==='POST').length;
+ await app.user.click(await screen.findByRole('link',{name:'Lampada'}));
+ await waitFor(()=>expect(app.router.state.location.pathname).toBe(`/home/${home.id}/oggetti/object/${item.ref.id}`));
+ expect(app.router.state.location.state).toMatchObject({accountId:owner.id,returnTo:{label:'Cucina'}});
+ await screen.findByRole('link',{name:'← Cucina'});
+ await app.user.click(await screen.findByRole('link',{name:'Ricevuta test'}));
+ await screen.findByRole('heading',{name:'Ricevuta test',level:1});
+ await app.user.click(await screen.findByRole('link',{name:'← Lampada'}));
+ expect(await screen.findByRole('link',{name:'← Cucina'})).toHaveAttribute('href',`/home/${home.id}/ambienti/${room.id}`);
+ expect(backend.log.filter(r=>r.method==='POST').length).toBe(before);
+});
