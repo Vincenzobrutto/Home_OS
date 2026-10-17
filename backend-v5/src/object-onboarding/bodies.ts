@@ -4,7 +4,7 @@ import { manualSelection } from '../home-objects/manuals';
 import { profileDecisions, type ProfileDecisions } from './profile';
 import { amountCents, spentOn } from '../expenses/domain';
 
-export type OnboardingExpense = { action: 'skip' } | { action: 'link'; id: string; expectedVersion: number } | { action: 'create'; title: string; amountCents: number; spentOn: string; supplier: string | null };
+export type OnboardingExpense = { action: 'skip' } | { action: 'link'; id: string; expectedVersion: number } | { action: 'create'; title: string; amountCents: number; spentOn: string; supplier: string | null; acknowledgePossibleDuplicate?: boolean };
 export type OnboardingChoice = { itemId: string } & (
   { action: 'skip' } | { action: 'defer' } |
   { action: 'create'; name: string; type: string; unitNames: string[]; roomIds: string[]; fields: ProfileDecisions; manual: ReturnType<typeof manualSelection> | null; confirmHouseholdObject: boolean; acknowledgeExistingSource: boolean; expense: OnboardingExpense } |
@@ -17,12 +17,13 @@ export function startOnboarding(input: unknown) {
   return { documentId: uuid(row.documentId), provider: row.provider as 'anthropic', consentToProviderTransfer: row.consentToProviderTransfer };
 }
 function expense(input: unknown, today: string): OnboardingExpense {
-  const r = object(input ?? { action: 'skip' }, ['action', 'id', 'expectedVersion', 'title', 'amountCents', 'spentOn', 'supplier']);
+  const r = object(input ?? { action: 'skip' }, ['action', 'id', 'expectedVersion', 'title', 'amountCents', 'spentOn', 'supplier', 'acknowledgePossibleDuplicate']);
   if (r.action === 'skip') { object(r, ['action']); return { action: 'skip' }; }
   if (r.action === 'link') { object(r, ['action', 'id', 'expectedVersion']); return { action: 'link', id: uuid(r.id), expectedVersion: version(r.expectedVersion) }; }
   if (r.action !== 'create') throw invalid();
-  object(r, ['action', 'title', 'amountCents', 'spentOn', 'supplier']);
-  return { action: 'create', title: text(r.title, 120), amountCents: amountCents(r.amountCents), spentOn: spentOn(r.spentOn, today), supplier: r.supplier === undefined || r.supplier === null ? null : text(r.supplier, 120) };
+  object(r, ['action', 'title', 'amountCents', 'spentOn', 'supplier', 'acknowledgePossibleDuplicate']);
+  if (r.acknowledgePossibleDuplicate !== undefined && typeof r.acknowledgePossibleDuplicate !== 'boolean') throw invalid();
+  return { ...(r.acknowledgePossibleDuplicate !== undefined ? { acknowledgePossibleDuplicate: r.acknowledgePossibleDuplicate } : {}), action: 'create', title: text(r.title, 120), amountCents: amountCents(r.amountCents), spentOn: spentOn(r.spentOn, today), supplier: r.supplier === undefined || r.supplier === null ? null : text(r.supplier, 120) };
 }
 export function onboardingConfirmation(input: unknown, today: string) {
   const r = object(input, ['expectedVersion', 'source', 'choices']);

@@ -202,6 +202,8 @@ export class ObjectOnboardingService {
     }
     const existing = await tx.$queryRaw<Array<{ id: string }>>`SELECT e.id FROM "HomeExpense" e JOIN "DocumentVersion" v ON v."documentId"=e."documentId" JOIN "Document" d ON d.id=v."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;
     if (existing.length) throw conflict('onboarding_expense_exists', 'Esiste già un costo per questa ricevuta: scegli quello esistente.');
+    const possible = await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e LEFT JOIN "Document" d ON d.id=e."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND e."amountCents"=${choice.expense.amountCents} AND e."spentOn"=${choice.expense.spentOn} AND (e."documentId" IS NULL OR (d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}))) LIMIT 1`;
+    if (possible.length && !choice.expense.acknowledgePossibleDuplicate) throw conflict('onboarding_possible_expense_duplicate', 'Esiste una spesa con lo stesso importo e data: collegala oppure verifica che sia un acquisto distinto.');
     const values = {title:choice.expense.title,amountCents:choice.expense.amountCents,spentOn:choice.expense.spentOn,supplier:choice.expense.supplier};
     const result = await expenses.mutateInTransaction(tx, a, h, 'create', '', { ...values, category: 'purchase_replacement', documentId: draft.documentId, objectRef: { kind: 'object', id: targetId } }, 'onboarding_' + digest(draft.id + ':' + choice.itemId + ':expense-create'), true);
     return { expenseId: result.expense.id, newExpenses: 1 };

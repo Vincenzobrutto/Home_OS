@@ -5,11 +5,13 @@ import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { Draft, Form } from './model';
 import { choice, initialForm } from './model';
-async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;derivedIdentity?:boolean;savedDraft?:boolean}={}){
+async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
  if(options.login!==false){await api.login({email:account.email,password});await api.getSession();}
  const wire:Draft={id:'draft-onboarding',version:1,state:'open',mode:'extraction',snapshot:{documentId:options.foreign?'other-document':doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:'delivery_notice',items:['Router demo','Speaker demo'].map((name,i)=>({id:'item'+i,nameTruncated:false,disposition:'household_object',fields:{name:{value:name,source:{documentId:doc.id,page:1,excerpt:name}}},quantity:null,profile:{brand:{value:'Lume',origin:'extraction_confirmed',sources:[{documentId:doc.id,page:1,excerpt:'Lume'}]}},enrichment:null,decision:null})),needsReview:false,purchaseTotal:null,review:null,permissions:['read','edit']};
+ if(options.purchase){wire.documentKind='purchase_document';wire.items=wire.items.slice(0,1);wire.items[0]!.profile.purchaseDate={value:'2025-06-13',origin:'extraction_confirmed',sources:[]};wire.purchaseTotal={amountCents:9999};}
+ if(options.savedExpenseSkip)wire.review={forms:{item0:initialForm(wire.items[0]!,{...wire,mode:'manual'})}};
  if(options.derivedIdentity)for(const item of wire.items)item.profile={brand:{value:'Amazon',origin:'derived_from_product_name',sources:[{documentId:doc.id,page:1,excerpt:'Amazon Echo Dot Max'}]},model:{value:'Echo Dot Max',origin:'derived_from_product_name',sources:[{documentId:doc.id,page:1,excerpt:'Amazon Echo Dot Max'}]}};
  const calls:Array<{path:string;body:unknown;key:string|null}>=[];let confirmations=0,starts=0,saved=false;
  const fetch=async(url:string,init:RequestInit)=>{
@@ -19,6 +21,7 @@ async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:bo
   if(path==='/jobs'){starts++;if(options.lostStart&&starts===1)throw new TypeError('lost');return Response.json({job:{id:'job1',state:'queued',draftId:null,errorCode:null}},{status:202});}
   if(path.startsWith('/jobs/'))return Response.json({job:{id:'job1',state:'succeeded',draftId:wire.id,errorCode:null}});
   if(path.includes('/candidates'))return Response.json({items:[{id:'existing1',name:'Speaker Studio',version:3,profile:{fields:{brand:{value:'Confirmed',origin:'user_declared',sources:[]}},unavailable:false},rooms:['Studio'],reason:'same_brand_model'}],nextCursor:null});
+  if(path.includes('/expense-candidates'))return options.expenseFailure?Response.json({error:{code:'unavailable',message:'Unavailable'}},{status:503}):Response.json({items:options.duplicates?[{id:'expense1',title:'Acquisto già registrato',amountCents:9999,spentOn:'2025-06-13',version:2,rank:1}]:[],nextCursor:null});
   if(path.endsWith('/review')){wire.review=body.review;wire.version++;return Response.json({draft:wire});}
   if(path.includes('/confirmations/'))return Response.json({status:saved?'confirmed':'not_found',draft:wire});
   if(path.endsWith('/confirmations')){
@@ -67,4 +70,26 @@ it('identity derived from title is visibly a proposal and sends separate explici
 
 it('stored proposals reopen automatically without a new provider job or a separate resume step',async()=>{
  const w=await world({start:true,savedDraft:true});await screen.findByRole('heading',{name:'Router demo'});expect(w.counts().starts).toBe(0);expect(screen.queryByRole('button',{name:'Analizza e proponi gli oggetti'})).not.toBeInTheDocument();
+});
+
+it('one confirmation includes the automatically proposed receipt expense without another choice',async()=>{
+ const w=await world({purchase:true});await screen.findByText(/Spesa proposta dal documento/);
+ expect(screen.getByLabelText('Cosa fare con il costo')).toHaveValue('create');expect(screen.getByLabelText('Importo (€)')).toHaveValue('99.99');
+ expect(w.counts().confirmations).toBe(0);await w.user.click(screen.getByRole('button',{name:'Conferma questo articolo'}));
+ await waitFor(()=>expect(w.counts().confirmations).toBe(1));
+ const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:Array<{expense:unknown}>};expect(body.choices[0]!.expense).toMatchObject({action:'create',amountCents:9999,spentOn:'2025-06-13'});
+});
+it('possible expense duplicate blocks default confirmation and lets user explicitly reuse it',async()=>{
+ const w=await world({purchase:true,duplicates:true});await screen.findByText(/Ci sono spese potenzialmente/);expect(screen.getByRole('button',{name:'Conferma questo articolo'})).toBeDisabled();
+ await w.user.selectOptions(screen.getByLabelText('Cosa fare con il costo'),'link');await w.user.selectOptions(screen.getByLabelText('Spesa esistente'),'expense1');
+ await w.user.click(screen.getByRole('button',{name:'Conferma questo articolo'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));
+ const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:Array<{expense:unknown}>};expect(body.choices[0]!.expense).toEqual({action:'link',id:'expense1',expectedVersion:2});
+});
+it('failed duplicate lookup never automatically creates a cost; explicit skip remains possible',async()=>{
+ const w=await world({purchase:true,expenseFailure:true});await screen.findByText(/Non è stato possibile controllare i doppioni/);expect(screen.getByRole('button',{name:'Conferma questo articolo'})).toBeDisabled();
+ await w.user.selectOptions(screen.getByLabelText('Cosa fare con il costo'),'skip');await w.user.click(screen.getByRole('button',{name:'Conferma questo articolo'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));
+ const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:Array<{expense:unknown}>};expect(body.choices[0]!.expense).toEqual({action:'skip'});
+});
+it('previously saved explicit skip is never replaced by automatic expense proposal',async()=>{
+ await world({purchase:true,savedExpenseSkip:true});await screen.findByLabelText('Cosa fare con il costo');expect(screen.getByLabelText('Cosa fare con il costo')).toHaveValue('skip');expect(screen.queryByText(/Spesa proposta dal documento/)).not.toBeInTheDocument();
 });

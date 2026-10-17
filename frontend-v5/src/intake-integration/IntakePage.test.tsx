@@ -94,7 +94,7 @@ it('upload proposals stay inline, require transfer consent, and preserve batch U
    if(url.includes('/capabilities'))return Response.json({manualAvailable:true,aiAvailable:true,canStartAnalysis:true,requiresConsent:true,drafts:[],job:null});
    if(url.endsWith('/jobs')&&init.method==='POST'){starts++;bodies.push(JSON.parse(String(init.body)));return Response.json({job:{id:'inline-job',state:'queued',draftId:null,errorCode:null}});}
    if(url.includes('/jobs/'))return Response.json({job:{id:'inline-job',state:'succeeded',draftId:draft.id,errorCode:null}});
-   if(url.includes('/candidates'))return Response.json({items:[],nextCursor:null});
+   if(url.includes('/candidates')||url.includes('/expense-candidates'))return Response.json({items:[],nextCursor:null});
    if(url.endsWith('/review')){order.push('review');draft.version++;return Response.json({draft});}
    if(url.endsWith('/confirmations')){objectWrites++;order.push('object');finalDraft={...draft,state:'confirmed',version:3,items:draft.items.map(i=>({...i,decision:{state:'confirmed',newObjects:1,newExpenses:0,objects:[]}}))};return Response.json({draft:finalDraft,result:{newObjects:1,newExpenses:0}});}
    return Response.json({draft:finalDraft});

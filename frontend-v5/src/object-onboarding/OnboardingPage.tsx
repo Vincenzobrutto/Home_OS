@@ -10,7 +10,7 @@ import { handleUnauthorized } from '../session/queryClient';
 import { useAccount, useApi } from '../session/session';
 import { useCurrentHome } from '../routes/HomePages';
 import type { DocumentDetail } from '../api/types';
-import { choice, initialForm, type Capabilities, type Draft, type Form, type Job, type Pending } from './model';
+import { choice, initialForm, expenseNeedsReview, type Capabilities, type Draft, type Form, type Job, type Pending } from './model';
 import { ItemEditor } from './ItemEditor';
 import pages from '../routes/pages.module.css';
 import styles from './onboarding.module.css';
@@ -73,12 +73,12 @@ function DraftEditor({draft,beforeConfirm,confirmLabel,busy,locked,clearPending,
  const [recoveryOverride,setRecoveryOverride]=useState<{version:number;value:Pending|null}|null>(null);
  const recovery=recoveryOverride?.version===draft.version?recoveryOverride.value:draft.review?.pending??null;
  const setRecovery=(value:Pending|null)=>setRecoveryOverride({version:draft.version,value});
- const form=(item:Draft['items'][number]):Form=>{const initial=initialForm(item,draft),saved=forms[item.id];return {...initial,...saved,fields:{...initial.fields,...saved?.fields}};};
+ const form=(item:Draft['items'][number]):Form=>{const initial=initialForm(item,draft),saved=forms[item.id];return {...initial,...saved,...(saved&&!saved.expenseAutoState?{expenseAutoState:'manual' as const}:{}),fields:{...initial.fields,...saved?.fields}};};
  const path='/drafts/'+encodeURIComponent(draft.id);
  const [preparing,setPreparing]=useState(false),preparingRef=useRef(false);
  const disabled=preparing||busy||locked||!!recovery||!draft.permissions.includes('edit');
  async function confirm(ids:string[],action?:'skip'|'defer'){
-  if(preparingRef.current)return;preparingRef.current=true;setPreparing(true);setMessage('');let reviewSaved=false;try{
+  if(preparingRef.current||!action&&ids.some(id=>expenseNeedsReview(form(draft.items.find(i=>i.id===id)!))))return;preparingRef.current=true;setPreparing(true);setMessage('');let reviewSaved=false;try{
    if(!action&&beforeConfirm)await beforeConfirm();
    const choices=ids.map(id=>{const item=draft.items.find(x=>x.id===id)!;return action?{itemId:id,action}:choice(item,form(item));});
    const attempt={path:path+'/confirmations',key:newIdempotencyKey(),body:{expectedVersion:draft.version+1,source:draft.snapshot,choices}};
@@ -101,10 +101,10 @@ function DraftEditor({draft,beforeConfirm,confirmLabel,busy,locked,clearPending,
    <div className={styles.row}>{draft.items.length>1&&<label className={styles.check}><input type="checkbox" checked={selected.includes(item.id)} disabled={disabled} onChange={e=>setSelected(old=>e.target.checked?[...old,item.id]:old.filter(id=>id!==item.id))}/>Includi nella conferma multipla</label>}</div>
    <h3>{item.fields.name?.value||form(item).name||'Articolo da identificare'}</h3>{item.decision?.state==='deferred'&&<p>Da riprendere</p>}
    <ItemEditor api={api} accountId={accountId} base={base} draft={draft} item={item} form={form(item)} disabled={disabled} change={value=>setForms(old=>({...old,[item.id]:value}))} enrich={body=>enrich(item.id,body)}/>
-   <div className={styles.row}><button type="button" className={ui.btnPrimary} disabled={disabled} onClick={()=>void confirm([item.id])}>{confirmLabel??'Conferma questo articolo'}</button><button type="button" className={ui.btn} disabled={disabled} onClick={()=>void confirm([item.id],'defer')}>Decidi più avanti</button><button type="button" className={ui.btn} disabled={disabled} onClick={()=>void confirm([item.id],'skip')}>Non creare un oggetto</button></div>
+   <div className={styles.row}><button type="button" className={ui.btnPrimary} disabled={disabled||expenseNeedsReview(form(item))} onClick={()=>void confirm([item.id])}>{confirmLabel??'Conferma questo articolo'}</button><button type="button" className={ui.btn} disabled={disabled} onClick={()=>void confirm([item.id],'defer')}>Decidi più avanti</button><button type="button" className={ui.btn} disabled={disabled} onClick={()=>void confirm([item.id],'skip')}>Non creare un oggetto</button></div>
   </article>)}
   {draft.state==='open'&&<div className={styles.row}>
-   {draft.items.length>1&&<button type="button" className={ui.btnPrimary} disabled={disabled||!selected.length} onClick={()=>void confirm(selected)}>Conferma {selected.length} articoli selezionati</button>}
+   {draft.items.length>1&&<button type="button" className={ui.btnPrimary} disabled={disabled||!selected.length||selected.some(id=>expenseNeedsReview(form(draft.items.find(i=>i.id===id)!)))} onClick={()=>void confirm(selected)}>Conferma {selected.length} articoli selezionati</button>}
    <button type="button" className={ui.btn} disabled={disabled} onClick={()=>void write<Reply>(path+'/review',{expectedVersion:draft.version,review:{forms}}).then(async()=>{setMessage('Scelte salvate. Puoi riprendere dal documento.');await refresh();}).catch(()=>{})}>Salva e riprendi più tardi</button>
    <button type="button" className={ui.btn} disabled={disabled||draft.items.length>=20} onClick={()=>void write<Reply>(path+'/items',{expectedVersion:draft.version}).then(refresh).catch(()=>{})}>Aggiungi un altro articolo</button>
   </div>}

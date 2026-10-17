@@ -67,9 +67,12 @@ export function onboardingExpenseCandidates(access: ObjectOnboardingAccess, a: s
   const q = pageQuery(query, false);
   return access.run(a, h, false, async tx => {
     const draft = await access.draft(tx, a, h, id); if (!await access.source(tx, a, h, draft.documentId, draft)) throw onboardingDenied();
+    const output = draft.output as unknown as ProductExtraction;
+    const purchaseDate = output.items.length === 1 ? output.items[0].fields.purchaseDate?.value ?? null : null;
+    const amount = output.purchaseTotal?.amountCents ?? null;
     const p = pagination(digest(JSON.stringify([a, h, id, 'expenses', q.q])), q.cursor), escaped = q.q.replace(/[\\%_]/gu, '\\$&');
     const rows = await tx.$queryRaw<Array<{ id: string; rank: number; title: string; amountCents: number; spentOn: string; version: number }>>(Prisma.sql`
-      WITH candidates AS (SELECT e.id,e.title,e."amountCents",e."spentOn",e.version,CASE WHEN v.sha256=${draft.documentSha256} THEN 1 ELSE 0 END AS rank FROM "HomeExpense" e LEFT JOIN "Document" d ON d.id=e."documentId" LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
+      WITH candidates AS (SELECT e.id,e.title,e."amountCents",e."spentOn",e.version,CASE WHEN v.sha256=${draft.documentSha256} THEN 2 WHEN ${amount}::int IS NOT NULL AND e."amountCents"=${amount} AND e."spentOn"=${purchaseDate}::text THEN 1 ELSE 0 END AS rank FROM "HomeExpense" e LEFT JOIN "Document" d ON d.id=e."documentId" LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
       WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND (e."documentId" IS NULL OR (d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}))) AND ${escaped ? Prisma.sql`e.title ILIKE ${'%' + escaped + '%'}` : Prisma.sql`TRUE`})
       SELECT * FROM candidates WHERE ${p.after ? Prisma.sql`(rank<${p.after.rank} OR (rank=${p.after.rank} AND id>${p.after.id}))` : Prisma.sql`TRUE`} ORDER BY rank DESC,id ASC LIMIT ${q.limit + 1}`);
     const items = rows.slice(0, q.limit);
