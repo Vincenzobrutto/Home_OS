@@ -36,7 +36,6 @@ import {
 import {
   ACCEPT_ATTRIBUTE,
   MAX_EXPORT_DOCUMENTS,
-  SOURCE_LABEL,
   STATUS_LABEL,
   VISIBILITY_HINT,
   VISIBILITY_LABEL,
@@ -468,7 +467,6 @@ function DocumentRow(props: {
         <span className={docs.tags}>
           <Tag tone="blue">{STATUS_LABEL}</Tag>
           <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
-          <Tag>{SOURCE_LABEL}</Tag>
         </span>
         {doc.permissions.includes('read') && doc.organization?.parts.some(part => part.kind === 'utility_bill') && (
           <DocumentBillEntry homeId={props.homeId} documentId={doc.id} compact />

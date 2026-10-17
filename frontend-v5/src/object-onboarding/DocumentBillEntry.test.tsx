@@ -26,8 +26,8 @@ it('allows resuming a running analysis without starting another', async () => {
   expect(await screen.findByRole('link', { name: 'Vedi analisi in corso' })).toBeInTheDocument();
   expect(callJson).toHaveBeenCalledTimes(1);
 });
-it('does not claim a confirmed draft created a spend', async () => {
+it('labels an accepted proposal and keeps the detail link', async () => {
   mount({ drafts: [{ id: 'previous', state: 'confirmed' }], job: null });
-  expect(await screen.findByRole('link', { name: 'Vedi esito della proposta' })).toBeInTheDocument();
+  expect(await screen.findByRole('link', { name: 'Proposta accettata · Vedi dettaglio' })).toBeInTheDocument();
   expect(screen.queryByText('Proposta di spesa pronta')).not.toBeInTheDocument();
 });
