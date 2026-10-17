@@ -52,7 +52,7 @@ export type DocumentIntakeAssistantProps = {
   renderPreview?: (itemId: OpaqueId, page: number | null) => ReactNode;
   onOpenReceiptFlow?: (itemId: OpaqueId) => void;
   objectProposalItemId?:string|null;
-  renderObjectProposals?:(itemId:string)=>ReactNode;
+  renderObjectProposals?:(itemId:string,reviewDocument:()=>void)=>ReactNode;
   renderOutcomeLinks?: (results: ItemConfirmResult[]) => ReactNode;
   onRetryLoad?: () => void;
 };
@@ -419,7 +419,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
             ? <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Modifica ${name}`} disabled={props.addingFiles} onClick={() => void props.onReorganizeDocument?.(item.id)}>Modifica</button>
             : <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Vedi originale ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale</button>)}
         </div>
-      {canReview&&supportsObjectProposals(item)&&props.objectProposalItemId===item.id&&props.renderObjectProposals&&<section className={styles.objectProposals} aria-label={'Proposte oggetti e spesa per '+name}>{props.renderObjectProposals(item.id)}</section>}
+      {canReview&&supportsObjectProposals(item)&&props.objectProposalItemId===item.id&&props.renderObjectProposals&&<section className={styles.objectProposals} aria-label={'Proposte oggetti e spesa per '+name}>{props.renderObjectProposals(item.id,()=>setDialog({itemId:item.id,onlyOriginal:false}))}</section>}
       </article>
     );
   };
