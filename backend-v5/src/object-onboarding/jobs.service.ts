@@ -46,7 +46,7 @@ export class OnboardingJobService {
       const budget=edit?await this.ai.budget.snapshot(tx,source.original!.sha256,a,h):null;
       const aiAvailable=edit&&!!budget?.available;
       const uncertain=aiAvailable ? await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,state:'uncertain',attempt:{is:{campaignId:this.ai.budget.config.campaign}}}}) : null;
-      return {manualAvailable:edit,aiAvailable,canStartAnalysis:aiAvailable&&!uncertain&&!['queued','running'].includes(job?.state??''),provider:'anthropic',requiresConsent:true,budget,drafts,job:job ? await this.view(tx,a,h,job) : null};
+      return {manualAvailable:edit,aiAvailable,canStartAnalysis:aiAvailable&&!uncertain&&!['queued','running'].includes(job?.state??''),canStartWithUncertainAcknowledgement:aiAvailable&&!!uncertain&&!['queued','running'].includes(job?.state??''),provider:'anthropic',requiresConsent:true,budget,drafts,job:job ? await this.view(tx,a,h,job) : null};
     });
   }
   recover(a:string,h:string,key:string,query:unknown) {
@@ -55,8 +55,9 @@ export class OnboardingJobService {
   }
   start(a: string, h: string, input: unknown, key?: string) {
     if (!key || !/^[A-Za-z0-9_-]{16,100}$/.test(key)) throw invalid('Chiave della richiesta non valida.');
-    const row = object(input, ['documentId', 'provider', 'consentToProviderTransfer']);
-    const body = { documentId: uuid(row.documentId), provider: row.provider, consentToProviderTransfer: row.consentToProviderTransfer };
+    const row = object(input, ['documentId', 'provider', 'consentToProviderTransfer','acknowledgePreviousUncertainAnalysis']);
+    if(row.acknowledgePreviousUncertainAnalysis!==undefined&&typeof row.acknowledgePreviousUncertainAnalysis!=='boolean')throw invalid();
+    const body = {...(row.acknowledgePreviousUncertainAnalysis===true?{acknowledgePreviousUncertainAnalysis:true}:{}), documentId: uuid(row.documentId), provider: row.provider, consentToProviderTransfer: row.consentToProviderTransfer };
     if (typeof body.provider !== 'string' || typeof body.consentToProviderTransfer !== 'boolean') throw invalid();
     return this.receipts.run(a, h, true, async tx => {
       const source = await this.receipts.source(tx, a, h, body.documentId);
@@ -78,7 +79,7 @@ export class OnboardingJobService {
       if (source.original!.byteSize > ANALYSIS_LIMITS.maxFileBytes) throw invalid('Il PDF supera il limite di analisi.', 'analysis_limits_exceeded');
       const snapshot = { documentId: source.id, documentVersion: source.original!.version, documentSha256: source.original!.sha256 };
       await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended('onboarding:queue',0))::text AS locked`;
-      if (body.provider === 'anthropic' && await tx.objectOnboardingJob.findFirst({ where: { accountId: a, homeId: h, ...snapshot, provider: 'anthropic', state: 'uncertain', attempt: { is: { campaignId: this.ai.budget.config.campaign } } } })) throw conflict('analysis_outcome_unknown', 'L’esito di una precedente analisi è incerto. Non avviare un altro invio a pagamento. Puoi compilare a mano.');
+      if (body.provider === 'anthropic' && !body.acknowledgePreviousUncertainAnalysis && await tx.objectOnboardingJob.findFirst({ where: { accountId: a, homeId: h, ...snapshot, provider: 'anthropic', state: 'uncertain', attempt: { is: { campaignId: this.ai.budget.config.campaign } } } })) throw conflict('analysis_outcome_unknown', 'L’esito di una precedente analisi è incerto. Non avviare un altro invio a pagamento. Puoi compilare a mano.');
       if (await tx.objectOnboardingJob.findFirst({ where: { accountId: a, homeId: h, ...snapshot, state: { in: ['queued', 'running'] } } })) throw conflict('onboarding_analysis_already_running', 'È già in corso un’analisi di questo documento.');
       const active = { state: { in: ['queued', 'running'] } };
       if (await tx.objectOnboardingJob.count({ where: active }) >= ONBOARDING_JOB_LIMITS.globalActive || await tx.objectOnboardingJob.count({ where: { ...active, accountId: a } }) >= ONBOARDING_JOB_LIMITS.accountActive) throw busy();
@@ -180,7 +181,7 @@ export class OnboardingJobService {
       if (job.provider === 'anthropic') await this.ai.budget.fail(job.id);
       const attempt = job.provider === 'anthropic' ? await this.db.objectOnboardingAttempt.findUnique({ where: { jobId: job.id } }) : null;
       const unknown = attempt?.state === 'uncertain';
-      await this.db.objectOnboardingJob.updateMany({ where: { id: job.id, state: 'running', leaseToken: job.leaseToken }, data: { state: unknown ? 'uncertain' : 'failed', errorCode: unknown ? 'analysis_outcome_unknown' : code, leaseToken: null, leaseUntil: null, version: { increment: 1 }, updatedAt: new Date() } });
+      await this.db.objectOnboardingJob.updateMany({ where: { id: job.id, state: 'running', leaseToken: job.leaseToken }, data: { state: unknown ? 'uncertain' : 'failed', errorCode: unknown ? (code==='provider_request_rejected'?code:'analysis_outcome_unknown') : code, leaseToken: null, leaseUntil: null, version: { increment: 1 }, updatedAt: new Date() } });
     } finally { abort.abort(); if (timer) clearTimeout(timer); }
   }
 }

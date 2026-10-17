@@ -9,7 +9,7 @@ import { checkImageDimensions } from './image-limits';
 const shape = (properties: Record<string, unknown>) => ({ type: 'object', properties, required: Object.keys(properties), additionalProperties: false });
 // Wire schema uses only Anthropic-supported constraints. Full bounds are enforced locally.
 const evidence = shape({ page: { type: 'integer' }, excerpt: { type: 'string' }, region: { anyOf: [{ type: 'null' }, shape({ x: { type: 'number' }, y: { type: 'number' }, width: { type: 'number' }, height: { type: 'number' } })] } });
-export const OBJECT_ONBOARDING_PROMPT_VERSION = 'document-proposals-v5';
+export const OBJECT_ONBOARDING_PROMPT_VERSION = 'document-proposals-v6';
 export const OBJECT_ONBOARDING_SCHEMA = shape({
   documentKind: { type: 'string', enum: ['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'device_label', 'utility_bill', 'unsupported'] },
   houseExpenses:{type:'array',items:shape({fields:{type:'array',items:shape({field:{type:'string',enum:['title','supplier','category','documentNumber','documentDate','competenceFrom','competenceTo','dueOn']},value:{type:'string'},evidence})},amountCandidates:{type:'array',items:shape({id:{type:'string'},amountCents:{type:'integer'},role:{type:'string',enum:['current_document_total','amount_due','arrears_balance','taxable','tax','line_total','other']},label:{type:'string'},evidence})}})},
@@ -22,6 +22,15 @@ export const OBJECT_ONBOARDING_SCHEMA = shape({
     nameTruncated: { type: 'boolean' }, disposition: { type: 'string', enum: ['household_object', 'consumable', 'uncertain'] }, confidence: { type: 'string', enum: ['high', 'low'] },
   }) },
 });
+
+/** Source mode is already known: avoid repeating nullable regions in every nested branch. */
+export function onboardingSchemaFor(kind:ProductEvidenceContext['kind']):Record<string,unknown>{
+ const schema=JSON.parse(JSON.stringify(OBJECT_ONBOARDING_SCHEMA)) as Record<string,unknown>;
+ const visit=(value:unknown)=>{if(!value||typeof value!=='object')return;const row=value as Record<string,unknown>,properties=row.properties as Record<string,unknown>|undefined;
+  if(properties?.region){const prior=properties.region as {anyOf:unknown[]};properties.region=kind==='text'?{type:'null'}:prior.anyOf[1];}
+  for(const child of Object.values(row))visit(child);
+ };visit(schema);return schema;
+}
 
 /** Normalize the compact provider representation; reject duplicate/unknown field names. */
 export function onboardingWireOutput(value: unknown): unknown {
@@ -89,7 +98,9 @@ export class ObjectOnboardingAnthropicProvider {
     // count_tokens transmits the same image/text: authorization precedes preparation.
     await authorize();
     if (signal.aborted) throw new ProviderFailure('analysis_timeout');
-    const request = await this.transport.prepareStructured(model, OBJECT_ONBOARDING_SYSTEM, messages, OBJECT_ONBOARDING_SCHEMA, signal, authorize);
+    const schema=onboardingSchemaFor(context.kind);
+    const system=OBJECT_ONBOARDING_SYSTEM.replace(JSON.stringify(OBJECT_ONBOARDING_SCHEMA),JSON.stringify(schema));
+    const request = await this.transport.prepareStructured(model, system, messages, schema, signal, authorize);
     return { request, context };
   }
 

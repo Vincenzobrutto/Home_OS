@@ -85,6 +85,13 @@ test('Full onboarding: DB, real PDF parser, fake provider; atomicity, replay, pr
  await t.test('confirmed extracted fields and drafts redact after private source transfer',async()=>{await db.document.update({where:{id:doc.id},data:{uploaderId:b}});const redacted=(await service.getDraft(a,h,d.id,{})).draft;assert.equal(redacted.snapshot,null);assert.equal(redacted.items.length,0);await assert.rejects(objects.getObject(a,h,'object',first,{}));await assert.rejects(service.getDraft(b,h,d.id,{}));});
  await t.test('unknown paid outcome is not sent twice or silently retried',async()=>{const doc3=await document();mode='lost';const started=await jobs.start(a,h,{documentId:doc3.id,provider:'anthropic',consentToProviderTransfer:true},randomUUID());await jobs.run(await jobs.claim(started.job.id));const job=(await jobs.get(a,h,started.job.id,{})).job;assert.equal(job.state,'uncertain');const before=sent;await assert.rejects(jobs.start(a,h,{documentId:doc3.id,provider:'anthropic',consentToProviderTransfer:true},randomUUID()),errorCode('analysis_outcome_unknown'));assert.equal(sent,before);
  assert.equal((await jobs.capabilities(a,h,{documentId:doc3.id})).canStartAnalysis,false);
+ const flags=await jobs.capabilities(a,h,{documentId:doc3.id});assert.equal(flags.canStartWithUncertainAcknowledgement,true);
+ const extraKey=randomUUID(),extraBody={documentId:doc3.id,provider:'anthropic',consentToProviderTransfer:true,acknowledgePreviousUncertainAnalysis:true};
+ const extra=await jobs.start(a,h,extraBody,extraKey);assert.equal((await jobs.start(a,h,extraBody,extraKey)).job.id,extra.job.id);assert.equal(sent,before);
+ const oldAttempt=await db.objectOnboardingAttempt.findUniqueOrThrow({where:{jobId:started.job.id}});assert.equal(oldAttempt.state,'uncertain');assert.equal(oldAttempt.actualMicroUsd,null);
+ // Synthetic retry was reserved but never dispatched: release only that fixture's unused reservation.
+ await budget.fail(extra.job.id);await db.objectOnboardingJob.update({where:{id:extra.job.id},data:{state:'failed'}});
+
  const originalCampaign=config.environment.ONBOARDING_AI_CAMPAIGN_ID;
  config.environment.ONBOARDING_AI_CAMPAIGN_ID=originalCampaign+'-separately-authorized';campaigns.push(config.campaign);
  assert.equal((await jobs.capabilities(a,h,{documentId:doc3.id})).canStartAnalysis,true);

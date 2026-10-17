@@ -24,3 +24,15 @@ UI bollette e conferme verificate con harness; pipeline backend con parser/DB e 
 I tre file reali risultavano già organizzati quando aperti nel browser: la loro classificazione confermata viene conservata. Le vecchie etichette «Ricevuta + Fattura + Bolletta» non sono state cambiate implicitamente. Una nuova proposta utility_bill viene archiviata in Bollette nei caricamenti non già confermati; per correggere organizzazioni pregresse si usa Modifica con consenso alla sostituzione.
 
 Prossimo passo: nel lotto381c5875-5759-4047-80ba-4d988c5b2c66 selezionare le due bollette, controllare elenco e consenso, preparare proposte e rivedere i totali; confermare ciascuna spesa solo se corretta. Nessuna ri-analisi della fattura necessaria. Mischiare acquisti di beni e bollette nello stesso PDF resta fuori da questo primo incremento; i controlli multiparte sono conservativi. Le altre note UI/prezzo oggetto/posizione Casa restano nel backlog condiviso.
+
+## Collaudo reale successivo: rifiuto HTTP400 e recupero esplicito
+
+Alle13:35:48Z i due Messages delle bollette autorizzate nell’app hanno ricevuto HTTP400. Job55f6970f-f853-4858-a6cb-b3ccca61d761 e743fcb6e-d80c-491b-bffe-c3547cab4b41: uncertain, nessuna bozza/usage. Le due riserve0,25 restano impegnate, senza attribuire un costo effettivo non verificato. Budget residuo4,476130USD,3/40 tentativi conteggiati. Non sono stati effettuati nuovi Messages dall’agente.
+
+Il log conserva soltanto stato HTTP/endpoint/request-id, senza corpo errore o documenti. Il400 è certo; la sua causa precisa non è ricostruibile dal log redatto. Complessità dello schema sospettata: la documentazione ufficiale Anthropic segnala limiti interni di compilazione anche sotto il limite esplicito delle union (https://platform.claude.com/docs/en/build-with-claude/structured-outputs). Non dichiarare il problema provider definitivamente risolto prima della prova reale.
+
+Schema ora specializzato per fonte: region=null per testo, region obbligatoria per immagini/PDF visuali,2 union anziché7. Restano invariati validazione evidenza locale, dati, consenso e budget. HTTP400 futuri hanno codice provider_request_rejected; nessun corpo provider letto/loggato. La UI segnala i file senza proposte.
+
+Nuovo tentativo possibile soltanto con consenso UI che dichiara espressamente l’ulteriore riserva e acknowledgePreviousUncertainAnalysis=true; vecchi tentativi/riserve restano conservati. Il comportamento predefinito continua a bloccare la ripetizione dopo esito incerto. Chiave nuova distinta dall’incarico precedente e stabile per replay HTTP; stesso campaign/budget/scope e limiti persistenti. Nessun invio all’apertura della pagina o al riavvio.
+
+Verifiche aggiornamento:30 unit,20 DB simulati (ack separato, vecchia riserva conservata, nessun dispatch automatico),3 UI lotto verdi; build/lint BE/FE verdi. Runtime riavviato via launcher registrato. Prossima prova consigliata: una sola bolletta prima, consenso nell’app; seconda dopo esito positivo.

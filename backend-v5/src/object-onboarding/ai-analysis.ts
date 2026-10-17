@@ -15,6 +15,7 @@ export class ObjectOnboardingAnthropicTransport extends AnthropicTransport {
   constructor(config: OnboardingAiConfig) { super(config); }
   protected override onHttpFailure(diagnostic: { status: number; endpoint: string; requestId: string | null }) {
     this.logger.warn(JSON.stringify({ event: 'onboarding_provider_http_failure', ...diagnostic }));
+    if(diagnostic.status===400)throw new ProviderFailure('provider_request_rejected');
   }
 }
 @Injectable()

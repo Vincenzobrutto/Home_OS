@@ -28,3 +28,7 @@ Le spese usano ExpensesService, storia e ricevute canoniche; provenienza importo
 Primo collaudo su fattura e due file bolletta distinti. PDF che mescolano acquisti di beni e bollette nello stesso originale non sono coperti; non dividere automaticamente importi o generare falsi oggetti. Più bollette nello stesso PDF richiedono identificativi e pagine distinguibili; i controlli conservativi possono bloccare una seconda spesa priva di numero. Documenti già organizzati dall’utente non vengono riclassificati silenziosamente. Importi/date insufficienti restano da completare o gestire manualmente; un documento non prova il pagamento.
 
 Prezzo sulla scheda oggetto, posizione Ambienti e oggetti e revisione generale della tipografia restano nel feedback successivo. Nessun cloud/email/Agenzie/forecast.
+
+## Ripetizione dopo esito incerto
+
+Il default resta blocco di un nuovo invio. Una nuova azione volontaria nell’app può aggiungere acknowledgePreviousUncertainAnalysis=true e un nuovo consenso che esplicita la riserva aggiuntiva nel medesimo budget. Le vecchie riserve non si rilasciano, la campagna e i contatori non cambiano. Il pulsante del lotto distingue la chiave del nuovo tentativo tramite ID del precedente job; la riemissione HTTP dello stesso tentativo riusa la medesima chiave. Non autorizza retry del provider in background.
