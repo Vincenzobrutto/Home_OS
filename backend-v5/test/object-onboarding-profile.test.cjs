@@ -34,3 +34,11 @@ test('explicit identity wins; empty ambiguous accessory and cut model titles are
 test('title derivation does not mix a conflicting explicit brand with its inferred model',()=>{
  const p=proposedProfile(parse({name:field('Amazon Echo Dot Max'),brand:field('Other printed brand')},'delivery_notice').items[0]);assert.equal(p.brand.value,'Other printed brand');assert.equal(p.model,undefined);
 });
+
+test('Strong router title prepopulates brand only, never a generic or cropped model',()=>{
+ const x=parse({name:field('Strong Router 4G LTE con SIM, WiF')},'delivery_notice');x.items[0].nameTruncated=true;const before=JSON.stringify(x);
+ const p=proposedProfile(x.items[0]);assert.equal(p.brand.value,'Strong');assert.equal(p.brand.origin,'derived_from_product_name');assert.equal(p.model,undefined);assert.equal(p.reference,undefined);assert.equal(JSON.stringify(x),before);
+ const complete=proposedProfile(parse({name:field('Strong Router 4G LTE con SIM')},'delivery_notice').items[0]);assert.equal(complete.brand.value,'Strong');assert.equal(complete.model,undefined);
+ for(const name of ['Strong adhesive tape','Custodia per Strong Router','Strong Router compatibile con Philips'])assert.equal(proposedProfile(parse({name:field(name)},'delivery_notice').items[0]).brand,undefined);
+ const explicit=proposedProfile(parse({name:field('Strong Router 4G LTE'),brand:field('Other brand')},'delivery_notice').items[0]);assert.equal(explicit.brand.value,'Other brand');
+});

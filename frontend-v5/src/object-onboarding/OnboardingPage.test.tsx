@@ -19,6 +19,7 @@ async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:bo
   const path=url.split('/object-onboarding')[1]!,body=init.body?JSON.parse(String(init.body)):undefined;calls.push({path,body,key:new Headers(init.headers).get('Idempotency-Key')});
   if(path.startsWith('/capabilities'))return Response.json({manualAvailable:true,aiAvailable:!!options.ai,requiresConsent:true,drafts:options.savedDraft?[{id:wire.id,state:'open'}]:[],canStartAnalysis:options.newAuthorization?true:undefined,job:options.newAuthorization?{id:"old-job",state:"uncertain",draftId:null,errorCode:"analysis_outcome_unknown"}:null});
   if(path==='/jobs'){starts++;if(options.lostStart&&starts===1)throw new TypeError('lost');return Response.json({job:{id:'job1',state:'queued',draftId:null,errorCode:null}},{status:202});}
+  if(path==='/jobs/old-job')return Response.json({job:{id:'old-job',state:'uncertain',draftId:null,errorCode:'analysis_outcome_unknown'}});
   if(path.startsWith('/jobs/'))return Response.json({job:{id:'job1',state:'succeeded',draftId:wire.id,errorCode:null}});
   if(path.includes('/candidates'))return Response.json({items:[{id:'existing1',name:'Speaker Studio',version:3,profile:{fields:{brand:{value:'Confirmed',origin:'user_declared',sources:[]}},unavailable:false},rooms:['Studio'],reason:'same_brand_model'}],nextCursor:null});
   if(path.includes('/expense-candidates'))return options.expenseFailure?Response.json({error:{code:'unavailable',message:'Unavailable'}},{status:503}):Response.json({items:options.duplicates?[{id:'expense1',title:'Acquisto già registrato',amountCents:9999,spentOn:'2025-06-13',version:2,rank:1}]:[],nextCursor:null});
@@ -55,12 +56,13 @@ it('separate operator authorization permits a new start but still requires fresh
  const button=await screen.findByRole('button',{name:'Analizza e proponi gli oggetti'});
  expect(button).toBeDisabled();
  await w.user.click(screen.getByRole('checkbox',{name:/Autorizzo/}));
- expect(button).toBeEnabled();
+ await waitFor(()=>expect(button).toBeEnabled());
 });
 
 it('identity derived from title is visibly a proposal and sends separate explicit acceptance',async()=>{
  const w=await world({derivedIdentity:true});await screen.findAllByText('Ricavato dal nome del prodotto · Da confermare');
  expect(screen.getAllByText('Proposta: Amazon')).toHaveLength(2);
+ expect(screen.getAllByLabelText('Scelta per Marca')[0]).toHaveValue('accept');expect(screen.getAllByRole('option',{name:'Amazon'})).toHaveLength(2);
  expect(screen.getAllByText('Proposta: Echo Dot Max')).toHaveLength(2);
  await w.user.click(screen.getAllByRole('button',{name:'Conferma questo articolo'})[0]!);
  await screen.findByText('Confermato: 1 nuovi oggetti e 0 nuove spese.');
