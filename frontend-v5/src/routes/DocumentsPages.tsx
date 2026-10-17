@@ -1,3 +1,4 @@
+import { DocumentBillEntry } from '../object-onboarding/DocumentBillEntry';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { createPortal } from 'react-dom';
@@ -469,6 +470,9 @@ function DocumentRow(props: {
           <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
           <Tag>{SOURCE_LABEL}</Tag>
         </span>
+        {doc.permissions.includes('read') && doc.organization?.parts.some(part => part.kind === 'utility_bill') && (
+          <DocumentBillEntry homeId={props.homeId} documentId={doc.id} compact />
+        )}
       </div>
     </li>
   );

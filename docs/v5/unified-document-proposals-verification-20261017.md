@@ -52,3 +52,10 @@ UX: scheda bolletta mostra importo/fornitore/utenza/date e Conferma spesa; campi
 Verifiche:8 unit bollette verdi (inclusa esclusione sicura di importo ausiliario),20 DB/parser+trasporto simulato verdi,32 FE verdi (spese bollette + regressioni onboarding),build/lint verdi. IAB reale390px: contenuto375px, riepilogo78,20EUR e pulsante Conferma spesa presente senza confermarlo. Screenshot outputs/bill-real-proposal-mobile-20261017.png. Runtime aggiornato tramite launcher registrato, nessuna modifica firewall.
 
 Limiti: una sola delle due bollette reali ora pronta; l’altra ha ancora il vecchio esito incerto. Conferme su dati sintetici verificate nel DB; conferma di questa spesa reale lasciata al committente. La rilettura di PDF complessi può lasciare campi mancanti; non dichiarare riconoscimento completo di tutto il documento. Il caricamento conserva ancora consenso esterno esplicito; non esistono invii AI nascosti all’upload.
+
+
+## Accesso dall’archivio Documenti (17 ottobre, 16:35)
+
+Aggiunto accesso in sola lettura per le bollette nell’elenco e nel dettaglio: proposta aperta → Rivedi e conferma la spesa; assente → Prepara la proposta di spesa; analisi attiva → Vedi analisi in corso; bozza conclusa → Vedi esito della proposta. Il mount non avvia analisi né scrive spese. Account, casa e documento isolano la cache; nessuna modifica agli originali o ai titoli già confermati.
+
+Verifica: 4 test mirati verdi, build e lint frontend verdi. Nel browser reale il collegamento della prima bolletta apre la bozza corretta e mostra “Spesa confermata” (conferma intervenuta dall’utente); la seconda non viene presentata come pronta. Nessuna chiamata provider o conferma eseguita da Codex. Screenshot outputs/bill-archive-entry-20261017.png nel workspace.

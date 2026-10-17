@@ -1,3 +1,4 @@
+import { DocumentBillEntry } from '../object-onboarding/DocumentBillEntry';
 import { ExportIconButton } from '../components/ExportIconButton';
 import { useState, type ReactNode } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
@@ -141,7 +142,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
           )}
         </div>
       </div>
-      <section className={ui.card}><h2>{bill?'Spesa della bolletta':'Oggetti presenti nel documento'}</h2><p>{bill?'Controlla fornitore, importo e date proposti. La spesa riguarda la casa, senza oggetti.':'Riconosci uno o più prodotti, completa le schede e collega questo originale. Le proposte richiedono la tua conferma.'}</p><Link className={ui.btnPrimary} to={'/home/'+props.home.id+'/documenti/'+doc.id+'/oggetti'}>{bill?'Rivedi la spesa proposta':'Organizza gli oggetti dal documento'}</Link></section>
+      <section className={ui.card}>{bill ? <DocumentBillEntry homeId={props.home.id} documentId={doc.id} /> : <><h2>Oggetti presenti nel documento</h2><p>Riconosci uno o più prodotti, completa le schede e collega questo originale. Le proposte richiedono la tua conferma.</p><Link className={ui.btnPrimary} to={'/home/'+props.home.id+'/documenti/'+doc.id+'/oggetti'}>Organizza gli oggetti dal documento</Link></>}</section>
       {!bill&&<details><summary>Percorso ricevuta precedente</summary><ReceiptEntry documentId={doc.id} /></details>}
       <div className={docs.detailGrid}>
         <section className={cx(ui.card, docs.preview)} aria-labelledby="doc-anteprima">
