@@ -100,4 +100,28 @@ test('Full onboarding: DB, real PDF parser, fake provider; atomicity, replay, pr
   const result=await confirm(d,choices);assert.equal(result.result.newExpenses,2);assert.equal(await db.homeExpense.count({where:{documentId:doc.id}}),2);
  });
 
+ await t.test('home pilot is account scoped, consent gated and persistent across budget instances',async()=>{
+  const cfg=new OfflineConfig();cfg.env.ONBOARDING_AI_SCOPE='home';cfg.env.ONBOARDING_AI_ACCOUNT_ID=a;cfg.env.ONBOARDING_AI_HOME_ID=h;cfg.env.ONBOARDING_AI_ALLOWED_SHA256='';cfg.env.ONBOARDING_AI_BUDGET_USD='5';cfg.env.ONBOARDING_AI_MAX_CALLS='40';campaigns.push(cfg.campaign);
+  const pilot=new OnboardingAiBudget(db,cfg),doc=await document(Buffer.concat([bytes,Buffer.from('\n%pilot-scope-'+randomUUID())]));
+  assert.equal(pilot.requireSource(doc.original.sha256,a,h).maxCalls,40);assert.throws(()=>pilot.requireSource(doc.original.sha256,b,h));assert.throws(()=>pilot.requireSource(doc.original.sha256,a,randomUUID()));assert.throws(()=>pilot.requireSource(doc.original.sha256));
+  const pilotAi=new OnboardingAiAnalysis(db,{}, {},pilot),pilotJobs=new OnboardingJobService(db,access,{read:async()=>bytes},pilotAi,objects);
+  await assert.rejects(pilotJobs.start(a,h,{documentId:doc.id,provider:'anthropic',consentToProviderTransfer:false},randomUUID()));assert.equal(await db.objectOnboardingAttempt.count({where:{campaignId:cfg.campaign}}),0);
+  const started=await pilotJobs.start(a,h,{documentId:doc.id,provider:'anthropic',consentToProviderTransfer:true},randomUUID());assert.equal(started.job.state,'queued');
+  const second=new OnboardingAiBudget(db,cfg);let snap=await db.$transaction(tx=>second.snapshot(tx,doc.original.sha256,a,h));assert.equal(snap.callsUsed,1);assert.equal(snap.remainingUsd,'4.750000');
+  await db.objectOnboardingJob.update({where:{id:started.job.id},data:{state:'uncertain'}});await db.objectOnboardingAttempt.update({where:{jobId:started.job.id},data:{state:'uncertain'}});
+  await assert.rejects(pilotJobs.start(a,h,{documentId:doc.id,provider:'anthropic',consentToProviderTransfer:true},randomUUID()),errorCode('analysis_outcome_unknown'));
+  snap=await db.$transaction(tx=>second.snapshot(tx,doc.original.sha256,a,h));assert.equal(snap.callsUsed,1);assert.equal(snap.remainingUsd,'4.750000');
+ });
+ await t.test('home pilot stops at either 5 USD or 40 analyses, including concurrent reservations',async()=>{
+  for(const scenario of ['money','calls']){
+   const cfg=new OfflineConfig();Object.assign(cfg.env,{ONBOARDING_AI_SCOPE:'home',ONBOARDING_AI_ACCOUNT_ID:a,ONBOARDING_AI_HOME_ID:h,ONBOARDING_AI_ALLOWED_SHA256:'',ONBOARDING_AI_BUDGET_USD:'5',ONBOARDING_AI_MAX_CALLS:'40'});campaigns.push(cfg.campaign);const pilot=new OnboardingAiBudget(db,cfg),doc=await document();
+   await db.objectOnboardingCampaign.create({data:{id:cfg.campaign,limitMicroUsd:5000000,maxCalls:40}});
+   const count=scenario==='money'?20:39,rows=Array.from({length:count+2},()=>({id:randomUUID(),accountId:a,homeId:h,documentId:doc.id,documentVersion:1,documentSha256:doc.original.sha256,mimeType:'application/pdf',provider:'anthropic',consentToProviderTransfer:true,key:randomUUID(),digest:randomUUID(),state:'failed'}));
+   await db.objectOnboardingJob.createMany({data:rows});await db.objectOnboardingAttempt.createMany({data:rows.slice(0,count).map(row=>({jobId:row.id,campaignId:cfg.campaign,model,promptVersion:'offline',inputMicroUsdPerToken:2,outputMicroUsdPerToken:10,reservedMicroUsd:250000,actualMicroUsd:scenario==='money'?240000:1000,state:'settled'}))});
+   if(scenario==='money'){await assert.rejects(db.$transaction(tx=>pilot.reserve(tx,rows[count].id,doc.original.sha256,a,h)),errorCode('ai_budget_exhausted'));}
+   else {const results=await Promise.allSettled(rows.slice(count).map(row=>db.$transaction(tx=>pilot.reserve(tx,row.id,doc.original.sha256,a,h))));assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal(results.filter(r=>r.status==='rejected').length,1);}
+   const snap=await db.$transaction(tx=>new OnboardingAiBudget(db,cfg).snapshot(tx,doc.original.sha256,a,h));assert.equal(snap.available,false);assert.equal(snap.disabledReason,scenario==='money'?'ai_budget_exhausted':'ai_evaluation_limit_reached');assert(snap.callsUsed<=40);assert(Number(snap.committedUsd)<=5);
+  }
+ });
+
 });

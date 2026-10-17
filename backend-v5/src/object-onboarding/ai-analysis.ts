@@ -25,7 +25,7 @@ export class OnboardingAiAnalysis {
     const attempt = await this.db.objectOnboardingAttempt.findUnique({ where: { jobId: job.id } });
     if (!attempt || job.provider !== 'anthropic' || !job.consentToProviderTransfer) throw new ProviderFailure('ai_provider_disabled');
     const configured = () => {
-      const settings = this.budget.requireSource(job.documentSha256);
+      const settings = this.budget.requireSource(job.documentSha256,job.accountId,job.homeId);
       if (settings.campaign !== attempt.campaignId || settings.model !== attempt.model) throw new ProviderFailure('ai_provider_disabled');
     };
     configured();

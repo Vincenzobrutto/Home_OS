@@ -23,17 +23,27 @@ export class OnboardingAiConfig extends AiConfig {
     const values = (this.environment.ONBOARDING_AI_ALLOWED_SHA256 ?? '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
     return values.length > 0 && values.length <= 10 && values.every(value => /^[a-f0-9]{64}$/.test(value)) ? [...new Set(values)] : [];
   }
-  sourceAuthorized(hash: string) { return this.authorizedHashes().includes(hash); }
+  authorizedScope() {
+    if(this.environment.ONBOARDING_AI_SCOPE!=='home')return null;
+    const accountId=this.environment.ONBOARDING_AI_ACCOUNT_ID??'',homeId=this.environment.ONBOARDING_AI_HOME_ID??'';
+    const id=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+    return id.test(accountId)&&id.test(homeId)?{accountId,homeId}:null;
+  }
+  sourceAuthorized(hash: string, accountId?: string, homeId?: string) {
+    if(this.environment.ONBOARDING_AI_SCOPE==='home'){const scope=this.authorizedScope();return !!scope&&scope.accountId===accountId&&scope.homeId===homeId&&/^[a-f0-9]{64}$/.test(hash);}
+    return !this.environment.ONBOARDING_AI_SCOPE&&this.authorizedHashes().includes(hash);
+  }
   settings() {
     if (!this.enabled) throw onboardingAiUnavailable('ai_provider_disabled');
     if (!this.configured) throw onboardingAiUnavailable('ai_provider_unconfigured');
     const price = MODEL_PRICES[this.model];
     if (!price || price.input * (50000 - 4096) + price.output * 4096 > RESERVE_MICRO_USD) throw onboardingAiUnavailable('ai_model_unavailable');
     const amount = this.environment.ONBOARDING_AI_BUDGET_USD ?? '', calls = this.environment.ONBOARDING_AI_MAX_CALLS ?? '';
-    if (!/^onboarding-[A-Za-z0-9_-]{1,80}$/.test(this.campaign) || !/^\d+(?:\.\d{1,6})?$/.test(amount) || !/^\d+$/.test(calls) || !this.authorizedHashes().length) throw onboardingAiUnavailable('ai_provider_unconfigured');
+    const scope=this.authorizedScope();
+    if (!/^onboarding-[A-Za-z0-9_-]{1,80}$/.test(this.campaign) || !/^\d+(?:\.\d{1,6})?$/.test(amount) || !/^\d+$/.test(calls) || (this.environment.ONBOARDING_AI_SCOPE ? !scope : !this.authorizedHashes().length)) throw onboardingAiUnavailable('ai_provider_unconfigured');
     const [whole, fraction = ''] = amount.split('.'), micro = BigInt(whole) * 1000000n + BigInt(fraction.padEnd(6, '0'));
     if (micro <= 0n || micro > 10000000n || Number(calls) < 1 || Number(calls) > 50) throw onboardingAiUnavailable('ai_provider_unconfigured');
-    return { model: this.model, campaign: this.campaign, price, limitMicroUsd: Number(micro), maxCalls: Number(calls), allowedDocumentHashes: this.authorizedHashes() };
+    return { model: this.model, campaign: this.campaign, price, limitMicroUsd: Number(micro), maxCalls: Number(calls), scope, allowedDocumentHashes: this.authorizedHashes() };
   }
   override headers() {
     this.settings();
@@ -43,13 +53,13 @@ export class OnboardingAiConfig extends AiConfig {
 @Injectable()
 export class OnboardingAiBudget {
   constructor(private readonly db: PrismaService, readonly config: OnboardingAiConfig) {}
-  requireSource(hash: string) {
+  requireSource(hash: string, accountId?: string, homeId?: string) {
     const settings = this.config.settings();
-    if (!settings.allowedDocumentHashes.includes(hash)) throw new UnprocessableEntityException({ code: 'onboarding_document_not_authorized', message: 'Questo documento non è autorizzato per il collaudo articoli. Nessun testo inviato.' });
+    if (!this.config.sourceAuthorized(hash,accountId,homeId)) throw new UnprocessableEntityException({ code: 'onboarding_document_not_authorized', message: 'Questo documento non è autorizzato per le analisi articoli. Nessun documento inviato.' });
     return settings;
   }
-  async reserve(tx: Prisma.TransactionClient, jobId: string, hash: string) {
-    const settings = this.requireSource(hash);
+  async reserve(tx: Prisma.TransactionClient, jobId: string, hash: string, accountId?: string, homeId?: string) {
+    const settings = this.requireSource(hash,accountId,homeId);
     await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'onboarding-ai-budget:' + settings.campaign},0))::text AS locked`;
     const campaign = await tx.objectOnboardingCampaign.upsert({ where: { id: settings.campaign }, create: { id: settings.campaign, limitMicroUsd: settings.limitMicroUsd, maxCalls: settings.maxCalls }, update: {} });
     const attempts = await tx.objectOnboardingAttempt.findMany({ where: { campaignId: campaign.id } });
@@ -57,12 +67,18 @@ export class OnboardingAiBudget {
     if (attempts.filter(attempt => attempt.state !== 'released').length >= Math.min(campaign.maxCalls, settings.maxCalls)) throw limit('ai_evaluation_limit_reached');
     return tx.objectOnboardingAttempt.create({ data: { jobId, campaignId: campaign.id, model: settings.model, promptVersion: OBJECT_ONBOARDING_PROMPT_VERSION, inputMicroUsdPerToken: settings.price.input, outputMicroUsdPerToken: settings.price.output, reservedMicroUsd: RESERVE_MICRO_USD } });
   }
-  async available(tx: Prisma.TransactionClient, hash: string): Promise<boolean> {
+  async available(tx: Prisma.TransactionClient, hash: string, accountId?: string, homeId?: string): Promise<boolean> {
+    return (await this.snapshot(tx,hash,accountId,homeId))?.available??false;
+  }
+  async snapshot(tx: Prisma.TransactionClient, hash: string, accountId?: string, homeId?: string) {
     try {
-      const settings = this.requireSource(hash), campaign = await tx.objectOnboardingCampaign.findUnique({ where: { id: settings.campaign } });
+      const settings = this.requireSource(hash,accountId,homeId), campaign = await tx.objectOnboardingCampaign.findUnique({ where: { id: settings.campaign } });
       const attempts = await tx.objectOnboardingAttempt.findMany({ where: { campaignId: settings.campaign } });
-      return attempts.reduce((sum, attempt) => sum + onboardingCommitted(attempt), 0) + RESERVE_MICRO_USD <= Math.min(campaign?.limitMicroUsd ?? settings.limitMicroUsd, settings.limitMicroUsd) && attempts.filter(attempt => attempt.state !== 'released').length < Math.min(campaign?.maxCalls ?? settings.maxCalls, settings.maxCalls);
-    } catch (error) { if (error instanceof ServiceUnavailableException || error instanceof UnprocessableEntityException) return false; throw error; }
+      const limitMicroUsd=Math.min(campaign?.limitMicroUsd??settings.limitMicroUsd,settings.limitMicroUsd),maxCalls=Math.min(campaign?.maxCalls??settings.maxCalls,settings.maxCalls);
+      const used=attempts.reduce((sum,attempt)=>sum+onboardingCommitted(attempt),0),callsUsed=attempts.filter(attempt=>attempt.state!=='released').length;
+      const disabledReason=used+RESERVE_MICRO_USD>limitMicroUsd?'ai_budget_exhausted':callsUsed>=maxCalls?'ai_evaluation_limit_reached':null;
+      return {currency:'USD',limitUsd:usd(limitMicroUsd),committedUsd:usd(used),remainingUsd:usd(Math.max(0,limitMicroUsd-used)),callsUsed,maxCalls,available:disabledReason===null,disabledReason};
+    } catch (error) { if (error instanceof ServiceUnavailableException || error instanceof UnprocessableEntityException) return null; throw error; }
   }
   async fail(jobId: string) {
     await this.db.objectOnboardingAttempt.updateMany({ where: { jobId, state: 'reserved' }, data: { state: 'released', actualMicroUsd: 0 } });

@@ -208,3 +208,12 @@ test('HTTP diagnostics keep only status, fixed endpoint and a validated request-
  transport.fetchImpl=async()=>({ok:false,status:400,headers:new Headers({'request-id':'personal@example.com'}),text:async()=>{reads++;return 'SECRET';}});
  await assert.rejects(transport.send({},new AbortController().signal)); assert.equal(transport.diagnostics[1].requestId,null); assert.equal(reads,0);
 });
+
+const {OnboardingAiConfig,OnboardingAiBudget}=require('../dist/object-onboarding/ai-budget');
+test('home pilot configuration fails closed and cannot fall back to hash authorization',()=>{
+ class Config extends OnboardingAiConfig{get environment(){return this.env;}}
+ const c=new Config();c.env={ONBOARDING_AI_ENABLED:'true',ANTHROPIC_API_KEY:'offline',ONBOARDING_AI_MODEL:'claude-sonnet-5-5',ONBOARDING_AI_CAMPAIGN_ID:'onboarding-offline-scope',ONBOARDING_AI_BUDGET_USD:'5',ONBOARDING_AI_MAX_CALLS:'40',ONBOARDING_AI_ALLOWED_SHA256:'a'.repeat(64),ONBOARDING_AI_SCOPE:'home'};
+ const budget=new OnboardingAiBudget({},c);assert.throws(()=>c.settings());c.env.ONBOARDING_AI_ACCOUNT_ID=randomUUID();assert.throws(()=>c.settings());c.env.ONBOARDING_AI_HOME_ID=randomUUID();assert.equal(c.settings().limitMicroUsd,5000000);
+ assert.throws(()=>budget.requireSource('a'.repeat(64)));assert.equal(budget.requireSource('b'.repeat(64),c.env.ONBOARDING_AI_ACCOUNT_ID,c.env.ONBOARDING_AI_HOME_ID).maxCalls,40);
+ c.env.ONBOARDING_AI_SCOPE='all';assert.throws(()=>c.settings());
+});

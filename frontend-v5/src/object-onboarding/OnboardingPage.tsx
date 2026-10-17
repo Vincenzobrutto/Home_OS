@@ -55,6 +55,8 @@ function Container({documentId,embedded=false,beforeConfirm,confirmLabel,onRevie
  return <div className={pages.stack}>
   {!embedded&&<Link to={root+'/documenti/'+encodeURIComponent(documentId)}>← Torna al documento</Link>}
   <header>{embedded?<h3>Oggetti e spesa proposti</h3>:<h1 className={pages.title}>Dal documento agli oggetti di casa</h1>}<p>{source.name}</p><p>Controlla ciò che il sistema propone, scegli le schede e conferma. Nessun oggetto o costo viene creato dalla sola analisi.</p></header>
+  {caps.data?.budget&&<p role="status">Budget AI complessivo: {Number(caps.data.budget.remainingUsd).toFixed(2)} USD disponibili su {Number(caps.data.budget.limitUsd).toFixed(2)} · {caps.data.budget.callsUsed}/{caps.data.budget.maxCalls} analisi utilizzate. I costi in attesa o incerti restano impegnati.</p>}
+  {caps.data?.budget?.disabledReason&&<Banner tone="warning"><p>{caps.data.budget.disabledReason==='ai_budget_exhausted'?'Budget AI esaurito o insufficiente per la riserva di una nuova analisi.':'Limite di analisi AI raggiunto.'} Nessun nuovo invio: puoi continuare manualmente. Il limite non si rinnova automaticamente.</p></Banner>}
   {error&&<Banner tone="error"><p>{error}</p></Banner>}
   {uncertain&&<Banner tone="warning"><p>Esito non ancora verificato. I campi sono bloccati per evitare richieste diverse o doppioni.</p><button type="button" className={ui.btn} disabled={busy} onClick={()=>void retry()}>Verifica ripetendo la stessa richiesta</button>{pendingView?.path==='/jobs'&&<p>Nessuna seconda analisi: verrà recuperato lo stesso incarico.</p>}</Banner>}
   {!draftId&&<section className={ui.card}>
@@ -103,7 +105,7 @@ function DraftEditor({draft,beforeConfirm,confirmLabel,onReviewDocument,busy,loc
  return <section className={styles.stack}>
   <h2>{draft.state==='confirmed'?'Esito dell’organizzazione':'Rivedi gli articoli'}</h2>
   {draft.mode==='manual'&&<p>Compilazione manuale: i dati inseriti da te saranno distinti dai valori letti automaticamente.</p>}
-  {beforeConfirm&&<p className={styles.source}>La conferma comprende l’archiviazione proposta del documento {({purchase_document:'di acquisto',delivery_notice:'di consegna',appliance_label:'con etichetta prodotto'} as Record<string,string>)[draft.documentKind]??''} in Acquisti e garanzie. Se la creazione dell’articolo non riesce, potrai riprenderlo qui.</p>}
+  {beforeConfirm&&<p className={styles.source}>La conferma comprende l’archiviazione proposta del documento {({purchase_document:'di acquisto',delivery_notice:'di consegna',appliance_label:'con etichetta prodotto',device_label:'con etichetta prodotto',order_confirmation:'con ordine di acquisto'} as Record<string,string>)[draft.documentKind]??''} in Acquisti e garanzie. Se la creazione dell’articolo non riesce, potrai riprenderlo qui.</p>}
   {draft.needsReview&&<Banner tone="warning"><p>La fonte richiede un controllo: verifica le descrizioni, le quantità e le parti non leggibili nell’originale. Puoi aggiungere un articolo mancante.</p></Banner>}
   {message&&<Banner tone="info"><p>{message}</p></Banner>}
   {recovery&&<Banner tone="warning"><p>Una conferma è da verificare. Manteniamo la stessa scelta e la stessa chiave anche dopo aver ricaricato la pagina.</p><div className={styles.row}><button type="button" className={ui.btn} disabled={busy} onClick={()=>void recover(false)}>Controlla l’esito</button><button type="button" className={ui.btn} disabled={busy} onClick={()=>void recover(true)}>Invia la stessa conferma</button></div></Banner>}

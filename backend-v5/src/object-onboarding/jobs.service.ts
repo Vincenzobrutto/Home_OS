@@ -43,9 +43,10 @@ export class OnboardingJobService {
       const source = await this.receipts.source(tx,a,h,documentId); if (!source) throw deny();
       const drafts = await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256},orderBy:[{updatedAt:'desc'},{id:'desc'}],take:10,select:{id:true,state:true,updatedAt:true}});
       const job = await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256},orderBy:{createdAt:'desc'}});
-      const aiAvailable=edit && await this.ai.budget.available(tx,source.original!.sha256);
+      const budget=edit?await this.ai.budget.snapshot(tx,source.original!.sha256,a,h):null;
+      const aiAvailable=edit&&!!budget?.available;
       const uncertain=aiAvailable ? await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,state:'uncertain',attempt:{is:{campaignId:this.ai.budget.config.campaign}}}}) : null;
-      return {manualAvailable:edit,aiAvailable,canStartAnalysis:aiAvailable&&!uncertain&&!['queued','running'].includes(job?.state??''),provider:'anthropic',requiresConsent:true,drafts,job:job ? await this.view(tx,a,h,job) : null};
+      return {manualAvailable:edit,aiAvailable,canStartAnalysis:aiAvailable&&!uncertain&&!['queued','running'].includes(job?.state??''),provider:'anthropic',requiresConsent:true,budget,drafts,job:job ? await this.view(tx,a,h,job) : null};
     });
   }
   recover(a:string,h:string,key:string,query:unknown) {
@@ -70,7 +71,7 @@ export class OnboardingJobService {
       if (body.provider !== 'anthropic') throw new ServiceUnavailableException({ code: 'ai_provider_disabled', message: 'Questo servizio di analisi non è abilitato.' });
       if (body.provider === 'anthropic') {
         if (!this.ai) throw new ServiceUnavailableException({ code: 'ai_provider_disabled', message: 'Analisi ricevuta non abilitata.' });
-        this.ai.budget.requireSource(source.original!.sha256);
+        this.ai.budget.requireSource(source.original!.sha256,a,h);
         if (!body.consentToProviderTransfer) throw invalid('Autorizza esplicitamente l’invio del testo di questo documento ad Anthropic.');
       }
       if (!['application/pdf','image/jpeg','image/png'].includes(source.original!.mimeType)) throw invalid('Serve un PDF o una foto JPEG/PNG.');
@@ -82,7 +83,7 @@ export class OnboardingJobService {
       const active = { state: { in: ['queued', 'running'] } };
       if (await tx.objectOnboardingJob.count({ where: active }) >= ONBOARDING_JOB_LIMITS.globalActive || await tx.objectOnboardingJob.count({ where: { ...active, accountId: a } }) >= ONBOARDING_JOB_LIMITS.accountActive) throw busy();
       const job = await tx.objectOnboardingJob.create({ data: { accountId: a, homeId: h, ...snapshot, mimeType: source.original!.mimeType, provider: body.provider as string, consentToProviderTransfer: body.provider === 'anthropic', key, digest: hash } });
-      if (body.provider === 'anthropic') await this.ai.budget.reserve(tx, job.id, snapshot.documentSha256);
+      if (body.provider === 'anthropic') await this.ai.budget.reserve(tx, job.id, snapshot.documentSha256,a,h);
       return { job: await this.view(tx, a, h, job) };
     });
   }

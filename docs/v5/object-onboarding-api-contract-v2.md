@@ -80,3 +80,10 @@ Estensioni additive, senza migrazione. Fonte/versioni/idempotenza e autorizzazio
 `expense.action=create` ammette `manualItemAmount:boolean`. Per documenti purchase_document multiarticolo richiede true, totale validato e quantità unitaria. Quote registrate come manual_item nelle decisioni JSON; contatore cumulativo per account/Home/hash in centesimi, lock transazionale Home condiviso con Spese. La somma non supera il totale, anche per più scelte della stessa richiesta. Costi già esistenti non riconosciuti come quote e quota già collegata allo stesso oggetto bloccano la nuova registrazione. Esclusioni non inviano dati economici. Single item conserva proposta e protezione del costo già presente. Nessuna distribuzione automatica o estrazione nuovi prezzi di riga.
 
 UI: una conferma oggetto/costo, con eventuale preparazione documento precedente. Questo non rende atomici i due endpoint: documento archiviato e articolo ancora da completare restano esiti distinti. Recupero del corpo/chiave originali invariato.
+
+
+## Pilota account/casa con budget persistente — 17 ottobre 2026
+
+OnboardingAiConfig supporta ONBOARDING_AI_SCOPE=home con ACCOUNT_ID e HOME_ID entrambi UUID; senza scope resta obbligatoria l'allowlist SHA. Scope invalido/incompleto non si attiva. Contesto account/home verificato in capabilities, prima della riserva e prima di ogni fase di trasmissione, oltre ad accesso originale e consenso esplicito già esistenti.
+
+Capabilities include budget opzionale/null: currency, limitUsd, committedUsd, remainingUsd (stringhe decimali), callsUsed, maxCalls, available, disabledReason. Visibile solo nel contesto autorizzato; nessun consumo esposto ad altri account/case. Budget esaurito blocca un nuovo invio anche quando restano chiamate; contatori persistenti non si rinnovano ai riavvii. Dettagli e collaudo in ai-home-pilot-20261017.md.

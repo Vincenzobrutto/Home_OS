@@ -54,6 +54,8 @@ it('object type can propose a home-only purchase classification, never overwrite
  const base={...wire().items[0],permissions:{review:true},confirmedOrganization:null,organizationVersion:0} as unknown as IntakeItem;
  expect(organizationFromObjectKind(base,'delivery_notice')).toMatchObject({replaceOrganization:false,selection:{parts:[{kind:'delivery_notice',pageFrom:null,pageTo:null}],target:{kind:'home'}}});
  expect(organizationFromObjectKind(base,'appliance_label')?.selection.parts[0]?.kind).toBe('product_label');
+ expect(organizationFromObjectKind(base,'device_label')?.selection.parts[0]?.kind).toBe('product_label');
+ expect(organizationFromObjectKind(base,'order_confirmation')?.selection.parts[0]?.kind).toBe('purchase_order');
  expect(organizationFromObjectKind(base,'purchase_document')?.selection.parts[0]?.kind).toBe('purchase_document');
  for(const patch of [{uploadState:'duplicate'},{reviewState:'deferred'},{reviewState:'saved'},{analysisState:'uncertain'},{organizationVersion:1},{permissions:{review:false}},{documentLink:{state:'unavailable',document:null}}])expect(organizationFromObjectKind({...base,...patch} as IntakeItem,'delivery_notice')).toBeNull();
  expect(organizationFromObjectKind(base,'other')).toBeNull();
