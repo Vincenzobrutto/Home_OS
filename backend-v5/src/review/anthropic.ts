@@ -4,7 +4,8 @@ import { ProviderFailure } from './provider';
 import { OUTPUT_SCHEMA } from './ai-evidence';
 import { TextDocument } from './pdf-text';
 export type ProviderResponse = { id: string; model: string; stop_reason: string; content: Array<{ type: string; text?: string }>; usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number } };
-export type PreparedRequest = { model: string; max_tokens: number; system: string; messages: Array<{ role: string; content: string }>; output_config: { format: { type: string; schema: Record<string, unknown> } } };
+export type MessageBlock = { type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg' | 'image/png'; data: string } };
+export type PreparedRequest = { model: string; max_tokens: number; system: string; messages: Array<{ role: string; content: string | MessageBlock[] }>; output_config: { format: { type: string; schema: Record<string, unknown> } } };
 @Injectable()
 export class AnthropicTransport {
   fetchImpl: typeof fetch = fetch;
