@@ -1,7 +1,7 @@
 import { contextReturn } from '../lib/contextReturn';
 import { DocumentBillEntry } from '../object-onboarding/DocumentBillEntry';
 import { ExportIconButton } from '../components/ExportIconButton';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
 import { safeFilename } from '../api/client';
 import { isApiError, userMessage } from '../api/errors';
@@ -145,7 +145,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
 
       <div className={docs.detailGrid}>
         <section className={cx(ui.card, docs.preview)} aria-labelledby="doc-anteprima">
-          <h2 id="doc-anteprima" className={styles.cardTitle}>
+          <h2 id="doc-anteprima" className={`${styles.cardTitle} ${docs.originalAnchor}`}>
             Originale
           </h2>
           {canRead ? (
@@ -204,6 +204,12 @@ function Preview({ doc }: { doc: DocumentDetail }) {
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<unknown>(null);
   const type = file.data?.contentType || doc.mimeType;
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash === '#doc-anteprima' && url && !file.isError) {
+      window.document.getElementById('doc-anteprima')?.scrollIntoView({ block: 'start' });
+    }
+  }, [hash, url, file.isError]);
 
   const download = async () => {
     setDownloading(true);

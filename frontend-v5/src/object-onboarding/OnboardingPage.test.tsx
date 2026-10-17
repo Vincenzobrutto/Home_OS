@@ -212,3 +212,12 @@ it('direct form opening leaves recovery controls accessible when a previous conf
  expect(screen.queryByRole('dialog',{name:'Rivedi l’articolo'})).not.toBeInTheDocument();
  expect(screen.getByRole('button',{name:'Invia la stessa conferma'})).toBeEnabled();
 });
+
+it('every article review keeps an original-document link in its fixed header without leaving the edited form',async()=>{
+ const w=await world();const panel=screen.getByRole('dialog',{name:'Rivedi l’articolo'});
+ const link=within(panel).getByRole('link',{name:'Vedi documento originale (si apre in una nuova scheda)'});
+ expect(link).toHaveAttribute('href',expect.stringContaining('/documenti/'+w.wire.snapshot!.documentId+'#doc-anteprima'));
+ expect(link).toHaveAttribute('target','_blank');expect(link).toHaveAttribute('rel','noopener noreferrer');
+ await w.user.clear(screen.getByLabelText('Nome dell’oggetto'));await w.user.type(screen.getByLabelText('Nome dell’oggetto'),'Nome modificato');
+ expect(link).toBeInTheDocument();expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Nome modificato');expect(w.counts()).toEqual({starts:0,confirmations:0});
+});

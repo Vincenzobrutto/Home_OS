@@ -420,3 +420,5 @@
   gap: var(--space-3);
   flex-wrap: wrap;
 }
+
+.originalAnchor{scroll-margin-top:100px}
