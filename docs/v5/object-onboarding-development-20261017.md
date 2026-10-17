@@ -1,5 +1,14 @@
 # Oggetti dai documenti — consegna implementazione, 17 ottobre 2026
 
+## Fattura macchina del ghiaccio — collaudo reale respinto dal validatore
+
+Autorizzazione committente: solo documento26ef0dba-50b1-4bdb-87f1-16c91008fdb4, una analisi Anthropic max0.25USD. SHA1c6ed7d313db0253b350006ce2f5546b3ba8ec843dab057a99e6b84307ac445f, campagna onboarding-live-20261017-ice-invoice-r1 maxCalls1. Job aee57375-7a8c-46c0-b8f6-f4ed65d16eb0: unica richiesta Messages inviata07:42:08.267Z, risposta07:42:17.968Z;5486token input/1298output, costo23952microUSD=0.023952USD. Risposta contabilizzata, ma decodifica/evidenza rifiutata con evidence_unverified; nessuna bozza pubblicata né oggetto/costo creato. Nessuna seconda analisi, contatori invariati, provider disabilitato via launcher registrato al termine.
+
+Controllo locale con parser reale: documento testuale leggibile, ricevuta acquisto con data13giugno2025, un articolo macchina del ghiaccio, totale99.99EUR. Tabella Qtà/Articolo/Posizione/Prezzo e data etichettata «Ricevuta d’acquisto» evidenziano formati non rappresentati adeguatamente da alcune regex correnti. Questo è un limite identificato sul documento, NON prova di quale campo del reply abbia causato il rifiuto: il reply grezzo non viene conservato. Non ricostruire e presentare un output manuale come risposta AI riuscita. Prima di altri invii rafforzare diagnostica sanitizzata per campo/tipo e fixture sintetiche di tabella/date, valutare conservazione dei soli campi validati con avviso per gli altri. Nessun dato della fattura copiato nel repo come fixture.
+
+Il committente propone flusso unico dopo caricamento: classificazione+proposte oggetti+eventuale spesa nella stessa schermata, ingresso separato non obbligatorio. Registrato in specifica, non implementato in questa prova. Consenso prima di trasferimento e conferma prima di creazione; assenza di un candidato in prima pagina non prova che l’oggetto non esista.
+
+
 ## Caso Echo confermato dal committente — consolidamento
 
 Il committente conferma di aver creato la scheda Echo Dot Max e di vedere marca/modello e screenshot collegato. Esito riportato dall’utente, non una nuova verifica DB/browser di questa sessione. Confermato anche che non è stata registrata una spesa: la mail non conteneva il prezzo. Fattura rinviata; al caricamento scegliere la scheda esistente e valutare il costo senza duplicati. Specifica consolidata in `object-onboarding-spec-v1.md`, sezione finale.

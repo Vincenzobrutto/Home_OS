@@ -122,3 +122,8 @@ Regole consolidate:
 - Riferimento preciso facoltativo, distinto da modello/numero ordine/seriale. Recupero online da marca/modello e disambiguazione delle varianti, insieme alla descrizione/help del campo, rimandati su richiesta del committente.
 
 Implementazione e prove: `object-onboarding-api-contract-v2.md` e `object-onboarding-development-20261017.md`. Le note O1 sopra sono storiche: persistenza/UI/default garanzia sono ora implementati e collaudati con sintetici; questa accettazione reale riguarda esclusivamente il caso Echo descritto. Provider disabilitato dopo il collaudo, nessuna autorizzazione implicita per altri documenti o analisi.
+
+
+## Direzione UX da integrare — proposta unica dopo caricamento (17 ottobre 2026)
+
+Il committente richiede di evitare il passaggio separato «organizza il documento» → «organizza gli oggetti». Dopo la lettura, la stessa schermata deve proporre insieme classificazione del documento, creazione/collegamento degli articoli identificati e costo attribuibile, quando presente. Nessuna corrispondenza plausibile → proposta di nuova scheda; corrispondenze plausibili → scelta delle schede esistenti, senza associazione implicita o certezza di assenza basata sulla sola prima pagina. Il consenso al provider esterno può essere raccolto nel caricamento, specificando file/limiti, prima di qualunque trasferimento; non è implicito nell’upload locale. Nessuna creazione, spesa o sovrascrittura senza conferma. Copie, conflitti, più articoli e analisi non disponibile mantengono percorsi espliciti. Direzione registrata; integrazione UI e transazioni da definire/verificare dopo la prova della fattura in corso, non ancora implementata.
