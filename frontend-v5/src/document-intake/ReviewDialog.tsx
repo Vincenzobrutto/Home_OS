@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Field, cx, ui } from '../components/ui';
 import {
   COLLECTIONS, KINDS, KIND_LABEL, MAX_PARTS, TITLE_MAX, chooseKeep, chooseUpdate, collectionLabel, consentSignature, displayName, draftParts,
-  formatCents, hasConflict, hasReplaceConsent, kindCollection, needsKeepOrUpdate, partLabel, replacesConfirmed, validateReviewDraft, visibleItem,
+  houseDocumentType, formatCents, hasConflict, hasReplaceConsent, kindCollection, needsKeepOrUpdate, partLabel, replacesConfirmed, validateReviewDraft, visibleItem,
   type CandidatePage, type ClassificationPart, type DocumentKind, type IntakeItem, type ReviewDraft, type ReviewErrors,
 } from './model';
 import styles from './intake.module.css';
@@ -202,6 +202,7 @@ export function ReviewDialog(props: Props) {
     if (keeping) props.onResolveDuplicate(); else props.onSave();
   };
   const sources = item.proposal?.sources ?? [];
+  const houseOnly=!!houseDocumentType('',draftParts(draft,item).map(p=>p.kind));
   const candidates = props.candidates;
   const firstError = errors.duplicate ?? errors.title ?? errors.parts ?? errors.target ?? errors.replace ?? '';
   const parts = draftParts(draft, item);
@@ -314,7 +315,7 @@ export function ReviewDialog(props: Props) {
                       <input type="radio" name={`${group}-t`} checked={draft.target?.kind === 'home'} disabled={locked} onChange={() => set({ target: { kind: 'home' } })} />
                       <span><strong>Solo alla casa</strong><span className={styles.hint}>Nessun oggetto o costo necessario.</span></span>
                     </label>
-                    {candidates?.items.map(c => (
+                    {!houseOnly&&<>{candidates?.items.map(c => (
                       <label key={`${c.kind}:${c.id}`} className={styles.choice}>
                         <input type="radio" name={`${group}-t`} checked={draft.target?.kind === c.kind && draft.target.id === c.id} disabled={locked} onChange={() => set({ target: { kind: c.kind, id: c.id } })} />
                         <span><strong>{c.name}{c.roomName ? ` · ${c.roomName}` : ''}</strong><span className={styles.hint}>{c.kind === 'boiler' ? 'Scheda caldaia esistente' : 'Oggetto esistente'}: collegala solo se è proprio questa.</span></span>
@@ -326,7 +327,7 @@ export function ReviewDialog(props: Props) {
                     ) : candidates.hasMore ? (
                       <button type="button" className={styles.linkButton} onClick={() => props.onLoadCandidates(true)} disabled={candidates.status === 'loading' || locked}>{candidates.status === 'loading' ? 'Caricamento…' : 'Mostra altre schede'}</button>
                     ) : null}
-                    <p className={styles.note}>Nessuna nuova scheda viene creata da questa scelta.</p>
+                    </>}<p className={styles.note}>Nessuna nuova scheda viene creata da questa scelta.</p>
                   </fieldset>
 
                   {isReceipt && (

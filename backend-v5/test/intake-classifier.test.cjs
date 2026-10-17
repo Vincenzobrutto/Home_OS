@@ -35,3 +35,9 @@ test('orders, shipment notices and product labels retain their type without beco
   const result=classifyText([text]);assert.deepEqual(result.parts.map(p=>p.kind),[kind]);assert.deepEqual(result.collections,['purchases']);
  }
 });
+
+test('floor plans are building documents with page evidence, not product proposals',()=>{
+ const result=classifyText(['Planimetria catastale appartamento\nScala 1:100']);
+ assert.equal(result.parts[0].kind,'floor_plan');assert.deepEqual(result.collections,['building']);
+ assert.equal(result.sources[0].page,1);assert(result.sources[0].excerpt.includes('Planimetria'));
+});

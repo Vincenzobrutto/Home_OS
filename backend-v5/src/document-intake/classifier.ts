@@ -10,6 +10,7 @@ const rules: Array<[DocumentKind, RegExp, string]> = [
   ['habitability', /certificato\s+(?:di\s+)?abitabilit[àa]/iu, 'Abitabilità'],
   ['agibility', /(?:certificato|segnalazione\s+certificata)\s+(?:di\s+)?agibilit[àa]/iu, 'Agibilità'],
   ['agibility_record', /visura\s+(?:di\s+)?agibilit[àa]['’]?/iu, 'Visura agibilità'],
+  ['floor_plan', /\bplanimetri[ae]\b/iu, 'Planimetria'],
   ['system_diagram', /schema\s+(?:(?:dell[’']?|di)\s*)?(?:impianto|elettrico|idraulico|termico)/iu, 'Schema di impianto'],
   ['conformity_declaration', /dichiarazione\s+(?:di\s+)?conformit[àa]/iu, 'Dichiarazione di conformità'],
   ['system_booklet', /libretto\s+(?:di\s+)?impianto/iu, 'Libretto di impianto'],

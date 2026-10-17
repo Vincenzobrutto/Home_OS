@@ -294,3 +294,16 @@ it('inline object proposals do not organize copies, change privacy or render ina
  renderIntake(intakeProps({batch:batchOf([{...receipt,documentLink:{state:'unavailable',document:null}}]),objectProposalItemId:receipt.id,renderObjectProposals}));
  expect(screen.queryByText('Proposte oggetti inline')).not.toBeInTheDocument();
 });
+
+it('a scanned floor plan uses house document review, not the article editor or AI product compilation',async()=>{
+ const item={...corpus.scan(),filename:'Planimetria.pdf',documentLink:{state:'linked' as const,document:{id:'plan',name:'Planimetria.pdf'}}};
+ const renderObjects=vi.fn(()=> <p>Editor oggetti</p>),renderActions=vi.fn(()=> <p>Azioni AI oggetti</p>);
+ const props=intakeProps({batch:batchOf([item]),objectProposalItemId:item.id,renderObjectProposals:renderObjects,renderCompilationActions:renderActions});
+ renderIntake(props);const user=userEvent.setup();
+ expect(renderObjects).not.toHaveBeenCalled();expect(renderActions).not.toHaveBeenCalled();
+ await user.click(screen.getByRole('button',{name:'Rivedi documento della casa'}));
+ expect(within(dialog()).getByRole('radio',{name:/Solo alla casa/})).toBeChecked();
+ expect(within(dialog()).queryByRole('button',{name:/scheda esistente/})).not.toBeInTheDocument();
+ await confirmIn(user);
+ expect(organized(props.onOrganize)[0]!.items[0]!.selection).toMatchObject({title:'Planimetria',parts:[{kind:'floor_plan',pageFrom:null,pageTo:null}],target:{kind:'home'}});
+});

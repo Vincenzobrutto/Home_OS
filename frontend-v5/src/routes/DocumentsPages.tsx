@@ -1,3 +1,4 @@
+import { houseDocumentType } from '../document-intake/model';
 import { DocumentBillEntry } from '../object-onboarding/DocumentBillEntry';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
@@ -469,7 +470,7 @@ function DocumentRow(props: {
           <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
         </span>
         {doc.permissions.includes('read') && (
-          <DocumentBillEntry homeId={props.homeId} documentId={doc.id} compact bill={doc.organization?.parts.some(part=>part.kind==='utility_bill')} />
+          <DocumentBillEntry homeId={props.homeId} documentId={doc.id} houseDocument={!!houseDocumentType(doc.originalFilename+' '+doc.name,doc.organization?.parts.map(p=>p.kind))} compact bill={doc.organization?.parts.some(part=>part.kind==='utility_bill')} />
         )}
       </div>
     </li>

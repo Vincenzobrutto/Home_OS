@@ -4,7 +4,7 @@ import { ReviewDialog, type ReviewWriteState } from './ReviewDialog';
 import {
   STATUS_LABEL, STATUS_TONE, buildOrganizePayload, buildReviewPayload, bulkEligible, bulkItem, canonical, collectionLabel, contextKeyString,
   deferPayload, displayName, draftChanged, formatBytes, hasConflict, initialReviewDraft, itemStatus, kindCollection, matchesWorkFilter, partLabel,
-  supportsObjectProposals, reviewable, rowTitle, selectionCollections, sourceLost, visibleItem, workGroup,
+  houseDocumentKind, supportsObjectProposals, reviewable, rowTitle, selectionCollections, sourceLost, visibleItem, workGroup,
   type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type IntakeAnalysisPanel, type IntakeBatch, type IntakeCapabilities,
   type IntakeContextKey, type IntakeItem, type IntakeLoadState, type ItemConfirmResult, type ItemStatus, type OpaqueId, type OpaqueVersion,
   type OrganizeBatchPayload, type RecoverBatchOutcome, type ReviewDraft, type ReviewPayload, type WorkFilter, type WriteOutcome,
@@ -88,6 +88,11 @@ function Inner(props: DocumentIntakeAssistantProps) {
   const [filter, setFilter] = useState<WorkFilter>('all');
   const [dialog, setDialog] = useState<Dialog>(null);
   const [drafts, setDrafts] = useState<Record<string, ReviewDraft>>({});
+  function reviewDocument(item:IntakeItem) {
+    const kind=houseDocumentKind(item);
+    if(kind&&!item.proposal&&!item.confirmedOrganization&&!item.selection&&item.uploadState!=='duplicate')setDrafts(old=>({...old,[draftKey(item)]:old[draftKey(item)]??{...initialReviewDraft(item),title:(item.filename??item.documentLink.document?.name??'Documento della casa').replace(/\.[^.]+$/u,''),manualParts:[{kind,pageFrom:null,pageTo:null}],target:{kind:'home'}}}));
+    setDialog({itemId:item.id,onlyOriginal:false});
+  }
   const [writes, setWrites] = useState<Record<OpaqueId, ReviewWriteState>>({});
   const [pendingReview, setPendingReview] = useState<Record<OpaqueId, ReviewPayload>>({});
   const [ops, setOps] = useState<OrganizeOp[]>([]);
@@ -412,16 +417,16 @@ function Inner(props: DocumentIntakeAssistantProps) {
         <div className={styles.rowActions}>
           {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
           {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
-          {canReview && item.documentLink.state==='linked' && props.renderCompilationActions && props.renderCompilationActions(item.id)}
+          {canReview && item.documentLink.state==='linked' && props.renderCompilationActions && (houseDocumentKind(item)?<button type="button" className={ui.btn} onClick={()=>reviewDocument(item)}>Rivedi documento della casa</button>:props.renderCompilationActions(item.id))}
           {!props.renderCompilationActions && canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && supportsObjectProposals(item) && !(props.renderObjectProposals&&(copy||conflict)) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={props.renderObjectProposals?`Rivedi proposta per ${name}`:`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>{props.renderObjectProposals?'Rivedi proposta':'Riconosci gli oggetti'}</button>}
-          {group !== 'done' && reviewable(item) && !(props.renderObjectProposals&&props.onOpenReceiptFlow&&supportsObjectProposals(item)&&!copy&&!conflict) && (
+          {group !== 'done' && reviewable(item) && !(props.renderCompilationActions&&houseDocumentKind(item)) && !(props.renderObjectProposals&&props.onOpenReceiptFlow&&supportsObjectProposals(item)&&!copy&&!conflict) && (
             <button type="button" className={cx(ui.btn, ui.small, ui.primary)} aria-label={`${actionLabel} ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>{actionLabel}</button>
           )}
           {group === 'done' && raw !== 'unavailable' && (canReview && item.permissions.review && props.onReorganizeDocument
             ? <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Modifica ${name}`} disabled={props.addingFiles} onClick={() => void props.onReorganizeDocument?.(item.id)}>Modifica</button>
             : <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Vedi originale ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale</button>)}
         </div>
-      {canReview&&(props.renderCompilationActions||supportsObjectProposals(item))&&props.objectProposalItemId===item.id&&props.renderObjectProposals&&<section className={styles.objectProposals} aria-label={'Proposte oggetti e spesa per '+name}>{props.renderObjectProposals(item.id,()=>setDialog({itemId:item.id,onlyOriginal:false}))}</section>}
+      {canReview&&(props.renderCompilationActions||supportsObjectProposals(item))&&props.objectProposalItemId===item.id&&props.renderObjectProposals&&<section className={styles.objectProposals} aria-label={'Proposte oggetti e spesa per '+name}>{houseDocumentKind(item)?<><h3>Documento della casa</h3><p>Riguarda l’immobile: nessun oggetto o spesa da creare.</p><button type="button" className={ui.btn} onClick={()=>reviewDocument(item)}>Rivedi titolo e tipo</button></>:props.renderObjectProposals(item.id,()=>setDialog({itemId:item.id,onlyOriginal:false}))}</section>}
       </article>
     );
   };

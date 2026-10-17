@@ -1,3 +1,4 @@
+import { houseDocumentType } from '../document-intake/model';
 import { contextReturn } from '../lib/contextReturn';
 import { DocumentBillEntry } from '../object-onboarding/DocumentBillEntry';
 import { ExportIconButton } from '../components/ExportIconButton';
@@ -139,7 +140,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
 
         </div>
       </div>
-      {canRead && <section className={ui.card}><DocumentBillEntry homeId={props.home.id} documentId={doc.id} bill={bill} allowPrepare /></section>}
+      {canRead && <section className={ui.card}><DocumentBillEntry homeId={props.home.id} documentId={doc.id} houseDocument={!!houseDocumentType(doc.originalFilename+' '+doc.name,doc.organization?.parts.map(p=>p.kind))} bill={bill} allowPrepare /></section>}
       {canRead && <LinkedExpenses home={props.home} by={{ documentId: doc.id }} title="Spese collegate" addLabel="Registra una spesa da questo documento" />}
       {!bill&&<details><summary>Altri strumenti di analisi</summary>{props.analyzeHref&&<Link to={props.analyzeHref} className={ui.btn}>Analizza questo documento</Link>}<ReceiptEntry documentId={doc.id} /></details>}
 

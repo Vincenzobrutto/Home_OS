@@ -40,3 +40,13 @@ Ora l’editor articolo espone «Usa il documento già presente senza modificarl
 Link «Vedi documento originale» nella testata fissa del pannello di ogni articolo, in modalità manuale e AI, anche per nomi parziali/accessori. Apre la pagina autorizzata del medesimo documento in una nuova scheda, posizionata sull’anteprima dopo il caricamento dei byte; non naviga via dal modulo e non salva/conferma né invia dati al provider. Focus trap include il link; chiusura e campi invariati. Fonte non disponibile continua a essere protetta dai guard esistenti.
 
 Test mirato: link corretto/target/rel e modifica del nome conservata, zero analisi o conferme. ESLint mirato e build verdi. Verificata UI reale sul «Coperchio della lavatrice» e apertura della fonte Samsung; nessuna nuova scrittura personale. Screenshot outputs/articolo-link-originale-20261017.png.
+
+## Planimetrie e documenti dell’immobile
+
+Aggiunto tipo JSON floor_plan → building («Planimetria», Pratiche edilizie) ai cataloghi frontend/backend e al classificatore locale con citazione della pagina quando il testo è leggibile. Nessuna migrazione e nessun nuovo endpoint.
+
+Planimetrie, APE, titoli edilizi e documenti condominiali identificati aprono la revisione del documento della casa, non il modulo di creazione oggetto. Il nome del file può suggerire il percorso e una selezione manuale da confermare, mai una fonte estratta né una scrittura automatica. I PDF misti con acquisti/bollette non vengono trattati come esclusivamente immobiliari. La revisione casa mostra «Solo alla casa» e nessun candidato oggetto quando le parti scelte sono tutte immobiliari. Restano conservati originale, privacy e bozze precedenti; nessuna scheda oggetto è creata o eliminata dall’apertura della revisione.
+
+Caso reale: planimetria.pdf, documento 22171224-0b4c-4dfe-bf0a-964a88a8c4c6, lotto ab8aeb41. Testo non leggibile: indicazione manuale precompilata Planimetria, destinazione Pratiche edilizie e target casa. Finestra corretta aperta al committente; nessuna conferma personale eseguita, nessuna nuova AI o spesa. La bozza articolo precedente è conservata, ma non è più esposta come creazione oggetto in questo percorso.
+
+Verifiche:56 test frontend mirati verdi,12 backend offline verdi (parser PDF reale e classificatore), build frontend/backend e lint mirati. Servizi locali aggiornati con launcher registrato, senza .env, reset, nuove analisi o modifiche alle quote. Screenshot outputs/planimetria-documento-casa-20261017.png.

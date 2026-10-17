@@ -117,3 +117,8 @@ Integrazione notturna completata: API caricate tramite launcher registrato, comp
 ## Vocabolario acquisti pilota — 17 ottobre 2026
 
 Tipi aggiunti: purchase_order, delivery_notice, product_label, purchase_document; raccolta purchases. Nessuna migrazione di organizzazioni precedenti. Classificazione locale con evidenza testuale; non è OCR. Il container può proporre un tipo dalla bozza oggetti già letta solo per nuovi originali senza proposta locale/copie/conflitti/rinvio, usando la conferma organizations esistente, destinazione home e versione0. Mappatura: purchase_document→purchase_document, delivery_notice→delivery_notice, appliance_label→product_label. Tipo generico di acquisto non certifica una fattura. Nessun invio al provider implicito.
+
+
+### 17 ottobre 2026 — Planimetria
+
+Catalogo additivo: floor_plan → building, etichetta Planimetria. Stessi payload/versioni/consensi di classificazione esistenti. Le planimetrie sono documenti dell’immobile, non prodotti o spese. Un nome file è un aiuto alla revisione manuale, non una fonte di estrazione.

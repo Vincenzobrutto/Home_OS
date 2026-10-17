@@ -1,3 +1,4 @@
+import { OrganizeDocumentButton } from '../intake-integration/OrganizeDocumentButton';
 import { DocumentCompilationActions } from './DocumentCompilationActions';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -7,7 +8,7 @@ import type { Capabilities, Draft } from './model';
 import { proposalStatus, proposalIdentity } from './proposalStatus';
 
 /** Read-only entry: rendering or opening this link never starts an analysis. */
-export function DocumentBillEntry({ homeId, documentId, compact = false, bill = true, allowPrepare = true }: { homeId: string; documentId: string; compact?: boolean; bill?: boolean; allowPrepare?: boolean }) {
+export function DocumentBillEntry({ homeId, documentId, compact = false, bill = true, allowPrepare = true, houseDocument = false }: { homeId: string; documentId: string; compact?: boolean; bill?: boolean; allowPrepare?: boolean; houseDocument?: boolean }) {
   const account = useAccount(), api = useApi();
   const caps = useQuery({
     queryKey: ['account', account.id, 'home', homeId, 'onboarding', 'capabilities', documentId],
@@ -29,6 +30,7 @@ export function DocumentBillEntry({ homeId, documentId, compact = false, bill = 
   });
   const objects = caps.isError || result.isError ? [] : result.data?.draft?.items?.flatMap(item => item.decision?.objects ?? []).filter(obj => obj.id && obj.state === 'active') ?? [];
   const identity = caps.isError || result.isError ? '' : proposalIdentity(result.data?.draft);
+  if(houseDocument)return <div><p>Documento della casa · Nessun oggetto o spesa</p><OrganizeDocumentButton homeId={homeId} documentId={documentId}/></div>;
   if (!allowPrepare && caps.isSuccess && status.state === 'empty' && !caps.data.job) return <p>Documento archiviato.</p>;
   return <div>
     {compact && identity && <p><strong>{identity}</strong></p>}
