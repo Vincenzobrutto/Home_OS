@@ -75,7 +75,7 @@ function IntakeContainer() {
     if (selected && creation.current) { setProblem('Recupera prima l’esito del caricamento precedente oppure riapri un caricamento salvato.'); return; }
     if (selected) {
       if (!selected.length || selected.length > 20 || selected.some(f => f.size < 1 || f.size > 20 * 1024 * 1024) || selected.reduce((n, f) => n + f.size, 0) > 200 * 1024 * 1024) { setProblem('Scegli fino a 20 file, 20 MiB per file e 200 MiB complessivi.'); return; }
-      creation.current = { files: selected, ids: selected.map(() => crypto.randomUUID()), key: newIdempotencyKey(), batchId: active.current };
+      creation.current = { files: selected, ids: selected.map(() => newIdempotencyKey()), key: newIdempotencyKey(), batchId: active.current };
     }
     const pending = creation.current; if (!pending) return; creating.current = true; setWaiting(true); setProblem(null);
     try {

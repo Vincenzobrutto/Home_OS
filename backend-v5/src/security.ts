@@ -26,6 +26,17 @@ export function assertCsrf(req: Pick<Request, 'headers'>, csrf: string, expected
     throw new ForbiddenException({ code: 'csrf_invalid', message: 'Richiesta non autorizzata. Ricarica la sessione.' });
   }
 }
+/** Optional local-phone entry: exact configured RFC1918 origin, never a wildcard or production allowance. */
+export function expectedSessionOrigin(origin: unknown, env: { NODE_ENV?: string; FRONTEND_ORIGIN?: string; DIMORA_LAN_ORIGIN?: string } = process.env): string {
+  const fallback = env.FRONTEND_ORIGIN || 'http://127.0.0.1:5174';
+  if (env.NODE_ENV === 'production' || !env.DIMORA_LAN_ORIGIN || origin !== env.DIMORA_LAN_ORIGIN) return fallback;
+  try {
+    const url = new URL(env.DIMORA_LAN_ORIGIN), ip = url.hostname.split('.').map(Number);
+    const privateIp = ip.length === 4 && ip.every(n => Number.isInteger(n) && n >= 0 && n <= 255) && (ip[0] === 10 || ip[0] === 172 && ip[1] >= 16 && ip[1] <= 31 || ip[0] === 192 && ip[1] === 168);
+    if (privateIp && url.protocol === 'http:' && url.port === '5175' && url.origin === env.DIMORA_LAN_ORIGIN) return url.origin;
+  } catch { /* Invalid optional configuration remains closed. */ }
+  return fallback;
+}
 @Injectable()
 export class SessionsService {
   constructor(private readonly db: PrismaService) {}
@@ -50,13 +61,13 @@ export class SessionsService {
     if (context !== undefined && context !== session.accountId) {
       throw new UnauthorizedException({ code: 'account_context_changed', message: 'L’account è cambiato in un’altra scheda. Ricarica la sessione.' });
     }
-    if (mutation) assertCsrf(req, session.csrfToken, process.env.FRONTEND_ORIGIN || 'http://127.0.0.1:5174');
+    if (mutation) assertCsrf(req, session.csrfToken, expectedSessionOrigin(req.headers.origin));
     return session as Session & { accountId: string };
   }
   async requireCsrf(req: Request) {
     const session = await this.current(req);
     if (!session) throw new ForbiddenException('Ricarica la sessione prima di inviare.');
-    assertCsrf(req, session.csrfToken, process.env.FRONTEND_ORIGIN || 'http://127.0.0.1:5174');
+    assertCsrf(req, session.csrfToken, expectedSessionOrigin(req.headers.origin));
     return session;
   }
 }
