@@ -1,5 +1,12 @@
 # Oggetti dai documenti — consegna implementazione, 17 ottobre 2026
 
+## Caso Echo confermato dal committente — consolidamento
+
+Il committente conferma di aver creato la scheda Echo Dot Max e di vedere marca/modello e screenshot collegato. Esito riportato dall’utente, non una nuova verifica DB/browser di questa sessione. Confermato anche che non è stata registrata una spesa: la mail non conteneva il prezzo. Fattura rinviata; al caricamento scegliere la scheda esistente e valutare il costo senza duplicati. Specifica consolidata in `object-onboarding-spec-v1.md`, sezione finale.
+
+Restano separati: prova reale PDF acquisto/costo/garanzia, multiarticolo e foto etichetta; ricerca del riferimento e testo/help campo rinviati. Nessun nuovo test, chiamata AI, documento caricato o dato prodotto modificato in questo consolidamento documentale.
+
+
 ## Aggiornamento: proposte locali dal nome del prodotto
 
 Il committente approva marca/modello ricavati dal titolo, da confermare; recupero del riferimento preciso e chiarezza del relativo campo rinviati. Implementata derivazione locale su prefissi riconoscibili, con origine `derived_from_product_name`, fonte originale e nessun cambiamento a output AI/fingerprint/identificatori. Usata sia in proiezione sia in conferma e ricerca candidati. Nessun valore esplicito o confermato sovrascritto, nessuna unione di identità esplicita contraddittoria con titolo; sconosciuti, accessori/compatibilità, marche multiple e modelli tagliati non completati. Regole iniziali estensibili, non lookup universale di catalogo.

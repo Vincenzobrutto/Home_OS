@@ -107,3 +107,18 @@ Ogni unità creata deve avere identità distinta; due righe non possono selezion
 L'analisi automatica locale gratuita resta tale. Per l'immagine occorre consenso esplicito all'invio del file (anche dati personali), campagna e budget propri. Mai fallback esterno automatico quando il PDF locale non è leggibile. Count_tokens è anch'esso un trasferimento; nessuna chiamata prima del consenso. Campagne ricevute precedenti concluse non vengono riutilizzate. Lo screenshot personale allegato non va inviato finché il consenso specifico non arriva.
 
 Prove obbligatorie: uno/due/nessun prodotto; due unità; testo troncato; consumabile; reso; documento illeggibile; stesso modello in due stanze; altro account/casa/archiviato; nome uguale ma modello discordante; fonte identica senza riuso improprio di tutte le righe; fonte cambiata/revocata; rollback/replay; zero spese da mail di consegna.
+
+
+## Consolidamento del caso Echo — validazione del committente, 17 ottobre 2026
+
+Il committente ha completato la conferma nell’app e dichiara di vedere la scheda Amazon Echo Dot Max con marca Amazon, modello Echo Dot Max e screenshot di consegna collegato. Questo chiude il caso reale singolo «mail di consegna → oggetto», comprensivo di revisione del nome e accettazione delle proposte marca/modello ricavate dal titolo. Non equivale alla validazione reale di multiarticolo, foto etichetta o fattura, tuttora distinta dai test sintetici.
+
+Regole consolidate:
+- L’analisi propone; la conferma dell’utente crea o collega la scheda. Il documento originale resta collegato e privato secondo la visibilità già scelta.
+- Nome commerciale correggibile; marca/modello ricavati localmente solo da titoli riconoscibili, origine `derived_from_product_name` e conferma. Dati espliciti e campi già confermati protetti; nessuna nuova chiamata provider per la derivazione.
+- La mail senza prezzo non crea una spesa e non inventa costo o data d’acquisto/garanzia. Oggetto, prova documentale e costo hanno conferme indipendenti.
+- Una futura fattura/ricevuta dell’Echo deve permettere di scegliere l’oggetto già esistente, aggiungere l’originale e proporre la spesa attribuibile. Se il costo è già presente va riusato/confrontato, mai duplicato; nome o stesso modello non autorizzano un collegamento automatico in caso di ambiguità. Eventuali dati discordanti restano da decidere, senza sovrascrittura.
+- Data documentata e garanzia proposta restano distinguibili; nessuna garanzia ricavata dalla sola consegna prevista.
+- Riferimento preciso facoltativo, distinto da modello/numero ordine/seriale. Recupero online da marca/modello e disambiguazione delle varianti, insieme alla descrizione/help del campo, rimandati su richiesta del committente.
+
+Implementazione e prove: `object-onboarding-api-contract-v2.md` e `object-onboarding-development-20261017.md`. Le note O1 sopra sono storiche: persistenza/UI/default garanzia sono ora implementati e collaudati con sintetici; questa accettazione reale riguarda esclusivamente il caso Echo descritto. Provider disabilitato dopo il collaudo, nessuna autorizzazione implicita per altri documenti o analisi.
