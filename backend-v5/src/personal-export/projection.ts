@@ -66,7 +66,7 @@ export class Projection {
     const row = record(value);
     const allowed = kind === 'object' ? this.objects : kind === 'boiler' ? this.assets : kind === 'room' ? this.rooms : kind === 'activity' ? this.activities : kind === 'expense' ? this.expenses : kind === 'work' ? this.works : new Set<string>();
     if (row.id !== undefined && !this.ref(row.id, allowed)) return null;
-    if (kind === 'object') return scalars(row, fields.object);
+    if (kind === 'object') return { ...scalars(row, fields.object), ...(row.manual ? { manual: scalars(row.manual, ['url', 'kind', 'brand', 'reference', 'origin', 'sourceUrl', 'checkedAt', 'boundVersion']) } : {}) };
     if (kind === 'room') return scalars(row, fields.room);
     if (kind === 'boiler') return { ...scalars(row, ['id', 'name', 'version', 'createdAt']), confirmed: this.confirmed(row.confirmed) };
     if (kind === 'activity') return { ...scalars(row, fields.activity), assetId: this.ref(row.assetId, this.assets) };

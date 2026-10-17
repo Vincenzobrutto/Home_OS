@@ -33,6 +33,8 @@ test('G1: HTTP/controller/auth/CSRF/originali/DB reali, nessun worker AI',async 
  const ok=(r,status=200)=>{assert.equal(r.status,status,JSON.stringify(r.data));return r.data;},a=new Browser(),b=new Browser();let h,room,obj,doc,expense,link;
  await t.test('Guard sessione/contesto/CSRF e ambienti Home condivisi',async()=>{
   for(const[client,name]of[[a,'A'],[b,'B']]){ok(await client.request('/session'));ok(await client.request('/auth/register','POST',{name:'HTTP G1 '+name,email:randomUUID()+'@example.test',password:'password-prova-g1-123'}),201);accounts.push(client.id);ok(await client.request('/session'));}
+  // Synthetic harness accounts only; email delivery/recovery is outside this test.
+  await db.account.updateMany({where:{id:{in:accounts}},data:{emailVerifiedAt:new Date()}});
   h=ok(await a.request('/homes','POST',{name:'HTTP G1',address:'Via test'}),201).home.id;homes.push(h);
   assert.equal(ok(await a.request(`/homes/${h}/object-capabilities`)).apiVersion,'home-objects-v1');assert.equal((await b.request(`/homes/${h}/rooms`)).status,403);
   await db.homeMembership.create({data:{accountId:b.id,homeId:h,role:'member',validFrom:new Date(0)}});
@@ -64,6 +66,41 @@ test('G1: HTTP/controller/auth/CSRF/originali/DB reali, nessun worker AI',async 
   ok(await a.request(`/homes/${h}/objects/object/${obj.ref.id}/links/${link.linkId}/remove`,'POST',{expectedVersion:1}));
   assert.equal(ok(await a.request(`/homes/${h}/expenses/${expense.id}`)).expense.amountCents,30);
   await db.document.update({where:{id:doc.id},data:{uploaderId:a.id,visibility:'home'}});assert.deepEqual(ok(await a.request(`/homes/${h}/documents/${doc.id}/file`)),pdf);
+ });
+ await t.test('Manuale: HTTP/DB, conferma e replay, privato, versioni, esportazione e rimozione',async()=>{
+  const manualObject=ok(await a.request(`/homes/${h}/objects`,'POST',{name:'Oggetto manuale sintetico',type:'appliance'}),201).object;
+  const path=`/homes/${h}/objects/object/${manualObject.ref.id}`;
+  const body={expectedVersion:1,selection:{mode:'manual',kind:'manual',brand:'Lume',reference:'TEST1',url:'https://manufacturer.example/manual.pdf'}},key=randomUUID();
+  assert.equal((await a.request(path+'/manual','POST',body,{'X-CSRF-Token':'errato'})).status,403);
+  const saved=ok(await a.request(path+'/manual','POST',body,{'Idempotency-Key':key})).object;
+  assert.equal(saved.version,2);assert.equal(saved.manual.origin,'user_provided');assert.equal(saved.manual.needsReview,false);
+  assert.deepEqual(ok(await a.request(path+'/manual','POST',body,{'Idempotency-Key':key})).object,saved);
+  assert.equal((await a.request(path+'/manual','POST',{...body,selection:{mode:'remove'}},{'Idempotency-Key':key})).status,409);
+  assert.equal((await b.request(path)).status,403);assert.equal((await b.request(path+'/manual','POST',body)).status,403);
+  assert.equal((await a.request(path+'/manual','POST',{...body,expectedVersion:2,selection:{...body.selection,url:'javascript:alert(1)'}})).status,422);
+  ok(await a.request(path+'/updates','POST',{expectedVersion:2,name:'Oggetto rinominato'}));
+  assert.equal(ok(await a.request(path)).object.manual.needsReview,true);
+  assert.equal((await a.request(path+'/manual','POST',{...body,expectedVersion:2})).status,409);
+  assert.equal(ok(await a.request(path+'/manual','POST',{expectedVersion:3,selection:{mode:'remove'}})).object.manual,null);
+  assert((await db.objectEvent.findMany({where:{targetId:manualObject.ref.id}})).some(event=>event.kind==='manual_removed'));
+ });
+ await t.test('Manuale ufficiale: recupero e conferma separati, prova firmata e ruolo ricontrollato',async()=>{
+  if(external)return; // Live manufacturer checks are separate from this strictly offline HTTP test.
+  const s=app.get(HomeObjectsService),originalFetch=s.manuals.fetchImpl;
+  const manualObject=ok(await a.request(`/homes/${h}/objects`,'POST',{name:'Moulinex sintetico',type:'appliance'}),201).object,path=`/homes/${h}/objects/object/${manualObject.ref.id}`;
+  try{
+   s.manuals.fetchImpl=async()=>new Response('<script type="application/ld+json">{"@type":"Product","mpn":"TEST123"}</script><a href="https://dam.groupeseb.com/m/synthetic/original/manual.pdf">Scarica le Istruzioni per l’uso</a>',{headers:{'content-type':'text/html'}});
+   const found=ok(await a.request(path+'/manual-proposals','POST',{brand:'Moulinex',reference:'TEST123',productUrl:'https://www.moulinex.it/p/test/123'}));
+   assert(found.candidate);assert.equal(ok(await a.request(path)).object.manual,null);
+   const save={expectedVersion:1,selection:{mode:'candidate',token:found.candidate.token}};
+   const other=ok(await a.request(`/homes/${h}/objects`,'POST',{name:'Altro sintetico',type:'appliance'}),201).object;
+   assert.equal((await a.request(`/homes/${h}/objects/object/${other.ref.id}/manual`,'POST',save)).status,422);
+   await db.homeMembership.update({where:{accountId_homeId:{accountId:a.id,homeId:h}},data:{role:'viewer'}});
+   assert.equal((await a.request(path+'/manual','POST',save)).status,403);
+   await db.homeMembership.update({where:{accountId_homeId:{accountId:a.id,homeId:h}},data:{role:'owner'}});
+   const linked=ok(await a.request(path+'/manual','POST',save)).object;
+   assert.equal(linked.manual.origin,'manufacturer_page');assert.equal(linked.manual.reference,'TEST123');
+  }finally{s.manuals.fetchImpl=originalFetch;await db.homeMembership.update({where:{accountId_homeId:{accountId:a.id,homeId:h}},data:{role:'owner'}});}
  });
  await t.test('Archivio/ripristino, viewer/revoca e nessun consumo AI',async()=>{
   obj=ok(await a.request(`/homes/${h}/objects/object/${obj.ref.id}/archive`,'POST',{expectedVersion:1})).object;assert.equal(obj.state,'archived');

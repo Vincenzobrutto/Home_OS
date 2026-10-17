@@ -615,6 +615,7 @@ model HomeRoom {
   @@index([homeId,state,createdAt,id])
 }
 model HomeObject {
+  manual Json?
   receiptFields ReceiptObjectField[]
   receiptComparisons ReceiptComparison[]
   id String @id @default(uuid())

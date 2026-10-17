@@ -26,6 +26,7 @@ import { BackToCasa, ObjectsGate, Unavailable, useFocusAfterVersion } from './Ro
 import { useCurrentHome } from './HomePages';
 import pages from './pages.module.css';
 import { ReceiptComparisons, ReceiptObjectFields } from '../receipt-integration/Surfaces';
+import { ManualSection } from '../objects/ManualSection';
 
 const STATE_OPTIONS: Array<{ value: CatalogFilters['state']; label: string }> = [
   { value: 'active', label: 'Attivi' },
@@ -437,6 +438,7 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
         )}
 
         <LinksSection home={home} object={object} resourceType="document" />
+        {!isBoiler && <ManualSection homeId={home.id} object={object} canEdit={canEdit} />}
         <LinksSection
           home={home}
           object={object}

@@ -17,6 +17,8 @@ const KIND_LABEL: Record<string, string> = {
   link_created: 'Collegamento aggiunto',
   unlinked: 'Collegamento rimosso',
   link_removed: 'Collegamento rimosso',
+  manual_updated: 'Manuale collegato o aggiornato',
+  manual_removed: 'Collegamento al manuale rimosso',
 };
 
 type Snap = Record<string, unknown> | null;

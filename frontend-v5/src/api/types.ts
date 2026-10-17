@@ -449,6 +449,7 @@ export type ObjectKind = 'object' | 'boiler';
 export type ObjectRef = { kind: ObjectKind; id: string };
 
 export type CatalogItem = {
+  manual?: ObjectManual | null;
   ref: ObjectRef;
   name: string;
   type: ObjectType | 'boiler';
@@ -463,6 +464,12 @@ export type CatalogItem = {
   version?: number;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type ObjectManual = {
+  url: string; kind: 'manual' | 'support'; brand: string; reference: string;
+  origin: 'manufacturer_page' | 'user_provided'; sourceUrl: string | null;
+  checkedAt: string | null; boundVersion: number; needsReview?: boolean;
 };
 
 export type ObjectCapabilities = {

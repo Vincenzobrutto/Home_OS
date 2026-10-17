@@ -80,3 +80,6 @@ Prove: nomi Unicode/codepoint/NFC, due ambienti stesso tipo; multiambiente e arc
 ## Taglio operativo
 
 G1a: Room + Object manuale + posizione + boiler nel catalogo + storia, dominio/schema/API/test. G1b: collegamenti a risorse e relativi flussi. Entrambi necessari per chiudere G1; G1a non va presentata come completa economia/oggetti. Claude revisiona UX documentale in parallelo; incarico frontend eseguibile solo con contratto congelato e baseline sincronizzata. Nessuna nuova chiamata Anthropic.
+# Aggiornamento additivo17ottobre2026: manuali online
+
+Il DTO CatalogItem può includere `manual` nullable (URL, kind manual/support, brand/reference, origin, sourceUrl/checkedAt, boundVersion/needsReview). Solo HomeObject generico personale, originale e privacy invariati. POST `/homes/:homeId/objects/object/:id/manual-proposals` ricerca senza salvare; POST stesso prefisso `/manual` salva/rimuove con expectedVersion, selection e Idempotency-Key. Contratto completo, copertura produttori e prove in [object-manuals-20261017.md](object-manuals-20261017.md). L'onboarding da foto resta un incremento separato, non attivato da questi endpoint.

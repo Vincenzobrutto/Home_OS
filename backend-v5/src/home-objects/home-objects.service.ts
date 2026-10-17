@@ -7,10 +7,11 @@ import { canReadDocument } from '../documents/access';
 import { readableReceiptName, readableReceiptObjectIds } from '../receipt-assistance/access';
 import { conflict, invalid, object, uuid, version } from '../review/domain';
 import { createHomeObject, objectAction, objectLimits, objectsQuery, objectTypes, positionBody, roomTypes, subjectKind, updateHomeObject, type SubjectKind } from './domain';
+import { ManufacturerManuals, manualLookup, manualSelection, type ObjectManual } from './manuals';
 
 type Tx = Prisma.TransactionClient;
 type Context = { a: string; h: string; edit: boolean };
-type Subject = { id: string; homeId: string; accountId: string; name: string; type: string; note: string | null; state: string; version: number; createdAt: Date; updatedAt: Date };
+type Subject = { id: string; homeId: string; accountId: string; name: string; type: string; note: string | null; manual?: Prisma.JsonValue | null; state: string; version: number; createdAt: Date; updatedAt: Date };
 type Saved = { kind: 'room'; row: HomeRoom } | { kind: SubjectKind; row: Subject; position: ObjectPosition | null } | { kind: 'link'; row: ObjectResourceLink; subjectKind: SubjectKind; subjectId: string };
 type Cursor = { b: string; t: string; id: string; k?: string };
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
@@ -26,6 +27,7 @@ const revive = <T extends { createdAt: Date; updatedAt: Date }>(row: T): T => ({
 
 @Injectable()
 export class HomeObjectsService {
+  readonly manuals = new ManufacturerManuals();
   constructor(private readonly db: PrismaService, private readonly access: ReviewService) {}
   private async transaction<T>(a: string, h: string, edit: boolean, action: (tx: Tx, c: Context) => Promise<T>) {
     uuid(h);
@@ -64,7 +66,9 @@ export class HomeObjectsService {
   private async catalogView(tx: Tx, c: Context, kind: SubjectKind, row: Subject, position?: ObjectPosition | null) {
     const pos = position === undefined ? await this.position(tx, c, kind, row.id) : position;
     const rooms = pos ? await tx.homeRoom.findMany({ where: { homeId: c.h, id: { in: pos.roomIds as string[] } }, orderBy: { id: 'asc' } }) : [];
+    const manual = kind === 'object' ? (row as HomeObject).manual as ObjectManual | null : null;
     return { ref: { kind, id: row.id }, homeId: row.homeId, name: row.name, type: row.type, note: row.note, state: row.state,
+      manual: manual ? { ...manual, needsReview: manual.boundVersion !== row.version } : null,
       version: row.version, createdAt: new Date(row.createdAt).toISOString(), updatedAt: new Date(row.updatedAt).toISOString(),
       kindLabel: kind === 'boiler' ? 'Scheda caldaia personale' : 'Oggetto personale', permissions: c.edit ? ['read', 'edit'] : ['read'],
       position: { version: pos?.version ?? 0, rooms: rooms.map(r => this.roomView(r, c)) }, technicalLink: kind === 'boiler' ? { assetId: row.id } : null };
@@ -167,6 +171,30 @@ export class HomeObjectsService {
   async getObject(a: string, h: string, kindInput: unknown, id: string, q: unknown) {
     object(q, []); const kind = subjectKind(kindInput);
     return this.transaction(a, h, false, async (tx, c) => ({ object: await this.catalogView(tx, c, kind, await this.subject(tx, c, kind, id)) }));
+  }
+  async findManual(a: string, h: string, id: string, input: unknown) {
+    const lookup = manualLookup(input);
+    const sourceVersion = await this.transaction(a, h, true, async (tx, c) => {
+      const row = await this.subject(tx, c, 'object', uuid(id)); this.active(row.state); return row.version;
+    });
+    const result = await this.manuals.lookup(lookup, JSON.stringify([a, h, id, sourceVersion]));
+    return this.transaction(a, h, true, async (tx, c) => {
+      const row = await this.subject(tx, c, 'object', id); this.active(row.state); this.checkVersion(row.version, sourceVersion, 'object'); return result;
+    });
+  }
+  async setManual(a: string, h: string, id: string, input: unknown, key?: string) {
+    uuid(id); const r = object(input, ['expectedVersion', 'selection']);
+    const expectedVersion = version(r.expectedVersion), selection = manualSelection(r.selection);
+    return this.mutate(a, h, 'object:manual', id, { expectedVersion, selection }, key, async (tx, c) => {
+      const before = await this.saveSubject(tx, c, 'object', id);
+      if (before.kind !== 'object') throw deny();
+      this.active(before.row.state); this.checkVersion(before.row.version, expectedVersion, 'object');
+      const proposed = selection.mode === 'remove' ? null : selection.mode === 'manual' ? selection.manual : this.manuals.accept(selection.token, JSON.stringify([a, h, id, expectedVersion]));
+      const manual = proposed ? { ...proposed, boundVersion: expectedVersion + 1 } : null;
+      await tx.homeObject.update({ where: { id }, data: { manual: manual ? json(manual) : Prisma.DbNull, version: { increment: 1 }, updatedAt: new Date() } });
+      const after = await this.saveSubject(tx, c, 'object', id);
+      await this.event(tx, c, 'object', id, manual ? 'manual_updated' : 'manual_removed', before, after); return after;
+    });
   }
   private async checkRooms(tx: Tx, c: Context, ids: string[], existing: string[] = []) {
     for (const id of ids) {
