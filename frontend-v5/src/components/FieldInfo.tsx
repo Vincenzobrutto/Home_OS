@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './FieldInfo.module.css';
+import { lockModalScroll } from './modalScroll';
 
 /** On-demand field explanations, usable by touch and keyboard as well as pointer. */
 export function FieldInfo({ label, children }: { label: string; children: ReactNode }) {
@@ -10,8 +11,7 @@ export function FieldInfo({ label, children }: { label: string; children: ReactN
     if (!open) return;
     panel.current?.querySelector<HTMLButtonElement>('button')?.focus();
     const returnTo = trigger.current;
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const unlock = lockModalScroll();
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { event.preventDefault(); setOpen(false); }
       if (event.key !== 'Tab') return;
@@ -21,7 +21,7 @@ export function FieldInfo({ label, children }: { label: string; children: ReactN
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
     };
     document.addEventListener('keydown', key);
-    return () => { document.removeEventListener('keydown', key); document.body.style.overflow = overflow; returnTo?.focus(); };
+    return () => { document.removeEventListener('keydown', key); unlock(); returnTo?.focus(); };
   }, [open]);
   return <>
     <button ref={trigger} type="button" className={styles.info} aria-label={'Informazioni su ' + label} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}><span aria-hidden="true">i</span></button>

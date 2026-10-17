@@ -60,3 +60,8 @@ Arbitrato d'integrazione: anche Mantieni i dati attuali su un conflitto stored u
 ## Criteri di chiusura
 
 Test componenti e HTTP/DB sintetici su singolo, selezione parziale multipla, rinvio/reload, copia invariata/aggiornata, consenso mancante, versione cambiata, sorgente revocata, errore parziale, risposta persa e replay. Build/lint mirati; browser sull'app integrata con dati sintetici, desktop e mobile. Le prove del mockup non valgono come collaudo del prodotto. Nessun provider a pagamento per questa implementazione.
+
+
+## Revisione UX successiva
+
+Il 17 ottobre è approvata la specifica complementare [onboarding V3](onboarding-simplified-spec-v3.md), con lista articoli compatta e revisione dedicata. Permessi, organizzazione documenti, consenso e recuperi V2 rimangono validi. Stato della prima integrazione e limiti in [rapporto V3](onboarding-v3-implementation-20261017.md).

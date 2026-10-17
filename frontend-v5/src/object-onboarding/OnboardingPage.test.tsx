@@ -5,7 +5,7 @@ import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { Draft, Form } from './model';
 import { choice, initialForm } from './model';
-async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean}={}){
+async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
  if(options.login!==false){await api.login({email:account.email,password});await api.getSession();}
@@ -21,8 +21,11 @@ async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:bo
   if(path==='/jobs'){starts++;if(options.lostStart&&starts===1)throw new TypeError('lost');return Response.json({job:{id:'job1',state:'queued',draftId:null,errorCode:null}},{status:202});}
   if(path==='/jobs/old-job')return Response.json({job:{id:'old-job',state:'uncertain',draftId:null,errorCode:'analysis_outcome_unknown'}});
   if(path.startsWith('/jobs/'))return Response.json({job:{id:'job1',state:'succeeded',draftId:wire.id,errorCode:null}});
+  if(path.includes('/candidates')&&options.dynamicCandidates&&wire.items[0]?.decision?.state==='confirmed')return Response.json({items:[{id:'objectitem0',name:'Router demo',version:1,profile:{fields:{},unavailable:false},rooms:[],reason:'confirmed_item'}],nextCursor:null});
+  if(path.includes('/candidates')&&options.clearCandidates)return Response.json({items:[],nextCursor:null});
   if(path.includes('/candidates'))return Response.json({items:[{id:'existing1',name:'Speaker Studio',version:3,profile:{fields:{brand:{value:'Confirmed',origin:'user_declared',sources:[]}},unavailable:false},rooms:['Studio'],reason:'same_brand_model'}],nextCursor:null});
   if(path.includes('/expense-candidates'))return options.expenseFailure?Response.json({error:{code:'unavailable',message:'Unavailable'}},{status:503}):Response.json({items:options.duplicates?[{id:'expense1',title:'Acquisto già registrato',amountCents:9999,spentOn:'2025-06-13',version:2,rank:1}]:[],nextCursor:null});
+  if(path.endsWith('/enrichment')){wire.items[0]!.profile.capacityLitres={value:'3.2',origin:'manufacturer_page',sources:[]};wire.version++;return Response.json({draft:wire});}
   if(path.endsWith('/review')){wire.review=body.review;wire.version++;return Response.json({draft:wire});}
   if(path.includes('/confirmations/'))return Response.json({status:saved?'confirmed':'not_found',draft:wire});
   if(path.endsWith('/confirmations')){
@@ -37,16 +40,17 @@ async function world(options:{login?:boolean;start?:boolean;ai?:boolean;lost?:bo
   return Response.json({error:{code:'not_found',message:'Unknown'}},{status:404});
  };
  const app=renderApp({backend,fetch,path:'/home/'+home.id+'/documenti/'+doc.id+'/oggetti'+(options.start?'':'?bozza='+wire.id)});
+ if(!options.compactList&&options.login!==false&&!options.foreign&&(!options.start||options.savedDraft)){await screen.findByRole('button',{name:'Rivedi Router demo'});await app.user.click(screen.getByRole('button',{name:'Rivedi Router demo'}));}
  return {...app,wire,calls,counts:()=>({confirmations,starts})};
 }
 describe('Onboarding reale nel router, API simulate e nessun invio esterno',()=>{
  it('guard login protegge il deep link prima di leggere documenti e proposte',async()=>{const w=await world({login:false});await screen.findByRole('heading',{name:/Accedi/});expect(w.calls).toHaveLength(0);expect(w.router.state.location.search).toContain('next=');});
  it('AI disabilitata mostra compilazione manuale e non inventa risultati',async()=>{const w=await world({start:true});await screen.findByText(/L’analisi AI di questo documento non è abilitata/);expect(screen.queryByRole('button',{name:'Analizza e proponi gli oggetti'})).not.toBeInTheDocument();await w.user.click(screen.getByRole('button',{name:'Compila le proposte manualmente'}));await screen.findByRole('heading',{name:'Rivedi gli articoli'});expect(w.counts().starts).toBe(0);});
- it('conferma un articolo e lascia l’altro da rivedere; nessuna spesa da una consegna',async()=>{const w=await world();await screen.findByRole('heading',{name:'Router demo'});expect(screen.queryByText('Spesa di acquisto (facoltativa)')).not.toBeInTheDocument();await w.user.click(screen.getAllByRole('button',{name:'Conferma questo articolo'})[0]!);await screen.findByText('Confermato: 1 nuovi oggetti e 0 nuove spese.');expect(screen.getByRole('link',{name:'Apri Router demo'})).toBeInTheDocument();expect(screen.getAllByRole('button',{name:'Conferma questo articolo'})).toHaveLength(1);expect(w.counts().confirmations).toBe(1);});
- it('esito perso si recupera tramite ricevuta senza un secondo POST',async()=>{const w=await world({lost:true});await screen.findByRole('heading',{name:'Router demo'});await w.user.click(screen.getAllByRole('button',{name:'Conferma questo articolo'})[0]!);await screen.findByRole('button',{name:'Controlla l’esito'});expect(screen.getAllByRole('button',{name:'Conferma questo articolo'})[0]).toBeDisabled();await w.user.click(screen.getByRole('button',{name:'Controlla l’esito'}));await screen.findByText('Conferma recuperata: nessun doppione.');expect(w.counts().confirmations).toBe(1);});
+ it('conferma un articolo e lascia l’altro da rivedere; nessuna spesa da una consegna',async()=>{const w=await world();await screen.findByRole('heading',{name:'Router demo'});expect(screen.queryByText('Spesa di acquisto (facoltativa)')).not.toBeInTheDocument();await w.user.click(screen.getAllByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})[0]!);await screen.findByText('Confermato: 1 nuovi oggetti e 0 nuove spese.');expect(screen.getByRole('link',{name:'Apri Router demo'})).toBeInTheDocument();expect(screen.getByRole('button',{name:'Rivedi Speaker demo'})).toBeInTheDocument();expect(w.counts().confirmations).toBe(1);});
+ it('esito perso si recupera tramite ricevuta senza un secondo POST',async()=>{const w=await world({lost:true});await screen.findByRole('heading',{name:'Router demo'});await w.user.click(screen.getAllByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})[0]!);await screen.findByRole('button',{name:'Controlla l’esito'});expect(screen.getByRole('button',{name:'Rivedi Speaker demo'})).toBeDisabled();await w.user.click(screen.getByRole('button',{name:'Controlla l’esito'}));await screen.findByText('Conferma recuperata: nessun doppione.');expect(w.counts().confirmations).toBe(1);});
  it('avvio perso ripete solo la stessa richiesta con consenso e chiave stabili',async()=>{const w=await world({start:true,ai:true,lostStart:true});const consent=await screen.findByRole('checkbox');expect(screen.getByRole('button',{name:'Analizza e proponi gli oggetti'})).toBeDisabled();await w.user.click(consent);await w.user.click(screen.getByRole('button',{name:'Analizza e proponi gli oggetti'}));await w.user.click(await screen.findByRole('button',{name:'Verifica ripetendo la stessa richiesta'}));await screen.findByRole('heading',{name:'Rivedi gli articoli'});const posts=w.calls.filter(c=>c.path==='/jobs');expect(posts).toHaveLength(2);expect(posts[0]).toEqual(posts[1]);expect(posts[0]!.body).toMatchObject({consentToProviderTransfer:true,provider:'anthropic'});});
- it('il collegamento esistente richiede una scelta esplicita e protegge il valore attuale',async()=>{const w=await world();await screen.findByRole('heading',{name:'Router demo'});const article=screen.getByRole('heading',{name:'Router demo'}).closest('article')!;await w.user.click(within(article).getByLabelText('Collega a un oggetto già in casa'));const select=within(article).getByLabelText('Scheda da collegare');expect(select).toHaveValue('');await w.user.selectOptions(select,'existing1');expect(within(article).getByText('Attuale confermato: Confirmed')).toBeInTheDocument();expect(within(article).getByLabelText('Scelta per Marca')).toHaveValue('keep');expect(within(article).queryByRole('option',{name:'Usa la proposta'})).not.toBeInTheDocument();});
- it('errore di validazione libera i campi e non lascia la conferma incerta',async()=>{const w=await world({invalid:true});await screen.findByRole('heading',{name:'Router demo'});await w.user.click(screen.getAllByRole('button',{name:'Conferma questo articolo'})[0]!);await screen.findByText('Controlla la scelta');await waitFor(()=>expect(screen.getAllByRole('button',{name:'Conferma questo articolo'})[0]).toBeEnabled());expect(screen.queryByRole('button',{name:'Controlla l’esito'})).not.toBeInTheDocument();});
+ it('il collegamento esistente richiede una scelta esplicita e protegge il valore attuale',async()=>{const w=await world();await screen.findByRole('heading',{name:'Router demo'});const article=screen.getByRole('dialog',{name:'Rivedi l’articolo'});await w.user.click(within(article).getByLabelText('Collega a un oggetto già in casa'));const select=within(article).getByLabelText('Scheda da collegare');expect(select).toHaveValue('');await w.user.selectOptions(select,'existing1');expect(within(article).getByText('Attuale confermato: Confirmed')).toBeInTheDocument();expect(within(article).getByLabelText('Scelta per Marca')).toHaveValue('keep');expect(within(article).queryByRole('option',{name:'Usa la proposta'})).not.toBeInTheDocument();});
+ it('errore di validazione libera i campi e non lascia la conferma incerta',async()=>{const w=await world({invalid:true});await screen.findByRole('heading',{name:'Router demo'});await w.user.click(screen.getAllByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})[0]!);await screen.findByText('Controlla la scelta');await waitFor(()=>expect(screen.getAllByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})[0]).toBeEnabled());expect(screen.queryByRole('button',{name:'Controlla l’esito'})).not.toBeInTheDocument();});
  it('non mescola originale e bozza di due documenti diversi',async()=>{await world({foreign:true});await screen.findByText(/Queste proposte appartengono a un altro documento/);expect(screen.queryByLabelText('Nome dell’oggetto')).not.toBeInTheDocument();});
  it('payload confermato include solo scelte esplicite, non campi o fonti inseriti dal client',()=>{const draft={purchaseTotal:null} as Draft,item={id:'x',profile:{},fields:{name:{value:'Router'}},enrichment:null} as Draft['items'][number];const form:Form=initialForm(item,draft);const result=choice(item,form);expect(result).toMatchObject({action:'create',itemId:'x',name:'Router',expense:{action:'skip'},fields:{},manual:null});expect(result).not.toHaveProperty('profile');});
 });
@@ -62,11 +66,11 @@ it('separate operator authorization permits a new start but still requires fresh
 it('identity derived from title is visibly a proposal and sends separate explicit acceptance',async()=>{
  const w=await world({derivedIdentity:true});await screen.findByRole('heading',{name:'Router demo'});
  expect(screen.queryByText('Ricavato dal nome del prodotto · Da confermare')).not.toBeInTheDocument();
- expect(screen.getAllByLabelText('Scelta per Marca')[0]).toHaveValue('accept');expect(screen.getAllByRole('option',{name:'Amazon'})).toHaveLength(2);
+ expect(screen.getByRole('textbox',{name:'Marca'})).toHaveValue('Amazon');expect(screen.getByRole('textbox',{name:'Modello'})).toHaveValue('Echo Dot Max');
  await w.user.click(screen.getAllByRole('button',{name:'Informazioni su Marca'})[0]!);
  const dialog=screen.getByRole('dialog',{name:'Marca'});expect(within(dialog).getByText('Proposta: Amazon')).toBeVisible();expect(within(dialog).getByText('Ricavato dal nome del prodotto · Da confermare')).toBeVisible();
- await w.user.keyboard('{Escape}');expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(screen.getAllByRole('button',{name:'Informazioni su Marca'})[0]).toHaveFocus();
- await w.user.click(screen.getAllByRole('button',{name:'Conferma questo articolo'})[0]!);
+ await w.user.keyboard('{Escape}');expect(screen.queryByRole('dialog',{name:'Marca'})).not.toBeInTheDocument();expect(screen.getByRole('dialog',{name:'Rivedi l’articolo'})).toBeInTheDocument();expect(screen.getAllByRole('button',{name:'Informazioni su Marca'})[0]).toHaveFocus();
+ await w.user.click(screen.getAllByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})[0]!);
  await screen.findByText('Confermato: 1 nuovi oggetti e 0 nuove spese.');
  const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:Array<{fields:Record<string,{action:string}>}>};
  expect(body.choices[0]!.fields.brand).toEqual({action:'accept'});expect(body.choices[0]!.fields.model).toEqual({action:'accept'});
@@ -79,19 +83,19 @@ it('stored proposals reopen automatically without a new provider job or a separa
 it('one confirmation includes the automatically proposed receipt expense without another choice',async()=>{
  const w=await world({purchase:true});await screen.findByText(/Spesa proposta dal documento/);
  expect(screen.getByLabelText('Cosa fare con il costo')).toHaveValue('create');expect(screen.getByLabelText('Importo (€)')).toHaveValue('99.99');
- expect(w.counts().confirmations).toBe(0);await w.user.click(screen.getByRole('button',{name:'Conferma questo articolo'}));
+ expect(w.counts().confirmations).toBe(0);await w.user.click(screen.getByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/}));
  await waitFor(()=>expect(w.counts().confirmations).toBe(1));
  const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:Array<{expense:unknown}>};expect(body.choices[0]!.expense).toMatchObject({action:'create',amountCents:9999,spentOn:'2025-06-13'});
 });
 it('possible expense duplicate blocks default confirmation and lets user explicitly reuse it',async()=>{
- const w=await world({purchase:true,duplicates:true});await screen.findByText(/Ci sono spese potenzialmente/);expect(screen.getByRole('button',{name:'Conferma questo articolo'})).toBeDisabled();
+ const w=await world({purchase:true,duplicates:true});await screen.findByText(/Ci sono spese potenzialmente/);expect(screen.getByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})).toBeDisabled();
  await w.user.selectOptions(screen.getByLabelText('Cosa fare con il costo'),'link');await w.user.selectOptions(screen.getByLabelText('Spesa esistente'),'expense1');
- await w.user.click(screen.getByRole('button',{name:'Conferma questo articolo'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));
+ await w.user.click(screen.getByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));
  const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:Array<{expense:unknown}>};expect(body.choices[0]!.expense).toEqual({action:'link',id:'expense1',expectedVersion:2});
 });
 it('failed duplicate lookup never automatically creates a cost; explicit skip remains possible',async()=>{
- const w=await world({purchase:true,expenseFailure:true});await screen.findByText(/Non è stato possibile controllare i doppioni/);expect(screen.getByRole('button',{name:'Conferma questo articolo'})).toBeDisabled();
- await w.user.selectOptions(screen.getByLabelText('Cosa fare con il costo'),'skip');await w.user.click(screen.getByRole('button',{name:'Conferma questo articolo'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));
+ const w=await world({purchase:true,expenseFailure:true});await screen.findByText(/Non è stato possibile controllare i doppioni/);expect(screen.getByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})).toBeDisabled();
+ await w.user.selectOptions(screen.getByLabelText('Cosa fare con il costo'),'skip');await w.user.click(screen.getByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));
  const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:Array<{expense:unknown}>};expect(body.choices[0]!.expense).toEqual({action:'skip'});
 });
 it('previously saved explicit skip is never replaced by automatic expense proposal',async()=>{
@@ -107,9 +111,38 @@ it('excluding a receipt item clears its proposed cost and sends only skip at the
 });
 it('excluding one of several products leaves the remaining product available independently',async()=>{
  const w=await world();await screen.findByRole('heading',{name:'Router demo'});
- const article=screen.getByRole('heading',{name:'Router demo'}).closest('article')!;await w.user.click(within(article).getByLabelText('Non riguarda questa casa'));await w.user.click(within(article).getByRole('button',{name:'Conferma esclusione'}));
- await screen.findByText('Escluso dalla casa: nessuna scheda o spesa creata');expect(screen.getByRole('heading',{name:'Speaker demo'})).toBeInTheDocument();expect(screen.getByRole('button',{name:'Conferma questo articolo'})).toBeEnabled();
+ const article=screen.getByRole('dialog',{name:'Rivedi l’articolo'});await w.user.click(within(article).getByLabelText('Non riguarda questa casa'));await w.user.click(within(article).getByRole('button',{name:'Conferma esclusione'}));
+ await screen.findByText('Escluso dalla casa: nessuna scheda o spesa creata');expect(screen.getByRole('heading',{name:'Speaker demo'})).toBeInTheDocument();expect(screen.getByRole('button',{name:'Rivedi Speaker demo'})).toBeEnabled();
 });
 it('exclusion can be reversed before confirmation and the purchase proposal is checked again',async()=>{
  const w=await world({purchase:true});await screen.findByText(/Spesa proposta dal documento/);await w.user.click(screen.getByLabelText('Non riguarda questa casa'));await w.user.click(screen.getByLabelText('Crea una nuova scheda'));await screen.findByLabelText('Importo (€)');expect(screen.getByLabelText('Cosa fare con il costo')).toHaveValue('create');expect(w.counts().confirmations).toBe(0);
+});
+
+it('compact list confirms only selected ready proposals and finds the object just created',async()=>{
+ const w=await world({compactList:true,clearCandidates:true,dynamicCandidates:true});
+ const first=await screen.findByRole('checkbox',{name:'Seleziona Router demo'});await waitFor(()=>expect(first).toBeEnabled());
+ expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(screen.queryByLabelText('Nome dell’oggetto')).not.toBeInTheDocument();
+ await w.user.click(first);await w.user.click(screen.getByRole('button',{name:'Conferma 1 articoli selezionati'}));
+ await screen.findByRole('link',{name:'Apri Router demo'});expect(w.counts().confirmations).toBe(1);
+ await w.user.click(screen.getByRole('button',{name:'Rivedi Speaker demo'}));await w.user.click(screen.getByLabelText('Collega a un oggetto già in casa'));
+ await waitFor(()=>expect(screen.getByRole('option',{name:'Router demo'})).toBeInTheDocument());
+ await w.user.selectOptions(screen.getByLabelText('Scheda da collegare'),'objectitem0');await w.user.click(screen.getByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/}));
+ const body=w.calls.filter(c=>c.path.endsWith('/confirmations')).at(-1)!.body as {choices:Array<{action:string;targets:unknown[]}>};expect(body.choices[0]).toMatchObject({action:'link',targets:[{id:'objectitem0',expectedVersion:1}]});
+});
+it('closing a changed review asks to discard without sending a review or confirmation',async()=>{
+ const w=await world();await w.user.clear(screen.getByLabelText('Nome dell’oggetto'));await w.user.type(screen.getByLabelText('Nome dell’oggetto'),'Modifica non confermata');
+ await w.user.click(screen.getByRole('button',{name:'Chiudi'}));expect(screen.getByText('Scartare le modifiche non confermate?')).toBeVisible();
+ await w.user.click(screen.getByRole('button',{name:'Scarta e chiudi'}));expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(w.calls.filter(c=>c.path.endsWith('/review')||c.path.endsWith('/confirmations'))).toHaveLength(0);
+ await w.user.click(screen.getByRole('button',{name:'Rivedi Router demo'}));expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Router demo');
+});
+it('nested help closes independently and all modal scroll locks clear on unmount',async()=>{
+ const w=await world();await w.user.click(screen.getByRole('button',{name:'Informazioni su Marca'}));await w.user.keyboard('{Escape}');expect(screen.getByRole('dialog',{name:'Rivedi l’articolo'})).toBeVisible();expect(document.body.style.overflow).toBe('hidden');
+ await w.user.click(screen.getByRole('button',{name:'Informazioni su Marca'}));w.unmount();expect(document.body.style.overflow).not.toBe('hidden');
+});
+
+it('official enrichment preserves edits in the open review and prefills new supported fields',async()=>{
+ const w=await world();await w.user.clear(screen.getByRole('textbox',{name:'Marca'}));await w.user.type(screen.getByRole('textbox',{name:'Marca'}),'Moulinex');
+ await w.user.click(screen.getByRole('button',{name:'Aggiungi altri dati, seriale o garanzia'}));await w.user.type(screen.getByRole('textbox',{name:'Riferimento prodotto'}),'AL4018F0');
+ await w.user.click(screen.getByText('Completa dal sito del produttore e cerca il manuale'));await w.user.click(screen.getByRole('button',{name:'Cerca dati e manuale ufficiali'}));
+ await waitFor(()=>expect(screen.getByRole('textbox',{name:'Capacità (litri)'})).toHaveValue('3.2'));expect(screen.getByRole('textbox',{name:'Marca'})).toHaveValue('Moulinex');expect(w.counts()).toEqual({confirmations:0,starts:0});
 });

@@ -115,11 +115,12 @@ it.each([false,true])('upload proposals stay inline and guide missing document t
  await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Analizza e proponi gli oggetti'}));await screen.findByRole('heading',{name:'Lampada demo'});
  expect(starts).toBe(1);expect(bodies[0]).toMatchObject({documentId:doc.id,consentToProviderTransfer:true});expect(app.router.state.location.pathname).toBe(path);
  const params=new URLSearchParams(app.router.state.location.search);expect(params.get('lotto')).toBe('inline-batch');expect(params.get('filtro')).toBe('conserva');expect(params.get('oggetti-bozza')).toBe('inline-draft');expect(params.get('bozza')).toBeNull();
+ await app.user.click(screen.getByRole('button',{name:'Rivedi Lampada demo'}));
  expect(screen.getByText('Spesa di acquisto (facoltativa)')).toBeInTheDocument();
  if(unknownType){
   await app.user.click(screen.getByRole('button',{name:'Conferma documento e articolo'}));
   const error=await screen.findByRole('alert');expect(error).toHaveTextContent('Prima completa la classificazione');expect(error).toHaveFocus();expect(objectWrites).toBe(0);expect(organizationWrites).toBe(0);
-  await app.user.click(screen.getByRole('button',{name:'Rivedi documento'}));expect(screen.getByRole('dialog')).toBeVisible();expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Lampada demo');app.unmount();return;
+  await app.user.click(screen.getByRole('button',{name:'Rivedi documento'}));expect(screen.getByRole('dialog')).toBeVisible();await app.user.click(screen.getByRole('button',{name:'Chiudi'}));await app.user.click(screen.getByRole('button',{name:'Rivedi Lampada demo'}));expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Lampada demo');app.unmount();return;
  }
 
  await app.user.click(screen.getByRole('button',{name:'Conferma documento e articolo'}));
