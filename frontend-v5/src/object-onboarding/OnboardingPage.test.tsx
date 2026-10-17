@@ -93,3 +93,19 @@ it('failed duplicate lookup never automatically creates a cost; explicit skip re
 it('previously saved explicit skip is never replaced by automatic expense proposal',async()=>{
  await world({purchase:true,savedExpenseSkip:true});await screen.findByLabelText('Cosa fare con il costo');expect(screen.getByLabelText('Cosa fare con il costo')).toHaveValue('skip');expect(screen.queryByText(/Spesa proposta dal documento/)).not.toBeInTheDocument();
 });
+
+it('excluding a receipt item clears its proposed cost and sends only skip at the final confirmation',async()=>{
+ const w=await world({purchase:true});await screen.findByText(/Spesa proposta dal documento/);
+ await w.user.click(screen.getByLabelText('Non riguarda questa casa'));
+ expect(screen.queryByLabelText('Nome dell’oggetto')).not.toBeInTheDocument();expect(screen.queryByLabelText('Importo (€)')).not.toBeInTheDocument();expect(w.counts().confirmations).toBe(0);
+ await w.user.click(screen.getByRole('button',{name:'Conferma esclusione'}));await screen.findByText('Escluso dalla casa: nessuna scheda o spesa creata');
+ const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:unknown[]};expect(body.choices).toEqual([{itemId:'item0',action:'skip'}]);
+});
+it('excluding one of several products leaves the remaining product available independently',async()=>{
+ const w=await world();await screen.findByRole('heading',{name:'Router demo'});
+ const article=screen.getByRole('heading',{name:'Router demo'}).closest('article')!;await w.user.click(within(article).getByLabelText('Non riguarda questa casa'));await w.user.click(within(article).getByRole('button',{name:'Conferma esclusione'}));
+ await screen.findByText('Escluso dalla casa: nessuna scheda o spesa creata');expect(screen.getByRole('heading',{name:'Speaker demo'})).toBeInTheDocument();expect(screen.getByRole('button',{name:'Conferma questo articolo'})).toBeEnabled();
+});
+it('exclusion can be reversed before confirmation and the purchase proposal is checked again',async()=>{
+ const w=await world({purchase:true});await screen.findByText(/Spesa proposta dal documento/);await w.user.click(screen.getByLabelText('Non riguarda questa casa'));await w.user.click(screen.getByLabelText('Crea una nuova scheda'));await screen.findByLabelText('Importo (€)');expect(screen.getByLabelText('Cosa fare con il costo')).toHaveValue('create');expect(w.counts().confirmations).toBe(0);
+});

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { ApiClient } from '../api/client';
 import { userMessage } from '../api/errors';
 import { Banner, ui } from '../components/ui';
-import { editProfileField, labels, originLabel, type Candidate, type CandidatePage, type Draft, type ExpenseCandidate, type FieldKey, type Form, type Item } from './model';
+import { automaticExpenseEligible, editProfileField, labels, originLabel, type Candidate, type CandidatePage, type Draft, type ExpenseCandidate, type FieldKey, type Form, type Item } from './model';
 import styles from './onboarding.module.css';
 
 type Props={api:ApiClient;accountId:string;base:string;draft:Draft;item:Item;form:Form;disabled:boolean;change:(value:Form)=>void;enrich:(body:{brand:string;reference:string;productUrl?:string})=>Promise<void>};
@@ -16,7 +16,7 @@ export function ItemEditor({api,accountId,base,draft,item,form,disabled,change,e
  const patch=(value:Partial<Form>)=>change({...form,...value});
  const duplicates=expense.data?.items.filter(row=>row.rank>0)??[];
  useEffect(()=>{
-  if(form.expenseAutoState!=='pending'||!expense.data)return;
+  if(form.action==='skip'||form.expenseAutoState!=='pending'||!expense.data)return;
   change({...form,expenseAutoState:duplicates.length?'review':'ready',expense:duplicates.length?'skip':'create'});
  },[form,expense.data,duplicates.length,change]);
  const quantity=item.quantity?.value??1;
@@ -33,8 +33,10 @@ export function ItemEditor({api,accountId,base,draft,item,form,disabled,change,e
   {item.disposition!=='household_object'&&<Banner tone="warning"><p>Potrebbe essere un accessorio o un materiale di consumo. Scegli se vuoi censirlo come oggetto di casa.</p></Banner>}
   {plausible.length>0&&<Banner tone="warning"><p>Ci sono schede che potrebbero corrispondere a questo articolo. Controllale prima di creare una nuova scheda; nessuna è selezionata automaticamente.</p></Banner>}
   <fieldset disabled={disabled} className={styles.stack}><legend>Cosa vuoi fare?</legend>
-   <label className={styles.check}><input type="radio" checked={form.action==='create'} onChange={()=>patch({action:'create',targets:[]})}/>Crea una nuova scheda</label>
-   <label className={styles.check}><input type="radio" checked={form.action==='link'} onChange={()=>patch({action:'link'})}/>Collega a un oggetto già in casa</label>
+   <label className={styles.check}><input type="radio" checked={form.action==='create'} onChange={()=>patch({action:'create',targets:[],...(form.action==='skip'?{expenseAutoState:automaticExpenseEligible(item,draft)?'pending' as const:'manual' as const}: {})})}/>Crea una nuova scheda</label>
+   <label className={styles.check}><input type="radio" checked={form.action==='link'} onChange={()=>patch({action:'link',...(form.action==='skip'?{expenseAutoState:automaticExpenseEligible(item,draft)?'pending' as const:'manual' as const}: {})})}/>Collega a un oggetto già in casa</label>
+   <label className={styles.check}><input type="radio" checked={form.action==='skip'} onChange={()=>patch({action:'skip',expense:'skip',expenseAutoState:'manual',expenseId:'',expenseVersion:0,manual:false,acknowledgePossibleDuplicate:false})}/>Non riguarda questa casa</label>
+   {form.action==='skip'?<p role="status">Questo articolo sarà escluso: nessuna scheda, collegamento o spesa verrà creata. Il documento originale e gli altri articoli restano disponibili. Conferma l’esclusione quando hai finito di controllare.</p>:<>
    <details open={plausible.length>0}><summary>Controlla le schede esistenti</summary><div className={styles.stack}>
     <div className={styles.row}><label className={styles.field}>Cerca un oggetto<input className={ui.input} value={search} onChange={e=>setSearch(e.target.value)} maxLength={80}/></label><button type="button" className={ui.btn} onClick={()=>{setQ(search);setExtra([]);setCursor(null);}}>Cerca</button></div>
     {candidates.isPending?<p>Caricamento schede…</p>:candidates.isError?<Banner tone="error"><p>{userMessage(candidates.error)}</p><button type="button" onClick={()=>void candidates.refetch()}>Riprova</button></Banner>:rows.length?<ul>{rows.map(t=><li key={t.id}>{t.name} {t.rooms.join(', ')} · {t.reason==='confirmed_item'?'Articolo già censito':t.reason==='manual_selection'?'Scelta manuale':'Corrispondenza da verificare'}</li>)}</ul>:<p>Nessuna scheda in questa ricerca.</p>}
@@ -78,6 +80,7 @@ export function ItemEditor({api,accountId,base,draft,item,form,disabled,change,e
     {form.expense==='create'&&duplicates.length>0&&<label className={styles.check}><input type="checkbox" checked={!!form.acknowledgePossibleDuplicate} onChange={e=>patch({acknowledgePossibleDuplicate:e.target.checked})}/>Ho verificato: è un acquisto distinto dalle spese indicate.</label>}
     {form.expense==='create'&&<div className={styles.values}><label className={styles.field}>Importo (€)<input className={ui.input} inputMode="decimal" value={form.amount} onChange={e=>patch({amount:e.target.value})}/></label><label className={styles.field}>Data della spesa<input className={ui.input} type="date" value={form.spentOn} onInput={e=>patch({spentOn:e.currentTarget.value})} onChange={e=>patch({spentOn:e.target.value})}/></label><label className={styles.field}>Venditore<input className={ui.input} maxLength={120} value={form.supplier} onChange={e=>patch({supplier:e.target.value})}/></label></div>}
    </div></details>:<p className={styles.source}>{draft.mode==='manual'?'Dopo aver controllato prezzo e acquisto, puoi aggiungere un costo dalla scheda o da Spese.':'Qui non creiamo costi: una consegna o un’etichetta non prova il prezzo. I totali di più articoli si controllano separatamente in Spese.'}</p>}
+   </>}
   </fieldset>
  </div>;
 }

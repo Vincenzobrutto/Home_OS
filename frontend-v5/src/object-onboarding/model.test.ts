@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { editProfileField, initialForm, type Draft, type Item } from './model';
+import { choice, expenseNeedsReview, editProfileField, initialForm, type Draft, type Item } from './model';
 const item={id:'x',profile:{},fields:{name:{value:'Demo'}},enrichment:null} as Item;
 const form=()=>initialForm(item,{purchaseTotal:null} as Draft);
 it('manual purchase proposes 24 calendar months and clamps leap-day',()=>{const r=editProfileField(form(),'purchaseDate',{action:'manual',value:'2024-02-29'},{},{});expect(r.fields.warrantyStart).toEqual({action:'manual',value:'2024-02-29'});expect(r.fields.warrantyEnd?.value).toBe('2026-02-28');});
@@ -13,4 +13,8 @@ it('automatic expense requires one supported item, verified amount/date and no r
  expect(automaticExpenseEligible(dated,receipt)).toBe(true);
  for(const patch of [{mode:'manual'},{documentKind:'delivery_notice'},{needsReview:true},{purchaseTotal:null},{items:[item,item]}])expect(automaticExpenseEligible(dated,{...receipt,...patch} as Draft)).toBe(false);
  expect(automaticExpenseEligible({...dated,quantity:{value:2}},receipt)).toBe(false);expect(automaticExpenseEligible(item,receipt)).toBe(false);
+});
+it('excluded item never carries stale amounts, expense links, profile fields or manual selections',()=>{
+ const f={...form(),action:'skip' as const,expense:'create' as const,amount:'500',expenseId:'stale',expenseAutoState:'pending' as const};
+ expect(choice(item,f)).toEqual({itemId:'x',action:'skip'});expect(expenseNeedsReview(f)).toBe(false);
 });
