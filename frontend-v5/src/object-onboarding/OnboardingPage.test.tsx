@@ -5,7 +5,7 @@ import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { AiBudget, Draft, Form } from './model';
 import { choice, initialForm } from './model';
-async function world(options:{budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
+async function world(options:{budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
  if(options.login!==false){await api.login({email:account.email,password});await api.getSession();}
@@ -18,7 +18,7 @@ async function world(options:{budget?:AiBudget;login?:boolean;start?:boolean;ai?
  const fetch=async(url:string,init:RequestInit)=>{
   if(!url.includes('/object-onboarding'))return control.fetch(url,init);
   const path=url.split('/object-onboarding')[1]!,body=init.body?JSON.parse(String(init.body)):undefined;calls.push({path,body,key:new Headers(init.headers).get('Idempotency-Key')});
-  if(path.startsWith('/capabilities'))return Response.json({budget:options.budget,manualAvailable:true,aiAvailable:!!options.ai,requiresConsent:true,drafts:options.savedDraft?[{id:wire.id,state:'open'}]:[],canStartAnalysis:options.newAuthorization?true:undefined,job:options.newAuthorization?{id:"old-job",state:"uncertain",draftId:null,errorCode:"analysis_outcome_unknown"}:null});
+  if(path.startsWith('/capabilities'))return Response.json({budget:options.budget,manualAvailable:true,aiAvailable:!!options.ai,requiresConsent:true,drafts:options.savedDraft?[{id:wire.id,state:'open'}]:[],canStartWithUncertainAcknowledgement:!!options.uncertainRetry,canStartAnalysis:options.uncertainRetry?false:options.newAuthorization?true:undefined,job:(options.newAuthorization||options.uncertainRetry)?{id:"old-job",state:"uncertain",draftId:null,errorCode:"analysis_outcome_unknown"}:null});
   if(path==='/jobs'){starts++;if(options.lostStart&&starts===1)throw new TypeError('lost');return Response.json({job:{id:'job1',state:'queued',draftId:null,errorCode:null}},{status:202});}
   if(path==='/jobs/old-job')return Response.json({job:{id:'old-job',state:'uncertain',draftId:null,errorCode:'analysis_outcome_unknown'}});
   if(path.startsWith('/jobs/'))return Response.json({job:{id:'job1',state:'succeeded',draftId:wire.id,errorCode:null}});
@@ -172,4 +172,15 @@ it.each(['ai_budget_exhausted','ai_evaluation_limit_reached'])('budget is visibl
 it('available pilot budget does not preselect consent or start an analysis',async()=>{
  const w=await world({start:true,ai:true,budget:{currency:'USD',limitUsd:'5.000000',committedUsd:'0.000000',remainingUsd:'5.000000',callsUsed:0,maxCalls:40,available:true,disabledReason:null}});
  const button=await screen.findByRole('button',{name:'Prepara le proposte'});expect(button).toBeDisabled();expect(screen.getByRole('checkbox',{name:/Autorizzo/})).not.toBeChecked();expect(w.counts().starts).toBe(0);
+});
+
+it('uncertain provider outcome needs both transfer consent and explicit budget acknowledgement before a new start',async()=>{
+ const w=await world({start:true,ai:true,uncertainRetry:true});
+ const button=await screen.findByRole('button',{name:'Prepara le proposte'});
+ expect(button).toBeDisabled();expect(w.counts().starts).toBe(0);
+ await w.user.click(screen.getByRole('checkbox',{name:/Autorizzo/}));expect(button).toBeDisabled();
+ await w.user.click(screen.getByRole('checkbox',{name:/Voglio riprovare/}));expect(button).toBeEnabled();
+ await w.user.click(button);
+ await waitFor(()=>expect(w.counts().starts).toBe(1));
+ expect(w.calls.find(c=>c.path==='/jobs')?.body).toMatchObject({consentToProviderTransfer:true,acknowledgePreviousUncertainAnalysis:true});
 });

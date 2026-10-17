@@ -59,3 +59,8 @@ Limiti: una sola delle due bollette reali ora pronta; l’altra ha ancora il vec
 Aggiunto accesso in sola lettura per le bollette nell’elenco e nel dettaglio: proposta aperta → Rivedi e conferma la spesa; assente → Prepara la proposta di spesa; analisi attiva → Vedi analisi in corso; bozza conclusa → Vedi esito della proposta. Il mount non avvia analisi né scrive spese. Account, casa e documento isolano la cache; nessuna modifica agli originali o ai titoli già confermati.
 
 Verifica: 4 test mirati verdi, build e lint frontend verdi. Nel browser reale il collegamento della prima bolletta apre la bozza corretta e mostra “Spesa confermata” (conferma intervenuta dall’utente); la seconda non viene presentata come pronta. Nessuna chiamata provider o conferma eseguita da Codex. Screenshot outputs/bill-archive-entry-20261017.png nel workspace.
+
+
+## Recupero analisi incerta dall’interfaccia
+
+Collegata la capability canStartWithUncertainAcknowledgement alla casella esplicita di nuovo tentativo e al payload acknowledgePreviousUncertainAnalysis. Il consenso al trasferimento e la presa visione della nuova riserva sono entrambi obbligatori. Restano invariati budget, riserve precedenti e recupero idempotente della medesima richiesta in caso di perdita rete. Verifica offline: 29 test router verdi, inclusa nuova regressione su blocco fino a entrambi i consensi e payload di avvio; nessun invio reale. Nel browser verificata la seconda casella presente senza selezionarla né avviare analisi.
