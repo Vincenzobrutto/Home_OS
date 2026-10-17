@@ -112,12 +112,11 @@ it.each(['local','unknown','draftkind'])('upload proposals stay inline and recov
  };
  const app=renderApp({path:'/accedi',backend,fetch});await screen.findByRole('heading',{name:'Accedi'});await app.user.type(screen.getByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));
  const path=`/home/${homeA1.id}/documenti/organizza`;await app.router.navigate(path+'?lotto=inline-batch&filtro=conserva');
- await app.user.click(await screen.findByRole('button',{name:/Rivedi proposta per/}));
- await screen.findByRole('heading',{name:'Proposta del documento'});expect(starts).toBe(0);expect(screen.getByRole('button',{name:'Prepara le proposte'})).toBeDisabled();
- await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Prepara le proposte'}));await screen.findByRole('heading',{name:'Lampada demo'});
+ await app.user.click(await screen.findByRole('button',{name:'Compila tramite AI'}));
+ await screen.findByRole('heading',{name:'Proposta del documento'});expect(starts).toBe(0);expect(screen.getByRole('button',{name:'Avvia compilazione AI'})).toBeDisabled();
+ await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Avvia compilazione AI'}));await screen.findByRole('heading',{name:'Lampada demo'});
  expect(starts).toBe(1);expect(bodies[0]).toMatchObject({documentId:doc.id,consentToProviderTransfer:true});expect(app.router.state.location.pathname).toBe(path);
  const params=new URLSearchParams(app.router.state.location.search);expect(params.get('lotto')).toBe('inline-batch');expect(params.get('filtro')).toBe('conserva');expect(params.get('oggetti-bozza')).toBe('inline-draft');expect(params.get('bozza')).toBeNull();
- await app.user.click(screen.getByRole('button',{name:'Rivedi Lampada demo'}));
  if(mode==='local')expect(screen.getByText('Spesa di acquisto (facoltativa)')).toBeInTheDocument();
  if(mode==='unknown'){
   await app.user.click(screen.getByRole('button',{name:/^Conferma (documento e articolo|questo articolo|oggetto e spesa)$/}));

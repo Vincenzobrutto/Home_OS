@@ -5,7 +5,7 @@ import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { AiBudget, Draft, Form } from './model';
 import { choice, initialForm } from './model';
-async function world(options:{budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
+async function world(options:{compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
  if(options.login!==false){await api.login({email:account.email,password});await api.getSession();}
@@ -14,6 +14,7 @@ async function world(options:{budget?:AiBudget;login?:boolean;start?:boolean;ai?
  if(options.multiPurchase){wire.documentKind='purchase_document';wire.purchaseTotal={amountCents:22990};}
  if(options.savedExpenseSkip)wire.review={forms:{item0:initialForm(wire.items[0]!,{...wire,mode:'manual'})}};
  if(options.derivedIdentity)for(const item of wire.items)item.profile={brand:{value:'Amazon',origin:'derived_from_product_name',sources:[{documentId:doc.id,page:1,excerpt:'Amazon Echo Dot Max'}]},model:{value:'Echo Dot Max',origin:'derived_from_product_name',sources:[{documentId:doc.id,page:1,excerpt:'Amazon Echo Dot Max'}]}};
+ if(options.pendingReview)wire.review={pending:{path:'/drafts/'+wire.id+'/confirmations',key:'same-confirmation',body:{expectedVersion:2,source:wire.snapshot,choices:[]}}};
  const calls:Array<{path:string;body:unknown;key:string|null}>=[];let confirmations=0,starts=0,saved=false;
  const fetch=async(url:string,init:RequestInit)=>{
   if(!url.includes('/object-onboarding'))return control.fetch(url,init);
@@ -30,7 +31,7 @@ async function world(options:{budget?:AiBudget;login?:boolean;start?:boolean;ai?
   if(path.endsWith('/review')){wire.review=body.review;wire.version++;return Response.json({draft:wire});}
   if(path.includes('/confirmations/'))return Response.json({status:saved?'confirmed':'not_found',draft:wire});
   if(path.endsWith('/confirmations')){
-   confirmations++;if(options.invalid&&confirmations===1)return Response.json({error:{code:'validation_error',message:'Controlla la scelta'}},{status:422});
+   confirmations++;if(options.lostUnrecorded&&confirmations===1)throw new TypeError('lost before recording');if(options.invalid&&confirmations===1)return Response.json({error:{code:'validation_error',message:'Controlla la scelta'}},{status:422});
    saved=true;wire.version++;wire.review=null;
    for(const c of body.choices){const item=wire.items.find(i=>i.id===c.itemId)!;item.decision={state:c.action==='defer'?'deferred':c.action==='skip'?'skipped':'confirmed',newObjects:c.action==='create'?1:0,newExpenses:0,objects:c.action==='create'?[{id:'object'+item.id,name:c.name,state:'active'}]:[]};}
    wire.state=wire.items.every(i=>i.decision?.state==='confirmed'||i.decision?.state==='skipped')?'confirmed':'open';
@@ -40,16 +41,16 @@ async function world(options:{budget?:AiBudget;login?:boolean;start?:boolean;ai?
   if(path.startsWith('/drafts/')||path==='/manual-drafts')return Response.json({draft:wire});
   return Response.json({error:{code:'not_found',message:'Unknown'}},{status:404});
  };
- const app=renderApp({backend,fetch,path:'/home/'+home.id+'/documenti/'+doc.id+'/oggetti'+(options.start?'':'?bozza='+wire.id)});
+ const app=renderApp({backend,fetch,path:'/home/'+home.id+'/documenti/'+doc.id+'/oggetti'+(options.start?'':'?bozza='+wire.id)+(options.compilation?'&compila='+options.compilation:'')});
  if(!options.compactList&&options.login!==false&&!options.foreign&&(!options.start||options.savedDraft)){await screen.findByRole('button',{name:'Rivedi Router demo'});await app.user.click(screen.getByRole('button',{name:'Rivedi Router demo'}));}
  return {...app,wire,calls,counts:()=>({confirmations,starts})};
 }
 describe('Onboarding reale nel router, API simulate e nessun invio esterno',()=>{
  it('guard login protegge il deep link prima di leggere documenti e proposte',async()=>{const w=await world({login:false});await screen.findByRole('heading',{name:/Accedi/});expect(w.calls).toHaveLength(0);expect(w.router.state.location.search).toContain('next=');});
- it('AI disabilitata mostra compilazione manuale e non inventa risultati',async()=>{const w=await world({start:true});await screen.findByText(/L’analisi AI di questo documento non è abilitata/);expect(screen.queryByRole('button',{name:'Prepara le proposte'})).not.toBeInTheDocument();await w.user.click(screen.getByRole('button',{name:'Compila le proposte manualmente'}));await screen.findByRole('heading',{name:'Rivedi gli articoli'});expect(w.counts().starts).toBe(0);});
+ it('AI disabilitata mostra compilazione manuale e non inventa risultati',async()=>{const w=await world({start:true});await screen.findByText(/L’analisi AI di questo documento non è abilitata/);expect(screen.queryByRole('button',{name:'Avvia compilazione AI'})).not.toBeInTheDocument();await w.user.click(screen.getByRole('button',{name:'Compila manualmente'}));await screen.findByRole('heading',{name:'Rivedi gli articoli'});expect(w.counts().starts).toBe(0);});
  it('conferma un articolo e lascia l’altro da rivedere; nessuna spesa da una consegna',async()=>{const w=await world();await screen.findByRole('heading',{name:'Router demo'});expect(screen.queryByText('Spesa di acquisto (facoltativa)')).not.toBeInTheDocument();await w.user.click(screen.getAllByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})[0]!);await screen.findByText('Confermato: 1 nuovi oggetti e 0 nuove spese.');expect(screen.getByRole('link',{name:'Apri Router demo'})).toBeInTheDocument();expect(screen.getByRole('button',{name:'Rivedi Speaker demo'})).toBeInTheDocument();expect(w.counts().confirmations).toBe(1);});
  it('esito perso si recupera tramite ricevuta senza un secondo POST',async()=>{const w=await world({lost:true});await screen.findByRole('heading',{name:'Router demo'});await w.user.click(screen.getAllByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})[0]!);await screen.findByRole('button',{name:'Controlla l’esito'});expect(screen.getByRole('button',{name:'Rivedi Speaker demo'})).toBeDisabled();await w.user.click(screen.getByRole('button',{name:'Controlla l’esito'}));await screen.findByText('Conferma recuperata: nessun doppione.');expect(w.counts().confirmations).toBe(1);});
- it('avvio perso ripete solo la stessa richiesta con consenso e chiave stabili',async()=>{const w=await world({start:true,ai:true,lostStart:true});const consent=await screen.findByRole('checkbox');expect(screen.getByRole('button',{name:'Prepara le proposte'})).toBeDisabled();await w.user.click(consent);await w.user.click(screen.getByRole('button',{name:'Prepara le proposte'}));await w.user.click(await screen.findByRole('button',{name:'Verifica ripetendo la stessa richiesta'}));await screen.findByRole('heading',{name:'Rivedi gli articoli'});const posts=w.calls.filter(c=>c.path==='/jobs');expect(posts).toHaveLength(2);expect(posts[0]).toEqual(posts[1]);expect(posts[0]!.body).toMatchObject({consentToProviderTransfer:true,provider:'anthropic'});});
+ it('avvio perso ripete solo la stessa richiesta con consenso e chiave stabili',async()=>{const w=await world({start:true,ai:true,lostStart:true});const consent=await screen.findByRole('checkbox');expect(screen.getByRole('button',{name:'Avvia compilazione AI'})).toBeDisabled();await w.user.click(consent);await w.user.click(screen.getByRole('button',{name:'Avvia compilazione AI'}));await w.user.click(await screen.findByRole('button',{name:'Verifica ripetendo la stessa richiesta'}));await screen.findByRole('heading',{name:'Rivedi gli articoli'});const posts=w.calls.filter(c=>c.path==='/jobs');expect(posts).toHaveLength(2);expect(posts[0]).toEqual(posts[1]);expect(posts[0]!.body).toMatchObject({consentToProviderTransfer:true,provider:'anthropic'});});
  it('il collegamento esistente richiede una scelta esplicita e protegge il valore attuale',async()=>{const w=await world();await screen.findByRole('heading',{name:'Router demo'});const article=screen.getByRole('dialog',{name:'Rivedi l’articolo'});await w.user.click(within(article).getByLabelText('Collega a un oggetto già in casa'));const select=within(article).getByLabelText('Scheda da collegare');expect(select).toHaveValue('');await w.user.selectOptions(select,'existing1');expect(within(article).getByText('Attuale confermato: Confirmed')).toBeInTheDocument();expect(within(article).getByLabelText('Scelta per Marca')).toHaveValue('keep');expect(within(article).queryByRole('option',{name:'Usa la proposta'})).not.toBeInTheDocument();});
  it('errore di validazione libera i campi e non lascia la conferma incerta',async()=>{const w=await world({invalid:true});await screen.findByRole('heading',{name:'Router demo'});await w.user.click(screen.getAllByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})[0]!);await screen.findByText('Controlla la scelta');await waitFor(()=>expect(screen.getAllByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/})[0]).toBeEnabled());expect(screen.queryByRole('button',{name:'Controlla l’esito'})).not.toBeInTheDocument();});
  it('non mescola originale e bozza di due documenti diversi',async()=>{await world({foreign:true});await screen.findByText(/Queste proposte appartengono a un altro documento/);expect(screen.queryByLabelText('Nome dell’oggetto')).not.toBeInTheDocument();});
@@ -58,7 +59,7 @@ describe('Onboarding reale nel router, API simulate e nessun invio esterno',()=>
 
 it('separate operator authorization permits a new start but still requires fresh consent',async()=>{
  const w=await world({start:true,ai:true,newAuthorization:true});
- const button=await screen.findByRole('button',{name:'Prepara le proposte'});
+ const button=await screen.findByRole('button',{name:'Avvia compilazione AI'});
  expect(button).toBeDisabled();
  await w.user.click(screen.getByRole('checkbox',{name:/Autorizzo/}));
  await waitFor(()=>expect(button).toBeEnabled());
@@ -78,7 +79,7 @@ it('identity derived from title is visibly a proposal and sends separate explici
 });
 
 it('stored proposals reopen automatically without a new provider job or a separate resume step',async()=>{
- const w=await world({start:true,savedDraft:true});await screen.findByRole('heading',{name:'Router demo'});expect(w.counts().starts).toBe(0);expect(screen.queryByRole('button',{name:'Prepara le proposte'})).not.toBeInTheDocument();
+ const w=await world({start:true,savedDraft:true});await screen.findByRole('heading',{name:'Router demo'});expect(w.counts().starts).toBe(0);expect(screen.queryByRole('button',{name:'Avvia compilazione AI'})).not.toBeInTheDocument();
 });
 
 it('one confirmation includes the automatically proposed receipt expense without another choice',async()=>{
@@ -167,20 +168,47 @@ it('multi-item purchase asks only for this item amount and never copies the gran
 it.each(['ai_budget_exhausted','ai_evaluation_limit_reached'])('budget is visible and exhaustion never offers a paid start (%s)',async(disabledReason)=>{
  const w=await world({start:true,budget:{currency:'USD',limitUsd:'5.000000',committedUsd:'4.800000',remainingUsd:'0.200000',callsUsed:40,maxCalls:40,available:false,disabledReason}});
  await screen.findByText(/Budget AI complessivo: 0.20 USD disponibili su 5.00/);expect(screen.getByText(/40\/40 analisi utilizzate/)).toBeInTheDocument();
- expect(screen.getByText(/Il limite non si rinnova automaticamente/)).toBeInTheDocument();expect(screen.queryByRole('button',{name:'Prepara le proposte'})).not.toBeInTheDocument();expect(w.counts().starts).toBe(0);
+ expect(screen.getByText(/Il limite non si rinnova automaticamente/)).toBeInTheDocument();expect(screen.queryByRole('button',{name:'Avvia compilazione AI'})).not.toBeInTheDocument();expect(w.counts().starts).toBe(0);
 });
 it('available pilot budget does not preselect consent or start an analysis',async()=>{
  const w=await world({start:true,ai:true,budget:{currency:'USD',limitUsd:'5.000000',committedUsd:'0.000000',remainingUsd:'5.000000',callsUsed:0,maxCalls:40,available:true,disabledReason:null}});
- const button=await screen.findByRole('button',{name:'Prepara le proposte'});expect(button).toBeDisabled();expect(screen.getByRole('checkbox',{name:/Autorizzo/})).not.toBeChecked();expect(w.counts().starts).toBe(0);
+ const button=await screen.findByRole('button',{name:'Avvia compilazione AI'});expect(button).toBeDisabled();expect(screen.getByRole('checkbox',{name:/Autorizzo/})).not.toBeChecked();expect(w.counts().starts).toBe(0);
 });
 
 it('uncertain provider outcome needs both transfer consent and explicit budget acknowledgement before a new start',async()=>{
  const w=await world({start:true,ai:true,uncertainRetry:true});
- const button=await screen.findByRole('button',{name:'Prepara le proposte'});
+ const button=await screen.findByRole('button',{name:'Avvia compilazione AI'});
  expect(button).toBeDisabled();expect(w.counts().starts).toBe(0);
  await w.user.click(screen.getByRole('checkbox',{name:/Autorizzo/}));expect(button).toBeDisabled();
  await w.user.click(screen.getByRole('checkbox',{name:/Voglio riprovare/}));expect(button).toBeEnabled();
  await w.user.click(button);
  await waitFor(()=>expect(w.counts().starts).toBe(1));
  expect(w.calls.find(c=>c.path==='/jobs')?.body).toMatchObject({consentToProviderTransfer:true,acknowledgePreviousUncertainAnalysis:true});
+});
+
+it('per-document compilation opens the same prefilled single-item form directly',async()=>{
+ const w=await world({purchase:true,compactList:true,compilation:'ai',clearCandidates:true});
+ await screen.findByRole('dialog',{name:'Rivedi l’articolo'});
+ expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Router demo');
+ expect(screen.getByLabelText('Marca')).toHaveValue('Lume');
+ expect(w.counts()).toEqual({starts:0,confirmations:0});
+});
+
+it('a previously unrecorded confirmation is replayed with the same key and replaces the obsolete warning',async()=>{
+ const w=await world({lostUnrecorded:true});
+ await w.user.click(screen.getByRole('button',{name:'Conferma questo articolo'}));
+ await w.user.click(await screen.findByRole('button',{name:'Controlla l’esito'}));
+ await screen.findByText(/La conferma non risulta registrata/);
+ await w.user.click(screen.getByRole('button',{name:'Invia la stessa conferma'}));
+ await screen.findByText('Conferma recuperata: nessun doppione.');
+ expect(screen.queryByText(/La conferma non risulta registrata/)).not.toBeInTheDocument();
+ expect(screen.getByRole('link',{name:'Apri Router demo'})).toBeInTheDocument();
+ const attempts=w.calls.filter(c=>c.path.endsWith('/confirmations'));expect(attempts).toHaveLength(2);expect(attempts[0]!.key).toBe(attempts[1]!.key);
+});
+
+it('direct form opening leaves recovery controls accessible when a previous confirmation is pending',async()=>{
+ await world({purchase:true,compactList:true,compilation:'manuale',pendingReview:true});
+ await screen.findByRole('button',{name:'Controlla l’esito'});
+ expect(screen.queryByRole('dialog',{name:'Rivedi l’articolo'})).not.toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'Invia la stessa conferma'})).toBeEnabled();
 });

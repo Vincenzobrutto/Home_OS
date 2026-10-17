@@ -52,6 +52,7 @@ export type DocumentIntakeAssistantProps = {
   renderPreview?: (itemId: OpaqueId, page: number | null) => ReactNode;
   onOpenReceiptFlow?: (itemId: OpaqueId) => void;
   objectProposalItemId?:string|null;
+  renderCompilationActions?: (itemId: string) => ReactNode;
   renderObjectProposals?:(itemId:string,reviewDocument:()=>void)=>ReactNode;
   renderOutcomeLinks?: (results: ItemConfirmResult[]) => ReactNode;
   onRetryLoad?: () => void;
@@ -354,7 +355,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
   const multi = items.length > 1;
   const doneCount = count('done');
   const bulkOps = ops.filter(o => o.payload.mode === 'multiple');
-  const showBulk = multi && canReview && !complete && (available.length > 0 || selected.length > 0 || bulkOps.length > 0);
+  const showBulk = !props.renderCompilationActions && multi && canReview && !complete && (available.length > 0 || selected.length > 0 || bulkOps.length > 0);
   const bulkPayload = selected.length ? buildOrganizePayload(batch, 'multiple', selected.flatMap(i => { const b = bulkItem(i); return b ? [b] : []; })) : null;
 
   const row = (item: IntakeItem) => {
@@ -365,7 +366,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
     const conflict = hasConflict(item);
     const decision = item.selection?.action === 'organize' ? item.selection : null;
     const manual = !copy && !item.proposal && !decision && ['stored', 'ready', 'unreadable', 'unsupported', 'analysis_failed'].includes(raw);
-    const canSelect = multi && selectable(item);
+    const canSelect = !props.renderCompilationActions && multi && selectable(item);
     const checked = canSelect && picked[item.id] === item.version;
     const name = displayName(item);
     const title = rowTitle(item);
@@ -411,7 +412,8 @@ function Inner(props: DocumentIntakeAssistantProps) {
         <div className={styles.rowActions}>
           {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
           {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
-          {canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && supportsObjectProposals(item) && !(props.renderObjectProposals&&(copy||conflict)) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={props.renderObjectProposals?`Rivedi proposta per ${name}`:`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>{props.renderObjectProposals?'Rivedi proposta':'Riconosci gli oggetti'}</button>}
+          {canReview && item.documentLink.state==='linked' && props.renderCompilationActions && props.renderCompilationActions(item.id)}
+          {!props.renderCompilationActions && canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && supportsObjectProposals(item) && !(props.renderObjectProposals&&(copy||conflict)) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={props.renderObjectProposals?`Rivedi proposta per ${name}`:`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>{props.renderObjectProposals?'Rivedi proposta':'Riconosci gli oggetti'}</button>}
           {group !== 'done' && reviewable(item) && !(props.renderObjectProposals&&props.onOpenReceiptFlow&&supportsObjectProposals(item)&&!copy&&!conflict) && (
             <button type="button" className={cx(ui.btn, ui.small, ui.primary)} aria-label={`${actionLabel} ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>{actionLabel}</button>
           )}
@@ -419,7 +421,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
             ? <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Modifica ${name}`} disabled={props.addingFiles} onClick={() => void props.onReorganizeDocument?.(item.id)}>Modifica</button>
             : <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Vedi originale ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale</button>)}
         </div>
-      {canReview&&supportsObjectProposals(item)&&props.objectProposalItemId===item.id&&props.renderObjectProposals&&<section className={styles.objectProposals} aria-label={'Proposte oggetti e spesa per '+name}>{props.renderObjectProposals(item.id,()=>setDialog({itemId:item.id,onlyOriginal:false}))}</section>}
+      {canReview&&(props.renderCompilationActions||supportsObjectProposals(item))&&props.objectProposalItemId===item.id&&props.renderObjectProposals&&<section className={styles.objectProposals} aria-label={'Proposte oggetti e spesa per '+name}>{props.renderObjectProposals(item.id,()=>setDialog({itemId:item.id,onlyOriginal:false}))}</section>}
       </article>
     );
   };
@@ -484,7 +486,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
             <p className={styles.note}>Documenti completati</p>
             <div className={styles.summaryLine}><span>Da rivedere</span><strong>{count('review')}</strong></div>
             <div className={styles.summaryLine}><span>Più tardi</span><strong>{count('later')}</strong></div>
-            <p className={styles.note}>Le caselle servono a scegliere cosa organizzare. I documenti cambiano solo quando confermi.</p>
+            <p className={styles.note}>{props.renderCompilationActions?'Apri ogni documento e scegli come compilare la scheda.':'Le caselle servono a scegliere cosa organizzare. I documenti cambiano solo quando confermi.'}</p>
           </section>
         </aside>
       </div>

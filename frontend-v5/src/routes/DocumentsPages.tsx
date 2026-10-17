@@ -468,7 +468,7 @@ function DocumentRow(props: {
           <Tag tone="blue">{STATUS_LABEL}</Tag>
           <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
         </span>
-        {doc.permissions.includes('read') && doc.organization?.parts.some(part => ['utility_bill','invoice','receipt','purchase_document','purchase_order','delivery_notice','product_label','warranty'].includes(part.kind)) && (
+        {doc.permissions.includes('read') && (
           <DocumentBillEntry homeId={props.homeId} documentId={doc.id} compact bill={doc.organization?.parts.some(part=>part.kind==='utility_bill')} />
         )}
       </div>

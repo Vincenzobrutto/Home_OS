@@ -139,7 +139,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
 
         </div>
       </div>
-      {canRead && <section className={ui.card}><DocumentBillEntry homeId={props.home.id} documentId={doc.id} bill={bill} allowPrepare={bill || doc.mimeType.startsWith('image/') || !!doc.organization?.collections.includes('purchases')} /></section>}
+      {canRead && <section className={ui.card}><DocumentBillEntry homeId={props.home.id} documentId={doc.id} bill={bill} allowPrepare /></section>}
       {canRead && <LinkedExpenses home={props.home} by={{ documentId: doc.id }} title="Spese collegate" addLabel="Registra una spesa da questo documento" />}
       {!bill&&<details><summary>Altri strumenti di analisi</summary>{props.analyzeHref&&<Link to={props.analyzeHref} className={ui.btn}>Analizza questo documento</Link>}<ReceiptEntry documentId={doc.id} /></details>}
 

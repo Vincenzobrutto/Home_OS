@@ -1,11 +1,11 @@
-import {BatchProposals} from './BatchProposals';
+import { DocumentCompilationActions } from '../object-onboarding/DocumentCompilationActions';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router';
 import { useAccount, useApi } from '../session/session';
 import { useCurrentHome } from '../routes/HomePages';
 import { DocumentIntakeAssistant } from '../document-intake/DocumentIntakeAssistant';
-import { supportsObjectProposals, bulkItem, canonical, type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type ReviewPayload, type WriteOutcome } from '../document-intake/model';
+import { bulkItem, canonical, type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type ReviewPayload, type WriteOutcome } from '../document-intake/model';
 import { DocumentObjectProposals } from '../object-onboarding/OnboardingPage';
 import { IntakeClient, toUiBatch, type BatchWire } from './client';
 import { localAnalysisCandidates, organizationFromObjectKind, organizeDocuments, type OrganizationPayload } from './organization';
@@ -151,7 +151,7 @@ function IntakeContainer() {
       setCandidates(p => ({ ...p, [itemId]: { items: [...(more ? previous?.items ?? [] : []), ...items], hasMore: !!result.nextCursor, status: 'idle' } }));
     } catch { if (alive.current && active.current === batchId) setCandidates(p => ({ ...p, [itemId]: { items: [], hasMore: false, status: 'error' } })); }
   }
-  const productItems=wire?toUiBatch(wire).items.filter(supportsObjectProposals):[];
+  const productItems=wire?toUiBatch(wire).items.filter(i=>i.documentLink.state==='linked'&&i.permissions.review):[];
   const requestedDocument=params.get('oggetti-documento');
   const productItem=requestedDocument?productItems.find(i=>i.documentLink.document?.id===requestedDocument):undefined;
   const preparationError=(message:string)=>new ApiError({kind:'http',status:422,code:'intake_preparation_required',message});
@@ -172,7 +172,6 @@ function IntakeContainer() {
     {waiting && <p role="status">Caricamento dei file, al massimo due alla volta…</p>}
     {wire?.items.some(i => i.documentLink.state === 'linked' && i.analysisState === 'ready' && !i.proposal && i.reviewState === 'unreviewed') && <Banner><p>Per alcuni file il testo non identifica un tipo con sufficiente chiarezza. Puoi consultare l’originale, scegliere il tipo manualmente o decidere più avanti.</p></Banner>}
 
-    {wire&&<BatchProposals key={wire.id} batchId={wire.id} items={productItems}/>}
     <DocumentIntakeAssistant {...directOrganizationActions} key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
       load={unavailable ? { status: 'unavailable' } : cap.isPending || !!id && batch.isPending ? { status: 'loading' } : error ? { status: 'error', message: userMessage(error), retryable: true } : { status: 'ready' }}
       candidates={candidates} loadCandidates={(itemId, more) => void loadCandidates(itemId, more)} onSelectFiles={selected => void create(selected)} addingFiles={waiting}
@@ -187,6 +186,7 @@ function IntakeContainer() {
       renderPreview={(itemId, page) => { const source = wire?.items.find(i => i.id === itemId)?.documentLink.document; return source ? <OriginalPreview homeId={home.id} id={source.id} page={page} /> : <p>Originale non disponibile.</p>; }}
       onOpenReceiptFlow={itemId => { const doc = current.current?.items.find(i => i.id === itemId)?.documentLink.document; if(doc)setParams(previous=>{const next=new URLSearchParams(previous);next.set('oggetti-documento',doc.id);next.delete('oggetti-bozza');next.delete('oggetti-analisi');return next;}); }}
       objectProposalItemId={productItem?.id}
+      renderCompilationActions={itemId=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentCompilationActions homeId={home.id} documentId={source.id} onOpen={(mode,draftId)=>setParams(previous=>{const next=new URLSearchParams(previous);next.set('oggetti-documento',source.id);next.set('compila',mode);next.delete('oggetti-bozza');next.delete('oggetti-analisi');if(draftId)next.set('oggetti-bozza',draftId);return next;})}/>:null;}}
       renderObjectProposals={(itemId,reviewDocument)=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentObjectProposals documentId={source.id} onReviewDocument={reviewDocument} beforeConfirm={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'&&wire?.items.find(i=>i.id===itemId)?.organization?undefined:kind=>prepareDocumentForObject(itemId,kind)} confirmLabel={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?'Conferma questo articolo':'Conferma documento e articolo'}/>:null;}}
       renderOutcomeLinks={() => <Link className={ui.btn} to={`/home/${home.id}/documenti`}>Vai ai Documenti</Link>}
       onRetryLoad={() => { void cap.refetch(); if (id) void batch.refetch(); }} />

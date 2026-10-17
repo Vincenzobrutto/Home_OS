@@ -1,3 +1,4 @@
+import { DocumentCompilationActions } from './DocumentCompilationActions';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { useAccount, useApi } from '../session/session';
@@ -32,10 +33,11 @@ export function DocumentBillEntry({ homeId, documentId, compact = false, bill = 
   return <div>
     {compact && identity && <p><strong>{identity}</strong></p>}
     {!compact && <><h2>{identity || (bill ? 'Spesa della bolletta' : 'Oggetti e spese')}</h2><p>{caps.isPending ? 'Controllo dello stato della proposta…' : caps.isError ? 'Non è stato possibile verificare lo stato. Apri il percorso per riprovare.' : draft ? 'La proposta è pronta da controllare. La spesa sarà registrata solo alla conferma.' : running ? 'L’analisi è in corso: puoi riaprire il suo stato.' : completed ? 'Le scelte sono già state registrate. Puoi consultare il dettaglio.' : (bill ? 'La spesa non ha ancora una proposta pronta da confermare.' : 'Prepara una proposta per gli oggetti e gli eventuali costi del documento.')}</p></>}
-    {compact && draft && <p><strong>{bill ? 'Proposta di spesa pronta' : 'Proposta pronta da confermare'}</strong></p>}
+    {compact && draft && <p><strong>{bill ? 'Spesa da confermare' : 'Scheda da confermare · Non ancora in Oggetti'}</strong></p>}
     {compact && !draft && !caps.isPending && !caps.isError && !completed && !running && <p>{bill ? 'Spesa da preparare' : 'Proposta da preparare'}</p>}
-    {!compact && !!objects.length && <ul aria-label="Oggetti confermati">{objects.filter((obj,index,all)=>all.findIndex(other=>other.id===obj.id)===index).map(obj=><li key={obj.id}><Link to={`/home/${encodeURIComponent(homeId)}/oggetti/object/${encodeURIComponent(obj.id!)}`}>Apri {obj.name ?? 'oggetto'}</Link></li>)}</ul>}
+    {!!objects.length && <ul aria-label="Oggetti confermati">{objects.filter((obj,index,all)=>all.findIndex(other=>other.id===obj.id)===index).map(obj=><li key={obj.id}><Link to={`/home/${encodeURIComponent(homeId)}/oggetti/object/${encodeURIComponent(obj.id!)}`}>Apri {obj.name ?? 'oggetto'}</Link></li>)}</ul>}
     {result.isError && <p role="alert">Impossibile leggere gli oggetti collegati. Riapri il dettaglio.</p>}
-    <Link className={draft ? ui.btnPrimary : ui.btn} to={href}>{label}</Link>
+    {(completed||running||caps.isError)&&<Link className={draft ? ui.btnPrimary : ui.btn} to={href}>{label}</Link>}
+    {!completed&&!running&&!caps.isPending&&!caps.isError&&<DocumentCompilationActions homeId={homeId} documentId={documentId}/>}
   </div>;
 }
