@@ -49,3 +49,9 @@ it('archive-only documents do not ask the user to create objects or expenses',as
  render(<QueryClientProvider client={new QueryClient()}><MemoryRouter><DocumentBillEntry homeId="home" documentId="ape" bill={false} allowPrepare={false}/></MemoryRouter></QueryClientProvider>);
  await screen.findByText('Documento archiviato.');expect(screen.queryByRole('link',{name:'Prepara oggetti e spese'})).not.toBeInTheDocument();
 });
+
+it.each(['invoice','receipt'])('uses the saved %s kind for accepted house expense headings',async(kind)=>{
+ callJson.mockReset().mockImplementation((path:string)=>Promise.resolve(path.includes('/drafts/')?{draft:{snapshot:{documentId:'expense-doc'},items:[],houseExpenses:[{documentKind:'simple_invoice',proposedFields:{}}]}}:{drafts:[{id:'accepted',state:'confirmed'}],job:null}));
+ render(<QueryClientProvider client={new QueryClient()}><MemoryRouter><DocumentBillEntry homeId="home" documentId="expense-doc" documentKind={kind} bill={false}/></MemoryRouter></QueryClientProvider>);
+ expect(await screen.findByRole('heading',{name:kind==='invoice'?'Fattura':'Ricevuta'})).toBeInTheDocument();expect(screen.queryByRole('heading',{name:'Bolletta'})).not.toBeInTheDocument();
+});

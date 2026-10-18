@@ -1,3 +1,7 @@
+## Documenti: ambito ricerca e continuità mobile — 18 ottobre 2026
+
+Scelta approvata: ricerca sempre visibile, globale all’avvio di una nuova query con ambito restringibile; ingresso senza ricerca in Da fare. Su mobile Compila/Originale nascondono i pannelli senza smontarli, per conservare campi e PDF nella sessione. Non si promette autosalvataggio o recupero su refresh. [Implementazione](v5/document-search-mobile-20261018.md).
+
 ## Fattura e Ricevuta: spesa diretta, oggetti facoltativi — 18 ottobre 2026
 
 Implementato il percorso approvato: importo/data/fornitore/categoria senza oggetto obbligatorio; aggiunta o collegamento facoltativi, costo unico e solo documento conservati. [Comportamento, motivazione e verifiche](v5/manual-purchase-flow-20261018.md).

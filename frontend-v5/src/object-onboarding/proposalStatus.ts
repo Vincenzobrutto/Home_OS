@@ -10,8 +10,8 @@ export function proposalStatus(c?: Capabilities) {
 }
 
 /** A readable description from already accepted data; never renames the original. */
-export function proposalIdentity(draft?: Draft) {
-  const bill = draft?.houseExpenses?.[0]?.proposedFields;
-  if (bill) return ['Bolletta', bill.supplier?.value, bill.documentDate?.value?.split('-').reverse().join('/')].filter(Boolean).join(' · ');
+export function proposalIdentity(draft?: Draft,documentKind?:string) {
+  const expense=draft?.houseExpenses?.[0],bill=expense?.proposedFields;
+  if (bill) return [expense?.documentKind==='simple_invoice'?((documentKind??draft?.documentInfo?.kind)==='receipt'?'Ricevuta':'Fattura'):'Bolletta', bill.supplier?.value, bill.documentDate?.value?.split('-').reverse().join('/')].filter(Boolean).join(' · ');
   return [...new Set(draft?.items?.flatMap(item=>item.decision?.objects??[]).filter(obj=>obj.id&&obj.state==='active').map(obj=>obj.name).filter(Boolean)??[])].join(', ');
 }

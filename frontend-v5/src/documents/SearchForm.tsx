@@ -36,11 +36,11 @@ export function SearchForm(props: {
   const inputRef = useRef<HTMLInputElement>(null);
   const appliedKey = filtersKey(applied);
   const [basis, setBasis] = useState(appliedKey);
-  const [draft, setDraft] = useState(applied);
+  const [draft, setDraft] = useState<DocumentSearchFilters>({...applied,workflow:applied.q?applied.workflow:'all' as const});
   const [error, setError] = useState<string>();
   if (basis !== appliedKey) {
     setBasis(appliedKey);
-    setDraft(applied);
+    setDraft({...applied,workflow:applied.q?applied.workflow:'all'});
     setError(undefined);
   }
 
@@ -76,11 +76,6 @@ export function SearchForm(props: {
 
   return (
     <>
-      {props.collectionsEnabled && <section aria-label="Sezioni documenti" className={docs.collectionSections}>
-        <h2 className={docs.collectionTitle}>Esplora i documenti</h2>
-        <DocumentCollectionFilters current={applied.collection ?? 'all'} onChange={collection => props.onApply({ ...applied, collection })} label="Tipologie di documenti" />
-        <p className={ui.hint}>Tutti insieme oppure per raccolta. Ogni documento mantiene la sua visibilità.</p>
-      </section>}
     <form role="search" aria-label={`Cerca nei documenti di ${props.home.name}`} className={cx(ui.card, docs.search)} onSubmit={onSubmit} noValidate>
       <h2 className={docs.collectionTitle}>Cerca documenti</h2>
       <p className="visually-hidden">
@@ -119,8 +114,12 @@ export function SearchForm(props: {
         <button type="button" className={ui.btn} onClick={reset} disabled={!canReset}>Azzera filtri</button>
       </div>
       </div>
-      <details className={docs.extraFilters} open={draft.format !== 'all' || draft.visibility !== 'all' || undefined}>
-      <summary>Filtri aggiuntivi{(draft.format !== 'all' || draft.visibility !== 'all') && ` · ${Number(draft.format !== 'all') + Number(draft.visibility !== 'all')}`}</summary>
+      <label className={docs.filter}>Cerca in<select className={docs.select} value={draft.workflow??'all'} onChange={e=>setDraft({...draft,workflow:e.target.value as DocumentSearchFilters['workflow']})}><option value="all">Tutti i documenti</option><option value="pending">Da fare</option><option value="completed">Completati</option></select></label>
+      <details className={docs.extraFilters}><summary>Filtri</summary>      {props.collectionsEnabled && <section aria-label="Sezioni documenti" className={docs.collectionSections}>
+        <h2 className={docs.collectionTitle}>Esplora i documenti</h2>
+        <DocumentCollectionFilters current={applied.collection ?? 'all'} onChange={collection => props.onApply({ ...applied, collection })} label="Tipologie di documenti" />
+        <p className={ui.hint}>Tutti insieme oppure per raccolta. Ogni documento mantiene la sua visibilità.</p>
+      </section>}
       <div className={docs.searchFilters}>
         <label className={docs.filter}>
           Formato

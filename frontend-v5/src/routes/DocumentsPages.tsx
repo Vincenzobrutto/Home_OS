@@ -74,7 +74,7 @@ export function DocumentsPage() {
   const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
   const [params, setParams] = useSearchParams();
   const uploadVisible=uploadOpen||params.has('aggiungi');
-  const applied = useMemo(() => ({...filtersFromParams(params), workflow: params.get('workflow') === 'completed' ? 'completed' as const : 'pending' as const}), [params]);
+  const applied = useMemo(() => ({...filtersFromParams(params), workflow: params.get('workflow') === 'completed' ? 'completed' as const : params.get('workflow') === 'pending' ? 'pending' as const : params.get('q') ? 'all' as const : 'pending' as const}), [params]);
   const appliedKey = filtersKey(applied);
   const capabilities = useDocumentSearchCapabilities(home.id);
   const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
@@ -92,7 +92,7 @@ export function DocumentsPage() {
             <h1 tabIndex={-1}>Documenti</h1>
             <span ref={setExportSlot} />
           </div>
-          <p className={styles.lead}>{applied.workflow==='completed'?'Dati salvati e originali sempre disponibili.':'Qui trovi i documenti che richiedono ancora un passaggio.'}</p>
+          <p className={styles.lead}>{applied.workflow==='completed'?'Dati salvati e originali sempre disponibili.':applied.workflow==='all'?'Cerca tra tutti i documenti della casa.':'Qui trovi i documenti che richiedono ancora un passaggio.'}</p>
         </div>
         {canUpload && (
           <div className={docs.toolbarActions}>
@@ -102,7 +102,7 @@ export function DocumentsPage() {
       </div>
       {params.has('documento-salvato')&&<Banner title="Documento organizzato" actions={<button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'completed'})}>Vedi nei Completati</button>}><p>Il salvataggio è riuscito. Il documento e l’originale restano disponibili.</p></Banner>}
       {canUpload&&uploadVisible&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={()=>closeUpload()}>Chiudi caricamento</button></section>}
-      <div className={docs.workflowTabs} role="group" aria-label="Stato dei documenti">{([['pending','Da fare'],['completed','Completati']] as const).map(([value,label])=><button key={value} type="button" className={cx(ui.btn,applied.workflow===value&&ui.primary)} aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
+      <div className={docs.workflowTabs} role="group" aria-label="Stato dei documenti">{([['pending','Da fare'],['completed','Completati'],...(applied.q?[['all','Tutti'] as const]:[])] as const).map(([value,label])=><button key={value} type="button" className={cx(ui.btn,applied.workflow===value&&ui.primary)} aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
       {!canUpload && (
         <p className={cx(docs.note, docs.panel)}>
           Con il tuo ruolo puoi consultare e scaricare i documenti visibili, non caricarne di nuovi.
@@ -110,14 +110,14 @@ export function DocumentsPage() {
       )}
 
       {capabilities.isSuccess ? (
-        <details className={docs.searchOptions} open={params.get('ricerca')==='1'||isFiltered({...applied,workflow:'all'})}><summary>Cerca e filtra</summary><SearchForm
+        <div className={docs.searchOptions}><SearchForm
           home={home}
           applied={applied}
           maxQuery={maxQuery}
           collectionsEnabled={!!capabilities.data.collections}
           autoFocus={params.get('ricerca') === '1'}
           onApply={apply}
-        /></details>
+        /></div>
       ) : capabilities.isError && !isForbidden(capabilities.error) ? (
         <div className={docs.panel}>
           <Banner

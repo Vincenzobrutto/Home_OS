@@ -41,11 +41,11 @@ async function open(backend: FakeBackend, email: string, password: string, homeI
   await login(app, email, password);
   await app.router.navigate(`/home/${homeId}/documenti${search}`);
   await screen.findByRole('heading', { level: 1, name: 'Documenti' });
-  await waitFor(()=>expect(screen.queryByText('Cerca e filtra',{selector:'summary'})??screen.queryByText('Ricerca non attiva')).not.toBeNull());const filters=screen.queryByText('Cerca e filtra',{selector:'summary'});if(filters&&!filters.parentElement?.hasAttribute('open'))await app.user.click(filters);
+  await waitFor(()=>expect(screen.queryByText('Filtri',{selector:'summary'})??screen.queryByText('Ricerca non attiva')).not.toBeNull());const filters=screen.queryByText('Filtri',{selector:'summary'});if(filters&&!filters.parentElement?.hasAttribute('open'))await app.user.click(filters);
   return app;
 }
 
-const field = async () => {const summary=await screen.findByText('Cerca e filtra',{selector:'summary'});if(!summary.parentElement?.hasAttribute('open'))fireEvent.click(summary);return screen.findByRole('searchbox', { name: 'Cerca nei documenti' });};
+const field = async () => {const summary=await screen.findByText('Filtri',{selector:'summary'});if(!summary.parentElement?.hasAttribute('open'))fireEvent.click(summary);return screen.findByRole('searchbox', { name: 'Cerca nei documenti' });};
 
 /** Query string delle richieste lista documenti ricevute dal backend. */
 const withoutWorkflow = (search:string) => { const params=new URLSearchParams(search);params.delete('workflow');const value=params.toString();return search.startsWith('?')&&value?'?'+value:value; };
@@ -146,7 +146,6 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     const app = await open(backend, 'owner@example.test', PW.owner, home.id);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
     const before = listQueries(backend).length;
-    await app.user.click(screen.getByText('Filtri aggiuntivi'));
     fireEvent.change(screen.getByLabelText('Formato'), { target: { value: 'png' } });
     fireEvent.change(screen.getByLabelText('Visibilità'), { target: { value: 'home' } });
     expect(listQueries(backend)).toHaveLength(before);
@@ -524,4 +523,14 @@ describe('[mock] H2 ricerca — gare, contesto e permessi', () => {
     expect(screen.queryByText('Rogito Roma')).not.toBeInTheDocument();
     expect(await screen.findByRole('search', { name: 'Cerca nei documenti di Casa Lago' })).toHaveTextContent('Ricerca in: Casa Lago');
   });
+});
+
+it('search is visible immediately and includes completed documents by default, with explicit scope filters',async()=>{
+ const {backend,owner,home}=world();await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Fattura completata',workflowState:'completed'});
+ const app=await open(backend,owner.email,PW.owner,home.id);
+ expect(screen.getByRole('searchbox',{name:'Cerca nei documenti'})).toBeVisible();
+ await search(app,'Fattura');expect(await screen.findByRole('link',{name:'Fattura completata'})).toBeInTheDocument();expect(app.router.state.location.search).not.toContain('workflow=pending');
+ await app.user.click(screen.getByRole('button',{name:'Vedi dettagli'}));await app.user.click(await screen.findByRole('link',{name:/← Documenti di/}));await results();expect(app.router.state.location.search).not.toContain('workflow=pending');
+ await app.user.selectOptions(screen.getByRole('combobox',{name:'Cerca in'}),'pending');await app.user.click(screen.getByRole('button',{name:'Cerca'}));
+ await screen.findByRole('heading',{name:'Nessun documento corrisponde ai filtri'});expect(app.router.state.location.search).toContain('workflow=pending');
 });

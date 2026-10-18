@@ -476,3 +476,5 @@
 .workflowStatus { min-width:120px; }
 @media(min-width:761px){ .workflowStatus { flex:0 1 200px; } }
 @media(max-width:760px){ .workflowStatus { flex:none; } }
+
+@media(max-width:600px){.workflowTabs{flex-wrap:wrap}.workflowTabs button{min-width:0;flex:1}.searchOptions{margin-bottom:16px}}

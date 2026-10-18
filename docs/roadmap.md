@@ -1,3 +1,7 @@
+## Ricerca visibile e viste mobile Documenti — 18 ottobre 2026
+
+Implementata la fase approvata: ricerca globale con ambito esplicito, filtri separati, alternanza Compila/Originale senza smontare i pannelli e intestazioni Fattura/Ricevuta corrette. [Comportamento, verifica e limiti](v5/document-search-mobile-20261018.md).
+
 ## Fattura e Ricevuta: spesa diretta, oggetti facoltativi — 18 ottobre 2026
 
 Implementato il percorso approvato: importo/data/fornitore/categoria senza oggetto obbligatorio; aggiunta o collegamento facoltativi, costo unico e solo documento conservati. [Comportamento, motivazione e verifiche](v5/manual-purchase-flow-20261018.md).
