@@ -30,13 +30,15 @@ export function readUnderstanding(raw:unknown, rawFacts:unknown, itemCount:numbe
   if(!Number.isSafeInteger(fact.subjectIndex)||Number(fact.subjectIndex)<-1||Number(fact.subjectIndex)>=itemCount||!(documentFactKeys as readonly unknown[]).includes(fact.field))throw invalid();
   const field=fact.field as DocumentFactKey,key=fact.subjectIndex+':'+field;if(seen.has(key))throw invalid();seen.add(key);
   try{
-   const proof=readSource(fact.evidence),value=normalize(text(fact.value,field==='interventionDescription'?500:120)),excerpt=normalize(proof.excerpt);
+   let proof=readSource(fact.evidence);const value=normalize(text(fact.value,field==='interventionDescription'?500:120));
+   if(field==='documentDate'&&kind==='invoice'&&proof.page===source.page&&normalize(source.excerpt).includes(normalize(proof.excerpt))&&printedDates(source.excerpt).length===1&&printedDates(source.excerpt).includes(value))proof=source;
+   const excerpt=normalize(proof.excerpt);
    if(field==='documentDate'||field==='installationDate'){
     calendar(value);if(printedDates(excerpt).length!==1||!printedDates(excerpt).includes(value))throw invalid();
     if(field==='installationDate'&&!/installat|messa in servizio|installation/iu.test(excerpt))throw invalid();
-    if(field==='documentDate'&&!/data|emess|rilasc|date|dichiarazione/iu.test(excerpt))throw invalid();
+    if(field==='documentDate'&&!/data|emess|rilasc|date|dichiarazione|fattura|invoice/iu.test(excerpt))throw invalid();
    }else if(field==='systemType'){
-    if(!systemWords[value]?.test(excerpt)||kind!=='conformity_declaration'||Number(fact.subjectIndex)<0)throw invalid();
+    if(!systemWords[value]?.test(excerpt)||!['conformity_declaration','invoice'].includes(kind)||Number(fact.subjectIndex)<0)throw invalid();
    }else if(field==='availablePowerKw'){
     if(!/^\d+(?:[.,]\d+)?$/u.test(value)||Number(value.replace(',','.'))<=0||Number(value.replace(',','.'))>1000000||!/(?:impegnabil|disponibil|contrattual)/iu.test(excerpt)||!new RegExp('(?:^|[^0-9.,])'+value.replace('.','\\.')+'\\s*kW\\b','iu').test(excerpt))throw invalid();
    }else if(!excerpt.includes(value))throw invalid();

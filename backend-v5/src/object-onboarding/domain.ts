@@ -15,7 +15,7 @@ export type Region = { x: number; y: number; width: number; height: number };
 export type ProductSource = Citation & { basis: 'verified_text' | 'provider_observed_image'; region: Region | null };
 export type ProductValue = { value: string; source: ProductSource };
 export type ProductItem = {
-  id: string; fingerprint: string; sourceIndex?: number;
+  id: string; fingerprint: string; sourceIndex?: number; subjectKind?: 'product' | 'system';
   fields: Partial<Record<ProductField, ProductValue>>;
   quantity: { value: number; source: ProductSource } | null;
   purchaseAmount?: { amountCents: number; source: ProductSource } | null;
@@ -78,8 +78,9 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     let needsReview = row.requiresHumanReview === true || understanding.warnings.length>0;
     const items: ProductItem[] = [];
     for (const [sourceIndex, raw] of row.items.entries()) {
-      const r = object(raw, ['fields', 'quantity', 'purchaseAmount', 'nameTruncated', 'disposition', 'confidence']);
+      const r = object(raw, ['fields', 'quantity', 'purchaseAmount', 'nameTruncated', 'disposition', 'confidence', 'subjectKind']);
       if (typeof r.nameTruncated !== 'boolean' || !['household_object', 'consumable', 'uncertain'].includes(String(r.disposition)) || !['high', 'low'].includes(String(r.confidence))) throw invalid();
+      if(r.subjectKind!==undefined&&!['product','system'].includes(String(r.subjectKind)))throw invalid();
       const fields: Partial<Record<ProductField, ProductValue>> = {};
       for (const [key, rawField] of Object.entries(object(r.fields, [...productFields]))) {
         if (rawField === null) continue;
@@ -122,23 +123,24 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       fingerprints.add(fingerprint);
       const id = digest(JSON.stringify([context.snapshot.documentId, fingerprint]));
       let purchaseAmount: ProductItem['purchaseAmount'] = null;
-      if (r.purchaseAmount !== undefined && r.purchaseAmount !== null) {
+      if (r.purchaseAmount !== undefined && r.purchaseAmount !== null) {try{
         const price = object(r.purchaseAmount, ['amountCents', 'evidence']), source = evidence(price.evidence, context);
         if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/(?:totale\s+riga|importo\s+riga|prezzo\s+articolo|line\s+total)/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(price.amountCents))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
         purchaseAmount = { amountCents: Number(price.amountCents), source };
-      }
-      items.push({ id, fingerprint,...(understanding.documentInfo?{sourceIndex}:{}), fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
+      }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:sourceIndex+':purchaseAmount',reason:'unverified'});}}
+      items.push({...(r.subjectKind?{subjectKind:r.subjectKind as 'product'|'system'}:{}), id, fingerprint,...(understanding.documentInfo?{sourceIndex}:{}), fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
     }
     let purchaseTotal: ProductExtraction['purchaseTotal'] = null;
-    if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {
+    if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {try{
       const total = object(row.purchaseTotal, ['amountCents', 'evidence']);
       const source = evidence(total.evidence, context);
       if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
       purchaseTotal = { amountCents: Number(total.amountCents), source };
-    }
-    if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents) throw new ProductEvidenceFailure('purchaseTotal', 'total');
-    const houseExpenses=readHouseExpenses(row.houseExpenses,context);
-    if(houseExpenses.length&&row.documentKind!=='utility_bill')throw invalid();
+    }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}}
+    if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents){needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}
+    const houseExpenses=readHouseExpenses(row.houseExpenses,context,row.documentKind==='utility_bill'?'utility_bill':'simple_invoice');
+    if(houseExpenses.length&&!['utility_bill','purchase_document'].includes(String(row.documentKind)))throw invalid();
+    if(row.documentKind==='purchase_document'&&houseExpenses.length>1)throw invalid('Una fattura propone un unico costo complessivo della casa.');
     return { ...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
   } catch (error) {
     if (error instanceof ProviderFailure) throw error;
@@ -212,12 +214,12 @@ export function productConfirmation(input: unknown, extraction: ProductExtractio
 
 const billKeys=['title','supplier','category','documentNumber','documentDate','competenceFrom','competenceTo','dueOn'];
 const billRoles=['current_document_total','amount_due','arrears_balance','taxable','tax','line_total','other'];
-function readHouseExpenses(input:unknown,context:ProductEvidenceContext):HouseExpense[]{
+function readHouseExpenses(input:unknown,context:ProductEvidenceContext,kind:'utility_bill'|'simple_invoice'):HouseExpense[]{
  if(input===undefined)return [];if(!Array.isArray(input)||input.length>10)throw invalid();const fingerprints=new Set<string>();
  return input.map(raw=>{const r=object(raw,['fields','amountCandidates']),fields:HouseExpense['proposedFields']={},reviewWarnings:string[]=[];
   for(const [key,rawField]of Object.entries(object(r.fields,billKeys))){try{const field=object(rawField,['value','evidence']),value=text(field.value,key==='documentNumber'?80:120),source=evidence(field.evidence,context);
    if(['documentDate','competenceFrom','competenceTo','dueOn'].includes(key)){calendar(value);if(!printedDates(source.excerpt).includes(value))throw new ProductEvidenceFailure('purchaseDate','date');}
-   else if(key==='category'){const matches:Record<string,RegExp>={electricity:/elettric|electric/iu,gas:/\bgas\b/iu,water:/acqua|water/iu,internet_services:/internet/iu};if(!matches[value]?.test(source.excerpt))throw invalid();}
+   else if(key==='category'){const matches:Record<string,RegExp>={electricity:/elettric|electric/iu,gas:/\bgas\b/iu,water:/acqua|water/iu,internet_services:/internet/iu,maintenance:/manutenzion/iu,repairs_works:/lavor|adeguamento|riparazion|installazion/iu,purchase_replacement:/acquisto|sostituzion/iu};if(!matches[value]?.test(source.excerpt))throw invalid();}
    else if(!normalize(source.excerpt).toLocaleLowerCase('it').includes(normalize(value).toLocaleLowerCase('it')))throw invalid();fields[key]={value,sources:[source]};
   }catch{reviewWarnings.push('field:'+key);}}
   if(!Array.isArray(r.amountCandidates)||r.amountCandidates.length>10)throw invalid();const seen=new Set<string>();
@@ -225,9 +227,10 @@ function readHouseExpenses(input:unknown,context:ProductEvidenceContext):HouseEx
   for(const rawAmount of r.amountCandidates){try{const x=object(rawAmount,['id','amountCents','role','label','evidence']),id=text(x.id,80),role=text(x.role,40),source=evidence(x.evidence,context);if(!/^[A-Za-z0-9_-]{1,80}$/.test(id)||seen.has(id)||!billRoles.includes(role)||!Number.isSafeInteger(x.amountCents)||Number(x.amountCents)<=0||Number(x.amountCents)>999999999||!printedCents(source.excerpt).includes(Number(x.amountCents)))throw invalid();seen.add(id);
    if(!/(?:€|\bEUR\b|euro)/iu.test(source.excerpt))throw invalid();
    if(['current_document_total','amount_due'].includes(role)&&!/(?:totale|importo|da\s+pagare|da\s+versare)/iu.test(source.excerpt))throw invalid();
+   if(kind==='simple_invoice'&&['current_document_total','amount_due'].includes(role)&&!/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt))throw invalid();
    amounts.push({id,amountCents:Number(x.amountCents),role,label:text(x.label,120),sources:[source]});
   }catch{reviewWarnings.push('amount');}}
   const fingerprint=digest(JSON.stringify([context.snapshot.documentSha256,fields.supplier?.value??null,fields.documentNumber?.value??null,fields.documentDate?.value??null,amounts[0]?.sources[0].page??fields.title?.sources[0].page??1]));if(fingerprints.has(fingerprint))throw invalid();fingerprints.add(fingerprint);
-  return {id:digest(context.snapshot.documentId+':bill:'+fingerprint),fingerprint,documentKind:'utility_bill' as const,proposedFields:fields,amountCandidates:amounts,...(reviewWarnings.length?{reviewWarnings:[...new Set(reviewWarnings)]}:{}),amountSelectionRequired:amounts.some(a=>a.role==='arrears_balance')||amounts.filter(a=>a.role==='current_document_total').length!==1};
+  return {id:digest(context.snapshot.documentId+':bill:'+fingerprint),fingerprint,documentKind:kind,proposedFields:fields,amountCandidates:amounts,...(reviewWarnings.length?{reviewWarnings:[...new Set(reviewWarnings)]}:{}),amountSelectionRequired:amounts.some(a=>a.role==='arrears_balance')||amounts.filter(a=>a.role==='current_document_total').length!==1};
  });
 }

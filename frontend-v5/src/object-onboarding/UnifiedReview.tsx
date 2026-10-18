@@ -12,13 +12,15 @@ type Props = {
   disabled: boolean; documentFields?: ReactNode; copyChoice?: { checked: boolean; change: (checked: boolean) => void };
   change: (id: string, form: Form) => void; save: () => void; defer: () => void; add: () => void;
   enrich: (id: string, body: { brand: string; reference: string; productUrl?: string }) => Promise<void>;
+  houseFields?:ReactNode;houseProblem?:string;houseTotals?:{newExpenses:number;amountCents:number};
   manualTotal?: string; changeManualTotal?: (value: string) => void;
 };
-export function UnifiedReview({ draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, defer, add, enrich, manualTotal, changeManualTotal }: Props) {
+export function UnifiedReview({ draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, defer, add, enrich, manualTotal, changeManualTotal,houseFields,houseProblem,houseTotals }: Props) {
   const items = draft.items.filter(item => !item.decision || item.decision.state === 'deferred');
   const manualCents = /^\d+(?:[.,]\d{1,2})?$/.test(manualTotal ?? '') ? Math.round(Number(manualTotal!.replace(',', '.')) * 100) : 0;
   const effectiveDraft = !draft.purchaseTotal && manualCents > 0 ? { ...draft, purchaseTotal: { amountCents: manualCents } } : draft;
-  const totals = reviewTotals(draft, forms), problem = reviewProblem(effectiveDraft, forms) ?? (draft.mode==='manual'&&draft.items.length>1&&totals.newExpenses>0&&!manualCents ? 'Indica il totale della fattura per controllare le quote degli articoli.' : null);
+  const totals = reviewTotals(draft, forms), problem = houseProblem ?? reviewProblem(effectiveDraft, forms) ?? (draft.mode==='manual'&&draft.items.length>1&&totals.newExpenses>0&&!manualCents ? 'Indica il totale della fattura per controllare le quote degli articoli.' : null);
+  if(houseTotals){totals.newExpenses+=houseTotals.newExpenses;totals.amountCents+=houseTotals.amountCents;}
   const euro = (cents: number) => (cents / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
   return <section className={styles.stack} aria-label="Revisione unica del documento">
     <header><h2>Rivedi e organizza</h2><Link to={root + '/documenti/' + encodeURIComponent(draft.snapshot!.documentId) + '#doc-anteprima'} target="_blank" rel="noopener noreferrer">Vedi documento originale ↗</Link></header>
@@ -29,7 +31,8 @@ export function UnifiedReview({ draft, forms, api, accountId, base, root, disabl
       <h3>Articolo {index + 1} · {forms[item.id]!.name || 'Da identificare'}</h3>
       <ItemEditor api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value => change(item.id, value)} enrich={body => enrich(item.id, body)} />
     </section>)}
-    <button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>Aggiungi un altro articolo</button>
+    {!['utility_bill','house_document'].includes(draft.documentKind)&&<button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>Aggiungi un altro articolo</button>}
+    {houseFields}
     <section className={ui.card} aria-label="Riepilogo prima di salvare" aria-live="polite">
       {draft.purchaseTotal && <p>Totale fattura: <strong>{euro(draft.purchaseTotal.amountCents)}</strong></p>}
       {(!items.length||items.some(item=>forms[item.id]?.action==='document_only'))&&<p>Il documento sarà conservato nella casa.</p>}
@@ -39,6 +42,6 @@ export function UnifiedReview({ draft, forms, api, accountId, base, root, disabl
       {!!totals.excludedUnknown && <p>{totals.excludedUnknown} articoli esclusi con importo non disponibile.</p>}
       {problem && <p role="status">{problem}</p>}
     </section>
-    <div className={styles.row}>{!!items.length&&<button type="button" className={ui.btn} disabled={disabled} onClick={defer}>Decidi più avanti</button>}<button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || (!items.length&&!draft.documentInfo)} onClick={save}>Salva e organizza</button></div>
+    <div className={styles.row}>{!!items.length&&<button type="button" className={ui.btn} disabled={disabled} onClick={defer}>Decidi più avanti</button>}<button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || (!items.length&&!draft.documentInfo&&!draft.houseExpenses?.length)} onClick={save}>Salva e organizza</button></div>
   </section>;
 }

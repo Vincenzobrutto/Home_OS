@@ -1,3 +1,7 @@
+## V5 — V12: soggetti e costo del documento
+
+Nessuna migrazione. subjectKind product/system nella bozza JSON; lavori/servizi in fatti del documento e HouseExpense simple_invoice. Conferma crea HomeExpense canonica senza objectRef/workId e schede HomeObject eventualmente collegate allo stesso originale. Il totale non viene copiato in ciascuna scheda.
+
 ## V5 — osservazioni documentali V11 (2026-10-18)
 
 ObjectOnboardingDraft.output JSON contiene opzionalmente documentInfo e reviewWarnings, senza migrazione. Fatti tecnici distinti dal profilo canonico; document_only registra una decisione senza HomeObject/HomeExpense. subjectIndex identifica documento (-1) o soggetto originale; proiezione sotto guard di fonte/privacy esistente. Dettagli nel report V11.

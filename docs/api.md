@@ -1,3 +1,7 @@
+## V5 — contratto onboarding V12
+
+Nessun endpoint nuovo. item.subjectKind opzionale product/system; houseExpenses può avere documentKind simple_invoice per un costo complessivo di fattura, oltre a utility_bill. Conferma combina choices e houseExpenses atomicamente. document_only ammesso anche per soggetti di fattura con costo complessivo. Vietate doppia allocazione e spesa superiore al totale; esclusione richiede costo casa dichiarato e tetto ridotto delle quote escluse note. Dettagli: docs/v5/document-understanding-v12-report-20261018.md.
+
 ## V5 — estensione onboarding V11 (2026-10-18)
 
 Nessun nuovo endpoint. Draft può includere documentInfo, reviewWarnings e subjectKind/proposedType sugli item. Conferma ammette action=document_only (solo conformità, itemId/action) e documentOnly=true per bozza riconosciuta senza item/spese. Nessun dato finanziario ammesso nel payload document_only; autorizzazione, privacy, snapshot e idempotenza invariati. Vedi docs/v5/document-understanding-v11-report-20261018.md.

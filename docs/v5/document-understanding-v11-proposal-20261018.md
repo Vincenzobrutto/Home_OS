@@ -83,3 +83,6 @@ Non modificare vecchie conferme, oggetti o spese per migrare una proposta; recup
 ## Riferimenti tecnici primari
 
 Anthropic PDF support: https://platform.claude.com/docs/en/build-with-claude/pdf-support — lettura visuale e testuale delle pagine. Structured outputs: https://platform.claude.com/docs/en/build-with-claude/structured-outputs — forma dell’output e limiti di complessità; JSON valido non garantisce completezza o correttezza semantica.
+
+
+Aggiornamento V12: implementati anche fatture lavori/servizi e miste, spese senza oggetto e revisione combinata. Vedi document-understanding-v12-report-20261018.md per prove e limiti; piano OCR/casi rimanenti invariato.

@@ -1,3 +1,7 @@
+## 2026-10-18 — V12: costo del documento separato dai soggetti
+
+Fatture lavori/miste possono proporre una spesa della casa e più soggetti fisici; servizi non diventano oggetti. Una richiesta AI, adattamento locale e una conferma combinata. Costi opzionali non comprovati sono omessi con avviso senza scartare gli altri dati; somme incoerenti restano da rivedere e non possono superare il totale al salvataggio. Scartate allocazione automatica del totale su ogni oggetto e richieste AI separate per tipo. Nessuna attività/intervento canonica creata da una descrizione lavori.
+
 ## 2026-10-18 — valuta esplicita tra parentesi
 
 Il validatore del totale finale accetta EUR/EURO/€ anche tra parentesi complete. Nessuna deduzione o somma: resta obbligatorio un totale positivo realmente presente nella citazione con etichetta finale; IVA, subtotali e parentesi malformate restano esclusi. Il fallimento di un totale non viene trasformato in successo finanziario.

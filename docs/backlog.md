@@ -1,3 +1,7 @@
+## V12 — aggiornamento 18 ottobre 2026
+
+Chiusi: spesa lavori senza oggetto, visualizzazione congiunta soggetti/spesa, omissioni isolate dei costi errati e data intestazione fattura. Restano collaudo V12 con consenso UI e misura richiamo del modello reale, OCR/PDF misti, persistenza delle modifiche non ancora inviate ai campi spesa su refresh, campi tecnici canonici e attività/interventi. Le vecchie bozze non vengono arricchite retroattivamente.
+
 ## V11 — formato totale fattura corretto
 
 Risolto formato valuta EUR/€ tra parentesi sul totale finale. La risposta AI rifiutata non è conservata: nessun recupero retroattivo; prossimo collaudo solo con nuovo consenso UI nel budget esistente.

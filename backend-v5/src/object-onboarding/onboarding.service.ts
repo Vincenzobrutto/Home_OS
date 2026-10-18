@@ -34,7 +34,7 @@ export class ObjectOnboardingService {
         try { const target = await this.access.target(tx, a, h, id); targets.push({ id: target.id, name: target.name, version: target.version, state: target.state }); }
         catch { targets.push({ id: null, name: null, state: 'unavailable', version: null }); }
       }
-      return { ...item,...(output.documentInfo?.kind==='conformity_declaration'?{subjectKind:'system',proposedType:output.documentInfo.facts.find(f=>f.subjectIndex===(item.sourceIndex??output.items.indexOf(item))&&f.field==='systemType')?.value??'other'}:{}), profile: { ...output.enrichments?.[item.id]?.profile, ...proposedProfile(item) }, enrichment: output.enrichments?.[item.id] ?? null, decision: choice ? { ...choice, expenseId:undefined, objectIds: undefined, objects: targets } : null };
+      return { ...item,...((item.subjectKind==='system'||output.documentInfo?.kind==='conformity_declaration')?{subjectKind:'system',proposedType:output.documentInfo?.facts.find(f=>f.subjectIndex===(item.sourceIndex??output.items.indexOf(item))&&f.field==='systemType')?.value??'other'}:{}), profile: { ...output.enrichments?.[item.id]?.profile, ...proposedProfile(item) }, enrichment: output.enrichments?.[item.id] ?? null, decision: choice ? { ...choice, expenseId:undefined, objectIds: undefined, objects: targets } : null };
     }));
     const review=await this.safeReview(tx,a,h,draft);
     return { id: draft.id, version: draft.version, state: draft.state, mode: draft.mode, snapshot: { documentId: draft.documentId, documentVersion: draft.documentVersion, sha256: draft.documentSha256 }, document: { id: source.id, name: source.name, mimeType: source.original!.mimeType }, documentKind: output.documentKind, documentInfo:output.documentInfo??null,reviewWarnings:output.reviewWarnings??[], items, needsReview: output.needsReview, purchaseTotal: output.purchaseTotal, houseExpenses:(output.houseExpenses??[]).map(item=>({...item,amountSelectionRequired:item.amountCandidates.some(a=>a.role==='arrears_balance')||item.amountCandidates.filter(a=>a.role==='current_document_total').length!==1,decision:decisions[item.id]?{state:decisions[item.id].state,newExpenses:decisions[item.id].newExpenses}:null})), review, permissions: edit ? ['read', 'edit'] : ['read'] };
@@ -208,6 +208,7 @@ export class ObjectOnboardingService {
     }
     const split=output.items.length>1;
     const maximum=output.purchaseTotal?.amountCents??manualMaximum;
+    if(maximum&&choice.expense.amountCents>maximum)throw invalid('La spesa supera il totale del documento.');
     if(split&&(!choice.expense.manualItemAmount||!maximum))throw invalid('Indica e conferma il prezzo del solo articolo e il totale della fattura.');
     const existing = await tx.$queryRaw<Array<{ id: string }>>`SELECT e.id FROM "HomeExpense" e JOIN "DocumentVersion" v ON v."documentId"=e."documentId" JOIN "Document" d ON d.id=v."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;
     if (existing.length&&!split) throw conflict('onboarding_expense_exists', 'Esiste già un costo per questa ricevuta: scegli quello esistente.');
@@ -235,7 +236,7 @@ export class ObjectOnboardingService {
       return {expenseId:row.id,newExpenses:0};
     }
     const candidate=c.amountSelection.mode==='candidate'?item.amountCandidates.find(x=>x.id===c.amountSelection.candidateId):null;
-    if(c.amountSelection.mode==='candidate'&&(!candidate||candidate.amountCents!==c.values.amountCents||!['current_document_total','amount_due'].includes(candidate.role)))throw invalid('Controlla il totale di questa bolletta.');
+    if(c.amountSelection.mode==='candidate'&&(!candidate||candidate.amountCents!==c.values.amountCents||!['current_document_total','amount_due'].includes(candidate.role)))throw invalid('Controlla il totale della spesa della casa.');
     const sameSource=await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE e."accountId"=${a} AND e."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}) AND v.sha256=${draft.documentSha256} AND (e."documentNumber" IS NOT DISTINCT FROM ${c.values.documentNumber??null}::text OR e."amountCents"=${c.values.amountCents}) LIMIT 1`;
     if(sameSource.length)throw conflict('onboarding_expense_exists','Questo documento ha già una spesa: collega quella esistente.');
     const similar=await tx.homeExpense.findMany({where:{accountId:a,homeId:h,state:'active',OR:[{amountCents:Number(c.values.amountCents),spentOn:String(c.values.spentOn)},...(c.values.documentNumber&&c.values.supplier?[{documentNumber:c.values.documentNumber,supplier:c.values.supplier}]:[])]},select:{id:true,documentId:true}});
@@ -258,11 +259,22 @@ export class ObjectOnboardingService {
       if(body.manualPurchaseTotalCents!==undefined&&(draft.mode!=='manual'||output.purchaseTotal))throw invalid('Il totale dichiarato è ammesso soltanto per una fattura compilata manualmente senza totale estratto.');
       if (body.source.documentId !== draft.documentId || body.source.documentVersion !== draft.documentVersion || body.source.sha256 !== draft.documentSha256) throw conflict('onboarding_source_changed', 'La fonte è cambiata.');
       const initialSourceLinks = await tx.$queryRaw<Array<{ id: string }>>`SELECT l.id FROM "ObjectResourceLink" l JOIN "Document" d ON d.id=l."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE l."accountId"=${a} AND l."homeId"=${h} AND l."resourceType"='document' AND l.state='active' AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;
+      // A document-wide cost and per-object costs are alternative allocations of the same source.
+      if(output.houseExpenses?.some(e=>e.documentKind==='simple_invoice')){
+        if(body.choices.some(c=>['create','link'].includes(c.action)&&'expense' in c&&c.expense.action!=='skip'))throw invalid('Il costo complessivo si registra una sola volta nella spesa della casa, senza costi sugli oggetti.');
+        const excluded=body.choices.some(c=>c.action==='skip')||output.items.some(i=>decisions[i.id]?.state==='skipped');
+        for(const selected of body.houseExpenses??[]){const c=selected.confirmation;if(c?.mode==='create'){
+          if(output.items.some(i=>!['confirmed','skipped'].includes(decisions[i.id]?.state??'')&&!body.choices.some(ch=>ch.itemId===i.id&&ch.action!=='defer')))throw invalid('Rivedi tutti i soggetti prima di registrare il costo complessivo.');
+          if(excluded&&c.amountSelection.mode!=='manual')throw invalid('Hai escluso un articolo: indica manualmente il solo importo relativo alla casa.');
+          const excludedCents=output.items.filter(i=>decisions[i.id]?.state==='skipped'||body.choices.some(ch=>ch.itemId===i.id&&ch.action==='skip')).reduce((n,i)=>n+(i.purchaseAmount?.amountCents??0),0);
+          if(output.purchaseTotal&&Number(c.values.amountCents)>output.purchaseTotal.amountCents-excludedCents)throw invalid('La spesa supera il totale del documento.');
+        }}
+      }
       const used = new Set<string>(); let newObjects = 0, newExpenses = 0;
       for (const choice of body.choices) {
         const item = output.items.find(item => item.id === choice.itemId);
         if (!item || decisions[item.id]?.state === 'confirmed' || decisions[item.id]?.state === 'skipped') throw conflict('onboarding_item_resolved', 'Uno degli articoli è già stato gestito.');
-        if(choice.action==='document_only'){if(output.documentInfo?.kind!=='conformity_declaration')throw invalid();decisions[item.id]={state:'confirmed',objectIds:[],expenseId:null,newObjects:0,newExpenses:0};continue;}
+        if(choice.action==='document_only'){if(output.documentInfo?.kind!=='conformity_declaration'&&!output.houseExpenses?.some(e=>e.documentKind==='simple_invoice'))throw invalid();decisions[item.id]={state:'confirmed',objectIds:[],expenseId:null,newObjects:0,newExpenses:0};continue;}
         if (choice.action === 'skip' || choice.action === 'defer') { decisions[item.id] = { state: choice.action === 'skip' ? 'skipped' : 'deferred', objectIds: [], expenseId: null, newObjects: 0, newExpenses: 0 }; continue; }
         const quantity = item.quantity?.value ?? 1;
         if (choice.action === 'create' && item.disposition !== 'household_object' && !choice.confirmHouseholdObject) throw invalid('Conferma che vuoi creare una scheda anche per questo articolo da verificare.');
@@ -319,6 +331,7 @@ export class ObjectOnboardingService {
       for(const selected of body.houseExpenses??[]){
         const item=output.houseExpenses?.find(x=>x.id===selected.itemId);if(!item||['confirmed','skipped'].includes(decisions[selected.itemId]?.state))throw conflict('onboarding_item_resolved','Questa proposta è già stata gestita.');
         if(selected.action==='skip'||selected.action==='defer'){decisions[item.id]={state:selected.action==='skip'?'skipped':'deferred',objectIds:[],expenseId:null,newObjects:0,newExpenses:0};continue;}
+        if(item.documentKind==='utility_bill'&&selected.confirmation?.mode==='create'&&!['electricity','gas','water','internet_services'].includes(String(selected.confirmation.values.category)))throw invalid('Scegli la fornitura della bolletta.');
         const result=await this.houseCost(tx,a,h,draft,item,selected);newExpenses+=result.newExpenses;decisions[item.id]={state:'confirmed',objectIds:[],newObjects:0,...result};
       }
       const complete = [...output.items,...(output.houseExpenses??[])].every(item => ['confirmed', 'skipped'].includes(decisions[item.id]?.state));

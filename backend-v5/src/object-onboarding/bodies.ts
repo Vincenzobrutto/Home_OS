@@ -66,7 +66,7 @@ function houseChoices(input:unknown,expectedVersion:unknown,today:string){
   if(r.action!=='create'&&r.action!=='link_existing'||r.acknowledgePossibleDuplicate!==undefined&&typeof r.acknowledgePossibleDuplicate!=='boolean')throw invalid();
   object(r,r.action==='create'?['itemId','action','values','amountSelection','acknowledgePossibleDuplicate']:['itemId','action','expenseId','expectedExpenseVersion']);
   const confirmation=confirmBody({expectedVersion,mode:r.action,...(r.action==='create'?{values:r.values,amountSelection:r.amountSelection}:{expenseId:r.expenseId,expectedExpenseVersion:r.expectedExpenseVersion})},today);
-  if(confirmation.mode==='create'&&(confirmation.values.objectRef||confirmation.values.workId||!['electricity','gas','water','internet_services'].includes(String(confirmation.values.category))))throw invalid('Una bolletta riguarda la casa, senza oggetti o lavori.');
+  if(confirmation.mode==='create'&&(confirmation.values.objectRef||confirmation.values.workId||!['electricity','gas','water','internet_services','maintenance','repairs_works','purchase_replacement'].includes(String(confirmation.values.category))))throw invalid('Questa spesa riguarda la casa, senza collegamenti a singoli oggetti o lavori.');
   return {itemId,action:r.action as 'create'|'link_existing',confirmation,acknowledgePossibleDuplicate:r.acknowledgePossibleDuplicate===true};
  });
 }

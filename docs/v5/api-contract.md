@@ -74,3 +74,8 @@ Il frontend seleziona la casa via URL `/home/:homeId/casa`; non serve endpoint s
 ## Estensione V11 — 18 ottobre 2026
 
 Contratto additivo di onboarding descritto in [report V11](document-understanding-v11-report-20261018.md#contratto-e-persistenza). documentInfo e reviewWarnings opzionali; soggetti impianto con subjectKind/proposedType. Conferma document_only limitata a conformità e documentOnly=true a metadati senza soggetti/spese, con ricevute e controlli esistenti. Nessun nuovo endpoint.
+
+
+## V12 — soggetti e costo complessivo (18 ottobre 2026)
+
+Estensione additiva: item.subjectKind product/system; houseExpenses.documentKind simple_invoice oltre a utility_bill. Categoria manutenzione/lavori/acquisti ammessa per fatture; bollette restano forniture. Un’unica conferma choices+houseExpenses; document_only anche per fatture con costo complessivo. Limiti, esclusioni e condizioni nel [report V12](document-understanding-v12-report-20261018.md).

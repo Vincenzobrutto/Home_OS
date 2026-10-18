@@ -22,8 +22,8 @@ test('two invoice rows keep evidenced EUR prices independent and never allocate 
  const value={documentKind:'purchase_document',hasMoreItems:false,purchaseTotal:{amountCents:14989,evidence:proof(total)},items:names.map((name,i)=>({fields:{name:{value:name,evidence:proof(lines[i])}},quantity:null,purchaseAmount:{amountCents:prices[i],evidence:proof(lines[i])},nameTruncated:false,disposition:'household_object',confidence:'high'}))};
  const context={...textContext,pages:[[...lines,total].join('\n')]};
  assert.deepEqual(productExtraction(value,context).items.map(item=>item.purchaseAmount.amountCents),prices);
- const crossed=structuredClone(value);crossed.items[1].purchaseAmount=value.items[0].purchaseAmount;fails(()=>productExtraction(crossed,context),'evidence_unverified');
- const invented=structuredClone(value);invented.items[0].purchaseAmount.amountCents=14989;fails(()=>productExtraction(invented,context),'evidence_unverified');
+ const crossed=structuredClone(value);crossed.items[1].purchaseAmount=value.items[0].purchaseAmount;assert.equal(productExtraction(crossed,context).items[1].purchaseAmount,undefined);
+ const invented=structuredClone(value);invented.items[0].purchaseAmount.amountCents=14989;assert.equal(productExtraction(invented,context).items[0].purchaseAmount,undefined);
  const absent=structuredClone(value);absent.items.forEach(item=>delete item.purchaseAmount);assert.ok(productExtraction(absent,context).items.every(item=>!item.purchaseAmount));
 });
 
@@ -258,6 +258,6 @@ test('V9 shares source grammar once and resolves citations without changing thei
 test('cropped order keeps explicit current total without inventing date or using crossed-out price',()=>{
  const value=raw(true);value.documentKind='order_confirmation';value.purchaseTotal={amountCents:44400,evidence:proof('TOTALE COSTI 444,00 €',true)};
  const result=productExtraction(value,imageContext);assert.equal(result.purchaseTotal.amountCents,44400);assert.equal(result.items[0].fields.purchaseDate,undefined);
- const crossed=structuredClone(value);crossed.purchaseTotal.amountCents=60000;fails(()=>productExtraction(crossed,imageContext),'evidence_unverified');
- const delivery=structuredClone(value);delivery.documentKind='delivery_notice';fails(()=>productExtraction(delivery,imageContext),'evidence_unverified');
+ const crossed=structuredClone(value);crossed.purchaseTotal.amountCents=60000;assert.equal(productExtraction(crossed,imageContext).purchaseTotal,null);
+ const delivery=structuredClone(value);delivery.documentKind='delivery_notice';assert.equal(productExtraction(delivery,imageContext).purchaseTotal,null);
 });

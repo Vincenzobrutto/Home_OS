@@ -1,3 +1,7 @@
+## 2026-10-18 — V12: fatture lavori e revisione combinata
+
+Spese della casa anche per lavori/servizi, soggetti product/system e un solo Salva e organizza. Costi opzionali non verificati non scartano identità valide; avvisi e limiti economici server/UI. Fonte/costi/doppioni/replay protetti. 92BEoffline,28DB,54FE verdi e browser mobile sintetico; nessuna AI live. Report V12 in docs/v5.
+
 ## 2026-10-18 — V11: valuta tra parentesi nel totale fattura
 
 Accettati totali espliciti come TOTALE 1.537,20 (EUR), mantenendo verifica importo e rifiuto IVA/subtotali/valute diverse. Diagnosi job evidence_unverified purchaseTotal/total; 37 test offline verdi, nessun nuovo invio AI o mutazione della bozza personale.
