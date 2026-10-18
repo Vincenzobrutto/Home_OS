@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Importi ausiliari: secondo blocco chiuso offline
+
+Risolti casi riproducibili di zero ausiliario e ruoli totali delle bollette; preservati replay finanziari della bolletta67.97/76.97 e fattura1537.20. Rimangono in revisione citazioni con valuta non attribuibile, etichette non riconoscibili, saldo differente/arretrati positivi. Non usare l’ultima analisi per ripetizioni senza ipotesi. Prossimo blocco3: dati estratti/manuali nella revisione unica/scheda, esclusioni e doppioni. [V16](v5/house-amount-evidence-v16-20261018.md).
+
 ## 18 ottobre 2026 — Conformità semplificata: obiettivo tecnico ritirato
 
 Completato percorso classificazione/originale/casa senza oggetto o campi tecnici. Non proseguire il recupero di potenze, tipo impianto o altre specifiche della conformità come requisito onboarding. FUTURO: proporre il collegamento dell’installatore esplicito alla mini rubrica, valutando dati esistenti e controllo doppioni; nessun nuovo contatto creato ora. Proseguire blocchi importi ausiliari e dati nella revisione unica. [Report V15](v5/conformity-document-only-20261018.md).

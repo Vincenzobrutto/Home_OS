@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Importi ausiliari e ruoli economici V16
+
+Zeri stampati di IVA/voci accessorie conservati senza bloccare una bolletta valida; arretrati zero non richiedono scelta importo. Totali correnti, saldi, subtotali e imposte distinti con prova valutaria attribuita al singolo numero. Nessuna spesa zero, somma o ripartizione automatica.27nuovi test/83offline e48DBHTTP verdi; replay in lettura della bolletta e fattura reali senza perdita degli importi validati. NessunaAI o modifica dati/budget. [V16](v5/house-amount-evidence-v16-20261018.md).
+
 ## 18 ottobre 2026 — Conformità archiviata nella casa, V15
 
 Su correzione del committente, la conformità propone classificazione/originale e metadati opzionali, senza digitalizzare dettagli tecnici o creare impianti. Revisione unica semplificata anche per bozze precedenti; nessun nuovo contatto. Policy automatica document-only con guard costi. ProviderV15 non-live; test backend/DB/FE e browser desktop/mobile verdi, dati e budget invariati. [Report](v5/conformity-document-only-20261018.md).

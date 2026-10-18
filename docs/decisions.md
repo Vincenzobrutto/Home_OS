@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Zero ausiliario non è un costo, ruolo del totale verificato localmente
+
+Consentiti zeri monetari provati per IVA/imponibile/righe/altro/arretrati, mai come costi canonici o totali selezionabili. Arretrati zero non creano ambiguità; positivi e saldo diverso dal costo corrente restano da rivedere. Per le bollette, il ruolo dichiarato dal provider richiede etichetta compatibile e proprio valore EUR; vietato promuovere imposte/subtotali/debiti a totale corrente o prendere valuta da altro numero. Scartate somma automatica e assunzione di valuta globale. [Evidenze V16](v5/house-amount-evidence-v16-20261018.md).
+
 ## 18 ottobre 2026 — Conformità come documento casa, non onboarding di un asset
 
 Il committente ridefinisce la priorità: classificare e conservare l’originale consultabile, con eventuale emittente/installatore utile alla mini rubrica futura. Sostituisce l’obiettivo di arricchimento tecnico V14, non i validatori dei dati storici. Nuova estrazione senza prodotti/spese e con soli metadati opzionali; vecchie proposte archiviate con document_only, mai nuove risorse automatiche. I controlli doppioni sotto lock si applicano quando vengono create risorse, non alla sola archiviazione. Scartata la richiesta di dati tecnici come condizione per completare il documento. [V15](v5/conformity-document-only-20261018.md).

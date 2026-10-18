@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Consolidamento economico V16 offline
+
+Completato blocco2: valori ausiliari zero, valuta e ruoli dei totali con test e replay originali, senza nuovi invii o mutazioni personali. Nessuna modifica frontend o nuove funzioni. Resta la verifica finale del passaggio dei dati alla scheda, poi chiusura dell’automazione. [Report](v5/house-amount-evidence-v16-20261018.md).
+
 ## 18 ottobre 2026 — Documenti tecnici con archiviazione semplice
 
 Conformità ricondotta al documento della casa: classificazione, originale e metadati opzionali; zero proposte di oggetti/spese. Verificato desktop/mobile e percorso canonico senza cambiare dati esistenti. Collegamento installatore alla mini rubrica rinviato; nessuna nuova analisi AI. Seguono importi e revisione dati degli acquisti. [V15](v5/conformity-document-only-20261018.md).

@@ -214,6 +214,22 @@ export function productConfirmation(input: unknown, extraction: ProductExtractio
 
 const billKeys=['title','supplier','category','documentNumber','documentDate','competenceFrom','competenceTo','dueOn'];
 const billRoles=['current_document_total','amount_due','arrears_balance','taxable','tax','line_total','other'];
+const auxiliaryBillRoles=['arrears_balance','taxable','tax','line_total','other'];
+const moneyNumber=String.raw`[-−+]?\d(?:[\d.,\u00a0\u202f ]*\d)?[.,]\d{2}`;
+const euroUnit=String.raw`(?:€|\bEUR(?:O)?\b|\(\s*(?:€|EUR(?:O)?)\s*\))`;
+function billAmountEvidence(excerpt:string,amount:number,role:string,kind:'utility_bill'|'simple_invoice') {
+ const monetary=new RegExp(String.raw`(?:${euroUnit}\s*${moneyNumber}(?![\d.,]|\s*%)|(?<![\d.,])${moneyNumber}\s*${euroUnit}(?!\s*%))`,'giu');
+ if(![...excerpt.matchAll(monetary)].some(match=>printedCents(match[0]).includes(amount)))return false;
+ const compact=normalize(excerpt);
+ if(kind==='utility_bill'&&['current_document_total','amount_due'].includes(role)){
+  const label=role==='current_document_total'
+   ?String.raw`(?:totale(?:\s+(?:bolletta|fattura|documento|costi|complessivo|della\s+bolletta|della\s+fattura|del\s+documento))?|importo\s+(?:bolletta|fattura|documento|totale))`
+   :String.raw`(?:totale\s+(?:da|a)\s+(?:pagare|versare)|importo\s+(?:(?:da|a)\s+(?:pagare|versare)|dovuto)|da\s+(?:pagare|versare)|saldo\s+(?:da\s+pagare|dovuto))`;
+  const primary=new RegExp(String.raw`^${label}\s*[:=]?\s*(?:${euroUnit}\s*${moneyNumber}(?![\d.,%])|${moneyNumber}\s*${euroUnit})`,'iu').exec(compact);
+  if(!primary||!printedCents(primary[0]).includes(amount))return false;
+ }
+ return true;
+}
 function readHouseExpenses(input:unknown,context:ProductEvidenceContext,kind:'utility_bill'|'simple_invoice'):HouseExpense[]{
  if(input===undefined)return [];if(!Array.isArray(input)||input.length>10)throw invalid();const fingerprints=new Set<string>();
  return input.map(raw=>{const r=object(raw,['fields','amountCandidates']),fields:HouseExpense['proposedFields']={},reviewWarnings:string[]=[];
@@ -224,13 +240,13 @@ function readHouseExpenses(input:unknown,context:ProductEvidenceContext,kind:'ut
   }catch{reviewWarnings.push('field:'+key);}}
   if(!Array.isArray(r.amountCandidates)||r.amountCandidates.length>10)throw invalid();const seen=new Set<string>();
   const amounts:HouseExpense['amountCandidates']=[];
-  for(const rawAmount of r.amountCandidates){try{const x=object(rawAmount,['id','amountCents','role','label','evidence']),id=text(x.id,80),role=text(x.role,40),source=evidence(x.evidence,context);if(!/^[A-Za-z0-9_-]{1,80}$/.test(id)||seen.has(id)||!billRoles.includes(role)||!Number.isSafeInteger(x.amountCents)||Number(x.amountCents)<=0||Number(x.amountCents)>999999999||!printedCents(source.excerpt).includes(Number(x.amountCents)))throw invalid();seen.add(id);
-   if(!/(?:€|\bEUR\b|euro)/iu.test(source.excerpt))throw invalid();
+  for(const rawAmount of r.amountCandidates){try{const x=object(rawAmount,['id','amountCents','role','label','evidence']),id=text(x.id,80),role=text(x.role,40),source=evidence(x.evidence,context);if(!/^[A-Za-z0-9_-]{1,80}$/.test(id)||seen.has(id)||!billRoles.includes(role)||!Number.isSafeInteger(x.amountCents)||Number(x.amountCents)<0||Number(x.amountCents)===0&&!auxiliaryBillRoles.includes(role)||Number(x.amountCents)>999999999||!printedCents(source.excerpt).includes(Number(x.amountCents)))throw invalid();seen.add(id);
+   if(!billAmountEvidence(source.excerpt,Number(x.amountCents),role,kind))throw invalid();
    if(['current_document_total','amount_due'].includes(role)&&!/(?:totale|importo|da\s+pagare|da\s+versare)/iu.test(source.excerpt))throw invalid();
    if(kind==='simple_invoice'&&['current_document_total','amount_due'].includes(role)&&!/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt))throw invalid();
    amounts.push({id,amountCents:Number(x.amountCents),role,label:text(x.label,120),sources:[source]});
   }catch{reviewWarnings.push('amount');}}
   const fingerprint=digest(JSON.stringify([context.snapshot.documentSha256,fields.supplier?.value??null,fields.documentNumber?.value??null,fields.documentDate?.value??null,amounts[0]?.sources[0].page??fields.title?.sources[0].page??1]));if(fingerprints.has(fingerprint))throw invalid();fingerprints.add(fingerprint);
-  return {id:digest(context.snapshot.documentId+':bill:'+fingerprint),fingerprint,documentKind:kind,proposedFields:fields,amountCandidates:amounts,...(reviewWarnings.length?{reviewWarnings:[...new Set(reviewWarnings)]}:{}),amountSelectionRequired:amounts.some(a=>a.role==='arrears_balance')||amounts.filter(a=>a.role==='current_document_total').length!==1};
+  return {id:digest(context.snapshot.documentId+':bill:'+fingerprint),fingerprint,documentKind:kind,proposedFields:fields,amountCandidates:amounts,...(reviewWarnings.length?{reviewWarnings:[...new Set(reviewWarnings)]}:{}),amountSelectionRequired:amounts.some(a=>a.role==='arrears_balance'&&a.amountCents>0)||amounts.filter(a=>a.role==='current_document_total').length!==1};
  });
 }

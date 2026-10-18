@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Candidati economici ausiliari zero
+
+Nelle proposte houseExpenses sono ammessi amountCents=0 esclusivamente per ruoli arrears_balance/taxable/tax/line_total/other con prova EUR. current_document_total e amount_due restano positivi; costi canonici e conferme rimangono strettamente positivi e selezionano soltanto ruoli totale/saldo. amountSelectionRequired considera arretrati strettamente positivi. Nessuna migrazione o modifica del ledger. [V16](v5/house-amount-evidence-v16-20261018.md).
+
 ## 18 ottobre 2026 — Perimetro delle nuove proposte di conformità
 
 La dichiarazione di conformità nell’estrazione V15 è un documento della casa: items e houseExpenses vuoti, purchaseTotal nullo. documentInfo conserva classificazione e soli fatti documentali issuer/documentDate verificabili; nessun nuovo oggetto o contatto implicito. Vecchie bozze possono conservare soggetti tecnici, ma la scelta iniziale/automatica è document_only. Nessuna migrazione o riscrittura delle schede canoniche. [Dettagli](v5/conformity-document-only-20261018.md).
