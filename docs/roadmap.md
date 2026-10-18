@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Ingresso caricamento semplificato
+
+Completata selezione locale modificabile prima dell’invio, pulsante file esplicito e scarto di acquisizioni errate prima dell’AI. Revisione unica e consenso automatico esistenti conservati. Eliminazione generale dopo elaborazione resta fuori perimetro.
+
 ## Aggiornamento 18 ottobre 2026 — Rubrica assistita operativa
 
 Completati estrazione del professionista nella chiamata documentale esistente, revisione unica e salvataggio automatico con opt-in esplicito, deduplica e protezione dei campi presenti. Verificati offline email e dati cliente esclusi; live conformità e fattura dello stesso elettricista, senza creare ulteriori oggetti/spese. Estensione ad altri mestieri/formati da valutare sui feedback, senza promessa di riconoscimento universale.

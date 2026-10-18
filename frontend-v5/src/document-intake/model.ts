@@ -70,6 +70,7 @@ export type OrganizationSelection =
   | { action: 'defer' };
 
 export type IntakeItem = {
+  canRemove?:boolean;
   id: OpaqueId;
   clientItemId: string;
   version: OpaqueVersion;

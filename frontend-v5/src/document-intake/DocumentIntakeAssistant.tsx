@@ -1,4 +1,5 @@
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { FilePicker } from '../components/FilePicker';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Banner, Loading, cx, ui } from '../components/ui';
 import { ReviewDialog, type ReviewWriteState } from './ReviewDialog';
 import {
@@ -31,6 +32,7 @@ export type DocumentIntakeAssistantProps = {
   addingFiles?: boolean;
   onReorganizeDocument?: (itemId: OpaqueId) => Promise<void>;
   onRetryUpload: (itemId: OpaqueId) => Promise<WriteOutcome>;
+  onRemoveItem?: (itemId:OpaqueId)=>Promise<WriteOutcome>;
   onCancelUpload: (itemId: OpaqueId) => Promise<WriteOutcome>;
   /** V2: usato solo per «Decidi più avanti» (action defer). */
   onSaveReview: (payload: ReviewPayload) => Promise<WriteOutcome>;
@@ -83,6 +85,7 @@ const IN_FLIGHT: ReadonlyArray<ReviewWriteState['status']> = ['saving', 'uncerta
 
 function Inner(props: DocumentIntakeAssistantProps) {
   const { batch, load, capabilities } = props;
+  const [removal,setRemoval]=useState<string|null>(null);
   const [viewChoice, setView] = useState<View | null>(null);
   const view: View = viewChoice ?? (batch ? 'lavoro' : 'ingresso');
   const [filter, setFilter] = useState<WorkFilter>('all');
@@ -106,7 +109,6 @@ function Inner(props: DocumentIntakeAssistantProps) {
   const inFlight = useRef(new Set<string>());
   const alive = useRef(true);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const inputId = useId();
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   useEffect(() => { headingRef.current?.focus(); }, [view]);
   const items = useMemo(() => (batch?.items ?? []).map(visibleItem), [batch]);
@@ -333,9 +335,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
                 onDrop={e => { e.preventDefault(); if (!props.addingFiles) choose(Array.from(e.dataTransfer.files)); }}>
                 <h2>Scegli uno o più documenti</h2>
                 <p>Seleziona i file dal dispositivo oppure trascinali qui.</p>
-                <label htmlFor={inputId} className={styles.legend}>Documenti da caricare</label>
-                <input id={inputId} className={styles.fileInput} type="file" multiple disabled={props.addingFiles} accept={limits?.acceptedMimeTypes.join(',')}
-                  onChange={(e) => { choose(e.target.files ? Array.from(e.target.files) : []); e.target.value = ''; }} />
+                <FilePicker onFiles={choose} disabled={props.addingFiles} accept={limits?.acceptedMimeTypes.join(',')}/>
                 {limits && <p className={styles.note}>Fino a {limits.maxFiles} file, {formatBytes(limits.maxFileBytes)} ciascuno e {formatBytes(limits.maxTotalBytes)} in totale. PDF, JPEG o PNG.</p>}
               </div>
             )}
@@ -415,6 +415,8 @@ function Inner(props: DocumentIntakeAssistantProps) {
           {uploadMessages[item.id] && <p role="alert">{uploadMessages[item.id]}</p>}
         </div>
         <div className={styles.rowActions}>
+          {item.canRemove&&props.onRemoveItem&&canUpload&&<button type="button" className={ui.btn} disabled={props.addingFiles} aria-label={'Rimuovi '+name} onClick={()=>setRemoval(item.id)}>Rimuovi</button>}
+          {removal===item.id&&<div role="group" aria-label={'Conferma rimozione '+name}><p>{copy?'Rimuovere questa copia dal caricamento? Il documento già presente sarà conservato.':'Rimuovere il documento caricato per errore? L’originale sarà eliminato e non verrà analizzato.'}</p><button type="button" className={ui.btn} onClick={()=>setRemoval(null)}>Mantieni</button><button type="button" className={ui.btn} onClick={()=>{setRemoval(null);void uploadAction(item.id,props.onRemoveItem!);}}>Conferma rimozione</button></div>}
           {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
           {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
           {canReview && item.documentLink.state==='linked' && props.renderCompilationActions && (houseDocumentKind(item)?<button type="button" className={ui.btn} onClick={()=>reviewDocument(item)}>Rivedi documento della casa</button>:props.renderCompilationActions(item.id))}

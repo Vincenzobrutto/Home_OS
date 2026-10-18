@@ -71,6 +71,8 @@ it('adding a second file appends to the same persisted batch and uploads only th
   await app.router.navigate(`/home/${homeA1.id}/documenti/organizza?lotto=same-batch-test`);
   await app.user.click(await screen.findByRole('button', { name: '+ Aggiungi documenti' }));
   await app.user.upload(screen.getByLabelText('Documenti da caricare'), new File(['new file'], 'Seconda.pdf', { type: 'application/pdf' }));
+  expect(calls).toHaveLength(0);
+  await app.user.click(screen.getByRole('button', { name: 'Carica documenti' }));
   await screen.findByRole('button', { name: 'Tutti · 2' });
   await waitFor(() => expect(calls).toHaveLength(3));
   expect(calls[0]).toMatch(/\/batches\/same-batch-test\/items$/);

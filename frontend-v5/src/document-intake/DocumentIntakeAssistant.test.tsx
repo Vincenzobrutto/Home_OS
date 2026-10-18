@@ -315,3 +315,8 @@ it('unknown scan offers per-document compilation without a competing classify-on
  expect(screen.queryByRole('button',{name:/Indica il tipo/})).not.toBeInTheDocument();
  expect(screen.getByText('La lettura locale non trova testo utilizzabile. Puoi compilare manualmente o tramite AI.')).toBeInTheDocument();
 });
+it('removal of a stored document needs explicit confirmation and exposes a refused removal',async()=>{
+ const user=userEvent.setup(),item={...corpus.ape(),canRemove:true},onRemoveItem=vi.fn(async()=>({status:'rejected' as const,code:'conflict' as const,message:'Analisi già avviata.'}));renderIntake(intakeProps({batch:batchOf([item]),onRemoveItem}));
+ await user.click(screen.getByRole('button',{name:'Rimuovi '+item.filename}));expect(onRemoveItem).not.toHaveBeenCalled();await user.click(screen.getByRole('button',{name:'Mantieni'}));expect(onRemoveItem).not.toHaveBeenCalled();
+ await user.click(screen.getByRole('button',{name:'Rimuovi '+item.filename}));await user.click(screen.getByRole('button',{name:'Conferma rimozione'}));await waitFor(()=>expect(onRemoveItem).toHaveBeenCalledWith(item.id));expect(await screen.findByText('Analisi già avviata.')).toBeVisible();
+});

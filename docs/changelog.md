@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Caricamento documenti più chiaro
+
+Pulsante Scegli file evidente, elenco con nome/dimensione e Rimuovi, avvio upload/AI soltanto dopo conferma della lista. La stessa scelta file è usata per aggiungere a un lotto. Rimuovi con conferma anche per file già acquisiti prima dell’AI; copie conservano l’originale, documenti elaborati/collegati protetti. Test sintetici HTTP e UI, verifica browser390/320; nessuna analisi a pagamento.
+
 ## 18 ottobre 2026 — Compilazione della rubrica dai documenti
 
 La stessa analisi AI propone installatore/professionista con recapiti e IVA/CF presenti nell’originale. Revisione unica precompilata, possibilità di escludere il contatto, riconoscimento dei contatti esistenti e completamento dei soli campi vuoti. Nuovo consenso per la creazione automatica anche dei contatti nei caricamenti delegati. Quattro analisi reali per 0,127216 USD hanno isolato e corretto citazioni visive incomplete: V19 riconosce nome, telefono e IVA dalla conformità; fattura riconciliata per IVA senza duplicati. Email non presente lasciata vuota. Test e limiti nel report contact-extraction-v19-20261018.md.

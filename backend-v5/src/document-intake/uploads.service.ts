@@ -1,10 +1,11 @@
+import { removalTarget } from './removal';
 import { ForbiddenException, HttpException, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { Prisma } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { LocalFileStorage, detectOriginal, safeFilename, storageUnavailable } from '../documents/storage';
 import { digest } from '../security';
-import { conflict, invalid, uuid } from '../review/domain';
+import { conflict, invalid, object, uuid, version } from '../review/domain';
 import { IntakeBatchesService } from './batches.service';
 
 export const INTAKE_UPLOAD_LEASE_MS = 120000;
@@ -22,6 +23,22 @@ export class IntakeUploadsService {
     // A failed commit response is not proof of rollback. Keep the file if DB is unavailable.
     const reference = await this.db.storedFile.findUnique({ where: { storageKey: key } }).catch(() => undefined);
     if (reference === null) await this.storage.remove(key).catch(() => undefined);
+  }
+  async remove(a:string,h:string,batchId:string,itemId:string,input:unknown,key?:string){
+    uuid(batchId);uuid(itemId);if(!key||!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw invalid();const body=object(input,['expectedVersion']),expectedVersion=version(body.expectedVersion),fingerprint=digest(String(expectedVersion)),operation='remove:'+itemId;
+    const stored=await this.batches.authorized(a,h,true,async tx=>{
+      const batch=await this.batches.locked(tx,a,h,batchId),prior=await tx.documentIntakeRequest.findUnique({where:{batchId_operation_key:{batchId,operation,key:key!}}});
+      if(prior){if(prior.digest!==fingerprint)throw conflict('idempotency_conflict','Chiave già utilizzata.');return prior.results as {storageKey?:string};}
+      const item=batch.items.find(i=>i.id===itemId);if(!item)throw new ForbiddenException();
+      if(batch.state!=='open'||item.version!==expectedVersion)throw conflict('item_version_conflict','Il file è cambiato: rileggi il caricamento.');
+      if(item.documentId)await tx.$queryRaw`SELECT id FROM "Document" WHERE id=${item.documentId} FOR UPDATE`;
+      const target=await removalTarget(tx,a,h,item);if(!target)throw conflict('intake_remove_unavailable','Puoi rimuovere soltanto file non ancora elaborati o collegati. Attendi eventuali letture locali in corso e rileggi il caricamento.');
+      await tx.documentIntakeAnalysis.deleteMany({where:{itemId}});await tx.documentIntakeItem.delete({where:{id:itemId}});
+      if(target.documentId){await tx.documentVersion.delete({where:{documentId:target.documentId}});await tx.document.delete({where:{id:target.documentId}});await tx.storedFile.delete({where:{id:target.fileId!}});}
+      await tx.documentIntakeBatch.update({where:{id:batchId},data:{version:{increment:1},updatedAt:new Date()}});
+      const result=target.storageKey?{storageKey:target.storageKey}:{};await tx.documentIntakeRequest.create({data:{batchId,operation,key:key!,digest:fingerprint,body:{expectedVersion},results:result}});return result;
+    });
+    await this.cleanup(stored.storageKey);return this.batches.get(a,h,batchId,{});
   }
   async upload(a: string, h: string, batchId: string, itemId: string, file: Incoming | undefined, key?: string) {
     uuid(batchId); uuid(itemId);

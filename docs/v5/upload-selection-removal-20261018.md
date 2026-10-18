@@ -1,0 +1,11 @@
+# Selezione e rimozione documenti — 18 ottobre 2026
+
+La selezione non avvia più alcun upload o analisi. Scegli file, elenco locale con nome/dimensione e Rimuovi, poi Carica documenti oppure Carica e organizza quando è selezionato il consenso AI. Drag-and-drop e aggiunta a un lotto esistente usano la stessa selezione. Nessuna dipendenza nuova; componente FilePicker condiviso e token CSS V5.
+
+Per file già acquisiti il DTO canRemove abilita Rimuovi con conferma. Endpoint removal con account/casa/edit/CSRF, versione e idempotenza. Lotto aperto personale e nessuna lettura locale in corso. Per copia viene rimossa soltanto la riga. Per originale privato nuovo: nessun altro riferimento, bozza/job AI, organizzazione, oggetto/spesa/contatto o condivisione. Le relazioni canoniche e il lock casa impediscono cancellazioni concorrenti con avvio/confirm. Automatic-run sul lotto già autorizzato blocca lo scarto. Il cleanup fisico avviene dopo commit e verifica dei riferimenti; esito DB incerto non autorizza cancellazione dei byte. Nessun nuovo schema Prisma e nessun reset del budget.
+
+Verifiche:15 test HTTP/DB upload inclusi nuova rimozione, replay, versione, account, originali duplicati e protezione dopo avvio AI; storage/scanner stub dichiarati, nessuna chiamata provider. Prima esecuzione:14 sottocasi verdi ma hook di pulizia privo dei nuovi receipt FK, corretto prima della suite15/15; ripulita solo la casa sintetica rimasta. Frontend integrazione12/12 e assistente31/31 dopo aggiornamento dei due label legacy. Nuovo test assicura che uno scarto locale non effettui alcuna chiamata upload/AI; nuovo test conferma richiesta esplicita e rifiuto server visibile. Primo giro aveva identificato un riferimento useId residuo, corretto; non dichiarare quel giro verde.
+
+Build/typecheck e lint dei file modificati. Browser reale: selezione2PDF sintetici, rimozione primo e ultimo senza upload, larghezze390/320 senza overflow. Nessun file personale confermato/eliminato né analisi pagata. Utente sta ricaricando autonomamente: non applicare i vecchi invarianti della casa vuota o fare un nuovo reset.
+
+API locale riavviata con il nuovo endpoint; Vite/LAN esistenti aggiornati via HMR. Nessun push/deploy, modifica env/modello/limiti/firewall. Dirty estraneo conservato.

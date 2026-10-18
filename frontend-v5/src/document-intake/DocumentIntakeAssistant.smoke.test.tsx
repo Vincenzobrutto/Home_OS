@@ -47,7 +47,7 @@ describe('archivio assistito V2: area di lavoro unica', () => {
     const props = intakeProps({ batch: null });
     renderIntake(props);
     const files = [new File(['a'], 'a.pdf', { type: 'application/pdf' }), new File(['b'], 'b.png', { type: 'image/png' })];
-    await user.upload(screen.getByLabelText('File'), files);
+    await user.upload(screen.getByLabelText('Documenti da caricare'), files);
     expect(props.onSelectFiles).toHaveBeenCalledWith(files);
   });
 
@@ -68,7 +68,7 @@ describe('archivio assistito V2: area di lavoro unica', () => {
     renderIntake(props);
     await user.click(screen.getByRole('button', { name: '+ Aggiungi documenti' }));
     const next = new File(['a'], 'aggiunto.pdf', { type: 'application/pdf' });
-    await user.upload(screen.getByLabelText('File'), next);
+    await user.upload(screen.getByLabelText('Documenti da caricare'), next);
     expect(props.onSelectFiles).toHaveBeenCalledWith([next]);
     expect(screen.getByRole('heading', { level: 1, name: 'Controlla e organizza.' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Tutti · 7' })).toBeInTheDocument();

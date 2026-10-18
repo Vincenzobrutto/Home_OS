@@ -1,3 +1,7 @@
+## V5 — Scarto pre-analisi (18 ottobre 2026)
+
+Nessuna migrazione: DocumentIntakeRequest registra operation remove:<itemId> per idempotenza. canRemove è una capacità derivata, non uno stato persistito. File solo scelti sono locali al browser. Originali acquisiti scartabili vengono rimossi con versione e riferimenti; i documenti esistenti delle copie rimangono intatti. Nessuna rimozione dopo avvio AI da questo percorso.
+
 ## V5 — 18 ottobre 2026: contatti derivati dai facts
 
 ProductExtraction JSON può contenere contacts; ciascuna proposta conserva valori verificati, fonti e campi omessi. Le decisioni sono registrate come contact:<proposalId> nella bozza. HomeContact e ContactResourceLink esistenti sono scritti nella transazione di conferma onboarding, con lock della casa; nessuna modifica Prisma. I dati già presenti sono conservati e i collegamenti allo stesso originale restano unici.

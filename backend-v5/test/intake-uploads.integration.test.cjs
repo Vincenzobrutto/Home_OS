@@ -23,6 +23,7 @@ test('Intake B1b: multipart uploads, durable replay, canonical private originals
   const home = await db.home.create({ data: { name: 'Intake upload synthetic', address: 'Via Fixture' } });
   t.after(async () => {
     const docs = await db.document.findMany({ where: { homeId: home.id }, include: { original: true } });
+    await db.documentIntakeAnalysis.deleteMany({where:{item:{batch:{homeId:home.id}}}});await db.documentIntakeRequest.deleteMany({where:{batch:{homeId:home.id}}});
     await db.documentIntakeItem.deleteMany({ where: { batch: { homeId: home.id } } }); await db.documentIntakeBatch.deleteMany({ where: { homeId: home.id } });
     await db.documentVersion.deleteMany({ where: { documentId: { in: docs.map(doc => doc.id) } } }); await db.document.deleteMany({ where: { homeId: home.id } }); await db.storedFile.deleteMany({ where: { id: { in: docs.flatMap(doc => doc.original ? [doc.original.fileId] : []) } } });
     await db.homeMembership.deleteMany({ where: { homeId: home.id } }); await db.home.delete({ where: { id: home.id } }); await db.session.deleteMany({ where: { accountId: { in: accounts } } }); await db.account.deleteMany({ where: { id: { in: accounts } } }); await app.close();
@@ -140,6 +141,24 @@ test('Intake B1b: multipart uploads, durable replay, canonical private originals
     const item = (await get(batch)).body.batch.items[0]; assert.equal(item.documentLink.document, null); assert.equal(item.uploadState, 'failed'); assert.equal(item.duplicate, null); assert.equal(writes, before);
     // Explicit same-request retry now stores the uploader's own private original, not the foreign one.
     const done = await upload(batch, 0, copy); assert.equal(done.status, 201); assert.equal(done.body.batch.items[0].uploadState, 'stored'); assert.notEqual(done.body.batch.items[0].documentLink.document.id, id);
+  });
+  await t.test('remove an acquired original before AI with version, account, replay and storage checks',async()=>{
+    const f=fixture(),batch=await make([f]),uploaded=await upload(batch,0,f),item=uploaded.body.batch.items[0],id=item.documentLink.document.id;
+    assert.equal(item.canRemove,true);const key=randomUUID(),endpoint=path+'/batches/'+batch.id+'/items/'+item.id+'/removal';
+    assert.equal((await call(B,endpoint,'POST',{expectedVersion:item.version},randomUUID())).status,403);
+    assert.equal((await call(A,endpoint,'POST',{expectedVersion:1},randomUUID())).status,409);
+    const original=await db.documentVersion.findUniqueOrThrow({where:{documentId:id},include:{file:true}});
+    const result=await call(A,endpoint,'POST',{expectedVersion:item.version},key);assert.equal(result.status,201);assert.equal(result.body.batch.items.length,0);
+    assert.equal(await db.document.count({where:{id}}),0);assert.equal(await db.storedFile.count({where:{id:original.fileId}}),0);assert.equal(content.has(original.file.storageKey),false);
+    assert.equal((await call(A,endpoint,'POST',{expectedVersion:item.version},key)).status,201);
+  });
+  await t.test('removing a duplicate preserves its original; starting AI blocks deleting a new original',async()=>{
+    const f=fixture(),copy=fixture(f.bytes,'Copy removal.pdf'),batch=await make([f,copy]);await upload(batch,0,f);let loaded=(await upload(batch,1,copy)).body.batch;const [first,second]=loaded.items,id=first.documentLink.document.id;
+    assert.equal(first.canRemove,false);assert.equal(second.canRemove,true);
+    assert.equal((await call(A,path+'/batches/'+batch.id+'/items/'+second.id+'/removal','POST',{expectedVersion:second.version},randomUUID())).status,201);assert.equal(await db.document.count({where:{id}}),1);
+    loaded=(await get(batch)).body.batch;assert.equal(loaded.items[0].canRemove,true);
+    const doc=await db.documentVersion.findUniqueOrThrow({where:{documentId:id}}),job=await db.objectOnboardingJob.create({data:{accountId:A.account.id,homeId:home.id,documentId:id,documentVersion:doc.version,documentSha256:doc.sha256,mimeType:doc.mimeType,provider:'anthropic',state:'failed',consentToProviderTransfer:true,key:randomUUID(),digest:'synthetic-no-dispatch'}});
+    try{assert.equal((await get(batch)).body.batch.items[0].canRemove,false);assert.equal((await call(A,path+'/batches/'+batch.id+'/items/'+first.id+'/removal','POST',{expectedVersion:first.version},randomUUID())).status,409);assert.equal(await db.document.count({where:{id}}),1);}finally{await db.objectOnboardingJob.delete({where:{id:job.id}});}
   });
   await t.test('Changed source redacts names/references and membership loss during storage prevents publication', async () => {
     const f = fixture(), batch = await make([f]), done = await upload(batch, 0, f), doc = done.body.batch.items[0].documentLink.document;

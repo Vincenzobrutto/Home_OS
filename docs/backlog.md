@@ -1,3 +1,13 @@
+## UX rilevata dal committente — accesso alla revisione
+
+«Controlla e organizza» è raggiungibile da Carica documenti→Caricamenti precedenti, dalle azioni di compilazione e da Organizza documento nel dettaglio. Accesso troppo indiretto dalla lista Documenti: da valutare un ingresso esplicito ai caricamenti da completare, senza duplicare revisioni o creare una nuova area separata. Non implementato in questo incremento.
+
+## 18 ottobre 2026 — Scarto file in ingresso
+
+RISOLTO: scelta file immersa nel testo e assenza di scarto prima dell’analisi. Rimozione da lista locale o lotto scartabile, con protezione originali esistenti e contenuti elaborati.
+
+Da valutare separatamente: cestino generale per documenti già organizzati/collegati e gestione delle dipendenze; in questo incremento tali contenuti non si eliminano dal caricamento.
+
 ## Aggiornamento 18 ottobre 2026 — Rubrica dai documenti
 
 RISOLTO: proposta automatica installatore con recapiti/IVA nella stessa analisi, conferma unica o processo delegato con consenso aggiornato.
