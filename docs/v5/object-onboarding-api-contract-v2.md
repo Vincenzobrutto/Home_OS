@@ -92,3 +92,6 @@ Capabilities include budget opzionale/null: currency, limitUsd, committedUsd, re
 ## Revisione unica V4 — 18 ottobre 2026
 
 Estensioni additive, endpoint invariati: manual-drafts accetta documentKind facoltativo purchase_document/utility_bill; confirmations accetta manualPurchaseTotalCents positivo soltanto per bozze manuali prive di totale estratto. review conserva il totale manuale e la richiesta pending per recupero. items[].purchaseAmount contiene amountCents e fonte di riga validata; assente nelle bozze precedenti. expense-candidates?itemId accetta anche articoli prodotto e usa importo/data di quella riga. Limite cumulativo e skip senza costo invariati. Specifica: document-review-unified-v4.md.
+
+## Provider wire V9 (18 ottobre 2026)
+Solo interfaccia interna Anthropic: sources=[{page,excerpt,region}] (max256); evidence nei field/quantity/purchaseAmount/purchaseTotal/houseExpenses è indice intero0-based della propria fonte. Array0/1 per valori nullable. Normalizzatore respinge indici mancanti/negativi/frazionari/fuori range e cardinalità>1, ricostruisce prove prima del dominio; snapshot e tutte le verifiche immutati. DTO pubblici e bozze persistenti restano uguali. Non si disabilitano controlli di fonte per ridurre lo schema.

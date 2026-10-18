@@ -9,7 +9,7 @@ import { checkImageDimensions } from './image-limits';
 const shape = (properties: Record<string, unknown>) => ({ type: 'object', properties, required: Object.keys(properties), additionalProperties: false });
 // Wire schema uses only Anthropic-supported constraints. Full bounds are enforced locally.
 const evidence = shape({ page: { type: 'integer' }, excerpt: { type: 'string' }, region: { anyOf: [{ type: 'null' }, shape({ x: { type: 'number' }, y: { type: 'number' }, width: { type: 'number' }, height: { type: 'number' } })] } });
-export const OBJECT_ONBOARDING_PROMPT_VERSION = 'document-proposals-v8';
+export const OBJECT_ONBOARDING_PROMPT_VERSION = 'document-proposals-v9';
 export const OBJECT_ONBOARDING_SCHEMA = shape({
   documentKind: { type: 'string', enum: ['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'device_label', 'utility_bill', 'unsupported'] },
   houseExpenses:{type:'array',items:shape({fields:{type:'array',items:shape({field:{type:'string',enum:['title','supplier','category','documentNumber','documentDate','competenceFrom','competenceTo','dueOn']},value:{type:'string'},evidence})},amountCandidates:{type:'array',items:shape({id:{type:'string'},amountCents:{type:'integer'},role:{type:'string',enum:['current_document_total','amount_due','arrears_balance','taxable','tax','line_total','other']},label:{type:'string'},evidence})}})},
@@ -32,7 +32,11 @@ export function onboardingSchemaFor(kind:ProductEvidenceContext['kind']):Record<
   for(const child of Object.values(row))visit(child);
  };visit(schema);
  // Singleton arrays avoid nullable object branches in the provider grammar.
- const compact=(value:unknown)=>{if(!value||typeof value!=='object')return;const row=value as Record<string,unknown>;const props=row.properties as Record<string,unknown>|undefined;if(props)for(const key of ['purchaseTotal','purchaseAmount','quantity']){const field=props[key] as {anyOf?:unknown[]}|undefined;if(field?.anyOf)props[key]={type:'array',items:field.anyOf[1]};}for(const child of Object.values(row))compact(child);};compact(schema);return schema;
+ const compact=(value:unknown)=>{if(!value||typeof value!=='object')return;const row=value as Record<string,unknown>;const props=row.properties as Record<string,unknown>|undefined;if(props)for(const key of ['purchaseTotal','purchaseAmount','quantity']){const field=props[key] as {anyOf?:unknown[]}|undefined;if(field?.anyOf)props[key]={type:'array',items:field.anyOf[1]};}for(const child of Object.values(row))compact(child);};compact(schema);
+ const sharedEvidence=JSON.parse(JSON.stringify((schema.properties as Record<string,unknown>).purchaseTotal)) as {items:{properties:{evidence:unknown}}};
+ const poolSchema=sharedEvidence.items.properties.evidence;
+ const reference=(value:unknown)=>{if(!value||typeof value!=='object')return;const row=value as Record<string,unknown>,props=row.properties as Record<string,unknown>|undefined;if(props?.evidence)props.evidence={type:'integer'};for(const child of Object.values(row))reference(child);};reference(schema);
+ (schema.properties as Record<string,unknown>).sources={type:'array',items:poolSchema};(schema.required as string[]).push('sources');return schema;
 }
 
 /** Normalize the compact provider representation; reject duplicate/unknown field names. */
@@ -41,6 +45,14 @@ export function onboardingWireOutput(value: unknown): unknown {
   const singleton=(value:unknown)=>{if(!Array.isArray(value))return value;if(value.length>1)throw new ProviderFailure('analysis_invalid_output');return value[0]??null;};
   const root = { ...value as Record<string, unknown> };
   if(Object.hasOwn(root,'purchaseTotal'))root.purchaseTotal=singleton(root.purchaseTotal);
+  if(!Array.isArray(root.items))throw new ProviderFailure('analysis_invalid_output');
+  if(root.sources!==undefined){
+    if(!Array.isArray(root.sources)||root.sources.length>256)throw new ProviderFailure('analysis_invalid_output');
+    const sources=root.sources;delete root.sources;
+    const expand=(value:unknown):void=>{if(!value||typeof value!=='object')return;const row=value as Record<string,unknown>;if(Object.hasOwn(row,'evidence')){const index=row.evidence;if(!Number.isSafeInteger(index)||Number(index)<0||Number(index)>=sources.length)throw new ProviderFailure('analysis_invalid_output');row.evidence=sources[Number(index)];}for(const [key,child] of Object.entries(row))if(key!=='evidence')expand(child);};
+    // Do not mutate a provider reply shared with diagnostics or recovery code.
+    root.items=JSON.parse(JSON.stringify(root.items));if(root.houseExpenses!==undefined)root.houseExpenses=JSON.parse(JSON.stringify(root.houseExpenses));if(root.purchaseTotal!==undefined)root.purchaseTotal=JSON.parse(JSON.stringify(root.purchaseTotal));expand(root);
+  }
   if (!Array.isArray(root.items)) throw new ProviderFailure('analysis_invalid_output');
   const houseExpenses=root.houseExpenses===undefined?undefined:(()=>{if(!Array.isArray(root.houseExpenses))throw new ProviderFailure('analysis_invalid_output');return root.houseExpenses.map(raw=>{const r=raw as Record<string,unknown>;if(!r||!Array.isArray(r.fields)||Object.keys(r).some(k=>!['fields','amountCandidates'].includes(k)))throw new ProviderFailure('analysis_invalid_output');const fields:Record<string,unknown>={};for(const entry of r.fields){if(!entry||typeof entry.field!=='string'||Object.hasOwn(fields,entry.field)||Object.keys(entry).some(k=>!['field','value','evidence'].includes(k)))throw new ProviderFailure('analysis_invalid_output');fields[entry.field]={value:entry.value,evidence:entry.evidence};}return {...r,fields};});})();
   return { ...root,...(houseExpenses!==undefined?{houseExpenses}:{}), items: root.items.map(item => {
@@ -104,7 +116,7 @@ export class ObjectOnboardingAnthropicProvider {
     await authorize();
     if (signal.aborted) throw new ProviderFailure('analysis_timeout');
     const schema=onboardingSchemaFor(context.kind);
-    const system=OBJECT_ONBOARDING_SYSTEM.replace(JSON.stringify(OBJECT_ONBOARDING_SCHEMA),JSON.stringify(schema))+' Wire representation: purchaseTotal, each purchaseAmount and each quantity are arrays with ZERO or ONE element. Use [] instead of null when absent; use [object] when evidenced. Never return multiple elements in these arrays.';
+    const system=OBJECT_ONBOARDING_SYSTEM.replace(JSON.stringify(OBJECT_ONBOARDING_SCHEMA),JSON.stringify(schema))+' Wire representation: purchaseTotal, each purchaseAmount and each quantity are arrays with ZERO or ONE element. Use [] instead of null when absent; use [object] when evidenced. Never return multiple elements in these arrays. Citation pool: return sources as an array of {page,excerpt,region}. Every evidence property in product fields, quantity, prices, totals and house expenses is the zero-based integer index of its own source in that array, NOT an inline citation. Reuse an index only when the exact same citation applies. Return at most 256 sources.';
     const request = await this.transport.prepareStructured(model, system, messages, schema, signal, authorize);
     return { request, context };
   }

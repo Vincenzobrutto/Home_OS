@@ -241,3 +241,16 @@ test('visual order summary keeps coffee machine identity, explicit purchase date
  const value={documentKind:'purchase_document',hasMoreItems:false,requiresHumanReview:false,houseExpenses:[],purchaseTotal:{amountCents:49900,evidence:proof('Totale: 499,00 €',true)},items:[{fields:{name:field('Lume Rivelia'),brand:field('Lume'),model:field('Rivelia'),reference:field('EX440.35.B'),purchaseDate:field('2026-06-14','Ordine effettuato il: 14 giugno 2026')},quantity:null,nameTruncated:false,disposition:'household_object',confidence:'high'}]};
  const result=productExtraction(value,imageContext);assert.equal(result.items[0].fields.purchaseDate.value,'2026-06-14');assert.equal(result.items[0].fields.reference.value,'EX440.35.B');assert.equal(result.purchaseTotal.amountCents,49900);
 });
+
+test('V9 shares source grammar once and resolves citations without changing their evidence',()=>{
+ const {onboardingSchemaFor}=require('../dist/object-onboarding/anthropic-provider');
+ const schema=onboardingSchemaFor('image');assert.equal(schema.properties.sources.type,'array');
+ assert.equal(schema.properties.items.items.properties.fields.items.properties.evidence.type,'integer');
+ assert.equal(schema.properties.purchaseTotal.items.properties.evidence.type,'integer');
+ let regionObjects=0;const visit=v=>{if(!v||typeof v!=='object')return;if(v.properties?.region?.type==='object')regionObjects++;Object.values(v).forEach(visit);};visit(schema);assert.equal(regionObjects,1);
+ const data=raw(true),sources=[],cite=evidence=>{sources.push(evidence);return sources.length-1;};
+ const wire={...data,sources,items:data.items.map(item=>({...item,quantity:[{...item.quantity,evidence:cite(item.quantity.evidence)}],purchaseAmount:[],fields:Object.entries(item.fields).map(([field,value])=>({field,value:value.value,evidence:cite(value.evidence)}))})),purchaseTotal:[]};
+ const before=structuredClone(wire),result=productExtraction(onboardingWireOutput(wire),imageContext);assert.deepEqual(wire,before);assert.equal(result.items[0].fields.brand.value,'Lume');assert.equal(result.items[0].quantity.value,1);assert.equal(result.items[0].fields.name.source.basis,'provider_observed_image');
+ for(const index of [-1,999,'0',null]){const bad=structuredClone(wire);bad.items[0].fields[0].evidence=index;fails(()=>onboardingWireOutput(bad),'analysis_invalid_output');}
+ const forged=structuredClone(wire);forged.sources[forged.items[0].fields[0].evidence].page=2;fails(()=>productExtraction(onboardingWireOutput(forged),imageContext),'analysis_invalid_output');
+});
