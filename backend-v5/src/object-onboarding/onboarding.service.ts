@@ -255,7 +255,8 @@ export class ObjectOnboardingService {
     const body = onboardingConfirmation(input, temporal(this.clock.now()).today);
     return this.request(a, h, 'confirm', uuid(id), body, key, async tx => {
       const draft = await this.open(tx, a, h, id, body.expectedVersion), output = draft.output as unknown as Output, decisions = { ...draft.decisions as Decisions };
-      if(automatic){
+      const onlyArchive=body.documentOnly||body.choices.length>0&&body.choices.every(c=>c.action==='document_only')&&!body.houseExpenses?.length;
+      if(automatic&&!onlyArchive){
         // Repeat duplicate checks under the same home lock as the canonical writes.
         for(const item of output.items){
           const profile=proposedProfile(item);

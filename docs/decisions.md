@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Conformità come documento casa, non onboarding di un asset
+
+Il committente ridefinisce la priorità: classificare e conservare l’originale consultabile, con eventuale emittente/installatore utile alla mini rubrica futura. Sostituisce l’obiettivo di arricchimento tecnico V14, non i validatori dei dati storici. Nuova estrazione senza prodotti/spese e con soli metadati opzionali; vecchie proposte archiviate con document_only, mai nuove risorse automatiche. I controlli doppioni sotto lock si applicano quando vengono create risorse, non alla sola archiviazione. Scartata la richiesta di dati tecnici come condizione per completare il documento. [V15](v5/conformity-document-only-20261018.md).
+
 ## 18 ottobre 2026 — Etichetta contigua e normalizzazione semantica della conformità
 
 Una citazione data breve può essere espansa solo sulla sua riga o quella precedente della stessa pagina testuale verificata; ruoli discordanti o pagine diverse non si uniscono. Nei visuali manca OCR indipendente, quindi serve la citazione osservata completa. systemType può normalizzare alias italiani circoscritti presenti nella propria fonte verso i codici esistenti. Alternativa scartata: accettare qualunque data o classificare dal contesto non attribuito. [Prove e limiti V14](v5/conformity-evidence-v14-20261018.md).

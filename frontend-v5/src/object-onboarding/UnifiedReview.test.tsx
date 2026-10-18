@@ -68,13 +68,13 @@ it('order screenshot exposes purchase cost and permits manual completion without
 });
 
 function conformityDraft(){const draft=fixture();draft.documentKind='conformity_declaration';draft.purchaseTotal=null;draft.items=draft.items.slice(0,1);const item=draft.items[0]!;item.subjectKind='system';item.proposedType='electrical';item.fields={name:{value:'Quadro elettrico',source}};item.profile={};delete item.purchaseAmount;draft.documentInfo={kind:'conformity_declaration',title:{value:'Dichiarazione di conformità',source},facts:[{subjectIndex:-1,field:'documentDate',value:'2026-07-08',source},{subjectIndex:0,field:'availablePowerKw',value:'6',source}]};return draft;}
-it('conformity prepopulates a system and preserves document roles in one review',async()=>{
- const w=mount(conformityDraft());expect(screen.getByText('Dichiarazione di conformità')).toBeInTheDocument();expect(screen.getByText('Destinazione: Impianti e documenti tecnici')).toBeInTheDocument();expect(screen.getByText('08/07/2026')).toBeInTheDocument();expect(screen.getByText('Potenza impegnabile (kW)')).toBeInTheDocument();
- expect(screen.getByLabelText('Tipo')).toHaveValue('electrical');expect(screen.getByLabelText('Data di acquisto')).toHaveValue('');
- expect(screen.getAllByRole('button',{name:'Salva e organizza'})).toHaveLength(1);await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));expect(w.submit.mock.calls[0]![0][0]).toMatchObject({action:'create',type:'electrical',expense:{action:'skip'}});
+it('conformity archives only the house document without technical or object fields',async()=>{
+ const w=mount(conformityDraft());expect(screen.getByText('Dichiarazione di conformità')).toBeInTheDocument();expect(screen.getByText('Destinazione: Impianti e documenti tecnici')).toBeInTheDocument();expect(screen.getByText('08/07/2026')).toBeInTheDocument();
+ expect(screen.queryByText('Potenza impegnabile (kW)')).not.toBeInTheDocument();expect(screen.queryByLabelText('Tipo')).not.toBeInTheDocument();expect(screen.queryByLabelText('Nome dell’oggetto')).not.toBeInTheDocument();expect(screen.queryByRole('button',{name:'Aggiungi un altro articolo'})).not.toBeInTheDocument();
+ await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));expect(w.submit.mock.calls[0]![0]).toEqual([{itemId:'item0',action:'document_only'}]);
 });
-it('conformity can remain only with the house and never submits hidden object or expense fields',async()=>{
- const w=mount(conformityDraft());await w.user.click(screen.getByRole('radio',{name:/Solo alla casa/}));expect(screen.queryByLabelText('Marca')).not.toBeInTheDocument();await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));expect(w.submit.mock.calls[0]![0]).toEqual([{itemId:'item0',action:'document_only'}]);
+it('conformity retains the explicit issuer and original link without proposing a contact',()=>{
+ const draft=conformityDraft();draft.documentInfo!.facts.push({subjectIndex:-1,field:'issuer',value:'Azienda Test',source});mount(draft);expect(screen.getByText('Azienda Test')).toBeInTheDocument();expect(screen.getByRole('link',{name:/Vedi documento originale/})).toHaveAttribute('href','/home/home/documenti/source#doc-anteprima');expect(screen.queryByLabelText('Marca')).not.toBeInTheDocument();
 });
 it('recognized house document without items can be confirmed without forcing a new object',async()=>{
  const draft=conformityDraft();draft.items=[];draft.documentInfo!.facts=draft.documentInfo!.facts.filter(f=>f.subjectIndex===-1);const w=mount(draft);expect(screen.getByRole('button',{name:'Salva e organizza'})).toBeEnabled();await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));expect(w.submit.mock.calls[0]![0]).toEqual([]);

@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Perimetro delle nuove proposte di conformità
+
+La dichiarazione di conformità nell’estrazione V15 è un documento della casa: items e houseExpenses vuoti, purchaseTotal nullo. documentInfo conserva classificazione e soli fatti documentali issuer/documentDate verificabili; nessun nuovo oggetto o contatto implicito. Vecchie bozze possono conservare soggetti tecnici, ma la scelta iniziale/automatica è document_only. Nessuna migrazione o riscrittura delle schede canoniche. [Dettagli](v5/conformity-document-only-20261018.md).
+
 ## 18 ottobre 2026 — Titolo locale delle planimetrie visive
 
 DocumentUnderstanding.title può avere origin=document_type quando una planimetria è riconosciuta visivamente ma manca un titolo letterale verificabile. value è allora «Planimetria», source conserva la regione osservata e documentTitle/unverified richiede revisione. Non è una citazione testuale verificata né abilita asset o spese. Quantità opzionali non verificate restano null con warning, senza sopprimere identità e altri dati validi. [V13](v5/document-extraction-v13-20261018.md).

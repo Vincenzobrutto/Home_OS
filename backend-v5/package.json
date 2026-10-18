@@ -6,7 +6,7 @@
     "build": "tsc -p tsconfig.json",
     "lint": "eslint src test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test:object-onboarding": "npm run build && node --test test/object-onboarding.test.cjs test/object-onboarding-profile.test.cjs test/onboarding-invoice-evidence.test.cjs test/house-expenses.test.cjs test/document-understanding.test.cjs test/conformity-evidence.test.cjs",
+    "test:object-onboarding": "npm run build && node --test test/object-onboarding.test.cjs test/object-onboarding-profile.test.cjs test/onboarding-invoice-evidence.test.cjs test/house-expenses.test.cjs test/document-understanding.test.cjs test/conformity-evidence.test.cjs test/conformity-document-only.test.cjs",
     "test:object-manuals": "node --test test/object-manuals.test.cjs",
     "start": "node --env-file=.env dist/main.js",
     "test": "node --test test/domain.test.cjs test/documents.test.cjs test/file-control.test.cjs test/personal-export.test.cjs test/multipart.test.cjs test/review.test.cjs test/anthropic.test.cjs test/activities.test.cjs test/document-search.test.cjs test/expenses.test.cjs test/home-objects.test.cjs test/economy.test.cjs test/economic-documents.test.cjs test/economic-anthropic.test.cjs test/sharing-policy.test.cjs test/recovery-mail.test.cjs test/pilot-corpus.test.cjs test/pilot-score.test.cjs test/pilot-observations.test.cjs test/receipt-assistance.test.cjs test/receipt-fixture.test.cjs test/receipt-release.test.cjs test/receipt-anthropic.test.cjs test/document-intake.test.cjs test/intake-classifier.test.cjs",

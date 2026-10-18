@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Conformità semplificata: obiettivo tecnico ritirato
+
+Completato percorso classificazione/originale/casa senza oggetto o campi tecnici. Non proseguire il recupero di potenze, tipo impianto o altre specifiche della conformità come requisito onboarding. FUTURO: proporre il collegamento dell’installatore esplicito alla mini rubrica, valutando dati esistenti e controllo doppioni; nessun nuovo contatto creato ora. Proseguire blocchi importi ausiliari e dati nella revisione unica. [Report V15](v5/conformity-document-only-20261018.md).
+
 ## 18 ottobre 2026 — Primo blocco autonomo estrazione
 
 Chiusi offline i casi riproducibili di data dichiarazione citata senza etichetta adiacente e alias italiano del tipo impianto. Rimane non dimostrata la causalità esatta delle omissioni nella precedente risposta personale, non conservata. Prossimo blocco: importi ausiliari fatture/bollette e distinzione dei ruoli. Nessun nuovo live test; resta una sola analisi. [V14](v5/conformity-evidence-v14-20261018.md).

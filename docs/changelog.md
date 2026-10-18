@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Conformità archiviata nella casa, V15
+
+Su correzione del committente, la conformità propone classificazione/originale e metadati opzionali, senza digitalizzare dettagli tecnici o creare impianti. Revisione unica semplificata anche per bozze precedenti; nessun nuovo contatto. Policy automatica document-only con guard costi. ProviderV15 non-live; test backend/DB/FE e browser desktop/mobile verdi, dati e budget invariati. [Report](v5/conformity-document-only-20261018.md).
+
 ## 18 ottobre 2026 — Evidenze conformità V14, verifica offline
 
 Date brevi della dichiarazione recuperano soltanto la propria etichetta contigua nella pagina verificata. Alias italiani espliciti del tipo impianto sono normalizzati alla tassonomia, senza inferire acquisto/garanzia. Prompt V14 più preciso sulle citazioni visuali.16 nuovi test,34 regressioni understanding,28 DB verdi; budget e contenuti invariati. [Report](v5/conformity-evidence-v14-20261018.md).

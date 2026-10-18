@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Documenti tecnici con archiviazione semplice
+
+Conformità ricondotta al documento della casa: classificazione, originale e metadati opzionali; zero proposte di oggetti/spese. Verificato desktop/mobile e percorso canonico senza cambiare dati esistenti. Collegamento installatore alla mini rubrica rinviato; nessuna nuova analisi AI. Seguono importi e revisione dati degli acquisti. [V15](v5/conformity-document-only-20261018.md).
+
 ## 18 ottobre 2026 — Conformità, consolidamento V14 offline
 
 Completato primo incremento autonomo su etichette date e tipo impianto con16nuovi test e regressioni verdi. Nessuna migrazione o modifica della revisione unica. Proseguire su importi ausiliari e passaggio dei dati alla scheda, senza ripetere collaudi già verdi o consumare inutilmente l’ultima analisi. [Report](v5/conformity-evidence-v14-20261018.md).

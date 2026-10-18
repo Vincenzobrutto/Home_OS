@@ -5,6 +5,10 @@ import type { OnboardingChoice } from './bodies';
 export class AutomaticReviewNeeded extends Error {}
 export function automaticPlan(output: ProductExtraction) {
   const review = (message: string): never => { throw new AutomaticReviewNeeded(message); };
+  if(output.documentKind==='conformity_declaration'){
+    if(output.documentInfo?.kind!=='conformity_declaration'||output.needsReview||output.reviewWarnings?.some(w=>!['-1:issuer','-1:documentDate'].includes(w.field))||output.houseExpenses?.length||output.purchaseTotal)review('Controlla la classificazione del documento nell’originale.');
+    return output.items.length?{choices:output.items.map(item=>({itemId:item.id,action:'document_only' as const}))}:{choices:[],documentOnly:true};
+  }
   if (output.documentKind === 'unsupported' || output.needsReview || output.reviewWarnings?.length) review('Alcune informazioni richiedono un controllo sull’originale.');
   if (output.documentKind === 'house_document' && !output.items.length && !output.houseExpenses?.length && output.documentInfo) return { choices: [], documentOnly: true };
   if (!output.items.length && !output.houseExpenses?.length) review('Non ci sono informazioni sufficienti per completare la scheda.');
