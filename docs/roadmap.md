@@ -1,3 +1,7 @@
+## V11 — robustezza fatture, 18 ottobre 2026
+
+Totali con valuta tra parentesi supportati e verificati offline; qualità live del caso specifico ancora da ricollaudare.
+
 ## V5 — raggiunto 18 ottobre 2026
 
 Prima tranche V11 implementata: conformità/fattura/bolletta/etichetta e revisione unica. Restano collaudo provider reale con consenso, OCR per pagina e ulteriori casi del piano.

@@ -1,3 +1,7 @@
+## 2026-10-18 — V11: valuta tra parentesi nel totale fattura
+
+Accettati totali espliciti come TOTALE 1.537,20 (EUR), mantenendo verifica importo e rifiuto IVA/subtotali/valute diverse. Diagnosi job evidence_unverified purchaseTotal/total; 37 test offline verdi, nessun nuovo invio AI o mutazione della bozza personale.
+
 ## 2026-10-18 — V5 comprensione documentale V11, prima tranche
 
 Conformità impianto, fattura, bolletta ed etichetta nella revisione unica; metadati/fatti con fonti, omissioni opzionali motivate, scelta conformità solo casa, ingresso archivio unificato. Test sintetici e browser mobile verdi; nessuna AI live o consumo budget. Report: docs/v5/document-understanding-v11-report-20261018.md.

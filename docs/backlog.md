@@ -1,3 +1,7 @@
+## V11 — formato totale fattura corretto
+
+Risolto formato valuta EUR/€ tra parentesi sul totale finale. La risposta AI rifiutata non è conservata: nessun recupero retroattivo; prossimo collaudo solo con nuovo consenso UI nel budget esistente.
+
 ## V11 — aggiornamento 18 ottobre 2026
 
 Chiusa prima tranche conformità/fattura/bolletta/etichetta con test sintetici. Restano: misurare qualità live V11 con consenso; fatti tecnici canonici editabili e interventi; OCR per pagina/PDF misti; allineare indicatore classificazione locale della riga ai metadati AI in revisione prima del salvataggio preservando conflitti. Vedi report V11.

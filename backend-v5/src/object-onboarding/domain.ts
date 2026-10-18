@@ -133,7 +133,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {
       const total = object(row.purchaseTotal, ['amountCents', 'evidence']);
       const source = evidence(total.evidence, context);
-      if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|€)?\s*\d[\d., ]*\s*(?:EUR|€)?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
+      if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
       purchaseTotal = { amountCents: Number(total.amountCents), source };
     }
     if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents) throw new ProductEvidenceFailure('purchaseTotal', 'total');

@@ -1,3 +1,7 @@
+## 2026-10-18 — valuta esplicita tra parentesi
+
+Il validatore del totale finale accetta EUR/EURO/€ anche tra parentesi complete. Nessuna deduzione o somma: resta obbligatorio un totale positivo realmente presente nella citazione con etichetta finale; IVA, subtotali e parentesi malformate restano esclusi. Il fallimento di un totale non viene trasformato in successo finanziario.
+
 ## 2026-10-18 — V11: comprensione documentale e validazione locale
 
 Una richiesta raccoglie classificazione e fatti con citazioni condivise; il backend verifica significati e fonti. Campi opzionali isolati non invalidano tutta la bozza, ma vengono omessi e segnalati. Identità e dati finanziari mantengono controlli rigorosi. Conformità può restare solo alla casa; data documento e potenza impegnabile non diventano acquisto/assorbimento. Nessuna nuova entità canonica tecnica in questa tranche: fatti conservati nella bozza, nessuna migrazione. Scartate richiesta AI separata per ogni tipo e creazione automatica senza conferma.
