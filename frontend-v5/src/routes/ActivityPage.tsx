@@ -85,20 +85,28 @@ export function ActivityPage() {
   const analyze = params.get('analizza');
   const targetFromUrl = params.get('scheda');
   const canEdit = home.permissions.includes('edit');
+  const analysisView = params.get('view') === 'analysis' || analyze !== null || focusJob !== null;
+  const tab = (view: string) => { const next = new URLSearchParams(params); if(view === 'analysis') next.set('view', view); else { next.delete('view'); next.delete('analizza'); next.delete('job'); next.delete('scheda'); } setParams(next); };
 
   return (
     <>
-      <div className={styles.heading}>
+      <div className={cx(styles.heading, "activity-page-heading")}>
         <div>
-          <span className={styles.eyebrow}>{home.name}</span>
+          <Link to={`/home/${encodeURIComponent(home.id)}/casa`}>← Torna alla Casa</Link><p className={styles.eyebrow}>{home.name}</p>
           <h1 tabIndex={-1}>Attività</h1>
           <p className={styles.lead}>
-            Promemoria personali, analisi dei documenti e verifiche da rivedere. Ogni analisi parte solo su tua richiesta e i dati proposti vanno confermati da te.
+            I tuoi promemoria personali.
           </p>
         </div>
+        {!analysisView && canEdit && params.get('nuova-attivita') !== '1' && <button type="button" className={cx(ui.btn,ui.primary)} onClick={()=>{const next=new URLSearchParams(params);next.set('nuova-attivita','1');setParams(next,{replace:true});}}><Icon name="plus"/>Nuova attività</button>}
+      </div>
+      <div className="activity-tabs" role="group" aria-label="Viste delle attività">
+        <button type="button" aria-pressed={!analysisView} onClick={() => tab('deadlines')}>Scadenze</button>
+        <button type="button" aria-pressed={analysisView} onClick={() => tab('analysis')}>Analisi e verifiche</button>
       </div>
       <div className={styles.stack}>
-        <ActivitiesSection home={home} />
+        {!analysisView && <ActivitiesSection home={home} />}
+        <div className={styles.stack} style={analysisView ? undefined : {display: 'none'}} hidden={!analysisView}>
         <ReviewSummary homeId={home.id} />
         {canEdit && (
           <StartAnalysis
@@ -109,13 +117,16 @@ export function ActivityPage() {
             preselect={analyze && analyze !== '1' ? analyze : null}
             preTarget={targetFromUrl}
             onStarted={(job) => setParams({ job: job.id }, { replace: true })}
-            onClose={() => setParams({}, { replace: true })}
+            onClose={() => setParams({view: 'analysis'}, { replace: true })}
           />
         )}
         {focusJob && <JobProgress key={focusJob} homeId={home.id} jobId={focusJob} />}
         <JobsList homeId={home.id} canEdit={canEdit} onRetried={(job) => setParams({ job: job.id }, { replace: true })} />
+        </div>
+        <details className="activity-tools"><summary>Strumenti ed esempi</summary><div className={styles.stack}>
         <BoilersSection home={home} />
         <ExamplePdfs homeId={home.id} />
+        </div></details>
       </div>
     </>
   );

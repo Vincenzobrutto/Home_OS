@@ -1,7 +1,7 @@
 import { ContactsPanel } from '../contacts/components';
 import { useId, useState, type ReactNode, type RefObject } from 'react';
 import { useUpdateFocus } from '../components/useUpdateFocus';
-import { Link, useParams } from 'react-router';
+import { Link, useLocation, useParams } from 'react-router';
 import { isApiError } from '../api/errors';
 import type { ActivityHistoryEvent, ActivityHistorySnapshot, Home, HomeActivity } from '../api/types';
 import {
@@ -33,10 +33,14 @@ import pages from './pages.module.css';
 export function ActivityDetailPage() {
   const home = useCurrentHome();
   const { activityId = '' } = useParams();
+  const location = useLocation();
+  const listBase = `/home/${encodeURIComponent(home.id)}/attivita`;
+  const saved = location.state?.activityList;
+  const fromList = saved && (saved.url === listBase || saved.url?.startsWith(listBase + '?')) ? saved : null;
   const query = useActivity(home.id, activityId);
   const statusRef = useUpdateFocus<HTMLDivElement>(`${home.id}:${activityId}`, query.data?.activity.version);
   const back = (
-    <Link to={`/home/${encodeURIComponent(home.id)}/attivita`} className={pages.spaced}>
+    <Link to={fromList?.url ?? listBase} state={fromList ? {activityRestore:fromList} : null} className={pages.spaced}>
       ← Attività
     </Link>
   );

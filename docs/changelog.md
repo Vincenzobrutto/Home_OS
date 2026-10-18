@@ -1,3 +1,7 @@
+## Attività: layout approvato e ritorno al contesto — 19 ottobre 2026
+
+Scadenze con filtri e conteggi server, Analisi e verifiche in vista distinta, strumenti secondari richiudibili. Desktop/mobile senza selezione multipla. Il ritorno dal dettaglio conserva filtro, pagine e posizione; supportato anche Indietro. [Comportamento, verifica e limiti](v5/activity-layout-20261019.md).
+
 ## Casa: scadenze compatte e filtri collegati — 19 ottobre 2026
 
 Tre righe con conteggi server delle attività aperte: Scadute, Oggi e In programma (tutte le date future). Ogni riga apre il filtro corrispondente in Attività; i filtri sono conservati nell’URL. Accesso alle attività senza data mantenuto quando presenti. Verificati desktop e mobile a 390 px, senza scorrimento orizzontale. Nessun cambiamento API o dati.

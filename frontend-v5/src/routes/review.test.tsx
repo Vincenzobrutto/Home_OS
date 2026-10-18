@@ -94,10 +94,11 @@ describe('[mock] M3 — endpoint assenti e avvio esplicito', () => {
     const { backend, home, A } = await m3World();
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/documenti`);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
-    expect(screen.getByRole('link', { name: 'Analizza documenti' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Seleziona documenti' })).toBeInTheDocument();
     await app.router.navigate(`/home/${home.id}/documenti/${A.id}`);
+    await app.user.click(await screen.findByText('Altri strumenti di analisi'));
     expect(await screen.findByRole('link', { name: 'Analizza questo documento' })).toBeInTheDocument();
-    await app.router.navigate(`/home/${home.id}/attivita`);
+    await app.router.navigate(`/home/${home.id}/attivita?view=analysis`);
     await screen.findByRole('heading', { level: 1, name: 'Attività' });
     await screen.findByText('Nessuna analisi avviata in questa casa.');
     expect(posts(backend, /analysis-jobs/)).toHaveLength(0);
@@ -132,10 +133,10 @@ describe('[mock] M3 — endpoint assenti e avvio esplicito', () => {
 
   it('member avvia analisi senza permesso export; viewer non può avviarle', async () => {
     const { backend, home } = await m3World();
-    const memberApp = await open(backend, 'member@example.test', PW.member, `/home/${home.id}/attivita`);
+    const memberApp = await open(backend, 'member@example.test', PW.member, `/home/${home.id}/attivita?view=analysis`);
     expect(await screen.findByRole('button', { name: 'Nuova analisi' })).toBeInTheDocument();
     memberApp.unmount();
-    await open(backend, 'viewer@example.test', PW.viewer, `/home/${home.id}/attivita`);
+    await open(backend, 'viewer@example.test', PW.viewer, `/home/${home.id}/attivita?view=analysis`);
     await screen.findByRole('heading', { level: 1, name: 'Attività' });
     await screen.findByText('Nessuna analisi avviata in questa casa.');
     expect(screen.queryByRole('button', { name: 'Nuova analisi' })).not.toBeInTheDocument();
@@ -145,7 +146,7 @@ describe('[mock] M3 — endpoint assenti e avvio esplicito', () => {
 describe('[mock] M3 — job: fallimento, retry, polling', () => {
   it('documento sconosciuto: fallito senza dati inventati; nuovo tentativo con nuova chiave, vecchio errore conservato', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     const progress = await analyze(app, home.id, ['Bolletta qualsiasi'], /Analisi non riuscita/);
     expect(progress).toHaveTextContent('riconosce solo i tre PDF di esempio');
     expect(backend.review.assets.size).toBe(0);
@@ -156,13 +157,14 @@ describe('[mock] M3 — job: fallimento, retry, polling', () => {
     await waitFor(() => expect(screen.getAllByText(/provider_fixture_unsupported/).length).toBe(2), { timeout: 3000 });
     expect(screen.getByText('Nuovo tentativo di un’analisi non riuscita.')).toBeInTheDocument();
     // L'inserimento manuale resta disponibile.
+    if (!(await screen.findByText('Strumenti ed esempi')).closest('details')?.open) await app.user.click(screen.getByText('Strumenti ed esempi'));
     expect(screen.getByRole('button', { name: 'Crea una scheda caldaia a mano' })).toBeInTheDocument();
   });
 
   it('job lungo: polling al massimo per la visita, poi «puoi tornare più tardi» e aggiornamento manuale', async () => {
     const { backend, home } = await m3World();
     backend.review.jobMode = 'hold';
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     const progress = await analyze(app, home.id, ['Libretto A'], /puoi tornare più tardi/);
     const jobId = [...backend.review.jobs.keys()][0]!;
     const reads = backend.review.jobReads.get(jobId)!;
@@ -178,7 +180,7 @@ describe('[mock] M3 — job: fallimento, retry, polling', () => {
   it('polling interrotto lasciando la pagina; rientro da Attività con stato persistente', async () => {
     const { backend, home } = await m3World();
     backend.review.jobMode = 'hold';
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     await app.router.navigate(`/home/${home.id}/attivita?analizza=1`);
     await app.user.click(await screen.findByRole('radio', { name: /Analisi di test — nessuna AI reale/ }));
     await app.user.click(await screen.findByRole('checkbox', { name: /Libretto A/ }));
@@ -191,7 +193,7 @@ describe('[mock] M3 — job: fallimento, retry, polling', () => {
     await new Promise((r) => setTimeout(r, 120));
     expect(backend.review.jobReads.get(jobId)).toBe(reads);
     backend.review.jobMode = 'auto';
-    await app.router.navigate(`/home/${home.id}/attivita`);
+    await app.router.navigate(`/home/${home.id}/attivita?view=analysis`);
     const followLink = await screen.findByRole('link', { name: 'Segui l’avanzamento' });
     await app.user.click(followLink);
     const progress = await screen.findByRole('region', { name: 'Analisi avviata' });
@@ -202,7 +204,7 @@ describe('[mock] M3 — job: fallimento, retry, polling', () => {
 describe('[mock] M3 — decisioni', () => {
   it('conferma solo la marca: modello e potenza restano aperti, il conteggio si rilegge, storia aggiornata', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     await analyze(app, home.id, ['Libretto A']);
     await app.router.navigate(`/home/${home.id}/review`);
     await screen.findByText(/3/, { selector: 'strong' });
@@ -229,7 +231,7 @@ describe('[mock] M3 — decisioni', () => {
 
   it('Rimanda non invia nulla; Non applicare richiede una nota e chiude solo quella proposta', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     await analyze(app, home.id, ['Libretto A']);
     await app.router.navigate(`/home/${home.id}/review`);
     const modello = await screen.findByRole('article', { name: 'Modello' });
@@ -252,7 +254,7 @@ describe('[mock] M3 — decisioni', () => {
 
   it('conferma insieme marca e modello, senza includere la potenza', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     await analyze(app, home.id, ['Libretto A']);
     await app.router.navigate(`/home/${home.id}/review`);
     const batch = await screen.findByRole('group', { name: 'Conferma insieme marca e modello' });
@@ -271,7 +273,7 @@ describe('[mock] M3 — decisioni', () => {
 
   it('A+B: due grandezze distinte, «Conserva le due grandezze» con nota; 24 utile e 28 nominale confermate con fonti', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     const progress = await analyze(app, home.id, ['Libretto A', 'Scheda tecnica B']);
     await openBoilerFromProgress(app, progress);
     const potenza = card('Potenza');
@@ -297,7 +299,7 @@ describe('[mock] M3 — decisioni', () => {
 
   it('A+C: stessa grandezza in conflitto, niente «Conserva le due grandezze»; scelta motivata di un valore', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     const progress = await analyze(app, home.id, ['Libretto A', 'Rapporto C']);
     await openBoilerFromProgress(app, progress);
     const potenza = card('Potenza');
@@ -317,7 +319,8 @@ describe('[mock] M3 — decisioni', () => {
 
   it('valore già confermato: prima/dopo, sostituzione esplicita con nota, poi replaceConfirmed', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
+    if (!(await screen.findByText('Strumenti ed esempi')).closest('details')?.open) await app.user.click(screen.getByText('Strumenti ed esempi'));
     await app.user.click(await screen.findByRole('button', { name: 'Crea una scheda caldaia a mano' }));
     await app.user.click(screen.getByRole('button', { name: 'Crea scheda' }));
     await screen.findByRole('heading', { level: 1, name: 'Caldaia' });
@@ -352,7 +355,7 @@ describe('[mock] M3 — decisioni', () => {
 
   it('409 di versione: messaggio, rilettura, nessun reinvio automatico', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     await analyze(app, home.id, ['Libretto A']);
     await app.router.navigate(`/home/${home.id}/review`);
     const original = backend.handle.bind(backend);
@@ -378,7 +381,7 @@ describe('[mock] M3 — decisioni', () => {
 
   it('esito ambiguo: «Riprova invio» con la stessa chiave, una sola conferma', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     await analyze(app, home.id, ['Libretto A']);
     await app.router.navigate(`/home/${home.id}/review`);
     const marca = await screen.findByRole('article', { name: 'Marca' });
@@ -399,7 +402,7 @@ describe('[mock] M3 — decisioni', () => {
 describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
   it('compilazione manuale: marca/modello e potenza (da sola), origine manuale senza fonti, verifiche aperte non chiuse', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     const progress = await analyze(app, home.id, ['Libretto A']);
     await openBoilerFromProgress(app, progress);
     const tm = screen.getByRole('form', { name: 'Marca e modello' });
@@ -432,12 +435,12 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
 
   it('conteggi reali in Casa; a zero verifiche Da rivedere è vuota e la scheda è «Dati confermati»', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     await analyze(app, home.id, ['Libretto A']);
     await app.router.navigate(`/home/${home.id}/casa`);
     await screen.findByRole('heading', { level: 1, name: home.name });
     const verifiche = await screen.findByRole('region', { name: 'Da rivedere' });
-    await waitFor(() => expect(verifiche).toHaveTextContent('3 verifiche da rivedere'));
+    await waitFor(() => expect(within(verifiche).getByRole('link',{name:'Verifiche da rivedere 3'})).toBeInTheDocument());
     await app.router.navigate(`/home/${home.id}/review`);
     const batch = await screen.findByRole('group', { name: 'Conferma insieme marca e modello' });
     await app.user.click(within(batch).getByRole('checkbox', { name: /Marca/ }));
@@ -455,18 +458,18 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
     await app.router.navigate(`/home/${home.id}/casa`);
     const after = await screen.findByRole('region', { name: 'Impianti e verifiche' });
     await waitFor(() => {
-      expect(screen.getByRole('region', { name: 'Da rivedere' })).toHaveTextContent('Nessuna verifica aperta.');
+      expect(screen.getByRole('link',{name:'Verifiche da rivedere 0'})).toBeInTheDocument();
       expect(after).toHaveTextContent('Dati confermati');
     });
   });
 
   it('schede personali: l’owner non vede la scheda del member né la apre via URL', async () => {
     const { backend, home } = await m3World();
-    const memberApp = await open(backend, 'member@example.test', PW.member, `/home/${home.id}/attivita`);
+    const memberApp = await open(backend, 'member@example.test', PW.member, `/home/${home.id}/attivita?view=analysis`);
     await analyze(memberApp, home.id, ['Libretto A']);
     memberApp.unmount();
     const assetId = [...backend.review.assets.keys()][0]!;
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     await screen.findByText('Nessuna analisi avviata in questa casa.');
     expect(await screen.findByText('Nessuna scheda caldaia.')).toBeInTheDocument();
     await app.router.navigate(`/home/${home.id}/impianti/${assetId}`);
@@ -478,7 +481,7 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
 
   it('401 sulla scheda: login e cache M3 rimossa', async () => {
     const { backend, home } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     await analyze(app, home.id, ['Libretto A']);
     const assetId = [...backend.review.assets.keys()][0]!;
     backend.sessions.clear();
@@ -491,7 +494,7 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
 
   it('cambio casa: la bozza di una decisione non segue l’utente', async () => {
     const { backend, home, second } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
     await analyze(app, home.id, ['Libretto A']);
     await app.router.navigate(`/home/${home.id}/review`);
     const marca = await screen.findByRole('article', { name: 'Marca' });
@@ -507,7 +510,8 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
 
   it('fonte apribile con il flusso M2 autenticato; PDF di esempio etichettati come sintetici', async () => {
     const { backend, home, A } = await m3World();
-    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita?view=analysis`);
+    if (!(await screen.findByText('Strumenti ed esempi')).closest('details')?.open) await app.user.click(screen.getByText('Strumenti ed esempi'));
     const esempi = await screen.findByRole('region', { name: 'Documenti per la prova con esempi' });
     expect(esempi).toHaveTextContent('dati dimostrativi');
     expect(within(esempi).getByRole('link', { name: /A — Libretto caldaia/ })).toHaveAttribute('href', '/m3-examples/libretto-caldaia-demo.pdf');

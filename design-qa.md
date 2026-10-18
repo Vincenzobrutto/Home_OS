@@ -43,3 +43,21 @@ Confronto: terzo risultato Image Gen scelto dal committente (Da fare e Completat
 Adattamenti intenzionali al prodotto reale: nessun contatore inventato senza totali server; ricerca/raccolte ancora nel controllo Cerca e filtra, limitata a titoli e nomi file, non ricerca full text promessa dal mock. Menu testuale Altre azioni invece di ellissi e metadati privacy conservati. Il numero e contenuto dei documenti differiscono dal mock perché si usano dati locali veri/sintetici già disponibili; nessuna nuova analisi creata per riempire la schermata.
 
 Nessuna criticità P0/P1/P2 aperta nel perimetro selezionato. Iterazione P3 possibile: totali server per tab e ricerca compatta sempre visibile, senza cambiare i filtri/cursori. Nessun deploy pubblico.
+
+
+---
+
+# Design QA — Attività desktop/mobile, 19 ottobre 2026
+
+final result: passed
+
+Confronto della proposta approvata con l’app reale; nessuna selezione multipla. Contenuti diversi dichiarati: mock Scadute 2, dati attuali Scadute 0 e fixture completata usata per il ritorno. Non si dichiara fedeltà pixel per pixel fra contenuti e densità differenti.
+
+- desktop: sorgente `C:\Users\07704017\.codex\generated_images\01a1508d-6897-7942-a213-e42197294238\exec-0597c41c-7bae-444c-bcf1-969c0ac010ba.png` ((1487, 1058)); implementazione `C:\Users\07704017\Documents\Codex\2026-10-18\sto-per-chiudere-questa-conversazione-codex\outputs\attivita-audit\implementata-desktop.png` ((1440, 1024)), viewport CSS 1440×1024. Confronto completo `C:\Users\07704017\Documents\Codex\2026-10-18\sto-per-chiudere-questa-conversazione-codex\outputs\attivita-audit\confronto-desktop.png`: immagini scalate proporzionalmente alla stessa altezza di 800 px per ispezione, senza deformazione. Non necessario un crop separato: controlli e gerarchia leggibili nel confronto completo.
+- mobile: sorgente `C:\Users\07704017\.codex\generated_images\01a1508d-6897-7942-a213-e42197294238\exec-240c5e2c-f50f-4798-afdb-34e84fde04e4.png` ((853, 1844)); implementazione `C:\Users\07704017\Documents\Codex\2026-10-18\sto-per-chiudere-questa-conversazione-codex\outputs\attivita-audit\implementata-mobile.png` ((375, 812)), viewport CSS 390×844. Confronto completo `C:\Users\07704017\Documents\Codex\2026-10-18\sto-per-chiudere-questa-conversazione-codex\outputs\attivita-audit\confronto-mobile.png`: immagini scalate proporzionalmente alla stessa altezza di 800 px per ispezione, senza deformazione. Non necessario un crop separato: controlli e gerarchia leggibili nel confronto completo.
+
+Prima revisione: azione primaria sotto le viste e descrizione ripetuta consumavano spazio (P2). Correzione: azione primaria nel titolo desktop e prima delle viste a tutta larghezza su mobile; nota sulla data spostata in coda. Seconda cattura e confronto completo: nessun P0/P1/P2 osservato nella struttura verificata.
+
+Differenze intenzionali: shell/token originali, selettore nativo per lo storico invece di menu personalizzato, selezione filtro in teal coerente con Dimora, dati effettivi e stato vuoto al posto delle fixture del mock. Strumenti richiudibili e viste scadenze/analisi conservati.
+
+Interazioni browser: Casa→Oggi; In programma/Senza data/Scadute; Completate→dettaglio→ritorno con link e Indietro; focus e posizione 170 px ripristinati. Creazione aperta e annullata senza scritture; Analisi separata, nessun avvio. Console: nessun errore rilevato. Mobile documento 375 px su viewport 390 px. Limiti: non provati telefono fisico, screen reader, zoom 200%, rete degradata o lunghe liste reali; la paginazione dopo perdita della cache è verificata nel test mock. Nessuna certificazione WCAG.

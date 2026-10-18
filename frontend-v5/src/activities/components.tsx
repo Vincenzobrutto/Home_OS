@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { newIdempotencyKey } from '../api/queryKeys';
 import type { ActivityResponse, DueState, Home, HomeActivity, UpdateActivity } from '../api/types';
 import { Banner, Field, cx, ui } from '../components/ui';
@@ -39,14 +39,18 @@ export function dueText(activity: HomeActivity) {
   return activity.dueDate ? `Data scelta da te: ${formatCalendarDate(activity.dueDate)}` : 'Nessuna data scelta';
 }
 
-export function ActivityRow({ activity, homeId }: { activity: HomeActivity; homeId: string }) {
+export function ActivityRow({ activity, homeId, returnPages = 1 }: { activity: HomeActivity; homeId: string; returnPages?: number }) {
+  const location = useLocation();
+  const navigate = useNavigate();
   return (
     <li className={styles.item}>
       <div className={styles.itemHead}>
-        <DueBadge state={activity.dueState} />
+        {activity.state === 'open' && <DueBadge state={activity.dueState} />}
         {activity.state !== 'open' && <span className={styles.due}>{STATE_LABEL[activity.state]}</span>}
         <Link
           to={`/home/${encodeURIComponent(homeId)}/attivita/${encodeURIComponent(activity.id)}`}
+          id={'activity-' + activity.id}
+          onClick={e=>{if(e.button!==0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)return; e.preventDefault();navigate(location.pathname+location.search,{replace:true,state:{activityRestore:{url:location.pathname+location.search,y:window.scrollY,id:activity.id,pages:returnPages}}});navigate(`/home/${encodeURIComponent(homeId)}/attivita/${encodeURIComponent(activity.id)}`,{state:{activityList:{url:location.pathname+location.search,y:window.scrollY,id:activity.id,pages:returnPages}}});}}
           className={styles.title}
         >
           {activity.title}

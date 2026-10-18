@@ -214,3 +214,25 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+:global(.activity-tabs){display:flex;gap:20px;border-bottom:1px solid var(--color-border);margin:16px 0 24px;flex-wrap:wrap}
+:global(.activity-tabs button){font:inherit;font-weight:700;color:var(--color-muted);background:none;border:0;border-bottom:3px solid transparent;min-height:48px;padding:8px 4px;cursor:pointer}
+:global(.activity-tabs button[aria-pressed="true"]){color:var(--color-accent);border-bottom-color:var(--color-accent)}
+:global(.activity-workspace){min-width:0}
+:global(.activity-filters){display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:16px 0 24px}
+:global(.activity-filters button){min-height:44px;gap:8px}
+:global(.activity-filters button[aria-pressed="true"]){border-color:var(--color-accent);background:var(--color-soft);color:var(--color-accent)}
+:global(.activity-count){border-radius:50%;background:var(--color-neutral-tag);padding:2px 8px}
+:global(.activity-tools){border-top:1px solid var(--color-border);padding:16px 0}
+:global(.activity-tools summary){cursor:pointer;min-height:44px;font-weight:700}
+:global(.activity-workspace) .list{gap:0;background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;overflow:hidden}
+:global(.activity-workspace) .item{border:0;border-radius:0;border-bottom:1px solid var(--color-border);padding:18px 16px}
+:global(.activity-workspace) .item:last-child{border-bottom:0}
+:global(.activity-workspace) .title{order:-1;flex-basis:100%;min-height:44px;display:flex;align-items:center;text-decoration:none}
+@media(max-width:600px){:global(.activity-filters){gap:8px}:global(.activity-tabs){gap:16px}:global(.activity-workspace) .item{padding:12px}}
+
+:global(.activity-heading){display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}:global(.activity-heading p){margin:0;max-width:50ch}
+
+@media(max-width:600px){:global(.activity-heading){flex-direction:column;align-items:stretch}:global(.activity-heading button){width:100%}}
+
+@media(max-width:600px){:global(.activity-page-heading){align-items:stretch}:global(.activity-page-heading>button){width:100%}}

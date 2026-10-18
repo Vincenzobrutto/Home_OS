@@ -99,6 +99,7 @@ describe('[mock] M4 — scelta del provider e consenso', () => {
     await app.router.navigate(`/home/${home.id}/attivita?analizza=1`);
     await screen.findByText('Analisi con AI non disponibile al momento. Puoi inserire i dati a mano.');
     expect(screen.queryByText(/sei chiamate|dettaglio interno/)).toBeNull();
+    if (!(await screen.findByText('Strumenti ed esempi')).closest('details')?.open) await app.user.click(screen.getByText('Strumenti ed esempi'));
     expect(await screen.findByRole('region', { name: 'Documenti per la prova con esempi' })).toBeInTheDocument();
   });
   it('Anthropic non configurato: opzione disattivata con il motivo, nessun campo per la chiave', async () => {
@@ -183,7 +184,7 @@ describe('[mock] M4 — risultati AI', () => {
   it('fonti su pagine 2 e 3 con nome del documento, badge AI e modello, nessun punteggio di confidenza', async () => {
     const { backend, home, P } = await world();
     backend.review.anthropicScript.push(claims());
-    const app = await open(backend, `/home/${home.id}/attivita`);
+    const app = await open(backend, `/home/${home.id}/attivita?view=analysis`);
     const progress = await startAi(app, home.id, /Manuale caldaia multipagina/);
     await waitFor(() => expect(progress).toHaveTextContent('Analisi completata'), { timeout: 3000 });
     await app.user.click(within(progress).getByRole('link', { name: 'Apri la scheda' }));
@@ -202,7 +203,7 @@ describe('[mock] M4 — risultati AI', () => {
   it('nessun dato sostenuto: no_supported_data senza schede create', async () => {
     const { backend, home } = await world();
     backend.review.anthropicScript.push({ kind: 'no_data', costUsd: '0.0100' });
-    const app = await open(backend, `/home/${home.id}/attivita`);
+    const app = await open(backend, `/home/${home.id}/attivita?view=analysis`);
     const progress = await startAi(app, home.id, /Manuale caldaia multipagina/);
     await waitFor(() => expect(progress).toHaveTextContent('Nessun dato sostenuto dai documenti: nessuna scheda è stata creata.'), { timeout: 3000 });
     expect(within(progress).queryByRole('link', { name: 'Apri la scheda' })).not.toBeInTheDocument();
@@ -218,12 +219,13 @@ describe('[mock] M4 — risultati AI', () => {
   ])('errore %s: messaggio distinto, nessuna scheda, manuale disponibile', async (code, text) => {
     const { backend, home } = await world();
     backend.review.anthropicScript.push({ kind: 'fail', code, costUsd: '0.00' });
-    const app = await open(backend, `/home/${home.id}/attivita`);
+    const app = await open(backend, `/home/${home.id}/attivita?view=analysis`);
     const progress = await startAi(app, home.id, /Manuale caldaia multipagina/);
     await waitFor(() => expect(progress).toHaveTextContent('Analisi non riuscita'), { timeout: 3000 });
     expect(progress).toHaveTextContent(text);
     expect(progress).toHaveTextContent('puoi sempre inserire i dati a mano');
     expect(backend.review.assets.size).toBe(0);
+    if (!(await screen.findByText('Strumenti ed esempi')).closest('details')?.open) await app.user.click(screen.getByText('Strumenti ed esempi'));
     expect(screen.getByRole('button', { name: 'Crea una scheda caldaia a mano' })).toBeInTheDocument();
   });
 
@@ -233,7 +235,7 @@ describe('[mock] M4 — risultati AI', () => {
       kind: 'claims',
       claims: [{ field: 'brand', value: 'Termica <b>Demo</b>', documentIndex: 0, page: 2, excerpt: '<img src=x onerror="alert(1)">Costruttore' }],
     });
-    const app = await open(backend, `/home/${home.id}/attivita`);
+    const app = await open(backend, `/home/${home.id}/attivita?view=analysis`);
     const progress = await startAi(app, home.id, /Manuale caldaia multipagina/);
     await waitFor(() => expect(progress).toHaveTextContent('Analisi completata'), { timeout: 3000 });
     await app.user.click(within(progress).getByRole('link', { name: 'Apri la scheda' }));
@@ -252,7 +254,7 @@ describe('[mock] M4 — risultati AI', () => {
         { field: 'power', value: '26', documentIndex: 0, page: 3, excerpt: 'Potenza 26 kW', measurement: { value: '26', unit: 'kW', quantityCode: 'other', quantityLabel: 'Potenza' } },
       ],
     });
-    const app = await open(backend, `/home/${home.id}/attivita`);
+    const app = await open(backend, `/home/${home.id}/attivita?view=analysis`);
     const progress = await startAi(app, home.id, /Manuale caldaia multipagina/);
     await waitFor(() => expect(progress).toHaveTextContent('Analisi completata'), { timeout: 3000 });
     await app.user.click(within(progress).getByRole('link', { name: 'Apri la scheda' }));
@@ -296,7 +298,8 @@ describe('[mock] M4 — risultati AI', () => {
     expect(screen.queryByText(/Proposte dell’analisi di test da confermare/)).toBeNull();
     expect(screen.getAllByRole('article').some((card) => card.textContent?.includes('Analisi AI con Anthropic'))).toBe(true);
 
-    await app.router.navigate(`/home/${home.id}/attivita`);
+    await app.router.navigate(`/home/${home.id}/attivita?view=analysis`);
+    if (!(await screen.findByText('Strumenti ed esempi')).closest('details')?.open) await app.user.click(screen.getByText('Strumenti ed esempi'));
     await app.user.click(await screen.findByRole('button', { name: 'Crea una scheda caldaia a mano' }));
     await app.user.click(screen.getByRole('button', { name: 'Crea scheda' }));
     const manualH1 = await waitFor(() => {
@@ -338,7 +341,7 @@ describe('[mock] M4 — costi, errori di avvio, retry e idempotenza', () => {
   it('costo incerto: mai zero; nuovo tentativo con nota sul costo precedente e nuovo consenso', async () => {
     const { backend, home } = await world();
     backend.review.anthropicScript.push({ kind: 'uncertain' });
-    const app = await open(backend, `/home/${home.id}/attivita`);
+    const app = await open(backend, `/home/${home.id}/attivita?view=analysis`);
     const progress = await startAi(app, home.id, /Manuale caldaia multipagina/);
     await waitFor(() => expect(progress).toHaveTextContent('Analisi non riuscita'), { timeout: 3000 });
     expect(progress).toHaveTextContent('Esito della richiesta ad Anthropic sconosciuto');
@@ -381,7 +384,7 @@ describe('[mock] M4 — costi, errori di avvio, retry e idempotenza', () => {
   it('capabilities aggiornate dopo l’esito: il budget disponibile scende del costo effettivo', async () => {
     const { backend, home } = await world();
     backend.review.anthropicScript.push(claims());
-    const app = await open(backend, `/home/${home.id}/attivita`);
+    const app = await open(backend, `/home/${home.id}/attivita?view=analysis`);
     const progress = await startAi(app, home.id, /Manuale caldaia multipagina/);
     await waitFor(() => expect(progress).toHaveTextContent('Analisi completata'), { timeout: 3000 });
     await app.router.navigate(`/home/${home.id}/attivita?analizza=1`);

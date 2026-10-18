@@ -1,8 +1,9 @@
+import {queryKeys} from '../api/queryKeys';
 // H1 activities-v1 con backend SIMULATO e orologio controllato dal test (fake.today):
 // nessun confronto con Date.now, nessuna prova di API/DB reali.
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { focusManager } from '@tanstack/react-query';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { FakeBackend } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
 import type { renderApp as RenderApp } from '../test/harness';
@@ -85,8 +86,9 @@ describe('[mock] H1 — Casa e creazione', () => {
     backend.activities.unavailable = false;
     backend.activities.enabled = false;
     await app.router.navigate(`/home/${home.id}/attivita`);
-    const daFare = await screen.findByRole('region', { name: 'Da fare' });
+    const daFare = await screen.findByRole('region', { name: 'Le tue attività' });
     await waitFor(() => expect(daFare).toHaveTextContent('Le attività personali non sono ancora attive su questo servizio.'));
+    await app.user.click(screen.getByRole('button', {name:'Analisi e verifiche'}));
     expect(screen.getByRole('region', { name: 'Da rivedere' })).toBeInTheDocument();
   });
 
@@ -94,7 +96,7 @@ describe('[mock] H1 — Casa e creazione', () => {
     const { backend, owner, home } = world();
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
     expect(await screen.findByRole('button', { name: 'Nuova attività' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Nuova analisi' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Nuova analisi' })).not.toBeInTheDocument();
     await app.user.click(screen.getByRole('button', { name: 'Nuova attività' }));
     const form = await screen.findByRole('form', { name: 'Nuova attività' });
     expect(form).toHaveTextContent('Destinazione: promemoria personale in Casa Roma, senza caldaia collegata.');
@@ -250,7 +252,7 @@ describe('[mock] H1 — stati, date e riepilogo', () => {
     await screen.findByRole('link',{name:'In programma 2'});
     expect(within(region).getByRole('link',{name:'Scadute 1'})).toBeInTheDocument();expect(within(region).getByRole('link',{name:'Oggi 1'})).toBeInTheDocument();expect(within(region).getByRole('link',{name:'Senza data: 1'})).toBeInTheDocument();
     await app.user.click(within(region).getByRole('link',{name:'In programma 2'}));
-    const upcoming=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(upcoming).getAllByRole('link').map(l=>l.textContent)).toEqual(['Più sette','Più otto']);expect(screen.getByRole('combobox',{name:'Scadenza'})).toHaveValue('upcoming');
+    const upcoming=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(upcoming).getAllByRole('link').map(l=>l.textContent)).toEqual(['Più sette','Più otto']);expect(screen.getByRole('button',{name:/In programma 2/})).toHaveAttribute('aria-pressed','true');
     await app.router.navigate(`/home/${home.id}/casa`);await app.user.click(await screen.findByRole('link',{name:'Scadute 1'}));const overdue=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(overdue).getAllByRole('link').map(l=>l.textContent)).toEqual(['Ieri']);
     await app.router.navigate(`/home/${home.id}/casa`);await app.user.click(await screen.findByRole('link',{name:'Oggi 1'}));const today=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(today).getAllByRole('link').map(l=>l.textContent)).toEqual(['Oggi']);
     await app.router.navigate(`/home/${home.id}/attivita`);
@@ -265,14 +267,38 @@ describe('[mock] H1 — stati, date e riepilogo', () => {
     await seedActivity(backend, owner.id, home.id, { title: 'Domani', dueDate: '2026-10-14' });
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
     await screen.findByRole('list', { name: 'Elenco delle attività' });
-    await app.user.selectOptions(screen.getByLabelText('Scadenza'), 'overdue');
+    await app.user.click(screen.getByRole('button',{name:/Scadute/}));
     await waitFor(() => expect(within(screen.getByRole('list', { name: 'Elenco delle attività' })).getAllByRole('listitem')).toHaveLength(1));
     expect(screen.getByRole('list', { name: 'Elenco delle attività' })).toHaveTextContent('Ieri');
     await app.user.selectOptions(screen.getByLabelText('Stato'), 'completed');
-    expect(await screen.findByText('Nessuna attività corrisponde a questo filtro.')).toBeInTheDocument();
+    expect(await screen.findByText('Nessuna attività completata.')).toBeInTheDocument();
     expect(screen.queryByLabelText('Scadenza')).not.toBeInTheDocument();
     const q = backend.log.filter((r) => r.path.includes('/activities?')).at(-1)!.path;
     expect(q).toContain('state=completed&due=all');
+  });
+
+  it('ritorno dal dettaglio conserva filtro, posizione e pagine dopo la perdita della cache', async () => {
+    const {backend,owner,home}=world();
+    for(let i=0;i<22;i++) await seedActivity(backend,owner.id,home.id,{title:`Promemoria ${i}`,dueDate:'2026-10-12'});
+    const app=await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/attivita?state=open&due=overdue`);
+    await app.user.click(await screen.findByRole('button',{name:'Mostra altre attività'}));
+    await waitFor(()=>expect(within(screen.getByRole('list',{name:'Elenco delle attività'})).getAllByRole('link')).toHaveLength(22));
+    const links=within(screen.getByRole('list',{name:'Elenco delle attività'})).getAllByRole('link');
+    const title=links[21]!.textContent!;
+    const scroll=vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
+    try {
+      await app.user.click(links[21]!);
+      await screen.findByRole('heading',{name:title});
+      expect(app.router.state.location.state.activityList.pages).toBe(2);
+      expect(screen.getByRole('link',{name:'← Attività'})).toHaveAttribute('href', '/home/'+home.id+'/attivita?state=open&due=overdue');
+      app.queryClient.removeQueries({queryKey:queryKeys.activities(owner.id,home.id,{state:'open',due:'overdue'})});
+      await app.user.click(screen.getByRole('link',{name:'← Attività'}));
+      await waitFor(()=>expect(app.router.state.location.search).toBe('?state=open&due=overdue'));
+      expect(app.router.state.location.state.activityRestore.pages).toBe(2);
+      const returned=await screen.findByRole('link',{name:title});
+      await waitFor(()=>expect(returned).toHaveFocus());
+      expect(scroll).toHaveBeenCalledWith(0,0);
+    } finally {scroll.mockRestore();}
   });
 
   it('completa con nota, poi riapri: data passata torna scaduta, storia conservata, Casa aggiornata', async () => {
@@ -388,7 +414,7 @@ describe('[mock] H1 — privacy, ruoli e contesto', () => {
     const { backend, member, home } = world();
     const theirs = await seedActivity(backend, member.id, home.id, { title: 'Privata di Mario' });
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
-    await waitFor(() => expect(screen.getByRole('region', { name: 'Da fare' })).toHaveTextContent('Nessuna attività aperta'));
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Le tue attività' })).toHaveTextContent('Nessuna attività aperta'));
     await app.router.navigate(`/home/${home.id}/attivita/${theirs.id}`);
     expect(await screen.findByRole('heading', { level: 1, name: 'Attività non disponibile' })).toBeInTheDocument();
     expect(document.body.textContent).not.toContain('Privata di Mario');
@@ -402,9 +428,9 @@ describe('[mock] H1 — privacy, ruoli e contesto', () => {
     const mine = await seedActivity(backend, owner.id, home.id, { title: 'Del viewer' });
     backend.activities.items.get(mine.id)!.accountId = viewer.id;
     const app = await open(backend, 'viewer@example.test', PW.viewer, `/home/${home.id}/attivita`);
-    const daFare = await screen.findByRole('region', { name: 'Da fare' });
+    const daFare = await screen.findByRole('region', { name: 'Le tue attività' });
     await waitFor(() => expect(daFare).toHaveTextContent('Del viewer'));
-    expect(within(daFare).queryByRole('button', { name: 'Nuova attività' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Nuova attività' })).not.toBeInTheDocument();
     await app.router.navigate(`/home/${home.id}/attivita/${mine.id}`);
     await screen.findByRole('heading', { level: 1, name: 'Del viewer' });
     expect(screen.queryByRole('button', { name: /Completa|Modifica|Annulla attività/ })).not.toBeInTheDocument();
