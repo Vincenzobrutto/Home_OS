@@ -1,3 +1,7 @@
+## Casa: layout approvato e scadenze — 19 ottobre 2026
+
+Implementati riepilogo operativo, fonti pendenti reali, scadenze personali, accessi alla casa e spese sintetiche su desktop/mobile. [Verifica e limiti](v5/casa-layout-20261019.md).
+
 ## Ricerca visibile e viste mobile Documenti — 18 ottobre 2026
 
 Implementata la fase approvata: ricerca globale con ambito esplicito, filtri separati, alternanza Compila/Originale senza smontare i pannelli e intestazioni Fattura/Ricevuta corrette. [Comportamento, verifica e limiti](v5/document-search-mobile-20261018.md).

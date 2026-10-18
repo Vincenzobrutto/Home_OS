@@ -22,6 +22,8 @@ const CasaSharingSummary = lazyPage(() => import('./CasaSharingSummary').then(m 
   return <m.CasaSharingSummary homeId={home.id} />;
 }));
 import styles from './pages.module.css';
+import casa from './casa.module.css';
+import {CasaDocumentsSummary} from './CasaDocumentsSummary';
 
 type HomeContext = { home: Home };
 
@@ -116,46 +118,29 @@ export function CasaPage() {
   const home = useCurrentHome();
   useDocumentTitle(home.name);
   return (
-    <>
-      <div className={styles.hero}>
+    <div className={casa.casa}>
+      <div className={casa.header}>
         <span className={styles.eyebrow}>Casa</span>
         <h1 tabIndex={-1}>{home.name}</h1>
         <p className={styles.lead}>{home.address}</p>
-        <div className={styles.heroMeta}>
-          <Tag tone="blue">{ROLE_LABEL[home.role] ?? home.role}</Tag>
-        </div>
+
       </div>
-      <section className={styles.quickActions} aria-labelledby="casa-azioni">
+      <section className={cx(styles.quickActions,casa.actions)} aria-labelledby="casa-azioni">
         <h2 id="casa-azioni" className="visually-hidden">Azioni rapide</h2>
         <div className={styles.formActions}>
-          <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/documenti`}>Documenti</Link>
+          <Link className={cx(ui.btn,ui.primary)} to={`/home/${encodeURIComponent(home.id)}/documenti?aggiungi=1`}>Aggiungi documento</Link>
           {home.permissions.includes('edit') && <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/spese?nuova-spesa=1`}>Registra una spesa</Link>}
-          <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/oggetti`}>Oggetti e impianti</Link>
-          <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/rubrica`}>Rubrica</Link>
         </div>
       </section>
-      <h2 className="visually-hidden">Da fare ora</h2>
-      <div className={styles.grid}>
+      <section className={casa.todo} aria-label="Da completare"><h2>Da completare</h2><CasaDocumentsSummary homeId={home.id}/>
+      <div className={casa.deadlines}>
         <ScadenzeSummary home={home} />
         <CasaReviewSummary homeId={home.id} />
       </div>
-      <h2 className={styles.spaced}>La tua casa</h2>
-      <div className={styles.grid}>
-        <ObjectsSummary home={home} />
-        <SpeseSummary home={home} />
+      </section><div className={casa.overview}><section className={ui.card} aria-label="Esplora la casa"><h2>Esplora la casa</h2><div className={casa.destinations}>{[['documenti','Documenti','Originali e dati salvati'],['oggetti','Oggetti e impianti','Le tue schede'],['ambienti','Ambienti','Organizza le stanze'],['rubrica','Rubrica','Contatti utili']].map(([path,label,hint])=><Link key={path} to={`/home/${encodeURIComponent(home.id)}/${path}`}><span><strong>{label}</strong><small>{hint}</small></span><Icon name="arrow"/></Link>)}</div><p className={styles.small}>Oggetti e spese personali; ambienti condivisi.</p></section><SpeseSummary home={home} compact/></div>
+      <div className={casa.secondary}>
         <CasaSharingSummary />
-        <ImpiantiSummary homeId={home.id} />
-        <section className={cx(ui.card, ui.tint, styles.wide)} aria-labelledby="casa-prossime">
-          <h2 id="casa-prossime" className={styles.cardTitle}>
-            Documenti
-          </h2>
-          <p className={styles.muted}>
-            In Documenti conservi gli originali della casa (PDF, JPEG, PNG).{' '}
-            <Link to={`/home/${encodeURIComponent(home.id)}/documenti`}>Apri i documenti</Link>
-            {' · '}
-            <Link to={`/home/${encodeURIComponent(home.id)}/documenti?ricerca=1`}>Cerca documenti</Link>
-          </p>
-        </section>
+        <details className={ui.card}><summary>Ambienti, oggetti e schede tecniche</summary><ObjectsSummary home={home}/><ImpiantiSummary homeId={home.id}/></details>
         <details className={cx(ui.card, styles.wide)}>
           <summary className={styles.cardTitle}>Dettagli della casa e del tuo ruolo</summary>
         <section className={ui.card} aria-labelledby="casa-dati">
@@ -194,7 +179,7 @@ export function CasaPage() {
         </section>
         </details>
       </div>
-    </>
+    </div>
   );
 }
 

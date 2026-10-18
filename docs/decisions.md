@@ -1,3 +1,7 @@
+## Casa come riepilogo operativo — 19 ottobre 2026
+
+Approvata la struttura delle anteprime con scadenze personali esplicite. Casa usa dati reali autorizzati, distingue documenti/attività/verifiche e sintetizza le spese. Senza aggregati documentali completi si mostrano fonti e stati, non conteggi dedotti dalle pagine. Le date sulle fatture non diventano automaticamente promemoria. [Report](v5/casa-layout-20261019.md).
+
 ## Documenti: ambito ricerca e continuità mobile — 18 ottobre 2026
 
 Scelta approvata: ricerca sempre visibile, globale all’avvio di una nuova query con ambito restringibile; ingresso senza ricerca in Da fare. Su mobile Compila/Originale nascondono i pannelli senza smontarli, per conservare campi e PDF nella sessione. Non si promette autosalvataggio o recupero su refresh. [Implementazione](v5/document-search-mobile-20261018.md).

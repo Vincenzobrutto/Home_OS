@@ -7,9 +7,10 @@ import { ExpenseRow, expenseOwn as own, expensePath, expenseStyles as styles } f
 import { useExpenseSummary } from '../expenses/hooks';
 import { expenseErrorMessage, formatCents } from '../lib/expenses';
 import pages from './pages.module.css';
+import casa from './casa.module.css';
 
 /** Casa: riepilogo dell'anno corrente (server) e ultime tre spese; errore mai mostrato come zero. */
-export function SpeseSummary({ home }: { home: Home }) {
+export function SpeseSummary({ home,compact=false }: { home: Home;compact?:boolean }) {
   const summary = useExpenseSummary(home.id, null);
   const canEdit = home.permissions.includes('edit');
   const data = summary.data;
@@ -34,13 +35,13 @@ export function SpeseSummary({ home }: { home: Home }) {
         />
       ) : (
         <>
-          <SummaryTotals data={data} />
+          {compact?<p aria-label={`Totali del ${data.year}`}><span>Totale registrato</span><br/><strong style={{fontSize:"2rem"}}>{formatCents(data.totalCents)}</strong><br/><span>Costi registrati, non pagamenti</span></p>:<SummaryTotals data={data} />}
           {data.lastItems.length === 0 ? (
             <p className={pages.muted}>Nessuna spesa attiva registrata nel {data.year}.</p>
           ) : (
             <ul className={styles.list} aria-label="Ultime spese">
               {data.lastItems.map((e) => (
-                <ExpenseRow key={e.id} expense={e} homeId={home.id} />
+                compact?<li className={casa.expenseRow} key={e.id}><Link to={`${expensePath(home.id)}/${encodeURIComponent(e.id)}`}>{e.title}</Link><strong>{formatCents(e.amountCents)}</strong><small>{e.spentOn.split('-').reverse().join('/')}</small></li>:<ExpenseRow key={e.id} expense={e} homeId={home.id} />
               ))}
             </ul>
           )}
