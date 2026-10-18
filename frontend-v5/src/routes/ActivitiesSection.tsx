@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import type { ActivityFilters, Home } from '../api/types';
 import { ActivityForm, ActivityRow, activityStyles as styles } from '../activities/components';
@@ -33,7 +32,9 @@ export function ActivitiesSection({ home }: { home: Home }) {
   const creating = params.get('nuova-attivita') === '1';
   const presetAssetId = params.get('assetId');
   const canEdit = home.permissions.includes('edit');
-  const [filters, setFilters] = useState<ActivityFilters>({ state: 'open', due: 'all' });
+  const state=STATE_OPTIONS.find(o=>o.value===params.get('state'))?.value??'open';
+  const filters:ActivityFilters={state,due:state==='open'?(DUE_OPTIONS.find(o=>o.value===params.get('due'))?.value??'all'):'all'};
+  const setFilters=(nextFilters:ActivityFilters)=>{const next=new URLSearchParams(params);next.set('state',nextFilters.state);if(nextFilters.due==='all')next.delete('due');else next.set('due',nextFilters.due);setParams(next);};
   const capabilities = useActivityCapabilities(home.id);
   const list = useActivities(home.id, filters);
   const items = list.data?.pages.flatMap((p) => p.items) ?? [];

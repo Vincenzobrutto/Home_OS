@@ -34,3 +34,9 @@ Su approvazione successiva, Le tue scadenze è un box autonomo precedente a Da c
 ### Conteggi e gruppi compatti
 
 La successiva implementazione del [riepilogo aggregato](casa-counts-20261019.md) supera il precedente limite sui contatori: Da completare mostra tre gruppi con conteggi completi dal server, non più una lista delle prime tre fonti.
+
+### Scadenze compatte — 19 ottobre
+
+Il box autonomo ora mostra tre righe cliccabili con conteggi completi dal riepilogo server: Scadute, Oggi, In programma. Quest’ultimo include tutte le attività future, anche oltre sette giorni. Rimangono Tutte le attività, Nuova attività per chi può modificare e Senza data quando il conteggio è positivo. Errori e caricamento restano distinti dallo zero.
+
+I filtri Stato/Scadenza di Attività leggono e aggiornano la query URL; link dalla Casa e navigazione indietro mantengono il filtro corretto. Browser: verificati Scadute su desktop, Oggi e In programma su mobile 390×844, con stato vuoto coerente e assenza di overflow. Test mock verificano conteggi positivi, collegamenti filtrati, date ieri/oggi/+7/+8 e senza data. Nessun originale aperto o dato modificato durante il collaudo browser.

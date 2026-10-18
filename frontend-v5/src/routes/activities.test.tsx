@@ -64,7 +64,7 @@ describe('[mock] H1 — Casa e creazione', () => {
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/casa`);
     const region = await screen.findByRole('region', { name: 'Le tue scadenze' });
     await waitFor(() => expect(region).toHaveTextContent('Nessuna attività aperta.'));
-    expect(within(region).queryByLabelText('Conteggi delle attività aperte')).not.toBeInTheDocument();
+    expect(within(region).getByRole('link',{name:'Scadute 0'})).toHaveAttribute('href',`/home/${home.id}/attivita?state=open&due=overdue`);
     expect(within(region).getByRole('link', { name: 'Nuova attività' })).toHaveAttribute('href', `/home/${home.id}/attivita?nuova-attivita=1`);
     await app.user.click(screen.getByText('Dettagli della casa e del tuo ruolo'));
     const permissions = screen.getByRole('region', { name: 'Permessi del tuo ruolo' });
@@ -234,7 +234,7 @@ describe('[mock] H1 — invii, esiti ambigui e conflitti', () => {
 });
 
 describe('[mock] H1 — stati, date e riepilogo', () => {
-  it('ieri/oggi/+7/+8/senza data: conteggi, anteprima di 3 con confine +7 incluso, ordine', async () => {
+  it('ieri/oggi/+7/+8/senza data: conteggi completi, collegamenti filtrati e ordine', async () => {
     const { backend, owner, home } = world('2026-10-13');
     for (const [title, dueDate] of [
       ['Più otto', '2026-10-21'],
@@ -247,13 +247,16 @@ describe('[mock] H1 — stati, date e riepilogo', () => {
     }
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/casa`);
     const region = await screen.findByRole('region', { name: 'Le tue scadenze' });
-    await waitFor(() => expect(within(region).getByLabelText('Conteggi delle attività aperte')).toHaveTextContent('1 scadute1 oggi2 in programma1 senza data'));
-    const preview = within(region).getByRole('list', { name: 'Prossime scadenze' });
-    expect(within(preview).getAllByRole('link').map((l) => l.textContent)).toEqual(['Ieri', 'Oggi', 'Più sette']);
+    await screen.findByRole('link',{name:'In programma 2'});
+    expect(within(region).getByRole('link',{name:'Scadute 1'})).toBeInTheDocument();expect(within(region).getByRole('link',{name:'Oggi 1'})).toBeInTheDocument();expect(within(region).getByRole('link',{name:'Senza data: 1'})).toBeInTheDocument();
+    await app.user.click(within(region).getByRole('link',{name:'In programma 2'}));
+    const upcoming=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(upcoming).getAllByRole('link').map(l=>l.textContent)).toEqual(['Più sette','Più otto']);expect(screen.getByRole('combobox',{name:'Scadenza'})).toHaveValue('upcoming');
+    await app.router.navigate(`/home/${home.id}/casa`);await app.user.click(await screen.findByRole('link',{name:'Scadute 1'}));const overdue=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(overdue).getAllByRole('link').map(l=>l.textContent)).toEqual(['Ieri']);
+    await app.router.navigate(`/home/${home.id}/casa`);await app.user.click(await screen.findByRole('link',{name:'Oggi 1'}));const today=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(today).getAllByRole('link').map(l=>l.textContent)).toEqual(['Oggi']);
     await app.router.navigate(`/home/${home.id}/attivita`);
-    const list = await screen.findByRole('list', { name: 'Elenco delle attività' });
-    expect(within(list).getAllByRole('link').map((l) => l.textContent)).toEqual(['Ieri', 'Oggi', 'Più sette', 'Più otto', 'Senza data']);
-    expect(within(list).getAllByRole('listitem')[0]).toHaveTextContent('Scaduta');
+    await screen.findByRole('list', { name: 'Elenco delle attività' });
+    await waitFor(() => expect(within(screen.getByRole('list', { name: 'Elenco delle attività' })).getAllByRole('link').map((l) => l.textContent)).toEqual(['Ieri', 'Oggi', 'Più sette', 'Più otto', 'Senza data']));
+    expect(within(screen.getByRole('list', { name: 'Elenco delle attività' })).getAllByRole('listitem')[0]).toHaveTextContent('Scaduta');
   });
 
   it('filtri: «Scadute», «Completate» vuote diverse da nessuna attività', async () => {
@@ -292,7 +295,7 @@ describe('[mock] H1 — stati, date e riepilogo', () => {
     await waitFor(() => expect(within(screen.getByRole('region', { name: 'Storia dell’attività' })).getAllByRole('listitem')).toHaveLength(3));
     await app.router.navigate(`/home/${home.id}/casa`);
     const region = await screen.findByRole('region', { name: 'Le tue scadenze' });
-    await waitFor(() => expect(region).toHaveTextContent('1 scadute'));
+    await waitFor(() => expect(within(region).getByRole('link',{name:'Scadute 1'})).toBeInTheDocument());
   });
 
   it('annulla in dialogo: Escape chiude e restituisce il focus; conferma annulla senza eliminare', async () => {
