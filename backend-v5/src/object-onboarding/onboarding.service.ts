@@ -126,18 +126,19 @@ export class ObjectOnboardingService {
   }
   changeManualKind(a:string,h:string,id:string,input:unknown,key?:string){
     const row=object(input,['expectedVersion','documentKind']),expectedVersion=version(row.expectedVersion);
-    if(!['utility_bill','unsupported'].includes(String(row.documentKind)))throw invalid();
-    const documentKind=row.documentKind as 'utility_bill'|'unsupported';
+    if(!['utility_bill','invoice','receipt','unsupported'].includes(String(row.documentKind)))throw invalid();
+    const documentKind=row.documentKind as 'utility_bill'|'invoice'|'receipt'|'unsupported';
     return this.request(a,h,'manual-kind',uuid(id),{expectedVersion,documentKind},key,async tx=>{
       const draft=await this.open(tx,a,h,id,expectedVersion),output=draft.output as unknown as Output;
       const review=draft.review as Record<string,unknown>|null;
       if(draft.mode!=='manual'||review?.pending||Object.keys(draft.decisions as object).length)throw conflict('onboarding_kind_locked','Il tipo della bozza non può cambiare dopo una decisione o con una conferma da verificare.');
-      if(output.documentKind===documentKind)return {draft};
+      const purchase=documentKind==='invoice'||documentKind==='receipt',expenseKind=purchase?'simple_invoice':'utility_bill',targetKind=purchase?'purchase_document':documentKind;
+      if(output.documentKind===targetKind&&(!purchase||output.houseExpenses?.some(e=>e.documentKind==='simple_invoice')))return {draft};
       if(output.items.length>1||output.items.some(item=>Object.keys(item.fields).length)||output.contacts?.length||output.enrichments&&Object.keys(output.enrichments).length)throw conflict('onboarding_kind_has_data','Questa bozza contiene già proposte: conservale prima di cambiare percorso.');
       const forms=(review?.forms??{}) as Record<string,{name?:string;amount?:string;targets?:unknown[];fields?:object}>;
       if(Object.values(forms).some(form=>form.name?.trim()||form.amount?.trim()||form.targets?.length||Object.keys(form.fields??{}).length))throw conflict('onboarding_kind_has_data','La bozza contiene dati salvati: conservali prima di cambiare percorso.');
       const fingerprint=digest('manual:'+draft.documentSha256+':1'),itemId=digest(draft.documentId+fingerprint);
-      const next:Output={...output,documentKind,purchaseTotal:null,needsReview:true,items:documentKind==='utility_bill'?[]:[{id:itemId,fingerprint,fields:{},quantity:null,nameTruncated:false,disposition:'uncertain'}],houseExpenses:documentKind==='utility_bill'?[{id:itemId,fingerprint,documentKind:'utility_bill',proposedFields:{},amountCandidates:[],amountSelectionRequired:true}]:[]};
+      const next:Output={...output,documentKind:targetKind,purchaseTotal:null,needsReview:true,items:documentKind==='utility_bill'||purchase?[]:[{id:itemId,fingerprint,fields:{},quantity:null,nameTruncated:false,disposition:'uncertain'}],houseExpenses:documentKind==='utility_bill'||purchase?[{id:itemId,fingerprint,documentKind:expenseKind,proposedFields:{},amountCandidates:[],amountSelectionRequired:true}]:[]};
       return {draft:await tx.objectOnboardingDraft.update({where:{id},data:{output:onboardingJson(next),version:{increment:1}}})};
     });
   }

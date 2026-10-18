@@ -83,3 +83,8 @@ Estensione additiva: item.subjectKind product/system; houseExpenses.documentKind
 ## Cambio percorso manuale — 18 ottobre 2026
 
 POST `/homes/:homeId/object-onboarding/drafts/:id/document-kind`, Idempotency-Key obbligatoria, body `{expectedVersion,documentKind:"utility_bill"|"unsupported"}`. Converte sulla stessa bozza manuale aperta il segnaposto vuoto in una spesa casa senza oggetti (o ripristina il segnaposto). Incrementa versione, nessuna creazione canonica. Fonte/versione/SHA, membership e permessi edit verificati dal servizio esistente. Rifiuta bozze AI/concluse, decisioni o pending (`onboarding_kind_locked`), più articoli/proposte/arricchimenti o input salvati (`onboarding_kind_has_data`). Conflitto di versione e replay secondo contratto onboarding. Il tipo documentale e il titolo vengono comunque organizzati nel normale salvataggio. «Conserva solo il documento» rimane `documentOnly:true`, senza houseExpenses.
+
+
+### Estensione tipo manuale: Fattura e Ricevuta (18 ottobre 2026)
+
+`POST /object-onboarding/drafts/:id/document-kind` accetta anche `documentKind: invoice | receipt`, oltre a `utility_bill | unsupported`, con `expectedVersion` e chiave idempotente invariati. Le due selezioni producono `purchase_document`, zero articoli iniziali e una proposta `simple_invoice` vuota. Un percorso già allineato non incrementa la versione; una vecchia bozza purchase senza proposta casa viene convertita soltanto se vuota. Aggiunta articolo e conferma canonica esistenti permettono oggetti facoltativi; il costo complessivo non può essere registrato anche sui singoli oggetti. Nessun cambiamento allo schema o al consenso AI. Restano vincoli di accesso, fonte/versione/SHA, dati salvati e conferma pendente del contratto precedente.

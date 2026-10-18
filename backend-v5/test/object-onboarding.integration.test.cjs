@@ -222,6 +222,22 @@ test('Full onboarding: DB, real PDF parser, fake provider; atomicity, replay, pr
   await service.confirm(a,h,bill.id,confirmation,confirmationKey);const costs=await db.homeExpense.findMany({where:{documentId:source.id}});assert.equal(costs.length,1);assert.equal(costs[0].amountCents,9321);assert.equal(costs[0].supplier,'SYNTHETIC supplier');assert.equal(await db.objectResourceLink.count({where:{documentId:source.id}}),0);
   await assert.rejects(service.changeManualKind(a,h,bill.id,{expectedVersion:result.draft.version,documentKind:'unsupported'},randomUUID()));
  });
+ for(const kind of ['invoice','receipt'])for(const optional of ['none','create','link'])await t.test(kind+' direct expense with optional object '+optional,async()=>{
+  const source=await document(Buffer.concat([bytes,Buffer.from('\n%manual-purchase-'+randomUUID())]));
+  let draft=(await service.manualDraft(a,h,{documentId:source.id},randomUUID())).draft;
+  draft=(await service.changeManualKind(a,h,draft.id,{expectedVersion:draft.version,documentKind:kind},randomUUID())).draft;
+  assert.equal(draft.documentKind,'purchase_document');assert.equal(draft.items.length,0);assert.equal(draft.houseExpenses[0].documentKind,'simple_invoice');
+  let choices=[];
+  if(optional!=='none'){
+   draft=(await service.addItem(a,h,draft.id,{expectedVersion:draft.version},randomUUID())).draft;
+   if(optional==='create')choices=[create(draft.items[0],'SYNTHETIC optional object')];
+   else{const target=(await objects.createObject(a,h,{name:'SYNTHETIC existing optional',type:'appliance',roomIds:[]},randomUUID())).object;choices=[{itemId:draft.items[0].id,action:'link',targets:[{id:target.ref.id,expectedVersion:target.version}],fields:{},manual:null,expense:{action:'skip'}}];}
+  }
+  const selection={itemId:draft.houseExpenses[0].id,action:'create',values:{title:'SYNTHETIC '+kind,category:'purchase_replacement',supplier:'SYNTHETIC supplier',amountCents:9321,spentOn:'2026-01-17',objectRef:null},amountSelection:{mode:'manual'},acknowledgePossibleDuplicate:true};
+  const body={expectedVersion:draft.version,source:draft.snapshot,choices,houseExpenses:[selection]},key=randomUUID();
+  const result=await service.confirm(a,h,draft.id,body,key);assert.equal(result.result.newObjects,optional==='create'?1:0);assert.equal(result.result.newExpenses,1);assert.equal(result.draft.state,'confirmed');
+  await service.confirm(a,h,draft.id,body,key);assert.equal(await db.homeExpense.count({where:{documentId:source.id}}),1);assert.equal(await db.objectResourceLink.count({where:{documentId:source.id}}),optional==='none'?0:1);
+ });
  await t.test('manual kind change protects saved input and pending confirmations; bill can still save only the document',async()=>{
   const source=await document(Buffer.concat([bytes,Buffer.from('\n%kind-guards-'+randomUUID())]));let draft=(await service.manualDraft(a,h,{documentId:source.id},randomUUID())).draft;
   draft=(await service.saveReview(a,h,draft.id,{expectedVersion:draft.version,review:{forms:{[draft.items[0].id]:{name:'SYNTHETIC preserved'}}}},randomUUID())).draft;

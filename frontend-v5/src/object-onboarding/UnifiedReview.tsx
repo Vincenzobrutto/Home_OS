@@ -33,7 +33,7 @@ export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentPr
     {changeDocumentOnly&&!editor&&<fieldset className={styles.stack} disabled={disabled}><legend>Cosa vuoi conservare?</legend><label className={styles.check}><input type="radio" name={"document-mode-"+draft.id} checked={documentOnly} onChange={()=>changeDocumentOnly(true)}/>Conserva solo il documento</label><label className={styles.check}><input type="radio" name={"document-mode-"+draft.id} checked={!documentOnly} onChange={()=>changeDocumentOnly(false)}/>Rivedi oggetti, spese e contatti</label><p>{documentOnly?'Salvi titolo e tipo. Non creiamo nuovi oggetti, spese o contatti; quelli già collegati restano conservati.':'Controlla le proposte e scegli cosa salvare.'}</p></fieldset>}
     {editor&&changeDocumentOnly&&<label className={styles.check}><input type="checkbox" disabled={disabled} checked={documentOnly} onChange={e=>changeDocumentOnly(e.target.checked)}/>Conserva solo il documento</label>}
     <section className={editor?styles.resource:undefined} aria-label="Documento"><h3>Documento</h3><div ref={metadataRef} className={styles.grid}>{documentFields}</div></section>
-    {!documentOnly&&draft.mode==='manual'&&draft.items.length>1&&!draft.purchaseTotal&&<label className={styles.field}>Totale della fattura (€), inserito da te<input className={ui.input} inputMode="decimal" value={manualTotal??''} disabled={disabled} onChange={e=>changeManualTotal?.(e.target.value)}/></label>}
+    {!documentOnly&&draft.mode==='manual'&&draft.items.length>1&&!draft.houseExpenses?.length&&!draft.purchaseTotal&&<label className={styles.field}>Totale della fattura (€), inserito da te<input className={ui.input} inputMode="decimal" value={manualTotal??''} disabled={disabled} onChange={e=>changeManualTotal?.(e.target.value)}/></label>}
     {copyChoice && <label className={styles.check}><input type="checkbox" checked={copyChoice.checked} disabled={disabled} onChange={e => copyChoice.change(e.target.checked)} />Usa il documento già presente senza modificarlo</label>}
     {editor? <>
       {!documentOnly&&<details className={styles.resource} open><summary>Spese · controlla i costi da registrare</summary><div className={styles.stack}>{houseFields}{!draft.houseExpenses?.length&&items.map((item,index)=><section key={item.id} id={'review-cost-'+draft.id+'-'+item.id}><h3>{forms[item.id]?.name||'Articolo '+(index+1)}</h3><ItemEditor part="expense" api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value=>change(item.id,value)} enrich={body=>enrich(item.id,body)}/></section>)}</div></details>}
@@ -41,14 +41,14 @@ export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentPr
       <h3>Articolo {index + 1} · {forms[item.id]!.name || 'Da identificare'}</h3>
       <ItemEditor part={editor?'object':'all'} api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value => change(item.id, value)} enrich={body => enrich(item.id, body)} />
     </section>)}
-    {!documentOnly&&!['utility_bill','house_document','conformity_declaration'].includes(draft.documentKind)&&<button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>Aggiungi un altro articolo</button>}
+    {!documentOnly&&!['utility_bill','house_document','conformity_declaration'].includes(draft.documentKind)&&<button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>{draft.items.length?'Aggiungi un altro articolo':'Aggiungi o collega un oggetto (facoltativo)'}</button>}
 </div></details>}
       {!documentOnly&&!!draft.contacts?.length&&<details className={styles.resource}><summary>Contatti · scegli cosa conservare in rubrica</summary>{contactFields}</details>}
     </>:<>    {items.map((item, index) => <section className={`${ui.card} ${styles.unifiedItem}`} key={item.id} id={'review-item-'+draft.id+'-'+item.id} tabIndex={-1} aria-label={'Articolo ' + (index + 1)}>
       <h3>Articolo {index + 1} · {forms[item.id]!.name || 'Da identificare'}</h3>
       <ItemEditor api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value => change(item.id, value)} enrich={body => enrich(item.id, body)} />
     </section>)}
-    {!documentOnly&&!['utility_bill','house_document','conformity_declaration'].includes(draft.documentKind)&&<button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>Aggiungi un altro articolo</button>}
+    {!documentOnly&&!['utility_bill','house_document','conformity_declaration'].includes(draft.documentKind)&&<button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>{draft.items.length?'Aggiungi un altro articolo':'Aggiungi o collega un oggetto (facoltativo)'}</button>}
     {!documentOnly&&houseFields}
     {!documentOnly&&contactFields}
 </>}

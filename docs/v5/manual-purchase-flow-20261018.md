@@ -1,0 +1,7 @@
+# Fattura e Ricevuta: spesa diretta — 18 ottobre 2026
+
+La scelta manuale Fattura o Ricevuta nella scheda Documenti apre una spesa casa con importo, data, fornitore e categoria. Nessun oggetto è obbligatorio: nella sezione Oggetti si può aggiungere un articolo e scegliere nuova scheda o collegamento esistente. Il costo rimane unico sulla spesa casa, senza attribuzioni automatiche agli oggetti. Resta disponibile «Conserva solo il documento».
+
+La conversione delle bozze manuali vuote usa il percorso esistente `purchase_document` con proposta economica `simple_invoice` e inizialmente nessun articolo. La selezione già organizzata viene riallineata all’apertura. Bozze con dati salvati, decisioni o conferme pendenti conservano le protezioni esistenti; non vengono convertite distruggendo i dati. Le bozze AI e il vecchio endpoint manuale con allocazioni per articolo mantengono il comportamento esistente. Nessuna migrazione o nuova analisi AI.
+
+Verifica: 72 test frontend (percorso integrato, revisione unica, onboarding, spesa casa), 43 test backend su DB dedicato con provider finto. Coperti Fattura/Ricevuta, tipo nuovo o già selezionato, solo documento, sola spesa, creazione/collegamento facoltativi e replay con una sola spesa. Typecheck, lint e build frontend/backend riusciti. Non effettuato un nuovo collaudo browser né una verifica AI live; i test non certificano la qualità di estrazione di documenti reali.

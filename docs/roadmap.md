@@ -1,3 +1,7 @@
+## Fattura e Ricevuta: spesa diretta, oggetti facoltativi — 18 ottobre 2026
+
+Implementato il percorso approvato: importo/data/fornitore/categoria senza oggetto obbligatorio; aggiunta o collegamento facoltativi, costo unico e solo documento conservati. [Comportamento, motivazione e verifiche](v5/manual-purchase-flow-20261018.md).
+
 ## 18 ottobre 2026 — Corretto ingresso Bolletta manuale
 
 Completato il seguito del feedback: importo/data/fornitore/categoria diretti e nessun oggetto, anche partendo da bozza generica vuota. Conservazione documento sola preservata. Conversione di bozze già popolate richiede una specifica di preservazione/mapping e resta esclusa. [Report](v5/manual-bill-flow-20261018.md).

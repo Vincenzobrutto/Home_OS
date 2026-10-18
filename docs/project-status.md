@@ -1,3 +1,7 @@
+## Fattura e Ricevuta: spesa diretta, oggetti facoltativi — 18 ottobre 2026
+
+Implementato il percorso approvato: importo/data/fornitore/categoria senza oggetto obbligatorio; aggiunta o collegamento facoltativi, costo unico e solo documento conservati. [Comportamento, motivazione e verifiche](v5/manual-purchase-flow-20261018.md).
+
 ## Ultimo aggiornamento — Bolletta manuale senza oggetti
 
 Corretta la scelta Bolletta nella scheda unica: converte la bozza manuale vuota, apre direttamente importo/data/fornitore/categoria e salva solo la spesa casa. Rimane «Conserva solo il documento». Input già salvati, decisioni e conferme pendenti sono protetti. [Verifica e limiti](v5/manual-bill-flow-20261018.md).

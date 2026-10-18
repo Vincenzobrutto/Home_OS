@@ -1,3 +1,7 @@
+## Fattura e Ricevuta: spesa diretta, oggetti facoltativi — 18 ottobre 2026
+
+Implementato il percorso approvato: importo/data/fornitore/categoria senza oggetto obbligatorio; aggiunta o collegamento facoltativi, costo unico e solo documento conservati. [Comportamento, motivazione e verifiche](v5/manual-purchase-flow-20261018.md).
+
 ## 18 ottobre 2026 — Tipo Bolletta guida il percorso manuale
 
 Confermato dal committente: Bolletta significa documento e possibile spesa casa, senza oggetto. La selezione deve guidare anche la bozza, non solo il metadato di classificazione. Per non cancellare dati, la conversione automatica si limita alla bozza manuale vuota e senza decisioni/conferme pendenti. Solo documento resta una scelta esplicita. [Report](v5/manual-bill-flow-20261018.md).
