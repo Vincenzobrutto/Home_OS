@@ -1,0 +1,22 @@
+import {useContext} from 'react';
+import {screen,waitFor} from '@testing-library/react';
+import {useSearchParams} from 'react-router';
+import {expect,it,vi} from 'vitest';
+import {DocumentEditorContext} from './DocumentEditorContext';
+import {renderApp,seededBackend,PASSWORD_A} from '../test/harness';
+const prepared=vi.hoisted(()=>vi.fn(async()=>({id:'prepared-batch'})));
+vi.mock('../intake-integration/client',()=>({IntakeClient:class{prepareExisting=prepared;}}));
+vi.mock('../intake-integration/IntakePage',()=>({IntakePage:()=>{const editor=useContext(DocumentEditorContext),[params]=useSearchParams();if(!editor)return <p>Caricamento pronto</p>;return <><label>Dato di prova<input/></label><button onClick={()=>void editor!.complete(params.get('oggetti-documento')!)}>Conferma bozza server</button><button onClick={editor!.pause}>Riprendi più tardi</button></>;}}));
+vi.mock('./PdfPreview',()=>({PdfPreview:()=> <p>Anteprima locale</p>}));
+it('preserves filters, guards unsaved changes and selects the next source only after successful confirmation',async()=>{
+ const {backend,homeA1,a}=seededBackend();
+ const first=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'Workspace A',workflowState:'to_compile'});
+ const second=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'Workspace B',workflowState:'review'});
+ const app=renderApp({path:'/accedi',backend});await app.user.type(await screen.findByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));
+ await app.router.navigate(`/home/${homeA1.id}/documenti?q=Workspace&oggetti-documento=${first.id}&lotto=old&oggetti-bozza=old-draft&compila=manuale`);
+ const queue=await screen.findByRole('navigation',{name:'Coda dei documenti'});expect(queue).toBeVisible();await app.user.type(await screen.findByLabelText('Dato di prova'),'modifica');
+ const guard=vi.spyOn(window,'confirm').mockReturnValue(false);
+ await app.user.click(screen.getByRole('button',{name:/Workspace B Stato/}));expect(guard).toHaveBeenCalled();expect(prepared).not.toHaveBeenCalled();expect(app.router.state.location.search).toContain(first.id);
+ await app.user.click(screen.getByRole('button',{name:'Conferma bozza server'}));await waitFor(()=>expect(app.router.state.location.search).toContain(second.id));expect(prepared).toHaveBeenCalledWith([second.id],expect.any(String));expect(app.router.state.location.search).toContain('q=Workspace');expect(app.router.state.location.search).not.toContain('old-draft');expect(guard).toHaveBeenCalledTimes(1);
+ await app.user.click(await screen.findByRole('button',{name:'Aggiungi file'}));await screen.findByText('Caricamento pronto');expect(screen.getByRole('button',{name:'Aggiungi documenti'})).toHaveAttribute('aria-expanded','true');await app.user.click(screen.getByRole('button',{name:'Chiudi caricamento'}));await waitFor(()=>expect(app.router.state.location.search).not.toContain('oggetti-documento'));expect(app.router.state.location.search).toContain('q=Workspace');expect(backend.log.some(row=>row.method==='POST'&&row.path.endsWith('/jobs'))).toBe(false);guard.mockRestore();
+});

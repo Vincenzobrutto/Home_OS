@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Proposta combinata Documenti approvata
+
+Il committente sceglie coda della proposta 3 e originale della proposta 2. Manuale e AI condividono l’editor canonico, con sezioni espandibili e una sola conferma finale; AI resta precompilazione con consenso, senza nuovo invio alla riapertura di proposte esistenti. Costi separati visivamente dagli oggetti ma salvati con le stesse regole atomiche. PDF.js locale sostituisce il riquadro PDF nativo vuoto senza servizi esterni; nessuna copia pubblica degli originali. [Report](v5/document-editor-workspace-20261018.md).
+
 ## 18 ottobre 2026 — Conservazione del solo documento
 
 Il committente approva i punti 1–4 dell’audit Documenti prima di ricerca/mobile. «Conserva solo il documento» salva titolo e tipo e chiude le proposte ancora aperte senza creare oggetti, spese o contatti; i collegamenti già confermati rimangono. Il manuale parte da questa scelta; la revisione AI mantiene la revisione delle proposte. Completato dipende dalla conferma server, non dalla sola classificazione. Le richieste pendenti mantengono intento e chiave originali per evitare duplicazioni o cambiamenti silenziosi. [Dettagli](v5/document-ux-fixes-20261018.md).

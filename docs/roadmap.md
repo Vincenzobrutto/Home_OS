@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Spazio di lavoro Documenti raggiunto
+
+Implementata e verificata la combinazione approvata: coda, scheda unica e originale affiancato. Prossimo passo: feedback sul flusso reale; ricerca e rifiniture mobile ulteriori su proposta mirata. Persistenza dei campi non salvati e convergenza degli ingressi legacy restano nel backlog, senza nuovi invii AI impliciti. [Report](v5/document-editor-workspace-20261018.md).
+
 ## 18 ottobre 2026 — Prossima fase Documenti
 
 Completati i punti UX 1–4: solo documento, salvataggio/Completati, campi mancanti precisi e ritorno alla stessa vista. Prossimo passaggio richiesto: proposta mirata per ricerca e mobile, prima dell’implementazione. Restano aperti persistenza della revisione non salvata, cestino/ripristino e miglioramenti di estrazione; nessun nuovo consenso AI implicito. [Verifica](v5/document-ux-fixes-20261018.md).

@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import {pdfAssets} from './scripts/pdfAssets';
 
 // Frontend V5 solo su loopback, porta fissa (strictPort): se 5174 è occupata
 // Vite si ferma invece di scegliere un'altra porta.
@@ -11,7 +12,7 @@ import react from '@vitejs/plugin-react';
 const API_TARGET = process.env.DIMORA_API_TARGET ?? 'http://127.0.0.1:3001';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(),pdfAssets()],
   server: {
     host: '127.0.0.1',
     port: 5174,

@@ -24,3 +24,7 @@
 .panelHead>div{min-width:0}.originalLink{display:inline-block;margin-top:.35rem;font-size:.9rem;text-decoration:underline;overflow-wrap:anywhere}
 
 .unifiedItem{min-width:0}.unifiedItem fieldset{border:0;padding:0;margin:0;min-width:0}.unifiedItem .values .card{padding:0;border:0}.unifiedItem .values{gap:1rem}.unifiedItem h3{overflow-wrap:anywhere}
+
+.resource{border:1px solid var(--color-border);border-radius:8px;padding:16px;min-width:0;background:var(--color-surface)}.resource h3{font-size:1rem;margin:0 0 12px}.resource>summary{font-weight:650;cursor:pointer;padding:4px 0}.resource[open]>summary{margin-bottom:16px}.resource fieldset{border:0;padding:0;margin:0}.saveBar{position:sticky;bottom:0;background:var(--color-surface);border-top:1px solid var(--color-border);padding:16px 0;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;z-index:2}.resource .unifiedItem{border:0;padding:0}.resource .values{grid-template-columns:1fr}.resource .values .card{border:0;padding:6px 0}
+
+.saveProblem{font-size:.85rem;color:var(--color-ink);max-width:450px;align-self:center}.saveBar>button:last-child{margin-left:auto}

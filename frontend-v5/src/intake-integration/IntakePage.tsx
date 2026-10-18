@@ -1,3 +1,4 @@
+import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
 import { FilePicker } from '../components/FilePicker';
 import { DocumentCompilationActions } from '../object-onboarding/DocumentCompilationActions';
 import { AutomaticIntake } from './AutomaticIntake';
@@ -22,11 +23,12 @@ import styles from './integration.module.css';
 
 const denied = (e: unknown) => isApiError(e) && [401, 403].includes(e.status);
 const rejected = (e: unknown): WriteOutcome => isApiError(e) && [400, 401, 403, 409, 413, 422, 429].includes(e.status) ? { status: 'rejected', code: e.status === 409 ? 'conflict' : e.status === 403 ? 'forbidden' : 'validation', message: userMessage(e) } : { status: 'uncertain', message: userMessage(e) };
-export function IntakePage({workspace=false,onUploaded}:{workspace?:boolean;onUploaded?:()=>void}={}) {
-  const home = useCurrentHome(), account = useAccount();
+export function IntakePage({workspace=false,onUploaded}:{workspace?:boolean;onUploaded?:(documentId?:string,batchId?:string)=>void}={}) {
+  const home = useCurrentHome(), account = useAccount(), [routeParams]=useSearchParams();
+  if(!workspace&&routeParams.has('oggetti-documento'))return <DocumentEditorWorkspace key={account.id+":"+home.id}/>;
   return <IntakeContainer key={account.id + ':' + home.id} workspace={workspace} onUploaded={onUploaded} />;
 }
-function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:()=>void}) {
+function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(documentId?:string,batchId?:string)=>void}) {
   const home = useCurrentHome(), account = useAccount(), api = useApi(), cache = useQueryClient(), [params, setParams] = useSearchParams();
   useDocumentTitle((workspace?'Documenti':'Carica documenti')+' · ' + home.name);
   const id = params.get('lotto'), client = useMemo(() => new IntakeClient(api, account.id, home.id), [api, account.id, home.id]);
@@ -94,7 +96,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
       const value = pending.batchId ? await client.append(pending.batchId, pending.files, pending.ids, pending.key) : await client.create(pending.files, pending.ids, pending.key); if (!alive.current || !workspace&&active.current !== pending.batchId) return;
       for (let i = 0; i < pending.ids.length; i++) { const item = value.items.find(r => r.clientItemId === pending.ids[i]), file = pending.files[i]; if (item && file) files.current.set(item.id, file); }
       if(!workspace){creation.current = null; setStagedFiles([]);} setRecoverCreation(false); active.current = value.id; adopt(value); if(!workspace)setParams({ lotto: value.id }); await pool(value, pending.ids);
-      if(workspace){const verified=await client.batch(value.id);if(verified.items.some(i=>pending.ids.includes(i.clientItemId)&&!['stored','duplicate'].includes(i.uploadState)))throw Error('Alcuni file non sono stati acquisiti. Recupera il caricamento per riprovare solo quelli mancanti.');creation.current=null;setStagedFiles([]);await cache.invalidateQueries({queryKey:['account',account.id,'home',home.id]});onUploaded?.();}
+      if(workspace){const verified=await client.batch(value.id);if(verified.items.some(i=>pending.ids.includes(i.clientItemId)&&!['stored','duplicate'].includes(i.uploadState)))throw Error('Alcuni file non sono stati acquisiti. Recupera il caricamento per riprovare solo quelli mancanti.');creation.current=null;setStagedFiles([]);await cache.invalidateQueries({queryKey:['account',account.id,'home',home.id]});onUploaded?.(verified.items.find(i=>pending.ids.includes(i.clientItemId)&&i.documentLink.document?.id)?.documentLink.document?.id,value.id);}
       if(automaticConsent)await startAutomatic(value.id,pending.key);
     } catch (e) { if (alive.current) { setProblem(userMessage(e)); if (rejected(e).status === 'rejected') creation.current = null; else setRecoverCreation(true); } }
     finally { creating.current = false; if (alive.current) setWaiting(false); }
@@ -207,7 +209,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
       {!workspace&&<div className={styles.uploadConsent}>{automaticControl}</div>}
       {stagedFiles.length>0&&<button type="button" className={`${ui.btn} ${ui.primary}`} disabled={waiting||recoverCreation||!cap.data||!home.permissions.includes('edit')} onClick={()=>void create(stagedFiles.map(x=>x.file))}>{automaticConsent?'Carica e organizza':'Carica documenti'}</button>}
     </section>}
-    {!(workspace&&params.get('compila')==='manuale')&&wire?.items.some(i => i.documentLink.state === 'linked' && i.analysisState === 'ready' && !i.proposal && i.reviewState === 'unreviewed') && <Banner><p>Per alcuni file il testo non identifica un tipo con sufficiente chiarezza. Puoi consultare l’originale, scegliere il tipo manualmente o decidere più avanti.</p></Banner>}
+    {!workspace&&wire?.items.some(i => i.documentLink.state === 'linked' && i.analysisState === 'ready' && !i.proposal && i.reviewState === 'unreviewed') && <Banner><p>Per alcuni file il testo non identifica un tipo con sufficiente chiarezza. Puoi consultare l’originale, scegliere il tipo manualmente o decidere più avanti.</p></Banner>}
 
     {!newUpload&&!stagedFiles.length&&!automaticActive&&!(automaticConsent&&waiting)&&<DocumentIntakeAssistant focused={workspace} focusedAi={params.get('compila')==='ai'} {...directOrganizationActions} key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
       load={unavailable ? { status: 'unavailable' } : cap.isPending || !!id && batch.isPending ? { status: 'loading' } : error ? { status: 'error', message: userMessage(error), retryable: true } : { status: 'ready' }}

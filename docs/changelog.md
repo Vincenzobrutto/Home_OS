@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Compilazione documentale in uno spazio unico
+
+Coda Da fare, modulo condiviso manuale/AI e anteprima PDF locale richiudibile; caricamento riuscito apre la prima scheda. Sezioni separate per metadati, costi, oggetti e contatti, controlli esistenti conservati. Salva e passa al successivo soltanto dopo conferma. Avviso sui campi locali non salvati. [Verifica](v5/document-editor-workspace-20261018.md).
+
 ## 18 ottobre 2026 — Documento solo, salvataggio e ritorno coerenti
 
 Scelta esplicita fra solo documento e revisione di oggetti/spese/contatti; nel manuale il default evita articoli fittizi. Tipo e titolo salvati prima della conferma; la revisione rimane montata fino alla chiusura della bozza. Esito visibile e collegamento ai Completati. Checklist dei dati mancanti per articolo, metadati e spesa; ritorno dai dettagli conserva vista e filtri. Recupero delle conferme pendenti conserva corpo e chiave originali. [Verifica](v5/document-ux-fixes-20261018.md).

@@ -1,3 +1,7 @@
+## Ultimo aggiornamento — Spazio di lavoro Documenti combinato
+
+Implementata la proposta approvata: coda personale, scheda unica manuale/AI, sezioni Documento/Spese/Oggetti/Contatti e originale affiancato richiudibile con PDF locale. Il caricamento apre la prima fonte; salvataggio confermato e passaggio al documento successivo, filtri e recuperi preservati. 131 test frontend mirati, build/lint e prova browser sintetica riusciti. Nessun nuovo invio AI, API o schema. [Report e limiti](v5/document-editor-workspace-20261018.md).
+
 ## Ultimo aggiornamento — Correzioni UX Documenti 1–4
 
 Implementati i quattro punti approvati dopo l’audit: scelta «Conserva solo il documento», chiusura della bozza dopo salvataggio metadati senza smontare la revisione, indicazioni cliccabili sui campi mancanti, ritorno ai dettagli con vista/filtri conservati. Nessuna nuova chiamata AI, migrazione o modifica legacy. Verifica e limiti: [report correzioni](v5/document-ux-fixes-20261018.md). Prossima fase: ricerca e mobile, da proporre prima di implementare.

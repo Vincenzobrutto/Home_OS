@@ -1,3 +1,15 @@
+# Design QA — Documenti, proposta combinata
+
+final result: passed
+
+Riferimento: exec-5b4246c8-1f82-45a2-80e8-ce115521ed12.png, proposta combinata approvata. Confronto affiancato in outputs/documenti-spazio-unico/confronto-finale.png della chat; entrambi desktop1547x1017, revisione di proposta con salvataggio bloccato. Contenuto differente dichiarato: fattura illustrativa con data mancante nel mockup, ricevuta sintetica con possibile doppione nell’app reale.
+
+Prima iterazione: P2 anteprima PDF nativa vuota, ripetizioni sopra il modulo e azione finale fuori vista. Corretti con renderer PDF.js locale, riduzione dei messaggi ripetuti e barra persistente con motivo del blocco. Seconda cattura e confronto: originale leggibile, tre aree separate, sezioni espandibili, stato personale in ambra, CTA e avviso visibili. Screenshot finali desktop-finale.png e mobile.png nella stessa cartella. Su mobile390 la coda scorre orizzontalmente; modulo e anteprima si impilano, barra sopra la navigazione, clientWidth=scrollWidth375. Nessun errore console finale.
+
+Adattamenti al prodotto: shell/font/token già presenti conservati; avvisi sui doppioni e consensi espliciti prevalgono sulla fattura illustrativa. Nessun asset finto o documento reale esposto. Verificati chiusura/riapertura anteprima e zoom, upload sintetico, manuale, solo documento e passaggio alla proposta AI esistente. Prove automatiche: 131 test frontend, build/lint mirato riusciti. P3: ulteriore compattezza dei riepiloghi e menu coda mobile; campi non salvati non persistiti, con avviso di scarto dichiarato. [Report](docs/v5/document-editor-workspace-20261018.md).
+
+---
+
 # Design QA — Correzioni Documenti 1–4
 
 final result: passed

@@ -1,3 +1,4 @@
+import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
 import { BulkDocumentCompilation } from '../documents/BulkDocumentCompilation';
 import { IntakePage } from '../intake-integration/IntakePage';
 import { DocumentWorkspaceActions } from '../documents/DocumentWorkspaceActions';
@@ -64,6 +65,7 @@ export function documentsErrorMessage(error: unknown) {
 }
 
 export function DocumentsPage() {
+  const account=useAccount();
   const home = useCurrentHome();
   useDocumentTitle(`Documenti · ${home.name}`);
   const canUpload = home.permissions.includes('edit');
@@ -71,14 +73,16 @@ export function DocumentsPage() {
   const canExport = home.permissions.includes('export');
   const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
   const [params, setParams] = useSearchParams();
+  const uploadVisible=uploadOpen||params.has('aggiungi');
   const applied = useMemo(() => ({...filtersFromParams(params), workflow: params.get('workflow') === 'completed' ? 'completed' as const : 'pending' as const}), [params]);
   const appliedKey = filtersKey(applied);
   const capabilities = useDocumentSearchCapabilities(home.id);
   const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
   // Solo q/format/visibility nell'indirizzo; ?ricerca=1 (ingresso da Casa) non va all'API e cade al primo Cerca.
   const apply = (filters: DocumentSearchFilters) => setParams(filtersToParams({...filters,workflow:filters.workflow??applied.workflow}));
-  const closeUpload=()=>{setUploadOpen(false);setParams(filtersToParams(applied),{replace:true});};
+  const closeUpload=(documentId?:string,batchId?:string)=>{setUploadOpen(false);const next=filtersToParams({...applied,workflow:documentId?'pending':applied.workflow});if(documentId&&batchId){next.set('oggetti-documento',documentId);next.set('lotto',batchId);next.set('compila','manuale');}setParams(next,{replace:true});};
 
+  if(params.has('oggetti-documento'))return <DocumentEditorWorkspace key={account.id+":"+home.id}/>;
   return (
     <>
       <div className={styles.heading}>
@@ -92,12 +96,12 @@ export function DocumentsPage() {
         </div>
         {canUpload && (
           <div className={docs.toolbarActions}>
-            <button type="button" className={cx(ui.btn,ui.primary)} aria-expanded={uploadOpen} onClick={()=>{setParams(filtersToParams(applied));setUploadOpen(v=>!v);}}><Icon name="plus"/> Aggiungi documenti</button>
+            <button type="button" className={cx(ui.btn,ui.primary)} aria-expanded={uploadVisible} onClick={()=>{setParams(filtersToParams(applied));setUploadOpen(!uploadVisible);}}><Icon name="plus"/> Aggiungi documenti</button>
           </div>
         )}
       </div>
       {params.has('documento-salvato')&&<Banner title="Documento organizzato" actions={<button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'completed'})}>Vedi nei Completati</button>}><p>Il salvataggio è riuscito. Il documento e l’originale restano disponibili.</p></Banner>}
-      {canUpload&&uploadOpen&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={closeUpload}>Chiudi caricamento</button></section>}
+      {canUpload&&uploadVisible&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={()=>closeUpload()}>Chiudi caricamento</button></section>}
       <div className={docs.workflowTabs} role="group" aria-label="Stato dei documenti">{([['pending','Da fare'],['completed','Completati']] as const).map(([value,label])=><button key={value} type="button" className={cx(ui.btn,applied.workflow===value&&ui.primary)} aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
       {!canUpload && (
         <p className={cx(docs.note, docs.panel)}>
