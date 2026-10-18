@@ -372,3 +372,41 @@
     margin-top: -6px;
   }
 }
+
+.board{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;min-width:0}
+.board>*{min-width:0}
+:global(.expense-tabs){display:flex;gap:24px;border-bottom:1px solid var(--color-border)}
+:global(.expense-tabs button){font:inherit;font-weight:700;min-height:48px;background:none;border:0;border-bottom:3px solid transparent;color:var(--color-muted);cursor:pointer}
+:global(.expense-tabs button[aria-pressed="true"]){color:var(--color-accent);border-bottom-color:var(--color-accent)}
+:global(.expense-search){display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+:global(.expense-search label){display:grid;gap:4px;flex:1 1 260px;font-size:14px}
+:global(.expense-family){display:grid;gap:4px;font-size:14px;max-width:380px}
+.workspace :global(ul[aria-label="Costi registrati"]){gap:0;border:1px solid var(--color-border);border-radius:12px;overflow:hidden}
+.workspace :global(ul[aria-label="Costi registrati"]>li){border:0;border-bottom:1px solid var(--color-border);border-radius:0}
+.workspace :global(ul[aria-label="Costi registrati"]>li:last-child){border-bottom:0}
+@media(min-width:1100px){.board:has(>[aria-labelledby="spese-elenco"]){grid-template-columns:minmax(0,1.7fr) minmax(310px,1fr);align-items:start}.board>[aria-labelledby="spese-elenco"]{grid-column:1;grid-row:1}.board:has(>[aria-labelledby="spese-elenco"])>[aria-labelledby="spese-distribuzione"]{grid-column:2;grid-row:1}}
+@media(max-width:1099px){.board>[aria-labelledby="spese-elenco"]{order:-1}}
+@media(max-width:600px){:global(.expense-search label){flex-basis:100%}:global(.expense-family){max-width:none}.toolbar{grid-template-columns:1fr}.workspace :global(ul[aria-label="Costi registrati"]>li){padding:14px}}
+
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.5fr);gap:18px;align-items:center;background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;padding:18px}
+.hero>section{padding:0;border:0;background:none;box-shadow:none}
+.hero>label{display:grid;gap:6px;font-size:14px;min-width:0}
+.quick{display:grid;grid-template-columns:minmax(260px,1fr) minmax(180px,.6fr) minmax(160px,.5fr);gap:14px;align-items:start}
+.quick .toolbar{display:block;margin:0}
+.quick :global(.expense-search){align-items:end}
+.workspace .filtersBox{padding:12px 16px;margin:0}
+.board:has(>[aria-labelledby="spese-elenco"]) .chartGrid{grid-template-columns:1fr}
+.board:has(>[aria-labelledby="spese-elenco"]) .chart{width:150px;height:150px;justify-self:center}
+@media(max-width:800px){.hero,.quick{grid-template-columns:1fr}.hero{padding:16px}.quick{gap:10px}.quick :global(.expense-search label){flex-basis:65%}.quick .toolbar{display:block}.quick :global(.expense-family){max-width:none}}
+
+@media(max-width:800px){.quick{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.quick>:global(.expense-search){grid-column:1/-1}.quick label{min-width:0}}
+
+.workspace{gap:16px}.workspace>p{margin:0}.workspace .toolbar{margin:0}
+@media(max-width:600px){.workspace{gap:12px}.hero{gap:10px;padding:14px}.hero .metric{font-size:28px}.workspace .filtersBox{padding:8px 12px}}
+
+.header{align-items:center}
+.headerActions{display:grid;gap:8px;max-width:430px}
+.headerActions p{margin:0}
+@media(max-width:600px){.header{gap:12px;align-items:stretch}.headerActions{max-width:none}.headerActions>p:first-child{gap:6px}.headerActions a{font-size:13px}.headerActions :global(button){min-height:44px}}
+
+@media(max-width:600px){.header{margin-bottom:12px;gap:8px}.header h1{margin:4px 0}.header>div>p{margin:4px 0}.headerActions{gap:4px}.headerActions :global(button){font-size:13px;padding:8px 12px}.headerActions>p:first-child>a{font-size:13px;min-height:24px;padding:4px 0;border:0;background:none}.hero{padding:10px;gap:4px}.hero .total{gap:0}}

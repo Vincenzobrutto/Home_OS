@@ -1,6 +1,6 @@
 // Prove [mock] economy-v1 (S1a/b): backend SIMULATO (src/test/fakeEconomy.ts), non il backend reale.
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { FakeBackend } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
 
@@ -48,11 +48,11 @@ async function seedTypical(backend: FakeBackend, acc: string, home: string) {
 }
 
 describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
-  it('prima vista Panoramica: totale, misura senza finanziamenti, legenda e percentuali dal summary anche oltre la prima pagina', async () => {
+  it('vista Panoramica esplicita: totale, misura senza finanziamenti, legenda e percentuali dal summary anche oltre la prima pagina', async () => {
     const { backend, owner, home } = world();
     for (let i = 0; i < 25; i++) await s1(backend, owner.id, home.id, 'expenses', { title: `Gas ${i}`, amountCents: 1000, spentOn: '2026-03-01', category: 'gas' });
     await s1(backend, owner.id, home.id, 'expenses', { title: 'Rata', amountCents: 25000, spentOn: '2026-04-01', category: 'financing' });
-    await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
+    await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese?vista=panoramica`);
     const total = await screen.findByRole('region', { name: /Tutte le famiglie/ });
     expect(total).toHaveTextContent('500,00 €');
     expect(total).toHaveTextContent('Senza mutuo e finanziamenti: 250,00 €');
@@ -69,7 +69,7 @@ describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
     expect(within(recent).getByRole('button', { name: 'Vedi tutte le 26 registrazioni' })).toBeInTheDocument();
     expect(gets(backend, /\/economy\/expenses\?limit=5$/)).toHaveLength(1);
     expect(gets(backend, /\/economy\/summary$/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('combobox', { name: 'Visualizza' })).toHaveValue('panoramica');
+    expect(screen.getByRole('combobox', { name: 'Raggruppa' })).toHaveValue('panoramica');
   });
 
   it('dall’ingresso senza parametri: la legenda apre l’elenco e il ritorno alla panoramica è disponibile', async () => {
@@ -184,7 +184,8 @@ describe('[mock] S1 Spese — privacy, capabilities e ripiego', () => {
   it('documentDrafts false: «Da documento» spiega che la compilazione assistita non è disponibile e apre il manuale; nessuna rotta S1c', async () => {
     const { backend, home } = world();
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
-    await app.user.click(await screen.findByRole('button', { name: 'Da documento' }));
+    await app.user.click(await screen.findByRole('button',{name:'Modalità di registrazione'}));
+    await app.user.click(screen.getByRole('button', { name: 'Da documento' }));
     expect(await screen.findByText('Compilazione assistita non ancora disponibile')).toBeInTheDocument();
     expect(screen.getByRole('form', { name: 'Registra una spesa' })).toBeInTheDocument();
     expect(backend.log.some((r) => /drafts|document-analysis-jobs/.test(r.path))).toBe(false);
@@ -194,7 +195,8 @@ describe('[mock] S1 Spese — privacy, capabilities e ripiego', () => {
     const { backend, home } = world();
     backend.economy.features.documentDrafts = true;
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
-    await app.user.click(await screen.findByRole('link', { name: 'Da documento' }));
+    await app.user.click(await screen.findByRole('button',{name:'Modalità di registrazione'}));
+    await app.user.click(screen.getByRole('link', { name: 'Da documento' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Spesa da documento' })).toBeInTheDocument();
     expect(backend.log.some((r) => r.method === 'POST' && /document-analysis-jobs/.test(r.path))).toBe(false);
   });
@@ -221,11 +223,35 @@ describe('[mock] S1 Spese — privacy, capabilities e ripiego', () => {
     const box = await screen.findByText(/^Filtri/);
     await app.user.click(box);
     await app.user.type(screen.getByRole('searchbox', { name: 'Cerca in descrizione o fornitore' }), 'Polizza');
-    await app.user.click(screen.getByRole('button', { name: 'Applica filtri' }));
+    await app.user.click(screen.getByRole('button', { name: 'Cerca' }));
     await waitFor(() => expect(within(screen.getByRole('list', { name: 'Costi registrati' })).getAllByRole('listitem')).toHaveLength(1));
     expect(app.router.state.location.search).not.toMatch(/Polizza|q=/);
     expect(gets(backend, /\/economy\/expenses\?.*q=Polizza/).length).toBeGreaterThan(0);
   });
+});
+
+describe('[mock] Spese — ritorno al contesto',()=>{
+ it('conserva ricerca privata, filtri, focus e pagine anche dopo la perdita della cache',async()=>{
+  const {backend,owner,home}=world();
+  for(let i=0;i<22;i++)await s1(backend,owner.id,home.id,'expenses',{title:`Rientro ${i}`,amountCents:100,spentOn:'2026-10-01',category:'gas'});
+  const app=await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/spese?vista=elenco&famiglia=utilities`);
+  await app.user.type(await screen.findByRole('searchbox',{name:'Cerca in descrizione o fornitore'}),'Rientro');
+  await app.user.click(screen.getByRole('button',{name:'Cerca'}));
+  await app.user.click(await screen.findByRole('button',{name:'Mostra altri costi'}));
+  await waitFor(()=>expect(within(screen.getByRole('list',{name:'Costi registrati'})).getAllByRole('link')).toHaveLength(22));
+  const links=within(screen.getByRole('list',{name:'Costi registrati'})).getAllByRole('link');const title=links[21]!.textContent!;
+  const scroll=vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
+  try{
+   await app.user.click(links[21]!);await screen.findByRole('heading',{name:title});
+   expect(app.router.state.location.state.expenseRestore.pages).toBe(2);
+   app.queryClient.removeQueries({predicate:q=>q.queryKey[4]==='economy'&&q.queryKey[6]==='list'});
+   await app.user.click(screen.getByRole('link',{name:'← Spese'}));
+   const row=await screen.findByRole('link',{name:title});await waitFor(()=>expect(row).toHaveFocus());
+   expect(screen.getByRole('searchbox',{name:'Cerca in descrizione o fornitore'})).toHaveValue('Rientro');
+   expect(app.router.state.location.search).toContain('famiglia=utilities');expect(app.router.state.location.search).not.toMatch(/Rientro|q=/);
+   expect(scroll).toHaveBeenCalledWith(0,0);
+  }finally{scroll.mockRestore();}
+ });
 });
 
 describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
@@ -237,7 +263,7 @@ describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
     const form = await screen.findByRole('form', { name: 'Registra una spesa' });
     await app.user.type(within(form).getByLabelText('Descrizione'), 'Piastrelle');
     await app.user.type(within(form).getByLabelText('Importo in euro'), '1.035,50');
-    fireEvent.change(within(form).getByLabelText(/Data di riferimento/), { target: { value: '2026-09-10' } });
+    fireEvent.change(within(form).getByLabelText(/Data della spesa/), { target: { value: '2026-09-10' } });
     fireEvent.change(within(form).getByLabelText('Categoria (facoltativa)'), { target: { value: 'repairs_works' } });
     expect(within(form).getByText(/Famiglia prevista/)).toHaveTextContent('Manutenzione e riparazioni');
     await waitFor(() => expect(within(within(form).getByLabelText('Lavoro (facoltativo)')).getByRole('option', { name: 'Rifacimento bagno' })).toBeInTheDocument());
@@ -263,7 +289,7 @@ describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
     const form = await screen.findByRole('form', { name: 'Registra una spesa' });
     await app.user.type(within(form).getByLabelText('Descrizione'), 'Idraulico');
     await app.user.type(within(form).getByLabelText('Importo in euro'), '85');
-    fireEvent.change(within(form).getByLabelText(/Data di riferimento/), { target: { value: '2026-10-01' } });
+    fireEvent.change(within(form).getByLabelText(/Data della spesa/), { target: { value: '2026-10-01' } });
     app.control.dropNextResponse();
     await app.user.click(within(form).getByRole('button', { name: 'Registra spesa' }));
     expect(await screen.findByText('Esito non confermato')).toBeInTheDocument();
@@ -329,7 +355,7 @@ describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
     await waitFor(() => expect(within(form).getByLabelText('Oggetto (facoltativo)')).toHaveValue(`object:${ref.id}`));
     await app.user.type(within(form).getByLabelText('Descrizione'), 'Riparazione lavatrice');
     await app.user.type(within(form).getByLabelText('Importo in euro'), '85');
-    fireEvent.change(within(form).getByLabelText(/Data di riferimento/), { target: { value: '2026-10-01' } });
+    fireEvent.change(within(form).getByLabelText(/Data della spesa/), { target: { value: '2026-10-01' } });
     await app.user.click(within(form).getByRole('button', { name: 'Registra spesa' }));
     await waitFor(() => expect(app.router.state.location.pathname).toBe(`/home/${home.id}/oggetti/object/${ref.id}`));
     // La lista G1 della scheda si rilegge al montaggio (prima mostra la cache): attesa più lunga sotto carico.
@@ -358,7 +384,7 @@ describe('[mock] S1 contesto della nuova spesa', () => {
     expect(save).toBeDisabled();
     await app.user.type(within(form).getByLabelText('Descrizione'), 'Costo sintetico');
     await app.user.type(within(form).getByLabelText('Importo in euro'), '10');
-    fireEvent.change(within(form).getByLabelText(/Data di riferimento/), { target: { value: '2026-10-01' } });
+    fireEvent.change(within(form).getByLabelText(/Data della spesa/), { target: { value: '2026-10-01' } });
     fireEvent.submit(form); // Anche un invio diretto non deve perdere il riferimento.
     expect(posts(backend, /\/economy\/expenses$/)).toHaveLength(0);
     release();

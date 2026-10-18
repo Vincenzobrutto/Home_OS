@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '../api/queryKeys';
 import type {
@@ -73,13 +73,13 @@ export function TotalCard(props: { summary: EconomySummary; caps: EconomyCapabil
           {props.family ? familyLabel(props.family, props.caps) : 'Tutte le famiglie'} · {periodText(summary.period, summary.today)}
         </h2>
         <span className={styles.metric}>{formatBigCents(total)}</span>
-        {props.showWithoutFinancing && (
+        {props.showWithoutFinancing && summary.totalCents !== summary.totalWithoutFinancingCents && (
           <span className={styles.second}>
             Senza mutuo e finanziamenti: <strong>{formatCentsString(summary.totalWithoutFinancingCents)}</strong>
           </span>
         )}
         <span className={styles.second}>
-          {summary.count} {summary.count === 1 ? 'registrazione' : 'registrazioni'} · costi registrati da te, il totale comprende i finanziamenti. Non attesta pagamenti.
+          {summary.count} {summary.count === 1 ? 'registrazione' : 'registrazioni'} · costi registrati, non pagamenti.
         </span>
       </div>
     </section>
@@ -274,9 +274,12 @@ export function Distribution(props: {
 
 export function EconomyExpenseRow(props: { expense: EconomyExpense; homeId: string; caps?: EconomyCapabilities; state?: unknown }) {
   const e = props.expense;
+  const location=useLocation();
+  const navigate=useNavigate();
   const meta = [
     formatCalendarDate(e.spentOn),
     categoryLabel(e.category, props.caps),
+    e.supplier,
     e.objectLink.state === 'linked' ? e.objectLink.value.name : null,
     e.workLink.state === 'linked' ? e.workLink.value.name : null,
     e.documentLink.state === 'linked' ? 'documento collegato' : null,
@@ -285,7 +288,8 @@ export function EconomyExpenseRow(props: { expense: EconomyExpense; homeId: stri
   return (
     <li className={act.item}>
       <div className={act.itemHead}>
-        <Link to={economyExpensePath(props.homeId, e.id)} state={props.state} className={act.title}>
+        <Link id={'expense-'+e.id} to={economyExpensePath(props.homeId, e.id)} state={props.state} className={act.title}
+          onClick={event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();const state=props.state as {accountId?:string;expensePages?:number};const restore={id:e.id,y:window.scrollY,pages:state?.expensePages??1};navigate(location.pathname+location.search,{replace:true,state:{...state,expenseRestore:restore}});navigate(economyExpensePath(props.homeId,e.id),{state:{...state,expenseRestore:restore}});}}>
           {e.title}
         </Link>
         <span className={act.meta} style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-ink)', whiteSpace: 'nowrap' }}>
@@ -618,7 +622,7 @@ export function EconomyExpenseForm(props: {
       </div>
       <div className={ui.field}>
         <label className={ui.label} htmlFor={`${id}-spentOn`}>
-          Data di riferimento
+          Data della spesa
         </label>
         <span id={`${id}-spentOn-hint`} className={ui.hint}>
           Decide in quale periodo compare il costo. Non è la data di pagamento.
@@ -664,6 +668,8 @@ export function EconomyExpenseForm(props: {
         definitiva la calcola il servizio.
       </p>
 
+      <details className={styles.details} open={!!expense || !!presets.object || !!presets.workId || !!presets.documentId || Object.keys(errors).some(k=>['object','work','doc','note'].includes(k))}>
+        <summary>Collegamenti e note (facoltativi)</summary>
       {select(
         'object',
         'Oggetto (facoltativo)',
@@ -727,6 +733,8 @@ export function EconomyExpenseForm(props: {
       {presets.workId && (presetWork.isError || (presetWork.isSuccess && !presetWorkOk)) && <Banner tone="warning"><p>Il lavoro indicato non è disponibile o è archiviato: nuove assegnazioni richiedono un lavoro attivo.</p></Banner>}
 
       <NoteField id={`${id}-note`} value={note} onChange={setNote} error={errors.note} disabled={disabled} label="Nota (facoltativa)" />
+
+      </details>
 
       <details className={styles.details} open={!!(expense && (expense.supplier || expense.documentNumber || expense.documentDate || expense.competenceFrom || expense.dueOn)) || !!(errors.supplier || errors.documentNumber || errors.documentDate || errors.competence || errors.dueOn)}>
         <summary>Dettagli aggiuntivi (facoltativi)</summary>

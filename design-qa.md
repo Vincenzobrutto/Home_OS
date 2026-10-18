@@ -61,3 +61,21 @@ Prima revisione: azione primaria sotto le viste e descrizione ripetuta consumava
 Differenze intenzionali: shell/token originali, selettore nativo per lo storico invece di menu personalizzato, selezione filtro in teal coerente con Dimora, dati effettivi e stato vuoto al posto delle fixture del mock. Strumenti richiudibili e viste scadenze/analisi conservati.
 
 Interazioni browser: Casa→Oggi; In programma/Senza data/Scadute; Completate→dettaglio→ritorno con link e Indietro; focus e posizione 170 px ripristinati. Creazione aperta e annullata senza scritture; Analisi separata, nessun avvio. Console: nessun errore rilevato. Mobile documento 375 px su viewport 390 px. Limiti: non provati telefono fisico, screen reader, zoom 200%, rete degradata o lunghe liste reali; la paginazione dopo perdita della cache è verificata nel test mock. Nessuna certificazione WCAG.
+
+
+---
+
+# Design QA — Spese desktop/mobile, 19 ottobre 2026
+
+final result: passed
+
+Sorgente: mock desktop/mobile approvati, con modifica esplicita del committente che richiede di reinserire la distribuzione (grafico originale osservato anche nell’audit Spese). API reali al posto dei dati dimostrativi dei mock. Confronto strutturale, non attestazione di corrispondenza pixel per pixel.
+
+- desktop: source `C:\Users\07704017\.codex\generated_images\01a1508d-6897-7942-a213-e42197294238\exec-13179d99-e617-46e6-97fb-8b6a7bc953fd.png`, pixel (1487, 1058); implementazione `C:\Users\07704017\Documents\Codex\2026-10-18\sto-per-chiudere-questa-conversazione-codex\outputs\spese-audit\implementata-desktop.png`, pixel (1425, 1013), viewport CSS 1440×1024. Evidenza congiunta `C:\Users\07704017\Documents\Codex\2026-10-18\sto-per-chiudere-questa-conversazione-codex\outputs\spese-audit\confronto-desktop.png`. Normalizzazione proporzionale ad altezza massima 900 px, senza deformazione.
+- mobile: source `C:\Users\07704017\.codex\generated_images\01a1508d-6897-7942-a213-e42197294238\exec-c60e87d0-c6f0-482c-bb28-6be4a02e0afc.png`, pixel (853, 1844); implementazione `C:\Users\07704017\Documents\Codex\2026-10-18\sto-per-chiudere-questa-conversazione-codex\outputs\spese-audit\implementata-mobile-vista.png`, pixel (375, 812), viewport CSS 390×844. Evidenza congiunta `C:\Users\07704017\Documents\Codex\2026-10-18\sto-per-chiudere-questa-conversazione-codex\outputs\spese-audit\confronto-mobile.png`. Normalizzazione proporzionale ad altezza massima 900 px, senza deformazione.
+
+Iterazione: prima revisione ha trovato azione primaria desktop sotto la testata e controlli mobile troppo dilatati (P2). Correzione: azioni affiancate al titolo desktop, riduzione spazi/controlli su mobile, totale e periodo nello stesso pannello; confronto finale ricatturato. Nessun overflow generale o controllo fuori pagina nella misura finale mobile. Grafico reinserito accanto all’elenco desktop e dopo le righe su mobile; ordine DOM/tastiera coerente. Nessun P0/P1/P2 residuo osservato nei controlli verificati.
+
+Differenze intenzionali: shell e font/token reali, riga metadata invece di colonne rigide per titoli lunghi, submit esplicito della ricerca, modalità da documento con accesso secondario, grafico aggiunto su richiesta. Resta come P3 ulteriore riduzione della densità della testata mobile; le righe iniziano sotto la prima schermata e il grafico segue l’elenco. Full-page `implementata-mobile.png` mostra lista e distribuzione. Non si usa l’immagine completa per misurare il primo viewport.
+
+Browser: ricerca fattura, filtro famiglia, dettaglio/ritorno, Indietro con ricerca e focus conservati a 656 px; cambio Famiglie/Categorie e vista Riepilogo/confronto; modulo aperto e annullato. Nessuna scrittura a dati o AI. Avviso di sviluppo HMR per un array di dipendenze modificato durante l’implementazione: dopo ricaricamento pulito nessun nuovo errore console rilevato. Test di 22 spese e cache rimossa verifica ricostruzione di due pagine; suite Spese/S1c/consensi 63 passati, regressioni ricerca ripetute. Non collaudati telefono fisico, zoom 200%, screen reader o errori di rete.

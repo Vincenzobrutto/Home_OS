@@ -41,9 +41,9 @@ function EconomyExpenseDetail({ home, caps }: { home: Home; caps?: EconomyCapabi
   const query = useEconomyExpense(home.id, expenseId);
   const [firstVersion, setFirstVersion] = useState<number | null>(null);
   if (query.data && firstVersion === null) setFirstVersion(query.data.version);
-  const nav = location.state as { accountId?: string; economyQ?: string } | null;
+  const nav = location.state as { accountId?: string; economyQ?: string; expenseRestore?: {id:string;y:number;pages:number} } | null;
   const back = (
-    <Link to={backTo(home.id, location.state, account.id)} state={nav?.accountId === account.id ? { accountId: account.id, economyQ: nav.economyQ } : undefined} className={pages.spaced}>
+    <Link to={backTo(home.id, location.state, account.id)} state={nav?.accountId === account.id ? { accountId: account.id, economyQ: nav.economyQ, expenseRestore:nav.expenseRestore } : undefined} className={pages.spaced}>
       ← Spese
     </Link>
   );
@@ -116,14 +116,14 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
             <dd style={{ fontWeight: 700 }}>{formatCents(expense.amountCents)}</dd>
             <dt>Origine dell’importo</dt>
             <dd>{expense.amountOrigin === 'extraction_confirmed' ? 'Proposto da un documento e confermato da te' : 'Dichiarato da te'}</dd>
-            <dt>Data di riferimento</dt>
+            <dt>Data della spesa</dt>
             <dd>{formatCalendarDate(expense.spentOn)}</dd>
             <dt>Categoria</dt>
             <dd>{categoryLabel(expense.category, caps)}</dd>
             <dt>Famiglia</dt>
             <dd>{familyLabel(expense.family, caps)}</dd>
             <dt>Oggetto</dt>
-            <dd>{o.state === 'linked' ? <Link to={objectHref(home.id, o.value.ref)}>{o.value.name}</Link> : o.state === 'unavailable' ? 'Oggetto non più disponibile per il tuo account' : 'Nessun oggetto'}</dd>
+            <dd>{o.state === 'linked' ? <Link to={objectHref(home.id, o.value.ref)}>{o.value.name}</Link> : o.state === 'unavailable' ? 'Oggetto non più disponibile per il tuo account' : 'Costo non attribuito a un oggetto'}</dd>
             <dt>Lavoro</dt>
             <dd>
               {w.state === 'linked' ? (

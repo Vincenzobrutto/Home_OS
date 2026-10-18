@@ -8,3 +8,8 @@ Differenze intenzionali dal mock: dati reali, scadenze esplicite aggiunte dall�
 ## Attività desktop/mobile — 19 ottobre 2026
 
 Proposta approvata verificata su app reale; azione primaria riallineata al mock dopo prima revisione. Filtri a capo e nessuna selezione multipla. Confronti completi e limiti nel report root `design-qa.md`, sezione Attività. Ritorno filtrato e posizione ripristinati anche con Indietro; regressione paginata con cache rimossa nel test mock.
+
+
+## Spese desktop/mobile — 19 ottobre 2026
+
+Layout approvato con grafico reinserito su richiesta. Corrette posizione delle azioni desktop e densità dei controlli mobile; confronto congiunto e limiti nel report root `design-qa.md`, sezione Spese. Ricerca privata, filtri, posizione e focus ripristinati. Nessun overflow orizzontale nella verifica finale; resta eventuale affinamento della densità mobile.

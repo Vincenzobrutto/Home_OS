@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { formatCalendarDate } from '../lib/activities';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import type { EconomyCapabilities, Family } from '../api/economyTypes';
@@ -47,7 +47,7 @@ import { useCurrentHome } from './HomePages';
 import pages from './pages.module.css';
 
 /** Stato di navigazione privato: ricerca e ritorno alla panoramica, legati all'account. */
-type NavState = { accountId?: string; economyQ?: string; overview?: string; returnTo?: { path: string; label: string } } | null;
+type NavState = { accountId?: string; economyQ?: string; overview?: string; returnTo?: { path: string; label: string }; expenseRestore?: {id:string;y:number;pages:number} } | null;
 
 const viewKey = (accountId: string, homeId: string) => `dimora.v5.spese.vista:${accountId}:${homeId}`;
 
@@ -109,15 +109,16 @@ export function ExpensesPage() {
   return <EconomySpese home={home} caps={caps.data} />;
 }
 
-function SpeseHeading({ home }: { home: Home }) {
+function SpeseHeading({ home,actions }: { home: Home;actions?:ReactNode }) {
   useDocumentTitle(`Spese · ${home.name}`);
   return (
-    <div className={pages.heading}>
+    <div className={cx(pages.heading,styles.header)}>
       <div>
-        <span className={pages.eyebrow}>{home.name}</span>
+        <Link to={`/home/${encodeURIComponent(home.id)}/casa`}>← Torna alla Casa</Link><p className={pages.eyebrow}>{home.name}</p>
         <h1 tabIndex={-1}>Spese</h1>
-        <p className={pages.lead}>I costi che hai registrato, visibili solo a te. Non sono pagamenti, budget o previsioni.</p>
+        <p className={pages.lead}>I costi registrati da te, visibili solo a te.</p>
       </div>
+      {actions && <div className={styles.headerActions}>{actions}</div>}
     </div>
   );
 }
@@ -127,6 +128,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
   const navigate = useNavigate();
   const location = useLocation();
   const [params, setParams] = useSearchParams();
+  const [entryOpen,setEntryOpen] = useState(false);
   const nav = (location.state as NavState) ?? null;
   const sameAccount = nav?.accountId === account.id;
   const q = sameAccount && typeof nav?.economyQ === 'string' ? nav.economyQ : '';
@@ -139,7 +141,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
     ? (viewParam as SpeseView)
     : hasListFilters(filters)
       ? 'elenco'
-      : (storedView(account.id, home.id) ?? 'panoramica');
+      : (storedView(account.id, home.id) ?? 'elenco');
   const split = params.get('per') === 'categorie' ? 'category' : 'family';
   const creating = params.get('nuova-spesa') === '1';
 
@@ -214,17 +216,33 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
   };
   const listState = { accountId: account.id, economyQ: filters.q, expensesSearch: filtersToParams(filters, { view, split: split === 'category' && !filters.family ? 'categorie' : null }).toString() };
 
+  const distribution = !summary.isError && summary.data ? (<Distribution
+              summary={summary.data}
+              caps={caps}
+              mode={filters.family ? 'category' : split}
+              family={filters.family}
+              onModeChange={(m) => {
+                go(filters, { split: m, replace: true });
+              }}
+              onAllFamilies={() => {
+                focusTarget.current = 'distribution';
+                go({ ...filters, family: null, category: null });
+              }}
+              onPick={pick}
+            />) : null;
+
   return (
     <>
-      <SpeseHeading home={home} />
-      <div className={pages.stack}>
+      <SpeseHeading home={home} actions={<>
         {canEdit && !creating && (
           <p className={act.actions}>
             <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => startCreating()}>
               <Icon name="plus" />
               Registra una spesa
             </button>
-            {caps.features.documentDrafts ? (
+            <button type="button" className={ui.btn} aria-label="Modalità di registrazione" aria-expanded={entryOpen} onClick={()=>setEntryOpen(v=>!v)}>Altre modalità</button>
+            {entryOpen && <button type="button" className={ui.btn} onClick={()=>{setEntryOpen(false);startCreating();}}>Inserisci a mano</button>}
+            {entryOpen && (caps.features.documentDrafts ? (
               <Link to={`/home/${encodeURIComponent(home.id)}/spese/da-documento`} state={listState} className={ui.btn}>
                 Da documento
               </Link>
@@ -232,7 +250,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
               <button type="button" className={ui.btn} onClick={() => startCreating(true)}>
                 Da documento
               </button>
-            )}
+            ))}
             <Link to={workPath(home.id)} className={ui.btn}>
               Lavori
             </Link>
@@ -241,10 +259,12 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
         {caps.features.documentDrafts && !creating && (
           <p>
             <Link to={`/home/${encodeURIComponent(home.id)}/spese/bozze`} state={listState}>
-              Bozze da documento: da confermare e accantonate
+              Bozze da confermare e accantonate
             </Link>
           </p>
         )}
+      </>}/>
+      <div className={cx(pages.stack, styles.workspace)}>
         {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare i tuoi costi già registrati, non aggiungerne o modificarli.</p>}
 
         {canEdit && creating && (
@@ -275,41 +295,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
           </>
         )}
 
-        <nav className={styles.families} aria-label="Famiglie di spesa">
-          {[null, ...caps.families.map((f) => f.code)].map((code) => (
-            <button
-              key={code ?? 'all'}
-              type="button"
-              className={styles.family}
-              aria-pressed={filters.family === code}
-              onClick={() =>
-                go({ ...filters, family: code, category: code && filters.category && !categoryFitsFamily(filters.category, code, caps) ? null : filters.category })
-              }
-            >
-              {code ? familyLabel(code, caps) : 'Tutte'}
-            </button>
-          ))}
-        </nav>
-
-        <div className={styles.toolbar}>
-          <label>
-            Visualizza
-            <select className={act.select} value={view} onChange={(e) => setView(e.target.value as SpeseView)}>
-              {VIEWS.map((v) => (
-                <option key={v.value} value={v.value}>
-                  {v.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <PeriodSelect filters={filters} caps={caps} summaryPeriod={summary.data ? periodText(summary.data.period, summary.data.today) : null} onChange={(period) => go({ ...filters, period })} />
-        </div>
-        {filters.period.kind === 'range' || params.get('periodo') === 'intervallo' ? (
-          <RangeForm filters={filters} onApply={(from, to) => go({ ...filters, period: { kind: 'range', from, to } })} />
-        ) : null}
-
-        <FiltersBox home={home} caps={caps} filters={filters} view={view} onApply={(next) => go(next)} />
-
+        <div className={styles.hero}>
         {summary.isPending ? (
           <Loading label="Calcolo del riepilogo…" />
         ) : summary.isError ? (
@@ -324,24 +310,40 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
           <TotalCard summary={summary.data} caps={caps} family={filters.family} showWithoutFinancing={!filters.family && !filters.category} />
         )}
 
-        {view === 'panoramica' && summary.data && (
+        <PeriodSelect filters={filters} caps={caps} summaryPeriod={summary.data ? periodText(summary.data.period, summary.data.today) : null} onChange={(period) => go({ ...filters, period })} />
+        </div>
+        <div className="expense-tabs" role="group" aria-label="Viste delle spese">
+          <button type="button" aria-pressed={['elenco','oggetti','lavori'].includes(view)} onClick={()=>setView('elenco')}>Registrazioni</button>
+          <button type="button" aria-pressed={['panoramica','riepilogo'].includes(view)} onClick={()=>setView('panoramica')}>Riepilogo</button>
+        </div>
+        <div className={styles.quick}>
+        <ExpenseSearch key={`${account.id}:${home.id}:${q}`} value={q} onSearch={value=>go({...filters,q:value})}/>
+        <label className="expense-family">Tipo di spesa<select className={act.select} value={filters.family ?? ''} onChange={e=>{const family=(e.target.value || null) as Family|null;go({...filters,family,category:family && filters.category && !categoryFitsFamily(filters.category,family,caps)?null:filters.category});}}><option value="">Tutte</option>{caps.families.map(f=><option key={f.code} value={f.code}>{f.label}</option>)}</select></label>
+        <div className={styles.toolbar}>
+          <label>
+            Raggruppa
+            <select className={act.select} value={view} onChange={(e) => setView(e.target.value as SpeseView)}>
+              {VIEWS.filter(v=>['panoramica','riepilogo'].includes(view) ? ['panoramica','riepilogo'].includes(v.value) : ['elenco','oggetti','lavori'].includes(v.value)).map((v) => (
+                <option key={v.value} value={v.value}>
+                  {v.value === 'elenco' ? 'Data' : v.value === 'panoramica' ? 'Distribuzione e confronto' : v.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        </div>
+        {filters.period.kind === 'range' || params.get('periodo') === 'intervallo' ? (
+          <RangeForm filters={filters} onApply={(from, to) => go({ ...filters, period: { kind: 'range', from, to } })} />
+        ) : null}
+
+        <FiltersBox home={home} caps={caps} filters={filters} view={view} onApply={(next) => go(next)} />
+
+        <div className={styles.board}>
+        {(view === 'panoramica' || view === 'elenco') && !summary.isError && summary.data && (
           <>
-            <Distribution
-              summary={summary.data}
-              caps={caps}
-              mode={filters.family ? 'category' : split}
-              family={filters.family}
-              onModeChange={(m) => {
-                go(filters, { split: m, replace: true });
-              }}
-              onAllFamilies={() => {
-                focusTarget.current = 'distribution';
-                go({ ...filters, family: null, category: null });
-              }}
-              onPick={pick}
-            />
-            <ComparisonCard summary={summary.data} />
-            <RecentCard home={home} caps={caps} filters={filters} count={summary.data.count} state={listState} onAll={() => go(filters, { view: 'elenco', state: { overview: params.toString() } })} />
+            {view === 'panoramica' && distribution}
+            {view === 'panoramica' && <ComparisonCard summary={summary.data} />}
+            {view === 'panoramica' && <RecentCard home={home} caps={caps} filters={filters} count={summary.data.count} state={listState} onAll={() => go(filters, { view: 'elenco', state: { overview: params.toString() } })} />}
           </>
         )}
 
@@ -353,24 +355,32 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
                 ← Torna alla panoramica
               </button>
             )}
-            <h2 id="spese-elenco" className={pages.cardTitle}>
+            <h2 id="spese-elenco" tabIndex={-1} className={pages.cardTitle}>
               Elenco{filters.family ? ` · ${familyLabel(filters.family, caps)}` : ''}
               {filters.category ? ` · ${filters.category === 'unclassified' ? 'Non classificata' : categoryLabel(filters.category, caps)}` : ''}
             </h2>
-            <ExpenseList home={home} caps={caps} filters={filters} state={listState} />
+            <ExpenseList home={home} caps={caps} filters={filters} state={listState} restoreReady={!summary.isPending} />
           </section>
         )}
 
+        {view === 'elenco' && distribution}
         {view === 'oggetti' && <ByObject home={home} caps={caps} filters={filters} state={listState} onChoose={(object) => go({ ...filters, object })} />}
         {view === 'lavori' && <ByWork home={home} caps={caps} filters={filters} state={listState} onChoose={(workId) => go({ ...filters, workId })} />}
         {view === 'riepilogo' && summary.data && <Summary summary={summary.data} caps={caps} />}
 
+        </div>
         <p className={cx(pages.small, pages.muted)}>
           Oggi è {formatCalendarDate(caps.today)}. Pagamenti, ricorrenze, budget e previsioni non fanno parte di questa versione.
         </p>
       </div>
     </>
   );
+}
+
+function ExpenseSearch({value,onSearch}:{value:string;onSearch:(q:string)=>void}){
+  const [text,setText]=useState(value);
+
+  return <form role="search" aria-label="Ricerca spese" className="expense-search" onSubmit={e=>{e.preventDefault();onSearch(text.trim());}}><label>Cerca in descrizione o fornitore<input type="search" className={ui.input} maxLength={120} value={text} onChange={e=>setText(e.target.value)}/></label><button type="submit" className={ui.btn}>Cerca</button>{value && <button type="button" className={ui.btn} onClick={()=>{setText('');onSearch('');}}>Cancella ricerca</button>}</form>;
 }
 
 function PeriodSelect(props: { filters: EconomyFilters; caps: EconomyCapabilities; summaryPeriod: string | null; onChange: (p: EconomyFilters['period']) => void }) {
@@ -469,7 +479,7 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
       </button>
     ) : null;
   return (
-    <details className={cx(ui.card, styles.filtersBox)} open={active > 0}>
+    <details className={cx(ui.card, styles.filtersBox)} open={countActiveFilters({...filters,q:''}) > 0}>
       <summary>Filtri{active ? ` · ${active} attiv${active === 1 ? 'o' : 'i'}` : ''}</summary>
       <form
         onSubmit={(e) => {
@@ -556,10 +566,7 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
               </select>
             </label>
           )}
-          <label>
-            Cerca in descrizione o fornitore
-            <input className={ui.input} type="search" maxLength={120} value={draft.q} onChange={(e) => setDraft({ ...draft, q: e.target.value })} />
-          </label>
+
         </div>
         <p className={act.actions}>
           <button type="submit" className={cx(ui.btn, ui.primary, ui.small)}>
@@ -579,7 +586,7 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
   );
 }
 
-function ExpenseList(props: { home: Home; caps: EconomyCapabilities; filters: EconomyFilters; state: unknown; limit?: number; single?: boolean }) {
+function ExpenseList(props: { home: Home; caps: EconomyCapabilities; filters: EconomyFilters; state: unknown; limit?: number; single?: boolean; restoreReady?:boolean }) {
   const list = useEconomyExpenses(props.home.id, props.filters, { limit: props.limit });
   const forget = useForgetEconomy(props.home.id);
   const forbidden = list.isError && isForbiddenError(list.error);
@@ -587,6 +594,18 @@ function ExpenseList(props: { home: Home; caps: EconomyCapabilities; filters: Ec
     if (forbidden) forget();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- una pulizia per ogni 403
   }, [forbidden]);
+  const account=useAccount();
+  const location=useLocation();
+  const restored=useRef(false);
+  const {data,hasNextPage,isFetchingNextPage,isFetchNextPageError,fetchNextPage}=list;
+  useEffect(()=>{
+    const state=location.state as NavState;
+    const restore=state?.accountId===account.id ? state.expenseRestore : null;
+    if(!restore || restored.current || !data || props.restoreReady === false)return;
+    if(data.pages.length<restore.pages && hasNextPage && !isFetchNextPageError){if(!isFetchingNextPage)void fetchNextPage();return;}
+    const frame=requestAnimationFrame(()=>{restored.current=true;(document.getElementById('expense-'+restore.id)??document.getElementById('spese-elenco'))?.focus({preventScroll:true});window.scrollTo(0,Math.max(0,restore.y));});
+    return ()=>cancelAnimationFrame(frame);
+  },[location.state,account.id,data,hasNextPage,isFetchingNextPage,isFetchNextPageError,fetchNextPage,props.restoreReady]);
   const items = list.data?.pages.flatMap((p) => p.items) ?? [];
   if (list.isPending) return <Loading label="Caricamento dei costi…" />;
   if (list.isError && !list.data) {
@@ -597,7 +616,7 @@ function ExpenseList(props: { home: Home; caps: EconomyCapabilities; filters: Ec
     <>
       <ul className={act.list} aria-label="Costi registrati">
         {items.map((e) => (
-          <EconomyExpenseRow key={e.id} expense={e} homeId={props.home.id} caps={props.caps} state={props.state} />
+          <EconomyExpenseRow key={e.id} expense={e} homeId={props.home.id} caps={props.caps} state={{...(props.state as object),expensePages:list.data?.pages.length ?? 1}} />
         ))}
       </ul>
       {!props.single && list.isFetchNextPageError && <ErrorState title="Altri costi non caricati" error={list.error} message={economyErrorMessage(list.error)} />}
