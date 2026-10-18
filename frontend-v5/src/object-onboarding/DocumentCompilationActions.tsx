@@ -11,7 +11,7 @@ import styles from './onboarding.module.css';
 import type { Capabilities, Draft } from './model';
 
 export type CompilationMode = 'manuale' | 'ai';
-export function DocumentCompilationActions({homeId,documentId,onOpen,documentKind}:{documentKind?:'purchase_document'|'utility_bill';homeId:string;documentId:string;onOpen?:(mode:CompilationMode,draftId?:string)=>void}) {
+export function DocumentCompilationActions({homeId,documentId,onOpen,documentKind,houseDocument=false}:{houseDocument?:boolean;documentKind?:'purchase_document'|'utility_bill';homeId:string;documentId:string;onOpen?:(mode:CompilationMode,draftId?:string)=>void}) {
  const account=useAccount(),api=useApi(),navigate=useNavigate(),cache=useQueryClient();
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
  const live=useRef(true);useEffect(()=>{live.current=true;return()=>{live.current=false;};},[]);
@@ -29,6 +29,7 @@ export function DocumentCompilationActions({homeId,documentId,onOpen,documentKin
  };
  async function manual(){
   if(sending.current)return;
+  if(houseDocument){await open('manuale');return;}
   const existing=caps.data?.drafts.find(d=>d.state==='open');
   if(existing){await open('manuale',existing.id);return;}
   sending.current=true;setBusy(true);setError('');attempt.current??=newIdempotencyKey();
@@ -44,10 +45,11 @@ export function DocumentCompilationActions({homeId,documentId,onOpen,documentKin
   sending.current=true;setBusy(true);setError('');
   try{const reply=await api.callJson<{draft:Draft}>(`/homes/${encodeURIComponent(homeId)}/object-onboarding/drafts/${encodeURIComponent(existing.id)}`,{accountId:account.id});if(reply.draft.snapshot?.documentId!==documentId)throw Error('La scheda non appartiene a questo documento.');await open('ai',reply.draft.mode==='manual'&&!reply.draft.review?.pending?undefined:existing.id);}catch(e){if(isUnauthorized(e))await handleUnauthorized(cache);if(live.current)setError(userMessage(e));}finally{sending.current=false;if(live.current)setBusy(false);}
  }
+ const ready=caps.data?.drafts.find(d=>d.state==='open'&&(d.mode==='extraction'||caps.data?.job?.state==='succeeded'&&caps.data.job.draftId===d.id));
  const accepted=!caps.data?.drafts.some(d=>d.state==='open')&&caps.data?.drafts.find(d=>d.state==='confirmed');
  if(accepted)return <button type="button" className={ui.btn} onClick={()=>open('manuale',accepted.id)}>Proposta accettata · Vedi dettaglio</button>;
  return <div><div className={styles.row}>
   <button type="button" className={ui.btn} disabled={busy||!caps.isSuccess||!caps.data.manualAvailable} onClick={()=>void manual()}>{busy?'Apertura scheda…':'Compila manualmente'}</button>
-  <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!caps.isSuccess} onClick={()=>void ai()}>Compila tramite AI</button>
+  <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!caps.isSuccess} onClick={()=>ready?void open('ai',ready.id):void ai()}>{ready?'Rivedi proposta':'Compila tramite AI'}</button>
  </div>{(error||caps.isError)&&<p role="alert">{error||'Impossibile verificare le opzioni.'} <button type="button" className={ui.btn} aria-label="Riprova le opzioni di compilazione" onClick={()=>void caps.refetch()}>Riprova</button></p>}</div>;
 }

@@ -20,6 +20,8 @@ export function BulkDocumentCompilation({homeId,selected,onClear,onLocked}:{home
  const caps=useQuery({queryKey:['account',account.id,'home',homeId,'onboarding','capabilities',first],queryFn:({signal})=>api.callJson<Capabilities>(`/homes/${homeId}/object-onboarding/capabilities?documentId=${first}`,{accountId:account.id,signal}),enabled:!!first,retry:false,gcTime:0});
  const result=useQuery({queryKey:['account',account.id,'home',homeId,'bulk-proposals',batchId],queryFn:({signal})=>api.callJson<{run:AutomaticRun|null}>(`/homes/${homeId}/object-onboarding/automatic-runs/batches/${batchId}`,{accountId:account.id,signal}),enabled:!!batchId,retry:false,refetchInterval:q=>q.state.data?.run?.state==='running'?1500:false});
  const run=result.data?.run;
+ const readyDocuments=run?.entries.filter(e=>e.state==='completed'&&e.draftId&&e.documentId).map(e=>e.documentId!).sort().join(',')??'';
+ useEffect(()=>{for(const id of readyDocuments.split(',').filter(Boolean))void cache.invalidateQueries({queryKey:['account',account.id,'home',homeId,'onboarding','capabilities',id]});},[readyDocuments,cache,account.id,homeId]);
  useEffect(()=>{live.current=true;return()=>{live.current=false;};},[]);
  useEffect(()=>{onLocked(busy||uncertain);return()=>onLocked(false);},[busy,uncertain,onLocked]);
  useEffect(()=>{if(run?.state==='finished')void cache.invalidateQueries({queryKey:['account',account.id,'home',homeId]});},[run?.id,run?.state,cache,account.id,homeId]);

@@ -1,3 +1,7 @@
+## 2026-10-18 — Modalità delle bozze nelle capabilities
+
+GET object-onboarding/capabilities include anche `mode` per ciascuna bozza già filtrata per account, casa e versione/SHA della fonte. Il frontend distingue una proposta `extraction` aperta da una bozza `manual` e apre direttamente la revisione disponibile. Nessun nuovo endpoint o invio al provider.
+
 ## 18 ottobre 2026 — Analisi AI dei documenti selezionati
 
 POST /api/v5/homes/:homeId/object-onboarding/automatic-runs estende il contratto con proposalOnly:true, automaticProcessing:false, consentToProviderTransfer:true, batchId e documentIds esatti (1–20). automaticContacts:true è incompatibile con questa modalità. La modalità è inclusa nell’impronta idempotente; il consenso e il manifest restano persistiti. GET automatic-runs/batches/:batchId restituisce anche mode=proposals|automatic. In proposals lo stato completed significa bozza pronta, non organizzazione o creazione di oggetti/spese/contatti. Guardie account/casa/fonte/versione/SHA, quote e riserva per analisi restano invariate.

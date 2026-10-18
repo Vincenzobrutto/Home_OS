@@ -1,3 +1,7 @@
+## 2026-10-18 — Rivedi proposta sulla singola scheda
+
+Le schede con bozza AI aperta mostrano «Rivedi proposta» e aprono la bozza esistente, anche per documenti della casa. Durante la compilazione multipla ogni proposta pronta aggiorna subito la relativa scheda. Bozze manuali ed esiti confermati restano distinti. Verifica: 17 test frontend mirati, build frontend/backend e lint dei file modificati; controllo browser su tre proposte già disponibili. Nessuna nuova analisi AI.
+
 ## 18 ottobre 2026 — Salvataggio schemi impianto e AI sui selezionati
 
 Corretto il mapping di Schema di impianto e altri tipi documentali nel salvataggio. Tipo, titolo e consenso a sostituire metadati già salvati sono nella revisione unica; nessun secondo dialogo richiesto per il tipo mancante. In Documenti: checkbox individuali/Seleziona tutti, consenso sui selezionati, preparazione AI persistente e riapertura delle proposte nella stessa pagina. Il nuovo avvio multiplo non crea automaticamente entità e rispetta budget/riserve esistenti.

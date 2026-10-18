@@ -41,7 +41,7 @@ export class OnboardingJobService {
     const q = object(query, ['documentId']), documentId = uuid(q.documentId);
     return this.receipts.run(a, h, false, async (tx, edit) => {
       const source = await this.receipts.source(tx,a,h,documentId); if (!source) throw deny();
-      const drafts = await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256},orderBy:[{updatedAt:'desc'},{id:'desc'}],take:10,select:{id:true,state:true,updatedAt:true}});
+      const drafts = await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256},orderBy:[{updatedAt:'desc'},{id:'desc'}],take:10,select:{id:true,state:true,mode:true,updatedAt:true}});
       const job = await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256},orderBy:{createdAt:'desc'}});
       const budget=edit?await this.ai.budget.snapshot(tx,source.original!.sha256,a,h):null;
       const aiAvailable=edit&&!!budget?.available;

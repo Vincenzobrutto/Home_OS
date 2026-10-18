@@ -37,7 +37,7 @@ export function DocumentWorkspaceActions({homeId,document:doc}:{homeId:string;do
  return <div className={styles.workspace}>
   <div className={styles.toolbarActions}>
    <button type="button" className={ui.btn} onClick={()=>setOriginal(v=>!v)} aria-expanded={original}>{original?'Chiudi originale':'Vedi originale'}</button>
-   {editable&&(house?<><button type="button" className={ui.btn} disabled={opening} onClick={()=>void open('manuale')}>Compila manualmente</button><button type="button" className={`${ui.btn} ${ui.primary}`} disabled={opening} onClick={()=>void open('ai')}>Compila tramite AI</button></>:<DocumentCompilationActions homeId={homeId} documentId={doc.id} documentKind={doc.organization?.parts.every(p=>p.kind==='utility_bill')?'utility_bill':undefined} onOpen={(mode,draft)=>void open(mode,draft)}/>)}
+   {editable&&<DocumentCompilationActions houseDocument={!!house} homeId={homeId} documentId={doc.id} documentKind={doc.organization?.parts.every(p=>p.kind==='utility_bill')?'utility_bill':undefined} onOpen={(mode,draft)=>void open(mode,draft)}/>}
    {editable&&<button type="button" className={ui.btn} onClick={()=>{setError('');setRemoving(true);}}>Elimina</button>}
   </div>
   {opening&&<p role="status">Apertura della scheda…</p>}{error&&<p role="alert">{error}</p>}
