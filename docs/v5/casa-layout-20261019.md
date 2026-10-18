@@ -24,3 +24,8 @@ Telefono fisico, tastiera virtuale e screen reader non collaudati. Nessuna certi
 ### Priorità alle scadenze
 
 Su richiesta successiva, le scadenze aprono il blocco Da completare prima delle fonti documentali, con fondo leggero, accento e titolo più evidente. Ordine verificato nel browser desktop e viewport mobile 390 × 844. Nessuna modifica ai dati o alla logica dei promemoria.
+
+
+### Scadenze autonome
+
+Su approvazione successiva, Le tue scadenze è un box autonomo precedente a Da completare, non più annidato al suo interno. Documenti, proposte e verifiche mantengono il nome Da completare. Ordine e separazione verificati su desktop e mobile.

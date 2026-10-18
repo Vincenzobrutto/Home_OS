@@ -1,3 +1,7 @@
+## Casa: scadenze in box autonomo — 19 ottobre 2026
+
+Le tue scadenze ora ha un box autonomo sopra Da completare, che mantiene documenti, proposte e verifiche. Separazione strutturale valida per desktop, mobile e ordine di lettura. Nessuna modifica ai dati.
+
 ## Casa: scadenze prima dei documenti — 19 ottobre 2026
 
 Le scadenze aprono il blocco Da completare su desktop e mobile, con maggiore evidenza del titolo e sfondo leggero. Seguono documenti e verifiche. Dati e logica dei promemoria invariati.
