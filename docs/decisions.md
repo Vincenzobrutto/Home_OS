@@ -1,3 +1,7 @@
+## Conteggi completi nella Casa — 19 ottobre 2026
+
+Approvato il riepilogo di tre gruppi. L’aggregazione documentale completa riusa lo stato canonico della lista, prima del paging, con permessi e fonte correnti; sostituisce l’anteprima di singole fonti. Verifiche e proposte restano risorse distinte. [Report](v5/casa-counts-20261019.md).
+
 ## Casa come riepilogo operativo — 19 ottobre 2026
 
 Approvata la struttura delle anteprime con scadenze personali esplicite. Casa usa dati reali autorizzati, distingue documenti/attività/verifiche e sintetizza le spese. Senza aggregati documentali completi si mostrano fonti e stati, non conteggi dedotti dalle pagine. Le date sulle fatture non diventano automaticamente promemoria. [Report](v5/casa-layout-20261019.md).

@@ -11,3 +11,5 @@
 .deadlines{grid-template-columns:minmax(0,1fr);margin:0 0 24px}.deadlines>section{background:var(--color-soft);border:0;border-left:3px solid var(--color-accent);border-radius:8px;padding:16px}.deadlines h2{font-size:1.2rem;color:var(--color-accent)}.review{margin-top:20px}.review>section{border:0;border-top:1px solid var(--color-border);border-radius:0;padding:16px 0 0;box-shadow:none}
 
 .casa>.deadlines{grid-column:1/-1;margin:16px 0 0}.casa>.deadlines>section{border:1px solid var(--color-border);border-left:3px solid var(--color-accent);padding:24px;border-radius:16px}@media(max-width:700px){.casa>.deadlines>section{padding:16px}}
+
+.summaryRow{display:grid;grid-template-columns:minmax(0,1fr) auto 24px;gap:16px;align-items:center;min-height:64px;border-top:1px solid var(--color-border);padding:12px 0;color:var(--color-ink);text-decoration:none}.summaryRow:hover{color:var(--color-accent)}.counter{display:grid;place-items:center;min-width:32px;min-height:32px;padding:4px 8px;border-radius:24px;background:var(--color-soft);font-weight:700}.todo .review{margin:0}.todo .review>section{border:0;padding:0}.otherStates{font-size:.85rem;margin:10px 0}

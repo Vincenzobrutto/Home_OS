@@ -62,6 +62,20 @@ export class DocumentsService implements OnModuleInit {
     object(query, []);
     return this.db.$transaction(async tx => { await this.policy.requireLocked(tx, accountId, homeId); return { ...SEARCH_CAPABILITIES, collections: DOCUMENT_COLLECTIONS }; });
   }
+  async workflowSummary(accountId:string,homeId:string,query:unknown){
+    object(query,[]);const {state}=workflowSql(accountId,homeId);
+    return this.db.$transaction(async tx=>{
+      await this.policy.requireLocked(tx,accountId,homeId);
+      const rows=await tx.$queryRaw<Array<{state:string;count:bigint}>>(Prisma.sql`SELECT x.state,COUNT(*) AS count FROM (
+        SELECT ${state} AS state FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
+        LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${accountId} AND o."homeId"=${homeId} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256
+        WHERE d."homeId"=${homeId} AND (d.visibility='home' OR d."uploaderId"=${accountId})
+      ) x GROUP BY x.state`);
+      const counts={to_compile:0,review:0,analyzing:0,attention:0,completed:0};
+      for(const row of rows)if(row.state in counts)counts[row.state as keyof typeof counts]=Number(row.count);
+      return {counts};
+    },{isolationLevel:Prisma.TransactionIsolationLevel.RepeatableRead,timeout:15000,maxWait:15000});
+  }
   async list(accountId: string, homeId: string, query: SearchDocumentsDto) {
     const filters = searchFilters(query), anchor = searchAnchor(query.cursor, accountId, homeId, filters);
     // Prisma raw Date parameters are timestamptz; Document.createdAt is timestamp.
@@ -70,28 +84,18 @@ export class DocumentsService implements OnModuleInit {
     const anchorTime = anchor?.createdAt.toISOString().slice(0, -1);
     const mime = { pdf: 'application/pdf', jpeg: 'image/jpeg', png: 'image/png' };
     const pattern = literalPattern(filters.q);
-    const completed=Prisma.sql`(
-      NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open')
-      AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND (j.state IN ('queued','running') OR (j.state='uncertain' AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" c WHERE c."accountId"=j."accountId" AND c."documentId"=d.id AND c."documentVersion"=v.version AND c."documentSha256"=v.sha256 AND c.state='confirmed' AND c."updatedAt">=j."updatedAt"))))
-      AND (EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='confirmed')
-      OR (o.id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(o.parts) p WHERE p->>'kind' IN ('invoice','receipt','utility_bill','purchase_document','purchase_order','product_label','delivery_notice'))))
-    )`;
+    const {completed,state}=workflowSql(accountId,homeId);
 
     return this.db.$transaction(async tx => {
       await this.policy.requireLocked(tx, accountId, homeId);
       // Use the installed deterministic Unicode ICU collation; the development
       // database's default C collation only folds ASCII. Never rewrite originals.
       const ids = await tx.$queryRaw<Array<{ id: string; workflowState: string }>>(Prisma.sql`
-        SELECT d.id, CASE
-          WHEN ${completed} THEN 'completed'
-          WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND j.state IN ('queued','running')) THEN 'analyzing'
-          WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open' AND p.mode='extraction') THEN 'review'
-          WHEN (SELECT j.state FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 ORDER BY j."createdAt" DESC,j.id DESC LIMIT 1) IN ('failed','uncertain') THEN 'attention'
-          ELSE 'to_compile' END AS "workflowState"
+        SELECT d.id, ${state} AS "workflowState"
         FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
         LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${accountId} AND o."homeId"=${homeId} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256
         WHERE d."homeId"=${homeId} AND (d.visibility='home' OR d."uploaderId"=${accountId})
-        ${filters.workflow==='all'?Prisma.empty:Prisma.sql`AND ${completed}=${filters.workflow==='completed'}`}
+        ${filters.workflow==='all'?Prisma.empty:['pending','completed'].includes(filters.workflow)?Prisma.sql`AND ${completed}=${filters.workflow==='completed'}`:Prisma.sql`AND ${state}=${filters.workflow}`}
         ${filters.visibility === 'all' ? Prisma.empty : Prisma.sql`AND d.visibility::text=${filters.visibility}`}
         ${filters.format === 'all' ? Prisma.empty : Prisma.sql`AND v."mimeType"=${mime[filters.format]}`}
         ${filters.collection === 'all' ? Prisma.empty : filters.collection === 'unclassified' ? Prisma.sql`AND (o.id IS NULL OR ${filters.collection}=ANY(o.collections))` : Prisma.sql`AND ${filters.collection}=ANY(o.collections)`}
@@ -202,4 +206,19 @@ export class DocumentsService implements OnModuleInit {
       return bytes;
     } finally { this.exportsRunning--; }
   }
+}
+
+function workflowSql(accountId:string,homeId:string){
+    const completed=Prisma.sql`(
+      NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open')
+      AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND (j.state IN ('queued','running') OR (j.state='uncertain' AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" c WHERE c."accountId"=j."accountId" AND c."documentId"=d.id AND c."documentVersion"=v.version AND c."documentSha256"=v.sha256 AND c.state='confirmed' AND c."updatedAt">=j."updatedAt"))))
+      AND (EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='confirmed')
+      OR (o.id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(o.parts) p WHERE p->>'kind' IN ('invoice','receipt','utility_bill','purchase_document','purchase_order','product_label','delivery_notice'))))
+    )`;
+return {completed,state:Prisma.sql`CASE
+          WHEN ${completed} THEN 'completed'
+          WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND j.state IN ('queued','running')) THEN 'analyzing'
+          WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open' AND p.mode='extraction') THEN 'review'
+          WHEN (SELECT j.state FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 ORDER BY j."createdAt" DESC,j.id DESC LIMIT 1) IN ('failed','uncertain') THEN 'attention'
+          ELSE 'to_compile' END`};
 }

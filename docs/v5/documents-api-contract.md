@@ -88,3 +88,10 @@ Staging privato e ammissione dopo scansione Defender/hash invariato. 503 file_ch
 ## Stato del lavoro — 18 ottobre 2026
 
 La lista aggiunge workflowState (to_compile, analyzing, review, completed, attention), relativo all'account e alla fonte/versione/SHA correnti. completed usa la stessa condizione dei filtri workflow già implementati; quindi precedono job attivi, bozza extraction aperta, ultimo job failed/uncertain, stato da compilare. Originale status=stored invariato; nessuna espansione permessi. UI usa pending/completed e mantiene ricerca, cursori e paging server. L'assenza del campo su un backend precedente significa stato non disponibile, mai completato presunto.
+
+
+## Riepilogo workflow Casa — 19 ottobre 2026
+
+`GET /homes/:homeId/documents/workflow-summary` è una lettura autenticata, senza parametri query. Risposta `{counts:{to_compile:number,review:number,analyzing:number,attention:number,completed:number}}`. Ogni fonte autorizzata contribuisce una sola volta. Aggregazione sull’intero archivio leggibile, non sulle pagine caricate; snapshot RepeatableRead con membership verificata e bloccata. Originali privati altrui esclusi anche per owner; stato personale account/casa e fonte versione/SHA correnti, stessa proiezione SQL della lista. Membership assente/revocata → 403; query estranee → validazione. Nessuna creazione, analisi o modifica.
+
+La lista `GET /homes/:homeId/documents` accetta anche `workflow=to_compile` e `workflow=review`, filtri esatti prima del paging. Restano `all`, `pending`, `completed`. Il digest del cursore include il workflow: non riutilizzabile tra gruppi. UI Casa apre gli elenchi corrispondenti. Il conteggio delle verifiche continua a usare `openCount` dell’API Review, risorsa distinta dalle proposte di onboarding.

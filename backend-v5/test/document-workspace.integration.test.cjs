@@ -30,5 +30,22 @@ test('Document workspace: persisted workflow before pagination and safe canonica
  await t.test('A new open revision returns a previously completed document to Da completare',async()=>{await db.objectOnboardingDraft.create({data:{accountId:a.id,homeId:h.id,documentId:object.id,documentVersion:1,documentSha256:'a'.repeat(64),mode:'manual',output:{}}});assert((await service.list(a.id,h.id,{limit:20,workflow:'pending'})).items.some(d=>d.id===object.id));});
  await t.test('Delete removes all disposable upload references, original, and supports durable replay',async()=>{for(let i=0;i<2;i++)await db.documentIntakeBatch.create({data:{accountId:a.id,homeId:h.id,key:randomUUID(),digest:'b'.repeat(64),totalBytes:100,items:{create:{clientItemId:randomUUID(),ordinal:0,filename:'Sbagliato.pdf',byteSize:100,mimeType:'application/pdf',uploadState:i?'duplicate':'stored',documentId:fresh.id,documentVersion:1,documentSha256:'a'.repeat(64)}}}});assert.equal((await service.removalCapability(a.id,h.id,fresh.id)).allowed,true);await assert.rejects(service.removalCapability(b.id,h.id,fresh.id),e=>e.getStatus()===403);await assert.rejects(service.remove(a.id,h.id,fresh.id,{expectedVersion:2},randomUUID()),e=>e.getStatus()===409);const key=randomUUID();assert.deepEqual(await service.remove(a.id,h.id,fresh.id,{expectedVersion:1},key),{removed:true});assert.deepEqual(await service.remove(a.id,h.id,fresh.id,{expectedVersion:1},key),{removed:true});assert.equal(await db.document.count({where:{id:fresh.id}}),0);assert.equal(await db.documentIntakeItem.count({where:{documentId:fresh.id}}),0);assert.equal(removed.length,2);});
  await t.test('Linked or revised sources remain intact, viewer cannot remove',async()=>{assert.equal((await service.removalCapability(a.id,h.id,object.id)).allowed,false);await assert.rejects(service.remove(a.id,h.id,object.id,{expectedVersion:1},randomUUID()),e=>e.getStatus()===409);assert(await db.document.findUnique({where:{id:object.id}}));await db.homeMembership.update({where:{accountId_homeId:{accountId:a.id,homeId:h.id}},data:{role:'viewer'}});await assert.rejects(service.removalCapability(a.id,h.id,invoice.id),e=>e.getStatus()===403);});
+ await t.test('workflow summary counts all pages with list-equivalent states and privacy, including viewer and revocation',async()=>{
+  for(let i=0;i<55;i++)await doc('Aggregate '+i);
+  const counts={to_compile:0,review:0,analyzing:0,attention:0,completed:0};let cursor;
+  do{const page=await service.list(a.id,h.id,{limit:20,...cursor?{cursor}:{}});for(const item of page.items)counts[item.workflowState]++;cursor=page.nextCursor;}while(cursor);
+  assert.deepEqual((await service.workflowSummary(a.id,h.id,{})).counts,counts);assert(counts.to_compile>50);
+  for(const workflow of ['to_compile','review']){
+   const page=await service.list(a.id,h.id,{limit:50,workflow});assert(page.items.every(item=>item.workflowState===workflow));assert.equal(page.items.length,Math.min(50,counts[workflow]));
+  }
+  assert.deepEqual((await service.workflowSummary(b.id,h.id,{})).counts,{to_compile:0,review:0,analyzing:0,attention:0,completed:0});
+  await assert.rejects(service.workflowSummary(a.id,h.id,{q:'ignored'}));
+  await db.document.update({where:{id:plan.id},data:{visibility:'home'}});assert.equal((await service.workflowSummary(b.id,h.id,{})).counts.to_compile,1);
+  await db.document.update({where:{id:plan.id},data:{visibility:'private'}});
+  await db.documentVersion.updateMany({where:{documentId:plan.id},data:{sha256:'b'.repeat(64)}});const changed=(await service.workflowSummary(a.id,h.id,{})).counts;assert.equal(changed.completed,counts.completed-1);assert.equal(changed.to_compile,counts.to_compile+1);
+  await db.documentVersion.updateMany({where:{documentId:plan.id},data:{sha256:'a'.repeat(64)}});
+  await db.homeMembership.delete({where:{accountId_homeId:{accountId:b.id,homeId:h.id}}});await assert.rejects(service.workflowSummary(b.id,h.id,{}));
+ });
+
 });
 

@@ -29,3 +29,8 @@ Su richiesta successiva, le scadenze aprono il blocco Da completare prima delle 
 ### Scadenze autonome
 
 Su approvazione successiva, Le tue scadenze è un box autonomo precedente a Da completare, non più annidato al suo interno. Documenti, proposte e verifiche mantengono il nome Da completare. Ordine e separazione verificati su desktop e mobile.
+
+
+### Conteggi e gruppi compatti
+
+La successiva implementazione del [riepilogo aggregato](casa-counts-20261019.md) supera il precedente limite sui contatori: Da completare mostra tre gruppi con conteggi completi dal server, non più una lista delle prime tre fonti.

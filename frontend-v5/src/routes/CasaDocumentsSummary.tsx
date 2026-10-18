@@ -1,11 +1,12 @@
 import {Link} from 'react-router';
-import {useDocumentSearch} from '../documents/hooks';
-import {EMPTY_FILTERS} from '../lib/documentSearch';
+import {useQuery} from '@tanstack/react-query';
+import {useAccount,useApi} from '../session/session';
 import {ErrorState,Loading} from '../components/ui';
-import {DocumentWorkflowStatus} from '../documents/DocumentWorkflowStatus';
+import {Icon} from '../components/Icon';
 import casa from './casa.module.css';
+type Summary={counts:Record<'to_compile'|'review'|'analyzing'|'attention'|'completed',number>};
 export function CasaDocumentsSummary({homeId}:{homeId:string}){
- const query=useDocumentSearch(homeId,{...EMPTY_FILTERS,workflow:'pending'},true),base=`/home/${encodeURIComponent(homeId)}/documenti`;
- const items=query.data?.pages.flatMap(p=>p.items)??[];
- return <section aria-label="Documenti da completare"><h3>Documenti da completare</h3>{query.isPending?<Loading label="Caricamento documenti…"/>:query.isError?<ErrorState error={query.error} onRetry={()=>void query.refetch()}/>:!items.length?<p>Nessun documento da completare.</p>:<><ul className={casa.documentList}>{items.slice(0,3).map(item=><li key={item.id}><Link to={base+'/'+encodeURIComponent(item.id)}>{item.name}</Link><DocumentWorkflowStatus state={item.workflowState}/></li>)}</ul><Link to={base+'?workflow=pending'}>Vedi tutti i documenti da completare</Link></>}</section>;
+ const account=useAccount(),api=useApi(),base=`/home/${encodeURIComponent(homeId)}/documenti`;
+ const query=useQuery({queryKey:['account',account.id,'home',homeId,'documents','workflow-summary'],queryFn:({signal})=>api.callJson<Summary>(`/homes/${encodeURIComponent(homeId)}/documents/workflow-summary`,{accountId:account.id,signal}),gcTime:0,refetchInterval:q=>q.state.data?.counts.analyzing?2000:false});
+ return <section aria-label="Documenti da completare">{query.isPending?<Loading label="Caricamento conteggi documenti…"/>:query.isError?<ErrorState error={query.error} onRetry={()=>void query.refetch()}/>:<>{([['to_compile','Documenti da compilare'],['review','Proposte da rivedere']] as const).map(([state,label])=><Link key={state} className={casa.summaryRow} to={base+'?workflow='+state}><strong>{label}</strong>{' '}<span className={casa.counter}>{query.data.counts[state]}</span><Icon name="arrow"/></Link>)}{(query.data.counts.analyzing>0||query.data.counts.attention>0)&&<p className={casa.otherStates}><Link to={base+'?workflow=pending'}>{query.data.counts.analyzing} in analisi · {query.data.counts.attention} richiedono attenzione</Link></p>}</>}</section>;
 }

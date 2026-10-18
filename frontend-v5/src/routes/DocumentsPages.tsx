@@ -74,7 +74,7 @@ export function DocumentsPage() {
   const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
   const [params, setParams] = useSearchParams();
   const uploadVisible=uploadOpen||params.has('aggiungi');
-  const applied = useMemo(() => ({...filtersFromParams(params), workflow: params.get('workflow') === 'completed' ? 'completed' as const : params.get('workflow') === 'pending' ? 'pending' as const : params.get('q') ? 'all' as const : 'pending' as const}), [params]);
+  const applied = useMemo(() => ({...filtersFromParams(params), workflow: params.get('workflow')==='to_compile'?'to_compile' as const:params.get('workflow')==='review'?'review' as const:params.get('workflow') === 'completed' ? 'completed' as const : params.get('workflow') === 'pending' ? 'pending' as const : params.get('q') ? 'all' as const : 'pending' as const}), [params]);
   const appliedKey = filtersKey(applied);
   const capabilities = useDocumentSearchCapabilities(home.id);
   const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
@@ -103,6 +103,7 @@ export function DocumentsPage() {
       {params.has('documento-salvato')&&<Banner title="Documento organizzato" actions={<button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'completed'})}>Vedi nei Completati</button>}><p>Il salvataggio è riuscito. Il documento e l’originale restano disponibili.</p></Banner>}
       {canUpload&&uploadVisible&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={()=>closeUpload()}>Chiudi caricamento</button></section>}
       <div className={docs.workflowTabs} role="group" aria-label="Stato dei documenti">{([['pending','Da fare'],['completed','Completati'],...(applied.q?[['all','Tutti'] as const]:[])] as const).map(([value,label])=><button key={value} type="button" className={cx(ui.btn,applied.workflow===value&&ui.primary)} aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
+      {['to_compile','review'].includes(applied.workflow)&&<p role="status">Vista: {applied.workflow==='review'?'Proposte da rivedere':'Documenti da compilare'}. <button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'pending'})}>Mostra tutti i documenti da fare</button></p>}
       {!canUpload && (
         <p className={cx(docs.note, docs.panel)}>
           Con il tuo ruolo puoi consultare e scaricare i documenti visibili, non caricarne di nuovi.

@@ -464,6 +464,11 @@ export class FakeBackend {
     if (!perms) return err(403, 'forbidden', 'Accesso non consentito.');
     if (this.storageDown) return err(503, 'storage_unavailable', 'Archivio non disponibile.');
 
+    if(documentId==='workflow-summary'&&req.method==='GET'){
+      const counts={to_compile:0,review:0,analyzing:0,attention:0,completed:0};
+      for(const doc of this.documents.values())if(doc.homeId===homeId&&this.canSee(doc,accountId,perms))counts[doc.workflowState??'to_compile']++;
+      return {status:200,body:{counts}};
+    }
     if (documentId === 'export' && !file) {
       if (req.method !== 'POST') return err(404, 'not_found', 'Risorsa non trovata.');
       return this.exportZip(req, accountId, homeId, perms);
@@ -536,7 +541,7 @@ export class FakeBackend {
     const limit = query.has('limit') ? Number(query.get('limit')) : 20;
     if (!Number.isInteger(limit) || limit < 1 || limit > 50) return err(422, 'validation_error', 'Limite non valido.');
     const workflow=query.get('workflow')??'all';
-    if(!['all','pending','completed'].includes(workflow))return err(422,'validation_error','Stato non valido.');
+    if(!['all','pending','completed','to_compile','review'].includes(workflow))return err(422,'validation_error','Stato non valido.');
     const filtered = workflow!=='all'||q !== '' || format !== 'all' || visibility !== 'all';
     const scope = fingerprint(`${accountId}|${homeId}|${q}|${format}|${visibility}|${workflow}`);
     const cursor = query.get('cursor');
@@ -552,7 +557,7 @@ export class FakeBackend {
     const needle = q.toLowerCase();
     const visible = [...this.documents.values()]
       .filter((d) => d.homeId === homeId && this.canSee(d, accountId, perms))
-      .filter(d=>workflow==='all'||(d.workflowState==='completed')===(workflow==='completed'))
+      .filter(d=>workflow==='all'||(['pending','completed'].includes(workflow)?(d.workflowState==='completed')===(workflow==='completed'):d.workflowState===workflow))
       .filter((d) => format === 'all' || d.mimeType === mime[format])
       .filter((d) => (visibility === 'all' ? true : visibility === 'home' ? d.visibility === 'home' : d.visibility === 'private'))
       .filter(

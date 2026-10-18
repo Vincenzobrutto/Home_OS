@@ -1,3 +1,7 @@
+## Casa: Da completare compatto con conteggi — 19 ottobre 2026
+
+Tre righe per documenti da compilare, proposte e verifiche; conteggi completi dal servizio e gruppi cliccabili. [Contratto, verifica e limiti](v5/casa-counts-20261019.md).
+
 ## Casa: scadenze in box autonomo — 19 ottobre 2026
 
 Le tue scadenze ora ha un box autonomo sopra Da completare, che mantiene documenti, proposte e verifiche. Separazione strutturale valida per desktop, mobile e ordine di lettura. Nessuna modifica ai dati.

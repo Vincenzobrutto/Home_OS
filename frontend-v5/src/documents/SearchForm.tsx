@@ -114,7 +114,7 @@ export function SearchForm(props: {
         <button type="button" className={ui.btn} onClick={reset} disabled={!canReset}>Azzera filtri</button>
       </div>
       </div>
-      <label className={docs.filter}>Cerca in<select className={docs.select} value={draft.workflow??'all'} onChange={e=>setDraft({...draft,workflow:e.target.value as DocumentSearchFilters['workflow']})}><option value="all">Tutti i documenti</option><option value="pending">Da fare</option><option value="completed">Completati</option></select></label>
+      <label className={docs.filter}>Cerca in<select className={docs.select} value={draft.workflow??'all'} onChange={e=>setDraft({...draft,workflow:e.target.value as DocumentSearchFilters['workflow']})}><option value="all">Tutti i documenti</option><option value="pending">Da fare</option><option value="completed">Completati</option><option value="to_compile">Documenti da compilare</option><option value="review">Proposte da rivedere</option></select></label>
       <details className={docs.extraFilters}><summary>Filtri</summary>      {props.collectionsEnabled && <section aria-label="Sezioni documenti" className={docs.collectionSections}>
         <h2 className={docs.collectionTitle}>Esplora i documenti</h2>
         <DocumentCollectionFilters current={applied.collection ?? 'all'} onChange={collection => props.onApply({ ...applied, collection })} label="Tipologie di documenti" />

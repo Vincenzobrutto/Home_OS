@@ -19,7 +19,7 @@ export function searchFilters(query: SearchDocumentsDto) {
   if (query.cursor !== undefined && (typeof query.cursor !== 'string' || !/^[A-Za-z0-9_-]{1,512}$/.test(query.cursor))) throw invalid('Pagina non valida.');
   const collection = query.collection ?? 'all';
   if (typeof collection !== 'string' || (collection !== 'all' && !Object.hasOwn(DOCUMENT_COLLECTIONS, collection))) throw invalid();
-  const workflow=query.workflow??'all';if(!['all','pending','completed'].includes(workflow))throw invalid();
+  const workflow=query.workflow??'all';if(!['all','pending','completed','to_compile','review'].includes(workflow))throw invalid();
   return { q, format, visibility, collection, workflow };
 }
 export type Filters = ReturnType<typeof searchFilters>;

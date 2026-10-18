@@ -19,6 +19,7 @@ export function attachment(filename: string) {
 export class DocumentsController {
   constructor(private readonly documents: DocumentsService, private readonly sessions: SessionsService) {}
   @Get() list(@Req() req: DocumentRequest, @Param('homeId') homeId: string, @Query() query: SearchDocumentsDto) { return this.documents.list(req.documentAccountId, homeId, query); }
+  @Get('workflow-summary') summary(@Req() req:DocumentRequest,@Param('homeId') homeId:string,@Query() query:unknown){return this.documents.workflowSummary(req.documentAccountId,homeId,query);}
   @Post()
   @UseInterceptors(FileInterceptor('file', { limits: DOCUMENT_UPLOAD_LIMITS }))
   upload(@Req() req: DocumentRequest, @Param('homeId') homeId: string, @Body() dto: UploadDocumentDto, @UploadedFile() file: { buffer: Buffer; originalname: string } | undefined, @Headers('idempotency-key') key?: string) { return this.documents.upload(req.documentAccountId, homeId, dto, file, key); }

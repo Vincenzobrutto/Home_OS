@@ -1,3 +1,7 @@
+## Casa: Da completare compatto con conteggi — 19 ottobre 2026
+
+Tre righe per documenti da compilare, proposte e verifiche; conteggi completi dal servizio e gruppi cliccabili. [Contratto, verifica e limiti](v5/casa-counts-20261019.md).
+
 ## Casa: layout approvato e scadenze — 19 ottobre 2026
 
 Implementati riepilogo operativo, fonti pendenti reali, scadenze personali, accessi alla casa e spese sintetiche su desktop/mobile. [Verifica e limiti](v5/casa-layout-20261019.md).

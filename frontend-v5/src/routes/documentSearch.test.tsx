@@ -101,19 +101,18 @@ describe('[mock] H2 confini della sessione e revoca delle pagine', () => {
 });
 
 describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
-  it('da Casa «Cerca documenti» porta a ?ricerca=1 e al campo; apertura normale non sposta il focus sul campo', async () => {
+  it('ingresso esplicito ?ricerca=1 porta al campo; apertura normale da Casa non sposta il focus sul campo', async () => {
     const { backend, home } = world();
     const app = renderApp({ path: '/accedi', backend });
     await login(app, 'owner@example.test', PW.owner);
     await app.router.navigate(`/home/${home.id}/casa`);
-    await app.user.click(await screen.findByRole('link', { name: 'Cerca documenti' }));
+    await app.router.navigate(`/home/${home.id}/documenti?ricerca=1`);
     await waitFor(() => expect(withoutWorkflow(app.router.state.location.search)).toBe('?ricerca=1'));
     await waitFor(async () => expect(await field()).toHaveFocus());
     expect(listQueries(backend).every((q) => !q.includes('ricerca'))).toBe(true);
 
     await app.router.navigate(`/home/${home.id}/casa`);
-    await screen.findByRole('link', { name: 'Cerca documenti' });
-    await app.user.click(screen.getByRole('link', { name: 'Apri i documenti' }));
+    await app.user.click(await screen.findByRole('link', { name: /Documenti.*Originali e dati salvati/ }));
     await field();
     await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Documenti' })).toHaveFocus());
   });

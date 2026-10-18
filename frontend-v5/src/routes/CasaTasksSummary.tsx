@@ -3,10 +3,13 @@ import { ErrorState, Loading, cx, ui } from '../components/ui';
 import { m3ErrorMessage } from '../lib/review';
 import { useReview } from '../review/hooks';
 import styles from './pages.module.css';
+import casa from './casa.module.css';
+import {Icon} from '../components/Icon';
 
-export function CasaReviewSummary({ homeId }: { homeId: string }) {
+export function CasaReviewSummary({ homeId,compact=false }: { homeId: string;compact?:boolean }) {
   const review = useReview(homeId);
   const count = review.data?.pages[0]?.openCount;
+  if(compact)return <section aria-label="Da rivedere">{review.isPending?<Loading label="Caricamento conteggio verifiche…"/>:review.isError||count===undefined?<ErrorState error={review.error??new Error('Conteggio non disponibile.')} onRetry={()=>void review.refetch()}/>:<Link className={casa.summaryRow} to={`/home/${encodeURIComponent(homeId)}/review`}><strong>Verifiche da rivedere</strong>{' '}<span className={casa.counter}>{count}</span><Icon name="arrow"/></Link>}</section>;
   if (review.isSuccess && count === 0) return <section className={cx(ui.card, styles.quietSummary)} aria-labelledby="casa-verifiche"><h2 id="casa-verifiche" className={styles.cardTitle}>Da rivedere</h2><p>Nessuna verifica aperta. <Link to={`/home/${encodeURIComponent(homeId)}/review`}>Apri verifiche</Link></p></section>;
   return (
     <section className={cx(ui.card, styles.wide)} aria-labelledby="casa-verifiche">

@@ -65,7 +65,7 @@ export function filtersFromParams(params: URLSearchParams): DocumentSearchFilter
   const visibility = params.get('visibility') ?? 'all';
   return {
     q: normalizeQuery(params.get('q') ?? ''),
-    ...(['pending','completed'].includes(params.get('workflow')??'')?{workflow:params.get('workflow') as 'pending'|'completed'}:{}),
+    ...(['pending','completed','to_compile','review'].includes(params.get('workflow')??'')?{workflow:params.get('workflow') as 'pending'|'completed'|'to_compile'|'review'}:{}),
     format: (FORMATS.has(format) ? format : 'all') as DocumentFormatFilter,
     visibility: (VISIBILITIES.has(visibility) ? visibility : 'all') as DocumentVisibilityFilter,
     ...(COLLECTION_OPTIONS.some(o => o.value === params.get('collection') && o.value !== 'all') ? { collection: params.get('collection') as DocumentSearchFilters['collection'] } : {}),
@@ -94,6 +94,7 @@ export function sameFilters(a: DocumentSearchFilters, b: DocumentSearchFilters) 
 /** Descrizione testuale dei filtri applicati (resa come testo React, mai HTML). */
 export function describeFilters(f: DocumentSearchFilters) {
   const parts: string[] = [];
+  if(f.workflow==='to_compile')parts.push('Da compilare');if(f.workflow==='review')parts.push('Proposte da rivedere');
   if(f.workflow==='pending')parts.push('Da fare');if(f.workflow==='completed')parts.push('Completati');
   if (f.q) parts.push(`«${f.q}»`);
   if (f.format !== 'all') parts.push(`formato ${FORMAT_OPTIONS.find((o) => o.value === f.format)!.label}`);
