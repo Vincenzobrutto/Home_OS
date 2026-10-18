@@ -40,7 +40,7 @@ function IntakeContainer() {
   const [automaticConsent,setAutomaticConsent]=useState(false),[automaticActive,setAutomaticActive]=useState(false);
   async function startAutomatic(batchId:string,key:string){
     const latest=await client.batch(batchId);
-    await api.callJson(`/homes/${home.id}/object-onboarding/automatic-runs`,{method:'POST',body:{batchId,documentIds:[...new Set(latest.items.map(i=>i.documentLink.document?.id).filter(Boolean))],consentToProviderTransfer:true,automaticProcessing:true},idempotencyKey:key,accountId:account.id});
+    await api.callJson(`/homes/${home.id}/object-onboarding/automatic-runs`,{method:'POST',body:{batchId,documentIds:[...new Set(latest.items.map(i=>i.documentLink.document?.id).filter(Boolean))],consentToProviderTransfer:true,automaticProcessing:true,automaticContacts:true},idempotencyKey:key,accountId:account.id});
     await cache.invalidateQueries({queryKey:['account',account.id,'home',home.id,'automatic-intake',batchId]});
   }
   const cursors = useRef(new Map<string, string | null>()), retryItem = useRef<string | null>(null), picker = useRef<HTMLInputElement>(null);
@@ -180,7 +180,7 @@ function IntakeContainer() {
     if(outcome.status!=='done'||outcome.results.some(r=>r.status!=='confirmed'))throw preparationError('Archiviazione del documento da verificare. Nessun oggetto o costo è stato creato: controlla il documento e riprendi qui.');
   }
   const error = cap.error ?? batch.error, unavailable = denied(error), busyAnalysis = wire?.items.some(i => ['queued', 'running'].includes(i.analysisState));
-  const automaticControl=<><label><input type="checkbox" checked={automaticConsent} disabled={waiting} onChange={e=>setAutomaticConsent(e.target.checked)}/> Autorizzo l’invio dei documenti di questo caricamento ad Anthropic, inclusi dati personali, e la creazione automatica di oggetti e spese verificati.</label><p>Entro il budget residuo · massimo 0,25 USD per documento. Ti chiederemo aiuto solo nei casi dubbi.</p></>;
+  const automaticControl=<><label><input type="checkbox" checked={automaticConsent} disabled={waiting} onChange={e=>setAutomaticConsent(e.target.checked)}/> Autorizzo l’invio dei documenti di questo caricamento ad Anthropic, inclusi dati personali, e la creazione automatica di oggetti, spese e contatti verificati.</label><p>Entro il budget residuo · massimo 0,25 USD per documento. Ti chiederemo aiuto solo nei casi dubbi.</p></>;
   const newUpload=!id&&home.permissions.includes('edit');
   return <>
     <p><Link to={`/home/${home.id}/documenti`}>← Documenti</Link></p>

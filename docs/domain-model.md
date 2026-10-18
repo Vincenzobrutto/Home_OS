@@ -1,3 +1,7 @@
+## V5 — 18 ottobre 2026: contatti derivati dai facts
+
+ProductExtraction JSON può contenere contacts; ciascuna proposta conserva valori verificati, fonti e campi omessi. Le decisioni sono registrate come contact:<proposalId> nella bozza. HomeContact e ContactResourceLink esistenti sono scritti nella transazione di conferma onboarding, con lock della casa; nessuna modifica Prisma. I dati già presenti sono conservati e i collegamenti allo stesso originale restano unici.
+
 ## 18 ottobre 2026 — HomeContact e collegamenti personali V5
 
 Migrazione additiva20261018130000_home_contacts: HomeContact appartiene ad Account e Home, con nome/ruolo/persona-impresa/recapiti/note/identificativo facoltativo, stato active|archived e versione. ContactResourceLink collega risorse document/object/boiler/expense/work/activity senza duplicare titoli o recapiti; l’autorizzazione è ricalcolata dal servizio canonico. ContactRequest conserva hash, chiave e ID della ricevuta, senza snapshot di recapiti. Archivio non cancella storia o collegamenti; nuove associazioni solo dopo ripristino. [Mini rubrica](v5/mini-rubrica-20261018.md).

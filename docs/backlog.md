@@ -1,3 +1,9 @@
+## Aggiornamento 18 ottobre 2026 — Rubrica dai documenti
+
+RISOLTO: proposta automatica installatore con recapiti/IVA nella stessa analisi, conferma unica o processo delegato con consenso aggiornato.
+
+DA VALUTARE: più professionisti nello stesso documento e recapiti su pagine differenti richiedono revisione; il primo incremento ammette un emittente documentale, non rubrica indiscriminata dei fornitori. Il CF e la partita IVA possono essere entrambi estratti ma il modello contatto conserva un solo identificativo (preferenza IVA). Nessun recupero contatti dal web o messaggio ai professionisti. Le vecchie analisi non vengono riscritte retroattivamente; usare un nuovo invio consentito quando necessario.
+
 ## 18 ottobre 2026 — BL-10 prima versione mini rubrica operativa
 
 Completati CRUD privato, archivio, ricerca/paging, collegamenti canonici da schede salvate e creazione inline atomica, proposta installatore da issuer esistente, export personale. Residui espliciti: picker/creazione in bozze di nuove spese/lavori, conferma AI combinata BL-10b, riuso fra case e contatti condivisi da specificare. Nessuna importazione telefono/recapiti online. Fuori scope osservato: dettaglio conformità conserva ancora alcuni testi generici Oggetti e spese pur avendo archiviazione document-only; semplificare in successivo intervento UX. [Prove e limiti](v5/mini-rubrica-20261018.md).

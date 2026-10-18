@@ -1,3 +1,4 @@
+import { contactChoices } from '../contacts/proposals';
 import {confirmBody} from '../economy/document-domain';
 import { object, text, uuid, version, invalid } from '../review/domain';
 import { objectTypes, roomIds } from '../home-objects/domain';
@@ -28,11 +29,12 @@ function expense(input: unknown, today: string): OnboardingExpense {
   return { ...(r.manualItemAmount!==undefined?{manualItemAmount:r.manualItemAmount}:{}),...(r.acknowledgePossibleDuplicate !== undefined ? { acknowledgePossibleDuplicate: r.acknowledgePossibleDuplicate } : {}), action: 'create', title: text(r.title, 120), amountCents: amountCents(r.amountCents), spentOn: spentOn(r.spentOn, today), supplier: r.supplier === undefined || r.supplier === null ? null : text(r.supplier, 120) };
 }
 export function onboardingConfirmation(input: unknown, today: string) {
-  const r = object(input, ['expectedVersion', 'source', 'choices', 'houseExpenses', 'manualPurchaseTotalCents','documentOnly']);
+  const r = object(input, ['expectedVersion', 'source', 'choices', 'houseExpenses', 'manualPurchaseTotalCents','documentOnly','contacts']);
+  const contacts=contactChoices(r.contacts);
   if(r.documentOnly!==undefined&&r.documentOnly!==true)throw invalid();
   const manualPurchaseTotalCents = r.manualPurchaseTotalCents === undefined ? undefined : amountCents(r.manualPurchaseTotalCents);
   const source = object(r.source, ['documentId', 'documentVersion', 'sha256']);
-  if (typeof source.sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(source.sha256) || !Array.isArray(r.choices) || (!r.choices.length&&!Array.isArray(r.houseExpenses)&&!r.documentOnly) || r.choices.length > 20) throw invalid();
+  if (typeof source.sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(source.sha256) || !Array.isArray(r.choices) || (!r.choices.length&&!Array.isArray(r.houseExpenses)&&!contacts.length&&!r.documentOnly) || r.choices.length > 20) throw invalid();
   const choices: OnboardingChoice[] = r.choices.map(raw => {
     const c = object(raw, ['itemId', 'action', 'name', 'type', 'unitNames', 'roomIds', 'fields', 'manual', 'confirmHouseholdObject', 'acknowledgeExistingSource', 'targets', 'expense']);
     const itemId = text(c.itemId, 80);
@@ -55,8 +57,8 @@ export function onboardingConfirmation(input: unknown, today: string) {
     return { itemId, action: 'create', name: text(c.name, 120), type: c.type, unitNames, roomIds: roomIds(c.roomIds ?? []), fields, manual, confirmHouseholdObject: c.confirmHouseholdObject === true, acknowledgeExistingSource: c.acknowledgeExistingSource === true, expense: cost };
   });
   if (new Set(choices.map(c => c.itemId)).size !== choices.length) throw invalid();
-  const houseExpenses=houseChoices(r.houseExpenses,r.expectedVersion,today);if(!choices.length&&!houseExpenses.length&&!r.documentOnly)throw invalid();
-  return {...(r.documentOnly?{documentOnly:true as const}:{}),...(manualPurchaseTotalCents!==undefined?{manualPurchaseTotalCents}:{}),...(houseExpenses.length?{houseExpenses}:{}), expectedVersion: version(r.expectedVersion), source: { documentId: uuid(source.documentId), documentVersion: version(source.documentVersion), sha256: source.sha256 }, choices };
+  const houseExpenses=houseChoices(r.houseExpenses,r.expectedVersion,today);if(!choices.length&&!houseExpenses.length&&!contacts.length&&!r.documentOnly)throw invalid();
+  return {...(contacts.length?{contacts}:{}),...(r.documentOnly?{documentOnly:true as const}:{}),...(manualPurchaseTotalCents!==undefined?{manualPurchaseTotalCents}:{}),...(houseExpenses.length?{houseExpenses}:{}), expectedVersion: version(r.expectedVersion), source: { documentId: uuid(source.documentId), documentVersion: version(source.documentVersion), sha256: source.sha256 }, choices };
 }
 
 function houseChoices(input:unknown,expectedVersion:unknown,today:string){

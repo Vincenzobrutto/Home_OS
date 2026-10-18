@@ -1,3 +1,4 @@
+import { contactProposal, type ContactProposal } from '../contacts/extraction';
 import { HttpException } from '@nestjs/common';
 import { citation, type Citation, type EconomicOutput } from '../economy/document-domain';
 import { object, text, invalid, uuid, version } from '../review/domain';
@@ -24,6 +25,7 @@ export type ProductItem = {
 };
 export type HouseExpense = EconomicOutput & {id:string;fingerprint:string;reviewWarnings?:string[]};
 export type ProductExtraction = {
+  contacts?:ContactProposal[];
   houseExpenses?:HouseExpense[];
   documentInfo?:DocumentUnderstanding;
   reviewWarnings?:UnderstandingWarning[];
@@ -143,7 +145,8 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     const houseExpenses=readHouseExpenses(row.houseExpenses,context,row.documentKind==='utility_bill'?'utility_bill':'simple_invoice');
     if(houseExpenses.length&&!['utility_bill','purchase_document'].includes(String(row.documentKind)))throw invalid();
     if(row.documentKind==='purchase_document'&&houseExpenses.length>1)throw invalid('Una fattura propone un unico costo complessivo della casa.');
-    return { ...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
+    const party=contactProposal(understanding.documentInfo,context.kind==='text'?context.pages:undefined);
+    return { ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
   } catch (error) {
     if (error instanceof ProviderFailure) throw error;
     throw new ProviderFailure('analysis_invalid_output');

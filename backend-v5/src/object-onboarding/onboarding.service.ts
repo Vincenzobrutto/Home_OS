@@ -1,3 +1,4 @@
+import { contactChoices, resolveContact, saveContactProposal } from '../contacts/proposals';
 import { Injectable } from '@nestjs/common';
 import { Prisma, type ObjectOnboardingDraft } from '../../generated/client';
 import { randomUUID } from 'node:crypto';
@@ -15,7 +16,7 @@ import { proposedProfile, resolveProfile, type ObjectProfile } from './profile';
 import type { ProductExtraction, ProductItem } from './domain';
 
 export const onboardingJson = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
-type Decision = { state: 'confirmed' | 'skipped' | 'deferred'; objectIds: string[]; expenseId: string | null; newObjects: number; newExpenses: number; allocation?: 'manual_item' };
+type Decision = { state: 'confirmed' | 'skipped' | 'deferred'; objectIds: string[]; expenseId: string | null; newObjects: number; newExpenses: number; contactId?:string|null;newContacts?:number;linkedContacts?:number;allocation?: 'manual_item' };
 type Decisions = Record<string, Decision>;
 type Enrichment = { brand:string; reference:string; name: string | null; profile: ObjectProfile; candidate: { manual: unknown; token: string } | null };
 type Output = ProductExtraction & { enrichments?: Record<string, Enrichment> };
@@ -36,12 +37,13 @@ export class ObjectOnboardingService {
       }
       return { ...item,...((item.subjectKind==='system'||output.documentInfo?.kind==='conformity_declaration')?{subjectKind:'system',proposedType:output.documentInfo?.facts.find(f=>f.subjectIndex===(item.sourceIndex??output.items.indexOf(item))&&f.field==='systemType')?.value??'other'}:{}), profile: { ...output.enrichments?.[item.id]?.profile, ...proposedProfile(item) }, enrichment: output.enrichments?.[item.id] ?? null, decision: choice ? { ...choice, expenseId:undefined, objectIds: undefined, objects: targets } : null };
     }));
+    const contacts=await Promise.all((output.contacts??[]).map(async p=>({...p,resolution:await resolveContact(tx,a,h,p),decision:decisions['contact:'+p.id]??null})));
     const review=await this.safeReview(tx,a,h,draft);
-    return { id: draft.id, version: draft.version, state: draft.state, mode: draft.mode, snapshot: { documentId: draft.documentId, documentVersion: draft.documentVersion, sha256: draft.documentSha256 }, document: { id: source.id, name: source.name, mimeType: source.original!.mimeType }, documentKind: output.documentKind, documentInfo:output.documentInfo??null,reviewWarnings:output.reviewWarnings??[], items, needsReview: output.needsReview, purchaseExpenseReady:output.purchaseExpenseReady===true, purchaseTotal: output.purchaseTotal, houseExpenses:(output.houseExpenses??[]).map(item=>({...item,amountSelectionRequired:item.amountCandidates.some(a=>a.role==='arrears_balance'&&a.amountCents>0)||item.amountCandidates.filter(a=>a.role==='current_document_total').length!==1,decision:decisions[item.id]?{state:decisions[item.id].state,newExpenses:decisions[item.id].newExpenses}:null})), review, permissions: edit ? ['read', 'edit'] : ['read'] };
+    return { id: draft.id, version: draft.version, state: draft.state, mode: draft.mode, snapshot: { documentId: draft.documentId, documentVersion: draft.documentVersion, sha256: draft.documentSha256 }, document: { id: source.id, name: source.name, mimeType: source.original!.mimeType }, documentKind: output.documentKind, documentInfo:output.documentInfo??null,reviewWarnings:output.reviewWarnings??[], contacts,items, needsReview: output.needsReview, purchaseExpenseReady:output.purchaseExpenseReady===true, purchaseTotal: output.purchaseTotal, houseExpenses:(output.houseExpenses??[]).map(item=>({...item,amountSelectionRequired:item.amountCandidates.some(a=>a.role==='arrears_balance'&&a.amountCents>0)||item.amountCandidates.filter(a=>a.role==='current_document_total').length!==1,decision:decisions[item.id]?{state:decisions[item.id].state,newExpenses:decisions[item.id].newExpenses}:null})), review, permissions: edit ? ['read', 'edit'] : ['read'] };
   }
   private async safeReview(tx:OnboardingTx,a:string,h:string,draft:ObjectOnboardingDraft){
     if(!draft.review)return null;
-    const saved=draft.review as {manualPurchaseTotalCents?:number;forms?:Record<string,Record<string,unknown>>;pending?:{path:string;key:string;body:unknown}},forms:Record<string,unknown>={};
+    const saved=draft.review as {contacts?:unknown;manualPurchaseTotalCents?:number;forms?:Record<string,Record<string,unknown>>;pending?:{path:string;key:string;body:unknown}},forms:Record<string,unknown>={};
     for(const [id,form] of Object.entries(saved.forms??{})){
       if(!form||typeof form!=='object'||Array.isArray(form))continue;
       const targets=[];
@@ -56,7 +58,8 @@ export class ObjectOnboardingService {
       for(const c of body.houseExpenses??[])if(c.confirmation?.mode==='link_existing')await new ExpensesService(this.access.db,this.reviewAccess,this.clock).record(tx,a,h,c.confirmation.expenseId);
       pending={...pending,body:pending.body};
     }catch{pending=undefined;}}
-    return {forms,...(draft.mode==='manual'&&Number.isSafeInteger(saved.manualPurchaseTotalCents)&&saved.manualPurchaseTotalCents!>0?{manualPurchaseTotalCents:saved.manualPurchaseTotalCents}:{}),...(pending?{pending}:{})};
+    let contacts:ReturnType<typeof contactChoices>=[];try{contacts=contactChoices(saved.contacts);for(const c of contacts)if(c.contactId&&!await tx.homeContact.findFirst({where:{id:c.contactId,accountId:a,homeId:h}}))throw invalid();}catch{contacts=[];}
+    return {forms,...(contacts.length?{contacts}:{}),...(draft.mode==='manual'&&Number.isSafeInteger(saved.manualPurchaseTotalCents)&&saved.manualPurchaseTotalCents!>0?{manualPurchaseTotalCents:saved.manualPurchaseTotalCents}:{}),...(pending?{pending}:{})};
   }
   comparisonsFor(a:string,h:string,objectId:string,query:unknown){
     object(query,[]);return this.access.run(a,h,false,async tx=>{
@@ -255,7 +258,7 @@ export class ObjectOnboardingService {
     const body = onboardingConfirmation(input, temporal(this.clock.now()).today);
     return this.request(a, h, 'confirm', uuid(id), body, key, async tx => {
       const draft = await this.open(tx, a, h, id, body.expectedVersion), output = draft.output as unknown as Output, decisions = { ...draft.decisions as Decisions };
-      const onlyArchive=body.documentOnly||body.choices.length>0&&body.choices.every(c=>c.action==='document_only')&&!body.houseExpenses?.length;
+      const onlyArchive=!!body.contacts?.length&&!body.choices.length&&!body.houseExpenses?.length||body.documentOnly||body.choices.length>0&&body.choices.every(c=>c.action==='document_only')&&!body.houseExpenses?.length;
       if(automatic&&!onlyArchive){
         // Repeat duplicate checks under the same home lock as the canonical writes.
         for(const item of output.items){
@@ -266,7 +269,7 @@ export class ObjectOnboardingService {
         const costs=[...body.choices.flatMap(c=>'expense'in c&&c.expense.action==='create'?[{amountCents:c.expense.amountCents,spentOn:c.expense.spentOn}]:[]),...(body.houseExpenses??[]).flatMap(c=>c.confirmation?.mode==='create'?[c.confirmation.values]:[])];
         if(await tx.homeExpense.findFirst({where:{accountId:a,homeId:h,state:'active',OR:[{documentId:draft.documentId},...costs.map(c=>({amountCents:Number(c.amountCents),spentOn:String(c.spentOn)}))]},select:{id:true}}))throw conflict('automatic_duplicate_review','Controlla una spesa già presente prima di proseguire.');
       }
-      if((body.documentOnly||!body.choices.length&&!body.houseExpenses?.length)&&(!body.documentOnly||!output.documentInfo||output.items.length||output.houseExpenses?.length||body.choices.length||body.houseExpenses?.length))throw invalid('Nessuna proposta da confermare.');
+      if((body.documentOnly||!body.choices.length&&!body.houseExpenses?.length&&!body.contacts?.length)&&(!body.documentOnly||!output.documentInfo||output.items.length||output.houseExpenses?.length||body.choices.length||body.houseExpenses?.length))throw invalid('Nessuna proposta da confermare.');
       if(body.manualPurchaseTotalCents!==undefined&&(draft.mode!=='manual'||output.purchaseTotal))throw invalid('Il totale dichiarato è ammesso soltanto per una fattura compilata manualmente senza totale estratto.');
       if (body.source.documentId !== draft.documentId || body.source.documentVersion !== draft.documentVersion || body.source.sha256 !== draft.documentSha256) throw conflict('onboarding_source_changed', 'La fonte è cambiata.');
       const initialSourceLinks = await tx.$queryRaw<Array<{ id: string }>>`SELECT l.id FROM "ObjectResourceLink" l JOIN "Document" d ON d.id=l."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE l."accountId"=${a} AND l."homeId"=${h} AND l."resourceType"='document' AND l.state='active' AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;
@@ -345,8 +348,10 @@ export class ObjectOnboardingService {
         if(item.documentKind==='utility_bill'&&selected.confirmation?.mode==='create'&&!['electricity','gas','water','internet_services'].includes(String(selected.confirmation.values.category)))throw invalid('Scegli la fornitura della bolletta.');
         const result=await this.houseCost(tx,a,h,draft,item,selected);newExpenses+=result.newExpenses;decisions[item.id]={state:'confirmed',objectIds:[],newObjects:0,...result};
       }
-      const complete = [...output.items,...(output.houseExpenses??[])].every(item => ['confirmed', 'skipped'].includes(decisions[item.id]?.state));
-      return { draft: await tx.objectOnboardingDraft.update({ where: { id }, data: { decisions: onboardingJson(decisions), review: onboardingJson({forms:Object.fromEntries(Object.entries((draft.review as {forms?:Record<string,unknown>}|null)?.forms??{}).filter(([key])=>!body.choices.some(c=>c.itemId===key&&c.action!=='defer')))}), state: complete ? 'confirmed' : 'open', version: { increment: 1 } } }), result: { newObjects, newExpenses } };
+      let newContacts=0,linkedContacts=0;
+      for(const selected of body.contacts??[]){const p=output.contacts?.find(p=>p.id===selected.proposalId),key='contact:'+selected.proposalId;if(!p||decisions[key])throw conflict('contact_proposal_resolved','La proposta di contatto è già stata gestita.');const result=await saveContactProposal(tx,a,h,draft.documentId,p,selected,automatic);newContacts+=result.newContacts;linkedContacts+=result.linkedContacts;decisions[key]={state:selected.action==='skip'?'skipped':'confirmed',objectIds:[],expenseId:null,newObjects:0,newExpenses:0,...result};}
+      const complete = [...output.items,...(output.houseExpenses??[])].every(item => ['confirmed', 'skipped'].includes(decisions[item.id]?.state))&&(!body.contacts?.length||(output.contacts??[]).every(p=>!!decisions['contact:'+p.id]));
+      return { draft: await tx.objectOnboardingDraft.update({ where: { id }, data: { decisions: onboardingJson(decisions), review: onboardingJson({forms:Object.fromEntries(Object.entries((draft.review as {forms?:Record<string,unknown>}|null)?.forms??{}).filter(([key])=>!body.choices.some(c=>c.itemId===key&&c.action!=='defer')))}), state: complete ? 'confirmed' : 'open', version: { increment: 1 } } }), result: { newObjects, newExpenses,...(body.contacts?.length?{newContacts,linkedContacts}:{}) } };
     });
   }
 }

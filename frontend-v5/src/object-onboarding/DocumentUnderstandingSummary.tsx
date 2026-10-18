@@ -4,7 +4,7 @@ import { KIND_LABEL, kindCollection, collectionLabel, type DocumentKind } from '
 import { FieldInfo } from '../components/FieldInfo';
 import { ui } from '../components/ui';
 import styles from './onboarding.module.css';
-const labels:Record<string,string>={purchaseTotal:'Totale della fattura',purchaseAmount:'Prezzo dell’articolo',issuer:'Impresa o emittente',documentDate:'Data del documento',installationDate:'Data di installazione',interventionDescription:'Intervento descritto',availablePowerKw:'Potenza impegnabile (kW)',systemType:'Tipo di impianto'};
+const labels:Record<string,string>={purchaseTotal:'Totale della fattura',purchaseAmount:'Prezzo dell’articolo',issuer:'Impresa o emittente',issuerPhone:'Telefono dell’impresa',issuerEmail:'Email dell’impresa',issuerVatId:'Partita IVA dell’impresa',issuerFiscalId:'Codice fiscale dell’impresa',documentDate:'Data del documento',installationDate:'Data di installazione',interventionDescription:'Intervento descritto',availablePowerKw:'Potenza impegnabile (kW)',systemType:'Tipo di impianto'};
 export const understandingFieldLabel=(field:string)=>{const key=field.split(':').at(-1)??field;return labels[key]??profileLabels[key as keyof typeof profileLabels]??'dato del documento';};
 const systems:Record<string,string>={electrical:'Elettrico',heating:'Riscaldamento',cooling:'Climatizzazione',plumbing:'Idraulica',security:'Sicurezza'};
 export function DocumentUnderstandingSummary({draft}:{draft:Draft}){

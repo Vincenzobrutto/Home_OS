@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Compilazione della rubrica dai documenti
+
+La stessa analisi AI propone installatore/professionista con recapiti e IVA/CF presenti nell’originale. Revisione unica precompilata, possibilità di escludere il contatto, riconoscimento dei contatti esistenti e completamento dei soli campi vuoti. Nuovo consenso per la creazione automatica anche dei contatti nei caricamenti delegati. Quattro analisi reali per 0,127216 USD hanno isolato e corretto citazioni visive incomplete: V19 riconosce nome, telefono e IVA dalla conformità; fattura riconciliata per IVA senza duplicati. Email non presente lasciata vuota. Test e limiti nel report contact-extraction-v19-20261018.md.
+
 ## 18 ottobre 2026 — Mini rubrica personale della casa
 
 Rubrica operativa da Casa: contatti, ricerca, modifica, archivio/ripristino, telefono/email; collegamenti privati da documenti, oggetti, spese, lavori e attività, creazione inline atomica e controllo doppioni/versioni/retry. Proposta installatore da conformità già estratta, solo su conferma; export personale esteso. Migrazione additiva V5; nessuna nuova AI. [Report e contratto](v5/mini-rubrica-20261018.md).

@@ -1,3 +1,7 @@
+## Aggiornamento 18 ottobre 2026 — Rubrica assistita operativa
+
+Completati estrazione del professionista nella chiamata documentale esistente, revisione unica e salvataggio automatico con opt-in esplicito, deduplica e protezione dei campi presenti. Verificati offline email e dati cliente esclusi; live conformità e fattura dello stesso elettricista, senza creare ulteriori oggetti/spese. Estensione ad altri mestieri/formati da valutare sui feedback, senza promessa di riconoscimento universale.
+
 ## 18 ottobre 2026 — Rubrica utilizzabile da Casa
 
 Raggiunta prima versione BL-10: contatti personali e collegamenti a documenti/oggetti/spese/lavori/attività con versione, archivio, duplicati e privacy. Proposta installatore riutilizza estrazione esistente. BL-10b e inserimento contatto nella bozza di nuova spesa/lavoro restano successivi, senza riaprire estrazione o automazioni. [Report](v5/mini-rubrica-20261018.md).

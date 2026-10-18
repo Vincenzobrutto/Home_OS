@@ -3,7 +3,7 @@ import { proposedProfile } from './profile';
 import type { OnboardingChoice } from './bodies';
 
 export class AutomaticReviewNeeded extends Error {}
-export function automaticPlan(output: ProductExtraction) {
+function resourcePlan(output: ProductExtraction) {
   const review = (message: string): never => { throw new AutomaticReviewNeeded(message); };
   if(output.documentKind==='conformity_declaration'){
     if(output.documentInfo?.kind!=='conformity_declaration'||output.needsReview||output.reviewWarnings?.some(w=>!['-1:issuer','-1:documentDate'].includes(w.field))||output.houseExpenses?.length||output.purchaseTotal)review('Controlla la classificazione del documento nell’originale.');
@@ -39,3 +39,5 @@ export function automaticPlan(output: ProductExtraction) {
   if (output.purchaseTotal && !documentCost && allocated > output.purchaseTotal.amountCents) review('Le righe superano il totale del documento.');
   return { choices, houseExpenses };
 }
+
+export function automaticPlan(output:ProductExtraction,withContacts=false){const plan=resourcePlan(output);if(!withContacts||!output.contacts?.length)return plan;return {...plan,contacts:output.contacts.map(p=>({proposalId:p.id,action:'save' as const}))};}

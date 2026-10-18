@@ -1,3 +1,7 @@
+## V5 — 18 ottobre 2026: contatti nelle proposte documentali
+
+Lo schema AI aggiunge i facts document-level issuerPhone, issuerEmail, issuerVatId, issuerFiscalId (subjectIndex=-1). Il draft espone contacts con id, values, sources, warnings, resolution (create/use_existing/review, contact, candidates, conflicts) e decision. La conferma accetta contacts: [{proposalId, action: save|skip, contactId?, expectedVersion?, values?, createDistinct?}]; è ammessa la sola conferma contatti senza creare oggetti/spese. Ownership, versione, sorgente e idempotenza restano obbligatorie. I risultati aggiungono newContacts/linkedContacts solo alle richieste con contacts. Il corpo di avvio automatico accetta automaticContacts?:boolean: assente/false conserva la vecchia semantica; true deve corrispondere al consenso aggiornato. Scelte manuali di contatto e valori modificati non sono accettati nella conferma interna automatica. Nessun nuovo endpoint o migrazione.
+
 ## 18 ottobre 2026 — contacts-v1
 
 Nuova API privata in /homes/:homeId: GET contacts (q/state/resourceKind/resourceId/limit/cursor), GET contacts/:id e /links, POST contacts, POST contacts/:id/updates|archive|restore|links|unlink. Mutazioni idempotenti con versione, controllo membri/CSRF e ambito privato. GET contact-suggestion?documentId propone issuer solo da conformità estratta stessa fonte/versione/SHA, senza AI o salvataggi. Contratto e limiti completi in [mini-rubrica](v5/mini-rubrica-20261018.md).

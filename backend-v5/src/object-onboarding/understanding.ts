@@ -6,7 +6,7 @@ import { calendar } from '../activities/domain';
 import { printedDates } from '../economy/document-evidence';
 import type { ProductSource } from './domain';
 
-export const documentFactKeys = ['issuer','documentDate','installationDate','interventionDescription','availablePowerKw','systemType'] as const;
+export const documentFactKeys = ['issuer','issuerPhone','issuerEmail','issuerVatId','issuerFiscalId','documentDate','installationDate','interventionDescription','availablePowerKw','systemType'] as const;
 export type DocumentFactKey = typeof documentFactKeys[number];
 export type UnderstandingWarning = { field: string; reason: 'unverified' | 'missing_identity' };
 export type DocumentUnderstanding = { kind: DocumentKind; title: { value: string; source: ProductSource; origin?: 'document_type' }; facts: Array<{ subjectIndex: number; field: DocumentFactKey; value: string; source: ProductSource }> };
@@ -52,9 +52,10 @@ export function readUnderstanding(raw:unknown, rawFacts:unknown, itemCount:numbe
   if(!Number.isSafeInteger(fact.subjectIndex)||Number(fact.subjectIndex)<-1||Number(fact.subjectIndex)>=itemCount||!(documentFactKeys as readonly unknown[]).includes(fact.field))throw invalid();
   const field=fact.field as DocumentFactKey,key=fact.subjectIndex+':'+field;if(seen.has(key))throw invalid();seen.add(key);
   try{
-   let proof=readSource(fact.evidence),value=normalize(text(fact.value,field==='interventionDescription'?500:120));
+   let proof=readSource(fact.evidence),value=normalize(text(fact.value,field==='interventionDescription'?500:field==='issuerEmail'?254:120));
    if(field==='documentDate'&&kind==='invoice'&&proof.page===source.page&&normalize(source.excerpt).includes(normalize(proof.excerpt))&&printedDates(source.excerpt).length===1&&printedDates(source.excerpt).includes(value))proof=source;
    const excerpt=normalize(proof.excerpt);
+   if(field.startsWith('issuer')&&Number(fact.subjectIndex)!==-1)throw invalid();
    if(field==='documentDate'||field==='installationDate'){
     if(field==='documentDate'&&kind==='conformity_declaration'){
      const labelled=conformityDateSource(proof,value,proof.basis==='verified_text'?pages?.[proof.page-1]:undefined);if(!labelled)throw invalid();proof=labelled;

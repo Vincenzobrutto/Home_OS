@@ -12,10 +12,10 @@ type Props = {
   disabled: boolean; documentFields?: ReactNode; copyChoice?: { checked: boolean; change: (checked: boolean) => void };
   change: (id: string, form: Form) => void; save: () => void; defer: () => void; add: () => void;
   enrich: (id: string, body: { brand: string; reference: string; productUrl?: string }) => Promise<void>;
-  houseFields?:ReactNode;houseProblem?:string;houseTotals?:{newExpenses:number;amountCents:number};
+  contactFields?:ReactNode;houseFields?:ReactNode;houseProblem?:string;houseTotals?:{newExpenses:number;amountCents:number};
   manualTotal?: string; changeManualTotal?: (value: string) => void;
 };
-export function UnifiedReview({ draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, defer, add, enrich, manualTotal, changeManualTotal,houseFields,houseProblem,houseTotals }: Props) {
+export function UnifiedReview({ draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, defer, add, enrich, manualTotal, changeManualTotal,contactFields,houseFields,houseProblem,houseTotals }: Props) {
   const items = draft.items.filter(item => (!item.decision || item.decision.state === 'deferred')&&!(draft.documentInfo?.kind==='conformity_declaration'&&forms[item.id]?.action==='document_only'));
   const manualCents = /^\d+(?:[.,]\d{1,2})?$/.test(manualTotal ?? '') ? Math.round(Number(manualTotal!.replace(',', '.')) * 100) : 0;
   const effectiveDraft = !draft.purchaseTotal && manualCents > 0 ? { ...draft, purchaseTotal: { amountCents: manualCents } } : draft;
@@ -33,6 +33,7 @@ export function UnifiedReview({ draft, forms, api, accountId, base, root, disabl
     </section>)}
     {!['utility_bill','house_document','conformity_declaration'].includes(draft.documentKind)&&<button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>Aggiungi un altro articolo</button>}
     {houseFields}
+    {contactFields}
     <section className={ui.card} aria-label="Riepilogo prima di salvare" aria-live="polite">
       {draft.purchaseTotal && <p>Totale fattura: <strong>{euro(draft.purchaseTotal.amountCents)}</strong></p>}
       {(!items.length||items.some(item=>forms[item.id]?.action==='document_only'))&&<p>Il documento sarà conservato nella casa.</p>}
