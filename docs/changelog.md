@@ -1,3 +1,7 @@
+## Etichette della spesa da documento — 18 ottobre 2026
+
+«Nessun oggetto» sostituito da «costo non attribuito a un oggetto», con spiegazione che gli oggetti collegati al documento non ricevono automaticamente il costo. Riepilogo ora «Data della spesa», coerente con il campo inserito. Solo testi, nessuna variazione ai collegamenti o ai dati.
+
 ## Collaudo browser Fattura/Ricevuta — 18 ottobre 2026
 
 Verificati upload, spesa sola, nuovo oggetto facoltativo, collegamento esistente, Completati e costi unici. Corretto azzeramento dei campi spesa dopo aggiunta articolo. [Evidenze e osservazioni UX](v5/manual-purchase-flow-20261018.md#collaudo-browser-e-correzione-successiva).

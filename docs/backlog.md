@@ -744,4 +744,4 @@ Risolto campo manuale nascosto in bozzeAI order_confirmation. Nuovo prompt V10 e
 Caso conformità elettrica classificato unsupported con job succeeded, non erroreAPI. Serve contratto per documenti/casa/impianti/interventi oltre acquisti, ragioni per campo, classificazione unica e corpus di accettazione. Proposta non implementata: docs/v5/document-understanding-v11-proposal-20261018.md. Nessuna nuova chiamataAI.
 
 
-- UX revisione spese da documento: chiarire «nessun oggetto» come assenza di attribuzione economica, distinta dagli oggetti collegati al documento; usare «Data della spesa» nel riepilogo dei valori inseriti. Osservato nel collaudo Fattura/Ricevuta del 18 ottobre 2026; vedere `v5/manual-purchase-flow-20261018.md`.
+- Completato il 18 ottobre 2026 — UX revisione spese da documento: chiarire «nessun oggetto» come assenza di attribuzione economica, distinta dagli oggetti collegati al documento; usare «Data della spesa» nel riepilogo dei valori inseriti. Osservato nel collaudo Fattura/Ricevuta del 18 ottobre 2026; vedere `v5/manual-purchase-flow-20261018.md`.

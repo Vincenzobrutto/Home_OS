@@ -19,3 +19,8 @@ Confermati nel browser: salvataggio disponibile prima di aggiungere oggetti, pas
 Rilevato e corretto un difetto reale: aggiungere un articolo incrementava la versione bozza e rimontava il form economico, azzerando i campi locali. La chiave della proposta economica ora segue l’identità della proposta; le query dei doppioni continuano a seguire la versione. Verificato nel browser che importo/data/fornitore/categoria rimangono dopo aggiunta; test integrato di regressione incluso. 61 test frontend mirati superati, oltre a typecheck/lint/build.
 
 Osservazioni UX ancora aperte: «Spesa della casa · nessun oggetto» descrive l’allocazione economica ma può essere confuso con l’assenza di collegamenti documentali; «Data del documento» nel riepilogo dovrebbe distinguere la data della spesa inserita. Nessuna promessa di persistenza dei campi su refresh.
+
+
+### Etichette chiarite
+
+Risolte le due osservazioni UX: «Spesa della casa · costo non attribuito a un oggetto», con spiegazione distinta dei collegamenti documentali, e «Data della spesa» nel riepilogo. Nessuna attribuzione economica o modifica dei dati.
