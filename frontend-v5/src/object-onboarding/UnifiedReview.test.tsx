@@ -12,11 +12,12 @@ import { reviewTotals } from './reviewSummary';
 
 const source = { documentId: 'source', page: 1, excerpt: 'Prova sintetica' };
 const fixture = (): Draft => ({ id: 'draft', version: 1, mode: 'extraction', state: 'open', documentKind: 'purchase_document', snapshot: { documentId: 'source', documentVersion: 1, sha256: 'a'.repeat(64) }, document: { id: 'source', name: 'Fattura due articoli', mimeType: 'application/pdf' }, needsReview: false, purchaseTotal: { amountCents: 14989 }, review: null, permissions: ['edit'], items: ['Macchina del ghiaccio', 'Cuffie personali'].map((name, index) => ({ id: 'item' + index, fields: { name: { value: name, source } }, purchaseAmount: { amountCents: index ? 4990 : 9999, source }, quantity: { value: 1 }, profile: { purchaseDate: { value: '2025-06-13', origin: 'extraction_confirmed', sources: [] } }, nameTruncated: false, disposition: 'household_object', enrichment: null, decision: null })) });
-function mount(draft = fixture()) {
+function mount(draft = fixture(), onlyDocument=false) {
   const submit = vi.fn(), api = new ApiClient({ fetch: async () => Response.json({ items: [], nextCursor: null }) });
   function Example() {
+    const [archiveOnly,setArchiveOnly]=useState(onlyDocument);
     const [forms, setForms] = useState<Record<string, Form>>(() => Object.fromEntries(draft.items.map(item => [item.id, initialForm(item, draft)])));
-    return <><DocumentUnderstandingSummary draft={draft}/><UnifiedReview draft={draft} forms={forms} api={api} accountId="account" base="/homes/home/object-onboarding" root="/home/home" disabled={false} change={(id, value) => setForms(old => ({ ...old, [id]: value }))} save={() => submit(draft.items.map(item => choice(item, forms[item.id]!)))} defer={vi.fn()} add={vi.fn()} enrich={vi.fn()} /></>;
+    return <><DocumentUnderstandingSummary draft={draft}/><UnifiedReview documentOnly={archiveOnly} changeDocumentOnly={setArchiveOnly} draft={draft} forms={forms} api={api} accountId="account" base="/homes/home/object-onboarding" root="/home/home" disabled={false} change={(id, value) => setForms(old => ({ ...old, [id]: value }))} save={() => submit(draft.items.map(item => choice(item, forms[item.id]!)))} defer={vi.fn()} add={vi.fn()} enrich={vi.fn()} /></>;
   }
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><MemoryRouter><Example /></MemoryRouter></QueryClientProvider>);
   return { user: userEvent.setup(), submit };
@@ -81,3 +82,19 @@ it('recognized house document without items can be confirmed without forcing a n
 });
 
 it('intercom classification is an editable local type and never invents brand or model',()=>{const draft=fixture(),item=draft.items[0]!;item.fields.name!.value='monitor videocitofonico';item.profile={};const form=initialForm(item,draft);expect(form.type).toBe('electrical');expect(form.fields.brand).toBeUndefined();expect(form.fields.model).toBeUndefined();item.proposedType='security';expect(initialForm(item,draft).type).toBe('security');});
+
+it('only-document mode hides object and cost forms and allows an explicit switch back',async()=>{
+ const w=mount(fixture(),true);
+ expect(screen.getByRole('radio',{name:'Conserva solo il documento'})).toBeChecked();
+ expect(screen.queryByRole('region',{name:'Articolo 1'})).not.toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'Salva documento'})).toBeEnabled();
+ await w.user.click(screen.getByRole('radio',{name:'Rivedi oggetti, spese e contatti'}));
+ expect(screen.getByRole('region',{name:'Articolo 1'})).toBeInTheDocument();
+});
+it('missing-data checklist identifies the item and focuses its name field',async()=>{
+ const d=fixture();d.items[0]!.fields.name!.value='';const w=mount(d);
+ const issue=await screen.findByRole('button',{name:/Articolo 1: indica il nome/});
+ await w.user.click(issue);
+ expect(within(screen.getByRole('region',{name:'Articolo 1'})).getByLabelText(/Nome dell/)).toHaveFocus();
+ expect(screen.getByRole('button',{name:'Salva e organizza'})).toBeDisabled();
+});

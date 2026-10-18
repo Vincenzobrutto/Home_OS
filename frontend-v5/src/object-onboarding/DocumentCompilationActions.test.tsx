@@ -54,8 +54,8 @@ it('updates a document card when a bulk proposal becomes available',async()=>{
 it('house documents also open their prepared AI proposal',async()=>{
  const w=mount([{id:'draft',state:'open'}],'extraction',false,true,true);await w.user.click(await screen.findByRole('button',{name:'Rivedi proposta'}));expect(w.onOpen).toHaveBeenCalledWith('ai','draft');
 });
-it('house manual compilation opens classification without creating an object draft',async()=>{
- const w=mount([],'manual',false,true,true);const b=await screen.findByRole('button',{name:'Compila manualmente'});await waitFor(()=>expect(b).toBeEnabled());await w.user.click(b);expect(w.onOpen).toHaveBeenCalledWith('manuale',undefined);expect(callJson.mock.calls.every(c=>c[1]?.method!=='POST')).toBe(true);
+it('house manual compilation creates a closable review without creating resources',async()=>{
+ const w=mount([],'manual',false,true,true);const b=await screen.findByRole('button',{name:'Compila manualmente'});await waitFor(()=>expect(b).toBeEnabled());await w.user.click(b);expect(w.onOpen).toHaveBeenCalledWith('manuale','draft');expect(callJson.mock.calls.filter(c=>c[1]?.method==='POST').every(c=>c[0].endsWith('/manual-drafts'))).toBe(true);
 });
 
 it('completed cards only offer details and never restart paid analysis',async()=>{

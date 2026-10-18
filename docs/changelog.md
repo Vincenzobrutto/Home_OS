@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Documento solo, salvataggio e ritorno coerenti
+
+Scelta esplicita fra solo documento e revisione di oggetti/spese/contatti; nel manuale il default evita articoli fittizi. Tipo e titolo salvati prima della conferma; la revisione rimane montata fino alla chiusura della bozza. Esito visibile e collegamento ai Completati. Checklist dei dati mancanti per articolo, metadati e spesa; ritorno dai dettagli conserva vista e filtri. Recupero delle conferme pendenti conserva corpo e chiave originali. [Verifica](v5/document-ux-fixes-20261018.md).
+
 ## 18 ottobre 2026 — Stati leggibili nella pagina Documenti
 
 Ingresso Da fare e vista Completati sullo stesso archivio. Righe con Da compilare, In analisi, Da rivedere, Analisi da verificare o Completato; Compila, Rivedi proposta, Apri documento o Vedi dettagli secondo stato. Eliminazione sotto Altre azioni; selezione multipla attivabile e recupero della coda conservato. Stato personale e versione/SHA calcolati dal server; nessuna migrazione, nuovo invio AI o modifica delle regole di conferma.

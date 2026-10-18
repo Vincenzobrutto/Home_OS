@@ -5,6 +5,7 @@ import { useCurrentHome } from '../routes/HomePages';
 import { useAccount, useApi } from '../session/session';
 import type { DocumentSummary } from '../api/types';
 import { newIdempotencyKey } from '../api/queryKeys';
+import { filtersFromParams, filtersToParams } from '../lib/documentSearch';
 import { userMessage } from '../api/errors';
 import { DocumentWorkflowStatus } from './DocumentWorkflowStatus';
 import { ui } from '../components/ui';
@@ -37,7 +38,7 @@ export function DocumentWorkspaceActions({homeId,document:doc}:{homeId:string;do
  const house=houseDocumentType(doc.originalFilename+' '+doc.name,doc.organization?.parts.map(p=>p.kind));
  return <div className={styles.workspace}>
   <div className={styles.workspaceHeader}><DocumentWorkflowStatus state={doc.workflowState}/><div className={styles.toolbarActions}>
-   {editable&&<DocumentCompilationActions compact workflowState={doc.workflowState} houseDocument={!!house} homeId={homeId} documentId={doc.id} documentKind={doc.organization?.parts.every(p=>p.kind==='utility_bill')?'utility_bill':undefined} onOpen={(mode,draft)=>void open(mode,draft)}/>}
+   {editable&&<DocumentCompilationActions compact backSearch={filtersToParams({...filtersFromParams(params),workflow:params.get('workflow')==='completed'?'completed':'pending'}).toString()} workflowState={doc.workflowState} houseDocument={!!house} homeId={homeId} documentId={doc.id} documentKind={doc.organization?.parts.every(p=>p.kind==='utility_bill')?'utility_bill':undefined} onOpen={(mode,draft)=>void open(mode,draft)}/>}
    <button type="button" className={ui.btn} onClick={()=>setOriginal(v=>!v)} aria-expanded={original}>{original?'Chiudi originale':'Vedi originale'}</button>
    {editable&&<details className={styles.documentMenu}><summary aria-label={'Altre azioni per '+doc.originalFilename}>Altre azioni</summary><button type="button" className={ui.btn} onClick={()=>{setError('');setRemoving(true);}}>Elimina</button></details>}
   </div></div>

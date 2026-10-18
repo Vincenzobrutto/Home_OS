@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Prossima fase Documenti
+
+Completati i punti UX 1–4: solo documento, salvataggio/Completati, campi mancanti precisi e ritorno alla stessa vista. Prossimo passaggio richiesto: proposta mirata per ricerca e mobile, prima dell’implementazione. Restano aperti persistenza della revisione non salvata, cestino/ripristino e miglioramenti di estrazione; nessun nuovo consenso AI implicito. [Verifica](v5/document-ux-fixes-20261018.md).
+
 ## 18 ottobre 2026 — Raggiunto: Documenti, Da fare e Completati
 
 Implementata proposta UX 3 scelta dal committente: due viste filtrate sul server, stato esplicito per riga, azione primaria contestuale e selezione AI attivabile. Proposta pronta resta Da fare fino al salvataggio; nessuna nuova analisi per riaprirla. Cestino, OCR e persistenza delle modifiche non salvate restano nel backlog.

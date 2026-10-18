@@ -1,3 +1,13 @@
+# Design QA — Correzioni Documenti 1–4
+
+final result: passed
+
+Verificati sul percorso reale esistente i quattro interventi approvati dopo l’audit. Nuova fixture sintetica: scelta solo documento, nessun articolo fittizio, tipo mancante cliccabile e focus sulla select, salvataggio e Completato. Recuperata anche la richiesta pendente dell’audit senza cambiare intento/chiave. Dai dettagli il ritorno mantiene Completati e ricerca audit. Token, colori, tipografia e struttura del prodotto conservati; nessun nuovo asset.
+
+78 test frontend e 41 backend riusciti, build e lint mirato riusciti. Screenshot locali outputs/documenti-fix/solo-documento.png e completati.png nella chat. Ricerca/mobile e ripristino dello scroll esclusi da questa iterazione. [Dettagli e limiti](docs/v5/document-ux-fixes-20261018.md).
+
+---
+
 # Design QA — Documenti, proposta 3
 
 final result: passed

@@ -20,11 +20,26 @@ export function HouseExpenseProposal({item,draft,api,accountId,base,root,disable
  const valid=mode==='skip'||mode==='defer'?true:mode==='link_existing'?!!row:!!title.trim()&&!!category&&!!date&&date<=today&&/^\d+(?:[.,]\d{1,2})?$/.test(amount)&&Number(amount.replace(',','.'))>0&&(manual||!!candidateId)&&(!duplicates.length||ack);
  function selection(action:string){const values={title,category,supplier:supplier||null,amountCents:Math.round(Number(amount.replace(',','.'))*100),spentOn:date,objectRef:null,...Object.fromEntries(['documentNumber','documentDate','competenceFrom','competenceTo','dueOn'].filter(k=>fields[k]).map(k=>[k,fields[k]!.value]))};return {itemId:item.id,action,...(action==='create'?{values,amountSelection:manual?{mode:'manual'}:{mode:'candidate',candidateId},acknowledgePossibleDuplicate:ack}:action==='link_existing'?{expenseId,expectedExpenseVersion:row?.version}:{})};}
  const review={choice:valid&&(['skip','defer'].includes(mode)||candidates.isSuccess)?selection(mode):null,newExpenses:mode==='create'?1:0,amountCents:mode==='create'?Math.round(Number(amount.replace(',','.'))*100)||0:0,manual,action:mode};
+ const region=useRef<HTMLElement>(null);
+ const missing:Array<{message:string;field:string}>=[];
+ if(!done&&!['skip','defer'].includes(mode)){
+  const add=(message:string,field:string)=>missing.push({message,field});
+  if(mode==='link_existing'&&!row)add('Scegli la spesa esistente da collegare.','Spesa da collegare');
+  if(mode==='create'){
+   if(!title.trim())add('Indica il titolo della spesa.','Titolo della spesa');
+   if(!category)add('Scegli la categoria della spesa.',isBill?'Fornitura':'Categoria della spesa');
+   if(!date||date>today)add('Indica una data della spesa valida, non futura.','Data della spesa');
+   if(!manual&&!candidateId)add('Scegli il totale da usare o inserisci un importo corretto.',isBill?'Totale della bolletta':'Totale della fattura');
+   else if(!/^\d+(?:[.,]\d{1,2})?$/.test(amount)||Number(amount.replace(',','.'))<=0)add('Inserisci un importo positivo.',isBill?'Importo della bolletta':'Importo della spesa');
+   if(duplicates.length&&!ack)add('Conferma che la spesa è distinta dai possibili doppioni.','Ho verificato');
+  }
+  if(!candidates.isSuccess)add(candidates.isError?'Riprova il controllo dei doppioni.':'Attendi il controllo dei doppioni.','Riprova');
+ }
  const serialized=JSON.stringify(review),notified=useRef('');
  useEffect(()=>{if(onReview&&serialized!==notified.current){notified.current=serialized;onReview(JSON.parse(serialized) as HouseReview);}},[serialized,onReview]);
  async function apply(action:string){setError('');setWorking(true);try{await confirm(selection(action));}catch(e){setError(userMessage(e));}finally{setWorking(false);}}
 
- return <section className={ui.card} aria-label={'Spesa della casa: '+title}><h3>{title}</h3><p>Spesa della casa · nessun oggetto</p>{!!item.reviewWarnings?.length&&<p role="status">Alcuni dettagli non verificabili sono stati esclusi. Controlla i dati proposti.</p>}{done?<><p>{item.decision?.state==='skipped'?'Spesa esclusa.':'Spesa confermata.'}</p><Link to={root+'/spese'}>Vai alle spese</Link></>:<fieldset disabled={disabled||working} className={styles.stack} style={{border:0,padding:0,margin:0,minWidth:0}}>
+ return <section ref={region} className={ui.card} aria-label={'Spesa della casa: '+title}><h3>{title}</h3><p>Spesa della casa · nessun oggetto</p>{!!item.reviewWarnings?.length&&<p role="status">Alcuni dettagli non verificabili sono stati esclusi. Controlla i dati proposti.</p>}{done?<><p>{item.decision?.state==='skipped'?'Spesa esclusa.':'Spesa confermata.'}</p><Link to={root+'/spese'}>Vai alle spese</Link></>:<fieldset disabled={disabled||working} className={styles.stack} style={{border:0,padding:0,margin:0,minWidth:0}}>
   <p><strong>{amount?Number(amount.replace(',','.')).toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'Importo da verificare'}</strong> · {categories[category as keyof typeof categories]??'Categoria da verificare'}{supplier?' · '+supplier:''}</p>
   {date&&<p>Data del documento: {date.split('-').reverse().join('/')}{fields.dueOn?' · Scadenza: '+fields.dueOn.value.split('-').reverse().join('/'):''}</p>}
   {!editing&&valid&&!duplicates.length&&<button type="button" className={ui.btn} onClick={()=>setEditing(true)}>Modifica dati</button>}
@@ -41,6 +56,7 @@ export function HouseExpenseProposal({item,draft,api,accountId,base,root,disable
    {duplicates.length>0&&<label className={styles.check}><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)}/>Ho verificato che è una spesa distinta da quelle già registrate.</label>}
   </>}
   </>}
+  {!!missing.length&&<div aria-label="Dati della spesa da completare"><p>Per questa spesa:</p><ul>{missing.map(issue=><li key={issue.field}><button type="button" className={ui.btn} onClick={()=>{setEditing(true);const label=Array.from(region.current?.querySelectorAll('label')??[]).find(label=>label.textContent?.includes(issue.field));const control=label?.querySelector<HTMLElement>('input,select,button');control?.scrollIntoView?.({block:'center'});control?.focus();}}>{issue.message}</button></li>)}</ul></div>}
   {error&&<p role="alert">{error}</p>}
   {!onReview&&<div className={styles.row}><button className={ui.btn} disabled={disabled||working} onClick={()=>void apply('defer')}>Decidi più avanti</button><button className={ui.btn} disabled={disabled||working} onClick={()=>void apply('skip')}>Non registrare la spesa</button><button className={`${ui.btn} ${ui.primary}`} disabled={disabled||working||!valid||!candidates.isSuccess} onClick={()=>void apply(mode)}>{unified?'Salva e organizza':beforeDocument?'Conferma documento e spesa':'Conferma spesa'}</button></div>}
  </fieldset>}</section>;

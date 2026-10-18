@@ -269,7 +269,14 @@ export class ObjectOnboardingService {
         const costs=[...body.choices.flatMap(c=>'expense'in c&&c.expense.action==='create'?[{amountCents:c.expense.amountCents,spentOn:c.expense.spentOn}]:[]),...(body.houseExpenses??[]).flatMap(c=>c.confirmation?.mode==='create'?[c.confirmation.values]:[])];
         if(await tx.homeExpense.findFirst({where:{accountId:a,homeId:h,state:'active',OR:[{documentId:draft.documentId},...costs.map(c=>({amountCents:Number(c.amountCents),spentOn:String(c.spentOn)}))]},select:{id:true}}))throw conflict('automatic_duplicate_review','Controlla una spesa già presente prima di proseguire.');
       }
-      if((body.documentOnly||!body.choices.length&&!body.houseExpenses?.length&&!body.contacts?.length)&&(!body.documentOnly||!output.documentInfo||output.items.length||output.houseExpenses?.length||body.choices.length||body.houseExpenses?.length))throw invalid('Nessuna proposta da confermare.');
+      if(body.documentOnly){
+        const legacyContacts=!!body.contacts?.length&&!!output.documentInfo&&!output.items.length&&!output.houseExpenses?.length;
+        if(body.choices.length||body.houseExpenses?.length||body.contacts?.length&&!legacyContacts||body.manualPurchaseTotalCents!==undefined)throw invalid('La conferma del solo documento non può creare o collegare altre risorse.');
+        const organized=await tx.documentOrganization.findFirst({where:{accountId:a,homeId:h,documentId:draft.documentId,documentVersion:draft.documentVersion,documentSha256:draft.documentSha256}});
+        if(!organized&&(!output.documentInfo||output.items.length||output.houseExpenses?.length))throw invalid('Scegli e salva titolo e tipo del documento prima di completarlo.');
+        for(const item of [...output.items,...(output.houseExpenses??[])])if(!['confirmed','skipped'].includes(decisions[item.id]?.state??''))decisions[item.id]={state:'confirmed',objectIds:[],expenseId:null,newObjects:0,newExpenses:0};
+        for(const contact of output.contacts??[])if(!body.contacts?.length&&!decisions['contact:'+contact.id])decisions['contact:'+contact.id]={state:'skipped',objectIds:[],expenseId:null,newObjects:0,newExpenses:0};
+      }else if(!body.choices.length&&!body.houseExpenses?.length&&!body.contacts?.length)throw invalid('Nessuna proposta da confermare.');
       if(body.manualPurchaseTotalCents!==undefined&&(draft.mode!=='manual'||output.purchaseTotal))throw invalid('Il totale dichiarato è ammesso soltanto per una fattura compilata manualmente senza totale estratto.');
       if (body.source.documentId !== draft.documentId || body.source.documentVersion !== draft.documentVersion || body.source.sha256 !== draft.documentSha256) throw conflict('onboarding_source_changed', 'La fonte è cambiata.');
       const initialSourceLinks = await tx.$queryRaw<Array<{ id: string }>>`SELECT l.id FROM "ObjectResourceLink" l JOIN "Document" d ON d.id=l."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE l."accountId"=${a} AND l."homeId"=${h} AND l."resourceType"='document' AND l.state='active' AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;

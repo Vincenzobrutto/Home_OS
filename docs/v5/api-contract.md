@@ -73,7 +73,7 @@ Il frontend seleziona la casa via URL `/home/:homeId/casa`; non serve endpoint s
 
 ## Estensione V11 — 18 ottobre 2026
 
-Contratto additivo di onboarding descritto in [report V11](document-understanding-v11-report-20261018.md#contratto-e-persistenza). documentInfo e reviewWarnings opzionali; soggetti impianto con subjectKind/proposedType. Conferma document_only limitata a conformità e documentOnly=true a metadati senza soggetti/spese, con ricevute e controlli esistenti. Nessun nuovo endpoint.
+Contratto additivo di onboarding descritto in [report V11](document-understanding-v11-report-20261018.md#contratto-e-persistenza). documentInfo e reviewWarnings opzionali; soggetti impianto con subjectKind/proposedType. Conferma document_only limitata a conformità e documentOnly=true esteso alla chiusura delle proposte aperte senza nuove risorse quando esiste organizzazione personale sulla stessa versione/SHA. Rifiuta choices, houseExpenses e totale manuale; contatti ammessi soltanto nel preesistente caso documentInfo senza articoli/spese, per compatibilità. Le altre proposte contatto sono escluse. Restano ricevute, membership, versione/SHA e idempotenza. Vedi [correzioni UX](document-ux-fixes-20261018.md). Nessun nuovo endpoint.
 
 
 ## V12 — soggetti e costo complessivo (18 ottobre 2026)

@@ -1,9 +1,10 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { configure, act, screen, waitFor, within } from '@testing-library/react';
 import { expect, it } from 'vitest';
 import { renderApp } from '../test/harness';
 import { FakeBackend } from '../test/fakeBackend';
 
 it('shows pending work first, exposes every state, and switches the canonical archive on the server', async () => {
+  configure({asyncUtilTimeout:5000});
   const backend = new FakeBackend();
   const owner = backend.seedAccount('Owner', 'owner@example.test', 'password-owner-001');
   const home = backend.seedHome(owner.id, 'Casa test', 'Via Test 1');
@@ -30,5 +31,15 @@ it('shows pending work first, exposes every state, and switches the canonical ar
   expect(screen.queryByText('Proposta',{selector:'a'})).not.toBeInTheDocument();
   expect(screen.queryByRole('button',{name:'Seleziona documenti'})).not.toBeInTheDocument();
   expect(backend.log.some(r=>r.method==='GET'&&r.path.includes('workflow=completed'))).toBe(true);
+  await act(async()=>{await app.router.navigate(`/home/${home.id}/documenti?workflow=completed&q=Salvato`);});
+  await screen.findByText('Salvato',{selector:'a'});
+  await waitFor(()=>expect(app.queryClient.isFetching()).toBe(0));
+  await app.user.click(await screen.findByRole('button',{name:'Vedi dettagli'}));
+  await screen.findByRole('heading',{name:'Salvato',level:1});
+  const back=screen.getByRole('link',{name:/Documenti di Casa test/});
+  expect(back.getAttribute('href')).toContain('workflow=completed&q=Salvato');
+  await app.user.click(back);
+  await screen.findByText('Salvato',{selector:'a'});
+  expect(within(screen.getByRole('group',{name:'Stato dei documenti'})).getByRole('button',{name:'Completati'})).toHaveAttribute('aria-pressed','true');
   expect(backend.log.some(r=>r.method==='POST'&&r.path.includes('analysis'))).toBe(false);
-});
+},15000);

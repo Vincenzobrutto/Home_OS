@@ -12,7 +12,7 @@ import type { DocumentWorkflowState } from '../api/types';
 import type { Capabilities, Draft } from './model';
 
 export type CompilationMode = 'manuale' | 'ai';
-export function DocumentCompilationActions({homeId,documentId,onOpen,documentKind,houseDocument=false,compact=false,workflowState}:{compact?:boolean;workflowState?:DocumentWorkflowState;houseDocument?:boolean;documentKind?:'purchase_document'|'utility_bill';homeId:string;documentId:string;onOpen?:(mode:CompilationMode,draftId?:string)=>void}) {
+export function DocumentCompilationActions({homeId,documentId,onOpen,documentKind,compact=false,workflowState,backSearch}:{backSearch?:string;compact?:boolean;workflowState?:DocumentWorkflowState;houseDocument?:boolean;documentKind?:'purchase_document'|'utility_bill';homeId:string;documentId:string;onOpen?:(mode:CompilationMode,draftId?:string)=>void}) {
  const account=useAccount(),api=useApi(),navigate=useNavigate(),cache=useQueryClient();
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
  const live=useRef(true);useEffect(()=>{live.current=true;return()=>{live.current=false;};},[]);
@@ -30,7 +30,6 @@ export function DocumentCompilationActions({homeId,documentId,onOpen,documentKin
  };
  async function manual(){
   if(sending.current)return;
-  if(houseDocument){await open('manuale');return;}
   const existing=caps.data?.drafts.find(d=>d.state==='open');
   if(existing){await open('manuale',existing.id);return;}
   sending.current=true;setBusy(true);setError('');attempt.current??=newIdempotencyKey();
@@ -49,9 +48,9 @@ export function DocumentCompilationActions({homeId,documentId,onOpen,documentKin
  const ready=caps.data?.drafts.find(d=>d.state==='open'&&(d.mode==='extraction'||caps.data?.job?.state==='succeeded'&&caps.data.job.draftId===d.id));
  const accepted=!caps.data?.drafts.some(d=>d.state==='open')&&caps.data?.drafts.find(d=>d.state==='confirmed');
  if(compact){
-  if(workflowState==='completed')return <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={()=>navigate(`/home/${encodeURIComponent(homeId)}/documenti/${encodeURIComponent(documentId)}`)}>Vedi dettagli</button>;
+  if(workflowState==='completed')return <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={()=>navigate(`/home/${encodeURIComponent(homeId)}/documenti/${encodeURIComponent(documentId)}`,{state:{documentsSearch:backSearch,documentsAccountId:account.id}})}>Vedi dettagli</button>;
   if(workflowState==='analyzing')return <button type="button" className={ui.btn} disabled>In analisi…</button>;
-  if(workflowState==='attention')return <button type="button" className={ui.btn} onClick={()=>navigate(`/home/${encodeURIComponent(homeId)}/documenti/${encodeURIComponent(documentId)}`)}>Apri documento</button>;
+  if(workflowState==='attention')return <button type="button" className={ui.btn} onClick={()=>navigate(`/home/${encodeURIComponent(homeId)}/documenti/${encodeURIComponent(documentId)}`,{state:{documentsSearch:backSearch,documentsAccountId:account.id}})}>Apri documento</button>;
   if(ready)return <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy} onClick={()=>void open('ai',ready.id)}>Rivedi proposta</button>;
   return <div><details><summary className={ui.btn}>Compila</summary><div className={styles.row}>
    <button type="button" className={ui.btn} disabled={busy||!caps.isSuccess||!caps.data.manualAvailable} onClick={()=>void manual()}>Compila manualmente</button>

@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Conservazione del solo documento
+
+Il committente approva i punti 1–4 dell’audit Documenti prima di ricerca/mobile. «Conserva solo il documento» salva titolo e tipo e chiude le proposte ancora aperte senza creare oggetti, spese o contatti; i collegamenti già confermati rimangono. Il manuale parte da questa scelta; la revisione AI mantiene la revisione delle proposte. Completato dipende dalla conferma server, non dalla sola classificazione. Le richieste pendenti mantengono intento e chiave originali per evitare duplicazioni o cambiamenti silenziosi. [Dettagli](v5/document-ux-fixes-20261018.md).
+
 ## 18 ottobre 2026 — Documenti: Da fare e Completati
 
 Scelta esplicita del committente: proposta visiva 3. Due viste dello stesso archivio, ingresso Da fare; ogni riga mostra stato e prossimo passo. Analisi riuscita significa proposta da rivedere, non completamento. Riusata la condizione canonica di completamento account/casa/versione/SHA prima della paginazione; nuove etichette esposte dalla lista, nessuna deduzione dal filename o dallo stato stored. Scartati terzo archivio, raggruppamento solo sulle pagine caricate e contatori ricavati da pagine parziali. Selezione AI su richiesta; recupero della coda resta montato. Eliminazione sotto Altre azioni, con guardie e conferma esistenti.

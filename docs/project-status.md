@@ -1,3 +1,7 @@
+## Ultimo aggiornamento — Correzioni UX Documenti 1–4
+
+Implementati i quattro punti approvati dopo l’audit: scelta «Conserva solo il documento», chiusura della bozza dopo salvataggio metadati senza smontare la revisione, indicazioni cliccabili sui campi mancanti, ritorno ai dettagli con vista/filtri conservati. Nessuna nuova chiamata AI, migrazione o modifica legacy. Verifica e limiti: [report correzioni](v5/document-ux-fixes-20261018.md). Prossima fase: ricerca e mobile, da proporre prima di implementare.
+
 ## Ultimo aggiornamento — Documenti, proposta 3 implementata
 
 Pagina iniziale Da fare, vista Completati e stati visibili per documento; proposta pronta distinta da dati salvati. Etichetta server workflowState account/casa/versione/SHA coerente con filtro prima del paging. Elimina sotto Altre azioni, selezione AI attivabile; recupero elaborazioni persistenti conservato anche con selezione chiusa. Nessuna nuova analisi a pagamento, schema/migrazione o modifica delle tre differenze legacy locali. Vedi docs/v5/document-workflow-20261018.md per verifica e limiti.
