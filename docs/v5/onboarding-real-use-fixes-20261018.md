@@ -1,0 +1,13 @@
+# Onboarding: correzioni da uso reale18ottobre2026
+
+Righe intake su due colonne; azioni sotto il contenuto, evitando titoli schiacciati. Browser reale in sola lettura:845px titolo444px,390px titolo253px e nessun overflow. Screenshot in outputs/onboarding-layout-845-20261018.png e onboarding-layout-mobile-20261018.png.
+
+Manuale: costo facoltativo subito visibile anche per tipo sconosciuto, importo/data/venditore e creazione canonica con oggetto nella stessa conferma; stesso controllo doppioni e replay, quote multiple sempre sotto totale dichiarato. Data acquisto visibile tra campi principali. Tipo manuale selezionabile inline in nuovo intake non classificato; nessun dato personale modificato dall’agente.
+
+AI: due job macchina caffe risultano HTTP400 Messages/provider_request_rejected, senza estrazione. Originale verificato localmente con skill PDF e pypdfium2:1pagina visuale, nome, marca, modello/riferimento, prezzo e data d’ordine leggibili. Non è un’estrazione AI completata con campi mancanti. Causa precisa400 non conservata; complessità schema è ipotesi, coerente con limiti documentati https://platform.claude.com/docs/en/build-with-claude/structured-outputs . WireV8 elimina le unioni di oggetti nullable usando array0/1, validati localmente e normalizzati al dominio preesistente. Prompt distingue riepilogo acquisto con data/totale da notifica di consegna, e richiede marca/modello/riferimento presenti nella descrizione. Niente completamento di testo troncato o prezzi presunti.
+
+Esiti terminali aggiornano capabilities per un eventuale nuovo consenso; rifiuto provider mostrato in linguaggio utente. Vecchie riserve e tentativi incerti conservati, niente ritentativi automatici o nuove chiamateAI.
+
+Prove:37BE offline verdi,23DB integrazione con parser reale/provider fake (incluso costo manuale sconosciuto+replay),69FE distinti mirati (prima una asserzione su label rinominata corretta e riprovata), buildFE/BE e lint mirati verdi. Schemi visuale/testo/immagine senza anyOf, cardinalità rifiutata se>1, evidenze visuali sintetiche con identità/data/prezzo. Nessun provider reale chiamato: miglioramento estrazione ancora da convalidare sul prossimo invio esplicito nell’app. Nessun nuovo costo,reset budget,env,segreti,push,deploy o modifiche ai contenuti personali.
+
+Ultimo raccordo UI: scansione con compilazione per documento espone solo Manuale/AI; eliminato terzo pulsante concorrente Indica il tipo, tipo selezionabile nella revisione. Messaggio distingue lettura locale senza testo dal riconoscimento AI. Servizi API/LAN aggiornati tramite launcher registrato, nessuna modifica.env o rete. Rootdocs con dirty preesistente aggiornati ma lasciati fuori dal commit di codice.

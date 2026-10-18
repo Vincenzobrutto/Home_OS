@@ -22,3 +22,6 @@ Fattura sintetica con macchina del ghiaccio 99,99 € e cuffie 49,90 €: entram
 ### Compilazione manuale
 
 manual-drafts accetta documentKind facoltativo purchase_document o utility_bill, proposto dal tipo disponibile nel lotto e da confermare nella revisione. Una classificazione già confermata può indirizzare la bozza; i dati non diventano estrazione. Una bolletta manuale inizia con una proposta di spesa vuota e nessun articolo. Le quote manuali multiple richiedono manualPurchaseTotalCents esplicito nella conferma: positivo, ammesso soltanto in modalità manuale e in assenza di totale estratto, conservato nella revisione/pending per recupero. Il backend applica lo stesso limite cumulativo e non crea una spesa per il totale.
+
+## Correzioni18ottobre2026
+Costo dichiarato manualmente disponibile anche per documento non riconosciuto; tipo documento selezionabile inline e data acquisto principale. I totali multiarticolo restano espliciti e vincolati. Nessun prezzo automatico inventato da consegne/etichette. Schema Anthropic V8 usa array0/1 sul solo wire, normalizzato al dominio nullable; evidenze e cardinalità validate localmente. Riepilogo ordine con data e totale espliciti può essere purchase_document.

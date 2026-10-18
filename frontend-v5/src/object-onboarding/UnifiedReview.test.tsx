@@ -11,8 +11,8 @@ import { reviewTotals } from './reviewSummary';
 
 const source = { documentId: 'source', page: 1, excerpt: 'Prova sintetica' };
 const fixture = (): Draft => ({ id: 'draft', version: 1, mode: 'extraction', state: 'open', documentKind: 'purchase_document', snapshot: { documentId: 'source', documentVersion: 1, sha256: 'a'.repeat(64) }, document: { id: 'source', name: 'Fattura due articoli', mimeType: 'application/pdf' }, needsReview: false, purchaseTotal: { amountCents: 14989 }, review: null, permissions: ['edit'], items: ['Macchina del ghiaccio', 'Cuffie personali'].map((name, index) => ({ id: 'item' + index, fields: { name: { value: name, source } }, purchaseAmount: { amountCents: index ? 4990 : 9999, source }, quantity: { value: 1 }, profile: { purchaseDate: { value: '2025-06-13', origin: 'extraction_confirmed', sources: [] } }, nameTruncated: false, disposition: 'household_object', enrichment: null, decision: null })) });
-function mount() {
-  const draft = fixture(), submit = vi.fn(), api = new ApiClient({ fetch: async () => Response.json({ items: [], nextCursor: null }) });
+function mount(draft = fixture()) {
+  const submit = vi.fn(), api = new ApiClient({ fetch: async () => Response.json({ items: [], nextCursor: null }) });
   function Example() {
     const [forms, setForms] = useState<Record<string, Form>>(() => Object.fromEntries(draft.items.map(item => [item.id, initialForm(item, draft)])));
     return <UnifiedReview draft={draft} forms={forms} api={api} accountId="account" base="/homes/home/object-onboarding" root="/home/home" disabled={false} change={(id, value) => setForms(old => ({ ...old, [id]: value }))} save={() => submit(draft.items.map(item => choice(item, forms[item.id]!)))} defer={vi.fn()} add={vi.fn()} enrich={vi.fn()} />;
@@ -46,4 +46,14 @@ it('does not derive two row prices from a grand total or include stale excluded 
   expect(forms.item0!.amount).toBe(''); expect(forms.item1!.amount).toBe('');
   forms.item1 = { ...forms.item1!, action: 'skip', amount: '900', expense: 'create' };
   expect(reviewTotals(draft, forms)).toMatchObject({ newObjects: 1, newExpenses: 0, amountCents: 0, excludedUnknown: 1 });
+});
+
+it('manual unknown document can include an immediate purchase cost with the object', async () => {
+ const draft=fixture();draft.mode='manual';draft.documentKind='unsupported';draft.items=draft.items.slice(0,1);draft.purchaseTotal=null;draft.items[0]!.profile={};delete draft.items[0]!.purchaseAmount;
+ const w=mount(draft);
+ await w.user.selectOptions(screen.getByLabelText('Cosa fare con il costo'),'create');
+ await w.user.type(screen.getByLabelText('Importo (€)'),'499,00');
+ await w.user.type(screen.getByLabelText('Data della spesa'),'2026-06-14');
+ await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));
+ expect(w.submit.mock.calls[0]![0][0].expense).toMatchObject({action:'create',amountCents:49900,spentOn:'2026-06-14'});
 });

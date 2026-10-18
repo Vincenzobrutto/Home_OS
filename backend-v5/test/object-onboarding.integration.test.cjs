@@ -138,6 +138,13 @@ test('Full onboarding: DB, real PDF parser, fake provider; atomicity, replay, pr
   assert.equal(await db.document.count({where:{id:source.id}}),1);assert.equal((await service.recover(a,h,draft.id,key,{})).status,'confirmed');
  });
 
+ await t.test('manual unknown source saves object and declared purchase cost atomically, with replay and profile',async()=>{
+ const doc=await document(Buffer.concat([bytes,Buffer.from('\n%manual-unknown-'+randomUUID())]));
+ const draft=(await service.manualDraft(a,h,{documentId:doc.id},randomUUID())).draft;assert.equal(draft.documentKind,'unsupported');
+ const selected=create(draft.items[0],'SYNTHETIC coffee');selected.fields={brand:{action:'manual',value:'Lume'},purchaseDate:{action:'manual',value:'2026-06-14'}};selected.expense={action:'create',title:'SYNTHETIC coffee',amountCents:49900,spentOn:'2026-06-14',supplier:null};
+ const key=randomUUID(),result=await confirm(draft,[selected],key);assert.equal(result.result.newObjects,1);assert.equal(result.result.newExpenses,1);
+ assert.equal((await confirm(draft,[selected],key)).result.newExpenses,1);assert.equal(await db.homeExpense.count({where:{documentId:doc.id}}),1);
+ });
  await t.test('manual invoice records row amounts against an explicitly declared total; manual bill has no product',async()=>{
   const doc=await document(Buffer.concat([bytes,Buffer.from('\n%manual-unified-'+randomUUID())]));
   let draft=(await service.manualDraft(a,h,{documentId:doc.id,documentKind:'purchase_document'},randomUUID())).draft;

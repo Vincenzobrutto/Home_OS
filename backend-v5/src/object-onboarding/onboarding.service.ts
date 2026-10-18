@@ -192,7 +192,7 @@ export class ObjectOnboardingService {
   }
   private async cost(tx: OnboardingTx, a: string, h: string, draft: ObjectOnboardingDraft, output: Output, choice: Extract<OnboardingChoice, { action: 'create' | 'link' }>, targetId: string, currentDecisions: Decisions, manualMaximum?:number) {
     if (choice.expense.action === 'skip') return { expenseId: null, newExpenses: 0 };
-    if (output.documentKind !== 'purchase_document') throw invalid('I costi di questo documento richiedono una scelta separata in Spese. Nessun importo viene distribuito automaticamente.');
+    if (output.documentKind !== 'purchase_document' && !(draft.mode === 'manual' && output.documentKind === 'unsupported')) throw invalid('I costi di questo documento richiedono una scelta separata in Spese. Nessun importo viene distribuito automaticamente.');
     const expenses = new ExpensesService(this.access.db, this.reviewAccess, this.clock);
     if (choice.expense.action === 'link') {
       const value = await expenses.record(tx, a, h, choice.expense.id);

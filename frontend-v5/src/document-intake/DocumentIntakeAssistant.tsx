@@ -408,7 +408,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
           {group === 'done' && decision && <p>{decision.parts.map(partLabel).join(' + ')} · {decision.target.kind === 'home' ? 'solo casa' : 'scheda esistente'}</p>}
           {group === 'review' && copy && raw !== 'unavailable' && <p>{item.duplicate?.document ? `Stesso contenuto di «${item.duplicate.document.name}». ` : ''}Apri il documento per scegliere quali dati mantenere.</p>}
           {group === 'review' && conflict && !copy && <p>La proposta è diversa dai dati già confermati: apri il documento per scegliere.</p>}
-          {group === 'review' && manual && raw !== 'unavailable' && <p>{item.mimeType?.startsWith('image/') ? 'La lettura locale non interpreta la foto. Puoi indicare il tipo oppure riconoscere gli oggetti presenti.' : raw === 'unreadable' || raw === 'unsupported' ? 'Il testo non è leggibile: indica il tipo consultando l’originale.' : 'Nessuna proposta: indica il tipo consultando l’originale.'}</p>}
+          {group === 'review' && manual && raw !== 'unavailable' && <p>{props.renderCompilationActions?'La lettura locale non trova testo utilizzabile. Puoi compilare manualmente o tramite AI.':item.mimeType?.startsWith('image/') ? 'La lettura locale non interpreta la foto. Puoi indicare il tipo oppure riconoscere gli oggetti presenti.' : raw === 'unreadable' || raw === 'unsupported' ? 'Il testo non è leggibile: indica il tipo consultando l’originale.' : 'Nessuna proposta: indica il tipo consultando l’originale.'}</p>}
           {raw === 'unavailable' && <p>Il documento non è più accessibile con questo account.</p>}
           {item.error && raw === 'upload_failed' && <p role="status">{item.error.message}</p>}
           {write.status === 'rejected' && <p className={styles.formError}>Non applicato: {write.message}</p>}
@@ -419,7 +419,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
           {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
           {canReview && item.documentLink.state==='linked' && props.renderCompilationActions && (houseDocumentKind(item)?<button type="button" className={ui.btn} onClick={()=>reviewDocument(item)}>Rivedi documento della casa</button>:props.renderCompilationActions(item.id))}
           {!props.renderCompilationActions && canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && supportsObjectProposals(item) && !(props.renderObjectProposals&&(copy||conflict)) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={props.renderObjectProposals?`Rivedi proposta per ${name}`:`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>{props.renderObjectProposals?'Rivedi proposta':'Riconosci gli oggetti'}</button>}
-          {group !== 'done' && reviewable(item) && !(props.renderCompilationActions&&houseDocumentKind(item)) && !(props.renderObjectProposals&&props.onOpenReceiptFlow&&supportsObjectProposals(item)&&!copy&&!conflict) && (
+          {group !== 'done' && reviewable(item) && !(props.renderCompilationActions&&manual) && !(props.renderCompilationActions&&houseDocumentKind(item)) && !(props.renderObjectProposals&&props.onOpenReceiptFlow&&supportsObjectProposals(item)&&!copy&&!conflict) && (
             <button type="button" className={cx(ui.btn, ui.small, ui.primary)} aria-label={`${actionLabel} ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>{actionLabel}</button>
           )}
           {group === 'done' && raw !== 'unavailable' && (canReview && item.permissions.review && props.onReorganizeDocument
@@ -439,7 +439,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
           {heading(reading ? 'Stiamo preparando le proposte…' : complete ? (props.renderObjectProposals&&props.batch?.items.some(supportsObjectProposals)?'Documenti archiviati.':'Hai finito questo caricamento.') : 'Controlla e organizza.',
             reading ? 'Lettura locale dei PDF con testo: nessun file viene inviato all’esterno. Puoi già iniziare dai documenti pronti.'
               : complete ? `${doneCount} ${doneCount === 1 ? 'documento completato' : 'documenti completati'}. Gli originali restano privati.`
-                : multi ? 'Controlla le proposte qui sotto, seleziona quelle corrette e organizzale con una sola conferma.'
+                : props.renderCompilationActions ? 'Apri un documento, scegli come compilare la scheda e conferma i dati.' : multi ? 'Controlla le proposte qui sotto, seleziona quelle corrette e organizzale con una sola conferma.'
                   : 'Apri la proposta e conferma: il documento sarà subito organizzato.')}
         </div>
         {props.renderOutcomeLinks && <div className={styles.headActions}>{props.renderOutcomeLinks(results)}</div>}

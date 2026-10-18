@@ -23,7 +23,7 @@ export function UnifiedReview({ draft, forms, api, accountId, base, root, disabl
   return <section className={styles.stack} aria-label="Revisione unica del documento">
     <header><h2>Rivedi e organizza</h2><Link to={root + '/documenti/' + encodeURIComponent(draft.snapshot!.documentId) + '#doc-anteprima'} target="_blank" rel="noopener noreferrer">Vedi documento originale ↗</Link></header>
     {documentFields}
-    {draft.mode==='manual'&&draft.documentKind==='purchase_document'&&draft.items.length>1&&!draft.purchaseTotal&&<label className={styles.field}>Totale della fattura (€), inserito da te<input className={ui.input} inputMode="decimal" value={manualTotal??''} disabled={disabled} onChange={e=>changeManualTotal?.(e.target.value)}/></label>}
+    {draft.mode==='manual'&&draft.items.length>1&&!draft.purchaseTotal&&<label className={styles.field}>Totale della fattura (€), inserito da te<input className={ui.input} inputMode="decimal" value={manualTotal??''} disabled={disabled} onChange={e=>changeManualTotal?.(e.target.value)}/></label>}
     {copyChoice && <label className={styles.check}><input type="checkbox" checked={copyChoice.checked} disabled={disabled} onChange={e => copyChoice.change(e.target.checked)} />Usa il documento già presente senza modificarlo</label>}
     {items.map((item, index) => <section className={`${ui.card} ${styles.unifiedItem}`} key={item.id} aria-label={'Articolo ' + (index + 1)}>
       <h3>Articolo {index + 1} · {forms[item.id]!.name || 'Da identificare'}</h3>

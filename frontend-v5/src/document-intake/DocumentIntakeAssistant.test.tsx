@@ -307,3 +307,11 @@ it('a scanned floor plan uses house document review, not the article editor or A
  await confirmIn(user);
  expect(organized(props.onOrganize)[0]!.items[0]!.selection).toMatchObject({title:'Planimetria',parts:[{kind:'floor_plan',pageFrom:null,pageTo:null}],target:{kind:'home'}});
 });
+
+it('unknown scan offers per-document compilation without a competing classify-only button',()=>{
+ const item={...corpus.scan(),filename:'Acquisto.pdf',documentLink:{state:'linked' as const,document:{id:'coffee',name:'Acquisto.pdf'}}};
+ renderIntake(intakeProps({batch:batchOf([item]),renderCompilationActions:()=> <><button>Compila manualmente</button><button>Compila tramite AI</button></>}));
+ expect(screen.getByRole('button',{name:'Compila manualmente'})).toBeInTheDocument();expect(screen.getByRole('button',{name:'Compila tramite AI'})).toBeInTheDocument();
+ expect(screen.queryByRole('button',{name:/Indica il tipo/})).not.toBeInTheDocument();
+ expect(screen.getByText('La lettura locale non trova testo utilizzabile. Puoi compilare manualmente o tramite AI.')).toBeInTheDocument();
+});

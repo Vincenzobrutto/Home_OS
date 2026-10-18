@@ -227,3 +227,17 @@ test('home pilot configuration fails closed and cannot fall back to hash authori
  assert.throws(()=>budget.requireSource('a'.repeat(64)));assert.equal(budget.requireSource('b'.repeat(64),c.env.ONBOARDING_AI_ACCOUNT_ID,c.env.ONBOARDING_AI_HOME_ID).maxCalls,40);
  c.env.ONBOARDING_AI_SCOPE='all';assert.throws(()=>c.settings());
 });
+
+test('provider grammar removes nullable object branches and validates singleton arrays locally',()=>{
+ const {onboardingSchemaFor}=require('../dist/object-onboarding/anthropic-provider');
+ for(const kind of ['text','visual_pdf','image']){const schema=onboardingSchemaFor(kind);assert(!JSON.stringify(schema).includes('anyOf'));assert.equal(schema.properties.purchaseTotal.type,'array');}
+ const value=raw(true);value.purchaseTotal=[];value.items[0].quantity=[value.items[0].quantity];value.items[0].purchaseAmount=[];
+ const wire={...value,items:value.items.map(item=>({...item,fields:Object.entries(item.fields).map(([field,data])=>({field,...data}))}))};
+ const parsed=productExtraction(onboardingWireOutput(wire),imageContext);assert.equal(parsed.items[0].quantity.value,1);assert.equal(parsed.purchaseTotal,null);
+ wire.items[0].quantity.push(wire.items[0].quantity[0]);fails(()=>onboardingWireOutput(wire),'analysis_invalid_output');
+});
+test('visual order summary keeps coffee machine identity, explicit purchase date and total',()=>{
+ const field=(value,excerpt=value)=>({value,evidence:proof(excerpt,true)});
+ const value={documentKind:'purchase_document',hasMoreItems:false,requiresHumanReview:false,houseExpenses:[],purchaseTotal:{amountCents:49900,evidence:proof('Totale: 499,00 €',true)},items:[{fields:{name:field('Lume Rivelia'),brand:field('Lume'),model:field('Rivelia'),reference:field('EX440.35.B'),purchaseDate:field('2026-06-14','Ordine effettuato il: 14 giugno 2026')},quantity:null,nameTruncated:false,disposition:'household_object',confidence:'high'}]};
+ const result=productExtraction(value,imageContext);assert.equal(result.items[0].fields.purchaseDate.value,'2026-06-14');assert.equal(result.items[0].fields.reference.value,'EX440.35.B');assert.equal(result.purchaseTotal.amountCents,49900);
+});
