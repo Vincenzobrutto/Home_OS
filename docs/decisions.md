@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Mini rubrica privata per account e casa
+
+Autorizzata dal committente: HomeContact versionato con archivio reversibile, ContactResourceLink polimorfo con autorizzazione canonica a ogni lettura, ContactRequest per idempotenza. Nessun riuso fra case o condivisione implicita. Mutex casa e membership lock per mutazioni; recapiti normalizzati bloccano doppioni, nome simile non fonde identità. Creazione inline e collegamento atomici alle risorse salvate, senza alterare supplier storico. Issuer della conformità è solo proposta da bozza stessa versione/SHA, niente nuovi invii o contatti automatici. Export personale proprio esteso; BL-10b combinato e rubriche condivise esclusi. [Dettagli](v5/mini-rubrica-20261018.md).
+
 ## 18 ottobre 2026 — Separare omissioni opzionali dalla proposta umana di acquisto
 
 Il flag locale purchaseExpenseReady conserva la provenienza dell’incertezza: vero solo per omissioni verificate di consegna/garanzia, mai se il provider richiede revisione generale. La UI può proporre il costo se prezzo/data e gli altri requisiti sono validi, dopo controllo doppioni e con conferma finale. Scartato ignorare needsReview in generale o dedurne la causa dalla sola lista di avvisi lato frontend. Policy di conferma automatica invariata; bozze precedenti senza flag conservate. Nessuna migrazione. Vedi report revisione unica del18ottobre.

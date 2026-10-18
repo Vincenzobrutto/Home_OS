@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — HomeContact e collegamenti personali V5
+
+Migrazione additiva20261018130000_home_contacts: HomeContact appartiene ad Account e Home, con nome/ruolo/persona-impresa/recapiti/note/identificativo facoltativo, stato active|archived e versione. ContactResourceLink collega risorse document/object/boiler/expense/work/activity senza duplicare titoli o recapiti; l’autorizzazione è ricalcolata dal servizio canonico. ContactRequest conserva hash, chiave e ID della ricevuta, senza snapshot di recapiti. Archivio non cancella storia o collegamenti; nuove associazioni solo dopo ripristino. [Mini rubrica](v5/mini-rubrica-20261018.md).
+
 ## 18 ottobre 2026 — Candidati economici ausiliari zero
 
 Nelle proposte houseExpenses sono ammessi amountCents=0 esclusivamente per ruoli arrears_balance/taxable/tax/line_total/other con prova EUR. current_document_total e amount_due restano positivi; costi canonici e conferme rimangono strettamente positivi e selezionano soltanto ruoli totale/saldo. amountSelectionRequired considera arretrati strettamente positivi. Nessuna migrazione o modifica del ledger. [V16](v5/house-amount-evidence-v16-20261018.md).

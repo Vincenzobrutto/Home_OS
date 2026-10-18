@@ -275,6 +275,12 @@ export class FakeBackend {
     }
     if (method === 'POST' && path === '/homes') return this.createHome(req, account.id);
 
+    const contactRead = /^\/homes\/([^/]+)\/(contacts|contact-suggestion)(?:\?|$)/.exec(path);
+    if (contactRead && method === 'GET') {
+      if (!this.memberships.some(m => m.accountId === account.id && m.homeId === decodeURIComponent(contactRead[1]!))) return err(403, 'forbidden', 'Accesso non consentito.');
+      return { status:200,body:contactRead[2] === 'contact-suggestion' ? {suggestion:null} : {items:[],nextCursor:null} };
+    }
+
     const capsMatch = /^\/homes\/([^/]+)\/document-search-capabilities$/.exec(path);
     if (capsMatch && method === 'GET') return this.searchCapabilities(account.id, decodeURIComponent(capsMatch[1]!));
 

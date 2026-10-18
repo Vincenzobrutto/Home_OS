@@ -131,6 +131,7 @@ export function CasaPage() {
           <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/documenti`}>Documenti</Link>
           {home.permissions.includes('edit') && <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/spese?nuova-spesa=1`}>Registra una spesa</Link>}
           <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/oggetti`}>Oggetti e impianti</Link>
+          <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/rubrica`}>Rubrica</Link>
         </div>
       </section>
       <h2 className="visually-hidden">Da fare ora</h2>

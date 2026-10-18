@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Rubrica utilizzabile da Casa
+
+Raggiunta prima versione BL-10: contatti personali e collegamenti a documenti/oggetti/spese/lavori/attività con versione, archivio, duplicati e privacy. Proposta installatore riutilizza estrazione esistente. BL-10b e inserimento contatto nella bozza di nuova spesa/lavoro restano successivi, senza riaprire estrazione o automazioni. [Report](v5/mini-rubrica-20261018.md).
+
 ## 18 ottobre 2026 — Revisione unica consolidata offline
 
 Raggiunti i tre blocchi autonomi: conformità solo casa, ruoli monetari e importi ausiliari, dati precompilati e costo in una conferma con esclusioni e doppioni. Collaudo live di V16 su nuovi originali ancora da misurare. [Report e limiti](v5/unified-review-autonomous-final-20261018.md).

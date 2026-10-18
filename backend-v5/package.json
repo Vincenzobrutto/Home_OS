@@ -9,7 +9,7 @@
     "test:object-onboarding": "npm run build && node --test test/object-onboarding.test.cjs test/object-onboarding-profile.test.cjs test/onboarding-invoice-evidence.test.cjs test/house-expenses.test.cjs test/house-amount-evidence.test.cjs test/document-understanding.test.cjs test/conformity-evidence.test.cjs test/conformity-document-only.test.cjs",
     "test:object-manuals": "node --test test/object-manuals.test.cjs",
     "start": "node --env-file=.env dist/main.js",
-    "test": "node --test test/domain.test.cjs test/documents.test.cjs test/file-control.test.cjs test/personal-export.test.cjs test/multipart.test.cjs test/review.test.cjs test/anthropic.test.cjs test/activities.test.cjs test/document-search.test.cjs test/expenses.test.cjs test/home-objects.test.cjs test/economy.test.cjs test/economic-documents.test.cjs test/economic-anthropic.test.cjs test/sharing-policy.test.cjs test/recovery-mail.test.cjs test/pilot-corpus.test.cjs test/pilot-score.test.cjs test/pilot-observations.test.cjs test/receipt-assistance.test.cjs test/receipt-fixture.test.cjs test/receipt-release.test.cjs test/receipt-anthropic.test.cjs test/document-intake.test.cjs test/intake-classifier.test.cjs",
+    "test": "node --test test/domain.test.cjs test/documents.test.cjs test/file-control.test.cjs test/personal-export.test.cjs test/multipart.test.cjs test/review.test.cjs test/anthropic.test.cjs test/activities.test.cjs test/document-search.test.cjs test/expenses.test.cjs test/home-objects.test.cjs test/economy.test.cjs test/economic-documents.test.cjs test/economic-anthropic.test.cjs test/sharing-policy.test.cjs test/recovery-mail.test.cjs test/pilot-corpus.test.cjs test/pilot-score.test.cjs test/pilot-observations.test.cjs test/receipt-assistance.test.cjs test/receipt-fixture.test.cjs test/receipt-release.test.cjs test/receipt-anthropic.test.cjs test/document-intake.test.cjs test/intake-classifier.test.cjs test/contacts.test.cjs",
     "test:personal-export-db": "node --env-file=.env --test test/personal-export.integration.test.cjs",
     "test:sharing-policy": "node --test test/sharing-policy.test.cjs",
     "test:recovery-db": "node --env-file=.env --test test/recovery.integration.test.cjs",
@@ -29,7 +29,8 @@
     "test:receipt-jobs-db": "node --env-file=.env --test test/receipt-jobs.integration.test.cjs",
     "test:intake-db": "node --env-file=.env --test --test-concurrency=1 test/document-intake.integration.test.cjs test/intake-uploads.integration.test.cjs test/intake-organization.integration.test.cjs test/intake-analysis.integration.test.cjs",
     "test:intake-physical": "node --env-file=.env --test test/intake-physical.integration.test.cjs",
-    "test:object-onboarding:integration": "npm run build && node --env-file=.env --test --test-concurrency=1 test/object-onboarding.integration.test.cjs test/object-onboarding.http.test.cjs"
+    "test:object-onboarding:integration": "npm run build && node --env-file=.env --test --test-concurrency=1 test/object-onboarding.integration.test.cjs test/object-onboarding.http.test.cjs",
+    "test:contacts-db": "npm run build && node --env-file=.env --test test/contacts.http.test.cjs"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",

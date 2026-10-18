@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — BL-10 prima versione mini rubrica operativa
+
+Completati CRUD privato, archivio, ricerca/paging, collegamenti canonici da schede salvate e creazione inline atomica, proposta installatore da issuer esistente, export personale. Residui espliciti: picker/creazione in bozze di nuove spese/lavori, conferma AI combinata BL-10b, riuso fra case e contatti condivisi da specificare. Nessuna importazione telefono/recapiti online. Fuori scope osservato: dettaglio conformità conserva ancora alcuni testi generici Oggetti e spese pur avendo archiviazione document-only; semplificare in successivo intervento UX. [Prove e limiti](v5/mini-rubrica-20261018.md).
+
 ## 18 ottobre 2026 — Consolidamento autonomo estrazione
 
 Chiusi offline conformità document-only, importi ausiliari, passaggio dei dati alla revisione e salvataggio con costo. Resta da misurare la completezza V16 su nuovi originali; non consumata l’ultima chiamata per ripetizioni. Futuro: collegamento emittente/installatore alla mini rubrica, senza digitalizzare dettagli della conformità. [Report](v5/unified-review-autonomous-final-20261018.md).

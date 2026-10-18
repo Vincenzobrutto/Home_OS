@@ -12,6 +12,7 @@ enum HomeRole {
   viewer
 }
 model Account {
+  contacts HomeContact[]
   onboardingComparisons ObjectOnboardingComparison[]
   onboardingDrafts ObjectOnboardingDraft[]
   onboardingJobs ObjectOnboardingJob[]
@@ -93,6 +94,7 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  contacts HomeContact[]
   onboardingComparisons ObjectOnboardingComparison[]
   onboardingDrafts ObjectOnboardingDraft[]
   onboardingJobs ObjectOnboardingJob[]
@@ -1151,4 +1153,48 @@ model DocumentIntakeRequest {
   createdAt DateTime @default(now())
   batch DocumentIntakeBatch @relation(fields:[batchId], references:[id], onDelete:Restrict)
   @@unique([batchId, operation, key])
+}
+
+model HomeContact {
+ id String @id @default(uuid())
+ accountId String
+ homeId String
+ name String
+ profession String?
+ kind String @default("person")
+ phone String?
+ email String?
+ fiscalId String?
+ note String?
+ state String @default("active")
+ version Int @default(1)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+ home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+ links ContactResourceLink[]
+ @@index([accountId,homeId,state,createdAt,id])
+}
+model ContactResourceLink {
+ id String @id @default(uuid())
+ contactId String
+ resourceKind String
+ resourceId String
+ state String @default("active")
+ createdAt DateTime @default(now())
+ contact HomeContact @relation(fields:[contactId],references:[id],onDelete:Cascade)
+ @@unique([contactId,resourceKind,resourceId])
+ @@index([resourceKind,resourceId])
+}
+model ContactRequest {
+ id String @id @default(uuid())
+ accountId String
+ homeId String
+ operation String
+ target String
+ key String
+ fingerprint String
+ contactId String
+ createdAt DateTime @default(now())
+ @@unique([accountId,homeId,operation,target,key])
 }

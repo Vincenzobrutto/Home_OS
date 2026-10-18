@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Mini rubrica personale della casa
+
+Rubrica operativa da Casa: contatti, ricerca, modifica, archivio/ripristino, telefono/email; collegamenti privati da documenti, oggetti, spese, lavori e attività, creazione inline atomica e controllo doppioni/versioni/retry. Proposta installatore da conformità già estratta, solo su conferma; export personale esteso. Migrazione additiva V5; nessuna nuova AI. [Report e contratto](v5/mini-rubrica-20261018.md).
+
 ## 18 ottobre 2026 — Revisione unica: campi e costo verificati
 
 Completati i tre blocchi autonomi offline. Proiezione bolletta non impone scelta per arretrati zero; proposta di costo con prezzo/data verificati può sopravvivere alle sole omissioni opzionali di consegna/garanzia, senza ignorare incertezza del provider. Una conferma, controlli duplicati/esclusioni e campi salvati verificati su DB sintetico. Report: [esiti e limiti](v5/unified-review-autonomous-final-20261018.md).

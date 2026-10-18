@@ -1,3 +1,4 @@
+import { ContactsPanel } from '../contacts/components';
 import { useId, useState, type ReactNode, type RefObject } from 'react';
 import { useUpdateFocus } from '../components/useUpdateFocus';
 import { Link, useParams } from 'react-router';
@@ -227,6 +228,7 @@ function ActivityView({ home, activity, today, back, statusRef }: { home: Home; 
             />
         )}
 
+        <ContactsPanel homeId={home.id} resource={{kind:"activity",id:activity.id}} canEdit={home.permissions.includes("edit") && activity.permissions.includes("edit")} />
         <HistorySection homeId={home.id} activityId={activity.id} />
       </div>
     </>

@@ -1,3 +1,4 @@
+import { ContactsPanel } from '../contacts/components';
 import { contextReturn } from '../lib/contextReturn';
 import { PurchaseSummary } from '../objects/PurchaseSummary';
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
@@ -359,6 +360,7 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
   return (
     <>
       {props.back}
+
       <div className={pages.heading}>
         <div>
           <span className={pages.eyebrow}>{home.name} · {isBoiler ? 'Scheda caldaia personale' : 'Oggetto personale'}</span>
@@ -451,6 +453,7 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
           />
         )}
 
+        <ContactsPanel homeId={home.id} resource={{kind:object.ref.kind,id:object.ref.id}} canEdit={canEdit} />
         <details><summary className={ui.btn}>Storia dell’oggetto</summary>
         <G1History
           title="Storia dell’oggetto"

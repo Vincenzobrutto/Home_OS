@@ -1,3 +1,4 @@
+import { ContactsPanel } from '../contacts/components';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { isApiError } from '../api/errors';
@@ -235,6 +236,7 @@ function WorkView(props: { home: Home; caps?: EconomyCapabilities; work: Economy
   return (
     <>
       {props.back}
+
       <div className={pages.heading}>
         <div>
           <span className={pages.eyebrow}>{home.name} · Lavoro</span>
@@ -303,6 +305,7 @@ function WorkView(props: { home: Home; caps?: EconomyCapabilities; work: Economy
         )}
         {panel === 'edit' && caps && <WorkForm home={home} caps={caps} work={work} onCancel={() => setPanel('none')} onDone={() => setPanel('none')} />}
         {(panel === 'archive' || panel === 'restore') && <WorkStateDialog home={home} work={work} kind={panel} onClose={() => setPanel('none')} />}
+        <ContactsPanel homeId={home.id} resource={{kind:"work",id:work.id}} canEdit={canEdit} />
         <WorkHistory homeId={home.id} workId={work.id} />
       </div>
     </>

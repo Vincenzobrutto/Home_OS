@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — contacts-v1
+
+Nuova API privata in /homes/:homeId: GET contacts (q/state/resourceKind/resourceId/limit/cursor), GET contacts/:id e /links, POST contacts, POST contacts/:id/updates|archive|restore|links|unlink. Mutazioni idempotenti con versione, controllo membri/CSRF e ambito privato. GET contact-suggestion?documentId propone issuer solo da conformità estratta stessa fonte/versione/SHA, senza AI o salvataggi. Contratto e limiti completi in [mini-rubrica](v5/mini-rubrica-20261018.md).
+
 ## 18 ottobre 2026 — Proiezione onboarding: idoneità della proposta umana
 
 La bozza include purchaseExpenseReady:boolean, additivo e falso per bozze storiche prive della prova. Calcolato dal dominio, consente alla UI di proporre il costo di acquisto nonostante sole omissioni opzionali di consegna/garanzia; richiede ancora condizioni prezzo/data/quantità e controllo doppioni. Non autorizza conferma automatica. houseExpenses.amountSelectionRequired considera arretrati solo se positivi. Nessun nuovo endpoint.

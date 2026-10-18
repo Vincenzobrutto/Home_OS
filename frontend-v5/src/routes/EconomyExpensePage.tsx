@@ -1,3 +1,4 @@
+import { ContactsPanel } from '../contacts/components';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
 import { isApiError } from '../api/errors';
@@ -92,6 +93,7 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
   return (
     <>
       {props.back}
+
       <div className={pages.heading}>
         <div>
           <span className={pages.eyebrow}>
@@ -173,6 +175,7 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
         {(panel === 'archive' || panel === 'restore') && (
           <StateDialog home={home} expense={expense} kind={panel} noteMax={caps?.limits.noteMaxCodePoints} onClose={() => setPanel('none')} />
         )}
+        <ContactsPanel homeId={home.id} resource={{kind:"expense",id:expense.id}} canEdit={canEdit} />
         <History homeId={home.id} expenseId={expense.id} caps={caps} />
       </div>
     </>

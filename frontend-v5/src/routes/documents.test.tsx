@@ -81,7 +81,7 @@ describe('[mock] Documenti — archivio', () => {
     expect(first).toHaveTextContent(/PDF · \d+ B/);
     expect(first).toHaveTextContent('Originale caricato');
     expect(first).toHaveTextContent('Persone della casa');
-    expect(first).toHaveTextContent('Caricamento manuale');
+    expect(first).not.toHaveTextContent('Caricamento manuale');
     expect(within(list).getAllByRole('listitem')[1]).toHaveTextContent('Solo io');
     await app.user.click(screen.getByRole('button', { name: 'Mostra altri documenti' }));
     await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(25));

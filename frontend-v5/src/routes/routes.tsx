@@ -6,6 +6,8 @@ import { CreateHomePage, HomeEntry, HomesPage } from './HomesPages';
 import { lazyPage } from './lazyPage';
 
 // Sezioni a caricamento differito: definite una volta qui, fuori dal rendering.
+const ContactsPage = lazyPage(() => import('../contacts/ContactsPages').then(m => m.ContactsPage));
+const ContactDetailPage = lazyPage(() => import('../contacts/ContactsPages').then(m => m.ContactDetailPage));
 const DocumentsPage = lazyPage(() => import('./DocumentsPages').then((m) => m.DocumentsPage));
 const IntakePage = lazyPage(() => import('../intake-integration/IntakePage').then(m => m.IntakePage));
 const DocumentDetailPage = lazyPage(() => import('./DocumentDetailPage').then((m) => m.DocumentDetailPage));
@@ -70,6 +72,8 @@ export const routes: RouteObject[] = [
             children: [
               { index: true, element: <Navigate to="casa" replace /> },
               { path: 'casa', element: <CasaPage /> },
+              { path:'rubrica',element:<ContactsPage /> },
+              { path:'rubrica/:contactId',element:<ContactDetailPage /> },
               { path: 'attivita', element: <ActivityPage /> },
               { path: 'attivita/:activityId', element: <ActivityDetailPage /> },
               { path: 'review', element: <ReviewPage /> },

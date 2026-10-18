@@ -84,7 +84,12 @@ export class PersonalExportService {
       }),
       ...assetHistory.map(row => ({ ...scalars(row, ['id', 'kind', 'note']), at: row.createdAt.toISOString(), resource: { kind: 'boiler', id: row.assetId }, changes: projection.technicalChanges(row.changes) })),
     ].sort((left, right) => String(record(left).at).localeCompare(String(record(right).at)) || String(record(left).id).localeCompare(String(record(right).id)));
+    const contacts=await collect((take,after)=>tx.homeContact.findMany({where:{...own,...pageWhere(after)},take,orderBy}),budget);
+    const contactLinks=await collect((take,after)=>tx.contactResourceLink.findMany({where:{contactId:{in:contacts.map(c=>c.id)},state:'active',...pageWhere(after)},take,orderBy}),budget);
+    const contactTargets:Record<string,Set<string>>={document:keys(documents),object:objectIds,boiler:assetIds,expense:keys(expenses),work:keys(works),activity:keys(activities)};
     const data = {
+      contacts:contacts.map(row=>scalars(row,['id','name','profession','kind','phone','email','fiscalId','note','state','version','createdAt','updatedAt'])),
+      contactLinks:contactLinks.filter(l=>contactTargets[l.resourceKind]?.has(l.resourceId)).map(l=>scalars(l,['id','contactId','resourceKind','resourceId','createdAt'])),
       documents: documents.map(row => ({ ...scalars(row, ['id', 'name', 'visibility', 'createdAt']), ...(organizations.has(row.id) ? { organization: organizations.get(row.id) } : {}), original: scalars(row.original, ['version', 'originalFilename', 'mimeType', 'byteSize', 'sha256']) })),
       objects: objects.map(row => projection.snapshot('object', row)),
       technicalAssets: assets.map(row => projection.snapshot('boiler', row)),
