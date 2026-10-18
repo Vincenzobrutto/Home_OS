@@ -1,3 +1,5 @@
+> **Ripartenza V5, 18 ottobre 2026:** leggere [project-status.md](project-status.md) e [AGENTS.md](../AGENTS.md). Questo handoff conserva lo stato storico legacy del 4 settembre; il riferimento a main e i comandi legacy sottostanti non descrivono il branch V5 attuale.
+
 # Handoff
 
 Documento di consegna per chi riceve questo progetto (sviluppatore umano o assistente AI). Aggiornato il 2026-09-04 dopo la chiusura dei prerequisiti private-alpha B61-B64. Per il dettaglio storico vedi [`changelog.md`](changelog.md).

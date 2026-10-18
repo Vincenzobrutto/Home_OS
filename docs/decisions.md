@@ -1,3 +1,9 @@
+## Indice di ripartenza — 18 ottobre 2026
+
+Le voci sottostanti sono conservate come registro storico; le più recenti del 18 ottobre e le [decisioni V5](v5/implementation-decisions.md) prevalgono sulle convenzioni legacy nel loro ambito. Nessuna nuova decisione di prodotto introdotta dalla consegna.
+
+Confermati: due stack indipendenti; router/Query/CSS Modules nella V5; DB/storage dedicati; originali e privacy per fonte; versione/SHA e idempotenza; pagina Documenti unica; classificazione inline; AI selettiva solo proposte e riapertura bozza senza nuovo invio. Eccezione alla conferma individuale soltanto per caricamento automatico con consenso specifico, contatti con opt-in distinto. Conformità può essere solo documento casa. Motivazioni e alternative sono nelle voci del 18 ottobre e nei report collegati dallo [stato corrente](project-status.md).
+
 ## 18 ottobre 2026 — Classificazione inline e compilazione AI selettiva
 
 Il salvataggio della revisione usa tutti i tipi documentali canonici, incluso system_diagram, che prima mancava dal mapping fra estrazione e archiviazione. Tipo e titolo sono modificabili nella stessa revisione; sostituire metadati già confermati richiede il consenso esplicito nello stesso pannello, mentre copie e versioni restano protette. Nessun rinvio a Rivedi documento per completare un tipo mancante nell’ingresso Documenti.
@@ -518,6 +524,78 @@ Note minori senza correzione necessaria: HomeVaultHQ è un'app di sviluppatore s
 **Conseguenza**: B74 ristretto dal validare 4 wedge a validare specificamente Renovation+Financing (colloqui con i buyer indicati: banca/lender, operatore di ristrutturazione, rete installatori). Nessun lavoro di sviluppo immediato sul wedge stesso: prima la validazione, poi eventualmente un "renovation opportunity model" (già annotato come "da aggiungere progressivamente" in `market-research-funding-2026.md` §27) che riusa dati già in gran parte presenti nel modello di dominio (Property Profile energetico, età/tipo Asset, storico interventi) estendendo le regole Home Detective esistenti — non un secondo prodotto, un'estensione delle Issue/Recommendation già costruite. Vedi `docs/roadmap.md` per la collocazione.
 **Alternative scartate**: Insurance/Prevention (segnale forte ma WTP consumer incerto per il dato storico, `market-research-funding-2026.md` §19); Energy Upgrade (mercato competitivo, l'Italia non ha ancora un ecosistema VPP/flessibilità maturo come UK/Germania dove operano Nomos/Axle Energy); Transaction Readiness (frequenza troppo bassa, più adatto come exit-point futuro del dato che come wedge di acquisizione); costruire ora un layer di esecuzione fisica (rischio operativo sproporzionato rispetto alla fase attuale del prodotto).
 
+### 78. Ambiente Windows V5 isolato per sviluppo
+**Contesto:** configurazione di un PC privo di Git/Node/VS Code/PostgreSQL; nessun database reale deve essere toccato.
+**Decisione:** Node 24 LTS, Git e VS Code installati; PostgreSQL 17 portabile nel workspace, cluster nuovo e autenticazione SCRAM su 127.0.0.1:55432. Credenziali in file locali ignorati, nessuna chiave AI/OAuth. Branch di lavoro locale dev/dimora-v5-local-20261013 da prototype/dimora-partner-home-v4. HOST backend opzionale, configurato localhost in questo ambiente; frontend avviato con --host 127.0.0.1. Lint frontend limitato a src.
+**Motivazione:** setup eseguibile senza servizi permanenti, virtualizzazione o connessioni ai dati esistenti. npm ci dai lockfile con script disabilitati, poi generazione esplicita del client Prisma 6.19.3.
+**Alternative scartate:** Docker Desktop/WSL ora (installazioni di sistema e riavvii non necessari); PostgreSQL come servizio Windows (ciclo di vita meno isolato); riscrittura totale durante il setup (non richiesta per verificare la baseline).
+**Conseguenze:** launcher locale fuori dal repository; backend eseguito dalla build dist/src/main.js e ricompilato dopo modifiche. Nessun nuovo framework frontend deciso; router o state manager restano proposte da discutere. Tutti i dati del cluster sono sintetici/locali e il seed legacy non viene eseguito.
+
+### 79. Frontend V5 nuovo e direzione Blu architettura
+**Contesto:** il committente esclude esplicitamente riuso del frontend legacy e sceglie la terza di tre nuove proposte, Blu architettura, in questa chat del 13 ottobre 2026.
+**Decisione:** nuovo frontend progettato da zero, con shell Home/Agenzie/Amministratori e palette blu profondo, superfici chiare, accenti azzurro/ciano. La direzione supera la proposta verde petrolio B dei documenti V5 precedenti. Possibile riuso solo di componenti backend valutati utili, dopo audit.
+**Motivazione:** la nuova UX non deve essere limitata da schermate, palette, navigazione o stato del progetto HomeOS.
+**Implementazione prototipo:** sorgente autonomo buildless in outputs/dimora-v5, copia locale in frontend/public/v5 per il solo servizio statico. Nessuna importazione da App.tsx, theme.ts, api.ts o componenti legacy; nessuna API. CSS dedicato e routing hash sono scelte del prototipo, non scelta automatica del framework di produzione.
+**Alternative scartate:** restyling del frontend legacy; migrazione della preview React minimale senza riprogettazione; riciclo del prototipo verde petrolio.
+**Conseguenze:** le precedenti convenzioni frontend continuano a valere sul legacy, ma non vincolano questa nuova progettazione esplicitamente autorizzata dall'utente. Prima delle verticali reali: validazione UX, scope freeze, ADR stack e permessi server-side.
+
+### 80. V5: vendita, consegna agenzia e cessazione mandato
+**Decisione (13/10/2026, richiesta esplicita del committente):** l’ex proprietario esporta prima della vendita e alla data perde accesso alla casa; l’account resta indipendente. Pratica agenzia: 60 giorni dalla conclusione per download e Gift, poi metadati senza documenti; la Home ricevuta resta autonoma. Lo studio cessato perde accesso all’edificio; solo pubblicazioni e allegati già autorizzati restano alle Home, con destinatari e provenienza invariati.
+**Alternative scartate:** archivio in-app perpetuo dell’ex proprietario (superata A-01), chiusura della Home dell’acquirente alla scadenza agenzia, cancellazione o pubblicazione automatica dell’archivio comune alla cessazione.
+**Conseguenze:** demo buildless aggiornata, stato V2 migrato senza reset forzato, export filtrati e controlli di percorso/azione. Nessun backend o schema modificato. Retention fisica, recupero controllato, proroghe e passaggio fra studi da definire prima della produzione. Specifica consolidata nel deliverable outputs/Dimora-V5-ciclo-di-vita-consolidato.md del workspace.
+
+
+### 81. Baseline prototipo V5: identità Home e contesti di revisione
+**Contesto:** revisione finale autorizzata dal committente, su MASTER-01, con sette rilievi R2.
+**Decisione:** ogni Home ha ID stabile e contesto proprietario; casa corrente distinta da archivio tecnico inaccessibile dopo cessione. I report appartengono alla Home, le bozze a persona/casa/form/record. Il Gift richiede scelta e attestazione esplicite della destinazione; nuove Home conservano quelle precedenti separatamente. Le schede Gift entrano in Da rivedere fino a conferma; il lotto usa un manifesto di 22 originali con conteggi derivati.
+**Alternative scartate:** assegnare report per solo autore; ripristinare bozze legacy ambigue; scegliere la destinazione per persona o indirizzo testuale; aggiungere fonti fuori dai conteggi del lotto; rimettere in discussione le decisioni di prodotto già consolidate.
+**Conseguenze:** baseline v9 finale, stato demo v3 migrato dalla v2; 21 controlli automatici e 64 verifiche browser. UI dei permessi ancora dimostrativa, nessuna modifica allo schema/API reali. MASTER-02 ed esito finale sono i riferimenti del workspace. La produzione richiede ancora autorizzazioni server-side, scheduler, archivi originali, recupero e passaggio mandato.
+
+
+### 82. Stato pubblico della comunicazione V5
+Richiesta del committente: individuare visivamente un problema risolto dalla Home. Lo studio sceglie uno stato comunicato (informativo, preso in carico, programmato, risolto) conservato per versione e mostrato con icona e testo. Non si deduce dalla chiusura privata né dal testo. Le comunicazioni già pubblicate richiedono una rettifica per assegnare lo stato. Alternativa scartata: propagazione automatica della chiusura privata o matching testuale. Solo demo, nessuna API/schema reale modificati.
+
+### 83. Collaborazione V5 e contratto identity-v1
+Codex mantiene contratto/backend/integrazione; Claude Code implementa nuovo frontend-v5 in checkout Git indipendente. Decisioni frontend in docs/v5/implementation-decisions.md e istruzioni scoped: React/TS/Vite, router, CSS Modules, cache account/casa. Non si applicano a frontend legacy. API identity-v1 esplicita CSRF, sessione, permessi e idempotenza. Checkpoint locale 101f053; nessun push né database creato. Separazione evita sovrapposizione file e import di automatismi legacy.
+
+### 84. Backend V5 identity-v1 isolato
+Nuovo progetto Nest/Prisma con schema e client autonomi. Cookie opaco, hash sessione in DB, CSRF per pre-sessione e sessione, Origin esplicito. Membership con validità/revoca verificata ad ogni richiesta, senza backfill owner. Creazione casa/membership/idempotenza transazionale per account; retry non riapre diritti revocati. Database guard iniziale limita al ruolo e database locale V5. Alternative scartate: bootstrap AppModule legacy, client Prisma legacy, token frontend/localStorage. Rate limit in memoria solo sviluppo; migrazioni esplicite e verifiche reali ancora da eseguire.
+
+### 85. Review integrazione identity-v1.1
+Query/form frontend inviano account catturato in X-Account-Context, controllato contro cookie sul server; nessun dato di B nella cache di A dopo cambio account in altra scheda. Sessione riletta sempre al focus, callback mutazione controlla account prima della cache. Codici CSRF/idempotenza stabili, niente retry automatico mutazioni; lunghezze Unicode code point e logout scaduto idempotente. Adottati ingresso diretto con una sola Home e font di sistema del contributo Claude; prove mock separate da reali. Dipendenze frontend fissate dal lockfile Claude, compatibilità verificata in build; non si aggiornano le major per inseguire latest.
+
+## ADR-V5-05 — Documenti M2, 13 ottobre 2026
+Originali immutabili e storage privato; private default per uploader con membership valida, home solo con scelta esplicita. Owner non supera private altrui. Scartata visibilita a tutta la Home automatica. Limiti tecnici locali 20 MiB/file, ZIP 100 MiB; non quote commerciali. API e modello in docs/v5/documents-api-contract.md e implementation-decisions.md. AI/conferme/cestino/versioni successive restano fuori da M2.
+
+## ADR-V5-06 — Storage e dipendenze M2
+Storage locale privato backend-v5/storage-private, nomi UUID, staging e rename prima della transazione DB; rollback rimuove file soltanto dopo verifica DB riuscita di assenza del riferimento. Commit incerto conserva il file; cleanup dopo 24 ore con lookup DB e nessuna cancellazione senza verifica. Nessun reset o pulizia di directory legacy. Originali verificati con hash anche prima del download/ZIP, membership e sessione ricontrollate prima della risposta binaria.
+Archiver 7.0.1 e file-type 21.3.4, gia installati/verificati nel workspace, dichiarati come dipendenze dirette V5 con lock autonomo. Alternativa scartata: scrivere a mano ZIP/detection generici o importare FileStorageService legacy con dipendenze incidentali. file-type rileva firma, non certifica validita completa o assenza di malware; hardening prima del pilota. Export in memoria con limite 100 MiB e massimo due concorrenti, coerente con ambiente locale; adapter streaming remoto per ambiente ospitato da rivalutare. Fonti primarie: https://www.archiverjs.com/docs/archiver/ e https://github.com/sindresorhus/file-type.
+
+## Review frontend M2 dopo riavvio
+Confermati cache dei byte gcTime 0, Blob URL revocati, multipart/binari con client unico, default private e permessi Home edit. Risposte binarie 200 consentite solo con MIME PDF/JPEG/PNG o ZIP previsto: scartato download silenzioso di HTML proxy. Unità tecniche MiB coerenti con limiti reali. Memoria ZIP e fallback PDF da verificare prima pilota.
+
+## ADR-V5-07 — Provider M3 di test esplicito
+Analisi asincrona richiesta dall'utente, job persistenti e provider test_fixture_v1 riconosciuto soltanto tramite hash delle tre fixture PDF. Documenti sconosciuti falliscono senza valori inventati. Nessuna chiamata AI a pagamento. Contratto: docs/v5/review-api-contract.md; implementazione ancora da costruire.
+
+## ADR-V5-08 — Conferme M3 personali e puntuali
+Proposte con fonti distinte dai dati confermati. Dati derivati privati del creatore con diritti Home correnti. Conferma parziale chiude solo le verifiche scelte; valori discordanti della stessa grandezza richiedono scelta motivata, grandezze diverse possono essere conservate entrambe. Reanalisi non sovrascrive conferme. Scartata conferma implicita di tutta la potenza o validazione globale dell'originale.
+
+
+## ADR-V5-09 — Worker e serializzazione M3
+Lease e token persistenti; un tentativo superato non pubblica. Job/proposte/storia pubblicati nella stessa transazione. Lock advisory per account/Home e membership/fonti FOR SHARE impediscono versioni incoerenti e pubblicazione in gara con revoca. Impronta delle evidenze e revisione del campo evitano riaperture sulla stessa decisione. Alternativa scartata: coda solo in memoria o aggiornamenti separati. Nessuna dipendenza nuova; JSON per valori tipizzati con validazione rigorosa al bordo e DTO. Parser SQL restituisce testo per il lock advisory, evitando il tipo PostgreSQL void non deserializzabile da Prisma.
+
+
+## Review M3 frontend — consolidamento
+Fonti nominate tramite query M2 autenticata, senza cambiare SourceRef; sottopagine review/impianti mantengono Attivita attiva; action dello storico tradotte; conteggio job esplicita totale aperte al termine, non nuove verifiche. Caldaia nome iniziale, nota marca/modello comune ammessa, chiusura manuale corrected solo per ID espliciti. Sincronizzazione futura via bundle e SHA256: la patch applicata nel checkout Claude aveva convertito i PDF in CRLF; root e public byte verificati, non riapplicato sync. Nessun limite auth ridotto: pausa tecnica fra suite backend e client nel launcher. App di test locale, nessuna conformita WCAG dichiarata.
+
+
+## ADR-V5-10 — M4 Anthropic e collaudo massimo 10 USD
+Scelta esplicita del committente: API Anthropic, plafon cumulativo 10 USD per il collaudo locale. Modello iniziale Sonnet 5.5 configurabile e da verificare nell'account; nessuna escalation o retry automatico. Primo incremento PDF testuali con JSON strutturato e riscontro locale pagina/citazione, non citazioni native incompatibili con structured outputs. Ledger persistente conserva costi incerti e impedisce ridispatch dopo crash. Scartati riuso integrale della pipeline legacy, fonte suggerita senza verifica e limite di spesa solo in memoria. Contratto analysis-v2 in docs/v5/anthropic-api-contract.md; implementazione/live test ancora da fare. Fonte primaria: https://platform.claude.com/docs/en/build-with-claude/citations e https://platform.claude.com/docs/en/models/overview .
+
+
+## V5 M4 — parser isolato e trasporto Anthropic (13 ottobre 2026)
+PDF.js 6.4.299 legge il solo testo paginato in un processo Node separato con heap, tempo e output limitati, senza variabili contenenti credenziali. Alternativa scartata: parser nel processo API con la chiave disponibile, o OCR implicito non previsto nel primo incremento. Il processo separato riduce l'impatto di errori di parsing ma non costituisce un sandbox di sicurezza del sistema operativo. Nessuna nuova SDK: fetch nativo e zero retry automatici. Ledger PostgreSQL e risposta persistita prima della validazione impediscono reinvii dopo crash ed evitano rimborsi di costo incerto. La citazione deve contenere la denominazione associata al numero e kW: la sola presenza dello stesso numero nella pagina non basta. Riferimenti: docs/v5/anthropic-api-contract.md; https://github.com/mozilla/pdf.js; https://platform.claude.com/docs/en/models/sonnet-5-5/overview .
+
 ## V5 M4 — integrazione reale e costo persistente (13 ottobre 2026)
 PDF.js 6.4.299 paginato in processo senza chiave, limiti di memoria/tempo; non è un sandbox OS. Fetch nativo e JSON strutturato, nessuna SDK/retry. Estratti verificati localmente con denominazione, numero e kW; un blocco JSON finale, thinking ignorato come fonte. Ledger serializzato alla prima creazione, uso persistito prima della validazione, nessun rimborso incerto o reinvio dopo crash. Tetto 10 USD e sei chiamate iniziali distinti; saldo non cancellato a fine test. Scartati pipeline legacy integrale, citazioni non riscontrate, limite solo in memoria, nuove campagne automatiche. ADR-V5-10/11 e dettagli in docs/v5/implementation-decisions.md e docs/v5/m4-integration-review.md.
 
@@ -564,3 +642,430 @@ ADR-V5-17: lock Home+account per ambienti shared, oggetti/posizioni personali fi
 ## G1 — integrazione finale reale (14 ottobre 2026)
 
 ADR-V5-18: frontend G1 pessimista, due POST costo/attività poi link con recupero senza ricreare risorsa; posizioni canoniche, nessun costo copiato su oggetto. Snapshot history diretti e posizione annidata; importo link expense letto dal record H3a autorizzato, senza N+1 HTTP/sommatori. Autofocus ActivityForm solo forObject dopo problema riprodotto nel browser. Scope personale conserva privacy finoC1. Precisazioni in docs/v5/g1-integration-review.md.
+
+## S1 — pianificazione approvata dopo G1 (14 ottobre 2026)
+S1 precede C1 e include manuale breve più proposta economica da bollette/fatture semplici, con conferma e costo unico. Specifica docs/v5/s1-economic-history-spec.md; revisione UX documentale preparata per Claude. Implementazione e contratto REST congelato ancora da completare; nessuna migrazione, chiamata paid o modifica runtime in questa sessione.
+
+## ADR-V5-19 — S1 prima C1, contratto e arbitrato UX
+14 ottobre 2026. S1 include manuale breve e compilazione assistita bollette/fatture. Bozza economy-v1 separata da expenses-v1 e da analisi caldaia, stesso HomeExpense canonico. Proposta create atomico con lavoro/oggetto e riepiloghi server con somme stringhe centesimi. Scartati copie del costo, pagamento dedotto e esclusione finanziamento dal totale generale. Revisione Claude d54a533 raccolta come db45d1b e arbitrata in s1-design-review.md: collegamento documento incrementa CAS/storia se cambia costo; bozze originali persistite, edit non salvati espliciti; consenso per ogni trasferimento. Nessuna dipendenza/migrazione/runtime o chiamata paid in questa fase. Contratto ancora bozza fino esempi DTO/congelamento.
+
+## S1 — mockup prima dello sviluppo e modulo aggiuntivo
+14 ottobre 2026. Steering esplicito: prima navigazione UX mockup, poi implementazione; Economia aggiunge capacità senza alterare funzionalità già definite. Creato frontend-v5/public/mockup-economia-s1.html standalone, dati sintetici in chiave localStorage isolata dimora-s1-ux-mock-v1 (QA separata suffisso -qa), nessuna API/AI o DB. Provati da browser: manuale85 EUR Lavatrice totale505; link gas esistente totale invariato; scelta80su80+20 e nuova registrazione esplicita; fatturaIVA122; scansione manuale; filtroGas e confronto;320px senza overflow. Backend invariato, nessuna build/test backend necessari. Confronti e archivio nel mockup sono simulazioni, non funzioni già aggiunte all'app.
+
+## S1 — schede oggetto preservate nel mockup
+14 ottobre 2026. Su richiesta committente, catalogo Oggetti distinto da Costi per oggetto. Scheda completa con sintesi essenziale e sezioni documenti/attività/costi/storia, link verso vista economica e ritorno. Verificato browser accesso fonte sintetica e ritorno,320px senza overflow e console senza errori. Solo mockup isolato: app/backend/DB e funzionalità già definite invariati. Specifica aggiornata docs/v5/s1-economic-history-spec.md; guida outputs/Dimora-V5-S1-mockup-navigazione.md. Sviluppo operativo ancora sospeso per revisione esperienza.
+
+## Mockup Home proprietario completo prima S1
+14 ottobre 2026. Quattro sezioni Casa/Attività/Documenti/Spese; ambienti/oggetti/condominio da Casa; spese essenziali distinte da approfondimento Economia. Archivio generale, review card aperte, attività, originali, costi collegati, ritorni contestuali, C1/ciclo di vita come anteprime simulate. Verifica browser reale delle sole simulazioni e viewport320, zero consoleerrori; nessuna API/DB/AI o modifica runtime. Source frontend-v5/public/mockup-proprietario-v5.html e report docs/v5/owner-mockup-navigation.md. Multi-casa/onboarding account e funzioni future non rappresentati. Backend S1 ancora sospeso finché committente valuta navigazione.
+
+## Audit UX Home e famiglie approvate —14ottobre
+Contributi Claude da02584/9357f2b raccolti selettivamente (audit20screenshot, proposta autonoma, famiglie). Audit attendibile con correzioni alle affermazioni assolute; alternativa2 raccomandata con schede ad anteprime limitate, unico ingresso Spese e ritorni contestuali; ufficiale non modificato. Report docs/v5/home-ux-audit-arbitration-20261014.md. Famiglie approvate recepite in spec/modulo/bozzaREST: settecodici serverfamily, categorie invarianti, repairs_works derivata da lavoro, polizza mutuo financing esplicita, totale generale e withoutFinancing stessa base. Non importare fonte Claude integralmente: vecchi gruppi, confronti annuali non omogenei, secondarie segnaposto, liste complete e viewportmeta assente. Nessuna API/DB/AIpaid; contratto non congelato.
+
+## Famiglie approvate ora visibili nei mockup —14ottobre
+Aggiornati mockup proprietario e copia navigabile proposta-Claude: tutte7famiglie, repairs_works con lavoro derivata in works_purchases, polizza casa180EUR insurance e polizza mutuo120EUR financing espliciti sintetici, rata450 già presente. Totale fixture2477,90EUR, famigliafinancing570EUR, senza1907,90EUR. Dati esistenti non riclassificati; esempi inseriti soltanto se ID mancante. Confronto proposta corrente allineato fino14ott in entrambi anni, viewportmeta/lang aggiunti. Originale consegna Claude in frontend-v5/docs/proposta-ux preservato; copia public ora adattata Codex e marcata. Browser verificato riepilogo proposta e proprietario, sintassi valida e console senza errori. Nessuna API/DB/AI. Non applicata ancora intera riorganizzazione UX al mockup ufficiale.
+
+## Spese — macro famiglie come navigazione principale
+14 ottobre2026. Richiesta esplicita committente: sostituire menu Elenco/Peroggetto/Lavori/Riepilogo con famiglie. Proposta navigabile aggiornata: Tutte+7famiglie; modalità secondarie nel select Visualizza, family applicata a elenco/totali/riepilogo/oggetti/lavori; mantenuto scroll orizzontale mobile. Verificati Mutuo570 e Assicurazioni180 con registrazioni giuste, Riepilogo stessa famiglia,320px senza overflow/scrollWidth305; console nessun errore. SintassiJS controllata. Solo copia proposta public e spec, mockup ufficiale/backend invariati da questa modifica. Scelta documentata per successiva integrazione UX ufficiale.
+
+
+### 14 ottobre 2026 — Consolidamento mockup proprietario S1
+
+Approvata dal committente la navigazione Spese per macro famiglie con Visualizza secondario. Applicata al mockup ufficiale completo, preservando sezioni oggetto/documenti/attività e percorsi condivisione/storia/esportazione. Report e limiti: docs/v5/owner-ux-consolidation-20261014.md. Si rimuove la duplicazione di ingresso Spese/Economia senza rimuovere funzioni. Contratto e implementazione S1 operativa restano separati dalla prova UX. Nessun nuovo incarico Claude o consumo API.
+
+
+### 14 ottobre 2026 — Rifinitura UI Claude integrata
+
+Raccolta variante Claude 2a5fd69/f37768d e applicata al mockup ufficiale preservando stato e funzionalità. Tipografia, densità, gerarchia azioni e righe Spese migliorate. Verifiche e limiti in docs/v5/owner-ui-refinement-integration-20261014.md; contratto S1 ancora da congelare, runtime invariato.
+
+
+### 14 ottobre 2026 — Contratto S1 e proposta dashboard
+
+Definizione S1 e wire economy-v1 congelati con tipi, esempi e hash in docs/v5/s1-contract-freeze-20261014.md. Bozze accantonate recuperabili, confronto nullable e compatibilità H3a/G1 definiti. Incarico Claude dashboard alternativa separata pronto; non cambia specifica, ingressi o API e non blocca implementazione. Nessun runtime o DB modificato.
+
+
+### 14 ottobre 2026 — Backend S1a/b e dashboard separata
+
+API economy-v1 implementate per costi/metadati/famiglie/filtri/confronti e lavori personali; mutazioni condivise con H3a e riferimenti G1 atomici. Migrazione additiva solo DB V5 dedicato. DocumentDrafts false: S1c e frontend operativo restano aperti. Build/lint,86 offline e119 integrazione passati;5 test ulteriori contro API registrata. Report docs/v5/s1ab-backend-review-20261014.md. Dashboard Claude raccolta e servita separatamente, non integrata nel mockup ufficiale.
+
+
+### 15 ottobre 2026 — Backend S1c fixture e ripresa verifiche
+
+Job economici persistenti, bozze recuperabili, candidati e conferma atomica sul costo canonico implementati; fonte/versione/hash e redazione replay/storia. Provider fixture solo due PDF sintetici, Anthropic economico disabilitato senza invii o spesa. Build/lint e12test S1c mirati verdi nella ripresa;89offline e130integrazione precedenti documentati. API locale ripristinata autonomamente. Frontend Claude non raccolto, S1 nel complesso non completato. Report docs/v5/s1c-backend-review-20261015.md.
+
+
+### 15 ottobre 2026 — Integrazione frontend Spese S1a/b
+Claude c7f145b/1e2ae0e raccolti senza sync, dashboard/manuale/lavori operativi. Build/lint e267test frontend verdi,17test mirati sulla correzione ritorno dal nuovo costo. Percorso browser/API/DB reale verificato: costo sintetico240EUR, totale240,60EUR, archivio/ripristino e storia. Report docs/v5/s1ab-frontend-integration-20261015.md. S1c UI resta aperta; Anthropic economico disabilitato, nessuna chiamata paid. Warning bundle677kB e riepiloghi H3a da evolvere tracciati nel report. Nessun push/main/legacyDB.
+
+
+
+### 15 ottobre 2026 — S1c frontend integrato con fixture
+Claude1e76d7f/afb9897 raccolti come da0135d/d3a27dd, sync escluso. Build/lint/typecheck e37test mirati verdi. Browser/API/DB reale: upload gas sintetico, fonti/importi, park/reopen dopo reload, conferma80EUR e link_existing senza duplicato. Dashboard320,60EUR/cinque record; AiAttempt8 invariato. Report docs/v5/s1c-frontend-integration-20261015.md. Adapter Anthropic economico non implementato/disabilitato; bundle715kB aperto. Nessun push/main/DBlegacy/paid.
+
+
+
+### 15 ottobre 2026 — Adapter economico Anthropic offline
+Prepare/decode con parser reale e schema/citazioni verificate, trasporto strutturato condiviso con regressioni caldaia verdi. Evidenza date italiane/importi raggruppati. Build/lint,95offline e12S1cDB/HTTP verdi. Report docs/v5/economic-anthropic-offline-20261015.md. Nessun invio paid/.env/migrazione/restart. Provider resta disabled: ledger economico dedicato, worker protetto e consenso UI reale ancora da implementare prima di autorizzare campagna live.
+
+
+
+### 15 ottobre 2026 — Ledger e worker Anthropic economico, ancora disabilitato
+Registro separato EconomicAiCampaign/EconomicAiAttempt, riserva atomica, quota/costi, consenso start/retry, recupero senza reinvio e permessi prima di count/Messages/pubblicazione. Migrazione20261015090000 solo DBV5 dedicato. Build/lint96offline/21DBHTTP verdi con AnthropicHTTP stub. API riavviata; providerdisabled, ledger economico vuoto, M4rimasto8. Report docs/v5/economic-ai-ledger-worker-20261015.md. Consenso frontend affidabile a Claude; nessun paid, budgetlive ancora da autorizzare dopo integrazione.
+
+
+
+### 15 ottobre 2026 — Consenso Anthropic economico integrato
+Claude0c3db1b/55aec7f raccolti d8c5e0b/a6b7497; allineamento escluso. Consenso locale, reset, nuovo retry e billing separato; Codex esclude retry quando billinguncertain anche con timeout. Build/lint48mirati e1test client/API reale a providerdisabled verdi. Economyledger0/M4Attempt8. Report docs/v5/economic-consent-integration-20261015.md. 311completi/browser solo evidenza Claude; nessun paid o budget attivato. Proposta collaudo1USD/treMessages sintetiche ancora da approvare.
+
+
+
+### 15 ottobre 2026 — Primo collaudo Anthropic economico reale
+Autorizzati1USD/treanalisi solo sintetici. Aggiunta allowlistSHA256 obbligatoria server (ECONOMY_AI_ALLOWED_SHA256), rifiuto prima riserva e trasferimento. Build/lint16mirati verdi; dueMessages reali Sonnet4.6, gas80/20/100 e fattura100+22/lordo122 corretti, conferma canonica totale202EUR. SpesaAPI0,021834USD settled; M4invariato8. Providerdisabilitato in finally/APIriavviata. Report docs/v5/economic-anthropic-live-20261015.md. Nessun terzoinvio o quota resettata; nessuna bolletta personale. Claude possibileottimizzazione bundle incaricopreparato; frontendnonmodificato.
+
+
+### 2026-10-15 — Caricamento differito delle sezioni V5
+
+Casa e autenticazione restano eager; sezioni secondarie via React.lazy/Suspense, con confine dedicato ai fallimenti di import. Recupero mediante reload esplicito della stessa URL: il browser conserva il fallimento del modulo, quindi il semplice retry in memoria non è affidabile. Scartati aumento della soglia warning, retry automatici e caricamento eager di tutte le pagine. Nessuna nuova dipendenza. Prove e limiti: v5/frontend-loading-integration-20261015.md.
+
+### 2026-10-15 — C1 manifesto separato e gate identita
+
+Base offline: originali scelti dal loro uploader, nessun ampliamento di canReadDocument o visibilita M2 e nessun derivato economico automatico. Avviso su tutto il contenuto dei file, fingerprint contestuale che invalida conferme obsolete, scadenza/revoca e diritti correnti controllati. Scartati grant impliciti agli owner, classificazione sensibile automatica e email non verificata come autorizzazione esterna. Same-Home prima verticale e oggetti successivi sono proposte da revisionare, non contratto congelato. Dettagli v5/c1-sharing-spec.md e c1-sharing-api-design.md.
+
+### 2026-10-15 — C1 arbitrato dopo Claude
+
+Accolta la critica al valore limitato del solo same-Home: tappa tecnica, mentre primo rilascio utente raccomandato include esterni. Account ID, codice monouso breve, confronto challenge via contatto conosciuto, approvazione mittente e accettazione destinatario distinti; nomi/email dichiarati non sono identita verificata. Conferma anche per soli dati tecnici; rifiuto distinto da revoca. Revoca C1 non toglie permessi M2 indipendenti. Specifica v0.2 e v5/c1-ux-arbitrato-20261015.md prevalgono sulla sequenza v0.1; nessun runtime esterno ancora autorizzante.
+
+### 2026-10-15 — C1a contratto e backend
+
+Protocollo approvato: codice50bit hashed a riposo e restituito solo alla generazione; replay perde il segreto ma recupera stesso invito, con rotazione esplicita. Claim account con consenso profilo, confronto40bit/claim/versione tramite contatto conosciuto, approvazione mittente e accettazione separati. Rate limit persistente distinto da AI. Lock su membership/documento/versione/share, fonte riveduta nei replay e file, nessuna modifica a canReadDocument. Alternativa scartata: memorizzare codice iniziale in chiaro nel ledger per riprodurre risposta, o usare email non verificata come prova. Contratto v5/sharing-api-contract.md; prove c1-backend-review-20261015.md.
+
+
+## 2026-10-15 — C1a: proteggere il contesto alla consegna del blob
+
+Controllare account corrente e componente montato dopo il download prima di salvarlo; su 403 azzerare il dettaglio e rileggere, senza conservare titoli nel messaggio. La sola autorizzazione server alla partenza non basta per evitare un salvataggio dopo logout. Due regressioni dedicate e suite frontend 331/331. Integrazione Claude e limiti in v5/c1-frontend-integration-20261015.md. Nessuna modifica ai permessi M2 o all'economia.
+
+
+## 2026-10-16 — Home: diagnostica, prove sintetiche e focus
+
+Le capability possono contenere motivi interni: la UI usa messaggi noti e un ripiego comprensibile, senza mostrare motivi liberi o campagne. Gli esempi compaiono solo quando il server dichiara attiva la fixture; resta esplicita la distinzione fra prova sintetica e AI reale. Dopo una conferma recuperare il focus soltanto se la rimozione del controllo lo ha lasciato sul body, senza sottrarlo ad altri elementi. Scartati mascheramento della simulazione e toast a tempo come unica soluzione. TTL C1 e protocollo invariati. Guida non modale raccomandata ma ancora proposta, nessuna telemetria nuova. Dettagli in v5/home-consolidamento-arbitrato-20261016.md.
+
+## 2026-10-16 — Casa operativa, paging e guida rinviata
+
+Scadenze/verifiche prima dei dettagli anagrafici richiudibili. Conteggio review da openCount del server; per sharing solo presenza autorizzata su pagine caricate, senza totale/assenza globale. Scartata scansione automatica di tutte le pagine. Riepilogo sharing differito col wrapper pagine esistente e contesto Home risolto al montaggio, evitando aumento superfluo entry. Guida non integrata su scelta del committente. Contratto e sicurezza C1 invariati.
+
+## 2026-10-16 — Collaudo senza ampliamento prodotto
+
+Nessuna nuova decisione di architettura o prodotto. Conservati collegamenti espliciti: un documento e un costo collegati allo stesso oggetto non diventano associati fra loro. Verifiche reali distinte da harness e prove precedenti; nessuna nuova campagna AI. Criteri e limiti in v5/home-collaudo-funzionale-20261016.md.
+
+## 2026-10-16 — Chiudere il ciclo Home con correzioni mirate
+
+Focus di esito solo se perso sul body: banner upload, titolo consegna aggiornata, campo codice editabile o contenitore errore se esito ignoto. Non sottrarlo a controlli attivi. Riusato useUpdateFocus senza nuove dipendenze. Unificato codice di confronto, protocollo invariato. Scartata ulteriore riprogettazione generale prima della prova personale; guida rinviata. Arbitrato v5/home-rifinitura-arbitrato-20261016.md.
+
+## 2026-10-16 — Pianificazione vincolata alle nuove decisioni Home
+
+Conservato ordine approvato della release corrente prima di Agenzie; nessuna rimessa in discussione dei rinvii BL-07/08/09 o placeholder12..16. Stime tecniche preliminari, non calendario AI; gate contratti prima frontend. Backup consistente online con snapshot esportato e SHARE lock sulle tabelle originali, nessun riavvio API o modifica flagAI; pg_restore su cluster separato55439 poi spento. Dati e config attivi invariati. Piani/limiti in v5/home-release-piano-20261016.md e v5/backup-verifica-20261016.md.
+
+## 16 ottobre 2026 proposta recupero account Fase 0
+
+Proposto recapito email verificato e challenge monouso con hash, revoca sessioni e rate limit durevole; preferito ai soli codici da conservare per usabilità utente medio. Contratto NON congelato, nessun endpoint/schema o provider aggiunto. Servizio e costi da concordare prima attivazione, indipendente dal digest BL-08. Vedi docs/v5/fase0-recovery-design-20261016.md. Guida primo accesso ancora rinviata.
+
+
+## 16 ottobre 2026 Fase 0 servizio email proposto
+
+Il committente non dispone di servizio e chiede proposta: suggerito Brevo, informazioni ufficiali verificate. Adapter minimale fetch senza SDK, scollegato da AuthModule e .env; attivazione richiede servizio/mittente e contratto completo. Nessun retry automatico su consegna incerta e nessun allegato. HTTPS normalmente, opt-in esplicito solo loopback5174 per collaudo locale. Nessuna impostazione sicurezza modificata. Corpus annotato24 casi e scorer non sono una misura di accuratezza del provider. Vedi report Fase0 tecnico.
+
+
+## 16 ottobre 2026 Recupero V5 dopo arbitrato Claude
+
+Consegna Claude c870cad raccolta aa4f55d. Recepiti UX01..05, corretta regola reinvio: link precedenti validi fino al primo reset riuscito, evitando dipendenza da ordine email. Scelta minima: dispatch inprocess con stato persistente, token soltanto in memoria, senza outbox plaintext o retry automatico; crash puo perdere invio e richiede nuova richiesta esplicita neutra. Limiti durevoli HMAC, accountlock comune con login. Config Brevo separata .local.json ignorata, nessuna modifica .envAI. Nuovi account a canale attivo verificati prima upload, vecchi nessun lockout. Brevo mittente attivo/API200 dopo autorizzazione IP effettuata dal committente, invio automatico non eseguito: live solo azione utente. Contratto docs/v5/account-recovery-api-contract.md.
+
+
+## 16 ottobre 2026 Collaudo live recupero concluso
+
+Brevo/API mittente verificati dopo autorizzazione IP eseguita dal committente, due email reali richieste da lui (verifica e reset), challenge accepted/consumed confermate DB. Committente conferma login con nuova password; Codex osserva /case autenticato senza case. Nessuna password letta. Runtime660e50d, report docs/v5/account-recovery-esito-20261016.md. Backup aggiornato083531Z verificato con restore43tabelle/262originali, clusterspento. Recupero gatechiuso locale; altri gate Fase0 aperti. Nessun paidAI/main/legacy/push. Preflight ora distingue il GETsession che puo creare metadato anonimo da una lettura file pura.
+
+
+## V5 Fase0 — ammissione file con Defender esistente (16 ottobre 2026)
+Scansione personalizzata senza remediation del singolo staging, binario Microsoft verificato, firme entro sette giorni, hash prima/dopo; ogni esito incerto blocca. Alternative scartate: formato come prova antimalware, accettazione su errore e caricamento su scanner esterno. Nessuna impostazione Windows cambiata; protezione cloud/campioni esistente va dichiarata. Limite Windows locale, non scelta di infrastruttura pubblica. Dettagli docs/v5/fase0-file-control-esito-20261016.md.
+
+## 2026-10-16 — Export personale V5 con provenienza e storia filtrate
+Per Home/account, JSON versionato separato dagli originali ZIP. Mapper di campi consentiti invece di dump Prisma/JSON storico grezzo; omissione riferimenti non autorizzati senza nomi/UUID. Fonti delle schede allineate a ReviewService e verificate in batch limitati, non con letture illimitate per ogni scheda. Snapshot RepeatableRead più controllo nuovo di privacy/sessione fuori snapshot: una rilettura nello stesso snapshot non prova una revoca recente. Budget righe/byte/concorrenza e nessun troncamento. Permesso Home export esistente, nessuna nuova capability commerciale. Pannello aggiuntivo in Documenti, Blob non in cache, verifica sessione/Home prima di salvarlo e risposte tardive scartate. Claude rimane solo documenti/mockup/corpus. Scartati ZIP con tutto indistinto, file pubblico o job asincrono non definito. Nessuna promessa di reimport/cancellazione o adempimento legale.
+
+## 2026-10-16 — Arbitrato finale Claude Fase0
+Rifiuti503 certi di ammissione distinti da invio incerto, retry stessa chiave; avviso pilota fattuale su mancata eliminazione/Defender e separazione ZIP/JSON. Export rimane nel pannello Documenti attivo; spostamento Casa non bloccante. Corpus E1–E8 da correggere offline, distinguendo rifiuto sicuro e accuratezza/copertura del modello, citazioni secondo regole dei validatori e fatti ripetibili. Riprodotta precisione fittizia0.36/0.375 sul provider di prova: non misura Anthropic. Copia backup Drive riscaricata/hash identico, chiave fuoriPC confermata. Restano qualitàAI, collaudo visivo e conservazione; dettagli v5/fase0-chiusura-arbitrato-20261016.md.
+
+## 2026-10-16 — Conservazione della prova personale Home
+La prova costruisce la casa reale da mantenere: nessuna scadenza automatica o reset di fine prova. Rimozione soltanto su richiesta esplicita con impatto su fonti/dati/condivisioni e copie spiegato. Scartati reset generalizzato e promessa di eliminazione attraverso sola archiviazione o revoca. Regole e limiti in v5/prova-personale-conservazione-20261016.md; funzione tecnica di eliminazione non implementata. Archiviazione iniziale e qualità AI distinte, Fase0 non dichiarata conclusa.
+
+## 2026-10-16 — Larghezza disponibile con scrollbar classiche
+Collaudo Chrome reale a320px: body min-width320 eccede clientWidth305 su Windows. Rimosso il minimo globale, lasciando i componenti adattarsi allo spazio disponibile. Scartato overflow-x:hidden: maschererebbe contenuti eccedenti. Nessun contratto o componente ridisegnato; verifica browser mirata dopo fix.
+
+## 2026-10-16 — Misuratore pilota v2 raccolto
+Convalidati E1…E8, systemSafe nullo sui positivi e allowed concreti come accordo col gold, non accuratezza. Revisione manuale degli alternativi dimostrabili prima di attribuirli al provider. Corretti duplicati potenze, doppio alias hash e documentKind nel riepilogo; provenance non prova una chiamata. Report v5/fase0-corpus-v2-integrazione-20261016.md, nessun runtime o contratto cambiato.
+
+## 2026-10-16 — Contesto spesa durante letture asincrone
+Il valore proposto dall'URL resta subordinato alla lettura autorizzata. Finché un preset non sostituito esplicitamente è in verifica, bloccare submit, mostrare attesa e mantenere i dati già digitati. Esplicitare oggetto preselezionato; nessuna scelta automatica di uno fra più documenti collegati. Non attribuita causa certa all'episodio originale, non riprodotto nello stesso modo. Fonte v5/expense-object-preset-20261016.md.
+
+## 2026-10-16 — Mockup analisi ricevuta prima del contratto
+Proposta UX in tre passaggi: documento/trasferimento esplicito, revisione indipendente oggetto e costo, riepilogo/conferma. Collegamenti già presenti riusati, campi vuoti completabili, ambiguità senza preselezione; errori di lettura senza fatti inventati. Solo HTML autonomo sintetico, senza API/storage/provider, non contratto congelato. Il matching non si basa sul solo nome. Fonte v5/receipt-assisted-flow-mockup-20261016.md.
+
+## 2026-10-16 — Mockup ricevuta: verifiche indipendenti e conflitti
+Il confronto di valori già confermati non è un riempimento di campi vuoti: mostrarlo per campo senza preselezione e senza sovrascrittura. Proposta da valutare: mantieni il dato attuale o rinvia il confronto; la correzione esplicita dalla scheda resta distinta. Scartata applicazione automatica del valore della ricevuta. Solo mockup, contratto persistente ancora da definire. Fonte v5/receipt-assisted-flow-mockup-20261016.md.
+
+## 2026-10-16 — Ricevuta assistita, specifica e primo nucleo backend
+UX consolidata con autorizzazione allo sviluppo. Primo incremento offline separato dalle rotte attive: evidenze legate a snapshot, totale semplice esplicito, riempimento soli vuoti, defer senza sovrascrittura, candidati nel proprio account/Home e nessun matching per solo nome. Contratto di coordinamento R1 e componenti Claude a props fino a DTO/API reali; non inventare un trasporto frontend. Dettagli docs/v5/receipt-assisted-spec-v1.md.
+
+## 2026-10-16 — Ricevuta R2: bozze persistenti in modulo isolato
+Ledger riferisce bozza invece di memorizzare risposta privata: replay con autorizzazioni/fonti attuali. Fonte non più leggibile/versionata viene redatta in GET e blocca POST. Lock anche DocumentVersion. Modulo separato e non registrato nell’app fino a conferma transazionale e export/policy completi, per evitare UI parzialmente attiva.
+
+## 2026-10-16 — Ricevuta R3 e integrazione sorgenti Claude
+Confronto rinviato persistito senza sovrascrittura, target CAS e fingerprint univoco. Fonti del valore confermato e della proposta sono autorizzate entrambe: se una non disponibile non mostrare il confronto né il nome estratto. Claude consegnato isolato a props, nessun client inventato. Corrette concatenazione involontaria negli importi e selezioni scomparse che potevano causare crash.
+
+## 2026-10-16 — Ricevuta R4 conferma transazionale
+Conferma ricevuta passa dall’orchestrazione unica e dalla mutazione economica canonica nello stesso tx. Riuso costo conserva valori, non riassegna link in conflitto. Contatori calcolati server. Nuovo oggetto di tipo other se tipo non verificato, evitando appliance dedotto arbitrariamente. Fingerprint fonte/fatto indipendente dalle citazioni equivalenti; esiti recuperabili dal ledger.
+
+
+Ricevuta assistita R5a (16 ottobre2026): policy fonte/versione/hash del nome generico estesa a catalogo G1 prima di LIMIT, scheda/storia, riferimento S1 ed export con verifica dei proof dopo snapshot. Rinomina manuale sostituisce la provenienza del nome; storia degli oggetti ricevuta mostra nome corrente autorizzato. Backend compilato/testato su fixture, servizio registrato non riavviato, modulo ricevuta ancora isolato/capabilities false. Dettagli docs/v5/receipt-assistance-backend-20261016.md.
+
+
+Ricevuta R5c (16ottobre): SHA256 di originale leggibile nella stessa Home identifica copie, non nome/importo. Conferma unica serializzata account/Home, costo canonico preservato; fingerprint conflitti hash/campo/proposta scoped oggetto. API candidati paginate + linkedCount autorevole oltre pagina, nessuna preselezione da pagina parziale. Modulo ancora isolato/capabilities false;22DB/HTTP/build/lint verdi. Dettagli report receipt-assistance-backend-20261016.
+
+
+Ricevuta R6b (16ottobre2026): tabella job dedicata invece di rendere nullable il ledger ReceiptRequest, preservando l’invariante bozza presente delle mutazioni conferma/review. Worker con lease e pubblicazione transazionale; scadenza fallisce senza reinvio automatico. Provider fixture-only anche nel CHECK SQL, hash noti prima di storage.read: il collaudo non diventa un falso fallback AI sui documenti reali. Attivazione modulo rinviata ai gate UI/browser; nessuna .env o campagna riutilizzata.
+
+
+### 2026-10-16 — Ricevuta R7a
+Ricevuta R7a: persistere il riepilogo valido al Rimanda, invece di perdere gli input o salvare automaticamente ogni tasto. Nessuna mutazione di oggetti/costi finché non si conferma; target cambiati da riselezionare.
+
+
+### 2026-10-16 — Ricevuta R7b
+Ricevuta R7b: container e DTO separati dai componenti Claude, trasporto ApiClient comune e key in memoria per payload canonico; nessun dato sintetico nel prodotto come fallback. Ripristino target oltre pagina1 prima del form. Superfici condivise nei chunk di sezione, ricevuta lazy.
+
+
+### 2026-10-16 — Ricevuta R7c preparazione
+Gate browser ricevuta limitato ai4hash sintetici, attivazione QA distinta da supporto personale. Provider DI obbligatorio nel modulo; fonte riletta per scrittura/replay e controlli prima di manual/confirm. Il runtime normale resta senza import finché browser non disponibile.
+
+
+### 2026-10-16 — Ricevuta R7c browser
+Ripresa ricevuta dal documento: server sceglie job attivo o ultima bozza open/parked sullo snapshot corrente, invece di dipendere da URL ricordato dal client. Ingresso generico può scoprire ripresa, mai rilancia analisi automaticamente. QA reale sintetica distinta da attivazione personale/provider AI.
+
+
+### 2026-10-16 — Ricevuta R8a
+Ricevuta Anthropic adapter separato da send: local snapshot identities e citazioni verificate, transport condiviso già collaudato, nessun budget/campagna precedente riutilizzato. Prossimo dispatcher deve autorizzare ogni trasmissione di testo.
+
+### 16ott2026 R8b — Budget ricevute separato e nessun reinvio su esito incerto
+Scelta: campagna e allowlist documenti dedicate, riserva atomica prima del job, stato sending prima di Messages; esito ignoto trattiene riserva e blocca nuovi invii per la stessa fonte. Rifiutato riuso budgetM4/S1 o retry automatico, perché consenso e limiti sono per scopo e un timeout non prova assenza di addebito. Conservare solo output validato, non prompt/risposta integrale. UI mantiene manuale e costo visibile anche nella bozza.
+
+### 16ott2026 — Lotto misto come archivio della casa (proposta UX M1)
+Classificazione documentale distinta da creazione oggetti/costi e da visibilità. PDF multiparte conservato unico con riferimenti pagina; un regolamento resta privato se caricato Soloio. Mockup esplora casi chiari/ambigui/copie/illeggibili e conferma parziale, senza congelare ancora tassonomia o contratto. Nessuna deduzione normativa dal tipo riconosciuto.
+
+### 16ott2026 — Archivio assistito V1 e fondazione lotti
+Flusso mockup approvato: raccolte casa e più tipi per originale, revisione perfile e conferma parziale; nessun oggetto/costo obbligatorio. Manifest20file/200MiB,20MiBfile,2uploadconcurrenti, stessi formati e controllo Defender esistenti. Scelti elementi normalizzati e idempotenza perlotto: JSON globale del lotto renderebbe più difficile isolare retry e concorrenza. Catalogo tipi→raccolte derivato, distinto da famiglie spesa. Nome/organizzazione personali per non riscrivere documenti condivisi; classificare Condominio non amplia visibilità. Contratto UI a props consente Claude in parallelo senza trasporto/router condiviso. AI resta disabilitata e richiederà campagna distinta.
+
+###16ott2026 — Dedup intake e risultati incerti
+Staging/scanner fuori transazione, lease perfile120s e quota2account; pubblicazione con lock percontenuto e ricontrollo fonte e membership. Riuso soltanto originaliprivati dello stesso uploader/Home: fusione con fonti condivise potrebbe cambiare visibilità e provenienza. Rifiutata cancellazione di copie storiche. Race cold upload può avere due staging ma un solo Document canonico. Incertezza DB conserva staging anziché interpretare subitoassenza come rollback, poi cleanup verificato. Condivisioni/classificazione/review restano azioni distinte.
+
+## 2026-10-16 — V5 B2 organizzazione documentale personale
+Titolo/tipi/pagine/raccolte confermati sono overlay scoped account/Home/documento con source version/hash; non rinominano Document.name condiviso, filename, byte o visibility. Preferito a cartelle/copiate o metadati globali, per consentire un PDF multiparte in più raccolte senza condividere scelte personali. Sostituzione richiede versione riletta e consenso esplicito. Conferma parziale usa ledger per elemento nella stessa transazione degli effetti, invece di fingere atomicità dell'intero lotto; outcome ignoto recuperabile con stessa chiave. Scelte defer restano riprendibili. Schema/contratto dettagliati in docs/v5/document-intake-api-contract.md B2; ingresso intake ancora disabilitato.
+
+## 2026-10-16 — Archivio assistito: prima classificazione locale e app
+Scelta: rendere provabile il flusso usando un classificatore locale dichiarato, su testo realmente estratto dal PDF, senza trasmissioni né nuovi budget. Non chiamarlo Anthropic/AI semantica/OCR e non usare fixture come fallback. Regole producono possibili tipi con estratto/pagina; l'utente rivede ciascun file. Testo non riconosciuto resta manuale; tecnico richiede scelta destinazione. Alternativa rinviata: motore AI esterno, che necessita campagna/ledger/consenso dedicati e validazione propria; nessun riuso dei budget ricevuta già consumati. Coda persistente locale con lease/token e namespace interno distinto dai test, per evitare che il servizio attivo processi fixture di collaudo. Riferimento contratto V5 B3locale/B4.
+
+### Sezioni Documenti coerenti con Spese —16ott2026
+Decisione del committente: raccolte come navigazione primaria, fuori dal form ricerca, selezione immediata. Riuso CSS famiglie Spese per coerenza senza nuova dipendenza. Raccolte restano metadati personali confermati e filtri server; non cartelle duplicate. Scartato richiedere Cerca dopo il cambio sezione. La ricerca continua ad applicarsi esplicitamente e Tutti preserva gli altri filtri applicati.
+
+
+### Export accanto al titolo —16ott2026
+Decisione esplicita del committente: icona allineata a Documenti, visibile anche nelle raccolte vuote e disabilitata senza selezione o mentre prepara. Il controller dell'archivio conserva selezione/permessi e rende l'azione nel titolo tramite portal React: evita duplicare stato e controlli. DatiJSON restano nel pannello esplicativo per distinguere ambito e formato dagli originaliZIP. Nessuna nuova capacità di esportazione introdotta.
+
+
+### 16 ottobre 2026 — Documenti: ingresso unico, export contestuale e ricerca compatta
+- Un solo ingresso «Carica documenti» per uno o più PDF/JPEG/PNG: selezione multipla dal dispositivo o drag&drop nella medesima area. Il controller esistente mantiene limiti, upload indipendenti e conferma esplicita dell'organizzazione. Non è un collegamento a cartelle cloud o scansione ricorsiva di directory.
+- Icona export accanto al titolo: primo clic abilita caselle/strumenti, secondo clic sui selezionati prepara ZIP. Annulla/cambio raccolta escono dalla selezione; successo la chiude. Nessuna casella nell'archivio normale. Il pannello JSON conserva la funzione distinta e compare soltanto nelle opzioni di esportazione, anche quando non ci sono originali.
+- Ricerca compatta con titolo «Cerca documenti», campo e azioni. «Ricerca in» e nota sul contenuto conservate per lettori di schermo, senza duplicare visivamente la casa già nel titolo. Formato e visibilità in details «Filtri aggiuntivi», chiusi se inattivi e aperti con filtri applicati.
+- Il form UploadForm ancora usato da Spese non è cancellato. Le sue regressioni sono isolate nel SingleUploadHarness e in route aggiuntive SOLO del harness, senza ingresso legacy nascosto nel prodotto. Nessuna API/mock fallback nel runtime.
+
+### 16 ottobre 2026 — Unico ingresso documentale
+Rimosso anche Analizza documenti dalla testata Documenti: resta solo Carica documenti, che entra nel percorso caricamento/classificazione locale/revisione/conferma. L'analisi tecnica M3/M4 resta disponibile da Attività e dai percorsi dedicati: nessuna funzione rimossa, nessuna AI a pagamento avviata. L'avvio locale e le conferme nel lotto mantengono le regole già implementate; non dichiarare introdotta un'analisi esterna automatica. Test mirato sulla testata, typecheck ed eslint dei file coinvolti.
+
+
+### 16 ottobre 2026 — Aggiunta progressiva di documenti allo stesso lotto
+POST /homes/:homeId/document-intake/batches/:batchId/items, body {items:[clientItemId,filename,byteSize,mimeType]}, Idempotency-Key. Stessa validazione manifest/CSRF/account/Home/ruolo/email del caricamento iniziale. Append commutativo senza expectedVersion: lock lotto e quote rilette serializzano conteggio, byte e ordinali, mentre i job possono avanzare. Max20file e200MiB sull'intero lotto, non per singola selezione. Stessa chiave/payload → replay del lotto attuale; payload diverso →409; clientItemId già presente con altra richiesta →409. Nessuna lettura di originali, schema o provider aggiunti.
+I file, le proposte, le scelte e gli esiti confermati precedenti non sono sovrascritti. Un lotto completato riapre solo per accogliere nuovi file; i risultati precedenti restano registrati. Il client usa stesso batchId e upload indipendenti soltanto per gli ID della nuova selezione; non ritenta automaticamente file precedenti falliti. Esito incerto conserva chiave/manifest per recupero. Risposta tardiva non naviga in un altro lotto.
+Il pulsante «+ Aggiungi documenti» nel lotto apre la medesima selezione/drag&drop e torna al lotto dopo la scelta, anche scegliendo un solo file. Durante il caricamento il selettore è disabilitato. Nessun file personale usato per verificare l'aggiunta, nessuna chiamata AI/email/paid, nessuna modifica .env/quote/sicurezza. Solo DB V5 dedicato e riavvio dell'API registrata.
+
+16ott2026: + Aggiungi documenti spostato dalla colonna laterale a subito dopo l'elenco, dentro File del lotto, su indicazione del committente. Nessun cambiamento di comportamento/API. Verifica smoke, typecheck ed eslint mirati.
+
+
+### 16 ottobre 2026 — Titolo e tipi proposti, revisione semplificata
+Il committente richiede di ridurre la compilazione manuale: il classificatore locale propone il titolo da una riga breve riconoscibile del testo effettivo, quando comincia con il tipo rilevato e non supera120caratteri. In assenza di intestazione affidabile resta un'etichetta del tipo; nessuna deduzione dal nomefile o OCR/AI esterna. I contenuti proposti sono tutti preselezionati, modificabili prima di salvataggio/conferma: prevale sulle precedenti istruzioni V1 che richiedevano selezione manuale dei PDF multiparte. Nessuna scrittura di organizzazione senza conferma e nessun consenso sostituzione preselezionato.
+Catalogo additivo: agibility_record → building, «Visura agibilità (non certificato)». Una pagina con Visuraagibilità/noncostituiscecertificazione non viene proposta come certificato agibilità/abitabilità solo perché li menziona. Non è una verifica semantica o legale: resta obbligatorio controllare l'originale. Test sintetici separano intestazione reale, prosa, riferimenti e dichiarazione di noncertificazione.
+Anche le copie identiche autorizzate possono essere classificate LOCALMENTE su avvio esplicito, tramite la stessa fonte canonica e controlli esistenti. Nessuna copia nuova, alterazione dell'originale o avvio paid. Possono essere riproposti file ready senza proposta ma ancora unreviewed; saved/confirmed/deferred esclusi dall'avvio UI. Backend conserva blocco saved/confirmed. Titolo e contenuti già confermati prevalgono sulla nuova proposta della copia, con scelta di riuso/organizzazione e consenso di sostituzione invariati.
+Revisione manuale: pagine facoltative in details richiudibile; già aperto se intervalli presenti. Percorso tastiera aggiornato al nuovo controllo, range conservati. Nessuna analisi dei documenti personali eseguita durante sviluppo: il nuovo comportamento si vede al prossimo avvio locale scelto dall'utente, non riclassificando retroattivamente.
+
+### 16 ottobre 2026 — Riuso distinto da organizzazione e correzione senza upload
+Diagnosi in sola lettura sul contesto del committente: il classificatore aveva proposto agibility_record, ma l'azione scelta era reuse dell'originale; una precedente organizzazione other/unclassified era quindi rimasta invariata. Non è un errore del filtro building né un fallimento di riconoscimento della visura. Nessuna modifica dei suoi dati effettuata dal collaudo: consultati solo metadati scoped al suo account/Home, non i byte originali. Evidenza locale outputs/intake-organization-readonly-result.json NON da committare.
+La revisione di una copia con organizzazione other e proposta più specifica ora preseleziona i tipi proposti, conservando titolo personalizzato e consenso di sostituzione esplicito. Scelte già classificate restano conservate. Il solo riuso avvisa che non applica titolo/categoria e lo stato non dice più Organizzato: Originale riusato · organizzazione invariata.
+POST /homes/:homeId/document-intake/batches/from-documents {documentIds:[uuid,...]} +Idempotency-Key prepara una nuova revisione degli originali già autorizzati (max20/200MiB e stessi limiti di formato/dimensione). Non ricarica byte, non crea Document/StoredFile, non modifica organizzazioni o vecchi ledger. Lock/check di account/Home/ruolo/email/originale; idempotenza peraccount/Home/chiave con digest origine distinto dai manifest. Riusa solo proposte precedenti dello stesso account/Home/documentId/versione/hash; altrimenti not_started. La nuova organizzazione esiste solo dopo salvataggio e conferma, con replaceOrganization/versioni quando necessario.
+Il comando Riorganizza senza ricaricare sui file confermati prepara quel lotto e porta lì il client, proteggendo da doppio clic e risposte tardive di altro lotto. Nessun automatismo paid/AI/OCR o classificazione retroattiva; la categoria deriva dal tipo riconosciuto oppure scelto. Per scansioni unreadable l'OCR resta fuori scope.
+
+### Documenti V2 — applicazione diretta e mantenimento, arbitrato finale 16 ottobre
+La specifica document-intake-simplified-spec-v2.md prevale sul salvataggio scelta/riepilogo V1: selezione e conferma esplicite applicano per documento con ledger atomico e recupero same-key. La lettura locale può partire dopo acquisizione, mai estesa a un provider esterno. Per mantenere dati attuali si completa soltanto il riferimento alla fonte senza riscrivere organizzazione/link, anche nel conflitto dall'archivio. Alternativa di riapplicare i medesimi metadati scartata: il mantenimento deve restare distinto da un aggiornamento. Copie e casi ambigui esclusi dal bulk. Nessun costo/oggetto creato dalla sola classificazione.
+
+### 17 ottobre 2026 — prova telefono locale richiesta dal committente
+Ingresso Wi-Fi dedicato su IP privato/5175; origin aggiuntivo CSRF esplicito, esatto e solo sviluppo, mai wildcard/disabilitazione del token. API/database loopback e ingresso PC invariati; nessuna modifica .env/firewall. Scartato il rewrite incondizionato dell'Origin nel proxy, che aggirerebbe il controllo. Dettagli e prove in docs/v5/phone-local-access-20261017.md, commit f8bfd47. UUID crittografici compatibili con HTTP LAN mediante getRandomValues.
+
+### 17 ottobre 2026 — onboarding oggetti dai documenti, O1
+Specifica docs/v5/object-onboarding-spec-v1.md. Percorso additivo multiarticolo per immagini/PDF; proposte e conferme separate. Lettura immagine marcata provider_observed_image, non OCR verificato. Matching per articolo: vietato usare il solo documento già collegato, perché una consegna può contenere più prodotti. Nessuna spesa da ordini/consegne. Scartato l'allargamento del JSON ReceiptDraft V1: il nuovo flusso richiede persistenza e budget dedicati. Nucleo offline implementato e non registrato nel runtime; nessun invio personale.
+
+### 17 ottobre — manuali online, prima integrazione
+Manuale esterno JSON nella scheda generica, separato dagli originali e con fonte/riferimento. Recupero iniziale solo pagine ufficiali Moulinex con Product.mpn esatto e un solo link istruzioni; AL4018F0 ha pagina sorgente pubblica nota, verificata live a ogni ricerca. Nessun fallback sintetico/catalogo universale o primo PDF arbitrario. Conferma con prova firmata e TTL15min vincolata a contesto/versione; niente scrittura durante ricerca. Link manuale di altri produttori ammesso ma mai dichiarato verificato. Versione scheda successiva richiede controllo compatibilità. Scartati download automatico/URL arbitrari sul server/copia nei documenti. Onboarding foto completo resta distinto e non attivo; specifica aggiornata con multiordine/ricevuta/garanzia proposta24mesi/foto/manuali. Fonte docs/v5/object-manuals-20261017.md.
+
+
+### 17 ottobre 2026 — onboarding documenti e oggetti O2–O5
+
+Onboarding V5: modulo dedicato e ledger stabile per non riutilizzare ReceiptDraft V1, conferme parziali/versionate, nessuna scrittura AI diretta. Foto/scansioni con consenso e budget separati; worker isolato per campagna/modello/hash, esiti incerti senza retry. Schema provider compatto a campi-array, vincoli verificati localmente perché structured outputs non accetta tutti i vincoli JSON Schema. Manuali ufficiali solo su riferimento verificato, nessuna ricerca universale implicita.
+
+
+### 17 ottobre 2026 — collaudo reale onboarding r2
+
+Nuova analisi dopo esito incerto possibile soltanto con diversa campagna operatore/hash/budget e nuovo consenso; la riserva precedente resta bloccata. Bloccare ogni job attivo sullo stesso originale anche fra campagne. Scartata la liberazione o modifica del tentativo incerto e il retry automatico.
+
+
+### 17 ottobre 2026 — identità dal nome del prodotto
+
+Marca/modello possono essere proposti localmente dal nome già estratto, origine derived_from_product_name con fonte del titolo, solo casi riconoscibili e conferma. Nessuna nuova chiamata AI e nessuna modifica a fingerprint/valori espliciti/valori confermati. Non identificare il riferimento commerciale preciso dal solo titolo.
+
+
+### 17 ottobre 2026 — consolidamento caso Echo
+
+Oggetto e costo sono indipendenti: una mail di consegna può sostenere la creazione della scheda ma non il prezzo assente. La successiva fattura va collegata alla scheda esistente con scelta esplicita e deduplica della spesa, senza creare automaticamente un altro oggetto.
+
+
+### 17 ottobre 2026 — validazione fattura e caricamento integrato
+
+Integrare il componente reale onboarding nella pagina caricamento, mantenendo parametri di ripresa separati dal lotto. Conferma coordinata documenti→oggetto/costo con esiti parziali dichiarati, senza fingere una transazione unica o riusare una campagna pagata. Copie/conflitti restano individuali. Diagnosi di evidenza solo campo/motivo, non testo personale.
+
+### 17 ottobre 2026 — data acquisto: contesto locale e prompt v4
+
+Diagnostica r2 purchaseDate/date: risposta grezza non conservata, impossibile attribuire il rifiuto a una specifica citazione. Corretta lacuna riproducibile: Il tuo ordine del, Ordine effettuato il, Data di acquisto e Ricevuta d’acquisto anche con data su riga immediatamente successiva. Per citazione della sola data, verificare tutte le sue occorrenze nella stessa pagina originale: ciascuna deve avere etichetta acquisto sulla riga o immediatamente precedente senza contenuti intermedi; espandere la fonte con tale contesto reale. Nessuna ricerca su altre pagine, nessuna data dedotta, rifiutare contesti di consegna prevista/produzione/pagamento e ambiguità. Nessun fallback che scarta silenziosamente il campo. Prompt object-onboarding-v4 richiede etichetta+data, omettendo dati privi di fonte.
+
+Build e lint mirati verdi;44 test offline distinti verdi (11 ricevuta,22 onboarding,11 profilo), sei nuovi casi. Parser reale su PDF sintetico→wire→validazione; controlli sull’originale locale con hash verificato: tre forme di citazione acquisto accettate, nessuna scritturaDB o chiamata provider. Non è replay del replyAI precedente, né prova di successo di una nuova risposta reale. Nessun endpoint/schema/frontend modificato; vecchi job/costi immutati. Prossimo collaudo reale SOLO con nuova autorizzazione: i due precedenti invii della fattura hanno consumato i rispettivi consensi.
+
+
+### 17 ottobre 2026 — proposta automatica spesa con conferma unica
+
+Ricevuta estratta non ambigua,unico articolo/esemplare,totale positivo e acquisto esplicito: controllo candidati e proposta create già visibile, mai scrittura prima della conferma articolo. Nessun costo automatico da consegna/etichetta/multiarticolo o dati insufficienti. Scelte precedenti salvate restano prioritarie, inclusa esclusione costo. Ricerca incerta/errore blocca proposta automatica: riprova oppure scelta esplicita. Stessa ricevuta o stessa cifra/data producono avviso senza scelta automatica. Importo/data non provano identità del costo: scelta link/skip oppure acquisto distinto dichiarato. Conferma resta una e usa transazione/idempotenza esistenti.
+
+GET expense-candidates: rank2 stessa fonteSHA,rank1 stesso importo/data acquisto,rank0 selezione manuale. Ordinamento su tutto lo scope autorizzato prima della paginazione. Conferma expense.create ammette acknowledgePossibleDuplicate boolean opzionale; senza true un altro costo attivo leggibile con stesso importo/data genera409 onboarding_possible_expense_duplicate. True non supera il divieto di secondo costo per stessa ricevuta, né controlli fonte/target/versione. Nessuna migrazione o nuovo endpoint. Controllo ripetuto nella transazione con lock Home condiviso dalle mutazioni.
+
+
+### 17 ottobre 2026 — esclusione individuale dalla casa
+
+Scelta «Non riguarda questa casa» nel gruppo Crea/Collega di ogni articolo, anche ricevute con costo proposto. Nasconde campi/profilo/costi, azzera selezione costo/link/manuale e payload finale contiene solo itemId+action skip: nessun prezzo residuo può creare spese. Pulsante «Conferma esclusione», eliminato doppio comando Non creare un oggetto. Prima di confermare si può tornare a Crea/Collega; per una ricevuta chiara la proposta spesa viene ricontrollata. Conferme multiple mescolano scelte indipendenti; preparazione archiviazione documento solo se almeno una scelta crea/collega. Esclusione sola non resta bloccata dal tipo documento da indicare. Originale e altre proposte conservati. Nessuna cancellazione di costi precedenti o ripartizione automatica di totali multiarticolo: il divieto esistente di attribuire tutto il totale resta attivo.
+
+Nessun endpoint/schema/backendruntime modificato: uso del comando skip già esistente, server rifiuta skip+expense.29FE/3file verdi,13DB inclusi contenitori verdi, build/lint frontend verdi. Test aggiunti: ricevuta con costo già proposto esclusa senza payload economico, articolo multiplo escluso lascia gli altri, ripristino scelta prima conferma, payload con costi residui e serverzerooggetti/zerospese/zerobinding/originalepresente. Prima nuovaasserzioneDB corregge assert.rejects per un errore sincrono, non controllo runtime. Browser app reale ordine70a1532f/bozza150a815d mostra3nuoveopzioni, nessuna scelta o conferma personale effettuata. Screenshot16-scelta-non-riguarda-casa.png. Zero AI/email/paid/env/modifiche dati personali. Provider disabilitato. Prossimo committente sceglie articoli estranei e conferma esclusione, poi classificazione documento e revisione router.
+
+
+### 17 ottobre 2026 — valori riconosciuti visibili nei menu, marca Strong
+
+MarcaStrong derivata localmente dal titolo router, con origine derived_from_product_name e fonte originale; descrizioni router/modem/ripetitore non diventano modelli precisi anche se non troncate. Identità esplicite e scelte utente protette. Nessuna nuova estrazione/provider: stessa bozza reale150a815d, nuove proposte proiettate dal nome già acquisito. Menu accettazione mostra direttamente il valore proposto (Strong, modello noto, date ecc.), preselezione accept già prevista per i nuovi campi; valori non identificati facoltativi restano vuoti. Fonti/origini restano visibili, selezioni salvate intenzionali non sovrascritte automaticamente.
+
+12 testBEprofilo+19FErouter verdi, buildBE/FE e lint mirati verdi. TestaggiuntoStrong titolotroncato/generico/accessori/contraddizione, menu con dato e accept iniziale verificato. Sistemato mock old-job della prova consenso: prima rispondeva succeeded con altra id e smontava il pulsante; ora restituisce il vero stato uncertain dello scenario, nessun comportamento runtime modificato. Browser personale: salvataggio bozza conserva nome/checkboxutente e due esclusioni; selezionata proposta Strong come richiesto e salvata SOLO bozza. Nessun oggetto/costo confermato. Screenshot17-strong-precompilato.png, menuvalueaccept/labelStrong verificati. API aggiornata via launcherTelefono senza campagna; zeroAI/paid/env. Prossimo classificare documento ancora tipo da indicare, poi conferma router dautente.
+
+
+### 17 ottobre 2026 — aiuto contestuale con icona informazioni
+
+Regola UX approvata: valori e azioni in pagina, spiegazioni secondarie/fonti/origini in popup su icona i accanto al campo. Component FieldInfo riutilizzabile: clic/touch/Enter, dialog aria-labelledby, focus iniziale/Tab confinato/Esc/Chiudi/clic fuori e ritorno focus, blocco scroll temporaneo ripristinato. Applicato a tutti i campi dati/garanzia di ItemEditor e al profilo confermato ProfileSection. Dati attuali confermati e differenze restano visibili; istruzioni decisive/errori non nascosti. Riferimento su riga piena evita etichetta spezzata. Nessun cambio conferme, API, riconoscimento o dati. Estendere questo criterio alle altre sezioni quando si interviene su spiegazioni analoghe, non nascondere avvisi necessari all'azione.
+
+30FE distinti/4file verdi (19router,4intake,5profilo,2FieldInfo), build/lint verdi. Testprovenienza adeguato a apertura esplicita, verificati tastiera/focuschiusura, profilo readonly conserva fonti su richiesta. Browser reale Strong: popup con fonte e stato da confermare, poi chiuso; viewport320 popup left16/right304/width288,clientWidth=scrollWidth286,reset. Screenshot18popup e19campicompatti. Nessun nuovo salvataggio o conferma personale, nessunAI/paid/riavvio backend. Pattern documentato, non dichiarare ridisegnate tutte le altre pagine.
+
+
+### 17 ottobre 2026 — conferma articolo apparentemente inerte: prerequisito documento
+
+Diagnosi browser read-only: messaggio Rivedi prima il documento già presente in alto; screenshot70a1532f ancora tipo da indicare, quindi guard prepareDocumentForObject impedisce scritture. Correzione: errore inline accanto al pulsante dell'articolo, rolealert/tabindex/focus per portarlo in vista, azione Rivedi documento apre dialogo del medesimoitem tramite callback, senza cambiare route/perdere form né bypassare copie/conflitti. Feedback scompare quando prerequisito confermato; altri errori/incerti mantengono recupero/idempotenza. Nessun comando personale di conferma cliccato dall'agente.
+
+45FE/3file verdi, build/lint verdi. Caso aggiunto screenshot tipo sconosciuto: click→alertfocused, zero POST organizzazione/oggetto, azione→dialogovisibile e nomeformpreservato; recovery 503/stessachiave ancoraverde. Nessun backend/API/AI/paid/env/DBmutato. Browser personale aperta SOLO finestra Indica il tipo per continuareutente, screenshot20. Limite emerso: nessun tipo Ordine/conferma consegna nel vocabolario corrente; usare Altro documento per il collaudo, non classificare una consegna come fattura/ricevuta. Da progettare riconciliazione classificazione locale vs documentKind AI già disponibile, senza nuovi invii impliciti.
+
+
+
+## 2026-10-17 — proposta onboarding semplificato
+
+Decisione di prototipazione, non ADR di prodotto: il nuovo flusso rimane in HTML standalone con dati sintetici. Mantiene la famiglia di mockup già esistente, senza nuova dipendenza o runtime. Alternativa rinviata: modificare immediatamente il modulo reale. La variante cromatica Luce indaco si applica solo a questa proposta; non sostituisce il tema approvato del prodotto.
+
+
+### 2026-10-17 — verifica autonoma onboarding
+
+Verifica del prototipo: collegamenti alle schede con identificatori stabili, applicazione comune per conferme individuali e multiple e validazione cumulativa delle quote monetarie prima della conferma simulata. Queste regole di coerenza non introducono API, categorie o garanzie transazionali nuove nel prodotto reale.
+
+
+## 2026-10-17 — integrazione UX onboarding V3
+
+Approvato il flusso V3 dal committente. Prima integrazione riusa i contratti protetti esistenti: lista compatta e pannello dedicato, stato di editing separato, candidati API correnti, nessuna nuova transazione globale o scrittura AI implicita. Le sostituzioni di valori confermati e le quote multiarticolo restano estensioni contrattuali esplicite, non scorciatoie nel client.
+
+
+### 17 ottobre 2026 — consolidamento onboarding pilota
+
+Sostituzione esplicita versionata, quote manuali multiarticolo con limite cumulativo e tipi ordine/consegna/etichetta implementati; conferma unica e recupero conservati. Dettagli, prove e limiti: `v5/onboarding-pilot-consolidation-20261017.md`. Nessuna migrazione o attivazione provider; priorità ora uso reale e feedback.
+
+
+### 17 ottobre 2026 — attivazione AI casa con tetto autorizzato
+
+Modalità pilota account/casa, consenso per invio e campagna persistente5 USD/40 analisi. Contatori e blocchi visibili; collaudi esclusivamente simulati, attivazione verificata senza Messages. Appartamento Roma svuotato dopo conferma definitiva, mantenendo account/anagrafica e nuovo budget. Vedi `v5/ai-home-pilot-20261017.md`.
+
+
+### 17 ottobre 2026 — coda AI pilota corretta
+
+Allineati claim del worker e lettura input allo scope account/casa, mantenendo consenso e filtro campagna/modello. Corretto il blocco queued del primo uso;19 test DB mirati verdi con nuovo percorso completo simulato. Nessun secondo incarico o reset budget. Dettagli in `v5/ai-home-pilot-20261017.md`.
+
+
+### Caricamento unico — 17 ottobre 2026
+
+Una risposta e un budget per originale: bollette integrate nel provider onboarding; nessuna attivazione parallela del provider economico. Consenso prima dell’invio e conferma finale prima delle scritture. Vedi docs/v5/unified-document-proposals-v1.md.
+
+
+### HTTP400 bollette — 17 ottobre 2026
+
+Esito incerto: nessun retry automatico; eventuale nuova analisi richiede consenso esplicito e un’ulteriore riserva nello stesso tetto. Le riserve pregresse non vengono rilasciate. Report: docs/v5/unified-document-proposals-verification-20261017.md.
+
+
+### Bollette — prove autonome 17 ottobre2026
+
+Un dettaglio ausiliario non deve impedire la proposta del totale corrente unico verificato; arretrati/ambiguità restano espliciti. Report: docs/v5/unified-document-proposals-verification-20261017.md.
+
+- 2026-10-17: Semplificazione tramite ordine DOM e details nativi, preservando form e avvisi. Prezzo oggetto letto da spese purchase_replacement attive per quello specifico oggetto; nessun nuovo campo o totale derivato dalle manutenzioni. Alternative scartate: duplicare importo nella scheda o assumere qualunque costo collegato come prezzo di acquisto.
+
+- 2026-10-17: Una proiezione frontend comune distingue revisione/analisi/esito accettato. Identità descrittiva da bozze già accettate come presentazione, senza riscrivere originali o titoli. Spese rilette dal record canonico, ritorno limitato alla stessa casa/account. Non usare completed del lotto come equivalente della conferma economica e non ripetere il provider per ricostruire l’esito.
+
+
+### 17 ottobre 2026 — Compilazione per documento
+
+Compilazione per documento: le due azioni manuale/AI usano lo stesso editor e le API esistenti. Rimossa la selezione collettiva AI dalla pagina reale. Bozze riutilizzate, consenso per originale, conferma finale e recupero idempotente conservati. Una bozza manuale non è una lettura AI. Dettagli: v5/document-compilation-per-file-20261017.md.
+
+
+### 17 ottobre 2026 — Copia Samsung nella conferma articolo
+
+Il riuso della copia resta esplicito, ma la scelta può avvenire nell’editor articolo. Si usa il comando versionato/idempotente esistente prima della conferma dell’oggetto; nessun overwrite e nessun nuovo endpoint. Alternativa esclusa: accettare silenziosamente una copia o imporre sempre un dialogo separato.
+
+
+### 17 ottobre 2026 — Originale nella revisione articolo
+
+Consultazione originale in una nuova scheda autorizzata: mantiene modifiche non confermate e non richiede un secondo modal o nuovi endpoint.
+
+
+### 17 ottobre 2026 — Planimetria a livello immobile
+
+Distinguere documenti dell’immobile da prodotti prima di aprire l’editor articolo. Classificazioni confermate/proposte prevalgono; filename può suggerire solo percorso e scelta manuale. PDF misti restano nel flusso che conserva tutti i contenuti. Nessuna modifica automatica dei dati confermati.
+
+
+## 18 ottobre 2026 — Revisione unica Documenti V4
+
+Decisione: manuale e AI per singolo documento aprono la stessa revisione; tutte le righe di una fattura si confermano insieme. I prezzi di riga richiedono citazione e attribuzione esplicite; nessuna ripartizione del totale. Esclusione produce solo una scelta skip, senza costo o oggetto. La conferma oggetti/spese resta transazionale e idempotente; classificazione documento separata e recuperabile, senza dichiarare atomicità tra servizi. Alternativa scartata: modali e conferme per ogni articolo, fonte dei passaggi ridondanti osservati. Nessuna nuova dipendenza/schema; dettagli e limiti in v5/document-review-unified-v4.md.
+
+### 18 ottobre 2026 — Costo manuale e wire AI compatto
+Una compilazione manuale di documento ancora sconosciuto può dichiarare un acquisto e registrare costo+oggetto nella stessa transazione. Non si attribuisce un prezzo estratto alla consegna o etichetta; controlli canonici, data, duplicati e quote restano attivi. Alternative scartate: costo obbligatoriamente successivo in Spese; dedurre prezzi assenti. Il solo wire Anthropic usa array0/1 per total/quantity/rowprice, riducendo la complessità della grammatica; normalizzazione locale valida cardinalità e prove e preserva il dominio nullable e le vecchie bozze. Non si presume risolto un400 senza collaudo reale.
+
+### 18 ottobre 2026 — Fonti condivise per evitare esplosione grammatica Anthropic
+Rifiuto400 riprodotto con PDF visuale interamente sintetico: grammatica compilata troppo grande, non un errore di OCR. Eliminare anyOf non era sufficiente. V9 descrive una sola lista sources di citazioni, con evidence=index intero nei campi/quantità/importi/bollette. Decoder valida cardinalità e indice, ricostruisce prove e applica gli stessi controlli di dominio. Alternative scartate: continuare a ripetere prove strutturate in ogni nodo, disabilitare le evidenze o riprovare automaticamente. Compatibilità vecchie risposte/bozze e DTO invariata.
+
+### 18 ottobre 2026 — Prezzo ordine distinto da prova di pagamento
+Un ordine può fornire un totale acquisto esplicito anche senza data o prova di pagamento. PurchaseTotal e date semanticamente etichettate ammessi per order_confirmation; notificheconsegna/etichette senza totali restano senza costoautomatico. Prezzo dichiarato manualmente ammesso per ogni articolo singolo, indipendente da documentKind; esplicita conferma/data/duplicati e tetti quote restano. Nessuna data fittizia per sbloccare una spesa. Il valore canonico resta HomeExpense collegata, non prezzo duplicato fuori contabilità.

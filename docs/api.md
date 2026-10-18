@@ -224,6 +224,16 @@ Lo schema sottostante supporta ora soggetti House/ThermalSystem/Asset, ma questi
 
 Il flusso OAuth (Gmail/Drive) fa un redirect completo del browser: **non funziona se avviato da un cellulare connesso all'IP LAN del backend**, perché il redirect URI registrato in Google Console punta a `localhost` — tracciato in `backlog.md`.
 
+## V5 M2 — API documentali autonome
+Base /api/v5; contratto completo docs/v5/documents-api-contract.md. GET/POST /homes/:homeId/documents, GET /homes/:homeId/documents/:documentId, GET .../:documentId/file, POST /homes/:homeId/documents/export. Cookie+Account-Context; Origin/CSRF su POST; upload multipart idempotente; file e ZIP binari autorizzati. Codice implementato, runtime/migrazione e prove API ancora da eseguire con launcher -Documents -Test. API legacy non cambiate.
+
+## V5 M3 review-v1
+Dodici endpoint locali analysis-capabilities, analysis-jobs (lista/creazione/dettaglio/retry), assets (lista/creazione/dettaglio), review, confirmations, manual-confirmations e history. Contratto completo docs/v5/review-api-contract.md. Codice implementato, migration/attivazione e API/PostgreSQL da verificare prima di dichiararli disponibili.
+
+
+## V5 M4 — analysis-v2
+Stessi endpoint review-v1, contratto esteso docs/v5/anthropic-api-contract.md. Capabilities espone providers, limiti e budget; POST analysis-jobs accetta provider esplicito e consentToProviderTransfer=true per Anthropic. Omissione del provider rimane analisi fixture per client M3. Retry Anthropic richiede nuovo consenso e nuovo tentativo con costo; nessun retry automatico. Job espone model/provider/isSimulation/billing; scheda espone analysisProviders e proposte/storia dichiarano origine per elemento. Zero dati supportati è succeeded/no_supported_data senza creare scheda vuota. Adapter implementato e verificato offline, runtime e live ancora da collaudare.
+
 ## V5 M4 — integrazione locale conclusa (13 ottobre 2026)
 Contratto analysis-v2 implementato sui percorsi review-v1, docs/v5/anthropic-api-contract.md. Provider/consenso, capabilities con budget, billing e origine per proposte/storia. Fixture default per client M3 senza provider; vecchie impronte idempotenti preservate. HTTP 422 validation_error senza consenso, nessun job; errori di analisi nel job failed. HTTP 429/disabledReason ai_evaluation_limit_reached distingue le sei chiamate iniziali dal tetto ai_budget_exhausted. No_supported_data non crea scheda vuota. API/DB/client/browser verificati; report docs/v5/m4-integration-review.md.
 
@@ -265,3 +275,161 @@ home-objects-v1 ora attivo su API locale3001: object-capabilities, rooms CRUD lo
 ## G1 — integrazione finale reale (14 ottobre 2026)
 
 home-objects-v1 G1 integrato col frontend reale. CatalogItem ha note/versione/date per metadati; history before/after DTOdiretto e position.rooms. LinkedResource expense autorizzata include amountCents/currency EUR/spentOn da H3a; unavailable null intero senza importo/ID/titolo. Boiler updates/archive/restore G1 assenti404, nessuna azione UI. DTO/edgecompatibilità in docs/v5/home-objects-api-contract.md.
+
+
+### API V5 economy-v1 — S1a/b locale
+
+Base /api/v5/homes/:homeId/economy. GET capabilities, expenses, expenses/:id, expenses/:id/history, summary, works, works/:id, works/:id/history; POST expenses, expenses/:id/updates|archive|restore, works, works/:id/updates|archive|restore. Sessione/CSRF/account-context, CAS e idempotenza; tipi/query/errori in docs/v5/economic-history-api-contract.md. documentDrafts=false: rotte job/bozze non ancora implementate. Vecchie API H3a invariate.
+
+
+### V5 economy-v1 — job/draft S1c in modalità fixture
+
+POST document-analysis-jobs, GET document-analysis-jobs/:id, POST document-analysis-jobs/:id/retries; GET drafts, drafts/:id, drafts/:id/candidates; POST drafts/:id/park|reopen|confirm. Stessa base economy-v1, sessione/CSRF, idempotenza, CAS e redazione attuale. Capabilities documentDrafts true, test_fixture_v1 esplicito e Anthropic disabled. Vedere report S1c per limiti e prove: non è estrazione AI generale da PDF arbitrari.
+
+
+### 15 ottobre 2026 — Ledger e worker Anthropic economico, ancora disabilitato
+Registro separato EconomicAiCampaign/EconomicAiAttempt, riserva atomica, quota/costi, consenso start/retry, recupero senza reinvio e permessi prima di count/Messages/pubblicazione. Migrazione20261015090000 solo DBV5 dedicato. Build/lint96offline/21DBHTTP verdi con AnthropicHTTP stub. API riavviata; providerdisabled, ledger economico vuoto, M4rimasto8. Report docs/v5/economic-ai-ledger-worker-20261015.md. Consenso frontend affidabile a Claude; nessun paid, budgetlive ancora da autorizzare dopo integrazione.
+
+
+
+### 15 ottobre 2026 — Primo collaudo Anthropic economico reale
+Autorizzati1USD/treanalisi solo sintetici. Aggiunta allowlistSHA256 obbligatoria server (ECONOMY_AI_ALLOWED_SHA256), rifiuto prima riserva e trasferimento. Build/lint16mirati verdi; dueMessages reali Sonnet4.6, gas80/20/100 e fattura100+22/lordo122 corretti, conferma canonica totale202EUR. SpesaAPI0,021834USD settled; M4invariato8. Providerdisabilitato in finally/APIriavviata. Report docs/v5/economic-anthropic-live-20261015.md. Nessun terzoinvio o quota resettata; nessuna bolletta personale. Claude possibileottimizzazione bundle incaricopreparato; frontendnonmodificato.
+
+
+## V5 C1a sharing-v1 — 15 ottobre 2026
+
+API documentale selettiva separata da M2: capability/picker/preview/share sotto homes/:homeId, code-claims autenticato, received-shares a livello account e download per sola consegna accettata. Nessun accesso implicito a Home o economie. Trasporto, DTO, errori e limiti nel contratto [sharing-v1](v5/sharing-api-contract.md); backend verificato in [C1 backend](v5/c1-backend-review-20261015.md).
+
+## V5 account recovery e verifica email 16 ottobre 2026
+
+Nuovi POST /api/v5/auth/password-recovery, /complete, /auth/email-verification e /complete; primo 202 neutro, completamenti204. GET /session aggiunge authRecovery.enabled e account.emailVerifiedAt/requiresEmailVerification. Contratto completo docs/v5/account-recovery-api-contract.md. CSRF/Origin e sessione anonima, token monouso hash, nessun login automatico. Nuovi account a canale attivo richiedono verifica per upload; precedenti non bloccati.
+
+
+## V5 Fase0 — 16 ottobre 2026
+POST documenti conserva il contratto, aggiunge errori 503 file_check_unavailable e storage_capacity_low prima del commit documento. Ricevuta scanner solo DB, nessun nuovo endpoint export. Vedi docs/v5/documents-api-contract.md.
+
+## V5 personal-export-v1 — 16 ottobre 2026
+POST /api/v5/homes/:homeId/personal-export con body {}, Origin/CSRF e X-Account-Context obbligatorio:200 allegato JSON versione1 personale, membership owner/member con export. Originali separati ZIP M2. 413 personal_export_too_large;503 personal_export_busy/personal_export_unavailable; autenticazione/privacy come identity. Budget10000righe10MiB2concorrenti, letture coerenti e controllo fresco prima della risposta. Contratto docs/v5/personal-export-api-contract.md; esito docs/v5/personal-export-esito-20261016.md.
+
+## 2026-10-16 — Ricevuta assistita, specifica e primo nucleo backend
+Le rotte receipt-assistance descritte in docs/v5/receipt-assisted-spec-v1.md sono pianificate, NON disponibili. Il nuovo validatore/policy offline non espone endpoint. Non riutilizzare document-analysis-jobs economici come se creassero già oggetti generici.
+
+## 2026-10-16 — Ricevuta R2: bozze persistenti in modulo isolato
+Modulo non importato in AppModule: rotte manual-drafts, drafts/:id, park/reopen e capabilities provate solo in harness HTTP reale. Payload/stati/privacy in docs/v5/receipt-assistance-backend-20261016.md. Nessun nuovo endpoint attivo annunciato.
+
+## 2026-10-16 — Ricevuta R3 e integrazione sorgenti Claude
+Modulo ancora non attivato: lettura campi/confronti, paginazione e risoluzioni keep/defer implementate e provate in harness HTTP. Dettagli contratto R3 in docs/v5/receipt-assistance-backend-20261016.md; conferma atomica/job restano da implementare.
+
+## 2026-10-16 — Ricevuta R4 conferma transazionale
+POST confirmations e GET confirmation per recupero esito nel modulo isolato, body e risposta definiti nel rapporto R4 docs/v5/receipt-assistance-backend-20261016.md. Modulo ancora NON importato: nessuna nuova API di prodotto annunciata attiva.
+
+
+Ricevuta assistita R5a (16 ottobre2026): policy fonte/versione/hash del nome generico estesa a catalogo G1 prima di LIMIT, scheda/storia, riferimento S1 ed export con verifica dei proof dopo snapshot. Rinomina manuale sostituisce la provenienza del nome; storia degli oggetti ricevuta mostra nome corrente autorizzato. Backend compilato/testato su fixture, servizio registrato non riavviato, modulo ricevuta ancora isolato/capabilities false. Dettagli docs/v5/receipt-assistance-backend-20261016.md.
+
+Ricevuta R5b: JSON personale v1 aggiunge array receiptFields/receiptComparisons con mapper allowlist e controllo fonti; filtro ambiente S1 esclude correlazioni a nomi derivati non più autorizzati. Build/lint e30DB/HTTP mirati verdi; servizio non ancora riavviato, modulo ricevuta isolato. Vedi report receipt-assistance-backend-20261016.
+
+Ricevuta R5c: GET /api/v5/homes/:homeId/receipt-assistance/drafts/:id/object-candidates e expense-candidates implementate nel modulo NON attivo. limit1–50/cursor; risposta items/linkedCount/nextCursor; cursor account/Home/bozza/versione/tipo. linkedCount oltre pagina impedisce falsa unicità. Rank legame stesso documento, stesso hash leggibile, marca+modello per oggetti, poi selezione manuale personale. Conferma deduplica copie dello stesso originale e riusa il documentId canonico del costo; nessun confronto con fonti private altrui. Report receipt-assistance-backend-20261016.
+
+Ricevuta R6b: POST /api/v5/homes/:homeId/receipt-assistance/jobs (202, documentId/provider receipt_fixture_v1/consentToProviderTransfer:false, Idempotency-Key) e GET jobs/:id implementati nel modulo NON attivo. DTO e codici in docs/v5/receipt-assistance-backend-20261016.md; fonte stale/revocata redatta, nessuna chiamata esterna, solo hash fixture noti. Manuale indipendente.
+
+
+### 2026-10-16 — Ricevuta R7a
+Ricevuta R7a: park accetta selection object/expense validata, GETdraft proietta review con targetVersions/staleTargets; reopen esplicito. API ancora isolata, non attiva.
+
+
+### 2026-10-16 — Ricevuta R7b
+Receipt R7b: capability documentId opzionale con controllo fonte; confronti DTO con draftId/documentLink redatti se indisponibili. GETrecupero frontend porta stessa key della POST. Modulo ancora isolato.
+
+
+### 2026-10-16 — Ricevuta R7c preparazione
+Preparazione QA ricevuta: capability per documentId noto sintetico ed edit, provider fixture locale esplicito; fonti diverse bloccate503 receipt_assistance_in_development nelle mutazioni del modulo. Non ancora attivo nel servizio.
+
+
+### 2026-10-16 — Ricevuta R7c browser
+R7c runtime ricevuta attivo esclusivamente fixture4hash: capability per documento+resume scoped {draftId,jobId}, job attivo prioritario, poi bozza open/parked. Personali bloccati503 nelle mutazioni. Browser reale sintetico verificato.
+
+### 16ott2026 Ricevuta R8b
+Receipt jobs supportano anthropic opt-in con consenso esplicito e allowlist server; provider resta disabilitato. JobDTO aggiunge model/billing e stato uncertain, DraftDTO analysis opzionale con costo persistente. Fonte revocata redige metadati. Dettagli: docs/v5/receipt-assisted-spec-v1.md R8b. Nessun nuovo endpoint live o chiamata esterna eseguita.
+
+### 16ott2026 Archivio assistito B1a — solo modulo isolato
+Progettato contratto docs/v5/document-intake-api-contract.md. Implementati GETdocument-intake/capabilities(disabled), POSTbatches e GETbatches/:id solo nel modulo di collaudo NON importato in AppModule. Sessione/CSRF/account/Home/idempotenza; nessun nuovo endpoint esposto nell’app. Upload/job/review/conferma e filtri ancora da completare.
+
+###16ott2026 ArchivioB1b isolato
+Aggiunto POSTdocument-intake/batches/:batchId/items/:itemId/file (solo file multipart, chiave stabile) e GETlotto recupera esito/scadenza. Dedup privata perupload, sorgenti rilette e redatte, quota2account/lease120s. AppModule NON importato, nessun endpoint prodotto attivato. Specifica B1b document-intake-api-contract.md. Filtro errori comune esteso solo a questi path, errori Documenti precedenti preservati.
+
+## V5 B2 —16ott2026
+Intake ISOLATO: POST review, GET ricevuta review, POST confirmations, GET esiti, POST duplicate-resolution; firme vincolanti in docs/v5/document-intake-api-contract.md B2. Nessuna registrazione AppModule. Documenti attivo: query collection, metadati personali in lista/dettaglio/manifestZIP/JSON personale, source proof e cursor/cache per raccolta.
+
+## V5 archivio nell'app16ott2026
+DocumentIntakeModule registrato, capability enabledtrue con motore local_text_v1, costo0 e externalTransmissionfalse. Nuovi POSTanalyses locale, GETbatches paginato, POSTupload-cancellation e404recuperoconfermanonricevuta. Dettagli vincolanti in docs/v5/document-intake-api-contract.md B3locale/B4. Nessun endpoint invia dati ad Anthropic; futuro provider richiede budget/consenso/contratto proprio.
+
+### 16 ottobre 2026 — Aggiunta progressiva di documenti allo stesso lotto
+POST /homes/:homeId/document-intake/batches/:batchId/items, body {items:[clientItemId,filename,byteSize,mimeType]}, Idempotency-Key. Stessa validazione manifest/CSRF/account/Home/ruolo/email del caricamento iniziale. Append commutativo senza expectedVersion: lock lotto e quote rilette serializzano conteggio, byte e ordinali, mentre i job possono avanzare. Max20file e200MiB sull'intero lotto, non per singola selezione. Stessa chiave/payload → replay del lotto attuale; payload diverso →409; clientItemId già presente con altra richiesta →409. Nessuna lettura di originali, schema o provider aggiunti.
+I file, le proposte, le scelte e gli esiti confermati precedenti non sono sovrascritti. Un lotto completato riapre solo per accogliere nuovi file; i risultati precedenti restano registrati. Il client usa stesso batchId e upload indipendenti soltanto per gli ID della nuova selezione; non ritenta automaticamente file precedenti falliti. Esito incerto conserva chiave/manifest per recupero. Risposta tardiva non naviga in un altro lotto.
+Il pulsante «+ Aggiungi documenti» nel lotto apre la medesima selezione/drag&drop e torna al lotto dopo la scelta, anche scegliendo un solo file. Durante il caricamento il selettore è disabilitato. Nessun file personale usato per verificare l'aggiunta, nessuna chiamata AI/email/paid, nessuna modifica .env/quote/sicurezza. Solo DB V5 dedicato e riavvio dell'API registrata.
+
+16ott2026: catalogo intake additivo agibility_record→building; stesso POSTanalyses locale, ora anche copie autorizzate e file ready senza proposta selezionabili dalla UI. Nessuna API nuova/migrazione; nessunpaid/OCR.
+
+
+### 16 ottobre 2026 — Riuso distinto da organizzazione e correzione senza upload
+Diagnosi in sola lettura sul contesto del committente: il classificatore aveva proposto agibility_record, ma l'azione scelta era reuse dell'originale; una precedente organizzazione other/unclassified era quindi rimasta invariata. Non è un errore del filtro building né un fallimento di riconoscimento della visura. Nessuna modifica dei suoi dati effettuata dal collaudo: consultati solo metadati scoped al suo account/Home, non i byte originali. Evidenza locale outputs/intake-organization-readonly-result.json NON da committare.
+La revisione di una copia con organizzazione other e proposta più specifica ora preseleziona i tipi proposti, conservando titolo personalizzato e consenso di sostituzione esplicito. Scelte già classificate restano conservate. Il solo riuso avvisa che non applica titolo/categoria e lo stato non dice più Organizzato: Originale riusato · organizzazione invariata.
+POST /homes/:homeId/document-intake/batches/from-documents {documentIds:[uuid,...]} +Idempotency-Key prepara una nuova revisione degli originali già autorizzati (max20/200MiB e stessi limiti di formato/dimensione). Non ricarica byte, non crea Document/StoredFile, non modifica organizzazioni o vecchi ledger. Lock/check di account/Home/ruolo/email/originale; idempotenza peraccount/Home/chiave con digest origine distinto dai manifest. Riusa solo proposte precedenti dello stesso account/Home/documentId/versione/hash; altrimenti not_started. La nuova organizzazione esiste solo dopo salvataggio e conferma, con replaceOrganization/versioni quando necessario.
+Il comando Riorganizza senza ricaricare sui file confermati prepara quel lotto e porta lì il client, proteggendo da doppio clic e risposte tardive di altro lotto. Nessun automatismo paid/AI/OCR o classificazione retroattiva; la categoria deriva dal tipo riconosciuto oppure scelto. Per scansioni unreadable l'OCR resta fuori scope.
+
+### Documenti V2 — API integrate e collaudate, notte 16 ottobre 2026
+POST /homes/:homeId/document-intake/batches/:batchId/organizations e GET /organizations/:key: conferma diretta singola/multipla, selezione esplicita, ricevute e recupero same-key, esiti per file. duplicate-resolution/reuse_reference mantiene anche stored già organizzati con fonte e proof attuali; niente riscritture o collegamenti. Contratto autorevole docs/v5/document-intake-api-contract.md e document-intake-simplified-spec-v2.md. Compatibilità V1 conservata; nessuna migrazione/provider esterno.
+
+
+### V5 manuali online oggetti — 17 ottobre 2026
+POST homes/:homeId/objects/object/:id/manual-proposals ricerca pubblica produttore senza scrittura; POST .../manual conferma candidate/token, aggiunta manuale o rimozione con expectedVersion e Idempotency-Key. Guard/CSRF/contesto/proprietà/ruolo, replay e versioni comuni. Solo oggetti generici; GET objects/:kind/:id proietta manual additivo. Contratto, limiti e prove docs/v5/object-manuals-20261017.md.
+
+
+### 17 ottobre 2026 — onboarding documenti e oggetti O2–O5
+
+Endpoint Home V5 object-onboarding (job/bozze/candidati/revisione/conferme recuperabili/confronti) e modifica profile oggetto implementati; contratto completo docs/v5/object-onboarding-api-contract-v2.md. Provider attualmente disabilitato, prova reale incerta.
+
+
+### 17 ottobre 2026 — validazione fattura e caricamento integrato
+
+Capabilities e endpoint onboarding restano invariati; nuova composizione frontend Documenti V2 organizations prima di onboarding confirmations. Nessuna creazione se esito documenti incerto. Formati ricevuta tabellare/data acquisto supportati; contratto dettagliato docs/v5/object-onboarding-api-contract-v2.md.
+
+### 17 ottobre 2026 — proposta automatica spesa con conferma unica
+
+Ricevuta estratta non ambigua,unico articolo/esemplare,totale positivo e acquisto esplicito: controllo candidati e proposta create già visibile, mai scrittura prima della conferma articolo. Nessun costo automatico da consegna/etichetta/multiarticolo o dati insufficienti. Scelte precedenti salvate restano prioritarie, inclusa esclusione costo. Ricerca incerta/errore blocca proposta automatica: riprova oppure scelta esplicita. Stessa ricevuta o stessa cifra/data producono avviso senza scelta automatica. Importo/data non provano identità del costo: scelta link/skip oppure acquisto distinto dichiarato. Conferma resta una e usa transazione/idempotenza esistenti.
+
+GET expense-candidates: rank2 stessa fonteSHA,rank1 stesso importo/data acquisto,rank0 selezione manuale. Ordinamento su tutto lo scope autorizzato prima della paginazione. Conferma expense.create ammette acknowledgePossibleDuplicate boolean opzionale; senza true un altro costo attivo leggibile con stesso importo/data genera409 onboarding_possible_expense_duplicate. True non supera il divieto di secondo costo per stessa ricevuta, né controlli fonte/target/versione. Nessuna migrazione o nuovo endpoint. Controllo ripetuto nella transazione con lock Home condiviso dalle mutazioni.
+
+
+
+### 17 ottobre 2026 — consolidamento onboarding pilota
+
+Sostituzione esplicita versionata, quote manuali multiarticolo con limite cumulativo e tipi ordine/consegna/etichetta implementati; conferma unica e recupero conservati. Dettagli, prove e limiti: `v5/onboarding-pilot-consolidation-20261017.md`. Nessuna migrazione o attivazione provider; priorità ora uso reale e feedback.
+
+
+### 17 ottobre 2026 — attivazione AI casa con tetto autorizzato
+
+Modalità pilota account/casa, consenso per invio e campagna persistente5 USD/40 analisi. Contatori e blocchi visibili; collaudi esclusivamente simulati, attivazione verificata senza Messages. Appartamento Roma svuotato dopo conferma definitiva, mantenendo account/anagrafica e nuovo budget. Vedi `v5/ai-home-pilot-20261017.md`.
+
+
+### Caricamento unico — 17 ottobre 2026
+
+Output onboarding additivo houseExpenses e documentKind utility_bill; conferma di costi della casa senza objectRef/workId, nello stesso budget del pilota. Vedi docs/v5/unified-document-proposals-v1.md.
+
+
+### HTTP400 bollette — 17 ottobre 2026
+
+POST object-onboarding/jobs accetta acknowledgePreviousUncertainAnalysis=true soltanto come nuovo consenso esplicito; chiave separata e budget invariato. Capability additiva canStartWithUncertainAcknowledgement. Report: docs/v5/unified-document-proposals-verification-20261017.md.
+
+
+### Bollette — prove autonome 17 ottobre2026
+
+Bozze bollette includono reviewWarnings con codici dei dati esclusi; solo candidati verificati entrano nella conferma. Report: docs/v5/unified-document-proposals-verification-20261017.md.
+
+
+## V5 — 18 ottobre 2026, revisione unica
+
+Endpoint invariati. JSON delle proposte articoli esteso con purchaseAmount facoltativo (amountCents e fonte verificata), senza migrazione. expense-candidates accetta itemId anche per articoli, con confronto importo/data della riga; choices multiple e skip restano la conferma atomica esistente. Nessun oggetto/costo dalla lettura. Contratto e recupero: v5/document-review-unified-v4.md.
+
+### Onboarding V5 —18 ottobre 2026
+Confirmations: costo dichiarato esplicitamente ammesso anche per bozza mode=manual/documentKind=unsupported, con medesimi controlli canonici e transazione oggetto+spesa. Nessuna nuova API, schema Prisma o modifica quote. Il wire esterno V8 usa array0/1; i DTO applicativi e le bozze mantengono oggetti nullable.

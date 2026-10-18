@@ -60,6 +60,12 @@ Completati: righe Amazon con descrizione multilinea, quantità parziali, classif
 - Bollette con canone/arretrati o più totali: richiesta mirata, senza omettere o distribuire importi automaticamente.
 - Estendere recupero trasparente all’intera saga classificazione/conferma e mostrare avanzamento anche nell’archivio, oltre alla pagina del caricamento. Annullamento coordinato di tutte le creazioni del lotto non implementato; le modifiche/archiviazioni esistenti restano disponibili.
 
+## V12 — riscontri ripopolamento reale 18 ottobre 2026
+
+- Quantità ricevuta Amazon: evidence_unverified sul layout Descrizione/Quant./Prezzo/Totale con nome prima della quantità. Coprire con fixture sintetica e prova quantità rigorosa; robot completato manualmente dall’originale senza ulteriore invio.
+- Caffè: un nuovo tentativo analysis_invalid_output sullo stesso file che aveva estrazione V12 valida. Serve diagnosi e test sintetico della completezza/validità, senza attribuire automaticamente il problema al documento. Riusata estrazione validata solo dopo identità SHA.
+- Riepilogo elenco documenti: fattura lavori simple_invoice appare come Bolletta nel testo sintetico della proposta accettata. Distinguere per documentKind; la classificazione canonica e la categoria spesa sono corrette.
+
 ## V12 — riscontri live
 
 Prime due letture reali riuscite. Da affinare: candidato oggetto esistente quando nome/modello manuale differisce dal prodotto estratto (mai associare automaticamente solo per documento comune); avvisi opzionali su importi secondari/consegna senza oscurare i dati validi. Citofono classificato elettrico e titolo fattura lavori specifico risolti localmente.
@@ -77,6 +83,20 @@ Risolto formato valuta EUR/€ tra parentesi sul totale finale. La risposta AI r
 Chiusa prima tranche conformità/fattura/bolletta/etichetta con test sintetici. Restano: misurare qualità live V11 con consenso; fatti tecnici canonici editabili e interventi; OCR per pagina/PDF misti; allineare indicatore classificazione locale della riga ai metadati AI in revisione prima del salvataggio preservando conflitti. Vedi report V11.
 
 # Backlog
+
+## Validazione nuovo prototipo Blu architettura — 2026-10-13
+
+- **P0 UX:** testare con il committente i tre journey completi, incluse varianti offline/403/quota/scadenza, tastiera e stati persistenti; raccogliere modifiche prima dello sviluppo reale. Mappa e copione in outputs/dimora-v5/README.md della chat locale.
+- **P0 architettura:** definire stack frontend nuovo, senza importazioni da frontend legacy; audit selettivo solo backend. Registrata scelta utente Blu architettura in ADR 79.
+- **P0 sicurezza:** i controlli browser del prototipo illustrano i permessi ma non sono sicurezza di produzione. Implementare e testare matrice ruolo/risorsa/operazione, accessi file, ricerca/retrieval, inviti neutri, revoca e retention prima della V1.
+
+## Audit Windows / V5 — 2026-10-13
+
+- **P0 prima beta:** audit npm sui lockfile di `5fb0415`: frontend 2 high (`nanoid`, `source-map-js`); backend 13 (3 moderate, 8 high, 2 critical, incluse `handlebars` e `proxy-addr`). Valutare raggiungibilità e aggiornamenti compatibili; nessun `audit fix --force` applicato.
+- **P1 demo:** preview V5 funzionante in sviluppo, ma build Vite standard solo legacy; definire target demo separato o build multi-entry prima di distribuire la preview.
+- **P1 qualità:** warning hooks exhaustive-deps in Inbox, Gmail e Drive, da analizzare prima di correggere.
+- **P1 comandi:** output backend `dist/src/main.js`, mentre `start:prod` indica `dist/main`; riallineare prima di deploy. Il launcher locale usa il percorso effettivo.
+- **P0 Partner:** organizzazioni/edifici/scale/unità, permessi per operazione, manifesti/versioni e report privati separati da `Issue` Genesis: restano R00–R06 dei documenti V5, non completati dalla configurazione locale.
 
 Attività aperte. Le voci storiche usano **Alta/Media/Bassa** per urgenza tecnica; la roadmap v6 usa **P0/P1/P2/P3** per sequenza di prodotto. Un vincolo di sicurezza “Alta prima di produzione” resta bloccante anche se non genera valore utente immediato.
 
@@ -177,6 +197,82 @@ Attività aperte. Le voci storiche usano **Alta/Media/Bassa** per urgenza tecnic
 
 Le decisioni di design già prese (comprese quelle che generano debito accettato consapevolmente, es. niente test, CORS aperto) sono in `decisions.md` — questo file è per il lavoro non ancora fatto, non per rispiegare perché.
 
+### V5-CV — Dal ciclo demo al ciclo reale
+P1: permessi server-side e scadenze effettive; export ZIP di originali; identificazione casa per account con più immobili; recupero controllato per vendita errata/annullata; passaggio esplicito fra studi. Prima del rilascio: definire conservazione/cancellazione fisica e proroghe agenzia. ADR 80: chiusura accesso distinta da eliminazione dei dati. La demo non implementa queste garanzie di produzione.
+
+
+### V5-R2 — revisione prototipo chiusa
+R2-001…007 risolti nella baseline v9 finale (ADR 81). Identità e selezione di più Home rappresentate nella demo; resta il modello e controllo di accesso server-side in produzione. Restano le attività V5-CV già elencate, audit completo accessibilità e presentazione dei ruoli demo dopo il cambio titolare (P3). Questi punti non sono ulteriori difetti aperti dei sette rilievi concordati.
+
+
+- [x] V5 validazione guidata: targhetta libretto incoerente dopo conferme, risolta in v9.1.
+
+- [x] V5 validazione guidata: accesso alla segnalazione dalla Casa indipendente dalle comunicazioni, v9.2.
+
+- [x] V5 validazione guidata: Segnala comunque fuorviante per problemi nuovi, risolto in v9.3.
+
+- [x] V5 validazione guidata: contenuto comunicazioni pubblicate visibile direttamente in Home, v9.4.
+
+- [x] V5: icone esplicative e stato comunicato scelto dallo studio, v9.5.
+
+- [x] V5 identity-v1: contratto e checkout frontend separato preparati (101f053).
+- [ ] V5: avviare sessione Claude Desktop sul checkout dedicato; costruire backend identity-v1 e integrare frontend dopo handoff.
+
+- [x] V5: backend account/casa, CSRF, membership e idempotenza implementati; build/lint/typecheck e 14 test dominio.
+- [ ] V5: eseguire launcher e 9 scenari API/database reali, poi integrare frontend Claude.
+- [ ] V5 prima del pilota: verifica email/reset account, limitatore condiviso e cleanup pre-sessioni; niente endpoint legacy set-password.
+
+- [x] V5: review frontend Claude e risposte alle 9 richieste contrattuali.
+- [x] V5: correzioni contesto account tra schede, codici errore, logout scaduto e Unicode; 17/47 test locali.
+- [ ] V5: collaudo API/client v1.1 e UI dopo riavvio esterno con -Restart -Test -Frontend.
+
+- [x] Collaudo v1.1: 11 API/PostgreSQL, 3 frontend/API e browser eseguiti.
+- [ ] M1-UI-001 P1: correzione temporalita creazione implementata, 18 test dominio passano; riverificare 10 creazioni sul runtime riavviato prima di chiudere M1.
+- [x] Chiarire i permessi futuri in Casa reale, senza presentarli come operazioni disponibili.
+
+- [x] M1-UI-001 riverificata: 12 API/PostgreSQL scenari passano, creazione aggiuntiva da browser senza errore.
+- [ ] Launcher frontend ripetibile: riuso sicuro implementato e parser validato; rieseguire -Frontend per 3 test client/API sull'ultimo backend.
+
+- [x] M1: ultimo launcher e 3 test client/API reali superati alle 17:41. Identita/casa consolidate.
+- [ ] V5-DEV-004 Codex: implementare documents-v1, DB/storage privato, upload idempotente, download ed export autorizzati.
+- [ ] V5-DEV-005 Claude: frontend Documenti sul contratto M2, sync correzioni M1, test e handoff.
+
+- [ ] M2: applicare migration V5 e collaudare API/PostgreSQL/file reali, poi integrare frontend Claude.
+- [ ] Prima del pilota M2: antimalware/validazione strutturale documenti, limiti rate/concorrenza upload e storage remoto, backup atomico DB+file, cleanup periodico oltre avvio.
+
+- [x] Frontend Documenti Claude integrato, review e prove mock completate; risposta HTML binaria bloccata e limiti MiB coerenti.
+- [ ] M2: launcher esterno -Resume -Documents -Test -Frontend, attivare V5_DOCUMENTS_API=1 nei test client, quindi browser reale.
+
+- [ ] M2-UPLOAD-001 P1: parser multipart corretto e regressione reale locale aggiunta; riverificare API esterna dopo -Restart -Test -Frontend.
+
+- [x] M2-UPLOAD-001 riverificata su backend reale; Documenti M2 completata in locale (23 API/file/DB, 6 client/API, browser).
+- [ ] V5 M3: contratto proposte/conferme campo, provider test esplicito, storico e nuova review Claude.
+
+- [x] M3: contratto job/proposte/conferme per campo, fixture sintetiche verificate e incarico Claude preparati.
+- [ ] M3 Codex: implementare schema/API/worker persistente e prove permessi/fonti/concorrenza/recupero.
+- [ ] M3 Claude: frontend Caldaia/Attivita/Da rivedere su contratto, prove mock e handoff.
+- [ ] M3: integrazione e collaudo reale prima della chiusura; nessuna AI reale o effetto normativo.
+
+
+- [x] M3 Codex: schema, API/worker, conferme, provider fixture e 52 test locali passanti.
+- [ ] M3: launcher -Review -Test per migrazione e 19 scenari nuovi API/PostgreSQL; correggere esiti prima di integrazione frontend.
+- [ ] Prima pilota M3: provider reale e sue condizioni, rate/quote job e retention audit; nessuna AI a pagamento attiva ora.
+
+
+- [x] M3: frontend Claude integrato, review e collaudo API/PostgreSQL/client/UI reale completati in locale.
+- [x] M3 UX: Attivita attiva nelle sottopagine, nomi fonti, storico italiano e conteggi job chiari.
+- [ ] Prossimo sync Claude: trasferire gli oggetti Git con bundle e ripristinare le copie docs delle fixture da byte verificati; non riusare i PDF convertiti della vecchia patch.
+
+
+- [x] M4: provider Anthropic e tetto 10 USD scelti, contratto e incarichi preparati.
+- [ ] M4: parser paginato, adapter, consenso, ledger persistente e dispatch senza duplicati, collaudo offline e reale.
+- [ ] M4: frontend Anthropic/provider misti/pagine/errori/costi incerti, integrazione e collaudo.
+- [ ] Incremento futuro: OCR/vision per scansioni e documenti privi di testo; non promesso in M4 iniziale.
+
+
+- [ ] M4 runtime: mantenere PostgreSQL V5 attivo, verificare migration 004 e API prima di abilitare M4_AI_ENABLED.
+- [ ] M4 collaudo: test concorrenti ledger su DB reale, PDF multipagina, esiti vuoti/errati, integrazione frontend e massimo sei chiamate iniziali sintetiche. 64 test backend offline passano; non equivalgono a collaudo live.
+
 ## Chiusura M4 locale — 13 ottobre 2026
 - [x] Parser testuale paginato, adapter Anthropic, consenso e ledger/recovery.
 - [x] Frontend provider/costi/errori/fonti integrato con API/DB reali.
@@ -268,3 +364,381 @@ G1 backend/schema verificati; restano integrazione frontend Claude dopo consegna
 ## G1 — integrazione finale reale (14 ottobre 2026)
 
 G1 backend/frontend/client/browser chiusa. Restano C1, S1-S4, vendita/cessazione accesso, hardening pilota. Chunk600,88kB: code splitting per rotta prima del pilota senza aumentare soglia. Picker H1 attività senza riferimento nativo: eventuale filtro server futuro, paging/messaggio ora espliciti. Focus H1 dopo altre mutazioni K7 distinto dalla correzione G1 forObject. Nessun forecast o condivisione implicita aggiunti.
+
+## S1 — pianificazione approvata dopo G1 (14 ottobre 2026)
+S1 precede C1 e include manuale breve più proposta economica da bollette/fatture semplici, con conferma e costo unico. Specifica docs/v5/s1-economic-history-spec.md; revisione UX documentale preparata per Claude. Implementazione e contratto REST congelato ancora da completare; nessuna migrazione, chiamata paid o modifica runtime in questa sessione.
+
+## ADR-V5-19 — S1 prima C1, contratto e arbitrato UX
+14 ottobre 2026. S1 include manuale breve e compilazione assistita bollette/fatture. Bozza economy-v1 separata da expenses-v1 e da analisi caldaia, stesso HomeExpense canonico. Proposta create atomico con lavoro/oggetto e riepiloghi server con somme stringhe centesimi. Scartati copie del costo, pagamento dedotto e esclusione finanziamento dal totale generale. Revisione Claude d54a533 raccolta come db45d1b e arbitrata in s1-design-review.md: collegamento documento incrementa CAS/storia se cambia costo; bozze originali persistite, edit non salvati espliciti; consenso per ogni trasferimento. Nessuna dipendenza/migrazione/runtime o chiamata paid in questa fase. Contratto ancora bozza fino esempi DTO/congelamento.
+
+## S1 — mockup prima dello sviluppo e modulo aggiuntivo
+14 ottobre 2026. Steering esplicito: prima navigazione UX mockup, poi implementazione; Economia aggiunge capacità senza alterare funzionalità già definite. Creato frontend-v5/public/mockup-economia-s1.html standalone, dati sintetici in chiave localStorage isolata dimora-s1-ux-mock-v1 (QA separata suffisso -qa), nessuna API/AI o DB. Provati da browser: manuale85 EUR Lavatrice totale505; link gas esistente totale invariato; scelta80su80+20 e nuova registrazione esplicita; fatturaIVA122; scansione manuale; filtroGas e confronto;320px senza overflow. Backend invariato, nessuna build/test backend necessari. Confronti e archivio nel mockup sono simulazioni, non funzioni già aggiunte all'app.
+
+## S1 — schede oggetto preservate nel mockup
+14 ottobre 2026. Su richiesta committente, catalogo Oggetti distinto da Costi per oggetto. Scheda completa con sintesi essenziale e sezioni documenti/attività/costi/storia, link verso vista economica e ritorno. Verificato browser accesso fonte sintetica e ritorno,320px senza overflow e console senza errori. Solo mockup isolato: app/backend/DB e funzionalità già definite invariati. Specifica aggiornata docs/v5/s1-economic-history-spec.md; guida outputs/Dimora-V5-S1-mockup-navigazione.md. Sviluppo operativo ancora sospeso per revisione esperienza.
+
+## Mockup Home proprietario completo prima S1
+14 ottobre 2026. Quattro sezioni Casa/Attività/Documenti/Spese; ambienti/oggetti/condominio da Casa; spese essenziali distinte da approfondimento Economia. Archivio generale, review card aperte, attività, originali, costi collegati, ritorni contestuali, C1/ciclo di vita come anteprime simulate. Verifica browser reale delle sole simulazioni e viewport320, zero consoleerrori; nessuna API/DB/AI o modifica runtime. Source frontend-v5/public/mockup-proprietario-v5.html e report docs/v5/owner-mockup-navigation.md. Multi-casa/onboarding account e funzioni future non rappresentati. Backend S1 ancora sospeso finché committente valuta navigazione.
+
+## Audit UX Home e famiglie approvate —14ottobre
+Contributi Claude da02584/9357f2b raccolti selettivamente (audit20screenshot, proposta autonoma, famiglie). Audit attendibile con correzioni alle affermazioni assolute; alternativa2 raccomandata con schede ad anteprime limitate, unico ingresso Spese e ritorni contestuali; ufficiale non modificato. Report docs/v5/home-ux-audit-arbitration-20261014.md. Famiglie approvate recepite in spec/modulo/bozzaREST: settecodici serverfamily, categorie invarianti, repairs_works derivata da lavoro, polizza mutuo financing esplicita, totale generale e withoutFinancing stessa base. Non importare fonte Claude integralmente: vecchi gruppi, confronti annuali non omogenei, secondarie segnaposto, liste complete e viewportmeta assente. Nessuna API/DB/AIpaid; contratto non congelato.
+
+## Famiglie approvate ora visibili nei mockup —14ottobre
+Aggiornati mockup proprietario e copia navigabile proposta-Claude: tutte7famiglie, repairs_works con lavoro derivata in works_purchases, polizza casa180EUR insurance e polizza mutuo120EUR financing espliciti sintetici, rata450 già presente. Totale fixture2477,90EUR, famigliafinancing570EUR, senza1907,90EUR. Dati esistenti non riclassificati; esempi inseriti soltanto se ID mancante. Confronto proposta corrente allineato fino14ott in entrambi anni, viewportmeta/lang aggiunti. Originale consegna Claude in frontend-v5/docs/proposta-ux preservato; copia public ora adattata Codex e marcata. Browser verificato riepilogo proposta e proprietario, sintassi valida e console senza errori. Nessuna API/DB/AI. Non applicata ancora intera riorganizzazione UX al mockup ufficiale.
+
+## Spese — macro famiglie come navigazione principale
+14 ottobre2026. Richiesta esplicita committente: sostituire menu Elenco/Peroggetto/Lavori/Riepilogo con famiglie. Proposta navigabile aggiornata: Tutte+7famiglie; modalità secondarie nel select Visualizza, family applicata a elenco/totali/riepilogo/oggetti/lavori; mantenuto scroll orizzontale mobile. Verificati Mutuo570 e Assicurazioni180 con registrazioni giuste, Riepilogo stessa famiglia,320px senza overflow/scrollWidth305; console nessun errore. SintassiJS controllata. Solo copia proposta public e spec, mockup ufficiale/backend invariati da questa modifica. Scelta documentata per successiva integrazione UX ufficiale.
+
+
+### 14 ottobre 2026 — Consolidamento mockup proprietario S1
+
+Approvata dal committente la navigazione Spese per macro famiglie con Visualizza secondario. Applicata al mockup ufficiale completo, preservando sezioni oggetto/documenti/attività e percorsi condivisione/storia/esportazione. Report e limiti: docs/v5/owner-ux-consolidation-20261014.md. Si rimuove la duplicazione di ingresso Spese/Economia senza rimuovere funzioni. Contratto e implementazione S1 operativa restano separati dalla prova UX. Nessun nuovo incarico Claude o consumo API.
+
+
+### 14 ottobre 2026 — Rifinitura UI Claude integrata
+
+Raccolta variante Claude 2a5fd69/f37768d e applicata al mockup ufficiale preservando stato e funzionalità. Tipografia, densità, gerarchia azioni e righe Spese migliorate. Verifiche e limiti in docs/v5/owner-ui-refinement-integration-20261014.md; contratto S1 ancora da congelare, runtime invariato.
+
+
+### 14 ottobre 2026 — Contratto S1 e proposta dashboard
+
+Definizione S1 e wire economy-v1 congelati con tipi, esempi e hash in docs/v5/s1-contract-freeze-20261014.md. Bozze accantonate recuperabili, confronto nullable e compatibilità H3a/G1 definiti. Incarico Claude dashboard alternativa separata pronto; non cambia specifica, ingressi o API e non blocca implementazione. Nessun runtime o DB modificato.
+
+
+### 14 ottobre 2026 — Backend S1a/b e dashboard separata
+
+API economy-v1 implementate per costi/metadati/famiglie/filtri/confronti e lavori personali; mutazioni condivise con H3a e riferimenti G1 atomici. Migrazione additiva solo DB V5 dedicato. DocumentDrafts false: S1c e frontend operativo restano aperti. Build/lint,86 offline e119 integrazione passati;5 test ulteriori contro API registrata. Report docs/v5/s1ab-backend-review-20261014.md. Dashboard Claude raccolta e servita separatamente, non integrata nel mockup ufficiale.
+
+
+### 15 ottobre 2026 — Backend S1c fixture e ripresa verifiche
+
+Job economici persistenti, bozze recuperabili, candidati e conferma atomica sul costo canonico implementati; fonte/versione/hash e redazione replay/storia. Provider fixture solo due PDF sintetici, Anthropic economico disabilitato senza invii o spesa. Build/lint e12test S1c mirati verdi nella ripresa;89offline e130integrazione precedenti documentati. API locale ripristinata autonomamente. Frontend Claude non raccolto, S1 nel complesso non completato. Report docs/v5/s1c-backend-review-20261015.md.
+
+
+### 15 ottobre 2026 — Integrazione frontend Spese S1a/b
+Claude c7f145b/1e2ae0e raccolti senza sync, dashboard/manuale/lavori operativi. Build/lint e267test frontend verdi,17test mirati sulla correzione ritorno dal nuovo costo. Percorso browser/API/DB reale verificato: costo sintetico240EUR, totale240,60EUR, archivio/ripristino e storia. Report docs/v5/s1ab-frontend-integration-20261015.md. S1c UI resta aperta; Anthropic economico disabilitato, nessuna chiamata paid. Warning bundle677kB e riepiloghi H3a da evolvere tracciati nel report. Nessun push/main/legacyDB.
+
+
+
+### 15 ottobre 2026 — S1c frontend integrato con fixture
+Claude1e76d7f/afb9897 raccolti come da0135d/d3a27dd, sync escluso. Build/lint/typecheck e37test mirati verdi. Browser/API/DB reale: upload gas sintetico, fonti/importi, park/reopen dopo reload, conferma80EUR e link_existing senza duplicato. Dashboard320,60EUR/cinque record; AiAttempt8 invariato. Report docs/v5/s1c-frontend-integration-20261015.md. Adapter Anthropic economico non implementato/disabilitato; bundle715kB aperto. Nessun push/main/DBlegacy/paid.
+
+
+
+### 15 ottobre 2026 — Adapter economico Anthropic offline
+Prepare/decode con parser reale e schema/citazioni verificate, trasporto strutturato condiviso con regressioni caldaia verdi. Evidenza date italiane/importi raggruppati. Build/lint,95offline e12S1cDB/HTTP verdi. Report docs/v5/economic-anthropic-offline-20261015.md. Nessun invio paid/.env/migrazione/restart. Provider resta disabled: ledger economico dedicato, worker protetto e consenso UI reale ancora da implementare prima di autorizzare campagna live.
+
+
+
+### 15 ottobre 2026 — Ledger e worker Anthropic economico, ancora disabilitato
+Registro separato EconomicAiCampaign/EconomicAiAttempt, riserva atomica, quota/costi, consenso start/retry, recupero senza reinvio e permessi prima di count/Messages/pubblicazione. Migrazione20261015090000 solo DBV5 dedicato. Build/lint96offline/21DBHTTP verdi con AnthropicHTTP stub. API riavviata; providerdisabled, ledger economico vuoto, M4rimasto8. Report docs/v5/economic-ai-ledger-worker-20261015.md. Consenso frontend affidabile a Claude; nessun paid, budgetlive ancora da autorizzare dopo integrazione.
+
+
+
+### 15 ottobre 2026 — Consenso Anthropic economico integrato
+Claude0c3db1b/55aec7f raccolti d8c5e0b/a6b7497; allineamento escluso. Consenso locale, reset, nuovo retry e billing separato; Codex esclude retry quando billinguncertain anche con timeout. Build/lint48mirati e1test client/API reale a providerdisabled verdi. Economyledger0/M4Attempt8. Report docs/v5/economic-consent-integration-20261015.md. 311completi/browser solo evidenza Claude; nessun paid o budget attivato. Proposta collaudo1USD/treMessages sintetiche ancora da approvare.
+
+
+
+### 15 ottobre 2026 — Primo collaudo Anthropic economico reale
+Autorizzati1USD/treanalisi solo sintetici. Aggiunta allowlistSHA256 obbligatoria server (ECONOMY_AI_ALLOWED_SHA256), rifiuto prima riserva e trasferimento. Build/lint16mirati verdi; dueMessages reali Sonnet4.6, gas80/20/100 e fattura100+22/lordo122 corretti, conferma canonica totale202EUR. SpesaAPI0,021834USD settled; M4invariato8. Providerdisabilitato in finally/APIriavviata. Report docs/v5/economic-anthropic-live-20261015.md. Nessun terzoinvio o quota resettata; nessuna bolletta personale. Claude possibileottimizzazione bundle incaricopreparato; frontendnonmodificato.
+
+
+- 2026-10-15: chiuso il caricamento differito frontend V5 (entry 485144 byte, nessun warning >500 kB). Nessun nuovo problema fuori scope emerso; misure di latenza reale non incluse in questo incarico.
+
+- 2026-10-15: verifica mirata del percorso Spese conclusa senza nuovi difetti riprodotti; nessun nuovo elemento da aprire. Vedi v5/spese-verifica-percorso-20261015.md.
+
+### C1 — gate identita destinatari e consegna (2026-10-15)
+Email account non verificata: non basta per sbloccare documenti esterni. Proposta prima verticale fra account gia membri, da arbitrare con mockup Claude; esterni richiedono protocollo identita/consegna. Aperte persistenza, locking, ledger/replay, download autorizzato, cache frontend e prove DB/HTTP/browser. Policy offline nove test verdi non equivale a funzione attiva. Vedi v5/c1-foundation-review-20261015.md.
+
+- C1 2026-10-15: chiusi nella simulazione difetti di sola scheda, rifiuto e accesso immediato dopo pairing. Resta da congelare protocollo esterno (challenge, claim/versione, rate limit, scadenze/recovery), poi persistenza/API/client. Vecchia anteprima C1 del mockup proprietario superata dal riferimento docs/proposta-c1. Vedi v5/c1-ux-arbitrato-20261015.md.
+
+- C1a 2026-10-15: chiuso contratto/protocollo/persistenza/API e test backend locali. Restano integrazione frontend e browser reale, prova con due account/zero case, perdita diritti/replay, codice effimero. Incarico frontend in outputs/Dimora-V5-incarico-Claude-C1-frontend.md; nessun paid AI.
+
+
+## 15 ottobre — chiusura integrazione C1a
+
+Risolti: UI documentale C1 reale, race download dopo logout/cambio account e dettaglio residuo dopo revoca/403. Verifiche: v5/c1-frontend-integration-20261015.md. Rinviati: dati tecnici condivisi, origine documentale oltre la pagina corrente migliorabile con filtro dedicato, cronologia eventi leggibile senza ricevute di lettura. Prove mobile contro API reale e assistive non eseguite in questo giro; non dichiarare copertura esaustiva. Analisi Agenzie separata, nessuna sovrapposizione con C1.
+
+
+## 16 ottobre — arbitrato Home prima di Agenzie
+
+HOME-CONS-002/003/004/005 corretti nel frontend; 006 corretto per l'elenco dei permessi futuri. Ordine Casa/Da fare ora (006), ingresso codice senza casa (001), segnale dei confronti in attesa (007) e guida3passi da valutare insieme prima dell'integrazione UX. Stati vuoti (009): distinguere assenza di dati da zero risultati con filtri; non nascondere l'uscita dai filtri. Collegamenti inversi G1 (014/parte002), etichetta consegna (015), ultima casa (011), dettagli tecnici (012), tipo oggetto (013) e bozza più compatta (016) restano separati. Nessun allungamento TTL implicito (010). Fonte: v5/home-consolidamento-arbitrato-20261016.md.
+
+## 2026-10-16 — Chiusure Home
+
+HOME-CONS-001/006 riordino/010 istruzioni applicati. HOME-CONS-007 applicato come segnale di presenza sulle pagine disponibili: eventuale ricerca completa delle conferme richiede contratto dedicato, non scansione client. Guida rinviata dal committente, non un difetto aperto. Nessun ampliamento C1 a schede tecniche. Rapporto v5/home-consolidamento-integrazione-20261016.md.
+
+## 2026-10-16 — Esito collaudo Home
+
+Nessun nuovo difetto runtime dimostrato nei percorsi provati. Test review e login/errore resi coerenti/deterministici senza allargare timeout. Restano i rinvii gia tracciati (guida, inverse G1, eventuale riepilogo conferme completo). Attendere consegna UX Claude prima di aprire altri interventi.
+
+## 2026-10-16 — Rilievi finali Home
+
+HOME-FIN-002/003 risolti con prove mirate. Rinviati FIN001 (ritorno destinatario senza casa),004 (azioni rapide),005 (priorita avviso condizionale). CONS009: zero aperti/anno non significa assenza totale di dati, non usare testo Nessun promemoria se esistono completati. Nessuno dei rinvii blocca la prova personale. Prima dati reali verificare backup/restauro DB e originali. Vedi v5/home-rifinitura-arbitrato-20261016.md.
+
+## 2026-10-16 — Release Home da proposition, piano prima del codice
+
+Fonte approvata frontend-v5/docs/home-backlog-proposition-20261016/BACKLOG.md, versione7ac52f7 raccolta34b863d. Corrente Fase0/04/01/02manuale/03essenziale/10/10b; le stime Claude S/M non sostituiscono contratti. Blocchi: recovery sicuro/email verificata, export oltre ZIP, foto senza OCR attuale, legame precedente/successiva atomico, garanzia per campo, timeline con precisione data/privacy/paging, scope rubrica e conferma multipla atomica con dedup. Nessuna implementazione autorizzata da questa pianificazione. Backup verificato, non sola copia: v5/backup-verifica-20261016.md. BL-12..16 nessuna stima.
+
+## Fase 0 pilota 16 ottobre 2026
+
+Tracciati: email verification/recovery con canale da scegliere, export strutturato distinto dal ZIP originali, verifica locale file/quarantena richiesta dal contratto documenti, gestione spazio e backup su destinazione distinta. Non dichiarare pronto il caricamento personale. Corpus AI sintetico 24 casi da preparare, nessuna nuova campagna live autorizzata. Dettagli docs/v5/fase0-prerequisiti-20261016.md.
+
+
+## Fase 0 completamenti ancora necessari dopo strumenti offline
+
+Congelare recovery dopo UX, implementare challenge/TTL/rate limit/transazione/revoca sessioni e API/frontend; confermare account/mittente Brevo e tracking disattivo prima dellinvio. Corpus24 pronto per revisione indipendente, normalizzazione output e soglie prima di eventuale nuova autorizzazione live. Export personale solo proposto, policy antimalware e destinazione backup aperte. Nessun doppio conteggio dei test parser come accuratezza AI.
+
+
+## Fase 0 residui dopo recupero locale
+
+Chiudere col committente prova casella reale/verifica/reset e aggiornare backup dopo migrazione13 e nuovo account. Invio inprocess puo essere perso al crash: monitorare queued non consegnati e valutare outbox cifrata/reconciliation in estensione, nessun token plaintext persistente. UX06..08 accolti da arbitrare nel pilota documentale: mancanza eliminazione da spiegare, foto/HEIC/scansioni, confiniZIP. Nessuna eliminazione implicita o guida. Restano antimalware, export, destinazionebackup e campagneAI su nuova autorizzazione.
+
+
+## 16 ottobre 2026 Collaudo live recupero concluso
+
+Brevo/API mittente verificati dopo autorizzazione IP eseguita dal committente, due email reali richieste da lui (verifica e reset), challenge accepted/consumed confermate DB. Committente conferma login con nuova password; Codex osserva /case autenticato senza case. Nessuna password letta. Runtime660e50d, report docs/v5/account-recovery-esito-20261016.md. Backup aggiornato083531Z verificato con restore43tabelle/262originali, clusterspento. Recupero gatechiuso locale; altri gate Fase0 aperti. Nessun paidAI/main/legacy/push. Preflight ora distingue il GETsession che puo creare metadato anonimo da una lettura file pura.
+
+
+## V5 Fase0 — residui dopo controllo file (16 ottobre 2026)
+Seconda copia cifrata su Drive privata con verifica recupero; export personale e retention ancora da congelare; chiarire politica cloud Defender prima di documenti personali; scanner portabile per futura infrastruttura pubblica fuori da questo incremento. Nessuna cancellazione automatica introdotta.
+
+## 2026-10-16 — Dopo personal-export-v1
+Export personale per Home disponibile con limiti espliciti; retention/cancellazione/reimport ancora assenti. Alla consegna Claude arbitrare UX e corpus, poi collaudo visivo browser/mobile senza usare impropriamente l'account personale. Dataset oltre10000righe/10MiB respinti interamente, nessun job asincrono incluso. Custodia chiave backup fuori PC non ancora confermata. Dettagli docs/v5/personal-export-esito-20261016.md.
+
+## 2026-10-16 — Residui chiusura Fase0 dopo raccolta Claude
+FE-UX-02 corretto e testato; avviso pilota/rimedi/distinzione JSONZIP recepiti. Corpus gold/scorer errati: E1…E8 e formato2 da realizzare prima di qualsiasi campagna. Poi qualitàAI con budget nuovo autorizzato, QA visivo reale desktop/mobile e regola/procedura conservazione-cancellazione. Backup seconda copia e chiave fuoriPC chiusi con verifica roundtrip. Fonte v5/fase0-chiusura-arbitrato-20261016.md.
+
+## 2026-10-16 — Rimozione dati e copie della prova personale
+Regole consolidate in v5/prova-personale-conservazione-20261016.md, senza eliminazione automatica. Implementare e provare su fixture impatto delle dipendenze JSON/FK, retry idempotenti, download/export concorrenti, job e condivisioni, rimozione fisica verificata; per rimozione completa gestire copie backup/cestini e riapplicazione delle rimozioni prima di riaprire un restore. Rotazione/tempi delle copie non ancora definiti: nessun termine massimo promesso. Non eseguire cancellazioni di dati personali come verifica. Nessuna stima aggiunta o nuova funzione avviata.
+
+## 2026-10-16 — QA visiva archivio chiusa
+Risolto scorrimento orizzontale a320px con scrollbar classiche; collaudo reale upload PDF/PNG, anteprima, download, ZIP e JSON completato su QA separata. Nessun test smartphone fisico/OCR/AI né nuova campagna di guasti. Restano corpus/scorer e qualitàAI, eliminazione tecnica e gestione copie. Prima archiviazione personale limitata possibile con condizioni in v5/fase0-browser-collaudo-20261016.md.
+
+## 2026-10-16 — Residui dopo corpus v2
+E1…E8 chiusi offline; consegna integrata e parser/fixture reali verdi. Restano campagna qualità con budget/consenso nuovi e riesame dei gold stretti, gap multipagina/prompt injection/altre notazioni/multicaldaia registrati nella consegna, senza estendere i24casi ora. Nessuna chiamata prodotto o funzione personale nuova. Rapporto v5/fase0-corpus-v2-integrazione-20261016.md.
+
+## 2026-10-16 — Prova personale: oggetti proposti dai documenti
+Consolidare estensione BL-10b per ricevute/acquisti: oggetto nuovo o suggerimento di esistente con evidenza, dati assenti non inventati, associazione ambigua esplicita. Un oggetto/costo già creati manualmente non si duplicano alla successiva analisi: proporre riuso/integrazioni e mantenere conferma singola per elemento. Contratto/transazione e percorso sintetico ancora da definire, nessuna funzione generale già attiva. Guardia submit per preset asincroni corretta e testata; causa esatta dell'episodio utente non dimostrata. Backup aggiornato rinviato su scelta utente. Vedi v5/expense-object-preset-20261016.md.
+
+## 2026-10-16 — Ricevuta assistita, valutare mockup prima implementazione
+Percorso sintetico pronto: originali, dati oggetto e spese distinti. Residui prima sviluppo: contratto generici brand/modello/provenienza, transazione/idempotenza/versioni, confronto valori già confermati diversi, più importi/articoli, bozze/revoche/errori di invio e campagna AI autorizzata. Mockup non risolve questi contratti. Fonte v5/receipt-assisted-flow-mockup-20261016.md.
+
+
+## 2026-10-16 — Canali aggiuntivi di acquisizione documenti
+
+Spunti del committente da progettare successivamente; nessuno sviluppo o collegamento esterno avviato, nessuna variazione all'ordine di release.
+
+- **Trascinamento:** area «Trascina qui i tuoi documenti», anche per più file, affiancata alla selezione file esistente; esito e gestione degli errori per singolo documento.
+- **Cartella cloud collegata:** acquisire documenti da una cartella scelta dall'utente. Da definire importazione una tantum oppure monitoraggio dei nuovi file, permessi sulla sola cartella, casa di destinazione e comportamento su modifiche/rimozioni.
+- **Ricevute via email:** indirizzo dedicato a cui inoltrare ricevute e documenti; il sistema raccoglie gli allegati, interpreta i contenuti e li porta nello stesso percorso di un documento caricato. Da definire indirizzo personale/per casa, mittenti ammessi, allegati rispetto al corpo email e gestione degli scarti.
+
+Principio comune proposto: conservare l'originale e la provenienza, rilevare reinvii/doppioni tra canali e presentare proposte da confermare per classificazione, associazione o creazione di oggetti e spese. L'acquisizione non autorizza di per sé l'invio a un provider AI: modalità e consenso dell'analisi automatica da progettare. Nessuna creazione o sovrascrittura silenziosa di oggetti/costi.
+
+## 2026-10-16 — Mockup ricevuta: verifiche indipendenti e conflitti
+Verifiche browser 2–4 concluse (solo oggetto/costo, ritorno con correzioni e dati invalidi). Conflitti aggiunti al mockup, da valutare con il committente. Definire persistenza e ripresa dei confronti rinviati e modifica esplicita con provenienza/versioni, prima del contratto generale. Nessuna implementazione reale avviata.
+
+## 2026-10-16 — Ricevuta assistita, specifica e primo nucleo backend
+Specifica consolidata e10test policy offline verdi; restano schema/provenienza/confronti, orchestrazione transazionale e ledger, manuale/job/provider e capabilities, API/frontend/DB/HTTP/browser e controlli export. Non attiva nel prodotto. Tre incarichi frontend Claude in directory isolate, raccolta progressiva autorizzata fino alle20.
+
+## 2026-10-16 — Ricevuta R2: bozze persistenti in modulo isolato
+R2 chiusa su fixture per bozze/ledger/park/reopen, non conclusa la funzione ricevuta. Restano migrazione campi/provenienza e confronti, transazione oggetto-costo, API candidate/analisi, export/privacy storia, integrazione UI e collaudo browser. Nessun invio provider.
+
+## 2026-10-16 — Ricevuta R3 e integrazione sorgenti Claude
+Raccolte tutte3fasi Claude,38test frontend verdi dopo4regressioni Codex; chiuso focus loop previsto nel suo handoff. R3 campi/confronti persistenti read/resolve verificati con9test HTTP/DB. Residui: creazione/conferma atomica, collegamenti/deduplica/versioni, proiezioni globali e JSON export dei nuovi dati, job/provider offline, container/rotte/client e browser reale. Differenze importo/data di costo esistente esposte e costo mantenuto, senza nuova contabilità.
+
+## 2026-10-16 — Ricevuta R4 conferma transazionale
+R4 core transazionale verificato con15test HTTP/DB e12offline; restano proiezioni privacy G1/S1/storia/export, deduplica tra documenti distinti con stesso originale leggibile, candidati/job/offlineprovider, adapter e browser. Modulo disattivato fino ai gate.
+
+Ricevuta R6b backend isolato concluso; residuo R7 adapter/client/route lazy, form park persistente/onesto, linkedCount, fonte originale, confronti riapribili e browser sintetico desktop/mobile. Gate manual/fixture solo dopo tali verifiche; nessuna analisi personale/paid autorizzata.
+
+
+### 2026-10-16 — Ricevuta R7b
+Ricevuta R7b: risolto disallineamento validatore JSON personale con le nuove sezioni receiptFields/receiptComparisons. R7c aperto: Chrome non collegato, gate browser e attivazione controllata; non dichiarare supportata analisi AI personale.
+
+
+### 2026-10-16 — Ricevuta R7c browser
+RicevutaR7c: RISOLTO ritorno dal documento alla bozza rimandata, con resume server scoped. PRIMA PERSONALI allineare CasaTasksSummary: countM3 non deve produrre un messaggio globale Nessuna verifica aperta mentre pendono confronti ricevuta; review e scheda già mostrano confronti. OSSERVAZIONE QA non conclusiva: click tool sul link upload Apri documento talvolta senza navigazione, Enter funziona; non diagnosticato bug applicativo, nessun fix speculativo.
+
+### Ricevuta R8b — limiti residui16ott2026
+Prima del pilota personale: allineare il segnale Casa/Da rivedere (conteggioM3 attuale) ai confronti ricevuta; riconciliazione operatore dei job paid uncertain da definire, nessun reinvio automatico disponibile. Live smoke sintetico richiede nuova autorizzazione con limite. Bulk organizzazione documenti: spunti in docs/v5/bulk-document-intake-notes.md, da mockup prima di sviluppo.
+
+### Archivio assistito — consegne aperte16ott2026
+B1b: uploader perfile con conteggio byte effettivo/scanner/idempotenza e dedup autorizzata prima storage; sostituire negazione prudente della projection stored con redazione fonte verificata prima di attivare. B2: organizzazione personale versionata, filtri lista/dettaglio/export e conferma parziale recuperabile. B3: worker/classificatore PDF/budget e consenso lotto separati; niente OCR/fallback. B4: raccogliere UI Claude document-intake/**, integrare container/router e prove browser sintetiche/mobile.
+
+###ArchivioB1b chiuso16ott2026
+Chiusa fondazione upload/lease/retry/dedup e sourceprojection per B1b. Restano B2decisioni/organizzazione/filtri/export, B3classificatore/budget e B4UI. Limite intenzionale: dedup serializza richieste intake; caricamenti manuali singoli e copie storiche non vengono globalmente fusi o ripuliti. Stage con outcomeDB ignoto conservati per cleanup successivo verificato.
+
+## V5 intake B2 / handoff Claude16ott2026
+Risolti BE R1 duplicate-resolution, R3 organization, R4 selectionStale, R6 GET ricevuta review. Restano B3/R7; B4 mapping R2 permessi/limiti/null fonte, R5 link canonici autorizzati; consenso esplicito replaceOrganization (mai forzato dall'adapter); mantenimento parti manuali multiple al ritorno in revisione; duplicate unavailable redatto, annullamento upload senza falsi esiti. Filtri raccolte integrati, cache separata corretta. Nessuna modifica del focus ricevuta fuori scope: rilievi tastiera/handoff conservati nel documento Claude. Regressione H2 HTTP aggiornata solo fixture sintetica email verificata, niente invio email.
+
+## V5 archivio app16ott2026
+Chiusi collegamento container/API/lazy/ingresso, ripresa lotti, R2/R5mapping+link, consenso sostituzione, multiparti manuali, duplicate unavailable, callbackincerto copia, focus editor e cancelupload reale. Motore local_text_v1 non sostituisce futuro AI esterno/OCR: servono campagna/ledger/consenso proprio. Da valutare: analisi automatica anche delle copie mai organizzate (ora si possono organizzare manualmente o riusare), copia sorgente con titolo personale nel riepilogo, CTA0file a classificazione conclusa; nessun contatore globale da pagine parziali. Verifica codice di cancellazione/retention futura includendo le nuove tabelle intake e job prima di abilitarla. Non affermare mobilefisico/screenreader dal harness.
+
+16ott2026: chiuso affinamento Documenti per sezioni grafiche coerenti con Spese e cambio immediato. File precedenti senza organizzazione confermata restano Da organizzare; nessuna inferenza dai nomi.
+
+
+16ott2026: chiusa incoerenza visibilità exportZIP nelle raccolte vuote; icona di pagina accanto a Documenti, originale eJSON coerenti. Export per singole sezioni ulteriori da valutare solo con contratto e ambito definiti, senza riciclareJSONcasa come exportspese.
+
+
+16ott2026: chiusi doppio ingresso caricamento Documenti, selezioneZIP sempre visibile, ricerca troppo ingombrante e bloccoJSON duplicato nella vista normale. Confermati ingresso unico e filtri aggiuntivi richiudibili. Nessuna modifica a categorie/visibilità/ledger/provider. Directory ricorsive e cartellecloud restano fuori scope.
+
+
+16ott2026: chiuso ingresso separato Analizza documenti nella testata. Il percorso canonico è Carica documenti; le analisi specialistiche restano nelle loro viste. Nessuna autorizzazione implicita a provider esterni/paid o riclassificazioni automatiche.
+
+
+16ott2026: chiusa impossibilità di aggiungere file dopo la prima selezione. Nuovo append allo stesso lotto, ripresa idempotente e quote globali con test concorrenza. Nessun caricamento ricorsivo cartelle o cloud introdotto.
+
+
+16ott2026: chiuso rilievo collocazione pulsante aggiunta file: ora sotto quelli già caricati.
+
+
+16ott2026: chiusi titolo generico quando intestazione leggibile, selezione dazero dei contenuti multiparte, esclusione UI delle copie dalla classificazione locale e ingombro delle pagine manuali. Resta limite motorelocale su scansioni/OCR e semantica di documenti complessi; noninferirevaliditàcertificativa.
+
+
+16ott2026: chiusa ambiguità reuse presentato come Organizzato e proposta più specifica nascosta da vecchio other. Disponibile nuova revisione degli originali senza upload; nessuna modifica implicita dei dati personali. OCR/semantica avanzata restano necessari per scansioni unreadable.
+
+
+### Rifiniture non bloccanti osservate nel collaudo V2 — 16 ottobre notte
+- Correzione di scansione già classificata: preferire Rivedi/Modifica a Indica il tipo quando esiste già una classificazione confermata; i campi attuali sono conservati correttamente.
+- Link legacy nel dettaglio: rendere contestuali Analizza questo documento e Oggetto/spesa da questa ricevuta; oggi compaiono anche su documenti tecnici. Nessun provider chiamato dal collaudo e nessuna modifica fuori scope eseguita.
+- Telefono fisico e lettore di schermo non ancora collaudati; viewport 320/390 e tastiera/harness documentati nel report V2.
+
+### Onboarding assistito oggetti da documenti —17ott2026, autorizzato/in corso
+O1 offline pronto (estrazione multiarticolo/evidenze/matching/piano scelte/adattatore senza dispatch). Da completare O2 persistenza/job/budget separati e policy, O3 conferma atomica/anti-duplicati, O4 UI/container/mobile, O5 prova provider autorizzata. Riferimenti docs/v5/object-onboarding-spec-v1.md e object-onboarding-development-20261017.md. Screenshot personali non inviati. Non indicare la funzione come già disponibile. Valutare decodifica/limiti dimensioni immagini prima del rilascio; file-type riconosce il formato ma non garantisce completa leggibilità.
+
+### Manuali online — 17 ottobre
+Chiuso primo incremento scheda oggetto/manuale, ricerca Moulinex esatta, conferma/rimozione/replay e UI mobile. Da estendere ricerca pagine/adattatori altri produttori, lingua documentale quando nota, integrazione del candidato manuale nella conferma unica futura da etichetta. Test fisico Safari ancora da fare; modello modificato segnala needsReview conservativo. Onboarding O2–O5 ancora aperto, nessuna visione personale/garanzia/creazione multiarticolo attiva. Contratto e limiti docs/v5/object-manuals-20261017.md.
+
+
+### 17 ottobre 2026 — onboarding documenti e oggetti O2–O5
+
+Onboarding oggetti: collaudo reale v3 ancora aperto (unico precedente invio incerto, riserva0.25USD). Diagnostica HTTP sanitizzata implementata e testata, senza contenuti personali; verificare Safari fisico e ulteriori marche/manuali con scope distinto. Nessun reinvio automatico o reset del contatore.
+
+
+### 17 ottobre 2026 — collaudo reale onboarding r2
+
+Chiuso collaudo reale v3 screenshot Echo Dot Max (campagna r2), costo0.013558USD e proposta valida. Restano Safari fisico e altri esempi personali multiarticolo/etichetta/PDF con autorizzazioni separate; costo r1 ancora incerto.
+
+
+### 17 ottobre 2026 — identità dal nome del prodotto
+
+Da approfondire con committente: riferimento prodotto. Negli ordini spesso assente; recuperarlo da marca/modello con verifica fonte ufficiale e disambiguazione varianti. Migliorare nome/descrizione/help del campo, distinguendolo da modello/ordine/seriale e rendendo chiaro che è facoltativo. Rinviato, non sviluppare lookup universale ora.
+
+
+### 17 ottobre 2026 — unificare proposte documento/oggetti/spesa
+
+Richiesta committente: analisi dal caricamento, unica schermata con proposta organizzazione documento + nuovo oggetto o scelta esistente + eventuale spesa. Eliminare ingresso separato obbligatorio, consenso provider raccolto prima del trasferimento, nessuna creazione automatica. Gestire copie, conflitti, più articoli e corrispondenze incomplete. Direzione in object-onboarding-spec-v1.md, da implementare dopo prova fattura attiva.
+
+
+### 17 ottobre 2026 — validazione fattura acquisto reale
+
+Primo collaudo ricevuta macchina ghiaccio: Messages riuscito/costo0.023952USD, ma output rifiutato evidence_unverified, nessuna proposta. Riprodurre con fixture sintetiche le tabelle Qtà/Articolo e l’etichetta data «Ricevuta d’acquisto», aggiungere diagnosi di campo senza contenuti personali e valutare proposte parziali solo per campi provati. Non è dimostrata la causa esatta sul reply non conservato; evitare altri collaudi pagati prima di queste verifiche.
+
+
+### 17 ottobre 2026 — validazione fattura e caricamento integrato
+
+Chiusi riproduzione locale ricevuta tabellare/data d’acquisto, diagnostica sanitizzata e integrazione proposte nel caricamento. Restano collaudo reale autorizzato, Safari fisico e valutazione proposte parziali per campi verificati; nessuna rianalisi implicita.
+
+- 17ott2026: riconoscimento contesto date acquisto corretto e testato offline; validazione live fattura ancora da verificare con consenso separato, non dichiarare risolto end-to-end.
+
+- 17ott2026: risolta selezione manuale obbligatoria della nuova spesa nel caso singolo chiaro. Restano ripartizione multiarticolo e gestione assistita costi archiviati.
+
+- 17ott2026: esclusione individuale nel gruppo Crea/Collega completata; costo escluso dalla conferma, nessuna ripartizione automatica del totale di fatture miste.
+
+- 17ott2026: per mail ordine/consegna riconosciute AI, integrare tipo documentale coerente e proposta classificazione dalla bozza già disponibile. Oggi vocabolario documenti privo di questi tipi, selezione manuale Altro; non riattivare provider implicitamente. Corretto feedback conferma bloccata da tipo mancante con alertinline+Rivedi documento.
+
+
+## 2026-10-17 — proposta onboarding semplificato
+
+Validare il mockup onboarding semplificato nei casi ordine tre articoli, duplicati, conflitti e mobile. Le proposte di architettura UI restano da arbitrare prima dello sviluppo reale.
+
+
+### 2026-10-17 — verifica autonoma onboarding
+
+Mockup onboarding: verificati gli 11 scenari e corrette le incoerenze emerse. Prima dell’integrazione consolidare la specifica del collegamento accessorio/scheda e della conferma unica con i contratti esistenti; non assumere una nuova transazione atomica globale.
+
+
+## 2026-10-17 — integrazione UX onboarding V3
+
+Onboarding V3: chiusa prima tranche UI (lista/pannello, editing protetto, conferma, selezione e aiuti). Pianificare estensioni server per sostituzione esplicita dati confermati e quote multiarticolo con evidenze e centesimi; raccordare documentKind AI e vocabolario documenti senza nuove analisi implicite. Report onboarding-v3-implementation-20261017.md.
+
+
+### 17 ottobre 2026 — consolidamento onboarding pilota
+
+Sostituzione esplicita versionata, quote manuali multiarticolo con limite cumulativo e tipi ordine/consegna/etichetta implementati; conferma unica e recupero conservati. Dettagli, prove e limiti: `v5/onboarding-pilot-consolidation-20261017.md`. Nessuna migrazione o attivazione provider; priorità ora uso reale e feedback.
+
+
+### 17 ottobre 2026 — attivazione AI casa con tetto autorizzato
+
+Modalità pilota account/casa, consenso per invio e campagna persistente5 USD/40 analisi. Contatori e blocchi visibili; collaudi esclusivamente simulati, attivazione verificata senza Messages. Appartamento Roma svuotato dopo conferma definitiva, mantenendo account/anagrafica e nuovo budget. Vedi `v5/ai-home-pilot-20261017.md`.
+
+
+### 17 ottobre 2026 — coda AI pilota corretta
+
+Allineati claim del worker e lettura input allo scope account/casa, mantenendo consenso e filtro campagna/modello. Corretto il blocco queued del primo uso;19 test DB mirati verdi con nuovo percorso completo simulato. Nessun secondo incarico o reset budget. Dettagli in `v5/ai-home-pilot-20261017.md`.
+
+
+### Caricamento unico — 17 ottobre 2026
+
+Parzialmente chiuse priorità caricamento unico/bollette; restano prezzo oggetto, posizione ambienti, revisione visuale e documenti misti acquisti+utenze. Vedi docs/v5/unified-document-proposals-v1.md.
+
+
+### HTTP400 bollette — 17 ottobre 2026
+
+Aperta verifica reale provider dopo rifiuto HTTP400. Riserve conservate0,50USD, residuo4,476130USD e3/40; nessuna ripetizione dell’agente. Report: docs/v5/unified-document-proposals-verification-20261017.md.
+
+
+### Bollette — prove autonome 17 ottobre2026
+
+Chiuso collaudo reale singola bolletta e validazione parziale; resta seconda bolletta reale e riordino completo consenso nel caricamento. Report: docs/v5/unified-document-proposals-verification-20261017.md.
+
+- 2026-10-17: Chiusi appunti Casa/ambienti e riepilogo prezzo acquisto dell’audit17ottobre. Da verificare nell’uso quotidiano il comportamento con molti ambienti e acquisti multipli; nessuna estensione cloud/email inclusa.
+
+
+- 2026-10-17, audit fruibilità successivo alla Casa compatta: allineare stati e azioni di documento/lotto/archivio (fattura già gestita ancora Analizza/Organizza; lotto concluso con pannello di avvio disabilitato), proporre titoli identificativi senza sovrascrivere i confermati, ritorno contestuale documento→oggetto→stanza, link postconferma alla spesa/periodo giusto, microtesti upload adatti a mobile. Report nel workspace outputs/Dimora-V5-feedback-uso-reale-20261017.md, sezione Secondo audit. Solo osservazione; non implementato in questa sessione. Primo clic di recupero lotto senza effetto da riprodurre, non bug confermato.
+
+- 2026-10-17: Risolti i rilievi stato/azioni di fattura e lotto concluso del secondo audit; identificazione da risultati senza rinominare titoli confermati, ritorno contestuale e collegamenti diretti alle spese. Resta futura valutazione della dashboard Spese e delle proposte di nuovi titoli persistibili; nessun cambio silenzioso ai titoli utente.
+
+
+### 17 ottobre 2026 — Compilazione per documento
+
+Risolto: ingresso AI collettivo e scarsa distinzione tra archiviazione e scheda oggetto confermata. Recupero manuale Dreame completato. Da valutare: ricerca catalogo anche per marca/modello, perché un oggetto con nome generico conserva correttamente quei dati ma è cercabile per nome. Report v5/document-compilation-per-file-20261017.md.
+
+
+### 17 ottobre 2026 — Copia Samsung nella conferma articolo
+
+Risolto blocco conferma Samsung per copia già presente: scelta di riuso inline e recupero sicuro. Restano espliciti i conflitti che richiedono sostituzione dei metadati.
+
+
+### 17 ottobre 2026 — Originale nella revisione articolo
+
+Risolto: originale non accessibile direttamente nel pannello articolo.
+
+
+### 17 ottobre 2026 — Planimetria a livello immobile
+
+Risolto: planimetria.pdf proposta come oggetto. Rimane necessaria la scelta manuale per scansioni generiche senza testo né nome identificativo; nessuna promessa di riconoscimento dei locali dal disegno.
+
+
+## 18 ottobre 2026 — Residui revisione unica V4
+
+- Tabelle di fattura con prezzo unitario, sconti/IVA/spedizione: ampliare lettura prezzi solo con attribuzione verificabile; nessuna ripartizione arbitraria. Il primo riconoscimento di riga richiede etichetta esplicita e nome nella citazione.
+- Classificazione documento e conferma oggetti/costi hanno ricevute separate: valutare coordinamento transazionale cross-modulo dopo feedback; recupero esistente resta esplicito.
+- Risolto: fattura manuale multiarticolo con totale dichiarato esplicito e tetto cumulativo backend; il totale manuale non può sovrascrivere quello estratto. Resta da rendere selezionabile il tipo di un documento manuale completamente sconosciuto nella stessa revisione, anziché ricorrere alla revisione di classificazione esistente.
+
+- File con più bollette distinte: valutare una sola conferma aggregata delle proposte casa; oggi conferme distinte per proposta.
+- Collegamento a un oggetto che verrà creato da un’altra riga nella stessa conferma: richiede dipendenze esplicite; il collegamento attuale seleziona oggetti già esistenti.
+
+### 18 ottobre 2026 — Verifica residua estrazione visuale
+Due HTTP400 Messages sul PDF macchina caffe, corpo errore intenzionalmente non conservato. Schema V8 semplificato: causa precisa del400 non dimostrata; prossimo collaudo singolo con consenso UI entro budget esistente. Verificare identità completa,499EUR e14/06/2026, senza alterare scheda già confermata. Nessun retry automatico/rilascio delle vecchie riserve.
+
+### Aggiornamento18ottobre —400Messages risolto nel collaudo sintetico
+Causa ora dimostrata: grammatica troppo grande. V9 fonti condivise accettata con successo dal provider, supersede ipotesi precedente. Prossimo: una rianalisi personale con consenso UI e collegamento a oggetto esistente; nessun nuovo oggetto/spesa creato dal test tecnico.
+
+### 18 ottobre 2026 — Prezzo screenshotordine
+Risolto campo manuale nascosto in bozzeAI order_confirmation. Nuovo prompt V10 e validazione accettano TOTALE COSTI su ordini; la vecchia bozza non viene rielaborata o alterata retroattivamente. Valutare futuro prezzo noto senza data come attributo separato solo se richiesto: ora spesa canonica richiede data, non usarne una inventata.
+
+### 18 ottobre 2026 — Revisione estrazione generalista V11
+Caso conformità elettrica classificato unsupported con job succeeded, non erroreAPI. Serve contratto per documenti/casa/impianti/interventi oltre acquisti, ragioni per campo, classificazione unica e corpus di accettazione. Proposta non implementata: docs/v5/document-understanding-v11-proposal-20261018.md. Nessuna nuova chiamataAI.

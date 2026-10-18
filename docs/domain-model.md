@@ -230,6 +230,16 @@ Eventi a livello di **casa** (Genesis avviato/completato, scansione completata..
 10. I piani di manutenzione suggeriti (da linee guida statiche per tipo di Asset) non vengono mai creati automaticamente: il sistema pre-compila il form, l'utente deve comunque confermare — vedi `decisions.md` #19.
 11. Un suggerimento di manutenzione ignorato non ricompare: il dismiss è persistito per Asset+linea guida, non solo nello state del browser — vedi `decisions.md` #22.
 
+## V5 M2 — modello autonomo
+Il modello legacy sopra non viene migrato. backend-v5 introduce Document (home/uploader/visibilita), DocumentVersion (originale/versione/hash/MIME/dimensione), StoredFile (chiave privata), UploadRequest (idempotenza account+home). Schema e migration 202610130002_documents autonomi; referenze Restrict per evitare perdita accidentale di originali. Proposte/conferme non create dall'upload. Contratto e policy: docs/v5/documents-api-contract.md.
+
+## Modello V5 M3 isolato
+BoilerAsset personale account/Home con versione e campi confermati JSON; AnalysisJob con snapshot fonti, lease/token e tempi; FieldProposal con candidati, stato e revisione di risoluzione; AssetHistory immutabile per analisi/conferme; ReviewRequest per risposta idempotente. Cinque tabelle nuove, nessuna modifica agli originali M2 o schema legacy. Dettaglio docs/v5/domain-model.md e review-api-contract.md.
+
+
+## V5 M4 — schema Anthropic isolato
+AnalysisJob aggiunge provider, model e consenso al trasferimento; i record precedenti ricevono test_fixture_v1. FieldProposal e AssetHistory conservano provider/model per etichette miste. AiCampaign conserva tetto e numero massimo chiamate; AiAttempt è unico per job, conserva tariffa microUSD/token, riserva, costo effettivo, stato reserved/sending/settled/uncertain/released e risposta JSON privata. FK Restrict e migration 202610130004_anthropic additiva, ancora da verificare sul runtime locale. Lo stato sending non è recuperato tramite una nuova chiamata; una risposta già persistita viene rivalidata localmente. Nessuna chiave API nel DB.
+
 ## V5 M4 — modello persistente verificato (13 ottobre 2026)
 Migrazione additiva 202610130004_anthropic applicata nel solo database V5 dedicato. AnalysisJob: provider/model/consentToProviderTransfer; FieldProposal e AssetHistory: provider/model. AiCampaign: tetto microUSD e chiamate massime; AiAttempt unico per job: tariffa, riserva, costo effettivo, stato e risposta privata/usage. Sending incerto conserva riserva; risposta persistita recuperata senza rete. Nessuna chiave API nel DB. Fixture e conferme M3 preservati; dati AI non diventano campi confermati automaticamente. Dettagli docs/v5/m4-integration-review.md.
 
@@ -266,3 +276,96 @@ Modello V5 additivo HomeRoom/HomeObject/ObjectPosition/ObjectResourceLink/Object
 ## G1 — integrazione finale reale (14 ottobre 2026)
 
 G1 sei modelli additivi attivi e integrati; Room shared, Object/Position personali, caldaia non clonata. Record HomeExpense unico nelle schede e nei totali, Link originale autorizzato/read-snapshot. Audit sintetico conferma boiler v4/PDFv1/hash immutato e tre costi10+20+30=60cent, ledger8/41714microUSD invariato. Fonte docs/v5/g1-integration-review.md; schema legacy intatto.
+
+
+### V5 S1a/b economico — database locale dedicato
+
+HomeExpense resta canonico e aggiunge categoria,fornitore,numero/data documento,competenza,scadenza,amountOrigin e workId facoltativo. EconomicWork è personale account/Home, con attività opzionale,versione,archivio e storia; EconomicRequest memorizza replay privati. FK Restrict; famiglia derivata e non scrivibile. Collegamento oggetto riusa G1. Nessun modello job/draft S1c ancora introdotto, nessuna modifica allo schema legacy.
+
+
+### V5 EconomicAnalysisJob / EconomicDraft
+
+S1c additivo: job con lease/stato/versione e snapshot originale; draft privata open/parked/confirmed con proposte/citazioni, un solo costo confermato. HomeExpense.analysisDraftId/economicProvenance conservano origine interna del dato, senza secondo registro monetario; FK Restrict e transazione comune alla conferma. Nuove tabelle solo DB V5 locale, nessuna modifica al modello legacy.
+
+
+### 15 ottobre 2026 — Ledger e worker Anthropic economico, ancora disabilitato
+Registro separato EconomicAiCampaign/EconomicAiAttempt, riserva atomica, quota/costi, consenso start/retry, recupero senza reinvio e permessi prima di count/Messages/pubblicazione. Migrazione20261015090000 solo DBV5 dedicato. Build/lint96offline/21DBHTTP verdi con AnthropicHTTP stub. API riavviata; providerdisabled, ledger economico vuoto, M4rimasto8. Report docs/v5/economic-ai-ledger-worker-20261015.md. Consenso frontend affidabile a Claude; nessun paid, budgetlive ancora da autorizzare dopo integrazione.
+
+
+## V5 C1a — 15 ottobre 2026
+
+SharePreview temporanea con manifesto canonico; ShareRecord collega mittente/Home e destinatario account senza membership implicita, con codice hashed/claim/confronto/scadenze/versione. ShareRequest conserva riferimenti idempotenti, senza codice segreto o JSON pubblico obsoleto; ShareEvent traccia azione/versione; ShareThrottle contiene bucket tecnici persistenti. Nessuna copia di originale o fatto economico. Migrazione20261015160000 solo DBV5. Dettagli in v5/sharing-api-contract.md e c1-backend-review-20261015.md.
+
+## V5 identita e recupero 16 ottobre 2026
+
+Solo backend-v5/prisma/schema.prisma: Account.emailVerifiedAt nullable e requiresEmailVerification defaultfalse. AuthChallenge con account, scopo, hash token, impronta email, scadenza/consumo e stato consegna; token originale mai persistito. AuthThrottle con chiaveHMAC, contatore e scadenza. Migrazione additiva20261016110000_auth_recovery applicata solo dimora_v5_product_dev. Nessuna modifica ai modelli legacy. Reset transazionale serializzato con login; revoca sessioni e challenge reset rimanenti.
+
+
+## V5 Fase0 controllo file — 16 ottobre 2026
+DocumentVersion aggiunge fileControlEngine, fileControlCheckedAt, fileControlSignature nullable: ricevuta del controllo di ammissione, assente sui documenti preesistenti. Nessuna attestazione generale di innocuità. Migrazione additiva 20261016120000_file_control, DB V5 soltanto.
+
+## 2026-10-16 — Ricevuta R2: bozze persistenti in modulo isolato
+Nuove ReceiptDraft (creatore/Home/fonte versionata/modalità/stato/campi proposti) e ReceiptRequest (ledger scoped con FK bozza). Migrazione20261016114500_receipt_drafts solo additiva. Non sono oggetti né spese confermati; esportazione di queste nuove entità e confronti è ancora gate prima dell’attivazione. Fonte docs/v5/receipt-assistance-backend-20261016.md.
+
+## 2026-10-16 — Ricevuta R3 e integrazione sorgenti Claude
+ReceiptObjectField separa valore/provenienza per nome/marca/modello da HomeObject; ReceiptComparison lega confronto versionato a bozza e oggetto, fingerprint unico. Migrazione additive20261016121000_receipt_fields_comparisons. Nessuna scrittura personale o creazione di oggetti assistiti attiva. Export/proiezioni trasversali sono gate ancora da completare.
+
+## 2026-10-16 — Ricevuta R4 conferma transazionale
+ReceiptDraft.confirmation aggiunto JSONB nullable con soli conteggi e riferimenti, proiettati freschi. Migrazione20261016124500_receipt_confirmation solo additiva. Oggetto/costo/storia/provenienza confermati nella stessa transazione; nessuna nuova copia del costo.
+
+
+Ricevuta R6b (16ottobre2026): ReceiptAnalysisJob separa richieste/lease/esiti di analisi da ReceiptRequest (che richiede già draftId). Snapshot account/Home/documento/versione/hash, key+digest scoped, provider solo fixture, consenso false, stato/versione, bozza nullable univoca, errore, lease/token/date; relazioni inverse Account/Home/Document/ReceiptDraft, FK Restrict e unique parziale fonte attiva. Migrazione18 additiva applicata solo al DB V5. Modulo ancora isolato, nessun dato personale creato.
+
+
+### 2026-10-16 — Ricevuta R7a
+ReceiptDraft.review JSON nullable: selezioni e input del riepilogo rimandato, proiezione autorizzata con versioni target. Migrazione additiva V5 receipt_review.
+
+### 16ott2026 Ricevuta R8b
+ReceiptAiCampaign/ReceiptAiAttempt separati dai ledger M4/S1: limite congelato, tentativo unico per job, riserva/stato/uso/costo/output validato. FK Restrict, nessun reset di campagne o originali. ReceiptAnalysisJob ammette Anthropic con consenso e stato uncertain. Migrazione20261016180000_receipt_ai_budget applicata al solo V5 locale. Specifica receipt-assisted-spec-v1.md R8b.
+
+### 16ott2026 Archivio assistito B1a
+Nuove entità V5 DocumentIntakeBatch e DocumentIntakeItem: lotto personale account/Home con key/digest/versione e totale manifest, elementi ordinati e identità client uniche, limiti e stato indipendente, snapshot fonte nullable tutto-o-nulla. Migrazione21 additiva, nessun documento esistente riscritto. Organizzazione personale confermata sarà entità distinta nella fase B2, non scrivere subito in Document.name/visibility.
+
+###16ott2026 ArchivioB1b
+DocumentIntakeItem aggiunge chiave/digest upload, lease token/scadenza e codiceerrore. CHECK chiave/digest accoppiati e lease soltanto uploading, indice uploadState/lease. Migrazione22 additiva locale. Fonte documento/versione/hash rimaneatomica; nessun cambio a originali privati già esistenti o creazione oggetti/costi.
+
+## V5 B2 —16ott2026
+DocumentOrganization: overlay personale account/Home/documentId univoco, titolo/parti/raccolte, versione e snapshot originale. DocumentIntakeItem salva selection e organizationVersion; DocumentIntakeRequest conserva richiesta/esiti per operazione/key nel lotto. Migrazione23V5 additiva. Collegamenti a schede esistenti usano ObjectResourceLink/Event canonici. Nessuna modifica modelli legacy. Riferimento: docs/v5/document-intake-api-contract.md B2.
+
+## V5 B3locale/B4,16ott2026
+Migrazione24: DocumentIntakeItem.proposal e DocumentIntakeAnalysis peritem con key/digest, coda/stato/lease/token/errore/date, vincolo unico job attivo peritem. Riferimenti personali scoped tramite item/lotto. Proposte non sono organizzazione confermata e non entrano negli export dei dati confermati. Nessuna nuova entità contabile o modifica legacy. Namespace della coda interno, nessun parametro client per sceglierlo.
+
+16ott2026: nessuna migrazione per aggiunta progressiva intake. DocumentIntakeRequest.operation=append conserva idempotenza manifest; DocumentIntakeBatch.totalBytes/version/state e nuovi item/ordinali sono aggiornati atomicamente, vecchi item/decisioni invariati.
+
+
+16ott2026: DocumentKind intake agibility_record identifica Visuraagibilità noncertificato, raccolta building. MetadatiJSON con catalogovalidato; nessunaentità/schema o migrazione nuova. PreselezioniUI nonsono daticonfermati.
+
+
+
+### V5 HomeObject.manual — 17 ottobre 2026
+Campo JSON opzionale del solo HomeObject: link HTTPS manuale/supporto, marca/riferimento, origine manufacturer_page oppure user_provided, sourceUrl/checkedAt, boundVersion. Nessun nuovo documento/file o condivisione, nessuna foto inviata al produttore. Migrazione additiva20261017080000_object_manual sul DB V5 dedicato, modello legacy invariato. Export personale proietta metadati consentiti senza token; dettagli docs/v5/object-manuals-20261017.md.
+
+
+### 17 ottobre 2026 — onboarding documenti e oggetti O2–O5
+
+Home V5: HomeObject.profile e sette entità additive ObjectOnboardingDraft/Job/Request/Binding/Campaign/Attempt/Comparison, migrazione26 sul solo DB V5. Proposte separate da oggetti confermati, binding articolo/unità e provenienze autorizzate, costi canonici indipendenti.
+
+
+### 17 ottobre 2026 — consolidamento onboarding pilota
+
+Sostituzione esplicita versionata, quote manuali multiarticolo con limite cumulativo e tipi ordine/consegna/etichetta implementati; conferma unica e recupero conservati. Dettagli, prove e limiti: `v5/onboarding-pilot-consolidation-20261017.md`. Nessuna migrazione o attivazione provider; priorità ora uso reale e feedback.
+
+
+### Caricamento unico — 17 ottobre 2026
+
+Una bolletta produce una proposta di spesa della casa autonoma dagli oggetti; originale, importi candidati e fonti restano tracciati nella bozza onboarding. Vedi docs/v5/unified-document-proposals-v1.md.
+
+
+### HTTP400 bollette — 17 ottobre 2026
+
+Il tentativo di analisi e la sua riserva restano distinti dalla bozza e dalla spesa effettiva; HTTP400 non produce una bozza e non giustifica inventare un costo. Report: docs/v5/unified-document-proposals-verification-20261017.md.
+
+
+### Bollette — prove autonome 17 ottobre2026
+
+Campo non verificabile distinto da intero documento inutilizzabile: dati accettati provati sull’originale, resto escluso e segnalato. Report: docs/v5/unified-document-proposals-verification-20261017.md.
