@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Raggiunto: AI multipla selettiva e classificazione nella revisione
+
+Documenti permette di spuntare fino20 fonti alla volta e precompilare con AI entro il budget autorizzato. Stato recuperabile dopo chiusura, nessuna creazione canonica alla sola analisi. Lo schema di impianto e gli altri tipi si confermano direttamente nella revisione unica, con correzione inline dei metadati.
+
 ## 18 ottobre 2026 — Raggiunto: gestione unica Documenti V5
 
 L’utente aggiunge file, riprende i documenti incompleti, sceglie manuale/AI, consulta l’originale ed elimina caricamenti inutilizzati dalla pagina Documenti. La revisione unica rimane nello stesso elenco; i filtri non creano un secondo archivio. Gli indirizzi dei vecchi lotti restano compatibili.

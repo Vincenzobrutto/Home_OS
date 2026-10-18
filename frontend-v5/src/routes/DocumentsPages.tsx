@@ -1,3 +1,4 @@
+import { BulkDocumentCompilation } from '../documents/BulkDocumentCompilation';
 import { IntakePage } from '../intake-integration/IntakePage';
 import { DocumentWorkspaceActions } from '../documents/DocumentWorkspaceActions';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
@@ -182,6 +183,8 @@ function DocumentsArchive(props: {
   }, [forbidden]);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [selecting, setSelecting] = useState(false);
+  const [aiSelected,setAiSelected]=useState<Set<string>>(()=>new Set());
+  const [aiLocked,setAiLocked]=useState(false);
   const [exported, setExported] = useState<number | null>(null);
 
   const items = useMemo(() => documents.data?.pages.flatMap((p) => p.items) ?? [], [documents.data]);
@@ -345,6 +348,8 @@ function DocumentsArchive(props: {
           </div>
         </div>
       )}
+      {props.canUpload&&!selecting&&<div className={docs.toolbar}><label className={docs.bulkConsent}><input type="checkbox" checked={items.length>0&&items.slice(0,20).every(d=>aiSelected.has(d.id))} disabled={aiLocked} onChange={e=>setAiSelected(e.target.checked?new Set(items.slice(0,20).map(d=>d.id)):new Set())}/>Seleziona {items.length>20?'i primi 20 documenti':'tutti i documenti mostrati'}</label><span>Spunta i documenti da compilare tramite AI</span></div>}
+      {props.canUpload&&!selecting&&<BulkDocumentCompilation homeId={home.id} selected={items.filter(d=>aiSelected.has(d.id))} onClear={()=>setAiSelected(new Set())} onLocked={setAiLocked}/>}
       {canExport && selecting && <PersonalExportPanel homeId={home.id} />}
 
       {exporter.isError && (
@@ -384,6 +389,7 @@ function DocumentsArchive(props: {
             selectable={canExport && selecting}
             selected={selected.has(doc.id)}
             onToggle={() => toggle(doc.id)}
+            aiSelectable={props.canUpload&&!selecting} aiSelected={aiSelected.has(doc.id)} aiLocked={aiLocked} onAiToggle={()=>setAiSelected(old=>{const next=new Set(old);if(next.has(doc.id))next.delete(doc.id);else next.add(doc.id);return next;})}
           />
         ))}
       </ul>
@@ -432,12 +438,14 @@ function DocumentRow(props: {
   selectable: boolean;
   selected: boolean;
   onToggle: () => void;
+  aiSelectable:boolean;aiSelected:boolean;aiLocked:boolean;onAiToggle:()=>void;
 }) {
   const { doc } = props;
   const account = useAccount();
   const exportable = doc.permissions.includes('export');
   return (
     <li className={cx(docs.item, props.selected && docs.itemSelected)}>
+      {props.aiSelectable&&<label className={docs.check}><input type="checkbox" checked={props.aiSelected} disabled={props.aiLocked} onChange={props.onAiToggle} aria-label={`Seleziona «${doc.originalFilename}» per compilazione AI`}/></label>}
       {props.selectable && (
         <label className={docs.check} title={exportable ? undefined : 'Non esportabile con i tuoi permessi'}>
           <input

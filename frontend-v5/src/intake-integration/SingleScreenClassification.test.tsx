@@ -1,0 +1,22 @@
+import {screen,waitFor} from '@testing-library/react';
+import {it,expect} from 'vitest';
+import {renderApp,seededBackend,createFakeFetch,PASSWORD_A} from '../test/harness';
+import type {FetchLike} from '../api/client';
+import type {Draft} from '../object-onboarding/model';
+it.each([true,false])('system diagram saves from the single revision (recognized=%s)',async recognized=>{
+ const {backend,homeA1,a}=seededBackend(),control=createFakeFetch(backend),doc=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'GEN. Q.E.',originalFilename:'GEN. Q.E..pdf'});
+ const draft:Draft={id:'schema-draft',version:1,state:'open',mode:'extraction',snapshot:{documentId:doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:'house_document',documentInfo:{kind:recognized?'system_diagram':'unsupported',title:{value:'GEN. Q.E.',source:{documentId:doc.id,page:1,excerpt:'GEN. Q.E.'}},facts:[]},items:[],needsReview:false,purchaseTotal:null,review:null,permissions:['read','edit']};
+ const limits={maxFiles:20,maxFileBytes:20971520,maxTotalBytes:209715200,acceptedMimeTypes:['application/pdf']},item={id:'schema-item',clientItemId:'schema-client',version:1,filename:doc.originalFilename,byteSize:100,mimeType:'application/pdf',uploadState:'stored',analysisState:'ready',reviewState:'unreviewed',documentLink:{state:'linked',document:{id:doc.id,name:doc.name}},pageCount:1,proposal:null,selection:null,organization:null,organizationVersion:0,duplicate:null,error:null,permissions:['read','edit']};
+ const wire={batch:{id:'schema-batch',homeId:homeA1.id,version:1,state:'open',limits,permissions:['read','edit'],items:[item]}},order:string[]=[],parts:string[]=[];
+ const fetch:FetchLike=async(url,init)=>{
+  if(url.includes('/object-onboarding/capabilities'))return Response.json({manualAvailable:true,aiAvailable:true,drafts:[{id:draft.id,state:draft.state}],job:null});
+  if(url.endsWith('/confirmations')){order.push('confirm');draft.state='confirmed';return Response.json({draft,result:{newObjects:0,newExpenses:0}});}
+  if(url.includes('/object-onboarding/drafts/'))return Response.json({draft});
+  if(url.includes('/document-intake')){if(url.endsWith('/capabilities'))return Response.json({apiVersion:'document-intake-v1',enabled:true,limits,analysis:{provider:'local_text_v1',enabled:false,externalTransmission:false}});if(url.endsWith('/organizations')){order.push('organize');parts.push(JSON.parse(String(init.body)).items[0].selection.parts[0].kind);item.reviewState='confirmed';return Response.json({...wire,results:{[item.id]:{state:'confirmed'}}});}return Response.json(wire);}
+  return control.fetch(url,init);
+ };
+ const app=renderApp({path:'/accedi',backend,fetch});await screen.findByRole('heading',{name:'Accedi'});await app.user.type(screen.getByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));const path='/home/'+homeA1.id+'/documenti';await app.router.navigate(path+'?lotto=schema-batch&oggetti-documento='+doc.id+'&oggetti-bozza=schema-draft&compila=ai');await screen.findByRole('button',{name:'Salva e organizza'},{timeout:10000});
+ if(!recognized){await app.user.click(screen.getByRole('button',{name:'Salva e organizza'}));await screen.findByText(/Scegli il tipo del documento qui sopra/);expect(order).toEqual([]);expect(screen.queryByRole('button',{name:'Rivedi documento'})).not.toBeInTheDocument();await app.user.selectOptions(screen.getByLabelText('Tipo del documento'),'system_diagram');}
+ else expect(screen.getByLabelText('Tipo del documento')).toHaveValue('system_diagram');
+ await app.user.click(screen.getByRole('button',{name:'Salva e organizza'}));await waitFor(()=>expect(order).toEqual(['organize','confirm']));expect(parts).toEqual(['system_diagram']);expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(app.router.state.location.pathname).toBe(path);app.unmount();
+});

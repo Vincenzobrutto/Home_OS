@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Analisi AI dei documenti selezionati
+
+POST /api/v5/homes/:homeId/object-onboarding/automatic-runs estende il contratto con proposalOnly:true, automaticProcessing:false, consentToProviderTransfer:true, batchId e documentIds esatti (1–20). automaticContacts:true è incompatibile con questa modalità. La modalità è inclusa nell’impronta idempotente; il consenso e il manifest restano persistiti. GET automatic-runs/batches/:batchId restituisce anche mode=proposals|automatic. In proposals lo stato completed significa bozza pronta, non organizzazione o creazione di oggetti/spese/contatti. Guardie account/casa/fonte/versione/SHA, quote e riserva per analisi restano invariate.
+
 ## 18 ottobre 2026 — Document workspace V5
 
 GET /api/v5/homes/:homeId/documents accetta workflow=all|pending|completed (default all), combinabile con ricerca/raccolta/formato/visibilità; filtro applicato prima della paginazione e incluso nella firma del cursor quando attivo. Le vecchie firme senza filtro rimangono valide. Stato personale account/casa e versione/SHA correnti.

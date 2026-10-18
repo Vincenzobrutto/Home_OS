@@ -433,3 +433,6 @@
 .searchOptions > summary { cursor:pointer; min-height:44px; display:flex; align-items:center; gap:8px; color:var(--color-accent); font-weight:600; }
 .searchOptions > summary::before { content:"▸"; }
 .searchOptions[open] > summary::before { content:"▾"; }
+
+.bulkConsent{display:flex;align-items:flex-start;gap:10px;line-height:1.5;margin-bottom:12px;}
+.bulkConsent input{flex-shrink:0;min-width:20px;min-height:20px;margin-top:3px;accent-color:var(--color-accent);}

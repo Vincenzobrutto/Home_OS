@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Salvataggio schemi impianto e AI sui selezionati
+
+Corretto il mapping di Schema di impianto e altri tipi documentali nel salvataggio. Tipo, titolo e consenso a sostituire metadati già salvati sono nella revisione unica; nessun secondo dialogo richiesto per il tipo mancante. In Documenti: checkbox individuali/Seleziona tutti, consenso sui selezionati, preparazione AI persistente e riapertura delle proposte nella stessa pagina. Il nuovo avvio multiplo non crea automaticamente entità e rispetta budget/riserve esistenti.
+
 ## 18 ottobre 2026 — Pagina unica Documenti V5
 
 Aggiunta inline, elenco canonico permanente, originale/manuale/AI/Elimina su ogni scheda. Revisione riutilizzata nella stessa pagina; rimossi elenco lotti e riepilogo del caricamento da questo ingresso. Filtri Tutti/Da completare/Completati sul server; ricerca e raccolte sotto «Cerca e filtra». Upload parziale recuperabile con stesso manifest e invio dei soli file mancanti. Eliminazione degli originali non ancora utilizzati con controllo dipendenze e conferma esplicita. Consenso e budget AI invariati.

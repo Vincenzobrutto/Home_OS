@@ -1,3 +1,7 @@
+## V5 — Selezione AI di soli documenti (18 ottobre 2026)
+
+Nessuna migrazione: il JSON del ledger automatic-intake-v1 può contenere proposalOnly:true con automaticProcessing:false e consenso all’invio del manifest esatto. Gli entry completed di questa modalità indicano soltanto draftId pronto; il ramo del worker non salva DocumentOrganization, oggetti, spese o contatti. Stato durevole e chiavi per documento/operazione conservate.
+
 ## V5 — Scarto pre-analisi (18 ottobre 2026)
 
 Nessuna migrazione: DocumentIntakeRequest registra operation remove:<itemId> per idempotenza. canRemove è una capacità derivata, non uno stato persistito. File solo scelti sono locali al browser. Originali acquisiti scartabili vengono rimossi con versione e riferimenti; i documenti esistenti delle copie rimangono intatti. Nessuna rimozione dopo avvio AI da questo percorso.

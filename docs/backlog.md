@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Chiuso: schema impianto e selezione AI
+
+Risolto il salvataggio che richiedeva classificazione non disponibile nel pannello: system_diagram e catalogo completo sono supportati, con tipo/titolo inline e consenso esplicito alle sostituzioni. Implementata la richiesta di AI sui documenti selezionati a checkbox, in modalità solo proposte con stato persistente. Il limite tecnico del singolo gruppo è20; gruppi ulteriori restano avviabili esplicitamente entro budget/quote. Restano le attività sul cestino e sugli ingressi legacy già annotate, senza estendere qui lo scope.
+
 ## 18 ottobre 2026 — Seguito pagina unica Documenti
 
 - Cestino/ripristino per originali già analizzati o collegati: la rimozione definitiva attuale è disponibile prima dell’uso; successivamente spiega il vincolo e conserva proposte, collegamenti e storico economico/AI. Progettare una rimozione reversibile senza perdita della fonte né azzeramento di riserve/costi.

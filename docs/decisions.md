@@ -1,3 +1,9 @@
+## 18 ottobre 2026 — Classificazione inline e compilazione AI selettiva
+
+Il salvataggio della revisione usa tutti i tipi documentali canonici, incluso system_diagram, che prima mancava dal mapping fra estrazione e archiviazione. Tipo e titolo sono modificabili nella stessa revisione; sostituire metadati già confermati richiede il consenso esplicito nello stesso pannello, mentre copie e versioni restano protette. Nessun rinvio a Rivedi documento per completare un tipo mancante nell’ingresso Documenti.
+
+La selezione a checkbox nell’elenco Documenti prepara soltanto proposte AI. Riutilizza la coda persistente dei caricamenti con proposalOnly=true e automaticProcessing=false, vincolati al consenso sull’esatto insieme di documenti (massimo20). Il worker esegue un ramo separato che non organizza né conferma alcuna entità. Non si riutilizza il vecchio consenso di creazione automatica: la modalità entra nel digest. Bozze di estrazione già presenti sono recuperate, modifiche manuali conservate; fallimenti/esiti incerti non generano retry a pagamento. Job/riserve/campagna AI mantengono i limiti esistenti. Scartato un semplice ciclo di fetch nel browser: si perderebbero progressi e consenso alla chiusura della pagina.
+
 ## 18 ottobre 2026 — Documenti: un solo spazio di lavoro V5
 
 L’archivio canonico è anche il punto di aggiunta, anteprima, compilazione manuale/AI e rimozione. «Da completare» e «Completati» filtrano i documenti sul server prima della paginazione, usando revisione corrente e versione/SHA; una classificazione di fattura o bolletta da sola non equivale ad aver creato oggetti/spese. Una nuova bozza riapre il lavoro, mentre una vecchia analisi incerta non riapre una conferma successiva. Si riusano uploader e revisione unica; i lotti restano un dettaglio tecnico e i vecchi indirizzi compatibili. Scartata una seconda lista di caricamenti da riprendere: duplicava il contesto senza rappresentare le entità dell’utente.

@@ -57,6 +57,7 @@ it('object type can propose a home-only purchase classification, never overwrite
  expect(organizationFromObjectKind(base,'device_label')?.selection.parts[0]?.kind).toBe('product_label');
  expect(organizationFromObjectKind(base,'order_confirmation')?.selection.parts[0]?.kind).toBe('purchase_order');
  expect(organizationFromObjectKind(base,'conformity_declaration')?.selection.parts[0]?.kind).toBe('conformity_declaration');
+ for(const kind of ['system_diagram','system_booklet','energy_certificate','warranty','manual'])expect(organizationFromObjectKind(base,kind)?.selection.parts[0]?.kind).toBe(kind);
  expect(organizationFromObjectKind(base,'invoice')?.selection.parts[0]?.kind).toBe('invoice');
  expect(organizationFromObjectKind(base,'purchase_document')?.selection.parts[0]?.kind).toBe('purchase_document');
  for(const patch of [{uploadState:'duplicate'},{reviewState:'deferred'},{reviewState:'saved'},{analysisState:'uncertain'},{organizationVersion:1},{permissions:{review:false}},{documentLink:{state:'unavailable',document:null}}])expect(organizationFromObjectKind({...base,...patch} as IntakeItem,'delivery_notice')).toBeNull();
