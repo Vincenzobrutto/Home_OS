@@ -1,3 +1,7 @@
+## Collaudo browser Fattura/Ricevuta — 18 ottobre 2026
+
+Verificati upload, spesa sola, nuovo oggetto facoltativo, collegamento esistente, Completati e costi unici. Corretto azzeramento dei campi spesa dopo aggiunta articolo. [Evidenze e osservazioni UX](v5/manual-purchase-flow-20261018.md#collaudo-browser-e-correzione-successiva).
+
 ## Fattura e Ricevuta: spesa diretta, oggetti facoltativi — 18 ottobre 2026
 
 Implementato il percorso approvato: importo/data/fornitore/categoria senza oggetto obbligatorio; aggiunta o collegamento facoltativi, costo unico e solo documento conservati. [Comportamento, motivazione e verifiche](v5/manual-purchase-flow-20261018.md).
