@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Tipo Bolletta guida il percorso manuale
+
+Confermato dal committente: Bolletta significa documento e possibile spesa casa, senza oggetto. La selezione deve guidare anche la bozza, non solo il metadato di classificazione. Per non cancellare dati, la conversione automatica si limita alla bozza manuale vuota e senza decisioni/conferme pendenti. Solo documento resta una scelta esplicita. [Report](v5/manual-bill-flow-20261018.md).
+
 ## 18 ottobre 2026 — Proposta combinata Documenti approvata
 
 Il committente sceglie coda della proposta 3 e originale della proposta 2. Manuale e AI condividono l’editor canonico, con sezioni espandibili e una sola conferma finale; AI resta precompilazione con consenso, senza nuovo invio alla riapertura di proposte esistenti. Costi separati visivamente dagli oggetti ma salvati con le stesse regole atomiche. PDF.js locale sostituisce il riquadro PDF nativo vuoto senza servizi esterni; nessuna copia pubblica degli originali. [Report](v5/document-editor-workspace-20261018.md).

@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Corretto ingresso Bolletta manuale
+
+Completato il seguito del feedback: importo/data/fornitore/categoria diretti e nessun oggetto, anche partendo da bozza generica vuota. Conservazione documento sola preservata. Conversione di bozze già popolate richiede una specifica di preservazione/mapping e resta esclusa. [Report](v5/manual-bill-flow-20261018.md).
+
 ## 18 ottobre 2026 — Spazio di lavoro Documenti raggiunto
 
 Implementata e verificata la combinazione approvata: coda, scheda unica e originale affiancato. Prossimo passo: feedback sul flusso reale; ricerca e rifiniture mobile ulteriori su proposta mirata. Persistenza dei campi non salvati e convergenza degli ingressi legacy restano nel backlog, senza nuovi invii AI impliciti. [Report](v5/document-editor-workspace-20261018.md).

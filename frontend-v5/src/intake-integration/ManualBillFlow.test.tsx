@@ -1,0 +1,28 @@
+import {screen,waitFor} from '@testing-library/react';
+import {expect,it} from 'vitest';
+import {renderApp,seededBackend,createFakeFetch,PASSWORD_A} from '../test/harness';
+import type {FetchLike} from '../api/client';
+import type {Draft} from '../object-onboarding/model';
+it.each([{only:false,preselected:false},{only:true,preselected:false},{only:false,preselected:true}])('Bolletta has no objects (document only=$only, existing type=$preselected)',async({only,preselected})=>{
+ const {backend,homeA1,a}=seededBackend(),control=createFakeFetch(backend),doc=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'Bolletta sintetica.pdf'});
+ const draft:Draft={id:'manual-bill',version:1,state:'open',mode:'manual',snapshot:{documentId:doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:'unsupported',documentInfo:null,items:[{id:'placeholder',fields:{},quantity:null,profile:{},nameTruncated:false,disposition:'uncertain',enrichment:null,decision:null}],needsReview:true,purchaseTotal:null,review:null,permissions:['read','edit']};
+ const limits={maxFiles:20,maxFileBytes:20971520,maxTotalBytes:209715200,acceptedMimeTypes:['application/pdf']},item={id:'item',clientItemId:'client',version:1,filename:doc.originalFilename,byteSize:100,mimeType:'application/pdf',uploadState:'stored',analysisState:'ready',reviewState:'unreviewed',documentLink:{state:'linked',document:{id:doc.id,name:doc.name}},pageCount:1,proposal:null,selection:null,organization:null,organizationVersion:0,duplicate:null,error:null,permissions:['read','edit']},wire={batch:{id:'batch',homeId:homeA1.id,version:1,state:'open',limits,permissions:['read','edit'],items:[item]}};
+ const order:string[]=[],paid:string[]=[];
+ const fetch:FetchLike=async(url,init)=>{
+  if(url.endsWith('/jobs'))paid.push(url);
+  if(url.includes('/object-onboarding/capabilities'))return Response.json({manualAvailable:true,aiAvailable:true,drafts:[{id:draft.id,state:draft.state}],job:null});
+  if(url.includes('/expense-candidates')||url.includes('/candidates'))return Response.json({items:[],nextCursor:null});
+  if(url.endsWith('/document-kind')){expect(JSON.parse(String(init.body))).toEqual({expectedVersion:1,documentKind:'utility_bill'});order.push('kind');draft.version++;draft.documentKind='utility_bill';draft.items=[];draft.houseExpenses=[{id:'bill-cost',documentKind:'utility_bill',proposedFields:{},amountCandidates:[],amountSelectionRequired:true,decision:null}];return Response.json({draft});}
+  if(url.endsWith('/review')){order.push('review');draft.version++;return Response.json({draft});}
+  if(url.endsWith('/confirmations')){const body=JSON.parse(String(init.body));expect(body.choices).toEqual([]);if(only){expect(body.documentOnly).toBe(true);expect(body.houseExpenses).toBeUndefined();}else{expect(body.documentOnly).toBeUndefined();expect(body.houseExpenses).toEqual([expect.objectContaining({itemId:'bill-cost',action:'create',amountSelection:{mode:'manual'},values:expect.objectContaining({amountCents:9321,spentOn:'2026-01-17',supplier:'Fornitore sintetico',category:'electricity',objectRef:null})})]);}order.push('confirm');draft.state='confirmed';return Response.json({draft,result:{newObjects:0,newExpenses:only?0:1}});}
+  if(url.includes('/object-onboarding/drafts/'))return Response.json({draft});
+  if(url.includes('/document-intake')){if(url.endsWith('/capabilities'))return Response.json({apiVersion:'document-intake-v1',enabled:true,limits,analysis:{provider:'local_text_v1',enabled:false,externalTransmission:false}});if(url.endsWith('/organizations')){order.push('organize');expect(JSON.parse(String(init.body)).items[0].selection.parts[0].kind).toBe('utility_bill');item.reviewState='confirmed';return Response.json({...wire,results:{[item.id]:{state:'confirmed'}}});}return Response.json(wire);}
+  if(preselected&&url.endsWith('/documents/'+doc.id))return Response.json({document:{...doc,organization:{title:doc.name,parts:[{kind:'utility_bill',pageFrom:null,pageTo:null}],version:1,collections:['utilities']}}});
+  return control.fetch(url,init);
+ };
+ const app=renderApp({path:'/accedi',backend,fetch});await app.user.type(await screen.findByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));await app.router.navigate(`/home/${homeA1.id}/documenti?lotto=batch&oggetti-documento=${doc.id}&oggetti-bozza=${draft.id}&compila=manuale`);
+ if(!preselected)await app.user.selectOptions(await screen.findByLabelText('Tipo del documento'),'utility_bill');
+ const amount=await screen.findByLabelText('Importo della bolletta (€)');expect(amount).not.toHaveAttribute('readonly');expect(screen.queryByText(/Oggetti ·/)).not.toBeInTheDocument();expect(screen.queryByLabelText('Nome dell’oggetto')).not.toBeInTheDocument();
+ if(only)await app.user.click(screen.getByRole('checkbox',{name:'Conserva solo il documento'}));else{await app.user.type(amount,'93,21');await app.user.type(screen.getByLabelText('Data della spesa'),'2026-01-17');await app.user.type(screen.getByLabelText('Fornitore'),'Fornitore sintetico');await app.user.selectOptions(screen.getByLabelText('Categoria della bolletta'),'electricity');}
+ const save=screen.getByRole('button',{name:'Salva e passa al successivo'});await waitFor(()=>expect(save).toBeEnabled());await app.user.click(save);await waitFor(()=>expect(order).toEqual(['kind','organize','review','confirm']));expect(paid).toEqual([]);app.unmount();
+});

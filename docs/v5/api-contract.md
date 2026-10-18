@@ -79,3 +79,7 @@ Contratto additivo di onboarding descritto in [report V11](document-understandin
 ## V12 — soggetti e costo complessivo (18 ottobre 2026)
 
 Estensione additiva: item.subjectKind product/system; houseExpenses.documentKind simple_invoice oltre a utility_bill. Categoria manutenzione/lavori/acquisti ammessa per fatture; bollette restano forniture. Un’unica conferma choices+houseExpenses; document_only anche per fatture con costo complessivo. Limiti, esclusioni e condizioni nel [report V12](document-understanding-v12-report-20261018.md).
+
+## Cambio percorso manuale — 18 ottobre 2026
+
+POST `/homes/:homeId/object-onboarding/drafts/:id/document-kind`, Idempotency-Key obbligatoria, body `{expectedVersion,documentKind:"utility_bill"|"unsupported"}`. Converte sulla stessa bozza manuale aperta il segnaposto vuoto in una spesa casa senza oggetti (o ripristina il segnaposto). Incrementa versione, nessuna creazione canonica. Fonte/versione/SHA, membership e permessi edit verificati dal servizio esistente. Rifiuta bozze AI/concluse, decisioni o pending (`onboarding_kind_locked`), più articoli/proposte/arricchimenti o input salvati (`onboarding_kind_has_data`). Conflitto di versione e replay secondo contratto onboarding. Il tipo documentale e il titolo vengono comunque organizzati nel normale salvataggio. «Conserva solo il documento» rimane `documentOnly:true`, senza houseExpenses.

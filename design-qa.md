@@ -1,3 +1,11 @@
+# Design QA — Bolletta manuale
+
+final result: passed
+
+Correzione funzionale richiesta sulle schermate fornite dal committente: Bolletta deve mostrare i campi spesa, non Articolo 1. Verifica browser su nuovo PDF sintetico: Categoria della bolletta, Fornitore, Importo editabile e Data visibili; sezione Oggetti assente. Scelta solo documento nasconde la spesa e rimane reversibile. Nessun avviso di versione dopo la correzione della sovrapposizione fra cambio manuale e allineamento. Screenshot outputs/bolletta-manuale/campi-spesa.png della chat. 69 test frontend e 37 backend riusciti; 3 test del flusso ripetuti dopo l’ultimo aggiustamento, build e lint riusciti. Nessun documento personale alterato o inviato all’AI. [Report](docs/v5/manual-bill-flow-20261018.md).
+
+---
+
 # Design QA — Documenti, proposta combinata
 
 final result: passed

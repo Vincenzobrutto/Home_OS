@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Bolletta manuale: campi spesa diretti
+
+Scelta Bolletta collegata alla struttura della bozza manuale, senza Articolo 1 o creazione oggetti. Importo subito editabile, data, fornitore e categoria; conservazione del solo documento ancora disponibile. Cambio versionato e idempotente con protezione dei dati salvati. [Report](v5/manual-bill-flow-20261018.md).
+
 ## 18 ottobre 2026 — Compilazione documentale in uno spazio unico
 
 Coda Da fare, modulo condiviso manuale/AI e anteprima PDF locale richiudibile; caricamento riuscito apre la prima scheda. Sezioni separate per metadati, costi, oggetti e contatti, controlli esistenti conservati. Salva e passa al successivo soltanto dopo conferma. Avviso sui campi locali non salvati. [Verifica](v5/document-editor-workspace-20261018.md).
