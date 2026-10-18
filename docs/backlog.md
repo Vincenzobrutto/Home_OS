@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Consolidamento autonomo estrazione
+
+Chiusi offline conformità document-only, importi ausiliari, passaggio dei dati alla revisione e salvataggio con costo. Resta da misurare la completezza V16 su nuovi originali; non consumata l’ultima chiamata per ripetizioni. Futuro: collegamento emittente/installatore alla mini rubrica, senza digitalizzare dettagli della conformità. [Report](v5/unified-review-autonomous-final-20261018.md).
+
 ## 18 ottobre 2026 — Importi ausiliari: secondo blocco chiuso offline
 
 Risolti casi riproducibili di zero ausiliario e ruoli totali delle bollette; preservati replay finanziari della bolletta67.97/76.97 e fattura1537.20. Rimangono in revisione citazioni con valuta non attribuibile, etichette non riconoscibili, saldo differente/arretrati positivi. Non usare l’ultima analisi per ripetizioni senza ipotesi. Prossimo blocco3: dati estratti/manuali nella revisione unica/scheda, esclusioni e doppioni. [V16](v5/house-amount-evidence-v16-20261018.md).

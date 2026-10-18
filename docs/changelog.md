@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Revisione unica: campi e costo verificati
+
+Completati i tre blocchi autonomi offline. Proiezione bolletta non impone scelta per arretrati zero; proposta di costo con prezzo/data verificati può sopravvivere alle sole omissioni opzionali di consegna/garanzia, senza ignorare incertezza del provider. Una conferma, controlli duplicati/esclusioni e campi salvati verificati su DB sintetico. Report: [esiti e limiti](v5/unified-review-autonomous-final-20261018.md).
+
 ## 18 ottobre 2026 — Importi ausiliari e ruoli economici V16
 
 Zeri stampati di IVA/voci accessorie conservati senza bloccare una bolletta valida; arretrati zero non richiedono scelta importo. Totali correnti, saldi, subtotali e imposte distinti con prova valutaria attribuita al singolo numero. Nessuna spesa zero, somma o ripartizione automatica.27nuovi test/83offline e48DBHTTP verdi; replay in lettura della bolletta e fattura reali senza perdita degli importi validati. NessunaAI o modifica dati/budget. [V16](v5/house-amount-evidence-v16-20261018.md).

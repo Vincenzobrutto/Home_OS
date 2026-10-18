@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Separare omissioni opzionali dalla proposta umana di acquisto
+
+Il flag locale purchaseExpenseReady conserva la provenienza dell’incertezza: vero solo per omissioni verificate di consegna/garanzia, mai se il provider richiede revisione generale. La UI può proporre il costo se prezzo/data e gli altri requisiti sono validi, dopo controllo doppioni e con conferma finale. Scartato ignorare needsReview in generale o dedurne la causa dalla sola lista di avvisi lato frontend. Policy di conferma automatica invariata; bozze precedenti senza flag conservate. Nessuna migrazione. Vedi report revisione unica del18ottobre.
+
 ## 18 ottobre 2026 — Zero ausiliario non è un costo, ruolo del totale verificato localmente
 
 Consentiti zeri monetari provati per IVA/imponibile/righe/altro/arretrati, mai come costi canonici o totali selezionabili. Arretrati zero non creano ambiguità; positivi e saldo diverso dal costo corrente restano da rivedere. Per le bollette, il ruolo dichiarato dal provider richiede etichetta compatibile e proprio valore EUR; vietato promuovere imposte/subtotali/debiti a totale corrente o prendere valuta da altro numero. Scartate somma automatica e assunzione di valuta globale. [Evidenze V16](v5/house-amount-evidence-v16-20261018.md).

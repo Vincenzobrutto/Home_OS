@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Revisione unica consolidata offline
+
+Raggiunti i tre blocchi autonomi: conformità solo casa, ruoli monetari e importi ausiliari, dati precompilati e costo in una conferma con esclusioni e doppioni. Collaudo live di V16 su nuovi originali ancora da misurare. [Report e limiti](v5/unified-review-autonomous-final-20261018.md).
+
 ## 18 ottobre 2026 — Consolidamento economico V16 offline
 
 Completato blocco2: valori ausiliari zero, valuta e ruoli dei totali con test e replay originali, senza nuovi invii o mutazioni personali. Nessuna modifica frontend o nuove funzioni. Resta la verifica finale del passaggio dei dati alla scheda, poi chiusura dell’automazione. [Report](v5/house-amount-evidence-v16-20261018.md).

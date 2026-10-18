@@ -32,7 +32,7 @@ test('delivery without price proposes an object, never a cost or delivered statu
   assert.equal(result.items.length, 1);
   assert.equal(result.items[0].fields.name.value, label);
   assert.equal(result.items[0].fields.name.source.basis, 'verified_text');
-  assert.deepEqual(Object.keys(result).sort(), ['documentKind', 'items', 'needsReview', 'purchaseTotal']);
+  assert.deepEqual(Object.keys(result).sort(), ['documentKind', 'items', 'needsReview', 'purchaseExpenseReady', 'purchaseTotal']);
   const plan = productChoices([{ itemId: result.items[0].id, action: 'create', name: label, units: 1 }], result);
   assert.equal(plan.newObjects, 1); assert.equal(plan.expenses, 0);
 });

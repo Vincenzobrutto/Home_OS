@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Proiezione onboarding: idoneità della proposta umana
+
+La bozza include purchaseExpenseReady:boolean, additivo e falso per bozze storiche prive della prova. Calcolato dal dominio, consente alla UI di proporre il costo di acquisto nonostante sole omissioni opzionali di consegna/garanzia; richiede ancora condizioni prezzo/data/quantità e controllo doppioni. Non autorizza conferma automatica. houseExpenses.amountSelectionRequired considera arretrati solo se positivi. Nessun nuovo endpoint.
+
 ## V5 — organizzazione automatica del caricamento (2026-10-18)
 
 - POST /homes/:homeId/object-onboarding/automatic-runs (202), idempotency-key obbligatoria: {batchId,documentIds:[uuid...],consentToProviderTransfer:true,automaticProcessing:true}. Da1a20 documenti, elenco esatto degli originali caricati nel lotto. Consenso include invio Anthropic e salvataggio delegato dei casi chiari. Nessuna API key o quota accettata dal client.
