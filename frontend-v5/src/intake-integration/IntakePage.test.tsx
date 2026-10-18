@@ -124,7 +124,7 @@ it.each(['local','unknown','draftkind','copy','copy-lost'])('upload proposals st
  await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Avvia compilazione AI'}));await screen.findByRole('heading',{name:'Articolo 1 · Lampada demo'});
  expect(starts).toBe(1);expect(bodies[0]).toMatchObject({documentId:doc.id,consentToProviderTransfer:true});expect(app.router.state.location.pathname).toBe(path);
  const params=new URLSearchParams(app.router.state.location.search);expect(params.get('lotto')).toBe('inline-batch');expect(params.get('filtro')).toBe('conserva');expect(params.get('oggetti-bozza')).toBe('inline-draft');expect(params.get('bozza')).toBeNull();
- if(mode==='local')expect(screen.getByText('Spesa di acquisto (facoltativa)')).toBeInTheDocument();
+ if(mode==='local')expect(screen.getByText('Costo di acquisto (facoltativo)')).toBeInTheDocument();
  if(copy){
   const confirm=()=>screen.getByRole('button',{name:'Salva e organizza'});
   await app.user.click(confirm());await screen.findByText(/Il file è già presente: seleziona/);expect(organizationWrites).toBe(0);expect(objectWrites).toBe(0);

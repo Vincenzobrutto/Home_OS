@@ -51,9 +51,9 @@ test('invalid region/page, forged image citations and invented text claims are r
   const data = raw(true); data.items[0].fields.name.evidence.page = 2;
   fails(() => productExtraction(data, imageContext), 'analysis_invalid_output');
   const invented = raw(); invented.items[0].fields.model = field('Max');
-  fails(() => productExtraction(invented, textContext), 'evidence_unverified');
+  assert.equal(productExtraction(invented,textContext).items[0].fields.model,undefined);assert.ok(productExtraction(invented,textContext).reviewWarnings.length);
   invented.items[0].fields.model.evidence.documentId = randomUUID();
-  fails(() => productExtraction(invented, textContext), 'analysis_invalid_output');
+  assert.equal(productExtraction(invented,textContext).items[0].fields.model,undefined);assert.ok(productExtraction(invented,textContext).reviewWarnings.length);
 });
 test('multiple items survive independently; identical repeated row and silent truncation fail', () => {
   const data = raw(), second = structuredClone(data.items[0]);

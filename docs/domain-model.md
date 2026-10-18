@@ -1,3 +1,7 @@
+## V5 — osservazioni documentali V11 (2026-10-18)
+
+ObjectOnboardingDraft.output JSON contiene opzionalmente documentInfo e reviewWarnings, senza migrazione. Fatti tecnici distinti dal profilo canonico; document_only registra una decisione senza HomeObject/HomeExpense. subjectIndex identifica documento (-1) o soggetto originale; proiezione sotto guard di fonte/privacy esistente. Dettagli nel report V11.
+
 # Modello di dominio
 
 Fonte di verità: `backend/prisma/schema.prisma`. Questo documento lo spiega in prosa e va aggiornato ogni volta che lo schema cambia — se sono in disaccordo, lo schema ha ragione.

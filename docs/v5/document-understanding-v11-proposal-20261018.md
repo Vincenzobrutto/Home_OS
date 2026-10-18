@@ -1,6 +1,6 @@
 # Comprensione documentale V11 — proposta di revisione
 
-Stato: analisi e proposta, NON implementata e NON collaudata con il provider. Supera l’idea di un estrattore centrato soltanto sui prodotti commerciali; conserva la revisione unica V4, fonti, privacy, consenso e budget. Nessuna nuova chiamata AI durante questa analisi.
+Stato aggiornato: prima tranche implementata per conformità impianto, fattura, bolletta ed etichetta; verificata con dati sintetici e trasporto AI simulato. Nessun collaudo V11 con il provider reale. Il resto della proposta rimane evolutivo. Vedi document-understanding-v11-report-20261018.md. Supera l’idea di un estrattore centrato soltanto sui prodotti commerciali; conserva la revisione unica V4, fonti, privacy, consenso e budget. Nessuna nuova chiamata AI durante questa analisi.
 
 ## Evidenza del caso osservato
 

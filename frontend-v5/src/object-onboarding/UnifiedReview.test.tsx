@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { expect, it, vi } from 'vitest';
 import { ApiClient } from '../api/client';
+import { DocumentUnderstandingSummary } from './DocumentUnderstandingSummary';
 import { UnifiedReview } from './UnifiedReview';
 import { choice, initialForm, type Draft, type Form } from './model';
 import { reviewTotals } from './reviewSummary';
@@ -15,7 +16,7 @@ function mount(draft = fixture()) {
   const submit = vi.fn(), api = new ApiClient({ fetch: async () => Response.json({ items: [], nextCursor: null }) });
   function Example() {
     const [forms, setForms] = useState<Record<string, Form>>(() => Object.fromEntries(draft.items.map(item => [item.id, initialForm(item, draft)])));
-    return <UnifiedReview draft={draft} forms={forms} api={api} accountId="account" base="/homes/home/object-onboarding" root="/home/home" disabled={false} change={(id, value) => setForms(old => ({ ...old, [id]: value }))} save={() => submit(draft.items.map(item => choice(item, forms[item.id]!)))} defer={vi.fn()} add={vi.fn()} enrich={vi.fn()} />;
+    return <><DocumentUnderstandingSummary draft={draft}/><UnifiedReview draft={draft} forms={forms} api={api} accountId="account" base="/homes/home/object-onboarding" root="/home/home" disabled={false} change={(id, value) => setForms(old => ({ ...old, [id]: value }))} save={() => submit(draft.items.map(item => choice(item, forms[item.id]!)))} defer={vi.fn()} add={vi.fn()} enrich={vi.fn()} /></>;
   }
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><MemoryRouter><Example /></MemoryRouter></QueryClientProvider>);
   return { user: userEvent.setup(), submit };
@@ -64,4 +65,17 @@ it('order screenshot exposes purchase cost and permits manual completion without
  await w.user.type(screen.getByLabelText('Importo (€)'),'444');expect(screen.getByRole('button',{name:'Salva e organizza'})).toBeDisabled();
  await w.user.type(screen.getByLabelText('Data della spesa'),'2026-06-14');await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));
  expect(w.submit.mock.calls[0]![0][0].expense).toMatchObject({action:'create',amountCents:44400,spentOn:'2026-06-14'});
+});
+
+function conformityDraft(){const draft=fixture();draft.documentKind='conformity_declaration';draft.purchaseTotal=null;draft.items=draft.items.slice(0,1);const item=draft.items[0]!;item.subjectKind='system';item.proposedType='electrical';item.fields={name:{value:'Quadro elettrico',source}};item.profile={};delete item.purchaseAmount;draft.documentInfo={kind:'conformity_declaration',title:{value:'Dichiarazione di conformità',source},facts:[{subjectIndex:-1,field:'documentDate',value:'2026-07-08',source},{subjectIndex:0,field:'availablePowerKw',value:'6',source}]};return draft;}
+it('conformity prepopulates a system and preserves document roles in one review',async()=>{
+ const w=mount(conformityDraft());expect(screen.getByText('Dichiarazione di conformità')).toBeInTheDocument();expect(screen.getByText('Destinazione: Impianti e documenti tecnici')).toBeInTheDocument();expect(screen.getByText('08/07/2026')).toBeInTheDocument();expect(screen.getByText('Potenza impegnabile (kW)')).toBeInTheDocument();
+ expect(screen.getByLabelText('Tipo')).toHaveValue('electrical');expect(screen.getByLabelText('Data di acquisto')).toHaveValue('');
+ expect(screen.getAllByRole('button',{name:'Salva e organizza'})).toHaveLength(1);await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));expect(w.submit.mock.calls[0]![0][0]).toMatchObject({action:'create',type:'electrical',expense:{action:'skip'}});
+});
+it('conformity can remain only with the house and never submits hidden object or expense fields',async()=>{
+ const w=mount(conformityDraft());await w.user.click(screen.getByRole('radio',{name:/Solo alla casa/}));expect(screen.queryByLabelText('Marca')).not.toBeInTheDocument();await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));expect(w.submit.mock.calls[0]![0]).toEqual([{itemId:'item0',action:'document_only'}]);
+});
+it('recognized house document without items can be confirmed without forcing a new object',async()=>{
+ const draft=conformityDraft();draft.items=[];draft.documentInfo!.facts=draft.documentInfo!.facts.filter(f=>f.subjectIndex===-1);const w=mount(draft);expect(screen.getByRole('button',{name:'Salva e organizza'})).toBeEnabled();await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));expect(w.submit.mock.calls[0]![0]).toEqual([]);
 });

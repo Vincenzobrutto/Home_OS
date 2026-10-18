@@ -34,10 +34,10 @@ export class ObjectOnboardingService {
         try { const target = await this.access.target(tx, a, h, id); targets.push({ id: target.id, name: target.name, version: target.version, state: target.state }); }
         catch { targets.push({ id: null, name: null, state: 'unavailable', version: null }); }
       }
-      return { ...item, profile: { ...output.enrichments?.[item.id]?.profile, ...proposedProfile(item) }, enrichment: output.enrichments?.[item.id] ?? null, decision: choice ? { ...choice, expenseId:undefined, objectIds: undefined, objects: targets } : null };
+      return { ...item,...(output.documentInfo?.kind==='conformity_declaration'?{subjectKind:'system',proposedType:output.documentInfo.facts.find(f=>f.subjectIndex===(item.sourceIndex??output.items.indexOf(item))&&f.field==='systemType')?.value??'other'}:{}), profile: { ...output.enrichments?.[item.id]?.profile, ...proposedProfile(item) }, enrichment: output.enrichments?.[item.id] ?? null, decision: choice ? { ...choice, expenseId:undefined, objectIds: undefined, objects: targets } : null };
     }));
     const review=await this.safeReview(tx,a,h,draft);
-    return { id: draft.id, version: draft.version, state: draft.state, mode: draft.mode, snapshot: { documentId: draft.documentId, documentVersion: draft.documentVersion, sha256: draft.documentSha256 }, document: { id: source.id, name: source.name, mimeType: source.original!.mimeType }, documentKind: output.documentKind, items, needsReview: output.needsReview, purchaseTotal: output.purchaseTotal, houseExpenses:(output.houseExpenses??[]).map(item=>({...item,amountSelectionRequired:item.amountCandidates.some(a=>a.role==='arrears_balance')||item.amountCandidates.filter(a=>a.role==='current_document_total').length!==1,decision:decisions[item.id]?{state:decisions[item.id].state,newExpenses:decisions[item.id].newExpenses}:null})), review, permissions: edit ? ['read', 'edit'] : ['read'] };
+    return { id: draft.id, version: draft.version, state: draft.state, mode: draft.mode, snapshot: { documentId: draft.documentId, documentVersion: draft.documentVersion, sha256: draft.documentSha256 }, document: { id: source.id, name: source.name, mimeType: source.original!.mimeType }, documentKind: output.documentKind, documentInfo:output.documentInfo??null,reviewWarnings:output.reviewWarnings??[], items, needsReview: output.needsReview, purchaseTotal: output.purchaseTotal, houseExpenses:(output.houseExpenses??[]).map(item=>({...item,amountSelectionRequired:item.amountCandidates.some(a=>a.role==='arrears_balance')||item.amountCandidates.filter(a=>a.role==='current_document_total').length!==1,decision:decisions[item.id]?{state:decisions[item.id].state,newExpenses:decisions[item.id].newExpenses}:null})), review, permissions: edit ? ['read', 'edit'] : ['read'] };
   }
   private async safeReview(tx:OnboardingTx,a:string,h:string,draft:ObjectOnboardingDraft){
     if(!draft.review)return null;
@@ -254,6 +254,7 @@ export class ObjectOnboardingService {
     const body = onboardingConfirmation(input, temporal(this.clock.now()).today);
     return this.request(a, h, 'confirm', uuid(id), body, key, async tx => {
       const draft = await this.open(tx, a, h, id, body.expectedVersion), output = draft.output as unknown as Output, decisions = { ...draft.decisions as Decisions };
+      if((body.documentOnly||!body.choices.length&&!body.houseExpenses?.length)&&(!body.documentOnly||!output.documentInfo||output.items.length||output.houseExpenses?.length||body.choices.length||body.houseExpenses?.length))throw invalid('Nessuna proposta da confermare.');
       if(body.manualPurchaseTotalCents!==undefined&&(draft.mode!=='manual'||output.purchaseTotal))throw invalid('Il totale dichiarato è ammesso soltanto per una fattura compilata manualmente senza totale estratto.');
       if (body.source.documentId !== draft.documentId || body.source.documentVersion !== draft.documentVersion || body.source.sha256 !== draft.documentSha256) throw conflict('onboarding_source_changed', 'La fonte è cambiata.');
       const initialSourceLinks = await tx.$queryRaw<Array<{ id: string }>>`SELECT l.id FROM "ObjectResourceLink" l JOIN "Document" d ON d.id=l."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE l."accountId"=${a} AND l."homeId"=${h} AND l."resourceType"='document' AND l.state='active' AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;
@@ -261,6 +262,7 @@ export class ObjectOnboardingService {
       for (const choice of body.choices) {
         const item = output.items.find(item => item.id === choice.itemId);
         if (!item || decisions[item.id]?.state === 'confirmed' || decisions[item.id]?.state === 'skipped') throw conflict('onboarding_item_resolved', 'Uno degli articoli è già stato gestito.');
+        if(choice.action==='document_only'){if(output.documentInfo?.kind!=='conformity_declaration')throw invalid();decisions[item.id]={state:'confirmed',objectIds:[],expenseId:null,newObjects:0,newExpenses:0};continue;}
         if (choice.action === 'skip' || choice.action === 'defer') { decisions[item.id] = { state: choice.action === 'skip' ? 'skipped' : 'deferred', objectIds: [], expenseId: null, newObjects: 0, newExpenses: 0 }; continue; }
         const quantity = item.quantity?.value ?? 1;
         if (choice.action === 'create' && item.disposition !== 'household_object' && !choice.confirmHouseholdObject) throw invalid('Conferma che vuoi creare una scheda anche per questo articolo da verificare.');

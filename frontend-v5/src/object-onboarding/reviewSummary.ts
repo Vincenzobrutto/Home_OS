@@ -11,6 +11,7 @@ export function reviewTotals(draft: Draft, forms: Record<string, Form>) {
       if (known !== undefined) excludedCents += known; else excludedUnknown++;
       continue;
     }
+    if(form.action==='document_only')continue;
     if (form.action === 'create') newObjects += item.quantity?.value ?? 1;
     else linkedObjects += form.targets.length;
     if (form.expense === 'create') {
@@ -25,7 +26,7 @@ export function reviewTotals(draft: Draft, forms: Record<string, Form>) {
 export function reviewProblem(draft: Draft, forms: Record<string, Form>) {
   for (const item of draft.items) {
     const form = forms[item.id];
-    if (!form || item.decision && item.decision.state !== 'deferred' || form.action === 'skip') continue;
+    if (!form || item.decision && item.decision.state !== 'deferred' || ['skip','document_only'].includes(form.action)) continue;
     if (expenseNeedsReview(form) || profileNeedsReview(form)) return 'Completa le scelte evidenziate prima di salvare.';
     if (form.action === 'create' && !form.name.trim()) return 'Indica il nome di ogni oggetto da creare.';
     if (form.action === 'create' && item.disposition !== 'household_object' && !form.confirmHouseholdObject) return 'Conferma quali articoli vuoi censire come oggetti della casa.';

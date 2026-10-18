@@ -32,12 +32,13 @@ export function UnifiedReview({ draft, forms, api, accountId, base, root, disabl
     <button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>Aggiungi un altro articolo</button>
     <section className={ui.card} aria-label="Riepilogo prima di salvare" aria-live="polite">
       {draft.purchaseTotal && <p>Totale fattura: <strong>{euro(draft.purchaseTotal.amountCents)}</strong></p>}
+      {(!items.length||items.some(item=>forms[item.id]?.action==='document_only'))&&<p>Il documento sarà conservato nella casa.</p>}
       <p>{totals.newObjects} nuovi oggetti · {totals.linkedObjects} collegamenti · {totals.newExpenses} nuove spese</p>
       <p>Nuove spese della casa: <strong>{euro(totals.amountCents)}</strong></p>
       {!!totals.excludedCents && <p>Importi esclusi: {euro(totals.excludedCents)}</p>}
       {!!totals.excludedUnknown && <p>{totals.excludedUnknown} articoli esclusi con importo non disponibile.</p>}
       {problem && <p role="status">{problem}</p>}
     </section>
-    <div className={styles.row}><button type="button" className={ui.btn} disabled={disabled} onClick={defer}>Decidi più avanti</button><button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || !items.length} onClick={save}>Salva e organizza</button></div>
+    <div className={styles.row}>{!!items.length&&<button type="button" className={ui.btn} disabled={disabled} onClick={defer}>Decidi più avanti</button>}<button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || (!items.length&&!draft.documentInfo)} onClick={save}>Salva e organizza</button></div>
   </section>;
 }

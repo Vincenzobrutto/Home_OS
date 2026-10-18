@@ -166,7 +166,7 @@ function IntakeContainer() {
       return;
     }
     let proposal=bulkItem(item)??organizationFromObjectKind(item,kind);
-    if(proposal&&['utility_bill','purchase_document'].includes(kind??'')&&item.reviewState==='unreviewed'&&!item.organizationVersion&&!item.duplicate)proposal={...proposal,selection:{...proposal.selection,parts:[{kind:kind as 'utility_bill'|'purchase_document',pageFrom:null,pageTo:null}]}};if(!proposal)throw preparationError('Prima completa la classificazione del documento: scegli il tipo o risolvi la copia o il conflitto. Usa «Rivedi documento» qui sotto; i dati dell’articolo restano conservati.');
+    if(proposal&&['utility_bill','purchase_document','invoice','receipt','conformity_declaration','product_label','purchase_order'].includes(kind??'')&&item.reviewState==='unreviewed'&&!item.organizationVersion&&!item.duplicate)proposal={...proposal,selection:{...proposal.selection,parts:[{kind:kind as 'utility_bill'|'purchase_document'|'invoice'|'receipt'|'conformity_declaration'|'product_label'|'purchase_order',pageFrom:null,pageTo:null}]}};if(!proposal)throw preparationError('Prima completa la classificazione del documento: scegli il tipo o risolvi la copia o il conflitto. Usa «Rivedi documento» qui sotto; i dati dell’articolo restano conservati.');
     if(proposal.selection.action==='organize'&&title!==undefined)proposal={...proposal,selection:{...proposal.selection,title:title.trim()}};
     const outcome=await organize({batchId:value.id,expectedVersion:value.version,mode:'single',items:[proposal]});
     if(outcome.status!=='done'||outcome.results.some(r=>r.status!=='confirmed'))throw preparationError('Archiviazione del documento da verificare. Nessun oggetto o costo è stato creato: controlla il documento e riprendi qui.');

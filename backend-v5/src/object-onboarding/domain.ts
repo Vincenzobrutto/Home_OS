@@ -1,9 +1,11 @@
+import { HttpException } from '@nestjs/common';
 import { citation, type Citation, type EconomicOutput } from '../economy/document-domain';
 import { object, text, invalid, uuid, version } from '../review/domain';
 import { ProviderFailure, type Snapshot } from '../review/provider';
 import { digest } from '../security';
 import { printedCents, printedDates } from '../economy/document-evidence';
 import { purchaseDateSource, tableQuantity } from './invoice-evidence';
+import { readUnderstanding, type DocumentUnderstanding, type UnderstandingWarning } from './understanding';
 import { calendar } from '../activities/domain';
 
 export const onboardingLimits = { maxItems: 20, maxUnits: 20, maxImageBytes: 5 * 1024 * 1024 } as const;
@@ -13,7 +15,7 @@ export type Region = { x: number; y: number; width: number; height: number };
 export type ProductSource = Citation & { basis: 'verified_text' | 'provider_observed_image'; region: Region | null };
 export type ProductValue = { value: string; source: ProductSource };
 export type ProductItem = {
-  id: string; fingerprint: string;
+  id: string; fingerprint: string; sourceIndex?: number;
   fields: Partial<Record<ProductField, ProductValue>>;
   quantity: { value: number; source: ProductSource } | null;
   purchaseAmount?: { amountCents: number; source: ProductSource } | null;
@@ -23,7 +25,9 @@ export type ProductItem = {
 export type HouseExpense = EconomicOutput & {id:string;fingerprint:string;reviewWarnings?:string[]};
 export type ProductExtraction = {
   houseExpenses?:HouseExpense[];
-  documentKind: 'delivery_notice' | 'order_confirmation' | 'purchase_document' | 'product_document' | 'device_label' | 'utility_bill' | 'unsupported';
+  documentInfo?:DocumentUnderstanding;
+  reviewWarnings?:UnderstandingWarning[];
+  documentKind: 'delivery_notice' | 'order_confirmation' | 'purchase_document' | 'product_document' | 'device_label' | 'utility_bill' | 'conformity_declaration' | 'house_document' | 'unsupported';
   items: ProductItem[];
   needsReview: boolean;
   purchaseTotal: { amountCents: number; source: ProductSource } | null;
@@ -61,20 +65,25 @@ function evidence(input: unknown, context: ProductEvidenceContext): ProductSourc
 /** Validates provider output, not truth of visual observations. No DB writes. */
 export function productExtraction(input: unknown, context: ProductEvidenceContext): ProductExtraction {
   try {
-    const row = object(input, ['documentKind', 'items', 'hasMoreItems', 'purchaseTotal', 'requiresHumanReview', 'houseExpenses']);
-    if (!['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'device_label', 'utility_bill', 'unsupported'].includes(String(row.documentKind)) || typeof row.hasMoreItems !== 'boolean' || !Array.isArray(row.items) || row.items.length > onboardingLimits.maxItems) throw invalid();
+    const row = object(input, ['documentKind', 'items', 'hasMoreItems', 'purchaseTotal', 'requiresHumanReview', 'houseExpenses', 'documentInfo', 'facts']);
+    if (!['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'device_label', 'utility_bill', 'conformity_declaration', 'house_document', 'unsupported'].includes(String(row.documentKind)) || typeof row.hasMoreItems !== 'boolean' || !Array.isArray(row.items) || row.items.length > onboardingLimits.maxItems) throw invalid();
     if (row.hasMoreItems) throw new ProviderFailure('object_onboarding_too_many_items');
-    if (['unsupported','utility_bill'].includes(String(row.documentKind)) && row.items.length) throw invalid();
     const fingerprints = new Set<string>();
     if (row.requiresHumanReview !== undefined && typeof row.requiresHumanReview !== 'boolean') throw invalid();
-    let needsReview = row.requiresHumanReview === true;
+    const understanding=readUnderstanding(row.documentInfo,row.facts,row.items.length,value=>evidence(value,context));
+    if(['conformity_declaration','house_document'].includes(String(row.documentKind))&&!understanding.documentInfo)throw invalid();
+    if(row.documentKind==='conformity_declaration'&&understanding.documentInfo?.kind!=='conformity_declaration')throw invalid();
+    if(understanding.documentInfo){const mapped:Record<string,string>={invoice:'purchase_document',receipt:'purchase_document',purchase_document:'purchase_document',purchase_order:'order_confirmation',delivery_notice:'delivery_notice',product_label:'device_label',conformity_declaration:'conformity_declaration',utility_bill:'utility_bill',ape:'house_document',floor_plan:'house_document'};row.documentKind=mapped[understanding.documentInfo.kind]??row.documentKind;}
+    if(['unsupported','utility_bill','house_document'].includes(String(row.documentKind))&&row.items.length)throw invalid();
+    let needsReview = row.requiresHumanReview === true || understanding.warnings.length>0;
     const items: ProductItem[] = [];
-    for (const raw of row.items) {
+    for (const [sourceIndex, raw] of row.items.entries()) {
       const r = object(raw, ['fields', 'quantity', 'purchaseAmount', 'nameTruncated', 'disposition', 'confidence']);
       if (typeof r.nameTruncated !== 'boolean' || !['household_object', 'consumable', 'uncertain'].includes(String(r.disposition)) || !['high', 'low'].includes(String(r.confidence))) throw invalid();
       const fields: Partial<Record<ProductField, ProductValue>> = {};
       for (const [key, rawField] of Object.entries(object(r.fields, [...productFields]))) {
         if (rawField === null) continue;
+        try {
         const field = object(rawField, ['value', 'evidence']);
         const value = normalize(text(field.value, key === 'brand' || key === 'serialNumber' ? 80 : 120));
         let source:ProductSource;try{source=evidence(field.evidence,context);}catch(error){if(error instanceof ProviderFailure&&error.code==='evidence_unverified')throw new ProductEvidenceFailure(key as ProductField,'citation');throw error;}
@@ -93,6 +102,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
         const unit = ({ powerWatts: 'W', voltageVolts: 'V', frequencyHz: 'Hz', capacityLitres: '(?:L|litri|litres?|liters?)' } as Record<string, string>)[key];
         if (unit && (!/^\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?$/u.test(value) || !new RegExp(value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&') + '\\s*' + unit + '\\b', 'iu').test(source.excerpt))) throw new ProductEvidenceFailure(key as ProductField,'unit');
         fields[key as ProductField] = { value, source };
+        } catch(error){if(key==='name'||!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;understanding.warnings.push({field:'item:'+sourceIndex+':'+key,reason:'unverified'});needsReview=true;}
       }
       const primary = fields.name ?? fields.reference ?? fields.model;
       if (!primary || !fields.name && row.documentKind !== 'device_label') throw invalid();
@@ -106,7 +116,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
         if (source.page !== primary.source.page || !(printed.length===1&&printed[0]===q.value || printed.length===0&&table===q.value)) throw new ProductEvidenceFailure('quantity','quantity');
         quantity = { value: Number(q.value), source };
       }
-      if (r.confidence === 'low') { needsReview = true; continue; }
+      if (r.confidence === 'low') { needsReview = true;understanding.warnings.push({field:'item:'+sourceIndex,reason:'missing_identity'});continue; }
       const fingerprint = digest(JSON.stringify([context.snapshot.documentSha256, normalize(primary.value).toLocaleLowerCase('it'), fields.brand?.value?.toLocaleLowerCase('it') ?? null, fields.model?.value?.toLocaleLowerCase('it') ?? fields.reference?.value?.toLocaleLowerCase('it') ?? null, primary.source.page, quantity?.value ?? null]));
       if (fingerprints.has(fingerprint)) throw new ProviderFailure('object_onboarding_repeated_item');
       fingerprints.add(fingerprint);
@@ -117,7 +127,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
         if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/(?:totale\s+riga|importo\s+riga|prezzo\s+articolo|line\s+total)/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(price.amountCents))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
         purchaseAmount = { amountCents: Number(price.amountCents), source };
       }
-      items.push({ id, fingerprint, fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
+      items.push({ id, fingerprint,...(understanding.documentInfo?{sourceIndex}:{}), fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
     }
     let purchaseTotal: ProductExtraction['purchaseTotal'] = null;
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {
@@ -129,7 +139,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents) throw new ProductEvidenceFailure('purchaseTotal', 'total');
     const houseExpenses=readHouseExpenses(row.houseExpenses,context);
     if(houseExpenses.length&&row.documentKind!=='utility_bill')throw invalid();
-    return { documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
+    return { ...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
   } catch (error) {
     if (error instanceof ProviderFailure) throw error;
     throw new ProviderFailure('analysis_invalid_output');

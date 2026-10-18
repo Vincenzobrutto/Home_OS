@@ -7,7 +7,7 @@ import { amountCents, spentOn } from '../expenses/domain';
 
 export type OnboardingExpense = { action: 'skip' } | { action: 'link'; id: string; expectedVersion: number } | { action: 'create'; title: string; amountCents: number; spentOn: string; supplier: string | null; manualItemAmount?: boolean; acknowledgePossibleDuplicate?: boolean };
 export type OnboardingChoice = { itemId: string } & (
-  { action: 'skip' } | { action: 'defer' } |
+  { action: 'skip' } | { action: 'defer' } | {action:'document_only'} |
   { action: 'create'; name: string; type: string; unitNames: string[]; roomIds: string[]; fields: ProfileDecisions; manual: ReturnType<typeof manualSelection> | null; confirmHouseholdObject: boolean; acknowledgeExistingSource: boolean; expense: OnboardingExpense } |
   { action: 'link'; targets: Array<{ id: string; expectedVersion: number }>; fields: ProfileDecisions; manual: ReturnType<typeof manualSelection> | null; expense: OnboardingExpense }
 );
@@ -28,15 +28,16 @@ function expense(input: unknown, today: string): OnboardingExpense {
   return { ...(r.manualItemAmount!==undefined?{manualItemAmount:r.manualItemAmount}:{}),...(r.acknowledgePossibleDuplicate !== undefined ? { acknowledgePossibleDuplicate: r.acknowledgePossibleDuplicate } : {}), action: 'create', title: text(r.title, 120), amountCents: amountCents(r.amountCents), spentOn: spentOn(r.spentOn, today), supplier: r.supplier === undefined || r.supplier === null ? null : text(r.supplier, 120) };
 }
 export function onboardingConfirmation(input: unknown, today: string) {
-  const r = object(input, ['expectedVersion', 'source', 'choices', 'houseExpenses', 'manualPurchaseTotalCents']);
+  const r = object(input, ['expectedVersion', 'source', 'choices', 'houseExpenses', 'manualPurchaseTotalCents','documentOnly']);
+  if(r.documentOnly!==undefined&&r.documentOnly!==true)throw invalid();
   const manualPurchaseTotalCents = r.manualPurchaseTotalCents === undefined ? undefined : amountCents(r.manualPurchaseTotalCents);
   const source = object(r.source, ['documentId', 'documentVersion', 'sha256']);
-  if (typeof source.sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(source.sha256) || !Array.isArray(r.choices) || (!r.choices.length&&!Array.isArray(r.houseExpenses)) || r.choices.length > 20) throw invalid();
+  if (typeof source.sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(source.sha256) || !Array.isArray(r.choices) || (!r.choices.length&&!Array.isArray(r.houseExpenses)&&!r.documentOnly) || r.choices.length > 20) throw invalid();
   const choices: OnboardingChoice[] = r.choices.map(raw => {
     const c = object(raw, ['itemId', 'action', 'name', 'type', 'unitNames', 'roomIds', 'fields', 'manual', 'confirmHouseholdObject', 'acknowledgeExistingSource', 'targets', 'expense']);
     const itemId = text(c.itemId, 80);
     if (!/^[A-Za-z0-9_-]{1,80}$/u.test(itemId)) throw invalid();
-    if (c.action === 'skip' || c.action === 'defer') { object(c, ['itemId', 'action']); return { itemId, action: c.action }; }
+    if (c.action === 'skip' || c.action === 'defer' || c.action==='document_only') { object(c, ['itemId', 'action']); return { itemId, action: c.action }; }
     const fields = profileDecisions(c.fields), manual = c.manual === undefined || c.manual === null ? null : manualSelection(c.manual), cost = expense(c.expense, today);
     if (manual?.mode === 'remove') throw invalid();
     if (c.action === 'link') {
@@ -54,8 +55,8 @@ export function onboardingConfirmation(input: unknown, today: string) {
     return { itemId, action: 'create', name: text(c.name, 120), type: c.type, unitNames, roomIds: roomIds(c.roomIds ?? []), fields, manual, confirmHouseholdObject: c.confirmHouseholdObject === true, acknowledgeExistingSource: c.acknowledgeExistingSource === true, expense: cost };
   });
   if (new Set(choices.map(c => c.itemId)).size !== choices.length) throw invalid();
-  const houseExpenses=houseChoices(r.houseExpenses,r.expectedVersion,today);if(!choices.length&&!houseExpenses.length)throw invalid();
-  return {...(manualPurchaseTotalCents!==undefined?{manualPurchaseTotalCents}:{}),...(houseExpenses.length?{houseExpenses}:{}), expectedVersion: version(r.expectedVersion), source: { documentId: uuid(source.documentId), documentVersion: version(source.documentVersion), sha256: source.sha256 }, choices };
+  const houseExpenses=houseChoices(r.houseExpenses,r.expectedVersion,today);if(!choices.length&&!houseExpenses.length&&!r.documentOnly)throw invalid();
+  return {...(r.documentOnly?{documentOnly:true as const}:{}),...(manualPurchaseTotalCents!==undefined?{manualPurchaseTotalCents}:{}),...(houseExpenses.length?{houseExpenses}:{}), expectedVersion: version(r.expectedVersion), source: { documentId: uuid(source.documentId), documentVersion: version(source.documentVersion), sha256: source.sha256 }, choices };
 }
 
 function houseChoices(input:unknown,expectedVersion:unknown,today:string){

@@ -1,3 +1,7 @@
+## V11 — aggiornamento 18 ottobre 2026
+
+Chiusa prima tranche conformità/fattura/bolletta/etichetta con test sintetici. Restano: misurare qualità live V11 con consenso; fatti tecnici canonici editabili e interventi; OCR per pagina/PDF misti; allineare indicatore classificazione locale della riga ai metadati AI in revisione prima del salvataggio preservando conflitti. Vedi report V11.
+
 # Backlog
 
 Attività aperte. Le voci storiche usano **Alta/Media/Bassa** per urgenza tecnica; la roadmap v6 usa **P0/P1/P2/P3** per sequenza di prodotto. Un vincolo di sicurezza “Alta prima di produzione” resta bloccante anche se non genera valore utente immediato.

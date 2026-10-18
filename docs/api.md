@@ -1,3 +1,7 @@
+## V5 — estensione onboarding V11 (2026-10-18)
+
+Nessun nuovo endpoint. Draft può includere documentInfo, reviewWarnings e subjectKind/proposedType sugli item. Conferma ammette action=document_only (solo conformità, itemId/action) e documentOnly=true per bozza riconosciuta senza item/spese. Nessun dato finanziario ammesso nel payload document_only; autorizzazione, privacy, snapshot e idempotenza invariati. Vedi docs/v5/document-understanding-v11-report-20261018.md.
+
 # API
 
 Base URL: `http://<host>:3000` (nessun prefisso globale). Sessione reale via cookie httpOnly `sid` (vedi `## Auth` sotto e `decisions.md`): ogni rotta richiede una sessione valida salvo quelle marcate `@Public()` (`/auth/register`, `/auth/login`, `/auth/set-password`, `/auth/account-status`). L'autorizzazione per-casa verifica `HouseMembership` (non solo `House.ownerId`), quindi 403 se la sessione è valida ma l'utente non ha accesso a quella casa specifica. Il client deve inviare le richieste con `credentials: 'include'` perché il cookie viaggi tra origin diversi (frontend/backend su porte diverse).

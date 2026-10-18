@@ -1,3 +1,7 @@
+## 2026-10-18 — V11: comprensione documentale e validazione locale
+
+Una richiesta raccoglie classificazione e fatti con citazioni condivise; il backend verifica significati e fonti. Campi opzionali isolati non invalidano tutta la bozza, ma vengono omessi e segnalati. Identità e dati finanziari mantengono controlli rigorosi. Conformità può restare solo alla casa; data documento e potenza impegnabile non diventano acquisto/assorbimento. Nessuna nuova entità canonica tecnica in questa tranche: fatti conservati nella bozza, nessuna migrazione. Scartate richiesta AI separata per ogni tipo e creazione automatica senza conferma.
+
 # Decisioni architetturali (ADR log)
 
 Registro cronologico. Ogni voce: contesto, decisione, motivazione, alternative scartate. Nuove voci si aggiungono **in fondo**, non si modificano quelle passate (se una decisione viene ribaltata, si aggiunge una nuova voce che lo dice, vedi es. #9).

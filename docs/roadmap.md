@@ -1,3 +1,7 @@
+## V5 — raggiunto 18 ottobre 2026
+
+Prima tranche V11 implementata: conformità/fattura/bolletta/etichetta e revisione unica. Restano collaudo provider reale con consenso, OCR per pagina e ulteriori casi del piano.
+
 # Roadmap
 
 ## Milestone raggiunte
