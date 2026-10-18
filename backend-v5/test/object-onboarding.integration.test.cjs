@@ -138,6 +138,11 @@ test('Full onboarding: DB, real PDF parser, fake provider; atomicity, replay, pr
   assert.equal(await db.document.count({where:{id:source.id}}),1);assert.equal((await service.recover(a,h,draft.id,key,{})).status,'confirmed');
  });
 
+ await t.test('order confirmation saves explicitly declared cost with date, original and replay',async()=>{
+ const source=await document(Buffer.concat([bytes,Buffer.from('\n%order-cost-'+randomUUID())]));const value=raw();value.documentKind='order_confirmation';value.items=value.items.slice(0,1);value.purchaseTotal=null;
+ const draft=await extracted(source,value),selected=create(draft.items[0],'SYNTHETIC TV');selected.expense={action:'create',title:'SYNTHETIC TV',amountCents:44400,spentOn:'2026-06-14',supplier:null};const key=randomUUID();
+ const result=await confirm(draft,[selected],key);assert.equal(result.result.newExpenses,1);assert.equal(result.result.newObjects,1);await confirm(draft,[selected],key);assert.equal(await db.homeExpense.count({where:{documentId:source.id}}),1);
+ });
  await t.test('manual unknown source saves object and declared purchase cost atomically, with replay and profile',async()=>{
  const doc=await document(Buffer.concat([bytes,Buffer.from('\n%manual-unknown-'+randomUUID())]));
  const draft=(await service.manualDraft(a,h,{documentId:doc.id},randomUUID())).draft;assert.equal(draft.documentKind,'unsupported');

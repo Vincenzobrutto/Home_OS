@@ -30,7 +30,7 @@ export function editProfileField(form:Form,key:FieldKey,decision:NonNullable<For
  return result;
 }
 
-export function automaticExpenseEligible(item:Item,draft:Draft){return draft.mode==='extraction'&&draft.documentKind==='purchase_document'&&(draft.items.length===1||!!item.purchaseAmount)&&(item.quantity?.value??1)===1&&!draft.needsReview&&!!draft.purchaseTotal&&draft.purchaseTotal.amountCents>0&&!!item.profile.purchaseDate?.value;}
+export function automaticExpenseEligible(item:Item,draft:Draft){return draft.mode==='extraction'&&['purchase_document','order_confirmation'].includes(draft.documentKind)&&(draft.items.length===1||!!item.purchaseAmount)&&(item.quantity?.value??1)===1&&!draft.needsReview&&!!draft.purchaseTotal&&draft.purchaseTotal.amountCents>0&&!!item.profile.purchaseDate?.value;}
 export function expenseNeedsReview(form:Form){return form.action!=='skip'&&(form.expenseAutoState==='pending'||form.expenseAutoState==='review'||form.expense==='create'&&form.manualItemAmount===false);}
 
 export function profileNeedsReview(form:Form){return form.action!=='skip'&&Object.values(form.fields).some(f=>f?.action==='replace'&&(!f.consent||!f.expectedValue));}

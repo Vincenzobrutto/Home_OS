@@ -82,9 +82,9 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
           calendar(value);
           const dateMeaning = ({purchaseDate: /(?:data.{0,12}(?:acquisto|ordine|fattura)|purchase.{0,8}date|order.{0,8}date|acquistato.{0,5}il)/iu,deliveredDate: /(?:consegnato.{0,8}il|consegna.{0,8}effettiva|delivered.{0,8}on)/iu,warrantyStart: /(?:inizio.{0,10}garanzia|garanzia.{0,10}(?:dal|decorrenza)|warranty.{0,10}start)/iu,warrantyEnd: /(?:scadenza.{0,10}garanzia|garanzia.{0,10}(?:al|fino)|warranty.{0,10}(?:end|expir))/iu} as Record<string,RegExp>)[key];
           if ((key==='purchaseDate'||key==='deliveredDate')&&value>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}))throw new ProviderFailure('evidence_unverified');
-          const purchaseSource = key === 'purchaseDate' && row.documentKind === 'purchase_document'
+          const purchaseSource = key === 'purchaseDate' && ['purchase_document','order_confirmation'].includes(String(row.documentKind))
             ? purchaseDateSource(source.excerpt, value, context.kind === 'text' ? context.pages[source.page - 1] : undefined) : null;
-          const dateVerified = key === 'purchaseDate' && row.documentKind === 'purchase_document'
+          const dateVerified = key === 'purchaseDate' && ['purchase_document','order_confirmation'].includes(String(row.documentKind))
             ? purchaseSource !== null
             : dateMeaning.test(source.excerpt) && printedDates(source.excerpt).length === 1 && printedDates(source.excerpt).includes(value);
           if (!dateVerified) throw new ProductEvidenceFailure(key as ProductField, 'date');
@@ -114,7 +114,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       let purchaseAmount: ProductItem['purchaseAmount'] = null;
       if (r.purchaseAmount !== undefined && r.purchaseAmount !== null) {
         const price = object(r.purchaseAmount, ['amountCents', 'evidence']), source = evidence(price.evidence, context);
-        if (row.documentKind !== 'purchase_document' || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/(?:totale\s+riga|importo\s+riga|prezzo\s+articolo|line\s+total)/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(price.amountCents))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
+        if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/(?:totale\s+riga|importo\s+riga|prezzo\s+articolo|line\s+total)/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(price.amountCents))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
         purchaseAmount = { amountCents: Number(price.amountCents), source };
       }
       items.push({ id, fingerprint, fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
@@ -123,7 +123,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {
       const total = object(row.purchaseTotal, ['amountCents', 'evidence']);
       const source = evidence(total.evidence, context);
-      if (row.documentKind !== 'purchase_document' || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo))?\s*[:=]?\s*(?:EUR|€)?\s*\d[\d., ]*\s*(?:EUR|€)?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
+      if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|€)?\s*\d[\d., ]*\s*(?:EUR|€)?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
       purchaseTotal = { amountCents: Number(total.amountCents), source };
     }
     if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents) throw new ProductEvidenceFailure('purchaseTotal', 'total');

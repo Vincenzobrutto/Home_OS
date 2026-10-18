@@ -57,3 +57,11 @@ it('manual unknown document can include an immediate purchase cost with the obje
  await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));
  expect(w.submit.mock.calls[0]![0][0].expense).toMatchObject({action:'create',amountCents:49900,spentOn:'2026-06-14'});
 });
+
+it('order screenshot exposes purchase cost and permits manual completion without an extracted total',async()=>{
+ const draft=fixture();draft.documentKind='order_confirmation';draft.items=draft.items.slice(0,1);draft.purchaseTotal=null;draft.items[0]!.profile={};delete draft.items[0]!.purchaseAmount;
+ const w=mount(draft);expect(screen.getByText('Costo di acquisto (facoltativo)')).toBeVisible();
+ await w.user.type(screen.getByLabelText('Importo (€)'),'444');expect(screen.getByRole('button',{name:'Salva e organizza'})).toBeDisabled();
+ await w.user.type(screen.getByLabelText('Data della spesa'),'2026-06-14');await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));
+ expect(w.submit.mock.calls[0]![0][0].expense).toMatchObject({action:'create',amountCents:44400,spentOn:'2026-06-14'});
+});

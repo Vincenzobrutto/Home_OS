@@ -254,3 +254,10 @@ test('V9 shares source grammar once and resolves citations without changing thei
  for(const index of [-1,999,'0',null]){const bad=structuredClone(wire);bad.items[0].fields[0].evidence=index;fails(()=>onboardingWireOutput(bad),'analysis_invalid_output');}
  const forged=structuredClone(wire);forged.sources[forged.items[0].fields[0].evidence].page=2;fails(()=>productExtraction(onboardingWireOutput(forged),imageContext),'analysis_invalid_output');
 });
+
+test('cropped order keeps explicit current total without inventing date or using crossed-out price',()=>{
+ const value=raw(true);value.documentKind='order_confirmation';value.purchaseTotal={amountCents:44400,evidence:proof('TOTALE COSTI 444,00 €',true)};
+ const result=productExtraction(value,imageContext);assert.equal(result.purchaseTotal.amountCents,44400);assert.equal(result.items[0].fields.purchaseDate,undefined);
+ const crossed=structuredClone(value);crossed.purchaseTotal.amountCents=60000;fails(()=>productExtraction(crossed,imageContext),'evidence_unverified');
+ const delivery=structuredClone(value);delivery.documentKind='delivery_notice';fails(()=>productExtraction(delivery,imageContext),'evidence_unverified');
+});
