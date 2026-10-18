@@ -76,7 +76,7 @@ test('quantity must be explicit and refer to a supported labelled quantity', () 
   assert.equal(productExtraction(data, textContext).items[0].quantity, null);
   for (const [value, excerpt] of [[2, 'Quantità: 1'], [1, 'Ordine 1'], [1, 'Quantità: 1 Quantità: 2']]) {
     data.items[0].quantity = { value, evidence: proof(excerpt) };
-    fails(() => productExtraction(data, { ...textContext, pages: [line + '\n' + excerpt] }), 'evidence_unverified');
+    const partial=productExtraction(data, { ...textContext, pages: [line + '\n' + excerpt] }); assert.equal(partial.items[0].quantity,null); assert.equal(partial.needsReview,true); assert(partial.items[0].fields.name);
   }
 });
 test('stable item keys survive replay, source copies share fingerprint but not local row id', () => {

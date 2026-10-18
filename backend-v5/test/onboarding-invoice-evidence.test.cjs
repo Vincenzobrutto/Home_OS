@@ -8,7 +8,7 @@ function context(text){return{kind:'text',snapshot:{documentId:randomUUID(),docu
 const page=[date,table,total].join('\n');
 test('receipt date, quantity table, capacity and total validate with original citations',()=>{const x=productExtraction(output(),context(page));assert.equal(x.items[0].quantity.value,1);assert.equal(x.purchaseTotal.amountCents,9950);const p=proposedProfile(x.items[0]);assert.equal(p.warrantyStart.value,'2025-05-12');assert.equal(p.warrantyEnd.value,'2027-05-12');});
 test('manufacturing/expected dates and an unrelated second date are not purchase evidence',()=>{assert.equal(receiptPurchaseDate('Prodotto il 12 maggio 2025','2025-05-12'),false);assert.equal(receiptPurchaseDate("Ricevuta d’acquisto 12 maggio 2025; consegna prevista 14 maggio 2025",'2025-05-14'),false);assert.equal(receiptPurchaseDate("Ricevuta d’acquisto 12 maggio 2025",'2025-05-12'),true);const x=output();x.items[0].fields.purchaseDate.evidence=ev('Data acquisto: 12 maggio 2025; consegna: 14 maggio 2025');const partial=productExtraction(x,context(page+'\n'+x.items[0].fields.purchaseDate.evidence.excerpt));assert.equal(partial.items[0].fields.purchaseDate,undefined);assert.ok(partial.reviewWarnings.length);});
-test('quantity belongs to the exact product row, not another quantity or first match',()=>{const t='Qtà Articolo Prezzo\n2 Lampada demo\n1 '+title+'\n99,50 EUR';assert.equal(tableQuantity(t,title),1);assert.equal(tableQuantity(t,'Lampada demo'),2);assert.equal(tableQuantity(t+'\n1 '+title,title),null);assert.equal(tableQuantity('Articolo Qtà\n'+title+' 1',title),null);const x=output();x.items[0].quantity={value:2,evidence:ev(t)};assert.throws(()=>productExtraction(x,context(page+'\n'+t)),e=>e.field==='quantity');});
+test('quantity belongs to the exact product row, not another quantity or first match',()=>{const t='Qtà Articolo Prezzo\n2 Lampada demo\n1 '+title+'\n99,50 EUR';assert.equal(tableQuantity(t,title),1);assert.equal(tableQuantity(t,'Lampada demo'),2);assert.equal(tableQuantity(t+'\n1 '+title,title),null);assert.equal(tableQuantity('Articolo Qtà\n'+title+' 1',title),null);const x=output();x.items[0].quantity={value:2,evidence:ev(t)};const partial=productExtraction(x,context(page+'\n'+t));assert.equal(partial.items[0].quantity,null);assert.equal(partial.items[0].fields.name.value,title);assert.equal(partial.needsReview,true);assert(partial.reviewWarnings.some(w=>w.field==='item:0:quantity'));});
 test('forged citation and wrong totals remain rejected, diagnostics contain no document text',()=>{const x=output();x.items[0].fields.name.evidence.excerpt='PRIVATE FORGED';assert.throws(()=>productExtraction(x,context(page)),e=>e.code==='evidence_unverified'&&e.field==='name'&&!JSON.stringify(e).includes('PRIVATE FORGED'));const y=output();y.purchaseTotal.amountCents=9951;const partial=productExtraction(y,context(page));assert.equal(partial.purchaseTotal,null);assert.equal(partial.items.length,1);assert(partial.reviewWarnings.some(w=>w.field==='purchaseTotal'));});
 function pdf(lines){const stream='BT /F1 12 Tf 40 790 Td '+lines.map((l,i)=>(i?'0 -24 Td ':'')+'('+l.replace(/[()\\]/g,c=>'\\'+c)+') Tj').join('\n')+' ET';const objects=['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Count 1 /Kids [3 0 R] >>','<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>','<< /Length '+Buffer.byteLength(stream)+' >>\nstream\n'+stream+'\nendstream'];let s='%PDF-1.4\n';const offsets=[];objects.forEach((o,i)=>{offsets.push(Buffer.byteLength(s));s+=(i+1)+' 0 obj\n'+o+'\nendobj\n';});const xref=Buffer.byteLength(s);s+='xref\n0 6\n0000000000 65535 f \n'+offsets.map(n=>String(n).padStart(10,'0')+' 00000 n \n').join('');return Buffer.from(s+'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');}
 test('real parser on a generated synthetic PDF feeds quantity/date/total evidence without network',async()=>{const bytes=pdf([date,...table.split('\n'),total]),snapshot={documentId:randomUUID(),documentVersion:1,documentSha256:digest(bytes)};const [parsed]=await new PdfTextExtractor().extract([{snapshot,bytes}]);const payload=output();payload.items[0].fields.purchaseDate.evidence.excerpt=parsed.pages[0].split('\n').find(line=>line.startsWith('Ricevuta'));const x=productExtraction(payload,{kind:'text',snapshot,pages:parsed.pages});assert.equal(x.items.length,1);assert.equal(x.items[0].quantity.value,1);assert.equal(x.purchaseTotal.amountCents,9950);});
@@ -47,4 +47,31 @@ test('generated PDF through wire normalization and domain verifies short date ci
  const [parsed]=await new PdfTextExtractor().extract([{snapshot,bytes}]);const x=output();x.items[0].fields.purchaseDate.evidence=ev('12 maggio 2025');
  const wire={...x,items:x.items.map(item=>({...item,fields:Object.entries(item.fields).map(([field,data])=>({field,...data}))}))};
  const result=productExtraction(onboardingWireOutput(wire),{kind:'text',snapshot,pages:parsed.pages});assert.equal(result.items[0].fields.purchaseDate.value,'2025-05-12');assert.equal(result.purchaseTotal.amountCents,9950);
+});
+
+const {tablePurchaseAmount}=require('../dist/object-onboarding/invoice-evidence');
+test('description-first wrapped Amazon rows retain their own quantity and final printed price',()=>{
+ const name='ROBOT X50 Ultra Complete';const t='Descrizione   Quant.   Prezzo Totale\n'+name+'\nNavigazione demo\nASIN: TESTONLY\n1   € 899,00\nCosti di spedizione € 0,00';
+ assert.equal(tableQuantity(t,name),1);assert.equal(tablePurchaseAmount(t,name),89900);
+ const two='Descrizione Quantità Prezzo Totale\nLampada demo 2 € 10,00 € 20,00\nRouter demo 1 € 80,00 € 80,00\nTotale € 100,00';
+ assert.equal(tablePurchaseAmount(two,'Lampada demo'),2000);assert.equal(tablePurchaseAmount(two,'Router demo'),8000);
+ assert.equal(tablePurchaseAmount(two,'Articolo assente'),null);
+ assert.equal(tablePurchaseAmount(two.replace('Totale € 100,00','Router demo 1 € 80,00 € 80,00'),'Router demo'),null);
+ assert.equal(tablePurchaseAmount('Descrizione Quantità Prezzo unitario Totale\nRouter demo 2 € 80,00','Router demo'),null);
+ assert.equal(tablePurchaseAmount('Router demo\nTotale € 80,00','Router demo'),null);
+});
+test('verified table price survives an unverified quantity without allowing automatic confirmation',()=>{
+ const t='Descrizione Quantità Prezzo Totale\n'+title+' 1 € 99,50';const x=output();x.items[0].purchaseAmount={amountCents:9950,evidence:ev(t)};x.items[0].quantity={value:2,evidence:ev(t)};
+ const result=productExtraction(x,context(page+'\n'+t));assert.equal(result.items[0].purchaseAmount.amountCents,9950);assert.equal(result.items[0].quantity,null);assert(result.needsReview);
+});
+
+test('incomplete neighbouring rows cannot lend their names to a different price',()=>{
+ for(const row of ['Lampada demo','Lampada demo € 10,00']){
+ const t='Descrizione Quantità Prezzo Totale\n'+row+'\nRouter demo 1 € 80,00';assert.equal(tablePurchaseAmount(t,'Lampada demo'),null);assert.equal(tablePurchaseAmount(t,'Router demo'),8000);
+ }
+});
+
+test('a decimal in a wrapped product description is not a monetary row boundary',()=>{
+ const name='Macchina ghiaccio 2.2L';const t='Descrizione Quantità Prezzo Totale\n'+name+'\nModello demo\n1 € 99,50';
+ assert.equal(tableQuantity(t,name),1);assert.equal(tablePurchaseAmount(t,name),9950);
 });

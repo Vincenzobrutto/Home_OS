@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Estrazione V13
+
+Completati: righe Amazon con descrizione multilinea, quantità parziali, classificazione di planimetria visiva senza titolo e diagnostica sicura. Verificati sette originali con otto analisi; caffè con i cinque dati richiesti. Da affinare: data e tipo impianto della conformità, candidati economici ausiliari senza perdere costo corrente/importo da pagare. Usare fixture/replay: resta una sola chiamata delle 40 autorizzate. [Report](v5/document-extraction-v13-20261018.md).
+
 ## V5 — residui del caricamento automatico (2026-10-18)
 
 - Misurare completamento senza interventi su corpus reale, prima di chiamare affidabile l’esperienza automatica. La nuova orchestrazione non corregge da sola quantity/evidence_unverified o output AI incompleti.

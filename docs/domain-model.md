@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Titolo locale delle planimetrie visive
+
+DocumentUnderstanding.title può avere origin=document_type quando una planimetria è riconosciuta visivamente ma manca un titolo letterale verificabile. value è allora «Planimetria», source conserva la regione osservata e documentTitle/unverified richiede revisione. Non è una citazione testuale verificata né abilita asset o spese. Quantità opzionali non verificate restano null con warning, senza sopprimere identità e altri dati validi. [V13](v5/document-extraction-v13-20261018.md).
+
 ## V5 — caricamento automatico delegato (2026-10-18)
 
 Nessun nuovo modello o migrazione. ObjectOnboardingRequest, operation automatic-intake-v1 e target=batchId, conserva il consenso per lista di documenti/snapshot, avanzamento per originale e lease recuperabile. Le scritture canoniche continuano a passare da IntakeBatchesService e ObjectOnboardingService. Gli originali non vengono modificati; le normali ricevute mantengono la semantica immutabile. Vedi decisione e contratto API del18ottobre.

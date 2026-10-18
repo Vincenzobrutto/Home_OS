@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Estrazione documenti V13 verificata sugli originali
+
+Corrette quantità opzionali e tabelle descrizione/quantità/prezzo/totale; planimetrie visive senza intestazione proposte come documenti della casa da rivedere. Diagnostica per fase senza testo personale. Otto analisi su sette originali: costo 0,258852 USD, saldo 2,416046 USD, 39/40 chiamate. Caffè e robot con identità/prezzo/data; conformità ancora parziale. Dati canonici 9/5/5 e nove SHA invariati. Test offline e DB/HTTP verdi. Dettagli: [report V13](v5/document-extraction-v13-20261018.md).
+
 ## 2026-10-18 — Organizzazione automatica dei caricamenti V5
 
 Consenso unico per invio AI e creazione delegata dei casi chiari, coda durevole, recupero dopo chiusura pagina, estrazioni già disponibili riusate senza costo. Riepilogo e sole eccezioni al posto della revisione di tutte le righe; percorso manuale mantenuto. Doppioni/source/versioni/budget preservati; nessun nuovo invio dopo errore o incertezza. Fatture con prezzi di riga verificati, bollette senza oggetto e documenti casa coperti dai test sintetici. Nessuna nuova analisi personale o modifica budget. Report docs/v5/automatic-intake-20261018.md.

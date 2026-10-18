@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Validazione parziale senza perdere i dati utili
+
+Una quantità non verificabile viene omessa e richiede revisione, conservando i campi validi; non consente conferma automatica. Le tabelle descrizione/quantità/prezzo/totale possono provare un importo di riga senza etichette aggiunte dal modello; vietate ripartizioni e moltiplicazioni. Una planimetria visiva priva di titolo stampato può proporre un titolo locale con origin=document_type e warning, esclusivamente come documento casa. Nessun allentamento di fatture, identità, fonte/SHA o controllo doppioni. Diagnostica limitata a fase e conteggi. [Verifica e limiti](v5/document-extraction-v13-20261018.md).
+
 ## 2026-10-18 — Organizzazione automatica su consenso di caricamento
 
 Il committente richiede che caricare i documenti produca direttamente oggetti e spese nei casi chiari. Per V5 il consenso esplicito del caricamento autorizza sia il trasferimento ad Anthropic sia la conferma delegata dei soli dati validati e non ambigui. La precedente scelta di richiedere una conferma per ogni articolo resta nel percorso manuale e per le eccezioni; non si estende al nuovo percorso autorizzato. Campi esistenti e fonti restano protetti, mai sovrascritti automaticamente.

@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Consolidamento qualità estrazione
+
+V13 attiva in locale e collaudata su sette originali già caricati senza nuove scritture canoniche. Acquisti, bollette, lavori e planimetrie producono proposte distinte nella revisione unica; conformità tecnica ancora parziale. Prossimo passo: coprire le semantiche residue con test sintetici e osservazioni utenti, preservando budget e controlli dei doppioni. Nessun via libera a estendere il limite di 40 analisi. [Evidenze](v5/document-extraction-v13-20261018.md).
+
 ## V5 — caricamento automatico: prima implementazione (2026-10-18)
 
 Implementati consenso per caricamento, orchestrazione persistente e conferma delegata dei casi chiari; revisione solo delle eccezioni. Riavvio server/pagina, replay, fonte modificata, possibili doppioni, fattura/bolletta/planimetria ed importi per riga coperti con dati sintetici. Resta misurare il tasso reale di completamento senza interventi: l’estrazione AI sottostante non è stata migliorata né ricollaudata a pagamento in questa sessione.

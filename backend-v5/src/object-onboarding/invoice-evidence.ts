@@ -1,4 +1,4 @@
-import { printedDates } from '../economy/document-evidence';
+import { printedDates, printedCents } from '../economy/document-evidence';
 
 const normalized = (text: string) => text.normalize('NFC').replace(/\s+/gu, ' ').trim();
 const purchaseLabel = /^(?:(?:il tuo )?ordine\s+(?:del|effettuato il)|ricevuta\s+d[’']acquisto|data\s*(?:(?:di|d[’'])\s*)?(?:acquisto|ordine|fattura)|acquistato il|purchase date|order date)\s*[:–-]?\s*/iu;
@@ -37,6 +37,7 @@ export function receiptPurchaseDate(excerpt: string, value: string): boolean {
 }
 /** A quantity column is usable only when a unique product row can be attributed. */
 export function tableQuantity(excerpt:string, productName:string):number|null {
+ const described=descriptionRows(excerpt,productName);if(described)return described.quantity;
  const clean=(s:string)=>s.normalize('NFC').replace(/\s+/gu,' ').trim();
  const lines=excerpt.split(/\r?\n/u).map(line=>line.trim()).filter(Boolean);
  const header=lines.findIndex(line=>/^(?:quantit[aà]|quantity|qty|qt[aà])\.?\s+(?:articolo|prodotto|descrizione|item|product)\b/iu.test(line));
@@ -50,3 +51,25 @@ export function tableQuantity(excerpt:string, productName:string):number|null {
  const matches=rows.filter(row=>clean(row.text).includes(clean(productName)));
  return matches.length===1?matches[0].quantity:null;
 }
+
+/** Read description-first tables without borrowing a quantity or price from another row. */
+function descriptionRows(excerpt:string,productName:string):{quantity:number;totalCents:number}|null {
+ const lines=excerpt.split(/\r?\n/u).map(s=>s.trim()).filter(Boolean);
+ const header=lines.findIndex(s=>/^(?:descrizione|articolo|prodotto|description|item)\s+(?:quant\.?|quantit[aà]|quantity|qty|qt[aà]|q\.?t[aà])\.?\s+(?:prezzo|price|importo|totale|total)/iu.test(s));
+ if(header<0||!/(?:totale|total)\b/iu.test(lines[header]))return null;
+ const money='(?:(?:€|EUR|EURO)\\s*\\d[\\d.,]*|\\d[\\d.,]*\\s*(?:€|EUR|EURO))';
+ const tail=new RegExp('^(.*?)\\b(\\d{1,2})\\s+('+money+')(?:(?:\\s+)('+money+'))?\\s*$','iu');
+ const rows:Array<{name:string;quantity:number;totalCents:number}>=[];let pending:string[]=[];
+ for(const line of lines.slice(header+1)){
+  if(/^(?:totale|subtotale|spedizione|costi di spedizione|ordine|ricevuta|indirizzo|pagamento|iva|vat|total|shipping)\b/iu.test(line))break;
+  const match=tail.exec(line);
+  if(match){const name=normalized(match[1].trim() ? match[1] : pending.join(' ')),amounts=printedCents(match[4]??match[3]);
+   // A separate unit-price column requires its own printed row total.
+   if(name&&amounts.length===1&&(match[4]||!/unitari|unit\s+price/iu.test(lines[header])))rows.push({name,quantity:Number(match[2]),totalCents:amounts[0]});
+   pending=[];
+  }else if(/(?:€|\bEUR\b|euro)/iu.test(line)&&printedCents(line).length)pending=[];else pending.push(line);
+ }
+ const matches=rows.filter(r=>r.name.includes(normalized(productName)));
+ return matches.length===1?{quantity:matches[0].quantity,totalCents:matches[0].totalCents}:null;
+}
+export function tablePurchaseAmount(excerpt:string,productName:string):number|null{return descriptionRows(excerpt,productName)?.totalCents??null;}
