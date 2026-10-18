@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Accesso diretto alle revisioni aperte
+
+Documenti mostra Da completare accanto a Carica documenti. Apre nello stesso contesto la lista dei caricamenti personali aperti e non vuoti; ogni link riusa il lotto esistente. Il filtro è lato server e precede paginazione, per non nascondere revisioni vecchie dietro pagine di esiti completati. Cursori legati al filtro; vecchia lista/cursori senza state restano compatibili. Nessun nuovo flusso di analisi o duplicazione del lotto e nessuna richiesta AI all’apertura.
+
 ## 18 ottobre 2026 — Selezione file prima dell’invio e rimozione pre-AI
 
 La scelta/il trascinamento compongono una lista locale modificabile: nessun upload o analisi fino a Carica documenti/Carica e organizza. Dopo acquisizione è consentita la rimozione solo di contenuti scartabili: lotto personale aperto, versione corrente, nessun onboarding AI avviato, organizzazione o collegamento. Letture locali in volo vanno attese. Per una copia si elimina solo la riga del lotto. Per un originale nuovo, privato e unico, riga/documento/metadati sono rimossi atomicamente, poi cleanup dello storage solo dopo commit e verifica assenza riferimenti; conferma esplicita nell’app. Chiavi persistenti rendono sicuro il replay. Scartata una cancellazione generica di documenti già elaborati/condivisi.

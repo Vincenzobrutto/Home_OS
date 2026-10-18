@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Accesso alla revisione risolto
+
+RISOLTO il rilievo «Controlla e organizza» nascosto: Da completare ora visibile in Documenti, lista aperti non vuoti e ripresa diretta del lotto. Include stati caricamento/errore/vuoto e paginazione. Sostituisce la precedente nota UX riportata qui sotto.
+
 ## UX rilevata dal committente — accesso alla revisione
 
 «Controlla e organizza» è raggiungibile da Carica documenti→Caricamenti precedenti, dalle azioni di compilazione e da Organizza documento nel dettaglio. Accesso troppo indiretto dalla lista Documenti: da valutare un ingresso esplicito ai caricamenti da completare, senza duplicare revisioni o creare una nuova area separata. Non implementato in questo incremento.

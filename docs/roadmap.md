@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Ripresa caricamenti
+
+Completato ingresso Da completare direttamente in Documenti, con link a Controlla e organizza sul lotto esistente. Verificati percorsi ripresa, paginazione ed errore/vuoto; nessuna nuova area di revisione o chiamata AI.
+
 ## 18 ottobre 2026 — Ingresso caricamento semplificato
 
 Completata selezione locale modificabile prima dell’invio, pulsante file esplicito e scarto di acquisizioni errate prima dell’AI. Revisione unica e consenso automatico esistenti conservati. Eliminazione generale dopo elaborazione resta fuori perimetro.

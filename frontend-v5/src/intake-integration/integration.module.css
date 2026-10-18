@@ -14,3 +14,7 @@
 .uploadConsent label { display: flex; align-items: flex-start; gap: var(--space-2); }
 .uploadConsent input { flex-shrink: 0; margin-top: .2em; }
 @media (max-width: 480px) { .dropZone { padding: var(--space-4); } }
+.pendingUploads { padding: 0; list-style: none; display: grid; gap: var(--space-3); }
+.pendingUploads a { display: flex; justify-content: flex-start; text-align: left; width: 100%; box-sizing: border-box; }
+.pendingUploads a > span { display: grid; gap: var(--space-1); min-width: 0; overflow-wrap: anywhere; }
+.pendingUploads a > span > span { font-size: 13px; color: var(--color-muted); }

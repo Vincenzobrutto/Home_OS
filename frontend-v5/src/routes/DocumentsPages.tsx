@@ -1,3 +1,4 @@
+import { PendingUploads } from '../intake-integration/PendingUploads';
 import { houseDocumentType } from '../document-intake/model';
 import { DocumentBillEntry } from '../object-onboarding/DocumentBillEntry';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
@@ -67,6 +68,8 @@ export function DocumentsPage() {
   const home = useCurrentHome();
   useDocumentTitle(`Documenti · ${home.name}`);
   const canUpload = home.permissions.includes('edit');
+  const [pendingOpen,setPendingOpen]=useState(false);
+  const pendingId=useId();
   const canExport = home.permissions.includes('export');
   const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
   const [params, setParams] = useSearchParams();
@@ -93,12 +96,14 @@ export function DocumentsPage() {
         </div>
         {canUpload && (
           <div className={docs.toolbarActions}>
+            <button type="button" className={ui.btn} aria-expanded={pendingOpen} aria-controls={pendingId} onClick={()=>setPendingOpen(v=>!v)}>Da completare</button>
             <Link to={`/home/${encodeURIComponent(home.id)}/documenti/organizza`} className={cx(ui.btn, ui.primary)}>
               <Icon name="plus" /> Carica documenti
             </Link>
           </div>
         )}
       </div>
+      {canUpload&&pendingOpen&&<PendingUploads homeId={home.id} id={pendingId}/>}
       {!canUpload && (
         <p className={cx(docs.note, docs.panel)}>
           Con il tuo ruolo puoi consultare e scaricare i documenti visibili, non caricarne di nuovi.

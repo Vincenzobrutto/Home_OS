@@ -1,3 +1,7 @@
+## V5 — Lista caricamenti da completare (18 ottobre 2026)
+
+GET /homes/:homeId/document-intake/batches accetta state=open|completed facoltativo insieme a cursor. open restituisce soltanto lotti personali aperti con almeno un item. Filtro applicato prima del limite10; cursori legati a account/casa/filtro. Senza state resta il contratto precedente e sono validi i cursori preesistenti. Nessuna scrittura o chiamata AI.
+
 ## V5 — Rimozione dal caricamento (18 ottobre 2026)
 
 Il DTO item aggiunge canRemove:boolean, ricalcolato dai riferimenti canonici. POST /homes/:homeId/document-intake/batches/:batchId/items/:itemId/removal con {expectedVersion} e Idempotency-Key restituisce il lotto aggiornato. Stessi guard account/casa/CSRF/edit, lock casa/lotto, controllo versione e replay. Una copia elimina solo la riga; un originale è cancellabile soltanto se privato dell’utente, unico nel lotto e non elaborato/organizzato/collegato/condiviso. Automatic-run già autorizzato sul lotto blocca rimozione. Risposte409 per stato cambiato o non scartabile. Nessuna modifica al ledger AI.

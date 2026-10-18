@@ -302,7 +302,7 @@ export class IntakeBatchesService {
     });
   }
   list(a: string, h: string, query: unknown) {
-    const q = object(query, ['cursor']), binding = digest(JSON.stringify([a, h, 'intake-list-v1']));
+    const q = object(query, ['cursor','state']);if(q.state!==undefined&&(typeof q.state!=='string'||!['open','completed'].includes(q.state)))throw invalid();const state=q.state as 'open'|'completed'|undefined,binding = digest(JSON.stringify(state?[a,h,'intake-list-v2',state]:[a, h, 'intake-list-v1']));
     let anchor: { id: string; t: string } | undefined;
     if (q.cursor !== undefined) {
       try {
@@ -312,7 +312,7 @@ export class IntakeBatchesService {
       } catch { throw invalid('Pagina non valida.'); }
     }
     return this.authorized(a, h, false, async tx => {
-      const rows = await tx.documentIntakeBatch.findMany({ where: { accountId: a, homeId: h, ...(anchor ? { OR: [{ createdAt: { lt: new Date(anchor.t) } }, { createdAt: new Date(anchor.t), id: { lt: anchor.id } }] } : {}) }, include: { _count: { select: { items: true } } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 11 });
+      const rows = await tx.documentIntakeBatch.findMany({ where: { accountId: a, homeId: h, ...(state?{state,...(state==='open'?{items:{some:{}}}:{})}:{}), ...(anchor ? { OR: [{ createdAt: { lt: new Date(anchor.t) } }, { createdAt: new Date(anchor.t), id: { lt: anchor.id } }] } : {}) }, include: { _count: { select: { items: true } } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 11 });
       const page = rows.slice(0, 10), last = page.at(-1);
       return { items: page.map(row => ({ id: row.id, state: row.state, createdAt: row.createdAt.toISOString(), itemCount: row._count.items })), nextCursor: rows.length > 10 && last ? Buffer.from(JSON.stringify({ id: last.id, t: last.createdAt.toISOString(), b: binding })).toString('base64url') : null };
     });

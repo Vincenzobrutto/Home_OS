@@ -160,6 +160,12 @@ test('Intake B1b: multipart uploads, durable replay, canonical private originals
     const doc=await db.documentVersion.findUniqueOrThrow({where:{documentId:id}}),job=await db.objectOnboardingJob.create({data:{accountId:A.account.id,homeId:home.id,documentId:id,documentVersion:doc.version,documentSha256:doc.sha256,mimeType:doc.mimeType,provider:'anthropic',state:'failed',consentToProviderTransfer:true,key:randomUUID(),digest:'synthetic-no-dispatch'}});
     try{assert.equal((await get(batch)).body.batch.items[0].canRemove,false);assert.equal((await call(A,path+'/batches/'+batch.id+'/items/'+first.id+'/removal','POST',{expectedVersion:first.version},randomUUID())).status,409);assert.equal(await db.document.count({where:{id}}),1);}finally{await db.objectOnboardingJob.delete({where:{id:job.id}});}
   });
+  await t.test('pending list filters completed, empty and foreign batches without changing the legacy list',async()=>{
+    const f=fixture(),open=await make([f]),done=await make([fixture()]),empty=await make([fixture()]),foreign=await make([fixture()],B);
+    await db.documentIntakeBatch.update({where:{id:done.id},data:{state:'completed'}});await db.documentIntakeItem.deleteMany({where:{batchId:empty.id}});
+    const pending=await call(A,path+'/batches?state=open');assert.equal(pending.status,200);assert(pending.body.items.some(b=>b.id===open.id));for(const id of [done.id,empty.id,foreign.id])assert(!pending.body.items.some(b=>b.id===id));
+    const legacy=await call(A,path+'/batches');assert(legacy.body.items.some(b=>b.id===done.id));assert.equal((await call(A,path+'/batches?state=bad')).status,422);
+  });
   await t.test('Changed source redacts names/references and membership loss during storage prevents publication', async () => {
     const f = fixture(), batch = await make([f]), done = await upload(batch, 0, f), doc = done.body.batch.items[0].documentLink.document;
     await db.document.update({ where: { id: doc.id }, data: { uploaderId: B.account.id } });

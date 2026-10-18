@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Da completare in Documenti
+
+Nuovo accesso vicino a Carica documenti per riprendere subito i lotti aperti nella revisione esistente. Lista filtrata lato server, vuoti/completati esclusi, account/casa rispettati. Nessuna analisi avviata dalla navigazione.
+
 ## 18 ottobre 2026 — Caricamento documenti più chiaro
 
 Pulsante Scegli file evidente, elenco con nome/dimensione e Rimuovi, avvio upload/AI soltanto dopo conferma della lista. La stessa scelta file è usata per aggiungere a un lotto. Rimuovi con conferma anche per file già acquisiti prima dell’AI; copie conservano l’originale, documenti elaborati/collegati protetti. Test sintetici HTTP e UI, verifica browser390/320; nessuna analisi a pagamento.
