@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Evidenze conformità V14, verifica offline
+
+Date brevi della dichiarazione recuperano soltanto la propria etichetta contigua nella pagina verificata. Alias italiani espliciti del tipo impianto sono normalizzati alla tassonomia, senza inferire acquisto/garanzia. Prompt V14 più preciso sulle citazioni visuali.16 nuovi test,34 regressioni understanding,28 DB verdi; budget e contenuti invariati. [Report](v5/conformity-evidence-v14-20261018.md).
+
 ## 18 ottobre 2026 — Estrazione documenti V13 verificata sugli originali
 
 Corrette quantità opzionali e tabelle descrizione/quantità/prezzo/totale; planimetrie visive senza intestazione proposte come documenti della casa da rivedere. Diagnostica per fase senza testo personale. Otto analisi su sette originali: costo 0,258852 USD, saldo 2,416046 USD, 39/40 chiamate. Caffè e robot con identità/prezzo/data; conformità ancora parziale. Dati canonici 9/5/5 e nove SHA invariati. Test offline e DB/HTTP verdi. Dettagli: [report V13](v5/document-extraction-v13-20261018.md).

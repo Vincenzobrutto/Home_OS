@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Conformità, consolidamento V14 offline
+
+Completato primo incremento autonomo su etichette date e tipo impianto con16nuovi test e regressioni verdi. Nessuna migrazione o modifica della revisione unica. Proseguire su importi ausiliari e passaggio dei dati alla scheda, senza ripetere collaudi già verdi o consumare inutilmente l’ultima analisi. [Report](v5/conformity-evidence-v14-20261018.md).
+
 ## 18 ottobre 2026 — Consolidamento qualità estrazione
 
 V13 attiva in locale e collaudata su sette originali già caricati senza nuove scritture canoniche. Acquisti, bollette, lavori e planimetrie producono proposte distinte nella revisione unica; conformità tecnica ancora parziale. Prossimo passo: coprire le semantiche residue con test sintetici e osservazioni utenti, preservando budget e controlli dei doppioni. Nessun via libera a estendere il limite di 40 analisi. [Evidenze](v5/document-extraction-v13-20261018.md).

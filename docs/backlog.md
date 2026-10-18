@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Primo blocco autonomo estrazione
+
+Chiusi offline i casi riproducibili di data dichiarazione citata senza etichetta adiacente e alias italiano del tipo impianto. Rimane non dimostrata la causalità esatta delle omissioni nella precedente risposta personale, non conservata. Prossimo blocco: importi ausiliari fatture/bollette e distinzione dei ruoli. Nessun nuovo live test; resta una sola analisi. [V14](v5/conformity-evidence-v14-20261018.md).
+
 ## 18 ottobre 2026 — Estrazione V13
 
 Completati: righe Amazon con descrizione multilinea, quantità parziali, classificazione di planimetria visiva senza titolo e diagnostica sicura. Verificati sette originali con otto analisi; caffè con i cinque dati richiesti. Da affinare: data e tipo impianto della conformità, candidati economici ausiliari senza perdere costo corrente/importo da pagare. Usare fixture/replay: resta una sola chiamata delle 40 autorizzate. [Report](v5/document-extraction-v13-20261018.md).

@@ -70,7 +70,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if (row.hasMoreItems) throw new ProviderFailure('object_onboarding_too_many_items');
     const fingerprints = new Set<string>();
     if (row.requiresHumanReview !== undefined && typeof row.requiresHumanReview !== 'boolean') throw invalid();
-    const understanding=readUnderstanding(row.documentInfo,row.facts,row.items.length,value=>evidence(value,context));
+    const understanding=readUnderstanding(row.documentInfo,row.facts,row.items.length,value=>evidence(value,context),context.kind==='text'?context.pages:undefined);
     if(['conformity_declaration','house_document'].includes(String(row.documentKind))&&!understanding.documentInfo)throw invalid();
     if(row.documentKind==='conformity_declaration'&&understanding.documentInfo?.kind!=='conformity_declaration')throw invalid();
     if(understanding.documentInfo){const mapped:Record<string,string>={invoice:'purchase_document',receipt:'purchase_document',purchase_document:'purchase_document',purchase_order:'order_confirmation',delivery_notice:'delivery_notice',product_label:'device_label',conformity_declaration:'conformity_declaration',utility_bill:'utility_bill',ape:'house_document',floor_plan:'house_document'};row.documentKind=mapped[understanding.documentInfo.kind]??row.documentKind;}

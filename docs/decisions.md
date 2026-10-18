@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Etichetta contigua e normalizzazione semantica della conformità
+
+Una citazione data breve può essere espansa solo sulla sua riga o quella precedente della stessa pagina testuale verificata; ruoli discordanti o pagine diverse non si uniscono. Nei visuali manca OCR indipendente, quindi serve la citazione osservata completa. systemType può normalizzare alias italiani circoscritti presenti nella propria fonte verso i codici esistenti. Alternativa scartata: accettare qualunque data o classificare dal contesto non attribuito. [Prove e limiti V14](v5/conformity-evidence-v14-20261018.md).
+
 ## 18 ottobre 2026 — Validazione parziale senza perdere i dati utili
 
 Una quantità non verificabile viene omessa e richiede revisione, conservando i campi validi; non consente conferma automatica. Le tabelle descrizione/quantità/prezzo/totale possono provare un importo di riga senza etichette aggiunte dal modello; vietate ripartizioni e moltiplicazioni. Una planimetria visiva priva di titolo stampato può proporre un titolo locale con origin=document_type e warning, esclusivamente come documento casa. Nessun allentamento di fatture, identità, fonte/SHA o controllo doppioni. Diagnostica limitata a fase e conteggi. [Verifica e limiti](v5/document-extraction-v13-20261018.md).
