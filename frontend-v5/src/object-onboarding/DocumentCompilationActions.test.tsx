@@ -9,7 +9,7 @@ const prepareExisting=vi.hoisted(()=>vi.fn());
 vi.mock('../intake-integration/client',()=>({IntakeClient:class{prepareExisting(...args:unknown[]){return prepareExisting(...args);}}}));
 const callJson=vi.fn();
 vi.mock('../session/session',()=>({useAccount:()=>({id:'account'}),useApi:()=>({callJson})}));
-function mount(drafts:Array<{id:string;state:string}>=[],mode='extraction',lose=false,inline=true,houseDocument=false){
+function mount(drafts:Array<{id:string;state:string}>=[],mode='extraction',lose=false,inline=true,houseDocument=false,workflowState?:'completed'|'analyzing'|'review'|'attention'){
  let manual=0;prepareExisting.mockReset().mockResolvedValue({id:'synthetic-batch'});
  callJson.mockReset().mockImplementation(async(path:string,options:{method?:string}={})=>{
   if(path.includes('/capabilities'))return {manualAvailable:true,aiAvailable:true,drafts:drafts.map(d=>({...d,mode})),job:null};
@@ -18,7 +18,7 @@ function mount(drafts:Array<{id:string;state:string}>=[],mode='extraction',lose=
  });
  const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});cache.setQueryData(queryKeys.session,{account:{id:'account'}});
  function Location(){const location=useLocation();return <p data-testid="location">{location.pathname+location.search}</p>;}
- const onOpen=vi.fn();render(<QueryClientProvider client={cache}><MemoryRouter><DocumentCompilationActions homeId="home" documentId="doc" houseDocument={houseDocument} onOpen={inline?onOpen:undefined}/><Location/></MemoryRouter></QueryClientProvider>);
+ const onOpen=vi.fn();render(<QueryClientProvider client={cache}><MemoryRouter><DocumentCompilationActions homeId="home" documentId="doc" compact={!!workflowState} workflowState={workflowState} houseDocument={houseDocument} onOpen={inline?onOpen:undefined}/><Location/></MemoryRouter></QueryClientProvider>);
  return {onOpen,cache,user:userEvent.setup()};
 }
 it('manual compilation opens the existing form, creates only a manual draft and never starts AI',async()=>{
@@ -56,4 +56,16 @@ it('house documents also open their prepared AI proposal',async()=>{
 });
 it('house manual compilation opens classification without creating an object draft',async()=>{
  const w=mount([],'manual',false,true,true);const b=await screen.findByRole('button',{name:'Compila manualmente'});await waitFor(()=>expect(b).toBeEnabled());await w.user.click(b);expect(w.onOpen).toHaveBeenCalledWith('manuale',undefined);expect(callJson.mock.calls.every(c=>c[1]?.method!=='POST')).toBe(true);
+});
+
+it('completed cards only offer details and never restart paid analysis',async()=>{
+ const w=mount([{id:'confirmed',state:'confirmed'}],'extraction',false,true,false,'completed');
+ await w.user.click(await screen.findByRole('button',{name:'Vedi dettagli'}));
+ expect(screen.queryByRole('button',{name:'Compila tramite AI'})).not.toBeInTheDocument();
+ expect(callJson.mock.calls.some(([,o])=>o?.method==='POST')).toBe(false);
+});
+it('running analysis is visible without an enabled start action',async()=>{
+ mount([],'extraction',false,true,false,'analyzing');
+ expect(await screen.findByRole('button',{name:/In analisi/})).toBeDisabled();
+ expect(screen.queryByRole('button',{name:'Compila tramite AI'})).not.toBeInTheDocument();
 });

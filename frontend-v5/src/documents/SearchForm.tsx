@@ -70,7 +70,7 @@ export function SearchForm(props: {
     inputRef.current?.focus();
   };
 
-  const canReset = isFiltered(applied) || isFiltered({ ...draft, q: draft.q.trim() });
+  const canReset = isFiltered({...applied,workflow:'all'}) || isFiltered({ ...draft, workflow:'all', q: draft.q.trim() });
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
 

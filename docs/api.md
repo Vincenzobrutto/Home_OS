@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Documenti, stato del lavoro
+
+La lista GET /api/v5/homes/:homeId/documents aggiunge workflowState: to_compile | analyzing | review | completed | attention. È personale account/casa, relativo a versione/SHA correnti. completed riusa la medesima condizione del filtro workflow=completed; poi precedenza job attivo, bozza extraction aperta, ultimo job failed/uncertain, altrimenti da compilare. Una conferma successiva a vecchio esito incerto resta completed. Nessun cambiamento allo status stored dell'originale. Filtri all/pending/completed e cursori invariati; UI normale usa pending/completed. Nessun totale globale disponibile: niente contatori inventati dalle pagine caricate.
+
 ## 2026-10-18 — Modalità delle bozze nelle capabilities
 
 GET object-onboarding/capabilities include anche `mode` per ciascuna bozza già filtrata per account, casa e versione/SHA della fonte. Il frontend distingue una proposta `extraction` aperta da una bozza `manual` e apre direttamente la revisione disponibile. Nessun nuovo endpoint o invio al provider.

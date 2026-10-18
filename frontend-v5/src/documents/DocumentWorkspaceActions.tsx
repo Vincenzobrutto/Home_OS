@@ -6,6 +6,7 @@ import { useAccount, useApi } from '../session/session';
 import type { DocumentSummary } from '../api/types';
 import { newIdempotencyKey } from '../api/queryKeys';
 import { userMessage } from '../api/errors';
+import { DocumentWorkflowStatus } from './DocumentWorkflowStatus';
 import { ui } from '../components/ui';
 import { IntakeClient } from '../intake-integration/client';
 import { IntakePage } from '../intake-integration/IntakePage';
@@ -35,11 +36,11 @@ export function DocumentWorkspaceActions({homeId,document:doc}:{homeId:string;do
  async function remove(){if(busy)return;setBusy(true);setError('');try{await api.callJson(`/homes/${homeId}/documents/${doc.id}/removal`,{method:'POST',body:{expectedVersion:doc.version},accountId:account.id,idempotencyKey:key.current});if(live.current){setRemoving(false);await cache.invalidateQueries({queryKey:['account',account.id,'home',homeId]});}}catch(e){if(live.current)setError(userMessage(e));}finally{if(live.current)setBusy(false);}}
  const house=houseDocumentType(doc.originalFilename+' '+doc.name,doc.organization?.parts.map(p=>p.kind));
  return <div className={styles.workspace}>
-  <div className={styles.toolbarActions}>
+  <div className={styles.workspaceHeader}><DocumentWorkflowStatus state={doc.workflowState}/><div className={styles.toolbarActions}>
+   {editable&&<DocumentCompilationActions compact workflowState={doc.workflowState} houseDocument={!!house} homeId={homeId} documentId={doc.id} documentKind={doc.organization?.parts.every(p=>p.kind==='utility_bill')?'utility_bill':undefined} onOpen={(mode,draft)=>void open(mode,draft)}/>}
    <button type="button" className={ui.btn} onClick={()=>setOriginal(v=>!v)} aria-expanded={original}>{original?'Chiudi originale':'Vedi originale'}</button>
-   {editable&&<DocumentCompilationActions houseDocument={!!house} homeId={homeId} documentId={doc.id} documentKind={doc.organization?.parts.every(p=>p.kind==='utility_bill')?'utility_bill':undefined} onOpen={(mode,draft)=>void open(mode,draft)}/>}
-   {editable&&<button type="button" className={ui.btn} onClick={()=>{setError('');setRemoving(true);}}>Elimina</button>}
-  </div>
+   {editable&&<details className={styles.documentMenu}><summary aria-label={'Altre azioni per '+doc.originalFilename}>Altre azioni</summary><button type="button" className={ui.btn} onClick={()=>{setError('');setRemoving(true);}}>Elimina</button></details>}
+  </div></div>
   {opening&&<p role="status">Apertura della scheda…</p>}{error&&<p role="alert">{error}</p>}
   {original&&<Original homeId={homeId} documentId={doc.id}/>}
   {active&&<section className={styles.reviewPanel} aria-label={'Revisione di '+doc.originalFilename}><IntakePage workspace/><button type="button" className={ui.btn} onClick={close}>Chiudi revisione</button></section>}

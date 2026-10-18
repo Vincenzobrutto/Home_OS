@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Documenti: Da fare e Completati
+
+Scelta esplicita del committente: proposta visiva 3. Due viste dello stesso archivio, ingresso Da fare; ogni riga mostra stato e prossimo passo. Analisi riuscita significa proposta da rivedere, non completamento. Riusata la condizione canonica di completamento account/casa/versione/SHA prima della paginazione; nuove etichette esposte dalla lista, nessuna deduzione dal filename o dallo stato stored. Scartati terzo archivio, raggruppamento solo sulle pagine caricate e contatori ricavati da pagine parziali. Selezione AI su richiesta; recupero della coda resta montato. Eliminazione sotto Altre azioni, con guardie e conferma esistenti.
+
 ## Indice di ripartenza — 18 ottobre 2026
 
 Le voci sottostanti sono conservate come registro storico; le più recenti del 18 ottobre e le [decisioni V5](v5/implementation-decisions.md) prevalgono sulle convenzioni legacy nel loro ambito. Nessuna nuova decisione di prodotto introdotta dalla consegna.

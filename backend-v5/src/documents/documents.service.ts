@@ -81,8 +81,14 @@ export class DocumentsService implements OnModuleInit {
       await this.policy.requireLocked(tx, accountId, homeId);
       // Use the installed deterministic Unicode ICU collation; the development
       // database's default C collation only folds ASCII. Never rewrite originals.
-      const ids = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`
-        SELECT d.id FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
+      const ids = await tx.$queryRaw<Array<{ id: string; workflowState: string }>>(Prisma.sql`
+        SELECT d.id, CASE
+          WHEN ${completed} THEN 'completed'
+          WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND j.state IN ('queued','running')) THEN 'analyzing'
+          WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open' AND p.mode='extraction') THEN 'review'
+          WHEN (SELECT j.state FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 ORDER BY j."createdAt" DESC,j.id DESC LIMIT 1) IN ('failed','uncertain') THEN 'attention'
+          ELSE 'to_compile' END AS "workflowState"
+        FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
         LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${accountId} AND o."homeId"=${homeId} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256
         WHERE d."homeId"=${homeId} AND (d.visibility='home' OR d."uploaderId"=${accountId})
         ${filters.workflow==='all'?Prisma.empty:Prisma.sql`AND ${completed}=${filters.workflow==='completed'}`}
@@ -98,7 +104,7 @@ export class DocumentsService implements OnModuleInit {
       const page = docs.slice(0, query.limit), last = page.at(-1);
       return { items: await Promise.all(page.map(async doc => {
         const org = await currentOrganization(tx, accountId, homeId, doc);
-        return { ...publicDocument(doc, canExport(member)), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null };
+        return { ...publicDocument(doc, canExport(member)), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null, workflowState: ids.find(row => row.id === doc.id)!.workflowState };
       })), nextCursor: docs.length > query.limit && last ? searchCursor(last, accountId, homeId, filters) : null };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 15000, maxWait: 15000 });
   }

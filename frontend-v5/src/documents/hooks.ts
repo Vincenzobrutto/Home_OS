@@ -56,6 +56,7 @@ export function useDocumentSearch(homeId: string, filters: DocumentSearchFilters
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,
     enabled,
+    refetchInterval: query => query.state.data?.pages.some(page => page.items.some(doc => doc.workflowState === 'analyzing')) ? 2000 : false,
   });
 }
 

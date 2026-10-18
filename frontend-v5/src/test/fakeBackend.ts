@@ -42,6 +42,7 @@ type BlobLike = { size: number; name?: string; arrayBuffer?: () => Promise<Array
 type FormLike = { get: (name: string) => unknown };
 
 type StoredDocument = {
+  workflowState?: DocumentSummary['workflowState'];
   id: string;
   homeId: string;
   uploaderId: string;
@@ -399,6 +400,7 @@ export class FakeBackend {
     visibility?: DocumentVisibility;
     /** Solo test UI in jsdom: impronta dichiarata al posto di quella calcolata (le prove sui byte reali sono in tests/fixtures). */
     sha256?: string;
+    workflowState?: DocumentSummary['workflowState'];
   }): Promise<DocumentDetail> {
     const mimeType = opts.mimeType ?? 'application/pdf';
     const bytes = opts.bytes ?? samplePdf(opts.name);
@@ -413,6 +415,7 @@ export class FakeBackend {
       createdAt: new Date((this.clock += 60_000)).toISOString(),
       sha256: opts.sha256 ?? (await sha256Hex(bytes)),
       visibility: opts.visibility ?? 'private',
+      workflowState: opts.workflowState ?? 'to_compile',
     };
     this.documents.set(doc.id, doc);
     return this.docDetail(doc, PERMS.owner);
@@ -440,6 +443,7 @@ export class FakeBackend {
       version: 1,
       source: 'manual_upload',
       status: 'stored',
+      workflowState: doc.workflowState ?? 'to_compile',
       visibility: doc.visibility,
       permissions: perms.includes('export') ? ['read', 'export'] : ['read'],
     };
@@ -513,7 +517,7 @@ export class FakeBackend {
    */
   private listDocs(req: FakeRequest, accountId: string, homeId: string, perms: HomePermission[]): FakeResponse {
     const query = new URLSearchParams(req.path.split('?')[1] ?? '');
-    const allowed = this.documentSearchEnabled ? ['limit', 'cursor', 'q', 'format', 'visibility'] : ['limit', 'cursor'];
+    const allowed = this.documentSearchEnabled ? ['limit', 'cursor', 'q', 'format', 'visibility', 'workflow'] : ['limit', 'cursor', 'workflow'];
     const fieldErrors: Record<string, string> = {};
     for (const key of new Set(query.keys())) {
       if (!allowed.includes(key)) fieldErrors[key] = 'Parametro non ammesso.';
@@ -531,8 +535,10 @@ export class FakeBackend {
 
     const limit = query.has('limit') ? Number(query.get('limit')) : 20;
     if (!Number.isInteger(limit) || limit < 1 || limit > 50) return err(422, 'validation_error', 'Limite non valido.');
-    const filtered = q !== '' || format !== 'all' || visibility !== 'all';
-    const scope = fingerprint(`${accountId}|${homeId}|${q}|${format}|${visibility}`);
+    const workflow=query.get('workflow')??'all';
+    if(!['all','pending','completed'].includes(workflow))return err(422,'validation_error','Stato non valido.');
+    const filtered = workflow!=='all'||q !== '' || format !== 'all' || visibility !== 'all';
+    const scope = fingerprint(`${accountId}|${homeId}|${q}|${format}|${visibility}|${workflow}`);
     const cursor = query.get('cursor');
     let offset = 0;
     if (cursor) {
@@ -546,6 +552,7 @@ export class FakeBackend {
     const needle = q.toLowerCase();
     const visible = [...this.documents.values()]
       .filter((d) => d.homeId === homeId && this.canSee(d, accountId, perms))
+      .filter(d=>workflow==='all'||(d.workflowState==='completed')===(workflow==='completed'))
       .filter((d) => format === 'all' || d.mimeType === mime[format])
       .filter((d) => (visibility === 'all' ? true : visibility === 'home' ? d.visibility === 'home' : d.visibility === 'private'))
       .filter(

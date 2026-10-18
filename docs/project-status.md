@@ -1,3 +1,7 @@
+## Ultimo aggiornamento — Documenti, proposta 3 implementata
+
+Pagina iniziale Da fare, vista Completati e stati visibili per documento; proposta pronta distinta da dati salvati. Etichetta server workflowState account/casa/versione/SHA coerente con filtro prima del paging. Elimina sotto Altre azioni, selezione AI attivabile; recupero elaborazioni persistenti conservato anche con selezione chiusa. Nessuna nuova analisi a pagamento, schema/migrazione o modifica delle tre differenze legacy locali. Vedi docs/v5/document-workflow-20261018.md per verifica e limiti.
+
 # Stato corrente — Dimora V5
 
 Consolidamento 18 ottobre 2026. Baseline funzionale `4742bd4`, branch `dev/dimora-v5-local-20261013`, repository `Vincenzobrutto/Home_OS`. Chat sorgente «Configura ambiente Dimora V5», terminata. Questa consegna non cambia il software.

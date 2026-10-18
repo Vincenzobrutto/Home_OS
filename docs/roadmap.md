@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Raggiunto: Documenti, Da fare e Completati
+
+Implementata proposta UX 3 scelta dal committente: due viste filtrate sul server, stato esplicito per riga, azione primaria contestuale e selezione AI attivabile. Proposta pronta resta Da fare fino al salvataggio; nessuna nuova analisi per riaprirla. Cestino, OCR e persistenza delle modifiche non salvate restano nel backlog.
+
 ## Priorità di ripartenza — 18 ottobre 2026
 
 Punto attuale: [project-status](project-status.md). Questa sezione ordina il lavoro aperto senza autorizzare nuove funzionalità o nuovi invii AI; il seguito conserva le milestone storiche.

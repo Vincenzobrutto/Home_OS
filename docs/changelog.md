@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Stati leggibili nella pagina Documenti
+
+Ingresso Da fare e vista Completati sullo stesso archivio. Righe con Da compilare, In analisi, Da rivedere, Analisi da verificare o Completato; Compila, Rivedi proposta, Apri documento o Vedi dettagli secondo stato. Eliminazione sotto Altre azioni; selezione multipla attivabile e recupero della coda conservato. Stato personale e versione/SHA calcolati dal server; nessuna migrazione, nuovo invio AI o modifica delle regole di conferma.
+
 ## 18 ottobre 2026 — Consolidamento e consegna della sessione
 
 Documentazione soltanto: AGENTS abbreviato, stato V5 verificabile, ingresso architettura distinto dal legacy, indice decisioni e priorità di ripartenza. Consolidate anche le note documentali preesistenti non committate; preservate ed escluse le modifiche funzionali legacy. Baseline funzionale 4742bd4 (schede «Rivedi proposta»). Nessuna nuova analisi AI, modifica DB o funzione introdotta.

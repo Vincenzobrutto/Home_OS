@@ -84,3 +84,7 @@ Backend e frontend integrati: 23 scenari API/DB/file e 6 frontend/API passano, c
 ## Fase 0 — controllo nuovi upload (16 ottobre 2026)
 
 Staging privato e ammissione dopo scansione Defender/hash invariato. 503 file_check_unavailable se il controllo non conclude con esito valido; 503 storage_capacity_low per riserva spazio insufficiente. Nessun documento creato in entrambi i casi; retry esplicito con stessa chiave/payload. Ricevuta DB interna, nessun nuovo campo pubblico. Originali precedenti non riclassificati. Prove e limiti in fase0-file-control-esito-20261016.md.
+
+## Stato del lavoro — 18 ottobre 2026
+
+La lista aggiunge workflowState (to_compile, analyzing, review, completed, attention), relativo all'account e alla fonte/versione/SHA correnti. completed usa la stessa condizione dei filtri workflow già implementati; quindi precedono job attivi, bozza extraction aperta, ultimo job failed/uncertain, stato da compilare. Originale status=stored invariato; nessuna espansione permessi. UI usa pending/completed e mantiene ricerca, cursori e paging server. L'assenza del campo su un backend precedente significa stato non disponibile, mai completato presunto.

@@ -40,7 +40,10 @@ export type DocumentVisibility = 'private' | 'home';
 export type DocumentMimeType = 'application/pdf' | 'image/jpeg' | 'image/png';
 export type DocumentPermission = 'read' | 'export';
 
+export type DocumentWorkflowState = 'to_compile' | 'analyzing' | 'review' | 'completed' | 'attention';
 export type DocumentSummary = {
+  /** Personal state for this source/version; provided by the canonical list. */
+  workflowState?: DocumentWorkflowState;
   organization?: { version: number; title: string; parts: Array<{ kind: string; pageFrom: number | null; pageTo: number | null }>; collections: DocumentCollection[]; origin: 'user_declared'; updatedAt: string } | null;
   id: string;
   homeId: string;

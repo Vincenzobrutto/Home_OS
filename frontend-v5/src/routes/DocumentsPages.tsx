@@ -38,7 +38,6 @@ import {
 import {
   ACCEPT_ATTRIBUTE,
   MAX_EXPORT_DOCUMENTS,
-  STATUS_LABEL,
   VISIBILITY_HINT,
   VISIBILITY_LABEL,
   exportProblem,
@@ -72,7 +71,7 @@ export function DocumentsPage() {
   const canExport = home.permissions.includes('export');
   const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
   const [params, setParams] = useSearchParams();
-  const applied = useMemo(() => filtersFromParams(params), [params]);
+  const applied = useMemo(() => ({...filtersFromParams(params), workflow: params.get('workflow') === 'completed' ? 'completed' as const : 'pending' as const}), [params]);
   const appliedKey = filtersKey(applied);
   const capabilities = useDocumentSearchCapabilities(home.id);
   const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
@@ -89,7 +88,7 @@ export function DocumentsPage() {
             <h1 tabIndex={-1}>Documenti</h1>
             <span ref={setExportSlot} />
           </div>
-          <p className={styles.lead}>Aggiungi i documenti e completa le schede, a mano o con AI.</p>
+          <p className={styles.lead}>{applied.workflow==='completed'?'Dati salvati e originali sempre disponibili.':'Qui trovi i documenti che richiedono ancora un passaggio.'}</p>
         </div>
         {canUpload && (
           <div className={docs.toolbarActions}>
@@ -98,7 +97,7 @@ export function DocumentsPage() {
         )}
       </div>
       {canUpload&&uploadOpen&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={closeUpload}>Chiudi caricamento</button></section>}
-      <div className={docs.toolbarActions} role="group" aria-label="Stato dei documenti">{([['all','Tutti'],['pending','Da completare'],['completed','Completati']] as const).map(([value,label])=><button key={value} type="button" className={ui.btn} aria-pressed={(applied.workflow??'all')===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
+      <div className={docs.workflowTabs} role="group" aria-label="Stato dei documenti">{([['pending','Da fare'],['completed','Completati']] as const).map(([value,label])=><button key={value} type="button" className={cx(ui.btn,applied.workflow===value&&ui.primary)} aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
       {!canUpload && (
         <p className={cx(docs.note, docs.panel)}>
           Con il tuo ruolo puoi consultare e scaricare i documenti visibili, non caricarne di nuovi.
@@ -142,11 +141,12 @@ export function DocumentsPage() {
         filters={applied}
         searchState={capabilities.isSuccess ? 'ready' : capabilities.isError ? 'unavailable' : 'pending'}
         maxQuery={maxQuery}
-        onReset={() => apply({...EMPTY_FILTERS,workflow:'all'})}
+        onReset={() => apply({...EMPTY_FILTERS,workflow:applied.workflow})}
         canExport={canExport}
         exportSlot={exportSlot}
         canUpload={canUpload}
       />
+      <div className={docs.archiveShortcut}><Icon name="document"/><span>{applied.workflow==='pending'?'I documenti completati restano consultabili, insieme ai loro originali.':'Puoi riprendere i documenti che richiedono ancora un passaggio.'}</span><button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:applied.workflow==='pending'?'completed':'pending'})}>{applied.workflow==='pending'?'Vedi completati':'Torna a Da fare'}<Icon name="arrow"/></button></div>
       {canUpload && (
         <div className={styles.spaced}>
           <details><summary>Documenti di esempio</summary><ExamplePdfs homeId={home.id} /></details>
@@ -169,10 +169,11 @@ function DocumentsArchive(props: {
 }) {
   const { home, canExport, filters } = props;
   const filtered = isFiltered(filters);
+  const searchFiltered = isFiltered({...filters,workflow:'all'});
   const queryProblem = filtered ? validateQuery(filters.q, props.maxQuery) : undefined;
   // Senza filtri: lista M2, consultabile anche se la ricerca non è attiva.
   // Con filtri: solo a ricerca attiva e query valida, mai una ricerca locale sulle pagine già caricate.
-  const runnable = !filtered || (props.searchState === 'ready' && !queryProblem);
+  const runnable = !searchFiltered || (props.searchState === 'ready' && !queryProblem);
   const documents = useDocumentSearch(home.id, filters, runnable);
   const exporter = useExportDocuments(home.id);
   const forget = useForgetHomeDocuments(home.id);
@@ -185,6 +186,7 @@ function DocumentsArchive(props: {
   const [selecting, setSelecting] = useState(false);
   const [aiSelected,setAiSelected]=useState<Set<string>>(()=>new Set());
   const [aiLocked,setAiLocked]=useState(false);
+  const [aiSelecting,setAiSelecting]=useState(false);
   const [exported, setExported] = useState<number | null>(null);
 
   const items = useMemo(() => documents.data?.pages.flatMap((p) => p.items) ?? [], [documents.data]);
@@ -192,7 +194,7 @@ function DocumentsArchive(props: {
   const problem = exportProblem(selectedDocs);
   const totalBytes = selectedDocs.reduce((sum, d) => sum + d.byteSize, 0);
 
-  if (filtered && props.searchState === 'unavailable') {
+  if (searchFiltered && props.searchState === 'unavailable') {
     return (
       <div className={cx(ui.card, styles.unavailable)}>
         <h2 className={styles.cardTitle}>Filtri non applicati</h2>
@@ -250,13 +252,11 @@ function DocumentsArchive(props: {
           <button type="button" className={ui.btn} onClick={() => setSelecting(false)}>Annulla selezione</button>
           <PersonalExportPanel homeId={home.id} />
         </>}
-        <h2 className={styles.cardTitle}>Nessun documento corrisponde ai filtri</h2>
+        <h2 className={styles.cardTitle}>{filters.q||filters.format!=='all'||filters.visibility!=='all'||filters.collection&&filters.collection!=='all'?'Nessun documento corrisponde ai filtri':filters.workflow==='completed'?'Nessun documento completato':'Non ci sono documenti da completare'}</h2>
         <p className={styles.muted} role="status">
-          Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Modifica la ricerca o azzera i filtri.
+          {isFiltered({...filters,workflow:'all'})?<>Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Modifica la ricerca o azzera i filtri.</>:filters.workflow==='completed'?'I documenti appariranno qui dopo il salvataggio della revisione.':'Hai completato tutti i documenti disponibili. Puoi consultarli in Completati oppure aggiungerne altri.'}
         </p>
-        <button type="button" className={ui.btn} onClick={props.onReset}>
-          Azzera filtri
-        </button>
+        {isFiltered({...filters,workflow:'all'})&&<button type="button" className={ui.btn} onClick={props.onReset}>Azzera filtri</button>}
       </div>
     );
   }
@@ -348,7 +348,8 @@ function DocumentsArchive(props: {
           </div>
         </div>
       )}
-      {props.canUpload&&!selecting&&<div className={docs.toolbar}><label className={docs.bulkConsent}><input type="checkbox" checked={items.length>0&&items.slice(0,20).every(d=>aiSelected.has(d.id))} disabled={aiLocked} onChange={e=>setAiSelected(e.target.checked?new Set(items.slice(0,20).map(d=>d.id)):new Set())}/>Seleziona {items.length>20?'i primi 20 documenti':'tutti i documenti mostrati'}</label><span>Spunta i documenti da compilare tramite AI</span></div>}
+      {props.canUpload&&!selecting&&filters.workflow!=='completed'&&<div className={docs.selectionToggle}><button type="button" className={ui.btn} aria-expanded={aiSelecting} onClick={()=>{setAiSelecting(v=>!v);setAiSelected(new Set());}} disabled={aiLocked}>{aiSelecting?'Annulla selezione AI':'Seleziona documenti'}</button></div>}
+      {props.canUpload&&!selecting&&aiSelecting&&<div className={docs.toolbar}><label className={docs.bulkConsent}><input type="checkbox" checked={items.length>0&&items.slice(0,20).every(d=>aiSelected.has(d.id))} disabled={aiLocked} onChange={e=>setAiSelected(e.target.checked?new Set(items.slice(0,20).map(d=>d.id)):new Set())}/>Seleziona {items.length>20?'i primi 20 documenti':'tutti i documenti mostrati'}</label><span>Spunta i documenti da compilare tramite AI</span></div>}
       {props.canUpload&&!selecting&&<BulkDocumentCompilation homeId={home.id} selected={items.filter(d=>aiSelected.has(d.id))} onClear={()=>setAiSelected(new Set())} onLocked={setAiLocked}/>}
       {canExport && selecting && <PersonalExportPanel homeId={home.id} />}
 
@@ -370,15 +371,15 @@ function DocumentsArchive(props: {
         </div>
       )}
 
-      {filtered && (
+      {isFiltered({...filters,workflow:'all'}) && (
         <p className={docs.resultsInfo} role="status">
-          Risultati per {describeFilters(filters)}
+          Risultati per {describeFilters({...filters,workflow:'all'})}
           {documents.hasNextPage ? ' — ce ne sono altri' : ''}
         </p>
       )}
       <ul
         className={docs.list}
-        aria-label={filtered ? `Risultati della ricerca in ${home.name}` : `Documenti di ${home.name}`}
+        aria-label={isFiltered({...filters,workflow:'all'}) ? `Risultati della ricerca in ${home.name}` : `Documenti di ${home.name}`}
       >
         {items.map((doc) => (
           <DocumentRow
@@ -389,7 +390,7 @@ function DocumentsArchive(props: {
             selectable={canExport && selecting}
             selected={selected.has(doc.id)}
             onToggle={() => toggle(doc.id)}
-            aiSelectable={props.canUpload&&!selecting} aiSelected={aiSelected.has(doc.id)} aiLocked={aiLocked} onAiToggle={()=>setAiSelected(old=>{const next=new Set(old);if(next.has(doc.id))next.delete(doc.id);else next.add(doc.id);return next;})}
+            aiSelectable={props.canUpload&&!selecting&&aiSelecting} aiSelected={aiSelected.has(doc.id)} aiLocked={aiLocked} onAiToggle={()=>setAiSelected(old=>{const next=new Set(old);if(next.has(doc.id))next.delete(doc.id);else next.add(doc.id);return next;})}
           />
         ))}
       </ul>
@@ -473,7 +474,6 @@ function DocumentRow(props: {
           {doc.organization && <span> · {doc.organization.collections.map(c => COLLECTION_OPTIONS.find(o => o.value === c)?.label ?? c).join(' · ')}</span>}
         </span>
         <span className={docs.tags}>
-          <Tag tone="blue">{STATUS_LABEL}</Tag>
           <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
         </span>
         {doc.permissions.includes('read') && (

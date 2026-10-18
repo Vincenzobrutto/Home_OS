@@ -48,8 +48,9 @@ async function open(backend: FakeBackend, email: string, password: string, homeI
 const field = async () => {const summary=await screen.findByText('Cerca e filtra',{selector:'summary'});if(!summary.parentElement?.hasAttribute('open'))fireEvent.click(summary);return screen.findByRole('searchbox', { name: 'Cerca nei documenti' });};
 
 /** Query string delle richieste lista documenti ricevute dal backend. */
+const withoutWorkflow = (search:string) => { const params=new URLSearchParams(search);params.delete('workflow');const value=params.toString();return search.startsWith('?')&&value?'?'+value:value; };
 const listQueries = (backend: FakeBackend) =>
-  backend.log.filter((r) => r.method === 'GET' && /\/documents(\?|$)/.test(r.path)).map((r) => r.path.split('?')[1] ?? '');
+  backend.log.filter((r) => r.method === 'GET' && /\/documents(\?|$)/.test(r.path)).map((r) => withoutWorkflow(r.path.split('?')[1] ?? ''));
 
 async function search(app: App, text: string) {
   const input = await field();
@@ -73,7 +74,7 @@ describe('[mock] H2 confini della sessione e revoca delle pagine', () => {
     session.accountId = member.id;
     await app.queryClient.invalidateQueries({ queryKey: queryKeys.documentsAll(owner.id, home.id) });
     await waitFor(() => expect(app.router.state.location.pathname).toBe(`/home/${home.id}/documenti`));
-    await waitFor(() => expect(app.router.state.location.search).toBe(''));
+    await waitFor(() => expect(withoutWorkflow(app.router.state.location.search)).toBe(''));
     expect(await field()).toHaveValue('');
     expect(screen.queryByText('Busta privata')).not.toBeInTheDocument();
   });
@@ -106,7 +107,7 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     await login(app, 'owner@example.test', PW.owner);
     await app.router.navigate(`/home/${home.id}/casa`);
     await app.user.click(await screen.findByRole('link', { name: 'Cerca documenti' }));
-    await waitFor(() => expect(app.router.state.location.search).toBe('?ricerca=1'));
+    await waitFor(() => expect(withoutWorkflow(app.router.state.location.search)).toBe('?ricerca=1'));
     await waitFor(async () => expect(await field()).toHaveFocus());
     expect(listQueries(backend).every((q) => !q.includes('ricerca'))).toBe(true);
 
@@ -133,7 +134,7 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     expect(listQueries(backend)).toHaveLength(before);
     await app.user.click(screen.getByRole('button', { name: 'Cerca' }));
     expect(names(await results())).toEqual(['Rogito notarile']);
-    expect(app.router.state.location.search).toBe('?q=rogito');
+    expect(withoutWorkflow(app.router.state.location.search)).toBe('?q=rogito');
     expect(listQueries(backend).at(-1)).toBe('q=rogito&limit=20');
   });
 
@@ -152,7 +153,7 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     await app.user.type(await field(), 'caldaia{Enter}');
     expect(names(await results())).toEqual(['Foto caldaia']);
     expect(listQueries(backend).slice(before)).toEqual(['q=caldaia&format=png&visibility=home&limit=20']);
-    expect(app.router.state.location.search).toBe('?q=caldaia&format=png&visibility=home');
+    expect(withoutWorkflow(app.router.state.location.search)).toBe('?q=caldaia&format=png&visibility=home');
     expect(screen.getByText(/Risultati per «caldaia» · formato PNG · Persone della casa/)).toBeInTheDocument();
   });
 
@@ -167,7 +168,7 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     await app.user.click(screen.getByRole('button', { name: 'Azzera filtri' }));
     const list = await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);
-    expect(app.router.state.location.search).toBe('');
+    expect(withoutWorkflow(app.router.state.location.search)).toBe('');
     expect(await field()).toHaveValue('');
     expect(screen.getByLabelText('Formato')).toHaveValue('all');
     expect(await field()).toHaveFocus();
@@ -196,7 +197,7 @@ describe('[mock] H2 ricerca — semantica (criteri 2–5)', () => {
     const app = await open(backend, 'owner@example.test', PW.owner, home.id);
     await search(app, '   ');
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
-    expect(app.router.state.location.search).toBe('');
+    expect(withoutWorkflow(app.router.state.location.search)).toBe('');
     await search(app, '  caffé  ');
     expect(names(await results())).toEqual(['Verbale caffé']);
     expect(listQueries(backend).at(-1)).toBe(`q=${encodeURIComponent('caffé')}&limit=20`);
@@ -233,7 +234,7 @@ describe('[mock] H2 ricerca — semantica (criteri 2–5)', () => {
   it('120 code point ammessi, 121 errore locale senza richiesta; controlli dall’indirizzo non inviati', async () => {
     const { backend, home } = world();
     const app = await open(backend, 'owner@example.test', PW.owner, home.id);
-    await screen.findByText('Nessun documento in questa casa');
+    await screen.findByText('Non ci sono documenti da completare');
     const before = listQueries(backend).length;
     const input = await field();
     fireEvent.change(input, { target: { value: '🔥'.repeat(121) } });
@@ -268,11 +269,11 @@ describe('[mock] H2 ricerca — stati, paginazione e selezione', () => {
   it('casa vuota, zero risultati e errore sono stati distinti (criterio 1)', async () => {
     const { backend, owner, home } = world();
     const app = await open(backend, 'owner@example.test', PW.owner, home.id);
-    expect(await screen.findByText('Nessun documento in questa casa')).toBeInTheDocument();
+    expect(await screen.findByText('Non ci sono documenti da completare')).toBeInTheDocument();
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Rogito' });
     await search(app, 'mutuo');
     expect(await screen.findByRole('heading', { name: 'Nessun documento corrisponde ai filtri' })).toBeInTheDocument();
-    expect(screen.queryByText('Nessun documento in questa casa')).not.toBeInTheDocument();
+    expect(screen.queryByText('Non ci sono documenti da completare')).not.toBeInTheDocument();
     backend.storageDown = true;
     await search(app, 'rogito');
     const alert = await screen.findByRole('alert');
@@ -343,7 +344,7 @@ describe('[mock] H2 ricerca — stati, paginazione e selezione', () => {
     await screen.findByRole('heading', { level: 1, name: 'Rogito' });
     await app.user.click(screen.getByRole('link', { name: /Documenti di Casa Roma/ }));
     expect(names(await results())).toEqual(['Rogito']);
-    expect(app.router.state.location.search).toBe('?q=rogito');
+    expect(withoutWorkflow(app.router.state.location.search)).toBe('?q=rogito');
     expect(await field()).toHaveValue('rogito');
 
     const cookie = app.control.cookie();
@@ -351,7 +352,7 @@ describe('[mock] H2 ricerca — stati, paginazione e selezione', () => {
     const reloaded = renderApp({ path: `/home/${home.id}/documenti?q=rogito`, backend, cookie });
     expect(names(await results())).toEqual(['Rogito']);
     expect(await field()).toHaveValue('rogito');
-    expect(reloaded.router.state.location.search).toBe('?q=rogito');
+    expect(withoutWorkflow(reloaded.router.state.location.search)).toBe('?q=rogito');
   });
 
   it('upload dal componente singolo riusato: la ricerca viene invalidata e trova il nuovo originale', async () => {
@@ -518,7 +519,7 @@ describe('[mock] H2 ricerca — gare, contesto e permessi', () => {
     await results();
     await app.user.type(await field(), ' bozza');
     await app.router.navigate(`/home/${second.id}/documenti`);
-    await screen.findByText('Nessun documento in questa casa');
+    await screen.findByText('Non ci sono documenti da completare');
     expect(await field()).toHaveValue('');
     expect(screen.queryByText('Rogito Roma')).not.toBeInTheDocument();
     expect(await screen.findByRole('search', { name: 'Cerca nei documenti di Casa Lago' })).toHaveTextContent('Ricerca in: Casa Lago');
