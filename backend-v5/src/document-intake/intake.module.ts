@@ -33,5 +33,5 @@ export class DocumentIntakeController {
   upload(@Req() req: DocumentRequest, @Param('homeId') home: string, @Param('batchId') batchId: string, @Param('itemId') itemId: string, @Body() body: unknown, @UploadedFile() file: { buffer: Buffer; originalname: string } | undefined, @Headers('idempotency-key') key?: string) { object(body, []); return this.uploads.upload(req.documentAccountId, home, batchId, itemId, file, key); }
 }
 // Registered after B1/B2 and local-classifier integration checks. No external AI provider.
-@Module({ imports: [DocumentsModule], controllers: [DocumentIntakeController], providers: [IntakeBatchesService, IntakeUploadsService, PdfTextExtractor, IntakeAnalysisService] })
+@Module({ imports: [DocumentsModule], controllers: [DocumentIntakeController], providers: [IntakeBatchesService, IntakeUploadsService, PdfTextExtractor, IntakeAnalysisService], exports: [IntakeBatchesService] })
 export class DocumentIntakeModule {}

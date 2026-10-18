@@ -1,3 +1,11 @@
+## V5 — residui del caricamento automatico (2026-10-18)
+
+- Misurare completamento senza interventi su corpus reale, prima di chiamare affidabile l’esperienza automatica. La nuova orchestrazione non corregge da sola quantity/evidence_unverified o output AI incompleti.
+- Migliorare recupero locale/OCR e riuso verificato tra sorgenti identiche; ora il worker riusa soltanto bozze estratte della stessa sorgente/versione/SHA.
+- Abbinamento oggetti fra fonti diverse resta assistito: stesso modello non prova stesso esemplare. Quantità multiple, consumabili, nomi troncati e candidati esistenti restano eccezioni.
+- Bollette con canone/arretrati o più totali: richiesta mirata, senza omettere o distribuire importi automaticamente.
+- Estendere recupero trasparente all’intera saga classificazione/conferma e mostrare avanzamento anche nell’archivio, oltre alla pagina del caricamento. Annullamento coordinato di tutte le creazioni del lotto non implementato; le modifiche/archiviazioni esistenti restano disponibili.
+
 ## V12 — riscontri live
 
 Prime due letture reali riuscite. Da affinare: candidato oggetto esistente quando nome/modello manuale differisce dal prodotto estratto (mai associare automaticamente solo per documento comune); avvisi opzionali su importi secondari/consegna senza oscurare i dati validi. Citofono classificato elettrico e titolo fattura lavori specifico risolti localmente.

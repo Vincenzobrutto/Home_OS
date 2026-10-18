@@ -1,3 +1,9 @@
+## 2026-10-18 — Organizzazione automatica su consenso di caricamento
+
+Il committente richiede che caricare i documenti produca direttamente oggetti e spese nei casi chiari. Per V5 il consenso esplicito del caricamento autorizza sia il trasferimento ad Anthropic sia la conferma delegata dei soli dati validati e non ambigui. La precedente scelta di richiedere una conferma per ogni articolo resta nel percorso manuale e per le eccezioni; non si estende al nuovo percorso autorizzato. Campi esistenti e fonti restano protetti, mai sovrascritti automaticamente.
+
+Orchestratore durevole scoped su account/casa/lotto, con lista esatta degli originali e snapshot, salvato in ObjectOnboardingRequest (operation automatic-intake-v1). Nessuna migrazione: il payload di questa operazione contiene avanzamento/lease/consenso; le normali ricevute di conferma rimangono immutabili. Riusa estrazioni disponibili della stessa sorgente/versione/SHA; nessun riavvio a pagamento dopo errore/incertezza. Salvataggi via servizi canonici/versioni/idempotenza; guard doppioni ripetuto sotto lock casa nella transazione di conferma. Classificazione e conferma mantengono ricevute separate e recuperabili. Nessuna divisione arbitraria di totali; ambiguità, consumabili, quantità multiple e fonte incompleta restano da controllare. Scartati timer solo nel browser e decisioni finanziarie basate sulla sola confidenza del modello.
+
 ## 2026-10-18 — default locali di presentazione dopo il collaudo V12
 
 Categoria elettrica suggerita da citofono/videocitofono nel nome già estratto; tipo proposto esplicito ha priorità. Titolo generico di spesa Fattura può usare la descrizione lavori già verificata (massimo120caratteri). Sono default modificabili del modulo, senza aggiornamento dell’outputAI, delle schede esistenti o attribuzione di marca/modello non presenti. Evitata un’altra richiesta a pagamento per questi dettagli.

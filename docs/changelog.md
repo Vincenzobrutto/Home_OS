@@ -1,3 +1,7 @@
+## 2026-10-18 — Organizzazione automatica dei caricamenti V5
+
+Consenso unico per invio AI e creazione delegata dei casi chiari, coda durevole, recupero dopo chiusura pagina, estrazioni già disponibili riusate senza costo. Riepilogo e sole eccezioni al posto della revisione di tutte le righe; percorso manuale mantenuto. Doppioni/source/versioni/budget preservati; nessun nuovo invio dopo errore o incertezza. Fatture con prezzi di riga verificati, bollette senza oggetto e documenti casa coperti dai test sintetici. Nessuna nuova analisi personale o modifica budget. Report docs/v5/automatic-intake-20261018.md.
+
 ## 2026-10-18 — V12 collaudata su due documenti reali
 
 Con consenso delegato: fattura lavori con quadro/monitor e1537.20EUR; acquisto caffè con nome/marca/modello EXAM440.35.B/499EUR/data2026-06-14. Due analisi riuscite,0.067026USD totali,nessuna conferma canonica. Default locale tipo citofono elettrico e titolo lavori da descrizione verificata;2testFE/build/typecheck/lint verdi. Report V12 aggiornato.

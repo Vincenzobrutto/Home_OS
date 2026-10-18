@@ -1,3 +1,7 @@
+## V5 — caricamento automatico delegato (2026-10-18)
+
+Nessun nuovo modello o migrazione. ObjectOnboardingRequest, operation automatic-intake-v1 e target=batchId, conserva il consenso per lista di documenti/snapshot, avanzamento per originale e lease recuperabile. Le scritture canoniche continuano a passare da IntakeBatchesService e ObjectOnboardingService. Gli originali non vengono modificati; le normali ricevute mantengono la semantica immutabile. Vedi decisione e contratto API del18ottobre.
+
 ## V5 — V12: soggetti e costo del documento
 
 Nessuna migrazione. subjectKind product/system nella bozza JSON; lavori/servizi in fatti del documento e HouseExpense simple_invoice. Conferma crea HomeExpense canonica senza objectRef/workId e schede HomeObject eventualmente collegate allo stesso originale. Il totale non viene copiato in ciascuna scheda.

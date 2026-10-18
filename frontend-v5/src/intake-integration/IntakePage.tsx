@@ -1,4 +1,5 @@
 import { DocumentCompilationActions } from '../object-onboarding/DocumentCompilationActions';
+import { AutomaticIntake } from './AutomaticIntake';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router';
@@ -36,6 +37,12 @@ function IntakeContainer() {
   useEffect(() => { active.current = id; }, [id]);
   const creation = useRef<{ files: File[]; ids: string[]; key: string; batchId: string | null } | null>(null), creating = useRef(false);
   const [problem, setProblem] = useState<string | null>(null), [waiting, setWaiting] = useState(false), [recoverCreation, setRecoverCreation] = useState(false), [candidates, setCandidates] = useState<Record<string, CandidatePage>>({});
+  const [automaticConsent,setAutomaticConsent]=useState(false),[automaticActive,setAutomaticActive]=useState(false);
+  async function startAutomatic(batchId:string,key:string){
+    const latest=await client.batch(batchId);
+    await api.callJson(`/homes/${home.id}/object-onboarding/automatic-runs`,{method:'POST',body:{batchId,documentIds:[...new Set(latest.items.map(i=>i.documentLink.document?.id).filter(Boolean))],consentToProviderTransfer:true,automaticProcessing:true},idempotencyKey:key,accountId:account.id});
+    await cache.invalidateQueries({queryKey:['account',account.id,'home',home.id,'automatic-intake',batchId]});
+  }
   const cursors = useRef(new Map<string, string | null>()), retryItem = useRef<string | null>(null), picker = useRef<HTMLInputElement>(null);
   useEffect(() => { const pending = controls.current; alive.current = true; return () => { alive.current = false; for (const ctl of pending) ctl.abort(); }; }, []);
   const wire = denied(batch.error) ? undefined : batch.data;
@@ -84,6 +91,7 @@ function IntakeContainer() {
       const value = pending.batchId ? await client.append(pending.batchId, pending.files, pending.ids, pending.key) : await client.create(pending.files, pending.ids, pending.key); if (!alive.current || active.current !== pending.batchId) return;
       for (let i = 0; i < pending.ids.length; i++) { const item = value.items.find(r => r.clientItemId === pending.ids[i]), file = pending.files[i]; if (item && file) files.current.set(item.id, file); }
       creation.current = null; setRecoverCreation(false); active.current = value.id; adopt(value); setParams({ lotto: value.id }); await pool(value, pending.ids);
+      if(automaticConsent)await startAutomatic(value.id,pending.key);
     } catch (e) { if (alive.current) { setProblem(userMessage(e)); if (rejected(e).status === 'rejected') creation.current = null; else setRecoverCreation(true); } }
     finally { creating.current = false; if (alive.current) setWaiting(false); }
   }
@@ -172,14 +180,20 @@ function IntakeContainer() {
     if(outcome.status!=='done'||outcome.results.some(r=>r.status!=='confirmed'))throw preparationError('Archiviazione del documento da verificare. Nessun oggetto o costo è stato creato: controlla il documento e riprendi qui.');
   }
   const error = cap.error ?? batch.error, unavailable = denied(error), busyAnalysis = wire?.items.some(i => ['queued', 'running'].includes(i.analysisState));
+  const automaticControl=<><label><input type="checkbox" checked={automaticConsent} disabled={waiting} onChange={e=>setAutomaticConsent(e.target.checked)}/> Autorizzo l’invio dei documenti di questo caricamento ad Anthropic, inclusi dati personali, e la creazione automatica di oggetti e spese verificati.</label><p>Entro il budget residuo · massimo 0,25 USD per documento. Ti chiederemo aiuto solo nei casi dubbi.</p></>;
+  const newUpload=!id&&home.permissions.includes('edit');
   return <>
     <p><Link to={`/home/${home.id}/documenti`}>← Documenti</Link></p>
     {problem && <Banner tone="warning" title="Controlla l’esito"><p>{problem}</p>{recoverCreation && <button className={ui.btn} disabled={waiting} onClick={() => void create()}>Recupera il caricamento</button>}</Banner>}
     {problem && id && <p><button className={ui.btn} onClick={() => window.location.reload()}>Riapri il caricamento dal server</button> <span>Solo per i file non ancora acquisiti potrà essere necessario scegliere di nuovo l’originale.</span></p>}
     {waiting && <p role="status">Caricamento dei file, al massimo due alla volta…</p>}
+    {newUpload&&cap.isError&&<ErrorState error={cap.error} onRetry={()=>void cap.refetch()}/>}
+    {!automaticActive&&wire&&!params.get('oggetti-documento')&&home.permissions.includes('edit')&&<section className={ui.card} aria-label="Come organizzare i documenti"><h2>Organizza questo caricamento</h2>{automaticControl}<button className={ui.btnPrimary} disabled={!automaticConsent||waiting} onClick={()=>{setWaiting(true);void startAutomatic(wire.id,stableKey('automatic:'+wire.id,wire.items.map(i=>i.id))).catch(e=>setProblem(userMessage(e))).finally(()=>setWaiting(false));}}>Organizza automaticamente questo caricamento</button></section>}
+    {id&&<AutomaticIntake homeId={home.id} batchId={id} onChange={setAutomaticActive}/>}
+    {newUpload&&<section className={ui.card} aria-label="Caricamento documenti" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(!waiting&&cap.data)void create(Array.from(e.dataTransfer.files));}}><h1>Carica i documenti della casa</h1><p>Scegli i file o trascinali qui.</p>{automaticControl}<label>Documenti da caricare<input type="file" multiple accept="application/pdf,image/jpeg,image/png" disabled={waiting||!cap.data} onChange={e=>{const selected=Array.from(e.target.files??[]);e.target.value='';if(selected.length)void create(selected);}}/></label><p>PDF, JPEG o PNG · fino a 20 file, 20 MiB ciascuno.</p>{!automaticConsent&&<p>Senza AI potrai compilare le schede manualmente.</p>}</section>}
     {wire?.items.some(i => i.documentLink.state === 'linked' && i.analysisState === 'ready' && !i.proposal && i.reviewState === 'unreviewed') && <Banner><p>Per alcuni file il testo non identifica un tipo con sufficiente chiarezza. Puoi consultare l’originale, scegliere il tipo manualmente o decidere più avanti.</p></Banner>}
 
-    <DocumentIntakeAssistant {...directOrganizationActions} key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
+    {!newUpload&&!automaticActive&&!(automaticConsent&&waiting)&&<DocumentIntakeAssistant {...directOrganizationActions} key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
       load={unavailable ? { status: 'unavailable' } : cap.isPending || !!id && batch.isPending ? { status: 'loading' } : error ? { status: 'error', message: userMessage(error), retryable: true } : { status: 'ready' }}
       candidates={candidates} loadCandidates={(itemId, more) => void loadCandidates(itemId, more)} onSelectFiles={selected => void create(selected)} addingFiles={waiting}
       onReorganizeDocument={reorganize}
@@ -196,7 +210,7 @@ function IntakeContainer() {
       renderCompilationActions={itemId=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;const value=wire?.items.find(i=>i.id===itemId),parts=value?.proposal?.parts??value?.organization?.parts??[];const documentKind=parts.length&&parts.every(p=>p.kind==='utility_bill')?'utility_bill':parts.some(p=>['invoice','receipt','purchase_document'].includes(p.kind))?'purchase_document':undefined;return source?<DocumentCompilationActions documentKind={documentKind} homeId={home.id} documentId={source.id} onOpen={(mode,draftId)=>setParams(previous=>{const next=new URLSearchParams(previous);next.set('oggetti-documento',source.id);next.set('compila',mode);next.delete('oggetti-bozza');next.delete('oggetti-analisi');if(draftId)next.set('oggetti-bozza',draftId);return next;})}/>:null;}}
       renderObjectProposals={(itemId,reviewDocument)=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentObjectProposals documentId={source.id} documentCopy={wire?.items.find(i=>i.id===itemId)?.uploadState==='duplicate'} onReviewDocument={reviewDocument} beforeConfirm={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?undefined:(kind,reuseCopy,title)=>prepareDocumentForObject(itemId,kind,reuseCopy,title)} confirmLabel={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?'Conferma questo articolo':'Conferma documento e articolo'}/>:null;}}
       renderOutcomeLinks={() => <Link className={ui.btn} to={`/home/${home.id}/documenti`}>Vai ai Documenti</Link>}
-      onRetryLoad={() => { void cap.refetch(); if (id) void batch.refetch(); }} />
+      onRetryLoad={() => { void cap.refetch(); if (id) void batch.refetch(); }} />}
     <input ref={picker} hidden type="file" accept="application/pdf,image/jpeg,image/png" aria-label="Originale da ricaricare" onChange={e => { const file = e.target.files?.[0], itemId = retryItem.current; if (file && itemId && current.current) { files.current.set(itemId, file); void upload(current.current, itemId); } e.target.value = ''; }} />
     {!id && <details><summary>PDF sintetici per provare il percorso</summary><p>Documenti di esempio, senza dati personali. Scaricali e selezionali nel caricamento.</p><ul>{['ape-sintetico.pdf', 'pratica-mista-sintetica.pdf', 'regolamento-sintetico.pdf', 'ricevuta-sintetica.pdf', 'senza-testo-sintetico.pdf'].map(name => <li key={name}><a href={'/intake-examples/' + name} download>{name}</a></li>)}</ul></details>}
     <section className={`${ui.card} ${styles.history}`} aria-label="Caricamenti precedenti"><h2>Caricamenti precedenti</h2>

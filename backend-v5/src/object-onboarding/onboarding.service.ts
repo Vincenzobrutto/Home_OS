@@ -251,10 +251,20 @@ export class ObjectOnboardingService {
     return {expenseId:created.expense.id,newExpenses:1};
   }
 
-  confirm(a: string, h: string, id: string, input: unknown, key?: string) {
+  confirm(a: string, h: string, id: string, input: unknown, key?: string, automatic = false) {
     const body = onboardingConfirmation(input, temporal(this.clock.now()).today);
     return this.request(a, h, 'confirm', uuid(id), body, key, async tx => {
       const draft = await this.open(tx, a, h, id, body.expectedVersion), output = draft.output as unknown as Output, decisions = { ...draft.decisions as Decisions };
+      if(automatic){
+        // Repeat duplicate checks under the same home lock as the canonical writes.
+        for(const item of output.items){
+          const profile=proposedProfile(item);
+          const found=await tx.homeObject.findFirst({where:{accountId:a,homeId:h,state:'active',OR:[{name:{equals:item.fields.name?.value??'',mode:'insensitive'}},...(profile.brand&&profile.model?[{AND:[{profile:{path:['brand','value'],equals:profile.brand.value}},{profile:{path:['model','value'],equals:profile.model.value}}]}]:[])]},select:{id:true}});
+          if(found)throw conflict('automatic_duplicate_review','Controlla una scheda già presente prima di proseguire.');
+        }
+        const costs=[...body.choices.flatMap(c=>'expense'in c&&c.expense.action==='create'?[{amountCents:c.expense.amountCents,spentOn:c.expense.spentOn}]:[]),...(body.houseExpenses??[]).flatMap(c=>c.confirmation?.mode==='create'?[c.confirmation.values]:[])];
+        if(await tx.homeExpense.findFirst({where:{accountId:a,homeId:h,state:'active',OR:[{documentId:draft.documentId},...costs.map(c=>({amountCents:Number(c.amountCents),spentOn:String(c.spentOn)}))]},select:{id:true}}))throw conflict('automatic_duplicate_review','Controlla una spesa già presente prima di proseguire.');
+      }
       if((body.documentOnly||!body.choices.length&&!body.houseExpenses?.length)&&(!body.documentOnly||!output.documentInfo||output.items.length||output.houseExpenses?.length||body.choices.length||body.houseExpenses?.length))throw invalid('Nessuna proposta da confermare.');
       if(body.manualPurchaseTotalCents!==undefined&&(draft.mode!=='manual'||output.purchaseTotal))throw invalid('Il totale dichiarato è ammesso soltanto per una fattura compilata manualmente senza totale estratto.');
       if (body.source.documentId !== draft.documentId || body.source.documentVersion !== draft.documentVersion || body.source.sha256 !== draft.documentSha256) throw conflict('onboarding_source_changed', 'La fonte è cambiata.');

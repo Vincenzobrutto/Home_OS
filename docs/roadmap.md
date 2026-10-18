@@ -1,3 +1,7 @@
+## V5 — caricamento automatico: prima implementazione (2026-10-18)
+
+Implementati consenso per caricamento, orchestrazione persistente e conferma delegata dei casi chiari; revisione solo delle eccezioni. Riavvio server/pagina, replay, fonte modificata, possibili doppioni, fattura/bolletta/planimetria ed importi per riga coperti con dati sintetici. Resta misurare il tasso reale di completamento senza interventi: l’estrazione AI sottostante non è stata migliorata né ricollaudata a pagamento in questa sessione.
+
 ## V12 — primo collaudo live superato
 
 Due fonti reali verificate: lavori con soggetti e spesa unica; macchina caffè con cinque dati essenziali e controllo spesa esistente. Nessuna garanzia generale OCR; continuare raccolta feedback nel budget residuo.

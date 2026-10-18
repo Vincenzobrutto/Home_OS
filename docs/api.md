@@ -1,3 +1,10 @@
+## V5 — organizzazione automatica del caricamento (2026-10-18)
+
+- POST /homes/:homeId/object-onboarding/automatic-runs (202), idempotency-key obbligatoria: {batchId,documentIds:[uuid...],consentToProviderTransfer:true,automaticProcessing:true}. Da1a20 documenti, elenco esatto degli originali caricati nel lotto. Consenso include invio Anthropic e salvataggio delegato dei casi chiari. Nessuna API key o quota accettata dal client.
+- GET /homes/:homeId/object-onboarding/automatic-runs/batches/:batchId: {run:null|{id,batchId,state:running|finished,entries:[{documentId,name,state:pending|waiting|completed|attention|unavailable,reason,draftId,newObjects,newExpenses}]}}. Nomi/ID/fonti oscurati se non leggibili o cambiati.
+
+Guard sessione/CSRF/context e membership del controller esistente. Il worker continua senza pagina aperta; un singolo invio per originale, limiti AI esistenti invariati. Rifiuto/esito incerto diventa eccezione, nessuna nuova analisi automatica. Fonte aggiornata, campi già iniziati e candidati oggetto/spesa richiedono revisione. I percorsi manuali e le conferme esplicite restano disponibili.
+
 ## V5 — contratto onboarding V12
 
 Nessun endpoint nuovo. item.subjectKind opzionale product/system; houseExpenses può avere documentKind simple_invoice per un costo complessivo di fattura, oltre a utility_bill. Conferma combina choices e houseExpenses atomicamente. document_only ammesso anche per soggetti di fattura con costo complessivo. Vietate doppia allocazione e spesa superiore al totale; esclusione richiede costo casa dichiarato e tetto ridotto delle quote escluse note. Dettagli: docs/v5/document-understanding-v12-report-20261018.md.

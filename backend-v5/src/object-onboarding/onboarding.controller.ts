@@ -1,12 +1,15 @@
-import { Body, Controller, Get, Headers, HttpCode, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Optional, Param, Post, Query, Req, UseGuards, ServiceUnavailableException } from '@nestjs/common';
 import { DocumentAccessGuard, DocumentRequest } from '../documents/access';
 import { ObjectOnboardingService } from './onboarding.service';
 import { OnboardingJobService } from './jobs.service';
 import { onboardingCandidates, onboardingExpenseCandidates } from './candidates';
+import { AutomaticIntakeService } from './automatic.service';
 @Controller('homes/:homeId/object-onboarding')
 @UseGuards(DocumentAccessGuard)
 export class ObjectOnboardingController {
- constructor(private readonly service:ObjectOnboardingService,private readonly jobs:OnboardingJobService){}
+ constructor(private readonly service:ObjectOnboardingService,private readonly jobs:OnboardingJobService,@Optional() private readonly automatic?:AutomaticIntakeService){}
+ @Post('automatic-runs') @HttpCode(202) autoStart(@Req() r:DocumentRequest,@Param('homeId') h:string,@Body() b:unknown,@Headers('idempotency-key') k?:string){if(!this.automatic)throw new ServiceUnavailableException();return this.automatic.start(r.documentAccountId,h,b,k);}
+ @Get('automatic-runs/batches/:batchId') autoStatus(@Req() r:DocumentRequest,@Param('homeId') h:string,@Param('batchId') id:string,@Query() q:unknown){if(!this.automatic)throw new ServiceUnavailableException();return this.automatic.latest(r.documentAccountId,h,id,q);}
  @Get('objects/:objectId/comparisons') comparisons(@Req() r:DocumentRequest,@Param('homeId') h:string,@Param('objectId') id:string,@Query() q:unknown){return this.service.comparisonsFor(r.documentAccountId,h,id,q);}
  @Post('comparisons/:id/keep') @HttpCode(200) keep(@Req() r:DocumentRequest,@Param('homeId') h:string,@Param('id') id:string,@Body() b:unknown,@Headers('idempotency-key') k?:string){return this.service.keepComparison(r.documentAccountId,h,id,b,k);}
  @Get('capabilities') capabilities(@Req() r:DocumentRequest,@Param('homeId') h:string,@Query() q:unknown){return this.jobs.capabilities(r.documentAccountId,h,q);}
