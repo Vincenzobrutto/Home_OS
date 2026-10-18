@@ -132,11 +132,10 @@ export function CasaPage() {
           {home.permissions.includes('edit') && <Link className={ui.btn} to={`/home/${encodeURIComponent(home.id)}/spese?nuova-spesa=1`}>Registra una spesa</Link>}
         </div>
       </section>
-      <section className={casa.todo} aria-label="Da completare"><h2>Da completare</h2><CasaDocumentsSummary homeId={home.id}/>
-      <div className={casa.deadlines}>
-        <ScadenzeSummary home={home} />
-        <CasaReviewSummary homeId={home.id} />
-      </div>
+      <section className={casa.todo} aria-label="Da completare"><h2>Da completare</h2>
+      <div className={casa.deadlines}><ScadenzeSummary home={home} /></div>
+      <CasaDocumentsSummary homeId={home.id}/>
+      <div className={casa.review}><CasaReviewSummary homeId={home.id}/></div>
       </section><div className={casa.overview}><section className={ui.card} aria-label="Esplora la casa"><h2>Esplora la casa</h2><div className={casa.destinations}>{[['documenti','Documenti','Originali e dati salvati'],['oggetti','Oggetti e impianti','Le tue schede'],['ambienti','Ambienti','Organizza le stanze'],['rubrica','Rubrica','Contatti utili']].map(([path,label,hint])=><Link key={path} to={`/home/${encodeURIComponent(home.id)}/${path}`}><span><strong>{label}</strong><small>{hint}</small></span><Icon name="arrow"/></Link>)}</div><p className={styles.small}>Oggetti e spese personali; ambienti condivisi.</p></section><SpeseSummary home={home} compact/></div>
       <div className={casa.secondary}>
         <CasaSharingSummary />

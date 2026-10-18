@@ -19,3 +19,8 @@ Verificate screenshot desktop e viewport mobile 390 × 844, righe lunghe e assen
 ## Limiti
 
 Telefono fisico, tastiera virtuale e screen reader non collaudati. Nessuna certificazione di accessibilità o verifica generale della qualità AI. I documenti sono un’anteprima delle prime tre fonti pendenti, non una lista completa né un riepilogo quantitativo. Le scadenze sono quelle delle attività personali: ricorrenze e promemoria automatici da bollette rimangono fuori scope.
+
+
+### Priorità alle scadenze
+
+Su richiesta successiva, le scadenze aprono il blocco Da completare prima delle fonti documentali, con fondo leggero, accento e titolo più evidente. Ordine verificato nel browser desktop e viewport mobile 390 × 844. Nessuna modifica ai dati o alla logica dei promemoria.

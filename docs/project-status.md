@@ -1,3 +1,7 @@
+## Casa: scadenze prima dei documenti — 19 ottobre 2026
+
+Le scadenze aprono il blocco Da completare su desktop e mobile, con maggiore evidenza del titolo e sfondo leggero. Seguono documenti e verifiche. Dati e logica dei promemoria invariati.
+
 ## Casa: layout approvato e scadenze — 19 ottobre 2026
 
 Implementati riepilogo operativo, fonti pendenti reali, scadenze personali, accessi alla casa e spese sintetiche su desktop/mobile. [Verifica e limiti](v5/casa-layout-20261019.md).
