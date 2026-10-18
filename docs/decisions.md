@@ -1,3 +1,7 @@
+## 2026-10-18 — default locali di presentazione dopo il collaudo V12
+
+Categoria elettrica suggerita da citofono/videocitofono nel nome già estratto; tipo proposto esplicito ha priorità. Titolo generico di spesa Fattura può usare la descrizione lavori già verificata (massimo120caratteri). Sono default modificabili del modulo, senza aggiornamento dell’outputAI, delle schede esistenti o attribuzione di marca/modello non presenti. Evitata un’altra richiesta a pagamento per questi dettagli.
+
 ## 2026-10-18 — V12: costo del documento separato dai soggetti
 
 Fatture lavori/miste possono proporre una spesa della casa e più soggetti fisici; servizi non diventano oggetti. Una richiesta AI, adattamento locale e una conferma combinata. Costi opzionali non comprovati sono omessi con avviso senza scartare gli altri dati; somme incoerenti restano da rivedere e non possono superare il totale al salvataggio. Scartate allocazione automatica del totale su ogni oggetto e richieste AI separate per tipo. Nessuna attività/intervento canonica creata da una descrizione lavori.

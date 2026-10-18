@@ -1,3 +1,7 @@
+## 2026-10-18 — V12 collaudata su due documenti reali
+
+Con consenso delegato: fattura lavori con quadro/monitor e1537.20EUR; acquisto caffè con nome/marca/modello EXAM440.35.B/499EUR/data2026-06-14. Due analisi riuscite,0.067026USD totali,nessuna conferma canonica. Default locale tipo citofono elettrico e titolo lavori da descrizione verificata;2testFE/build/typecheck/lint verdi. Report V12 aggiornato.
+
 ## 2026-10-18 — V12: fatture lavori e revisione combinata
 
 Spese della casa anche per lavori/servizi, soggetti product/system e un solo Salva e organizza. Costi opzionali non verificati non scartano identità valide; avvisi e limiti economici server/UI. Fonte/costi/doppioni/replay protetti. 92BEoffline,28DB,54FE verdi e browser mobile sintetico; nessuna AI live. Report V12 in docs/v5.

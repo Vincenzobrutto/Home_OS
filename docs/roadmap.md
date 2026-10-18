@@ -1,3 +1,7 @@
+## V12 — primo collaudo live superato
+
+Due fonti reali verificate: lavori con soggetti e spesa unica; macchina caffè con cinque dati essenziali e controllo spesa esistente. Nessuna garanzia generale OCR; continuare raccolta feedback nel budget residuo.
+
 ## V12 — raggiunto 18 ottobre 2026
 
 Fatture lavori/servizi e miste: soggetti e unico costo della casa nella stessa revisione; servizi senza oggetto e bollette con una conferma. Restano qualità live del modello, OCR per pagina e ulteriori casistiche.

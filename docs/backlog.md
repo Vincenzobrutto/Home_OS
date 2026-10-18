@@ -1,3 +1,7 @@
+## V12 — riscontri live
+
+Prime due letture reali riuscite. Da affinare: candidato oggetto esistente quando nome/modello manuale differisce dal prodotto estratto (mai associare automaticamente solo per documento comune); avvisi opzionali su importi secondari/consegna senza oscurare i dati validi. Citofono classificato elettrico e titolo fattura lavori specifico risolti localmente.
+
 ## V12 — aggiornamento 18 ottobre 2026
 
 Chiusi: spesa lavori senza oggetto, visualizzazione congiunta soggetti/spesa, omissioni isolate dei costi errati e data intestazione fattura. Restano collaudo V12 con consenso UI e misura richiamo del modello reale, OCR/PDF misti, persistenza delle modifiche non ancora inviate ai campi spesa su refresh, campi tecnici canonici e attività/interventi. Le vecchie bozze non vengono arricchite retroattivamente.
