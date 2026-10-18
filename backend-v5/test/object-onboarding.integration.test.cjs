@@ -126,6 +126,32 @@ test('Full onboarding: DB, real PDF parser, fake provider; atomicity, replay, pr
   const result=await confirm(d,choices);assert.equal(result.result.newExpenses,2);assert.equal(await db.homeExpense.count({where:{documentId:doc.id}}),2);
  });
 
+ await t.test('one final invoice confirmation excludes the other row from objects and canonical costs, including replay',async()=>{
+  const source=await document(Buffer.concat([bytes,Buffer.from('\n%unified-exclusion-'+randomUUID())])),draft=await extracted(source);
+  const included={...create(draft.items[0]),expense:{action:'create',title:'SYNTHETIC included item',amountCents:9999,spentOn:'2025-06-13',supplier:null,manualItemAmount:true}};
+  const key=randomUUID(),choices=[included,{itemId:draft.items[1].id,action:'skip'}],before=await db.homeObject.count({where:{homeId:h}});
+  const result=await confirm(draft,choices,key);await confirm(draft,choices,key);
+  assert.equal(result.draft.state,'confirmed');assert.equal(result.result.newObjects,1);assert.equal(result.result.newExpenses,1);
+  assert.equal(result.draft.items[1].decision.state,'skipped');assert.equal(result.draft.items[1].decision.objects.length,0);
+  assert.equal(await db.homeObject.count({where:{homeId:h}}),before+1);
+  const expenses=await db.homeExpense.findMany({where:{documentId:source.id}});assert.equal(expenses.length,1);assert.equal(expenses[0].amountCents,9999);
+  assert.equal(await db.document.count({where:{id:source.id}}),1);assert.equal((await service.recover(a,h,draft.id,key,{})).status,'confirmed');
+ });
+
+ await t.test('manual invoice records row amounts against an explicitly declared total; manual bill has no product',async()=>{
+  const doc=await document(Buffer.concat([bytes,Buffer.from('\n%manual-unified-'+randomUUID())]));
+  let draft=(await service.manualDraft(a,h,{documentId:doc.id,documentKind:'purchase_document'},randomUUID())).draft;
+  assert.equal(draft.documentKind,'purchase_document');draft=(await service.addItem(a,h,draft.id,{expectedVersion:draft.version},randomUUID())).draft;
+  const choices=draft.items.map((item,i)=>({...create(item,'SYNTHETIC manual row '+i),expense:{action:'create',title:'Manual row '+i,amountCents:i?4990:9999,spentOn:'2025-06-13',supplier:null,manualItemAmount:true,acknowledgePossibleDuplicate:true}}));
+  const body={expectedVersion:draft.version,source:draft.snapshot,choices,manualPurchaseTotalCents:14989},key=randomUUID();
+  await assert.rejects(service.confirm(a,h,draft.id,{...body,manualPurchaseTotalCents:10000},randomUUID()));
+  assert.equal(await db.homeExpense.count({where:{documentId:doc.id}}),0);
+  const result=await service.confirm(a,h,draft.id,body,key);await service.confirm(a,h,draft.id,body,key);assert.equal(result.result.newExpenses,2);
+  const costs=await db.homeExpense.findMany({where:{documentId:doc.id}});assert.equal(costs.reduce((n,c)=>n+c.amountCents,0),14989);
+  const bill=await document(Buffer.concat([bytes,Buffer.from('\n%manual-bill-'+randomUUID())]));const manual=(await service.manualDraft(a,h,{documentId:bill.id,documentKind:'utility_bill'},randomUUID())).draft;
+  assert.equal(manual.items.length,0);assert.equal(manual.houseExpenses.length,1);assert.equal(manual.houseExpenses[0].amountCandidates.length,0);
+ });
+
  await t.test('home pilot is account scoped, consent gated and persistent across budget instances',async()=>{
   const cfg=new OfflineConfig();cfg.env.ONBOARDING_AI_SCOPE='home';cfg.env.ONBOARDING_AI_ACCOUNT_ID=a;cfg.env.ONBOARDING_AI_HOME_ID=h;cfg.env.ONBOARDING_AI_ALLOWED_SHA256='';cfg.env.ONBOARDING_AI_BUDGET_USD='5';cfg.env.ONBOARDING_AI_MAX_CALLS='40';campaigns.push(cfg.campaign);
   const pilot=new OnboardingAiBudget(db,cfg),doc=await document(Buffer.concat([bytes,Buffer.from('\n%pilot-scope-'+randomUUID())]));

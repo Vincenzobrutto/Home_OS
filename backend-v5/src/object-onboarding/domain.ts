@@ -16,6 +16,7 @@ export type ProductItem = {
   id: string; fingerprint: string;
   fields: Partial<Record<ProductField, ProductValue>>;
   quantity: { value: number; source: ProductSource } | null;
+  purchaseAmount?: { amountCents: number; source: ProductSource } | null;
   nameTruncated: boolean;
   disposition: 'household_object' | 'consumable' | 'uncertain';
 };
@@ -69,7 +70,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     let needsReview = row.requiresHumanReview === true;
     const items: ProductItem[] = [];
     for (const raw of row.items) {
-      const r = object(raw, ['fields', 'quantity', 'nameTruncated', 'disposition', 'confidence']);
+      const r = object(raw, ['fields', 'quantity', 'purchaseAmount', 'nameTruncated', 'disposition', 'confidence']);
       if (typeof r.nameTruncated !== 'boolean' || !['household_object', 'consumable', 'uncertain'].includes(String(r.disposition)) || !['high', 'low'].includes(String(r.confidence))) throw invalid();
       const fields: Partial<Record<ProductField, ProductValue>> = {};
       for (const [key, rawField] of Object.entries(object(r.fields, [...productFields]))) {
@@ -110,7 +111,13 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       if (fingerprints.has(fingerprint)) throw new ProviderFailure('object_onboarding_repeated_item');
       fingerprints.add(fingerprint);
       const id = digest(JSON.stringify([context.snapshot.documentId, fingerprint]));
-      items.push({ id, fingerprint, fields, quantity, nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
+      let purchaseAmount: ProductItem['purchaseAmount'] = null;
+      if (r.purchaseAmount !== undefined && r.purchaseAmount !== null) {
+        const price = object(r.purchaseAmount, ['amountCents', 'evidence']), source = evidence(price.evidence, context);
+        if (row.documentKind !== 'purchase_document' || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/(?:totale\s+riga|importo\s+riga|prezzo\s+articolo|line\s+total)/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(price.amountCents))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
+        purchaseAmount = { amountCents: Number(price.amountCents), source };
+      }
+      items.push({ id, fingerprint, fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
     }
     let purchaseTotal: ProductExtraction['purchaseTotal'] = null;
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {
@@ -119,6 +126,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       if (row.documentKind !== 'purchase_document' || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo))?\s*[:=]?\s*(?:EUR|€)?\s*\d[\d., ]*\s*(?:EUR|€)?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
       purchaseTotal = { amountCents: Number(total.amountCents), source };
     }
+    if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents) throw new ProductEvidenceFailure('purchaseTotal', 'total');
     const houseExpenses=readHouseExpenses(row.houseExpenses,context);
     if(houseExpenses.length&&row.documentKind!=='utility_bill')throw invalid();
     return { documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,...(row.houseExpenses!==undefined?{houseExpenses}:{}) };

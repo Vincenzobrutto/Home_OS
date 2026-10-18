@@ -121,12 +121,12 @@ it.each(['local','unknown','draftkind','copy','copy-lost'])('upload proposals st
  const path=`/home/${homeA1.id}/documenti/organizza`;await app.router.navigate(path+'?lotto=inline-batch&filtro=conserva');
  await app.user.click(await screen.findByRole('button',{name:'Compila tramite AI'}));
  await screen.findByRole('heading',{name:'Proposta del documento'});expect(starts).toBe(0);expect(screen.getByRole('button',{name:'Avvia compilazione AI'})).toBeDisabled();
- await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Avvia compilazione AI'}));await screen.findByRole('heading',{name:'Lampada demo'});
+ await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Avvia compilazione AI'}));await screen.findByRole('heading',{name:'Articolo 1 · Lampada demo'});
  expect(starts).toBe(1);expect(bodies[0]).toMatchObject({documentId:doc.id,consentToProviderTransfer:true});expect(app.router.state.location.pathname).toBe(path);
  const params=new URLSearchParams(app.router.state.location.search);expect(params.get('lotto')).toBe('inline-batch');expect(params.get('filtro')).toBe('conserva');expect(params.get('oggetti-bozza')).toBe('inline-draft');expect(params.get('bozza')).toBeNull();
  if(mode==='local')expect(screen.getByText('Spesa di acquisto (facoltativa)')).toBeInTheDocument();
  if(copy){
-  const confirm=()=>screen.getByRole('button',{name:/^Conferma (documento e articolo|questo articolo|oggetto e spesa)$/});
+  const confirm=()=>screen.getByRole('button',{name:'Salva e organizza'});
   await app.user.click(confirm());await screen.findByText(/Il file è già presente: seleziona/);expect(organizationWrites).toBe(0);expect(objectWrites).toBe(0);
   expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Lampada demo');
   await app.user.click(screen.getByRole('checkbox',{name:'Usa il documento già presente senza modificarlo'}));
@@ -139,14 +139,14 @@ it.each(['local','unknown','draftkind','copy','copy-lost'])('upload proposals st
  }
 
  if(mode==='unknown'){
-  await app.user.click(screen.getByRole('button',{name:/^Conferma (documento e articolo|questo articolo|oggetto e spesa)$/}));
+  await app.user.click(screen.getByRole('button',{name:'Salva e organizza'}));
   const error=await screen.findByRole('alert');expect(error).toHaveTextContent('Prima completa la classificazione');expect(error).toHaveFocus();expect(objectWrites).toBe(0);expect(organizationWrites).toBe(0);
-  await app.user.click(screen.getByRole('button',{name:'Rivedi documento'}));expect(screen.getByRole('dialog')).toBeVisible();await app.user.click(screen.getByRole('button',{name:'Chiudi'}));await app.user.click(screen.getByRole('button',{name:'Rivedi Lampada demo'}));expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Lampada demo');app.unmount();return;
+  await app.user.click(screen.getByRole('button',{name:'Rivedi documento'}));expect(screen.getByRole('dialog')).toBeVisible();await app.user.click(screen.getByRole('button',{name:'Chiudi'}));expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Lampada demo');app.unmount();return;
  }
 
- await app.user.click(screen.getByRole('button',{name:/^Conferma (documento e articolo|questo articolo|oggetto e spesa)$/}));
+ await app.user.click(screen.getByRole('button',{name:'Salva e organizza'}));
  await screen.findByText(/Archiviazione del documento da verificare/);expect(objectWrites).toBe(0);
- await app.user.click(screen.getByRole('button',{name:/^Conferma (documento e articolo|questo articolo|oggetto e spesa)$/}));
+ await app.user.click(screen.getByRole('button',{name:'Salva e organizza'}));
  await screen.findByText('Confermato: 1 nuovi oggetti e 0 nuove spese.');expect(objectWrites).toBe(1);expect(order).toEqual(['document','document','review','object']);expect(organizationKeys[0]).toBeTruthy();expect(organizationKeys[0]).toBe(organizationKeys[1]);
  expect(new URLSearchParams(app.router.state.location.search).get('lotto')).toBe('inline-batch');app.unmount();
 });

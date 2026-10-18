@@ -22,3 +22,5 @@
 .compactValues dd { margin: 0; }
 
 .panelHead>div{min-width:0}.originalLink{display:inline-block;margin-top:.35rem;font-size:.9rem;text-decoration:underline;overflow-wrap:anywhere}
+
+.unifiedItem{min-width:0}.unifiedItem fieldset{border:0;padding:0;margin:0;min-width:0}.unifiedItem .values .card{padding:0;border:0}.unifiedItem .values{gap:1rem}.unifiedItem h3{overflow-wrap:anywhere}

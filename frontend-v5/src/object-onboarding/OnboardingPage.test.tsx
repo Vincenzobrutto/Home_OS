@@ -188,7 +188,8 @@ it('uncertain provider outcome needs both transfer consent and explicit budget a
 
 it('per-document compilation opens the same prefilled single-item form directly',async()=>{
  const w=await world({purchase:true,compactList:true,compilation:'ai',clearCandidates:true});
- await screen.findByRole('dialog',{name:'Rivedi l’articolo'});
+ await screen.findByRole('region',{name:'Revisione unica del documento'});
+ expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
  expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Router demo');
  expect(screen.getByLabelText('Marca')).toHaveValue('Lume');
  expect(w.counts()).toEqual({starts:0,confirmations:0});
@@ -211,6 +212,19 @@ it('direct form opening leaves recovery controls accessible when a previous conf
  await screen.findByRole('button',{name:'Controlla l’esito'});
  expect(screen.queryByRole('dialog',{name:'Rivedi l’articolo'})).not.toBeInTheDocument();
  expect(screen.getByRole('button',{name:'Invia la stessa conferma'})).toBeEnabled();
+});
+
+it('unified confirmation sends every open choice once and recovers a lost reply without another confirmation',async()=>{
+ const w=await world({compilation:'manuale',compactList:true,clearCandidates:true,lost:true});
+ await screen.findByRole('region',{name:'Revisione unica del documento'});
+ const second=screen.getByRole('region',{name:'Articolo 2'});
+ await w.user.click(within(second).getByRole('radio',{name:'Non riguarda questa casa'}));
+ await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));
+ await screen.findByRole('button',{name:'Controlla l’esito'});
+ const posts=w.calls.filter(c=>c.path.endsWith('/confirmations'));
+ expect(posts).toHaveLength(1);expect(posts[0]!.body).toMatchObject({choices:[{itemId:'item0',action:'create',expense:{action:'skip'}},{itemId:'item1',action:'skip'}]});
+ await w.user.click(screen.getByRole('button',{name:'Controlla l’esito'}));
+ await screen.findByText('Conferma recuperata: nessun doppione.');expect(w.counts().confirmations).toBe(1);expect(w.counts().starts).toBe(0);
 });
 
 it('every article review keeps an original-document link in its fixed header without leaving the edited form',async()=>{

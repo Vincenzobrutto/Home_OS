@@ -68,9 +68,9 @@ export function onboardingExpenseCandidates(access: ObjectOnboardingAccess, a: s
   return access.run(a, h, false, async tx => {
     const draft = await access.draft(tx, a, h, id); if (!await access.source(tx, a, h, draft.documentId, draft)) throw onboardingDenied();
     const output = draft.output as unknown as ProductExtraction;
-    const bill=q.itemId?output.houseExpenses?.find(x=>x.id===q.itemId):null;if(q.itemId&&!bill)throw invalid();
-    const purchaseDate = bill?bill.proposedFields.documentDate?.value??null:output.items.length === 1 ? output.items[0].fields.purchaseDate?.value ?? null : null;
-    const amount = bill?bill.amountCandidates.find(x=>x.role==='current_document_total')?.amountCents??null:output.purchaseTotal?.amountCents ?? null;
+    const bill=q.itemId?output.houseExpenses?.find(x=>x.id===q.itemId):null,product=q.itemId?output.items.find(x=>x.id===q.itemId):null;if(q.itemId&&!bill&&!product)throw invalid();
+    const purchaseDate = bill?bill.proposedFields.documentDate?.value??null:product?.fields.purchaseDate?.value??(output.items.length === 1 ? output.items[0].fields.purchaseDate?.value ?? null : null);
+    const amount = bill?bill.amountCandidates.find(x=>x.role==='current_document_total')?.amountCents??null:product?.purchaseAmount?.amountCents??(output.items.length===1?output.purchaseTotal?.amountCents:null)??null;
     const billNumber=bill?.proposedFields.documentNumber?.value??null,billSupplier=bill?.proposedFields.supplier?.value??null;
     const p = pagination(digest(JSON.stringify([a, h, id, 'expenses', q.itemId,q.q])), q.cursor), escaped = q.q.replace(/[\\%_]/gu, '\\$&');
     const rows = await tx.$queryRaw<Array<{ id: string; rank: number; title: string; amountCents: number; spentOn: string; version: number }>>(Prisma.sql`

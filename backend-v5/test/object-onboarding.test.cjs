@@ -17,6 +17,16 @@ const field = (value, image = false) => ({ value, evidence: proof(value, image) 
 const raw = (image = false) => ({ documentKind: 'delivery_notice', hasMoreItems: false, items: [{ fields: { name: field(label, image), brand: field('Lume', image), model: field('Mini', image) }, quantity: { value: 1, evidence: proof('Quantità: 1', image) }, nameTruncated: false, disposition: 'household_object', confidence: 'high' }] });
 const fails = (fn, code) => assert.throws(fn, error => code ? error.code === code : !!error);
 
+test('two invoice rows keep evidenced EUR prices independent and never allocate the grand total', () => {
+ const names=['Macchina del ghiaccio','Cuffie personali'],prices=[9999,4990],lines=names.map((name,i)=>`${name} — Totale riga: ${i?'49,90':'99,99'} EUR`),total='Totale documento: 149,89 EUR';
+ const value={documentKind:'purchase_document',hasMoreItems:false,purchaseTotal:{amountCents:14989,evidence:proof(total)},items:names.map((name,i)=>({fields:{name:{value:name,evidence:proof(lines[i])}},quantity:null,purchaseAmount:{amountCents:prices[i],evidence:proof(lines[i])},nameTruncated:false,disposition:'household_object',confidence:'high'}))};
+ const context={...textContext,pages:[[...lines,total].join('\n')]};
+ assert.deepEqual(productExtraction(value,context).items.map(item=>item.purchaseAmount.amountCents),prices);
+ const crossed=structuredClone(value);crossed.items[1].purchaseAmount=value.items[0].purchaseAmount;fails(()=>productExtraction(crossed,context),'evidence_unverified');
+ const invented=structuredClone(value);invented.items[0].purchaseAmount.amountCents=14989;fails(()=>productExtraction(invented,context),'evidence_unverified');
+ const absent=structuredClone(value);absent.items.forEach(item=>delete item.purchaseAmount);assert.ok(productExtraction(absent,context).items.every(item=>!item.purchaseAmount));
+});
+
 test('delivery without price proposes an object, never a cost or delivered status', () => {
   const result = productExtraction(raw(), textContext);
   assert.equal(result.items.length, 1);

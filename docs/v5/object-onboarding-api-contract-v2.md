@@ -87,3 +87,8 @@ UI: una conferma oggetto/costo, con eventuale preparazione documento precedente.
 OnboardingAiConfig supporta ONBOARDING_AI_SCOPE=home con ACCOUNT_ID e HOME_ID entrambi UUID; senza scope resta obbligatoria l'allowlist SHA. Scope invalido/incompleto non si attiva. Contesto account/home verificato in capabilities, prima della riserva e prima di ogni fase di trasmissione, oltre ad accesso originale e consenso esplicito già esistenti.
 
 Capabilities include budget opzionale/null: currency, limitUsd, committedUsd, remainingUsd (stringhe decimali), callsUsed, maxCalls, available, disabledReason. Visibile solo nel contesto autorizzato; nessun consumo esposto ad altri account/case. Budget esaurito blocca un nuovo invio anche quando restano chiamate; contatori persistenti non si rinnovano ai riavvii. Dettagli e collaudo in ai-home-pilot-20261017.md.
+
+
+## Revisione unica V4 — 18 ottobre 2026
+
+Estensioni additive, endpoint invariati: manual-drafts accetta documentKind facoltativo purchase_document/utility_bill; confirmations accetta manualPurchaseTotalCents positivo soltanto per bozze manuali prive di totale estratto. review conserva il totale manuale e la richiesta pending per recupero. items[].purchaseAmount contiene amountCents e fonte di riga validata; assente nelle bozze precedenti. expense-candidates?itemId accetta anche articoli prodotto e usa importo/data di quella riga. Limite cumulativo e skip senza costo invariati. Specifica: document-review-unified-v4.md.

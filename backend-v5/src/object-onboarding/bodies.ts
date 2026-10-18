@@ -28,7 +28,8 @@ function expense(input: unknown, today: string): OnboardingExpense {
   return { ...(r.manualItemAmount!==undefined?{manualItemAmount:r.manualItemAmount}:{}),...(r.acknowledgePossibleDuplicate !== undefined ? { acknowledgePossibleDuplicate: r.acknowledgePossibleDuplicate } : {}), action: 'create', title: text(r.title, 120), amountCents: amountCents(r.amountCents), spentOn: spentOn(r.spentOn, today), supplier: r.supplier === undefined || r.supplier === null ? null : text(r.supplier, 120) };
 }
 export function onboardingConfirmation(input: unknown, today: string) {
-  const r = object(input, ['expectedVersion', 'source', 'choices', 'houseExpenses']);
+  const r = object(input, ['expectedVersion', 'source', 'choices', 'houseExpenses', 'manualPurchaseTotalCents']);
+  const manualPurchaseTotalCents = r.manualPurchaseTotalCents === undefined ? undefined : amountCents(r.manualPurchaseTotalCents);
   const source = object(r.source, ['documentId', 'documentVersion', 'sha256']);
   if (typeof source.sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(source.sha256) || !Array.isArray(r.choices) || (!r.choices.length&&!Array.isArray(r.houseExpenses)) || r.choices.length > 20) throw invalid();
   const choices: OnboardingChoice[] = r.choices.map(raw => {
@@ -54,7 +55,7 @@ export function onboardingConfirmation(input: unknown, today: string) {
   });
   if (new Set(choices.map(c => c.itemId)).size !== choices.length) throw invalid();
   const houseExpenses=houseChoices(r.houseExpenses,r.expectedVersion,today);if(!choices.length&&!houseExpenses.length)throw invalid();
-  return {...(houseExpenses.length?{houseExpenses}:{}), expectedVersion: version(r.expectedVersion), source: { documentId: uuid(source.documentId), documentVersion: version(source.documentVersion), sha256: source.sha256 }, choices };
+  return {...(manualPurchaseTotalCents!==undefined?{manualPurchaseTotalCents}:{}),...(houseExpenses.length?{houseExpenses}:{}), expectedVersion: version(r.expectedVersion), source: { documentId: uuid(source.documentId), documentVersion: version(source.documentVersion), sha256: source.sha256 }, choices };
 }
 
 function houseChoices(input:unknown,expectedVersion:unknown,today:string){

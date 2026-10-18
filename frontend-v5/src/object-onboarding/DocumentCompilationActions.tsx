@@ -10,7 +10,7 @@ import styles from './onboarding.module.css';
 import type { Capabilities, Draft } from './model';
 
 export type CompilationMode = 'manuale' | 'ai';
-export function DocumentCompilationActions({homeId,documentId,onOpen}:{homeId:string;documentId:string;onOpen?:(mode:CompilationMode,draftId?:string)=>void}) {
+export function DocumentCompilationActions({homeId,documentId,onOpen,documentKind}:{documentKind?:'purchase_document'|'utility_bill';homeId:string;documentId:string;onOpen?:(mode:CompilationMode,draftId?:string)=>void}) {
  const account=useAccount(),api=useApi(),navigate=useNavigate(),cache=useQueryClient();
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
  const live=useRef(true);useEffect(()=>{live.current=true;return()=>{live.current=false;};},[]);
@@ -23,7 +23,7 @@ export function DocumentCompilationActions({homeId,documentId,onOpen}:{homeId:st
   const existing=caps.data?.drafts.find(d=>d.state==='open');
   if(existing){open('manuale',existing.id);return;}
   sending.current=true;setBusy(true);setError('');attempt.current??=newIdempotencyKey();
-  try {const result=await api.callJson<{draft:Draft}>(`/homes/${encodeURIComponent(homeId)}/object-onboarding/manual-drafts`,{method:'POST',body:{documentId},idempotencyKey:attempt.current,accountId:account.id});
+  try {const result=await api.callJson<{draft:Draft}>(`/homes/${encodeURIComponent(homeId)}/object-onboarding/manual-drafts`,{method:'POST',body:{documentId,...(documentKind?{documentKind}:{})},idempotencyKey:attempt.current,accountId:account.id});
    if(result.draft.snapshot?.documentId!==documentId)throw Error('La scheda non appartiene a questo documento.');
    await cache.invalidateQueries({queryKey:key});open('manuale',result.draft.id);
   }catch(e){if(isUnauthorized(e))await handleUnauthorized(cache);if(live.current)setError(userMessage(e));}finally{sending.current=false;if(live.current)setBusy(false);}

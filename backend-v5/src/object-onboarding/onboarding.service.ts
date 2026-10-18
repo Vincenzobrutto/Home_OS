@@ -41,7 +41,7 @@ export class ObjectOnboardingService {
   }
   private async safeReview(tx:OnboardingTx,a:string,h:string,draft:ObjectOnboardingDraft){
     if(!draft.review)return null;
-    const saved=draft.review as {forms?:Record<string,Record<string,unknown>>;pending?:{path:string;key:string;body:unknown}},forms:Record<string,unknown>={};
+    const saved=draft.review as {manualPurchaseTotalCents?:number;forms?:Record<string,Record<string,unknown>>;pending?:{path:string;key:string;body:unknown}},forms:Record<string,unknown>={};
     for(const [id,form] of Object.entries(saved.forms??{})){
       if(!form||typeof form!=='object'||Array.isArray(form))continue;
       const targets=[];
@@ -56,7 +56,7 @@ export class ObjectOnboardingService {
       for(const c of body.houseExpenses??[])if(c.confirmation?.mode==='link_existing')await new ExpensesService(this.access.db,this.reviewAccess,this.clock).record(tx,a,h,c.confirmation.expenseId);
       pending={...pending,body:pending.body};
     }catch{pending=undefined;}}
-    return {forms,...(pending?{pending}:{})};
+    return {forms,...(draft.mode==='manual'&&Number.isSafeInteger(saved.manualPurchaseTotalCents)&&saved.manualPurchaseTotalCents!>0?{manualPurchaseTotalCents:saved.manualPurchaseTotalCents}:{}),...(pending?{pending}:{})};
   }
   comparisonsFor(a:string,h:string,objectId:string,query:unknown){
     object(query,[]);return this.access.run(a,h,false,async tx=>{
@@ -100,13 +100,18 @@ export class ObjectOnboardingService {
     });
   }
   manualDraft(a: string, h: string, input: unknown, key?: string) {
-    const r = object(input, ['documentId']), documentId = uuid(r.documentId);
-    return this.request(a, h, 'manual', documentId, { documentId }, key, async tx => {
+    const r = object(input, ['documentId','documentKind']), documentId = uuid(r.documentId);
+    if(r.documentKind!==undefined&&!['purchase_document','utility_bill'].includes(String(r.documentKind)))throw invalid();
+    return this.request(a, h, 'manual', documentId, { documentId,...(r.documentKind?{documentKind:r.documentKind}:{}) }, key, async tx => {
       const source = await this.access.source(tx, a, h, documentId); if (!source) throw onboardingDenied();
       const prior = await tx.objectOnboardingDraft.findFirst({ where: { accountId: a, homeId: h, documentId, documentVersion: source.original!.version, documentSha256: source.original!.sha256, state: 'open' }, orderBy: { createdAt: 'desc' } });
       if (prior) return { draft: prior };
       const fingerprint = digest('manual:' + source.original!.sha256 + ':1'), item: ProductItem = { id: digest(documentId + fingerprint), fingerprint, fields: {}, quantity: null, nameTruncated: false, disposition: 'uncertain' };
-      const output: ProductExtraction = { documentKind: 'unsupported', items: [item], needsReview: true, purchaseTotal: null };
+      const organization = await tx.documentOrganization.findUnique({where:{accountId_homeId_documentId:{accountId:a,homeId:h,documentId}}});
+      const parts = organization && organization.documentVersion === source.original!.version && organization.documentSha256 === source.original!.sha256 && Array.isArray(organization.parts) ? organization.parts as Array<{kind?:string}> : [];
+      const isBill = r.documentKind==='utility_bill'||parts.length > 0 && parts.every(part => part.kind === 'utility_bill');
+      const isPurchase = r.documentKind==='purchase_document'||parts.some(part => ['invoice','receipt','purchase_document'].includes(part.kind ?? '')) && !parts.some(part => part.kind === 'utility_bill');
+      const output: ProductExtraction = isBill ? {documentKind:'utility_bill',items:[],needsReview:true,purchaseTotal:null,houseExpenses:[{id:item.id,fingerprint:item.fingerprint,documentKind:'utility_bill',proposedFields:{},amountCandidates:[],amountSelectionRequired:true}]} : { documentKind: isPurchase ? 'purchase_document' : 'unsupported', items: [item], needsReview: true, purchaseTotal: null };
       return { draft: await tx.objectOnboardingDraft.create({ data: { accountId: a, homeId: h, documentId, documentVersion: source.original!.version, documentSha256: source.original!.sha256, mode: 'manual', output: onboardingJson(output) } }) };
     });
   }
@@ -185,7 +190,7 @@ export class ObjectOnboardingService {
       await tx.objectOnboardingComparison.create({ data: { ...lookup.accountId_homeId_objectId_fieldKey_fingerprint, draftId: draft.id, documentId: draft.documentId, documentVersion: draft.documentVersion, documentSha256: draft.documentSha256, proposed: onboardingJson(proposed) } });
     }
   }
-  private async cost(tx: OnboardingTx, a: string, h: string, draft: ObjectOnboardingDraft, output: Output, choice: Extract<OnboardingChoice, { action: 'create' | 'link' }>, targetId: string, currentDecisions: Decisions) {
+  private async cost(tx: OnboardingTx, a: string, h: string, draft: ObjectOnboardingDraft, output: Output, choice: Extract<OnboardingChoice, { action: 'create' | 'link' }>, targetId: string, currentDecisions: Decisions, manualMaximum?:number) {
     if (choice.expense.action === 'skip') return { expenseId: null, newExpenses: 0 };
     if (output.documentKind !== 'purchase_document') throw invalid('I costi di questo documento richiedono una scelta separata in Spese. Nessun importo viene distribuito automaticamente.');
     const expenses = new ExpensesService(this.access.db, this.reviewAccess, this.clock);
@@ -203,7 +208,8 @@ export class ObjectOnboardingService {
       return { expenseId: value.id, newExpenses: 0 };
     }
     const split=output.items.length>1;
-    if(split&&(!choice.expense.manualItemAmount||!output.purchaseTotal))throw invalid('Indica e conferma il prezzo del solo articolo. Il totale documento deve essere disponibile.');
+    const maximum=output.purchaseTotal?.amountCents??manualMaximum;
+    if(split&&(!choice.expense.manualItemAmount||!maximum))throw invalid('Indica e conferma il prezzo del solo articolo e il totale della fattura.');
     const existing = await tx.$queryRaw<Array<{ id: string }>>`SELECT e.id FROM "HomeExpense" e JOIN "DocumentVersion" v ON v."documentId"=e."documentId" JOIN "Document" d ON d.id=v."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;
     if (existing.length&&!split) throw conflict('onboarding_expense_exists', 'Esiste già un costo per questa ricevuta: scegli quello esistente.');
     if(split){
@@ -211,7 +217,7 @@ export class ObjectOnboardingService {
       const prior=await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentSha256:draft.documentSha256},select:{decisions:true}});
       const allocated=new Set([...prior.flatMap(row=>Object.values(row.decisions as Decisions)),...Object.values(currentDecisions)].filter(d=>d.allocation==='manual_item').map(d=>d.expenseId));
       if(costs.some(c=>c.sameTarget||!allocated.has(c.id)))throw conflict('onboarding_expense_exists','Questo documento ha già un costo per l’oggetto oppure un totale non ripartito. Collega la spesa esistente.');
-      if(costs.reduce((n,c)=>n+c.amountCents,0)+choice.expense.amountCents>output.purchaseTotal!.amountCents)throw invalid('La somma delle quote supera il totale del documento. Nessun importo viene attribuito automaticamente.');
+      if(costs.reduce((n,c)=>n+c.amountCents,0)+choice.expense.amountCents>maximum!)throw invalid('La somma delle quote supera il totale del documento. Nessun importo viene attribuito automaticamente.');
     }
     const possible = await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e LEFT JOIN "Document" d ON d.id=e."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND e."amountCents"=${choice.expense.amountCents} AND e."spentOn"=${choice.expense.spentOn} AND (e."documentId" IS NULL OR (d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}))) LIMIT 1`;
     if (possible.length && !choice.expense.acknowledgePossibleDuplicate) throw conflict('onboarding_possible_expense_duplicate', 'Esiste una spesa con lo stesso importo e data: collegala oppure verifica che sia un acquisto distinto.');
@@ -249,6 +255,7 @@ export class ObjectOnboardingService {
     const body = onboardingConfirmation(input, temporal(this.clock.now()).today);
     return this.request(a, h, 'confirm', uuid(id), body, key, async tx => {
       const draft = await this.open(tx, a, h, id, body.expectedVersion), output = draft.output as unknown as Output, decisions = { ...draft.decisions as Decisions };
+      if(body.manualPurchaseTotalCents!==undefined&&(draft.mode!=='manual'||output.purchaseTotal))throw invalid('Il totale dichiarato è ammesso soltanto per una fattura compilata manualmente senza totale estratto.');
       if (body.source.documentId !== draft.documentId || body.source.documentVersion !== draft.documentVersion || body.source.sha256 !== draft.documentSha256) throw conflict('onboarding_source_changed', 'La fonte è cambiata.');
       const initialSourceLinks = await tx.$queryRaw<Array<{ id: string }>>`SELECT l.id FROM "ObjectResourceLink" l JOIN "Document" d ON d.id=l."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE l."accountId"=${a} AND l."homeId"=${h} AND l."resourceType"='document' AND l.state='active' AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;
       const used = new Set<string>(); let newObjects = 0, newExpenses = 0;
@@ -305,7 +312,7 @@ export class ObjectOnboardingService {
           await tx.objectEvent.create({ data: { accountId: a, homeId: h, targetKind: 'object', targetId: target.id, kind: choice.action === 'create' ? 'created' : 'onboarding_confirmed', before: choice.action === 'create' ? Prisma.JsonNull : onboardingJson({ kind: 'object', row: before, position }), after: onboardingJson({ kind: 'object', row: target, position }) } });
           objectIds.push(target.id);
         }
-        const cost = await this.cost(tx, a, h, draft, output, choice, objectIds[0], decisions); newExpenses += cost.newExpenses;
+        const cost = await this.cost(tx, a, h, draft, output, choice, objectIds[0], decisions, body.manualPurchaseTotalCents); newExpenses += cost.newExpenses;
         decisions[item.id] = { state: 'confirmed', objectIds, ...cost, newObjects: choice.action === 'create' ? quantity : 0 };
       }
       for(const selected of body.houseExpenses??[]){

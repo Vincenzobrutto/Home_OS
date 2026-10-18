@@ -7,11 +7,11 @@ import {ui} from '../components/ui';
 import type {Draft,HouseExpense,ExpenseCandidate} from './model';
 import styles from './onboarding.module.css';
 const categories={electricity:'Energia elettrica',gas:'Gas',water:'Acqua',internet_services:'Internet e servizi'};
-export function HouseExpenseProposal({item,draft,api,accountId,base,root,disabled,beforeDocument,confirm}:{item:HouseExpense;draft:Draft;api:ApiClient;accountId:string;base:string;root:string;disabled:boolean;beforeDocument:boolean;confirm:(choice:unknown)=>Promise<void>}){
+export function HouseExpenseProposal({item,draft,api,accountId,base,root,disabled,beforeDocument,confirm,unified=false}:{item:HouseExpense;draft:Draft;api:ApiClient;accountId:string;base:string;root:string;disabled:boolean;beforeDocument:boolean;confirm:(choice:unknown)=>Promise<void>;unified?:boolean}){
  const today=new Date().toLocaleDateString('en-CA');
  const fields=item.proposedFields,eligible=item.amountCandidates.filter(a=>['current_document_total','amount_due'].includes(a.role)),initial=!item.amountSelectionRequired?eligible.find(a=>a.role==='current_document_total'):undefined;
  const [candidateId,setCandidate]=useState(initial?.id??''),[amount,setAmount]=useState(initial?String(initial.amountCents/100):''),[manual,setManual]=useState(false),[title,setTitle]=useState(fields.title?.value??'Bolletta '+(categories[fields.category?.value as keyof typeof categories]??'')),[supplier,setSupplier]=useState(fields.supplier?.value??''),[date,setDate]=useState(fields.documentDate?.value&&fields.documentDate.value<=today?fields.documentDate.value:''),[category,setCategory]=useState(fields.category?.value??''),[mode,setMode]=useState('create'),[expenseId,setExpense]=useState(''),[ack,setAck]=useState(false),[working,setWorking]=useState(false),[error,setError]=useState('');
- const [editing,setEditing]=useState(false);
+ const [editing,setEditing]=useState(unified);
  const done=['confirmed','skipped'].includes(item.decision?.state??'');
  const candidates=useQuery({queryKey:['account',accountId,'home',root,'bill-expenses',draft.id,item.id,draft.version],queryFn:({signal})=>api.callJson<{items:ExpenseCandidate[];nextCursor:string|null}>(base+'/drafts/'+draft.id+'/expense-candidates?itemId='+encodeURIComponent(item.id),{accountId,signal}),enabled:!done,retry:false,gcTime:0});
  const duplicates=candidates.data?.items.filter(x=>x.rank>0)??[],row=candidates.data?.items.find(x=>x.id===expenseId);
@@ -35,6 +35,6 @@ export function HouseExpenseProposal({item,draft,api,accountId,base,root,disable
   </>}
   </>}
   {error&&<p role="alert">{error}</p>}
-  <div className={styles.row}><button className={ui.btn} disabled={disabled||working} onClick={()=>void apply('defer')}>Decidi più avanti</button><button className={ui.btn} disabled={disabled||working} onClick={()=>void apply('skip')}>Non registrare la spesa</button><button className={`${ui.btn} ${ui.primary}`} disabled={disabled||working||!valid||!candidates.isSuccess} onClick={()=>void apply(mode)}>{beforeDocument?'Conferma documento e spesa':'Conferma spesa'}</button></div>
+  <div className={styles.row}><button className={ui.btn} disabled={disabled||working} onClick={()=>void apply('defer')}>Decidi più avanti</button><button className={ui.btn} disabled={disabled||working} onClick={()=>void apply('skip')}>Non registrare la spesa</button><button className={`${ui.btn} ${ui.primary}`} disabled={disabled||working||!valid||!candidates.isSuccess} onClick={()=>void apply(mode)}>{unified?'Salva e organizza':beforeDocument?'Conferma documento e spesa':'Conferma spesa'}</button></div>
  </fieldset>}</section>;
 }
