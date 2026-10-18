@@ -14,6 +14,8 @@ import styles from './intake.module.css';
 
 /** Props del componente integrabile. Il container Codex fornisce dati e callback reali; qui nessun fetch. */
 export type DocumentIntakeAssistantProps = {
+  focused?: boolean;
+  focusedAi?: boolean;
   contextKey: IntakeContextKey;
   load: IntakeLoadState;
   capabilities: IntakeCapabilities | null;
@@ -433,6 +435,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
     );
   };
 
+  if(props.focused){const item=items.find(i=>i.id===props.objectProposalItemId);return <div className={styles.stack}>{notice&&<p role="status">{notice.text}</p>}{item?(houseDocumentKind(item)&&!props.focusedAi?<section className={ui.card}><h3>Documento della casa</h3><p>Nessun oggetto o spesa da creare.</p><button type="button" className={ui.btn} onClick={()=>reviewDocument(item)}>Rivedi titolo e tipo</button></section>:props.renderObjectProposals?.(item.id,()=>reviewDocument(item))):<Loading label="Apertura della scheda…"/>}{reviewDialog}</div>;}
   return (
     <div className={cx(styles.stack, showBulk && styles.withBar)}>
       <p className={styles.crumb}>Documenti / Carica documenti</p>

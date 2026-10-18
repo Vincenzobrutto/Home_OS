@@ -1,6 +1,5 @@
-import { PendingUploads } from '../intake-integration/PendingUploads';
-import { houseDocumentType } from '../document-intake/model';
-import { DocumentBillEntry } from '../object-onboarding/DocumentBillEntry';
+import { IntakePage } from '../intake-integration/IntakePage';
+import { DocumentWorkspaceActions } from '../documents/DocumentWorkspaceActions';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { createPortal } from 'react-dom';
@@ -68,8 +67,7 @@ export function DocumentsPage() {
   const home = useCurrentHome();
   useDocumentTitle(`Documenti · ${home.name}`);
   const canUpload = home.permissions.includes('edit');
-  const [pendingOpen,setPendingOpen]=useState(false);
-  const pendingId=useId();
+  const [uploadOpen,setUploadOpen]=useState(false);
   const canExport = home.permissions.includes('export');
   const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
   const [params, setParams] = useSearchParams();
@@ -78,7 +76,8 @@ export function DocumentsPage() {
   const capabilities = useDocumentSearchCapabilities(home.id);
   const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
   // Solo q/format/visibility nell'indirizzo; ?ricerca=1 (ingresso da Casa) non va all'API e cade al primo Cerca.
-  const apply = (filters: DocumentSearchFilters) => setParams(filtersToParams(filters));
+  const apply = (filters: DocumentSearchFilters) => setParams(filtersToParams({...filters,workflow:filters.workflow??applied.workflow}));
+  const closeUpload=()=>{setUploadOpen(false);setParams(filtersToParams(applied),{replace:true});};
 
   return (
     <>
@@ -89,21 +88,16 @@ export function DocumentsPage() {
             <h1 tabIndex={-1}>Documenti</h1>
             <span ref={setExportSlot} />
           </div>
-          <p className={styles.lead}>
-            Gli originali dei documenti della casa. Un originale caricato è conservato così com’è: non è verificato né
-            certificato.
-          </p>
+          <p className={styles.lead}>Aggiungi i documenti e completa le schede, a mano o con AI.</p>
         </div>
         {canUpload && (
           <div className={docs.toolbarActions}>
-            <button type="button" className={ui.btn} aria-expanded={pendingOpen} aria-controls={pendingId} onClick={()=>setPendingOpen(v=>!v)}>Da completare</button>
-            <Link to={`/home/${encodeURIComponent(home.id)}/documenti/organizza`} className={cx(ui.btn, ui.primary)}>
-              <Icon name="plus" /> Carica documenti
-            </Link>
+            <button type="button" className={cx(ui.btn,ui.primary)} aria-expanded={uploadOpen} onClick={()=>{setParams(filtersToParams(applied));setUploadOpen(v=>!v);}}><Icon name="plus"/> Aggiungi documenti</button>
           </div>
         )}
       </div>
-      {canUpload&&pendingOpen&&<PendingUploads homeId={home.id} id={pendingId}/>}
+      {canUpload&&uploadOpen&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={closeUpload}>Chiudi caricamento</button></section>}
+      <div className={docs.toolbarActions} role="group" aria-label="Stato dei documenti">{([['all','Tutti'],['pending','Da completare'],['completed','Completati']] as const).map(([value,label])=><button key={value} type="button" className={ui.btn} aria-pressed={(applied.workflow??'all')===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
       {!canUpload && (
         <p className={cx(docs.note, docs.panel)}>
           Con il tuo ruolo puoi consultare e scaricare i documenti visibili, non caricarne di nuovi.
@@ -111,14 +105,14 @@ export function DocumentsPage() {
       )}
 
       {capabilities.isSuccess ? (
-        <SearchForm
+        <details className={docs.searchOptions} open={params.get('ricerca')==='1'||isFiltered({...applied,workflow:'all'})}><summary>Cerca e filtra</summary><SearchForm
           home={home}
           applied={applied}
           maxQuery={maxQuery}
           collectionsEnabled={!!capabilities.data.collections}
           autoFocus={params.get('ricerca') === '1'}
           onApply={apply}
-        />
+        /></details>
       ) : capabilities.isError && !isForbidden(capabilities.error) ? (
         <div className={docs.panel}>
           <Banner
@@ -147,14 +141,14 @@ export function DocumentsPage() {
         filters={applied}
         searchState={capabilities.isSuccess ? 'ready' : capabilities.isError ? 'unavailable' : 'pending'}
         maxQuery={maxQuery}
-        onReset={() => apply(EMPTY_FILTERS)}
+        onReset={() => apply({...EMPTY_FILTERS,workflow:'all'})}
         canExport={canExport}
         exportSlot={exportSlot}
         canUpload={canUpload}
       />
       {canUpload && (
         <div className={styles.spaced}>
-          <ExamplePdfs homeId={home.id} />
+          <details><summary>Documenti di esempio</summary><ExamplePdfs homeId={home.id} /></details>
         </div>
       )}
     </>
@@ -475,7 +469,7 @@ function DocumentRow(props: {
           <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
         </span>
         {doc.permissions.includes('read') && (
-          <DocumentBillEntry homeId={props.homeId} documentId={doc.id} houseDocument={!!houseDocumentType(doc.originalFilename+' '+doc.name,doc.organization?.parts.map(p=>p.kind))} compact bill={doc.organization?.parts.some(part=>part.kind==='utility_bill')} />
+          <DocumentWorkspaceActions homeId={props.homeId} document={doc}/>
         )}
       </div>
     </li>

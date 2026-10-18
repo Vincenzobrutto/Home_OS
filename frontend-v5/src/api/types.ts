@@ -67,7 +67,7 @@ export type DocumentFormatFilter = 'all' | 'pdf' | 'jpeg' | 'png';
 export type DocumentVisibilityFilter = 'all' | DocumentVisibility;
 /** Filtri canonici: q già trim + NFC ('' = nessuna ricerca testuale). */
 export type DocumentCollection = 'energy' | 'building' | 'technical' | 'condominium' | 'purchases' | 'utilities' | 'unclassified';
-export type DocumentSearchFilters = { q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter; collection?: 'all' | DocumentCollection };
+export type DocumentSearchFilters = { q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter; collection?: 'all' | DocumentCollection; workflow?: 'all'|'pending'|'completed' };
 
 export type DocumentSearchCapabilities = {
   collections?: Record<DocumentCollection, string>;

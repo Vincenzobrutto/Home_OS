@@ -22,18 +22,18 @@ import styles from './integration.module.css';
 
 const denied = (e: unknown) => isApiError(e) && [401, 403].includes(e.status);
 const rejected = (e: unknown): WriteOutcome => isApiError(e) && [400, 401, 403, 409, 413, 422, 429].includes(e.status) ? { status: 'rejected', code: e.status === 409 ? 'conflict' : e.status === 403 ? 'forbidden' : 'validation', message: userMessage(e) } : { status: 'uncertain', message: userMessage(e) };
-export function IntakePage() {
+export function IntakePage({workspace=false,onUploaded}:{workspace?:boolean;onUploaded?:()=>void}={}) {
   const home = useCurrentHome(), account = useAccount();
-  return <IntakeContainer key={account.id + ':' + home.id} />;
+  return <IntakeContainer key={account.id + ':' + home.id} workspace={workspace} onUploaded={onUploaded} />;
 }
-function IntakeContainer() {
+function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:()=>void}) {
   const home = useCurrentHome(), account = useAccount(), api = useApi(), cache = useQueryClient(), [params, setParams] = useSearchParams();
-  useDocumentTitle('Carica documenti · ' + home.name);
+  useDocumentTitle((workspace?'Documenti':'Carica documenti')+' · ' + home.name);
   const id = params.get('lotto'), client = useMemo(() => new IntakeClient(api, account.id, home.id), [api, account.id, home.id]);
   const prefix = ['account', account.id, 'home', home.id, 'intake'] as const, key = [...prefix, 'batch', id];
   const cap = useQuery({ queryKey: [...prefix, 'capabilities'], queryFn: ({ signal }) => client.capability(signal), retry: false });
   const batch = useQuery({ queryKey: key, queryFn: ({ signal }) => client.batch(id!, signal), enabled: !!id, retry: false, refetchInterval: query => query.state.data?.items.some(i => ['queued', 'running'].includes(i.analysisState) || i.uploadState === 'uploading') ? 1500 : false });
-  const history = useInfiniteQuery({ queryKey: [...prefix, 'list'], queryFn: ({ pageParam, signal }) => client.list(pageParam ?? undefined, signal), initialPageParam: null as string | null, getNextPageParam: p => p.nextCursor, retry: false });
+  const history = useInfiniteQuery({ queryKey: [...prefix, 'list'], queryFn: ({ pageParam, signal }) => client.list(pageParam ?? undefined, signal), initialPageParam: null as string | null, getNextPageParam: p => p.nextCursor, retry: false, enabled: !workspace });
   const files = useRef(new Map<string, File>()), keys = useRef(new Map<string, string>()), controls = useRef(new Set<AbortController>()), alive = useRef(true), active = useRef(id);
   useEffect(() => { active.current = id; }, [id]);
   const creation = useRef<{ files: File[]; ids: string[]; key: string; batchId: string | null } | null>(null), creating = useRef(false);
@@ -74,7 +74,7 @@ function IntakeContainer() {
     const file = files.current.get(itemId);
     if (!file) { retryItem.current = itemId; picker.current?.click(); return { status: 'rejected', code: 'validation', message: 'Seleziona di nuovo l’originale per questo file. I file già caricati restano disponibili.' }; }
     const ctl = new AbortController(); controls.current.add(ctl);
-    try { adopt(await client.upload(value.id, itemId, file, ctl.signal)); return { status: 'confirmed' }; }
+    try { adopt(await client.upload(value.id, itemId, file, ctl.signal)); if(workspace)void cache.invalidateQueries({queryKey:queryKeys.documentsAll(account.id,home.id)}); return { status: 'confirmed' }; }
     catch (e) { if (alive.current && active.current === value.id) { void cache.invalidateQueries({ queryKey: [...prefix, 'batch', value.id] }); setProblem(userMessage(e)); } return rejected(e); }
     finally { controls.current.delete(ctl); }
   }
@@ -91,9 +91,10 @@ function IntakeContainer() {
     }
     const pending = creation.current; if (!pending) return; creating.current = true; setWaiting(true); setProblem(null);
     try {
-      const value = pending.batchId ? await client.append(pending.batchId, pending.files, pending.ids, pending.key) : await client.create(pending.files, pending.ids, pending.key); if (!alive.current || active.current !== pending.batchId) return;
+      const value = pending.batchId ? await client.append(pending.batchId, pending.files, pending.ids, pending.key) : await client.create(pending.files, pending.ids, pending.key); if (!alive.current || !workspace&&active.current !== pending.batchId) return;
       for (let i = 0; i < pending.ids.length; i++) { const item = value.items.find(r => r.clientItemId === pending.ids[i]), file = pending.files[i]; if (item && file) files.current.set(item.id, file); }
-      creation.current = null; setStagedFiles([]); setRecoverCreation(false); active.current = value.id; adopt(value); setParams({ lotto: value.id }); await pool(value, pending.ids);
+      if(!workspace){creation.current = null; setStagedFiles([]);} setRecoverCreation(false); active.current = value.id; adopt(value); if(!workspace)setParams({ lotto: value.id }); await pool(value, pending.ids);
+      if(workspace){const verified=await client.batch(value.id);if(verified.items.some(i=>pending.ids.includes(i.clientItemId)&&!['stored','duplicate'].includes(i.uploadState)))throw Error('Alcuni file non sono stati acquisiti. Recupera il caricamento per riprovare solo quelli mancanti.');creation.current=null;setStagedFiles([]);await cache.invalidateQueries({queryKey:['account',account.id,'home',home.id]});onUploaded?.();}
       if(automaticConsent)await startAutomatic(value.id,pending.key);
     } catch (e) { if (alive.current) { setProblem(userMessage(e)); if (rejected(e).status === 'rejected') creation.current = null; else setRecoverCreation(true); } }
     finally { creating.current = false; if (alive.current) setWaiting(false); }
@@ -186,27 +187,27 @@ function IntakeContainer() {
   const automaticControl=<><label><input type="checkbox" checked={automaticConsent} disabled={waiting} onChange={e=>setAutomaticConsent(e.target.checked)}/> Autorizzo l’invio dei documenti di questo caricamento ad Anthropic, inclusi dati personali, e la creazione automatica di oggetti, spese e contatti verificati.</label><p>Entro il budget residuo · massimo 0,25 USD per documento. Ti chiederemo aiuto solo nei casi dubbi.</p></>;
   const newUpload=!id&&home.permissions.includes('edit');
   return <>
-    <p><Link to={`/home/${home.id}/documenti`}>← Documenti</Link></p>
+    {!workspace&&<p><Link to={`/home/${home.id}/documenti`}>← Documenti</Link></p>}
     {problem && <Banner tone="warning" title="Controlla l’esito"><p>{problem}</p>{recoverCreation && <button className={ui.btn} disabled={waiting} onClick={() => void create()}>Recupera il caricamento</button>}</Banner>}
     {problem && id && <p><button className={ui.btn} onClick={() => window.location.reload()}>Riapri il caricamento dal server</button> <span>Solo per i file non ancora acquisiti potrà essere necessario scegliere di nuovo l’originale.</span></p>}
     {waiting && <p role="status">Caricamento dei file, al massimo due alla volta…</p>}
     {newUpload&&cap.isError&&<ErrorState error={cap.error} onRetry={()=>void cap.refetch()}/>}
-    {!stagedFiles.length&&!automaticActive&&wire&&!params.get('oggetti-documento')&&home.permissions.includes('edit')&&<section className={ui.card} aria-label="Come organizzare i documenti"><h2>Organizza questo caricamento</h2>{automaticControl}<button className={`${ui.btn} ${ui.primary}`} disabled={!automaticConsent||waiting} onClick={()=>{setWaiting(true);void startAutomatic(wire.id,stableKey('automatic:'+wire.id,wire.items.map(i=>i.id))).catch(e=>setProblem(userMessage(e))).finally(()=>setWaiting(false));}}>Organizza automaticamente questo caricamento</button></section>}
-    {id&&<AutomaticIntake homeId={home.id} batchId={id} onChange={setAutomaticActive}/>}
+    {!workspace&&!stagedFiles.length&&!automaticActive&&wire&&!params.get('oggetti-documento')&&home.permissions.includes('edit')&&<section className={ui.card} aria-label="Come organizzare i documenti"><h2>Organizza questo caricamento</h2>{automaticControl}<button className={`${ui.btn} ${ui.primary}`} disabled={!automaticConsent||waiting} onClick={()=>{setWaiting(true);void startAutomatic(wire.id,stableKey('automatic:'+wire.id,wire.items.map(i=>i.id))).catch(e=>setProblem(userMessage(e))).finally(()=>setWaiting(false));}}>Organizza automaticamente questo caricamento</button></section>}
+    {!workspace&&id&&<AutomaticIntake homeId={home.id} batchId={id} onChange={setAutomaticActive}/>}
     {(newUpload||stagedFiles.length>0)&&<section className={ui.card} aria-label="Caricamento documenti">
-      {newUpload?<h1>Carica i documenti della casa</h1>:<h2>Aggiungi documenti</h2>}
+      <h2>Aggiungi documenti</h2>
       <div className={styles.dropZone} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(!waiting&&cap.data&&home.permissions.includes('edit'))stage(Array.from(e.dataTransfer.files));}}>
         <p>Fatture, bollette, documenti e foto della casa.</p>
         <FilePicker disabled={waiting||!cap.data||recoverCreation||!home.permissions.includes('edit')} secondary={stagedFiles.length>0} onFiles={stage}/>
         <p className={pages.muted}>Oppure trascinali qui · PDF, JPEG o PNG · fino a 20 file, 20 MiB ciascuno.</p>
       </div>
       {stagedFiles.length>0&&<><h2 className={styles.selectionHeading}>File scelti · {stagedFiles.length}</h2><ul className={styles.selectedFiles} aria-label="File scelti">{stagedFiles.map(x=><li key={x.id}><div className={styles.selectedName}><strong>{x.file.name}</strong><span>{new Intl.NumberFormat('it-IT',{maximumFractionDigits:1}).format(x.file.size/1024)} KiB</span></div><button type="button" className={ui.btn} aria-label={'Rimuovi '+x.file.name} disabled={waiting||recoverCreation} onClick={()=>setStagedFiles(old=>old.filter(f=>f.id!==x.id))}>Rimuovi</button></li>)}</ul><p className={pages.muted}>Puoi rimuovere i file sbagliati prima di caricarli.</p></>}
-      <div className={styles.uploadConsent}>{automaticControl}</div>
+      {!workspace&&<div className={styles.uploadConsent}>{automaticControl}</div>}
       {stagedFiles.length>0&&<button type="button" className={`${ui.btn} ${ui.primary}`} disabled={waiting||recoverCreation||!cap.data||!home.permissions.includes('edit')} onClick={()=>void create(stagedFiles.map(x=>x.file))}>{automaticConsent?'Carica e organizza':'Carica documenti'}</button>}
     </section>}
     {wire?.items.some(i => i.documentLink.state === 'linked' && i.analysisState === 'ready' && !i.proposal && i.reviewState === 'unreviewed') && <Banner><p>Per alcuni file il testo non identifica un tipo con sufficiente chiarezza. Puoi consultare l’originale, scegliere il tipo manualmente o decidere più avanti.</p></Banner>}
 
-    {!newUpload&&!stagedFiles.length&&!automaticActive&&!(automaticConsent&&waiting)&&<DocumentIntakeAssistant {...directOrganizationActions} key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
+    {!newUpload&&!stagedFiles.length&&!automaticActive&&!(automaticConsent&&waiting)&&<DocumentIntakeAssistant focused={workspace} focusedAi={params.get('compila')==='ai'} {...directOrganizationActions} key={id ? (wire ? 'ready:' : 'loading:') + id : 'new'} contextKey={{ accountId: account.id, homeId: home.id, batchId: id }} homeName={home.name} canEdit={home.permissions.includes('edit')} capabilities={cap.data ?? null} batch={wire ? toUiBatch(wire) : null}
       load={unavailable ? { status: 'unavailable' } : cap.isPending || !!id && batch.isPending ? { status: 'loading' } : error ? { status: 'error', message: userMessage(error), retryable: true } : { status: 'ready' }}
       candidates={candidates} loadCandidates={(itemId, more) => void loadCandidates(itemId, more)} onSelectFiles={stage} addingFiles={waiting}
       onReorganizeDocument={reorganize}
@@ -226,12 +227,12 @@ function IntakeContainer() {
       renderOutcomeLinks={() => <Link className={ui.btn} to={`/home/${home.id}/documenti`}>Vai ai Documenti</Link>}
       onRetryLoad={() => { void cap.refetch(); if (id) void batch.refetch(); }} />}
     <input ref={picker} hidden type="file" accept="application/pdf,image/jpeg,image/png" aria-label="Originale da ricaricare" onChange={e => { const file = e.target.files?.[0], itemId = retryItem.current; if (file && itemId && current.current) { files.current.set(itemId, file); void upload(current.current, itemId); } e.target.value = ''; }} />
-    {!id && <details><summary>PDF sintetici per provare il percorso</summary><p>Documenti di esempio, senza dati personali. Scaricali e selezionali nel caricamento.</p><ul>{['ape-sintetico.pdf', 'pratica-mista-sintetica.pdf', 'regolamento-sintetico.pdf', 'ricevuta-sintetica.pdf', 'senza-testo-sintetico.pdf'].map(name => <li key={name}><a href={'/intake-examples/' + name} download>{name}</a></li>)}</ul></details>}
-    <section className={`${ui.card} ${styles.history}`} aria-label="Caricamenti precedenti"><h2>Caricamenti precedenti</h2>
+    {!workspace&&!id && <details><summary>PDF sintetici per provare il percorso</summary><p>Documenti di esempio, senza dati personali. Scaricali e selezionali nel caricamento.</p><ul>{['ape-sintetico.pdf', 'pratica-mista-sintetica.pdf', 'regolamento-sintetico.pdf', 'ricevuta-sintetica.pdf', 'senza-testo-sintetico.pdf'].map(name => <li key={name}><a href={'/intake-examples/' + name} download>{name}</a></li>)}</ul></details>}
+    {!workspace&&<section className={`${ui.card} ${styles.history}`} aria-label="Caricamenti precedenti"><h2>Caricamenti precedenti</h2>
       {history.isPending ? <Loading label="Caricamento della cronologia…" /> : history.isError ? <ErrorState error={history.error} onRetry={() => void history.refetch()} /> : <ul>{history.data?.pages.flatMap(p => p.items).map(b => <li key={b.id}><Link to={`?lotto=${b.id}`}>{new Date(b.createdAt).toLocaleString('it-IT')} · {b.itemCount} file · {b.state === 'completed' ? 'Completato' : 'Da completare'}</Link></li>)}</ul>}
       {history.hasNextPage && <button className={ui.btn} disabled={history.isFetchingNextPage} onClick={() => void history.fetchNextPage()}>Altri caricamenti</button>}
       {id && <Link className={ui.btn} to="?">Nuovo caricamento</Link>}
-    </section>
+    </section>}
   </>;
 }
 function OriginalPreview({ homeId, id, page }: { homeId: string; id: string; page: number | null }) {

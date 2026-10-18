@@ -1,3 +1,7 @@
+## 18 ottobre 2026 — Raggiunto: gestione unica Documenti V5
+
+L’utente aggiunge file, riprende i documenti incompleti, sceglie manuale/AI, consulta l’originale ed elimina caricamenti inutilizzati dalla pagina Documenti. La revisione unica rimane nello stesso elenco; i filtri non creano un secondo archivio. Gli indirizzi dei vecchi lotti restano compatibili.
+
 ## 18 ottobre 2026 — Ripresa caricamenti
 
 Completato ingresso Da completare direttamente in Documenti, con link a Controlla e organizza sul lotto esistente. Verificati percorsi ripresa, paginazione ed errore/vuoto; nessuna nuova area di revisione o chiamata AI.

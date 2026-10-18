@@ -14,6 +14,7 @@ export class ListDocumentsDto {
 }
 // H2 only: Review controllers continue to use the strict M2 ListDocumentsDto.
 export class SearchDocumentsDto extends ListDocumentsDto {
+  @IsOptional() @IsIn(['all','pending','completed']) workflow?:'all'|'pending'|'completed';
   @IsOptional() @IsString() @IsIn(['all', ...Object.keys(DOCUMENT_COLLECTIONS)]) collection?: 'all' | DocumentCollection;
   @Transform(({ value }: { value: unknown }) => value === undefined ? undefined : normalizeSearchQuery(value))
   @IsOptional() @IsString() @CodePointLength(0, 120, 'Ricerca') q?: string;

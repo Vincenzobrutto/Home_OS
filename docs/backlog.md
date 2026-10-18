@@ -1,3 +1,9 @@
+## 18 ottobre 2026 — Seguito pagina unica Documenti
+
+- Cestino/ripristino per originali già analizzati o collegati: la rimozione definitiva attuale è disponibile prima dell’uso; successivamente spiega il vincolo e conserva proposte, collegamenti e storico economico/AI. Progettare una rimozione reversibile senza perdita della fonte né azzeramento di riserve/costi.
+- Consolidare anche gli ingressi legacy dal dettaglio e i vecchi link dei lotti sulla pagina unica; ora rimangono compatibili, mentre l’ingresso principale Documenti è unificato.
+- Valutare salvataggio automatico della bozza della revisione al cambio pannello: oggi restano espliciti «Salva e organizza» e «Decidi più avanti»; non promettere persistenza di modifiche non salvate.
+
 ## 18 ottobre 2026 — Accesso alla revisione risolto
 
 RISOLTO il rilievo «Controlla e organizza» nascosto: Da completare ora visibile in Documenti, lista aperti non vuoti e ripresa diretta del lotto. Include stati caricamento/errore/vuoto e paginazione. Sostituisce la precedente nota UX riportata qui sotto.

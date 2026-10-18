@@ -49,5 +49,5 @@ export function DocumentCompilationActions({homeId,documentId,onOpen,documentKin
  return <div><div className={styles.row}>
   <button type="button" className={ui.btn} disabled={busy||!caps.isSuccess||!caps.data.manualAvailable} onClick={()=>void manual()}>{busy?'Apertura scheda…':'Compila manualmente'}</button>
   <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!caps.isSuccess} onClick={()=>void ai()}>Compila tramite AI</button>
- </div>{(error||caps.isError)&&<p role="alert">{error||'Impossibile verificare le opzioni.'} <button type="button" className={ui.btn} onClick={()=>void caps.refetch()}>Riprova</button></p>}</div>;
+ </div>{(error||caps.isError)&&<p role="alert">{error||'Impossibile verificare le opzioni.'} <button type="button" className={ui.btn} aria-label="Riprova le opzioni di compilazione" onClick={()=>void caps.refetch()}>Riprova</button></p>}</div>;
 }

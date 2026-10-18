@@ -10,6 +10,7 @@ import { SEARCH_CAPABILITIES, literalPattern, searchAnchor, searchCursor, search
 import { object } from '../review/domain';
 import { currentOrganization, organizationView } from '../document-intake/organization';
 import { DOCUMENT_COLLECTIONS } from '../document-intake/domain';
+import { documentRemoval } from './removal';
 const includeOriginal = { original: { include: { file: true } } } as const;
 type OriginalDocument = Prisma.DocumentGetPayload<{ include: typeof includeOriginal }>;
 function readableWhere(accountId: string, homeId: string): Prisma.DocumentWhereInput { return { homeId, OR: [{ visibility: 'home' }, { uploaderId: accountId }] }; }
@@ -24,6 +25,32 @@ export class DocumentsService implements OnModuleInit {
   constructor(private readonly db: PrismaService, private readonly storage: LocalFileStorage, private readonly policy: DocumentPolicy) {}
   async onModuleInit() {
     await this.storage.cleanup(async storageKey => !!(await this.db.storedFile.findUnique({ where: { storageKey } }))).catch(() => console.warn('Cleanup storage V5 rinviato: nessun file eliminato senza verifica.'));
+  }
+  async removalCapability(accountId:string,homeId:string,id:string){
+    return this.db.$transaction(async tx=>{await this.policy.requireLocked(tx,accountId,homeId);await this.policy.require(accountId,homeId,'edit',tx);const target=await documentRemoval(tx,accountId,homeId,id);if(!target)throw new ForbiddenException();return {allowed:target.allowed,reason:target.reason};});
+  }
+  async remove(accountId:string,homeId:string,id:string,input:unknown,key?:string){
+    const body=object(input,['expectedVersion']);if(!Number.isSafeInteger(body.expectedVersion)||Number(body.expectedVersion)<1||!key||!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw new UnprocessableEntityException();
+    const fingerprint=digest(JSON.stringify(body)),operation='document-removal-v1';
+    const result=await this.db.$transaction(async tx=>{
+      await this.policy.requireLocked(tx,accountId,homeId);await this.policy.require(accountId,homeId,'edit',tx);
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'g1:'+homeId},0))::text AS locked`;
+      const prior=await tx.objectOnboardingRequest.findUnique({where:{accountId_homeId_operation_target_key:{accountId,homeId,operation,target:id,key:key!}}});
+      if(prior){if(prior.digest!==fingerprint)throw new ConflictException();return prior.response as {storageKey:string};}
+      await tx.$queryRaw`SELECT id FROM "Document" WHERE id=${id} FOR UPDATE`;
+      const target=await documentRemoval(tx,accountId,homeId,id);if(!target)throw new ForbiddenException();
+      if(!target.allowed)throw new ConflictException({code:'document_removal_unavailable',message:target.reason});
+      const doc=target.doc;if(doc.original!.version!==body.expectedVersion)throw new ConflictException({code:'document_version_conflict',message:'Il documento è cambiato. Riapri la sua scheda.'});
+      const itemIds=doc.intakeItems.map(i=>i.id),batchIds=[...new Set(doc.intakeItems.map(i=>i.batchId))];
+      await tx.documentIntakeAnalysis.deleteMany({where:{itemId:{in:itemIds}}});
+      await tx.documentIntakeItem.deleteMany({where:{id:{in:itemIds}}});
+      await tx.documentIntakeBatch.updateMany({where:{id:{in:batchIds}},data:{version:{increment:1},updatedAt:new Date()}});
+      await tx.uploadRequest.deleteMany({where:{documentId:id}});
+      await tx.documentVersion.delete({where:{documentId:id}});await tx.document.delete({where:{id}});await tx.storedFile.delete({where:{id:doc.original!.fileId}});
+      const response={storageKey:doc.original!.file.storageKey};await tx.objectOnboardingRequest.create({data:{accountId,homeId,operation,target:id,key:key!,digest:fingerprint,response}});return response;
+    });
+    const ref=await this.db.storedFile.findUnique({where:{storageKey:result.storageKey}}).catch(()=>undefined);if(ref===null)await this.storage.remove(result.storageKey).catch(()=>undefined);
+    return {removed:true};
   }
   async accessible(accountId: string, homeId: string, documentId: string) {
     const member = await this.policy.require(accountId, homeId);
@@ -43,6 +70,13 @@ export class DocumentsService implements OnModuleInit {
     const anchorTime = anchor?.createdAt.toISOString().slice(0, -1);
     const mime = { pdf: 'application/pdf', jpeg: 'image/jpeg', png: 'image/png' };
     const pattern = literalPattern(filters.q);
+    const completed=Prisma.sql`(
+      NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open')
+      AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND (j.state IN ('queued','running') OR (j.state='uncertain' AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" c WHERE c."accountId"=j."accountId" AND c."documentId"=d.id AND c."documentVersion"=v.version AND c."documentSha256"=v.sha256 AND c.state='confirmed' AND c."updatedAt">=j."updatedAt"))))
+      AND (EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='confirmed')
+      OR (o.id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(o.parts) p WHERE p->>'kind' IN ('invoice','receipt','utility_bill','purchase_document','purchase_order','product_label','delivery_notice'))))
+    )`;
+
     return this.db.$transaction(async tx => {
       await this.policy.requireLocked(tx, accountId, homeId);
       // Use the installed deterministic Unicode ICU collation; the development
@@ -51,6 +85,7 @@ export class DocumentsService implements OnModuleInit {
         SELECT d.id FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
         LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${accountId} AND o."homeId"=${homeId} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256
         WHERE d."homeId"=${homeId} AND (d.visibility='home' OR d."uploaderId"=${accountId})
+        ${filters.workflow==='all'?Prisma.empty:Prisma.sql`AND ${completed}=${filters.workflow==='completed'}`}
         ${filters.visibility === 'all' ? Prisma.empty : Prisma.sql`AND d.visibility::text=${filters.visibility}`}
         ${filters.format === 'all' ? Prisma.empty : Prisma.sql`AND v."mimeType"=${mime[filters.format]}`}
         ${filters.collection === 'all' ? Prisma.empty : filters.collection === 'unclassified' ? Prisma.sql`AND (o.id IS NULL OR ${filters.collection}=ANY(o.collections))` : Prisma.sql`AND ${filters.collection}=ANY(o.collections)`}

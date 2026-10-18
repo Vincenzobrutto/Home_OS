@@ -422,3 +422,14 @@
 }
 
 .originalAnchor{scroll-margin-top:100px}
+
+.workspace { margin-top:12px; display:grid; gap:12px; min-width:0; }
+.reviewPanel { border-top:1px solid var(--color-border); padding-top:16px; min-width:0; }
+.original { display:block; width:100%; max-width:100%; min-height:400px; max-height:70vh; object-fit:contain; }
+@media(max-width:600px){ .symbol{display:none;} .toolbarActions > div {width:100%;} .toolbarActions button{white-space:normal;} .item{padding:14px;} }
+
+.toolbarActions button[aria-pressed="true"] { background:var(--color-accent); color:#fff; border-color:var(--color-accent); }
+
+.searchOptions > summary { cursor:pointer; min-height:44px; display:flex; align-items:center; gap:8px; color:var(--color-accent); font-weight:600; }
+.searchOptions > summary::before { content:"▸"; }
+.searchOptions[open] > summary::before { content:"▾"; }

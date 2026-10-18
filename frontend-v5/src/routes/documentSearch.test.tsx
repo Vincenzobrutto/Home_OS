@@ -41,10 +41,11 @@ async function open(backend: FakeBackend, email: string, password: string, homeI
   await login(app, email, password);
   await app.router.navigate(`/home/${homeId}/documenti${search}`);
   await screen.findByRole('heading', { level: 1, name: 'Documenti' });
+  await waitFor(()=>expect(screen.queryByText('Cerca e filtra',{selector:'summary'})??screen.queryByText('Ricerca non attiva')).not.toBeNull());const filters=screen.queryByText('Cerca e filtra',{selector:'summary'});if(filters&&!filters.parentElement?.hasAttribute('open'))await app.user.click(filters);
   return app;
 }
 
-const field = () => screen.findByRole('searchbox', { name: 'Cerca nei documenti' });
+const field = async () => {const summary=await screen.findByText('Cerca e filtra',{selector:'summary'});if(!summary.parentElement?.hasAttribute('open'))fireEvent.click(summary);return screen.findByRole('searchbox', { name: 'Cerca nei documenti' });};
 
 /** Query string delle richieste lista documenti ricevute dal backend. */
 const listQueries = (backend: FakeBackend) =>

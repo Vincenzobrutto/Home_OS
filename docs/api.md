@@ -1,3 +1,9 @@
+## 18 ottobre 2026 — Document workspace V5
+
+GET /api/v5/homes/:homeId/documents accetta workflow=all|pending|completed (default all), combinabile con ricerca/raccolta/formato/visibilità; filtro applicato prima della paginazione e incluso nella firma del cursor quando attivo. Le vecchie firme senza filtro rimangono valide. Stato personale account/casa e versione/SHA correnti.
+
+GET /api/v5/homes/:homeId/documents/:documentId/removal restituisce {allowed,reason}; richiede edit e originale privato proprio. POST stesso percorso, {expectedVersion} e Idempotency-Key, restituisce {removed:true}. Rimuove soltanto fonti inutilizzate, relativi riferimenti di caricamento, versione e storage; storico AI, proposte, organizzazioni e collegamenti bloccano l’operazione con 409. Replay persistente; nessuna modifica a oggetti/spese/budget.
+
 ## V5 — Lista caricamenti da completare (18 ottobre 2026)
 
 GET /homes/:homeId/document-intake/batches accetta state=open|completed facoltativo insieme a cursor. open restituisce soltanto lotti personali aperti con almeno un item. Filtro applicato prima del limite10; cursori legati a account/casa/filtro. Senza state resta il contratto precedente e sono validi i cursori preesistenti. Nessuna scrittura o chiamata AI.

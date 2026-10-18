@@ -1,3 +1,9 @@
+## 18 ottobre 2026 — Documenti: un solo spazio di lavoro V5
+
+L’archivio canonico è anche il punto di aggiunta, anteprima, compilazione manuale/AI e rimozione. «Da completare» e «Completati» filtrano i documenti sul server prima della paginazione, usando revisione corrente e versione/SHA; una classificazione di fattura o bolletta da sola non equivale ad aver creato oggetti/spese. Una nuova bozza riapre il lavoro, mentre una vecchia analisi incerta non riapre una conferma successiva. Si riusano uploader e revisione unica; i lotti restano un dettaglio tecnico e i vecchi indirizzi compatibili. Scartata una seconda lista di caricamenti da riprendere: duplicava il contesto senza rappresentare le entità dell’utente.
+
+Eliminazione definitiva limitata agli originali privati propri ancora inutilizzati, con permessi/versione, blocco transazionale e ricevuta idempotente. Se esistono proposte, analisi, condivisioni o collegamenti, il motivo è mostrato e nessuna cascata cancella dati economici. Riutilizzato il ledger persistente ObjectOnboardingRequest con operation document-removal-v1: nessuna nuova tabella o modifica dei contatori AI.
+
 ## 18 ottobre 2026 — Accesso diretto alle revisioni aperte
 
 Documenti mostra Da completare accanto a Carica documenti. Apre nello stesso contesto la lista dei caricamenti personali aperti e non vuoti; ogni link riusa il lotto esistente. Il filtro è lato server e precede paginazione, per non nascondere revisioni vecchie dietro pagine di esiti completati. Cursori legati al filtro; vecchia lista/cursori senza state restano compatibili. Nessun nuovo flusso di analisi o duplicazione del lotto e nessuna richiesta AI all’apertura.
