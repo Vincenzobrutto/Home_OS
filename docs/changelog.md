@@ -1,3 +1,7 @@
+## Casa più compatta — 19 ottobre 2026
+
+Scadenze e Da completare con tre conteggi affiancati. Da completare dopo Esplora e Spese; rimosso il riepilogo duplicato ambienti/oggetti/tecnica, dettagli casa e ruolo più discreti. Dati e collegamenti canonici preservati. [Comportamento e verifica](v5/casa-layout-20261019.md#casa-più-compatta--19-ottobre-2026).
+
 ## Collocazione oggetto dal dettaglio — 19 ottobre 2026
 
 Menu Stanza nel box Dettagli, salvataggio esplicito, Da collocare e Più ambienti mantenuti. Stanze disponibili reali, stato vuoto e caricamento pagine; nessuna assegnazione reale automatica. [Verifica e comportamento](v5/object-catalog-layout-20261019.md#scelta-stanza-nel-dettaglio--19-ottobre-2026).

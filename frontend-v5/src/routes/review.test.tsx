@@ -85,8 +85,8 @@ describe('[mock] M3 — endpoint assenti e avvio esplicito', () => {
     const { backend, home } = await m3World();
     backend.reviewEnabled = false;
     await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/casa`);
-    const impianti = await screen.findByRole('region', { name: 'Impianti e verifiche' });
-    await waitFor(() => expect(impianti).toHaveTextContent('non sono ancora attive su questo servizio'));
+    const impianti = await screen.findByRole('region', { name: 'Da rivedere' });
+    await waitFor(() => expect(within(impianti).getByRole('alert')).toHaveTextContent('Risorsa non trovata.'));
     expect(impianti).not.toHaveTextContent(/verifiche da rivedere/);
   });
 
@@ -456,10 +456,10 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
     expect(await screen.findByRole('heading', { name: 'Nessuna verifica aperta' })).toBeInTheDocument();
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
     await app.router.navigate(`/home/${home.id}/casa`);
-    const after = await screen.findByRole('region', { name: 'Impianti e verifiche' });
+    await screen.findByRole('region', { name: 'Da rivedere' });
     await waitFor(() => {
       expect(screen.getByRole('link',{name:'Verifiche da rivedere 0'})).toBeInTheDocument();
-      expect(after).toHaveTextContent('Dati confermati');
+      expect(screen.getByRole('region',{name:'Esplora la casa'})).toBeInTheDocument();
     });
   });
 

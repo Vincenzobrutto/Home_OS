@@ -81,8 +81,7 @@ describe('[mock] H1 — Casa e creazione', () => {
     const region = await screen.findByRole('region', { name: 'Le tue scadenze' });
     await waitFor(() => expect(region).toHaveTextContent('non sono disponibili in questo momento'));
     expect(within(region).queryByText(/0 scadute/)).not.toBeInTheDocument();
-    const impianti = screen.getByRole('region', { name: 'Impianti e verifiche' });
-    await waitFor(() => expect(impianti).toHaveTextContent('Caldaia cucina'));
+    expect(within(screen.getByRole('region',{name:'Esplora la casa'})).getByRole('link',{name:/Oggetti e impianti/})).toHaveAttribute('href',`/home/${home.id}/oggetti`);
     backend.activities.unavailable = false;
     backend.activities.enabled = false;
     await app.router.navigate(`/home/${home.id}/attivita`);

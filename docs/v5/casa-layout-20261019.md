@@ -40,3 +40,9 @@ La successiva implementazione del [riepilogo aggregato](casa-counts-20261019.md)
 Il box autonomo ora mostra tre righe cliccabili con conteggi completi dal riepilogo server: Scadute, Oggi, In programma. Quest’ultimo include tutte le attività future, anche oltre sette giorni. Rimangono Tutte le attività, Nuova attività per chi può modificare e Senza data quando il conteggio è positivo. Errori e caricamento restano distinti dallo zero.
 
 I filtri Stato/Scadenza di Attività leggono e aggiornano la query URL; link dalla Casa e navigazione indietro mantengono il filtro corretto. Browser: verificati Scadute su desktop, Oggi e In programma su mobile 390×844, con stato vuoto coerente e assenza di overflow. Test mock verificano conteggi positivi, collegamenti filtrati, date ieri/oggi/+7/+8 e senza data. Nessun originale aperto o dato modificato durante il collaudo browser.
+
+## Casa più compatta — 19 ottobre 2026
+
+Le tue scadenze e Da completare ora mostrano tre conteggi affiancati, con collegamenti invariati e stato di caricamento/errore distinto dallo zero. Scadenze resta sopra Esplora/Spese; Da completare segue entrambi nell’ordine DOM, anche su mobile. Rimosso dalla Casa il riepilogo duplicato Ambienti, oggetti e schede tecniche: accessi canonici in Esplora; caldaie nel catalogo Oggetti e impianti, verifica in Da completare/Attività. Dettagli casa/ruolo mantenuti chiusi di default con font ridotto. Nessuna API o dato modificato.
+
+Verifica: build/typecheck e lint frontend; 69 test pertinenti passati (67 al primo giro, 2 aspettative aggiornate alla navigazione senza riepilogo duplicato e riprovate). Browser reale desktop 1440×1100 e mobile 390×844: Scadenze circa 180 px desktop/232 mobile, Da completare circa 140/147 px, nessun overflow. Provati accessi e apertura dettagli senza scritture nei test. Evidenze locali outputs/dimora-v5-completo/casa-compact nella chat del 18 ottobre.

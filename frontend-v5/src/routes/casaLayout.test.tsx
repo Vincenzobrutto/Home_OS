@@ -22,6 +22,8 @@ it('[mock] Casa mette le azioni prima dei dettagli e aprire il ruolo non scrive 
   expect(within(explore).queryByRole('link',{name:/Rubrica/})).not.toBeInTheDocument();
   expect(within(explore).getAllByRole('link')).toHaveLength(3);
   expect(within(screen.getAllByRole('navigation',{name:'Sezioni di '+homeB1.name})[0]!).getAllByRole('link').map(link=>link.textContent)).toEqual(['Casa','Attività','Documenti','Spese','Rubrica']);
+  expect(explore.compareDocumentPosition(screen.getByRole('region',{name:'Da completare'})) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.queryByText('Ambienti, oggetti e schede tecniche')).not.toBeInTheDocument();
   const actions = screen.getByRole('region', { name: 'Azioni rapide' });
   expect(within(actions).getByRole('link', { name: 'Aggiungi documento' })).toHaveAttribute('href', `/home/${homeB1.id}/documenti?aggiungi=1`);
   expect(within(actions).getByRole('link', { name: 'Registra una spesa' })).toHaveAttribute('href', `/home/${homeB1.id}/spese?nuova-spesa=1`);

@@ -11,9 +11,6 @@ import { useAccount, useSession } from '../session/session';
 import { ROLE_LABEL } from './HomesPages';
 import { ScadenzeSummary } from './ScadenzeSummary';
 import { SpeseSummary } from './SpeseSummary';
-import { ObjectsSummary } from './ObjectsSummary';
-import { BOILER_STATE_LABEL, PERSONAL_LABEL, m3ErrorMessage } from '../lib/review';
-import { useAssets } from '../review/hooks';
 import { CasaReviewSummary } from './CasaTasksSummary';
 import { lazyPage } from './lazyPage';
 
@@ -133,14 +130,14 @@ export function CasaPage() {
         </div>
       </section>
       <div className={casa.deadlines}><ScadenzeSummary home={home} /></div>
+<div className={casa.overview}><section className={ui.card} aria-label="Esplora la casa"><h2>Esplora la casa</h2><div className={casa.destinations}>{[['oggetti','Oggetti e impianti','Le tue schede'],['ambienti','Ambienti','Organizza le stanze'],['documenti?collection=house','Documenti della casa','Planimetrie, pratiche edilizie, APE e contratti']].map(([path,label,hint])=><Link key={path} to={`/home/${encodeURIComponent(home.id)}/${path}`}><span><strong>{label}</strong><small>{hint}</small></span><Icon name="arrow"/></Link>)}</div><p className={styles.small}>Oggetti e spese personali; ambienti condivisi.</p></section><SpeseSummary home={home} compact/></div>
       <section className={casa.todo} aria-label="Da completare"><h2>Da completare</h2>
-      <CasaDocumentsSummary homeId={home.id}/>
-      <div className={casa.review}><CasaReviewSummary homeId={home.id} compact/></div>
-      </section><div className={casa.overview}><section className={ui.card} aria-label="Esplora la casa"><h2>Esplora la casa</h2><div className={casa.destinations}>{[['oggetti','Oggetti e impianti','Le tue schede'],['ambienti','Ambienti','Organizza le stanze'],['documenti?collection=house','Documenti della casa','Planimetrie, pratiche edilizie, APE e contratti']].map(([path,label,hint])=><Link key={path} to={`/home/${encodeURIComponent(home.id)}/${path}`}><span><strong>{label}</strong><small>{hint}</small></span><Icon name="arrow"/></Link>)}</div><p className={styles.small}>Oggetti e spese personali; ambienti condivisi.</p></section><SpeseSummary home={home} compact/></div>
+      <div className={casa.todoCounts}><CasaDocumentsSummary homeId={home.id}/>
+      <CasaReviewSummary homeId={home.id} compact/></div>
+      </section>
       <div className={casa.secondary}>
         <CasaSharingSummary />
-        <details className={ui.card}><summary>Ambienti, oggetti e schede tecniche</summary><ObjectsSummary home={home}/><ImpiantiSummary homeId={home.id}/></details>
-        <details className={cx(ui.card, styles.wide)}>
+        <details className={cx(ui.card, styles.wide,casa.houseDetails)}>
           <summary className={styles.cardTitle}>Dettagli della casa e del tuo ruolo</summary>
         <section className={ui.card} aria-labelledby="casa-dati">
           <h2 id="casa-dati" className={styles.cardTitle}>
@@ -238,49 +235,5 @@ export function NotFoundPage() {
         </p>
       </div>
     </PublicShell>
-  );
-}
-
-/** Anteprima delle caldaie personali: nessun totale dedotto dalle pagine caricate. */
-function ImpiantiSummary({ homeId }: { homeId: string }) {
-  const assets = useAssets(homeId);
-  const boilers = assets.data?.pages.flatMap((p) => p.items) ?? [];
-  const base = `/home/${encodeURIComponent(homeId)}`;
-  return (
-    <section className={cx(ui.card, styles.wide)} aria-labelledby="casa-impianti">
-      <h2 id="casa-impianti" className={styles.cardTitle}>
-        Impianti e verifiche
-      </h2>
-      {assets.isPending ? (
-        <Loading label="Caricamento delle schede…" />
-      ) : assets.isError ? (
-        <ErrorState
-          error={assets.error}
-          message={m3ErrorMessage(assets.error)}
-          onRetry={() => {
-            void assets.refetch();
-          }}
-          retrying={assets.isFetching}
-        />
-      ) : (
-        <>
-          {boilers.length === 0 ? (
-            <p className={cx(styles.muted, styles.spaced)}>
-              Nessuna scheda caldaia. Puoi crearne una dai documenti o a mano in{' '}
-              <Link to={`${base}/attivita`}>Attività</Link>.
-            </p>
-          ) : (
-            <ul className={styles.list}>
-              {boilers.map((b) => (
-                <li key={b.id}>
-                  <Link to={`${base}/impianti/${encodeURIComponent(b.id)}`}>{b.name}</Link> — {BOILER_STATE_LABEL[b.state]}
-                </li>
-              ))}
-            </ul>
-          )}
-          <p className={cx(styles.small, styles.muted, styles.spaced)}>{PERSONAL_LABEL}: ogni scheda è visibile solo a chi l’ha creata.</p>
-        </>
-      )}
-    </section>
   );
 }

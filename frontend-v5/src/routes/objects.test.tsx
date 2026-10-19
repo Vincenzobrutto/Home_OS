@@ -73,12 +73,11 @@ describe('[mock] G1 — ingresso, capabilities e ambienti', () => {
     const { backend, member, home } = world();
     await seedRoom(backend, member.id, home.id, 'Soggiorno');
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/casa`);
-    const card = await screen.findByRole('region', { name: 'Ambienti e oggetti' });
-    expect(await within(card).findByRole('link', { name: 'Soggiorno' })).toBeInTheDocument();
-    expect(within(card).getByRole('link', { name: 'Da collocare' })).toHaveAttribute('href', `/home/${home.id}/oggetti?collocazione=da-collocare`);
+    const card = await screen.findByRole('region', { name: 'Esplora la casa' });
     expect(card.textContent).not.toMatch(/\d+ oggett/);
-    await app.user.click(within(card).getByRole('link', { name: 'Ambienti' }));
+    await app.user.click(within(card).getByRole('link', { name: /Ambienti/ }));
     await screen.findByRole('heading', { level: 1, name: 'Ambienti' });
+    expect(await screen.findByRole('link',{name:'Soggiorno'})).toBeInTheDocument();
     const nav = screen.getAllByRole('navigation', { name: 'Sezioni di Casa Roma' })[0]!;
     expect(within(nav).getByRole('link', { name: /Casa/ })).toHaveAttribute('aria-current', 'page');
   });
@@ -92,7 +91,7 @@ describe('[mock] G1 — ingresso, capabilities e ambienti', () => {
     backend.objects.enabled = true;
     backend.objects.unavailable = true;
     await app.router.navigate(`/home/${home.id}/casa`);
-    await screen.findByRole('region', { name: 'Ambienti e oggetti' });
+    await screen.findByRole('region', { name: 'Esplora la casa' });
     await app.router.navigate(`/home/${home.id}/oggetti`);
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('non sono disponibili');
