@@ -1,3 +1,5 @@
+import {DotsThree} from '@phosphor-icons/react/dist/csr/DotsThree';
+import {FieldInfo} from '../components/FieldInfo';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import { contextReturn } from '../lib/contextReturn';
@@ -435,7 +437,7 @@ export function QuickPlacement({home,object,onMultiple,focus=false}:{home:Home;o
       {dirty&&!op.locked&&<button className={cx(ui.btn,ui.primary)} type="submit" disabled={disabled}>{op.mutation.isPending?'Salvataggio…':'Salva stanza'}</button>}
       <button type="button" className={ui.btn} disabled={op.mutation.isPending||op.locked} onClick={onMultiple}>Più ambienti</button>
     </div>
-    <p id={`${id}-hint`} className={ui.hint}>{initial==='multiple'?'Scegliendo una stanza sostituisci gli ambienti attuali. Usa «Più ambienti» per mantenerne più di uno.':'Scegli la stanza e premi «Salva stanza». Puoi lasciare l’oggetto da collocare.'}</p>
+    <p id={`${id}-hint`} className={ui.hint}>{initial==='multiple'?'Scegliendo una stanza sostituisci gli ambienti attuali. Usa «Più ambienti» per mantenerne più di uno.':'Per cambiare stanza, scegli un ambiente e salva.'}</p>
     {rooms.isPending&&<Loading label="Caricamento delle stanze…"/>}
     {rooms.isError&&<ErrorState title="Stanze non disponibili" error={rooms.error} onRetry={()=>void rooms.refetch()}/>}
     {!rooms.isPending&&!rooms.isError&&!available.length&&<p>Non ci sono ancora stanze attive. Crea o conferma gli ambienti della casa per trovarli qui.</p>}
@@ -587,6 +589,7 @@ export function LinksSection(props: {
   activityCapabilities?: ActivityCapabilities;
   /** economy-v1 attivo: registrazione atomica con objectRef e ritorno alla scheda. */
   economyEnabled?: boolean;
+  compact?:boolean;
 }) {
   const { home, object, resourceType } = props;
   const links = useObjectLinks(home.id, object.ref, resourceType);
@@ -613,60 +616,7 @@ export function LinksSection(props: {
     setRefocus((n) => n + 1);
   };
 
-  return (
-    <section className={ui.card} aria-labelledby={headingId}>
-      <h2 id={headingId} ref={headingRef} tabIndex={-1} className={own.sectionTitle}>
-        {SECTION_TITLE[resourceType]}
-      </h2>
-      <p className={styles.meta}>{SECTION_NOTE[resourceType]}</p>
-      {links.isPending ? (
-        <Loading label="Caricamento dei collegamenti…" />
-      ) : links.isError && !links.data ? (
-        <ErrorState title="Collegamenti non disponibili" error={links.error} message={objectsErrorMessage(links.error)} onRetry={() => void links.refetch()} retrying={links.isFetching} />
-      ) : items.length === 0 ? (
-        <p className={styles.meta}>{EMPTY_TEXT[resourceType]}</p>
-      ) : (
-        <ul className={styles.list} aria-label={SECTION_TITLE[resourceType]}>
-          {items.map((l, i) => (
-            <li key={l.linkId ?? `${l.origin}-${l.resource?.id ?? i}`} className={styles.item}>
-              {l.state === 'unavailable' || !l.resource ? (
-                <span className={styles.meta}>{RESOURCE_LABEL[resourceType]} non più disponibile per il tuo account</span>
-              ) : (
-                <Link to={resourceHref(home.id, resourceType, l.resource.id)} state={resourceType === 'document' ? {accountId:account.id,returnTo:{path:objectPathHere,label:object.name},returnState:returnContext?{accountId:account.id,returnTo:returnContext}:undefined} : undefined} className={styles.title}>
-                  {l.resource.title}
-                </Link>
-              )}
-              <span className={styles.meta}>
-                {l.origin === 'native'
-                  ? isBoiler
-                    ? 'Collegamento della scheda caldaia: si gestisce dalla risorsa originale'
-                    : 'Collegamento originale: si gestisce dalla risorsa'
-                  : 'Collegato da te a questo oggetto'}
-              </span>
-              {resourceType === 'expense' && l.resource?.amountCents !== undefined && l.resource.currency === 'EUR' && (
-                <span className={styles.meta}>Costo registrato: {formatCents(l.resource.amountCents)}</span>
-              )}
-              {canEdit && l.origin === 'reference' && l.linkId && l.version !== null && (
-                <span>
-                  <button type="button" className={cx(ui.btn, ui.small)} onClick={() => setRemoving(l)}>
-                    Rimuovi collegamento
-                  </button>
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-      {links.hasNextPage && (
-        <p className={own.spaced}>
-          <button type="button" className={ui.btn} onClick={() => void links.fetchNextPage()} disabled={links.isFetchingNextPage}>
-            {links.isFetchingNextPage ? 'Caricamento…' : 'Mostra altri collegamenti'}
-          </button>
-        </p>
-      )}
-
-      {canEdit && active && panel === 'none' && (
-        <p className={cx(styles.actions, own.spaced)}>
+  const actionButtons=(<p className={cx(styles.actions, own.spaced)}>
           {(resourceType === 'document' || !isBoiler) && (
             <button type="button" className={ui.btn} onClick={() => setPanel('pick')}>
               {resourceType === 'document' ? 'Collega un documento' : resourceType === 'expense' ? 'Collega un costo esistente' : 'Collega un’attività esistente'}
@@ -701,8 +651,62 @@ export function LinksSection(props: {
                 Crea promemoria per questo oggetto
               </button>
             ) : null)}
+        </p>);
+  return (
+    <section className={cx(ui.card,props.compact&&own.compactLinks)} aria-labelledby={headingId}>
+      <h2 aria-label={SECTION_TITLE[resourceType]} id={headingId} ref={headingRef} tabIndex={-1} className={own.sectionTitle}>
+        {SECTION_TITLE[resourceType]}{props.compact&&<FieldInfo label={SECTION_TITLE[resourceType]}><p>{SECTION_NOTE[resourceType]}</p></FieldInfo>}
+      </h2>
+      {!props.compact&&<p className={styles.meta}>{SECTION_NOTE[resourceType]}</p>}
+      {links.isPending ? (
+        <Loading label="Caricamento dei collegamenti…" />
+      ) : links.isError && !links.data ? (
+        <ErrorState title="Collegamenti non disponibili" error={links.error} message={objectsErrorMessage(links.error)} onRetry={() => void links.refetch()} retrying={links.isFetching} />
+      ) : items.length === 0 ? (
+        <p className={styles.meta}>{EMPTY_TEXT[resourceType]}</p>
+      ) : (
+        <ul className={styles.list} aria-label={SECTION_TITLE[resourceType]}>
+          {items.map((l, i) => (
+            <li key={l.linkId ?? `${l.origin}-${l.resource?.id ?? i}`} className={styles.item}>
+              {l.state === 'unavailable' || !l.resource ? (
+                <span className={styles.meta}>{RESOURCE_LABEL[resourceType]} non più disponibile per il tuo account</span>
+              ) : (
+                <Link to={resourceHref(home.id, resourceType, l.resource.id)} state={resourceType === 'document' ? {accountId:account.id,returnTo:{path:objectPathHere,label:object.name},returnState:returnContext?{accountId:account.id,returnTo:returnContext}:undefined} : undefined} className={styles.title}>
+                  {l.resource.title}
+                </Link>
+              )}
+              {!props.compact&&<span className={styles.meta}>
+                {l.origin === 'native'
+                  ? isBoiler
+                    ? 'Collegamento della scheda caldaia: si gestisce dalla risorsa originale'
+                    : 'Collegamento originale: si gestisce dalla risorsa'
+                  : 'Collegato da te a questo oggetto'}
+              </span>}
+              {resourceType === 'expense' && l.resource?.amountCents !== undefined && l.resource.currency === 'EUR' && (
+                <span className={styles.meta}>{props.compact?'':'Costo registrato: '}{formatCents(l.resource.amountCents)}{props.compact&&l.resource.spentOn&&<> · {l.resource.spentOn.split('-').reverse().join('/')}</>}</span>
+              )}
+              {props.compact?<details className={own.rowMenu}><summary aria-label={`Azioni per ${l.resource?.title??'collegamento'}`}><DotsThree size={22} aria-hidden="true"/></summary><div><p>{l.origin==='native'?'Collegamento originale: si gestisce dalla risorsa.':'Collegato da te a questo oggetto'}</p>{canEdit&&l.origin==='reference'&&l.linkId&&l.version!==null&&<button type="button" className={ui.btn} onClick={()=>setRemoving(l)}>Rimuovi collegamento</button>}</div></details>:canEdit && l.origin === 'reference' && l.linkId && l.version !== null && (
+                <span>
+                  <button type="button" className={cx(ui.btn, ui.small)} onClick={() => setRemoving(l)}>
+                    Rimuovi collegamento
+                  </button>
+                </span>
+              )}
+
+            </li>
+          ))}
+        </ul>
+      )}
+      {links.hasNextPage && (
+        <p className={own.spaced}>
+          <button type="button" className={ui.btn} onClick={() => void links.fetchNextPage()} disabled={links.isFetchingNextPage}>
+            {links.isFetchingNextPage ? 'Caricamento…' : 'Mostra altri collegamenti'}
+          </button>
         </p>
       )}
+
+      {canEdit&&active&&panel==='none'&&(props.compact&&resourceType==='expense'?<details className={own.actionMenu}><summary>Collega o registra spesa</summary>{actionButtons}</details>:actionButtons)}
+
       {resourceType === 'expense' && props.economyEnabled && (
         <p className={own.spaced}>
           <Link to={`/home/${encodeURIComponent(home.id)}/spese?vista=elenco&oggetto=${refParam}`}>Vedi i costi di questo oggetto in Spese, con totale e periodo</Link>

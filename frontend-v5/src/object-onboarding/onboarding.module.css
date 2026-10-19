@@ -28,3 +28,9 @@
 .resource{border:1px solid var(--color-border);border-radius:8px;padding:16px;min-width:0;background:var(--color-surface)}.resource h3{font-size:1rem;margin:0 0 12px}.resource>summary{font-weight:650;cursor:pointer;padding:4px 0}.resource[open]>summary{margin-bottom:16px}.resource fieldset{border:0;padding:0;margin:0}.saveBar{position:sticky;bottom:0;background:var(--color-surface);border-top:1px solid var(--color-border);padding:16px 0;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;z-index:2}.resource .unifiedItem{border:0;padding:0}.resource .values{grid-template-columns:1fr}.resource .values .card{border:0;padding:6px 0}
 
 .saveProblem{font-size:.85rem;color:var(--color-ink);max-width:450px;align-self:center}.saveBar>button:last-child{margin-left:auto}
+
+.detailValues{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px;margin:16px 0}.detailValues>div{min-width:0;padding-bottom:12px;border-bottom:1px solid var(--color-border)}.detailValues dt{font-size:13px;color:var(--color-muted)}.detailValues dd{margin:4px 0 0;overflow-wrap:anywhere}.detailValues dd strong{font-size:14px}
+
+.technicalInputs{grid-column:1/-1}.technicalInputs>summary{min-height:44px;cursor:pointer;align-content:center}.technicalInputs>div{margin-top:12px}
+
+.detailValues{gap:10px 16px;margin:12px 0}.detailValues>div{padding-bottom:8px}.detailValues dd{line-height:1.45}

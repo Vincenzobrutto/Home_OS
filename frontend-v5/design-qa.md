@@ -1,3 +1,23 @@
+# Design QA — Dettaglio oggetto compatto
+
+19 ottobre 2026. Target approvato: outputs/dettaglio-oggetto-preview/desktop-mobile.png. Stato reale: oggetto corrente con stanza assegnata, acquisto collegato e garanzia proposta; valori letti dalle fonti autorizzate, senza fixture sostitutive. Sorgente e catture finali desktop.png/mobile.png aperte insieme nello stesso input di confronto; desktop 1440×1024 con cattura pagina completa e mobile 390×844, densità 1. La sorgente è un board di due frame: confronto per regioni, senza affermare uguaglianza pixel fra canvas e viewport.
+
+## Riscontri e correzioni
+
+Nessun P0/P1/P2 aperto nella vista verificata. Riprodotti gerarchia, posizione dei controlli, fascia acquisto/garanzia, dati in griglia, due colonne desktop e una mobile. Modifica/menu, menu riga e disclosure sono operativi. Corrette durante il giro densità dei dati garanzia, collocazione mobile sullo sfondo base, proporzioni del manuale e voci di menu. Ricattura dopo le correzioni e ricarica completa riuscita.
+
+Superfici richieste: tipografia Manrope/DM Sans del prodotto e gerarchia titolo/dati/metadati; spaziatura ridotta con gap 14–16 e radius 12; colori navy/teal/superfici esistenti; icone Phosphor per menu, acquisto e garanzia senza foto inventate; testi e date legati ai dati autorizzati. Verifica ravvicinata di nome, menu, date/fonte garanzia e documento. Nessuna immagine di prodotto da ricreare: il target non ne contiene.
+
+Differenze intenzionali: titoli I tuoi costi e Le tue attività conservati; controlli Collega documento e Collega attività esistente mantenuti oltre alla sintesi del mockup, quindi l’altezza effettiva supera il frame illustrativo. Dati tecnici in lettura solo quando esistono valori, in modifica sempre apribili. Conteggi documenti non inventati dal numero di righe paginato. La selezione stanza include il tipo già previsto dal prodotto. Tali differenze preservano le funzioni richieste, non cambiano la struttura approvata.
+
+Interazioni controllate su desktop/mobile; nessun overflow a 390 o 320 px, navigazione inferiore libera. Conferme potenzialmente mutative annullate. Tastiera e focus di base verificati, non certificazione WCAG. I salvataggi sono coperti da test sintetici, senza scrivere sui dati reali. Dopo ricarica completa nessun nuovo errore console.
+
+P3 futuro: ulteriore uniformazione delle etichette dei costi e dei collegamenti con le altre pagine, da valutare come scelta di prodotto. Nessuna funzione lasciata come segnaposto.
+
+final result: passed
+
+---
+
 # Design QA — Catalogo Oggetti e impianti
 
 19 ottobre 2026. Riferimento: proposta definitiva desktop/mobile approvata, outputs/oggetti-proposta-definitiva/desktop-mobile.png. Implementazione reale: /home/:homeId/oggetti. Immagine sorgente e catture desktop.png/mobile-cucina-fixture.png aperte insieme nello stesso input di confronto; mobile.png controllata separatamente sui dati reali. Desktop 1440×1024, mobile 390×844; screenshot a densità 1. Ulteriore controllo 320×740.

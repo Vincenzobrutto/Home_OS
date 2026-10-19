@@ -1,3 +1,7 @@
+## Dettaglio oggetto compatto — 19 ottobre 2026
+
+Implementata anteprima desktop/mobile: sintesi, menu modifica, dati essenziali compatti, documenti/manuali raggruppati, costi e attività laterali, contatti/storia richiudibili. Funzioni e fonti preservate; nessun dato reale modificato. [Comportamento, verifica e limiti](v5/object-detail-layout-20261019.md).
+
 ## Audit UX Casa applicato — 19 ottobre 2026
 
 Stati vuoti più discreti, Esplora mobile uniforme, Condivisioni richiudibile senza nascondere avvisi, anno vicino al totale e Storico Attività separato. Nessuna modifica ai dati reali. [Comportamento e verifica](v5/casa-layout-20261019.md#audit-ux-applicato--19-ottobre-2026).

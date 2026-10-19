@@ -1,3 +1,4 @@
+import {FieldInfo} from '../components/FieldInfo';
 import { useId, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { CatalogItem, ObjectManual } from '../api/types';
@@ -11,7 +12,7 @@ import styles from './manual.module.css';
 
 type Candidate = { manual: ObjectManual; token: string };
 type Selection = { mode: 'candidate'; token: string } | { mode: 'remove' } | { mode: 'manual'; url: string; brand: string; reference: string; kind: 'manual' | 'support' };
-export function ManualSection({ homeId, object, canEdit }: { homeId: string; object: CatalogItem; canEdit: boolean }) {
+export function ManualSection({ homeId, object, canEdit,compact=false }: { homeId: string; object: CatalogItem; canEdit: boolean;compact?:boolean }) {
   const api = useApi(), account = useAccount(), cache = useQueryClient(), id = useId();
   const [editing, setEditing] = useState(false), [brand, setBrand] = useState(object.manual?.brand ?? object.profile?.fields.brand?.value ?? ''), [reference, setReference] = useState(object.manual?.reference ?? object.profile?.fields.reference?.value ?? object.profile?.fields.model?.value ?? '');
   const [productUrl, setProductUrl] = useState(''), [url, setUrl] = useState(object.manual?.url ?? ''), [kind, setKind] = useState<'manual' | 'support'>(object.manual?.kind ?? 'manual');
@@ -49,9 +50,9 @@ export function ManualSection({ homeId, object, canEdit }: { homeId: string; obj
       await failed(e);
     } finally { setBusy(false); }
   }
-  return <section className={ui.card} aria-labelledby={id + '-title'}>
-    <h2 id={id + '-title'} className={pages.cardTitle}>Manuale e istruzioni</h2>
-    <p className={pages.muted}>Collegamenti esterni. I documenti che hai caricato restano nella sezione Documenti collegati.</p>
+  return <section className={cx(ui.card,compact&&!editing&&styles.compact)} aria-labelledby={id + '-title'}>
+    <h2 aria-label="Manuale e istruzioni" id={id + '-title'} className={pages.cardTitle}>Manuale e istruzioni{compact&&<FieldInfo label="Manuale e istruzioni"><p>Collegamenti esterni. I documenti che hai caricato restano nella sezione Documenti collegati.</p></FieldInfo>}</h2>
+    {!compact&&<p className={pages.muted}>Collegamenti esterni. I documenti che hai caricato restano nella sezione Documenti collegati.</p>}
     {manual ? <>
       <p><a className={ui.btn} href={manual.url} target="_blank" rel="noopener noreferrer">{manual.kind === 'manual' ? manual.origin === 'manufacturer_page' ? 'Apri manuale sul sito del produttore' : 'Apri manuale online' : 'Istruzioni e assistenza'} <span className="visually-hidden">(si apre in una nuova scheda)</span></a></p>
       <p className={pages.small}>{manual.brand} · {manual.reference} · {manual.origin === 'manufacturer_page' ? 'Trovato sulla pagina ufficiale del modello' : 'Collegamento aggiunto da te'}</p>

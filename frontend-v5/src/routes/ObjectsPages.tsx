@@ -1,3 +1,7 @@
+import {ShieldCheck} from '@phosphor-icons/react/dist/csr/ShieldCheck';
+import {DotsThree} from '@phosphor-icons/react/dist/csr/DotsThree';
+import {CaretDown} from '@phosphor-icons/react/dist/csr/CaretDown';
+import detail from '../objects/detail.module.css';
 import { CatalogContent } from '../objects/Catalog';
 import { ContactsPanel } from '../contacts/components';
 import { contextReturn } from '../lib/contextReturn';
@@ -11,7 +15,7 @@ import { ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../component
 import { useExpenseCapabilities } from '../expenses/hooks';
 import { useEconomyCapabilities } from '../economy/hooks';
 import { G1History } from '../objects/History';
-import { LinksSection, ObjectForm, PositionEditor, QuickPlacement, StateDialog, objectOwn as own, objectStyles as styles, roomsText, typeLabel } from '../objects/components';
+import { LinksSection, ObjectForm, PositionEditor, QuickPlacement, StateDialog, objectStyles as styles, roomsText, typeLabel } from '../objects/components';
 import { useObject, useObjectHistory } from '../objects/hooks';
 import {
   backToCatalog,
@@ -122,7 +126,7 @@ function ObjectDetail(props: { home: Home; kind: ObjectKind; id: string; caps: O
   );
 }
 
-type Panel = 'none' | 'edit' | 'position' | 'state';
+type Panel = 'none' | 'edit' | 'position' | 'state' | 'profile';
 
 function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabilities; back: ReactNode; focusActions: boolean; focusPlacement:boolean }) {
   const { home, object } = props;
@@ -138,107 +142,36 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
   const actionsRef = useFocusAfterVersion(props.focusActions);
   const base = `/home/${encodeURIComponent(home.id)}`;
 
-  return (
-    <>
-      {props.back}
-
-      <div className={pages.heading}>
-        <div>
-          <span className={pages.eyebrow}>{home.name} · {isBoiler ? 'Scheda caldaia personale' : 'Oggetto personale'}</span>
-          <h1 tabIndex={-1}>{object.name}</h1>
-          <div className={styles.actions}>
-            <Tag tone="blue">{object.ref.kind === 'boiler' ? object.kindLabel || 'Caldaia' : typeLabel(object)}</Tag>
-            {!active && <Tag>Archiviato</Tag>}
-          </div>
+  const finishPanel=()=>{setPanel('none');requestAnimationFrame(()=>{const target=panel==='position'?document.querySelector<HTMLSelectElement>('form[aria-label="Collocazione dell’oggetto"] select'):document.getElementById('object-edit-button');target?.focus();});};
+  const [menu,setMenu]=useState(false),[more,setMore]=useState(false);
+  const warranty=object.profile?.fields.warrantyEnd?.value;
+  const date=(value:string)=>new Intl.DateTimeFormat('it-IT',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
+  return <div className={detail.page}>
+    {props.back}
+    <header className={detail.header}>
+      <div><h1 tabIndex={-1}>{object.name}</h1><div className={styles.actions}><Tag tone="blue">{isBoiler?object.kindLabel||'Caldaia':typeLabel(object)}</Tag><span className={pages.muted}>Visibile solo a te</span>{!active&&<Tag>Archiviato</Tag>}</div></div>
+      {canEdit&&panel==='none'&&<div ref={actionsRef} className={detail.headerActions} onKeyDown={e=>{if(e.key==='Escape'){setMenu(false);setMore(false);}}}>
+        {!isBoiler&&active&&<div className={detail.menu}><button id="object-edit-button" type="button" className={cx(ui.btn,ui.primary)} aria-expanded={menu} onClick={()=>{setMenu(!menu);setMore(false);}}>Modifica <CaretDown size={16} aria-hidden="true"/></button>{menu&&<div className={detail.menuItems}><button className={ui.btn} onClick={()=>{setPanel('edit');setMenu(false);}}>Nome e tipo</button>{object.profile&&!object.profile.unavailable&&<button className={ui.btn} onClick={()=>{setPanel('profile');setMenu(false);}}>Dati e garanzia</button>}</div>}</div>}
+        {!isBoiler&&(!active?<button className={ui.btn} onClick={()=>setPanel('state')}>Ripristina</button>:<div className={detail.menu}><button className={ui.btn} aria-label="Altre azioni" aria-expanded={more} onClick={()=>{setMore(!more);setMenu(false);}}><DotsThree size={22} aria-hidden="true"/></button>{more&&<div className={detail.menuItems}><button className={ui.btn} onClick={()=>{setPanel('state');setMore(false);}}>Archivia</button></div>}</div>)}
+      </div>}
+    </header>
+    <section className={detail.placement} aria-labelledby="oggetto-dati"><h2 id="oggetto-dati" className="visually-hidden">Dettagli</h2>
+      {canEdit&&active&&panel==='none'?<QuickPlacement home={home} object={object} focus={props.focusPlacement} onMultiple={()=>setPanel('position')}/>:panel==='position'?<PositionEditor home={home} capabilities={props.caps} object={object} onCancel={finishPanel} onDone={finishPanel}/>:<p>Dove si trova: {roomsText(object.position.rooms)}</p>}
+      {object.note&&<p>{object.note}</p>}
+      {isBoiler&&object.technicalLink&&<Link className={ui.btn} to={`${base}/impianti/${object.technicalLink.assetId}`}>Apri la scheda tecnica</Link>}
+    </section>
+    {!canEdit&&<p className={pages.muted}>Con il tuo ruolo puoi consultare questo oggetto, non modificarlo.</p>}
+    {panel==='edit'&&!isBoiler&&<ObjectForm home={home} capabilities={props.caps} object={object} onCancel={finishPanel} onDone={finishPanel}/>}<div hidden={panel==='edit'}>
+      {!isBoiler&&<div className={detail.summary}><PurchaseSummary homeId={home.id} object={object} enabled={!!economyCaps.data?.enabled} compact/>{warranty&&<div className={detail.warranty}><ShieldCheck size={26} aria-hidden="true"/><div><span>Garanzia</span><strong>fino al {date(warranty)}</strong></div></div>}</div>}
+      <div className={detail.grid}>
+        <div className={detail.main}>
+          {!isBoiler&&<>{object.profile?<ProfileSection object={object} homeId={home.id} canEdit={canEdit} compact detailLayout editMode={panel==='profile'} onEditModeChange={editing=>{if(editing)setPanel('profile');else finishPanel();}}/>:<ReceiptObjectFields objectId={object.ref.id}/>}<ReceiptComparisons objectId={object.ref.id}/></>}
+          <section className={detail.documents} aria-label="Documenti e manuali"><h2>Documenti e manuali</h2><LinksSection home={home} object={object} resourceType="document" compact={!isBoiler}/>{!isBoiler&&<ManualSection homeId={home.id} object={object} canEdit={canEdit} compact/>}</section>
         </div>
+        <div className={detail.aside}><LinksSection home={home} object={object} resourceType="expense" expenseCapabilities={expenseCaps.data} economyEnabled={!!economyCaps.data?.enabled&&!!economyCaps.data?.features.history} compact={!isBoiler}/><LinksSection home={home} object={object} resourceType="activity" activityCapabilities={activityCaps.data} compact={!isBoiler}/></div>
       </div>
-      <div className={pages.stack}>
-        <section className={ui.card} aria-labelledby="oggetto-dati">
-          <h2 id="oggetto-dati" className={pages.cardTitle}>
-            Dettagli
-          </h2>
-          <dl className={pages.detailList}>
-            <dt>Dove si trova</dt>
-            <dd className={own.position}>{object.position.rooms.length ? object.position.rooms.map((room, index) => <span key={room.id}>{index > 0 && ", "}<Link to={`${base}/ambienti/${encodeURIComponent(room.id)}`}>{roomsText([room])}</Link></span>) : roomsText(object.position.rooms)}</dd>
-            {!isBoiler && object.note && (
-              <>
-                <dt>Nota</dt>
-                <dd className={styles.description}>{object.note}</dd>
-              </>
-            )}
-          </dl>
-          {canEdit && active && panel !== 'edit' && panel !== 'state' && (panel === 'position' ?
-            <PositionEditor home={home} capabilities={props.caps} object={object} onCancel={() => setPanel('none')} onDone={() => setPanel('none')} /> :
-            <QuickPlacement home={home} object={object} focus={props.focusPlacement} onMultiple={() => setPanel('position')} />)}
-          {isBoiler && object.technicalLink && (
-            <p className={pages.spaced}>
-              <Link to={`${base}/impianti/${encodeURIComponent(object.technicalLink.assetId)}`} className={ui.btn}>
-                Apri la scheda tecnica
-              </Link>
-            </p>
-          )}
-          <p className={cx(pages.small, pages.muted, pages.spaced)}>
-            {isBoiler
-              ? 'Proposte, conferme e storia tecnica restano nella scheda caldaia originale: qui ne vedi posizione e collegamenti.'
-              : 'Visibile solo a te.'}
-          </p>
-        </section>
-
-        {!isBoiler && <PurchaseSummary homeId={home.id} object={object} enabled={!!economyCaps.data?.enabled} />}
-        {!isBoiler && <>{object.profile ? <ProfileSection object={object} homeId={home.id} canEdit={canEdit} compact /> : <ReceiptObjectFields objectId={object.ref.id} />}<ReceiptComparisons objectId={object.ref.id} /></>}
-        <LinksSection home={home} object={object} resourceType="document" />
-        {!isBoiler && <ManualSection homeId={home.id} object={object} canEdit={canEdit} />}
-        <LinksSection
-          home={home}
-          object={object}
-          resourceType="expense"
-          expenseCapabilities={expenseCaps.data}
-          economyEnabled={!!economyCaps.data?.enabled && !!economyCaps.data?.features.history}
-        />
-        <LinksSection home={home} object={object} resourceType="activity" activityCapabilities={activityCaps.data} />
-
-        {canEdit && panel !== 'edit' && panel !== 'position' && (
-          <div ref={actionsRef} className={styles.actions}>
-            {!isBoiler && active && (
-              <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => setPanel('edit')}>
-                Modifica
-              </button>
-            )}
-            {!isBoiler && (
-              <button type="button" className={ui.btn} onClick={() => setPanel('state')}>
-                {active ? 'Archivia' : 'Ripristina'}
-              </button>
-            )}
-          </div>
-        )}
-        {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare questo oggetto, non modificarlo.</p>}
-        {panel === 'edit' && !isBoiler && (
-          <ObjectForm home={home} capabilities={props.caps} object={object} onCancel={() => setPanel('none')} onDone={() => setPanel('none')} />
-        )}
-        {panel === 'state' && !isBoiler && (
-          <StateDialog
-            homeId={home.id}
-            title={active ? 'Archivia oggetto' : 'Ripristina oggetto'}
-            hint={
-              active
-                ? 'L’oggetto esce dall’elenco degli attivi. Non viene cancellato: posizione, collegamenti e storia restano, e documenti o costi non cambiano.'
-                : 'L’oggetto torna attivo con gli stessi dati, posizione e collegamenti.'
-            }
-            vars={{ kind: active ? 'objectArchive' : 'objectRestore', ref: object.ref, body: { expectedVersion: object.version ?? 1 } }}
-            onClose={() => setPanel('none')}
-          />
-        )}
-
-        <ContactsPanel homeId={home.id} resource={{kind:object.ref.kind,id:object.ref.id}} canEdit={canEdit} />
-        <details><summary className={ui.btn}>Storia dell’oggetto</summary>
-        <G1History
-          title="Storia dell’oggetto"
-          id="oggetto-storia"
-          query={history}
-          note={isBoiler ? 'Solo posizione e collegamenti: la storia tecnica è nella scheda caldaia.' : undefined}
-        />
-        </details>
-      </div>
-    </>
-  );
+      <div className={detail.secondary}><details><summary>Contatti</summary><ContactsPanel homeId={home.id} resource={{kind:object.ref.kind,id:object.ref.id}} canEdit={canEdit}/></details><details><summary>Storia dell’oggetto</summary><G1History title="Storia dell’oggetto" id="oggetto-storia" query={history} note={isBoiler?'Solo posizione e collegamenti: la storia tecnica è nella scheda caldaia.':undefined}/></details></div>
+    </div>
+    {panel==='state'&&!isBoiler&&<StateDialog homeId={home.id} title={active?'Archivia oggetto':'Ripristina oggetto'} hint={active?'L’oggetto esce dall’elenco degli attivi. Non viene cancellato: posizione, collegamenti e storia restano, e documenti o costi non cambiano.':'L’oggetto torna attivo con gli stessi dati, posizione e collegamenti.'} vars={{kind:active?'objectArchive':'objectRestore',ref:object.ref,body:{expectedVersion:object.version??1}}} onClose={finishPanel}/>}
+  </div>;
 }

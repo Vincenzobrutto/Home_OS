@@ -25,3 +25,20 @@ it('compact profile keeps warranty visible and technical details available on de
  await u.click(screen.getByText('Dati tecnici',{exact:true}));expect(screen.getByText('SERIAL-TEST')).toBeVisible();
  expect(mocks.callJson.mock.calls.some(c=>c[1].method==='POST')).toBe(false);
 });
+
+it('detail edit starts with saved fields, replaces values, and preserves technical input behind disclosure',async()=>{
+ const cache=new QueryClient({defaultOptions:{queries:{retry:false}}}),close=vi.fn(),u=userEvent.setup();
+ render(<QueryClientProvider client={cache}><ProfileSection object={object} homeId="h" canEdit compact detailLayout editMode onEditModeChange={close}/></QueryClientProvider>);
+ expect(screen.getByLabelText('Marca')).toHaveValue('Lume');
+ expect(screen.queryByRole('button',{name:'Informazioni su Marca'})).not.toBeInTheDocument();
+ expect(screen.getByLabelText('Numero di serie')).not.toBeVisible();
+ await u.click(screen.getByText('Dati tecnici facoltativi'));expect(screen.getByLabelText('Numero di serie')).toBeVisible();
+ await u.click(screen.getByRole('button',{name:'Annulla'}));expect(close).toHaveBeenCalledWith(false);
+ expect(mocks.callJson.mock.calls.some(c=>c[1].method==='POST')).toBe(false);
+});
+it('detail menu cannot force editing of unavailable sources',()=>{
+ const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});
+ render(<QueryClientProvider client={cache}><ProfileSection object={{...object,profile:{fields:{},unavailable:true}}} homeId="h" canEdit detailLayout editMode/></QueryClientProvider>);
+ expect(screen.queryByRole('button',{name:'Salva modifiche'})).not.toBeInTheDocument();
+ expect(screen.getByText(/Alcuni dati dipendono/)).toBeVisible();
+});

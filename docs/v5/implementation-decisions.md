@@ -1,3 +1,7 @@
+## Dettaglio oggetto — 19 ottobre 2026
+
+Approvata e implementata la struttura compatta: sintesi in alto, griglia desktop, ordine unico mobile, funzioni secondarie richiudibili. La garanzia mantiene origine e due date distinte; prezzo d’acquisto e costi rimandano a registrazioni canoniche senza duplicarle. [Scelte e verifica](object-detail-layout-20261019.md).
+
 ## Catalogo oggetti compatto — 19 ottobre 2026
 
 Scelta approvata: struttura a schede compatte della proposta 3 e filtri ambiente della 1; due colonne desktop, una mobile, vista elenco alternativa. Ricerca e conteggi sul server per non limitare i risultati alla pagina caricata. Icone in assenza di foto reali, avvisi solo da dati esistenti, contesto di ritorno privato per account/casa. [Implementazione e limiti](object-catalog-layout-20261019.md).

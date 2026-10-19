@@ -180,7 +180,7 @@ describe('[mock] G1 — oggetti, posizione e catalogo', () => {
     await app.user.type(within(form).getByLabelText('Nome'), 'Lavastoviglie');
     await app.user.click(within(form).getByRole('button', { name: 'Crea oggetto' }));
     await screen.findByRole('heading', { level: 1, name: 'Lavastoviglie' });
-    expect(screen.getByText('Da collocare',{selector:'dd'})).toBeInTheDocument();
+    expect(screen.getByRole('option',{name:'Da collocare'})).toBeInTheDocument();
     expect(posts(backend, /\/objects$/)[0]!.body).toEqual({ name: 'Lavastoviglie', type: 'appliance' });
 
     await app.router.navigate(`/home/${home.id}/oggetti?nuovo=1`);
@@ -329,12 +329,13 @@ describe('[mock] G1 — oggetti, posizione e catalogo', () => {
     await g1(backend, owner.id, home.id, `rooms/${old.id}/archive`, { expectedVersion: 1 });
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/oggetti/object/${o.ref.id}`);
     await screen.findByRole('heading', { level: 1, name: 'Bici' });
-    expect(screen.getByRole('link',{name:'Vecchia cantina (ambiente archiviato)'})).toBeInTheDocument();
+    expect(screen.getByRole('option',{name:'Vecchia cantina (ambiente archiviato)'})).toBeInTheDocument();
     await app.user.click(screen.getByRole('button', { name: 'Più ambienti' }));
     const form = await screen.findByRole('form', { name: 'Dove si trova' });
     expect(await within(form).findByRole('checkbox', { name: /Garage/ })).not.toBeChecked();
     expect(within(form).getByRole('checkbox', { name: 'Vecchia cantina (ambiente archiviato)' })).toBeChecked();
     await app.user.click(within(form).getByRole('button', { name: 'Annulla' }));
+    await app.user.click(screen.getByRole('button', { name: 'Altre azioni' }));
     await app.user.click(screen.getByRole('button', { name: 'Archivia' }));
     const dialog = await screen.findByRole('dialog', { name: 'Archivia oggetto' });
     await app.user.click(within(dialog).getByRole('button', { name: 'Archivia oggetto' }));
