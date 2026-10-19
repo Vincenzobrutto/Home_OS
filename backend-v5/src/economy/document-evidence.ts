@@ -31,3 +31,12 @@ export function printedDates(excerpt: string): string[] {
   }
   return [...dates];
 }
+
+export function periodBoundary(excerpt:string,key:string,value:string):boolean {
+ if(printedDates(excerpt).includes(value))return true;
+ const months=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+ const found=[...excerpt.toLocaleLowerCase('it').matchAll(/\b(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+(\d{4})\b/g)];
+ if(!/periodo|fatturazione|competenza|consumi|fornitura/iu.test(excerpt)||found.length!==1||!['competenceFrom','competenceTo'].includes(key))return false;
+ const m=months.indexOf(found[0][1])+1,y=Number(found[0][2]),day=key==='competenceFrom'?1:new Date(Date.UTC(y,m,0)).getUTCDate();
+ return value===found[0][2]+'-'+String(m).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+}

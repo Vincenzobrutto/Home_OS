@@ -4,7 +4,7 @@ import { ProviderFailure, type Snapshot } from '../review/provider';
 import { amountCents } from '../expenses/domain';
 import { calendar } from '../activities/domain';
 import { categories, category, expenseValues, text } from './domain';
-import { printedCents, printedDates } from './document-evidence';
+import { printedCents, printedDates, periodBoundary } from './document-evidence';
 export type Citation={documentId:string;documentVersion:number;sha256:string;page:number;excerpt:string};
 export type Candidate={id:string;amountCents:number;role:string;label:string;sources:Citation[]};
 export type Proposed={value:string;sources:Citation[]};
@@ -32,7 +32,7 @@ export function validateOutput(input:unknown,pages:string[],snapshot:Snapshot):E
       if(key==='category') {
         const labels:Record<string,RegExp>={electricity:/elettric|electric/,gas:/\bgas\b/,water:/acqua|water/,internet_services:/internet/,maintenance:/manutenzion/,repairs_works:/riparazion/,purchase_replacement:/acquisto|sostituzion/};
         if(!labels[value]?.test(claims))throw new ProviderFailure('evidence_unverified');
-      }else if(dateKeys.includes(key)?!refs.some(s=>printedDates(s.excerpt).includes(value)):!claims.includes(normalized(value).toLocaleLowerCase('it')))throw new ProviderFailure('evidence_unverified');
+      }else if(dateKeys.includes(key)?!refs.some(s=>['competenceFrom','competenceTo'].includes(key)?periodBoundary(s.excerpt,key,value):printedDates(s.excerpt).includes(value)):!claims.includes(normalized(value).toLocaleLowerCase('it')))throw new ProviderFailure('evidence_unverified');
       fields[key]={value,sources:refs};
     }
     if(!Array.isArray(r.amountCandidates)||!r.amountCandidates.length||r.amountCandidates.length>10)throw new ProviderFailure('no_supported_economic_data');

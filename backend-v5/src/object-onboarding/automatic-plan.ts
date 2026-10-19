@@ -33,6 +33,7 @@ function resourcePlan(output: ProductExtraction) {
     if (totals.length !== 1 || item.amountSelectionRequired || item.amountCandidates.some(c => c.role === 'arrears_balance'&&c.amountCents>0) || due.some(c => c.amountCents !== totals[0].amountCents)) review('Il documento contiene più importi: controlla il costo da registrare.');
     const fields = item.proposedFields;
     if (!fields.documentDate || !fields.category || !fields.title) review('Completa data, categoria o descrizione della spesa.');
+    if(output.documentKind==='utility_bill'&&(!fields.competenceFrom||!fields.competenceTo))review('Indica il periodo di riferimento della bolletta.');
     return { itemId: item.id, action: 'create', values: { title: fields.title.value, category: fields.category.value, amountCents: totals[0].amountCents, spentOn: fields.documentDate.value, ...Object.fromEntries(['supplier','documentNumber','documentDate','competenceFrom','competenceTo','dueOn'].filter(k => fields[k]).map(k => [k, fields[k].value])), objectRef: null }, amountSelection: { mode: 'candidate', candidateId: totals[0].id }, acknowledgePossibleDuplicate: false };
   });
   const allocated = choices.reduce((sum,c) => sum + ('expense' in c && c.expense.action === 'create' ? c.expense.amountCents : 0), 0);

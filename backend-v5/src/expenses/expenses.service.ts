@@ -1,3 +1,4 @@
+import {referenceYearWhere} from '../economy/reference-period';
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Prisma, type HomeExpense } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
@@ -83,7 +84,7 @@ export class ExpensesService {
   }
   private where(a: string, h: string, q: ReturnType<typeof expenseQuery>): Prisma.HomeExpenseWhereInput {
     return { accountId: a, homeId: h, ...(q.state === 'all' ? {} : { state: q.state }),
-      ...(q.year ? { spentOn: { gte: q.year + '-01-01', lte: q.year + '-12-31' } } : {}),
+      ...(q.year ? {AND:[referenceYearWhere(q.year)]} : {}),
       ...(q.source === 'manual' ? { documentId: null } : q.source === 'document' ? { documentId: { not: null } } : {}),
       ...(q.documentId ? { documentId: q.documentId } : {}), ...(q.assetId ? { assetId: q.assetId } : {}) };
   }

@@ -88,3 +88,7 @@ POST `/homes/:homeId/object-onboarding/drafts/:id/document-kind`, Idempotency-Ke
 ### Estensione tipo manuale: Fattura e Ricevuta (18 ottobre 2026)
 
 `POST /object-onboarding/drafts/:id/document-kind` accetta anche `documentKind: invoice | receipt`, oltre a `utility_bill | unsupported`, con `expectedVersion` e chiave idempotente invariati. Le due selezioni producono `purchase_document`, zero articoli iniziali e una proposta `simple_invoice` vuota. Un percorso già allineato non incrementa la versione; una vecchia bozza purchase senza proposta casa viene convertita soltanto se vuota. Aggiunta articolo e conferma canonica esistenti permettono oggetti facoltativi; il costo complessivo non può essere registrato anche sui singoli oggetti. Nessun cambiamento allo schema o al consenso AI. Restano vincoli di accesso, fonte/versione/SHA, dati salvati e conferma pendente del contratto precedente.
+
+## Bollette e periodo — 19 ottobre 2026
+
+Nessun nuovo campo o endpoint: economy-v1 usa competenceFrom (quando sono presenti entrambi gli estremi e la categoria è un'utenza) per filtri temporali, ordinamento, cursore, totali e confronti. Emissione documentDate e scadenza dueOn restano separate. Intervalli conteggiati una volta nel mese iniziale, senza prorata. Record senza periodo: fallback spentOn. I vecchi cursori dell'elenco economy sono invalidati dal binding v2. [Dettagli](bill-reference-period-20261019.md).

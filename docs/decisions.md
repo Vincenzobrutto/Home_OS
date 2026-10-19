@@ -1101,3 +1101,7 @@ Rifiuto400 riprodotto con PDF visuale interamente sintetico: grammatica compilat
 
 ### 18 ottobre 2026 — Prezzo ordine distinto da prova di pagamento
 Un ordine può fornire un totale acquisto esplicito anche senza data o prova di pagamento. PurchaseTotal e date semanticamente etichettate ammessi per order_confirmation; notificheconsegna/etichette senza totali restano senza costoautomatico. Prezzo dichiarato manualmente ammesso per ogni articolo singolo, indipendente da documentKind; esplicita conferma/data/duplicati e tetti quote restano. Nessuna data fittizia per sbloccare una spesa. Il valore canonico resta HomeExpense collegata, non prezzo duplicato fuori contabilità.
+
+## 19 ottobre 2026 — Periodo delle bollette
+
+I costi delle utenze appartengono al periodo di riferimento, senza confonderlo con emissione o scadenza. Intervalli conteggiati una volta nel mese iniziale: conserva l'importo originale, evita duplicazioni e ripartizioni stimate. [Regole e limiti](v5/bill-reference-period-20261019.md).

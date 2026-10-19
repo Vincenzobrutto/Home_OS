@@ -1,3 +1,4 @@
+import {billPeriodLabel} from '../lib/billPeriod';
 import { ContactsPanel } from '../contacts/components';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
@@ -141,8 +142,8 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
             <dd>{expense.documentLink.state === 'linked' ? <Link to={`${base}/documenti/${encodeURIComponent(expense.documentLink.document.id)}`}>{expense.documentLink.document.name}</Link> : documentLinkText(expense.documentLink)}</dd>
             {expense.supplier && (<><dt>Fornitore</dt><dd>{expense.supplier}</dd></>)}
             {expense.documentNumber && (<><dt>Numero documento</dt><dd>{expense.documentNumber}</dd></>)}
-            {expense.documentDate && (<><dt>Data documento</dt><dd>{formatCalendarDate(expense.documentDate)}</dd></>)}
-            {expense.competenceFrom && expense.competenceTo && (<><dt>Competenza</dt><dd>{formatCalendarDate(expense.competenceFrom)} – {formatCalendarDate(expense.competenceTo)}</dd></>)}
+            {expense.documentDate && (<><dt>Data di emissione</dt><dd>{formatCalendarDate(expense.documentDate)}</dd></>)}
+            {expense.competenceFrom && expense.competenceTo && (<><dt>Periodo di riferimento</dt><dd>{billPeriodLabel(expense)??(formatCalendarDate(expense.competenceFrom)+' – '+formatCalendarDate(expense.competenceTo))}</dd></>)}
             {expense.dueOn && (<><dt>Scadenza sul documento</dt><dd>{formatCalendarDate(expense.dueOn)}</dd></>)}
             <dt>Nota</dt>
             <dd className={act.description}>{expense.note ?? '—'}</dd>

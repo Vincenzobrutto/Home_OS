@@ -1,3 +1,4 @@
+import {expenseReferenceDate} from '../lib/billPeriod';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { formatCalendarDate } from '../lib/activities';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
@@ -116,7 +117,7 @@ function SpeseHeading({ home,actions }: { home: Home;actions?:ReactNode }) {
       <div>
         <Link to={`/home/${encodeURIComponent(home.id)}/casa`}>← Torna alla Casa</Link><p className={pages.eyebrow}>{home.name}</p>
         <h1 tabIndex={-1}>Spese</h1>
-        <p className={pages.lead}>I costi registrati da te, visibili solo a te.</p>
+        <p className={pages.lead}>I costi registrati da te, visibili solo a te.</p><p>Bollette per periodo di riferimento; emissione e scadenza separate. Gli intervalli di più mesi sono conteggiati una volta nel mese iniziale. Senza periodo vale la data registrata, finché lo completi.</p>
       </div>
       {actions && <div className={styles.headerActions}>{actions}</div>}
     </div>
@@ -325,7 +326,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
             <select className={act.select} value={view} onChange={(e) => setView(e.target.value as SpeseView)}>
               {VIEWS.filter(v=>['panoramica','riepilogo'].includes(view) ? ['panoramica','riepilogo'].includes(v.value) : ['elenco','oggetti','lavori'].includes(v.value)).map((v) => (
                 <option key={v.value} value={v.value}>
-                  {v.value === 'elenco' ? 'Data' : v.value === 'panoramica' ? 'Distribuzione e confronto' : v.label}
+                  {v.value === 'elenco' ? 'Mese di riferimento' : v.value === 'panoramica' ? 'Distribuzione e confronto' : v.label}
                 </option>
               ))}
             </select>
@@ -615,9 +616,10 @@ function ExpenseList(props: { home: Home; caps: EconomyCapabilities; filters: Ec
   return (
     <>
       <ul className={act.list} aria-label="Costi registrati">
-        {items.map((e) => (
+        {items.map((e,i) => [
+          (i===0||expenseReferenceDate(e).slice(0,7)!==expenseReferenceDate(items[i-1]!).slice(0,7))?<li role="presentation" key={'month-'+expenseReferenceDate(e).slice(0,7)}><h3>{new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(expenseReferenceDate(e)+'T12:00:00Z'))}</h3></li>:null,
           <EconomyExpenseRow key={e.id} expense={e} homeId={props.home.id} caps={props.caps} state={{...(props.state as object),expensePages:list.data?.pages.length ?? 1}} />
-        ))}
+        ])}
       </ul>
       {!props.single && list.isFetchNextPageError && <ErrorState title="Altri costi non caricati" error={list.error} message={economyErrorMessage(list.error)} />}
       {!props.single && list.hasNextPage && (

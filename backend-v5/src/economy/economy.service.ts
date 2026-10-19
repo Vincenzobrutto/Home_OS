@@ -1,3 +1,4 @@
+import {referenceDate,referenceDateSql} from './reference-period';
 import { ForbiddenException, Injectable, Optional } from '@nestjs/common';
 import { Prisma, type HomeExpense, type EconomicWork } from '../../generated/client';
 import { ExpensesService } from '../expenses/expenses.service';
@@ -48,7 +49,7 @@ export class EconomyService {
     WHERE j."assetId"=b.id AND j.state='succeeded' AND (d.id IS NULL OR d."homeId"<>${h} OR NOT(d.visibility::text='home' OR d."uploaderId"=${a}) OR v.id IS NULL OR v.version::text<>s->>'documentVersion' OR v.sha256<>s->>'documentSha256')
   ))`;}
   private where(a:string,h:string,q:Query){
-    const parts:Prisma.Sql[]=[Prisma.sql`e."accountId"=${a}`,Prisma.sql`e."homeId"=${h}`,Prisma.sql`e."spentOn">=${q.from} AND e."spentOn"<=${q.to}`];
+    const parts:Prisma.Sql[]=[Prisma.sql`e."accountId"=${a}`,Prisma.sql`e."homeId"=${h}`,Prisma.sql`${referenceDateSql}>=${q.from} AND ${referenceDateSql}<=${q.to}`];
     if(q.state!=='all')parts.push(Prisma.sql`e.state::text=${q.state}`);
     if(q.source==='manual')parts.push(Prisma.sql`e."documentId" IS NULL`);else if(q.source==='document')parts.push(Prisma.sql`e."documentId" IS NOT NULL`);
     if(q.category)parts.push(q.category==='unclassified'?Prisma.sql`e.category IS NULL`:Prisma.sql`e.category=${q.category}`);
@@ -62,9 +63,9 @@ export class EconomyService {
     ))`);
     return Prisma.join(parts,' AND ');
   }
-  async list(a:string,h:string,input:unknown){return this.expenses.read(a,h,async(tx,edit,context)=>{const q=economyQuery(input,context.today),b=digest(JSON.stringify([a,h,'economy-expenses',{...q,limit:undefined,cursor:undefined}])),anchor=this.cursor(q.cursor,b,true);await this.references(tx,a,h,q);
-    const rows=await tx.$queryRaw<HomeExpense[]>(Prisma.sql`SELECT e.* FROM "HomeExpense" e WHERE ${this.where(a,h,q)} ${anchor?Prisma.sql`AND (e."spentOn",e."createdAt",e.id)<(${anchor.d},${anchor.t}::timestamp,${anchor.i})`:Prisma.sql``} ORDER BY e."spentOn" DESC,e."createdAt" DESC,e.id DESC LIMIT ${q.limit+1}`);
-    const page=rows.slice(0,q.limit);return {items:await Promise.all(page.map(row=>this.expenses.project(tx,row,edit,true))),nextCursor:rows.length>q.limit?this.encode(b,page.at(-1)!):null};});}
+  async list(a:string,h:string,input:unknown){return this.expenses.read(a,h,async(tx,edit,context)=>{const q=economyQuery(input,context.today),b=digest(JSON.stringify([a,h,'economy-expenses-reference-v2',{...q,limit:undefined,cursor:undefined}])),anchor=this.cursor(q.cursor,b,true);await this.references(tx,a,h,q);
+    const rows=await tx.$queryRaw<HomeExpense[]>(Prisma.sql`SELECT e.* FROM "HomeExpense" e WHERE ${this.where(a,h,q)} ${anchor?Prisma.sql`AND (${referenceDateSql},e."createdAt",e.id)<(${anchor.d},${anchor.t}::timestamp,${anchor.i})`:Prisma.sql``} ORDER BY ${referenceDateSql} DESC,e."createdAt" DESC,e.id DESC LIMIT ${q.limit+1}`);
+    const page=rows.slice(0,q.limit);return {items:await Promise.all(page.map(row=>this.expenses.project(tx,row,edit,true))),nextCursor:rows.length>q.limit?this.encode(b,{...page.at(-1)!,spentOn:referenceDate(page.at(-1)!)}):null};});}
   private async totals(tx:Tx,a:string,h:string,q:Query){
     const rows=await tx.$queryRaw<{category:Category|null;hasWork:boolean;count:string;total:string}[]>(Prisma.sql`SELECT e.category,(e."workId" IS NOT NULL) AS "hasWork",COUNT(*)::text AS count,COALESCE(SUM(e."amountCents"::bigint),0)::text AS total FROM "HomeExpense" e WHERE ${this.where(a,h,q)} GROUP BY e.category,(e."workId" IS NOT NULL)`);
     const byCategory=[...categories,null].map(category=>({category,count:0,totalCents:'0'})),byFamily=families.map(family=>({family,count:0,totalCents:'0'}));let total=0n,count=0;

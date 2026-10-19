@@ -1,3 +1,7 @@
+## Bollette: periodo di riferimento — 19 ottobre 2026
+
+Completati raggruppamento mensile, filtri e totali per competenza, con emissione e scadenza separate. SORGENIA corretta sulla registrazione esistente. [Regole, verifica e limiti](v5/bill-reference-period-20261019.md).
+
 ## Spese: layout desktop/mobile e distribuzione — 19 ottobre 2026
 
 Totale e ricerca anticipati, Registrazioni/Riepilogo, grafico mantenuto anche accanto/sotto l’elenco su richiesta esplicita. Ritorno dal dettaglio con ricerca privata, filtri, pagine e posizione. [Comportamento, verifica e limiti](v5/spese-layout-20261019.md).

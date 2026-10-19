@@ -4,7 +4,7 @@ import { citation, type Citation, type EconomicOutput } from '../economy/documen
 import { object, text, invalid, uuid, version } from '../review/domain';
 import { ProviderFailure, type Snapshot } from '../review/provider';
 import { digest } from '../security';
-import { printedCents, printedDates } from '../economy/document-evidence';
+import { printedCents, printedDates, periodBoundary } from '../economy/document-evidence';
 import { purchaseDateSource, tableQuantity, tablePurchaseAmount } from './invoice-evidence';
 import { readUnderstanding, type DocumentUnderstanding, type UnderstandingWarning } from './understanding';
 import { calendar } from '../activities/domain';
@@ -239,7 +239,7 @@ function readHouseExpenses(input:unknown,context:ProductEvidenceContext,kind:'ut
  if(input===undefined)return [];if(!Array.isArray(input)||input.length>10)throw invalid();const fingerprints=new Set<string>();
  return input.map(raw=>{const r=object(raw,['fields','amountCandidates']),fields:HouseExpense['proposedFields']={},reviewWarnings:string[]=[];
   for(const [key,rawField]of Object.entries(object(r.fields,billKeys))){try{const field=object(rawField,['value','evidence']),value=text(field.value,key==='documentNumber'?80:120),source=evidence(field.evidence,context);
-   if(['documentDate','competenceFrom','competenceTo','dueOn'].includes(key)){calendar(value);if(!printedDates(source.excerpt).includes(value))throw new ProductEvidenceFailure('purchaseDate','date');}
+   if(['documentDate','competenceFrom','competenceTo','dueOn'].includes(key)){calendar(value);if(!(['competenceFrom','competenceTo'].includes(key)?periodBoundary(source.excerpt,key,value):printedDates(source.excerpt).includes(value)))throw new ProductEvidenceFailure('purchaseDate','date');}
    else if(key==='category'){const matches:Record<string,RegExp>={electricity:/elettric|electric/iu,gas:/\bgas\b/iu,water:/acqua|water/iu,internet_services:/internet/iu,maintenance:/manutenzion/iu,repairs_works:/lavor|adeguamento|riparazion|installazion/iu,purchase_replacement:/acquisto|sostituzion/iu};if(!matches[value]?.test(source.excerpt))throw invalid();}
    else if(!normalize(source.excerpt).toLocaleLowerCase('it').includes(normalize(value).toLocaleLowerCase('it')))throw invalid();fields[key]={value,sources:[source]};
   }catch{reviewWarnings.push('field:'+key);}}

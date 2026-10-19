@@ -1,3 +1,4 @@
+import {billPeriodLabel,isUtility} from '../lib/billPeriod';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -277,7 +278,8 @@ export function EconomyExpenseRow(props: { expense: EconomyExpense; homeId: stri
   const location=useLocation();
   const navigate=useNavigate();
   const meta = [
-    formatCalendarDate(e.spentOn),
+    billPeriodLabel(e)??formatCalendarDate(e.spentOn),
+    isUtility(e.category)&&e.documentDate?'Emissione '+formatCalendarDate(e.documentDate):null,
     categoryLabel(e.category, props.caps),
     e.supplier,
     e.objectLink.state === 'linked' ? e.objectLink.value.name : null,
@@ -465,7 +467,7 @@ export function EconomyExpenseForm(props: {
       supplier: validateOptionalText(supplier, 120),
       documentNumber: validateOptionalText(documentNumber, 80),
       documentDate: validateOptionalDate(documentDate),
-      competence: validateCompetence(competenceFrom, competenceTo),
+      competence: isUtility(category)&&(!expense||category!==expense.category)&&(!competenceFrom||!competenceTo)?'Indica inizio e fine del periodo di riferimento della bolletta.':validateCompetence(competenceFrom, competenceTo),
       dueOn: validateOptionalDate(dueOn),
     };
     setErrors(errs);
@@ -625,7 +627,7 @@ export function EconomyExpenseForm(props: {
           Data della spesa
         </label>
         <span id={`${id}-spentOn-hint`} className={ui.hint}>
-          Decide in quale periodo compare il costo. Non è la data di pagamento.
+          Per le bollette il periodo di riferimento decide dove compare il costo. Per le altre spese vale questa data. Non indica il pagamento.
         </span>
         <input
           id={`${id}-spentOn`}
@@ -736,15 +738,16 @@ export function EconomyExpenseForm(props: {
 
       </details>
 
-      <details className={styles.details} open={!!(expense && (expense.supplier || expense.documentNumber || expense.documentDate || expense.competenceFrom || expense.dueOn)) || !!(errors.supplier || errors.documentNumber || errors.documentDate || errors.competence || errors.dueOn)}>
-        <summary>Dettagli aggiuntivi (facoltativi)</summary>
+      <details className={styles.details} open={isUtility(category) || !!(expense && (expense.supplier || expense.documentNumber || expense.documentDate || expense.competenceFrom || expense.dueOn)) || !!(errors.supplier || errors.documentNumber || errors.documentDate || errors.competence || errors.dueOn)}>
+        <summary>{isUtility(category)?'Periodo di riferimento, emissione e scadenza':'Dettagli aggiuntivi (facoltativi)'}</summary>
         <Field id={`${id}-supplier`} label="Fornitore" autoComplete="off" value={supplier} disabled={disabled} onChange={(e) => setSupplier(e.target.value)} error={errors.supplier} />
         <Field id={`${id}-documentNumber`} label="Numero del documento" autoComplete="off" value={documentNumber} disabled={disabled} onChange={(e) => setDocumentNumber(e.target.value)} error={errors.documentNumber} />
-        {dateField('documentDate', 'Data del documento', documentDate, setDocumentDate)}
+        {dateField('documentDate', 'Data di emissione', documentDate, setDocumentDate)}
         {err('documentDate')}
         <fieldset className={ui.field} style={{ border: 0, padding: 0, margin: 0 }}>
-          <legend className={ui.label}>Periodo di competenza</legend>
-          <span className={ui.hint}>Per esempio i mesi di una bolletta. Inizio e fine insieme, oppure nessuno dei due.</span>
+          <legend className={ui.label}>Periodo di riferimento</legend>
+          {isUtility(category)&&<label className={ui.label}>Mese di riferimento (bolletta mensile)<input type="month" className={ui.input} value={competenceFrom&&competenceFrom.slice(0,7)===competenceTo.slice(0,7)?competenceFrom.slice(0,7):''} disabled={disabled} onChange={e=>{const m=e.target.value;setCompetenceFrom(m?m+'-01':'');setCompetenceTo(m?m+'-'+new Date(Number(m.slice(0,4)),Number(m.slice(5,7)),0).getDate():'');}}/></label>}
+          <span className={ui.hint}>Per le bollette questo periodo determina il mese nei riepiloghi. Un intervallo di più mesi è contato una sola volta nel mese iniziale.</span>
           <div className={styles.range}>
             {dateField('competence', 'Dal', competenceFrom, setCompetenceFrom)}
             {dateField('competenceTo', 'Al', competenceTo, setCompetenceTo, 'competence')}
