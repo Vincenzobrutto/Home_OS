@@ -26,3 +26,5 @@ test('H2: pattern letterale e cursori legati a filtri/contesto, non limit', () =
   assert.deepEqual(s.searchAnchor(legacy, a, h, s.searchFilters({ limit: 20 })), row); assert.throws(() => s.searchAnchor(legacy, a, h, filters));
   for (const q of [{ limit: 20, cursor: '!' }, { limit: 51 }, { limit: 20, unknown: 'x' }]) assert.throws(() => s.searchFilters(q));
 });
+
+test('house filters are validated and cursor-bound separately from the complete archive',()=>{const a=randomUUID(),h=randomUUID(),row={id:randomUUID(),createdAt:new Date('2026-10-19T08:00:00Z')};for(const collection of ['house','floor_plans','contracts']){const f=s.searchFilters({limit:20,collection});assert.equal(f.collection,collection);const c=s.searchCursor(row,a,h,f);assert.equal(s.searchAnchor(c,a,h,f).id,row.id);assert.throws(()=>s.searchAnchor(c,a,h,s.searchFilters({limit:20,collection:'all'})));}assert.throws(()=>s.searchFilters({limit:20,collection:'unknown'}));});

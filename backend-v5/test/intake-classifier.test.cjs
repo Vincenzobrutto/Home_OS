@@ -41,3 +41,5 @@ test('floor plans are building documents with page evidence, not product proposa
  assert.equal(result.parts[0].kind,'floor_plan');assert.deepEqual(result.collections,['building']);
  assert.equal(result.sources[0].page,1);assert(result.sources[0].excerpt.includes('Planimetria'));
 });
+
+test('housing contracts have an explicit category without classifying generic supply clauses as contracts',()=>{const result=classifyText(['Contratto di locazione']);assert(result.parts.some(p=>p.kind==='contract'));assert.deepEqual(result.collections,['contracts']);assert.equal(classifyText(['condizioni del contratto di fornitura']),null);});

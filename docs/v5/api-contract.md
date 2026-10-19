@@ -92,3 +92,7 @@ POST `/homes/:homeId/object-onboarding/drafts/:id/document-kind`, Idempotency-Ke
 ## Bollette e periodo — 19 ottobre 2026
 
 Nessun nuovo campo o endpoint: economy-v1 usa competenceFrom (quando sono presenti entrambi gli estremi e la categoria è un'utenza) per filtri temporali, ordinamento, cursore, totali e confronti. Emissione documentDate e scadenza dueOn restano separate. Intervalli conteggiati una volta nel mese iniziale, senza prorata. Record senza periodo: fallback spentOn. I vecchi cursori dell'elenco economy sono invalidati dal binding v2. [Dettagli](bill-reference-period-20261019.md).
+
+## Ricerca documenti: casa, planimetrie e contratti — 19 ottobre 2026
+
+collection accetta inoltre house e floor_plans come viste virtuali, contracts come nuova raccolta reale. Il tipo documentale contract appartiene a contracts. Nessun nuovo endpoint o copia: filtri prima del paging e stesso controllo fonti/permissi. [Regole](house-document-navigation-20261019.md).

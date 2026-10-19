@@ -18,7 +18,7 @@ export function searchFilters(query: SearchDocumentsDto) {
   if (!Number.isSafeInteger(query.limit) || query.limit < 1 || query.limit > 50) throw invalid();
   if (query.cursor !== undefined && (typeof query.cursor !== 'string' || !/^[A-Za-z0-9_-]{1,512}$/.test(query.cursor))) throw invalid('Pagina non valida.');
   const collection = query.collection ?? 'all';
-  if (typeof collection !== 'string' || (collection !== 'all' && !Object.hasOwn(DOCUMENT_COLLECTIONS, collection))) throw invalid();
+  if (typeof collection !== 'string' || (!['all','house','floor_plans'].includes(collection) && !Object.hasOwn(DOCUMENT_COLLECTIONS, collection))) throw invalid();
   const workflow=query.workflow??'all';if(!['all','pending','completed','to_compile','review'].includes(workflow))throw invalid();
   return { q, format, visibility, collection, workflow };
 }

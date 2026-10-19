@@ -98,7 +98,7 @@ export class DocumentsService implements OnModuleInit {
         ${filters.workflow==='all'?Prisma.empty:['pending','completed'].includes(filters.workflow)?Prisma.sql`AND ${completed}=${filters.workflow==='completed'}`:Prisma.sql`AND ${state}=${filters.workflow}`}
         ${filters.visibility === 'all' ? Prisma.empty : Prisma.sql`AND d.visibility::text=${filters.visibility}`}
         ${filters.format === 'all' ? Prisma.empty : Prisma.sql`AND v."mimeType"=${mime[filters.format]}`}
-        ${filters.collection === 'all' ? Prisma.empty : filters.collection === 'unclassified' ? Prisma.sql`AND (o.id IS NULL OR ${filters.collection}=ANY(o.collections))` : Prisma.sql`AND ${filters.collection}=ANY(o.collections)`}
+        ${filters.collection === 'all' ? Prisma.empty : filters.collection === 'house' ? Prisma.sql`AND o.collections && ARRAY['building','energy','technical','contracts']::text[]` : filters.collection === 'floor_plans' ? Prisma.sql`AND EXISTS(SELECT 1 FROM jsonb_array_elements(o.parts) part WHERE part->>'kind'='floor_plan')` : filters.collection === 'unclassified' ? Prisma.sql`AND (o.id IS NULL OR ${filters.collection}=ANY(o.collections))` : Prisma.sql`AND ${filters.collection}=ANY(o.collections)`}
         ${!filters.q ? Prisma.empty : Prisma.sql`AND (normalize(COALESCE(o.title,d.name),NFC) COLLATE "und-x-icu" ILIKE ${pattern} ESCAPE '\\' OR normalize(v."originalFilename",NFC) COLLATE "und-x-icu" ILIKE ${pattern} ESCAPE '\\')`}
         ${!anchor ? Prisma.empty : Prisma.sql`AND (d."createdAt"<${anchorTime}::timestamp OR (d."createdAt"=${anchorTime}::timestamp AND d.id<${anchor.id}))`}
         ORDER BY d."createdAt" DESC,d.id DESC LIMIT ${query.limit + 1} FOR SHARE OF d`);

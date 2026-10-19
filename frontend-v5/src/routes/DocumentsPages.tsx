@@ -74,7 +74,7 @@ export function DocumentsPage() {
   const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
   const [params, setParams] = useSearchParams();
   const uploadVisible=uploadOpen||params.has('aggiungi');
-  const applied = useMemo(() => ({...filtersFromParams(params), workflow: params.get('workflow')==='to_compile'?'to_compile' as const:params.get('workflow')==='review'?'review' as const:params.get('workflow') === 'completed' ? 'completed' as const : params.get('workflow') === 'pending' ? 'pending' as const : params.get('q') ? 'all' as const : 'pending' as const}), [params]);
+  const applied = useMemo(() => ({...filtersFromParams(params), workflow: params.get('workflow')==='to_compile'?'to_compile' as const:params.get('workflow')==='review'?'review' as const:params.get('workflow') === 'completed' ? 'completed' as const : params.get('workflow') === 'pending' ? 'pending' as const : params.get('workflow')==='all'||['house','floor_plans','building','energy','contracts','technical'].includes(params.get('collection')??'') ? 'all' as const : params.get('q') ? 'all' as const : 'pending' as const}), [params]);
   const appliedKey = filtersKey(applied);
   const capabilities = useDocumentSearchCapabilities(home.id);
   const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
@@ -89,7 +89,7 @@ export function DocumentsPage() {
         <div>
           <span className={styles.eyebrow}>{home.name}</span>
           <div className={docs.titleActions}>
-            <h1 tabIndex={-1}>Documenti</h1>
+            <h1 tabIndex={-1}>{['house','floor_plans','building','energy','contracts','technical'].includes(applied.collection??'')?'Documenti della casa':'Documenti'}</h1>
             <span ref={setExportSlot} />
           </div>
           <p className={styles.lead}>{applied.workflow==='completed'?'Dati salvati e originali sempre disponibili.':applied.workflow==='all'?'Cerca tra tutti i documenti della casa.':'Qui trovi i documenti che richiedono ancora un passaggio.'}</p>
@@ -100,9 +100,10 @@ export function DocumentsPage() {
           </div>
         )}
       </div>
+      {['house','floor_plans','building','energy','contracts','technical'].includes(applied.collection??'')&&<section className={docs.panel} aria-label="Documenti della casa per tipologia"><h2>Esplora i documenti della casa</h2><p>Un unico archivio: ogni file resta al suo posto, senza copie. Le categorie dipendono dal tipo che hai salvato.</p><div className={docs.workflowTabs} role="group" aria-label="Tipologie della casa">{[['house','Tutti della casa'],['floor_plans','Planimetrie'],['building','Pratiche edilizie'],['energy','APE ed energia'],['contracts','Contratti'],['technical','Impianti']].map(([collection,label])=><button key={collection} type="button" className={cx(ui.btn,applied.collection===collection&&ui.primary)} aria-pressed={applied.collection===collection} onClick={()=>apply({...applied,collection:collection as DocumentSearchFilters['collection'],workflow:'all'})}>{label}</button>)}</div><Link to={'/home/'+encodeURIComponent(home.id)+'/documenti?workflow=all'}>Apri l’archivio completo</Link></section>}
       {params.has('documento-salvato')&&<Banner title="Documento organizzato" actions={<button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'completed'})}>Vedi nei Completati</button>}><p>Il salvataggio è riuscito. Il documento e l’originale restano disponibili.</p></Banner>}
       {canUpload&&uploadVisible&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={()=>closeUpload()}>Chiudi caricamento</button></section>}
-      <div className={docs.workflowTabs} role="group" aria-label="Stato dei documenti">{([['pending','Da fare'],['completed','Completati'],...(applied.q?[['all','Tutti'] as const]:[])] as const).map(([value,label])=><button key={value} type="button" className={cx(ui.btn,applied.workflow===value&&ui.primary)} aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
+      <div className={docs.workflowTabs} role="group" aria-label="Stato dei documenti">{([['pending','Da fare'],['completed','Completati'],...(applied.q||applied.workflow==='all'?[['all','Tutti'] as const]:[])] as const).map(([value,label])=><button key={value} type="button" className={cx(ui.btn,applied.workflow===value&&ui.primary)} aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
       {['to_compile','review'].includes(applied.workflow)&&<p role="status">Vista: {applied.workflow==='review'?'Proposte da rivedere':'Documenti da compilare'}. <button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'pending'})}>Mostra tutti i documenti da fare</button></p>}
       {!canUpload && (
         <p className={cx(docs.note, docs.panel)}>

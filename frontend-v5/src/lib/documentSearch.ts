@@ -22,6 +22,9 @@ export const VISIBILITY_FILTER_OPTIONS: Array<{ value: DocumentVisibilityFilter;
 ];
 export const COLLECTION_OPTIONS = [
   { value: 'all', label: 'Tutte le raccolte' },
+  {value:'house',label:'Documenti della casa'},
+  {value:'floor_plans',label:'Planimetrie'},
+  {value:'contracts',label:'Contratti'},
   { value: 'energy', label: 'Energia' },
   { value: 'building', label: 'Pratiche edilizie' },
   { value: 'technical', label: 'Impianti e documenti tecnici' },

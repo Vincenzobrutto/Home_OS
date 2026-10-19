@@ -7,13 +7,14 @@ import { Banner, cx } from './ui';
 import styles from './AppShell.module.css';
 import { EmailVerificationNotice } from './EmailVerificationNotice';
 
-export type SectionId = 'casa' | 'attivita' | 'documenti' | 'spese';
+export type SectionId = 'casa' | 'attivita' | 'documenti' | 'spese' | 'rubrica';
 
 export const SECTIONS: Array<{ id: SectionId; label: string; icon: IconName; available: boolean }> = [
   { id: 'casa', label: 'Casa', icon: 'home', available: true },
   { id: 'attivita', label: 'Attività', icon: 'activity', available: true },
   { id: 'documenti', label: 'Documenti', icon: 'document', available: true },
   { id: 'spese', label: 'Spese', icon: 'expenses', available: true },
+  { id: 'rubrica', label: 'Rubrica', icon: 'contacts', available: true },
 ];
 
 

@@ -1,3 +1,7 @@
+## Documenti della casa e Rubrica — 19 ottobre 2026
+
+Esplora la casa con tre accessi: Oggetti e impianti, Ambienti, Documenti della casa. Rubrica sotto Spese; archivio unico con filtri Planimetrie/Pratiche/APE/Contratti/Impianti. [Dettagli](v5/house-document-navigation-20261019.md).
+
 ## Bollette: periodo di riferimento — 19 ottobre 2026
 
 Completati raggruppamento mensile, filtri e totali per competenza, con emissione e scadenza separate. SORGENIA corretta sulla registrazione esistente. [Regole, verifica e limiti](v5/bill-reference-period-20261019.md).

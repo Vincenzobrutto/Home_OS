@@ -2,6 +2,7 @@ import { DOCUMENT_KINDS, collectionsFor, classificationParts, type DocumentKind 
 /** Real, conservative local text matching. Not AI, OCR, semantic validation or a fixture lookup. */
 export const LOCAL_CLASSIFIER = { provider: 'local_text_v1', label: 'Classificazione locale del testo', isSimulation: false, costUsd: '0.000000', externalTransmission: false } as const;
 const rules: Array<[DocumentKind, RegExp, string]> = [
+  ['contract', /\bcontratto\s+di\s+(?:locazione|affitto|compravendita|mutuo|comodato)\b/iu, 'Contratto'],
   ['ape', /attestato\s+di\s+prestazione\s+energetica/iu, 'APE'],
   ['energy_certificate', /certificat[oa]\s+energetic[oa]/iu, 'Certificato energetico'],
   ['cila', /\bCILA\b|comunicazione\s+(?:di\s+)?inizio\s+lavori\s+asseverata/iu, 'CILA'],

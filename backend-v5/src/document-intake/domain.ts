@@ -2,10 +2,10 @@ import { invalid, object, text, uuid, version } from '../review/domain';
 import { MAX_FILE_BYTES } from '../documents/storage';
 
 export const INTAKE_LIMITS = { maxFiles: 20, maxTotalBytes: 200 * 1024 * 1024, maxFileBytes: MAX_FILE_BYTES, uploadConcurrency: 2, maxParts: 12, acceptedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png'] } as const;
-export const DOCUMENT_COLLECTIONS = { energy: 'Energia', building: 'Pratiche edilizie', technical: 'Impianti e documenti tecnici', condominium: 'Condominio', purchases: 'Acquisti e garanzie', utilities: 'Bollette', unclassified: 'Da organizzare' } as const;
+export const DOCUMENT_COLLECTIONS = { contracts:'Contratti', energy: 'Energia', building: 'Pratiche edilizie', technical: 'Impianti e documenti tecnici', condominium: 'Condominio', purchases: 'Acquisti e garanzie', utilities: 'Bollette', unclassified: 'Da organizzare' } as const;
 export type DocumentCollection = keyof typeof DOCUMENT_COLLECTIONS;
 export const DOCUMENT_KINDS = {
-  ape: 'energy', energy_certificate: 'energy', cila: 'building', scia: 'building', building_permit: 'building', habitability: 'building', agibility: 'building', agibility_record: 'building', floor_plan: 'building',
+  contract:'contracts', ape: 'energy', energy_certificate: 'energy', cila: 'building', scia: 'building', building_permit: 'building', habitability: 'building', agibility: 'building', agibility_record: 'building', floor_plan: 'building',
   system_diagram: 'technical', conformity_declaration: 'technical', system_booklet: 'technical',
   condominium_rules: 'condominium', condominium_minutes: 'condominium', millesimal_tables: 'condominium',
   purchase_order:'purchases',delivery_notice:'purchases',product_label:'purchases',purchase_document:'purchases',receipt: 'purchases', invoice: 'purchases', warranty: 'purchases', manual: 'purchases', utility_bill: 'utilities', other: 'unclassified',

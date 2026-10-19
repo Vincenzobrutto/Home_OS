@@ -1,7 +1,7 @@
 import { COLLECTIONS, type Collection } from './model';
 import styles from '../economy/economy.module.css';
 
-export type CollectionFilter = 'all' | Collection;
+export type CollectionFilter = 'all' | 'house' | 'floor_plans' | Collection;
 
 /**
  * Filtri delle raccolte sull'archivio, controllati a props. Le raccolte sono filtri, non copie, e non sono
@@ -14,7 +14,7 @@ export function DocumentCollectionFilters(props: {
   countsExact?: boolean;
   label?: string;
 }) {
-  const options: Array<{ id: CollectionFilter; label: string }> = [{ id: 'all', label: 'Tutti' }, ...COLLECTIONS];
+  const options: Array<{ id: CollectionFilter; label: string }> = [{ id: 'all', label: 'Tutti' },{id:'house',label:'Documenti della casa'},{id:'floor_plans',label:'Planimetrie'}, ...COLLECTIONS];
   return (
     <nav className={styles.families} aria-label={props.label ?? 'Raccolte'}>
       {options.map(o => {

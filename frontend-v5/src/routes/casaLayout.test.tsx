@@ -17,6 +17,11 @@ it('[mock] Casa mette le azioni prima dei dettagli e aprire il ruolo non scrive 
   expect(await screen.findByRole('link',{name:/Proposte da rivedere 1/})).toHaveAttribute('href',`/home/${homeB1.id}/documenti?workflow=review`);
   expect(screen.getByRole('link',{name:/Documenti da compilare 26/})).toHaveAttribute('href',`/home/${homeB1.id}/documenti?workflow=to_compile`);
   expect(screen.queryByText('Casa pending source')).not.toBeInTheDocument();expect(screen.queryByText('Private other account')).not.toBeInTheDocument();
+  const explore=screen.getByRole('region',{name:'Esplora la casa'});
+  expect(within(explore).getByRole('link',{name:/Documenti della casa/})).toHaveAttribute('href',`/home/${homeB1.id}/documenti?collection=house`);
+  expect(within(explore).queryByRole('link',{name:/Rubrica/})).not.toBeInTheDocument();
+  expect(within(explore).getAllByRole('link')).toHaveLength(3);
+  expect(within(screen.getAllByRole('navigation',{name:'Sezioni di '+homeB1.name})[0]!).getAllByRole('link').map(link=>link.textContent)).toEqual(['Casa','Attività','Documenti','Spese','Rubrica']);
   const actions = screen.getByRole('region', { name: 'Azioni rapide' });
   expect(within(actions).getByRole('link', { name: 'Aggiungi documento' })).toHaveAttribute('href', `/home/${homeB1.id}/documenti?aggiungi=1`);
   expect(within(actions).getByRole('link', { name: 'Registra una spesa' })).toHaveAttribute('href', `/home/${homeB1.id}/spese?nuova-spesa=1`);

@@ -12,7 +12,7 @@ import { checkImageDimensions } from './image-limits';
 const shape = (properties: Record<string, unknown>) => ({ type: 'object', properties, required: Object.keys(properties), additionalProperties: false });
 // Wire schema uses only Anthropic-supported constraints. Full bounds are enforced locally.
 const evidence = shape({ page: { type: 'integer' }, excerpt: { type: 'string' }, region: { anyOf: [{ type: 'null' }, shape({ x: { type: 'number' }, y: { type: 'number' }, width: { type: 'number' }, height: { type: 'number' } })] } });
-export const OBJECT_ONBOARDING_PROMPT_VERSION = 'document-understanding-v20';
+export const OBJECT_ONBOARDING_PROMPT_VERSION = 'document-understanding-v21';
 export const OBJECT_ONBOARDING_SCHEMA = shape({
   documentKind: { type: 'string', enum: ['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'device_label', 'utility_bill', 'conformity_declaration', 'house_document', 'unsupported'] },
   houseExpenses:{type:'array',items:shape({fields:{type:'array',items:shape({field:{type:'string',enum:['title','supplier','category','documentNumber','documentDate','competenceFrom','competenceTo','dueOn']},value:{type:'string'},evidence})},amountCandidates:{type:'array',items:shape({id:{type:'string'},amountCents:{type:'integer'},role:{type:'string',enum:['current_document_total','amount_due','arrears_balance','taxable','tax','line_total','other']},label:{type:'string'},evidence})}})},

@@ -1,6 +1,7 @@
 import styles from './ui.module.css';
 
 const paths = {
+  contacts:'M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0M5 21v-2a7 7 0 0 1 14 0v2M20 8h3M20 12h3',
   home: 'M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5M10 20v-5.5h4V20',
   activity: 'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
   document: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',

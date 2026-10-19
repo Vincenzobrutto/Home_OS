@@ -69,8 +69,8 @@ export type UploadDocumentInput = { file: File; name: string; visibility: Docume
 export type DocumentFormatFilter = 'all' | 'pdf' | 'jpeg' | 'png';
 export type DocumentVisibilityFilter = 'all' | DocumentVisibility;
 /** Filtri canonici: q già trim + NFC ('' = nessuna ricerca testuale). */
-export type DocumentCollection = 'energy' | 'building' | 'technical' | 'condominium' | 'purchases' | 'utilities' | 'unclassified';
-export type DocumentSearchFilters = { q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter; collection?: 'all' | DocumentCollection; workflow?: 'all'|'pending'|'completed'|'to_compile'|'review' };
+export type DocumentCollection = 'contracts' | 'energy' | 'building' | 'technical' | 'condominium' | 'purchases' | 'utilities' | 'unclassified';
+export type DocumentSearchFilters = { q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter; collection?: 'all' | 'house' | 'floor_plans' | DocumentCollection; workflow?: 'all'|'pending'|'completed'|'to_compile'|'review' };
 
 export type DocumentSearchCapabilities = {
   collections?: Record<DocumentCollection, string>;

@@ -9,7 +9,7 @@
 // ---------------------------------------------------------------------------------------------
 // Catalogo (dal contratto)
 
-export type Collection = 'energy' | 'building' | 'technical' | 'condominium' | 'purchases' | 'utilities' | 'unclassified';
+export type Collection = 'contracts' | 'energy' | 'building' | 'technical' | 'condominium' | 'purchases' | 'utilities' | 'unclassified';
 export type DocumentKind =
   | 'ape' | 'energy_certificate'
   | 'floor_plan' | 'cila' | 'scia' | 'building_permit' | 'habitability' | 'agibility' | 'agibility_record'
@@ -17,9 +17,10 @@ export type DocumentKind =
   | 'condominium_rules' | 'condominium_minutes' | 'millesimal_tables'
   | 'purchase_order' | 'delivery_notice' | 'product_label' | 'purchase_document' | 'receipt' | 'invoice' | 'warranty' | 'manual'
   | 'utility_bill'
-  | 'other';
+  | 'contract' | 'other';
 
 export const COLLECTIONS: ReadonlyArray<{ id: Collection; label: string }> = [
+  {id:'contracts',label:'Contratti'},
   { id: 'energy', label: 'Energia' },
   { id: 'building', label: 'Pratiche edilizie' },
   { id: 'technical', label: 'Impianti e documenti tecnici' },
@@ -31,7 +32,7 @@ export const COLLECTIONS: ReadonlyArray<{ id: Collection; label: string }> = [
 export const collectionLabel = (c: Collection) => COLLECTIONS.find(x => x.id === c)?.label ?? c;
 
 const KIND_COLLECTION: Record<DocumentKind, Collection> = {
-  ape: 'energy', energy_certificate: 'energy',
+  contract:'contracts', ape: 'energy', energy_certificate: 'energy',
   floor_plan: 'building', cila: 'building', scia: 'building', building_permit: 'building', habitability: 'building', agibility: 'building', agibility_record: 'building',
   system_diagram: 'technical', conformity_declaration: 'technical', system_booklet: 'technical',
   condominium_rules: 'condominium', condominium_minutes: 'condominium', millesimal_tables: 'condominium',
@@ -40,7 +41,7 @@ const KIND_COLLECTION: Record<DocumentKind, Collection> = {
   other: 'unclassified',
 };
 export const KIND_LABEL: Record<DocumentKind, string> = {
-  ape: 'APE', energy_certificate: 'Certificato energetico',
+  contract:'Contratto', ape: 'APE', energy_certificate: 'Certificato energetico',
   floor_plan: 'Planimetria', cila: 'CILA', scia: 'SCIA', building_permit: 'Titolo edilizio', habitability: 'Abitabilità', agibility: 'Agibilità', agibility_record: 'Visura agibilità (non certificato)',
   system_diagram: 'Schema di impianto', conformity_declaration: 'Dichiarazione di conformità', system_booklet: 'Libretto di impianto',
   condominium_rules: 'Regolamento condominiale', condominium_minutes: 'Verbale di assemblea', millesimal_tables: 'Tabelle millesimali',
