@@ -35,7 +35,7 @@ export function SpeseSummary({ home,compact=false }: { home: Home;compact?:boole
         />
       ) : (
         <>
-          {compact?<p aria-label={`Totali del ${data.year}`}><span>Totale registrato</span><br/><strong style={{fontSize:"2rem"}}>{formatCents(data.totalCents)}</strong><br/><span>Costi registrati, non pagamenti</span></p>:<SummaryTotals data={data} />}
+          {compact?<p aria-label={`Totali del ${data.year}`}><span>Totale registrato · Anno {data.year}</span><br/><strong style={{fontSize:"2rem"}}>{formatCents(data.totalCents)}</strong><br/><span>Costi registrati, non pagamenti</span></p>:<SummaryTotals data={data} />}
           {data.lastItems.length === 0 ? (
             <p className={pages.muted}>Nessuna spesa attiva registrata nel {data.year}.</p>
           ) : (

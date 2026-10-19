@@ -236,3 +236,5 @@
 @media(max-width:600px){:global(.activity-heading){flex-direction:column;align-items:stretch}:global(.activity-heading button){width:100%}}
 
 @media(max-width:600px){:global(.activity-page-heading){align-items:stretch}:global(.activity-page-heading>button){width:100%}}
+
+:global(.activity-history){display:flex;border-top:1px solid var(--color-border);padding-top:12px;margin:-8px 0 20px}:global(.activity-history select){min-height:44px}

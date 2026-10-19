@@ -102,7 +102,7 @@ export function ActivitiesSection({ home }: { home: Home }) {
             {o.value === 'all' ? 'Tutte aperte' : o.label}{' '}{count !== undefined && <span className="activity-count">{count}</span>}
           </button>;
         })}
-        <label className={styles.filter}>Storico<select aria-label="Stato" className={styles.select} value={filters.state} onChange={e=>setFilters({state:e.target.value as ActivityFilters['state'],due:'all'})}>{STATE_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.value === 'open' ? 'Aperte' : o.label}</option>)}</select></label>
+        </div><div className="activity-history"><label className={styles.filter}>Storico<select aria-label="Stato" className={styles.select} value={filters.state} onChange={e=>setFilters({state:e.target.value as ActivityFilters['state'],due:'all'})}>{STATE_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.value === 'open' ? 'Aperte' : o.label}</option>)}</select></label>
       </div>
       {summary.isError && <p role="status">Conteggi non disponibili. Puoi comunque filtrare le attività.</p>}
       <h3 id="activity-results" tabIndex={-1} aria-live="polite">{filters.state === 'open' ? (filters.due === 'all' ? 'Tutte le attività aperte' : DUE_OPTIONS.find(o=>o.value===filters.due)?.label) : STATE_OPTIONS.find(o=>o.value===filters.state)?.label}{filters.state === 'open' && !summary.isError && summary.data && <> · {filters.due === 'all' ? Object.values(summary.data.counts).reduce((a,b)=>a+b,0) : summary.data.counts[filters.due]} attività</>}</h3>

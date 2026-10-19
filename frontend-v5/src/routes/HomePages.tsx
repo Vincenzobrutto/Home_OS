@@ -11,7 +11,7 @@ import { useAccount, useSession } from '../session/session';
 import { ROLE_LABEL } from './HomesPages';
 import { ScadenzeSummary } from './ScadenzeSummary';
 import { SpeseSummary } from './SpeseSummary';
-import { CasaReviewSummary } from './CasaTasksSummary';
+import {CasaCompletion} from './CasaCompletion';
 import { lazyPage } from './lazyPage';
 
 const CasaSharingSummary = lazyPage(() => import('./CasaSharingSummary').then(m => function HomeSharing() {
@@ -20,7 +20,6 @@ const CasaSharingSummary = lazyPage(() => import('./CasaSharingSummary').then(m 
 }));
 import styles from './pages.module.css';
 import casa from './casa.module.css';
-import {CasaDocumentsSummary} from './CasaDocumentsSummary';
 
 type HomeContext = { home: Home };
 
@@ -131,10 +130,7 @@ export function CasaPage() {
       </section>
       <div className={casa.deadlines}><ScadenzeSummary home={home} /></div>
 <div className={casa.overview}><section className={ui.card} aria-label="Esplora la casa"><h2>Esplora la casa</h2><div className={casa.destinations}>{[['oggetti','Oggetti e impianti','Le tue schede'],['ambienti','Ambienti','Organizza le stanze'],['documenti?collection=house','Documenti della casa','Planimetrie, pratiche edilizie, APE e contratti']].map(([path,label,hint])=><Link key={path} to={`/home/${encodeURIComponent(home.id)}/${path}`}><span><strong>{label}</strong><small>{hint}</small></span><Icon name="arrow"/></Link>)}</div><p className={styles.small}>Oggetti e spese personali; ambienti condivisi.</p></section><SpeseSummary home={home} compact/></div>
-      <section className={casa.todo} aria-label="Da completare"><h2>Da completare</h2>
-      <div className={casa.todoCounts}><CasaDocumentsSummary homeId={home.id}/>
-      <CasaReviewSummary homeId={home.id} compact/></div>
-      </section>
+      <CasaCompletion homeId={home.id}/>
       <div className={casa.secondary}>
         <CasaSharingSummary />
         <details className={cx(ui.card, styles.wide,casa.houseDetails)}>

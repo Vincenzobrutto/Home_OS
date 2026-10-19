@@ -4,19 +4,20 @@ import { Banner, ErrorState, Loading, cx, ui } from '../components/ui';
 import { sharingErrorMessage } from '../lib/sharing';
 import { useShares, useSharingCapabilities } from '../sharing/hooks';
 import styles from './pages.module.css';
+import casa from './casa.module.css';
 
 export function CasaSharingSummary({ homeId }: { homeId: string }) {
   const caps = useSharingCapabilities(homeId);
   const notActive = caps.isError && isApiError(caps.error) && caps.error.kind === 'http' && caps.error.status === 404;
   return (
-    <section className={cx(ui.card, styles.wide)} aria-labelledby="casa-condivisioni">
-      <h2 id="casa-condivisioni" className={styles.cardTitle}>Condivisioni</h2>
-      <p className={styles.muted}>Consegna originali scelti da te a una persona precisa, per un periodo limitato, senza darle accesso alla casa.</p>
-      {caps.isPending ? <Loading label="Verifica delle condivisioni…" /> : notActive || (caps.isSuccess && !caps.data.enabled) ? (
+    <section className={cx(ui.card, styles.wide,casa.sharingCompact)} aria-labelledby="casa-condivisioni">
+      <details><summary><h2 id="casa-condivisioni" className={styles.cardTitle}>Condivisioni</h2></summary>
+      <p className={styles.muted}>Consegna originali scelti da te a una persona precisa, per un periodo limitato, senza darle accesso alla casa.</p></details>
+      <div className={casa.sharingAttention}>{caps.isPending ? <Loading label="Verifica delle condivisioni…" /> : notActive || (caps.isSuccess && !caps.data.enabled) ? (
         <p className={styles.muted}>Le condivisioni non sono attive su questo servizio.</p>
       ) : caps.isError ? (
         <ErrorState error={caps.error} message={sharingErrorMessage(caps.error)} onRetry={() => void caps.refetch()} retrying={caps.isFetching} />
-      ) : <SharingAttention homeId={homeId} />}
+      ) : <SharingAttention homeId={homeId} />}</div>
       <p className={styles.spaced}><Link className={ui.btn} to={`/home/${encodeURIComponent(homeId)}/condivisioni`}>Apri le condivisioni</Link></p>
     </section>
   );

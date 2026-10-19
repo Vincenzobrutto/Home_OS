@@ -40,3 +40,8 @@
 @media(max-width:700px){.deadlineFooter>p:last-child{margin-left:0}}
 
 .secondary{grid-template-columns:minmax(0,1fr)}
+
+.quietLine{display:flex;align-items:center;flex-wrap:wrap;gap:6px 18px}.quietLine p{margin:0}.quietLine a,.deadlineLinks a{min-height:44px;display:inline-flex;align-items:center;font-size:.875rem}.countDetails{font-size:.875rem}.countDetails>summary{cursor:pointer;min-height:44px;align-content:center}.countDetails[open]>.compactCounts,.countDetails[open]>.todoCounts{margin-top:8px}.sharingCompact{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;align-items:start}.sharingCompact>details{grid-column:1;grid-row:1}.sharingCompact>details>summary{cursor:pointer;min-height:44px;align-content:center}.sharingCompact h2{display:inline;font-size:1rem}.sharingCompact>p{grid-column:2;grid-row:1;margin:0}.sharingAttention{grid-column:1/-1;grid-row:2}.sharingAttention:empty{display:none}
+@media(max-width:700px){.destinations{grid-template-columns:1fr;gap:0}.destinations a{padding:12px 0;min-height:52px}.destinations a>span:last-child{display:block}.destinations small{display:block;font-size:.8rem}.compactCounts .summaryRow strong,.todoCounts .summaryRow strong{font-size:.8rem}.deadlineFooter>p{font-size:.8rem}.sharingCompact{padding:14px}.sharingCompact>p a{padding:8px 10px;font-size:.8rem}}
+
+.casa>.deadlines>section.quietDeadline{background:var(--color-surface);border-left:1px solid var(--color-border)}.quietDeadline .deadlineFooter{margin-top:0}.quietDeadline .deadlineFooter>p:first-child{font-size:.9rem}
