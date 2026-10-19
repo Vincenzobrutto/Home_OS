@@ -1,3 +1,5 @@
+import { FloorPlanController } from './floor-plan.controller';
+import { FloorPlanService } from './floor-plan.service';
 import { Module } from '@nestjs/common';
 import { DocumentsModule } from '../documents/documents.module';
 import { ReviewModule } from '../review/review.module';
@@ -14,5 +16,5 @@ import { OnboardingAiAnalysis, ObjectOnboardingAnthropicTransport } from './ai-a
 import { ObjectOnboardingAnthropicProvider } from './anthropic-provider';
 import { DocumentIntakeModule } from '../document-intake/intake.module';
 import { AutomaticIntakeService } from './automatic.service';
-@Module({imports:[DocumentsModule,ReviewModule,HomeObjectsModule,DocumentIntakeModule],controllers:[ObjectOnboardingController],providers:[AutomaticIntakeService,ObjectOnboardingAccess,ObjectOnboardingService,OnboardingJobService,OnboardingJobWorker,OnboardingAiBudget,OnboardingAiConfig,OnboardingAiAnalysis,ObjectOnboardingAnthropicTransport,ActivityClock,PdfTextExtractor,{provide:ObjectOnboardingAnthropicProvider,useFactory:(parser:PdfTextExtractor,transport:ObjectOnboardingAnthropicTransport)=>new ObjectOnboardingAnthropicProvider(parser,transport),inject:[PdfTextExtractor,ObjectOnboardingAnthropicTransport]}]})
+@Module({imports:[DocumentsModule,ReviewModule,HomeObjectsModule,DocumentIntakeModule],controllers:[ObjectOnboardingController,FloorPlanController],providers:[FloorPlanService,AutomaticIntakeService,ObjectOnboardingAccess,ObjectOnboardingService,OnboardingJobService,OnboardingJobWorker,OnboardingAiBudget,OnboardingAiConfig,OnboardingAiAnalysis,ObjectOnboardingAnthropicTransport,ActivityClock,PdfTextExtractor,{provide:ObjectOnboardingAnthropicProvider,useFactory:(parser:PdfTextExtractor,transport:ObjectOnboardingAnthropicTransport)=>new ObjectOnboardingAnthropicProvider(parser,transport),inject:[PdfTextExtractor,ObjectOnboardingAnthropicTransport]}]})
 export class ObjectOnboardingModule {}

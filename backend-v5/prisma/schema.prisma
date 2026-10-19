@@ -678,6 +678,7 @@ model ObjectOnboardingDraft {
   @@index([accountId,homeId,state,updatedAt,id])
 }
 model ObjectOnboardingJob {
+  purpose String @default("products")
   key String
   digest String
   firstStartedAt DateTime?

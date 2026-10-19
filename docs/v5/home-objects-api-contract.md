@@ -1,3 +1,7 @@
+## Ambienti da planimetria — 19 ottobre 2026
+
+Aggiunti endpoint floor-plan-layouts, bozza privata e conferma atomica verso HomeRoom, senza duplicare gli originali. [Contratto e comportamento](floor-plan-rooms-20261019.md#api-e-persistenza).
+
 # G1 — home-objects-v1: ambienti, oggetti e collegamenti
 
 14 ottobre 2026. G1 integrata e verificata in locale: backend/schema, frontend Claude, client/API e browser reali. Contratto baseline0b12d8a con precisazioni history/importi dei riferimenti durante integrazione. Esito autorevole g1-integration-review.md. Fonte prodotto home-economy-module.md. API H1/H3a e caldaie M3/M4 conservate.

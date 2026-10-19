@@ -1,0 +1,32 @@
+import {act,render,screen,waitFor} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import {expect,it,vi} from 'vitest';
+import {MemoryRouter,Routes,Route} from 'react-router';
+import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
+const fixture=vi.hoisted(()=>({get:vi.fn(),mutate:vi.fn()}));
+vi.mock('../session/session',()=>({useAccount:()=>({id:'account'}),useApi:()=>({getFloorPlan:fixture.get,mutateFloorPlan:fixture.mutate})}));
+vi.mock('../routes/HomePages',()=>({useCurrentHome:()=>({id:'home'})}));
+vi.mock('../documents/hooks',()=>({useDocumentFile:()=>({data:{blob:new Blob()},isPending:false}),useDocumentSearch:vi.fn()}));
+vi.mock('./PlanMap',()=>({PlanMap:({plan,onSelect}:{plan:{points:{number:number;name:string}[]};onSelect:(n:number)=>void})=><div>{plan.points.map(p=><button key={p.number} onClick={()=>onSelect(p.number)}>Punto {p.number}: {p.name}</button>)}</div>}));
+import {FloorPlanPage} from './FloorPlanPage';
+it('point five opens room five; rename, exclusion and mobile views retain fields without creating rooms',async()=>{
+ const points=[1,5].map(number=>({number,page:1,x:.1*number,y:.5,name:`Ambiente ${number}`,type:'other',included:true,roomId:null}));
+ const plan={points,view:{page:1,x:0,y:0,width:1,height:1},warnings:[]};
+ fixture.get.mockResolvedValue({document:{id:'doc',name:'Synthetic plan',version:1,sha256:'a'.repeat(64),mimeType:'application/pdf'},draft:{id:'draft',version:1,plan,bindings:{}},job:null,rooms:[],canEdit:true,budget:null});
+ HTMLElement.prototype.scrollIntoView=vi.fn(); const user=userEvent.setup();vi.stubGlobal('matchMedia',()=>({matches:true}));
+ const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
+ render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/plan/doc']}><Routes><Route path="/plan/:documentId" element={<FloorPlanPage/>}/></Routes></MemoryRouter></QueryClientProvider>);
+ await user.click(await screen.findByRole('button',{name:'Punto 5: Ambiente 5'}));
+ const input=screen.getByLabelText('Nome ambiente 5');await user.clear(input);await user.type(input,'Studio');
+ await user.click(screen.getByRole('button',{name:'Planimetria'}));await user.click(screen.getByRole('button',{name:'Elenco (2)'}));
+ expect(screen.getByLabelText('Nome ambiente 5')).toHaveValue('Studio');expect(screen.getByRole('button',{name:'Punto 5: Studio'})).toBeInTheDocument();
+ await user.click(screen.getAllByRole('checkbox',{name:'Includi'})[0]!);
+ expect(screen.getByRole('button',{name:'Conferma ambienti (1)'})).toBeEnabled();expect(fixture.mutate).not.toHaveBeenCalled();
+ // A background refresh must not advance the base version of local edits.
+ await act(async()=>{client.setQueryData(['account','account','home','home','floor-plan','doc'],{document:{id:'doc',name:'Synthetic plan',version:1,sha256:'a'.repeat(64),mimeType:'application/pdf'},draft:{id:'draft',version:2,plan,bindings:{}},job:null,rooms:[],canEdit:true,budget:null});});
+ expect(screen.getByLabelText('Nome ambiente 5')).toHaveValue('Studio');
+ fixture.mutate.mockResolvedValue({draft:{id:'draft',version:2,plan,bindings:{}},created:0,linked:0});
+ await user.click(screen.getByRole('button',{name:'Salva bozza'}));
+ await waitFor(()=>expect(fixture.mutate).toHaveBeenCalled());expect(fixture.mutate.mock.calls[0]![2]).toBe('draft');
+ expect(fixture.mutate.mock.calls[0]![3].expectedVersion).toBe(1);
+});

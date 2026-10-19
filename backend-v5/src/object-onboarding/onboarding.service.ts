@@ -107,7 +107,7 @@ export class ObjectOnboardingService {
     if(r.documentKind!==undefined&&!['purchase_document','utility_bill'].includes(String(r.documentKind)))throw invalid();
     return this.request(a, h, 'manual', documentId, { documentId,...(r.documentKind?{documentKind:r.documentKind}:{}) }, key, async tx => {
       const source = await this.access.source(tx, a, h, documentId); if (!source) throw onboardingDenied();
-      const prior = await tx.objectOnboardingDraft.findFirst({ where: { accountId: a, homeId: h, documentId, documentVersion: source.original!.version, documentSha256: source.original!.sha256, state: 'open' }, orderBy: { createdAt: 'desc' } });
+      const prior = await tx.objectOnboardingDraft.findFirst({ where: { accountId: a, homeId: h, documentId, documentVersion: source.original!.version, documentSha256: source.original!.sha256, mode:{not:'floor_plan'}, state: 'open' }, orderBy: { createdAt: 'desc' } });
       if (prior) return { draft: prior };
       const fingerprint = digest('manual:' + source.original!.sha256 + ':1'), item: ProductItem = { id: digest(documentId + fingerprint), fingerprint, fields: {}, quantity: null, nameTruncated: false, disposition: 'uncertain' };
       const organization = await tx.documentOrganization.findUnique({where:{accountId_homeId_documentId:{accountId:a,homeId:h,documentId}}});

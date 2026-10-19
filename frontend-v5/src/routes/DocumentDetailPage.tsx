@@ -142,6 +142,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
         </div>
       </div>
 
+      {canRead && doc.organization?.parts.some(p=>p.kind==='floor_plan') && <p><Link className={ui.btn} to={`/home/${props.home.id}/ambienti/da-planimetria/${doc.id}`}>Crea ambienti dalla planimetria</Link></p>}
       {canRead && <section className={ui.card}><DocumentBillEntry homeId={props.home.id} documentId={doc.id} documentKind={doc.organization?.parts[0]?.kind} houseDocument={!!houseDocumentType(doc.originalFilename+' '+doc.name,doc.organization?.parts.map(p=>p.kind))} bill={bill} allowPrepare /></section>}
       {canRead && <LinkedExpenses home={props.home} by={{ documentId: doc.id }} title="Spese collegate" addLabel="Registra una spesa da questo documento" />}
       {!bill&&<details><summary>Altri strumenti di analisi</summary>{props.analyzeHref&&<Link to={props.analyzeHref} className={ui.btn}>Analizza questo documento</Link>}<ReceiptEntry documentId={doc.id} /></details>}

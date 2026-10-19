@@ -41,8 +41,8 @@ export class OnboardingJobService {
     const q = object(query, ['documentId']), documentId = uuid(q.documentId);
     return this.receipts.run(a, h, false, async (tx, edit) => {
       const source = await this.receipts.source(tx,a,h,documentId); if (!source) throw deny();
-      const drafts = await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256},orderBy:[{updatedAt:'desc'},{id:'desc'}],take:10,select:{id:true,state:true,mode:true,updatedAt:true}});
-      const job = await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256},orderBy:{createdAt:'desc'}});
+      const drafts = await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,mode:{not:'floor_plan'}},orderBy:[{updatedAt:'desc'},{id:'desc'}],take:10,select:{id:true,state:true,mode:true,updatedAt:true}});
+      const job = await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,purpose:'products'},orderBy:{createdAt:'desc'}});
       const budget=edit?await this.ai.budget.snapshot(tx,source.original!.sha256,a,h):null;
       const aiAvailable=edit&&!!budget?.available;
       const uncertain=aiAvailable ? await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,state:'uncertain',attempt:{is:{campaignId:this.ai.budget.config.campaign}}}}) : null;
@@ -55,9 +55,10 @@ export class OnboardingJobService {
   }
   start(a: string, h: string, input: unknown, key?: string) {
     if (!key || !/^[A-Za-z0-9_-]{16,100}$/.test(key)) throw invalid('Chiave della richiesta non valida.');
-    const row = object(input, ['documentId', 'provider', 'consentToProviderTransfer','acknowledgePreviousUncertainAnalysis']);
+    const row = object(input, ['documentId', 'provider', 'consentToProviderTransfer','acknowledgePreviousUncertainAnalysis','purpose']);
     if(row.acknowledgePreviousUncertainAnalysis!==undefined&&typeof row.acknowledgePreviousUncertainAnalysis!=='boolean')throw invalid();
-    const body = {...(row.acknowledgePreviousUncertainAnalysis===true?{acknowledgePreviousUncertainAnalysis:true}:{}), documentId: uuid(row.documentId), provider: row.provider, consentToProviderTransfer: row.consentToProviderTransfer };
+    if(row.purpose!==undefined&&!['products','floor_plan'].includes(String(row.purpose)))throw invalid();
+    const body = {...(row.purpose==='floor_plan'?{purpose:'floor_plan'}:{}),...(row.acknowledgePreviousUncertainAnalysis===true?{acknowledgePreviousUncertainAnalysis:true}:{}), documentId: uuid(row.documentId), provider: row.provider, consentToProviderTransfer: row.consentToProviderTransfer };
     if (typeof body.provider !== 'string' || typeof body.consentToProviderTransfer !== 'boolean') throw invalid();
     return this.receipts.run(a, h, true, async tx => {
       const source = await this.receipts.source(tx, a, h, body.documentId);
@@ -69,6 +70,7 @@ export class OnboardingJobService {
         if (!await this.receipts.source(tx, a, h, prior.documentId, prior)) throw deny();
         return { job: await this.view(tx, a, h, prior) };
       }
+      if(row.purpose==='floor_plan'&&await tx.objectOnboardingDraft.findFirst({where:{accountId:a,homeId:h,documentId:source.id,documentVersion:source.original!.version,documentSha256:source.original!.sha256,mode:'floor_plan'}}))throw conflict('floor_plan_already_proposed','Esiste già una proposta.');
       if (body.provider !== 'anthropic') throw new ServiceUnavailableException({ code: 'ai_provider_disabled', message: 'Questo servizio di analisi non è abilitato.' });
       if (body.provider === 'anthropic') {
         if (!this.ai) throw new ServiceUnavailableException({ code: 'ai_provider_disabled', message: 'Analisi ricevuta non abilitata.' });
@@ -83,8 +85,8 @@ export class OnboardingJobService {
       if (await tx.objectOnboardingJob.findFirst({ where: { accountId: a, homeId: h, ...snapshot, state: { in: ['queued', 'running'] } } })) throw conflict('onboarding_analysis_already_running', 'È già in corso un’analisi di questo documento.');
       const active = { state: { in: ['queued', 'running'] } };
       if (await tx.objectOnboardingJob.count({ where: active }) >= ONBOARDING_JOB_LIMITS.globalActive || await tx.objectOnboardingJob.count({ where: { ...active, accountId: a } }) >= ONBOARDING_JOB_LIMITS.accountActive) throw busy();
-      const job = await tx.objectOnboardingJob.create({ data: { accountId: a, homeId: h, ...snapshot, mimeType: source.original!.mimeType, provider: body.provider as string, consentToProviderTransfer: body.provider === 'anthropic', key, digest: hash } });
-      if (body.provider === 'anthropic') await this.ai.budget.reserve(tx, job.id, snapshot.documentSha256,a,h);
+      const job = await tx.objectOnboardingJob.create({ data: { accountId: a, homeId: h, ...snapshot, purpose: row.purpose==='floor_plan'?'floor_plan':'products', mimeType: source.original!.mimeType, provider: body.provider as string, consentToProviderTransfer: body.provider === 'anthropic', key, digest: hash } });
+      if (body.provider === 'anthropic') { const attempt=await this.ai.budget.reserve(tx, job.id, snapshot.documentSha256,a,h);if(job.purpose==='floor_plan')await tx.objectOnboardingAttempt.update({where:{id:attempt.id},data:{promptVersion:'floor-plan-v1'}}); }
       return { job: await this.view(tx, a, h, job) };
     });
   }
@@ -171,7 +173,7 @@ export class OnboardingJobService {
         if (!current || current.state !== 'running' || current.leaseToken !== job.leaseToken) return;
         if (!current.leaseUntil || current.leaseUntil.getTime() <= Date.now()) throw new ProviderFailure('analysis_timeout');
         if (!await this.receipts.source(tx, job.accountId, job.homeId, job.documentId, job)) throw deny();
-        const draft = await tx.objectOnboardingDraft.create({ data: { id:draftId, accountId: job.accountId, homeId: job.homeId, documentId: job.documentId, documentVersion: job.documentVersion, documentSha256: job.documentSha256, mode: 'extraction', output: json({...output,enrichments}) } });
+        const draft = await tx.objectOnboardingDraft.create({ data: { id:draftId, accountId: job.accountId, homeId: job.homeId, documentId: job.documentId, documentVersion: job.documentVersion, documentSha256: job.documentSha256, mode: job.purpose==='floor_plan'?'floor_plan':'extraction', output: json({...output,enrichments}) } });
         await tx.objectOnboardingJob.update({ where: { id: job.id }, data: { state: 'succeeded', draftId: draft.id, errorCode: null, leaseToken: null, leaseUntil: null, version: { increment: 1 }, updatedAt: new Date() } });
       });
     } catch (error) {

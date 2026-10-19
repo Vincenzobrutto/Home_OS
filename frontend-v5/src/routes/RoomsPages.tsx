@@ -122,6 +122,7 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
             <Icon name="plus" />
             Aggiungi ambiente
           </button>
+          <Link className={ui.btn} to={`/home/${home.id}/ambienti/da-planimetria`}>Da una planimetria</Link>
         </p>
       )}
       {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare gli ambienti, non aggiungerne o modificarli.</p>}

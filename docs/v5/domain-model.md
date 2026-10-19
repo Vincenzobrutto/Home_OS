@@ -1,3 +1,7 @@
+## Planimetrie e ambienti — 19 ottobre 2026
+
+ObjectOnboardingJob.purpose distingue products/floor_plan (migrazione additiva). ObjectOnboardingDraft mode=floor_plan conserva output, revisione e mappa numero→HomeRoom; ObjectRequest protegge salvataggio e conferma. Originali e coordinate non diventano dati condivisi con la creazione degli ambienti. [Dettagli](floor-plan-rooms-20261019.md).
+
 # Modello V5 — implementazione locale e incrementi
 
 ## Aggiornamento G1 del 14 ottobre 2026

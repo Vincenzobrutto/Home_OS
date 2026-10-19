@@ -1,3 +1,7 @@
+## ADR — Ambienti proposti da planimetria, 19 ottobre 2026
+
+Riutilizzare coda, autorizzazione per fonte e budget onboarding con purpose distinto, senza una seconda pipeline di pagamento. Conservare punti numerati in una bozza privata; creare stanze condivise solo dopo conferma esplicita. Numero stabile indipendente dal nome, nessuna fusione automatica: nomi uguali richiedono collegamento o distinzione. Coordinate normalizzate sull’intera pagina, ritaglio solo visivo. Motivo: coerenza mappa/elenco, ripresa della revisione e protezione da doppio invio senza pubblicare originali privati. [Contratto e limiti](floor-plan-rooms-20261019.md).
+
 # V5 — contratto di implementazione iniziale
 
 ## ADR-V5-17 — G1 backend e compatibilità del costo canonico

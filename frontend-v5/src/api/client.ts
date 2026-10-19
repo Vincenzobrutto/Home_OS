@@ -905,6 +905,12 @@ export class ApiClient {
     return this.send<BinaryPayload>(path, { signal, accountId }, 'binary');
   }
 
+  getFloorPlan(homeId:string,documentId:string,signal:AbortSignal|undefined,accountId:string) {
+    return this.request<import('../floor-plan/model').PlanResponse>(`${homePath(homeId)}/floor-plan-layouts/${encodeURIComponent(documentId)}`,{signal,accountId});
+  }
+  mutateFloorPlan(homeId:string,documentId:string,action:'analysis'|'draft'|'confirmations',body:unknown,key:string,accountId:string) {
+    return this.mutate<{draft:import('../floor-plan/model').PlanDraft;created:number;linked:number}>(`${homePath(homeId)}/floor-plan-layouts/${encodeURIComponent(documentId)}/${action}`,{body,headers:{'Idempotency-Key':key},accountId});
+  }
   private async ensureCsrf() {
     if (!this.csrfToken) {
       // Nessun token in memoria (es. dopo logout): lo chiediamo al server.

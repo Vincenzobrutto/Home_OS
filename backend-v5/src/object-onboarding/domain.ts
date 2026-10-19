@@ -25,6 +25,7 @@ export type ProductItem = {
 };
 export type HouseExpense = EconomicOutput & {id:string;fingerprint:string;reviewWarnings?:string[]};
 export type ProductExtraction = {
+  floorPlan?: import('./floor-plan-domain').FloorPlan;
   contacts?:ContactProposal[];
   houseExpenses?:HouseExpense[];
   documentInfo?:DocumentUnderstanding;

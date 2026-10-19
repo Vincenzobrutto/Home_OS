@@ -39,7 +39,7 @@ export class OnboardingAiAnalysis {
     await check();
     if (attempt.output) return attempt.output as unknown as ProductExtraction;
     if (attempt.state !== 'reserved') throw new ProviderFailure('analysis_outcome_unknown');
-    const prepared = await this.provider.prepare(input, attempt.model, signal, check);
+    const prepared = await this.provider.prepare(input, attempt.model, signal, check, job.purpose);
     const dispatch = await authorize(async tx => {
       configured();
       await tx.$queryRaw`SELECT id FROM "ObjectOnboardingJob" WHERE id=${job.id} FOR UPDATE`;

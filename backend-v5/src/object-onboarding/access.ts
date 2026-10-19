@@ -50,7 +50,7 @@ export class ObjectOnboardingAccess {
   }
   async draft(tx: OnboardingTx, a: string, h: string, id: string) {
     const draft = await tx.objectOnboardingDraft.findFirst({ where: { id: uuid(id), accountId: a, homeId: h } });
-    if (!draft) throw onboardingDenied(); return draft;
+    if (!draft || draft.mode==='floor_plan') throw onboardingDenied(); return draft;
   }
   async target(tx: OnboardingTx, a: string, h: string, id: string) {
     const target = await tx.homeObject.findFirst({ where: { id: uuid(id), accountId: a, homeId: h } });

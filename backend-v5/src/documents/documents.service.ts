@@ -210,15 +210,15 @@ export class DocumentsService implements OnModuleInit {
 
 function workflowSql(accountId:string,homeId:string){
     const completed=Prisma.sql`(
-      NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open')
-      AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND (j.state IN ('queued','running') OR (j.state='uncertain' AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" c WHERE c."accountId"=j."accountId" AND c."documentId"=d.id AND c."documentVersion"=v.version AND c."documentSha256"=v.sha256 AND c.state='confirmed' AND c."updatedAt">=j."updatedAt"))))
-      AND (EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='confirmed')
+      NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p.mode<>'floor_plan' AND p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open')
+      AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j.purpose='products' AND j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND (j.state IN ('queued','running') OR (j.state='uncertain' AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" c WHERE c.mode<>'floor_plan' AND c."accountId"=j."accountId" AND c."documentId"=d.id AND c."documentVersion"=v.version AND c."documentSha256"=v.sha256 AND c.state='confirmed' AND c."updatedAt">=j."updatedAt"))))
+      AND (EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p.mode<>'floor_plan' AND p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='confirmed')
       OR (o.id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(o.parts) p WHERE p->>'kind' IN ('invoice','receipt','utility_bill','purchase_document','purchase_order','product_label','delivery_notice'))))
     )`;
 return {completed,state:Prisma.sql`CASE
           WHEN ${completed} THEN 'completed'
-          WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND j.state IN ('queued','running')) THEN 'analyzing'
-          WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open' AND p.mode='extraction') THEN 'review'
-          WHEN (SELECT j.state FROM "ObjectOnboardingJob" j WHERE j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 ORDER BY j."createdAt" DESC,j.id DESC LIMIT 1) IN ('failed','uncertain') THEN 'attention'
+          WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j.purpose='products' AND j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND j.state IN ('queued','running')) THEN 'analyzing'
+          WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p.mode<>'floor_plan' AND p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open' AND p.mode='extraction') THEN 'review'
+          WHEN (SELECT j.state FROM "ObjectOnboardingJob" j WHERE j.purpose='products' AND j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 ORDER BY j."createdAt" DESC,j.id DESC LIMIT 1) IN ('failed','uncertain') THEN 'attention'
           ELSE 'to_compile' END`};
 }
