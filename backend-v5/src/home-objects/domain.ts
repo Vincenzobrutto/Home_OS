@@ -56,12 +56,13 @@ export function positionBody(input: unknown) {
   return { expectedVersion: row.expectedVersion as number, roomIds: roomIds(row.roomIds) };
 }
 export function objectsQuery(input: unknown, catalog = false, history = false) {
-  const row = object(input, history ? ['limit', 'cursor'] : ['state', 'limit', 'cursor', ...(catalog ? ['roomId', 'placement', 'q', 'type'] : [])]);
+  const row = object(input, history ? ['limit', 'cursor'] : ['state', 'limit', 'cursor', ...(catalog ? ['roomId', 'placement', 'q', 'type', 'sort'] : [])]);
   const state = row.state ?? 'active', placement = row.placement ?? 'all';
   if (!['active', 'archived', 'all'].includes(String(state)) || typeof state !== 'string' || !['all', 'unplaced'].includes(String(placement)) || typeof placement !== 'string') throw invalid();
   if (row.roomId !== undefined && placement === 'unplaced') throw invalid();
   if (row.limit !== undefined && (typeof row.limit !== 'string' || !/^[1-9]\d?$/.test(row.limit) || Number(row.limit) > 50)) throw invalid();
-  if (row.cursor !== undefined && (typeof row.cursor !== 'string' || !/^[A-Za-z0-9_-]{1,512}$/.test(row.cursor))) throw invalid();
+  if (row.cursor !== undefined && (typeof row.cursor !== 'string' || !/^[A-Za-z0-9_-]{1,2048}$/.test(row.cursor))) throw invalid();
+  if(row.sort!==undefined&&(typeof row.sort!=='string'||!['recent','name'].includes(row.sort)))throw invalid();
   if (row.type !== undefined && (typeof row.type !== 'string' || ![...objectTypes, 'boiler'].includes(row.type))) throw invalid();
-  return { state: state as 'active' | 'archived' | 'all', placement: placement as 'all' | 'unplaced', roomId: row.roomId === undefined ? null : uuid(row.roomId), q: row.q === undefined ? null : normalized(row.q, 80, true), type: row.type as string | undefined, limit: Number(row.limit ?? 20), cursor: row.cursor as string | undefined };
+  return { sort:row.sort==='name'?'name' as const:'recent' as const, state: state as 'active' | 'archived' | 'all', placement: placement as 'all' | 'unplaced', roomId: row.roomId === undefined ? null : uuid(row.roomId), q: row.q === undefined ? null : normalized(row.q, 80, true), type: row.type as string | undefined, limit: Number(row.limit ?? 20), cursor: row.cursor as string | undefined };
 }

@@ -1,3 +1,7 @@
+## Catalogo oggetti compatto — 19 ottobre 2026
+
+Scelta approvata: struttura a schede compatte della proposta 3 e filtri ambiente della 1; due colonne desktop, una mobile, vista elenco alternativa. Ricerca e conteggi sul server per non limitare i risultati alla pagina caricata. Icone in assenza di foto reali, avvisi solo da dati esistenti, contesto di ritorno privato per account/casa. [Implementazione e limiti](object-catalog-layout-20261019.md).
+
 ## ADR — Ambienti proposti da planimetria, 19 ottobre 2026
 
 Riutilizzare coda, autorizzazione per fonte e budget onboarding con purpose distinto, senza una seconda pipeline di pagamento. Conservare punti numerati in una bozza privata; creare stanze condivise solo dopo conferma esplicita. Numero stabile indipendente dal nome, nessuna fusione automatica: nomi uguali richiedono collegamento o distinzione. Coordinate normalizzate sull’intera pagina, ritaglio solo visivo. Motivo: coerenza mappa/elenco, ripresa della revisione e protezione da doppio invio senza pubblicare originali privati. [Contratto e limiti](floor-plan-rooms-20261019.md).

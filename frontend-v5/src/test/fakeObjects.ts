@@ -320,7 +320,7 @@ export class FakeObjects {
   }
 
   private catalog(params: URLSearchParams, accountId: string, homeId: string, perms: HomePermission[]): Res {
-    if (![...params.keys()].every((k) => ['state', 'roomId', 'placement', 'q', 'type', 'limit', 'cursor'].includes(k))) {
+    if (![...params.keys()].every((k) => ['state', 'roomId', 'placement', 'q', 'type', 'limit', 'cursor','sort'].includes(k))) {
       return err(422, 'validation_error', 'Parametro non ammesso.');
     }
     const state = params.get('state') ?? 'active';
@@ -341,6 +341,7 @@ export class FakeObjects {
       ...[...this.objects.values()].filter((o) => o.accountId === accountId && o.homeId === homeId).map((o) => ({ ref: { kind: 'object' as const, id: o.id }, createdAt: o.createdAt })),
       ...this.access.boilers(accountId, homeId).map((b) => ({ ref: { kind: 'boiler' as const, id: b.id }, createdAt: b.createdAt })),
     ];
+    const sort=params.get('sort')??'recent';if(!['name','recent'].includes(sort))return err(422,'validation_error','Ordine non valido.');
     const needle = q.toLowerCase();
     const items = refs
       .map((r) => this.find(accountId, homeId, r.ref)!.item())
@@ -349,10 +350,10 @@ export class FakeObjects {
       .filter((i) => !needle || i.name.normalize('NFC').toLowerCase().includes(needle))
       .filter((i) => (roomId ? i.position.rooms.some((r) => r.id === roomId) : placement === 'unplaced' ? i.position.rooms.length === 0 : true))
       .map((i) => ({ i, createdAt: refs.find((r) => r.ref.id === i.ref.id)!.createdAt }))
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || a.i.ref.kind.localeCompare(b.i.ref.kind) || b.i.ref.id.localeCompare(a.i.ref.id))
+      .sort((a, b) => sort==='name'?(a.i.name.localeCompare(b.i.name,'it')||a.i.ref.kind.localeCompare(b.i.ref.kind)||a.i.ref.id.localeCompare(b.i.ref.id)):(b.createdAt.localeCompare(a.createdAt) || a.i.ref.kind.localeCompare(b.i.ref.kind) || b.i.ref.id.localeCompare(a.i.ref.id)))
       .map((x) => x.i);
     void perms;
-    return this.page(items, params, `c:${accountId}:${homeId}:${state}:${roomId ?? '-'}:${placement}:${q}:${type ?? '-'}`);
+    return this.page(items, params, `c:${accountId}:${homeId}:${state}:${roomId ?? '-'}:${placement}:${q}:${type ?? '-'}:${sort}`);
   }
 
   private listLinks(params: URLSearchParams, accountId: string, homeId: string, ref: Ref): Res {

@@ -77,6 +77,7 @@ export function catalogFiltersFromParams(params: URLSearchParams): CatalogFilter
   const room = params.get('ambiente');
   const roomId = room && UUID_RE.test(room) ? room : null;
   return {
+    sort:params.get('ordine')==='recenti'?'recent':'name',
     state: state === 'archived' || state === 'all' ? state : 'active',
     q: clean(params.get('q') ?? '').slice(0, 200),
     type: type && OBJECT_TYPES.has(type) ? (type as CatalogFilters['type']) : null,
@@ -87,6 +88,7 @@ export function catalogFiltersFromParams(params: URLSearchParams): CatalogFilter
 
 export function catalogFiltersToParams(f: CatalogFilters) {
   const p = new URLSearchParams();
+  if (f.sort === 'recent') p.set('ordine','recenti');
   if (f.state !== 'active') p.set('stato', f.state);
   if (f.q) p.set('q', f.q);
   if (f.type) p.set('tipo', f.type);
@@ -109,7 +111,10 @@ export function roomPath(homeId: string, roomId?: string) {
 export function backToCatalog(homeId: string, state: unknown, accountId: string) {
   const saved = state as { objectsSearch?: unknown; objectsAccountId?: unknown } | null;
   if (saved?.objectsAccountId !== accountId || typeof saved.objectsSearch !== 'string') return objectPath(homeId);
-  const query = catalogFiltersToParams(catalogFiltersFromParams(new URLSearchParams(saved.objectsSearch))).toString();
+  const raw=new URLSearchParams(saved.objectsSearch),params=catalogFiltersToParams(catalogFiltersFromParams(raw));
+  if(raw.get('vista')==='elenco')params.set('vista','elenco');
+  if(raw.get('filtri')==='1')params.set('filtri','1');
+  const query = params.toString();
   return `${objectPath(homeId)}${query ? `?${query}` : ''}`;
 }
 

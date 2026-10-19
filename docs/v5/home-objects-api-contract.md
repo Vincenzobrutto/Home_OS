@@ -1,3 +1,7 @@
+## Catalogo compatto — 19 ottobre 2026
+
+GET objects esteso con ordinamento, ricerca autorizzata marca/modello, conteggi e riepiloghi. [Dettagli e semantica dei contatori](object-catalog-layout-20261019.md#api-e-sicurezza).
+
 ## Ambienti da planimetria — 19 ottobre 2026
 
 Aggiunti endpoint floor-plan-layouts, bozza privata e conferma atomica verso HomeRoom, senza duplicare gli originali. [Contratto e comportamento](floor-plan-rooms-20261019.md#api-e-persistenza).
@@ -31,9 +35,9 @@ Room `{id,homeId,name,type,note,state:'active'|'archived',version,createdAt,upda
 
 Object `{ref:{kind:'object',id},homeId,name,type,note,state:'active'|'archived',version,createdAt,updatedAt,permissions}`. Tipi appliance,heating,cooling,electrical,plumbing,security,fixture,other; name1..120, note nullable<=500. Tipo manuale heating non ha dati certificati caldaia o analisi implicita.
 
-CatalogItem `{ref,name,type,kindLabel,state,permissions,position:{version:number,rooms:Room[]},technicalLink:null|{assetId:UUID}}`. Object type da DTO; boiler type:'boiler', state active per G1, technicalLink assetId esistente; stato conferma tecnica rimane nel dettaglio M3. Posizione versione0 indica mai impostata. Non include conteggi privati o documenti prima dell'autorizzazione. AccountId/ledger/storage mai esposti.
+CatalogItem `{ref,name,type,kindLabel,state,permissions,position:{version:number,rooms:Room[]},technicalLink:null|{assetId:UUID}}`. Object type da DTO; boiler type:'boiler', state active per G1, technicalLink assetId esistente; stato conferma tecnica rimane nel dettaglio M3. Posizione versione0 indica mai impostata. Non include conteggi privati o documenti prima dell'autorizzazione. AccountId/ledger/storage mai esposti. Nella lista, summary additivo con brand/model autorizzati e nextActivity nullable (titolo/data della prima attività aperta collegata dell’account corrente); metadati pagina e conteggi come nel report del 19 ottobre.
 
-Pagine `{items:T[],nextCursor:string|null}`; limit1..50 default20; cursor base64url1..512. Ordinamento createdAt desc,id desc per room/object; catalogo due sorgenti unificate con tie-break kind,id. Keyset DB limit+1, nessun fetch integrale. Cursor legato account/Home/risorsa/filtri, non limite. Nessun dato nascosto nei contatori o sommatori.
+Pagine `{items:T[],nextCursor:string|null}`; limit1..50 default20; cursor base64url1..2048. Ordinamento createdAt desc,id desc per room; catalogo sort=recent (default) oppure name, con tie-break kind,id. Keyset DB limit+1, nessun fetch integrale. Cursor legato account/Home/risorsa/filtri, non limite. Nessun dato nascosto nei contatori o sommatori.
 
 ## Endpoint
 
@@ -46,7 +50,7 @@ Pagine `{items:T[],nextCursor:string|null}`; limit1..50 default20; cursor base64
 | POST rooms/:id/updates | expectedVersion + almeno name/type/note;200 `{room}` |
 | POST rooms/:id/archive oppure restore | expectedVersion;200 `{room}` |
 | GET rooms/:id/history | limit,cursor; pagina eventi autorizzati |
-| GET objects | state active(default)/archived/all,roomId facoltativo,placement all(default)/unplaced,q facoltativo,type facoltativo,limit,cursor; pagina CatalogItem incluse boiler leggibili |
+| GET objects | state active(default)/archived/all,roomId facoltativo,placement all(default)/unplaced,q facoltativo,type facoltativo,sort name/recent (default recent),limit,cursor; pagina CatalogItem incluse boiler leggibili più total/facets/today |
 | POST objects | name,type,note?,roomIds?;201 `{object:CatalogItem}`; posizione e creazione atomiche |
 | GET objects/:kind/:id | kind object/boiler;query vuota; `{object:CatalogItem}` |
 | POST objects/object/:id/updates | expectedVersion + almeno name/type/note;200 `{object}`; boiler aggiornamenti tecnici restano API M3 |
@@ -59,7 +63,7 @@ Pagine `{items:T[],nextCursor:string|null}`; limit1..50 default20; cursor base64
 
 No roomId insieme a placement unplaced. Room filter richiede stanza leggibile stessaHome. Boiler selezionati dalla policy M3 comprese fonti correnti; filtri applicati prima di paging. Lista stanza non significa che stanza abbia documenti/costi propri.
 
-q: stringa NFC trim max80codepoint, vuota equivalente ad assenza; ricerca letterale case-insensitive sul nome, accenti distinti come H2, nessun wildcard client o filtro della sola pagina locale. type: una delle objectTypes o boiler; non ripetibile. Query/paging binding include q/type. Picker documenti usa H2 autorizzata, non scarica tutto il catalogo per cercare localmente.
+q: stringa NFC trim max80codepoint, vuota equivalente ad assenza; ricerca letterale case-insensitive su nome e marca/modello autorizzati, accenti distinti come H2, nessun wildcard client o filtro della sola pagina locale. type: una delle objectTypes o boiler; non ripetibile. Query/paging binding include q/type/sort. Picker documenti usa H2 autorizzata, non scarica tutto il catalogo per cercare localmente.
 
 ## Collegamenti
 

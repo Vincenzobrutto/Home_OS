@@ -1,28 +1,21 @@
+import { CatalogContent } from '../objects/Catalog';
 import { ContactsPanel } from '../contacts/components';
 import { contextReturn } from '../lib/contextReturn';
 import { PurchaseSummary } from '../objects/PurchaseSummary';
-import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
+import { useMemo, useState, type ReactNode } from 'react';
+import { Link, useLocation, useParams } from 'react-router';
 import { isApiError } from '../api/errors';
-import type { CatalogFilters, CatalogItem, Home, ObjectCapabilities, ObjectKind } from '../api/types';
+import type { CatalogItem, Home, ObjectCapabilities, ObjectKind } from '../api/types';
 import { useActivityCapabilities } from '../activities/hooks';
-import { Icon } from '../components/Icon';
 import { ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import { useExpenseCapabilities } from '../expenses/hooks';
 import { useEconomyCapabilities } from '../economy/hooks';
 import { G1History } from '../objects/History';
 import { LinksSection, ObjectForm, PositionEditor, StateDialog, objectOwn as own, objectStyles as styles, roomsText, typeLabel } from '../objects/components';
-import { useCatalog, useForgetObjects, useObject, useObjectHistory, useRooms } from '../objects/hooks';
+import { useObject, useObjectHistory } from '../objects/hooks';
 import {
-  OBJECT_TYPE_LABEL,
-  UNPLACED_LABEL,
   backToCatalog,
-  catalogFiltersFromParams,
-  catalogFiltersToParams,
-  isForbidden,
-  objectPath,
   objectsErrorMessage,
-  validateQuery,
 } from '../lib/objects';
 import { useAccount } from '../session/session';
 import { BackToCasa, ObjectsGate, Unavailable, useFocusAfterVersion } from './RoomsPages';
@@ -32,26 +25,18 @@ import { ProfileSection } from '../object-onboarding/ProfileSection';
 import { ReceiptComparisons, ReceiptObjectFields } from '../receipt-integration/Surfaces';
 import { ManualSection } from '../objects/ManualSection';
 
-const STATE_OPTIONS: Array<{ value: CatalogFilters['state']; label: string }> = [
-  { value: 'active', label: 'Attivi' },
-  { value: 'archived', label: 'Archiviati' },
-  { value: 'all', label: 'Tutti' },
-];
-
 export function ObjectsPage() {
   const home = useCurrentHome();
+  const account=useAccount();
   useDocumentTitle(`Oggetti e impianti · ${home.name}`);
   const heading = (
     <>
       <BackToCasa homeId={home.id} />
       <div className={pages.heading}>
         <div>
-          <span className={pages.eyebrow}>{home.name}</span>
+
           <h1 tabIndex={-1}>Oggetti e impianti</h1>
-          <p className={pages.lead}>
-            I tuoi oggetti, visibili solo a te, e le tue schede caldaia. Una caldaia compare una volta sola: la sua scheda tecnica
-            resta quella originale.
-          </p>
+          <p className={pages.muted}>Oggetti personali e schede impianto · visibili solo a te.</p>
         </div>
       </div>
     </>
@@ -61,214 +46,10 @@ export function ObjectsPage() {
       {(caps) => (
         <>
           {heading}
-          <CatalogContent home={home} caps={caps} />
+          <CatalogContent key={`${account.id}:${home.id}`} home={home} caps={caps} />
         </>
       )}
     </ObjectsGate>
-  );
-}
-
-function CatalogContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) {
-  const account = useAccount();
-  const navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
-  const filters = useMemo(() => catalogFiltersFromParams(params), [params]);
-  const creating = params.get('nuovo') === '1';
-  const presetRoomId = params.get('ambiente');
-  const canEdit = home.permissions.includes('edit');
-  const id = useId();
-  const [draft, setDraft] = useState(filters.q);
-  const [basis, setBasis] = useState(filters.q);
-  if (basis !== filters.q) {
-    setBasis(filters.q);
-    setDraft(filters.q);
-  }
-  const [queryError, setQueryError] = useState<string>();
-  const rooms = useRooms(home.id, { state: 'active' });
-  const roomItems = rooms.data?.pages.flatMap((p) => p.items) ?? [];
-  const catalog = useCatalog(home.id, filters);
-  const forget = useForgetObjects(home.id);
-  const forbidden = catalog.isError && isForbidden(catalog.error);
-  useEffect(() => {
-    if (forbidden) forget();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- una sola pulizia per ogni 403
-  }, [forbidden]);
-  const items = catalog.data?.pages.flatMap((p) => p.items) ?? [];
-  const filtered = filters.q !== '' || filters.type !== null || filters.roomId !== null || filters.placement !== 'all' || filters.state !== 'active';
-
-  const apply = (next: CatalogFilters) => {
-    const p = catalogFiltersToParams(next);
-    if (creating) p.set('nuovo', '1');
-    setParams(p);
-  };
-  const setCreating = (on: boolean) => {
-    const next = new URLSearchParams(params);
-    if (on) next.set('nuovo', '1');
-    else next.delete('nuovo');
-    setParams(next, { replace: !on });
-  };
-  // «Ambiente» e «Da collocare» stanno nello stesso selettore: combinazione incompatibile impossibile.
-  const whereValue = filters.roomId ?? (filters.placement === 'unplaced' ? '__unplaced__' : '');
-  const returnState = { objectsSearch: catalogFiltersToParams(filters).toString(), objectsAccountId: account.id };
-
-  return (
-    <div className={pages.stack}>
-      {canEdit && !creating && (
-        <p className={styles.actions}>
-          <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => setCreating(true)}>
-            <Icon name="plus" />
-            Aggiungi oggetto
-          </button>
-        </p>
-      )}
-      {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare i tuoi oggetti già esistenti, non aggiungerne o modificarli.</p>}
-      {canEdit && creating && (
-        <ObjectForm
-          home={home}
-          capabilities={caps}
-          presetRoomId={presetRoomId && roomItems.some((r) => r.id === presetRoomId) ? presetRoomId : null}
-          onCancel={() => setCreating(false)}
-          onDone={(object) => navigate(objectPath(home.id, object.ref), { state: returnState })}
-        />
-      )}
-
-      <section className={ui.card} aria-labelledby="oggetti-elenco">
-        <h2 id="oggetti-elenco" className={pages.cardTitle}>
-          Elenco
-        </h2>
-        <form
-          role="search"
-          aria-label="Cerca tra i tuoi oggetti"
-          className={own.searchRow}
-          onSubmit={(e) => {
-            e.preventDefault();
-            const q = draft.normalize('NFC').trim();
-            const problem = validateQuery(q);
-            setQueryError(problem);
-            if (problem) return;
-            apply({ ...filters, q });
-          }}
-        >
-          <label className={ui.label} htmlFor={`${id}-q`}>
-            Cerca per nome
-          </label>
-          <input
-            id={`${id}-q`}
-            className={ui.input}
-            type="search"
-            autoComplete="off"
-            value={draft}
-            aria-invalid={queryError ? true : undefined}
-            aria-describedby={queryError ? `${id}-q-error` : undefined}
-            onChange={(e) => setDraft(e.target.value)}
-          />
-          <button type="submit" className={cx(ui.btn, ui.small)}>
-            Cerca
-          </button>
-          {queryError && (
-            <span id={`${id}-q-error`} className={ui.fieldError}>
-              {queryError}
-            </span>
-          )}
-        </form>
-        <div className={styles.filters} role="group" aria-label="Filtri degli oggetti">
-          <label className={styles.filter}>
-            Dove
-            <select
-              className={styles.select}
-              value={whereValue}
-              onChange={(e) => {
-                const v = e.target.value;
-                apply({ ...filters, roomId: v && v !== '__unplaced__' ? v : null, placement: v === '__unplaced__' ? 'unplaced' : 'all' });
-              }}
-            >
-              <option value="">Tutti gli ambienti</option>
-              <option value="__unplaced__">{UNPLACED_LABEL}</option>
-              {filters.roomId && !roomItems.some((r) => r.id === filters.roomId) && <option value={filters.roomId}>Ambiente selezionato</option>}
-              {roomItems.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={styles.filter}>
-            Tipo
-            <select className={styles.select} value={filters.type ?? ''} onChange={(e) => apply({ ...filters, type: (e.target.value || null) as CatalogFilters['type'] })}>
-              <option value="">Tutti i tipi</option>
-              {[...caps.types, 'boiler' as const].map((t) => (
-                <option key={t} value={t}>
-                  {OBJECT_TYPE_LABEL[t] ?? t}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={styles.filter}>
-            Stato
-            <select className={styles.select} value={filters.state} onChange={(e) => apply({ ...filters, state: e.target.value as CatalogFilters['state'] })}>
-              {STATE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        {rooms.hasNextPage && (
-          <p className={pages.small}>
-            <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void rooms.fetchNextPage()} disabled={rooms.isFetchingNextPage}>
-              Carica altri ambienti nel filtro
-            </button>
-          </p>
-        )}
-        {catalog.isPending ? (
-          <Loading label={filtered ? 'Ricerca in corso…' : 'Caricamento degli oggetti…'} />
-        ) : forbidden || (catalog.isError && !catalog.data) ? (
-          <ErrorState title="Oggetti non disponibili" error={catalog.error} message={objectsErrorMessage(catalog.error)} onRetry={forbidden ? undefined : () => void catalog.refetch()} retrying={catalog.isFetching} />
-        ) : items.length === 0 ? (
-          <div role="status">
-            <p className={pages.muted}>{filtered ? 'Nessun oggetto corrisponde a questi filtri.' : 'Non hai ancora oggetti o schede caldaia in questa casa.'}</p>
-            {filtered && (
-              <button type="button" className={cx(ui.btn, ui.small)} onClick={() => apply({ state: 'active', q: '', type: null, roomId: null, placement: 'all' })}>
-                Azzera filtri
-              </button>
-            )}
-          </div>
-        ) : (
-          <ul className={styles.list} aria-label="Oggetti">
-            {items.map((o) => (
-              <CatalogRow key={`${o.ref.kind}:${o.ref.id}`} item={o} homeId={home.id} state={returnState} />
-            ))}
-          </ul>
-        )}
-        {catalog.isFetchNextPageError && <ErrorState title="Altri oggetti non caricati" error={catalog.error} message={objectsErrorMessage(catalog.error)} />}
-        {catalog.hasNextPage && (
-          <p className={pages.spaced}>
-            <button type="button" className={ui.btn} onClick={() => void catalog.fetchNextPage()} disabled={catalog.isFetchingNextPage}>
-              {catalog.isFetchingNextPage ? 'Caricamento…' : 'Mostra altri oggetti'}
-            </button>
-          </p>
-        )}
-      </section>
-    </div>
-  );
-}
-
-function CatalogRow({ item, homeId, state }: { item: CatalogItem; homeId: string; state: unknown }) {
-  return (
-    <li className={styles.item}>
-      <div className={styles.itemHead}>
-        <Link to={objectPath(homeId, item.ref)} state={state} className={styles.title}>
-          {item.name}
-        </Link>
-        <span className={styles.due}>{item.ref.kind === 'boiler' ? item.kindLabel || 'Caldaia' : typeLabel(item)}</span>
-        {item.state === 'archived' && <span className={styles.due}>Archiviato</span>}
-      </div>
-      <span className={cx(styles.meta, own.position)}>
-        {roomsText(item.position.rooms)}
-        {item.ref.kind === 'boiler' ? ' · scheda tecnica personale' : ''}
-      </span>
-    </li>
   );
 }
 

@@ -1,10 +1,11 @@
+import { catalogBase, catalogPlacement } from './catalog';
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Prisma, type HomeRoom, type HomeObject, type ObjectPosition, type ObjectResourceLink } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { ReviewService } from '../review/review.service';
 import { digest } from '../security';
 import { canReadDocument } from '../documents/access';
-import { readableReceiptName, readableReceiptObjectIds } from '../receipt-assistance/access';
+import { readableReceiptObjectIds } from '../receipt-assistance/access';
 import { conflict, invalid, object, uuid, version } from '../review/domain';
 import { createHomeObject, objectAction, objectLimits, objectsQuery, objectTypes, positionBody, roomTypes, subjectKind, updateHomeObject, type SubjectKind } from './domain';
 import { ManufacturerManuals, manualLookup, manualSelection, type ObjectManual } from './manuals';
@@ -16,7 +17,7 @@ type Tx = Prisma.TransactionClient;
 type Context = { a: string; h: string; edit: boolean };
 type Subject = { id: string; homeId: string; accountId: string; name: string; type: string; note: string | null; manual?: Prisma.JsonValue | null; profile?: Prisma.JsonValue | null; state: string; version: number; createdAt: Date; updatedAt: Date };
 type Saved = { kind: 'room'; row: HomeRoom } | { kind: SubjectKind; row: Subject; position: ObjectPosition | null } | { kind: 'link'; row: ObjectResourceLink; subjectKind: SubjectKind; subjectId: string };
-type Cursor = { b: string; t: string; id: string; k?: string };
+type Cursor = { b: string; t: string; id: string; k?: string; n?: string };
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 const deny = () => new ForbiddenException('Accesso non consentito.');
 const targetWhere = (kind: SubjectKind, id: string) => kind === 'object' ? { objectId: id } : { boilerId: id };
@@ -155,10 +156,11 @@ export class HomeObjectsService {
   private cursor(input: string | undefined, binding: string): Cursor | null {
     if (!input) return null;
     try {
-      const parsed = object(JSON.parse(Buffer.from(input, 'base64url').toString('utf8')), ['b', 't', 'id', 'k']);
+      const parsed = object(JSON.parse(Buffer.from(input, 'base64url').toString('utf8')), ['b', 't', 'id', 'k', 'n']);
       if (parsed.b !== binding || typeof parsed.t !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(parsed.t) || !Number.isFinite(new Date(parsed.t).getTime())) throw invalid();
       if (parsed.k !== undefined && !['object', 'boiler', 'native', 'reference'].includes(String(parsed.k))) throw invalid();
-      return { b: binding, t: parsed.t, id: uuid(parsed.id), ...(parsed.k !== undefined ? { k: String(parsed.k) } : {}) };
+      if(parsed.n!==undefined&&(typeof parsed.n!=='string'||[...parsed.n].length>200))throw invalid();
+      return { b: binding, t: parsed.t, id: uuid(parsed.id), ...(parsed.n!==undefined?{n:parsed.n as string}:{}), ...(parsed.k !== undefined ? { k: String(parsed.k) } : {}) };
     } catch { throw invalid('Pagina non valida.'); }
   }
   private page<T>(rows: T[], limit: number, binding: string, anchor: (row: T) => Omit<Cursor, 'b'>) {
@@ -281,28 +283,28 @@ export class HomeObjectsService {
     });
   }
   async objects(a: string, h: string, input: unknown) {
-    const q = objectsQuery(input, true), b = digest(JSON.stringify([a, h, 'objects', q.state, q.placement, q.roomId, q.q, q.type ?? null])), cur = this.cursor(q.cursor, b);
-    return this.transaction(a, h, false, async (tx, c) => {
-      if (q.roomId) await this.room(tx, c, q.roomId);
-      const escaped = q.q?.replace(/[\\%_]/g, '\\$&');
-      // All boiler source permissions are applied before paging, not after LIMIT.
-      const rows = await tx.$queryRaw<Array<{ id: string; kind: SubjectKind; createdAt: Date }>>(Prisma.sql`
-        SELECT x.id,x.kind,x."createdAt" FROM (
-          SELECT o.id,'object'::text AS kind,o.name,o.type,o.state,o."createdAt" FROM "HomeObject" o WHERE o."accountId"=${a} AND o."homeId"=${h} AND ${readableReceiptName(a, h)}
-          UNION ALL
-          SELECT o.id,'boiler'::text,o.name,'boiler'::text,'active'::text,o."createdAt" FROM "BoilerAsset" o WHERE o."accountId"=${a} AND o."homeId"=${h}
-          AND NOT EXISTS (SELECT 1 FROM "AnalysisJob" j CROSS JOIN LATERAL jsonb_array_elements(j.documents) s LEFT JOIN "Document" d ON d.id=s->>'documentId' LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
-            WHERE j."assetId"=o.id AND j.state='succeeded' AND (d.id IS NULL OR d."homeId"<>${h} OR (d.visibility::text<>'home' AND d."uploaderId"<>${a}) OR v.id IS NULL OR NOT COALESCE(v.version::text=s->>'documentVersion',FALSE) OR NOT COALESCE(v.sha256=s->>'documentSha256',FALSE)))
-        ) x LEFT JOIN "ObjectPosition" p ON p."accountId"=${a} AND p."homeId"=${h} AND ((x.kind='object' AND p."objectId"=x.id) OR (x.kind='boiler' AND p."boilerId"=x.id))
-        WHERE ${q.state === 'all' ? Prisma.sql`TRUE` : Prisma.sql`x.state=${q.state}`}
-          AND ${q.type ? Prisma.sql`x.type=${q.type}` : Prisma.sql`TRUE`}
-          AND ${escaped ? Prisma.sql`normalize(x.name,NFC) COLLATE "und-x-icu" ILIKE ${'%' + escaped + '%'}` : Prisma.sql`TRUE`}
-          AND ${q.roomId ? Prisma.sql`p."roomIds" @> ${JSON.stringify([q.roomId])}::jsonb` : Prisma.sql`TRUE`}
-          AND ${q.placement === 'unplaced' ? Prisma.sql`(p.id IS NULL OR jsonb_array_length(p."roomIds")=0)` : Prisma.sql`TRUE`}
-          AND ${cur ? Prisma.sql`(x."createdAt",x.kind,x.id)<(${cur.t}::timestamp,${cur.k ?? ''},${cur.id})` : Prisma.sql`TRUE`}
-        ORDER BY x."createdAt" DESC,x.kind DESC,x.id DESC LIMIT ${q.limit + 1}`);
-      const page = this.page(rows, q.limit, b, r => ({ t: r.createdAt.toISOString(), k: r.kind, id: r.id }));
-      return { ...page, items: await Promise.all(page.items.map(async r => this.catalogView(tx, c, r.kind, await this.subject(tx, c, r.kind, r.id)))) };
+    const q=objectsQuery(input,true),b=digest(JSON.stringify([a,h,'objects',q.state,q.placement,q.roomId,q.q,q.type??null,q.sort])),cur=this.cursor(q.cursor,b);
+    if(cur&&q.sort==='name'&&cur.n===undefined)throw invalid('Pagina non valida.');
+    return this.transaction(a,h,false,async(tx,c)=>{
+      if(q.roomId)await this.room(tx,c,q.roomId);
+      const base=catalogBase(a,h,q),placement=catalogPlacement(q);
+      const after=!cur?Prisma.sql`TRUE`:q.sort==='name'?Prisma.sql`(x."sortName" COLLATE "und-x-icu",x.kind,x.id)>(${cur.n} COLLATE "und-x-icu",${cur.k??''},${cur.id})`:Prisma.sql`(x."createdAt",x.kind,x.id)<(${cur.t}::timestamp,${cur.k??''},${cur.id})`;
+      const order=q.sort==='name'?Prisma.sql`x."sortName" COLLATE "und-x-icu" ASC,x.kind ASC,x.id ASC`:Prisma.sql`x."createdAt" DESC,x.kind DESC,x.id DESC`;
+      const rows=await tx.$queryRaw<Array<{id:string;kind:SubjectKind;createdAt:Date;sortName:string;brand:string|null;model:string|null}>>(Prisma.sql`${base} SELECT x.* FROM filtered x WHERE ${placement} AND ${after} ORDER BY ${order} LIMIT ${q.limit+1}`);
+      const page=this.page(rows,q.limit,b,r=>({t:r.createdAt.toISOString(),k:r.kind,id:r.id,...(q.sort==='name'?{n:r.sortName}:{})}));
+      const [counts]=await tx.$queryRaw<Array<{all:number;unplaced:number;total:number;rooms:Array<{id:string;name:string;count:number}>}>>(Prisma.sql`${base}
+        SELECT count(*)::int AS "all",count(*) FILTER(WHERE jsonb_array_length(x."roomIds")=0)::int AS unplaced,
+        count(*) FILTER(WHERE ${placement})::int AS total,
+        COALESCE((SELECT jsonb_agg(y ORDER BY y.name COLLATE "und-x-icu",y.id) FROM (
+          SELECT r.id,r.name,(SELECT count(*)::int FROM filtered f WHERE f."roomIds" @> jsonb_build_array(r.id)) AS count
+          FROM "HomeRoom" r WHERE r."homeId"=${h} AND (r.state='active' OR r.id=${q.roomId??''})
+        ) y),'[]'::jsonb) AS rooms FROM filtered x`);
+      const items=await Promise.all(page.items.map(async r=>{
+        const item=await this.catalogView(tx,c,r.kind,await this.subject(tx,c,r.kind,r.id));
+        const next=await tx.homeActivity.findFirst({where:{accountId:a,homeId:h,state:'open',dueDate:{not:null},OR:[...(r.kind==='boiler'?[{assetId:r.id}]:[]),{objectLinks:{some:{accountId:a,homeId:h,state:'active',...targetWhere(r.kind,r.id)}}}]},orderBy:[{dueDate:'asc'},{id:'asc'}],select:{title:true,dueDate:true}});
+        return {...item,summary:{brand:r.brand,model:r.model,nextActivity:next}};
+      }));
+      return {...page,items,total:counts.total,facets:{all:counts.all,unplaced:counts.unplaced,rooms:counts.rooms},today:temporal(new Date()).today};
     });
   }
   async history(a: string, h: string, kindInput: unknown, id: string, input: unknown) {

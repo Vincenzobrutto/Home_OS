@@ -1,0 +1,36 @@
+require('reflect-metadata');
+const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
+const {PrismaService}=require('../dist/prisma.service'),{ReviewService}=require('../dist/review/review.service'),{HomeObjectsService}=require('../dist/home-objects/home-objects.service');
+test('catalog: global counts, authorized brand/model search, name keyset and activity summary',async t=>{
+ const db=new PrismaService(),accounts=await Promise.all(['A','B'].map(name=>db.account.create({data:{name:'Catalog synthetic '+name,email:randomUUID()+'@example.test',passwordHash:'not-login'}}))),[a,b]=accounts.map(x=>x.id);
+ const home=await db.home.create({data:{name:'Catalog synthetic isolated',address:'Synthetic'}}),h=home.id;
+ await db.homeMembership.createMany({data:[a,b].map(accountId=>({accountId,homeId:h,role:'owner',validFrom:new Date(0)}))});
+ const doc=await db.document.create({data:{homeId:h,uploaderId:a,name:'Synthetic source',visibility:'private',original:{create:{originalFilename:'synthetic.pdf',mimeType:'application/pdf',byteSize:10,sha256:'a'.repeat(64),file:{create:{storageKey:randomUUID()+'.bin'}}}}},include:{original:true}});
+ t.after(async()=>{await db.objectResourceLink.deleteMany({where:{homeId:h}});await db.homeActivity.deleteMany({where:{homeId:h}});await db.objectPosition.deleteMany({where:{homeId:h}});await db.homeObject.deleteMany({where:{homeId:h}});await db.boilerAsset.deleteMany({where:{homeId:h}});await db.homeRoom.deleteMany({where:{homeId:h}});await db.documentVersion.deleteMany({where:{documentId:doc.id}});await db.document.delete({where:{id:doc.id}});await db.storedFile.delete({where:{id:doc.original.fileId}});await db.homeMembership.deleteMany({where:{homeId:h}});await db.home.delete({where:{id:h}});await db.account.deleteMany({where:{id:{in:[a,b]}}});await db.$disconnect();});
+ const ids=Array.from({length:45},randomUUID);
+ const source={documentId:doc.id,documentVersion:1,sha256:doc.original.sha256};
+ await db.homeObject.createMany({data:ids.map((id,i)=>({id,homeId:h,accountId:a,name:i===44?'Literal %_ object':`Oggetto ${String(i+1).padStart(3,'0')}`,type:'appliance',...(i===24?{profile:{brand:{value:'Marca Privata',origin:'extraction_confirmed',sources:[source]},model:{value:'Rivelia',origin:'user_declared',sources:[]}}}:{})}))});
+ await db.homeObject.create({data:{homeId:h,accountId:b,name:'Other account object',type:'appliance'}});
+ await db.boilerAsset.create({data:{homeId:h,accountId:a,name:'Caldaia',confirmed:{brand:{value:'BoilerBrand'},model:{value:'B1'}}}});
+ const rooms=await Promise.all(['Cucina','Studio'].map(name=>db.homeRoom.create({data:{homeId:h,name,type:'other'}})));
+ await db.objectPosition.createMany({data:[{objectId:ids[0],roomIds:rooms.map(r=>r.id)},{objectId:ids[1],roomIds:[rooms[0].id]}].map(v=>({...v,homeId:h,accountId:a}))});
+ const activity=await db.homeActivity.create({data:{homeId:h,accountId:a,title:'Controllo sintetico',dueDate:'2026-01-01'}});
+ await db.objectResourceLink.create({data:{homeId:h,accountId:a,objectId:ids[24],resourceType:'activity',resourceId:activity.id,activityId:activity.id}});
+ const service=new HomeObjectsService(db,new ReviewService(db,{}));
+ await assert.rejects(service.objects(a,h,{sort:['name']}),e=>e.getStatus()===422);
+ const first=await service.objects(a,h,{limit:'7',sort:'name'});assert.equal(first.total,46);assert.equal(first.facets.all,46);assert.equal(first.facets.unplaced,44);assert.deepEqual(first.facets.rooms.map(r=>r.count),[2,1]);
+ let page=first,all=[...page.items];while(page.nextCursor){page=await service.objects(a,h,{limit:'7',sort:'name',cursor:page.nextCursor});all.push(...page.items);}
+ assert.equal(all.length,46);assert.equal(new Set(all.map(o=>o.ref.kind+o.ref.id)).size,46);assert.equal(all[0].name,'Caldaia');
+ const sorted=all.map(o=>o.name);assert.deepEqual([...sorted].sort((x,y)=>x.localeCompare(y,'und')),sorted);
+ const found=await service.objects(a,h,{q:'rivelia',sort:'name'});assert.equal(found.total,1);assert.equal(found.items[0].summary.model,'Rivelia');assert.equal(found.items[0].summary.nextActivity.title,'Controllo sintetico');
+ assert.equal((await service.objects(a,h,{q:'marca privata'})).total,1);
+ await db.document.update({where:{id:doc.id},data:{uploaderId:b}});
+ const hidden=await service.objects(a,h,{q:'marca privata'});assert.equal(hidden.total,0);assert.equal(hidden.facets.all,0);assert.deepEqual(hidden.items,[]);
+ const still=await service.objects(a,h,{q:'rivelia'});assert.equal(still.total,1);assert.equal(still.items[0].summary.brand,null);assert.equal(still.items[0].profile.fields.brand,undefined);
+ assert.equal((await service.objects(a,h,{q:'boilerbrand'})).items[0].summary.model,'B1');
+ assert.equal((await service.objects(a,h,{q:'%_'})).total,1);
+ const placed=await service.objects(a,h,{roomId:rooms[0].id,sort:'name'});assert.equal(placed.total,2);assert.equal(placed.facets.all,46);
+ await assert.rejects(service.objects(a,h,{sort:'recent',cursor:first.nextCursor}),e=>e.getStatus()===422);
+ await db.homeMembership.update({where:{accountId_homeId:{accountId:a,homeId:h}},data:{validUntil:new Date(0)}});
+ await assert.rejects(service.objects(a,h,{sort:'name'}),e=>e.getStatus()===403);
+});

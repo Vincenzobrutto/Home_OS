@@ -452,6 +452,7 @@ export type ObjectKind = 'object' | 'boiler';
 export type ObjectRef = { kind: ObjectKind; id: string };
 
 export type CatalogItem = {
+  summary?: {brand:string|null;model:string|null;nextActivity:{title:string;dueDate:string|null}|null};
   profile?: { fields: import('../object-onboarding/model').Profile; unavailable: boolean } | null;
   manual?: ObjectManual | null;
   ref: ObjectRef;
@@ -486,7 +487,9 @@ export type ObjectCapabilities = {
 };
 
 export type RoomFilters = { state: G1State | 'all' };
+export type CatalogPage = Page<CatalogItem> & {total?:number;today?:string;facets?:{all:number;unplaced:number;rooms:Array<{id:string;name:string;count:number}>}};
 export type CatalogFilters = {
+  sort?: 'name'|'recent';
   state: G1State | 'all';
   /** Nome già NFC/trim; '' = nessuna ricerca. */
   q: string;

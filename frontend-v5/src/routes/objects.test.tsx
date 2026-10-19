@@ -237,22 +237,22 @@ describe('[mock] G1 — oggetti, posizione e catalogo', () => {
     expect(within(list).getAllByRole('listitem')).toHaveLength(20);
     await app.user.click(screen.getByRole('button', { name: 'Mostra altri oggetti' }));
     await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(26));
-    expect(new Set(within(list).getAllByRole('link').map((l) => l.textContent)).size).toBe(26);
+    expect(new Set(within(list).getAllByRole('link').map((l) => l.getAttribute('aria-label')??l.textContent)).size).toBe(26);
 
     const before = gets(backend, /\/objects(\?|$)/).length;
-    await app.user.type(screen.getByLabelText('Cerca per nome'), 'forno');
+    await app.user.type(screen.getByLabelText('Cerca nome, marca o modello'), 'forno');
     expect(gets(backend, /\/objects(\?|$)/)).toHaveLength(before);
     await app.user.click(screen.getByRole('button', { name: 'Cerca' }));
-    await waitFor(() => expect(within(screen.getByRole('list', { name: 'Oggetti' })).getAllByRole('link').map((l) => l.textContent)).toEqual(['Forno']));
+    await waitFor(() => expect(within(screen.getByRole('list', { name: 'Oggetti' })).getAllByRole('link').map((l) => l.getAttribute('aria-label')??l.textContent)).toEqual(['Forno']));
     expect(app.router.state.location.search).toBe('?q=forno');
-    expect(gets(backend, /\/objects(\?|$)/).at(-1)).toBe('q=forno&limit=20');
+    expect(gets(backend, /\/objects(\?|$)/).at(-1)).toBe('q=forno&sort=name&limit=20');
 
     await app.router.navigate(`/home/${home.id}/oggetti?collocazione=da-collocare&tipo=boiler`);
-    await waitFor(() => expect(gets(backend, /\/objects(\?|$)/).at(-1)).toBe('placement=unplaced&type=boiler&limit=20'));
+    await waitFor(() => expect(gets(backend, /\/objects(\?|$)/).at(-1)).toBe('placement=unplaced&type=boiler&sort=name&limit=20'));
     expect(await screen.findByRole('link', { name: 'Caldaia cucina' })).toBeInTheDocument();
     // Ambiente e «da collocare» insieme non vengono mai inviati.
     await app.router.navigate(`/home/${home.id}/oggetti?collocazione=da-collocare&ambiente=${room.id}`);
-    await waitFor(() => expect(gets(backend, /\/objects(\?|$)/).at(-1)).toBe(`roomId=${room.id}&limit=20`));
+    await waitFor(() => expect(gets(backend, /\/objects(\?|$)/).at(-1)).toBe(`roomId=${room.id}&sort=name&limit=20`));
   });
 
   it('ritorno dal dettaglio conserva i filtri dello stesso account', async () => {
@@ -437,6 +437,7 @@ describe('[mock] G1 — privacy e contesto', () => {
     const app = await open(backend, 'member@example.test', PW.member, `/home/${home.id}/oggetti`);
     await screen.findByRole('link', { name: 'Bici di Mario' });
     backend.memberships = backend.memberships.filter((m) => !(m.accountId === member.id && m.homeId === home.id));
+    await app.user.click(screen.getByRole('button',{name:/^Filtri$/}));
     fireEvent.change(screen.getByLabelText('Stato'), { target: { value: 'all' } });
     expect(await screen.findByRole('heading', { level: 1, name: 'Accesso non consentito' })).toBeInTheDocument();
     expect(screen.queryByText('Bici di Mario')).not.toBeInTheDocument();

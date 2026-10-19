@@ -9,6 +9,7 @@ const ROOM = '11111111-2222-4333-8444-555555555555';
 describe('regole G1 (unitarie, senza rete)', () => {
   it('filtri catalogo dall’indirizzo: validati, ambiente vince su «da collocare», mai entrambi', () => {
     expect(catalogFiltersFromParams(new URLSearchParams(`q=%20Forno%20&tipo=boiler&ambiente=${ROOM}&collocazione=da-collocare&stato=all`))).toEqual({
+      sort:'name',
       state: 'all',
       q: 'Forno',
       type: 'boiler',
@@ -16,6 +17,7 @@ describe('regole G1 (unitarie, senza rete)', () => {
       placement: 'all',
     });
     expect(catalogFiltersFromParams(new URLSearchParams('tipo=razzo&ambiente=non-uuid&collocazione=da-collocare'))).toEqual({
+      sort:'name',
       state: 'active',
       q: '',
       type: null,

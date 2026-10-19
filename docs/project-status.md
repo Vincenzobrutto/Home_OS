@@ -1,3 +1,7 @@
+## Oggetti e impianti — 19 ottobre 2026
+
+Implementati schede compatte desktop/mobile, Elenco, ricerca server nome/marca/modello, chip ambiente con conteggi completi e ordinamento. Ritorno dal dettaglio con vista, filtri, pagine, focus e posizione. Dati reali e icone, nessuna foto inventata. [Comportamento, API, verifiche e limiti](v5/object-catalog-layout-20261019.md).
+
 ## Ambienti dalla planimetria — 19 ottobre 2026
 
 Implementati punti numerati coerenti con le schede, proposte AI da rivedere, elenco modificabile, bozza persistente e conferma atomica con collegamento agli ambienti già presenti. Desktop/mobile verificati; analisi reale autorizzata con 8 proposte lasciate in bozza e nessun ambiente reale creato. [Comportamento, contratto e limiti](v5/floor-plan-rooms-20261019.md).

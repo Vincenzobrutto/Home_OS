@@ -528,13 +528,14 @@ export class ApiClient {
   }
 
   /** Catalogo unificato oggetti + caldaie: solo i filtri attivi diventano parametri. */
-  listObjects(homeId: string, filters: CatalogFilters, page: PageParams, signal: AbortSignal | undefined, accountId: string) {
+  listObjects(homeId: string, filters: CatalogFilters, page: PageParams, signal: AbortSignal | undefined, accountId: string):Promise<import('./types').CatalogPage> {
     const params = new URLSearchParams();
     if (filters.state !== 'active') params.set('state', filters.state);
     if (filters.roomId) params.set('roomId', filters.roomId);
     else if (filters.placement === 'unplaced') params.set('placement', 'unplaced');
     if (filters.q) params.set('q', filters.q);
     if (filters.type) params.set('type', filters.type);
+    if (filters.sort) params.set('sort', filters.sort);
     return this.page<CatalogItem>(`${homePath(homeId)}/objects${withPage(params, page)}`, {}, signal, accountId);
   }
 
