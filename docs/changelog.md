@@ -1,3 +1,7 @@
+## Collocazione oggetto dal dettaglio — 19 ottobre 2026
+
+Menu Stanza nel box Dettagli, salvataggio esplicito, Da collocare e Più ambienti mantenuti. Stanze disponibili reali, stato vuoto e caricamento pagine; nessuna assegnazione reale automatica. [Verifica e comportamento](v5/object-catalog-layout-20261019.md#scelta-stanza-nel-dettaglio--19-ottobre-2026).
+
 ## Oggetti e impianti — 19 ottobre 2026
 
 Implementati schede compatte desktop/mobile, Elenco, ricerca server nome/marca/modello, chip ambiente con conteggi completi e ordinamento. Ritorno dal dettaglio con vista, filtri, pagine, focus e posizione. Dati reali e icone, nessuna foto inventata. [Comportamento, API, verifiche e limiti](v5/object-catalog-layout-20261019.md).

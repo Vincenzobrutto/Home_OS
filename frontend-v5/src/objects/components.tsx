@@ -409,6 +409,42 @@ export function ObjectForm(props: {
 }
 
 /** Modifica posizione con CAS (versione 0 = mai impostata); array vuoto = «Da collocare». */
+/** Scelta rapida di un ambiente; gli oggetti multiambiente restano espliciti. */
+export function QuickPlacement({home,object,onMultiple,focus=false}:{home:Home;object:CatalogItem;onMultiple:()=>void;focus?:boolean}) {
+  const id=useId(),rooms=useRooms(home.id,{state:'active'}),op=useG1Operation(home.id);
+  const current=object.position.rooms,initial=current.length>1?'multiple':current[0]?.id??'';
+  const [selected,setSelected]=useState(initial);
+  const selectRef=useRef<HTMLSelectElement>(null);
+  useEffect(()=>{if(focus)selectRef.current?.focus();},[focus]);
+  const available=rooms.isError?[]:rooms.data?.pages.flatMap(p=>p.items)??[];
+  const retained=current.filter(r=>!available.some(a=>a.id===r.id));
+  const dirty=selected!==initial,disabled=op.mutation.isPending||op.locked||rooms.isPending||rooms.isError;
+  return <form className={own.quickPlacement} aria-label="Collocazione dell’oggetto" onSubmit={e=>{
+    e.preventDefault();if(!dirty||disabled||selected==='multiple')return;
+    op.run({kind:'position',ref:object.ref,body:{expectedVersion:object.position.version,roomIds:selected?[selected]:[]}});
+  }}>
+    {focus&&<p role="status">Posizione aggiornata.</p>}
+    <label htmlFor={`${id}-room`}>Stanza</label>
+    <div className={styles.actions}>
+      <select ref={selectRef} id={`${id}-room`} value={selected} onChange={e=>setSelected(e.target.value)} disabled={disabled||(!available.length&&!current.length)} aria-describedby={`${id}-hint`}>
+        <option value="">Da collocare</option>
+        {initial==='multiple'&&<option value="multiple" disabled>Più ambienti ({current.length})</option>}
+        {!rooms.isError&&retained.map(r=><option key={r.id} value={r.id} disabled>{roomsText([r])}</option>)}
+        {available.map(r=><option key={r.id} value={r.id}>{r.name} · {ROOM_TYPE_LABEL[r.type]??r.type}</option>)}
+      </select>
+      {dirty&&!op.locked&&<button className={cx(ui.btn,ui.primary)} type="submit" disabled={disabled}>{op.mutation.isPending?'Salvataggio…':'Salva stanza'}</button>}
+      <button type="button" className={ui.btn} disabled={op.mutation.isPending||op.locked} onClick={onMultiple}>Più ambienti</button>
+    </div>
+    <p id={`${id}-hint`} className={ui.hint}>{initial==='multiple'?'Scegliendo una stanza sostituisci gli ambienti attuali. Usa «Più ambienti» per mantenerne più di uno.':'Scegli la stanza e premi «Salva stanza». Puoi lasciare l’oggetto da collocare.'}</p>
+    {rooms.isPending&&<Loading label="Caricamento delle stanze…"/>}
+    {rooms.isError&&<ErrorState title="Stanze non disponibili" error={rooms.error} onRetry={()=>void rooms.refetch()}/>}
+    {!rooms.isPending&&!rooms.isError&&!available.length&&<p>Non ci sono ancora stanze attive. Crea o conferma gli ambienti della casa per trovarli qui.</p>}
+    <Link to={`/home/${encodeURIComponent(home.id)}/ambienti`}>Gestisci ambienti</Link>
+    {rooms.hasNextPage&&<button type="button" className={ui.btn} disabled={rooms.isFetchingNextPage} onClick={()=>void rooms.fetchNextPage()}>Carica altre stanze</button>}
+    <G1Feedback op={op} homeId={home.id} title="Stanza non salvata" onRetry={()=>op.retry()}/>
+  </form>;
+}
+
 export function PositionEditor(props: { home: Home; capabilities: ObjectCapabilities; object: CatalogItem; onDone: () => void; onCancel: () => void }) {
   const { home, object } = props;
   const id = useId();

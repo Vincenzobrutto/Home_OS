@@ -181,7 +181,7 @@ describe('[mock] G1 — oggetti, posizione e catalogo', () => {
     await app.user.type(within(form).getByLabelText('Nome'), 'Lavastoviglie');
     await app.user.click(within(form).getByRole('button', { name: 'Crea oggetto' }));
     await screen.findByRole('heading', { level: 1, name: 'Lavastoviglie' });
-    expect(screen.getByText('Da collocare')).toBeInTheDocument();
+    expect(screen.getByText('Da collocare',{selector:'dd'})).toBeInTheDocument();
     expect(posts(backend, /\/objects$/)[0]!.body).toEqual({ name: 'Lavastoviglie', type: 'appliance' });
 
     await app.router.navigate(`/home/${home.id}/oggetti?nuovo=1`);
@@ -202,23 +202,52 @@ describe('[mock] G1 — oggetti, posizione e catalogo', () => {
     await waitFor(() => expect(list).toHaveTextContent(/Camera, Soggiorno|Soggiorno, Camera/));
   });
 
+  it('senza stanze disponibili spiega come crearle senza inventare opzioni', async () => {
+    const {backend,owner,home}=world();
+    const item=await seedObject(backend,owner.id,home.id,'Robot senza stanza');
+    await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/oggetti/object/${item.ref.id}`);
+    await screen.findByText(/Non ci sono ancora stanze attive/);
+    expect(screen.getByRole('combobox',{name:'Stanza'})).toBeDisabled();
+    expect(screen.getByRole('link',{name:'Gestisci ambienti'})).toHaveAttribute('href',`/home/${home.id}/ambienti`);
+    expect(posts(backend,/\/position$/)).toHaveLength(0);
+  });
+
+  it('colloca con menu stanza e salva esplicitamente, poi torna da collocare', async () => {
+    const {backend,owner,home}=world();
+    const room=await seedRoom(backend,owner.id,home.id,'Cucina','kitchen');
+    const item=await seedObject(backend,owner.id,home.id,'Robot');
+    const app=await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/oggetti/object/${item.ref.id}`);
+    const select=await screen.findByRole('combobox',{name:'Stanza'});
+    await screen.findByRole('option',{name:'Cucina · Cucina'});
+    await app.user.selectOptions(select,room.id);
+    expect(posts(backend,/\/position$/)).toHaveLength(0);
+    await app.user.click(screen.getByRole('button',{name:'Salva stanza'}));
+    await screen.findByText('Posizione aggiornata.');
+    await waitFor(()=>expect(screen.getByRole('combobox',{name:'Stanza'})).toHaveValue(room.id));
+    expect(posts(backend,/\/position$/)[0]!.body).toEqual({expectedVersion:0,roomIds:[room.id]});
+    await app.user.selectOptions(screen.getByRole('combobox',{name:'Stanza'}),'');
+    await app.user.click(screen.getByRole('button',{name:'Salva stanza'}));
+    await waitFor(()=>expect(screen.getByRole('combobox',{name:'Stanza'})).toHaveValue(''));
+    expect(posts(backend,/\/position$/)[1]!.body).toEqual({expectedVersion:1,roomIds:[]});
+  });
+
   it('posizione con CAS: prima volta versione 0, poi 1; versione vecchia → 409 e rilettura', async () => {
     const { backend, owner, home } = world();
     const room = await seedRoom(backend, owner.id, home.id, 'Bagno', 'bathroom');
     const o = await seedObject(backend, owner.id, home.id, 'Scaldabagno');
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/oggetti/object/${o.ref.id}`);
     await screen.findByRole('heading', { level: 1, name: 'Scaldabagno' });
-    await app.user.click(screen.getByRole('button', { name: 'Cambia posizione' }));
+    await app.user.click(screen.getByRole('button', { name: 'Più ambienti' }));
     let form = await screen.findByRole('form', { name: 'Dove si trova' });
     await app.user.click(await within(form).findByRole('checkbox', { name: /Bagno/ }));
     await app.user.click(within(form).getByRole('button', { name: 'Salva posizione' }));
     await waitFor(() => expect(screen.queryByRole('form', { name: 'Dove si trova' })).not.toBeInTheDocument());
     expect(posts(backend, /\/position$/)[0]!.body).toEqual({ expectedVersion: 0, roomIds: [room.id] });
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Modifica' })).toHaveFocus());
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Stanza' })).toHaveFocus());
 
     // Un'altra scheda cambia la posizione: la versione locale è vecchia.
     backend.objects.positions.get(`${owner.id}:object:${o.ref.id}`)!.version += 1;
-    await app.user.click(screen.getByRole('button', { name: 'Cambia posizione' }));
+    await app.user.click(screen.getByRole('button', { name: 'Più ambienti' }));
     form = await screen.findByRole('form', { name: 'Dove si trova' });
     await app.user.click(await within(form).findByRole('checkbox', { name: /Bagno/ }));
     await app.user.click(within(form).getByRole('button', { name: 'Salva posizione' }));
@@ -283,7 +312,7 @@ describe('[mock] G1 — oggetti, posizione e catalogo', () => {
     expect(screen.getByRole('link', { name: 'Apri la scheda tecnica' })).toHaveAttribute('href', `/home/${home.id}/impianti/${boiler.id}`);
     expect(screen.queryByRole('button', { name: 'Modifica' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Archivia' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Cambia posizione' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Più ambienti' })).toBeInTheDocument();
     const costs = screen.getByRole('region', { name: 'I tuoi costi' });
     await waitFor(() => expect(within(costs).getByRole('link', { name: 'Controllo fumi' })).toBeInTheDocument());
     expect(costs).toHaveTextContent('Collegamento della scheda caldaia');
@@ -301,8 +330,8 @@ describe('[mock] G1 — oggetti, posizione e catalogo', () => {
     await g1(backend, owner.id, home.id, `rooms/${old.id}/archive`, { expectedVersion: 1 });
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/oggetti/object/${o.ref.id}`);
     await screen.findByRole('heading', { level: 1, name: 'Bici' });
-    expect(screen.getByText('Vecchia cantina (ambiente archiviato)')).toBeInTheDocument();
-    await app.user.click(screen.getByRole('button', { name: 'Cambia posizione' }));
+    expect(screen.getByRole('link',{name:'Vecchia cantina (ambiente archiviato)'})).toBeInTheDocument();
+    await app.user.click(screen.getByRole('button', { name: 'Più ambienti' }));
     const form = await screen.findByRole('form', { name: 'Dove si trova' });
     expect(await within(form).findByRole('checkbox', { name: /Garage/ })).not.toBeChecked();
     expect(within(form).getByRole('checkbox', { name: 'Vecchia cantina (ambiente archiviato)' })).toBeChecked();

@@ -11,7 +11,7 @@ import { ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../component
 import { useExpenseCapabilities } from '../expenses/hooks';
 import { useEconomyCapabilities } from '../economy/hooks';
 import { G1History } from '../objects/History';
-import { LinksSection, ObjectForm, PositionEditor, StateDialog, objectOwn as own, objectStyles as styles, roomsText, typeLabel } from '../objects/components';
+import { LinksSection, ObjectForm, PositionEditor, QuickPlacement, StateDialog, objectOwn as own, objectStyles as styles, roomsText, typeLabel } from '../objects/components';
 import { useObject, useObjectHistory } from '../objects/hooks';
 import {
   backToCatalog,
@@ -118,13 +118,13 @@ function ObjectDetail(props: { home: Home; kind: ObjectKind; id: string; caps: O
   }
   const v = versionOf(query.data);
   return (
-    <ObjectView key={v} home={home} object={query.data} caps={props.caps} back={props.back} focusActions={firstVersion !== null && v !== firstVersion} />
+    <ObjectView key={v} home={home} object={query.data} caps={props.caps} back={props.back} focusActions={firstVersion !== null && (query.data.version??0) !== Number(firstVersion.split(':')[0])} focusPlacement={firstVersion !== null && query.data.position.version !== Number(firstVersion.split(':')[1])} />
   );
 }
 
 type Panel = 'none' | 'edit' | 'position' | 'state';
 
-function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabilities; back: ReactNode; focusActions: boolean }) {
+function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabilities; back: ReactNode; focusActions: boolean; focusPlacement:boolean }) {
   const { home, object } = props;
   useDocumentTitle(`${object.name} · ${home.name}`);
   const [panel, setPanel] = useState<Panel>('none');
@@ -167,6 +167,9 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
               </>
             )}
           </dl>
+          {canEdit && active && panel !== 'edit' && panel !== 'state' && (panel === 'position' ?
+            <PositionEditor home={home} capabilities={props.caps} object={object} onCancel={() => setPanel('none')} onDone={() => setPanel('none')} /> :
+            <QuickPlacement home={home} object={object} focus={props.focusPlacement} onMultiple={() => setPanel('position')} />)}
           {isBoiler && object.technicalLink && (
             <p className={pages.spaced}>
               <Link to={`${base}/impianti/${encodeURIComponent(object.technicalLink.assetId)}`} className={ui.btn}>
@@ -201,11 +204,6 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
                 Modifica
               </button>
             )}
-            {active && (
-              <button type="button" className={ui.btn} onClick={() => setPanel('position')}>
-                Cambia posizione
-              </button>
-            )}
             {!isBoiler && (
               <button type="button" className={ui.btn} onClick={() => setPanel('state')}>
                 {active ? 'Archivia' : 'Ripristina'}
@@ -216,9 +214,6 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
         {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare questo oggetto, non modificarlo.</p>}
         {panel === 'edit' && !isBoiler && (
           <ObjectForm home={home} capabilities={props.caps} object={object} onCancel={() => setPanel('none')} onDone={() => setPanel('none')} />
-        )}
-        {panel === 'position' && (
-          <PositionEditor home={home} capabilities={props.caps} object={object} onCancel={() => setPanel('none')} onDone={() => setPanel('none')} />
         )}
         {panel === 'state' && !isBoiler && (
           <StateDialog

@@ -26,3 +26,9 @@ Keyset DB per nome normalizzato/casefold ICU + kind/id o data + kind/id; cursor 
 ## Limiti e prossimi incrementi
 
 Foto reali caricabili e personalizzazione icona sono fuori scope. Non confondere icona categoria con riconoscimento certo del prodotto. Nessuna dichiarazione WCAG completa o prestazione certificata su archivi enormi: verificata paginazione con decine di oggetti. Il dettaglio esistente resta il punto per modifica, documenti, spese e attività.
+
+## Scelta stanza nel dettaglio — 19 ottobre 2026
+
+Nel box Dettagli è ora disponibile il menu Stanza con ambienti attivi della casa e Salva stanza esplicito. Da collocare rimuove l’assegnazione. Più ambienti apre il selettore multiplo esistente nello stesso box; selezionare una sola stanza su un oggetto multiambiente sostituisce esplicitamente la posizione, con avviso. Ambienti archiviati assegnati visibili ma non proposti come nuove assegnazioni. Carica altre stanze mantiene accessibili pagine successive; stato vuoto con Gestisci ambienti, errori senza fallback inventato. Solo oggetti attivi modificabili; stessi CAS/idempotenza/retry G1, nessun cambio API/schema. Focus e conferma restano vicino al menu dopo il salvataggio.
+
+Verificati browser desktop e mobile 390 px: opzioni reali presenti; salvataggio Studio su fixture isolata, persistenza dopo ricarica e ritorno Da collocare. Fixture rimossa, nessuna collocazione reale scelta al posto dell’utente. 23 test frontend del percorso passati (22 suite completa più nuovo caso vuoto mirato), build/typecheck/lint riusciti.
