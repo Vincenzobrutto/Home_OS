@@ -1,3 +1,7 @@
+## Compilazione: avviso coerente sulle modifiche non salvate — 20 ottobre 2026
+
+Menu e cronologia Indietro protetti come cambio documento e ritorno; Annulla conserva i campi, salvataggio riuscito prosegue senza doppio avviso. Verifica su dati simulati, dati reali intatti. [Comportamento e limiti](v5/document-unsaved-guard-20261020.md).
+
 ## Selezione AI riservata ai documenti non completati — 20 ottobre 2026
 
 Completati esclusi da caselle e selezione totale anche in Tutti e ricerca; rianalisi dal dettaglio da decidere. Dati reali preservati. [Regola e verifiche](v5/ux-audit-followup-20261020.md#selezione-ai-esclusione-dei-completati).

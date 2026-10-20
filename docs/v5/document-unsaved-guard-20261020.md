@@ -1,0 +1,15 @@
+# Protezione delle modifiche non salvate nella compilazione — 20 ottobre 2026
+
+Il contenitore `DocumentEditorWorkspace` ora intercetta le navigazioni del router con `useBlocker`, comprese le voci del menu e Indietro nella cronologia. Usa lo stesso avviso già presente sul cambio documento: «Le modifiche non salvate saranno scartate. Vuoi lasciare questa scheda?».
+
+Annulla mantiene scheda e campi. Conferma prosegue verso la destinazione e scarta solo le modifiche locali non salvate. Il cambio documento chiede il consenso prima della preparazione della fonte successiva; non compare una seconda conferma al cambio di URL. Anche Torna a Documenti, Aggiungi file e Riprendi più tardi passano dalla protezione. Compila/Originale non è una navigazione e mantiene i campi senza avvisi.
+
+Dopo una conferma di salvataggio riuscita, il passaggio al documento successivo resta libero. Nessun nuovo salvataggio automatico delle bozze, cambiamento ai consensi AI o modifica di API/DB. La protezione nativa `beforeunload` per aggiornamento/chiusura pagina resta attiva; testo e pulsanti di questo avviso dipendono dal browser. Intervento circoscritto alla compilazione Documenti, non una nuova protezione generale di tutti i moduli dell’app.
+
+## Verifica
+
+- 13 test mirati superati: contenitore compilazione e upload/selezione AI. Menu, cronologia Indietro, Torna a Documenti e Riprendi più tardi verificati con annullamento e successiva conferma; controllo del testo preservato, nessuna preparazione o analisi automatica. Cambio documento dal selettore mobile prima della preparazione, una sola conferma, reload protetto quando sporco e libero quando pulito. Test esistente sul passaggio dopo salvataggio e sui filtri preservati mantenuto.
+- Browser in un harness locale separato su loopback, con il modulo di produzione `DocumentEditorWorkspace`, router e navigazione dell’app. Solo il modulo interno, l’originale e le API sono sostituiti con un campo e dati sintetici in memoria: nessuna connessione alle API reali. Desktop 1280×900, mobile 390×844 e 320×740: avviso dal menu, annullamento con campo conservato; cronologia Indietro annullata; conferma dell’uscita senza secondo avviso; passaggio dopo salvataggio simulato senza blocco. La prova browser del cambio documento tramite conferma sincrona ha incontrato un timeout dello strumento; annullamento e accettazione di quel percorso sono coperti dai test automatici.
+- L’avviso nativo è stato letto nell’albero di accessibilità. Lo strumento non consente screenshot con un dialogo JavaScript aperto: le immagini mostrano la scheda con il campo conservato dopo Annulla. Evidenze e harness nella chat: `outputs/unsaved-guard-20261020/`.
+- Nessuna scrittura, nuova bozza, duplicazione, upload o chiamata AI sui dati reali. Harness chiuso, server di collaudo fermato e viewport ripristinato. App reale lasciata sull’archivio iniziale con Completati e ricerca BOLLETTA.
+- Build/TypeScript e lint mirato dei due file modificati superati. Modifiche legacy locali preservate ed escluse dal commit.

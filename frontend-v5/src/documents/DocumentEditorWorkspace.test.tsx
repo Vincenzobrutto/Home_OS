@@ -1,5 +1,5 @@
 import {useContext} from 'react';
-import {screen,waitFor} from '@testing-library/react';
+import {act,screen,waitFor} from '@testing-library/react';
 import {useSearchParams} from 'react-router';
 import {expect,it,vi} from 'vitest';
 import {DocumentEditorContext} from './DocumentEditorContext';
@@ -20,4 +20,55 @@ it('preserves filters, guards unsaved changes and selects the next source only a
  await app.user.click(screen.getByRole('button',{name:/Workspace B Stato/}));expect(guard).toHaveBeenCalled();expect(prepared).not.toHaveBeenCalled();expect(app.router.state.location.search).toContain(first.id);
  await app.user.click(screen.getByRole('button',{name:'Conferma bozza server'}));await waitFor(()=>expect(app.router.state.location.search).toContain(second.id));expect(prepared).toHaveBeenCalledWith([second.id],expect.any(String));expect(app.router.state.location.search).toContain('q=Workspace');expect(app.router.state.location.search).not.toContain('old-draft');expect(guard).toHaveBeenCalledTimes(1);
  await app.user.click(await screen.findByRole('button',{name:'Aggiungi file'}));await screen.findByText('Caricamento pronto');expect(screen.getByRole('button',{name:'Aggiungi documenti'})).toHaveAttribute('aria-expanded','true');await app.user.click(screen.getByRole('button',{name:'Chiudi caricamento'}));await waitFor(()=>expect(app.router.state.location.search).not.toContain('oggetti-documento'));expect(app.router.state.location.search).toContain('q=Workspace');expect(backend.log.some(row=>row.method==='POST'&&row.path.endsWith('/jobs'))).toBe(false);guard.mockRestore();
+});
+
+async function editedWorkspace() {
+ const {backend,homeA1,a}=seededBackend();
+ const first=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'Guard A',workflowState:'to_compile'});
+ const second=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'Guard B',workflowState:'to_compile'});
+ const app=renderApp({path:'/accedi',backend});
+ await app.user.type(await screen.findByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);
+ await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));
+ await app.router.navigate(`/home/${homeA1.id}/spese`);
+ await app.router.navigate(`/home/${homeA1.id}/documenti?oggetti-documento=${first.id}&lotto=guard&compila=manuale&q=Guard`);
+ await app.user.type(await screen.findByLabelText('Dato di prova'),'Da conservare');
+ prepared.mockClear();
+ return {...app,homeId:homeA1.id,first,second};
+}
+
+it.each(['menu','history','return','pause'] as const)('guards %s exits once, preserves edits on cancel, and continues only on confirmation',async(kind)=>{
+ const app=await editedWorkspace();
+ const guard=vi.spyOn(window,'confirm').mockReturnValue(false);
+ const exit=async()=>{
+  if(kind==='menu')await app.user.click(screen.getAllByRole('link',{name:'Spese'})[0]!);
+  else if(kind==='history')await act(async()=>{await app.router.navigate(-1);});
+  else await app.user.click(screen.getByRole('button',{name:kind==='return'?'Torna a Documenti':'Riprendi più tardi'}));
+ };
+ await exit();
+ await waitFor(()=>expect(guard).toHaveBeenCalledTimes(1));
+ expect(guard).toHaveBeenLastCalledWith('Le modifiche non salvate saranno scartate. Vuoi lasciare questa scheda?');
+ expect(screen.getByLabelText('Dato di prova')).toHaveValue('Da conservare');
+ expect(app.router.state.location.search).toContain(app.first.id);
+ guard.mockReturnValue(true);await exit();
+ await waitFor(()=>expect(app.router.state.location.search).not.toContain('oggetti-documento'));
+ expect(guard).toHaveBeenCalledTimes(2);
+ expect(prepared).not.toHaveBeenCalled();
+ expect(app.backend.log.some(row=>row.method==='POST'&&/\/jobs|\/confirmations/.test(row.path))).toBe(false);
+});
+
+it('guards a source change before preparing it, does not ask twice, and retains the native reload guard',async()=>{
+ const app=await editedWorkspace();
+ const beforeUnload=new Event('beforeunload',{cancelable:true});window.dispatchEvent(beforeUnload);expect(beforeUnload.defaultPrevented).toBe(true);
+ const guard=vi.spyOn(window,'confirm').mockReturnValue(false);
+ await app.user.selectOptions(screen.getByLabelText('Documento da completare'),app.second.id);
+ expect(guard).toHaveBeenCalledTimes(1);expect(prepared).not.toHaveBeenCalled();
+ expect(screen.getByLabelText('Dato di prova')).toHaveValue('Da conservare');
+ guard.mockReturnValue(true);
+ await app.user.selectOptions(screen.getByLabelText('Documento da completare'),app.second.id);
+ await waitFor(()=>expect(app.router.state.location.search).toContain(app.second.id));
+ expect(guard).toHaveBeenCalledTimes(2);expect(prepared).toHaveBeenCalledTimes(1);
+ const cleanUnload=new Event('beforeunload',{cancelable:true});window.dispatchEvent(cleanUnload);expect(cleanUnload.defaultPrevented).toBe(false);
+ await app.user.click(await screen.findByRole('button',{name:'Torna a Documenti'}));
+ await waitFor(()=>expect(app.router.state.location.search).not.toContain('oggetti-documento'));
+ expect(guard).toHaveBeenCalledTimes(2);
 });

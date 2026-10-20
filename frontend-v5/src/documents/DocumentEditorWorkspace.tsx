@@ -1,6 +1,6 @@
 import {PdfPreview} from './PdfPreview';
-import {useEffect,useMemo,useRef,useState} from 'react';
-import {useNavigate,useSearchParams} from 'react-router';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {useBlocker,useNavigate,useSearchParams} from 'react-router';
 import {useCurrentHome} from '../routes/HomePages';
 import {useAccount,useApi} from '../session/session';
 import {useDocument,useDocumentFile,useDocumentSearch,useObjectUrl} from './hooks';
@@ -30,8 +30,14 @@ export function DocumentEditorWorkspace(){
  useEffect(()=>{live.current=true;return()=>{live.current=false;};},[]);
  useEffect(()=>{dirty.current=false;},[documentId]);
  useEffect(()=>{const guard=(event:BeforeUnloadEvent)=>{if(dirty.current){event.preventDefault();event.returnValue='';}};window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard);},[]);
- const canLeave=()=>!dirty.current||window.confirm('Le modifiche non salvate saranno scartate. Vuoi lasciare questa scheda?');
- function leave(upload=false){if(!canLeave())return;const next=filtersToParams(filters);if(upload)next.set('aggiungi','1');navigate(root+'?'+next.toString());}
+ const canLeave=useCallback(()=>!dirty.current||window.confirm('Le modifiche non salvate saranno scartate. Vuoi lasciare questa scheda?'),[]);
+ // Covers links outside this workspace and browser history as well as its own back button.
+ const blocker=useBlocker(()=>dirty.current);
+ useEffect(()=>{
+  if(blocker.state!=='blocked')return;
+  if(canLeave()){dirty.current=false;blocker.proceed();}else blocker.reset();
+ },[blocker,canLeave]);
+ function leave(upload=false){const next=filtersToParams(filters);if(upload)next.set('aggiungi','1');navigate(root+'?'+next.toString());}
  async function select(id:string,confirmed=false,savedId?:string){
   if(busy||(!confirmed&&!canLeave()))return;setBusy(true);setError('');
   try{if(!keys.current.has(id))keys.current.set(id,newIdempotencyKey());const batch=await client.prepareExisting([id],keys.current.get(id)!);if(!live.current)return;
