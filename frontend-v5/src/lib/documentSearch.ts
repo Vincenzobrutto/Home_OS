@@ -97,7 +97,7 @@ export function sameFilters(a: DocumentSearchFilters, b: DocumentSearchFilters) 
 /** Descrizione testuale dei filtri applicati (resa come testo React, mai HTML). */
 export function describeFilters(f: DocumentSearchFilters) {
   const parts: string[] = [];
-  if(f.workflow==='to_compile')parts.push('Da compilare');if(f.workflow==='review')parts.push('Proposte da rivedere');
+  if(f.workflow==='to_compile')parts.push('Da compilare');if(f.workflow==='review')parts.push('Documenti da controllare');
   if(f.workflow==='pending')parts.push('Da fare');if(f.workflow==='completed')parts.push('Completati');
   if (f.q) parts.push(`«${f.q}»`);
   if (f.format !== 'all') parts.push(`formato ${FORMAT_OPTIONS.find((o) => o.value === f.format)!.label}`);

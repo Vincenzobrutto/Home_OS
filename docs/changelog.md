@@ -1,3 +1,7 @@
+## Casa e Documenti: testi chiari e primo utilizzo — 20 ottobre 2026
+
+Documenti da controllare e Dati da confermare distinguono le due code; casa senza documenti con invito iniziale, casa completata con messaggio distinto. Versioni e impronta nei dettagli tecnici richiudibili. [Comportamento e verifiche](v5/casa-document-copy-20261020.md). Bozze escluse dall’intervento.
+
 ## Compila diretto e uscita esplicita — 20 ottobre 2026
 
 Compila apre direttamente il modulo, recupera la bozza esistente e non avvia AI; Precompila con AI resta nel modulo con consenso separato. Riprendi più tardi sostituito da Esci senza salvare con spiegazione di ciò che resta disponibile. [Comportamento e verifica](v5/direct-compilation-20261020.md).

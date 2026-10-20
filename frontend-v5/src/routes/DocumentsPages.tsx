@@ -97,7 +97,7 @@ export function DocumentsPage() {
             <h1 tabIndex={-1}>{['house','floor_plans','building','energy','contracts','technical'].includes(applied.collection??'')?'Documenti della casa':'Documenti'}</h1>
             <span ref={setExportSlot} />
           </div>
-          <p className={styles.lead}>{applied.workflow==='completed'?'Dati salvati e originali sempre disponibili.':applied.workflow==='all'?'Cerca tra tutti i documenti della casa.':'Qui trovi i documenti che richiedono ancora un passaggio.'}</p>
+          <p className={styles.lead}>{applied.workflow==='completed'?'Dati salvati e originali sempre disponibili.':applied.workflow==='all'?'Cerca tra tutti i documenti della casa.':'Completa i dati mancanti o controlla quelli proposti.'}</p>
         </div>
         {canUpload && (
           <div className={docs.toolbarActions}>
@@ -106,10 +106,10 @@ export function DocumentsPage() {
         )}
       </div>
       {['house','floor_plans','building','energy','contracts','technical'].includes(applied.collection??'')&&<section className={docs.panel} aria-label="Documenti della casa per tipologia"><h2>Esplora i documenti della casa</h2><p>Un unico archivio: ogni file resta al suo posto, senza copie. Le categorie dipendono dal tipo che hai salvato.</p><div className={cx(docs.workflowTabs,docs.houseTabs)} role="group" aria-label="Tipologie della casa">{[['house','Tutti della casa'],['floor_plans','Planimetrie'],['building','Pratiche edilizie'],['energy','APE ed energia'],['contracts','Contratti'],['technical','Impianti']].map(([collection,label])=><button key={collection} type="button" className={cx(ui.btn,applied.collection===collection&&ui.primary)} aria-pressed={applied.collection===collection} onClick={()=>apply({...applied,collection:collection as DocumentSearchFilters['collection'],workflow:'all'})}>{label}</button>)}</div><Link to={'/home/'+encodeURIComponent(home.id)+'/documenti?workflow=all'}>Apri l’archivio completo</Link></section>}
-      {params.has('documento-salvato')&&<Banner title="Documento organizzato" actions={<button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'completed'})}>Vedi nei Completati</button>}><p>Il salvataggio è riuscito. Il documento e l’originale restano disponibili.</p></Banner>}
+      {params.has('documento-salvato')&&<Banner title="Documento salvato" actions={<button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'completed'})}>Vai ai documenti completati</button>}><p>Il salvataggio è riuscito. Il documento e l’originale restano disponibili.</p></Banner>}
       {canUpload&&uploadVisible&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={()=>closeUpload()}>Chiudi caricamento</button></section>}
       <div className={docs.workflowTabs} role="group" aria-label="Stato dei documenti">{([['pending','Da fare'],['completed','Completati'],...(applied.q||applied.workflow==='all'?[['all','Tutti'] as const]:[])] as const).map(([value,label])=><button key={value} type="button" className={cx(ui.btn,applied.workflow===value&&ui.primary)} aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
-      {['to_compile','review'].includes(applied.workflow)&&<p role="status">Vista: {applied.workflow==='review'?'Proposte da rivedere':'Documenti da compilare'}. <button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'pending'})}>Mostra tutti i documenti da fare</button></p>}
+      {['to_compile','review'].includes(applied.workflow)&&<p role="status">Vista: {applied.workflow==='review'?'Documenti da controllare':'Documenti da compilare'}. <button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'pending'})}>Mostra tutti i documenti da fare</button></p>}
       {!canUpload && (
         <p className={cx(docs.note, docs.panel)}>
           Con il tuo ruolo puoi consultare e scaricare i documenti visibili, non caricarne di nuovi.
@@ -338,7 +338,7 @@ function DocumentsArchive(props: {
             <span className={docs.limits}>
               ZIP con al massimo {MAX_EXPORT_DOCUMENTS} documenti e 100 MiB complessivi: limite tecnico di questa
               versione.
-              {' '}Lo ZIP contiene solo gli originali selezionati e un elenco con le loro impronte; attività, spese e oggetti si esportano separatamente dal riquadro dei dati personali qui sotto.
+              {' '}Lo ZIP contiene solo gli originali selezionati e un elenco dei file con i codici per verificarne l’integrità; attività, spese e oggetti si esportano separatamente dal riquadro dei dati personali qui sotto.
             </span>
             {selected.size > 0 && problem && <span className={docs.problem}>{problem}</span>}
           </div>

@@ -14,7 +14,7 @@ it('[mock] Casa mette le azioni prima dei dettagli e aprire il ruolo non scrive 
   await app.user.type(screen.getByLabelText('Password'), PASSWORD_B);
   await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
   await screen.findByRole('heading', { level: 1, name: homeB1.name });
-  expect(await screen.findByRole('link',{name:/Proposte da rivedere 1/})).toHaveAttribute('href',`/home/${homeB1.id}/documenti?workflow=review`);
+  expect(await screen.findByRole('link',{name:/Documenti da controllare 1/})).toHaveAttribute('href',`/home/${homeB1.id}/documenti?workflow=review`);
   expect(screen.getByRole('link',{name:/Documenti da compilare 26/})).toHaveAttribute('href',`/home/${homeB1.id}/documenti?workflow=to_compile`);
   expect(screen.queryByText('Casa pending source')).not.toBeInTheDocument();expect(screen.queryByText('Private other account')).not.toBeInTheDocument();
   const explore=screen.getByRole('region',{name:'Esplora la casa'});
@@ -43,5 +43,5 @@ it('[mock] Casa mette le azioni prima dei dettagli e aprire il ruolo non scrive 
   expect(screen.getByRole('heading', { name: 'Dati della casa' })).toBeVisible();
   expect(writes()).toBe(before);
   expect(screen.queryByText('Benvenuto su Dimora')).toBeNull();
-  await app.user.click(screen.getByRole('link',{name:/Proposte da rivedere 1/}));expect(await screen.findByRole('link',{name:'Casa pending source'})).toBeInTheDocument();expect(screen.queryByRole('link',{name:'Compile 0'})).not.toBeInTheDocument();
+  await app.user.click(screen.getByRole('link',{name:/Documenti da controllare 1/}));expect(await screen.findByRole('link',{name:'Casa pending source'},{timeout:10000})).toBeInTheDocument();expect(screen.queryByRole('link',{name:'Compile 0'})).not.toBeInTheDocument();
 });

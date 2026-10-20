@@ -3,11 +3,11 @@ import { Icon } from '../components/Icon';
 import styles from '../routes/documents.module.css';
 
 const states = {
-  to_compile: ['Da compilare', 'Completa la scheda, a mano o con AI.', 'neutral', 'document'],
+  to_compile: ['Da compilare', 'Inserisci i dati oppure precompilali con l’AI.', 'neutral', 'document'],
   analyzing: ['In analisi', 'Stiamo preparando la proposta. Puoi tornare più tardi.', 'progress', 'info'],
-  review: ['Da rivedere', 'Proposta pronta: controlla e conferma i dati.', 'warning', 'alert'],
-  completed: ['Completato', 'Dati salvati. Originale disponibile.', 'success', 'document'],
-  attention: ['Analisi da verificare', 'Apri il documento: nessun nuovo invio automatico.', 'error', 'alert'],
+  review: ['Da rivedere', 'Controlla i dati proposti e salva.', 'warning', 'alert'],
+  completed: ['Completato', 'Dati salvati. Puoi consultare il file originale.', 'success', 'document'],
+  attention: ['Analisi da controllare', 'Apri il documento per controllare l’esito dell’analisi.', 'error', 'alert'],
 } as const;
 
 export function DocumentWorkflowStatus({ state }: { state?: DocumentWorkflowState }) {

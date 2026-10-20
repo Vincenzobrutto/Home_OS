@@ -37,7 +37,7 @@ async function login(app: App, email: string, password: string) {
 async function openDocuments(backend: FakeBackend, email: string, password: string, homeId: string) {
   const app = renderApp({ path: '/accedi', backend, homeTestRoutes: [{ path: 'single-upload-test', element: <SingleUploadHarness /> }] });
   await login(app, email, password);
-  await app.router.navigate(`/home/${homeId}/documenti`);
+  await app.router.navigate(`/home/${homeId}/documenti?workflow=all`);
   await screen.findByRole('heading', { level: 1, name: 'Documenti' });
   return app;
 }
@@ -73,13 +73,13 @@ describe('[mock] Documenti — archivio', () => {
     const list = await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(20);
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Carica documenti' })).toHaveAttribute('href', `/home/${home.id}/documenti/organizza`);
+    expect(screen.getByRole('button', { name: 'Aggiungi documenti' })).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('link', { name: 'Organizza più documenti' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Analizza documenti' })).not.toBeInTheDocument();
     const first = within(list).getAllByRole('listitem')[0]!;
     expect(first).toHaveTextContent('Documento 25');
     expect(first).toHaveTextContent(/PDF · \d+ B/);
-    expect(first).toHaveTextContent('Originale caricato');
+    expect(first).toHaveTextContent('Da compilare');
     expect(first).toHaveTextContent('Persone della casa');
     expect(first).not.toHaveTextContent('Caricamento manuale');
     expect(within(list).getAllByRole('listitem')[1]).toHaveTextContent('Solo io');
@@ -304,14 +304,14 @@ describe('[mock] Documenti — caricamento', () => {
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Regolamento', visibility: 'home' });
     const memberApp = await openDocuments(backend, 'member@example.test', PW.member, home.id);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
-    expect(screen.getByRole('link', { name: 'Carica documenti' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Aggiungi documenti' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Esporta ZIP' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     memberApp.unmount();
 
     await openDocuments(backend, 'viewer@example.test', PW.viewer, home.id);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
-    expect(screen.queryByRole('link', { name: 'Carica documenti' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aggiungi documenti' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Esporta ZIP' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.getByText(/puoi consultare e scaricare i documenti visibili, non caricarne/)).toBeInTheDocument();
@@ -331,7 +331,13 @@ describe('[mock] Documenti — dettaglio, download ed export', () => {
     expect(data).toHaveTextContent('Caricamento manuale');
     expect(data).toHaveTextContent('Originale caricato');
     expect(data).toHaveTextContent(doc.sha256);
-    expect(data).toHaveTextContent(/Versione\s*1/);
+    expect(data).toHaveTextContent(/Versione del file\s*1/);
+    const technical=within(data).getByText('Dettagli tecnici del file').closest('details')!;
+    expect(technical).not.toHaveAttribute('open');expect(within(data).getByText(doc.sha256)).not.toBeVisible();
+    const writesBeforeDetails=backend.log.filter(r=>r.method==='POST').length;
+    await app.user.click(within(data).getByText('Dettagli tecnici del file'));
+    expect(within(data).getByText(doc.sha256)).toBeVisible();expect(backend.log.filter(r=>r.method==='POST')).toHaveLength(writesBeforeDetails);
+    await app.user.click(within(data).getByText('Dettagli tecnici del file'));expect(technical).not.toHaveAttribute('open');
     expect(data).not.toHaveTextContent(/Validato|Confermato|Certificato/);
     const preview = await screen.findByLabelText('Anteprima di Rogito');
     expect(preview.tagName).toBe('OBJECT');
@@ -440,7 +446,7 @@ describe('[mock] Documenti — dettaglio, download ed export', () => {
     await app.user.click(screen.getByRole('button', { name: 'Esporta ZIP' }));
     await app.user.click(await screen.findByRole('checkbox', { name: /Seleziona «Uno»/ }));
     await app.user.click(screen.getByRole('button', { name: 'Esporta ZIP' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Nessun file è stato esportato.');
+    expect(await screen.findByText(/Nessun file è stato esportato\./)).toBeInTheDocument();
     expect(downloads).toHaveLength(0);
   });
 });
@@ -482,7 +488,7 @@ describe('[mock] Documenti — sessione e contesto', () => {
     const app = await openDocuments(backend, 'owner@example.test', PW.owner, home.id);
     await openUpload(app);
     await app.user.upload(screen.getByLabelText('File'), pdfFile('per-casa-roma.pdf'));
-    await app.router.navigate(`/home/${second.id}/documenti`);
+    await app.router.navigate(`/home/${second.id}/documenti?workflow=all`);
     await waitFor(() => expect(screen.getAllByRole('navigation', { name: 'Sezioni di Casa Lago' }).length).toBeGreaterThan(0), { timeout: 3000 });
     await screen.findByText('Nessun documento in questa casa');
     expect(screen.queryByText(/per-casa-roma/)).not.toBeInTheDocument();

@@ -112,7 +112,7 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     expect(listQueries(backend).every((q) => !q.includes('ricerca'))).toBe(true);
 
     await app.router.navigate(`/home/${home.id}/casa`);
-    await app.user.click(await screen.findByRole('link', { name: 'Apri documenti' }));
+    await app.user.click(screen.getAllByRole('link', { name: 'Documenti' })[0]!);
     await screen.findByRole('heading', { level: 1, name: 'Documenti' });
     await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Documenti' })).toHaveFocus());
     expect(screen.getByRole('searchbox', { name: 'Cerca nei documenti' })).not.toHaveFocus();

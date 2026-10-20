@@ -14,11 +14,11 @@ it('shows pending work first, exposes every state, and switches the canonical ar
   await app.user.type(await screen.findByLabelText('Email'),'owner@example.test');
   await app.user.type(screen.getByLabelText('Password'),'password-owner-001');
   await app.user.click(screen.getByRole('button',{name:'Accedi'}));
-  await waitFor(()=>expect(app.router.state.location.pathname).not.toBe('/accedi'));
+  await waitFor(()=>expect(app.router.state.location.pathname).toBe(`/home/${home.id}/casa`));
   await app.router.navigate(`/home/${home.id}/documenti`);
   expect(await screen.findByLabelText('Stato: Da rivedere')).toBeVisible();
   expect(screen.getByLabelText('Stato: In analisi')).toBeVisible();
-  expect(screen.getByLabelText('Stato: Analisi da verificare')).toBeVisible();
+  expect(screen.getByLabelText('Stato: Analisi da controllare')).toBeVisible();
   expect(screen.queryByText('Salvato',{selector:'a'})).not.toBeInTheDocument();
   expect(screen.queryByRole('checkbox',{name:/per compilazione AI/})).not.toBeInTheDocument();
   await app.user.click(screen.getByRole('button',{name:'Seleziona per compilare con l’AI'}));
@@ -54,7 +54,7 @@ it('keeps an explicit All scope without a query and aligns it with the list',asy
   await app.user.type(await screen.findByLabelText('Email'),owner.email);
   await app.user.type(screen.getByLabelText('Password'),'password-owner-001');
   await app.user.click(screen.getByRole('button',{name:'Accedi'}));
-  await waitFor(()=>expect(app.router.state.location.pathname).not.toBe('/accedi'));
+  await waitFor(()=>expect(app.router.state.location.pathname).toBe(`/home/${home.id}/casa`));
   await app.router.navigate('/home/'+home.id+'/documenti');
   const scope=await screen.findByRole('combobox',{name:'Cerca in'});
   expect(scope).toHaveValue('pending');

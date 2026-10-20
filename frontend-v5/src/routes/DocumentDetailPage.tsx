@@ -127,7 +127,6 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
           <div className={docs.tags}>
             <Tag tone="blue">{STATUS_LABEL}</Tag>
             <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
-            <Tag>Versione {doc.version}</Tag>
           </div>
           {props.home.permissions.includes('edit') && (
             <p className={styles.spaced}>
@@ -167,7 +166,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
             <dt>Nome del file</dt>
             <dd>{doc.originalFilename}</dd>
             {doc.organization && <>
-              <dt>Organizzazione personale</dt><dd>{doc.organization.title}<br />Scelta da te · versione {doc.organization.version}</dd>
+              <dt>Titolo scelto da te</dt><dd>{doc.organization.title}</dd>
               <dt>Parti del documento</dt><dd>{doc.organization.parts.map((part, i) => <div key={i}>{KIND_LABEL[part.kind as keyof typeof KIND_LABEL] ?? part.kind}{part.pageFrom === null ? ' · documento intero' : ` · pagine ${part.pageFrom}–${part.pageTo}`}</div>)}</dd>
             </>}
             <dt>Formato</dt>
@@ -176,8 +175,6 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
             <dd>{formatBytes(doc.byteSize)}</dd>
             <dt>Caricato il</dt>
             <dd>{formatDate(doc.createdAt)}</dd>
-            <dt>Versione</dt>
-            <dd>{doc.version}</dd>
             <dt>Fonte</dt>
             <dd>{SOURCE_LABEL}</dd>
             <dt>Chi può vederlo</dt>
@@ -188,13 +185,20 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
             </dd>
             <dt>Stato</dt>
             <dd>{STATUS_LABEL}</dd>
-            <dt>Impronta SHA-256</dt>
-            <dd className={docs.hash}>{doc.sha256}</dd>
+
           </dl>
+          <details className={styles.spaced}>
+            <summary className={styles.cardTitle}>Dettagli tecnici del file</summary>
+            <dl className={styles.detailList}>
+              <dt>Versione del file</dt><dd>{doc.version}</dd>
+              {doc.organization&&<><dt>Versione del titolo e della classificazione</dt><dd>{doc.organization.version}</dd></>}
+              <dt>Impronta SHA-256</dt><dd className={docs.hash}>{doc.sha256}</dd>
+            </dl>
           <p className={cx(docs.note, styles.spaced)}>
             L’originale è conservato byte per byte. Caricarlo o scaricarlo non conferma i dati e non certifica
             contenuto, proprietà o validità tecnica.
           </p>
+          </details>
         </section>
       </div>
     </>

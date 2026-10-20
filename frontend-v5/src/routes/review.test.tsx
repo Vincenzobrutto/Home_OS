@@ -440,7 +440,7 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
     await app.router.navigate(`/home/${home.id}/casa`);
     await screen.findByRole('heading', { level: 1, name: home.name });
     const verifiche = await screen.findByRole('region', { name: 'Da rivedere' });
-    await waitFor(() => expect(within(verifiche).getByRole('link',{name:'Verifiche da rivedere 3'})).toBeInTheDocument());
+    await waitFor(() => expect(within(verifiche).getByRole('link',{name:'Dati da confermare 3'})).toBeInTheDocument());
     await app.router.navigate(`/home/${home.id}/review`);
     const batch = await screen.findByRole('group', { name: 'Conferma insieme marca e modello' });
     await app.user.click(within(batch).getByRole('checkbox', { name: /Marca/ }));
@@ -458,7 +458,7 @@ describe('[mock] M3 — manuale, conteggi, riservatezza, contesto', () => {
     await app.router.navigate(`/home/${home.id}/casa`);
     await screen.findByRole('region', { name: 'Da rivedere' });
     await waitFor(() => {
-      expect(screen.getByRole('link',{name:'Verifiche da rivedere 0'})).toBeInTheDocument();
+      expect(screen.getByRole('link',{name:'Dati da confermare 0'})).toBeInTheDocument();
       expect(screen.getByRole('region',{name:'Esplora la casa'})).toBeInTheDocument();
     });
   });
