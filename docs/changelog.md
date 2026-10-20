@@ -1,3 +1,7 @@
+## Rubrica: archiviazione e collegamenti distinti — 21 ottobre 2026
+
+Nel dettaglio, spiegazioni separate per Archivia contatto e Rimuovi collegamento, con indicazione dei dati conservati e messaggio dopo l’esito riuscito. Azioni dirette, elenco e ritorno invariati. [Comportamento e verifiche](v5/contact-actions-20261021.md). Collaudo su contatti fittizi; dati reali intatti. Bozze rimandate.
+
 ## Testi tecnici più semplici — 21 ottobre 2026
 
 Documenti ricevuti sostituisce Consegne ricevute; dimensioni in KB/MB con conversione decimale e limiti approssimati leggibili, controlli esatti in byte invariati. [Comportamento e verifiche](v5/plain-language-20261021.md). Nessuna modifica ai dati reali; bozze rimandate.
