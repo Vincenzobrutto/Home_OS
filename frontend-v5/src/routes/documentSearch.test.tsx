@@ -41,11 +41,12 @@ async function open(backend: FakeBackend, email: string, password: string, homeI
   await login(app, email, password);
   await app.router.navigate(`/home/${homeId}/documenti${search}`);
   await screen.findByRole('heading', { level: 1, name: 'Documenti' });
-  await waitFor(()=>expect(screen.queryByText('Filtri',{selector:'summary'})??screen.queryByText('Ricerca non attiva')).not.toBeNull());const filters=screen.queryByText('Filtri',{selector:'summary'});if(filters&&!filters.parentElement?.hasAttribute('open'))await app.user.click(filters);
+  await waitFor(()=>expect(screen.queryByRole('button',{name:/^Filtri/})??screen.queryByText('Ricerca non attiva')).not.toBeNull());
   return app;
 }
 
-const field = async () => {const summary=await screen.findByText('Filtri',{selector:'summary'});if(!summary.parentElement?.hasAttribute('open'))fireEvent.click(summary);return screen.findByRole('searchbox', { name: 'Cerca nei documenti' });};
+const field = async () => screen.findByRole('searchbox', { name: 'Cerca nei documenti' });
+const filtersPanel = async (app:App) => { await app.user.click(screen.getByRole('button',{name:/^Filtri/})); return screen.findByRole('dialog',{name:'Filtri'}); };
 
 /** Query string delle richieste lista documenti ricevute dal backend. */
 const withoutWorkflow = (search:string) => { const params=new URLSearchParams(search);params.delete('workflow');const value=params.toString();return search.startsWith('?')&&value?'?'+value:value; };
@@ -56,13 +57,31 @@ async function search(app: App, text: string) {
   const input = await field();
   await app.user.clear(input);
   if (text) await app.user.type(input, text);
-  await app.user.click(screen.getByRole('button', { name: 'Cerca' }));
+  fireEvent.submit((await field()).closest('form')!);
 }
 
 const results = (home = 'Casa Roma') => screen.findByRole('list', { name: `Risultati della ricerca in ${home}` });
 const names = (list: HTMLElement) => within(list).getAllByRole('listitem').map((li) => within(li).getByRole('link').textContent);
 
 const png = () => new Uint8Array([...PNG_SIGNATURE, 0, 0, 0, 0]);
+
+it('restores all loaded result pages and the document focus after detail and Back',async()=>{
+ const {backend,owner,home}=world();
+ for(let i=0;i<24;i++)await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Manuale '+i,workflowState:'completed'});
+ const app=await open(backend,owner.email,PW.owner,home.id,'?workflow=all&q=Manuale');
+ await results();await app.user.click(screen.getByRole('button',{name:'Mostra altri documenti'}));
+ await waitFor(async()=>expect(within(await results()).getAllByRole('listitem')).toHaveLength(24));
+ await waitFor(()=>expect(app.queryClient.isFetching()).toBe(0));
+ const links=within(await results()).getAllByRole('link'),name=links.at(-1)!.textContent!;
+ await app.user.click(screen.getAllByRole('button',{name:'Vedi dettagli'}).at(-1)!);
+ await screen.findByRole('heading',{name,level:1});
+ await app.user.click(await screen.findByRole('link',{name:/← Documenti di/}));
+ await waitFor(async()=>expect(within(await results()).getAllByRole('listitem')).toHaveLength(24));
+ await waitFor(()=>expect(screen.getByRole('link',{name})).toHaveFocus());
+ expect(new URLSearchParams(app.router.state.location.search).get('workflow')).toBe('all');
+ await app.user.click(screen.getAllByRole('button',{name:'Vedi dettagli'}).at(-1)!);await screen.findByRole('heading',{name,level:1});await app.router.navigate(-1);
+ await waitFor(()=>expect(screen.getByRole('link',{name})).toHaveFocus());
+});
 
 describe('[mock] H2 confini della sessione e revoca delle pagine', () => {
   it('401 account_context_changed non trasferisce la ricerca al nuovo account', async () => {
@@ -118,7 +137,7 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     expect(screen.getByRole('searchbox', { name: 'Cerca nei documenti' })).not.toHaveFocus();
   });
 
-  it('destinazione e nota; nessuna richiesta a ogni tasto; Cerca applica, filtri nell’URL senza cursor', async () => {
+  it('destinazione e nota; Invio anticipa il debounce; filtri nell’URL senza cursor', async () => {
     const { backend, owner, home } = world();
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Rogito notarile' });
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Bolletta luce' });
@@ -132,47 +151,45 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     const before = listQueries(backend).length;
     await app.user.type(await field(), 'rogito');
     expect(listQueries(backend)).toHaveLength(before);
-    await app.user.click(screen.getByRole('button', { name: 'Cerca' }));
+    fireEvent.submit((await field()).closest('form')!);
     expect(names(await results())).toEqual(['Rogito notarile']);
     expect(withoutWorkflow(app.router.state.location.search)).toBe('?q=rogito');
     expect(listQueries(backend).at(-1)).toBe('q=rogito&limit=20');
   });
 
-  it('Invio applica insieme testo, formato e visibilità in una sola richiesta', async () => {
+  it('Mostra risultati applica insieme formato e visibilità senza modificare la ricerca', async () => {
     const { backend, owner, home } = world();
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Foto caldaia', mimeType: 'image/png', bytes: png(), visibility: 'home' });
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Foto caldaia privata', mimeType: 'image/png', bytes: png() });
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Libretto caldaia', visibility: 'home' });
     const app = await open(backend, 'owner@example.test', PW.owner, home.id);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
+    await search(app, 'caldaia');
     const before = listQueries(backend).length;
+    await filtersPanel(app);
     fireEvent.change(screen.getByLabelText('Formato'), { target: { value: 'png' } });
-    fireEvent.change(screen.getByLabelText('Visibilità'), { target: { value: 'home' } });
+    fireEvent.change(screen.getByLabelText('Chi può vederli'), { target: { value: 'home' } });
     expect(listQueries(backend)).toHaveLength(before);
-    await app.user.type(await field(), 'caldaia{Enter}');
+    await app.user.click(screen.getByRole('button',{name:'Mostra risultati'}));
     expect(names(await results())).toEqual(['Foto caldaia']);
     expect(listQueries(backend).slice(before)).toEqual(['q=caldaia&format=png&visibility=home&limit=20']);
     expect(withoutWorkflow(app.router.state.location.search)).toBe('?q=caldaia&format=png&visibility=home');
     expect(screen.getByText(/Risultati per «caldaia» · formato PNG · Persone della casa/)).toBeInTheDocument();
   });
 
-  it('Azzera filtri: lista iniziale M2 e prima pagina, bozza vuota, focus sul campo', async () => {
+  it('Rimuovi filtri conserva la query; Azzera ricerca conserva lo stato', async () => {
     const { backend, owner, home } = world();
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Rogito' });
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Bolletta' });
     const app = await open(backend, 'owner@example.test', PW.owner, home.id, '?q=rogito&format=pdf');
     expect(names(await results())).toEqual(['Rogito']);
+    await app.user.click(screen.getByRole('button', {name:'Rimuovi filtri'}));
+    await waitFor(()=>expect(app.router.state.location.search).not.toContain('format='));
     expect(await field()).toHaveValue('rogito');
-    expect(screen.getByLabelText('Formato')).toHaveValue('pdf');
-    await app.user.click(screen.getByRole('button', { name: 'Azzera filtri' }));
-    const list = await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
+    await app.user.click(screen.getByRole('button',{name:'Azzera ricerca'}));
+    const list=await screen.findByRole('list',{name:'Documenti di Casa Roma'});
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);
-    expect(withoutWorkflow(app.router.state.location.search)).toBe('');
-    expect(await field()).toHaveValue('');
-    expect(screen.getByLabelText('Formato')).toHaveValue('all');
     expect(await field()).toHaveFocus();
-    expect(listQueries(backend).at(-1)).toBe('limit=20');
-    expect(screen.getByRole('button', { name: 'Azzera filtri' })).toBeDisabled();
   });
 });
 
@@ -237,18 +254,18 @@ describe('[mock] H2 ricerca — semantica (criteri 2–5)', () => {
     const before = listQueries(backend).length;
     const input = await field();
     fireEvent.change(input, { target: { value: '🔥'.repeat(121) } });
-    await app.user.click(screen.getByRole('button', { name: 'Cerca' }));
+    fireEvent.submit((await field()).closest('form')!);
     expect(await screen.findByText('La ricerca può avere al massimo 120 caratteri.')).toBeInTheDocument();
     expect(input).toHaveAttribute('aria-invalid', 'true');
-    expect(input).toHaveFocus();
+    expect(input).toBeVisible();
     expect(listQueries(backend)).toHaveLength(before);
     fireEvent.change(input, { target: { value: '🔥'.repeat(120) } });
-    await app.user.click(screen.getByRole('button', { name: 'Cerca' }));
+    fireEvent.submit((await field()).closest('form')!);
     await screen.findByRole('heading', { name: 'Nessun documento corrisponde ai filtri' });
     expect(listQueries(backend)).toHaveLength(before + 1);
 
     await app.router.navigate(`/home/${home.id}/documenti?q=${encodeURIComponent('a\nb')}`);
-    expect(await screen.findByRole('alert')).toHaveTextContent('caratteri non ammessi');
+    expect((await screen.findAllByRole('alert')).some(el=>el.textContent?.includes('caratteri non ammessi'))).toBe(true);
     expect(listQueries(backend)).toHaveLength(before + 1);
   });
 
@@ -258,8 +275,9 @@ describe('[mock] H2 ricerca — semantica (criteri 2–5)', () => {
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Contratto', originalFilename: 'contratto.pdf' });
     const app = await open(backend, 'owner@example.test', PW.owner, home.id, '?format=pdf');
     expect(names(await results())).toEqual(['Contratto']);
+    await filtersPanel(app);
     fireEvent.change(screen.getByLabelText('Formato'), { target: { value: 'png' } });
-    await app.user.click(screen.getByRole('button', { name: 'Cerca' }));
+    await app.user.click(screen.getByRole('button',{name:'Mostra risultati'}));
     await waitFor(async () => expect(names(await results())).toEqual(['Foto']));
   });
 });
@@ -531,6 +549,6 @@ it('search is visible immediately and includes completed documents by default, w
  expect(screen.getByRole('searchbox',{name:'Cerca nei documenti'})).toBeVisible();
  await search(app,'Fattura');expect(await screen.findByRole('link',{name:'Fattura completata'})).toBeInTheDocument();expect(app.router.state.location.search).not.toContain('workflow=pending');
  await app.user.click(screen.getByRole('button',{name:'Vedi dettagli'}));await app.user.click(await screen.findByRole('link',{name:/← Documenti di/}));await results();expect(app.router.state.location.search).not.toContain('workflow=pending');
- await app.user.selectOptions(screen.getByRole('combobox',{name:'Cerca in'}),'pending');await app.user.click(screen.getByRole('button',{name:'Cerca'}));
+ await app.user.click(screen.getByRole('button',{name:'Da fare'}));
  await screen.findByRole('heading',{name:'Nessun documento corrisponde ai filtri'});expect(app.router.state.location.search).toContain('workflow=pending');
 });

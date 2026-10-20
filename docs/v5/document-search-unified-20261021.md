@@ -1,0 +1,17 @@
+# Ricerca Documenti unificata — 21 ottobre 2026
+
+Anteprime desktop/mobile approvate, applicate all’app V5 esistente. Una barra di ricerca per titolo o nome file, attesa di 300 ms e Invio immediato, azzeramento del solo testo. Il contenuto PDF non viene cercato. Una nuova ricerca da campo vuoto parte da Tutti e rimuove le restrizioni secondarie; tutte le successive scelte di stato/raccolta/formato/visibilità sono esplicite e conservate quando si modifica quel testo. Nessuna ricerca locale sulle sole pagine caricate: il server mantiene autorizzazioni, filtri e paginazione dell’intero archivio visibile della casa corrente.
+
+Un solo gruppo Tutti/Da fare/Completati, sempre presente; in Da fare resta il sottofiltro per documenti da compilare/controllare. Rimossi Cerca in, pulsante Cerca, scorciatoia finale duplicata e seconda raccolta di filtri di Documenti della casa. L’ingresso da Casa continua a impostare la raccolta corretta, senza un archivio separato.
+
+Filtri apre un pannello compatto su desktop e dal basso su mobile: Gruppo di documenti, Formato e Chi può vederli. Mostra risultati applica insieme le scelte; Annulla, X, Escape o sfondo le scartano. Conteggio e indicatori rimovibili espongono i filtri attivi; Rimuovi filtri mantiene testo e stato. Il pannello blocca lo scorrimento e rende inerte lo sfondo, confina Tab/Shift+Tab e restituisce il focus. La posizione visiva del pulsante Filtri si adatta al telefono. Pulsanti di almeno 44 px.
+
+Query e filtri restano nell’URL; digitazione con replace evita una voce di cronologia per ogni pausa. Tutti viene serializzato esplicitamente anche senza testo per evitare il ripiego a Da fare tornando dal dettaglio. Pagine caricate, focus e posizione sono conservati nella cache privata per account/casa/filtri, ripristinati dopo il caricamento. La cache si pulisce con la sessione e dopo revoca 403. Nessuna nuova persistenza dei contenuti su disco. Resta l’ingresso iniziale Da fare quando non si cerca e nessuno stato è specificato.
+
+## Verifiche
+
+50 test mirati superati: SearchForm, ricerca Documenti, workflow, regole del contratto e azioni di compilazione. Coprono debounce/Invio, ricerca globale inclusi completati, applicazione/annullamento filtri, query non valide senza richieste, titolo/nome file e caratteri letterali, paginazione, ritorno con 24 documenti e Indietro, isolamento account/casa, revoca 403 e assenza di nuova analisi AI sui completati. Build TypeScript/Vite e lint superati; warning Vite preesistente sul bundle principale oltre 500 kB.
+
+Browser reale: desktop 1440×1024 e mobile 390×844/320×740, ricerca della bolletta esistente nei completati, Da fare senza risultati distinto, nuova ricerca globale, filtri PDF applicati/annullati/rimossi e ritorno dal dettaglio con testo, stato, filtro, focus e posizione. Nessun overflow orizzontale nelle viste provate. Console senza errori o avvisi durante la verifica. Nessun caricamento, salvataggio, invio AI o altra modifica ai dati reali.
+
+Confronti visivi affiancati con le tre immagini approvate e dettaglio dei controlli: evidenze locali della chat in outputs/document-search-implemented-20261021. Rifiniti testata mobile e titolo risultati dopo il primo confronto. Font, token, shell, esportazione e informazioni reali delle righe preservati; nessun account Demo o documento fittizio aggiunto all’app. Prove responsive in browser, non certificazione su dispositivo fisico/screen reader. API, backend e schema invariati. Bozze rinviate; legacy locale preservato.

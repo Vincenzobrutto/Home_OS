@@ -1,3 +1,7 @@
+## Ricerca Documenti unificata — 21 ottobre 2026
+
+Ricerca automatica nell’intero archivio della casa, stato unico Tutti/Da fare/Completati, filtri in pannello desktop/mobile e indicatori rimovibili. Nuova ricerca senza restrizioni nascoste; testo, filtri, pagine, focus e posizione conservati dal dettaglio. [Comportamento, verifiche e limiti](v5/document-search-unified-20261021.md). Dati reali intatti; bozze rinviate.
+
 ## Rubrica compatta e ritorno all’elenco — 21 ottobre 2026
 
 Elenco desktop/mobile approvato, ricerca durante la digitazione, azioni Chiama/Email e pagine aggiunte. Ricerca, filtro, pagine, focus e posizione preservati dal dettaglio e con Indietro. [Comportamento, verifiche e limiti](v5/contacts-catalog-20261021.md). Dati reali intatti; bozze rinviate.

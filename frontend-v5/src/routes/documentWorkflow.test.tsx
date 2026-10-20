@@ -24,7 +24,7 @@ it('shows pending work first, exposes every state, and switches the canonical ar
   await app.user.click(screen.getByRole('button',{name:'Seleziona per compilare con l’AI'}));
   expect(screen.getAllByRole('checkbox',{name:/per compilazione AI/})).toHaveLength(3);
   const tabs=screen.getByRole('group',{name:'Stato dei documenti'});
-  expect(within(tabs).getAllByRole('button')).toHaveLength(2);
+  expect(within(tabs).getAllByRole('button')).toHaveLength(3);
   await app.user.click(within(tabs).getByRole('button',{name:'Completati'}));
   expect(await screen.findByText('Salvato',{selector:'a'})).toBeVisible();
   expect(screen.getByLabelText('Stato: Completato')).toBeVisible();
@@ -56,14 +56,14 @@ it('keeps an explicit All scope without a query and aligns it with the list',asy
   await app.user.click(screen.getByRole('button',{name:'Accedi'}));
   await waitFor(()=>expect(app.router.state.location.pathname).toBe(`/home/${home.id}/casa`));
   await app.router.navigate('/home/'+home.id+'/documenti');
-  const scope=await screen.findByRole('combobox',{name:'Cerca in'});
-  expect(scope).toHaveValue('pending');
+  const scope=await screen.findByRole('button',{name:'Da fare'});
+  expect(scope).toHaveAttribute('aria-pressed','true');
   expect(await screen.findByText('Da compilare',{selector:'a'})).toBeVisible();
   expect(screen.queryByText('Già salvato',{selector:'a'})).not.toBeInTheDocument();
-  await app.user.selectOptions(scope,'all');
-  await app.user.click(screen.getByRole('button',{name:'Cerca'}));
+  await app.user.click(screen.getByRole('button',{name:'Tutti'}));
+
   expect(await screen.findByText('Già salvato',{selector:'a'})).toBeVisible();
-  expect(screen.getByRole('combobox',{name:'Cerca in'})).toHaveValue('all');
+
   expect(within(screen.getByRole('group',{name:'Stato dei documenti'})).getByRole('button',{name:'Tutti'})).toHaveAttribute('aria-pressed','true');
   expect(new URLSearchParams(app.router.state.location.search).get('workflow')).toBe('all');
   await app.user.click(screen.getByRole('button',{name:'Seleziona per compilare con l’AI'}));

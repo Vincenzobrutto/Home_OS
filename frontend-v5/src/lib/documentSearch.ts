@@ -68,7 +68,7 @@ export function filtersFromParams(params: URLSearchParams): DocumentSearchFilter
   const visibility = params.get('visibility') ?? 'all';
   return {
     q: normalizeQuery(params.get('q') ?? ''),
-    ...(['pending','completed','to_compile','review'].includes(params.get('workflow')??'')?{workflow:params.get('workflow') as 'pending'|'completed'|'to_compile'|'review'}:{}),
+    ...(['all','pending','completed','to_compile','review'].includes(params.get('workflow')??'')?{workflow:params.get('workflow') as 'all'|'pending'|'completed'|'to_compile'|'review'}:{}),
     format: (FORMATS.has(format) ? format : 'all') as DocumentFormatFilter,
     visibility: (VISIBILITIES.has(visibility) ? visibility : 'all') as DocumentVisibilityFilter,
     ...(COLLECTION_OPTIONS.some(o => o.value === params.get('collection') && o.value !== 'all') ? { collection: params.get('collection') as DocumentSearchFilters['collection'] } : {}),
@@ -78,7 +78,7 @@ export function filtersFromParams(params: URLSearchParams): DocumentSearchFilter
 /** Parametri dell'indirizzo per i filtri applicati: solo quelli attivi, mai il cursor. */
 export function filtersToParams(f: DocumentSearchFilters) {
   const params = new URLSearchParams();
-  if(f.workflow&&f.workflow!=='all')params.set('workflow',f.workflow);
+  if(f.workflow)params.set('workflow',f.workflow);
   if (f.q) params.set('q', f.q);
   if (f.format !== 'all') params.set('format', f.format);
   if (f.visibility !== 'all') params.set('visibility', f.visibility);

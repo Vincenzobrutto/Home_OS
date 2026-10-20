@@ -6,6 +6,7 @@ import { DocumentWorkspaceActions } from '../documents/DocumentWorkspaceActions'
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { createPortal } from 'react-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { safeFilename } from '../api/client';
 import { isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey } from '../api/queryKeys';
@@ -78,19 +79,19 @@ export function DocumentsPage() {
   const appliedKey = filtersKey(applied);
   const capabilities = useDocumentSearchCapabilities(home.id);
   const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
-  // Solo q/format/visibility nell'indirizzo; ?ricerca=1 (ingresso da Casa) non va all'API e cade al primo Cerca.
-  const apply = (filters: DocumentSearchFilters) => {
+  // Solo q/format/visibility nell'indirizzo; ?ricerca=1 (ingresso da Casa) non va all'API e cade alla prima ricerca applicata.
+  const apply = (filters: DocumentSearchFilters, replace = false) => {
     const workflow=filters.workflow??applied.workflow;
     const next=filtersToParams({...filters,workflow});
     if(workflow==='all')next.set('workflow','all');
-    setParams(next);
+    setParams(next, { replace });
   };
   const closeUpload=(documentId?:string,batchId?:string)=>{setUploadOpen(false);const next=filtersToParams({...applied,workflow:documentId?'pending':applied.workflow});if(documentId&&batchId){next.set('oggetti-documento',documentId);next.set('lotto',batchId);next.set('compila','manuale');}setParams(next,{replace:true});};
 
   if(params.has('oggetti-documento'))return <DocumentEditorWorkspace key={account.id+":"+home.id}/>;
   return (
     <>
-      <div className={styles.heading}>
+      <div className={cx(styles.heading, docs.documentsHeading)}>
         <div>
           <span className={styles.eyebrow}>{home.name}</span>
           <div className={docs.titleActions}>
@@ -105,11 +106,8 @@ export function DocumentsPage() {
           </div>
         )}
       </div>
-      {['house','floor_plans','building','energy','contracts','technical'].includes(applied.collection??'')&&<section className={docs.panel} aria-label="Documenti della casa per tipologia"><h2>Esplora i documenti della casa</h2><p>Un unico archivio: ogni file resta al suo posto, senza copie. Le categorie dipendono dal tipo che hai salvato.</p><div className={cx(docs.workflowTabs,docs.houseTabs)} role="group" aria-label="Tipologie della casa">{[['house','Tutti della casa'],['floor_plans','Planimetrie'],['building','Pratiche edilizie'],['energy','APE ed energia'],['contracts','Contratti'],['technical','Impianti']].map(([collection,label])=><button key={collection} type="button" className={cx(ui.btn,applied.collection===collection&&ui.primary)} aria-pressed={applied.collection===collection} onClick={()=>apply({...applied,collection:collection as DocumentSearchFilters['collection'],workflow:'all'})}>{label}</button>)}</div><Link to={'/home/'+encodeURIComponent(home.id)+'/documenti?workflow=all'}>Apri l’archivio completo</Link></section>}
       {params.has('documento-salvato')&&<Banner title="Documento salvato" actions={<button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'completed'})}>Vai ai documenti completati</button>}><p>Il salvataggio è riuscito. Il documento e l’originale restano disponibili.</p></Banner>}
       {canUpload&&uploadVisible&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={()=>closeUpload()}>Chiudi caricamento</button></section>}
-      <div className={docs.workflowTabs} role="group" aria-label="Stato dei documenti">{([['pending','Da fare'],['completed','Completati'],...(applied.q||applied.workflow==='all'?[['all','Tutti'] as const]:[])] as const).map(([value,label])=><button key={value} type="button" className={cx(ui.btn,applied.workflow===value&&ui.primary)} aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
-      {['to_compile','review'].includes(applied.workflow)&&<p role="status">Vista: {applied.workflow==='review'?'Documenti da controllare':'Documenti da compilare'}. <button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'pending'})}>Mostra tutti i documenti da fare</button></p>}
       {!canUpload && (
         <p className={cx(docs.note, docs.panel)}>
           Con il tuo ruolo puoi consultare e scaricare i documenti visibili, non caricarne di nuovi.
@@ -145,6 +143,7 @@ export function DocumentsPage() {
           </Banner>
         </div>
       ) : null}
+      {!capabilities.isSuccess && <div className={docs.statusSegments} role="group" aria-label="Stato dei documenti">{([['all','Tutti'],['pending','Da fare'],['completed','Completati']] as const).map(([value,label]) => <button key={value} type="button" aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>}
 
       {/* Archivio rimontato a ogni cambio dei filtri applicati: prima pagina e selezione ZIP vuota. */}
       <DocumentsArchive
@@ -153,12 +152,11 @@ export function DocumentsPage() {
         filters={applied}
         searchState={capabilities.isSuccess ? 'ready' : capabilities.isError ? 'unavailable' : 'pending'}
         maxQuery={maxQuery}
-        onReset={() => apply({...EMPTY_FILTERS,workflow:applied.workflow})}
+        onReset={() => apply({...EMPTY_FILTERS,workflow:'all'})}
         canExport={canExport}
         exportSlot={exportSlot}
         canUpload={canUpload}
       />
-      <div className={docs.archiveShortcut}><Icon name="document"/><span>{applied.workflow==='pending'?'I documenti completati restano consultabili, insieme ai loro originali.':'Puoi riprendere i documenti che richiedono ancora un passaggio.'}</span><button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:applied.workflow==='pending'?'completed':'pending'})}>{applied.workflow==='pending'?'Vedi completati':'Torna a Da fare'}<Icon name="arrow"/></button></div>
       {canUpload && (
         <div className={styles.spaced}>
           <details><summary>Documenti di esempio</summary><ExamplePdfs homeId={home.id} /></details>
@@ -180,6 +178,10 @@ function DocumentsArchive(props: {
   canUpload: boolean;
 }) {
   const { home, canExport, filters } = props;
+  const account = useAccount(), cache = useQueryClient();
+  const viewKey = ['account', account.id, 'home', home.id, 'documents-view'];
+  const [restore] = useState(() => cache.getQueryData<{filters:string;pages:number;y:number;focus?:string}>(viewKey));
+  const restored = useRef(false);
   const filtered = isFiltered(filters);
   const searchFiltered = isFiltered({...filters,workflow:'all'});
   const queryProblem = filtered ? validateQuery(filters.q, props.maxQuery) : undefined;
@@ -187,11 +189,19 @@ function DocumentsArchive(props: {
   // Con filtri: solo a ricerca attiva e query valida, mai una ricerca locale sulle pagine già caricate.
   const runnable = !searchFiltered || (props.searchState === 'ready' && !queryProblem);
   const documents = useDocumentSearch(home.id, filters, runnable);
+  const {data,hasNextPage,isFetchingNextPage,isFetchNextPageError,fetchNextPage} = documents;
+  useEffect(() => {
+    if (restored.current || !restore || restore.filters !== filtersKey(filters) || !data || documents.isError) return;
+    if (data.pages.length < restore.pages && hasNextPage && !isFetchNextPageError) { if (!isFetchingNextPage) void fetchNextPage(); return; }
+    const frame = requestAnimationFrame(() => { restored.current=true; if (restore.focus) document.getElementById(restore.focus)?.focus({preventScroll:true}); window.scrollTo(0,restore.y); });
+    return () => cancelAnimationFrame(frame);
+  }, [restore,filters,data,documents.isError,hasNextPage,isFetchNextPageError,isFetchingNextPage,fetchNextPage]);
   const exporter = useExportDocuments(home.id);
   const forget = useForgetHomeDocuments(home.id);
   const forbidden = documents.isError && isForbidden(documents.error);
   useEffect(() => {
     if (forbidden) forget();
+    if (forbidden) cache.removeQueries({queryKey:viewKey,exact:true});
     // eslint-disable-next-line react-hooks/exhaustive-deps -- una sola pulizia per ogni 403
   }, [forbidden]);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
@@ -234,7 +244,7 @@ function DocumentsArchive(props: {
           </button>
         }
       >
-        <p>{queryProblem} Correggi il testo e premi «Cerca».</p>
+        <p>{queryProblem} Correggi il testo per aggiornare i risultati.</p>
       </Banner>
     );
   }
@@ -268,9 +278,8 @@ function DocumentsArchive(props: {
         </>}
         <h2 className={styles.cardTitle}>{filters.q||filters.format!=='all'||filters.visibility!=='all'||filters.collection&&filters.collection!=='all'?'Nessun documento corrisponde ai filtri':filters.workflow==='completed'?'Nessun documento completato':'Non ci sono documenti da completare'}</h2>
         <p className={styles.muted} role="status">
-          {isFiltered({...filters,workflow:'all'})?<>Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Modifica la ricerca o azzera i filtri.</>:filters.workflow==='completed'?'I documenti appariranno qui dopo il salvataggio della revisione.':'Hai completato tutti i documenti disponibili. Puoi consultarli in Completati oppure aggiungerne altri.'}
+          {isFiltered({...filters,workflow:'all'})?<>Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Prova un altro testo o rimuovi i filtri.</>:filters.workflow==='completed'?'I documenti appariranno qui dopo il salvataggio della revisione.':'Hai completato tutti i documenti disponibili. Puoi consultarli in Completati oppure aggiungerne altri.'}
         </p>
-        {isFiltered({...filters,workflow:'all'})&&<button type="button" className={ui.btn} onClick={props.onReset}>Azzera filtri</button>}
       </div>
     );
   }
@@ -318,7 +327,12 @@ function DocumentsArchive(props: {
   };
 
   return (
-    <section aria-labelledby="archivio-title">
+    <section aria-labelledby="archivio-title" onClickCapture={event => {
+      const target = event.target as HTMLElement;
+      const row = target.closest('li');
+      if (!row || !target.closest('a,button')) return;
+      cache.setQueryData(viewKey,{filters:filtersKey(filters),pages:documents.data?.pages.length??1,y:window.scrollY,focus:row.querySelector('a[id]')?.id});
+    }}>
       {canExport && props.exportSlot && createPortal(
         <ExportIconButton label={exporter.isPending ? 'Preparazione ZIP…' : 'Esporta ZIP'}
           hint={exporter.isPending ? 'Preparazione ZIP…' : selecting ? problem || 'Scarica i documenti selezionati in ZIP' : 'Seleziona i documenti da esportare'}
@@ -387,10 +401,10 @@ function DocumentsArchive(props: {
       )}
 
       {isFiltered({...filters,workflow:'all'}) && (
-        <p className={docs.resultsInfo} role="status">
+        <h2 className={docs.searchResultsTitle} aria-live="polite">
           Risultati per {describeFilters({...filters,workflow:'all'})}
           {documents.hasNextPage ? ' — ce ne sono altri' : ''}
-        </p>
+        </h2>
       )}
       <ul
         className={docs.list}
@@ -401,7 +415,7 @@ function DocumentsArchive(props: {
             key={doc.id}
             doc={doc}
             homeId={home.id}
-            backSearch={filtered ? filtersToParams(filters).toString() : ''}
+            backSearch={filtersToParams(filters).toString()}
             selectable={canExport && selecting}
             selected={selected.has(doc.id)}
             onToggle={() => toggle(doc.id)}
@@ -478,6 +492,7 @@ function DocumentRow(props: {
       </span>
       <div className={docs.body}>
         <Link
+          id={'document-'+doc.id}
           className={docs.title}
           to={`/home/${encodeURIComponent(props.homeId)}/documenti/${encodeURIComponent(doc.id)}`}
           state={props.backSearch ? { documentsSearch: props.backSearch, documentsAccountId: account.id } : undefined}
