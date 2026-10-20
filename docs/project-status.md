@@ -1,3 +1,7 @@
+## Rubrica compatta e ritorno all’elenco — 21 ottobre 2026
+
+Elenco desktop/mobile approvato, ricerca durante la digitazione, azioni Chiama/Email e pagine aggiunte. Ricerca, filtro, pagine, focus e posizione preservati dal dettaglio e con Indietro. [Comportamento, verifiche e limiti](v5/contacts-catalog-20261021.md). Dati reali intatti; bozze rinviate.
+
 ## Analisi AI riuscite: nessuna rianalisi — 21 ottobre 2026
 
 Risultati estratti riutilizzati anche prima della conferma; esclusione dalla selezione multipla e blocco server dei nuovi invii sullo stesso snapshot. Correzione manuale e recupero idempotente preservati. [Regola e verifiche](v5/ai-success-reuse-20261021.md). Nessuna modifica ai dati reali; bozze rinviate.

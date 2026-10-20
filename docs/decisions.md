@@ -1,3 +1,7 @@
+## 21 ottobre 2026 — Rubrica: elenco compatto e contesto conservato
+
+Implementare l’organizzazione approvata nelle anteprime: righe compatte, ricerca durante la digitazione, recapiti accessibili e Mostra altri che aggiunge pagine. Il ritorno conserva ricerca/filtro/posizione e focus in memoria privata per account/casa, senza persistenza dei dati digitati nelle bozze. Preservare API, autorizzazioni e funzioni esistenti; i conteggi illustrativi dei collegamenti non vanno stimati. [Dettagli](v5/contacts-catalog-20261021.md).
+
 ## 21 ottobre 2026 — Riusare l’analisi AI riuscita prima e dopo la conferma
 
 Decisione dell’utente: un esito AI riuscito con dati estratti non va rianalizzato. Il blocco dipende dall’analisi, non da Completato, e vale per account/casa/snapshot/scopo. Si riapre la proposta esistente e si corregge manualmente; nuovi avvii riusano il successo senza nuovo costo. Motivo: evitare invii ripetuti, proposte duplicate e costi inutili. [Implementazione](v5/ai-success-reuse-20261021.md).
