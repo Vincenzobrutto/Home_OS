@@ -1,3 +1,4 @@
+import { BillPeriodFields } from '../components/BillPeriodFields';
 import {billPeriodLabel,isUtility} from '../lib/billPeriod';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -622,27 +623,6 @@ export function EconomyExpenseForm(props: {
         />
         {err('amount')}
       </div>
-      <div className={ui.field}>
-        <label className={ui.label} htmlFor={`${id}-spentOn`}>
-          Data della spesa
-        </label>
-        <span id={`${id}-spentOn-hint`} className={ui.hint}>
-          Per le bollette il periodo di riferimento decide dove compare il costo. Per le altre spese vale questa data. Non indica il pagamento.
-        </span>
-        <input
-          id={`${id}-spentOn`}
-          className={ui.input}
-          type="date"
-          max={caps.today}
-          value={spentOn}
-          disabled={disabled}
-          onChange={(e) => setSpentOn(e.target.value)}
-          aria-invalid={errors.spentOn ? true : undefined}
-          aria-describedby={`${id}-spentOn-hint${errors.spentOn ? ` ${id}-spentOn-error` : ''}`}
-        />
-        {err('spentOn')}
-      </div>
-
       {select(
         'category',
         'Categoria (facoltativa)',
@@ -662,16 +642,40 @@ export function EconomyExpenseForm(props: {
             ) : null,
           )}
         </>,
-        'Per una polizza richiesta dal mutuo scegli Finanziamento; per la polizza della casa scegli Assicurazione.',
+        isUtility(category)?undefined:'Per una polizza richiesta dal mutuo scegli Finanziamento; per la polizza della casa scegli Assicurazione.',
       )}
-      <p className={styles.preview} aria-live="polite">
+      {isUtility(category)&&<><Field id={`${id}-bill-supplier`} label="Fornitore" value={supplier} disabled={disabled} onChange={e=>setSupplier(e.target.value)} error={errors.supplier}/><BillPeriodFields inputId={`${id}-competence`} error={errors.competence} from={competenceFrom} to={competenceTo} disabled={disabled} onChange={({from,to})=>{setCompetenceFrom(from);setCompetenceTo(to);}}/></>}
+      <div className={ui.field}>
+        <details open={!isUtility(category)||!!errors.spentOn}><summary hidden={!isUtility(category)}>Altri dati della spesa</summary>
+        <label className={ui.label} htmlFor={`${id}-spentOn`}>
+          Data della spesa
+        </label>
+        <span id={`${id}-spentOn-hint`} className={ui.hint}>
+          Per le bollette il periodo di riferimento decide dove compare il costo. Per le altre spese vale questa data. Non indica il pagamento.
+        </span>
+        <input
+          id={`${id}-spentOn`}
+          className={ui.input}
+          type="date"
+          max={caps.today}
+          value={spentOn}
+          disabled={disabled}
+          onChange={(e) => setSpentOn(e.target.value)}
+          aria-invalid={errors.spentOn ? true : undefined}
+          aria-describedby={`${id}-spentOn-hint${errors.spentOn ? ` ${id}-spentOn-error` : ''}`}
+        />
+        {err('spentOn')}
+        </details>
+      </div>
+
+      {!isUtility(category)&&<p className={styles.preview} aria-live="polite">
         Famiglia prevista: <strong>{familyLabel(preview, caps)}</strong>
         {category === 'repairs_works' ? ' (con un lavoro va in Lavori e acquisti, senza in Manutenzione e riparazioni)' : ''}. La famiglia
         definitiva la calcola il servizio.
-      </p>
+      </p>}
 
-      <details className={styles.details} open={!!expense || !!presets.object || !!presets.workId || !!presets.documentId || Object.keys(errors).some(k=>['object','work','doc','note'].includes(k))}>
-        <summary>Collegamenti e note (facoltativi)</summary>
+      <details className={styles.details} open={(!isUtility(category)&&!!expense) || !!presets.object || !!presets.workId || !!presets.documentId || Object.keys(errors).some(k=>['object','work','doc','note','documentNumber'].includes(k))}>
+        <summary>Altri dati e collegamenti</summary>
       {select(
         'object',
         'Oggetto (facoltativo)',
@@ -734,29 +738,30 @@ export function EconomyExpenseForm(props: {
       {presets.object && (presetObj.isError || (presetObj.isSuccess && !presetObjOk)) && <Banner tone="warning"><p>L’oggetto indicato non è disponibile o è archiviato: il costo non verrà collegato.</p></Banner>}
       {presets.workId && (presetWork.isError || (presetWork.isSuccess && !presetWorkOk)) && <Banner tone="warning"><p>Il lavoro indicato non è disponibile o è archiviato: nuove assegnazioni richiedono un lavoro attivo.</p></Banner>}
 
+      {isUtility(category)&&<Field id={`${id}-documentNumber`} label="Numero del documento" autoComplete="off" value={documentNumber} disabled={disabled} onChange={(e) => setDocumentNumber(e.target.value)} error={errors.documentNumber} />}
       <NoteField id={`${id}-note`} value={note} onChange={setNote} error={errors.note} disabled={disabled} label="Nota (facoltativa)" />
 
       </details>
 
       <details className={styles.details} open={isUtility(category) || !!(expense && (expense.supplier || expense.documentNumber || expense.documentDate || expense.competenceFrom || expense.dueOn)) || !!(errors.supplier || errors.documentNumber || errors.documentDate || errors.competence || errors.dueOn)}>
-        <summary>{isUtility(category)?'Periodo di riferimento, emissione e scadenza':'Dettagli aggiuntivi (facoltativi)'}</summary>
-        <Field id={`${id}-supplier`} label="Fornitore" autoComplete="off" value={supplier} disabled={disabled} onChange={(e) => setSupplier(e.target.value)} error={errors.supplier} />
-        <Field id={`${id}-documentNumber`} label="Numero del documento" autoComplete="off" value={documentNumber} disabled={disabled} onChange={(e) => setDocumentNumber(e.target.value)} error={errors.documentNumber} />
+        <summary>{isUtility(category)?'Emissione e scadenza':'Dettagli aggiuntivi (facoltativi)'}</summary>
+        {!isUtility(category)&&<Field id={`${id}-supplier`} label="Fornitore" autoComplete="off" value={supplier} disabled={disabled} onChange={(e) => setSupplier(e.target.value)} error={errors.supplier} />}
+{!isUtility(category)&&<Field id={`${id}-documentNumber`} label="Numero del documento" autoComplete="off" value={documentNumber} disabled={disabled} onChange={(e) => setDocumentNumber(e.target.value)} error={errors.documentNumber} />}
         {dateField('documentDate', 'Data di emissione', documentDate, setDocumentDate)}
         {err('documentDate')}
+        {!isUtility(category)&&<>
         <fieldset className={ui.field} style={{ border: 0, padding: 0, margin: 0 }}>
           <legend className={ui.label}>Periodo di riferimento</legend>
-          {isUtility(category)&&<label className={ui.label}>Mese di riferimento (bolletta mensile)<input type="month" className={ui.input} value={competenceFrom&&competenceFrom.slice(0,7)===competenceTo.slice(0,7)?competenceFrom.slice(0,7):''} disabled={disabled} onChange={e=>{const m=e.target.value;setCompetenceFrom(m?m+'-01':'');setCompetenceTo(m?m+'-'+new Date(Number(m.slice(0,4)),Number(m.slice(5,7)),0).getDate():'');}}/></label>}
           <span className={ui.hint}>Per le bollette questo periodo determina il mese nei riepiloghi. Un intervallo di più mesi è contato una sola volta nel mese iniziale.</span>
           <div className={styles.range}>
             {dateField('competence', 'Dal', competenceFrom, setCompetenceFrom)}
             {dateField('competenceTo', 'Al', competenceTo, setCompetenceTo, 'competence')}
           </div>
           {err('competence')}
-        </fieldset>
-        {dateField('dueOn', 'Scadenza indicata sul documento', dueOn, setDueOn)}
+        </fieldset></>}
+        {dateField('dueOn', 'Scadenza indicata', dueOn, setDueOn)}
         {err('dueOn')}
-        <p className={act.meta}>La scadenza è solo un dato del documento: non crea promemoria né indica un pagamento.</p>
+        <p className={act.meta}>La scadenza non indica che la bolletta sia stata pagata e non crea un promemoria.</p>
       </details>
 
       {nothing && (

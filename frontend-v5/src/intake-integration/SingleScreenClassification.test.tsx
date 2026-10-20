@@ -7,7 +7,7 @@ it.each([{recognized:true,manual:false},{recognized:false,manual:false},{recogni
  const {backend,homeA1,a}=seededBackend(),control=createFakeFetch(backend),doc=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'GEN. Q.E.',originalFilename:'GEN. Q.E..pdf'});
  const draft:Draft={id:'schema-draft',version:1,state:'open',mode:'extraction',snapshot:{documentId:doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:'house_document',documentInfo:{kind:recognized?'system_diagram':'unsupported',title:{value:'GEN. Q.E.',source:{documentId:doc.id,page:1,excerpt:'GEN. Q.E.'}},facts:[]},items:[],needsReview:false,purchaseTotal:null,review:null,permissions:['read','edit']};
  if(manual){draft.mode='manual';draft.documentInfo=null;draft.documentKind='unsupported';draft.items=[{id:'manual-placeholder',fields:{},quantity:null,profile:{},nameTruncated:false,disposition:'uncertain',enrichment:null,decision:null}];}
- const saveLabel='Salva e passa al successivo';
+ const saveLabel=manual?'Salva documento':'Salva e continua';
  const limits={maxFiles:20,maxFileBytes:20971520,maxTotalBytes:209715200,acceptedMimeTypes:['application/pdf']},item={id:'schema-item',clientItemId:'schema-client',version:1,filename:doc.originalFilename,byteSize:100,mimeType:'application/pdf',uploadState:'stored',analysisState:'ready',reviewState:'unreviewed',documentLink:{state:'linked',document:{id:doc.id,name:doc.name}},pageCount:1,proposal:null,selection:null,organization:null,organizationVersion:0,duplicate:null,error:null,permissions:['read','edit']};
  const wire={batch:{id:'schema-batch',homeId:homeA1.id,version:1,state:'open',limits,permissions:['read','edit'],items:[item]}},order:string[]=[],parts:string[]=[];
  const fetch:FetchLike=async(url,init)=>{
@@ -20,7 +20,7 @@ it.each([{recognized:true,manual:false},{recognized:false,manual:false},{recogni
  const app=renderApp({path:'/accedi',backend,fetch});await screen.findByRole('heading',{name:'Accedi'});await app.user.type(screen.getByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));const path='/home/'+homeA1.id+'/documenti';await app.router.navigate(path+'?lotto=schema-batch&oggetti-documento='+doc.id+'&oggetti-bozza=schema-draft&compila='+(manual?'manuale':'ai'));await screen.findByRole('button',{name:saveLabel},{timeout:10000});
  if(!recognized){expect(screen.getByRole('button',{name:saveLabel})).toBeDisabled();await screen.findByRole('button',{name:'Scegli il tipo del documento.'});expect(order).toEqual([]);expect(screen.queryByRole('button',{name:'Rivedi documento'})).not.toBeInTheDocument();await app.user.selectOptions(screen.getByLabelText('Tipo del documento'),'system_diagram');}
  else expect(screen.getByLabelText('Tipo del documento')).toHaveValue('system_diagram');
- expect(screen.getByRole('heading',{name:'Completa i tuoi documenti'})).toBeVisible();
+ expect(screen.getByRole('heading',{name:'Completa i dati del documento'})).toBeVisible();
  expect(screen.getByRole('navigation',{name:'Coda dei documenti'})).toBeVisible();
  expect(screen.getByRole('complementary',{name:'Anteprima del documento'})).toBeVisible();
  await app.user.click(screen.getByRole('button',{name:'Chiudi anteprima'}));expect(screen.queryByRole('complementary',{name:'Anteprima del documento'})).not.toBeInTheDocument();

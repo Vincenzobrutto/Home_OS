@@ -54,12 +54,12 @@ export function DocumentCompilationActions({homeId,documentId,onOpen,documentKin
   if(ready)return <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy} onClick={()=>void open('ai',ready.id)}>Rivedi proposta</button>;
   return <div><details><summary className={ui.btn}>Compila</summary><div className={styles.row}>
    <button type="button" className={ui.btn} disabled={busy||!caps.isSuccess||!caps.data.manualAvailable} onClick={()=>void manual()}>Compila manualmente</button>
-   <button type="button" className={ui.btn} disabled={busy||!caps.isSuccess} onClick={()=>void ai()}>Compila tramite AI</button>
+   <button type="button" className={ui.btn} disabled={busy||!caps.isSuccess} onClick={()=>void ai()}>Precompila con AI</button>
   </div></details>{(error||caps.isError)&&<p role="alert">{error||'Impossibile verificare le opzioni.'} <button type="button" className={ui.btn} onClick={()=>void caps.refetch()}>Riprova le opzioni</button></p>}</div>;
  }
  if(accepted)return <button type="button" className={ui.btn} onClick={()=>open('manuale',accepted.id)}>Proposta accettata · Vedi dettaglio</button>;
  return <div><div className={styles.row}>
   <button type="button" className={ui.btn} disabled={busy||!caps.isSuccess||!caps.data.manualAvailable} onClick={()=>void manual()}>{busy?'Apertura scheda…':'Compila manualmente'}</button>
-  <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!caps.isSuccess} onClick={()=>ready?void open('ai',ready.id):void ai()}>{ready?'Rivedi proposta':'Compila tramite AI'}</button>
+  <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!caps.isSuccess} onClick={()=>ready?void open('ai',ready.id):void ai()}>{ready?'Rivedi proposta':'Precompila con AI'}</button>
  </div>{(error||caps.isError)&&<p role="alert">{error||'Impossibile verificare le opzioni.'} <button type="button" className={ui.btn} aria-label="Riprova le opzioni di compilazione" onClick={()=>void caps.refetch()}>Riprova</button></p>}</div>;
 }

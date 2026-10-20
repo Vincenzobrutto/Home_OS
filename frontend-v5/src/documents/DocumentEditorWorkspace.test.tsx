@@ -72,3 +72,16 @@ it('guards a source change before preparing it, does not ask twice, and retains 
  await waitFor(()=>expect(app.router.state.location.search).not.toContain('oggetti-documento'));
  expect(guard).toHaveBeenCalledTimes(2);
 });
+
+
+it('preserves edits during same-document draft metadata updates without an exit prompt',async()=>{
+ const app=await editedWorkspace();
+ const guard=vi.spyOn(window,'confirm').mockReturnValue(false);
+ const next=new URLSearchParams(app.router.state.location.search);next.set('oggetti-bozza','ai-result');
+ await act(async()=>{await app.router.navigate(app.router.state.location.pathname+'?'+next);});
+ expect(guard).not.toHaveBeenCalled();
+ expect(screen.getByLabelText('Dato di prova')).toHaveValue('Da conservare');
+ expect(app.router.state.location.search).toContain('ai-result');
+ const beforeUnload=new Event('beforeunload',{cancelable:true});window.dispatchEvent(beforeUnload);expect(beforeUnload.defaultPrevented).toBe(true);
+ guard.mockRestore();
+});

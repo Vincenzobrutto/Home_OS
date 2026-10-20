@@ -1,3 +1,7 @@
+## Bollette: modulo e linguaggio semplificati — 20 ottobre 2026
+
+Scelta esclusiva Un mese/Un intervallo con bozze locali conservate al cambio; emissione e scadenza separate. Precompila con AI, Registra spesa e Salva documento espliciti; riepilogo confermato descritto come già salvato. API e dati reali invariati. [Comportamento e verifiche](v5/bill-form-language-20261020.md).
+
 ## Compilazione: avviso coerente sulle modifiche non salvate — 20 ottobre 2026
 
 Menu e cronologia Indietro protetti come cambio documento e ritorno; Annulla conserva i campi, salvataggio riuscito prosegue senza doppio avviso. Verifica su dati simulati, dati reali intatti. [Comportamento e limiti](v5/document-unsaved-guard-20261020.md).

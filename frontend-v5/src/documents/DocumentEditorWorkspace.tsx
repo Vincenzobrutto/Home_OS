@@ -26,13 +26,13 @@ export function DocumentEditorWorkspace(){
  const setMobileOriginal=(value:boolean)=>setMobileOriginalId(value?documentId:null);
  const dirty=useRef(false),live=useRef(true),keys=useRef(new Map<string,string>());
  const client=useMemo(()=>new IntakeClient(api,account.id,home.id),[api,account.id,home.id]);
- useDocumentTitle('Completa i tuoi documenti · '+home.name);
+ useDocumentTitle('Completa i dati del documento · '+home.name);
  useEffect(()=>{live.current=true;return()=>{live.current=false;};},[]);
  useEffect(()=>{dirty.current=false;},[documentId]);
  useEffect(()=>{const guard=(event:BeforeUnloadEvent)=>{if(dirty.current){event.preventDefault();event.returnValue='';}};window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard);},[]);
  const canLeave=useCallback(()=>!dirty.current||window.confirm('Le modifiche non salvate saranno scartate. Vuoi lasciare questa scheda?'),[]);
  // Covers links outside this workspace and browser history as well as its own back button.
- const blocker=useBlocker(()=>dirty.current);
+ const blocker=useBlocker(({currentLocation,nextLocation})=>dirty.current&&(currentLocation.pathname!==nextLocation.pathname||new URLSearchParams(currentLocation.search).get('oggetti-documento')!==new URLSearchParams(nextLocation.search).get('oggetti-documento')));
  useEffect(()=>{
   if(blocker.state!=='blocked')return;
   if(canLeave()){dirty.current=false;blocker.proceed();}else blocker.reset();
@@ -47,7 +47,7 @@ export function DocumentEditorWorkspace(){
  async function complete(id:string){if(!live.current)return;dirty.current=false;const next=rows.find(row=>row.id!==id&&!['completed','analyzing','attention'].includes(row.workflowState??'to_compile'));if(next){await select(next.id,true,id);}else{const search=filtersToParams(filters);search.set('documento-salvato',id);navigate(root+'?'+search.toString());}}
  return <div className={styles.editor}>
   <button type="button" className={styles.back} onClick={()=>leave()}>Torna a Documenti</button>
-  <header className={styles.heading}><h1 tabIndex={-1}>Completa i tuoi documenti</h1><p>Controlla i dati e salva, un documento alla volta.</p></header>
+  <header className={styles.heading}><h1 tabIndex={-1}>Completa i dati del documento</h1><p>Controlla i dati e salva, un documento alla volta.</p></header>
   {params.has("documento-salvato")&&<p role="status">Documento precedente salvato. Puoi continuare con la scheda successiva.</p>}
   {error&&<p role="alert">{error}</p>}
   <div className={styles.mobileViews} role="group" aria-label="Vista del documento"><button type="button" className={ui.btn} aria-pressed={!mobileOriginal} onClick={()=>setMobileOriginal(false)}>Compila</button><button type="button" className={ui.btn} aria-pressed={mobileOriginal} onClick={()=>{setPreview(true);setMobileOriginal(true);}}>Originale</button></div>
@@ -60,7 +60,7 @@ export function DocumentEditorWorkspace(){
    </aside>
    <section className={styles.form} aria-label="Scheda del documento" onChangeCapture={()=>{dirty.current=true;}}>
     {document.isPending?<Loading label="Apertura documento…"/>:document.isError?<ErrorState error={document.error}/>:<>
-     <header className={styles.documentHead}><h2>{document.data.name}</h2><p>Compila i dati a mano oppure usa una proposta AI. Puoi sempre correggerli qui.</p>{!preview&&<button type="button" className={ui.btn} onClick={()=>setPreview(true)}>Apri anteprima</button>}</header>
+     <header className={styles.documentHead}><h2>{document.data.name}</h2><p>Inserisci i dati oppure usa l’AI per precompilarli. Controlla le proposte prima di salvare.</p>{!preview&&<button type="button" className={ui.btn} onClick={()=>setPreview(true)}>Apri anteprima</button>}</header>
      <DocumentEditorContext.Provider value={{complete,pause:()=>leave(),showOriginal:()=>{setPreview(true);setMobileOriginal(true);}}}><IntakePage workspace key={documentId}/></DocumentEditorContext.Provider>
     </>}
    </section>
