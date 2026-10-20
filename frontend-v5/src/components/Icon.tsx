@@ -1,3 +1,5 @@
+import { Cube } from '@phosphor-icons/react/dist/csr/Cube';
+import { DoorOpen } from '@phosphor-icons/react/dist/csr/DoorOpen';
 import styles from './ui.module.css';
 
 const paths = {
@@ -16,9 +18,10 @@ const paths = {
   info: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 8h.01',
 } as const;
 
-export type IconName = keyof typeof paths;
+export type IconName = keyof typeof paths | 'objects' | 'rooms';
 
 export function Icon({ name }: { name: IconName }) {
+  if(name==='objects'||name==='rooms'){const Glyph=name==='objects'?Cube:DoorOpen;return <span className={styles.icon} aria-hidden="true"><Glyph size={20} style={{fill:'currentColor',stroke:'none'}}/></span>;}
   return (
     <span className={styles.icon} aria-hidden="true">
       <svg viewBox="0 0 24 24" focusable="false">

@@ -322,3 +322,18 @@
     clip: rect(0 0 0 0);
   }
 }
+
+.mobileMenuButton{display:none}
+.menuBackdrop{position:fixed;inset:0;z-index:100;background:rgb(10 30 42 / 55%);display:flex;align-items:flex-start;justify-content:flex-start;padding:12px}
+.menuPanel{width:min(360px,100%);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;border-radius:16px;padding:20px;background:var(--color-nav);color:var(--color-nav-text);box-shadow:0 12px 40px rgb(0 0 0 / 25%)}
+.menuHeader{display:flex;gap:16px;align-items:center;justify-content:space-between}
+.menuHeader h2{font-size:1.25rem;margin:0;color:#fff}
+.menuHome{overflow-wrap:anywhere;font-size:.875rem;margin:16px 0;color:var(--color-nav-text)}
+@media(max-width:800px){
+ .mobileMenuButton{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 10px;border:1px solid #3e5b6a;border-radius:10px;background:#203f4e;color:#fff;font-size:13px}
+ .top:has(.mobileMenuButton){flex-wrap:nowrap;gap:8px;padding-inline:12px}
+ .top:has(.mobileMenuButton) .brand{margin-right:auto}
+ .top:has(.mobileMenuButton) .account{gap:8px}
+ .top:has(.mobileMenuButton) .logout{padding:8px 10px}
+ .top:has(.mobileMenuButton) .logoutLabel{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+}

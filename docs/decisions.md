@@ -1,3 +1,7 @@
+## Oggetti e Ambienti nella navigazione globale — 21 ottobre 2026
+
+Approvati Oggetti e impianti e Ambienti nel menu laterale desktop, subito dopo Casa. Su mobile Menu nella testata con tutte le sezioni, mantenendo la barra inferiore attuale. Riduce il passaggio obbligato dalla pagina Casa senza comprimere sette voci nella barra; Esplora la casa resta un ingresso aggiuntivo alle stesse risorse. [Implementazione e limiti](v5/section-navigation-20261021.md).
+
 ## Conteggi completi nella Casa — 19 ottobre 2026
 
 Approvato il riepilogo di tre gruppi. L’aggregazione documentale completa riusa lo stato canonico della lista, prima del paging, con permessi e fonte correnti; sostituisce l’anteprima di singole fonti. Verifiche e proposte restano risorse distinte. [Report](v5/casa-counts-20261019.md).

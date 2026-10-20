@@ -1,4 +1,7 @@
-import type { ReactNode } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { List } from '@phosphor-icons/react/dist/csr/List';
+import { lockModalScroll } from './modalScroll';
 import { Link, useLocation } from 'react-router';
 import type { Account, Home } from '../api/types';
 import { useLogout } from '../session/hooks';
@@ -8,10 +11,12 @@ import styles from './AppShell.module.css';
 import { EmailVerificationNotice } from './EmailVerificationNotice';
 import { contactNavigationState } from '../contacts/navigation';
 
-export type SectionId = 'casa' | 'attivita' | 'documenti' | 'spese' | 'rubrica';
+export type SectionId = 'casa' | 'oggetti' | 'ambienti' | 'attivita' | 'documenti' | 'spese' | 'rubrica';
 
 export const SECTIONS: Array<{ id: SectionId; label: string; icon: IconName; available: boolean }> = [
   { id: 'casa', label: 'Casa', icon: 'home', available: true },
+  { id: 'oggetti', label: 'Oggetti e impianti', icon: 'objects', available: true },
+  { id: 'ambienti', label: 'Ambienti', icon: 'rooms', available: true },
   { id: 'attivita', label: 'Attività', icon: 'activity', available: true },
   { id: 'documenti', label: 'Documenti', icon: 'document', available: true },
   { id: 'spese', label: 'Spese', icon: 'expenses', available: true },
@@ -48,12 +53,18 @@ export function PublicShell({ children }: { children: ReactNode }) {
 export function AppShell(props: { account: Account; home?: Home; children: ReactNode }) {
   const logout = useLogout();
   const { home } = props;
+  const location = useLocation(), menuId = useId();
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const menuKey = home ? props.account.id + ':' + home.id + ':' + location.key : '';
+  const menuOpen = !!home && menuFor === menuKey;
+  const closeMenu = useCallback(() => setMenuFor(null), []);
   return (
     <div className={styles.app}>
       <a className={styles.skip} href="#main">
         Vai al contenuto
       </a>
       <header className={styles.top}>
+        {home&&<button type="button" className={styles.mobileMenuButton} aria-haspopup="dialog" aria-expanded={menuOpen} aria-controls={menuOpen?menuId:undefined} onClick={()=>setMenuFor(menuKey)}><List size={20} aria-hidden="true"/>Menu</button>}
         <Link to="/case" className={styles.brand} aria-label="Dimora, le mie case">
           Dimora<span>.</span>
         </Link>
@@ -103,26 +114,28 @@ export function AppShell(props: { account: Account; home?: Home; children: React
           </div>
         </main>
       </div>
+      {home&&menuOpen&&<MobileSectionMenu id={menuId} home={home} accountId={props.account.id} onClose={closeMenu}/> }
       {home && <SectionNav home={home} accountId={props.account.id} variant="bottom" />}
     </div>
   );
 }
 
-function SectionNav({ home, accountId, variant }: { home: Home; accountId: string; variant: 'side' | 'bottom' }) {
+function SectionNav({ home, accountId, variant, onNavigate }: { home: Home; accountId: string; variant: 'side' | 'bottom' | 'menu'; onNavigate?:()=>void }) {
   const location = useLocation();
   const { pathname } = location;
   const section = pathname.split('/')[3];
   const activeSection =
-    section === 'review' || section === 'impianti' ? 'attivita' : section === 'ambienti' || section === 'oggetti' ? 'casa' : section;
-  const linkClass = variant === 'side' ? styles.sideLink : styles.bottomLink;
+    section === 'review' || section === 'impianti' ? 'attivita' : variant === 'bottom' && (section === 'ambienti' || section === 'oggetti') ? 'casa' : section;
+  const linkClass = variant === 'bottom' ? styles.bottomLink : styles.sideLink;
   return (
     <nav
-      className={variant === 'side' ? styles.sideNav : styles.bottomNav}
-      aria-label={`Sezioni di ${home.name}`}
+      className={variant === 'bottom' ? styles.bottomNav : styles.sideNav}
+      aria-label={`${variant==='menu'?'Menu sezioni':'Sezioni'} di ${home.name}`}
     >
-      {SECTIONS.map((s) => (
+      {SECTIONS.filter(s=>variant!=='bottom'||!['oggetti','ambienti'].includes(s.id)).map((s) => (
         <Link
           key={s.id}
+          onClick={onNavigate}
           to={`/home/${encodeURIComponent(home.id)}/${s.id}`}
           state={s.id === 'rubrica' ? section === 'rubrica' ? location.state : contactNavigationState(accountId, home.id, location) : undefined}
           className={cx(linkClass, !s.available && styles.unavailableLink)}
@@ -142,4 +155,31 @@ function SectionNav({ home, accountId, variant }: { home: Home; accountId: strin
       ))}
     </nav>
   );
+}
+
+function MobileSectionMenu({id,home,accountId,onClose}:{id:string;home:Home;accountId:string;onClose:()=>void}){
+ const panel=useRef<HTMLDivElement>(null),title=useId();
+ useEffect(()=>{
+  const trigger=document.activeElement as HTMLElement|null,root=document.getElementById('root'),previousInert=root?.inert,unlock=lockModalScroll();
+  if(root)root.inert=true;
+  panel.current?.querySelector<HTMLButtonElement>('button')?.focus();
+  const key=(event:KeyboardEvent)=>{
+   if(event.key==='Escape'){event.preventDefault();onClose();return;}
+   if(event.key!=='Tab')return;
+   const controls=Array.from(panel.current?.querySelectorAll<HTMLElement>('button:not(:disabled),a[href]')??[]),first=controls[0],last=controls.at(-1);
+   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  };
+  const wide=typeof window.matchMedia==='function'?window.matchMedia('(min-width: 801px)'):undefined;
+  const resize=()=>{if(wide?.matches)onClose();};
+  document.addEventListener('keydown',key);wide?.addEventListener('change',resize);
+  return()=>{document.removeEventListener('keydown',key);wide?.removeEventListener('change',resize);unlock();if(root)root.inert=previousInert??false;if(trigger?.isConnected)trigger.focus();};
+ },[onClose]);
+ return createPortal(<div className={styles.menuBackdrop} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+  <div ref={panel} id={id} role="dialog" aria-modal="true" aria-labelledby={title} className={styles.menuPanel}>
+   <header className={styles.menuHeader}><h2 id={title}>Menu</h2><button type="button" className={styles.logout} onClick={onClose}>Chiudi menu</button></header>
+   <p className={styles.menuHome}>{home.name}</p>
+   <SectionNav home={home} accountId={accountId} variant="menu" onNavigate={onClose}/>
+  </div>
+ </div>,document.body);
 }

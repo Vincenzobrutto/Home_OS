@@ -1,5 +1,5 @@
 import {useContext} from 'react';
-import {act,screen,waitFor} from '@testing-library/react';
+import {act,screen,waitFor,within} from '@testing-library/react';
 import {useSearchParams} from 'react-router';
 import {expect,it,vi} from 'vitest';
 import {DocumentEditorContext} from './DocumentEditorContext';
@@ -84,4 +84,13 @@ it('preserves edits during same-document draft metadata updates without an exit 
  expect(app.router.state.location.search).toContain('ai-result');
  const beforeUnload=new Event('beforeunload',{cancelable:true});window.dispatchEvent(beforeUnload);expect(beforeUnload.defaultPrevented).toBe(true);
  guard.mockRestore();
+});
+
+
+it('the mobile section menu preserves dirty edits when navigation is cancelled',async()=>{
+ const app=await editedWorkspace();const guard=vi.spyOn(window,'confirm').mockReturnValue(false);
+ await app.user.click(screen.getByRole('button',{name:'Menu'}));await app.user.click(within(screen.getByRole('dialog',{name:'Menu'})).getByRole('link',{name:'Spese'}));
+ await waitFor(()=>expect(guard).toHaveBeenCalledTimes(1));expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(screen.getByLabelText('Dato di prova')).toHaveValue('Da conservare');expect(app.router.state.location.search).toContain(app.first.id);
+ guard.mockReturnValue(true);await app.user.click(screen.getByRole('button',{name:'Menu'}));await app.user.click(within(screen.getByRole('dialog',{name:'Menu'})).getByRole('link',{name:'Spese'}));
+ await waitFor(()=>expect(app.router.state.location.pathname).toBe('/home/'+app.homeId+'/spese'));expect(guard).toHaveBeenCalledTimes(2);expect(prepared).not.toHaveBeenCalled();guard.mockRestore();
 });

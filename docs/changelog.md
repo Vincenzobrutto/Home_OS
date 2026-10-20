@@ -1,3 +1,7 @@
+## Accesso diretto a Oggetti e Ambienti — 21 ottobre 2026
+
+Menu laterale desktop con sette sezioni; Menu mobile completo con barra inferiore a cinque voci preservata. Sezione attiva precisa, focus e chiusura gestiti, ritorno Rubrica mantenuto. [Comportamento e verifiche](v5/section-navigation-20261021.md). Nessuna modifica dei dati reali.
+
 ## Casa e Documenti: testi chiari e primo utilizzo — 20 ottobre 2026
 
 Documenti da controllare e Dati da confermare distinguono le due code; casa senza documenti con invito iniziale, casa completata con messaggio distinto. Versioni e impronta nei dettagli tecnici richiudibili. [Comportamento e verifiche](v5/casa-document-copy-20261020.md). Bozze escluse dall’intervento.
