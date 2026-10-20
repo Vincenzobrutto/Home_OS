@@ -47,7 +47,7 @@ describe('V2 · originale non disponibile e manifest in attesa', () => {
       expect(screen.getByText('Non più disponibile')).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 3, name: 'Documento non disponibile' })).toBeInTheDocument();
       expect(document.body).not.toHaveTextContent(/APE_Casa_copia|Stesso contenuto di/);
-      expect(screen.getAllByText(/KiB|MiB/)).toHaveLength(1);
+      expect(screen.getAllByText(/KB|MB/)).toHaveLength(1);
       expect(screen.queryByRole('button', { name: /Documento non disponibile/ })).not.toBeInTheDocument();
       unmount();
     }

@@ -123,7 +123,7 @@ describe('[mock] M4 — scelta del provider e consenso', () => {
     expect(screen.queryByRole('checkbox', { name: CONSENT })).not.toBeInTheDocument();
     await app.user.click(ai);
     const box = screen.getByLabelText('Limiti e costi dell’analisi');
-    expect(box).toHaveTextContent('massimo 10 MiB per file, 20 pagine');
+    expect(box).toHaveTextContent('massimo circa 10,5 MB per file, 20 pagine');
     expect(box).toHaveTextContent('10.00 USD disponibili su 10.00 USD');
     expect(box).toHaveTextContent('non è un prezzo di Dimora né il saldo dell’account Anthropic');
     const consent = screen.getByRole('checkbox', { name: CONSENT });

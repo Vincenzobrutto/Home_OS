@@ -54,31 +54,31 @@ export function ReceivedListPage() {
   const list = useReceivedShares();
   const items = list.data?.pages.flatMap((p) => p.items) ?? [];
   return (
-    <Shell title="Consegne ricevute">
+    <Shell title="Documenti ricevuti">
       <div className={pages.heading}>
         <div>
-          <h1 tabIndex={-1}>Consegne ricevute</h1>
+          <h1 tabIndex={-1}>Documenti ricevuti</h1>
           <p className={pages.lead}>Solo ciò che qualcuno ha scelto di darti, per un periodo limitato. Non è l’accesso a una casa.</p>
         </div>
         <Link to={receivedPath('codice')} className={ui.btn}>Ho ricevuto un codice</Link>
       </div>
-      <section className={ui.card} aria-label="Consegne">
+      <section className={ui.card} aria-label="Documenti ricevuti">
         {list.isPending ? (
-          <Loading label="Caricamento delle consegne…" />
+          <Loading label="Caricamento dei documenti ricevuti…" />
         ) : list.isError && !list.data ? (
           isNotActiveError(list.error) ? (
-            <p className={pages.muted}>Le consegne non sono ancora attive su questo servizio.</p>
+            <p className={pages.muted}>La ricezione dei documenti condivisi non è ancora attiva su questo servizio.</p>
           ) : (
             <ErrorState error={list.error} message={sharingErrorMessage(list.error)} onRetry={() => void list.refetch()} retrying={list.isFetching} />
           )
         ) : items.length === 0 ? (
-          <p className={pages.muted}>Nessuna consegna per questo account.</p>
+          <p className={pages.muted}>Non hai ancora ricevuto documenti condivisi.</p>
         ) : (
-          <ul className={act.list} aria-label="Consegne ricevute">
+          <ul className={act.list} aria-label="Documenti ricevuti">
             {items.map((s) => (
               <li key={s.id} className={act.item}>
                 <div className={act.itemHead}>
-                  <Link to={receivedPath(s.id)} className={act.title}>Consegna da {sender(s)}</Link>
+                  <Link to={receivedPath(s.id)} className={act.title}>Documenti da {sender(s)}</Link>
                   <Tag tone={s.state === 'pending' || s.state === 'awaiting_confirmation' ? 'warn' : s.state === 'accepted' ? 'blue' : 'neutral'}>{RECEIVED_LABEL[s.state]}</Tag>
                 </div>
                 <span className={act.meta}>
@@ -146,7 +146,7 @@ function ClaimCode() {
   };
   return (
     <Shell title="Inserisci il codice">
-      <Link to={receivedPath()} className={pages.spaced}>← Consegne ricevute</Link>
+      <Link to={receivedPath()} className={pages.spaced}>← Documenti ricevuti</Link>
       <h1 tabIndex={-1}>Inserisci il codice</h1>
       <p className={pages.lead}>Ti è stato comunicato da chi vuole darti dei documenti. Da solo non mostra nulla: prima il mittente conferma che sei tu, poi accetti l’invito.</p>
       <section className={ui.card}>
@@ -209,16 +209,16 @@ function ReceivedDetail({ shareId }: { shareId: string }) {
   const store = useStoreReceived();
   const op = useSharingOperation<Share>();
   const [confirmDecline, setConfirmDecline] = useState(false);
-  const back = <Link to={receivedPath()} className={pages.spaced}>← Consegne ricevute</Link>;
+  const back = <Link to={receivedPath()} className={pages.spaced}>← Documenti ricevuti</Link>;
   const forbidden = query.isError && isShareUnavailableError(query.error);
-  if (query.isPending) return <Shell title="Consegna">{back}<Loading label="Lettura della consegna…" /></Shell>;
+  if (query.isPending) return <Shell title="Documenti condivisi">{back}<Loading label="Caricamento dei documenti condivisi…" /></Shell>;
   if (forbidden || !query.data) {
     return (
-      <Shell title="Consegna">
+      <Shell title="Documenti condivisi">
         {back}
-        <h1 tabIndex={-1}>{forbidden ? 'Consegna non disponibile' : 'Consegna'}</h1>
+        <h1 tabIndex={-1}>{forbidden ? 'Documenti non disponibili' : 'Documenti condivisi'}</h1>
         {forbidden ? (
-          <p className={pages.muted}>Questa consegna non esiste, non è destinata al tuo account o non è più disponibile.</p>
+          <p className={pages.muted}>Questa condivisione non esiste, non è destinata al tuo account o non è più disponibile.</p>
         ) : (
           <ErrorState error={query.error} message={sharingErrorMessage(query.error)} onRetry={() => void query.refetch()} retrying={query.isFetching} />
         )}
@@ -229,10 +229,10 @@ function ReceivedDetail({ shareId }: { shareId: string }) {
   const act2 = (action: 'accept' | 'decline') => op.run((key) => sharingApi(api).receivedAction(s.id, action, { expectedVersion: s.version }, key, account.id), store);
   const gone = s.state === 'revoked' || s.state === 'unavailable' || s.state === 'expired';
   return (
-    <Shell title={`Consegna da ${sender(s)}`}>
+    <Shell title={`Documenti da ${sender(s)}`}>
       {back}
       <h1 tabIndex={-1} ref={resultFocus}>
-        {s.state === 'pending' ? `${sender(s)} vuole darti dei documenti` : s.state === 'awaiting_confirmation' ? 'In attesa del mittente' : gone ? 'Non più disponibile' : `Consegna da ${sender(s)}`}
+        {s.state === 'pending' ? `${sender(s)} vuole darti dei documenti` : s.state === 'awaiting_confirmation' ? 'In attesa del mittente' : gone ? 'Non più disponibile' : `Documenti da ${sender(s)}`}
       </h1>
       {query.isError && (
         <Banner tone="warning" role="status" actions={<button type="button" className={cx(ui.btn, ui.small)} onClick={() => void query.refetch()}>Aggiorna</button>}>
@@ -269,7 +269,7 @@ function ReceivedDetail({ shareId }: { shareId: string }) {
         {s.state === 'declined' && <Banner><p>Hai rifiutato questo invito: i file non sono consultabili.</p></Banner>}
         {gone && (
           <Banner>
-            <p>{s.state === 'expired' && s.expiresAt ? `Il periodo di consultazione è terminato il ${formatDateTime(s.expiresAt)}.` : 'Questa consegna non è più consultabile.'} Le copie che hai già scaricato restano tue.</p>
+            <p>{s.state === 'expired' && s.expiresAt ? `Il periodo di consultazione è terminato il ${formatDateTime(s.expiresAt)}.` : 'Questa condivisione non è più consultabile.'} Le copie che hai già scaricato restano tue.</p>
           </Banner>
         )}
       </div>
@@ -313,13 +313,13 @@ function AcceptedFiles({ share }: { share: Share }) {
   return (
     <section className={ui.card} aria-labelledby="files">
       <h2 id="files" className={pages.cardTitle}>{share.items.length === 1 ? '1 file per te' : `${share.items.length} file per te`}</h2>
-      <p className={act.meta}>Consultabile fino a {formatDateTime(share.expiresAt)}. Puoi scaricare i file; non puoi inoltrare la consegna dentro Dimora.</p>
+      <p className={act.meta}>Consultabile fino a {formatDateTime(share.expiresAt)}. Puoi scaricare i file; non puoi inoltrare la condivisione dentro Dimora.</p>
       {error && (
         <Banner tone={isAmbiguousShareError(error.error) ? 'error' : 'warning'} role="alert" title="Download non riuscito">
-          <p>{isShareUnavailableError(error.error) ? 'Questa consegna non è più disponibile per te.' : `«${error.item.name}»: ${sharingErrorMessage(error.error)}`}</p>
+          <p>{isShareUnavailableError(error.error) ? 'Questa condivisione non è più disponibile per te.' : `«${error.item.name}»: ${sharingErrorMessage(error.error)}`}</p>
         </Banner>
       )}
-      <ul className={act.list} aria-label="File della consegna">
+      <ul className={act.list} aria-label="Documenti condivisi">
         {(error && isShareUnavailableError(error.error) ? [] : share.items).map((it) => (
           <li key={it.documentId} className={act.item}>
             <div className={act.itemHead}>

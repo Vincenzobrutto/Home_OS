@@ -97,7 +97,7 @@ describe('[mock] pagina senza case: ingresso per chi ha ricevuto un codice (HOME
     expect(screen.getByText(/non serve creare una casa/)).toBeInTheDocument();
     expect(screen.getByText(/Non ti dà accesso alla casa di chi li invia/)).toBeInTheDocument();
     const card = codeCard.closest('section')!;
-    expect(within(card).getByRole('link', { name: 'Consegne ricevute' })).toHaveAttribute('href', '/consegne');
+    expect(within(card).getByRole('link', { name: 'Documenti ricevuti' })).toHaveAttribute('href', '/consegne');
     expect(within(card).getByRole('link', { name: 'Inserisci il codice' })).toHaveAttribute('href', '/consegne/codice');
     const posts = () => app.backend.log.filter((r) => r.method === 'POST' && r.path !== '/auth/login');
     expect(posts()).toHaveLength(0); // nessuna richiesta finché l'utente non sceglie
@@ -123,7 +123,7 @@ describe('[mock] pagina senza case: ingresso per chi ha ricevuto un codice (HOME
     // Aspetta l'esito dell'ingresso prima di avviare una seconda navigazione.
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     await app.router.navigate('/case');
-    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
     expect(screen.queryByText('Hai ricevuto un codice?')).toBeNull();
     expect(screen.queryByRole('form', { name: 'Nuova casa' })).toBeNull();
   });
@@ -145,7 +145,7 @@ describe('[mock] pagina senza case: ingresso per chi ha ricevuto un codice (HOME
     await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
     await waitFor(() => expect(app.router.state.location.pathname).not.toBe('/accedi'));
     await app.router.navigate('/case');
-    expect(await screen.findByText('Caricamento delle case…')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Caricamento delle case…')).toBeInTheDocument());
     expect(screen.queryByText('Hai ricevuto un codice?')).toBeNull();
     expect(screen.queryByRole('form', { name: 'Nuova casa' })).toBeNull();
     release();

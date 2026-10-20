@@ -111,7 +111,7 @@ function Onboarding() {
             Se qualcuno ti ha dato un codice per consegnarti dei documenti, inseriscilo qui: non serve creare una casa.
           </p>
           <p className={styles.muted}>
-            La consegna ti mostra soltanto i file scelti per te, per un periodo limitato. Non ti dà accesso alla casa di
+            La condivisione ti mostra soltanto i file scelti per te, per un periodo limitato. Non ti dà accesso alla casa di
             chi li invia.
           </p>
           <div className={styles.formActions}>
@@ -119,7 +119,7 @@ function Onboarding() {
               Inserisci il codice
             </Link>
             <Link to="/consegne" className={cx(ui.btn, ui.ghost)}>
-              Consegne ricevute
+              Documenti ricevuti
             </Link>
           </div>
         </section>

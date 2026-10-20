@@ -530,12 +530,7 @@ export function canonical(value: unknown): string {
   return JSON.stringify(sort(value));
 }
 
-const sizeFormat = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 1 });
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${sizeFormat.format(bytes / 1024)} KiB`;
-  return `${sizeFormat.format(bytes / (1024 * 1024))} MiB`;
-}
+export { formatBytes } from '../lib/fileSize';
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' });
 export const formatCents = (cents: number) => euro.format(cents / 100);
 

@@ -134,7 +134,7 @@ describe('[mock] Documenti — caricamento', () => {
     await openUpload(app);
     await app.user.upload(screen.getByLabelText('File'), pdfFile());
     await app.user.click(screen.getByRole('button', { name: 'Carica' }));
-    const otherControl = screen.getByRole('link', { name: 'Consegne ricevute' });
+    const otherControl = screen.getByRole('link', { name: 'Documenti ricevuti' });
     otherControl.focus();
     release();
     await screen.findByText('Documento caricato');
@@ -196,7 +196,7 @@ describe('[mock] Documenti — caricamento', () => {
     const big = pdfFile('grande.pdf');
     Object.defineProperty(big, 'size', { value: 20 * MiB + 1 });
     await app.user.upload(screen.getByLabelText('File'), big);
-    expect(screen.getByLabelText('File')).toHaveAccessibleDescription(/limite per file è 20 MiB/);
+    expect(screen.getByLabelText('File')).toHaveAccessibleDescription(/limite per file è circa 21 MB/);
 
     const input = screen.getByLabelText('File') as HTMLInputElement;
     // Un browser può ignorare accept (es. «Tutti i file»): l'input riceve comunque un .txt.

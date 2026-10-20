@@ -1,3 +1,4 @@
+import { formatBytes } from './fileSize';
 import { isApiError, userMessage } from '../api/errors';
 // Etichette e regole review-v1 lato client. Il server resta l'autorità su valori,
 // fonti e origini: il client non invia mai sources/origin.
@@ -219,7 +220,6 @@ export function startErrorMessage(error: unknown) {
 }
 
 export function formatLimit(limits: NonNullable<AnalysisCapabilities['limits']>) {
-  const mib = Math.round((limits.maxFileBytes / (1024 * 1024)) * 10) / 10;
   const n = new Intl.NumberFormat('it-IT');
-  return `PDF con testo estraibile, massimo ${n.format(mib)} MiB per file, ${n.format(limits.maxTotalPages)} pagine e ${n.format(limits.maxExtractedCodePoints)} caratteri di testo in totale, ${n.format(limits.maxInputTokens)} token di input.`;
+  return `PDF con testo estraibile, massimo circa ${formatBytes(limits.maxFileBytes)} per file, ${n.format(limits.maxTotalPages)} pagine e ${n.format(limits.maxExtractedCodePoints)} caratteri di testo in totale, ${n.format(limits.maxInputTokens)} token di input.`;
 }

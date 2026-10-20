@@ -99,7 +99,7 @@ describe('[mock] C1a — download e cambio contesto', () => {
     await app.user.click(screen.getByRole('button', { name: /Scarica Manuale caldaia/ }));
     await waitFor(() => expect(backend.log.some(r => /\/received-shares\/.*\/file$/.test(r.path))).toBe(true));
     await switchTo(app, 'luca@example.test', '/consegne');
-    await screen.findByRole('heading', { name: 'Consegne ricevute' });
+    await screen.findByRole('heading', { name: 'Documenti ricevuti' });
     release();
     await waitFor(() => expect(delivered).toBe(true));
     await new Promise(r => setTimeout(r, 0));
@@ -274,7 +274,7 @@ describe('[mock] C1a — persona esterna, codice e abbinamento', () => {
     const code = backend.sharing.issuedCodes.at(-1)!;
     const shareId = [...backend.sharing.shares.keys()][0]!;
     await switchTo(app, 'luca@example.test', '/consegne');
-    expect(await screen.findByText('Nessuna consegna per questo account.')).toBeInTheDocument();
+    expect(await screen.findByText('Non hai ancora ricevuto documenti condivisi.')).toBeInTheDocument();
     await app.user.click(screen.getByRole('link', { name: 'Ho ricevuto un codice' }));
     await app.user.type(await screen.findByLabelText('Codice'), code.slice(0, 5) + '-' + code.slice(5).toLowerCase());
     expect(screen.getByRole('button', { name: 'Invia il codice' })).toBeDisabled(); // consenso discloseAccount esplicito
@@ -320,7 +320,7 @@ describe('[mock] C1a — persona esterna, codice e abbinamento', () => {
     acceptButton.blur();
     finishAccept();
     expect(await screen.findByRole('button', { name: 'Scarica Manuale caldaia' })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Consegna da Giulia Leone' })).toHaveFocus());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Documenti da Giulia Leone' })).toHaveFocus());
     expect(screen.queryByText(/Via Roma|Casa Roma|Spese|Attività/)).toBeNull();
     await app.user.click(screen.getByRole('button', { name: 'Scarica Manuale caldaia' }));
     await waitFor(() => expect(backend.log.some((r) => r.method === 'GET' && /\/received-shares\/.+\/documents\/.+\/file$/.test(r.path))).toBe(true));
@@ -355,7 +355,7 @@ describe('[mock] C1a — persona esterna, codice e abbinamento', () => {
     expect(screen.getByRole('checkbox', { name: /Ho confrontato il codice/ })).not.toBeChecked();
     // Paolo non vede più nulla della consegna.
     await switchTo(app, 'paolo@example.test', `/consegne/${shareId}`);
-    expect(await screen.findByRole('heading', { level: 1, name: 'Consegna non disponibile' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Documenti non disponibili' })).toBeInTheDocument();
   });
 
   it('codice errato o troppi tentativi: messaggi generici, nessuna ripetizione automatica', async () => {
@@ -493,7 +493,7 @@ describe('[mock] C1a — stati finali, privacy e contesti', () => {
     backend.outage = 503;
     await app.router.navigate('/consegne');
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    expect(screen.queryByText('Nessuna consegna per questo account.')).toBeNull();
+    expect(screen.queryByText('Non hai ancora ricevuto documenti condivisi.')).toBeNull();
     backend.outage = null;
     backend.sharing.enabled = false;
     await app.router.navigate(`/home/${home.id}/condivisioni`);

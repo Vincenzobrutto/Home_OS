@@ -1,3 +1,5 @@
+import { formatBytes } from './fileSize';
+export { formatBytes };
 // Regole documents-v1 lato client. Sono un aiuto immediato all'utente: il server
 // verifica byte, formato e limiti e resta l'unica autorità.
 import type { DocumentMimeType, DocumentSummary, DocumentVisibility } from '../api/types';
@@ -34,14 +36,6 @@ export function isImage(mime: string) {
   return mime === 'image/jpeg' || mime === 'image/png';
 }
 
-const sizeFormat = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 1 });
-
-export function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < MiB) return `${sizeFormat.format(bytes / 1024)} KiB`;
-  return `${sizeFormat.format(bytes / MiB)} MiB`;
-}
-
 const dateFormat = new Intl.DateTimeFormat('it-IT', { dateStyle: 'medium', timeStyle: 'short' });
 
 export function formatDate(iso: string) {
@@ -76,7 +70,7 @@ export function validateUploadFile(file: File | null): string | undefined {
   if (!declaredType(file)) return /\.heic$/i.test(file.name) ? 'Formato non supportato: puoi caricare PDF, JPEG o PNG. Esporta o salva questa foto come JPEG e seleziona la nuova copia.' : 'Formato non supportato: puoi caricare PDF, JPEG o PNG. Salva una copia in uno di questi formati.';
   if (file.size === 0) return 'Il file è vuoto. Seleziona una copia completa del documento.';
   if (file.size > MAX_UPLOAD_BYTES) {
-    return `Il file pesa ${formatBytes(file.size)}: il limite per file è 20 MiB. Riducilo o dividilo prima di caricarlo.`;
+    return `Il file pesa ${formatBytes(file.size)}: il limite per file è circa 21 MB. Riducilo o dividilo prima di caricarlo.`;
   }
   return undefined;
 }
@@ -96,7 +90,7 @@ export function exportProblem(selected: DocumentSummary[]): string | undefined {
   }
   const total = selected.reduce((sum, d) => sum + d.byteSize, 0);
   if (total > MAX_EXPORT_BYTES) {
-    return `La selezione pesa ${formatBytes(total)}: il limite per uno ZIP è 100 MiB.`;
+    return `La selezione pesa ${formatBytes(total)}: il limite per uno ZIP è circa 105 MB.`;
   }
   return undefined;
 }

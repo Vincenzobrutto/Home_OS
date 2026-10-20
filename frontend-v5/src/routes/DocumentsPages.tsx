@@ -295,7 +295,7 @@ function DocumentsArchive(props: {
         <h2 className={styles.cardTitle}>Nessun documento in questa casa</h2>
         <p className={styles.muted}>
           {props.canUpload
-            ? 'Carica il primo originale: PDF, JPEG o PNG fino a 20 MiB.'
+            ? 'Carica il primo originale: PDF, JPEG o PNG fino a circa 21 MB.'
             : 'Non ci sono documenti visibili per il tuo account.'}
         </p>
       </div>
@@ -350,7 +350,7 @@ function DocumentsArchive(props: {
                 : `${selectedDocs.length} selezionat${selectedDocs.length === 1 ? 'o' : 'i'} · ${formatBytes(totalBytes)}`}
             </strong>
             <span className={docs.limits}>
-              ZIP con al massimo {MAX_EXPORT_DOCUMENTS} documenti e 100 MiB complessivi: limite tecnico di questa
+              ZIP con al massimo {MAX_EXPORT_DOCUMENTS} documenti e circa 105 MB complessivi: limite tecnico di questa
               versione.
               {' '}Lo ZIP contiene solo gli originali selezionati e un elenco dei file con i codici per verificarne l’integrità; attività, spese e oggetti si esportano separatamente dal riquadro dei dati personali qui sotto.
             </span>
@@ -454,7 +454,7 @@ function exportErrorMessage(error: unknown) {
     if (error.status === 403) {
       return 'Almeno un documento selezionato non è esportabile con i tuoi permessi. Nessun file è stato esportato.';
     }
-    if (error.code === 'export_too_large') return 'La selezione supera 100 MiB complessivi. Nessun file è stato esportato.';
+    if (error.code === 'export_too_large') return 'La selezione supera circa 105 MB complessivi. Nessun file è stato esportato.';
     if (error.status === 404) return 'L’esportazione non è ancora attiva su questo servizio.';
   }
   return `${userMessage(error)} Nessun file è stato esportato.`;
@@ -636,7 +636,7 @@ export function UploadForm(props: {
         <h2 id={props.titleId} ref={titleRef} tabIndex={-1}>
           Carica documento
         </h2>
-        <p className={docs.note}>Un file per volta: PDF, JPEG o PNG fino a 20 MiB (limite tecnico di questa versione).</p>
+        <p className={docs.note}>Un file per volta: PDF, JPEG o PNG fino a circa 21 MB (limite tecnico di questa versione).</p>
       </div>
       <p className={docs.destination}>
         Destinazione: <strong>{home.name}</strong>
@@ -711,7 +711,7 @@ export function UploadForm(props: {
           File
         </label>
         <span id={`${fileInputId}-hint`} className={ui.hint}>
-          PDF, JPEG o PNG, massimo 20 MiB. Le foto vengono archiviate; l’analisi legge solo il testo presente nei PDF.
+          PDF, JPEG o PNG, massimo circa 21 MB. Le foto vengono archiviate; l’analisi legge solo il testo presente nei PDF.
         </span>
         <input
           id={fileInputId}

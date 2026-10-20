@@ -520,7 +520,7 @@ function ExternalCodeHelp({ minutes, action }: { minutes: number | null; action:
     <Banner title="Prima di generare il codice">
       <p>
         Il codice di abbinamento vale {minutes ? `${minutes} minuti` : 'pochi minuti'} da quando premi «{action}». Prima chiedi alla persona di
-        preparare il suo account Dimora (crearlo o accedere) e di aprire «Consegne ricevute» → «Ho ricevuto un codice»: non deve creare
+        preparare il suo account Dimora (crearlo o accedere) e di aprire «Documenti ricevuti» → «Ho ricevuto un codice»: non deve creare
         una casa.
       </p>
       <p>Genera il codice quando è pronta a inserirlo. Dopo l’inserimento confronterete il codice di confronto tramite un recapito che già conosci.</p>

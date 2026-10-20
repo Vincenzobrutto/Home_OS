@@ -16,7 +16,7 @@ import { ApiError, isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey, queryKeys } from '../api/queryKeys';
 import { Banner, ErrorState, Loading, ui, useDocumentTitle } from '../components/ui';
 import { useDocumentFile, useObjectUrl } from '../documents/hooks';
-import { saveBlob } from '../lib/files';
+import { formatBytes, saveBlob } from '../lib/files';
 import { handleUnauthorized } from '../session/queryClient';
 import pages from '../routes/pages.module.css';
 import styles from './integration.module.css';
@@ -41,7 +41,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
   const creation = useRef<{ files: File[]; ids: string[]; key: string; batchId: string | null } | null>(null), creating = useRef(false);
   const [problem, setProblem] = useState<string | null>(null), [waiting, setWaiting] = useState(false), [recoverCreation, setRecoverCreation] = useState(false), [candidates, setCandidates] = useState<Record<string, CandidatePage>>({});
   const [stagedFiles,setStagedFiles]=useState<Array<{id:string;file:File}>>([]);
-  function stage(selected:File[]){if(creating.current||creation.current||recoverCreation)return;const next=[...stagedFiles,...selected.map(file=>({id:newIdempotencyKey(),file}))];if(next.length>20||next.some(x=>x.file.size<1||x.file.size>20*1024*1024)||next.reduce((n,x)=>n+x.file.size,0)>200*1024*1024){setProblem('Scegli fino a 20 file, 20 MiB per file e 200 MiB complessivi.');return;}setProblem(null);setStagedFiles(next);}
+  function stage(selected:File[]){if(creating.current||creation.current||recoverCreation)return;const next=[...stagedFiles,...selected.map(file=>({id:newIdempotencyKey(),file}))];if(next.length>20||next.some(x=>x.file.size<1||x.file.size>20*1024*1024)||next.reduce((n,x)=>n+x.file.size,0)>200*1024*1024){setProblem('Scegli fino a 20 file, circa 21 MB per file e circa 210 MB complessivi.');return;}setProblem(null);setStagedFiles(next);}
   const [automaticConsent,setAutomaticConsent]=useState(false),[automaticActive,setAutomaticActive]=useState(false);
   async function startAutomatic(batchId:string,key:string){
     const latest=await client.batch(batchId);
@@ -88,7 +88,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
     if (creating.current) return;
     if (selected && creation.current) { setProblem('Recupera prima l’esito del caricamento precedente oppure riapri un caricamento salvato.'); return; }
     if (selected) {
-      if (!selected.length || selected.length > 20 || selected.some(f => f.size < 1 || f.size > 20 * 1024 * 1024) || selected.reduce((n, f) => n + f.size, 0) > 200 * 1024 * 1024) { setProblem('Scegli fino a 20 file, 20 MiB per file e 200 MiB complessivi.'); return; }
+      if (!selected.length || selected.length > 20 || selected.some(f => f.size < 1 || f.size > 20 * 1024 * 1024) || selected.reduce((n, f) => n + f.size, 0) > 200 * 1024 * 1024) { setProblem('Scegli fino a 20 file, circa 21 MB per file e circa 210 MB complessivi.'); return; }
       creation.current = { files: selected, ids: selected.map(() => newIdempotencyKey()), key: newIdempotencyKey(), batchId: active.current };
     }
     const pending = creation.current; if (!pending) return; creating.current = true; setWaiting(true); setProblem(null);
@@ -203,9 +203,9 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
       <div className={styles.dropZone} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(!waiting&&cap.data&&home.permissions.includes('edit'))stage(Array.from(e.dataTransfer.files));}}>
         <p>Fatture, bollette, documenti e foto della casa.</p>
         <FilePicker disabled={waiting||!cap.data||recoverCreation||!home.permissions.includes('edit')} secondary={stagedFiles.length>0} onFiles={stage}/>
-        <p className={pages.muted}>Oppure trascinali qui · PDF, JPEG o PNG · fino a 20 file, 20 MiB ciascuno.</p>
+        <p className={pages.muted}>Oppure trascinali qui · PDF, JPEG o PNG · fino a 20 file, circa 21 MB ciascuno.</p>
       </div>
-      {stagedFiles.length>0&&<><h2 className={styles.selectionHeading}>File scelti · {stagedFiles.length}</h2><ul className={styles.selectedFiles} aria-label="File scelti">{stagedFiles.map(x=><li key={x.id}><div className={styles.selectedName}><strong>{x.file.name}</strong><span>{new Intl.NumberFormat('it-IT',{maximumFractionDigits:1}).format(x.file.size/1024)} KiB</span></div><button type="button" className={ui.btn} aria-label={'Rimuovi '+x.file.name} disabled={waiting||recoverCreation} onClick={()=>setStagedFiles(old=>old.filter(f=>f.id!==x.id))}>Rimuovi</button></li>)}</ul><p className={pages.muted}>Puoi rimuovere i file sbagliati prima di caricarli.</p></>}
+      {stagedFiles.length>0&&<><h2 className={styles.selectionHeading}>File scelti · {stagedFiles.length}</h2><ul className={styles.selectedFiles} aria-label="File scelti">{stagedFiles.map(x=><li key={x.id}><div className={styles.selectedName}><strong>{x.file.name}</strong><span>{formatBytes(x.file.size)}</span></div><button type="button" className={ui.btn} aria-label={'Rimuovi '+x.file.name} disabled={waiting||recoverCreation} onClick={()=>setStagedFiles(old=>old.filter(f=>f.id!==x.id))}>Rimuovi</button></li>)}</ul><p className={pages.muted}>Puoi rimuovere i file sbagliati prima di caricarli.</p></>}
       {!workspace&&<div className={styles.uploadConsent}>{automaticControl}</div>}
       {stagedFiles.length>0&&<button type="button" className={`${ui.btn} ${ui.primary}`} disabled={waiting||recoverCreation||!cap.data||!home.permissions.includes('edit')} onClick={()=>void create(stagedFiles.map(x=>x.file))}>{automaticConsent?'Carica e organizza':'Carica documenti'}</button>}
     </section>}
@@ -220,7 +220,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
       onCancelUpload={itemId => post(`/items/${itemId}/upload-cancellation`, { expectedVersion: current.current?.items.find(i => i.id === itemId)?.version }, 'cancel:' + itemId)}
       onSaveReview={saveReview} onRecoverReview={recoverReview} onResolveDuplicate={(itemId, expectedVersion) => post(`/items/${itemId}/duplicate-resolution`, { expectedVersion, action: 'reuse_reference' }, 'duplicate:' + itemId)}
       onConfirm={async p => { const r = await confirm(p); return r.status === 'not_found' ? { status: 'uncertain' } : r; }} onRecoverConfirmation={p => confirm(p, true)}
-      analysis={cap.data?.analysis.enabled ? { consentText: 'Classificazione locale: cerca possibili tipi nel testo del PDF e mostra le pagine da controllare. Non usa Anthropic e non invia file all’esterno. Tu confermi le proposte.', costText: 'Nessun costo API.', limitsText: 'PDF con testo: massimo 10 MiB e 20 pagine. Scansioni e immagini si organizzano manualmente.', state: busyAnalysis ? { status: 'running' } : { status: 'idle' } } : undefined}
+      analysis={cap.data?.analysis.enabled ? { consentText: 'Classificazione locale: cerca possibili tipi nel testo del PDF e mostra le pagine da controllare. Non usa Anthropic e non invia file all’esterno. Tu confermi le proposte.', costText: 'Nessun costo API.', limitsText: 'PDF con testo: massimo circa 10,5 MB e 20 pagine. Scansioni e immagini si organizzano manualmente.', state: busyAnalysis ? { status: 'running' } : { status: 'idle' } } : undefined}
       onStartAnalysis={ids => { const items = current.current?.items.filter(i => ids.includes(i.id)).map(i => ({ id: i.id, expectedVersion: i.version })) ?? []; void post('/analyses', { provider: 'local_text_v1', items }, 'analysis').then(r => { if (r.status !== 'confirmed') setProblem(r.status === 'rejected' ? r.message : 'Esito incerto: rileggi il caricamento prima di riprovare.'); }); }}
       openOriginal={async itemId => { const source = current.current?.items.find(i => i.id === itemId)?.documentLink.document; if (!source) throw Error('Originale non disponibile.'); const file = await api.downloadDocumentFile(home.id, source.id, undefined, account.id); saveBlob(file.blob, file.filename ?? 'originale.pdf'); }}
       renderPreview={(itemId, page) => { const source = wire?.items.find(i => i.id === itemId)?.documentLink.document; return source ? <OriginalPreview homeId={home.id} id={source.id} page={page} /> : <p>Originale non disponibile.</p>; }}

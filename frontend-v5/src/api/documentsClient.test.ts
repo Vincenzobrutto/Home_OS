@@ -150,7 +150,7 @@ describe('nomi file e limiti export (unitari, senza rete)', () => {
     const doc = (byteSize: number, i = 0) => ({ id: `d${i}`, byteSize }) as DocumentSummary;
     expect(exportProblem([])).toMatch(/almeno un documento/);
     expect(exportProblem(Array.from({ length: 51 }, (_, i) => doc(1, i)))).toMatch(/50/);
-    expect(exportProblem([doc(60 * MiB, 1), doc(41 * MiB, 2)])).toMatch(/100 MiB/);
+    expect(exportProblem([doc(60 * MiB, 1), doc(41 * MiB, 2)])).toMatch(/circa 105 MB/);
     expect(exportProblem([doc(50 * MiB, 1), doc(50 * MiB, 2)])).toBeUndefined();
   });
 });
