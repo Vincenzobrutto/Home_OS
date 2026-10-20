@@ -202,7 +202,7 @@ function DocumentsArchive(props: {
   const [exported, setExported] = useState<number | null>(null);
 
   const items = useMemo(() => documents.data?.pages.flatMap((p) => p.items) ?? [], [documents.data]);
-  const aiEligible = items.filter(doc => doc.workflowState !== 'completed');
+  const aiEligible = items.filter(doc => doc.workflowState !== 'completed' && !doc.aiAnalysisSucceeded && doc.workflowState !== 'review');
   const aiFirstPage = aiEligible.slice(0, 20);
   const selectedDocs = items.filter((d) => selected.has(d.id));
   const problem = exportProblem(selectedDocs);
@@ -363,9 +363,9 @@ function DocumentsArchive(props: {
         </div>
       )}
       {props.canUpload&&!selecting&&filters.workflow!=='completed'&&(aiEligible.length>0||aiSelecting)&&<div className={docs.selectionToggle}><button type="button" className={ui.btn} aria-expanded={aiSelecting} onClick={()=>{setAiSelecting(v=>!v);setAiSelected(new Set());}} disabled={aiLocked}>{aiSelecting?'Annulla selezione AI':'Seleziona per compilare con l’AI'}</button></div>}
-      {props.canUpload&&!selecting&&aiSelecting&&<div className={docs.toolbar}><label className={docs.bulkConsent}><input type="checkbox" checked={aiFirstPage.length>0&&aiFirstPage.every(d=>aiSelected.has(d.id))} disabled={aiLocked||!aiFirstPage.length} onChange={e=>setAiSelected(e.target.checked?new Set(aiFirstPage.map(d=>d.id)):new Set())}/>Seleziona {aiEligible.length>20?'i primi 20 documenti da completare':'tutti i documenti da completare mostrati'}</label><span>I documenti completati sono esclusi dalla selezione AI.</span></div>}
-      {/* A locked attempt preserves its exact authorized group for idempotent recovery. New attempts exclude completed records. */}
-      {props.canUpload&&!selecting&&<BulkDocumentCompilation homeId={home.id} selected={items.filter(d=>aiSelected.has(d.id)&&(aiLocked||d.workflowState!=='completed'))} onClear={()=>setAiSelected(new Set())} onLocked={setAiLocked}/>}
+      {props.canUpload&&!selecting&&aiSelecting&&<div className={docs.toolbar}><label className={docs.bulkConsent}><input type="checkbox" checked={aiFirstPage.length>0&&aiFirstPage.every(d=>aiSelected.has(d.id))} disabled={aiLocked||!aiFirstPage.length} onChange={e=>setAiSelected(e.target.checked?new Set(aiFirstPage.map(d=>d.id)):new Set())}/>Seleziona {aiEligible.length>20?'i primi 20 documenti da completare':'tutti i documenti da completare mostrati'}</label><span>Sono esclusi i documenti completati e quelli già analizzati con successo. Riapri le proposte disponibili per confermarle.</span></div>}
+      {/* A locked attempt preserves its exact authorized group for idempotent recovery. New attempts exclude completed records and successful extractions. */}
+      {props.canUpload&&!selecting&&<BulkDocumentCompilation homeId={home.id} selected={items.filter(d=>aiSelected.has(d.id)&&(aiLocked||d.workflowState!=='completed'&&!d.aiAnalysisSucceeded&&d.workflowState!=='review'))} onClear={()=>setAiSelected(new Set())} onLocked={setAiLocked}/>}
       {canExport && selecting && <PersonalExportPanel homeId={home.id} />}
 
       {exporter.isError && (
@@ -405,7 +405,7 @@ function DocumentsArchive(props: {
             selectable={canExport && selecting}
             selected={selected.has(doc.id)}
             onToggle={() => toggle(doc.id)}
-            aiSelectable={props.canUpload&&!selecting&&aiSelecting&&doc.workflowState!=='completed'} aiSelected={aiSelected.has(doc.id)} aiLocked={aiLocked} onAiToggle={()=>setAiSelected(old=>{const next=new Set(old);if(next.has(doc.id))next.delete(doc.id);else if(doc.workflowState!=='completed')next.add(doc.id);return next;})}
+            aiSelectable={props.canUpload&&!selecting&&aiSelecting&&doc.workflowState!=='completed'&&!doc.aiAnalysisSucceeded&&doc.workflowState!=='review'} aiSelected={aiSelected.has(doc.id)} aiLocked={aiLocked} onAiToggle={()=>setAiSelected(old=>{const next=new Set(old);if(next.has(doc.id))next.delete(doc.id);else if(doc.workflowState!=='completed'&&!doc.aiAnalysisSucceeded&&doc.workflowState!=='review')next.add(doc.id);return next;})}
           />
         ))}
       </ul>

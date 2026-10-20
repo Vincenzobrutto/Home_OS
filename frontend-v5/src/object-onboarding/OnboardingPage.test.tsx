@@ -5,7 +5,7 @@ import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { AiBudget, Draft, Form, FieldKey } from './model';
 import { choice, initialForm, houseExpenseTitle } from './model';
-async function world(options:{contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
+async function world(options:{analysisSucceeded?:boolean;contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
  if(options.login!==false){await api.login({email:account.email,password});await api.getSession();}
@@ -24,7 +24,7 @@ async function world(options:{contact?:boolean;completePurchase?:boolean;reviewW
  const fetch=async(url:string,init:RequestInit)=>{
   if(!url.includes('/object-onboarding'))return control.fetch(url,init);
   const path=url.split('/object-onboarding')[1]!,body=init.body?JSON.parse(String(init.body)):undefined;calls.push({path,body,key:new Headers(init.headers).get('Idempotency-Key')});
-  if(path.startsWith('/capabilities'))return Response.json({budget:options.budget,manualAvailable:true,aiAvailable:!!options.ai,requiresConsent:true,drafts:options.savedDraft?[{id:wire.id,state:'open'}]:[],canStartWithUncertainAcknowledgement:!!options.uncertainRetry,canStartAnalysis:options.uncertainRetry?false:options.newAuthorization?true:undefined,job:(options.newAuthorization||options.uncertainRetry)?{id:"old-job",state:"uncertain",draftId:null,errorCode:"analysis_outcome_unknown"}:null});
+  if(path.startsWith('/capabilities'))return Response.json({analysisSucceeded:options.analysisSucceeded,successfulDraftId:options.analysisSucceeded?wire.id:null,budget:options.budget,manualAvailable:true,aiAvailable:!!options.ai,requiresConsent:true,drafts:options.savedDraft?[{id:wire.id,state:'open'}]:[],canStartWithUncertainAcknowledgement:!!options.uncertainRetry,canStartAnalysis:options.uncertainRetry?false:options.newAuthorization?true:undefined,job:(options.newAuthorization||options.uncertainRetry)?{id:"old-job",state:"uncertain",draftId:null,errorCode:"analysis_outcome_unknown"}:null});
   if(path==='/jobs'){starts++;if(options.lostStart&&starts===1)throw new TypeError('lost');return Response.json({job:{id:'job1',state:'queued',draftId:null,errorCode:null}},{status:202});}
   if(path==='/jobs/old-job')return Response.json({job:{id:'old-job',state:'uncertain',draftId:null,errorCode:'analysis_outcome_unknown'}});
   if(path.startsWith('/jobs/'))return Response.json({job:{id:'job1',state:'succeeded',draftId:wire.id,errorCode:null}});
@@ -48,7 +48,7 @@ async function world(options:{contact?:boolean;completePurchase?:boolean;reviewW
   if(path.startsWith('/drafts/')||path==='/manual-drafts')return Response.json({draft:wire});
   return Response.json({error:{code:'not_found',message:'Unknown'}},{status:404});
  };
- const app=renderApp({backend,fetch,path:'/home/'+home.id+'/documenti/'+doc.id+'/oggetti'+(options.start?'':'?bozza='+wire.id)+(options.compilation?'&compila='+options.compilation:'')});
+ const app=renderApp({backend,fetch,path:'/home/'+home.id+'/documenti/'+doc.id+'/oggetti'+(options.start?'':'?bozza='+wire.id)+(options.compilation?(options.start?'?':'&')+'compila='+options.compilation:'')});
  if(!options.compactList&&options.login!==false&&!options.foreign&&(!options.start||options.savedDraft)){await screen.findByRole('button',{name:'Rivedi Router demo'});await app.user.click(screen.getByRole('button',{name:'Rivedi Router demo'}));}
  return {...app,wire,calls,counts:()=>({confirmations,starts})};
 }
@@ -267,3 +267,14 @@ it.each(['quantity','unknown'] as const)('uncertain %s never proposes a purchase
 
 it('professional fields are prefilled and saved with the SAME single document confirmation',async()=>{const w=await world({conformity:true,contact:true,compactList:true});await screen.findByRole('button',{name:'Salva e organizza'});expect(screen.getByLabelText('Nome o ragione sociale')).toHaveValue('Boreale Impianti');expect(screen.getByLabelText('Telefono')).toHaveValue('030 1234567');expect(screen.getByLabelText('Partita IVA / codice fiscale')).toHaveValue('12345678903');await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));expect(w.calls.find(c=>c.path.endsWith('/confirmations'))!.body).toMatchObject({choices:[],documentOnly:true,contacts:[{proposalId:'contact-proposal',action:'save'}]});await screen.findByRole('link',{name:'Vedi contatto: Boreale Impianti'});});
 it('professional can be excluded without adding another confirmation step',async()=>{const w=await world({conformity:true,contact:true,compactList:true});await w.user.click(await screen.findByRole('checkbox',{name:'Aggiungi o collega alla rubrica'}));await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));expect(w.calls.find(c=>c.path.endsWith('/confirmations'))!.body).toMatchObject({contacts:[{proposalId:'contact-proposal',action:'skip'}]});});
+
+
+it('a direct AI URL reopens successful extraction without consent or another analysis',async()=>{
+ const w=await world({start:true,ai:true,analysisSucceeded:true,compilation:'ai'});
+ await screen.findByText(/Questo documento è già stato analizzato con successo/);
+ expect(screen.queryByRole('button',{name:'Avvia precompilazione AI'})).not.toBeInTheDocument();
+ expect(screen.queryByLabelText(/Autorizzo l’invio di questo documento/)).not.toBeInTheDocument();
+ expect(screen.queryByText('Scegli la precompilazione AI')).not.toBeInTheDocument();
+ expect(w.counts().starts).toBe(0);
+ expect(w.calls.some(r=>r.path.endsWith('/jobs'))).toBe(false);
+});

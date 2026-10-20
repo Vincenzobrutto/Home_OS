@@ -90,3 +90,8 @@ Il contratto non richiede produzione/cloud, motori esterni o pagamenti. Aggiorna
 
 ## Estensione B2 archivio assistito16ott2026
 Raccolte personali confermate, filtro collection e title personale, cache/cursor/export coerenti. Firme e regole vincolanti: document-intake-api-contract.md sezione B2. Nessuna classificazione automatica dei documenti pregressi; gli originali senza metadati personali correnti sono in Da organizzare. UI e schema additivi, visibilità invariata.
+
+
+## 21 ottobre 2026 — Esito AI distinto dallo stato di conferma
+
+Ogni voce della lista documenti aggiunge `aiAnalysisSucceeded: boolean`, calcolato sullo snapshot corrente e sull’account/casa autorizzati. È vero per job prodotti riuscito o proposta extraction esistente, anche non confermata. Il campo non altera workflow/filtri/conteggi, ma permette di escludere i successi dalla selezione AI multipla. Nessun dato delle proposte o di altri account esposto. [Regola e verifica](ai-success-reuse-20261021.md).

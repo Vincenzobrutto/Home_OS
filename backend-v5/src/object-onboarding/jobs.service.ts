@@ -43,10 +43,13 @@ export class OnboardingJobService {
       const source = await this.receipts.source(tx,a,h,documentId); if (!source) throw deny();
       const drafts = await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,mode:{not:'floor_plan'}},orderBy:[{updatedAt:'desc'},{id:'desc'}],take:10,select:{id:true,state:true,mode:true,updatedAt:true}});
       const job = await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,purpose:'products'},orderBy:{createdAt:'desc'}});
+      const successful = await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,purpose:'products',state:'succeeded'},orderBy:{createdAt:'desc'}});
+      const extracted = await tx.objectOnboardingDraft.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,mode:'extraction'},orderBy:{createdAt:'desc'},select:{id:true}});
+      const analysisSucceeded=!!successful||!!extracted;
       const budget=edit?await this.ai.budget.snapshot(tx,source.original!.sha256,a,h):null;
       const aiAvailable=edit&&!!budget?.available;
       const uncertain=aiAvailable ? await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,state:'uncertain',attempt:{is:{campaignId:this.ai.budget.config.campaign}}}}) : null;
-      return {manualAvailable:edit,aiAvailable,canStartAnalysis:aiAvailable&&!uncertain&&!['queued','running'].includes(job?.state??''),canStartWithUncertainAcknowledgement:aiAvailable&&!!uncertain&&!['queued','running'].includes(job?.state??''),provider:'anthropic',requiresConsent:true,budget,drafts,job:job ? await this.view(tx,a,h,job) : null};
+      return {analysisSucceeded,successfulDraftId:successful?.draftId??extracted?.id??null,manualAvailable:edit,aiAvailable,canStartAnalysis:aiAvailable&&!analysisSucceeded&&!uncertain&&!['queued','running'].includes(job?.state??''),canStartWithUncertainAcknowledgement:aiAvailable&&!analysisSucceeded&&!!uncertain&&!['queued','running'].includes(job?.state??''),provider:'anthropic',requiresConsent:true,budget,drafts,job:job ? await this.view(tx,a,h,job) : null};
     });
   }
   recover(a:string,h:string,key:string,query:unknown) {
@@ -70,8 +73,13 @@ export class OnboardingJobService {
         if (!await this.receipts.source(tx, a, h, prior.documentId, prior)) throw deny();
         return { job: await this.view(tx, a, h, prior) };
       }
-      if(row.purpose==='floor_plan'&&await tx.objectOnboardingDraft.findFirst({where:{accountId:a,homeId:h,documentId:source.id,documentVersion:source.original!.version,documentSha256:source.original!.sha256,mode:'floor_plan'}}))throw conflict('floor_plan_already_proposed','Esiste già una proposta.');
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended('onboarding:queue',0))::text AS locked`;
       if (body.provider !== 'anthropic') throw new ServiceUnavailableException({ code: 'ai_provider_disabled', message: 'Questo servizio di analisi non è abilitato.' });
+      const purpose=row.purpose==='floor_plan'?'floor_plan':'products';
+      const successful=await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId:source.id,documentVersion:source.original!.version,documentSha256:source.original!.sha256,purpose,state:'succeeded'},orderBy:{createdAt:'desc'}});
+      if(successful)return {job:await this.view(tx,a,h,successful)};
+      if(purpose==='products'&&await tx.objectOnboardingDraft.findFirst({where:{accountId:a,homeId:h,documentId:source.id,documentVersion:source.original!.version,documentSha256:source.original!.sha256,mode:'extraction'}}))throw conflict('onboarding_analysis_already_succeeded','Questo documento è già stato analizzato con successo. Riapri le proposte esistenti.');
+      if(row.purpose==='floor_plan'&&await tx.objectOnboardingDraft.findFirst({where:{accountId:a,homeId:h,documentId:source.id,documentVersion:source.original!.version,documentSha256:source.original!.sha256,mode:'floor_plan'}}))throw conflict('floor_plan_already_proposed','Esiste già una proposta.');
       if (body.provider === 'anthropic') {
         if (!this.ai) throw new ServiceUnavailableException({ code: 'ai_provider_disabled', message: 'Analisi ricevuta non abilitata.' });
         this.ai.budget.requireSource(source.original!.sha256,a,h);
@@ -80,7 +88,6 @@ export class OnboardingJobService {
       if (!['application/pdf','image/jpeg','image/png'].includes(source.original!.mimeType)) throw invalid('Serve un PDF o una foto JPEG/PNG.');
       if (source.original!.byteSize > ANALYSIS_LIMITS.maxFileBytes) throw invalid('Il PDF supera il limite di analisi.', 'analysis_limits_exceeded');
       const snapshot = { documentId: source.id, documentVersion: source.original!.version, documentSha256: source.original!.sha256 };
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended('onboarding:queue',0))::text AS locked`;
       if (body.provider === 'anthropic' && !body.acknowledgePreviousUncertainAnalysis && await tx.objectOnboardingJob.findFirst({ where: { accountId: a, homeId: h, ...snapshot, provider: 'anthropic', state: 'uncertain', attempt: { is: { campaignId: this.ai.budget.config.campaign } } } })) throw conflict('analysis_outcome_unknown', 'L’esito di una precedente analisi è incerto. Non avviare un altro invio a pagamento. Puoi compilare a mano.');
       if (await tx.objectOnboardingJob.findFirst({ where: { accountId: a, homeId: h, ...snapshot, state: { in: ['queued', 'running'] } } })) throw conflict('onboarding_analysis_already_running', 'È già in corso un’analisi di questo documento.');
       const active = { state: { in: ['queued', 'running'] } };

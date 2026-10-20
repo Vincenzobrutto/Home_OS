@@ -84,14 +84,14 @@ export class DocumentsService implements OnModuleInit {
     const anchorTime = anchor?.createdAt.toISOString().slice(0, -1);
     const mime = { pdf: 'application/pdf', jpeg: 'image/jpeg', png: 'image/png' };
     const pattern = literalPattern(filters.q);
-    const {completed,state}=workflowSql(accountId,homeId);
+    const {completed,state,analysisSucceeded}=workflowSql(accountId,homeId);
 
     return this.db.$transaction(async tx => {
       await this.policy.requireLocked(tx, accountId, homeId);
       // Use the installed deterministic Unicode ICU collation; the development
       // database's default C collation only folds ASCII. Never rewrite originals.
-      const ids = await tx.$queryRaw<Array<{ id: string; workflowState: string }>>(Prisma.sql`
-        SELECT d.id, ${state} AS "workflowState"
+      const ids = await tx.$queryRaw<Array<{ id: string; workflowState: string; aiAnalysisSucceeded: boolean }>>(Prisma.sql`
+        SELECT d.id, ${state} AS "workflowState", ${analysisSucceeded} AS "aiAnalysisSucceeded"
         FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
         LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${accountId} AND o."homeId"=${homeId} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256
         WHERE d."homeId"=${homeId} AND (d.visibility='home' OR d."uploaderId"=${accountId})
@@ -108,7 +108,7 @@ export class DocumentsService implements OnModuleInit {
       const page = docs.slice(0, query.limit), last = page.at(-1);
       return { items: await Promise.all(page.map(async doc => {
         const org = await currentOrganization(tx, accountId, homeId, doc);
-        return { ...publicDocument(doc, canExport(member)), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null, workflowState: ids.find(row => row.id === doc.id)!.workflowState };
+        return { ...publicDocument(doc, canExport(member)), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null, aiAnalysisSucceeded: ids.find(row => row.id === doc.id)!.aiAnalysisSucceeded, workflowState: ids.find(row => row.id === doc.id)!.workflowState };
       })), nextCursor: docs.length > query.limit && last ? searchCursor(last, accountId, homeId, filters) : null };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 15000, maxWait: 15000 });
   }
@@ -215,7 +215,11 @@ function workflowSql(accountId:string,homeId:string){
       AND (EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p.mode<>'floor_plan' AND p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='confirmed')
       OR (o.id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(o.parts) p WHERE p->>'kind' IN ('invoice','receipt','utility_bill','purchase_document','purchase_order','product_label','delivery_notice'))))
     )`;
-return {completed,state:Prisma.sql`CASE
+const analysisSucceeded=Prisma.sql`(
+ EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j.purpose='products' AND j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND j.state='succeeded')
+ OR EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p.mode='extraction' AND p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256)
+ )`;
+return {completed,analysisSucceeded,state:Prisma.sql`CASE
           WHEN ${completed} THEN 'completed'
           WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j.purpose='products' AND j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND j.state IN ('queued','running')) THEN 'analyzing'
           WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p.mode<>'floor_plan' AND p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open' AND p.mode='extraction') THEN 'review'

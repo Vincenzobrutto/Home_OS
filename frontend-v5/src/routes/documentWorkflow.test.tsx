@@ -22,7 +22,7 @@ it('shows pending work first, exposes every state, and switches the canonical ar
   expect(screen.queryByText('Salvato',{selector:'a'})).not.toBeInTheDocument();
   expect(screen.queryByRole('checkbox',{name:/per compilazione AI/})).not.toBeInTheDocument();
   await app.user.click(screen.getByRole('button',{name:'Seleziona per compilare con l’AI'}));
-  expect(screen.getAllByRole('checkbox',{name:/per compilazione AI/})).toHaveLength(4);
+  expect(screen.getAllByRole('checkbox',{name:/per compilazione AI/})).toHaveLength(3);
   const tabs=screen.getByRole('group',{name:'Stato dei documenti'});
   expect(within(tabs).getAllByRole('button')).toHaveLength(2);
   await app.user.click(within(tabs).getByRole('button',{name:'Completati'}));
@@ -81,4 +81,23 @@ it('keeps an explicit All scope without a query and aligns it with the list',asy
   await app.user.click(screen.getByRole('button',{name:'Annulla selezione AI'}));
   expect(screen.queryByRole('button',{name:'Seleziona per compilare con l’AI'})).not.toBeInTheDocument();
   expect(backend.log.some(r=>r.method==='POST'&&/automatic-runs|from-documents/.test(r.path))).toBe(false);
+});
+
+
+it('excludes successful AI extraction before confirmation and after a refresh without starting a run',async()=>{
+ const backend=new FakeBackend(),owner=backend.seedAccount('Owner','ai-success@example.test','password-owner-001'),home=backend.seedHome(owner.id,'Casa AI','Via Test');
+ await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Proposta riuscita',workflowState:'review',aiAnalysisSucceeded:true});
+ await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Analisi precedente riuscita',workflowState:'attention',aiAnalysisSucceeded:true});
+ const fresh=await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Mai analizzato',workflowState:'to_compile'});
+ const app=renderApp({path:'/accedi',backend});await app.user.type(await screen.findByLabelText('Email'),owner.email);await app.user.type(screen.getByLabelText('Password'),'password-owner-001');await app.user.click(screen.getByRole('button',{name:'Accedi'}));
+ await waitFor(()=>expect(app.router.state.location.pathname).toBe(`/home/${home.id}/casa`));await act(async()=>{await app.router.navigate(`/home/${home.id}/documenti`);});
+ await app.user.click(await screen.findByRole('button',{name:'Seleziona per compilare con l’AI'}));
+ expect(screen.getAllByRole('checkbox',{name:/per compilazione AI/})).toHaveLength(1);
+ await app.user.click(screen.getByRole('checkbox',{name:'Seleziona tutti i documenti da completare mostrati'}));
+ await screen.findByRole('heading',{name:'1 documento selezionato'});
+ backend.documents.get(fresh.id)!.aiAnalysisSucceeded=true;
+ await act(async()=>{await app.queryClient.invalidateQueries();});
+ await waitFor(()=>expect(screen.queryByRole('checkbox',{name:/per compilazione AI/})).not.toBeInTheDocument());
+ expect(screen.queryByRole('button',{name:'Compila selezionati tramite AI'})).not.toBeInTheDocument();
+ expect(backend.log.some(r=>r.method==='POST'&&/automatic-runs|from-documents|jobs/.test(r.path))).toBe(false);
 });

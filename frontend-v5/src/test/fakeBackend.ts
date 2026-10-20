@@ -43,6 +43,7 @@ type FormLike = { get: (name: string) => unknown };
 
 type StoredDocument = {
   workflowState?: DocumentSummary['workflowState'];
+  aiAnalysisSucceeded?: boolean;
   id: string;
   homeId: string;
   uploaderId: string;
@@ -401,6 +402,7 @@ export class FakeBackend {
     /** Solo test UI in jsdom: impronta dichiarata al posto di quella calcolata (le prove sui byte reali sono in tests/fixtures). */
     sha256?: string;
     workflowState?: DocumentSummary['workflowState'];
+  aiAnalysisSucceeded?: boolean;
   }): Promise<DocumentDetail> {
     const mimeType = opts.mimeType ?? 'application/pdf';
     const bytes = opts.bytes ?? samplePdf(opts.name);
@@ -416,6 +418,7 @@ export class FakeBackend {
       sha256: opts.sha256 ?? (await sha256Hex(bytes)),
       visibility: opts.visibility ?? 'private',
       workflowState: opts.workflowState ?? 'to_compile',
+      aiAnalysisSucceeded: opts.aiAnalysisSucceeded,
     };
     this.documents.set(doc.id, doc);
     return this.docDetail(doc, PERMS.owner);
@@ -444,6 +447,7 @@ export class FakeBackend {
       source: 'manual_upload',
       status: 'stored',
       workflowState: doc.workflowState ?? 'to_compile',
+      aiAnalysisSucceeded: doc.aiAnalysisSucceeded,
       visibility: doc.visibility,
       permissions: perms.includes('export') ? ['read', 'export'] : ['read'],
     };

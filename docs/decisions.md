@@ -1,3 +1,7 @@
+## 21 ottobre 2026 — Riusare l’analisi AI riuscita prima e dopo la conferma
+
+Decisione dell’utente: un esito AI riuscito con dati estratti non va rianalizzato. Il blocco dipende dall’analisi, non da Completato, e vale per account/casa/snapshot/scopo. Si riapre la proposta esistente e si corregge manualmente; nuovi avvii riusano il successo senza nuovo costo. Motivo: evitare invii ripetuti, proposte duplicate e costi inutili. [Implementazione](v5/ai-success-reuse-20261021.md).
+
 ## Oggetti e Ambienti nella navigazione globale — 21 ottobre 2026
 
 Approvati Oggetti e impianti e Ambienti nel menu laterale desktop, subito dopo Casa. Su mobile Menu nella testata con tutte le sezioni, mantenendo la barra inferiore attuale. Riduce il passaggio obbligato dalla pagina Casa senza comprimere sette voci nella barra; Esplora la casa resta un ingresso aggiuntivo alle stesse risorse. [Implementazione e limiti](v5/section-navigation-20261021.md).

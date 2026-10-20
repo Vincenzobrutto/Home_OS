@@ -44,6 +44,8 @@ export type DocumentWorkflowState = 'to_compile' | 'analyzing' | 'review' | 'com
 export type DocumentSummary = {
   /** Personal state for this source/version; provided by the canonical list. */
   workflowState?: DocumentWorkflowState;
+  /** Successful extraction for this account and exact source snapshot, independent of confirmation. */
+  aiAnalysisSucceeded?: boolean;
   organization?: { version: number; title: string; parts: Array<{ kind: string; pageFrom: number | null; pageTo: number | null }>; collections: DocumentCollection[]; origin: 'user_declared'; updatedAt: string } | null;
   id: string;
   homeId: string;

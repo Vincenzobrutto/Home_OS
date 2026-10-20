@@ -98,3 +98,10 @@ Solo interfaccia interna Anthropic: sources=[{page,excerpt,region}] (max256); ev
 
 ## Totali ordine e costi dichiarati (V10)
 ProductExtraction.purchaseTotal ammesso per purchase_document e order_confirmation con totaleEUR esplicito; label Totale costi aggiunta. Le date ordine richiedono evidenza semantica completa, date assenti restano assenti. Confirmation expense.create/link ammessa su articolo anche per altri documentKind, solo con valori esplicitamente scelti e stessa validazione canonica. Nessun prezzo automatico da consegne/etichette; nessuna ripartizione implicita dei totali multiarticolo.
+
+
+## 21 ottobre 2026 — Riuso dell’analisi riuscita
+
+`GET capabilities` aggiunge `analysisSucceeded: boolean` e `successfulDraftId: string | null`, scoped ad account/casa/documento/versione/SHA, scopo prodotti. Un successo storico o una bozza extraction impediscono nuovi avvii (`canStartAnalysis=false`, `canStartWithUncertainAcknowledgement=false`), senza impedire lettura/modifica manuale. Il recupero non dipende dalla campagna AI corrente.
+
+`POST jobs`: una chiave già registrata conserva il replay precedente; con chiave nuova, dopo autorizzazione fonte e lock di coda, un job riuscito dello stesso snapshot/scopo viene restituito senza nuova riserva/job/invio. Una extraction priva del job storico produce 409 `onboarding_analysis_already_succeeded`. Documenti/versioni/account/case/scopi differenti non condividono automaticamente il risultato. Nessuna modifica a schema, consensi o contratti di conferma. [Report](ai-success-reuse-20261021.md).
