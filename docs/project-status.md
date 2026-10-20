@@ -1,3 +1,7 @@
+## Selezione AI riservata ai documenti non completati — 20 ottobre 2026
+
+Completati esclusi da caselle e selezione totale anche in Tutti e ricerca; rianalisi dal dettaglio da decidere. Dati reali preservati. [Regola e verifiche](v5/ux-audit-followup-20261020.md#selezione-ai-esclusione-dei-completati).
+
 ## Correzioni dopo audit browser — 20 ottobre 2026
 
 Competenza nelle spese collegate, titolo leggibile dalla spesa, tipologia precisa dei documenti e contrasto dei campi migliorati. Dati reali preservati; selezione AI sui completati da decidere. [Comportamento e verifiche](v5/ux-audit-followup-20261020.md).

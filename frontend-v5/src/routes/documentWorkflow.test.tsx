@@ -66,4 +66,19 @@ it('keeps an explicit All scope without a query and aligns it with the list',asy
   expect(screen.getByRole('combobox',{name:'Cerca in'})).toHaveValue('all');
   expect(within(screen.getByRole('group',{name:'Stato dei documenti'})).getByRole('button',{name:'Tutti'})).toHaveAttribute('aria-pressed','true');
   expect(new URLSearchParams(app.router.state.location.search).get('workflow')).toBe('all');
+  await app.user.click(screen.getByRole('button',{name:'Seleziona per compilare con l’AI'}));
+  expect(screen.getAllByRole('checkbox',{name:/per compilazione AI/})).toHaveLength(1);
+  expect(screen.queryByRole('checkbox',{name:'Seleziona «Già salvato.pdf» per compilazione AI'})).not.toBeInTheDocument();
+  await app.user.click(screen.getByRole('checkbox',{name:'Seleziona tutti i documenti da completare mostrati'}));
+  expect(await screen.findByRole('heading',{name:'1 documento selezionato'})).toBeVisible();
+  expect(screen.getByRole('checkbox',{name:'Seleziona «Da compilare.pdf» per compilazione AI'})).toBeChecked();
+  // A document completed elsewhere must disappear from a new AI selection on refresh.
+  const pending=[...backend.documents.values()].find(d=>d.name==='Da compilare')!;
+  pending.workflowState='completed';
+  await act(async()=>{await app.queryClient.invalidateQueries();});
+  await waitFor(()=>expect(screen.queryByRole('checkbox',{name:/per compilazione AI/})).not.toBeInTheDocument());
+  expect(screen.queryByRole('button',{name:'Compila selezionati tramite AI'})).not.toBeInTheDocument();
+  await app.user.click(screen.getByRole('button',{name:'Annulla selezione AI'}));
+  expect(screen.queryByRole('button',{name:'Seleziona per compilare con l’AI'})).not.toBeInTheDocument();
+  expect(backend.log.some(r=>r.method==='POST'&&/automatic-runs|from-documents/.test(r.path))).toBe(false);
 });

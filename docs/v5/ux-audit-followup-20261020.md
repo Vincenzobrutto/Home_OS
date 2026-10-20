@@ -15,4 +15,12 @@ Browser reale desktop e viewport emulati 390×844 e 320×740: competenza dicembr
 
 Nessun upload, salvataggio, archiviazione o chiamata AI nel browser reale. 53 test superati con backend simulato: collegamento trasversale agli anni senza scritture, titoli e fallback, documenti misti, suite Spese, ricerca documenti e periodo bollette. Due vecchie aspettative sul testo del totale Casa aggiornate per includere l’anno già presente nell’interfaccia. Build/TypeScript e lint frontend superati.
 
-Evidenze locali nella chat: `outputs/ux-audit-followup-20261020/`; le immagini con suffisso `finale` mostrano il riepilogo definitivo della bolletta. La selezione AI sui completati resta deliberatamente invariata e da decidere con l’utente. Gli altri rilievi dell’audit restano fuori da questo intervento.
+Evidenze locali nella chat: `outputs/ux-audit-followup-20261020/`; le immagini con suffisso `finale` mostrano il riepilogo definitivo della bolletta. Gli altri rilievi dell’audit restano fuori da questo intervento; la successiva decisione sulla selezione AI è descritta sotto.
+
+## Selezione AI: esclusione dei completati
+
+Decisione confermata dall’utente: i documenti con stato canonico `completed` non sono selezionabili nella compilazione AI multipla, anche in Tutti, raccolte e ricerche miste. Se tutti i risultati sono completati non compare l’ingresso alla selezione AI. Nessun nuovo messaggio o azione di rianalisi dal dettaglio: questo percorso resta da decidere.
+
+Le caselle individuali e «Seleziona tutti» escludono i completati; il limite di 20 si applica ai soli documenti non completati mostrati. Una rilettura che rileva un documento appena completato lo esclude anche dal gruppo di un nuovo avvio. L’esito incerto di un avvio già inviato conserva invece il gruppo e la chiave autorizzati per il recupero idempotente, senza un secondo avvio. Stato ZIP e consultazione invariati; nessun cambio ai contratti API.
+
+Verifica: 9 test simulati di workflow e upload/selezione, inclusi elenco misto, selezione totale, cambio stato da un’altra sessione e recupero con stessa chiave. Browser desktop e viewport 390/320: Tutti con cinque completati e ricerca della bolletta senza ingresso/caselle AI, vista Completati preservata, nessun overflow nelle viste provate. Nessuna modifica o analisi sui dati reali; il caso misto è provato nel simulatore perché la casa reale contiene solo completati. Evidenze locali: `outputs/ai-completed-exclusion-20261020/`.
