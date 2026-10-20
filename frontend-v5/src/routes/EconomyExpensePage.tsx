@@ -1,4 +1,5 @@
 import {billPeriodLabel} from '../lib/billPeriod';
+import { LinkedDocument } from '../expenses/LinkedDocument';
 import { ContactsPanel } from '../contacts/components';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
@@ -88,7 +89,6 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
   }, []);
   const canEdit = home.permissions.includes('edit') && expense.permissions.includes('edit') && !!caps;
   const active = expense.state === 'active';
-  const base = `/home/${encodeURIComponent(home.id)}`;
   const o = expense.objectLink;
   const w = expense.workLink;
   return (
@@ -139,7 +139,7 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
               )}
             </dd>
             <dt>Documento</dt>
-            <dd>{expense.documentLink.state === 'linked' ? <Link to={`${base}/documenti/${encodeURIComponent(expense.documentLink.document.id)}`}>{expense.documentLink.document.name}</Link> : documentLinkText(expense.documentLink)}</dd>
+            <dd>{expense.documentLink.state === 'linked' ? <LinkedDocument homeId={home.id} document={expense.documentLink.document} /> : documentLinkText(expense.documentLink)}</dd>
             {expense.supplier && (<><dt>Fornitore</dt><dd>{expense.supplier}</dd></>)}
             {expense.documentNumber && (<><dt>Numero documento</dt><dd>{expense.documentNumber}</dd></>)}
             {expense.documentDate && (<><dt>Data di emissione</dt><dd>{formatCalendarDate(expense.documentDate)}</dd></>)}

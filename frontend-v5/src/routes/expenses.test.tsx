@@ -203,7 +203,7 @@ describe('[mock] H3a Spese — registrazione, importi e idempotenza', () => {
     await waitFor(() => expect(within(region).getByLabelText('Totali del 2026')).toHaveTextContent('Totale registrato0,30 €'));
     await app.router.navigate(`/home/${home.id}/casa`);
     const casa = await screen.findByRole('region', { name: 'Le tue spese del 2026' });
-    await waitFor(() => expect(casa).toHaveTextContent('Totale registrato0,30 €'));
+    await waitFor(() => expect(casa).toHaveTextContent('Totale registrato · Anno 20260,30 €'));
     expect(within(within(casa).getByRole('list', { name: 'Ultime spese' })).getAllByRole('listitem')).toHaveLength(2);
   });
 
@@ -321,6 +321,27 @@ describe('[mock] H3a Spese — modifica, archiviazione e storia', () => {
 });
 
 describe('[mock] H3a Spese — documento, caldaia e costo unico', () => {
+  it('la spesa collegata mantiene la competenza di dicembre anche nell’anno successivo, senza scritture', async () => {
+    const { backend, owner, home } = world();
+    backend.economy.enabled = true;
+    const doc = await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Bolletta dicembre' });
+    const seeded = await backend.economy.handle({ method: 'POST', path: '', headers: { 'idempotency-key': crypto.randomUUID() }, body: {
+      title: 'Luce dicembre', amountCents: 9339, spentOn: '2026-01-17', documentId: doc.id,
+      category: 'electricity', competenceFrom: '2025-12-01', competenceTo: '2025-12-31', documentDate: '2026-01-17',
+    } }, owner.id, home.id, 'expenses');
+    expect(seeded.status).toBe(201);
+    const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/documenti/${doc.id}`);
+    const linked = await screen.findByRole('region', { name: 'Spese collegate' });
+    await waitFor(() => expect(linked).toHaveTextContent('dicembre 2025'));
+    expect(within(linked).getAllByRole('listitem')).toHaveLength(1);
+    expect(linked).toHaveTextContent('Emissione');
+    expect(backend.log.some(r => r.method === 'GET' && r.path.includes('from=0001-01-01') && r.path.includes('to=9999-12-31'))).toBe(true);
+    await app.user.click(within(linked).getByRole('link', { name: 'Luce dicembre' }));
+    expect(await screen.findByRole('link', { name: 'Bolletta dicembre' })).toHaveAttribute('href', `/home/${home.id}/documenti/${doc.id}`);
+    expect(posts(backend, /\/expenses(?:\/|$)/)).toHaveLength(0);
+    expect(backend.expenses.items.size).toBe(1);
+  });
+
   it('da un documento: precompilazione verificata, origine «Collegata a un documento», originale invariato', async () => {
     const { backend, owner, home } = world();
     const doc = await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Fattura idraulico', visibility: 'home' });
@@ -508,7 +529,7 @@ describe('[mock] H3a Spese — privacy, ruoli, paginazione e contesto', () => {
     await seedExpense(backend, owner.id, home.id, { title: 'Anno scorso', amountCents: 5000, spentOn: '2025-12-31' });
     await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/casa`);
     const casa = await screen.findByRole('region', { name: 'Le tue spese del 2026' });
-    await waitFor(() => expect(casa).toHaveTextContent('Totale registrato40,00 €'));
+    await waitFor(() => expect(casa).toHaveTextContent('Totale registrato · Anno 202640,00 €'));
     const last = within(casa).getByRole('list', { name: 'Ultime spese' });
     expect(within(last).getAllByRole('link').map((a) => a.textContent)).toEqual(['Quattro', 'Tre', 'Due']);
     expect(screen.getByRole('region', { name: 'Le tue scadenze' })).toBeInTheDocument();

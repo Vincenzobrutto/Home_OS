@@ -27,6 +27,7 @@ import {
   validateNote,
 } from '../lib/expenses';
 import { useAccount } from '../session/session';
+import { LinkedDocument } from '../expenses/LinkedDocument';
 import { backToExpenses } from './ExpensesPage';
 import { useCurrentHome } from './HomePages';
 import pages from './pages.module.css';
@@ -158,7 +159,7 @@ function ExpenseView(props: {
             <dt>Documento</dt>
             <dd>
               {expense.documentLink.state === 'linked' ? (
-                <Link to={`${base}/documenti/${encodeURIComponent(expense.documentLink.document.id)}`}>{expense.documentLink.document.name}</Link>
+                <LinkedDocument homeId={home.id} document={expense.documentLink.document} />
               ) : (
                 documentLinkText(expense.documentLink)
               )}

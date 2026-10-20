@@ -37,7 +37,7 @@ export function expensePath(homeId: string, expenseId?: string) {
   return expenseId ? `${base}/${encodeURIComponent(expenseId)}` : base;
 }
 
-export function ExpenseRow(props: { expense: HomeExpense; homeId: string; state?: unknown }) {
+export function ExpenseRow(props: { expense: HomeExpense; homeId: string; state?: unknown; referencePeriod?: string | null; issuedOn?: string | null }) {
   const { expense } = props;
   return (
     <li className={styles.item}>
@@ -48,7 +48,8 @@ export function ExpenseRow(props: { expense: HomeExpense; homeId: string; state?
         <span className={own.amount}>{formatCents(expense.amountCents)}</span>
       </div>
       <span className={styles.meta}>
-        {formatCalendarDate(expense.spentOn)} · {ORIGIN_LABEL[expense.origin]}
+        {props.referencePeriod ?? formatCalendarDate(expense.spentOn)}
+        {props.issuedOn ? ` · Emissione ${formatCalendarDate(props.issuedOn)}` : ''} · {ORIGIN_LABEL[expense.origin]}
         {expense.state === 'archived' ? ` · ${STATE_LABEL.archived}` : ''}
         {expense.assetLink.state !== 'none' ? ` · ${assetLinkText(expense.assetLink)}` : ''}
       </span>

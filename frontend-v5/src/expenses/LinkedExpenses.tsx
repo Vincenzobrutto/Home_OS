@@ -6,6 +6,9 @@ import { expenseErrorMessage } from '../lib/expenses';
 import pages from '../routes/pages.module.css';
 import { ExpenseRow, expensePath, expenseStyles as styles } from './components';
 import { useExpenses } from './hooks';
+import { useEconomyCapabilities, useEconomyExpenses } from '../economy/hooks';
+import { billPeriodLabel, isUtility } from '../lib/billPeriod';
+import { DEFAULT_FILTERS } from '../lib/economy';
 
 /**
  * Costi collegati a una caldaia o a un documento: la stessa lista server filtrata
@@ -19,7 +22,12 @@ export function LinkedExpenses(props: {
   addLabel: string;
 }) {
   const { home } = props;
-  const list = useExpenses(home.id, { state: 'active', year: null, source: 'all', ...props.by });
+  const caps = useEconomyCapabilities(home.id);
+  const economic = 'documentId' in props.by && !!caps.data;
+  const legacy = useExpenses(home.id, { state: 'active', year: null, source: 'all', ...props.by }, !economic && !caps.isPending);
+  // Same document filter, across all years: never hide a December bill in January.
+  const economy = useEconomyExpenses(home.id, { ...DEFAULT_FILTERS, period: { kind: 'range', from: '0001-01-01', to: '9999-12-31' }, documentId: 'documentId' in props.by ? props.by.documentId : null }, { enabled: economic });
+  const list = economic ? economy : legacy;
   const items = list.data?.pages.flatMap((p) => p.items) ?? [];
   const canEdit = home.permissions.includes('edit');
   const param = 'assetId' in props.by ? `assetId=${encodeURIComponent(props.by.assetId)}` : `documentId=${encodeURIComponent(props.by.documentId)}`;
@@ -50,9 +58,9 @@ export function LinkedExpenses(props: {
             <p className={pages.muted}>Nessuna spesa attiva collegata.</p>
           ) : (
             <ul className={styles.list} aria-label={props.title}>
-              {items.map((e) => (
-                <ExpenseRow key={e.id} expense={e} homeId={home.id} />
-              ))}
+              {economic ? economy.data?.pages.flatMap(p => p.items).map(e => (
+                <ExpenseRow key={e.id} expense={e} homeId={home.id} referencePeriod={billPeriodLabel(e)} issuedOn={isUtility(e.category) ? e.documentDate : null} />
+              )) : items.map(e => <ExpenseRow key={e.id} expense={e} homeId={home.id} />)}
             </ul>
           )}
           {list.hasNextPage && (

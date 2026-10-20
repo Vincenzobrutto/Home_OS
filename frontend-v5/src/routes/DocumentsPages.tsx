@@ -1,4 +1,5 @@
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
+import { documentTypeLabels } from '../documents/presentation';
 import { BulkDocumentCompilation } from '../documents/BulkDocumentCompilation';
 import { IntakePage } from '../intake-integration/IntakePage';
 import { DocumentWorkspaceActions } from '../documents/DocumentWorkspaceActions';
@@ -24,7 +25,6 @@ import { PersonalExportPanel } from '../documents/PersonalExportPanel';
 import { useAccount, useSession } from '../session/session';
 import {
   EMPTY_FILTERS,
-  COLLECTION_OPTIONS,
   QUERY_MAX_CODE_POINTS,
   SEARCH_SCOPE_NOTE,
   describeFilters,
@@ -483,7 +483,7 @@ function DocumentRow(props: {
         </Link>
         <span className={docs.meta}>
           {doc.originalFilename} · {formatLabel(doc.mimeType)} · {formatBytes(doc.byteSize)} · {formatDate(doc.createdAt)}
-          {doc.organization && <span> · {doc.organization.collections.map(c => COLLECTION_OPTIONS.find(o => o.value === c)?.label ?? c).join(' · ')}</span>}
+          {doc.organization && <span> · {documentTypeLabels(doc.organization).join(' · ')}</span>}
         </span>
         <span className={docs.tags}>
           <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
