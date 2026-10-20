@@ -7,7 +7,6 @@ import { isUnauthorized, userMessage } from '../api/errors';
 import { IntakeClient } from '../intake-integration/client';
 import { ui } from '../components/ui';
 import { handleUnauthorized } from '../session/queryClient';
-import styles from './onboarding.module.css';
 import type { DocumentWorkflowState } from '../api/types';
 import type { Capabilities, Draft } from './model';
 
@@ -38,13 +37,6 @@ export function DocumentCompilationActions({homeId,documentId,onOpen,documentKin
    await cache.invalidateQueries({queryKey:key});await open('manuale',result.draft.id);
   }catch(e){if(isUnauthorized(e))await handleUnauthorized(cache);if(live.current)setError(userMessage(e));}finally{sending.current=false;if(live.current)setBusy(false);}
  }
- async function ai(){
-  if(sending.current)return;
-  const existing=caps.data?.drafts.find(d=>d.state==='open');
-  if(!existing){await open('ai');return;}
-  sending.current=true;setBusy(true);setError('');
-  try{const reply=await api.callJson<{draft:Draft}>(`/homes/${encodeURIComponent(homeId)}/object-onboarding/drafts/${encodeURIComponent(existing.id)}`,{accountId:account.id});if(reply.draft.snapshot?.documentId!==documentId)throw Error('La scheda non appartiene a questo documento.');await open('ai',reply.draft.mode==='manual'&&!reply.draft.review?.pending?undefined:existing.id);}catch(e){if(isUnauthorized(e))await handleUnauthorized(cache);if(live.current)setError(userMessage(e));}finally{sending.current=false;if(live.current)setBusy(false);}
- }
  const ready=caps.data?.drafts.find(d=>d.state==='open'&&(d.mode==='extraction'||caps.data?.job?.state==='succeeded'&&caps.data.job.draftId===d.id));
  const accepted=!caps.data?.drafts.some(d=>d.state==='open')&&caps.data?.drafts.find(d=>d.state==='confirmed');
  if(compact){
@@ -52,14 +44,7 @@ export function DocumentCompilationActions({homeId,documentId,onOpen,documentKin
   if(workflowState==='analyzing')return <button type="button" className={ui.btn} disabled>In analisi…</button>;
   if(workflowState==='attention')return <button type="button" className={ui.btn} onClick={()=>navigate(`/home/${encodeURIComponent(homeId)}/documenti/${encodeURIComponent(documentId)}`,{state:{documentsSearch:backSearch,documentsAccountId:account.id}})}>Apri documento</button>;
   if(ready)return <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy} onClick={()=>void open('ai',ready.id)}>Rivedi proposta</button>;
-  return <div><details><summary className={ui.btn}>Compila</summary><div className={styles.row}>
-   <button type="button" className={ui.btn} disabled={busy||!caps.isSuccess||!caps.data.manualAvailable} onClick={()=>void manual()}>Compila manualmente</button>
-   <button type="button" className={ui.btn} disabled={busy||!caps.isSuccess} onClick={()=>void ai()}>Precompila con AI</button>
-  </div></details>{(error||caps.isError)&&<p role="alert">{error||'Impossibile verificare le opzioni.'} <button type="button" className={ui.btn} onClick={()=>void caps.refetch()}>Riprova le opzioni</button></p>}</div>;
  }
- if(accepted)return <button type="button" className={ui.btn} onClick={()=>open('manuale',accepted.id)}>Proposta accettata · Vedi dettaglio</button>;
- return <div><div className={styles.row}>
-  <button type="button" className={ui.btn} disabled={busy||!caps.isSuccess||!caps.data.manualAvailable} onClick={()=>void manual()}>{busy?'Apertura scheda…':'Compila manualmente'}</button>
-  <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!caps.isSuccess} onClick={()=>ready?void open('ai',ready.id):void ai()}>{ready?'Rivedi proposta':'Precompila con AI'}</button>
- </div>{(error||caps.isError)&&<p role="alert">{error||'Impossibile verificare le opzioni.'} <button type="button" className={ui.btn} aria-label="Riprova le opzioni di compilazione" onClick={()=>void caps.refetch()}>Riprova</button></p>}</div>;
+ if(!compact&&accepted)return <button type="button" className={ui.btn} onClick={()=>open('manuale',accepted.id)}>Proposta accettata · Vedi dettaglio</button>;
+ return <div><button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!caps.isSuccess||(!ready&&!caps.data.manualAvailable)} onClick={()=>ready?void open('ai',ready.id):void manual()}>{busy?'Apertura scheda…':ready?'Rivedi proposta':'Compila'}</button>{(error||caps.isError)&&<p role="alert">{error||'Impossibile verificare le opzioni.'} <button type="button" className={ui.btn} onClick={()=>void caps.refetch()}>Riprova le opzioni</button></p>}</div>;
 }

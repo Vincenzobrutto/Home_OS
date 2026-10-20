@@ -6,7 +6,7 @@ import {DocumentEditorContext} from './DocumentEditorContext';
 import {renderApp,seededBackend,PASSWORD_A} from '../test/harness';
 const prepared=vi.hoisted(()=>vi.fn(async()=>({id:'prepared-batch'})));
 vi.mock('../intake-integration/client',()=>({IntakeClient:class{prepareExisting=prepared;}}));
-vi.mock('../intake-integration/IntakePage',()=>({IntakePage:()=>{const editor=useContext(DocumentEditorContext),[params]=useSearchParams();if(!editor)return <p>Caricamento pronto</p>;return <><label>Dato di prova<input/></label><button onClick={()=>void editor!.complete(params.get('oggetti-documento')!)}>Conferma bozza server</button><button onClick={editor!.pause}>Riprendi più tardi</button></>;}}));
+vi.mock('../intake-integration/IntakePage',()=>({IntakePage:()=>{const editor=useContext(DocumentEditorContext),[params]=useSearchParams();if(!editor)return <p>Caricamento pronto</p>;return <><label>Dato di prova<input/></label><button onClick={()=>void editor!.complete(params.get('oggetti-documento')!)}>Conferma bozza server</button><button onClick={editor!.pause}>Esci senza salvare</button></>;}}));
 vi.mock('./PdfPreview',()=>({PdfPreview:()=> <p>Anteprima locale</p>}));
 it('preserves filters, guards unsaved changes and selects the next source only after successful confirmation',async()=>{
  const {backend,homeA1,a}=seededBackend();
@@ -42,7 +42,7 @@ it.each(['menu','history','return','pause'] as const)('guards %s exits once, pre
  const exit=async()=>{
   if(kind==='menu')await app.user.click(screen.getAllByRole('link',{name:'Spese'})[0]!);
   else if(kind==='history')await act(async()=>{await app.router.navigate(-1);});
-  else await app.user.click(screen.getByRole('button',{name:kind==='return'?'Torna a Documenti':'Riprendi più tardi'}));
+  else await app.user.click(screen.getByRole('button',{name:kind==='return'?'Torna a Documenti':'Esci senza salvare'}));
  };
  await exit();
  await waitFor(()=>expect(guard).toHaveBeenCalledTimes(1));

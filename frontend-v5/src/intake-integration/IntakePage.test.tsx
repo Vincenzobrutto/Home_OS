@@ -1,5 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { renderApp, createFakeFetch, seededBackend, PASSWORD_A } from '../test/harness';
 import type { FetchLike } from '../api/client';
 
@@ -97,6 +97,7 @@ it.each(['local','unknown','draftkind','copy','copy-lost'])('upload proposals st
  const fetch:FetchLike=async(url,init)=>{
   if(url.includes('/object-onboarding')){
    if(url.includes('/capabilities'))return Response.json({manualAvailable:true,aiAvailable:true,canStartAnalysis:true,requiresConsent:true,drafts:[],job:null});
+   if(url.endsWith('/manual-drafts')||url.includes('/drafts/manual-inline'))return Response.json({draft:{...draft,id:'manual-inline',mode:'manual',documentKind:'house_document',documentInfo:{kind:'unsupported',title:{value:'Ricevuta sintetica'},facts:[]},items:[],purchaseTotal:null}});
    if(url.endsWith('/jobs')&&init.method==='POST'){starts++;bodies.push(JSON.parse(String(init.body)));return Response.json({job:{id:'inline-job',state:'queued',draftId:null,errorCode:null}});}
    if(url.includes('/jobs/'))return Response.json({job:{id:'inline-job',state:'succeeded',draftId:draft.id,errorCode:null}});
    if(url.includes('/candidates')||url.includes('/expense-candidates'))return Response.json({items:[],nextCursor:null});
@@ -121,7 +122,10 @@ it.each(['local','unknown','draftkind','copy','copy-lost'])('upload proposals st
  };
  const app=renderApp({path:'/accedi',backend,fetch});await screen.findByRole('heading',{name:'Accedi'});await app.user.type(screen.getByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));
  const path=`/home/${homeA1.id}/documenti/organizza`;await app.router.navigate(path+'?lotto=inline-batch&filtro=conserva');
- await app.user.click(await screen.findByRole('button',{name:'Precompila con AI'}));
+ await app.user.click(await screen.findByRole('button',{name:'Compila'}));
+ await screen.findByRole('heading',{name:'Cosa vuoi salvare?'});
+ await app.user.click(screen.getByText('Precompila con AI',{exact:true}));
+ const switchGuard=vi.spyOn(window,'confirm').mockReturnValue(true);await app.user.click(screen.getByRole('button',{name:'Scegli la precompilazione AI'}));switchGuard.mockRestore();
  await screen.findByRole('heading',{name:'Precompila con AI'});expect(starts).toBe(0);expect(screen.getByRole('button',{name:'Avvia precompilazione AI'})).toBeDisabled();
  await app.user.click(screen.getByRole('checkbox',{name:/Autorizzo l’invio/}));await app.user.click(screen.getByRole('button',{name:'Avvia precompilazione AI'}));await screen.findByRole('heading',{name:'Cosa vuoi salvare?'});await app.user.click(screen.getByText(/Oggetti · .*da creare/));await screen.findByRole('heading',{name:'Articolo 1 · Lampada demo'});
  expect(starts).toBe(1);expect(bodies[0]).toMatchObject({documentId:doc.id,consentToProviderTransfer:true});expect(app.router.state.location.pathname).toBe(path);
