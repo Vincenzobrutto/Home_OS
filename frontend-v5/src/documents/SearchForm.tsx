@@ -36,11 +36,13 @@ export function SearchForm(props: {
   const inputRef = useRef<HTMLInputElement>(null);
   const appliedKey = filtersKey(applied);
   const [basis, setBasis] = useState(appliedKey);
-  const [draft, setDraft] = useState<DocumentSearchFilters>({...applied,workflow:applied.q?applied.workflow:'all' as const});
+  const [draft, setDraft] = useState<DocumentSearchFilters>(applied);
+  const [scopeChosen, setScopeChosen] = useState(Boolean(applied.q && applied.workflow && applied.workflow !== 'all'));
   const [error, setError] = useState<string>();
   if (basis !== appliedKey) {
     setBasis(appliedKey);
-    setDraft({...applied,workflow:applied.q?applied.workflow:'all'});
+    setDraft(applied);
+    setScopeChosen(Boolean(applied.q && applied.workflow && applied.workflow !== 'all'));
     setError(undefined);
   }
 
@@ -64,7 +66,8 @@ export function SearchForm(props: {
   };
 
   const reset = () => {
-    setDraft(EMPTY_FILTERS);
+    setDraft({...EMPTY_FILTERS,workflow:applied.workflow});
+    setScopeChosen(false);
     setError(undefined);
     props.onApply(EMPTY_FILTERS);
     inputRef.current?.focus();
@@ -101,7 +104,7 @@ export function SearchForm(props: {
           value={draft.q}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${hintId} ${errorId}` : hintId}
-          onChange={(e) => setDraft({ ...draft, q: e.target.value })}
+          onChange={(e) => setDraft({ ...draft, q: e.target.value, workflow: scopeChosen ? draft.workflow : e.target.value.trim() ? 'all' : applied.workflow })}
         />
         {error && (
           <span id={errorId} className={ui.fieldError}>
@@ -114,7 +117,8 @@ export function SearchForm(props: {
         <button type="button" className={ui.btn} onClick={reset} disabled={!canReset}>Azzera filtri</button>
       </div>
       </div>
-      <label className={docs.filter}>Cerca in<select className={docs.select} value={draft.workflow??'all'} onChange={e=>setDraft({...draft,workflow:e.target.value as DocumentSearchFilters['workflow']})}><option value="all">Tutti i documenti</option><option value="pending">Da fare</option><option value="completed">Completati</option><option value="to_compile">Documenti da compilare</option><option value="review">Proposte da rivedere</option></select></label>
+      <p className={ui.hint}>Scrivendo cerchi in tutti i documenti. Puoi scegliere un ambito diverso qui sotto; premi Cerca per applicarlo.</p>
+      <label className={docs.filter}>Cerca in<select className={docs.select} value={draft.workflow??'all'} onChange={e=>{setScopeChosen(true);setDraft({...draft,workflow:e.target.value as DocumentSearchFilters['workflow']});}}><option value="all">Tutti i documenti</option><option value="pending">Da fare</option><option value="completed">Completati</option><option value="to_compile">Documenti da compilare</option><option value="review">Proposte da rivedere</option></select></label>
       <details className={docs.extraFilters}><summary>Filtri</summary>      {props.collectionsEnabled && <section aria-label="Sezioni documenti" className={docs.collectionSections}>
         <h2 className={docs.collectionTitle}>Esplora i documenti</h2>
         <DocumentCollectionFilters current={applied.collection ?? 'all'} onChange={collection => props.onApply({ ...applied, collection })} label="Tipologie di documenti" />

@@ -94,7 +94,7 @@ describe('[mock] M3 — endpoint assenti e avvio esplicito', () => {
     const { backend, home, A } = await m3World();
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/documenti`);
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
-    expect(screen.getByRole('button', { name: 'Seleziona documenti' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Seleziona per compilare con l’AI' })).toBeInTheDocument();
     await app.router.navigate(`/home/${home.id}/documenti/${A.id}`);
     await app.user.click(await screen.findByText('Altri strumenti di analisi'));
     expect(await screen.findByRole('link', { name: 'Analizza questo documento' })).toBeInTheDocument();

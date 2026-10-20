@@ -21,7 +21,7 @@ it('shows pending work first, exposes every state, and switches the canonical ar
   expect(screen.getByLabelText('Stato: Analisi da verificare')).toBeVisible();
   expect(screen.queryByText('Salvato',{selector:'a'})).not.toBeInTheDocument();
   expect(screen.queryByRole('checkbox',{name:/per compilazione AI/})).not.toBeInTheDocument();
-  await app.user.click(screen.getByRole('button',{name:'Seleziona documenti'}));
+  await app.user.click(screen.getByRole('button',{name:'Seleziona per compilare con l’AI'}));
   expect(screen.getAllByRole('checkbox',{name:/per compilazione AI/})).toHaveLength(4);
   const tabs=screen.getByRole('group',{name:'Stato dei documenti'});
   expect(within(tabs).getAllByRole('button')).toHaveLength(2);
@@ -29,7 +29,7 @@ it('shows pending work first, exposes every state, and switches the canonical ar
   expect(await screen.findByText('Salvato',{selector:'a'})).toBeVisible();
   expect(screen.getByLabelText('Stato: Completato')).toBeVisible();
   expect(screen.queryByText('Proposta',{selector:'a'})).not.toBeInTheDocument();
-  expect(screen.queryByRole('button',{name:'Seleziona documenti'})).not.toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Seleziona per compilare con l’AI'})).not.toBeInTheDocument();
   expect(backend.log.some(r=>r.method==='GET'&&r.path.includes('workflow=completed'))).toBe(true);
   await act(async()=>{await app.router.navigate(`/home/${home.id}/documenti?workflow=completed&q=Salvato`);});
   await screen.findByText('Salvato',{selector:'a'});
@@ -43,3 +43,27 @@ it('shows pending work first, exposes every state, and switches the canonical ar
   expect(within(screen.getByRole('group',{name:'Stato dei documenti'})).getByRole('button',{name:'Completati'})).toHaveAttribute('aria-pressed','true');
   expect(backend.log.some(r=>r.method==='POST'&&r.path.includes('analysis'))).toBe(false);
 },15000);
+
+it('keeps an explicit All scope without a query and aligns it with the list',async()=>{
+  const backend=new FakeBackend();
+  const owner=backend.seedAccount('Owner','scope@example.test','password-owner-001');
+  const home=backend.seedHome(owner.id,'Casa ambiti','Via Test');
+  await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Da compilare',workflowState:'to_compile'});
+  await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Già salvato',workflowState:'completed'});
+  const app=renderApp({path:'/accedi',backend});
+  await app.user.type(await screen.findByLabelText('Email'),owner.email);
+  await app.user.type(screen.getByLabelText('Password'),'password-owner-001');
+  await app.user.click(screen.getByRole('button',{name:'Accedi'}));
+  await waitFor(()=>expect(app.router.state.location.pathname).not.toBe('/accedi'));
+  await app.router.navigate('/home/'+home.id+'/documenti');
+  const scope=await screen.findByRole('combobox',{name:'Cerca in'});
+  expect(scope).toHaveValue('pending');
+  expect(await screen.findByText('Da compilare',{selector:'a'})).toBeVisible();
+  expect(screen.queryByText('Già salvato',{selector:'a'})).not.toBeInTheDocument();
+  await app.user.selectOptions(scope,'all');
+  await app.user.click(screen.getByRole('button',{name:'Cerca'}));
+  expect(await screen.findByText('Già salvato',{selector:'a'})).toBeVisible();
+  expect(screen.getByRole('combobox',{name:'Cerca in'})).toHaveValue('all');
+  expect(within(screen.getByRole('group',{name:'Stato dei documenti'})).getByRole('button',{name:'Tutti'})).toHaveAttribute('aria-pressed','true');
+  expect(new URLSearchParams(app.router.state.location.search).get('workflow')).toBe('all');
+});

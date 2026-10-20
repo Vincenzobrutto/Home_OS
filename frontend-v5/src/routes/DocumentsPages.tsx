@@ -79,7 +79,12 @@ export function DocumentsPage() {
   const capabilities = useDocumentSearchCapabilities(home.id);
   const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
   // Solo q/format/visibility nell'indirizzo; ?ricerca=1 (ingresso da Casa) non va all'API e cade al primo Cerca.
-  const apply = (filters: DocumentSearchFilters) => setParams(filtersToParams({...filters,workflow:filters.workflow??applied.workflow}));
+  const apply = (filters: DocumentSearchFilters) => {
+    const workflow=filters.workflow??applied.workflow;
+    const next=filtersToParams({...filters,workflow});
+    if(workflow==='all')next.set('workflow','all');
+    setParams(next);
+  };
   const closeUpload=(documentId?:string,batchId?:string)=>{setUploadOpen(false);const next=filtersToParams({...applied,workflow:documentId?'pending':applied.workflow});if(documentId&&batchId){next.set('oggetti-documento',documentId);next.set('lotto',batchId);next.set('compila','manuale');}setParams(next,{replace:true});};
 
   if(params.has('oggetti-documento'))return <DocumentEditorWorkspace key={account.id+":"+home.id}/>;
@@ -100,7 +105,7 @@ export function DocumentsPage() {
           </div>
         )}
       </div>
-      {['house','floor_plans','building','energy','contracts','technical'].includes(applied.collection??'')&&<section className={docs.panel} aria-label="Documenti della casa per tipologia"><h2>Esplora i documenti della casa</h2><p>Un unico archivio: ogni file resta al suo posto, senza copie. Le categorie dipendono dal tipo che hai salvato.</p><div className={docs.workflowTabs} role="group" aria-label="Tipologie della casa">{[['house','Tutti della casa'],['floor_plans','Planimetrie'],['building','Pratiche edilizie'],['energy','APE ed energia'],['contracts','Contratti'],['technical','Impianti']].map(([collection,label])=><button key={collection} type="button" className={cx(ui.btn,applied.collection===collection&&ui.primary)} aria-pressed={applied.collection===collection} onClick={()=>apply({...applied,collection:collection as DocumentSearchFilters['collection'],workflow:'all'})}>{label}</button>)}</div><Link to={'/home/'+encodeURIComponent(home.id)+'/documenti?workflow=all'}>Apri l’archivio completo</Link></section>}
+      {['house','floor_plans','building','energy','contracts','technical'].includes(applied.collection??'')&&<section className={docs.panel} aria-label="Documenti della casa per tipologia"><h2>Esplora i documenti della casa</h2><p>Un unico archivio: ogni file resta al suo posto, senza copie. Le categorie dipendono dal tipo che hai salvato.</p><div className={cx(docs.workflowTabs,docs.houseTabs)} role="group" aria-label="Tipologie della casa">{[['house','Tutti della casa'],['floor_plans','Planimetrie'],['building','Pratiche edilizie'],['energy','APE ed energia'],['contracts','Contratti'],['technical','Impianti']].map(([collection,label])=><button key={collection} type="button" className={cx(ui.btn,applied.collection===collection&&ui.primary)} aria-pressed={applied.collection===collection} onClick={()=>apply({...applied,collection:collection as DocumentSearchFilters['collection'],workflow:'all'})}>{label}</button>)}</div><Link to={'/home/'+encodeURIComponent(home.id)+'/documenti?workflow=all'}>Apri l’archivio completo</Link></section>}
       {params.has('documento-salvato')&&<Banner title="Documento organizzato" actions={<button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'completed'})}>Vedi nei Completati</button>}><p>Il salvataggio è riuscito. Il documento e l’originale restano disponibili.</p></Banner>}
       {canUpload&&uploadVisible&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={()=>closeUpload()}>Chiudi caricamento</button></section>}
       <div className={docs.workflowTabs} role="group" aria-label="Stato dei documenti">{([['pending','Da fare'],['completed','Completati'],...(applied.q||applied.workflow==='all'?[['all','Tutti'] as const]:[])] as const).map(([value,label])=><button key={value} type="button" className={cx(ui.btn,applied.workflow===value&&ui.primary)} aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>
@@ -355,7 +360,7 @@ function DocumentsArchive(props: {
           </div>
         </div>
       )}
-      {props.canUpload&&!selecting&&filters.workflow!=='completed'&&<div className={docs.selectionToggle}><button type="button" className={ui.btn} aria-expanded={aiSelecting} onClick={()=>{setAiSelecting(v=>!v);setAiSelected(new Set());}} disabled={aiLocked}>{aiSelecting?'Annulla selezione AI':'Seleziona documenti'}</button></div>}
+      {props.canUpload&&!selecting&&filters.workflow!=='completed'&&<div className={docs.selectionToggle}><button type="button" className={ui.btn} aria-expanded={aiSelecting} onClick={()=>{setAiSelecting(v=>!v);setAiSelected(new Set());}} disabled={aiLocked}>{aiSelecting?'Annulla selezione AI':'Seleziona per compilare con l’AI'}</button></div>}
       {props.canUpload&&!selecting&&aiSelecting&&<div className={docs.toolbar}><label className={docs.bulkConsent}><input type="checkbox" checked={items.length>0&&items.slice(0,20).every(d=>aiSelected.has(d.id))} disabled={aiLocked} onChange={e=>setAiSelected(e.target.checked?new Set(items.slice(0,20).map(d=>d.id)):new Set())}/>Seleziona {items.length>20?'i primi 20 documenti':'tutti i documenti mostrati'}</label><span>Spunta i documenti da compilare tramite AI</span></div>}
       {props.canUpload&&!selecting&&<BulkDocumentCompilation homeId={home.id} selected={items.filter(d=>aiSelected.has(d.id))} onClear={()=>setAiSelected(new Set())} onLocked={setAiLocked}/>}
       {canExport && selecting && <PersonalExportPanel homeId={home.id} />}

@@ -6,6 +6,7 @@ import { Icon, type IconName } from './Icon';
 import { Banner, cx } from './ui';
 import styles from './AppShell.module.css';
 import { EmailVerificationNotice } from './EmailVerificationNotice';
+import { contactNavigationState } from '../contacts/navigation';
 
 export type SectionId = 'casa' | 'attivita' | 'documenti' | 'spese' | 'rubrica';
 
@@ -83,7 +84,7 @@ export function AppShell(props: { account: Account; home?: Home; children: React
             <span className={styles.sideTitle} id="side-title">
               La tua casa
             </span>
-            <SectionNav home={home} variant="side" />
+            <SectionNav home={home} accountId={props.account.id} variant="side" />
             <div className={styles.sideFooter}>
               <strong>{home.name}</strong>
               <Link to="/case">Cambia casa</Link>
@@ -102,13 +103,14 @@ export function AppShell(props: { account: Account; home?: Home; children: React
           </div>
         </main>
       </div>
-      {home && <SectionNav home={home} variant="bottom" />}
+      {home && <SectionNav home={home} accountId={props.account.id} variant="bottom" />}
     </div>
   );
 }
 
-function SectionNav({ home, variant }: { home: Home; variant: 'side' | 'bottom' }) {
-  const { pathname } = useLocation();
+function SectionNav({ home, accountId, variant }: { home: Home; accountId: string; variant: 'side' | 'bottom' }) {
+  const location = useLocation();
+  const { pathname } = location;
   const section = pathname.split('/')[3];
   const activeSection =
     section === 'review' || section === 'impianti' ? 'attivita' : section === 'ambienti' || section === 'oggetti' ? 'casa' : section;
@@ -122,6 +124,7 @@ function SectionNav({ home, variant }: { home: Home; variant: 'side' | 'bottom' 
         <Link
           key={s.id}
           to={`/home/${encodeURIComponent(home.id)}/${s.id}`}
+          state={s.id === 'rubrica' ? section === 'rubrica' ? location.state : contactNavigationState(accountId, home.id, location) : undefined}
           className={cx(linkClass, !s.available && styles.unavailableLink)}
           aria-current={activeSection === s.id ? 'page' : undefined}
         >

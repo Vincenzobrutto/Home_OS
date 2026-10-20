@@ -1,3 +1,7 @@
+## Correzioni UX Documenti e Rubrica — 20 ottobre 2026
+
+Tipologie casa leggibili su mobile, ambito di ricerca coerente con la vista e ricerca globale preservata, selezione AI esplicita e ritorno della Rubrica alla provenienza. Nessuna modifica ai dati reali. [Comportamento, verifica e limiti](v5/ux-confirmed-fixes-20261020.md).
+
 ## Dettaglio oggetto compatto — 19 ottobre 2026
 
 Implementata anteprima desktop/mobile: sintesi, menu modifica, dati essenziali compatti, documenti/manuali raggruppati, costi e attività laterali, contatti/storia richiudibili. Funzioni e fonti preservate; nessun dato reale modificato. [Comportamento, verifica e limiti](v5/object-detail-layout-20261019.md).
