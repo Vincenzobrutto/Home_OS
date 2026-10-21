@@ -1,3 +1,7 @@
+## Ambienti a schede — 21 ottobre 2026
+
+Implementata l’anteprima approvata: schede coerenti con Oggetti, ricerca e filtro unico con archivio e contenuto personale. Creazione, planimetria e dettagli conservati; ritorno con ricerca/filtri. [Comportamento, verifiche e limiti](v5/room-cards-20261021.md). 26 test mirati, build/lint e browser desktop/mobile; dati reali intatti.
+
 ## Rubrica: ricerca durante lo scorrimento — 21 ottobre 2026
 
 Ricerca e filtro sempre raggiungibili durante lo scorrimento desktop/mobile. Solo CSS; vista e paginazione conservate. [Comportamento e verifiche](v5/contact-search-sticky-20261021.md). Collaudo con 100 contatti fittizi, 8 test mirati, build/lint; dati reali intatti. Altre proposte Rubrica rinviate per scelta dell’utente.

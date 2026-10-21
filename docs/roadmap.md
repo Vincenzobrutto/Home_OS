@@ -1,3 +1,7 @@
+## Ambienti a schede — 21 ottobre 2026
+
+Completata la proposta approvata desktop/mobile: schede come Oggetti, ricerca, filtri e funzionalità esistenti conservate. [Verifiche e limiti](v5/room-cards-20261021.md). Nessuna modifica ai dati reali.
+
 ## Rubrica: ricerca durante lo scorrimento — 21 ottobre 2026
 
 Completata la sola priorità scelta: ricerca e filtro sempre raggiungibili su desktop/mobile. [Verifiche](v5/contact-search-sticky-20261021.md). Conteggi, ordinamento e omonimi rinviati per scelta dell’utente.

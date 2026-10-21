@@ -1,3 +1,7 @@
+## Ambienti a schede — 21 ottobre 2026
+
+Schede desktop/mobile coerenti con Oggetti, ricerca per nome e filtro unico con Attivi/Archiviati/Tutti e Con/Senza oggetti. Dettagli e azioni esistenti conservati. [Comportamento e verifiche](v5/room-cards-20261021.md).
+
 ## Rubrica: ricerca durante lo scorrimento — 21 ottobre 2026
 
 Ricerca e filtro restano visibili scorrendo i contatti, anche su mobile. [Verifiche e ambito](v5/contact-search-sticky-20261021.md): solo CSS, 8 test mirati e controlli frontend, collaudo desktop/mobile con dati fittizi.

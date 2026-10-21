@@ -1,17 +1,22 @@
 import { useAccount } from '../session/session';
-import { useEffect, useState, type ReactNode } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
+import { MagnifyingGlass } from '@phosphor-icons/react/dist/csr/MagnifyingGlass';
+import { X } from '@phosphor-icons/react/dist/csr/X';
+import { Blueprint } from '@phosphor-icons/react/dist/csr/Blueprint';
 import type { Home, ObjectCapabilities, Room, RoomFilters } from '../api/types';
 import { Icon } from '../components/Icon';
 import { Banner, ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import { G1History } from '../objects/History';
 import { RoomForm, StateDialog, objectStyles as styles, roomsText, typeLabel } from '../objects/components';
 import { useCatalog, useForgetObjects, useObjectCapabilities, useRoom, useRoomHistory, useRooms } from '../objects/hooks';
-import { ROOM_TYPE_LABEL, isForbidden, isNotActive, objectPath, objectsErrorMessage, roomMeta, roomPath } from '../lib/objects';
+import { ROOM_TYPE_LABEL, isForbidden, isNotActive, objectPath, objectsErrorMessage, roomPath } from '../lib/objects';
 import { isApiError } from '../api/errors';
 import { useCurrentHome } from './HomePages';
 import pages from './pages.module.css';
 import roomStyles from './rooms.module.css';
+import cards from '../objects/catalog.module.css';
+import { RoomCard } from '../objects/RoomCard';
 
 /** Ritorno a Casa: ambienti e oggetti sono sottosezioni di Casa nella navigazione. */
 export function BackToCasa({ homeId }: { homeId: string }) {
@@ -83,7 +88,7 @@ export function RoomsPage() {
           <span className={pages.eyebrow}>{home.name}</span>
           <h1 tabIndex={-1}>Ambienti</h1>
           <p className={pages.lead}>
-            Le stanze della casa, condivise con chi vi ha accesso. Apri una stanza per vedere i tuoi oggetti.
+            Apri una stanza per vedere i tuoi oggetti.
           </p>
         </div>
       </div>
@@ -94,10 +99,15 @@ export function RoomsPage() {
 
 function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) {
   const [params, setParams] = useSearchParams();
+  const account = useAccount();
+  const location = useLocation();
   const navigate = useNavigate();
   const stateParam = params.get('stato');
   const state: RoomFilters['state'] = stateParam === 'archived' || stateParam === 'all' ? stateParam : 'active';
   const creating = params.get('nuovo') === '1';
+  const search = params.get('q') ?? '';
+  const searchInput = useRef<HTMLInputElement>(null);
+  const content = state === 'active' && ['populated','empty'].includes(params.get('contenuto') ?? '') ? params.get('contenuto') : null;
   const canEdit = home.permissions.includes('edit');
   const rooms = useRooms(home.id, { state });
   const catalog = useCatalog(home.id, { state: 'active', q: '', type: null, roomId: null, placement: 'all', sort: 'name' });
@@ -107,13 +117,15 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
     if (forbidden) forget();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- una sola pulizia per ogni 403
   }, [forbidden]);
-  const loaded = rooms.data?.pages.flatMap((p) => p.items) ?? [];
-  const facets = !catalog.isError ? catalog.data?.pages[0]?.facets : undefined;
+  const loaded = !forbidden ? rooms.data?.pages.flatMap((p) => p.items) ?? [] : [];
+  const facets = !forbidden && !catalog.isError ? catalog.data?.pages[0]?.facets : undefined;
   const counts = new Map(facets?.rooms.map(r => [r.id, r.count]));
   // Facets cover every active room, including rooms beyond the loaded room page.
   const items: Array<Pick<Room, 'id' | 'name' | 'state'>> = state === 'active' && facets
     ? facets.rooms.map(r => ({id:r.id,name:r.name,state:'active'})) : loaded;
   items.sort((a,b) => Number((counts.get(b.id)??0)>0)-Number((counts.get(a.id)??0)>0)||a.name.localeCompare(b.name,'it')||a.id.localeCompare(b.id));
+  const visible = items.filter(r => r.name.toLocaleLowerCase('it').includes(search.trim().toLocaleLowerCase('it')) && (!content || (content === 'populated' ? (counts.get(r.id) ?? 0) > 0 : counts.get(r.id) === 0)));
+  const partial = !!rooms.hasNextPage && !(state === 'active' && facets);
   const setCreating = (on: boolean) => {
     const next = new URLSearchParams(params);
     if (on) next.set('nuovo', '1');
@@ -123,34 +135,43 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
 
   return (
     <div className={pages.stack}>
-      {canEdit && !creating && (
-        <p className={styles.actions}>
+      <div className={roomStyles.tools}>
+        <form role="search" aria-label="Cerca ambienti" onSubmit={e => e.preventDefault()}>
+          <MagnifyingGlass size={20} aria-hidden="true" />
+          <input ref={searchInput} type="search" aria-label="Cerca un ambiente" placeholder="Cerca un ambiente" maxLength={120} value={search} onChange={e => {const next=new URLSearchParams(params);if(e.target.value)next.set('q',e.target.value);else next.delete('q');setParams(next,{replace:true});}} />
+          {search && <button type="button" className={ui.btn} aria-label="Azzera ricerca" onClick={() => {const next=new URLSearchParams(params);next.delete('q');setParams(next,{replace:true});searchInput.current?.focus();}}><X size={20} aria-hidden="true" /></button>}
+        </form>
+        {canEdit && !creating && <>
           <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => setCreating(true)}>
             <Icon name="plus" />
             Aggiungi ambiente
           </button>
-          <Link className={ui.btn} to={`/home/${home.id}/ambienti/da-planimetria`}>Da una planimetria</Link>
-        </p>
-      )}
+          <Link className={ui.btn} to={`/home/${home.id}/ambienti/da-planimetria`}><Blueprint size={18} aria-hidden="true" />Da planimetria</Link>
+        </>}
+      </div>
       {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare gli ambienti, non aggiungerne o modificarli.</p>}
       {canEdit && creating && (
         <RoomForm home={home} capabilities={caps} onCancel={() => setCreating(false)} onDone={(room) => navigate(roomPath(home.id, room.id))} />
       )}
-      <section className={ui.card} aria-labelledby="ambienti-elenco">
+      <section aria-labelledby="ambienti-elenco">
         <div className={roomStyles.toolbar}>
-        <h2 id="ambienti-elenco" className={pages.cardTitle}>
+        <h2 id="ambienti-elenco" className="visually-hidden">
           Le stanze
         </h2>
+        <p role="status" className={roomStyles.resultCount}>{rooms.isPending ? 'Caricamento…' : `${visible.length} ${visible.length === 1 ? 'ambiente' : 'ambienti'}${partial ? ' caricati' : ''}${search || content ? ' trovati' : ''}`}</p>
         <div className={styles.filters} role="group" aria-label="Filtri degli ambienti">
           <label className={styles.filter}>
             Mostra
             <select
               className={styles.select}
-              value={state}
+              value={content ?? state}
               onChange={(e) => {
                 const next = new URLSearchParams(params);
-                if (e.target.value === 'active') next.delete('stato');
-                else next.set('stato', e.target.value);
+                const value=e.target.value;
+                next.delete('contenuto');
+                if (value === 'active' || value === 'populated' || value === 'empty') next.delete('stato');
+                else next.set('stato', value);
+                if (value === 'populated' || value === 'empty') next.set('contenuto',value);
                 setParams(next);
               }}
             >
@@ -159,22 +180,26 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
                   {o.label}
                 </option>
               ))}
+              <option value="populated" disabled={!facets}>Con oggetti</option>
+              <option value="empty" disabled={!facets}>Senza oggetti</option>
             </select>
           </label>
         </div>
         </div>
-        {rooms.isPending ? (
+        {rooms.isPending || (content && catalog.isPending) ? (
           <Loading label="Caricamento degli ambienti…" />
         ) : forbidden || (rooms.isError && !rooms.data) ? (
           <ErrorState title="Ambienti non disponibili" error={rooms.error} message={objectsErrorMessage(rooms.error)} onRetry={forbidden ? undefined : () => void rooms.refetch()} retrying={rooms.isFetching} />
-        ) : items.length === 0 ? (
-          <p className={pages.muted} role="status">
-            {state === 'active' ? 'Non ci sono ancora ambienti in questa casa.' : state === 'archived' ? 'Nessun ambiente archiviato.' : 'Nessun ambiente.'}
-          </p>
+        ) : content && catalog.isError ? (
+          <ErrorState title="Conteggi degli oggetti non disponibili" error={catalog.error} message={objectsErrorMessage(catalog.error)} onRetry={() => void catalog.refetch()} retrying={catalog.isFetching} />
+        ) : visible.length === 0 ? (
+          <div className={cards.empty}><p className={pages.muted} role="status">
+            {search || content ? 'Nessun ambiente corrisponde alla ricerca e ai filtri.' : state === 'active' ? 'Non ci sono ancora ambienti in questa casa.' : state === 'archived' ? 'Nessun ambiente archiviato.' : 'Nessun ambiente.'}
+          </p>{(search || content) && <button className={ui.btn} onClick={() => {const next=new URLSearchParams(params);next.delete('q');next.delete('contenuto');setParams(next,{replace:true});}}>Azzera ricerca e filtri</button>}</div>
         ) : (
-          <ul className={cx(styles.list,roomStyles.list)} aria-label="Ambienti">
-            {items.map((r) => (
-              <RoomRow key={r.id} room={r} meta={!facets ? loaded.find(item=>item.id===r.id) : undefined} count={counts.get(r.id)} homeId={home.id} />
+          <ul className={cards.grid} aria-label="Ambienti">
+            {visible.map((r) => (
+              <RoomCard key={r.id} room={r} meta={loaded.find(item=>item.id===r.id)} count={counts.get(r.id)} homeId={home.id} returnState={{roomCatalog:{accountId:account.id,homeId:home.id,search:location.search}}} />
             ))}
           </ul>
         )}
@@ -186,30 +211,20 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
           </p>
         )}
       </section>
+      <p className={roomStyles.privacy}>Gli ambienti sono condivisi con chi ha accesso alla casa. Qui vedi solo i tuoi oggetti.{partial && ' La ricerca riguarda gli ambienti caricati: usa Mostra altri ambienti per cercare anche nelle pagine successive.'}</p>
     </div>
-  );
-}
-
-function RoomRow({ room, meta, count, homeId }: { room: Pick<Room,'id'|'name'|'state'>; meta?: Room; count?: number; homeId: string }) {
-  return (
-    <li className={styles.item}>
-      <div className={styles.itemHead}>
-        <Link to={roomPath(homeId, room.id)} className={styles.title}>
-          {room.name}
-        </Link>
-        {count !== undefined && <span className={styles.meta}>{count === 0 ? 'Nessun tuo oggetto' : `${count} ${count === 1 ? 'tuo oggetto' : 'tuoi oggetti'}`}</span>}
-        {room.state === 'archived' && <span className={styles.due}>Archiviato</span>}
-      </div>
-      {meta && roomMeta(meta) && <span className={styles.meta}>{roomMeta(meta)}</span>}
-    </li>
   );
 }
 
 export function RoomDetailPage() {
   const home = useCurrentHome();
+  const account = useAccount();
+  const location = useLocation();
+  const origin = (location.state as {roomCatalog?:{accountId?:unknown;homeId?:unknown;search?:unknown}} | null)?.roomCatalog;
+  const catalogSearch = origin?.accountId === account.id && origin.homeId === home.id && typeof origin.search === 'string' && origin.search.startsWith('?') ? origin.search : '';
   const { roomId = '' } = useParams();
   const back = (
-    <Link to={roomPath(home.id)} className={pages.spaced}>
+    <Link to={roomPath(home.id)+catalogSearch} className={pages.spaced}>
       ← Ambienti
     </Link>
   );
