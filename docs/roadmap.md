@@ -1,3 +1,9 @@
+## Prossima attività concordata — dettagli bollette e spese (21 ottobre 2026)
+
+Dopo i tre interventi appena completati, portare anche nelle pagine di consultazione un riepilogo iniziale con **importo, fornitore e periodo di riferimento** insieme, seguito da **emissione e scadenza distinte**. Partire dal dettaglio Spese e verificare la coerenza con il dettaglio Documento/bolletta, su desktop e mobile, senza modificare dati personali.
+
+Stato verificato: il riepilogo **prima del salvataggio** è già implementato. Il dettaglio economy-v1 contiene già tutti questi campi, ma fornitore e periodo sono ancora in basso nella lista dopo gli altri collegamenti: manca la loro presentazione immediata in testa. Questa voce riguarda il layout di consultazione, non una nuova estrazione AI o una correzione dei dati.
+
 ## Riepilogo, filtri Spese e dettaglio oggetto — 21 ottobre 2026
 
 Riepilogo dei valori da salvare con periodo/emissione/scadenza distinti; filtri Spese unificati e richiudibili con indicatori rimovibili; collocazione oggetto evidente e dati secondari richiudibili. Campi della spesa conservati al cambio solo-documento. [Comportamento, verifiche e limiti](v5/ux-summary-filters-object-20261021.md). 131 test simulati, controlli frontend e browser desktop/mobile; dati reali intatti.
