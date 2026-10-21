@@ -61,7 +61,7 @@ export function DocumentEditorWorkspace(){
    <section className={styles.form} aria-label="Scheda del documento" onChangeCapture={()=>{dirty.current=true;}}>
     {document.isPending?<Loading label="Apertura documento…"/>:document.isError?<ErrorState error={document.error}/>:<>
      <header className={styles.documentHead}><h2>{document.data.name}</h2><p>Inserisci i dati oppure usa l’AI per precompilarli. Controlla le proposte prima di salvare.</p>{!preview&&<button type="button" className={ui.btn} onClick={()=>setPreview(true)}>Apri anteprima</button>}</header>
-     <DocumentEditorContext.Provider value={{complete,pause:()=>leave(),showOriginal:()=>{setPreview(true);setMobileOriginal(true);}}}><IntakePage workspace key={documentId}/></DocumentEditorContext.Provider>
+     <DocumentEditorContext.Provider value={{complete,pause:(saved=false)=>{if(saved)dirty.current=false;leave();},showOriginal:()=>{setPreview(true);setMobileOriginal(true);}}}><IntakePage workspace key={documentId}/></DocumentEditorContext.Provider>
     </>}
    </section>
    {preview&&<aside className={styles.preview} aria-label="Anteprima del documento"><header><div><h2>Originale</h2><p>{document.data?.originalFilename}</p></div><button type="button" className={styles.back} onClick={()=>setPreview(false)}>Chiudi anteprima</button></header><Original key={documentId} homeId={home.id} documentId={documentId}/></aside>}

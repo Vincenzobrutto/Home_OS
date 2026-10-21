@@ -1,3 +1,7 @@
+## Compilazione salvata esplicitamente — 21 ottobre 2026
+
+POST `/homes/:homeId/object-onboarding/drafts/:id/review` conserva ora anche `review.compilation`: `{saved:true, documentTitle, documentKind, replaceOrganization, reuseCopy, documentOnly, manualTotal, contacts, houseForms}`. Titolo/tipo, totale e campi casa sono stringhe grezze, anche vuote/incomplete; houseForms è indicizzato per proposta e conserva selezione/importo/fornitore/date/categoria/azione/collegamento e alternative del periodo. I campi degli oggetti restano in `review.forms`. Il server valida la struttura e il limite complessivo di 100.000 caratteri, senza applicare decisioni. Fonte, membership/edit, stato aperto, versione e Idempotency-Key restano obbligatori. Nessuna modifica canonica o invio AI. GET draft riproietta `compilation` solo quando la fonte è accessibile. GET capabilities aggiunge `drafts[].hasSavedCompilation` (solo per bozze aperte), senza esporre il review. [Dettagli e verifiche](compilation-draft-20261021.md).
+
 # Contratto API V5 — identity-v1
 
 identity-v1.1: endpoint invariati, estensioni concordate in review Codex del ticket frontend V5-DEV-003. M1 verificata: 12 scenari API/PostgreSQL, 3 client/API, 18 dominio e 47 frontend mock; collaudo browser reale e regressione creazione superati. Documenti seguono documents-api-contract.md; proposte restano fuori da entrambi i contratti.

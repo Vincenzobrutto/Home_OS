@@ -12,25 +12,23 @@ function fullMonth(from: string, to: string) {
   return !!from && period.from === from && period.to === to;
 }
 
+import type {BillPeriodDraft} from '../lib/billPeriod';
 /** Both drafts stay local when switching. Only the visible mode feeds the saved dates. */
-export function BillPeriodFields({ from, to, onChange, disabled = false, inputId, error }: {
-  from: string; to: string; onChange: (period: { from: string; to: string }) => void; disabled?: boolean; inputId?:string; error?:string;
+export function BillPeriodFields({ from, to, onChange, draftValue,onDraftChange,disabled = false, inputId, error }: {
+  draftValue?:BillPeriodDraft;onDraftChange?:(value:BillPeriodDraft)=>void;from: string; to: string; onChange: (period: { from: string; to: string }) => void; disabled?: boolean; inputId?:string; error?:string;
 }) {
   const id = useId();
   const monthly = fullMonth(from, to);
-  const [mode, setMode] = useState<'month' | 'range'>(() => !from && !to || monthly ? 'month' : 'range');
-  const [month, setMonth] = useState(monthly ? from.slice(0, 7) : '');
-  const [range, setRange] = useState({ from, to });
+  const [mode, setMode] = useState<'month' | 'range'>(() => draftValue?.mode??(!from && !to || monthly ? 'month' : 'range'));
+  const [month, setMonth] = useState(draftValue?.month??(monthly ? from.slice(0, 7) : ''));
+  const [range, setRange] = useState(draftValue?.range??{ from, to });
   function switchMode(next: 'month' | 'range') {
     if (next === mode) return;
-    if (mode === 'range') setRange({ from, to });
-    else setMonth(fullMonth(from, to) ? from.slice(0, 7) : month);
-    setMode(next);
-    if (next === 'month') onChange(monthPeriod(month));
-    else {
-      const restored = range.from || range.to ? range : { from, to };
-      setRange(restored); onChange(restored);
-    }
+    const nextMonth=mode==='month'&&fullMonth(from,to)?from.slice(0,7):month;
+    const nextRange=mode==='range'?{from,to}:range.from||range.to?range:{from,to};
+    setMonth(nextMonth);setRange(nextRange);setMode(next);
+    onDraftChange?.({mode:next,month:nextMonth,range:nextRange});
+    onChange(next==='month'?monthPeriod(nextMonth):nextRange);
   }
   return <fieldset className={ui.field} disabled={disabled} data-bill-period="" style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
     <legend className={ui.label}>Periodo di riferimento</legend>
@@ -38,10 +36,10 @@ export function BillPeriodFields({ from, to, onChange, disabled = false, inputId
       <label style={{display:"inline-flex",alignItems:"center",gap:6,minHeight:44}}><input type="radio" name={id} checked={mode === 'month'} onChange={() => switchMode('month')} /> Un mese</label>
       <label style={{display:"inline-flex",alignItems:"center",gap:6,minHeight:44}}><input type="radio" name={id} checked={mode === 'range'} onChange={() => switchMode('range')} /> Un intervallo</label>
     </div>
-    {mode === 'month' ? <label className={ui.label}>Mese di riferimento<input type="month" id={inputId} aria-invalid={error?true:undefined} aria-describedby={error?id+"-error":undefined} className={ui.input} value={fullMonth(from, to) ? from.slice(0, 7) : ''} onChange={e => { setMonth(e.target.value); onChange(monthPeriod(e.target.value)); }} /></label>
+    {mode === 'month' ? <label className={ui.label}>Mese di riferimento<input type="month" id={inputId} aria-invalid={error?true:undefined} aria-describedby={error?id+"-error":undefined} className={ui.input} value={fullMonth(from, to) ? from.slice(0, 7) : ''} onChange={e => { setMonth(e.target.value); onDraftChange?.({mode,month:e.target.value,range}); onChange(monthPeriod(e.target.value)); }} /></label>
       : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-        <label className={ui.label} style={{ flex: '1 1 140px' }}>Dal<input type="date" id={inputId} aria-invalid={error?true:undefined} aria-describedby={error?id+"-error":undefined} className={ui.input} value={from} onChange={e => { const next = { from: e.target.value, to }; setRange(next); onChange(next); }} /></label>
-        <label className={ui.label} style={{ flex: '1 1 140px' }}>Al<input type="date" aria-invalid={error?true:undefined} aria-describedby={error?id+"-error":undefined} className={ui.input} value={to} onChange={e => { const next = { from, to: e.target.value }; setRange(next); onChange(next); }} /></label>
+        <label className={ui.label} style={{ flex: '1 1 140px' }}>Dal<input type="date" id={inputId} aria-invalid={error?true:undefined} aria-describedby={error?id+"-error":undefined} className={ui.input} value={from} onChange={e => { const next = { from: e.target.value, to }; setRange(next); onDraftChange?.({mode,month,range:next}); onChange(next); }} /></label>
+        <label className={ui.label} style={{ flex: '1 1 140px' }}>Al<input type="date" aria-invalid={error?true:undefined} aria-describedby={error?id+"-error":undefined} className={ui.input} value={to} onChange={e => { const next = { from, to: e.target.value }; setRange(next); onDraftChange?.({mode,month,range:next}); onChange(next); }} /></label>
       </div>}
     {error&&<p id={id+"-error"} role="alert">{error}</p>}
     <p className={ui.hint}>Questo periodo determina dove trovi la bolletta nei riepiloghi delle spese.{mode === 'range' && ' Un intervallo su più mesi viene conteggiato una sola volta, nel mese iniziale.'}</p>

@@ -41,7 +41,7 @@ export class OnboardingJobService {
     const q = object(query, ['documentId']), documentId = uuid(q.documentId);
     return this.receipts.run(a, h, false, async (tx, edit) => {
       const source = await this.receipts.source(tx,a,h,documentId); if (!source) throw deny();
-      const drafts = await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,mode:{not:'floor_plan'}},orderBy:[{updatedAt:'desc'},{id:'desc'}],take:10,select:{id:true,state:true,mode:true,updatedAt:true}});
+      const drafts = await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,mode:{not:'floor_plan'}},orderBy:[{updatedAt:'desc'},{id:'desc'}],take:10,select:{id:true,state:true,mode:true,updatedAt:true,review:true}});
       const job = await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,purpose:'products'},orderBy:{createdAt:'desc'}});
       const successful = await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,purpose:'products',state:'succeeded'},orderBy:{createdAt:'desc'}});
       const extracted = await tx.objectOnboardingDraft.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,mode:'extraction'},orderBy:{createdAt:'desc'},select:{id:true}});
@@ -49,7 +49,7 @@ export class OnboardingJobService {
       const budget=edit?await this.ai.budget.snapshot(tx,source.original!.sha256,a,h):null;
       const aiAvailable=edit&&!!budget?.available;
       const uncertain=aiAvailable ? await tx.objectOnboardingJob.findFirst({where:{accountId:a,homeId:h,documentId,documentVersion:source.original!.version,documentSha256:source.original!.sha256,state:'uncertain',attempt:{is:{campaignId:this.ai.budget.config.campaign}}}}) : null;
-      return {analysisSucceeded,successfulDraftId:successful?.draftId??extracted?.id??null,manualAvailable:edit,aiAvailable,canStartAnalysis:aiAvailable&&!analysisSucceeded&&!uncertain&&!['queued','running'].includes(job?.state??''),canStartWithUncertainAcknowledgement:aiAvailable&&!analysisSucceeded&&!!uncertain&&!['queued','running'].includes(job?.state??''),provider:'anthropic',requiresConsent:true,budget,drafts,job:job ? await this.view(tx,a,h,job) : null};
+      return {analysisSucceeded,successfulDraftId:successful?.draftId??extracted?.id??null,manualAvailable:edit,aiAvailable,canStartAnalysis:aiAvailable&&!analysisSucceeded&&!uncertain&&!['queued','running'].includes(job?.state??''),canStartWithUncertainAcknowledgement:aiAvailable&&!analysisSucceeded&&!!uncertain&&!['queued','running'].includes(job?.state??''),provider:'anthropic',requiresConsent:true,budget,drafts:drafts.map(({review,...draft})=>({...draft,hasSavedCompilation:draft.state==='open'&&(review as {compilation?:{saved?:boolean}}|null)?.compilation?.saved===true})),job:job ? await this.view(tx,a,h,job) : null};
     });
   }
   recover(a:string,h:string,key:string,query:unknown) {

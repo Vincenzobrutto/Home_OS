@@ -37,14 +37,16 @@ export function DocumentCompilationActions({homeId,documentId,onOpen,documentKin
    await cache.invalidateQueries({queryKey:key});await open('manuale',result.draft.id);
   }catch(e){if(isUnauthorized(e))await handleUnauthorized(cache);if(live.current)setError(userMessage(e));}finally{sending.current=false;if(live.current)setBusy(false);}
  }
+ const saved=caps.data?.drafts.find(d=>d.state==='open'&&d.hasSavedCompilation);
  const ready=caps.data?.drafts.find(d=>d.state==='open'&&(d.mode==='extraction'||caps.data?.job?.state==='succeeded'&&caps.data.job.draftId===d.id));
  const accepted=!caps.data?.drafts.some(d=>d.state==='open')&&caps.data?.drafts.find(d=>d.state==='confirmed');
  if(compact){
   if(workflowState==='completed')return <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={()=>navigate(`/home/${encodeURIComponent(homeId)}/documenti/${encodeURIComponent(documentId)}`,{state:{documentsSearch:backSearch,documentsAccountId:account.id}})}>Vedi dettagli</button>;
   if(workflowState==='analyzing')return <button type="button" className={ui.btn} disabled>In analisi…</button>;
   if(workflowState==='attention')return <button type="button" className={ui.btn} onClick={()=>navigate(`/home/${encodeURIComponent(homeId)}/documenti/${encodeURIComponent(documentId)}`,{state:{documentsSearch:backSearch,documentsAccountId:account.id}})}>Apri documento</button>;
+  if(saved)return <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy} onClick={()=>void open('manuale',saved.id)}>Riprendi compilazione</button>;
   if(ready)return <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy} onClick={()=>void open('ai',ready.id)}>Rivedi proposta</button>;
  }
  if(!compact&&accepted)return <button type="button" className={ui.btn} onClick={()=>open('manuale',accepted.id)}>Proposta accettata · Vedi dettaglio</button>;
- return <div><button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!caps.isSuccess||(!ready&&!caps.data.manualAvailable)} onClick={()=>ready?void open('ai',ready.id):void manual()}>{busy?'Apertura scheda…':ready?'Rivedi proposta':'Compila'}</button>{(error||caps.isError)&&<p role="alert">{error||'Impossibile verificare le opzioni.'} <button type="button" className={ui.btn} onClick={()=>void caps.refetch()}>Riprova le opzioni</button></p>}</div>;
+ return <div><button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!caps.isSuccess||(!saved&&!ready&&!caps.data.manualAvailable)} onClick={()=>saved?void open('manuale',saved.id):ready?void open('ai',ready.id):void manual()}>{busy?'Apertura scheda…':saved?'Riprendi compilazione':ready?'Rivedi proposta':'Compila'}</button>{(error||caps.isError)&&<p role="alert">{error||'Impossibile verificare le opzioni.'} <button type="button" className={ui.btn} onClick={()=>void caps.refetch()}>Riprova le opzioni</button></p>}</div>;
 }

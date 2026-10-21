@@ -13,12 +13,12 @@ type Props = {
   documentOnly?:boolean; changeDocumentOnly?:(value:boolean)=>void; documentProblem?:string;
   draft: Draft; forms: Record<string, Form>; api: ApiClient; accountId: string; base: string; root: string;
   disabled: boolean; documentFields?: ReactNode; copyChoice?: { checked: boolean; change: (checked: boolean) => void };
-  change: (id: string, form: Form) => void; save: () => void; defer: () => void; add: () => void;
+  change: (id: string, form: Form) => void; save: () => void; saveDraft?:()=>void; defer: () => void; add: () => void;
   enrich: (id: string, body: { brand: string; reference: string; productUrl?: string }) => Promise<void>;
   contactFields?:ReactNode;houseFields?:ReactNode;houseProblem?:string;houseTotals?:{newExpenses:number;amountCents:number};
   manualTotal?: string; changeManualTotal?: (value: string) => void;
 };
-export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentProblem,draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, defer, add, enrich, manualTotal, changeManualTotal,contactFields,houseFields,houseProblem,houseTotals }: Props) {
+export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentProblem,draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, saveDraft, defer, add, enrich, manualTotal, changeManualTotal,contactFields,houseFields,houseProblem,houseTotals }: Props) {
   const editor=useContext(DocumentEditorContext);
   const metadataRef=useRef<HTMLDivElement>(null);
   const issues=documentOnly?[]:reviewIssues(draft,forms);
@@ -66,7 +66,7 @@ export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentPr
         {issues.map((issue,index)=><li key={index}><button type="button" className={ui.btn} onClick={()=>{const region=document.getElementById((editor&&['Cosa fare con il costo','Prezzo','Data'].includes(issue.field)?'review-cost-':'review-item-')+draft.id+'-'+issue.itemId);for(let parent=region?.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')(parent as HTMLDetailsElement).open=true;region?.scrollIntoView?.({block:'center'});const label=Array.from(region?.querySelectorAll('label')??[]).find(label=>label.textContent?.includes(issue.field));const details=label?.closest('details');if(details)details.open=true;(label?.querySelector<HTMLElement>('input,select,button')??region)?.focus();}}>{issue.message}</button></li>)}
       </ul></div>}
     </section>
-    {editor&&<p className={ui.hint}>Il documento e le proposte già salvate restano disponibili. Se esci, le modifiche non salvate vengono scartate.</p>}
-    <div data-editor-save={editor?"true":undefined} className={editor?styles.saveBar:styles.row}>{editor&&problem&&<span className={styles.saveProblem} role="status">{documentProblem??issues[0]?.message??problem}</span>}{editor&&<button type="button" className={ui.btn} disabled={disabled} onClick={editor.pause}>Esci senza salvare</button>}{!editor&&!!items.length&&<button type="button" className={ui.btn} disabled={disabled} onClick={defer}>Decidi più avanti</button>}<button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || (!documentOnly&&!items.length&&!draft.documentInfo&&!draft.houseExpenses?.length)} onClick={save}>{documentOnly?'Salva documento':totals.newExpenses>0&&totals.newObjects===0&&totals.linkedObjects===0?'Registra spesa':editor?'Salva e continua':'Salva e organizza'}</button></div>
+    {editor&&<p className={ui.hint}>Salva una bozza per riprendere da qui, anche se mancano dei dati. Nessuna spesa, oggetto o contatto verrà registrato.</p>}
+    <div data-editor-save={editor?"true":undefined} className={editor?styles.saveBar:styles.row}>{editor&&problem&&<span className={styles.saveProblem} role="status">{documentProblem??issues[0]?.message??problem}</span>}{editor&&<button type="button" className={ui.btn} disabled={disabled} onClick={()=>void saveDraft?.()}>Salva bozza ed esci</button>}{!editor&&!!items.length&&<button type="button" className={ui.btn} disabled={disabled} onClick={defer}>Decidi più avanti</button>}<button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || (!documentOnly&&!items.length&&!draft.documentInfo&&!draft.houseExpenses?.length)} onClick={save}>{documentOnly?'Salva documento':totals.newExpenses>0&&totals.newObjects===0&&totals.linkedObjects===0?'Registra spesa':editor?'Salva e continua':'Salva e organizza'}</button></div>
   </section>;
 }

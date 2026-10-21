@@ -6,7 +6,7 @@ import {DocumentEditorContext} from './DocumentEditorContext';
 import {renderApp,seededBackend,PASSWORD_A} from '../test/harness';
 const prepared=vi.hoisted(()=>vi.fn(async()=>({id:'prepared-batch'})));
 vi.mock('../intake-integration/client',()=>({IntakeClient:class{prepareExisting=prepared;}}));
-vi.mock('../intake-integration/IntakePage',()=>({IntakePage:()=>{const editor=useContext(DocumentEditorContext),[params]=useSearchParams();if(!editor)return <p>Caricamento pronto</p>;return <><label>Dato di prova<input/></label><button onClick={()=>void editor!.complete(params.get('oggetti-documento')!)}>Conferma bozza server</button><button onClick={editor!.pause}>Esci senza salvare</button></>;}}));
+vi.mock('../intake-integration/IntakePage',()=>({IntakePage:()=>{const editor=useContext(DocumentEditorContext),[params]=useSearchParams();if(!editor)return <p>Caricamento pronto</p>;return <><label>Dato di prova<input/></label><button onClick={()=>void editor!.complete(params.get('oggetti-documento')!)}>Conferma bozza server</button><button onClick={()=>editor!.pause()}>Esci senza salvare</button><button onClick={()=>editor!.pause(true)}>Bozza salvata sul server</button></>;}}));
 vi.mock('./PdfPreview',()=>({PdfPreview:()=> <p>Anteprima locale</p>}));
 it('preserves filters, guards unsaved changes and selects the next source only after successful confirmation',async()=>{
  const {backend,homeA1,a}=seededBackend();
@@ -93,4 +93,9 @@ it('the mobile section menu preserves dirty edits when navigation is cancelled',
  await waitFor(()=>expect(guard).toHaveBeenCalledTimes(1));expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(screen.getByLabelText('Dato di prova')).toHaveValue('Da conservare');expect(app.router.state.location.search).toContain(app.first.id);
  guard.mockReturnValue(true);await app.user.click(screen.getByRole('button',{name:'Menu'}));await app.user.click(within(screen.getByRole('dialog',{name:'Menu'})).getByRole('link',{name:'Spese'}));
  await waitFor(()=>expect(app.router.state.location.pathname).toBe('/home/'+app.homeId+'/spese'));expect(guard).toHaveBeenCalledTimes(2);expect(prepared).not.toHaveBeenCalled();guard.mockRestore();
+});
+
+it('clears dirty state only after the explicit acknowledged draft-save exit',async()=>{
+ const app=await editedWorkspace();const guard=vi.spyOn(window,'confirm').mockReturnValue(false);
+ await app.user.click(screen.getByRole('button',{name:'Bozza salvata sul server'}));await waitFor(()=>expect(app.router.state.location.search).not.toContain('oggetti-documento'));expect(guard).not.toHaveBeenCalled();expect(app.router.state.location.search).toContain('q=Guard');guard.mockRestore();
 });

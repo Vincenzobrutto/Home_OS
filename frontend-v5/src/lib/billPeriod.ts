@@ -1,3 +1,4 @@
+export type BillPeriodDraft={mode:'month'|'range';month:string;range:{from:string;to:string}};
 export type BillPeriod={category?:string|null;competenceFrom?:string|null;competenceTo?:string|null;spentOn:string};
 export const isUtility=(category?:string|null)=>['electricity','gas','water','internet_services'].includes(category??'');
 export function expenseReferenceDate(e:BillPeriod){return isUtility(e.category)&&e.competenceFrom&&e.competenceTo?e.competenceFrom:e.spentOn;}

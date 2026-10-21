@@ -9,7 +9,7 @@ const prepareExisting=vi.hoisted(()=>vi.fn());
 vi.mock('../intake-integration/client',()=>({IntakeClient:class{prepareExisting(...args:unknown[]){return prepareExisting(...args);}}}));
 const callJson=vi.fn();
 vi.mock('../session/session',()=>({useAccount:()=>({id:'account'}),useApi:()=>({callJson})}));
-function mount(drafts:Array<{id:string;state:string}>=[],mode='extraction',lose=false,inline=true,houseDocument=false,workflowState?:'to_compile'|'completed'|'analyzing'|'review'|'attention'){
+function mount(drafts:Array<{id:string;state:string;hasSavedCompilation?:boolean}>=[],mode='extraction',lose=false,inline=true,houseDocument=false,workflowState?:'to_compile'|'completed'|'analyzing'|'review'|'attention'){
  let manual=0;prepareExisting.mockReset().mockResolvedValue({id:'synthetic-batch'});
  callJson.mockReset().mockImplementation(async(path:string,options:{method?:string}={})=>{
   if(path.includes('/capabilities'))return {manualAvailable:true,aiAvailable:true,drafts:drafts.map(d=>({...d,mode})),job:null};
@@ -54,4 +54,8 @@ it('completed cards only offer details',async()=>{
 });
 it('running analysis has no enabled start action',async()=>{
  mount([],'extraction',false,true,false,'analyzing');expect(await screen.findByRole('button',{name:/In analisi/})).toBeDisabled();expect(screen.queryByRole('button',{name:'Compila'})).not.toBeInTheDocument();
+});
+
+it('explicitly saved incomplete compilation resumes without a new draft or AI job',async()=>{
+ const w=mount([{id:'saved-manual',state:'open',hasSavedCompilation:true}],'manual',false,true,false,'to_compile');await w.user.click(await screen.findByRole('button',{name:'Riprendi compilazione'}));expect(w.onOpen).toHaveBeenCalledWith('manuale','saved-manual');expect(callJson.mock.calls.every(c=>c[1]?.method!=='POST')).toBe(true);
 });

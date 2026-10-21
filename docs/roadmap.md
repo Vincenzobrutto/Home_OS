@@ -1,3 +1,7 @@
+## Documenti: Salva bozza ed esci — 21 ottobre 2026
+
+Bozza esplicita anche incompleta, ripresa dalla stessa scheda, nessuna spesa/oggetto/contatto creato e nessun invio AI. Errori e risposte perse conservano il modulo; altre uscite mantengono l’avviso. [Comportamento, verifiche e limiti](v5/compilation-draft-20261021.md). Sostituisce il rinvio delle bozze nei resoconti precedenti; nessun autosalvataggio.
+
 ## Rubrica: archiviazione e collegamenti distinti — 21 ottobre 2026
 
 Nel dettaglio, spiegazioni separate per Archivia contatto e Rimuovi collegamento, con indicazione dei dati conservati e messaggio dopo l’esito riuscito. Azioni dirette, elenco e ritorno invariati. [Comportamento e verifiche](v5/contact-actions-20261021.md). Collaudo su contatti fittizi; dati reali intatti. Bozze rimandate.

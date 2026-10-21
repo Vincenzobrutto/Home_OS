@@ -1,3 +1,4 @@
+import {compilationDraft} from './compilation-draft';
 import { contactChoices, resolveContact, saveContactProposal } from '../contacts/proposals';
 import { Injectable } from '@nestjs/common';
 import { Prisma, type ObjectOnboardingDraft } from '../../generated/client';
@@ -43,7 +44,7 @@ export class ObjectOnboardingService {
   }
   private async safeReview(tx:OnboardingTx,a:string,h:string,draft:ObjectOnboardingDraft){
     if(!draft.review)return null;
-    const saved=draft.review as {contacts?:unknown;manualPurchaseTotalCents?:number;forms?:Record<string,Record<string,unknown>>;pending?:{path:string;key:string;body:unknown}},forms:Record<string,unknown>={};
+    const saved=draft.review as {compilation?:Record<string,unknown>;contacts?:unknown;manualPurchaseTotalCents?:number;forms?:Record<string,Record<string,unknown>>;pending?:{path:string;key:string;body:unknown}},forms:Record<string,unknown>={};
     for(const [id,form] of Object.entries(saved.forms??{})){
       if(!form||typeof form!=='object'||Array.isArray(form))continue;
       const targets=[];
@@ -59,7 +60,8 @@ export class ObjectOnboardingService {
       pending={...pending,body:pending.body};
     }catch{pending=undefined;}}
     let contacts:ReturnType<typeof contactChoices>=[];try{contacts=contactChoices(saved.contacts);for(const c of contacts)if(c.contactId&&!await tx.homeContact.findFirst({where:{id:c.contactId,accountId:a,homeId:h}}))throw invalid();}catch{contacts=[];}
-    return {forms,...(contacts.length?{contacts}:{}),...(draft.mode==='manual'&&Number.isSafeInteger(saved.manualPurchaseTotalCents)&&saved.manualPurchaseTotalCents!>0?{manualPurchaseTotalCents:saved.manualPurchaseTotalCents}:{}),...(pending?{pending}:{})};
+    let compilation;try{if(saved.compilation)compilation=compilationDraft(saved.compilation);}catch{/* malformed old input is never restored */}
+    return {forms,...(compilation?{compilation}:{}),...(contacts.length?{contacts}:{}),...(draft.mode==='manual'&&Number.isSafeInteger(saved.manualPurchaseTotalCents)&&saved.manualPurchaseTotalCents!>0?{manualPurchaseTotalCents:saved.manualPurchaseTotalCents}:{}),...(pending?{pending}:{})};
   }
   comparisonsFor(a:string,h:string,objectId:string,query:unknown){
     object(query,[]);return this.access.run(a,h,false,async tx=>{
@@ -155,6 +157,7 @@ export class ObjectOnboardingService {
   saveReview(a: string, h: string, id: string, input: unknown, key?: string) {
     const row = object(input, ['expectedVersion', 'review']), expectedVersion = version(row.expectedVersion);
     if (!row.review || typeof row.review !== 'object' || Array.isArray(row.review) || JSON.stringify(row.review).length > 100000) throw invalid();
+    const compilation=(row.review as {compilation?:unknown}).compilation;if(compilation!==undefined)compilationDraft(compilation);
     return this.request(a, h, 'review', uuid(id), { expectedVersion, review: row.review }, key, async tx => {
       await this.open(tx, a, h, id, expectedVersion);
       return { draft: await tx.objectOnboardingDraft.update({ where: { id }, data: { review: onboardingJson(row.review), version: { increment: 1 } } }) };
