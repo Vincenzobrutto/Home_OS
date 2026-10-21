@@ -427,3 +427,12 @@ it('compact expense filters apply explicitly, collapse, expose removable chips a
  await app.user.click(screen.getByRole('button',{name:'Rimuovi filtro Bollette'}));expect(app.router.state.location.search).not.toContain('famiglia=');expect(search).toHaveValue('Bolletta');
  await app.user.click(screen.getByText(/^Filtri(?: · \d+ attiv[oi])?$/));await app.user.click(screen.getByRole('button',{name:'Azzera filtri'}));expect(search).toHaveValue('Bolletta');expect(posts(backend,/expenses$/)).toHaveLength(0);
 });
+
+it('saved bill summary is identical in expense and linked document, with no mutations on consultation',async()=>{
+ const {backend,owner,home}=world();const doc=await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Bolletta sintetica',visibility:'private'});
+ const {expense}=await s1(backend,owner.id,home.id,'expenses',{title:'Luce dicembre',amountCents:9339,spentOn:'2026-01-17',category:'electricity',supplier:'Fornitore sintetico',documentDate:'2026-01-17',competenceFrom:'2025-12-01',competenceTo:'2025-12-31',dueOn:'2026-02-06',documentId:doc.id});
+ const app=await open(backend,owner.email,PW.owner,`/home/${home.id}/spese/${expense!.id}`);
+ const summary=await screen.findByRole('region',{name:'Riepilogo della spesa'});expect(summary).toHaveTextContent('dicembre 2025');expect(summary).toHaveTextContent('Fornitore sintetico');
+ const values=within(summary).getAllByRole('definition').map(n=>n.textContent);expect(summary.compareDocumentPosition(screen.getByRole('region',{name:'Dettagli'}))&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+ await app.router.navigate(`/home/${home.id}/documenti/${doc.id}`);const linked=await screen.findByRole('region',{name:'Spese collegate'});await within(linked).findByText('Fornitore sintetico');expect(within(linked).getAllByRole('definition').map(n=>n.textContent)).toEqual(values);expect(within(linked).getAllByRole('listitem')).toHaveLength(1);expect(posts(backend,/\/economy\//)).toHaveLength(0);
+});

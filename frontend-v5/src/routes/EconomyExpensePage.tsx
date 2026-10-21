@@ -1,4 +1,5 @@
-import {billPeriodLabel} from '../lib/billPeriod';
+import {isUtility} from '../lib/billPeriod';
+import {ExpenseOverview} from '../expenses/ExpenseOverview';
 import { LinkedDocument } from '../expenses/LinkedDocument';
 import { ContactsPanel } from '../contacts/components';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
@@ -108,17 +109,15 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
         </div>
       </div>
       <div className={pages.stack}>
+        <section className={ui.card} aria-label="Riepilogo della spesa"><ExpenseOverview expense={expense}/></section>
         <section className={ui.card} aria-labelledby="costo-dati">
           <h2 id="costo-dati" className={pages.cardTitle}>
             Dettagli
           </h2>
           <dl className={pages.detailList}>
-            <dt>Importo</dt>
-            <dd style={{ fontWeight: 700 }}>{formatCents(expense.amountCents)}</dd>
             <dt>Origine dell’importo</dt>
             <dd>{expense.amountOrigin === 'extraction_confirmed' ? 'Proposto da un documento e confermato da te' : 'Dichiarato da te'}</dd>
-            <dt>Data della spesa</dt>
-            <dd>{formatCalendarDate(expense.spentOn)}</dd>
+            {isUtility(expense.category)&&<><dt>Data registrata per la spesa</dt><dd>{formatCalendarDate(expense.spentOn)}</dd></>}
             <dt>Categoria</dt>
             <dd>{categoryLabel(expense.category, caps)}</dd>
             <dt>Famiglia</dt>
@@ -140,11 +139,7 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
             </dd>
             <dt>Documento</dt>
             <dd>{expense.documentLink.state === 'linked' ? <LinkedDocument homeId={home.id} document={expense.documentLink.document} /> : documentLinkText(expense.documentLink)}</dd>
-            {expense.supplier && (<><dt>Fornitore</dt><dd>{expense.supplier}</dd></>)}
             {expense.documentNumber && (<><dt>Numero documento</dt><dd>{expense.documentNumber}</dd></>)}
-            {expense.documentDate && (<><dt>Data di emissione</dt><dd>{formatCalendarDate(expense.documentDate)}</dd></>)}
-            {expense.competenceFrom && expense.competenceTo && (<><dt>Periodo di riferimento</dt><dd>{billPeriodLabel(expense)??(formatCalendarDate(expense.competenceFrom)+' – '+formatCalendarDate(expense.competenceTo))}</dd></>)}
-            {expense.dueOn && (<><dt>Scadenza sul documento</dt><dd>{formatCalendarDate(expense.dueOn)}</dd></>)}
             <dt>Nota</dt>
             <dd className={act.description}>{expense.note ?? '—'}</dd>
             <dt>Registrato</dt>

@@ -7,7 +7,8 @@ import pages from '../routes/pages.module.css';
 import { ExpenseRow, expensePath, expenseStyles as styles } from './components';
 import { useExpenses } from './hooks';
 import { useEconomyCapabilities, useEconomyExpenses } from '../economy/hooks';
-import { billPeriodLabel, isUtility } from '../lib/billPeriod';
+import { ExpenseOverview } from './ExpenseOverview';
+import overview from './overview.module.css';
 import { DEFAULT_FILTERS } from '../lib/economy';
 
 /**
@@ -59,7 +60,7 @@ export function LinkedExpenses(props: {
           ) : (
             <ul className={styles.list} aria-label={props.title}>
               {economic ? economy.data?.pages.flatMap(p => p.items).map(e => (
-                <ExpenseRow key={e.id} expense={e} homeId={home.id} referencePeriod={billPeriodLabel(e)} issuedOn={isUtility(e.category) ? e.documentDate : null} />
+                <li key={e.id} className={styles.item}><Link className={overview.linkedTitle} to={expensePath(home.id,e.id)}>{e.title}</Link><ExpenseOverview expense={e}/></li>
               )) : items.map(e => <ExpenseRow key={e.id} expense={e} homeId={home.id} />)}
             </ul>
           )}
