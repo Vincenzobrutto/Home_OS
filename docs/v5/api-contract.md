@@ -1,3 +1,9 @@
+## Cambia famiglia della casa — 21 ottobre 2026
+
+POST `/homes/:homeId/documents/:documentId/house-family`, `Idempotency-Key` obbligatorio (16–100 caratteri alfanumerici, `_`, `-`), corpo esatto `{expectedOrganizationVersion,documentVersion,sha256,family}`. Versioni intere positive, SHA-256 esadecimale; family `plans|building|energy|contracts|other|null` (null = Automatico dal tipo). Risposta 200 `{organization,effectiveFamily}`. Le proiezioni organization autorizzate aggiungono `houseFamily`, `documentVersion`, `documentSha256` per il controllo della fonte.
+
+Richiede organizzazione corrente, sessione, Origin/CSRF, contesto, membership edit e lettura della fonte. Lock G1, confronto versione/SHA e versione organizzazione, richiesta idempotente per account/casa/documento. 422 input, 403 accesso, 409 `document_version_conflict`, `organization_version_conflict`, `idempotency_conflict`. Aggiorna solo override/appartenenza casa/versione organizzazione; nessuna modifica di tipo, parti, raccolte, file, collegamenti o costi. [Dettagli](document-house-family-20261021.md).
+
 ## Conserva documenti nella casa da oggetto — 21 ottobre 2026
 
 GET `/homes/:homeId/objects/object/:id/house-documents`: riepilogo personale `{token,objectName,documents:[{id,title,originalFilename,reason,willOrganize,relatedObjects:[{id,name}],expenses:[{id,title,amountCents}]}],unavailable,archiveBlocked}`. Include fatture e costi anche attribuiti ad altre schede generiche personali; espone i loro nomi soltanto con fonti autorizzate. `reason:null` indica documento disponibile. Le fonti non consultabili non vengono elencate; altri riferimenti inaccessibili impediscono lo spostamento senza esporre nomi/costi. Nessuna scrittura nel GET.

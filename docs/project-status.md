@@ -1,3 +1,7 @@
+## Documenti: cambia famiglia dall’elenco — 21 ottobre 2026
+
+Menu diretto nella vista Documenti della casa, scelta manuale indipendente dal tipo e ritorno alla famiglia scelta. Conservati originali, collegamenti e spese; Automatico dal tipo rimuove la scelta manuale. Migrazione additiva, 35 test backend e 5 frontend passati, build/lint e browser desktop/mobile con fatture fittizie; dati reali verificati invariati. [Regole e verifiche](v5/document-house-family-20261021.md).
+
 ## Documenti della casa da scheda oggetto — 21 ottobre 2026
 
 **Sposta in Documenti della casa** archivia solo la scheda scelta. Fatture condivise disponibili sia nella casa sia dagli altri oggetti: videocitofono, collegamenti e spese conservati, nessun duplicato. Appartenenza esplicita personale/versionata distinta dai riferimenti agli oggetti; migrazione additiva e viste sovrapposte. Test isolati e browser desktop/mobile; nessuno spostamento reale eseguito. [Comportamento, sicurezza e limiti](v5/house-documents-from-object-20261021.md).

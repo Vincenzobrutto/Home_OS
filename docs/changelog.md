@@ -1,3 +1,7 @@
+## Documenti: Cambia famiglia — 21 ottobre 2026
+
+Menu a tendina direttamente nell’elenco della casa, conferma esplicita e apertura del gruppo scelto. Famiglia personale/versionata distinta dal tipo; costi e riferimenti condivisi conservati. [Regole e verifiche](v5/document-house-family-20261021.md).
+
 ## Oggetti: conserva documenti nella casa — 21 ottobre 2026
 
 Corretta la gestione delle fatture condivise: archivia soltanto la scheda scelta, conserva gli altri oggetti e tutti i loro collegamenti. Appartenenza esplicita personale alla vista casa, senza copie o rimozione dei riferimenti al videocitofono. Migrazione additiva e riepilogo “Collegamenti che rimangono”. [Verifiche e limiti](v5/house-documents-from-object-20261021.md).

@@ -1136,6 +1136,7 @@ model DocumentOrganization {
   parts Json
   collections String[]
   houseDocument Boolean @default(false)
+  houseFamily String?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
   account Account @relation(fields:[accountId], references:[id], onDelete:Restrict)

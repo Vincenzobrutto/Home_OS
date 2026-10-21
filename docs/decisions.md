@@ -1,3 +1,7 @@
+## 21 ottobre 2026 — Famiglia della casa indipendente dal tipo
+
+La richiesta dell’utente distingue collocazione e natura del documento: una fattura può appartenere a una famiglia della casa mantenendo tipo Fattura, spese e oggetti collegati. Override manuale personale sulla fonte corrente; null mantiene il raggruppamento automatico esistente. Nessuna modifica di parti o raccolte e nessuna nuova copia. [Regole e verifiche](v5/document-house-family-20261021.md).
+
 ## 21 ottobre 2026 — Documento della casa e scheda oggetto restano entità distinte
 
 La precisazione dell’utente sostituisce la rimozione dei riferimenti ad altre schede: archiviando l’impianto nella casa, il videocitofono resta attivo con le stesse fatture condivise. Casa e oggetti sono viste sovrapposte di file unici, non contenitori esclusivi. Memorizzare un’appartenenza esplicita personale/versionata e modificare soltanto i riferimenti alla scheda scelta; altri oggetti e costi restano invariati. [Regole e limiti](v5/house-documents-from-object-20261021.md).

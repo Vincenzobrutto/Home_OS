@@ -30,6 +30,7 @@ export class DocumentsController {
     res.setHeader('Content-Type', 'application/zip'); res.setHeader('Content-Disposition', attachment('documenti-dimora.zip')); res.send(bytes);
   }
   @Get(':documentId') get(@Req() req: DocumentRequest, @Param('homeId') homeId: string, @Param('documentId', new ParseUUIDPipe()) id: string) { return this.documents.get(req.documentAccountId, homeId, id); }
+  @Post(':documentId/house-family') @HttpCode(200) family(@Req() req:DocumentRequest,@Param('homeId') h:string,@Param('documentId',new ParseUUIDPipe()) id:string,@Body() body:unknown,@Headers('idempotency-key') key?:string){return this.documents.changeHouseFamily(req.documentAccountId,h,id,body,key);}
   @Get(':documentId/removal') removal(@Req() req:DocumentRequest,@Param('homeId') h:string,@Param('documentId',new ParseUUIDPipe()) id:string){return this.documents.removalCapability(req.documentAccountId,h,id);}
   @Post(':documentId/removal') @HttpCode(200) remove(@Req() req:DocumentRequest,@Param('homeId') h:string,@Param('documentId',new ParseUUIDPipe()) id:string,@Body() body:unknown,@Headers('idempotency-key') key?:string){return this.documents.remove(req.documentAccountId,h,id,body,key);}
   @Get(':documentId/file')

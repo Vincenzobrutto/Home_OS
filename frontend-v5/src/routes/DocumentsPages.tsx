@@ -1,4 +1,5 @@
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
+import {ChangeHouseFamily} from '../documents/ChangeHouseFamily';
 import {documentExamplesEnabled} from '../documents/exampleEnvironment';
 import {DocumentRowContext} from '../documents/DocumentRowContext';
 import { documentTypeLabels,documentDisplayTitle } from '../documents/presentation';
@@ -79,6 +80,9 @@ export function DocumentsPage() {
   useDocumentTitle(`Documenti · ${home.name}`);
   const canUpload = home.permissions.includes('edit');
   const [uploadOpen,setUploadOpen]=useState(false);
+  const [familyNotice,setFamilyNotice]=useState<{accountId:string;homeId:string}|null>(null);
+  const familyNoticeRef=useRef<HTMLParagraphElement>(null);
+  useEffect(()=>{familyNoticeRef.current?.focus();},[familyNotice]);
   const canExport = home.permissions.includes('export');
   const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
   const [params, setParams] = useSearchParams();
@@ -147,6 +151,7 @@ export function DocumentsPage() {
       )}
 
       {viewsEnabled && <DocumentViews value={applied.view ?? 'all'} summary={summary} onChange={view => apply({...applied,view,group:undefined})}/>}
+      {familyNotice?.accountId===account.id&&familyNotice.homeId===home.id&&<p role="status" tabIndex={-1} ref={familyNoticeRef}>Famiglia aggiornata. Tipo del documento e collegamenti invariati.</p>}
       {capabilities.isSuccess ? (
         <SearchForm
           home={home}
@@ -194,6 +199,7 @@ export function DocumentsPage() {
         exportSlot={exportSlot}
         canUpload={canUpload}
         onGroup={group => apply({...applied,group})}
+        onFamilyChanged={group=>{setFamilyNotice({accountId:account.id,homeId:home.id});apply({...applied,group});}}
         onView={view=>apply({...applied,view,group:undefined})}
       />
       {canUpload && documentExamplesEnabled() && (
@@ -224,6 +230,7 @@ function DocumentsArchive(props: {
   exportSlot: HTMLSpanElement | null;
   canUpload: boolean;
   onGroup: (group?: DocumentSearchFilters['group']) => void;
+  onFamilyChanged: (group:NonNullable<DocumentSearchFilters['group']>)=>void;
   onView: (view:NonNullable<DocumentSearchFilters['view']>)=>void;
 }) {
   const { home, canExport, filters } = props;
@@ -398,6 +405,8 @@ function DocumentsArchive(props: {
             doc={doc}
             fileDetailsOpen={restore?.filters===filtersKey(filters)&&restore.openedFiles?.includes(doc.id)||false}
             showTypeCorrection={!!house&&filters.group==='other'&&props.canUpload}
+            canChangeFamily={!!house&&props.canUpload&&!selecting&&!aiSelecting}
+            onFamilyChanged={props.onFamilyChanged}
             homeId={home.id}
             backSearch={filtersToParams(filters).toString()}
             selectable={canExport && selecting}
@@ -511,7 +520,7 @@ function DocumentsArchive(props: {
           {documents.hasNextPage ? ' — ce ne sono altri' : ''}
         </h2>
       )}
-      {house ? <HouseDocumentGroups summary={summary} selected={filters.group} onChange={props.onGroup}>{filters.group==='other'&&props.canUpload&&<p className={docs.groupEmpty}>Un documento appartiene a un’altra tipologia? Usa “Correggi tipo”.</p>}{documentList()}</HouseDocumentGroups> : documentList()}
+      {house ? <HouseDocumentGroups summary={summary} selected={filters.group} onChange={props.onGroup}>{filters.group==='other'&&props.canUpload&&<p className={docs.groupEmpty}>Usa “Cambia famiglia” per spostare un documento senza modificarne il tipo.</p>}{documentList()}</HouseDocumentGroups> : documentList()}
 
     </section>
   );
@@ -531,6 +540,8 @@ function exportErrorMessage(error: unknown) {
 function DocumentRow(props: {
   doc: DocumentSummary;
   showTypeCorrection?:boolean;
+  canChangeFamily?:boolean;
+  onFamilyChanged:(group:NonNullable<DocumentSearchFilters['group']>)=>void;
   fileDetailsOpen?:boolean;
   homeId: string;
   /** Filtri applicati, per tornare dal dettaglio agli stessi risultati. */
@@ -573,6 +584,7 @@ function DocumentRow(props: {
         </Link>
         <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>{props.showTypeCorrection&&<Link className={docs.correctType} to={`/home/${encodeURIComponent(props.homeId)}/documenti/${encodeURIComponent(doc.id)}#doc-classificazione`} state={{documentsSearch:props.backSearch,documentsAccountId:account.id}}>Correggi tipo</Link>}</div>
         <DocumentRowContext doc={doc} homeId={props.homeId}/>
+        {props.canChangeFamily&&doc.organization&&<ChangeHouseFamily key={doc.id+':'+doc.organization.version} homeId={props.homeId} document={doc} onChanged={props.onFamilyChanged}/>}
         {doc.permissions.includes('read') && (
           <DocumentWorkspaceActions homeId={props.homeId} document={doc}/>
         )}

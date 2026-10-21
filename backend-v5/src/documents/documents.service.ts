@@ -1,4 +1,5 @@
 import {documentViewBase,documentViewSummary,documentViewWhere} from './views';
+import {changeHouseFamily} from './house-family';
 import {documentRowContexts} from './row-context';
 import { ConflictException, ForbiddenException, Injectable, OnModuleInit, PayloadTooLargeException, HttpException, UnprocessableEntityException } from '@nestjs/common';
 import archiver from 'archiver';
@@ -25,6 +26,7 @@ export function publicDocument(doc: OriginalDocument, exporting: boolean, detail
 export class DocumentsService implements OnModuleInit {
   private exportsRunning = 0;
   constructor(private readonly db: PrismaService, private readonly storage: LocalFileStorage, private readonly policy: DocumentPolicy) {}
+  async changeHouseFamily(a:string,h:string,id:string,body:unknown,key?:string){return this.db.$transaction(tx=>changeHouseFamily(tx,this.policy,a,h,id,body,key),{timeout:15000,maxWait:15000});}
   async onModuleInit() {
     await this.storage.cleanup(async storageKey => !!(await this.db.storedFile.findUnique({ where: { storageKey } }))).catch(() => console.warn('Cleanup storage V5 rinviato: nessun file eliminato senza verifica.'));
   }

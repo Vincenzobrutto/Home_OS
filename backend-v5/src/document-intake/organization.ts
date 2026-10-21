@@ -9,7 +9,7 @@ export const sameParts = (left: unknown, right: unknown) => {
   const canonical = (parts: unknown) => JSON.stringify(Array.isArray(parts) ? parts.map(p => { const row = p as Record<string, unknown>; return [row.kind, row.pageFrom, row.pageTo]; }).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))) : null);
   return canonical(left) === canonical(right);
 };
-export const organizationView = (row: DocumentOrganization) => ({ version: row.version, title: row.title, parts: row.parts, collections: row.collections, origin: 'user_declared' as const, updatedAt: row.updatedAt.toISOString() });
+export const organizationView = (row: DocumentOrganization) => ({ version: row.version, title: row.title, parts: row.parts, collections: row.collections, houseFamily:row.houseFamily, documentVersion:row.documentVersion, documentSha256:row.documentSha256, origin: 'user_declared' as const, updatedAt: row.updatedAt.toISOString() });
 export async function currentOrganization(tx: Tx, a: string, h: string, doc: { id: string; original: { version: number; sha256: string } | null }) {
   const row = await tx.documentOrganization.findUnique({ where: { accountId_homeId_documentId: { accountId: a, homeId: h, documentId: doc.id } } });
   return row && row.documentVersion === doc.original?.version && row.documentSha256 === doc.original.sha256 ? row : null;

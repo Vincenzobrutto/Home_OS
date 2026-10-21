@@ -15,9 +15,9 @@ export function documentViewBase(a:string,h:string,f:Filters,w:{state:Prisma.Sql
    OR EXISTS(SELECT 1 FROM "AnalysisJob" j JOIN authorized subject ON subject.kind='boiler' AND subject.id=j."assetId"
      CROSS JOIN LATERAL jsonb_array_elements(j.documents) proof WHERE j.state='succeeded' AND proof->>'documentId'=d.id
        AND proof->>'documentVersion'=v.version::text AND proof->>'documentSha256'=v.sha256))`;
- const group=Prisma.sql`CASE WHEN o.parts @> '[{"kind":"floor_plan"}]'::jsonb THEN 'plans'
+ const group=Prisma.sql`COALESCE(o."houseFamily",CASE WHEN o.parts @> '[{"kind":"floor_plan"}]'::jsonb THEN 'plans'
    WHEN 'building'=ANY(o.collections) THEN 'building' WHEN 'energy'=ANY(o.collections) THEN 'energy'
-   WHEN 'contracts'=ANY(o.collections) THEN 'contracts' ELSE 'other' END`;
+   WHEN 'contracts'=ANY(o.collections) THEN 'contracts' ELSE 'other' END)`;
  const mime={pdf:'application/pdf',jpeg:'image/jpeg',png:'image/png'};
  return Prisma.sql`${catalogBase(a,h,objectsQuery({state:'all'}))}, searched_documents AS (
    SELECT d.id,d."createdAt",${w.state} AS "workflowState",${w.analysisSucceeded} AS "aiAnalysisSucceeded",

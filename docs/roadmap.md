@@ -1,3 +1,7 @@
+## Documenti: famiglia manuale completata — 21 ottobre 2026
+
+Cambia famiglia direttamente dalle righe della casa, senza compilazione o cambio del tipo. Conteggi e filtri server coerenti; nessuna riclassificazione automatica dei dati esistenti. [Regole e verifiche](v5/document-house-family-20261021.md).
+
 ## Documenti della casa da scheda oggetto completato — 21 ottobre 2026
 
 Spostamento nella casa con archivio della sola scheda scelta; documenti condivisi e relativi collegamenti sugli altri oggetti preservati. Viste sovrapposte con un unico archivio. Restano separati riferimenti nativi a caldaie e fusione delle schede. [Regole e verifiche](v5/house-documents-from-object-20261021.md).

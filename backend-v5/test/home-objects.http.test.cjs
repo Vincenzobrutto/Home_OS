@@ -16,7 +16,7 @@ test('G1: HTTP/controller/auth/CSRF/originali/DB reali, nessun worker AI',async 
  const base=external?'http://127.0.0.1:3001/api/v5':(await app.getUrl())+'/api/v5',db=app?app.get(PrismaService):new PrismaService();if(!app)await db.$connect();
  const storage=app?app.get(LocalFileStorage):new LocalFileStorage(),accounts=[],homes=[],aiBefore=await db.aiAttempt.count();
  t.after(async()=>{
-  for(const model of ['objectEvent','objectRequest','objectResourceLink','objectPosition','homeObject','homeRoom'])await db[model].deleteMany({where:{homeId:{in:homes}}});
+  for(const model of ['objectEvent','objectRequest','objectResourceLink','objectPosition','homeObject','homeRoom','objectOnboardingRequest'])await db[model].deleteMany({where:{homeId:{in:homes}}});
   await db.expenseHistory.deleteMany({where:{accountId:{in:accounts}}});await db.expenseRequest.deleteMany({where:{accountId:{in:accounts}}});await db.homeExpense.deleteMany({where:{homeId:{in:homes}}});
   const docs=await db.document.findMany({where:{uploaderId:{in:accounts}},include:{original:{include:{file:true}}}}),files=docs.map(x=>x.original.file),ids=docs.map(x=>x.id);
   await db.documentOrganization.deleteMany({where:{homeId:{in:homes}}});await db.uploadRequest.deleteMany({where:{accountId:{in:accounts}}});await db.documentVersion.deleteMany({where:{documentId:{in:ids}}});await db.document.deleteMany({where:{id:{in:ids}}});await db.storedFile.deleteMany({where:{id:{in:files.map(x=>x.id)}}});for(const file of files)await storage.remove(file.storageKey);
@@ -115,6 +115,9 @@ test('G1: HTTP/controller/auth/CSRF/originali/DB reali, nessun worker AI',async 
   const result=ok(await a.request(path,'POST',body,{'Idempotency-Key':key}));assert(result.archivedObject);
   assert.deepEqual(ok(await a.request(path,'POST',body,{'Idempotency-Key':key})),result);
   assert.deepEqual(ok(await a.request(`/homes/${h}/documents/${source.id}/file`)),pdf);
+  const detail=ok(await a.request(`/homes/${h}/documents/${source.id}`)).document,familyPath=`/homes/${h}/documents/${source.id}/house-family`,familyBody={expectedOrganizationVersion:detail.organization.version,documentVersion:detail.version,sha256:detail.sha256,family:'energy'},familyKey=randomUUID();
+  assert.equal((await a.request(familyPath,'POST',familyBody,{'X-CSRF-Token':'errato'})).status,403);assert.equal((await a.request(familyPath,'POST',familyBody,{'X-Account-Context':b.id})).status,401);assert.equal((await b.request(familyPath,'POST',familyBody)).status,403);
+  const familyResult=ok(await a.request(familyPath,'POST',familyBody,{'Idempotency-Key':familyKey}));assert.equal(familyResult.effectiveFamily,'energy');assert.deepEqual(familyResult.organization.parts,detail.organization.parts);assert.deepEqual(ok(await a.request(familyPath,'POST',familyBody,{'Idempotency-Key':familyKey})),familyResult);
  });
  await t.test('Archivio/ripristino, viewer/revoca e nessun consumo AI',async()=>{
   obj=ok(await a.request(`/homes/${h}/objects/object/${obj.ref.id}/archive`,'POST',{expectedVersion:1})).object;assert.equal(obj.state,'archived');

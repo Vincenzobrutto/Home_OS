@@ -49,7 +49,7 @@ export type DocumentSummary = {
   workflowState?: DocumentWorkflowState;
   /** Successful extraction for this account and exact source snapshot, independent of confirmation. */
   aiAnalysisSucceeded?: boolean;
-  organization?: { version: number; title: string; parts: Array<{ kind: string; pageFrom: number | null; pageTo: number | null }>; collections: DocumentCollection[]; origin: 'user_declared'; updatedAt: string } | null;
+  organization?: { houseFamily?:DocumentGroup|null; documentVersion?:number; documentSha256?:string; version: number; title: string; parts: Array<{ kind: string; pageFrom: number | null; pageTo: number | null }>; collections: DocumentCollection[]; origin: 'user_declared'; updatedAt: string } | null;
   id: string;
   homeId: string;
   name: string;

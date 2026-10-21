@@ -1,3 +1,7 @@
+## Famiglia manuale dei documenti della casa — 21 ottobre 2026
+
+`DocumentOrganization.houseFamily` nullable con CHECK sui cinque gruppi `plans|building|energy|contracts|other`, migrazione additiva `20261021193000_document_house_family`. Null usa il raggruppamento preesistente da parti/raccolte; valore manuale prevale nei conteggi, filtri e pagine. La scelta è personale e vincolata a versione/SHA, imposta houseDocument=true anche tornando ad Automatico. Modificare metadati della stessa fonte conserva la scelta; nuova versione/SHA la azzera. Nessun backfill o cambio del tipo. `ObjectOnboardingRequest.operation=document-house-family-v1` protegge i replay della mutazione. [Dettagli](document-house-family-20261021.md).
+
 ## Documenti della casa condivisi — 21 ottobre 2026
 
 `DocumentOrganization.houseDocument` (booleano default false, migrazione additiva `20261021190000_document_house_membership`) registra una scelta personale per account/casa/documento e versione/SHA correnti. È indipendente da `ObjectResourceLink`: le stesse fatture possono appartenere alla vista casa e restare collegate ad altri oggetti. Casa e Oggetti non sono partizioni; Tutti non duplica i file. Lo spostamento archivia soltanto la scheda scelta e conserva i riferimenti agli altri oggetti. Nuova versione/SHA invalida la scelta finché non viene riconfermata. [Regole](house-documents-from-object-20261021.md).

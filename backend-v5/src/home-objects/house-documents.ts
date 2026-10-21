@@ -81,7 +81,7 @@ export async function keepHouseDocuments(tx:Tx,a:string,h:string,id:string,input
  }
  for(const doc of selected){
   const where={accountId_homeId_documentId:{accountId:a,homeId:h,documentId:doc.id}};
-  if(doc.willOrganize){const data={documentVersion:doc.documentVersion,documentSha256:doc.sha256,title:doc.title,parts:[{kind:'other',pageFrom:null,pageTo:null}],collections:['unclassified'],houseDocument:true};await tx.documentOrganization.upsert({where,create:{accountId:a,homeId:h,documentId:doc.id,...data},update:{...data,version:{increment:1}}});}
+  if(doc.willOrganize){const data={documentVersion:doc.documentVersion,documentSha256:doc.sha256,title:doc.title,parts:[{kind:'other',pageFrom:null,pageTo:null}],collections:['unclassified'],houseDocument:true,houseFamily:null};await tx.documentOrganization.upsert({where,create:{accountId:a,homeId:h,documentId:doc.id,...data},update:{...data,version:{increment:1}}});}
   else{const organization=await tx.documentOrganization.findUniqueOrThrow({where});if(!organization.houseDocument)await tx.documentOrganization.update({where,data:{houseDocument:true,version:{increment:1},updatedAt:new Date()}});}
  }
  for(const before of [...new Map(selected.flatMap(d=>d.expenses).filter(e=>expenseIds.includes(e.id)).map(e=>[e.id,e])).values()]){
