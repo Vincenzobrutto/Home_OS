@@ -1,3 +1,10 @@
+## Documenti: azioni su una riga e dettagli file compatti — 22 ottobre 2026
+
+Solo CSS in frontend-v5 ([documents.module.css](../frontend-v5/src/routes/documents.module.css)). Su mobile (≤600 px) «Vedi dettagli», «Vedi originale» e «Altre azioni» stanno su una riga (vanno a capo solo se le etichette sono più lunghe); link secondari della riga e «Dettagli del file» con altezza minima ridotta (32/36 px invece di 44; resta sopra il minimo WCAG 2.2 di 24 px). Altezza righe nella casa sintetica «COLLAUDO V2»: mobile 252–308 px (prima 344–412), desktop ~254 px (prima ~288). Nessun overflow orizzontale; menu «Altre azioni» dentro la viewport; «Dettagli del file» si apre e chiude.
+
+Verificato: typecheck, lint, build; 101 test su documenti/ricerca/workflow/archivio passati. **Non verificato/aperto**: `documentSearch.test.tsx › restores all loaded result pages and the document focus after detail and Back` è instabile (fallisce in 3 prove su 5, anche senza queste modifiche CSS: preesistente); i 2 test di `collectionFilters.test.tsx` falliscono su HEAD (pulsanti rimossi dall'archivio unico). Non provati stati con etichette lunghe («Riprendi compilazione», «Rivedi proposta») né viewport 320 px.
+Osservazione: aprendo un URL con `group=unclassified` subito dopo aver visto un altro gruppo la pagina è finita su `group=building` (una volta, in collaudo); non analizzato.
+
 ## Documenti: righe più compatte, meno ripetizioni — 22 ottobre 2026
 
 Implementate le priorità 1–2 dell'audit del 22 ottobre (solo frontend-v5, nessun cambio API/schema/dati). «Cambia famiglia» è ora un comando testuale sulla riga del tipo (stesso nome accessibile, editor invariato e a tutta riga quando aperto); la famiglia della riga non è ripetuta dentro il gruppo che la contiene, resta nei risultati di ricerca; «Collegato a:» sta sulla stessa riga del collegamento. Altezza righe in collaudo: desktop ~288 px (prima 267–311), mobile ~344 px (prima ~311–350): **guadagno modesto**, dovuto alla rimozione di pulsante e etichetta; il grosso dell'altezza resta in stato, due pulsanti, «Altre azioni» e «Dettagli del file» (da affrontare a parte se si vuole una riga davvero compatta).
