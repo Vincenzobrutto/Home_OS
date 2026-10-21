@@ -42,6 +42,9 @@ export type DocumentPermission = 'read' | 'export';
 
 export type DocumentWorkflowState = 'to_compile' | 'analyzing' | 'review' | 'completed' | 'attention';
 export type DocumentSummary = {
+  /** Personal read-only context, absent on older API versions and detail responses. */
+  linkedObjects?: Array<{id:string;kind:'object'|'boiler';name:string}>;
+  savedExpenses?: Array<{id:string;title:string;amountCents:number;supplier:string|null;documentNumber:string|null;documentDate:string|null}>;
   /** Personal state for this source/version; provided by the canonical list. */
   workflowState?: DocumentWorkflowState;
   /** Successful extraction for this account and exact source snapshot, independent of confirmation. */

@@ -1,4 +1,5 @@
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
+import {DocumentRowContext} from '../documents/DocumentRowContext';
 import { documentTypeLabels,documentDisplayTitle } from '../documents/presentation';
 import { BulkDocumentCompilation } from '../documents/BulkDocumentCompilation';
 import { IntakePage } from '../intake-integration/IntakePage';
@@ -543,6 +544,7 @@ function DocumentRow(props: {
           {title}
         </Link>
         <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag></div>
+        <DocumentRowContext doc={doc} homeId={props.homeId}/>
         {doc.permissions.includes('read') && (
           <DocumentWorkspaceActions homeId={props.homeId} document={doc}/>
         )}

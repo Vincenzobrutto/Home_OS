@@ -56,6 +56,8 @@ export function useDocumentSearch(homeId: string, filters: DocumentSearchFilters
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,
     enabled,
+    // Returning from an expense/object detail must refresh its saved row context.
+    refetchOnMount: 'always',
     refetchInterval: query => query.state.data?.pages.some(page => page.items.some(doc => doc.workflowState === 'analyzing')) ? 2000 : false,
   });
 }

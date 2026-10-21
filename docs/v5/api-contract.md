@@ -1,6 +1,10 @@
+## Contesto personale nelle righe Documenti — 21 ottobre 2026
+
+GET `/homes/:homeId/documents` aggiunge a ogni elemento `linkedObjects: Array<{id,kind:'object'|'boiler',name}>` e `savedExpenses: Array<{id,title,amountCents,supplier:string|null,documentNumber:string|null,documentDate:string|null}>`, anche senza `view`. Collezioni vuote se assenti. Dettaglio, cursori e filtri invariati. `linkedObjects` deduplica riferimenti diretti, derivati da spesa attiva e fonti correnti caldaia con la stessa policy fonte del catalogo. `savedExpenses` contiene solo spese attive personali dello stesso account/casa associate al documento accessibile; ordinamento data spesa discendente, ID crescente. Dati confermati, nessuna proposta AI o inferenza. Il frontend mostra i dati della spesa nelle righe classificate Fattura e tollera l’assenza delle due proprietà su API precedenti. [Regole e verifiche](document-row-context-20261021.md).
+
 ## Viste Documenti e conteggi — 21 ottobre 2026
 
-GET `/homes/:homeId/document-search-capabilities` aggiunge `documentViews:true`. GET `/homes/:homeId/documents` accetta `view=all|house|objects`, opzionale; `group=plans|building|energy|contracts|other` ammesso soltanto con `view=house`, altrimenti 422. Senza `view` restano comportamento, risposta e cursori precedenti.
+GET `/homes/:homeId/document-search-capabilities` aggiunge `documentViews:true`. GET `/homes/:homeId/documents` accetta `view=all|house|objects`, opzionale; `group=plans|building|energy|contracts|other` ammesso soltanto con `view=house`, altrimenti 422. Senza `view` restano comportamento e cursori precedenti, con il contesto additivo delle righe descritto sopra.
 
 Con `view` la risposta aggiunge `summary:{views:{all,house,objects},groups:{plans,building,energy,contracts,other}}`. Conteggi dell’intero dataset autorizzato prima del LIMIT, applicando `q`, `workflow`, `format`, `visibility`, `collection`, senza restringerli a vista/gruppo correnti. Nuovi cursori vincolati anche a vista e gruppo; cambiare contesto restituisce 422. `view=house` senza `group` restituisce `items:[],nextCursor:null` e il riepilogo: è l’indice dei gruppi, non un archivio vuoto. Con `group` restituisce e pagina soltanto quella tipologia.
 

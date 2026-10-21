@@ -15,7 +15,7 @@ describe('presentazione dei documenti senza modificare i dati', () => {
   it('distingue planimetrie e pratiche anche nei documenti misti', () => {
     expect(documentTypeLabels(organization)).toEqual(['Planimetria']);
     expect(documentTypeLabels({ ...organization, parts: [...organization.parts, { kind: 'cila', pageFrom: 2, pageTo: 3 }] })).toEqual(['Planimetria', 'CILA']);
-    expect(documentTypeLabels({ ...organization, parts: [] })).toEqual(['Pratiche edilizie']);
+    expect(documentTypeLabels({ ...organization, parts: [] })).toEqual(['Pratiche edilizie e catastali']);
   });
 });
 

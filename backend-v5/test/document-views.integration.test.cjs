@@ -34,8 +34,17 @@ test('Document views: complete facets, current references, privacy and category 
  const direct=await doc('Electrical certificate','conformity_declaration',['technical']);
  await db.objectResourceLink.create({data:{...scope,objectId:obj.id,resourceType:'document',resourceId:direct.id,documentId:direct.id}});
  const invoice=await doc('Invoice','invoice',['purchases']);
- const expense=await db.homeExpense.create({data:{...scope,documentId:invoice.id,title:'Synthetic expense',amountCents:100,spentOn:'2026-01-01'}});
+ const expense=await db.homeExpense.create({data:{...scope,documentId:invoice.id,title:'Acconto synthetic expense',supplier:'Synthetic supplier',documentNumber:'14',documentDate:'2026-01-01',amountCents:100,spentOn:'2026-02-01'}});
  const expenseLink=await db.objectResourceLink.create({data:{...scope,objectId:obj.id,resourceType:'expense',resourceId:expense.id,expenseId:expense.id}});
+ await db.homeExpense.create({data:{accountId:b,homeId:h,documentId:invoice.id,title:'Private other account expense',amountCents:999,spentOn:'2026-01-01'}});
+ await db.objectResourceLink.create({data:{...scope,objectId:obj.id,resourceType:'document',resourceId:invoice.id,documentId:invoice.id}});
+ await t.test('Rows deduplicate direct/expense references and expose only personal saved facts',async()=>{
+  const row=(await list()).items.find(x=>x.id===invoice.id);
+  assert.deepEqual(row.linkedObjects,[{id:obj.id,kind:'object',name:obj.name}]);
+  assert.deepEqual(row.savedExpenses,[{id:expense.id,title:'Acconto synthetic expense',supplier:'Synthetic supplier',documentNumber:'14',documentDate:'2026-01-01',amountCents:100}]);
+  assert.equal(row.name,'Invoice');
+  await db.objectResourceLink.deleteMany({where:{documentId:invoice.id}});
+ });
  await db.documentOrganization.update({where:{accountId_homeId_documentId:{...scope,documentId:plans[0].id}},data:{parts:[{kind:'floor_plan'},{kind:'ape'}],collections:['building','energy']}});
  await t.test('Facets are global before LIMIT; home overview returns groups, raw/stale stay only in All',async()=>{
   const page=await list();assert.equal(page.items.length,20);assert.deepEqual(page.summary,{views:{all:34,house:29,objects:2},groups:{plans:25,building:1,energy:1,contracts:1,other:1}});
@@ -61,6 +70,7 @@ test('Document views: complete facets, current references, privacy and category 
   assert.equal((await list()).summary.views.objects,1);assert.equal((await list()).summary.views.house,30);
   await db.receiptObjectField.create({data:{...scope,objectId:obj.id,fieldKey:'name',value:'Name from inaccessible source',origin:'extraction_confirmed',documentId:hidden.id,documentVersion:1,documentSha256:'a'.repeat(64),sources:[{documentId:hidden.id,page:1,excerpt:'Synthetic name'}]}});
   assert.equal((await list()).summary.views.objects,0,'Unreadable object sources must not classify or count references');
+  const row=(await list()).items.find(x=>x.id===direct.id);assert.deepEqual(row.linkedObjects,[],'Unreadable object name must not leak in row context');
   await db.homeMembership.update({where:{accountId_homeId:scope},data:{revokedAt:new Date()}});
   await assert.rejects(list(),e=>e.getStatus?.()===403);
  });

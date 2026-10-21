@@ -1,3 +1,7 @@
+## Documenti: oggetti collegati e fatture riconoscibili — 21 ottobre 2026
+
+Righe con tutti i riferimenti personali leggibili, anche derivati dalle spese; fatture con descrizione, fornitore, numero, emissione e importo già salvati. Titoli/originali invariati. Test mirati e browser desktop/mobile in sola lettura, dati reali verificati invariati. [Regole e verifiche](v5/document-row-context-20261021.md).
+
 ## Documenti: ingresso e filtri semplificati — 21 ottobre 2026
 
 Ingresso su tutti i documenti, stato nei Filtri con etichetta rimovibile e avviso dei pendenti solo quando presenti. Testata mobile compatta e ricerca raggiungibile durante lo scorrimento; testi e ritorno dal dettaglio coerenti. 72 test mirati e browser desktop/mobile in sola lettura. [Comportamento, verifiche e limiti](v5/document-archive-entry-20261021.md).

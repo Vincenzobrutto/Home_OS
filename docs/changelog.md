@@ -1,3 +1,7 @@
+## Documenti: riferimenti e dati salvati nelle righe — 21 ottobre 2026
+
+Oggetti e impianti collegati apribili direttamente; fatture distinguibili tramite le spese personali già salvate, senza rinominare o duplicare record. [Ambito e verifiche](v5/document-row-context-20261021.md).
+
 ## Documenti: meno scelte prima dell’archivio — 21 ottobre 2026
 
 Apertura su tutti gli stati, stato nel pannello Filtri, avviso pendenti condizionale, testata mobile compatta e barra ricerca persistente. Terminologia e messaggi vuoti più chiari; Vedi dettagli conserva il contesto all anche dall’ingresso senza parametri. [Verifiche](v5/document-archive-entry-20261021.md).

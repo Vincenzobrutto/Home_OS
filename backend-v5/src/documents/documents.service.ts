@@ -1,4 +1,5 @@
 import {documentViewBase,documentViewSummary,documentViewWhere} from './views';
+import {documentRowContexts} from './row-context';
 import { ConflictException, ForbiddenException, Injectable, OnModuleInit, PayloadTooLargeException, HttpException, UnprocessableEntityException } from '@nestjs/common';
 import archiver from 'archiver';
 import { Prisma } from '../../generated/client';
@@ -112,9 +113,10 @@ export class DocumentsService implements OnModuleInit {
       const docs = await tx.document.findMany({ where: { ...readableWhere(accountId, homeId), id: { in: ids.map(row => row.id) } }, include: includeOriginal, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] });
       const member = await this.policy.require(accountId, homeId, 'read', tx);
       const page = docs.slice(0, query.limit), last = page.at(-1);
+      const contexts=await documentRowContexts(tx,accountId,homeId,page.map(doc=>doc.id));
       return { items: await Promise.all(page.map(async doc => {
         const org = await currentOrganization(tx, accountId, homeId, doc);
-        return { ...publicDocument(doc, canExport(member)), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null, aiAnalysisSucceeded: ids.find(row => row.id === doc.id)!.aiAnalysisSucceeded, workflowState: ids.find(row => row.id === doc.id)!.workflowState };
+        return { ...publicDocument(doc, canExport(member)), ...contexts.get(doc.id), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null, aiAnalysisSucceeded: ids.find(row => row.id === doc.id)!.aiAnalysisSucceeded, workflowState: ids.find(row => row.id === doc.id)!.workflowState };
       })), nextCursor: docs.length > query.limit && last ? searchCursor(last, accountId, homeId, filters) : null,...(summary?{summary}:{}) };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 15000, maxWait: 15000 });
   }

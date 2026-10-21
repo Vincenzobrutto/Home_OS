@@ -60,6 +60,11 @@
   gap: 4px;
 }
 
+.rowContext{grid-column:1 / -1;min-width:0;font-size:13px;line-height:1.5;color:var(--color-muted);overflow-wrap:anywhere}
+.rowContext a{display:inline-block;min-height:44px;align-content:center;color:var(--color-accent)}
+.expenseDescription{display:block;color:var(--color-ink);font-weight:600}
+@media(min-width:1250px){.body:has(>.rowContext)>.workspace{grid-row:1/span 2}}
+
 .title {
   font-family: var(--font-display);
   font-size: 16px;
