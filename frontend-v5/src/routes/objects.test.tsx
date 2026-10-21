@@ -534,3 +534,37 @@ it('room → object → document → object preserves the original room without 
  expect(await screen.findByRole('link',{name:'← Cucina'})).toHaveAttribute('href',`/home/${home.id}/ambienti/${room.id}`);
  expect(backend.log.filter(r=>r.method==='POST').length).toBe(before);
 });
+
+
+describe('[mock] filtri stanza compatti', () => {
+  it('tutte le stanze restano raggiungibili, con oggetti prima delle vuote anche oltre la prima pagina', async () => {
+    const {backend,owner,member,home}=world();
+    for(let i=1;i<=23;i++) await seedRoom(backend,owner.id,home.id,`A vuota ${String(i).padStart(2,'0')}`);
+    const used=await seedRoom(backend,owner.id,home.id,'Z cucina','kitchen');
+    const other=await seedRoom(backend,owner.id,home.id,'B privata altrui');
+    await seedObject(backend,owner.id,home.id,'Forno',{roomIds:[used.id]});
+    await seedObject(backend,member.id,home.id,'Privato',{roomIds:[other.id]});
+    const app=await open(backend,owner.email,PW.owner,`/home/${home.id}/oggetti`);
+    const select=await screen.findByRole('combobox',{name:'Stanza'});
+    await waitFor(()=>expect(within(select).getAllByRole('option')).toHaveLength(27));
+    const names=within(select).getAllByRole('option').map(o=>o.textContent);
+    expect(names.slice(0,4)).toEqual(['Tutte le stanze (2)','Senza stanza (1)','Z cucina (1)','A vuota 01 (0)']);
+    expect(names).toContain('B privata altrui (0)');
+    await app.user.selectOptions(select,used.id);
+    await waitFor(()=>expect(app.router.state.location.search).toContain(`ambiente=${used.id}`));
+    expect(await screen.findByRole('link',{name:'Forno'})).toBeInTheDocument();
+    await app.user.click(screen.getByRole('link',{name:'Forno'}));
+    await screen.findByRole('heading',{level:1,name:'Forno'});
+    await app.user.click(screen.getByRole('link',{name:'← Oggetti e impianti'}));
+    expect(await screen.findByRole('combobox',{name:'Stanza'})).toHaveValue(used.id);
+    await app.user.selectOptions(screen.getByRole('combobox',{name:'Stanza'}),'unplaced');
+    await waitFor(()=>expect(app.router.state.location.search).toBe('?collocazione=da-collocare'));
+    await app.router.navigate(`/home/${home.id}/ambienti`);
+    const list=await screen.findByRole('list',{name:'Ambienti'});
+    await waitFor(()=>expect(within(list).getAllByRole('listitem')).toHaveLength(25));
+    expect(within(list).getAllByRole('link')[0]).toHaveTextContent('Z cucina');
+    expect(within(list).getAllByRole('listitem')[0]).toHaveTextContent('1 tuo oggetto');
+    expect(within(list).getAllByRole('listitem').find(li=>li.textContent?.includes('B privata altrui'))).toHaveTextContent('Nessun tuo oggetto');
+    expect(posts(backend,/objects|rooms/)).toHaveLength(0);
+  });
+});

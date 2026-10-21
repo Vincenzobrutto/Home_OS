@@ -40,7 +40,7 @@ export function ObjectsPage() {
         <div>
 
           <h1 tabIndex={-1}>Oggetti e impianti</h1>
-          <p className={pages.muted}>Oggetti personali e schede impianto · visibili solo a te.</p>
+          <p className={pages.muted}>I tuoi oggetti e impianti, visibili solo a te.</p>
         </div>
       </div>
     </>

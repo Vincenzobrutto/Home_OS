@@ -1,3 +1,7 @@
+## Filtri stanza compatti — 21 ottobre 2026
+
+Oggetti: selettore Stanza sempre visibile, prima le stanze con oggetti, conteggi server e accesso a tutte le altre. Ambienti: elenco compatto con lo stesso ordine e conteggi personali. Ricerca e ritorno conservati. [Comportamento, verifiche e limiti](v5/room-filters-compact-20261021.md). 24 test mirati, build/lint e browser desktop/mobile; dati reali intatti.
+
 ## Elenco Documenti compatto — 21 ottobre 2026
 
 Titolo/tipo/visibilità, stato e azione principale in evidenza; metadati nei dettagli richiudibili e originale nel menu secondario. Ricerca, filtri, selezioni e ritorno conservati, inclusi i dettagli già aperti. [Comportamento, verifiche e attività residue](v5/document-list-compact-20261021.md). 72 test mirati, controlli frontend e browser desktop/mobile; dati reali intatti.

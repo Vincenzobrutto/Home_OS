@@ -343,17 +343,18 @@ export class FakeObjects {
     ];
     const sort=params.get('sort')??'recent';if(!['name','recent'].includes(sort))return err(422,'validation_error','Ordine non valido.');
     const needle = q.toLowerCase();
-    const items = refs
+    const matching = refs
       .map((r) => this.find(accountId, homeId, r.ref)!.item())
       .filter((i) => state === 'all' || i.state === state)
       .filter((i) => !type || i.type === type)
-      .filter((i) => !needle || i.name.normalize('NFC').toLowerCase().includes(needle))
-      .filter((i) => (roomId ? i.position.rooms.some((r) => r.id === roomId) : placement === 'unplaced' ? i.position.rooms.length === 0 : true))
+      .filter((i) => !needle || i.name.normalize('NFC').toLowerCase().includes(needle));
+    const items = matching.filter((i) => (roomId ? i.position.rooms.some((r) => r.id === roomId) : placement === 'unplaced' ? i.position.rooms.length === 0 : true))
       .map((i) => ({ i, createdAt: refs.find((r) => r.ref.id === i.ref.id)!.createdAt }))
       .sort((a, b) => sort==='name'?(a.i.name.localeCompare(b.i.name,'it')||a.i.ref.kind.localeCompare(b.i.ref.kind)||a.i.ref.id.localeCompare(b.i.ref.id)):(b.createdAt.localeCompare(a.createdAt) || a.i.ref.kind.localeCompare(b.i.ref.kind) || b.i.ref.id.localeCompare(a.i.ref.id)))
       .map((x) => x.i);
     void perms;
-    return this.page(items, params, `c:${accountId}:${homeId}:${state}:${roomId ?? '-'}:${placement}:${q}:${type ?? '-'}:${sort}`);
+    const page = this.page(items, params, `c:${accountId}:${homeId}:${state}:${roomId ?? '-'}:${placement}:${q}:${type ?? '-'}:${sort}`);
+    return {...page, body:{...(page.body as Record<string, unknown>), total:items.length, facets:{all:matching.length,unplaced:matching.filter(i=>!i.position.rooms.length).length,rooms:[...this.rooms.values()].filter(r=>r.homeId===homeId&&(r.state==='active'||r.id===roomId)).map(r=>({id:r.id,name:r.name,count:matching.filter(i=>i.position.rooms.some(p=>p.id===r.id)).length}))}}};
   }
 
   private listLinks(params: URLSearchParams, accountId: string, homeId: string, ref: Ref): Res {

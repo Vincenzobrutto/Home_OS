@@ -11,6 +11,7 @@ import { ROOM_TYPE_LABEL, isForbidden, isNotActive, objectPath, objectsErrorMess
 import { isApiError } from '../api/errors';
 import { useCurrentHome } from './HomePages';
 import pages from './pages.module.css';
+import roomStyles from './rooms.module.css';
 
 /** Ritorno a Casa: ambienti e oggetti sono sottosezioni di Casa nella navigazione. */
 export function BackToCasa({ homeId }: { homeId: string }) {
@@ -82,8 +83,7 @@ export function RoomsPage() {
           <span className={pages.eyebrow}>{home.name}</span>
           <h1 tabIndex={-1}>Ambienti</h1>
           <p className={pages.lead}>
-            Le stanze e gli spazi della casa, condivisi con chi vi ha accesso. Sono un contesto: documenti, costi e attività
-            restano sugli oggetti e sulla casa.
+            Le stanze della casa, condivise con chi vi ha accesso. Apri una stanza per vedere i tuoi oggetti.
           </p>
         </div>
       </div>
@@ -100,13 +100,20 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
   const creating = params.get('nuovo') === '1';
   const canEdit = home.permissions.includes('edit');
   const rooms = useRooms(home.id, { state });
+  const catalog = useCatalog(home.id, { state: 'active', q: '', type: null, roomId: null, placement: 'all', sort: 'name' });
   const forget = useForgetObjects(home.id);
   const forbidden = rooms.isError && isForbidden(rooms.error);
   useEffect(() => {
     if (forbidden) forget();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- una sola pulizia per ogni 403
   }, [forbidden]);
-  const items = rooms.data?.pages.flatMap((p) => p.items) ?? [];
+  const loaded = rooms.data?.pages.flatMap((p) => p.items) ?? [];
+  const facets = !catalog.isError ? catalog.data?.pages[0]?.facets : undefined;
+  const counts = new Map(facets?.rooms.map(r => [r.id, r.count]));
+  // Facets cover every active room, including rooms beyond the loaded room page.
+  const items: Array<Pick<Room, 'id' | 'name' | 'state'>> = state === 'active' && facets
+    ? facets.rooms.map(r => ({id:r.id,name:r.name,state:'active'})) : loaded;
+  items.sort((a,b) => Number((counts.get(b.id)??0)>0)-Number((counts.get(a.id)??0)>0)||a.name.localeCompare(b.name,'it')||a.id.localeCompare(b.id));
   const setCreating = (on: boolean) => {
     const next = new URLSearchParams(params);
     if (on) next.set('nuovo', '1');
@@ -130,12 +137,13 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
         <RoomForm home={home} capabilities={caps} onCancel={() => setCreating(false)} onDone={(room) => navigate(roomPath(home.id, room.id))} />
       )}
       <section className={ui.card} aria-labelledby="ambienti-elenco">
+        <div className={roomStyles.toolbar}>
         <h2 id="ambienti-elenco" className={pages.cardTitle}>
-          Elenco
+          Le stanze
         </h2>
         <div className={styles.filters} role="group" aria-label="Filtri degli ambienti">
           <label className={styles.filter}>
-            Stato
+            Mostra
             <select
               className={styles.select}
               value={state}
@@ -154,6 +162,7 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
             </select>
           </label>
         </div>
+        </div>
         {rooms.isPending ? (
           <Loading label="Caricamento degli ambienti…" />
         ) : forbidden || (rooms.isError && !rooms.data) ? (
@@ -163,13 +172,13 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
             {state === 'active' ? 'Non ci sono ancora ambienti in questa casa.' : state === 'archived' ? 'Nessun ambiente archiviato.' : 'Nessun ambiente.'}
           </p>
         ) : (
-          <ul className={styles.list} aria-label="Ambienti">
+          <ul className={cx(styles.list,roomStyles.list)} aria-label="Ambienti">
             {items.map((r) => (
-              <RoomRow key={r.id} room={r} homeId={home.id} />
+              <RoomRow key={r.id} room={r} meta={!facets ? loaded.find(item=>item.id===r.id) : undefined} count={counts.get(r.id)} homeId={home.id} />
             ))}
           </ul>
         )}
-        {rooms.hasNextPage && (
+        {rooms.hasNextPage && !(state === 'active' && facets) && (
           <p className={pages.spaced}>
             <button type="button" className={ui.btn} onClick={() => void rooms.fetchNextPage()} disabled={rooms.isFetchingNextPage}>
               {rooms.isFetchingNextPage ? 'Caricamento…' : 'Mostra altri ambienti'}
@@ -181,16 +190,17 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
   );
 }
 
-function RoomRow({ room, homeId }: { room: Room; homeId: string }) {
+function RoomRow({ room, meta, count, homeId }: { room: Pick<Room,'id'|'name'|'state'>; meta?: Room; count?: number; homeId: string }) {
   return (
     <li className={styles.item}>
       <div className={styles.itemHead}>
         <Link to={roomPath(homeId, room.id)} className={styles.title}>
           {room.name}
         </Link>
+        {count !== undefined && <span className={styles.meta}>{count === 0 ? 'Nessun tuo oggetto' : `${count} ${count === 1 ? 'tuo oggetto' : 'tuoi oggetti'}`}</span>}
         {room.state === 'archived' && <span className={styles.due}>Archiviato</span>}
       </div>
-      {roomMeta(room) && <span className={styles.meta}>{roomMeta(room)}</span>}
+      {meta && roomMeta(meta) && <span className={styles.meta}>{roomMeta(meta)}</span>}
     </li>
   );
 }
