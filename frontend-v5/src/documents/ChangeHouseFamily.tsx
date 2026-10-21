@@ -27,7 +27,7 @@ export function ChangeHouseFamily({homeId,document,onChanged,archive=false}:{arc
   }catch(e){if(live.current){setError(userMessage(e));if(isApiError(e)&&e.kind==='http'&&e.status<500){attempt.current=null;setUncertain(false);}else setUncertain(true);}}
   finally{flight.current=false;if(live.current)setBusy(false);}
  }
- if(!open)return <button className={`${ui.btn} ${ui.small}`} disabled={!org?.documentSha256} onClick={()=>{setValue((archive?canonicalFamily(org?.houseFamily??undefined):org?.houseFamily)??'auto');setOpen(true);}}>Cambia famiglia</button>;
+ if(!open)return <button type="button" className={styles.familyTrigger} disabled={!org?.documentSha256} onClick={()=>{setValue((archive?canonicalFamily(org?.houseFamily??undefined):org?.houseFamily)??'auto');setOpen(true);}}>Cambia famiglia</button>;
  return <div className={styles.familyEditor}>
   <label htmlFor={id}>Famiglia</label><select id={id} autoFocus value={value} disabled={busy||uncertain} onChange={e=>setValue(e.target.value)}><option value="auto">Automatico dal tipo</option>{(archive?ARCHIVE_GROUPS:HOUSE_DOCUMENT_GROUPS).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select>
   <div className={styles.toolbarActions}><button className={`${ui.btn} ${ui.small}`} disabled={busy} onClick={()=>{setOpen(false);setError('');attempt.current=null;setUncertain(false);}}>Annulla</button><button className={`${ui.btn} ${ui.small}`} disabled={busy} onClick={()=>void save()}>{busy?'Salvataggio…':uncertain?'Riprova salvataggio':'Salva famiglia'}</button></div>

@@ -1,3 +1,11 @@
+## Documenti: righe più compatte, meno ripetizioni — 22 ottobre 2026
+
+Implementate le priorità 1–2 dell'audit del 22 ottobre (solo frontend-v5, nessun cambio API/schema/dati). «Cambia famiglia» è ora un comando testuale sulla riga del tipo (stesso nome accessibile, editor invariato e a tutta riga quando aperto); la famiglia della riga non è ripetuta dentro il gruppo che la contiene, resta nei risultati di ricerca; «Collegato a:» sta sulla stessa riga del collegamento. Altezza righe in collaudo: desktop ~288 px (prima 267–311), mobile ~344 px (prima ~311–350): **guadagno modesto**, dovuto alla rimozione di pulsante e etichetta; il grosso dell'altezza resta in stato, due pulsanti, «Altre azioni» e «Dettagli del file» (da affrontare a parte se si vuole una riga davvero compatta).
+
+Verificato: typecheck, lint, build; 7 test mirati (archivio, famiglia, ArchiveFamilies) + 101 su documenti/ricerca/workflow passati, test pagina esteso (etichetta assente nel gruppo, presente nella ricerca). Browser su casa «COLLAUDO V2» (documenti sintetici) desktop e mobile 375 px: nessun overflow orizzontale, editor famiglia aperto e annullato senza salvare. Nessuna scrittura, nessuna AI.
+**Problema preesistente**: 2 test di `src/documents/collectionFilters.test.tsx` falliscono anche su HEAD (cercano i pulsanti di raccolta rimossi dall'archivio unico del 21 ottobre): da aggiornare o eliminare.
+Priorità 3–8 dell'audit restano da decidere.
+
 ## Audit UX/UI browser (sola lettura) — 22 ottobre 2026
 
 Proposta, **nessuna modifica al codice**. Casa «Appartamento Roma» (dati reali, solo consultazione) su `127.0.0.1:5174`, desktop e mobile 375 px: Casa, Documenti (panoramica e gruppi Catasto e Da classificare), Oggetti, Ambienti, Attività, Spese, Rubrica. Nessun overflow orizzontale mobile; nessuna scrittura, caricamento o AI. **Non esaminati**: dialoghi Info, dettaglio documento/oggetto/spesa, caricamento e compilazione, altre due case, Ambienti/Rubrica come schermata (solo testo).

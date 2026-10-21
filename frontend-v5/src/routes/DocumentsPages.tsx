@@ -413,6 +413,7 @@ function DocumentsArchive(props: {
             fileDetailsOpen={restore?.filters===filtersKey(filters)&&restore.openedFiles?.includes(doc.id)||false}
             showTypeCorrection={!!(house&&filters.group==='other'||archive&&(doc.family==='unclassified'||filters.group==='unclassified'))&&props.canUpload}
             archiveFamily={!!archive}
+            inSelectedGroup={!!archive&&filters.group===doc.family}
             canChangeFamily={!!(house||archive)&&props.canUpload&&!selecting&&!aiSelecting}
             onFamilyChanged={props.onFamilyChanged}
             homeId={home.id}
@@ -550,6 +551,7 @@ function exportErrorMessage(error: unknown) {
 function DocumentRow(props: {
   doc: DocumentSummary;
   archiveFamily?:boolean;
+  inSelectedGroup?:boolean;
   showTypeCorrection?:boolean;
   canChangeFamily?:boolean;
   onFamilyChanged:(group:NonNullable<DocumentSearchFilters['group']>)=>void;
@@ -593,10 +595,8 @@ function DocumentRow(props: {
         >
           {title}
         </Link>
-        <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>{props.showTypeCorrection&&<Link className={docs.correctType} to={`/home/${encodeURIComponent(props.homeId)}/documenti/${encodeURIComponent(doc.id)}#doc-classificazione`} state={{documentsSearch:props.backSearch,documentsAccountId:account.id}}>Correggi tipo</Link>}</div>
-        {props.archiveFamily&&<span className={docs.rowFamily}>{familyLabel(doc.family)}</span>}
+        <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>{props.showTypeCorrection&&<Link className={docs.correctType} to={`/home/${encodeURIComponent(props.homeId)}/documenti/${encodeURIComponent(doc.id)}#doc-classificazione`} state={{documentsSearch:props.backSearch,documentsAccountId:account.id}}>Correggi tipo</Link>}{props.archiveFamily&&!props.inSelectedGroup&&<span className={docs.rowFamily}>{familyLabel(doc.family)}</span>}{props.canChangeFamily&&doc.organization&&<ChangeHouseFamily archive={props.archiveFamily} key={doc.id+':'+doc.organization.version} homeId={props.homeId} document={doc} onChanged={props.onFamilyChanged}/>}</div>
         <DocumentRowContext doc={doc} homeId={props.homeId}/>
-        {props.canChangeFamily&&doc.organization&&<ChangeHouseFamily archive={props.archiveFamily} key={doc.id+':'+doc.organization.version} homeId={props.homeId} document={doc} onChanged={props.onFamilyChanged}/>}
         {doc.permissions.includes('read') && (
           <DocumentWorkspaceActions homeId={props.homeId} document={doc}/>
         )}
