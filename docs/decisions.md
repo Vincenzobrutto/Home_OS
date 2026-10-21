@@ -1,6 +1,6 @@
 ## 21 ottobre 2026 — Documento della casa e scheda oggetto restano entità distinte
 
-Per correggere una scheda creata per errore, conservare gli originali esistenti nella vista della casa e togliere i riferimenti personali selezionati. Non convertire una riga oggetto in un file e non eliminare costi: archivio della scheda con rimozione dalle stanze soltanto come opzione esplicita, dopo il riepilogo e se non restano altre risorse. Motivo: correzione comprensibile senza perdita di dati o duplicazioni. [Regole e limiti](v5/house-documents-from-object-20261021.md).
+Per correggere una scheda creata per errore, spostare tutti i suoi documenti esistenti nella vista della casa e archiviare la scheda togliendola dalle stanze, con un’unica conferma dopo il riepilogo. La richiesta successiva dell’utente sostituisce l’archivio facoltativo iniziale: lo spostamento deve far sparire la scheda dagli attivi e includere le fatture. Altri riferimenti generici possono essere rimossi soltanto dopo averli presentati, mantenendo le altre schede e gli stessi costi; fonti inaccessibili e relazioni native restano protette. Motivo: azione coerente e semplice senza perdita di dati o duplicazioni. [Regole e limiti](v5/house-documents-from-object-20261021.md).
 
 ## 21 ottobre 2026 — Proporre il riuso per le fatture successive
 

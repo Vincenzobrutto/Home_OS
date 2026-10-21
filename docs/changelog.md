@@ -1,6 +1,6 @@
 ## Oggetti: conserva documenti nella casa — 21 ottobre 2026
 
-Azione nel menu della scheda con riepilogo, scelta dei documenti e archivio facoltativo con rimozione dalle stanze. Spese e originali preservati, conferma atomica protetta da versione/fonte e idempotenza. [Verifiche e limiti](v5/house-documents-from-object-20261021.md).
+Azione **Sposta in Documenti della casa** con riepilogo, fatture incluse e archivio automatico della scheda con rimozione dalle stanze. Altri collegamenti generici mostrati e rimossi con conferma; altre schede, spese e originali preservati. Conferma atomica protetta da versione/fonte e idempotenza. [Verifiche e limiti](v5/house-documents-from-object-20261021.md).
 
 ## Documenti: consultazione e correzione del tipo — 21 ottobre 2026
 

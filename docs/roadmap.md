@@ -1,6 +1,6 @@
 ## Documenti della casa da scheda oggetto completato — 21 ottobre 2026
 
-Disponibile la conservazione esplicita dei documenti nella casa con archivio facoltativo della scheda errata, senza duplicare fonti o costi. Restano separati unione di schede e trasformazione dei loro dati tecnici. [Regole e verifiche](v5/house-documents-from-object-20261021.md).
+Disponibile lo spostamento di documenti e fatture nella casa con archivio automatico della scheda errata e riepilogo degli altri collegamenti da rimuovere, senza duplicare fonti o costi. Restano separati riferimenti nativi a caldaie, unione di schede e trasformazione dei loro dati tecnici. [Regole e verifiche](v5/house-documents-from-object-20261021.md).
 
 ## Documenti: originale, classificazioni ed esempi completati — 21 ottobre 2026
 

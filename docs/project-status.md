@@ -1,6 +1,6 @@
 ## Documenti della casa da scheda oggetto — 21 ottobre 2026
 
-Nuova azione con riepilogo e conferma: conserva documenti e spese nella casa, rimuove i riferimenti alla scheda e permette di archiviarla facoltativamente togliendola dalle stanze. Fonti/file e importi conservati, blocchi per altri riferimenti ed elaborazioni pendenti, idempotenza e storia. Test isolati e browser desktop/mobile; dati reali invariati. [Comportamento, sicurezza e limiti](v5/house-documents-from-object-20261021.md).
+Azione semplificata **Sposta in Documenti della casa**: un’unica conferma conserva tutti i documenti, comprese le fatture, e archivia sempre la scheda errata togliendola dalle stanze. Altri collegamenti generici vengono elencati prima della conferma e rimossi con consenso; altre schede, file e importi conservati. Fonti non accessibili, riferimenti nativi ed elaborazioni pendenti restano bloccati; idempotenza e storia. Test isolati e browser desktop/mobile; dati reali invariati. [Comportamento, sicurezza e limiti](v5/house-documents-from-object-20261021.md).
 
 ## Documenti: originale e classificazioni più accessibili — 21 ottobre 2026
 
