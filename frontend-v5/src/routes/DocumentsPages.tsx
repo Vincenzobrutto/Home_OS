@@ -1,5 +1,5 @@
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
-import { documentTypeLabels } from '../documents/presentation';
+import { documentTypeLabels,documentDisplayTitle } from '../documents/presentation';
 import { BulkDocumentCompilation } from '../documents/BulkDocumentCompilation';
 import { IntakePage } from '../intake-integration/IntakePage';
 import { DocumentWorkspaceActions } from '../documents/DocumentWorkspaceActions';
@@ -180,7 +180,7 @@ function DocumentsArchive(props: {
   const { home, canExport, filters } = props;
   const account = useAccount(), cache = useQueryClient();
   const viewKey = ['account', account.id, 'home', home.id, 'documents-view'];
-  const [restore] = useState(() => cache.getQueryData<{filters:string;pages:number;y:number;focus?:string}>(viewKey));
+  const [restore] = useState(() => cache.getQueryData<{filters:string;pages:number;y:number;focus?:string;openedFiles?:string[]}>(viewKey));
   const restored = useRef(false);
   const filtered = isFiltered(filters);
   const searchFiltered = isFiltered({...filters,workflow:'all'});
@@ -331,7 +331,7 @@ function DocumentsArchive(props: {
       const target = event.target as HTMLElement;
       const row = target.closest('li');
       if (!row || !target.closest('a,button')) return;
-      cache.setQueryData(viewKey,{filters:filtersKey(filters),pages:documents.data?.pages.length??1,y:window.scrollY,focus:row.querySelector('a[id]')?.id});
+      cache.setQueryData(viewKey,{filters:filtersKey(filters),pages:documents.data?.pages.length??1,y:window.scrollY,focus:row.querySelector('a[id]')?.id,openedFiles:Array.from(event.currentTarget.querySelectorAll<HTMLDetailsElement>('details[data-file-id][open]')).map(details=>details.dataset.fileId!)});
     }}>
       {canExport && props.exportSlot && createPortal(
         <ExportIconButton label={exporter.isPending ? 'Preparazione ZIP…' : 'Esporta ZIP'}
@@ -414,6 +414,7 @@ function DocumentsArchive(props: {
           <DocumentRow
             key={doc.id}
             doc={doc}
+            fileDetailsOpen={restore?.filters===filtersKey(filters)&&restore.openedFiles?.includes(doc.id)||false}
             homeId={home.id}
             backSearch={filtersToParams(filters).toString()}
             selectable={canExport && selecting}
@@ -462,6 +463,7 @@ function exportErrorMessage(error: unknown) {
 
 function DocumentRow(props: {
   doc: DocumentSummary;
+  fileDetailsOpen?:boolean;
   homeId: string;
   /** Filtri applicati, per tornare dal dettaglio agli stessi risultati. */
   backSearch: string;
@@ -473,9 +475,11 @@ function DocumentRow(props: {
   const { doc } = props;
   const account = useAccount();
   const exportable = doc.permissions.includes('export');
+  const title=documentDisplayTitle(doc,'Documento senza titolo'),types=documentTypeLabels(doc.organization);
+  const [fileOpen,setFileOpen]=useState(props.fileDetailsOpen??false);
   return (
     <li className={cx(docs.item, props.selected && docs.itemSelected)}>
-      {props.aiSelectable&&<label className={docs.check}><input type="checkbox" checked={props.aiSelected} disabled={props.aiLocked} onChange={props.onAiToggle} aria-label={`Seleziona «${doc.originalFilename}» per compilazione AI`}/></label>}
+      {props.aiSelectable&&<label className={docs.check}><input type="checkbox" checked={props.aiSelected} disabled={props.aiLocked} onChange={props.onAiToggle} aria-label={`Seleziona «${title}» per compilazione AI`}/></label>}
       {props.selectable && (
         <label className={docs.check} title={exportable ? undefined : 'Non esportabile con i tuoi permessi'}>
           <input
@@ -483,7 +487,7 @@ function DocumentRow(props: {
             checked={props.selected}
             onChange={props.onToggle}
             disabled={!exportable}
-            aria-label={`Seleziona «${doc.name}» per lo ZIP${exportable ? '' : ' (non esportabile)'}`}
+            aria-label={`Seleziona «${title}» per lo ZIP${exportable ? '' : ' (non esportabile)'}`}
           />
         </label>
       )}
@@ -497,18 +501,18 @@ function DocumentRow(props: {
           to={`/home/${encodeURIComponent(props.homeId)}/documenti/${encodeURIComponent(doc.id)}`}
           state={props.backSearch ? { documentsSearch: props.backSearch, documentsAccountId: account.id } : undefined}
         >
-          {doc.name}
+          {title}
         </Link>
-        <span className={docs.meta}>
-          {doc.originalFilename} · {formatLabel(doc.mimeType)} · {formatBytes(doc.byteSize)} · {formatDate(doc.createdAt)}
-          {doc.organization && <span> · {documentTypeLabels(doc.organization).join(' · ')}</span>}
-        </span>
-        <span className={docs.tags}>
-          <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
-        </span>
+        <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag></div>
         {doc.permissions.includes('read') && (
           <DocumentWorkspaceActions homeId={props.homeId} document={doc}/>
         )}
+        <details className={docs.fileDetails} data-file-id={doc.id} open={fileOpen} onToggle={e=>setFileOpen(e.currentTarget.open)}><summary aria-label={'Dettagli del file: '+title}>Dettagli del file</summary><dl>
+          <div><dt>Nome originale</dt><dd>{doc.originalFilename}</dd></div>
+          <div><dt>Formato</dt><dd>{formatLabel(doc.mimeType)}</dd></div>
+          <div><dt>Dimensione</dt><dd>{formatBytes(doc.byteSize)}</dd></div>
+          <div><dt>Caricato il</dt><dd>{formatDate(doc.createdAt)}</dd></div>
+        </dl></details>
       </div>
     </li>
   );

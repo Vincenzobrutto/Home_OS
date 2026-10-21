@@ -10,11 +10,11 @@ const states = {
   attention: ['Analisi da controllare', 'Apri il documento per controllare l’esito dell’analisi.', 'error', 'alert'],
 } as const;
 
-export function DocumentWorkflowStatus({ state }: { state?: DocumentWorkflowState }) {
-  if (!state) return <div className={styles.workflowStatus}><span className={styles.statusBadge}>Stato non disponibile</span><small>Apri la scheda per verificare.</small></div>;
+export function DocumentWorkflowStatus({ state,compact=false }: { state?: DocumentWorkflowState;compact?:boolean }) {
+  if (!state) return <div className={styles.workflowStatus}><span className={styles.statusBadge}>Stato non disponibile</span>{!compact&&<small>Apri la scheda per verificare.</small>}</div>;
   const [label, hint, tone, icon] = states[state];
   return <div className={styles.workflowStatus} aria-label={`Stato: ${label}`}>
     <span className={`${styles.statusBadge} ${styles[tone]}`}><Icon name={icon}/>{label}</span>
-    <small>{hint}</small>
+    {!compact&&<small>{hint}</small>}
   </div>;
 }

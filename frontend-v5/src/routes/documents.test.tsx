@@ -78,7 +78,10 @@ describe('[mock] Documenti — archivio', () => {
     expect(screen.queryByRole('link', { name: 'Analizza documenti' })).not.toBeInTheDocument();
     const first = within(list).getAllByRole('listitem')[0]!;
     expect(first).toHaveTextContent('Documento 25');
-    expect(first).toHaveTextContent(/PDF · \d+ B/);
+    expect(within(first).getByText('PDF')).not.toBeVisible();
+    await app.user.click(within(first).getByText('Dettagli del file',{exact:true}));
+    expect(within(first).getByText('PDF')).toBeVisible();
+    expect(first).toHaveTextContent(/Dimensione\d+ B/);
     expect(first).toHaveTextContent('Da compilare');
     expect(first).toHaveTextContent('Persone della casa');
     expect(first).not.toHaveTextContent('Caricamento manuale');
@@ -494,4 +497,15 @@ describe('[mock] Documenti — sessione e contesto', () => {
     expect(screen.queryByText(/per-casa-roma/)).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Carica documento' })).not.toBeInTheDocument();
   });
+});
+
+it('compact document row keeps file metadata on demand, restores the open disclosure and reads the original without writes',async()=>{
+ const {backend,owner,home}=documentsWorld();const filename='26e90b5602ac295807c9c20932b85b70.pdf';
+ await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Bolletta dicembre',originalFilename:filename,workflowState:'completed'});
+ const app=await openDocuments(backend,owner.email,PW.owner,home.id);const list=await screen.findByRole('list',{name:'Documenti di Casa Roma'});let row=within(list).getAllByRole('listitem')[0]!;
+ expect(within(row).getByRole('link',{name:'Bolletta dicembre'})).toBeVisible();expect(within(row).getByLabelText('Stato: Completato')).toBeVisible();expect(within(row).getByText(filename)).not.toBeVisible();expect(within(row).getByText('Tipo non indicato')).toBeVisible();
+ await app.user.click(within(row).getByText('Dettagli del file',{exact:true}));expect(within(row).getByText(filename)).toBeVisible();
+ await app.user.click(within(row).getByRole('button',{name:'Vedi dettagli'}));await screen.findByRole('heading',{level:1,name:'Bolletta dicembre'});await app.user.click(screen.getByRole('link',{name:/← Documenti di/}));
+ row=within(await screen.findByRole('list',{name:'Documenti di Casa Roma'})).getAllByRole('listitem')[0]!;await waitFor(()=>expect(within(row).getByText(filename)).toBeVisible());await waitFor(()=>expect(within(row).getByRole('link',{name:'Bolletta dicembre'})).toHaveFocus());
+ await app.user.click(within(row).getByText('Altre azioni',{exact:true}));await app.user.keyboard('{Escape}');expect(within(row).getByLabelText('Altre azioni per Bolletta dicembre').closest('details')).not.toHaveAttribute('open');await app.user.click(within(row).getByText('Altre azioni',{exact:true}));await app.user.click(within(row).getByRole('button',{name:'Vedi originale'}));expect(await within(row).findByLabelText('Documento originale')).toBeVisible();expect(within(row).getByLabelText('Altre azioni per Bolletta dicembre').closest('details')).not.toHaveAttribute('open');expect(backend.log.some(r=>r.method==='POST'&&/documents|jobs|onboarding/.test(r.path))).toBe(false);
 });

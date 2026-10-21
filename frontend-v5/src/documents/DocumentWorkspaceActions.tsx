@@ -8,6 +8,7 @@ import { newIdempotencyKey } from '../api/queryKeys';
 import { filtersFromParams, filtersToParams } from '../lib/documentSearch';
 import { userMessage } from '../api/errors';
 import { DocumentWorkflowStatus } from './DocumentWorkflowStatus';
+import {documentDisplayTitle} from './presentation';
 import { ui } from '../components/ui';
 import { IntakeClient } from '../intake-integration/client';
 import { IntakePage } from '../intake-integration/IntakePage';
@@ -35,12 +36,16 @@ export function DocumentWorkspaceActions({homeId,document:doc}:{homeId:string;do
  }
  function close(){setParams(previous=>{const next=new URLSearchParams(previous);for(const key of ['lotto','oggetti-documento','oggetti-bozza','oggetti-analisi','compila'])next.delete(key);return next;});}
  async function remove(){if(busy)return;setBusy(true);setError('');try{await api.callJson(`/homes/${homeId}/documents/${doc.id}/removal`,{method:'POST',body:{expectedVersion:doc.version},accountId:account.id,idempotencyKey:key.current});if(live.current){setRemoving(false);await cache.invalidateQueries({queryKey:['account',account.id,'home',homeId]});}}catch(e){if(live.current)setError(userMessage(e));}finally{if(live.current)setBusy(false);}}
+ const menuRef=useRef<HTMLDetailsElement>(null);
+ const closeMenu=()=>{if(menuRef.current){menuRef.current.open=false;menuRef.current.querySelector('summary')?.focus();}};
  const house=houseDocumentType(doc.originalFilename+' '+doc.name,doc.organization?.parts.map(p=>p.kind));
- return <div className={styles.workspace}>
-  <div className={styles.workspaceHeader}><DocumentWorkflowStatus state={doc.workflowState}/><div className={styles.toolbarActions}>
+ return <div className={`${styles.workspace} ${styles.compactWorkspace}`}>
+  <div className={styles.workspaceHeader}><DocumentWorkflowStatus compact state={doc.workflowState}/><div className={styles.toolbarActions}>
    {editable&&<DocumentCompilationActions compact backSearch={filtersToParams({...filtersFromParams(params),workflow:params.get('workflow')==='to_compile'?'to_compile':params.get('workflow')==='review'?'review':params.get('workflow')==='completed'?'completed':params.get('workflow')==='pending'?'pending':params.get('workflow')==='all'||params.get('q')?'all':'pending'}).toString()} workflowState={doc.workflowState} houseDocument={!!house} homeId={homeId} documentId={doc.id} documentKind={doc.organization?.parts.every(p=>p.kind==='utility_bill')?'utility_bill':undefined} onOpen={(mode,draft)=>void open(mode,draft)}/>}
-   <button type="button" className={ui.btn} onClick={()=>setOriginal(v=>!v)} aria-expanded={original}>{original?'Chiudi originale':'Vedi originale'}</button>
-   {editable&&<details className={styles.documentMenu}><summary aria-label={'Altre azioni per '+doc.originalFilename}>Altre azioni</summary><button type="button" className={ui.btn} onClick={()=>{setError('');setRemoving(true);}}>Elimina</button></details>}
+   <details ref={menuRef} className={styles.documentMenu} onKeyDown={e=>{if(e.key==='Escape'){e.preventDefault();closeMenu();}}}><summary aria-label={'Altre azioni per '+documentDisplayTitle(doc,'Documento senza titolo')}>Altre azioni</summary><div className={styles.documentMenuItems}>
+    <button type="button" className={ui.btn} onClick={()=>{setOriginal(v=>!v);closeMenu();}} aria-expanded={original}>{original?'Chiudi originale':'Vedi originale'}</button>
+    {editable&&<button type="button" className={ui.btn} onClick={()=>{setError('');setRemoving(true);closeMenu();}}>Elimina</button>}
+   </div></details>
   </div></div>
   {opening&&<p role="status">Apertura della scheda…</p>}{error&&<p role="alert">{error}</p>}
   {original&&<Original homeId={homeId} documentId={doc.id}/>}

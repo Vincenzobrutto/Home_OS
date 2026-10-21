@@ -18,3 +18,7 @@ describe('presentazione dei documenti senza modificare i dati', () => {
     expect(documentTypeLabels({ ...organization, parts: [] })).toEqual(['Pratiche edilizie']);
   });
 });
+
+it('archive fallback for hash-only titles never replaces a readable or confirmed title',()=>{
+ expect(documentDisplayTitle({name:'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.pdf'},'Documento senza titolo')).toBe('Documento senza titolo');expect(documentDisplayTitle({name:'Contratto di locazione'},'Documento senza titolo')).toBe('Contratto di locazione');
+});

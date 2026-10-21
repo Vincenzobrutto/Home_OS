@@ -3,11 +3,11 @@ import { KIND_LABEL } from '../document-intake/model';
 import { COLLECTION_OPTIONS } from '../lib/documentSearch';
 
 /** Prefer the user's confirmed title. Never derive document facts from expense data. */
-export function documentDisplayTitle(doc: Pick<DocumentSummary, 'name' | 'organization'>) {
+export function documentDisplayTitle(doc: Pick<DocumentSummary, 'name' | 'organization'>,fallback='Documento collegato') {
   const title = doc.organization?.title.trim() || doc.name.trim();
   return /^(?:[a-f\d]{24,}|[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12})(?:\.[a-z\d]+)?$/i.test(title)
-    ? 'Documento collegato'
-    : title || 'Documento collegato';
+    ? fallback
+    : title || fallback;
 }
 
 /** Specific confirmed types, rather than a parent collection mistaken for a type. */
