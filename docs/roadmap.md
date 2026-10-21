@@ -1,3 +1,7 @@
+## Recupero bozze e collegamento Ambienti — 21 ottobre 2026
+
+Avviso e Riprova salvataggio nella barra sempre visibile, focus sull’errore e recupero idempotente preservato. Gestisci ambienti non si sposta al focus e apre al primo clic. [Comportamento e verifiche](v5/ux-recovery-fixes-20261021.md). Frontend soltanto; dati reali intatti.
+
 ## Documenti: Salva bozza ed esci — 21 ottobre 2026
 
 Bozza esplicita anche incompleta, ripresa dalla stessa scheda, nessuna spesa/oggetto/contatto creato e nessun invio AI. Errori e risposte perse conservano il modulo; altre uscite mantengono l’avviso. [Comportamento, verifiche e limiti](v5/compilation-draft-20261021.md). Sostituisce il rinvio delle bozze nei resoconti precedenti; nessun autosalvataggio.

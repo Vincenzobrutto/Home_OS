@@ -27,3 +27,5 @@ Browser con componenti di produzione e API isolate: desktop 1440×1000 e mobile 
 ## Limiti
 
 Il salvataggio richiede connessione e rimane manuale. La nuova funzione riguarda il modulo unico Documenti: non modifica gli altri flussi di bozze (planimetrie, ricevute e moduli storici). Le modifiche non salvate prima di una nuova precompilazione AI continuano a essere separate dalla nuova proposta. Nessun collaudo DB reale eseguito per evitare scritture ai dati personali.
+
+Il successivo [intervento su errore e recupero](ux-recovery-fixes-20261021.md) rende avviso e azione sempre visibili e gestisce il focus dopo un fallimento.

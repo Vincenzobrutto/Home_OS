@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { DocumentEditorContext } from '../documents/DocumentEditorContext';
-import { useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { ApiClient } from '../api/client';
 import { ui } from '../components/ui';
@@ -9,7 +9,9 @@ import type { Draft, Form } from './model';
 import { reviewIssues, reviewProblem, reviewTotals } from './reviewSummary';
 import styles from './onboarding.module.css';
 
+export type DraftSaveFailure={message:string;uncertain:boolean};
 type Props = {
+  draftSaveFailure?:DraftSaveFailure|null;retryDraftSave?:()=>void;busy?:boolean;
   documentOnly?:boolean; changeDocumentOnly?:(value:boolean)=>void; documentProblem?:string;
   draft: Draft; forms: Record<string, Form>; api: ApiClient; accountId: string; base: string; root: string;
   disabled: boolean; documentFields?: ReactNode; copyChoice?: { checked: boolean; change: (checked: boolean) => void };
@@ -18,8 +20,10 @@ type Props = {
   contactFields?:ReactNode;houseFields?:ReactNode;houseProblem?:string;houseTotals?:{newExpenses:number;amountCents:number};
   manualTotal?: string; changeManualTotal?: (value: string) => void;
 };
-export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentProblem,draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, saveDraft, defer, add, enrich, manualTotal, changeManualTotal,contactFields,houseFields,houseProblem,houseTotals }: Props) {
+export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentProblem,draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, saveDraft, draftSaveFailure,retryDraftSave,busy=false,defer, add, enrich, manualTotal, changeManualTotal,contactFields,houseFields,houseProblem,houseTotals }: Props) {
   const editor=useContext(DocumentEditorContext);
+  const saveErrorRef=useRef<HTMLDivElement>(null);
+  useEffect(()=>{if(draftSaveFailure)saveErrorRef.current?.focus({preventScroll:true});},[draftSaveFailure]);
   const metadataRef=useRef<HTMLDivElement>(null);
   const issues=documentOnly?[]:reviewIssues(draft,forms);
   const items = (documentOnly?[]:draft.items).filter(item => (!item.decision || item.decision.state === 'deferred')&&!(draft.documentInfo?.kind==='conformity_declaration'&&forms[item.id]?.action==='document_only'));
@@ -67,6 +71,19 @@ export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentPr
       </ul></div>}
     </section>
     {editor&&<p className={ui.hint}>Salva una bozza per riprendere da qui, anche se mancano dei dati. Nessuna spesa, oggetto o contatto verrà registrato.</p>}
-    <div data-editor-save={editor?"true":undefined} className={editor?styles.saveBar:styles.row}>{editor&&problem&&<span className={styles.saveProblem} role="status">{documentProblem??issues[0]?.message??problem}</span>}{editor&&<button type="button" className={ui.btn} disabled={disabled} onClick={()=>void saveDraft?.()}>Salva bozza ed esci</button>}{!editor&&!!items.length&&<button type="button" className={ui.btn} disabled={disabled} onClick={defer}>Decidi più avanti</button>}<button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || (!documentOnly&&!items.length&&!draft.documentInfo&&!draft.houseExpenses?.length)} onClick={save}>{documentOnly?'Salva documento':totals.newExpenses>0&&totals.newObjects===0&&totals.linkedObjects===0?'Registra spesa':editor?'Salva e continua':'Salva e organizza'}</button></div>
+    <div data-editor-save={editor?"true":undefined} data-draft-save-failure={editor&&draftSaveFailure?"true":undefined} className={editor?styles.saveBar:styles.row}>
+      {editor&&draftSaveFailure?<>
+        <div ref={saveErrorRef} tabIndex={-1} role="alert" aria-label="Salvataggio bozza" className={styles.saveFailure}>
+          <strong>{draftSaveFailure.uncertain?'Salvataggio da verificare':'Bozza non salvata'}</strong>
+          <span>{draftSaveFailure.message}</span>
+        </div>
+        <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy} onClick={draftSaveFailure.uncertain?retryDraftSave:saveDraft}>{busy?'Salvataggio in corso…':'Riprova salvataggio'}</button>
+      </>:<>
+        {editor&&problem&&<span className={styles.saveProblem} role="status">{documentProblem??issues[0]?.message??problem}</span>}
+        {editor&&<button type="button" className={ui.btn} disabled={disabled} onClick={()=>void saveDraft?.()}>Salva bozza ed esci</button>}
+        {!editor&&!!items.length&&<button type="button" className={ui.btn} disabled={disabled} onClick={defer}>Decidi più avanti</button>}
+        <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || (!documentOnly&&!items.length&&!draft.documentInfo&&!draft.houseExpenses?.length)} onClick={save}>{documentOnly?'Salva documento':totals.newExpenses>0&&totals.newObjects===0&&totals.linkedObjects===0?'Registra spesa':editor?'Salva e continua':'Salva e organizza'}</button>
+      </>}
+    </div>
   </section>;
 }

@@ -69,7 +69,7 @@ describe('[mock] G1 — promemoria collegato e focus', () => {
 });
 
 describe('[mock] G1 — ingresso, capabilities e ambienti', () => {
-  it('Casa: ambienti condivisi e link, senza conteggi; Casa resta attiva nei sottopercorsi', async () => {
+  it('Casa: ambienti condivisi e link, senza conteggi; Ambienti diventa la sezione attiva', async () => {
     const { backend, member, home } = world();
     await seedRoom(backend, member.id, home.id, 'Soggiorno');
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/casa`);
@@ -79,7 +79,8 @@ describe('[mock] G1 — ingresso, capabilities e ambienti', () => {
     await screen.findByRole('heading', { level: 1, name: 'Ambienti' });
     expect(await screen.findByRole('link',{name:'Soggiorno'})).toBeInTheDocument();
     const nav = screen.getAllByRole('navigation', { name: 'Sezioni di Casa Roma' })[0]!;
-    expect(within(nav).getByRole('link', { name: /Casa/ })).toHaveAttribute('aria-current', 'page');
+    expect(within(nav).getByRole('link', { name: 'Ambienti' })).toHaveAttribute('aria-current', 'page');
+    expect(within(nav).getByRole('link', { name: 'Casa' })).not.toHaveAttribute('aria-current');
   });
 
   it('capabilities 404: «non ancora attivi», nessuna azione; 503: errore con Riprova', async () => {
@@ -289,7 +290,7 @@ describe('[mock] G1 — oggetti, posizione e catalogo', () => {
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/oggetti?q=forno`);
     await app.user.click(await screen.findByRole('link', { name: 'Forno' }));
     await screen.findByRole('heading', { level: 1, name: 'Forno' });
-    await app.user.click(screen.getByRole('link', { name: /Oggetti e impianti/ }));
+    await app.user.click(screen.getByRole('link', { name: '← Oggetti e impianti' }));
     await waitFor(() => expect(app.router.state.location.search).toBe('?q=forno'));
   });
 

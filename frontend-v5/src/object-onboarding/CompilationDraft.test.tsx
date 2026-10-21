@@ -6,6 +6,7 @@ import {it,expect,vi} from 'vitest';
 import {DocumentObjectProposals} from './OnboardingPage';
 import {DocumentEditorContext} from '../documents/DocumentEditorContext';
 import {queryKeys} from '../api/queryKeys';
+import {ApiError} from '../api/errors';
 import type {Draft} from './model';
 const mocks=vi.hoisted(()=>({callJson:vi.fn(),getDocument:vi.fn()}));
 vi.mock('../session/session',()=>({useAccount:()=>({id:'account'}),useApi:()=>mocks}));
@@ -13,7 +14,7 @@ vi.mock('../routes/HomePages',()=>({useCurrentHome:()=>({id:'home',name:'Casa fi
 function setup(extras=false){
  const wire:Draft={id:'draft',version:1,state:'open',mode:'manual',snapshot:{documentId:'doc',documentVersion:1,sha256:'a'.repeat(64)},document:{id:'doc',name:'Prova',mimeType:'application/pdf'},documentKind:'utility_bill',items:[],needsReview:false,purchaseTotal:null,review:null,permissions:['read','edit'],houseExpenses:[{id:'cost',documentKind:'utility_bill',proposedFields:{},amountCandidates:[],amountSelectionRequired:true,decision:null}]};
  if(extras){wire.mode='extraction';wire.documentKind='purchase_document';wire.documentInfo={kind:'invoice',title:{value:'Fattura',source:{documentId:'doc',page:1,excerpt:'Fattura'}},facts:[]};wire.items=[{id:'item',fields:{name:{value:'Oggetto fittizio',source:{documentId:'doc',page:1,excerpt:'Oggetto'}}},quantity:null,nameTruncated:false,disposition:'household_object',profile:{},enrichment:null,decision:null}];wire.contacts=[{id:'contact',values:{name:'Impresa fittizia',kind:'company',profession:null,phone:null,email:null,fiscalId:null,note:null},sources:{},warnings:[],resolution:{state:'create',contact:null,candidates:[],conflicts:[]},decision:null}];wire.houseExpenses=[];}
- let fail=false,lost=false;const keys=new Map<string,unknown>();
+ let fail=false,lost=false,reject=false;const keys=new Map<string,unknown>();
  mocks.getDocument.mockResolvedValue({id:'doc',name:'Bolletta fittizia',organization:null});
  mocks.callJson.mockReset().mockImplementation(async(path:string,options:{method?:string;body?:{review:Draft['review']};idempotencyKey?:string}={})=>{
   if(path.includes('/capabilities'))return {manualAvailable:true,aiAvailable:false,drafts:[{id:wire.id,state:'open',mode:'manual',hasSavedCompilation:!!wire.review?.compilation}],job:null};
@@ -21,6 +22,7 @@ function setup(extras=false){
   if(path.includes('/expense-candidates'))return {items:[],nextCursor:null};
   if(options.method==='POST'){
    if(!path.endsWith('/review'))throw Error('Canonical writes forbidden in draft test');
+   if(reject){reject=false;throw new ApiError({kind:'http',status:422,code:'validation_error',message:'Controlla i dati della bozza.'});}
    if(fail){fail=false;return Promise.reject(new Error('Connessione interrotta'));}
    if(!keys.has(options.idempotencyKey!)){wire.review=options.body!.review;wire.version++;keys.set(options.idempotencyKey!,true);}
    if(lost){lost=false;throw Error('Risposta persa');}
@@ -31,7 +33,7 @@ function setup(extras=false){
  function Editor(){const navigate=useNavigate();return <DocumentEditorContext.Provider value={{pause:saved=>{pause(saved);if(saved)navigate('/saved');},complete:vi.fn(),showOriginal:vi.fn()}}><DocumentObjectProposals documentId="doc" beforeConfirm={beforeConfirm} singleScreen/></DocumentEditorContext.Provider>;}
  function mount(){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});cache.setQueryData(queryKeys.session,{account:{id:'account'}});return render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/?oggetti-documento=doc&oggetti-bozza=draft&compila=manuale']}><Routes><Route path="/" element={<Editor/>}/><Route path="/saved" element={<p>Elenco fittizio</p>}/></Routes></MemoryRouter></QueryClientProvider>);}
 
- mount();return {wire,pause,beforeConfirm,mount,user:userEvent.setup(),fail:()=>{fail=true;},lose:()=>{lost=true;}};
+ mount();return {wire,pause,beforeConfirm,mount,user:userEvent.setup(),fail:()=>{fail=true;},lose:()=>{lost=true;},reject:()=>{reject=true;}};
 }
 it('saves and restores incomplete inputs, metadata and both bill period modes without confirmation or AI',async()=>{
  const w=setup();await screen.findByRole('button',{name:'Salva bozza ed esci'});
@@ -51,8 +53,8 @@ it('saves and restores incomplete inputs, metadata and both bill period modes wi
 });
 it.each(['failure','lost'] as const)('keeps inputs on %s and replays the same review with the same key',async(kind)=>{
  const w=setup();await w.user.type(await screen.findByLabelText('Fornitore'),'Da conservare');if(kind==='failure')w.fail();else w.lose();
- await w.user.click(screen.getByRole('button',{name:'Salva bozza ed esci'}));await screen.findByText('Salvataggio della bozza da verificare. I dati restano qui: riprova prima di uscire.');expect(w.pause).not.toHaveBeenCalled();expect(screen.getByLabelText('Fornitore')).toHaveValue('Da conservare');
- await w.user.click(screen.getByRole('button',{name:'Verifica ripetendo la stessa richiesta'}));await waitFor(()=>expect(w.pause).toHaveBeenCalledWith(true));await screen.findByText('Elenco fittizio');
+ await w.user.click(screen.getByRole('button',{name:'Salva bozza ed esci'}));const notice=await screen.findByRole('alert',{name:'Salvataggio bozza'});await waitFor(()=>expect(notice).toHaveFocus());expect(notice).toHaveTextContent('Salvataggio da verificare');expect(screen.queryByRole('button',{name:'Registra spesa'})).not.toBeInTheDocument();expect(mocks.callJson.mock.calls.filter(([,o])=>o?.method==='POST')).toHaveLength(1);expect(w.pause).not.toHaveBeenCalled();expect(screen.getByLabelText('Fornitore')).toHaveValue('Da conservare');
+ await w.user.click(screen.getByRole('button',{name:'Riprova salvataggio'}));await waitFor(()=>expect(w.pause).toHaveBeenCalledWith(true));await screen.findByText('Elenco fittizio');
  const posts=mocks.callJson.mock.calls.filter(([,o])=>o?.method==='POST');expect(posts).toHaveLength(2);expect(posts[0]).toEqual(posts[1]);expect(w.wire.version).toBe(2);expect(w.beforeConfirm).not.toHaveBeenCalled();
 });
 
@@ -66,4 +68,11 @@ it('preserves object and incomplete contact edits even when saving document-only
 
 it('restores deliberately empty document title and type rather than falling back to AI proposals',async()=>{
  const w=setup(true);await w.user.clear(await screen.findByLabelText('Titolo del documento'));await w.user.selectOptions(screen.getByLabelText('Tipo del documento'),'');await w.user.click(screen.getByRole('button',{name:'Salva bozza ed esci'}));await screen.findByText('Elenco fittizio');cleanup();w.mount();expect(await screen.findByLabelText('Titolo del documento')).toHaveValue('');expect(screen.getByLabelText('Tipo del documento')).toHaveValue('');expect(w.beforeConfirm).not.toHaveBeenCalled();
+});
+
+it('a repeated recovery failure refocuses the visible alert and preserves the original request',async()=>{
+ const w=setup();await w.user.type(await screen.findByLabelText('Fornitore'),'Da conservare');w.fail();await w.user.click(screen.getByRole('button',{name:'Salva bozza ed esci'}));await screen.findByRole('alert',{name:'Salvataggio bozza'});w.fail();await w.user.click(screen.getByRole('button',{name:'Riprova salvataggio'}));await waitFor(()=>expect(screen.getByRole('alert',{name:'Salvataggio bozza'})).toHaveFocus());expect(screen.getByLabelText('Fornitore')).toHaveValue('Da conservare');const posts=mocks.callJson.mock.calls.filter(([,o])=>o?.method==='POST');expect(posts).toHaveLength(2);expect(posts[0]).toEqual(posts[1]);expect(w.pause).not.toHaveBeenCalled();
+});
+it('a definite rejection remains visible and permits correcting inputs before a fresh draft save',async()=>{
+ const w=setup();await w.user.type(await screen.findByLabelText('Fornitore'),'Prima');w.reject();await w.user.click(screen.getByRole('button',{name:'Salva bozza ed esci'}));const alert=await screen.findByRole('alert',{name:'Salvataggio bozza'});await waitFor(()=>expect(alert).toHaveFocus());expect(alert).toHaveTextContent('Bozza non salvata');expect(alert).toHaveTextContent('Controlla i dati della bozza.');expect(screen.getByLabelText('Fornitore')).toBeEnabled();await w.user.clear(screen.getByLabelText('Fornitore'));await w.user.type(screen.getByLabelText('Fornitore'),'Corretto');await w.user.click(screen.getByRole('button',{name:'Riprova salvataggio'}));await screen.findByText('Elenco fittizio');const posts=mocks.callJson.mock.calls.filter(([,o])=>o?.method==='POST');expect(posts).toHaveLength(2);expect(posts[0]![1].idempotencyKey).not.toBe(posts[1]![1].idempotencyKey);expect(w.wire.review?.compilation?.houseForms.cost?.supplier).toBe('Corretto');expect(w.beforeConfirm).not.toHaveBeenCalled();
 });

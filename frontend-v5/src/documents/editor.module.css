@@ -20,3 +20,5 @@
 
 .mobileViews,.mobileQueue{display:none}
 @media(max-width:600px){.mobileViews{display:flex;gap:8px;margin:12px 0;position:sticky;top:0;background:var(--color-surface);padding:8px 0;z-index:4}.mobileViews button{flex:1;min-height:44px}.mobileViews button[aria-pressed="true"]{background:var(--color-accent);color:var(--color-surface)}.mobileQueue{display:grid;gap:8px}.queue nav,.queue h2{display:none}.queue>button{margin-bottom:8px}.formView>.preview,.originalView>.form{display:none}.originalView>.queue{display:none}.originalView .preview{position:static}.preview .back{display:none}}
+
+@media(max-width:800px){.editor:has([data-draft-save-failure]){padding-bottom:220px}}
