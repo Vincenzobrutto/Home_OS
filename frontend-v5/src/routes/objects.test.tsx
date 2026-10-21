@@ -141,13 +141,16 @@ describe('[mock] G1 — ingresso, capabilities e ambienti', () => {
     expect(posts(backend, /\/updates$/)[0]!.body).toEqual({ expectedVersion: 1, note: 'Con finestra' });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Modifica' })).toHaveFocus());
 
+    const actions = screen.getByRole('button', { name: 'Altre azioni dell’ambiente' });
+    await app.user.click(actions);
     const archive = screen.getByRole('button', { name: 'Archivia' });
     await app.user.click(archive);
     await screen.findByRole('dialog', { name: 'Archivia ambiente' });
     await app.user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(archive).toHaveFocus();
-    await app.user.click(archive);
+    expect(actions).toHaveFocus();
+    await app.user.click(actions);
+    await app.user.click(screen.getByRole('button', { name: 'Archivia' }));
     const dialog = await screen.findByRole('dialog', { name: 'Archivia ambiente' });
     await app.user.click(within(dialog).getByRole('button', { name: 'Archivia ambiente' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Ripristina' })).toHaveFocus());
@@ -570,6 +573,33 @@ describe('[mock] filtri stanza compatti', () => {
     expect(within(list).getByRole('link',{name:'Z cucina'})).toHaveTextContent('1 oggetto');
     expect(posts(backend,/objects|rooms/)).toHaveLength(0);
   });
+});
+
+it('dettaglio Ambiente: schede, totale personale, altre stanze e paginazione con focus', async () => {
+ const {backend,owner,member,home}=world();
+ const room=await seedRoom(backend,owner.id,home.id,'Cucina','kitchen');
+ const second=await seedRoom(backend,owner.id,home.id,'Soggiorno','living');
+ for(let i=1;i<=22;i++)await seedObject(backend,owner.id,home.id,`Oggetto ${String(i).padStart(2,'0')}`,{roomIds:i===22?[room.id,second.id]:[room.id]});
+ await seedObject(backend,member.id,home.id,'Privato altrui',{roomIds:[room.id]});
+ const app=await open(backend,owner.email,PW.owner,`/home/${home.id}/ambienti/${room.id}`);
+ const list=await screen.findByRole('list',{name:'Oggetti in questo ambiente'});
+ expect(within(list).getAllByRole('link')).toHaveLength(20);
+ expect(screen.getByRole('heading',{name:'I tuoi oggetti 22'})).toBeInTheDocument();
+ expect(within(list).getByText('Anche in: Soggiorno')).toBeInTheDocument();
+ expect(within(list).queryByText('Privato altrui')).not.toBeInTheDocument();
+ await app.user.click(screen.getByRole('button',{name:'Mostra altri oggetti'}));
+ await waitFor(()=>expect(within(list).getAllByRole('link')).toHaveLength(22));
+ expect(within(list).getAllByRole('link')[20]).toHaveFocus();
+ expect(screen.getByRole('status')).toHaveTextContent('Aggiunti 2 oggetti · 22 caricati');
+ await app.user.click(screen.getByRole('button',{name:'Altre azioni dell’ambiente'}));
+ await app.user.keyboard('{Escape}');
+ expect(screen.getByRole('button',{name:'Altre azioni dell’ambiente'})).toHaveFocus();
+ expect(screen.queryByRole('button',{name:'Archivia'})).not.toBeInTheDocument();
+ await app.user.click(screen.getByRole('button',{name:'Modifica'}));
+ expect(screen.getByRole('button',{name:'Altre azioni dell’ambiente'})).toBeDisabled();
+ await app.user.click(within(screen.getByRole('form',{name:'Modifica ambiente'})).getByRole('button',{name:'Annulla'}));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Modifica'})).toHaveFocus());
+ expect(posts(backend,/objects|rooms/)).toHaveLength(0);
 });
 
 it('schede Ambienti: ricerca, contenuto personale, archivio e ritorno dal dettaglio senza scritture', async () => {

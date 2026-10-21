@@ -33,13 +33,13 @@ function Glyph({item}:{item:CatalogItem}){
  return <Icon size={44} weight="regular" aria-hidden="true"/>;
 }
 function date(value:string){return new Intl.DateTimeFormat('it-IT',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));}
-export function CatalogTile({item,homeId,state,today,onOpen}:{item:CatalogItem;homeId:string;state:unknown;today?:string;onOpen:()=>void}){
+export function CatalogTile({item,homeId,state,today,onOpen,contextRoomId}:{item:CatalogItem;homeId:string;state:unknown;today?:string;onOpen:()=>void;contextRoomId?:string}){
  const brand=item.summary?.brand??item.profile?.fields.brand?.value,model=item.summary?.model??item.profile?.fields.model?.value;
  const subtitle=[brand,model].filter(Boolean).join(' · '),notice=catalogNotice(item,today);
  return <li className={styles.tile}><Link id={`catalog-${item.ref.kind}-${item.ref.id}`} to={objectPath(homeId,item.ref)} state={state} className={styles.tileLink} aria-label={item.name} onClick={onOpen}>
   <span className={styles.visual}><Glyph item={item}/></span><span className={styles.body}>
    <strong className={styles.name}>{item.name}</strong><span className={styles.brand}>{subtitle||typeLabel(item)}</span>
-   <span className={styles.room}>{roomsText(item.position.rooms)}</span>{item.state==='archived'&&<span className={styles.archived}>Archiviato</span>}
+   {(!contextRoomId||item.position.rooms.some(r=>r.id!==contextRoomId))&&<span className={styles.room}>{contextRoomId?'Anche in: ':''}{roomsText(contextRoomId?item.position.rooms.filter(r=>r.id!==contextRoomId):item.position.rooms)}</span>}{item.state==='archived'&&<span className={styles.archived}>Archiviato</span>}
   </span>
   {notice&&<span className={`${styles.notice} ${notice.urgent?styles.urgent:''}`}><CalendarBlank size={18} aria-hidden="true"/><span><span>{notice.overdue?'Attività scaduta · ':''}{notice.label}</span><strong>{date(notice.date)}</strong></span></span>}
   <ArrowRight className={styles.arrow} size={18} aria-hidden="true"/>

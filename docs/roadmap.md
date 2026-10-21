@@ -1,3 +1,7 @@
+## Dettaglio Ambiente compatto — 21 ottobre 2026
+
+Completata la proposta approvata: testata e schede coerenti con Oggetti, azioni e dati secondari riordinati senza perdere funzionalità. [Verifiche e limiti](v5/room-detail-20261021.md). Dati reali intatti.
+
 ## Ambienti a schede — 21 ottobre 2026
 
 Completata la proposta approvata desktop/mobile: schede come Oggetti, ricerca, filtri e funzionalità esistenti conservate. [Verifiche e limiti](v5/room-cards-20261021.md). Nessuna modifica ai dati reali.

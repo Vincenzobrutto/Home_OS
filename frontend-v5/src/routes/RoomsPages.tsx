@@ -3,20 +3,26 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { MagnifyingGlass } from '@phosphor-icons/react/dist/csr/MagnifyingGlass';
 import { X } from '@phosphor-icons/react/dist/csr/X';
+import { DotsThree } from '@phosphor-icons/react/dist/csr/DotsThree';
+import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple';
+import { useAppendPage } from '../lib/useAppendPage';
+import { CatalogTile } from '../objects/CatalogTile';
+import detail from '../objects/detail.module.css';
+import roomDetail from './room-detail.module.css';
 import { Blueprint } from '@phosphor-icons/react/dist/csr/Blueprint';
 import type { Home, ObjectCapabilities, Room, RoomFilters } from '../api/types';
 import { Icon } from '../components/Icon';
 import { Banner, ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import { G1History } from '../objects/History';
-import { RoomForm, StateDialog, objectStyles as styles, roomsText, typeLabel } from '../objects/components';
+import { RoomForm, StateDialog, objectStyles as styles } from '../objects/components';
 import { useCatalog, useForgetObjects, useObjectCapabilities, useRoom, useRoomHistory, useRooms } from '../objects/hooks';
-import { ROOM_TYPE_LABEL, isForbidden, isNotActive, objectPath, objectsErrorMessage, roomPath } from '../lib/objects';
+import { ROOM_TYPE_LABEL, isForbidden, isNotActive, objectsErrorMessage, roomPath } from '../lib/objects';
 import { isApiError } from '../api/errors';
 import { useCurrentHome } from './HomePages';
 import pages from './pages.module.css';
 import roomStyles from './rooms.module.css';
 import cards from '../objects/catalog.module.css';
-import { RoomCard } from '../objects/RoomCard';
+import { RoomCard, RoomGlyph } from '../objects/RoomCard';
 
 /** Ritorno a Casa: ambienti e oggetti sono sottosezioni di Casa nella navigazione. */
 export function BackToCasa({ homeId }: { homeId: string }) {
@@ -300,106 +306,62 @@ function RoomView(props: { home: Home; room: Room; caps: ObjectCapabilities; bac
   const account = useAccount();
   useDocumentTitle(`${room.name} · ${home.name}`);
   const [panel, setPanel] = useState<'none' | 'edit' | 'state'>('none');
+  const [menu, setMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null), menuButton = useRef<HTMLButtonElement>(null), editButton = useRef<HTMLButtonElement>(null);
   const canEdit = home.permissions.includes('edit') && room.permissions.includes('edit');
   const active = room.state === 'active';
   const history = useRoomHistory(home.id, room.id);
   const objects = useCatalog(home.id, { state: 'active', q: '', type: null, roomId: room.id, placement: 'all' });
-  const objectItems = objects.data?.pages.flatMap((p) => p.items) ?? [];
+  const denied = objects.isError && isForbidden(objects.error);
+  const objectItems = denied ? [] : Array.from(new Map((objects.data?.pages.flatMap(p => p.items) ?? []).map(o => [o.ref.kind+':'+o.ref.id,o])).values());
+  const append = useAppendPage([account.id,home.id,room.id].join(':'),objectItems.map(o=>`catalog-${o.ref.kind}-${o.ref.id}`),objects.fetchNextPage);
   const actionsRef = useFocusAfterVersion(props.focusActions);
+  const total = !denied && !(objects.isError && !objects.data) ? objects.data?.pages[0]?.total : undefined;
+  useEffect(() => {
+    if (!menu) return;
+    const outside = (e: PointerEvent) => {if(!menuRef.current?.contains(e.target as Node))setMenu(false);};
+    const escape = (e: KeyboardEvent) => {if(e.key==='Escape'){e.preventDefault();setMenu(false);menuButton.current?.focus();}};
+    document.addEventListener('pointerdown',outside);document.addEventListener('keydown',escape);
+    return () => {document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',escape);};
+  },[menu]);
+  const closeEdit = () => {setPanel('none');requestAnimationFrame(()=>editButton.current?.focus());};
 
-  return (
-    <>
-      {props.back}
-      <div className={pages.heading}>
-        <div>
-          <span className={pages.eyebrow}>{home.name} · Ambiente condiviso</span>
-          <h1 tabIndex={-1}>{room.name}</h1>
-          <div className={styles.actions}>
-            <Tag tone="blue">{ROOM_TYPE_LABEL[room.type] ?? room.type}</Tag>
-            {!active && <Tag>Archiviato</Tag>}
+  return <div className={cx(detail.page,roomDetail.page)}>
+    {props.back}
+    <header className={cx(detail.header,roomDetail.heading)}>
+      <div className={roomDetail.identity}><span className={roomDetail.glyph}><RoomGlyph type={room.type}/></span><div>
+        <h1 tabIndex={-1}>{room.name}</h1><p>Ambiente condiviso</p>{!active&&<Tag>Archiviato</Tag>}
+      </div></div>
+      {canEdit&&<div ref={actionsRef} className={detail.headerActions}>
+        {active ? <>
+          <button ref={editButton} type="button" className={cx(ui.btn,ui.primary)} disabled={panel==='edit'} onClick={()=>{setMenu(false);setPanel('edit');}}><PencilSimple size={18} aria-hidden="true"/>Modifica</button>
+          <div ref={menuRef} className={detail.menu}><button ref={menuButton} type="button" className={ui.btn} disabled={panel==='edit'} aria-label="Altre azioni dell’ambiente" aria-expanded={menu} onClick={()=>setMenu(!menu)}><DotsThree size={24} aria-hidden="true"/></button>
+            {menu&&<div className={detail.menuItems}><button className={ui.btn} onClick={()=>{setMenu(false);menuButton.current?.focus();setPanel('state');}}>Archivia</button></div>}
           </div>
-        </div>
+        </> : <button className={ui.btn} onClick={()=>setPanel('state')}>Ripristina</button>}
+      </div>}
+    </header>
+    {room.note&&<p className={roomDetail.note}>{room.note}</p>}
+    {!canEdit&&<p className={pages.muted}>Con il tuo ruolo puoi consultare questo ambiente, non modificarlo.</p>}
+    {panel==='edit'&&active&&<div className={roomDetail.form}><RoomForm home={home} capabilities={props.caps} room={room} onCancel={closeEdit} onDone={closeEdit}/></div>}
+    <section aria-labelledby="ambiente-oggetti">
+      <div className={roomDetail.objectsTitle}><h2 id="ambiente-oggetti">I tuoi oggetti {total!==undefined ? <span className={roomDetail.count}>{total}</span> : !objects.isPending&&!denied&&objectItems.length>0 ? <span className={roomDetail.count}>{objectItems.length}{objects.hasNextPage?' caricati':''}</span> : null}</h2>
+        <p>Qui vedi solo gli oggetti del tuo account.</p>
       </div>
-      <div className={pages.stack}>
-        <section className={ui.card} aria-labelledby="ambiente-oggetti">
-          <h2 id="ambiente-oggetti" className={pages.cardTitle}>
-            I tuoi oggetti in questo ambiente
-          </h2>
-          <p className={cx(pages.small, pages.muted)}>Solo oggetti e schede caldaia tuoi: gli oggetti sono personali fino alla condivisione.</p>
-          {objects.isPending ? (
-            <Loading label="Caricamento degli oggetti…" />
-          ) : objects.isError && !objects.data ? (
-            <ErrorState error={objects.error} message={objectsErrorMessage(objects.error)} onRetry={() => void objects.refetch()} retrying={objects.isFetching} />
-          ) : objectItems.length === 0 ? (
-            <p className={pages.muted}>Nessun tuo oggetto in questo ambiente.</p>
-          ) : (
-            <ul className={styles.list} aria-label="Oggetti in questo ambiente">
-              {objectItems.map((o) => (
-                <li key={`${o.ref.kind}:${o.ref.id}`} className={styles.item}>
-                  <Link to={objectPath(home.id, o.ref)} state={{accountId: account.id, returnTo: {path: roomPath(home.id, room.id), label: room.name}}} className={styles.title}>
-                    {o.name}
-                  </Link>
-                  <span className={styles.meta}>
-                    {typeLabel(o)}
-                    {o.position.rooms.length > 1 ? ` · anche in altri ${o.position.rooms.length - 1} ambienti` : ''}
-                    {o.position.rooms.length > 1 ? ` (${roomsText(o.position.rooms.filter((r) => r.id !== room.id))})` : ''}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {objects.hasNextPage && (
-            <p className={pages.spaced}>
-              <button type="button" className={ui.btn} onClick={() => void objects.fetchNextPage()} disabled={objects.isFetchingNextPage}>
-                Mostra altri oggetti
-              </button>
-            </p>
-          )}
-        </section>
-        <details className={ui.card}><summary className={pages.cardTitle}>Dettagli dell’ambiente</summary>
-          <dl className={pages.detailList}>
-            <dt>Tipo</dt>
-            <dd>{ROOM_TYPE_LABEL[room.type] ?? room.type}</dd>
-            {room.note && <><dt>Nota</dt><dd className={styles.description}>{room.note}</dd></>}
-          </dl>
-          <p className={cx(pages.small, pages.muted, pages.spaced)}>
-            L’ambiente raccoglie i tuoi oggetti e i loro collegamenti.
-          </p>
-        </details>
-        {canEdit && panel !== 'edit' && (
-          <div ref={actionsRef} className={styles.actions}>
-            {active && (
-              <button type="button" className={cx(ui.btn, ui.primary)} onClick={() => setPanel('edit')}>
-                Modifica
-              </button>
-            )}
-            <button type="button" className={ui.btn} onClick={() => setPanel('state')}>
-              {active ? 'Archivia' : 'Ripristina'}
-            </button>
-          </div>
-        )}
-        {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare questo ambiente, non modificarlo.</p>}
-        {panel === 'edit' && active && (
-          <RoomForm home={home} capabilities={props.caps} room={room} onCancel={() => setPanel('none')} onDone={() => setPanel('none')} />
-        )}
-        {panel === 'state' && (
-          <StateDialog
-            homeId={home.id}
-            title={active ? 'Archivia ambiente' : 'Ripristina ambiente'}
-            hint={
-              active
-                ? 'L’ambiente esce dalle scelte per nuove posizioni. Non viene cancellato: oggetti e posizioni esistenti restano, con l’ambiente indicato come archiviato.'
-                : 'L’ambiente torna disponibile per nuove posizioni, con gli stessi dati e la sua storia.'
-            }
-            vars={{ kind: active ? 'roomArchive' : 'roomRestore', roomId: room.id, body: { expectedVersion: room.version } }}
-            onClose={() => setPanel('none')}
-          />
-        )}
-
-        <details><summary className={ui.btn}>Storia dell’ambiente</summary><G1History title="Storia dell’ambiente" id="ambiente-storia" query={history} /></details>
-      </div>
-    </>
-  );
+      {objects.isPending ? <Loading label="Caricamento degli oggetti…"/> : denied || (objects.isError&&!objects.data) ?
+        <ErrorState error={objects.error} message={objectsErrorMessage(objects.error)} onRetry={denied?undefined:()=>void objects.refetch()} retrying={objects.isFetching}/> : objectItems.length===0 ?
+        <div className={cards.empty}><p className={pages.muted}>Nessun tuo oggetto in questo ambiente.</p><Link className={ui.btn} to={`/home/${home.id}/oggetti`}>Vai a Oggetti e impianti</Link></div> :
+        <ul className={cards.grid} aria-label="Oggetti in questo ambiente">{objectItems.map(o=><CatalogTile key={o.ref.kind+':'+o.ref.id} item={o} homeId={home.id} contextRoomId={room.id} today={objects.data?.pages[0]?.today} state={{accountId:account.id,returnTo:{path:roomPath(home.id,room.id),label:room.name}}} onOpen={()=>{}}/>)}</ul>}
+      <p role="status" className="visually-hidden">{append.notice?`Aggiunti ${append.notice.added} oggetti · ${append.notice.total} caricati`:''}</p>
+      {objects.isFetchNextPageError&&!denied&&<ErrorState title="Altri oggetti non disponibili" error={objects.error} onRetry={()=>void append.loadMore()} retrying={objects.isFetchingNextPage}/>}
+      {objects.hasNextPage&&!denied&&<p className={pages.spaced}><button className={ui.btn} onClick={()=>void append.loadMore()} disabled={objects.isFetchingNextPage}>{objects.isFetchingNextPage?'Caricamento…':'Mostra altri oggetti'}</button></p>}
+    </section>
+    <div className={cx(detail.secondary,roomDetail.secondary)}>
+      <details><summary>Dettagli dell’ambiente</summary><dl><dt>Tipo</dt><dd>{ROOM_TYPE_LABEL[room.type]??room.type}</dd><dt>Visibilità dell’ambiente</dt><dd>Condiviso con chi ha accesso alla casa.</dd></dl></details>
+      <details><summary>Storia dell’ambiente</summary><G1History title="Storia dell’ambiente" id="ambiente-storia" query={history}/></details>
+    </div>
+    {panel==='state'&&<StateDialog homeId={home.id} title={active?'Archivia ambiente':'Ripristina ambiente'} hint={active?'L’ambiente esce dalle scelte per nuove posizioni. Non viene cancellato: oggetti e posizioni esistenti restano, con l’ambiente indicato come archiviato.':'L’ambiente torna disponibile per nuove posizioni, con gli stessi dati e la sua storia.'} vars={{kind:active?'roomArchive':'roomRestore',roomId:room.id,body:{expectedVersion:room.version}}} onClose={()=>setPanel('none')}/>}
+  </div>;
 }
 
 /**

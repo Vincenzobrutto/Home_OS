@@ -1,3 +1,7 @@
+## Dettaglio Ambiente compatto — 21 ottobre 2026
+
+Testata come Oggetti, azioni in alto, schede oggetto condivise, nota visibile e dettagli/storia compatti. Modulo, archivio/ripristino, altre collocazioni e ritorni conservati. [Comportamento e verifiche](v5/room-detail-20261021.md). 30 casi mirati, build/lint e browser desktop/mobile con dati fittizi; dati reali intatti.
+
 ## Ambienti a schede — 21 ottobre 2026
 
 Implementata l’anteprima approvata: schede coerenti con Oggetti, ricerca e filtro unico con archivio e contenuto personale. Creazione, planimetria e dettagli conservati; ritorno con ricerca/filtri. [Comportamento, verifiche e limiti](v5/room-cards-20261021.md). 26 test mirati, build/lint e browser desktop/mobile; dati reali intatti.

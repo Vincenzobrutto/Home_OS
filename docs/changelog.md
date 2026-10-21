@@ -1,3 +1,7 @@
+## Dettaglio Ambiente compatto — 21 ottobre 2026
+
+Modifica in alto, Archivia nel menu, nota visibile, schede degli oggetti e dettagli/storia compatti su desktop/mobile. Conteggi personali e paginazione preservati. [Comportamento e verifiche](v5/room-detail-20261021.md).
+
 ## Ambienti a schede — 21 ottobre 2026
 
 Schede desktop/mobile coerenti con Oggetti, ricerca per nome e filtro unico con Attivi/Archiviati/Tutti e Con/Senza oggetti. Dettagli e azioni esistenti conservati. [Comportamento e verifiche](v5/room-cards-20261021.md).
