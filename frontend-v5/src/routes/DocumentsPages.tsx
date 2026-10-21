@@ -21,6 +21,7 @@ import {
   useForgetHomeDocuments,
   useUploadDocument,
 } from '../documents/hooks';
+import { DocumentViews, HouseDocumentGroups } from '../documents/DocumentViews';
 import { SearchForm } from '../documents/SearchForm';
 import { PersonalExportPanel } from '../documents/PersonalExportPanel';
 import { useAccount, useSession } from '../session/session';
@@ -75,14 +76,22 @@ export function DocumentsPage() {
   const [exportSlot, setExportSlot] = useState<HTMLSpanElement | null>(null);
   const [params, setParams] = useSearchParams();
   const uploadVisible=uploadOpen||params.has('aggiungi');
-  const applied = useMemo(() => ({...filtersFromParams(params), workflow: params.get('workflow')==='to_compile'?'to_compile' as const:params.get('workflow')==='review'?'review' as const:params.get('workflow') === 'completed' ? 'completed' as const : params.get('workflow') === 'pending' ? 'pending' as const : params.get('workflow')==='all'||['house','floor_plans','building','energy','contracts','technical'].includes(params.get('collection')??'') ? 'all' as const : params.get('q') ? 'all' as const : 'pending' as const}), [params]);
-  const appliedKey = filtersKey(applied);
   const capabilities = useDocumentSearchCapabilities(home.id);
+  const viewsEnabled = !!capabilities.data?.documentViews;
+  const applied = useMemo<DocumentSearchFilters>(() => {
+    const parsed = filtersFromParams(params);
+    const houseLink = viewsEnabled && parsed.collection === 'house';
+    return {...parsed, ...(viewsEnabled ? {view: houseLink ? 'house' as const : parsed.view ?? 'all', ...(houseLink ? {collection:undefined} : {})} : {}),
+      workflow: parsed.workflow ?? (parsed.q || houseLink || parsed.view || ['house','floor_plans','building','energy','contracts','technical'].includes(parsed.collection ?? '') ? 'all' : 'pending')};
+  }, [params, viewsEnabled]);
+  const appliedKey = filtersKey(applied);
+  const viewDocuments = useDocumentSearch(home.id, applied, viewsEnabled && !validateQuery(applied.q, capabilities.data?.limits.queryMaxCodePoints) && !params.has('oggetti-documento'));
+  const summary = viewDocuments.isError ? undefined : viewDocuments.data?.pages[0]?.summary;
   const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
   // Solo q/format/visibility nell'indirizzo; ?ricerca=1 (ingresso da Casa) non va all'API e cade alla prima ricerca applicata.
   const apply = (filters: DocumentSearchFilters, replace = false) => {
     const workflow=filters.workflow??applied.workflow;
-    const next=filtersToParams({...filters,workflow});
+    const next=filtersToParams({...filters,workflow,...(viewsEnabled?{view:filters.view??'all'}:{})});
     if(workflow==='all')next.set('workflow','all');
     setParams(next, { replace });
   };
@@ -95,10 +104,10 @@ export function DocumentsPage() {
         <div>
           <span className={styles.eyebrow}>{home.name}</span>
           <div className={docs.titleActions}>
-            <h1 tabIndex={-1}>{['house','floor_plans','building','energy','contracts','technical'].includes(applied.collection??'')?'Documenti della casa':'Documenti'}</h1>
+            <h1 tabIndex={-1}>{viewsEnabled?'Documenti':['house','floor_plans','building','energy','contracts','technical'].includes(applied.collection??'')?'Documenti della casa':'Documenti'}</h1>
             <span ref={setExportSlot} />
           </div>
-          <p className={styles.lead}>{applied.workflow==='completed'?'Dati salvati e originali sempre disponibili.':applied.workflow==='all'?'Cerca tra tutti i documenti della casa.':'Completa i dati mancanti o controlla quelli proposti.'}</p>
+          <p className={styles.lead}>{applied.workflow==='completed'?'Dati salvati e originali sempre disponibili.':applied.workflow==='all'?'Un unico archivio per la casa, gli oggetti e gli impianti.':'Completa i dati mancanti o controlla quelli proposti.'}</p>
         </div>
         {canUpload && (
           <div className={docs.toolbarActions}>
@@ -114,12 +123,14 @@ export function DocumentsPage() {
         </p>
       )}
 
+      {viewsEnabled && <DocumentViews value={applied.view ?? 'all'} summary={summary} onChange={view => apply({...applied,view,group:undefined})}/>}
       {capabilities.isSuccess ? (
         <div className={docs.searchOptions}><SearchForm
           home={home}
           applied={applied}
           maxQuery={maxQuery}
           collectionsEnabled={!!capabilities.data.collections}
+          documentViewsEnabled={viewsEnabled}
           autoFocus={params.get('ricerca') === '1'}
           onApply={apply}
         /></div>
@@ -156,6 +167,7 @@ export function DocumentsPage() {
         canExport={canExport}
         exportSlot={exportSlot}
         canUpload={canUpload}
+        onGroup={group => apply({...applied,group})}
       />
       {canUpload && (
         <div className={styles.spaced}>
@@ -176,6 +188,7 @@ function DocumentsArchive(props: {
   canExport: boolean;
   exportSlot: HTMLSpanElement | null;
   canUpload: boolean;
+  onGroup: (group?: DocumentSearchFilters['group']) => void;
 }) {
   const { home, canExport, filters } = props;
   const account = useAccount(), cache = useQueryClient();
@@ -268,6 +281,16 @@ function DocumentsArchive(props: {
     );
   }
 
+  const summary = data?.pages[0]?.summary;
+  const house = filters.view === 'house' && summary;
+  if (house && !filters.group) return <>
+    <p className={docs.note}>Apri una tipologia per consultare i documenti.</p>
+    <HouseDocumentGroups summary={summary} onChange={props.onGroup}/>
+  </>;
+  if (house && !items.length) return <HouseDocumentGroups summary={summary} selected={filters.group} onChange={props.onGroup}>
+    <p className={docs.groupEmpty}>Nessun documento in questo gruppo con i filtri attuali.</p>
+  </HouseDocumentGroups>;
+
   if (items.length === 0 && filtered) {
     return (
       <div className={cx(ui.card, styles.unavailable)}>
@@ -325,6 +348,49 @@ function DocumentsArchive(props: {
       },
     });
   };
+
+  function documentList() { return <>
+      <ul
+        className={docs.list}
+        aria-label={isFiltered({...filters,workflow:'all'}) ? `Risultati della ricerca in ${home.name}` : `Documenti di ${home.name}`}
+      >
+        {items.map((doc) => (
+          <DocumentRow
+            key={doc.id}
+            doc={doc}
+            fileDetailsOpen={restore?.filters===filtersKey(filters)&&restore.openedFiles?.includes(doc.id)||false}
+            homeId={home.id}
+            backSearch={filtersToParams(filters).toString()}
+            selectable={canExport && selecting}
+            selected={selected.has(doc.id)}
+            onToggle={() => toggle(doc.id)}
+            aiSelectable={props.canUpload&&!selecting&&aiSelecting&&doc.workflowState!=='completed'&&!doc.aiAnalysisSucceeded&&doc.workflowState!=='review'} aiSelected={aiSelected.has(doc.id)} aiLocked={aiLocked} onAiToggle={()=>setAiSelected(old=>{const next=new Set(old);if(next.has(doc.id))next.delete(doc.id);else if(doc.workflowState!=='completed'&&!doc.aiAnalysisSucceeded&&doc.workflowState!=='review')next.add(doc.id);return next;})}
+          />
+        ))}
+      </ul>
+
+      {documents.isFetchNextPageError && (
+        <div className={docs.panel}>
+          <ErrorState
+            title="Altri documenti non caricati"
+            error={documents.error}
+            message={documentsErrorMessage(documents.error)}
+          />
+        </div>
+      )}
+      {documents.hasNextPage && (
+        <div className={docs.more}>
+          <button
+            type="button"
+            className={ui.btn}
+            onClick={() => void documents.fetchNextPage()}
+            disabled={documents.isFetchingNextPage}
+          >
+            {documents.isFetchingNextPage ? 'Caricamento…' : 'Mostra altri documenti'}
+          </button>
+        </div>
+      )}
+  </>; }
 
   return (
     <section aria-labelledby="archivio-title" onClickCapture={event => {
@@ -406,46 +472,8 @@ function DocumentsArchive(props: {
           {documents.hasNextPage ? ' — ce ne sono altri' : ''}
         </h2>
       )}
-      <ul
-        className={docs.list}
-        aria-label={isFiltered({...filters,workflow:'all'}) ? `Risultati della ricerca in ${home.name}` : `Documenti di ${home.name}`}
-      >
-        {items.map((doc) => (
-          <DocumentRow
-            key={doc.id}
-            doc={doc}
-            fileDetailsOpen={restore?.filters===filtersKey(filters)&&restore.openedFiles?.includes(doc.id)||false}
-            homeId={home.id}
-            backSearch={filtersToParams(filters).toString()}
-            selectable={canExport && selecting}
-            selected={selected.has(doc.id)}
-            onToggle={() => toggle(doc.id)}
-            aiSelectable={props.canUpload&&!selecting&&aiSelecting&&doc.workflowState!=='completed'&&!doc.aiAnalysisSucceeded&&doc.workflowState!=='review'} aiSelected={aiSelected.has(doc.id)} aiLocked={aiLocked} onAiToggle={()=>setAiSelected(old=>{const next=new Set(old);if(next.has(doc.id))next.delete(doc.id);else if(doc.workflowState!=='completed'&&!doc.aiAnalysisSucceeded&&doc.workflowState!=='review')next.add(doc.id);return next;})}
-          />
-        ))}
-      </ul>
+      {house ? <HouseDocumentGroups summary={summary} selected={filters.group} onChange={props.onGroup}>{documentList()}</HouseDocumentGroups> : documentList()}
 
-      {documents.isFetchNextPageError && (
-        <div className={docs.panel}>
-          <ErrorState
-            title="Altri documenti non caricati"
-            error={documents.error}
-            message={documentsErrorMessage(documents.error)}
-          />
-        </div>
-      )}
-      {documents.hasNextPage && (
-        <div className={docs.more}>
-          <button
-            type="button"
-            className={ui.btn}
-            onClick={() => void documents.fetchNextPage()}
-            disabled={documents.isFetchingNextPage}
-          >
-            {documents.isFetchingNextPage ? 'Caricamento…' : 'Mostra altri documenti'}
-          </button>
-        </div>
-      )}
     </section>
   );
 }

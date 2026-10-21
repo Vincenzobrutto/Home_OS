@@ -6,6 +6,16 @@ import { SearchForm } from './SearchForm';
 const home={id:'home-test',name:'Casa test'} as Home;
 const filters:DocumentSearchFilters={q:'',format:'pdf',visibility:'private',workflow:'pending',collection:'utilities'};
 
+it('new views retain category filters without duplicating the house view inside the dialog',async()=>{
+ const user=userEvent.setup(),onApply=vi.fn(),applied={...filters,view:'all' as const};
+ render(<SearchForm home={home} applied={applied} maxQuery={120} autoFocus={false} collectionsEnabled documentViewsEnabled onApply={onApply}/>);
+ await user.click(screen.getByRole('button',{name:'Filtri (3)'}));
+ expect(screen.queryByRole('option',{name:'Documenti della casa'})).not.toBeInTheDocument();
+ await user.selectOptions(screen.getByRole('combobox',{name:'Categoria del documento'}),'contracts');
+ await user.click(screen.getByRole('button',{name:'Mostra risultati'}));
+ expect(onApply).toHaveBeenLastCalledWith({...applied,collection:'contracts'});
+});
+
 it('new query searches the entire archive after debounce, with one visible status control',async()=>{
  const user=userEvent.setup(),onApply=vi.fn();
  render(<SearchForm home={home} applied={filters} maxQuery={120} autoFocus={false} onApply={onApply}/>);

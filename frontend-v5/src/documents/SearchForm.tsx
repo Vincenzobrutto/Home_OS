@@ -11,7 +11,7 @@ import docs from '../routes/documents.module.css';
 
 /** Server search across the authorized archive. Only secondary filters are staged. */
 export function SearchForm(props: {
-  home: Home; applied: DocumentSearchFilters; maxQuery: number; collectionsEnabled?: boolean;
+  home: Home; applied: DocumentSearchFilters; maxQuery: number; collectionsEnabled?: boolean; documentViewsEnabled?: boolean;
   autoFocus: boolean; onApply: (filters: DocumentSearchFilters, replace?: boolean) => void;
 }) {
   const { applied } = props, id = useId(), input = useRef<HTMLInputElement>(null);
@@ -57,14 +57,14 @@ export function SearchForm(props: {
     <div className={docs.statusSegments} role="group" aria-label="Stato dei documenti">
       {([['all','Tutti'],['pending','Da fare'],['completed','Completati']] as const).map(([value,label]) => <button key={value} type="button" aria-pressed={active === value} onClick={() => apply({...current(),workflow:value})}>{label}</button>)}
     </div>
-    <p className={docs.scopeNote}>{active === 'all' ? 'Ricerca in tutti i documenti di questa casa.' : active === 'pending' ? 'Mostra i documenti da fare.' : 'Mostra i documenti completati.'}</p>
+    <p className={docs.scopeNote}>{active === 'all' ? applied.view === 'house' ? 'Documenti della casa, raggruppati per tipologia.' : applied.view === 'objects' ? 'Documenti collegati ai tuoi oggetti e impianti.' : 'Ricerca in tutti i documenti di questa casa.' : active === 'pending' ? 'Mostra i documenti da fare.' : 'Mostra i documenti completati.'}</p>
     {active === 'pending' && <label className={docs.pendingFilter}>Mostra<select className={docs.select} value={applied.workflow} onChange={e => apply({...current(),workflow:e.target.value as DocumentSearchFilters['workflow']})}><option value="pending">Tutti i documenti da fare</option><option value="to_compile">Documenti da compilare</option><option value="review">Documenti da controllare</option></select></label>}
     {!global && !!chips.length && <div className={docs.filterChips} aria-label="Filtri applicati">{chips.map(chip => <button type="button" className={ui.btn} key={chip.field} aria-label={'Rimuovi filtro '+chip.label} onClick={() => apply({...current(),[chip.field]:'all'})}>{chip.label}<X size={16} aria-hidden="true"/></button>)}<button type="button" className={ui.btn} onClick={() => apply({...current(),format:'all',visibility:'all',collection:'all'})}>Rimuovi filtri</button></div>}
     {open && <FilterDialog titleId={`${id}-filters`} onClose={() => setOpen(false)}>
       <div className={docs.filterHeading}><h2 id={`${id}-filters`}>Filtri</h2><button type="button" className={ui.btn} aria-label="Chiudi filtri" data-autofocus onClick={() => setOpen(false)}><X size={22} aria-hidden="true"/></button></div>
       <p className={ui.hint}>Cerca nei documenti di questa casa.</p>
       <div className={docs.filterFields}>
-        {props.collectionsEnabled && <label className={docs.filter}>Gruppo di documenti<select className={docs.select} value={staged.collection ?? 'all'} onChange={e => setStaged({...staged,collection:e.target.value as DocumentSearchFilters['collection']})}>{COLLECTION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>}
+        {props.collectionsEnabled && <label className={docs.filter}>{props.documentViewsEnabled ? 'Categoria del documento' : 'Gruppo di documenti'}<select className={docs.select} value={staged.collection ?? 'all'} onChange={e => setStaged({...staged,collection:e.target.value as DocumentSearchFilters['collection']})}>{COLLECTION_OPTIONS.filter(o => !props.documentViewsEnabled || o.value !== 'house').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>}
         <label className={docs.filter}>Formato<select className={docs.select} value={staged.format} onChange={e => setStaged({...staged,format:e.target.value as DocumentSearchFilters['format']})}>{FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
         <label className={docs.filter}>Chi può vederli<select className={docs.select} value={staged.visibility} onChange={e => setStaged({...staged,visibility:e.target.value as DocumentSearchFilters['visibility']})}>{VISIBILITY_FILTER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
       </div>

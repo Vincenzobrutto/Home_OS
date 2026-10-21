@@ -1,3 +1,11 @@
+## Viste Documenti e conteggi — 21 ottobre 2026
+
+GET `/homes/:homeId/document-search-capabilities` aggiunge `documentViews:true`. GET `/homes/:homeId/documents` accetta `view=all|house|objects`, opzionale; `group=plans|building|energy|contracts|other` ammesso soltanto con `view=house`, altrimenti 422. Senza `view` restano comportamento, risposta e cursori precedenti.
+
+Con `view` la risposta aggiunge `summary:{views:{all,house,objects},groups:{plans,building,energy,contracts,other}}`. Conteggi dell’intero dataset autorizzato prima del LIMIT, applicando `q`, `workflow`, `format`, `visibility`, `collection`, senza restringerli a vista/gruppo correnti. Nuovi cursori vincolati anche a vista e gruppo; cambiare contesto restituisce 422. `view=house` senza `group` restituisce `items:[],nextCursor:null` e il riepilogo: è l’indice dei gruppi, non un archivio vuoto. Con `group` restituisce e pagina soltanto quella tipologia.
+
+Casa = organizzazione personale corrente (versione/SHA) senza riferimento personale leggibile a oggetto/caldaia; Oggetti = documento collegato direttamente o tramite spesa attiva o fonte corrente di analisi caldaia riuscita, con policy fonte del catalogo. Tutti include anche documenti non organizzati. Gruppi esclusivi con precedenza plans/building/energy/contracts/other. Scope, membership, visibilità e versione/SHA prima dei conteggi; nessuna duplicazione o scrittura canonica. [Dettagli e verifiche](document-views-20261021.md).
+
 ## Documenti derivati dalle spese e dati della fattura — 21 ottobre 2026
 
 GET dei collegamenti oggetto con `resourceType=document` include ora le fonti leggibili delle spese attive attribuite allo stesso riferimento. Proiezione `origin=native`, senza link persistente aggiuntivo; deduplica con i riferimenti espliciti, paginazione e privacy invariati. GET dei collegamenti `resourceType=expense` aggiunge `resource.document: {id,title} | null`, presente solo per fonte accessibile nello stesso scope. Il frontend può aprire direttamente la fattura. Nessun nuovo endpoint o schema.

@@ -42,7 +42,7 @@ export function useDocumentSearchCapabilities(homeId: string) {
 export function useDocumentSearch(homeId: string, filters: DocumentSearchFilters, enabled: boolean) {
   const api = useApi();
   const account = useAccount();
-  const filtered = isFiltered(filters);
+  const filtered = isFiltered(filters)||filters.view!==undefined;
   return useInfiniteQuery({
     queryKey: filtered ? queryKeys.documentSearch(account.id, homeId, filters) : queryKeys.documents(account.id, homeId),
     queryFn: ({ pageParam, signal }) =>

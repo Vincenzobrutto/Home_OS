@@ -63,7 +63,10 @@ export type DocumentSummary = {
 
 export type DocumentDetail = DocumentSummary & { sha256: string };
 
-export type DocumentsPage = { items: DocumentSummary[]; nextCursor: string | null };
+export type DocumentView='all'|'house'|'objects';
+export type DocumentGroup='plans'|'building'|'energy'|'contracts'|'other';
+export type DocumentViewSummary={views:Record<DocumentView,number>;groups:Record<DocumentGroup,number>};
+export type DocumentsPage = { items: DocumentSummary[]; nextCursor: string | null;summary?:DocumentViewSummary };
 
 export type UploadDocumentInput = { file: File; name: string; visibility: DocumentVisibility };
 
@@ -72,9 +75,10 @@ export type DocumentFormatFilter = 'all' | 'pdf' | 'jpeg' | 'png';
 export type DocumentVisibilityFilter = 'all' | DocumentVisibility;
 /** Filtri canonici: q già trim + NFC ('' = nessuna ricerca testuale). */
 export type DocumentCollection = 'contracts' | 'energy' | 'building' | 'technical' | 'condominium' | 'purchases' | 'utilities' | 'unclassified';
-export type DocumentSearchFilters = { q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter; collection?: 'all' | 'house' | 'floor_plans' | DocumentCollection; workflow?: 'all'|'pending'|'completed'|'to_compile'|'review' };
+export type DocumentSearchFilters = { view?:DocumentView;group?:DocumentGroup; q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter; collection?: 'all' | 'house' | 'floor_plans' | DocumentCollection; workflow?: 'all'|'pending'|'completed'|'to_compile'|'review' };
 
 export type DocumentSearchCapabilities = {
+  documentViews?:boolean;
   collections?: Record<DocumentCollection, string>;
   apiVersion: 'document-search-v1';
   enabled: true;

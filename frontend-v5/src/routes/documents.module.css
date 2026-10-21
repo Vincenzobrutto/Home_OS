@@ -535,3 +535,27 @@
 
 /* Compact archive rows: decisions first, file metadata on demand. */
 .rowInfo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-width:0}.rowType{font-size:14px;color:var(--color-muted);overflow-wrap:anywhere}.fileDetails{min-width:0;font-size:13px;color:var(--color-muted)}.fileDetails>summary{min-height:44px;cursor:pointer;align-content:center;width:fit-content}.fileDetails dl{margin:4px 0 8px;display:grid;gap:8px}.fileDetails dl>div{min-width:0}.fileDetails dt{font-size:12px}.fileDetails dd{margin:2px 0 0;color:var(--color-ink);overflow-wrap:anywhere}.compactWorkspace{margin-top:4px;gap:8px}.compactWorkspace .workspaceHeader{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 12px}.compactWorkspace .workflowStatus{flex:0 1 auto;min-width:0;max-width:none}.compactWorkspace .toolbarActions{width:auto;gap:8px;flex-wrap:wrap;justify-content:flex-start}.compactWorkspace .toolbarActions>div{width:auto}.documentMenuItems{position:absolute;right:0;z-index:5;min-width:160px;padding:8px;display:grid;gap:6px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:10px;box-shadow:0 4px 12px #132e3e22}.documentMenuItems button{justify-content:flex-start;width:100%;min-height:44px}.item{padding-block:14px}.compactWorkspace .documentMenu summary{padding-inline:6px}.compactWorkspace .statusBadge{font-size:13px;padding:5px 8px}.compactWorkspace .toolbarActions button{font-size:13px}.fileDetails[open]{padding-bottom:4px}@media(min-width:1250px){.rowInfo,.fileDetails{grid-column:1}.body:has(>.fileDetails[open])>.workspace{grid-row:1/span 2}}@media(max-width:600px){.body{gap:5px}.compactWorkspace .workspaceHeader{gap:8px}.compactWorkspace .toolbarActions{gap:8px}.compactWorkspace .documentMenu{flex:0 0 auto}.compactWorkspace .workflowStatus{flex-basis:100%}.fileDetails>summary{min-height:44px}}
+
+/* The three archive views only affect Documents, never the object catalogue. */
+.archiveViews { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 16px; }
+.archiveViews button { display:flex; align-items:center; justify-content:center; gap:8px; min-height:46px; padding:10px 15px; border:1px solid #dce6eb; border-radius:10px; background:white; color:#182f3d; font:inherit; font-weight:600; cursor:pointer; }
+.archiveViews button[aria-pressed="true"] { background:#0b6177; color:white; border-color:#0b6177; }
+.viewCount { display:inline-grid; place-items:center; min-width:24px; height:24px; border-radius:20px; background:#e3f3f6; color:#0b6177; font-size:.8rem; }
+.viewMobile { display:none; }
+.houseGroups { display:grid; gap:12px; margin:16px 0; }
+.houseGroup { border:1px solid #dce6eb; border-radius:14px; background:white; }
+.houseGroup h3 { margin:0; font-size:1rem; border-radius:inherit; }
+.houseGroup h3 button { display:flex; width:100%; align-items:center; gap:12px; min-height:64px; padding:14px 18px; border:0; background:white; color:#182f3d; text-align:left; font:inherit; font-weight:600; cursor:pointer; }
+.groupLabel { flex:1; min-width:0; }
+.houseGroup h3 strong { display:grid; place-items:center; min-width:28px; height:28px; border-radius:20px; background:#e3f3f6; color:#0b6177; font-size:.85rem; }
+.houseGroup h3 button { border-radius:inherit; }
+.houseGroup > div > ul { margin:0; border:0; border-top:1px solid #dce6eb; border-radius:0 0 14px 14px; }
+.houseGroup button:focus-visible,.archiveViews button:focus-visible { outline:3px solid #0b6177; outline-offset:2px; }
+.groupEmpty { padding:0 18px 18px; }
+@media(max-width:640px) {
+ .archiveViews { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; }
+ .archiveViews button { padding:9px 5px; gap:5px; font-size:.8rem; flex-wrap:wrap; }
+ .viewDesktop { display:none; } .viewMobile { display:inline; }
+ .viewCount { min-width:21px; height:21px; font-size:.73rem; }
+ .houseGroup h3 button { padding:12px; gap:8px; min-height:60px; font-size:.9rem; }
+}

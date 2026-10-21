@@ -1,3 +1,7 @@
+## Documenti: tre viste nello stesso archivio — 21 ottobre 2026
+
+Tutti i documenti, Documenti della casa e Documenti di oggetti e impianti; tipologie della casa, conteggi completi e paginazione dedicata, ricerca globale e ripristino dal dettaglio. Allineato il CHECK di persistenza per Contratti, già accettati dal dominio. [Verifiche e limiti](v5/document-views-20261021.md).
+
 ## AI: case autorizzate sulla stessa campagna — 21 ottobre 2026
 
 Configurazione opzionale per ulteriori case dello stesso account, con tetto monetario e chiamate condivisi. Disponibilità e worker rispettano lo stesso perimetro; nessuna modifica al ledger o ai consensi. [Verifiche](v5/shared-ai-campaign-20261021.md).

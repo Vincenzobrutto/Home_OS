@@ -179,6 +179,8 @@ export class ApiClient {
     filters?: DocumentSearchFilters,
   ): Promise<DocumentsPage> {
     const params = new URLSearchParams();
+    if(filters?.view)params.set('view',filters.view);
+    if(filters?.group)params.set('group',filters.group);
     if (filters?.workflow && filters.workflow !== 'all') params.set('workflow',filters.workflow);
     if (filters?.q) params.set('q', filters.q);
     if (filters && filters.format !== 'all') params.set('format', filters.format);

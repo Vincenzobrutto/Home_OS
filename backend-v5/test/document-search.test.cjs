@@ -28,3 +28,8 @@ test('H2: pattern letterale e cursori legati a filtri/contesto, non limit', () =
 });
 
 test('house filters are validated and cursor-bound separately from the complete archive',()=>{const a=randomUUID(),h=randomUUID(),row={id:randomUUID(),createdAt:new Date('2026-10-19T08:00:00Z')};for(const collection of ['house','floor_plans','contracts']){const f=s.searchFilters({limit:20,collection});assert.equal(f.collection,collection);const c=s.searchCursor(row,a,h,f);assert.equal(s.searchAnchor(c,a,h,f).id,row.id);assert.throws(()=>s.searchAnchor(c,a,h,s.searchFilters({limit:20,collection:'all'})));}assert.throws(()=>s.searchFilters({limit:20,collection:'unknown'}));});
+
+test('document views reject unknown views and categories outside the house view',()=>{
+ for(const query of [{view:'unknown'},{view:['house']},{group:'plans'},{view:'objects',group:'plans'},{view:'house',group:'constructor'}])assert.throws(()=>s.searchFilters({limit:20,...query}));
+ assert.equal(s.searchFilters({limit:20,view:'house',group:'contracts'}).group,'contracts');
+});

@@ -1,3 +1,7 @@
+## Documenti: viste dell’archivio completate — 21 ottobre 2026
+
+Concluse le tre viste e i gruppi della casa, mantenendo archivio unico e catalogo Oggetti invariato. Nessuna riclassificazione automatica dei file ancora da organizzare. [Regole e verifiche](v5/document-views-20261021.md).
+
 ## AI: prova sulla stessa campagna — 21 ottobre 2026
 
 Abilitazione di case aggiuntive esplicite dello stesso account, senza duplicare il credito. Prova live dei cinque documenti lasciata al committente; nessuna analisi automatica. [Regole](v5/shared-ai-campaign-20261021.md).

@@ -1,3 +1,7 @@
+## Documenti: tre viste e gruppi per tipologia — 21 ottobre 2026
+
+Implementate solo in Documenti le viste Tutti / Della casa / Degli oggetti, categorie della casa con conteggi globali e paginazione server. Ricerca globale e ritorni conservati. Nessuna copia o modifica dei documenti reali; altre sezioni invariate. Collaudo desktop/mobile con 33 PDF sintetici, test mirati e build/lint. [Regole, verifiche e limiti](v5/document-views-20261021.md).
+
 ## AI: stesso credito per casa reale e casa di prova — 21 ottobre 2026
 
 Case aggiuntive dello stesso account esplicitamente autorizzabili sulla medesima campagna: credito, riserve e limite chiamate condivisi, nessun aumento o reset. Casa di prova abilitata localmente, analisi lasciate all’utente. 32 test offline, build/lint e disponibilità browser. [Configurazione e verifiche](v5/shared-ai-campaign-20261021.md).
