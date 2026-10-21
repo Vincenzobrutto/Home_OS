@@ -1,6 +1,6 @@
 ## Documenti della casa da scheda oggetto — 21 ottobre 2026
 
-Azione semplificata **Sposta in Documenti della casa**: un’unica conferma conserva tutti i documenti, comprese le fatture, e archivia sempre la scheda errata togliendola dalle stanze. Altri collegamenti generici vengono elencati prima della conferma e rimossi con consenso; altre schede, file e importi conservati. Fonti non accessibili, riferimenti nativi ed elaborazioni pendenti restano bloccati; idempotenza e storia. Test isolati e browser desktop/mobile; dati reali invariati. [Comportamento, sicurezza e limiti](v5/house-documents-from-object-20261021.md).
+**Sposta in Documenti della casa** archivia solo la scheda scelta. Fatture condivise disponibili sia nella casa sia dagli altri oggetti: videocitofono, collegamenti e spese conservati, nessun duplicato. Appartenenza esplicita personale/versionata distinta dai riferimenti agli oggetti; migrazione additiva e viste sovrapposte. Test isolati e browser desktop/mobile; nessuno spostamento reale eseguito. [Comportamento, sicurezza e limiti](v5/house-documents-from-object-20261021.md).
 
 ## Documenti: originale e classificazioni più accessibili — 21 ottobre 2026
 

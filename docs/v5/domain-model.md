@@ -1,3 +1,7 @@
+## Documenti della casa condivisi — 21 ottobre 2026
+
+`DocumentOrganization.houseDocument` (booleano default false, migrazione additiva `20261021190000_document_house_membership`) registra una scelta personale per account/casa/documento e versione/SHA correnti. È indipendente da `ObjectResourceLink`: le stesse fatture possono appartenere alla vista casa e restare collegate ad altri oggetti. Casa e Oggetti non sono partizioni; Tutti non duplica i file. Lo spostamento archivia soltanto la scheda scelta e conserva i riferimenti agli altri oggetti. Nuova versione/SHA invalida la scelta finché non viene riconfermata. [Regole](house-documents-from-object-20261021.md).
+
 ## Planimetrie e ambienti — 19 ottobre 2026
 
 ObjectOnboardingJob.purpose distingue products/floor_plan (migrazione additiva). ObjectOnboardingDraft mode=floor_plan conserva output, revisione e mappa numero→HomeRoom; ObjectRequest protegge salvataggio e conferma. Originali e coordinate non diventano dati condivisi con la creazione degli ambienti. [Dettagli](floor-plan-rooms-20261019.md).

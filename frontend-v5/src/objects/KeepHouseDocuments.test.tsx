@@ -25,10 +25,10 @@ async function setup(options:{blocked?:boolean;drop?:boolean;actualMenu?:boolean
 it('menu oggetto: riepilogo prima di scrivere; conferma con archivio automatico e ritorno alla casa',async()=>{
  const {app,posts,home}=await setup({actualMenu:true});expect(posts).toHaveLength(0);
  const dialog=screen.getByRole('dialog');expect(within(dialog).getByText(/Certificazione sintetica/)).toHaveTextContent('120,00');expect(within(dialog).getByText('File: originale-sintetico.pdf')).toBeVisible();
- expect(within(dialog).getByText('Componente già presente')).toBeVisible();expect(within(dialog).queryByRole('checkbox')).not.toBeInTheDocument();
+ expect(within(dialog).getByText('Componente già presente')).toBeVisible();expect(within(dialog).getByText('Collegamenti che rimangono')).toBeVisible();expect(within(dialog).queryByRole('checkbox')).not.toBeInTheDocument();
  await app.user.click(within(dialog).getByRole('button',{name:'Sposta e archivia scheda'}));
  await waitFor(()=>expect(app.router.state.location.pathname).toBe(`/home/${home.id}/documenti`));
- expect(posts).toHaveLength(1);expect(JSON.parse(posts[0]!.body as string).detachRelatedObjects).toBe(true);expect(JSON.parse(posts[0]!.body as string).archiveObject).toBe(true);
+ expect(posts).toHaveLength(1);expect(JSON.parse(posts[0]!.body as string)).not.toHaveProperty('detachRelatedObjects');expect(JSON.parse(posts[0]!.body as string).archiveObject).toBe(true);
  expect(app.router.state.location.search).toBe('?workflow=all&view=house');await screen.findByText('Documenti conservati nella casa');
 });
 it('Annulla non scrive e i documenti con altri riferimenti non sono selezionabili',async()=>{

@@ -68,11 +68,11 @@ export async function keepHouseDocuments(tx:Tx,a:string,h:string,id:string,input
  }
  if(plan.token!==body.expectedToken)throw conflict('house_documents_changed','Documenti o collegamenti sono cambiati. Riapri il riepilogo prima di confermare.');
  if(!body.archiveObject)throw invalid('Lo spostamento conserva i documenti e archivia la scheda oggetto.');
+ if(body.detachRelatedObjects===true)throw invalid('I collegamenti alle altre schede devono essere conservati. Aggiorna il riepilogo.');
  const selected=plan.rows.filter(d=>documentIds.includes(d.id));
  if(selected.length!==documentIds.length)throw new ForbiddenException();
  if(selected.some(d=>d.reason))throw conflict('house_documents_unavailable','Controlla i documenti non disponibili nel riepilogo.');
- if(selected.some(d=>d.relatedObjects.length)&&body.detachRelatedObjects!==true)throw conflict('related_objects_confirmation_required','Conferma anche la rimozione dei collegamenti alle altre schede indicate.');
- const removing=[...new Map(selected.flatMap(d=>d.relatedLinks).map(l=>[l.id,l])).values()];
+ const removing=plan.links.filter(l=>l.resourceType==='document'&&documentIds.includes(l.documentId??'')||l.resourceType==='expense'&&selected.some(d=>d.expenses.some(e=>e.id===l.expenseId)));
  const expenseIds=removing.flatMap(l=>l.expenseId?[l.expenseId]:[]);
  if(plan.unavailable||selected.length!==plan.rows.length||plan.links.some(l=>!removing.some(r=>r.id===l.id)))throw conflict('object_has_other_resources','Per spostare la scheda includi tutti i documenti e gestisci prima le altre risorse collegate.');
  for(const row of removing){
@@ -80,7 +80,9 @@ export async function keepHouseDocuments(tx:Tx,a:string,h:string,id:string,input
   await tx.objectEvent.create({data:{accountId:a,homeId:h,targetKind:'object',targetId:row.objectId!,kind:'unlinked',before:json({kind:'link',row,subjectKind:'object',subjectId:row.objectId}),after:json({kind:'link',row:after,subjectKind:'object',subjectId:row.objectId})}});
  }
  for(const doc of selected){
-  if(doc.willOrganize){const data={documentVersion:doc.documentVersion,documentSha256:doc.sha256,title:doc.title,parts:[{kind:'other',pageFrom:null,pageTo:null}],collections:['unclassified']};await tx.documentOrganization.upsert({where:{accountId_homeId_documentId:{accountId:a,homeId:h,documentId:doc.id}},create:{accountId:a,homeId:h,documentId:doc.id,...data},update:{...data,version:{increment:1}}});}
+  const where={accountId_homeId_documentId:{accountId:a,homeId:h,documentId:doc.id}};
+  if(doc.willOrganize){const data={documentVersion:doc.documentVersion,documentSha256:doc.sha256,title:doc.title,parts:[{kind:'other',pageFrom:null,pageTo:null}],collections:['unclassified'],houseDocument:true};await tx.documentOrganization.upsert({where,create:{accountId:a,homeId:h,documentId:doc.id,...data},update:{...data,version:{increment:1}}});}
+  else{const organization=await tx.documentOrganization.findUniqueOrThrow({where});if(!organization.houseDocument)await tx.documentOrganization.update({where,data:{houseDocument:true,version:{increment:1},updatedAt:new Date()}});}
  }
  for(const before of [...new Map(selected.flatMap(d=>d.expenses).filter(e=>expenseIds.includes(e.id)).map(e=>[e.id,e])).values()]){
   const after=await tx.homeExpense.update({where:{id:before.id},data:{version:{increment:1},updatedAt:new Date()}});

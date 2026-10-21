@@ -1,30 +1,35 @@
-# Conservare documenti nella casa da una scheda oggetto
+# Documenti della casa e fatture condivise
 
-Implementato e semplificato il 21 ottobre 2026 nella V5. Dalla scheda di un oggetto generico attivo: **Altre azioni → Sposta in Documenti della casa**. La seconda revisione sostituisce l’archivio facoltativo iniziale, su richiesta dell’utente.
+Aggiornato il 21 ottobre 2026. Dalla scheda di un oggetto generico attivo: **Altre azioni → Sposta in Documenti della casa**.
 
-## Comportamento
+## Comportamento confermato
 
-Il riepilogo consultabile prima della scrittura include tutti i documenti diretti e quelli delle spese collegate, comprese le fatture, senza duplicati. Mostra titolo, nome originale e spese conservate. Quando una fattura o la sua spesa è collegata anche ad altre schede generiche personali, mostra i loro nomi autorizzati e spiega che quei collegamenti verranno rimossi. Una sola conferma **Sposta e archivia scheda** autorizza l’intero spostamento; nessuna selezione parziale o seconda casella di archivio.
+La conferma **Sposta e archivia scheda** conserva tutti i documenti e le fatture nella vista della casa, archivia soltanto la scheda scelta e la toglie dalle stanze. Gli originali rimangono unici. La scheda è ripristinabile dagli archiviati, con stanza da riassegnare.
 
-Lo spostamento archivia sempre la scheda corrente e svuota la sua posizione: scompare dagli oggetti attivi e dalle stanze. Resta ripristinabile dagli archiviati, con stanza da riassegnare. Le altre schede mantengono il loro stato. Tutti i documenti devono essere disponibili e inclusi; attività o costi senza documento residui richiedono prima la gestione dei relativi collegamenti.
+**Gli altri oggetti e i loro collegamenti restano invariati.** Esempio: archiviando l’impianto elettrico nella casa, il videocitofono resta attivo e continua a mostrare le stesse fatture di acconto e saldo. Le fatture sono consultabili sia nella casa sia dal videocitofono, senza copie e senza nuove spese. Il riepilogo mostra “Collegamenti che rimangono”. Questa regola corregge e sostituisce la precedente rimozione dei riferimenti ad altre schede.
 
-Originali, spese e dati economici restano gli stessi. Si rimuovono i riferimenti personali dei documenti e delle loro spese alle schede elencate nel riepilogo; si registra la storia su ciascuna scheda interessata. La classificazione corrente resta invariata, anche per Fattura/Ricevuta. Se manca un’organizzazione corrente, si registra la scelta manuale generica in Altri documenti della casa, senza dedurre la tipologia dal nome.
+Si rimuovono soltanto i riferimenti personali alla scheda archiviata. I costi attribuiti ad altre schede non cambiano, neppure nella versione o nella storia. Per i soli costi scollegati dalla scheda corrente si aggiorna la versione e si registra il cambio di attribuzione, mantenendo importo, titolo, date, fornitore, provenienza e documento.
 
-La conferma conduce a Documenti → Della casa con messaggio di esito. I documenti possono essere nei rispettivi gruppi: non è una nuova cartella né una copia dei file. Annulla non scrive. Importi, date, fornitore, provenienza e allegato delle spese non cambiano; versione e storia delle spese registrano il cambio di attribuzione.
+La classificazione corrente Fattura/Ricevuta o tecnica resta invariata; se manca un’organizzazione corrente, si registra una scelta manuale generica in Altri documenti della casa. Annulla non scrive. Dopo la conferma si apre Documenti → Della casa con esito.
+
+## Archivio unico e viste sovrapposte
+
+Migrazione additiva `20261021190000_document_house_membership`: `DocumentOrganization.houseDocument` booleano, default false. Lo spostamento lo imposta a true per le sole fonti personali selezionate, con versione/SHA correnti; non deriva l’appartenenza dalla rimozione dei collegamenti agli altri oggetti.
+
+La vista casa comprende organizzazioni correnti con appartenenza esplicita **oppure** senza riferimenti personali leggibili. La vista oggetti continua a includere i documenti collegati. Le due viste possono sovrapporsi: i conteggi non sono partizioni, e Tutti include ogni file una sola volta. Gruppi, ricerca e paging applicano la medesima regola. Nessun ampliamento della visibilità dei file o dei derivati altrui.
+
+Modificare titolo/tipo della stessa fonte conserva l’appartenenza esplicita; una fonte di nuova versione/SHA richiede una nuova scelta. La migrazione inizializza false e non riclassifica documenti esistenti.
 
 ## Sicurezza e limiti
 
-- Solo oggetti generici personali; caldaie native escluse. Massimo 50 documenti per riepilogo.
-- Sessione, Origin/CSRF, contesto account, membership e diritto di modifica verificati sul server. Oggetti/fonte privati altrui non accessibili; collegamenti non consultabili non espongono titoli.
-- Originali correnti verificati per versione/SHA e diritto di lettura. Token del riepilogo vincolato a scheda, posizione, collegamenti, costi, organizzazioni e blocchi; modifiche concorrenti richiedono un nuovo riepilogo.
-- Collegamenti ad altre schede generiche consentiti soltanto con fonti/nome accessibili, token aggiornato e consenso server `detachRelatedObjects:true`, dopo il riepilogo. Storia e versione delle spese aggiornate per la loro attribuzione effettiva, senza nuove spese o modifica degli importi.
-- Collegamenti nativi a caldaie, attribuzioni native di spesa, analisi caldaia riuscite o fonti non consultabili restano bloccati. Nessun nome privato esposto e nessuna rimozione forzata aggirando il riepilogo.
-- Elaborazioni di acquisizione/prodotto in corso, incerte o orchestrazioni automatiche pendenti: operazione bloccata. Nessuna cancellazione di lavori o nuova analisi AI.
-- Transazione atomica col lock G1 della casa, lock delle fonti, storia collegamenti/archivio/posizione e chiave di idempotenza. Replay ricontrolla permessi e fonte/versione/SHA; risposta persa ritentata con stesso corpo e chiave. Nessun nuovo documento, oggetto o costo canonico.
-- Non elimina schede/file, non unisce oggetti e non migra dati tecnici su documenti. I dati della scheda archiviata restano nella sua storia. Eventuali conferme future di bozze restano scelte esplicite nel flusso ordinario.
+Sessione, Origin/CSRF, contesto account, membership edit e diritti sulle fonti rivalidati. Snapshot del riepilogo vincolato a scheda, posizione, collegamenti, costi, organizzazioni e versione/SHA. Conferma atomica/idempotente sotto lock G1, fonti bloccate e storia della sola scheda interessata. Retry della risposta persa con stesso corpo/chiave, senza ripetere l’operazione.
+
+Tutti i documenti devono essere disponibili e inclusi (massimo 50). Attività o costi senza documento residui, riferimenti nativi a caldaie, elaborazioni pendenti/incerte e fonti non consultabili restano bloccati. Nessuna nuova AI, copia, cancellazione o fusione di schede. Non ripristina automaticamente vecchi collegamenti eventualmente rimossi da conferme precedenti.
+
+Per nuove richieste `archiveObject:true`; `detachRelatedObjects:true` è rifiutato. I replay storici già confermati restano compatibili e non effettuano nuove rimozioni.
 
 ## Verifiche
 
-Backend: suite `house-documents.integration.test.cjs`, `home-objects.http.test.cjs`, `home-objects.integration.test.cjs`: 23 test passati su fixture isolate con pulizia scoped; archivio unico verificato anche dalla ricerca server. Coperti preservazione originali/importi, archivio automatico/ripristino, altre risorse, token scaduto anche su altra scheda, fatture acconto/saldo multioggetto, consenso mancante, fonti private di altre schede, riferimenti nativi, elaborazione automatica pendente, viewer, CSRF/contesto e replay. Il vecchio replay già registrato prima della revisione resta compatibile; nuove conferme senza archivio sono rifiutate.
+Fixture isolate: spostamento condiviso, archivio/stanze, stessi file in casa e oggetti, una riga in Tutti, classificazioni conservate, costi e collegamenti delle altre schede invariati, token scaduto, fonte di nuova versione esclusa, fonti private, riferimenti nativi, viewer, CSRF e replay. Regressione viste e organizzazione dell’acquisizione, build/lint V5 e test UI con backend simulato.
 
-Frontend: `KeepHouseDocuments.test.tsx` e `objects.test.tsx`: 29 test passati con backend simulato; menu, annullamento, singola conferma con archivio automatico e consenso ai collegamenti correlati, ritorno e retry stessa chiave. Build e lint V5. Browser desktop 1366×900 e mobile 390×844 con due fatture/costi sintetici e altra scheda conservata; nessuna AI live. Dati reali verificati separatamente in sola lettura.
+Browser desktop/mobile con due fatture sintetiche condivise e videocitofono conservato. Dati reali controllati in sola lettura: le due fatture risultano ancora collegate al videocitofono. Nessuno spostamento reale eseguito durante la correzione.

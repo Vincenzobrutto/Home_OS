@@ -59,7 +59,7 @@ test('Conserva documenti nella casa: transazione su sole fixture, nessun worker 
   const org=await db.documentOrganization.create({data:{accountId:a.id,homeId:h,documentId:doc.id,documentVersion:1,documentSha256:doc.original.sha256,title:'APE già classificato',parts:[{kind:'other',pageFrom:null,pageTo:null}],collections:['unclassified']}});
   const plan=await s.houseDocuments(a.id,h,obj.ref.id),input=body(plan,true),key=randomUUID();
   await s.keepHouseDocuments(a.id,h,obj.ref.id,input,key);await s.keepHouseDocuments(a.id,h,obj.ref.id,input,key);
-  assert.deepEqual(await db.documentOrganization.findUnique({where:{id:org.id}}),org);
+  const savedOrg=await db.documentOrganization.findUnique({where:{id:org.id}});assert(savedOrg.houseDocument);assert.deepEqual({...savedOrg,houseDocument:org.houseDocument,version:org.version,updatedAt:org.updatedAt},org);
   const after=(await s.getObject(a.id,h,'object',obj.ref.id,{})).object;assert.equal(after.state,'archived');assert.equal(after.position.rooms.length,0);
   assert((await s.history(a.id,h,'object',obj.ref.id,{})).items.some(e=>e.kind==='position_updated'));
   const restored=await s.objectAction(a.id,h,obj.ref.id,'restore',{expectedVersion:after.version},randomUUID());assert.equal(restored.object.state,'active');
@@ -76,10 +76,10 @@ test('Conserva documenti nella casa: transazione su sole fixture, nessun worker 
   const other=(await s.createObject(a.id,h,{name:'Altro oggetto',type:'other'},randomUUID())).object;
   await s.addLink(a.id,h,'object',other.ref.id,{resourceType:'document',resourceId:doc.id},randomUUID());
   const blocked=await s.houseDocuments(a.id,h,obj.ref.id);assert.equal(blocked.documents[0].reason,null);assert.equal(blocked.documents[0].relatedObjects[0].name,'Altro oggetto');
-  await rejected(s.keepHouseDocuments(a.id,h,obj.ref.id,body(blocked),randomUUID()),409,'related_objects_confirmation_required');
-  await rejected(s.keepHouseDocuments(a.id,h,obj.ref.id,{...body(blocked),detachRelatedObjects:true},randomUUID()),409,'object_has_other_resources');
+  await rejected(s.keepHouseDocuments(a.id,h,obj.ref.id,body(blocked),randomUUID()),409,'object_has_other_resources');
+  await rejected(s.keepHouseDocuments(a.id,h,obj.ref.id,{...body(blocked),detachRelatedObjects:true},randomUUID()),422);
  });
- await t.test('Acconto e saldo multioggetto: una conferma esplicita, stessi documenti/costi, altre schede conservate',async()=>{
+ await t.test('Acconto e saldo condivisi: casa e componenti consultano gli stessi file, collegamenti preservati',async()=>{
   const {obj,doc,cost}=await fixture();
   const component=(await s.createObject(a.id,h,{name:'Componente sintetico',type:'other'},randomUUID())).object;
   await s.addLink(a.id,h,'object',component.ref.id,{resourceType:'document',resourceId:doc.id},randomUUID());
@@ -90,18 +90,22 @@ test('Conserva documenti nella casa: transazione su sole fixture, nessun worker 
   const org=await db.documentOrganization.create({data:{accountId:a.id,homeId:h,documentId:second.id,documentVersion:1,documentSha256:second.original.sha256,title:'Fattura saldo sintetica',parts:[{kind:'invoice',pageFrom:null,pageTo:null}],collections:['purchases']}});
   let plan=await s.houseDocuments(a.id,h,obj.ref.id);assert.equal(plan.documents.length,2);assert(plan.documents.every(d=>d.reason===null));assert(plan.documents.some(d=>d.expenses.some(e=>e.id===saldo.id)));
   await db.homeObject.update({where:{id:component.ref.id},data:{name:'Componente rinominato',version:{increment:1}}});
-  await rejected(s.keepHouseDocuments(a.id,h,obj.ref.id,{...body(plan),detachRelatedObjects:true},randomUUID()),409,'house_documents_changed');
+  await rejected(s.keepHouseDocuments(a.id,h,obj.ref.id,body(plan),randomUUID()),409,'house_documents_changed');
   plan=await s.houseDocuments(a.id,h,obj.ref.id);
-  await rejected(s.keepHouseDocuments(a.id,h,obj.ref.id,body(plan),randomUUID()),409,'related_objects_confirmation_required');
-  const input={...body(plan),detachRelatedObjects:true},key=randomUUID(),reply=await s.keepHouseDocuments(a.id,h,obj.ref.id,input,key);
-  assert(reply.archivedObject);assert.deepEqual(await db.documentOrganization.findUnique({where:{id:org.id}}),org);
-  for(const before of [cost,saldo]){const after=await db.homeExpense.findUnique({where:{id:before.id}});assert.deepEqual({...after,updatedAt:before.updatedAt,version:before.version},before);assert.equal(after.version,before.version+1);}
+  await rejected(s.keepHouseDocuments(a.id,h,obj.ref.id,{...body(plan),detachRelatedObjects:true},randomUUID()),422);
+  const input=body(plan),key=randomUUID(),reply=await s.keepHouseDocuments(a.id,h,obj.ref.id,input,key);
+  assert(reply.archivedObject);const savedOrg=await db.documentOrganization.findUnique({where:{id:org.id}});assert(savedOrg.houseDocument);assert.deepEqual({...savedOrg,houseDocument:org.houseDocument,version:org.version,updatedAt:org.updatedAt},org);
+  for(const before of [cost,saldo]){const after=await db.homeExpense.findUnique({where:{id:before.id}});assert.deepEqual({...after,updatedAt:before.updatedAt,version:before.version},before);assert.equal(after.version,before.version+(before.id===cost.id?1:0));}
   assert.equal(await db.homeExpense.count({where:{documentId:{in:[doc.id,second.id]}}}),2);
   assert.equal((await s.getObject(a.id,h,'object',component.ref.id,{})).object.state,'active');
-  assert.equal(await db.objectResourceLink.count({where:{state:'active',OR:[{documentId:{in:[doc.id,second.id]}},{expenseId:{in:[cost.id,saldo.id]}}]}}),0);
+  assert.equal(await db.objectResourceLink.count({where:{state:'active',OR:[{documentId:{in:[doc.id,second.id]}},{expenseId:{in:[cost.id,saldo.id]}}]}}),2);
   const house=await documents.list(a.id,h,{limit:50,view:'house',group:'other'});assert([doc.id,second.id].every(id=>house.items.some(d=>d.id===id)));
-  const count=await db.expenseHistory.count({where:{expenseId:{in:[cost.id,saldo.id]}}});assert.equal(count,2);assert.deepEqual(await s.keepHouseDocuments(a.id,h,obj.ref.id,input,key),reply);assert.equal(await db.expenseHistory.count({where:{expenseId:{in:[cost.id,saldo.id]}}}),count);
-  assert((await s.history(a.id,h,'object',component.ref.id,{})).items.some(e=>e.kind==='unlinked'));
+  const count=await db.expenseHistory.count({where:{expenseId:{in:[cost.id,saldo.id]}}});assert.equal(count,1);assert.deepEqual(await s.keepHouseDocuments(a.id,h,obj.ref.id,input,key),reply);assert.equal(await db.expenseHistory.count({where:{expenseId:{in:[cost.id,saldo.id]}}}),count);
+  assert(!(await s.history(a.id,h,'object',component.ref.id,{})).items.some(e=>e.kind==='unlinked'));
+  const objectDocs=await documents.list(a.id,h,{limit:50,view:'objects'});assert([doc.id,second.id].every(id=>objectDocs.items.some(d=>d.id===id)));
+  const all=await documents.list(a.id,h,{limit:50,view:'all'});for(const id of [doc.id,second.id])assert.equal(all.items.filter(d=>d.id===id).length,1);
+  await db.documentVersion.update({where:{id:second.original.id},data:{version:2}});
+  assert(!(await documents.list(a.id,h,{limit:50,view:'house',group:'other'})).items.some(d=>d.id===second.id));
  });
  await t.test('Fonte privata di un’altra scheda e riferimenti nativi: nessun aggiramento o nome esposto',async()=>{
   const {obj,doc}=await fixture();
@@ -110,11 +114,11 @@ test('Conserva documenti nella casa: transazione su sole fixture, nessun worker 
   const proof=await db.document.create({data:{homeId:h,uploaderId:b.id,name:'Fonte riservata',visibility:'private',original:{create:{originalFilename:'private.pdf',mimeType:'application/pdf',byteSize:10,sha256:'c'.repeat(64),file:{create:{storageKey:randomUUID()+'.bin'}}}}},include:{original:true}});files.push(proof.original.fileId);
   await db.receiptObjectField.create({data:{accountId:a.id,homeId:h,objectId:hidden.ref.id,fieldKey:'name',value:'Nome riservato da non esporre',origin:'extraction_confirmed',documentId:proof.id,documentVersion:1,documentSha256:proof.original.sha256,sources:[{documentId:proof.id,page:1,excerpt:'Nome riservato da non esporre'}]}});
   const privatePlan=await s.houseDocuments(a.id,h,obj.ref.id);assert(privatePlan.documents[0].reason.includes('non è consultabile'));assert.equal(privatePlan.documents[0].relatedObjects.length,0);assert(!JSON.stringify(privatePlan).includes('Nome riservato'));
-  await rejected(s.keepHouseDocuments(a.id,h,obj.ref.id,{...body(privatePlan),detachRelatedObjects:true},randomUUID()),409,'house_documents_unavailable');
+  await rejected(s.keepHouseDocuments(a.id,h,obj.ref.id,body(privatePlan),randomUUID()),409,'house_documents_unavailable');
   const second=await fixture(),boiler=await db.boilerAsset.create({data:{accountId:a.id,homeId:h,name:'Caldaia sintetica'}});
   await s.addLink(a.id,h,'boiler',boiler.id,{resourceType:'document',resourceId:second.doc.id},randomUUID());
   const nativePlan=await s.houseDocuments(a.id,h,second.obj.ref.id);assert(nativePlan.documents[0].reason.includes('caldaia'));
-  await rejected(s.keepHouseDocuments(a.id,h,second.obj.ref.id,{...body(nativePlan),detachRelatedObjects:true},randomUUID()),409,'house_documents_unavailable');
+  await rejected(s.keepHouseDocuments(a.id,h,second.obj.ref.id,body(nativePlan),randomUUID()),409,'house_documents_unavailable');
  });
  await t.test('Elaborazione automatica pendente, privacy, viewer e replay con permessi revocati',async()=>{
   const {obj,doc}=await fixture();

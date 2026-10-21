@@ -21,7 +21,7 @@ export function documentViewBase(a:string,h:string,f:Filters,w:{state:Prisma.Sql
  const mime={pdf:'application/pdf',jpeg:'image/jpeg',png:'image/png'};
  return Prisma.sql`${catalogBase(a,h,objectsQuery({state:'all'}))}, searched_documents AS (
    SELECT d.id,d."createdAt",${w.state} AS "workflowState",${w.analysisSucceeded} AS "aiAnalysisSucceeded",
-     o.id IS NOT NULL AS organized,${linked} AS linked,${group} AS "groupKey"
+     o.id IS NOT NULL AS organized,COALESCE(o."houseDocument",false) AS "houseDocument",${linked} AS linked,${group} AS "groupKey"
    FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
    LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${a} AND o."homeId"=${h} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256
    WHERE d."homeId"=${h} AND (d.visibility='home' OR d."uploaderId"=${a})
@@ -32,12 +32,12 @@ export function documentViewBase(a:string,h:string,f:Filters,w:{state:Prisma.Sql
    ${!f.q?Prisma.empty:Prisma.sql`AND (normalize(COALESCE(o.title,d.name),NFC) COLLATE "und-x-icu" ILIKE ${literalPattern(f.q)} ESCAPE '\\' OR normalize(v."originalFilename",NFC) COLLATE "und-x-icu" ILIKE ${literalPattern(f.q)} ESCAPE '\\')`}
  )`;
 }
-export function documentViewWhere(f:Filters){return Prisma.sql`${f.view==='house'?Prisma.sql`s.organized AND NOT s.linked`:f.view==='objects'?Prisma.sql`s.linked`:Prisma.sql`TRUE`}
+export function documentViewWhere(f:Filters){return Prisma.sql`${f.view==='house'?Prisma.sql`s.organized AND (s."houseDocument" OR NOT s.linked)`:f.view==='objects'?Prisma.sql`s.linked`:Prisma.sql`TRUE`}
  ${f.group?Prisma.sql`AND s."groupKey"=${f.group}`:f.view==='house'?Prisma.sql`AND FALSE`:Prisma.empty}`;}
 export async function documentViewSummary(tx:Prisma.TransactionClient,base:Prisma.Sql){
  const [row]=await tx.$queryRaw<Array<Record<string,bigint>>>(Prisma.sql`${base} SELECT COUNT(*) AS "all",
- COUNT(*) FILTER(WHERE organized AND NOT linked) AS house,COUNT(*) FILTER(WHERE linked) AS objects,
- ${Prisma.join(DOCUMENT_GROUPS.map(group=>Prisma.sql`COUNT(*) FILTER(WHERE organized AND NOT linked AND "groupKey"=${group}) AS ${Prisma.raw('"'+group+'"')}`))}
+ COUNT(*) FILTER(WHERE organized AND ("houseDocument" OR NOT linked)) AS house,COUNT(*) FILTER(WHERE linked) AS objects,
+ ${Prisma.join(DOCUMENT_GROUPS.map(group=>Prisma.sql`COUNT(*) FILTER(WHERE organized AND ("houseDocument" OR NOT linked) AND "groupKey"=${group}) AS ${Prisma.raw('"'+group+'"')}`))}
  FROM searched_documents`);
  return {views:{all:Number(row.all),house:Number(row.house),objects:Number(row.objects)},groups:Object.fromEntries(DOCUMENT_GROUPS.map(group=>[group,Number(row[group])]))};
 }

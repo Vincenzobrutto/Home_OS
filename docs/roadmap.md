@@ -1,6 +1,6 @@
 ## Documenti della casa da scheda oggetto completato — 21 ottobre 2026
 
-Disponibile lo spostamento di documenti e fatture nella casa con archivio automatico della scheda errata e riepilogo degli altri collegamenti da rimuovere, senza duplicare fonti o costi. Restano separati riferimenti nativi a caldaie, unione di schede e trasformazione dei loro dati tecnici. [Regole e verifiche](v5/house-documents-from-object-20261021.md).
+Spostamento nella casa con archivio della sola scheda scelta; documenti condivisi e relativi collegamenti sugli altri oggetti preservati. Viste sovrapposte con un unico archivio. Restano separati riferimenti nativi a caldaie e fusione delle schede. [Regole e verifiche](v5/house-documents-from-object-20261021.md).
 
 ## Documenti: originale, classificazioni ed esempi completati — 21 ottobre 2026
 

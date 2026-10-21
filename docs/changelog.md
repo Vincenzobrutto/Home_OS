@@ -1,6 +1,6 @@
 ## Oggetti: conserva documenti nella casa — 21 ottobre 2026
 
-Azione **Sposta in Documenti della casa** con riepilogo, fatture incluse e archivio automatico della scheda con rimozione dalle stanze. Altri collegamenti generici mostrati e rimossi con conferma; altre schede, spese e originali preservati. Conferma atomica protetta da versione/fonte e idempotenza. [Verifiche e limiti](v5/house-documents-from-object-20261021.md).
+Corretta la gestione delle fatture condivise: archivia soltanto la scheda scelta, conserva gli altri oggetti e tutti i loro collegamenti. Appartenenza esplicita personale alla vista casa, senza copie o rimozione dei riferimenti al videocitofono. Migrazione additiva e riepilogo “Collegamenti che rimangono”. [Verifiche e limiti](v5/house-documents-from-object-20261021.md).
 
 ## Documenti: consultazione e correzione del tipo — 21 ottobre 2026
 

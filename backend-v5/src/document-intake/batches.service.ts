@@ -152,7 +152,7 @@ export class IntakeBatchesService {
             const proposal = item.proposal as { title?: unknown; parts?: unknown } | null;
             if (item.uploadState !== 'stored' || item.reviewState !== 'unreviewed' || item.analysisState !== 'ready' || org || selection.target.kind !== 'home' || !proposal || proposal.title !== selection.title || !sameParts(proposal.parts, selection.parts)) throw conflict('intake_individual_review_required', 'Questo documento richiede una revisione individuale.');
           }
-          const data = { title: selection.title, parts: json(selection.parts), collections: collectionsFor(selection.parts), documentVersion: item.documentVersion!, documentSha256: item.documentSha256!, updatedAt: new Date() };
+          const data = { title: selection.title, parts: json(selection.parts), collections: collectionsFor(selection.parts), documentVersion: item.documentVersion!, documentSha256: item.documentSha256!, houseDocument:!!org?.houseDocument&&org.documentVersion===item.documentVersion&&org.documentSha256===item.documentSha256, updatedAt: new Date() };
           const same = org && org.title === data.title && sameParts(org.parts, selection.parts) && org.documentVersion === data.documentVersion && org.documentSha256 === data.documentSha256;
           if (!same) await tx.documentOrganization.upsert({ where, create: { ...data, accountId: a, homeId: h, documentId: doc.id }, update: { ...data, version: { increment: 1 } } });
           if (selection.target.kind !== 'home') {

@@ -1,6 +1,6 @@
 ## 21 ottobre 2026 — Documento della casa e scheda oggetto restano entità distinte
 
-Per correggere una scheda creata per errore, spostare tutti i suoi documenti esistenti nella vista della casa e archiviare la scheda togliendola dalle stanze, con un’unica conferma dopo il riepilogo. La richiesta successiva dell’utente sostituisce l’archivio facoltativo iniziale: lo spostamento deve far sparire la scheda dagli attivi e includere le fatture. Altri riferimenti generici possono essere rimossi soltanto dopo averli presentati, mantenendo le altre schede e gli stessi costi; fonti inaccessibili e relazioni native restano protette. Motivo: azione coerente e semplice senza perdita di dati o duplicazioni. [Regole e limiti](v5/house-documents-from-object-20261021.md).
+La precisazione dell’utente sostituisce la rimozione dei riferimenti ad altre schede: archiviando l’impianto nella casa, il videocitofono resta attivo con le stesse fatture condivise. Casa e oggetti sono viste sovrapposte di file unici, non contenitori esclusivi. Memorizzare un’appartenenza esplicita personale/versionata e modificare soltanto i riferimenti alla scheda scelta; altri oggetti e costi restano invariati. [Regole e limiti](v5/house-documents-from-object-20261021.md).
 
 ## 21 ottobre 2026 — Proporre il riuso per le fatture successive
 
