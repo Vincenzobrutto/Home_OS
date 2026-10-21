@@ -5,7 +5,7 @@ import {ui} from '../components/ui';
 import styles from './editor.module.css';
 
 /** Local renderer: only authorized bytes, bundled worker, no external viewer or PDF actions. */
-export function PdfPreview({blob,url}:{blob:Blob;url:string}){
+export function PdfPreview({blob,url,filename='documento-originale.pdf',showDownload=true}:{blob:Blob;url:string;filename?:string;showDownload?:boolean}){
  const [pdf,setPdf]=useState<PDFDocumentProxy|null>(null),[page,setPage]=useState(1),[zoom,setZoom]=useState(1),[rotation,setRotation]=useState(0),[error,setError]=useState(false);
  const canvas=useRef<HTMLCanvasElement>(null);
  useEffect(()=>{let live=true;let destroy:(()=>void)|undefined;
@@ -19,6 +19,6 @@ export function PdfPreview({blob,url}:{blob:Blob;url:string}){
  return <div className={styles.pdf}><div className={styles.pdfToolbar} aria-label="Controlli anteprima PDF"><button type="button" className={ui.btn} aria-label="Pagina precedente" disabled={!pdf||page<=1} onClick={()=>setPage(n=>n-1)}>Indietro</button><span aria-live="polite">{page} / {pdf?.numPages??'…'}</span><button type="button" className={ui.btn} aria-label="Pagina successiva" disabled={!pdf||page>=pdf.numPages} onClick={()=>setPage(n=>n+1)}>Avanti</button><label>Zoom<select aria-label="Zoom PDF" value={zoom} onChange={e=>setZoom(Number(e.target.value))}>{[.75,1,1.25,1.5,2].map(value=><option key={value} value={value}>{value*100}%</option>)}</select></label></div>
   <div className={styles.pdfToolbar}><button type="button" className={ui.btn} disabled={!pdf} aria-label="Ruota anteprima di 90 gradi" onClick={()=>setRotation(n=>(n+90)%360)}>Ruota ↻</button><span className={ui.hint}>Solo l’anteprima: l’originale resta invariato.</span></div>
   {error?<p role="status">Anteprima non disponibile per questo PDF. Puoi aprire o scaricare l’originale.</p>:<div className={styles.pdfPage}>{!pdf&&<p role="status">Preparazione anteprima…</p>}<canvas ref={canvas} style={{width:`${zoom*100}%`}} aria-label={'Pagina '+page+' del documento originale'}/></div>}
-  <a href={url} download="documento-originale.pdf">Scarica originale</a>
+  {showDownload&&<a href={url} download={filename}>Scarica originale</a>}
  </div>;
 }

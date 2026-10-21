@@ -1,3 +1,7 @@
+## Documenti: originale e classificazioni più accessibili — 21 ottobre 2026
+
+Originale diretto nelle righe e in testa al dettaglio, PDF con renderer locale, ritorno conservato e modifica del tipo senza duplicati. Stato Completato coerente, originale distinto dalla compilazione; Correggi tipo in Altri e PDF di esempio solo in modalità demo/test. Browser desktop/mobile, test mirati e dati reali invariati. [Regole e verifiche](v5/document-original-classification-20261021.md).
+
 ## Documenti: ricerca con ritorno e rimandi — 21 ottobre 2026
 
 Cancellando la ricerca si ripristinano vista, gruppo, filtri e punto di lettura iniziali. Le viste vuote rimandano ai risultati server nelle altre viste mantenendo i filtri. Browser desktop/mobile in sola lettura, 41 test mirati, build/lint e dati reali invariati. [Regole, verifiche e limiti](v5/document-search-context-20261021.md).

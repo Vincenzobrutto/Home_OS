@@ -43,6 +43,10 @@ test('Document views: complete facets, current references, privacy and category 
   assert.deepEqual(row.linkedObjects,[{id:obj.id,kind:'object',name:obj.name}]);
   assert.deepEqual(row.savedExpenses,[{id:expense.id,title:'Acconto synthetic expense',supplier:'Synthetic supplier',documentNumber:'14',documentDate:'2026-01-01',amountCents:100}]);
   assert.equal(row.name,'Invoice');
+  assert.equal((await service.get(a,h,invoice.id)).document.workflowState,row.workflowState,'Detail uses the same personal workflow state as the list');
+  assert.equal((await service.get(a,h,direct.id)).document.workflowState,'completed');
+  assert.equal((await service.get(a,h,raw.id)).document.workflowState,'to_compile');
+  await assert.rejects(service.get(b,h,invoice.id),e=>e.getStatus?.()===403);
   await db.objectResourceLink.deleteMany({where:{documentId:invoice.id}});
  });
  await db.documentOrganization.update({where:{accountId_homeId_documentId:{...scope,documentId:plans[0].id}},data:{parts:[{kind:'floor_plan'},{kind:'ape'}],collections:['building','energy']}});

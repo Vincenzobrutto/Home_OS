@@ -1,3 +1,7 @@
+## Documenti: consultazione e correzione del tipo — 21 ottobre 2026
+
+Accesso diretto all’originale, visualizzatore PDF locale e singola azione di modifica nel dettaglio. Stato personale anche nel GET dettaglio; correzione esplicita da Altri, esempi nascosti nell’app reale. [Verifiche e limiti](v5/document-original-classification-20261021.md).
+
 ## Documenti: ritorno dalla ricerca e risultati nelle altre viste — 21 ottobre 2026
 
 Ricerca globale con origine temporanea per account/casa, ripristino alla cancellazione e rimandi dai risultati vuoti senza azzerare i filtri. [Verifiche e limiti](v5/document-search-context-20261021.md).

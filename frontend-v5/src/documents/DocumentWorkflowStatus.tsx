@@ -6,7 +6,7 @@ const states = {
   to_compile: ['Da compilare', 'Inserisci i dati oppure precompilali con l’AI.', 'neutral', 'document'],
   analyzing: ['In analisi', 'Stiamo preparando la proposta. Puoi tornare più tardi.', 'progress', 'info'],
   review: ['Da rivedere', 'Controlla i dati proposti e salva.', 'warning', 'alert'],
-  completed: ['Completato', 'Dati salvati. Puoi consultare il file originale.', 'success', 'document'],
+  completed: ['Completato', 'Le tue scelte sono salvate, anche quando conservi solo il documento.', 'success', 'document'],
   attention: ['Analisi da controllare', 'Apri il documento per controllare l’esito dell’analisi.', 'error', 'alert'],
 } as const;
 

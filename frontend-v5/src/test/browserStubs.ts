@@ -18,6 +18,8 @@ export const downloads: Array<{ filename: string; blob: Blob | undefined }> = []
 let counter = 0;
 
 export function installBrowserStubs() {
+  // jsdom has no layout/scrolling; browser QA verifies the actual anchor position.
+  HTMLElement.prototype.scrollIntoView = function scrollIntoView() {};
   URL.createObjectURL = (obj: Blob | MediaSource) => {
     const url = `blob:test/${++counter}`;
     blobUrls.created.set(url, obj as Blob);

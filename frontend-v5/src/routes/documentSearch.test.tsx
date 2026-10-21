@@ -105,6 +105,8 @@ it('restores all loaded result pages and the document focus after detail and Bac
  const links=within(await results()).getAllByRole('link'),name=links.at(-1)!.textContent!;
  await app.user.click(screen.getAllByRole('button',{name:'Vedi dettagli'}).at(-1)!);
  await screen.findByRole('heading',{name,level:1});
+ await app.user.click(screen.getByRole('link',{name:'Vedi originale'}));
+ expect(screen.getByRole('link',{name:/← Documenti di/}).getAttribute('href')).toContain('q=Manuale');
  await app.user.click(await screen.findByRole('link',{name:/← Documenti di/}));
  await waitFor(async()=>expect(within(await results()).getAllByRole('listitem')).toHaveLength(24));
  await waitFor(()=>expect(screen.getByRole('link',{name})).toHaveFocus());

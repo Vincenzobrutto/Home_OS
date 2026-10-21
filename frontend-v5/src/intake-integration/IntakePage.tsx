@@ -1,4 +1,5 @@
 import type {DocumentTarget} from '../object-onboarding/DocumentReference';
+import {documentExamplesEnabled} from '../documents/exampleEnvironment';
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
 import { FilePicker } from '../components/FilePicker';
 import { DocumentCompilationActions } from '../object-onboarding/DocumentCompilationActions';
@@ -233,7 +234,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
       renderOutcomeLinks={() => <Link className={ui.btn} to={`/home/${home.id}/documenti`}>Vai ai Documenti</Link>}
       onRetryLoad={() => { void cap.refetch(); if (id) void batch.refetch(); }} />}
     <input ref={picker} hidden type="file" accept="application/pdf,image/jpeg,image/png" aria-label="Originale da ricaricare" onChange={e => { const file = e.target.files?.[0], itemId = retryItem.current; if (file && itemId && current.current) { files.current.set(itemId, file); void upload(current.current, itemId); } e.target.value = ''; }} />
-    {!workspace&&!id && <details><summary>PDF sintetici per provare il percorso</summary><p>Documenti di esempio, senza dati personali. Scaricali e selezionali nel caricamento.</p><ul>{['ape-sintetico.pdf', 'pratica-mista-sintetica.pdf', 'regolamento-sintetico.pdf', 'ricevuta-sintetica.pdf', 'senza-testo-sintetico.pdf'].map(name => <li key={name}><a href={'/intake-examples/' + name} download>{name}</a></li>)}</ul></details>}
+    {documentExamplesEnabled()&&!workspace&&!id && <details><summary>PDF sintetici per provare il percorso</summary><p>Documenti di esempio, senza dati personali. Scaricali e selezionali nel caricamento.</p><ul>{['ape-sintetico.pdf', 'pratica-mista-sintetica.pdf', 'regolamento-sintetico.pdf', 'ricevuta-sintetica.pdf', 'senza-testo-sintetico.pdf'].map(name => <li key={name}><a href={'/intake-examples/' + name} download>{name}</a></li>)}</ul></details>}
     {!workspace&&<section className={`${ui.card} ${styles.history}`} aria-label="Caricamenti precedenti"><h2>Caricamenti precedenti</h2>
       {history.isPending ? <Loading label="Caricamento della cronologia…" /> : history.isError ? <ErrorState error={history.error} onRetry={() => void history.refetch()} /> : <ul>{history.data?.pages.flatMap(p => p.items).map(b => <li key={b.id}><Link to={`?lotto=${b.id}`}>{new Date(b.createdAt).toLocaleString('it-IT')} · {b.itemCount} file · {b.state === 'completed' ? 'Completato' : 'Da completare'}</Link></li>)}</ul>}
       {history.hasNextPage && <button className={ui.btn} disabled={history.isFetchingNextPage} onClick={() => void history.fetchNextPage()}>Altri caricamenti</button>}

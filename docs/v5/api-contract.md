@@ -1,3 +1,7 @@
+## Stato personale nel dettaglio Documenti — 21 ottobre 2026
+
+GET `/homes/:homeId/documents/:id` aggiunge `document.workflowState`, con gli stessi valori e la stessa proiezione account/casa/versione/SHA dell’elenco (`to_compile|analyzing|review|completed|attention`). Membership, visibilità e lock della fonte prima della proiezione. `status:stored` continua a descrivere il file conservato: non viene usato come stato della compilazione. Nessuna scrittura o analisi durante il GET. [UI e verifiche](document-original-classification-20261021.md).
+
 ## Contesto personale nelle righe Documenti — 21 ottobre 2026
 
 GET `/homes/:homeId/documents` aggiunge a ogni elemento `linkedObjects: Array<{id,kind:'object'|'boiler',name}>` e `savedExpenses: Array<{id,title,amountCents,supplier:string|null,documentNumber:string|null,documentDate:string|null}>`, anche senza `view`. Collezioni vuote se assenti. Dettaglio, cursori e filtri invariati. `linkedObjects` deduplica riferimenti diretti, derivati da spesa attiva e fonti correnti caldaia con la stessa policy fonte del catalogo. `savedExpenses` contiene solo spese attive personali dello stesso account/casa associate al documento accessibile; ordinamento data spesa discendente, ID crescente. Dati confermati, nessuna proposta AI o inferenza. Il frontend mostra i dati della spesa nelle righe classificate Fattura e tollera l’assenza delle due proprietà su API precedenti. [Regole e verifiche](document-row-context-20261021.md).

@@ -1,4 +1,5 @@
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
+import {documentExamplesEnabled} from '../documents/exampleEnvironment';
 import {DocumentRowContext} from '../documents/DocumentRowContext';
 import { documentTypeLabels,documentDisplayTitle } from '../documents/presentation';
 import { BulkDocumentCompilation } from '../documents/BulkDocumentCompilation';
@@ -193,7 +194,7 @@ export function DocumentsPage() {
         onGroup={group => apply({...applied,group})}
         onView={view=>apply({...applied,view,group:undefined})}
       />
-      {canUpload && (
+      {canUpload && documentExamplesEnabled() && (
         <div className={styles.spaced}>
           <details><summary>Documenti di esempio</summary><ExamplePdfs homeId={home.id} /></details>
         </div>
@@ -394,6 +395,7 @@ function DocumentsArchive(props: {
             key={doc.id}
             doc={doc}
             fileDetailsOpen={restore?.filters===filtersKey(filters)&&restore.openedFiles?.includes(doc.id)||false}
+            showTypeCorrection={!!house&&filters.group==='other'&&props.canUpload}
             homeId={home.id}
             backSearch={filtersToParams(filters).toString()}
             selectable={canExport && selecting}
@@ -507,7 +509,7 @@ function DocumentsArchive(props: {
           {documents.hasNextPage ? ' — ce ne sono altri' : ''}
         </h2>
       )}
-      {house ? <HouseDocumentGroups summary={summary} selected={filters.group} onChange={props.onGroup}>{documentList()}</HouseDocumentGroups> : documentList()}
+      {house ? <HouseDocumentGroups summary={summary} selected={filters.group} onChange={props.onGroup}>{filters.group==='other'&&props.canUpload&&<p className={docs.groupEmpty}>Un documento appartiene a un’altra tipologia? Usa “Correggi tipo”.</p>}{documentList()}</HouseDocumentGroups> : documentList()}
 
     </section>
   );
@@ -526,6 +528,7 @@ function exportErrorMessage(error: unknown) {
 
 function DocumentRow(props: {
   doc: DocumentSummary;
+  showTypeCorrection?:boolean;
   fileDetailsOpen?:boolean;
   homeId: string;
   /** Filtri applicati, per tornare dal dettaglio agli stessi risultati. */
@@ -566,7 +569,7 @@ function DocumentRow(props: {
         >
           {title}
         </Link>
-        <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag></div>
+        <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>{props.showTypeCorrection&&<Link className={docs.correctType} to={`/home/${encodeURIComponent(props.homeId)}/documenti/${encodeURIComponent(doc.id)}#doc-classificazione`} state={{documentsSearch:props.backSearch,documentsAccountId:account.id}}>Correggi tipo</Link>}</div>
         <DocumentRowContext doc={doc} homeId={props.homeId}/>
         {doc.permissions.includes('read') && (
           <DocumentWorkspaceActions homeId={props.homeId} document={doc}/>

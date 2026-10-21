@@ -1,3 +1,4 @@
+import {documentExamplesEnabled} from '../documents/exampleEnvironment';
 import { useId, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { isApiError } from '../api/errors';
@@ -49,6 +50,9 @@ export const EXAMPLE_PDFS = [
 
 /** Download statici dei tre PDF sintetici; il caricamento passa sempre da Documenti (M2). */
 export function ExamplePdfs({ homeId }: { homeId: string }) {
+  return documentExamplesEnabled()?<EnabledExamplePdfs homeId={homeId}/>:null;
+}
+function EnabledExamplePdfs({homeId}:{homeId:string}){
   const capabilities = useCapabilities(homeId);
   const caps = capabilities.data;
   const fixtureEnabled = caps?.providers

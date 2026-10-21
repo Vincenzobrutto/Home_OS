@@ -128,7 +128,10 @@ export class DocumentsService implements OnModuleInit {
       const current = await tx.document.findUnique({ where: { id }, include: includeOriginal });
       if (!current || current.homeId !== homeId || !canReadDocument(current, accountId)) throw new ForbiddenException();
       const org = await currentOrganization(tx, accountId, homeId, current);
-      return { document: { ...publicDocument(current, canExport(member), true), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null } };
+      const {state}=workflowSql(accountId,homeId);
+      const [workflow]=await tx.$queryRaw<Array<{workflowState:string}>>(Prisma.sql`SELECT ${state} AS "workflowState" FROM "Document" d
+        LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${accountId} AND o."homeId"=${homeId} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256 WHERE d.id=${id}`);
+      return { document: { ...publicDocument(current, canExport(member), true),workflowState:workflow.workflowState, ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null } };
     });
   }
   async upload(accountId: string, homeId: string, dto: UploadDocumentDto, file: { buffer: Buffer; originalname: string } | undefined, key?: string) {

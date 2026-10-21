@@ -322,6 +322,31 @@ describe('[mock] Documenti — caricamento', () => {
 });
 
 describe('[mock] Documenti — dettaglio, download ed export', () => {
+  it('dettaglio casa: uno stato coerente, una sola modifica del tipo e accesso diretto all’originale',async()=>{
+    const {backend,owner,home}=documentsWorld();
+    const doc=await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Planimetria casa',workflowState:'completed'});
+    const app=await openDocuments(backend,owner.email,PW.owner,home.id);
+    const writes=backend.log.filter(r=>r.method==='POST').length;
+    await app.router.navigate(`/home/${home.id}/documenti/${doc.id}#doc-classificazione`);
+    await screen.findByRole('heading',{level:1,name:'Planimetria casa'});
+    expect(await screen.findByLabelText('Stato: Completato')).toBeVisible();
+    expect(screen.getAllByRole('button',{name:'Modifica titolo e tipo'})).toHaveLength(1);
+    await waitFor(()=>expect(screen.getByRole('button',{name:'Modifica titolo e tipo'})).toHaveFocus());
+    expect(screen.getByText(/Le tue scelte sono salvate/)).toBeVisible();
+    expect(screen.getByRole('link',{name:'Vedi originale'})).toHaveAttribute('href',`/home/${home.id}/documenti/${doc.id}#doc-anteprima`);
+    expect(screen.queryByText('Originale caricato')).not.toBeInTheDocument();
+    expect(backend.log.filter(r=>r.method==='POST')).toHaveLength(writes);
+  });
+  it('originale apribile dalla riga con un clic, senza aprire altre azioni o modificare dati',async()=>{
+    const {backend,owner,home}=documentsWorld();await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Documento originale'});
+    const app=await openDocuments(backend,owner.email,PW.owner,home.id);await screen.findByRole('link',{name:'Documento originale'});
+    const writes=backend.log.filter(r=>r.method==='POST').length;
+    await app.user.click(screen.getByRole('button',{name:'Vedi originale'}));
+    expect(await screen.findByRole('region',{name:'Documento originale'})).toBeVisible();
+    expect(screen.getByRole('button',{name:'Chiudi originale'})).toHaveAttribute('aria-expanded','true');
+    expect(backend.log.filter(r=>r.method==='POST')).toHaveLength(writes);
+    await app.user.click(screen.getByRole('button',{name:'Chiudi originale'}));expect(screen.queryByLabelText('Documento originale')).not.toBeInTheDocument();
+  });
   it('dettaglio: metadati, versione 1, SHA-256, anteprima dai byte autorizzati e download con nome sicuro', async () => {
     const { backend, owner, home } = documentsWorld();
     const doc = await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Rogito', originalFilename: 'rogito.pdf', visibility: 'home' });
@@ -332,7 +357,10 @@ describe('[mock] Documenti — dettaglio, download ed export', () => {
     const data = screen.getByRole('region', { name: 'Dati del file' });
     expect(data).toHaveTextContent('rogito.pdf');
     expect(data).toHaveTextContent('Caricamento manuale');
-    expect(data).toHaveTextContent('Originale caricato');
+    expect(data).toHaveTextContent('File originale');
+    expect(data).toHaveTextContent('Caricato e conservato');
+    expect(screen.getByLabelText('Stato: Da compilare')).toBeVisible();
+    expect(screen.queryByText('Originale caricato')).not.toBeInTheDocument();
     expect(data).toHaveTextContent(doc.sha256);
     expect(data).toHaveTextContent(/Versione del file\s*1/);
     const technical=within(data).getByText('Dettagli tecnici del file').closest('details')!;
@@ -343,8 +371,8 @@ describe('[mock] Documenti — dettaglio, download ed export', () => {
     await app.user.click(within(data).getByText('Dettagli tecnici del file'));expect(technical).not.toHaveAttribute('open');
     expect(data).not.toHaveTextContent(/Validato|Confermato|Certificato/);
     const preview = await screen.findByLabelText('Anteprima di Rogito');
-    expect(preview.tagName).toBe('OBJECT');
-    expect(preview.getAttribute('data')).toMatch(/^blob:/);
+    expect(preview).toHaveAttribute('role','region');
+    expect(within(preview).getByLabelText('Controlli anteprima PDF')).toBeVisible();
     expect(backend.log.filter((r) => r.path.endsWith('/file'))).toHaveLength(1);
     expect(backend.log.find((r) => r.path.endsWith('/file'))!.headers['x-account-context']).toBe(owner.id);
 

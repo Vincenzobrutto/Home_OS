@@ -1,6 +1,10 @@
+## Documenti: originale, classificazioni ed esempi completati — 21 ottobre 2026
+
+Completati gli interventi richiesti sulla consultazione, sui duplicati e sulla distinzione degli stati; correzione esplicita facilitata e PDF sintetici riservati alle modalità di prova. Resta separato il focus durante l’apertura dei gruppi. [Regole e verifiche](v5/document-original-classification-20261021.md).
+
 ## Documenti: contesto di ricerca completato — 21 ottobre 2026
 
-Completati ripristino della vista/gruppo/posizione alla cancellazione e rimandi ai risultati delle altre viste. Restano focus dei gruppi, consultazione originale/dettaglio e contenuti di esempio; classificazioni personali da correggere solo con scelta esplicita. [Regole e verifiche](v5/document-search-context-20261021.md).
+Completati ripristino della vista/gruppo/posizione alla cancellazione e rimandi ai risultati delle altre viste. Consultazione originale/dettaglio e gestione degli esempi ora completate; resta il focus dei gruppi. Classificazioni personali da correggere solo con scelta esplicita. [Regole e verifiche](v5/document-search-context-20261021.md).
 
 ## Documenti: secondo intervento dell’audit completato — 21 ottobre 2026
 

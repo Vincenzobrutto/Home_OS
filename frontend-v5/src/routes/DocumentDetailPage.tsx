@@ -1,4 +1,6 @@
 import { ContactsPanel } from '../contacts/components';
+import {DocumentWorkflowStatus} from '../documents/DocumentWorkflowStatus';
+import {PdfPreview} from '../documents/PdfPreview';
 import { houseDocumentType } from '../document-intake/model';
 import { contextReturn } from '../lib/contextReturn';
 import { DocumentBillEntry } from '../object-onboarding/DocumentBillEntry';
@@ -12,7 +14,6 @@ import { Banner, ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../c
 import { useDocument, useDocumentFile, useFetchDocumentFile, useObjectUrl } from '../documents/hooks';
 import {
   SOURCE_LABEL,
-  STATUS_LABEL,
   VISIBILITY_HINT,
   VISIBILITY_LABEL,
   formatBytes,
@@ -113,7 +114,10 @@ function DocumentUnavailable(props: { back: ReactNode; title: string; children: 
 function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode; analyzeHref: string | null }) {
   const homeName = props.home.name;
   const { doc } = props;
+  const location=useLocation(),{hash}=location;
+  useEffect(()=>{if(hash!=='#doc-classificazione')return;const frame=requestAnimationFrame(()=>window.document.getElementById('doc-classificazione')?.querySelector('button')?.focus());return()=>cancelAnimationFrame(frame);},[hash,doc.id]);
   const bill=doc.organization?.parts.some(part=>part.kind==='utility_bill')??false;
+  const house=!!houseDocumentType(doc.originalFilename+' '+doc.name,doc.organization?.parts.map(p=>p.kind));
   useDocumentTitle(`${doc.name} · ${homeName}`);
   const canRead = doc.permissions.includes('read');
 
@@ -125,30 +129,31 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
           <span className={styles.eyebrow}>{homeName}</span>
           <h1 tabIndex={-1}>{doc.name}</h1>
           <div className={docs.tags}>
-            <Tag tone="blue">{STATUS_LABEL}</Tag>
             <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
           </div>
-          {props.home.permissions.includes('edit') && (
-            <p className={styles.spaced}>
+          <DocumentWorkflowStatus state={doc.workflowState}/>
+            <div className={`${styles.spaced} ${styles.formActions}`}>
+              {canRead&&<Link to="#doc-anteprima" state={location.state} className={ui.btn}>Vedi originale</Link>}
+              {props.home.permissions.includes('edit')&&<>
               {/* Scorciatoia: il documento è solo evidenziato nella scelta, mai selezionato; l'idoneità la decide il server. */}
               <Link to={`/home/${encodeURIComponent(props.home.id)}/condivisioni/nuova?documento=${encodeURIComponent(doc.id)}`} className={ui.btn}>
                 Condividi…
               </Link>
-              {canRead && ['application/pdf', 'image/jpeg', 'image/png'].includes(doc.mimeType) && <OrganizeDocumentButton homeId={props.home.id} documentId={doc.id} />}
-            </p>
-          )}
+              {canRead && ['application/pdf', 'image/jpeg', 'image/png'].includes(doc.mimeType) && <span id="doc-classificazione"><OrganizeDocumentButton homeId={props.home.id} documentId={doc.id} /></span>}
+              </>}
+            </div>
 
         </div>
       </div>
 
       {canRead && doc.organization?.parts.some(p=>p.kind==='floor_plan') && <p><Link className={ui.btn} to={`/home/${props.home.id}/ambienti/da-planimetria/${doc.id}`}>Crea ambienti dalla planimetria</Link></p>}
       {canRead && <LinkedExpenses home={props.home} by={{ documentId: doc.id }} title="Spese collegate" addLabel="Registra una spesa da questo documento" />}
-      {canRead && <section className={ui.card}><DocumentBillEntry homeId={props.home.id} documentId={doc.id} documentKind={doc.organization?.parts[0]?.kind} houseDocument={!!houseDocumentType(doc.originalFilename+' '+doc.name,doc.organization?.parts.map(p=>p.kind))} bill={bill} allowPrepare /></section>}
+      {canRead && !house && <section className={ui.card}><DocumentBillEntry homeId={props.home.id} documentId={doc.id} documentKind={doc.organization?.parts[0]?.kind} bill={bill} allowPrepare /></section>}
       {!bill&&<details><summary>Altri strumenti di analisi</summary>{props.analyzeHref&&<Link to={props.analyzeHref} className={ui.btn}>Analizza questo documento</Link>}<ReceiptEntry documentId={doc.id} /></details>}
 
       <div className={docs.detailGrid}>
         <section className={cx(ui.card, docs.preview)} aria-labelledby="doc-anteprima">
-          <h2 id="doc-anteprima" className={`${styles.cardTitle} ${docs.originalAnchor}`}>
+          <h2 id="doc-anteprima" tabIndex={-1} className={`${styles.cardTitle} ${docs.originalAnchor}`}>
             Originale
           </h2>
           {canRead ? (
@@ -183,8 +188,8 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
               <br />
               <span className={docs.note}>{VISIBILITY_HINT[doc.visibility]}</span>
             </dd>
-            <dt>Stato</dt>
-            <dd>{STATUS_LABEL}</dd>
+            <dt>File originale</dt>
+            <dd>Caricato e conservato. Lo stato in alto riguarda la compilazione.</dd>
 
           </dl>
           <details className={styles.spaced}>
@@ -216,7 +221,7 @@ function Preview({ doc }: { doc: DocumentDetail }) {
   const { hash } = useLocation();
   useEffect(() => {
     if (hash === '#doc-anteprima' && url && !file.isError) {
-      window.document.getElementById('doc-anteprima')?.scrollIntoView({ block: 'start' });
+      const target=window.document.getElementById('doc-anteprima');target?.focus({preventScroll:true});target?.scrollIntoView({ block: 'start' });
     }
   }, [hash, url, file.isError]);
 
@@ -256,11 +261,7 @@ function Preview({ doc }: { doc: DocumentDetail }) {
           {isImage(type) ? (
             <img className={docs.previewImage} src={url} alt={`Anteprima di ${doc.name}`} />
           ) : (
-            <object className={docs.previewPdf} data={url} type="application/pdf" aria-label={`Anteprima di ${doc.name}`}>
-              <div className={docs.pdfFallback}>
-                <p>Questo browser non mostra l’anteprima del PDF. Puoi scaricare l’originale.</p>
-              </div>
-            </object>
+            <div role="region" aria-label={`Anteprima di ${doc.name}`}><PdfPreview blob={file.data.blob} url={url} filename={doc.originalFilename} showDownload={false}/></div>
           )}
         </div>
       ) : null}

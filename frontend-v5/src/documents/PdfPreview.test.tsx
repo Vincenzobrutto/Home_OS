@@ -4,6 +4,13 @@ import {expect,it,vi} from 'vitest';
 const fixture=vi.hoisted(()=>({destroy:vi.fn(),render:vi.fn(()=>({promise:Promise.resolve(),cancel:vi.fn()})),getPage:vi.fn()}));
 vi.mock('pdfjs-dist',()=>({GlobalWorkerOptions:{workerSrc:''},getDocument:vi.fn(()=>({promise:Promise.resolve({numPages:2,getPage:fixture.getPage}),destroy:fixture.destroy}))}));
 import {PdfPreview} from './PdfPreview';
+it('preserves the original filename and can leave a single download action to its parent',()=>{
+ const blob={arrayBuffer:async()=>new ArrayBuffer(12)} as Blob;
+ const view=render(<PdfPreview blob={blob} url="blob:original" filename="fattura-originale.pdf"/>);
+ expect(screen.getByRole('link',{name:'Scarica originale'})).toHaveAttribute('download','fattura-originale.pdf');
+ view.rerender(<PdfPreview blob={blob} url="blob:original" showDownload={false}/>);
+ expect(screen.queryByRole('link',{name:'Scarica originale'})).toBeNull();
+});
 it('renders authorized bytes locally, changes page and zoom, then releases the document',async()=>{
  fixture.getPage.mockImplementation(async()=>({getViewport:()=>({width:600,height:800}),render:fixture.render}));
  const blob={arrayBuffer:async()=>new ArrayBuffer(12)} as Blob,user=userEvent.setup();const view=render(<PdfPreview blob={blob} url="blob:authorized"/>);

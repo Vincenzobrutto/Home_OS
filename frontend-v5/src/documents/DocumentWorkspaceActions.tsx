@@ -16,6 +16,7 @@ import { DocumentCompilationActions, type CompilationMode } from '../object-onbo
 import { houseDocumentType } from '../document-intake/model';
 import { Modal } from '../document-intake/ReviewDialog';
 import { useDocumentFile, useObjectUrl } from './hooks';
+import {PdfPreview} from './PdfPreview';
 import styles from '../routes/documents.module.css';
 
 export function DocumentWorkspaceActions({homeId,document:doc}:{homeId:string;document:DocumentSummary}) {
@@ -42,15 +43,15 @@ export function DocumentWorkspaceActions({homeId,document:doc}:{homeId:string;do
  return <div className={`${styles.workspace} ${styles.compactWorkspace}`}>
   <div className={styles.workspaceHeader}><DocumentWorkflowStatus compact state={doc.workflowState}/><div className={styles.toolbarActions}>
    {editable&&<DocumentCompilationActions compact backSearch={filtersToParams({...filtersFromParams(params),workflow:filtersFromParams(params).workflow??'all'}).toString()} workflowState={doc.workflowState} houseDocument={!!house} homeId={homeId} documentId={doc.id} documentKind={doc.organization?.parts.every(p=>p.kind==='utility_bill')?'utility_bill':undefined} onOpen={(mode,draft)=>void open(mode,draft)}/>}
-   <details ref={menuRef} className={styles.documentMenu} onKeyDown={e=>{if(e.key==='Escape'){e.preventDefault();closeMenu();}}}><summary aria-label={'Altre azioni per '+documentDisplayTitle(doc,'Documento senza titolo')}>Altre azioni</summary><div className={styles.documentMenuItems}>
-    <button type="button" className={ui.btn} onClick={()=>{setOriginal(v=>!v);closeMenu();}} aria-expanded={original}>{original?'Chiudi originale':'Vedi originale'}</button>
+   <button type="button" className={ui.btn} onClick={()=>{setOriginal(v=>!v);if(menuRef.current)menuRef.current.open=false;}} aria-expanded={original} aria-controls={'original-'+doc.id}>{original?'Chiudi originale':'Vedi originale'}</button>
+   {editable&&<details ref={menuRef} className={styles.documentMenu} onKeyDown={e=>{if(e.key==='Escape'){e.preventDefault();closeMenu();}}}><summary aria-label={'Altre azioni per '+documentDisplayTitle(doc,'Documento senza titolo')}>Altre azioni</summary><div className={styles.documentMenuItems}>
     {editable&&<button type="button" className={ui.btn} onClick={()=>{setError('');setRemoving(true);closeMenu();}}>Elimina</button>}
-   </div></details>
+   </div></details>}
   </div></div>
   {opening&&<p role="status">Apertura della scheda…</p>}{error&&<p role="alert">{error}</p>}
-  {original&&<Original homeId={homeId} documentId={doc.id}/>}
+  {original&&<div id={'original-'+doc.id} className={styles.inlineOriginal}><Original homeId={homeId} documentId={doc.id} filename={doc.originalFilename}/></div>}
   {active&&<section className={styles.reviewPanel} aria-label={'Revisione di '+doc.originalFilename}><IntakePage workspace/><button type="button" className={ui.btn} onClick={close}>Chiudi revisione</button></section>}
   {removing&&<Modal labelledBy={'remove-'+doc.id} onClose={()=>{if(!busy)setRemoving(false);}}><div className={styles.panel}><h2 id={'remove-'+doc.id}>Eliminare questo documento?</h2><p>{doc.originalFilename}</p>{removal.isPending?<p>Controllo dei collegamenti…</p>:removal.isError?<p role="alert">{userMessage(removal.error)}</p>:removal.data?.allowed?<p>Il documento e l’originale saranno eliminati definitivamente.</p>:<p>{removal.data?.reason}</p>}{error&&<p role="alert">{error}</p>}<div className={styles.toolbarActions}><button type="button" className={ui.btn} data-autofocus disabled={busy} onClick={()=>setRemoving(false)}>Annulla</button><button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!removal.data?.allowed} onClick={()=>void remove()}>{busy?'Eliminazione…':'Elimina documento'}</button>{removal.isError&&<button className={ui.btn} onClick={()=>void removal.refetch()}>Riprova</button>}</div></div></Modal>}
  </div>;
 }
-function Original({homeId,documentId}:{homeId:string;documentId:string}){const file=useDocumentFile(homeId,documentId,true),url=useObjectUrl(file.data?.blob);return <div>{file.isPending?<p>Apertura originale…</p>:file.isError?<p role="alert">{userMessage(file.error)}</p>:url?file.data.contentType.startsWith('image/')?<img src={url} alt="Documento originale" className={styles.original}/>:<object data={url} type="application/pdf" className={styles.original} aria-label="Documento originale"><a href={url} target="_blank" rel="noreferrer">Apri originale PDF</a></object>:null}</div>;}
+function Original({homeId,documentId,filename}:{homeId:string;documentId:string;filename:string}){const file=useDocumentFile(homeId,documentId,true),url=useObjectUrl(file.data?.blob);return <div role="region" aria-label="Documento originale">{file.isPending?<p>Apertura originale…</p>:file.isError?<p role="alert">{userMessage(file.error)}</p>:url?file.data.contentType.startsWith('image/')?<img src={url} alt="Immagine del documento originale" className={styles.original}/>:<PdfPreview blob={file.data.blob} url={url} filename={filename}/>:null}</div>;}
