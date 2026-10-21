@@ -57,8 +57,8 @@ export function ActivityRow({ activity, homeId, returnPages = 1 }: { activity: H
         </Link>
       </div>
       <span className={styles.meta}>
-        {dueText(activity)}
-        {activity.assetLink.state !== 'none' ? ` · ${assetLinkText(activity.assetLink)}` : ''}
+        {activity.dueDate ? `Scadenza: ${formatCalendarDate(activity.dueDate)}` : activity.state === 'open' ? '' : 'Senza data'}
+        {activity.assetLink.state !== 'none' ? `${activity.dueDate ? ' · ' : ''}${assetLinkText(activity.assetLink)}` : ''}
       </span>
     </li>
   );

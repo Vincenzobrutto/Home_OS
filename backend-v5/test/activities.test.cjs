@@ -27,3 +27,28 @@ test('H1: filtri stretti, nessuna lista multipla o filtro privato implicito', ()
   for (const q of [{ state: ['open'] }, { due: ['today'] }, { limit: '51' }, { limit: 10 }, { state: 'completed', due: 'today' }, { unknown: 'x' }, { cursor: '!' }]) assert.throws(() => d.listQuery(q));
   assert.equal(d.listQuery({ limit: '50' }).limit, 50);
 });
+
+
+test('H1 ricerca: NFC, limite, input stretti e nessuna ricerca nella storia',()=>{
+ assert.equal(d.listQuery({q:' e\u0301 '}).q,'é');
+ assert.equal(d.listQuery({q:'   '}).q,'');
+ assert.equal(d.listQuery({q:'🏠'.repeat(120)}).q.length,240);
+ for(const q of [null,[],42,'x'.repeat(121)])assert.throws(()=>d.listQuery({q}));
+ assert.throws(()=>d.listQuery({q:'x'},true));
+});
+test('H1 servizio: ricerca scoped prima delle pagine, totale e cursore vincolato alla ricerca',async()=>{
+ const {ActivitiesService}=require('../dist/activities/activities.service');
+ const service=new ActivitiesService(null,null,{now:()=>new Date('2026-10-21T10:00:00Z')});
+ const rows=Array.from({length:30},(_,i)=>({id:crypto.randomUUID(),accountId:'account-a',homeId:'home-a',title:i<25?'Controllo caldaia '+i:'Finestre '+i,description:null,dueDate:'2026-10-22',state:'open',assetId:null,version:1,createdAt:new Date(2026,9,21,0,i),updatedAt:new Date(2026,9,21),completedAt:null,cancelledAt:null}));
+ const tx={homeActivity:{findMany:async({where})=>{
+  assert.equal(where.accountId,'account-a');assert.equal(where.homeId,'home-a');assert.equal(where.title.mode,'insensitive');
+  return rows.filter(r=>r.title.toLowerCase().includes(where.title.contains.toLowerCase()));
+ }}};
+ service.read=async(a,h,run)=>{assert.equal(a,'account-a');assert.equal(h,'home-a');return run(tx,true,{today:'2026-10-21',asOf:'2026-10-21T10:00:00Z',timeZone:'Europe/Rome'});};
+ const first=await service.list('account-a','home-a',{q:' CALDAIA ',limit:'20'});
+ assert.equal(first.total,25);assert.equal(first.items.length,20);assert.ok(first.nextCursor);
+ const next=await service.list('account-a','home-a',{q:'CALDAIA',limit:'20',cursor:first.nextCursor});
+ assert.equal(next.items.length,5);assert.equal(next.nextCursor,null);
+ assert.equal(new Set([...first.items,...next.items].map(r=>r.id)).size,25);
+ await assert.rejects(()=>service.list('account-a','home-a',{q:'Finestre',cursor:first.nextCursor}));
+});

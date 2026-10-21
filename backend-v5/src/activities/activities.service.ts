@@ -114,9 +114,9 @@ export class ActivitiesService {
     const query = listQuery(input);
     return this.read(a, h, async (tx, edit, context) => {
       if (query.assetId) await this.link(tx, a, h, query.assetId, true);
-      const rows = this.order(await tx.homeActivity.findMany({ where: { accountId: a, homeId: h, ...(query.state !== 'all' ? { state: query.state } : {}), ...(query.assetId ? { assetId: query.assetId } : {}) } })).filter(r => query.due === 'all' || dueState(r, context.today) === query.due);
-      const page = this.paginate(rows, query, [a, h, 'activities', query.state, query.due, query.assetId]);
-      return { ...context, items: await Promise.all(page.items.map(r => this.project(tx, r, edit, context.today))), nextCursor: page.nextCursor };
+      const rows = this.order(await tx.homeActivity.findMany({ where: { accountId: a, homeId: h, ...(query.q ? {title: {contains: query.q, mode: 'insensitive' as const}} : {}), ...(query.state !== 'all' ? { state: query.state } : {}), ...(query.assetId ? { assetId: query.assetId } : {}) } })).filter(r => query.due === 'all' || dueState(r, context.today) === query.due);
+      const page = this.paginate(rows, query, [a, h, 'activities', query.state, query.due, query.assetId, query.q]);
+      return { ...context, total: rows.length, items: await Promise.all(page.items.map(r => this.project(tx, r, edit, context.today))), nextCursor: page.nextCursor };
     });
   }
   summary(a: string, h: string, input: unknown) {

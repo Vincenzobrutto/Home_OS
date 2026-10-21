@@ -183,18 +183,20 @@ export class FakeActivities {
 
   private list(params: URLSearchParams, accountId: string, homeId: string, perms: HomePermission[]): Res {
     for (const k of params.keys()) {
-      if (!['state', 'due', 'assetId', 'limit', 'cursor'].includes(k)) return err(422, 'validation_error', 'Parametro non valido.');
+      if (!['state', 'due', 'assetId', 'q', 'limit', 'cursor'].includes(k)) return err(422, 'validation_error', 'Parametro non valido.');
     }
     const state = params.get('state') ?? 'open';
     const due = params.get('due') ?? 'all';
     const assetId = params.get('assetId');
+    const q = (params.get('q') ?? '').trim().normalize('NFC');
+    if ([...q].length > 120) return err(422, 'validation_error', 'Ricerca troppo lunga.');
     if (!['open', 'completed', 'cancelled', 'all'].includes(state)) return err(422, 'validation_error', 'Stato non valido.');
     if (!['all', 'overdue', 'today', 'upcoming', 'undated'].includes(due)) return err(422, 'validation_error', 'Scadenza non valida.');
     if (due !== 'all' && state !== 'open') return err(422, 'validation_error', 'Il filtro scadenza vale solo per le aperte.');
     if (assetId && (!UUID_RE.test(assetId) || !this.access.asset(accountId, homeId, assetId))) {
       return assetId && UUID_RE.test(assetId) ? err(403, 'FORBIDDEN', 'Accesso non consentito.') : err(422, 'validation_error', 'Caldaia non valida.');
     }
-    let rows = this.mine(accountId, homeId).filter((s) => (assetId ? s.assetId === assetId : true));
+    let rows = this.mine(accountId, homeId).filter((s) => (assetId ? s.assetId === assetId : true) && (!q || s.title.toLocaleLowerCase('it').includes(q.toLocaleLowerCase('it'))));
     const byState = (st: ActivityState) => rows.filter((s) => s.state === st);
     const open = byState('open').sort((a, b) => this.openOrder(a, b));
     const closedOrder = (key: 'completedAt' | 'cancelledAt') => (a: Stored, b: Stored) =>
@@ -207,8 +209,8 @@ export class FakeActivities {
     return this.page(
       rows.map((s) => this.view(s, perms)),
       params,
-      `l:${accountId}:${homeId}:${state}:${due}:${assetId ?? '-'}`,
-      this.temporal(),
+      `l:${accountId}:${homeId}:${state}:${due}:${assetId ?? '-'}:${q}`,
+      {...this.temporal(), total: rows.length},
     );
   }
 

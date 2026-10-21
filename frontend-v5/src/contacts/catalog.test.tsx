@@ -47,3 +47,15 @@ it('hides cached contacts when access is denied while loading another page',asyn
  await screen.findByRole('alert');expect(screen.queryByRole('link',{name:'Anna Bianchi'})).not.toBeInTheDocument();
  expect(w.queryClient.getQueryData(['account',f.account.id,'home',f.home.id,'contacts-view'])).toBeUndefined();
 });
+
+it('focuses the first appended contact and announces the appended count',async()=>{
+ const w=await world();await screen.findByRole('link',{name:'Anna Bianchi'});
+ const scroll=vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
+ try{
+  await w.user.click(screen.getByRole('button',{name:'Mostra altri contatti'}));
+  await waitFor(()=>expect(screen.getByRole('link',{name:'Studio Alba'})).toHaveFocus());
+  expect(screen.getByText('Aggiunti 5 contatti · 13 caricati')).toBeInTheDocument();
+  expect(scroll).toHaveBeenCalled();
+  expect(w.calls.filter(c=>c.path.includes('/contacts')&&c.method!=='GET')).toHaveLength(0);
+ }finally{scroll.mockRestore();}
+});

@@ -219,17 +219,13 @@
 :global(.activity-tabs button){font:inherit;font-weight:700;color:var(--color-muted);background:none;border:0;border-bottom:3px solid transparent;min-height:48px;padding:8px 4px;cursor:pointer}
 :global(.activity-tabs button[aria-pressed="true"]){color:var(--color-accent);border-bottom-color:var(--color-accent)}
 :global(.activity-workspace){min-width:0}
-:global(.activity-filters){display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:16px 0 24px}
-:global(.activity-filters button){min-height:44px;gap:8px}
-:global(.activity-filters button[aria-pressed="true"]){border-color:var(--color-accent);background:var(--color-soft);color:var(--color-accent)}
-:global(.activity-count){border-radius:50%;background:var(--color-neutral-tag);padding:2px 8px}
 :global(.activity-tools){border-top:1px solid var(--color-border);padding:16px 0}
 :global(.activity-tools summary){cursor:pointer;min-height:44px;font-weight:700}
 :global(.activity-workspace) .list{gap:0;background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;overflow:hidden}
-:global(.activity-workspace) .item{border:0;border-radius:0;border-bottom:1px solid var(--color-border);padding:18px 16px}
+:global(.activity-workspace) .item{border:0;border-radius:0;border-bottom:1px solid var(--color-border);padding:8px 16px;gap:0}
 :global(.activity-workspace) .item:last-child{border-bottom:0}
-:global(.activity-workspace) .title{order:-1;flex-basis:100%;min-height:44px;display:flex;align-items:center;text-decoration:none}
-@media(max-width:600px){:global(.activity-filters){gap:8px}:global(.activity-tabs){gap:16px}:global(.activity-workspace) .item{padding:12px}}
+:global(.activity-workspace) .title{order:-1;flex:1;min-width:0;min-height:44px;display:flex;align-items:center;text-decoration:none}
+@media(max-width:600px){:global(.activity-tabs){gap:16px}:global(.activity-workspace) .item{padding:8px 12px}}
 
 :global(.activity-heading){display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}:global(.activity-heading p){margin:0;max-width:50ch}
 
@@ -238,3 +234,17 @@
 @media(max-width:600px){:global(.activity-page-heading){align-items:stretch}:global(.activity-page-heading>button){width:100%}}
 
 :global(.activity-history){display:flex;border-top:1px solid var(--color-border);padding-top:12px;margin:-8px 0 20px}:global(.activity-history select){min-height:44px}
+
+:global(.activity-search-filters){display:flex;align-items:end;gap:12px;margin:0 0 12px;min-width:0}
+:global(.activity-search-filters form){display:flex;align-items:center;gap:8px;flex:1;min-width:0;min-height:44px;border:1px solid var(--color-input-border);border-radius:10px;background:white;padding:0 10px}
+:global(.activity-search-filters form:focus-within){outline:2px solid var(--color-focus);outline-offset:2px}
+:global(.activity-search-filters form>svg){flex-shrink:0;color:var(--color-muted)}
+:global(.activity-search-filters input){width:100%;min-width:0;border:0;background:transparent;font:inherit;color:var(--color-ink);padding:10px 0;outline:0}
+:global(.activity-search-filters button){display:flex;align-items:center;justify-content:center;flex-shrink:0;border:0;min-height:44px;min-width:44px;background:none;color:var(--color-ink);cursor:pointer}
+:global(.activity-search-filters select){width:100%;max-width:100%}
+:global(.activity-workspace #activity-results){font-size:16px;margin:12px 0 8px}
+:global(.activity-workspace) .meta:empty{display:none}
+:global(.activity-tabs){margin:8px 0 16px}
+@media(max-width:700px){:global(.activity-search-filters){display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:8px}:global(.activity-search-filters form){grid-column:1/-1}:global(.activity-search-filters label){min-width:0}:global(.activity-search-filters select){font-size:13px;padding:8px}:global(.activity-workspace) .itemHead{gap:6px}:global(.activity-workspace) .title{font-size:15px}:global(.activity-workspace) .due{font-size:11px;padding:3px 6px}}
+
+:global(.activity-search-filters input::-webkit-search-cancel-button){display:none}

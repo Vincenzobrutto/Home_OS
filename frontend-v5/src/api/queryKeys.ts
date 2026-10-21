@@ -34,8 +34,8 @@ export const queryKeys = {
   // activities-v1 (H1): attività personali, separate dalle risorse M3/M4.
   h1: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h1'] as const,
   activityCapabilities: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'h1', 'capabilities'] as const,
-  activities: (accountId: string, homeId: string, filters: { state: string; due: string; assetId?: string }) =>
-    ['account', accountId, 'home', homeId, 'h1', 'list', filters.state, filters.due, filters.assetId ?? '-'] as const,
+  activities: (accountId: string, homeId: string, filters: { state: string; due: string; assetId?: string; q?: string }) =>
+    ['account', accountId, 'home', homeId, 'h1', 'list', filters.state, filters.due, filters.assetId ?? '-', filters.q ?? ''] as const,
   activity: (accountId: string, homeId: string, activityId: string) =>
     ['account', accountId, 'home', homeId, 'h1', 'activity', activityId, 'detail'] as const,
   activityHistory: (accountId: string, homeId: string, activityId: string) =>

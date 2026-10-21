@@ -7,6 +7,7 @@ import {Phone} from '@phosphor-icons/react/dist/csr/Phone';
 import {Envelope} from '@phosphor-icons/react/dist/csr/Envelope';
 import {CaretRight} from '@phosphor-icons/react/dist/csr/CaretRight';
 import {isApiError} from '../api/errors';
+import {useAppendPage} from '../lib/useAppendPage';
 import {useAccount,useApi} from '../session/session';
 import {ErrorState,Loading,Tag,cx,ui} from '../components/ui';
 import {contactBase,type Contact,type ContactPage} from './api';
@@ -27,6 +28,7 @@ export function ContactCatalog({homeId}:{homeId:string}){
  useEffect(()=>{if(denied)cache.removeQueries({queryKey:['account',account.id,'home',homeId,'contacts-view'],exact:true});},[denied,cache,account.id,homeId]);
  const {data,hasNextPage,isFetchingNextPage,isFetchNextPageError,fetchNextPage}=list;
  const items=Array.from(new Map((data?.pages.flatMap(p=>p.items)??[]).map(c=>[c.id,c])).values());
+ const append=useAppendPage([account.id,homeId,q,state].join(':'),items.map(c=>'contact-'+c.id),fetchNextPage);
  useEffect(()=>{const timer=setTimeout(()=>setQ(search.trim()),300);return()=>clearTimeout(timer);},[search]);
  useEffect(()=>{if(!restore.current||restored.current||!data||(list.isError&&(!isFetchNextPageError||denied)))return;
   if(data.pages.length<restore.current.pages&&hasNextPage&&!isFetchNextPageError){if(!isFetchingNextPage)void fetchNextPage();return;}
@@ -47,8 +49,9 @@ export function ContactCatalog({homeId}:{homeId:string}){
     <div className={styles.rowActions}>{c.phone&&<a className={cx(ui.btn,styles.contactAction)} href={'tel:'+c.phone.replace(/[^\d+]/g,'')} aria-label={'Chiama '+c.name}><Phone size={18} aria-hidden="true"/>Chiama</a>}{c.email&&<a className={cx(ui.btn,styles.contactAction)} href={'mailto:'+encodeURIComponent(c.email)} aria-label={'Email a '+c.name}><Envelope size={18} aria-hidden="true"/>Email</a>}</div>
     <Link className={styles.detailArrow} aria-label={'Apri dettaglio di '+c.name} to={'/home/'+encodeURIComponent(homeId)+'/rubrica/'+encodeURIComponent(c.id)} state={contactState} onClick={()=>remember(c)}><CaretRight size={20} aria-hidden="true"/></Link>
    </li>)}</ul>:<div className={styles.empty}><h2>{q?'Nessun contatto trovato':state==='archived'?'Nessun contatto archiviato':'Non ci sono ancora contatti'}</h2><p>{q?'Prova un altro nome o mestiere, oppure azzera la ricerca.':state==='archived'?'Qui troverai i contatti che hai archiviato.':'Aggiungi chi ti aiuta con la casa: idraulico, elettricista o altri professionisti.'}</p>{q&&<button className={ui.btn} onClick={()=>change('')}>Azzera ricerca</button>}</div>}
-   {isFetchNextPageError&&<ErrorState error={list.error} title="Altri contatti non caricati" onRetry={()=>void fetchNextPage()}/>}
-   {hasNextPage&&<div className={styles.listFooter}><button className={ui.btn} disabled={isFetchingNextPage} onClick={()=>void fetchNextPage()}>{isFetchingNextPage?'Caricamento…':'Mostra altri contatti'}</button></div>}
+   <p role="status" className="visually-hidden">{append.notice?`Aggiunti ${append.notice.added} contatti · ${append.notice.total} caricati`:''}</p>
+   {isFetchNextPageError&&<ErrorState error={list.error} title="Altri contatti non caricati" onRetry={()=>void append.loadMore()}/>}
+   {hasNextPage&&<div className={styles.listFooter}><button className={ui.btn} disabled={isFetchingNextPage} onClick={()=>void append.loadMore()}>{isFetchingNextPage?'Caricamento…':'Mostra altri contatti'}</button></div>}
   </section>}
  </>;
 }

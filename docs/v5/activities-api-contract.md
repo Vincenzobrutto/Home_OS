@@ -85,7 +85,7 @@ Base /api/v5; tutti sotto /homes/:homeId. Ogni POST richiede Idempotency-Key (st
 | Metodo/percorso | Body/query | Risposta |
 |---|---|---|
 | GET /activity-capabilities | Nessuna | 200 ActivityCapabilities, dopo autorizzazione Home |
-| GET /activities | Filtri/paginazione sotto | 200 TemporalContext + {items:HomeActivity[],nextCursor:string|null} |
+| GET /activities | Filtri/paginazione sotto | 200 TemporalContext + {items:HomeActivity[],nextCursor:string|null,total:number} |
 | POST /activities | CreateActivity | 201 TemporalContext + {activity:HomeActivity} |
 | GET /activities/:id | Nessuna | 200 TemporalContext + {activity:HomeActivity} |
 | POST /activities/:id/updates | UpdateActivity | 200 TemporalContext + {activity:HomeActivity} |
@@ -97,7 +97,7 @@ Base /api/v5; tutti sotto /homes/:homeId. Ogni POST richiede Idempotency-Key (st
 
 Summary conta tutte le attività personali open autorizzate. upcoming conta tutte quelle future, non solo i sette giorni. nextItems contiene al massimo tre attività datate: arretrate, oggi o entro today+7 giorni inclusi; le non datate non occupano l'anteprima. Se vuota, dire «Nessuna scadenza nei prossimi 7 giorni» ed eventualmente indicare N attività senza data, con link alla lista. Non nascondere un errore come zero attività.
 
-Lista: state=open|completed|cancelled|all, default open; due=all|overdue|today|upcoming|undated, default all; assetId UUID facoltativo; limit 1–50 default 20; cursor opaco. due diverso da all ammesso solo con state=open. assetId filtro richiede accesso asset M3/M4; non è un modo di cercare ID altrui. Parametri sconosciuti/non validi → 422.
+Lista: state=open|completed|cancelled|all, default open; due=all|overdue|today|upcoming|undated, default all; assetId UUID facoltativo; q facoltativo (titolo, sottostringa case-insensitive, trim/NFC, massimo 120 code point, vuoto = nessuna ricerca); limit 1–50 default 20; cursor opaco. due diverso da all ammesso solo con state=open. assetId filtro richiede accesso asset M3/M4; non è un modo di cercare ID altrui. Parametri sconosciuti/non validi → 422. La ricerca viene applicata nel servizio sugli elementi personali autorizzati, prima della paginazione e insieme ai filtri. total è il numero dei risultati dopo tutti i filtri, senza dipendere dalla pagina. La ricerca normalizzata entra nel vincolo del cursore: cambiarla con un cursore precedente produce 422. Summary resta il conteggio globale delle sole aperte; il client non lo presenta come conteggio della ricerca. History non accetta q.
 
 Ordine open: dueDate crescente con null in fondo, poi createdAt decrescente e id crescente. All: prima open con tale ordine, poi completed per completedAt decrescente/id crescente, poi cancelled per cancelledAt decrescente/id crescente. History: at decrescente/id decrescente. Cursor vincolato ad account/Home/risorsa/filtri/ordinamento; non al limit. Cursor di altra casa/account/filtro → 422. Nessun duplicato/salto in dataset invariato; non promettere snapshot immutabile mentre attività cambiano. Dopo mutazioni rileggere lista/summary/storia.
 
@@ -143,3 +143,8 @@ Scenari minimi per backend/API/client/browser, con clock controllabile per prove
 18. UI reale tastiera/mobile/desktop: crea → modifica → completa → storia → riapri; test backend/API/DB e client reali prima di dichiarare H1 finita.
 
 Test live Anthropic disabilitati: H1 non ne ha bisogno. Nessuna nuova installazione di sistema o modifica DB reali. Codex integra prima il backend e poi i commit frontend, verifica sul database dedicato e produce il resoconto finale; mock e contratto da soli non chiudono H1.
+
+
+### Aggiornamento UX del 21 ottobre 2026
+
+Ricerca per titolo sempre visibile; Mostra (Aperte/Completate/Annullate/Tutte) e Scadenza in una barra compatta desktop/mobile. Scadenza compare per le aperte; i conteggi nelle opzioni sono globali e si mostrano soltanto senza ricerca. Totale dei risultati dal nuovo campo total, con fallback senza totali inventati sui servizi precedenti. q resta nell’URL e nel ritorno dal dettaglio. Righe con titolo/stato vicini e data sintetica; nessuna modifica al modulo o alle azioni del dettaglio. Paginazione con ultima riga già letta stabile, focus sul primo risultato aggiunto e annuncio del numero aggiunto; stesso comportamento in Rubrica. [Implementazione e verifiche](activities-search-pagination-20261021.md).

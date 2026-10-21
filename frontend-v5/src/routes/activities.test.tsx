@@ -252,7 +252,7 @@ describe('[mock] H1 — stati, date e riepilogo', () => {
     await screen.findByRole('link',{name:'In programma 2'});
     expect(within(region).getByRole('link',{name:'Scadute 1'})).toBeInTheDocument();expect(within(region).getByRole('link',{name:'Oggi 1'})).toBeInTheDocument();expect(within(region).getByRole('link',{name:'Senza data: 1'})).toBeInTheDocument();
     await app.user.click(within(region).getByRole('link',{name:'In programma 2'}));
-    const upcoming=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(upcoming).getAllByRole('link').map(l=>l.textContent)).toEqual(['Più sette','Più otto']);expect(screen.getByRole('button',{name:/In programma 2/})).toHaveAttribute('aria-pressed','true');
+    const upcoming=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(upcoming).getAllByRole('link').map(l=>l.textContent)).toEqual(['Più sette','Più otto']);expect(screen.getByRole('combobox',{name:'Scadenza'})).toHaveValue('upcoming');
     await app.router.navigate(`/home/${home.id}/casa`);await app.user.click(await screen.findByRole('link',{name:'Scadute 1'}));const overdue=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(overdue).getAllByRole('link').map(l=>l.textContent)).toEqual(['Ieri']);
     await app.router.navigate(`/home/${home.id}/casa`);await app.user.click(await screen.findByRole('link',{name:'Oggi 1'}));const today=await screen.findByRole('list',{name:'Elenco delle attività'});expect(within(today).getAllByRole('link').map(l=>l.textContent)).toEqual(['Oggi']);
     await app.router.navigate(`/home/${home.id}/attivita`);
@@ -267,10 +267,10 @@ describe('[mock] H1 — stati, date e riepilogo', () => {
     await seedActivity(backend, owner.id, home.id, { title: 'Domani', dueDate: '2026-10-14' });
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/attivita`);
     await screen.findByRole('list', { name: 'Elenco delle attività' });
-    await app.user.click(screen.getByRole('button',{name:/Scadute/}));
+    await app.user.selectOptions(screen.getByRole('combobox',{name:'Scadenza'}),'overdue');
     await waitFor(() => expect(within(screen.getByRole('list', { name: 'Elenco delle attività' })).getAllByRole('listitem')).toHaveLength(1));
     expect(screen.getByRole('list', { name: 'Elenco delle attività' })).toHaveTextContent('Ieri');
-    await app.user.selectOptions(screen.getByLabelText('Stato'), 'completed');
+    await app.user.selectOptions(screen.getByLabelText('Mostra attività'), 'completed');
     expect(await screen.findByText('Nessuna attività completata.')).toBeInTheDocument();
     expect(screen.queryByLabelText('Scadenza')).not.toBeInTheDocument();
     const q = backend.log.filter((r) => r.path.includes('/activities?')).at(-1)!.path;
@@ -479,4 +479,50 @@ describe('[mock] H1 — privacy, ruoli e contesto', () => {
     expect(posts(backend, /analysis-jobs|confirmations|manual-confirmations/)).toHaveLength(0);
     expect(backend.review.jobs.size).toBe(0);
   });
+});
+
+
+describe('[mock] ricerca attività e paginazione stabile',()=>{
+ it('cerca oltre pagina 1, preserva ricerca e filtri dal dettaglio e azzera solo la ricerca',async()=>{
+  const {backend,owner,member,home}=world();
+  await seedActivity(backend,owner.id,home.id,{title:'Filtro terrazzo',dueDate:'2026-10-12'});
+  for(let i=0;i<28;i++)await seedActivity(backend,owner.id,home.id,{title:'Controllo '+i,dueDate:'2026-10-12'});
+  await seedActivity(backend,member.id,home.id,{title:'Filtro privato altrui',dueDate:'2026-10-12'});
+  const app=await open(backend,owner.email,PW.owner,`/home/${home.id}/attivita?state=open&due=overdue`);
+  await screen.findByRole('list',{name:'Elenco delle attività'});
+  expect(screen.queryByRole('link',{name:'Filtro terrazzo'})).not.toBeInTheDocument();
+  await app.user.type(screen.getByRole('searchbox',{name:'Cerca attività'}),'FILTRO');
+  await screen.findByRole('link',{name:'Filtro terrazzo'});
+  await waitFor(()=>expect(within(screen.getByRole('list',{name:'Elenco delle attività'})).getAllByRole('link')).toHaveLength(1));
+  expect(screen.queryByText('Filtro privato altrui')).not.toBeInTheDocument();
+  expect(screen.getByRole('heading',{name:'Risultati · 1 attività'})).toBeInTheDocument();
+  expect(app.router.state.location.search).toContain('q=FILTRO');
+  await app.user.click(screen.getByRole('link',{name:'Filtro terrazzo'}));await screen.findByRole('heading',{level:1,name:'Filtro terrazzo'});
+  await app.user.click(screen.getByRole('link',{name:'← Attività'}));
+  expect(await screen.findByRole('searchbox',{name:'Cerca attività'})).toHaveValue('FILTRO');
+  expect(screen.getByRole('combobox',{name:'Scadenza'})).toHaveValue('overdue');
+  await app.user.click(screen.getByRole('button',{name:'Azzera ricerca attività'}));
+  await waitFor(()=>expect(within(screen.getByRole('list',{name:'Elenco delle attività'})).getAllByRole('link')).toHaveLength(20));
+  expect(screen.getByRole('combobox',{name:'Scadenza'})).toHaveValue('overdue');
+  await app.user.type(screen.getByRole('searchbox',{name:'Cerca attività'}),'inesistente');
+  expect(await screen.findByText('Nessuna attività trovata con questi filtri.')).toBeInTheDocument();
+  expect(posts(backend,/activities/)).toHaveLength(0);
+ });
+ it('non segue il pulsante spostato: mantiene l’ultima riga e porta il focus al primo nuovo risultato',async()=>{
+  const {backend,owner,home}=world();
+  for(let i=0;i<25;i++)await seedActivity(backend,owner.id,home.id,{title:'Promemoria '+i});
+  const app=await open(backend,owner.email,PW.owner,`/home/${home.id}/attivita`);
+  const list=await screen.findByRole('list',{name:'Elenco delle attività'});
+  const last=within(list).getAllByRole('link').at(-1)!;
+  let top=480;vi.spyOn(last,'getBoundingClientRect').mockImplementation(()=>({top} as DOMRect));
+  const scroll=vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
+  try{
+   await app.user.click(screen.getByRole('button',{name:'Mostra altre attività'}));
+   top=620;
+   await waitFor(()=>expect(within(list).getAllByRole('link')).toHaveLength(25));
+   expect(within(list).getAllByRole('link')[20]).toHaveFocus();
+   expect(await screen.findByText('Aggiunte 5 attività · 25 caricate')).toBeInTheDocument();
+   expect(scroll).toHaveBeenCalled();
+  }finally{scroll.mockRestore();}
+ });
 });

@@ -425,6 +425,7 @@ export class ApiClient {
     const params = new URLSearchParams();
     params.set('state', filters.state);
     params.set('due', filters.due);
+    if (filters.q) params.set('q', filters.q);
     if (filters.assetId) params.set('assetId', filters.assetId);
     if (page.limit !== undefined) params.set('limit', String(page.limit));
     if (page.cursor) params.set('cursor', page.cursor);

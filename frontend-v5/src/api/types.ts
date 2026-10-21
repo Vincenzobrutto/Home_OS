@@ -313,11 +313,12 @@ export type ActivityHistoryEvent = {
   after: ActivityHistorySnapshot;
 };
 export type ActivityFilters = {
+  q?: string;
   state: ActivityState | 'all';
   due: Exclude<DueState, 'closed'> | 'all';
   assetId?: string;
 };
-export type ActivitiesPage = TemporalContext & Page<HomeActivity>;
+export type ActivitiesPage = TemporalContext & Page<HomeActivity> & {total?: number};
 export type ActivityResponse = TemporalContext & { activity: HomeActivity };
 export type ActivitySummary = TemporalContext & {
   counts: { overdue: number; today: number; upcoming: number; undated: number };

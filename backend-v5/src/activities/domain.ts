@@ -47,11 +47,12 @@ export function actionBody(input: unknown) {
   return { expectedVersion: version(row.expectedVersion), note: row.note === undefined ? null : normalized(row.note, 500, true) };
 }
 export function listQuery(input: unknown, history = false) {
-  const row = object(input, history ? ['limit', 'cursor'] : ['state', 'due', 'assetId', 'limit', 'cursor']);
+  const row = object(input, history ? ['limit', 'cursor'] : ['state', 'due', 'assetId', 'q', 'limit', 'cursor']);
+  if (row.q !== undefined && typeof row.q !== 'string') throw invalid();
   const state = row.state ?? 'open', due = row.due ?? 'all';
   if (typeof state !== 'string' || typeof due !== 'string') throw invalid();
   if (!['open', 'completed', 'cancelled', 'all'].includes(String(state)) || !['all', 'overdue', 'today', 'upcoming', 'undated'].includes(String(due)) || (due !== 'all' && state !== 'open')) throw invalid();
   if (row.limit !== undefined && (typeof row.limit !== 'string' || !/^[1-9]\d?$/.test(row.limit) || Number(row.limit) > 50)) throw invalid();
   if (row.cursor !== undefined && (typeof row.cursor !== 'string' || !/^[A-Za-z0-9_-]{1,4096}$/.test(row.cursor))) throw invalid();
-  return { state: state as State | 'all', due: String(due), assetId: row.assetId === undefined ? null : uuid(row.assetId), limit: Number(row.limit ?? 20), cursor: row.cursor as string | undefined };
+  return { q: history || row.q === undefined ? '' : normalized(row.q, 120, true) ?? '', state: state as State | 'all', due: String(due), assetId: row.assetId === undefined ? null : uuid(row.assetId), limit: Number(row.limit ?? 20), cursor: row.cursor as string | undefined };
 }
