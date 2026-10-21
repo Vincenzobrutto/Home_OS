@@ -1,3 +1,7 @@
+## AI: stesso credito per casa reale e casa di prova — 21 ottobre 2026
+
+Case aggiuntive dello stesso account esplicitamente autorizzabili sulla medesima campagna: credito, riserve e limite chiamate condivisi, nessun aumento o reset. Casa di prova abilitata localmente, analisi lasciate all’utente. 32 test offline, build/lint e disponibilità browser. [Configurazione e verifiche](v5/shared-ai-campaign-20261021.md).
+
 ## Documenti: collegamento diretto, titoli, categoria e coda — 21 ottobre 2026
 
 Documenti tecnici e fallback collegabili direttamente all’impianto senza nuovo articolo; titolo iniziale più leggibile e categoria proposta soltanto da precedenti concordi dello stesso intervento. Coda dei nuovi gruppi nell’ordine di caricamento, numerata, e anteprima PDF ruotabile senza cambiare gli originali. Verificati bozza/ripresa, salvataggio e consultazione desktop/mobile con soli dati fittizi; dati reali invariati, nessuna AI live. 127 test frontend e 15 backend, build/lint. [Regole, verifiche e limiti](v5/document-flow-simplification-20261021.md).

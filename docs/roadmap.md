@@ -1,3 +1,7 @@
+## AI: prova sulla stessa campagna — 21 ottobre 2026
+
+Abilitazione di case aggiuntive esplicite dello stesso account, senza duplicare il credito. Prova live dei cinque documenti lasciata al committente; nessuna analisi automatica. [Regole](v5/shared-ai-campaign-20261021.md).
+
 ## Documenti: priorità 1, 2 e 4 concluse — 21 ottobre 2026
 
 Collegamento diretto del documento, titoli/categoria proposti con criteri conservativi, ordine e avanzamento della coda e rotazione di anteprima implementati e collaudati. Restano il riconoscimento tecnico da approfondire offline e le proposte coordinate nello stesso lotto. [Esiti e limiti](v5/document-flow-simplification-20261021.md).

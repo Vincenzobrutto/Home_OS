@@ -29,8 +29,16 @@ export class OnboardingAiConfig extends AiConfig {
     const id=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
     return id.test(accountId)&&id.test(homeId)?{accountId,homeId}:null;
   }
+  authorizedHomeIds() {
+    const scope=this.authorizedScope();if(!scope)return [];
+    const extra=(this.environment.ONBOARDING_AI_ADDITIONAL_HOME_IDS??'').trim();
+    const values=extra?extra.split(',').map(value=>value.trim()):[];
+    if(values.length>9||values.some(value=>!(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i).test(value)))return [];
+    return [...new Set([scope.homeId,...values])];
+  }
   sourceAuthorized(hash: string, accountId?: string, homeId?: string) {
-    if(this.environment.ONBOARDING_AI_SCOPE==='home'){const scope=this.authorizedScope();return !!scope&&scope.accountId===accountId&&scope.homeId===homeId&&/^[a-f0-9]{64}$/.test(hash);}
+    if(this.environment.ONBOARDING_AI_SCOPE==='home'){const scope=this.authorizedScope();return !!scope&&scope.accountId===accountId&&!!homeId&&this.authorizedHomeIds().includes(homeId)&&/^[a-f0-9]{64}$/.test(hash);}
+    if(this.environment.ONBOARDING_AI_ADDITIONAL_HOME_IDS?.trim())return false;
     return !this.environment.ONBOARDING_AI_SCOPE&&this.authorizedHashes().includes(hash);
   }
   settings() {
@@ -39,11 +47,11 @@ export class OnboardingAiConfig extends AiConfig {
     const price = MODEL_PRICES[this.model];
     if (!price || price.input * (50000 - 4096) + price.output * 4096 > RESERVE_MICRO_USD) throw onboardingAiUnavailable('ai_model_unavailable');
     const amount = this.environment.ONBOARDING_AI_BUDGET_USD ?? '', calls = this.environment.ONBOARDING_AI_MAX_CALLS ?? '';
-    const scope=this.authorizedScope();
-    if (!/^onboarding-[A-Za-z0-9_-]{1,80}$/.test(this.campaign) || !/^\d+(?:\.\d{1,6})?$/.test(amount) || !/^\d+$/.test(calls) || (this.environment.ONBOARDING_AI_SCOPE ? !scope : !this.authorizedHashes().length)) throw onboardingAiUnavailable('ai_provider_unconfigured');
+    const scope=this.authorizedScope(),homeIds=this.authorizedHomeIds();
+    if (!/^onboarding-[A-Za-z0-9_-]{1,80}$/.test(this.campaign) || !/^\d+(?:\.\d{1,6})?$/.test(amount) || !/^\d+$/.test(calls) || (this.environment.ONBOARDING_AI_SCOPE ? !scope||!homeIds.length : !this.authorizedHashes().length||!!this.environment.ONBOARDING_AI_ADDITIONAL_HOME_IDS?.trim())) throw onboardingAiUnavailable('ai_provider_unconfigured');
     const [whole, fraction = ''] = amount.split('.'), micro = BigInt(whole) * 1000000n + BigInt(fraction.padEnd(6, '0'));
     if (micro <= 0n || micro > 10000000n || Number(calls) < 1 || Number(calls) > 50) throw onboardingAiUnavailable('ai_provider_unconfigured');
-    return { model: this.model, campaign: this.campaign, price, limitMicroUsd: Number(micro), maxCalls: Number(calls), scope, allowedDocumentHashes: this.authorizedHashes() };
+    return { model: this.model, campaign: this.campaign, price, limitMicroUsd: Number(micro), maxCalls: Number(calls), scope, homeIds, allowedDocumentHashes: this.authorizedHashes() };
   }
   override headers() {
     this.settings();

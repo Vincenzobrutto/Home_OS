@@ -1,3 +1,7 @@
+## AI: case autorizzate sulla stessa campagna — 21 ottobre 2026
+
+Configurazione opzionale per ulteriori case dello stesso account, con tetto monetario e chiamate condivisi. Disponibilità e worker rispettano lo stesso perimetro; nessuna modifica al ledger o ai consensi. [Verifiche](v5/shared-ai-campaign-20261021.md).
+
 ## Documenti: collegamento diretto e compilazione più breve — 21 ottobre 2026
 
 Riferimento esistente selezionabile senza nuovo oggetto, anche nel fallback manuale; scelta conservata nella bozza e validata alla conferma. Titoli iniziali distinguibili, categoria proposta da precedenti concordi e mai sopra una scelta esplicita. Nuovi gruppi numerati nell’ordine dei file e anteprima PDF ruotabile. [Comportamento e verifiche](v5/document-flow-simplification-20261021.md).
