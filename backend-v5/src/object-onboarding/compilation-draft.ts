@@ -1,8 +1,9 @@
-import {invalid,object} from '../review/domain';
+import {invalid,object,uuid,version} from '../review/domain';
 /** Form input only. Business validation still happens exclusively at confirmation. */
 export function compilationDraft(input:unknown){
- const row=object(input,['saved','documentTitle','documentKind','replaceOrganization','reuseCopy','documentOnly','manualTotal','contacts','houseForms']);
+ const row=object(input,['saved','documentTarget','documentTitle','documentKind','replaceOrganization','reuseCopy','documentOnly','manualTotal','contacts','houseForms']);
  if(row.saved!==true)throw invalid();
+ if(row.documentTarget!==undefined&&row.documentTarget!==null){const target=object(row.documentTarget,['kind','id','expectedVersion','name']);if(!['object','boiler'].includes(String(target.kind))||typeof target.name!=='string'||target.name.length>120)throw invalid();uuid(target.id);version(target.expectedVersion);}
  const string=(v:unknown)=>{if(typeof v!=='string'||v.length>4000)throw invalid();};
  const boolean=(v:unknown)=>{if(typeof v!=='boolean')throw invalid();};
  for(const k of ['documentTitle','documentKind','manualTotal'])string(row[k]);

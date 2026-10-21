@@ -1,3 +1,7 @@
+## Documenti: priorità 1, 2 e 4 concluse — 21 ottobre 2026
+
+Collegamento diretto del documento, titoli/categoria proposti con criteri conservativi, ordine e avanzamento della coda e rotazione di anteprima implementati e collaudati. Restano il riconoscimento tecnico da approfondire offline e le proposte coordinate nello stesso lotto. [Esiti e limiti](v5/document-flow-simplification-20261021.md).
+
 ## Fatture: collaudo del modulo unico completato — 21 ottobre 2026
 
 Concluso il caso da casa vuota con cinque originali, un impianto e due spese senza doppioni. Riferimento precompilato modificabile e consultazione dei documenti tramite i costi. Restano miglioramenti mirati su titoli/categorie estratti e fallback dei documenti tecnici, da valutare senza nuovi invii AI impliciti. [Esiti e limiti](v5/invoice-single-flow-20261021.md).

@@ -19,6 +19,13 @@ it('effective delivery takes precedence and removing dates removes only automati
 it('manual extension remains unchanged when purchase or delivery changes',()=>{let r=editProfileField(form(),'purchaseDate',{action:'manual',value:'2025-01-01'},{},{});r=editProfileField(r,'warrantyEnd',{action:'manual',value:'2030-01-01'},{},{});r=editProfileField(r,'deliveredDate',{action:'manual',value:'2025-01-08'},{},{});expect(r.fields.warrantyEnd?.value).toBe('2030-01-01');});
 it('explicit document warranty and already confirmed dates are never recomputed',()=>{const profile={warrantyStart:{value:'2024-01-01',origin:'extraction_confirmed',sources:[]},warrantyEnd:{value:'2029-01-01',origin:'extraction_confirmed',sources:[]}},f=initialForm({...item,profile},{purchaseTotal:null} as Draft);const r=editProfileField(f,'purchaseDate',{action:'manual',value:'2025-01-01'},profile,{});expect(r.fields.warrantyStart?.action).toBe('accept');expect(r.fields.warrantyEnd?.action).toBe('accept');const linked=editProfileField(form(),'purchaseDate',{action:'manual',value:'2025-01-01'},{},profile);expect(linked.fields.warrantyStart).toBeUndefined();expect(linked.fields.warrantyEnd).toBeUndefined();});
 import { automaticExpenseEligible } from './model';
+import {documentTitleSuggestion} from './model';
+it('suggests distinguishable invoice titles using verified number and supplier, preserving descriptive titles',()=>{
+ const source={documentId:'source',page:1,excerpt:'Fattura di primo acconto'},draft={snapshot:{documentId:'source'},documentInfo:{kind:'invoice',title:{value:'Fattura',source},facts:[]},houseExpenses:[{documentKind:'simple_invoice',proposedFields:{title:{value:'Fattura di primo acconto',sources:[source]},documentNumber:{value:'42',sources:[source]},supplier:{value:'Officina sintetica',sources:[source]}}}]} as unknown as Draft;
+ expect(documentTitleSuggestion(draft)).toBe('Acconto · Fattura 42 · Officina sintetica');
+ expect(documentTitleSuggestion({...draft,documentInfo:{...draft.documentInfo!,title:{value:'Certificazione lavori cucina',source}}})).toBe('Certificazione lavori cucina');
+ expect(documentTitleSuggestion({...draft,houseExpenses:[],documentInfo:{kind:'system_diagram',title:{value:'GEN. Q.E.',source},facts:[]}})).toBe('Schema dell’impianto');
+});
 it('automatic expense requires one supported item, verified amount/date and no review ambiguity',()=>{
  const receipt={mode:'extraction',documentKind:'purchase_document',needsReview:false,purchaseTotal:{amountCents:9999},items:[item]} as Draft;
  const dated={...item,quantity:{value:1},profile:{purchaseDate:{value:'2025-06-13',origin:'extraction_confirmed',sources:[]}}} as Item;

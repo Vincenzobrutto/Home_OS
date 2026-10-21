@@ -1,3 +1,7 @@
+## Documenti: collegamento diretto, titoli, categoria e coda — 21 ottobre 2026
+
+Documenti tecnici e fallback collegabili direttamente all’impianto senza nuovo articolo; titolo iniziale più leggibile e categoria proposta soltanto da precedenti concordi dello stesso intervento. Coda dei nuovi gruppi nell’ordine di caricamento, numerata, e anteprima PDF ruotabile senza cambiare gli originali. Verificati bozza/ripresa, salvataggio e consultazione desktop/mobile con soli dati fittizi; dati reali invariati, nessuna AI live. 127 test frontend e 15 backend, build/lint. [Regole, verifiche e limiti](v5/document-flow-simplification-20261021.md).
+
 ## Fatture: modulo unico e documenti dell’intervento — 21 ottobre 2026
 
 Implementati selettore compatto del riferimento, riepilogo unico, dati secondari ripristinabili e documenti derivati dalle spese già attribuite. Collaudo su casa inizialmente vuota con i cinque originali autorizzati: 1 impianto, 5 documenti, 2 spese distinte per 3.074,40 €. AI: 4 esiti validi e 1 fallback manuale, senza retry. App principale aggiornata e controllata in sola lettura; legacy locale preservato. [Comportamento, verifiche e frizioni residue](v5/invoice-single-flow-20261021.md).

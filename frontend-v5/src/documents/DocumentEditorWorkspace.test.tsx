@@ -35,6 +35,14 @@ async function editedWorkspace() {
  prepared.mockClear();
  return {...app,homeId:homeA1.id,first,second};
 }
+it('keeps the explicit upload order and progress despite archive filters and a reverse server order',async()=>{
+ const app=await editedWorkspace(),guard=vi.spyOn(window,'confirm').mockReturnValue(true),order=[app.second.id,app.first.id];
+ await app.router.navigate(`/home/${app.homeId}/documenti?oggetti-documento=${app.second.id}&lotto=ordered&compila=manuale&q=not-a-match&coda=${order.join(',')}`);
+ await screen.findByRole('button',{name:/1\. Guard B/});expect(screen.getByText('Documento 1 di 2')).toBeInTheDocument();
+ await app.user.click(screen.getByRole('button',{name:'Conferma bozza server'}));await waitFor(()=>expect(prepared).toHaveBeenLastCalledWith([app.first.id],expect.any(String)));
+ expect(new URLSearchParams(app.router.state.location.search).get('coda')).toBe(order.join(','));expect(new URLSearchParams(app.router.state.location.search).get('q')).toBe('not-a-match');
+ expect(await screen.findByText('Documento 2 di 2')).toBeInTheDocument();guard.mockRestore();
+});
 
 it.each(['menu','history','return','pause'] as const)('guards %s exits once, preserves edits on cancel, and continues only on confirmation',async(kind)=>{
  const app=await editedWorkspace();

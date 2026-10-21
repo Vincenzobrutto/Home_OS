@@ -1,3 +1,4 @@
+import type {DocumentTarget} from '../object-onboarding/DocumentReference';
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
 import { FilePicker } from '../components/FilePicker';
 import { DocumentCompilationActions } from '../object-onboarding/DocumentCompilationActions';
@@ -23,12 +24,12 @@ import styles from './integration.module.css';
 
 const denied = (e: unknown) => isApiError(e) && [401, 403].includes(e.status);
 const rejected = (e: unknown): WriteOutcome => isApiError(e) && [400, 401, 403, 409, 413, 422, 429].includes(e.status) ? { status: 'rejected', code: e.status === 409 ? 'conflict' : e.status === 403 ? 'forbidden' : 'validation', message: userMessage(e) } : { status: 'uncertain', message: userMessage(e) };
-export function IntakePage({workspace=false,onUploaded}:{workspace?:boolean;onUploaded?:(documentId?:string,batchId?:string)=>void}={}) {
+export function IntakePage({workspace=false,onUploaded}:{workspace?:boolean;onUploaded?:(documentId?:string,batchId?:string,documentIds?:string[])=>void}={}) {
   const home = useCurrentHome(), account = useAccount(), [routeParams]=useSearchParams();
   if(!workspace&&routeParams.has('oggetti-documento'))return <DocumentEditorWorkspace key={account.id+":"+home.id}/>;
   return <IntakeContainer key={account.id + ':' + home.id} workspace={workspace} onUploaded={onUploaded} />;
 }
-function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(documentId?:string,batchId?:string)=>void}) {
+function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(documentId?:string,batchId?:string,documentIds?:string[])=>void}) {
   const home = useCurrentHome(), account = useAccount(), api = useApi(), cache = useQueryClient(), [params, setParams] = useSearchParams();
   useDocumentTitle((workspace?'Documenti':'Carica documenti')+' · ' + home.name);
   const id = params.get('lotto'), client = useMemo(() => new IntakeClient(api, account.id, home.id), [api, account.id, home.id]);
@@ -96,7 +97,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
       const value = pending.batchId ? await client.append(pending.batchId, pending.files, pending.ids, pending.key) : await client.create(pending.files, pending.ids, pending.key); if (!alive.current || !workspace&&active.current !== pending.batchId) return;
       for (let i = 0; i < pending.ids.length; i++) { const item = value.items.find(r => r.clientItemId === pending.ids[i]), file = pending.files[i]; if (item && file) files.current.set(item.id, file); }
       if(!workspace){creation.current = null; setStagedFiles([]);} setRecoverCreation(false); active.current = value.id; adopt(value); if(!workspace)setParams({ lotto: value.id }); await pool(value, pending.ids);
-      if(workspace){const verified=await client.batch(value.id);if(verified.items.some(i=>pending.ids.includes(i.clientItemId)&&!['stored','duplicate'].includes(i.uploadState)))throw Error('Alcuni file non sono stati acquisiti. Recupera il caricamento per riprovare solo quelli mancanti.');creation.current=null;setStagedFiles([]);await cache.invalidateQueries({queryKey:['account',account.id,'home',home.id]});onUploaded?.(verified.items.find(i=>pending.ids.includes(i.clientItemId)&&i.documentLink.document?.id)?.documentLink.document?.id,value.id);}
+      if(workspace){const verified=await client.batch(value.id);if(verified.items.some(i=>pending.ids.includes(i.clientItemId)&&!['stored','duplicate'].includes(i.uploadState)))throw Error('Alcuni file non sono stati acquisiti. Recupera il caricamento per riprovare solo quelli mancanti.');creation.current=null;setStagedFiles([]);await cache.invalidateQueries({queryKey:['account',account.id,'home',home.id]});const orderedIds=pending.ids.flatMap(id=>{const doc=verified.items.find(i=>i.clientItemId===id)?.documentLink.document;return doc?[doc.id]:[];});onUploaded?.(orderedIds[0],value.id,orderedIds);}
       if(automaticConsent)await startAutomatic(value.id,pending.key);
     } catch (e) { if (alive.current) { setProblem(userMessage(e)); if (rejected(e).status === 'rejected') creation.current = null; else setRecoverCreation(true); } }
     finally { creating.current = false; if (alive.current) setWaiting(false); }
@@ -169,10 +170,10 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
   const requestedDocument=params.get('oggetti-documento');
   const productItem=requestedDocument?productItems.find(i=>i.documentLink.document?.id===requestedDocument):undefined;
   const preparationError=(message:string)=>new ApiError({kind:'http',status:422,code:'intake_preparation_required',message});
-  async function prepareDocumentForObject(itemId:string,kind?:string,reuseCopy=false,title?:string,replaceOrganization=false){
+  async function prepareDocumentForObject(itemId:string,kind?:string,reuseCopy=false,title?:string,replaceOrganization=false,target?:DocumentTarget|null){
     const value=current.current;if(!value||active.current!==value.id)throw preparationError('Rileggi il caricamento corrente.');
     const item=toUiBatch(value).items.find(i=>i.id===itemId);if(!item)throw preparationError('Documento non disponibile.');
-    if(item.reviewState==='confirmed'&&(!workspace||(!kind||item.confirmedOrganization?.parts.every(p=>p.kind===kind))&&(!title||title.trim()===item.confirmedOrganization?.title)))return;
+    if(!target&&item.reviewState==='confirmed'&&(!workspace||(!kind||item.confirmedOrganization?.parts.every(p=>p.kind===kind))&&(!title||title.trim()===item.confirmedOrganization?.title)))return;
     if(item.uploadState==='duplicate'){
       if(!reuseCopy)throw preparationError('Il file è già presente: seleziona «Usa il documento già presente senza modificarlo» nella scheda, oppure scegli «Rivedi documento» per cambiarne titolo o tipo.');
       const result=await post(`/items/${encodeURIComponent(item.id)}/duplicate-resolution`,{expectedVersion:item.version,action:'reuse_reference'},'duplicate:'+item.id);
@@ -184,6 +185,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
     if(workspace&&kind&&KINDS.includes(kind as DocumentKind)&&item.uploadState==='stored'&&!item.duplicate&&!item.selectionStale)proposal={itemId:item.id,expectedVersion:item.version,expectedOrganizationVersion:item.organizationVersion??0,replaceOrganization,selection:{action:'organize',title:title?.trim()||item.filename||'Documento',parts:[{kind:kind as DocumentKind,pageFrom:null,pageTo:null}],target:{kind:'home'}}};
     if(proposal&&['utility_bill','purchase_document','invoice','receipt','conformity_declaration','system_diagram','system_booklet','floor_plan','ape','product_label','purchase_order'].includes(kind??'')&&item.reviewState==='unreviewed'&&!item.organizationVersion&&!item.duplicate)proposal={...proposal,selection:{...proposal.selection,parts:[{kind:kind as 'utility_bill'|'purchase_document'|'invoice'|'receipt'|'conformity_declaration'|'system_diagram'|'system_booklet'|'floor_plan'|'ape'|'product_label'|'purchase_order',pageFrom:null,pageTo:null}]}};if(!proposal)throw preparationError(workspace?'Scegli il tipo del documento qui sopra e controlla eventuali indicazioni sulla copia. I dati inseriti restano in questa revisione.':'Prima completa la classificazione del documento: scegli il tipo o risolvi la copia o il conflitto. Usa «Rivedi documento» qui sotto; i dati dell’articolo restano conservati.');
     if(proposal.selection.action==='organize'&&title!==undefined)proposal={...proposal,selection:{...proposal.selection,title:title.trim()}};
+    if(target&&proposal.selection.action==='organize')proposal={...proposal,selection:{...proposal.selection,target:{kind:target.kind,id:target.id,expectedVersion:target.expectedVersion}}};
     const outcome=await organize({batchId:value.id,expectedVersion:value.version,mode:'single',items:[proposal]});
     if(outcome.status!=='done'||outcome.results.some(r=>r.status!=='confirmed'))throw preparationError('Archiviazione del documento da verificare. Nessun oggetto o costo è stato creato: controlla il documento e riprendi qui.');
   }
@@ -227,7 +229,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
       onOpenReceiptFlow={itemId => { const doc = current.current?.items.find(i => i.id === itemId)?.documentLink.document; if(doc)setParams(previous=>{const next=new URLSearchParams(previous);next.set('oggetti-documento',doc.id);next.delete('oggetti-bozza');next.delete('oggetti-analisi');return next;}); }}
       objectProposalItemId={productItem?.id}
       renderCompilationActions={itemId=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;const value=wire?.items.find(i=>i.id===itemId),parts=value?.proposal?.parts??value?.organization?.parts??[];const documentKind=parts.length&&parts.every(p=>p.kind==='utility_bill')?'utility_bill':parts.some(p=>['invoice','receipt','purchase_document'].includes(p.kind))?'purchase_document':undefined;return source?<DocumentCompilationActions documentKind={documentKind} homeId={home.id} documentId={source.id} onOpen={(mode,draftId)=>setParams(previous=>{const next=new URLSearchParams(previous);next.set('oggetti-documento',source.id);next.set('compila',mode);next.delete('oggetti-bozza');next.delete('oggetti-analisi');if(draftId)next.set('oggetti-bozza',draftId);return next;})}/>:null;}}
-      renderObjectProposals={(itemId,reviewDocument)=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentObjectProposals singleScreen={workspace} documentId={source.id} documentCopy={wire?.items.find(i=>i.id===itemId)?.uploadState==='duplicate'} onReviewDocument={reviewDocument} beforeConfirm={!workspace&&wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?undefined:(kind,reuseCopy,title,replaceOrganization)=>prepareDocumentForObject(itemId,kind,reuseCopy,title,replaceOrganization)} confirmLabel={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?'Conferma questo articolo':'Conferma documento e articolo'}/>:null;}}
+      renderObjectProposals={(itemId,reviewDocument)=>{const source=wire?.items.find(i=>i.id===itemId)?.documentLink.document;return source?<DocumentObjectProposals singleScreen={workspace} documentId={source.id} documentCopy={wire?.items.find(i=>i.id===itemId)?.uploadState==='duplicate'} onReviewDocument={reviewDocument} beforeConfirm={!workspace&&wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?undefined:(kind,reuseCopy,title,replaceOrganization,target)=>prepareDocumentForObject(itemId,kind,reuseCopy,title,replaceOrganization,target)} confirmLabel={wire?.items.find(i=>i.id===itemId)?.reviewState==='confirmed'?'Conferma questo articolo':'Conferma documento e articolo'}/>:null;}}
       renderOutcomeLinks={() => <Link className={ui.btn} to={`/home/${home.id}/documenti`}>Vai ai Documenti</Link>}
       onRetryLoad={() => { void cap.refetch(); if (id) void batch.refetch(); }} />}
     <input ref={picker} hidden type="file" accept="application/pdf,image/jpeg,image/png" aria-label="Originale da ricaricare" onChange={e => { const file = e.target.files?.[0], itemId = retryItem.current; if (file && itemId && current.current) { files.current.set(itemId, file); void upload(current.current, itemId); } e.target.value = ''; }} />

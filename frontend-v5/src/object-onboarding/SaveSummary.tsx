@@ -5,7 +5,7 @@ import styles from './onboarding.module.css';
 
 const euro=(value:string)=>/^\d+(?:[.,]\d{1,2})?$/.test(value)?Number(value.replace(',','.')).toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'Da completare';
 const date=(value:string)=>value?formatCalendarDate(value):'Non indicata';
-export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contacts=[]}:{draft:Draft;forms:Record<string,Form>;houseForms?:Record<string,HouseForm>;documentOnly:boolean;title?:string;contacts?:ContactInput[]}){
+export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contacts=[],documentTargetLabel}:{draft:Draft;forms:Record<string,Form>;houseForms?:Record<string,HouseForm>;documentOnly:boolean;title?:string;contacts?:ContactInput[];documentTargetLabel?:string}){
  const items=draft.items.filter(i=>!i.decision||i.decision.state==='deferred');
  const houses=(draft.houseExpenses??[]).filter(i=>!i.decision||i.decision.state==='deferred');
  const objectForms=items.flatMap(item=>{const form=forms[item.id];return form&&!['skip','document_only'].includes(form.action)?[{item,form}]:[];});
@@ -13,7 +13,7 @@ export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contac
  return <div className={styles.saveSummary}>
   <h3>Al salvataggio</h3>
   <p><strong>Documento</strong> · {title||draft.documentInfo?.title.value||draft.document?.name||'Titolo da completare'}</p>
-  {documentOnly?<p>Conservi solo il documento. Nessuna nuova spesa, oggetto o contatto; i collegamenti già presenti restano.</p>:<>
+  {documentOnly?<p>{documentTargetLabel?'Documento collegato a '+documentTargetLabel+'. Nessuna nuova spesa, oggetto o contatto.':'Conservi solo il documento. Nessuna nuova spesa, oggetto o contatto; i collegamenti già presenti restano.'}</p>:<>
    {houses.map(item=>{const f=houseForms[item.id];if(!f)return <p key={item.id}>Spesa · controlla i dati nel modulo.</p>;
     return <section key={item.id} className={styles.summaryExpense} aria-label="Spesa da salvare">
      <h4>{f.mode==='link_existing'?'Collega una spesa esistente':f.mode==='create'?'Nuova spesa':f.mode==='defer'?'Spesa da decidere più avanti':'Spesa esclusa'}</h4>

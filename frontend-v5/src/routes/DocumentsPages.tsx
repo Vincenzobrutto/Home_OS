@@ -86,7 +86,7 @@ export function DocumentsPage() {
     if(workflow==='all')next.set('workflow','all');
     setParams(next, { replace });
   };
-  const closeUpload=(documentId?:string,batchId?:string)=>{setUploadOpen(false);const next=filtersToParams({...applied,workflow:documentId?'pending':applied.workflow});if(documentId&&batchId){next.set('oggetti-documento',documentId);next.set('lotto',batchId);next.set('compila','manuale');}setParams(next,{replace:true});};
+  const closeUpload=(documentId?:string,batchId?:string,documentIds?:string[])=>{setUploadOpen(false);const next=filtersToParams({...applied,workflow:documentId?'pending':applied.workflow});if(documentId&&batchId){next.set('oggetti-documento',documentId);next.set('lotto',batchId);next.set('compila','manuale');if(documentIds?.length)next.set('coda',documentIds.join(','));}setParams(next,{replace:true});};
 
   if(params.has('oggetti-documento'))return <DocumentEditorWorkspace key={account.id+":"+home.id}/>;
   return (

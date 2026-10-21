@@ -12,7 +12,7 @@ import styles from './onboarding.module.css';
 
 export type DraftSaveFailure={message:string;uncertain:boolean};
 type Props = {
-  summaryTitle?:string;houseForms?:Record<string,HouseForm>;summaryContacts?:ContactInput[];
+  documentReference?:ReactNode;documentTargetLabel?:string;summaryTitle?:string;houseForms?:Record<string,HouseForm>;summaryContacts?:ContactInput[];
   draftSaveFailure?:DraftSaveFailure|null;retryDraftSave?:()=>void;busy?:boolean;
   documentOnly?:boolean; changeDocumentOnly?:(value:boolean)=>void; documentProblem?:string;
   draft: Draft; forms: Record<string, Form>; api: ApiClient; accountId: string; base: string; root: string;
@@ -22,7 +22,7 @@ type Props = {
   contactFields?:ReactNode;houseFields?:ReactNode;houseProblem?:string;houseTotals?:{newExpenses:number;amountCents:number};
   manualTotal?: string; changeManualTotal?: (value: string) => void;
 };
-export function UnifiedReview({ summaryTitle,houseForms,summaryContacts,documentOnly=false,changeDocumentOnly,documentProblem,draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, saveDraft, draftSaveFailure,retryDraftSave,busy=false,defer, add, enrich, manualTotal, changeManualTotal,contactFields,houseFields,houseProblem,houseTotals }: Props) {
+export function UnifiedReview({ documentReference,documentTargetLabel,summaryTitle,houseForms,summaryContacts,documentOnly=false,changeDocumentOnly,documentProblem,draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, saveDraft, draftSaveFailure,retryDraftSave,busy=false,defer, add, enrich, manualTotal, changeManualTotal,contactFields,houseFields,houseProblem,houseTotals }: Props) {
   const editor=useContext(DocumentEditorContext);
   const technicalDocument=['conformity_declaration','house_document'].includes(draft.documentKind);
   const saveErrorRef=useRef<HTMLDivElement>(null);
@@ -41,7 +41,7 @@ export function UnifiedReview({ summaryTitle,houseForms,summaryContacts,document
     {changeDocumentOnly&&!editor&&<fieldset className={styles.stack} disabled={disabled}><legend>Cosa vuoi conservare?</legend><label className={styles.check}><input type="radio" name={"document-mode-"+draft.id} checked={documentOnly} onChange={()=>changeDocumentOnly(true)}/>Conserva solo il documento</label><label className={styles.check}><input type="radio" name={"document-mode-"+draft.id} checked={!documentOnly} onChange={()=>changeDocumentOnly(false)}/>Rivedi oggetti, spese e contatti</label><p>{documentOnly?'Salvi titolo e tipo. Non creiamo nuovi oggetti, spese o contatti; quelli già collegati restano conservati.':'Controlla le proposte e scegli cosa salvare.'}</p></fieldset>}
     {editor&&changeDocumentOnly&&<label className={styles.check}><input type="checkbox" disabled={disabled} checked={documentOnly} onChange={e=>changeDocumentOnly(e.target.checked)}/>Conserva solo il documento</label>}
     {documentOnly&&<p>Salva il documento senza registrare spese o creare oggetti.</p>}
-    <section className={editor?styles.resource:undefined} aria-label="Documento"><h3>Documento</h3><div ref={metadataRef} className={styles.grid}>{documentFields}</div></section>
+    <section className={editor?styles.resource:undefined} aria-label="Documento"><h3>Documento</h3><div ref={metadataRef} className={styles.grid}>{documentFields}</div></section>{documentReference}
     {!documentOnly&&draft.mode==='manual'&&draft.items.length>1&&!draft.houseExpenses?.length&&!draft.purchaseTotal&&<label className={styles.field}>Totale della fattura (€), inserito da te<input className={ui.input} inputMode="decimal" value={manualTotal??''} disabled={disabled} onChange={e=>changeManualTotal?.(e.target.value)}/></label>}
     {copyChoice && <label className={styles.check}><input type="checkbox" checked={copyChoice.checked} disabled={disabled} onChange={e => copyChoice.change(e.target.checked)} />Usa il documento già presente senza modificarlo</label>}
     {editor? <>
@@ -63,13 +63,13 @@ export function UnifiedReview({ summaryTitle,houseForms,summaryContacts,document
 </>}
     <section className={ui.card} aria-label="Riepilogo prima di salvare" aria-live="polite">
       {!documentOnly&&draft.purchaseTotal && <p>Totale fattura: <strong>{euro(draft.purchaseTotal.amountCents)}</strong></p>}
-      <SaveSummary draft={draft} forms={forms} documentOnly={documentOnly} title={summaryTitle} houseForms={houseForms} contacts={summaryContacts}/>
+      <SaveSummary draft={draft} forms={forms} documentOnly={documentOnly} title={summaryTitle} houseForms={houseForms} contacts={summaryContacts} documentTargetLabel={documentTargetLabel}/>
       {!documentOnly&&totals.amountCents>0&&!(totals.newExpenses===1&&draft.houseExpenses?.length===1)&&<p>Totale nuove spese: <strong>{euro(totals.amountCents)}</strong></p>}
       {!!totals.excludedCents && <p>Importi esclusi: {euro(totals.excludedCents)}</p>}
       {!!totals.excludedUnknown && <p>{totals.excludedUnknown} articoli esclusi con importo non disponibile.</p>}
       {problem && !issues.length && !documentProblem && <p role="status">{problem}</p>}
       {(issues.length>0||documentProblem)&&<div aria-label="Dati da completare"><p>Prima di salvare:</p><ul>
-        {documentProblem&&<li><button type="button" className={ui.btn} onClick={()=>{const selector=documentProblem.includes('sostituzione')?'input[type="checkbox"]':documentProblem.includes('tipo')?'select':'input';metadataRef.current?.scrollIntoView?.({block:'center'});metadataRef.current?.querySelector<HTMLElement>(selector)?.focus();}}>{documentProblem}</button></li>}
+        {documentProblem&&<li><button type="button" className={ui.btn} onClick={()=>{const selector=documentProblem.includes('sostituzione')?'input[type="checkbox"]':documentProblem.includes('tipo')?'select':'input';metadataRef.current?.scrollIntoView?.({block:'center'});(documentProblem.includes('collegamento')?reviewRef.current?.querySelector<HTMLElement>('[aria-label="Collegamento del documento"] select'):metadataRef.current?.querySelector<HTMLElement>(selector))?.focus();}}>{documentProblem}</button></li>}
         {issues.map((issue,index)=><li key={index}><button type="button" className={ui.btn} onClick={()=>{const region=document.getElementById((editor&&['Cosa fare con il costo','Prezzo','Data'].includes(issue.field)?'review-cost-':'review-item-')+draft.id+'-'+issue.itemId);for(let parent=region?.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')(parent as HTMLDetailsElement).open=true;region?.scrollIntoView?.({block:'center'});const label=Array.from(region?.querySelectorAll('label')??[]).find(label=>label.textContent?.includes(issue.field));const details=label?.closest('details');if(details)details.open=true;(label?.querySelector<HTMLElement>('input,select,button')??region)?.focus();}}>{issue.message}</button></li>)}
       </ul></div>}
     </section>

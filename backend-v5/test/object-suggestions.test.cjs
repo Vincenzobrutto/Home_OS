@@ -6,6 +6,13 @@ const {EconomyPolicy}=require('../dist/economy/policy');
 const {automaticPlan,AutomaticReviewNeeded}=require('../dist/object-onboarding/automatic-plan');
 const cost=(title='Acconto adeguamento quadro elettrico',supplier='Tecnico fittizio')=>({id:'cost',documentKind:'simple_invoice',proposedFields:{title:{value:title,sources:[]},supplier:{value:supplier,sources:[]}},amountCandidates:[]});
 const output=item=>({items:[],houseExpenses:[item],documentKind:'purchase_document',needsReview:false,purchaseTotal:null});
+test('category is proposed only when all readable matching costs agree and the scan is complete',async()=>{
+ const id=randomUUID(),original=EconomyPolicy.prototype.subject;EconomyPolicy.prototype.subject=async()=>({name:'Quadro elettrico',state:'active'});
+ try{for(const [categories,wanted] of [[['repairs_works','repairs_works'],'repairs_works'],[['repairs_works','maintenance'],undefined],[Array(50).fill('repairs_works'),undefined]]){
+  let calls=0;const tx={$queryRaw:async()=>++calls===1?[]:categories.map(category=>({objectId:id,assetId:null,title:'Saldo quadro elettrico',supplier:'Tecnico fittizio',category}))};
+  const result=await invoiceObjectSuggestions(tx,'account','home',output(cost()),cost(),{});assert.equal(result.items[0].category,wanted);
+ }}finally{EconomyPolicy.prototype.subject=original;}
+});
 
 test('same supplier needs two distinctive shared terms, independently of installment amount/date',()=>{
  const c=suggestionContext(output(cost()),cost());assert(relatedExpense(c,{title:'Saldo · adeguamento quadro elettrico',supplier:' TECNICO   FITTIZIO '}));

@@ -1,6 +1,6 @@
 ## 21 ottobre 2026 — Frizioni residue del collaudo fatture
 
-Da valutare: titoli AI troppo generici e categoria assente; ordine della coda rispetto al caricamento; modulo generico lungo nel fallback tecnico; rotazione della sola anteprima. Un originale tecnico ha dato `analysis_invalid_output`: completato manualmente senza retry, da analizzare offline preservando i validatori. Nessun nuovo invio a pagamento implicito. [Evidenze e limiti](v5/invoice-single-flow-20261021.md).
+Collegamento diretto, titoli/categoria, ordine della coda e rotazione anteprima risolti nel [seguito del collaudo](v5/document-flow-simplification-20261021.md). Restano proposte coordinate all’interno dello stesso lotto e analisi offline di `analysis_invalid_output` su un originale tecnico, preservando i validatori. Nessun nuovo invio a pagamento implicito.
 
 ## 18 ottobre 2026 — Chiuso: schema impianto e selezione AI
 

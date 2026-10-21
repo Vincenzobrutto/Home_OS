@@ -19,8 +19,13 @@ export function DocumentEditorWorkspace(){
  const home=useCurrentHome(),account=useAccount(),api=useApi(),navigate=useNavigate(),[params]=useSearchParams();
  const documentId=params.get('oggetti-documento')??'',root=`/home/${home.id}/documenti`;
  const filters=useMemo(()=>({...filtersFromParams(params),workflow:'pending' as const}),[params]);
- const queue=useDocumentSearch(home.id,filters,true),document=useDocument(home.id,documentId);
- const rows=queue.data?.pages.flatMap(page=>page.items)??[];
+ const orderedIds=useMemo(()=>[...new Set((params.get('coda')??'').split(',').filter(Boolean))].slice(0,20),[params]);
+ const queue=useDocumentSearch(home.id,orderedIds.length?{q:'',format:'all',visibility:'all',workflow:'pending'}:filters,true),document=useDocument(home.id,documentId);
+ const completedIds=new Set((params.get('coda-fatti')??'').split(','));
+ const loadedRows=queue.data?.pages.flatMap(page=>page.items)??[];
+ const rows=orderedIds.length?loadedRows.filter(row=>orderedIds.includes(row.id)&&!completedIds.has(row.id)).sort((a,b)=>orderedIds.indexOf(a.id)-orderedIds.indexOf(b.id)):loadedRows;
+ const position=orderedIds.length?orderedIds.indexOf(documentId)+1:rows.findIndex(row=>row.id===documentId)+1;
+ const total=orderedIds.length||rows.length;
  const [preview,setPreview]=useState(true),[mobileOriginalId,setMobileOriginalId]=useState<string|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const mobileOriginal=mobileOriginalId===documentId;
  const setMobileOriginal=(value:boolean)=>setMobileOriginalId(value?documentId:null);
@@ -41,7 +46,7 @@ export function DocumentEditorWorkspace(){
  async function select(id:string,confirmed=false,savedId?:string){
   if(busy||(!confirmed&&!canLeave()))return;setBusy(true);setError('');
   try{if(!keys.current.has(id))keys.current.set(id,newIdempotencyKey());const batch=await client.prepareExisting([id],keys.current.get(id)!);if(!live.current)return;
-   const next=filtersToParams(filters);next.set('lotto',batch.id);next.set('oggetti-documento',id);next.set('compila','manuale');if(savedId)next.set('documento-salvato',savedId);dirty.current=false;navigate(root+'?'+next.toString());
+   const next=filtersToParams(filters);next.set('lotto',batch.id);next.set('oggetti-documento',id);next.set('compila','manuale');if(orderedIds.length){next.set('coda',orderedIds.join(','));next.set('coda-fatti',[...completedIds,...(savedId?[savedId]:[])].filter(Boolean).join(','));}if(savedId)next.set('documento-salvato',savedId);dirty.current=false;navigate(root+'?'+next.toString());
   }catch(e){if(live.current)setError(userMessage(e));}finally{if(live.current)setBusy(false);}
  }
  async function complete(id:string){if(!live.current)return;dirty.current=false;const next=rows.find(row=>row.id!==id&&!['completed','analyzing','attention'].includes(row.workflowState??'to_compile'));if(next){await select(next.id,true,id);}else{const search=filtersToParams(filters);search.set('documento-salvato',id);navigate(root+'?'+search.toString());}}
@@ -54,13 +59,13 @@ export function DocumentEditorWorkspace(){
   <div className={`${mobileOriginal?styles.originalView:styles.formView} ${styles.layout} ${preview?styles.withPreview:''}`}>
    <aside className={styles.queue} aria-label="Documenti da completare">
     <button type="button" className={ui.btn} disabled={busy} onClick={()=>leave(true)}><Icon name="plus"/> Aggiungi file</button>
-    <h2>Da fare</h2><label className={styles.mobileQueue}>Documento da completare<select className={ui.input} value={documentId} disabled={busy} onChange={e=>void select(e.target.value)}>{!rows.some(row=>row.id===documentId)&&<option value={documentId}>{document.data?.name??'Documento corrente'}</option>}{rows.map((row,index)=><option key={row.id} value={row.id}>{index+1}. {row.name}</option>)}</select></label>
-    {queue.isPending?<Loading label="Caricamento documenti…"/>:queue.isError?<ErrorState error={queue.error} onRetry={()=>void queue.refetch()}/>:<nav aria-label="Coda dei documenti">{!rows.some(row=>row.id===documentId)&&document.data&&<button type="button" className={styles.selected} aria-current="true">{document.data.name}<span>Documento corrente</span></button>}{rows.map(row=><button key={row.id} type="button" className={row.id===documentId?styles.selected:''} aria-current={row.id===documentId?'true':undefined} disabled={busy} onClick={()=>{if(row.id!==documentId)void select(row.id);}}><strong>{row.name}</strong><DocumentWorkflowStatus state={row.workflowState}/></button>)}</nav>}
+    <h2>Da fare</h2><label className={styles.mobileQueue}>Documento da completare<select className={ui.input} value={documentId} disabled={busy} onChange={e=>void select(e.target.value)}>{!rows.some(row=>row.id===documentId)&&<option value={documentId}>{document.data?.name??'Documento corrente'}</option>}{rows.map((row,index)=><option key={row.id} value={row.id}>{orderedIds.length?orderedIds.indexOf(row.id)+1:index+1}. {row.name}</option>)}</select></label>
+    {queue.isPending?<Loading label="Caricamento documenti…"/>:queue.isError?<ErrorState error={queue.error} onRetry={()=>void queue.refetch()}/>:<nav aria-label="Coda dei documenti">{!rows.some(row=>row.id===documentId)&&document.data&&<button type="button" className={styles.selected} aria-current="true">{document.data.name}<span>Documento corrente</span></button>}{rows.map(row=><button key={row.id} type="button" className={row.id===documentId?styles.selected:''} aria-current={row.id===documentId?'true':undefined} disabled={busy} onClick={()=>{if(row.id!==documentId)void select(row.id);}}><strong>{orderedIds.length?orderedIds.indexOf(row.id)+1+'. ':''}{row.name}</strong><DocumentWorkflowStatus state={row.workflowState}/></button>)}</nav>}
     {queue.hasNextPage&&<button type="button" className={ui.btn} disabled={queue.isFetchingNextPage} onClick={()=>void queue.fetchNextPage()}>Altri documenti</button>}
    </aside>
    <section className={styles.form} aria-label="Scheda del documento" onChangeCapture={()=>{dirty.current=true;}}>
     {document.isPending?<Loading label="Apertura documento…"/>:document.isError?<ErrorState error={document.error}/>:<>
-     <header className={styles.documentHead}><h2>{document.data.name}</h2><p>Inserisci i dati oppure usa l’AI per precompilarli. Controlla le proposte prima di salvare.</p>{!preview&&<button type="button" className={ui.btn} onClick={()=>setPreview(true)}>Apri anteprima</button>}</header>
+     <header className={styles.documentHead}>{position>0&&total>0&&<p role="status">Documento {position} di {total}</p>}<h2>{document.data.name}</h2><p>Inserisci i dati oppure usa l’AI per precompilarli. Controlla le proposte prima di salvare.</p>{!preview&&<button type="button" className={ui.btn} onClick={()=>setPreview(true)}>Apri anteprima</button>}</header>
      <DocumentEditorContext.Provider value={{complete,pause:(saved=false)=>{if(saved)dirty.current=false;leave();},showOriginal:()=>{setPreview(true);setMobileOriginal(true);}}}><IntakePage workspace key={documentId}/></DocumentEditorContext.Provider>
     </>}
    </section>

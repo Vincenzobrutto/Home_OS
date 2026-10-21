@@ -22,6 +22,17 @@ test('stale version and unavailable source reject saving without updating',async
 test('draft parser accepts incomplete fields but rejects malformed envelopes, unbounded inputs and side-effect flags',()=>{
  assert.deepEqual(compilationDraft(saved()),saved());for(const input of [{...saved(),saved:false},{...saved(),documentTitle:'x'.repeat(4001)},{...saved(),consentToProviderTransfer:true},{...saved(),houseForms:{cost:{amount:'x'}}},{...saved(),contacts:[{proposalId:'contact',action:'save',values:{name:'',email:null}}],manualTotal:3}])assert.throws(()=>compilationDraft(input));
 });
+test('document reference is saved as input only with a scoped versioned target shape',()=>{
+ const input={...saved(),documentTarget:{kind:'object',id:randomUUID(),expectedVersion:2,name:'Impianto sintetico'}};assert.deepEqual(compilationDraft(input).documentTarget,input.documentTarget);
+ for(const patch of [{kind:'home'},{id:'foreign-invalid'},{expectedVersion:0},{name:'x'.repeat(121)},{accountId:randomUUID()}])assert.throws(()=>compilationDraft({...input,documentTarget:{...input.documentTarget,...patch}}));
+});
+test('restored document reference never exposes a name whose source is no longer readable',async()=>{
+ const {EconomyPolicy}=require('../dist/economy/policy'),{ForbiddenException}=require('@nestjs/common'),original=EconomyPolicy.prototype.subject;
+ const compilation={...saved(),documentTarget:{kind:'object',id:randomUUID(),expectedVersion:1,name:'Private old name'}},service=new ObjectOnboardingService({}, {}, {}, {});
+ try{EconomyPolicy.prototype.subject=async()=>{throw new ForbiddenException()};const result=await service.safeReview({},'account','home',{review:{compilation}});assert.equal(result.compilation.documentTarget.name,'');assert.equal(result.compilation.documentTarget.id,compilation.documentTarget.id);
+ EconomyPolicy.prototype.subject=async()=>({name:'Readable current name',state:'active'});assert.equal((await service.safeReview({},'account','home',{review:{compilation}})).compilation.documentTarget.name,'Readable current name');
+ }finally{EconomyPolicy.prototype.subject=original;}
+});
 
 test('invoice draft retains an explicit installment label and selected existing installation without canonical writes',async()=>{
  const w=world(),compilation=saved();compilation.houseForms.cost.objectChoice='object:'+randomUUID();compilation.houseForms.cost.title='Acconto · Impianto sintetico';Object.assign(compilation.houseForms.cost,{objectLabel:'Impianto sintetico',documentNumber:'14',documentDate:'2026-06-16',note:'Nota in bozza'});

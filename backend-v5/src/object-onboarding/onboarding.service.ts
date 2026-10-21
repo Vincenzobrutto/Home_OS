@@ -1,7 +1,7 @@
 import {compilationDraft} from './compilation-draft';
 import {invoiceObjectSuggestions,onboardingObjectSuggestions} from './object-suggestions';
 import { contactChoices, resolveContact, saveContactProposal } from '../contacts/proposals';
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { Prisma, type ObjectOnboardingDraft } from '../../generated/client';
 import { randomUUID } from 'node:crypto';
 import { digest } from '../security';
@@ -67,6 +67,8 @@ export class ObjectOnboardingService {
     }catch{pending=undefined;}}
     let contacts:ReturnType<typeof contactChoices>=[];try{contacts=contactChoices(saved.contacts);for(const c of contacts)if(c.contactId&&!await tx.homeContact.findFirst({where:{id:c.contactId,accountId:a,homeId:h}}))throw invalid();}catch{contacts=[];}
     let compilation;try{if(saved.compilation)compilation=compilationDraft(saved.compilation);}catch{/* malformed old input is never restored */}
+    const target=compilation?.documentTarget as {kind:'object'|'boiler';id:string;expectedVersion:number;name:string}|null|undefined;
+    if(target){let name='';try{const subject=await new EconomyPolicy(this.reviewAccess).subject(tx,a,h,{kind:target.kind,id:target.id});if(subject?.state==='active')name=subject.name;}catch(e){if(!(e instanceof ForbiddenException))throw e;}compilation={...compilation,documentTarget:{...target,name}};}
     return {forms,...(compilation?{compilation}:{}),...(contacts.length?{contacts}:{}),...(draft.mode==='manual'&&Number.isSafeInteger(saved.manualPurchaseTotalCents)&&saved.manualPurchaseTotalCents!>0?{manualPurchaseTotalCents:saved.manualPurchaseTotalCents}:{}),...(pending?{pending}:{})};
   }
   comparisonsFor(a:string,h:string,objectId:string,query:unknown){

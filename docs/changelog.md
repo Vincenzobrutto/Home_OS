@@ -1,3 +1,7 @@
+## Documenti: collegamento diretto e compilazione più breve — 21 ottobre 2026
+
+Riferimento esistente selezionabile senza nuovo oggetto, anche nel fallback manuale; scelta conservata nella bozza e validata alla conferma. Titoli iniziali distinguibili, categoria proposta da precedenti concordi e mai sopra una scelta esplicita. Nuovi gruppi numerati nell’ordine dei file e anteprima PDF ruotabile. [Comportamento e verifiche](v5/document-flow-simplification-20261021.md).
+
 ## Modulo unico fatture e originali dell’intervento — 21 ottobre 2026
 
 Riferimento facoltativo compatto, proposta unica precompilata senza scritture, campi secondari ripristinabili, azione guidata sui dati mancanti e riepilogo senza totali ripetuti. I documenti delle spese attribuite compaiono nella scheda dell’oggetto e si aprono anche dalla riga del costo, senza copie o migrazioni. Percorso tecnico da casa vuota e collaudo desktop/mobile su cinque originali. [Verifiche e limiti](v5/invoice-single-flow-20261021.md).

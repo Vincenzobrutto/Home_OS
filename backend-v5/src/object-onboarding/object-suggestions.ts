@@ -20,7 +20,7 @@ export function relatedExpense(current:{tokens:string[];supplier:string},prior:{
  if(!current.supplier||current.supplier!==suggestionText(prior.supplier??''))return false;
  const words=new Set(suggestionText(prior.title).split(' '));return current.tokens.filter(t=>words.has(t)).length>=2;
 }
-export type ObjectSuggestion={ref:ObjectRef;name:string;reason:'document_name'|'product_identity'|'supplier_and_description'};
+export type ObjectSuggestion={ref:ObjectRef;name:string;reason:'document_name'|'product_identity'|'supplier_and_description';category?:string};
 /** Read-only suggestions. A shared supplier, an amount or a date alone is never an identity. */
 export async function invoiceObjectSuggestions(tx:OnboardingTx,a:string,h:string,output:ProductExtraction,item:HouseExpense,review:ReviewService){
  if(item.documentKind!=='simple_invoice')return {items:[] as ObjectSuggestion[]};
@@ -31,8 +31,8 @@ export async function invoiceObjectSuggestions(tx:OnboardingTx,a:string,h:string
  const identity=identities.length?Prisma.sql`(${Prisma.join(identities.map(p=>Prisma.sql`(position(${' '+p.brand+' '} IN ' '||${clean(Prisma.sql`o.name`)}||' ')>0 AND position(${' '+p.model+' '} IN ' '||${clean(Prisma.sql`o.name`)}||' ')>0)`),' OR ')})`:Prisma.sql`FALSE`;
  const direct=await tx.$queryRaw<Array<{id:string;reason:ObjectSuggestion['reason']}>>(Prisma.sql`SELECT o.id,CASE WHEN ${named} THEN 'document_name' ELSE 'product_identity' END AS reason FROM "HomeObject" o WHERE o."accountId"=${a} AND o."homeId"=${h} AND o.state='active' AND ${readableReceiptName(a,h)}
    AND ((${named}) OR ${identity}) ORDER BY o.id LIMIT 50`);
- const previous=context.supplier&&context.tokens.length>=2?await tx.$queryRaw<Array<{id:string;objectId:string|null;assetId:string|null;title:string;supplier:string|null}>>(Prisma.sql`
-   SELECT e.id,l."objectId",e."assetId",e.title,e.supplier FROM "HomeExpense" e
+ const previous=context.supplier&&context.tokens.length>=2?await tx.$queryRaw<Array<{id:string;objectId:string|null;assetId:string|null;title:string;supplier:string|null;category:string|null}>>(Prisma.sql`
+   SELECT e.id,l."objectId",e."assetId",e.title,e.supplier,e.category FROM "HomeExpense" e
    LEFT JOIN "ObjectResourceLink" l ON l."expenseId"=e.id AND l."accountId"=${a} AND l."homeId"=${h} AND l.state='active'
    LEFT JOIN "Document" d ON d.id=e."documentId"
    WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND (l."objectId" IS NOT NULL OR e."assetId" IS NOT NULL)
@@ -46,7 +46,10 @@ export async function invoiceObjectSuggestions(tx:OnboardingTx,a:string,h:string
  refs.push(...direct.map(r=>({ref:{kind:'object' as const,id:r.id},reason:r.reason??'document_name' as const})));
  const policy=new EconomyPolicy(review),items:ObjectSuggestion[]=[],seen=new Set<string>();
  for(const candidate of refs){const key=candidate.ref.kind+':'+candidate.ref.id;if(seen.has(key))continue;seen.add(key);
-  try{const subject=await policy.subject(tx,a,h,candidate.ref);if(!subject||subject.state!=='active'||candidate.reason==='document_name'&&!suggestionText(subject.name).split(' ').some(t=>t.length>=4&&!ignored.has(t)))continue;items.push({ref:candidate.ref,name:subject.name,reason:candidate.reason});}catch(e){if(e instanceof ForbiddenException)continue;throw e;}
+  try{const subject=await policy.subject(tx,a,h,candidate.ref);if(!subject||subject.state!=='active'||candidate.reason==='document_name'&&!suggestionText(subject.name).split(' ').some(t=>t.length>=4&&!ignored.has(t)))continue;
+   const matches=previous.filter(row=>(candidate.ref.kind==='object'?row.objectId:row.assetId)===candidate.ref.id&&relatedExpense(context,row));
+   const categories=new Set(matches.map(row=>row.category));const category=previous.length<50&&categories.size===1?[...categories][0]:null;
+   items.push({ref:candidate.ref,name:subject.name,reason:candidate.reason,...(category&&['electricity','gas','water','internet_services','maintenance','repairs_works','purchase_replacement'].includes(category)?{category}:{})});}catch(e){if(e instanceof ForbiddenException)continue;throw e;}
   if(items.length===5)break;
  }
  return {items};

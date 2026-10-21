@@ -13,7 +13,8 @@ export type Form={expenseAutoState?:'pending'|'ready'|'review'|'manual';manualIt
 export type HouseExpense={documentKind?:'utility_bill'|'simple_invoice';id:string;reviewWarnings?:string[];proposedFields:Record<string,{value:string;sources:unknown[]}>;amountCandidates:Array<{id:string;amountCents:number;role:string;label:string}>;amountSelectionRequired:boolean;decision:null|{state:string;newExpenses:number}};
 export type ContactInput={proposalId:string;action:"save"|"skip";contactId?:string;expectedVersion?:number;values?:ContactValues;createDistinct?:boolean};
 export type ProposedContact={id:string;values:ContactValues;sources:Record<string,Field["sources"][number]>;warnings:string[];resolution:{state:string;contact:Contact|null;candidates:Array<{id:string;name:string;version:number;state:string}>;conflicts:string[]};decision:null|{contactId:string|null}};
-export type CompilationDraft={saved:true;documentTitle:string;documentKind:string;replaceOrganization:boolean;reuseCopy:boolean;documentOnly:boolean;manualTotal:string;contacts:ContactInput[];houseForms:Record<string,HouseForm>};
+export type DocumentTarget={kind:'object'|'boiler';id:string;expectedVersion:number;name:string};
+export type CompilationDraft={documentTarget?:DocumentTarget|null;saved:true;documentTitle:string;documentKind:string;replaceOrganization:boolean;reuseCopy:boolean;documentOnly:boolean;manualTotal:string;contacts:ContactInput[];houseForms:Record<string,HouseForm>};
 export type HouseForm={documentNumber?:string;documentDate?:string;note?:string;objectLabel?:string;objectSuggestionReviewed?:boolean;objectChoice?:string;candidateId:string;amount:string;manual:boolean;title:string;supplier:string;date:string;category:string;mode:string;expenseId:string;ack:boolean;periodFrom:string;periodTo:string;dueOn:string;periodDraft?:import('../lib/billPeriod').BillPeriodDraft};
 export type Draft={contacts?:ProposedContact[];documentInfo?:{kind:string;title:{value:string;source:Field['sources'][number]};facts:Array<{subjectIndex:number;field:string;value:string;source:Field['sources'][number]}>}|null;reviewWarnings?:Array<{field:string;reason:string}>;houseExpenses?:HouseExpense[];id:string;version:number;state:string;mode:string;snapshot:{documentId:string;documentVersion:number;sha256:string}|null;document:{id:string;name:string;mimeType:string}|null;documentKind:string;items:Item[];needsReview:boolean;purchaseExpenseReady?:boolean;purchaseTotal:{amountCents:number}|null;review:{compilation?:CompilationDraft;contacts?:ContactInput[];manualPurchaseTotalCents?:number;forms?:Record<string,Form>;pending?:Pending}|null;permissions:string[]};
 export type Pending={path:string;key:string;body:unknown};
@@ -55,4 +56,17 @@ export function houseExpenseTitle(item:HouseExpense,draft:Draft){
  if(purposes.size!==1)return [...title].slice(0,120).join('');
  const prefix=purposes.has('acconto')?'Acconto · ':'Saldo · ';
  return prefix+[...title].slice(0,120-[...prefix].length).join('');
+}
+
+/** Suggest a readable initial title; callers preserve any saved organization or user edit. */
+export function documentTitleSuggestion(draft:Draft){
+ const original=draft.documentInfo?.title.value;
+ const invoice=draft.houseExpenses?.find(e=>e.documentKind==='simple_invoice');
+ if(invoice&&(!original||/^(fattura|ricevuta)$/iu.test(original.trim()))){
+  const number=invoice.proposedFields.documentNumber?.value,supplier=invoice.proposedFields.supplier?.value?.replace(/\s+/gu,' ').trim();
+  const purpose=houseExpenseTitle(invoice,draft),prefix=purpose?.startsWith('Acconto · ')?'Acconto · ':purpose?.startsWith('Saldo · ')?'Saldo · ':'';
+  if(number||supplier)return [...prefix+(original?.toLocaleLowerCase('it')==='ricevuta'?'Ricevuta':'Fattura')+(number?' '+number:'')+(supplier?' · '+supplier:'')].slice(0,120).join('');
+ }
+ if(draft.documentInfo?.kind==='system_diagram'&&(!original||original.length<=12&&/^[\p{Lu}\s.\-/]+$/u.test(original)))return 'Schema dell’impianto'+(draft.documentInfo.facts.some(f=>f.field==='systemType'&&f.value==='electrical')?' elettrico':'');
+ return original;
 }
