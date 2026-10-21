@@ -1,3 +1,7 @@
+## 21 ottobre 2026 — Un impianto come riferimento dell’intervento
+
+Decisione dell’utente: l’impianto elettrico esistente rappresenta l’intero intervento; acconto e saldo sono spese distinte collegate a quella stessa scheda. Nessuna copia del totale sui componenti citati dalla fattura. Scelta esplicita del riferimento, con preselezione limitata all’unico oggetto già confermato nella bozza. Distinzione semplice tramite etichetta nel titolo, senza dichiarare pagamenti o calcolare rate/residui. Motivo: collegamenti comprensibili e prevenzione dei doppioni. [Implementazione e limiti](v5/expense-installments-object-20261021.md).
+
 ## 21 ottobre 2026 — Rubrica: elenco compatto e contesto conservato
 
 Implementare l’organizzazione approvata nelle anteprime: righe compatte, ricerca durante la digitazione, recapiti accessibili e Mostra altri che aggiunge pagine. Il ritorno conserva ricerca/filtro/posizione e focus in memoria privata per account/casa, senza persistenza dei dati digitati nelle bozze. Preservare API, autorizzazioni e funzioni esistenti; i conteggi illustrativi dei collegamenti non vanno stimati. [Dettagli](v5/contacts-catalog-20261021.md).

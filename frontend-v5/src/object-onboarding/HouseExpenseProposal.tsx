@@ -1,10 +1,12 @@
 import {useState,useEffect,useRef} from 'react';
-import {useQuery} from '@tanstack/react-query';
+import {useQuery,useInfiniteQuery} from '@tanstack/react-query';
 import {Link} from 'react-router';
 import type {ApiClient} from '../api/client';
 import {userMessage} from '../api/errors';
 import {ui} from '../components/ui';
 import {BillPeriodFields} from '../components/BillPeriodFields';
+import {ExpenseInstallmentFields} from '../components/ExpenseInstallmentFields';
+import type {ObjectRef} from '../api/types';
 import type {Draft,HouseExpense,ExpenseCandidate,HouseForm} from './model';
 import {houseExpenseTitle} from './model';
 import styles from './onboarding.module.css';
@@ -21,11 +23,21 @@ export function HouseExpenseProposal({item,draft,api,accountId,base,root,disable
  const periodValid=!isBill||!!periodFrom&&!!periodTo&&periodFrom<=periodTo;
  const [editing,setEditing]=useState(unified);
  const done=['confirmed','skipped'].includes(item.decision?.state??'');
+ const homeId=root.split('/').at(-1)!;
+ const confirmedObjects=[...new Set((draft.items??[]).flatMap(i=>i.decision?.state==='confirmed'?i.decision.objects.filter(o=>o.state==='active'&&o.id).map(o=>'object:'+o.id):[]))];
+ const [objectChoice,setObjectChoice]=useState(saved?.objectChoice??(!isBill&&confirmedObjects.length===1?confirmedObjects[0]! :''));
+ const objectRef=objectChoice?{kind:objectChoice.split(':')[0],id:objectChoice.split(':')[1]} as ObjectRef:null;
+ const catalog=useInfiniteQuery({queryKey:['account',accountId,'home',homeId,'invoice-expense-objects'],initialPageParam:null as string|null,queryFn:({signal,pageParam})=>api.listObjects(homeId,{state:'active',q:'',type:null,roomId:null,placement:'all',sort:'name'},{limit:20,cursor:pageParam},signal,accountId),getNextPageParam:p=>p.nextCursor??undefined,enabled:!isBill&&!done,retry:false,gcTime:0});
+ const selectedObject=useQuery({queryKey:['account',accountId,'home',homeId,'invoice-expense-object',objectChoice],queryFn:({signal})=>api.getObject(homeId,objectRef!,signal,accountId),enabled:!isBill&&!done&&!!objectRef,retry:false,gcTime:0});
+ const readableObject=selectedObject.isSuccess&&selectedObject.data.state==='active'?selectedObject.data:null;
+ const objectValid=isBill||!objectChoice||!!readableObject;
+ const objects=catalog.isSuccess?catalog.data.pages.flatMap(p=>p.items).filter(o=>o.state==='active'):[];
+ const objectOptions=readableObject&&!objects.some(o=>o.ref.kind===readableObject.ref.kind&&o.ref.id===readableObject.ref.id)?[readableObject,...objects]:objects;
  const candidates=useQuery({queryKey:['account',accountId,'home',root,'bill-expenses',draft.id,item.id,draft.version],queryFn:({signal})=>api.callJson<{items:ExpenseCandidate[];nextCursor:string|null}>(base+'/drafts/'+draft.id+'/expense-candidates?itemId='+encodeURIComponent(item.id),{accountId,signal}),enabled:!done,retry:false,gcTime:0});
  const duplicates=candidates.data?.items.filter(x=>x.rank>0)??[],row=candidates.data?.items.find(x=>x.id===expenseId);
- const valid=mode==='skip'||mode==='defer'?true:mode==='link_existing'?!!row:periodValid&&!!title.trim()&&!!category&&!!date&&date<=today&&/^\d+(?:[.,]\d{1,2})?$/.test(amount)&&Number(amount.replace(',','.'))>0&&(manual||!!candidateId)&&(!duplicates.length||ack);
- function selection(action:string){const values={title,category,supplier:supplier||null,amountCents:Math.round(Number(amount.replace(',','.'))*100),spentOn:date,objectRef:null,...Object.fromEntries(['documentNumber','documentDate','competenceFrom','competenceTo','dueOn'].filter(k=>fields[k]).map(k=>[k,fields[k]!.value])),...(isBill?{documentDate:date,competenceFrom:periodFrom,competenceTo:periodTo,dueOn:dueOn||null}:{})};return {itemId:item.id,action,...(action==='create'?{values,amountSelection:manual?{mode:'manual'}:{mode:'candidate',candidateId},acknowledgePossibleDuplicate:ack}:action==='link_existing'?{expenseId,expectedExpenseVersion:row?.version}:{})};}
- const review={form:{candidateId,amount,manual,title,supplier,date,category,mode,expenseId,ack,periodFrom,periodTo,dueOn,periodDraft},choice:valid&&(['skip','defer'].includes(mode)||candidates.isSuccess)?selection(mode):null,newExpenses:mode==='create'?1:0,amountCents:mode==='create'?Math.round(Number(amount.replace(',','.'))*100)||0:0,manual,action:mode};
+ const valid=mode==='skip'||mode==='defer'?true:mode==='link_existing'?!!row:objectValid&&periodValid&&!!title.trim()&&[...title].length<=120&&!!category&&!!date&&date<=today&&/^\d+(?:[.,]\d{1,2})?$/.test(amount)&&Number(amount.replace(',','.'))>0&&(manual||!!candidateId)&&(!duplicates.length||ack);
+ function selection(action:string){const values={title,category,supplier:supplier||null,amountCents:Math.round(Number(amount.replace(',','.'))*100),spentOn:date,objectRef:isBill?null:objectRef,...Object.fromEntries(['documentNumber','documentDate','competenceFrom','competenceTo','dueOn'].filter(k=>fields[k]).map(k=>[k,fields[k]!.value])),...(isBill?{documentDate:date,competenceFrom:periodFrom,competenceTo:periodTo,dueOn:dueOn||null}:{})};return {itemId:item.id,action,...(action==='create'?{values,amountSelection:manual?{mode:'manual'}:{mode:'candidate',candidateId},acknowledgePossibleDuplicate:ack}:action==='link_existing'?{expenseId,expectedExpenseVersion:row?.version}:{})};}
+ const review={form:{candidateId,amount,manual,title,supplier,date,category,mode,expenseId,ack,periodFrom,periodTo,dueOn,periodDraft,objectChoice},choice:valid&&(['skip','defer'].includes(mode)||candidates.isSuccess)?selection(mode):null,newExpenses:mode==='create'?1:0,amountCents:mode==='create'?Math.round(Number(amount.replace(',','.'))*100)||0:0,manual,action:mode};
  const region=useRef<HTMLElement>(null);
  const missing:Array<{message:string;field:string}>=[];
  if(!done&&!['skip','defer'].includes(mode)){
@@ -34,6 +46,8 @@ export function HouseExpenseProposal({item,draft,api,accountId,base,root,disable
   if(mode==='create'){
    if(!periodValid)add('Indica inizio e fine del periodo di riferimento della bolletta.','Periodo di riferimento');
    if(!title.trim())add('Indica il titolo della spesa.','Titolo della spesa');
+   else if([...title].length>120)add('Riduci il titolo a 120 caratteri, compresa l’etichetta acconto o saldo.','Titolo della spesa');
+   if(!objectValid)add('Verifica l’oggetto o impianto scelto, oppure lascia la spesa senza collegamento.','Oggetto o impianto');
    if(!category)add('Scegli la categoria della spesa.',isBill?'Categoria della bolletta':'Categoria della spesa');
    if(!date||date>today)add(isBill?'Indica una data di emissione valida, non futura.':'Indica una data della spesa valida, non futura.',isBill?'Data di emissione':'Data della spesa');
    if(!manual&&!candidateId)add('Scegli il totale da usare o inserisci un importo corretto.',isBill?'Totale della bolletta':'Totale della fattura');
@@ -46,7 +60,7 @@ export function HouseExpenseProposal({item,draft,api,accountId,base,root,disable
  useEffect(()=>{if(onReview&&serialized!==notified.current){notified.current=serialized;onReview(JSON.parse(serialized) as HouseReview);}},[serialized,onReview]);
  async function apply(action:string){setError('');setWorking(true);try{await confirm(selection(action));}catch(e){setError(userMessage(e));}finally{setWorking(false);}}
 
- return <section ref={region} className={ui.card} aria-label={'Spesa della casa: '+title}><h3>{title}</h3><p>Spesa della casa · costo non attribuito a un oggetto</p>{!!item.reviewWarnings?.length&&<p role="status">Alcuni dettagli non verificabili sono stati esclusi. Controlla i dati proposti.</p>}{done?<><p>{item.decision?.state==='skipped'?'Spesa esclusa.':'Spesa registrata.'}</p><Link to={root+'/spese'}>Apri le spese</Link></>:<fieldset disabled={disabled||working} className={styles.stack} style={{border:0,padding:0,margin:0,minWidth:0}}>
+ return <section ref={region} className={ui.card} aria-label={'Spesa della casa: '+title}><h3>{title}</h3><p>{objectChoice&&!isBill?'Costo riferito a: '+(readableObject?.name??'oggetto o impianto da verificare'):'Spesa della casa · senza oggetto o impianto collegato'}</p>{!!item.reviewWarnings?.length&&<p role="status">Alcuni dettagli non verificabili sono stati esclusi. Controlla i dati proposti.</p>}{done?<><p>{item.decision?.state==='skipped'?'Spesa esclusa.':'Spesa registrata.'}</p><Link to={root+'/spese'}>Apri le spese</Link></>:<fieldset disabled={disabled||working} className={styles.stack} style={{border:0,padding:0,margin:0,minWidth:0}}>
   {!editing&&<><p><strong>{amount?Number(amount.replace(',','.')).toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'Importo da verificare'}</strong> · {categories[category as keyof typeof categories]??'Categoria da verificare'}{supplier?' · '+supplier:''}</p>
   {date&&<p>{isBill?'Emissione':'Data della spesa'}: {date.split('-').reverse().join('/')}{dueOn?' · Scadenza: '+dueOn.split('-').reverse().join('/'):''}</p>}
   {isBill&&<p>Periodo di riferimento: {periodFrom&&periodTo?periodFrom.split('-').reverse().join('/')+' – '+periodTo.split('-').reverse().join('/'):'Da indicare prima del salvataggio'}</p>}</>}
@@ -60,13 +74,18 @@ export function HouseExpenseProposal({item,draft,api,accountId,base,root,disable
    <label className={styles.field}>{isBill?'Importo della bolletta (€)':'Importo della spesa (€)'}<input className={ui.input} inputMode="decimal" readOnly={!manual} value={amount} onChange={e=>setAmount(e.target.value)}/></label>
   <label className={styles.field}>{isBill?'Categoria della bolletta':'Categoria della spesa'}<select className={ui.input} value={category} onChange={e=>setCategory(e.target.value)}><option value="">Scegli la categoria</option>{Object.entries(categories).filter(([key])=>!isBill||['electricity','gas','water','internet_services'].includes(key)).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
    {!isBill&&<label className={styles.field}>Data della spesa<input type="date" max={today} className={ui.input} value={date} onChange={e=>setDate(e.target.value)}/></label>}
+   {!isBill&&<><ExpenseInstallmentFields title={title} onChange={setTitle}/><label className={styles.field}>Oggetto o impianto (facoltativo)<select className={ui.input} value={objectChoice} onChange={e=>setObjectChoice(e.target.value)}><option value="">Senza collegamento</option>{objectOptions.map(o=><option key={o.ref.kind+':'+o.ref.id} value={o.ref.kind+':'+o.ref.id}>{o.name}</option>)}{objectChoice&&!objectOptions.some(o=>o.ref.kind+':'+o.ref.id===objectChoice)&&<option value={objectChoice}>Collegamento da verificare</option>}</select></label>
+   <p>Per acconto e saldo scegli lo stesso impianto esistente. La spesa viene registrata una sola volta, senza attribuirla anche agli altri oggetti del documento.</p>
+   {catalog.hasNextPage&&<button type="button" className={ui.btn} disabled={catalog.isFetchingNextPage} onClick={()=>void catalog.fetchNextPage()}>Carica altri oggetti e impianti</button>}
+   {catalog.isError&&<p role="alert">Elenco oggetti non disponibile. <button type="button" onClick={()=>void catalog.refetch()}>Riprova elenco oggetti</button></p>}
+   {!!objectChoice&&!objectValid&&<p role="status">{selectedObject.isFetching?'Verifica del collegamento…':'Oggetto non disponibile. Scegline un altro o rimuovi il collegamento.'}{selectedObject.isError&&<button type="button" onClick={()=>void selectedObject.refetch()}>Riprova collegamento</button>}</p>}</>}
    {isBill&&<><BillPeriodFields draftValue={periodDraft} onDraftChange={setPeriodDraft} from={periodFrom} to={periodTo} onChange={({from,to})=>{setPeriodFrom(from);setPeriodTo(to);}}/><fieldset className={styles.stack}><legend>Emissione e scadenza</legend><label className={styles.field}>Data di emissione<input type="date" max={today} className={ui.input} value={date} onChange={e=>setDate(e.target.value)}/></label><label className={styles.field}>Scadenza indicata<input type="date" className={ui.input} value={dueOn} onChange={e=>setDueOn(e.target.value)}/></label><p>La scadenza non indica che la bolletta sia stata pagata e non crea un promemoria.</p></fieldset></>}
    {duplicates.length>0&&<label className={styles.check}><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)}/>Ho verificato che è una spesa distinta da quelle già registrate.</label>}
   </>}
   <details className={styles.stack} open={duplicates.length>0||mode!=='create'||!title.trim()}><summary>Altri dati e collegamenti</summary>
   <label className={styles.field}>Titolo della spesa<input className={ui.input} value={title} onChange={e=>setTitle(e.target.value)} maxLength={120}/></label>
   <label className={styles.field}>{isBill?'Come registrare la bolletta':'Come registrare la spesa'}<select className={ui.input} value={mode} onChange={e=>setMode(e.target.value)}><option value="create">Registra una nuova spesa</option><option value="link_existing">Collega una spesa già presente</option>{onReview&&<><option value="skip">Non registrare la spesa</option><option value="defer">Decidi più avanti</option></>}</select></label>
-  <p>Gli eventuali oggetti collegati al documento non ricevono automaticamente questo costo.</p></details>
+  <p>Il collegamento del documento a un oggetto non attribuisce da solo il costo. Per una fattura puoi scegliere qui l’oggetto o impianto di riferimento.</p></details>
   </>}
   {!!missing.length&&<div aria-label="Dati della spesa da completare"><p>Per questa spesa:</p><ul>{missing.map(issue=><li key={issue.field}><button type="button" className={ui.btn} onClick={()=>{setEditing(true);const label=Array.from(region.current?.querySelectorAll('label')??[]).find(label=>label.textContent?.includes(issue.field));const control=issue.field==='Periodo di riferimento'?region.current?.querySelector<HTMLElement>('[data-bill-period] input[type=month], [data-bill-period] input[type=date]'):label?.querySelector<HTMLElement>('input,select,button');for(let parent=control?.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')(parent as HTMLDetailsElement).open=true;control?.scrollIntoView?.({block:'center'});control?.focus();}}>{issue.message}</button></li>)}</ul></div>}
   {error&&<p role="alert">{error}</p>}

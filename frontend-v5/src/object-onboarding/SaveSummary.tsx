@@ -20,7 +20,7 @@ export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contac
      {f.mode==='create'&&<><p><strong>{euro(f.amount)}</strong> · {f.supplier||'Fornitore non indicato'}</p><dl>
       <div><dt>Titolo</dt><dd>{f.title||'Da completare'}</dd></div><div><dt>Categoria</dt><dd>{({electricity:'Energia elettrica',gas:'Gas',water:'Acqua',internet_services:'Internet e servizi',maintenance:'Manutenzione',repairs_works:'Lavori e riparazioni',purchase_replacement:'Acquisti e sostituzioni'} as Record<string,string>)[f.category]||'Da completare'}</dd></div>
       {item.documentKind!=='simple_invoice'?<><div><dt>Periodo di riferimento</dt><dd>{f.periodFrom&&f.periodTo&&f.periodFrom<=f.periodTo?billPeriodLabel({category:'electricity',spentOn:f.date,competenceFrom:f.periodFrom,competenceTo:f.periodTo}):'Da completare'}</dd></div><div><dt>Emissione</dt><dd>{date(f.date)}</dd></div><div><dt>Scadenza</dt><dd>{date(f.dueOn)}</dd></div></>:<div><dt>Data della spesa</dt><dd>{date(f.date)}</dd></div>}
-     </dl></>}
+     </dl>{item.documentKind==='simple_invoice'&&<p>{f.objectChoice?'Spesa collegata all’oggetto o impianto scelto nel modulo. Un solo costo, anche se il documento riguarda più oggetti.':'Senza oggetto o impianto collegato.'}</p>}</>}
      {f.mode==='link_existing'&&<p>{f.expenseId?'Viene collegata quella scelta nel modulo. Non crei una nuova spesa.':'Scegli la spesa da collegare nel modulo.'}</p>}
      {['skip','defer'].includes(f.mode)&&<p>Nessuna spesa verrà registrata.</p>}
     </section>;
@@ -31,7 +31,7 @@ export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contac
     {!houses.length&&f.expense==='create'&&<p>Nuova spesa: <strong>{euro(f.amount)}</strong> · {f.supplier||'Fornitore non indicato'} · {date(f.spentOn)}</p>}
     {!houses.length&&f.expense==='link'&&<p>Collega la spesa esistente scelta nel modulo. Non crei una nuova spesa.</p>}
    </section>)}
-   {!objectForms.length&&<p>Nessun nuovo oggetto o collegamento a oggetti.</p>}
+   {!objectForms.length&&<p>{houses.some(i=>houseForms[i.id]?.mode==='create'&&houseForms[i.id]?.objectChoice)?'Nessun nuovo oggetto. Usi quello già esistente scelto per la spesa.':'Nessun nuovo oggetto o collegamento a oggetti.'}</p>}
    {!houses.length&&!objectForms.some(x=>x.form.expense!=='skip')&&<p>Nessuna nuova spesa.</p>}
    {selectedContacts.length>0&&<p>Contatti da salvare in Rubrica: {selectedContacts.length}. Solo quelli che hai scelto.</p>}
   </>}

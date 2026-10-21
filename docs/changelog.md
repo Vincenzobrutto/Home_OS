@@ -1,3 +1,7 @@
+## Fatture: collegamento all’impianto e acconto/saldo — 21 ottobre 2026
+
+Il costo complessivo di una fattura può riferirsi a un oggetto o impianto esistente, senza creare una scheda o copiare il totale sugli altri componenti. Etichette acconto/saldo nel titolo, selettore nei moduli, riepilogo e ripristino della scelta. [Causa, verifiche e limiti](v5/expense-installments-object-20261021.md).
+
 ## Dettaglio Ambiente compatto — 21 ottobre 2026
 
 Modifica in alto, Archivia nel menu, nota visibile, schede degli oggetti e dettagli/storia compatti su desktop/mobile. Conteggi personali e paginazione preservati. [Comportamento e verifiche](v5/room-detail-20261021.md).

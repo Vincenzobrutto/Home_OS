@@ -1,4 +1,5 @@
 import { BillPeriodFields } from '../components/BillPeriodFields';
+import { ExpenseInstallmentFields } from '../components/ExpenseInstallmentFields';
 import {billPeriodLabel,isUtility} from '../lib/billPeriod';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -603,6 +604,7 @@ export function EconomyExpenseForm(props: {
       {checkingPresets && <p role="status">Verifica dei collegamenti di partenza in corso… Attendi prima di salvare.</p>}
       {presets.object && presetObjOk && objectChoice === null && <p className={act.meta}>Oggetto preselezionato: <strong>{presetObj.data.name}</strong>. Puoi cambiarlo nel campo Oggetto.</p>}
       <Field id={`${id}-title`} label="Descrizione" autoComplete="off" value={title} disabled={disabled} onChange={(e) => setTitle(e.target.value)} error={errors.title} />
+      {!isUtility(category)&&<ExpenseInstallmentFields title={title} onChange={setTitle} disabled={disabled}/>}
       <div className={ui.field}>
         <label className={ui.label} htmlFor={`${id}-amount`}>
           Importo in euro

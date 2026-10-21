@@ -23,6 +23,12 @@ test('draft parser accepts incomplete fields but rejects malformed envelopes, un
  assert.deepEqual(compilationDraft(saved()),saved());for(const input of [{...saved(),saved:false},{...saved(),documentTitle:'x'.repeat(4001)},{...saved(),consentToProviderTransfer:true},{...saved(),houseForms:{cost:{amount:'x'}}},{...saved(),contacts:[{proposalId:'contact',action:'save',values:{name:'',email:null}}],manualTotal:3}])assert.throws(()=>compilationDraft(input));
 });
 
+test('invoice draft retains an explicit installment label and selected existing installation without canonical writes',async()=>{
+ const w=world(),compilation=saved();compilation.houseForms.cost.objectChoice='object:'+randomUUID();compilation.houseForms.cost.title='Acconto · Impianto sintetico';
+ const result=await w.service.saveReview(w.a,w.h,w.id,{expectedVersion:1,review:{compilation}},w.key);
+ assert.deepEqual(result.draft.review.compilation,compilation);assert.deepEqual(w.draft().decisions,{});
+});
+
 test('capabilities expose only a resume marker scoped to the current source, never private review fields',async()=>{
  const {OnboardingJobService}=require('../dist/object-onboarding/jobs.service');const a=randomUUID(),h=randomUUID(),doc=randomUUID(),id=randomUUID(),sha='a'.repeat(64);
  const tx={objectOnboardingDraft:{findMany:async q=>{assert.deepEqual(q.where,{accountId:a,homeId:h,documentId:doc,documentVersion:3,documentSha256:sha,mode:{not:'floor_plan'}});return [{id,state:'open',mode:'manual',review:{compilation:saved()}}];},findFirst:async()=>null},objectOnboardingJob:{findFirst:async()=>null}};

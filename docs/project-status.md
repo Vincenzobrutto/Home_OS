@@ -1,3 +1,7 @@
+## Fatture: impianto di riferimento, acconto e saldo — 21 ottobre 2026
+
+Scelta facoltativa dell’oggetto/impianto esistente nella compilazione fatture/ricevute, con validazione server e senza attribuire il totale a ogni componente. Scelta importo unico/acconto/saldo salvata nel titolo; nessun modello rate o pagamento verificato. Corretta l’associazione reale autorizzata mantenendo la stessa spesa. [Causa, comportamento e verifiche](v5/expense-installments-object-20261021.md). Acconto reale ancora da caricare; associazione automatica generale non implementata.
+
 ## Dettaglio Ambiente compatto — 21 ottobre 2026
 
 Testata come Oggetti, azioni in alto, schede oggetto condivise, nota visibile e dettagli/storia compatti. Modulo, archivio/ripristino, altre collocazioni e ritorni conservati. [Comportamento e verifiche](v5/room-detail-20261021.md). 30 casi mirati, build/lint e browser desktop/mobile con dati fittizi; dati reali intatti.

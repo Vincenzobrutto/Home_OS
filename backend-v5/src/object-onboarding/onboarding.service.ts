@@ -7,6 +7,7 @@ import { digest } from '../security';
 import { object, uuid, version, invalid, conflict } from '../review/domain';
 import { ActivityClock, temporal } from '../activities/domain';
 import { EconomyPolicy } from '../economy/policy';
+import type { ObjectRef } from '../economy/domain';
 import { ExpensesService } from '../expenses/expenses.service';
 import { ReviewService } from '../review/review.service';
 import { HomeObjectsService } from '../home-objects/home-objects.service';
@@ -56,7 +57,10 @@ export class ObjectOnboardingService {
       if(pending.path!=='/drafts/'+draft.id+'/confirmations')throw invalid();requestKey(pending.key);
       const body=onboardingConfirmation(pending.body,temporal(this.clock.now()).today);
       for(const c of body.choices)if(c.action==='link')for(const target of c.targets)await this.access.target(tx,a,h,target.id);
-      for(const c of body.houseExpenses??[])if(c.confirmation?.mode==='link_existing')await new ExpensesService(this.access.db,this.reviewAccess,this.clock).record(tx,a,h,c.confirmation.expenseId);
+      for(const c of body.houseExpenses??[]){
+        if(c.confirmation?.mode==='link_existing')await new ExpensesService(this.access.db,this.reviewAccess,this.clock).record(tx,a,h,c.confirmation.expenseId);
+        if(c.confirmation?.mode==='create'&&c.confirmation.values.objectRef)await new EconomyPolicy(this.reviewAccess).subject(tx,a,h,c.confirmation.values.objectRef as ObjectRef,true);
+      }
       pending={...pending,body:pending.body};
     }catch{pending=undefined;}}
     let contacts:ReturnType<typeof contactChoices>=[];try{contacts=contactChoices(saved.contacts);for(const c of contacts)if(c.contactId&&!await tx.homeContact.findFirst({where:{id:c.contactId,accountId:a,homeId:h}}))throw invalid();}catch{contacts=[];}
@@ -266,7 +270,7 @@ export class ObjectOnboardingService {
     const similar=await tx.homeExpense.findMany({where:{accountId:a,homeId:h,state:'active',OR:[{amountCents:Number(c.values.amountCents),spentOn:String(c.values.spentOn)},...(c.values.documentNumber&&c.values.supplier?[{documentNumber:c.values.documentNumber,supplier:c.values.supplier}]:[])]},select:{id:true,documentId:true}});
     let duplicate=false;for(const row of similar){if(!row.documentId||(await expenses.documentLink(tx,a,h,row.documentId)).state==='linked')duplicate=true;}
     if(duplicate&&!selected.acknowledgePossibleDuplicate)throw conflict('onboarding_possible_expense_duplicate','C’è una spesa simile: controlla prima di registrare un costo distinto.');
-    const created=await expenses.mutateInTransaction(tx,a,h,'create','',{...c.values,objectRef:null,workId:null,documentId:draft.documentId},'onboarding_'+digest(draft.id+':'+item.id+':home-create'),true);
+    const created=await expenses.mutateInTransaction(tx,a,h,'create','',{...c.values,workId:null,documentId:draft.documentId},'onboarding_'+digest(draft.id+':'+item.id+':home-create'),true);
     const provenance=Object.fromEntries(Object.entries(c.values).filter(([key])=>!['objectRef','workId'].includes(key)).map(([key,value])=>[key,{origin:key==='amountCents'&&candidate||item.proposedFields[key]?.value===value?'extraction_confirmed':'user_declared',sources:key==='amountCents'&&candidate?candidate.sources:item.proposedFields[key]?.value===value?item.proposedFields[key].sources:[]} ]));
     const expense=await tx.homeExpense.update({where:{id:created.expense.id},data:{amountOrigin:candidate?'extraction_confirmed':'user_declared',economicProvenance:onboardingJson(provenance)}});
     const saved=await new EconomyPolicy(this.reviewAccess).saved(tx,expense);

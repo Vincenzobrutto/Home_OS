@@ -1,3 +1,7 @@
+## Fatture: impianto, acconto e saldo — 21 ottobre 2026
+
+Completato il collegamento esplicito al riferimento dell’intervento e la distinzione acconto/saldo nei moduli, mantenendo deduplica e singolo costo. [Verifiche e limiti](v5/expense-installments-object-20261021.md). Prossimo caso reale: fattura di acconto da caricare sullo stesso impianto. Nessuna associazione per semplice somiglianza o fornitore.
+
 ## Dettaglio Ambiente compatto — 21 ottobre 2026
 
 Completata la proposta approvata: testata e schede coerenti con Oggetti, azioni e dati secondari riordinati senza perdere funzionalità. [Verifiche e limiti](v5/room-detail-20261021.md). Dati reali intatti.
