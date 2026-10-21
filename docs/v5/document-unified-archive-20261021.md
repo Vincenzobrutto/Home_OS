@@ -2,11 +2,13 @@
 
 ## Comportamento approvato
 
-Unico ingresso Documenti, dieci famiglie richiudibili: Proprietà e affitto; Catasto e pratiche edilizie; Energia e impianti; Condominio; Utenze e servizi; Lavori, ristrutturazioni e bonus; Tasse e tributi; Assicurazioni; Garanzie e manuali; Sicurezza e vincoli. Da classificare compare solo se contiene documenti, oppure se selezionato esplicitamente. Ogni Info è un pulsante separato dall’apertura del gruppo, con dialogo, Escape, focus confinato e ritorno al comando. Chiusura mobile senza spezzare il testo.
+Unico ingresso Documenti, dieci famiglie richiudibili: Proprietà e affitto; Catasto e pratiche edilizie; Energia e impianti; Condominio; Utenze e servizi; Lavori, ristrutturazioni e bonus; Tasse e tributi; Assicurazioni; Acquisti, garanzie e manuali; Sicurezza e vincoli. Da classificare compare solo se contiene documenti, oppure se selezionato esplicitamente. Ogni Info è un pulsante separato dall’apertura del gruppo, con dialogo, Escape, focus confinato e ritorno al comando. Chiusura mobile senza spezzare il testo.
 
 Ricerca globale per titolo/filename; risultati immediati in elenco con famiglia della riga, senza obbligo di aprire più gruppi. Famiglia e Collegamento sono filtri espliciti insieme a stato, formato e visibilità. Eliminata la seconda categoria concorrente dal nuovo dialogo. Apertura/chiusura gruppo e ritorni dal dettaglio mantengono URL, filtri, pagine/posizione e file aperti; nuova ricerca conserva il contesto precedente per il ritorno alla cancellazione. Selezioni ZIP/AI continuano nell’elenco dei documenti effettivamente mostrati; esclusioni AI precedenti immutate.
 
 Conteggi e filtro famiglia sul server prima della paginazione. Panoramica con tutte le famiglie, gruppo selezionato con le sue pagine. Un solo originale anche con riferimenti diretti e tramite spese. Oggetti, spese, attività, originali e loro collegamenti non vengono riscritti dal raggruppamento. Link vecchi e azioni Casa/oggetti restano raggiungibili; le macroviste diventano filtro Collegamento.
+
+La famiglia Acquisti, garanzie e manuali include fatture e scontrini di acquisto degli elettrodomestici. Nome e descrizione aggiornati mantenendo la chiave interna `warranty`: nessuna riclassificazione, migrazione o modifica dei dati e collegamenti esistenti.
 
 ## Conservazione e classificazione
 

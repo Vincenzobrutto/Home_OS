@@ -1,6 +1,6 @@
 ## Documenti: archivio unico e dieci famiglie — 21 ottobre 2026
 
-Eliminate le tre macroviste dal nuovo ingresso; documenti personali autorizzati organizzati in famiglie con conteggi server e paginazione. Info accessibili, filtro Collegamento, ricerca globale e famiglie nelle righe. Conservati originali, spese, riferimenti e scelte pregresse. [Regole e verifiche](v5/document-unified-archive-20261021.md).
+Eliminate le tre macroviste dal nuovo ingresso; documenti personali autorizzati organizzati in famiglie con conteggi server e paginazione. Info accessibili, filtro Collegamento, ricerca globale e famiglie nelle righe. Conservati originali, spese, riferimenti e scelte pregresse. [Regole e verifiche](v5/document-unified-archive-20261021.md). La famiglia acquisti è ora «Acquisti, garanzie e manuali», con Info esplicita su fatture e scontrini degli elettrodomestici; chiave e dati invariati.
 
 ## Documenti: Cambia famiglia — 21 ottobre 2026
 

@@ -1,6 +1,6 @@
 ## Documenti: archivio unico con dieci famiglie — 21 ottobre 2026
 
-Implementata l’organizzazione approvata: dieci famiglie con Info accessibile e Da classificare condizionale. Macroviste sostituite da filtro Collegamento; ricerca globale e ritorno conservati. Proiezione dai record attuali senza backfill; tipi generici non assegnati per indizi del titolo. Migrazione amplia solo il vincolo, dati reali verificati invariati. Test mirati e browser desktop/mobile con fixture isolate. [Regole e verifiche](v5/document-unified-archive-20261021.md).
+Implementata l’organizzazione approvata: dieci famiglie con Info accessibile e Da classificare condizionale. Macroviste sostituite da filtro Collegamento; ricerca globale e ritorno conservati. Proiezione dai record attuali senza backfill; tipi generici non assegnati per indizi del titolo. Migrazione amplia solo il vincolo, dati reali verificati invariati. Test mirati e browser desktop/mobile con fixture isolate. [Regole e verifiche](v5/document-unified-archive-20261021.md). La famiglia acquisti è ora «Acquisti, garanzie e manuali», con Info esplicita su fatture e scontrini degli elettrodomestici; chiave e dati invariati.
 
 ## Documenti: cambia famiglia dall’elenco — 21 ottobre 2026
 

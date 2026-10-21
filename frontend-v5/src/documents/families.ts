@@ -8,7 +8,7 @@ export const DOCUMENT_FAMILIES:ReadonlyArray<readonly [DocumentGroup,string,stri
 ['works','Lavori, ristrutturazioni e bonus','Preventivi, contratti con imprese, fatture, pagamenti e pratiche per le detrazioni.'],
 ['tax','Tasse e tributi','Documenti fiscali della casa, dichiarazioni, avvisi e ricevute di pagamento.'],
 ['insurance','Assicurazioni','Polizze della casa, rinnovi, denunce di sinistro, perizie e rimborsi.'],
-['warranty','Garanzie e manuali','Garanzie, istruzioni e schede tecniche di elettrodomestici, componenti e materiali.'],
+['warranty','Acquisti, garanzie e manuali','Fatture e scontrini di acquisto degli elettrodomestici, garanzie, istruzioni e schede tecniche di elettrodomestici, componenti e materiali.'],
 ['safety','Sicurezza e vincoli','Documenti su vincoli, servitù, prevenzione incendi e altri aspetti di sicurezza dell’immobile.']];
 
 export const UNCLASSIFIED_FAMILY:readonly [DocumentGroup,string,string]=['unclassified','Da classificare','Documenti per cui non è stata ancora scelta una famiglia. Usa Cambia famiglia sui documenti già compilati; per gli altri scegli Compila.'];
