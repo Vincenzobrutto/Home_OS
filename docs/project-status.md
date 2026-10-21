@@ -1,3 +1,22 @@
+## Audit UX/UI browser (sola lettura) — 22 ottobre 2026
+
+Proposta, **nessuna modifica al codice**. Casa «Appartamento Roma» (dati reali, solo consultazione) su `127.0.0.1:5174`, desktop e mobile 375 px: Casa, Documenti (panoramica e gruppi Catasto e Da classificare), Oggetti, Ambienti, Attività, Spese, Rubrica. Nessun overflow orizzontale mobile; nessuna scrittura, caricamento o AI. **Non esaminati**: dialoghi Info, dettaglio documento/oggetto/spesa, caricamento e compilazione, altre due case, Ambienti/Rubrica come schermata (solo testo).
+
+Priorità proposte (da approvare prima di implementare):
+
+1. **Righe Documenti troppo alte.** Ogni riga occupa 270–350 px (mobile ~350): «Cambia famiglia» a tutta larghezza, stato, due pulsanti, «Altre azioni» e «Dettagli del file» impilati. Aprendo un gruppo il primo documento sta sotto la piega (mobile) e 6 documenti superano 2000 px. Proposta: azione famiglia nel menu secondario o come link discreto, azioni in una riga.
+2. **Ridondanze nelle righe.** Nel gruppo «Da classificare» ogni riga ripete «Da classificare»; in un gruppo la famiglia è ripetuta su ogni riga. Mostrare la famiglia solo nei risultati di ricerca/Tutti.
+3. **Titoli poco identificabili.** «Fattura», «Ricevuta d'acquisto», «Ordine di acquisto», «macchina caffe.pdf» senza fornitore/importo in riga quando i dati mancano; tre documenti sono indistinguibili senza aprire «Collegato a».
+4. **Conteggio ambiguo con gruppo selezionato.** Dopo aver aperto un gruppo l'etichetta resta «16 documenti nell'archivio» e compare il chip filtro: non è chiaro se i 16 siano il totale o il gruppo. Il chip del gruppo e «Rimuovi filtri» duplicano il comando di chiusura del gruppo.
+5. **Casa con stati vuoti rumorosi.** «Da completare: Non ci sono attività da completare» con link «Apri documenti / Controlla i dati» e «Le tue scadenze» vuota occupano due box prima delle spese. Proposta: riga unica o box nascosti se vuoti.
+6. **Spese mobile.** Paragrafo esplicativo di 4 righe prima delle azioni; «Altre modalità» e «Lavori» non chiariscono cosa fanno; titoli spesa troncati nel box Casa mobile.
+7. **Etichette.** «Documenti ricevuti» (barra superiore) e «Documenti» (menu) sembrano sinonimi; il pulsante Esporta ZIP accanto al titolo è solo un'icona senza testo visibile.
+8. **Focus.** Aprendo un gruppo da URL il focus resta sulla pagina (già noto, vedi [report archivio](v5/document-unified-archive-20261021.md)).
+
+Dato, non UX: la spesa «Saldo · lavori elettricidi…» contiene un refuso nel titolo salvato; non modificato.
+
+Prossimo passo: scegliere quali priorità implementare (suggerite 1–2, poi 4–5); frontend-v5 soltanto, test mirati e browser su fixture isolate (casa «COLLAUDO V2»).
+
 ## Documenti: archivio unico con dieci famiglie — 21 ottobre 2026
 
 Implementata l’organizzazione approvata: dieci famiglie con Info accessibile e Da classificare condizionale. Macroviste sostituite da filtro Collegamento; ricerca globale e ritorno conservati. Proiezione dai record attuali senza backfill; tipi generici non assegnati per indizi del titolo. Migrazione amplia solo il vincolo, dati reali verificati invariati. Test mirati e browser desktop/mobile con fixture isolate. [Regole e verifiche](v5/document-unified-archive-20261021.md). La famiglia acquisti è ora «Acquisti, garanzie e manuali», con Info esplicita su fatture e scontrini degli elettrodomestici; chiave e dati invariati.
