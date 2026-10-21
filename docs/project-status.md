@@ -1,3 +1,9 @@
+## Passaggio di consegne multi-agente e autorizzazioni — 22 ottobre 2026
+
+Aggiornati [AGENTS.md](../AGENTS.md) e [frontend-v5/AGENTS.md](../frontend-v5/AGENTS.md): formalizzata l'alternanza operativa tra Antigravity, Claude e Codex, con continuità demandata esclusivamente a repository e documentazione condivisa (nessuna presunzione di memoria delle sessioni/chat altrui). Autorizzato Antigravity a intervenire su frontend-v5, backend-v5 e documenti condivisi. Fissate a livello di root le regole di passaggio di consegne per ogni sessione (nessuna informazione indispensabile lasciata solo nella chat o nell'IDE, aggiornamento documentazione condivisa, verifiche dichiarate con precisione, preservazione modifiche preesistenti, commit del proprio lavoro e push verificato).
+
+Verificato: diff e link documentali, controllo assenza credenziali/segreti; modifiche legacy locali preesistenti preservate senza inclusione nello staging.
+
 ## Documenti: azioni su una riga e dettagli file compatti — 22 ottobre 2026
 
 Solo CSS in frontend-v5 ([documents.module.css](../frontend-v5/src/routes/documents.module.css)). Su mobile (≤600 px) «Vedi dettagli», «Vedi originale» e «Altre azioni» stanno su una riga (vanno a capo solo se le etichette sono più lunghe); link secondari della riga e «Dettagli del file» con altezza minima ridotta (32/36 px invece di 44; resta sopra il minimo WCAG 2.2 di 24 px). Altezza righe nella casa sintetica «COLLAUDO V2»: mobile 252–308 px (prima 344–412), desktop ~254 px (prima ~288). Nessun overflow orizzontale; menu «Altre azioni» dentro la viewport; «Dettagli del file» si apre e chiude.
