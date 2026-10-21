@@ -22,7 +22,7 @@ import {
   useForgetHomeDocuments,
   useUploadDocument,
 } from '../documents/hooks';
-import { DocumentViews, HouseDocumentGroups } from '../documents/DocumentViews';
+import { DocumentViews, HouseDocumentGroups, OtherDocumentResults } from '../documents/DocumentViews';
 import { useCasaDocumentCounts } from './CasaDocumentsSummary';
 import { SearchForm } from '../documents/SearchForm';
 import { PersonalExportPanel } from '../documents/PersonalExportPanel';
@@ -70,7 +70,10 @@ export function documentsErrorMessage(error: unknown) {
 
 export function DocumentsPage() {
   const account=useAccount();
+  const cache=useQueryClient();
   const home = useCurrentHome();
+  const originKey=['account',account.id,'home',home.id,'documents-search-origin'];
+  const viewKey=['account',account.id,'home',home.id,'documents-view'];
   useDocumentTitle(`Documenti · ${home.name}`);
   const canUpload = home.permissions.includes('edit');
   const [uploadOpen,setUploadOpen]=useState(false);
@@ -92,10 +95,25 @@ export function DocumentsPage() {
   const maxQuery = capabilities.data?.limits.queryMaxCodePoints ?? QUERY_MAX_CODE_POINTS;
   // Solo q/format/visibility nell'indirizzo; ?ricerca=1 (ingresso da Casa) non va all'API e cade alla prima ricerca applicata.
   const apply = (filters: DocumentSearchFilters, replace = false) => {
+    if(!applied.q&&!filters.q)cache.removeQueries({queryKey:originKey,exact:true});
     const workflow=filters.workflow??applied.workflow;
     const next=filtersToParams({...filters,workflow,...(viewsEnabled?{view:filters.view??'all'}:{})});
     if(workflow==='all')next.set('workflow','all');
     setParams(next, { replace });
+  };
+  const beginSearch=()=>{
+    if(!applied.q&&!cache.getQueryData(originKey)){
+      cache.setQueryData(originKey,{filters:applied,snapshot:{filters:appliedKey,pages:viewDocuments.data?.pages.length??1,y:window.scrollY,
+        openedFiles:Array.from(document.querySelectorAll<HTMLDetailsElement>('details[data-file-id][open]')).map(details=>details.dataset.fileId!)}});
+    }
+  };
+  const applySearch=(filters:DocumentSearchFilters,replace=false)=>{
+    if(!applied.q&&filters.q)beginSearch();
+    if(applied.q&&!filters.q){
+      const origin=cache.getQueryData<{filters:DocumentSearchFilters;snapshot:{filters:string;pages:number;y:number;openedFiles:string[]}}>(originKey);
+      if(origin){cache.setQueryData(viewKey,origin.snapshot);cache.removeQueries({queryKey:originKey,exact:true});apply(origin.filters,replace);return;}
+    }
+    apply(filters,replace);
   };
   const closeUpload=(documentId?:string,batchId?:string,documentIds?:string[])=>{setUploadOpen(false);const next=filtersToParams({...applied,workflow:documentId?'pending':applied.workflow});if(documentId&&batchId){next.set('oggetti-documento',documentId);next.set('lotto',batchId);next.set('compila','manuale');if(documentIds?.length)next.set('coda',documentIds.join(','));}setParams(next,{replace:true});};
 
@@ -134,7 +152,8 @@ export function DocumentsPage() {
           collectionsEnabled={!!capabilities.data.collections}
           documentViewsEnabled={viewsEnabled}
           autoFocus={params.get('ricerca') === '1'}
-          onApply={apply}
+          onApply={applySearch}
+          onSearchStart={beginSearch}
         />
       ) : capabilities.isError && !isForbidden(capabilities.error) ? (
         <div className={docs.panel}>
@@ -172,6 +191,7 @@ export function DocumentsPage() {
         exportSlot={exportSlot}
         canUpload={canUpload}
         onGroup={group => apply({...applied,group})}
+        onView={view=>apply({...applied,view,group:undefined})}
       />
       {canUpload && (
         <div className={styles.spaced}>
@@ -201,6 +221,7 @@ function DocumentsArchive(props: {
   exportSlot: HTMLSpanElement | null;
   canUpload: boolean;
   onGroup: (group?: DocumentSearchFilters['group']) => void;
+  onView: (view:NonNullable<DocumentSearchFilters['view']>)=>void;
 }) {
   const { home, canExport, filters } = props;
   const account = useAccount(), cache = useQueryClient();
@@ -226,7 +247,7 @@ function DocumentsArchive(props: {
   const forbidden = documents.isError && isForbidden(documents.error);
   useEffect(() => {
     if (forbidden) forget();
-    if (forbidden) cache.removeQueries({queryKey:viewKey,exact:true});
+    if (forbidden) {cache.removeQueries({queryKey:viewKey,exact:true});cache.removeQueries({queryKey:['account',account.id,'home',home.id,'documents-search-origin'],exact:true});}
     // eslint-disable-next-line react-hooks/exhaustive-deps -- una sola pulizia per ogni 403
   }, [forbidden]);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
@@ -296,11 +317,12 @@ function DocumentsArchive(props: {
   const summary = data?.pages[0]?.summary;
   const house = filters.view === 'house' && summary;
   if (house && !filters.group) return <>
-    {summary.views.house === 0 && <div className={docs.panel}><p>Nessun documento in questa vista{isFiltered({...filters,view:'all',group:undefined}) ? ' con i filtri attuali' : ''}.</p><button type="button" className={ui.btn} onClick={props.onReset}>Mostra tutto l’archivio</button></div>}
+    {summary.views.house === 0 && <div className={docs.panel}><p>Nessun documento in questa vista{isFiltered({...filters,view:'all',group:undefined}) ? ' con i filtri attuali' : ''}.</p><OtherDocumentResults view="house" summary={summary} onChange={props.onView}/>{!summary.views.all&&<button type="button" className={ui.btn} onClick={props.onReset}>Mostra tutto l’archivio</button>}</div>}
     <HouseDocumentGroups summary={summary} onChange={props.onGroup}/>
   </>;
   if (house && !items.length) return <HouseDocumentGroups summary={summary} selected={filters.group} onChange={props.onGroup}>
     <p className={docs.groupEmpty}>{filters.q || filters.format!=='all' || filters.visibility!=='all' || filters.collection && filters.collection!=='all' || filters.workflow!=='all' ? 'Nessun risultato con questi filtri. Rimuovi un filtro o cerca in tutto l’archivio.' : 'Non hai ancora documenti di questa tipologia. Puoi aggiungerli da “Aggiungi documenti”.'}</p>
+    {isFiltered({...filters,view:'all',group:undefined})&&<OtherDocumentResults view="house" summary={summary} onChange={props.onView}/>}
   </HouseDocumentGroups>;
 
   if (items.length === 0 && filtered) {
@@ -311,10 +333,11 @@ function DocumentsArchive(props: {
           <button type="button" className={ui.btn} onClick={() => setSelecting(false)}>Annulla selezione</button>
           <PersonalExportPanel homeId={home.id} />
         </>}
-        <h2 className={styles.cardTitle}>{filters.q||filters.format!=='all'||filters.visibility!=='all'||filters.collection&&filters.collection!=='all'?'Nessun documento corrisponde ai filtri':filters.workflow==='completed'?'Nessun documento completato':'Nessun documento da completare'}</h2>
+        <h2 className={styles.cardTitle}>{filters.view&&filters.view!=='all'?'Nessun documento in questa vista':filters.q||filters.format!=='all'||filters.visibility!=='all'||filters.collection&&filters.collection!=='all'?'Nessun documento corrisponde ai filtri':filters.workflow==='completed'?'Nessun documento completato':'Nessun documento da completare'}</h2>
         <p className={styles.muted} role="status">
-          {isFiltered({...filters,workflow:'all'})?<>Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Prova un altro testo o rimuovi i filtri.</>:filters.workflow==='completed'?'I documenti appariranno qui dopo il salvataggio della revisione.':'Non ci sono documenti da completare. Rimuovi il filtro di stato per consultare l’archivio.'}
+          {isFiltered({...filters,workflow:'all',view:'all',group:undefined})?<>Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Prova un altro testo o rimuovi i filtri.</>:filters.workflow==='completed'?'I documenti appariranno qui dopo il salvataggio della revisione.':filters.workflow&&filters.workflow!=='all'?'Non ci sono documenti da completare. Rimuovi il filtro di stato per consultare l’archivio.':'Qui trovi i documenti collegati agli oggetti e agli impianti della casa.'}
         </p>
+        <OtherDocumentResults view={filters.view??'all'} summary={summary} onChange={props.onView}/>
       </div>
     );
   }

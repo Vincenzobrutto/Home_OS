@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { downloads } from '../test/browserStubs';
 import { FakeBackend, PNG_SIGNATURE, samplePdf } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
@@ -64,6 +64,36 @@ const results = (home = 'Casa Roma') => screen.findByRole('list', { name: `Risul
 const names = (list: HTMLElement) => within(list).getAllByRole('listitem').map((li) => within(li).getByRole('link').textContent);
 
 const png = () => new Uint8Array([...PNG_SIGNATURE, 0, 0, 0, 0]);
+
+it('clearing a new global search restores its starting filters and saved reading position',async()=>{
+ const {backend,owner,home}=world();await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Manuale ricerca',workflowState:'completed'});
+ const app=await open(backend,owner.email,PW.owner,home.id,'?workflow=completed&format=pdf&visibility=private');
+ await screen.findByRole('link',{name:'Manuale ricerca'});
+ const descriptor=Object.getOwnPropertyDescriptor(window,'scrollY')!,scroll=vi.spyOn(window,'scrollTo').mockImplementation(()=>{});
+ Object.defineProperty(window,'scrollY',{configurable:true,value:480});
+ fireEvent.pointerDown(await field());
+ Object.defineProperty(window,'scrollY',{configurable:true,value:0});
+ await search(app,'Manuale');await results();
+ expect(new URLSearchParams(app.router.state.location.search).get('format')).toBeNull();
+ const originKey=['account',owner.id,'home',home.id,'documents-search-origin'];
+ expect(app.queryClient.getQueryData(originKey)).toMatchObject({filters:{workflow:'completed',format:'pdf',visibility:'private'},snapshot:{pages:1,y:480}});
+ await app.user.click(screen.getByRole('button',{name:'Vedi dettagli'}));await screen.findByRole('heading',{level:1,name:'Manuale ricerca'});
+ await app.user.click(screen.getByRole('link',{name:/← Documenti di/}));await results();
+ await app.user.click(screen.getByRole('button',{name:'Azzera ricerca'}));
+ await waitFor(()=>expect(new URLSearchParams(app.router.state.location.search).get('format')).toBe('pdf'));
+ const restored=new URLSearchParams(app.router.state.location.search);expect(restored.get('workflow')).toBe('completed');expect(restored.get('visibility')).toBe('private');expect(restored.has('q')).toBe(false);
+ expect(app.queryClient.getQueryData(originKey)).toBeUndefined();expect(await field()).toHaveFocus();
+ await waitFor(()=>expect(scroll).toHaveBeenCalledWith(0,480));scroll.mockRestore();Object.defineProperty(window,'scrollY',descriptor);
+});
+
+it('a search opened by URL never restores a different home context',async()=>{
+ const {backend,owner,home,second}=world();await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Manuale ricerca'});
+ const app=await open(backend,owner.email,PW.owner,home.id,'?q=Manuale&format=pdf');await results();
+ app.queryClient.setQueryData(['account',owner.id,'home',second.id,'documents-search-origin'],{filters:{q:'',format:'png',visibility:'private',workflow:'completed'}});
+ await app.user.click(screen.getByRole('button',{name:'Azzera ricerca'}));
+ await waitFor(()=>expect(new URLSearchParams(app.router.state.location.search).has('q')).toBe(false));
+ expect(new URLSearchParams(app.router.state.location.search).get('format')).toBe('pdf');
+});
 
 it('restores all loaded result pages and the document focus after detail and Back',async()=>{
  const {backend,owner,home}=world();

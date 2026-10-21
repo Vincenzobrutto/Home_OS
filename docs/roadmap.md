@@ -1,10 +1,14 @@
+## Documenti: contesto di ricerca completato — 21 ottobre 2026
+
+Completati ripristino della vista/gruppo/posizione alla cancellazione e rimandi ai risultati delle altre viste. Restano focus dei gruppi, consultazione originale/dettaglio e contenuti di esempio; classificazioni personali da correggere solo con scelta esplicita. [Regole e verifiche](v5/document-search-context-20261021.md).
+
 ## Documenti: secondo intervento dell’audit completato — 21 ottobre 2026
 
-Completati riferimenti oggetto nelle righe e riconoscibilità delle fatture dai dati salvati. Restano separati contesto di ricerca, accessibilità e classificazioni mancanti; nessuna modifica automatica dei dati. [Verifiche](v5/document-row-context-20261021.md).
+Completati riferimenti oggetto nelle righe e riconoscibilità delle fatture dai dati salvati. Contesto di ricerca ora completato; restano accessibilità e classificazioni mancanti; nessuna modifica automatica dei dati. [Verifiche](v5/document-row-context-20261021.md).
 
 ## Documenti: primo intervento dell’audit completato — 21 ottobre 2026
 
-Completati ingresso sull’archivio, stato nei Filtri, compattezza mobile e ricerca sticky. I riferimenti oggetto nelle righe sono ora completati; restano miglioramenti del contesto di ricerca e rilievi di accessibilità. Nessuna riclassificazione automatica. [Ambito e verifiche](v5/document-archive-entry-20261021.md).
+Completati ingresso sull’archivio, stato nei Filtri, compattezza mobile e ricerca sticky. I riferimenti oggetto nelle righe sono ora completati; il contesto di ricerca è ora completato, restano rilievi di accessibilità. Nessuna riclassificazione automatica. [Ambito e verifiche](v5/document-archive-entry-20261021.md).
 
 ## Documenti: viste dell’archivio completate — 21 ottobre 2026
 

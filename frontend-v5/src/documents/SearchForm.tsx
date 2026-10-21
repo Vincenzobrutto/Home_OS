@@ -13,6 +13,7 @@ import docs from '../routes/documents.module.css';
 export function SearchForm(props: {
   home: Home; applied: DocumentSearchFilters; maxQuery: number; collectionsEnabled?: boolean; documentViewsEnabled?: boolean;
   autoFocus: boolean; onApply: (filters: DocumentSearchFilters, replace?: boolean) => void;
+  onSearchStart?:()=>void;
 }) {
   const { applied } = props, id = useId(), input = useRef<HTMLInputElement>(null);
   const key = filtersKey(applied), [basis, setBasis] = useState({key,q:applied.q});
@@ -48,6 +49,7 @@ export function SearchForm(props: {
       <div className={docs.queryBox}>
         <MagnifyingGlass size={21} aria-hidden="true"/>
         <input ref={input} aria-label="Cerca nei documenti" type="search" placeholder={applied.q ? "Titolo o nome del file" : "Cerca in tutto l’archivio"} autoComplete="off" spellCheck={false}
+          onPointerDown={props.onSearchStart} onFocus={props.onSearchStart}
           value={query} aria-invalid={!!error} aria-describedby={`${id}-hint${error ? ' '+id+'-error' : ''}`}
           onChange={e => { setQuery(e.target.value); if (!applied.q && !query.trim() && e.target.value.trim()) setGlobal(true); }}/>
         {query && <button type="button" aria-label="Azzera ricerca" onClick={() => { setQuery(''); setGlobal(false); props.onApply({...applied,q:''}); input.current?.focus(); }}><X size={20} aria-hidden="true"/></button>}

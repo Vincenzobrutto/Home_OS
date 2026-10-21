@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { DocumentGroup, DocumentView, DocumentViewSummary } from '../api/types';
 import { Icon } from '../components/Icon';
 import docs from '../routes/documents.module.css';
+import {ui} from '../components/ui';
 
 export const HOUSE_DOCUMENT_GROUPS: ReadonlyArray<readonly [DocumentGroup, string]> = [
   ['plans', 'Planimetrie'], ['building', 'Pratiche edilizie e catastali'],
@@ -12,6 +13,14 @@ const views: ReadonlyArray<readonly [DocumentView, string, string]> = [
   ['all', 'Tutti i documenti', 'Tutti'], ['house', 'Documenti della casa', 'Della casa'],
   ['objects', 'Documenti di oggetti e impianti', 'Oggetti e impianti'],
 ];
+
+/** Server totals already include the current search/filters; never infer from loaded rows. */
+export function OtherDocumentResults({view,summary,onChange}:{view:DocumentView;summary?:DocumentViewSummary;onChange:(view:DocumentView)=>void}){
+ if(!summary||view==='all'||!summary.views.all)return null;
+ const alternatives=views.filter(([id])=>id!=='all'&&id!==view&&summary.views[id]>0);
+ const targets=alternatives.length?alternatives:views.filter(([id])=>id==='all');
+ return <div className={docs.otherResults}>{targets.map(([id,label])=><p key={id}><span>{summary.views[id]} risultat{summary.views[id]===1?'o':'i'} in {label}</span><button type="button" className={ui.btn} aria-label={'Mostra risultati in '+label} onClick={()=>onChange(id)}>Mostra</button></p>)}</div>;
+}
 
 export function DocumentViews({ value, summary, onChange }: {
   value: DocumentView; summary?: DocumentViewSummary; onChange: (value: DocumentView) => void;

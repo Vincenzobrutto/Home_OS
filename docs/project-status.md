@@ -1,3 +1,7 @@
+## Documenti: ricerca con ritorno e rimandi — 21 ottobre 2026
+
+Cancellando la ricerca si ripristinano vista, gruppo, filtri e punto di lettura iniziali. Le viste vuote rimandano ai risultati server nelle altre viste mantenendo i filtri. Browser desktop/mobile in sola lettura, 41 test mirati, build/lint e dati reali invariati. [Regole, verifiche e limiti](v5/document-search-context-20261021.md).
+
 ## Documenti: oggetti collegati e fatture riconoscibili — 21 ottobre 2026
 
 Righe con tutti i riferimenti personali leggibili, anche derivati dalle spese; fatture con descrizione, fornitore, numero, emissione e importo già salvati. Titoli/originali invariati. Test mirati e browser desktop/mobile in sola lettura, dati reali verificati invariati. [Regole e verifiche](v5/document-row-context-20261021.md).

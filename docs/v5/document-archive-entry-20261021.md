@@ -1,5 +1,7 @@
 # Documenti: ingresso e ricerca semplificati — 21 ottobre 2026
 
+Successivo aggiornamento: [ritorno dalla ricerca e rimandi tra viste](document-search-context-20261021.md).
+
 ## Comportamento
 
 Solo pagina Documenti e suo contesto di ritorno: ingresso senza parametri su tutto l’archivio e tutti gli stati. Le tre viste restano la scelta principale. I collegamenti espliciti `workflow=pending|to_compile|review|completed` continuano a funzionare.

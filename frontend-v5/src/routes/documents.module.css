@@ -63,6 +63,8 @@
 .rowContext{grid-column:1 / -1;min-width:0;font-size:13px;line-height:1.5;color:var(--color-muted);overflow-wrap:anywhere}
 .rowContext a{display:inline-block;min-height:44px;align-content:center;color:var(--color-accent)}
 .expenseDescription{display:block;color:var(--color-ink);font-weight:600}
+.otherResults p{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;margin:12px 0}.otherResults{min-width:0;overflow-wrap:anywhere}
+.houseGroup .otherResults{padding:0 18px 12px}
 @media(min-width:1250px){.body:has(>.rowContext)>.workspace{grid-row:1/span 2}}
 
 .title {

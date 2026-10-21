@@ -1,7 +1,7 @@
 import {render,screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {expect,it,vi} from 'vitest';
-import {DocumentViews,HouseDocumentGroups} from './DocumentViews';
+import {DocumentViews,HouseDocumentGroups,OtherDocumentResults} from './DocumentViews';
 import {filtersFromParams,filtersToParams,sameFilters} from '../lib/documentSearch';
 const summary={views:{all:34,house:29,objects:2},groups:{plans:25,building:1,energy:1,contracts:1,other:1}};
 it('three views keep full accessible labels, selected state and server totals',async()=>{
@@ -22,4 +22,16 @@ it('view, category, query and state survive detail/back URL; categories cannot l
  expect(sameFilters(filters,filtersFromParams(filtersToParams(filters)))).toBe(true);
  expect(filtersToParams({...filters,view:'objects'}).has('group')).toBe(false);
  expect(filtersFromParams(new URLSearchParams('view=objects&group=plans')).group).toBeUndefined();
+});
+
+it('empty views offer exact server totals and only switch the view',async()=>{
+ const onChange=vi.fn(),user=userEvent.setup();render(<OtherDocumentResults view="house" summary={{...summary,views:{all:42,house:0,objects:42}}} onChange={onChange}/>);
+ expect(screen.getByText('42 risultati in Documenti di oggetti e impianti')).toBeVisible();
+ await user.click(screen.getByRole('button',{name:'Mostra risultati in Documenti di oggetti e impianti'}));expect(onChange).toHaveBeenCalledWith('objects');
+});
+it('unclassified matches can be reached through All; no unavailable or zero totals are advertised',()=>{
+ const onChange=vi.fn(),view=render(<OtherDocumentResults view="objects" summary={{...summary,views:{all:1,house:0,objects:0}}} onChange={onChange}/>);
+ expect(screen.getByText('1 risultato in Tutti i documenti')).toBeVisible();
+ view.rerender(<OtherDocumentResults view="house" summary={undefined} onChange={onChange}/>);expect(screen.queryByRole('button')).toBeNull();
+ view.rerender(<OtherDocumentResults view="house" summary={{...summary,views:{all:0,house:0,objects:0}}} onChange={onChange}/>);expect(screen.queryByRole('button')).toBeNull();
 });

@@ -1,3 +1,7 @@
+## Documenti: ritorno dalla ricerca e risultati nelle altre viste — 21 ottobre 2026
+
+Ricerca globale con origine temporanea per account/casa, ripristino alla cancellazione e rimandi dai risultati vuoti senza azzerare i filtri. [Verifiche e limiti](v5/document-search-context-20261021.md).
+
 ## Documenti: riferimenti e dati salvati nelle righe — 21 ottobre 2026
 
 Oggetti e impianti collegati apribili direttamente; fatture distinguibili tramite le spese personali già salvate, senza rinominare o duplicare record. [Ambito e verifiche](v5/document-row-context-20261021.md).
