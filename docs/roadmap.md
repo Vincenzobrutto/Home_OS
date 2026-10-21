@@ -1,3 +1,7 @@
+## Rubrica: ricerca durante lo scorrimento — 21 ottobre 2026
+
+Completata la sola priorità scelta: ricerca e filtro sempre raggiungibili su desktop/mobile. [Verifiche](v5/contact-search-sticky-20261021.md). Conteggi, ordinamento e omonimi rinviati per scelta dell’utente.
+
 ## Attività: ricerca e compattezza; paginazione stabile — 21 ottobre 2026
 
 Ricerca per titolo su tutte le pagine, Mostra/Scadenza compatti e righe sintetiche. Mostra altri conserva il punto di lettura in Attività e Rubrica, con focus sul primo risultato aggiunto. [Comportamento, verifiche e limiti](v5/activities-search-pagination-20261021.md). 37 test frontend e 6 backend offline, build/lint e browser desktop/mobile con 80 attività e 100 contatti fittizi; dati reali intatti.

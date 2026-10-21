@@ -1,3 +1,7 @@
+## Rubrica: ricerca durante lo scorrimento — 21 ottobre 2026
+
+Ricerca e filtro restano visibili scorrendo i contatti, anche su mobile. [Verifiche e ambito](v5/contact-search-sticky-20261021.md): solo CSS, 8 test mirati e controlli frontend, collaudo desktop/mobile con dati fittizi.
+
 ## Attività: ricerca e compattezza; paginazione stabile — 21 ottobre 2026
 
 Ricerca per titolo su tutte le pagine, Mostra/Scadenza compatti e righe sintetiche. Mostra altri conserva il punto di lettura in Attività e Rubrica, con focus sul primo risultato aggiunto. [Comportamento, verifiche e limiti](v5/activities-search-pagination-20261021.md). 37 test frontend e 6 backend offline, build/lint e browser desktop/mobile con 80 attività e 100 contatti fittizi; dati reali intatti.
