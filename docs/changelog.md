@@ -1,3 +1,7 @@
+## Oggetti: conserva documenti nella casa — 21 ottobre 2026
+
+Azione nel menu della scheda con riepilogo, scelta dei documenti e archivio facoltativo con rimozione dalle stanze. Spese e originali preservati, conferma atomica protetta da versione/fonte e idempotenza. [Verifiche e limiti](v5/house-documents-from-object-20261021.md).
+
 ## Documenti: consultazione e correzione del tipo — 21 ottobre 2026
 
 Accesso diretto all’originale, visualizzatore PDF locale e singola azione di modifica nel dettaglio. Stato personale anche nel GET dettaglio; correzione esplicita da Altri, esempi nascosti nell’app reale. [Verifiche e limiti](v5/document-original-classification-20261021.md).

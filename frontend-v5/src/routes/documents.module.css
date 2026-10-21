@@ -599,3 +599,7 @@
 .body>.workspace:has(.inlineOriginal){grid-column:1/-1;grid-row:auto}
 .inlineOriginal{min-width:0;border:1px solid var(--color-border);border-radius:8px;margin-top:8px;padding:10px}
 .previewFrame>div{width:100%;min-width:0}
+
+.houseConversionList{list-style:none;padding:0;display:grid;gap:12px}.houseConversionList>li{padding:12px;border:1px solid var(--color-border);border-radius:10px;overflow-wrap:anywhere}.houseConversionList label,.conversionArchive{display:flex;align-items:center;gap:10px;min-height:44px}.houseConversionList p{font-size:14px;color:var(--color-muted)}.houseConversionList input,.conversionArchive input{flex-shrink:0}
+.conversionDialog{padding:20px;max-height:calc(100dvh - 26px);overflow:auto;min-height:0;overflow-wrap:anywhere}.conversionDialog h2{font-size:20px;margin:0 0 12px}.conversionDialog>.toolbarActions{position:sticky;bottom:-20px;padding:12px 0;background:var(--color-surface);margin-top:12px}.conversionDialog p{margin:10px 0}
+@media(max-width:600px){.conversionDialog{padding:16px}.conversionDialog>.toolbarActions{bottom:-16px}.conversionDialog>.toolbarActions>button{flex:1 1 auto}}

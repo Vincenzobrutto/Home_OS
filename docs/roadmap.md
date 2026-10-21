@@ -1,3 +1,7 @@
+## Documenti della casa da scheda oggetto completato — 21 ottobre 2026
+
+Disponibile la conservazione esplicita dei documenti nella casa con archivio facoltativo della scheda errata, senza duplicare fonti o costi. Restano separati unione di schede e trasformazione dei loro dati tecnici. [Regole e verifiche](v5/house-documents-from-object-20261021.md).
+
 ## Documenti: originale, classificazioni ed esempi completati — 21 ottobre 2026
 
 Completati gli interventi richiesti sulla consultazione, sui duplicati e sulla distinzione degli stati; correzione esplicita facilitata e PDF sintetici riservati alle modalità di prova. Resta separato il focus durante l’apertura dei gruppi. [Regole e verifiche](v5/document-original-classification-20261021.md).

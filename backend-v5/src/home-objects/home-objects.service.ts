@@ -1,4 +1,5 @@
 import { catalogBase, catalogPlacement } from './catalog';
+import {houseDocumentPlan,publicHouseDocumentPlan,keepHouseDocuments} from './house-documents';
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Prisma, type HomeRoom, type HomeObject, type ObjectPosition, type ObjectResourceLink } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
@@ -32,6 +33,8 @@ const revive = <T extends { createdAt: Date; updatedAt: Date }>(row: T): T => ({
 @Injectable()
 export class HomeObjectsService {
   readonly manuals = new ManufacturerManuals();
+  async houseDocuments(a:string,h:string,id:string){return this.transaction(a,h,false,async(tx,c)=>{await this.subject(tx,c,'object',id);return publicHouseDocumentPlan(await houseDocumentPlan(tx,a,h,id));});}
+  async keepHouseDocuments(a:string,h:string,id:string,body:unknown,key?:string){return this.transaction(a,h,true,async(tx,c)=>{await this.subject(tx,c,'object',id);return keepHouseDocuments(tx,a,h,id,body,key);});}
   constructor(private readonly db: PrismaService, private readonly access: ReviewService) {}
   private async transaction<T>(a: string, h: string, edit: boolean, action: (tx: Tx, c: Context) => Promise<T>) {
     uuid(h);

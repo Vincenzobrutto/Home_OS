@@ -1,3 +1,9 @@
+## Conserva documenti nella casa da oggetto — 21 ottobre 2026
+
+GET `/homes/:homeId/objects/object/:id/house-documents`: riepilogo personale `{token,objectName,documents:[{id,title,originalFilename,reason,willOrganize,expenses:[{id,title,amountCents}]}],unavailable,archiveBlocked}`. `reason:null` rende selezionabile il documento; le fonti non consultabili non vengono elencate. Il nome originale distingue titoli uguali. Nessuna scrittura nel GET.
+
+POST stesso percorso, header `Idempotency-Key`, corpo esatto `{expectedToken,documentIds,archiveObject}`. Da 1 a 50 UUID distinti, `archiveObject` booleano esplicito. Risposta 200 `{documentIds,archivedObject}`. Rimuove i riferimenti selezionati alla scheda corrente, conserva file e costi e registra storia/versioni; archivio e svuotamento posizione solo su scelta esplicita e assenza di altri riferimenti residui. Sessione, Origin/CSRF, contesto, membership edit, accesso alle fonti e versione/SHA rivalidati. 403 per accesso negato; 422 input; 409 `house_documents_changed`, `house_documents_unavailable`, `object_has_other_resources`, `too_many_documents` o `idempotency_conflict`. Operazione atomica/idempotente sotto lock G1. [Regole e test](house-documents-from-object-20261021.md).
+
 ## Stato personale nel dettaglio Documenti — 21 ottobre 2026
 
 GET `/homes/:homeId/documents/:id` aggiunge `document.workflowState`, con gli stessi valori e la stessa proiezione account/casa/versione/SHA dell’elenco (`to_compile|analyzing|review|completed|attention`). Membership, visibilità e lock della fonte prima della proiezione. `status:stored` continua a descrivere il file conservato: non viene usato come stato della compilazione. Nessuna scrittura o analisi durante il GET. [UI e verifiche](document-original-classification-20261021.md).

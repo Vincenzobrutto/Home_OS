@@ -1,3 +1,4 @@
+import {KeepHouseDocuments} from '../objects/KeepHouseDocuments';
 import {ShieldCheck} from '@phosphor-icons/react/dist/csr/ShieldCheck';
 import {DotsThree} from '@phosphor-icons/react/dist/csr/DotsThree';
 import {CaretDown} from '@phosphor-icons/react/dist/csr/CaretDown';
@@ -126,7 +127,7 @@ function ObjectDetail(props: { home: Home; kind: ObjectKind; id: string; caps: O
   );
 }
 
-type Panel = 'none' | 'edit' | 'position' | 'state' | 'profile';
+type Panel = 'none' | 'edit' | 'position' | 'state' | 'profile' | 'houseDocuments';
 
 function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabilities; back: ReactNode; focusActions: boolean; focusPlacement:boolean }) {
   const { home, object } = props;
@@ -152,7 +153,7 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
       <div><h1 tabIndex={-1}>{object.name}</h1><div className={styles.actions}><Tag tone="blue">{isBoiler?object.kindLabel||'Caldaia':typeLabel(object)}</Tag><span className={pages.muted}>Visibile solo a te</span>{!active&&<Tag>Archiviato</Tag>}</div></div>
       {canEdit&&panel==='none'&&<div ref={actionsRef} className={detail.headerActions} onKeyDown={e=>{if(e.key==='Escape'){setMenu(false);setMore(false);}}}>
         {!isBoiler&&active&&<div className={detail.menu}><button id="object-edit-button" type="button" className={cx(ui.btn,ui.primary)} aria-expanded={menu} onClick={()=>{setMenu(!menu);setMore(false);}}>Modifica <CaretDown size={16} aria-hidden="true"/></button>{menu&&<div className={detail.menuItems}><button className={ui.btn} onClick={()=>{setPanel('edit');setMenu(false);}}>Nome e tipo</button>{object.profile&&!object.profile.unavailable&&<button className={ui.btn} onClick={()=>{setPanel('profile');setMenu(false);}}>Dati e garanzia</button>}</div>}</div>}
-        {!isBoiler&&(!active?<button className={ui.btn} onClick={()=>setPanel('state')}>Ripristina</button>:<div className={detail.menu}><button className={ui.btn} aria-label="Altre azioni" aria-expanded={more} onClick={()=>{setMore(!more);setMenu(false);}}><DotsThree size={22} aria-hidden="true"/></button>{more&&<div className={detail.menuItems}><button className={ui.btn} onClick={()=>{setPanel('state');setMore(false);}}>Archivia</button></div>}</div>)}
+        {!isBoiler&&(!active?<button className={ui.btn} onClick={()=>setPanel('state')}>Ripristina</button>:<div className={detail.menu}><button className={ui.btn} aria-label="Altre azioni" aria-expanded={more} onClick={()=>{setMore(!more);setMenu(false);}}><DotsThree size={22} aria-hidden="true"/></button>{more&&<div className={detail.menuItems}><button className={ui.btn} onClick={()=>{setPanel('houseDocuments');setMore(false);}}>Conserva come documento della casa</button><button className={ui.btn} onClick={()=>{setPanel('state');setMore(false);}}>Archivia</button></div>}</div>)}
       </div>}
     </header>
     <section className={detail.placement} aria-labelledby="oggetto-dati"><h2 id="oggetto-dati" className="visually-hidden">Dettagli</h2>
@@ -172,6 +173,7 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
       </div>
       <div className={detail.secondary}><details><summary>Contatti</summary><ContactsPanel homeId={home.id} resource={{kind:object.ref.kind,id:object.ref.id}} canEdit={canEdit}/></details><details><summary>Storia dell’oggetto</summary><G1History title="Storia dell’oggetto" id="oggetto-storia" query={history} note={isBoiler?'Solo posizione e collegamenti: la storia tecnica è nella scheda caldaia.':undefined}/></details></div>
     </div>
+    {panel==='houseDocuments'&&!isBoiler&&<KeepHouseDocuments homeId={home.id} objectId={object.ref.id} onClose={finishPanel}/>}
     {panel==='state'&&!isBoiler&&<StateDialog homeId={home.id} title={active?'Archivia oggetto':'Ripristina oggetto'} hint={active?'L’oggetto esce dall’elenco degli attivi. Non viene cancellato: posizione, collegamenti e storia restano, e documenti o costi non cambiano.':'L’oggetto torna attivo con gli stessi dati, posizione e collegamenti.'} vars={{kind:active?'objectArchive':'objectRestore',ref:object.ref,body:{expectedVersion:object.version??1}}} onClose={finishPanel}/>}
   </div>;
 }

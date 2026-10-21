@@ -1,3 +1,7 @@
+## 21 ottobre 2026 — Documento della casa e scheda oggetto restano entità distinte
+
+Per correggere una scheda creata per errore, conservare gli originali esistenti nella vista della casa e togliere i riferimenti personali selezionati. Non convertire una riga oggetto in un file e non eliminare costi: archivio della scheda con rimozione dalle stanze soltanto come opzione esplicita, dopo il riepilogo e se non restano altre risorse. Motivo: correzione comprensibile senza perdita di dati o duplicazioni. [Regole e limiti](v5/house-documents-from-object-20261021.md).
+
 ## 21 ottobre 2026 — Proporre il riuso per le fatture successive
 
 Estendere a tutti gli oggetti il caso acconto/saldo: proporre il riferimento esistente con indizi spiegabili, richiedere una scelta esplicita e non creare altre schede accettando il riuso. Il solo fornitore non identifica un intervento; ambiguità e assenza di dati richiedono scelta manuale. Usare i collegamenti canonici già confermati, senza nuova memoria separata o invii AI aggiuntivi. [Regole e limiti](v5/object-suggestions-20261021.md).

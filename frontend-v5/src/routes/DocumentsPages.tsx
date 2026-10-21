@@ -6,7 +6,7 @@ import { BulkDocumentCompilation } from '../documents/BulkDocumentCompilation';
 import { IntakePage } from '../intake-integration/IntakePage';
 import { DocumentWorkspaceActions } from '../documents/DocumentWorkspaceActions';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useLocation, useSearchParams } from 'react-router';
 import { createPortal } from 'react-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { safeFilename } from '../api/client';
@@ -71,6 +71,7 @@ export function documentsErrorMessage(error: unknown) {
 
 export function DocumentsPage() {
   const account=useAccount();
+  const location=useLocation();
   const cache=useQueryClient();
   const home = useCurrentHome();
   const originKey=['account',account.id,'home',home.id,'documents-search-origin'];
@@ -136,6 +137,7 @@ export function DocumentsPage() {
           </div>
         )}
       </div>
+      {(()=>{const result=(location.state as {houseDocumentResult?:{accountId:string;homeId:string;count:number;archived:boolean}}|null)?.houseDocumentResult;return result?.accountId===account.id&&result.homeId===home.id&&Number.isSafeInteger(result.count)&&result.count>0&&result.count<=50?<Banner title="Documenti conservati nella casa"><p>{result.count} document{result.count===1?'o disponibile':'i disponibili'} nella vista della casa. File e spese sono conservati. {result.archived?'La scheda oggetto è stata archiviata e rimossa dalle stanze.':'La scheda oggetto resta nella sua stanza.'}</p></Banner>:null;})()}
       {params.has('documento-salvato')&&<Banner title="Documento salvato" actions={<button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'completed'})}>Vai ai documenti completati</button>}><p>Il salvataggio è riuscito. Il documento e l’originale restano disponibili.</p></Banner>}
       {canUpload&&uploadVisible&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={()=>closeUpload()}>Chiudi caricamento</button></section>}
       {!canUpload && (

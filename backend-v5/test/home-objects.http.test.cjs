@@ -19,7 +19,7 @@ test('G1: HTTP/controller/auth/CSRF/originali/DB reali, nessun worker AI',async 
   for(const model of ['objectEvent','objectRequest','objectResourceLink','objectPosition','homeObject','homeRoom'])await db[model].deleteMany({where:{homeId:{in:homes}}});
   await db.expenseHistory.deleteMany({where:{accountId:{in:accounts}}});await db.expenseRequest.deleteMany({where:{accountId:{in:accounts}}});await db.homeExpense.deleteMany({where:{homeId:{in:homes}}});
   const docs=await db.document.findMany({where:{uploaderId:{in:accounts}},include:{original:{include:{file:true}}}}),files=docs.map(x=>x.original.file),ids=docs.map(x=>x.id);
-  await db.uploadRequest.deleteMany({where:{accountId:{in:accounts}}});await db.documentVersion.deleteMany({where:{documentId:{in:ids}}});await db.document.deleteMany({where:{id:{in:ids}}});await db.storedFile.deleteMany({where:{id:{in:files.map(x=>x.id)}}});for(const file of files)await storage.remove(file.storageKey);
+  await db.documentOrganization.deleteMany({where:{homeId:{in:homes}}});await db.uploadRequest.deleteMany({where:{accountId:{in:accounts}}});await db.documentVersion.deleteMany({where:{documentId:{in:ids}}});await db.document.deleteMany({where:{id:{in:ids}}});await db.storedFile.deleteMany({where:{id:{in:files.map(x=>x.id)}}});for(const file of files)await storage.remove(file.storageKey);
   await db.home.deleteMany({where:{id:{in:homes}}});await db.account.deleteMany({where:{id:{in:accounts}}});if(app)await app.close();else await db.$disconnect();
  });
  class Browser{
@@ -101,6 +101,20 @@ test('G1: HTTP/controller/auth/CSRF/originali/DB reali, nessun worker AI',async 
    const linked=ok(await a.request(path+'/manual','POST',save)).object;
    assert.equal(linked.manual.origin,'manufacturer_page');assert.equal(linked.manual.reference,'TEST123');
   }finally{s.manuals.fetchImpl=originalFetch;await db.homeMembership.update({where:{accountId_homeId:{accountId:a.id,homeId:h}},data:{role:'owner'}});}
+ });
+ await t.test('Conserva nella casa: HTTP CSRF, contesto, conferma esplicita e replay',async()=>{
+  const subject=ok(await a.request(`/homes/${h}/objects`,'POST',{name:'APE scambiato per oggetto',type:'other'}),201).object;
+  const form=new FormData();form.set('name','APE sintetico');form.set('visibility','private');form.set('file',new Blob([pdf]),'ape-test.pdf');
+  const source=ok(await a.request(`/homes/${h}/documents`,'POST',form),201).document;
+  ok(await a.request(`/homes/${h}/objects/object/${subject.ref.id}/links`,'POST',{resourceType:'document',resourceId:source.id}),201);
+  const path=`/homes/${h}/objects/object/${subject.ref.id}/house-documents`,plan=ok(await a.request(path));assert.equal(plan.documents.length,1);
+  assert.equal((await b.request(path)).status,403);
+  const body={expectedToken:plan.token,documentIds:[source.id],archiveObject:true},key=randomUUID();
+  assert.equal((await a.request(path,'POST',body,{'X-CSRF-Token':'errato'})).status,403);
+  assert.equal((await a.request(path,'POST',body,{'X-Account-Context':b.id})).status,401);
+  const result=ok(await a.request(path,'POST',body,{'Idempotency-Key':key}));assert(result.archivedObject);
+  assert.deepEqual(ok(await a.request(path,'POST',body,{'Idempotency-Key':key})),result);
+  assert.deepEqual(ok(await a.request(`/homes/${h}/documents/${source.id}/file`)),pdf);
  });
  await t.test('Archivio/ripristino, viewer/revoca e nessun consumo AI',async()=>{
   obj=ok(await a.request(`/homes/${h}/objects/object/${obj.ref.id}/archive`,'POST',{expectedVersion:1})).object;assert.equal(obj.state,'archived');

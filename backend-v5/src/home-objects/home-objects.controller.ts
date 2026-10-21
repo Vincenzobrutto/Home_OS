@@ -4,6 +4,8 @@ import { HomeObjectsService } from './home-objects.service';
 @Controller('homes/:homeId') @UseGuards(DocumentAccessGuard)
 export class HomeObjectsController {
   constructor(private readonly service: HomeObjectsService) {}
+  @Get('objects/object/:id/house-documents') houseDocuments(@Req() r:DocumentRequest,@Param('homeId') h:string,@Param('id') id:string){return this.service.houseDocuments(r.documentAccountId,h,id);}
+  @Post('objects/object/:id/house-documents') @HttpCode(200) keepHouseDocuments(@Req() r:DocumentRequest,@Param('homeId') h:string,@Param('id') id:string,@Body() b:unknown,@Headers('idempotency-key') k?:string){return this.service.keepHouseDocuments(r.documentAccountId,h,id,b,k);}
   @Get('object-capabilities') capabilities(@Req() r: DocumentRequest, @Param('homeId') h: string, @Query() q: unknown) { return this.service.capabilities(r.documentAccountId, h, q); }
   @Get('rooms') rooms(@Req() r: DocumentRequest, @Param('homeId') h: string, @Query() q: unknown) { return this.service.rooms(r.documentAccountId, h, q); }
   @Post('rooms') createRoom(@Req() r: DocumentRequest, @Param('homeId') h: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) { return this.service.createRoom(r.documentAccountId, h, b, k); }

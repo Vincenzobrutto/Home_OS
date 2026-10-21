@@ -1,3 +1,7 @@
+## Documenti della casa da scheda oggetto — 21 ottobre 2026
+
+Nuova azione con riepilogo e conferma: conserva documenti e spese nella casa, rimuove i riferimenti alla scheda e permette di archiviarla facoltativamente togliendola dalle stanze. Fonti/file e importi conservati, blocchi per altri riferimenti ed elaborazioni pendenti, idempotenza e storia. Test isolati e browser desktop/mobile; dati reali invariati. [Comportamento, sicurezza e limiti](v5/house-documents-from-object-20261021.md).
+
 ## Documenti: originale e classificazioni più accessibili — 21 ottobre 2026
 
 Originale diretto nelle righe e in testa al dettaglio, PDF con renderer locale, ritorno conservato e modifica del tipo senza duplicati. Stato Completato coerente, originale distinto dalla compilazione; Correggi tipo in Altri e PDF di esempio solo in modalità demo/test. Browser desktop/mobile, test mirati e dati reali invariati. [Regole e verifiche](v5/document-original-classification-20261021.md).
