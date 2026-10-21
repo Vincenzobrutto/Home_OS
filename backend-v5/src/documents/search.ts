@@ -1,17 +1,18 @@
+import {ARCHIVE_FAMILIES,LEGACY_FAMILIES} from './families';
 import { isUUID } from 'class-validator';
 import { digest } from '../security';
 import { invalid, object } from '../review/domain';
 import type { SearchDocumentsDto } from './dto';
 import { DOCUMENT_COLLECTIONS } from '../document-intake/domain';
 export const SEARCH_RESOURCE = 'document-search-v1';
-export const SEARCH_CAPABILITIES = { apiVersion: SEARCH_RESOURCE, enabled: true, isSimulation: false, documentViews: true, searchableFields: ['name', 'originalFilename'], formats: ['pdf', 'jpeg', 'png'], visibilities: ['private', 'home'], limits: { queryMaxCodePoints: 120, maxPageSize: 50 } } as const;
+export const SEARCH_CAPABILITIES = { apiVersion: SEARCH_RESOURCE, enabled: true, isSimulation: false, documentViews: true, documentFamilies:true, searchableFields: ['name', 'originalFilename'], formats: ['pdf', 'jpeg', 'png'], visibilities: ['private', 'home'], limits: { queryMaxCodePoints: 120, maxPageSize: 50 } } as const;
 export function normalizeSearchQuery(input: unknown): string {
   if (typeof input !== 'string' || [...input].some(c => c.codePointAt(0)! < 32 || c.codePointAt(0) === 127)) throw invalid();
   const value = input.trim().normalize('NFC');
   if ([...value].length > 120) throw invalid(); return value;
 }
 export function searchFilters(query: SearchDocumentsDto) {
-  object(query, ['limit', 'cursor', 'q', 'format', 'visibility', 'collection', 'workflow', 'view', 'group']);
+  object(query, ['limit', 'cursor', 'q', 'format', 'visibility', 'collection', 'workflow', 'view', 'group', 'related']);
   if (query.q !== undefined && typeof query.q !== 'string') throw invalid();
   const q = normalizeSearchQuery(query.q ?? ''), format = query.format ?? 'all', visibility = query.visibility ?? 'all';
   if ([...q].length > 120 || [...q].some(c => c.codePointAt(0)! < 32 || c.codePointAt(0) === 127) || !['all', 'pdf', 'jpeg', 'png'].includes(format) || !['all', 'private', 'home'].includes(visibility)) throw invalid();
@@ -20,13 +21,15 @@ export function searchFilters(query: SearchDocumentsDto) {
   const collection = query.collection ?? 'all';
   if (typeof collection !== 'string' || (!['all','house','floor_plans'].includes(collection) && !Object.hasOwn(DOCUMENT_COLLECTIONS, collection))) throw invalid();
   const workflow=query.workflow??'all';if(!['all','pending','completed','to_compile','review'].includes(workflow))throw invalid();
-  if(query.view!==undefined&&!['all','house','objects'].includes(query.view))throw invalid();
-  if(query.group!==undefined&&(query.view!=='house'||!['plans','building','energy','contracts','other'].includes(query.group)))throw invalid();
-  return { q, format, visibility, collection, workflow,...(query.view!==undefined?{view:query.view}:{}),...(query.group!==undefined?{group:query.group}:{}) };
+  if(query.view!==undefined&&!['all','house','objects','archive'].includes(query.view))throw invalid();
+  if(query.group!==undefined&&!(query.view==='house'&&LEGACY_FAMILIES.includes(query.group as typeof LEGACY_FAMILIES[number])||query.view==='archive'&&ARCHIVE_FAMILIES.includes(query.group as typeof ARCHIVE_FAMILIES[number])))throw invalid();
+  if(query.related!==undefined&&(query.view!=='archive'||!['all','house','objects'].includes(query.related)))throw invalid();
+  return { q, format, visibility, collection, workflow,...(query.view!==undefined?{view:query.view}:{}),...(query.group!==undefined?{group:query.group}:{}),...(query.related!==undefined?{related:query.related}:{}) };
 }
 export type Filters = ReturnType<typeof searchFilters>;
 export const filtersDigest = (f: Filters) => {
  const base=f.workflow!=='all'?[f.q,f.format,f.visibility,f.collection,f.workflow]:f.collection==='all'?[f.q,f.format,f.visibility]:[f.q,f.format,f.visibility,f.collection];
+ if(f.related&&f.related!=='all')base.push('related',f.related);
  return digest(JSON.stringify(f.view!==undefined?[...base,'view',f.view,f.group??null]:base));
 };
 export const literalPattern = (q: string) => '%' + q.replace(/[\\%_]/g, c => '\\' + c) + '%';

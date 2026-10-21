@@ -9,7 +9,7 @@ export const HOUSE_DOCUMENT_GROUPS: ReadonlyArray<readonly [DocumentGroup, strin
   ['energy', 'APE e certificazioni energetiche'], ['contracts', 'Contratti'],
   ['other', 'Altri documenti della casa'],
 ];
-const views: ReadonlyArray<readonly [DocumentView, string, string]> = [
+const views: ReadonlyArray<readonly [Exclude<DocumentView,'archive'>, string, string]> = [
   ['all', 'Tutti i documenti', 'Tutti'], ['house', 'Documenti della casa', 'Della casa'],
   ['objects', 'Documenti di oggetti e impianti', 'Oggetti e impianti'],
 ];

@@ -1,3 +1,7 @@
+## Documenti: archivio unico con dieci famiglie — 21 ottobre 2026
+
+Implementata l’organizzazione approvata: dieci famiglie con Info accessibile e Da classificare condizionale. Macroviste sostituite da filtro Collegamento; ricerca globale e ritorno conservati. Proiezione dai record attuali senza backfill; tipi generici non assegnati per indizi del titolo. Migrazione amplia solo il vincolo, dati reali verificati invariati. Test mirati e browser desktop/mobile con fixture isolate. [Regole e verifiche](v5/document-unified-archive-20261021.md).
+
 ## Documenti: cambia famiglia dall’elenco — 21 ottobre 2026
 
 Menu diretto nella vista Documenti della casa, scelta manuale indipendente dal tipo e ritorno alla famiglia scelta. Conservati originali, collegamenti e spese; Automatico dal tipo rimuove la scelta manuale. Migrazione additiva, 35 test backend e 5 frontend passati, build/lint e browser desktop/mobile con fatture fittizie; dati reali verificati invariati. [Regole e verifiche](v5/document-house-family-20261021.md).

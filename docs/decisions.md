@@ -1,3 +1,7 @@
+## 21 ottobre 2026 — Archivio unico per argomento
+
+L’utente approva dieci famiglie, descrizioni tramite Info e superamento delle tre macroviste. La famiglia principale è indipendente da tipo e collegamenti: un originale resta unico anche se condiviso fra più oggetti. Derivare dai tipi esistenti soltanto appartenenze univoche, lasciare gli altri documenti in Da classificare. Conservare i valori storici e tradurli in lettura, senza backfill o nuovi invii AI. [Regole e verifiche](v5/document-unified-archive-20261021.md).
+
 ## 21 ottobre 2026 — Famiglia della casa indipendente dal tipo
 
 La richiesta dell’utente distingue collocazione e natura del documento: una fattura può appartenere a una famiglia della casa mantenendo tipo Fattura, spese e oggetti collegati. Override manuale personale sulla fonte corrente; null mantiene il raggruppamento automatico esistente. Nessuna modifica di parti o raccolte e nessuna nuova copia. [Regole e verifiche](v5/document-house-family-20261021.md).

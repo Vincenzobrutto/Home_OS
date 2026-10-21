@@ -1,3 +1,4 @@
+import {ARCHIVE_FAMILIES,LEGACY_FAMILIES} from './families';
 import { Transform, Type } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsIn, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 import { CodePointLength } from '../dto';
@@ -14,8 +15,9 @@ export class ListDocumentsDto {
 }
 // H2 only: Review controllers continue to use the strict M2 ListDocumentsDto.
 export class SearchDocumentsDto extends ListDocumentsDto {
-  @IsOptional() @IsIn(['all','house','objects']) view?:'all'|'house'|'objects';
-  @IsOptional() @IsIn(['plans','building','energy','contracts','other']) group?:'plans'|'building'|'energy'|'contracts'|'other';
+  @IsOptional() @IsIn(['all','house','objects','archive']) view?:'all'|'house'|'objects'|'archive';
+  @IsOptional() @IsIn(['all','house','objects']) related?:'all'|'house'|'objects';
+  @IsOptional() @IsIn([...ARCHIVE_FAMILIES,...LEGACY_FAMILIES]) group?:typeof ARCHIVE_FAMILIES[number]|typeof LEGACY_FAMILIES[number];
   @IsOptional() @IsIn(['all','pending','completed','to_compile','review']) workflow?:'all'|'pending'|'completed'|'to_compile'|'review';
   @IsOptional() @IsString() @IsIn(['all', 'house', 'floor_plans', ...Object.keys(DOCUMENT_COLLECTIONS)]) collection?: 'all' | 'house' | 'floor_plans' | DocumentCollection;
   @Transform(({ value }: { value: unknown }) => value === undefined ? undefined : normalizeSearchQuery(value))

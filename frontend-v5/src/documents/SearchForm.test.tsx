@@ -62,3 +62,11 @@ it('changing query retains explicit filters; invalid queries never reach the ser
  await user.type(screen.getByRole('searchbox'),'x');expect(screen.getByRole('alert')).toHaveTextContent('5 caratteri');
  fireEvent.submit(screen.getByRole('searchbox').closest('form')!);expect(onApply).not.toHaveBeenCalled();
 });
+
+it('archivio unico: famiglia e collegamento nello stesso dialogo, senza categorie duplicate',async()=>{
+ const user=userEvent.setup(),onApply=vi.fn(),applied:DocumentSearchFilters={q:'fattura',format:'all',visibility:'all',view:'archive'};
+ render(<SearchForm home={home} applied={applied} maxQuery={120} autoFocus={false} collectionsEnabled documentViewsEnabled documentFamiliesEnabled onApply={onApply}/>);
+ await user.click(screen.getByRole('button',{name:'Filtri'}));expect(screen.queryByRole('combobox',{name:'Categoria del documento'})).not.toBeInTheDocument();
+ await user.selectOptions(screen.getByRole('combobox',{name:'Famiglia'}),'works');await user.selectOptions(screen.getByRole('combobox',{name:'Collegamento'}),'objects');await user.click(screen.getByRole('button',{name:'Mostra risultati'}));
+ expect(onApply).toHaveBeenLastCalledWith({...applied,workflow:'all',collection:undefined,group:'works',related:'objects'});
+});

@@ -1,3 +1,9 @@
+## Famiglie dell’archivio unico — 21 ottobre 2026
+
+Riutilizzato DocumentOrganization.houseFamily, nessuna nuova entità o copia. Migrazione `20261021230000_document_archive_families`: amplia solo il CHECK dei valori ammessi. Nessun UPDATE dei dati. Chiavi nuove: property, building, energy, condo, utilities, works, tax, insurance, warranty, safety e fallback unclassified. Storici plans/contracts/other conservati; nuova proiezione plans→building, contracts/other→unclassified. Per altre viste API, valori nuovi ricadono nel raggruppamento precedente da tipo.
+
+Scelta manuale valida sulla fonte corrente prevale. Senza scelta, parti tipizzate univoche determinano famiglia (planimetrie/pratiche→building, APE/tecnici→energy, condominio→condo, bolletta→utilities, manuali/garanzie/etichette→warranty). Tipi generici, parti discordanti, organizzazione assente o obsoleta→unclassified. Nessuna euristica sui titoli, nessuna classificazione normativa. Tipo, collection, source proof e collegamenti non riscritti. [Regole](document-unified-archive-20261021.md).
+
 ## Famiglia manuale dei documenti della casa — 21 ottobre 2026
 
 `DocumentOrganization.houseFamily` nullable con CHECK sui cinque gruppi `plans|building|energy|contracts|other`, migrazione additiva `20261021193000_document_house_family`. Null usa il raggruppamento preesistente da parti/raccolte; valore manuale prevale nei conteggi, filtri e pagine. La scelta è personale e vincolata a versione/SHA, imposta houseDocument=true anche tornando ad Automatico. Modificare metadati della stessa fonte conserva la scelta; nuova versione/SHA la azzera. Nessun backfill o cambio del tipo. `ObjectOnboardingRequest.operation=document-house-family-v1` protegge i replay della mutazione. [Dettagli](document-house-family-20261021.md).

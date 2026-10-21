@@ -1,3 +1,11 @@
+## Archivio unico Documenti — 21 ottobre 2026
+
+Capability document-search-capabilities aggiunge `documentFamilies:true`. GET documenti accetta `view=archive`, `group=property|building|energy|condo|utilities|works|tax|insurance|warranty|safety|unclassified` facoltativo e `related=all|house|objects` facoltativo (solo con view=archive). Stessi limiti, privacy, keyset e filtri titolo/filename, formato, visibilità, collection e workflow. Nessuna ricerca nel contenuto o per nomi degli oggetti. Il client inizia una nuova ricerca in tutto l’archivio e mantiene le restrizioni applicate esplicitamente dopo la ricerca.
+
+In archive, `summary.groups` comprende le dieci famiglie più unclassified, sull’intero dataset autorizzato filtrato prima di LIMIT e prima di group; ogni originale appartiene a un solo gruppo e la somma equivale a summary.views.all. Ogni riga aggiunge `family` canonica, indipendente dal tipo. related usa le precedenti regole di appartenenza personale alla casa/riferimenti leggibili agli oggetti; i due insiemi possono sovrapporsi. Nessun JOIN che moltiplica documenti. Cursor e cache vincolati anche a related. Vecchie viste API e cursor compatibili; la UI traduce gli URL precedenti nell’archivio con filtro equivalente.
+
+POST house-family ammette le nuove chiavi e l’opzionale `scope:'archive'`: in questa modalità preserva anche houseDocument. Omettendo scope mantiene il comportamento storico di appartenenza esplicita alla casa. Il digest di idempotenza include scope quando presente, vecchi replay invariati. Risposta aggiunge `archiveFamily` canonica oltre a effectiveFamily storico e organization. Organizzazione e fonte correnti obbligatorie, nessuna creazione di organizzazione implicita. [Dettagli](document-unified-archive-20261021.md).
+
 ## Cambia famiglia della casa — 21 ottobre 2026
 
 POST `/homes/:homeId/documents/:documentId/house-family`, `Idempotency-Key` obbligatorio (16–100 caratteri alfanumerici, `_`, `-`), corpo esatto `{expectedOrganizationVersion,documentVersion,sha256,family}`. Versioni intere positive, SHA-256 esadecimale; family `plans|building|energy|contracts|other|null` (null = Automatico dal tipo). Risposta 200 `{organization,effectiveFamily}`. Le proiezioni organization autorizzate aggiungono `houseFamily`, `documentVersion`, `documentSha256` per il controllo della fonte.

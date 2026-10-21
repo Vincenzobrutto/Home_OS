@@ -49,6 +49,7 @@ export type DocumentSummary = {
   workflowState?: DocumentWorkflowState;
   /** Successful extraction for this account and exact source snapshot, independent of confirmation. */
   aiAnalysisSucceeded?: boolean;
+  family?:DocumentGroup;
   organization?: { houseFamily?:DocumentGroup|null; documentVersion?:number; documentSha256?:string; version: number; title: string; parts: Array<{ kind: string; pageFrom: number | null; pageTo: number | null }>; collections: DocumentCollection[]; origin: 'user_declared'; updatedAt: string } | null;
   id: string;
   homeId: string;
@@ -66,9 +67,9 @@ export type DocumentSummary = {
 
 export type DocumentDetail = DocumentSummary & { sha256: string };
 
-export type DocumentView='all'|'house'|'objects';
-export type DocumentGroup='plans'|'building'|'energy'|'contracts'|'other';
-export type DocumentViewSummary={views:Record<DocumentView,number>;groups:Record<DocumentGroup,number>};
+export type DocumentView='all'|'house'|'objects'|'archive';
+export type DocumentGroup='plans'|'building'|'energy'|'contracts'|'other'|'property'|'condo'|'utilities'|'works'|'tax'|'insurance'|'warranty'|'safety'|'unclassified';
+export type DocumentViewSummary={views:Record<'all'|'house'|'objects',number>;groups:Partial<Record<DocumentGroup,number>>};
 export type DocumentsPage = { items: DocumentSummary[]; nextCursor: string | null;summary?:DocumentViewSummary };
 
 export type UploadDocumentInput = { file: File; name: string; visibility: DocumentVisibility };
@@ -78,10 +79,11 @@ export type DocumentFormatFilter = 'all' | 'pdf' | 'jpeg' | 'png';
 export type DocumentVisibilityFilter = 'all' | DocumentVisibility;
 /** Filtri canonici: q già trim + NFC ('' = nessuna ricerca testuale). */
 export type DocumentCollection = 'contracts' | 'energy' | 'building' | 'technical' | 'condominium' | 'purchases' | 'utilities' | 'unclassified';
-export type DocumentSearchFilters = { view?:DocumentView;group?:DocumentGroup; q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter; collection?: 'all' | 'house' | 'floor_plans' | DocumentCollection; workflow?: 'all'|'pending'|'completed'|'to_compile'|'review' };
+export type DocumentSearchFilters = { related?:'all'|'house'|'objects';view?:DocumentView;group?:DocumentGroup; q: string; format: DocumentFormatFilter; visibility: DocumentVisibilityFilter; collection?: 'all' | 'house' | 'floor_plans' | DocumentCollection; workflow?: 'all'|'pending'|'completed'|'to_compile'|'review' };
 
 export type DocumentSearchCapabilities = {
   documentViews?:boolean;
+  documentFamilies?:boolean;
   collections?: Record<DocumentCollection, string>;
   apiVersion: 'document-search-v1';
   enabled: true;

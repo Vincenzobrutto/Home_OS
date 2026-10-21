@@ -1,3 +1,4 @@
+import {ARCHIVE_GROUPS,familyLabel} from './families';
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MagnifyingGlass } from '@phosphor-icons/react/dist/csr/MagnifyingGlass';
@@ -11,7 +12,7 @@ import docs from '../routes/documents.module.css';
 
 /** Server search across the authorized archive. Only secondary filters are staged. */
 export function SearchForm(props: {
-  home: Home; applied: DocumentSearchFilters; maxQuery: number; collectionsEnabled?: boolean; documentViewsEnabled?: boolean;
+  home: Home; applied: DocumentSearchFilters; maxQuery: number; collectionsEnabled?: boolean; documentViewsEnabled?: boolean;documentFamiliesEnabled?:boolean;
   autoFocus: boolean; onApply: (filters: DocumentSearchFilters, replace?: boolean) => void;
   onSearchStart?:()=>void;
 }) {
@@ -38,6 +39,8 @@ export function SearchForm(props: {
   const workflowLabels = {pending:'Da completare',to_compile:'Da compilare',review:'Da controllare',completed:'Completati'};
   const activeWorkflow = global ? 'all' : applied.workflow ?? 'all';
   const chips = global ? [] : [
+    ...(props.documentFamiliesEnabled&&applied.group?[{field:'group' as const,label:familyLabel(applied.group)}]:[]),
+    ...(props.documentFamiliesEnabled&&applied.related&&applied.related!=='all'?[{field:'related' as const,label:applied.related==='house'?'Della casa':'Collegati a oggetti e impianti'}]:[]),
     ...(activeWorkflow !== 'all' ? [{field:'workflow' as const,label:'Stato: '+workflowLabels[activeWorkflow]}] : []),
     ...(applied.collection && applied.collection !== 'all' ? [{ field:'collection' as const, label:COLLECTION_OPTIONS.find(o => o.value === applied.collection)!.label }] : []),
     ...(applied.format !== 'all' ? [{ field:'format' as const, label:FORMAT_OPTIONS.find(o => o.value === applied.format)!.label }] : []),
@@ -63,15 +66,16 @@ export function SearchForm(props: {
       <p className={ui.hint}>Cerca nei documenti di questa casa.</p>
       <div className={docs.filterFields}>
         <label className={docs.filter}>Stato<select className={docs.select} value={staged.workflow ?? 'all'} onChange={e => setStaged({...staged,workflow:e.target.value as DocumentSearchFilters['workflow']})}><option value="all">Tutti gli stati</option><option value="pending">Da completare</option><option value="to_compile">Da compilare</option><option value="review">Da controllare</option><option value="completed">Completati</option></select></label>
-        {props.collectionsEnabled && <label className={docs.filter}>{props.documentViewsEnabled ? 'Categoria del documento' : 'Gruppo di documenti'}<select className={docs.select} value={staged.collection ?? 'all'} onChange={e => setStaged({...staged,collection:e.target.value as DocumentSearchFilters['collection']})}>{COLLECTION_OPTIONS.filter(o => !props.documentViewsEnabled || o.value !== 'house').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>}
+        {props.collectionsEnabled && !props.documentFamiliesEnabled && <label className={docs.filter}>{props.documentViewsEnabled ? 'Categoria del documento' : 'Gruppo di documenti'}<select className={docs.select} value={staged.collection ?? 'all'} onChange={e => setStaged({...staged,collection:e.target.value as DocumentSearchFilters['collection']})}>{COLLECTION_OPTIONS.filter(o => !props.documentViewsEnabled || o.value !== 'house').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>}
+        {props.documentFamiliesEnabled&&<><label className={docs.filter}>Famiglia<select className={docs.select} value={staged.group??'all'} onChange={e=>setStaged({...staged,group:e.target.value==='all'?undefined:e.target.value as DocumentSearchFilters['group']})}><option value="all">Tutte le famiglie</option>{ARCHIVE_GROUPS.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label><label className={docs.filter}>Collegamento<select className={docs.select} value={staged.related??'all'} onChange={e=>setStaged({...staged,related:e.target.value as DocumentSearchFilters['related']})}><option value="all">Tutti i documenti</option><option value="house">Della casa</option><option value="objects">Collegati a oggetti e impianti</option></select></label></>}
         <label className={docs.filter}>Formato<select className={docs.select} value={staged.format} onChange={e => setStaged({...staged,format:e.target.value as DocumentSearchFilters['format']})}>{FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
         <label className={docs.filter}>Chi può vederli<select className={docs.select} value={staged.visibility} onChange={e => setStaged({...staged,visibility:e.target.value as DocumentSearchFilters['visibility']})}>{VISIBILITY_FILTER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
       </div>
-      <div className={docs.filterFooter}><button type="button" className={ui.btn} onClick={() => setOpen(false)}>Annulla</button><button type="button" className={cx(ui.btn,ui.primary)} disabled={!!error} onClick={() => { apply({...current(),format:staged.format,visibility:staged.visibility,collection:staged.collection,workflow:staged.workflow??'all'}); setOpen(false); }}>Mostra risultati</button></div>
+      <div className={docs.filterFooter}><button type="button" className={ui.btn} onClick={() => setOpen(false)}>Annulla</button><button type="button" className={cx(ui.btn,ui.primary)} disabled={!!error} onClick={() => { apply({...current(),format:staged.format,visibility:staged.visibility,collection:staged.collection,workflow:staged.workflow??'all',...(props.documentFamiliesEnabled?{group:staged.group,related:staged.related}:{})}); setOpen(false); }}>Mostra risultati</button></div>
     </FilterDialog>}
   </form>
-    {q && <p className={docs.searchScope} role="status">{global || !applied.view || applied.view==='all' ? 'Ricerca nell’intero archivio' : applied.view==='house' ? 'Risultati nei documenti della casa' : 'Risultati nei documenti di oggetti e impianti'} · titolo o nome del file</p>}
-    {!global && !!chips.length && <div className={docs.filterChips} aria-label="Filtri applicati">{chips.map(chip => <button type="button" className={ui.btn} key={chip.field} aria-label={'Rimuovi filtro '+chip.label} onClick={() => apply({...current(),[chip.field]:'all'})}>{chip.label}<X size={16} aria-hidden="true"/></button>)}<button type="button" className={ui.btn} onClick={() => apply({...current(),format:'all',visibility:'all',collection:'all',workflow:'all'})}>Rimuovi filtri</button></div>}
+    {q && <p className={docs.searchScope} role="status">{global || !applied.view || applied.view==='all'||applied.view==='archive' ? 'Ricerca nell’intero archivio' : applied.view==='house' ? 'Risultati nei documenti della casa' : 'Risultati nei documenti di oggetti e impianti'} · titolo o nome del file</p>}
+    {!global && !!chips.length && <div className={docs.filterChips} aria-label="Filtri applicati">{chips.map(chip => <button type="button" className={ui.btn} key={chip.field} aria-label={'Rimuovi filtro '+chip.label} onClick={() => apply({...current(),[chip.field]:chip.field==='group'?undefined:'all'})}>{chip.label}<X size={16} aria-hidden="true"/></button>)}<button type="button" className={ui.btn} onClick={() => apply({...current(),format:'all',visibility:'all',collection:'all',workflow:'all',...(props.documentFamiliesEnabled?{group:undefined,related:'all'}:{})})}>Rimuovi filtri</button></div>}
   </>;
 }
 

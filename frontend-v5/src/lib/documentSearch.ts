@@ -1,3 +1,4 @@
+import {ARCHIVE_GROUPS,familyLabel} from '../documents/families';
 // Regole document-search-v1 (H2) lato client: aiuto immediato all'utente.
 // Il server applica permessi, normalizzazione e limiti ed è l'unica autorità.
 import { isApiError, userMessage } from '../api/errors';
@@ -53,7 +54,7 @@ export function validateQuery(q: string, max = QUERY_MAX_CODE_POINTS) {
 }
 
 export function isFiltered(f: DocumentSearchFilters) {
-  return (f.workflow !== undefined && f.workflow !== 'all') || f.q !== '' || f.format !== 'all' || f.visibility !== 'all' || (f.collection !== undefined && f.collection !== 'all') || (!!f.view&&f.view!=='all') || !!f.group;
+  return (f.workflow !== undefined && f.workflow !== 'all') || f.q !== '' || f.format !== 'all' || f.visibility !== 'all' || (f.collection !== undefined && f.collection !== 'all') || (!!f.view&&!['all','archive'].includes(f.view)) || (!!f.related&&f.related!=='all') || !!f.group;
 }
 
 const FORMATS = new Set<string>(FORMAT_OPTIONS.map((o) => o.value));
@@ -68,8 +69,10 @@ export function filtersFromParams(params: URLSearchParams): DocumentSearchFilter
   const visibility = params.get('visibility') ?? 'all';
   return {
     q: normalizeQuery(params.get('q') ?? ''),
-    ...(['all','house','objects'].includes(params.get('view')??'')?{view:params.get('view') as DocumentSearchFilters['view']}:{}),
+    ...(['all','house','objects','archive'].includes(params.get('view')??'')?{view:params.get('view') as DocumentSearchFilters['view']}:{}),
     ...(params.get('view')==='house'&&['plans','building','energy','contracts','other'].includes(params.get('group')??'')?{group:params.get('group') as DocumentSearchFilters['group']}:{}),
+    ...(params.get('view')==='archive'&&ARCHIVE_GROUPS.some(([g])=>g===params.get('group'))?{group:params.get('group') as DocumentSearchFilters['group']}:{}),
+    ...(params.get('view')==='archive'&&['all','house','objects'].includes(params.get('related')??'')?{related:params.get('related') as DocumentSearchFilters['related']}:{}),
     ...(['all','pending','completed','to_compile','review'].includes(params.get('workflow')??'')?{workflow:params.get('workflow') as 'all'|'pending'|'completed'|'to_compile'|'review'}:{}),
     format: (FORMATS.has(format) ? format : 'all') as DocumentFormatFilter,
     visibility: (VISIBILITIES.has(visibility) ? visibility : 'all') as DocumentVisibilityFilter,
@@ -86,7 +89,8 @@ export function filtersToParams(f: DocumentSearchFilters) {
   if (f.visibility !== 'all') params.set('visibility', f.visibility);
   if (f.collection && f.collection !== 'all') params.set('collection', f.collection);
   if(f.view)params.set('view',f.view);
-  if(f.view==='house'&&f.group)params.set('group',f.group);
+  if((f.view==='house'||f.view==='archive')&&f.group)params.set('group',f.group);
+  if(f.view==='archive'&&f.related&&f.related!=='all')params.set('related',f.related);
   return params;
 }
 
@@ -95,7 +99,7 @@ export function filtersKey(f: DocumentSearchFilters) {
 }
 
 export function sameFilters(a: DocumentSearchFilters, b: DocumentSearchFilters) {
-  return (a.workflow??'all')===(b.workflow??'all') && a.q === b.q && a.format === b.format && a.visibility === b.visibility && (a.collection ?? 'all') === (b.collection ?? 'all') && (a.view??'all')===(b.view??'all') && a.group===b.group;
+  return (a.workflow??'all')===(b.workflow??'all') && a.q === b.q && a.format === b.format && a.visibility === b.visibility && (a.collection ?? 'all') === (b.collection ?? 'all') && (a.view??'all')===(b.view??'all') && a.group===b.group && (a.related??'all')===(b.related??'all');
 }
 
 /** Descrizione testuale dei filtri applicati (resa come testo React, mai HTML). */
@@ -108,7 +112,9 @@ export function describeFilters(f: DocumentSearchFilters) {
   if (f.visibility !== 'all') parts.push(VISIBILITY_FILTER_OPTIONS.find((o) => o.value === f.visibility)!.label);
   if (f.collection && f.collection !== 'all') parts.push(COLLECTION_OPTIONS.find(o => o.value === f.collection)!.label);
   if(f.view==='house')parts.push('Documenti della casa');if(f.view==='objects')parts.push('Documenti di oggetti e impianti');
-  if(f.group)parts.push(({plans:'Planimetrie',building:'Pratiche edilizie e catastali',energy:'APE e certificazioni energetiche',contracts:'Contratti',other:'Altri documenti della casa'})[f.group]);
+  if(f.related&&f.related!=='all')parts.push(f.related==='house'?'Della casa':'Collegati a oggetti e impianti');
+  if(f.view==='archive'&&f.group)parts.push(familyLabel(f.group));
+  else if(f.group)parts.push((({plans:'Planimetrie',building:'Pratiche edilizie e catastali',energy:'APE e certificazioni energetiche',contracts:'Contratti',other:'Altri documenti della casa'} as Record<string,string>)[f.group]??familyLabel(f.group)));
   return parts.join(' · ');
 }
 

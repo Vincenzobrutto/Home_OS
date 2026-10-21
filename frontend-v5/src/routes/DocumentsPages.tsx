@@ -1,3 +1,5 @@
+import {ArchiveFamilies} from '../documents/ArchiveFamilies';
+import {canonicalFamily,familyLabel} from '../documents/families';
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
 import {ChangeHouseFamily} from '../documents/ChangeHouseFamily';
 import {documentExamplesEnabled} from '../documents/exampleEnvironment';
@@ -89,12 +91,14 @@ export function DocumentsPage() {
   const uploadVisible=uploadOpen||params.has('aggiungi');
   const capabilities = useDocumentSearchCapabilities(home.id);
   const viewsEnabled = !!capabilities.data?.documentViews;
+  const familiesEnabled=!!capabilities.data?.documentFamilies;
   const applied = useMemo<DocumentSearchFilters>(() => {
     const parsed = filtersFromParams(params);
+    if(familiesEnabled){const related=parsed.related??(parsed.view==='house'?'house':parsed.view==='objects'?'objects':undefined);const group=canonicalFamily(parsed.group);return {...parsed,view:'archive',related,group,workflow:parsed.workflow??'all',...(parsed.collection==='house'?{collection:undefined,related:'house'}:{})};}
     const houseLink = viewsEnabled && parsed.collection === 'house';
     return {...parsed, ...(viewsEnabled ? {view: houseLink ? 'house' as const : parsed.view ?? 'all', ...(houseLink ? {collection:undefined} : {})} : {}),
       workflow: parsed.workflow ?? 'all'};
-  }, [params, viewsEnabled]);
+  }, [params, viewsEnabled,familiesEnabled]);
   const appliedKey = filtersKey(applied);
   const viewDocuments = useDocumentSearch(home.id, applied, viewsEnabled && !validateQuery(applied.q, capabilities.data?.limits.queryMaxCodePoints) && !params.has('oggetti-documento'));
   const summary = viewDocuments.isError ? undefined : viewDocuments.data?.pages[0]?.summary;
@@ -103,7 +107,7 @@ export function DocumentsPage() {
   const apply = (filters: DocumentSearchFilters, replace = false) => {
     if(!applied.q&&!filters.q)cache.removeQueries({queryKey:originKey,exact:true});
     const workflow=filters.workflow??applied.workflow;
-    const next=filtersToParams({...filters,workflow,...(viewsEnabled?{view:filters.view??'all'}:{})});
+    const next=filtersToParams({...filters,workflow,...(viewsEnabled?{view:familiesEnabled?'archive':filters.view??'all'}:{})});
     if(workflow==='all')next.set('workflow','all');
     setParams(next, { replace });
   };
@@ -141,7 +145,7 @@ export function DocumentsPage() {
           </div>
         )}
       </div>
-      {(()=>{const result=(location.state as {houseDocumentResult?:{accountId:string;homeId:string;count:number;archived:boolean}}|null)?.houseDocumentResult;return result?.accountId===account.id&&result.homeId===home.id&&Number.isSafeInteger(result.count)&&result.count>0&&result.count<=50?<Banner title="Documenti conservati nella casa"><p>{result.count} document{result.count===1?'o disponibile':'i disponibili'} nella vista della casa. File e spese sono conservati. {result.archived?'La scheda oggetto è stata archiviata e rimossa dalle stanze.':'La scheda oggetto resta nella sua stanza.'}</p></Banner>:null;})()}
+      {(()=>{const result=(location.state as {houseDocumentResult?:{accountId:string;homeId:string;count:number;archived:boolean}}|null)?.houseDocumentResult;return result?.accountId===account.id&&result.homeId===home.id&&Number.isSafeInteger(result.count)&&result.count>0&&result.count<=50?<Banner title="Documenti conservati nella casa"><p>{result.count} document{result.count===1?'o disponibile':'i disponibili'} nell’archivio documenti. File, spese e collegamenti sono conservati. {result.archived?'La scheda oggetto è stata archiviata e rimossa dalle stanze.':'La scheda oggetto resta nella sua stanza.'}</p></Banner>:null;})()}
       {params.has('documento-salvato')&&<Banner title="Documento salvato" actions={<button type="button" className={ui.btn} onClick={()=>apply({...applied,workflow:'completed'})}>Vai ai documenti completati</button>}><p>Il salvataggio è riuscito. Il documento e l’originale restano disponibili.</p></Banner>}
       {canUpload&&uploadVisible&&<section className={docs.panel}><IntakePage workspace onUploaded={closeUpload}/><button type="button" className={ui.btn} onClick={()=>closeUpload()}>Chiudi caricamento</button></section>}
       {!canUpload && (
@@ -150,7 +154,7 @@ export function DocumentsPage() {
         </p>
       )}
 
-      {viewsEnabled && <DocumentViews value={applied.view ?? 'all'} summary={summary} onChange={view => apply({...applied,view,group:undefined})}/>}
+      {viewsEnabled && !familiesEnabled && <DocumentViews value={applied.view ?? 'all'} summary={summary} onChange={view => apply({...applied,view,group:undefined})}/>}
       {familyNotice?.accountId===account.id&&familyNotice.homeId===home.id&&<p role="status" tabIndex={-1} ref={familyNoticeRef}>Famiglia aggiornata. Tipo del documento e collegamenti invariati.</p>}
       {capabilities.isSuccess ? (
         <SearchForm
@@ -159,6 +163,7 @@ export function DocumentsPage() {
           maxQuery={maxQuery}
           collectionsEnabled={!!capabilities.data.collections}
           documentViewsEnabled={viewsEnabled}
+          documentFamiliesEnabled={familiesEnabled}
           autoFocus={params.get('ricerca') === '1'}
           onApply={applySearch}
           onSearchStart={beginSearch}
@@ -326,6 +331,8 @@ function DocumentsArchive(props: {
 
   const summary = data?.pages[0]?.summary;
   const house = filters.view === 'house' && summary;
+  const archive=filters.view==='archive'&&summary;
+  const grouped=!!archive&&!filters.q&&!selecting&&!aiSelecting;
   if (house && !filters.group) return <>
     {summary.views.house === 0 && <div className={docs.panel}><p>Nessun documento in questa vista{isFiltered({...filters,view:'all',group:undefined}) ? ' con i filtri attuali' : ''}.</p><OtherDocumentResults view="house" summary={summary} onChange={props.onView}/>{!summary.views.all&&<button type="button" className={ui.btn} onClick={props.onReset}>Mostra tutto l’archivio</button>}</div>}
     <HouseDocumentGroups summary={summary} onChange={props.onGroup}/>
@@ -335,7 +342,7 @@ function DocumentsArchive(props: {
     {isFiltered({...filters,view:'all',group:undefined})&&<OtherDocumentResults view="house" summary={summary} onChange={props.onView}/>}
   </HouseDocumentGroups>;
 
-  if (items.length === 0 && filtered) {
+  if (!archive && items.length === 0 && filtered) {
     return (
       <div className={cx(ui.card, styles.unavailable)}>
         {canExport && props.exportSlot && createPortal(<ExportIconButton label="Esporta ZIP" disabled={selecting} onClick={() => setSelecting(true)} hint={selecting ? 'Nessun documento in questa raccolta da esportare' : 'Apri le opzioni di esportazione'} />, props.exportSlot)}
@@ -352,7 +359,7 @@ function DocumentsArchive(props: {
     );
   }
 
-  if (items.length === 0) {
+  if (!archive && items.length === 0) {
     return (
       <div className={cx(ui.card, styles.unavailable)}>
         {canExport && props.exportSlot && createPortal(<ExportIconButton label="Esporta ZIP" disabled={selecting} onClick={() => setSelecting(true)} hint={selecting ? 'Nessun documento da esportare' : 'Apri le opzioni di esportazione'} />, props.exportSlot)}
@@ -404,8 +411,9 @@ function DocumentsArchive(props: {
             key={doc.id}
             doc={doc}
             fileDetailsOpen={restore?.filters===filtersKey(filters)&&restore.openedFiles?.includes(doc.id)||false}
-            showTypeCorrection={!!house&&filters.group==='other'&&props.canUpload}
-            canChangeFamily={!!house&&props.canUpload&&!selecting&&!aiSelecting}
+            showTypeCorrection={!!(house&&filters.group==='other'||archive&&(doc.family==='unclassified'||filters.group==='unclassified'))&&props.canUpload}
+            archiveFamily={!!archive}
+            canChangeFamily={!!(house||archive)&&props.canUpload&&!selecting&&!aiSelecting}
             onFamilyChanged={props.onFamilyChanged}
             homeId={home.id}
             backSearch={filtersToParams(filters).toString()}
@@ -520,7 +528,9 @@ function DocumentsArchive(props: {
           {documents.hasNextPage ? ' — ce ne sono altri' : ''}
         </h2>
       )}
-      {house ? <HouseDocumentGroups summary={summary} selected={filters.group} onChange={props.onGroup}>{filters.group==='other'&&props.canUpload&&<p className={docs.groupEmpty}>Usa “Cambia famiglia” per spostare un documento senza modificarne il tipo.</p>}{documentList()}</HouseDocumentGroups> : documentList()}
+      {archive&&!items.length&&!grouped&&<p className={docs.groupEmpty}>Nessun documento con questi filtri. Prova un altro titolo o rimuovi i filtri.</p>}
+      {archive&&summary.views.all===0&&<p className={docs.groupEmpty} role="status">{isFiltered({...filters,group:undefined})?'Nessun documento con i filtri attuali. Rimuovi un filtro o prova un altro titolo.':props.canUpload?'Non ci sono ancora documenti in questa casa. Usa “Aggiungi documenti” per caricare il primo originale.':'Non ci sono documenti visibili per il tuo account.'}</p>}
+      {grouped ? <><p className={docs.archiveCount}>{summary.views.all} document{summary.views.all===1?'o':'i'} {isFiltered({...filters,group:undefined})?'con i filtri attuali':'nell’archivio'}</p><ArchiveFamilies summary={summary} selected={filters.group} onChange={props.onGroup}>{items.length?documentList():<p className={docs.groupEmpty}>Nessun documento in questa famiglia con i filtri attuali.</p>}</ArchiveFamilies></> : house ? <HouseDocumentGroups summary={summary} selected={filters.group} onChange={props.onGroup}>{filters.group==='other'&&props.canUpload&&<p className={docs.groupEmpty}>Usa “Cambia famiglia” per spostare un documento senza modificarne il tipo.</p>}{documentList()}</HouseDocumentGroups> : documentList()}
 
     </section>
   );
@@ -539,6 +549,7 @@ function exportErrorMessage(error: unknown) {
 
 function DocumentRow(props: {
   doc: DocumentSummary;
+  archiveFamily?:boolean;
   showTypeCorrection?:boolean;
   canChangeFamily?:boolean;
   onFamilyChanged:(group:NonNullable<DocumentSearchFilters['group']>)=>void;
@@ -583,8 +594,9 @@ function DocumentRow(props: {
           {title}
         </Link>
         <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>{props.showTypeCorrection&&<Link className={docs.correctType} to={`/home/${encodeURIComponent(props.homeId)}/documenti/${encodeURIComponent(doc.id)}#doc-classificazione`} state={{documentsSearch:props.backSearch,documentsAccountId:account.id}}>Correggi tipo</Link>}</div>
+        {props.archiveFamily&&<span className={docs.rowFamily}>{familyLabel(doc.family)}</span>}
         <DocumentRowContext doc={doc} homeId={props.homeId}/>
-        {props.canChangeFamily&&doc.organization&&<ChangeHouseFamily key={doc.id+':'+doc.organization.version} homeId={props.homeId} document={doc} onChanged={props.onFamilyChanged}/>}
+        {props.canChangeFamily&&doc.organization&&<ChangeHouseFamily archive={props.archiveFamily} key={doc.id+':'+doc.organization.version} homeId={props.homeId} document={doc} onChanged={props.onFamilyChanged}/>}
         {doc.permissions.includes('read') && (
           <DocumentWorkspaceActions homeId={props.homeId} document={doc}/>
         )}

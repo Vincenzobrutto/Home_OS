@@ -8,8 +8,8 @@ export const queryKeys = {
   documents: (accountId: string, homeId: string) =>
     ['account', accountId, 'home', homeId, 'documents', 'list'] as const,
   // document-search-v1 (H2): varianti filtrate sotto la lista, così l'upload le invalida tutte.
-  documentSearch: (accountId: string, homeId: string, f: { q: string; format: string; visibility: string; collection?: string; workflow?: string;view?:string;group?:string }) =>
-    ['account', accountId, 'home', homeId, 'documents', 'list', 'search', f.q, f.format, f.visibility, f.collection ?? 'all',...(f.workflow && f.workflow!=='all'?[f.workflow]:[]),...(f.view?[f.view,f.group??'all']:[])] as const,
+  documentSearch: (accountId: string, homeId: string, f: { q: string; format: string; visibility: string; collection?: string; workflow?: string;view?:string;group?:string;related?:string }) =>
+    ['account', accountId, 'home', homeId, 'documents', 'list', 'search', f.q, f.format, f.visibility, f.collection ?? 'all',...(f.workflow && f.workflow!=='all'?[f.workflow]:[]),...(f.view?[f.view,f.group??'all',...(f.related&&f.related!=='all'?[f.related]:[])]:[])] as const,
   documentSearchCapabilities: (accountId: string, homeId: string) =>
     ['account', accountId, 'home', homeId, 'documents', 'search-capabilities'] as const,
   documentsAll: (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'documents'] as const,

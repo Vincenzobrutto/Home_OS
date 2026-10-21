@@ -1,3 +1,7 @@
+## Archivio unico Documenti completato — 21 ottobre 2026
+
+Dieci famiglie e descrizioni su richiesta, ricerca globale, filtro Collegamento e cambio famiglia separato dal tipo. Nessuna importazione delle126 voci Excel, checklist normativa o nuova AI: questi sviluppi restano separati. [Regole e verifiche](v5/document-unified-archive-20261021.md).
+
 ## Documenti: famiglia manuale completata — 21 ottobre 2026
 
 Cambia famiglia direttamente dalle righe della casa, senza compilazione o cambio del tipo. Conteggi e filtri server coerenti; nessuna riclassificazione automatica dei dati esistenti. [Regole e verifiche](v5/document-house-family-20261021.md).

@@ -1,3 +1,7 @@
+## Documenti: archivio unico e dieci famiglie — 21 ottobre 2026
+
+Eliminate le tre macroviste dal nuovo ingresso; documenti personali autorizzati organizzati in famiglie con conteggi server e paginazione. Info accessibili, filtro Collegamento, ricerca globale e famiglie nelle righe. Conservati originali, spese, riferimenti e scelte pregresse. [Regole e verifiche](v5/document-unified-archive-20261021.md).
+
 ## Documenti: Cambia famiglia — 21 ottobre 2026
 
 Menu a tendina direttamente nell’elenco della casa, conferma esplicita e apertura del gruppo scelto. Famiglia personale/versionata distinta dal tipo; costi e riferimenti condivisi conservati. [Regole e verifiche](v5/document-house-family-20261021.md).

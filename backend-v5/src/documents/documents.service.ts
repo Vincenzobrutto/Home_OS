@@ -1,3 +1,4 @@
+import {archiveFamily} from './families';
 import {documentViewBase,documentViewSummary,documentViewWhere} from './views';
 import {changeHouseFamily} from './house-family';
 import {documentRowContexts} from './row-context';
@@ -95,7 +96,7 @@ export class DocumentsService implements OnModuleInit {
       // Use the installed deterministic Unicode ICU collation; the development
       // database's default C collation only folds ASCII. Never rewrite originals.
       const viewBase=query.view===undefined?null:documentViewBase(accountId,homeId,filters,{completed,state,analysisSucceeded});
-      const summary=viewBase?await documentViewSummary(tx,viewBase):undefined;
+      const summary=viewBase?await documentViewSummary(tx,viewBase,filters.view==='archive'):undefined;
       const ids = viewBase?await tx.$queryRaw<Array<{id:string;workflowState:string;aiAnalysisSucceeded:boolean}>>(Prisma.sql`${viewBase}
         SELECT s.id,s."workflowState",s."aiAnalysisSucceeded" FROM searched_documents s JOIN "Document" d ON d.id=s.id
         WHERE ${documentViewWhere(filters)} ${!anchor?Prisma.empty:Prisma.sql`AND (d."createdAt"<${anchorTime}::timestamp OR (d."createdAt"=${anchorTime}::timestamp AND d.id<${anchor.id}))`}
@@ -118,7 +119,7 @@ export class DocumentsService implements OnModuleInit {
       const contexts=await documentRowContexts(tx,accountId,homeId,page.map(doc=>doc.id));
       return { items: await Promise.all(page.map(async doc => {
         const org = await currentOrganization(tx, accountId, homeId, doc);
-        return { ...publicDocument(doc, canExport(member)), ...contexts.get(doc.id), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null, aiAnalysisSucceeded: ids.find(row => row.id === doc.id)!.aiAnalysisSucceeded, workflowState: ids.find(row => row.id === doc.id)!.workflowState };
+        return { ...publicDocument(doc, canExport(member)), ...contexts.get(doc.id), ...(org ? { name: org.title } : {}), organization: org ? organizationView(org) : null, family:archiveFamily(org), aiAnalysisSucceeded: ids.find(row => row.id === doc.id)!.aiAnalysisSucceeded, workflowState: ids.find(row => row.id === doc.id)!.workflowState };
       })), nextCursor: docs.length > query.limit && last ? searchCursor(last, accountId, homeId, filters) : null,...(summary?{summary}:{}) };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 15000, maxWait: 15000 });
   }
