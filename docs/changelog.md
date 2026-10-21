@@ -1,3 +1,7 @@
+## Modulo unico fatture e originali dell’intervento — 21 ottobre 2026
+
+Riferimento facoltativo compatto, proposta unica precompilata senza scritture, campi secondari ripristinabili, azione guidata sui dati mancanti e riepilogo senza totali ripetuti. I documenti delle spese attribuite compaiono nella scheda dell’oggetto e si aprono anche dalla riga del costo, senza copie o migrazioni. Percorso tecnico da casa vuota e collaudo desktop/mobile su cinque originali. [Verifiche e limiti](v5/invoice-single-flow-20261021.md).
+
 ## Fatture successive: proposta dell’oggetto esistente — 21 ottobre 2026
 
 Ricerca in sola lettura dei riferimenti già presenti, motivazione e scelta esplicita senza creare nuove schede. Riuso delle spese già attribuite, protezione nella modalità automatica e nessun nuovo invio AI. [Comportamento, verifiche e limiti](v5/object-suggestions-20261021.md).

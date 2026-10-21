@@ -334,14 +334,15 @@ export class HomeObjectsService {
     if (type === 'expense') {
       const row = await tx.homeExpense.findFirst({ where: { id, homeId: c.h, accountId: c.a } });
       if (!row) throw deny();
-      return { id, title: row.title, assetId: row.assetId, amountCents: row.amountCents, currency: 'EUR' as const, spentOn: row.spentOn };
+      const source = row.documentId ? await tx.document.findFirst({ where: { id: row.documentId, homeId: c.h, OR: [{ visibility: 'home' }, { uploaderId: c.a }] }, select: { id: true, name: true } }) : null;
+      return { id, title: row.title, assetId: row.assetId, amountCents: row.amountCents, currency: 'EUR' as const, spentOn: row.spentOn, document: source ? { id: source.id, title: source.name } : null };
     }
     const row = await tx.homeActivity.findFirst({ where: { id, homeId: c.h, accountId: c.a } });
     if (!row) throw deny(); return { id, title: row.title, assetId: row.assetId };
   }
   private async linkView(tx: Tx, c: Context, row: ObjectResourceLink, kind: SubjectKind, id: string) {
-    let resource: { id: string; title: string; amountCents?: number; currency?: 'EUR'; spentOn?: string } | null = null;
-    try { const found = await this.resource(tx, c, resourceType(row.resourceType), row.resourceId); resource = { id: found.id, title: found.title, ...('amountCents' in found ? { amountCents: found.amountCents, currency: found.currency, spentOn: found.spentOn } : {}) }; }
+    let resource: { id: string; title: string; amountCents?: number; currency?: 'EUR'; spentOn?: string; document?: { id: string; title: string } | null } | null = null;
+    try { const found = await this.resource(tx, c, resourceType(row.resourceType), row.resourceId); resource = { id: found.id, title: found.title, ...('amountCents' in found ? { amountCents: found.amountCents, currency: found.currency, spentOn: found.spentOn, document: found.document } : {}) }; }
     catch (e) { if (!(e instanceof ForbiddenException)) throw e; }
     return { linkId: row.id, version: row.version, origin: 'reference', state: resource ? row.state : 'unavailable', resourceType: row.resourceType, resource, objectRef: { kind, id } };
   }
@@ -379,9 +380,20 @@ export class HomeObjectsService {
     const b = digest(JSON.stringify([a, h, kind, id, type, 'links'])), cur = this.cursor(q.cursor, b);
     return this.transaction(a, h, false, async (tx, c) => {
       await this.subject(tx, c, kind, id);
-      const native = kind !== 'boiler' ? Prisma.sql`SELECT NULL::text AS id,NULL::text AS title,NULL::timestamp AS "createdAt" WHERE FALSE` : type === 'document' ? Prisma.sql`
+      const noNative = Prisma.sql`SELECT NULL::text AS id,NULL::text AS title,NULL::timestamp AS "createdAt" WHERE FALSE`;
+      // A cost already identifies both the object and its source. Project that relationship
+      // rather than creating another file or a reference that could outlive a moved cost.
+      const costDocuments = Prisma.sql`SELECT DISTINCT d.id,d.name AS title,d."createdAt"
+        FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId"
+        WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active'
+          AND d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a})
+          AND ${kind === 'boiler' ? Prisma.sql`e."assetId"=${id}` : Prisma.sql`EXISTS (
+            SELECT 1 FROM "ObjectResourceLink" l WHERE l."expenseId"=e.id AND l."objectId"=${id}
+              AND l."accountId"=${a} AND l."homeId"=${h} AND l.state='active')`}`;
+      const analysisDocuments = kind !== 'boiler' ? noNative : Prisma.sql`
         SELECT DISTINCT d.id,d.name AS title,d."createdAt" FROM "AnalysisJob" j CROSS JOIN LATERAL jsonb_array_elements(j.documents) s JOIN "Document" d ON d.id=s->>'documentId'
-        WHERE j."assetId"=${id} AND j.state='succeeded' AND d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a})` : type === 'expense' ? Prisma.sql`
+        WHERE j."assetId"=${id} AND j.state='succeeded' AND d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a})`;
+      const native = type === 'document' ? Prisma.sql`SELECT * FROM (${costDocuments}) costs UNION SELECT * FROM (${analysisDocuments}) analyses` : kind !== 'boiler' ? noNative : type === 'expense' ? Prisma.sql`
         SELECT id,title,"createdAt" FROM "HomeExpense" WHERE "assetId"=${id} AND "accountId"=${a} AND "homeId"=${h}` : Prisma.sql`
         SELECT id,title,"createdAt" FROM "HomeActivity" WHERE "assetId"=${id} AND "accountId"=${a} AND "homeId"=${h}`;
       const rows = await tx.$queryRaw<Array<{ id: string; origin: 'native' | 'reference'; title: string | null; createdAt: Date }>>(Prisma.sql`
@@ -397,7 +409,7 @@ export class HomeObjectsService {
         if (r.origin === 'reference') return this.linkView(tx, c, (await tx.objectResourceLink.findUnique({ where: { id: r.id } }))!, kind, id);
         const found = await this.resource(tx, c, type, r.id);
         return { linkId: null, version: null, origin: 'native', state: 'active', resourceType: type,
-          resource: { id: r.id, title: r.title, ...('amountCents' in found ? { amountCents: found.amountCents, currency: found.currency, spentOn: found.spentOn } : {}) }, objectRef: { kind, id } };
+          resource: { id: r.id, title: r.title, ...('amountCents' in found ? { amountCents: found.amountCents, currency: found.currency, spentOn: found.spentOn, document: found.document } : {}) }, objectRef: { kind, id } };
       })) };
     });
   }

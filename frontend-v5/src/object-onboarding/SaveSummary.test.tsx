@@ -19,7 +19,7 @@ it('existing links, exclusion and only-document mode never present a new expense
 });
 it('invoice installment summary distinguishes reuse of an existing installation from creating an object',()=>{
  render(<SaveSummary draft={{...draft,houseExpenses:[{...draft.houseExpenses![0]!,documentKind:'simple_invoice'}]}} forms={{}} houseForms={{cost:{...form,title:'Acconto · Impianto sintetico',objectChoice:'object:existing'}}} documentOnly={false}/>);
- expect(screen.getByText('Acconto · Impianto sintetico')).toBeVisible();expect(screen.getByText(/Spesa collegata all’oggetto o impianto scelto/)).toBeVisible();expect(screen.getByText(/Nessun nuovo oggetto. Usi quello già esistente/)).toBeVisible();expect(screen.queryByText('Nessun nuovo oggetto o collegamento a oggetti.')).not.toBeInTheDocument();
+ expect(screen.getByText('Acconto · Impianto sintetico')).toBeVisible();expect(screen.getByText(/Spesa e documento collegati a oggetto o impianto scelto/)).toBeVisible();expect(screen.queryByText(/Nessun nuovo oggetto. Usi quello già esistente/)).not.toBeInTheDocument();expect(screen.queryByText('Nessun nuovo oggetto o collegamento a oggetti.')).not.toBeInTheDocument();
 });
 it('invoice uses expense date and excluded articles do not appear as objects or expenses',()=>{
  const item:Draft['items'][number]={id:'i',nameTruncated:false,disposition:'household_object',fields:{},quantity:{value:2},profile:{},enrichment:null,decision:null};

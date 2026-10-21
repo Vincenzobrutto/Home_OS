@@ -44,7 +44,7 @@ it('saves and restores incomplete inputs, metadata and both bill period modes wi
  await w.user.click(screen.getByRole('radio',{name:'Un intervallo'}));
  await w.user.clear(screen.getByLabelText('Dal'));await w.user.type(screen.getByLabelText('Dal'),'2025-11-01');
  await w.user.clear(screen.getByLabelText('Al'));
- expect(screen.getByRole('button',{name:'Registra spesa'})).toBeDisabled();
+ expect(screen.getByRole('button',{name:'Completa i dati'})).toBeEnabled();
  await w.user.click(screen.getByRole('button',{name:'Salva bozza ed esci'}));await waitFor(()=>expect(w.pause).toHaveBeenCalledWith(true));await screen.findByText('Elenco fittizio');
  expect(w.beforeConfirm).not.toHaveBeenCalled();expect(w.wire.state).toBe('open');
  expect(w.wire.review?.compilation).toMatchObject({documentTitle:'Da finire',documentOnly:false,houseForms:{cost:{amount:'12,',supplier:'Fornitore fittizio',periodFrom:'2025-11-01',periodTo:'',periodDraft:{mode:'range',month:'2025-12'}}}});

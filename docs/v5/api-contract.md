@@ -1,3 +1,9 @@
+## Documenti derivati dalle spese e dati della fattura — 21 ottobre 2026
+
+GET dei collegamenti oggetto con `resourceType=document` include ora le fonti leggibili delle spese attive attribuite allo stesso riferimento. Proiezione `origin=native`, senza link persistente aggiuntivo; deduplica con i riferimenti espliciti, paginazione e privacy invariati. GET dei collegamenti `resourceType=expense` aggiunge `resource.document: {id,title} | null`, presente solo per fonte accessibile nello stesso scope. Il frontend può aprire direttamente la fattura. Nessun nuovo endpoint o schema.
+
+`review.compilation.houseForms[id]` ammette le stringhe opzionali `objectLabel`, `documentNumber`, `documentDate`, `note`, conservate come input grezzo. `objectLabel` è solo presentazione: il server continua a validare il riferimento alla conferma; numero, emissione e nota passano nei già esistenti `houseExpenses[].values`. [Regole e verifiche](invoice-single-flow-20261021.md).
+
 ## Compilazione salvata esplicitamente — 21 ottobre 2026
 
 POST `/homes/:homeId/object-onboarding/drafts/:id/review` conserva ora anche `review.compilation`: `{saved:true, documentTitle, documentKind, replaceOrganization, reuseCopy, documentOnly, manualTotal, contacts, houseForms}`. Titolo/tipo, totale e campi casa sono stringhe grezze, anche vuote/incomplete; houseForms è indicizzato per proposta e conserva selezione/importo/fornitore/date/categoria/azione/collegamento e alternative del periodo. I campi degli oggetti restano in `review.forms`. Il server valida la struttura e il limite complessivo di 100.000 caratteri, senza applicare decisioni. Fonte, membership/edit, stato aperto, versione e Idempotency-Key restano obbligatori. Nessuna modifica canonica o invio AI. GET draft riproietta `compilation` solo quando la fonte è accessibile. GET capabilities aggiunge `drafts[].hasSavedCompilation` (solo per bozze aperte), senza esporre il review. [Dettagli e verifiche](compilation-draft-20261021.md).

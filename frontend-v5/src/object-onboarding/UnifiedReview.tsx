@@ -24,18 +24,20 @@ type Props = {
 };
 export function UnifiedReview({ summaryTitle,houseForms,summaryContacts,documentOnly=false,changeDocumentOnly,documentProblem,draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, saveDraft, draftSaveFailure,retryDraftSave,busy=false,defer, add, enrich, manualTotal, changeManualTotal,contactFields,houseFields,houseProblem,houseTotals }: Props) {
   const editor=useContext(DocumentEditorContext);
+  const technicalDocument=['conformity_declaration','house_document'].includes(draft.documentKind);
   const saveErrorRef=useRef<HTMLDivElement>(null);
   useEffect(()=>{if(draftSaveFailure)saveErrorRef.current?.focus({preventScroll:true});},[draftSaveFailure]);
   const metadataRef=useRef<HTMLDivElement>(null);
+  const reviewRef=useRef<HTMLElement>(null);
   const issues=documentOnly?[]:reviewIssues(draft,forms);
-  const items = (documentOnly?[]:draft.items).filter(item => (!item.decision || item.decision.state === 'deferred')&&!(draft.documentInfo?.kind==='conformity_declaration'&&forms[item.id]?.action==='document_only'));
+  const items = (documentOnly?[]:draft.items).filter(item => (!item.decision || item.decision.state === 'deferred'));
   const manualCents = /^\d+(?:[.,]\d{1,2})?$/.test(manualTotal ?? '') ? Math.round(Number(manualTotal!.replace(',', '.')) * 100) : 0;
   const effectiveDraft = !draft.purchaseTotal && manualCents > 0 ? { ...draft, purchaseTotal: { amountCents: manualCents } } : draft;
   const totals = reviewTotals(documentOnly?{...draft,items:[]}:draft, forms), problem = documentProblem ?? (documentOnly?null:houseProblem ?? reviewProblem(effectiveDraft, forms)) ?? (!documentOnly&&draft.mode==='manual'&&draft.items.length>1&&totals.newExpenses>0&&!manualCents ? 'Indica il totale della fattura per controllare le quote degli articoli.' : null);
   if(!documentOnly&&houseTotals){totals.newExpenses+=houseTotals.newExpenses;totals.amountCents+=houseTotals.amountCents;}
   const euro = (cents: number) => (cents / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
-  return <section className={styles.stack} aria-label="Revisione unica del documento">
-    <header><h2>{editor?"Cosa vuoi salvare?":"Rivedi e organizza"}</h2>{!editor&&<Link to={root + '/documenti/' + encodeURIComponent(draft.snapshot!.documentId) + '#doc-anteprima'} target="_blank" rel="noopener noreferrer">Vedi documento originale ↗</Link>}</header>
+  return <section ref={reviewRef} className={styles.stack} aria-label="Revisione unica del documento">
+    <header><h2>{editor?"Controlla e salva":"Rivedi e organizza"}</h2>{!editor&&<Link to={root + '/documenti/' + encodeURIComponent(draft.snapshot!.documentId) + '#doc-anteprima'} target="_blank" rel="noopener noreferrer">Vedi documento originale ↗</Link>}</header>
     {changeDocumentOnly&&!editor&&<fieldset className={styles.stack} disabled={disabled}><legend>Cosa vuoi conservare?</legend><label className={styles.check}><input type="radio" name={"document-mode-"+draft.id} checked={documentOnly} onChange={()=>changeDocumentOnly(true)}/>Conserva solo il documento</label><label className={styles.check}><input type="radio" name={"document-mode-"+draft.id} checked={!documentOnly} onChange={()=>changeDocumentOnly(false)}/>Rivedi oggetti, spese e contatti</label><p>{documentOnly?'Salvi titolo e tipo. Non creiamo nuovi oggetti, spese o contatti; quelli già collegati restano conservati.':'Controlla le proposte e scegli cosa salvare.'}</p></fieldset>}
     {editor&&changeDocumentOnly&&<label className={styles.check}><input type="checkbox" disabled={disabled} checked={documentOnly} onChange={e=>changeDocumentOnly(e.target.checked)}/>Conserva solo il documento</label>}
     {documentOnly&&<p>Salva il documento senza registrare spese o creare oggetti.</p>}
@@ -43,26 +45,26 @@ export function UnifiedReview({ summaryTitle,houseForms,summaryContacts,document
     {!documentOnly&&draft.mode==='manual'&&draft.items.length>1&&!draft.houseExpenses?.length&&!draft.purchaseTotal&&<label className={styles.field}>Totale della fattura (€), inserito da te<input className={ui.input} inputMode="decimal" value={manualTotal??''} disabled={disabled} onChange={e=>changeManualTotal?.(e.target.value)}/></label>}
     {copyChoice && <label className={styles.check}><input type="checkbox" checked={copyChoice.checked} disabled={disabled} onChange={e => copyChoice.change(e.target.checked)} />Usa il documento già presente senza modificarlo</label>}
     {editor? <>
-      <details hidden={documentOnly} className={styles.resource} open><summary>Spese · controlla i costi da registrare</summary><div className={styles.stack}>{houseFields}{!draft.houseExpenses?.length&&items.map((item,index)=><section key={item.id} id={'review-cost-'+draft.id+'-'+item.id}><h3>{forms[item.id]?.name||'Articolo '+(index+1)}</h3><ItemEditor part="expense" api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value=>change(item.id,value)} enrich={body=>enrich(item.id,body)}/></section>)}</div></details>
-      {!documentOnly&&draft.documentKind!=='utility_bill'&&<details className={styles.resource}><summary>Oggetti · {totals.newObjects} da creare, {totals.linkedObjects} da collegare</summary><div className={styles.stack}>    {items.map((item, index) => <section className={`${ui.card} ${styles.unifiedItem}`} key={item.id} id={'review-item-'+draft.id+'-'+item.id} tabIndex={-1} aria-label={'Articolo ' + (index + 1)}>
-      <h3>Articolo {index + 1} · {forms[item.id]!.name || 'Da identificare'}</h3>
+      <details hidden={documentOnly||technicalDocument} className={styles.resource} open><summary>Spese · controlla i costi da registrare</summary><div className={styles.stack}>{houseFields}{!draft.houseExpenses?.length&&items.map((item,index)=><section key={item.id} id={'review-cost-'+draft.id+'-'+item.id}><h3>{forms[item.id]?.name||'Articolo '+(index+1)}</h3><ItemEditor part="expense" api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value=>change(item.id,value)} enrich={body=>enrich(item.id,body)}/></section>)}</div></details>
+      {!documentOnly&&draft.documentKind!=='utility_bill'&&<details className={styles.resource} open={technicalDocument||undefined}><summary>Oggetti · {totals.newObjects} da creare, {totals.linkedObjects} da collegare</summary><div className={styles.stack}>    {items.map((item, index) => <section className={`${ui.card} ${styles.unifiedItem}`} key={item.id} id={'review-item-'+draft.id+'-'+item.id} tabIndex={-1} aria-label={'Articolo ' + (index + 1)}>
+      <h3>{technicalDocument?'Scheda':'Articolo'} {index + 1} · {forms[item.id]!.name || 'Da identificare'}</h3>
       <ItemEditor part={editor?'object':'all'} api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value => change(item.id, value)} enrich={body => enrich(item.id, body)} />
     </section>)}
-    {!documentOnly&&!['utility_bill','house_document','conformity_declaration'].includes(draft.documentKind)&&<button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>{draft.items.length?'Aggiungi un altro articolo':'Aggiungi o collega un oggetto (facoltativo)'}</button>}
+    {!documentOnly&&draft.documentKind!=='utility_bill'&&<button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>{technicalDocument?'Crea o collega la scheda dell’impianto':draft.items.length?'Aggiungi un altro articolo':'Aggiungi o collega un oggetto (facoltativo)'}</button>}
 </div></details>}
       {!documentOnly&&!!draft.contacts?.length&&<details className={styles.resource}><summary>Contatti · scegli cosa conservare in rubrica</summary>{contactFields}</details>}
     </>:<>    {items.map((item, index) => <section className={`${ui.card} ${styles.unifiedItem}`} key={item.id} id={'review-item-'+draft.id+'-'+item.id} tabIndex={-1} aria-label={'Articolo ' + (index + 1)}>
       <h3>Articolo {index + 1} · {forms[item.id]!.name || 'Da identificare'}</h3>
       <ItemEditor api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value => change(item.id, value)} enrich={body => enrich(item.id, body)} />
     </section>)}
-    {!documentOnly&&!['utility_bill','house_document','conformity_declaration'].includes(draft.documentKind)&&<button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>{draft.items.length?'Aggiungi un altro articolo':'Aggiungi o collega un oggetto (facoltativo)'}</button>}
+    {!documentOnly&&draft.documentKind!=='utility_bill'&&<button type="button" className={ui.btn} disabled={disabled || draft.items.length >= 20} onClick={add}>{technicalDocument?'Crea o collega la scheda dell’impianto':draft.items.length?'Aggiungi un altro articolo':'Aggiungi o collega un oggetto (facoltativo)'}</button>}
     {!documentOnly&&houseFields}
     {!documentOnly&&contactFields}
 </>}
     <section className={ui.card} aria-label="Riepilogo prima di salvare" aria-live="polite">
       {!documentOnly&&draft.purchaseTotal && <p>Totale fattura: <strong>{euro(draft.purchaseTotal.amountCents)}</strong></p>}
       <SaveSummary draft={draft} forms={forms} documentOnly={documentOnly} title={summaryTitle} houseForms={houseForms} contacts={summaryContacts}/>
-      {!documentOnly&&totals.amountCents>0&&<p>Totale nuove spese: <strong>{euro(totals.amountCents)}</strong></p>}
+      {!documentOnly&&totals.amountCents>0&&!(totals.newExpenses===1&&draft.houseExpenses?.length===1)&&<p>Totale nuove spese: <strong>{euro(totals.amountCents)}</strong></p>}
       {!!totals.excludedCents && <p>Importi esclusi: {euro(totals.excludedCents)}</p>}
       {!!totals.excludedUnknown && <p>{totals.excludedUnknown} articoli esclusi con importo non disponibile.</p>}
       {problem && !issues.length && !documentProblem && <p role="status">{problem}</p>}
@@ -83,7 +85,7 @@ export function UnifiedReview({ summaryTitle,houseForms,summaryContacts,document
         {editor&&problem&&<span className={styles.saveProblem} role="status">{documentProblem??issues[0]?.message??problem}</span>}
         {editor&&<button type="button" className={ui.btn} disabled={disabled} onClick={()=>void saveDraft?.()}>Salva bozza ed esci</button>}
         {!editor&&!!items.length&&<button type="button" className={ui.btn} disabled={disabled} onClick={defer}>Decidi più avanti</button>}
-        <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || (!documentOnly&&!items.length&&!draft.documentInfo&&!draft.houseExpenses?.length)} onClick={save}>{documentOnly?'Salva documento':totals.newExpenses>0&&totals.newObjects===0&&totals.linkedObjects===0?'Registra spesa':editor?'Salva e continua':'Salva e organizza'}</button>
+        <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || (!editor&&!!problem) || (!documentOnly&&!items.length&&!draft.documentInfo&&!draft.houseExpenses?.length)} onClick={()=>{if(editor&&problem){const selector=!documentProblem&&houseProblem?'[aria-label="Dati della spesa da completare"] button':'[aria-label="Dati da completare"] button';const action=reviewRef.current?.querySelector<HTMLButtonElement>(selector);if(action){action.click();return;}metadataRef.current?.scrollIntoView?.({block:"center"});metadataRef.current?.querySelector<HTMLElement>("input,select")?.focus();return;}save();}}>{editor&&problem?'Completa i dati':documentOnly?'Salva documento':totals.newExpenses>0&&totals.newObjects===0&&totals.linkedObjects===0?(houseForms&&Object.values(houseForms).some(f=>f.title.startsWith('Acconto · '))?'Salva acconto':houseForms&&Object.values(houseForms).some(f=>f.title.startsWith('Saldo · '))?'Salva saldo':'Registra spesa'):editor?'Salva e continua':'Salva e organizza'}</button>
       </>}
     </div>
   </section>;

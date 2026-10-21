@@ -1,6 +1,10 @@
+## Fatture: modulo unico e documenti dell’intervento — 21 ottobre 2026
+
+Implementati selettore compatto del riferimento, riepilogo unico, dati secondari ripristinabili e documenti derivati dalle spese già attribuite. Collaudo su casa inizialmente vuota con i cinque originali autorizzati: 1 impianto, 5 documenti, 2 spese distinte per 3.074,40 €. AI: 4 esiti validi e 1 fallback manuale, senza retry. App principale aggiornata e controllata in sola lettura; legacy locale preservato. [Comportamento, verifiche e frizioni residue](v5/invoice-single-flow-20261021.md).
+
 ## Fatture: stesso oggetto proposto per acconto e saldo — 21 ottobre 2026
 
-Proposte automatiche di riferimenti esistenti, motivate da nome/identità o fornitore più descrizione della spesa già attribuita. Accettazione esplicita senza nuove schede, un solo costo e riuso delle spese già collegate. Nessuna scelta arbitraria tra più oggetti; controlli anche nella modalità automatica. [Regole, verifiche e limiti](v5/object-suggestions-20261021.md). Resta la scelta facoltativa del riferimento e importo unico/acconto/saldo nel titolo, senza modello rate o pagamento verificato. [Correzione iniziale e causa](v5/expense-installments-object-20261021.md). Acconto reale ancora da caricare; dati personali intatti in questa estensione.
+Proposte automatiche di riferimenti esistenti, motivate da nome/identità o fornitore più descrizione della spesa già attribuita. Accettazione esplicita senza nuove schede, un solo costo e riuso delle spese già collegate. Nessuna scelta arbitraria tra più oggetti; controlli anche nella modalità automatica. [Regole, verifiche e limiti](v5/object-suggestions-20261021.md). Resta la scelta facoltativa del riferimento e importo unico/acconto/saldo nel titolo, senza modello rate o pagamento verificato. [Correzione iniziale e causa](v5/expense-installments-object-20261021.md). Caso da casa vuota verificato nel [modulo unico](v5/invoice-single-flow-20261021.md); le registrazioni personali esistenti sono conservate.
 
 ## Dettaglio Ambiente compatto — 21 ottobre 2026
 

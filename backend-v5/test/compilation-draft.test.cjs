@@ -24,7 +24,7 @@ test('draft parser accepts incomplete fields but rejects malformed envelopes, un
 });
 
 test('invoice draft retains an explicit installment label and selected existing installation without canonical writes',async()=>{
- const w=world(),compilation=saved();compilation.houseForms.cost.objectChoice='object:'+randomUUID();compilation.houseForms.cost.title='Acconto · Impianto sintetico';
+ const w=world(),compilation=saved();compilation.houseForms.cost.objectChoice='object:'+randomUUID();compilation.houseForms.cost.title='Acconto · Impianto sintetico';Object.assign(compilation.houseForms.cost,{objectLabel:'Impianto sintetico',documentNumber:'14',documentDate:'2026-06-16',note:'Nota in bozza'});
  const result=await w.service.saveReview(w.a,w.h,w.id,{expectedVersion:1,review:{compilation}},w.key);
  assert.deepEqual(result.draft.review.compilation,compilation);assert.deepEqual(w.draft().decisions,{});
 });

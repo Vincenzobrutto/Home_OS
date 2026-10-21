@@ -1,6 +1,10 @@
+## Fatture: collaudo del modulo unico completato — 21 ottobre 2026
+
+Concluso il caso da casa vuota con cinque originali, un impianto e due spese senza doppioni. Riferimento precompilato modificabile e consultazione dei documenti tramite i costi. Restano miglioramenti mirati su titoli/categorie estratti e fallback dei documenti tecnici, da valutare senza nuovi invii AI impliciti. [Esiti e limiti](v5/invoice-single-flow-20261021.md).
+
 ## Fatture: impianto, acconto e saldo — 21 ottobre 2026
 
-Completati collegamento esplicito, acconto/saldo e [proposte di riuso degli oggetti esistenti](v5/object-suggestions-20261021.md), senza nuove schede alla loro accettazione e con deduplica dei costi. [Correzione iniziale](v5/expense-installments-object-20261021.md). Prossimo caso reale: fattura di acconto da caricare sullo stesso impianto. Nessuna associazione per solo fornitore o in presenza di dati insufficienti.
+Completati collegamento esplicito, acconto/saldo e [proposte di riuso degli oggetti esistenti](v5/object-suggestions-20261021.md), senza nuove schede alla loro accettazione e con deduplica dei costi. [Correzione iniziale](v5/expense-installments-object-20261021.md). Caso di acconto e saldo verificato nel [collaudo del modulo unico](v5/invoice-single-flow-20261021.md). Nessuna associazione per solo fornitore o in presenza di dati insufficienti.
 
 ## Dettaglio Ambiente compatto — 21 ottobre 2026
 

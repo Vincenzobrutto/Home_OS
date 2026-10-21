@@ -508,7 +508,7 @@ export type LinkedResource = {
   origin: 'native' | 'reference';
   state: 'active' | 'removed' | 'unavailable';
   resourceType: G1ResourceType;
-  resource: null | { id: string; title: string; amountCents?: number; currency?: 'EUR'; spentOn?: string };
+  resource: null | { id: string; title: string; amountCents?: number; currency?: 'EUR'; spentOn?: string; document?: { id: string; title: string } | null };
   objectRef: ObjectRef;
 };
 

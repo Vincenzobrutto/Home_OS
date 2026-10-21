@@ -9,8 +9,22 @@ import { DocumentUnderstandingSummary } from './DocumentUnderstandingSummary';
 import { UnifiedReview } from './UnifiedReview';
 import { choice, initialForm, type Draft, type Form } from './model';
 import { reviewTotals } from './reviewSummary';
+import { DocumentEditorContext } from '../documents/DocumentEditorContext';
 
 const source = { documentId: 'source', page: 1, excerpt: 'Prova sintetica' };
+it('editor directs an incomplete expense to its missing field without confirming anything',async()=>{
+ const draft={...fixture(),items:[],purchaseTotal:null,houseExpenses:[{id:'cost'}]} as unknown as Draft,save=vi.fn();
+ const api=new ApiClient({fetch:vi.fn()});
+ render(<MemoryRouter><DocumentEditorContext.Provider value={{complete:vi.fn(),pause:vi.fn(),showOriginal:vi.fn()}}><UnifiedReview draft={draft} forms={{}} api={api} accountId="account" base="/homes/home/object-onboarding" root="/home/home" disabled={false} change={vi.fn()} save={save} defer={vi.fn()} add={vi.fn()} enrich={vi.fn()} houseProblem="Completa la categoria" houseFields={<><label>Categoria della spesa<select><option>Scegli la categoria</option></select></label><div aria-label="Dati della spesa da completare"><button onClick={()=>screen.getByLabelText('Categoria della spesa').focus()}>Scegli la categoria della spesa.</button></div></>}/></DocumentEditorContext.Provider></MemoryRouter>);
+ await userEvent.setup().click(screen.getByRole('button',{name:'Completa i dati'}));
+ expect(screen.getByLabelText('Categoria della spesa')).toHaveFocus();expect(save).not.toHaveBeenCalled();
+});
+it('technical document with no extracted components can explicitly start an installation reference',async()=>{
+ const draft={...fixture(),documentKind:'conformity_declaration',items:[],purchaseTotal:null,documentInfo:{kind:'conformity_declaration',title:{value:'Dichiarazione sintetica',source},facts:[]}} as Draft,add=vi.fn();
+ render(<MemoryRouter><DocumentEditorContext.Provider value={{complete:vi.fn(),pause:vi.fn(),showOriginal:vi.fn()}}><UnifiedReview draft={draft} forms={{}} api={new ApiClient({fetch:vi.fn()})} accountId="account" base="/homes/home/object-onboarding" root="/home/home" disabled={false} change={vi.fn()} save={vi.fn()} defer={vi.fn()} add={add} enrich={vi.fn()}/></DocumentEditorContext.Provider></MemoryRouter>);
+ expect(screen.getByText('Spese · controlla i costi da registrare')).not.toBeVisible();
+ await userEvent.setup().click(screen.getByRole('button',{name:'Crea o collega la scheda dell’impianto'}));expect(add).toHaveBeenCalledOnce();
+});
 const fixture = (): Draft => ({ id: 'draft', version: 1, mode: 'extraction', state: 'open', documentKind: 'purchase_document', snapshot: { documentId: 'source', documentVersion: 1, sha256: 'a'.repeat(64) }, document: { id: 'source', name: 'Fattura due articoli', mimeType: 'application/pdf' }, needsReview: false, purchaseTotal: { amountCents: 14989 }, review: null, permissions: ['edit'], items: ['Macchina del ghiaccio', 'Cuffie personali'].map((name, index) => ({ id: 'item' + index, fields: { name: { value: name, source } }, purchaseAmount: { amountCents: index ? 4990 : 9999, source }, quantity: { value: 1 }, profile: { purchaseDate: { value: '2025-06-13', origin: 'extraction_confirmed', sources: [] } }, nameTruncated: false, disposition: 'household_object', enrichment: null, decision: null })) });
 function mount(draft = fixture(), onlyDocument=false) {
   const submit = vi.fn(), api = new ApiClient({ fetch: async () => Response.json({ items: [], nextCursor: null }) });

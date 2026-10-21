@@ -686,6 +686,7 @@ export function LinksSection(props: {
               {resourceType === 'expense' && l.resource?.amountCents !== undefined && l.resource.currency === 'EUR' && (
                 <span className={styles.meta}>{props.compact?'':'Costo registrato: '}{formatCents(l.resource.amountCents)}{props.compact&&l.resource.spentOn&&<> · {l.resource.spentOn.split('-').reverse().join('/')}</>}</span>
               )}
+              {resourceType === 'expense' && l.resource?.document && <Link className={styles.meta} to={'/home/'+encodeURIComponent(home.id)+'/documenti/'+encodeURIComponent(l.resource.document.id)} aria-label={'Apri documento '+l.resource.document.title}>Apri documento</Link>}
               {props.compact?<details className={own.rowMenu}><summary aria-label={`Azioni per ${l.resource?.title??'collegamento'}`}><DotsThree size={22} aria-hidden="true"/></summary><div><p>{l.origin==='native'?'Collegamento originale: si gestisce dalla risorsa.':'Collegato da te a questo oggetto'}</p>{canEdit&&l.origin==='reference'&&l.linkId&&l.version!==null&&<button type="button" className={ui.btn} onClick={()=>setRemoving(l)}>Rimuovi collegamento</button>}</div></details>:canEdit && l.origin === 'reference' && l.linkId && l.version !== null && (
                 <span>
                   <button type="button" className={cx(ui.btn, ui.small)} onClick={() => setRemoving(l)}>

@@ -1,7 +1,19 @@
 import { expect, it } from 'vitest';
-import { choice, profileNeedsReview, expenseNeedsReview, editProfileField, initialForm, type Draft, type Item } from './model';
+import { choice, profileNeedsReview, expenseNeedsReview, editProfileField, initialForm, houseExpenseTitle, type HouseExpense, type Draft, type Item } from './model';
 const item={id:'x',profile:{},fields:{name:{value:'Demo'}},enrichment:null} as Item;
 const form=()=>initialForm(item,{purchaseTotal:null} as Draft);
+it('prefills only explicit and unambiguous invoice installment wording from the current original',()=>{
+ const invoice={documentKind:'simple_invoice',proposedFields:{title:{value:'Fattura di primo acconto',sources:[]}}} as unknown as HouseExpense;
+ const draft={snapshot:{documentId:'source'},documentInfo:null} as Draft;
+ expect(houseExpenseTitle(invoice,draft)).toBe('Acconto · Fattura di primo acconto');
+ const source={documentId:'source',page:1,excerpt:'Fattura di saldo per lavori'};
+ const described={...invoice,proposedFields:{title:{value:'Lavori impianto',sources:[source]}}} as unknown as HouseExpense;
+ expect(houseExpenseTitle(described,draft)).toBe('Saldo · Lavori impianto');
+ expect(houseExpenseTitle({...described,proposedFields:{title:{value:'Lavori impianto',sources:[{...source,documentId:'another'}]}}} as unknown as HouseExpense,draft)).toBe('Lavori impianto');
+ expect(houseExpenseTitle({...described,proposedFields:{title:{value:'Saldo precedente del conto',sources:[]}}} as unknown as HouseExpense,draft)).toBe('Saldo precedente del conto');
+ expect(houseExpenseTitle({...described,proposedFields:{title:{value:'Fattura di acconto',sources:[source]}}} as unknown as HouseExpense,draft)).toBe('Fattura di acconto');
+ expect([...houseExpenseTitle({...described,proposedFields:{title:{value:'x'.repeat(120),sources:[source]}}} as unknown as HouseExpense,draft)!]).toHaveLength(120);
+});
 it('manual purchase proposes 24 calendar months and clamps leap-day',()=>{const r=editProfileField(form(),'purchaseDate',{action:'manual',value:'2024-02-29'},{},{});expect(r.fields.warrantyStart).toEqual({action:'manual',value:'2024-02-29'});expect(r.fields.warrantyEnd?.value).toBe('2026-02-28');});
 it('effective delivery takes precedence and removing dates removes only automatic defaults',()=>{let r=editProfileField(form(),'purchaseDate',{action:'manual',value:'2025-01-01'},{},{});r=editProfileField(r,'deliveredDate',{action:'manual',value:'2025-01-05'},{},{});expect(r.fields.warrantyStart?.value).toBe('2025-01-05');r=editProfileField(r,'deliveredDate',{action:'skip'},{},{});expect(r.fields.warrantyStart?.value).toBe('2025-01-01');r=editProfileField(r,'purchaseDate',{action:'skip'},{},{});expect(r.fields.warrantyStart?.action).toBe('skip');expect(r.fields.warrantyEnd?.action).toBe('skip');});
 it('manual extension remains unchanged when purchase or delivery changes',()=>{let r=editProfileField(form(),'purchaseDate',{action:'manual',value:'2025-01-01'},{},{});r=editProfileField(r,'warrantyEnd',{action:'manual',value:'2030-01-01'},{},{});r=editProfileField(r,'deliveredDate',{action:'manual',value:'2025-01-08'},{},{});expect(r.fields.warrantyEnd?.value).toBe('2030-01-01');});

@@ -1,3 +1,7 @@
+## 21 ottobre 2026 — Frizioni residue del collaudo fatture
+
+Da valutare: titoli AI troppo generici e categoria assente; ordine della coda rispetto al caricamento; modulo generico lungo nel fallback tecnico; rotazione della sola anteprima. Un originale tecnico ha dato `analysis_invalid_output`: completato manualmente senza retry, da analizzare offline preservando i validatori. Nessun nuovo invio a pagamento implicito. [Evidenze e limiti](v5/invoice-single-flow-20261021.md).
+
 ## 18 ottobre 2026 — Chiuso: schema impianto e selezione AI
 
 Risolto il salvataggio che richiedeva classificazione non disponibile nel pannello: system_diagram e catalogo completo sono supportati, con tipo/titolo inline e consenso esplicito alle sostituzioni. Implementata la richiesta di AI sui documenti selezionati a checkbox, in modalità solo proposte con stato persistente. Il limite tecnico del singolo gruppo è20; gruppi ulteriori restano avviabili esplicitamente entro budget/quote. Restano le attività sul cestino e sugli ingressi legacy già annotate, senza estendere qui lo scope.

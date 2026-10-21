@@ -39,3 +39,5 @@
 @media(max-width:600px){.saveFailure{flex-basis:100%;max-width:none;font-size:.85rem}}
 
 .saveSummary{min-width:0;overflow-wrap:anywhere}.saveSummary h3{margin:0 0 10px}.summaryExpense{border-top:1px solid var(--color-border);padding-top:12px;margin-top:12px}.summaryExpense h4,.summaryExpense p{margin:0 0 8px}.summaryExpense dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}.summaryExpense dt{color:var(--color-muted);font-size:.85rem}.summaryExpense dd{margin:3px 0 0}@media(max-width:600px){.summaryExpense dl{grid-template-columns:1fr}}
+
+.invoiceExpense{min-width:0}.invoiceReference{padding:12px 0;border-bottom:1px solid var(--color-border)}.invoiceReference p{margin:8px 0 12px}.invoiceReference label{scroll-margin-block:140px}.invoiceExpense input,.invoiceExpense select{scroll-margin-block:140px}
