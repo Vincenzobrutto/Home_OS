@@ -25,7 +25,6 @@ import {
   VIEWS,
   categoryFitsFamily,
   categoryLabel,
-  countActiveFilters,
   economyErrorMessage,
   familyLabel,
   filtersFromParams,
@@ -317,27 +316,12 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
           <button type="button" aria-pressed={['elenco','oggetti','lavori'].includes(view)} onClick={()=>setView('elenco')}>Registrazioni</button>
           <button type="button" aria-pressed={['panoramica','riepilogo'].includes(view)} onClick={()=>setView('panoramica')}>Riepilogo</button>
         </div>
-        <div className={styles.quick}>
         <ExpenseSearch key={`${account.id}:${home.id}:${q}`} value={q} onSearch={value=>go({...filters,q:value})}/>
-        <label className="expense-family">Tipo di spesa<select className={act.select} value={filters.family ?? ''} onChange={e=>{const family=(e.target.value || null) as Family|null;go({...filters,family,category:family && filters.category && !categoryFitsFamily(filters.category,family,caps)?null:filters.category});}}><option value="">Tutte</option>{caps.families.map(f=><option key={f.code} value={f.code}>{f.label}</option>)}</select></label>
-        <div className={styles.toolbar}>
-          <label>
-            Raggruppa
-            <select className={act.select} value={view} onChange={(e) => setView(e.target.value as SpeseView)}>
-              {VIEWS.filter(v=>['panoramica','riepilogo'].includes(view) ? ['panoramica','riepilogo'].includes(v.value) : ['elenco','oggetti','lavori'].includes(v.value)).map((v) => (
-                <option key={v.value} value={v.value}>
-                  {v.value === 'elenco' ? 'Mese di riferimento' : v.value === 'panoramica' ? 'Distribuzione e confronto' : v.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        </div>
         {filters.period.kind === 'range' || params.get('periodo') === 'intervallo' ? (
           <RangeForm filters={filters} onApply={(from, to) => go({ ...filters, period: { kind: 'range', from, to } })} />
         ) : null}
 
-        <FiltersBox home={home} caps={caps} filters={filters} view={view} onApply={(next) => go(next)} />
+        <FiltersBox home={home} caps={caps} filters={filters} view={view} onApply={(next,nextView) => go(next,{view:nextView})} />
 
         <div className={styles.board}>
         {(view === 'panoramica' || view === 'elenco') && !summary.isError && summary.data && (
@@ -456,8 +440,13 @@ function RangeForm(props: { filters: EconomyFilters; onApply: (from: string, to:
   );
 }
 
-function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: EconomyFilters; view: SpeseView; onApply: (f: EconomyFilters) => void }) {
+function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: EconomyFilters; view: SpeseView; onApply: (f: EconomyFilters, view?:SpeseView) => void }) {
   const { home, caps, filters } = props;
+  const panelRef=useRef<HTMLDetailsElement>(null);
+  const [draftView,setDraftView]=useState(props.view);
+  const [previousView,setPreviousView]=useState(props.view);
+  if(previousView!==props.view){setPreviousView(props.view);setDraftView(props.view);}
+  const apply=(next:EconomyFilters,nextView=props.view)=>{props.onApply(next,nextView);if(panelRef.current){panelRef.current.open=false;panelRef.current.querySelector('summary')?.focus();}};
   const [draft, setDraft] = useState(filters);
   const [syncedFrom, setSyncedFrom] = useState(filters);
   if (syncedFrom !== filters) {
@@ -470,7 +459,17 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
   const objects = catalog.data?.pages.flatMap((p) => p.items) ?? [];
   const roomList = rooms.data?.pages.flatMap((p) => p.items) ?? [];
   const workList = works.data?.pages.flatMap((p) => p.items) ?? [];
-  const active = countActiveFilters(filters);
+  const chips:Array<{label:string;clear:Partial<EconomyFilters>}>=[
+   ...(filters.family?[{label:familyLabel(filters.family,caps),clear:{family:null}}]:[]),
+   ...(filters.category?[{label:filters.category==='unclassified'?'Non classificata':categoryLabel(filters.category,caps),clear:{category:null}}]:[]),
+   ...(filters.object?[{label:'Oggetto: '+(objects.find(o=>o.ref.id===filters.object!.id)?.name??'selezionato'),clear:{object:null}}]:[]),
+   ...(filters.roomId?[{label:'Ambiente: '+(roomList.find(r=>r.id===filters.roomId)?.name??'selezionato'),clear:{roomId:null}}]:[]),
+   ...(filters.workId?[{label:'Lavoro: '+(workList.find(w=>w.id===filters.workId)?.name??'selezionato'),clear:{workId:null}}]:[]),
+   ...(filters.documentId?[{label:'Documento collegato',clear:{documentId:null}}]:[]),
+   ...(filters.source!=='all'?[{label:filters.source==='manual'?'Inserite da te':'Da documento',clear:{source:'all' as const}}]:[]),
+   ...(filters.state!=='active'?[{label:filters.state==='archived'?'Archiviate':'Tutti gli stati',clear:{state:'active' as const}}]:[]),
+  ];
+  const active = chips.length;
   const cats = caps.categories.filter((c) => !draft.family || c.possibleFamilies.includes(draft.family));
   const objKey = draft.object ? `${draft.object.kind}:${draft.object.id}` : '';
   const more = (q: { hasNextPage: boolean; isFetchingNextPage: boolean; fetchNextPage: () => unknown }, label: string) =>
@@ -480,15 +479,18 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
       </button>
     ) : null;
   return (
-    <details className={cx(ui.card, styles.filtersBox)} open={countActiveFilters({...filters,q:''}) > 0}>
+    <div>
+    <details ref={panelRef} className={cx(ui.card, styles.filtersBox)}>
       <summary>Filtri{active ? ` · ${active} attiv${active === 1 ? 'o' : 'i'}` : ''}</summary>
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          props.onApply(draft);
+          apply(draft,draftView);
         }}
       >
         <div className={styles.filterGrid}>
+          <label>Tipo di spesa<select className={act.select} value={draft.family??''} onChange={e=>{const family=(e.target.value||null) as Family|null;setDraft({...draft,family,category:family&&draft.category&&!categoryFitsFamily(draft.category,family,caps)?null:draft.category});}}><option value="">Tutte</option>{caps.families.map(f=><option key={f.code} value={f.code}>{f.label}</option>)}</select></label>
+          <label>Raggruppa<select className={act.select} value={draftView} onChange={e=>setDraftView(e.target.value as SpeseView)}>{VIEWS.filter(v=>['panoramica','riepilogo'].includes(props.view)?['panoramica','riepilogo'].includes(v.value):['elenco','oggetti','lavori'].includes(v.value)).map(v=><option key={v.value} value={v.value}>{v.value==='elenco'?'Mese di riferimento':v.value==='panoramica'?'Distribuzione e confronto':v.label}</option>)}</select></label>
           <label>
             Categoria
             <select className={act.select} value={draft.category ?? ''} onChange={(e) => setDraft({ ...draft, category: (e.target.value || null) as CategoryFilter | null })}>
@@ -576,7 +578,7 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
           <button
             type="button"
             className={cx(ui.btn, ui.small)}
-            onClick={() => props.onApply({ ...filters, category: null, object: null, roomId: null, workId: null, documentId: null, source: 'all', state: 'active', q: '' })}
+            onClick={() => apply({ ...filters, family:null,category: null, object: null, roomId: null, workId: null, documentId: null, source: 'all', state: 'active' })}
           >
             Azzera filtri
           </button>
@@ -584,6 +586,8 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
         <p className={styles.note}>I filtri valgono per totale, grafico, confronto e righe. La ricerca non viene scritta nell’indirizzo.</p>
       </form>
     </details>
+    {active>0&&<div className={styles.activeFilters} aria-label="Filtri attivi">{chips.map(chip=><button key={chip.label} type="button" className={ui.btn} aria-label={'Rimuovi filtro '+chip.label} onClick={()=>props.onApply({...filters,...chip.clear})}>{chip.label} ×</button>)}</div>}
+    </div>
   );
 }
 

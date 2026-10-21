@@ -5,12 +5,14 @@ import { Link } from 'react-router';
 import type { ApiClient } from '../api/client';
 import { ui } from '../components/ui';
 import { ItemEditor } from './ItemEditor';
-import type { Draft, Form } from './model';
+import { SaveSummary } from './SaveSummary';
+import type { Draft, Form, HouseForm, ContactInput } from './model';
 import { reviewIssues, reviewProblem, reviewTotals } from './reviewSummary';
 import styles from './onboarding.module.css';
 
 export type DraftSaveFailure={message:string;uncertain:boolean};
 type Props = {
+  summaryTitle?:string;houseForms?:Record<string,HouseForm>;summaryContacts?:ContactInput[];
   draftSaveFailure?:DraftSaveFailure|null;retryDraftSave?:()=>void;busy?:boolean;
   documentOnly?:boolean; changeDocumentOnly?:(value:boolean)=>void; documentProblem?:string;
   draft: Draft; forms: Record<string, Form>; api: ApiClient; accountId: string; base: string; root: string;
@@ -20,7 +22,7 @@ type Props = {
   contactFields?:ReactNode;houseFields?:ReactNode;houseProblem?:string;houseTotals?:{newExpenses:number;amountCents:number};
   manualTotal?: string; changeManualTotal?: (value: string) => void;
 };
-export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentProblem,draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, saveDraft, draftSaveFailure,retryDraftSave,busy=false,defer, add, enrich, manualTotal, changeManualTotal,contactFields,houseFields,houseProblem,houseTotals }: Props) {
+export function UnifiedReview({ summaryTitle,houseForms,summaryContacts,documentOnly=false,changeDocumentOnly,documentProblem,draft, forms, api, accountId, base, root, disabled, documentFields, copyChoice, change, save, saveDraft, draftSaveFailure,retryDraftSave,busy=false,defer, add, enrich, manualTotal, changeManualTotal,contactFields,houseFields,houseProblem,houseTotals }: Props) {
   const editor=useContext(DocumentEditorContext);
   const saveErrorRef=useRef<HTMLDivElement>(null);
   useEffect(()=>{if(draftSaveFailure)saveErrorRef.current?.focus({preventScroll:true});},[draftSaveFailure]);
@@ -41,7 +43,7 @@ export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentPr
     {!documentOnly&&draft.mode==='manual'&&draft.items.length>1&&!draft.houseExpenses?.length&&!draft.purchaseTotal&&<label className={styles.field}>Totale della fattura (€), inserito da te<input className={ui.input} inputMode="decimal" value={manualTotal??''} disabled={disabled} onChange={e=>changeManualTotal?.(e.target.value)}/></label>}
     {copyChoice && <label className={styles.check}><input type="checkbox" checked={copyChoice.checked} disabled={disabled} onChange={e => copyChoice.change(e.target.checked)} />Usa il documento già presente senza modificarlo</label>}
     {editor? <>
-      {!documentOnly&&<details className={styles.resource} open><summary>Spese · controlla i costi da registrare</summary><div className={styles.stack}>{houseFields}{!draft.houseExpenses?.length&&items.map((item,index)=><section key={item.id} id={'review-cost-'+draft.id+'-'+item.id}><h3>{forms[item.id]?.name||'Articolo '+(index+1)}</h3><ItemEditor part="expense" api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value=>change(item.id,value)} enrich={body=>enrich(item.id,body)}/></section>)}</div></details>}
+      <details hidden={documentOnly} className={styles.resource} open><summary>Spese · controlla i costi da registrare</summary><div className={styles.stack}>{houseFields}{!draft.houseExpenses?.length&&items.map((item,index)=><section key={item.id} id={'review-cost-'+draft.id+'-'+item.id}><h3>{forms[item.id]?.name||'Articolo '+(index+1)}</h3><ItemEditor part="expense" api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value=>change(item.id,value)} enrich={body=>enrich(item.id,body)}/></section>)}</div></details>
       {!documentOnly&&draft.documentKind!=='utility_bill'&&<details className={styles.resource}><summary>Oggetti · {totals.newObjects} da creare, {totals.linkedObjects} da collegare</summary><div className={styles.stack}>    {items.map((item, index) => <section className={`${ui.card} ${styles.unifiedItem}`} key={item.id} id={'review-item-'+draft.id+'-'+item.id} tabIndex={-1} aria-label={'Articolo ' + (index + 1)}>
       <h3>Articolo {index + 1} · {forms[item.id]!.name || 'Da identificare'}</h3>
       <ItemEditor part={editor?'object':'all'} api={api} accountId={accountId} base={base} draft={draft} item={item} form={forms[item.id]!} disabled={disabled} change={value => change(item.id, value)} enrich={body => enrich(item.id, body)} />
@@ -59,9 +61,8 @@ export function UnifiedReview({ documentOnly=false,changeDocumentOnly,documentPr
 </>}
     <section className={ui.card} aria-label="Riepilogo prima di salvare" aria-live="polite">
       {!documentOnly&&draft.purchaseTotal && <p>Totale fattura: <strong>{euro(draft.purchaseTotal.amountCents)}</strong></p>}
-      {(!items.length||items.some(item=>forms[item.id]?.action==='document_only'))&&<p>Il documento sarà conservato nella casa.</p>}
-      {!documentOnly&&!(draft.documentInfo?.kind==='conformity_declaration'&&!items.length)&&<><p>{totals.newObjects} nuovi oggetti · {totals.linkedObjects} collegamenti · {totals.newExpenses} nuove spese</p>
-      <p>Nuove spese della casa: <strong>{euro(totals.amountCents)}</strong></p></>}
+      <SaveSummary draft={draft} forms={forms} documentOnly={documentOnly} title={summaryTitle} houseForms={houseForms} contacts={summaryContacts}/>
+      {!documentOnly&&totals.amountCents>0&&<p>Totale nuove spese: <strong>{euro(totals.amountCents)}</strong></p>}
       {!!totals.excludedCents && <p>Importi esclusi: {euro(totals.excludedCents)}</p>}
       {!!totals.excludedUnknown && <p>{totals.excludedUnknown} articoli esclusi con importo non disponibile.</p>}
       {problem && !issues.length && !documentProblem && <p role="status">{problem}</p>}

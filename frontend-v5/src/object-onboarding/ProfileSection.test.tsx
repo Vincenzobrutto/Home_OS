@@ -42,3 +42,11 @@ it('detail menu cannot force editing of unavailable sources',()=>{
  expect(screen.queryByRole('button',{name:'Salva modifiche'})).not.toBeInTheDocument();
  expect(screen.getByText(/Alcuni dati dipendono/)).toBeVisible();
 });
+
+it('object detail keeps brand visible and secondary warranty evidence available without writes',async()=>{
+ const cache=new QueryClient({defaultOptions:{queries:{retry:false}}}),u=userEvent.setup();
+ render(<QueryClientProvider client={cache}><ProfileSection object={object} homeId="h" canEdit compact detailLayout/></QueryClientProvider>);
+ expect(screen.getByText('Lume')).toBeVisible();expect(screen.getByText(/2027/)).not.toBeVisible();
+ await u.click(screen.getByText('Altri dettagli · acquisto, garanzia e dati tecnici'));expect(screen.getByText(/2027/)).toBeVisible();
+ await u.click(screen.getByRole('button',{name:'Informazioni su Garanzia'}));expect(screen.getByText('Proposta: 24 mesi, modificabile')).toBeVisible();expect(mocks.callJson.mock.calls.some(c=>c[1].method==='POST')).toBe(false);
+});

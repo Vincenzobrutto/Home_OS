@@ -69,7 +69,7 @@ describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
     expect(within(recent).getByRole('button', { name: 'Vedi tutte le 26 registrazioni' })).toBeInTheDocument();
     expect(gets(backend, /\/economy\/expenses\?limit=5$/)).toHaveLength(1);
     expect(gets(backend, /\/economy\/summary$/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('combobox', { name: 'Raggruppa' })).toHaveValue('panoramica');
+    expect(screen.getByLabelText('Raggruppa')).toHaveValue('panoramica');
   });
 
   it('dall’ingresso senza parametri: la legenda apre l’elenco e il ritorno alla panoramica è disponibile', async () => {
@@ -415,3 +415,15 @@ describe('[mock] S1 contesto della nuova spesa', () => {
 });
 
 export type { App };
+
+it('compact expense filters apply explicitly, collapse, expose removable chips and preserve search on reset',async()=>{
+ const {backend,owner,home}=world();await seedTypical(backend,owner.id,home.id);
+ const app=await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/spese?vista=elenco`);
+ const search=await screen.findByRole('searchbox',{name:'Cerca in descrizione o fornitore'});await app.user.type(search,'Bolletta');await app.user.click(screen.getByRole('button',{name:'Cerca'}));
+ expect(screen.getByLabelText('Tipo di spesa').closest('details')).not.toHaveAttribute('open');
+ await app.user.click(screen.getByText(/^Filtri(?: · \d+ attiv[oi])?$/));await app.user.selectOptions(screen.getByRole('combobox',{name:'Tipo di spesa'}),'utilities');
+ expect(app.router.state.location.search).not.toContain('famiglia=');
+ await app.user.click(screen.getByRole('button',{name:'Applica filtri'}));expect(app.router.state.location.search).toContain('famiglia=utilities');expect(screen.getByLabelText('Tipo di spesa').closest('details')).not.toHaveAttribute('open');expect(screen.getByText(/^Filtri(?: · \d+ attiv[oi])?$/).closest('summary')).toHaveFocus();
+ await app.user.click(screen.getByRole('button',{name:'Rimuovi filtro Bollette'}));expect(app.router.state.location.search).not.toContain('famiglia=');expect(search).toHaveValue('Bolletta');
+ await app.user.click(screen.getByText(/^Filtri(?: · \d+ attiv[oi])?$/));await app.user.click(screen.getByRole('button',{name:'Azzera filtri'}));expect(search).toHaveValue('Bolletta');expect(posts(backend,/expenses$/)).toHaveLength(0);
+});

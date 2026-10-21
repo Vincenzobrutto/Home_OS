@@ -4,7 +4,7 @@
 
 .header>div:first-child{flex:1;min-width:0}.headerActions button{display:inline-flex;gap:6px;align-items:center;justify-content:center}.summary h2{font-weight:500}.aside>section>p{line-height:1.5}@media(max-width:600px){.header{flex-wrap:nowrap}.headerActions{margin:0}.headerActions>div>button{padding:8px}.headerActions{gap:6px}.header h1{font-size:1.35rem}.header>div:first-child>div{gap:5px}.summary p a{overflow-wrap:anywhere}}
 
-@media(max-width:600px){.placement form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px}.placement form>label{grid-column:1/-1}.placement form>div:first-of-type{display:contents}.placement form select{grid-column:1/-1}.placement form>div>button{grid-column:1;justify-self:start}.placement form>a{grid-column:2;justify-self:end;align-self:center}.placement form>p{grid-column:1/-1}.header{margin-bottom:14px}.detailValues{margin:10px 0}}
+@media(max-width:600px){.placement form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px}.placement form>label{grid-column:1/-1}.placement form>div:has(>select){display:contents}.placement form select{grid-column:1/-1}.placement form>div>button{grid-column:1;justify-self:start}.placement form>a{grid-column:2;justify-self:end;align-self:center}.placement form>p{grid-column:1/-1}.header{margin-bottom:14px}.detailValues{margin:10px 0}}
 
 .documents>section>h2{display:flex;align-items:center;justify-content:space-between;gap:12px}.page [hidden]{display:none!important}
 

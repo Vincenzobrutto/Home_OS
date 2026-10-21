@@ -426,6 +426,7 @@ export function QuickPlacement({home,object,onMultiple,focus=false}:{home:Home;o
     op.run({kind:'position',ref:object.ref,body:{expectedVersion:object.position.version,roomIds:selected?[selected]:[]}});
   }}>
     {focus&&<p role="status">Posizione aggiornata.</p>}
+    <div className={own.currentRooms} aria-label="Collocazione attuale"><span>Dove si trova</span>{current.length?current.map(room=><span key={room.id} className={own.roomChip}>{roomsText([room])}</span>):<span className={own.roomChip}>Da collocare</span>}</div>
     <label htmlFor={`${id}-room`}>Stanza</label>
     <div className={styles.actions}>
       <select ref={selectRef} id={`${id}-room`} value={selected} onChange={e=>setSelected(e.target.value)} disabled={disabled||(!available.length&&!current.length)} aria-describedby={`${id}-hint`}>
@@ -437,7 +438,7 @@ export function QuickPlacement({home,object,onMultiple,focus=false}:{home:Home;o
       {dirty&&!op.locked&&<button className={cx(ui.btn,ui.primary)} type="submit" disabled={disabled}>{op.mutation.isPending?'Salvataggio…':'Salva stanza'}</button>}
       <button type="button" className={ui.btn} disabled={op.mutation.isPending||op.locked} onClick={onMultiple}>Più ambienti</button>
     </div>
-    <p id={`${id}-hint`} className={ui.hint}>{initial==='multiple'?'Scegliendo una stanza sostituisci gli ambienti attuali. Usa «Più ambienti» per mantenerne più di uno.':'Per cambiare stanza, scegli un ambiente e salva.'}</p>
+    <p id={`${id}-hint`} className={ui.hint}>{initial==='multiple'?'Scegliendo una stanza sostituisci gli ambienti attuali. Usa «Più ambienti» per mantenerne più di uno.':dirty?'La nuova stanza non è ancora salvata. Premi «Salva stanza» per confermare.':'Scegli una stanza per spostare l’oggetto. «Più ambienti» permette di collegarne diversi.'}</p>
     {rooms.isPending&&<Loading label="Caricamento delle stanze…"/>}
     {rooms.isError&&<ErrorState title="Stanze non disponibili" error={rooms.error} onRetry={()=>void rooms.refetch()}/>}
     {!rooms.isPending&&!rooms.isError&&!available.length&&<p>Non ci sono ancora stanze attive. Crea o conferma gli ambienti della casa per trovarli qui.</p>}

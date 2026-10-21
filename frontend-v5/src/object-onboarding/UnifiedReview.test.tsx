@@ -36,7 +36,7 @@ it('excludes the second item and its entire monetary choice in the same final re
   await waitFor(() => expect(screen.getByRole('button', { name: 'Salva e organizza' })).toBeEnabled());
   await w.user.click(within(second).getByRole('radio', { name: 'Non riguarda questa casa' }));
   const summary = screen.getByRole('region', { name: 'Riepilogo prima di salvare' });
-  expect(within(summary).getByText('99,99 €')).toBeInTheDocument();
+  expect(within(summary).getAllByText('99,99 €')).toHaveLength(2);
   expect(within(summary).getByText('Importi esclusi: 49,90 €')).toBeInTheDocument();
   await w.user.click(screen.getByRole('button', { name: 'Salva e organizza' }));
   expect(w.submit.mock.calls[0]![0][1]).toEqual({ itemId: 'item1', action: 'skip' });
