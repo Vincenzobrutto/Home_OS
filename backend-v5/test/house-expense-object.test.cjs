@@ -30,3 +30,13 @@ test('expense preparation checks account/home and refuses inaccessible or archiv
  readable=false;await assert.rejects(policy.prepare(tx,a,h,{objectRef:ref},null));readable=true;
  state='archived';await assert.rejects(policy.prepare(tx,a,h,{objectRef:ref},null),e=>e.getResponse().code==='resource_state_conflict');state='active';exists=false;await assert.rejects(policy.prepare(tx,a,h,{objectRef:ref},null));
 });
+
+test('reusing the expense already linked to an object preserves its ID/ref and creates no second cost',async()=>{
+ const a=randomUUID(),h=randomUUID(),id=randomUUID(),doc=randomUUID(),ref={kind:'object',id:randomUUID()};let subjects=0,writes=0;
+ const original=ExpensesService.prototype.record,document=ExpensesService.prototype.documentLink,mutation=ExpensesService.prototype.mutateInTransaction,subject=EconomyPolicy.prototype.subject;
+ ExpensesService.prototype.record=async()=>({id,accountId:a,homeId:h,state:'active',version:4,documentId:doc});ExpensesService.prototype.documentLink=async()=>({state:'linked'});ExpensesService.prototype.mutateInTransaction=async()=>{writes++;throw Error('No write expected');};
+ EconomyPolicy.prototype.subject=async(_tx,account,home,next,strict)=>{subjects++;assert.equal(account,a);assert.equal(home,h);assert.equal(strict,true);assert.deepEqual(next,ref);return {ref,name:'Sintetico',state:'active'};};
+ const tx={objectResourceLink:{findFirst:async()=>({objectId:ref.id})}},service=new ObjectOnboardingService({}, {}, {}, {now:()=>new Date()});
+ try{assert.deepEqual(await service.houseCost(tx,a,h,{documentId:doc},{id:'cost'},{confirmation:{mode:'link_existing',expenseId:id,expectedExpenseVersion:4}}),{expenseId:id,newExpenses:0});assert.equal(subjects,1);assert.equal(writes,0);await assert.rejects(service.houseCost(tx,a,h,{documentId:doc},{id:'cost'},{confirmation:{mode:'link_existing',expenseId:id,expectedExpenseVersion:3}}),e=>e.getResponse().code==='expense_version_conflict');}
+ finally{ExpensesService.prototype.record=original;ExpensesService.prototype.documentLink=document;ExpensesService.prototype.mutateInTransaction=mutation;EconomyPolicy.prototype.subject=subject;}
+});

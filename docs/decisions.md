@@ -1,3 +1,7 @@
+## 21 ottobre 2026 — Proporre il riuso per le fatture successive
+
+Estendere a tutti gli oggetti il caso acconto/saldo: proporre il riferimento esistente con indizi spiegabili, richiedere una scelta esplicita e non creare altre schede accettando il riuso. Il solo fornitore non identifica un intervento; ambiguità e assenza di dati richiedono scelta manuale. Usare i collegamenti canonici già confermati, senza nuova memoria separata o invii AI aggiuntivi. [Regole e limiti](v5/object-suggestions-20261021.md).
+
 ## 21 ottobre 2026 — Un impianto come riferimento dell’intervento
 
 Decisione dell’utente: l’impianto elettrico esistente rappresenta l’intero intervento; acconto e saldo sono spese distinte collegate a quella stessa scheda. Nessuna copia del totale sui componenti citati dalla fattura. Scelta esplicita del riferimento, con preselezione limitata all’unico oggetto già confermato nella bozza. Distinzione semplice tramite etichetta nel titolo, senza dichiarare pagamenti o calcolare rate/residui. Motivo: collegamenti comprensibili e prevenzione dei doppioni. [Implementazione e limiti](v5/expense-installments-object-20261021.md).

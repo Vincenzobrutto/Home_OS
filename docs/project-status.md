@@ -1,6 +1,6 @@
-## Fatture: impianto di riferimento, acconto e saldo — 21 ottobre 2026
+## Fatture: stesso oggetto proposto per acconto e saldo — 21 ottobre 2026
 
-Scelta facoltativa dell’oggetto/impianto esistente nella compilazione fatture/ricevute, con validazione server e senza attribuire il totale a ogni componente. Scelta importo unico/acconto/saldo salvata nel titolo; nessun modello rate o pagamento verificato. Corretta l’associazione reale autorizzata mantenendo la stessa spesa. [Causa, comportamento e verifiche](v5/expense-installments-object-20261021.md). Acconto reale ancora da caricare; associazione automatica generale non implementata.
+Proposte automatiche di riferimenti esistenti, motivate da nome/identità o fornitore più descrizione della spesa già attribuita. Accettazione esplicita senza nuove schede, un solo costo e riuso delle spese già collegate. Nessuna scelta arbitraria tra più oggetti; controlli anche nella modalità automatica. [Regole, verifiche e limiti](v5/object-suggestions-20261021.md). Resta la scelta facoltativa del riferimento e importo unico/acconto/saldo nel titolo, senza modello rate o pagamento verificato. [Correzione iniziale e causa](v5/expense-installments-object-20261021.md). Acconto reale ancora da caricare; dati personali intatti in questa estensione.
 
 ## Dettaglio Ambiente compatto — 21 ottobre 2026
 

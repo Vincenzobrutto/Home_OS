@@ -1,3 +1,7 @@
+## Fatture successive: proposta dell’oggetto esistente — 21 ottobre 2026
+
+Ricerca in sola lettura dei riferimenti già presenti, motivazione e scelta esplicita senza creare nuove schede. Riuso delle spese già attribuite, protezione nella modalità automatica e nessun nuovo invio AI. [Comportamento, verifiche e limiti](v5/object-suggestions-20261021.md).
+
 ## Fatture: collegamento all’impianto e acconto/saldo — 21 ottobre 2026
 
 Il costo complessivo di una fattura può riferirsi a un oggetto o impianto esistente, senza creare una scheda o copiare il totale sugli altri componenti. Etichette acconto/saldo nel titolo, selettore nei moduli, riepilogo e ripristino della scelta. [Causa, verifiche e limiti](v5/expense-installments-object-20261021.md).

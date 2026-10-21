@@ -13,6 +13,7 @@ function resourcePlan(output: ProductExtraction) {
   if (output.documentKind === 'house_document' && !output.items.length && !output.houseExpenses?.length && output.documentInfo) return { choices: [], documentOnly: true };
   if (!output.items.length && !output.houseExpenses?.length) review('Non ci sono informazioni sufficienti per completare la scheda.');
   const documentCost = !!output.houseExpenses?.length;
+  if(output.houseExpenses?.some(item=>item.documentKind==='simple_invoice'&&/\b(?:acconto|saldo)\b/iu.test(item.proposedFields.title?.value??'')))review('Controlla acconto o saldo e il collegamento all’oggetto esistente prima di registrare la spesa.');
   const choices: OnboardingChoice[] = output.items.map(item => {
     const name = item.fields.name?.value;
     if (!name || item.nameTruncated || item.disposition !== 'household_object' || item.quantity?.value !== 1) review('Controlla quali articoli riguardano la casa e le loro quantità.');

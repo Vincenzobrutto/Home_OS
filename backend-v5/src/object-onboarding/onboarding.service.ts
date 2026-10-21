@@ -1,4 +1,5 @@
 import {compilationDraft} from './compilation-draft';
+import {invoiceObjectSuggestions,onboardingObjectSuggestions} from './object-suggestions';
 import { contactChoices, resolveContact, saveContactProposal } from '../contacts/proposals';
 import { Injectable } from '@nestjs/common';
 import { Prisma, type ObjectOnboardingDraft } from '../../generated/client';
@@ -27,6 +28,7 @@ const eq = (a: string, b: string) => a.normalize('NFC').trim().toLocaleLowerCase
 @Injectable()
 export class ObjectOnboardingService {
   constructor(readonly access: ObjectOnboardingAccess, private readonly objects: HomeObjectsService, private readonly reviewAccess: ReviewService, private readonly clock: ActivityClock) {}
+  objectSuggestions(a:string,h:string,id:string,query:unknown){return onboardingObjectSuggestions(this.access,this.reviewAccess,a,h,id,query);}
   async project(tx: OnboardingTx, a: string, h: string, draft: ObjectOnboardingDraft, edit: boolean) {
     const source = await this.access.source(tx, a, h, draft.documentId, draft);
     if (!source) return { id: draft.id, version: draft.version, state: 'unavailable', snapshot: null, document: null, items: [], review: null, permissions: ['read'], purchaseTotal: null };
@@ -258,7 +260,8 @@ export class ObjectOnboardingService {
     const c=selected.confirmation;if(!c)throw invalid();const expenses=new ExpensesService(this.access.db,this.reviewAccess,this.clock);
     if(c.mode==='link_existing'){
       const row=await expenses.record(tx,a,h,c.expenseId);if(row.version!==c.expectedExpenseVersion||row.state!=='active')throw conflict('expense_version_conflict','Rileggi la spesa.');
-      if(row.assetId||row.workId||await tx.objectResourceLink.count({where:{expenseId:row.id,state:'active'}}))throw invalid('Questa spesa è già collegata a un oggetto.');
+      if(row.workId)throw invalid('Questa spesa è già collegata a un lavoro.');
+      const policy=new EconomyPolicy(this.reviewAccess),currentRef=await policy.currentRef(tx,row);if(currentRef)await policy.subject(tx,a,h,currentRef,true);
       if(row.documentId){await expenses.documentLink(tx,a,h,row.documentId,true);if(row.documentId!==draft.documentId){const original=await tx.documentVersion.findFirst({where:{documentId:row.documentId,sha256:draft.documentSha256}});if(!original)throw conflict('expense_document_conflict','La spesa ha già un altro documento.');}}
       else await expenses.mutateInTransaction(tx,a,h,'update',row.id,{expectedVersion:row.version,documentId:draft.documentId},'onboarding_'+digest(draft.id+':'+item.id+':home-link'),true);
       return {expenseId:row.id,newExpenses:0};
@@ -285,6 +288,7 @@ export class ObjectOnboardingService {
       const draft = await this.open(tx, a, h, id, body.expectedVersion), output = draft.output as unknown as Output, decisions = { ...draft.decisions as Decisions };
       const onlyArchive=!!body.contacts?.length&&!body.choices.length&&!body.houseExpenses?.length||body.documentOnly||body.choices.length>0&&body.choices.every(c=>c.action==='document_only')&&!body.houseExpenses?.length;
       if(automatic&&!onlyArchive){
+        for(const cost of output.houseExpenses??[])if((await invoiceObjectSuggestions(tx,a,h,output,cost,this.reviewAccess)).items.length)throw conflict('automatic_duplicate_review','La fattura potrebbe riguardare un oggetto già presente: controlla il collegamento prima di salvare.');
         // Repeat duplicate checks under the same home lock as the canonical writes.
         for(const item of output.items){
           const profile=proposedProfile(item);
