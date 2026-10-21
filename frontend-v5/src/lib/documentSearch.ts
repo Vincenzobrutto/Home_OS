@@ -21,12 +21,12 @@ export const VISIBILITY_FILTER_OPTIONS: Array<{ value: DocumentVisibilityFilter;
   { value: 'home', label: 'Persone della casa' },
 ];
 export const COLLECTION_OPTIONS = [
-  { value: 'all', label: 'Tutte le raccolte' },
+  { value: 'all', label: 'Tutte le tipologie' },
   {value:'house',label:'Documenti della casa'},
   {value:'floor_plans',label:'Planimetrie'},
   {value:'contracts',label:'Contratti'},
-  { value: 'energy', label: 'Energia' },
-  { value: 'building', label: 'Pratiche edilizie' },
+  { value: 'energy', label: 'APE e certificazioni energetiche' },
+  { value: 'building', label: 'Pratiche edilizie e catastali' },
   { value: 'technical', label: 'Impianti e documenti tecnici' },
   { value: 'condominium', label: 'Condominio' },
   { value: 'purchases', label: 'Acquisti e garanzie' },

@@ -145,7 +145,7 @@ describe('[mock] H2 ricerca — ingresso, bozza e filtri applicati', () => {
     const form = await screen.findByRole('search', { name: 'Cerca nei documenti di Casa Roma' });
     expect(form).toHaveTextContent('Ricerca in: Casa Roma');
     expect(form).toHaveTextContent('La ricerca riguarda titoli e nomi dei file, non il contenuto.');
-    expect(await field()).toHaveAttribute('placeholder', 'Titolo o nome del file');
+    expect(await field()).toHaveAttribute('placeholder', 'Cerca in tutto l’archivio');
     expect(await field()).not.toHaveFocus();
     await screen.findByRole('list', { name: 'Documenti di Casa Roma' });
     const before = listQueries(backend).length;
@@ -250,7 +250,7 @@ describe('[mock] H2 ricerca — semantica (criteri 2–5)', () => {
   it('120 code point ammessi, 121 errore locale senza richiesta; controlli dall’indirizzo non inviati', async () => {
     const { backend, home } = world();
     const app = await open(backend, 'owner@example.test', PW.owner, home.id);
-    await screen.findByText('Non ci sono documenti da completare');
+    await screen.findByText('Nessun documento in questa casa');
     const before = listQueries(backend).length;
     const input = await field();
     fireEvent.change(input, { target: { value: '🔥'.repeat(121) } });
@@ -286,7 +286,7 @@ describe('[mock] H2 ricerca — stati, paginazione e selezione', () => {
   it('casa vuota, zero risultati e errore sono stati distinti (criterio 1)', async () => {
     const { backend, owner, home } = world();
     const app = await open(backend, 'owner@example.test', PW.owner, home.id);
-    expect(await screen.findByText('Non ci sono documenti da completare')).toBeInTheDocument();
+    expect(await screen.findByText('Nessun documento in questa casa')).toBeInTheDocument();
     await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Rogito' });
     await search(app, 'mutuo');
     expect(await screen.findByRole('heading', { name: 'Nessun documento corrisponde ai filtri' })).toBeInTheDocument();
@@ -536,7 +536,7 @@ describe('[mock] H2 ricerca — gare, contesto e permessi', () => {
     await results();
     await app.user.type(await field(), ' bozza');
     await app.router.navigate(`/home/${second.id}/documenti`);
-    await screen.findByText('Non ci sono documenti da completare');
+    await screen.findByText('Nessun documento in questa casa');
     expect(await field()).toHaveValue('');
     expect(screen.queryByText('Rogito Roma')).not.toBeInTheDocument();
     expect(await screen.findByRole('search', { name: 'Cerca nei documenti di Casa Lago' })).toHaveTextContent('Ricerca in: Casa Lago');
@@ -549,6 +549,29 @@ it('search is visible immediately and includes completed documents by default, w
  expect(screen.getByRole('searchbox',{name:'Cerca nei documenti'})).toBeVisible();
  await search(app,'Fattura');expect(await screen.findByRole('link',{name:'Fattura completata'})).toBeInTheDocument();expect(app.router.state.location.search).not.toContain('workflow=pending');
  await app.user.click(screen.getByRole('button',{name:'Vedi dettagli'}));await app.user.click(await screen.findByRole('link',{name:/← Documenti di/}));await results();expect(app.router.state.location.search).not.toContain('workflow=pending');
- await app.user.click(screen.getByRole('button',{name:'Da fare'}));
+ await app.user.click(screen.getByRole('button',{name:/^Filtri/}));await app.user.selectOptions(screen.getByRole('combobox',{name:'Stato'}),'pending');await app.user.click(screen.getByRole('button',{name:'Mostra risultati'}));
  await screen.findByRole('heading',{name:'Nessun documento corrisponde ai filtri'});expect(app.router.state.location.search).toContain('workflow=pending');
+});
+
+it('archive entry includes completed files and pending notice opens only the outstanding documents',async()=>{
+ const {backend,owner,home}=world();
+ await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Completato di prova',workflowState:'completed'});
+ await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Da compilare di prova',workflowState:'to_compile'});
+ const app=await open(backend,owner.email,PW.owner,home.id);
+ expect(await screen.findByRole('link',{name:'Completato di prova'})).toBeInTheDocument();
+ expect(await screen.findByRole('link',{name:'Da compilare di prova'})).toBeInTheDocument();
+ const completed=screen.getByRole('link',{name:'Completato di prova'});
+ await app.user.click(within(completed.closest('li')!).getByRole('button',{name:'Vedi dettagli'}));
+ await screen.findByRole('heading',{name:'Completato di prova',level:1});
+ await app.user.click(screen.getByRole('link',{name:/← Documenti di/}));
+ expect(await screen.findByRole('link',{name:'Completato di prova'})).toBeInTheDocument();
+ expect(app.router.state.location.search).toContain('workflow=all');
+ expect(await screen.findByText('1 documento da completare nell’archivio')).toBeInTheDocument();
+ expect(screen.queryByRole('group',{name:'Stato dei documenti'})).not.toBeInTheDocument();
+ await app.user.click(screen.getByRole('button',{name:'Apri'}));
+ await waitFor(()=>expect(screen.queryByRole('link',{name:'Completato di prova'})).not.toBeInTheDocument());
+ expect(app.router.state.location.search).toContain('workflow=pending');
+ expect(screen.getByRole('button',{name:'Rimuovi filtro Stato: Da completare'})).toBeInTheDocument();
+ await app.user.click(screen.getByRole('button',{name:'Rimuovi filtro Stato: Da completare'}));
+ expect(await screen.findByRole('link',{name:'Completato di prova'})).toBeInTheDocument();
 });

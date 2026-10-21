@@ -1,3 +1,7 @@
+## Documenti: meno scelte prima dell’archivio — 21 ottobre 2026
+
+Apertura su tutti gli stati, stato nel pannello Filtri, avviso pendenti condizionale, testata mobile compatta e barra ricerca persistente. Terminologia e messaggi vuoti più chiari; Vedi dettagli conserva il contesto all anche dall’ingresso senza parametri. [Verifiche](v5/document-archive-entry-20261021.md).
+
 ## Documenti: tre viste nello stesso archivio — 21 ottobre 2026
 
 Tutti i documenti, Documenti della casa e Documenti di oggetti e impianti; tipologie della casa, conteggi completi e paginazione dedicata, ricerca globale e ripristino dal dettaglio. Allineato il CHECK di persistenza per Contratti, già accettati dal dominio. [Verifiche e limiti](v5/document-views-20261021.md).

@@ -1,3 +1,7 @@
+## Documenti: ingresso e filtri semplificati — 21 ottobre 2026
+
+Ingresso su tutti i documenti, stato nei Filtri con etichetta rimovibile e avviso dei pendenti solo quando presenti. Testata mobile compatta e ricerca raggiungibile durante lo scorrimento; testi e ritorno dal dettaglio coerenti. 72 test mirati e browser desktop/mobile in sola lettura. [Comportamento, verifiche e limiti](v5/document-archive-entry-20261021.md).
+
 ## Documenti: tre viste e gruppi per tipologia — 21 ottobre 2026
 
 Implementate solo in Documenti le viste Tutti / Della casa / Degli oggetti, categorie della casa con conteggi globali e paginazione server. Ricerca globale e ritorni conservati. Nessuna copia o modifica dei documenti reali; altre sezioni invariate. Collaudo desktop/mobile con 33 PDF sintetici, test mirati e build/lint. [Regole, verifiche e limiti](v5/document-views-20261021.md).

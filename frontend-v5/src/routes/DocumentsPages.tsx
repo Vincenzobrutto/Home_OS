@@ -22,6 +22,7 @@ import {
   useUploadDocument,
 } from '../documents/hooks';
 import { DocumentViews, HouseDocumentGroups } from '../documents/DocumentViews';
+import { useCasaDocumentCounts } from './CasaDocumentsSummary';
 import { SearchForm } from '../documents/SearchForm';
 import { PersonalExportPanel } from '../documents/PersonalExportPanel';
 import { useAccount, useSession } from '../session/session';
@@ -82,7 +83,7 @@ export function DocumentsPage() {
     const parsed = filtersFromParams(params);
     const houseLink = viewsEnabled && parsed.collection === 'house';
     return {...parsed, ...(viewsEnabled ? {view: houseLink ? 'house' as const : parsed.view ?? 'all', ...(houseLink ? {collection:undefined} : {})} : {}),
-      workflow: parsed.workflow ?? (parsed.q || houseLink || parsed.view || ['house','floor_plans','building','energy','contracts','technical'].includes(parsed.collection ?? '') ? 'all' : 'pending')};
+      workflow: parsed.workflow ?? 'all'};
   }, [params, viewsEnabled]);
   const appliedKey = filtersKey(applied);
   const viewDocuments = useDocumentSearch(home.id, applied, viewsEnabled && !validateQuery(applied.q, capabilities.data?.limits.queryMaxCodePoints) && !params.has('oggetti-documento'));
@@ -107,11 +108,11 @@ export function DocumentsPage() {
             <h1 tabIndex={-1}>{viewsEnabled?'Documenti':['house','floor_plans','building','energy','contracts','technical'].includes(applied.collection??'')?'Documenti della casa':'Documenti'}</h1>
             <span ref={setExportSlot} />
           </div>
-          <p className={styles.lead}>{applied.workflow==='completed'?'Dati salvati e originali sempre disponibili.':applied.workflow==='all'?'Un unico archivio per la casa, gli oggetti e gli impianti.':'Completa i dati mancanti o controlla quelli proposti.'}</p>
+          <p className={styles.lead}>Originali e dati salvati, in un unico archivio.</p>
         </div>
         {canUpload && (
           <div className={docs.toolbarActions}>
-            <button type="button" className={cx(ui.btn,ui.primary)} aria-expanded={uploadVisible} onClick={()=>{setParams(filtersToParams(applied));setUploadOpen(!uploadVisible);}}><Icon name="plus"/> Aggiungi documenti</button>
+            <button type="button" className={cx(ui.btn,ui.primary)} aria-label="Aggiungi documenti" aria-expanded={uploadVisible} onClick={()=>{setParams(filtersToParams(applied));setUploadOpen(!uploadVisible);}}><Icon name="plus"/><span className={docs.viewDesktop}>Aggiungi documenti</span><span className={docs.viewMobile}>Aggiungi</span></button>
           </div>
         )}
       </div>
@@ -125,7 +126,7 @@ export function DocumentsPage() {
 
       {viewsEnabled && <DocumentViews value={applied.view ?? 'all'} summary={summary} onChange={view => apply({...applied,view,group:undefined})}/>}
       {capabilities.isSuccess ? (
-        <div className={docs.searchOptions}><SearchForm
+        <SearchForm
           home={home}
           applied={applied}
           maxQuery={maxQuery}
@@ -133,7 +134,7 @@ export function DocumentsPage() {
           documentViewsEnabled={viewsEnabled}
           autoFocus={params.get('ricerca') === '1'}
           onApply={apply}
-        /></div>
+        />
       ) : capabilities.isError && !isForbidden(capabilities.error) ? (
         <div className={docs.panel}>
           <Banner
@@ -156,6 +157,8 @@ export function DocumentsPage() {
       ) : null}
       {!capabilities.isSuccess && <div className={docs.statusSegments} role="group" aria-label="Stato dei documenti">{([['all','Tutti'],['pending','Da fare'],['completed','Completati']] as const).map(([value,label]) => <button key={value} type="button" aria-pressed={applied.workflow===value} onClick={()=>apply({...applied,workflow:value})}>{label}</button>)}</div>}
 
+      {!applied.q && applied.workflow === 'all' && <DocumentsToComplete homeId={home.id} onOpen={() => apply({...EMPTY_FILTERS,view:viewsEnabled?'all':undefined,workflow:'pending'})}/>}
+
       {/* Archivio rimontato a ogni cambio dei filtri applicati: prima pagina e selezione ZIP vuota. */}
       <DocumentsArchive
         key={appliedKey}
@@ -176,6 +179,14 @@ export function DocumentsPage() {
       )}
     </>
   );
+}
+
+function DocumentsToComplete({homeId,onOpen}:{homeId:string;onOpen:()=>void}) {
+  const summary=useCasaDocumentCounts(homeId);
+  if(!summary.isSuccess||summary.isError)return null;
+  const total=(['to_compile','review','analyzing','attention'] as const).reduce((sum,key)=>sum+summary.data.counts[key],0);
+  if(!total)return null;
+  return <p className={docs.pendingNotice}><span>{total} document{total===1?'o':'i'} da completare nell’archivio</span><button type="button" className={ui.btn} onClick={onOpen}>Apri</button></p>;
 }
 
 function DocumentsArchive(props: {
@@ -284,11 +295,11 @@ function DocumentsArchive(props: {
   const summary = data?.pages[0]?.summary;
   const house = filters.view === 'house' && summary;
   if (house && !filters.group) return <>
-    <p className={docs.note}>Apri una tipologia per consultare i documenti.</p>
+    {summary.views.house === 0 && <div className={docs.panel}><p>Nessun documento in questa vista{isFiltered({...filters,view:'all',group:undefined}) ? ' con i filtri attuali' : ''}.</p><button type="button" className={ui.btn} onClick={props.onReset}>Mostra tutto l’archivio</button></div>}
     <HouseDocumentGroups summary={summary} onChange={props.onGroup}/>
   </>;
   if (house && !items.length) return <HouseDocumentGroups summary={summary} selected={filters.group} onChange={props.onGroup}>
-    <p className={docs.groupEmpty}>Nessun documento in questo gruppo con i filtri attuali.</p>
+    <p className={docs.groupEmpty}>{filters.q || filters.format!=='all' || filters.visibility!=='all' || filters.collection && filters.collection!=='all' || filters.workflow!=='all' ? 'Nessun risultato con questi filtri. Rimuovi un filtro o cerca in tutto l’archivio.' : 'Non hai ancora documenti di questa tipologia. Puoi aggiungerli da “Aggiungi documenti”.'}</p>
   </HouseDocumentGroups>;
 
   if (items.length === 0 && filtered) {
@@ -299,9 +310,9 @@ function DocumentsArchive(props: {
           <button type="button" className={ui.btn} onClick={() => setSelecting(false)}>Annulla selezione</button>
           <PersonalExportPanel homeId={home.id} />
         </>}
-        <h2 className={styles.cardTitle}>{filters.q||filters.format!=='all'||filters.visibility!=='all'||filters.collection&&filters.collection!=='all'?'Nessun documento corrisponde ai filtri':filters.workflow==='completed'?'Nessun documento completato':'Non ci sono documenti da completare'}</h2>
+        <h2 className={styles.cardTitle}>{filters.q||filters.format!=='all'||filters.visibility!=='all'||filters.collection&&filters.collection!=='all'?'Nessun documento corrisponde ai filtri':filters.workflow==='completed'?'Nessun documento completato':'Nessun documento da completare'}</h2>
         <p className={styles.muted} role="status">
-          {isFiltered({...filters,workflow:'all'})?<>Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Prova un altro testo o rimuovi i filtri.</>:filters.workflow==='completed'?'I documenti appariranno qui dopo il salvataggio della revisione.':'Hai completato tutti i documenti disponibili. Puoi consultarli in Completati oppure aggiungerne altri.'}
+          {isFiltered({...filters,workflow:'all'})?<>Filtri applicati: {describeFilters(filters)}. {SEARCH_SCOPE_NOTE} Prova un altro testo o rimuovi i filtri.</>:filters.workflow==='completed'?'I documenti appariranno qui dopo il salvataggio della revisione.':'Non ci sono documenti da completare. Rimuovi il filtro di stato per consultare l’archivio.'}
         </p>
       </div>
     );
@@ -466,7 +477,7 @@ function DocumentsArchive(props: {
         </div>
       )}
 
-      {isFiltered({...filters,workflow:'all'}) && (
+      {(filters.q || filters.format!=='all' || filters.visibility!=='all' || filters.collection && filters.collection!=='all') && (
         <h2 className={docs.searchResultsTitle} aria-live="polite">
           Risultati per {describeFilters({...filters,workflow:'all'})}
           {documents.hasNextPage ? ' — ce ne sono altri' : ''}

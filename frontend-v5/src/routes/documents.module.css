@@ -559,3 +559,31 @@
  .viewCount { min-width:21px; height:21px; font-size:.73rem; }
  .houseGroup h3 button { padding:12px; gap:8px; min-height:60px; font-size:.9rem; }
 }
+
+/* Archive entry: one primary view choice, state among staged filters. */
+.unifiedSearch { position:sticky; top:0; z-index:20; display:block; padding:8px 0; margin:0 0 12px; background:var(--color-bg,#f2f6f8); }
+.queryRow { display:flex; align-items:stretch; gap:10px; }
+.queryBox { flex:1; }
+.filtersTrigger { flex:none; align-self:stretch; grid-column:auto; grid-row:auto; }
+.unifiedSearch:has([role=alert]) .filtersTrigger { grid-row:auto; }
+.searchScope { font-size:13px; color:var(--color-muted); margin:0 0 12px; }
+.filterChips { margin:0 0 14px; }
+.pendingNotice { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 12px; margin:0 0 16px; background:var(--color-accent-soft,#e3f3f6); border-radius:10px; font-size:14px; }
+.houseGroups { margin-top:8px; }
+@media(max-width:600px) {
+ .documentsHeading { margin-bottom:12px; }
+ .documentsHeading > div:first-child > p { display:none; }
+ .documentsHeading .toolbarActions { grid-column:2; grid-row:2; }
+ .documentsHeading .toolbarActions button { width:auto; min-height:44px; font-size:12px; }
+ .documentsHeading h1 { font-size:24px; }
+ .archiveViews { margin-bottom:8px; }
+ .archiveViews button { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px; min-height:48px; padding:7px 5px; line-height:1.2; }
+ .archiveViews .viewMobile { min-width:0; font-size:12px; }
+ .queryRow { gap:8px; }
+ .queryBox { padding-inline:8px; gap:6px; }
+ .queryBox input { font-size:14px; }
+ .filtersTrigger { padding-inline:10px; font-size:13px; gap:4px; }
+ .filtersTrigger svg { width:18px; }
+ .filterFields { gap:14px; margin-block:16px; }
+ .houseGroups { gap:8px; }
+}

@@ -1,9 +1,9 @@
-import { configure, act, screen, waitFor, within } from '@testing-library/react';
+import { configure, act, screen, waitFor } from '@testing-library/react';
 import { expect, it } from 'vitest';
 import { renderApp } from '../test/harness';
 import { FakeBackend } from '../test/fakeBackend';
 
-it('shows pending work first, exposes every state, and switches the canonical archive on the server', async () => {
+it('shows the archive, excludes saved documents from AI selection, and stages state filters', async () => {
   configure({asyncUtilTimeout:5000});
   const backend = new FakeBackend();
   const owner = backend.seedAccount('Owner', 'owner@example.test', 'password-owner-001');
@@ -19,13 +19,13 @@ it('shows pending work first, exposes every state, and switches the canonical ar
   expect(await screen.findByLabelText('Stato: Da rivedere')).toBeVisible();
   expect(screen.getByLabelText('Stato: In analisi')).toBeVisible();
   expect(screen.getByLabelText('Stato: Analisi da controllare')).toBeVisible();
-  expect(screen.queryByText('Salvato',{selector:'a'})).not.toBeInTheDocument();
+  expect(screen.getByText('Salvato',{selector:'a'})).toBeVisible();
   expect(screen.queryByRole('checkbox',{name:/per compilazione AI/})).not.toBeInTheDocument();
   await app.user.click(screen.getByRole('button',{name:'Seleziona per compilare con l’AI'}));
   expect(screen.getAllByRole('checkbox',{name:/per compilazione AI/})).toHaveLength(3);
-  const tabs=screen.getByRole('group',{name:'Stato dei documenti'});
-  expect(within(tabs).getAllByRole('button')).toHaveLength(3);
-  await app.user.click(within(tabs).getByRole('button',{name:'Completati'}));
+  await app.user.click(screen.getByRole('button',{name:/^Filtri/}));
+  await app.user.selectOptions(screen.getByRole('combobox',{name:'Stato'}),'completed');
+  await app.user.click(screen.getByRole('button',{name:'Mostra risultati'}));
   expect(await screen.findByText('Salvato',{selector:'a'})).toBeVisible();
   expect(screen.getByLabelText('Stato: Completato')).toBeVisible();
   expect(screen.queryByText('Proposta',{selector:'a'})).not.toBeInTheDocument();
@@ -40,7 +40,7 @@ it('shows pending work first, exposes every state, and switches the canonical ar
   expect(back.getAttribute('href')).toContain('workflow=completed&q=Salvato');
   await app.user.click(back);
   await screen.findByText('Salvato',{selector:'a'});
-  expect(within(screen.getByRole('group',{name:'Stato dei documenti'})).getByRole('button',{name:'Completati'})).toHaveAttribute('aria-pressed','true');
+  expect(screen.getByRole('button',{name:'Rimuovi filtro Stato: Completati'})).toBeVisible();
   expect(backend.log.some(r=>r.method==='POST'&&r.path.includes('analysis'))).toBe(false);
 },15000);
 
@@ -56,16 +56,9 @@ it('keeps an explicit All scope without a query and aligns it with the list',asy
   await app.user.click(screen.getByRole('button',{name:'Accedi'}));
   await waitFor(()=>expect(app.router.state.location.pathname).toBe(`/home/${home.id}/casa`));
   await app.router.navigate('/home/'+home.id+'/documenti');
-  const scope=await screen.findByRole('button',{name:'Da fare'});
-  expect(scope).toHaveAttribute('aria-pressed','true');
   expect(await screen.findByText('Da compilare',{selector:'a'})).toBeVisible();
-  expect(screen.queryByText('Già salvato',{selector:'a'})).not.toBeInTheDocument();
-  await app.user.click(screen.getByRole('button',{name:'Tutti'}));
-
   expect(await screen.findByText('Già salvato',{selector:'a'})).toBeVisible();
-
-  expect(within(screen.getByRole('group',{name:'Stato dei documenti'})).getByRole('button',{name:'Tutti'})).toHaveAttribute('aria-pressed','true');
-  expect(new URLSearchParams(app.router.state.location.search).get('workflow')).toBe('all');
+  expect(screen.queryByRole('group',{name:'Stato dei documenti'})).not.toBeInTheDocument();
   await app.user.click(screen.getByRole('button',{name:'Seleziona per compilare con l’AI'}));
   expect(screen.getAllByRole('checkbox',{name:/per compilazione AI/})).toHaveLength(1);
   expect(screen.queryByRole('checkbox',{name:'Seleziona «Già salvato.pdf» per compilazione AI'})).not.toBeInTheDocument();

@@ -1,5 +1,7 @@
 # Documenti: tre viste e tipologie — 21 ottobre 2026
 
+Ingresso, posizione dei filtri e testata mobile aggiornati nel [primo intervento dell’audit](document-archive-entry-20261021.md); restano valide le regole di appartenenza e le API descritte qui.
+
 ## Comportamento attuale
 
 Solo la pagina Documenti: Tutti i documenti, Documenti della casa, Documenti di oggetti e impianti. Un solo archivio e gli stessi ID/originali. Le altre pagine, il catalogo Oggetti, le schede e il menu sono invariati. L’ingresso esistente da Casa (`collection=house`) viene interpretato dalla pagina come nuova vista Casa.

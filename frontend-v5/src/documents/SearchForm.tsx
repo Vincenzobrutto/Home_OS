@@ -34,43 +34,43 @@ export function SearchForm(props: {
     return global ? { q, workflow:'all', format:'all', visibility:'all' } : { ...applied, q };
   }
   function apply(next: DocumentSearchFilters) { if (!error) props.onApply(next); }
-  const active = global ? 'all' : ['to_compile','review'].includes(applied.workflow ?? '') ? 'pending' : applied.workflow ?? 'all';
+  const workflowLabels = {pending:'Da completare',to_compile:'Da compilare',review:'Da controllare',completed:'Completati'};
+  const activeWorkflow = global ? 'all' : applied.workflow ?? 'all';
   const chips = global ? [] : [
+    ...(activeWorkflow !== 'all' ? [{field:'workflow' as const,label:'Stato: '+workflowLabels[activeWorkflow]}] : []),
     ...(applied.collection && applied.collection !== 'all' ? [{ field:'collection' as const, label:COLLECTION_OPTIONS.find(o => o.value === applied.collection)!.label }] : []),
     ...(applied.format !== 'all' ? [{ field:'format' as const, label:FORMAT_OPTIONS.find(o => o.value === applied.format)!.label }] : []),
     ...(applied.visibility !== 'all' ? [{ field:'visibility' as const, label:VISIBILITY_FILTER_OPTIONS.find(o => o.value === applied.visibility)!.label }] : []),
   ];
-  return <form role="search" aria-label={`Cerca nei documenti di ${props.home.name}`} className={docs.unifiedSearch} onSubmit={e => { e.preventDefault(); apply(current()); }} noValidate>
+  return <><form role="search" aria-label={`Cerca nei documenti di ${props.home.name}`} className={docs.unifiedSearch} onSubmit={e => { e.preventDefault(); apply(current()); }} noValidate>
     <p className="visually-hidden">Ricerca in: {props.home.name}. {SEARCH_SCOPE_NOTE}</p>
     <div className={docs.queryRow}>
       <div className={docs.queryBox}>
         <MagnifyingGlass size={21} aria-hidden="true"/>
-        <input ref={input} aria-label="Cerca nei documenti" type="search" placeholder="Titolo o nome del file" autoComplete="off" spellCheck={false}
+        <input ref={input} aria-label="Cerca nei documenti" type="search" placeholder={applied.q ? "Titolo o nome del file" : "Cerca in tutto l’archivio"} autoComplete="off" spellCheck={false}
           value={query} aria-invalid={!!error} aria-describedby={`${id}-hint${error ? ' '+id+'-error' : ''}`}
           onChange={e => { setQuery(e.target.value); if (!applied.q && !query.trim() && e.target.value.trim()) setGlobal(true); }}/>
         {query && <button type="button" aria-label="Azzera ricerca" onClick={() => { setQuery(''); setGlobal(false); props.onApply({...applied,q:''}); input.current?.focus(); }}><X size={20} aria-hidden="true"/></button>}
       </div>
       <button type="button" className={cx(ui.btn,docs.filtersTrigger)} aria-haspopup="dialog" aria-expanded={open} onClick={() => { setStaged(current()); setOpen(true); }}><SlidersHorizontal size={20} aria-hidden="true"/>Filtri{chips.length ? ` (${chips.length})` : ''}</button>
     </div>
-    <p id={`${id}-hint`} className={ui.hint}>Cerca per titolo o nome del file.</p>
+    <p id={`${id}-hint`} className="visually-hidden">Cerca in tutto l’archivio per titolo o nome del file. {SEARCH_SCOPE_NOTE}</p>
     {error && <p id={`${id}-error`} role="alert" className={ui.fieldError}>{error}</p>}
-    <div className={docs.statusSegments} role="group" aria-label="Stato dei documenti">
-      {([['all','Tutti'],['pending','Da fare'],['completed','Completati']] as const).map(([value,label]) => <button key={value} type="button" aria-pressed={active === value} onClick={() => apply({...current(),workflow:value})}>{label}</button>)}
-    </div>
-    <p className={docs.scopeNote}>{active === 'all' ? applied.view === 'house' ? 'Documenti della casa, raggruppati per tipologia.' : applied.view === 'objects' ? 'Documenti collegati ai tuoi oggetti e impianti.' : 'Ricerca in tutti i documenti di questa casa.' : active === 'pending' ? 'Mostra i documenti da fare.' : 'Mostra i documenti completati.'}</p>
-    {active === 'pending' && <label className={docs.pendingFilter}>Mostra<select className={docs.select} value={applied.workflow} onChange={e => apply({...current(),workflow:e.target.value as DocumentSearchFilters['workflow']})}><option value="pending">Tutti i documenti da fare</option><option value="to_compile">Documenti da compilare</option><option value="review">Documenti da controllare</option></select></label>}
-    {!global && !!chips.length && <div className={docs.filterChips} aria-label="Filtri applicati">{chips.map(chip => <button type="button" className={ui.btn} key={chip.field} aria-label={'Rimuovi filtro '+chip.label} onClick={() => apply({...current(),[chip.field]:'all'})}>{chip.label}<X size={16} aria-hidden="true"/></button>)}<button type="button" className={ui.btn} onClick={() => apply({...current(),format:'all',visibility:'all',collection:'all'})}>Rimuovi filtri</button></div>}
     {open && <FilterDialog titleId={`${id}-filters`} onClose={() => setOpen(false)}>
       <div className={docs.filterHeading}><h2 id={`${id}-filters`}>Filtri</h2><button type="button" className={ui.btn} aria-label="Chiudi filtri" data-autofocus onClick={() => setOpen(false)}><X size={22} aria-hidden="true"/></button></div>
       <p className={ui.hint}>Cerca nei documenti di questa casa.</p>
       <div className={docs.filterFields}>
+        <label className={docs.filter}>Stato<select className={docs.select} value={staged.workflow ?? 'all'} onChange={e => setStaged({...staged,workflow:e.target.value as DocumentSearchFilters['workflow']})}><option value="all">Tutti gli stati</option><option value="pending">Da completare</option><option value="to_compile">Da compilare</option><option value="review">Da controllare</option><option value="completed">Completati</option></select></label>
         {props.collectionsEnabled && <label className={docs.filter}>{props.documentViewsEnabled ? 'Categoria del documento' : 'Gruppo di documenti'}<select className={docs.select} value={staged.collection ?? 'all'} onChange={e => setStaged({...staged,collection:e.target.value as DocumentSearchFilters['collection']})}>{COLLECTION_OPTIONS.filter(o => !props.documentViewsEnabled || o.value !== 'house').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>}
         <label className={docs.filter}>Formato<select className={docs.select} value={staged.format} onChange={e => setStaged({...staged,format:e.target.value as DocumentSearchFilters['format']})}>{FORMAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
         <label className={docs.filter}>Chi può vederli<select className={docs.select} value={staged.visibility} onChange={e => setStaged({...staged,visibility:e.target.value as DocumentSearchFilters['visibility']})}>{VISIBILITY_FILTER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
       </div>
-      <div className={docs.filterFooter}><button type="button" className={ui.btn} onClick={() => setOpen(false)}>Annulla</button><button type="button" className={cx(ui.btn,ui.primary)} disabled={!!error} onClick={() => { apply({...current(),format:staged.format,visibility:staged.visibility,collection:staged.collection}); setOpen(false); }}>Mostra risultati</button></div>
+      <div className={docs.filterFooter}><button type="button" className={ui.btn} onClick={() => setOpen(false)}>Annulla</button><button type="button" className={cx(ui.btn,ui.primary)} disabled={!!error} onClick={() => { apply({...current(),format:staged.format,visibility:staged.visibility,collection:staged.collection,workflow:staged.workflow??'all'}); setOpen(false); }}>Mostra risultati</button></div>
     </FilterDialog>}
-  </form>;
+  </form>
+    {q && <p className={docs.searchScope} role="status">{global || !applied.view || applied.view==='all' ? 'Ricerca nell’intero archivio' : applied.view==='house' ? 'Risultati nei documenti della casa' : 'Risultati nei documenti di oggetti e impianti'} · titolo o nome del file</p>}
+    {!global && !!chips.length && <div className={docs.filterChips} aria-label="Filtri applicati">{chips.map(chip => <button type="button" className={ui.btn} key={chip.field} aria-label={'Rimuovi filtro '+chip.label} onClick={() => apply({...current(),[chip.field]:'all'})}>{chip.label}<X size={16} aria-hidden="true"/></button>)}<button type="button" className={ui.btn} onClick={() => apply({...current(),format:'all',visibility:'all',collection:'all',workflow:'all'})}>Rimuovi filtri</button></div>}
+  </>;
 }
 
 function FilterDialog({children,titleId,onClose}: {children:React.ReactNode;titleId:string;onClose:()=>void}) {

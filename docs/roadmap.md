@@ -1,3 +1,7 @@
+## Documenti: primo intervento dell’audit completato — 21 ottobre 2026
+
+Completati ingresso sull’archivio, stato nei Filtri, compattezza mobile e ricerca sticky. Restano da scegliere riferimenti oggetto nelle righe, miglioramenti del contesto di ricerca e rilievi di accessibilità. Nessuna riclassificazione automatica. [Ambito e verifiche](v5/document-archive-entry-20261021.md).
+
 ## Documenti: viste dell’archivio completate — 21 ottobre 2026
 
 Concluse le tre viste e i gruppi della casa, mantenendo archivio unico e catalogo Oggetti invariato. Nessuna riclassificazione automatica dei file ancora da organizzare. [Regole e verifiche](v5/document-views-20261021.md).

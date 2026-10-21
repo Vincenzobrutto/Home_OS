@@ -10,7 +10,7 @@ export const HOUSE_DOCUMENT_GROUPS: ReadonlyArray<readonly [DocumentGroup, strin
 ];
 const views: ReadonlyArray<readonly [DocumentView, string, string]> = [
   ['all', 'Tutti i documenti', 'Tutti'], ['house', 'Documenti della casa', 'Della casa'],
-  ['objects', 'Documenti di oggetti e impianti', 'Degli oggetti'],
+  ['objects', 'Documenti di oggetti e impianti', 'Oggetti e impianti'],
 ];
 
 export function DocumentViews({ value, summary, onChange }: {
