@@ -1,3 +1,7 @@
+## Documento–spesa: ritorno e azioni esplicite — 21 ottobre 2026
+
+Ritorno al documento di provenienza, “Registra un’altra spesa” distinto dalla consultazione e data della proposta etichettata Emissione. Annullamento della spesa aggiuntiva torna al documento; provenienza preservata anche dopo il salvataggio esplicito. [Comportamento, verifiche e attività residue](v5/document-expense-navigation-20261021.md). 86 test simulati, build/lint e browser desktop/mobile; dati reali intatti.
+
 ## Dettagli spese e bollette: riepilogo iniziale — 21 ottobre 2026
 
 Completata la priorità concordata: importo, fornitore e periodo insieme in testa alla spesa; emissione e scadenza distinte. Stesso riepilogo nei documenti collegati, con dati mancanti espliciti e nessuna duplicazione dei record. [Comportamento e verifiche](v5/expense-detail-overview-20261021.md). 75 test simulati, controlli frontend e browser desktop/mobile; dati reali intatti.

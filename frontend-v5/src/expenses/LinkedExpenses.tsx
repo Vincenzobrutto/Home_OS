@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link,useLocation } from 'react-router';
 import type { Home } from '../api/types';
 import { ErrorState, Loading, cx, ui } from '../components/ui';
 import { isApiError } from '../api/errors';
@@ -9,6 +9,7 @@ import { useExpenses } from './hooks';
 import { useEconomyCapabilities, useEconomyExpenses } from '../economy/hooks';
 import { ExpenseOverview } from './ExpenseOverview';
 import overview from './overview.module.css';
+import {useAccount} from '../session/session';
 import { DEFAULT_FILTERS } from '../lib/economy';
 
 /**
@@ -23,6 +24,8 @@ export function LinkedExpenses(props: {
   addLabel: string;
 }) {
   const { home } = props;
+  const account=useAccount(),location=useLocation();
+  const documentState='documentId' in props.by?{accountId:account.id,expenseDocumentReturn:{homeId:home.id,documentId:props.by.documentId,documentState:location.state}}:undefined;
   const caps = useEconomyCapabilities(home.id);
   const economic = 'documentId' in props.by && !!caps.data;
   const legacy = useExpenses(home.id, { state: 'active', year: null, source: 'all', ...props.by }, !economic && !caps.isPending);
@@ -60,8 +63,8 @@ export function LinkedExpenses(props: {
           ) : (
             <ul className={styles.list} aria-label={props.title}>
               {economic ? economy.data?.pages.flatMap(p => p.items).map(e => (
-                <li key={e.id} className={styles.item}><Link className={overview.linkedTitle} to={expensePath(home.id,e.id)}>{e.title}</Link><ExpenseOverview expense={e}/></li>
-              )) : items.map(e => <ExpenseRow key={e.id} expense={e} homeId={home.id} />)}
+                <li key={e.id} className={styles.item}><Link className={overview.linkedTitle} state={documentState} to={expensePath(home.id,e.id)}>{e.title}</Link><ExpenseOverview expense={e}/></li>
+              )) : items.map(e => <ExpenseRow key={e.id} expense={e} homeId={home.id} state={documentState} />)}
             </ul>
           )}
           {list.hasNextPage && (
@@ -74,11 +77,12 @@ export function LinkedExpenses(props: {
         </>
       )}
       {canEdit && !notActive && (
-        <p className={pages.spaced}>
-          <Link to={`${expensePath(home.id)}?nuova-spesa=1&${param}`} className={ui.btn}>
-            {props.addLabel}
+        <div className={pages.spaced}>
+          {'documentId' in props.by&&items.length>0&&<p className={pages.small}>Solo se serve un costo aggiuntivo: crei una nuova spesa separata da quelle già collegate.</p>}
+          <Link state={documentState} to={`${expensePath(home.id)}?nuova-spesa=1&${param}`} className={ui.btn}>
+            {'documentId' in props.by&&items.length>0?'Registra un’altra spesa':props.addLabel}
           </Link>
-        </p>
+        </div>
       )}
     </section>
   );

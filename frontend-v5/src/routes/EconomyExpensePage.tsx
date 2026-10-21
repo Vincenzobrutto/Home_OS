@@ -1,3 +1,4 @@
+import {expenseDocumentReturn} from '../lib/expenseDocumentReturn';
 import {isUtility} from '../lib/billPeriod';
 import {ExpenseOverview} from '../expenses/ExpenseOverview';
 import { LinkedDocument } from '../expenses/LinkedDocument';
@@ -45,9 +46,10 @@ function EconomyExpenseDetail({ home, caps }: { home: Home; caps?: EconomyCapabi
   const [firstVersion, setFirstVersion] = useState<number | null>(null);
   if (query.data && firstVersion === null) setFirstVersion(query.data.version);
   const nav = location.state as { accountId?: string; economyQ?: string; expenseRestore?: {id:string;y:number;pages:number} } | null;
+  const documentOrigin=expenseDocumentReturn(location.state,account.id,home.id);
   const back = (
-    <Link to={backTo(home.id, location.state, account.id)} state={nav?.accountId === account.id ? { accountId: account.id, economyQ: nav.economyQ, expenseRestore:nav.expenseRestore } : undefined} className={pages.spaced}>
-      ← Spese
+    <Link to={documentOrigin?.path??backTo(home.id, location.state, account.id)} state={documentOrigin?documentOrigin.state:nav?.accountId === account.id ? { accountId: account.id, economyQ: nav.economyQ, expenseRestore:nav.expenseRestore } : undefined} className={pages.spaced}>
+      ← {documentOrigin?'Documento':'Spese'}
     </Link>
   );
   if (query.isPending) {

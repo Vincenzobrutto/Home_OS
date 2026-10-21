@@ -1,3 +1,4 @@
+import {formatCalendarDate} from '../lib/activities';
 import type { Capabilities, Draft } from './model';
 export function proposalStatus(c?: Capabilities) {
   const open = c?.drafts.find(d => d.state === 'open');
@@ -12,6 +13,6 @@ export function proposalStatus(c?: Capabilities) {
 /** A readable description from already accepted data; never renames the original. */
 export function proposalIdentity(draft?: Draft,documentKind?:string) {
   const expense=draft?.houseExpenses?.[0],bill=expense?.proposedFields;
-  if (bill) return [expense?.documentKind==='simple_invoice'?((documentKind??draft?.documentInfo?.kind)==='receipt'?'Ricevuta':'Fattura'):'Bolletta', bill.supplier?.value, bill.documentDate?.value?.split('-').reverse().join('/')].filter(Boolean).join(' · ');
+  if (bill) return [expense?.documentKind==='simple_invoice'?((documentKind??draft?.documentInfo?.kind)==='receipt'?'Ricevuta':'Fattura'):'Bolletta',bill.supplier?.value,bill.documentDate?.value?'Emissione '+formatCalendarDate(bill.documentDate.value):null].filter(Boolean).join(' · ');
   return [...new Set(draft?.items?.flatMap(item=>item.decision?.objects??[]).filter(obj=>obj.id&&obj.state==='active').map(obj=>obj.name).filter(Boolean)??[])].join(', ');
 }

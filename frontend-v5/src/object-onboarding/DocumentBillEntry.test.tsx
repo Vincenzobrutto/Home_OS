@@ -12,13 +12,13 @@ function mount(data: unknown, documentId = 'bill-ready') {
 it('opens the ready draft for this bill directly, using read-only requests', async () => {
   mount({ drafts: [{ id: 'draft-ready', state: 'open' }], job: null });
   expect(await screen.findByText('Spesa da confermare')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Compila manualmente' })).toBeInTheDocument();expect(screen.getByRole('button', { name: 'Compila tramite AI' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Compila' })).toBeInTheDocument();expect(screen.queryByRole('button', { name: 'Compila tramite AI' })).not.toBeInTheDocument();
   expect(callJson).toHaveBeenCalledWith('/homes/home/object-onboarding/capabilities?documentId=bill-ready', expect.not.objectContaining({ method: 'POST' }));
 });
 it('does not describe the other bill as ready', async () => {
   mount({ drafts: [], job: null }, 'other-bill');
   expect(await screen.findByText('Spesa da preparare')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Compila manualmente' })).toBeInTheDocument();expect(screen.getByRole('button', { name: 'Compila tramite AI' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Compila' })).toBeInTheDocument();expect(screen.queryByRole('button', { name: 'Compila tramite AI' })).not.toBeInTheDocument();
   expect(screen.queryByText('Spesa da confermare')).not.toBeInTheDocument();
 });
 it('allows resuming a running analysis without starting another', async () => {

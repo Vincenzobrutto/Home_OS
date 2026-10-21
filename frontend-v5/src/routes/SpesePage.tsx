@@ -1,3 +1,4 @@
+import {expenseDocumentReturn} from '../lib/expenseDocumentReturn';
 import {expenseReferenceDate} from '../lib/billPeriod';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { formatCalendarDate } from '../lib/activities';
@@ -188,6 +189,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
     setParams(p, { state: { accountId: account.id, economyQ: filters.q } });
   };
 
+  const documentOrigin=expenseDocumentReturn(location.state,account.id,home.id);
   const returnTo = sameAccount && nav?.returnTo && nav.returnTo.path.startsWith(`/home/${encodeURIComponent(home.id)}/`) ? nav.returnTo : null;
   const presets: ExpensePresets = {
     documentId: isUuid(params.get('documentId')) ? params.get('documentId') : null,
@@ -206,6 +208,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
     setParams(p, { state: location.state });
   };
   const closeForm = () => {
+    if(documentOrigin){navigate(documentOrigin.path,{state:documentOrigin.state});return;}
     if (returnTo) {
       navigate(returnTo.path);
       return;
@@ -288,7 +291,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
               presets={presets}
               onCancel={closeForm}
               onDone={(expense) =>
-                returnTo ? navigate(returnTo.path) : navigate(economyExpensePath(home.id, expense.id), { state: listState })
+                returnTo ? navigate(returnTo.path) : navigate(economyExpensePath(home.id, expense.id), { state: documentOrigin?location.state:listState })
               }
             />
             {returnTo && <p className={pages.muted}>Dopo il salvataggio torni a «{returnTo.label}».</p>}

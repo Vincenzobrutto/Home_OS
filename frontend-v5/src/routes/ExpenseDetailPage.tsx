@@ -1,3 +1,4 @@
+import {expenseDocumentReturn} from '../lib/expenseDocumentReturn';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
 import { isApiError } from '../api/errors';
@@ -43,9 +44,10 @@ export function ExpenseDetailPage() {
   // focus va alla nuova azione. Le callback di mutate non bastano: il dialogo è già smontato.
   const [firstVersion, setFirstVersion] = useState<number | null>(null);
   if (query.data && firstVersion === null) setFirstVersion(query.data.expense.version);
+  const documentOrigin=expenseDocumentReturn(location.state,account.id,home.id);
   const back = (
-    <Link to={backToExpenses(home.id, location.state, account.id)} className={pages.spaced}>
-      ← Spese
+    <Link to={documentOrigin?.path??backToExpenses(home.id, location.state, account.id)} state={documentOrigin?.state} className={pages.spaced}>
+      ← {documentOrigin?'Documento':'Spese'}
     </Link>
   );
 
