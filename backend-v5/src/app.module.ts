@@ -8,6 +8,7 @@ import { HomesModule } from './homes/homes.module';
 import { DocumentsModule } from './documents/documents.module';
 import { ReviewModule } from './review/review.module';
 import { ActivitiesModule } from './activities/activities.module';
+import { HomeHistoryModule } from './home-history/home-history.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { HomeObjectsModule } from './home-objects/home-objects.module';
 import { SharingModule } from './sharing/sharing.module';
@@ -16,5 +17,5 @@ import { ReceiptAssistanceModule } from './receipt-assistance/receipt.module';
 import { DocumentIntakeModule } from './document-intake/intake.module';
 @Global() @Module({ providers: [PrismaService, SessionsService], exports: [PrismaService, SessionsService] })
 export class InfrastructureModule {}
-@Module({ imports: [ContactsModule, ObjectOnboardingModule, InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, ExpensesModule, HomeObjectsModule, SharingModule, PersonalExportModule, ReceiptAssistanceModule, DocumentIntakeModule] })
+@Module({ imports: [ContactsModule, ObjectOnboardingModule, InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, HomeHistoryModule, ExpensesModule, HomeObjectsModule, SharingModule, PersonalExportModule, ReceiptAssistanceModule, DocumentIntakeModule] })
 export class AppModule {}

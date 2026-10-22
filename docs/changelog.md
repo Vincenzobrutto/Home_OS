@@ -1,3 +1,7 @@
+## Casa: storia essenziale (BL-03) — 22 ottobre 2026
+
+Nuova pagina «Storia della casa» da Casa: eventi inseriti a mano con data anche solo per anno o mese, lavori datati con le spese, promemoria completati e oggetti aggiunti a Dimora, filtro per anno, «Aggiungi alla storia» dal documento. Migrazione additiva con backup verificato. [Dettagli e verifiche](v5/home-history-bl03-20261022.md).
+
 ## Oggetti: garanzia manuale (BL-02) — 22 ottobre 2026
 
 Scheda oggetto con garanzia «fino al» o «scaduta il» e provenienza; modifica per data o mesi, scorciatoia esplicita dei 24 mesi, documento di supporto tra quelli collegati, «Crea promemoria» precompilato. L'onboarding non presume più la scadenza di 24 mesi. [Dettagli e verifiche](v5/warranty-bl02-20261022.md).

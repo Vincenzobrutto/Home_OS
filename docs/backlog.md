@@ -1,3 +1,9 @@
+## 22 ottobre 2026 — Da sistemare emersi in BL-02/BL-03
+
+- **Originali mancanti nel DB V5**: 104 `StoredFile` senza file in `storage-private` (63 di case di account `@example.test` create dai test di integrazione sul DB `dimora_v5_product_dev`, 41 orfani senza documento). Nessuno delle case del committente. Decidere pulizia sicura e separare i test di integrazione dal DB usato dall'app; lo script di backup originale si ferma su questi record (copia tollerante in `outputs/Dimora-V5-backup-verify-tolerant.mjs`).
+- **Test non aggiornati**: backend `documents.test.cjs` (3, mock senza `$transaction`/`getStatus` dopo le modifiche documenti del 21/10); frontend 18 in 9 file (contatti, filtri, bollette manuali, upload pendenti, `casaTasks` «Apri le verifiche», ricerca, routing, spese; `KeepHouseDocuments` instabile in parallelo).
+- **Storia della casa, release successiva**: filtro per oggetto/tipo; raggruppare o filtrare «Aggiunto a Dimora» se domina l'elenco.
+
 ## 21 ottobre 2026 — Frizioni residue del collaudo fatture
 
 Collegamento diretto, titoli/categoria, ordine della coda e rotazione anteprima risolti nel [seguito del collaudo](v5/document-flow-simplification-20261021.md). Restano proposte coordinate all’interno dello stesso lotto e analisi offline di `analysis_invalid_output` su un originale tecnico, preservando i validatori. Nessun nuovo invio a pagamento implicito.

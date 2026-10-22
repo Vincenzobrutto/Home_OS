@@ -129,7 +129,7 @@ export function CasaPage() {
         </div>
       </section>
       <div className={casa.deadlines}><ScadenzeSummary home={home} /></div>
-<div className={casa.overview}><section className={ui.card} aria-label="Esplora la casa"><h2>Esplora la casa</h2><div className={casa.destinations}>{[['oggetti','Oggetti e impianti','Elettrodomestici, impianti e altri oggetti'],['ambienti','Ambienti','Le stanze della casa'],['documenti?collection=house','Documenti della casa','Planimetrie, pratiche edilizie, APE e contratti']].map(([path,label,hint])=><Link key={path} to={`/home/${encodeURIComponent(home.id)}/${path}`}><span><strong>{label}</strong><small>{hint}</small></span><Icon name="arrow"/></Link>)}</div><p className={styles.small}>Oggetti e spese personali; ambienti condivisi.</p></section><SpeseSummary home={home} compact/></div>
+<div className={casa.overview}><section className={ui.card} aria-label="Esplora la casa"><h2>Esplora la casa</h2><div className={casa.destinations}>{[['oggetti','Oggetti e impianti','Elettrodomestici, impianti e altri oggetti'],['ambienti','Ambienti','Le stanze della casa'],['documenti?collection=house','Documenti della casa','Planimetrie, pratiche edilizie, APE e contratti'],['storia','Storia della casa','Lavori, interventi ed eventi nel tempo']].map(([path,label,hint])=><Link key={path} to={`/home/${encodeURIComponent(home.id)}/${path}`}><span><strong>{label}</strong><small>{hint}</small></span><Icon name="arrow"/></Link>)}</div><p className={styles.small}>Oggetti e spese personali; ambienti condivisi.</p></section><SpeseSummary home={home} compact/></div>
       <CasaCompletion homeId={home.id} canUpload={home.permissions.includes('edit')}/>
       <div className={casa.secondary}>
         <CasaSharingSummary />

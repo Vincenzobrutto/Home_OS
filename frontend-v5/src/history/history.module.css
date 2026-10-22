@@ -1,0 +1,47 @@
+/* BL-03 storia della casa: solo token V5 esistenti. */
+.page { display: grid; gap: var(--space-4, 16px); min-width: 0; }
+.header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.header > div { min-width: 0; flex: 1 1 320px; }
+.header h1 { margin: 0 0 6px; }
+.lead { margin: 0; color: var(--color-muted); max-width: 680px; }
+.years { display: flex; gap: 8px; flex-wrap: wrap; }
+.year { border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-ink); border-radius: 999px; padding: 6px 14px; min-height: 40px; font: inherit; font-size: 14px; cursor: pointer; }
+.year[aria-pressed='true'] { background: var(--color-nav); border-color: var(--color-nav); color: #fff; }
+.empty h2 { margin-top: 0; }
+.group { display: grid; gap: 8px; }
+.group > h2 { margin: 8px 0 0; font-size: 1.15rem; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; }
+.entry { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 16px; padding: 14px 16px; border-bottom: 1px solid var(--color-border); }
+.entry:last-child { border-bottom: 0; }
+.when { color: var(--color-muted); font-size: 14px; font-weight: 600; }
+.body { min-width: 0; display: grid; gap: 4px; }
+.body h3 { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
+.meta { margin: 0; color: var(--color-muted); font-size: 13px; overflow-wrap: anywhere; }
+.kind { display: inline-block; border-radius: 6px; padding: 1px 8px; margin-right: 4px; font-size: 12px; font-weight: 650; background: var(--color-neutral-tag); color: var(--color-ink); }
+.manual { background: var(--color-soft); color: var(--color-accent); }
+.work { background: var(--color-warning-bg); color: var(--color-warning); }
+.activity_completed { background: var(--color-success-bg); color: var(--color-success); }
+.description { margin: 0; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.docs { margin: 0; padding-left: 18px; font-size: 14px; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.confirm { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 14px; }
+.link { background: none; border: 0; padding: 4px 0; min-height: 44px; color: var(--color-accent); text-decoration: underline; text-underline-offset: 3px; font: inherit; font-size: 14px; cursor: pointer; }
+.error { margin: 0; color: var(--color-error); font-size: 14px; }
+.hint { margin: 0; color: var(--color-muted); font-size: 13px; flex-basis: 100%; }
+.form { display: grid; gap: 12px; }
+.form h2 { margin: 0; }
+.fields { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; min-width: 0; }
+.fields > label, .when2 label, .picker label { display: grid; gap: 4px; font-size: 14px; }
+.when2 { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: end; }
+.when2 > label { flex: 1 1 120px; min-width: 0; }
+.legend { font-weight: 650; font-size: 14px; flex-basis: 100%; }
+.picker { display: grid; gap: 8px; }
+.chosen, .results { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.chosen li, .results li { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 14px; overflow-wrap: anywhere; }
+.search { display: flex; gap: 8px; flex-wrap: wrap; }
+.search input { flex: 1 1 220px; min-width: 0; }
+.formActions { display: flex; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 600px) {
+  .entry { grid-template-columns: 1fr; }
+  .header > button { width: 100%; }
+}

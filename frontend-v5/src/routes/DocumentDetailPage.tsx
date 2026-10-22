@@ -139,6 +139,8 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
               <Link to={`/home/${encodeURIComponent(props.home.id)}/condivisioni/nuova?documento=${encodeURIComponent(doc.id)}`} className={ui.btn}>
                 Condividi…
               </Link>
+              {/* BL-03: il documento entra nella storia come evento con la data scelta dall'utente, non con quella di caricamento. */}
+              {canRead&&<Link to={`/home/${encodeURIComponent(props.home.id)}/storia?nuovo=1&documento=${encodeURIComponent(doc.id)}`} state={{historyDocumentName:doc.name}} className={ui.btn}>Aggiungi alla storia</Link>}
               {canRead && ['application/pdf', 'image/jpeg', 'image/png'].includes(doc.mimeType) && <span id="doc-classificazione"><OrganizeDocumentButton homeId={props.home.id} documentId={doc.id} /></span>}
               </>}
             </div>

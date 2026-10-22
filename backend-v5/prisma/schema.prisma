@@ -12,6 +12,8 @@ enum HomeRole {
   viewer
 }
 model Account {
+  historyEvents HomeHistoryEvent[]
+  historyRequests HomeHistoryRequest[]
   contacts HomeContact[]
   onboardingComparisons ObjectOnboardingComparison[]
   onboardingDrafts ObjectOnboardingDraft[]
@@ -94,6 +96,8 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  historyEvents HomeHistoryEvent[]
+  historyRequests HomeHistoryRequest[]
   contacts HomeContact[]
   onboardingComparisons ObjectOnboardingComparison[]
   onboardingDrafts ObjectOnboardingDraft[]
@@ -1200,4 +1204,40 @@ model ContactRequest {
  contactId String
  createdAt DateTime @default(now())
  @@unique([accountId,homeId,operation,target,key])
+}
+
+/// BL-03: evento della storia della casa inserito dall'utente. Personale (accountId), data con precisione esplicita:
+/// anno sempre, mese e giorno facoltativi; sortKey "YYYY-MM-DD" con "00" per le parti assenti (nessun giorno inventato).
+model HomeHistoryEvent {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  title String
+  description String?
+  year Int
+  month Int?
+  day Int?
+  sortKey String
+  documentIds Json @default("[]")
+  state String @default("active")
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  @@index([accountId, homeId, state, sortKey, id])
+}
+model HomeHistoryRequest {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  operation String
+  target String
+  key String
+  digest String
+  response Json
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  @@unique([accountId, homeId, operation, target, key])
 }
