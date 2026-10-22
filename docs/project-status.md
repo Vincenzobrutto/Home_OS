@@ -2,7 +2,7 @@
 
 Implementato su branch `claude/bl02-garanzia` (Claude). Pagina «Storia della casa» (Casa → Esplora la casa), eventi a mano con precisione anno/mese/giorno e documenti, lavori/promemoria completati/oggetti aggiunti a Dimora, filtro anno, «Aggiungi alla storia» dal documento. Migrazione additiva `20261022150000_home_history` applicata al DB V5 dopo backup verificato `backups/dimora-v5-20261022T133036Z`. [Report](v5/home-history-bl03-20261022.md), [contratto](v5/home-history-api-contract.md).
 
-Verificato: typecheck/lint FE e BE; test offline storia (BE 3, FE 8); browser su «COLLAUDO V2» desktop e 390 px (evento di prova creato e rimosso). **Non verificato**: suite HTTP/DB. **Problemi aperti**: 104 `StoredFile` senza file sul disco nel DB V5 (account sintetici dei test di integrazione e orfani, nessuno del committente); 3 test backend (`documents.test.cjs`) e 18 test frontend preesistenti falliscono. **Push**: il branch non è pubblicato (push negato dal permesso dell'ambiente; da eseguire dal committente). Prossimo passo: BL-04 Foto e BL-01 Prossimo promemoria, poi BL-10b.
+Verificato: typecheck/lint FE e BE; test offline storia (BE 3, FE 8); browser su «COLLAUDO V2» desktop e 390 px (evento di prova creato e rimosso). **Non verificato**: suite HTTP/DB. **Problemi aperti**: 104 `StoredFile` senza file sul disco nel DB V5 (account sintetici dei test di integrazione e orfani, nessuno del committente); 3 test backend (`documents.test.cjs`) e 18 test frontend preesistenti falliscono. **Push**: branch pubblicato su `origin/claude/bl02-garanzia` (non ancora unito a main). Prossimo passo: BL-04 Foto e BL-01 Prossimo promemoria, poi BL-10b.
 
 ## Oggetti: garanzia manuale (BL-02) — 22 ottobre 2026
 
