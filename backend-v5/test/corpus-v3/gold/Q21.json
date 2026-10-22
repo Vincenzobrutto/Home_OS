@@ -1,0 +1,36 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q21",
+  "documentKind": "purchase_document",
+  "items": [
+    {
+      "name": "Forno Vetravia F4",
+      "brand": "Vetravia",
+      "model": "F4",
+      "type": "appliance",
+      "typeCertain": true,
+      "quantity": 2,
+      "powerWatts": null
+    }
+  ],
+  "expenses": [
+    {
+      "amountCents": 120000,
+      "date": "2026-09-18",
+      "supplier": null,
+      "period": null
+    }
+  ],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Quantità 2 esplicita: revisione, non un solo oggetto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "95ec87dcf8e1c4c3b2eecc1be5412d1b0d8a82488ccd6ad4633f3d9afe83cad9"
+}

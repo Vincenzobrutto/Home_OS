@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q07",
+  "documentKind": "utility_bill",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 9600,
+      "date": "2026-09-18",
+      "supplier": "Rivoluce Acque Sintetiche",
+      "period": [
+        "2026-06-01",
+        "2026-08-31"
+      ]
+    }
+  ],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Prima rata non equivale al totale corrente.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "ee93eab0ce9e34735435074be3d42ee839d7112b85ab77beb9aac0f7cab9e496"
+}

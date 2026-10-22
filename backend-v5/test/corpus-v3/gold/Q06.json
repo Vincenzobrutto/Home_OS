@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q06",
+  "documentKind": "utility_bill",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 12000,
+      "date": "2026-09-18",
+      "supplier": "Nivolume Energia Sintetica",
+      "period": [
+        "2026-08-01",
+        "2026-08-31"
+      ]
+    }
+  ],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Credito precedente riduce il saldo ma non il costo corrente.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": "P06",
+  "humanReviewed": false,
+  "sourceSha256": "3c21665949d12e1873f100099efb6abb582a2a325ca2db4098fd0c7d3113771f"
+}

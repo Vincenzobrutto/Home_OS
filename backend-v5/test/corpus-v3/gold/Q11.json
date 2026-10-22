@@ -1,0 +1,31 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q11",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 12200,
+      "date": "2026-09-18",
+      "supplier": "Idroquarzo Collaudo",
+      "period": null
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Idroquarzo Collaudo",
+      "vatId": "99900000128"
+    }
+  ],
+  "automatic": "complete",
+  "reviewReason": "Solo servizio: professionista e spesa, nessun nuovo oggetto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": "P07",
+  "humanReviewed": false,
+  "sourceSha256": "299cfbe1074b6165b889942bf6b5efbc8870971821371de79336bbca13a21957"
+}

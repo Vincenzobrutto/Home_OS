@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q09",
+  "documentKind": "utility_bill",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 7337,
+      "date": "2026-09-18",
+      "supplier": "Nivolume Energia Sintetica",
+      "period": [
+        "2026-09-01",
+        "2026-09-30"
+      ]
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Mese scritto settembre 2026: confini di competenza espliciti.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "1f683889efb03572361e052215eb0ecf65e2cc48481cc853db8d88e1a446e2ed"
+}

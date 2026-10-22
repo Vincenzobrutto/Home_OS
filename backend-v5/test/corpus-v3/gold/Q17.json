@@ -1,0 +1,31 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q17",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 50000,
+      "date": "2026-09-18",
+      "supplier": "Idroquarzo Collaudo",
+      "period": null
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Idroquarzo Collaudo",
+      "vatId": "99900000128"
+    }
+  ],
+  "automatic": "review",
+  "reviewReason": "Acconto 500 EUR contro preventivo 2000 EUR; richiede controllo dei collegamenti.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": "P10",
+  "humanReviewed": false,
+  "sourceSha256": "43df205b2ef19f622f5d33f6545ea6867cb7d679b53e3407f08dcae28cf5e792"
+}

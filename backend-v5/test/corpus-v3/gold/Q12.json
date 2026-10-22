@@ -1,0 +1,31 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q12",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 18300,
+      "date": "2026-09-18",
+      "supplier": "Termonimbo Collaudo",
+      "period": null
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Termonimbo Collaudo",
+      "vatId": "99900000219"
+    }
+  ],
+  "automatic": "review",
+  "reviewReason": "Manutenzione non prova un nuovo acquisto; nessuna nuova caldaia. Copia scansionata: richiede revisione visiva.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "1e14cc0f0555ab40d92fb09bd0f754a70d8e577b08281364827583af21c1fb91"
+}

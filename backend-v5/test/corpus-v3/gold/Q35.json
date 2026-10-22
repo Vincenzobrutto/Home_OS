@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q35",
+  "documentKind": "device_label",
+  "items": [
+    {
+      "name": "Lavatrice Vetravia LV8",
+      "brand": "Vetravia",
+      "model": "LV8",
+      "type": "appliance",
+      "typeCertain": true,
+      "quantity": null,
+      "powerWatts": "2100"
+    }
+  ],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Foto procedurale, non foto reale: marca/modello leggibili; quantità assente, nessun acquisto presunto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "2583d50668e0a08618a827512024221bf8df2dcfdee5f901cbf82a31edbceb32"
+}

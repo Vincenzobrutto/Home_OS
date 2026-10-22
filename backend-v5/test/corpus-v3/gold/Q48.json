@@ -1,0 +1,32 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q48",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 12200,
+      "date": "2026-09-18",
+      "supplier": "Idroquarzo Collaudo",
+      "period": null
+    },
+    {
+      "amountCents": 24400,
+      "date": "2026-09-19",
+      "supplier": "Termonimbo Collaudo",
+      "period": null
+    }
+  ],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Due originali/fatture differenti, non fonderli in una spesa.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "c375b4d811303c0acaf42a94d34cd653c9438c2525d707bfb26d4dfe5d83a2a0"
+}

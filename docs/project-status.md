@@ -1,3 +1,7 @@
+## Fase 0 qualità AI v3 - prima consegna offline — 22 ottobre 2026 (Codex)
+
+Su `codex/fase0-ai-quality-v3` da dev aggiornata: conservati piano/prototipo nel primo commit `eee8733`, generatore realistico e primi 30 originali sintetici con gold, hash e audit. 30 controlli fonte/gold e 2 test corpus/parser verdi; tavole visive esaminate. Taratura aggregata locale autorizzata: 34 originali reali letti in sola lettura, nessun contenuto/identificativo copiato, nessuna AI. [Prima consegna, limiti e prossimi passi](v5/fase0-quality-v3-stage1-20261022.md). **Non ancora implementati** in questa consegna: tipologia certa, caching, modalità di lettura, misuratore/runner onboarding e gli ultimi 22 originali. Non è una misura della qualità AI né un'autorizzazione a spendere. Prosegue la preparazione offline; budget sintetico e invio dei reali richiedono autorizzazioni successive distinte.
+
 ## Integrazione V5 BL-01/02/03/04/10b — 22 ottobre 2026 (Codex)
 
 **Implementato e integrato**: `claude/bl02-garanzia` unito con fast-forward da `44d9448` a `161e605` in `dev/dimora-v5-local-20261013`. Fetch effettivo prima dell'unione: confronto remoto `0 9`; primo push verificato con `git ls-remote` su `161e6055f2ce6da58c92068b0862b8cffa3637dd`. Nessuna modifica a `main`, nessun force push. I resoconti Claude sottostanti sono fotografie precedenti: questo riepilogo prevale per integrazione e verifiche.

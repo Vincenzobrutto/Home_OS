@@ -1,0 +1,31 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q16",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 15200,
+      "date": "2026-09-18",
+      "supplier": "Termonimbo Collaudo",
+      "period": null
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Termonimbo Collaudo",
+      "vatId": "99900000219"
+    }
+  ],
+  "automatic": "complete",
+  "reviewReason": "Regime forfettario, bollo 2 EUR, nessuna IVA aggiuntiva inventata.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "af30dada300f61531812c487645f664f42a875d68ad7c9a0b1c9a5e0638d8b3a"
+}

@@ -1,0 +1,36 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q20",
+  "documentKind": "purchase_document",
+  "items": [
+    {
+      "name": "MACC CAFFE NUBEO C2",
+      "brand": "Nubeo",
+      "model": "C2",
+      "type": "appliance",
+      "typeCertain": true,
+      "quantity": 1,
+      "powerWatts": null
+    }
+  ],
+  "expenses": [
+    {
+      "amountCents": 8990,
+      "date": "2026-09-18",
+      "supplier": null,
+      "period": null
+    }
+  ],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Scontrino abbreviato: conservare il nome stampato. Copia scansionata: richiede revisione visiva.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "9a550a2c80631f74493aae620e03b9a5894e5781abc5776ad88bce35eed875fe"
+}

@@ -1,0 +1,41 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q13",
+  "documentKind": "purchase_document",
+  "items": [
+    {
+      "name": "Quadro elettrico",
+      "brand": null,
+      "model": null,
+      "type": "electrical",
+      "typeCertain": true,
+      "quantity": 1,
+      "powerWatts": null
+    }
+  ],
+  "expenses": [
+    {
+      "amountCents": 61000,
+      "date": "2026-09-18",
+      "supplier": "Voltacervo Collaudo",
+      "period": null
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Voltacervo Collaudo",
+      "vatId": "99900000300"
+    }
+  ],
+  "automatic": "complete",
+  "reviewReason": "Impianto nominato espressamente, costo complessivo della casa non ripartito.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "411d580a39ea43bdf060a26033108758016607db1f3ca86a554bf881ea748d70"
+}

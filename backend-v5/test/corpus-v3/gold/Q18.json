@@ -1,0 +1,41 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q18",
+  "documentKind": "purchase_document",
+  "items": [
+    {
+      "name": "Monitor videocitofonico",
+      "brand": null,
+      "model": null,
+      "type": "electrical",
+      "typeCertain": true,
+      "quantity": 1,
+      "powerWatts": null
+    }
+  ],
+  "expenses": [
+    {
+      "amountCents": 46400,
+      "date": "2026-09-18",
+      "supplier": "Voltacervo Collaudo",
+      "period": null
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Voltacervo Collaudo",
+      "vatId": "99900000300"
+    }
+  ],
+  "automatic": "complete",
+  "reviewReason": "Bene fisico esplicito, professionista distinto dal cliente con P.IVA.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "94f2aa426ab12f5c52ff7b32bdfec163fddda93cecc1e4eee37dfb985244786a"
+}

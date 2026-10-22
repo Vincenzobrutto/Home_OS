@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q04",
+  "documentKind": "utility_bill",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 2990,
+      "date": "2026-09-18",
+      "supplier": "Tramofilo Rete Sintetica",
+      "period": [
+        "2026-09-01",
+        "2026-09-30"
+      ]
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Il router citato nel servizio non è un prodotto acquistato.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": "P04",
+  "humanReviewed": false,
+  "sourceSha256": "207a59b8912ba777ca01b524f3709611592c81b52d4e6bece44b0cbc4511e103"
+}

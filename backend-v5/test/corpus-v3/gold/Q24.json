@@ -1,0 +1,36 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q24",
+  "documentKind": "purchase_document",
+  "items": [
+    {
+      "name": "Pannello radiante Nubeo P6",
+      "brand": "Nubeo",
+      "model": "P6",
+      "type": "heating",
+      "typeCertain": true,
+      "quantity": 1,
+      "powerWatts": null
+    }
+  ],
+  "expenses": [
+    {
+      "amountCents": 24400,
+      "date": "2026-09-18",
+      "supplier": null,
+      "period": null
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Tipologia heating, non appliance d’ufficio.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "ed2a2172639a2e1613f460bd8e064402b031893f62f0fc025fbdbfcfd4a79743"
+}

@@ -1,3 +1,7 @@
+## Fase 0: generatore e primi 30 casi qualità AI — 22 ottobre 2026
+
+Generatore offline HTML/PDF, scansioni e targhette simulate, corpus iniziale con gold versionato e hash, audit e parser di produzione. Taratura locale autorizzata su sole statistiche aggregate di 34 originali, senza invii o scritture sui dati reali. [Consegna e limiti](v5/fase0-quality-v3-stage1-20261022.md).
+
 ## Integrazione release Home nel branch V5 — 22 ottobre 2026
 
 Integrati BL-01/02/03/04/10b da `claude/bl02-garanzia` nel branch `dev/dimora-v5-local-20261013`, con fast-forward e API locale riavviata. Stabilizzati tre file di test frontend: precaricamento dei moduli lazy nei casi ricevuta/costo da oggetto e attesa esplicita del ripristino delle 24 righe prima del focus nella ricerca; conservate tutte le asserzioni di privacy, idempotenza e comportamento. [Esiti e limiti delle verifiche](project-status.md).

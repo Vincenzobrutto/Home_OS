@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q36",
+  "documentKind": "device_label",
+  "items": [
+    {
+      "name": "Caldaia Nubeo T24",
+      "brand": "Nubeo",
+      "model": "T24",
+      "type": "heating",
+      "typeCertain": true,
+      "quantity": null,
+      "powerWatts": "120"
+    }
+  ],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Foto procedurale, non foto reale: marca/modello leggibili; quantità assente, nessun acquisto presunto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "05a70e706bfb4302cedb3fbf2edbb76da30f806f93e6b1d12b84ea36fd7a8a74"
+}

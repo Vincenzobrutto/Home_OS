@@ -1,0 +1,51 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q22",
+  "documentKind": "purchase_document",
+  "items": [
+    {
+      "name": "Forno Nubeo N4",
+      "brand": "Nubeo",
+      "model": "N4",
+      "type": "appliance",
+      "typeCertain": true,
+      "quantity": 1,
+      "powerWatts": null
+    },
+    {
+      "name": "Frigorifero Vetravia R3",
+      "brand": "Vetravia",
+      "model": "R3",
+      "type": "appliance",
+      "typeCertain": true,
+      "quantity": 1,
+      "powerWatts": null
+    }
+  ],
+  "expenses": [
+    {
+      "amountCents": 30000,
+      "date": "2026-09-18",
+      "supplier": null,
+      "period": null
+    },
+    {
+      "amountCents": 50000,
+      "date": "2026-09-18",
+      "supplier": null,
+      "period": null
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Due righe con prezzi distinti: 300 e 500 EUR, non ripartire 800 EUR.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": "P12",
+  "humanReviewed": false,
+  "sourceSha256": "585dda9422f442846b759c492d54e97f19cada68d8f3c6d77957c3709db99016"
+}

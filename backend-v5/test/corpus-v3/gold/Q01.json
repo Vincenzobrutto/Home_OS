@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q01",
+  "documentKind": "utility_bill",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 11847,
+      "date": "2026-09-18",
+      "supplier": "Nivolume Energia Sintetica",
+      "period": [
+        "2026-07-01",
+        "2026-08-31"
+      ]
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Canone TV incluso, non creare un professionista; totale distinto dalle componenti.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": "P01",
+  "humanReviewed": false,
+  "sourceSha256": "b9a56eb63596cf4bd42e7945a49338a9701932ac5a224feaef5503809436e5d6"
+}

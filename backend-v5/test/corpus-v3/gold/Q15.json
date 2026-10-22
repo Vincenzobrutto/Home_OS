@@ -1,0 +1,31 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q15",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 24400,
+      "date": "2026-09-18",
+      "supplier": "Voltacervo Collaudo",
+      "period": null
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Voltacervo Collaudo",
+      "vatId": "99900000300"
+    }
+  ],
+  "automatic": "review",
+  "reviewReason": "Split payment: non scambiare imponibile e costo complessivo.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "f3c1627a0ff678e817f350764ae6bb89b9e8357a2c664f3423354e26141a6600"
+}

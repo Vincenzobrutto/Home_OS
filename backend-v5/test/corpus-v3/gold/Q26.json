@@ -1,0 +1,36 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q26",
+  "documentKind": "purchase_document",
+  "items": [
+    {
+      "name": "Modulo Nubeo MX",
+      "brand": "Nubeo",
+      "model": "MX",
+      "type": "other",
+      "typeCertain": false,
+      "quantity": 1,
+      "powerWatts": null
+    }
+  ],
+  "expenses": [
+    {
+      "amountCents": 6100,
+      "date": "2026-09-18",
+      "supplier": null,
+      "period": null
+    }
+  ],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Natura del modulo non chiara: tipologia proposta incerta e revisione.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "4d1997fdb50b619602752b9011ce8846a6fa4c36b8708b6e4df7b12cdd144b91"
+}

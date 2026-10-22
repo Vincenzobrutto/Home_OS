@@ -1,0 +1,36 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q25",
+  "documentKind": "purchase_document",
+  "items": [
+    {
+      "name": "Finestra Vetravia V2",
+      "brand": "Vetravia",
+      "model": "V2",
+      "type": "fixture",
+      "typeCertain": true,
+      "quantity": 1,
+      "powerWatts": null
+    }
+  ],
+  "expenses": [
+    {
+      "amountCents": 36600,
+      "date": "2026-09-18",
+      "supplier": null,
+      "period": null
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Tipologia fixture da dicitura esplicita.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "92103e349e8543f8760ddbe04dd5226bfe46d51f6d5ad34900a953e269087f17"
+}

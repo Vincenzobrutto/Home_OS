@@ -1,0 +1,158 @@
+{
+  "version": "corpus-v3.1",
+  "reviewer": "Codex",
+  "date": "2026-10-22",
+  "method": "per-case source/gold arithmetic and production parser audit; rendered gallery inspection; not human confirmation",
+  "cases": [
+    {
+      "id": "Q01",
+      "sha256": "b9a56eb63596cf4bd42e7945a49338a9701932ac5a224feaef5503809436e5d6",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q02",
+      "sha256": "c753b982960f337e754946c5209f89ad5e7ded8f87e8b3059a50f430ba854b84",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q03",
+      "sha256": "d6de1996fcb549caf3f399452adc32d04bbe5f182b3b51190ebfcef8919c378a",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q04",
+      "sha256": "207a59b8912ba777ca01b524f3709611592c81b52d4e6bece44b0cbc4511e103",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q05",
+      "sha256": "6d952e0082f94dd35f59ba22ba2aaf0e1f54aa49383e6f97b8953d3c83f886e4",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q06",
+      "sha256": "3c21665949d12e1873f100099efb6abb582a2a325ca2db4098fd0c7d3113771f",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q07",
+      "sha256": "ee93eab0ce9e34735435074be3d42ee839d7112b85ab77beb9aac0f7cab9e496",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q08",
+      "sha256": "4b6e5faaf29244bfe7ce6c6481373cbf0a4f47d6c33e0f6e723e3f19a3931661",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q09",
+      "sha256": "1f683889efb03572361e052215eb0ecf65e2cc48481cc853db8d88e1a446e2ed",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q10",
+      "sha256": "c317b83bf7cf835288f693092369f08e88a0603828388551e1a9149e96a19ce6",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q11",
+      "sha256": "299cfbe1074b6165b889942bf6b5efbc8870971821371de79336bbca13a21957",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q12",
+      "sha256": "1e14cc0f0555ab40d92fb09bd0f754a70d8e577b08281364827583af21c1fb91",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q13",
+      "sha256": "411d580a39ea43bdf060a26033108758016607db1f3ca86a554bf881ea748d70",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q14",
+      "sha256": "44657f58307786c27d9c4ddcc45850e681a7a03d0381155b822381dafbcc7df0",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q15",
+      "sha256": "f3c1627a0ff678e817f350764ae6bb89b9e8357a2c664f3423354e26141a6600",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q16",
+      "sha256": "af30dada300f61531812c487645f664f42a875d68ad7c9a0b1c9a5e0638d8b3a",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q17",
+      "sha256": "43df205b2ef19f622f5d33f6545ea6867cb7d679b53e3407f08dcae28cf5e792",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q18",
+      "sha256": "94f2aa426ab12f5c52ff7b32bdfec163fddda93cecc1e4eee37dfb985244786a",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q19",
+      "sha256": "872d29f70272b30a9fabd6ea1a0fc4fff6ca736ba958d0a6af586a509246233a",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q20",
+      "sha256": "9a550a2c80631f74493aae620e03b9a5894e5781abc5776ad88bce35eed875fe",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q21",
+      "sha256": "95ec87dcf8e1c4c3b2eecc1be5412d1b0d8a82488ccd6ad4633f3d9afe83cad9",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q22",
+      "sha256": "585dda9422f442846b759c492d54e97f19cada68d8f3c6d77957c3709db99016",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q23",
+      "sha256": "07d654e4b5ecd94515e16047d04d5e6b11a8779e6ec48132513bf7a82e7139b5",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q24",
+      "sha256": "ed2a2172639a2e1613f460bd8e064402b031893f62f0fc025fbdbfcfd4a79743",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q25",
+      "sha256": "92103e349e8543f8760ddbe04dd5226bfe46d51f6d5ad34900a953e269087f17",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q26",
+      "sha256": "4d1997fdb50b619602752b9011ce8846a6fa4c36b8708b6e4df7b12cdd144b91",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q35",
+      "sha256": "2583d50668e0a08618a827512024221bf8df2dcfdee5f901cbf82a31edbceb32",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q36",
+      "sha256": "05a70e706bfb4302cedb3fbf2edbb76da30f806f93e6b1d12b84ea36fd7a8a74",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q47",
+      "sha256": "b152aede0cfd9b4cd84b2f19fd8f2df7d2cdd12abbd8331fa8147ed98e4b23c4",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q48",
+      "sha256": "c375b4d811303c0acaf42a94d34cd653c9438c2525d707bfb26d4dfe5d83a2a0",
+      "status": "reviewed"
+    }
+  ]
+}

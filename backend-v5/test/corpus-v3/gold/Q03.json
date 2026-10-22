@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q03",
+  "documentKind": "utility_bill",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 3520,
+      "date": "2026-09-18",
+      "supplier": "Rivoluce Acque Sintetiche",
+      "period": [
+        "2026-07-01",
+        "2026-08-31"
+      ]
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Consumi, quota fissa e IVA: una sola spesa.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": "P03",
+  "humanReviewed": false,
+  "sourceSha256": "d6de1996fcb549caf3f399452adc32d04bbe5f182b3b51190ebfcef8919c378a"
+}

@@ -1,0 +1,36 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q23",
+  "documentKind": "order_confirmation",
+  "items": [
+    {
+      "name": "Asciugatrice Vetravia A7",
+      "brand": "Vetravia",
+      "model": "A7",
+      "type": "appliance",
+      "typeCertain": true,
+      "quantity": 1,
+      "powerWatts": null
+    }
+  ],
+  "expenses": [
+    {
+      "amountCents": 59900,
+      "date": "2026-09-18",
+      "supplier": null,
+      "period": null
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Ordine completo con data e totale, non prova consegna.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "07d654e4b5ecd94515e16047d04d5e6b11a8779e6ec48132513bf7a82e7139b5"
+}

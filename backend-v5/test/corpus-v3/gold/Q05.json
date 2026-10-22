@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q05",
+  "documentKind": "utility_bill",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 8000,
+      "date": "2026-09-18",
+      "supplier": "Brinavela Gas Sintetico",
+      "period": [
+        "2026-09-01",
+        "2026-09-30"
+      ]
+    }
+  ],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Costo corrente 80 EUR, saldo da pagare 100 EUR: revisione.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": "P01",
+  "humanReviewed": false,
+  "sourceSha256": "6d952e0082f94dd35f59ba22ba2aaf0e1f54aa49383e6f97b8953d3c83f886e4"
+}

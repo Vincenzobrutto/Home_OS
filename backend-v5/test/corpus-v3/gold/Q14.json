@@ -1,0 +1,31 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q14",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 30500,
+      "date": "2026-09-18",
+      "supplier": "Idroquarzo Collaudo",
+      "period": null
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Idroquarzo Collaudo",
+      "vatId": "99900000128"
+    }
+  ],
+  "automatic": "review",
+  "reviewReason": "Ritenuta distingue costo e saldo: revisione prudente.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "44657f58307786c27d9c4ddcc45850e681a7a03d0381155b822381dafbcc7df0"
+}
