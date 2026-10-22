@@ -57,6 +57,8 @@ Le prove mirate coprono anche classificazione testuale corretta, rendering reale
 
 ## Cosa resta da autorizzare e misurare
 
+**Aggiornamento successivo**: la sola campagna sintetica è stata autorizzata e completata (146 chiamate, 3,545746 USD, gate non superato). [Risultati e verifiche live](fase0-quality-v3-campaign-20261022.md). I paragrafi seguenti descrivono la situazione alla consegna offline; non il consenso corrente. I reali rimangono esclusi.
+
 L’adattatore e il ciclo sono **implementati e verificati offline** con il trasporto simulato. Accuratezza, stabilità AI e confronto del costo delle modalità rimangono da misurare su risposte effettive, con tetto sintetico proposto **12 USD/150 chiamate** e autorizzazione esplicita prima di spendere. Nessuna campagna AI è avviata da questo incarico. Fonte completa resta predefinita; non si adotta una modalità più economica sulla base delle risposte finte.
 
 Il successivo invio dei 10–15 originali reali richiede selezione/gold confermati dal committente, consenso specifico e tetto separato. I circa 52 casi costituiscono un cancello per il pilota, non una stima di affidabilità generale.

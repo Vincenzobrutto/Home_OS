@@ -1,0 +1,25 @@
+{
+    "campaignId":  "fase0-quality-v3-20261022-synthetic-01",
+    "authorizationHash":  "84812c5db495ccab13a80093b0e973be2aef9edec7fcf0b9714c4cc9d6eac221",
+    "readOnlyVerification":  true,
+    "documents":  52,
+    "allHashesAuthorized":  true,
+    "allProviderConsentsSyntheticLive":  true,
+    "attempts":  146,
+    "settled":  146,
+    "uncertain":  0,
+    "actualMicroUsd":  3545746,
+    "budgetMicroUsd":  12000000,
+    "maxCalls":  150,
+    "resources":  {
+                      "homeObject":  0,
+                      "homeExpense":  0,
+                      "homeContact":  0
+                  },
+    "completedTasks":  120,
+    "auditLines":  876,
+    "messageDispatches":  146,
+    "networkDisabledReplay":  true,
+    "replayNewHttpRequests":  0,
+    "replayNewAttempts":  0
+}

@@ -1,3 +1,7 @@
+## Fase 0: campagna qualità AI sintetica conclusa — 22 ottobre 2026
+
+Eseguito il protocollo congelato sui soli 52 sintetici autorizzati: 146 Messages, costo calcolato 3,545746 USD, zero esiti incerti/retry, entro 12 USD/150 chiamate. Runner live con ricevuta vincolata agli hash, consenso sintetico e ledger persistente isolato; diagnostiche e misure per campo senza risposte grezze. Gate qualità **non superato** (81/104 output baseline validi); nessun cambio alle modalità predefinite o promozione del pilota. Build/lint, 24/24 test qualità e 10/10 guard verdi; verifiche ledger dopo riavvio e replay a rete disabilitata senza nuovi tentativi. Nessuna risorsa canonica creata, nessun reale inviato o `.env` modificato. [Report e limiti](v5/fase0-quality-v3-campaign-20261022.md).
+
 ## Fase 0: generatore e primi 30 casi qualità AI — 22 ottobre 2026
 
 Generatore offline HTML/PDF, scansioni e targhette simulate, corpus iniziale con gold versionato e hash, audit e parser di produzione. Taratura locale autorizzata su sole statistiche aggregate di 34 originali, senza invii o scritture sui dati reali. [Consegna e limiti](v5/fase0-quality-v3-stage1-20261022.md).

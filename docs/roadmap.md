@@ -1,6 +1,6 @@
-## Fase 0 qualità AI — adattatore e ciclo progressivo offline, 22 ottobre 2026
+## Fase 0 qualità AI — campagna sintetica conclusa, gate non superato, 22 ottobre 2026
 
-Preparazione/decoding/politica del prodotto collegati al runner e al ledger durevole, con HTTP simulato; ciclo progressivo con arresto e ripresa persistenti. Il gate di qualità AI resta aperto fino alla campagna sintetica autorizzata e alla tappa reale con consenso separato. [Verifiche offline e limiti](v5/fase0-quality-v3-model-20261022.md).
+Campagna autorizzata sui 52 sintetici completata: 146/150 Messages, 3,545746/12 USD, nessun esito incerto o retry. **Gate non superato**: intervenire offline su validazione evidenze visive/testuali, output strutturato, proposte di spesa univoche e tipologia oggetto; mantenere gold e risultati congelati. Nessuna modalità di lettura promossa. Nuova misura dopo correzioni versionate richiede nuova autorizzazione; i reali restano esclusi e richiedono consenso/tetto separati. [Risultati e verifiche](v5/fase0-quality-v3-campaign-20261022.md).
 
 ## Archivio unico Documenti completato — 21 ottobre 2026
 

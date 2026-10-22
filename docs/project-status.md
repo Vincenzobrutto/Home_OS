@@ -1,4 +1,12 @@
-## Fase 0 qualità AI v3 — adattatore al modello e ciclo progressivo offline — 22 ottobre 2026 (Codex)
+## Fase 0 qualità AI v3 — campagna sintetica autorizzata, 22 ottobre 2026 (Codex)
+
+**Eseguita e verificata** `fase0-quality-v3-20261022-synthetic-01`: soli **52 sintetici**, **120/120 attività**, **146 Messages/150**, tutte liquidate, **3,545746/12 USD**, **0 esiti incerti e nessun retry**. Ricevuta, hash dei file/gold/codice e piano congelati prima dell’invio (massimo pianificato 148 Messages). Ledger persistente separato sulla porta 55433, conservato e spento; nessuna modifica al DB o alle quote dell’app. [Protocollo e risultati](v5/fase0-quality-v3-campaign-20261022.md), [ricevuta](v5/fase0-quality-v3-authorization-20261022.json), [verifica finale](v5/fase0-quality-v3-verification-20261022.json).
+
+**Gate qualità NON SUPERATO**: baseline completa 81/104 output validi; tipo documento 79/104, tipologia oggetto 21/40, marca/modello etichette 0/16, importo univoco 13/70, stabilità decisione 39/52. Zero errori critici automatici, ma soltanto 7/104 esiti `complete`, tutti documentali: non certificano creazioni automatiche di oggetti/spese. Gli invalidi rimangono nel denominatore; i rifiuti delle evidenze visive non dimostrano da soli incapacità di lettura del modello. Report con misure per campo, limiti del gold auditato dall’agente e confronti costi. Nessuna modalità promossa; lettura completa ancora predefinita. Correzioni e diagnostica successive offline, nuova campagna versionata soltanto con nuova autorizzazione. Tappa sui reali esclusa.
+
+**Verifiche di questo passaggio**: build, lint, `test:quality-v3` **24/24**, `test:quality-v3-live-guards` **10/10**, prima degli invii. Verifica finale in sola lettura dopo riavvio del solo cluster sintetico: 52 SHA autorizzati, 146 liquidazioni, costi coerenti, zero oggetti/spese/contatti creati; replay con rete disabilitata **0 nuove richieste HTTP e 0 nuovi tentativi**. Corpus/gold/codice congelati invariati. Suite generali backend/frontend non ripetute: gli esiti sottostanti sono storici. `.env`, `main`, dati personali e modifiche legacy preesistenti preservati.
+
+## Checkpoint offline precedente — adattatore e ciclo progressivo, 22 ottobre 2026
 
 **Implementato e verificato offline**: corpus sintetico completo di 52 casi, hash/gold aggiornati e 52 audit fonte/gold; tavole visive delle 52 prime pagine e di tutte le 46 pagine dei quattro documenti lunghi esaminate. Test del parser di produzione su tutto il corpus 2/2; audit indipendente 52/52. Scorer puro per document kind, oggetti, tipologia, spese, professionisti, citazioni, decisioni automatiche, costo e stabilità (quando sono presenti due esecuzioni), con test adversarial.
 
@@ -12,7 +20,7 @@ Il ledger resta quello onboarding esistente, con prenotazione standard di 0,25 U
 
 **Verifiche precedenti conservate** (`62b17c0`): backend `npm test` 213/213; frontend typecheck/lint e suite mock completa 100/100 file, 822/822 test, exit 0, 641,59 s. Non ripetute in questo passaggio. Suite onboarding ripetuta qui: **148/148**; nessuna asserzione indebolita. Unica modifica al codice prodotto: prefisso della modalità PDF progressiva; nessun cambio a prompt/schema, quote o frontend.
 
-**Non verificato / residuo**: accuratezza, stabilità del modello e costi reali delle modalità richiedono la campagna AI autorizzata. I 52 originali attraversano preparazione/decoding/politica reali con HTTP interamente simulato e output conservativo; questa prova dimostra il funzionamento del percorso, non il superamento delle soglie del pilota. Nessuna modalità economica è adottata senza misure. Nessuna chiamata AI/email e nessuna spesa; tetto sintetico proposto 12 USD/150 chiamate ancora da autorizzare. Consenso e tetto per i 10–15 reali restano separati. `.env`, limiti dell’app e dati personali invariati. I 52 casi sono un cancello per il pilota, non una misura statistica generale.
+**Limite del checkpoint offline, ora storico**: HTTP simulato provava il percorso, non la qualità AI. Autorizzazione e campagna sintetica sono state successivamente completate nel riepilogo corrente in testa, con gate non superato. Restano separati consenso e tetto per i 10–15 reali; i 52 casi sono un cancello per il pilota, non una misura statistica generale.
 
 Il checkpoint precedente resta nel [report prima consegna](v5/fase0-quality-v3-stage1-20261022.md); dettagli tecnici nel [report Fase 0 qualità v3](v5/fase0-quality-v3-stage2-20261022.md).
 

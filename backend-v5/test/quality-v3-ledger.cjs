@@ -10,6 +10,7 @@ const {ONBOARDING_READING_VERSION}=require('../dist/object-onboarding/reading');
 const {CampaignLimit}=require('./quality-v3-runner.cjs');
 const {load}=require('./corpus-v3/corpus.cjs');
 const {checkedObservation,MODEL_ADAPTER_VERSION}=require('./quality-v3-model.cjs');
+const {validateAuthorization}=require('./quality-v3-authorization.cjs');
 const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const fail=code=>{throw new CampaignLimit(code);};
 function assertQualityDatabase(raw){
@@ -23,6 +24,11 @@ function entry(attempt){
 class PrismaCampaignLedger {
  static async open(options){
   assertQualityDatabase(options.databaseUrl);
+  if(options.execution!==undefined&&!['offline','live'].includes(options.execution))fail('invalid_campaign');
+  if(options.execution==='live'){
+   if(new URL(options.databaseUrl).pathname!=='/dimora_v5_quality_v3_campaign')fail('quality_database_required');
+   validateAuthorization(options.authorization,options);
+  }
   if(!/^fase0-quality-v3-[A-Za-z0-9_-]{1,64}$/.test(options.campaignId)||!Number.isSafeInteger(options.maxCalls)||options.maxCalls<1||options.maxCalls>150||!Number.isSafeInteger(options.budgetMicroUsd)||options.budgetMicroUsd<1||options.budgetMicroUsd>12_000_000||!MODEL_PRICES[options.model])fail('invalid_campaign');
   const db=new PrismaClient({datasources:{db:{url:options.databaseUrl}}});
   const ledger=new PrismaCampaignLedger(db,options);
@@ -30,6 +36,8 @@ class PrismaCampaignLedger {
  }
  constructor(db,options){
   this.db=db;this.options=Object.freeze({...options});this.corpus=new Map(load().cases.map(c=>[c.id,c]));
+  this.provider=options.execution==='live'?'quality-v3-live':'quality-v3-offline';
+  this.authorizationHash=options.execution==='live'?validateAuthorization(options.authorization,options):null;
   const policy=this.options,allowedHashes=new Set([...this.corpus.values()].map(c=>c.sha256));
   // Explicit evaluation policy only; production .env and 10 USD/50-call cap stay
   // unchanged. This subclass is not registered in the application container.
@@ -48,13 +56,13 @@ class PrismaCampaignLedger {
   if(!c||!Number.isSafeInteger(run)||run<1||run>2||!['full','local_pages','progressive'].includes(mode)||(mode==='progressive'?!Number.isSafeInteger(throughPage)||throughPage<1||throughPage>c.pages:throughPage!==null)||item.sha256!==c.sha256||!item.documentId||item.documentVersion!==1||hash(item.gold)!==hash(c.gold))fail('invalid_synthetic_case');
   const key=`${this.options.campaignId}:${item.id}:${run}:${mode}:${throughPage??0}`;
   if(item.protocol!==undefined&&item.protocol!==MODEL_ADAPTER_VERSION)fail('invalid_adapter_protocol');
-  const digest=hash({key,documentId:item.documentId,sha256:c.sha256,gold:c.gold,model:this.options.model,prompt:OBJECT_ONBOARDING_PROMPT_VERSION,reading:ONBOARDING_READING_VERSION,pages:item.pages??[],...(item.protocol?{protocol:item.protocol}:{})});
+  const digest=hash({key,documentId:item.documentId,sha256:c.sha256,gold:c.gold,model:this.options.model,prompt:OBJECT_ONBOARDING_PROMPT_VERSION,reading:ONBOARDING_READING_VERSION,pages:item.pages??[],...(item.protocol?{protocol:item.protocol}:{}),...(this.authorizationHash?{authorizationHash:this.authorizationHash}:{})});
   return{key,digest,c};
  }
  async lock(tx){await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'onboarding-ai-budget:'+this.options.campaignId},0))::text AS locked`;}
  async existing(tx,request){
   const job=await tx.objectOnboardingJob.findUnique({where:{accountId_homeId_key:{accountId:this.options.accountId,homeId:this.options.homeId,key:request.key}},include:{attempt:true}});
-  if(job&&(job.digest!==request.digest||job.provider!=='quality-v3-offline'||job.attempt?.campaignId!==this.options.campaignId||job.attempt.model!==this.options.model||job.attempt.promptVersion!==OBJECT_ONBOARDING_PROMPT_VERSION))fail('campaign_identity_conflict');
+  if(job&&(job.digest!==request.digest||job.provider!==this.provider||job.consentToProviderTransfer!==(this.options.execution==='live')||job.attempt?.campaignId!==this.options.campaignId||job.attempt.model!==this.options.model||job.attempt.promptVersion!==OBJECT_ONBOARDING_PROMPT_VERSION))fail('campaign_identity_conflict');
   return job;
  }
  async validate(tx,item,request){
@@ -83,7 +91,7 @@ class PrismaCampaignLedger {
     await tx.objectOnboardingAttempt.updateMany({where:{id:prior.attempt.id,state:{in:['reserved','sending']}},data:{state:'uncertain'}});
     return{dispatch:false,entry:entry({...prior.attempt,job:prior})};
    }
-   const job=await tx.objectOnboardingJob.create({data:{accountId:this.options.accountId,homeId:this.options.homeId,documentId:item.documentId,documentVersion:1,documentSha256:request.c.sha256,mimeType:request.c.mimeType,provider:'quality-v3-offline',consentToProviderTransfer:false,purpose:'quality_v3',key:request.key,digest:request.digest,state:'running'}});
+   const job=await tx.objectOnboardingJob.create({data:{accountId:this.options.accountId,homeId:this.options.homeId,documentId:item.documentId,documentVersion:1,documentSha256:request.c.sha256,mimeType:request.c.mimeType,provider:this.provider,consentToProviderTransfer:this.options.execution==='live',purpose:'quality_v3',key:request.key,digest:request.digest,state:'running'}});
    const attempt=await this.budget.reserve(tx,job.id,request.c.sha256,this.options.accountId,this.options.homeId);
    await tx.objectOnboardingAttempt.update({where:{id:attempt.id},data:{state:'sending',sentAt:new Date()}});
    return{dispatch:true,entry:{...entry({...attempt,job}),state:'sending'}};
