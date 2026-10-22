@@ -1153,3 +1153,7 @@ Decisione del committente: la proposta parte dal giorno di completamento (Europe
 ## 22 ottobre 2026 — BL-04: foto come acquisizione, senza lettura
 
 Lo scatto riusa il caricamento documenti esistente (nessun nuovo endpoint): campo immagine con `capture="environment"`, JPEG/PNG, documento privato. Le immagini non avviano la lettura locale (solo testo PDF) né l'AI senza consenso esplicito; HEIC rifiutato nel client con istruzioni, senza conversione. Alternative scartate: conversione HEIC/compressione nel browser (nuovo sottosistema), OCR/visione automatica (non approvati), apertura della rete per provare dal telefono senza accordo.
+
+## 22 ottobre 2026 — BL-10b: collegamento automatico del professionista alle risorse confermate
+
+Decisione del committente: il professionista confermato con un documento si collega automaticamente anche a spese e oggetti confermati dalla stessa bozza (e agli oggetti già collegati a quelle spese), nella stessa transazione; solo risorse leggibili e attive, nessun duplicato. L'oggetto dell'intervento resta proposto dai suggerimenti esistenti basati sul testo del documento (nessuna modifica all'estrattore). Alternativa scartata: casella da confermare ogni volta.

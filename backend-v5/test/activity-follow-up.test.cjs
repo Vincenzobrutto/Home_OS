@@ -23,7 +23,7 @@ test('BL-01 corpo: data obbligatoria e valida, collegamenti copiati salvo scelta
 });
 
 /** Database finto in memoria, sufficiente per il percorso di creazione del successivo. */
-function fakeService(a, h) {
+function fakeService() {
   const db = { activities: [], requests: [], history: [], links: [], objects: [], events: [], readableObjects: new Set() };
   const match = (row, where) => Object.entries(where).every(([k, v]) => row[k] === v);
   const tx = {
@@ -45,7 +45,7 @@ function fakeService(a, h) {
 
 test('BL-01 creazione del successivo: legame, collegamenti leggibili copiati, storia su entrambe, idempotenza, nessun duplicato', async () => {
   const a = randomUUID(), h = randomUUID();
-  const { db, service } = fakeService(a, h);
+  const { db, service } = fakeService();
   const source = { id: randomUUID(), accountId: a, homeId: h, title: 'Controllo caldaia', description: 'Annuale', dueDate: '2026-10-20', state: 'completed', version: 3, assetId: null, previousActivityId: null, completedAt: new Date('2026-10-21T23:30:00Z'), cancelledAt: null, createdAt: new Date(), updatedAt: new Date() };
   db.activities.push(source);
   const readable = { id: randomUUID(), accountId: a, homeId: h, state: 'active' }, archived = { id: randomUUID(), accountId: a, homeId: h, state: 'archived' };

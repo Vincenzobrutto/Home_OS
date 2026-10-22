@@ -1,3 +1,7 @@
+## Documenti: BL-10b completato — 22 ottobre 2026
+
+Analisi: quasi tutto BL-10b era già implementato (18/10). Aggiunto il collegamento automatico del professionista a spesa e oggetti della stessa conferma (`linkConfirmedContacts`), senza migrazioni. [Report](v5/bl10b-document-professional-object-20261022.md). Verificato: test offline, integrazione su DB temporaneo vuoto (54/57, 3 preesistenti bollette), frontend mirato. **Non verificato**: browser con bozza reale (servirebbe una nuova analisi a pagamento). Con BL-01/02/03/04/10/10b le funzioni della release Home sono implementate; restano prova telefono BL-04, qualità AI e cancellazione (Fase 0), stabilizzazione e pilota.
+
 ## Documenti: scatta una foto (BL-04) — 22 ottobre 2026
 
 Implementato su branch `claude/bl02-garanzia` (Claude), solo frontend, nessuna migrazione. [Report](v5/photo-capture-bl04-20261022.md). Verificato: typecheck/lint, 4 test nuovi, suite invariata (14 preesistenti), caricamento reale sul computer nella casa «COLLAUDO V2» (privato, nessuna analisi), 390 px. **Non verificato**: scatto da telefono reale (gate del piano aperto). Con BL-01/02/03/04 i blocchi pre-rubrica sono implementati; prossimo: prova su telefono, BL-10b, gate Fase 0 (recupero account).

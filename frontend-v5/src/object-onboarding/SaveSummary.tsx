@@ -33,7 +33,7 @@ export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contac
    </section>)}
    {!objectForms.length&&!houses.some(i=>houseForms[i.id]?.mode==='create'&&houseForms[i.id]?.objectChoice)&&<p>Nessun nuovo oggetto o collegamento a oggetti.</p>}
    {!houses.length&&!objectForms.some(x=>x.form.expense!=='skip')&&<p>Nessuna nuova spesa.</p>}
-   {selectedContacts.length>0&&<p>Contatti da salvare in Rubrica: {selectedContacts.length}. Solo quelli che hai scelto.</p>}
+   {selectedContacts.length>0&&<p>Contatti da salvare in Rubrica: {selectedContacts.length}. Solo quelli che hai scelto. Ognuno viene collegato al documento, alla spesa e agli oggetti salvati con questa conferma.</p>}
   </>}
  </div>;
 }

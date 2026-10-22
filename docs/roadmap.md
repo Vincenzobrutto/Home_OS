@@ -672,7 +672,7 @@ Raccolta e arbitrato Claude completati, difetti focus/terminologia corretti. Res
 
 ## 2026-10-16 — Piano corrente approvato, prima di Agenzie
 
-Ordine vincolante: Fase0 → BL-04 → BL-01 → BL-02 manuale → BL-03 essenziale (22/10: il committente ha scelto di fare prima BL-02 manuale e BL-03 essenziale, entrambi completati, poi BL-01 e BL-04 completati; BL-04 da provare su telefono reale) → BL-10 mini-rubrica → BL-10b documento/professionista/oggetto → Agenzie. Supera precedenti rinvii di storia e mini-rubrica per questo perimetro. Stime e dipendenze da valutare PRIMA di sviluppare: v5/home-release-piano-20261016.md. Backup/restauro Fase0 verificati; recovery/storage/export/sensibili/qualita AI ancora gate da chiudere. BL-07/08/09 successiva release. BL-12..16 placeholder non pianificati o stimati.
+Ordine vincolante: Fase0 → BL-04 → BL-01 → BL-02 manuale → BL-03 essenziale (22/10: il committente ha scelto di fare prima BL-02 manuale e BL-03 essenziale, entrambi completati, poi BL-01 e BL-04 completati; BL-04 da provare su telefono reale; BL-10b completato il 22/10 con il collegamento del professionista a spesa e oggetti) → BL-10 mini-rubrica → BL-10b documento/professionista/oggetto → Agenzie. Supera precedenti rinvii di storia e mini-rubrica per questo perimetro. Stime e dipendenze da valutare PRIMA di sviluppare: v5/home-release-piano-20261016.md. Backup/restauro Fase0 verificati; recovery/storage/export/sensibili/qualita AI ancora gate da chiudere. BL-07/08/09 successiva release. BL-12..16 placeholder non pianificati o stimati.
 
 ## Fase 0 Home 16 ottobre 2026 avvio
 

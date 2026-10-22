@@ -1,3 +1,7 @@
+## Documenti: professionista collegato a spesa e oggetto (BL-10b) — 22 ottobre 2026
+
+Con la conferma unica del documento il professionista confermato viene collegato anche alla spesa e agli oggetti salvati, così compare sulla scheda dell'oggetto. Il resto di BL-10b (estrazione del professionista, riconciliazione per P.IVA, scarto, oggetto dell'intervento proposto dal documento) era già presente. [Analisi e verifiche](v5/bl10b-document-professional-object-20261022.md).
+
 ## Documenti: scatta una foto (BL-04) — 22 ottobre 2026
 
 «Scatta una foto» accanto a «Scegli file»: fotocamera posteriore sul telefono, nomi leggibili, archiviazione Solo io, HEIC rifiutato con istruzioni, nessuna analisi automatica sulle immagini. Provato sul computer; prova su telefono reale ancora da fare. [Dettagli](v5/photo-capture-bl04-20261022.md).
