@@ -1,3 +1,7 @@
+## Fase 0: Q15 split payment, revisione obbligatoria dal testo verificato — 23 ottobre 2026
+
+Controllo locale su tutte le pagine, anche escluse dal prefisso AI: totale corretto senza saldo proposto non autorizza più l’automatico. Policy legata a documento/versione/SHA, verifica finale transazionale anche per i contatti; bozze finanziarie precedenti prive del controllo richiedono conferma esplicita. Manuale da 244 EUR conservato. Build/lint, onboarding 181/181, qualità 24/24, guard 11/11, backend 213/213 e DB isolato Q15/Q48 20/20 verdi. Nessuna AI, modifica gold o ricalcolo della campagna; gate ancora non superato. [Report](v5/fase0-q15-payment-offline-20261023.md).
+
 ## Fase 0: nuova campagna sintetica v24 conclusa — 23 ottobre 2026
 
 Eseguita l’autorizzazione sui soli 52 sintetici: 148 Messages, 3,562652 USD, zero incerti/retry, nuovo ledger isolato. Baseline 101/104 output validi, etichette 16/16 e importi 64/70, ma **gate non superato**: due esiti automatici contrari al gold su Q15 split payment, soglie importi/date/stabilità non raggiunte e copertura Q48 ancora 1/2 per campo. Ricevuta con protocollo/piano/codice congelati, confronto con v22 e verifica dopo riavvio/replay a rete disabilitata senza nuove richieste. Nessuna risorsa canonica o dato reale trasferito; gold e campagna precedente invariati. [Esiti, costi e blocchi](v5/fase0-quality-v24-campaign-20261023.md).

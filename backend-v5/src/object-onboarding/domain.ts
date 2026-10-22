@@ -1,3 +1,4 @@
+import { paymentReview, type PaymentReview } from './payment-review';
 import { contactProposal, type ContactProposal } from '../contacts/extraction';
 import { readObjectType, type ObjectTypeProposal } from './object-type';
 import { HttpException } from '@nestjs/common';
@@ -29,6 +30,7 @@ export type ProductItem = {
 export type HouseExpense = EconomicOutput & {id:string;fingerprint:string;reviewWarnings?:string[];invoiceSegment?:{key:string;page:number}};
 export type ProductExtraction = {
   evidenceMode?: 'text'|'image'|'visual_pdf';
+  paymentReview?: PaymentReview;
   floorPlan?: import('./floor-plan-domain').FloorPlan;
   contacts?:ContactProposal[];
   houseExpenses?:HouseExpense[];
@@ -85,7 +87,8 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if(row.documentKind==='conformity_declaration'&&understanding.documentInfo?.kind!=='conformity_declaration')throw invalid();
     if(understanding.documentInfo){const mapped:Record<string,string>={invoice:'purchase_document',receipt:'purchase_document',purchase_document:'purchase_document',purchase_order:'order_confirmation',delivery_notice:'delivery_notice',product_label:'device_label',conformity_declaration:'conformity_declaration',utility_bill:'utility_bill',ape:'house_document',floor_plan:'house_document'};row.documentKind=mapped[understanding.documentInfo.kind]??row.documentKind;}
     if(['unsupported','utility_bill','house_document'].includes(String(row.documentKind))&&row.items.length)throw invalid();
-    let needsReview = row.requiresHumanReview === true || understanding.warnings.length>0;
+    const payment = paymentReview(context);
+    let needsReview = payment?.reason === 'split_payment' || row.requiresHumanReview === true || understanding.warnings.length>0;
     const items: ProductItem[] = [];
     for (const [sourceIndex, raw] of row.items.entries()) {
       const r = object(raw, ['fields', 'quantity', 'purchaseAmount', 'nameTruncated', 'disposition', 'confidence', 'subjectKind','objectType']);
@@ -153,7 +156,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if(houseExpenses.length&&!['utility_bill','purchase_document'].includes(String(row.documentKind)))throw invalid();
     if(row.documentKind==='purchase_document'&&houseExpenses.length>1){if(row.items.length||row.purchaseTotal!=null||Array.isArray(row.facts)&&row.facts.length)throw invalid();houseExpenses=separateInvoices({items,purchaseTotal,documentInfo:understanding.documentInfo},houseExpenses,context.snapshot.documentSha256,context.snapshot.documentId);needsReview=true;}
     const party=contactProposal(understanding.documentInfo,context.kind==='text'?context.pages:undefined);
-    return { evidenceMode:context.kind, ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
+    return { evidenceMode:context.kind, ...(payment?{paymentReview:payment}:{}), ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
   } catch (error) {
     if (error instanceof ProviderFailure) throw error;
     throw new ProviderFailure('analysis_invalid_output');

@@ -1,3 +1,4 @@
+import { requiresPaymentReview } from './payment-review';
 import {compilationDraft} from './compilation-draft';
 import {invoiceObjectSuggestions,onboardingObjectSuggestions} from './object-suggestions';
 import { contactChoices, linkConfirmedContacts, resolveContact, saveContactProposal } from '../contacts/proposals';
@@ -297,6 +298,7 @@ export class ObjectOnboardingService {
     return this.request(a, h, 'confirm', uuid(id), body, key, async tx => {
       const draft = await this.open(tx, a, h, id, body.expectedVersion), output = draft.output as unknown as Output, decisions = { ...draft.decisions as Decisions };
       if(automatic&&output.houseExpenses?.some(e=>e.invoiceSegment))throw conflict('onboarding_multiple_invoices_review','Conferma separatamente le fatture del file.');
+      if(automatic&&requiresPaymentReview(output,{documentId:draft.documentId,documentVersion:draft.documentVersion as 1,documentSha256:draft.documentSha256}))throw conflict('onboarding_payment_review','Controlla il regime di pagamento e il costo complessivo prima di confermare.');
       const onlyArchive=!!body.contacts?.length&&!body.choices.length&&!body.houseExpenses?.length||body.documentOnly||body.choices.length>0&&body.choices.every(c=>c.action==='document_only')&&!body.houseExpenses?.length;
       if(automatic&&!onlyArchive){
         for(const cost of output.houseExpenses??[])if((await invoiceObjectSuggestions(tx,a,h,output,cost,this.reviewAccess)).items.length)throw conflict('automatic_duplicate_review','La fattura potrebbe riguardare un oggetto già presente: controlla il collegamento prima di salvare.');

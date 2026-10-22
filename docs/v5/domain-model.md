@@ -65,3 +65,7 @@ HomeActivity: creatore/Home, collegamento BoilerAsset facoltativo, testo, dueDat
 ## Fatture distinte nello stesso originale — 22 ottobre 2026
 
 Una bozza onboarding può rappresentare fatture complete su pagine singole distinte mediante `houseExpenses[].invoiceSegment:{key,page}`. La chiave deriva da SHA/pagina (`invoice-page-v1`), con fingerprint stabile fra copie e `itemId` legato alla bozza/documento; fornitore, numero e data rimangono ancoraggi obbligatori citati nella stessa pagina del totale. Nessuna nuova entità o migrazione. Ogni spesa canonica conserva `_invoiceSegment` nel JSON `economicProvenance`, oltre alle fonti per campo; separazione, conferma e duplicati operano per segmento. Il file originale e i suoi permessi rimangono unici. Nessun totale globale o soggetto/professionista attribuito implicitamente al gruppo. [Regole e prove Q48](fase0-q48-invoices-offline-20261022.md).
+
+## Revisione split payment sulla fonte — 23 ottobre 2026
+
+Il JSON interno ProductExtraction della bozza può contenere paymentReview: policy payment-review-v1, documentId/documentVersion/documentSha256 e reason split_payment oppure null. Prodotto soltanto dal server sul testo completo localmente verificato, non dallo schema AI; nessun nuovo testo salvato. Policy assente/vecchia o snapshot diverso impediscono automazione finanziaria, preservando la conferma umana. Nessuna tabella/migrazione o riscrittura delle bozze esistenti; metadato non proiettato pubblicamente. [Contratto e prove](fase0-q15-payment-offline-20261023.md).

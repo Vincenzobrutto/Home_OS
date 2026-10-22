@@ -195,3 +195,7 @@ Esiti automatici baseline: Q45/2, Q33/1, Q15/1, Q33/2, Q46/2, Q03/2, Q27/1, Q11/
 | 1/progressive/1 | review | 1/2 | 1/2 | 1/2 |
 | 2/full/0 | review | 1/2 | 1/2 | 1/2 |
 | 2/progressive/1 | review | 1/2 | 1/2 | 1/2 |
+
+## Seguito offline del 23 ottobre: Q15
+
+Il blocco automatico split payment è stato corretto e verificato successivamente con parser Q15 e trasporto in memoria, più prove privacy/idempotenza su DB sintetico nuovo. [Report separato](fase0-q15-payment-offline-20261023.md). Queste prove non modificano i risultati, i due critici Q15, la ricevuta o il ledger qui congelati; gate sempre non superato. Nessuna nuova chiamata AI o uso del residuo autorizzato.

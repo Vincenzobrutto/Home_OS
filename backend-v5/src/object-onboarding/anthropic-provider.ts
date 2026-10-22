@@ -180,7 +180,7 @@ export class ObjectOnboardingAnthropicProvider {
       stage = 'wire';
       const normalized = onboardingWireOutput(raw); stage = 'evidence';
       const output=productExtraction(documentScope(normalized), prepared.context);
-      if(output.documentKind==='conformity_declaration'&&(normalized as {requiresHumanReview?:boolean}).requiresHumanReview!==true&&output.reviewWarnings?.every(w=>['-1:issuer','-1:documentDate'].includes(w.field)))output.needsReview=false;
+      if(!output.paymentReview?.reason&&output.documentKind==='conformity_declaration'&&(normalized as {requiresHumanReview?:boolean}).requiresHumanReview!==true&&output.reviewWarnings?.every(w=>['-1:issuer','-1:documentDate'].includes(w.field)))output.needsReview=false;
       return { output, usage };
     } catch (error) {
       // Shapes and bounded enums only: never log text, titles, excerpts or provider error bodies.

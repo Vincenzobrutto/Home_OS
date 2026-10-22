@@ -1,4 +1,12 @@
-## Fase 0 — nuova campagna AI v24 autorizzata, 23 ottobre 2026 (Codex)
+## Fase 0 — Q15 split payment corretto offline, 23 ottobre 2026 (Codex)
+
+**Implementato e verificato offline**: policy server `payment-review-v1` sul testo completo verificato dell’originale, indipendente da importi omessi e flag del modello. Q15 conserva il totale **244,00 EUR** e richiede revisione; niente automatico di spese/oggetti/contatti. Controllo ripetuto nella transazione di conferma con binding documento/versione/SHA. Vecchie bozze finanziarie prive del controllo o con policy/snapshot errati richiedono conferma esplicita. Conferma manuale e opt-in contatti preservati; nessuna migrazione. [Correzione, test e limiti](v5/fase0-q15-payment-offline-20261023.md).
+
+**Verifiche**: build/lint backend V5, onboarding **181/181**, qualità **24/24**, guard **11/11**, backend **213/213**. DB sintetico nuovo **55433: 20/20**, Q15 9 e regressioni Q48 11 inclusi contenitori: privacy, revoca fonte, SHA/versione, ruoli, rollback, concorrenza e replay da altro client. Una sola spesa da 244 EUR e un solo contatto dopo conferma manuale concorrente, zero risorse dopo tentativi automatici. Cluster conservato e spento. Vecchio test sulle chiavi aggiornato al metadato interno, nessuna asserzione privacy/idempotenza indebolita.
+
+**Non verificato / residuo**: nessun nuovo invio AI, originale reale, accesso DB/API app, modifica `.env` o riavvio API; frontend/browser e HTTP non ripetuti. Gold/corpus e artefatti/ledger delle campagne invariati; la ricevuta v24 è rifiutata dal codice modificato. Gate AI ancora **NON SUPERATO**, nessun ricalcolo retroattivo dei due critici Q15. Restano Q22, copertura live Q48, date/titoli/stabilità e consenso distinto per future misure. File estranei preservati.
+
+## Campagna precedente v24 — fotografia congelata, 23 ottobre 2026
 
 **Eseguita e verificata** `fase0-quality-v3-v24-20261023-synthetic-02`: **52 sintetici, 120/120 attività, 148/150 Messages**, tutti liquidati, **3,562652/12 USD**, **0 esiti incerti e nessun retry**. Ricevuta/piano/codice/gold congelati prima dell’invio, prompt `document-understanding-v24-invoice-pages`. Cluster/ledger nuovi sulla 55433, directory `quality-v24-live-20261023`, conservati e spenti, separati da campagna v22 e app. [Report e confronto](v5/fase0-quality-v24-campaign-20261023.md), [ricevuta](v5/fase0-quality-v24-authorization-20261023.json), [verifica](v5/fase0-quality-v24-verification-20261023.json).
 

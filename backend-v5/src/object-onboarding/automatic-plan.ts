@@ -1,3 +1,4 @@
+import { requiresPaymentReview } from './payment-review';
 import type { ProductExtraction } from './domain';
 import { proposedProfile } from './profile';
 import type { OnboardingChoice } from './bodies';
@@ -5,6 +6,7 @@ import type { OnboardingChoice } from './bodies';
 export class AutomaticReviewNeeded extends Error {}
 function resourcePlan(output: ProductExtraction) {
   const review = (message: string): never => { throw new AutomaticReviewNeeded(message); };
+  if(requiresPaymentReview(output))review('Controlla il regime di pagamento e il costo complessivo nell’originale prima di confermare.');
   if(output.evidenceMode&&output.evidenceMode!=='text')review('Controlla il documento visivo: le citazioni non sono verificate sul testo.');
   if(output.documentKind==='conformity_declaration'){
     if(output.documentInfo?.kind!=='conformity_declaration'||output.needsReview||output.reviewWarnings?.some(w=>!['-1:issuer','-1:documentDate'].includes(w.field))||output.houseExpenses?.length||output.purchaseTotal)review('Controlla la classificazione del documento nell’originale.');
