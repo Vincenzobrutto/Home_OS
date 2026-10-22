@@ -1,3 +1,9 @@
+## Oggetti: garanzia manuale (BL-02) — 22 ottobre 2026
+
+Implementato su branch `claude/bl02-garanzia` (Claude). Scheda: garanzia «fino al/scaduta il», provenienza e documento di supporto; modifica per data o mesi con scorciatoia esplicita 24 mesi; «Crea promemoria» precompilato e confermato dall'utente; onboarding senza scadenza presunta. Contratto profilo esteso con `warrantyDocument`, nessuna migrazione. [Report](v5/warranty-bl02-20261022.md).
+
+Verificato: typecheck/lint FE e BE, test offline backend (35) e frontend mirati (28), browser su casa «COLLAUDO V2» (una scrittura sintetica). **Non verificato**: suite HTTP/DB, onboarding nel browser. Prossimo passo concordato: BL-03 Storia essenziale della casa; BL-04 e BL-01 restano da fare.
+
 ## Passaggio di consegne multi-agente e autorizzazioni — 22 ottobre 2026
 
 Aggiornati [AGENTS.md](../AGENTS.md) e [frontend-v5/AGENTS.md](../frontend-v5/AGENTS.md): formalizzata l'alternanza operativa tra Antigravity, Claude e Codex, con continuità demandata esclusivamente a repository e documentazione condivisa (nessuna presunzione di memoria delle sessioni/chat altrui). Autorizzato Antigravity a intervenire su frontend-v5, backend-v5 e documenti condivisi. Fissate a livello di root le regole di passaggio di consegne per ogni sessione (nessuna informazione indispensabile lasciata solo nella chat o nell'IDE, aggiornamento documentazione condivisa, verifiche dichiarate con precisione, preservazione modifiche preesistenti, commit del proprio lavoro e push verificato).

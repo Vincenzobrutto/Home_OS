@@ -241,10 +241,13 @@ export function ActivityForm(props: {
   limits?: { titleMaxCodePoints: number; descriptionMaxCodePoints: number };
   /** G1: promemoria per un oggetto manuale. Nessuna caldaia: il collegamento G1 segue la creazione. */
   forObject?: string;
+  /** Solo in creazione: valori iniziali modificabili (es. promemoria della garanzia, BL-02). Nessun invio automatico. */
+  initial?: { title?: string; description?: string; dueDate?: string };
   onDone: (res: ActivityResponse) => void;
   onCancel: () => void;
 }) {
   const { home, activity } = props;
+  const initial = !activity ? props.initial : undefined;
   const forObject = !activity ? props.forObject : undefined;
   const objectHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (forObject) objectHeading.current?.focus(); }, [forObject]);
@@ -259,9 +262,9 @@ export function ActivityForm(props: {
         ? KEEP
         : ''
     : (props.presetAssetId ?? '');
-  const [title, setTitle] = useState(activity?.title ?? '');
-  const [description, setDescription] = useState(activity?.description ?? '');
-  const [dueDate, setDueDate] = useState(activity?.dueDate ?? '');
+  const [title, setTitle] = useState(activity?.title ?? initial?.title ?? '');
+  const [description, setDescription] = useState(activity?.description ?? initial?.description ?? '');
+  const [dueDate, setDueDate] = useState(activity?.dueDate ?? initial?.dueDate ?? '');
   const [assetChoice, setAssetChoice] = useState(initialAsset);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [nothing, setNothing] = useState(false);

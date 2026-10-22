@@ -907,12 +907,14 @@ function ActivityChoices(props: { homeId: string; disabled: boolean; onChoose: (
  * collegamento da completare», si conserva l'ID e si riprova solo il collegamento con la
  * stessa chiave. Mai ricreare il costo. Stato solo in memoria (azzerato al cambio contesto).
  */
-function CreateAndLink(props: {
+export function CreateAndLink(props: {
   home: Home;
   object: CatalogItem;
   resourceType: 'expense' | 'activity';
   expenseCapabilities?: ExpenseCapabilities;
   activityCapabilities?: ActivityCapabilities;
+  /** Valori iniziali del promemoria (BL-02): modificabili, salvati solo con conferma esplicita. */
+  activityInitial?: { title?: string; description?: string; dueDate?: string };
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -942,6 +944,7 @@ function CreateAndLink(props: {
       <ActivityForm
         home={home}
         forObject={object.name}
+        initial={props.activityInitial}
         limits={props.activityCapabilities?.limits}
         onCancel={props.onClose}
         onDone={(res) => afterCreate({ id: res.activity.id, title: res.activity.title })}

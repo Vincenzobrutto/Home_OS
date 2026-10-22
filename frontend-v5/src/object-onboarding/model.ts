@@ -2,7 +2,7 @@ import type { ContactValues, Contact } from '../contacts/types';
 import type { ObjectManual } from '../api/types';
 export const labels = {brand:'Marca',model:'Modello',reference:'Riferimento prodotto',serialNumber:'Numero di serie',powerWatts:'Potenza (W)',voltageVolts:'Tensione (V)',frequencyHz:'Frequenza (Hz)',capacityLitres:'Capacità (litri)',purchaseDate:'Data di acquisto',deliveredDate:'Consegna effettiva',warrantyStart:'Inizio garanzia',warrantyEnd:'Scadenza garanzia'} as const;
 export type FieldKey=keyof typeof labels;
-export type Field={value:string;origin:string;sources:Array<{documentId:string;page:number;excerpt:string;basis?:string}>;externalSource?:{url:string;checkedAt:string}};
+export type Field={value:string;origin:string;sources:Array<{documentId:string;page:number;excerpt:string;basis?:string}>;externalSource?:{url:string;checkedAt:string};/** BL-02: documento di supporto di una scadenza dichiarata, solo se leggibile. */support?:{documentId:string;name:string}|null;supportUnavailable?:boolean};
 export type Profile=Partial<Record<FieldKey,Field>>;
 export const originLabel=(origin:string)=>({user_declared:'Inserito da te',extraction_confirmed:'Letto dal documento',derived_from_product_name:'Ricavato dal nome del prodotto',derived_from_purchase:'Proposta dalla data di acquisto: verifica la consegna',derived_from_delivery:'Proposta dalla consegna effettiva',default_24_months:'Proposta: 24 mesi, modificabile',manufacturer_page:'Pagina ufficiale del produttore'}[origin]??'Da verificare');
 export type Candidate={id:string;name:string;version:number;profile:{fields:Profile;unavailable:boolean};rooms:string[];reason:string};
@@ -25,16 +25,17 @@ export function initialForm(item:Item,draft:Draft):Form {return {expenseAutoStat
 export function choice(item:Item,form:Form){if(form.action==='document_only')return {itemId:item.id,action:'document_only' as const};if(form.action==='skip')return {itemId:item.id,action:'skip' as const};const common={itemId:item.id,fields:form.fields,manual:form.manual&&item.enrichment?.candidate?{mode:'candidate',token:item.enrichment.candidate.token}:null,expense:form.expense==='skip'?{action:'skip'}:form.expense==='link'?{action:'link',id:form.expenseId,expectedVersion:form.expenseVersion}:{action:'create',title:form.name||item.fields.name?.value||'Acquisto',amountCents:Math.round(Number(form.amount.replace(',','.'))*100),spentOn:form.spentOn,supplier:form.supplier||null,...(form.manualItemAmount?{manualItemAmount:true}:{}),...(form.acknowledgePossibleDuplicate?{acknowledgePossibleDuplicate:true}:{})}};return form.action==='link'?{...common,action:'link',targets:form.targets.map(t=>({id:t.id,expectedVersion:t.version}))}:{...common,action:'create',name:form.name,type:form.type,unitNames:form.unitNames,roomIds:[],confirmHouseholdObject:form.confirmHouseholdObject,acknowledgeExistingSource:form.acknowledgeExistingSource};}
 
 function calendarPlus24(value:string){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return null;const [year,month,day]=value.split('-').map(Number),end=new Date(Date.UTC(year!+2,month!,0));return `${end.getUTCFullYear()}-${String(month).padStart(2,'0')}-${String(Math.min(day!,end.getUTCDate())).padStart(2,'0')}`;}
-/** Editable defaults follow dates until the user independently changes the guarantee. */
+/** Editable defaults follow dates until the user independently changes the guarantee. BL-02: nessuna scadenza presunta. */
 export function editProfileField(form:Form,key:FieldKey,decision:NonNullable<Form['fields'][FieldKey]>,proposals:Profile,current:Profile):Form {
  const result={...form,fields:{...form.fields,[key]:decision}};
  if(key==='warrantyStart')result.autoWarrantyStart=false;
  if(key==='warrantyEnd')result.autoWarrantyEnd=false;
  const value=(field:FieldKey)=>{const d=result.fields[field];return d?.action==='manual'?d.value:d?.action==='skip'?undefined:d?.action==='replace'?proposals[field]?.value:current[field]?.value??proposals[field]?.value;};
  if((key==='purchaseDate'||key==='deliveredDate')&&!current.warrantyStart&&result.autoWarrantyStart!==false){const start=value('deliveredDate')||value('purchaseDate');if(start&&calendarPlus24(start))result.fields.warrantyStart={action:'manual',value:start};else if(!start){result.fields.warrantyStart={action:'skip'};if(result.autoWarrantyEnd!==false)result.fields.warrantyEnd={action:'skip'};}}
- if(['purchaseDate','deliveredDate','warrantyStart'].includes(key)&&!current.warrantyEnd&&result.autoWarrantyEnd!==false){const start=value('warrantyStart'),end=start?calendarPlus24(start):null;if(end)result.fields.warrantyEnd={action:'manual',value:end};}
  return result;
 }
+/** BL-02: scorciatoia esplicita «24 mesi» dalla decorrenza scelta o proposta; null se manca la decorrenza. */
+export function legalWarrantyEnd(form:Form,proposals:Profile,current:Profile):string|null{const d=form.fields.warrantyStart;const start=d?.action==='manual'?d.value:d?.action==='skip'?undefined:current.warrantyStart?.value??proposals.warrantyStart?.value;return start?calendarPlus24(start):null;}
 
 export function automaticExpenseEligible(item:Item,draft:Draft){return draft.mode==='extraction'&&['purchase_document','order_confirmation'].includes(draft.documentKind)&&(draft.items.length===1||!!item.purchaseAmount)&&(item.quantity?.value??1)===1&&(!draft.needsReview||draft.purchaseExpenseReady===true)&&!!draft.purchaseTotal&&draft.purchaseTotal.amountCents>0&&!!item.profile.purchaseDate?.value;}
 export function expenseNeedsReview(form:Form){return !['skip','document_only'].includes(form.action)&&(form.expenseAutoState==='pending'||form.expenseAutoState==='review'||form.expense==='create'&&form.manualItemAmount===false);}

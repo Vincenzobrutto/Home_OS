@@ -13,6 +13,7 @@ import { ManufacturerManuals, manualLookup, manualSelection, type ObjectManual }
 import { objectProfileView } from '../object-onboarding/access';
 import { profileFields, profileValue, type ProfileKey, type ObjectProfile } from '../object-onboarding/profile';
 import { temporal } from '../activities/domain';
+import { applyWarrantySupport, presentWarrantySupport, warrantyDocumentInput } from './warranty';
 
 type Tx = Prisma.TransactionClient;
 type Context = { a: string; h: string; edit: boolean };
@@ -74,7 +75,7 @@ export class HomeObjectsService {
     const pos = position === undefined ? await this.position(tx, c, kind, row.id) : position;
     const rooms = pos ? await tx.homeRoom.findMany({ where: { homeId: c.h, id: { in: pos.roomIds as string[] } }, orderBy: { id: 'asc' } }) : [];
     const manual = kind === 'object' ? (row as HomeObject).manual as ObjectManual | null : null;
-    const profile = kind === 'object' ? await objectProfileView(tx, c.a, c.h, row.id, row.profile) : null;
+    const profile = kind === 'object' ? await presentWarrantySupport(tx, c.a, c.h, await objectProfileView(tx, c.a, c.h, row.id, row.profile)) : null;
     return { ref: { kind, id: row.id }, homeId: row.homeId, name: row.name, type: row.type, note: row.note, state: row.state,
       manual: manual ? { ...manual, needsReview: manual.boundVersion !== row.version } : null,
       profile,
@@ -207,13 +208,15 @@ export class HomeObjectsService {
     });
   }
   async setProfile(a: string, h: string, id: string, input: unknown, key?: string) {
-    uuid(id); const r = object(input, ['expectedVersion', 'values']), expectedVersion = version(r.expectedVersion);
-    const values = object(r.values, [...profileFields]);
-    if (!Object.keys(values).length) throw invalid();
+    uuid(id); const r = object(input, ['expectedVersion', 'values', 'warrantyDocument']), expectedVersion = version(r.expectedVersion);
+    const values = r.values === undefined ? {} : object(r.values, [...profileFields]);
+    // BL-02: documento di supporto della scadenza dichiarata (undefined = invariato, null = rimosso).
+    const warrantyDocument = warrantyDocumentInput(r.warrantyDocument);
+    if (!Object.keys(values).length && warrantyDocument === undefined) throw invalid();
     const normalized = Object.fromEntries(Object.entries(values).map(([k, v]) => [k, v === null ? null : profileValue(k as ProfileKey, v)]));
     const today = temporal(new Date()).today;
     for (const field of ['purchaseDate', 'deliveredDate']) if (normalized[field] && normalized[field]! > today) throw invalid('La data effettiva non può essere futura.');
-    return this.mutate(a, h, 'object:profile', id, { expectedVersion, values: normalized }, key, async (tx, c) => {
+    return this.mutate(a, h, 'object:profile', id, { expectedVersion, values: normalized, ...(warrantyDocument !== undefined ? { warrantyDocument } : {}) }, key, async (tx, c) => {
       const before = await this.saveSubject(tx, c, 'object', id); if (before.kind !== 'object') throw deny();
       this.active(before.row.state); this.checkVersion(before.row.version, expectedVersion, 'object');
       const current = await objectProfileView(tx, a, h, id, before.row.profile); if (current.unavailable) throw deny();
@@ -227,6 +230,13 @@ export class HomeObjectsService {
         }
       }
       if (fields.warrantyStart && fields.warrantyEnd && fields.warrantyEnd.value < fields.warrantyStart.value) throw invalid('La scadenza non può precedere l’inizio garanzia.');
+      if (warrantyDocument) {
+        // Solo un documento leggibile e già collegato a questo oggetto: il supporto non crea collegamenti nuovi.
+        await this.resource(tx, c, 'document', warrantyDocument);
+        const linked = await tx.objectResourceLink.findFirst({ where: { accountId: a, homeId: h, objectId: id, documentId: warrantyDocument, state: 'active' } });
+        if (!linked) throw invalid('Collega prima il documento a questo oggetto.');
+      }
+      applyWarrantySupport(fields, warrantyDocument);
       await tx.homeObject.update({ where: { id }, data: { profile: json(fields), version: { increment: 1 } } });
       await tx.objectOnboardingComparison.updateMany({ where: { accountId: a, homeId: h, objectId: id, fieldKey: { in: Object.keys(normalized) }, state: 'open' }, data: { state: 'resolved', version: { increment: 1 } } });
       const after = await this.saveSubject(tx, c, 'object', id); await this.event(tx, c, 'object', id, 'profile_updated', before, after); return after;

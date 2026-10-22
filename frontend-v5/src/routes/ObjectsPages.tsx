@@ -1,5 +1,4 @@
 import {KeepHouseDocuments} from '../objects/KeepHouseDocuments';
-import {ShieldCheck} from '@phosphor-icons/react/dist/csr/ShieldCheck';
 import {DotsThree} from '@phosphor-icons/react/dist/csr/DotsThree';
 import {CaretDown} from '@phosphor-icons/react/dist/csr/CaretDown';
 import detail from '../objects/detail.module.css';
@@ -7,6 +6,7 @@ import { CatalogContent } from '../objects/Catalog';
 import { ContactsPanel } from '../contacts/components';
 import { contextReturn } from '../lib/contextReturn';
 import { PurchaseSummary } from '../objects/PurchaseSummary';
+import { WarrantyReminder, WarrantySummary } from '../objects/Warranty';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
 import { isApiError } from '../api/errors';
@@ -144,9 +144,7 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
   const base = `/home/${encodeURIComponent(home.id)}`;
 
   const finishPanel=()=>{setPanel('none');requestAnimationFrame(()=>{const target=panel==='position'?document.querySelector<HTMLSelectElement>('form[aria-label="Collocazione dell’oggetto"] select'):document.getElementById('object-edit-button');target?.focus();});};
-  const [menu,setMenu]=useState(false),[more,setMore]=useState(false);
-  const warranty=object.profile?.fields.warrantyEnd?.value;
-  const date=(value:string)=>new Intl.DateTimeFormat('it-IT',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
+  const [menu,setMenu]=useState(false),[more,setMore]=useState(false),[reminding,setReminding]=useState(false);
   return <div className={detail.page}>
     {props.back}
     <header className={detail.header}>
@@ -163,7 +161,8 @@ function ObjectView(props: { home: Home; object: CatalogItem; caps: ObjectCapabi
     </section>
     {!canEdit&&<p className={pages.muted}>Con il tuo ruolo puoi consultare questo oggetto, non modificarlo.</p>}
     {panel==='edit'&&!isBoiler&&<ObjectForm home={home} capabilities={props.caps} object={object} onCancel={finishPanel} onDone={finishPanel}/>}<div hidden={panel==='edit'}>
-      {!isBoiler&&<div className={detail.summary}><PurchaseSummary homeId={home.id} object={object} enabled={!!economyCaps.data?.enabled} compact/>{warranty&&<div className={detail.warranty}><ShieldCheck size={26} aria-hidden="true"/><div><span>Garanzia</span><strong>fino al {date(warranty)}</strong></div></div>}</div>}
+      {!isBoiler&&<div className={detail.summary}><PurchaseSummary homeId={home.id} object={object} enabled={!!economyCaps.data?.enabled} compact/><WarrantySummary home={home} object={object} canRemind={canEdit&&active&&!!activityCaps.data&&panel==='none'} onRemind={()=>setReminding(true)}/></div>}
+      {reminding&&!isBoiler&&<div className={detail.reminder}><WarrantyReminder home={home} object={object} activityCapabilities={activityCaps.data} onClose={()=>setReminding(false)}/></div>}
       <div className={detail.grid}>
         <div className={detail.main}>
           {!isBoiler&&<>{object.profile?<ProfileSection object={object} homeId={home.id} canEdit={canEdit} compact detailLayout editMode={panel==='profile'} onEditModeChange={editing=>{if(editing)setPanel('profile');else finishPanel();}}/>:<ReceiptObjectFields objectId={object.ref.id}/>}<ReceiptComparisons objectId={object.ref.id}/></>}

@@ -6,7 +6,8 @@ import type { ProductItem, ProductSource } from './domain';
 export const profileFields = ['brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
 export type ProfileKey = typeof profileFields[number];
 export type ProfileOrigin = 'user_declared' | 'extraction_confirmed' | 'derived_from_purchase' | 'derived_from_delivery' | 'default_24_months' | 'manufacturer_page' | 'derived_from_product_name';
-export type ProfileField = { value: string; origin: ProfileOrigin; sources: ProductSource[]; externalSource?: { url: string; checkedAt: string } };
+/** `support`: documento di supporto scelto dall'utente per un dato dichiarato (BL-02, solo scadenza garanzia). Non è una citazione e non cambia la provenienza. */
+export type ProfileField = { value: string; origin: ProfileOrigin; sources: ProductSource[]; externalSource?: { url: string; checkedAt: string }; support?: { documentId: string } };
 export type ObjectProfile = Partial<Record<ProfileKey, ProfileField>>;
 
 export function addCalendarMonths(value: string, months: number) {
@@ -34,7 +35,7 @@ export function proposedProfile(item: ProductItem): ObjectProfile {
     const base = result.deliveredDate ?? result.purchaseDate!;
     result.warrantyStart = { value: base.value, origin: result.deliveredDate ? 'derived_from_delivery' : 'derived_from_purchase', sources: base.sources };
   }
-  if (!result.warrantyEnd && result.warrantyStart) result.warrantyEnd = { value: addCalendarMonths(result.warrantyStart.value, 24), origin: 'default_24_months', sources: result.warrantyStart.sources };
+  // BL-02: nessuna scadenza presunta. I 24 mesi sono solo una scorciatoia esplicita dell'utente nell'interfaccia.
   return result;
 }
 

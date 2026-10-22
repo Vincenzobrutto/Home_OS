@@ -1137,3 +1137,7 @@ Un ordine può fornire un totale acquisto esplicito anche senza data o prova di 
 ## 19 ottobre 2026 — Periodo delle bollette
 
 I costi delle utenze appartengono al periodo di riferimento, senza confonderlo con emissione o scadenza. Intervalli conteggiati una volta nel mese iniziale: conserva l'importo originale, evita duplicazioni e ripartizioni stimate. [Regole e limiti](v5/bill-reference-period-20261019.md).
+
+## 22 ottobre 2026 — BL-02: nessuna copertura di garanzia presunta
+
+Decisione del committente: la scadenza di garanzia è dichiarata dall'utente (data o mesi), letta da un documento oppure assente. I 24 mesi della garanzia legale per i beni di consumo sono solo una scorciatoia esplicita; il default automatico `default_24_months` non viene più proposto (resta leggibile per dati storici). Il documento di supporto è un riferimento separato dalle citazioni: non trasforma un dato dichiarato in documentato, deve essere già collegato all'oggetto e viene oscurato se non più leggibile. Promemoria solo su richiesta, riusando attività + collegamento. Alternative scartate: proposta automatica a 24 mesi (copertura presunta), campo garanzia libero nelle note, nuova tabella garanzie multiple (rinviata). Ordine scelto dal committente: BL-02 poi BL-03, prima di BL-04/BL-01.
