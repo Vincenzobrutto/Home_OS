@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q38",
+  "documentKind": "device_label",
+  "items": [
+    {
+      "name": "Forno Nubeo N4",
+      "brand": "Nubeo",
+      "model": "N4",
+      "type": "appliance",
+      "typeCertain": true,
+      "quantity": null,
+      "powerWatts": "2800"
+    }
+  ],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Foto procedurale, non foto reale: marca/modello leggibili; quantità assente, nessun acquisto presunto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "a038bf6f0d2f8cf86f47046876afe3c7e16bc74fd9df0c99d967740587473a88"
+}

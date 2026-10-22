@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q41",
+  "documentKind": "device_label",
+  "items": [
+    {
+      "name": "Pompa acqua Vetravia H2",
+      "brand": "Vetravia",
+      "model": "H2",
+      "type": "plumbing",
+      "typeCertain": true,
+      "quantity": null,
+      "powerWatts": "450"
+    }
+  ],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Foto procedurale, non foto reale: marca/modello leggibili; quantità assente, nessun acquisto presunto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "a21bea037c09cece15d9ce57924a128753665e0410e231eae049e5c810a4deda"
+}

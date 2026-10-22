@@ -1,0 +1,19 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q34",
+  "documentKind": "house_document",
+  "items": [],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Solo classificazione, nessun acquisto dedotto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "79364fc287e3459da520c204f61cde5ccfc6ec89d0992e76cb0d58e07b9b2f45"
+}

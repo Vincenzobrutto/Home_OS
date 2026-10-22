@@ -1,0 +1,19 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q31",
+  "documentKind": "house_document",
+  "items": [],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Classificare floor_plan, nessun oggetto, costo o professionista.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "69e7888bf0d0c7a2f05fb7277ba21d20f4baf1089cf4f9a9bbe3392c665495ce"
+}

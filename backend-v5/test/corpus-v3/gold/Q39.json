@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q39",
+  "documentKind": "device_label",
+  "items": [
+    {
+      "name": "Climatizzatore Vetravia K9",
+      "brand": "Vetravia",
+      "model": "K9",
+      "type": "cooling",
+      "typeCertain": true,
+      "quantity": null,
+      "powerWatts": "950"
+    }
+  ],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Foto procedurale, non foto reale: marca/modello leggibili; quantità assente, nessun acquisto presunto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "077779ff24e202a6a7e10873ba870ce6062fed77b94a45558c7332b4929df02c"
+}

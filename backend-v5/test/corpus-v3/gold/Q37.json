@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q37",
+  "documentKind": "device_label",
+  "items": [
+    {
+      "name": "Frigorifero Vetravia R3",
+      "brand": "Vetravia",
+      "model": "R3",
+      "type": "appliance",
+      "typeCertain": true,
+      "quantity": null,
+      "powerWatts": "90"
+    }
+  ],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Foto procedurale, non foto reale: marca/modello leggibili; quantità assente, nessun acquisto presunto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "ebe84909f6ff81b8ff2a74bf3eae9a2220dcac6dfb0c3c57e1cfa5e47f5a37bd"
+}

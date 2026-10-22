@@ -8,6 +8,15 @@ export type InputDocument = { snapshot: Snapshot; bytes: Buffer };
 export type TextDocument = { snapshot: Snapshot; pages: string[] };
 @Injectable()
 export class PdfTextExtractor {
+  async renderPage(input:InputDocument,page:number):Promise<{bytes:Buffer;pageCount:number}>{
+    if(input.bytes.length>ANALYSIS_LIMITS.maxFileBytes||digest(input.bytes)!==input.snapshot.documentSha256||!Number.isSafeInteger(page)||page<1||page>20)throw new ProviderFailure('analysis_limits_exceeded');
+    return new Promise((res,rej)=>{
+      const child=execFile(process.execPath,['--max-old-space-size=256',resolve(__dirname,'../../src/review/pdf-worker.cjs')],{timeout:15000,maxBuffer:8*1024*1024,windowsHide:true,env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,TEMP:process.env.TEMP,TMP:process.env.TMP}},(error,stdout)=>{
+        if(error){rej(new ProviderFailure('pdf_invalid'));return;}
+        try{const data=JSON.parse(stdout);if(data.error)throw new ProviderFailure(data.error);if(typeof data.image!=='string'||!Number.isSafeInteger(data.pageCount)||data.pageCount<page||data.pageCount>20)throw new ProviderFailure('pdf_invalid');res({bytes:Buffer.from(data.image,'base64'),pageCount:data.pageCount});}catch(e){rej(e instanceof ProviderFailure?e:new ProviderFailure('pdf_invalid'));}
+      });child.stdin?.on('error',()=>rej(new ProviderFailure('pdf_invalid')));child.stdin?.end(JSON.stringify({bytes:input.bytes.toString('base64'),renderPage:page}));
+    });
+  }
   async pageCount(input: InputDocument): Promise<number> {
     if (input.bytes.length > ANALYSIS_LIMITS.maxFileBytes || digest(input.bytes) !== input.snapshot.documentSha256) throw new ProviderFailure('analysis_limits_exceeded');
     return new Promise((resolveResult, reject) => {

@@ -95,7 +95,7 @@ it('recognized house document without items can be confirmed without forcing a n
  const draft=conformityDraft();draft.items=[];draft.documentInfo!.facts=draft.documentInfo!.facts.filter(f=>f.subjectIndex===-1);const w=mount(draft);expect(screen.getByRole('button',{name:'Salva e organizza'})).toBeEnabled();await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));expect(w.submit.mock.calls[0]![0]).toEqual([]);
 });
 
-it('intercom classification is an editable local type and never invents brand or model',()=>{const draft=fixture(),item=draft.items[0]!;item.fields.name!.value='monitor videocitofonico';item.profile={};const form=initialForm(item,draft);expect(form.type).toBe('electrical');expect(form.fields.brand).toBeUndefined();expect(form.fields.model).toBeUndefined();item.proposedType='security';expect(initialForm(item,draft).type).toBe('security');});
+it('object type is suggested only when the extractor supplied it; brand and model stay explicit',()=>{const draft=fixture(),item=draft.items[0]!;item.fields.name!.value='monitor videocitofonico';item.profile={};const form=initialForm(item,draft);expect(form.type).toBe('');expect(form.fields.brand).toBeUndefined();expect(form.fields.model).toBeUndefined();item.proposedType='security';expect(initialForm(item,draft).type).toBe('security');});
 
 it('only-document mode hides object and cost forms and allows an explicit switch back',async()=>{
  const w=mount(fixture(),true);

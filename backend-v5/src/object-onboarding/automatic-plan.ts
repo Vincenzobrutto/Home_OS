@@ -5,6 +5,7 @@ import type { OnboardingChoice } from './bodies';
 export class AutomaticReviewNeeded extends Error {}
 function resourcePlan(output: ProductExtraction) {
   const review = (message: string): never => { throw new AutomaticReviewNeeded(message); };
+  if(output.evidenceMode&&output.evidenceMode!=='text')review('Controlla il documento visivo: le citazioni non sono verificate sul testo.');
   if(output.documentKind==='conformity_declaration'){
     if(output.documentInfo?.kind!=='conformity_declaration'||output.needsReview||output.reviewWarnings?.some(w=>!['-1:issuer','-1:documentDate'].includes(w.field))||output.houseExpenses?.length||output.purchaseTotal)review('Controlla la classificazione del documento nell’originale.');
     return output.items.length?{choices:output.items.map(item=>({itemId:item.id,action:'document_only' as const}))}:{choices:[],documentOnly:true};
@@ -17,15 +18,13 @@ function resourcePlan(output: ProductExtraction) {
   const choices: OnboardingChoice[] = output.items.map(item => {
     const name = item.fields.name?.value;
     if (!name || item.nameTruncated || item.disposition !== 'household_object' || item.quantity?.value !== 1) review('Controlla quali articoli riguardano la casa e le loro quantità.');
-    const profile = proposedProfile(item), system = item.subjectKind === 'system' || output.documentKind === 'conformity_declaration';
-    const index = item.sourceIndex ?? output.items.indexOf(item);
-    const type = system ? output.documentInfo?.facts.find(f => f.subjectIndex === index && f.field === 'systemType')?.value : /\b(?:video)?citofon/iu.test(name!) ? 'electrical' : /robot|caff|coffee|frigo|lavatr|asciugat|router|modem|televisor|\btv\b|forno|lavastov|clima|congel|tostap|speaker/iu.test(name!) ? 'appliance' : 'other';
-    if (system && !type) review('Indica il tipo di impianto.');
+    const profile = proposedProfile(item), type=item.objectType?.value;
+    if(!type||item.objectType?.certainty!=='certain'||item.objectType.source.basis!=='verified_text')review('Conferma la tipologia proposta per l’oggetto o l’impianto.');
     const amount = item.purchaseAmount?.amountCents ?? (output.items.length === 1 ? output.purchaseTotal?.amountCents : null);
     const purchase = ['purchase_document', 'order_confirmation'].includes(output.documentKind);
     if (!documentCost && purchase && (!amount || !profile.purchaseDate)) review('Mancano prezzo o data d’acquisto verificabili.');
     if (!documentCost && output.items.length > 1 && output.purchaseTotal && !item.purchaseAmount) review('Manca il prezzo di una riga: il totale non viene ripartito automaticamente.');
-    return { itemId: item.id, action: 'create', name: name!, type: type ?? 'appliance', unitNames: [], roomIds: [], fields: Object.fromEntries(Object.keys(profile).map(k => [k, { action: 'accept' as const }])), manual: null, confirmHouseholdObject: false, acknowledgeExistingSource: false,
+    return { itemId: item.id, action: 'create', name: name!, type: type!, unitNames: [], roomIds: [], fields: Object.fromEntries(Object.keys(profile).map(k => [k, { action: 'accept' as const }])), manual: null, confirmHouseholdObject: false, acknowledgeExistingSource: false,
       expense: !documentCost && amount && profile.purchaseDate ? { action: 'create', title: ('Acquisto ' + name).slice(0,120), amountCents: amount, spentOn: profile.purchaseDate.value, supplier: null, ...(output.items.length>1?{manualItemAmount:true}:{}), acknowledgePossibleDuplicate: false } : { action: 'skip' } };
   });
   const houseExpenses = (output.houseExpenses ?? []).map(item => {

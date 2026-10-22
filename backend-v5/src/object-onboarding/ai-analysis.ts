@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, type ObjectOnboardingJob } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
-import { AnthropicTransport, responseUsage } from '../review/anthropic';
+import { AnthropicTransport, onboardingUsageCost } from '../review/anthropic';
 import type { InputDocument } from '../review/pdf-text';
 import { ProviderFailure } from '../review/provider';
 import { ProductEvidenceFailure, type ProductExtraction } from './domain';
@@ -50,8 +50,8 @@ export class OnboardingAiAnalysis {
     if (!dispatch) throw new ProviderFailure('analysis_outcome_unknown');
     try {
       if (signal.aborted) throw new ProviderFailure('analysis_timeout');
-      const response = await this.transport.send(prepared.request, signal), usage = responseUsage(response, attempt.model);
-      const cost = usage.input * attempt.inputMicroUsdPerToken + usage.output * attempt.outputMicroUsdPerToken;
+      const response = await this.transport.send(prepared.request, signal);
+      const {usage,cost}=onboardingUsageCost(response,attempt.model,{input:attempt.inputMicroUsdPerToken,output:attempt.outputMicroUsdPerToken});
       if (usage.input + prepared.request.max_tokens > 50000 || !Number.isSafeInteger(cost) || cost > attempt.reservedMicroUsd) throw new ProviderFailure('analysis_invalid_output');
       // Persist only billing before validation: no raw prompt or provider reply is stored.
       const settled = await this.db.objectOnboardingAttempt.updateMany({ where: { id: attempt.id, state: { in: ['sending', 'uncertain'] } }, data: { state: 'settled', responseAt: new Date(), providerRequestId: response.id, inputTokens: usage.input, outputTokens: usage.output, actualMicroUsd: cost } });

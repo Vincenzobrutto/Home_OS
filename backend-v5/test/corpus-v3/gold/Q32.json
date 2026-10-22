@@ -1,0 +1,19 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q32",
+  "documentKind": "house_document",
+  "items": [],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Classificare APE; classe energetica non è un prodotto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "16b8d6b688cb93552e473bdf5a20d9e2faf311c4f31f47d906284c48df121d7a"
+}

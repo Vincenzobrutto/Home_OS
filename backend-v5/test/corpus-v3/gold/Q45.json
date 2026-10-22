@@ -1,0 +1,31 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q45",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 36600,
+      "date": "2026-09-18",
+      "supplier": "Termonimbo Collaudo",
+      "period": null
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Termonimbo Collaudo",
+      "vatId": "99900000219"
+    }
+  ],
+  "automatic": "complete",
+  "reviewReason": "Totale a pagina 2, condizioni successive irrilevanti.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "ee65da2fb376b549de1f2908790a1784df59a907dca0c911b660169160148095"
+}

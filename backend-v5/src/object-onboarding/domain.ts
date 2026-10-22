@@ -1,4 +1,5 @@
 import { contactProposal, type ContactProposal } from '../contacts/extraction';
+import { readObjectType, type ObjectTypeProposal } from './object-type';
 import { HttpException } from '@nestjs/common';
 import { citation, type Citation, type EconomicOutput } from '../economy/document-domain';
 import { object, text, invalid, uuid, version } from '../review/domain';
@@ -16,6 +17,7 @@ export type Region = { x: number; y: number; width: number; height: number };
 export type ProductSource = Citation & { basis: 'verified_text' | 'provider_observed_image'; region: Region | null };
 export type ProductValue = { value: string; source: ProductSource };
 export type ProductItem = {
+  objectType?: ObjectTypeProposal;
   id: string; fingerprint: string; sourceIndex?: number; subjectKind?: 'product' | 'system';
   fields: Partial<Record<ProductField, ProductValue>>;
   quantity: { value: number; source: ProductSource } | null;
@@ -25,6 +27,7 @@ export type ProductItem = {
 };
 export type HouseExpense = EconomicOutput & {id:string;fingerprint:string;reviewWarnings?:string[]};
 export type ProductExtraction = {
+  evidenceMode?: 'text'|'image'|'visual_pdf';
   floorPlan?: import('./floor-plan-domain').FloorPlan;
   contacts?:ContactProposal[];
   houseExpenses?:HouseExpense[];
@@ -37,7 +40,7 @@ export type ProductExtraction = {
   purchaseExpenseReady?: boolean;
   purchaseTotal: { amountCents: number; source: ProductSource } | null;
 };
-export type ProductEvidenceContext = { snapshot: Snapshot } & (
+export type ProductEvidenceContext = { snapshot: Snapshot; allowedPages?:number[] } & (
   { kind: 'text'; pages: string[] } | { kind: 'image' } | { kind: 'visual_pdf'; pageCount: number }
 );
 export class ProductEvidenceFailure extends ProviderFailure {
@@ -58,6 +61,7 @@ function evidence(input: unknown, context: ProductEvidenceContext): ProductSourc
   const r = object(input, ['page', 'excerpt', 'region']);
   const excerpt = text(r.excerpt, 2000);
   if (!Number.isSafeInteger(r.page) || Number(r.page) < 1) throw invalid();
+  if(context.allowedPages&&!context.allowedPages.includes(Number(r.page)))throw invalid();
   const bound = { documentId: context.snapshot.documentId, documentVersion: context.snapshot.documentVersion, sha256: context.snapshot.documentSha256, page: Number(r.page), excerpt };
   if (context.kind === 'text') {
     if (r.region !== null) throw invalid();
@@ -83,7 +87,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     let needsReview = row.requiresHumanReview === true || understanding.warnings.length>0;
     const items: ProductItem[] = [];
     for (const [sourceIndex, raw] of row.items.entries()) {
-      const r = object(raw, ['fields', 'quantity', 'purchaseAmount', 'nameTruncated', 'disposition', 'confidence', 'subjectKind']);
+      const r = object(raw, ['fields', 'quantity', 'purchaseAmount', 'nameTruncated', 'disposition', 'confidence', 'subjectKind','objectType']);
       if (typeof r.nameTruncated !== 'boolean' || !['household_object', 'consumable', 'uncertain'].includes(String(r.disposition)) || !['high', 'low'].includes(String(r.confidence))) throw invalid();
       if(r.subjectKind!==undefined&&!['product','system'].includes(String(r.subjectKind)))throw invalid();
       const fields: Partial<Record<ProductField, ProductValue>> = {};
@@ -112,6 +116,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       }
       const primary = fields.name ?? fields.reference ?? fields.model;
       if (!primary || !fields.name && row.documentKind !== 'device_label') throw invalid();
+      const objectType=readObjectType(r.objectType,value=>evidence(value,context),primary.value);
       let quantity: ProductItem['quantity'] = null;
       if (r.quantity !== null) {try{
         const q = object(r.quantity, ['value', 'evidence']);
@@ -133,7 +138,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
         if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !(/(?:totale\s+riga|importo\s+riga|prezzo\s+articolo|line\s+total)/iu.test(source.excerpt)||tablePurchaseAmount(source.excerpt,fields.name.value)===price.amountCents) || !printedCents(source.excerpt).includes(Number(price.amountCents))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
         purchaseAmount = { amountCents: Number(price.amountCents), source };
       }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:sourceIndex+':purchaseAmount',reason:'unverified'});}}
-      items.push({...(r.subjectKind?{subjectKind:r.subjectKind as 'product'|'system'}:{}), id, fingerprint,...(understanding.documentInfo?{sourceIndex}:{}), fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
+      items.push({...(objectType?{objectType}:{}),...(r.subjectKind?{subjectKind:r.subjectKind as 'product'|'system'}:{}), id, fingerprint,...(understanding.documentInfo?{sourceIndex}:{}), fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
     }
     let purchaseTotal: ProductExtraction['purchaseTotal'] = null;
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {try{
@@ -147,7 +152,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if(houseExpenses.length&&!['utility_bill','purchase_document'].includes(String(row.documentKind)))throw invalid();
     if(row.documentKind==='purchase_document'&&houseExpenses.length>1)throw invalid('Una fattura propone un unico costo complessivo della casa.');
     const party=contactProposal(understanding.documentInfo,context.kind==='text'?context.pages:undefined);
-    return { ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
+    return { evidenceMode:context.kind, ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
   } catch (error) {
     if (error instanceof ProviderFailure) throw error;
     throw new ProviderFailure('analysis_invalid_output');

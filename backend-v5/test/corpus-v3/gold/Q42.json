@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q42",
+  "documentKind": "device_label",
+  "items": [
+    {
+      "name": "Asciugatrice Nubeo A4",
+      "brand": "Nubeo",
+      "model": "A4",
+      "type": "appliance",
+      "typeCertain": true,
+      "quantity": null,
+      "powerWatts": "800"
+    }
+  ],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Foto procedurale, non foto reale: marca/modello leggibili; quantità assente, nessun acquisto presunto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "f4792d5fe63dbe906273ef2ed99f63f875d622fe772a300e39d90f175600bfe9"
+}

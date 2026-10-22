@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q40",
+  "documentKind": "device_label",
+  "items": [
+    {
+      "name": "Centrale allarme Nubeo S2",
+      "brand": "Nubeo",
+      "model": "S2",
+      "type": "security",
+      "typeCertain": true,
+      "quantity": null,
+      "powerWatts": "24"
+    }
+  ],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Foto procedurale, non foto reale: marca/modello leggibili; quantità assente, nessun acquisto presunto.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "1bc4f448c87c81039485e3c67c21fee8157137fe317748bc1c20887fb28f5676"
+}

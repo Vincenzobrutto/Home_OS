@@ -1545,3 +1545,6 @@ Test sintetico reale conferma HTTP400 “compiled grammar is too large”. Fonti
 
 ## 18 ottobre 2026 — Prezzo nelle proposte da ordini/immagini
 Campo Prezzo di acquisto visibile nella revisione di ogni articolo singolo, anche dopo AI/consegna/documento prodotto; inserimento esplicito avvia scelta costo manuale con data obbligatoria, nessun costo implicito da documenti senza prezzo. Conferme ordine possono estrarre totaleEUR esplicito (TOTALE COSTI), senza prezzi barrati/ratizzazione/date inventate. Nessuna nuovaAI.
+## Fase 0 qualità AI v3 — aggiornamento offline, 22 ottobre 2026
+
+Corpus sintetico completato a 52 originali e gold auditati; aggiunta tipologia con certezza nell’onboarding, cache delle sole istruzioni fisse con contabilità di costo prudenziale, selezione locale conservativa delle pagine e scorer puro per le osservazioni validate. Nessuna analisi AI eseguita. [Stato, misure aggregate e lavoro residuo](v5/fase0-quality-v3-stage2-20261022.md).

@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q44",
+  "documentKind": "utility_bill",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 15300,
+      "date": "2026-09-18",
+      "supplier": "Brinavela Gas Sintetico",
+      "period": [
+        "2026-07-01",
+        "2026-08-31"
+      ]
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Confronto modalità di lettura, riferimenti fisici immutati.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "0812a4464d232b28199790bbb83f1bb03cd7e46e948e0a33c06d71e373d17226"
+}

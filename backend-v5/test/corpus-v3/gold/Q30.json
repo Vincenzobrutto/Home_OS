@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q30",
+  "documentKind": "product_document",
+  "items": [
+    {
+      "name": "Caldaia Nubeo T24",
+      "brand": "Nubeo",
+      "model": "T24",
+      "type": "heating",
+      "typeCertain": true,
+      "quantity": null,
+      "powerWatts": null
+    }
+  ],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Potenza utile 24 kW distinta da nominale 28 kW; quantità assente richiede revisione.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": "P14",
+  "humanReviewed": false,
+  "sourceSha256": "9e9bc72d33270b16fee2915a7ec845bb7d1d5cb0e38b53260c33e239504e010b"
+}

@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q43",
+  "documentKind": "utility_bill",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 11847,
+      "date": "2026-09-18",
+      "supplier": "Nivolume Energia Sintetica",
+      "period": [
+        "2026-07-01",
+        "2026-08-31"
+      ]
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Dati essenziali pagine 1 e 2; quattro pagine di consumi/condizioni.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "51ef28ffbd6faa4ce431a11df3ed9169d0b0fa801bbe43de7246e54da1460344"
+}

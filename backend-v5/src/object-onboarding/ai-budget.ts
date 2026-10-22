@@ -45,7 +45,7 @@ export class OnboardingAiConfig extends AiConfig {
     if (!this.enabled) throw onboardingAiUnavailable('ai_provider_disabled');
     if (!this.configured) throw onboardingAiUnavailable('ai_provider_unconfigured');
     const price = MODEL_PRICES[this.model];
-    if (!price || price.input * (50000 - 4096) + price.output * 4096 > RESERVE_MICRO_USD) throw onboardingAiUnavailable('ai_model_unavailable');
+    if (!price || Math.ceil(price.input * 1.25 * (50000 - 4096) + price.output * 4096) > RESERVE_MICRO_USD) throw onboardingAiUnavailable('ai_model_unavailable');
     const amount = this.environment.ONBOARDING_AI_BUDGET_USD ?? '', calls = this.environment.ONBOARDING_AI_MAX_CALLS ?? '';
     const scope=this.authorizedScope(),homeIds=this.authorizedHomeIds();
     if (!/^onboarding-[A-Za-z0-9_-]{1,80}$/.test(this.campaign) || !/^\d+(?:\.\d{1,6})?$/.test(amount) || !/^\d+$/.test(calls) || (this.environment.ONBOARDING_AI_SCOPE ? !scope||!homeIds.length : !this.authorizedHashes().length||!!this.environment.ONBOARDING_AI_ADDITIONAL_HOME_IDS?.trim())) throw onboardingAiUnavailable('ai_provider_unconfigured');

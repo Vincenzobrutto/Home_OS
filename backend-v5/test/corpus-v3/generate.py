@@ -89,7 +89,10 @@ def pages(c):
             body+=block('Pagamento','Modalità: PagoPA / bonifico. IBAN SINTETICO NON UTILIZZABILE: IT00 X000 0000 0000 0000 0000 000.<br>Codice avviso TEST-000000000000000000. <div class="qr"></div><div class="barcode"></div>Segnaposto grafici non operativi: non scansionare o seguire link.')
         else:
             body='<h1>'+('Dettaglio consumi' if c.get('period') else 'Condizioni e allegati')+'</h1>'
-            body+=table([[f'Voce informativa {j+1}',f'Lettura {j*17+i} al 01/08/2026, periodo precedente','0,00 EUR (non costo corrente)'] for j in range(17)])
+            # Long synthetic bills model sparse statement pages. Repeating dated
+            # meter rows on every page inflated digit/date density beyond the
+            # locally measured archive, so keep a few representative entries.
+            body+=table([[f'Voce informativa {j+1}','Lettura registrata, periodo precedente','0,00 EUR (non costo corrente)'] for j in range(4)])
         body+='<p class="legal">Comunicazioni contrattuali di esempio. Nomi, numeri, recapiti, marchi e importi sono fittizi. Nessun dato personale, nessuna connessione esterna. Le descrizioni non dimostrano pagamento, proprietà, garanzia o certificazione del bene. Per il collaudo non seguire collegamenti o codici grafici. Reclami: collaudo@assistenza.invalid.</p>'
         if layout in [0,2]:body+='<p class="legal">'+terms+'</p>'
         result.append(head+body)

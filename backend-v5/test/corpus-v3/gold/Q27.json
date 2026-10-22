@@ -1,0 +1,24 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q27",
+  "documentKind": "conformity_declaration",
+  "items": [],
+  "expenses": [],
+  "contacts": [
+    {
+      "name": "Voltacervo Collaudo",
+      "vatId": "99900000300"
+    }
+  ],
+  "automatic": "complete",
+  "reviewReason": "Regola v21: solo documento e installatore, nessun oggetto/spesa.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "ce5d3552b98014e47def8ddb9af9f68bef65d092518b9950df8b66ae062fe594"
+}

@@ -1,0 +1,19 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q33",
+  "documentKind": "house_document",
+  "items": [],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Dati catastali fittizi; solo archiviazione.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "0c90344b7ec9c07bbbd9012dc2f09897c0d62f344d65be1907749002f9653190"
+}

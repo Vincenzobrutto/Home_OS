@@ -1,0 +1,29 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q46",
+  "documentKind": "utility_bill",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 6100,
+      "date": "2026-09-18",
+      "supplier": "Tramofilo Rete Sintetica",
+      "period": [
+        "2026-08-01",
+        "2026-09-30"
+      ]
+    }
+  ],
+  "contacts": [],
+  "automatic": "complete",
+  "reviewReason": "Servizi e traffico non sono oggetti domestici.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "fe7aa1d8997df25b64056a8e609893cd496b60e4b53269c79eca4221abf1765a"
+}

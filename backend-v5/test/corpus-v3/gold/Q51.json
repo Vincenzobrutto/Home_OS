@@ -1,0 +1,19 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q51",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "USD, nessuna conversione in EUR o spesa automatica.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "a7556a934bc8bf2d47464619dd329f34a3dcd093242ea20621bfe9a70975bdd0"
+}

@@ -1,0 +1,19 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q52",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Totale cancellato, nessuna somma dedotta dalle righe per inventarlo.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "d8d6e3a4ad65a7300932da60b071cc1e5d2a63bd53f2e88609bb9294c28c2eb2"
+}

@@ -1,0 +1,26 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q50",
+  "documentKind": "purchase_document",
+  "items": [],
+  "expenses": [
+    {
+      "amountCents": 12200,
+      "date": "2026-09-18",
+      "supplier": null,
+      "period": null
+    }
+  ],
+  "contacts": [],
+  "automatic": "review",
+  "reviewReason": "Solo P.IVA del cliente leggibile: non creare professionista o inventare fornitore.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "3df94ecfe262942ebf09a4c62c833b3545ecd3908667a0611d42845670bfb21c"
+}

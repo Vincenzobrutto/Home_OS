@@ -1,0 +1,24 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q28",
+  "documentKind": "conformity_declaration",
+  "items": [],
+  "expenses": [],
+  "contacts": [
+    {
+      "name": "Idroquarzo Collaudo",
+      "vatId": "99900000128"
+    }
+  ],
+  "automatic": "review",
+  "reviewReason": "Impianto idrico nominato, ma conformità archiviata senza creare impianti. Copia scansionata: richiede revisione visiva.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "91f5ccb1c1f187ea1faaacb71f86645f798b4a5fa30b205cf9d8c8896397a875"
+}

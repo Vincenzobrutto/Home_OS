@@ -153,6 +153,116 @@
       "id": "Q48",
       "sha256": "c375b4d811303c0acaf42a94d34cd653c9438c2525d707bfb26d4dfe5d83a2a0",
       "status": "reviewed"
+    },
+    {
+      "id": "Q27",
+      "sha256": "ce5d3552b98014e47def8ddb9af9f68bef65d092518b9950df8b66ae062fe594",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q28",
+      "sha256": "91f5ccb1c1f187ea1faaacb71f86645f798b4a5fa30b205cf9d8c8896397a875",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q29",
+      "sha256": "240a16e7c62ed6225c705afbf032f9fc4fedb4f98b774861dc3bad2e42664dcd",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q30",
+      "sha256": "9e9bc72d33270b16fee2915a7ec845bb7d1d5cb0e38b53260c33e239504e010b",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q31",
+      "sha256": "69e7888bf0d0c7a2f05fb7277ba21d20f4baf1089cf4f9a9bbe3392c665495ce",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q32",
+      "sha256": "16b8d6b688cb93552e473bdf5a20d9e2faf311c4f31f47d906284c48df121d7a",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q33",
+      "sha256": "0c90344b7ec9c07bbbd9012dc2f09897c0d62f344d65be1907749002f9653190",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q34",
+      "sha256": "79364fc287e3459da520c204f61cde5ccfc6ec89d0992e76cb0d58e07b9b2f45",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q37",
+      "sha256": "ebe84909f6ff81b8ff2a74bf3eae9a2220dcac6dfb0c3c57e1cfa5e47f5a37bd",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q38",
+      "sha256": "a038bf6f0d2f8cf86f47046876afe3c7e16bc74fd9df0c99d967740587473a88",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q39",
+      "sha256": "077779ff24e202a6a7e10873ba870ce6062fed77b94a45558c7332b4929df02c",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q40",
+      "sha256": "1bc4f448c87c81039485e3c67c21fee8157137fe317748bc1c20887fb28f5676",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q41",
+      "sha256": "a21bea037c09cece15d9ce57924a128753665e0410e231eae049e5c810a4deda",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q42",
+      "sha256": "f4792d5fe63dbe906273ef2ed99f63f875d622fe772a300e39d90f175600bfe9",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q43",
+      "sha256": "51ef28ffbd6faa4ce431a11df3ed9169d0b0fa801bbe43de7246e54da1460344",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q44",
+      "sha256": "0812a4464d232b28199790bbb83f1bb03cd7e46e948e0a33c06d71e373d17226",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q45",
+      "sha256": "ee65da2fb376b549de1f2908790a1784df59a907dca0c911b660169160148095",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q46",
+      "sha256": "fe7aa1d8997df25b64056a8e609893cd496b60e4b53269c79eca4221abf1765a",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q49",
+      "sha256": "13063d8e687b9d157c2541f2843141932f82dace7499677ab97f3251777ce369",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q50",
+      "sha256": "3df94ecfe262942ebf09a4c62c833b3545ecd3908667a0611d42845670bfb21c",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q51",
+      "sha256": "a7556a934bc8bf2d47464619dd329f34a3dcd093242ea20621bfe9a70975bdd0",
+      "status": "reviewed"
+    },
+    {
+      "id": "Q52",
+      "sha256": "d8d6e3a4ad65a7300932da60b071cc1e5d2a63bd53f2e88609bb9294c28c2eb2",
+      "status": "reviewed"
     }
   ]
 }

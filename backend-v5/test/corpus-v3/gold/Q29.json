@@ -1,0 +1,24 @@
+{
+  "version": "corpus-v3.1",
+  "id": "Q29",
+  "documentKind": "house_document",
+  "items": [],
+  "expenses": [],
+  "contacts": [
+    {
+      "name": "Voltacervo Collaudo",
+      "vatId": "99900000300"
+    }
+  ],
+  "automatic": "complete",
+  "reviewReason": "Allegato tecnico della casa, non fattura.",
+  "forbidden": [
+    "customer_contact",
+    "invented_evidence",
+    "implicit_warranty",
+    "duplicate_expense"
+  ],
+  "legacySource": null,
+  "humanReviewed": false,
+  "sourceSha256": "240a16e7c62ed6225c705afbf032f9fc4fedb4f98b774861dc3bad2e42664dcd"
+}
