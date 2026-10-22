@@ -1,3 +1,7 @@
+## Fase 0: piano ampliato con catalogo apparati v4 — 23 ottobre 2026
+
+Aggiornato il solo [piano proposto di 5–8 ore](v5/fase0-next-hours-plan-20261023.md) dal workbook v4 letto senza modifiche: 147 tipi documentali e 91 apparati. Aggiunta matrice oggetto/impianto e suggerimenti di ambienti tipici alternativi, da confermare, con prove sintetiche previste di privacy e idempotenza. Conteggi e riferimenti controllati; nessuna implementazione runtime, import, test di prodotto nuovo o chiamata AI. Report e gate storici invariati.
+
 ## Fase 0: Q48, copertura per pagina e revisione incompleta esplicita — 23 ottobre 2026
 
 Schema v26 con uno slot per pagina fisica; fatture da 122/244 EUR separate, nessun totale globale. Copertura server e metadati durevoli senza contenuti: la prima fattura non chiude il file se resta pagina 2, neppure tramite documentOnly. Build/lint, onboarding 195/195, qualità 24/24, guard 11/11, backend 213/213 e DB sintetico 38/38 verdi. Nessuna AI, gold o campagna ricalcolati. [Report](v5/fase0-q48-coverage-offline-20261023.md). [Piano proposto per le prossime ore](v5/fase0-next-hours-plan-20261023.md), con riferimento Excel in sola lettura alle famiglie già presenti.

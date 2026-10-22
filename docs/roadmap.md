@@ -4,7 +4,7 @@ Nuova misura autorizzata v24 sui 52 sintetici: 148 Messages, 3,562652 USD, zero 
 
 ## Archivio unico Documenti completato — 21 ottobre 2026
 
-Dieci famiglie e descrizioni su richiesta, ricerca globale, filtro Collegamento e cambio famiglia separato dal tipo. Nessuna importazione delle126 voci Excel, checklist normativa o nuova AI: questi sviluppi restano separati. [Regole e verifiche](v5/document-unified-archive-20261021.md).
+Dieci famiglie e descrizioni su richiesta, ricerca globale, filtro Collegamento e cambio famiglia separato dal tipo. [Piano proposto v4](v5/fase0-next-hours-plan-20261023.md): matrice dei 147 tipi documentali e 91 apparati, classificazione oggetto/impianto e ambienti tipici da confermare. Nessun import, checklist normativa o nuova AI; ottimizzazione non implementata. [Regole e verifiche](v5/document-unified-archive-20261021.md).
 
 ## Documenti: famiglia manuale completata — 21 ottobre 2026
 
