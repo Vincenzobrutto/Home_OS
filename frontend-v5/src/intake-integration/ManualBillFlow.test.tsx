@@ -12,6 +12,8 @@ it.each(['utility_bill','invoice','receipt'].flatMap(kind=>[{kind,only:false,pre
   if(url.endsWith('/jobs'))paid.push(url);
   if(url.includes('/object-onboarding/capabilities'))return Response.json({manualAvailable:true,aiAvailable:true,drafts:[{id:draft.id,state:draft.state}],job:null});
   if(url.includes('/expense-candidates')||url.includes('/candidates'))return Response.json({items:[],nextCursor:null});
+  // Suggerimenti di oggetto per le fatture (object-suggestions), aggiunti dopo questo test: nessun oggetto suggerito.
+  if(url.includes('/object-suggestions'))return Response.json({items:[]});
   if(url.endsWith('/document-kind')){expect(JSON.parse(String(init.body))).toEqual({expectedVersion:1,documentKind:kind});order.push('kind');draft.version++;draft.documentKind=kind==='utility_bill'?'utility_bill':'purchase_document';draft.items=[];draft.houseExpenses=[{id:'bill-cost',documentKind:kind==='utility_bill'?'utility_bill':'simple_invoice',proposedFields:{},amountCandidates:[],amountSelectionRequired:true,decision:null}];return Response.json({draft});}
   if(url.endsWith('/items')){draft.version++;draft.items=[{id:'optional',fields:{},quantity:null,profile:{},nameTruncated:false,disposition:'uncertain',enrichment:null,decision:null}];return Response.json({draft});}
   if(url.endsWith('/review')){order.push('review');draft.version++;return Response.json({draft});}

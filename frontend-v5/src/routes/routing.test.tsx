@@ -112,13 +112,15 @@ describe('[mock] routing e contesto casa via URL', () => {
     expect(screen.getByRole('link', { name: 'Vai alle mie case' })).toBeInTheDocument();
   });
 
-  it('Agenzie e Amministratori sono visibili come non disponibili e non navigabili', async () => {
+  // Dopo f7e7b94 Agenzie e Amministratori non compaiono più nella Home: nessun link e nessuna rotta.
+  it('Agenzie e Amministratori non hanno link né rotte', async () => {
     const { backend } = seededBackend();
     const app = renderApp({ path: '/accedi', backend });
     await loginAs(app, 'a@example.test', PASSWORD_A);
-    const exp = await screen.findByRole('list', { name: 'Esperienze Dimora' });
-    expect(within(exp).getByText('Agenzie').closest('li')).toHaveTextContent('non ancora disponibile');
-    expect(within(exp).queryAllByRole('link')).toHaveLength(0);
+    await screen.findByRole('heading', { level: 1 });
+    expect(screen.queryByRole('link', { name: /Agenzie|Amministratori/ })).not.toBeInTheDocument();
+    await app.router.navigate('/agenzie');
+    expect(await screen.findByRole('heading', { name: 'Pagina non trovata' })).toBeInTheDocument();
   });
 
   it('rotta sconosciuta: pagina non trovata', async () => {

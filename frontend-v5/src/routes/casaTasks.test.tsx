@@ -21,7 +21,7 @@ describe('[mock] attenzione Casa, senza deduzioni dalle pagine parziali', () => 
     hooks.review.mockReturnValue(ready({ pages: [{ openCount: 23, items: [{}] }] }));
     show(<CasaReviewSummary homeId="casa-a" />);
     expect(screen.getByText('23 verifiche da rivedere')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Apri le verifiche' })).toHaveAttribute('href', '/home/casa-a/review');
+    expect(screen.getByRole('link', { name: 'Controlla i dati' })).toHaveAttribute('href', '/home/casa-a/review');
   });
 
   it('un errore review con cache precedente non mostra zero o conteggi vecchi', () => {

@@ -1,8 +1,9 @@
 ## 22 ottobre 2026 — Da sistemare emersi in BL-02/BL-03
 
+- **Test sensibili ai tempi**: `documentSearch.test.tsx` e `objects.test.tsx` possono fallire solo con la suite in parallelo (verdi da soli e nelle ripetizioni).
+- **Test di integrazione sul DB dell'app**: le suite HTTP/DB creano account `@example.test` in `dimora_v5_product_dev`; valutare un DB di test dedicato (porta/nome) invece del vincolo unico in `assertDevelopmentDatabase`.
+
 - **Originali mancanti nel DB V5**: 104 `StoredFile` senza file in `storage-private` (63 di case di account `@example.test` create dai test di integrazione sul DB `dimora_v5_product_dev`, 41 orfani senza documento). Nessuno delle case del committente. Decidere pulizia sicura e separare i test di integrazione dal DB usato dall'app; lo script di backup originale si ferma su questi record (copia tollerante in `outputs/Dimora-V5-backup-verify-tolerant.mjs`).
-- **Integrazione `automatic-intake`**: 3 test falliscono sulla regola del periodo delle bollette («Indica il periodo di riferimento della bolletta»), da aggiornare dopo bb5b83d (eseguiti su DB temporaneo il 22/10).
-- **Test non aggiornati**: backend `documents.test.cjs` (3, mock senza `$transaction`/`getStatus` dopo le modifiche documenti del 21/10); frontend 18 in 9 file (contatti, filtri, bollette manuali, upload pendenti, `casaTasks` «Apri le verifiche», ricerca, routing, spese; `KeepHouseDocuments` instabile in parallelo).
 - **Foto HEIC trasparenti (rinviato dal committente il 22/10)**: conversione automatica HEIC→JPEG sul dispositivo prima del caricamento (Safari con decodifica nativa; Chrome/Edge/Android con libreria libheif-js LGPL-3 caricata solo quando serve, previa approvazione della licenza). Si archivia la copia JPEG, metadati/GPS non copiati, foto oltre ~16 MP ridotte. Oggi HEIC è rifiutato con istruzioni.
 - **Storia della casa, release successiva**: filtro per oggetto/tipo; raggruppare o filtrare «Aggiunto a Dimora» se domina l'elenco.
 
