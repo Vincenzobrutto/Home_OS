@@ -1,5 +1,5 @@
 import type { ProductExtraction } from './domain';
-export const ONBOARDING_READING_VERSION='onboarding-reading-v1';
+export const ONBOARDING_READING_VERSION='onboarding-reading-v2';
 export type ReadingMode='full'|'local_pages'|'progressive';
 export type ReadingPlan={version:typeof ONBOARDING_READING_VERSION;mode:ReadingMode;totalPages:number;sentPages:number[]};
 /** Keep headers and every page carrying potentially useful evidence. */

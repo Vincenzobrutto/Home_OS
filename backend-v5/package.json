@@ -7,7 +7,7 @@
     "lint": "eslint src test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:object-onboarding": "npm run build && node --test test/object-onboarding.test.cjs test/object-onboarding-profile.test.cjs test/onboarding-invoice-evidence.test.cjs test/house-expenses.test.cjs test/house-amount-evidence.test.cjs test/document-understanding.test.cjs test/conformity-evidence.test.cjs test/conformity-document-only.test.cjs",
-    "test:quality-v3": "npm run build && node --test test/quality-v3-corpus.test.cjs test/quality-v3-reading.test.cjs test/quality-v3-score.test.cjs test/quality-v3-runner.test.cjs",
+    "test:quality-v3": "npm run build && node --test test/quality-v3-corpus.test.cjs test/quality-v3-reading.test.cjs test/quality-v3-score.test.cjs test/quality-v3-runner.test.cjs test/quality-v3-model.test.cjs",
     "test:quality-v3-db": "powershell -NoProfile -ExecutionPolicy Bypass -File test/quality-v3-offline.ps1",
     "test:object-manuals": "node --test test/object-manuals.test.cjs",
     "start": "node --env-file=.env dist/main.js",

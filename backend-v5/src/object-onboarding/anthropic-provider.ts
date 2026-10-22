@@ -130,7 +130,9 @@ export class ObjectOnboardingAnthropicProvider {
     if (input.mimeType === 'application/pdf') {
       try {
         const [document] = await this.parser.extract([input]);
-        const sentPages=mode==='local_pages'?localPageSelection(document.pages):document.pages.map((_,i)=>i+1);
+        const through=options.throughPage??1;
+        if(mode==='progressive'&&(!Number.isSafeInteger(through)||through<1||through>document.pages.length))throw new ProviderFailure('analysis_limits_exceeded');
+        const sentPages=mode==='local_pages'?localPageSelection(document.pages):document.pages.flatMap((_,i)=>mode!=='progressive'||i<through?[i+1]:[]);
         reading={version:ONBOARDING_READING_VERSION,mode,totalPages:document.pages.length,sentPages};
         context = { kind: 'text', snapshot: document.snapshot, pages: document.pages,allowedPages:sentPages };
         messages = [{ role: 'user', content: JSON.stringify({ pages: document.pages.flatMap((text, index) => sentPages.includes(index+1)?[{page:index+1,text}]:[]) }) }];

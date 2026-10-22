@@ -1552,3 +1552,7 @@ Corpus sintetico completato a 52 originali e gold auditati; aggiunta tipologia c
 ## Fase 0 qualità AI v3 — runner con ledger durevole, 22 ottobre 2026
 
 Runner collegato al ledger onboarding esistente, campagna sintetica separata, prenotazione atomica prima del provider simulato e ripresa senza reinvii. Verificati concorrenza, tetti persistiti, rollback ed esiti incerti anche dopo riavvio PostgreSQL. Build/lint verdi; test offline 17/17, ledger 12/12 più 1/1 dopo riavvio. Nessuna modifica a schema/quote del prodotto e nessuna chiamata AI/email. [Report](v5/fase0-quality-v3-ledger-20261022.md).
+
+## Fase 0 qualità AI v3 — adattatore e ciclo progressivo, 22 ottobre 2026
+
+Adattatore al modello con preparazione/decoding, evidenze, prezzi cache e politica automatica del prodotto; HTTP simulato e nessuna chiave o trasporto live implicito. Ciclo progressivo con prefissi cumulativi, riserva per passaggio e completezza persistita; arresto su risposta invalida/incerta, tetto e annullamento, ripresa senza reinvii. Corretto il prefisso dei PDF testuali (`onboarding-reading-v2`); fonte completa resta predefinita. [Verifiche, limite delle prove simulate e costo da misurare](v5/fase0-quality-v3-model-20261022.md).

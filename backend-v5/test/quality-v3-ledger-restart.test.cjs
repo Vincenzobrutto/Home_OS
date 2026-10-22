@@ -19,6 +19,16 @@ test('after PostgreSQL restart: 52 persisted scores, uncertain charge, immutable
   await ledger.close();ledger=await PrismaCampaignLedger.open({databaseUrl,campaignId:uncertain.campaignId,accountId:uncertain.job.accountId,homeId:uncertain.job.homeId,model:uncertain.model,maxCalls:uncertain.campaign.maxCalls,budgetMicroUsd:uncertain.campaign.limitMicroUsd});
   const c=corpus.find(c=>c.sha256===uncertain.job.documentSha256);
   const pending=await runCampaign({cases:[{id:c.id,gold:c.gold,sha256:c.sha256,documentId:uncertain.job.documentId,documentVersion:1,pages:[]}],ledger,provider:async()=>{calls++;}});assert.equal(calls,0);assert(pending.uncertain>=1);assert(pending.committedMicroUsd>=250000);
-  assert.equal(await db.objectOnboardingCampaign.count({where:{maxCalls:1}}),1);
+  assert.equal(await db.objectOnboardingCampaign.count({where:{maxCalls:1,id:{startsWith:'fase0-quality-v3-offline-'}}}),1);
+ }finally{if(ledger)await ledger.close();await db.$disconnect();}
+});
+test('after PostgreSQL restart: persisted progressive completion stops without any model HTTP request',async()=>{
+ const {createModelAdapter,MODEL_ADAPTER_VERSION}=require('./quality-v3-model.cjs'),{runProgressiveCampaign}=require('./quality-v3-runner.cjs'),{MODEL,fakeTransport}=require('./quality-v3-model-fixture.cjs');
+ const databaseUrl=process.env.QUALITY_V3_DATABASE_URL;assertQualityDatabase(databaseUrl);const db=new PrismaClient({datasources:{db:{url:databaseUrl}}});let ledger;
+ try{
+  const row=await db.objectOnboardingAttempt.findFirstOrThrow({where:{campaignId:{startsWith:'fase0-quality-v3-progress-stop-'}},include:{job:true,campaign:true}});assert.equal(row.output.observation.version,MODEL_ADAPTER_VERSION);assert.equal(row.output.observation.complete,true);
+  ledger=await PrismaCampaignLedger.open({databaseUrl,campaignId:row.campaignId,accountId:row.job.accountId,homeId:row.job.homeId,model:MODEL,maxCalls:row.campaign.maxCalls,budgetMicroUsd:row.campaign.limitMicroUsd});
+  const c=load().cases.find(c=>c.id==='Q48'),item={id:c.id,sha256:c.sha256,gold:c.gold,documentId:row.job.documentId,documentVersion:1,pages:[]},fake=fakeTransport(),provider=createModelAdapter({transport:fake.transport,model:MODEL});
+  const report=await runProgressiveCampaign({item,provider,ledger});assert.equal(report.progressive.reason,'complete');assert.equal(report.progressive.throughPage,1);assert.equal(fake.requests.length,0);assert.equal(report.calls,1);
  }finally{if(ledger)await ledger.close();await db.$disconnect();}
 });

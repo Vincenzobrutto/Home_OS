@@ -9,6 +9,7 @@ const {OBJECT_ONBOARDING_PROMPT_VERSION}=require('../dist/object-onboarding/anth
 const {ONBOARDING_READING_VERSION}=require('../dist/object-onboarding/reading');
 const {CampaignLimit}=require('./quality-v3-runner.cjs');
 const {load}=require('./corpus-v3/corpus.cjs');
+const {checkedObservation,MODEL_ADAPTER_VERSION}=require('./quality-v3-model.cjs');
 const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const fail=code=>{throw new CampaignLimit(code);};
 function assertQualityDatabase(raw){
@@ -17,7 +18,7 @@ function assertQualityDatabase(raw){
 }
 function entry(attempt){
  const state=['reserved','sending'].includes(attempt.state)?'uncertain':attempt.state;
- return{id:attempt.job.key,state,reserveMicroUsd:attempt.reservedMicroUsd,costMicroUsd:attempt.actualMicroUsd,...(attempt.output?.schema==='quality-v3-score-v1'?{score:attempt.output.score}:{})};
+ return{id:attempt.job.key,state,reserveMicroUsd:attempt.reservedMicroUsd,costMicroUsd:attempt.actualMicroUsd,...(['quality-v3-score-v1','quality-v3-score-v2'].includes(attempt.output?.schema)?{score:attempt.output.score}:{}),...(attempt.output?.observation?{observation:checkedObservation(attempt.output.observation)}:{})};
 }
 class PrismaCampaignLedger {
  static async open(options){
@@ -46,7 +47,8 @@ class PrismaCampaignLedger {
   const c=this.corpus.get(item.id),run=item.run??1,mode=item.mode??'full',throughPage=item.throughPage??null;
   if(!c||!Number.isSafeInteger(run)||run<1||run>2||!['full','local_pages','progressive'].includes(mode)||(mode==='progressive'?!Number.isSafeInteger(throughPage)||throughPage<1||throughPage>c.pages:throughPage!==null)||item.sha256!==c.sha256||!item.documentId||item.documentVersion!==1||hash(item.gold)!==hash(c.gold))fail('invalid_synthetic_case');
   const key=`${this.options.campaignId}:${item.id}:${run}:${mode}:${throughPage??0}`;
-  const digest=hash({key,documentId:item.documentId,sha256:c.sha256,gold:c.gold,model:this.options.model,prompt:OBJECT_ONBOARDING_PROMPT_VERSION,reading:ONBOARDING_READING_VERSION,pages:item.pages??[]});
+  if(item.protocol!==undefined&&item.protocol!==MODEL_ADAPTER_VERSION)fail('invalid_adapter_protocol');
+  const digest=hash({key,documentId:item.documentId,sha256:c.sha256,gold:c.gold,model:this.options.model,prompt:OBJECT_ONBOARDING_PROMPT_VERSION,reading:ONBOARDING_READING_VERSION,pages:item.pages??[],...(item.protocol?{protocol:item.protocol}:{})});
   return{key,digest,c};
  }
  async lock(tx){await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'onboarding-ai-budget:'+this.options.campaignId},0))::text AS locked`;}
@@ -55,15 +57,27 @@ class PrismaCampaignLedger {
   if(job&&(job.digest!==request.digest||job.provider!=='quality-v3-offline'||job.attempt?.campaignId!==this.options.campaignId||job.attempt.model!==this.options.model||job.attempt.promptVersion!==OBJECT_ONBOARDING_PROMPT_VERSION))fail('campaign_identity_conflict');
   return job;
  }
- async claim(item){
-  const request=this.request(item);
-  return this.db.$transaction(async tx=>{
-   await this.lock(tx);
+ async validate(tx,item,request){
    await this.verifyScope(tx);
    const incompatible=await tx.objectOnboardingAttempt.findFirst({where:{campaignId:this.options.campaignId,OR:[{model:{not:this.options.model}},{promptVersion:{not:OBJECT_ONBOARDING_PROMPT_VERSION}},{job:{accountId:{not:this.options.accountId}}},{job:{homeId:{not:this.options.homeId}}}]}});
    if(incompatible)fail('campaign_identity_conflict');
    const original=await tx.document.findUnique({where:{id:item.documentId},include:{original:true}});
    if(!original||original.homeId!==this.options.homeId||original.uploaderId!==this.options.accountId||original.visibility!=='private'||original.original?.version!==1||original.original.sha256!==request.c.sha256||original.original.mimeType!==request.c.mimeType)fail('synthetic_source_changed');
+ }
+ async authorize(item,{afterResponse=false}={}){
+  const request=this.request(item);
+  // Uncertainty forbids every new transfer. Only the original dispatcher may
+  // validate a response it has already received, then settle its known charge.
+  await this.db.$transaction(async tx=>{await this.lock(tx);await this.validate(tx,item,request);const job=await this.existing(tx,request);if(job?.attempt.state!=='sending'&&!(afterResponse&&job?.attempt.state==='uncertain'))fail('analysis_outcome_unknown');});
+ }
+ async read(item){
+  const request=this.request(item);
+  return this.db.$transaction(async tx=>{await this.lock(tx);await this.validate(tx,item,request);const job=await this.existing(tx,request);return job?entry({...job.attempt,job}):null;});
+ }
+ async claim(item){
+  const request=this.request(item);
+  return this.db.$transaction(async tx=>{
+   await this.lock(tx);await this.validate(tx,item,request);
    const prior=await this.existing(tx,request);
    if(prior){
     await tx.objectOnboardingAttempt.updateMany({where:{id:prior.attempt.id,state:{in:['reserved','sending']}},data:{state:'uncertain'}});
@@ -77,10 +91,15 @@ class PrismaCampaignLedger {
  }
  async settle(item,response,score){
   const request=this.request(item);
+  const observation=response.observation?checkedObservation(response.observation):null;
+  if(observation){
+   const r=observation.reading,mode=item.mode??'full',count=mode==='progressive'?item.throughPage:request.c.pages;
+   if(r.totalPages!==request.c.pages||r.mode!==mode||mode!=='local_pages'&&(r.sentPages.length!==count||r.sentPages.some((p,i)=>p!==i+1)))fail('reading_identity_conflict');
+  }
   await this.db.$transaction(async tx=>{
    await this.lock(tx);const job=await this.existing(tx,request);
    if(!job||!Number.isSafeInteger(response.costMicroUsd)||response.costMicroUsd<0||response.costMicroUsd>job.attempt.reservedMicroUsd)fail('invalid_settlement');
-   const updated=await tx.objectOnboardingAttempt.updateMany({where:{id:job.attempt.id,state:{in:['sending','uncertain']}},data:{state:'settled',actualMicroUsd:response.costMicroUsd,responseAt:new Date(),...(score?{output:{schema:'quality-v3-score-v1',score}}:{})}});
+   const updated=await tx.objectOnboardingAttempt.updateMany({where:{id:job.attempt.id,state:{in:['sending','uncertain']}},data:{state:'settled',actualMicroUsd:response.costMicroUsd,responseAt:new Date(),...(score||observation?{output:{schema:observation?'quality-v3-score-v2':'quality-v3-score-v1',score,...(observation?{observation}:{})}}:{})}});
    if(updated.count!==1)fail('settlement_conflict');
    await tx.objectOnboardingJob.update({where:{id:job.id},data:{state:'succeeded'}});
   });

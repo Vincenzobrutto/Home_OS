@@ -36,3 +36,5 @@ Prima di una campagna sintetica a pagamento occorrono il collegamento e la verif
 ## Aggiornamento successivo: ledger durevole
 
 Il limite del ledger in memoria descritto sopra è superato dal checkpoint successivo: runner collegato al ledger onboarding esistente e provato su PostgreSQL temporaneo isolato, 12/12 test più 1/1 dopo riavvio DB; suite offline corpus/lettura/scorer/runner 17/17, build e lint verdi. I 52 casi simulati persistono e la ripresa non reinvia richieste. Restano da verificare l’adattatore al modello e il ciclo progressivo reale prima di qualunque campagna autorizzata. [Report completo del collegamento e limiti](fase0-quality-v3-ledger-20261022.md).
+
+L’ulteriore checkpoint [adattatore e ciclo progressivo](fase0-quality-v3-model-20261022.md) supera anche questo residuo tecnico, con trasporto interamente simulato. La campagna AI e i suoi esiti non sono inclusi nelle prove offline.

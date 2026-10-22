@@ -1,3 +1,7 @@
+## Fase 0 qualità AI — adattatore e ciclo progressivo offline, 22 ottobre 2026
+
+Preparazione/decoding/politica del prodotto collegati al runner e al ledger durevole, con HTTP simulato; ciclo progressivo con arresto e ripresa persistenti. Il gate di qualità AI resta aperto fino alla campagna sintetica autorizzata e alla tappa reale con consenso separato. [Verifiche offline e limiti](v5/fase0-quality-v3-model-20261022.md).
+
 ## Archivio unico Documenti completato — 21 ottobre 2026
 
 Dieci famiglie e descrizioni su richiesta, ricerca globale, filtro Collegamento e cambio famiglia separato dal tipo. Nessuna importazione delle126 voci Excel, checklist normativa o nuova AI: questi sviluppi restano separati. [Regole e verifiche](v5/document-unified-archive-20261021.md).

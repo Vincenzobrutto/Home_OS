@@ -24,7 +24,7 @@ try {
  $taskMigration=Start-Process -FilePath $taskNode -ArgumentList @(('"'+(Join-Path $taskBackend 'node_modules/prisma/build/index.js')+'"'),'migrate','deploy','--schema','prisma/schema.prisma') -WorkingDirectory $taskScratch -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput (Join-Path $taskScratch 'migrations.log') -RedirectStandardError (Join-Path $taskScratch 'migrations-error.log')
  if($taskMigration.ExitCode -ne 0){throw 'Migration failed; see scratch migrations logs.'}
  Push-Location $taskBackend
- try { & $taskNode --test test/quality-v3-ledger.integration.test.cjs; Checked } finally { Pop-Location }
+ try { & $taskNode --test --test-concurrency=1 test/quality-v3-ledger.integration.test.cjs test/quality-v3-model.integration.test.cjs; Checked } finally { Pop-Location }
  # Verify committed rows remain after an actual PostgreSQL shutdown/restart.
  & (Join-Path $PgBin 'pg_ctl.exe') -D $taskCluster -m fast -w stop; Checked
  $taskStarted=$false
