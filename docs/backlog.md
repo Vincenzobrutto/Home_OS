@@ -760,7 +760,7 @@ Caso conformità elettrica classificato unsupported con job succeeded, non error
 - Completato il 18 ottobre 2026 — UX revisione spese da documento: chiarire «nessun oggetto» come assenza di attribuzione economica, distinta dagli oggetti collegati al documento; usare «Data della spesa» nel riepilogo dei valori inseriti. Osservato nel collaudo Fattura/Ricevuta del 18 ottobre 2026; vedere `v5/manual-purchase-flow-20261018.md`.
 ## Fase 0 qualità AI v3 — residui offline prima della campagna
 
-- Completare runner onboarding con provider simulato, ledger dedicato, ripresa senza reinvio incerto e report delle misure; lo scorer puro è presente ma la campagna non è ancora avviabile/verificata end-to-end.
+- Completato offline il collegamento del runner al ledger onboarding durevole: 52 casi simulati, ripresa da nuovo processo e dopo riavvio PostgreSQL senza doppie chiamate, tetti/concorrenza/esiti incerti/rollback verificati. [Report](v5/fase0-quality-v3-ledger-20261022.md). Prima della campagna AI restano verifica dell’adattatore al modello e autorizzazione distinta; la prova simulata non misura accuratezza o costi reali.
 - Verificare l’orchestrazione progressiva delle scansioni con prenotazione distinta per ogni richiesta; il preparatore attuale rende solo un prefisso di pagine e non sceglie ancora il ciclo multi-chiamata.
 - Dopo test offline verdi, consegnare il report di prontezza e chiedere l’autorizzazione esplicita per la campagna sintetica (massimo proposto 12 USD / 150 chiamate). Nessuna chiamata prima dell’autorizzazione.
 - Dopo la campagna sintetica: selezione dei 10–15 reali e consenso/tetto separati prima di qualunque invio.

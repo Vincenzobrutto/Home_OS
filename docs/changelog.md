@@ -1548,3 +1548,7 @@ Campo Prezzo di acquisto visibile nella revisione di ogni articolo singolo, anch
 ## Fase 0 qualità AI v3 — aggiornamento offline, 22 ottobre 2026
 
 Corpus sintetico completato a 52 originali e gold auditati; aggiunta tipologia con certezza nell’onboarding, cache delle sole istruzioni fisse con contabilità di costo prudenziale, selezione locale conservativa delle pagine e scorer puro per le osservazioni validate. Nessuna analisi AI eseguita. [Stato, misure aggregate e lavoro residuo](v5/fase0-quality-v3-stage2-20261022.md).
+
+## Fase 0 qualità AI v3 — runner con ledger durevole, 22 ottobre 2026
+
+Runner collegato al ledger onboarding esistente, campagna sintetica separata, prenotazione atomica prima del provider simulato e ripresa senza reinvii. Verificati concorrenza, tetti persistiti, rollback ed esiti incerti anche dopo riavvio PostgreSQL. Build/lint verdi; test offline 17/17, ledger 12/12 più 1/1 dopo riavvio. Nessuna modifica a schema/quote del prodotto e nessuna chiamata AI/email. [Report](v5/fase0-quality-v3-ledger-20261022.md).

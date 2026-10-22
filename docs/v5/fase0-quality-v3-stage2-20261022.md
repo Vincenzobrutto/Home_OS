@@ -32,3 +32,7 @@ Audit fonte/gold 52/52; parser di produzione 2/2. `npm run test:quality-v3` 16/1
 Harness offline con provider simulato e ledger in memoria verificato: tetti chiamate/costo, resume senza duplicati, esito incerto senza retry; preparatore progressivo verificato con reader simulato e arresto conservativo. Non è ancora collegato end-to-end al ledger durevole né a un ciclo reale di richieste successive. Nessun confronto AI/costo eseguito; lettura completa resta default conservativo. Nessuna chiamata AI o email a pagamento.
 
 Prima di una campagna sintetica a pagamento occorrono il collegamento e la verifica del ledger durevole, quindi l’autorizzazione esplicita del tetto proposto (12 USD / 150 chiamate). Consenso all’invio di documenti reali e relativo tetto restano separati.
+
+## Aggiornamento successivo: ledger durevole
+
+Il limite del ledger in memoria descritto sopra è superato dal checkpoint successivo: runner collegato al ledger onboarding esistente e provato su PostgreSQL temporaneo isolato, 12/12 test più 1/1 dopo riavvio DB; suite offline corpus/lettura/scorer/runner 17/17, build e lint verdi. I 52 casi simulati persistono e la ripresa non reinvia richieste. Restano da verificare l’adattatore al modello e il ciclo progressivo reale prima di qualunque campagna autorizzata. [Report completo del collegamento e limiti](fase0-quality-v3-ledger-20261022.md).
