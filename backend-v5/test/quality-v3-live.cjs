@@ -9,7 +9,7 @@ const {runCampaign,runProgressiveCampaign}=require('./quality-v3-runner.cjs');
 const {AnthropicTransport}=require('../dist/review/anthropic');
 const {load}=require('./corpus-v3/corpus.cjs');
 const {detailed}=require('./quality-v3-measures.cjs');
-const CAMPAIGN='fase0-quality-v3-20261022-synthetic-01',MODEL='claude-sonnet-5-5';
+const CAMPAIGN='fase0-quality-v3-v24-20261023-synthetic-02',MODEL='claude-sonnet-5-5';
 function write(file,value){const fd=fs.openSync(file,'w');try{fs.writeFileSync(fd,JSON.stringify(value,null,2)+'\n');fs.fsyncSync(fd);}finally{fs.closeSync(fd);}}
 function audit(file,value){const fd=fs.openSync(file,'a');try{fs.writeFileSync(fd,JSON.stringify({at:new Date().toISOString(),...value})+'\n');fs.fsyncSync(fd);}finally{fs.closeSync(fd);}}
 function compile(rows,auth,completed,reason){
@@ -26,10 +26,11 @@ function compile(rows,auth,completed,reason){
  const criteria=[];for(const [name,threshold] of [['documentKind',.9],['objectType',.9],['labelBrandModel',.9],['expenseAmountCents',.95],['expenseDate',.95],['expenseSupplier',.9],['professionalVatId',.95],['difficultReview',1]]){const m=dimensions[name]??{correct:0,total:0};criteria.push({name,threshold,...m,rate:m.total?m.correct/m.total:null,passed:m.total>0&&m.correct/m.total>=threshold});}
  criteria.push({name:'criticalAutomaticErrors',count:critical,passed:critical===0},{name:'automaticCorrectness',correct:automatic-unsafe,total:automatic,rate:automatic?(automatic-unsafe)/automatic:null,passed:automatic>0&&unsafe===0},{name:'decisionStability',correct:pairs.filter(p=>p.sameDecision).length,total:52,rate:pairs.filter(p=>p.sameDecision).length/52,threshold:.9,passed:pairs.filter(p=>p.sameDecision).length/52>=.9});
  const actualMicroUsd=rows.reduce((n,r)=>n+(r.state==='settled'?r.costMicroUsd:0),0),uncertainReservedMicroUsd=rows.reduce((n,r)=>n+(r.state==='settled'?0:r.reserveMicroUsd),0);
- return{campaignId:CAMPAIGN,authorizationHash:jsonHash(auth),planHash:auth.planSha256,model:MODEL,state:reason??'complete',completedTasks:completed,plannedTasks:auth.plan.tasks.length,plannedMaxMessages:auth.plan.maxMessageCalls,calls:rows.length,settled:rows.filter(r=>r.state==='settled').length,uncertain:rows.filter(r=>r.state==='uncertain').length,actualMicroUsd,uncertainReservedMicroUsd,committedMicroUsd:actualMicroUsd+uncertainReservedMicroUsd,budgetMicroUsd:auth.budgetMicroUsd,maxCalls:auth.maxCalls,validBaselineExecutions:valid,dimensions,criteria,automaticExecutions:automatic,unsafeAutomaticExecutions:unsafe,automaticShare:automatic/104,pairs,costByMode,gatePassed:!reason&&completed===auth.plan.tasks.length&&criteria.every(c=>c.passed),results:rows};
+ return{campaignId:auth.campaignId,protocol:auth.protocol,authorizationHash:jsonHash(auth),planHash:auth.planSha256,model:auth.model,state:reason??'complete',completedTasks:completed,plannedTasks:auth.plan.tasks.length,plannedMaxMessages:auth.plan.maxMessageCalls,calls:rows.length,settled:rows.filter(r=>r.state==='settled').length,uncertain:rows.filter(r=>r.state==='uncertain').length,actualMicroUsd,uncertainReservedMicroUsd,committedMicroUsd:actualMicroUsd+uncertainReservedMicroUsd,budgetMicroUsd:auth.budgetMicroUsd,maxCalls:auth.maxCalls,validBaselineExecutions:valid,dimensions,criteria,automaticExecutions:automatic,unsafeAutomaticExecutions:unsafe,automaticShare:automatic/104,pairs,costByMode,gatePassed:!reason&&completed===auth.plan.tasks.length&&criteria.every(c=>c.passed),results:rows};
 }
 async function main(){
  const [action,folder]=process.argv.slice(2);if(!['prepare','run','report'].includes(action)||!folder)throw Error('explicit_live_action_and_work_directory_required');
+ if(require('../dist/object-onboarding/anthropic-provider').OBJECT_ONBOARDING_PROMPT_VERSION!=='document-understanding-v24-invoice-pages')throw Error('v24_build_required');
  const root=path.resolve(folder);fs.mkdirSync(root,{recursive:true});const databaseUrl=process.env.QUALITY_V3_DATABASE_URL;assertQualityDatabase(databaseUrl);if(new URL(databaseUrl).pathname!=='/dimora_v5_quality_v3_campaign')throw Error('live_database_required');
  const authFile=path.join(root,'authorization.json');
  if(action==='prepare'&&!fs.existsSync(authFile))write(authFile,createAuthorization(CAMPAIGN,MODEL));
@@ -37,7 +38,7 @@ async function main(){
  validateAuthorization(auth,{campaignId:CAMPAIGN,model:MODEL,maxCalls:150,budgetMicroUsd:12000000});
  const db=new PrismaClient({datasources:{db:{url:databaseUrl}}});let ledger;
  try{
-  const email='fase0-quality-v3-20261022@example.test';let account=await db.account.findUnique({where:{email}});if(!account)account=await db.account.create({data:{email,name:'Synthetic AI quality campaign',passwordHash:'not-a-login'}});
+  const email='fase0-quality-v3-v24-20261023@example.test';let account=await db.account.findUnique({where:{email}});if(!account)account=await db.account.create({data:{email,name:'Synthetic AI quality campaign',passwordHash:'not-a-login'}});
   let home=await db.home.findFirst({where:{name:'SYNTHETIC QUALITY V3',memberships:{some:{accountId:account.id}}}});if(!home)home=await db.home.create({data:{name:'SYNTHETIC QUALITY V3',address:'Synthetic only',memberships:{create:{accountId:account.id,role:'owner'}}}});
   const cases=[];for(const c of load().cases){let doc=await db.document.findFirst({where:{homeId:home.id,uploaderId:account.id,name:c.id},include:{original:true}});if(!doc)doc=await db.document.create({data:{homeId:home.id,uploaderId:account.id,name:c.id,visibility:'private',original:{create:{originalFilename:path.basename(c.path),mimeType:c.mimeType,sha256:c.sha256,byteSize:c.bytes.length,file:{create:{storageKey:'synthetic-campaign-'+randomUUID()}}}}},include:{original:true}});if(doc.original?.sha256!==c.sha256)throw Error('existing_source_mismatch');cases.push({id:c.id,gold:c.gold,sha256:c.sha256,documentId:doc.id,documentVersion:1,pages:[]});}
   write(path.join(root,'scope.json'),{campaignId:CAMPAIGN,accountId:account.id,homeId:home.id,documents:cases.map(c=>({id:c.id,documentId:c.documentId,sha256:c.sha256}))});

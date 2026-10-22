@@ -1,3 +1,7 @@
+## Fase 0: nuova campagna sintetica v24 conclusa — 23 ottobre 2026
+
+Eseguita l’autorizzazione sui soli 52 sintetici: 148 Messages, 3,562652 USD, zero incerti/retry, nuovo ledger isolato. Baseline 101/104 output validi, etichette 16/16 e importi 64/70, ma **gate non superato**: due esiti automatici contrari al gold su Q15 split payment, soglie importi/date/stabilità non raggiunte e copertura Q48 ancora 1/2 per campo. Ricevuta con protocollo/piano/codice congelati, confronto con v22 e verifica dopo riavvio/replay a rete disabilitata senza nuove richieste. Nessuna risorsa canonica o dato reale trasferito; gold e campagna precedente invariati. [Esiti, costi e blocchi](v5/fase0-quality-v24-campaign-20261023.md).
+
 ## Fase 0: Q48, fatture separate per pagina — 22 ottobre 2026
 
 Supportate offline due fatture complete in uno stesso originale, con segmenti SHA/pagina, ancoraggi e conferme distinte. Q48 conserva 122 e 244 EUR senza un totale aggregato; nessun automatico, contatto o soggetto implicito. Provenienza e deduplica per segmento, replay e copie protetti, rollback dell’intera richiesta. Prompt v24; nessuna migrazione o chiamata AI. Build/lint, onboarding 174/174, backend 213/213, DB sintetico 11/11; gate live e gold invariati. [Report e limiti](v5/fase0-q48-invoices-offline-20261022.md).

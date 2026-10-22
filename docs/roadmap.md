@@ -1,6 +1,6 @@
-## Fase 0 qualità AI — correzioni offline concluse, gate ancora non superato, 22 ottobre 2026
+## Fase 0 qualità AI — campagna v24 conclusa, gate non superato, 23 ottobre 2026
 
-Campagna sui 52 sintetici conclusa (146 Messages, 3,545746 USD, nessun incerto/retry); risultati congelati. Corretti offline titoli delle targhette e totali correnti; ora Q48 gestisce due fatture complete su pagine singole con conferma/provenienza e deduplica separate, prompt v24 e privacy/idempotenza DB verificate. **Gate ancora non superato**: non è una nuova misura AI. Restano diagnostica di altri rifiuti/ambiguità e generalizzazione multipagina/soggetti/contatti; nessuna modalità di lettura promossa. Nuova campagna richiede autorizzazione; reali esclusi con consenso/tetto separati. [Q48 e limiti](v5/fase0-q48-invoices-offline-20261022.md), [risultati live](v5/fase0-quality-v3-campaign-20261022.md).
+Nuova misura autorizzata v24 sui 52 sintetici: 148 Messages, 3,562652 USD, zero incerti/retry. Output validi 101/104, etichette 16/16, importi 64/70. **Gate non superato**: prima del pilota correggere offline gli esiti automatici di Q15 split payment e la copertura economica Q22/Q48, con gold/validazioni invariati; restano date, stabilità e rifiuti del titolo. Supporto Q48 del decoder verificato offline non equivale a estrazione AI completa: il live resta 1/2 per campo. Nessuna modalità di lettura promossa; progressivo lungo più costoso. Nuova campagna e reali richiedono autorizzazioni distinte. [Esiti e confronto v22/v24](v5/fase0-quality-v24-campaign-20261023.md).
 
 ## Archivio unico Documenti completato — 21 ottobre 2026
 

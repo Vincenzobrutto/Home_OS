@@ -758,7 +758,16 @@ Caso conformità elettrica classificato unsupported con job succeeded, non error
 
 
 - Completato il 18 ottobre 2026 — UX revisione spese da documento: chiarire «nessun oggetto» come assenza di attribuzione economica, distinta dagli oggetti collegati al documento; usare «Data della spesa» nel riepilogo dei valori inseriti. Osservato nel collaudo Fattura/Ricevuta del 18 ottobre 2026; vedere `v5/manual-purchase-flow-20261018.md`.
-## Fase 0 qualità AI v3 — residui dopo campagna sintetica del 22 ottobre 2026
+## Fase 0 qualità AI — residui dopo nuova campagna v24 del 23 ottobre 2026
+
+- **Campagna v24 completata e verificata**: 148/150 Messages, 3,562652/12 USD, zero incerti/retry, ledger separato. Gold/soglie invariati; baseline 101/104 output validi, etichette 16/16, importi 64/70. **Gate non superato**, questi risultati prevalgono sui checkpoint di prontezza e sulle sole fixture offline. [Report e confronto](v5/fase0-quality-v24-campaign-20261023.md).
+- **Priorità: Q15 split payment**, due decisioni automatiche `complete` dove il gold impone `review`; campi misurati corretti. Riprodurre offline il guard di revisione indipendentemente dall’eventuale omissione di un saldo alternativo nelle proposte. Non assimilare un importo giusto al permesso di confermare automaticamente; nessun cambio retroattivo del gold.
+- **Q22 prezzi di riga**: entrambi i run non soddisfano i due importi e le rispettive date economiche; verificare fonte/ruolo e attribuzione dei prezzi senza sommare, distribuire o dedurre costi dal solo totale. Q20/run 2 fallisce la data spesa. Date associate a proposte assenti non provano lettura OCR errata.
+- **Q48 live incompleto**: output validi/review ma 1/2 per importo/data/fornitore in entrambi i full e negli ultimi prefissi progressivi. Il decoder supporta due segmenti con fixture; il modello non soddisfa ancora il gold per entrambi. Strumentare offline contatori strutturali per pagina/proposta e motivo di incompletezza senza contenuti/risposte personali; gli score attuali non distinguono esattamente omissione da campi errati. Nessun reinvio diagnostico implicito.
+- **Rifiuti titolo**: Q29/run 1 e Q30/entrambi, enum `document_title`; riprodurre offline intestazione letterale/classificazione, senza indebolire le citazioni. Stabilità 45/52 sotto soglia; 45/50 condizionata agli output validi non sostituisce il denominatore congelato.
+- **Costi**: progressivo Q43/Q44 esaurisce sei/otto prefissi per run, circa 5,60×/6,93× la completa; locale meno caro su Q44/Q46. Nessuna modalità promossa dal costo o dal confronto parziale. Correzioni versionate e nuova autorizzazione necessarie prima di ulteriori misure. Nessun reale autorizzato; pilota bloccato.
+
+### Checkpoint precedenti, risultati v22 e correzioni offline del 22 ottobre
 
 - Checkpoint offline conservati: runner collegato al ledger durevole, ripresa da nuovo processo e dopo riavvio PostgreSQL senza doppie chiamate, tetti/concorrenza/incerti/rollback; adattatore e prefissi cumulativi con revalidazione della fonte. **24/24 offline, 23/23 DB isolato più 2/2 dopo riavvio, 148/148 onboarding**, build/lint verdi. [Ledger](v5/fase0-quality-v3-ledger-20261022.md), [adattatore/ciclo](v5/fase0-quality-v3-model-20261022.md). Le prove simulate restano distinte dalle misure live successive.
 - Campagna esplicitamente autorizzata e completata: 146/150 Messages, 3,545746/12 USD, zero incerti/retry. **Gate non superato**; questi risultati live prevalgono sui precedenti residui di prontezza. [Report](v5/fase0-quality-v3-campaign-20261022.md).
