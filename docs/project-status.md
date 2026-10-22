@@ -1,3 +1,7 @@
+## Documenti: scatta una foto (BL-04) — 22 ottobre 2026
+
+Implementato su branch `claude/bl02-garanzia` (Claude), solo frontend, nessuna migrazione. [Report](v5/photo-capture-bl04-20261022.md). Verificato: typecheck/lint, 4 test nuovi, suite invariata (14 preesistenti), caricamento reale sul computer nella casa «COLLAUDO V2» (privato, nessuna analisi), 390 px. **Non verificato**: scatto da telefono reale (gate del piano aperto). Con BL-01/02/03/04 i blocchi pre-rubrica sono implementati; prossimo: prova su telefono, BL-10b, gate Fase 0 (recupero account).
+
 ## Attività: prossimo promemoria (BL-01) — 22 ottobre 2026
 
 Implementato su branch `claude/bl02-garanzia` (Claude). Dopo il completamento: proposta 6/12/24 mesi dal giorno di completamento o data libera, conferma esplicita, collegamenti leggibili copiati, un solo successivo per attività. Migrazione additiva `20261022180000_activity_follow_up` applicata dopo backup verificato `backups/dimora-v5-20261022T154341Z`. [Report](v5/activity-follow-up-bl01-20261022.md).

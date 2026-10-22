@@ -1149,3 +1149,7 @@ Decisione del committente: date degli eventi a mano con precisione scelta (anno,
 ## 22 ottobre 2026 — BL-01: successivo esplicito, uno per attività, dal giorno di completamento
 
 Decisione del committente: la proposta parte dal giorno di completamento (Europe/Rome), non dalla scadenza precedente. Mesi di calendario con ultimo giorno del mese se mancante. Il legame è un riferimento unico `previousActivityId` sull'attività nuova: impedisce duplicati dopo retry, doppio clic o riapertura e nuovo completamento, senza memorizzare regole di ricorrenza. Endpoint dedicato e transazionale invece di un secondo POST di creazione dal browser. Alternative scartate: ricorrenza automatica (BL-09), base sulla scadenza precedente, più successivi per la stessa attività, preselezione di una durata.
+
+## 22 ottobre 2026 — BL-04: foto come acquisizione, senza lettura
+
+Lo scatto riusa il caricamento documenti esistente (nessun nuovo endpoint): campo immagine con `capture="environment"`, JPEG/PNG, documento privato. Le immagini non avviano la lettura locale (solo testo PDF) né l'AI senza consenso esplicito; HEIC rifiutato nel client con istruzioni, senza conversione. Alternative scartate: conversione HEIC/compressione nel browser (nuovo sottosistema), OCR/visione automatica (non approvati), apertura della rete per provare dal telefono senza accordo.

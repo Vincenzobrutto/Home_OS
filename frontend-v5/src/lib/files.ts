@@ -65,6 +65,25 @@ export function declaredType(file: File): DocumentMimeType | null {
   return EXTENSIONS[ext] ?? null;
 }
 
+const HEIC = /\.(heic|heif)$/i;
+/** BL-04: messaggio per un file che il caricamento non accetta (PDF, JPEG, PNG); HEIC con istruzioni pratiche. */
+export function unsupportedFileProblem(file: File): string | undefined {
+  if (declaredType(file)) return undefined;
+  return HEIC.test(file.name) || /^image\/hei[cf]$/i.test(file.type)
+    ? `«${file.name}» è in formato HEIC, che Dimora non accetta. Sul telefono scegli «Più compatibile» (JPEG) nelle impostazioni della fotocamera, oppure esporta la foto come JPEG e seleziona la copia.`
+    : `«${file.name}» non è un PDF, JPEG o PNG. Salva una copia in uno di questi formati.`;
+}
+
+const GENERIC_PHOTO = /^(image|photo|img|pxl|dsc|foto)[\s._-]*[\d\s._-]*\.(jpe?g|png)$/i;
+const two = (n: number) => String(n).padStart(2, '0');
+/** BL-04: le foto scattate arrivano spesso come «image.jpg» o «IMG_1234.jpg»: nome leggibile con data e ora. */
+export function photoFile(file: File, at = new Date()): File {
+  if (!GENERIC_PHOTO.test(file.name)) return file;
+  const ext = file.type === 'image/png' || /\.png$/i.test(file.name) ? 'png' : 'jpg';
+  const name = `Foto ${two(at.getDate())}-${two(at.getMonth() + 1)}-${at.getFullYear()} ${two(at.getHours())}.${two(at.getMinutes())}.${ext}`;
+  return new File([file], name, { type: file.type || (ext === 'png' ? 'image/png' : 'image/jpeg'), lastModified: file.lastModified });
+}
+
 export function validateUploadFile(file: File | null): string | undefined {
   if (!file) return 'Scegli un file da caricare.';
   if (!declaredType(file)) return /\.heic$/i.test(file.name) ? 'Formato non supportato: puoi caricare PDF, JPEG o PNG. Esporta o salva questa foto come JPEG e seleziona la nuova copia.' : 'Formato non supportato: puoi caricare PDF, JPEG o PNG. Salva una copia in uno di questi formati.';

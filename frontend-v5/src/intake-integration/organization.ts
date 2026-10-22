@@ -43,6 +43,7 @@ export async function organizeDocuments(client: IntakeClient, payload: Organizat
 /** Local acquisition aid only: no saved/deferred decision, external provider or organization write. */
 export function localAnalysisCandidates(capability: CapabilityWire | undefined, batch: BatchWire | undefined, attempted: ReadonlySet<string>) {
   if (!capability?.enabled || !capability.analysis.enabled || capability.analysis.provider !== 'local_text_v1' || capability.analysis.externalTransmission !== false || !batch?.permissions.includes('edit')) return [];
-  return batch.items.filter(item => item.permissions.includes('edit') && ['stored', 'duplicate'].includes(item.uploadState) && item.documentLink.state === 'linked' && item.analysisState === 'not_started' && item.reviewState === 'unreviewed' && !attempted.has(batch.id + ':' + item.id))
+  // BL-04: la lettura locale legge solo il testo dei PDF; foto e immagini non avviano alcuna analisi.
+  return batch.items.filter(item => item.permissions.includes('edit') && item.mimeType === 'application/pdf' && ['stored', 'duplicate'].includes(item.uploadState) && item.documentLink.state === 'linked' && item.analysisState === 'not_started' && item.reviewState === 'unreviewed' && !attempted.has(batch.id + ':' + item.id))
     .map(item => ({ id: item.id, expectedVersion: item.version }));
 }

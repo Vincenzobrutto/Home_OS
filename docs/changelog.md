@@ -1,3 +1,7 @@
+## Documenti: scatta una foto (BL-04) — 22 ottobre 2026
+
+«Scatta una foto» accanto a «Scegli file»: fotocamera posteriore sul telefono, nomi leggibili, archiviazione Solo io, HEIC rifiutato con istruzioni, nessuna analisi automatica sulle immagini. Provato sul computer; prova su telefono reale ancora da fare. [Dettagli](v5/photo-capture-bl04-20261022.md).
+
 ## Attività: prossimo promemoria (BL-01) — 22 ottobre 2026
 
 Dopo il completamento di un promemoria Dimora propone il successivo tra 6, 12 o 24 mesi dal giorno del completamento, o a una data scelta; nulla viene creato senza conferma, un solo successivo per attività, legame visibile su entrambe. Migrazione additiva con backup verificato. [Dettagli e verifiche](v5/activity-follow-up-bl01-20261022.md).

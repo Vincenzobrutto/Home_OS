@@ -1,7 +1,7 @@
 import type {DocumentTarget} from '../object-onboarding/DocumentReference';
 import {documentExamplesEnabled} from '../documents/exampleEnvironment';
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
-import { FilePicker } from '../components/FilePicker';
+import { FilePicker, PhotoPicker } from '../components/FilePicker';
 import { DocumentCompilationActions } from '../object-onboarding/DocumentCompilationActions';
 import { AutomaticIntake } from './AutomaticIntake';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -18,7 +18,7 @@ import { ApiError, isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey, queryKeys } from '../api/queryKeys';
 import { Banner, ErrorState, Loading, ui, useDocumentTitle } from '../components/ui';
 import { useDocumentFile, useObjectUrl } from '../documents/hooks';
-import { formatBytes, saveBlob } from '../lib/files';
+import { formatBytes, saveBlob, unsupportedFileProblem } from '../lib/files';
 import { handleUnauthorized } from '../session/queryClient';
 import pages from '../routes/pages.module.css';
 import styles from './integration.module.css';
@@ -43,7 +43,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
   const creation = useRef<{ files: File[]; ids: string[]; key: string; batchId: string | null } | null>(null), creating = useRef(false);
   const [problem, setProblem] = useState<string | null>(null), [waiting, setWaiting] = useState(false), [recoverCreation, setRecoverCreation] = useState(false), [candidates, setCandidates] = useState<Record<string, CandidatePage>>({});
   const [stagedFiles,setStagedFiles]=useState<Array<{id:string;file:File}>>([]);
-  function stage(selected:File[]){if(creating.current||creation.current||recoverCreation)return;const next=[...stagedFiles,...selected.map(file=>({id:newIdempotencyKey(),file}))];if(next.length>20||next.some(x=>x.file.size<1||x.file.size>20*1024*1024)||next.reduce((n,x)=>n+x.file.size,0)>200*1024*1024){setProblem('Scegli fino a 20 file, circa 21 MB per file e circa 210 MB complessivi.');return;}setProblem(null);setStagedFiles(next);}
+  function stage(chosen:File[]){if(creating.current||creation.current||recoverCreation)return;const refused=chosen.map(unsupportedFileProblem).filter(Boolean),selected=chosen.filter(f=>!unsupportedFileProblem(f));if(refused.length){setProblem(refused.join(' '));if(!selected.length)return;}const next=[...stagedFiles,...selected.map(file=>({id:newIdempotencyKey(),file}))];if(next.length>20||next.some(x=>x.file.size<1||x.file.size>20*1024*1024)||next.reduce((n,x)=>n+x.file.size,0)>200*1024*1024){setProblem('Scegli fino a 20 file, circa 21 MB per file e circa 210 MB complessivi.');return;}if(!refused.length)setProblem(null);setStagedFiles(next);}
   const [automaticConsent,setAutomaticConsent]=useState(false),[automaticActive,setAutomaticActive]=useState(false);
   async function startAutomatic(batchId:string,key:string){
     const latest=await client.batch(batchId);
@@ -205,8 +205,9 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
       <h2>Aggiungi documenti</h2>
       <div className={styles.dropZone} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(!waiting&&cap.data&&home.permissions.includes('edit'))stage(Array.from(e.dataTransfer.files));}}>
         <p>Fatture, bollette, documenti e foto della casa.</p>
-        <FilePicker disabled={waiting||!cap.data||recoverCreation||!home.permissions.includes('edit')} secondary={stagedFiles.length>0} onFiles={stage}/>
+        <div className={styles.pickers}><FilePicker disabled={waiting||!cap.data||recoverCreation||!home.permissions.includes('edit')} secondary={stagedFiles.length>0} onFiles={stage}/><PhotoPicker disabled={waiting||!cap.data||recoverCreation||!home.permissions.includes('edit')} onFiles={stage}/></div>
         <p className={pages.muted}>Oppure trascinali qui · PDF, JPEG o PNG · fino a 20 file, circa 21 MB ciascuno.</p>
+        <p className={pages.muted}>Le foto si salvano come immagini visibili solo a te. Dimora non ne legge il testo e non le invia all’esterno senza il tuo consenso.</p>
       </div>
       {stagedFiles.length>0&&<><h2 className={styles.selectionHeading}>File scelti · {stagedFiles.length}</h2><ul className={styles.selectedFiles} aria-label="File scelti">{stagedFiles.map(x=><li key={x.id}><div className={styles.selectedName}><strong>{x.file.name}</strong><span>{formatBytes(x.file.size)}</span></div><button type="button" className={ui.btn} aria-label={'Rimuovi '+x.file.name} disabled={waiting||recoverCreation} onClick={()=>setStagedFiles(old=>old.filter(f=>f.id!==x.id))}>Rimuovi</button></li>)}</ul><p className={pages.muted}>Puoi rimuovere i file sbagliati prima di caricarli.</p></>}
       {!workspace&&<div className={styles.uploadConsent}>{automaticControl}</div>}
