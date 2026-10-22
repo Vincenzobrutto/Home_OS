@@ -1,5 +1,7 @@
 # Fase 0 — campagna AI sui 52 sintetici, 22 ottobre 2026
 
+Seguito successivo: [correzioni offline di evidenze e importi](fase0-evidence-amounts-offline-20261022.md). Questo report conserva i risultati del protocollo v22 congelato; non viene ricalcolato con il nuovo codice v23.
+
 Campagna `fase0-quality-v3-20261022-synthetic-01`, autorizzata esplicitamente dal committente sui **soli 52 originali sintetici**, tetto **12 USD e 150 chiamate Messages**, nessun retry incerto e nessun documento reale. [Ricevuta congelata](fase0-quality-v3-authorization-20261022.json), hash `84812c5db495ccab13a80093b0e973be2aef9edec7fcf0b9714c4cc9d6eac221`. Questa autorizzazione è successiva ai report offline e non amplia le quote dell’app o i consensi sui reali.
 
 ## Protocollo congelato prima del primo invio

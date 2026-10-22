@@ -144,7 +144,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {try{
       const total = object(row.purchaseTotal, ['amountCents', 'evidence']);
       const source = evidence(total.evidence, context);
-      if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
+      if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento(?:\s+corrente)?|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
       purchaseTotal = { amountCents: Number(total.amountCents), source };
     }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}}
     if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents){needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}
@@ -234,7 +234,7 @@ function billAmountEvidence(excerpt:string,amount:number,role:string,kind:'utili
  const compact=normalize(excerpt);
  if(kind==='utility_bill'&&['current_document_total','amount_due'].includes(role)){
   const label=role==='current_document_total'
-   ?String.raw`(?:totale(?:\s+(?:bolletta|fattura|documento|costi|complessivo|della\s+bolletta|della\s+fattura|del\s+documento))?|importo\s+(?:bolletta|fattura|documento|totale))`
+   ?String.raw`(?:totale(?:\s+(?:bolletta|fattura|documento(?:\s+corrente)?|costi|complessivo|della\s+bolletta|della\s+fattura|del\s+documento))?|importo\s+(?:bolletta|fattura|documento(?:\s+corrente)?|totale))`
    :String.raw`(?:totale\s+(?:da|a)\s+(?:pagare|versare)|importo\s+(?:(?:da|a)\s+(?:pagare|versare)|dovuto)|da\s+(?:pagare|versare)|saldo\s+(?:da\s+pagare|dovuto))`;
   const primary=new RegExp(String.raw`^${label}\s*[:=]?\s*(?:${euroUnit}\s*${moneyNumber}(?![\d.,%])|${moneyNumber}\s*${euroUnit})`,'iu').exec(compact);
   if(!primary||!printedCents(primary[0]).includes(amount))return false;
@@ -254,7 +254,7 @@ function readHouseExpenses(input:unknown,context:ProductEvidenceContext,kind:'ut
   for(const rawAmount of r.amountCandidates){try{const x=object(rawAmount,['id','amountCents','role','label','evidence']),id=text(x.id,80),role=text(x.role,40),source=evidence(x.evidence,context);if(!/^[A-Za-z0-9_-]{1,80}$/.test(id)||seen.has(id)||!billRoles.includes(role)||!Number.isSafeInteger(x.amountCents)||Number(x.amountCents)<0||Number(x.amountCents)===0&&!auxiliaryBillRoles.includes(role)||Number(x.amountCents)>999999999||!printedCents(source.excerpt).includes(Number(x.amountCents)))throw invalid();seen.add(id);
    if(!billAmountEvidence(source.excerpt,Number(x.amountCents),role,kind))throw invalid();
    if(['current_document_total','amount_due'].includes(role)&&!/(?:totale|importo|da\s+pagare|da\s+versare)/iu.test(source.excerpt))throw invalid();
-   if(kind==='simple_invoice'&&['current_document_total','amount_due'].includes(role)&&!/^\s*totale(?:\s+(?:documento|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt))throw invalid();
+   if(kind==='simple_invoice'&&['current_document_total','amount_due'].includes(role)&&!/^\s*totale(?:\s+(?:documento(?:\s+corrente)?|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt))throw invalid();
    amounts.push({id,amountCents:Number(x.amountCents),role,label:text(x.label,120),sources:[source]});
   }catch{reviewWarnings.push('amount');}}
   const fingerprint=digest(JSON.stringify([context.snapshot.documentSha256,fields.supplier?.value??null,fields.documentNumber?.value??null,fields.documentDate?.value??null,amounts[0]?.sources[0].page??fields.title?.sources[0].page??1]));if(fingerprints.has(fingerprint))throw invalid();fingerprints.add(fingerprint);

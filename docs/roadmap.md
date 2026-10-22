@@ -1,6 +1,6 @@
-## Fase 0 qualità AI — campagna sintetica conclusa, gate non superato, 22 ottobre 2026
+## Fase 0 qualità AI — correzioni offline concluse, gate ancora non superato, 22 ottobre 2026
 
-Campagna autorizzata sui 52 sintetici completata: 146/150 Messages, 3,545746/12 USD, nessun esito incerto o retry. **Gate non superato**: intervenire offline su validazione evidenze visive/testuali, output strutturato, proposte di spesa univoche e tipologia oggetto; mantenere gold e risultati congelati. Nessuna modalità di lettura promossa. Nuova misura dopo correzioni versionate richiede nuova autorizzazione; i reali restano esclusi e richiedono consenso/tetto separati. [Risultati e verifiche](v5/fase0-quality-v3-campaign-20261022.md).
+Campagna sui 52 sintetici conclusa (146 Messages, 3,545746 USD, nessun incerto/retry); risultati congelati. Corretti offline i falsi rifiuti dei titoli delle targhette e della dicitura `documento corrente`, prompt v23 e regressioni verdi. **Gate ancora non superato**: non è una nuova misura AI. Restano diagnostica di altri rifiuti/ambiguità e contratto per le due fatture Q48 senza fonderle; nessuna modalità di lettura promossa. Nuova campagna versionata richiede autorizzazione; reali esclusi con consenso/tetto separati. [Correzioni e limiti](v5/fase0-evidence-amounts-offline-20261022.md), [risultati live](v5/fase0-quality-v3-campaign-20261022.md).
 
 ## Archivio unico Documenti completato — 21 ottobre 2026
 

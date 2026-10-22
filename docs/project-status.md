@@ -1,4 +1,12 @@
-## Fase 0 qualità AI v3 — campagna sintetica autorizzata, 22 ottobre 2026 (Codex)
+## Fase 0 — correzioni evidenze e importi verificate offline, 22 ottobre 2026 (Codex)
+
+**Implementato e verificato offline**: corretti due falsi rifiuti riproducibili, titoli stampati `Targhetta`/`Etichetta energetica` e totale con dicitura `documento corrente`. Titolo e importo restano legati alla propria citazione letterale, con pagina/regioni/valuta/ruolo obbligatori; evidenze visive sempre da revisionare, IVA/arretrati/importi concorrenti mai promossi automaticamente. Prompt versionato **`document-understanding-v23-evidence`**, diagnostica `document_title` senza contenuti. Gold, corpus, soglie, ricevuta e score della campagna precedente invariati. [Diagnosi, correzioni e limiti](v5/fase0-evidence-amounts-offline-20261022.md).
+
+**Verificato**: build/lint, onboarding **166/166** (18 nuove regressioni), qualità **24/24**, guard **10/10**, backend `npm test` **213/213**. Risposte costruite localmente e parser sul PDF sintetico Q01: prove del decoder, non nuova accuratezza AI. Nessuna chiamata AI, DB, originale reale, modifica `.env` o riavvio API. Frontend/HTTP/DB non ripetuti; modifiche estranee preservate.
+
+**Non verificato / residuo**: miglioramento effettivo del modello e gate AI, che resta **non superato**. Q48 con due fatture resta rifiutato dal contratto attuale, senza fusione o modifica del gold; serve progettare segmentazione/conferma/idempotenza per originali distinti. Altri rifiuti/assenze non sono ricostruibili esattamente senza risposte grezze; non attribuirli tutti ai due difetti isolati. Nuova campagna e reali richiedono autorizzazioni distinte. Il nuovo codice rifiuta la ricevuta congelata della campagna precedente, senza reset o ricalcolo del ledger.
+
+## Campagna sintetica precedente — esito congelato, 22 ottobre 2026 (Codex)
 
 **Eseguita e verificata** `fase0-quality-v3-20261022-synthetic-01`: soli **52 sintetici**, **120/120 attività**, **146 Messages/150**, tutte liquidate, **3,545746/12 USD**, **0 esiti incerti e nessun retry**. Ricevuta, hash dei file/gold/codice e piano congelati prima dell’invio (massimo pianificato 148 Messages). Ledger persistente separato sulla porta 55433, conservato e spento; nessuna modifica al DB o alle quote dell’app. [Protocollo e risultati](v5/fase0-quality-v3-campaign-20261022.md), [ricevuta](v5/fase0-quality-v3-authorization-20261022.json), [verifica finale](v5/fase0-quality-v3-verification-20261022.json).
 

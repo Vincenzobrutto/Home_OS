@@ -1,3 +1,7 @@
+## Fase 0: correzioni offline di evidenze visive e importi — 22 ottobre 2026
+
+Corretti falsi rifiuti dei titoli stampati delle targhette e dei totali con dicitura `documento corrente`; citazioni, ruolo/valuta, regioni e revisione visiva ancora obbligatori. Prompt `document-understanding-v23-evidence` e diagnostica del rifiuto titolo senza contenuti. Build/lint, onboarding 166/166 (18 nuove regressioni), qualità 24/24, guard 10/10 e backend 213/213 verdi. Gold e risultati live invariati, nessuna nuova chiamata AI o accesso DB; gate ancora non superato. [Report e residuo delle due fatture Q48](v5/fase0-evidence-amounts-offline-20261022.md).
+
 ## Fase 0: campagna qualità AI sintetica conclusa — 22 ottobre 2026
 
 Eseguito il protocollo congelato sui soli 52 sintetici autorizzati: 146 Messages, costo calcolato 3,545746 USD, zero esiti incerti/retry, entro 12 USD/150 chiamate. Runner live con ricevuta vincolata agli hash, consenso sintetico e ledger persistente isolato; diagnostiche e misure per campo senza risposte grezze. Gate qualità **non superato** (81/104 output baseline validi); nessun cambio alle modalità predefinite o promozione del pilota. Build/lint, 24/24 test qualità e 10/10 guard verdi; verifiche ledger dopo riavvio e replay a rete disabilitata senza nuovi tentativi. Nessuna risorsa canonica creata, nessun reale inviato o `.env` modificato. [Report e limiti](v5/fase0-quality-v3-campaign-20261022.md).

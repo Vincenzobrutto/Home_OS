@@ -9,11 +9,14 @@ import type { ProductSource } from './domain';
 export const documentFactKeys = ['issuer','issuerPhone','issuerEmail','issuerVatId','issuerFiscalId','documentDate','installationDate','interventionDescription','availablePowerKw','systemType'] as const;
 export type DocumentFactKey = typeof documentFactKeys[number];
 export type UnderstandingWarning = { field: string; reason: 'unverified' | 'missing_identity' };
+export class DocumentTitleEvidenceFailure extends ProviderFailure {
+ constructor(){super('analysis_invalid_output');}
+}
 export type DocumentUnderstanding = { kind: DocumentKind; title: { value: string; source: ProductSource; origin?: 'document_type' }; facts: Array<{ subjectIndex: number; field: DocumentFactKey; value: string; source: ProductSource }> };
 const normalize=(value:string)=>value.normalize('NFC').replace(/\s+/gu,' ').trim();
 const systemWords:Record<string,RegExp>={electrical:/elettric|electric/iu,heating:/riscaldamento|termic|heating/iu,cooling:/climatizz|condizion|cooling/iu,plumbing:/idric|idrico|idraulic|plumbing/iu,security:/sicurezza|allarme|security/iu};
 const systemAliases:Record<string,RegExp>={electrical:/^(?:impianto\s+)?elettric[oa]$/iu,heating:/^(?:impianto\s+)?(?:termico|riscaldamento)$/iu,cooling:/^(?:impianto\s+(?:di\s+)?)?(?:climatizzazione|condizionamento)$/iu,plumbing:/^(?:impianto\s+)?(?:idrico|idraulico)$/iu,security:/^(?:impianto\s+(?:di\s+)?)?(?:sicurezza|allarme)$/iu};
-const kinds:Partial<Record<DocumentKind,RegExp>>={conformity_declaration:/dichiarazione.{0,10}conformit[aà]|declaration.{0,10}conformity/iu,invoice:/fattura|invoice/iu,receipt:/ricevuta|scontrino|receipt/iu,utility_bill:/bolletta|fornitura|energia|elettric|gas|acqua|internet/iu,product_label:/marca|model|modello|type|ref|serial|\bW\b|\bV\b/iu,purchase_order:/ordine|order/iu,delivery_notice:/consegna|delivery|spedito/iu,ape:/attestato|prestazione energetica|\bAPE\b/iu,floor_plan:/planimetri|floor plan/iu};
+const kinds:Partial<Record<DocumentKind,RegExp>>={conformity_declaration:/dichiarazione.{0,10}conformit[aà]|declaration.{0,10}conformity/iu,invoice:/fattura|invoice/iu,receipt:/ricevuta|scontrino|receipt/iu,utility_bill:/bolletta|fornitura|energia|elettric|gas|acqua|internet/iu,product_label:/\btarghetta\b|\betichetta\s+(?:energetica|tecnica|(?:del\s+)?prodotto)\b|marca|model|modello|type|ref|serial|\bW\b|\bV\b/iu,purchase_order:/ordine|order/iu,delivery_notice:/consegna|delivery|spedito/iu,ape:/attestato|prestazione energetica|\bAPE\b/iu,floor_plan:/planimetri|floor plan/iu};
 
 /** A short date quote can regain only its own adjacent label, never another page's. */
 function conformityDateSource(proof:ProductSource,value:string,page?:string):ProductSource|null {
@@ -44,7 +47,7 @@ export function readUnderstanding(raw:unknown, rawFacts:unknown, itemCount:numbe
  // Floor plans are often drawings with room labels and no printed document heading.
  // A visual classification is a proposal to review, never a fabricated quotation or an asset.
  const visualFloorPlan=!literal&&kind==='floor_plan'&&source.basis==='provider_observed_image';
- if(!literal&&!visualFloorPlan)throw invalid('Tipo o titolo del documento non verificabile.');
+ if(!literal&&!visualFloorPlan)throw new DocumentTitleEvidenceFailure();
  if(visualFloorPlan){title='Planimetria';warnings.push({field:'documentTitle',reason:'unverified'});}
  const facts:DocumentUnderstanding['facts']=[],seen=new Set<string>();
  for(const raw of rawFacts){
