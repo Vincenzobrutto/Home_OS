@@ -199,3 +199,7 @@ Esiti automatici baseline: Q45/2, Q33/1, Q15/1, Q33/2, Q46/2, Q03/2, Q27/1, Q11/
 ## Seguito offline del 23 ottobre: Q15
 
 Il blocco automatico split payment è stato corretto e verificato successivamente con parser Q15 e trasporto in memoria, più prove privacy/idempotenza su DB sintetico nuovo. [Report separato](fase0-q15-payment-offline-20261023.md). Queste prove non modificano i risultati, i due critici Q15, la ricevuta o il ledger qui congelati; gate sempre non superato. Nessuna nuova chiamata AI o uso del residuo autorizzato.
+
+## Seguito offline del 23 ottobre: Q22
+
+Aggiunta lettura locale verificata del formato Importo e della Data acquisto comune per i soggetti già citati; 300/500 EUR e 18/09/2026, senza ripartizione degli 800 EUR. [Report distinto con privacy/idempotenza](fase0-q22-lines-offline-20261023.md). Fixture/parser/scorer offline non ricostruiscono le risposte live assenti né ricalcolano i run Q22, il gate, i JSON o il ledger della campagna. Prompt successivo v25, nessuna nuova chiamata AI.

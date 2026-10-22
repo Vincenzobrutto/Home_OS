@@ -1,3 +1,7 @@
+## Fase 0: Q22, prezzi e data per riga dalla fonte verificata — 23 ottobre 2026
+
+Supportata la tabella testuale Importo con quantità esplicite: 300 e 500 EUR, data d’acquisto comune 18/09/2026, senza dividere gli 800 EUR. Fonti, identità e costi distinti per riga; deduplica tra copie e verifica finale prezzo/data nell’automatico, rollback e replay durevole. Prompt v25; nessuna AI, modifica gold/validazioni o migrazione. Build/lint, onboarding 188/188, qualità 24/24, guard 11/11, backend 213/213, DB isolato Q22/Q15/Q48 30/30. Gate storico ancora non superato. [Report e limiti](v5/fase0-q22-lines-offline-20261023.md).
+
 ## Fase 0: Q15 split payment, revisione obbligatoria dal testo verificato — 23 ottobre 2026
 
 Controllo locale su tutte le pagine, anche escluse dal prefisso AI: totale corretto senza saldo proposto non autorizza più l’automatico. Policy legata a documento/versione/SHA, verifica finale transazionale anche per i contatti; bozze finanziarie precedenti prive del controllo richiedono conferma esplicita. Manuale da 244 EUR conservato. Build/lint, onboarding 181/181, qualità 24/24, guard 11/11, backend 213/213 e DB isolato Q15/Q48 20/20 verdi. Nessuna AI, modifica gold o ricalcolo della campagna; gate ancora non superato. [Report](v5/fase0-q15-payment-offline-20261023.md).

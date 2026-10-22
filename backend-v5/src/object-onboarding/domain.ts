@@ -1,3 +1,4 @@
+import { verifiedInvoiceLine, type InvoiceLine } from './invoice-lines';
 import { paymentReview, type PaymentReview } from './payment-review';
 import { contactProposal, type ContactProposal } from '../contacts/extraction';
 import { readObjectType, type ObjectTypeProposal } from './object-type';
@@ -19,6 +20,7 @@ export type Region = { x: number; y: number; width: number; height: number };
 export type ProductSource = Citation & { basis: 'verified_text' | 'provider_observed_image'; region: Region | null };
 export type ProductValue = { value: string; source: ProductSource };
 export type ProductItem = {
+  invoiceLine?: InvoiceLine;
   objectType?: ObjectTypeProposal;
   id: string; fingerprint: string; sourceIndex?: number; subjectKind?: 'product' | 'system';
   fields: Partial<Record<ProductField, ProductValue>>;
@@ -81,6 +83,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if (!['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'device_label', 'utility_bill', 'conformity_declaration', 'house_document', 'unsupported'].includes(String(row.documentKind)) || typeof row.hasMoreItems !== 'boolean' || !Array.isArray(row.items) || row.items.length > onboardingLimits.maxItems) throw invalid();
     if (row.hasMoreItems) throw new ProviderFailure('object_onboarding_too_many_items');
     const fingerprints = new Set<string>();
+    const invoiceLines = new Set<string>();
     if (row.requiresHumanReview !== undefined && typeof row.requiresHumanReview !== 'boolean') throw invalid();
     const understanding=readUnderstanding(row.documentInfo,row.facts,row.items.length,value=>evidence(value,context),context.kind==='text'?context.pages:undefined);
     if(['conformity_declaration','house_document'].includes(String(row.documentKind))&&!understanding.documentInfo)throw invalid();
@@ -120,16 +123,20 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       }
       const primary = fields.name ?? fields.reference ?? fields.model;
       if (!primary || !fields.name && row.documentKind !== 'device_label') throw invalid();
+      const line = ['purchase_document','order_confirmation'].includes(String(row.documentKind)) && !(Array.isArray(row.houseExpenses)&&row.houseExpenses.length) ? verifiedInvoiceLine(context, primary.value, primary.source.page) : null;
+      if(line && (r.fields as Record<string,unknown>).purchaseDate == null && line.purchaseDate && line.purchaseDate.value <= new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}))fields.purchaseDate=line.purchaseDate;
       const objectType=readObjectType(r.objectType,value=>evidence(value,context),primary.value);
       let quantity: ProductItem['quantity'] = null;
+      if(r.quantity === null && line)quantity={value:line.quantity,source:line.source};
       if (r.quantity !== null) {try{
         const q = object(r.quantity, ['value', 'evidence']);
         if (!Number.isSafeInteger(q.value) || Number(q.value) < 1 || Number(q.value) > onboardingLimits.maxUnits) throw invalid();
         const source = evidence(q.evidence, context);
         const printed = [...source.excerpt.matchAll(/(?:quantit[aà]|quantity|qty|qt[aà])\s*[:x×]?\s*(\d+)\b/giu)].map(match => Number(match[1]));
         const table=context.kind==='text'&&fields.name?tableQuantity(source.excerpt,fields.name.value):null;
-        if (source.page !== primary.source.page || !(printed.length===1&&printed[0]===q.value || printed.length===0&&table===q.value)) throw new ProductEvidenceFailure('quantity','quantity');
-        quantity = { value: Number(q.value), source };
+        if (source.page !== primary.source.page || !(printed.length===1&&printed[0]===q.value || printed.length===0&&table===q.value || line&&line.quantity===q.value&&normalize(source.excerpt).includes(normalize(line.rowText)))) throw new ProductEvidenceFailure('quantity','quantity');
+        if(line&&(q.value!==line.quantity||!normalize(source.excerpt).includes(normalize(line.rowText))))throw new ProductEvidenceFailure('quantity','quantity');
+        quantity = { value: Number(q.value), source:line?line.source:source };
       }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:'item:'+sourceIndex+':quantity',reason:'unverified'});}}
       if (r.confidence === 'low') { needsReview = true;understanding.warnings.push({field:'item:'+sourceIndex,reason:'missing_identity'});continue; }
       const fingerprint = digest(JSON.stringify([context.snapshot.documentSha256, normalize(primary.value).toLocaleLowerCase('it'), fields.brand?.value?.toLocaleLowerCase('it') ?? null, fields.model?.value?.toLocaleLowerCase('it') ?? fields.reference?.value?.toLocaleLowerCase('it') ?? null, primary.source.page, quantity?.value ?? null]));
@@ -139,10 +146,14 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       let purchaseAmount: ProductItem['purchaseAmount'] = null;
       if (r.purchaseAmount !== undefined && r.purchaseAmount !== null) {try{
         const price = object(r.purchaseAmount, ['amountCents', 'evidence']), source = evidence(price.evidence, context);
-        if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !(/(?:totale\s+riga|importo\s+riga|prezzo\s+articolo|line\s+total)/iu.test(source.excerpt)||tablePurchaseAmount(source.excerpt,fields.name.value)===price.amountCents) || !printedCents(source.excerpt).includes(Number(price.amountCents))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
-        purchaseAmount = { amountCents: Number(price.amountCents), source };
+        if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !(/(?:totale\s+riga|importo\s+riga|prezzo\s+articolo|line\s+total)/iu.test(source.excerpt)||tablePurchaseAmount(source.excerpt,fields.name.value)===price.amountCents||line&&line.amountCents===price.amountCents&&normalize(source.excerpt).includes(normalize(line.rowText))) || !(line&&line.amountCents===price.amountCents&&normalize(source.excerpt).includes(normalize(line.rowText))||printedCents(source.excerpt).includes(Number(price.amountCents)))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
+        if(line && price.amountCents!==line.amountCents)throw new ProductEvidenceFailure('purchaseTotal','total');
+        purchaseAmount = { amountCents: Number(price.amountCents), source:line?line.source:source };
       }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:sourceIndex+':purchaseAmount',reason:'unverified'});}}
-      items.push({...(objectType?{objectType}:{}),...(r.subjectKind?{subjectKind:r.subjectKind as 'product'|'system'}:{}), id, fingerprint,...(understanding.documentInfo?{sourceIndex}:{}), fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
+      if(line && r.purchaseAmount == null)purchaseAmount={amountCents:line.amountCents,source:line.source};
+      const invoiceLine = line && purchaseAmount?.amountCents===line.amountCents && quantity?.value===line.quantity ? line.invoiceLine : null;
+      if(invoiceLine){if(invoiceLines.has(invoiceLine.key))throw new ProviderFailure('object_onboarding_repeated_item');invoiceLines.add(invoiceLine.key);}
+      items.push({...(invoiceLine?{invoiceLine}:{}),...(objectType?{objectType}:{}),...(r.subjectKind?{subjectKind:r.subjectKind as 'product'|'system'}:{}), id, fingerprint,...(understanding.documentInfo?{sourceIndex}:{}), fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
     }
     let purchaseTotal: ProductExtraction['purchaseTotal'] = null;
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {try{

@@ -234,10 +234,17 @@ export class ObjectOnboardingService {
         const existing = await this.access.source(tx, a, h, value.documentId);
         if (!existing || existing.original!.sha256 !== draft.documentSha256) throw conflict('expense_document_conflict', 'La spesa ha un altro documento.');
       }
+      const item=output.items.find(item=>item.id===choice.itemId);
+      if(item?.invoiceLine&&(value.economicProvenance as {_invoiceLine?:{key?:string}}|null)?._invoiceLine?.key!==item.invoiceLine.key)throw conflict('onboarding_invoice_line_conflict','La spesa non appartiene alla stessa riga della fattura.');
       const linked = await tx.objectResourceLink.findFirst({ where: { accountId: a, homeId: h, expenseId: value.id, state: 'active', objectId: { not: targetId } } });
       if (linked) throw conflict('expense_object_conflict', 'La spesa è già collegata a un altro oggetto.');
       await expenses.mutateInTransaction(tx, a, h, 'update', value.id, { expectedVersion: value.version, documentId: value.documentId ?? draft.documentId, objectRef: { kind: 'object', id: targetId } }, 'onboarding_' + digest(draft.id + ':' + choice.itemId + ':expense-link'), true);
       return { expenseId: value.id, newExpenses: 0 };
+    }
+    const item=output.items.find(item=>item.id===choice.itemId);
+    if(item?.invoiceLine){
+      const sameLine=await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) AND e."economicProvenance"->'_invoiceLine'->>'key'=${item.invoiceLine.key} LIMIT 1`;
+      if(sameLine.length)throw conflict('onboarding_expense_exists','Questa riga della fattura ha già una spesa: collega quella esistente.');
     }
     const split=output.items.length>1;
     const maximum=output.purchaseTotal?.amountCents??manualMaximum;
@@ -256,6 +263,14 @@ export class ObjectOnboardingService {
     if (possible.length && !choice.expense.acknowledgePossibleDuplicate) throw conflict('onboarding_possible_expense_duplicate', 'Esiste una spesa con lo stesso importo e data: collegala oppure verifica che sia un acquisto distinto.');
     const values = {title:choice.expense.title,amountCents:choice.expense.amountCents,spentOn:choice.expense.spentOn,supplier:choice.expense.supplier};
     const result = await expenses.mutateInTransaction(tx, a, h, 'create', '', { ...values, category: 'purchase_replacement', documentId: draft.documentId, objectRef: { kind: 'object', id: targetId } }, 'onboarding_' + digest(draft.id + ':' + choice.itemId + ':expense-create'), true);
+    if(item?.invoiceLine){
+      const amount=item.purchaseAmount, date=item.fields.purchaseDate;
+      const verified=amount?.amountCents===choice.expense.amountCents;
+      const expense=await tx.homeExpense.update({where:{id:result.expense.id},data:{amountOrigin:verified?'extraction_confirmed':'user_declared',economicProvenance:onboardingJson({_invoiceLine:item.invoiceLine,amountCents:{origin:verified?'extraction_confirmed':'user_declared',sources:verified?[amount!.source]:[]},spentOn:{origin:date?.value===choice.expense.spentOn?'extraction_confirmed':'user_declared',sources:date?.value===choice.expense.spentOn?[date.source]:[]}})}});
+      const saved=await new EconomyPolicy(this.reviewAccess).saved(tx,expense);
+      await tx.expenseHistory.updateMany({where:{expenseId:expense.id,kind:'created'},data:{after:onboardingJson(saved)}});
+      await tx.expenseRequest.updateMany({where:{accountId:a,homeId:h,operation:'economy:create',key:'onboarding_'+digest(draft.id+':'+item.id+':expense-create')},data:{response:onboardingJson(saved)}});
+    }
     return { expenseId: result.expense.id, newExpenses: 1, ...(split?{allocation:'manual_item' as const}:{}) };
   }
 
@@ -339,6 +354,10 @@ export class ObjectOnboardingService {
         if (!item || decisions[item.id]?.state === 'confirmed' || decisions[item.id]?.state === 'skipped') throw conflict('onboarding_item_resolved', 'Uno degli articoli è già stato gestito.');
         if(choice.action==='document_only'){if(output.documentInfo?.kind!=='conformity_declaration'&&!output.houseExpenses?.some(e=>e.documentKind==='simple_invoice'))throw invalid();decisions[item.id]={state:'confirmed',objectIds:[],expenseId:null,newObjects:0,newExpenses:0};continue;}
         if (choice.action === 'skip' || choice.action === 'defer') { decisions[item.id] = { state: choice.action === 'skip' ? 'skipped' : 'deferred', objectIds: [], expenseId: null, newObjects: 0, newExpenses: 0 }; continue; }
+        if(automatic&&(choice.action==='create'||choice.action==='link')&&choice.expense.action==='create'){
+          const amount=item.purchaseAmount?.amountCents??(output.items.length===1?output.purchaseTotal?.amountCents:null), date=proposedProfile(item).purchaseDate?.value;
+          if(!amount||!date||choice.expense.amountCents!==amount||choice.expense.spentOn!==date)throw conflict('onboarding_item_cost_review','Controlla prezzo e data della singola riga prima di confermare.');
+        }
         const quantity = item.quantity?.value ?? 1;
         if (choice.action === 'create' && item.disposition !== 'household_object' && !choice.confirmHouseholdObject) throw invalid('Conferma che vuoi creare una scheda anche per questo articolo da verificare.');
         if (choice.action === 'create' && choice.unitNames.length && choice.unitNames.length !== quantity || choice.action === 'link' && choice.targets.length !== quantity) throw invalid('Scegli esplicitamente una scheda per ogni esemplare.');

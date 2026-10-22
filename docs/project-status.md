@@ -1,4 +1,12 @@
-## Fase 0 — Q15 split payment corretto offline, 23 ottobre 2026 (Codex)
+## Fase 0 — Q22, due prezzi e date verificati offline, 23 ottobre 2026 (Codex)
+
+**Implementato e verificato offline**: lettura locale della tabella esplicita Importo di Q22: forno **300,00 EUR**, frigorifero **500,00 EUR**, entrambi **18/09/2026** dalla Data acquisto stampata. Nessuna ripartizione degli 800 EUR, somma o moltiplicazione. Soggetti già citati, riga univoca sulla stessa pagina autorizzata, citazioni contigue e validazioni preservate; proposte errate restano segnalate. Identità server per riga, costi/fonti separati, deduplica tra copie/abbreviazioni e controllo prezzo/data nella conferma automatica transazionale. Prompt `document-understanding-v25-invoice-lines`; nessuna migrazione. [Diagnosi, correzione e limiti](v5/fase0-q22-lines-offline-20261023.md).
+
+**Verifiche**: build/lint backend V5, onboarding **188/188**, qualità **24/24**, guard **11/11**, backend **213/213**. DB sintetico nuovo **55433: 30/30**: Q22 10, Q15 9, Q48 11 inclusi contenitori. Concorrenza, rollback sulla seconda riga, replay da altro client, copie SHA ancora sotto il limite totale, collegamenti incrociati, privacy, revoche, SHA/versione, viewer e membership verificati. Parser/scorer sul Q22 congelato: 2/2 importi e 2/2 date nella risposta costruita offline; adattatore completo/locale/progressivo solo in memoria. Cluster conservato e spento.
+
+**Non verificato / residuo**: nessuna nuova chiamata AI o accesso a originali reali, DB/API app, `.env` o riavvio API. Gold/corpus, scorer/soglie e artefatti/ledger v22/v24 invariati; nessun ricalcolo storico, gate AI ancora **NON SUPERATO**. Le risposte live grezze non erano conservate: correzione verificata del formato sorgente e delle omissioni, non ricostruzione certa dei payload né misura AI v25. Restano Q48 live, Q20/date, titoli Q29/Q30, stabilità/modalità di lettura e autorizzazione distinta per nuove misure. Frontend/browser e HTTP non ripetuti. File estranei preservati.
+
+## Checkpoint precedente — Q15 split payment corretto offline, 23 ottobre 2026 (Codex)
 
 **Implementato e verificato offline**: policy server `payment-review-v1` sul testo completo verificato dell’originale, indipendente da importi omessi e flag del modello. Q15 conserva il totale **244,00 EUR** e richiede revisione; niente automatico di spese/oggetti/contatti. Controllo ripetuto nella transazione di conferma con binding documento/versione/SHA. Vecchie bozze finanziarie prive del controllo o con policy/snapshot errati richiedono conferma esplicita. Conferma manuale e opt-in contatti preservati; nessuna migrazione. [Correzione, test e limiti](v5/fase0-q15-payment-offline-20261023.md).
 

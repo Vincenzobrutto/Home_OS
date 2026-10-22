@@ -69,3 +69,9 @@ Una bozza onboarding può rappresentare fatture complete su pagine singole disti
 ## Revisione split payment sulla fonte — 23 ottobre 2026
 
 Il JSON interno ProductExtraction della bozza può contenere paymentReview: policy payment-review-v1, documentId/documentVersion/documentSha256 e reason split_payment oppure null. Prodotto soltanto dal server sul testo completo localmente verificato, non dallo schema AI; nessun nuovo testo salvato. Policy assente/vecchia o snapshot diverso impediscono automazione finanziaria, preservando la conferma umana. Nessuna tabella/migrazione o riscrittura delle bozze esistenti; metadato non proiettato pubblicamente. [Contratto e prove](fase0-q15-payment-offline-20261023.md).
+
+## Prezzi verificati e identità di riga — 23 ottobre 2026
+
+ProductItem può contenere invoiceLine:{key,page,row}, derivato dal server sul testo locale verificato (invoice-line-v1: SHA, pagina, posizione intestazione e indice riga); non è accettato dallo schema provider. Quantità/prezzo della riga esplicita Importo e data acquisto autonoma comune possono completare campi omessi dello stesso soggetto/pagina autorizzata; nessun prezzo ricavato dal totale o da altre righe. Le fonti restano ProductSource verified_text con estratti contigui.
+
+La spesa salva economicProvenance._invoiceLine e provenienza di amountCents/spentOn; valori coincidenti con quelli verificati hanno origine extraction_confirmed, modifiche esplicite restano user_declared senza citazioni improprie. Storico e ricevuta economica coerenti nella stessa transazione. Identità per duplicati/collegamenti, costi indipendenti per oggetto; nessuna nuova tabella/migrazione o riscrittura dei dati precedenti. [Contratto e verifiche](fase0-q22-lines-offline-20261023.md).
