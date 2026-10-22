@@ -31,6 +31,7 @@ import type {
   UpdateExpense,
   CreateActivity,
   UpdateActivity,
+  FollowUpActivity,
   Account,
   AnalysisCapabilities,
   AnalysisJob,
@@ -459,8 +460,8 @@ export class ApiClient {
   async activityMutation(
     homeId: string,
     activityId: string,
-    kind: 'updates' | 'complete' | 'cancel' | 'reopen',
-    body: UpdateActivity | ActivityAction,
+    kind: 'updates' | 'complete' | 'cancel' | 'reopen' | 'follow-up',
+    body: UpdateActivity | ActivityAction | FollowUpActivity,
     idempotencyKey: string,
     accountId: string,
   ) {
@@ -470,7 +471,7 @@ export class ApiClient {
         headers: { 'Idempotency-Key': idempotencyKey },
         accountId,
       }),
-      200,
+      kind === 'follow-up' ? 201 : 200,
     );
   }
 

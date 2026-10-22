@@ -26,7 +26,20 @@ export const HISTORY_KIND_LABEL = {
   completed: 'Completata da te',
   cancelled: 'Annullata',
   reopened: 'Riaperta',
+  follow_up_created: 'Prossimo promemoria creato',
 } as const;
+
+/** BL-01: proposte esplicite dopo il completamento, dalla data di completamento. */
+export const FOLLOW_UP_MONTHS = [6, 12, 24] as const;
+
+/** Mesi di calendario; se il giorno manca nel mese di arrivo si usa l'ultimo (31 agosto + 6 mesi → 28/29 febbraio). */
+export function addMonths(day: string, months: number) {
+  const [y, m, d] = day.split('-').map(Number) as [number, number, number];
+  const total = y * 12 + (m - 1) + months, year = Math.floor(total / 12), month = (total % 12) + 1;
+  const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  const last = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1]!;
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(Math.min(d, last)).padStart(2, '0')}`;
+}
 
 const cp = (s: string) => [...s].length;
 const clean = (s: string) => s.normalize('NFC').trim();
@@ -116,6 +129,8 @@ export function activityErrorMessage(error: unknown) {
           return 'L’attività è stata modificata nel frattempo (per esempio in un’altra scheda). Rileggi i dati prima di continuare.';
         case 'invalid_activity_state':
           return 'Lo stato dell’attività è cambiato nel frattempo: rileggi i dati prima di continuare.';
+        case 'follow_up_exists':
+          return 'Il prossimo promemoria è già stato creato: rileggi i dati per aprirlo.';
         case 'idempotency_conflict':
           return 'Una richiesta precedente con dati diversi risulta già registrata: rileggi i dati prima di continuare.';
       }

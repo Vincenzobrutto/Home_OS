@@ -1,3 +1,9 @@
+## Attività: prossimo promemoria (BL-01) — 22 ottobre 2026
+
+Implementato su branch `claude/bl02-garanzia` (Claude). Dopo il completamento: proposta 6/12/24 mesi dal giorno di completamento o data libera, conferma esplicita, collegamenti leggibili copiati, un solo successivo per attività. Migrazione additiva `20261022180000_activity_follow_up` applicata dopo backup verificato `backups/dimora-v5-20261022T154341Z`. [Report](v5/activity-follow-up-bl01-20261022.md).
+
+Verificato: typecheck/lint FE e BE; test offline (BE 3 nuovi, FE 4 nuovi, `activities.test.tsx` verde); browser su «COLLAUDO V2» con doppio clic senza duplicati e 390 px. **Non verificato**: suite HTTP/DB. Prossimo passo: BL-04 Foto (serve accordo su come provare da telefono reale), poi BL-10b; in parallelo decisione sul recupero account (Fase 0).
+
 ## Casa: storia essenziale (BL-03) — 22 ottobre 2026
 
 Implementato su branch `claude/bl02-garanzia` (Claude). Pagina «Storia della casa» (Casa → Esplora la casa), eventi a mano con precisione anno/mese/giorno e documenti, lavori/promemoria completati/oggetti aggiunti a Dimora, filtro anno, «Aggiungi alla storia» dal documento. Migrazione additiva `20261022150000_home_history` applicata al DB V5 dopo backup verificato `backups/dimora-v5-20261022T133036Z`. [Report](v5/home-history-bl03-20261022.md), [contratto](v5/home-history-api-contract.md).

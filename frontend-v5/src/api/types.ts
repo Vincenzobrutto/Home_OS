@@ -281,7 +281,16 @@ export type HomeActivity = {
   completedAt: string | null;
   cancelledAt: string | null;
   permissions: Array<'read' | 'edit'>;
+  /** BL-01: giorno di completamento nel calendario Europe/Rome. */
+  completedOn?: string | null;
+  /** BL-01: solo nel dettaglio e nelle risposte di scrittura. */
+  followUp?: {
+    previous: { id: string; title: string; completedOn: string | null } | null;
+    next: { id: string; title: string; dueDate: string | null; state: ActivityState } | null;
+  };
 };
+/** BL-01: prossimo promemoria dopo il completamento; data obbligatoria, mai prima del completamento. */
+export type FollowUpActivity = { expectedVersion: number; title: string; description?: string | null; dueDate: string; copyLinks?: boolean };
 export type TemporalContext = { asOf: string; today: string; timeZone: 'Europe/Rome' };
 export type ActivityCapabilities = TemporalContext & {
   apiVersion: 'activities-v1';
@@ -315,7 +324,7 @@ export type ActivityHistoryEvent = {
   id: string;
   activityId: string;
   at: string;
-  kind: 'created' | 'updated' | 'completed' | 'cancelled' | 'reopened';
+  kind: 'created' | 'updated' | 'completed' | 'cancelled' | 'reopened' | 'follow_up_created';
   origin: 'explicit_user';
   note: string | null;
   before: ActivityHistorySnapshot | null;

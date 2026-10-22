@@ -4,7 +4,8 @@ import { PrismaService } from '../prisma.service';
 import { digest } from '../security';
 import { conflict, invalid, object, uuid } from '../review/domain';
 import { ReviewService } from '../review/review.service';
-import { ActivityClock, Snapshot, actionBody, createBody, dueState, limits, listQuery, plusDays, temporal, updateBody } from './domain';
+import { readableReceiptObjectIds } from '../receipt-assistance/access';
+import { ActivityClock, Snapshot, actionBody, createBody, dueState, followUpBody, limits, listQuery, plusDays, temporal, updateBody } from './domain';
 type Tx = Prisma.TransactionClient;
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 const snapshot = (row: HomeActivity): Snapshot => ({ title: row.title, description: row.description, dueDate: row.dueDate, state: row.state, assetId: row.assetId });
@@ -27,8 +28,16 @@ export class ActivitiesService {
       return { state: 'unavailable' as const, asset: null };
     }
   }
-  private async project(tx: Tx, row: HomeActivity, edit: boolean, today: string) {
-    return { id: row.id, homeId: row.homeId, title: row.title, description: row.description, dueDate: row.dueDate, state: row.state,
+  /** BL-01: legame con il promemoria precedente/successivo, solo nel dettaglio e nelle risposte di scrittura (stesso account). */
+  private async followUpLinks(tx: Tx, row: HomeActivity) {
+    const [previous, next] = await Promise.all([
+      row.previousActivityId ? tx.homeActivity.findFirst({ where: { id: row.previousActivityId, accountId: row.accountId, homeId: row.homeId }, select: { id: true, title: true, completedAt: true } }) : null,
+      tx.homeActivity.findFirst({ where: { previousActivityId: row.id, accountId: row.accountId, homeId: row.homeId }, select: { id: true, title: true, dueDate: true, state: true } }),
+    ]);
+    return { previous: previous ? { id: previous.id, title: previous.title, completedOn: previous.completedAt ? temporal(previous.completedAt).today : null } : null, next };
+  }
+  private async project(tx: Tx, row: HomeActivity, edit: boolean, today: string, detail = false) {
+    return { ...(detail ? { followUp: await this.followUpLinks(tx, row) } : {}), completedOn: row.completedAt ? temporal(row.completedAt).today : null, id: row.id, homeId: row.homeId, title: row.title, description: row.description, dueDate: row.dueDate, state: row.state,
       dueState: dueState(row, today), assetLink: await this.link(tx, row.accountId, row.homeId, row.assetId), version: row.version, origin: 'user_created',
       createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString(), completedAt: row.completedAt?.toISOString() ?? null,
       cancelledAt: row.cancelledAt?.toISOString() ?? null, permissions: edit ? ['read', 'edit'] : ['read'] };
@@ -51,7 +60,7 @@ export class ActivitiesService {
   }
   get(accountId: string, homeId: string, id: string, query: unknown) {
     object(query, []); uuid(id);
-    return this.read(accountId, homeId, async (tx, edit, context) => ({ ...context, activity: await this.project(tx, await this.activity(tx, accountId, homeId, id), edit, context.today) }));
+    return this.read(accountId, homeId, async (tx, edit, context) => ({ ...context, activity: await this.project(tx, await this.activity(tx, accountId, homeId, id), edit, context.today, true) }));
   }
   private async mutate(accountId: string, homeId: string, operation: string, target: string, body: ReturnType<typeof createBody> | ReturnType<typeof updateBody> | ReturnType<typeof actionBody>, key?: string) {
     if (!key || !/^[a-zA-Z0-9_-]{16,100}$/.test(key)) throw invalid('Chiave della richiesta non valida.');
@@ -86,7 +95,7 @@ export class ActivitiesService {
         else row = await tx.homeActivity.update({ where: { id: old.id }, data: { ...changes, version: { increment: 1 }, updatedAt: now } });
       }
       if (kind) await tx.activityHistory.create({ data: { activityId: row.id, accountId, at: now, kind, note: 'note' in body ? body.note : null, before: old ? json(snapshot(old)) : Prisma.JsonNull, after: json(snapshot(row)) } });
-      const response = { ...context, activity: await this.project(tx, row, true, context.today) };
+      const response = { ...context, activity: await this.project(tx, row, true, context.today, true) };
       await tx.activityRequest.create({ data: { accountId, homeId, operation, target, key, digest: hash, response: json(response), createdAt: now } });
       return response;
     }, { timeout: 15000, maxWait: 15000 });
@@ -94,6 +103,52 @@ export class ActivitiesService {
   create(a: string, h: string, input: unknown, key?: string) { return this.mutate(a, h, 'create', '', createBody(input), key); }
   update(a: string, h: string, id: string, input: unknown, key?: string) { return this.mutate(a, h, 'update', id, updateBody(input), key); }
   action(a: string, h: string, id: string, action: 'complete' | 'cancel' | 'reopen', input: unknown, key?: string) { return this.mutate(a, h, action, id, actionBody(input), key); }
+  /** Copia i collegamenti a oggetti/caldaie ancora leggibili; quelli revocati o archiviati non vengono copiati né nominati. */
+  private async copyObjectLinks(tx: Tx, a: string, h: string, sourceId: string, targetId: string, now: Date) {
+    const links = await tx.objectResourceLink.findMany({ where: { accountId: a, homeId: h, activityId: sourceId, resourceType: 'activity', state: 'active' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] });
+    for (const link of links) {
+      const subjectKind = link.objectId ? 'object' : 'boiler', subjectId = link.objectId ?? link.boilerId;
+      if (!subjectId) continue;
+      if (link.objectId) {
+        const item = await tx.homeObject.findFirst({ where: { id: link.objectId, accountId: a, homeId: h, state: 'active' } });
+        if (!item || !(await readableReceiptObjectIds(tx, a, h, [item.id])).has(item.id)) continue;
+      } else if ((await this.link(tx, a, h, subjectId)).state !== 'linked') continue;
+      const row = await tx.objectResourceLink.create({ data: { accountId: a, homeId: h, objectId: link.objectId, boilerId: link.boilerId, resourceType: 'activity', resourceId: targetId, activityId: targetId, createdAt: now } });
+      await tx.objectEvent.create({ data: { accountId: a, homeId: h, targetKind: subjectKind, targetId: subjectId, kind: 'linked', at: now, before: Prisma.JsonNull, after: json({ kind: 'link', row, subjectKind, subjectId }) } });
+    }
+  }
+  /**
+   * BL-01: crea il prossimo promemoria dopo un completamento. Un solo successivo per attività (vincolo unico), anche dopo
+   * riapertura e nuovo completamento; idempotente; versione attesa della fonte. Nessuna ricorrenza automatica.
+   */
+  followUp(a: string, h: string, id: string, input: unknown, key?: string) {
+    if (!key || !/^[a-zA-Z0-9_-]{16,100}$/.test(key)) throw invalid('Chiave della richiesta non valida.');
+    uuid(id); const body = followUpBody(input);
+    return this.db.$transaction(async tx => {
+      await this.access.lock(tx, a, h); await this.access.require(tx, a, h, true);
+      const source = await this.activity(tx, a, h, id);
+      const lookup = { accountId_homeId_operation_target_key: { accountId: a, homeId: h, operation: 'follow_up', target: id, key } };
+      const hash = digest(JSON.stringify(body)), prior = await tx.activityRequest.findUnique({ where: lookup });
+      if (prior) {
+        if (prior.digest !== hash) throw conflict('idempotency_conflict', 'Chiave già usata per una richiesta diversa.');
+        await this.activity(tx, a, h, (prior.response as unknown as { activity: { id: string } }).activity.id);
+        return prior.response;
+      }
+      if (source.version !== body.expectedVersion) throw conflict('activity_version_conflict', 'L’attività è cambiata. Rileggi prima di continuare.');
+      if (source.state !== 'completed' || !source.completedAt) throw conflict('invalid_activity_state', 'Completa prima il promemoria.');
+      if (await tx.homeActivity.findFirst({ where: { previousActivityId: source.id } })) throw conflict('follow_up_exists', 'Il prossimo promemoria è già stato creato.');
+      if (body.dueDate < temporal(source.completedAt).today) throw invalid('La data non può precedere il completamento.');
+      const now = this.clock.now(), context = temporal(now);
+      const assetId = body.copyLinks && source.assetId && (await this.link(tx, a, h, source.assetId)).state === 'linked' ? source.assetId : null;
+      const row = await tx.homeActivity.create({ data: { accountId: a, homeId: h, title: body.title, description: body.description, dueDate: body.dueDate, assetId, previousActivityId: source.id, createdAt: now, updatedAt: now } });
+      if (body.copyLinks) await this.copyObjectLinks(tx, a, h, source.id, row.id, now);
+      await tx.activityHistory.create({ data: { activityId: row.id, accountId: a, at: now, kind: 'created', note: null, before: Prisma.JsonNull, after: json(snapshot(row)) } });
+      await tx.activityHistory.create({ data: { activityId: source.id, accountId: a, at: now, kind: 'follow_up_created', note: null, before: json(snapshot(source)), after: json(snapshot(source)) } });
+      const response = { ...context, activity: await this.project(tx, row, true, context.today, true) };
+      await tx.activityRequest.create({ data: { accountId: a, homeId: h, operation: 'follow_up', target: id, key, digest: hash, response: json(response), createdAt: now } });
+      return response;
+    }, { timeout: 15000, maxWait: 15000 });
+  }
   private paginate<T extends { id: string }>(rows: T[], query: ReturnType<typeof listQuery>, scope: unknown) {
     const binding = digest(JSON.stringify(scope)); let start = 0;
     if (query.cursor) {

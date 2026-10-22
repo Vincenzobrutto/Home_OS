@@ -56,3 +56,14 @@ export function listQuery(input: unknown, history = false) {
   if (row.cursor !== undefined && (typeof row.cursor !== 'string' || !/^[A-Za-z0-9_-]{1,4096}$/.test(row.cursor))) throw invalid();
   return { q: history || row.q === undefined ? '' : normalized(row.q, 120, true) ?? '', state: state as State | 'all', due: String(due), assetId: row.assetId === undefined ? null : uuid(row.assetId), limit: Number(row.limit ?? 20), cursor: row.cursor as string | undefined };
 }
+/** BL-01: n mesi di calendario; se il giorno manca nel mese di arrivo si usa l'ultimo (31/1 + 1 mese → 28 o 29/2). */
+export function addMonths(day: string, months: number) {
+  const [y, m, d] = day.split('-').map(Number), total = y * 12 + (m - 1) + months, year = Math.floor(total / 12), month = total % 12 + 1;
+  const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(Math.min(d, last)).padStart(2, '0')}`;
+}
+export function followUpBody(input: unknown) {
+  const row = object(input, ['expectedVersion', 'title', 'description', 'dueDate', 'copyLinks']);
+  if (row.copyLinks !== undefined && typeof row.copyLinks !== 'boolean') throw invalid();
+  return { expectedVersion: version(row.expectedVersion), title: normalized(row.title, 120)!, description: row.description === undefined ? null : normalized(row.description, 2000, true), dueDate: calendar(row.dueDate ?? '') as string, copyLinks: (row.copyLinks ?? true) as boolean };
+}

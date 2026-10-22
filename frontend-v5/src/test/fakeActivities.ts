@@ -21,7 +21,7 @@ export type ActivityAccess = {
   asset(accountId: string, homeId: string, assetId: string): { id: string; name: string } | null;
 };
 
-type Stored = Omit<HomeActivity, 'dueState' | 'assetLink' | 'permissions'> & { accountId: string; assetId: string | null };
+type Stored = Omit<HomeActivity, 'dueState' | 'assetLink' | 'permissions' | 'completedOn' | 'followUp'> & { accountId: string; assetId: string | null; previousActivityId?: string | null };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const KEY_RE = /^[A-Za-z0-9_-]{16,100}$/;
@@ -90,9 +90,17 @@ export class FakeActivities {
 
   private view(s: Stored, perms: HomePermission[]): HomeActivity {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { accountId, assetId, ...rest } = s;
+    const { accountId, assetId, previousActivityId, ...rest } = s;
+    const previous = previousActivityId ? this.items.get(previousActivityId) : undefined;
+    const next = [...this.items.values()].find((x) => x.previousActivityId === s.id);
     return {
       ...rest,
+      // BL-01: giorno di completamento (l'orologio simulato è già il calendario di Roma) e legami precedente/successivo.
+      completedOn: s.completedAt ? s.completedAt.slice(0, 10) : null,
+      followUp: {
+        previous: previous ? { id: previous.id, title: previous.title, completedOn: previous.completedAt ? previous.completedAt.slice(0, 10) : null } : null,
+        next: next ? { id: next.id, title: next.title, dueDate: next.dueDate, state: next.state } : null,
+      },
       dueState: this.dueState(s),
       assetLink: this.link(s.accountId, s.homeId, s.assetId),
       permissions: perms.includes('edit') ? ['read', 'edit'] : ['read'],
@@ -144,6 +152,7 @@ export class FakeActivities {
       const events = [...(this.history.get(id) ?? [])].reverse();
       return this.page(events, params, `h:${accountId}:${homeId}:${id}`);
     }
+    if (isPost && parts[2] === 'follow-up') return this.followUp(req, s, accountId, homeId, perms);
     if (isPost && ['updates', 'complete', 'cancel', 'reopen'].includes(parts[2]!)) {
       return this.mutate(req, parts[2] as 'updates' | 'complete' | 'cancel' | 'reopen', s, accountId, homeId, perms);
     }
@@ -319,6 +328,32 @@ export class FakeActivities {
       this.items.set(s.id, s);
       this.event(s, 'created', null, null, at);
       return { res: { status: 201, body: { ...this.temporal(), activity: this.view(s, perms) } }, assetIds: s.assetId ? [s.assetId] : [] };
+    });
+  }
+
+  /** BL-01: un solo successivo per attività completata; data obbligatoria, non prima del completamento. */
+  private followUp(req: Req, s: Stored, accountId: string, homeId: string, perms: HomePermission[]): Res {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const ev = body.expectedVersion;
+    if (typeof ev !== 'number' || !Number.isInteger(ev) || ev < 1) return err(422, 'validation_error', 'Versione mancante.');
+    if (typeof body.copyLinks !== 'undefined' && typeof body.copyLinks !== 'boolean') return err(422, 'validation_error', 'Dati non validi.');
+    const fields = Object.fromEntries(Object.entries(body).filter(([k]) => k !== 'expectedVersion' && k !== 'copyLinks'));
+    const parsed = this.parseFields(fields, ['title', 'description', 'dueDate'], accountId, homeId);
+    if ('forbidden' in parsed) return err(403, 'FORBIDDEN', 'Accesso non consentito.');
+    if (!parsed.out.title || !parsed.out.dueDate) parsed.fieldErrors.dueDate ??= 'Data obbligatoria.';
+    if (Object.keys(parsed.fieldErrors).length) return err(422, 'validation_error', 'Controlla i campi.', parsed.fieldErrors);
+    return this.withIdem(req, `${accountId}:${homeId}:follow-up:${s.id}`, accountId, homeId, () => {
+      if (ev !== s.version) return { res: err(409, 'activity_version_conflict', 'L’attività è cambiata: rileggi.'), assetIds: [] };
+      if (s.state !== 'completed' || !s.completedAt) return { res: err(409, 'invalid_activity_state', 'Completa prima il promemoria.'), assetIds: [] };
+      if ([...this.items.values()].some((x) => x.previousActivityId === s.id)) return { res: err(409, 'follow_up_exists', 'Il prossimo promemoria è già stato creato.'), assetIds: [] };
+      if (parsed.out.dueDate! < s.completedAt.slice(0, 10)) return { res: err(422, 'validation_error', 'La data non può precedere il completamento.'), assetIds: [] };
+      const at = this.stamp();
+      const assetId = body.copyLinks !== false && s.assetId && this.link(accountId, homeId, s.assetId).state === 'linked' ? s.assetId : null;
+      const n: Stored = { id: uuid(), homeId, accountId, title: parsed.out.title!, description: parsed.out.description ?? null, dueDate: parsed.out.dueDate!, assetId, previousActivityId: s.id, state: 'open', version: 1, origin: 'user_created', createdAt: at, updatedAt: at, completedAt: null, cancelledAt: null };
+      this.items.set(n.id, n);
+      this.event(n, 'created', null, null, at);
+      this.event(s, 'follow_up_created', this.snapshot(s), null, at);
+      return { res: { status: 201, body: { ...this.temporal(), activity: this.view(n, perms) } }, assetIds: assetId ? [assetId] : [] };
     });
   }
 

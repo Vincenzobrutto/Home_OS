@@ -15,6 +15,7 @@ import {
   useActivityOperation,
 } from '../activities/components';
 import { useActivity, useActivityCapabilities, useActivityHistory } from '../activities/hooks';
+import { FollowUpForm, FollowUpSummary } from '../activities/FollowUp';
 import { Banner, ErrorState, Loading, Tag, cx, ui, useDocumentTitle } from '../components/ui';
 import {
   HISTORY_KIND_LABEL,
@@ -38,6 +39,8 @@ export function ActivityDetailPage() {
   const saved = location.state?.activityList;
   const fromList = saved && (saved.url === listBase || saved.url?.startsWith(listBase + '?')) ? saved : null;
   const query = useActivity(home.id, activityId);
+  // BL-01: la proposta segue il completamento anche se la vista si rimonta sulla nuova versione.
+  const [proposeFor, setProposeFor] = useState<string | null>(null);
   const statusRef = useUpdateFocus<HTMLDivElement>(`${home.id}:${activityId}`, query.data?.activity.version);
   const back = (
     <Link to={fromList?.url ?? listBase} state={fromList ? {activityRestore:fromList} : null} className={pages.spaced}>
@@ -76,7 +79,19 @@ export function ActivityDetailPage() {
     );
   }
   // Chiave sulla versione: dopo una rilettura con dati nuovi le bozze locali ripartono dai dati del server.
-  return <ActivityView key={query.data.activity.version} home={home} activity={query.data.activity} today={query.data.today} back={back} statusRef={statusRef} />;
+  return (
+    <ActivityView
+      key={query.data.activity.version}
+      home={home}
+      activity={query.data.activity}
+      today={query.data.today}
+      back={back}
+      statusRef={statusRef}
+      propose={proposeFor === activityId}
+      onCompleted={() => setProposeFor(activityId)}
+      onProposalClosed={() => setProposeFor(null)}
+    />
+  );
 }
 
 function Unavailable(props: { back: ReactNode; title: string; children: string }) {
@@ -94,12 +109,19 @@ function Unavailable(props: { back: ReactNode; title: string; children: string }
   );
 }
 
-type Panel = 'none' | 'edit' | 'complete' | 'cancel' | 'reopen';
+type Panel = 'none' | 'edit' | 'complete' | 'cancel' | 'reopen' | 'followUp';
 
-function ActivityView({ home, activity, today, back, statusRef }: { home: Home; activity: HomeActivity; today: string; back: ReactNode; statusRef: RefObject<HTMLDivElement | null> }) {
+function ActivityView({ home, activity, today, back, statusRef, propose, onCompleted, onProposalClosed }: { home: Home; activity: HomeActivity; today: string; back: ReactNode; statusRef: RefObject<HTMLDivElement | null>; propose: boolean; onCompleted: () => void; onProposalClosed: () => void }) {
   useDocumentTitle(`${activity.title} · ${home.name}`);
   const capabilities = useActivityCapabilities(home.id);
   const [panel, setPanel] = useState<Panel>('none');
+  const closeProposal = () => {
+    setPanel('none');
+    onProposalClosed();
+  };
+  // La proposta può arrivare dopo il rimontaggio sulla nuova versione: deriva dallo stato della pagina.
+  const current: Panel = propose && panel === 'none' && activity.state === 'completed' && !activity.followUp?.next ? 'followUp' : panel;
+  const previous = activity.followUp?.previous;
   const canEdit = home.permissions.includes('edit') && activity.permissions.includes('edit');
   const isOpen = activity.state === 'open';
   const base = `/home/${encodeURIComponent(home.id)}`;
@@ -139,6 +161,15 @@ function ActivityView({ home, activity, today, back, statusRef }: { home: Home; 
                 assetLinkText(activity.assetLink)
               )}
             </dd></>}
+            {previous && (
+              <>
+                <dt>Promemoria precedente</dt>
+                <dd>
+                  <Link to={`${base}/attivita/${encodeURIComponent(previous.id)}`}>{previous.title}</Link>
+                  {previous.completedOn ? ` · completato il ${formatCalendarDate(previous.completedOn)}` : ''}
+                </dd>
+              </>
+            )}
             <dt>Creata</dt>
             <dd>{formatTimestamp(activity.createdAt)}</dd>
             {activity.completedAt && (
@@ -161,7 +192,7 @@ function ActivityView({ home, activity, today, back, statusRef }: { home: Home; 
         </section>
 
         {/* Con il dialogo di annullamento aperto i pulsanti restano: alla chiusura il focus torna al pulsante d'origine. */}
-        {canEdit && (panel === 'none' || panel === 'cancel') && (
+        {canEdit && (current === 'none' || current === 'cancel' || current === 'followUp') && (
           <div className={styles.actions}>
             {isOpen ? (
               <>
@@ -184,7 +215,7 @@ function ActivityView({ home, activity, today, back, statusRef }: { home: Home; 
         )}
         {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare questa attività, non modificarla.</p>}
 
-        {panel === 'edit' && isOpen && (
+        {current === 'edit' && isOpen && (
           <ActivityForm
             home={home}
             activity={activity}
@@ -193,19 +224,25 @@ function ActivityView({ home, activity, today, back, statusRef }: { home: Home; 
             onDone={() => setPanel('none')}
           />
         )}
-        {panel === 'complete' && isOpen && (
+        {current === 'complete' && isOpen && (
           <ActionForm
             home={home}
             activity={activity}
             kind="complete"
             title="Completa l’attività"
             confirmLabel="Conferma completamento"
-            hint="Dichiari di averla svolta. Puoi aggiungere una nota sul lavoro fatto."
+            hint="Dichiari di averla svolta. Puoi aggiungere una nota sul lavoro fatto. Dopo potrai decidere se creare il prossimo promemoria."
             noteMax={capabilities.data?.limits.noteMaxCodePoints}
             onClose={() => setPanel('none')}
+            onSubmitted={onCompleted}
           />
         )}
-        {panel === 'reopen' && !isOpen && (
+        {current === 'followUp' && canEdit && activity.state === 'completed' && !activity.followUp?.next ? (
+          <FollowUpForm home={home} activity={activity} today={today} limits={capabilities.data?.limits} onClose={closeProposal} onDone={closeProposal} autoFocus={panel === 'followUp'} />
+        ) : (
+          <FollowUpSummary home={home} activity={activity} canEdit={canEdit} onPropose={() => setPanel('followUp')} />
+        )}
+        {current === 'reopen' && !isOpen && (
           <ActionForm
             home={home}
             activity={activity}
@@ -217,7 +254,7 @@ function ActivityView({ home, activity, today, back, statusRef }: { home: Home; 
             onClose={() => setPanel('none')}
           />
         )}
-        {panel === 'cancel' && isOpen && (
+        {current === 'cancel' && isOpen && (
             <ActionForm
               modal
               home={home}
@@ -250,6 +287,8 @@ function ActionForm(props: {
   onClose: () => void;
   backLabel?: string;
   modal?: boolean;
+  /** All'invio: la vista si rimonta sulla nuova versione prima delle callback della mutazione. */
+  onSubmitted?: () => void;
 }) {
   const id = useId();
   const op = useActivityOperation(props.home.id);
@@ -262,6 +301,7 @@ function ActionForm(props: {
     setError(e);
     if (e) return;
     const n = normalizeText(note);
+    props.onSubmitted?.();
     op.run(
       {
         kind: props.kind,

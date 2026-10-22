@@ -79,7 +79,7 @@ export class Projection {
     if (kind === 'object') return { ...scalars(row, fields.object), profile:this.profile(row.profile), ...(row.manual ? { manual: scalars(row.manual, ['url', 'kind', 'brand', 'reference', 'origin', 'sourceUrl', 'checkedAt', 'boundVersion']) } : {}) };
     if (kind === 'room') return scalars(row, fields.room);
     if (kind === 'boiler') return { ...scalars(row, ['id', 'name', 'version', 'createdAt']), confirmed: this.confirmed(row.confirmed) };
-    if (kind === 'activity') return { ...scalars(row, fields.activity), assetId: this.ref(row.assetId, this.assets) };
+    if (kind === 'activity') return { ...scalars(row, fields.activity), assetId: this.ref(row.assetId, this.assets), previousActivityId: this.ref(row.previousActivityId, this.activities) };
     if (kind === 'work') return { ...scalars(row, fields.work), activityId: this.ref(row.activityId, this.activities) };
     if (kind === 'expense') {
       const provenance: Row = {};
@@ -115,7 +115,7 @@ export class Projection {
     return { ...scalars(row, ['id', 'fieldKey', 'targetVersion', 'state', 'version', 'createdAt', 'updatedAt']), objectId, proposed: { value: proposed.value, sources: this.sources(sources) } };
   }
   history(kind: string, event: string, value: unknown, objectEvent = false): Row | null {
-    const recognized = objectEvent ? ['created', 'updated', 'archived', 'restored', 'position_updated', 'linked', 'unlinked', 'receipt_fields_confirmed'] : kind === 'activity' ? ['created', 'updated', 'completed', 'cancelled', 'reopened'] : ['created', 'updated', 'archived', 'restored'];
+    const recognized = objectEvent ? ['created', 'updated', 'archived', 'restored', 'position_updated', 'linked', 'unlinked', 'receipt_fields_confirmed'] : kind === 'activity' ? ['created', 'updated', 'completed', 'cancelled', 'reopened', 'follow_up_created'] : ['created', 'updated', 'archived', 'restored'];
     if (!recognized.includes(event)) { this.historyLimited = true; return null; }
     return objectEvent ? this.objectSnapshot(value) : this.snapshot(kind, value);
   }

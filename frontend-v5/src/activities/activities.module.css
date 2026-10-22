@@ -248,3 +248,8 @@
 @media(max-width:700px){:global(.activity-search-filters){display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:8px}:global(.activity-search-filters form){grid-column:1/-1}:global(.activity-search-filters label){min-width:0}:global(.activity-search-filters select){font-size:13px;padding:8px}:global(.activity-workspace) .itemHead{gap:6px}:global(.activity-workspace) .title{font-size:15px}:global(.activity-workspace) .due{font-size:11px;padding:3px 6px}}
 
 :global(.activity-search-filters input::-webkit-search-cancel-button){display:none}
+/* BL-01: proposta del prossimo promemoria */
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choices button[aria-pressed="true"]{border-color:var(--color-accent);color:var(--color-accent);font-weight:600}
+.check{display:flex;gap:8px;align-items:flex-start;margin:4px 0 12px}
+.followUpTitle{margin:0 0 8px;font-size:1.05rem}

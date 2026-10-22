@@ -1,3 +1,7 @@
+## Attività: prossimo promemoria (BL-01) — 22 ottobre 2026
+
+Dopo il completamento di un promemoria Dimora propone il successivo tra 6, 12 o 24 mesi dal giorno del completamento, o a una data scelta; nulla viene creato senza conferma, un solo successivo per attività, legame visibile su entrambe. Migrazione additiva con backup verificato. [Dettagli e verifiche](v5/activity-follow-up-bl01-20261022.md).
+
 ## Casa: storia essenziale (BL-03) — 22 ottobre 2026
 
 Nuova pagina «Storia della casa» da Casa: eventi inseriti a mano con data anche solo per anno o mese, lavori datati con le spese, promemoria completati e oggetti aggiunti a Dimora, filtro per anno, «Aggiungi alla storia» dal documento. Migrazione additiva con backup verificato. [Dettagli e verifiche](v5/home-history-bl03-20261022.md).

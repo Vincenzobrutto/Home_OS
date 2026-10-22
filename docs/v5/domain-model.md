@@ -57,3 +57,7 @@ HomeActivity: creatore/Home, collegamento BoilerAsset facoltativo, testo, dueDat
 ## BL-03 — storia della casa (22/10/2026)
 
 `HomeHistoryEvent`: evento personale inserito a mano (account, casa, titolo, descrizione, `year` obbligatorio, `month`/`day` facoltativi, `sortKey` `YYYY-MM-DD` con `00` per le parti assenti, `documentIds` ≤5, stato `active|removed`, versione); `HomeHistoryRequest` per l'idempotenza. Le altre voci della storia (lavori, promemoria completati, oggetti aggiunti a Dimora) sono lette dalle loro tabelle, non copiate. Contratto: [home-history-api-contract.md](home-history-api-contract.md).
+
+## BL-01 — prossimo promemoria (22/10/2026)
+
+`HomeActivity.previousActivityId`: riferimento facoltativo e unico all'attività completata da cui il promemoria è stato proposto (al più un successivo per attività). Nessuna regola di ricorrenza memorizzata.

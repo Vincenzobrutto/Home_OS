@@ -5,6 +5,7 @@ import type {
   ActivityFilters,
   ActivityResponse,
   CreateActivity,
+  FollowUpActivity,
   SessionResponse,
   UpdateActivity,
 } from '../api/types';
@@ -79,7 +80,8 @@ function sameAccount(queryClient: QueryClient, accountId: string) {
 export type ActivityMutationVars =
   | { kind: 'create'; body: CreateActivity; idempotencyKey: string }
   | { kind: 'updates'; activityId: string; body: UpdateActivity; idempotencyKey: string }
-  | { kind: 'complete' | 'cancel' | 'reopen'; activityId: string; body: ActivityAction; idempotencyKey: string };
+  | { kind: 'complete' | 'cancel' | 'reopen'; activityId: string; body: ActivityAction; idempotencyKey: string }
+  | { kind: 'follow-up'; activityId: string; body: FollowUpActivity; idempotencyKey: string };
 
 /**
  * Mutazioni pessimistiche: nessun aggiornamento locale prima della risposta.

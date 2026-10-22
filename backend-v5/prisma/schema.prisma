@@ -343,6 +343,9 @@ model HomeActivity {
   updatedAt DateTime @default(now())
   completedAt DateTime?
   cancelledAt DateTime?
+  previousActivityId String? @unique
+  previous HomeActivity? @relation("ActivityFollowUp", fields: [previousActivityId], references: [id], onDelete: Restrict)
+  next HomeActivity? @relation("ActivityFollowUp")
   account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
   home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
   asset BoilerAsset? @relation(fields: [assetId], references: [id], onDelete: Restrict)
