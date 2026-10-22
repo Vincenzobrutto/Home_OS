@@ -1,6 +1,6 @@
 ## Fase 0 qualità AI — correzioni offline concluse, gate ancora non superato, 22 ottobre 2026
 
-Campagna sui 52 sintetici conclusa (146 Messages, 3,545746 USD, nessun incerto/retry); risultati congelati. Corretti offline i falsi rifiuti dei titoli delle targhette e della dicitura `documento corrente`, prompt v23 e regressioni verdi. **Gate ancora non superato**: non è una nuova misura AI. Restano diagnostica di altri rifiuti/ambiguità e contratto per le due fatture Q48 senza fonderle; nessuna modalità di lettura promossa. Nuova campagna versionata richiede autorizzazione; reali esclusi con consenso/tetto separati. [Correzioni e limiti](v5/fase0-evidence-amounts-offline-20261022.md), [risultati live](v5/fase0-quality-v3-campaign-20261022.md).
+Campagna sui 52 sintetici conclusa (146 Messages, 3,545746 USD, nessun incerto/retry); risultati congelati. Corretti offline titoli delle targhette e totali correnti; ora Q48 gestisce due fatture complete su pagine singole con conferma/provenienza e deduplica separate, prompt v24 e privacy/idempotenza DB verificate. **Gate ancora non superato**: non è una nuova misura AI. Restano diagnostica di altri rifiuti/ambiguità e generalizzazione multipagina/soggetti/contatti; nessuna modalità di lettura promossa. Nuova campagna richiede autorizzazione; reali esclusi con consenso/tetto separati. [Q48 e limiti](v5/fase0-q48-invoices-offline-20261022.md), [risultati live](v5/fase0-quality-v3-campaign-20261022.md).
 
 ## Archivio unico Documenti completato — 21 ottobre 2026
 

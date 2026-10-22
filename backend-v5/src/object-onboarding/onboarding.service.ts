@@ -260,8 +260,14 @@ export class ObjectOnboardingService {
 
   private async houseCost(tx:OnboardingTx,a:string,h:string,draft:ObjectOnboardingDraft,item:NonNullable<ProductExtraction['houseExpenses']>[number],selected:HouseExpenseChoice){
     const c=selected.confirmation;if(!c)throw invalid();const expenses=new ExpensesService(this.access.db,this.reviewAccess,this.clock);
+    if(item.invoiceSegment&&c.mode==='create'){
+      const f=item.proposedFields,number=c.values.documentNumber,supplier=c.values.supplier,date=c.values.documentDate;
+      const total=item.amountCandidates.find(x=>x.id===(c.amountSelection.mode==='candidate'?c.amountSelection.candidateId:null));
+      if(typeof number!=='string'||typeof supplier!=='string'||typeof date!=='string'||!eq(number,f.documentNumber.value)||!eq(supplier,f.supplier.value)||date!==f.documentDate.value||c.values.spentOn!==date||!total||total.role!=='current_document_total'||total.amountCents!==c.values.amountCents)throw invalid('Conferma separatamente numero, fornitore, data e totale della fattura nella sua pagina.');
+    }
     if(c.mode==='link_existing'){
       const row=await expenses.record(tx,a,h,c.expenseId);if(row.version!==c.expectedExpenseVersion||row.state!=='active')throw conflict('expense_version_conflict','Rileggi la spesa.');
+      if(item.invoiceSegment&&(row.economicProvenance as {_invoiceSegment?:{key?:string}}|null)?._invoiceSegment?.key!==item.invoiceSegment.key)throw conflict('onboarding_invoice_segment_conflict','La spesa non appartiene alla stessa fattura del file.');
       if(row.workId)throw invalid('Questa spesa è già collegata a un lavoro.');
       const policy=new EconomyPolicy(this.reviewAccess),currentRef=await policy.currentRef(tx,row);if(currentRef)await policy.subject(tx,a,h,currentRef,true);
       if(row.documentId){await expenses.documentLink(tx,a,h,row.documentId,true);if(row.documentId!==draft.documentId){const original=await tx.documentVersion.findFirst({where:{documentId:row.documentId,sha256:draft.documentSha256}});if(!original)throw conflict('expense_document_conflict','La spesa ha già un altro documento.');}}
@@ -270,14 +276,16 @@ export class ObjectOnboardingService {
     }
     const candidate=c.amountSelection.mode==='candidate'?item.amountCandidates.find(x=>x.id===c.amountSelection.candidateId):null;
     if(c.amountSelection.mode==='candidate'&&(!candidate||candidate.amountCents!==c.values.amountCents||!['current_document_total','amount_due'].includes(candidate.role)))throw invalid('Controlla il totale della spesa della casa.');
-    const sameSource=await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE e."accountId"=${a} AND e."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}) AND v.sha256=${draft.documentSha256} AND (e."documentNumber" IS NOT DISTINCT FROM ${c.values.documentNumber??null}::text OR e."amountCents"=${c.values.amountCents}) LIMIT 1`;
+    const legacyMatch=Prisma.sql`(e."documentNumber" IS NOT DISTINCT FROM ${c.values.documentNumber??null}::text OR e."amountCents"=${c.values.amountCents})`;
+    const sourceMatch=item.invoiceSegment?Prisma.sql`(e."economicProvenance"->'_invoiceSegment'->>'key'=${item.invoiceSegment.key} OR (e."economicProvenance"->'_invoiceSegment' IS NULL AND ${legacyMatch}))`:legacyMatch;
+    const sameSource=await tx.$queryRaw<Array<{id:string}>>(Prisma.sql`SELECT e.id FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE e."accountId"=${a} AND e."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}) AND v.sha256=${draft.documentSha256} AND ${sourceMatch} LIMIT 1`);
     if(sameSource.length)throw conflict('onboarding_expense_exists','Questo documento ha già una spesa: collega quella esistente.');
     const similar=await tx.homeExpense.findMany({where:{accountId:a,homeId:h,state:'active',OR:[{amountCents:Number(c.values.amountCents),spentOn:String(c.values.spentOn)},...(c.values.documentNumber&&c.values.supplier?[{documentNumber:c.values.documentNumber,supplier:c.values.supplier}]:[])]},select:{id:true,documentId:true}});
     let duplicate=false;for(const row of similar){if(!row.documentId||(await expenses.documentLink(tx,a,h,row.documentId)).state==='linked')duplicate=true;}
     if(duplicate&&!selected.acknowledgePossibleDuplicate)throw conflict('onboarding_possible_expense_duplicate','C’è una spesa simile: controlla prima di registrare un costo distinto.');
     const created=await expenses.mutateInTransaction(tx,a,h,'create','',{...c.values,workId:null,documentId:draft.documentId},'onboarding_'+digest(draft.id+':'+item.id+':home-create'),true);
     const provenance=Object.fromEntries(Object.entries(c.values).filter(([key])=>!['objectRef','workId'].includes(key)).map(([key,value])=>[key,{origin:key==='amountCents'&&candidate||item.proposedFields[key]?.value===value?'extraction_confirmed':'user_declared',sources:key==='amountCents'&&candidate?candidate.sources:item.proposedFields[key]?.value===value?item.proposedFields[key].sources:[]} ]));
-    const expense=await tx.homeExpense.update({where:{id:created.expense.id},data:{amountOrigin:candidate?'extraction_confirmed':'user_declared',economicProvenance:onboardingJson(provenance)}});
+    const expense=await tx.homeExpense.update({where:{id:created.expense.id},data:{amountOrigin:candidate?'extraction_confirmed':'user_declared',economicProvenance:onboardingJson({...provenance,...(item.invoiceSegment?{_invoiceSegment:item.invoiceSegment}:{})})}});
     const saved=await new EconomyPolicy(this.reviewAccess).saved(tx,expense);
     await tx.expenseHistory.updateMany({where:{expenseId:expense.id,kind:'created'},data:{after:onboardingJson(saved)}});
     await tx.expenseRequest.updateMany({where:{accountId:a,homeId:h,operation:'economy:create',key:'onboarding_'+digest(draft.id+':'+item.id+':home-create')},data:{response:onboardingJson(saved)}});
@@ -288,6 +296,7 @@ export class ObjectOnboardingService {
     const body = onboardingConfirmation(input, temporal(this.clock.now()).today);
     return this.request(a, h, 'confirm', uuid(id), body, key, async tx => {
       const draft = await this.open(tx, a, h, id, body.expectedVersion), output = draft.output as unknown as Output, decisions = { ...draft.decisions as Decisions };
+      if(automatic&&output.houseExpenses?.some(e=>e.invoiceSegment))throw conflict('onboarding_multiple_invoices_review','Conferma separatamente le fatture del file.');
       const onlyArchive=!!body.contacts?.length&&!body.choices.length&&!body.houseExpenses?.length||body.documentOnly||body.choices.length>0&&body.choices.every(c=>c.action==='document_only')&&!body.houseExpenses?.length;
       if(automatic&&!onlyArchive){
         for(const cost of output.houseExpenses??[])if((await invoiceObjectSuggestions(tx,a,h,output,cost,this.reviewAccess)).items.length)throw conflict('automatic_duplicate_review','La fattura potrebbe riguardare un oggetto già presente: controlla il collegamento prima di salvare.');

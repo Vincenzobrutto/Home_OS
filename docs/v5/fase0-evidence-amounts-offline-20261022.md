@@ -1,5 +1,7 @@
 # Fase 0 — evidenze visive e importi, correzioni offline del 22 ottobre 2026
 
+Seguito successivo: [Q48 con fatture separate per pagina](fase0-q48-invoices-offline-20261022.md) estende il contratto con verifiche di privacy/idempotenza. Il residuo Q48 descritto sotto resta la fotografia della consegna v23; risultati e gold della campagna non cambiano.
+
 Implementate e verificate offline sul branch `codex/fase0-ai-quality-v3`, dopo la [campagna sintetica](fase0-quality-v3-campaign-20261022.md) di `24551f8`. **Nessuna nuova chiamata AI, nessuna spesa e nessun accesso agli originali reali**. Gold, corpus, soglie, risultati e ricevuta della campagna rimangono invariati. Il gate AI resta non superato.
 
 ## Diagnosi riproducibile

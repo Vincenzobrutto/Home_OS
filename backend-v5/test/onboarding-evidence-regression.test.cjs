@@ -53,7 +53,7 @@ test('new extractor cannot reuse the completed paid campaign receipt',()=>{
  const {validateAuthorization}=require('./quality-v3-authorization.cjs');
  assert.throws(()=>validateAuthorization(receipt,{campaignId:receipt.campaignId,model:receipt.model,budgetMicroUsd:receipt.budgetMicroUsd,maxCalls:receipt.maxCalls}),e=>e.code==='synthetic_authorization_mismatch');
 });
-test('two invoices in one visual file remain rejected instead of being merged into one expense',()=>{
+test('unsegmented invoices with a global total remain rejected instead of merged',()=>{
  const f=fixtures.works(),context={kind:'visual_pdf',snapshot:fixtures.context(f).snapshot,pageCount:2};
  const visit=(x,page)=>{if(!x||typeof x!=='object')return;if(x.evidence){x.evidence.page=page;x.evidence.region={x:.1,y:.1,width:.7,height:.2};}Object.values(x).forEach(v=>visit(v,page));};visit(f.raw,1);
  const second=structuredClone(f.raw.houseExpenses[0]);visit(second,2);f.raw.houseExpenses.push(second);

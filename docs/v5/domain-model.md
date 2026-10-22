@@ -61,3 +61,7 @@ HomeActivity: creatore/Home, collegamento BoilerAsset facoltativo, testo, dueDat
 ## BL-01 — prossimo promemoria (22/10/2026)
 
 `HomeActivity.previousActivityId`: riferimento facoltativo e unico all'attività completata da cui il promemoria è stato proposto (al più un successivo per attività). Nessuna regola di ricorrenza memorizzata.
+
+## Fatture distinte nello stesso originale — 22 ottobre 2026
+
+Una bozza onboarding può rappresentare fatture complete su pagine singole distinte mediante `houseExpenses[].invoiceSegment:{key,page}`. La chiave deriva da SHA/pagina (`invoice-page-v1`), con fingerprint stabile fra copie e `itemId` legato alla bozza/documento; fornitore, numero e data rimangono ancoraggi obbligatori citati nella stessa pagina del totale. Nessuna nuova entità o migrazione. Ogni spesa canonica conserva `_invoiceSegment` nel JSON `economicProvenance`, oltre alle fonti per campo; separazione, conferma e duplicati operano per segmento. Il file originale e i suoi permessi rimangono unici. Nessun totale globale o soggetto/professionista attribuito implicitamente al gruppo. [Regole e prove Q48](fase0-q48-invoices-offline-20261022.md).

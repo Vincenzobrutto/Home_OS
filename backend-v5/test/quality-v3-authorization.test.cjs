@@ -17,3 +17,5 @@ test('live execution cannot fall back to offline database or run without the exp
 test('empty/partial campaign has explicit missing denominators, unknown automatic correctness, and can never pass',()=>{
  const a=createAuthorization(options.campaignId,options.model),report=compile([],a,0,'not_completed');assert.equal(report.gatePassed,false);assert.equal(report.validBaselineExecutions,0);assert.equal(report.criteria.find(c=>c.name==='documentKind').total,104);assert.equal(report.criteria.find(c=>c.name==='documentKind').rate,0);assert.equal(report.criteria.find(c=>c.name==='automaticCorrectness').rate,null);assert.equal(report.criteria.find(c=>c.name==='decisionStability').rate,0);
 });
+
+test('future authorization also freezes invoice segmentation and domain validation',()=>{const a=createAuthorization(options.campaignId,options.model);for(const file of ['src/object-onboarding/domain.ts','src/object-onboarding/understanding.ts','src/object-onboarding/invoice-segments.ts'])assert.match(a.frozenFiles[file],/^[a-f0-9]{64}$/);});

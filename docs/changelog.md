@@ -1,3 +1,7 @@
+## Fase 0: Q48, fatture separate per pagina — 22 ottobre 2026
+
+Supportate offline due fatture complete in uno stesso originale, con segmenti SHA/pagina, ancoraggi e conferme distinte. Q48 conserva 122 e 244 EUR senza un totale aggregato; nessun automatico, contatto o soggetto implicito. Provenienza e deduplica per segmento, replay e copie protetti, rollback dell’intera richiesta. Prompt v24; nessuna migrazione o chiamata AI. Build/lint, onboarding 174/174, backend 213/213, DB sintetico 11/11; gate live e gold invariati. [Report e limiti](v5/fase0-q48-invoices-offline-20261022.md).
+
 ## Fase 0: correzioni offline di evidenze visive e importi — 22 ottobre 2026
 
 Corretti falsi rifiuti dei titoli stampati delle targhette e dei totali con dicitura `documento corrente`; citazioni, ruolo/valuta, regioni e revisione visiva ancora obbligatori. Prompt `document-understanding-v23-evidence` e diagnostica del rifiuto titolo senza contenuti. Build/lint, onboarding 166/166 (18 nuove regressioni), qualità 24/24, guard 10/10 e backend 213/213 verdi. Gold e risultati live invariati, nessuna nuova chiamata AI o accesso DB; gate ancora non superato. [Report e residuo delle due fatture Q48](v5/fase0-evidence-amounts-offline-20261022.md).

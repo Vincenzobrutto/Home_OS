@@ -9,6 +9,7 @@ import { printedCents, printedDates, periodBoundary } from '../economy/document-
 import { purchaseDateSource, tableQuantity, tablePurchaseAmount } from './invoice-evidence';
 import { readUnderstanding, type DocumentUnderstanding, type UnderstandingWarning } from './understanding';
 import { calendar } from '../activities/domain';
+import { separateInvoices } from './invoice-segments';
 
 export const onboardingLimits = { maxItems: 20, maxUnits: 20, maxImageBytes: 5 * 1024 * 1024 } as const;
 export const productFields = ['name', 'brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
@@ -25,7 +26,7 @@ export type ProductItem = {
   nameTruncated: boolean;
   disposition: 'household_object' | 'consumable' | 'uncertain';
 };
-export type HouseExpense = EconomicOutput & {id:string;fingerprint:string;reviewWarnings?:string[]};
+export type HouseExpense = EconomicOutput & {id:string;fingerprint:string;reviewWarnings?:string[];invoiceSegment?:{key:string;page:number}};
 export type ProductExtraction = {
   evidenceMode?: 'text'|'image'|'visual_pdf';
   floorPlan?: import('./floor-plan-domain').FloorPlan;
@@ -148,9 +149,9 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       purchaseTotal = { amountCents: Number(total.amountCents), source };
     }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}}
     if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents){needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}
-    const houseExpenses=readHouseExpenses(row.houseExpenses,context,row.documentKind==='utility_bill'?'utility_bill':'simple_invoice');
+    let houseExpenses=readHouseExpenses(row.houseExpenses,context,row.documentKind==='utility_bill'?'utility_bill':'simple_invoice');
     if(houseExpenses.length&&!['utility_bill','purchase_document'].includes(String(row.documentKind)))throw invalid();
-    if(row.documentKind==='purchase_document'&&houseExpenses.length>1)throw invalid('Una fattura propone un unico costo complessivo della casa.');
+    if(row.documentKind==='purchase_document'&&houseExpenses.length>1){if(row.items.length||row.purchaseTotal!=null||Array.isArray(row.facts)&&row.facts.length)throw invalid();houseExpenses=separateInvoices({items,purchaseTotal,documentInfo:understanding.documentInfo},houseExpenses,context.snapshot.documentSha256,context.snapshot.documentId);needsReview=true;}
     const party=contactProposal(understanding.documentInfo,context.kind==='text'?context.pages:undefined);
     return { evidenceMode:context.kind, ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
   } catch (error) {
