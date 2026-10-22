@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><title>Bolletta luce sintetica</title>
+<style>
+@page{size:A4;margin:12mm 12mm 16mm}
+body{font-family:Arial,Helvetica,sans-serif;font-size:8.6pt;color:#222;margin:0}
+.top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1b6b4a;padding-bottom:6px}
+.logo{font-size:20pt;font-weight:800;color:#1b6b4a;letter-spacing:-.5px}.logo small{display:block;font-size:7pt;font-weight:400;color:#555;letter-spacing:0}
+.issuer{font-size:7pt;color:#555;text-align:right;line-height:1.35}
+.row{display:flex;gap:10px;margin-top:8px}.box{border:1px solid #c9d6cf;border-radius:4px;padding:6px 8px;flex:1}
+.box h3{margin:0 0 4px;font-size:8pt;color:#1b6b4a;text-transform:uppercase}
+.total{background:#1b6b4a;color:#fff;border-radius:4px;padding:8px 10px;flex:0 0 46%}
+.total .amt{font-size:22pt;font-weight:800}.total p{margin:2px 0}
+table{width:100%;border-collapse:collapse;margin-top:6px}th,td{padding:3px 4px;border-bottom:1px solid #e3e9e5;text-align:left}td.n,th.n{text-align:right;white-space:nowrap}
+th{background:#eef4f0;font-size:7.6pt}.sub td{font-weight:700;border-top:1px solid #9bb5a7}
+.foot{position:fixed;bottom:-10mm;left:0;right:0;font-size:6.4pt;color:#777;display:flex;justify-content:space-between}
+.small{font-size:6.8pt;color:#555;line-height:1.35}.bar{height:26px;background:repeating-linear-gradient(90deg,#000 0 2px,#fff 2px 3px,#000 3px 4px,#fff 4px 7px);width:210px;margin-top:4px}
+.page{page-break-after:always}.chart{display:flex;align-items:flex-end;gap:5px;height:60px;margin-top:4px}.chart div{background:#7fb59a;width:18px}
+</style></head><body>
+<div class="page">
+<div class="top">
+ <div class="logo">Luminova<small>Energia per la casa · Mercato libero</small></div>
+ <div class="issuer">Luminova Energia S.p.A. · Via dei Tigli 14, 20154 Milano (MI)<br>P.IVA 04182930962 · REA MI-1734421 · Cap. soc. € 2.000.000 i.v.<br>Servizio clienti 800 91 22 33 · clienti@luminova-energia.example</div>
+</div>
+<div class="row">
+ <div class="box"><h3>Intestatario</h3>Spett.le MARIO ROSSI<br>Via Garibaldi 8 int. 5<br>00185 Roma (RM)<br>C.F. RSSMRA80A01H501U</div>
+ <div class="box"><h3>Fornitura</h3>Codice cliente 7734410923<br>POD IT001E73519852<br>Via Garibaldi 8 int. 5 – 00185 Roma (RM)<br>Offerta: Luminova Casa Fissa 24 – Uso domestico residente<br>Potenza impegnata 3 kW · Tensione 230 V</div>
+</div>
+<div class="row">
+ <div class="box"><h3>Bolletta n. 2025/E/0388215 del 12/09/2025</h3>
+  Periodo di fatturazione: <b>01/07/2025 – 31/08/2025</b> (consumi effettivi)<br>
+  Prossima bolletta prevista: novembre 2025<br>Modalità di pagamento: bollettino / PagoPA<br>
+  Contratto n. LUM-RM-2024-118842</div>
+ <div class="total"><p>TOTALE DA PAGARE</p><div class="amt">€ 118,47</div><p>entro il <b>02/10/2025</b></p><p class="small" style="color:#dfeee6">Di cui canone di abbonamento alla televisione € 18,00</p></div>
+</div>
+<div class="row">
+ <div class="box"><h3>Sintesi degli importi</h3>
+ <table><tr><th>Voce</th><th class="n">Importo</th></tr>
+ <tr><td>Spesa per la materia energia</td><td class="n">€ 61,32</td></tr>
+ <tr><td>Spesa per il trasporto e la gestione del contatore</td><td class="n">€ 19,84</td></tr>
+ <tr><td>Spesa per oneri di sistema</td><td class="n">€ 7,91</td></tr>
+ <tr><td>Imposte (accise)</td><td class="n">€ 5,63</td></tr>
+ <tr><td>Altre partite (conguaglio periodo precedente)</td><td class="n">− € 3,20</td></tr>
+ <tr class="sub"><td>Totale servizi e imposte</td><td class="n">€ 91,50</td></tr>
+ <tr><td>IVA 10% su imponibile € 91,50</td><td class="n">€ 9,15</td></tr>
+ <tr><td>Canone TV per uso privato (rata luglio–agosto)</td><td class="n">€ 18,00</td></tr>
+ <tr><td>Arrotondamento</td><td class="n">− € 0,18</td></tr>
+ <tr class="sub"><td>Totale bolletta</td><td class="n">€ 118,47</td></tr></table></div>
+ <div class="box"><h3>I tuoi consumi</h3>
+ Consumo fatturato: <b>412 kWh</b> (F1 168 · F2 121 · F3 123)<br>Lettura rilevata al 31/08/2025: 18.733 kWh<br>Consumo annuo: 2.214 kWh
+ <div class="chart"><div style="height:44px"></div><div style="height:38px"></div><div style="height:31px"></div><div style="height:29px"></div><div style="height:35px"></div><div style="height:52px"></div></div>
+ <div class="small">gen-feb · mar-apr · mag-giu · lug-ago 2024 · … · lug-ago 2025</div>
+ </div>
+</div>
+<div class="box" style="margin-top:8px"><h3>Pagamento</h3>
+ Codice avviso PagoPA 3020 0003 8821 5000 41 · Ente creditore Luminova Energia S.p.A.<br>IBAN per bonifico IT60 X054 2811 1010 0000 0123 456 – causale: bolletta 2025/E/0388215
+ <div class="bar"></div></div>
+<p class="small">Comunicazioni: dal 1° gennaio 2026 cambiano le condizioni economiche dell'offerta Luminova Casa Fissa 24; riceverai una comunicazione con almeno tre mesi di preavviso. Per reclami scrivi a reclami@luminova-energia.example o compila il modulo sul sito. Servizio guasti del distributore: 803 500 (24 ore su 24). I valori riportati non includono eventuali bonus sociali.</p>
+<div class="foot"><span>Luminova Energia S.p.A. – documento sintetico di prova, nessun valore fiscale</span><span>Pagina 1 di 2</span></div>
+</div>
+<div>
+<h3 style="color:#1b6b4a">Dettaglio della bolletta n. 2025/E/0388215</h3>
+<table><tr><th>Descrizione</th><th>Periodo</th><th class="n">Quantità</th><th class="n">Prezzo unitario</th><th class="n">Importo</th></tr>
+<tr><td>Quota energia F1</td><td>01/07–31/08</td><td class="n">168 kWh</td><td class="n">0,152400 €/kWh</td><td class="n">25,60</td></tr>
+<tr><td>Quota energia F2</td><td>01/07–31/08</td><td class="n">121 kWh</td><td class="n">0,141900 €/kWh</td><td class="n">17,17</td></tr>
+<tr><td>Quota energia F3</td><td>01/07–31/08</td><td class="n">123 kWh</td><td class="n">0,128300 €/kWh</td><td class="n">15,78</td></tr>
+<tr><td>Quota fissa vendita</td><td>01/07–31/08</td><td class="n">2 mesi</td><td class="n">1,385000 €/mese</td><td class="n">2,77</td></tr>
+<tr><td>Trasporto – quota fissa e potenza</td><td>01/07–31/08</td><td class="n">2 mesi</td><td class="n">7,160000 €/mese</td><td class="n">14,32</td></tr>
+<tr><td>Trasporto – quota energia</td><td>01/07–31/08</td><td class="n">412 kWh</td><td class="n">0,013398 €/kWh</td><td class="n">5,52</td></tr>
+<tr><td>Oneri di sistema ASOS/ARIM</td><td>01/07–31/08</td><td class="n">412 kWh</td><td class="n">0,019199 €/kWh</td><td class="n">7,91</td></tr>
+<tr><td>Accisa</td><td>01/07–31/08</td><td class="n">412 kWh</td><td class="n">0,022700 €/kWh</td><td class="n">5,63</td></tr>
+<tr><td>Conguaglio stima maggio–giugno</td><td>01/05–30/06</td><td class="n">−21 kWh</td><td class="n"></td><td class="n">−3,20</td></tr></table>
+<p class="small">Letture: 30/06/2025 18.321 kWh (effettiva) · 31/08/2025 18.733 kWh (effettiva). Il canone TV è addebitato per conto dell'Agenzia delle Entrate ai sensi della L. 208/2015. Fattura emessa ai sensi del DPR 633/72. Documento sintetico generato per il collaudo di Dimora: nomi, codici e importi sono fittizi.</p>
+<div class="foot"><span>Luminova Energia S.p.A. – documento sintetico di prova</span><span>Pagina 2 di 2</span></div>
+</div>
+</body></html>
