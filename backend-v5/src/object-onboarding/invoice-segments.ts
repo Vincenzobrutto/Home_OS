@@ -4,8 +4,8 @@ import type { HouseExpense, ProductExtraction } from './domain';
 
 const normalized=(s:string)=>s.normalize('NFC').replace(/\s+/gu,' ').trim().toLocaleLowerCase('it');
 /** Conservative first increment: one complete invoice per physical page, no global subjects or totals. */
-export function separateInvoices(output:Pick<ProductExtraction,'items'|'purchaseTotal'|'documentInfo'>,expenses:HouseExpense[],sha:string,documentId:string):HouseExpense[]{
- if(expenses.length<2||!expenses.some(e=>e.documentKind==='simple_invoice'))return expenses;
+export function separateInvoices(output:Pick<ProductExtraction,'items'|'purchaseTotal'|'documentInfo'>,expenses:HouseExpense[],sha:string,documentId:string,segmentSingle=false):HouseExpense[]{
+ if((!segmentSingle&&expenses.length<2)||!expenses.some(e=>e.documentKind==='simple_invoice'))return expenses;
  const fail=():never=>{throw new ProviderFailure('analysis_invalid_output');};
  if(output.items.length||output.purchaseTotal||output.documentInfo?.kind!=='invoice'||output.documentInfo.facts.length)fail();
  const pages=new Set<number>(),identities=new Set<string>();

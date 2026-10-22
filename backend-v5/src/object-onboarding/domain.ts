@@ -1,3 +1,4 @@
+import { invoiceCoverage, assertInvoicePages, type InvoiceCoverage } from './invoice-coverage';
 import { verifiedInvoiceLine, type InvoiceLine } from './invoice-lines';
 import { paymentReview, type PaymentReview } from './payment-review';
 import { contactProposal, type ContactProposal } from '../contacts/extraction';
@@ -33,6 +34,7 @@ export type HouseExpense = EconomicOutput & {id:string;fingerprint:string;review
 export type ProductExtraction = {
   evidenceMode?: 'text'|'image'|'visual_pdf';
   paymentReview?: PaymentReview;
+  invoiceCoverage?: InvoiceCoverage;
   floorPlan?: import('./floor-plan-domain').FloorPlan;
   contacts?:ContactProposal[];
   houseExpenses?:HouseExpense[];
@@ -45,7 +47,7 @@ export type ProductExtraction = {
   purchaseExpenseReady?: boolean;
   purchaseTotal: { amountCents: number; source: ProductSource } | null;
 };
-export type ProductEvidenceContext = { snapshot: Snapshot; allowedPages?:number[] } & (
+export type ProductEvidenceContext = { snapshot: Snapshot; allowedPages?:number[]; invoiceExpensePages?:number[] } & (
   { kind: 'text'; pages: string[] } | { kind: 'image' } | { kind: 'visual_pdf'; pageCount: number }
 );
 export class ProductEvidenceFailure extends ProviderFailure {
@@ -165,9 +167,13 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents){needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}
     let houseExpenses=readHouseExpenses(row.houseExpenses,context,row.documentKind==='utility_bill'?'utility_bill':'simple_invoice');
     if(houseExpenses.length&&!['utility_bill','purchase_document'].includes(String(row.documentKind)))throw invalid();
-    if(row.documentKind==='purchase_document'&&houseExpenses.length>1){if(row.items.length||row.purchaseTotal!=null||Array.isArray(row.facts)&&row.facts.length)throw invalid();houseExpenses=separateInvoices({items,purchaseTotal,documentInfo:understanding.documentInfo},houseExpenses,context.snapshot.documentSha256,context.snapshot.documentId);needsReview=true;}
+    assertInvoicePages(houseExpenses,context.invoiceExpensePages);
+    const pageInvoices=context.kind==='visual_pdf'&&context.pageCount>1&&understanding.documentInfo?.kind==='invoice'&&!items.length&&houseExpenses.length>0;
+    if(row.documentKind==='purchase_document'&&(houseExpenses.length>1||pageInvoices)){if(row.items.length||row.purchaseTotal!=null||Array.isArray(row.facts)&&row.facts.length)throw invalid();houseExpenses=separateInvoices({items,purchaseTotal,documentInfo:understanding.documentInfo},houseExpenses,context.snapshot.documentSha256,context.snapshot.documentId,pageInvoices);needsReview=true;}
+    const coverage=invoiceCoverage(context,{documentKind:row.documentKind as ProductExtraction['documentKind'],documentInfo:understanding.documentInfo,items},houseExpenses);
+    if(coverage?.pendingPages.length)needsReview=true;
     const party=contactProposal(understanding.documentInfo,context.kind==='text'?context.pages:undefined);
-    return { evidenceMode:context.kind, ...(payment?{paymentReview:payment}:{}), ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
+    return { evidenceMode:context.kind, ...(coverage?{invoiceCoverage:coverage}:{}), ...(payment?{paymentReview:payment}:{}), ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
   } catch (error) {
     if (error instanceof ProviderFailure) throw error;
     throw new ProviderFailure('analysis_invalid_output');

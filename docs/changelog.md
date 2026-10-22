@@ -1,3 +1,7 @@
+## Fase 0: Q48, copertura per pagina e revisione incompleta esplicita — 23 ottobre 2026
+
+Schema v26 con uno slot per pagina fisica; fatture da 122/244 EUR separate, nessun totale globale. Copertura server e metadati durevoli senza contenuti: la prima fattura non chiude il file se resta pagina 2, neppure tramite documentOnly. Build/lint, onboarding 195/195, qualità 24/24, guard 11/11, backend 213/213 e DB sintetico 38/38 verdi. Nessuna AI, gold o campagna ricalcolati. [Report](v5/fase0-q48-coverage-offline-20261023.md). [Piano proposto per le prossime ore](v5/fase0-next-hours-plan-20261023.md), con riferimento Excel in sola lettura alle famiglie già presenti.
+
 ## Fase 0: Q22, prezzi e data per riga dalla fonte verificata — 23 ottobre 2026
 
 Supportata la tabella testuale Importo con quantità esplicite: 300 e 500 EUR, data d’acquisto comune 18/09/2026, senza dividere gli 800 EUR. Fonti, identità e costi distinti per riga; deduplica tra copie e verifica finale prezzo/data nell’automatico, rollback e replay durevole. Prompt v25; nessuna AI, modifica gold/validazioni o migrazione. Build/lint, onboarding 188/188, qualità 24/24, guard 11/11, backend 213/213, DB isolato Q22/Q15/Q48 30/30. Gate storico ancora non superato. [Report e limiti](v5/fase0-q22-lines-offline-20261023.md).

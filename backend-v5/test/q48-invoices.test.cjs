@@ -25,8 +25,8 @@ test('same money or invoice number alone never merges different suppliers and ph
 test('abbreviating printed invoice identifiers cannot change its source-page identity',()=>{
  const f=q48(),before=decode(f);f.raw.houseExpenses[0].fields.supplier.value='Idroquarzo';f.raw.houseExpenses[0].fields.documentNumber.value='Q48';const after=decode(f);assert.equal(before.houseExpenses[0].invoiceSegment.key,after.houseExpenses[0].invoiceSegment.key);assert.equal(before.houseExpenses[0].id,after.houseExpenses[0].id);
 });
-test('single invoice and legacy malformed multi-invoice behavior keep their existing validation',()=>{
- const f=q48();f.raw.houseExpenses.pop();const out=productExtraction(f.raw,f.context);assert.equal(out.houseExpenses.length,1);assert.equal(out.houseExpenses[0].invoiceSegment,undefined);
+test('single proposal in a multipage invoice is segmented and records the missing physical page',()=>{
+ const f=q48();f.raw.houseExpenses.pop();const out=productExtraction(f.raw,f.context);assert.equal(out.houseExpenses.length,1);assert.equal(out.houseExpenses[0].invoiceSegment.page,1);assert.deepEqual(out.invoiceCoverage.pendingPages,[2]);
 });
 test('actual Q48 visual PDF crosses preparation and scoring with in-memory transport only',async()=>{
  const f=q48(),{createModelAdapter}=require('./quality-v3-model.cjs'),{fakeTransport,MODEL}=require('./quality-v3-model-fixture.cjs'),{detailed}=require('./quality-v3-measures.cjs');

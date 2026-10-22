@@ -1,3 +1,4 @@
+const {checkedInvoiceCoverage}=require('../dist/object-onboarding/invoice-coverage');
 // No default transport, credentials or environment. Tests inject HTTP responses.
 require('reflect-metadata');
 const {ObjectOnboardingAnthropicProvider}=require('../dist/object-onboarding/anthropic-provider');
@@ -13,7 +14,9 @@ function checkedObservation(value){
  if(!value||value.version!==MODEL_ADAPTER_VERSION||typeof value.complete!=='boolean'||!['review','complete'].includes(value.automatic)||![null,'analysis_invalid_output','analysis_authorization_lost'].includes(value.failureCode))throw new ProviderFailure('analysis_invalid_output');
  const r=value.reading,u=value.usage;
  if(!r||r.version!==ONBOARDING_READING_VERSION||!['full','local_pages','progressive'].includes(r.mode)||!Number.isSafeInteger(r.totalPages)||r.totalPages<1||r.totalPages>20||!Array.isArray(r.sentPages)||!r.sentPages.length||r.sentPages.some((p,i)=>!Number.isSafeInteger(p)||p<1||p>r.totalPages||(i>0&&p<=r.sentPages[i-1]))||!u||['input','output','uncachedInput','cacheCreation','cacheRead'].some(k=>!Number.isSafeInteger(u[k])||u[k]<0)||u.input>50000||u.output>4096||u.input!==u.uncachedInput+u.cacheCreation+u.cacheRead||value.failureCode&&(value.complete||value.automatic!=='review'))throw new ProviderFailure('analysis_invalid_output');
- return{version:MODEL_ADAPTER_VERSION,complete:value.complete,automatic:value.automatic,failureCode:value.failureCode,reading:{version:r.version,mode:r.mode,totalPages:r.totalPages,sentPages:[...r.sentPages]},usage:{input:u.input,output:u.output,uncachedInput:u.uncachedInput,cacheCreation:u.cacheCreation,cacheRead:u.cacheRead}};
+ const coverage=value.invoiceCoverage===undefined?null:checkedInvoiceCoverage(value.invoiceCoverage);
+ if(coverage&&(coverage.totalPages!==r.totalPages||JSON.stringify(coverage.sentPages)!==JSON.stringify(r.sentPages)||value.failureCode||value.automatic!=='review'||coverage.pendingPages.length&&value.complete))throw new ProviderFailure('analysis_invalid_output');
+ return{...(coverage?{invoiceCoverage:coverage}:{}),version:MODEL_ADAPTER_VERSION,complete:value.complete,automatic:value.automatic,failureCode:value.failureCode,reading:{version:r.version,mode:r.mode,totalPages:r.totalPages,sentPages:[...r.sentPages]},usage:{input:u.input,output:u.output,uncachedInput:u.uncachedInput,cacheCreation:u.cacheCreation,cacheRead:u.cacheRead}};
 }
 function createModelAdapter({transport,model,parser=new PdfTextExtractor()}){
  if(!transport||typeof transport.prepareStructured!=='function'||typeof transport.send!=='function'||!MODEL_PRICES[model])throw new ProviderFailure('ai_provider_disabled');
@@ -38,7 +41,7 @@ function createModelAdapter({transport,model,parser=new PdfTextExtractor()}){
   try{await authorize(true);}catch{output=null;automatic='review';complete=false;failureCode='analysis_authorization_lost';}
   // A received/priceable invalid output still has a known charge. Settle that
   // charge, report failure and stop; never retry it or certify it as complete.
-  return{state:'settled',costMicroUsd:cost,output,automatic,pages:prepared.context.kind==='text'?prepared.context.pages:[],observation:checkedObservation({version:MODEL_ADAPTER_VERSION,complete,automatic,failureCode,reading:prepared.reading,usage})};
+  return{state:'settled',costMicroUsd:cost,output,automatic,pages:prepared.context.kind==='text'?prepared.context.pages:[],observation:checkedObservation({version:MODEL_ADAPTER_VERSION,complete,automatic,failureCode,reading:prepared.reading,usage,...(output?.invoiceCoverage?{invoiceCoverage:output.invoiceCoverage}:{})})};
  };
  adapter.protocol=MODEL_ADAPTER_VERSION;adapter.pageCount=item=>source(item).pages;
  return adapter;

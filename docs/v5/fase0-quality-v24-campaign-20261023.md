@@ -203,3 +203,7 @@ Il blocco automatico split payment è stato corretto e verificato successivament
 ## Seguito offline del 23 ottobre: Q22
 
 Aggiunta lettura locale verificata del formato Importo e della Data acquisto comune per i soggetti già citati; 300/500 EUR e 18/09/2026, senza ripartizione degli 800 EUR. [Report distinto con privacy/idempotenza](fase0-q22-lines-offline-20261023.md). Fixture/parser/scorer offline non ricostruiscono le risposte live assenti né ricalcolano i run Q22, il gate, i JSON o il ledger della campagna. Prompt successivo v25, nessuna nuova chiamata AI.
+
+## Seguito offline del 23 ottobre: copertura Q48
+
+Aggiunto schema v26 con slot per pagina e controllo server/ledger di pagine coperte e pendenti. Fixture per pagina 2/2 su importi/date/fornitori, nessuna fusione; la sola prima fattura non chiude il file. [Report e limiti](fase0-q48-coverage-offline-20261023.md). Il live v24 resta congelato a 1/2 per campo: nessuna nuova risposta AI, ricalcolo di score/gate o modifica dei JSON/ledger di questa campagna.

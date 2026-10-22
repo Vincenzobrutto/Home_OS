@@ -17,6 +17,7 @@ export function localPageSelection(pages:string[]):number[]{
 }
 /** Extraction completeness heuristic, never permission to save. */
 export function progressiveComplete(output:ProductExtraction):boolean{
+ if(output.invoiceCoverage?.pendingPages.length)return false;
  if(output.needsReview||output.reviewWarnings?.length||output.documentKind==='unsupported')return false;
  if(['house_document','conformity_declaration'].includes(output.documentKind))return !!output.documentInfo;
  if(output.houseExpenses?.length)return output.houseExpenses.every(e=>{

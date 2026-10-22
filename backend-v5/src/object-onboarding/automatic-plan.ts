@@ -6,6 +6,7 @@ import type { OnboardingChoice } from './bodies';
 export class AutomaticReviewNeeded extends Error {}
 function resourcePlan(output: ProductExtraction) {
   const review = (message: string): never => { throw new AutomaticReviewNeeded(message); };
+  if(output.invoiceCoverage?.pendingPages.length)review('Restano pagine della fattura da controllare.');
   if(requiresPaymentReview(output))review('Controlla il regime di pagamento e il costo complessivo nell’originale prima di confermare.');
   if(output.evidenceMode&&output.evidenceMode!=='text')review('Controlla il documento visivo: le citazioni non sono verificate sul testo.');
   if(output.documentKind==='conformity_declaration'){
