@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { downloads } from '../test/browserStubs';
 import { FakeBackend, PNG_SIGNATURE, samplePdf } from '../test/fakeBackend';
@@ -111,7 +111,8 @@ it('restores all loaded result pages and the document focus after detail and Bac
  await waitFor(async()=>expect(within(await results()).getAllByRole('listitem')).toHaveLength(24));
  await waitFor(()=>expect(screen.getByRole('link',{name})).toHaveFocus());
  expect(new URLSearchParams(app.router.state.location.search).get('workflow')).toBe('all');
- await app.user.click(screen.getAllByRole('button',{name:'Vedi dettagli'}).at(-1)!);await screen.findByRole('heading',{name,level:1});await app.router.navigate(-1);
+ await app.user.click(screen.getAllByRole('button',{name:'Vedi dettagli'}).at(-1)!);await screen.findByRole('heading',{name,level:1});await act(async()=>{await app.router.navigate(-1);});
+ await waitFor(async()=>expect(within(await results()).getAllByRole('listitem')).toHaveLength(24));
  await waitFor(()=>expect(screen.getByRole('link',{name})).toHaveFocus());
 });
 

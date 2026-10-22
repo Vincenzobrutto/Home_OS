@@ -192,6 +192,7 @@ describe('[mock] S1 Spese — privacy, capabilities e ripiego', () => {
   });
 
   it('documentDrafts true: «Da documento» apre il percorso S1c (dettagli in s1c.test.tsx), senza avviare analisi', async () => {
+    await import('./DocumentDraftPages');
     const { backend, home } = world();
     backend.economy.features.documentDrafts = true;
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
@@ -346,6 +347,8 @@ describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
   });
 
   it('dalla scheda oggetto: costo con objectRef in una sola richiesta e ritorno alla scheda', async () => {
+    // Precarica la pagina: qui verifichiamo il costo e il ritorno, non i tempi di compilazione lazy.
+    await import('./ObjectsPages');
     const { backend, owner, home } = world();
     const obj = await backend.objects.handle({ method: 'POST', path: '', headers: { 'idempotency-key': crypto.randomUUID() }, body: { name: 'Lavatrice', type: 'appliance' } }, owner.id, home.id, 'objects');
     const ref = (obj.body as { object: { ref: { kind: string; id: string } } }).object.ref;
@@ -438,6 +441,7 @@ it('saved bill summary is identical in expense and linked document, with no muta
 });
 
 it('document expense return preserves provenance; an extra expense is explicit, cancelable and separate',async()=>{
+ await import('./DocumentDetailPage');
  const {backend,owner,home}=world();const doc=await backend.seedDocument({homeId:home.id,uploaderId:owner.id,name:'Documento origine'});
  await s1(backend,owner.id,home.id,'expenses',{title:'Prima spesa',amountCents:9339,spentOn:'2026-01-17',category:'electricity',documentId:doc.id});
  const app=await open(backend,owner.email,PW.owner,`/home/${home.id}/documenti/${doc.id}`);const saved={documentsAccountId:owner.id,documentsSearch:'workflow=completed&q=origine'};await app.router.navigate(`/home/${home.id}/documenti/${doc.id}`,{state:saved});

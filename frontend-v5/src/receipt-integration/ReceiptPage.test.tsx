@@ -127,6 +127,8 @@ describe('[mock] receipt route integration', () => {
     await w.user.click(screen.getByRole('button', { name: /Controlla il riepilogo/ }));
     await w.user.click(screen.getByRole('button', { name: 'Rimanda' }));
     await screen.findByText(/Bozza rimandata: la ritrovi/);
+    // Il test verifica la bozza: la compilazione lazy della pagina non deve consumare l'attesa UI.
+    await import('../routes/DocumentDetailPage');
     await act(async () => { await w.router.navigate(`/home/${w.home.id}/documenti/${w.doc.id}`); });
     await w.user.click(await screen.findByRole('link', { name: 'Riprendi oggetto e spesa dalla ricevuta' }));
     expect(await screen.findByLabelText('Nome dell’oggetto')).toHaveValue('Acquisto rivisto');

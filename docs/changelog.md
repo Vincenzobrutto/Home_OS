@@ -1,3 +1,7 @@
+## Integrazione release Home nel branch V5 — 22 ottobre 2026
+
+Integrati BL-01/02/03/04/10b da `claude/bl02-garanzia` nel branch `dev/dimora-v5-local-20261013`, con fast-forward e API locale riavviata. Stabilizzati tre file di test frontend: precaricamento dei moduli lazy nei casi ricevuta/costo da oggetto e attesa esplicita del ripristino delle 24 righe prima del focus nella ricerca; conservate tutte le asserzioni di privacy, idempotenza e comportamento. [Esiti e limiti delle verifiche](project-status.md).
+
 ## Documenti: professionista collegato a spesa e oggetto (BL-10b) — 22 ottobre 2026
 
 Con la conferma unica del documento il professionista confermato viene collegato anche alla spesa e agli oggetti salvati, così compare sulla scheda dell'oggetto. Il resto di BL-10b (estrazione del professionista, riconciliazione per P.IVA, scarto, oggetto dell'intervento proposto dal documento) era già presente. [Analisi e verifiche](v5/bl10b-document-professional-object-20261022.md).
