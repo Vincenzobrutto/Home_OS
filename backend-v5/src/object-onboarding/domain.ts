@@ -1,4 +1,4 @@
-import { purchaseGrandTotal, labelledProductAmount, columnProductRow } from './role-evidence';
+import { columnProductRow } from './role-evidence';
 import { invoiceCoverage, assertInvoicePages, type InvoiceCoverage } from './invoice-coverage';
 import { verifiedInvoiceLine, type InvoiceLine } from './invoice-lines';
 import { paymentReview, type PaymentReview } from './payment-review';
@@ -10,13 +10,13 @@ import { object, text, invalid, uuid, version } from '../review/domain';
 import { ProviderFailure, type Snapshot } from '../review/provider';
 import { digest } from '../security';
 import { printedCents, printedDates, periodBoundary } from '../economy/document-evidence';
-import { tableQuantity, tablePurchaseAmount } from './invoice-evidence';
 import { readUnderstanding, type DocumentUnderstanding, type UnderstandingWarning } from './understanding';
 import { calendar } from '../activities/domain';
 import { separateInvoices } from './invoice-segments';
 import { locateDecodeFailure, type DecodeLocation } from './decode-diagnostic';
 import { shortProductName } from './short-name';
 import { validateProductField, ProductEvidenceFailure } from './field-validation';
+import { validateProductQuantity, validateProductAmount, validatePurchaseTotal } from './purchase-validation';
 export { ProductEvidenceFailure } from './field-validation';
 
 export const onboardingLimits = { maxItems: 20, maxUnits: 20, maxImageBytes: 5 * 1024 * 1024 } as const;
@@ -129,14 +129,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       let quantity: ProductItem['quantity'] = null;
       if(r.quantity === null && line)quantity={value:line.quantity,source:line.source};
       if (r.quantity !== null) {try{
-        const q = object(r.quantity, ['value', 'evidence']);
-        if (!Number.isSafeInteger(q.value) || Number(q.value) < 1 || Number(q.value) > onboardingLimits.maxUnits) throw invalid();
-        const source = evidence(q.evidence, context);
-        const printed = [...source.excerpt.matchAll(/(?:quantit[aà]|quantity|qty|qt[aà])\s*[:x×]?\s*(\d+)\b/giu)].map(match => Number(match[1]));
-        const table=context.kind==='text'&&fields.name?tableQuantity(source.excerpt,fields.name.value):null;
-        if (source.page !== primary.source.page || !(printed.length===1&&printed[0]===q.value || printed.length===0&&table===q.value || line&&line.quantity===q.value&&normalize(source.excerpt).includes(normalize(line.rowText)))) throw new ProductEvidenceFailure('quantity','quantity');
-        if(line&&(q.value!==line.quantity||!normalize(source.excerpt).includes(normalize(line.rowText))))throw new ProductEvidenceFailure('quantity','quantity');
-        quantity = { value: Number(q.value), source:line?line.source:source };
+        quantity = validateProductQuantity(r.quantity, context, fields, primary, line, onboardingLimits, value => evidence(value, context));
       }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:'item:'+sourceIndex+':quantity',reason:'unverified'});}}
       if (r.confidence === 'low') { needsReview = true;understanding.warnings.push({field:'item:'+sourceIndex,reason:'missing_identity'});continue; }
       if (row.documentKind === 'order_confirmation') {
@@ -151,10 +144,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       let purchaseAmount: ProductItem['purchaseAmount'] = null;
       location = { section: 'item_price' };
       if (r.purchaseAmount !== undefined && r.purchaseAmount !== null) {try{
-        const price = object(r.purchaseAmount, ['amountCents', 'evidence']), source = evidence(price.evidence, context);
-        if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !(labelledProductAmount(source.excerpt,fields.name.value,Number(price.amountCents))||tablePurchaseAmount(source.excerpt,fields.name.value)===price.amountCents||line&&line.amountCents===price.amountCents&&normalize(source.excerpt).includes(normalize(line.rowText))) || !(line&&line.amountCents===price.amountCents&&normalize(source.excerpt).includes(normalize(line.rowText))||printedCents(source.excerpt).includes(Number(price.amountCents)))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
-        if(line && price.amountCents!==line.amountCents)throw new ProductEvidenceFailure('purchaseTotal','total');
-        purchaseAmount = { amountCents: Number(price.amountCents), source:line?line.source:source };
+        purchaseAmount = validateProductAmount(r.purchaseAmount, row.documentKind, fields, line, value => evidence(value, context));
       }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:sourceIndex+':purchaseAmount',reason:'unverified'});}}
       if(line && r.purchaseAmount == null)purchaseAmount={amountCents:line.amountCents,source:line.source};
       const quotedRow=quantity&&fields.name?columnProductRow(quantity.source.excerpt,fields.name.value):undefined;
@@ -168,10 +158,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     let purchaseTotal: ProductExtraction['purchaseTotal'] = null;
     location = { section: 'purchase_total' };
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {try{
-      const total = object(row.purchaseTotal, ['amountCents', 'evidence']);
-      const source = evidence(total.evidence, context);
-      if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !purchaseGrandTotal(source.excerpt, Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
-      purchaseTotal = { amountCents: Number(total.amountCents), source };
+      purchaseTotal = validatePurchaseTotal(row.purchaseTotal, row.documentKind, value => evidence(value, context));
     }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}}
     if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents){needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}
     location = { section: 'house_expenses' };

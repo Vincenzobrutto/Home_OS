@@ -5,6 +5,7 @@ const profiles = {
     "api": false,
     "files": [
       "test/field-validation.test.cjs",
+      "test/purchase-validation.test.cjs",
       "test/object-onboarding.test.cjs",
       "test/short-name.test.cjs",
       "test/short-name-stress.test.cjs",

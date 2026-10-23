@@ -1,5 +1,7 @@
 # R04 — validazione dei campi backend separata
 
+Seguito: [quantità, prezzo articolo e totale documento separati nel lotto successivo](fase0-backend-purchase-validation-refactor-20261023.md). Le verifiche sottostanti descrivono il primo lotto del validatore dei campi.
+
 23 ottobre 2026. Branch codex/fase0-ai-quality-v3, base 52de871dd643da84e8cbd42aeca788212016ce37; fetch iniziale, HEAD/upstream 0/0. Lotto circoscritto del piano di audit. Applicata la procedura simple-refactor già letta dalla libreria proflead/codex-skills-library; nessuna nuova installazione.
 
 ## Implementato e verificato

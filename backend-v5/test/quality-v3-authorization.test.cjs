@@ -37,3 +37,10 @@ test('future authorization freezes extracted field validation and refuses a stal
  a.frozenFiles[file]='0'.repeat(64);
  assert.throws(()=>validateAuthorization(a,options),e=>e.code==='synthetic_authorization_mismatch');
 });
+
+test('future authorization freezes quantity and price validation before any dispatch',()=>{
+ const file='src/object-onboarding/purchase-validation.ts',a=createAuthorization(options.campaignId,options.model);
+ assert.match(a.frozenFiles[file],/^[a-f0-9]{64}$/);
+ a.frozenFiles[file]='0'.repeat(64);
+ assert.throws(()=>validateAuthorization(a,options),e=>e.code==='synthetic_authorization_mismatch');
+});

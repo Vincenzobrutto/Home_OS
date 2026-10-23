@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — R04, quantità e prezzi separati dal dominio
+
+Estratti i validatori di quantità, prezzo articolo e totale documento mantenendo criteri, errori, fonti e ordine degli avvisi. Recuperi dalla riga verificata, fingerprint e controlli tra articoli restano nel dominio; nessuna ripartizione del totale. Equivalenza su 20.672 casi, 300/300 onboarding e 495/495 HTTP/DB sintetici, inclusi privacy, replay e riavvio del ledger. Nuovo sorgente vincolato nelle future autorizzazioni, zero AI o DB reale. [Report](v5/fase0-backend-purchase-validation-refactor-20261023.md).
+
 ## 23 ottobre 2026 — R07, ingresso unico dei test offline
 
 Alias test backend e sette wrapper passano da un runner con build, allowlist di profili/DB, ambiente ridotto e guardie Node/Prisma. Cluster nuovo 55439/API3119; API separata dai test di code, risorse possedute arrestate anche su errore. Aggiornate due fixture obsolete senza ridurre privacy/idempotenza. Verificati 224 ordinari, 295 onboarding e 495 HTTP/DB, compreso riavvio del ledger; zero AI/DB reale. [Report](v5/fase0-offline-test-harness-20261023.md) e [comandi](../backend-v5/test/OFFLINE.md).

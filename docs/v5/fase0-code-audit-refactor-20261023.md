@@ -2,7 +2,7 @@
 
 **Seguito R03:** proiezione pura delle spese e presentazione della checklist separate nel [secondo lotto](fase0-editor-review-refactor-20261023.md); seguono gli [helper di ripristino/compilazione](fase0-editor-compilation-refactor-20261023.md). Rilievo parzialmente affrontato, altri editor ancora aperti. Le misure e le verifiche sottostanti restano quelle dell’audit iniziale.
 
-**Seguito R04:** [validazione del singolo campo backend separata](fase0-backend-field-validation-refactor-20261023.md), con criteri/errori invariati e verifica differenziale offline. Conferma e altre validazioni ancora aperte.
+**Seguito R04:** [validazione del singolo campo backend separata](fase0-backend-field-validation-refactor-20261023.md), con criteri/errori invariati e verifica differenziale offline. Ora separati anche [quantità/prezzi/totale](fase0-backend-purchase-validation-refactor-20261023.md), con criteri ed errori invariati, 20.672 confronti e 495/495 HTTP/DB sintetici. Conferma e altre validazioni ancora aperte.
 
 **Seguito R07:** [ingresso offline unico implementato e verificato](fase0-offline-test-harness-20261023.md), con guardie Node/Prisma, cluster nuovo e 495/495 HTTP/DB, incluso riavvio del ledger. Nessun DB permanente istituito.
 
