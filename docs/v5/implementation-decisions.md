@@ -1,3 +1,7 @@
+## Test offline unificati — 23 ottobre 2026
+
+Un solo runner con profili espliciti, ambiente dei figli ridotto, guardie Node/Prisma e cluster nuovo posseduto dal test. Porte 55439/3119 riservate al runner per preservare il collaudo dell’utente 55433/3109; nessun riuso automatico o modifica del guard di prodotto. Gli indirizzi cambiano soltanto nella copia temporanea. API avviata solo per i file HTTP esterni e arrestata prima dei test che reclamano job: il primo collaudo aggregato ha mostrato che i worker dell’API potevano sottrarre i job alle prove dirette. Log e cluster fermo conservati anche sugli errori. [Uso e confini](../../backend-v5/test/OFFLINE.md); [report del lotto R07](fase0-offline-test-harness-20261023.md).
+
 ## Dettaglio oggetto — 19 ottobre 2026
 
 Approvata e implementata la struttura compatta: sintesi in alto, griglia desktop, ordine unico mobile, funzioni secondarie richiudibili. La garanzia mantiene origine e due date distinte; prezzo d’acquisto e costi rimandano a registrazioni canoniche senza duplicarle. [Scelte e verifica](object-detail-layout-20261019.md).

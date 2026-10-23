@@ -33,7 +33,7 @@ test('durable onboarding campaign: corpus, processes, races, caps and uncertain 
   assert.equal(await db.homeObject.count({where:{homeId:home.id}}),0);assert.equal(await db.homeExpense.count({where:{homeId:home.id}}),0);assert.equal(await db.homeContact.count({where:{homeId:home.id}}),0);
  });
  await t.test('process death after committed sending never retries and retains full reservation',async()=>{
-  const config=options(),crash=child(config,[cases[0]],'crash');assert.equal(crash.status,23,crash.stderr);
+  const config=options({campaignId:'fase0-quality-v3-offline-crash-'+randomUUID()}),crash=child(config,[cases[0]],'crash');assert.equal(crash.status,23,crash.stderr);
   const row=await db.objectOnboardingAttempt.findFirstOrThrow({where:{campaignId:config.campaignId}});assert.equal(row.state,'sending');assert.equal(row.actualMicroUsd,null);
   const resumed=child(config,[cases[0]],'run');assert.equal(resumed.status,0,resumed.stderr);const r=JSON.parse(resumed.stdout);assert.equal(r.providerCalls,0);assert.equal(r.uncertain,1);assert.equal(r.committedMicroUsd,RESERVE_MICRO_USD);
   assert.equal((await db.objectOnboardingAttempt.findUniqueOrThrow({where:{id:row.id}})).state,'uncertain');

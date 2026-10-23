@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — R07, ingresso unico dei test offline
+
+Alias test backend e sette wrapper passano da un runner con build, allowlist di profili/DB, ambiente ridotto e guardie Node/Prisma. Cluster nuovo 55439/API3119; API separata dai test di code, risorse possedute arrestate anche su errore. Aggiornate due fixture obsolete senza ridurre privacy/idempotenza. Verificati 224 ordinari, 295 onboarding e 495 HTTP/DB, compreso riavvio del ledger; zero AI/DB reale. [Report](v5/fase0-offline-test-harness-20261023.md) e [comandi](../backend-v5/test/OFFLINE.md).
+
 ## 23 ottobre 2026 — R04, validazione per campo backend separata
 
 Estratto il validatore dei campi degli oggetti, conservando criteri, ordine, errori, diagnostica e revisione dei dati facoltativi. Equivalenza su 8.316 casi, onboarding 295/295, ordinari 214/214 e guardie qualità 25/25; nuovo file vincolato nelle future autorizzazioni. Nessun AI, DB o cambio delle conferme. [Report e limiti](v5/fase0-backend-field-validation-refactor-20261023.md).

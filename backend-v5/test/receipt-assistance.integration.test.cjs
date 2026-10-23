@@ -323,7 +323,11 @@ test('receipt foundation: real HTTP/controller/session/CSRF and dedicated DB, sy
     await g1.updateObject(a.id, home, renamed.id, renameBody, renameKey);
     await db.document.update({ where: { id: source.id }, data: { visibility: 'private' } });
     const page = await g1.objects(a.id, home, { q: 'Derived confidential', limit: '1' });
-    assert.deepEqual(page, { items: [], nextCursor: null });
+    assert.deepEqual(page, {
+      items: [], nextCursor: null, total: 0,
+      facets: { all: 0, unplaced: 0, rooms: [{ id: room.id, name: room.name, count: 0 }] },
+      today: new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' }),
+    });
     for (const read of [() => g1.getObject(a.id, home, 'object', object.id, {}), () => g1.history(a.id, home, 'object', object.id, {}), () => g1.links(a.id, home, 'object', object.id, { resourceType: 'document' })]) await assert.rejects(read, e => e.getStatus() === 403);
     assert.equal(await db.$transaction(tx => economy.subject(tx, a.id, home, { kind: 'object', id: object.id })), null);
     assert.equal((await s1.summary(a.id, home, roomQuery)).totalCents, '0');
