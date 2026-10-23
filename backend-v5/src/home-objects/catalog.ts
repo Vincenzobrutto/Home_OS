@@ -1,4 +1,5 @@
 import { Prisma } from '../../generated/client';
+import { confirmedSourceVisible } from '../documents/access';
 import { readableReceiptName } from '../receipt-assistance/access';
 import { objectsQuery } from './domain';
 
@@ -9,12 +10,12 @@ function profileText(a:string,h:string,key:'brand'|'model'):Prisma.Sql {
  return Prisma.sql`CASE WHEN o.profile ? ${key} THEN CASE WHEN ${field}->>'origin'='user_declared' OR
    (jsonb_array_length(${sources})>0 AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(${sources}) s
     LEFT JOIN "Document" d ON d.id=s->>'documentId' LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
-    WHERE d.id IS NULL OR d."homeId"<>${h} OR (d.visibility::text<>'home' AND d."uploaderId"<>${a})
-     OR v.id IS NULL OR NOT COALESCE(v.version::text=s->>'documentVersion',FALSE) OR NOT COALESCE(v.sha256=s->>'sha256',FALSE)))
+    WHERE d.id IS NULL OR d."homeId"<>${h} OR NOT ${confirmedSourceVisible(a)}
+     OR (d."trashedAt" IS NULL AND (v.id IS NULL OR NOT COALESCE(v.version::text=s->>'documentVersion',FALSE) OR NOT COALESCE(v.sha256=s->>'sha256',FALSE)))))
    THEN ${field}->>'value' ELSE NULL END
   ELSE (SELECT f.value FROM "ReceiptObjectField" f WHERE f."objectId"=o.id AND f."accountId"=${a} AND f."homeId"=${h} AND f."fieldKey"=${key}
-   AND (f.origin='user_declared' OR EXISTS(SELECT 1 FROM "Document" d JOIN "DocumentVersion" v ON v."documentId"=d.id
-    WHERE d.id=f."documentId" AND d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}) AND v.version=f."documentVersion" AND v.sha256=f."documentSha256"))) END`;
+   AND (f.origin='user_declared' OR EXISTS(SELECT 1 FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
+    WHERE d.id=f."documentId" AND d."homeId"=${h} AND ${confirmedSourceVisible(a)} AND (d."trashedAt" IS NOT NULL OR (v.version=f."documentVersion" AND v.sha256=f."documentSha256"))))) END`;
 }
 export function catalogBase(a:string,h:string,q:ReturnType<typeof objectsQuery>):Prisma.Sql {
  const escaped=q.q?.replace(/[\\%_]/g,'\\$&');
@@ -26,8 +27,8 @@ export function catalogBase(a:string,h:string,q:ReturnType<typeof objectsQuery>)
    FROM "BoilerAsset" o WHERE o."accountId"=${a} AND o."homeId"=${h}
    AND NOT EXISTS(SELECT 1 FROM "AnalysisJob" j CROSS JOIN LATERAL jsonb_array_elements(j.documents) s
     LEFT JOIN "Document" d ON d.id=s->>'documentId' LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
-    WHERE j."assetId"=o.id AND j.state='succeeded' AND (d.id IS NULL OR d."homeId"<>${h} OR (d.visibility::text<>'home' AND d."uploaderId"<>${a})
-     OR v.id IS NULL OR NOT COALESCE(v.version::text=s->>'documentVersion',FALSE) OR NOT COALESCE(v.sha256=s->>'documentSha256',FALSE)))
+    WHERE j."assetId"=o.id AND j.state='succeeded' AND (d.id IS NULL OR d."homeId"<>${h} OR NOT ${confirmedSourceVisible(a)}
+     OR (d."trashedAt" IS NULL AND (v.id IS NULL OR NOT COALESCE(v.version::text=s->>'documentVersion',FALSE) OR NOT COALESCE(v.sha256=s->>'documentSha256',FALSE)))))
  ), filtered AS (
   SELECT x.*,lower(normalize(x.name,NFC) COLLATE "und-x-icu") AS "sortName",COALESCE(p."roomIds",'[]'::jsonb) AS "roomIds"
   FROM authorized x LEFT JOIN "ObjectPosition" p ON p."accountId"=${a} AND p."homeId"=${h}

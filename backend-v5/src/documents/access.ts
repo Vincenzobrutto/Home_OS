@@ -3,9 +3,15 @@ import { isUUID } from 'class-validator';
 import type { Request } from 'express';
 import { PrismaService } from '../prisma.service';
 import { SessionsService, validMembership } from '../security';
-import type { HomeMembership, Document, Prisma } from '../../generated/client';
+import { Prisma, type HomeMembership, type Document } from '../../generated/client';
 export type DocumentRequest = Request & { documentAccountId: string };
-export function canReadDocument(doc: Pick<Document, 'uploaderId' | 'visibility'>, accountId: string) { return doc.visibility === 'home' || doc.uploaderId === accountId; }
+// A trashed or purged document is unreadable everywhere: lists, opening, new analyses and proposals, shares, exports.
+export function canReadDocument(doc: Pick<Document, 'uploaderId' | 'visibility' | 'trashedAt'>, accountId: string) { return !doc.trashedAt && (doc.visibility === 'home' || doc.uploaderId === accountId); }
+export const activeDocument = { trashedAt: null } as const;
+// Data already confirmed from a trashed or purged source stays usable (§4.1 of the deletion design):
+// only the visibility frozen at trash time still protects it; version/SHA proofs apply while the source is active.
+export function canSeeConfirmedSource(doc: Pick<Document, 'uploaderId' | 'visibility'>, accountId: string) { return doc.visibility === 'home' || doc.uploaderId === accountId; }
+export function confirmedSourceVisible(accountId: string) { return Prisma.sql`(d.visibility::text='home' OR d."uploaderId"=${accountId})`; }
 export function canExport(member: HomeMembership) { return member.role !== 'viewer'; }
 @Injectable()
 export class DocumentPolicy {

@@ -294,7 +294,7 @@ export class ReceiptAssistanceService {
     return this.transaction(a, h, false, async (tx, edit) => {
       if (objectId) await this.target(tx, a, h, objectId);
       if (draftId) await this.record(tx, a, h, draftId);
-      const rows = await tx.receiptComparison.findMany({ where: { accountId: a, homeId: h, ...(state === 'all' ? {} : { state }), ...(objectId ? { objectId } : {}), ...(draftId ? { draftId } : {}), ...(after ? { id: { gt: after } } : {}) }, orderBy: { id: 'asc' }, take: limit + 1 });
+      const rows = await tx.receiptComparison.findMany({ where: { accountId: a, homeId: h, draft: { document: { trashedAt: null } }, ...(state === 'all' ? {} : { state }), ...(objectId ? { objectId } : {}), ...(draftId ? { draftId } : {}), ...(after ? { id: { gt: after } } : {}) }, orderBy: { id: 'asc' }, take: limit + 1 });
       const page = rows.slice(0, limit);
       return { items: await Promise.all(page.map(row => this.comparisonView(tx, a, h, row, edit))), nextCursor: rows.length > limit ? Buffer.from(JSON.stringify({ b: binding, id: page.at(-1)!.id })).toString('base64url') : null };
     });
@@ -334,7 +334,7 @@ export class ReceiptAssistanceService {
       }
     }
     const expense = saved.expenseId ? await tx.homeExpense.findFirst({ where: { id: saved.expenseId, accountId: a, homeId: h, state: 'active' } }) : null;
-    const openComparisons = saved.objectId ? await tx.receiptComparison.count({ where: { accountId: a, homeId: h, objectId: saved.objectId, state: 'open' } }) : 0;
+    const openComparisons = saved.objectId ? await tx.receiptComparison.count({ where: { accountId: a, homeId: h, objectId: saved.objectId, state: 'open', draft: { document: { trashedAt: null } } } }) : 0;
     return { newObjects: saved.newObjects, newExpenses: saved.newExpenses, object: subject, expense: expense ? { id: expense.id, title: expense.title, amountCents: expense.amountCents } : null, openComparisons };
   }
 
@@ -461,7 +461,7 @@ export class ReceiptAssistanceService {
         expenseId = row.id;
       }
       const result = { newObjects: Number(newObject), newExpenses: Number(newExpense), objectId: target?.id ?? null, expenseId };
-      const open = target ? await tx.receiptComparison.count({ where: { accountId: a, homeId: h, objectId: target.id, state: 'open' } }) : 0;
+      const open = target ? await tx.receiptComparison.count({ where: { accountId: a, homeId: h, objectId: target.id, state: 'open', draft: { document: { trashedAt: null } } } }) : 0;
       if (target) await this.closeResolvedDrafts(tx, a, h, target.id);
       return tx.receiptDraft.update({ where: { id }, data: { confirmation: json(result), state: open ? 'partially_resolved' : 'confirmed', version: { increment: 1 }, updatedAt: now } });
     });

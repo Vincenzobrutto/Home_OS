@@ -14,7 +14,7 @@ Lotto Codex isolato dal Cestino: [costo/data da ordine confermato](v5/ordini-acq
 
 ## Evolutive proposte, in ordine
 
-1. Cestino ed eliminazione dati: [progetto con le scelte del committente del 22/10](v5/fase0-deletion-design-20261022.md), da dividere in lotti (modello/backend, pagina Cestino, backup). Solo progetto, nessun codice.
+1. Cestino ed eliminazione dati: [progetto con le scelte del committente del 22/10](v5/fase0-deletion-design-20261022.md). Lotto 1 backend documenti implementato e verificato offline ([report](v5/cestino-lotto1-report-20261023.md)), in PR. Restano lotto 2 pagina Cestino (frontend), lotto 3 schede/storia, casa e account, ciclo dei backup.
 2. DB di test dedicato e permanente, utile prima di toccare le eliminazioni.
 3. Audit npm P0 delle dipendenze ([backlog](backlog.md)).
 4. Attività del committente: verifica proposte caffè, BL-04 su telefono.

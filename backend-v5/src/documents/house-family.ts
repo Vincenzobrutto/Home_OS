@@ -1,4 +1,5 @@
 import {ForbiddenException} from '@nestjs/common';
+import { rejectDeletedReplay } from './trash';
 import {Prisma} from '../../generated/client';
 import {DocumentPolicy,canReadDocument} from './access';
 import {currentOrganization,organizationView} from '../document-intake/organization';
@@ -25,7 +26,7 @@ export async function changeHouseFamily(tx:Prisma.TransactionClient,policy:Docum
  if(doc.original.version!==body.documentVersion||doc.original.sha256!==body.sha256)throw conflict('document_version_conflict','Il file è cambiato. Aggiorna l’elenco prima di riprovare.');
  const lookup={accountId_homeId_operation_target_key:{accountId:a,homeId:h,operation:'document-house-family-v1',target:id,key}},fingerprint=digest(JSON.stringify(payload));
  const prior=await tx.objectOnboardingRequest.findUnique({where:lookup});
- if(prior){if(prior.digest!==fingerprint)throw conflict('idempotency_conflict','Chiave già usata per una scelta diversa.');return prior.response;}
+ if(prior){if(prior.digest!==fingerprint)throw conflict('idempotency_conflict','Chiave già usata per una scelta diversa.');rejectDeletedReplay(prior.response);return prior.response;}
  const org=await currentOrganization(tx,a,h,doc);
  if(!org||org.version!==body.expectedOrganizationVersion)throw conflict('organization_version_conflict','La classificazione è cambiata. Aggiorna l’elenco prima di riprovare.');
  const houseDocument=body.scope==='archive'?org.houseDocument:true;

@@ -1,10 +1,12 @@
 import {denyRepeatedInvoiceObject, relatedPurchaseCost, samePurchaseSources, checkPurchaseSources} from './purchase-review';
+import { rejectDeletedReplay } from '../documents/trash';
 import { requiresPaymentReview } from './payment-review';
 import {compilationDraft,reviewAfterConfirmation} from './compilation-draft';
 import {invoiceObjectSuggestions,onboardingObjectSuggestions} from './object-suggestions';
 import { contactChoices, linkConfirmedContacts, resolveContact, saveContactProposal } from '../contacts/proposals';
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { Prisma, type ObjectOnboardingDraft } from '../../generated/client';
+import { confirmedSourceVisible } from '../documents/access';
 import { randomUUID } from 'node:crypto';
 import { digest } from '../security';
 import { object, uuid, version, invalid, conflict } from '../review/domain';
@@ -109,6 +111,7 @@ export class ObjectOnboardingService {
       const old = await tx.objectOnboardingRequest.findUnique({ where: lookup });
       if (old) {
         if (old.digest !== hash) throw conflict('idempotency_conflict', 'Chiave già usata per un’altra richiesta.');
+        rejectDeletedReplay(old.response);
         const saved = old.response as { draftId: string; result?: unknown }, draft = await this.access.draft(tx, a, h, saved.draftId);
         const projected = await this.project(tx, a, h, draft, edit);
         if (!projected.snapshot) throw onboardingDenied();
@@ -250,23 +253,23 @@ export class ObjectOnboardingService {
     }
     const item=output.items.find(item=>item.id===choice.itemId);
     if(item?.invoiceLine){
-      const sameLine=await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) AND e."economicProvenance"->'_invoiceLine'->>'key'=${item.invoiceLine.key} LIMIT 1`;
+      const sameLine=await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND ${confirmedSourceVisible(a)} AND e."economicProvenance"->'_invoiceLine'->>'key'=${item.invoiceLine.key} LIMIT 1`;
       if(sameLine.length)throw conflict('onboarding_expense_exists','Questa riga della fattura ha già una spesa: collega quella esistente.');
     }
     const split=output.items.length>1;
     const maximum=output.purchaseTotal?.amountCents??manualMaximum;
     if(maximum&&choice.expense.amountCents>maximum)throw invalid('La spesa supera il totale del documento.');
     if(split&&(!choice.expense.manualItemAmount||!maximum))throw invalid('Indica e conferma il prezzo del solo articolo e il totale della fattura.');
-    const existing = await tx.$queryRaw<Array<{ id: string }>>`SELECT e.id FROM "HomeExpense" e JOIN "DocumentVersion" v ON v."documentId"=e."documentId" JOIN "Document" d ON d.id=v."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;
+    const existing = await tx.$queryRaw<Array<{ id: string }>>`SELECT e.id FROM "HomeExpense" e JOIN "DocumentVersion" v ON v."documentId"=e."documentId" JOIN "Document" d ON d.id=v."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND ${confirmedSourceVisible(a)} LIMIT 1`;
     if (existing.length&&!split) throw conflict('onboarding_expense_exists', 'Esiste già un costo per questa ricevuta: scegli quello esistente.');
     if(split){
-      const costs=await tx.$queryRaw<Array<{id:string;amountCents:number;sameTarget:boolean}>>`SELECT DISTINCT e.id,e."amountCents",EXISTS(SELECT 1 FROM "ObjectResourceLink" l WHERE l."expenseId"=e.id AND l."objectId"=${targetId} AND l.state='active') AS "sameTarget" FROM "HomeExpense" e JOIN "DocumentVersion" v ON v."documentId"=e."documentId" JOIN "Document" d ON d.id=v."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a})`;
+      const costs=await tx.$queryRaw<Array<{id:string;amountCents:number;sameTarget:boolean}>>`SELECT DISTINCT e.id,e."amountCents",EXISTS(SELECT 1 FROM "ObjectResourceLink" l WHERE l."expenseId"=e.id AND l."objectId"=${targetId} AND l.state='active') AS "sameTarget" FROM "HomeExpense" e JOIN "DocumentVersion" v ON v."documentId"=e."documentId" JOIN "Document" d ON d.id=v."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND v.sha256=${draft.documentSha256} AND ${confirmedSourceVisible(a)}`;
       const prior=await tx.objectOnboardingDraft.findMany({where:{accountId:a,homeId:h,documentSha256:draft.documentSha256},select:{decisions:true}});
       const allocated=new Set([...prior.flatMap(row=>Object.values(row.decisions as Decisions)),...Object.values(currentDecisions)].filter(d=>d.allocation==='manual_item').map(d=>d.expenseId));
       if(costs.some(c=>c.sameTarget||!allocated.has(c.id)))throw conflict('onboarding_expense_exists','Questo documento ha già un costo per l’oggetto oppure un totale non ripartito. Collega la spesa esistente.');
       if(costs.reduce((n,c)=>n+c.amountCents,0)+choice.expense.amountCents>maximum!)throw invalid('La somma delle quote supera il totale del documento. Nessun importo viene attribuito automaticamente.');
     }
-    const possible = await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e LEFT JOIN "Document" d ON d.id=e."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND e."amountCents"=${choice.expense.amountCents} AND e."spentOn"=${choice.expense.spentOn} AND (e."documentId" IS NULL OR (d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}))) LIMIT 1`;
+    const possible = await tx.$queryRaw<Array<{id:string}>>`SELECT e.id FROM "HomeExpense" e LEFT JOIN "Document" d ON d.id=e."documentId" WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND e."amountCents"=${choice.expense.amountCents} AND e."spentOn"=${choice.expense.spentOn} AND (e."documentId" IS NULL OR (d."homeId"=${h} AND ${confirmedSourceVisible(a)})) LIMIT 1`;
     if (possible.length && !choice.expense.acknowledgePossibleDuplicate) throw conflict('onboarding_possible_expense_duplicate', 'Esiste una spesa con lo stesso importo e data: collegala oppure verifica che sia un acquisto distinto.');
     const values = {title:choice.expense.title,amountCents:choice.expense.amountCents,spentOn:choice.expense.spentOn,supplier:choice.expense.supplier};
     const result = await expenses.mutateInTransaction(tx, a, h, 'create', '', { ...values, category: 'purchase_replacement', documentId: draft.documentId, objectRef: { kind: 'object', id: targetId } }, 'onboarding_' + digest(draft.id + ':' + choice.itemId + ':expense-create'), true);
@@ -315,7 +318,7 @@ export class ObjectOnboardingService {
     if(c.amountSelection.mode==='candidate'&&(!candidate||candidate.amountCents!==c.values.amountCents||!['current_document_total','amount_due'].includes(candidate.role)))throw invalid('Controlla il totale della spesa della casa.');
     const legacyMatch=Prisma.sql`(e."documentNumber" IS NOT DISTINCT FROM ${c.values.documentNumber??null}::text OR e."amountCents"=${c.values.amountCents})`;
     const sourceMatch=item.invoiceSegment?Prisma.sql`(e."economicProvenance"->'_invoiceSegment'->>'key'=${item.invoiceSegment.key} OR (e."economicProvenance"->'_invoiceSegment' IS NULL AND ${legacyMatch}))`:legacyMatch;
-    const sameSource=await tx.$queryRaw<Array<{id:string}>>(Prisma.sql`SELECT e.id FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE e."accountId"=${a} AND e."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}) AND ((v.sha256=${draft.documentSha256} AND ${sourceMatch}) OR EXISTS(SELECT 1 FROM jsonb_array_elements(COALESCE(e."economicProvenance"->'_purchaseReview'->'sources','[]'::jsonb)) p WHERE p->>'documentSha256'=${draft.documentSha256})) LIMIT 1`);
+    const sameSource=await tx.$queryRaw<Array<{id:string}>>(Prisma.sql`SELECT e.id FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE e."accountId"=${a} AND e."homeId"=${h} AND ${confirmedSourceVisible(a)} AND ((v.sha256=${draft.documentSha256} AND ${sourceMatch}) OR EXISTS(SELECT 1 FROM jsonb_array_elements(COALESCE(e."economicProvenance"->'_purchaseReview'->'sources','[]'::jsonb)) p WHERE p->>'documentSha256'=${draft.documentSha256})) LIMIT 1`);
     if(sameSource.length)throw conflict('onboarding_expense_exists','Questo documento ha già una spesa: collega quella esistente.');
     if(item.documentKind==='simple_invoice'){
       if(review&&review.confirmedTotalCents!==c.values.amountCents)throw invalid('Il costo complessivo confermato non corrisponde all’importo indicato.');
@@ -364,7 +367,7 @@ export class ObjectOnboardingService {
       }else if(!body.choices.length&&!body.houseExpenses?.length&&!body.contacts?.length)throw invalid('Nessuna proposta da confermare.');
       if(body.manualPurchaseTotalCents!==undefined&&(draft.mode!=='manual'||output.purchaseTotal))throw invalid('Il totale dichiarato è ammesso soltanto per una fattura compilata manualmente senza totale estratto.');
       if (body.source.documentId !== draft.documentId || body.source.documentVersion !== draft.documentVersion || body.source.sha256 !== draft.documentSha256) throw conflict('onboarding_source_changed', 'La fonte è cambiata.');
-      const initialSourceLinks = await tx.$queryRaw<Array<{ id: string }>>`SELECT l.id FROM "ObjectResourceLink" l JOIN "Document" d ON d.id=l."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE l."accountId"=${a} AND l."homeId"=${h} AND l."resourceType"='document' AND l.state='active' AND v.sha256=${draft.documentSha256} AND (d.visibility::text='home' OR d."uploaderId"=${a}) LIMIT 1`;
+      const initialSourceLinks = await tx.$queryRaw<Array<{ id: string }>>`SELECT l.id FROM "ObjectResourceLink" l JOIN "Document" d ON d.id=l."documentId" JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE l."accountId"=${a} AND l."homeId"=${h} AND l."resourceType"='document' AND l.state='active' AND v.sha256=${draft.documentSha256} AND ${confirmedSourceVisible(a)} LIMIT 1`;
       // A document-wide cost and per-object costs are alternative allocations of the same source.
       if(output.houseExpenses?.some(e=>e.documentKind==='simple_invoice')){
         if(body.choices.some(c=>['create','link'].includes(c.action)&&'expense' in c&&c.expense.action!=='skip'))throw invalid('Il costo complessivo si registra una sola volta nella spesa della casa, senza costi sugli oggetti.');
