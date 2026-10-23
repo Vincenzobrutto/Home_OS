@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — R03, responsabilità della revisione spese separate
+
+Estratte proiezione pura di regole/payload/riepilogo e checklist con focus, conservando stato, query e conferme nel componente. Nessuna modifica di comportamento, API o validazioni; regressioni su importi ambigui, acconto/saldo, risorse non disponibili e input conservati. [Report R03](v5/fase0-editor-review-refactor-20261023.md).
+
 ## 23 ottobre 2026 — Manutenzione del caricamento V5 e peso iniziale frontend
 
 Separati ingresso rotta e contenuto intake per eliminare il ciclo con il workspace. Riga spesa del riepilogo Casa separata dai form: entry JS di produzione da 507.951 a 479.496 byte, gzip da 156.490 a 147.622. Stato corrente separato dai 98 checkpoint storici conservati integralmente. Stesse props/export, markup e logiche operative; nessun cambiamento a API, dati o validazioni. [Audit e verifiche](v5/fase0-code-audit-refactor-20261023.md).

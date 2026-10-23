@@ -1,5 +1,7 @@
 # Audit del debito tecnico V5 e primo lotto di refactoring
 
+**Seguito R03:** proiezione pura delle spese e presentazione della checklist separate nel [secondo lotto](fase0-editor-review-refactor-20261023.md); rilievo parzialmente affrontato, altri editor ancora aperti. Le misure e le verifiche sottostanti restano quelle dell’audit iniziale.
+
 23 ottobre 2026, Codex. Base esaminata: 0422af6d9a287c0584a0d7699e6b60a1f7909c15, branch codex/fase0-ai-quality-v3, HEAD/upstream 0/0 dopo fetch. Nessuna integrazione con main. Incarico: verificare gli accumuli nel codice e procedere con interventi pratici verificabili.
 
 ## Metodo e perimetro

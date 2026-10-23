@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — R03, secondo lotto di manutenzione editor
+
+Proiezione pura di spese e checklist con focus separate dal componente che gestisce stato/query/conferme. [Equivalenza, regressioni e limiti](v5/fase0-editor-review-refactor-20261023.md). R03 non chiuso integralmente; prossimo passo ripristino/serializzazione di DraftEditor, poi gli altri lotti dell’audit. Nessuna modifica funzionale, nuove capacità AI, accesso al DB o deploy implicito.
+
 ## 23 ottobre 2026 — Manutenzione V5 dopo audit tecnico
 
 [Audit e piano dei lotti](v5/fase0-code-audit-refactor-20261023.md): primo lotto con dipendenze workspace in una direzione e riga spesa separata dai form; entry JS ridotta del 5,60%, non misurata latenza utente. Seguito prioritario: estrazioni pure dagli editor, validazioni/backend mantenendo transazione e controlli, ingresso test DB offline uniforme; conteggio query prima di eventuali letture batch. Ritiri di componenti, prompt/client e archivio documentazione restano proposte. Nessuna riscrittura generale, nuovo gate AI o deploy implicito.
