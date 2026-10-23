@@ -1,3 +1,5 @@
+**Seguito R06/R09:** [ricognizione conclusa e archivi documentali verificati](fase0-maintenance-boundaries-20261023.md); componenti conservati deliberatamente, nessun ritiro UX implicito.
+
 **Seguito R08:** [protocollo provider separato](fase0-provider-protocol-refactor-20261023.md), prompt/schema e richieste equivalenti; 300 onboarding, 24 qualità, 16 guardie offline. Nessuna nuova chiamata AI.
 
 **Seguito R04:** [conferma transazionale separata per fasi](fase0-confirmation-orchestration-refactor-20261023.md), stessa transazione/ordine/errori; 495/495 HTTP/DB sintetici.

@@ -28,7 +28,9 @@ Questo file riassume il punto attuale. I 98 checkpoint precedenti sono conservat
 
 **R08 implementato e verificato:** [schema, decoder compatto e prompt separati](v5/fase0-provider-protocol-refactor-20261023.md), export compatibili e prompt/schema identici byte per byte. Confronti offline: 15 schemi, 507 risposte, 12 richieste preparate; build/lint, 300/300 onboarding, 24/24 qualità, 16/16 guardie. Nuovi sorgenti vincolati nelle future autorizzazioni, nessun consenso storico riattivato.
 
-**Aperti, non implementati:** completamento delle estrazioni dagli altri orchestratori frontend (R03, parzialmente affrontato), restante separazione validazioni/conferme backend preservando la transazione (R04, parzialmente affrontato), conteggio query prima di letture batch (R05); verifica componenti non raggiungibili (R06), modularizzazione client API (R10) e restante documentazione (R09). Nessuna riscrittura generale o rimozione dei controlli di privacy/SHA/idempotenza.
+**R06/R09 verificati:** [ricognizione e archivi](v5/fase0-maintenance-boundaries-20261023.md): quattro componenti esclusi dall’ingresso produttivo conservati deliberatamente come compatibilità/test; nessun beneficio di bundle dalla rimozione. Stato/roadmap/architettura ora hanno ingressi correnti e archivi integrali con blob verificati, senza perdita degli handoff.
+
+**Aperti, non implementati:** completamento delle estrazioni dagli altri orchestratori frontend (R03, parzialmente affrontato), restante separazione validazioni/conferme backend preservando la transazione (R04, parzialmente affrontato), conteggio query prima di letture batch (R05); modularizzazione client API (R10). Nessuna riscrittura generale o rimozione dei controlli di privacy/SHA/idempotenza.
 
 ## Precompilazione del PDF caffè — ultimo esito reale, precedente all’audit
 

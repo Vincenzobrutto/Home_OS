@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — R06/R09, ingressi correnti e storico
+
+Roadmap e architettura correnti separate dagli archivi integrali con blob verificati; componenti senza ingresso produttivo censiti e conservati. Nessuna modifica UX o test rimossi. [Report](v5/fase0-maintenance-boundaries-20261023.md).
+
 ## 23 ottobre 2026 — R08, protocollo provider separato
 
 Schema, decoder compatto e istruzioni in moduli distinti; export compatibili, prompt e schema identici, autorizzazione e diagnostica invariate. Freeze dei nuovi moduli verificato, nessuna AI o revisione semantica. [Report](v5/fase0-provider-protocol-refactor-20261023.md).
