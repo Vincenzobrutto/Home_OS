@@ -1,3 +1,5 @@
+**R10 completato:** [domini API separati, un solo trasporto](v5/fase0-api-client-domains-refactor-20261023.md), 860/860 mock e 581 confronti offline; entry +7.214 byte, nessun beneficio di velocità dichiarato.
+
 ## 23 ottobre 2026 — R06/R09, ingressi correnti e storico
 
 Roadmap e architettura correnti separate dagli archivi integrali con blob verificati; componenti senza ingresso produttivo censiti e conservati. Nessuna modifica UX o test rimossi. [Report](v5/fase0-maintenance-boundaries-20261023.md).

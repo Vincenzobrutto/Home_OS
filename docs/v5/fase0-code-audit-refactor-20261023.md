@@ -1,3 +1,5 @@
+**R10 completato:** [domini API separati, un solo trasporto](fase0-api-client-domains-refactor-20261023.md), 860/860 mock e 581 confronti offline; entry +7.214 byte, nessun beneficio di velocità dichiarato.
+
 **Seguito R06/R09:** [ricognizione conclusa e archivi documentali verificati](fase0-maintenance-boundaries-20261023.md); componenti conservati deliberatamente, nessun ritiro UX implicito.
 
 **Seguito R08:** [protocollo provider separato](fase0-provider-protocol-refactor-20261023.md), prompt/schema e richieste equivalenti; 300 onboarding, 24 qualità, 16 guardie offline. Nessuna nuova chiamata AI.

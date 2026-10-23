@@ -4,7 +4,7 @@ Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedent
 
 ## Manutenzione autorizzata in corso
 
-Seguire i dieci rilievi dell’[audit](v5/fase0-code-audit-refactor-20261023.md), con commit distinti e prove offline. R01/R02 corretti; R03 estrazioni dagli editor e R04 validazioni/conferma affrontati per responsabilità, senza riscrittura generale. R07 test protetti completato; R08 protocollo provider separato e verificato. R05 misura query, R06 ricognizione componenti e R10 client per dominio proseguono; aggiornamenti e risultati nel solo project-status. R09 separa qui stato e archivio, preservando i contenuti storici.
+Seguire i dieci rilievi dell’[audit](v5/fase0-code-audit-refactor-20261023.md), con commit distinti e prove offline. R01/R02 corretti; R03 estrazioni dagli editor e R04 validazioni/conferma affrontati per responsabilità, senza riscrittura generale. R07 test protetti completato; R08 protocollo provider separato e verificato. R10 client per dominio completato e verificato ([report](v5/fase0-api-client-domains-refactor-20261023.md)); R06 ricognizione conclusa con conservazione deliberata. R05 misura/letture batch e R03 richieste editor proseguono; aggiornamenti e risultati nel solo project-status. R09 separa qui stato e archivio, preservando i contenuti storici.
 
 La chiusura del refactoring richiede riepilogo delle verifiche, limiti residui e push verificato. La creazione di un nuovo branch pulito su GitHub si valuta dopo: nessuna nuova branch o integrazione con main è implicita.
 

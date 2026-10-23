@@ -30,7 +30,9 @@ Questo file riassume il punto attuale. I 98 checkpoint precedenti sono conservat
 
 **R06/R09 verificati:** [ricognizione e archivi](v5/fase0-maintenance-boundaries-20261023.md): quattro componenti esclusi dall’ingresso produttivo conservati deliberatamente come compatibilità/test; nessun beneficio di bundle dalla rimozione. Stato/roadmap/architettura ora hanno ingressi correnti e archivi integrali con blob verificati, senza perdita degli handoff.
 
-**Aperti, non implementati:** completamento delle estrazioni dagli altri orchestratori frontend (R03, parzialmente affrontato), restante separazione validazioni/conferme backend preservando la transazione (R04, parzialmente affrontato), conteggio query prima di letture batch (R05); modularizzazione client API (R10). Nessuna riscrittura generale o rimozione dei controlli di privacy/SHA/idempotenza.
+**R10 implementato e verificato:** [client per otto domini e trasporto unico](v5/fase0-api-client-domains-refactor-20261023.md), facciata invariata, token/contesto condivisi. Typecheck/lint/build, 581 confronti e 99 corpi equivalenti; mock completa **860/860, 105 file, 558,98 secondi**, due worker e retry massimo 1. Entry +7.214 byte (+1,50%), gzip +999: beneficio di manutenzione, nessuna riduzione di peso dichiarata.
+
+**Aperti, non implementati:** completamento delle estrazioni dagli altri orchestratori frontend (R03, parzialmente affrontato), restante separazione validazioni/conferme backend preservando la transazione (R04, parzialmente affrontato), conteggio query prima di letture batch (R05). Nessuna riscrittura generale o rimozione dei controlli di privacy/SHA/idempotenza.
 
 ## Precompilazione del PDF caffè — ultimo esito reale, precedente all’audit
 
