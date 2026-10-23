@@ -30,3 +30,10 @@ test('future authorization binds abbreviation and complete-name identity rules w
   a.frozenFiles[file]='0'.repeat(64);assert.throws(()=>validateAuthorization(a,options),e=>e.code==='synthetic_authorization_mismatch');
  }
 });
+
+test('future authorization freezes extracted field validation and refuses a stale validator hash',()=>{
+ const file='src/object-onboarding/field-validation.ts',a=createAuthorization(options.campaignId,options.model);
+ assert.match(a.frozenFiles[file],/^[a-f0-9]{64}$/);
+ a.frozenFiles[file]='0'.repeat(64);
+ assert.throws(()=>validateAuthorization(a,options),e=>e.code==='synthetic_authorization_mismatch');
+});

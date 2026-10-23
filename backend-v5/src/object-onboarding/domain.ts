@@ -10,12 +10,14 @@ import { object, text, invalid, uuid, version } from '../review/domain';
 import { ProviderFailure, type Snapshot } from '../review/provider';
 import { digest } from '../security';
 import { printedCents, printedDates, periodBoundary } from '../economy/document-evidence';
-import { purchaseDateSource, orderDateSource, tableQuantity, tablePurchaseAmount } from './invoice-evidence';
+import { tableQuantity, tablePurchaseAmount } from './invoice-evidence';
 import { readUnderstanding, type DocumentUnderstanding, type UnderstandingWarning } from './understanding';
 import { calendar } from '../activities/domain';
 import { separateInvoices } from './invoice-segments';
 import { locateDecodeFailure, type DecodeLocation } from './decode-diagnostic';
 import { shortProductName } from './short-name';
+import { validateProductField, ProductEvidenceFailure } from './field-validation';
+export { ProductEvidenceFailure } from './field-validation';
 
 export const onboardingLimits = { maxItems: 20, maxUnits: 20, maxImageBytes: 5 * 1024 * 1024 } as const;
 export const productFields = ['name', 'brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'orderDate', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
@@ -55,9 +57,6 @@ export type ProductExtraction = {
 export type ProductEvidenceContext = { snapshot: Snapshot; allowedPages?:number[]; invoiceExpensePages?:number[] } & (
   { kind: 'text'; pages: string[] } | { kind: 'image' } | { kind: 'visual_pdf'; pageCount: number }
 );
-export class ProductEvidenceFailure extends ProviderFailure {
-  constructor(readonly field: ProductField | 'quantity' | 'purchaseTotal', readonly reason: 'citation' | 'value' | 'date' | 'unit' | 'quantity' | 'total') { super('evidence_unverified'); }
-}
 const normalize = (value: string) => value.normalize('NFC').replace(/\s+/gu, ' ').trim();
 const equal = (a: string | null | undefined, b: string | null | undefined) => !!a && !!b && normalize(a).toLocaleLowerCase('it') === normalize(b).toLocaleLowerCase('it');
 
@@ -116,26 +115,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
         if (rawField === null) continue;
         location = { section: 'item_field', field: key };
         try {
-        const field = object(rawField, ['value', 'evidence']);
-        // Source descriptions use the existing citation bound. The output name
-        // retains its 120-character limit and is projected only AFTER validation.
-        const value = normalize(text(field.value, key === 'name' ? 2000 : key === 'brand' || key === 'serialNumber' ? 80 : 120));
-        let source:ProductSource;try{source=evidence(field.evidence,context);}catch(error){if(error instanceof ProviderFailure&&error.code==='evidence_unverified')throw new ProductEvidenceFailure(key as ProductField,'citation');throw error;}
-        if (['orderDate', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'].includes(key)) {
-          calendar(value);
-          const dateMeaning = ({orderDate: /ordine|order/iu,purchaseDate: /(?:data.{0,12}(?:acquisto|fattura)|purchase.{0,8}date|acquistato.{0,5}il)/iu,deliveredDate: /(?:consegnato.{0,8}il|consegna.{0,8}effettiva|delivered.{0,8}on)/iu,warrantyStart: /(?:inizio.{0,10}garanzia|garanzia.{0,10}(?:dal|decorrenza)|warranty.{0,10}start)/iu,warrantyEnd: /(?:scadenza.{0,10}garanzia|garanzia.{0,10}(?:al|fino)|warranty.{0,10}(?:end|expir))/iu} as Record<string,RegExp>)[key];
-          if ((key==='orderDate'||key==='purchaseDate'||key==='deliveredDate')&&value>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}))throw new ProviderFailure('evidence_unverified');
-          const purchaseSource = (key === 'purchaseDate' || key === 'orderDate') && ['purchase_document','order_confirmation'].includes(String(row.documentKind))
-            ? (key === 'orderDate' ? orderDateSource : purchaseDateSource)(source.excerpt, value, context.kind === 'text' ? context.pages[source.page - 1] : undefined) : null;
-          const dateVerified = (key === 'purchaseDate' || key === 'orderDate') && ['purchase_document','order_confirmation'].includes(String(row.documentKind))
-            ? purchaseSource !== null
-            : dateMeaning.test(source.excerpt) && printedDates(source.excerpt).length === 1 && printedDates(source.excerpt).includes(value);
-          if (!dateVerified) throw new ProductEvidenceFailure(key as ProductField, 'date');
-          if (purchaseSource) source = { ...source, excerpt: purchaseSource };
-        } else if (!normalize(source.excerpt).includes(value)) throw new ProductEvidenceFailure(key as ProductField,'value');
-        const unit = ({ powerWatts: 'W', voltageVolts: 'V', frequencyHz: 'Hz', capacityLitres: '(?:L|litri|litres?|liters?)' } as Record<string, string>)[key];
-        if (unit && (!/^\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?$/u.test(value) || !new RegExp(value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&') + '\\s*' + unit + '\\b', 'iu').test(source.excerpt))) throw new ProductEvidenceFailure(key as ProductField,'unit');
-        fields[key as ProductField] = { value, source };
+        fields[key as ProductField] = validateProductField(key as ProductField, rawField, row.documentKind, context, value => evidence(value, context));
         } catch(error){if(key==='name'||!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;understanding.warnings.push({field:'item:'+sourceIndex+':'+key,reason:'unverified'});needsReview=true;}
       }
       location = { section: 'item_identity' };

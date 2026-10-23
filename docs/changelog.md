@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — R04, validazione per campo backend separata
+
+Estratto il validatore dei campi degli oggetti, conservando criteri, ordine, errori, diagnostica e revisione dei dati facoltativi. Equivalenza su 8.316 casi, onboarding 295/295, ordinari 214/214 e guardie qualità 25/25; nuovo file vincolato nelle future autorizzazioni. Nessun AI, DB o cambio delle conferme. [Report e limiti](v5/fase0-backend-field-validation-refactor-20261023.md).
+
 ## 23 ottobre 2026 — R03, responsabilità della revisione spese separate
 
 Estratte proiezione pura di regole/payload/riepilogo e checklist con focus, conservando stato, query e conferme nel componente. Centralizzati anche [ripristino e snapshot della compilazione](v5/fase0-editor-compilation-refactor-20261023.md), preservando scelte salvate, rinvii e separazione dalle richieste pendenti. Nessuna modifica di comportamento, API o validazioni; regressioni su importi ambigui, acconto/saldo, risorse non disponibili e input conservati. [Report R03](v5/fase0-editor-review-refactor-20261023.md).

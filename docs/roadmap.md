@@ -1,6 +1,6 @@
 ## 23 ottobre 2026 — R03, secondo lotto di manutenzione editor
 
-Proiezione pura di spese e checklist con focus separate dal componente che gestisce stato/query/conferme. [Equivalenza, regressioni e limiti](v5/fase0-editor-review-refactor-20261023.md). R03 non chiuso integralmente; ripristino/serializzazione di DraftEditor ora estratti nel [lotto successivo](v5/fase0-editor-compilation-refactor-20261023.md). Seguito proposto R04, validazione per campo backend preservando contratti e diagnostica. Nessuna modifica funzionale, nuove capacità AI, accesso al DB o deploy implicito.
+Proiezione pura di spese e checklist con focus separate dal componente che gestisce stato/query/conferme. [Equivalenza, regressioni e limiti](v5/fase0-editor-review-refactor-20261023.md). R03 non chiuso integralmente; ripristino/serializzazione di DraftEditor ora estratti nel [lotto successivo](v5/fase0-editor-compilation-refactor-20261023.md). R04 ora parzialmente implementato: [validatore per campo estratto](v5/fase0-backend-field-validation-refactor-20261023.md), contratti e diagnostica preservati e verificati offline. Restano conferma transazionale e R07 harness offline. Nessuna modifica funzionale, nuove capacità AI, accesso al DB o deploy implicito.
 
 ## 23 ottobre 2026 — Manutenzione V5 dopo audit tecnico
 
