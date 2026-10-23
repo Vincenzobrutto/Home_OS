@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Classificazione locale di ricevute e negazioni
+
+Riconosciute le forme «ricevuta d'acquisto» con apostrofi e spazi diversi. Le menzioni esplicitamente negate e i riferimenti negativi all'obbligo di emissione non attribuiscono un tipo al documento; una vera fattura nello stesso PDF rimane riconoscibile. Build/lint e 233/233 test ordinari offline superati. Nessuna AI, accesso DB o modifica al lotto Cestino. Implementazione sul branch del lotto, non ancora integrata. [Report](v5/ricevute-negazioni-20261023.md).
+
 ## 23 ottobre 2026 — Ordini confermati: proposte di costo e acquisto
 
 Ordine confermato come data di acquisto proposta e totale come costo del singolo prodotto, spedizione inclusa. Nessun pagamento, consegna o garanzia dedotti; spesa soltanto dopo scelta e conferma. Ripresa bozze senza nuova AI. Backend 306 onboarding, 224 ordinari, 24 qualità, 18 guardie e 88 DB; frontend mock completa 864/864. PR #8 verso il consolidamento, senza merge o deploy. [Report e verifica offline](v5/ordini-acquisto-20261023.md).

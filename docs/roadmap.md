@@ -12,6 +12,10 @@ La chiusura del refactoring richiede riepilogo delle verifiche, limiti residui e
 
 Lotto Codex isolato dal Cestino: [costo/data da ordine confermato](v5/ordini-acquisto-20261023.md), verificato offline con 864/864 mock e 88/88 DB mirati; [PR #8](https://github.com/Vincenzobrutto/Home_OS/pull/8) verso il consolidamento, integrata su approvazione del committente (`30c73a2`); collaudo isolato aggiornato in sola consultazione, dati invariati. Nessuna AI, deploy o modifica al collaudo persistito. Il merge resta al committente.
 
+## Classificazione locale: ricevute e negazioni
+
+[Lotto separato](v5/ricevute-negazioni-20261023.md) implementato e verificato sul branch `codex/ricevute-negazioni-20261023`: apostrofi, negazioni per occorrenza, riferimenti all'obbligo di emissione e documenti misti. 233/233 ordinari, build/lint e riscontro locale sul PDF reale. PR verso il consolidamento, nessun merge o aggiornamento dell'ambiente utente; Cestino di Claude escluso. Non introduce OCR né nuove analisi AI.
+
 ## Evolutive proposte, in ordine
 
 1. Cestino ed eliminazione dati: [progetto con le scelte del committente del 22/10](v5/fase0-deletion-design-20261022.md), da dividere in lotti (modello/backend, pagina Cestino, backup). Solo progetto, nessun codice.

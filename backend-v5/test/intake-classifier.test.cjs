@@ -43,3 +43,64 @@ test('floor plans are building documents with page evidence, not product proposa
 });
 
 test('housing contracts have an explicit category without classifying generic supply clauses as contracts',()=>{const result=classifyText(['Contratto di locazione']);assert(result.parts.some(p=>p.kind==='contract'));assert.deepEqual(result.collections,['contracts']);assert.equal(classifyText(['condizioni del contratto di fornitura']),null);});
+
+const kinds = pages => classifyText(pages)?.parts.map(part => part.kind) ?? [];
+test('purchase receipts accept Italian apostrophes, case, whitespace and line wrapping',()=>{
+ for(const title of ["Ricevuta d'acquisto",'RICEVUTA D’ACQUISTO','Ricevuta dʼacquisto',"Ricevuta d' acquisto",'Ricevuta\u00a0di\u00a0acquisto',"Ricevuta\nd'\nacquisto",'Ricevuta fiscale','Scontrino','Documento commerciale']){
+  const page=title+'\nProdotto generico',result=classifyText([page]);
+  assert.deepEqual(result.parts.map(p=>p.kind),['receipt'],title);
+  assert.deepEqual(result.collections,['purchases']);
+  assert.equal(result.sources[0].page,1);assert(page.includes(result.sources[0].excerpt));
+ }
+});
+test('a receipt with a negative invoice disclaimer remains only a receipt',()=>{
+ for(const footer of ['Questo documento non è valido come fattura.', 'Non costituisce una fattura.', 'Non si tratta di una fattura.', 'Documento senza valore di fattura.', 'Non ha valore fiscale di fattura.', "Non e' una fattura.", 'Non è fiscalmente valido quale fattura.', 'Non rappresenta in alcun modo una fattura.', 'Non sostituisce la fattura.']){
+  assert.deepEqual(kinds(["Ricevuta d'acquisto\nArticolo generico\n"+footer]),['receipt'],footer);
+  assert.equal(classifyText([footer]),null,footer);
+ }
+});
+test('denied mentions are excluded for other document kinds without inferring a replacement',()=>{
+ for(const page of ["Non è una ricevuta d'acquisto.", 'Non costituisce ricevuta fiscale.', 'Non è un documento commerciale.', 'Non costituisce un certificato di garanzia.', 'Non è un manuale di istruzioni.', 'Non rappresenta una dichiarazione di conformità.', 'Non si tratta di una bolletta.']){
+  assert.equal(classifyText([page]),null,page);
+ }
+});
+test('a wrapped disclaimer remains denied without treating a whole page as negative',()=>{
+ assert.deepEqual(kinds(["Ricevuta d’acquisto\nQuesto documento non è\nvalido come\nfattura."]),['receipt']);
+ assert.deepEqual(kinds(['Non costituisce\nuna\nfattura.']),[]);
+ assert.deepEqual(kinds(['Non è una fattura.\nFATTURA\nFornitura generica']),['invoice']);
+});
+test('later positive mentions on the same page and on later pages survive denied occurrences',()=>{
+ const pages=['Non costituisce fattura.\nFATTURA\nRiga di fornitura'];
+ const result=classifyText(pages);assert.deepEqual(result.parts.map(p=>p.kind),['invoice']);
+ assert(result.sources[0].excerpt.includes('FATTURA'));assert(pages[0].includes(result.sources[0].excerpt));
+ const next=classifyText(['Non è una fattura.', 'FATTURA\nFornitura generica']);
+ assert.deepEqual(next.parts.map(p=>p.kind),['invoice']);assert.equal(next.sources[0].page,2);assert.equal(next.parts[0].pageFrom,2);
+ const receipt=classifyText(["Non è una ricevuta d'acquisto.\nRicevuta fiscale\nArticolo"]);
+ assert.deepEqual(receipt.parts.map(p=>p.kind),['receipt']);assert(receipt.sources[0].excerpt.includes('Ricevuta fiscale'));
+});
+test('one denied kind does not deny the affirmative kind after it in the same sentence',()=>{
+ assert.deepEqual(kinds(["Non è una fattura, ma una ricevuta d'acquisto."]),['receipt']);
+ assert.deepEqual(kinds(['Non è una ricevuta fiscale, ma una fattura.']),['invoice']);
+ assert.deepEqual(kinds(['Non è una bolletta; Fattura']),['invoice']);
+});
+test('real mixed documents retain both kinds regardless of disclaimer page or order',()=>{
+ const receipt="Ricevuta d’acquisto\nQuesto documento non è valido come fattura.";
+ for(const pages of [[receipt,'Fattura\nFornitura'],['Fattura\nFornitura',receipt],[receipt+'\nFattura\nFornitura']]){
+  const result=classifyText(pages);assert.deepEqual(result.parts.map(p=>p.kind),['receipt','invoice']);
+  for(const source of result.sources)assert(pages[source.page-1].includes(source.excerpt));
+ }
+});
+test('unrelated negatives and validity or payment notes do not erase an invoice heading',()=>{
+ for(const page of ['FATTURA\nPagamento non eseguito.', 'Non pagato.\nFATTURA', 'Non solo fattura, ma anche assistenza.', 'Fattura non pagata', 'Fattura non valida', 'Questa fattura non costituisce prova del pagamento.']){
+  assert.deepEqual(kinds([page]),['invoice'],page);
+ }
+});
+test('negative issuance-obligation references are not new document kinds or page-wide vetoes',()=>{
+ for(const footer of ["Operazione non soggetta all'obbligo di emissione della fattura.", 'Operazioni esenti dall’obbligo di emissione di fattura.', 'Nessun obbligo di rilascio della fattura.', 'Operazione non soggetta a obbligo di presentazione di una fattura.']){
+  const page="Ricevuta d’acquisto\nNon è valido come fattura. "+footer;
+  assert.deepEqual(kinds([page]),['receipt'],footer);
+  assert.equal(classifyText([footer]),null,footer);
+  assert.deepEqual(kinds([footer+'\nFATTURA\nFornitura']),['invoice'],footer);
+ }
+ assert.equal(classifyText(["Operazione non soggetta all’obbligo di rilascio della ricevuta fiscale."]),null);
+});
