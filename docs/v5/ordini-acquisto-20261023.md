@@ -1,6 +1,6 @@
 # Ordini confermati: costo e data di acquisto — 23 ottobre 2026
 
-Implementato e verificato offline; [PR #8](https://github.com/Vincenzobrutto/Home_OS/pull/8) verso il consolidamento, in attesa di revisione e decisione di merge del committente. Nessuna integrazione o deploy eseguiti.
+Implementato e verificato offline; [PR #8](https://github.com/Vincenzobrutto/Home_OS/pull/8) verso il consolidamento, integrata su approvazione esplicita del committente, merge `30c73a29d73294ccee6a62b3f616bbb84a618e3f`. Collaudo isolato aggiornato; nessun deploy del prodotto reale.
 
 Lotto Codex, branch `codex/ordini-acquisto-20261023`, worktree dedicato `Dimora-V5-ordini-acquisto-20261023`, base remota del consolidamento `d373700`. Registrazione preventiva nel commit `86095c3`, pubblicato prima del codice. Nessun commit su main/Fase 0 o sul consolidamento. Il lotto Cestino di Claude resta separato: nessuna modifica a schema, migrazioni, documenti, accesso o letture DB.
 
@@ -24,7 +24,7 @@ Preventivi, carrelli, resi e ordini annullati sono esclusi; oltre alla classific
 
 Osservazioni manuali già deidentificate: De’Longhi Rivelia, EXAM440.35.B, ordine 14/06/2026, totale 499 EUR, spedizione zero. Il replay offline propone 499 EUR e 14/06/2026 come acquisto. Il nome, marca e modello erano stati confermati dal committente nella verifica UI. Non si inventano prezzo di riga estratto, quantità, pagamento, consegna, stanza, colore o garanzia. Le trascrizioni/test non sono una nuova estrazione del PDF né una misura live della qualità AI.
 
-Il collaudo dell’utente su 55433/3109/5179, la bozza aperta e i suoi dati non vengono modificati o riavviati da questo lotto. La versione nel browser resta quella precedente finché il committente non decide l’integrazione/avvio della PR. Il replay mock verifica anche la forma della bozza precedente, senza accedere al suo DB o originale.
+Dopo l’approvazione del committente e il merge, il collaudo su 55433/3109/5179 è stato aggiornato alla versione integrata e riaperto nel browser. La bozza e i dati persistiti sono invariati. La ripresa usa la proposta locale sulla bozza esistente, senza nuova AI o backfill. Le precedenti prove mock restano distinte da questa verifica effettiva nel browser.
 
 ## Verifiche
 
@@ -45,3 +45,17 @@ Log locali nel `work/` del task: `order-onboarding-final2.log`, `order-backend-o
 ## Vincoli e residui
 
 Zero nuove chiamate AI, zero email; nessun `.env`, DB/API/storage reale, originale privato, migrazione di prodotto o dato del collaudo persistito modificato. Nessun reset/clean, force push o rimozione di worktree. Dirty legacy del checkout Home_OS preservato. Nessun merge automatico. Il gate qualità AI generale resta non promosso; prova su documenti diversi e revisione del committente restano distinte dai test offline.
+
+## Merge approvato e aggiornamento del collaudo — 23 ottobre 2026
+
+PR #8 integrata con merge commit e controllo della punta approvata `4cb3a5d`. Hash remoto del consolidamento verificato: `30c73a29d73294ccee6a62b3f616bbb84a618e3f`; main resta `cdbb318ddb56e764ad4b111a71560e3e71c7a033`. Nessun aggiornamento al checkout sporco Home_OS; frontend avviato dal worktree dell’evolutiva, allineato al merge. Nessun file del lotto Cestino modificato.
+
+API ricompilata dal merge e copiata solo nel backend del collaudo; dist precedente conservato in una cartella di backup, senza cancellazioni. Le sole adattazioni del compilato riguardano API 3109 e vincolo DB 55433/quality_test/dimora_v5_quality_v3_test. Nessuna .env, schema o migrazione modificati/eseguiti. Configurazione temporanea frontend con root del nuovo worktree, cache/envDir dedicati, proxy fisso all’API isolata e accesso limitato alle dipendenze PDF locali. Nessun cambiamento della configurazione di prodotto.
+
+Avvio protetto verificato da log e GET: header `X-Dimora-Inspection: coffee-read-only`, provider/fetch esterni bloccati, worker e pulizia storage sospesi, richieste applicative di scrittura respinte. Nessuna richiesta POST di prova e nessun click su Salva o Avvia AI. Servizi loopback temporanei per quattro ore dall’avvio (scadenza prevista 00:05 del 24 ottobre, Europe/Rome).
+
+Nel browser integrato, stessa bozza caffè: marca/modello invariati, data ordine e acquisto proposto 14/06/2026, importo 499 EUR, scelta «Non creare una spesa», riepilogo «Nessuna nuova spesa». Screenshot locale in outputs/bozza-caffe-dopo-merge8.png del task, senza originali pubblicati nel repository.
+
+Transazioni di sola lettura sul DB isolato prima/dopo: 1 documento, 0 oggetti, 0 spese, 2 bozze e 3 job storici. Identiche impronte di documenti e originale, bozze/output/review/decisions, job e attempt/budget, oggetti e spese: nessuna nuova analisi o modifica persistente. Nel repository soltanto esiti aggregati, non valori grezzi del DB o risposte AI. Build backend e verifica UI effettuate in questo passaggio; le suite complete restano quelle già verdi della PR #8, non dichiarate come rieseguite dopo il merge a codice invariato.
+
+Il successivo aggiornamento documentale è separato dal codice già integrato e resta soggetto al flusso PR; nessun merge aggiuntivo implicito.
