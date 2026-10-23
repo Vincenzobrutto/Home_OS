@@ -6,7 +6,14 @@ Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedent
 
 Seguire i dieci rilievi dell’[audit](v5/fase0-code-audit-refactor-20261023.md), con commit distinti e prove offline. R01/R02 corretti; R03 estrazioni dagli editor e R04 validazioni/conferma affrontati per responsabilità, senza riscrittura generale. R07 test protetti completato; R08 protocollo provider separato e verificato. R10 client per dominio completato e verificato ([report](v5/fase0-api-client-domains-refactor-20261023.md)); R06 ricognizione conclusa con conservazione deliberata. R05 candidati misurato/ottimizzato ([report](v5/fase0-candidate-query-batching-20261023.md)); R03 richieste editor e presentazione intake concluso nel perimetro selezionato, collaudo completo verde ([chiusura e opportunità residue](v5/fase0-refactor-closure-20261023.md)); aggiornamenti e risultati nel solo project-status. R09 separa qui stato e archivio, preservando i contenuti storici.
 
-La chiusura del refactoring richiede riepilogo delle verifiche, limiti residui e push verificato. Creato il [branch di consolidamento](v5/dimora-v5-consolidation-branch-20261023.md) dalla versione verificata fef9d96, senza includere il dirty locale. Nessuna integrazione con main; il checkout di lavoro corrente rimane su Fase 0.
+La chiusura del refactoring richiede riepilogo delle verifiche, limiti residui e push verificato. Creato il [branch di consolidamento](v5/dimora-v5-consolidation-branch-20261023.md) dalla versione verificata fef9d96, senza includere il dirty locale. Nessuna integrazione con main. Dal 23/10 le evolutive partono da questo branch, un lotto per branch e PR ([flusso](../AGENTS.md#flusso-delle-evolutive-deciso-dal-committente-il-23-ottobre-2026)).
+
+## Evolutive proposte, in ordine
+
+1. Cestino ed eliminazione dati: [progetto con le scelte del committente del 22/10](v5/fase0-deletion-design-20261022.md), da dividere in lotti (modello/backend, pagina Cestino, backup). Solo progetto, nessun codice.
+2. DB di test dedicato e permanente, utile prima di toccare le eliminazioni.
+3. Audit npm P0 delle dipendenze ([backlog](backlog.md)).
+4. Attività del committente: verifica proposte caffè, BL-04 su telefono.
 
 ## Qualità documentale prima del pilota
 

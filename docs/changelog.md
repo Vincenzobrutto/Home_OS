@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Flusso delle evolutive fra agenti
+
+Il consolidamento diventa la base delle evolutive: un branch e una PR per lotto, prefisso dell'agente, tabella «Lotti in corso» nello [stato corrente](project-status.md), regole in [AGENTS.md](../AGENTS.md). Riportati il commit di registrazione del branch e il [progetto dell'eliminazione dati](v5/fase0-deletion-design-20261022.md) (solo documentazione, nessun codice).
+
 ## 23 ottobre 2026 — Branch di consolidamento verificato
 
 Creato su GitHub codex/dimora-v5-consolidata-20261023 dal commit verificato fef9d96, con hash remoto identico. Main, checkout locale e file sporchi preservati; nessun codice o dato modificato. [Registrazione e confini](v5/dimora-v5-consolidation-branch-20261023.md).

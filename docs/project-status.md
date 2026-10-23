@@ -4,7 +4,13 @@
 
 ## Branch e vincoli
 
-Checkout di lavoro **codex/fase0-ai-quality-v3**. Creato e verificato su GitHub **codex/dimora-v5-consolidata-20261023**, esattamente dal commit collaudato **fef9d96faeed1d932507f3527e24b76ff706fa95** ([registrazione](v5/dimora-v5-consolidation-branch-20261023.md)); il successivo commit documentale resta su Fase 0. Nessuna modifica/integrazione su main e nessun cambio del checkout locale. I file legacy sporchi e gli untracked estranei rimangono locali, esclusi dai commit.
+Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commit collaudato **fef9d96faeed1d932507f3527e24b76ff706fa95** ([registrazione](v5/dimora-v5-consolidation-branch-20261023.md)), con il commit documentale di registrazione riportato dalla Fase 0. Lavorata nel worktree dedicato `Home_OS-v5-consolidata`; il checkout `Home_OS` resta su Fase 0 con i file legacy sporchi e gli untracked estranei, esclusi dai commit. Nessuna modifica/integrazione su main. Flusso di lavoro fra agenti in [AGENTS.md](../AGENTS.md#flusso-delle-evolutive-deciso-dal-committente-il-23-ottobre-2026).
+
+### Lotti in corso
+
+| Lotto | Agente | Branch | Area/file | Stato |
+| --- | --- | --- | --- | --- |
+| — | — | — | — | Nessun lotto aperto. Prossimo proposto: Cestino ed eliminazione dati, primo lotto modello/backend, dal [progetto del 22/10](v5/fase0-deletion-design-20261022.md); richiede incarico. |
 
 Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a pagamento, DB/API/storage reale, .env, migrazione di prodotto, gold/ledger storico, quota o dato del collaudo utente modificati; nessun reset/clean, force push o rimozione worktree. I 104 StoredFile orfani non toccati.
 

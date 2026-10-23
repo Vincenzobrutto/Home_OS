@@ -8,6 +8,14 @@
 - Leggi le istruzioni della sottocartella, incluso [frontend-v5/AGENTS.md](frontend-v5/AGENTS.md). Router, TanStack Query e CSS Modules sono autorizzati nella V5. Le convenzioni [legacy](prompts/conventions.md) inline/theme valgono al legacy, non alla V5.
 - Agenti operativi: Antigravity, Claude e Codex si alternano. Il repository e la documentazione condivisa sono la sola fonte di continuità; non presumere memoria delle sessioni o chat altrui. Claude e Antigravity sono autorizzati a intervenire su `frontend-v5`, `backend-v5` e documentazione condivisa quando necessario per le attività richieste, mantenendo tutti gli altri vincoli.
 
+## Flusso delle evolutive (deciso dal committente il 23 ottobre 2026)
+
+- **Base comune:** `codex/dimora-v5-consolidata-20261023` è il punto di partenza e di arrivo di ogni evolutiva. Niente commit diretti su main né su Fase 0 (`codex/fase0-ai-quality-v3`, storica).
+- **Un branch per lotto:** crea il branch dalla punta remota del consolidamento, con prefisso dell'agente: `claude/<tema>-<aaaammgg>`, `codex/<tema>-<aaaammgg>`, `antigravity/<tema>-<aaaammgg>`. Lavora in un worktree dedicato, non nel checkout `Home_OS` che contiene il dirty legacy.
+- **Un lotto alla volta per area:** prima di iniziare controlla in [stato corrente](docs/project-status.md) la tabella «Lotti in corso». Registra lì il tuo lotto (agente, branch, file/moduli toccati) e non toccare file di un lotto altrui ancora aperto.
+- **Chiusura:** test del modulo, report in `docs/v5/`, aggiornamento di stato/roadmap/changelog, push verificato e PR verso il consolidamento. Il merge lo decide il committente; un agente diverso dall'autore può rivedere la PR su richiesta.
+- **Ripartenza:** chi riprende legge stato corrente, la riga del lotto e il suo report. Se il consolidamento è avanzato, aggiorna il proprio branch con merge (mai rebase di branch pubblicati) e senza force push.
+
 ## Prima di modificare
 
 - Verifica branch, `git status`, staging e remote; `git fetch origin`, confronto HEAD/upstream/origin/main. Non dichiarare sincronizzazione dalla sola cache locale.
