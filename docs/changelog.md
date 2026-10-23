@@ -1,6 +1,8 @@
 ## 23 ottobre 2026 — Classificazione locale di ricevute e negazioni
 
-Riconosciute le forme «ricevuta d'acquisto» con apostrofi e spazi diversi. Le menzioni esplicitamente negate e i riferimenti negativi all'obbligo di emissione non attribuiscono un tipo al documento; una vera fattura nello stesso PDF rimane riconoscibile. Build/lint e 233/233 test ordinari offline superati. Nessuna AI, accesso DB o modifica al lotto Cestino. Implementazione sul branch del lotto, non ancora integrata. [Report](v5/ricevute-negazioni-20261023.md).
+Riconosciute le forme «ricevuta d'acquisto» con apostrofi e spazi diversi. Le menzioni esplicitamente negate e i riferimenti negativi all'obbligo di emissione non attribuiscono un tipo al documento; una vera fattura nello stesso PDF rimane riconoscibile. Build/lint e 233/233 test ordinari offline superati. Correzione verificata senza AI, accesso DB o modifica al lotto Cestino; integrazione approvata descritta sotto. [Report](v5/ricevute-negazioni-20261023.md).
+
+Successiva integrazione approvata: PR #12 unita a `b74efe9`, API del collaudo isolato ricompilata e riavviata con AI/worker/salvataggi bloccati. Bozza caffè 499 EUR e nessuna spesa; audit dati prima/dopo identici. Nessun DB reale, main o lotto Claude modificato.
 
 ## 23 ottobre 2026 — Ordini confermati: proposte di costo e acquisto
 
