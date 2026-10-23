@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Caffè: prima proposta reale accettata, copertura da affinare
+
+Terzo invio autorizzato riuscito con nome breve, marca/modello/data ordine coerenti. Restano prezzo articolo non proposto pur visibile nel PDF, descrizione estesa incompleta e colore non esplicito; quantità non verificata. Analizzare offline criteri generali di copertura dei campi e varianti, senza ricavare prezzi dal totale né regole sul campione. Nessuna modifica automatica alla bozza o ai dati confermati. Controllo umano ancora aperto; nessun gate AI promosso o ulteriore invio autorizzato. [Esito e confronto](v5/fase0-coffee-third-attempt-20261023.md). Le voci sottostanti descrivono i checkpoint storici precedenti.
+
 ## 23 ottobre 2026 — Nome breve implementato offline; misura reale ancora aperta
 
 Nome breve letterale con descrizione estesa e fonti preservate, revisione obbligatoria e fingerprint sul testo completo. Il precedente rifiuto caffè non è retroattivamente attribuibile alla lunghezza; eventuale nuova misura AI resta separata e richiede consenso. Nessuna promessa di estrazione automatica delle varianti in attributi strutturati: quelle non esplicitamente validate restano nella descrizione da controllare. [Prove e limiti](v5/fase0-short-product-name-offline-20261023.md).

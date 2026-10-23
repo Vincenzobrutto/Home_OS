@@ -1,3 +1,11 @@
+## Fase 0 — terzo invio caffè riuscito, proposta da confermare, 23 ottobre 2026 (Codex)
+
+**Verificato live nel collaudo isolato**: nuovo consenso per una sola precompilazione del PDF anonimizzato caffè ad Anthropic, massimo 0,25 USD. Chiamata riuscita, costo settled **0,038369 USD**, nessun retry; totale storico tre invii 0,115147 USD. Proposti nome breve De’Longhi Rivelia, marca/modello e data ordine 14/06/2026 coerenti con il PDF; totale documento 499 EUR e spedizione zero. **1 documento, 0 oggetti, 0 spese**, bozza AI aperta per il committente. [Esito, confronto e limiti](v5/fase0-coffee-third-attempt-20261023.md).
+
+**Da rivedere**: prezzo articolo assente, descrizione AI estesa incompleta e colore non esplicito; quantità non verificata, stanza/garanzia/seriale non dedotti. Data ordine distinta da acquisto/consegna/pagamento; nessuna spesa dal totale. Nome abbreviato segnalato per revisione. Una riuscita non prova accuratezza generale né ricostruisce le vecchie risposte rifiutate. Nessuna conferma canonica o correzione manuale dell’agente.
+
+**Consegna**: UI sulla bozza nel browser integrato; servizi isolati ripristinati offline, AI disabilitata e fetch esterni bloccati, supervisore temporaneo quattro ore. Nessuna nuova modifica di prodotto o suite ripetuta: verificati UI, ledger/audit, SHA e conteggi. Main, .env, DB reale, gold/ledger sintetici, file estranei e 104 StoredFile preservati. Prossimo passo: controllo umano della bozza; omissioni prezzo/varianti in backlog, nessuna nuova chiamata autorizzata dal budget residuo.
+
 ## Fase 0 — collaudo aggiuntivo di formati e varianti, 23 ottobre 2026 (Codex)
 
 **Verificato offline sul codice prodotto esistente**: 252 combinazioni di scrittura/separatori/spaziature dei nomi; 20 varianti con prefisso uguale, identità stabili anche invertendo articoli/campi; confini 120/2000, Unicode NFC/NFD, pagine escluse e citazioni di altri articoli. Due varianti con stesso nome breve e stesso modello confermate nei due ordini, poi copie dello stesso SHA e replay da altro client: **2 oggetti, 0 spese** per scenario, fonti/varianti preservate e bozze private protette. [Casi e limiti](v5/fase0-additional-offline-tests-20261023.md).
