@@ -8,6 +8,10 @@ Seguire i dieci rilievi dell’[audit](v5/fase0-code-audit-refactor-20261023.md)
 
 La chiusura del refactoring richiede riepilogo delle verifiche, limiti residui e push verificato. Creato il [branch di consolidamento](v5/dimora-v5-consolidation-branch-20261023.md) dalla versione verificata fef9d96, senza includere il dirty locale. Nessuna integrazione con main. Dal 23/10 le evolutive partono da questo branch, un lotto per branch e PR ([flusso](../AGENTS.md#flusso-delle-evolutive-deciso-dal-committente-il-23-ottobre-2026)).
 
+## Evolutiva ordini e acquisto
+
+Lotto Codex isolato dal Cestino: [costo/data da ordine confermato](v5/ordini-acquisto-20261023.md), in verifica offline e destinato a PR verso il consolidamento. Nessuna AI, deploy o modifica al collaudo persistito. Il merge resta al committente.
+
 ## Evolutive proposte, in ordine
 
 1. Cestino ed eliminazione dati: [progetto con le scelte del committente del 22/10](v5/fase0-deletion-design-20261022.md), da dividere in lotti (modello/backend, pagina Cestino, backup). Solo progetto, nessun codice.
@@ -23,7 +27,7 @@ Una futura prova sui reali richiede documenti e dati corretti concordati, consen
 
 ## Attività di prodotto ancora distinte
 
-- Verifica del committente sulle proposte del PDF caffè: dati leggibili mancanti, varianti e stanza effettiva; nessun acquisto o garanzia dedotto automaticamente.
+- Verifica del committente sulle proposte del PDF caffè: dati leggibili mancanti, varianti e stanza effettiva; acquisto proposto secondo la nuova regola degli ordini, nessun pagamento, consegna o garanzia dedotti.
 - BL-04 su telefono reale con accesso di sviluppo concordato; conversione HEIC rinviata dal committente.
 - Campagna qualità AI/eliminazione dati Fase 0 e test DB permanente dedicato richiedono il proprio incarico. Il runner temporaneo non istituisce quel DB.
 - Sicurezza, recovery/export, qualità per famiglie e restanti attività di prodotto: consultare il backlog e le decisioni, preservati; questo indice non li dichiara completati.

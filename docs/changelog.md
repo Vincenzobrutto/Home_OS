@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Ordini confermati: proposte di costo e acquisto
+
+Ordine confermato come data di acquisto proposta e totale come costo del singolo prodotto, spedizione inclusa. Nessun pagamento, consegna o garanzia dedotti; spesa soltanto dopo scelta e conferma. Ripresa bozze senza nuova AI. [Report e verifica offline](v5/ordini-acquisto-20261023.md).
+
 ## 23 ottobre 2026 — Flusso delle evolutive fra agenti
 
 Il consolidamento diventa la base delle evolutive: un branch e una PR per lotto, prefisso dell'agente, tabella «Lotti in corso» nello [stato corrente](project-status.md), regole in [AGENTS.md](../AGENTS.md). Riportati il commit di registrazione del branch e il [progetto dell'eliminazione dati](v5/fase0-deletion-design-20261022.md) (solo documentazione, nessun codice).
