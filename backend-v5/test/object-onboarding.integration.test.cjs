@@ -170,7 +170,7 @@ test('Full onboarding: DB, real PDF parser, fake provider; atomicity, replay, pr
  });
  await t.test('V12 works invoice saves systems and one house expense atomically, replays and prevents duplicate allocation',async()=>{
   const f=require('./document-understanding-fixture.cjs'),fixture=f.works(),doc=await document(f.pdf(fixture.lines)),draft=await extracted(doc,fixture.raw),bill=draft.houseExpenses[0];assert.equal(draft.items[0].subjectKind,'system');assert.equal(draft.items[0].proposedType,'electrical');
-  const choices=draft.items.map(i=>({...create(i),type:i.proposedType??'other'})),house={itemId:bill.id,action:'create',acknowledgePossibleDuplicate:true,values:{title:'SYNTHETIC lavori casa',category:'repairs_works',amountCents:153720,spentOn:'2026-07-08',documentDate:'2026-07-08',objectRef:null},amountSelection:{mode:'candidate',candidateId:'total'}};
+  const choices=draft.items.map(i=>({...create(i,'SYNTHETIC V12 distinct '+i.fields.name.value),type:i.proposedType??'other'})),house={itemId:bill.id,action:'create',acknowledgePossibleDuplicate:true,values:{title:'SYNTHETIC lavori casa',category:'repairs_works',amountCents:153720,spentOn:'2026-07-08',documentDate:'2026-07-08',objectRef:null},amountSelection:{mode:'candidate',candidateId:'total'}};
   const beforeObjects=await db.homeObject.count({where:{homeId:h}}),beforeExpenses=await db.homeExpense.count({where:{homeId:h}});
   await assert.rejects(service.confirm(a,h,draft.id,{expectedVersion:draft.version,source:draft.snapshot,choices:[{...choices[0],expense:{action:'create',title:'dup',amountCents:153720,spentOn:'2026-07-08',supplier:null,manualItemAmount:true}}],houseExpenses:[house]},randomUUID()));assert.equal(await db.homeObject.count({where:{homeId:h}}),beforeObjects);
   await assert.rejects(service.confirm(a,h,draft.id,{expectedVersion:draft.version,source:draft.snapshot,choices:[{itemId:draft.items[0].id,action:'skip'},...choices.slice(1)],houseExpenses:[house]},randomUUID()));assert.equal(await db.homeExpense.count({where:{homeId:h}}),beforeExpenses);
@@ -230,7 +230,7 @@ test('Full onboarding: DB, real PDF parser, fake provider; atomicity, replay, pr
   let choices=[];
   if(optional!=='none'){
    draft=(await service.addItem(a,h,draft.id,{expectedVersion:draft.version},randomUUID())).draft;
-   if(optional==='create')choices=[create(draft.items[0],'SYNTHETIC optional object')];
+   if(optional==='create')choices=[create(draft.items[0],'SYNTHETIC optional object '+kind)];
    else{const target=(await objects.createObject(a,h,{name:'SYNTHETIC existing optional',type:'appliance',roomIds:[]},randomUUID())).object;choices=[{itemId:draft.items[0].id,action:'link',targets:[{id:target.ref.id,expectedVersion:target.version}],fields:{},manual:null,expense:{action:'skip'}}];}
   }
   const selection={itemId:draft.houseExpenses[0].id,action:'create',values:{title:'SYNTHETIC '+kind,category:'purchase_replacement',supplier:'SYNTHETIC supplier',amountCents:9321,spentOn:'2026-01-17',objectRef:null},amountSelection:{mode:'manual'},acknowledgePossibleDuplicate:true};

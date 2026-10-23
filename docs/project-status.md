@@ -1,4 +1,12 @@
-## Fase 0 — acconto/saldo, verifica offline parziale: requisito NON SUPERATO, 23 ottobre 2026 (Codex)
+## Fase 0 — acconto/saldo corretto offline con revisione del costo, 23 ottobre 2026 (Codex)
+
+**Implementato**: stesso insieme di schede selezionato esplicitamente per entrambe le fatture; creazione di schede omonime leggibili bloccata nel percorso fattura. Secondo costo sugli stessi oggetti da riconciliare, anche con accettazione generica dei doppioni. Conferma manuale `purchaseReview` con campo vuoto per il costo complessivo: una sola spesa aggiornata atomicamente, senza somme/differenze dedotte; importo ambiguo resta pendente. Fonti aggiuntive con versione/SHA, CAS, storico e replay durevole. Nessuna migrazione o modifica ai dati preesistenti. [Report e limiti](v5/fase0-installments-fix-offline-20261023.md).
+
+**Verificato offline**: backend build/lint e onboarding 200/200, ordinari 213/213; nuovo caso DB e regressioni Q48 **48/48**, inclusi entrambi gli ordini, ricaricamenti, concorrenza, costo dichiarato diverso dai totali, rollback, revoca/SHA/versione, viewer, set di schede incompleti, conferma automatica respinta e storico/versione singoli. Regressioni HTTP/DB **98/98** e Q15/Q22/Q48 **38/38** su API/DB/storage temporanei separati, poi fermati. Originali SHA/dimensione invariati. Frontend typecheck/lint superati; suite mock completa **836/836 (102 file)** dopo i fix, più **69/69** mirati. Esecuzione finale con due worker e retry massimo 1 per i timeout frontend noti; nessuna asserzione ridotta.
+
+**Limiti**: prova manuale con riferimenti dei due PDF anonimizzati, non OCR/AI o conferma del loro costo reale. L'utente sceglie le schede esistenti e dichiara il totale; nessuna deduplicazione universale da nomi commerciali. Fatture segmentate Q48 e registro rate/pagamenti non accorpati. Spese legacy senza fonti verificabili richiedono revisione; nessun backfill. Gate AI storico non promosso. Nessuna AI/email, DB/API/storage reale, `.env`, deploy o `main` toccati; file estranei e 104 StoredFile conservati.
+
+## Checkpoint precedente — acconto/saldo, diagnosi offline prima della correzione, 23 ottobre 2026 (Codex)
 
 **Verificato / nessun fix di prodotto**: i due documenti anonimizzati indicati dal committente riguardano gli stessi climatizzatori. Con inserimento manuale e collegamento esplicito, acconto→saldo e saldo→acconto mantengono tre schede e collegano entrambe le fonti; replay, copie SHA e privacy protetti. La seconda spesa può restare pendente, senza duplicazione. [Report, riproduzione e limiti](v5/fase0-installments-offline-20261023.md).
 

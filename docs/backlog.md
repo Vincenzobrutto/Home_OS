@@ -783,6 +783,10 @@ Caso conformità elettrica classificato unsupported con job succeeded, non error
 
 Residuo distinto dall’implementazione offline: rivedere le ambiguità della [matrice](v5/fase0-document-family-matrix-v4-20261023.json) prima di nuove regole; valutare la [prossima misura sintetica](v5/fase0-next-measure-proposal-20261023.md) soltanto con nuova autorizzazione e codice congelato. Le vecchie risposte grezze Q20/Q29/Q30 non sono disponibili: nessuna diagnosi certa o metrica ricostruita. Fatture che proseguono su più pagine e pagine non fattura restano pendenti da verificare. Test su telefono fisico, HEIC, eliminazione dei dati e DB di test permanente restano fuori incarico. I 104 StoredFile orfani restano conservati senza cancellazioni.
 
-## Fase 0 — acconto/saldo stessi apparati (23 ottobre 2026, verificato offline, aperto)
+## Fase 0 — acconto/saldo stessi apparati (23 ottobre 2026, diagnosi storica)
 
 Riconciliazione acquisto/intervento con più documenti/rate non implementata: collegamento manuale agli stessi oggetti funziona, ma una nuova fonte con SHA diverso può creare oggetti duplicati se si sceglie crea; il secondo totale può diventare seconda spesa senza riconciliazione. Collegare due SHA alla stessa spesa è bloccato. Non rimuovere la protezione fonti per aggirare il limite. Definire costo complessivo vs rate e relazione con più apparati; rivedere il costo effettivo col committente. [Diagnostica e test](v5/fase0-installments-offline-20261023.md). Nessuna chiamata AI autorizzata.
+
+### Acconto/saldo — correzione successiva verificata offline
+
+Il caso manuale è corretto: stessi oggetti selezionati, costo unico con totale esplicitamente confermato, ricaricamenti e privacy protetti. [Correzione e limiti](v5/fase0-installments-fix-offline-20261023.md). Restano distinti: costo reale da confermare, OCR dei PDF raster, registro rate/pagamenti, riconciliazione generica di interventi successivi/legacy e riconoscimento universale di identità senza matricola. Nessuna nuova campagna AI autorizzata.

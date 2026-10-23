@@ -61,15 +61,22 @@ export function onboardingConfirmation(input: unknown, today: string) {
   return {...(contacts.length?{contacts}:{}),...(r.documentOnly?{documentOnly:true as const}:{}),...(manualPurchaseTotalCents!==undefined?{manualPurchaseTotalCents}:{}),...(houseExpenses.length?{houseExpenses}:{}), expectedVersion: version(r.expectedVersion), source: { documentId: uuid(source.documentId), documentVersion: version(source.documentVersion), sha256: source.sha256 }, choices };
 }
 
+export function purchaseReview(input:unknown){
+ if(input===undefined)return undefined;
+ const r=object(input,['mode','confirmedTotalCents']);
+ if(r.mode!=='confirmed_total'&&r.mode!=='same_purchase')throw invalid('Conferma il rapporto tra fatture e il costo complessivo.');
+ return {mode:r.mode as 'confirmed_total'|'same_purchase',confirmedTotalCents:amountCents(r.confirmedTotalCents)};
+}
 function houseChoices(input:unknown,expectedVersion:unknown,today:string){
  if(input===undefined)return [];if(!Array.isArray(input)||input.length>10)throw invalid();const ids=new Set<string>();
- return input.map(raw=>{const r=object(raw,['itemId','action','values','amountSelection','expenseId','expectedExpenseVersion','acknowledgePossibleDuplicate']),itemId=text(r.itemId,80);if(!/^[A-Za-z0-9_-]{1,80}$/.test(itemId)||ids.has(itemId))throw invalid();ids.add(itemId);
-  if(r.action==='skip'||r.action==='defer'){object(r,['itemId','action']);return {itemId,action:r.action as 'skip'|'defer',confirmation:null,acknowledgePossibleDuplicate:false};}
+ return input.map(raw=>{const r=object(raw,['itemId','action','values','amountSelection','expenseId','expectedExpenseVersion','acknowledgePossibleDuplicate','purchaseReview']),itemId=text(r.itemId,80);if(!/^[A-Za-z0-9_-]{1,80}$/.test(itemId)||ids.has(itemId))throw invalid();ids.add(itemId);
+  if(r.action==='skip'||r.action==='defer'){object(r,['itemId','action']);return {itemId,action:r.action as 'skip'|'defer',confirmation:null,purchaseReview:undefined,acknowledgePossibleDuplicate:false};}
   if(r.action!=='create'&&r.action!=='link_existing'||r.acknowledgePossibleDuplicate!==undefined&&typeof r.acknowledgePossibleDuplicate!=='boolean')throw invalid();
-  object(r,r.action==='create'?['itemId','action','values','amountSelection','acknowledgePossibleDuplicate']:['itemId','action','expenseId','expectedExpenseVersion']);
+  object(r,r.action==='create'?['itemId','action','values','amountSelection','acknowledgePossibleDuplicate','purchaseReview']:['itemId','action','expenseId','expectedExpenseVersion','purchaseReview']);
+  const review=purchaseReview(r.purchaseReview);if(review&&(r.action==='create'?review.mode!=='confirmed_total':review.mode!=='same_purchase'))throw invalid();
   const confirmation=confirmBody({expectedVersion,mode:r.action,...(r.action==='create'?{values:r.values,amountSelection:r.amountSelection}:{expenseId:r.expenseId,expectedExpenseVersion:r.expectedExpenseVersion})},today);
   if(confirmation.mode==='create'&&(confirmation.values.workId||!['electricity','gas','water','internet_services','maintenance','repairs_works','purchase_replacement'].includes(String(confirmation.values.category))))throw invalid('Scegli una categoria della casa; i lavori restano gestiti nella sezione Spese.');
-  return {itemId,action:r.action as 'create'|'link_existing',confirmation,acknowledgePossibleDuplicate:r.acknowledgePossibleDuplicate===true};
+  return {itemId,action:r.action as 'create'|'link_existing',confirmation,...(review?{purchaseReview:review}:{}),acknowledgePossibleDuplicate:r.acknowledgePossibleDuplicate===true};
  });
 }
 export type HouseExpenseChoice=NonNullable<ReturnType<typeof onboardingConfirmation>['houseExpenses']>[number];

@@ -11,7 +11,7 @@ const {onboardingCandidates}=require('../dist/object-onboarding/candidates');
 const code=expected=>e=>(e.getResponse?.().code??e.code)===expected;
 const hash=s=>createHash('sha256').update(s).digest('hex');
 
-test('Acconto/saldo: manual linking, replay, source copies and diagnostic of missing reconciliation',async t=>{
+test('Acconto/saldo: manual purchase reconciliation, replay, source copies and privacy',async t=>{
  const rawUrl=process.env.QUALITY_V3_DATABASE_URL,url=new URL(rawUrl??'invalid:');
  assert.equal(url.protocol,'postgresql:');assert.equal(url.hostname,'127.0.0.1');assert.equal(url.port,'55433');assert.equal(url.pathname,'/dimora_v5_quality_v3_test');assert.equal(url.username,'quality_test');
  const db=new PrismaClient({datasources:{db:{url:rawUrl}}});await db.$connect();t.after(()=>db.$disconnect());
@@ -34,7 +34,7 @@ test('Acconto/saldo: manual linking, replay, source copies and diagnostic of mis
  const body=(d,choices,houseExpenses)=>({expectedVersion:d.version,source:d.snapshot,choices,...(houseExpenses?{houseExpenses}:{})});
  const create=d=>d.items.map((x,i)=>({itemId:x.id,action:'create',name:names[i],type:'appliance',unitNames:[],roomIds:[],fields:{},manual:null,expense:{action:'skip'},confirmHouseholdObject:true,acknowledgeExistingSource:false}));
  async function links(d,ids){return Promise.all(d.items.map(async(x,i)=>({itemId:x.id,action:'link',targets:[{id:ids[i],expectedVersion:(await db.homeObject.findUniqueOrThrow({where:{id:ids[i]}})).version}],fields:{},manual:null,expense:{action:'skip'}})));}
- const cost=(d,s)=>({itemId:d.houseExpenses[0].id,action:'create',values:{title:s.kind+' climatizzatori',category:'repairs_works',amountCents:210450,spentOn:s.date,documentDate:s.date,documentNumber:s.number,supplier:'Fornitore collaudo'},amountSelection:{mode:'manual'}});
+ const cost=(d,s)=>({itemId:d.houseExpenses[0].id,action:'create',values:{title:s.kind+' climatizzatori',category:'repairs_works',amountCents:210450,spentOn:s.date,documentDate:s.date,documentNumber:s.number,supplier:'Fornitore collaudo'},amountSelection:{mode:'manual'},purchaseReview:{mode:'confirmed_total',confirmedTotalCents:210450}});
  const pending=d=>[{itemId:d.houseExpenses[0].id,action:'defer'}];
  for(const order of [sources,[...sources].reverse()])await t.test(order.map(s=>s.kind).join(' -> '),async t=>{
   const h=await home(),first=await draft(h,order[0]),second=await draft(h,order[1]);
@@ -70,18 +70,64 @@ test('Acconto/saldo: manual linking, replay, source copies and diagnostic of mis
    const e=await db.homeExpense.findFirstOrThrow({where:{homeId:h}}),c={itemId:current.houseExpenses[0].id,action:'link_existing',expenseId:e.id,expectedExpenseVersion:e.version};
    await assert.rejects(svc.confirm(a.id,h,current.id,body(current,[],[c]),randomUUID()),code('expense_document_conflict'));assert.deepEqual(await counts(h),{objects:3,expenses:1});
   });
-  await t.test('DIAGNOSTIC: second invoice full amount is accepted as a separate cost; reconciliation requirement NOT MET',async()=>{
-   await svc.confirm(a.id,h,current.id,body(current,[],[cost(current,order[1])]),randomUUID());assert.deepEqual(await counts(h),{objects:3,expenses:2});
-   const e=await db.homeExpense.aggregate({where:{homeId:h},_sum:{amountCents:true}});assert.equal(e._sum.amountCents,420900); // Observed behavior, NOT an approved total for the real purchase.
+  await t.test('a second total, including an acknowledged duplicate, is blocked pending purchase review',async()=>{
+   const attempt=cost(current,order[1]);attempt.acknowledgePossibleDuplicate=true;
+   await assert.rejects(svc.confirm(a.id,h,current.id,body(current,[],[attempt]),randomUUID()),code('onboarding_purchase_review'));assert.deepEqual(await counts(h),{objects:3,expenses:1});
   });
-  await t.test('both files reloaded after both costs exist cannot create any additional cost',async()=>{
-   for(const s of order){const copy=await draft(h,s);await assert.rejects(svc.confirm(a.id,h,copy.d.id,body(copy.d,await links(copy.d,ids),[cost(copy.d,s)]),randomUUID()),code('onboarding_expense_exists'));assert.deepEqual(await counts(h),{objects:3,expenses:2});}
+  let reviewedBody,reviewedKey;
+  await t.test('explicit human total is not inferred from invoice amounts; one cost even concurrently',async()=>{
+   const e=await db.homeExpense.findFirstOrThrow({where:{homeId:h}});
+   const c={itemId:current.houseExpenses[0].id,action:'link_existing',expenseId:e.id,expectedExpenseVersion:e.version,purchaseReview:{mode:'same_purchase',confirmedTotalCents:199900}};
+   reviewedBody=body(current,[],[c]);reviewedKey=randomUUID();
+   const results=await Promise.all([svc.confirm(a.id,h,current.id,reviewedBody,reviewedKey),svc.confirm(a.id,h,current.id,reviewedBody,reviewedKey)]);
+   assert(results.every(x=>x.result.newExpenses===0));assert.deepEqual(await counts(h),{objects:3,expenses:1});
+   const saved=await db.homeExpense.findUniqueOrThrow({where:{id:e.id}});assert.equal(saved.amountCents,199900);assert.equal(saved.amountOrigin,'user_declared');assert.equal(saved.economicProvenance._purchaseReview.sources.length,2);assert.equal(saved.version,e.version+1);assert.equal(saved.economicProvenance.amountCents.origin,'user_declared');assert.deepEqual(saved.economicProvenance.amountCents.sources,[]);
+   const other=new PrismaClient({datasources:{db:{url:rawUrl}}});try{await services(other).svc.confirm(a.id,h,current.id,reviewedBody,reviewedKey);}finally{await other.$disconnect();}assert.equal(await db.expenseHistory.count({where:{expenseId:e.id,kind:'updated'}}),1);
+  });
+  await t.test('both files reloaded after reconciliation cannot create any additional cost',async()=>{
+   for(const s of order){const copy=await draft(h,s);await assert.rejects(svc.confirm(a.id,h,copy.d.id,body(copy.d,await links(copy.d,ids),[cost(copy.d,s)]),randomUUID()),code('onboarding_expense_exists'));assert.deepEqual(await counts(h),{objects:3,expenses:1});}
+  });
+  await t.test('source SHA/version, viewer and missing amount deny reconciliation replay/writes',async()=>{
+   for(const change of [{sha256:'e'.repeat(64)},{version:2}]){await db.documentVersion.update({where:{id:first.doc.original.id},data:change});await assert.rejects(svc.confirm(a.id,h,current.id,reviewedBody,reviewedKey));await db.documentVersion.update({where:{id:first.doc.original.id},data:{sha256:first.doc.original.sha256,version:1}});}
+   await db.homeMembership.updateMany({where:{accountId:a.id,homeId:h},data:{role:'viewer'}});await assert.rejects(svc.confirm(a.id,h,current.id,reviewedBody,reviewedKey));await db.homeMembership.updateMany({where:{accountId:a.id,homeId:h},data:{role:'owner'}});
+   const missing=structuredClone(reviewedBody);delete missing.houseExpenses[0].purchaseReview.confirmedTotalCents;await assert.rejects(async()=>svc.confirm(a.id,h,current.id,missing,randomUUID()));assert.deepEqual(await counts(h),{objects:3,expenses:1});
+  });
+  await t.test('primary source revocation denies reconciliation replay from the second document',async()=>{
+   await db.document.update({where:{id:first.doc.id},data:{uploaderId:b.id}});await assert.rejects(svc.confirm(a.id,h,current.id,reviewedBody,reviewedKey));await db.document.update({where:{id:first.doc.id},data:{uploaderId:a.id}});
   });
   await t.test('revoked source denies old confirmation replay',async()=>{
-   await db.document.update({where:{id:first.doc.id},data:{uploaderId:b.id}});await assert.rejects(svc.confirm(a.id,h,first.d.id,firstBody,key));assert.deepEqual(await counts(h),{objects:3,expenses:2});
+   await db.document.update({where:{id:first.doc.id},data:{uploaderId:b.id}});await assert.rejects(svc.confirm(a.id,h,first.d.id,firstBody,key));assert.deepEqual(await counts(h),{objects:3,expenses:1});
   });
  });
- await t.test('DIAGNOSTIC: manual create on a distinct invoice can duplicate the same declared objects',async()=>{
-  const h=await home();for(const s of sources){const {d}=await draft(h,s);await svc.confirm(a.id,h,d.id,body(d,create(d),pending(d)),randomUUID());}assert.deepEqual(await counts(h),{objects:6,expenses:0}); // Does not claim automatic creation would pass.
+ await t.test('new invoice cannot create duplicate named objects: transaction rolls back',async()=>{
+  const h=await home(),first=await draft(h,sources[0]);await svc.confirm(a.id,h,first.d.id,body(first.d,create(first.d),pending(first.d)),randomUUID());
+  const second=await draft(h,sources[1]);await assert.rejects(svc.confirm(a.id,h,second.d.id,body(second.d,create(second.d),pending(second.d)),randomUUID()),code('onboarding_invoice_object_review'));assert.deepEqual(await counts(h),{objects:3,expenses:0});
+ });
+ await t.test('same-purchase confirmation cannot bypass a different or incomplete object set or automatic review',async()=>{
+  const h=await home(),first=await draft(h,sources[0]);const saved=await svc.confirm(a.id,h,first.d.id,body(first.d,create(first.d),[cost(first.d,sources[0])]),randomUUID()),ids=saved.draft.items.map(x=>x.decision.objects[0].id);
+  const second=await draft(h,sources[1]),choices=await links(second.d,ids);choices[2]={itemId:second.d.items[2].id,action:'defer'};
+  const partial=(await svc.confirm(a.id,h,second.d.id,body(second.d,choices,pending(second.d)),randomUUID())).draft,e=await db.homeExpense.findFirstOrThrow({where:{homeId:h}});
+  const choice={itemId:partial.houseExpenses[0].id,action:'link_existing',expenseId:e.id,expectedExpenseVersion:e.version,purchaseReview:{mode:'same_purchase',confirmedTotalCents:199900}};
+  await assert.rejects(svc.confirm(a.id,h,partial.id,body(partial,[],[choice]),randomUUID()),code('onboarding_purchase_objects_review'));
+  await assert.rejects(svc.confirm(a.id,h,partial.id,body(partial,[],[choice]),randomUUID(),true),code('onboarding_purchase_review'));assert.deepEqual(await counts(h),{objects:3,expenses:1});assert.equal((await db.homeExpense.findUniqueOrThrow({where:{id:e.id}})).amountCents,210450);
+ });
+ await t.test('two distinct documents confirmed concurrently cannot create the same named objects twice',async()=>{
+  const h=await home(),x=await draft(h,sources[0]),y=await draft(h,sources[1]);
+  const results=await Promise.allSettled([x,y].map(z=>svc.confirm(a.id,h,z.d.id,body(z.d,create(z.d),pending(z.d)),randomUUID())));assert.equal(results.filter(x=>x.status==='fulfilled').length,1);assert.deepEqual(await counts(h),{objects:3,expenses:0});
+ });
+ await t.test('Italian accented names and case cannot bypass the repeated-object guard',async()=>{
+  const h=await home(),x=await draft(h,sources[0]),y=await draft(h,sources[1]);
+  const first=create(x.d).map((c,i)=>({...c,name:'Unità climatizzazione '+i})),second=create(y.d).map((c,i)=>({...c,name:'UNITÀ CLIMATIZZAZIONE '+i}));
+  await svc.confirm(a.id,h,x.d.id,body(x.d,first,pending(x.d)),randomUUID());await assert.rejects(svc.confirm(a.id,h,y.d.id,body(y.d,second,pending(y.d)),randomUUID()),code('onboarding_invoice_object_review'));assert.deepEqual(await counts(h),{objects:3,expenses:0});
+ });
+ await t.test('equal invoice totals still require explicit review and one versioned cost, not two',async()=>{
+  const h=await home(),first=await draft(h,sources[0]);const one=await svc.confirm(a.id,h,first.d.id,body(first.d,create(first.d),[cost(first.d,sources[0])]),randomUUID()),ids=one.draft.items.map(x=>x.decision.objects[0].id);
+  const second=await draft(h,sources[1]),linked=(await svc.confirm(a.id,h,second.d.id,body(second.d,await links(second.d,ids),pending(second.d)),randomUUID())).draft,e=await db.homeExpense.findFirstOrThrow({where:{homeId:h}});
+  await svc.confirm(a.id,h,linked.id,body(linked,[],[{itemId:linked.houseExpenses[0].id,action:'link_existing',expenseId:e.id,expectedExpenseVersion:e.version,purchaseReview:{mode:'same_purchase',confirmedTotalCents:210450}}]),randomUUID());
+  const saved=await db.homeExpense.findUniqueOrThrow({where:{id:e.id}});assert.equal(saved.amountCents,210450);assert.equal(saved.version,e.version+1);assert.deepEqual(await counts(h),{objects:3,expenses:1});assert.equal(await db.expenseHistory.count({where:{expenseId:e.id,kind:'updated'}}),1);
+ });
+ await t.test('an unconfirmed acconto amount rolls back objects, cost and confirmation receipt',async()=>{
+  const h=await home(),x=await draft(h,sources[0]),c=cost(x.d,sources[0]),key=randomUUID();delete c.purchaseReview;
+  await assert.rejects(svc.confirm(a.id,h,x.d.id,body(x.d,create(x.d),[c]),key),code('onboarding_purchase_amount_review'));assert.deepEqual(await counts(h),{objects:0,expenses:0});assert.equal(await db.objectOnboardingRequest.count({where:{accountId:a.id,key}}),0);
  });
 });

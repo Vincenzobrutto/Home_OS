@@ -1596,3 +1596,7 @@ Adattatore al modello con preparazione/decoding, evidenze, prezzi cache e politi
 ### 2026-10-23 — verifica offline acconto/saldo
 
 Aggiunti collaudo DB isolato e diagnostica in entrambi gli ordini, replay, ricaricamenti e privacy. Documentati i limiti di identità tra fonti diverse e riconciliazione economica; nessun cambiamento al prodotto o AI live. [Report](v5/fase0-installments-offline-20261023.md).
+
+### 2026-10-23 — acconto/saldo, revisione esplicita e costo unico
+
+Bloccati nuovi oggetti omonimi e seconda spesa non riconciliata nel percorso fattura. Nuova conferma manuale dello stesso acquisto, con costo complessivo inserito esplicitamente e un solo aggiornamento canonico/storico. Ricaricamenti e fonte privata/versione/SHA protetti; importi ambigui lasciati pendenti. [Correzione, test e limiti](v5/fase0-installments-fix-offline-20261023.md).
