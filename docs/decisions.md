@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Esempi come regressioni, non formati obbligatori
+
+Le regole documentali dipendono dal ruolo del dato e dalla sua fonte, non da cliente, venditore, prezzo o impaginazione di esempio. Condividere i ruoli, ammettere varianti dimostrate e colonne riordinate; non moltiplicare/ripartire importi o sostituire ruoli delle date. Ambiguità del singolo campo conserva le altre identità leggibili e richiede revisione. Le nuove varianti devono avere controesempi di pagina/riga/valuta/ruolo e verifica di privacy/idempotenza. Nessuna promessa di copertura universale o promozione del gate da test offline. [Audit e prove](v5/fase0-general-rules-offline-20261023.md).
+
 ## 23 ottobre 2026 — Un ordine non prova acquisto concluso o pagamento
 
 Separare `orderDate` da acquisto e consegna; la sola data ordine non avvia garanzia né spesa automatica. La spedizione resta fatto documentale, senza allocazione nei prezzi o costo aggiuntivo; totale ordine e prezzo oggetto non sono intercambiabili. Consentire costo/data dichiarati nella revisione manuale, senza certificarne il pagamento. Vecchie proposte con ruolo ordine riclassificate solo in lettura; nessun backfill sui dati confermati. Prompt v28 candidato non misurato live, gold e soglie invariati; citazioni e ruoli restano obbligatori. [Esiti e limiti](v5/fase0-orders-offline-20261023.md).

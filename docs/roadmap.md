@@ -1,3 +1,7 @@
+## Fase 0 — generalità delle regole prima di nuove misure AI, 23 ottobre 2026
+
+Regole di acquisto riviste per ruoli semantici, varianti e colonne riordinate, mantenendo controlli su attribuzione e fonti. [Report](v5/fase0-general-rules-offline-20261023.md). Test di contratto e DB isolato non dimostrano accuratezza su tutti i documenti; futuro confronto sui reali richiede perimetro e consenso distinti. Nessuna nuova campagna o deploy implicito.
+
 ## Fase 0 — ordini reali, correzioni offline del 23 ottobre 2026
 
 Implementata distinzione data ordine/acquisto/consegna e spedizione/prezzo/totale, con revisione economica esplicita. [Report](v5/fase0-orders-offline-20261023.md). La lettura automatica delle due scansioni non è verificata: il worker locale non trova testo. Nessuna campagna o promozione del gate AI; pagamento e anno di consegna restano da confermare dove non documentati.

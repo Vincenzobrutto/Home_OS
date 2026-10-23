@@ -1,3 +1,4 @@
+import { dateLabels, dateOnly } from './role-evidence';
 import type { ProductEvidenceContext, ProductSource } from './domain';
 import { printedCents, printedDates } from '../economy/document-evidence';
 import { purchaseDateSource } from './invoice-evidence';
@@ -30,7 +31,8 @@ export function verifiedInvoiceLine(context: ProductEvidenceContext, name: strin
   if (ambiguous || matches.length !== 1) return null;
   // Only an explicit purchase label; an issue, delivery or payment date cannot fill it.
   const dates = lines.flatMap(line => {
-    if(!/^(?:data\s+(?:di\s+)?acquisto|purchase\s+date)\s*[:–-]?\s*(?:\d{4}-\d{2}-\d{2}|\d{1,2}([/.-])\d{1,2}\1\d{4}|\d{1,2}\s+[a-zà]+\s+\d{4})$/iu.test(normalize(line)))return [];
+    const label=dateLabels.purchase.exec(normalize(line));
+    if(!label||!dateOnly(normalize(line).slice(label[0].length)))return [];
     const values = printedDates(line);
     return values.length === 1 && purchaseDateSource(line, values[0]) ? [{ value: values[0], source: source(line.trim()) }] : [];
   });

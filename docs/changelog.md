@@ -1,3 +1,7 @@
+## Fase 0: regole generali dei documenti, offline — 23 ottobre 2026
+
+Rimossi vincoli su poche diciture e ordine fisso delle colonne per gli acquisti: ruoli condivisi, sinonimi e colonne riordinabili con valuta e prezzo stampati. Rafforzata attribuzione della riga e distinzione data fattura/acquisto; dati ambigui richiedono revisione. Nessuna regola per nomi/prezzi del committente, AI o modifica ai dati reali. [Audit e verifiche](v5/fase0-general-rules-offline-20261023.md).
+
 ## Fase 0: ordini Samsung/caffè, verifica offline — 23 ottobre 2026
 
 Separati ordine, acquisto e consegna; la data dell’ordine non propone garanzia o spesa automatica. Spedizione esplicita come dato documentale, totale ordine distinto dal prezzo oggetto; prodotti ripetuti tra pagine richiedono revisione. Prompt candidato v28, nessuna AI o modifica ai dati reali. [Report e verifiche](v5/fase0-orders-offline-20261023.md).

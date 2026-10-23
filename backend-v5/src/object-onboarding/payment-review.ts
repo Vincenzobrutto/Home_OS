@@ -1,3 +1,4 @@
+import { orderDateSource, purchaseDateSource } from './invoice-evidence';
 import type { ProductEvidenceContext, ProductExtraction } from './domain';
 import type { Snapshot } from '../review/provider';
 
@@ -16,10 +17,12 @@ export function paymentReview(context: ProductEvidenceContext): PaymentReview | 
 /** Old drafts lack this source check and cannot authorize financial automation. */
 export function requiresPaymentReview(output: ProductExtraction, snapshot?: Snapshot): boolean {
   const check = output.paymentReview;
-  if (output.documentKind === 'order_confirmation' || output.items.some(item => !!item.fields.orderDate || /ordine|order/iu.test(item.fields.purchaseDate?.source.excerpt ?? ''))) return true;
+  if (output.documentKind === 'order_confirmation' || output.items.some(item => !!item.fields.orderDate || !!item.fields.purchaseDate && !!orderDateSource(item.fields.purchaseDate.source.excerpt, item.fields.purchaseDate.value))) return true;
+  if (output.items.some(item => item.fields.purchaseDate && !purchaseDateSource(item.fields.purchaseDate.source?.excerpt ?? '', item.fields.purchaseDate.value))) return true;
   if (check?.reason === 'split_payment') return true;
   const financial = ['purchase_document', 'order_confirmation', 'utility_bill'].includes(output.documentKind) || !!output.houseExpenses?.length || !!output.purchaseTotal || output.items.some(item => !!item.purchaseAmount);
   if (!financial) return false;
+  if (output.reviewWarnings?.some(w => /(?:^|:)purchaseAmount$/u.test(w.field))) return true;
   return !check || check.policy !== PAYMENT_REVIEW_POLICY || check.reason !== null || output.evidenceMode !== 'text' ||
     !!snapshot && (check.documentId !== snapshot.documentId || check.documentVersion !== snapshot.documentVersion || check.documentSha256 !== snapshot.documentSha256);
 }

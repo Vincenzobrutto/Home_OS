@@ -1,3 +1,4 @@
+import { purchaseGrandTotal, labelledProductAmount, columnProductRow } from './role-evidence';
 import { invoiceCoverage, assertInvoicePages, type InvoiceCoverage } from './invoice-coverage';
 import { verifiedInvoiceLine, type InvoiceLine } from './invoice-lines';
 import { paymentReview, type PaymentReview } from './payment-review';
@@ -154,11 +155,15 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       let purchaseAmount: ProductItem['purchaseAmount'] = null;
       if (r.purchaseAmount !== undefined && r.purchaseAmount !== null) {try{
         const price = object(r.purchaseAmount, ['amountCents', 'evidence']), source = evidence(price.evidence, context);
-        if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !(/(?:totale\s+riga|importo\s+riga|prezzo\s+articolo|line\s+total)/iu.test(source.excerpt)||tablePurchaseAmount(source.excerpt,fields.name.value)===price.amountCents||line&&line.amountCents===price.amountCents&&normalize(source.excerpt).includes(normalize(line.rowText))) || !(line&&line.amountCents===price.amountCents&&normalize(source.excerpt).includes(normalize(line.rowText))||printedCents(source.excerpt).includes(Number(price.amountCents)))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
+        if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !(labelledProductAmount(source.excerpt,fields.name.value,Number(price.amountCents))||tablePurchaseAmount(source.excerpt,fields.name.value)===price.amountCents||line&&line.amountCents===price.amountCents&&normalize(source.excerpt).includes(normalize(line.rowText))) || !(line&&line.amountCents===price.amountCents&&normalize(source.excerpt).includes(normalize(line.rowText))||printedCents(source.excerpt).includes(Number(price.amountCents)))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
         if(line && price.amountCents!==line.amountCents)throw new ProductEvidenceFailure('purchaseTotal','total');
         purchaseAmount = { amountCents: Number(price.amountCents), source:line?line.source:source };
       }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:sourceIndex+':purchaseAmount',reason:'unverified'});}}
       if(line && r.purchaseAmount == null)purchaseAmount={amountCents:line.amountCents,source:line.source};
+      const quotedRow=quantity&&fields.name?columnProductRow(quantity.source.excerpt,fields.name.value):undefined;
+      if (['purchase_document','order_confirmation'].includes(String(row.documentKind)) && quotedRow && quotedRow.totalCents===null && !purchaseAmount) {
+        needsReview=true;understanding.warnings.push({field:sourceIndex+':purchaseAmount',reason:'unverified'});
+      }
       const invoiceLine = line && purchaseAmount?.amountCents===line.amountCents && quantity?.value===line.quantity ? line.invoiceLine : null;
       if(invoiceLine){if(invoiceLines.has(invoiceLine.key))throw new ProviderFailure('object_onboarding_repeated_item');invoiceLines.add(invoiceLine.key);}
       items.push({...(invoiceLine?{invoiceLine}:{}),...(objectType?{objectType}:{}),...(r.subjectKind?{subjectKind:r.subjectKind as 'product'|'system'}:{}), id, fingerprint,...(understanding.documentInfo?{sourceIndex}:{}), fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
@@ -167,7 +172,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {try{
       const total = object(row.purchaseTotal, ['amountCents', 'evidence']);
       const source = evidence(total.evidence, context);
-      if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*(?:prezzo\s+totale|totale)(?:\s+(?:documento(?:\s+corrente)?|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
+      if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !purchaseGrandTotal(source.excerpt, Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
       purchaseTotal = { amountCents: Number(total.amountCents), source };
     }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}}
     if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents){needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}

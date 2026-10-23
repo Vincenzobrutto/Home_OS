@@ -1,13 +1,12 @@
+import { dateLabels, dateOnly, columnProductRow } from './role-evidence';
 import { printedDates, printedCents } from '../economy/document-evidence';
 
 const normalized = (text: string) => text.normalize('NFC').replace(/\s+/gu, ' ').trim();
-const orderLabel = /^(?:(?:il tuo )?ordine\s+(?:del|effettuato il)|data\s*(?:(?:di|d[’'])\s*)?ordine|order date)\s*[:–-]?\s*/iu;
-const purchaseLabel = /^(?:ricevuta\s+d[’']acquisto|data\s*(?:(?:di|d[’'])\s*)?(?:acquisto|fattura)|acquistato il|purchase date)\s*[:–-]?\s*/iu;
 const conflictingLabel = /(?:consegna|consegnato|prevista|previsto|produzione|prodotto il|scadenza|pagamento|spedizione|manufactur|delivery|payment|due date)/iu;
 
 /** Date-only citations need an unambiguous purchase label on the same original page. */
 export function purchaseDateSource(excerpt: string, value: string, page?: string, role: 'purchase' | 'order' = 'purchase'): string | null {
-  const labelPattern = role === 'order' ? orderLabel : purchaseLabel;
+  const labelPattern = dateLabels[role];
   const dates = printedDates(excerpt);
   if (dates.length !== 1 || dates[0] !== value || conflictingLabel.test(excerpt)) return null;
   const valid = (candidate: string) => {
@@ -18,7 +17,7 @@ export function purchaseDateSource(excerpt: string, value: string, page?: string
   };
   if (valid(excerpt)) return excerpt;
   // Do not borrow a label from elsewhere on the page or from a different date occurrence.
-  if (!page || !/^(?:\d{4}-\d{2}-\d{2}|\d{1,2}([/.-])\d{1,2}\1\d{4}|\d{1,2}\s+[a-zà]+\s+\d{4})$/iu.test(normalized(excerpt))) return null;
+  if (!page || !dateOnly(excerpt)) return null;
   const lines = page.split(/\r?\n/u).map(line => line.trim());
   const occurrences: string[] = [];
   for (let i = 0; i < lines.length; i++) {
@@ -39,6 +38,7 @@ export function receiptPurchaseDate(excerpt: string, value: string): boolean {
 }
 /** A quantity column is usable only when a unique product row can be attributed. */
 export function tableQuantity(excerpt:string, productName:string):number|null {
+ const columns=columnProductRow(excerpt,productName);if(columns!==undefined)return columns?.quantity??null;
  const described=descriptionRows(excerpt,productName);if(described)return described.quantity;
  const clean=(s:string)=>s.normalize('NFC').replace(/\s+/gu,' ').trim();
  const lines=excerpt.split(/\r?\n/u).map(line=>line.trim()).filter(Boolean);
@@ -74,6 +74,6 @@ function descriptionRows(excerpt:string,productName:string):{quantity:number;tot
  const matches=rows.filter(r=>r.name.includes(normalized(productName)));
  return matches.length===1?{quantity:matches[0].quantity,totalCents:matches[0].totalCents}:null;
 }
-export function tablePurchaseAmount(excerpt:string,productName:string):number|null{return descriptionRows(excerpt,productName)?.totalCents??null;}
+export function tablePurchaseAmount(excerpt:string,productName:string):number|null{const columns=columnProductRow(excerpt,productName);return (columns===undefined?descriptionRows(excerpt,productName):columns)?.totalCents??null;}
 
 export function orderDateSource(excerpt: string, value: string, page?: string): string | null { return purchaseDateSource(excerpt, value, page, 'order'); }

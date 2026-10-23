@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Formati generali: copertura dichiarata, nessuna eccezione per cliente
+
+Nuovi ruoli e colonne riordinate verificati offline negli acquisti. Restano da valutare formati con celle unite/non separabili, altre lingue o valute e convenzioni estere di data: revisione esplicita finché non esiste evidenza sufficiente, senza inventare conversioni. Non estendere per automatismo le regole dei totali d’acquisto a saldi/bollette/fatture segmentate. I dati già confermati non vengono riscritti; nessun OCR/AI reale misurato. [Audit, regressioni e principio per nuove varianti](v5/fase0-general-rules-offline-20261023.md).
+
 ## 23 ottobre 2026 — Residui della verifica ordini reali
 
 - Scansioni Samsung/caffè: testo locale indisponibile; revisione manuale disponibile, nessun OCR/AI misurato. Righe senza evidenza di ruolo sufficiente restano manuali; non rilassare validatori per adattarli ai campioni.

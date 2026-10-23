@@ -3,7 +3,8 @@ import { ProviderFailure } from '../review/provider';
 import { DOCUMENT_KINDS, type DocumentKind } from '../document-intake/domain';
 import { object, text, invalid } from '../review/domain';
 import { calendar } from '../activities/domain';
-import { printedDates, printedCents } from '../economy/document-evidence';
+import { shippingMoney } from './role-evidence';
+import { printedDates } from '../economy/document-evidence';
 import type { ProductSource } from './domain';
 
 export const documentFactKeys = ['issuer','issuerPhone','issuerEmail','issuerVatId','issuerFiscalId','documentDate','shippingCost','installationDate','interventionDescription','availablePowerKw','systemType'] as const;
@@ -68,8 +69,7 @@ export function readUnderstanding(raw:unknown, rawFacts:unknown, itemCount:numbe
     if(field==='installationDate'&&!/installat|messa in servizio|installation/iu.test(excerpt))throw invalid();
     if(field==='documentDate'&&!/data|emess|rilasc|date|dichiarazione|fattura|invoice/iu.test(excerpt))throw invalid();
    }else if(field==='shippingCost'){
-    const shipping=/^\s*(?:spese|costi)(?:\s+di)?\s+spedizione\s*:?\s*((?:EUR|€)\s*\d[\d.,]*|\d[\d.,]*\s*(?:EUR|€))\s*$/iu.exec(excerpt);
-    if(kind!=='purchase_order'||fact.subjectIndex!==-1||!shipping||normalize(shipping[1])!==value||printedCents(value).length!==1)throw invalid();
+    if(kind!=='purchase_order'||fact.subjectIndex!==-1||shippingMoney(excerpt)!==value)throw invalid();
    }else if(field==='systemType'){
     if(!Object.hasOwn(systemWords,value)){
      const canonical=Object.keys(systemAliases).find(key=>systemAliases[key].test(value)&&excerpt.toLocaleLowerCase('it').includes(value.toLocaleLowerCase('it')));if(!canonical)throw invalid();value=canonical;
