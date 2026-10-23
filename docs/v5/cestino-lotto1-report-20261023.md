@@ -24,6 +24,21 @@ La suite del cestino copre: anteprima e conteggi, rifiuto per il non caricatore,
 
 Nessuna AI o email a pagamento, nessun DB/API/storage reale, nessun `.env`. Cluster temporanei dentro `tmp/cestino`, conservati con i log.
 
+## Correzioni dopo la revisione indipendente di Codex
+
+[Revisione](cestino-review-20261023.md) sulla punta `86b2b74`: due rilievi P1 e due P2, riprodotti da cinque test in `test/document-trash-review.integration.test.cjs`. I test sono entrati invariati nel branch e ora fanno parte di `test:trash-db` e dell'aggregato `test:offline-db`.
+
+1. **P1 — schede confermate inaccessibili.** Il filtro del cestino era stato applicato anche alle prove dei dati già confermati: nome, marca, modello, campi della ricevuta, caldaia, abbinamento delle spese. Ora i concetti sono due. `canReadDocument` e i predicati con `"trashedAt" IS NULL` valgono per aprire un documento, elencarlo o usarlo per nuove proposte. `canSeeConfirmedSource` e `confirmedSourceVisible` valgono per i dati confermati: conta solo la visibilità fissata al momento del cestino, e la verifica di versione e SHA si applica solo finché la fonte è attiva. La privacy verso gli altri membri resta invariata; la scheda mostra la fonte come non disponibile.
+2. **P1 — contenuti non confermati nei registri.** All'eliminazione definitiva, oltre a `ObjectOnboardingRequest`, `EconomicRequest` e `TrashRequest`, vengono ripuliti anche `ObjectRequest.response` (piani non confermati) e `DocumentIntakeRequest.body`. Del secondo cambiano solo le voci del documento: nome del file sostituito e corpi `review:`/`duplicate:` dell'elemento. Gli altri file del lotto e i digest restano.
+3. **P2 — deadlock con il download condiviso.** Lo spostamento nel cestino non aggiorna più le condivisioni dopo aver bloccato il documento. Le condivisioni smettono di funzionare nella stessa transazione, perché un documento nel cestino non è un originale disponibile, e vengono marcate revocate in una transazione separata subito dopo il commit. Ripristino ed eliminazione definitiva bloccano prima le righe `ShareRecord` e poi il documento, nello stesso ordine di `SharingService`; «Svuota cestino» blocca tutte le condivisioni coinvolte prima del primo documento. Il ripristino revoca anche eventuali condivisioni rimaste aperte per una revoca interrotta.
+4. **P2 — replay economico dopo l'eliminazione.** Le risposte ripulite contengono ora la marca `{sourceDeleted:true}`. I replay di economia, onboarding, planimetria, famiglia della casa e cestino rispondono 410 `source_deleted`, invece di dereferenziare una risposta vuota. Digest e chiavi restano, quindi nessun nuovo job parte con la stessa chiave.
+
+Un mio test sulla scadenza contava le rimozioni fisiche di tutto il DB. La scadenza del server agisce su tutte le case e, ora che la suite gira insieme a quella di Codex, raccoglieva anche le sue chiavi: l'asserzione ora conta solo le proprie.
+
+### Verifiche dopo le correzioni
+
+Branch aggiornato con merge del consolidamento (PR #8 e #10 di Codex, ordini) e della revisione (`codex/cestino-review-20261023`). Build/lint superati; `npm test` 227/227; onboarding 306/306; qualità 24/24; guardie qualità 18/18; guardie runner 10/10; `test:trash-db` 16/16 (cestino e revisione, conteggio Node). Aggregato `test:offline-db` **513/513**: 54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL. Nessuna asserzione dei test di revisione modificata.
+
 ## Limiti e lavoro residuo
 
 - **Frontend non toccato:** la pagina Cestino, l'avviso «Annulla» e il passaggio del pulsante attuale al cestino sono il lotto 2. `POST documents/:id/removal` resta com'è.

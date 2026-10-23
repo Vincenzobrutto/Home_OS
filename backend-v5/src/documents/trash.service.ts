@@ -5,7 +5,7 @@ import { digest } from '../security';
 import { object } from '../review/domain';
 import { DocumentPolicy } from './access';
 import { LocalFileStorage } from './storage';
-import { busyReason, moveToTrash, purgeDocument, restoreFromTrash, trashEntry, trashImpact } from './trash';
+import { busyReason, lockDocumentShares, moveToTrash, purgeDocument, rejectDeletedReplay, restoreFromTrash, revokeDocumentShares, trashEntry, trashImpact } from './trash';
 
 type Tx = Prisma.TransactionClient;
 const KEY = /^[A-Za-z0-9_-]{16,100}$/;
@@ -36,7 +36,7 @@ export class TrashService implements OnModuleInit, OnModuleDestroy {
       await this.policy.requireLocked(tx, a, h); await this.policy.require(a, h, 'edit', tx);
       await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'g1:' + h},0))::text AS locked`;
       const prior = await tx.trashRequest.findUnique({ where: { accountId_homeId_operation_target_key: { accountId: a, homeId: h, operation, target, key } } });
-      if (prior) { if (prior.digest !== fingerprint) throw new ConflictException({ code: 'idempotency_conflict', message: 'La chiave è già usata per un’altra richiesta.' }); return { response: prior.response as R, storageKeys: [] }; }
+      if (prior) { if (prior.digest !== fingerprint) throw new ConflictException({ code: 'idempotency_conflict', message: 'La chiave è già usata per un’altra richiesta.' }); rejectDeletedReplay(prior.response); return { response: prior.response as R, storageKeys: [] }; }
       const done = await work(tx, this.now());
       await tx.trashRequest.create({ data: { accountId: a, homeId: h, operation, target, key, digest: fingerprint, response: done.response as Prisma.InputJsonValue } });
       return done;
@@ -54,9 +54,12 @@ export class TrashService implements OnModuleInit, OnModuleDestroy {
       return { allowed: !reason, reason, document: { id, version: doc.original.version }, impact: await trashImpact(tx, a, h, id, this.now()) };
     });
   }
-  trash(a: string, h: string, id: string, input: unknown, key?: string) {
+  async trash(a: string, h: string, id: string, input: unknown, key?: string) {
     const body = version(input);
-    return this.request(a, h, 'document-trash-v1', id, body, key, async (tx, now) => ({ response: await moveToTrash(tx, a, h, id, body.expectedVersion, now), storageKeys: [] }));
+    const response = await this.request(a, h, 'document-trash-v1', id, body, key, async (tx, now) => ({ response: await moveToTrash(tx, a, h, id, body.expectedVersion, now), storageKeys: [] }));
+    // Separate transaction, share rows locked first like SharingService; also completes an interrupted earlier attempt.
+    await this.db.$transaction(tx => revokeDocumentShares(tx, h, id, a, this.now()), { timeout: 30000, maxWait: 15000 });
+    return response;
   }
   restore(a: string, h: string, id: string, input: unknown, key?: string) {
     const body = version(input);
@@ -78,6 +81,7 @@ export class TrashService implements OnModuleInit, OnModuleDestroy {
     return this.request(a, h, 'trash-empty-v1', h, body, key, async (tx, now) => {
       const rows = await tx.document.findMany({ where: { homeId: h, uploaderId: a, trashedAt: { not: null }, purgedAt: null }, select: { id: true }, orderBy: { id: 'asc' } });
       const storageKeys: string[] = [];
+      await lockDocumentShares(tx, h, rows.map(r => r.id));
       for (const row of rows) { const purged = await purgeDocument(tx, h, row.id, 'user_empty', now); if (purged?.storageKey) storageKeys.push(purged.storageKey); }
       return { response: { purged: rows.length }, storageKeys };
     });

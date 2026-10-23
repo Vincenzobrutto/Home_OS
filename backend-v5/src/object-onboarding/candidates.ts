@@ -1,4 +1,5 @@
 import { Prisma } from '../../generated/client';
+import { confirmedSourceVisible } from '../documents/access';
 import { digest } from '../security';
 import { object, uuid, text, invalid } from '../review/domain';
 import { readableReceiptName } from '../receipt-assistance/access';
@@ -29,8 +30,8 @@ function readableProfileReference(a: string, h: string) {
     jsonb_array_length(COALESCE(o.profile->'reference'->'sources','[]'::jsonb))>0 AND NOT EXISTS(
       SELECT 1 FROM jsonb_array_elements(o.profile->'reference'->'sources') s
       LEFT JOIN "Document" d ON d.id=s->>'documentId' LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
-      WHERE d.id IS NULL OR d."homeId"<>${h} OR (d."trashedAt" IS NOT NULL OR (d.visibility::text<>'home' AND d."uploaderId"<>${a}))
-        OR v.id IS NULL OR NOT COALESCE(v.sha256=s->>'sha256',FALSE) OR NOT COALESCE(v.version::text=s->>'documentVersion',FALSE))))`;
+      WHERE d.id IS NULL OR d."homeId"<>${h} OR NOT ${confirmedSourceVisible(a)}
+        OR (d."trashedAt" IS NULL AND (v.id IS NULL OR NOT COALESCE(v.sha256=s->>'sha256',FALSE) OR NOT COALESCE(v.version::text=s->>'documentVersion',FALSE))))))`;
 }
 export function onboardingCandidates(access: ObjectOnboardingAccess, a: string, h: string, id: string, query: unknown) {
   const q = pageQuery(query, true);
@@ -43,7 +44,7 @@ export function onboardingCandidates(access: ObjectOnboardingAccess, a: string, 
     const p = pagination(digest(JSON.stringify([a, h, id, draft.version, q.itemId, q.q])), q.cursor), escaped = q.q.replace(/[\\%_]/gu, '\\$&');
     const rows = await tx.$queryRaw<Array<{ id: string; rank: number }>>(Prisma.sql`
       WITH fields AS (SELECT f.* FROM "ReceiptObjectField" f WHERE f."accountId"=${a} AND f."homeId"=${h} AND f."fieldKey" IN ('brand','model') AND
-        (f.origin='user_declared' OR EXISTS(SELECT 1 FROM "Document" d JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE d.id=f."documentId" AND d."homeId"=${h} AND (d."trashedAt" IS NULL AND (d.visibility::text='home' OR d."uploaderId"=${a})) AND v.version=f."documentVersion" AND v.sha256=f."documentSha256"))),
+        (f.origin='user_declared' OR EXISTS(SELECT 1 FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id WHERE d.id=f."documentId" AND d."homeId"=${h} AND ${confirmedSourceVisible(a)} AND (d."trashedAt" IS NOT NULL OR (v.version=f."documentVersion" AND v.sha256=f."documentSha256"))))),
       candidates AS (SELECT o.id,CASE
         WHEN EXISTS(SELECT 1 FROM "ObjectOnboardingBinding" l WHERE l."accountId"=${a} AND l."homeId"=${h} AND l."objectId"=o.id AND l.fingerprint=${item.fingerprint}) THEN 4
         WHEN ${brand}::text IS NOT NULL AND lower(normalize(b.value,NFC))=${brand} AND ${reference}::text IS NOT NULL AND lower(normalize(o.profile->'reference'->>'value',NFC))=${reference} AND ${readableProfileReference(a, h)} THEN 3
@@ -79,7 +80,7 @@ export function onboardingExpenseCandidates(access: ObjectOnboardingAccess, a: s
     const p = pagination(digest(JSON.stringify([a, h, id, 'expenses', q.itemId,q.q])), q.cursor), escaped = q.q.replace(/[\\%_]/gu, '\\$&');
     const rows = await tx.$queryRaw<Array<{ id: string; rank: number; title: string; amountCents: number; spentOn: string; version: number }>>(Prisma.sql`
       WITH candidates AS (SELECT e.id,e.title,e."amountCents",e."spentOn",e.version,CASE WHEN v.sha256=${draft.documentSha256} THEN 2 WHEN ${billNumber}::text IS NOT NULL AND ${billSupplier}::text IS NOT NULL AND e."documentNumber"=${billNumber} AND lower(e.supplier)=lower(${billSupplier}::text) THEN 1 WHEN ${amount}::int IS NOT NULL AND e."amountCents"=${amount} AND e."spentOn"=${purchaseDate}::text THEN 1 ELSE 0 END AS rank FROM "HomeExpense" e LEFT JOIN "Document" d ON d.id=e."documentId" LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
-      WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND ${bill?Prisma.sql`e."workId" IS NULL`:Prisma.sql`TRUE`} AND (e."documentId" IS NULL OR (d."homeId"=${h} AND (d."trashedAt" IS NULL AND (d.visibility::text='home' OR d."uploaderId"=${a})))) AND ${escaped ? Prisma.sql`e.title ILIKE ${'%' + escaped + '%'}` : Prisma.sql`TRUE`})
+      WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND ${bill?Prisma.sql`e."workId" IS NULL`:Prisma.sql`TRUE`} AND (e."documentId" IS NULL OR (d."homeId"=${h} AND ${confirmedSourceVisible(a)})) AND ${escaped ? Prisma.sql`e.title ILIKE ${'%' + escaped + '%'}` : Prisma.sql`TRUE`})
       SELECT * FROM candidates WHERE ${p.after ? Prisma.sql`(rank<${p.after.rank} OR (rank=${p.after.rank} AND id>${p.after.id}))` : Prisma.sql`TRUE`} ORDER BY rank DESC,id ASC LIMIT ${q.limit + 1}`);
     const items = rows.slice(0, q.limit);
     return { items, nextCursor: rows.length > q.limit ? p.encode(items.at(-1)!) : null };

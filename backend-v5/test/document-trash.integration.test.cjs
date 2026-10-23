@@ -80,7 +80,8 @@ test('Cestino lotto 1: documents move to the trash, stay private, restore, expir
   await trash.tick();await trash.tick();
   const row=await db.document.findUnique({where:{id:invoice.id},include:{original:true}});
   assert.equal(row.name,'');assert(row.purgedAt);assert.equal(row.original,null);
-  assert.equal(await db.storedFile.count({where:{id:invoice.original.fileId}}),0);assert.deepEqual(removed,[invoice.original.file.storageKey]);
+  assert.equal(await db.storedFile.count({where:{id:invoice.original.fileId}}),0);// The expiry tick is server-wide: other suites sharing this DB may contribute their own keys.
+  assert.equal(removed.filter(k=>k===invoice.original.file.storageKey).length,1);
   const record=await db.deletionRecord.findUnique({where:{resourceKind_resourceId:{resourceKind:'document',resourceId:invoice.id}}});assert.equal(record.reason,'expired');assert(record.fileRemovedAt);
   assert.equal(await db.homeExpense.count({where:{documentId:invoice.id}}),1);assert.equal(await db.contactResourceLink.count({where:{resourceId:invoice.id}}),0);
   assert.equal((await db.shareRecord.findUnique({where:{id:shared.id}})).manifest.items[0].name,'');

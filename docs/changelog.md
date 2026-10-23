@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Cestino lotto 1: correzioni dopo la revisione Codex
+
+Le schede confermate restano leggibili anche con la fonte nel cestino o eliminata; registri di caricamento e planimetrie ripuliti all'eliminazione definitiva; nessun deadlock fra download condiviso e cestino (condivisioni bloccate prima del documento); replay dopo l'eliminazione con 410 `source_deleted`. 513/513 HTTP/DB sintetici con i cinque test di riproduzione. [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-la-revisione-indipendente-di-codex).
+
 ## 23 ottobre 2026 — Cestino dei documenti, lotto 1 (backend)
 
 Documenti nel cestino per 30 giorni, solo per chi li ha caricati: invisibili ovunque, condivisioni revocate, ripristino versionato, eliminazione definitiva automatica o immediata con segnaposto senza contenuto e registro delle eliminazioni. Migrazione additiva `20261023200000_document_trash`. Verificato offline: 227/227 ordinari, 506/506 HTTP/DB sintetici, ricerca del testo sintetico in tutto il DB dopo lo svuotamento con zero risultati. Frontend nel lotto 2, backup in un lotto separato. [Report](v5/cestino-lotto1-report-20261023.md).

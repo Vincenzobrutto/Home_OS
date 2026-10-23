@@ -103,7 +103,16 @@ const profiles = {
     "database": true,
     "api": false,
     "files": [
-      "test/document-trash.integration.test.cjs"
+      "test/document-trash.integration.test.cjs",
+      "test/document-trash-review.integration.test.cjs"
+    ],
+    "apiFiles": []
+  },
+  "test:cestino-review-db": {
+    "database": true,
+    "api": false,
+    "files": [
+      "test/document-trash-review.integration.test.cjs"
     ],
     "apiFiles": []
   },
@@ -393,7 +402,4 @@ const profiles = {
 const databaseProfiles = Object.values(profiles).filter(profile => profile.database);
 const union = key => [...new Set(databaseProfiles.flatMap(profile => profile[key] ?? []))];
 profiles['test:offline-db'] = { database: true, api: true, files: union('files'), apiFiles: union('apiFiles'), restartFiles: union('restartFiles') };
-// Explicit opt-in: independent review reproductions are expected to fail on PR9.
-// Keep the original aggregate unchanged until the product defects are fixed.
-profiles['test:cestino-review-db'] = { database: true, api: false, files: ['test/document-trash-review.integration.test.cjs'], apiFiles: [] };
 module.exports = profiles;

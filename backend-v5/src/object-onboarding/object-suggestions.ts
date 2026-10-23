@@ -1,5 +1,6 @@
 import { ForbiddenException } from '@nestjs/common';
 import { Prisma } from '../../generated/client';
+import { confirmedSourceVisible } from '../documents/access';
 import { EconomyPolicy } from '../economy/policy';
 import type { ObjectRef } from '../economy/domain';
 import { readableReceiptName } from '../receipt-assistance/access';
@@ -36,7 +37,7 @@ export async function invoiceObjectSuggestions(tx:OnboardingTx,a:string,h:string
    LEFT JOIN "ObjectResourceLink" l ON l."expenseId"=e.id AND l."accountId"=${a} AND l."homeId"=${h} AND l.state='active'
    LEFT JOIN "Document" d ON d.id=e."documentId"
    WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active' AND (l."objectId" IS NOT NULL OR e."assetId" IS NOT NULL)
-   AND (e."documentId" IS NULL OR (d."homeId"=${h} AND (d."trashedAt" IS NULL AND (d.visibility::text='home' OR d."uploaderId"=${a}))))
+   AND (e."documentId" IS NULL OR (d."homeId"=${h} AND ${confirmedSourceVisible(a)}))
    AND ${clean(Prisma.sql`e.supplier`)}=${context.supplier}
    AND (SELECT count(DISTINCT t) FROM unnest(${context.tokens}::text[]) t WHERE position(' '||t||' ' IN ' '||${clean(Prisma.sql`e.title`)}||' ')>0)>=2
    ORDER BY e.id LIMIT 50`):[];
