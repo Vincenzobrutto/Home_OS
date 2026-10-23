@@ -49,11 +49,19 @@ test('Acconto/saldo: manual purchase reconciliation, replay, source copies and p
   await t.test('existing objects are selectable for the second document',async()=>{
    for(let i=0;i<3;i++){const result=await onboardingCandidates(access,a.id,h,second.d.id,{itemId:second.d.items[i].id});assert(result.items.some(x=>x.id===ids[i]));}
   });
+  const houseForm={candidateId:'',amount:'',manual:true,title:order[1].kind+' climatizzatori',supplier:'',date:'',category:'',mode:'defer',expenseId:'',ack:false,periodFrom:'',periodTo:'',dueOn:'',purchaseMode:'',purchaseTotal:''};
+  const compilation={saved:true,documentTitle:'Fattura '+order[1].kind,documentKind:'invoice',replaceOrganization:false,reuseCopy:false,documentOnly:false,manualTotal:'',contacts:[],houseForms:{[second.d.houseExpenses[0].id]:houseForm}};
+  second.d=(await svc.saveReview(a.id,h,second.d.id,{expectedVersion:second.d.version,review:{compilation,forms:{},pending:{path:'/drafts/'+second.d.id+'/confirmations',key:randomUUID(),body:{}}}},randomUUID())).draft;
   const secondBody=body(second.d,await links(second.d,ids),pending(second.d)),secondKey=randomUUID();
   const linked=await svc.confirm(a.id,h,second.d.id,secondBody,secondKey);
   await t.test('explicit link attaches both invoices to each existing object; unresolved balance creates no extra expense',async()=>{
    assert.equal(linked.result.newObjects,0);assert.equal(linked.result.newExpenses,0);assert.equal(linked.draft.state,'open');assert.deepEqual(await counts(h),{objects:3,expenses:1});
    for(const id of ids){const docs=(await objects.links(a.id,h,'object',id,{resourceType:'document'})).items;assert.deepEqual(new Set(docs.map(x=>x.resource.id)),new Set([first.doc.id,second.doc.id]));}
+  });
+  await t.test('partial compilation reopens durably with deferred cost and invoice label, without stale pending',async()=>{
+   const reopened=(await svc.getDraft(a.id,h,second.d.id,{})).draft;
+   assert.deepEqual(reopened.review.compilation.houseForms,compilation.houseForms);assert.equal(reopened.review.pending,undefined);assert.deepEqual(reopened.review.forms,{});
+   await assert.rejects(svc.getDraft(b.id,h,second.d.id,{}));assert.deepEqual(await counts(h),{objects:3,expenses:1});
   });
   await t.test('durable replay from a different client and changed-key rejection',async()=>{
    const other=new PrismaClient({datasources:{db:{url:rawUrl}}});try{await services(other).svc.confirm(a.id,h,second.d.id,secondBody,secondKey);}finally{await other.$disconnect();}

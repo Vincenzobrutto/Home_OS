@@ -1,4 +1,4 @@
-import { KINDS } from '../document-intake/model';
+import { canonical, KINDS } from '../document-intake/model';
 import type { ConfirmBatchOutcome, DocumentKind, IntakeItem, OrganizeItemPayload, OrganizeBatchPayload } from '../document-intake/model';
 import type { IntakeClient, BatchWire, CapabilityWire } from './client';
 
@@ -46,4 +46,11 @@ export function localAnalysisCandidates(capability: CapabilityWire | undefined, 
   // BL-04: la lettura locale legge solo il testo dei PDF; foto e immagini non avviano alcuna analisi.
   return batch.items.filter(item => item.permissions.includes('edit') && item.mimeType === 'application/pdf' && ['stored', 'duplicate'].includes(item.uploadState) && item.documentLink.state === 'linked' && item.analysisState === 'not_started' && item.reviewState === 'unreviewed' && !attempted.has(batch.id + ':' + item.id))
     .map(item => ({ id: item.id, expectedVersion: item.version }));
+}
+
+/** Manual workspace intent survives local analysis, never changed sources, rights or saved decisions. */
+export function sameManualOrganizationContext(before:BatchWire,after:BatchWire,itemId:string){
+ const context=(batch:BatchWire)=>{const item=batch.items.find(i=>i.id===itemId);return item?{batchId:batch.id,homeId:batch.homeId,permissions:batch.permissions,item:{id:item.id,filename:item.filename,byteSize:item.byteSize,mimeType:item.mimeType,uploadState:item.uploadState,reviewState:item.reviewState,documentLink:item.documentLink,permissions:item.permissions,organizationVersion:item.organizationVersion,organization:item.organization,selection:item.selection,selectionStale:item.selectionStale,duplicate:item.duplicate}}:null;};
+ const first=context(before),last=context(after);
+ return !!first&&!!last&&after.version>=before.version&&after.items.find(i=>i.id===itemId)!.version>=before.items.find(i=>i.id===itemId)!.version&&canonical(first)===canonical(last);
 }

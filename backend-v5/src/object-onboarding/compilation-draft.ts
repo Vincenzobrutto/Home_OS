@@ -14,3 +14,12 @@ export function compilationDraft(input:unknown){
  for(const [id,value] of Object.entries(row.houseForms)){string(id);const form=object(value,['candidateId','amount','manual','title','supplier','date','category','mode','expenseId','ack','periodFrom','periodTo','dueOn','periodDraft','objectChoice','objectSuggestionReviewed','objectLabel','documentNumber','documentDate','note','purchaseMode','purchaseTotal']);for(const k of ['candidateId','amount','title','supplier','date','category','mode','expenseId','periodFrom','periodTo','dueOn'])string(form[k]);if(form.objectSuggestionReviewed!==undefined)boolean(form.objectSuggestionReviewed);if(form.objectChoice!==undefined)string(form.objectChoice);if(form.objectLabel!==undefined)string(form.objectLabel);for(const k of ['documentNumber','documentDate','note','purchaseMode','purchaseTotal'])if(form[k]!==undefined)string(form[k]);boolean(form.manual);boolean(form.ack);if(form.periodDraft!==undefined){const period=object(form.periodDraft,['mode','month','range']);if(!['month','range'].includes(period.mode as string))throw invalid();string(period.month);const range=object(period.range,['from','to']);string(range.from);string(range.to);}}
  return row;
 }
+
+/** Keep only unresolved form inputs; an executed pending request must never be restored. */
+export function reviewAfterConfirmation(input:unknown,remainingIds:ReadonlySet<string>){
+ const saved=input&&typeof input==='object'&&!Array.isArray(input)?input as {forms?:Record<string,unknown>;compilation?:unknown;manualPurchaseTotalCents?:number}:{};
+ const forms=Object.fromEntries(Object.entries(saved.forms??{}).filter(([id])=>remainingIds.has(id)));
+ let compilation;
+ if(remainingIds.size&&saved.compilation){try{const value=compilationDraft(saved.compilation);compilation={...value,houseForms:Object.fromEntries(Object.entries(value.houseForms as Record<string,unknown>).filter(([id])=>remainingIds.has(id)))};}catch{/* Invalid legacy compilation is never promoted to a saved form. */}}
+ return {forms,...(compilation?{compilation}:{}),...(remainingIds.size&&Number.isSafeInteger(saved.manualPurchaseTotalCents)&&saved.manualPurchaseTotalCents!>0?{manualPurchaseTotalCents:saved.manualPurchaseTotalCents}:{})};
+}

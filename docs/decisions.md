@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Ripresa parziale come input, non nuova conferma
+
+La conferma parziale conserva i moduli degli elementi irrisolti con le scelte esplicite dell’utente. Elimina dalla revisione solo form risolti e richiesta pendente eseguita; mantiene le ricevute idempotenti. La ripresa non crea costi e ogni successiva conferma rivalida fonte, versione, SHA, permessi e riferimenti. La sincronizzazione preventiva del workspace può aggiornare le versioni soltanto a contesto manuale invariato; modifiche di fonte, diritti o decisioni richiedono rilettura, senza retry automatico incerto. [Prove](v5/fase0-ui-fixes-offline-20261023.md).
+
 ## 23 ottobre 2026 — Esempi come regressioni, non formati obbligatori
 
 Le regole documentali dipendono dal ruolo del dato e dalla sua fonte, non da cliente, venditore, prezzo o impaginazione di esempio. Condividere i ruoli, ammettere varianti dimostrate e colonne riordinate; non moltiplicare/ripartire importi o sostituire ruoli delle date. Ambiguità del singolo campo conserva le altre identità leggibili e richiede revisione. Le nuove varianti devono avere controesempi di pagina/riga/valuta/ruolo e verifica di privacy/idempotenza. Nessuna promessa di copertura universale o promozione del gate da test offline. [Audit e prove](v5/fase0-general-rules-offline-20261023.md).

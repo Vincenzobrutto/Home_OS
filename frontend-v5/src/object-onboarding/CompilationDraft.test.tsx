@@ -11,7 +11,7 @@ import type {Draft} from './model';
 const mocks=vi.hoisted(()=>({callJson:vi.fn(),getDocument:vi.fn()}));
 vi.mock('../session/session',()=>({useAccount:()=>({id:'account'}),useApi:()=>mocks}));
 vi.mock('../routes/HomePages',()=>({useCurrentHome:()=>({id:'home',name:'Casa fittizia'})}));
-function setup(extras=false){
+function setup(extras=false,rejectConfirmation=false){
  const wire:Draft={id:'draft',version:1,state:'open',mode:'manual',snapshot:{documentId:'doc',documentVersion:1,sha256:'a'.repeat(64)},document:{id:'doc',name:'Prova',mimeType:'application/pdf'},documentKind:'utility_bill',items:[],needsReview:false,purchaseTotal:null,review:null,permissions:['read','edit'],houseExpenses:[{id:'cost',documentKind:'utility_bill',proposedFields:{},amountCandidates:[],amountSelectionRequired:true,decision:null}]};
  if(extras){wire.mode='extraction';wire.documentKind='purchase_document';wire.documentInfo={kind:'invoice',title:{value:'Fattura',source:{documentId:'doc',page:1,excerpt:'Fattura'}},facts:[]};wire.items=[{id:'item',fields:{name:{value:'Oggetto fittizio',source:{documentId:'doc',page:1,excerpt:'Oggetto'}}},quantity:null,nameTruncated:false,disposition:'household_object',profile:{},enrichment:null,decision:null}];wire.contacts=[{id:'contact',values:{name:'Impresa fittizia',kind:'company',profession:null,phone:null,email:null,fiscalId:null,note:null},sources:{},warnings:[],resolution:{state:'create',contact:null,candidates:[],conflicts:[]},decision:null}];wire.houseExpenses=[];}
  let fail=false,lost=false,reject=false;const keys=new Map<string,unknown>();
@@ -21,6 +21,7 @@ function setup(extras=false){
   if(path.endsWith('/candidates'))return {items:[],nextCursor:null};
   if(path.includes('/expense-candidates'))return {items:[],nextCursor:null};
   if(options.method==='POST'){
+   if(rejectConfirmation&&path.endsWith('/confirmations'))throw new ApiError({kind:'http',status:422,code:'validation_error',message:'Conferma respinta: controlla i dati.'});
    if(!path.endsWith('/review'))throw Error('Canonical writes forbidden in draft test');
    if(reject){reject=false;throw new ApiError({kind:'http',status:422,code:'validation_error',message:'Controlla i dati della bozza.'});}
    if(fail){fail=false;return Promise.reject(new Error('Connessione interrotta'));}
@@ -81,4 +82,14 @@ it('only-document switch preserves expense inputs for returning to the complete 
  const w=setup();await screen.findByLabelText('Importo della bolletta (€)');await w.user.type(screen.getByLabelText('Importo della bolletta (€)'),'93,39');await w.user.type(screen.getByLabelText('Fornitore'),'Fornitore da conservare');
  await w.user.click(screen.getByRole('checkbox',{name:'Conserva solo il documento'}));expect(screen.getByLabelText('Fornitore')).not.toBeVisible();
  await w.user.click(screen.getByRole('checkbox',{name:'Conserva solo il documento'}));expect(screen.getByLabelText('Fornitore')).toHaveValue('Fornitore da conservare');expect(screen.getByLabelText('Importo della bolletta (€)')).toHaveValue('93,39');expect(mocks.callJson.mock.calls.some(c=>c[1]?.method==='POST')).toBe(false);
+});
+
+it('a rejected confirmation preserves compilation without treating internal cleanup as Save draft and exit',async()=>{
+ const w=setup(true,true);await screen.findByRole('button',{name:'Salva e continua'});
+ await w.user.click(screen.getByRole('button',{name:'Salva e continua'}));
+ await screen.findByText('Conferma respinta: controlla i dati.');
+ await waitFor(()=>expect(mocks.callJson.mock.calls.filter(([p,o])=>p.endsWith('/review')&&o?.method==='POST')).toHaveLength(2));
+ expect(w.pause).not.toHaveBeenCalled();expect(screen.queryByText('Elenco fittizio')).not.toBeInTheDocument();
+ await w.user.click(screen.getByText(/^Oggetti ·/));expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Oggetto fittizio');
+ expect(w.wire.review?.compilation?.saved).toBe(true);expect(w.wire.review?.pending).toBeUndefined();
 });

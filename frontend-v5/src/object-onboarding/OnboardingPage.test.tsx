@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ApiClient } from '../api/client';
 import { FakeBackend } from '../test/fakeBackend';
@@ -39,11 +39,12 @@ async function world(options:{objectSuggestion?:boolean;analysisSucceeded?:boole
   if(path.includes('/confirmations/'))return Response.json({status:saved?'confirmed':'not_found',draft:wire});
   if(path.endsWith('/confirmations')){
    confirmations++;if(options.lostUnrecorded&&confirmations===1)throw new TypeError('lost before recording');if(options.invalid&&confirmations===1)return Response.json({error:{code:'validation_error',message:'Controlla la scelta'}},{status:422});
-   saved=true;wire.version++;wire.review=null;
+   saved=true;wire.version++;const savedReview=wire.review;wire.review=null;
    for(const c of body.choices){const item=wire.items.find(i=>i.id===c.itemId)!;item.decision={state:c.action==='defer'?'deferred':c.action==='skip'?'skipped':'confirmed',newObjects:c.action==='create'?1:0,newExpenses:0,objects:c.action==='create'?[{id:'object'+item.id,name:c.name,state:'active'}]:[]};}
    for(const c of body.houseExpenses??[]){const item=wire.houseExpenses!.find(i=>i.id===c.itemId)!;item.decision={state:c.action==='skip'?'skipped':c.action==='defer'?'deferred':'confirmed',newExpenses:c.action==='create'?1:0};}
    for(const c of body.contacts??[]){const p=wire.contacts!.find(p=>p.id===c.proposalId)!;p.decision={contactId:c.action==='save'?'saved-contact':null};}
    wire.state=[...wire.items,...(wire.houseExpenses??[])].every(i=>i.decision?.state==='confirmed'||i.decision?.state==='skipped')?'confirmed':'open';
+   if(wire.state==='open'&&savedReview?.compilation)wire.review={forms:{},compilation:savedReview.compilation};
    if(options.lost&&confirmations===1)throw new TypeError('lost response');
    return Response.json({draft:wire,result:{newObjects:body.choices.filter((c:{action:string})=>c.action==='create').length,newExpenses:(body.houseExpenses??[]).filter((c:{action:string})=>c.action==='create').length}});
   }
@@ -286,4 +287,26 @@ it('a direct AI URL reopens successful extraction without consent or another ana
  expect(screen.queryByText('Scegli la precompilazione AI')).not.toBeInTheDocument();
  expect(w.counts().starts).toBe(0);
  expect(w.calls.some(r=>r.path.endsWith('/jobs'))).toBe(false);
+});
+
+it('native date input survives other field edits and reaches the durable confirmation without purchase or warranty inference',async()=>{
+ const w=await world();
+ fireEvent.input(screen.getByLabelText('Data dell’ordine'),{target:{value:'2026-06-14'}});
+ await w.user.clear(screen.getByLabelText('Nome dell’oggetto'));await w.user.type(screen.getByLabelText('Nome dell’oggetto'),'Apparato da ordine');
+ expect(screen.getByLabelText('Data dell’ordine')).toHaveValue('2026-06-14');
+ await w.user.click(screen.getByRole('button',{name:/^Conferma (questo articolo|oggetto e spesa)$/}));
+ await waitFor(()=>expect(w.counts().confirmations).toBe(1));
+ const post=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body as {choices:Array<{fields:Record<string,unknown>;expense:unknown}>};
+ expect(post.choices[0]!.fields.orderDate).toEqual({action:'manual',value:'2026-06-14'});expect(post.choices[0]!.fields.purchaseDate).toBeUndefined();expect(post.choices[0]!.fields.warrantyStart).toBeUndefined();expect(post.choices[0]!.expense).toEqual({action:'skip'});
+});
+it('partial invoice confirmation durably saves deferred cost form and clears no user inputs on the review write',async()=>{
+ const w=await world({documentCost:'works',compilation:'manuale',compactList:true,clearCandidates:true});
+ await w.user.click(await screen.findByText('Altri dati e collegamenti'));
+ await w.user.selectOptions(screen.getByLabelText('Come registrare la spesa'),'defer');
+ await w.user.selectOptions(screen.getByLabelText('Questa spesa è'),'balance');
+ const save=screen.getByRole('button',{name:'Salva e organizza'});await waitFor(()=>expect(save).toBeEnabled());await w.user.click(save);
+ await waitFor(()=>expect(w.counts().confirmations).toBe(1));
+ const review=w.calls.find(c=>c.path.endsWith('/review'))!.body as {review:{compilation:{houseForms:Record<string,{mode:string;title:string}>};pending:{body:unknown}}};
+ expect(review.review.compilation.houseForms['house-cost']).toMatchObject({mode:'defer',title:'Saldo · Lavori elettrici'});expect(review.review.pending.body).toMatchObject({houseExpenses:[{itemId:'house-cost',action:'defer'}]});
+ const route=w.router.state.location.pathname+w.router.state.location.search;await w.router.navigate('/case');await screen.findByRole('heading',{name:'Le mie case'});await w.router.navigate(route);await screen.findByRole('heading',{name:'Rivedi e organizza'});expect(screen.getByLabelText('Come registrare la spesa')).toHaveValue('defer');expect(screen.getByLabelText('Questa spesa è')).toHaveValue('balance');expect(w.counts().confirmations).toBe(1);
 });

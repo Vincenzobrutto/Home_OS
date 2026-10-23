@@ -1,3 +1,7 @@
+## Fase 0: tre anomalie UI risolte offline — 23 ottobre 2026
+
+Archiviazione manuale sincronizzata prima dell’invio, preservando CAS e fonte; date dei profili acquisite anche dall’evento input nativo. La conferma parziale conserva costo rinviato ed etichette Acconto/Saldo nella compilazione durevole, senza vecchie richieste pendenti o nuove spese. Percorso browser completo ripetuto su ambiente nuovo e isolato. [Report e limiti](v5/fase0-ui-fixes-offline-20261023.md).
+
 ## Fase 0: regole generali dei documenti, offline — 23 ottobre 2026
 
 Rimossi vincoli su poche diciture e ordine fisso delle colonne per gli acquisti: ruoli condivisi, sinonimi e colonne riordinabili con valuta e prezzo stampati. Rafforzata attribuzione della riga e distinzione data fattura/acquisto; dati ambigui richiedono revisione. Nessuna regola per nomi/prezzi del committente, AI o modifica ai dati reali. [Audit e verifiche](v5/fase0-general-rules-offline-20261023.md).

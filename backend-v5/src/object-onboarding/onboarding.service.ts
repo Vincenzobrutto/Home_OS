@@ -1,6 +1,6 @@
 import {denyRepeatedInvoiceObject, relatedPurchaseCost, samePurchaseSources, checkPurchaseSources} from './purchase-review';
 import { requiresPaymentReview } from './payment-review';
-import {compilationDraft} from './compilation-draft';
+import {compilationDraft,reviewAfterConfirmation} from './compilation-draft';
 import {invoiceObjectSuggestions,onboardingObjectSuggestions} from './object-suggestions';
 import { contactChoices, linkConfirmedContacts, resolveContact, saveContactProposal } from '../contacts/proposals';
 import { Injectable, ForbiddenException } from '@nestjs/common';
@@ -446,7 +446,7 @@ export class ObjectOnboardingService {
       for(const selected of body.contacts??[]){const p=output.contacts?.find(p=>p.id===selected.proposalId),key='contact:'+selected.proposalId;if(!p||decisions[key])throw conflict('contact_proposal_resolved','La proposta di contatto è già stata gestita.');const result=await saveContactProposal(tx,a,h,draft.documentId,p,selected,automatic);newContacts+=result.newContacts;linkedContacts+=result.linkedContacts;decisions[key]={state:selected.action==='skip'?'skipped':'confirmed',objectIds:[],expenseId:null,newObjects:0,newExpenses:0,...result};}
       await linkConfirmedContacts(tx,a,h,decisions,this.reviewAccess);
       const complete = !output.invoiceCoverage?.pendingPages.length && [...output.items,...(output.houseExpenses??[])].every(item => ['confirmed', 'skipped'].includes(decisions[item.id]?.state))&&(!body.contacts?.length||(output.contacts??[]).every(p=>!!decisions['contact:'+p.id]));
-      return { draft: await tx.objectOnboardingDraft.update({ where: { id }, data: { decisions: onboardingJson(decisions), review: onboardingJson({forms:Object.fromEntries(Object.entries((draft.review as {forms?:Record<string,unknown>}|null)?.forms??{}).filter(([key])=>!body.choices.some(c=>c.itemId===key&&c.action!=='defer')))}), state: complete ? 'confirmed' : 'open', version: { increment: 1 } } }), result: { newObjects, newExpenses,...(body.contacts?.length?{newContacts,linkedContacts}:{}) } };
+      return { draft: await tx.objectOnboardingDraft.update({ where: { id }, data: { decisions: onboardingJson(decisions), review: onboardingJson(reviewAfterConfirmation(draft.review,new Set([...output.items,...(output.houseExpenses??[])].filter(item=>!['confirmed','skipped'].includes(decisions[item.id]?.state)).map(item=>item.id)))), state: complete ? 'confirmed' : 'open', version: { increment: 1 } } }), result: { newObjects, newExpenses,...(body.contacts?.length?{newContacts,linkedContacts}:{}) } };
     });
   }
 }

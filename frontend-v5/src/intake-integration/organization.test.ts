@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import type { BatchWire, CapabilityWire, IntakeClient } from './client';
-import { localAnalysisCandidates, organizationFromObjectKind, organizeDocuments, type OrganizationPayload } from './organization';
+import { sameManualOrganizationContext, localAnalysisCandidates, organizationFromObjectKind, organizeDocuments, type OrganizationPayload } from './organization';
 
 const capability = { enabled: true, analysis: { enabled: true, provider: 'local_text_v1', externalTransmission: false } } as CapabilityWire;
 const wire = (): BatchWire => ({ id: 'batch', homeId: 'home', version: 1, state: 'open', permissions: ['read', 'edit'], limits: { maxFiles: 20, maxFileBytes: 20971520, maxTotalBytes: 209715200, acceptedMimeTypes: ['application/pdf'] }, items: [
@@ -62,4 +62,11 @@ it('object type can propose a home-only purchase classification, never overwrite
  expect(organizationFromObjectKind(base,'purchase_document')?.selection.parts[0]?.kind).toBe('purchase_document');
  for(const patch of [{uploadState:'duplicate'},{reviewState:'deferred'},{reviewState:'saved'},{analysisState:'uncertain'},{organizationVersion:1},{permissions:{review:false}},{documentLink:{state:'unavailable',document:null}}])expect(organizationFromObjectKind({...base,...patch} as IntakeItem,'delivery_notice')).toBeNull();
  expect(organizationFromObjectKind(base,'other')).toBeNull();
+});
+
+it('manual organization tolerates local analysis progress but rejects changed source, rights and saved choices',()=>{
+ const before=wire(),after=structuredClone(before);after.version=3;after.items[0]!.version=4;after.items[0]!.analysisState='unreadable';after.items[0]!.pageCount=1;
+ expect(sameManualOrganizationContext(before,after,'a')).toBe(true);
+ const changed:Array<(b:BatchWire)=>void>=[b=>{b.items=[];},b=>{b.homeId='other';},b=>{b.items[0]!.documentLink={state:'unavailable',document:null};},b=>{b.items[0]!.documentLink.document!.id='other';},b=>{b.items[0]!.organizationVersion=1;},b=>{b.items[0]!.selection={action:'defer'};},b=>{b.items[0]!.reviewState='confirmed';},b=>{b.items[0]!.permissions=['read'];},b=>{b.permissions=['read'];},b=>{b.items[0]!.uploadState='duplicate';},b=>{b.items[0]!.version=0;},b=>{b.version=0;}];
+ for(const mutate of changed){const value=structuredClone(after);mutate(value);expect(sameManualOrganizationContext(before,value,'a')).toBe(false);}
 });

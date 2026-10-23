@@ -1,6 +1,6 @@
-## 23 ottobre 2026 — Ripresa della revisione parziale e primo salvataggio UI
+## 23 ottobre 2026 — Chiuso offline: tre anomalie della revisione UI
 
-Nel collaudo isolato con API vera: primo salvataggio ordine respinto genericamente, secondo riuscito senza doppioni (causa originaria da riprodurre); data ordine iniziale intake non presente nel profilo, modifica dalla scheda verificata; costo rinviato riaperto con modulo iniziale, etichetta acconto/saldo e scelta rinvio da reinserire. Non dichiarati risolti. Priorità: regressioni mirate del workspace e persistenza della revisione parziale, mantenendo CAS, recupero esatto/idempotenza, privacy e separazione costo/pagamento. [Report e prove](v5/fase0-ui-workflow-offline-20261023.md).
+Sincronizzazione prima dell’archiviazione manuale contro il conflitto del lotto avanzato dalla lettura locale; eventi input/change dei campi data; persistenza dei moduli irrisolti dopo conferma parziale, senza vecchie richieste pendenti o costi impliciti. Percorso UI ripetuto da casa vuota con saldo→acconto e ricaricamenti. [Correzioni e verifiche](v5/fase0-ui-fixes-offline-20261023.md). Nessun miglioramento AI/OCR dichiarato, né deploy sul DB reale.
 
 ## 23 ottobre 2026 — Formati generali: copertura dichiarata, nessuna eccezione per cliente
 

@@ -1,4 +1,14 @@
-## Fase 0 — percorso manuale verificato nell’interfaccia isolata, 23 ottobre 2026 (Codex)
+## Fase 0 — tre anomalie UI corrette e percorso ripetuto offline, 23 ottobre 2026 (Codex)
+
+**Implementato e verificato offline**: primo salvataggio riprodotto come HTTP 409 batch_version_conflict, ora sincronizzazione preventiva del solo contesto manuale invariato e CAS server intatto; primo comando completo riuscito nel nuovo collaudo. Campi profilo ascoltano input/change: data ordine inserita nell’intake persistita sulla scheda senza acquisto/garanzia impliciti. Conferme parziali conservano compilazione e moduli irrisolti; vecchia richiesta pendente e form risolti rimossi dalla revisione, ricevute idempotenti intatte. Rinvio e titolo Acconto/Saldo ripresi anche dopo reload e ricaricamenti. [Cause, correzioni, percorso e limiti](v5/fase0-ui-fixes-offline-20261023.md).
+
+**Percorso completo UI**: API vera su DB/storage nuovi; ordine caffè, saldo→acconto con tre schede comuni, ricaricamenti invertiti e riconferma del rinvio. Risultato finale in sola lettura: **3 documenti, 4 oggetti, 1 spesa**, due fonti distinte per ciascun climatizzatore, zero job/tentativi AI. Stanza scelta manualmente; costo dichiarato non certifica pagamento. Servizi temporanei fermati.
+
+**Verifiche**: backend build/lint, onboarding **276/276**, ordinari **214/214**, DB isolato **84/84** inclusi entrambi gli ordini, privacy/revoca/SHA/versione/replay/concorrenza e ripresa durevole. Frontend typecheck/lint e mirati **73/73**. Suite mock completa finale **842/842 (102 file)**, due worker e retry massimo 1 configurato, 499,09 secondi. Nessuna asserzione ridotta.
+
+**Limiti e seguito**: prova manuale, nessuna accuratezza AI/OCR misurata. Restano le attività già rinviate e una misura dei reali con eventuale consenso distinto; nessun gate promosso. Nessuna AI/email, `.env`, gold/ledger delle campagne, DB/API/storage reale, deploy o main; file estranei e 104 StoredFile conservati.
+
+## Checkpoint precedente — percorso manuale verificato nell’interfaccia isolata, 23 ottobre 2026 (Codex)
 
 **Verificato offline nel browser**: frontend con API vera, DB/storage temporanei nuovi; ordine caffè, acconto e saldo reali anonimizzati già forniti. Una scheda caffè con marca/modello, stanza scelta e data ordine salvata dalla scheda; una sola spesa dichiarata di 499 EUR, pagamento non attestato. Tre climatizzatori creati dall’acconto; saldo collegato agli stessi tre. Ricaricamenti riutilizzano gli originali. Query finali in sola lettura: **3 documenti, 4 oggetti, 1 spesa**, esattamente due fonti documentali per ciascun climatizzatore, zero job/tentativi AI. [Percorso, ambiente, anomalie e limiti](v5/fase0-ui-workflow-offline-20261023.md).
 

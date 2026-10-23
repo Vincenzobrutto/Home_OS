@@ -13,7 +13,7 @@ import { DocumentIntakeAssistant } from '../document-intake/DocumentIntakeAssist
 import { bulkItem, canonical, KINDS, type DocumentKind, type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type ReviewPayload, type WriteOutcome } from '../document-intake/model';
 import { DocumentObjectProposals } from '../object-onboarding/OnboardingPage';
 import { IntakeClient, toUiBatch, type BatchWire } from './client';
-import { localAnalysisCandidates, organizationFromObjectKind, organizeDocuments, type OrganizationPayload } from './organization';
+import { localAnalysisCandidates, organizationFromObjectKind, organizeDocuments, sameManualOrganizationContext, type OrganizationPayload } from './organization';
 import { ApiError, isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey, queryKeys } from '../api/queryKeys';
 import { Banner, ErrorState, Loading, ui, useDocumentTitle } from '../components/ui';
@@ -172,7 +172,14 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
   const productItem=requestedDocument?productItems.find(i=>i.documentLink.document?.id===requestedDocument):undefined;
   const preparationError=(message:string)=>new ApiError({kind:'http',status:422,code:'intake_preparation_required',message});
   async function prepareDocumentForObject(itemId:string,kind?:string,reuseCopy=false,title?:string,replaceOrganization=false,target?:DocumentTarget|null){
-    const value=current.current;if(!value||active.current!==value.id)throw preparationError('Rileggi il caricamento corrente.');
+    let value=current.current;if(!value||active.current!==value.id)throw preparationError('Rileggi il caricamento corrente.');
+    if(workspace){
+      const observed=value,latest=await client.batch(observed.id);
+      if(!alive.current||active.current!==observed.id)throw preparationError('Rileggi il caricamento corrente.');
+      adopt(latest);
+      if(!sameManualOrganizationContext(observed,latest,itemId))throw preparationError('Il documento o le scelte salvate sono cambiati. Rileggi il documento prima di confermare; i dati inseriti restano qui.');
+      value=latest;
+    }
     const item=toUiBatch(value).items.find(i=>i.id===itemId);if(!item)throw preparationError('Documento non disponibile.');
     if(!target&&item.reviewState==='confirmed'&&(!workspace||(!kind||item.confirmedOrganization?.parts.every(p=>p.kind===kind))&&(!title||title.trim()===item.confirmedOrganization?.title)))return;
     if(item.uploadState==='duplicate'){
@@ -188,7 +195,7 @@ function IntakeContainer({workspace,onUploaded}:{workspace:boolean;onUploaded?:(
     if(proposal.selection.action==='organize'&&title!==undefined)proposal={...proposal,selection:{...proposal.selection,title:title.trim()}};
     if(target&&proposal.selection.action==='organize')proposal={...proposal,selection:{...proposal.selection,target:{kind:target.kind,id:target.id,expectedVersion:target.expectedVersion}}};
     const outcome=await organize({batchId:value.id,expectedVersion:value.version,mode:'single',items:[proposal]});
-    if(outcome.status!=='done'||outcome.results.some(r=>r.status!=='confirmed'))throw preparationError('Archiviazione del documento da verificare. Nessun oggetto o costo è stato creato: controlla il documento e riprendi qui.');
+    if(outcome.status!=='done'||outcome.results.some(r=>r.status!=='confirmed'))throw preparationError('Archiviazione del documento da verificare. Nessun oggetto o costo è stato creato: '+(outcome.status==='rejected'?outcome.message:'controlla il documento e riprendi qui.'));
   }
   const error = cap.error ?? batch.error, unavailable = denied(error), busyAnalysis = wire?.items.some(i => ['queued', 'running'].includes(i.analysisState));
   const automaticControl=<><label><input type="checkbox" checked={automaticConsent} disabled={waiting} onChange={e=>setAutomaticConsent(e.target.checked)}/> Autorizzo l’invio dei documenti di questo caricamento ad Anthropic, inclusi dati personali, e la creazione automatica di oggetti, spese e contatti verificati.</label><p>Entro il budget residuo · massimo 0,25 USD per documento. Ti chiederemo aiuto solo nei casi dubbi.</p></>;

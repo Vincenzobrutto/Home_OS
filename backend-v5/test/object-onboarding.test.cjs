@@ -261,3 +261,14 @@ test('cropped order keeps explicit current total without inventing date or using
  const crossed=structuredClone(value);crossed.purchaseTotal.amountCents=60000;assert.equal(productExtraction(crossed,imageContext).purchaseTotal,null);
  const delivery=structuredClone(value);delivery.documentKind='delivery_notice';assert.equal(productExtraction(delivery,imageContext).purchaseTotal,null);
 });
+
+test('partial confirmation preserves only unresolved compilation and never pending requests',()=>{
+ const {reviewAfterConfirmation}=require('../dist/object-onboarding/compilation-draft');
+ const form={candidateId:'',amount:'',manual:true,title:'Saldo',supplier:'',date:'',category:'',mode:'defer',expenseId:'',ack:false,periodFrom:'',periodTo:'',dueOn:'',purchaseMode:'same_purchase',purchaseTotal:''};
+ const compilation={saved:true,documentTitle:'Fattura',documentKind:'invoice',replaceOrganization:false,reuseCopy:false,documentOnly:false,manualTotal:'',contacts:[],houseForms:{cost:form,done:form}};
+ const input={forms:{item:{name:'done'},cost:{action:'defer'}},compilation,pending:{key:'must-not-return'},manualPurchaseTotalCents:999};
+ const result=reviewAfterConfirmation(input,new Set(['cost']));
+ assert.deepEqual(Object.keys(result.forms),['cost']);assert.deepEqual(result.compilation.houseForms,{cost:form});assert.equal(result.compilation.documentTitle,'Fattura');assert.equal(result.pending,undefined);assert.equal(result.manualPurchaseTotalCents,999);assert.deepEqual(input.compilation.houseForms.done,form);
+ assert.deepEqual(reviewAfterConfirmation(input,new Set()),{forms:{}});
+ assert.deepEqual(reviewAfterConfirmation({...input,compilation:{saved:true}},new Set(['cost'])),{forms:{cost:{action:'defer'}},manualPurchaseTotalCents:999});
+});

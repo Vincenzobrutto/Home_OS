@@ -1,5 +1,7 @@
 # Fase 0 — collaudo del percorso completo nell’interfaccia, 23 ottobre 2026
 
+**Seguito**: le tre anomalie sono state successivamente corrette e il percorso ripetuto offline; vedere il [report delle correzioni](fase0-ui-fixes-offline-20261023.md). Questo documento conserva gli esiti del collaudo precedente.
+
 ## Ambito ed esito
 
 Eseguito nel browser il frontend V5 con API vera, PostgreSQL e storage nuovi e temporanei. Tre PDF anonimizzati già autorizzati sono stati letti esclusivamente in locale: ordine macchina da caffè, acconto e saldo degli stessi climatizzatori. Nessuna estrazione AI: tutti i valori e i collegamenti sono dichiarazioni manuali di collaudo. Questa verifica dimostra la persistenza del percorso manuale e i suoi limiti, non l’accuratezza della precompilazione automatica.
