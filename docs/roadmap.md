@@ -16,6 +16,10 @@ Lotto Codex isolato dal Cestino: [costo/data da ordine confermato](v5/ordini-acq
 
 [Lotto separato](v5/ricevute-negazioni-20261023.md) implementato e verificato: apostrofi, negazioni per occorrenza, riferimenti all'obbligo di emissione e documenti misti. 233/233 ordinari, build/lint e riscontro locale sul PDF reale. PR #12 integrata su approvazione a `b74efe9`; solo collaudo isolato ricompilato/riavviato in consultazione, dati invariati. Cestino di Claude escluso; nessun OCR o nuova analisi AI.
 
+## Collaudo offline di prezzi e date
+
+Lotto separato [prezzi e date](v5/prezzi-date-20261023.md): implementato e verificato offline, 311/311 onboarding, 233/233 ordinari, 18/18 guardie e build/lint. Date sconosciute/condizionali e riferimenti con date ripetute restano da confermare; note neutre e ruoli economici preservati. PR verso il consolidamento, merge al committente; nessuna AI, DB o modifica al lotto Cestino.
+
 ## Evolutive proposte, in ordine
 
 1. Cestino ed eliminazione dati: [progetto con le scelte del committente del 22/10](v5/fase0-deletion-design-20261022.md), da dividere in lotti (modello/backend, pagina Cestino, backup). Solo progetto, nessun codice.
