@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Branch di consolidamento verificato
+
+Creato su GitHub codex/dimora-v5-consolidata-20261023 dal commit verificato fef9d96, con hash remoto identico. Main, checkout locale e file sporchi preservati; nessun codice o dato modificato. [Registrazione e confini](v5/dimora-v5-consolidation-branch-20261023.md).
+
 **Tranche autonoma verificata:** [editor/presentazione R03](v5/fase0-editor-write-presentation-refactor-20261023.md), mock finale 860/860 e backend 496/496 HTTP/DB sintetici. [Chiusura, misure e opportunità residue](v5/fase0-refactor-closure-20261023.md): nessuna promozione del gate AI o nuovo branch impliciti.
 
 **R05 verificato sui candidati:** [317 → 170 statement per 50 candidati](v5/fase0-candidate-query-batching-20261023.md), stessi filtri e lock; 496/496 HTTP/DB sintetici. Altri percorsi restano opportunità distinte da misurare, nessuna cache fra account.

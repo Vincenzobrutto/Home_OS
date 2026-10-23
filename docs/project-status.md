@@ -4,7 +4,7 @@
 
 ## Branch e vincoli
 
-Branch **codex/fase0-ai-quality-v3**, commit pubblicati e push verificati. Nessun nuovo branch di consolidamento creato, nessuna modifica/integrazione su main. I file legacy sporchi e gli untracked estranei rimangono locali, esclusi dai commit.
+Checkout di lavoro **codex/fase0-ai-quality-v3**. Creato e verificato su GitHub **codex/dimora-v5-consolidata-20261023**, esattamente dal commit collaudato **fef9d96faeed1d932507f3527e24b76ff706fa95** ([registrazione](v5/dimora-v5-consolidation-branch-20261023.md)); il successivo commit documentale resta su Fase 0. Nessuna modifica/integrazione su main e nessun cambio del checkout locale. I file legacy sporchi e gli untracked estranei rimangono locali, esclusi dai commit.
 
 Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a pagamento, DB/API/storage reale, .env, migrazione di prodotto, gold/ledger storico, quota o dato del collaudo utente modificati; nessun reset/clean, force push o rimozione worktree. I 104 StoredFile orfani non toccati.
 
@@ -35,4 +35,4 @@ Frontend typecheck/lint/build e **mock completa finale 860/860, 105 file, 509.88
 
 Ultimo esito AI reale, precedente all’audit: [terzo invio autorizzato](v5/fase0-coffee-third-attempt-20261023.md) riuscito, una chiamata da 0,038369 USD, tre tentativi complessivi 0,115147 USD. Bozza proposta: 1 documento, 0 oggetti, 0 spese. Nome breve/marca/modello e ordine 14/06/2026 coerenti; totale 499 EUR e spedizione zero. Da controllare prezzo articolo non proposto, descrizione/colore/quantità, stanza e oggetto nuovo/esistente. Acquisto/consegna/pagamento e garanzia non dedotti.
 
-Il collaudo persistito e i suoi servizi temporanei preesistenti non sono un deploy né una disponibilità garantita; nessun nuovo consenso AI implicito. **Gate qualità AI Fase 0 generale non promosso.** Restano prova BL-04 su telefono/accesso concordato, HEIC rinviato, qualità AI/eliminazione dati e DB permanente di test. Per il branch pulito: valutare una base dalla punta Fase 0 verificata; un branch nuovo conserva storia e file già tracciati, senza includere il dirty locale. Nessuna creazione o riscrittura della storia ora.
+Il collaudo persistito e i suoi servizi temporanei preesistenti non sono un deploy né una disponibilità garantita; nessun nuovo consenso AI implicito. **Gate qualità AI Fase 0 generale non promosso.** Restano prova BL-04 su telefono/accesso concordato, HEIC rinviato, qualità AI/eliminazione dati e DB permanente di test. Il branch di consolidamento è ora creato sulla punta verificata fef9d96: conserva storia e file già tracciati, esclude il dirty locale. Nessuna riscrittura della storia; eventuale lavoro futuro richiede un checkout distinto, non creato in questa operazione.
