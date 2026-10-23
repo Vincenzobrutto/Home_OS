@@ -39,6 +39,19 @@ Un mio test sulla scadenza contava le rimozioni fisiche di tutto il DB. La scade
 
 Branch aggiornato con merge del consolidamento (PR #8 e #10 di Codex, ordini) e della revisione (`codex/cestino-review-20261023`). Build/lint superati; `npm test` 227/227; onboarding 306/306; qualità 24/24; guardie qualità 18/18; guardie runner 10/10; `test:trash-db` 16/16 (cestino e revisione, conteggio Node). Aggregato `test:offline-db` **513/513**: 54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL. Nessuna asserzione dei test di revisione modificata.
 
+## Correzioni dopo il riesame di Codex
+
+[Riesame](cestino-riesame-20261023.md) sulla punta `a132696`: un P1 e tre P2 (B1–B4), riprodotti da sei nuovi casi in `test/document-trash-rereview.integration.test.cjs` (PR #14, `a08335d`). Il file è stato portato nel branch con un merge, insieme al consolidamento aggiornato (PR #12 e #13); asserzioni invariate.
+
+1. **B1 (P1) — export di proposte non confermate.** `readableReceiptProofKeys` ha ora due ambiti. `confirmed` (predefinito) vale per i valori già confermati: conta solo la visibilità, e versione/SHA solo su fonti attive. `proposal` vale per confronti e contenuti non confermati: richiede la fonte attiva e corrente, come `canReadDocument`. L'export personale usa `proposal` per i `ReceiptComparison`, sia nella selezione sia nel ricontrollo prima di rilasciare il file.
+2. **B2 (P2) — valori confermati nell'API ricevute.** `objectFields` usa la regola dei valori confermati per `value` e la fonte attiva per `sources`. Il nuovo campo `sourceAvailable` distingue il valore leggibile dalla fonte non apribile; con la fonte nel cestino gli estratti non vengono restituiti.
+3. **B3 (P2) — pulizia dei registri intake per lotto.** La ripulitura confronta la coppia `(batchId, clientItemId)` e le operazioni `review:`/`duplicate:` dello stesso lotto. I corpi e i digest di altri file restano intatti.
+4. **B4 (P2) — replay di un vecchio cestino.** La revoca dopo il commit avviene solo se il documento è ancora nel cestino nello stesso ciclo di vita descritto dalla risposta salvata (`lifecycleVersion`). Il replay dopo un ripristino non tocca condivisioni nuove. L'ordine `ShareRecord` → `Document` e il recupero della revoca interrotta, nel ripristino, restano invariati.
+
+### Verifiche dopo il riesame
+
+Build/lint superati. `npm test` 236/236 (9 in più dal consolidamento, PR #12); onboarding 306/306; qualità 24/24; guardie qualità 18/18; guardie runner 10/10. `test:trash-db` 16/16. Profilo aggiuntivo `test:cestino-riesame-db` **7/7** (6 casi più il contenitore), escluso dall'aggregato come impostato da Codex. Aggregato `test:offline-db` **513/513 (54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL)**. Due tentativi precedenti non hanno dato esito. Il primo si è fermato prima dei test (`offline_api_not_ready`, log API vuoto) con i test unitari in parallelo. Il secondo è stato interrotto dal limite di 10 minuti del runner (`offline_command_timeout:tests`), con un altro collaudo PostgreSQL attivo sulla macchina, dopo 421 superati e il caso onboarding «single receipt optional cost» fallito; quel profilo rieseguito da solo dà 44/44. Il terzo aggregato, su cluster nuovo, è verde. Log in `tmp/cestino/dimora-offline-RgSwVZ` (interrotto) e `dimora-offline-KKOfgg` (verde).
+
 ## Limiti e lavoro residuo
 
 - **Frontend non toccato:** la pagina Cestino, l'avviso «Annulla» e il passaggio del pulsante attuale al cestino sono il lotto 2. `POST documents/:id/removal` resta com'è.

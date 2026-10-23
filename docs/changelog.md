@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame Codex
+
+Proposte non confermate escluse anche dall'export finché la fonte è nel cestino; valori confermati dell'API ricevute leggibili con fonte indisponibile; ripulitura intake per lotto; il replay di un vecchio cestino non revoca condivisioni create dopo il ripristino. Sei casi del riesame 7/7, aggregato 513/513 (54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL). [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-di-codex).
+
 ## 23 ottobre 2026 — Cestino lotto 1: correzioni dopo la revisione Codex
 
 Le schede confermate restano leggibili anche con la fonte nel cestino o eliminata; registri di caricamento e planimetrie ripuliti all'eliminazione definitiva; nessun deadlock fra download condiviso e cestino (condivisioni bloccate prima del documento); replay dopo l'eliminazione con 410 `source_deleted`. 513/513 HTTP/DB sintetici con i cinque test di riproduzione. [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-la-revisione-indipendente-di-codex).

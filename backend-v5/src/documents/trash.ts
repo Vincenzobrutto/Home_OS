@@ -144,13 +144,16 @@ export async function purgeDocument(tx: Tx, h: string, id: string, reason: Purge
   await tx.objectRequest.updateMany(replayed);
   await tx.trashRequest.updateMany({ where: { homeId: h, target: id }, data: { response: SOURCE_DELETED } });
   // Intake ledgers: only this document's entries lose file name and review bodies; other files of the batch stay.
-  const clientIds = new Set(items.map(i => i.clientItemId)), itemOps = new Set(items.flatMap(i => ['review:' + i.id, 'duplicate:' + i.id]));
-  const intake = items.length ? await tx.documentIntakeRequest.findMany({ where: { batchId: { in: [...new Set(items.map(i => i.batchId))] } }, select: { id: true, operation: true, body: true } }) : [];
+  // clientItemId is unique inside one batch only: match the (batchId, clientItemId) pair.
+  const pair = (batchId: string, clientItemId: unknown) => JSON.stringify([batchId, clientItemId]);
+  const clientIds = new Set(items.map(i => pair(i.batchId, i.clientItemId))), itemOps = new Set(items.map(i => i.batchId + ':review:' + i.id).concat(items.map(i => i.batchId + ':duplicate:' + i.id)));
+  const intake = items.length ? await tx.documentIntakeRequest.findMany({ where: { batchId: { in: [...new Set(items.map(i => i.batchId))] } }, select: { id: true, batchId: true, operation: true, body: true } }) : [];
   for (const row of intake) {
-    if (itemOps.has(row.operation)) { await tx.documentIntakeRequest.update({ where: { id: row.id }, data: { body: SOURCE_DELETED } }); continue; }
+    if (itemOps.has(row.batchId + ':' + row.operation)) { await tx.documentIntakeRequest.update({ where: { id: row.id }, data: { body: SOURCE_DELETED } }); continue; }
     const body = row.body as { items?: Array<Record<string, unknown>> } | null;
-    if (!Array.isArray(body?.items) || !body.items.some(item => clientIds.has(item.clientItemId as string))) continue;
-    const next = { ...body, items: body.items.map(item => clientIds.has(item.clientItemId as string) ? { ...item, filename: 'documento-eliminato' } : item) };
+    const own = (item: Record<string, unknown>) => clientIds.has(pair(row.batchId, item.clientItemId));
+    if (!Array.isArray(body?.items) || !body.items.some(own)) continue;
+    const next = { ...body, items: body.items.map(item => own(item) ? { ...item, filename: 'documento-eliminato' } : item) };
     await tx.documentIntakeRequest.update({ where: { id: row.id }, data: { body: next as Prisma.InputJsonValue } });
   }
   // Share manifests keep ids and hashes for audit, not the name. Share rows were locked before the Document.

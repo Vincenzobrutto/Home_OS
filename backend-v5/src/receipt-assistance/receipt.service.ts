@@ -12,7 +12,7 @@ import { receiptConfirmation, type ReceiptOrigin, type FieldPlan } from './confi
 import { resolveReceiptField, type ReceiptExtraction, type ReceiptProposal } from './domain';
 import { candidateQuery, candidatePagination, equivalentReceiptDocuments, objectCandidatesSql, expenseCandidatesSql, type CandidateKind, type CandidateAnchor } from './candidates';
 import { reviewedForm, type SavedReceiptSelection } from './review';
-import { readableReceiptObjectIds } from './access';
+import { readableReceiptObjectIds, readableReceiptProofKeys, receiptProofKey } from './access';
 import { ReceiptReleasePolicy } from './release-policy';
 import { ReceiptAiBudget, receiptBilling } from './ai-budget';
 
@@ -229,9 +229,11 @@ export class ReceiptAssistanceService {
   private async fields(tx: Tx, a: string, h: string, id: string) {
     const rows = await tx.receiptObjectField.findMany({ where: { accountId: a, homeId: h, objectId: id } });
     const result: Record<string, unknown> = { name: null, brand: null, model: null };
+    const proofs = rows.filter(row => row.origin !== 'user_declared' && row.documentId && row.documentVersion && row.documentSha256);
+    const confirmed = await readableReceiptProofKeys(tx, a, h, proofs), active = await readableReceiptProofKeys(tx, a, h, proofs, undefined, 'proposal');
     for (const row of rows) {
-      const available = row.origin === 'user_declared' || row.documentId && row.documentVersion && row.documentSha256 && await this.source(tx, a, h, row.documentId, { documentVersion: row.documentVersion, documentSha256: row.documentSha256 });
-      result[row.fieldKey] = available ? { state: 'confirmed', value: row.value, origin: row.origin, version: row.version, sources: row.sources } : { state: 'unavailable', value: null, origin: row.origin, version: row.version, sources: [] };
+      const key = receiptProofKey(row), available = row.origin === 'user_declared' || confirmed.has(key), sourceAvailable = row.origin === 'user_declared' || active.has(key);
+      result[row.fieldKey] = available ? { state: 'confirmed', value: row.value, origin: row.origin, version: row.version, sources: sourceAvailable ? row.sources : [], sourceAvailable } : { state: 'unavailable', value: null, origin: row.origin, version: row.version, sources: [], sourceAvailable: false };
     }
     return result;
   }
