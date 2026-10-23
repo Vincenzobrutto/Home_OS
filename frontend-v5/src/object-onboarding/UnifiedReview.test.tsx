@@ -12,6 +12,22 @@ import { reviewTotals } from './reviewSummary';
 import { DocumentEditorContext } from '../documents/DocumentEditorContext';
 
 const source = { documentId: 'source', page: 1, excerpt: 'Prova sintetica' };
+it('coffee order proposes 499 and the purchase date without creating an expense or implying warranty/payment',async()=>{
+ const draft=fixture();draft.documentKind='order_confirmation';draft.items=draft.items.slice(0,1);draft.purchaseTotal={amountCents:49900};draft.documentInfo={kind:'purchase_order',title:{value:'Riepilogo dell’ordine',source},facts:[{subjectIndex:-1,field:'shippingCost',value:'0,00 €',source}]};
+ const item=draft.items[0]!;item.fields.name!.value="De’Longhi Rivelia";delete item.purchaseAmount;
+ item.profile={brand:{value:'De’Longhi',origin:'extraction_confirmed',sources:[source]},model:{value:'EXAM440.35.B',origin:'extraction_confirmed',sources:[source]},orderDate:{value:'2026-06-14',origin:'extraction_confirmed',sources:[source]},purchaseDate:{value:'2026-06-14',origin:'derived_from_order',sources:[source]}};
+ const w=mount(draft);expect(screen.getByLabelText('Importo (€)')).toHaveValue('499');expect(screen.getByLabelText('Data di acquisto')).toHaveValue('2026-06-14');expect(screen.getByLabelText('Cosa fare con il costo')).toHaveValue('skip');
+ expect(screen.getByText(/Proposto il totale dell’ordine/)).toBeVisible();expect(item.profile.warrantyStart).toBeUndefined();expect(w.submit).not.toHaveBeenCalled();
+ await w.user.selectOptions(screen.getByLabelText('Cosa fare con il costo'),'create');expect(screen.getByLabelText('Data della spesa')).toHaveValue('2026-06-14');expect(w.submit).not.toHaveBeenCalled();
+ await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));expect(w.submit).toHaveBeenCalledOnce();expect(w.submit.mock.calls[0]![0][0]).toMatchObject({fields:{purchaseDate:{action:'accept'}},expense:{action:'create',amountCents:49900,spentOn:'2026-06-14'}});
+});
+it('existing coffee draft resumes offline without AI or backfill, retaining explicit user confirmation of the proposed date',()=>{
+ const draft=fixture();draft.documentKind='order_confirmation';draft.items=draft.items.slice(0,1);draft.purchaseTotal={amountCents:49900};draft.documentInfo={kind:'purchase_order',title:{value:'Riepilogo dell’ordine',source},facts:[]};
+ const item=draft.items[0]!;delete item.purchaseAmount;item.profile={orderDate:{value:'2026-06-14',origin:'extraction_confirmed',sources:[source]}};
+ const before=structuredClone(draft),w=mount(draft);expect(screen.getByLabelText('Data di acquisto')).toHaveValue('2026-06-14');expect(screen.getByLabelText('Importo (€)')).toHaveValue('499');expect(w.submit).not.toHaveBeenCalled();expect(draft).toEqual(before);
+ const form=initialForm(item,draft);expect(form.expense).toBe('skip');expect(form.spentOn).toBe('2026-06-14');expect(choice(item,form)).toMatchObject({fields:{orderDate:{action:'accept'},purchaseDate:{action:'manual',value:'2026-06-14'}},expense:{action:'skip'}});
+ expect(form.fields.warrantyStart).toBeUndefined();expect(form.fields.warrantyEnd).toBeUndefined();
+});
 it('editor directs an incomplete expense to its missing field without confirming anything',async()=>{
  const draft={...fixture(),items:[],purchaseTotal:null,houseExpenses:[{id:'cost'}]} as unknown as Draft,save=vi.fn();
  const api=new ApiClient({fetch:vi.fn()});

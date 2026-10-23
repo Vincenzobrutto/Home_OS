@@ -20,6 +20,8 @@ it('manual extension remains unchanged when purchase or delivery changes',()=>{l
 it('explicit document warranty and already confirmed dates are never recomputed',()=>{const profile={warrantyStart:{value:'2024-01-01',origin:'extraction_confirmed',sources:[]},warrantyEnd:{value:'2029-01-01',origin:'extraction_confirmed',sources:[]}},f=initialForm({...item,profile},{purchaseTotal:null} as Draft);const r=editProfileField(f,'purchaseDate',{action:'manual',value:'2025-01-01'},profile,{});expect(r.fields.warrantyStart?.action).toBe('accept');expect(r.fields.warrantyEnd?.action).toBe('accept');const linked=editProfileField(form(),'purchaseDate',{action:'manual',value:'2025-01-01'},{},profile);expect(linked.fields.warrantyStart).toBeUndefined();expect(linked.fields.warrantyEnd).toBeUndefined();});
 import { automaticExpenseEligible } from './model';
 import {documentTitleSuggestion} from './model';
+import {singleOrderCost} from './model';
+import {legacyOrderPurchaseDate} from './model';
 it('suggests distinguishable invoice titles using verified number and supplier, preserving descriptive titles',()=>{
  const source={documentId:'source',page:1,excerpt:'Fattura di primo acconto'},draft={snapshot:{documentId:'source'},documentInfo:{kind:'invoice',title:{value:'Fattura',source},facts:[]},houseExpenses:[{documentKind:'simple_invoice',proposedFields:{title:{value:'Fattura di primo acconto',sources:[source]},documentNumber:{value:'42',sources:[source]},supplier:{value:'Officina sintetica',sources:[source]}}}]} as unknown as Draft;
  expect(documentTitleSuggestion(draft)).toBe('Acconto · Fattura 42 · Officina sintetica');
@@ -55,10 +57,26 @@ it('order date stays separate: no expense date, warranty or financial automation
  const edited=editProfileField(f,'orderDate',{action:'manual',value:'2026-06-15'},ordered.profile,{});expect(edited.fields.warrantyStart).toBeUndefined();expect(edited.spentOn).toBe('');
 });
 
-it('order grand total with shipping cannot prefill a missing article price',()=>{
- const ordered={...item,profile:{orderDate:{value:'2024-10-13',origin:'extraction_confirmed',sources:[]}}};
- const draft={mode:'extraction',documentKind:'order_confirmation',items:[ordered],purchaseTotal:{amountCents:92415}} as unknown as Draft;
- expect(initialForm(ordered,draft).amount).toBe('');
+it('single order total never allocates across products, units, house costs or unsupported classifications',()=>{
+ const ordered={...item,disposition:'household_object'},d={documentKind:'order_confirmation',documentInfo:{kind:'purchase_order'},items:[ordered],purchaseTotal:{amountCents:49900}} as Draft;
+ expect(singleOrderCost(ordered,d)).toBe(49900);
+ for(const patch of [{items:[ordered,ordered]},{documentKind:'delivery_notice'},{documentKind:'unsupported'},{documentInfo:null},{purchaseTotal:null},{purchaseTotal:{amountCents:0}},{houseExpenses:[{id:'cost'}]}])expect(singleOrderCost(ordered,{...d,...patch} as Draft)).toBeNull();
+ for(const changed of [{...ordered,quantity:{value:2}},{...ordered,disposition:'uncertain'}])expect(singleOrderCost(changed,{...d,items:[changed]})).toBeNull();
+ for(const title of ['Preventivo ordine','Ordine annullato','Order cancelled','Carrello ordine','Reso ordine'])expect(singleOrderCost(ordered,{...d,documentInfo:{...d.documentInfo!,title:{value:title,source:{documentId:'source',page:1,excerpt:title}}}})).toBeNull();
+});
+it('legacy order date requires a confirmed order, a verified origin and the current document source',()=>{
+ const ordered={...item,profile:{orderDate:{value:'2026-06-14',origin:'extraction_confirmed',sources:[{documentId:'source',page:1,excerpt:'Ordine effettuato il 14 giugno 2026'}]}}};
+ const d={mode:'extraction',documentKind:'order_confirmation',documentInfo:{kind:'purchase_order'},snapshot:{documentId:'source'},items:[ordered],purchaseTotal:{amountCents:49900}} as Draft;
+ expect(legacyOrderPurchaseDate(ordered,d)).toBe('2026-06-14');
+ for(const patch of [{documentKind:'delivery_notice'},{documentKind:'unsupported'},{documentInfo:null},{snapshot:{documentId:'other'}},{mode:'manual'}])expect(legacyOrderPurchaseDate(ordered,{...d,...patch} as Draft)).toBeUndefined();
+ expect(legacyOrderPurchaseDate({...ordered,profile:{orderDate:{...ordered.profile.orderDate,origin:'user_declared'}}},d)).toBeUndefined();
+ expect(legacyOrderPurchaseDate({...ordered,profile:{...ordered.profile,purchaseDate:{value:'2026-06-15',origin:'extraction_confirmed',sources:[]}}},d)).toBeUndefined();
+});
+
+it('confirmed single-product order proposes acquisition cost including shipping, preserving the row price',()=>{
+ const ordered={...item,disposition:'household_object',profile:{orderDate:{value:'2024-10-13',origin:'extraction_confirmed',sources:[]}}};
+ const draft={mode:'extraction',documentKind:'order_confirmation',documentInfo:{kind:'purchase_order',facts:[]},items:[ordered],purchaseTotal:{amountCents:92415}} as unknown as Draft;
+ expect(initialForm(ordered,draft).amount).toBe('924.15');
  const priced={...ordered,purchaseAmount:{amountCents:84915,source:{documentId:'source',page:1,excerpt:'Manually reviewed row'}}};
- expect(initialForm(priced,draft).amount).toBe('849.15');expect(initialForm(priced,draft).spentOn).toBe('');
+ expect(initialForm(priced,{...draft,items:[priced]}).amount).toBe('924.15');expect(priced.purchaseAmount.amountCents).toBe(84915);expect(initialForm(priced,draft).spentOn).toBe('');
 });
