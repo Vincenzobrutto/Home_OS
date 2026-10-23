@@ -215,7 +215,7 @@ export class HomeObjectsService {
     if (!Object.keys(values).length && warrantyDocument === undefined) throw invalid();
     const normalized = Object.fromEntries(Object.entries(values).map(([k, v]) => [k, v === null ? null : profileValue(k as ProfileKey, v)]));
     const today = temporal(new Date()).today;
-    for (const field of ['purchaseDate', 'deliveredDate']) if (normalized[field] && normalized[field]! > today) throw invalid('La data effettiva non può essere futura.');
+    for (const field of ['orderDate','purchaseDate','deliveredDate']) if (normalized[field] && normalized[field]! > today) throw invalid('La data effettiva non può essere futura.');
     return this.mutate(a, h, 'object:profile', id, { expectedVersion, values: normalized, ...(warrantyDocument !== undefined ? { warrantyDocument } : {}) }, key, async (tx, c) => {
       const before = await this.saveSubject(tx, c, 'object', id); if (before.kind !== 'object') throw deny();
       this.active(before.row.state); this.checkVersion(before.row.version, expectedVersion, 'object');

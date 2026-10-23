@@ -47,3 +47,18 @@ it('multi-item purchases never prefill the total as an item price and require it
  f.expense='create';f.amount='99';f.spentOn='2025-06-13';expect(expenseNeedsReview(f)).toBe(true);f.manualItemAmount=true;expect(expenseNeedsReview(f)).toBe(false);
  expect(choice(item,f)).toMatchObject({expense:{action:'create',amountCents:9900,manualItemAmount:true}});
 });
+
+it('order date stays separate: no expense date, warranty or financial automation is prefilled',()=>{
+ const ordered={...item,profile:{orderDate:{value:'2026-06-14',origin:'extraction_confirmed',sources:[]}}};
+ const draft={mode:'extraction',documentKind:'order_confirmation',items:[ordered],purchaseTotal:{amountCents:49900},needsReview:false} as unknown as Draft;
+ const f=initialForm(ordered,draft);expect(f.spentOn).toBe('');expect(f.expense).toBe('skip');expect(f.expenseAutoState).toBeUndefined();expect(f.fields.orderDate).toEqual({action:'accept'});expect(f.fields.warrantyStart).toBeUndefined();
+ const edited=editProfileField(f,'orderDate',{action:'manual',value:'2026-06-15'},ordered.profile,{});expect(edited.fields.warrantyStart).toBeUndefined();expect(edited.spentOn).toBe('');
+});
+
+it('order grand total with shipping cannot prefill a missing article price',()=>{
+ const ordered={...item,profile:{orderDate:{value:'2024-10-13',origin:'extraction_confirmed',sources:[]}}};
+ const draft={mode:'extraction',documentKind:'order_confirmation',items:[ordered],purchaseTotal:{amountCents:92415}} as unknown as Draft;
+ expect(initialForm(ordered,draft).amount).toBe('');
+ const priced={...ordered,purchaseAmount:{amountCents:84915,source:{documentId:'source',page:1,excerpt:'Manually reviewed row'}}};
+ expect(initialForm(priced,draft).amount).toBe('849.15');expect(initialForm(priced,draft).spentOn).toBe('');
+});

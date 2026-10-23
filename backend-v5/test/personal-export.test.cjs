@@ -46,3 +46,11 @@ test('Controller requires explicit context and empty input; logout detected befo
   let authCalls=0;sessions.require=async()=>{if(authCalls++)throw new UnauthorizedException();return {accountId:'a'};};
   await assert.rejects(c.export({headers:{'x-account-context':'a'}},'h',{}, {},res),e=>e.getStatus()===401);assert(!sent);
 });
+
+test('order date export keeps declared or accessible evidence only, including SHA and version checks',()=>{
+ const source={documentId:'doc',documentVersion:1,sha256:'hash',page:1,excerpt:'Data ordine demo'};
+ const field={value:'2024-10-13',origin:'extraction_confirmed',sources:[source]};
+ assert.equal(projection().profile({orderDate:field}).orderDate.value,'2024-10-13');
+ for(const change of [{documentId:'foreign'},{documentVersion:2},{sha256:'changed'}])assert.deepEqual(projection().profile({orderDate:{...field,sources:[{...source,...change}]}}),{});
+ const declared=projection().profile({orderDate:{value:'2024-10-13',origin:'user_declared',sources:[]}});assert.equal(declared.orderDate.origin,'user_declared');assert.equal(declared.purchaseDate,undefined);
+});

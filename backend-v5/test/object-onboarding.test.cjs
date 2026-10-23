@@ -236,10 +236,10 @@ test('provider grammar removes nullable object branches and validates singleton 
  const parsed=productExtraction(onboardingWireOutput(wire),imageContext);assert.equal(parsed.items[0].quantity.value,1);assert.equal(parsed.purchaseTotal,null);
  wire.items[0].quantity.push(wire.items[0].quantity[0]);fails(()=>onboardingWireOutput(wire),'analysis_invalid_output');
 });
-test('visual order summary keeps coffee machine identity, explicit purchase date and total',()=>{
+test('visual order summary keeps coffee machine identity, explicit order date and total',()=>{
  const field=(value,excerpt=value)=>({value,evidence:proof(excerpt,true)});
- const value={documentKind:'purchase_document',hasMoreItems:false,requiresHumanReview:false,houseExpenses:[],purchaseTotal:{amountCents:49900,evidence:proof('Totale: 499,00 €',true)},items:[{fields:{name:field('Lume Rivelia'),brand:field('Lume'),model:field('Rivelia'),reference:field('EX440.35.B'),purchaseDate:field('2026-06-14','Ordine effettuato il: 14 giugno 2026')},quantity:null,nameTruncated:false,disposition:'household_object',confidence:'high'}]};
- const result=productExtraction(value,imageContext);assert.equal(result.items[0].fields.purchaseDate.value,'2026-06-14');assert.equal(result.items[0].fields.reference.value,'EX440.35.B');assert.equal(result.purchaseTotal.amountCents,49900);
+ const value={documentKind:'order_confirmation',hasMoreItems:false,requiresHumanReview:false,houseExpenses:[],purchaseTotal:{amountCents:49900,evidence:proof('Totale: 499,00 €',true)},items:[{fields:{name:field('Lume Rivelia'),brand:field('Lume'),model:field('Rivelia'),reference:field('EX440.35.B'),orderDate:field('2026-06-14','Ordine effettuato il: 14 giugno 2026')},quantity:null,nameTruncated:false,disposition:'household_object',confidence:'high'}]};
+ const result=productExtraction(value,imageContext);assert.equal(result.items[0].fields.orderDate.value,'2026-06-14');assert.equal(result.items[0].fields.reference.value,'EX440.35.B');assert.equal(result.purchaseTotal.amountCents,49900);const profile=require('../dist/object-onboarding/profile').proposedProfile(result.items[0]);assert.equal(profile.purchaseDate,undefined);assert.equal(profile.warrantyStart,undefined);assert.throws(()=>require('../dist/object-onboarding/automatic-plan').automaticPlan(result));
 });
 
 test('V9 shares source grammar once and resolves citations without changing their evidence',()=>{

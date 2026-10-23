@@ -1,3 +1,9 @@
+## 23 ottobre 2026 — Residui della verifica ordini reali
+
+- Scansioni Samsung/caffè: testo locale indisponibile; revisione manuale disponibile, nessun OCR/AI misurato. Righe senza evidenza di ruolo sufficiente restano manuali; non rilassare validatori per adattarli ai campioni.
+- Chiarire modello oscurato e voce aggiuntiva Samsung, anno della consegna caffè e date effettive di pagamento: non inferire dai metodi di pagamento.
+- Nessun backfill delle vecchie date già confermate; eventuale revisione dei dati e contabilità distinta della spedizione/pagamenti richiedono un intervento specifico. Prompt v28 candidato non eseguito; gold e ledger immutati. [Report](v5/fase0-orders-offline-20261023.md).
+
 ## 22 ottobre 2026 — Da sistemare emersi in BL-02/BL-03
 
 - **Test sensibili ai tempi**: `documentSearch.test.tsx` e `objects.test.tsx` possono fallire solo con la suite in parallelo (verdi da soli e nelle ripetizioni).

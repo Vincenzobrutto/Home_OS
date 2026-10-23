@@ -64,7 +64,7 @@ export function UnifiedReview({ documentReference,documentTargetLabel,summaryTit
     {!documentOnly&&contactFields}
 </>}
     <section className={ui.card} aria-label="Riepilogo prima di salvare" aria-live="polite">
-      {!documentOnly&&draft.purchaseTotal && <p>Totale fattura: <strong>{euro(draft.purchaseTotal.amountCents)}</strong></p>}
+      {!documentOnly&&draft.purchaseTotal && <p>Totale documento: <strong>{euro(draft.purchaseTotal.amountCents)}</strong></p>}
       <SaveSummary draft={draft} forms={forms} documentOnly={documentOnly} title={summaryTitle} houseForms={houseForms} contacts={summaryContacts} documentTargetLabel={documentTargetLabel}/>
       {!documentOnly&&!draft.invoiceCoverage&&totals.amountCents>0&&!(totals.newExpenses===1&&draft.houseExpenses?.length===1)&&<p>Totale nuove spese: <strong>{euro(totals.amountCents)}</strong></p>}
       {!!totals.excludedCents && <p>Importi esclusi: {euro(totals.excludedCents)}</p>}

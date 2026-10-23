@@ -9,13 +9,13 @@ import { object, text, invalid, uuid, version } from '../review/domain';
 import { ProviderFailure, type Snapshot } from '../review/provider';
 import { digest } from '../security';
 import { printedCents, printedDates, periodBoundary } from '../economy/document-evidence';
-import { purchaseDateSource, tableQuantity, tablePurchaseAmount } from './invoice-evidence';
+import { purchaseDateSource, orderDateSource, tableQuantity, tablePurchaseAmount } from './invoice-evidence';
 import { readUnderstanding, type DocumentUnderstanding, type UnderstandingWarning } from './understanding';
 import { calendar } from '../activities/domain';
 import { separateInvoices } from './invoice-segments';
 
 export const onboardingLimits = { maxItems: 20, maxUnits: 20, maxImageBytes: 5 * 1024 * 1024 } as const;
-export const productFields = ['name', 'brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
+export const productFields = ['name', 'brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'orderDate', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
 export type ProductField = typeof productFields[number];
 export type Region = { x: number; y: number; width: number; height: number };
 export type ProductSource = Citation & { basis: 'verified_text' | 'provider_observed_image'; region: Region | null };
@@ -86,6 +86,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if (row.hasMoreItems) throw new ProviderFailure('object_onboarding_too_many_items');
     const fingerprints = new Set<string>();
     const invoiceLines = new Set<string>();
+    const orderItems = new Set<string>();
     if (row.requiresHumanReview !== undefined && typeof row.requiresHumanReview !== 'boolean') throw invalid();
     const understanding=readUnderstanding(row.documentInfo,row.facts,row.items.length,value=>evidence(value,context),context.kind==='text'?context.pages:undefined);
     if(['conformity_declaration','house_document'].includes(String(row.documentKind))&&!understanding.documentInfo)throw invalid();
@@ -106,13 +107,13 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
         const field = object(rawField, ['value', 'evidence']);
         const value = normalize(text(field.value, key === 'brand' || key === 'serialNumber' ? 80 : 120));
         let source:ProductSource;try{source=evidence(field.evidence,context);}catch(error){if(error instanceof ProviderFailure&&error.code==='evidence_unverified')throw new ProductEvidenceFailure(key as ProductField,'citation');throw error;}
-        if (['purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'].includes(key)) {
+        if (['orderDate', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'].includes(key)) {
           calendar(value);
-          const dateMeaning = ({purchaseDate: /(?:data.{0,12}(?:acquisto|ordine|fattura)|purchase.{0,8}date|order.{0,8}date|acquistato.{0,5}il)/iu,deliveredDate: /(?:consegnato.{0,8}il|consegna.{0,8}effettiva|delivered.{0,8}on)/iu,warrantyStart: /(?:inizio.{0,10}garanzia|garanzia.{0,10}(?:dal|decorrenza)|warranty.{0,10}start)/iu,warrantyEnd: /(?:scadenza.{0,10}garanzia|garanzia.{0,10}(?:al|fino)|warranty.{0,10}(?:end|expir))/iu} as Record<string,RegExp>)[key];
-          if ((key==='purchaseDate'||key==='deliveredDate')&&value>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}))throw new ProviderFailure('evidence_unverified');
-          const purchaseSource = key === 'purchaseDate' && ['purchase_document','order_confirmation'].includes(String(row.documentKind))
-            ? purchaseDateSource(source.excerpt, value, context.kind === 'text' ? context.pages[source.page - 1] : undefined) : null;
-          const dateVerified = key === 'purchaseDate' && ['purchase_document','order_confirmation'].includes(String(row.documentKind))
+          const dateMeaning = ({orderDate: /ordine|order/iu,purchaseDate: /(?:data.{0,12}(?:acquisto|fattura)|purchase.{0,8}date|acquistato.{0,5}il)/iu,deliveredDate: /(?:consegnato.{0,8}il|consegna.{0,8}effettiva|delivered.{0,8}on)/iu,warrantyStart: /(?:inizio.{0,10}garanzia|garanzia.{0,10}(?:dal|decorrenza)|warranty.{0,10}start)/iu,warrantyEnd: /(?:scadenza.{0,10}garanzia|garanzia.{0,10}(?:al|fino)|warranty.{0,10}(?:end|expir))/iu} as Record<string,RegExp>)[key];
+          if ((key==='orderDate'||key==='purchaseDate'||key==='deliveredDate')&&value>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}))throw new ProviderFailure('evidence_unverified');
+          const purchaseSource = (key === 'purchaseDate' || key === 'orderDate') && ['purchase_document','order_confirmation'].includes(String(row.documentKind))
+            ? (key === 'orderDate' ? orderDateSource : purchaseDateSource)(source.excerpt, value, context.kind === 'text' ? context.pages[source.page - 1] : undefined) : null;
+          const dateVerified = (key === 'purchaseDate' || key === 'orderDate') && ['purchase_document','order_confirmation'].includes(String(row.documentKind))
             ? purchaseSource !== null
             : dateMeaning.test(source.excerpt) && printedDates(source.excerpt).length === 1 && printedDates(source.excerpt).includes(value);
           if (!dateVerified) throw new ProductEvidenceFailure(key as ProductField, 'date');
@@ -141,6 +142,11 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
         quantity = { value: Number(q.value), source:line?line.source:source };
       }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:'item:'+sourceIndex+':quantity',reason:'unverified'});}}
       if (r.confidence === 'low') { needsReview = true;understanding.warnings.push({field:'item:'+sourceIndex,reason:'missing_identity'});continue; }
+      if (row.documentKind === 'order_confirmation') {
+        const identity = JSON.stringify([normalize(primary.value).toLocaleLowerCase('it'),fields.brand?.value?.toLocaleLowerCase('it')??null,fields.model?.value?.toLocaleLowerCase('it')??fields.reference?.value?.toLocaleLowerCase('it')??null]);
+        if (orderItems.has(identity)) throw new ProviderFailure('object_onboarding_repeated_item');
+        orderItems.add(identity);
+      }
       const fingerprint = digest(JSON.stringify([context.snapshot.documentSha256, normalize(primary.value).toLocaleLowerCase('it'), fields.brand?.value?.toLocaleLowerCase('it') ?? null, fields.model?.value?.toLocaleLowerCase('it') ?? fields.reference?.value?.toLocaleLowerCase('it') ?? null, primary.source.page, quantity?.value ?? null]));
       if (fingerprints.has(fingerprint)) throw new ProviderFailure('object_onboarding_repeated_item');
       fingerprints.add(fingerprint);
@@ -161,7 +167,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {try{
       const total = object(row.purchaseTotal, ['amountCents', 'evidence']);
       const source = evidence(total.evidence, context);
-      if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*totale(?:\s+(?:documento(?:\s+corrente)?|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
+      if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !Number.isSafeInteger(total.amountCents) || Number(total.amountCents) <= 0 || Number(total.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !/^\s*(?:prezzo\s+totale|totale)(?:\s+(?:documento(?:\s+corrente)?|scontrino|ricevuta|complessivo|costi))?\s*[:=]?\s*(?:EUR|EURO|€)?\s*\d[\d., ]*\s*(?:EUR|EURO|€|\(\s*(?:EUR|EURO|€)\s*\))?\s*$/iu.test(source.excerpt) || !printedCents(source.excerpt).includes(Number(total.amountCents))) throw new ProductEvidenceFailure('purchaseTotal','total');
       purchaseTotal = { amountCents: Number(total.amountCents), source };
     }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}}
     if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents){needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}

@@ -1,3 +1,7 @@
+## Fase 0: ordini Samsung/caffè, verifica offline — 23 ottobre 2026
+
+Separati ordine, acquisto e consegna; la data dell’ordine non propone garanzia o spesa automatica. Spedizione esplicita come dato documentale, totale ordine distinto dal prezzo oggetto; prodotti ripetuti tra pagine richiedono revisione. Prompt candidato v28, nessuna AI o modifica ai dati reali. [Report e verifiche](v5/fase0-orders-offline-20261023.md).
+
 ## Fase 0: piano attuato offline, UI fatture e proposte da catalogo — 23 ottobre 2026
 
 Q48 mostra pagine coperte/pendenti e pagina di ogni fattura, con importi separati e revisione parziale esplicita. Prompt v27 e regressioni Q20/Q29/Q30 preservano titoli/date letterali e tutti i validatori. Catalogo generico di 91 apparati: proposte locali di tipo e ambienti compatibili, salvate solo con scelta esplicita; posizioni confermate protette. Matrice proposta dei 147 documenti, nessun cambio automatico delle famiglie. Test backend/HTTP/DB isolati verdi e frontend mock **834/834 (102 file)**; nessuna AI, migrazione o modifica ai dati dell’app. [Report e limiti](v5/fase0-night-plan-offline-20261023.md).

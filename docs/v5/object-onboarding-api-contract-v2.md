@@ -1,3 +1,7 @@
+## Aggiornamento 23 ottobre 2026 — ruoli degli ordini
+
+`fields`/profilo aggiungono `orderDate` (ISO completo, origine/fonti come le altre date). Non alimenta `purchaseDate`, data della spesa o inizio garanzia. Intestazioni d’ordine non verificano più acquisto; vecchie proposte vengono riclassificate in lettura, nessun backfill. `documentInfo.facts` ammette `shippingCost`, subjectIndex=-1 e kind=purchase_order, con ruolo completo e valuta stampata; è dato documentale, non costo aggiuntivo. `PREZZO TOTALE` è un totale valido con gli stessi vincoli di evidenza. Gli ordini richiedono revisione finanziaria anche se il provider non la richiede; importo/data dichiarati restano ammessi nella conferma manuale. Prodotto ripetuto tra pagine dello stesso ordine respinto per revisione. Nessuna nuova rotta o migrazione. [Verifiche e limiti](fase0-orders-offline-20261023.md).
+
 # Onboarding documenti e oggetti — contratto implementato O2–O5, 17 ottobre 2026
 
 Implementazione autorizzata, additiva a Documenti V2/ricevuta/manuali. Questo file estende object-onboarding-spec-v1.md per la consegna completa richiesta. Modulo registrato nell’app, migrazione26 applicata al solo DB V5 dedicato; provider esterno disabilitato dopo il collaudo con esito incerto.

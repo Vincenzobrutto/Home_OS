@@ -1,3 +1,7 @@
+## Ordini: date e spedizione — 23 ottobre 2026
+
+Profilo JSON oggetto/proposta: `orderDate` separata da acquisto/consegna/garanzia; stesse origini e fonti protette, nessuna colonna o migrazione. Fatto documentale `shippingCost` conserva testo monetario esplicito con valuta, mai una seconda spesa automatica. Costo dichiarato e pagamento sono concetti distinti: nessun registro pagamenti introdotto. Nessuna riscrittura dei dati confermati. [Report](fase0-orders-offline-20261023.md).
+
 ## Famiglie dell’archivio unico — 21 ottobre 2026
 
 Riutilizzato DocumentOrganization.houseFamily, nessuna nuova entità o copia. Migrazione `20261021230000_document_archive_families`: amplia solo il CHECK dei valori ammessi. Nessun UPDATE dei dati. Chiavi nuove: property, building, energy, condo, utilities, works, tax, insurance, warranty, safety e fallback unclassified. Storici plans/contracts/other conservati; nuova proiezione plans→building, contracts/other→unclassified. Per altre viste API, valori nuovi ricadono nel raggruppamento precedente da tipo.

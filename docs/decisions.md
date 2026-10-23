@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Un ordine non prova acquisto concluso o pagamento
+
+Separare `orderDate` da acquisto e consegna; la sola data ordine non avvia garanzia né spesa automatica. La spedizione resta fatto documentale, senza allocazione nei prezzi o costo aggiuntivo; totale ordine e prezzo oggetto non sono intercambiabili. Consentire costo/data dichiarati nella revisione manuale, senza certificarne il pagamento. Vecchie proposte con ruolo ordine riclassificate solo in lettura; nessun backfill sui dati confermati. Prompt v28 candidato non misurato live, gold e soglie invariati; citazioni e ruoli restano obbligatori. [Esiti e limiti](v5/fase0-orders-offline-20261023.md).
+
 ## 23 ottobre 2026 — Vocabolario locale e ambienti tipici restano suggerimenti
 
 Il committente autorizza l’attuazione autonoma offline del piano dopo aver fornito la mappa v4. Trascrivere soltanto il vocabolario generico, tracciato a foglio/riga/SHA, distinguendo tipo documentale, famiglia, oggetto/impianto e ambiente. La matrice delle famiglie resta proposta, senza nuove famiglie o backfill. Il catalogo non è evidenza di possesso o posizione: tipo applicato con clic su campo vuoto, stanza proposta soltanto tra ambienti attivi leggibili della casa e confermata con l’operazione canonica versionata. Posizioni già confermate e sistemi distribuiti non ricevono una collocazione automatica. Nessun consenso AI o invio reale deriva dall’autonomia autorizzata; gate invariato. [Attuazione e limiti](v5/fase0-night-plan-offline-20261023.md).

@@ -1,15 +1,17 @@
 import { printedDates, printedCents } from '../economy/document-evidence';
 
 const normalized = (text: string) => text.normalize('NFC').replace(/\s+/gu, ' ').trim();
-const purchaseLabel = /^(?:(?:il tuo )?ordine\s+(?:del|effettuato il)|ricevuta\s+d[’']acquisto|data\s*(?:(?:di|d[’'])\s*)?(?:acquisto|ordine|fattura)|acquistato il|purchase date|order date)\s*[:–-]?\s*/iu;
+const orderLabel = /^(?:(?:il tuo )?ordine\s+(?:del|effettuato il)|data\s*(?:(?:di|d[’'])\s*)?ordine|order date)\s*[:–-]?\s*/iu;
+const purchaseLabel = /^(?:ricevuta\s+d[’']acquisto|data\s*(?:(?:di|d[’'])\s*)?(?:acquisto|fattura)|acquistato il|purchase date)\s*[:–-]?\s*/iu;
 const conflictingLabel = /(?:consegna|consegnato|prevista|previsto|produzione|prodotto il|scadenza|pagamento|spedizione|manufactur|delivery|payment|due date)/iu;
 
 /** Date-only citations need an unambiguous purchase label on the same original page. */
-export function purchaseDateSource(excerpt: string, value: string, page?: string): string | null {
+export function purchaseDateSource(excerpt: string, value: string, page?: string, role: 'purchase' | 'order' = 'purchase'): string | null {
+  const labelPattern = role === 'order' ? orderLabel : purchaseLabel;
   const dates = printedDates(excerpt);
   if (dates.length !== 1 || dates[0] !== value || conflictingLabel.test(excerpt)) return null;
   const valid = (candidate: string) => {
-    const compact = normalized(candidate), label = purchaseLabel.exec(compact);
+    const compact = normalized(candidate), label = labelPattern.exec(compact);
     if (!label || conflictingLabel.test(compact)) return false;
     const printed = printedDates(compact.slice(label[0].length));
     return printed.length === 1 && printed[0] === value;
@@ -23,7 +25,7 @@ export function purchaseDateSource(excerpt: string, value: string, page?: string
     if (!normalized(lines[i]).includes(normalized(excerpt))) continue;
     let candidate = lines[i];
     if (!valid(candidate) && normalized(lines[i]) === normalized(excerpt) && i > 0) {
-      const previous = lines[i - 1], label = purchaseLabel.exec(normalized(previous));
+      const previous = lines[i - 1], label = labelPattern.exec(normalized(previous));
       if (label && !normalized(previous).slice(label[0].length)) candidate = previous + '\n' + lines[i];
     }
     if (!valid(candidate)) return null;
@@ -73,3 +75,5 @@ function descriptionRows(excerpt:string,productName:string):{quantity:number;tot
  return matches.length===1?{quantity:matches[0].quantity,totalCents:matches[0].totalCents}:null;
 }
 export function tablePurchaseAmount(excerpt:string,productName:string):number|null{return descriptionRows(excerpt,productName)?.totalCents??null;}
+
+export function orderDateSource(excerpt: string, value: string, page?: string): string | null { return purchaseDateSource(excerpt, value, page, 'order'); }

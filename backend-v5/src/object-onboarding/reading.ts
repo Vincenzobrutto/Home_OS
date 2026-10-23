@@ -26,7 +26,7 @@ export function progressiveComplete(output:ProductExtraction):boolean{
    (output.documentKind!=='utility_bill'||!!f.competenceFrom&&!!f.competenceTo);
  });
  return output.items.length>0&&output.items.every(i=>i.objectType?.certainty==='certain'&&!!i.fields.name&&
-  (!['purchase_document','order_confirmation'].includes(output.documentKind)||!!i.fields.purchaseDate&&!!(i.purchaseAmount||output.purchaseTotal)));
+  (!['purchase_document','order_confirmation'].includes(output.documentKind)||!!(i.fields.purchaseDate||i.fields.orderDate)&&!!(i.purchaseAmount||output.purchaseTotal)));
 }
 /** Sequential, caller-budgeted scan loop; each iteration must authorize/reserve before sending. */
 export async function readProgressively<T>(pageCount:number,readPage:(throughPage:number)=>Promise<T>,complete:(value:T)=>boolean):Promise<{value:T;pagesRead:number;complete:boolean}>{

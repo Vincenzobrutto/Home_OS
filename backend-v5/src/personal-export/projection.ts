@@ -63,7 +63,7 @@ export class Projection {
   }
   profile(value: unknown) {
     const result:Row={};
-    for(const key of ['brand','model','reference','serialNumber','powerWatts','voltageVolts','frequencyHz','capacityLitres','purchaseDate','deliveredDate','warrantyStart','warrantyEnd']){
+    for(const key of ['brand','model','reference','serialNumber','powerWatts','voltageVolts','frequencyHz','capacityLitres','orderDate','purchaseDate','deliveredDate','warrantyStart','warrantyEnd']){
       const field=record(record(value)[key]); if(typeof field.value!=='string')continue;
       const sources=this.sources(field.sources);
       if(field.origin!=='user_declared'&&(!sources.length||sources.length!==list(field.sources).length))continue;

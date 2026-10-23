@@ -1,3 +1,7 @@
+## Fase 0 — ordini reali, correzioni offline del 23 ottobre 2026
+
+Implementata distinzione data ordine/acquisto/consegna e spedizione/prezzo/totale, con revisione economica esplicita. [Report](v5/fase0-orders-offline-20261023.md). La lettura automatica delle due scansioni non è verificata: il worker locale non trova testo. Nessuna campagna o promozione del gate AI; pagamento e anno di consegna restano da confermare dove non documentati.
+
 ## Fase 0 — attuazione offline del piano completata, 23 ottobre 2026
 
 UI delle fatture incomplete, regressioni di titoli/date e suggerimenti locali per 91 apparati/ambienti attuati e collaudati offline. [Report e limiti](v5/fase0-night-plan-offline-20261023.md). La [matrice dei 147 documenti](v5/fase0-document-family-matrix-v4-20261023.json) resta proposta; nessuna nuova famiglia o backfill. Gate AI storico non superato e nessuna campagna avviata; [protocollo candidato](v5/fase0-next-measure-proposal-20261023.md) da autorizzare separatamente.

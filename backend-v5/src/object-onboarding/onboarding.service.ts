@@ -420,7 +420,7 @@ export class ObjectOnboardingService {
             if (target.manual && (target.manual as { url?: string }).url !== selected.url) throw conflict('onboarding_manual_exists', 'La scheda ha già un manuale: puoi modificarlo dalla scheda.');
             manual = onboardingJson({ ...selected, boundVersion: target.version + Number(choice.action === 'link') }) as Prisma.JsonValue;
           }
-          for(const date of ['purchaseDate','deliveredDate'] as const)if(resolved.fields[date]&&resolved.fields[date]!.value>temporal(this.clock.now()).today)throw invalid('Acquisto e consegna effettiva non possono essere futuri.');
+          for(const date of ['orderDate','purchaseDate','deliveredDate'] as const)if(resolved.fields[date]&&resolved.fields[date]!.value>temporal(this.clock.now()).today)throw invalid('Acquisto e consegna effettiva non possono essere futuri.');
           const before = target;
           if (changed || choice.manual || choice.action === 'create') target = await tx.homeObject.update({ where: { id: target.id }, data: { profile: onboardingJson(resolved.fields), manual: manual ?? Prisma.DbNull, ...(choice.action === 'link' ? { version: { increment: 1 } } : {}) } });
           await this.storeBasicFields(tx, a, h, target.id, resolved.fields);

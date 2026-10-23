@@ -16,6 +16,7 @@ export function paymentReview(context: ProductEvidenceContext): PaymentReview | 
 /** Old drafts lack this source check and cannot authorize financial automation. */
 export function requiresPaymentReview(output: ProductExtraction, snapshot?: Snapshot): boolean {
   const check = output.paymentReview;
+  if (output.documentKind === 'order_confirmation' || output.items.some(item => !!item.fields.orderDate || /ordine|order/iu.test(item.fields.purchaseDate?.source.excerpt ?? ''))) return true;
   if (check?.reason === 'split_payment') return true;
   const financial = ['purchase_document', 'order_confirmation', 'utility_bill'].includes(output.documentKind) || !!output.houseExpenses?.length || !!output.purchaseTotal || output.items.some(item => !!item.purchaseAmount);
   if (!financial) return false;

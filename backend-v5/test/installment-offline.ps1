@@ -12,7 +12,9 @@ try{$taskProbe.Start()}finally{$taskProbe.Stop()}
 New-Item -ItemType Directory -Path $taskScratch | Out-Null
 function RunHidden([string]$file,[string[]]$arguments,[string]$label){
  $taskProcess=Start-Process -FilePath $file -ArgumentList $arguments -WorkingDirectory $taskScratch -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $taskScratch ($label+'.log')) -RedirectStandardError (Join-Path $taskScratch ($label+'-error.log'))
+ $taskHandle=$taskProcess.Handle
  $taskProcess.WaitForExit()
+ $taskProcess.Refresh()
  if($taskProcess.ExitCode -ne 0){throw "Offline runner failed at $label ($($taskProcess.ExitCode)); see $taskScratch"}
 }
 try{
@@ -28,8 +30,8 @@ try{
  Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
  Copy-Item -LiteralPath (Join-Path $taskBackend 'prisma') -Destination (Join-Path $taskScratch 'prisma') -Recurse
  RunHidden $taskNode @(('"'+(Join-Path $taskBackend 'node_modules/prisma/build/index.js')+'"'),'migrate','deploy','--schema','prisma/schema.prisma') 'migrations'
- # No .env or provider configuration is read. Both suites block provider fetch and strictly assert the isolated DB address.
- RunHidden $taskNode @('--test','--test-concurrency=1',('"'+(Join-Path $taskBackend 'test/installment-linking.integration.test.cjs')+'"'),('"'+(Join-Path $taskBackend 'test/q48-invoices.integration.test.cjs')+'"')) 'tests'
+ # No .env or provider configuration is read. All suites block provider fetch and strictly assert the isolated DB address.
+ RunHidden $taskNode @('--test','--test-concurrency=1',('"'+(Join-Path $taskBackend 'test/installment-linking.integration.test.cjs')+'"'),('"'+(Join-Path $taskBackend 'test/q48-invoices.integration.test.cjs')+'"'),('"'+(Join-Path $taskBackend 'test/order-roles.integration.test.cjs')+'"')) 'tests'
  Get-Content (Join-Path $taskScratch 'tests.log')
 }finally{
  try{if($taskStarted){RunHidden (Join-Path $PgBin 'pg_ctl.exe') @('-D',('"'+$taskCluster+'"'),'-m','fast','-w','stop') 'stop'}}finally{foreach($taskKey in $taskSavedEnv.Keys){[Environment]::SetEnvironmentVariable($taskKey,$taskSavedEnv[$taskKey],'Process')}}

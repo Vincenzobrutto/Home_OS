@@ -1,4 +1,14 @@
-## Fase 0 — acconto/saldo corretto offline con revisione del costo, 23 ottobre 2026 (Codex)
+## Fase 0 — ordini Samsung/caffè corretti e verificati offline, 23 ottobre 2026 (Codex)
+
+**Implementato e verificato offline**: `orderDate` separata da acquisto/consegna e garanzia; vecchie proposte con ruolo ordine riclassificate solo in lettura. Spedizione come fatto documentale, totale ordine distinto dal prezzo oggetto; nessun prezzo mancante precompilato dal totale. Ordine/metodo di pagamento non autorizzano spesa automatica; costo/data restano dichiarabili manualmente. Prodotto ripetuto tra pagine bloccato per revisione. Nuovo campo esportabile solo con le consuete verifiche sulle fonti. Nessuna migrazione/backfill. [Report, aspettative dei due originali e riproduzione](v5/fase0-orders-offline-20261023.md).
+
+**Verifiche**: backend build/lint, onboarding **212/212**, ordinari **214/214**, runner/adattatore qualità offline **24/24**. DB temporaneo ordini/acconto-saldo/Q48 **63/63** con ricaricamenti, terzo upload, concorrenza, replay durevole da altro client, privacy tra owner, revoca/versione/SHA. HTTP/DB **98/98** + Q15/Q22/Q48 **38/38**, cluster e API temporanei fermati. Frontend typecheck/lint, mirati **73/73**, suite mock completa **838/838 (102 file)** dopo i fix, due worker e retry massimo 1 per timeout noti. Originali dei due ordini con SHA/dimensioni invariati.
+
+**Implementato non verificato live / limiti**: prompt candidato v28 non inviato a provider; gold, scorer, soglie, campagne e ledger invariati. Le due scansioni restituiscono `pdf_text_unavailable`: nessun OCR o miglioramento dell’estrazione automatica dimostrato. Righe senza ruolo verificabile rimangono manuali. Modello Samsung oscurato e voce aggiuntiva da chiarire; consegna caffè senza anno non completata. Metodo di pagamento non certifica pagamento. Nessun backfill di date già confermate, registro pagamenti o ripartizione automatica della spedizione.
+
+**Autonomia completata**: estese le regressioni a ripetizioni multipagina, IVA/subtotali/sconti, ruoli delle date, prezzi non attribuibili, esportazione e flussi precedenti. Prossimo passo: revisione offline degli altri reali già forniti; nessuna nuova campagna o deploy impliciti. Nessuna AI/email, `.env`, DB/API/storage reale o `main` toccati; modifiche estranee e 104 StoredFile conservati.
+
+## Checkpoint precedente — acconto/saldo corretto offline con revisione del costo, 23 ottobre 2026 (Codex)
 
 **Implementato**: stesso insieme di schede selezionato esplicitamente per entrambe le fatture; creazione di schede omonime leggibili bloccata nel percorso fattura. Secondo costo sugli stessi oggetti da riconciliare, anche con accettazione generica dei doppioni. Conferma manuale `purchaseReview` con campo vuoto per il costo complessivo: una sola spesa aggiornata atomicamente, senza somme/differenze dedotte; importo ambiguo resta pendente. Fonti aggiuntive con versione/SHA, CAS, storico e replay durevole. Nessuna migrazione o modifica ai dati preesistenti. [Report e limiti](v5/fase0-installments-fix-offline-20261023.md).
 

@@ -1,9 +1,10 @@
+import { orderDateSource } from './invoice-evidence';
 import { productNameIdentity } from './product-name';
 import { calendar } from '../activities/domain';
 import { invalid, object, text } from '../review/domain';
 import type { ProductItem, ProductSource } from './domain';
 
-export const profileFields = ['brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
+export const profileFields = ['brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'orderDate', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
 export type ProfileKey = typeof profileFields[number];
 export type ProfileOrigin = 'user_declared' | 'extraction_confirmed' | 'derived_from_purchase' | 'derived_from_delivery' | 'default_24_months' | 'manufacturer_page' | 'derived_from_product_name';
 /** `support`: documento di supporto scelto dall'utente per un dato dichiarato (BL-02, solo scadenza garanzia). Non è una citazione e non cambia la provenienza. */
@@ -26,6 +27,10 @@ export function profileValue(key: ProfileKey, input: unknown): string {
 export function proposedProfile(item: ProductItem): ObjectProfile {
   const result: ObjectProfile = {};
   for (const key of profileFields) if (item.fields[key]) result[key] = { value: profileValue(key, item.fields[key]!.value), origin: 'extraction_confirmed', sources: [item.fields[key]!.source] };
+  // Older drafts may have stored an order heading as purchaseDate. Preserve its role.
+  if (result.purchaseDate && orderDateSource(result.purchaseDate.sources[0]?.excerpt ?? '', result.purchaseDate.value)) {
+    result.orderDate ??= result.purchaseDate; delete result.purchaseDate;
+  }
   const inferred=productNameIdentity(item);
   const equal=(a:string,b:string)=>a.normalize('NFC').toLocaleLowerCase('it')===b.normalize('NFC').toLocaleLowerCase('it');
   const contradicts=(['brand','model'] as const).some(key=>result[key]&&inferred[key]&&!equal(result[key]!.value,inferred[key]!));
