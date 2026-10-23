@@ -42,6 +42,18 @@ I test committati sono sintetici e non richiedono il PDF privato. I log della se
 
 ## Stato e limiti
 
-**Implementato e verificato sul branch del lotto**, da integrare soltanto con PR verso `codex/dimora-v5-consolidata-20261023` e decisione del committente. Nessun deploy, riavvio del collaudo o ricalcolo di bozze esistenti.
+**Implementato e verificato; PR #12 integrata su approvazione del committente il 23 ottobre**, merge `b74efe994fdf6416509afaae9254d317e2e74570` nel consolidamento. Nessun ricalcolo di bozze esistenti. Il successivo riavvio del solo collaudo isolato è documentato sotto.
 
 Resta un classificatore lessicale conservativo, non un interprete completo di qualsiasi negazione, condizione o riferimento giuridico. Non introduce OCR: i PDF raster senza testo restano fuori dalla capacità di questa classificazione locale. Le precedenti regole edilizie restano invariate. Test frontend e suite DB non eseguiti: il lotto modifica soltanto una funzione pura backend e i suoi test, senza UI o percorsi DB. Le analisi AI storiche, la qualità generale dell'estrattore e il lotto Cestino restano distinti.
+
+## Integrazione e riavvio isolato approvati — 23 ottobre
+
+- Verificata la PR #12 prima del merge: punta attesa `aea593fd6dc14d76081d50dfc01b6b391dfe2c87`, base consolidamento, nessuna modifica ulteriore. Merge GitHub con controllo dell'hash, poi fetch e verifica remota di `b74efe9`. Main resta `cdbb318ddb56e764ad4b111a71560e3e71c7a033`; il branch Claude resta alla punta osservata all'inizio della consegna, `a132696bd6878246a471b42b44ac977eb6b8cce5`.
+- Worktree del lotto aggiornato con fast-forward alla versione integrata e build TypeScript ripetuta con successo. Non è stata ripetuta la suite 233/233, già verde sullo stesso codice prodotto; il merge non aggiunge cambiamenti al prodotto rispetto alla punta collaudata.
+- Arrestato il precedente supervisore del solo ambiente isolato, verificando percorsi e processi; conservato il vecchio `dist` in un backup locale, copiato il nuovo compilato e adattate esclusivamente nella copia le porte/identità di collaudo. Nessuna migrazione, `.env` o servizio reale.
+- Riavviati API 3109, frontend 5179 e relativo PostgreSQL 55433 di collaudo. Stessa guardia: fetch/rete esterna bloccati, provider AI disabilitati, worker e pulizia storage disabilitati, scritture HTTP di prodotto respinte. Verificati log di avvio, header `X-Dimora-Inspection: coffee-read-only`, risposta frontend 200 e browser con sessione esistente.
+- Hash del classificatore compilato in esecuzione identico a quello della build integrata. Controlli puri sul modulo effettivamente distribuito: ricevuta con entrambi i disclaimer → solo receipt; PDF misto con fattura su un'altra pagina → receipt + invoice. Nessuna analisi o riclassificazione salvata sul DB.
+- Browser: aperta la bozza preesistente del caffè; nome/marca/modello e data 14/06/2026 invariati, 499 EUR, scelta «Non creare una spesa», riepilogo «Nessuna nuova spesa». Nessun comando di salvataggio o nuova analisi eseguito.
+- Audit Prisma in transazione READ ONLY prima/dopo: identici conteggi e impronte di documenti/originale, bozze, job/tentativi, oggetti e spese. Restano **1 documento, 2 bozze caffè, 3 job caffè, 0 oggetti e 0 spese**. Nessun dato canonico modificato.
+
+Log, backup compilato, audit e schermata sono conservati soltanto negli artefatti locali della chat. Questa registrazione documentale non cambia codice o dati e passa da una PR separata verso il consolidamento; nessun merge aggiuntivo automatico.

@@ -14,7 +14,7 @@ Lotto Codex isolato dal Cestino: [costo/data da ordine confermato](v5/ordini-acq
 
 ## Classificazione locale: ricevute e negazioni
 
-[Lotto separato](v5/ricevute-negazioni-20261023.md) implementato e verificato sul branch `codex/ricevute-negazioni-20261023`: apostrofi, negazioni per occorrenza, riferimenti all'obbligo di emissione e documenti misti. 233/233 ordinari, build/lint e riscontro locale sul PDF reale. PR verso il consolidamento, nessun merge o aggiornamento dell'ambiente utente; Cestino di Claude escluso. Non introduce OCR né nuove analisi AI.
+[Lotto separato](v5/ricevute-negazioni-20261023.md) implementato e verificato: apostrofi, negazioni per occorrenza, riferimenti all'obbligo di emissione e documenti misti. 233/233 ordinari, build/lint e riscontro locale sul PDF reale. PR #12 integrata su approvazione a `b74efe9`; solo collaudo isolato ricompilato/riavviato in consultazione, dati invariati. Cestino di Claude escluso; nessun OCR o nuova analisi AI.
 
 ## Evolutive proposte, in ordine
 
