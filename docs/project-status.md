@@ -10,7 +10,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
-| — | — | — | — | Nessun lotto aperto. Prossimo proposto: Cestino ed eliminazione dati, primo lotto modello/backend, dal [progetto del 22/10](v5/fase0-deletion-design-20261022.md); richiede incarico. |
+| Cestino 1 — modello e backend documenti | Claude | `claude/cestino-backend-20261023` | `backend-v5` (schema/migrazione, `documents`, letture dei documenti negli altri moduli, nuovo worker di scadenza), test e documentazione del lotto | Aperto 23/10: [piano](v5/cestino-lotto1-piano-20261023.md) in attesa di approvazione, nessun codice. Frontend non toccato. |
 
 Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a pagamento, DB/API/storage reale, .env, migrazione di prodotto, gold/ledger storico, quota o dato del collaudo utente modificati; nessun reset/clean, force push o rimozione worktree. I 104 StoredFile orfani non toccati.
 
