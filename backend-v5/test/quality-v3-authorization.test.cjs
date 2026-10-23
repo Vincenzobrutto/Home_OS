@@ -23,3 +23,10 @@ test('future authorization also freezes invoice segmentation and domain validati
 test('changed semantic-role validator hash invalidates candidate authorization without dispatch',()=>{
  const a=createAuthorization(options.campaignId,options.model);a.frozenFiles['src/object-onboarding/role-evidence.ts']='0'.repeat(64);assert.throws(()=>validateAuthorization(a,options),e=>e.code==='synthetic_authorization_mismatch');
 });
+
+test('future authorization binds abbreviation and complete-name identity rules without reusing stale hashes',()=>{
+ for(const file of ['src/object-onboarding/short-name.ts','src/object-onboarding/product-name.ts']){
+  const a=createAuthorization(options.campaignId,options.model);assert.match(a.frozenFiles[file],/^[a-f0-9]{64}$/);
+  a.frozenFiles[file]='0'.repeat(64);assert.throws(()=>validateAuthorization(a,options),e=>e.code==='synthetic_authorization_mismatch');
+ }
+});

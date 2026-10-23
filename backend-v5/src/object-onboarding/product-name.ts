@@ -5,7 +5,7 @@ import type { ProductItem } from './domain';
 const brands = ['Strong', 'Amazon', 'Amazon Basics', 'Moulinex', 'De’Longhi', "De'Longhi", 'DeLonghi', 'Philips', 'Bosch', 'Siemens', 'Samsung', 'LG', 'Whirlpool', 'Electrolux', 'AEG', 'Beko', 'Candy', 'Haier', 'Hisense', 'Dyson', 'Apple', 'Sony', 'Panasonic', 'Rowenta', 'Braun', 'Krups', 'Nespresso', 'Smeg', 'Ariston', 'Ariete', 'Kenwood', 'Tefal'].sort((a,b)=>b.length-a.length);
 const escaped=(s:string)=>s.replace(/[.*+?^${}()|[\]\\]/gu,'\\$&');
 export function productNameIdentity(item: ProductItem): Partial<Record<'brand'|'model', string>> {
- const original=item.fields.name?.value.normalize('NFC').replace(/\s+/gu,' ').trim();
+ const original=(item.fullName??item.fields.name?.value)?.normalize('NFC').replace(/\s+/gu,' ').trim();
  if(!original || /\b(?:compatibil[ei]|compatible|ricambi?o?|custodia|cover|accessori[oa]|vendut[oa]|spedit[oa])\b/iu.test(original))return {};
  const brand=brands.find(b=>new RegExp('^'+escaped(b)+'\\s+','iu').test(original));
  if(!brand)return {};

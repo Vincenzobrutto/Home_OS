@@ -138,4 +138,30 @@ test('Acconto/saldo: manual purchase reconciliation, replay, source copies and p
   const h=await home(),x=await draft(h,sources[0]),c=cost(x.d,sources[0]),key=randomUUID();delete c.purchaseReview;
   await assert.rejects(svc.confirm(a.id,h,x.d.id,body(x.d,create(x.d),[c]),key),code('onboarding_purchase_amount_review'));assert.deepEqual(await counts(h),{objects:0,expenses:0});assert.equal(await db.objectOnboardingRequest.count({where:{accountId:a.id,key}}),0);
  });
+ await t.test('abbreviated names retain durable full variants, source privacy and cross-client idempotence',async()=>{
+  const {productExtraction}=require('../dist/object-onboarding/domain');
+  const h=await home(),full='Apparato domestico — '+ 'Descrizione commerciale completa '.repeat(5)+'Modello ZX-82/B variante Blu 256 GB';
+  const doc=await db.document.create({data:{homeId:h,uploaderId:a.id,name:'Synthetic long title',visibility:'private',original:{create:{originalFilename:'synthetic.pdf',mimeType:'application/pdf',sha256:hash(full),byteSize:1,file:{create:{storageKey:'not-stored-'+randomUUID()}}}}},include:{original:true}});
+  const snap={documentId:doc.id,documentVersion:1,documentSha256:doc.original.sha256},proof={page:1,excerpt:full,region:null};
+  const output=productExtraction({documentKind:'product_document',hasMoreItems:false,purchaseTotal:null,items:[{fields:{name:{value:full,evidence:proof},model:{value:'ZX-82/B',evidence:proof}},quantity:null,nameTruncated:false,disposition:'household_object',confidence:'high'}]},{kind:'text',snapshot:snap,pages:[full]});
+  const row=await db.objectOnboardingDraft.create({data:{accountId:a.id,homeId:h,documentId:doc.id,documentVersion:1,documentSha256:snap.documentSha256,mode:'extraction',output}});
+  const d=(await services(db).svc.getDraft(a.id,h,row.id,{})).draft;
+  assert.equal(d.items[0].fullName,full);assert.equal(d.items[0].fields.name.value,'Apparato domestico');assert.equal(d.needsReview,true);
+  await assert.rejects(svc.getDraft(b.id,h,row.id,{}));
+  const choice={...create(d)[0],name:d.items[0].fields.name.value,fields:{model:{action:'accept'}}},request=body(d,[choice]);
+  await assert.rejects(svc.confirm(a.id,h,d.id,{...request,expectedVersion:d.version+1},randomUUID()));
+  await assert.rejects(svc.confirm(a.id,h,d.id,{...request,source:{...d.snapshot,sha256:'f'.repeat(64)}},randomUUID()));
+  assert.deepEqual(await counts(h),{objects:0,expenses:0});
+  const key=randomUUID(),saved=await svc.confirm(a.id,h,d.id,request,key);
+  const replay=await services(db).svc.confirm(a.id,h,d.id,request,key);
+  assert.deepEqual(replay.result,saved.result);assert.deepEqual(await counts(h),{objects:1,expenses:0});
+  const objectId=saved.draft.items[0].decision.objects[0].id,field=await db.receiptObjectField.findUniqueOrThrow({where:{objectId_fieldKey:{objectId,fieldKey:'name'}}});
+  assert.equal(field.value,'Apparato domestico');assert.equal(field.sources[0].excerpt,full);assert.equal(field.documentSha256,snap.documentSha256);
+  const target=await db.homeObject.findUniqueOrThrow({where:{id:objectId}});assert.equal(target.profile.model.value,'ZX-82/B');
+  assert.equal((await svc.getDraft(a.id,h,d.id,{})).draft.items[0].fullName,full);
+  await db.documentVersion.update({where:{documentId:doc.id},data:{sha256:'b'.repeat(64)}});
+  const stale=(await svc.getDraft(a.id,h,d.id,{})).draft;assert.equal(stale.state,'unavailable');assert.deepEqual(stale.items,[]);assert(!JSON.stringify(stale).includes(full));
+  await assert.rejects(svc.confirm(a.id,h,d.id,request,key));assert.deepEqual(await counts(h),{objects:1,expenses:0});
+ });
+
 });

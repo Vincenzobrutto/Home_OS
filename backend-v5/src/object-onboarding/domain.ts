@@ -15,6 +15,7 @@ import { readUnderstanding, type DocumentUnderstanding, type UnderstandingWarnin
 import { calendar } from '../activities/domain';
 import { separateInvoices } from './invoice-segments';
 import { locateDecodeFailure, type DecodeLocation } from './decode-diagnostic';
+import { shortProductName } from './short-name';
 
 export const onboardingLimits = { maxItems: 20, maxUnits: 20, maxImageBytes: 5 * 1024 * 1024 } as const;
 export const productFields = ['name', 'brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'orderDate', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
@@ -23,6 +24,8 @@ export type Region = { x: number; y: number; width: number; height: number };
 export type ProductSource = Citation & { basis: 'verified_text' | 'provider_observed_image'; region: Region | null };
 export type ProductValue = { value: string; source: ProductSource };
 export type ProductItem = {
+  /** Entire verified source name retained when the display name is abbreviated. */
+  fullName?: string;
   invoiceLine?: InvoiceLine;
   objectType?: ObjectTypeProposal;
   id: string; fingerprint: string; sourceIndex?: number; subjectKind?: 'product' | 'system';
@@ -114,7 +117,9 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
         location = { section: 'item_field', field: key };
         try {
         const field = object(rawField, ['value', 'evidence']);
-        const value = normalize(text(field.value, key === 'brand' || key === 'serialNumber' ? 80 : 120));
+        // Source descriptions use the existing citation bound. The output name
+        // retains its 120-character limit and is projected only AFTER validation.
+        const value = normalize(text(field.value, key === 'name' ? 2000 : key === 'brand' || key === 'serialNumber' ? 80 : 120));
         let source:ProductSource;try{source=evidence(field.evidence,context);}catch(error){if(error instanceof ProviderFailure&&error.code==='evidence_unverified')throw new ProductEvidenceFailure(key as ProductField,'citation');throw error;}
         if (['orderDate', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'].includes(key)) {
           calendar(value);
@@ -200,6 +205,19 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     if(coverage?.pendingPages.length)needsReview=true;
     location = { section: 'contacts' };
     const party=contactProposal(understanding.documentInfo,context.kind==='text'?context.pages:undefined);
+    // Matching, prices, quantities and fingerprints above use the entire name.
+    // Preserve its variants and source, and forbid automatic acceptance of the abbreviation.
+    for (const [index, item] of items.entries()) {
+      const name = item.fields.name;
+      if (!name || [...name.value].length <= 120) continue;
+      location = { section: 'item_field', field: 'name' };
+      const abbreviated = shortProductName(name.value);
+      item.fullName = name.value;
+      item.fields.name = { ...name, value: abbreviated };
+      item.nameTruncated = true;
+      needsReview = true;
+      understanding.warnings.push({ field: 'item:' + (item.sourceIndex ?? index) + ':name', reason: 'unverified' });
+    }
     return { evidenceMode:context.kind, ...(coverage?{invoiceCoverage:coverage}:{}), ...(payment?{paymentReview:payment}:{}), ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
   } catch (error) {
     throw locateDecodeFailure(error, location);

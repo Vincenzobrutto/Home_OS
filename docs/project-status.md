@@ -1,3 +1,11 @@
+## Fase 0 — nome breve automatico e descrizione preservata, 23 ottobre 2026 (Codex)
+
+**Implementato e verificato offline**: proposta di nome breve letterale entro 120 caratteri dopo verifica integrale del nome esteso (entro il bound di citazione 2000). Nome esteso e fonte preservati, visibili nell’editor con modello e varianti; no taglio di identificatori non separabili. Nome abbreviato sempre da rivedere, nessuna conferma automatica. Fingerprint, ripetizioni, quantità e prezzi restano basati sul nome completo, così varianti finali diverse non collassano sul prefisso. [Comportamento, contratto e prove](v5/fase0-short-product-name-offline-20261023.md).
+
+**Verifiche**: backend build/lint, onboarding **285/285**, ordinari **214/214**, guard/runner/adattatore offline **17/17**. DB temporaneo nuovo **85/85**, con fonte privata/SHA/versione e replay da altro client, modello e descrizione integrale persistiti senza duplicati; cluster fermato. Frontend typecheck/lint, mirati **52/52**, mock completa finale **844/844 (102 file)** con due worker e retry massimo 1; primo giro 843/844, attesa link Spese scaduta; Spese isolato 23/23 e mock completa ripetuta senza carico concorrente. Nessun timeout/asserzione modificato.
+
+**Limiti**: due risposte reali precedenti non ricostruite; non dimostrato che il rifiuto caffè fosse dovuto alla lunghezza né che la sua precompilazione ora riesca. Varianti non validate in campi strutturati restano nella descrizione da controllare. Nessuna nuova AI/email, .env, DB/API/storage reale, main, gold/ledger sintetici, deploy o backfill. File estranei e 104 StoredFile preservati. UI temporanea ripristinata offline con AI disabilitata.
+
 ## Fase 0 — secondo invio reale autorizzato, rifiuto sul nome, 23 ottobre 2026 (Codex)
 
 **Verificato live nel solo collaudo isolato**: una nuova chiamata Anthropic esplicitamente autorizzata sul solo PDF anonimizzato caffè, tetto 0,25 USD; costo **0,038369 USD**, nessun retry. Rifiuto analysis_invalid_output alla fase evidence, sezione **item_field**, campo **name**. Nessuna proposta accettata; **1 documento, 0 oggetti, 0 spese**. Primo tentativo e costo preservati, totale dei due 0,076778 USD. [Esito, diagnosi e proposta nome breve](v5/fase0-coffee-second-attempt-20261023.md).

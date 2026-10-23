@@ -5,11 +5,12 @@ import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { AiBudget, Draft, Form, FieldKey } from './model';
 import { choice, initialForm, houseExpenseTitle } from './model';
-async function world(options:{objectSuggestion?:boolean;analysisSucceeded?:boolean;contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
+async function world(options:{shortName?:boolean;objectSuggestion?:boolean;analysisSucceeded?:boolean;contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
  if(options.login!==false){await api.login({email:account.email,password});await api.getSession();}
  const wire:Draft={id:'draft-onboarding',version:1,state:'open',mode:'extraction',snapshot:{documentId:options.foreign?'other-document':doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:'delivery_notice',items:['Router demo','Speaker demo'].map((name,i)=>({id:'item'+i,nameTruncated:false,disposition:'household_object',fields:{name:{value:name,source:{documentId:doc.id,page:1,excerpt:name}}},quantity:null,profile:{brand:{value:'Lume',origin:'extraction_confirmed',sources:[{documentId:doc.id,page:1,excerpt:'Lume'}]}},enrichment:null,decision:null})),needsReview:false,purchaseTotal:null,review:null,permissions:['read','edit']};
+ if(options.shortName){const item=wire.items[0]!;item.fullName='Router demo — '+ 'Descrizione commerciale documentata '.repeat(5)+'Modello ZX-82/B variante Blu 256 GB';item.fields.name!.source.excerpt=item.fullName;item.nameTruncated=true;item.profile.model={value:'ZX-82/B',origin:'extraction_confirmed',sources:[item.fields.name!.source]};wire.needsReview=true;wire.reviewWarnings=[{field:'item:0:name',reason:'unverified'}];}
  if(options.conformity){wire.documentKind='conformity_declaration';wire.items=[];wire.documentInfo={kind:'conformity_declaration',title:{value:'Dichiarazione di conformità',source:{documentId:doc.id,page:1,excerpt:'Dichiarazione di conformità'}},facts:[]};}
  if(options.contact)wire.contacts=[{id:'contact-proposal',values:{name:'Boreale Impianti',profession:'Elettricista',kind:'company',phone:'030 1234567',email:null,fiscalId:'12345678903',note:null},sources:{name:{documentId:doc.id,page:1,excerpt:'Impresa Boreale Impianti'}},warnings:[],resolution:{state:'create',contact:null,candidates:[],conflicts:[]},decision:null}];
  if(options.purchase){wire.documentKind='purchase_document';wire.items=wire.items.slice(0,1);wire.items[0]!.profile.purchaseDate={value:'2025-06-13',origin:'extraction_confirmed',sources:[]};wire.purchaseTotal={amountCents:9999};}
@@ -309,4 +310,22 @@ it('partial invoice confirmation durably saves deferred cost form and clears no 
  const review=w.calls.find(c=>c.path.endsWith('/review'))!.body as {review:{compilation:{houseForms:Record<string,{mode:string;title:string}>};pending:{body:unknown}}};
  expect(review.review.compilation.houseForms['house-cost']).toMatchObject({mode:'defer',title:'Saldo · Lavori elettrici'});expect(review.review.pending.body).toMatchObject({houseExpenses:[{itemId:'house-cost',action:'defer'}]});
  const route=w.router.state.location.pathname+w.router.state.location.search;await w.router.navigate('/case');await screen.findByRole('heading',{name:'Le mie case'});await w.router.navigate(route);await screen.findByRole('heading',{name:'Rivedi e organizza'});expect(screen.getByLabelText('Come registrare la spesa')).toHaveValue('defer');expect(screen.getByLabelText('Questa spesa è')).toHaveValue('balance');expect(w.counts().confirmations).toBe(1);
+});
+
+it('short display name retains visible complete variant and separate model without sending AI or confirming',async()=>{
+ const w=await world({shortName:true});
+ expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Router demo');
+ expect(screen.getByLabelText('Modello')).toHaveValue('ZX-82/B');
+ const region=screen.getByRole('region',{name:'Nome esteso del prodotto'});
+ expect(within(region).getByText(w.wire.items[0]!.fullName!)).toBeVisible();
+ expect(within(region).getByText(/Controlla modello e varianti/)).toBeVisible();
+ expect(w.counts()).toEqual({confirmations:0,starts:0});
+ expect(w.calls.every(c=>!c.path.endsWith('/jobs')&&!c.path.endsWith('/confirmations'))).toBe(true);
+});
+it('source mismatch never reveals the preserved extended name',async()=>{
+ const w=await world({shortName:true,foreign:true});
+ await screen.findByText(/Queste proposte appartengono a un altro documento/);
+ await waitFor(()=>expect(screen.queryByRole('region',{name:'Nome esteso del prodotto'})).not.toBeInTheDocument());
+ expect(screen.queryByText(w.wire.items[0]!.fullName!)).not.toBeInTheDocument();
+ expect(w.counts()).toEqual({confirmations:0,starts:0});
 });

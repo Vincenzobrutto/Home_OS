@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Nome breve come presentazione, identità sul nome verificato completo
+
+Separare descrizione sorgente entro il bound esistente della citazione (2000) e nome canonico entro 120. Abbreviare solo dopo la verifica integrale, conservando fullName e fonte visibili: non tagliare identificatori né sintetizzare varianti. Identità, ripetizioni e attribuzione economica restano basate sul testo completo. Abbreviazione sempre soggetta a revisione, senza automatico, backfill o sostituzioni dei dati già confermati. Accettare il nome breve mantiene l’estratto completo nella provenienza. Nessuna eccezione per venditore/cliente. [Prove](v5/fase0-short-product-name-offline-20261023.md).
+
 ## 23 ottobre 2026 — Diagnostica del decoder senza conservare risposte rifiutate
 
 Localizzare le eccezioni con metadati a vocabolario chiuso, associati internamente all'errore senza modificare API, ledger o bozze. Il log contiene soltanto sezione/campo ammessi, mai valori o messaggi originali. Conservare codici e criteri di rifiuto; non trasformare la mancanza di una risposta grezza in una causa presunta o in un retry a pagamento. Le prove costruite offline verificano il meccanismo, non riproducono la risposta reale persa. [Diagnosi e limiti](v5/fase0-coffee-rejection-offline-20261023.md).

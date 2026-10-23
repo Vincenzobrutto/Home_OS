@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Nome breve implementato offline; misura reale ancora aperta
+
+Nome breve letterale con descrizione estesa e fonti preservate, revisione obbligatoria e fingerprint sul testo completo. Il precedente rifiuto caffè non è retroattivamente attribuibile alla lunghezza; eventuale nuova misura AI resta separata e richiede consenso. Nessuna promessa di estrazione automatica delle varianti in attributi strutturati: quelle non esplicitamente validate restano nella descrizione da controllare. [Prove e limiti](v5/fase0-short-product-name-offline-20261023.md).
+
 ## 23 ottobre 2026 — Secondo tentativo caffè: nome da diagnosticare offline
 
 Seconda singola chiamata autorizzata: rifiuto localizzato in item_field/name, nessuna proposta accettata e nessun oggetto/spesa salvato. Non ancora distinta la causa lunghezza/struttura/citazione. Verificare offline diagnostica più granulare e politica generale di nome breve documentato con modello separato, senza tagli che nascondano varianti o aumenti del limite. Nessun ulteriore invio autorizzato da questo esito. [Dettagli](v5/fase0-coffee-second-attempt-20261023.md).

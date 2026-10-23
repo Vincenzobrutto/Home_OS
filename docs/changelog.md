@@ -1,3 +1,7 @@
+## Fase 0: nome breve senza perdere la descrizione documentale — 23 ottobre 2026
+
+Proposta entro 120 caratteri dopo verifica del nome esteso, conservato e visibile con modello/varianti e fonte. Abbreviazione sempre da controllare; nessuna conferma automatica, identità o attribuzione di prezzo dal solo prefisso. [Report e limiti](v5/fase0-short-product-name-offline-20261023.md).
+
 ## Fase 0: diagnostica dei rifiuti visuali, offline — 23 ottobre 2026
 
 Il decoder localizza gli errori con sezioni e campi ammessi, senza valori o contenuti privati nei log. Codici, limiti e validazioni invariati. Causa della precedente risposta caffè non recuperabile senza il risultato grezzo, nessuna nuova chiamata AI. [Report e verifiche](v5/fase0-coffee-rejection-offline-20261023.md).

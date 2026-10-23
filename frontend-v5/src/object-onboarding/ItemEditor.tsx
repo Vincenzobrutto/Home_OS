@@ -44,6 +44,7 @@ export function ItemEditor({part='all',api,accountId,base,draft,item,form,disabl
  if(part==='expense')return <fieldset disabled={disabled} className={styles.stack}>{!['skip','document_only'].includes(form.action)?expenseFields:<p>Nessun costo per questo articolo.</p>}</fieldset>;
  return <div className={styles.stack}>
   <p>{technicalDocument?'Scheda collegata al documento':quantity>1?quantity+' esemplari indicati nel documento':'Un articolo'}{item.nameTruncated?' · Nome parziale: verifica la descrizione completa':''}</p>
+  {item.fullName&&<section aria-label="Nome esteso del prodotto"><p>Nome abbreviato automaticamente. Controlla modello e varianti prima di confermare.</p><details open><summary>Nome esteso nel documento</summary><p>{item.fullName}</p></details></section>}
   {!technicalDocument&&item.disposition!=='household_object'&&item.subjectKind!=='system'&&<Banner tone="warning"><p>Potrebbe essere un accessorio o un materiale di consumo. Scegli se vuoi censirlo come oggetto di casa.</p></Banner>}
   {plausible.length>0&&<Banner tone="warning"><p>Possibili schede già presenti: {plausible.slice(0,3).map(row=>row.name).join(', ')}. Controllale prima di creare una nuova scheda.</p></Banner>}
   <fieldset disabled={disabled} className={styles.stack}><legend>Cosa vuoi fare?</legend>
