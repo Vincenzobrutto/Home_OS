@@ -20,6 +20,10 @@ Lotto Codex isolato dal Cestino: [costo/data da ordine confermato](v5/ordini-acq
 
 Lotto separato [prezzi e date](v5/prezzi-date-20261023.md): implementato e verificato offline, 311/311 onboarding, 233/233 ordinari, 18/18 guardie e build/lint. Date sconosciute/condizionali e riferimenti con date ripetute restano da confermare; note neutre e ruoli economici preservati. PR verso il consolidamento, merge al committente; nessuna AI, DB o modifica al lotto Cestino.
 
+## Collaudo offline di oggetti e stanze
+
+Lotto separato [oggetti e stanze](v5/oggetti-stanze-20261023.md): specificità per occorrenza, varianti generiche del vocabolario e compatibilità dei tipi stanza. Suggerimenti da confermare; nessuna deduzione di marca/modello o ubicazione. Verificati typecheck/lint/build e mock completa 870/870 (105 file); esiti e limiti nel report, PR verso il consolidamento con merge al committente. Esclusi lotti Cestino, AI e DB reale.
+
 ## Evolutive proposte, in ordine
 
 1. Cestino ed eliminazione dati: [progetto con le scelte del committente del 22/10](v5/fase0-deletion-design-20261022.md), da dividere in lotti (modello/backend, pagina Cestino, backup). Solo progetto, nessun codice.
