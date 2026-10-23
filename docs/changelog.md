@@ -6,6 +6,12 @@ Le schede confermate restano leggibili anche con la fonte nel cestino o eliminat
 
 Documenti nel cestino per 30 giorni, solo per chi li ha caricati: invisibili ovunque, condivisioni revocate, ripristino versionato, eliminazione definitiva automatica o immediata con segnaposto senza contenuto e registro delle eliminazioni. Migrazione additiva `20261023200000_document_trash`. Verificato offline: 227/227 ordinari, 506/506 HTTP/DB sintetici, ricerca del testo sintetico in tutto il DB dopo lo svuotamento con zero risultati. Frontend nel lotto 2, backup in un lotto separato. [Report](v5/cestino-lotto1-report-20261023.md).
 
+## 23 ottobre 2026 — Classificazione locale di ricevute e negazioni
+
+Riconosciute le forme «ricevuta d'acquisto» con apostrofi e spazi diversi. Le menzioni esplicitamente negate e i riferimenti negativi all'obbligo di emissione non attribuiscono un tipo al documento; una vera fattura nello stesso PDF rimane riconoscibile. Build/lint e 233/233 test ordinari offline superati. Correzione verificata senza AI, accesso DB o modifica al lotto Cestino; integrazione approvata descritta sotto. [Report](v5/ricevute-negazioni-20261023.md).
+
+Successiva integrazione approvata: PR #12 unita a `b74efe9`, API del collaudo isolato ricompilata e riavviata con AI/worker/salvataggi bloccati. Bozza caffè 499 EUR e nessuna spesa; audit dati prima/dopo identici. Nessun DB reale, main o lotto Claude modificato.
+
 ## 23 ottobre 2026 — Ordini confermati: proposte di costo e acquisto
 
 Ordine confermato come data di acquisto proposta e totale come costo del singolo prodotto, spedizione inclusa. Nessun pagamento, consegna o garanzia dedotti; spesa soltanto dopo scelta e conferma. Ripresa bozze senza nuova AI. Backend 306 onboarding, 224 ordinari, 24 qualità, 18 guardie e 88 DB; frontend mock completa 864/864. PR #8 verso il consolidamento, senza merge o deploy. [Report e verifica offline](v5/ordini-acquisto-20261023.md).
