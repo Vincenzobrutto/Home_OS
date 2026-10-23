@@ -1,4 +1,14 @@
-## Fase 0 — regole degli acquisti generalizzate e verificate offline, 23 ottobre 2026 (Codex)
+## Fase 0 — percorso manuale verificato nell’interfaccia isolata, 23 ottobre 2026 (Codex)
+
+**Verificato offline nel browser**: frontend con API vera, DB/storage temporanei nuovi; ordine caffè, acconto e saldo reali anonimizzati già forniti. Una scheda caffè con marca/modello, stanza scelta e data ordine salvata dalla scheda; una sola spesa dichiarata di 499 EUR, pagamento non attestato. Tre climatizzatori creati dall’acconto; saldo collegato agli stessi tre. Ricaricamenti riutilizzano gli originali. Query finali in sola lettura: **3 documenti, 4 oggetti, 1 spesa**, esattamente due fonti documentali per ciascun climatizzatore, zero job/tentativi AI. [Percorso, ambiente, anomalie e limiti](v5/fase0-ui-workflow-offline-20261023.md).
+
+**Aperto / non dichiarato risolto**: primo salvataggio ordine riuscito solo al secondo tentativo, causa originaria non raccolta; data ordine iniziale nell’intake non persistita (successo verificato dalla modifica della scheda); riapertura della revisione economica parziale richiede di reinserire rinvio ed etichetta acconto/saldo. Costi ambigui rimangono senza registrazione, nessuna somma/ripartizione. Priorità successiva: regressioni mirate e ripresa della compilazione parziale. Nessun fix di prodotto in questa sessione.
+
+**Verifiche automatiche**: frontend typecheck/lint superati; suite mock completa **838/838 (102 file)**, due worker e retry massimo 1 configurato. Build backend e DB temporaneo **82/82** (ordini, acconto/saldo, Q48, varianti generali, privacy/revoca/SHA/versione/replay/concorrenza). API e cluster UI e cluster di regressione fermati. Altre suite HTTP/DB non ripetute.
+
+**Limiti**: compilazione manuale, nessuna accuratezza AI/OCR dimostrata. UI acconto→saldo e ricaricamento invertito; l’inversione iniziale, privacy e replay concorrente appartengono alla suite DB. Nessuna AI/email, `.env`, gold/ledger delle campagne, DB/API/storage reale, deploy o main toccati; file estranei e 104 StoredFile conservati. Servizi di collaudo fermati.
+
+## Checkpoint precedente — regole degli acquisti generalizzate e verificate offline, 23 ottobre 2026 (Codex)
 
 **Implementato e verificato offline**: ruoli condivisi per date, totali e spedizione, con varianti italiane/inglesi e ritorni a capo; colonne esplicite riordinate e EUR nella cella o nella propria intestazione. Nessuna regola su nomi/prezzi del committente. Data fattura non prova acquisto; date comuni qualificate per un solo articolo non vengono propagate. Nome/ruolo/prezzo devono appartenere alla stessa riga; quantità e prezzo hanno esiti indipendenti. Prezzo di riga assente/errato conserva gli altri dati e richiede revisione, bloccando il ripiego automatico sul totale anche nel controllo finanziario server. Nessun calcolo di prezzi, ripartizione o cambio di API/schema. [Audit, regressioni e limiti](v5/fase0-general-rules-offline-20261023.md).
 

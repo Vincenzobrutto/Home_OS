@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Ripresa della revisione parziale e primo salvataggio UI
+
+Nel collaudo isolato con API vera: primo salvataggio ordine respinto genericamente, secondo riuscito senza doppioni (causa originaria da riprodurre); data ordine iniziale intake non presente nel profilo, modifica dalla scheda verificata; costo rinviato riaperto con modulo iniziale, etichetta acconto/saldo e scelta rinvio da reinserire. Non dichiarati risolti. Priorità: regressioni mirate del workspace e persistenza della revisione parziale, mantenendo CAS, recupero esatto/idempotenza, privacy e separazione costo/pagamento. [Report e prove](v5/fase0-ui-workflow-offline-20261023.md).
+
 ## 23 ottobre 2026 — Formati generali: copertura dichiarata, nessuna eccezione per cliente
 
 Nuovi ruoli e colonne riordinate verificati offline negli acquisti. Restano da valutare formati con celle unite/non separabili, altre lingue o valute e convenzioni estere di data: revisione esplicita finché non esiste evidenza sufficiente, senza inventare conversioni. Non estendere per automatismo le regole dei totali d’acquisto a saldi/bollette/fatture segmentate. I dati già confermati non vengono riscritti; nessun OCR/AI reale misurato. [Audit, regressioni e principio per nuove varianti](v5/fase0-general-rules-offline-20261023.md).
