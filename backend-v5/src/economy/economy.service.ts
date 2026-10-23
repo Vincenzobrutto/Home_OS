@@ -46,7 +46,7 @@ export class EconomyService {
   private readableBoiler(a:string,h:string,id:Prisma.Sql){return Prisma.sql`EXISTS (SELECT 1 FROM "BoilerAsset" b WHERE b.id=${id} AND b."accountId"=${a} AND b."homeId"=${h} AND NOT EXISTS (
     SELECT 1 FROM "AnalysisJob" j CROSS JOIN LATERAL jsonb_array_elements(j.documents) s
     LEFT JOIN "Document" d ON d.id=s->>'documentId' LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
-    WHERE j."assetId"=b.id AND j.state='succeeded' AND (d.id IS NULL OR d."homeId"<>${h} OR NOT(d.visibility::text='home' OR d."uploaderId"=${a}) OR v.id IS NULL OR v.version::text<>s->>'documentVersion' OR v.sha256<>s->>'documentSha256')
+    WHERE j."assetId"=b.id AND j.state='succeeded' AND (d.id IS NULL OR d."homeId"<>${h} OR NOT(d."trashedAt" IS NULL AND (d."trashedAt" IS NULL AND (d.visibility::text='home' OR d."uploaderId"=${a}))) OR v.id IS NULL OR v.version::text<>s->>'documentVersion' OR v.sha256<>s->>'documentSha256')
   ))`;}
   private where(a:string,h:string,q:Query){
     const parts:Prisma.Sql[]=[Prisma.sql`e."accountId"=${a}`,Prisma.sql`e."homeId"=${h}`,Prisma.sql`${referenceDateSql}>=${q.from} AND ${referenceDateSql}<=${q.to}`];

@@ -347,7 +347,7 @@ export class HomeObjectsService {
     if (type === 'expense') {
       const row = await tx.homeExpense.findFirst({ where: { id, homeId: c.h, accountId: c.a } });
       if (!row) throw deny();
-      const source = row.documentId ? await tx.document.findFirst({ where: { id: row.documentId, homeId: c.h, OR: [{ visibility: 'home' }, { uploaderId: c.a }] }, select: { id: true, name: true } }) : null;
+      const source = row.documentId ? await tx.document.findFirst({ where: { id: row.documentId, homeId: c.h, trashedAt: null, OR: [{ visibility: 'home' }, { uploaderId: c.a }] }, select: { id: true, name: true } }) : null;
       return { id, title: row.title, assetId: row.assetId, amountCents: row.amountCents, currency: 'EUR' as const, spentOn: row.spentOn, document: source ? { id: source.id, title: source.name } : null };
     }
     const row = await tx.homeActivity.findFirst({ where: { id, homeId: c.h, accountId: c.a } });
@@ -399,13 +399,13 @@ export class HomeObjectsService {
       const costDocuments = Prisma.sql`SELECT DISTINCT d.id,d.name AS title,d."createdAt"
         FROM "HomeExpense" e JOIN "Document" d ON d.id=e."documentId"
         WHERE e."accountId"=${a} AND e."homeId"=${h} AND e.state='active'
-          AND d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a})
+          AND d."homeId"=${h} AND (d."trashedAt" IS NULL AND (d.visibility::text='home' OR d."uploaderId"=${a}))
           AND ${kind === 'boiler' ? Prisma.sql`e."assetId"=${id}` : Prisma.sql`EXISTS (
             SELECT 1 FROM "ObjectResourceLink" l WHERE l."expenseId"=e.id AND l."objectId"=${id}
               AND l."accountId"=${a} AND l."homeId"=${h} AND l.state='active')`}`;
       const analysisDocuments = kind !== 'boiler' ? noNative : Prisma.sql`
         SELECT DISTINCT d.id,d.name AS title,d."createdAt" FROM "AnalysisJob" j CROSS JOIN LATERAL jsonb_array_elements(j.documents) s JOIN "Document" d ON d.id=s->>'documentId'
-        WHERE j."assetId"=${id} AND j.state='succeeded' AND d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a})`;
+        WHERE j."assetId"=${id} AND j.state='succeeded' AND d."homeId"=${h} AND (d."trashedAt" IS NULL AND (d.visibility::text='home' OR d."uploaderId"=${a}))`;
       const native = type === 'document' ? Prisma.sql`SELECT * FROM (${costDocuments}) costs UNION SELECT * FROM (${analysisDocuments}) analyses` : kind !== 'boiler' ? noNative : type === 'expense' ? Prisma.sql`
         SELECT id,title,"createdAt" FROM "HomeExpense" WHERE "assetId"=${id} AND "accountId"=${a} AND "homeId"=${h}` : Prisma.sql`
         SELECT id,title,"createdAt" FROM "HomeActivity" WHERE "assetId"=${id} AND "accountId"=${a} AND "homeId"=${h}`;

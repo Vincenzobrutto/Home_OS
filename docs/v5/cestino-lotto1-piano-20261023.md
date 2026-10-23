@@ -1,6 +1,6 @@
 # Cestino — lotto 1, modello e backend dei documenti: piano, 23 ottobre 2026
 
-Lotto Claude, branch `claude/cestino-backend-20261023` dal consolidamento `d373700`. **Solo piano, in attesa di approvazione del committente: nessun codice scritto.** Parte dal [progetto del 22/10](fase0-deletion-design-20261022.md), §2–§4.1, §4.4, §5–§8 punti 1–2, limitato ai documenti.
+Lotto Claude, branch `claude/cestino-backend-20261023` dal consolidamento `d373700`. **Approvato dal committente il 23/10** con le due risposte sotto; implementazione e verifiche nel [report](cestino-lotto1-report-20261023.md). Parte dal [progetto del 22/10](fase0-deletion-design-20261022.md), §2–§4.1, §4.4, §5–§8 punti 1–2, limitato ai documenti.
 
 ## Perimetro
 
@@ -37,7 +37,7 @@ Le letture dei documenti sono in una ventina di file (`documents`, `review`, `do
 - Dopo l'eliminazione definitiva di un documento sintetico: ricerca in tutte le tabelle, JSON inclusi, del nome e dei valori del documento, con zero risultati.
 - Suite esistenti invariate: nessuna asserzione allentata.
 
-## Domande al committente
+## Domande al committente (risposte del 23/10: sì a entrambe)
 
 1. Va bene che solo chi ha caricato un documento possa eliminarlo, anche quando è condiviso con la casa?
 2. Va bene lasciare a un lotto a parte il ciclo dei backup, visto che i relativi script stanno fuori dal repository?

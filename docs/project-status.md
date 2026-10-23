@@ -10,7 +10,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
-| Cestino 1 — modello e backend documenti | Claude | `claude/cestino-backend-20261023` | `backend-v5` (schema/migrazione, `documents`, letture dei documenti negli altri moduli, nuovo worker di scadenza), test e documentazione del lotto | Aperto 23/10: [piano](v5/cestino-lotto1-piano-20261023.md) in attesa di approvazione, nessun codice. Frontend non toccato. |
+| Cestino 1 — modello e backend documenti | Claude | `claude/cestino-backend-20261023` | `backend-v5` (schema/migrazione, `documents`, letture dei documenti negli altri moduli, nuovo worker di scadenza), test e documentazione del lotto | Implementato e verificato offline 23/10 ([report](v5/cestino-lotto1-report-20261023.md)): build/lint, 227/227 ordinari, 303/303 onboarding, 506/506 HTTP/DB sintetici incluso il nuovo test:trash-db. PR verso il consolidamento in attesa del merge del committente. Frontend non toccato: pagina Cestino nel lotto 2. |
 
 Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a pagamento, DB/API/storage reale, .env, migrazione di prodotto, gold/ledger storico, quota o dato del collaudo utente modificati; nessun reset/clean, force push o rimozione worktree. I 104 StoredFile orfani non toccati.
 

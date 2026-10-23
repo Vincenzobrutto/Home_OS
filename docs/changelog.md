@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Cestino dei documenti, lotto 1 (backend)
+
+Documenti nel cestino per 30 giorni, solo per chi li ha caricati: invisibili ovunque, condivisioni revocate, ripristino versionato, eliminazione definitiva automatica o immediata con segnaposto senza contenuto e registro delle eliminazioni. Migrazione additiva `20261023200000_document_trash`. Verificato offline: 227/227 ordinari, 506/506 HTTP/DB sintetici, ricerca del testo sintetico in tutto il DB dopo lo svuotamento con zero risultati. Frontend nel lotto 2, backup in un lotto separato. [Report](v5/cestino-lotto1-report-20261023.md).
+
 ## 23 ottobre 2026 — Flusso delle evolutive fra agenti
 
 Il consolidamento diventa la base delle evolutive: un branch e una PR per lotto, prefisso dell'agente, tabella «Lotti in corso» nello [stato corrente](project-status.md), regole in [AGENTS.md](../AGENTS.md). Riportati il commit di registrazione del branch e il [progetto dell'eliminazione dati](v5/fase0-deletion-design-20261022.md) (solo documentazione, nessun codice).

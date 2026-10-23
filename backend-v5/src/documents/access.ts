@@ -5,7 +5,9 @@ import { PrismaService } from '../prisma.service';
 import { SessionsService, validMembership } from '../security';
 import type { HomeMembership, Document, Prisma } from '../../generated/client';
 export type DocumentRequest = Request & { documentAccountId: string };
-export function canReadDocument(doc: Pick<Document, 'uploaderId' | 'visibility'>, accountId: string) { return doc.visibility === 'home' || doc.uploaderId === accountId; }
+// A trashed or purged document is unreadable everywhere: lists, sources, AI, shares, exports, confirmations.
+export function canReadDocument(doc: Pick<Document, 'uploaderId' | 'visibility' | 'trashedAt'>, accountId: string) { return !doc.trashedAt && (doc.visibility === 'home' || doc.uploaderId === accountId); }
+export const activeDocument = { trashedAt: null } as const;
 export function canExport(member: HomeMembership) { return member.role !== 'viewer'; }
 @Injectable()
 export class DocumentPolicy {

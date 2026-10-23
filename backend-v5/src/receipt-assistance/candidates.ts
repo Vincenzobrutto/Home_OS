@@ -7,7 +7,7 @@ export type CandidateKind = 'object' | 'expense';
 export type CandidateAnchor = { id: string; rank: number };
 export const equivalentReceiptDocuments = (a: string, h: string, draft: Pick<ReceiptDraft, 'documentSha256'>) => Prisma.sql`
   SELECT d.id FROM "Document" d JOIN "DocumentVersion" v ON v."documentId"=d.id
-  WHERE d."homeId"=${h} AND (d.visibility::text='home' OR d."uploaderId"=${a}) AND v.sha256=${draft.documentSha256}`;
+  WHERE d."homeId"=${h} AND (d."trashedAt" IS NULL AND (d.visibility::text='home' OR d."uploaderId"=${a})) AND v.sha256=${draft.documentSha256}`;
 
 export function candidateQuery(input: unknown) {
   const q = object(input, ['limit', 'cursor']);
@@ -30,7 +30,7 @@ export function candidatePagination(a: string, h: string, kind: CandidateKind, d
 const readableField = (a: string, h: string) => Prisma.sql`(f.origin='user_declared' OR EXISTS (
   SELECT 1 FROM "Document" d JOIN "DocumentVersion" v ON v."documentId"=d.id
   WHERE f.origin='extraction_confirmed' AND d.id=f."documentId" AND d."homeId"=${h}
-    AND (d.visibility::text='home' OR d."uploaderId"=${a}) AND v.version=f."documentVersion" AND v.sha256=f."documentSha256"))`;
+    AND (d."trashedAt" IS NULL AND (d.visibility::text='home' OR d."uploaderId"=${a})) AND v.version=f."documentVersion" AND v.sha256=f."documentSha256"))`;
 const normalize = (value: unknown) => typeof value === 'string' ? value.normalize('NFC').replace(/\s+/gu, ' ').trim().toLocaleLowerCase('it') : null;
 export function objectCandidatesSql(a: string, h: string, draft: ReceiptDraft, limit: number, anchor: CandidateAnchor | null, countOnly = false) {
   const fields = draft.fields as Record<string, { value?: string }>;

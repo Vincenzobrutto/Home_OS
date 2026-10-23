@@ -22,7 +22,7 @@ export class PersonalExportService {
   private async readableAssets(tx: Tx, a: string, h: string, assetIds: string[], budget: ExportBudget) {
     const jobs = assetIds.length ? await collect((take, after) => tx.analysisJob.findMany({ where: { assetId: { in: assetIds }, state: 'succeeded', ...pageWhere(after) }, select: { id: true, assetId: true, documents: true }, take, orderBy }), budget) : [];
     const sourceIds = [...new Set(jobs.flatMap(job => list(job.documents).map(value => record(value).documentId).filter((id): id is string => typeof id === 'string')))];
-    const docs = sourceIds.length ? await collect((take, after) => tx.document.findMany({ where: { id: { in: sourceIds, ...(after ? { gt: after } : {}) } }, select: { id: true, homeId: true, uploaderId: true, visibility: true, original: { select: { version: true, sha256: true } } }, take, orderBy }), budget) : [];
+    const docs = sourceIds.length ? await collect((take, after) => tx.document.findMany({ where: { id: { in: sourceIds, ...(after ? { gt: after } : {}) } }, select: { id: true, homeId: true, uploaderId: true, visibility: true, trashedAt: true, original: { select: { version: true, sha256: true } } }, take, orderBy }), budget) : [];
     const sources = new Map(docs.map(doc => [doc.id, doc]));
     const excluded = new Set<string>();
     for (const job of jobs) {
@@ -40,7 +40,7 @@ export class PersonalExportService {
     const home = await tx.home.findUnique({ where: { id: h }, select: { id: true, name: true, address: true } });
     if (!account || !home) throw new ForbiddenException('Accesso non consentito.');
     const budget = new ExportBudget(), own = { accountId: a, homeId: h };
-    const documents = await collect((take, after) => tx.document.findMany({ where: { homeId: h, uploaderId: a, ...pageWhere(after) }, select: { id: true, name: true, visibility: true, createdAt: true, original: { select: { version: true, originalFilename: true, mimeType: true, byteSize: true, sha256: true } } }, take, orderBy }), budget);
+    const documents = await collect((take, after) => tx.document.findMany({ where: { homeId: h, uploaderId: a, trashedAt: null, ...pageWhere(after) }, select: { id: true, name: true, visibility: true, createdAt: true, original: { select: { version: true, originalFilename: true, mimeType: true, byteSize: true, sha256: true } } }, take, orderBy }), budget);
     if (documents.some(doc => !doc.original)) throw unavailable();
     const organizationCandidates = await collect((take, after) => tx.documentOrganization.findMany({ where: { ...own, documentId: { in: documents.map(doc => doc.id) }, ...pageWhere(after) }, take, orderBy }), budget);
     const organizations = new Map(organizationCandidates.filter(org => documents.some(doc => doc.id === org.documentId && doc.original?.version === org.documentVersion && doc.original?.sha256 === org.documentSha256)).map(org => [org.documentId, organizationView(org)]));

@@ -16,7 +16,7 @@ export class IntakeUploadsService {
   constructor(private readonly db: PrismaService, private readonly batches: IntakeBatchesService, private readonly storage: LocalFileStorage) {}
   private canonical(tx: Tx, a: string, h: string, sha256: string, byteSize: number, mimeType: string, id?: string) {
     // Only the uploader's private originals qualify; shared/private variants are never merged.
-    return tx.document.findFirst({ where: { ...(id ? { id } : {}), homeId: h, uploaderId: a, visibility: 'private', original: { sha256, byteSize, mimeType } }, include: { original: { include: { file: true } } }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] });
+    return tx.document.findFirst({ where: { ...(id ? { id } : {}), homeId: h, uploaderId: a, visibility: 'private', trashedAt: null, original: { sha256, byteSize, mimeType } }, include: { original: { include: { file: true } } }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] });
   }
   private async cleanup(key: string | undefined) {
     if (!key) return;

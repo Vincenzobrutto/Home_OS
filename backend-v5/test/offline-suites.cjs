@@ -95,8 +95,17 @@ const profiles = {
       "test/document-intake.test.cjs",
       "test/intake-classifier.test.cjs",
       "test/contacts.test.cjs",
-      "test/offline-harness.test.cjs"
+      "test/offline-harness.test.cjs",
+      "test/document-trash-guard.test.cjs"
     ]
+  },
+  "test:trash-db": {
+    "database": true,
+    "api": false,
+    "files": [
+      "test/document-trash.integration.test.cjs"
+    ],
+    "apiFiles": []
   },
   "test:personal-export-db": {
     "database": true,

@@ -4,6 +4,10 @@
 
 **R10 completato:** [domini API separati, un solo trasporto](v5/fase0-api-client-domains-refactor-20261023.md), 860/860 mock e 581 confronti offline; entry +7.214 byte, nessun beneficio di velocità dichiarato.
 
+## 23 ottobre 2026 — Cestino lotto 1: residui fuori perimetro
+
+- Pagina Cestino, avviso «Annulla» e passaggio del pulsante attuale al cestino (lotto 2, frontend); dichiarare in UI che i documenti già inviati al fornitore AI seguono la sua conservazione. Documenti fonte di una scheda caldaia (AnalysisJob) oggi non spostabili: decidere il trattamento. Verificare che `DocumentIntakeRequest.results` non conservi il nome del file dopo l'eliminazione definitiva. Riapplicazione di `DeletionRecord` dopo un restore e ciclo delle copie di backup: lotto separato. [Report](v5/cestino-lotto1-report-20261023.md).
+
 ## 23 ottobre 2026 — R06/R09, confini di manutenzione
 
 [Quattro componenti storici conservati deliberatamente; ingressi correnti e archivi documentali fedeli](v5/fase0-maintenance-boundaries-20261023.md). Nessuna rimozione UX/test o riduzione del bundle dichiarata. Ritiro eventuale distinto dalla chiusura del refactoring.
