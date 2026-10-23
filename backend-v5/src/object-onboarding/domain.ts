@@ -17,6 +17,7 @@ import { locateDecodeFailure, type DecodeLocation } from './decode-diagnostic';
 import { shortProductName } from './short-name';
 import { validateProductField, ProductEvidenceFailure } from './field-validation';
 import { validateProductQuantity, validateProductAmount, validatePurchaseTotal } from './purchase-validation';
+import { proposeOrderPurchase } from './order-purchase';
 export { ProductEvidenceFailure } from './field-validation';
 
 export const onboardingLimits = { maxItems: 20, maxUnits: 20, maxImageBytes: 5 * 1024 * 1024 } as const;
@@ -26,6 +27,8 @@ export type Region = { x: number; y: number; width: number; height: number };
 export type ProductSource = Citation & { basis: 'verified_text' | 'provider_observed_image'; region: Region | null };
 export type ProductValue = { value: string; source: ProductSource };
 export type ProductItem = {
+  /** Derived proposal, distinct from the provider's explicitly labelled purchaseDate. */
+  purchaseDateFromOrder?: ProductValue;
   /** Entire verified source name retained when the display name is abbreviated. */
   fullName?: string;
   invoiceLine?: InvoiceLine;
@@ -185,7 +188,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       needsReview = true;
       understanding.warnings.push({ field: 'item:' + (item.sourceIndex ?? index) + ':name', reason: 'unverified' });
     }
-    return { evidenceMode:context.kind, ...(coverage?{invoiceCoverage:coverage}:{}), ...(payment?{paymentReview:payment}:{}), ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
+    return proposeOrderPurchase({ evidenceMode:context.kind, ...(coverage?{invoiceCoverage:coverage}:{}), ...(payment?{paymentReview:payment}:{}), ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) });
   } catch (error) {
     throw locateDecodeFailure(error, location);
   }

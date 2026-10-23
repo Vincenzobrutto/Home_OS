@@ -7,6 +7,7 @@ const {proposedProfile}=require('../dist/object-onboarding/profile');
 const {purchaseDateSource,orderDateSource}=require('../dist/object-onboarding/invoice-evidence');
 const {automaticPlan}=require('../dist/object-onboarding/automatic-plan');
 const {requiresPaymentReview}=require('../dist/object-onboarding/payment-review');
+const {proposeOrderPurchase}=require('../dist/object-onboarding/order-purchase');
 const ev=(excerpt,page=1)=>({page,excerpt,region:null});
 function fixture(coffee=false){
  const name=coffee?'De’Longhi Rivelia EXAM440.35.B':'Frigorifero Combinato da Incasso Samsung';
@@ -22,7 +23,7 @@ function fixture(coffee=false){
 for(const coffee of [false,true])test((coffee?'coffee':'Samsung')+': manual observations preserve order, row price, shipping and grand total independently',()=>{
  const f=fixture(coffee),x=productExtraction(f.raw,f.context),p=proposedProfile(x.items[0]);
  assert.equal(x.items.length,1);assert.equal(x.items[0].purchaseAmount.amountCents,coffee?49900:84915);assert.equal(x.purchaseTotal.amountCents,coffee?49900:92415);
- assert.equal(p.orderDate.value,coffee?'2026-06-14':'2024-10-13');assert.equal(p.purchaseDate,undefined);assert.equal(p.deliveredDate,undefined);assert.equal(p.warrantyStart,undefined);assert.equal(p.warrantyEnd,undefined);
+ assert.equal(p.orderDate.value,coffee?'2026-06-14':'2024-10-13');assert.equal(p.purchaseDate.value,p.orderDate.value);assert.equal(p.purchaseDate.origin,'derived_from_order');assert.deepEqual(p.purchaseDate.sources,p.orderDate.sources);assert.equal(x.items[0].fields.purchaseDate,undefined);assert.equal(p.deliveredDate,undefined);assert.equal(p.warrantyStart,undefined);assert.equal(p.warrantyEnd,undefined);
  assert.equal(x.documentInfo.facts[0].field,'shippingCost');assert.equal(x.houseExpenses,undefined);assert.equal(p.serialNumber,undefined);if(!coffee)assert.equal(p.model,undefined);
  assert(requiresPaymentReview(x));assert.throws(()=>automaticPlan(x));
 });
@@ -37,7 +38,7 @@ test('order labels never certify purchase/payment dates; bare dates borrow only 
 test('provider cannot turn order date into purchase date; older drafts remap that proposal without warranty',()=>{
  const f=fixture(true),field=f.raw.items[0].fields.orderDate;f.raw.items[0].fields.purchaseDate=field;
  const x=productExtraction(f.raw,f.context);assert.equal(x.items[0].fields.purchaseDate,undefined);assert(x.needsReview);assert(x.reviewWarnings.some(w=>w.field==='item:0:purchaseDate'));
- const legacy=structuredClone(x.items[0]);delete legacy.fields.orderDate;legacy.fields.purchaseDate={value:field.value,source:{...x.items[0].fields.orderDate.source}};
+ const legacy=structuredClone(x.items[0]);delete legacy.purchaseDateFromOrder;delete legacy.fields.orderDate;legacy.fields.purchaseDate={value:field.value,source:{...x.items[0].fields.orderDate.source}};
  const p=proposedProfile(legacy);assert.equal(p.orderDate.value,field.value);assert.equal(p.purchaseDate,undefined);assert.equal(p.warrantyStart,undefined);
  assert(requiresPaymentReview({...x,documentKind:'purchase_document',items:[legacy]}));
 });
@@ -88,4 +89,31 @@ test('a delivery notice cannot relabel an order heading as purchase date',()=>{
 
 test('shipping value is the whole cited monetary value, never a substring or changed currency position',()=>{
  for(const value of ['75','75,00','75,00 €','€ 5,00','€ 750,00']){const f=fixture();f.raw.facts[0].value=value;const x=productExtraction(f.raw,f.context);assert.equal(x.documentInfo.facts.length,0);assert(x.needsReview);}
+});
+
+test('coffee observations replay offline: missing row price becomes no invented fact; purchase date is a sourced business proposal',()=>{
+ const f=fixture(true);f.raw.items[0].purchaseAmount=null;
+ const before=structuredClone(f.raw),x=productExtraction(f.raw,f.context),p=proposedProfile(x.items[0]);
+ assert.deepEqual(f.raw,before);assert.equal(x.purchaseTotal.amountCents,49900);assert.equal(x.items[0].purchaseAmount,undefined);
+ assert.equal(p.purchaseDate.value,'2026-06-14');assert.equal(p.purchaseDate.origin,'derived_from_order');
+ assert.equal(p.purchaseDate.sources[0].documentId,f.context.snapshot.documentId);assert.equal(p.purchaseDate.sources[0].sha256,f.context.snapshot.documentSha256);
+ for(const key of ['deliveredDate','warrantyStart','warrantyEnd'])assert.equal(p[key],undefined);
+ assert.equal(x.items[0].quantity,null);assert(requiresPaymentReview(x));assert.throws(()=>automaticPlan(x));
+ assert.deepEqual(proposeOrderPurchase(x),x);assert.deepEqual(productExtraction(f.raw,f.context),x);
+});
+
+test('order policy does not apply to delivery, unsupported, quote or unclassified documents',()=>{
+ const f=fixture(true),x=productExtraction(f.raw,f.context),item=structuredClone(x.items[0]);delete item.purchaseDateFromOrder;
+ for(const patch of [{documentKind:'delivery_notice'},{documentKind:'unsupported'},{documentKind:'purchase_document'},{documentInfo:undefined}]){
+  const changed={...x,items:[item],...patch};assert.equal(proposeOrderPurchase(changed).items[0].purchaseDateFromOrder,undefined);
+ }
+ const invalid=structuredClone(item);invalid.fields.orderDate.source.excerpt='Pagamento 14 giugno 2026';
+ assert.equal(proposeOrderPurchase({...x,items:[invalid]}).items[0].purchaseDateFromOrder,undefined);
+ for(const title of ['Preventivo ordine','Ordine annullato','Order cancelled','Reso ordine','Carrello ordine','Pro-forma ordine'])assert.equal(proposeOrderPurchase({...x,items:[item],documentInfo:{...x.documentInfo,title:{...x.documentInfo.title,value:title}}}).items[0].purchaseDateFromOrder,undefined);
+});
+
+test('explicit purchase/delivery dates retain their own roles; order date never starts warranty',()=>{
+ const f=fixture(true);f.context.pages[0]+='\nData acquisto 15 giugno 2026';f.raw.items[0].fields.purchaseDate={value:'2026-06-15',evidence:ev('Data acquisto 15 giugno 2026')};
+ const x=productExtraction(f.raw,f.context),p=proposedProfile(x.items[0]);assert.equal(p.purchaseDate.value,'2026-06-15');assert.equal(p.purchaseDate.origin,'extraction_confirmed');assert.equal(x.items[0].purchaseDateFromOrder,undefined);
+ const ordered=productExtraction(fixture(true).raw,f.context);assert.equal(proposedProfile(ordered.items[0]).warrantyStart,undefined);
 });
