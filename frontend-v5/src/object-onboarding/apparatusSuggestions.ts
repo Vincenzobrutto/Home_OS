@@ -11,8 +11,17 @@ const contains = (text: string, phrase: string) => (' ' + text + ' ').includes('
 export function apparatusSuggestions(name: string): ApparatusReference[] {
   const text = normalized(name);
   if (/\b(?:manuale|garanzia|fattura|riparazione|manutenzione|installazione|filtr[oi]|sacchetti|ricambi[oi]|kit|tubo|cavo|detergente|cartuccia)\b/u.test(text)) return [];
-  const hits = reference.entries.flatMap(entry => entry.aliases.filter(alias => contains(text, normalized(alias))).map(alias => ({ entry, alias: normalized(alias) })));
-  const specific = hits.filter(hit => !hits.some(other => other.entry.id !== hit.entry.id && other.alias.length > hit.alias.length && contains(other.alias, hit.alias)));
+  const padded = ' ' + text + ' ';
+  const hits = reference.entries.flatMap(entry => entry.aliases.flatMap(alias => {
+    const needle = ' ' + normalized(alias) + ' ', matches = [];
+    for (let start = padded.indexOf(needle); start !== -1; start = padded.indexOf(needle, start + 1)) {
+      matches.push({ entry, start, end: start + needle.length });
+    }
+    return matches;
+  }));
+  // Specificity is local to an occurrence: a separate boiler must not disappear
+  // merely because another item is an iron with a boiler.
+  const specific = hits.filter(hit => !hits.some(other => other.entry.id !== hit.entry.id && other.end - other.start > hit.end - hit.start && other.start <= hit.start && other.end >= hit.end));
   return [...new Map(specific.map(hit => [hit.entry.id, hit.entry])).values()];
 }
 
@@ -22,8 +31,17 @@ const roomWords: Record<string, string[]> = {
   meters: ['vano contatori'], storage: ['ripostiglio'], laundry: ['lavanderia'], study: ['studio'], balcony: ['balcone'], terrace: ['terrazzo', 'terrazza'], tavern: ['taverna'], roof: ['tetto'], facade: ['facciata'], stairs: ['vano scale'],
 };
 const formalTypes = new Set(['kitchen', 'bathroom', 'living', 'bedroom', 'hall', 'outdoor']);
+// Some catalogue locations are more specific than the application's room types.
+const roomSubtypes: Record<string, string[]> = { outdoor: ['garden', 'balcony', 'terrace', 'roof', 'facade'], hall: ['stairs'] };
 /** Only caller-supplied, authorized active rooms. Distributed systems need an explicit multi-room choice. */
 export function typicalRooms(entry: ApparatusReference, rooms: Pick<Room, 'id' | 'name' | 'type' | 'state'>[]) {
   if (entry.distributed) return [];
-  return rooms.filter(room => room.state === 'active' && entry.roomKeys.some(key => formalTypes.has(key) && room.type === key || (roomWords[key] ?? []).some(word => contains(normalized(room.name), word))));
+  return rooms.filter(room => {
+    if (room.state !== 'active') return false;
+    const named = (key: string) => (roomWords[key] ?? []).some(word => contains(normalized(room.name), word));
+    // A declared type wins over an unrelated room mentioned in its free name;
+    // narrower locations still need their own explicit name (e.g. a balcony).
+    if (formalTypes.has(room.type)) return entry.roomKeys.includes(room.type) || entry.roomKeys.some(key => roomSubtypes[room.type]?.includes(key) && named(key));
+    return entry.roomKeys.some(named);
+  });
 }

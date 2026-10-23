@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Catalogo apparati e ambienti tipici
+
+Il confronto tra alias avviene sulla singola occorrenza: un apparato specifico non nasconde più un altro oggetto nominato separatamente. I tipi stanza dichiarati prevalgono sui riferimenti ad altri ambienti nei nomi, mantenendo le sottocategorie esplicite dei tipi generali. Aggiunte le varianti generiche «macchina da caffè» e «forno microonde» al vocabolario derivato V4. Typecheck/lint/build e mock completa 870/870 superati. Nessuna scelta o salvataggio automatici; [collaudo e limiti](v5/oggetti-stanze-20261023.md).
+
 ## 23 ottobre 2026 — Prezzi e date: collaudo offline
 
 Corrette le evidenze di acquisto/ordine che potevano accettare date dichiarate non disponibili, condizionali o riferite a un'altra occorrenza. Restano ammesse note neutre; calendario, fonti e ruoli economici mantengono i controlli esistenti. Cinque nuovi gruppi generalizzati; build/lint, 311/311 onboarding, 233/233 ordinari e 18/18 guardie superati. Nessuna AI, DB, modifica al lotto Claude o salvataggio canonico; merge soggetto al committente. [Report](v5/prezzi-date-20261023.md).

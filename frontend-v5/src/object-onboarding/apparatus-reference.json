@@ -1,5 +1,5 @@
 {
-  "version": "apparatus-reference-v4-1",
+  "version": "apparatus-reference-v4-2",
   "source": {
     "file": "Mappa_documenti_immobile_v4.xlsx",
     "sha256": "3093c9b295634e1c913caa602310bec1552fa7a2fd1085c210a3116eb3ba6573",
@@ -90,6 +90,7 @@
       "name": "Forno a microonde",
       "aliases": [
         "forno a microonde",
+        "forno microonde",
         "microonde"
       ],
       "objectType": "appliance",
@@ -202,6 +203,7 @@
       "name": "Macchina del caffè (espresso, a capsule, moka elettrica)",
       "aliases": [
         "macchina del caffe",
+        "macchina da caffe",
         "macc caffe",
         "moka elettrica"
       ],
