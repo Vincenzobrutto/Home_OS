@@ -1,0 +1,1804 @@
+{
+  "version": "apparatus-reference-v4-1",
+  "source": {
+    "file": "Mappa_documenti_immobile_v4.xlsx",
+    "sha256": "3093c9b295634e1c913caa602310bec1552fa7a2fd1085c210a3116eb3ba6573",
+    "sheet": "Elettrodomestici e apparati",
+    "range": "A1:I92"
+  },
+  "entries": [
+    {
+      "id": "apparatus-v4-r2",
+      "sourceRow": 2,
+      "category": "Cucina - grandi elettrodomestici",
+      "name": "Frigorifero",
+      "aliases": [
+        "frigorifero",
+        "frigo"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino o fattura, garanzia, manuale, etichetta energetica",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r3",
+      "sourceRow": 3,
+      "category": "Cucina - grandi elettrodomestici",
+      "name": "Congelatore",
+      "aliases": [
+        "congelatore",
+        "freezer"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina, cantina o garage",
+      "roomKeys": [
+        "cellar",
+        "garage",
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino o fattura, garanzia, manuale",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r4",
+      "sourceRow": 4,
+      "category": "Cucina - grandi elettrodomestici",
+      "name": "Piano cottura (gas, induzione o elettrico)",
+      "aliases": [
+        "piano cottura"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale; se a gas: dichiarazione di conformità dell'impianto gas",
+      "documentMapReference": "Energia e impianti > Impianto gas: dichiarazione di conformità"
+    },
+    {
+      "id": "apparatus-v4-r5",
+      "sourceRow": 5,
+      "category": "Cucina - grandi elettrodomestici",
+      "name": "Forno (da incasso o a libera installazione)",
+      "aliases": [
+        "forno"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino o fattura, garanzia, manuale",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r6",
+      "sourceRow": 6,
+      "category": "Cucina - grandi elettrodomestici",
+      "name": "Forno a microonde",
+      "aliases": [
+        "forno a microonde",
+        "microonde"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r7",
+      "sourceRow": 7,
+      "category": "Cucina - grandi elettrodomestici",
+      "name": "Cappa aspirante",
+      "aliases": [
+        "cappa aspirante"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino o fattura, garanzia, manuale",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r8",
+      "sourceRow": 8,
+      "category": "Cucina - grandi elettrodomestici",
+      "name": "Lavastoviglie",
+      "aliases": [
+        "lavastoviglie"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino o fattura, garanzia, manuale",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r9",
+      "sourceRow": 9,
+      "category": "Cucina - grandi elettrodomestici",
+      "name": "Cantinetta per vino o frigo bar",
+      "aliases": [
+        "cantinetta per vino",
+        "frigo bar"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina, sala o taverna",
+      "roomKeys": [
+        "kitchen",
+        "living",
+        "tavern"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r10",
+      "sourceRow": 10,
+      "category": "Cucina - piccoli elettrodomestici",
+      "name": "Bollitore",
+      "aliases": [
+        "bollitore"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r11",
+      "sourceRow": 11,
+      "category": "Cucina - piccoli elettrodomestici",
+      "name": "Tostapane",
+      "aliases": [
+        "tostapane"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r12",
+      "sourceRow": 12,
+      "category": "Cucina - piccoli elettrodomestici",
+      "name": "Macchina del caffè (espresso, a capsule, moka elettrica)",
+      "aliases": [
+        "macchina del caffe",
+        "macc caffe",
+        "moka elettrica"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r13",
+      "sourceRow": 13,
+      "category": "Cucina - piccoli elettrodomestici",
+      "name": "Robot da cucina o impastatrice",
+      "aliases": [
+        "robot da cucina",
+        "impastatrice"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r14",
+      "sourceRow": 14,
+      "category": "Cucina - piccoli elettrodomestici",
+      "name": "Frullatore o mixer a immersione",
+      "aliases": [
+        "frullatore",
+        "mixer a immersione"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r15",
+      "sourceRow": 15,
+      "category": "Cucina - piccoli elettrodomestici",
+      "name": "Friggitrice ad aria",
+      "aliases": [
+        "friggitrice ad aria"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r16",
+      "sourceRow": 16,
+      "category": "Cucina - piccoli elettrodomestici",
+      "name": "Multicooker o pentola a pressione elettrica",
+      "aliases": [
+        "multicooker",
+        "pentola a pressione elettrica"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r17",
+      "sourceRow": 17,
+      "category": "Cucina - piccoli elettrodomestici",
+      "name": "Fornetto elettrico o mini forno",
+      "aliases": [
+        "fornetto elettrico",
+        "mini forno"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina",
+      "roomKeys": [
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r18",
+      "sourceRow": 18,
+      "category": "Lavanderia e stiro",
+      "name": "Lavatrice",
+      "aliases": [
+        "lavatrice"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Bagno, cucina o lavanderia",
+      "roomKeys": [
+        "bathroom",
+        "kitchen",
+        "laundry"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino o fattura, garanzia, manuale",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r19",
+      "sourceRow": 19,
+      "category": "Lavanderia e stiro",
+      "name": "Asciugatrice",
+      "aliases": [
+        "asciugatrice"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Bagno o lavanderia",
+      "roomKeys": [
+        "bathroom",
+        "laundry"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino o fattura, garanzia, manuale",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r20",
+      "sourceRow": 20,
+      "category": "Lavanderia e stiro",
+      "name": "Lavasciuga",
+      "aliases": [
+        "lavasciuga"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Bagno o lavanderia",
+      "roomKeys": [
+        "bathroom",
+        "laundry"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino o fattura, garanzia, manuale",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r21",
+      "sourceRow": 21,
+      "category": "Lavanderia e stiro",
+      "name": "Ferro da stiro o stiratrice a caldaia",
+      "aliases": [
+        "ferro da stiro",
+        "stiratrice a caldaia",
+        "ferro da stiro a caldaia"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Ripostiglio o lavanderia",
+      "roomKeys": [
+        "laundry",
+        "storage"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino o fattura, garanzia, manuale",
+      "documentMapReference": "Garanzie e libretti d'uso > Manuali e garanzie degli elettrodomestici"
+    },
+    {
+      "id": "apparatus-v4-r22",
+      "sourceRow": 22,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Caldaia (a gas o altro combustibile)",
+      "aliases": [
+        "caldaia"
+      ],
+      "objectType": "heating",
+      "subjectKind": "system",
+      "typicalLocation": "Cucina, bagno, balcone o locale tecnico",
+      "roomKeys": [
+        "balcony",
+        "bathroom",
+        "kitchen",
+        "technical"
+      ],
+      "distributed": false,
+      "documentLinks": "Libretto di impianto, rapporti di controllo e bollino, dichiarazione di conformità, garanzia, contratto di manutenzione",
+      "documentMapReference": "Energia e impianti > Libretto di impianto; Rapporti di controllo e bollino"
+    },
+    {
+      "id": "apparatus-v4-r23",
+      "sourceRow": 23,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Pompa di calore (riscaldamento, raffrescamento, acqua calda)",
+      "aliases": [
+        "pompa di calore"
+      ],
+      "objectType": "heating",
+      "subjectKind": "system",
+      "typicalLocation": "Esterno, balcone o locale tecnico",
+      "roomKeys": [
+        "balcony",
+        "outdoor",
+        "technical"
+      ],
+      "distributed": false,
+      "documentLinks": "Libretto di impianto, rapporti di controllo, dichiarazione di conformità, garanzia, contratto di manutenzione",
+      "documentMapReference": "Energia e impianti > Libretto di impianto; Rapporti di controllo e bollino"
+    },
+    {
+      "id": "apparatus-v4-r24",
+      "sourceRow": 24,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Scaldabagno a gas (istantaneo)",
+      "aliases": [
+        "scaldabagno a gas"
+      ],
+      "objectType": "plumbing",
+      "subjectKind": "system",
+      "typicalLocation": "Cucina, bagno o balcone",
+      "roomKeys": [
+        "balcony",
+        "bathroom",
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, dichiarazione di conformità dell'impianto gas e dello scarico fumi",
+      "documentMapReference": "Energia e impianti > Impianto gas: dichiarazione di conformità"
+    },
+    {
+      "id": "apparatus-v4-r25",
+      "sourceRow": 25,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Scaldabagno elettrico (boiler)",
+      "aliases": [
+        "scaldabagno elettrico",
+        "boiler elettrico"
+      ],
+      "objectType": "plumbing",
+      "subjectKind": "system",
+      "typicalLocation": "Bagno, cucina o ripostiglio",
+      "roomKeys": [
+        "bathroom",
+        "kitchen",
+        "storage"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, fattura dell'installatore; per gli impianti anche la dichiarazione di conformità",
+      "documentMapReference": "Energia e impianti; Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r26",
+      "sourceRow": 26,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Climatizzatore fisso (split)",
+      "aliases": [
+        "climatizzatore fisso",
+        "climatizzatore split",
+        "condizionatore fisso"
+      ],
+      "objectType": "cooling",
+      "subjectKind": "system",
+      "typicalLocation": "Camere, soggiorno; unità esterna sul balcone o sulla facciata",
+      "roomKeys": [
+        "balcony",
+        "bedroom",
+        "facade",
+        "living"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, dichiarazione di conformità e fattura dell'installatore",
+      "documentMapReference": "Energia e impianti > Climatizzazione: dichiarazione di conformità"
+    },
+    {
+      "id": "apparatus-v4-r27",
+      "sourceRow": 27,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Climatizzatore portatile",
+      "aliases": [
+        "climatizzatore portatile",
+        "condizionatore portatile"
+      ],
+      "objectType": "cooling",
+      "subjectKind": "product",
+      "typicalLocation": "Camere, soggiorno",
+      "roomKeys": [
+        "bedroom",
+        "living"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Energia e impianti; Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r28",
+      "sourceRow": 28,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Stufa a pellet, a legna o camino",
+      "aliases": [
+        "stufa a pellet",
+        "stufa a legna",
+        "camino"
+      ],
+      "objectType": "heating",
+      "subjectKind": "product",
+      "typicalLocation": "Soggiorno o taverna",
+      "roomKeys": [
+        "living",
+        "tavern"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, dichiarazione di conformità, documenti della canna fumaria",
+      "documentMapReference": "Energia e impianti > Canna fumaria, camino, stufa"
+    },
+    {
+      "id": "apparatus-v4-r29",
+      "sourceRow": 29,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Termosifoni e valvole termostatiche",
+      "aliases": [
+        "termosifoni",
+        "termosifone",
+        "valvole termostatiche",
+        "radiatore"
+      ],
+      "objectType": "heating",
+      "subjectKind": "product",
+      "typicalLocation": "In tutta la casa",
+      "roomKeys": [],
+      "distributed": true,
+      "documentLinks": "Contabilizzazione del calore in condominio (se presente)",
+      "documentMapReference": "Energia e impianti; Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r30",
+      "sourceRow": 30,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Termostato o cronotermostato (anche smart)",
+      "aliases": [
+        "termostato",
+        "cronotermostato"
+      ],
+      "objectType": "heating",
+      "subjectKind": "product",
+      "typicalLocation": "Soggiorno o ingresso",
+      "roomKeys": [
+        "hall",
+        "living"
+      ],
+      "distributed": false,
+      "documentLinks": "Manuale, garanzia",
+      "documentMapReference": "Energia e impianti; Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r31",
+      "sourceRow": 31,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Riscaldamento a pavimento",
+      "aliases": [
+        "riscaldamento a pavimento"
+      ],
+      "objectType": "heating",
+      "subjectKind": "system",
+      "typicalLocation": "Pavimenti",
+      "roomKeys": [],
+      "distributed": true,
+      "documentLinks": "Dichiarazione di conformità, schema dell'impianto, garanzie dell'installatore",
+      "documentMapReference": "Energia e impianti > Riscaldamento: dichiarazione di conformità"
+    },
+    {
+      "id": "apparatus-v4-r32",
+      "sourceRow": 32,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Stufette e radiatori elettrici",
+      "aliases": [
+        "stufetta",
+        "radiatore elettrico"
+      ],
+      "objectType": "heating",
+      "subjectKind": "product",
+      "typicalLocation": "Camere, bagno, studio",
+      "roomKeys": [
+        "bathroom",
+        "bedroom",
+        "study"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, fattura dell'installatore; per gli impianti anche la dichiarazione di conformità",
+      "documentMapReference": "Energia e impianti; Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r33",
+      "sourceRow": 33,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Deumidificatore",
+      "aliases": [
+        "deumidificatore"
+      ],
+      "objectType": "cooling",
+      "subjectKind": "product",
+      "typicalLocation": "Camere, bagno, cantina",
+      "roomKeys": [
+        "bathroom",
+        "bedroom",
+        "cellar"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, fattura dell'installatore; per gli impianti anche la dichiarazione di conformità",
+      "documentMapReference": "Energia e impianti; Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r34",
+      "sourceRow": 34,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Umidificatore",
+      "aliases": [
+        "umidificatore"
+      ],
+      "objectType": "cooling",
+      "subjectKind": "product",
+      "typicalLocation": "Camere",
+      "roomKeys": [
+        "bedroom"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, fattura dell'installatore; per gli impianti anche la dichiarazione di conformità",
+      "documentMapReference": "Energia e impianti; Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r35",
+      "sourceRow": 35,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Ventilatori (a pale, da soffitto, a piantana)",
+      "aliases": [
+        "ventilatore",
+        "ventilatore da soffitto"
+      ],
+      "objectType": "cooling",
+      "subjectKind": "product",
+      "typicalLocation": "Camere, soggiorno",
+      "roomKeys": [
+        "bedroom",
+        "living"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, fattura dell'installatore; per gli impianti anche la dichiarazione di conformità",
+      "documentMapReference": "Energia e impianti; Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r36",
+      "sourceRow": 36,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Ventilazione meccanica controllata (VMC)",
+      "aliases": [
+        "ventilazione meccanica controllata",
+        "vmc"
+      ],
+      "objectType": "cooling",
+      "subjectKind": "system",
+      "typicalLocation": "Soffitti, bagni o locale tecnico",
+      "roomKeys": [
+        "bathroom",
+        "technical"
+      ],
+      "distributed": true,
+      "documentLinks": "Garanzia, manuale, dichiarazione di conformità, relazione di progetto",
+      "documentMapReference": "Energia e impianti; Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r37",
+      "sourceRow": 37,
+      "category": "Riscaldamento, acqua calda e clima",
+      "name": "Addolcitore o depuratore dell'acqua",
+      "aliases": [
+        "addolcitore",
+        "depuratore acqua",
+        "depuratore dell acqua"
+      ],
+      "objectType": "plumbing",
+      "subjectKind": "system",
+      "typicalLocation": "Cucina, locale tecnico o garage",
+      "roomKeys": [
+        "garage",
+        "kitchen",
+        "technical"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, fattura dell'installatore",
+      "documentMapReference": "Energia e impianti; Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r38",
+      "sourceRow": 38,
+      "category": "Energia e impianti tecnici",
+      "name": "Quadro elettrico e salvavita (interruttore differenziale)",
+      "aliases": [
+        "quadro elettrico",
+        "salvavita",
+        "interruttore differenziale"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "system",
+      "typicalLocation": "Ingresso, corridoio o locale tecnico",
+      "roomKeys": [
+        "hall",
+        "technical"
+      ],
+      "distributed": false,
+      "documentLinks": "Dichiarazione di conformità dell'impianto elettrico, schema del quadro",
+      "documentMapReference": "Energia e impianti > Impianto elettrico: dichiarazione di conformità"
+    },
+    {
+      "id": "apparatus-v4-r39",
+      "sourceRow": 39,
+      "category": "Energia e impianti tecnici",
+      "name": "Contatore elettrico",
+      "aliases": [
+        "contatore elettrico"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "system",
+      "typicalLocation": "Ingresso, vano contatori o esterno",
+      "roomKeys": [
+        "hall",
+        "meters",
+        "outdoor"
+      ],
+      "distributed": false,
+      "documentLinks": "Contratto di fornitura, bollette",
+      "documentMapReference": "Utenze e servizi > Contratto di fornitura e codice POD"
+    },
+    {
+      "id": "apparatus-v4-r40",
+      "sourceRow": 40,
+      "category": "Energia e impianti tecnici",
+      "name": "Contatore del gas",
+      "aliases": [
+        "contatore gas",
+        "contatore del gas"
+      ],
+      "objectType": "other",
+      "subjectKind": "system",
+      "typicalLocation": "Vano contatori, scala o esterno",
+      "roomKeys": [
+        "meters",
+        "outdoor"
+      ],
+      "distributed": false,
+      "documentLinks": "Contratto di fornitura, bollette",
+      "documentMapReference": "Utenze e servizi > Contratto di fornitura e codice PDR"
+    },
+    {
+      "id": "apparatus-v4-r41",
+      "sourceRow": 41,
+      "category": "Energia e impianti tecnici",
+      "name": "Contatore dell'acqua e ripartitori",
+      "aliases": [
+        "contatore acqua",
+        "contatore dell acqua",
+        "ripartitore acqua"
+      ],
+      "objectType": "plumbing",
+      "subjectKind": "system",
+      "typicalLocation": "Vano contatori, scala o cantina",
+      "roomKeys": [
+        "cellar",
+        "meters"
+      ],
+      "distributed": false,
+      "documentLinks": "Contratto e bollette del servizio idrico",
+      "documentMapReference": "Utenze e servizi > Acqua"
+    },
+    {
+      "id": "apparatus-v4-r42",
+      "sourceRow": 42,
+      "category": "Energia e impianti tecnici",
+      "name": "Impianto fotovoltaico (pannelli e inverter)",
+      "aliases": [
+        "impianto fotovoltaico",
+        "inverter fotovoltaico",
+        "pannello fotovoltaico"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "system",
+      "typicalLocation": "Tetto, balcone o giardino; inverter nel locale tecnico",
+      "roomKeys": [
+        "balcony",
+        "garden",
+        "roof",
+        "technical"
+      ],
+      "distributed": true,
+      "documentLinks": "Dichiarazione di conformità, pratiche di connessione, contratto GSE, garanzie di pannelli e inverter",
+      "documentMapReference": "Energia e impianti > Fotovoltaico: pratiche di connessione e contratto GSE"
+    },
+    {
+      "id": "apparatus-v4-r43",
+      "sourceRow": 43,
+      "category": "Energia e impianti tecnici",
+      "name": "Sistema di accumulo (batteria)",
+      "aliases": [
+        "sistema di accumulo",
+        "batteria fotovoltaico"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "system",
+      "typicalLocation": "Locale tecnico, garage o cantina",
+      "roomKeys": [
+        "cellar",
+        "garage",
+        "technical"
+      ],
+      "distributed": false,
+      "documentLinks": "Dichiarazione di conformità, garanzia del produttore, schede tecniche",
+      "documentMapReference": "Energia e impianti > Solare termico e sistemi di accumulo"
+    },
+    {
+      "id": "apparatus-v4-r44",
+      "sourceRow": 44,
+      "category": "Energia e impianti tecnici",
+      "name": "Colonnina di ricarica per auto elettrica (wallbox)",
+      "aliases": [
+        "wallbox",
+        "colonnina di ricarica"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "system",
+      "typicalLocation": "Garage o esterno",
+      "roomKeys": [
+        "garage",
+        "outdoor"
+      ],
+      "distributed": false,
+      "documentLinks": "Dichiarazione di conformità, garanzia, schede tecniche",
+      "documentMapReference": "Energia e impianti"
+    },
+    {
+      "id": "apparatus-v4-r45",
+      "sourceRow": 45,
+      "category": "Energia e impianti tecnici",
+      "name": "Solare termico",
+      "aliases": [
+        "solare termico"
+      ],
+      "objectType": "heating",
+      "subjectKind": "system",
+      "typicalLocation": "Tetto o balcone",
+      "roomKeys": [
+        "balcony",
+        "roof"
+      ],
+      "distributed": false,
+      "documentLinks": "Dichiarazione di conformità, garanzia, schede tecniche",
+      "documentMapReference": "Energia e impianti > Solare termico e sistemi di accumulo"
+    },
+    {
+      "id": "apparatus-v4-r46",
+      "sourceRow": 46,
+      "category": "Energia e impianti tecnici",
+      "name": "Gruppo di continuità (UPS)",
+      "aliases": [
+        "gruppo di continuita",
+        "ups"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "product",
+      "typicalLocation": "Studio o locale tecnico",
+      "roomKeys": [
+        "study",
+        "technical"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Energia e impianti"
+    },
+    {
+      "id": "apparatus-v4-r47",
+      "sourceRow": 47,
+      "category": "Energia e impianti tecnici",
+      "name": "Autoclave, pompa dell'acqua o pozzo",
+      "aliases": [
+        "autoclave",
+        "pompa dell acqua",
+        "pompa acqua",
+        "pozzo"
+      ],
+      "objectType": "plumbing",
+      "subjectKind": "system",
+      "typicalLocation": "Cantina, giardino o locale tecnico",
+      "roomKeys": [
+        "cellar",
+        "garden",
+        "technical"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale; per il pozzo la denuncia o concessione",
+      "documentMapReference": "Utenze e servizi > Pozzo: denuncia o concessione per l'acqua"
+    },
+    {
+      "id": "apparatus-v4-r48",
+      "sourceRow": 48,
+      "category": "Energia e impianti tecnici",
+      "name": "Pompa di sollevamento o sommersa (cantina, scarichi)",
+      "aliases": [
+        "pompa di sollevamento",
+        "pompa sommersa"
+      ],
+      "objectType": "plumbing",
+      "subjectKind": "system",
+      "typicalLocation": "Cantina, garage o fossa",
+      "roomKeys": [
+        "cellar",
+        "garage"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia e manuale",
+      "documentMapReference": "Energia e impianti"
+    },
+    {
+      "id": "apparatus-v4-r49",
+      "sourceRow": 49,
+      "category": "Energia e impianti tecnici",
+      "name": "Serbatoio GPL o cisterna per gasolio",
+      "aliases": [
+        "serbatoio gpl",
+        "cisterna gasolio",
+        "cisterna per gasolio"
+      ],
+      "objectType": "other",
+      "subjectKind": "system",
+      "typicalLocation": "Giardino o esterno",
+      "roomKeys": [
+        "garden",
+        "outdoor"
+      ],
+      "distributed": false,
+      "documentLinks": "Contratto di fornitura, certificati del serbatoio",
+      "documentMapReference": "Utenze e servizi > Teleriscaldamento, GPL o serbatoio"
+    },
+    {
+      "id": "apparatus-v4-r50",
+      "sourceRow": 50,
+      "category": "Energia e impianti tecnici",
+      "name": "Generatore o gruppo elettrogeno",
+      "aliases": [
+        "generatore",
+        "gruppo elettrogeno"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "product",
+      "typicalLocation": "Garage o esterno",
+      "roomKeys": [
+        "garage",
+        "outdoor"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia e manuale",
+      "documentMapReference": "Energia e impianti"
+    },
+    {
+      "id": "apparatus-v4-r51",
+      "sourceRow": 51,
+      "category": "Energia e impianti tecnici",
+      "name": "Ascensore o montascale privato",
+      "aliases": [
+        "ascensore",
+        "montascale"
+      ],
+      "objectType": "fixture",
+      "subjectKind": "system",
+      "typicalLocation": "Vano scale o interno",
+      "roomKeys": [
+        "stairs"
+      ],
+      "distributed": false,
+      "documentLinks": "Dichiarazione CE, libretto, verbali di verifica, contratto di manutenzione",
+      "documentMapReference": "Energia e impianti > Ascensore: dichiarazione CE, matricola e verbali"
+    },
+    {
+      "id": "apparatus-v4-r52",
+      "sourceRow": 52,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Citofono o videocitofono",
+      "aliases": [
+        "citofono",
+        "videocitofono"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "product",
+      "typicalLocation": "Ingresso",
+      "roomKeys": [
+        "hall"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, dichiarazione di conformità",
+      "documentMapReference": "Energia e impianti > Antenna TV, citofono, cancello automatico"
+    },
+    {
+      "id": "apparatus-v4-r53",
+      "sourceRow": 53,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Cancello automatico (battente o scorrevole)",
+      "aliases": [
+        "cancello automatico"
+      ],
+      "objectType": "fixture",
+      "subjectKind": "system",
+      "typicalLocation": "Ingresso carrabile o pedonale",
+      "roomKeys": [
+        "hall"
+      ],
+      "distributed": false,
+      "documentLinks": "Dichiarazione di conformità e marcatura CE, libretto, garanzia, contratto di manutenzione",
+      "documentMapReference": "Energia e impianti > Antenna TV, citofono, cancello automatico"
+    },
+    {
+      "id": "apparatus-v4-r54",
+      "sourceRow": 54,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Porta del garage motorizzata (basculante o sezionale)",
+      "aliases": [
+        "porta del garage motorizzata",
+        "basculante motorizzata"
+      ],
+      "objectType": "fixture",
+      "subjectKind": "system",
+      "typicalLocation": "Garage",
+      "roomKeys": [
+        "garage"
+      ],
+      "distributed": false,
+      "documentLinks": "Dichiarazione di conformità e marcatura CE, libretto, garanzia",
+      "documentMapReference": "Energia e impianti; Sicurezza e vincoli"
+    },
+    {
+      "id": "apparatus-v4-r55",
+      "sourceRow": 55,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Tapparelle motorizzate",
+      "aliases": [
+        "tapparella motorizzata",
+        "tapparelle motorizzate"
+      ],
+      "objectType": "fixture",
+      "subjectKind": "system",
+      "typicalLocation": "Finestre e portefinestre",
+      "roomKeys": [],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, fattura dell'installatore",
+      "documentMapReference": "Energia e impianti; Sicurezza e vincoli"
+    },
+    {
+      "id": "apparatus-v4-r56",
+      "sourceRow": 56,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Tende da sole o pergola motorizzate",
+      "aliases": [
+        "tenda da sole motorizzata",
+        "pergola motorizzata"
+      ],
+      "objectType": "fixture",
+      "subjectKind": "system",
+      "typicalLocation": "Balcone, terrazzo o giardino",
+      "roomKeys": [
+        "balcony",
+        "garden",
+        "terrace"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, fattura; per le pergole la pratica edilizia",
+      "documentMapReference": "Urbanistica ed edilizia > Titoli edilizi"
+    },
+    {
+      "id": "apparatus-v4-r57",
+      "sourceRow": 57,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Serratura elettronica o smart lock",
+      "aliases": [
+        "serratura elettronica",
+        "smart lock"
+      ],
+      "objectType": "security",
+      "subjectKind": "product",
+      "typicalLocation": "Porta di ingresso",
+      "roomKeys": [
+        "hall"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia e manuale",
+      "documentMapReference": "Energia e impianti; Sicurezza e vincoli"
+    },
+    {
+      "id": "apparatus-v4-r58",
+      "sourceRow": 58,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Impianto d'allarme antifurto",
+      "aliases": [
+        "impianto di allarme",
+        "allarme antifurto",
+        "antifurto"
+      ],
+      "objectType": "security",
+      "subjectKind": "system",
+      "typicalLocation": "Centrale all'ingresso e sensori in casa",
+      "roomKeys": [
+        "hall"
+      ],
+      "distributed": true,
+      "documentLinks": "Contratto di monitoraggio, garanzia, dichiarazione di conformità",
+      "documentMapReference": "Utenze e servizi > Contratti di allarme, videosorveglianza, pulizie, giardinaggio"
+    },
+    {
+      "id": "apparatus-v4-r59",
+      "sourceRow": 59,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Telecamere e videosorveglianza",
+      "aliases": [
+        "telecamera",
+        "videosorveglianza"
+      ],
+      "objectType": "security",
+      "subjectKind": "product",
+      "typicalLocation": "Esterno e interno",
+      "roomKeys": [
+        "outdoor"
+      ],
+      "distributed": true,
+      "documentLinks": "Garanzia, manuale, informativa sulla privacy se riprende spazi comuni o di terzi",
+      "documentMapReference": "Energia e impianti; Sicurezza e vincoli"
+    },
+    {
+      "id": "apparatus-v4-r60",
+      "sourceRow": 60,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Rilevatori di fumo",
+      "aliases": [
+        "rilevatore di fumo",
+        "rilevatori di fumo"
+      ],
+      "objectType": "security",
+      "subjectKind": "product",
+      "typicalLocation": "Corridoio, camere, cucina",
+      "roomKeys": [
+        "bedroom",
+        "hall",
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino, manuale",
+      "documentMapReference": "Energia e impianti; Sicurezza e vincoli"
+    },
+    {
+      "id": "apparatus-v4-r61",
+      "sourceRow": 61,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Rilevatori di gas e monossido di carbonio",
+      "aliases": [
+        "rilevatore di gas",
+        "rilevatore monossido di carbonio",
+        "rilevatori di gas"
+      ],
+      "objectType": "security",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina, locale caldaia, camere",
+      "roomKeys": [
+        "bedroom",
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino, manuale",
+      "documentMapReference": "Locazione e gestione > Dotazioni di sicurezza obbligatorie"
+    },
+    {
+      "id": "apparatus-v4-r62",
+      "sourceRow": 62,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Sensori di allagamento (perdite d'acqua)",
+      "aliases": [
+        "sensore di allagamento",
+        "sensori di allagamento"
+      ],
+      "objectType": "security",
+      "subjectKind": "product",
+      "typicalLocation": "Cucina, bagno, lavanderia",
+      "roomKeys": [
+        "bathroom",
+        "kitchen",
+        "laundry"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino, manuale",
+      "documentMapReference": "Energia e impianti; Sicurezza e vincoli"
+    },
+    {
+      "id": "apparatus-v4-r63",
+      "sourceRow": 63,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Estintore",
+      "aliases": [
+        "estintore"
+      ],
+      "objectType": "security",
+      "subjectKind": "product",
+      "typicalLocation": "Ingresso, cucina o garage",
+      "roomKeys": [
+        "garage",
+        "hall",
+        "kitchen"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino, cartellino di revisione, certificati",
+      "documentMapReference": "Sicurezza e vincoli > Sicurezza"
+    },
+    {
+      "id": "apparatus-v4-r64",
+      "sourceRow": 64,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Porta blindata e serrature",
+      "aliases": [
+        "porta blindata",
+        "serratura"
+      ],
+      "objectType": "fixture",
+      "subjectKind": "product",
+      "typicalLocation": "Ingresso",
+      "roomKeys": [
+        "hall"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, certificato, chiavi di sicurezza e codice delle chiavi",
+      "documentMapReference": "Garanzie e libretti d'uso > Garanzie su infissi e porte blindate"
+    },
+    {
+      "id": "apparatus-v4-r65",
+      "sourceRow": 65,
+      "category": "Accessi, sicurezza e automazioni",
+      "name": "Cassaforte",
+      "aliases": [
+        "cassaforte"
+      ],
+      "objectType": "security",
+      "subjectKind": "product",
+      "typicalLocation": "Armadio o studio",
+      "roomKeys": [
+        "study"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Energia e impianti; Sicurezza e vincoli"
+    },
+    {
+      "id": "apparatus-v4-r66",
+      "sourceRow": 66,
+      "category": "Rete, TV e casa connessa",
+      "name": "Modem e router",
+      "aliases": [
+        "modem",
+        "router"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Ingresso o studio",
+      "roomKeys": [
+        "hall",
+        "study"
+      ],
+      "distributed": false,
+      "documentLinks": "Contratto con l'operatore, documento di consegna del comodato",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r67",
+      "sourceRow": 67,
+      "category": "Rete, TV e casa connessa",
+      "name": "Terminale della fibra (ONT)",
+      "aliases": [
+        "terminale della fibra",
+        "ont"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Ingresso o vano tecnico",
+      "roomKeys": [
+        "hall",
+        "technical"
+      ],
+      "distributed": false,
+      "documentLinks": "Contratto con l'operatore",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r68",
+      "sourceRow": 68,
+      "category": "Rete, TV e casa connessa",
+      "name": "Ripetitori Wi-Fi o sistema mesh",
+      "aliases": [
+        "ripetitore wi fi",
+        "sistema mesh"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "In tutta la casa",
+      "roomKeys": [],
+      "distributed": true,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r69",
+      "sourceRow": 69,
+      "category": "Rete, TV e casa connessa",
+      "name": "Televisore",
+      "aliases": [
+        "televisore",
+        "smart tv"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Soggiorno, camere",
+      "roomKeys": [
+        "bedroom",
+        "living"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino o fattura, garanzia, manuale",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r70",
+      "sourceRow": 70,
+      "category": "Rete, TV e casa connessa",
+      "name": "Decoder, box TV o dispositivi di streaming",
+      "aliases": [
+        "decoder",
+        "box tv",
+        "dispositivo di streaming"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Soggiorno, camere",
+      "roomKeys": [
+        "bedroom",
+        "living"
+      ],
+      "distributed": false,
+      "documentLinks": "Contratto, scontrino e garanzia",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r71",
+      "sourceRow": 71,
+      "category": "Rete, TV e casa connessa",
+      "name": "Soundbar, impianto audio o home theatre",
+      "aliases": [
+        "soundbar",
+        "impianto audio",
+        "home theatre"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Soggiorno",
+      "roomKeys": [
+        "living"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r72",
+      "sourceRow": 72,
+      "category": "Rete, TV e casa connessa",
+      "name": "Smart speaker o assistente vocale",
+      "aliases": [
+        "smart speaker",
+        "assistente vocale"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Soggiorno, cucina",
+      "roomKeys": [
+        "kitchen",
+        "living"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r73",
+      "sourceRow": 73,
+      "category": "Rete, TV e casa connessa",
+      "name": "Centralina domotica o hub smart home",
+      "aliases": [
+        "centralina domotica",
+        "hub smart home"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "system",
+      "typicalLocation": "Locale tecnico, ingresso o soggiorno",
+      "roomKeys": [
+        "hall",
+        "living",
+        "technical"
+      ],
+      "distributed": false,
+      "documentLinks": "Manuale, garanzia, schema dei collegamenti",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r74",
+      "sourceRow": 74,
+      "category": "Rete, TV e casa connessa",
+      "name": "Prese, lampadine e interruttori smart",
+      "aliases": [
+        "presa smart",
+        "prese smart",
+        "lampadina smart",
+        "interruttore smart"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "product",
+      "typicalLocation": "In tutta la casa",
+      "roomKeys": [],
+      "distributed": true,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r75",
+      "sourceRow": 75,
+      "category": "Rete, TV e casa connessa",
+      "name": "Stampante o multifunzione",
+      "aliases": [
+        "stampante",
+        "multifunzione"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Studio",
+      "roomKeys": [
+        "study"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r76",
+      "sourceRow": 76,
+      "category": "Rete, TV e casa connessa",
+      "name": "Computer fissi, NAS e dischi di backup",
+      "aliases": [
+        "computer",
+        "nas",
+        "disco di backup"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Studio",
+      "roomKeys": [
+        "study"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Utenze e servizi > Internet e telefono"
+    },
+    {
+      "id": "apparatus-v4-r77",
+      "sourceRow": 77,
+      "category": "Rete, TV e casa connessa",
+      "name": "Antenna TV o parabola e centralino",
+      "aliases": [
+        "antenna tv",
+        "parabola",
+        "centralino antenna"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "system",
+      "typicalLocation": "Tetto, balcone o facciata",
+      "roomKeys": [
+        "balcony",
+        "facade",
+        "roof"
+      ],
+      "distributed": true,
+      "documentLinks": "Dichiarazione di conformità, contratto del satellite",
+      "documentMapReference": "Energia e impianti > Antenna TV, citofono, cancello automatico"
+    },
+    {
+      "id": "apparatus-v4-r78",
+      "sourceRow": 78,
+      "category": "Pulizia, bagno e benessere",
+      "name": "Aspirapolvere (a traino, scopa elettrica o senza fili)",
+      "aliases": [
+        "aspirapolvere",
+        "scopa elettrica"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Ripostiglio",
+      "roomKeys": [
+        "storage"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r79",
+      "sourceRow": 79,
+      "category": "Pulizia, bagno e benessere",
+      "name": "Robot aspirapolvere o lavapavimenti",
+      "aliases": [
+        "robot aspirapolvere",
+        "robot lavapavimenti"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Soggiorno o ripostiglio",
+      "roomKeys": [
+        "living",
+        "storage"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r80",
+      "sourceRow": 80,
+      "category": "Pulizia, bagno e benessere",
+      "name": "Pulitore a vapore",
+      "aliases": [
+        "pulitore a vapore"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Ripostiglio",
+      "roomKeys": [
+        "storage"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r81",
+      "sourceRow": 81,
+      "category": "Pulizia, bagno e benessere",
+      "name": "Scaldasalviette elettrico",
+      "aliases": [
+        "scaldasalviette elettrico"
+      ],
+      "objectType": "heating",
+      "subjectKind": "product",
+      "typicalLocation": "Bagno",
+      "roomKeys": [
+        "bathroom"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r82",
+      "sourceRow": 82,
+      "category": "Pulizia, bagno e benessere",
+      "name": "Asciugacapelli e piccoli apparecchi per la cura personale",
+      "aliases": [
+        "asciugacapelli",
+        "phon"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Bagno, camere",
+      "roomKeys": [
+        "bathroom",
+        "bedroom"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r83",
+      "sourceRow": 83,
+      "category": "Pulizia, bagno e benessere",
+      "name": "Vasca idromassaggio o cabina doccia multifunzione",
+      "aliases": [
+        "vasca idromassaggio",
+        "cabina doccia multifunzione"
+      ],
+      "objectType": "plumbing",
+      "subjectKind": "system",
+      "typicalLocation": "Bagno",
+      "roomKeys": [
+        "bathroom"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, dichiarazione di conformità dell'impianto elettrico e idraulico",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r84",
+      "sourceRow": 84,
+      "category": "Pulizia, bagno e benessere",
+      "name": "Purificatore d'aria",
+      "aliases": [
+        "purificatore d aria"
+      ],
+      "objectType": "cooling",
+      "subjectKind": "product",
+      "typicalLocation": "Camere, soggiorno",
+      "roomKeys": [
+        "bedroom",
+        "living"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino e garanzia",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r85",
+      "sourceRow": 85,
+      "category": "Pulizia, bagno e benessere",
+      "name": "Sauna o bagno turco",
+      "aliases": [
+        "sauna",
+        "bagno turco"
+      ],
+      "objectType": "plumbing",
+      "subjectKind": "system",
+      "typicalLocation": "Bagno o taverna",
+      "roomKeys": [
+        "bathroom",
+        "tavern"
+      ],
+      "distributed": false,
+      "documentLinks": "Garanzia, manuale, dichiarazione di conformità",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r86",
+      "sourceRow": 86,
+      "category": "Giardino, esterni e piscina",
+      "name": "Tosaerba o robot tagliaerba",
+      "aliases": [
+        "tosaerba",
+        "robot tagliaerba"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Giardino, garage",
+      "roomKeys": [
+        "garage",
+        "garden"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino, garanzia e manuale",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r87",
+      "sourceRow": 87,
+      "category": "Giardino, esterni e piscina",
+      "name": "Decespugliatore, tagliasiepi, soffiatore",
+      "aliases": [
+        "decespugliatore",
+        "tagliasiepi",
+        "soffiatore"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Garage o ripostiglio",
+      "roomKeys": [
+        "garage",
+        "storage"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino, garanzia e manuale",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r88",
+      "sourceRow": 88,
+      "category": "Giardino, esterni e piscina",
+      "name": "Idropulitrice",
+      "aliases": [
+        "idropulitrice"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Garage o ripostiglio",
+      "roomKeys": [
+        "garage",
+        "storage"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino, garanzia e manuale",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r89",
+      "sourceRow": 89,
+      "category": "Giardino, esterni e piscina",
+      "name": "Impianto di irrigazione",
+      "aliases": [
+        "impianto di irrigazione"
+      ],
+      "objectType": "plumbing",
+      "subjectKind": "system",
+      "typicalLocation": "Giardino e balcone",
+      "roomKeys": [
+        "balcony",
+        "garden"
+      ],
+      "distributed": true,
+      "documentLinks": "Garanzia, manuale, schema dell'impianto",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r90",
+      "sourceRow": 90,
+      "category": "Giardino, esterni e piscina",
+      "name": "Illuminazione esterna e crepuscolari",
+      "aliases": [
+        "illuminazione esterna",
+        "crepuscolare"
+      ],
+      "objectType": "electrical",
+      "subjectKind": "system",
+      "typicalLocation": "Giardino, balcone, ingresso",
+      "roomKeys": [
+        "balcony",
+        "garden",
+        "hall"
+      ],
+      "distributed": true,
+      "documentLinks": "Dichiarazione di conformità dell'impianto elettrico esterno",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r91",
+      "sourceRow": 91,
+      "category": "Giardino, esterni e piscina",
+      "name": "Barbecue a gas o elettrico",
+      "aliases": [
+        "barbecue"
+      ],
+      "objectType": "appliance",
+      "subjectKind": "product",
+      "typicalLocation": "Giardino o terrazzo",
+      "roomKeys": [
+        "garden",
+        "terrace"
+      ],
+      "distributed": false,
+      "documentLinks": "Scontrino, garanzia e manuale",
+      "documentMapReference": "Garanzie e libretti d'uso"
+    },
+    {
+      "id": "apparatus-v4-r92",
+      "sourceRow": 92,
+      "category": "Giardino, esterni e piscina",
+      "name": "Piscina (pompa, filtro e trattamento acqua)",
+      "aliases": [
+        "piscina"
+      ],
+      "objectType": "plumbing",
+      "subjectKind": "system",
+      "typicalLocation": "Giardino o terrazzo",
+      "roomKeys": [
+        "garden",
+        "terrace"
+      ],
+      "distributed": false,
+      "documentLinks": "Pratica edilizia e autorizzazioni, dichiarazione di conformità degli impianti, garanzie",
+      "documentMapReference": "Urbanistica ed edilizia > Titoli edilizi"
+    }
+  ]
+}

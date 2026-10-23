@@ -1,10 +1,14 @@
+## Fase 0 — attuazione offline del piano completata, 23 ottobre 2026
+
+UI delle fatture incomplete, regressioni di titoli/date e suggerimenti locali per 91 apparati/ambienti attuati e collaudati offline. [Report e limiti](v5/fase0-night-plan-offline-20261023.md). La [matrice dei 147 documenti](v5/fase0-document-family-matrix-v4-20261023.json) resta proposta; nessuna nuova famiglia o backfill. Gate AI storico non superato e nessuna campagna avviata; [protocollo candidato](v5/fase0-next-measure-proposal-20261023.md) da autorizzare separatamente.
+
 ## Fase 0 qualità AI — campagna v24 conclusa, gate non superato, 23 ottobre 2026
 
 Nuova misura autorizzata v24 sui 52 sintetici: 148 Messages, 3,562652 USD, zero incerti/retry. Output validi 101/104, etichette 16/16, importi 64/70. **Gate non superato**: Q15 split payment, Q22 prezzi/date di riga e Q48 copertura per pagina corretti e verificati offline, con privacy/idempotenza su DB isolato. [Copertura Q48 e limiti](v5/fase0-q48-coverage-offline-20261023.md). [Correzione Q22 e limiti](v5/fase0-q22-lines-offline-20261023.md). Prima del pilota restano verifica AI della copertura Q48, UI dei pendenti, Q20/date, stabilità e rifiuti del titolo; gold/validazioni e risultati storici invariati. [Correzione Q15 e limiti](v5/fase0-q15-payment-offline-20261023.md). Supporto Q48 del decoder verificato offline non equivale a estrazione AI completa: il live resta 1/2 per campo. Nessuna modalità di lettura promossa; progressivo lungo più costoso. Nuova campagna e reali richiedono autorizzazioni distinte. [Esiti e confronto v22/v24](v5/fase0-quality-v24-campaign-20261023.md).
 
 ## Archivio unico Documenti completato — 21 ottobre 2026
 
-Dieci famiglie e descrizioni su richiesta, ricerca globale, filtro Collegamento e cambio famiglia separato dal tipo. [Piano proposto v4](v5/fase0-next-hours-plan-20261023.md): matrice dei 147 tipi documentali e 91 apparati, classificazione oggetto/impianto e ambienti tipici da confermare. Nessun import, checklist normativa o nuova AI; ottimizzazione non implementata. [Regole e verifiche](v5/document-unified-archive-20261021.md).
+Dieci famiglie e descrizioni su richiesta, ricerca globale, filtro Collegamento e cambio famiglia separato dal tipo. [Piano v4 e attuazione](v5/fase0-next-hours-plan-20261023.md): matrice documentale proposta e suggerimenti locali per apparati/ambienti, con scelta esplicita. Nessun import di inventari, checklist normativa o nuova AI. [Regole e verifiche](v5/document-unified-archive-20261021.md).
 
 ## Documenti: famiglia manuale completata — 21 ottobre 2026
 

@@ -1,3 +1,4 @@
+import { InvoiceCoverageNotice } from './InvoiceCoverageNotice';
 import { useContext } from 'react';
 import { DocumentEditorContext } from '../documents/DocumentEditorContext';
 import { ContactProposals, initialContact, contactsProblem } from './ContactProposals';
@@ -181,6 +182,7 @@ function DraftEditor({draft,draftSaveFailure,retryDraftSave,metadata,documentPro
   {!openSingle&&draft.mode==='manual'&&<p>Compilazione manuale: i dati inseriti da te saranno distinti dai valori letti automaticamente.</p>}
   {!openSingle&&beforeConfirm&&copyChoice&&<p className={styles.source}>Scegli se usare il documento già presente senza modificarlo. Non verrà caricato un secondo originale.</p>}
   {!openSingle&&beforeConfirm&&!copyChoice&&<p className={styles.source}>La conferma comprende l’archiviazione proposta del documento {({purchase_document:'di acquisto',delivery_notice:'di consegna',utility_bill:'di bolletta',appliance_label:'con etichetta prodotto',device_label:'con etichetta prodotto',order_confirmation:'con ordine di acquisto'} as Record<string,string>)[draft.documentKind]??''} in {draft.documentKind==='utility_bill'?'Bollette':'Acquisti e garanzie'}. Se la registrazione non riesce, potrai riprenderla qui.</p>}
+  {(!openSingle||draft.state!=='open')&&<InvoiceCoverageNotice draft={draft} root={root}/>}
   {!openSingle&&!documentOnly&&<DocumentUnderstandingSummary draft={draft}/>}
   {draft.state==='confirmed'&&draft.contacts?.map(p=>p.decision?.contactId?<p key={p.id}><Link to={root+'/rubrica/'+p.decision.contactId}>Vedi contatto: {p.values.name}</Link></p>:null)}
   {!documentOnly&&draft.state!=='confirmed'&&!!visibleWarnings?.length&&<Banner tone="warning"><p>Da verificare: {[...new Set(visibleWarnings!.map(w=>w.reason==='missing_identity'?'identità dell’articolo':understandingFieldLabel(w.field)))].join(', ')}.</p></Banner>}

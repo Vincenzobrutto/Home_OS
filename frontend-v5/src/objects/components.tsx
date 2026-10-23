@@ -1,3 +1,4 @@
+import { apparatusSuggestions, typicalRooms } from '../object-onboarding/apparatusSuggestions';
 import {DotsThree} from '@phosphor-icons/react/dist/csr/DotsThree';
 import {FieldInfo} from '../components/FieldInfo';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
@@ -420,6 +421,8 @@ export function QuickPlacement({home,object,onMultiple,focus=false}:{home:Home;o
   useEffect(()=>{if(focus)selectRef.current?.focus();},[focus]);
   const available=rooms.isError?[]:rooms.data?.pages.flatMap(p=>p.items)??[];
   const retained=current.filter(r=>!available.some(a=>a.id===r.id));
+  const catalog=apparatusSuggestions(object.name),reference=catalog.length===1?catalog[0]:undefined;
+  const suggestions=!current.length&&reference&&!rooms.isError?typicalRooms(reference,available):[];
   const dirty=selected!==initial,disabled=op.mutation.isPending||op.locked||rooms.isPending||rooms.isError;
   return <form className={own.quickPlacement} aria-label="Collocazione dell’oggetto" onSubmit={e=>{
     e.preventDefault();if(!dirty||disabled||selected==='multiple')return;
@@ -427,6 +430,8 @@ export function QuickPlacement({home,object,onMultiple,focus=false}:{home:Home;o
   }}>
     {focus&&<p role="status">Posizione aggiornata.</p>}
     <div className={own.currentRooms} aria-label="Collocazione attuale"><span>Dove si trova</span>{current.length?current.map(room=><span key={room.id} className={own.roomChip}>{roomsText([room])}</span>):<span className={own.roomChip}>Da collocare</span>}</div>
+    {suggestions.length>0&&<aside aria-label="Ambienti tipici da confermare"><p>Ambienti tipici, da confermare nella tua casa:</p>{suggestions.map(room=><button key={room.id} className={ui.btn} type="button" disabled={disabled} onClick={()=>setSelected(room.id)}>{room.name}</button>)}<p className={ui.hint}>La scelta è una proposta: premi «Salva stanza» per confermare la posizione.</p></aside>}
+    {!current.length&&reference?.distributed&&<p>Questo apparato può interessare più ambienti. Usa «Più ambienti» per scegliere la collocazione effettiva.</p>}
     <label htmlFor={`${id}-room`}>Stanza</label>
     <div className={styles.actions}>
       <select ref={selectRef} id={`${id}-room`} value={selected} onChange={e=>setSelected(e.target.value)} disabled={disabled||(!available.length&&!current.length)} aria-describedby={`${id}-hint`}>

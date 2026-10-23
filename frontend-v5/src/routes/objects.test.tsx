@@ -215,6 +215,27 @@ describe('[mock] G1 — oggetti, posizione e catalogo', () => {
     expect(posts(backend,/\/position$/)).toHaveLength(0);
   });
 
+  it('catalogo apparati propone solo stanze attive della casa e salva soltanto dopo conferma',async()=>{
+    const {backend,owner,home,second}=world();
+    const kitchen=await seedRoom(backend,owner.id,home.id,'Cucina','kitchen');
+    await seedRoom(backend,owner.id,home.id,'Cantina','other');
+    await seedRoom(backend,owner.id,second.id,'Garage segreto','other');
+    const item=await seedObject(backend,owner.id,home.id,'Congelatore Nubeo');
+    const app=await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/oggetti/object/${item.ref.id}`);
+    const suggestions=await screen.findByLabelText('Ambienti tipici da confermare');
+    expect(within(suggestions).getByRole('button',{name:'Cantina'})).toBeVisible();
+    expect(screen.queryByText('Garage segreto')).not.toBeInTheDocument();
+    expect(posts(backend,/\/position$/)).toHaveLength(0);
+    await app.user.click(within(suggestions).getByRole('button',{name:'Cucina'}));
+    expect(screen.getByRole('combobox',{name:'Stanza'})).toHaveValue(kitchen.id);
+    expect(posts(backend,/\/position$/)).toHaveLength(0);
+    await app.user.click(screen.getByRole('button',{name:'Salva stanza'}));
+    await waitFor(()=>expect(posts(backend,/\/position$/)).toHaveLength(1));
+    expect(posts(backend,/\/position$/)[0]!.body).toEqual({expectedVersion:0,roomIds:[kitchen.id]});
+    await waitFor(()=>expect(screen.queryByLabelText('Ambienti tipici da confermare')).not.toBeInTheDocument());
+    expect(posts(backend,/\/position$/)).toHaveLength(1);
+  });
+
   it('colloca con menu stanza e salva esplicitamente, poi torna da collocare', async () => {
     const {backend,owner,home}=world();
     const room=await seedRoom(backend,owner.id,home.id,'Cucina','kitchen');

@@ -1,0 +1,1804 @@
+{
+  "version": "family-matrix-v4-1",
+  "state": "proposal_only",
+  "source": {
+    "file": "Mappa_documenti_immobile_v4.xlsx",
+    "sha256": "3093c9b295634e1c913caa602310bec1552fa7a2fd1085c210a3116eb3ba6573",
+    "sheet": "Mappa documenti",
+    "range": "A1:C148"
+  },
+  "rows": [
+    {
+      "sourceRow": 2,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Atto di proprietà",
+      "document": "Rogito notarile (compravendita, donazione o altro atto di acquisto)",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 3,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Atto di proprietà",
+      "document": "Nota di trascrizione",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 4,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Atto di proprietà",
+      "document": "Atto di provenienza (acquisti precedenti: chi ha venduto a chi)",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 5,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Atto di proprietà",
+      "document": "Visura ipotecaria (ispezione ipotecaria dell'immobile)",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 6,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Diritti di altri",
+      "document": "Usufrutto, nuda proprietà o diritto di abitazione",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 7,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Diritti di altri",
+      "document": "Comproprietà: quote e accordi tra i proprietari",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 8,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Diritti di altri",
+      "document": "Fondo patrimoniale o convenzioni matrimoniali che riguardano la casa",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 9,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Diritti di altri",
+      "document": "Assegnazione della casa familiare (separazione o divorzio)",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 10,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Mutuo e garanzie",
+      "document": "Contratto di mutuo e piano di ammortamento",
+      "candidateFamily": "property",
+      "alternatives": [
+        "works",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 11,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Mutuo e garanzie",
+      "document": "Ipoteca: atto di iscrizione",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 12,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Mutuo e garanzie",
+      "document": "Ipoteca: cancellazione e quietanza di estinzione",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 13,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Mutuo e garanzie",
+      "document": "Polizze collegate al mutuo (incendio e scoppio, eventuale vita)",
+      "candidateFamily": "insurance",
+      "alternatives": [
+        "property"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "La polizza conserva la famiglia Assicurazioni anche se allegata al mutuo.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 14,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Mutuo e garanzie",
+      "document": "Perizia di stima della banca (valutazione dell'immobile per il mutuo)",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 15,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Mutuo e garanzie",
+      "document": "Certificazione degli interessi passivi del mutuo (per la detrazione)",
+      "candidateFamily": "tax",
+      "alternatives": [
+        "property"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Certificazione fiscale degli interessi: distinguere dal contratto di mutuo.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 16,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Acquisto",
+      "document": "Proposta d'acquisto e contratto preliminare",
+      "candidateFamily": "property",
+      "alternatives": [
+        "works",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 17,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Acquisto",
+      "document": "Ricevute di caparra e acconti",
+      "candidateFamily": "property",
+      "alternatives": [
+        "works",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 18,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Acquisto",
+      "document": "Fattura dell'agenzia immobiliare",
+      "candidateFamily": "property",
+      "alternatives": [
+        "works",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 19,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Acquisto",
+      "document": "Parcella e spese notarili",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 20,
+      "area": "1. Titolarità e acquisto",
+      "subarea": "Acquisto",
+      "document": "Acquisto da costruttore: fideiussione sugli acconti",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 21,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Visure e mappe",
+      "document": "Visura catastale attuale",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 22,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Visure e mappe",
+      "document": "Visura catastale storica",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 23,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Visure e mappe",
+      "document": "Planimetria catastale",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 24,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Visure e mappe",
+      "document": "Estratto di mappa catastale",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 25,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Visure e mappe",
+      "document": "Scheda dei dati catastali (foglio, particella, subalterno, categoria, rendita)",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 26,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Visure e mappe",
+      "document": "Elaborato planimetrico ed elenco dei subalterni",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 27,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Visure e mappe",
+      "document": "Tipo mappale o tipo di frazionamento",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 28,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Variazioni catastali",
+      "document": "Pratica di variazione catastale (DOCFA) presentata dopo lavori",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 29,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Pertinenze",
+      "document": "Box, cantina, posto auto, soffitta: visure e planimetrie",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 30,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Pertinenze",
+      "document": "Vincolo pertinenziale del box o posto auto (Legge Tognoli)",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 31,
+      "area": "2. Catasto e identificazione",
+      "subarea": "Successioni e volture",
+      "document": "Voltura catastale",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 32,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Titoli edilizi",
+      "document": "Licenza o concessione edilizia originaria",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 33,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Titoli edilizi",
+      "document": "Permesso di costruire, DIA, SCIA, CILA o CIL per lavori successivi",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 34,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Titoli edilizi",
+      "document": "Condono, sanatoria (1985, 1994, 2003) o accertamento di conformità",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 35,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Titoli edilizi",
+      "document": "Autorizzazione paesaggistica o nulla osta della Soprintendenza",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 36,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Titoli edilizi",
+      "document": "Cambio di destinazione d'uso (pratica e autorizzazioni)",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 37,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Titoli edilizi",
+      "document": "Ricevute di oneri di urbanizzazione, costo di costruzione e diritti pagati al Comune",
+      "candidateFamily": "building",
+      "alternatives": [
+        "property",
+        "works",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 38,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Conformità e agibilità",
+      "document": "Agibilità (ex abitabilità): certificato o SCA",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 39,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Conformità e agibilità",
+      "document": "Relazione di conformità urbanistica e catastale (tecnico abilitato)",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 40,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Conformità e agibilità",
+      "document": "Stato legittimo e tolleranze costruttive (novità Salva-casa 2024)",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 41,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Conformità e agibilità",
+      "document": "Certificato di destinazione urbanistica (CDU)",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 42,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Conformità e agibilità",
+      "document": "Certificato di idoneità statica",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 43,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Progetti e cantiere",
+      "document": "Elaborati grafici approvati (piante, prospetti, sezioni)",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 44,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Progetti e cantiere",
+      "document": "Relazione tecnica e computo dei lavori",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 45,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Progetti e cantiere",
+      "document": "Comunicazione di inizio e fine lavori, verbali di direzione lavori",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 46,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Progetti e cantiere",
+      "document": "Collaudo finale o certificato di regolare esecuzione",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 47,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Progetti e cantiere",
+      "document": "Pratiche strutturali: denuncia dei lavori e collaudo statico (cemento armato o acciaio)",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 48,
+      "area": "3. Urbanistica ed edilizia",
+      "subarea": "Progetti e cantiere",
+      "document": "Autorizzazione o deposito sismico",
+      "candidateFamily": "building",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 49,
+      "area": "4. Energia e impianti",
+      "subarea": "Energia",
+      "document": "Attestato di Prestazione Energetica (APE)",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 50,
+      "area": "4. Energia e impianti",
+      "subarea": "Energia",
+      "document": "Relazione tecnica ex Legge 10 (progetto energetico)",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 51,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Impianto elettrico: dichiarazione di conformità (DM 37/2008)",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 52,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Dichiarazione di rispondenza (DiRi) per impianti anteriori al 1990",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 53,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Impianto idraulico: dichiarazione di conformità",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 54,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Impianto gas: dichiarazione di conformità e prova di tenuta",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 55,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Riscaldamento (caldaia, pompa di calore, termosifoni): dichiarazione di conformità",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 56,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Climatizzazione: dichiarazione di conformità e schede tecniche",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 57,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Ascensore: dichiarazione CE, matricola e verbali di verifica periodica",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 58,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Impianto antincendio",
+      "candidateFamily": "energy",
+      "alternatives": [
+        "safety"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Impianto tecnico e documenti antincendio: scegliere dal documento, senza certificazione implicita.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 59,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Antenna TV, citofono, cancello automatico: conformità e marcatura CE",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 60,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Canna fumaria, camino, stufa o caminetto: conformità e controlli",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 61,
+      "area": "4. Energia e impianti",
+      "subarea": "Conformità impianti",
+      "document": "Scarichi e fognatura: allaccio alla rete o fossa settica (autorizzazione allo scarico)",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 62,
+      "area": "4. Energia e impianti",
+      "subarea": "Manutenzione e controlli",
+      "document": "Libretto di impianto (caldaia, pompa di calore)",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 63,
+      "area": "4. Energia e impianti",
+      "subarea": "Manutenzione e controlli",
+      "document": "Rapporti di controllo di efficienza energetica e bollino",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 64,
+      "area": "4. Energia e impianti",
+      "subarea": "Manutenzione e controlli",
+      "document": "Contratto di manutenzione di caldaia e impianti",
+      "candidateFamily": "energy",
+      "alternatives": [
+        "works"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Distinguere contratto di manutenzione, libretto tecnico e fatture dei singoli interventi.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 65,
+      "area": "4. Energia e impianti",
+      "subarea": "Manutenzione e controlli",
+      "document": "Verifica dell'impianto di messa a terra",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 66,
+      "area": "4. Energia e impianti",
+      "subarea": "Energie rinnovabili",
+      "document": "Fotovoltaico: pratiche di connessione, contratto GSE e dichiarazione di conformità",
+      "candidateFamily": "energy",
+      "alternatives": [
+        "property",
+        "works",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 67,
+      "area": "4. Energia e impianti",
+      "subarea": "Energie rinnovabili",
+      "document": "Solare termico e sistemi di accumulo: schede tecniche e conformità",
+      "candidateFamily": "energy",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 68,
+      "area": "5. Condominio",
+      "subarea": "Documenti del condominio",
+      "document": "Regolamento condominiale",
+      "candidateFamily": "condo",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 69,
+      "area": "5. Condominio",
+      "subarea": "Documenti del condominio",
+      "document": "Tabelle millesimali",
+      "candidateFamily": "condo",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 70,
+      "area": "5. Condominio",
+      "subarea": "Documenti del condominio",
+      "document": "Verbali delle assemblee",
+      "candidateFamily": "condo",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 71,
+      "area": "5. Condominio",
+      "subarea": "Documenti del condominio",
+      "document": "Bilanci, preventivi e rendiconti delle spese",
+      "candidateFamily": "condo",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 72,
+      "area": "5. Condominio",
+      "subarea": "Documenti del condominio",
+      "document": "Anagrafe condominiale e dati dell'amministratore",
+      "candidateFamily": "condo",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 73,
+      "area": "5. Condominio",
+      "subarea": "Documenti del condominio",
+      "document": "Estratto conto personale delle spese condominiali (saldo e rate)",
+      "candidateFamily": "condo",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 74,
+      "area": "5. Condominio",
+      "subarea": "Documenti del condominio",
+      "document": "Delibere su lavori straordinari e relative rate",
+      "candidateFamily": "condo",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 75,
+      "area": "5. Condominio",
+      "subarea": "Documenti del condominio",
+      "document": "Attestazione dell'amministratore su spese arretrate (per la vendita)",
+      "candidateFamily": "condo",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 76,
+      "area": "5. Condominio",
+      "subarea": "Documenti del condominio",
+      "document": "Documentazione delle parti comuni (antincendio, strutture, ascensore)",
+      "candidateFamily": "condo",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 77,
+      "area": "6. Utenze e servizi",
+      "subarea": "Luce",
+      "document": "Contratto di fornitura e codice POD",
+      "candidateFamily": "utilities",
+      "alternatives": [
+        "property",
+        "works",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 78,
+      "area": "6. Utenze e servizi",
+      "subarea": "Luce",
+      "document": "Bollette e letture",
+      "candidateFamily": "utilities",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 79,
+      "area": "6. Utenze e servizi",
+      "subarea": "Gas",
+      "document": "Contratto di fornitura e codice PDR",
+      "candidateFamily": "utilities",
+      "alternatives": [
+        "property",
+        "works",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 80,
+      "area": "6. Utenze e servizi",
+      "subarea": "Gas",
+      "document": "Bollette e letture",
+      "candidateFamily": "utilities",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 81,
+      "area": "6. Utenze e servizi",
+      "subarea": "Acqua",
+      "document": "Contratto e bollette",
+      "candidateFamily": "utilities",
+      "alternatives": [
+        "property",
+        "works",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 82,
+      "area": "6. Utenze e servizi",
+      "subarea": "Acqua",
+      "document": "Pozzo: denuncia o concessione per l'acqua",
+      "candidateFamily": "building",
+      "alternatives": [
+        "energy",
+        "safety"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Autorizzazione o concessione del pozzo distinta dalla bolletta o dal contatore.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 83,
+      "area": "6. Utenze e servizi",
+      "subarea": "Riscaldamento e combustibili",
+      "document": "Teleriscaldamento, GPL o serbatoio: contratto e documentazione",
+      "candidateFamily": "utilities",
+      "alternatives": [
+        "property",
+        "works",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 84,
+      "area": "6. Utenze e servizi",
+      "subarea": "Internet e telefono",
+      "document": "Contratto e ricevute",
+      "candidateFamily": "utilities",
+      "alternatives": [
+        "property",
+        "works",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 85,
+      "area": "6. Utenze e servizi",
+      "subarea": "Rifiuti",
+      "document": "Iscrizione e avvisi di pagamento della TARI",
+      "candidateFamily": "tax",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "La TARI resta un tributo anche nella sezione utenze del riferimento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 86,
+      "area": "6. Utenze e servizi",
+      "subarea": "Cambi di intestazione",
+      "document": "Volture, subentri, disdette e verbali di attivazione",
+      "candidateFamily": "utilities",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 87,
+      "area": "6. Utenze e servizi",
+      "subarea": "Servizi",
+      "document": "Contratti di allarme, videosorveglianza, pulizie, giardinaggio",
+      "candidateFamily": "unclassified",
+      "alternatives": [
+        "utilities",
+        "works",
+        "safety"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Voce mista: natura del singolo servizio necessaria, nessuna famiglia assegnata dalla sola area.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 88,
+      "area": "7. Fiscalità e tributi",
+      "subarea": "Dichiarazioni",
+      "document": "Dichiarazione dei redditi: dati degli immobili",
+      "candidateFamily": "tax",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 89,
+      "area": "7. Fiscalità e tributi",
+      "subarea": "Imposte comunali",
+      "document": "IMU: dichiarazione e ricevute di pagamento",
+      "candidateFamily": "tax",
+      "alternatives": [
+        "property",
+        "works",
+        "utilities",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 90,
+      "area": "7. Fiscalità e tributi",
+      "subarea": "Imposte comunali",
+      "document": "Passo carrabile: autorizzazione e canone",
+      "candidateFamily": "tax",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 91,
+      "area": "7. Fiscalità e tributi",
+      "subarea": "Imposte sull'acquisto",
+      "document": "Imposte pagate sull'atto (registro o IVA, ipotecaria e catastale)",
+      "candidateFamily": "tax",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 92,
+      "area": "7. Fiscalità e tributi",
+      "subarea": "Imposte sull'acquisto",
+      "document": "Agevolazione prima casa (dichiarazioni nel rogito)",
+      "candidateFamily": "tax",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 93,
+      "area": "7. Fiscalità e tributi",
+      "subarea": "Successione",
+      "document": "Dichiarazione di successione, accettazione dell'eredità e testamento",
+      "candidateFamily": "unclassified",
+      "alternatives": [
+        "tax",
+        "property"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Separare dichiarazione fiscale di successione, accettazione e testamento; il file misto richiede revisione.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 94,
+      "area": "7. Fiscalità e tributi",
+      "subarea": "Plusvalenze",
+      "document": "Costi di acquisto e di ristrutturazione per calcolare eventuali plusvalenze",
+      "candidateFamily": "tax",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 95,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Pratiche agevolative",
+      "document": "Comunicazione ENEA (ecobonus e bonus casa con risparmio energetico)",
+      "candidateFamily": "works",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 96,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Pratiche agevolative",
+      "document": "Asseverazioni tecniche (efficienza energetica, sismica, congruità delle spese)",
+      "candidateFamily": "works",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 97,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Pratiche agevolative",
+      "document": "Visto di conformità e ricevute di invio all'Agenzia delle Entrate",
+      "candidateFamily": "works",
+      "alternatives": [
+        "property",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 98,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Pratiche agevolative",
+      "document": "Cessione del credito o sconto in fattura: contratti e comunicazioni",
+      "candidateFamily": "works",
+      "alternatives": [
+        "property",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 99,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Pratiche agevolative",
+      "document": "Sismabonus: classificazione sismica prima e dopo i lavori",
+      "candidateFamily": "works",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 100,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Pratiche agevolative",
+      "document": "Altri bonus (mobili, verde, barriere architettoniche, impianti)",
+      "candidateFamily": "works",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 101,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Pratiche agevolative",
+      "document": "Conto Termico e altri incentivi (GSE, Regione, Comune)",
+      "candidateFamily": "works",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 102,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Documentazione dei lavori",
+      "document": "Preventivi e computo dei lavori",
+      "candidateFamily": "works",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 103,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Documentazione dei lavori",
+      "document": "Contratto con l'impresa",
+      "candidateFamily": "works",
+      "alternatives": [
+        "property",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 104,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Documentazione dei lavori",
+      "document": "Fatture e ricevute dei lavori",
+      "candidateFamily": "works",
+      "alternatives": [
+        "property",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 105,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Documentazione dei lavori",
+      "document": "Bonifici parlanti o altri pagamenti tracciati",
+      "candidateFamily": "works",
+      "alternatives": [
+        "property",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 106,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Documentazione dei lavori",
+      "document": "Stati di avanzamento lavori (SAL)",
+      "candidateFamily": "works",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 107,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Documentazione dei lavori",
+      "document": "Notifica preliminare all'ASL e piano di sicurezza del cantiere",
+      "candidateFamily": "works",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 108,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Documentazione dei lavori",
+      "document": "DURC e visura camerale dell'impresa",
+      "candidateFamily": "works",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 109,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Documentazione dei lavori",
+      "document": "Garanzie e certificati dei materiali",
+      "candidateFamily": "works",
+      "alternatives": [
+        "warranty",
+        "energy"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Garanzie, certificati e schede di materiali non sono equivalenti: esaminare i singoli allegati.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 110,
+      "area": "8. Bonus, detrazioni e lavori",
+      "subarea": "Documentazione dei lavori",
+      "document": "Foto prima, durante e dopo i lavori",
+      "candidateFamily": "works",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 111,
+      "area": "9. Assicurazioni e rischi",
+      "subarea": "Polizze sull'immobile",
+      "document": "Polizza fabbricato / incendio e scoppio",
+      "candidateFamily": "insurance",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 112,
+      "area": "9. Assicurazioni e rischi",
+      "subarea": "Polizze sull'immobile",
+      "document": "Polizza di responsabilità civile del proprietario o capofamiglia",
+      "candidateFamily": "insurance",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 113,
+      "area": "9. Assicurazioni e rischi",
+      "subarea": "Polizze sull'immobile",
+      "document": "Polizza contro eventi catastrofali (terremoto, alluvione, frane)",
+      "candidateFamily": "insurance",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 114,
+      "area": "9. Assicurazioni e rischi",
+      "subarea": "Polizze sull'immobile",
+      "document": "Polizza globale fabbricato del condominio",
+      "candidateFamily": "insurance",
+      "alternatives": [
+        "condo"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Polizza con contesto condominiale: la natura assicurativa resta esplicita.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 115,
+      "area": "9. Assicurazioni e rischi",
+      "subarea": "Polizze sull'immobile",
+      "document": "Polizza decennale postuma (immobili nuovi o ristrutturati da impresa)",
+      "candidateFamily": "insurance",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 116,
+      "area": "9. Assicurazioni e rischi",
+      "subarea": "Sinistri",
+      "document": "Denunce di sinistro, perizie e liquidazioni",
+      "candidateFamily": "insurance",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 117,
+      "area": "10. Garanzie e libretti d'uso",
+      "subarea": "Libretti e garanzie",
+      "document": "Manuali e garanzie degli elettrodomestici",
+      "candidateFamily": "warranty",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 118,
+      "area": "10. Garanzie e libretti d'uso",
+      "subarea": "Libretti e garanzie",
+      "document": "Garanzie su infissi, serramenti e porte blindate",
+      "candidateFamily": "warranty",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 119,
+      "area": "10. Garanzie e libretti d'uso",
+      "subarea": "Libretti e garanzie",
+      "document": "Garanzie su copertura, impermeabilizzazioni e cappotto termico",
+      "candidateFamily": "warranty",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 120,
+      "area": "10. Garanzie e libretti d'uso",
+      "subarea": "Libretti e garanzie",
+      "document": "Schede tecniche dei materiali (parquet, rivestimenti, vernici, sanitari)",
+      "candidateFamily": "warranty",
+      "alternatives": [
+        "building",
+        "energy"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Schede materiali: verificare se documentazione di acquisto o allegato tecnico, senza certificare proprietà.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 121,
+      "area": "10. Garanzie e libretti d'uso",
+      "subarea": "Libretti e garanzie",
+      "document": "Garanzie e manuali di impianti (caldaia, climatizzatore, fotovoltaico, allarme)",
+      "candidateFamily": "warranty",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 122,
+      "area": "11. Locazione e gestione",
+      "subarea": "Contratto",
+      "document": "Contratto di locazione registrato",
+      "candidateFamily": "property",
+      "alternatives": [
+        "works",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 123,
+      "area": "11. Locazione e gestione",
+      "subarea": "Contratto",
+      "document": "Ricevuta di registrazione (RLI) e pagamenti annuali dell'imposta",
+      "candidateFamily": "property",
+      "alternatives": [
+        "tax"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Registrazione della locazione e ricevute di imposta da distinguere per tipo.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 124,
+      "area": "11. Locazione e gestione",
+      "subarea": "Contratto",
+      "document": "Opzione per la cedolare secca",
+      "candidateFamily": "tax",
+      "alternatives": [
+        "property"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Opzione fiscale della locazione, distinta dal contratto.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 125,
+      "area": "11. Locazione e gestione",
+      "subarea": "Contratto",
+      "document": "Allegati al contratto (APE, planimetria, regolamento condominiale, tabelle spese)",
+      "candidateFamily": "unclassified",
+      "alternatives": [
+        "energy",
+        "building",
+        "condo",
+        "property"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Allegati eterogenei: APE, planimetria e regolamento conservano i propri tipi; nessuna famiglia unica dedotta.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 126,
+      "area": "11. Locazione e gestione",
+      "subarea": "Contratto",
+      "document": "Contratto di comodato (casa concessa in uso gratuito)",
+      "candidateFamily": "property",
+      "alternatives": [
+        "works",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 127,
+      "area": "11. Locazione e gestione",
+      "subarea": "Affitti brevi e turistici",
+      "document": "Codice CIN, codice regionale e comunicazioni (Alloggiati Web, imposta di soggiorno)",
+      "candidateFamily": "unclassified",
+      "alternatives": [
+        "property",
+        "tax"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Identificativi locazione e imposta di soggiorno non costituiscono un unico tipo.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 128,
+      "area": "11. Locazione e gestione",
+      "subarea": "Affitti brevi e turistici",
+      "document": "Dotazioni di sicurezza obbligatorie (estintore, rilevatori di gas e monossido)",
+      "candidateFamily": "safety",
+      "alternatives": [
+        "property"
+      ],
+      "status": "ambiguo_da_rivedere",
+      "reason": "Dotazioni di sicurezza con contesto locazione: non trasformare il riferimento in obblighi o inventario.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 129,
+      "area": "11. Locazione e gestione",
+      "subarea": "Rapporto con l'inquilino",
+      "document": "Ricevuta della cauzione",
+      "candidateFamily": "property",
+      "alternatives": [
+        "works",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 130,
+      "area": "11. Locazione e gestione",
+      "subarea": "Rapporto con l'inquilino",
+      "document": "Verbale di consegna e inventario",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 131,
+      "area": "11. Locazione e gestione",
+      "subarea": "Rapporto con l'inquilino",
+      "document": "Ricevute dei canoni",
+      "candidateFamily": "property",
+      "alternatives": [
+        "works",
+        "utilities",
+        "tax",
+        "warranty"
+      ],
+      "status": "proposta_da_rivedere",
+      "reason": "Tipo economico/contrattuale ambiguo: distinguere acquisto, lavori, utenze, tributi e locazione dalla fonte.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 132,
+      "area": "11. Locazione e gestione",
+      "subarea": "Rapporto con l'inquilino",
+      "document": "Rinnovi, proroghe e disdette",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 133,
+      "area": "11. Locazione e gestione",
+      "subarea": "Rapporto con l'inquilino",
+      "document": "Ripartizione delle spese tra proprietario e inquilino",
+      "candidateFamily": "property",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 134,
+      "area": "12. Sicurezza e vincoli",
+      "subarea": "Vincoli",
+      "document": "Vincoli paesaggistici, storici o idrogeologici",
+      "candidateFamily": "safety",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 135,
+      "area": "12. Sicurezza e vincoli",
+      "subarea": "Vincoli",
+      "document": "Servitù (passaggio, acqua, vista) e diritti di terzi",
+      "candidateFamily": "safety",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 136,
+      "area": "12. Sicurezza e vincoli",
+      "subarea": "Vincoli",
+      "document": "Convenzione edilizia (edilizia convenzionata o agevolata, PEEP)",
+      "candidateFamily": "safety",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 137,
+      "area": "12. Sicurezza e vincoli",
+      "subarea": "Sicurezza",
+      "document": "Certificato di prevenzione incendi (CPI) o SCIA antincendio",
+      "candidateFamily": "safety",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 138,
+      "area": "12. Sicurezza e vincoli",
+      "subarea": "Sicurezza",
+      "document": "Censimento o presenza di amianto",
+      "candidateFamily": "safety",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 139,
+      "area": "12. Sicurezza e vincoli",
+      "subarea": "Sicurezza",
+      "document": "Documento di valutazione dei rischi (attività lavorativa svolta in casa)",
+      "candidateFamily": "safety",
+      "alternatives": [],
+      "status": "proposta_da_rivedere",
+      "reason": "Candidato dal contesto di area; verificare natura e allegati del documento.",
+      "fallback": "unclassified"
+    },
+    {
+      "sourceRow": 140,
+      "area": "13. Diario della casa",
+      "subarea": "Archivio personale",
+      "document": "Storico delle manutenzioni e degli interventi (guasti, infiltrazioni, lavori)",
+      "candidateFamily": null,
+      "alternatives": [],
+      "status": "funzione_da_valutare",
+      "reason": "Voce organizzativa: nessun documento o famiglia da creare automaticamente.",
+      "fallback": null,
+      "candidateFunctions": [
+        "Storia della casa",
+        "Attività"
+      ]
+    },
+    {
+      "sourceRow": 141,
+      "area": "13. Diario della casa",
+      "subarea": "Archivio personale",
+      "document": "Elenco di fornitori e artigiani di fiducia",
+      "candidateFamily": null,
+      "alternatives": [],
+      "status": "funzione_da_valutare",
+      "reason": "Voce organizzativa: nessun documento o famiglia da creare automaticamente.",
+      "fallback": null,
+      "candidateFunctions": [
+        "Contatti"
+      ]
+    },
+    {
+      "sourceRow": 142,
+      "area": "13. Diario della casa",
+      "subarea": "Archivio personale",
+      "document": "Foto e planimetria aggiornata con le misure",
+      "candidateFamily": null,
+      "alternatives": [],
+      "status": "funzione_da_valutare",
+      "reason": "Voce organizzativa: nessun documento o famiglia da creare automaticamente.",
+      "fallback": null,
+      "candidateFunctions": [
+        "Documenti",
+        "Ambienti"
+      ]
+    },
+    {
+      "sourceRow": 143,
+      "area": "13. Diario della casa",
+      "subarea": "Archivio personale",
+      "document": "Inventario dei beni di valore",
+      "candidateFamily": null,
+      "alternatives": [],
+      "status": "funzione_da_valutare",
+      "reason": "Voce organizzativa: nessun documento o famiglia da creare automaticamente.",
+      "fallback": null,
+      "candidateFunctions": [
+        "Oggetti"
+      ]
+    },
+    {
+      "sourceRow": 144,
+      "area": "13. Diario della casa",
+      "subarea": "Archivio personale",
+      "document": "Scadenzario (cosa rinnovare e quando)",
+      "candidateFamily": null,
+      "alternatives": [],
+      "status": "funzione_da_valutare",
+      "reason": "Voce organizzativa: nessun documento o famiglia da creare automaticamente.",
+      "fallback": null,
+      "candidateFunctions": [
+        "Attività"
+      ]
+    },
+    {
+      "sourceRow": 145,
+      "area": "13. Diario della casa",
+      "subarea": "Archivio personale",
+      "document": "Chiavi, telecomandi e codici di accesso (cancello, allarme, Wi-Fi)",
+      "candidateFamily": null,
+      "alternatives": [],
+      "status": "escluso_segreti",
+      "reason": "Voce contenente segreti: nessuna raccolta, importazione o invio AI di chiavi/codici da questo riferimento.",
+      "fallback": null,
+      "candidateFunctions": []
+    },
+    {
+      "sourceRow": 146,
+      "area": "13. Diario della casa",
+      "subarea": "Archivio personale",
+      "document": "Punti di intercettazione: dove sono quadro elettrico, valvole dell'acqua e del gas",
+      "candidateFamily": null,
+      "alternatives": [],
+      "status": "funzione_da_valutare",
+      "reason": "Voce organizzativa: nessun documento o famiglia da creare automaticamente.",
+      "fallback": null,
+      "candidateFunctions": [
+        "Oggetti",
+        "Ambienti"
+      ]
+    },
+    {
+      "sourceRow": 147,
+      "area": "13. Diario della casa",
+      "subarea": "Archivio personale",
+      "document": "Numeri utili e contatti di emergenza (amministratore, assistenza caldaia, idraulico, elettricista)",
+      "candidateFamily": null,
+      "alternatives": [],
+      "status": "funzione_da_valutare",
+      "reason": "Voce organizzativa: nessun documento o famiglia da creare automaticamente.",
+      "fallback": null,
+      "candidateFunctions": [
+        "Contatti"
+      ]
+    },
+    {
+      "sourceRow": 148,
+      "area": "13. Diario della casa",
+      "subarea": "Archivio personale",
+      "document": "Indice dei documenti: dove si trova ogni cosa (carta, email, cloud)",
+      "candidateFamily": null,
+      "alternatives": [],
+      "status": "funzione_da_valutare",
+      "reason": "Voce organizzativa: nessun documento o famiglia da creare automaticamente.",
+      "fallback": null,
+      "candidateFunctions": [
+        "Documenti"
+      ]
+    }
+  ]
+}

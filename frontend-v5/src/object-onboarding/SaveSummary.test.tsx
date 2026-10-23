@@ -26,3 +26,9 @@ it('invoice uses expense date and excluded articles do not appear as objects or 
  const invoice={...draft,items:[item],houseExpenses:[{...draft.houseExpenses![0]!,documentKind:'simple_invoice' as const}]};const f={...initialForm(item,invoice),action:'skip' as const,name:'Escluso',expense:'create' as const,amount:'999'};
  render(<SaveSummary draft={invoice} forms={{i:f}} houseForms={{cost:form}} documentOnly={false}/>);expect(screen.getByText('Data della spesa')).toBeVisible();expect(screen.queryByText('Periodo di riferimento')).not.toBeInTheDocument();expect(screen.queryByText(/Escluso/)).not.toBeInTheDocument();expect(screen.queryByText('999,00 €')).not.toBeInTheDocument();
 });
+
+it('two invoice segments keep page, supplier, date and amount separate in the save summary',()=>{
+ const invoice={...draft,houseExpenses:[1,2].map(page=>({...draft.houseExpenses![0]!,id:'p'+page,documentKind:'simple_invoice' as const,invoiceSegment:{key:'synthetic-'+page,page}}))};
+ render(<SaveSummary draft={invoice} forms={{}} houseForms={{p1:{...form,amount:'122',supplier:'Idroquarzo',date:'2026-09-18'},p2:{...form,amount:'244',supplier:'Termonimbo',date:'2026-09-19'}}} documentOnly={false}/>);
+ expect(screen.getAllByLabelText('Spesa da salvare')).toHaveLength(2);expect(screen.getByText('Pagina 1 dell’originale')).toBeVisible();expect(screen.getByText('Pagina 2 dell’originale')).toBeVisible();expect(screen.getByText('122,00 €')).toBeVisible();expect(screen.getByText('244,00 €')).toBeVisible();expect(screen.queryByText('366,00 €')).not.toBeInTheDocument();
+});

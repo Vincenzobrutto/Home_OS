@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import type { ApiClient } from '../api/client';
 import { ui } from '../components/ui';
 import { ItemEditor } from './ItemEditor';
+import { InvoiceCoverageNotice } from './InvoiceCoverageNotice';
 import { SaveSummary } from './SaveSummary';
 import type { Draft, Form, HouseForm, ContactInput } from './model';
 import { reviewIssues, reviewProblem, reviewTotals } from './reviewSummary';
@@ -33,10 +34,11 @@ export function UnifiedReview({ documentReference,documentTargetLabel,summaryTit
   const items = (documentOnly?[]:draft.items).filter(item => (!item.decision || item.decision.state === 'deferred'));
   const manualCents = /^\d+(?:[.,]\d{1,2})?$/.test(manualTotal ?? '') ? Math.round(Number(manualTotal!.replace(',', '.')) * 100) : 0;
   const effectiveDraft = !draft.purchaseTotal && manualCents > 0 ? { ...draft, purchaseTotal: { amountCents: manualCents } } : draft;
-  const totals = reviewTotals(documentOnly?{...draft,items:[]}:draft, forms), problem = documentProblem ?? (documentOnly?null:houseProblem ?? reviewProblem(effectiveDraft, forms)) ?? (!documentOnly&&draft.mode==='manual'&&draft.items.length>1&&totals.newExpenses>0&&!manualCents ? 'Indica il totale della fattura per controllare le quote degli articoli.' : null);
+  const totals = reviewTotals(documentOnly?{...draft,items:[]}:draft, forms), problem = (documentOnly&&draft.invoiceCoverage?.pendingPages.length?"Restano pagine della fattura da controllare: conserva la bozza per riprendere la revisione.":null) ?? documentProblem ?? (documentOnly?null:houseProblem ?? reviewProblem(effectiveDraft, forms)) ?? (!documentOnly&&draft.mode==='manual'&&draft.items.length>1&&totals.newExpenses>0&&!manualCents ? 'Indica il totale della fattura per controllare le quote degli articoli.' : null);
   if(!documentOnly&&houseTotals){totals.newExpenses+=houseTotals.newExpenses;totals.amountCents+=houseTotals.amountCents;}
   const euro = (cents: number) => (cents / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
   return <section ref={reviewRef} className={styles.stack} aria-label="Revisione unica del documento">
+    <InvoiceCoverageNotice draft={draft} root={root}/>
     <header><h2>{editor?"Controlla e salva":"Rivedi e organizza"}</h2>{!editor&&<Link to={root + '/documenti/' + encodeURIComponent(draft.snapshot!.documentId) + '#doc-anteprima'} target="_blank" rel="noopener noreferrer">Vedi documento originale ↗</Link>}</header>
     {changeDocumentOnly&&!editor&&<fieldset className={styles.stack} disabled={disabled}><legend>Cosa vuoi conservare?</legend><label className={styles.check}><input type="radio" name={"document-mode-"+draft.id} checked={documentOnly} onChange={()=>changeDocumentOnly(true)}/>Conserva solo il documento</label><label className={styles.check}><input type="radio" name={"document-mode-"+draft.id} checked={!documentOnly} onChange={()=>changeDocumentOnly(false)}/>Rivedi oggetti, spese e contatti</label><p>{documentOnly?'Salvi titolo e tipo. Non creiamo nuovi oggetti, spese o contatti; quelli già collegati restano conservati.':'Controlla le proposte e scegli cosa salvare.'}</p></fieldset>}
     {editor&&changeDocumentOnly&&<label className={styles.check}><input type="checkbox" disabled={disabled} checked={documentOnly} onChange={e=>changeDocumentOnly(e.target.checked)}/>Conserva solo il documento</label>}
@@ -64,7 +66,7 @@ export function UnifiedReview({ documentReference,documentTargetLabel,summaryTit
     <section className={ui.card} aria-label="Riepilogo prima di salvare" aria-live="polite">
       {!documentOnly&&draft.purchaseTotal && <p>Totale fattura: <strong>{euro(draft.purchaseTotal.amountCents)}</strong></p>}
       <SaveSummary draft={draft} forms={forms} documentOnly={documentOnly} title={summaryTitle} houseForms={houseForms} contacts={summaryContacts} documentTargetLabel={documentTargetLabel}/>
-      {!documentOnly&&totals.amountCents>0&&!(totals.newExpenses===1&&draft.houseExpenses?.length===1)&&<p>Totale nuove spese: <strong>{euro(totals.amountCents)}</strong></p>}
+      {!documentOnly&&!draft.invoiceCoverage&&totals.amountCents>0&&!(totals.newExpenses===1&&draft.houseExpenses?.length===1)&&<p>Totale nuove spese: <strong>{euro(totals.amountCents)}</strong></p>}
       {!!totals.excludedCents && <p>Importi esclusi: {euro(totals.excludedCents)}</p>}
       {!!totals.excludedUnknown && <p>{totals.excludedUnknown} articoli esclusi con importo non disponibile.</p>}
       {problem && !issues.length && !documentProblem && <p role="status">{problem}</p>}

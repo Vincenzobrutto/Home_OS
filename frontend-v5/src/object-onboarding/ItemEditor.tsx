@@ -1,3 +1,4 @@
+import { ApparatusSuggestion } from './ApparatusSuggestion';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ApiClient } from '../api/client';
@@ -58,6 +59,7 @@ export function ItemEditor({part='all',api,accountId,base,draft,item,form,disabl
    </div></details>
    {form.action==='create'?<>
     <label className={styles.field}>Nome dell’oggetto<input className={ui.input} value={form.name} maxLength={120} onChange={e=>patch({name:e.target.value})} required/></label>
+    <ApparatusSuggestion name={form.name} selectedType={form.type} disabled={disabled} onType={type=>patch({type})}/>
     <p className={styles.source}>{item.objectType?item.objectType.certainty==='certain'?'Tipologia letta dal documento: puoi correggerla.':'Tipologia proposta da confermare: il documento non la rende certa.':'Tipologia non indicata: scegli quella adatta, senza assegnazioni automatiche.'}</p>
     <label className={styles.field}>Tipo<select className={ui.input} value={form.type} onChange={e=>patch({type:e.target.value})}><option value="">Scegli il tipo</option><option value="appliance">Elettrodomestico</option><option value="heating">Riscaldamento</option><option value="cooling">Climatizzazione</option><option value="electrical">Elettrico</option><option value="plumbing">Idraulica</option><option value="security">Sicurezza</option><option value="fixture">Dotazione fissa</option><option value="other">Altro oggetto</option></select></label>
     {quantity>1&&Array.from({length:quantity},(_,index)=><label className={styles.field} key={index}>Nome esemplare {index+1}<input className={ui.input} maxLength={120} value={form.unitNames[index]??''} placeholder={form.name+' ('+(index+1)+'/'+quantity+')'} onChange={e=>{const names=Array.from({length:quantity},(_,i)=>form.unitNames[i]||form.name+' ('+(i+1)+'/'+quantity+')');names[index]=e.target.value;patch({unitNames:names});}}/></label>)}

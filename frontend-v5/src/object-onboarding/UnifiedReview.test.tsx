@@ -112,3 +112,13 @@ it('missing-data checklist identifies the item and focuses its name field',async
  expect(within(screen.getByRole('region',{name:'Articolo 1'})).getByLabelText(/Nome dell/)).toHaveFocus();
  expect(screen.getByRole('button',{name:'Salva e organizza'})).toBeDisabled();
 });
+
+it('pending invoice pages block only-document completion while allowing partial review',async()=>{
+ const draft=fixture();draft.invoiceCoverage={version:'invoice-coverage-v1',totalPages:2,sentPages:[1],coveredPages:[1],pendingPages:[2]};
+ const w=mount(draft,true);expect(screen.getByRole('button',{name:'Salva documento'})).toBeDisabled();
+ expect(screen.getByText('Pagine ancora da controllare: 2.')).toBeVisible();
+ await w.user.click(screen.getByRole('radio',{name:'Rivedi oggetti, spese e contatti'}));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Salva e organizza'})).toBeEnabled());
+ await w.user.click(screen.getByRole('button',{name:'Salva e organizza'}));expect(w.submit).toHaveBeenCalledOnce();
+ expect(screen.getByText('Pagine ancora da controllare: 2.')).toBeVisible();
+});

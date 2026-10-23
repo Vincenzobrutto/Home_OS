@@ -1,3 +1,7 @@
+## Suggerimenti di ambiente da catalogo — 23 ottobre 2026
+
+Suggerimenti locali facoltativi per schede senza posizione, ricavati dal vocabolario generico v4 e dalle sole stanze attive già lette tramite GET rooms. Nessuna query trasversale alle case, nuova API, persistenza o preselezione automatica. Il clic prepara il menu; «Salva stanza» usa la consueta conferma CAS con roomIds e chiave idempotente. Posizioni confermate non ricevono suggerimenti e sistemi distribuiti richiedono la scelta multiambiente. Errori di lettura non usano stanze in cache per proporre una collocazione. [Report e test](fase0-night-plan-offline-20261023.md).
+
 ## Catalogo compatto — 19 ottobre 2026
 
 GET objects esteso con ordinamento, ricerca autorizzata marca/modello, conteggi e riepiloghi. [Dettagli e semantica dei contatori](object-catalog-layout-20261019.md#api-e-sicurezza).

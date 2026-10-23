@@ -1,3 +1,7 @@
+## Fase 0: piano attuato offline, UI fatture e proposte da catalogo — 23 ottobre 2026
+
+Q48 mostra pagine coperte/pendenti e pagina di ogni fattura, con importi separati e revisione parziale esplicita. Prompt v27 e regressioni Q20/Q29/Q30 preservano titoli/date letterali e tutti i validatori. Catalogo generico di 91 apparati: proposte locali di tipo e ambienti compatibili, salvate solo con scelta esplicita; posizioni confermate protette. Matrice proposta dei 147 documenti, nessun cambio automatico delle famiglie. Test backend/HTTP/DB isolati verdi e frontend mock **834/834 (102 file)**; nessuna AI, migrazione o modifica ai dati dell’app. [Report e limiti](v5/fase0-night-plan-offline-20261023.md).
+
 ## Fase 0: piano ampliato con catalogo apparati v4 — 23 ottobre 2026
 
 Aggiornato il solo [piano proposto di 5–8 ore](v5/fase0-next-hours-plan-20261023.md) dal workbook v4 letto senza modifiche: 147 tipi documentali e 91 apparati. Aggiunta matrice oggetto/impianto e suggerimenti di ambienti tipici alternativi, da confermare, con prove sintetiche previste di privacy e idempotenza. Conteggi e riferimenti controllati; nessuna implementazione runtime, import, test di prodotto nuovo o chiamata AI. Report e gate storici invariati.

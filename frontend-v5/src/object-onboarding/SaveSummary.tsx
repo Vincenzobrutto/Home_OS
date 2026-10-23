@@ -17,6 +17,7 @@ export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contac
    {houses.map(item=>{const f=houseForms[item.id];if(!f)return <p key={item.id}>Spesa · controlla i dati nel modulo.</p>;
     return <section key={item.id} className={styles.summaryExpense} aria-label="Spesa da salvare">
      <h4>{f.mode==='link_existing'?'Collega una spesa esistente':f.mode==='create'?'Nuova spesa':f.mode==='defer'?'Spesa da decidere più avanti':'Spesa esclusa'}</h4>
+     {item.invoiceSegment&&<p>Pagina {item.invoiceSegment.page} dell’originale</p>}
      {f.mode==='create'&&<><p><strong>{euro(f.amount)}</strong> · {f.supplier||'Fornitore non indicato'}</p><dl>
       <div><dt>Titolo</dt><dd>{f.title||'Da completare'}</dd></div><div><dt>Categoria</dt><dd>{({electricity:'Energia elettrica',gas:'Gas',water:'Acqua',internet_services:'Internet e servizi',maintenance:'Manutenzione',repairs_works:'Lavori e riparazioni',purchase_replacement:'Acquisti e sostituzioni'} as Record<string,string>)[f.category]||'Da completare'}</dd></div>
       {item.documentKind!=='simple_invoice'?<><div><dt>Periodo di riferimento</dt><dd>{f.periodFrom&&f.periodTo&&f.periodFrom<=f.periodTo?billPeriodLabel({category:'electricity',spentOn:f.date,competenceFrom:f.periodFrom,competenceTo:f.periodTo}):'Da completare'}</dd></div><div><dt>Emissione</dt><dd>{date(f.date)}</dd></div><div><dt>Scadenza</dt><dd>{date(f.dueOn)}</dd></div></>:<div><dt>Data della spesa</dt><dd>{date(f.date)}</dd></div>}

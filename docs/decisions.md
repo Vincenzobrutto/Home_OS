@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Vocabolario locale e ambienti tipici restano suggerimenti
+
+Il committente autorizza l’attuazione autonoma offline del piano dopo aver fornito la mappa v4. Trascrivere soltanto il vocabolario generico, tracciato a foglio/riga/SHA, distinguendo tipo documentale, famiglia, oggetto/impianto e ambiente. La matrice delle famiglie resta proposta, senza nuove famiglie o backfill. Il catalogo non è evidenza di possesso o posizione: tipo applicato con clic su campo vuoto, stanza proposta soltanto tra ambienti attivi leggibili della casa e confermata con l’operazione canonica versionata. Posizioni già confermate e sistemi distribuiti non ricevono una collocazione automatica. Nessun consenso AI o invio reale deriva dall’autonomia autorizzata; gate invariato. [Attuazione e limiti](v5/fase0-night-plan-offline-20261023.md).
+
 ## 21 ottobre 2026 — Archivio unico per argomento
 
 L’utente approva dieci famiglie, descrizioni tramite Info e superamento delle tre macroviste. La famiglia principale è indipendente da tipo e collegamenti: un originale resta unico anche se condiviso fra più oggetti. Derivare dai tipi esistenti soltanto appartenenze univoche, lasciare gli altri documenti in Da classificare. Conservare i valori storici e tradurli in lettura, senza backfill o nuovi invii AI. [Regole e verifiche](v5/document-unified-archive-20261021.md).
