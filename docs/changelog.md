@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Prezzi e date: collaudo offline
+
+Corrette le evidenze di acquisto/ordine che potevano accettare date dichiarate non disponibili, condizionali o riferite a un'altra occorrenza. Restano ammesse note neutre; calendario, fonti e ruoli economici mantengono i controlli esistenti. Cinque nuovi gruppi generalizzati; build/lint, 311/311 onboarding, 233/233 ordinari e 18/18 guardie superati. Nessuna AI, DB, modifica al lotto Claude o salvataggio canonico; merge soggetto al committente. [Report](v5/prezzi-date-20261023.md).
+
 ## 23 ottobre 2026 — Classificazione locale di ricevute e negazioni
 
 Riconosciute le forme «ricevuta d'acquisto» con apostrofi e spazi diversi. Le menzioni esplicitamente negate e i riferimenti negativi all'obbligo di emissione non attribuiscono un tipo al documento; una vera fattura nello stesso PDF rimane riconoscibile. Build/lint e 233/233 test ordinari offline superati. Correzione verificata senza AI, accesso DB o modifica al lotto Cestino; integrazione approvata descritta sotto. [Report](v5/ricevute-negazioni-20261023.md).

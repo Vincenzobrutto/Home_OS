@@ -3,6 +3,7 @@ import { printedDates, printedCents } from '../economy/document-evidence';
 
 const normalized = (text: string) => text.normalize('NFC').replace(/\s+/gu, ' ').trim();
 const conflictingLabel = /(?:consegna|consegnato|prevista|previsto|produzione|prodotto il|scadenza|pagamento|spedizione|manufactur|delivery|payment|due date)/iu;
+const uncertainDate = /\b(?:da\s+(?:confermare|verificare|definire)|non\s+(?:disponibile|confermat[oa]|not[oa])|sconosciut[oa]|provvisori[oa]|stimat[oa]|presunt[oa]|indicativ[oa]|ipotetic[oa]|estimated|expected|tentative|unconfirmed|unknown|not\s+(?:available|confirmed|known)|to\s+be\s+confirmed)\b/iu;
 
 /** Date-only citations need an unambiguous purchase label on the same original page. */
 export function purchaseDateSource(excerpt: string, value: string, page?: string, role: 'purchase' | 'order' = 'purchase'): string | null {
@@ -12,7 +13,14 @@ export function purchaseDateSource(excerpt: string, value: string, page?: string
   const valid = (candidate: string) => {
     const compact = normalized(candidate), label = labelPattern.exec(compact);
     if (!label || conflictingLabel.test(compact)) return false;
-    const printed = printedDates(compact.slice(label[0].length));
+    const cell = compact.slice(label[0].length);
+    // A role heading cannot lend authority to an unavailable/conditional date,
+    // another reference or repeated dates collapsed by printedDates' Set.
+    // Neutral notes after a semicolon keep their historical support; they must
+    // not qualify the date or introduce a second date occurrence.
+    const [date, ...notes] = cell.split(';');
+    if (!dateOnly(date.trim()) || uncertainDate.test(cell) || printedDates(notes.join(';')).length) return false;
+    const printed = printedDates(date);
     return printed.length === 1 && printed[0] === value;
   };
   if (valid(excerpt)) return excerpt;

@@ -8,6 +8,41 @@ const {productExtraction}=require('../dist/object-onboarding/domain');
 const {requiresPaymentReview,paymentReview}=require('../dist/object-onboarding/payment-review');
 const ev=excerpt=>({page:1,excerpt,region:null});
 const context=page=>({kind:'text',pages:[page],snapshot:{documentId:randomUUID(),documentVersion:1,documentSha256:'c'.repeat(64)}});
+for(const [label,read] of [['Data acquisto',purchaseDateSource],['Order date',orderDateSource]])test('date role rejects unavailable, conditional and unrelated dates: '+label,()=>{
+ for(const tail of ['non disponibile; riferimento 07/03/2024','da confermare 07/03/2024','sconosciuta, documento del 07/03/2024','not available; reference 07/03/2024','estimated 07/03/2024','07/03/2024 (da confermare)','07/03/2024 or 07/03/2024','07/03/2024; stampa 07/03/2024','07/03/2024; da confermare','07/03/2024; tentative','07/03/2024; not confirmed','07/03/2024; 07/03/2024']){
+  const quote=label+': '+tail;
+  assert.equal(read(quote,'2024-03-07'),null,quote);
+  assert.equal(read('07/03/2024','2024-03-07',quote),null,quote);
+ }
+});
+test('date cells retain full calendar evidence across formatting and leap years',()=>{
+ for(const token of ['29/02/2024','2024-02-29','29 febbraio 2024'])for(const gap of [': ','\n',' :\u00a0']){
+  const quote='Data acquisto'+gap+token;assert.equal(purchaseDateSource(quote,'2024-02-29'),quote);
+ }
+ for(const token of ['29/02/2023','31/04/2024','07/03','07/03/24'])assert.equal(purchaseDateSource('Data acquisto: '+token,'2024-03-07'),null);
+ for(const read of [purchaseDateSource,orderDateSource]){
+  const label=read===purchaseDateSource?'Purchased on':'Ordered on',quote=label+' 2024-03-07; customer reference ABC-91';
+  assert.equal(read(quote,'2024-03-07'),quote);
+ }
+ assert.equal(purchaseDateSource('07/03/2024','2024-03-07','Data acquisto\n07/03/2024\nPayment date\n07/03/2024'),null);
+});
+test('prices preserve roles across currencies, separators, discounts and totals without arithmetic',()=>{
+ const {monetaryCell,labelledProductAmount}=require('../dist/object-onboarding/role-evidence');
+ for(const money of ['EUR 1.234,56','1,234.56 EUR','1\u202f234,56 €','1\u00a0234,56 €']){
+  assert.equal(monetaryCell(money),123456);assert(purchaseGrandTotal('Grand total: '+money,123456));
+  assert(labelledProductAmount('Unseen appliance — Line total '+money,'Unseen appliance',123456));
+ }
+ for(const quote of ['Totale sconto EUR 123.45','Totale acconto EUR 123.45','Saldo EUR 123.45','Totale EUR 123.45 meno sconto EUR 5.00','Total USD 123.45','Total EUR 1,23.45'])assert(!purchaseGrandTotal(quote,12345),quote);
+ assert.equal(shippingMoney('Shipping EUR 0.00'),'EUR 0.00');
+ assert.equal(tablePurchaseAmount('Product | Quantity | Unit price (EUR)\nOther device | 3 | 10.00','Other device'),null);
+});
+test('unavailable purchase date stays a reviewed field, never a canonical or automatic financial proposal',()=>{
+ const f=fixture(),quote='Purchased on: not available; reference 2024-03-07';f.ctx.pages[0]+='\n'+quote;
+ f.raw.items[0].fields.purchaseDate.evidence=ev(quote);const before=structuredClone(f.raw);
+ const x=productExtraction(f.raw,f.ctx);assert.equal(x.items[0].fields.purchaseDate,undefined);assert(x.needsReview);
+ assert(x.reviewWarnings.some(w=>w.field==='item:0:purchaseDate'));assert.equal(x.items[0].purchaseAmount.amountCents,12345);
+ assert.equal(x.items[0].fields.name.value,f.name);assert.throws(()=>require('../dist/object-onboarding/automatic-plan').automaticPlan(x));assert.deepEqual(f.raw,before);assert.deepEqual(productExtraction(f.raw,f.ctx),x);
+});
 for(const label of ['Data dell’ordine','Data d’ordine','Ordine effettuato in data','Order placed on','Ordered on','Data ordine'])test('order role with different wording: '+label,()=>{
  const quote=label+'\n07/03/2024';assert.equal(orderDateSource(quote,'2024-03-07'),quote);assert.equal(purchaseDateSource(quote,'2024-03-07'),null);
  assert.equal(orderDateSource('07/03/2024','2024-03-07',quote),quote);assert.equal(orderDateSource('07/03/2024','2024-03-07',label+'\nUnrelated field\n07/03/2024'),null);
