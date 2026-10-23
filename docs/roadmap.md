@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Manutenzione V5 dopo audit tecnico
+
+[Audit e piano dei lotti](v5/fase0-code-audit-refactor-20261023.md): primo lotto con dipendenze workspace in una direzione e riga spesa separata dai form; entry JS ridotta del 5,60%, non misurata latenza utente. Seguito prioritario: estrazioni pure dagli editor, validazioni/backend mantenendo transazione e controlli, ingresso test DB offline uniforme; conteggio query prima di eventuali letture batch. Ritiri di componenti, prompt/client e archivio documentazione restano proposte. Nessuna riscrittura generale, nuovo gate AI o deploy implicito.
+
 ## Fase 0 — generalità delle regole prima di nuove misure AI, 23 ottobre 2026
 
 Regole di acquisto riviste per ruoli semantici, varianti e colonne riordinate, mantenendo controlli su attribuzione e fonti. [Report](v5/fase0-general-rules-offline-20261023.md). Test di contratto e DB isolato non dimostrano accuratezza su tutti i documenti; futuro confronto sui reali richiede perimetro e consenso distinti. Nessuna nuova campagna o deploy implicito.

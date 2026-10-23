@@ -1,0 +1,25 @@
+{
+  "baselineCommit": "0422af6d9a287c0584a0d7699e6b60a1f7909c15",
+  "scope": "src TS/TSX excluding .test and test directories; includes demo/testing folders",
+  "baselineInventory": {
+    "backendFiles": 148,
+    "backendLines": 10103,
+    "frontendFiles": 169,
+    "frontendLines": 26732
+  },
+  "bundle": [
+    {
+      "label": "before",
+      "indexBytes": 507951,
+      "indexGzip": 156490,
+      "totalJsBytes": 1857135
+    },
+    {
+      "label": "after",
+      "indexBytes": 479496,
+      "indexGzip": 147622,
+      "totalJsBytes": 1859649
+    }
+  ],
+  "method": "Vite production build, unchanged lockfiles/config; gzip via Node zlib defaults; JS total includes deferred chunks, excludes maps and worker .mjs; not a latency benchmark"
+}

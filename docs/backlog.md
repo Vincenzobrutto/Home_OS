@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Portafoglio debito tecnico V5 dopo audit
+
+[Dieci rilievi con evidenze, priorità, rischio e lotti verificabili](v5/fase0-code-audit-refactor-20261023.md). R01 ciclo workspace/intake e R02 import anticipato dei form dalla Casa corretti nel primo lotto; R09 stato corrente separato dallo storico integrale, restante documentazione ancora aperta. Restano R03 orchestratori frontend, R04 validatore/conferma transazionale e R07 harness offline come prime attività; R05 query richiede misurazioni su sintetici prima di ottimizzare. R06 componenti non raggiungibili assenti dal bundle: nessuna rimozione automatica; R08 prompt, R09 riepilogo/storico documentazione e R10 client API da trattare separatamente. Ripetizioni di privacy/SHA/idempotenza ai confini non sono codice morto; nessuna rinuncia alle garanzie per ridurre righe.
+
 ## 23 ottobre 2026 — Caffè: prima proposta reale accettata, copertura da affinare
 
 Terzo invio autorizzato riuscito con nome breve, marca/modello/data ordine coerenti. Restano prezzo articolo non proposto pur visibile nel PDF, descrizione estesa incompleta e colore non esplicito; quantità non verificata. Analizzare offline criteri generali di copertura dei campi e varianti, senza ricavare prezzi dal totale né regole sul campione. Nessuna modifica automatica alla bozza o ai dati confermati. Controllo umano ancora aperto; nessun gate AI promosso o ulteriore invio autorizzato. [Esito e confronto](v5/fase0-coffee-third-attempt-20261023.md). Le voci sottostanti descrivono i checkpoint storici precedenti.

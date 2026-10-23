@@ -6,7 +6,7 @@ import {DocumentEditorContext} from './DocumentEditorContext';
 import {renderApp,seededBackend,PASSWORD_A} from '../test/harness';
 const prepared=vi.hoisted(()=>vi.fn(async()=>({id:'prepared-batch'})));
 vi.mock('../intake-integration/client',()=>({IntakeClient:class{prepareExisting=prepared;}}));
-vi.mock('../intake-integration/IntakePage',()=>({IntakePage:()=>{const editor=useContext(DocumentEditorContext),[params]=useSearchParams();if(!editor)return <p>Caricamento pronto</p>;return <><label>Dato di prova<input/></label><button onClick={()=>void editor!.complete(params.get('oggetti-documento')!)}>Conferma bozza server</button><button onClick={()=>editor!.pause()}>Esci senza salvare</button><button onClick={()=>editor!.pause(true)}>Bozza salvata sul server</button></>;}}));
+vi.mock('../intake-integration/IntakeContent',()=>({IntakeContent:()=>{const editor=useContext(DocumentEditorContext),[params]=useSearchParams();if(!editor)return <p>Caricamento pronto</p>;return <><label>Dato di prova<input/></label><button onClick={()=>void editor!.complete(params.get('oggetti-documento')!)}>Conferma bozza server</button><button onClick={()=>editor!.pause()}>Esci senza salvare</button><button onClick={()=>editor!.pause(true)}>Bozza salvata sul server</button></>;}}));
 vi.mock('./PdfPreview',()=>({PdfPreview:()=> <p>Anteprima locale</p>}));
 it('preserves filters, guards unsaved changes and selects the next source only after successful confirmation',async()=>{
  const {backend,homeA1,a}=seededBackend();

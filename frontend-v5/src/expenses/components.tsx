@@ -1,5 +1,4 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { newIdempotencyKey, queryKeys } from '../api/queryKeys';
 import type { ExpenseCapabilities, ExpenseResponse, Home, HomeExpense, UpdateExpense } from '../api/types';
@@ -7,15 +6,12 @@ import { Dialog, NoteField } from '../activities/components';
 import styles from '../activities/activities.module.css';
 import { Banner, Field, cx, ui } from '../components/ui';
 import { useDocuments } from '../documents/hooks';
-import { formatCalendarDate } from '../lib/activities';
 import {
   ORIGIN_LABEL,
-  STATE_LABEL,
   assetLinkText,
   centsToInput,
   documentLinkText,
   expenseErrorMessage,
-  formatCents,
   isAmbiguous,
   isConflict,
   normalizeNote,
@@ -32,30 +28,7 @@ import own from './expenses.module.css';
 
 export { Dialog, NoteField, styles as expenseStyles, own as expenseOwn };
 
-export function expensePath(homeId: string, expenseId?: string) {
-  const base = `/home/${encodeURIComponent(homeId)}/spese`;
-  return expenseId ? `${base}/${encodeURIComponent(expenseId)}` : base;
-}
-
-export function ExpenseRow(props: { expense: HomeExpense; homeId: string; state?: unknown; referencePeriod?: string | null; issuedOn?: string | null }) {
-  const { expense } = props;
-  return (
-    <li className={styles.item}>
-      <div className={styles.itemHead}>
-        <Link to={expensePath(props.homeId, expense.id)} state={props.state} className={styles.title}>
-          {expense.title}
-        </Link>
-        <span className={own.amount}>{formatCents(expense.amountCents)}</span>
-      </div>
-      <span className={styles.meta}>
-        {props.referencePeriod ?? formatCalendarDate(expense.spentOn)}
-        {props.issuedOn ? ` · Emissione ${formatCalendarDate(props.issuedOn)}` : ''} · {ORIGIN_LABEL[expense.origin]}
-        {expense.state === 'archived' ? ` · ${STATE_LABEL.archived}` : ''}
-        {expense.assetLink.state !== 'none' ? ` · ${assetLinkText(expense.assetLink)}` : ''}
-      </span>
-    </li>
-  );
-}
+export { ExpenseRow, expensePath } from './ExpenseRow';
 
 /**
  * Operazione idempotente su una spesa: stessa chiave e stesso payload finché

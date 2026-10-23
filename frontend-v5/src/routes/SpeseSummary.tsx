@@ -3,7 +3,7 @@ import type { Home } from '../api/types';
 import { isApiError } from '../api/errors';
 import { ErrorState, Loading, cx, ui } from '../components/ui';
 import type { ExpenseSummary } from '../api/types';
-import { ExpenseRow, expenseOwn as own, expensePath, expenseStyles as styles } from '../expenses/components';
+import { ExpenseRow, expenseOwn as own, expensePath, expenseStyles as styles } from '../expenses/ExpenseRow';
 import { useExpenseSummary } from '../expenses/hooks';
 import { expenseErrorMessage, formatCents } from '../lib/expenses';
 import pages from './pages.module.css';
