@@ -1,3 +1,11 @@
+## Fase 0 — collaudo aggiuntivo di formati e varianti, 23 ottobre 2026 (Codex)
+
+**Verificato offline sul codice prodotto esistente**: 252 combinazioni di scrittura/separatori/spaziature dei nomi; 20 varianti con prefisso uguale, identità stabili anche invertendo articoli/campi; confini 120/2000, Unicode NFC/NFD, pagine escluse e citazioni di altri articoli. Due varianti con stesso nome breve e stesso modello confermate nei due ordini, poi copie dello stesso SHA e replay da altro client: **2 oggetti, 0 spese** per scenario, fonti/varianti preservate e bozze private protette. [Casi e limiti](v5/fase0-additional-offline-tests-20261023.md).
+
+**Verifiche**: build/lint backend, onboarding **291/291**, DB temporaneo nuovo **87/87**; cluster fermato, UI precedente ripristinata offline. Aggiunti sei test di stress e due scenari DB permanenti; nessun nuovo difetto riprodotto o codice prodotto modificato. Frontend invariato, mock non ripetuta: ultimo 844/844 è del checkpoint precedente, come ordinari 214/214 e guard/runner 17/17.
+
+**Limiti**: prove tecniche di invarianti, non nuova accuratezza AI/OCR o supporto semantico di tutte le lingue. PDF reale dopo il fix ancora non misurato. Nessuna nuova AI/email, DB reale, .env, main, gold/ledger, file estranei, deploy o backfill. 104 StoredFile preservati.
+
 ## Fase 0 — nome breve automatico e descrizione preservata, 23 ottobre 2026 (Codex)
 
 **Implementato e verificato offline**: proposta di nome breve letterale entro 120 caratteri dopo verifica integrale del nome esteso (entro il bound di citazione 2000). Nome esteso e fonte preservati, visibili nell’editor con modello e varianti; no taglio di identificatori non separabili. Nome abbreviato sempre da rivedere, nessuna conferma automatica. Fingerprint, ripetizioni, quantità e prezzi restano basati sul nome completo, così varianti finali diverse non collassano sul prefisso. [Comportamento, contratto e prove](v5/fase0-short-product-name-offline-20261023.md).

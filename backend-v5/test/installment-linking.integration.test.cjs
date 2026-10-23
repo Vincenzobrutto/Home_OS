@@ -164,4 +164,35 @@ test('Acconto/saldo: manual purchase reconciliation, replay, source copies and p
   await assert.rejects(svc.confirm(a.id,h,d.id,request,key));assert.deepEqual(await counts(h),{objects:1,expenses:0});
  });
 
+ for(const order of [['Blu','Rossa'],['Rossa','Blu']])await t.test('same short name, distinct full variants: '+order.join(' -> '),async()=>{
+  const {productExtraction}=require('../dist/object-onboarding/domain'),{automaticPlan,AutomaticReviewNeeded}=require('../dist/object-onboarding/automatic-plan');
+  const h=await home(),saved={};
+  async function variant(v){
+   const full='Apparato domestico — '+'descrizione commerciale documentata '.repeat(8)+'Modello ZX-82/B variante '+v;
+   const doc=await db.document.create({data:{homeId:h,uploaderId:a.id,name:'Synthetic variant '+v,visibility:'private',original:{create:{originalFilename:'synthetic.pdf',mimeType:'application/pdf',sha256:hash(full),byteSize:1,file:{create:{storageKey:'not-stored-'+randomUUID()}}}}},include:{original:true}});
+   const source={page:1,excerpt:full,region:null},output=productExtraction({documentKind:'product_document',hasMoreItems:false,purchaseTotal:null,items:[{fields:{name:{value:full,evidence:source},model:{value:'ZX-82/B',evidence:source}},quantity:null,nameTruncated:false,disposition:'household_object',confidence:'high'}]},{kind:'text',snapshot:{documentId:doc.id,documentVersion:1,documentSha256:doc.original.sha256},pages:[full]});
+   assert.throws(()=>automaticPlan(output),AutomaticReviewNeeded);
+   const row=await db.objectOnboardingDraft.create({data:{accountId:a.id,homeId:h,documentId:doc.id,documentVersion:1,documentSha256:doc.original.sha256,mode:'extraction',output}});
+   return {doc,full,d:(await svc.getDraft(a.id,h,row.id,{})).draft};
+  }
+  for(const v of order){
+   const x=await variant(v);await assert.rejects(svc.getDraft(b.id,h,x.d.id,{}));
+   const request=body(x.d,[{...create(x.d)[0],name:x.d.items[0].fields.name.value,fields:{model:{action:'accept'}}}]),key=randomUUID();
+   const first=await svc.confirm(a.id,h,x.d.id,request,key),replay=await services(db).svc.confirm(a.id,h,x.d.id,request,key);
+   assert.deepEqual(replay.result,first.result);const id=first.draft.items[0].decision.objects[0].id;saved[v]={id,x};
+   const field=await db.receiptObjectField.findUniqueOrThrow({where:{objectId_fieldKey:{objectId:id,fieldKey:'name'}}});assert.equal(field.sources[0].excerpt,x.full);assert.equal(field.documentSha256,x.doc.original.sha256);
+  }
+  assert.notEqual(saved.Blu.id,saved.Rossa.id);assert.deepEqual(await counts(h),{objects:2,expenses:0});
+  const rows=await db.homeObject.findMany({where:{homeId:h}});assert.equal(new Set(rows.map(r=>r.name)).size,1);assert(rows.every(r=>r.profile.model.value==='ZX-82/B'));
+  for(const v of [...order].reverse()){
+   const copy=await variant(v),choice={...create(copy.d)[0],name:copy.d.items[0].fields.name.value};
+   await assert.rejects(svc.confirm(a.id,h,copy.d.id,body(copy.d,[choice]),randomUUID()),code('onboarding_object_exists'));assert.deepEqual(await counts(h),{objects:2,expenses:0});
+   const original=await db.homeObject.findUniqueOrThrow({where:{id:saved[v].id}}),request=body(copy.d,[{itemId:copy.d.items[0].id,action:'link',targets:[{id:original.id,expectedVersion:original.version}],fields:{},manual:null,expense:{action:'skip'}}]),key=randomUUID();
+   await svc.confirm(a.id,h,copy.d.id,request,key);await services(db).svc.confirm(a.id,h,copy.d.id,request,key);
+   assert.equal(await db.objectResourceLink.count({where:{objectId:original.id,documentId:copy.doc.id,state:'active'}}),1);
+   assert.equal((await svc.getDraft(a.id,h,copy.d.id,{})).draft.items[0].fullName,copy.full);
+  }
+  assert.deepEqual(await counts(h),{objects:2,expenses:0});
+ });
+
 });
