@@ -11,20 +11,31 @@ import { profileFields, type ObjectProfile, type ProfileField, type ProfileKey }
 export const onboardingDenied = () => new ForbiddenException('Accesso non consentito.');
 export type OnboardingTx = Prisma.TransactionClient;
 
-export async function objectProfileView(tx: OnboardingTx, accountId: string, homeId: string, objectId: string, stored: unknown) {
-  const raw = (stored && typeof stored === 'object' ? stored : {}) as ObjectProfile;
-  const merged: ObjectProfile = { ...raw };
-  const receipt = await tx.receiptObjectField.findMany({ where: { accountId, homeId, objectId, fieldKey: { in: ['brand', 'model'] } } });
-  for (const row of receipt) if (!merged[row.fieldKey as ProfileKey]) merged[row.fieldKey as ProfileKey] = { value: row.value, origin: row.origin === 'user_declared' ? 'user_declared' : 'extraction_confirmed', sources: row.sources as unknown as ProfileField['sources'] };
-  const proofs = Object.values(merged).flatMap(field => field?.sources ?? []).map(source => ({ documentId: source.documentId, documentVersion: source.documentVersion, documentSha256: source.sha256 }));
+/** Request-local batch: each stored field still needs every captured source proof. */
+export async function objectProfileViews(tx: OnboardingTx, accountId: string, homeId: string, targets: ReadonlyArray<{id:string;profile:unknown}>) {
+  if (!targets.length) return new Map<string, {fields:ObjectProfile;unavailable:boolean}>();
+  const receipt = await tx.receiptObjectField.findMany({ where: { accountId, homeId, objectId: {in:targets.map(target=>target.id)}, fieldKey: { in: ['brand', 'model'] } } });
+  const merged = targets.map(target => {
+    const raw = (target.profile && typeof target.profile === 'object' ? target.profile : {}) as ObjectProfile;
+    const fields: ObjectProfile = { ...raw };
+    for (const row of receipt) if (row.objectId===target.id && !fields[row.fieldKey as ProfileKey]) fields[row.fieldKey as ProfileKey] = { value: row.value, origin: row.origin === 'user_declared' ? 'user_declared' : 'extraction_confirmed', sources: row.sources as unknown as ProfileField['sources'] };
+    return {id:target.id,fields};
+  });
+  const proofs = merged.flatMap(target=>Object.values(target.fields).flatMap(field => field?.sources ?? []).map(source => ({ documentId: source.documentId, documentVersion: source.documentVersion, documentSha256: source.sha256 })));
   const readable = await readableReceiptProofKeys(tx, accountId, homeId, proofs);
-  const fields: ObjectProfile = {}; let unavailable = false;
-  for (const key of profileFields) {
-    const field = merged[key]; if (!field) continue;
-    if (field.origin === 'user_declared' || field.sources.length > 0 && field.sources.every(source => readable.has(receiptProofKey({ documentId: source.documentId, documentVersion: source.documentVersion, documentSha256: source.sha256 })))) fields[key] = field;
-    else unavailable = true;
-  }
-  return { fields, unavailable };
+  return new Map(merged.map(target=>{
+    const fields: ObjectProfile = {}; let unavailable = false;
+    for (const key of profileFields) {
+      const field = target.fields[key]; if (!field) continue;
+      if (field.origin === 'user_declared' || field.sources.length > 0 && field.sources.every(source => readable.has(receiptProofKey({ documentId: source.documentId, documentVersion: source.documentVersion, documentSha256: source.sha256 })))) fields[key] = field;
+      else unavailable = true;
+    }
+    return [target.id,{fields,unavailable}] as const;
+  }));
+}
+
+export async function objectProfileView(tx: OnboardingTx, accountId: string, homeId: string, objectId: string, stored: unknown) {
+  return (await objectProfileViews(tx,accountId,homeId,[{id:objectId,profile:stored}])).get(objectId)!;
 }
 
 @Injectable()

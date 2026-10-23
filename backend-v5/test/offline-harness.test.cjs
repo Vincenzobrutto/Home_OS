@@ -36,7 +36,8 @@ test('runner accepts only named profiles, refuses arbitrary commands and require
   assert(profile.files.length); for (const file of profile.files) assert.match(file, /^test\/[\w.-]+\.cjs$/);
  }
  assert.equal(suites['test:quality-v3-db'].restartFiles.length, 1);
- assert.equal(suites['test:night-plan-db'].files.length, 11);
+ assert.equal(suites['test:night-plan-db'].files.length, 12);
+ assert(suites['test:night-plan-db'].files.includes('test/candidate-query-measurements.test.cjs'));
 });
 
 test('an occupied local port is refused and the existing listener remains owned and running', async () => {

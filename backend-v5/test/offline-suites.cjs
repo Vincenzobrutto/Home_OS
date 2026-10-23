@@ -5,6 +5,7 @@ const profiles = {
     "api": false,
     "files": [
       "test/field-validation.test.cjs",
+      "test/profile-batch.test.cjs",
       "test/purchase-validation.test.cjs",
       "test/object-onboarding.test.cjs",
       "test/short-name.test.cjs",
@@ -278,6 +279,7 @@ const profiles = {
     "api": false,
     "files": [
       "test/object-onboarding.integration.test.cjs",
+      "test/candidate-query-measurements.test.cjs",
       "test/object-onboarding.http.test.cjs"
     ],
     "apiFiles": []
@@ -300,6 +302,7 @@ const profiles = {
       "test/home-objects.http.test.cjs",
       "test/documents.integration.test.cjs",
       "test/object-onboarding.integration.test.cjs",
+      "test/candidate-query-measurements.test.cjs",
       "test/automatic-intake.integration.test.cjs",
       "test/q48-coverage.integration.test.cjs",
       "test/q22-lines.integration.test.cjs",

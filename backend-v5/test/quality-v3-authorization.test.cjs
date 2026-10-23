@@ -53,3 +53,12 @@ test('future authorization freezes each provider protocol module and rejects tam
   assert.throws(()=>validateAuthorization(a,options),e=>e.code==='synthetic_authorization_mismatch');
  }
 });
+
+test('future authorization freezes candidate and profile source visibility policy',()=>{
+ for(const file of ['src/object-onboarding/access.ts','src/object-onboarding/candidates.ts']){
+  const a=createAuthorization(options.campaignId,options.model);
+  assert.match(a.frozenFiles[file],/^[a-f0-9]{64}$/);
+  a.frozenFiles[file]='0'.repeat(64);
+  assert.throws(()=>validateAuthorization(a,options),e=>e.code==='synthetic_authorization_mismatch');
+ }
+});

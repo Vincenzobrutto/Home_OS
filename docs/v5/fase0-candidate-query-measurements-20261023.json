@@ -1,0 +1,80 @@
+{
+  "scope": "synthetic onboardingCandidates only, SQL statements not latency",
+  "before": [
+    {
+      "candidates": 1,
+      "sourcesPerProfile": 1,
+      "sqlStatements": 23,
+      "sourceLocks": 4
+    },
+    {
+      "candidates": 10,
+      "sourcesPerProfile": 1,
+      "sqlStatements": 77,
+      "sourceLocks": 4
+    },
+    {
+      "candidates": 50,
+      "sourcesPerProfile": 1,
+      "sqlStatements": 317,
+      "sourceLocks": 4
+    },
+    {
+      "candidates": 1,
+      "sourcesPerProfile": 3,
+      "sqlStatements": 23,
+      "sourceLocks": 4
+    },
+    {
+      "candidates": 10,
+      "sourcesPerProfile": 3,
+      "sqlStatements": 77,
+      "sourceLocks": 4
+    },
+    {
+      "candidates": 50,
+      "sourcesPerProfile": 3,
+      "sqlStatements": 317,
+      "sourceLocks": 4
+    }
+  ],
+  "after": [
+    {
+      "candidates": 1,
+      "sourcesPerProfile": 1,
+      "sqlStatements": 23,
+      "sourceLocks": 4
+    },
+    {
+      "candidates": 10,
+      "sourcesPerProfile": 1,
+      "sqlStatements": 50,
+      "sourceLocks": 4
+    },
+    {
+      "candidates": 50,
+      "sourcesPerProfile": 1,
+      "sqlStatements": 170,
+      "sourceLocks": 4
+    },
+    {
+      "candidates": 1,
+      "sourcesPerProfile": 3,
+      "sqlStatements": 23,
+      "sourceLocks": 4
+    },
+    {
+      "candidates": 10,
+      "sourcesPerProfile": 3,
+      "sqlStatements": 50,
+      "sourceLocks": 4
+    },
+    {
+      "candidates": 50,
+      "sourcesPerProfile": 3,
+      "sqlStatements": 170,
+      "sourceLocks": 4
+    }
+  ],
+  "profileEquivalenceCases": 1458
+}

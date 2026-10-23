@@ -40,4 +40,3 @@ export function onboardingSchemaFor(kind:ProductEvidenceContext['kind'],sentInvo
  const reference=(value:unknown)=>{if(!value||typeof value!=='object')return;const row=value as Record<string,unknown>,props=row.properties as Record<string,unknown>|undefined;if(props?.evidence)props.evidence={type:'integer'};for(const child of Object.values(row))reference(child);};reference(schema);
  (schema.properties as Record<string,unknown>).sources={type:'array',items:poolSchema};(schema.required as string[]).push('sources');return schema;
 }
-

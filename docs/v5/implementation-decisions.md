@@ -1,3 +1,7 @@
+## Letture batch dei candidati — 23 ottobre 2026
+
+Preletture soltanto nella singola richiesta dopo verifica di ogni target: profili e posizioni insieme, prove per campo ancora tutte obbligatorie. Facciata singola usa lo stesso criterio; nessuna cache fra account/richieste o rimozione di lock. Conteggio SQL distinto dalla latenza. [R05](fase0-candidate-query-batching-20261023.md).
+
 ## Client API per dominio — 23 ottobre 2026
 
 Facciata pubblica compatibile e moduli con lo stesso ApiTransport iniettato: unico stato CSRF/sessione/fetch e stessi controlli HTTP/binari. Nessuna gerarchia tra domini, nuovo framework o dipendenza; aumento della entry documentato come costo di manutenzione, non ottimizzazione runtime. [Decisione e verifiche R10](fase0-api-client-domains-refactor-20261023.md).

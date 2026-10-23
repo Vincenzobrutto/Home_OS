@@ -2,7 +2,7 @@ import { Prisma } from '../../generated/client';
 import { digest } from '../security';
 import { object, uuid, text, invalid } from '../review/domain';
 import { readableReceiptName } from '../receipt-assistance/access';
-import { ObjectOnboardingAccess, objectProfileView, onboardingDenied } from './access';
+import { ObjectOnboardingAccess, objectProfileViews, onboardingDenied } from './access';
 import { proposedProfile } from './profile';
 import type { ProductExtraction } from './domain';
 
@@ -53,9 +53,13 @@ export function onboardingCandidates(access: ObjectOnboardingAccess, a: string, 
       WHERE o."accountId"=${a} AND o."homeId"=${h} AND o.state='active' AND ${readableReceiptName(a, h)} AND ${escaped ? Prisma.sql`o.name ILIKE ${'%' + escaped + '%'}` : Prisma.sql`TRUE`})
       SELECT * FROM candidates WHERE ${p.after ? Prisma.sql`(rank<${p.after.rank} OR (rank=${p.after.rank} AND id>${p.after.id}))` : Prisma.sql`TRUE`} ORDER BY rank DESC,id ASC LIMIT ${q.limit + 1}`);
     const page = rows.slice(0, q.limit);
-    const items = await Promise.all(page.map(async row => {
-      const target = await access.target(tx, a, h, row.id), profile = await objectProfileView(tx, a, h, target.id, target.profile);
-      const position = await tx.objectPosition.findUnique({ where: { objectId: target.id } });
+    const targets = await Promise.all(page.map(row=>access.target(tx,a,h,row.id)));
+    const profiles = await objectProfileViews(tx,a,h,targets);
+    const positions = targets.length ? await tx.objectPosition.findMany({where:{objectId:{in:targets.map(target=>target.id)}}}) : [];
+    const positionsByObject = new Map(positions.map(position=>[position.objectId,position]));
+    const items = await Promise.all(targets.map(async (target,index) => {
+      const row=page[index],profile=profiles.get(target.id)!;
+      const position = positionsByObject.get(target.id);
       const rooms = position ? await tx.homeRoom.findMany({ where: { homeId: h, id: { in: position.roomIds as string[] } }, select: { name: true } }) : [];
       return { id: target.id, name: target.name, version: target.version, profile, rooms: rooms.map(r => r.name), manual: target.manual, reason: ['manual_selection', 'same_complete_name', 'same_brand_model', 'same_brand_reference', 'confirmed_item'][row.rank] };
     }));
