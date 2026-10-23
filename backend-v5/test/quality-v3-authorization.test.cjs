@@ -44,3 +44,12 @@ test('future authorization freezes quantity and price validation before any disp
  a.frozenFiles[file]='0'.repeat(64);
  assert.throws(()=>validateAuthorization(a,options),e=>e.code==='synthetic_authorization_mismatch');
 });
+
+test('future authorization freezes each provider protocol module and rejects tampering',()=>{
+ for(const file of ['src/object-onboarding/provider-schema.ts','src/object-onboarding/provider-wire.ts','src/object-onboarding/provider-prompt.ts']){
+  const a=createAuthorization(options.campaignId,options.model);
+  assert.match(a.frozenFiles[file],/^[a-f0-9]{64}$/);
+  a.frozenFiles[file]='0'.repeat(64);
+  assert.throws(()=>validateAuthorization(a,options),e=>e.code==='synthetic_authorization_mismatch');
+ }
+});

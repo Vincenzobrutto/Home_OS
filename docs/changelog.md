@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — R08, protocollo provider separato
+
+Schema, decoder compatto e istruzioni in moduli distinti; export compatibili, prompt e schema identici, autorizzazione e diagnostica invariate. Freeze dei nuovi moduli verificato, nessuna AI o revisione semantica. [Report](v5/fase0-provider-protocol-refactor-20261023.md).
+
 ## 23 ottobre 2026 — R04, conferma backend per fasi
 
 Controlli, oggetti, spese e contatti separati dietro la stessa conferma idempotente/transazione. Blocchi operativi e finalizzazione invariati, nessun nuovo criterio o errore. Build/lint, 300 onboarding e 495 HTTP/DB sintetici superati. [Report](v5/fase0-confirmation-orchestration-refactor-20261023.md).
