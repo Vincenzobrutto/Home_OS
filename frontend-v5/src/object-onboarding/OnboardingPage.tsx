@@ -1,3 +1,4 @@
+import { compilationSnapshot, formsWithEditing, restoredItemForm } from './editorCompilation';
 import { InvoiceCoverageNotice } from './InvoiceCoverageNotice';
 import { useContext } from 'react';
 import { DocumentEditorContext } from '../documents/DocumentEditorContext';
@@ -140,17 +141,18 @@ function DraftEditor({draft,draftSaveFailure,retryDraftSave,metadata,documentPro
  const [recoveryOverride,setRecoveryOverride]=useState<{version:number;value:Pending|null}|null>(null);
  const recovery=recoveryOverride?.version===draft.version?recoveryOverride.value:draft.review?.pending??null;
  const setRecovery=(value:Pending|null)=>setRecoveryOverride({version:draft.version,value});
- const form=(item:Draft['items'][number]):Form=>{const initial=initialForm(item,draft),saved=forms[item.id];return {...initial,...saved,...(saved&&!saved.expenseAutoState?{expenseAutoState:'manual' as const}:{}),fields:{...initial.fields,...saved?.fields}};};
+ const form=(item:Draft['items'][number]):Form=>restoredItemForm(item,draft,forms);
  const useExistingInvoiceObject=()=>setForms(old=>({...old,...Object.fromEntries(draft.items.filter(i=>!i.decision||i.decision.state==='deferred').map(i=>[i.id,{...form(i),action:'document_only' as const,expense:'skip' as const,expenseAutoState:'manual' as const}]))}));
  const path='/drafts/'+encodeURIComponent(draft.id);
  const [preparing,setPreparing]=useState(false),preparingRef=useRef(false);
  const disabled=preparing||busy||locked||!!recovery||!draft.permissions.includes('edit');
  // A pending confirmation saves editable inputs too; only explicit Save draft pauses the editor.
- const compilation=()=>metadata?{compilation:{saved:true as const,...metadata,documentOnly,...(directReference?{documentTarget}:{}),manualTotal,contacts:Object.values(contactInputs),houseForms:{...draft.review?.compilation?.houseForms,...Object.fromEntries(Object.entries(houseReviews).map(([id,review])=>[id,review.form]))}}}:{};
+ const snapshot=()=>compilationSnapshot({metadata,documentOnly,directReference,documentTarget,manualTotal,contactInputs,savedHouseForms:draft.review?.compilation?.houseForms,houseReviews});
+ const compilation=()=>metadata?{compilation:snapshot()}:{};
  async function saveDraft(){
   if(preparingRef.current||disabled)return;
   preparingRef.current=true;setPreparing(true);setMessage('');
-  try{await write<Reply>(path+'/review',{expectedVersion:draft.version,review:{forms:editing?{...forms,[editing.id]:editing.form}:forms,compilation:{saved:true,...metadata,documentOnly,...(directReference?{documentTarget}:{}),manualTotal,contacts:Object.values(contactInputs),houseForms:{...draft.review?.compilation?.houseForms,...Object.fromEntries(Object.entries(houseReviews).map(([id,review])=>[id,review.form]))}}}},undefined,true);}
+  try{await write<Reply>(path+'/review',{expectedVersion:draft.version,review:{forms:formsWithEditing(forms,editing),compilation:snapshot()}},undefined,true);}
   catch{/* write exposes the failure without losing local inputs. */}
   finally{preparingRef.current=false;setPreparing(false);}
  }
@@ -172,7 +174,7 @@ function DraftEditor({draft,draftSaveFailure,retryDraftSave,metadata,documentPro
    await write<Reply>(path+'/review',{expectedVersion:draft.version,review:{...compilation(),forms,pending:attempt}});reviewSaved=true;setRecovery(attempt);const result=await write<Reply>(attempt.path,attempt.body,attempt.key);setRecovery(null);setMessage(`Confermato: ${result.result?.newExpenses??0} nuove spese della casa.`);await refresh();
   }catch(e){if(isApiError(e)&&e.kind==='http'&&e.status<500){setRecovery(null);if(reviewSaved){try{await write<Reply>(path+'/review',{expectedVersion:draft.version+1,review:{...compilation(),forms}});}catch{/* refresh below */}}await refresh();}await onFailure(e,true);throw e;}finally{preparingRef.current=false;setPreparing(false);}}
  async function recover(replay:boolean){if(!recovery)return;try{if(replay){await write<Reply>(recovery.path,recovery.body,recovery.key);setRecovery(null);setMessage('Conferma recuperata: nessun doppione.');await refresh();}else{const result=await api.callJson<{status:string}>(base+path+'/confirmations/'+encodeURIComponent(recovery.key),{accountId});if(result.status==='confirmed'){clearPending();setRecovery(null);setMessage('Conferma recuperata: nessun doppione.');await refresh();}else setMessage('La conferma non risulta registrata. Puoi inviare la stessa scelta con il pulsante qui sotto.');}}catch(e){await onFailure(e);}}
- async function enrich(id:string,body:{brand:string;reference:string;productUrl?:string}){try{await write<Reply>(path+'/review',{expectedVersion:draft.version,review:{forms:editing?{...forms,[editing.id]:editing.form}:forms}});await refresh();const latest=await api.callJson<Reply>(base+path,{accountId});await write<Reply>(path+'/items/'+encodeURIComponent(id)+'/enrichment',body);const updated=await api.callJson<Reply>(base+path,{accountId});const item=updated.draft.items.find(i=>i.id===id);if(item)setForms(old=>{const f=old[id]??initialForm(item,latest.draft);return {...old,[id]:{...f,fields:{...Object.fromEntries(Object.keys(item.profile).map(k=>[k,{action:'accept'}])),...f.fields}}};});if(item)setEditing(old=>old&&old.id===id?{...old,form:{...old.form,fields:{...Object.fromEntries(Object.keys(item.profile).map(k=>[k,{action:'accept' as const}])),...old.form.fields}}}:old);await refresh();setMessage('Ricerca ufficiale completata. Controlla le nuove proposte.');}catch(e){await onFailure(e);}}
+ async function enrich(id:string,body:{brand:string;reference:string;productUrl?:string}){try{await write<Reply>(path+'/review',{expectedVersion:draft.version,review:{forms:formsWithEditing(forms,editing)}});await refresh();const latest=await api.callJson<Reply>(base+path,{accountId});await write<Reply>(path+'/items/'+encodeURIComponent(id)+'/enrichment',body);const updated=await api.callJson<Reply>(base+path,{accountId});const item=updated.draft.items.find(i=>i.id===id);if(item)setForms(old=>{const f=old[id]??initialForm(item,latest.draft);return {...old,[id]:{...f,fields:{...Object.fromEntries(Object.keys(item.profile).map(k=>[k,{action:'accept'}])),...f.fields}}};});if(item)setEditing(old=>old&&old.id===id?{...old,form:{...old.form,fields:{...Object.fromEntries(Object.keys(item.profile).map(k=>[k,{action:'accept' as const}])),...old.form.fields}}}:old);await refresh();setMessage('Ricerca ufficiale completata. Controlla le nuove proposte.');}catch(e){await onFailure(e);}}
  if(!draft.snapshot)return <Banner tone="warning"><p>La fonte non è più disponibile. Nessun dato della proposta viene mostrato.</p></Banner>;
  const open=draft.items.filter(i=>!i.decision||i.decision.state==='deferred'),houseOpen=(draft.houseExpenses??[]).filter(i=>!i.decision||i.decision.state==='deferred');
  const houseTotals=houseOpen.reduce((sum,i)=>({newExpenses:sum.newExpenses+(houseReviews[i.id]?.newExpenses??0),amountCents:sum.amountCents+(houseReviews[i.id]?.amountCents??0)}),{newExpenses:0,amountCents:0});

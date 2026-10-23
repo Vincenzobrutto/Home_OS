@@ -1,6 +1,6 @@
 ## 23 ottobre 2026 — R03, responsabilità della revisione spese separate
 
-Estratte proiezione pura di regole/payload/riepilogo e checklist con focus, conservando stato, query e conferme nel componente. Nessuna modifica di comportamento, API o validazioni; regressioni su importi ambigui, acconto/saldo, risorse non disponibili e input conservati. [Report R03](v5/fase0-editor-review-refactor-20261023.md).
+Estratte proiezione pura di regole/payload/riepilogo e checklist con focus, conservando stato, query e conferme nel componente. Centralizzati anche [ripristino e snapshot della compilazione](v5/fase0-editor-compilation-refactor-20261023.md), preservando scelte salvate, rinvii e separazione dalle richieste pendenti. Nessuna modifica di comportamento, API o validazioni; regressioni su importi ambigui, acconto/saldo, risorse non disponibili e input conservati. [Report R03](v5/fase0-editor-review-refactor-20261023.md).
 
 ## 23 ottobre 2026 — Manutenzione del caricamento V5 e peso iniziale frontend
 
