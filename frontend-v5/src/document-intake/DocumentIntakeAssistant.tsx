@@ -1,13 +1,15 @@
+import { IntakeWorkRow } from './IntakeWorkRow';
+export { StatusBadge } from './IntakeBadges';
 import { FilePicker } from '../components/FilePicker';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Banner, Loading, cx, ui } from '../components/ui';
 import { ReviewDialog, type ReviewWriteState } from './ReviewDialog';
 import {
-  STATUS_LABEL, STATUS_TONE, buildOrganizePayload, buildReviewPayload, bulkEligible, bulkItem, canonical, collectionLabel, contextKeyString,
-  deferPayload, displayName, draftChanged, formatBytes, hasConflict, initialReviewDraft, itemStatus, kindCollection, matchesWorkFilter, partLabel,
-  houseDocumentKind, supportsObjectProposals, reviewable, rowTitle, selectionCollections, sourceLost, visibleItem, workGroup,
+  buildOrganizePayload, buildReviewPayload, bulkEligible, bulkItem, canonical, collectionLabel, contextKeyString,
+  deferPayload, draftChanged, formatBytes, initialReviewDraft, matchesWorkFilter,
+  houseDocumentKind, supportsObjectProposals, rowTitle, selectionCollections, sourceLost, visibleItem, workGroup,
   type CandidatePage, type ConfirmBatchOutcome, type ConfirmBatchPayload, type IntakeAnalysisPanel, type IntakeBatch, type IntakeCapabilities,
-  type IntakeContextKey, type IntakeItem, type IntakeLoadState, type ItemConfirmResult, type ItemStatus, type OpaqueId, type OpaqueVersion,
+  type IntakeContextKey, type IntakeItem, type IntakeLoadState, type ItemConfirmResult, type OpaqueId, type OpaqueVersion,
   type OrganizeBatchPayload, type RecoverBatchOutcome, type ReviewDraft, type ReviewPayload, type WorkFilter, type WriteOutcome,
 } from './model';
 import styles from './intake.module.css';
@@ -72,14 +74,6 @@ type Dialog = { itemId: OpaqueId; onlyOriginal: boolean } | null;
 /** Una richiesta diretta in volo o con esito da chiarire. Il payload resta congelato per recupero e reinvio. */
 type OrganizeOp = { key: string; payload: OrganizeBatchPayload; status: 'submitting' | 'uncertain' | 'recovering' | 'not_found'; message?: string };
 type Notice = { tone: 'success' | 'warning'; text: string; failures: Array<{ id: OpaqueId; name: string; message: string }> } | null;
-
-const TONE_CLASS = { ok: styles.badgeOk, warn: styles.badgeWarn, neutral: styles.badgeNeutral, error: styles.badgeError } as const;
-export function StatusBadge({ status }: { status: ItemStatus }) {
-  return <span className={cx(styles.badge, TONE_CLASS[STATUS_TONE[status]])}>{STATUS_LABEL[status]}</span>;
-}
-function Badge({ tone, children }: { tone: keyof typeof TONE_CLASS; children: ReactNode }) {
-  return <span className={cx(styles.badge, TONE_CLASS[tone])}>{children}</span>;
-}
 
 const FILTERS: Array<[WorkFilter, string]> = [['all', 'Tutti'], ['review', 'Da rivedere'], ['later', 'Più tardi'], ['done', 'Completati']];
 export const ORGANIZE_UNAVAILABLE = 'La conferma diretta non è ancora disponibile in questo servizio: puoi decidere più avanti.';
@@ -365,75 +359,7 @@ function Inner(props: DocumentIntakeAssistantProps) {
   const showBulk = !props.renderCompilationActions && multi && canReview && !complete && (available.length > 0 || selected.length > 0 || bulkOps.length > 0);
   const bulkPayload = selected.length ? buildOrganizePayload(batch, 'multiple', selected.flatMap(i => { const b = bulkItem(i); return b ? [b] : []; })) : null;
 
-  const row = (item: IntakeItem) => {
-    const raw = itemStatus(item);
-    const write = writeOf(item.id);
-    const group = workGroup(item);
-    const copy = item.uploadState === 'duplicate';
-    const conflict = hasConflict(item);
-    const decision = item.selection?.action === 'organize' ? item.selection : null;
-    const manual = !copy && !item.proposal && !decision && ['stored', 'ready', 'unreadable', 'unsupported', 'analysis_failed'].includes(raw);
-    const canSelect = !props.renderCompilationActions && multi && selectable(item);
-    const checked = canSelect && picked[item.id] === item.version;
-    const name = displayName(item);
-    const title = rowTitle(item);
-    let badge: ReactNode;
-    if (write.status === 'uncertain' || write.status === 'recovering') badge = <Badge tone="warn">Esito non noto</Badge>;
-    else if (group === 'done') badge = <Badge tone="ok">{decision ? `In ${selectionCollections(decision).map(collectionLabel).join(' e ')}` : 'Mantenuto invariato'}</Badge>;
-    else if (group === 'later') badge = <Badge tone="warn">Da riprendere</Badge>;
-    else if (['unavailable', 'pending', 'uploading', 'upload_failed', 'analysis_waiting', 'analysis_running'].includes(raw)) badge = <StatusBadge status={raw} />;
-    else if (copy) badge = <Badge tone="warn">File già presente</Badge>;
-    else if (conflict) badge = <Badge tone="warn">Dati diversi</Badge>;
-    else if (manual) badge = <Badge tone="warn">Tipo da indicare</Badge>;
-    else badge = <StatusBadge status={raw} />;
-    const proposal = group === 'review' && !copy && !conflict && raw !== 'unavailable' ? item.proposal : null;
-    const actionLabel = group === 'later' ? 'Riprendi' : manual ? 'Indica il tipo' : 'Rivedi';
-    return (
-      <article key={item.id} className={cx(styles.row, checked && styles.rowSelected)}>
-        <span className={styles.rowCheck}>
-          {canSelect && <input type="checkbox" checked={checked} aria-label={`Seleziona ${title}`}
-            onChange={(e) => { const on = e.target.checked; setPicked(prev => { const next = { ...prev }; if (on) next[item.id] = item.version; else delete next[item.id]; return next; }); }} />}
-        </span>
-        <div className={styles.rowMain}>
-          <h3>{title}</h3>
-          {raw !== 'unavailable' && (
-            <p>{title !== name ? `${name} · ` : ''}{item.byteSize !== null ? formatBytes(item.byteSize) : ''}{item.pageCount ? ` · ${item.pageCount} ${item.pageCount === 1 ? 'pagina' : 'pagine'}` : ''} · Solo io</p>
-          )}
-          <p>{badge}</p>
-          {proposal && (
-            <>
-              <p>Tipo: <strong>{proposal.parts.map(partLabel).join(' + ')}</strong></p>
-              <p>Destinazione: <strong>{[...new Set(proposal.parts.map(p => collectionLabel(kindCollection(p.kind))))].join(' + ')}</strong>{item.analysisState === 'needs_choice' ? ' · scheda da scegliere' : ' · Solo alla casa'}</p>
-              {proposal.parts.some(p => p.kind === 'receipt' || p.kind === 'invoice') && <p>{props.renderObjectProposals?'':'Archivi soltanto la ricevuta: non viene creata una spesa.'}</p>}
-            </>
-          )}
-          {group === 'done' && decision && <p>{decision.parts.map(partLabel).join(' + ')} · {decision.target.kind === 'home' ? 'solo casa' : 'scheda esistente'}</p>}
-          {group === 'review' && copy && raw !== 'unavailable' && <p>{item.duplicate?.document ? `Stesso contenuto di «${item.duplicate.document.name}». ` : ''}Apri il documento per scegliere quali dati mantenere.</p>}
-          {group === 'review' && conflict && !copy && <p>La proposta è diversa dai dati già confermati: apri il documento per scegliere.</p>}
-          {group === 'review' && manual && raw !== 'unavailable' && <p>{props.renderCompilationActions?'La lettura locale non trova testo utilizzabile. Puoi compilare manualmente o tramite AI.':item.mimeType?.startsWith('image/') ? 'La lettura locale non interpreta la foto. Puoi indicare il tipo oppure riconoscere gli oggetti presenti.' : raw === 'unreadable' || raw === 'unsupported' ? 'Il testo non è leggibile: indica il tipo consultando l’originale.' : 'Nessuna proposta: indica il tipo consultando l’originale.'}</p>}
-          {raw === 'unavailable' && <p>Il documento non è più accessibile con questo account.</p>}
-          {item.error && raw === 'upload_failed' && <p role="status">{item.error.message}</p>}
-          {write.status === 'rejected' && <p className={styles.formError}>Non applicato: {write.message}</p>}
-          {uploadMessages[item.id] && <p role="alert">{uploadMessages[item.id]}</p>}
-        </div>
-        <div className={styles.rowActions}>
-          {item.canRemove&&props.onRemoveItem&&canUpload&&<button type="button" className={ui.btn} disabled={props.addingFiles} aria-label={'Rimuovi '+name} onClick={()=>setRemoval(item.id)}>Rimuovi</button>}
-          {removal===item.id&&<div role="group" aria-label={'Conferma rimozione '+name}><p>{copy?'Rimuovere questa copia dal caricamento? Il documento già presente sarà conservato.':'Rimuovere il documento caricato per errore? L’originale sarà eliminato e non verrà analizzato.'}</p><button type="button" className={ui.btn} onClick={()=>setRemoval(null)}>Mantieni</button><button type="button" className={ui.btn} onClick={()=>{setRemoval(null);void uploadAction(item.id,props.onRemoveItem!);}}>Conferma rimozione</button></div>}
-          {raw === 'upload_failed' && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onRetryUpload)}>Riprova questo file</button>}
-          {(raw === 'pending' || raw === 'uploading') && canUpload && <button type="button" className={cx(ui.btn, ui.small)} onClick={() => void uploadAction(item.id, props.onCancelUpload)}>Annulla</button>}
-          {canReview && item.documentLink.state==='linked' && props.renderCompilationActions && (houseDocumentKind(item)?<button type="button" className={ui.btn} onClick={()=>reviewDocument(item)}>Rivedi documento della casa</button>:props.renderCompilationActions(item.id))}
-          {!props.renderCompilationActions && canReview && item.documentLink.state==='linked' && props.onOpenReceiptFlow && supportsObjectProposals(item) && !(props.renderObjectProposals&&(copy||conflict)) && <button type="button" className={cx(ui.btn,ui.small)} disabled={props.addingFiles} aria-label={props.renderObjectProposals?`Rivedi proposta per ${name}`:`Riconosci gli oggetti in ${name}`} onClick={()=>props.onOpenReceiptFlow?.(item.id)}>{props.renderObjectProposals?'Rivedi proposta':'Riconosci gli oggetti'}</button>}
-          {group !== 'done' && reviewable(item) && !(props.renderCompilationActions&&manual) && !(props.renderCompilationActions&&houseDocumentKind(item)) && !(props.renderObjectProposals&&props.onOpenReceiptFlow&&supportsObjectProposals(item)&&!copy&&!conflict) && (
-            <button type="button" className={cx(ui.btn, ui.small, ui.primary)} aria-label={`${actionLabel} ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: false })}>{actionLabel}</button>
-          )}
-          {group === 'done' && raw !== 'unavailable' && (canReview && item.permissions.review && props.onReorganizeDocument
-            ? <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Modifica ${name}`} disabled={props.addingFiles} onClick={() => void props.onReorganizeDocument?.(item.id)}>Modifica</button>
-            : <button type="button" className={cx(ui.btn, ui.small)} aria-label={`Vedi originale ${name}`} onClick={() => setDialog({ itemId: item.id, onlyOriginal: true })}>Vedi originale</button>)}
-        </div>
-      {canReview&&(props.renderCompilationActions||supportsObjectProposals(item))&&props.objectProposalItemId===item.id&&props.renderObjectProposals&&<section className={styles.objectProposals} aria-label={'Proposte oggetti e spesa per '+name}>{houseDocumentKind(item)?<><h3>Documento della casa</h3><p>Riguarda l’immobile: nessun oggetto o spesa da creare.</p><button type="button" className={ui.btn} onClick={()=>reviewDocument(item)}>Rivedi titolo e tipo</button></>:props.renderObjectProposals(item.id,()=>setDialog({itemId:item.id,onlyOriginal:false}))}</section>}
-      </article>
-    );
-  };
+  const row = (item: IntakeItem) => <IntakeWorkRow key={item.id} item={item} context={{props,multi,selectable,picked,setPicked,writeOf,uploadMessages,canUpload,canReview,removal,setRemoval,uploadAction,reviewDocument,setDialog}}/>;
 
   if(props.focused){const item=items.find(i=>i.id===props.objectProposalItemId);return <div className={styles.stack}>{notice&&<p role="status">{notice.text}</p>}{item?props.renderObjectProposals?.(item.id,()=>reviewDocument(item)):<Loading label="Apertura della scheda…"/>}{reviewDialog}</div>;}
   return (

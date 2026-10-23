@@ -1,3 +1,5 @@
+**Tranche autonoma verificata:** [editor/presentazione R03](fase0-editor-write-presentation-refactor-20261023.md), mock finale 860/860 e backend 496/496 HTTP/DB sintetici. [Chiusura, misure e opportunità residue](fase0-refactor-closure-20261023.md): nessuna promozione del gate AI o nuovo branch impliciti.
+
 **R05 verificato sui candidati:** [317 → 170 statement per 50 candidati](fase0-candidate-query-batching-20261023.md), stessi filtri e lock; 496/496 HTTP/DB sintetici. Altri percorsi restano opportunità distinte da misurare, nessuna cache fra account.
 
 **R10 completato:** [domini API separati, un solo trasporto](fase0-api-client-domains-refactor-20261023.md), 860/860 mock e 581 confronti offline; entry +7.214 byte, nessun beneficio di velocità dichiarato.

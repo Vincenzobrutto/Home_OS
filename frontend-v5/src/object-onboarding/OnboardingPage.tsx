@@ -1,3 +1,4 @@
+import { useOnboardingWrites, isCompilationSave, type Reply } from './useOnboardingWrites';
 import { compilationSnapshot, formsWithEditing, restoredItemForm } from './editorCompilation';
 import { InvoiceCoverageNotice } from './InvoiceCoverageNotice';
 import { useContext } from 'react';
@@ -11,12 +12,11 @@ import {HouseExpenseProposal,type HouseReview} from './HouseExpenseProposal';
 import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams, useSearchParams } from 'react-router';
-import { ApiError, isApiError, isUnauthorized, userMessage } from '../api/errors';
-import { newIdempotencyKey, queryKeys } from '../api/queryKeys';
+import { ApiError, isApiError, userMessage } from '../api/errors';
+import { newIdempotencyKey } from '../api/queryKeys';
 import { Banner, ErrorState, Loading, ui, useDocumentTitle } from '../components/ui';
 import { useDocumentFile, useObjectUrl } from '../documents/hooks';
 import { saveBlob } from '../lib/files';
-import { handleUnauthorized } from '../session/queryClient';
 import { useAccount, useApi } from '../session/session';
 import { useCurrentHome } from '../routes/HomePages';
 import type { DocumentDetail } from '../api/types';
@@ -30,9 +30,6 @@ import { UnifiedReview,type DraftSaveFailure } from './UnifiedReview';
 import pages from '../routes/pages.module.css';
 import styles from './onboarding.module.css';
 
-function isCompilationSave(path:string,body:unknown){const review=(body as {review?:{compilation?:CompilationDraft;pending?:Pending}}).review;return path.endsWith('/review')&&review?.compilation?.saved===true&&!review.pending;}
-type LocalWrite=Pending&{pauseAfterCompilation?:boolean};
-type Reply={draft:Draft;result?:{newObjects:number;newExpenses:number}|null};
 export function OnboardingPage(){const home=useCurrentHome(),account=useAccount(),{documentId=''}=useParams();return <Container key={[account.id,home.id,documentId].join(':')} documentId={documentId}/>;}
 export function DocumentObjectProposals({documentId,beforeConfirm,confirmLabel,onReviewDocument,documentCopy,singleScreen=false}:{singleScreen?:boolean;documentId:string;beforeConfirm?:(kind?:string,reuseCopy?:boolean,title?:string,replaceOrganization?:boolean,target?:DocumentTarget|null)=>Promise<void>;confirmLabel?:string;onReviewDocument?:()=>void;documentCopy?:boolean}){const home=useCurrentHome(),account=useAccount();return <Container key={[account.id,home.id,documentId].join(':')} documentId={documentId} embedded singleScreen={singleScreen} documentCopy={documentCopy} beforeConfirm={beforeConfirm} confirmLabel={confirmLabel} onReviewDocument={onReviewDocument}/>;}
 function Container({documentId,embedded=false,beforeConfirm,confirmLabel,onReviewDocument,documentCopy,singleScreen=false}:{singleScreen?:boolean;documentId:string;embedded?:boolean;beforeConfirm?:(kind?:string,reuseCopy?:boolean,title?:string,replaceOrganization?:boolean,target?:DocumentTarget|null)=>Promise<void>;confirmLabel?:string;onReviewDocument?:()=>void;documentCopy?:boolean}){
@@ -49,11 +46,8 @@ function Container({documentId,embedded=false,beforeConfirm,confirmLabel,onRevie
  const [replaceOrganizationInput,setReplaceOrganization]=useState<boolean|null>(null);
  const [documentTitle,setDocumentTitle]=useState<string|null>(null);
  const [acknowledgeUncertain,setAcknowledgeUncertain]=useState(false);
- const [consent,setConsent]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[uncertain,setUncertain]=useState(false),[blocked,setBlocked]=useState(false),[pendingView,setPendingView]=useState<LocalWrite|null>(null);
- const pending=useRef<LocalWrite|null>(null),live=useRef(true);
- const [draftSaveFailure,setDraftSaveFailure]=useState<DraftSaveFailure|null>(null);
- useEffect(()=>{live.current=true;return()=>{live.current=false;};},[]);
- const current=()=>live.current&&cache.getQueryData<{account:{id:string}|null}>(queryKeys.session)?.account?.id===account.id;
+ const [consent,setConsent]=useState(false);
+ const {busy,error,uncertain,blocked,pendingView,pending,draftSaveFailure,write,fail,invalidate,setUncertain,setPendingView,setError}=useOnboardingWrites({api,cache,account,home,base,documentId,embedded,editor,setSearchParams});
  const caps=useQuery({queryKey:['account',account.id,'home',home.id,'onboarding','capabilities',documentId],queryFn:({signal})=>api.callJson<Capabilities>(base+'/capabilities?documentId='+encodeURIComponent(documentId),{accountId:account.id,signal}),retry:false,gcTime:0});
  const analysisSucceeded=!!caps.data?.analysisSucceeded||caps.data?.job?.state==='succeeded'||!!caps.data?.drafts.some(d=>d.mode==='extraction');
  const requestedAi=params.get('compila')==='ai'&&!explicitDraftId&&!explicitJobId&&!analysisSucceeded;
@@ -65,9 +59,6 @@ function Container({documentId,embedded=false,beforeConfirm,confirmLabel,onRevie
  const job=useQuery({queryKey:['account',account.id,'home',home.id,'onboarding','job',jobId],queryFn:({signal})=>api.callJson<{job:Job}>(base+'/jobs/'+encodeURIComponent(jobId!),{accountId:account.id,signal}),enabled:!!jobId&&!draftId,retry:false,gcTime:0,refetchInterval:q=>q.state.data&&['queued','running'].includes(q.state.data.job.state)?1000:false});
  useEffect(()=>{const id=job.data?.job.state==='succeeded'?job.data.job.draftId:null;if(id)setSearchParams(previous=>{const next=new URLSearchParams(previous);next.delete(embedded?'oggetti-analisi':'analisi');next.set(embedded?'oggetti-bozza':'bozza',id);if(embedded)next.set('oggetti-documento',documentId);return next;},{replace:true});},[job.data,setSearchParams,embedded,documentId]);
  useEffect(()=>{if(['succeeded','failed','uncertain'].includes(job.data?.job.state??''))void cache.invalidateQueries({queryKey:['account',account.id,'home',home.id,'onboarding','capabilities']});},[job.data?.job.state,cache,account.id,home.id]);
- async function fail(e:unknown,inline=false){if(isUnauthorized(e))await handleUnauthorized(cache);if(!current())return;if(isApiError(e)&&e.status===403)setBlocked(true);setError(inline?'':userMessage(e));}
- async function write<T>(path:string,body:unknown,key=newIdempotencyKey(),pauseAfterCompilation=false):Promise<T>{setBusy(true);setError('');const attempt=pending.current??{path,body,key,pauseAfterCompilation};pending.current=attempt;try{const result=await api.callJson<T>(base+attempt.path,{method:'POST',body:attempt.body,idempotencyKey:attempt.key,accountId:account.id});if(!current())throw new Error('Contesto cambiato.');pending.current=null;setUncertain(false);setPendingView(null);if(attempt.pauseAfterCompilation&&isCompilationSave(attempt.path,attempt.body))setDraftSaveFailure(null);if(editor&&attempt.pauseAfterCompilation&&isCompilationSave(attempt.path,attempt.body)&&(result as Reply).draft?.review?.compilation?.saved){await invalidate();if(current())editor.pause(true);}else if(editor&&path.endsWith('/confirmations')&&(result as Reply).draft?.state==='confirmed'){await invalidate();if(current())await editor.complete(documentId);}else if(embedded&&path.endsWith('/confirmations')&&(result as Reply).draft?.state==='confirmed')setSearchParams(previous=>{const next=new URLSearchParams(previous);for(const key of ['lotto','oggetti-documento','oggetti-bozza','oggetti-analisi','compila'])next.delete(key);next.set('documento-salvato',documentId);return next;});return result;}catch(e){if(current()){if(attempt.pauseAfterCompilation&&isCompilationSave(attempt.path,attempt.body)){const uncertain=!(isApiError(e)&&e.kind==='http'&&e.status<500);setDraftSaveFailure({uncertain,message:uncertain?'I dati restano qui. Riprova per verificare il salvataggio.':userMessage(e)+' I dati inseriti restano nel modulo.'});}if(isApiError(e)&&e.kind==='http'&&e.status<500){pending.current=null;setUncertain(false);setPendingView(null);}else{setUncertain(true);setPendingView(attempt);}}await fail(e);throw e;}finally{if(current())setBusy(false);}}
- const invalidate=()=>cache.invalidateQueries({queryKey:['account',account.id,'home',home.id]});
  async function begin(ai:boolean){if(ai&&analysisSucceeded)return;try{if(ai){const result=await write<{job:Job}>('/jobs',{documentId,provider:'anthropic',consentToProviderTransfer:consent,...(caps.data?.canStartWithUncertainAcknowledgement&&acknowledgeUncertain?{acknowledgePreviousUncertainAnalysis:true}:{})});setParams({analisi:result.job.id});}else{const result=await write<Reply>('/manual-drafts',{documentId});setParams({bozza:result.draft.id});}await caps.refetch();}catch{/* surfaced above */}}
  async function retry(){if(!pending.current)return;const attempt=pending.current;try{const result=await write<Reply&{job?:Job}>(attempt.path,attempt.body,attempt.key);if(editor&&attempt.pauseAfterCompilation&&isCompilationSave(attempt.path,attempt.body))return;if(result.job)setParams({analisi:result.job.id});else if(result.draft){if(attempt.path.endsWith('/document-kind'))setManualDocumentKind(String((attempt.body as {documentKind?:string}).documentKind??''));if(editor&&result.draft.state==='confirmed'){await invalidate();return;}setParams({bozza:result.draft.id});await draft.refetch();}await invalidate();}catch{/* same request remains recoverable */}}
  const billAlignmentAttempt=useRef('');

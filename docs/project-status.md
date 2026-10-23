@@ -1,52 +1,38 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
-Questo file riassume il punto attuale. I 98 checkpoint precedenti sono conservati integralmente nell’[archivio dello stato al 23 ottobre](project-status-history-20261023.md); descrivono verifiche storiche, non uno stato cumulativo sempre valido. Per architettura, contratti e problemi aperti: [architettura](architecture.md), [decisioni V5](v5/implementation-decisions.md), [backlog](backlog.md), [roadmap](roadmap.md).
+[Chiusura della tranche di refactoring e limiti](v5/fase0-refactor-closure-20261023.md). I 98 checkpoint precedenti restano nell’[archivio dello stato](project-status-history-20261023.md); sono evidenze datate. [Architettura](architecture.md), [roadmap corrente](roadmap.md), [backlog completo](backlog.md), [decisioni V5](v5/implementation-decisions.md).
 
-## Branch e confini operativi
+## Branch e vincoli
 
-- Checkout di lavoro: **codex/fase0-ai-quality-v3**, base dell’audit **0422af6**, sincronizzata con origin prima degli interventi. Il codice non è stato integrato o distribuito su main in questo incarico.
-- Sviluppo corrente in backend-v5/ e frontend-v5/. Legacy backend/ e frontend/ esclusi. Conservati i file sporchi preesistenti backend/src/main.ts, frontend/package.json e frontend/public/dimora-v5-design.html, oltre agli altri untracked estranei.
-- DB reale dimora_v5_product_dev su 55432, API 3001/storage reali: non usati in audit/refactoring. Nessuna modifica a .env, migrazioni, gold/ledger sintetici o 104 StoredFile orfani. Nessun reset/clean, force push o rimozione worktree.
+Branch **codex/fase0-ai-quality-v3**, commit pubblicati e push verificati. Nessun nuovo branch di consolidamento creato, nessuna modifica/integrazione su main. I file legacy sporchi e gli untracked estranei rimangono locali, esclusi dai commit.
 
-## Audit tecnico e interventi correnti
+Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a pagamento, DB/API/storage reale, .env, migrazione di prodotto, gold/ledger storico, quota o dato del collaudo utente modificati; nessun reset/clean, force push o rimozione worktree. I 104 StoredFile orfani non toccati.
 
-[Audit approfondito, dieci rilievi e piano dei lotti](v5/fase0-code-audit-refactor-20261023.md), [misure ripetibili](v5/fase0-code-audit-metrics-20261023.json). Inventario AST V5, import statici/dinamici/type-only, lettura dei percorsi critici e build di riferimento.
+## Audit e interventi verificati
 
-**Implementato e verificato nel primo lotto:**
+L’[audit iniziale](v5/fase0-code-audit-refactor-20261023.md) e le sue misure sono storici. Questa tranche conclude i lotti selezionati, non dichiara debito tecnico azzerato.
 
-- R01: eliminato il ciclo runtime IntakePage/workspace, separando ingresso della rotta da IntakeContent. Key di account/casa/documento e logica operativa preservate.
-- R02: ExpenseRow separata dai form e importata direttamente dal riepilogo Casa. Entry JS **507.951 → 479.496 byte (−5,60%)**, gzip **156.490 → 147.622 (−5,67%)**; somma chunk +0,14%, codice rinviato alle sezioni interessate. Nessun benchmark di latenza o accuratezza AI dichiarato.
-- R09, primo passo: stato corrente separato dai 98 checkpoint storici, senza perdita dei contenuti o cambi dei link relativi. Altri documenti storici/legacy non riorganizzati.
+| ID | Stato corrente |
+| --- | --- |
+| R01 | Ciclo workspace/intake eliminato; key account/casa/documento e percorso preservati. |
+| R02 | Riga spesa separata dai form; prima entry JS 507.951 → 479.496 byte, misura del primo lotto. |
+| R03 | [Proiezione spese](v5/fase0-editor-review-refactor-20261023.md), [compilazione](v5/fase0-editor-compilation-refactor-20261023.md), [ciclo scritture e presentazione intake](v5/fase0-editor-write-presentation-refactor-20261023.md) separati e verificati. Container ancora ampi, nessuna riscrittura generale. |
+| R04 | [Campi](v5/fase0-backend-field-validation-refactor-20261023.md), [quantità/prezzi](v5/fase0-backend-purchase-validation-refactor-20261023.md) e [fasi conferma](v5/fase0-confirmation-orchestration-refactor-20261023.md) separati: stessi errori, unica transazione, lock/replay/fonti invariati. Altre validazioni restano nei moduli. |
+| R05 | [Candidati misurati e letture batch](v5/fase0-candidate-query-batching-20261023.md): 1/10/50 candidati, una o tre fonti, SQL 23/77/317 → 23/50/170, stessi lock. Altri percorsi non ottimizzati; nessuna misura di latenza dichiarata. |
+| R06 | [Ricognizione conclusa](v5/fase0-maintenance-boundaries-20261023.md): quattro componenti esclusi dal bundle conservati deliberatamente come compatibilità/test. Nessuna UX o asserzione rimossa. |
+| R07 | [Runner offline unico](v5/fase0-offline-test-harness-20261023.md): build, guardie Node/Prisma, cluster nuovo posseduto; [comandi](../backend-v5/test/OFFLINE.md). Nessun DB permanente istituito. |
+| R08 | [Protocollo provider separato](v5/fase0-provider-protocol-refactor-20261023.md), prompt/schema identici byte per byte, nuovi moduli vincolati nelle future autorizzazioni. |
+| R09 | Ingressi stato/roadmap/architettura correnti e archivi integrali con blob verificati, handoff preservati. |
+| R10 | [Client per otto domini e unico trasporto](v5/fase0-api-client-domains-refactor-20261023.md), facciata compatibile. Entry del lotto +7.214 byte (+1,50%), gzip +999: manutenzione, non riduzione di peso. |
 
-**Verifiche del primo lotto:** backend baseline build/lint; primo refactoring frontend typecheck/lint e **76/76 mirati**. Build Vite produzione prima/dopo, confronto identico dei quattro corpi operativi spostati e grafo runtime esaminato senza cicli. Typecheck/lint finali superati. **Mock completa finale 844/844, 102 file, 480,95 secondi**, due worker e retry massimo 1 configurato; nessuna asserzione o timeout modificato. Backend prodotto invariato: suite backend/HTTP/DB non ripetute. Nessuna verifica UI con browser in questo incarico.
+## Ultimo collaudo della tranche
 
-**R03 implementato parzialmente:** separate la proiezione pura delle spese e la checklist ([report](v5/fase0-editor-review-refactor-20261023.md)); ora centralizzati ripristino dei moduli, override dell’editor aperto e snapshot di compilazione ([report](v5/fase0-editor-compilation-refactor-20261023.md)). Richieste, versioni, conferme e recupero invariati. Ultime verifiche: **93/93 mirati**, confronto equivalente su 10.000 casi/tre proiezioni, typecheck/lint/build; **mock completa finale 858/858, 104 file, 483,70 secondi**, due worker e retry massimo 1 configurato. Nessun nuovo dato estratto o salvataggio nel collaudo. Il precedente lotto R03 resta verificato a 852/852 nel relativo report.
+Backend build/lint, **303/303 onboarding**, **224/224 ordinari**, **24/24 qualità offline**, **17/17 guardie**; **496/496 HTTP/DB sintetici**, inclusi privacy/idempotenza/concorrenza/revoche/acconto-saldo/Q15-Q22-Q48 e due test dopo riavvio PostgreSQL. Cinque cluster temporanei fermati, porte proprie 55439/3119 libere, log conservati.
 
-**R04 implementato parzialmente:** separati il [validatore del singolo campo](v5/fase0-backend-field-validation-refactor-20261023.md) e ora i [validatori di quantità, prezzo articolo e totale documento](v5/fase0-backend-purchase-validation-refactor-20261023.md). Criteri, ordine, errori, diagnostica, recuperi consentiti e avvisi preservati; classe di errore condivisa, nuovi sorgenti vincolati nelle future autorizzazioni qualità. Ultimo lotto: build/lint, **300/300 onboarding**, **224/224 ordinari**, **24/24 qualità offline**, **15/15 guardie qualità**, **495/495 HTTP/DB** sul cluster sintetico nuovo, incluso riavvio del ledger. Equivalenza su **20.672 casi**, sette corpi delle altre funzioni identici, nessun ciclo runtime. Nessun AI o DB reale. Separata anche l’[orchestrazione della conferma](v5/fase0-confirmation-orchestration-refactor-20261023.md) in controlli, oggetti, spese e contatti: stessa transazione, ordine e finalizzazione; 19 altri metodi identici, build/lint, 300/300 onboarding, 224/224 ordinari, 15/15 guardie e 495/495 HTTP/DB sintetici, incluso riavvio. Altre validazioni non separate. Il primo lotto resta documentato con le sue verifiche storiche nel relativo report.
+Frontend typecheck/lint/build e **mock completa finale 860/860, 105 file, 509.88 secondi**, due worker e retry massimo 1 configurato. Nessuna asserzione o timeout esistente allentato. Confronti differenziali e corpi spostati nel report; nessun ciclo runtime rilevato. Nessuna prova browser/salvataggio nel collaudo in questa tranche. I conteggi dei profili non si sommano; le verifiche precedenti sono nei rispettivi report.
 
-**R07 implementato e verificato:** [ingresso offline unico](../backend-v5/test/OFFLINE.md) per tutti gli alias test backend e sette wrapper, build automatica, profili espliciti, ambiente ridotto, guardie Node/Prisma e cluster nuovo posseduto su 55439/API 3119 ([report](v5/fase0-offline-test-harness-20261023.md)). Porte occupate rifiutate; collaudo 55433/3109 conservato. API fermata prima dei test di code; corrette due fragilità delle fixture senza ridurre asserzioni di privacy o idempotenza. Verifiche del lotto R07: **224/224 ordinari**, **295/295 onboarding**, **24/24 qualità offline**, **14/14 guardie qualità**, **495/495 HTTP/DB** inclusi due dopo riavvio PostgreSQL. Errore intenzionale: arresto delle sole risorse possedute verificato, log conservati. Nessun AI o DB reale; nessun DB permanente di test creato.
+## Precompilazione caffè e lavoro di prodotto ancora aperto
 
-**R08 implementato e verificato:** [schema, decoder compatto e prompt separati](v5/fase0-provider-protocol-refactor-20261023.md), export compatibili e prompt/schema identici byte per byte. Confronti offline: 15 schemi, 507 risposte, 12 richieste preparate; build/lint, 300/300 onboarding, 24/24 qualità, 16/16 guardie. Nuovi sorgenti vincolati nelle future autorizzazioni, nessun consenso storico riattivato.
+Ultimo esito AI reale, precedente all’audit: [terzo invio autorizzato](v5/fase0-coffee-third-attempt-20261023.md) riuscito, una chiamata da 0,038369 USD, tre tentativi complessivi 0,115147 USD. Bozza proposta: 1 documento, 0 oggetti, 0 spese. Nome breve/marca/modello e ordine 14/06/2026 coerenti; totale 499 EUR e spedizione zero. Da controllare prezzo articolo non proposto, descrizione/colore/quantità, stanza e oggetto nuovo/esistente. Acquisto/consegna/pagamento e garanzia non dedotti.
 
-**R06/R09 verificati:** [ricognizione e archivi](v5/fase0-maintenance-boundaries-20261023.md): quattro componenti esclusi dall’ingresso produttivo conservati deliberatamente come compatibilità/test; nessun beneficio di bundle dalla rimozione. Stato/roadmap/architettura ora hanno ingressi correnti e archivi integrali con blob verificati, senza perdita degli handoff.
-
-**R10 implementato e verificato:** [client per otto domini e trasporto unico](v5/fase0-api-client-domains-refactor-20261023.md), facciata invariata, token/contesto condivisi. Typecheck/lint/build, 581 confronti e 99 corpi equivalenti; mock completa **860/860, 105 file, 558,98 secondi**, due worker e retry massimo 1. Entry +7.214 byte (+1,50%), gzip +999: beneficio di manutenzione, nessuna riduzione di peso dichiarata.
-
-**R05 implementato e verificato nel percorso candidati:** [misure e letture batch locali alla richiesta](v5/fase0-candidate-query-batching-20261023.md): 1/10/50 candidati, una o tre fonti; SQL **23/77/317 → 23/50/170**, stessi quattro lock FOR SHARE e stessi filtri/privacy. 1.458 confronti sui profili; build/lint, 303/303 onboarding, 224/224 ordinari, 24/24 qualità, 17/17 guardie e **496/496 HTTP/DB** sul cluster sintetico nuovo, incluso riavvio. Altri percorsi non ottimizzati né presentati come più rapidi.
-
-**Aperti, non implementati:** completamento delle estrazioni dagli altri orchestratori frontend (R03, parzialmente affrontato), restante separazione validazioni/conferme backend preservando la transazione (R04, parzialmente affrontato), ulteriori misure su project/safeReview/automatic (R05). Nessuna riscrittura generale o rimozione dei controlli di privacy/SHA/idempotenza.
-
-## Precompilazione del PDF caffè — ultimo esito reale, precedente all’audit
-
-[Terzo invio autorizzato](v5/fase0-coffee-third-attempt-20261023.md): succeeded, una chiamata Anthropic per il solo PDF anonimizzato, **0,038369 USD**, nessun retry; totale tre tentativi **0,115147 USD**. Bozza AI aperta, **1 documento, 0 oggetti, 0 spese** nel collaudo isolato. Nome breve De’Longhi Rivelia, marca/modello e data ordine 14/06/2026 coerenti con il PDF; totale documento 499 EUR e spedizione zero.
-
-Da controllare dal committente: prezzo articolo non proposto, descrizione estesa incompleta e colore non esplicito, quantità non verificata, stanza effettiva e oggetto nuovo/esistente. Data acquisto/consegna/pagamento e garanzia non dedotte; nessuna spesa registrata dal totale. Il successo non ricostruisce i due vecchi rifiuti né dimostra accuratezza generale.
-
-UI temporanea del collaudo su 5179, API 3109 e DB 55433/dimora_v5_quality_v3_test: ripristinata offline nel checkpoint precedente con AI disabilitata e fetch esterni bloccati, supervisore a quattro ore. Disponibilità temporanea, non stato di deploy. La bozza resta persistita anche a servizi fermi. Nessuna nuova chiamata AI autorizzata dal budget residuo; il consenso alla singola chiamata è consumato.
-
-## Baseline storiche e prossimo lavoro
-
-- Ultimo checkpoint backend prima dell’audit: onboarding **291/291**, DB temporaneo **87/87** ([report](v5/fase0-additional-offline-tests-20261023.md)); ordinari **214/214**, guard/runner **17/17** nel checkpoint del [nome breve](v5/fase0-short-product-name-offline-20261023.md). Non sono nuove esecuzioni di questa sessione.
-- Fase 0 qualità AI generale **non promossa**; gold e campagne storiche immutati. [Campagna v24](v5/fase0-quality-v24-campaign-20261023.md) e successive correzioni offline nell’archivio/backlog. Il singolo PDF caffè non chiude il gate.
-- Proseguimento autonomo autorizzato: R08 protocollo provider preservato byte per byte; R10 client per dominio, R05 misure su sintetici e ricognizione R06/R09. R03 sugli editor e altre validazioni delle spese restano nel piano; nessun cambio funzionale o nuova campagna impliciti.
-- Restano fuori da questo lotto: prova BL-04 su telefono/accesso concordato, conversione HEIC rinviata, campagna AI/eliminazione dati Fase 0 e DB di test dedicato permanente. Nessuna autorizzazione implicita a invii a pagamento, deploy o eliminazione dati.
+Il collaudo persistito e i suoi servizi temporanei preesistenti non sono un deploy né una disponibilità garantita; nessun nuovo consenso AI implicito. **Gate qualità AI Fase 0 generale non promosso.** Restano prova BL-04 su telefono/accesso concordato, HEIC rinviato, qualità AI/eliminazione dati e DB permanente di test. Per il branch pulito: valutare una base dalla punta Fase 0 verificata; un branch nuovo conserva storia e file già tracciati, senza includere il dirty locale. Nessuna creazione o riscrittura della storia ora.
