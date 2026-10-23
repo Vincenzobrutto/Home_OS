@@ -1,3 +1,9 @@
+## Fase 0 — secondo invio reale autorizzato, rifiuto sul nome, 23 ottobre 2026 (Codex)
+
+**Verificato live nel solo collaudo isolato**: una nuova chiamata Anthropic esplicitamente autorizzata sul solo PDF anonimizzato caffè, tetto 0,25 USD; costo **0,038369 USD**, nessun retry. Rifiuto analysis_invalid_output alla fase evidence, sezione **item_field**, campo **name**. Nessuna proposta accettata; **1 documento, 0 oggetti, 0 spese**. Primo tentativo e costo preservati, totale dei due 0,076778 USD. [Esito, diagnosi e proposta nome breve](v5/fase0-coffee-second-attempt-20261023.md).
+
+**Limite e seguito offline**: il log identifica il campo ma non distingue ancora lunghezza/struttura/citazione. Il titolo lungo oltre 120 caratteri è un’ipotesi, non una causa dimostrata. Nome breve supportato dalla fonte e modello separato discussi come proposta, non implementati; nessun troncamento o allentamento. Nessuna nuova modifica di prodotto né suite ripetuta. Nessun oggetto/spesa confermato, DB reale, .env, main, gold/ledger sintetici o file estranei toccati.
+
 ## Fase 0 — diagnosi offline del rifiuto del PDF caffè, 23 ottobre 2026 (Codex)
 
 **Implementato e verificato offline**: errori di validazione localizzati per sezione e campo ammesso, senza contenuti, valori, messaggi di eccezione o identificativi nei log. Coordinate visuali distinguibili come source_region; errori di campo come item_field/name. Stessi codici di errore, limiti e criteri di accettazione; nessun cambiamento a prompt, API, budget o conferme. [Diagnosi, prove e limiti](v5/fase0-coffee-rejection-offline-20261023.md).

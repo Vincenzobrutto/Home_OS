@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Secondo tentativo caffè: nome da diagnosticare offline
+
+Seconda singola chiamata autorizzata: rifiuto localizzato in item_field/name, nessuna proposta accettata e nessun oggetto/spesa salvato. Non ancora distinta la causa lunghezza/struttura/citazione. Verificare offline diagnostica più granulare e politica generale di nome breve documentato con modello separato, senza tagli che nascondano varianti o aumenti del limite. Nessun ulteriore invio autorizzato da questo esito. [Dettagli](v5/fase0-coffee-second-attempt-20261023.md).
+
 ## 23 ottobre 2026 — PDF caffè: diagnostica corretta, esito reale ancora da misurare
 
 La prima risposta reale autorizzata è stata respinta alla fase evidence; la risposta grezza non è conservata e la causa specifica non è ricostruibile. Aggiunta diagnostica sicura di sezione/campo, verificata offline senza ridurre le validazioni. Resta aperta la verifica della precompilazione su questo PDF: nessun retry o aumento di budget in questo incarico, nessuna accuratezza reale dichiarata. Eventuale nuova misura richiede consenso e limiti espliciti. [Report](v5/fase0-coffee-rejection-offline-20261023.md).
