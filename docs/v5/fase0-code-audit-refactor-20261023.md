@@ -1,3 +1,5 @@
+**Seguito R04:** [conferma transazionale separata per fasi](fase0-confirmation-orchestration-refactor-20261023.md), stessa transazione/ordine/errori; 495/495 HTTP/DB sintetici.
+
 # Audit del debito tecnico V5 e primo lotto di refactoring
 
 **Seguito R03:** proiezione pura delle spese e presentazione della checklist separate nel [secondo lotto](fase0-editor-review-refactor-20261023.md); seguono gli [helper di ripristino/compilazione](fase0-editor-compilation-refactor-20261023.md). Rilievo parzialmente affrontato, altri editor ancora aperti. Le misure e le verifiche sottostanti restano quelle dell’audit iniziale.

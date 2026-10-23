@@ -25,6 +25,11 @@ type Decision = { state: 'confirmed' | 'skipped' | 'deferred'; objectIds: string
 type Decisions = Record<string, Decision>;
 type Enrichment = { brand:string; reference:string; name: string | null; profile: ObjectProfile; candidate: { manual: unknown; token: string } | null };
 type Output = ProductExtraction & { enrichments?: Record<string, Enrichment> };
+type ConfirmationContext = {
+  a: string; h: string; id: string;
+  draft: ObjectOnboardingDraft; output: Output; decisions: Decisions;
+  body: ReturnType<typeof onboardingConfirmation>; automatic: boolean;
+};
 const eq = (a: string, b: string) => a.normalize('NFC').trim().toLocaleLowerCase('it') === b.normalize('NFC').trim().toLocaleLowerCase('it');
 
 @Injectable()
@@ -331,10 +336,8 @@ export class ObjectOnboardingService {
     return {expenseId:created.expense.id,newExpenses:1};
   }
 
-  confirm(a: string, h: string, id: string, input: unknown, key?: string, automatic = false) {
-    const body = onboardingConfirmation(input, temporal(this.clock.now()).today);
-    return this.request(a, h, 'confirm', uuid(id), body, key, async tx => {
-      const draft = await this.open(tx, a, h, id, body.expectedVersion), output = draft.output as unknown as Output, decisions = { ...draft.decisions as Decisions };
+  private async prepareConfirmation(tx: OnboardingTx, context: ConfirmationContext) {
+    const { a, h, draft, output, decisions, body, automatic } = context;
       if(automatic&&body.houseExpenses?.some(c=>c.purchaseReview))throw conflict('onboarding_purchase_review','Il costo complessivo richiede conferma manuale.');
       if(automatic&&output.houseExpenses?.some(e=>e.invoiceSegment))throw conflict('onboarding_multiple_invoices_review','Conferma separatamente le fatture del file.');
       if(automatic&&requiresPaymentReview(output,{documentId:draft.documentId,documentVersion:draft.documentVersion as 1,documentSha256:draft.documentSha256}))throw conflict('onboarding_payment_review','Controlla il regime di pagamento e il costo complessivo prima di confermare.');
@@ -373,6 +376,10 @@ export class ObjectOnboardingService {
           if(output.purchaseTotal&&Number(c.values.amountCents)>output.purchaseTotal.amountCents-excludedCents)throw invalid('La spesa supera il totale del documento.');
         }}
       }
+    return initialSourceLinks;
+  }
+  private async confirmItems(tx: OnboardingTx, context: ConfirmationContext, initialSourceLinks: Array<{ id: string }>) {
+    const { a, h, id, draft, output, decisions, body, automatic } = context;
       const used = new Set<string>(); let newObjects = 0, newExpenses = 0;
       for (const choice of body.choices) {
         const item = output.items.find(item => item.id === choice.itemId);
@@ -436,14 +443,34 @@ export class ObjectOnboardingService {
         const cost = await this.cost(tx, a, h, draft, output, choice, objectIds[0], decisions, body.manualPurchaseTotalCents); newExpenses += cost.newExpenses;
         decisions[item.id] = { state: 'confirmed', objectIds, ...cost, newObjects: choice.action === 'create' ? quantity : 0 };
       }
+    return { newObjects, newExpenses };
+  }
+  private async confirmHouseExpenses(tx: OnboardingTx, context: ConfirmationContext) {
+    const { a, h, draft, output, decisions, body } = context;
+    let newExpenses = 0;
       for(const selected of body.houseExpenses??[]){
         const item=output.houseExpenses?.find(x=>x.id===selected.itemId);if(!item||['confirmed','skipped'].includes(decisions[selected.itemId]?.state))throw conflict('onboarding_item_resolved','Questa proposta è già stata gestita.');
         if(selected.action==='skip'||selected.action==='defer'){decisions[item.id]={state:selected.action==='skip'?'skipped':'deferred',objectIds:[],expenseId:null,newObjects:0,newExpenses:0};continue;}
         if(item.documentKind==='utility_bill'&&selected.confirmation?.mode==='create'&&!['electricity','gas','water','internet_services'].includes(String(selected.confirmation.values.category)))throw invalid('Scegli la fornitura della bolletta.');
         const result=await this.houseCost(tx,a,h,draft,item,selected);newExpenses+=result.newExpenses;decisions[item.id]={state:'confirmed',objectIds:[],newObjects:0,...result};
       }
+    return newExpenses;
+  }
+  private async confirmContacts(tx: OnboardingTx, context: ConfirmationContext) {
+    const { a, h, draft, output, decisions, body, automatic } = context;
       let newContacts=0,linkedContacts=0;
       for(const selected of body.contacts??[]){const p=output.contacts?.find(p=>p.id===selected.proposalId),key='contact:'+selected.proposalId;if(!p||decisions[key])throw conflict('contact_proposal_resolved','La proposta di contatto è già stata gestita.');const result=await saveContactProposal(tx,a,h,draft.documentId,p,selected,automatic);newContacts+=result.newContacts;linkedContacts+=result.linkedContacts;decisions[key]={state:selected.action==='skip'?'skipped':'confirmed',objectIds:[],expenseId:null,newObjects:0,newExpenses:0,...result};}
+    return { newContacts, linkedContacts };
+  }
+  confirm(a: string, h: string, id: string, input: unknown, key?: string, automatic = false) {
+    const body = onboardingConfirmation(input, temporal(this.clock.now()).today);
+    return this.request(a, h, 'confirm', uuid(id), body, key, async tx => {
+      const draft = await this.open(tx, a, h, id, body.expectedVersion), output = draft.output as unknown as Output, decisions = { ...draft.decisions as Decisions };
+      const context: ConfirmationContext = { a, h, id, draft, output, decisions, body, automatic };
+      const initialSourceLinks = await this.prepareConfirmation(tx, context);
+      const counts = await this.confirmItems(tx, context, initialSourceLinks);
+      const newObjects = counts.newObjects, newExpenses = counts.newExpenses + await this.confirmHouseExpenses(tx, context);
+      const { newContacts, linkedContacts } = await this.confirmContacts(tx, context);
       await linkConfirmedContacts(tx,a,h,decisions,this.reviewAccess);
       const complete = !output.invoiceCoverage?.pendingPages.length && [...output.items,...(output.houseExpenses??[])].every(item => ['confirmed', 'skipped'].includes(decisions[item.id]?.state))&&(!body.contacts?.length||(output.contacts??[]).every(p=>!!decisions['contact:'+p.id]));
       return { draft: await tx.objectOnboardingDraft.update({ where: { id }, data: { decisions: onboardingJson(decisions), review: onboardingJson(reviewAfterConfirmation(draft.review,new Set([...output.items,...(output.houseExpenses??[])].filter(item=>!['confirmed','skipped'].includes(decisions[item.id]?.state)).map(item=>item.id)))), state: complete ? 'confirmed' : 'open', version: { increment: 1 } } }), result: { newObjects, newExpenses,...(body.contacts?.length?{newContacts,linkedContacts}:{}) } };

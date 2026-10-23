@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — R04, conferma backend per fasi
+
+Controlli, oggetti, spese e contatti separati dietro la stessa conferma idempotente/transazione. Blocchi operativi e finalizzazione invariati, nessun nuovo criterio o errore. Build/lint, 300 onboarding e 495 HTTP/DB sintetici superati. [Report](v5/fase0-confirmation-orchestration-refactor-20261023.md).
+
 ## 23 ottobre 2026 — R04, quantità e prezzi separati dal dominio
 
 Estratti i validatori di quantità, prezzo articolo e totale documento mantenendo criteri, errori, fonti e ordine degli avvisi. Recuperi dalla riga verificata, fingerprint e controlli tra articoli restano nel dominio; nessuna ripartizione del totale. Equivalenza su 20.672 casi, 300/300 onboarding e 495/495 HTTP/DB sintetici, inclusi privacy, replay e riavvio del ledger. Nuovo sorgente vincolato nelle future autorizzazioni, zero AI o DB reale. [Report](v5/fase0-backend-purchase-validation-refactor-20261023.md).
