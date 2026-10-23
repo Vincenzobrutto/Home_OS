@@ -940,3 +940,7 @@ Schema con pool fonti accettato da Anthropic e cinque dati acquisto estratti dal
 
 ### 18 ottobre 2026 — Prezzo in revisione articolo
 Costo dichiarabile subito anche dopo letturaAI ordine/immagine; totale ordine esplicito leggibile e distinta assenza della data. Nessuna rianalisi automatica o nuove spese senza conferma.
+
+### Verifica acconto/saldo — 23 ottobre 2026
+
+Requisito non superato integralmente: idempotenza e collegamento esplicito verificati, riconciliazione tra due fatture e costo unico/rate ancora da progettare. [Report](v5/fase0-installments-offline-20261023.md). Nessuna promozione del gate AI o del pilota.

@@ -1,4 +1,14 @@
-## Fase 0 — piano autonomo attuato e verificato offline, 23 ottobre 2026 (Codex)
+## Fase 0 — acconto/saldo, verifica offline parziale: requisito NON SUPERATO, 23 ottobre 2026 (Codex)
+
+**Verificato / nessun fix di prodotto**: i due documenti anonimizzati indicati dal committente riguardano gli stessi climatizzatori. Con inserimento manuale e collegamento esplicito, acconto→saldo e saldo→acconto mantengono tre schede e collegano entrambe le fonti; replay, copie SHA e privacy protetti. La seconda spesa può restare pendente, senza duplicazione. [Report, riproduzione e limiti](v5/fase0-installments-offline-20261023.md).
+
+**Verifiche eseguite**: build backend, lint mirato, **37/37 controlli** (26 nuova suite inclusi diagnostici e contenitori, 11 regressioni Q48), su cluster nuovo isolato poi fermato. SHA/byteSize dei due originali invariati. Nessuna suite frontend ripetuta.
+
+**NON implementato**: riconciliazione economica acconto/saldo e acquisto con più originali. Prove diagnostiche riproducono sei oggetti scegliendo manualmente crea su due fonti diverse, e due spese per i due totali senza riconciliazione. Collegare il secondo SHA alla prima spesa è respinto. I test diagnostici che passano NON equivalgono al superamento del requisito; non confermano il costo reale.
+
+**Vincoli**: nessuna AI/email, nessuna modifica al DB/API/storage reale, `.env`, gold, ledger o `main`. Solo DB temporanei nuovi, fermati; originali e dati personali esclusi dal repository. Prossimo passo: modello di acquisto/documenti/rate e verifica del costo effettivo prima di qualsiasi automatismo. La campagna sintetica proposta in precedenza non è stata autorizzata; il committente ha scelto la lettura offline di documenti reali anonimizzati.
+
+## Checkpoint precedente — piano autonomo attuato e verificato offline, 23 ottobre 2026 (Codex)
 
 **Implementato offline**: UI Q48 con pagine coperte/pendenti, pagina di ogni fattura e importi separati; conferma parziale resta aperta, solo-documento non chiude il pendente. Regressioni Q20/Q29/Q30 e prompt **document-understanding-v27-literal-headings**, senza allentare validatori/gold. Vocabolario locale di **91 apparati / 9 categorie**: tipo e ambiente suggeriti, scelta esplicita; nessuna collocazione automatica o modifica di posizioni confermate. [Report, comandi e limiti](v5/fase0-night-plan-offline-20261023.md).
 

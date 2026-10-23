@@ -1592,3 +1592,7 @@ Runner collegato al ledger onboarding esistente, campagna sintetica separata, pr
 ## Fase 0 qualità AI v3 — adattatore e ciclo progressivo, 22 ottobre 2026
 
 Adattatore al modello con preparazione/decoding, evidenze, prezzi cache e politica automatica del prodotto; HTTP simulato e nessuna chiave o trasporto live implicito. Ciclo progressivo con prefissi cumulativi, riserva per passaggio e completezza persistita; arresto su risposta invalida/incerta, tetto e annullamento, ripresa senza reinvii. Corretto il prefisso dei PDF testuali (`onboarding-reading-v2`); fonte completa resta predefinita. [Verifiche, limite delle prove simulate e costo da misurare](v5/fase0-quality-v3-model-20261022.md).
+
+### 2026-10-23 — verifica offline acconto/saldo
+
+Aggiunti collaudo DB isolato e diagnostica in entrambi gli ordini, replay, ricaricamenti e privacy. Documentati i limiti di identità tra fonti diverse e riconciliazione economica; nessun cambiamento al prodotto o AI live. [Report](v5/fase0-installments-offline-20261023.md).
