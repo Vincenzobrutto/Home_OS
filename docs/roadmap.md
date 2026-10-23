@@ -10,7 +10,7 @@ La chiusura del refactoring richiede riepilogo delle verifiche, limiti residui e
 
 ## Evolutiva ordini e acquisto
 
-Lotto Codex isolato dal Cestino: [costo/data da ordine confermato](v5/ordini-acquisto-20261023.md), in verifica offline e destinato a PR verso il consolidamento. Nessuna AI, deploy o modifica al collaudo persistito. Il merge resta al committente.
+Lotto Codex isolato dal Cestino: [costo/data da ordine confermato](v5/ordini-acquisto-20261023.md), verificato offline con 864/864 mock e 88/88 DB mirati; [PR #8](https://github.com/Vincenzobrutto/Home_OS/pull/8) verso il consolidamento, in attesa di revisione/merge. Nessuna AI, deploy o modifica al collaudo persistito. Il merge resta al committente.
 
 ## Evolutive proposte, in ordine
 

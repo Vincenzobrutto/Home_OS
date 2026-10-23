@@ -1,5 +1,7 @@
 # Ordini confermati: costo e data di acquisto — 23 ottobre 2026
 
+Implementato e verificato offline; [PR #8](https://github.com/Vincenzobrutto/Home_OS/pull/8) verso il consolidamento, in attesa di revisione e decisione di merge del committente. Nessuna integrazione o deploy eseguiti.
+
 Lotto Codex, branch `codex/ordini-acquisto-20261023`, worktree dedicato `Dimora-V5-ordini-acquisto-20261023`, base remota del consolidamento `d373700`. Registrazione preventiva nel commit `86095c3`, pubblicato prima del codice. Nessun commit su main/Fase 0 o sul consolidamento. Il lotto Cestino di Claude resta separato: nessuna modifica a schema, migrazioni, documenti, accesso o letture DB.
 
 ## Decisione del committente
@@ -26,13 +28,19 @@ Il collaudo dell’utente su 55433/3109/5179, la bozza aperta e i suoi dati non 
 
 ## Verifiche
 
-Backend: build e lint; 306/306 onboarding, 224/224 ordinari, 18/18 guardie delle autorizzazioni. Test DB mirati: 88/88 anche nella ripetizione sul codice finale; privacy, conferma esplicita, replay concorrente e con un altro client, ricaricamento dello stesso SHA senza duplicare oggetti/spese, Q48 e acconto/saldo. Frontend: typecheck/lint e 67/67 test mirati (editor più route review/sharing); build superata; mock completa finale in corso. Le prove DB usano esclusivamente un cluster nuovo del runner offline (55439, ruolo quality_test), distinto dal prodotto e dal collaudo persistito. Le prove di conferma creano soltanto dati sintetici nel cluster posseduto.
+Backend: build e lint; 306/306 onboarding, 224/224 ordinari, 18/18 guardie delle autorizzazioni e 24/24 qualità offline. Test DB mirati: 88/88 anche nella ripetizione sul codice finale; privacy, conferma esplicita, replay concorrente e con un altro client, ricaricamento dello stesso SHA senza duplicare oggetti/spese, Q48 e acconto/saldo. Frontend: typecheck/lint e 67/67 test mirati (editor più route review/sharing); build superata; **mock completa finale 864/864, 105 file, 525.86 secondi**, tutti superati. Le prove DB usano esclusivamente un cluster nuovo del runner offline (55439, ruolo quality_test), distinto dal prodotto e dal collaudo persistito. Le prove di conferma creano soltanto dati sintetici nel cluster posseduto.
 
 ### Configurazione locale dei test frontend
 
-Il primo lancio completo è stato interrotto dopo errori `Denied ID` sul worker PDF: le dipendenze riutilizzate con junction nel nuovo worktree risiedono fuori dalla root Vite. Non era un errore della regola di acquisto. Risolto con un override temporaneo esterno al repository che ammette soltanto la root frontend e la directory `pdfjs-dist/build` della dipendenza, con cache/envDir nel work del task. Configurazione di prodotto, asserzioni e timeout non modificati. Le route prima fallite sono incluse nei 67 test mirati superati. Suite completa ripartita con due worker e retry massimo 1, come nel collaudo precedente; esito finale ancora da registrare.
+Il primo lancio completo è stato interrotto dopo errori `Denied ID` sul worker PDF: le dipendenze riutilizzate con junction nel nuovo worktree risiedono fuori dalla root Vite. Non era un errore della regola di acquisto. Risolto con un override temporaneo esterno al repository che ammette soltanto la root frontend e la directory `pdfjs-dist/build` della dipendenza, con cache/envDir nel work del task. Configurazione di prodotto, asserzioni e timeout non modificati. Le route prima fallite sono incluse nei 67 test mirati superati. Suite completa ripartita con due worker e retry massimo 1, come nel collaudo precedente; esito finale 864/864, 105 file. Nessuna asserzione o timeout allentato.
 
 La prima suite onboarding ha evidenziato una fixture legacy costruita copiando il nuovo marcatore: rimossa dalla sola fixture la proprietà che le bozze storiche non possiedono. La riclassificazione della data storica e le asserzioni di privacy/idempotenza restano intatte; suite finale 306/306.
+
+### Riproduzione e log
+
+Dalla cartella backend-v5: `npm run test:object-onboarding`, `npm test`, `npm run test:quality-v3`, `npm run test:quality-v3-live-guards`, `npm run lint`. Tutti i profili test ricompilano tramite il runner offline, senza caricare `.env`. Per le prove DB: `npm run test:installments-db -- --pg-bin <binari-PostgreSQL-locali> --scratch-root <cartella-test>`, sempre con un cluster nuovo del runner, mai il DB del collaudo utente. Dalla cartella frontend-v5: `npm run typecheck`, `npm run lint`, `npm run build`, `npx vitest run --config <override-locale-junction> --project mock --maxWorkers=2 --retry=1` (senza override quando le dipendenze sono nella root del nuovo checkout).
+
+Log locali nel `work/` del task: `order-onboarding-final2.log`, `order-backend-ordinary.log`, `order-quality-guards.log`, `order-quality-offline.log`, `order-db-final.log`, `order-frontend-targeted-final.log`, `order-frontend-mock-final.log`, `order-frontend-build.log`, `order-backend-lint.log`. Il secondo cluster, `order-test-clusters/dimora-offline-EDhoGP`, e il primo `dimora-offline-ulO00u` sono arrestati, con log di stop conservati. Nessun file del cluster cancellato. I profili hanno sovrapposizioni e i conteggi non vanno sommati.
 
 ## Vincoli e residui
 

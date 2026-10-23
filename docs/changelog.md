@@ -1,6 +1,6 @@
 ## 23 ottobre 2026 — Ordini confermati: proposte di costo e acquisto
 
-Ordine confermato come data di acquisto proposta e totale come costo del singolo prodotto, spedizione inclusa. Nessun pagamento, consegna o garanzia dedotti; spesa soltanto dopo scelta e conferma. Ripresa bozze senza nuova AI. [Report e verifica offline](v5/ordini-acquisto-20261023.md).
+Ordine confermato come data di acquisto proposta e totale come costo del singolo prodotto, spedizione inclusa. Nessun pagamento, consegna o garanzia dedotti; spesa soltanto dopo scelta e conferma. Ripresa bozze senza nuova AI. Backend 306 onboarding, 224 ordinari, 24 qualità, 18 guardie e 88 DB; frontend mock completa 864/864. PR #8 verso il consolidamento, senza merge o deploy. [Report e verifica offline](v5/ordini-acquisto-20261023.md).
 
 ## 23 ottobre 2026 — Flusso delle evolutive fra agenti
 
