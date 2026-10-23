@@ -402,4 +402,6 @@ const profiles = {
 const databaseProfiles = Object.values(profiles).filter(profile => profile.database);
 const union = key => [...new Set(databaseProfiles.flatMap(profile => profile[key] ?? []))];
 profiles['test:offline-db'] = { database: true, api: true, files: union('files'), apiFiles: union('apiFiles'), restartFiles: union('restartFiles') };
+// Explicit independent review; keep the author's baseline aggregate unchanged.
+profiles['test:cestino-riesame-db'] = { database: true, api: false, files: ['test/document-trash-rereview.integration.test.cjs'], apiFiles: [] };
 module.exports = profiles;

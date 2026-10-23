@@ -23,6 +23,7 @@
     "test:sharing-policy": "node test/offline.cjs --suite test:sharing-policy",
     "test:recovery-db": "node test/offline.cjs --suite test:recovery-db",
     "test:trash-db": "node test/offline.cjs --suite test:trash-db",
+    "test:cestino-riesame-db": "node test/offline.cjs --suite test:cestino-riesame-db",
     "test:cestino-review-db": "node test/offline.cjs --suite test:cestino-review-db",
     "test:sharing-db": "node test/offline.cjs --suite test:sharing-db",
     "test:integration": "node test/offline.cjs --suite test:integration",
