@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — Diagnostica del decoder senza conservare risposte rifiutate
+
+Localizzare le eccezioni con metadati a vocabolario chiuso, associati internamente all'errore senza modificare API, ledger o bozze. Il log contiene soltanto sezione/campo ammessi, mai valori o messaggi originali. Conservare codici e criteri di rifiuto; non trasformare la mancanza di una risposta grezza in una causa presunta o in un retry a pagamento. Le prove costruite offline verificano il meccanismo, non riproducono la risposta reale persa. [Diagnosi e limiti](v5/fase0-coffee-rejection-offline-20261023.md).
+
 ## 23 ottobre 2026 — Ripresa parziale come input, non nuova conferma
 
 La conferma parziale conserva i moduli degli elementi irrisolti con le scelte esplicite dell’utente. Elimina dalla revisione solo form risolti e richiesta pendente eseguita; mantiene le ricevute idempotenti. La ripresa non crea costi e ogni successiva conferma rivalida fonte, versione, SHA, permessi e riferimenti. La sincronizzazione preventiva del workspace può aggiornare le versioni soltanto a contesto manuale invariato; modifiche di fonte, diritti o decisioni richiedono rilettura, senza retry automatico incerto. [Prove](v5/fase0-ui-fixes-offline-20261023.md).

@@ -1,3 +1,11 @@
+## Fase 0 — diagnosi offline del rifiuto del PDF caffè, 23 ottobre 2026 (Codex)
+
+**Implementato e verificato offline**: errori di validazione localizzati per sezione e campo ammesso, senza contenuti, valori, messaggi di eccezione o identificativi nei log. Coordinate visuali distinguibili come source_region; errori di campo come item_field/name. Stessi codici di errore, limiti e criteri di accettazione; nessun cambiamento a prompt, API, budget o conferme. [Diagnosi, prove e limiti](v5/fase0-coffee-rejection-offline-20261023.md).
+
+**Esito della precedente prova reale, non di questa sessione**: una richiesta Anthropic autorizzata, costo 0,038409 USD entro 0,25 USD; risposta rifiutata alla fase evidence con analysis_invalid_output. Nessuna proposta accettata, un documento e zero oggetti/spese nel collaudo. La risposta grezza non è conservata: causa specifica non ricostruibile, precompilazione del PDF non dichiarata risolta. Extra budget non usato.
+
+**Verifiche di questa sessione**: backend build/lint, onboarding **278/278**, ordinari **214/214**, runner/adattatore/autorizzazioni offline **16/16**. Regioni, limiti, pagina, campo sconosciuto e privacy dei log coperti. Nessuna suite frontend o HTTP/DB ripetuta; ultimo mock storico 842/842. Nessuna nuova AI/email, accesso al DB reale, modifica a .env, gold/ledger delle campagne, deploy o main. File estranei e 104 StoredFile preservati. Successivo passo: eventuale nuova misura reale soltanto con consenso/limiti definiti, senza retry automatico.
+
 ## Fase 0 — tre anomalie UI corrette e percorso ripetuto offline, 23 ottobre 2026 (Codex)
 
 **Implementato e verificato offline**: primo salvataggio riprodotto come HTTP 409 batch_version_conflict, ora sincronizzazione preventiva del solo contesto manuale invariato e CAS server intatto; primo comando completo riuscito nel nuovo collaudo. Campi profilo ascoltano input/change: data ordine inserita nell’intake persistita sulla scheda senza acquisto/garanzia impliciti. Conferme parziali conservano compilazione e moduli irrisolti; vecchia richiesta pendente e form risolti rimossi dalla revisione, ricevute idempotenti intatte. Rinvio e titolo Acconto/Saldo ripresi anche dopo reload e ricaricamenti. [Cause, correzioni, percorso e limiti](v5/fase0-ui-fixes-offline-20261023.md).

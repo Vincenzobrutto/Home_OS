@@ -12,6 +12,7 @@ import { documentFactKeys, DocumentTitleEvidenceFailure } from './understanding'
 import { checkImageDimensions } from './image-limits';
 import { objectTypes } from '../home-objects/domain';
 import { localPageSelection, ONBOARDING_READING_VERSION, type ReadingMode, type ReadingPlan } from './reading';
+import { decodeDiagnostic } from './decode-diagnostic';
 
 const shape = (properties: Record<string, unknown>) => ({ type: 'object', properties, required: Object.keys(properties), additionalProperties: false });
 const OBJECT_TYPE_INSTRUCTIONS='For EACH item return objectType with canonical value appliance, heating, cooling, electrical, plumbing, security, fixture or other, certainty certain or uncertain, and evidence that contains BOTH that same product name/model and explicit words identifying its category. Do not default to appliance. Use uncertain when a module, accessory or subject does not establish its function; null when no supported proposal is possible. A certain taxonomy must never be guessed from brand/model knowledge. Source citations remain mandatory. Images marked with a physical PDF page number must cite that number, not image position. ';
@@ -190,7 +191,7 @@ export class ObjectOnboardingAnthropicProvider {
     } catch (error) {
       // Shapes and bounded enums only: never log text, titles, excerpts or provider error bodies.
       this.logger.warn(JSON.stringify({ event: 'onboarding_decode_rejected', stage,
-        sourceMode: prepared.context.kind, ...(error instanceof DocumentTitleEvidenceFailure?{evidenceReason:'document_title'}:{}), stopReason: ['end_turn','max_tokens','refusal'].includes(response.stop_reason) ? response.stop_reason : 'other',
+        sourceMode: prepared.context.kind, ...decodeDiagnostic(error), ...(error instanceof DocumentTitleEvidenceFailure?{evidenceReason:'document_title'}:{}), stopReason: ['end_turn','max_tokens','refusal'].includes(response.stop_reason) ? response.stop_reason : 'other',
         inputTokens: usage.input, outputTokens: usage.output,
         textCharacters: (Array.isArray(response.content) ? response.content : []).filter(b => b?.type === 'text').reduce((n,b) => n + (typeof b.text === 'string' ? b.text.length : 0),0) }));
       throw error;

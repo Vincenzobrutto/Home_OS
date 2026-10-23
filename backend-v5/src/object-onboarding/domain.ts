@@ -14,6 +14,7 @@ import { purchaseDateSource, orderDateSource, tableQuantity, tablePurchaseAmount
 import { readUnderstanding, type DocumentUnderstanding, type UnderstandingWarning } from './understanding';
 import { calendar } from '../activities/domain';
 import { separateInvoices } from './invoice-segments';
+import { locateDecodeFailure, type DecodeLocation } from './decode-diagnostic';
 
 export const onboardingLimits = { maxItems: 20, maxUnits: 20, maxImageBytes: 5 * 1024 * 1024 } as const;
 export const productFields = ['name', 'brand', 'model', 'reference', 'serialNumber', 'powerWatts', 'voltageVolts', 'frequencyHz', 'capacityLitres', 'orderDate', 'purchaseDate', 'deliveredDate', 'warrantyStart', 'warrantyEnd'] as const;
@@ -58,11 +59,13 @@ const normalize = (value: string) => value.normalize('NFC').replace(/\s+/gu, ' '
 const equal = (a: string | null | undefined, b: string | null | undefined) => !!a && !!b && normalize(a).toLocaleLowerCase('it') === normalize(b).toLocaleLowerCase('it');
 
 function region(input: unknown): Region {
+  try {
   const r = object(input, ['x', 'y', 'width', 'height']);
   for (const key of ['x', 'y', 'width', 'height']) if (typeof r[key] !== 'number' || !Number.isFinite(r[key]) || r[key] as number < 0 || r[key] as number > 1) throw invalid();
   const result = r as Region;
   if (result.width <= 0 || result.height <= 0 || result.x + result.width > 1.000001 || result.y + result.height > 1.000001) throw invalid();
   return result;
+  } catch (error) { throw locateDecodeFailure(error, { section: 'source_region' }); }
 }
 
 function evidence(input: unknown, context: ProductEvidenceContext): ProductSource {
@@ -81,6 +84,7 @@ function evidence(input: unknown, context: ProductEvidenceContext): ProductSourc
 
 /** Validates provider output, not truth of visual observations. No DB writes. */
 export function productExtraction(input: unknown, context: ProductEvidenceContext): ProductExtraction {
+  let location: DecodeLocation = { section: 'root' };
   try {
     const row = object(input, ['documentKind', 'items', 'hasMoreItems', 'purchaseTotal', 'requiresHumanReview', 'houseExpenses', 'documentInfo', 'facts']);
     if (!['delivery_notice', 'order_confirmation', 'purchase_document', 'product_document', 'device_label', 'utility_bill', 'conformity_declaration', 'house_document', 'unsupported'].includes(String(row.documentKind)) || typeof row.hasMoreItems !== 'boolean' || !Array.isArray(row.items) || row.items.length > onboardingLimits.maxItems) throw invalid();
@@ -89,6 +93,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     const invoiceLines = new Set<string>();
     const orderItems = new Set<string>();
     if (row.requiresHumanReview !== undefined && typeof row.requiresHumanReview !== 'boolean') throw invalid();
+    location = { section: 'document_info' };
     const understanding=readUnderstanding(row.documentInfo,row.facts,row.items.length,value=>evidence(value,context),context.kind==='text'?context.pages:undefined);
     if(['conformity_declaration','house_document'].includes(String(row.documentKind))&&!understanding.documentInfo)throw invalid();
     if(row.documentKind==='conformity_declaration'&&understanding.documentInfo?.kind!=='conformity_declaration')throw invalid();
@@ -98,12 +103,15 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
     let needsReview = payment?.reason === 'split_payment' || row.requiresHumanReview === true || understanding.warnings.length>0;
     const items: ProductItem[] = [];
     for (const [sourceIndex, raw] of row.items.entries()) {
+      location = { section: 'item' };
       const r = object(raw, ['fields', 'quantity', 'purchaseAmount', 'nameTruncated', 'disposition', 'confidence', 'subjectKind','objectType']);
       if (typeof r.nameTruncated !== 'boolean' || !['household_object', 'consumable', 'uncertain'].includes(String(r.disposition)) || !['high', 'low'].includes(String(r.confidence))) throw invalid();
       if(r.subjectKind!==undefined&&!['product','system'].includes(String(r.subjectKind)))throw invalid();
       const fields: Partial<Record<ProductField, ProductValue>> = {};
+      location = { section: 'item_fields' };
       for (const [key, rawField] of Object.entries(object(r.fields, [...productFields]))) {
         if (rawField === null) continue;
+        location = { section: 'item_field', field: key };
         try {
         const field = object(rawField, ['value', 'evidence']);
         const value = normalize(text(field.value, key === 'brand' || key === 'serialNumber' ? 80 : 120));
@@ -125,11 +133,14 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
         fields[key as ProductField] = { value, source };
         } catch(error){if(key==='name'||!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;understanding.warnings.push({field:'item:'+sourceIndex+':'+key,reason:'unverified'});needsReview=true;}
       }
+      location = { section: 'item_identity' };
       const primary = fields.name ?? fields.reference ?? fields.model;
       if (!primary || !fields.name && row.documentKind !== 'device_label') throw invalid();
       const line = ['purchase_document','order_confirmation'].includes(String(row.documentKind)) && !(Array.isArray(row.houseExpenses)&&row.houseExpenses.length) ? verifiedInvoiceLine(context, primary.value, primary.source.page) : null;
       if(line && (r.fields as Record<string,unknown>).purchaseDate == null && line.purchaseDate && line.purchaseDate.value <= new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Rome'}))fields.purchaseDate=line.purchaseDate;
+      location = { section: 'item_type' };
       const objectType=readObjectType(r.objectType,value=>evidence(value,context),primary.value);
+      location = { section: 'item_quantity' };
       let quantity: ProductItem['quantity'] = null;
       if(r.quantity === null && line)quantity={value:line.quantity,source:line.source};
       if (r.quantity !== null) {try{
@@ -153,6 +164,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       fingerprints.add(fingerprint);
       const id = digest(JSON.stringify([context.snapshot.documentId, fingerprint]));
       let purchaseAmount: ProductItem['purchaseAmount'] = null;
+      location = { section: 'item_price' };
       if (r.purchaseAmount !== undefined && r.purchaseAmount !== null) {try{
         const price = object(r.purchaseAmount, ['amountCents', 'evidence']), source = evidence(price.evidence, context);
         if (!['purchase_document','order_confirmation'].includes(String(row.documentKind)) || !fields.name || source.page !== fields.name.source.page || !normalize(source.excerpt).includes(fields.name.value) || !Number.isSafeInteger(price.amountCents) || Number(price.amountCents) <= 0 || Number(price.amountCents) > 999999999 || !/(?:€|\bEUR\b|\bEURO\b)/iu.test(source.excerpt) || !(labelledProductAmount(source.excerpt,fields.name.value,Number(price.amountCents))||tablePurchaseAmount(source.excerpt,fields.name.value)===price.amountCents||line&&line.amountCents===price.amountCents&&normalize(source.excerpt).includes(normalize(line.rowText))) || !(line&&line.amountCents===price.amountCents&&normalize(source.excerpt).includes(normalize(line.rowText))||printedCents(source.excerpt).includes(Number(price.amountCents)))) throw new ProductEvidenceFailure('purchaseTotal', 'total');
@@ -169,6 +181,7 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       items.push({...(invoiceLine?{invoiceLine}:{}),...(objectType?{objectType}:{}),...(r.subjectKind?{subjectKind:r.subjectKind as 'product'|'system'}:{}), id, fingerprint,...(understanding.documentInfo?{sourceIndex}:{}), fields, quantity, ...(purchaseAmount ? { purchaseAmount } : {}), nameTruncated: r.nameTruncated, disposition: r.disposition as ProductItem['disposition'] });
     }
     let purchaseTotal: ProductExtraction['purchaseTotal'] = null;
+    location = { section: 'purchase_total' };
     if (row.purchaseTotal !== null && row.purchaseTotal !== undefined) {try{
       const total = object(row.purchaseTotal, ['amountCents', 'evidence']);
       const source = evidence(total.evidence, context);
@@ -176,18 +189,20 @@ export function productExtraction(input: unknown, context: ProductEvidenceContex
       purchaseTotal = { amountCents: Number(total.amountCents), source };
     }catch(error){if(!(error instanceof HttpException)&&!(error instanceof ProviderFailure))throw error;needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}}
     if (purchaseTotal && items.reduce((sum, item) => sum + (item.purchaseAmount?.amountCents ?? 0), 0) > purchaseTotal.amountCents){needsReview=true;understanding.warnings.push({field:'purchaseTotal',reason:'unverified'});}
+    location = { section: 'house_expenses' };
     let houseExpenses=readHouseExpenses(row.houseExpenses,context,row.documentKind==='utility_bill'?'utility_bill':'simple_invoice');
     if(houseExpenses.length&&!['utility_bill','purchase_document'].includes(String(row.documentKind)))throw invalid();
     assertInvoicePages(houseExpenses,context.invoiceExpensePages);
     const pageInvoices=context.kind==='visual_pdf'&&context.pageCount>1&&understanding.documentInfo?.kind==='invoice'&&!items.length&&houseExpenses.length>0;
     if(row.documentKind==='purchase_document'&&(houseExpenses.length>1||pageInvoices)){if(row.items.length||row.purchaseTotal!=null||Array.isArray(row.facts)&&row.facts.length)throw invalid();houseExpenses=separateInvoices({items,purchaseTotal,documentInfo:understanding.documentInfo},houseExpenses,context.snapshot.documentSha256,context.snapshot.documentId,pageInvoices);needsReview=true;}
+    location = { section: 'invoice_coverage' };
     const coverage=invoiceCoverage(context,{documentKind:row.documentKind as ProductExtraction['documentKind'],documentInfo:understanding.documentInfo,items},houseExpenses);
     if(coverage?.pendingPages.length)needsReview=true;
+    location = { section: 'contacts' };
     const party=contactProposal(understanding.documentInfo,context.kind==='text'?context.pages:undefined);
     return { evidenceMode:context.kind, ...(coverage?{invoiceCoverage:coverage}:{}), ...(payment?{paymentReview:payment}:{}), ...(party?{contacts:[party]}:{}),...(understanding.documentInfo?{documentInfo:understanding.documentInfo}:{}),...(understanding.warnings.length?{reviewWarnings:understanding.warnings}:{}),documentKind: row.documentKind as ProductExtraction['documentKind'], items, needsReview:needsReview||houseExpenses.some(x=>x.reviewWarnings?.length), purchaseTotal,purchaseExpenseReady:row.requiresHumanReview!==true&&understanding.warnings.length>0&&understanding.warnings.every(w=>w.reason==='unverified'&&/^item:\d+:(deliveredDate|warrantyStart|warrantyEnd)$/.test(w.field))&&!houseExpenses.some(x=>x.reviewWarnings?.length),...(row.houseExpenses!==undefined?{houseExpenses}:{}) };
   } catch (error) {
-    if (error instanceof ProviderFailure) throw error;
-    throw new ProviderFailure('analysis_invalid_output');
+    throw locateDecodeFailure(error, location);
   }
 }
 

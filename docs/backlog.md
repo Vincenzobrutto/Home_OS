@@ -1,3 +1,7 @@
+## 23 ottobre 2026 — PDF caffè: diagnostica corretta, esito reale ancora da misurare
+
+La prima risposta reale autorizzata è stata respinta alla fase evidence; la risposta grezza non è conservata e la causa specifica non è ricostruibile. Aggiunta diagnostica sicura di sezione/campo, verificata offline senza ridurre le validazioni. Resta aperta la verifica della precompilazione su questo PDF: nessun retry o aumento di budget in questo incarico, nessuna accuratezza reale dichiarata. Eventuale nuova misura richiede consenso e limiti espliciti. [Report](v5/fase0-coffee-rejection-offline-20261023.md).
+
 ## 23 ottobre 2026 — Chiuso offline: tre anomalie della revisione UI
 
 Sincronizzazione prima dell’archiviazione manuale contro il conflitto del lotto avanzato dalla lettura locale; eventi input/change dei campi data; persistenza dei moduli irrisolti dopo conferma parziale, senza vecchie richieste pendenti o costi impliciti. Percorso UI ripetuto da casa vuota con saldo→acconto e ricaricamenti. [Correzioni e verifiche](v5/fase0-ui-fixes-offline-20261023.md). Nessun miglioramento AI/OCR dichiarato, né deploy sul DB reale.

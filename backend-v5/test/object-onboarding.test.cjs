@@ -17,6 +17,41 @@ const field = (value, image = false) => ({ value, evidence: proof(value, image) 
 const raw = (image = false) => ({ documentKind: 'delivery_notice', hasMoreItems: false, items: [{ fields: { name: field(label, image), brand: field('Lume', image), model: field('Mini', image) }, quantity: { value: 1, evidence: proof('Quantità: 1', image) }, nameTruncated: false, disposition: 'household_object', confidence: 'high' }] });
 const fails = (fn, code) => assert.throws(fn, error => code ? error.code === code : !!error);
 
+test('offline visual rejection identifies bounded name and region failures without relaxing validation', () => {
+ const {decodeDiagnostic}=require('../dist/object-onboarding/decode-diagnostic');
+ const context={kind:'visual_pdf',snapshot,pageCount:1};
+ const capture=value=>{try{productExtraction(value,context);assert.fail('invalid output accepted');}catch(error){assert.equal(error.code,'analysis_invalid_output');return decodeDiagnostic(error);}};
+ const exact=raw(true);exact.items[0].fields.name=field('N'.repeat(120),true);
+ assert.equal(productExtraction(exact,context).items[0].fields.name.value.length,120);
+ const long=structuredClone(exact);long.items[0].fields.name=field('N'.repeat(121),true);
+ assert.deepEqual(capture(long),{validationSection:'item_field',validationField:'name'});
+ for(const region of [null,{x:.9,y:.1,width:.2,height:.1},{x:0,y:0,width:0,height:1},{x:-.1,y:0,width:.1,height:1},{x:0,y:0,width:1,height:Infinity},{x:0,y:0,width:1,height:1,private:'secret'}]){
+  const invalid=raw(true);invalid.items[0].fields.name.evidence.region=region;
+  assert.deepEqual(capture(invalid),{validationSection:'source_region'});
+ }
+ const badPage=raw(true);badPage.items[0].fields.name.evidence.page=2;
+ assert.deepEqual(capture(badPage),{validationSection:'item_field',validationField:'name'});
+ const unknown=raw(true);unknown.items[0].fields['secret@example.test']={value:'private'};
+ assert.deepEqual(capture(unknown),{validationSection:'item_fields'});
+});
+
+test('decoder diagnostics log only closed metadata and preserve rejection codes', () => {
+ const {decodeDiagnostic,locateDecodeFailure}=require('../dist/object-onboarding/decode-diagnostic');
+ const {ProviderFailure}=require('../dist/review/provider');
+ const failure=new ProviderFailure('evidence_unverified');
+ assert.equal(locateDecodeFailure(failure,{section:'item_field',field:'private@example.test'}),failure);
+ assert.deepEqual(decodeDiagnostic(failure),{validationSection:'item_field'});
+ assert.deepEqual(decodeDiagnostic(locateDecodeFailure(new Error('secret'),{section:'malicious',field:'name'})),{});
+ const logs=[],provider=new ObjectOnboardingAnthropicProvider(new PdfTextExtractor(),{});
+ provider.logger.warn=value=>logs.push(JSON.parse(value));
+ const invalid=raw(true);invalid.items[0].fields.name=field('PRIVATE_CUSTOMER_PAYLOAD_'.repeat(10),true);
+ const response={id:'private_provider_id',model,stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(wire(invalid))}],usage:{input_tokens:1000,output_tokens:100}};
+ fails(()=>provider.decode(response,{request:{model,max_tokens:4096},context:{kind:'visual_pdf',snapshot,pageCount:1}}),'analysis_invalid_output');
+ assert.equal(logs.length,1);
+ assert.deepEqual(logs[0],{event:'onboarding_decode_rejected',stage:'evidence',sourceMode:'visual_pdf',validationSection:'item_field',validationField:'name',stopReason:'end_turn',inputTokens:1000,outputTokens:100,textCharacters:response.content[0].text.length});
+ const encoded=JSON.stringify(logs);for(const secret of ['PRIVATE_CUSTOMER_PAYLOAD','private_provider_id',snapshot.documentId,snapshot.documentSha256,'secret@example.test'])assert(!encoded.includes(secret));
+});
+
 test('two invoice rows keep evidenced EUR prices independent and never allocate the grand total', () => {
  const names=['Macchina del ghiaccio','Cuffie personali'],prices=[9999,4990],lines=names.map((name,i)=>`${name} — Totale riga: ${i?'49,90':'99,99'} EUR`),total='Totale documento: 149,89 EUR';
  const value={documentKind:'purchase_document',hasMoreItems:false,purchaseTotal:{amountCents:14989,evidence:proof(total)},items:names.map((name,i)=>({fields:{name:{value:name,evidence:proof(lines[i])}},quantity:null,purchaseAmount:{amountCents:prices[i],evidence:proof(lines[i])},nameTruncated:false,disposition:'household_object',confidence:'high'}))};
