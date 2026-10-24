@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Protocollo multi-pagina, verifica offline
+
+La struttura di spesa viene definita una sola volta e riusata negli slot fisici tramite riferimenti locali, conservando esattamente lo schema espanso e le validazioni. Nessuna fusione di importi o modifica ai decoder. Identificatore v30; nuovo test del rifiuto HTTP400 con ledger incerto, privacy e replay senza ulteriori invii. La riduzione del payload è verificata offline; l'accettazione Anthropic resta non verificata e Samsung non viene ritentato. Nessuna AI, DB reale, modifica al lotto Claude o deploy. [Report](v5/protocollo-multipagina-offline-20261024.md).
+
 ## 23 ottobre 2026 — Catalogo apparati e ambienti tipici
 
 Il confronto tra alias avviene sulla singola occorrenza: un apparato specifico non nasconde più un altro oggetto nominato separatamente. I tipi stanza dichiarati prevalgono sui riferimenti ad altri ambienti nei nomi, mantenendo le sottocategorie esplicite dei tipi generali. Aggiunte le varianti generiche «macchina da caffè» e «forno microonde» al vocabolario derivato V4. Typecheck/lint/build e mock completa 870/870 superati. Nessuna scelta o salvataggio automatici; [collaudo e limiti](v5/oggetti-stanze-20261023.md).

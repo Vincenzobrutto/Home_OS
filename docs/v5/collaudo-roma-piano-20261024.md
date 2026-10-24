@@ -78,3 +78,10 @@ Documentazione del lotto su branch proprio con PR verso il consolidamento; il me
 
 Verificati nuovamente frontend 5174 HTTP200, API3011 con header di protezione e autenticazione obbligatoria (401 senza sessione); gli stessi processi propri sono ancora attivi. La bozza caffè si riapre dal server nel browser autenticato, con 499 EUR, 14/06/2026, modello da verificare e nessuna nuova spesa. Audit READ ONLY: impronte canoniche ancora identiche, 30 documenti, una bozza riuscita; ledger invariato a 0,037809 USD settled più 0,25 USD uncertain. Nessun riavvio, nuovo upload, AI/preflight/retry o conferma durante il controllo. Monitoraggio concluso dopo questa finestra; servizi lasciati disponibili e PR #19 senza merge.
 
+## Aggiornamento dopo approvazione PR #20 — 24 ottobre
+
+PR #20 integrata su approvazione a 112ad051aa3c291ab56a88149af1d0beae0d0a63; hash remoto verificato, main e Claude invariati. Preparato un checkout runtime separato dalla versione integrata, senza modificare il checkout Home_OS. Il prodotto integrato è identico al codice già verificato nella PR (498/498 HTTP/DB offline e controlli del modulo); build backend rieseguita dopo il merge. Nessuna migrazione o modifica .env.
+
+Riavviati soltanto frontend5174 e API3011 del collaudo, dopo controllo dei PID e delle porte. API precedente3001 e PostgreSQL55432 preservati. Il preload controlla le impronte dei moduli compilati v30; header di risposta X-Dimora-Protocol conferma document-understanding-v30-shared-expense-grammar. AI, processi automatici e conferme canoniche restano bloccati; classificatore locale su coda propria invariato. Cinque sonde di protezione tutte403 prima dei controller.
+
+Audit READ ONLY prima/dopo: intero risultato identico per fonti/hash, bozza caffè, migrazioni, tentativi e ledger, oltre alle impronte canoniche (5 oggetti, 9 spese, 12 stanze, 1 contatto; 30 documenti). Samsung conserva la prenotazione incerta0,25USD; nessun nuovo invio, token count o retry. Il nuovo invio Samsung richiede ancora consenso separato; il merge non lo autorizza. Helper precedenti conservati per il ripristino; stato corrente locale in work/roma-runtime.json.
