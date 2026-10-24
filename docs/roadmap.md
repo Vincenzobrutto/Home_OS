@@ -1,3 +1,5 @@
+Percorso promozionale parallelo: [demo guidata](v5/prototipo-percorso-guidato-20261024.md), 12 passi con cambio automatico di profilo e trasferimenti espliciti. Pubblicazione privata riuscita, 12/12 test e browser locale completo desktop/mobile; online protetto da login ChatGPT. Demo libera invariata.
+
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
 Bollette testuali senza AI: [lotto frontend separato](v5/bollette-locali-20261024.md), proposte locali modificabili nella compilazione, senza oggetti o deduzione di pagamento. Stesso salvataggio canonico e nessuna modifica al cestino Claude. OCR per scansioni e verifica del file effettivamente caricato restano aperti; nessun deploy o aggiornamento dei dati reali in questo lotto.

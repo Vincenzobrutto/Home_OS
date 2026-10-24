@@ -1,3 +1,5 @@
+Percorso promozionale parallelo: [demo guidata](v5/prototipo-percorso-guidato-20261024.md), 12 passi con cambio automatico di profilo e trasferimenti espliciti. Pubblicazione privata riuscita, 12/12 test e browser locale completo desktop/mobile; online protetto da login ChatGPT. Demo libera invariata.
+
 ## 24 ottobre 2026 — Prototipo promozionale dei tre profili
 
 Landing e 24 viste Home/Agenzia/Amministratore, percorsi guidati e azioni simulate in prototypes/dimora-promo. Pubblicazione privata Sites completata; browser dei percorsi principali e mobile verificati localmente. Nessuna modifica alle app V5. [Report, copertura e limiti](v5/prototipo-promozionale-20261024.md).
