@@ -42,4 +42,6 @@ Resta il limite già dichiarato: il successo dell’analisi non è un indicatore
 
 ## Limiti
 
+Consegna pubblicata nel commit `12fe187c8fde1ec7684491c7a9161f35ffea825d`, push verificato con `git ls-remote`. [PR #29](https://github.com/Vincenzobrutto/Home_OS/pull/29) in bozza verso il solo branch frontend Claude, con E1 rosso esplicito; [commento sulla PR #16](https://github.com/Vincenzobrutto/Home_OS/pull/16#issuecomment-6389497217). Nessun merge o modifica al prodotto nei branch dell'autore.
+
 Prova browser indipendente non eseguita: il browser integrato ha negato l’origine mock 5186 per un’impostazione salvata. Nessun aggiramento e nessuna prova nell’app reale. Tastiera e stati asincroni sono verificati nel harness, non equivalgono a un collaudo fisico mobile o con screen reader. Le prove browser riferite nel report dell’autore restano sue evidenze, non vengono attribuite a questo riesame.
