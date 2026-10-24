@@ -1,12 +1,86 @@
 .stack { display: grid; gap: 1rem; min-width: 0; }
-.steps { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; padding: 0; }
-.steps button, .footer button, .directions label { min-height: 44px; white-space: normal; }
-.steps button { border: 1px solid currentColor; border-radius: .5rem; padding: .5rem .75rem; background: transparent; color: inherit; }
-.steps button[aria-current="step"] { font-weight: 700; outline: 2px solid currentColor; outline-offset: 2px; }
-.directions { display: flex; flex-wrap: wrap; gap: .5rem; }
-.directions label:has(input:checked) { outline: 2px solid currentColor; outline-offset: 2px; }
-.footer { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1rem 0; background: var(--color-surface); border-top: 1px solid var(--color-border); }
-.panel { min-width: 0; overflow-wrap: anywhere; }
+
+/* Toolbar above the steps: original and draft, always at hand. */
+.toolbar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: var(--space-2); }
+.cardTop { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.originalLink { display: inline-flex; align-items: center; min-height: var(--tap-min); font-size: .9375rem; }
+
+/* Step bar: badge with number or check; current outlined in accent; future dashed. */
+.stepNav { min-width: 0; }
+.steps { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
+.stepCurrent, .stepDone, .stepTodo { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 40px; padding: 0 14px 0 6px; border-radius: 999px; font: inherit; font-size: .875rem; white-space: nowrap; }
+.stepCurrent { background: var(--color-soft); color: var(--color-accent); border: 1px solid var(--color-accent); font-weight: 700; }
+.stepDone { background: var(--color-surface); color: var(--color-ink); border: 1px solid var(--color-border); cursor: pointer; }
+.stepDone:hover { border-color: var(--color-accent); }
+.stepTodo { background: transparent; color: var(--color-muted); border: 1px dashed var(--color-input-border); }
+.stepTodo:disabled { cursor: default; }
+.badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; font-size: .8125rem; font-weight: 700; background: var(--color-neutral-tag); color: var(--color-muted); }
+.stepCurrent .badge { background: var(--color-accent); color: var(--color-accent-ink); }
+.stepDone .badge { background: var(--color-success-bg); color: var(--color-success); }
+.progress { display: none; gap: 4px; margin-bottom: var(--space-2); }
+.segment, .segmentDone, .segmentCurrent { flex: 1 1 0; height: 6px; border-radius: 3px; background: var(--color-border); }
+.segmentDone { background: var(--color-success); }
+.segmentCurrent { background: var(--color-accent); }
+
+/* The card holds one question at a time. */
+.card { display: grid; gap: var(--space-5); min-width: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 28px; }
+.cardHead { display: grid; gap: var(--space-1); }
+.heading { margin: 0; font-size: .8125rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--color-muted); }
+.heading:focus { outline: 2px solid var(--color-focus); outline-offset: 4px; border-radius: 4px; }
+.question { margin: 0; font-family: var(--font-display); font-size: 1.375rem; font-weight: 700; line-height: 1.25; color: var(--color-ink); }
+.hint { margin: 0; color: var(--color-muted); }
+.panel { display: grid; gap: var(--space-4); min-width: 0; overflow-wrap: anywhere; }
 .panel[hidden] { display: none; }
-.heading:focus { outline: 2px solid currentColor; outline-offset: 4px; }
-@media (max-width: 480px) { .footer > button { flex: 1 1 9rem; } .directions { flex-direction: column; } .steps { font-size: .875rem; } }
+.option { display: grid; gap: var(--space-1); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+.option label { display: flex; align-items: center; gap: var(--space-2); min-height: var(--tap-min); font-weight: 700; cursor: pointer; }
+.optionHint { margin: 0; color: var(--color-muted); font-size: .9375rem; }
+
+/* Content: one row per article, the direction as pills. */
+.row { display: grid; gap: var(--space-3); margin: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); min-width: 0; }
+.rowTitle { float: left; width: 100%; padding: 0; font-weight: 700; }
+.rowHint { margin: 0; color: var(--color-muted); font-size: .9375rem; }
+.directions { display: flex; flex-wrap: wrap; gap: var(--space-2); clear: both; }
+.pill { position: relative; display: inline-flex; align-items: center; min-height: var(--tap-min); padding: 0 16px; border-radius: 999px; border: 1px solid var(--color-input-border); background: var(--color-surface); color: var(--color-ink); font-weight: 500; cursor: pointer; }
+.pill:has(.pillInput:checked) { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-accent-ink); }
+.pill:has(.pillInput:focus-visible) { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.pill:has(.pillInput:disabled) { opacity: .6; cursor: default; }
+.pillInput { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: inherit; }
+.add { justify-self: start; }
+
+/* Summary blocks and problems. */
+.summary { display: grid; gap: var(--space-3); min-width: 0; }
+.problems { border: 1px solid var(--color-warning-border); background: var(--color-warning-bg); color: var(--color-warning); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+.problems p, .problems ul { margin: 0; }
+
+/* Footer: back on the left, position and main action on the right. */
+.footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--color-border); background: var(--color-surface); }
+.footer button { min-height: var(--tap-min); white-space: normal; }
+.back { flex: 0 0 auto; }
+.forward { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-3); margin-left: auto; }
+.position { margin: 0; color: var(--color-muted); font-size: .875rem; }
+.nextHint { display: none; }
+
+/* Two columns with the original when the compilation opens on its own route. */
+.withOriginal { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 420px); gap: var(--space-5); align-items: start; }
+.withOriginal > details { position: sticky; top: var(--space-4); max-height: calc(100vh - 32px); overflow: auto; }
+.singleViewLink { justify-self: start; min-height: var(--tap-min); padding: 0; border: 0; background: none; color: var(--color-accent); font: inherit; text-decoration: underline; cursor: pointer; }
+
+@media (max-width: 1100px) {
+  .withOriginal { grid-template-columns: minmax(0, 1fr); }
+  .withOriginal > details { position: static; max-height: none; }
+}
+@media (max-width: 800px) {
+  .card { padding: 20px 16px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .progress { display: flex; }
+  .steps { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--space-1); }
+  .question { font-size: 1.25rem; }
+  .footer:not([data-editor-save]) { position: sticky; bottom: var(--bottom-nav-height); z-index: 4; margin: 0 -16px -20px; padding: 12px 16px 16px; box-shadow: 0 -2px 8px rgb(16 43 59 / 6%); }
+  .position { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .nextHint { display: inline; }
+  .forward { flex: 1 1 60%; }
+  .forward > button { flex: 1 1 auto; }
+}
+@media (max-width: 480px) {
+  .directions { flex-direction: column; }
+  .pill { justify-content: center; }
+}

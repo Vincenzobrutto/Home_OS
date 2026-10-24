@@ -55,19 +55,27 @@ export function CompilationSteps(props: Props) {
   // Panels stay mounted once visited. Local search inputs and expense decisions must survive Back.
   const mounted = (key: string) => current === key || navigation.visited.has(key);
   const panelProps = (key: string) => ({ hidden: current !== key, inert: current !== key, className: styles.panel });
+  const step = steps[index]!, next = steps[index + 1];
+  // One card per step: the heading keeps the step title (keyboard and tests), the question carries the decision.
   return <section className={styles.stack} aria-label="Compilazione del documento a schede">
-    <p>Nessun dato viene registrato passando da una scheda all’altra.</p>
+    {props.saveDraft && !props.draftSaveFailure && <div className={styles.toolbar}><button type="button" className={ui.btn} disabled={disabled} onClick={props.saveDraft}>Salva bozza ed esci</button></div>}
     <CompilationStepper steps={steps} current={current} reached={reachable} change={go} />
-    <p role="status" aria-live="polite">Passo {index + 1} di {steps.length} · {steps[index]!.title}</p>
-    <h2 className={styles.heading} ref={heading} tabIndex={-1}>{steps[index]!.title}</h2>
+    <div className={styles.card}>
+    <header className={styles.cardHead}>
+      <div className={styles.cardTop}>
+        <h2 className={styles.heading} ref={heading} tabIndex={-1}>{step.title}</h2>
+        {editor ? <button type="button" className={`${ui.btn} ${styles.originalLink}`} onClick={editor.showOriginal}>Vedi documento originale</button>
+          : <Link className={styles.originalLink} target="_blank" rel="noopener noreferrer" to={props.root + '/documenti/' + encodeURIComponent(draft.snapshot!.documentId) + '#doc-anteprima'}>Vedi documento originale ↗</Link>}
+      </div>
+      <p className={styles.question}>{step.question}</p>
+      {step.hint && <p className={styles.hint}>{step.hint}</p>}
+    </header>
     <InvoiceCoverageNotice draft={draft} root={props.root} />
-    {editor ? <button type="button" className={ui.btn} onClick={editor.showOriginal}>Vedi documento originale</button>
-      : <Link target="_blank" rel="noopener noreferrer" to={props.root + '/documenti/' + encodeURIComponent(draft.snapshot!.documentId) + '#doc-anteprima'}>Vedi documento originale ↗</Link>}
     <div {...panelProps('documento')}>
-      {props.documentFields}{props.documentReference}
-      {props.changeDocumentOnly && <label><input type="checkbox" checked={documentOnly} disabled={disabled} onChange={e => props.changeDocumentOnly?.(e.target.checked)} />Conserva solo il documento</label>}
+      <div className={styles.stack}>{props.documentFields}{props.documentReference}</div>
+      {props.changeDocumentOnly && <div className={styles.option}><label><input type="checkbox" checked={documentOnly} disabled={disabled} aria-describedby={draft.id + '-document-only-hint'} onChange={e => props.changeDocumentOnly?.(e.target.checked)} />Conserva solo il documento</label><p id={draft.id + '-document-only-hint'} className={styles.optionHint}>Nessun oggetto, spesa o contatto: dopo questa scheda c’è il riepilogo.</p></div>}
       {documentOnly && <p>Salvi il documento senza registrare spese, oggetti o contatti.</p>}
-      {props.copyChoice && <label><input type="checkbox" checked={props.copyChoice.checked} disabled={disabled} onChange={e => props.copyChoice?.change(e.target.checked)} />Usa il documento già presente senza modificarlo</label>}
+      {props.copyChoice && <div className={styles.option}><label><input type="checkbox" checked={props.copyChoice.checked} disabled={disabled} onChange={e => props.copyChoice?.change(e.target.checked)} />Usa il documento già presente senza modificarlo</label></div>}
     </div>
     {mounted('contenuto') && <div {...panelProps('contenuto')}><CompilationContent draft={draft} forms={forms} disabled={disabled} change={props.change} add={props.add} /></div>}
     {items.map(item => mounted('articolo:' + item.id) && <div key={item.id} {...panelProps('articolo:' + item.id)}>
@@ -83,31 +91,32 @@ export function CompilationSteps(props: Props) {
       {draft.mode === 'manual' && draft.items.length > 1 && !draft.houseExpenses?.length && !draft.purchaseTotal && <label>Totale della fattura (€), inserito da te<input className={ui.input} inputMode="decimal" value={props.manualTotal ?? ''} disabled={disabled} onChange={e => props.changeManualTotal?.(e.target.value)} /></label>}
     </div>}
     {mounted('contatti') && <div {...panelProps('contatti')}>{props.contactFields}</div>}
-    {last && <section className={ui.card} aria-label="Riepilogo prima di salvare">
-      <SaveSummary draft={draft} forms={forms} documentOnly={documentOnly} title={props.summaryTitle} houseForms={props.houseForms} contacts={(draft.contacts ?? []).filter(contact => !contact.decision).map(contact => props.summaryContacts?.find(input => input.proposalId === contact.id) ?? initialContact(contact))} documentTargetLabel={props.documentTargetLabel} />
+    {last && <section className={styles.summary} aria-label="Riepilogo prima di salvare">
+      <SaveSummary draft={draft} forms={forms} documentOnly={documentOnly} title={props.summaryTitle} houseForms={props.houseForms} contacts={(draft.contacts ?? []).filter(contact => !contact.decision).map(contact => props.summaryContacts?.find(input => input.proposalId === contact.id) ?? initialContact(contact))} documentTargetLabel={props.documentTargetLabel} edit={{ go, steps: new Set(steps.filter(s => s.key !== 'riepilogo').map(s => s.key)) }} />
       {!documentOnly && draft.purchaseTotal && <p>Totale documento: {euro(draft.purchaseTotal.amountCents)}</p>}
       {!!totals.excludedCents && <p>Importi esclusi: {euro(totals.excludedCents)}</p>}
       {!!totals.excludedUnknown && <p>{totals.excludedUnknown} articoli esclusi con importo non disponibile.</p>}
-      <div className={styles.directions} aria-label="Modifica prima di salvare">{steps.filter(step => step.key !== 'riepilogo').map(step => <button key={step.key} type="button" className={ui.btn} onClick={() => go(step.key)}>Modifica {step.title}</button>)}</div>
-      <p>Niente è ancora registrato nelle schede di casa. La conferma finale registra insieme le scelte.</p>
-      {problem && <div role="alert"><p>{problem}</p><ul>
+      {problem && <div role="alert" className={styles.problems}><p>{problem}</p><ul>
         {props.documentProblem && <li><button type="button" onClick={() => go('documento')}>{props.documentProblem}</button></li>}
         {issues.map((issue, i) => <li key={i}><button type="button" onClick={() => go(issueStep(issue))}>{issue.message}</button></li>)}
         {props.houseProblem && <li><button type="button" onClick={() => go(props.expenseProblem ? 'spese' : 'contatti')}>{props.houseProblem}</button></li>}
         {!issues.length && !props.documentProblem && !props.houseProblem && <li><button type="button" onClick={() => go(technical ? 'contenuto' : 'spese')}>Controlla i dati</button></li>}
       </ul></div>}
     </section>}
-    {attempted && blocked && !last && <div role="alert">{stepProblem}{currentIssues.map(issue => <p key={issue.message}>{issue.message}</p>)}</div>}
+    {attempted && blocked && !last && <div role="alert" className={styles.problems}>{stepProblem}{currentIssues.map(issue => <p key={issue.message}>{issue.message}</p>)}</div>}
     <div className={styles.footer} data-editor-save={editor ? 'true' : undefined} data-draft-save-failure={editor && props.draftSaveFailure ? 'true' : undefined}>
       {props.draftSaveFailure ? <>
         <div ref={saveError} role="alert" tabIndex={-1} aria-label="Salvataggio bozza"><strong>{props.draftSaveFailure.uncertain ? 'Salvataggio da verificare' : 'Bozza non salvata'}</strong><p>{props.draftSaveFailure.message}</p></div>
         <button type="button" className={ui.btn} disabled={props.busy} onClick={props.draftSaveFailure.uncertain ? props.retryDraftSave : props.saveDraft}>Riprova salvataggio</button>
       </> : <>
-      {props.saveDraft && <button type="button" className={ui.btn} disabled={disabled} onClick={props.saveDraft}>Salva bozza ed esci</button>}
-      {index > 0 && <button type="button" className={ui.btn} onClick={() => go(steps[index - 1]!.key)}>Indietro</button>}
-      {last ? <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || (!documentOnly && !items.length && !draft.documentInfo && !draft.houseExpenses?.length)} onClick={props.save}>{documentOnly ? 'Salva documento' : 'Salva e continua'}</button>
-        : <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled} onClick={() => { if (blocked) setAttempted(true); else go(steps[index + 1]!.key); }}>Avanti</button>}
+      {index > 0 ? <button type="button" className={`${ui.btn} ${styles.back}`} onClick={() => go(steps[index - 1]!.key)}>Indietro</button> : <span className={styles.back} />}
+      <div className={styles.forward}>
+        <p role="status" aria-live="polite" className={styles.position}>Passaggio {index + 1} di {steps.length}</p>
+        {last ? <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled || !!problem || (!documentOnly && !items.length && !draft.documentInfo && !draft.houseExpenses?.length)} onClick={props.save}>{documentOnly ? 'Salva documento' : 'Salva e continua'}</button>
+          : <button type="button" className={`${ui.btn} ${ui.primary}`} disabled={disabled} onClick={() => { if (blocked) setAttempted(true); else go(next!.key); }}>Avanti{next && <span className={styles.nextHint} aria-hidden="true">· {next.title}</span>}</button>}
+      </div>
       </>}
+    </div>
     </div>
   </section>;
 }
