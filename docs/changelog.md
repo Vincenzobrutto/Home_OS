@@ -1,3 +1,23 @@
+## 24 ottobre 2026 — Schede predefinite, pagina unica disponibile
+
+Su incarico esplicito dopo la demo manuale, la compilazione apre le schede senza parametro di vista. «Torna alla pagina unica» conserva il confronto tramite `vista-compilazione=unica`; cambio e ritorno mantengono campi locali, documento, bozza e modalità senza salvare. Nessuna modifica a conferma, validazioni o payload; quattro confronti integrali con la pagina unica. Typecheck/lint/build e mock completa 910/910 in 108 file verdi, nessun test saltato e retry0. [Report corrente](v5/compilazione-schede-default-20261024.md). Nessuna AI o accesso al DB/API reale; PR #23 approvata dal committente per il merge nel consolidamento; registrazione finale soltanto documentale, prodotto e test invariati.
+
+### Cronologia del collaudo precedente
+
+## 24 ottobre 2026 — Compilazione a schede in prova
+
+Demo manuale multi-articolo completata e checklist confermata dal committente: ritorni e dati conservati, esclusione accessorio con due oggetti proposti/nessuna spesa, PDF e comandi usabili a finestra stretta. Raccomandata promozione futura a default con ritorno alla pagina unica; nessun cambio di default o merge eseguiti. [Esito](v5/compilazione-schede-pdf-fix-20261024.md).
+
+Corretto l’originale PDF della compilazione standalone riusando PdfPreview locale: nessuna dipendenza dal visualizzatore nativo, stesso accesso ai byte e un solo download. Due regressioni su autorizzazione/assenza di scritture, mirati71/71, typecheck/lint/build e mock completa900/900 in 108 file verdi, nessun test saltato e retry0. PDF osservato su mobile con zoom/rotazione; prova visiva mock multi-articolo ancora negata dal browser5186. [Report finale della correzione](v5/compilazione-schede-pdf-fix-20261024.md), nessuna nuova AI o salvataggio sul reale.
+
+Collaudo successivo: mobile emulato390px e320px sul caffè, ritorni e dati conservati; test mirati multi-articolo77/77. Anteprima PDF vuota riprodotta anche nella pagina unica; nessuna bozza multi-articolo preesistente per il giro visivo senza scritture. Dati/ledger/migrazioni invariati. [Esito e raccomandazione](v5/compilazione-schede-collaudo-mobile-20261024.md): mantenere opt-in e pagina attuale, nessun merge o nuova AI.
+
+Ripristino successivamente autorizzato: cluster esistente e API protetta disponibili, sette worker disabilitati e sole letture/login/logout consentiti. Bozza caffè open e impronte di dati, ledger e migrazioni invariate; predisposta apertura con vista a schede, rendering ancora da verificare dal committente. Nessuna nuova AI, migrazione o salvataggio automatico.
+
+Su successivo incarico, predisposto e avviato soltanto il frontend del collaudo applicativo5174 con le schede opt-in già implementate e proxy fisso all'API protetta3011. API e database non in ascolto: nessuna prova applicativa end-to-end dichiarata. Nessun cambio di renderer predefinito, merge, nuova AI o dato salvato; perimetro e blocco nel report.
+
+Implementato il percorso sequenziale frontend con scelta opt-in, conservando la pagina attuale predefinita. Stato, conferma, payload e recuperi restano nel proprietario corrente. Schede visitate conservate, controlli per passo, riepilogo modificabile, nessun salvataggio sulla navigazione. Harness browser esteso con proposte sintetiche e replay solo in memoria; typecheck/lint/build e mock completa 898/898 in 108 file superati, quattro confronti integrali del body verdi; limiti nel [report](v5/compilazione-schede-report-20261024.md). La sostituzione della pagina unica e il merge restano al committente dopo il collaudo visivo. Nessuna AI, DB/API/storage reale o modifica a backend/schema/lotti Claude.
+
 ## 24 ottobre 2026 — Protocollo multi-pagina, verifica offline
 
 La struttura di spesa viene definita una sola volta e riusata negli slot fisici tramite riferimenti locali, conservando esattamente lo schema espanso e le validazioni. Nessuna fusione di importi o modifica ai decoder. Identificatore v30; nuovo test del rifiuto HTTP400 con ledger incerto, privacy e replay senza ulteriori invii. La riduzione del payload è verificata offline; l'accettazione Anthropic resta non verificata e Samsung non viene ritentato. Nessuna AI, DB reale, modifica al lotto Claude o deploy. [Report](v5/protocollo-multipagina-offline-20261024.md).

@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+Compilazione del documento a schede: ora predefinita, dopo il collaudo manuale confermato e l'incarico esplicito del committente. Ritorno alla pagina unica mantenuto, scelte e payload conservati. [Esito corrente](v5/compilazione-schede-default-20261024.md), [piano](v5/compilazione-schede-piano-20261024.md), PR #23. Codice 61f4a37: mock completa 910/910 in 108 file, nessun test saltato, typecheck/lint/build verdi. Nessuna nuova AI o scrittura reale; telefono fisico/tastiera virtuale non provati. Merge della PR #23 approvato dal committente il 24 ottobre; nessun nuovo cambiamento di prodotto richiesto.
+
 Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedente è conservata integralmente nell’[archivio del 23 ottobre](roadmap-history-20261023.md), inclusi checkpoint e decisioni dei diversi agenti. I suoi esiti descrivono la data del singolo lotto. [Stato verificato](project-status.md), [backlog completo](backlog.md), [architettura](architecture.md).
 
 ## Manutenzione autorizzata in corso
