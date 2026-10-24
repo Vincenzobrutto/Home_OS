@@ -40,3 +40,6 @@ Nessuna creazione di oggetti/spese prima della conferma. Una bolletta crea solo 
 La demo usa un solo articolo per documento, dati fittizi condivisi fra gli immobili dimostrativi, stato in memoria perso al refresh e facsimili testuali al posto di PDF autentici. Non riproduce in modo esaustivo batch multi-articolo, tutti i tipi/campi tecnici, ricevute comparative, automazioni autorizzate, ricerca avanzata server, permessi, API, idempotenza persistente, import reali o condizioni di errore del servizio. Il percorso automatico autorizzato reale non è sostituito dalla regola generale «AI propone»: questo prototipo illustra il percorso manuale/conferma e la precompilazione a proposte. Nessuna promessa di disponibilità commerciale.
 
 Prossimo passo: valutazione del committente sull'esperienza aggiornata; eventuali nuovi dettagli del prototipo nello stesso lotto. Merge della PR #25 al committente.
+
+## Consegna
+Pubblicazione privata riuscita: https://dimora-esperienza-demo.vincenzo-b.chatgpt.site . Commit fonte Sites 33df57066c5f4edcd3d250ae6d173d6bdf8142ed. Schermata Documenti verificata anche sul sito pubblicato, con le sette sezioni, stati e famiglie aggiornati. Fonte Home_OS del lotto 4f8ba4c; PR #25 aggiornata, nessun merge eseguito.
