@@ -11,7 +11,7 @@ import type {Draft} from './model';
 const mocks=vi.hoisted(()=>({callJson:vi.fn(),getDocument:vi.fn()}));
 vi.mock('../session/session',()=>({useAccount:()=>({id:'account'}),useApi:()=>mocks}));
 vi.mock('../routes/HomePages',()=>({useCurrentHome:()=>({id:'home',name:'Casa fittizia'})}));
-function setup(extras=false,rejectConfirmation=false){
+function setup(extras=false,rejectConfirmation=false,view:'unica'|'default'='unica',otherDocument=false){
  const wire:Draft={id:'draft',version:1,state:'open',mode:'manual',snapshot:{documentId:'doc',documentVersion:1,sha256:'a'.repeat(64)},document:{id:'doc',name:'Prova',mimeType:'application/pdf'},documentKind:'utility_bill',items:[],needsReview:false,purchaseTotal:null,review:null,permissions:['read','edit'],houseExpenses:[{id:'cost',documentKind:'utility_bill',proposedFields:{},amountCandidates:[],amountSelectionRequired:true,decision:null}]};
  if(extras){wire.mode='extraction';wire.documentKind='purchase_document';wire.documentInfo={kind:'invoice',title:{value:'Fattura',source:{documentId:'doc',page:1,excerpt:'Fattura'}},facts:[]};wire.items=[{id:'item',fields:{name:{value:'Oggetto fittizio',source:{documentId:'doc',page:1,excerpt:'Oggetto'}}},quantity:null,nameTruncated:false,disposition:'household_object',profile:{},enrichment:null,decision:null}];wire.contacts=[{id:'contact',values:{name:'Impresa fittizia',kind:'company',profession:null,phone:null,email:null,fiscalId:null,note:null},sources:{},warnings:[],resolution:{state:'create',contact:null,candidates:[],conflicts:[]},decision:null}];wire.houseExpenses=[];}
  let fail=false,lost=false,reject=false;const keys=new Map<string,unknown>();
@@ -32,10 +32,32 @@ function setup(extras=false,rejectConfirmation=false){
  });
  const pause=vi.fn(),beforeConfirm=vi.fn();
  function Editor(){const navigate=useNavigate();return <DocumentEditorContext.Provider value={{pause:saved=>{pause(saved);if(saved)navigate('/saved');},complete:vi.fn(),showOriginal:vi.fn()}}><DocumentObjectProposals documentId="doc" beforeConfirm={beforeConfirm} singleScreen/></DocumentEditorContext.Provider>;}
- function mount(){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});cache.setQueryData(queryKeys.session,{account:{id:'account'}});return render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/?oggetti-documento=doc&oggetti-bozza=draft&compila=manuale']}><Routes><Route path="/" element={<Editor/>}/><Route path="/saved" element={<p>Elenco fittizio</p>}/></Routes></MemoryRouter></QueryClientProvider>);}
+ function mount(){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});cache.setQueryData(queryKeys.session,{account:{id:'account'}});return render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/?oggetti-documento='+(otherDocument?'other-doc':'doc')+'&oggetti-bozza='+(otherDocument?'foreign-draft':'draft')+'&compila=manuale'+(view==='unica'?'&vista-compilazione=unica':'')]}><Routes><Route path="/" element={<Editor/>}/><Route path="/saved" element={<p>Elenco fittizio</p>}/></Routes></MemoryRouter></QueryClientProvider>);}
 
  mount();return {wire,pause,beforeConfirm,mount,user:userEvent.setup(),fail:()=>{fail=true;},lose:()=>{lost=true;},reject:()=>{reject=true;}};
 }
+it('opens embedded compilation in steps by default and preserves document inputs when returning to the single page',async()=>{
+ const w=setup(false,false,'default');
+ await screen.findByRole('heading',{level:2,name:'Documento'});
+ await w.user.clear(screen.getByLabelText('Titolo del documento'));await w.user.type(screen.getByLabelText('Titolo del documento'),'Titolo conservato');
+ await w.user.click(screen.getByRole('button',{name:'Torna alla pagina unica'}));
+ await screen.findByRole('region',{name:'Revisione unica del documento'});
+ expect(screen.getByLabelText('Titolo del documento')).toHaveValue('Titolo conservato');
+ await w.user.click(screen.getByRole('button',{name:'Usa la compilazione a schede'}));
+ await screen.findByRole('heading',{level:2,name:'Documento'});
+ expect(screen.getByLabelText('Titolo del documento')).toHaveValue('Titolo conservato');
+ expect(mocks.callJson.mock.calls.some(([,o])=>o?.method==='POST')).toBe(false);
+ expect(w.beforeConfirm).not.toHaveBeenCalled();expect(w.pause).not.toHaveBeenCalled();
+});
+it('ignores a view owned by another document and pins its own draft before switching renderers',async()=>{
+ const w=setup(false,false,'unica',true);
+ await screen.findByRole('heading',{level:2,name:'Documento'});
+ await w.user.click(screen.getByRole('button',{name:'Torna alla pagina unica'}));
+ await screen.findByRole('region',{name:'Revisione unica del documento'});
+ expect(screen.getByLabelText('Titolo del documento')).toHaveValue('Bolletta fittizia');
+ expect(mocks.callJson.mock.calls.some(([p,o])=>p.includes('foreign-draft')||o?.method==='POST')).toBe(false);
+ expect(w.beforeConfirm).not.toHaveBeenCalled();
+});
 it('saves and restores incomplete inputs, metadata and both bill period modes without confirmation or AI',async()=>{
  const w=setup();await screen.findByRole('button',{name:'Salva bozza ed esci'});
  const amount=await screen.findByLabelText('Importo della bolletta (€)');await w.user.type(amount,'12,');

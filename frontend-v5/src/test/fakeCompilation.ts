@@ -56,5 +56,5 @@ export async function seedCompilation(backend: FakeBackend, homeId: string, uplo
     }
     return fail(422, 'operation_not_supported_no_provider');
   }
-  return { handle, draft, path: '/home/' + homeId + '/documenti/' + doc.id + '/oggetti?compila=manuale&bozza=' + draft.id + '&vista-compilazione=schede' };
+  return { handle, draft, path: '/home/' + homeId + '/documenti/' + doc.id + '/oggetti?compila=manuale&bozza=' + draft.id };
 }

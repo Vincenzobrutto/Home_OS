@@ -121,7 +121,7 @@ it.each(['local','unknown','draftkind','copy','copy-lost'])('upload proposals st
   return control.fetch(url,init);
  };
  const app=renderApp({path:'/accedi',backend,fetch});await screen.findByRole('heading',{name:'Accedi'});await app.user.type(screen.getByLabelText('Email'),a.email);await app.user.type(screen.getByLabelText('Password'),PASSWORD_A);await app.user.click(screen.getByRole('button',{name:'Accedi'}));await waitFor(()=>expect(app.router.state.location.pathname).toBe('/case'));
- const path=`/home/${homeA1.id}/documenti/organizza`;await app.router.navigate(path+'?lotto=inline-batch&filtro=conserva');
+ const path=`/home/${homeA1.id}/documenti/organizza`;await app.router.navigate(path+'?lotto=inline-batch&filtro=conserva&vista-compilazione=unica');
  await app.user.click(await screen.findByRole('button',{name:'Compila'}));
  await screen.findByRole('heading',{name:'Controlla e salva'});
  await app.user.click(screen.getByText('Precompila con AI',{exact:true}));

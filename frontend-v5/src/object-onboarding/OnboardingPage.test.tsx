@@ -7,7 +7,7 @@ import type { AiBudget, Draft, Form, FieldKey } from './model';
 import { choice, initialForm, houseExpenseTitle } from './model';
 import { PdfPreview } from '../documents/PdfPreview';
 vi.mock('../documents/PdfPreview',()=>({PdfPreview:vi.fn(()=> <div role="img" aria-label="Anteprima PDF locale"/>)}));
-async function world(options:{originalFailure?:boolean;manualMode?:boolean;savedDocumentOnly?:boolean;contactReview?:boolean;quantityTwo?:boolean;stepped?:boolean;fixedDocument?:boolean;threeRows?:boolean;shortName?:boolean;objectSuggestion?:boolean;analysisSucceeded?:boolean;contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
+async function world(options:{defaultView?:boolean;viewValue?:string;originalFailure?:boolean;manualMode?:boolean;savedDocumentOnly?:boolean;contactReview?:boolean;quantityTwo?:boolean;stepped?:boolean;fixedDocument?:boolean;threeRows?:boolean;shortName?:boolean;objectSuggestion?:boolean;analysisSucceeded?:boolean;contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const uuid=options.fixedDocument?vi.spyOn(globalThis.crypto,'randomUUID').mockReturnValueOnce('11111111-2222-4333-8444-555555555555'):null;
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
@@ -62,7 +62,8 @@ async function world(options:{originalFailure?:boolean;manualMode?:boolean;saved
   if(path.startsWith('/drafts/')||path==='/manual-drafts')return Response.json({draft:wire});
   return Response.json({error:{code:'not_found',message:'Unknown'}},{status:404});
  };
- const app=renderApp({backend,fetch,path:'/home/'+home.id+'/documenti/'+doc.id+'/oggetti'+(options.start?'':'?bozza='+wire.id)+(options.compilation?(options.start?'?':'&')+'compila='+options.compilation:'')+(options.stepped?'&vista-compilazione=schede':'')});
+ const search=new URLSearchParams();if(!options.start)search.set('bozza',wire.id);if(options.compilation)search.set('compila',options.compilation);if(options.viewValue!==undefined)search.set('vista-compilazione',options.viewValue);else if(!options.defaultView)search.set('vista-compilazione',options.stepped?'schede':'unica');
+ const app=renderApp({backend,fetch,path:'/home/'+home.id+'/documenti/'+doc.id+'/oggetti'+'?'+search.toString()});
  if(!options.compactList&&options.login!==false&&!options.foreign&&(!options.start||options.savedDraft)){await screen.findByRole('button',{name:'Rivedi Router demo'});await app.user.click(screen.getByRole('button',{name:'Rivedi Router demo'}));}
  return {...app,wire,calls,counts:()=>({confirmations,starts})};
 }
@@ -367,6 +368,44 @@ it('source mismatch never reveals the preserved extended name',async()=>{
 });
 
 // The same routed owner and mock API exercise both renderers; no alternate serializer.
+describe('Schede predefinite e ritorno esplicito alla pagina unica',()=>{
+ it.each([undefined,'schede','valore-sconosciuto'])('apre le schede con vista %s senza scritture',async(viewValue)=>{
+  const w=await world({defaultView:true,viewValue,compactList:true});
+  await screen.findByRole('heading',{level:2,name:'Documento'});
+  expect(screen.getByRole('region',{name:'Compilazione del documento a schede'})).toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Torna alla pagina unica'})).toBeEnabled();
+  expect(w.calls.filter(c=>c.body)).toHaveLength(0);expect(w.counts().starts).toBe(0);
+ });
+ it.each(['ai','manuale'] as const)('mantiene bozza e modo %s passando da schede a pagina unica e ritorno',async(compilation)=>{
+  const w=await world({defaultView:true,compilation,compactList:true});
+  await screen.findByRole('heading',{level:2,name:'Documento'});
+  await w.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:'Contenuto'});
+  await w.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:'Articolo 1'});
+  await w.user.clear(screen.getByLabelText('Nome dell’oggetto'));await w.user.type(screen.getByLabelText('Nome dell’oggetto'),'Router conservato');
+  await w.user.click(screen.getByRole('button',{name:'Torna alla pagina unica'}));
+  await screen.findByRole('region',{name:'Revisione unica del documento'});
+  expect(screen.getAllByLabelText('Nome dell’oggetto')[0]).toHaveValue('Router conservato');
+  expect(w.router.state.location.search).toContain('bozza=draft-onboarding');
+  expect(w.router.state.location.search).toContain('compila='+compilation);
+  expect(w.router.state.location.search).toContain('vista-compilazione=unica');
+  await w.user.click(screen.getByRole('button',{name:'Usa la compilazione a schede'}));
+  await screen.findByRole('heading',{level:2,name:'Documento'});
+  expect(w.router.state.location.search).not.toContain('vista-compilazione');
+  await w.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:'Contenuto'});
+  await w.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:'Articolo 1'});
+  expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Router conservato');
+  expect(w.calls.filter(c=>c.body)).toHaveLength(0);expect(w.counts().starts).toBe(0);
+ });
+ it('dal link diretto senza compila torna alla pagina unica completa e non alla lista di selezione',async()=>{
+  const w=await world({defaultView:true,compactList:true});
+  await screen.findByRole('heading',{level:2,name:'Documento'});
+  await w.user.click(screen.getByRole('button',{name:'Torna alla pagina unica'}));
+  await screen.findByRole('region',{name:'Revisione unica del documento'});
+  expect(w.router.state.location.search).toContain('bozza=draft-onboarding');
+  expect(w.router.state.location.search).toContain('compila=ai');
+  expect(w.calls.filter(c=>c.body)).toHaveLength(0);expect(w.counts().starts).toBe(0);
+ });
+});
 describe('Compilazione a schede, confronto offline con la pagina unica',()=>{
  async function next(w:Awaited<ReturnType<typeof world>>,heading:string){await w.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:heading});}
  it('naviga senza scritture, mantiene i campi locali e torna a una riga esclusa',async()=>{
@@ -381,7 +420,7 @@ describe('Compilazione a schede, confronto offline con la pagina unica',()=>{
   await w.user.click(within(row).getByRole('radio',{name:'Nuovo oggetto'}));await next(w,'Articolo 1');
   expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Router modificato');expect(screen.getByLabelText('Pagina prodotto ufficiale (se necessaria)')).toHaveValue('https://example.test/router');
   expect(w.calls.filter(c=>c.body)).toHaveLength(0);expect(w.counts().starts).toBe(0);
-  await w.user.click(screen.getByRole('button',{name:'Torna alla compilazione attuale'}));await screen.findByRole('region',{name:'Revisione unica del documento'});expect(screen.getAllByLabelText('Nome dell’oggetto')[0]).toHaveValue('Router modificato');expect(w.router.state.location.search).toContain('bozza=draft-onboarding');expect(w.router.state.location.search).toContain('compila=ai');expect(w.router.state.location.search).not.toContain('vista-compilazione');
+  await w.user.click(screen.getByRole('button',{name:'Torna alla pagina unica'}));await screen.findByRole('region',{name:'Revisione unica del documento'});expect(screen.getAllByLabelText('Nome dell’oggetto')[0]).toHaveValue('Router modificato');expect(w.router.state.location.search).toContain('bozza=draft-onboarding');expect(w.router.state.location.search).toContain('compila=ai');expect(w.router.state.location.search).toContain('vista-compilazione=unica');
  });
  it('il nome obbligatorio blocca solo il passo articolo e la bozza incompleta si può salvare',async()=>{
   const w=await world({stepped:true,compilation:'ai',compactList:true});await screen.findByRole('heading',{level:2,name:'Documento'});
@@ -393,7 +432,7 @@ describe('Compilazione a schede, confronto offline con la pagina unica',()=>{
  });
  it('sei passaggi e payload completo identico per crea, collega e non riguarda la casa',async()=>{
   async function execute(stepped:boolean){
-   const w=await world({stepped,fixedDocument:true,threeRows:true,compilation:'ai',compactList:true});
+   const w=await world({stepped,defaultView:stepped,fixedDocument:true,threeRows:true,compilation:'ai',compactList:true});
    if(stepped){await screen.findByRole('heading',{level:2,name:'Documento'});await next(w,'Contenuto');
     await w.user.click(within(screen.getByRole('group',{name:/Articolo 2/})).getByRole('radio',{name:'Collega a un oggetto'}));
     await w.user.click(within(screen.getByRole('group',{name:/Articolo 3/})).getByRole('radio',{name:'Non riguarda la casa'}));
@@ -465,7 +504,7 @@ describe('Schede: documenti, contatti e quantità senza riduzioni del contratto'
 it.each(['works','bill','service'] as const)('schede: parità integrale di body con spesa globale %s, contatti e compilazione manuale',async documentCost=>{
  const currentLabel=documentCost==='works'?'Salva e organizza':'Registra spesa';
  async function execute(stepped:boolean){
-  const w=await world({stepped,fixedDocument:true,documentCost,contact:true,manualMode:true,compilation:'manuale',compactList:true});
+  const w=await world({stepped,defaultView:stepped,fixedDocument:true,documentCost,contact:true,manualMode:true,compilation:'manuale',compactList:true});
   if(stepped){
    await screen.findByRole('heading',{level:2,name:'Documento'});
    for(const heading of [...(documentCost==='works'?['Contenuto','Articolo 1','Articolo 2']:[]),'Spese','Contatti','Riepilogo']){

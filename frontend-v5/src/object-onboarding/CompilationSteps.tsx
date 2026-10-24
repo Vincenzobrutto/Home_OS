@@ -56,7 +56,7 @@ export function CompilationSteps(props: Props) {
   const mounted = (key: string) => current === key || navigation.visited.has(key);
   const panelProps = (key: string) => ({ hidden: current !== key, inert: current !== key, className: styles.panel });
   return <section className={styles.stack} aria-label="Compilazione del documento a schede">
-    <p>Nuova compilazione in prova · nessun dato viene registrato passando da una scheda all’altra.</p>
+    <p>Nessun dato viene registrato passando da una scheda all’altra.</p>
     <CompilationStepper steps={steps} current={current} reached={reachable} change={go} />
     <p role="status" aria-live="polite">Passo {index + 1} di {steps.length} · {steps[index]!.title}</p>
     <h2 className={styles.heading} ref={heading} tabIndex={-1}>{steps[index]!.title}</h2>
