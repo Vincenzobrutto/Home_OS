@@ -1,5 +1,7 @@
 # Bollette: riconoscimento e precompilazione locale — 24 ottobre 2026
 
+Consegna: [PR #24](https://github.com/Vincenzobrutto/Home_OS/pull/24) verso il consolidamento, commit prodotto `5c615be7f90e2cb2fda1ca3843c60ebe9ef18b17` pubblicato e verificato con `git ls-remote`. Nessun merge eseguito; l’app corrente non è stata aggiornata.
+
 ## Ambito e origine
 
 Lotto `codex/bollette-locali-20261024`, worktree dedicato dal consolidamento remoto `e8ac99fca531f42b57d1b70b67cf63de9c34014c`. Registrazione prima del codice nel commit `3edcd75`. Verificati i file dei branch Claude cestino backend e frontend: il servizio onboarding backend è occupato, quindi non è stato modificato. Questo lotto cambia esclusivamente moduli/test frontend di compilazione e documentazione condivisa. Nessuna dipendenza aggiunta.
