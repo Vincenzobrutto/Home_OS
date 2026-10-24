@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Proposta: compilazione del documento a schede
+
+Specifica UX/UI per sostituire la pagina unica di compilazione con un flusso sequenziale a schede, salvataggio finale invariato. Solo documentazione. [Proposta](v5/compilazione-a-schede-proposta-20261024.md).
+
 ## 24 ottobre 2026 — Protocollo multi-pagina, verifica offline
 
 La struttura di spesa viene definita una sola volta e riusata negli slot fisici tramite riferimenti locali, conservando esattamente lo schema espanso e le validazioni. Nessuna fusione di importi o modifica ai decoder. Identificatore v30; nuovo test del rifiuto HTTP400 con ledger incerto, privacy e replay senza ulteriori invii. La riduzione del payload è verificata offline; l'accettazione Anthropic resta non verificata e Samsung non viene ritentato. Nessuna AI, DB reale, modifica al lotto Claude o deploy. [Report](v5/protocollo-multipagina-offline-20261024.md).
