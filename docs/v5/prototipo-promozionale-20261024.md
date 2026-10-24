@@ -21,3 +21,5 @@ Le bollette propongono solo spese; la garanzia non viene dedotta. Manifesto con 
 ## Limiti e prossimo passo
 
 Non tutte le combinazioni o modali hanno collaudo browser. Ruoli/immobili usano fixture comuni, aggiornamenti solo di sessione; team, branding, integrazioni e piani restano anteprime dichiarate. Nessuna promessa di prodotto completo. Prossimo passo: revisione del committente su messaggio, semplicità e copertura, poi eventuale iterazione del prototipo. Merge della PR verso il consolidamento al committente.
+
+PR di consegna: https://github.com/Vincenzobrutto/Home_OS/pull/25 . Browser del sito pubblicato fermo al gate di accesso ChatGPT; il collaudo delle interazioni è stato eseguito sul server locale con gli stessi file. Accesso privato preservato.
