@@ -5,7 +5,9 @@ import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { AiBudget, Draft, Form, FieldKey } from './model';
 import { choice, initialForm, houseExpenseTitle } from './model';
-async function world(options:{manualMode?:boolean;savedDocumentOnly?:boolean;contactReview?:boolean;quantityTwo?:boolean;stepped?:boolean;fixedDocument?:boolean;threeRows?:boolean;shortName?:boolean;objectSuggestion?:boolean;analysisSucceeded?:boolean;contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
+import { PdfPreview } from '../documents/PdfPreview';
+vi.mock('../documents/PdfPreview',()=>({PdfPreview:vi.fn(()=> <div role="img" aria-label="Anteprima PDF locale"/>)}));
+async function world(options:{originalFailure?:boolean;manualMode?:boolean;savedDocumentOnly?:boolean;contactReview?:boolean;quantityTwo?:boolean;stepped?:boolean;fixedDocument?:boolean;threeRows?:boolean;shortName?:boolean;objectSuggestion?:boolean;analysisSucceeded?:boolean;contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const uuid=options.fixedDocument?vi.spyOn(globalThis.crypto,'randomUUID').mockReturnValueOnce('11111111-2222-4333-8444-555555555555'):null;
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
@@ -31,6 +33,7 @@ async function world(options:{manualMode?:boolean;savedDocumentOnly?:boolean;con
  if(options.pendingReview)wire.review={pending:{path:'/drafts/'+wire.id+'/confirmations',key:'same-confirmation',body:{expectedVersion:2,source:wire.snapshot,choices:[]}}};
  const calls:Array<{path:string;body:unknown;key:string|null}>=[];let confirmations=0,starts=0,saved=false;
  const fetch=async(url:string,init:RequestInit)=>{
+  if(options.originalFailure&&url.endsWith('/file'))return Response.json({error:{code:'forbidden',message:'Originale non accessibile'}},{status:403});
   if(!url.includes('/object-onboarding'))return control.fetch(url,init);
   const path=url.split('/object-onboarding')[1]!,body=init.body?JSON.parse(String(init.body)):undefined;calls.push({path,body,key:new Headers(init.headers).get('Idempotency-Key')});
   if(path.startsWith('/capabilities'))return Response.json({analysisSucceeded:options.analysisSucceeded,successfulDraftId:options.analysisSucceeded?wire.id:null,budget:options.budget,manualAvailable:true,aiAvailable:!!options.ai,requiresConsent:true,drafts:options.savedDraft?[{id:wire.id,state:'open'}]:[],canStartWithUncertainAcknowledgement:!!options.uncertainRetry,canStartAnalysis:options.uncertainRetry?false:options.newAuthorization?true:undefined,job:(options.newAuthorization||options.uncertainRetry)?{id:"old-job",state:"uncertain",draftId:null,errorCode:"analysis_outcome_unknown"}:null});
@@ -63,6 +66,32 @@ async function world(options:{manualMode?:boolean;savedDocumentOnly?:boolean;con
  if(!options.compactList&&options.login!==false&&!options.foreign&&(!options.start||options.savedDraft)){await screen.findByRole('button',{name:'Rivedi Router demo'});await app.user.click(screen.getByRole('button',{name:'Rivedi Router demo'}));}
  return {...app,wire,calls,counts:()=>({confirmations,starts})};
 }
+describe('Originale nella compilazione, solo byte autorizzati',()=>{
+ it('riusa il renderer locale PDF con un solo download e nessuna scrittura',async()=>{
+  vi.mocked(PdfPreview).mockClear();
+  const w=await world({stepped:true,compilation:'ai',compactList:true});
+  await screen.findByRole('heading',{name:'Documento',level:2});
+  await w.user.click(screen.getByText('Vedi il documento originale',{exact:true}));
+  await screen.findByRole('img',{name:'Anteprima PDF locale'});
+  const props=vi.mocked(PdfPreview).mock.calls.at(-1)![0];
+  expect(props.blob.type).toBe('application/pdf');expect(props.blob.size).toBeGreaterThan(0);
+  expect(props.url).toMatch(/^blob:/);expect(props.filename).toContain('Ordine sintetico');
+  expect(props.showDownload).toBe(false);
+  expect(screen.getAllByRole('button',{name:'Scarica originale'})).toHaveLength(1);
+  expect(document.querySelector('object[type="application/pdf"]')).toBeNull();
+  expect(w.calls.some(c=>c.path.endsWith('/review')||c.path.endsWith('/confirmations')||c.path==='/jobs')).toBe(false);
+ });
+ it('non monta il renderer e non offre il download quando i byte originali sono negati',async()=>{
+  vi.mocked(PdfPreview).mockClear();
+  const w=await world({stepped:true,compilation:'ai',compactList:true,originalFailure:true});
+  await screen.findByRole('heading',{name:'Documento',level:2});
+  await w.user.click(screen.getByText('Vedi il documento originale',{exact:true}));
+  await screen.findByRole('button',{name:'Riprova'});
+  expect(PdfPreview).not.toHaveBeenCalled();
+  expect(screen.queryByRole('button',{name:'Scarica originale'})).toBeNull();
+  expect(screen.queryByRole('img',{name:'Anteprima PDF locale'})).toBeNull();
+ });
+});
 describe('Onboarding reale nel router, API simulate e nessun invio esterno',()=>{
  it('guard login protegge il deep link prima di leggere documenti e proposte',async()=>{const w=await world({login:false});await screen.findByRole('heading',{name:/Accedi/});expect(w.calls).toHaveLength(0);expect(w.router.state.location.search).toContain('next=');});
  it('AI disabilitata mostra compilazione manuale e non inventa risultati',async()=>{const w=await world({start:true});await screen.findByText(/L’analisi AI di questo documento non è abilitata/);expect(screen.queryByRole('button',{name:'Avvia precompilazione AI'})).not.toBeInTheDocument();await w.user.click(screen.getByRole('button',{name:'Compila manualmente'}));await screen.findByRole('heading',{name:'Rivedi gli articoli'});expect(w.counts().starts).toBe(0);});

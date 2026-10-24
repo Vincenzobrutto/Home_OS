@@ -16,6 +16,7 @@ import { ApiError, isApiError, userMessage } from '../api/errors';
 import { newIdempotencyKey } from '../api/queryKeys';
 import { Banner, ErrorState, Loading, ui, useDocumentTitle } from '../components/ui';
 import { useDocumentFile, useObjectUrl } from '../documents/hooks';
+import { PdfPreview } from '../documents/PdfPreview';
 import { saveBlob } from '../lib/files';
 import { useAccount, useApi } from '../session/session';
 import { useCurrentHome } from '../routes/HomePages';
@@ -208,4 +209,4 @@ function DraftEditor({stepped=false,draft,draftSaveFailure,retryDraftSave,metada
   {!open.length&&!draft.houseExpenses?.length&&<p>Non ci sono altri articoli da rivedere.</p>}
  </section>;
 }
-function Original({doc,homeId}:{doc:DocumentDetail;homeId:string}){const file=useDocumentFile(homeId,doc.id,true),url=useObjectUrl(file.isError?undefined:file.data?.blob);if(file.isPending)return <Loading label="Caricamento originale…"/>;if(file.isError)return <ErrorState error={file.error} onRetry={()=>void file.refetch()}/>;if(!url)return null;return <div className={styles.stack}>{doc.mimeType==='application/pdf'?<object className={styles.preview} data={url} type="application/pdf" aria-label={'Originale '+doc.name}><p>Scarica l’originale per leggerlo sul dispositivo.</p></object>:<img className={styles.preview} src={url} alt={'Originale '+doc.name}/>}<button type="button" className={ui.btn} onClick={()=>file.data&&saveBlob(file.data.blob,file.data.filename??doc.originalFilename)}>Scarica originale</button></div>;}
+function Original({doc,homeId}:{doc:DocumentDetail;homeId:string}){const file=useDocumentFile(homeId,doc.id,true),url=useObjectUrl(file.isError?undefined:file.data?.blob);if(file.isPending)return <Loading label="Caricamento originale…"/>;if(file.isError)return <ErrorState error={file.error} onRetry={()=>void file.refetch()}/>;if(!url||!file.data)return null;return <div className={styles.stack}>{doc.mimeType==='application/pdf'?<PdfPreview blob={file.data.blob} url={url} filename={file.data.filename??doc.originalFilename} showDownload={false}/>:<img className={styles.preview} src={url} alt={'Originale '+doc.name}/>}<button type="button" className={ui.btn} onClick={()=>file.data&&saveBlob(file.data.blob,file.data.filename??doc.originalFilename)}>Scarica originale</button></div>;}
