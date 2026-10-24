@@ -1,8 +1,11 @@
 import {screen,waitFor} from '@testing-library/react';
-import {expect,it} from 'vitest';
+import {beforeAll,expect,it,vi} from 'vitest';
 import {renderApp,seededBackend,createFakeFetch,PASSWORD_A} from '../test/harness';
 import type {FetchLike} from '../api/client';
 import type {Draft} from '../object-onboarding/model';
+// This suite exercises the manual fallback; local extraction has separate PDF and UI tests.
+vi.mock('../object-onboarding/localBillPdf',()=>({localBillPdf:vi.fn(async()=>null)}));
+beforeAll(async()=>{await import('../routes/DocumentsPages');});
 it.each([...['utility_bill','invoice','receipt'].flatMap(kind=>[{kind,only:false,preselected:false,stepped:false},{kind,only:true,preselected:false,stepped:false},{kind,only:false,preselected:true,stepped:false}]),{kind:'utility_bill',only:false,preselected:false,stepped:true}])('Bolletta has no objects (document only=$only, existing type=$preselected)',async({kind,only,preselected,stepped})=>{
  const {backend,homeA1,a}=seededBackend(),control=createFakeFetch(backend),doc=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'Bolletta sintetica.pdf'});
  const draft:Draft={id:'manual-bill',version:1,state:'open',mode:'manual',snapshot:{documentId:doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:preselected&&kind!=='utility_bill'?'purchase_document':'unsupported',documentInfo:null,items:[{id:'placeholder',fields:{},quantity:null,profile:{},nameTruncated:false,disposition:'uncertain',enrichment:null,decision:null}],needsReview:true,purchaseTotal:null,review:null,permissions:['read','edit']};

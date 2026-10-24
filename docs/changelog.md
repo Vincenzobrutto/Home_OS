@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Bollette testuali, proposte locali senza AI
+
+La compilazione manuale riconosce una possibile bolletta dal testo PDF e propone tipo, categoria, fornitore, totale, periodo, emissione e scadenza quando univoci. Stessa scheda Spese e conferma canonica nelle due viste, nessun oggetto o pagamento dedotto. Compilazioni salvate preservate; importi discordanti non sommati. SHA verificato e limiti locali; scansioni senza testo richiedono OCR e sono segnalate. [Report e limiti](v5/bollette-locali-20261024.md). Mock completa 947/947 in 111 file, nessun test saltato/retry0, typecheck/lint/build verdi. Lotto separato, nessuna modifica a backend/cestino Claude o dati reali; aggiornamento dell’app subordinato al merge.
+
 ## 24 ottobre 2026 — Schede predefinite, pagina unica disponibile
 
 Su incarico esplicito dopo la demo manuale, la compilazione apre le schede senza parametro di vista. «Torna alla pagina unica» conserva il confronto tramite `vista-compilazione=unica`; cambio e ritorno mantengono campi locali, documento, bozza e modalità senza salvare. Nessuna modifica a conferma, validazioni o payload; quattro confronti integrali con la pagina unica. Typecheck/lint/build e mock completa 910/910 in 108 file verdi, nessun test saltato e retry0. [Report corrente](v5/compilazione-schede-default-20261024.md). Nessuna AI o accesso al DB/API reale; PR #23 approvata dal committente per il merge nel consolidamento; registrazione finale soltanto documentale, prodotto e test invariati.

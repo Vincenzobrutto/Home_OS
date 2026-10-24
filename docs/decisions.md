@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Proposte locali per bollette testuali
+
+Su incarico del committente, la compilazione propone dati di bolletta anche senza AI usando solo testo PDF locale con SHA coincidente. Sono suggerimenti modificabili, salvati come valori manuali confermati attraverso il flusso esistente; non diventano evidenze AI o candidati server inventati. Compilazioni già salvate ed estrazioni precedenti non vengono sostituite; dati mancanti o discordanti restano da indicare. Nessuna inferenza di pagamento. Il servizio backend onboarding è occupato dal lotto cestino Claude e resta invariato: [ambito, verifiche e limiti OCR](v5/bollette-locali-20261024.md).
+
 ## 24 ottobre 2026 — Schede predefinite con ritorno alla pagina unica
 
 Dopo il collaudo manuale sintetico il committente autorizza la promozione del percorso a schede. L’assenza di una scelta esplicita apre le schede; `vista-compilazione=unica` conserva la pagina unica e il relativo comando di ritorno. Scelta limitata all’URL del documento, nessuna preferenza globale, nessun salvataggio nel cambio di vista. Stesso proprietario dello stato e stessi payload/criteri di conferma; backend e dati esclusi. Il ritiro della pagina unica e il merge restano decisioni separate. [Report e verifiche](v5/compilazione-schede-default-20261024.md).
