@@ -1,6 +1,7 @@
 import type { Draft, HouseForm } from './model';
 /** Local, conservative proposals. No issuer catalogue, filename rules or payment inference. */
 export type LocalBill = {
+  method?:'ocr';
   supplier?: string; amount?: string; category?: string; documentDate?: string;
   competenceFrom?: string; competenceTo?: string; dueOn?: string;
 };
@@ -23,7 +24,7 @@ function date(value: string) {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0,10) === iso ? iso : undefined;
 }
 const unique = (values: string[]) => { const all = [...new Set(values)]; return all.length === 1 ? all[0] : undefined; };
-const dateToken = '(\\d{1,2}[/.\\-]\\d{1,2}[/.\\-]\\d{4})';
+const dateToken = '(\\d{1,2}[/.\\-]\\d{1,2}[/.\\-]\\d{4})(?!\\d)';
 function labeledDates(text: string, label: string) {
   return unique([...text.matchAll(new RegExp('(?:'+label+')[ \\t:]*(?:\\n[ \\t]*)?'+dateToken,'giu'))].flatMap(m => date(m[1]!) ?? []));
 }
@@ -33,7 +34,9 @@ export function localBill(pages: string[]): LocalBill | null {
   const firstLine = text.split('\n').find(line=>line.trim())?.trim()??'';
   const deniedHeading = /^(?:preventivo|offerta\s+commerciale|fac[ -]?simile|esempio\s+di\s+bolletta)\b/iu;
   const denied = /\bnon\s+(?:(?:è|e['’])\s+|costituisce\s+)(?:una\s+)?bolletta\b/iu;
-  if (deniedHeading.test(firstLine) || denied.test(text)) return null;
+  const invoiceHeading=/^(?:bolletta|(?:n(?:umero)?[.°º]?[ \t]+)?fattura)\b/imu;
+  const commercialBox=/^offerta\s+commerciale\b/iu.test(firstLine)&&invoiceHeading.test(text)&&/^totale\s+da\s+pagare\b/imu.test(text)&&/^(?:emess[ao]\s+il|data\s+(?:di\s+)?emissione)\b/imu.test(text);
+  if ((deniedHeading.test(firstLine)&&!commercialBox) || denied.test(text)) return null;
   // Require a billing signal AND a utility/consumption signal; a casual mention is insufficient.
   const billing = /\b(?:bolletta|fattura|periodo\s+di\s+fatturazione)\b/iu.test(text);
   const categories = [
@@ -43,19 +46,19 @@ export function localBill(pages: string[]): LocalBill | null {
     ['internet_services', /\b(?:telefonia|connessione\s+internet|banda\s+larga|fibra\s+ottica)\b/iu],
   ] as const;
   const found = categories.filter(([,pattern]) => pattern.test(text)).map(([kind]) => kind);
-  const heading = /^(?:bolletta|fattura)\b/imu.test(text) || /\bperiodo\s+di\s+fatturazione\b/iu.test(text);
+  const heading = invoiceHeading.test(text) || /\bperiodo\s+di\s+fatturazione\b/iu.test(text);
   if (!billing || !heading || !found.length) return null;
   const invoiceNumbers = [...new Set([...text.matchAll(/\b(?:numero\s+fattura|fattura\s+(?:n\.?|numero))[ \t:]*([\w/-]+)/giu)].map(m=>m[1]))];
   if (invoiceNumbers.length > 1) return null;
   const result: LocalBill = { category: unique(found) };
   // Labels are explicit: never use VAT, rates, historical balances or an arbitrary euro value.
-  const money = [...text.matchAll(/\b(?:totale\s+(?:da\s+pagare|(?:della\s+)?bolletta|(?:della\s+)?fattura|documento)|importo\s+(?:da\s+pagare|(?:della\s+)?bolletta))[^\S\n]*:?[ \t]*(?:\n[ \t]*)?(?:€|EUR)?[ \t]*((?:\d{1,3}(?:\.\d{3})+|\d+),\d{2})(?:[ \t]*(?:€|EUR))?/giu)].map(m => m[1]!.replace(/\./g,'').replace(',','.')).filter(v => Number(v)>0 && Number(v)*100<=999999999);
+  const money = [...text.matchAll(/^[ \t]*(?:totale\s+(?:da\s+pagare|(?:della\s+)?bolletta|(?:della\s+)?fattura|documento)|importo\s+(?:da\s+pagare|(?:della\s+)?bolletta))[^\S\n]*:?[ \t]*(?:\n[ \t]*)?(?:€|EUR)?[ \t]*((?:\d{1,3}(?:\.\d{3})+|\d+),\d{2})(?!\d)(?:[ \t]*(?:€|EUR))?/gimu)].map(m => m[1]!.replace(/\./g,'').replace(',','.')).filter(v => Number(v)>0 && Number(v)*100<=999999999);
   result.amount = unique(money);
   const suppliers = [...text.matchAll(/^(?:fornitore|venditore|società\s+di\s+vendita|ragione\s+sociale\s+del\s+fornitore)[ \t]*:[ \t]*([^\n]{2,120})$/gimu)].map(m=>m[1]!.trim());
   // A legal name at the top is usable only when unique; no logo/brand lookup.
   const headingNames = pages[0]!.split('\n').slice(0,12).map(line=>line.trim()).filter(line=>/^[\p{L}][\p{L}\d '&’.-]{1,100}\s+(?:S\.?p\.?A\.?|S\.?r\.?l\.?)$/iu.test(line));
   result.supplier = unique(suppliers.length ? suppliers : headingNames.includes(firstLine) ? headingNames : []);
-  result.documentDate = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?emissione|data[ \\t]+(?:della[ \\t]+)?fattura');
+  result.documentDate = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?emissione|data[ \\t]+(?:della[ \\t]+)?fattura|emess[ao][ \\t]+il');
   result.dueOn = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?scadenza|scadenza|da[ \\t]+saldare[ \\t]+entro|pagare[ \\t]+entro');
   const periods: string[] = [];
   const label = '(?:periodo[ \\t]+(?:di[ \\t]+)?(?:riferimento|fatturazione|competenza)|periodo[ \\t]+fatturato)';

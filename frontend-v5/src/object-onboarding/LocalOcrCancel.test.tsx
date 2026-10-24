@@ -1,0 +1,20 @@
+import {render,screen,waitFor} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
+import {MemoryRouter} from 'react-router';
+import {expect,it,vi} from 'vitest';
+const state=vi.hoisted(()=>({signal:null as AbortSignal|null,posts:[] as string[]}));
+vi.mock('../session/session',()=>({useAccount:()=>({id:'account'}),useApi:()=>api}));
+vi.mock('../routes/HomePages',()=>({useCurrentHome:()=>({id:'home',name:'Casa sintetica'})}));
+vi.mock('../documents/PdfPreview',()=>({PdfPreview:()=>null}));
+vi.mock('./localBillPdf',()=>({localBillPdf:vi.fn((_blob,_sha,signal:AbortSignal,progress:(text:string)=>void)=>{state.signal=signal;progress('OCR locale · pagina 1 di 1');return new Promise(()=>{});})}));
+const draft={id:'draft',version:1,state:'open',mode:'manual',documentKind:'unsupported',review:null,items:[],snapshot:{documentId:'doc',documentVersion:1,sha256:'a'.repeat(64)},permissions:['read','edit'],purchaseTotal:null};
+const api={getDocument:async()=>({id:'doc',name:'Scansione sintetica',mimeType:'application/pdf',originalFilename:'scan.pdf'}),downloadDocumentFile:async()=>({blob:new Blob(['synthetic'])}),listObjects:async()=>({items:[],nextCursor:null}),callJson:async(path:string,options?:{method?:string})=>{if(options?.method==='POST')state.posts.push(path);return path.includes('/capabilities')?{manualAvailable:true,aiAvailable:false,drafts:[{id:'draft',state:'open'}],job:null}:{draft};}};
+import {DocumentObjectProposals} from './OnboardingPage';
+it('cancel aborts local OCR and opens manual compilation without an AI or confirmation request',async()=>{
+ const client=new QueryClient({defaultOptions:{queries:{retry:false}}});const user=userEvent.setup();state.posts=[];
+ render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/?oggetti-documento=doc&oggetti-bozza=draft&compila=manuale']}><DocumentObjectProposals documentId="doc" beforeConfirm={vi.fn()}/></MemoryRouter></QueryClientProvider>);
+ await screen.findByText('OCR locale · pagina 1 di 1');expect(state.signal?.aborted).toBe(false);
+ await user.click(screen.getByRole('button',{name:'Continua manualmente senza lettura locale'}));
+ await screen.findByLabelText('Tipo del documento');await waitFor(()=>expect(state.signal?.aborted).toBe(true));expect(state.posts).toEqual([]);
+});
