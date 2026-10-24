@@ -64,6 +64,12 @@ La sola API simulata è stata avviata e chiusa per la prova HTTP protetta descri
 
 ## Prossimo confronto con il committente
 
+### Tentativo di apertura dopo il consenso in chat
+
+Il 24 ottobre, dopo il successivo «Ok» del committente, avviati soltanto il mock su loopback 3101 e la UI su loopback 5186, con target fissato al mock, ambiente sanificato e guardia di rete locale. Il browser integrato ha nuovamente rifiutato l'apertura: un permesso salvato o una regola gestita nega l'accesso all'origine `http://127.0.0.1:5186`. Il consenso nella conversazione non ha rimosso quel blocco tecnico.
+
+Nessuna pagina aperta, screenshot o verifica visiva acquisita. Nessuna modifica di autorizzazioni e nessun tentativo su altra porta, browser o canale alternativo. Verificata l'identità dei due processi appena creati, entrambi chiusi; porte mock nuovamente libere. Nessun altro processo o servizio fermato. Per riprendere serve risolvere il permesso sull'origine nel browser; non un ulteriore consenso generico in chat. Criterio 8 ancora non verificato, PR in bozza, pagina corrente ancora predefinita. Nessun codice modificato né nuova esecuzione dei test: restano gli esiti automatici del commit `3ba9835` sopra riportati.
+
 1. Eseguire il giro visivo desktop e 390px nel mock autorizzato, inclusi originale, ritorni, focus, bozza e riepilogo. Verificare che il piede non copra campi o navigazione, anche con tastiera virtuale.
 2. Confrontare chiarezza di Contenuto, Spese, contatti ed esclusioni con la pagina unica. Il comando di ritorno permette il confronto sullo stesso proprietario del form.
 3. Decidere se promuovere le schede a default e se abbreviare il monoriga; solo dopo valutare il ritiro della pagina unica. Nessun merge automatico.
