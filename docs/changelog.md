@@ -1,3 +1,11 @@
+Demo libera semplificata e case Gift: [report e link](v5/prototipo-case-gift-20261024.md). 15 impianti, 1 elettrodomestico, 19 documenti; accettare la Gift aggiunge una casa distinta a Le mie case. 21/21 test e browser desktop/mobile; pubblicata e Casa verificata online. Guidata invariata. Consegnare sempre entrambi i link, come richiesto dal committente.
+
+Percorso promozionale parallelo: [demo guidata](v5/prototipo-percorso-guidato-20261024.md), 12 passi con cambio automatico di profilo e trasferimenti espliciti. Pubblicazione privata riuscita, 12/12 test e browser locale completo desktop/mobile; online protetto da login ChatGPT. Demo libera invariata.
+
+## 24 ottobre 2026 — Prototipo promozionale dei tre profili
+
+Landing e 24 viste Home/Agenzia/Amministratore, percorsi guidati e azioni simulate in prototypes/dimora-promo. Pubblicazione privata Sites completata; browser dei percorsi principali e mobile verificati localmente. Nessuna modifica alle app V5. [Report, copertura e limiti](v5/prototipo-promozionale-20261024.md).
+
 ## 24 ottobre 2026 — Bollette testuali, proposte locali senza AI
 
 La compilazione manuale riconosce una possibile bolletta dal testo PDF e propone tipo, categoria, fornitore, totale, periodo, emissione e scadenza quando univoci. Stessa scheda Spese e conferma canonica nelle due viste, nessun oggetto o pagamento dedotto. Compilazioni salvate preservate; importi discordanti non sommati. SHA verificato e limiti locali; scansioni senza testo richiedono OCR e sono segnalate. [Report e limiti](v5/bollette-locali-20261024.md). Mock completa 947/947 in 111 file, nessun test saltato/retry0, typecheck/lint/build verdi. Lotto separato, nessuna modifica a backend/cestino Claude o dati reali; aggiornamento dell’app subordinato al merge.
@@ -1712,3 +1720,12 @@ Aggiunti collaudo DB isolato e diagnostica in entrambi gli ordini, replay, ricar
 ### 2026-10-23 — acconto/saldo, revisione esplicita e costo unico
 
 Bloccati nuovi oggetti omonimi e seconda spesa non riconciliata nel percorso fattura. Nuova conferma manuale dello stesso acquisto, con costo complessivo inserito esplicitamente e un solo aggiornamento canonico/storico. Ricaricamenti e fonte privata/versione/SHA protetti; importi ambigui lasciati pendenti. [Correzione, test e limiti](v5/fase0-installments-fix-offline-20261023.md).
+
+## 24 ottobre 2026 - Menu promozionale Home allineato
+Voci e ordine delle sette sezioni dell'app reale ripristinati, Ambienti/Rubrica separati ed extra demo distinti. Report: v5/prototipo-promozionale-20261024.md.
+
+## 24 ottobre 2026 - Schermate promozionali allineate alla V5
+Home con workflow Documenti, compilazione adattiva, oggetti/ambienti, attività, spese, Rubrica e storia coerenti con il consolidamento 2ab7570. Anteprime Partner separate, palette e navigazione mobile V5. 7/7 test e browser sui percorsi principali. Report: v5/prototipo-allineamento-v5-20261024.md.
+
+## 24 ottobre 2026 - Profili Partner collegati a Home nel prototipo
+Agenzia e Amministratore navigabili con stato di sessione e passaggi selettivi: Gift, invito unità, pubblicazione versionata, proposte personali e segnalazioni/risposte. Memorie personali separate per immobile e nuovo proprietario. 31 viste, 17/17 test, browser sui percorsi principali e mobile. Report: v5/prototipo-partner-collegati-20261024.md. Nessun runtime V5 modificato.

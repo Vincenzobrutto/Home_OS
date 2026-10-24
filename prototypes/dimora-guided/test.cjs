@@ -1,0 +1,22 @@
+const {readFileSync}=require('node:fs');
+const vm=require('node:vm');
+const assert=require('node:assert/strict');
+const source=readFileSync(__dirname+'/dist/guided.js','utf8').split("document.addEventListener('click'")[0];
+const ctx=vm.createContext({});vm.runInContext(source,ctx);
+const run=s=>vm.runInContext(s,ctx);
+let count=0;function test(name,fn){fn();count++;console.log('ok '+count+' - '+name)}
+const reset=()=>run('G=initialState()');
+const step=(n,setup='')=>run(`G.step=${n};${setup};performStep()`);
+test('selection requires reviewed source',()=>{reset();assert.equal(step(2),false)});
+test('asset requires selected booklet',()=>{reset();step(1);assert.equal(step(2,"G.selection=['plan']"),false)});
+test('gift requires recipient and explicit review',()=>{reset();step(1);step(2);assert.equal(step(3),false);assert.equal(step(3,'G.giftRights=true'),true)});
+test('private memory remains empty until acceptance',()=>{assert.equal(run('G.homeDocs.length'),0);assert.equal(step(4),false);assert.equal(step(4,'G.acceptGift=true'),true);assert.equal(run('G.homeDocs.length'),2)});
+test('accepted copies retain provenance without seller private data',()=>{assert.equal(run('G.homeObjects[0].warranty'),'Da verificare');assert.equal(run("'contacts' in G.manifest || 'expenses' in G.manifest"),false)});
+test('review does not duplicate acceptance',()=>{const before=run('G.events.length');step(4);assert.equal(run('G.events.length'),before);assert.equal(run('G.homeDocs.length'),2)});
+test('unit linking requires invitation review',()=>{assert.equal(step(6),false);assert.equal(step(7),false);step(6,'G.unitRights=true');assert.equal(step(7),true)});
+test('common publication requires review and remains separate',()=>{assert.equal(step(8),false);step(8,'G.publishRights=true');assert.equal(run('G.homeDocs.length'),2);assert.equal(run('G.published.version'),1);assert.equal(run('G.tasks.length'),0)});
+test('deferred proposal creates no personal task',()=>{step(9,"G.reminderChoice='Decidi più avanti'");assert.equal(run('G.tasks.length'),0)});
+test('confirmed reminder is created only once',()=>{run('G.done=G.done.filter(n=>n!==9)');step(9,"G.reminderChoice='Aggiungi alle mie attività'");step(9);assert.equal(run('G.tasks.length'),1)});
+test('same issue carries response back to Home',()=>{step(10);const id=run('G.issue.id');step(11,"G.replyText='Risposta di esempio'");assert.equal(run('G.issue.id'),id);assert.equal(run('G.issue.reply'),'Risposta di esempio');assert.equal(run("'documents' in G.issue"),false)});
+test('reset starts an independent fresh session',()=>{reset();assert.equal(run('G.step'),0);assert.equal(run('G.events.length+G.homeDocs.length+G.tasks.length'),0)});
+console.log(count+' tests passed');
