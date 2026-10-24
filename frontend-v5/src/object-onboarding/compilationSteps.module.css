@@ -1,0 +1,12 @@
+.stack { display: grid; gap: 1rem; min-width: 0; }
+.steps { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; padding: 0; }
+.steps button, .footer button, .directions label { min-height: 44px; white-space: normal; }
+.steps button { border: 1px solid currentColor; border-radius: .5rem; padding: .5rem .75rem; background: transparent; color: inherit; }
+.steps button[aria-current="step"] { font-weight: 700; outline: 2px solid currentColor; outline-offset: 2px; }
+.directions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.directions label:has(input:checked) { outline: 2px solid currentColor; outline-offset: 2px; }
+.footer { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1rem 0; background: var(--color-surface); border-top: 1px solid var(--color-border); }
+.panel { min-width: 0; overflow-wrap: anywhere; }
+.panel[hidden] { display: none; }
+.heading:focus { outline: 2px solid currentColor; outline-offset: 4px; }
+@media (max-width: 480px) { .footer > button { flex: 1 1 9rem; } .directions { flex-direction: column; } .steps { font-size: .875rem; } }

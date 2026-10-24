@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { FakeBackend, PNG_SIGNATURE } from '../src/test/fakeBackend.ts';
+import { seedCompilation } from '../src/test/fakeCompilation.ts';
 
 const REAL_API_PORT = 3001;
 const PORT = Number(process.env.MOCK_API_PORT ?? 3101);
@@ -19,6 +20,15 @@ if (PORT === REAL_API_PORT) {
 }
 
 const backend = new FakeBackend();
+let compilation: Awaited<ReturnType<typeof seedCompilation>> | undefined;
+
+if (process.argv.includes('--compilation')) {
+  const owner = backend.seedAccount('Collaudo schede', 'schede@example.test', 'password-schede-demo');
+  const home = backend.seedHome(owner.id, 'COLLAUDO SCHEDE · sintetico', 'Indirizzo sintetico');
+  compilation = await seedCompilation(backend, home.id, owner.id);
+  console.log('SOLO MOCK · schede@example.test / password-schede-demo · percorso UI:', compilation.path);
+  console.log('Conferme simulate in memoria, non creano schede canoniche. API non supportate rifiutate, nessun provider.');
+}
 
 if (process.argv.includes('--seed')) {
   const a = backend.seedAccount('Giulia Prova', 'a@example.test', 'password-di-prova-A');
@@ -188,13 +198,14 @@ const server = createServer((req, res) => {
     } catch {
       body = undefined;
     }
-    const out = await backend.handle({
+    const request = {
       method: req.method ?? 'GET',
       path: url.pathname.replace(/^\/api\/v5/, '') + url.search,
       headers,
       body,
       cookie: readCookie(req.headers.cookie),
-    });
+    };
+    const out = await compilation?.handle(request) ?? await backend.handle(request);
     const resHeaders: Record<string, string> = { 'Cache-Control': 'no-store', 'X-Dimora-Mock': '1' };
     if (out.setCookie !== undefined) {
       resHeaders['Set-Cookie'] =

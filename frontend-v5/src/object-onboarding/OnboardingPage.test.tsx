@@ -1,18 +1,25 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ApiClient } from '../api/client';
 import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
 import type { AiBudget, Draft, Form, FieldKey } from './model';
 import { choice, initialForm, houseExpenseTitle } from './model';
-async function world(options:{shortName?:boolean;objectSuggestion?:boolean;analysisSucceeded?:boolean;contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
+async function world(options:{manualMode?:boolean;savedDocumentOnly?:boolean;contactReview?:boolean;quantityTwo?:boolean;stepped?:boolean;fixedDocument?:boolean;threeRows?:boolean;shortName?:boolean;objectSuggestion?:boolean;analysisSucceeded?:boolean;contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
+ const uuid=options.fixedDocument?vi.spyOn(globalThis.crypto,'randomUUID').mockReturnValueOnce('11111111-2222-4333-8444-555555555555'):null;
  const doc=await backend.seedDocument({homeId:home.id,uploaderId:account.id,name:'Ordine sintetico'}),control=createFakeFetch(backend),api=new ApiClient({fetch:control.fetch});
+ uuid?.mockRestore();
  if(options.login!==false){await api.login({email:account.email,password});await api.getSession();}
  const wire:Draft={id:'draft-onboarding',version:1,state:'open',mode:'extraction',snapshot:{documentId:options.foreign?'other-document':doc.id,documentVersion:1,sha256:'a'.repeat(64)},document:{id:doc.id,name:doc.name,mimeType:'application/pdf'},documentKind:'delivery_notice',items:['Router demo','Speaker demo'].map((name,i)=>({id:'item'+i,nameTruncated:false,disposition:'household_object',fields:{name:{value:name,source:{documentId:doc.id,page:1,excerpt:name}}},quantity:null,profile:{brand:{value:'Lume',origin:'extraction_confirmed',sources:[{documentId:doc.id,page:1,excerpt:'Lume'}]}},enrichment:null,decision:null})),needsReview:false,purchaseTotal:null,review:null,permissions:['read','edit']};
+ if(options.manualMode)wire.mode='manual';
+ if(options.quantityTwo)wire.items[0]!.quantity={value:2};
+ if(options.savedDocumentOnly)wire.review={compilation:{saved:true,documentTitle:'Documento test',documentKind:'invoice',replaceOrganization:false,reuseCopy:false,documentOnly:true,manualTotal:'',contacts:[],houseForms:{}}};
+ if(options.threeRows)wire.items.push({...structuredClone(wire.items[1]!),id:'item2'});
  if(options.shortName){const item=wire.items[0]!;item.fullName='Router demo — '+ 'Descrizione commerciale documentata '.repeat(5)+'Modello ZX-82/B variante Blu 256 GB';item.fields.name!.source.excerpt=item.fullName;item.nameTruncated=true;item.profile.model={value:'ZX-82/B',origin:'extraction_confirmed',sources:[item.fields.name!.source]};wire.needsReview=true;wire.reviewWarnings=[{field:'item:0:name',reason:'unverified'}];}
  if(options.conformity){wire.documentKind='conformity_declaration';wire.items=[];wire.documentInfo={kind:'conformity_declaration',title:{value:'Dichiarazione di conformità',source:{documentId:doc.id,page:1,excerpt:'Dichiarazione di conformità'}},facts:[]};}
  if(options.contact)wire.contacts=[{id:'contact-proposal',values:{name:'Boreale Impianti',profession:'Elettricista',kind:'company',phone:'030 1234567',email:null,fiscalId:'12345678903',note:null},sources:{name:{documentId:doc.id,page:1,excerpt:'Impresa Boreale Impianti'}},warnings:[],resolution:{state:'create',contact:null,candidates:[],conflicts:[]},decision:null}];
+ if(options.contactReview&&wire.contacts)wire.contacts[0]!.resolution.state='review';
  if(options.purchase){wire.documentKind='purchase_document';wire.items=wire.items.slice(0,1);wire.items[0]!.profile.purchaseDate={value:'2025-06-13',origin:'extraction_confirmed',sources:[]};wire.purchaseTotal={amountCents:9999};}
  if(options.completePurchase){wire.items[0]!.fields.name!.value='Macchina caffe Boreale TestP17';for(const [key,value] of Object.entries({brand:'Boreale',model:'TestP17',reference:'BP17-REF',purchaseDate:'2026-04-18'}))wire.items[0]!.profile[key as FieldKey]={value,origin:'extraction_confirmed',sources:[]};wire.purchaseTotal={amountCents:12743};}
  if(options.reviewWarning){wire.needsReview=true;wire.purchaseExpenseReady=options.reviewWarning==='delivery';wire.reviewWarnings=options.reviewWarning==='unknown'?[]:[{field:'item:0:'+ (options.reviewWarning==='delivery'?'deliveredDate':'quantity'),reason:'unverified'}];}
@@ -32,7 +39,7 @@ async function world(options:{shortName?:boolean;objectSuggestion?:boolean;analy
   if(path.startsWith('/jobs/'))return Response.json({job:{id:'job1',state:'succeeded',draftId:wire.id,errorCode:null}});
   if(path.includes('/candidates')&&options.dynamicCandidates&&wire.items[0]?.decision?.state==='confirmed')return Response.json({items:[{id:'objectitem0',name:'Router demo',version:1,profile:{fields:{},unavailable:false},rooms:[],reason:'confirmed_item'}],nextCursor:null});
   if(path.includes('/candidates')&&options.clearCandidates)return Response.json({items:[],nextCursor:null});
-  if(path.includes('/candidates'))return Response.json({items:[{id:'existing1',name:'Speaker Studio',version:3,profile:{fields:{brand:{value:'Confirmed',origin:'user_declared',sources:[]}},unavailable:false},rooms:['Studio'],reason:'same_brand_model'}],nextCursor:null});
+  if(path.includes('/candidates'))return Response.json({items:[{id:'existing1',name:'Speaker Studio',version:3,profile:{fields:{brand:{value:'Confirmed',origin:'user_declared',sources:[]}},unavailable:false},rooms:['Studio'],reason:'same_brand_model'},...(options.quantityTwo?[{id:'existing2',name:'Secondo Speaker',version:4,profile:{fields:{},unavailable:false},rooms:['Studio'],reason:'same_brand_model'}]:[])],nextCursor:null});
   if(path.includes('/object-suggestions'))return Response.json({items:suggestedObject?[{ref:suggestedObject.ref,name:suggestedObject.name,reason:'supplier_and_description'}]:[]});
   if(path.includes('/expense-candidates'))return options.expenseFailure?Response.json({error:{code:'unavailable',message:'Unavailable'}},{status:503}):Response.json({items:options.duplicates?[{id:'expense1',title:'Acquisto già registrato',amountCents:9999,spentOn:'2025-06-13',version:2,rank:1}]:[],nextCursor:null});
   if(path.endsWith('/enrichment')){wire.items[0]!.profile.capacityLitres={value:'3.2',origin:'manufacturer_page',sources:[]};wire.version++;return Response.json({draft:wire});}
@@ -52,7 +59,7 @@ async function world(options:{shortName?:boolean;objectSuggestion?:boolean;analy
   if(path.startsWith('/drafts/')||path==='/manual-drafts')return Response.json({draft:wire});
   return Response.json({error:{code:'not_found',message:'Unknown'}},{status:404});
  };
- const app=renderApp({backend,fetch,path:'/home/'+home.id+'/documenti/'+doc.id+'/oggetti'+(options.start?'':'?bozza='+wire.id)+(options.compilation?(options.start?'?':'&')+'compila='+options.compilation:'')});
+ const app=renderApp({backend,fetch,path:'/home/'+home.id+'/documenti/'+doc.id+'/oggetti'+(options.start?'':'?bozza='+wire.id)+(options.compilation?(options.start?'?':'&')+'compila='+options.compilation:'')+(options.stepped?'&vista-compilazione=schede':'')});
  if(!options.compactList&&options.login!==false&&!options.foreign&&(!options.start||options.savedDraft)){await screen.findByRole('button',{name:'Rivedi Router demo'});await app.user.click(screen.getByRole('button',{name:'Rivedi Router demo'}));}
  return {...app,wire,calls,counts:()=>({confirmations,starts})};
 }
@@ -328,4 +335,118 @@ it('source mismatch never reveals the preserved extended name',async()=>{
  await waitFor(()=>expect(screen.queryByRole('region',{name:'Nome esteso del prodotto'})).not.toBeInTheDocument());
  expect(screen.queryByText(w.wire.items[0]!.fullName!)).not.toBeInTheDocument();
  expect(w.counts()).toEqual({confirmations:0,starts:0});
+});
+
+// The same routed owner and mock API exercise both renderers; no alternate serializer.
+describe('Compilazione a schede, confronto offline con la pagina unica',()=>{
+ async function next(w:Awaited<ReturnType<typeof world>>,heading:string){await w.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:heading});}
+ it('naviga senza scritture, mantiene i campi locali e torna a una riga esclusa',async()=>{
+  const w=await world({stepped:true,compilation:'ai',compactList:true});
+  await screen.findByRole('heading',{level:2,name:'Documento'});expect(screen.getByRole('heading',{level:2,name:'Documento'})).toHaveFocus();
+  await next(w,'Contenuto');await next(w,'Articolo 1');
+  await w.user.clear(screen.getByLabelText('Nome dell’oggetto'));await w.user.type(screen.getByLabelText('Nome dell’oggetto'),'Router modificato');
+  await w.user.click(screen.getByText('Completa dal sito del produttore e cerca il manuale'));await w.user.type(screen.getByLabelText('Pagina prodotto ufficiale (se necessaria)'),'https://example.test/router');
+  await w.user.click(screen.getByRole('button',{name:'Indietro'}));
+  const row=screen.getByRole('group',{name:/Articolo 1/});await w.user.click(within(row).getByRole('radio',{name:'Non riguarda la casa'}));
+  expect(screen.queryByRole('textbox',{name:'Nome dell’oggetto'})).not.toBeInTheDocument();
+  await w.user.click(within(row).getByRole('radio',{name:'Nuovo oggetto'}));await next(w,'Articolo 1');
+  expect(screen.getByLabelText('Nome dell’oggetto')).toHaveValue('Router modificato');expect(screen.getByLabelText('Pagina prodotto ufficiale (se necessaria)')).toHaveValue('https://example.test/router');
+  expect(w.calls.filter(c=>c.body)).toHaveLength(0);expect(w.counts().starts).toBe(0);
+  await w.user.click(screen.getByRole('button',{name:'Torna alla compilazione attuale'}));await screen.findByRole('region',{name:'Revisione unica del documento'});expect(screen.getAllByLabelText('Nome dell’oggetto')[0]).toHaveValue('Router modificato');expect(w.router.state.location.search).toContain('bozza=draft-onboarding');expect(w.router.state.location.search).toContain('compila=ai');expect(w.router.state.location.search).not.toContain('vista-compilazione');
+ });
+ it('il nome obbligatorio blocca solo il passo articolo e la bozza incompleta si può salvare',async()=>{
+  const w=await world({stepped:true,compilation:'ai',compactList:true});await screen.findByRole('heading',{level:2,name:'Documento'});
+  await next(w,'Contenuto');await next(w,'Articolo 1');fireEvent.change(screen.getByLabelText('Nome dell’oggetto'),{target:{value:''}});
+  await w.user.click(screen.getByRole('button',{name:'Avanti'}));expect(screen.getByRole('alert')).toHaveTextContent('indica il nome');
+  await w.user.click(screen.getByRole('button',{name:'Salva bozza ed esci'}));await waitFor(()=>expect(w.calls.some(c=>c.path.endsWith('/review'))).toBe(true));
+  expect(w.counts().confirmations).toBe(0);const body=w.calls.find(c=>c.path.endsWith('/review'))!.body as {review:{forms:Record<string,Form>}};
+  expect(body.review.forms.item0!.name).toBe('');expect(body).not.toHaveProperty('passo');
+ });
+ it('sei passaggi e payload completo identico per crea, collega e non riguarda la casa',async()=>{
+  async function execute(stepped:boolean){
+   const w=await world({stepped,fixedDocument:true,threeRows:true,compilation:'ai',compactList:true});
+   if(stepped){await screen.findByRole('heading',{level:2,name:'Documento'});await next(w,'Contenuto');
+    await w.user.click(within(screen.getByRole('group',{name:/Articolo 2/})).getByRole('radio',{name:'Collega a un oggetto'}));
+    await w.user.click(within(screen.getByRole('group',{name:/Articolo 3/})).getByRole('radio',{name:'Non riguarda la casa'}));
+    expect(screen.getByRole('navigation',{name:'Passaggi della compilazione'}).querySelectorAll('li')).toHaveLength(6);
+    await next(w,'Articolo 1');await next(w,'Articolo 2');await w.user.selectOptions(await screen.findByLabelText('Scheda da collegare'),'existing1');
+    await next(w,'Spese');await next(w,'Riepilogo');
+   }else{
+    await screen.findByRole('region',{name:'Revisione unica del documento'});
+    const rows=screen.getAllByRole('region',{name:/Articolo [123]$/});
+    await w.user.click(within(rows[1]!).getByLabelText('Collega a un oggetto già in casa'));await w.user.selectOptions(within(rows[1]!).getByLabelText('Scheda da collegare'),'existing1');
+    await w.user.click(within(rows[2]!).getByLabelText('Non riguarda questa casa'));
+   }
+   await w.user.click(screen.getByRole('button',{name:stepped?'Salva e continua':'Salva e organizza'}));
+   await waitFor(()=>expect(w.counts().confirmations).toBe(1));const body=structuredClone(w.calls.find(c=>c.path.endsWith('/confirmations'))!.body);w.unmount();w.queryClient.clear();return body;
+  }
+  const legacy=await execute(false),steps=await execute(true);expect(steps).toEqual(legacy);
+  expect(steps).toMatchObject({expectedVersion:2,source:{documentVersion:1,sha256:'a'.repeat(64)},choices:[{action:'create'},{action:'link',targets:[{id:'existing1',expectedVersion:3}]},{itemId:'item2',action:'skip'}]});
+ });
+ it('la bolletta passa direttamente a spese, con un unico costo e senza chiamate AI',async()=>{
+  const w=await world({stepped:true,compilation:'ai',compactList:true,documentCost:'bill'});await screen.findByRole('heading',{level:2,name:'Documento'});await next(w,'Spese');
+  expect(screen.queryByRole('button',{name:/Contenuto/})).not.toBeInTheDocument();await waitFor(()=>expect(screen.getByRole('button',{name:'Avanti'})).toBeEnabled());
+  await w.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:'Riepilogo'});
+  await w.user.click(screen.getByRole('button',{name:'Salva e continua'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));
+  expect(w.calls.find(c=>c.path.endsWith('/confirmations'))!.body).toMatchObject({choices:[],houseExpenses:[{itemId:'house-cost',action:'create',values:{amountCents:153720,competenceFrom:'2026-07-01',competenceTo:'2026-07-31'}}]});expect(w.counts().starts).toBe(0);
+ });
+ it('i doppioni non diventano assenza di spesa e richiedono una scelta prima del riepilogo',async()=>{
+  const w=await world({stepped:true,compilation:'ai',compactList:true,purchase:true,duplicates:true});await screen.findByRole('heading',{level:2,name:'Documento'});await next(w,'Contenuto');await next(w,'Articolo 1');await next(w,'Spese');
+  await screen.findByText(/Possibile doppione: scegli/);await w.user.click(screen.getByRole('button',{name:'Avanti'}));expect(screen.getByRole('alert')).toHaveTextContent('possibili doppioni');
+  await w.user.selectOptions(screen.getByLabelText('Cosa fare con il costo'),'link');await w.user.selectOptions(screen.getByLabelText('Spesa esistente'),'expense1');await next(w,'Riepilogo');
+  await w.user.click(screen.getByRole('button',{name:'Salva e continua'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));expect(w.calls.find(c=>c.path.endsWith('/confirmations'))!.body).toMatchObject({choices:[{expense:{action:'link',id:'expense1',expectedVersion:2}}]});
+ });
+ it('un controllo doppioni fallito non si converte in controllo riuscito',async()=>{
+  const w=await world({stepped:true,compilation:'ai',compactList:true,purchase:true,expenseFailure:true});await screen.findByRole('heading',{level:2,name:'Documento'});await next(w,'Contenuto');await next(w,'Articolo 1');await next(w,'Spese');await screen.findByText(/Non è stato possibile controllare i doppioni/);
+  await w.user.click(screen.getByRole('button',{name:'Avanti'}));expect(screen.getByRole('heading',{level:2,name:'Spese'})).toBeInTheDocument();expect(w.counts().confirmations).toBe(0);
+ });
+ it('una conferma incerta conserva la chiave e recupera la ricevuta senza nuovo POST',async()=>{
+  const w=await world({stepped:true,compilation:'ai',compactList:true,purchase:true,lost:true});await screen.findByRole('heading',{level:2,name:'Documento'});await next(w,'Contenuto');await next(w,'Articolo 1');await next(w,'Spese');await screen.findByText(/Spesa proposta dal documento/);await next(w,'Riepilogo');await w.user.click(screen.getByRole('button',{name:'Salva e continua'}));
+  await w.user.click(await screen.findByRole('button',{name:'Controlla l’esito'}));await screen.findByText('Conferma recuperata: nessun doppione.');expect(w.counts().confirmations).toBe(1);expect(w.counts().starts).toBe(0);
+ });
+});
+describe('Schede: documenti, contatti e quantità senza riduzioni del contratto',()=>{
+ async function next(w:Awaited<ReturnType<typeof world>>,heading:string){await w.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:heading});}
+ it('solo documento salvato riapre due schede e conferma senza oggetti, spese o contatti',async()=>{
+  const w=await world({stepped:true,compilation:'ai',compactList:true,savedDocumentOnly:true,contact:true});await screen.findByRole('heading',{level:2,name:'Documento'});
+  expect(screen.getByRole('navigation',{name:'Passaggi della compilazione'}).querySelectorAll('li')).toHaveLength(2);await next(w,'Riepilogo');await w.user.click(screen.getByRole('button',{name:'Salva documento'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));
+  const body=w.calls.find(c=>c.path.endsWith('/confirmations'))!.body;expect(body).toMatchObject({choices:[],documentOnly:true});expect(body).not.toHaveProperty('contacts');expect(body).not.toHaveProperty('houseExpenses');
+ });
+ it('i contatti hanno una scheda propria e la risoluzione ambigua blocca solo quel passo',async()=>{
+  const w=await world({stepped:true,compilation:'ai',compactList:true,contact:true,contactReview:true});await screen.findByRole('heading',{level:2,name:'Documento'});await next(w,'Contenuto');await next(w,'Articolo 1');await next(w,'Articolo 2');await next(w,'Spese');await next(w,'Contatti');
+  await w.user.click(screen.getByRole('button',{name:'Avanti'}));expect(screen.getByRole('alert')).toHaveTextContent('Scegli come gestire il contatto');
+  await w.user.click(screen.getByRole('checkbox',{name:'Confermo che è un nuovo contatto'}));await next(w,'Riepilogo');await w.user.click(screen.getByRole('button',{name:'Salva e continua'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));expect(w.calls.find(c=>c.path.endsWith('/confirmations'))!.body).toMatchObject({contacts:[{proposalId:'contact-proposal',action:'save',createDistinct:true}]});
+ });
+ it('due esemplari richiedono due target e conserva il collegamento passando da escluso a collega',async()=>{
+  const w=await world({stepped:true,compilation:'ai',compactList:true,quantityTwo:true});await screen.findByRole('heading',{level:2,name:'Documento'});await next(w,'Contenuto');
+  const row=screen.getByRole('group',{name:/Articolo 1/});await w.user.click(within(row).getByRole('radio',{name:'Collega a un oggetto'}));await next(w,'Articolo 1');await screen.findByLabelText('Scheda per esemplare 1');
+  await w.user.selectOptions(screen.getByLabelText('Scheda per esemplare 1'),'existing1');await w.user.click(screen.getByRole('button',{name:'Avanti'}));expect(screen.getByRole('alert')).toHaveTextContent('ogni esemplare');
+  await w.user.selectOptions(screen.getByLabelText('Scheda per esemplare 2'),'existing2');await w.user.click(screen.getByRole('button',{name:'Indietro'}));
+  await w.user.click(within(screen.getByRole('group',{name:/Articolo 1/})).getByRole('radio',{name:'Non riguarda la casa'}));await w.user.click(within(screen.getByRole('group',{name:/Articolo 1/})).getByRole('radio',{name:'Collega a un oggetto'}));await next(w,'Articolo 1');
+  expect(screen.getByLabelText('Scheda per esemplare 1')).toHaveValue('existing1');expect(screen.getByLabelText('Scheda per esemplare 2')).toHaveValue('existing2');
+  await next(w,'Articolo 2');await next(w,'Spese');await next(w,'Riepilogo');await w.user.click(screen.getByRole('button',{name:'Salva e continua'}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));expect(w.calls.find(c=>c.path.endsWith('/confirmations'))!.body).toMatchObject({choices:[{action:'link',targets:[{id:'existing1',expectedVersion:3},{id:'existing2',expectedVersion:4}]},{action:'create'}]});
+ });
+ it('i passi futuri non si raggiungono da tastiera e i pannelli precedenti sono nascosti e inert',async()=>{
+  const w=await world({stepped:true,compilation:'ai',compactList:true});await screen.findByRole('heading',{level:2,name:'Documento'});
+  const nav=screen.getByRole('navigation',{name:'Passaggi della compilazione'});expect(within(nav).getByRole('button',{name:'2. Contenuto'})).toBeDisabled();
+  await w.user.tab();expect(screen.getByRole('link',{name:/Vedi documento originale/})).toHaveFocus();await w.user.click(screen.getByRole('button',{name:'Avanti'}));expect(screen.getByRole('heading',{level:2,name:'Contenuto'})).toHaveFocus();expect(within(nav).getByRole('button',{name:'2. Contenuto'})).toHaveAttribute('aria-current','step');
+  const documentFields=screen.getByText('Ordine sintetico');expect(documentFields.closest('[hidden]')).toHaveAttribute('inert');expect(documentFields).not.toBeVisible();
+ });
+});
+it.each(['works','bill','service'] as const)('schede: parità integrale di body con spesa globale %s, contatti e compilazione manuale',async documentCost=>{
+ const currentLabel=documentCost==='works'?'Salva e organizza':'Registra spesa';
+ async function execute(stepped:boolean){
+  const w=await world({stepped,fixedDocument:true,documentCost,contact:true,manualMode:true,compilation:'manuale',compactList:true});
+  if(stepped){
+   await screen.findByRole('heading',{level:2,name:'Documento'});
+   for(const heading of [...(documentCost==='works'?['Contenuto','Articolo 1','Articolo 2']:[]),'Spese','Contatti','Riepilogo']){
+    await w.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:heading});
+   }
+   expect(screen.getByText(/Contatti da salvare in Rubrica: 1/)).toBeInTheDocument();
+  }else await screen.findByRole('button',{name:currentLabel});
+  await waitFor(()=>expect(screen.getByRole('button',{name:stepped?'Salva e continua':currentLabel})).toBeEnabled());
+  await w.user.click(screen.getByRole('button',{name:stepped?'Salva e continua':currentLabel}));await waitFor(()=>expect(w.counts().confirmations).toBe(1));
+  const body=structuredClone(w.calls.find(c=>c.path.endsWith('/confirmations'))!.body);w.unmount();w.queryClient.clear();return body;
+ }
+ const legacy=await execute(false),stepped=await execute(true);expect(stepped).toEqual(legacy);expect(stepped).not.toHaveProperty('manualPurchaseTotalCents');
 });
