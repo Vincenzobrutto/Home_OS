@@ -60,3 +60,5 @@ Il collaudo persistito e i suoi servizi temporanei preesistenti non sono un depl
 ## Prototipo promozionale — 24 ottobre 2026
 
 Prototipo separato dei tre profili implementato, 24 viste e simulazioni. Browser sui percorsi principali e vista mobile verificati; anteprime e limiti nel [report](v5/prototipo-promozionale-20261024.md). Branch codex/prototipo-promozionale-20261024, area prototypes/dimora-promo; nessun file runtime V5 modificato. Demo privata pubblicata; revisione del committente e merge al consolidamento ancora da decidere.
+
+Prototipo promozionale: correzione menu Home su richiesta del committente, 26 viste con Ambienti e Rubrica separati; verifica offline. PR #25 in aggiornamento.

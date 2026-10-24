@@ -23,3 +23,6 @@ Le bollette propongono solo spese; la garanzia non viene dedotta. Manifesto con 
 Non tutte le combinazioni o modali hanno collaudo browser. Ruoli/immobili usano fixture comuni, aggiornamenti solo di sessione; team, branding, integrazioni e piani restano anteprime dichiarate. Nessuna promessa di prodotto completo. Prossimo passo: revisione del committente su messaggio, semplicità e copertura, poi eventuale iterazione del prototipo. Merge della PR verso il consolidamento al committente.
 
 PR di consegna: https://github.com/Vincenzobrutto/Home_OS/pull/25 . Browser del sito pubblicato fermo al gate di accesso ChatGPT; il collaudo delle interazioni è stato eseguito sul server locale con gli stessi file. Accesso privato preservato.
+
+## Allineamento menu Home richiesto dal committente
+Menu principale ora identico alle SECTIONS di frontend-v5/src/components/AppShell.tsx: Casa, Oggetti e impianti, Ambienti, Attività, Documenti, Spese, Rubrica. Ambienti e Rubrica hanno viste distinte; le voci aggiuntive sono separate sotto Esplora anche - demo. Compatibilità degli URL precedenti preservata. Sintassi e rendering delle 26 viste verificati offline; nessun nuovo collaudo browser in questa correzione.

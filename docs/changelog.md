@@ -1716,3 +1716,6 @@ Aggiunti collaudo DB isolato e diagnostica in entrambi gli ordini, replay, ricar
 ### 2026-10-23 — acconto/saldo, revisione esplicita e costo unico
 
 Bloccati nuovi oggetti omonimi e seconda spesa non riconciliata nel percorso fattura. Nuova conferma manuale dello stesso acquisto, con costo complessivo inserito esplicitamente e un solo aggiornamento canonico/storico. Ricaricamenti e fonte privata/versione/SHA protetti; importi ambigui lasciati pendenti. [Correzione, test e limiti](v5/fase0-installments-fix-offline-20261023.md).
+
+## 24 ottobre 2026 - Menu promozionale Home allineato
+Voci e ordine delle sette sezioni dell'app reale ripristinati, Ambienti/Rubrica separati ed extra demo distinti. Report: v5/prototipo-promozionale-20261024.md.
