@@ -47,4 +47,6 @@ Riferimenti tecnici primari: [installazione locale](https://github.com/naptha/te
 
 ## Consegna
 
+Aggiornamento del collaudo browser: il committente ha approvato la PR, subordinando il merge al superamento della prova visiva. Il browser integrato ha rifiutato l'apertura di `http://127.0.0.1:5186/accedi`: un'autorizzazione salvata blocca quell'origine. Richiesto di aggiornare l'impostazione di navigazione; nessun tentativo su origini/browser alternativi o aggiramento della protezione. La prova resta non eseguita: **PR #26 non unita e app non aggiornata all'OCR**. API, PostgreSQL, dati e main invariati; nessun nuovo invio AI, migrazione o salvataggio automatico. Riprendere dall'origine mock autorizzata dopo la conferma dell'impostazione, non dal documento reale.
+
 Codice e verifiche nel commit `f826cd70ab8c1de01858708f13c00836a1813ca5`, pubblicato sul solo branch del lotto con hash verificato tramite `git ls-remote`. [PR #26](https://github.com/Vincenzobrutto/Home_OS/pull/26) aperta verso `codex/dimora-v5-consolidata-20261023`; nessun merge o aggiornamento dei servizi. Il seguito documentale registra soltanto la consegna, senza cambiare il prodotto verificato. Prossimo passo: revisione/decisione del committente, quindi collaudo browser controllato prima dell’uso ordinario.
