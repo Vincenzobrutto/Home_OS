@@ -26,3 +26,6 @@ PR di consegna: https://github.com/Vincenzobrutto/Home_OS/pull/25 . Browser del 
 
 ## Allineamento menu Home richiesto dal committente
 Menu principale ora identico alle SECTIONS di frontend-v5/src/components/AppShell.tsx: Casa, Oggetti e impianti, Ambienti, Attività, Documenti, Spese, Rubrica. Ambienti e Rubrica hanno viste distinte; le voci aggiuntive sono separate sotto Esplora anche - demo. Compatibilità degli URL precedenti preservata. Sintassi e rendering delle 26 viste verificati offline; nessun nuovo collaudo browser in questa correzione.
+
+## Revisione corrente: allineamento schermate
+Il report corrente di copertura, verifiche e limiti è prototipo-allineamento-v5-20261024.md. La demo ora include 27 viste e sette percorsi Home allineati; i conteggi e limiti precedenti sono storici.

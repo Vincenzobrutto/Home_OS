@@ -1719,3 +1719,6 @@ Bloccati nuovi oggetti omonimi e seconda spesa non riconciliata nel percorso fat
 
 ## 24 ottobre 2026 - Menu promozionale Home allineato
 Voci e ordine delle sette sezioni dell'app reale ripristinati, Ambienti/Rubrica separati ed extra demo distinti. Report: v5/prototipo-promozionale-20261024.md.
+
+## 24 ottobre 2026 - Schermate promozionali allineate alla V5
+Home con workflow Documenti, compilazione adattiva, oggetti/ambienti, attività, spese, Rubrica e storia coerenti con il consolidamento 2ab7570. Anteprime Partner separate, palette e navigazione mobile V5. 7/7 test e browser sui percorsi principali. Report: v5/prototipo-allineamento-v5-20261024.md.
