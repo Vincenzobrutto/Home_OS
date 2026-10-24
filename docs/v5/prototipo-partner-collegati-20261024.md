@@ -39,3 +39,6 @@ Dati fittizi e sessione in memoria: refresh azzera il percorso. Nessuna email, c
 Prossimo passo: revisione del committente sull'esperienza promozionale, eventuale iterazione nello stesso lotto. Merge PR #25 al committente.
 
 Controllo finale: collegamenti diretti alle nuove pagine risolti al caricamento (non soltanto da menu). Test aggiuntivo su Agenzia/Amministratore Passaggi e Home Consegne; totale corrente 18/18.
+
+## Pubblicazione e consegna
+Pubblicazione privata riuscita: https://dimora-esperienza-demo.vincenzo-b.chatgpt.site/#agency/Passaggi%20tra%20profili . Fonte Sites 1c1e488162ef1a1870cf1ef98dd77155051cccbb; pagina Passaggi verificata sul sito pubblicato anche dopo reload diretto. Fonte Home_OS del lotto ea455e1, PR #25 aggiornata; nessun merge eseguito.
