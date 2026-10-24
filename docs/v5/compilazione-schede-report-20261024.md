@@ -37,7 +37,7 @@ Una prima suite completa durante gli ultimi aggiornamenti ha riportato 889/891 e
 | 5 — validazione e bozza | Nome assente, problemi documento e contatto, costo pendente/fallito; salvataggio incompleto senza conferma; errori bozza certi e incerti con focus e recuperi distinti. Comando comune a tutti i passi; non simulata una persistenza reale. |
 | 6 — doppioni | Possibile doppione blocca l'avanzamento fino alla scelta; collegamento conserva id/versione. Errore di lookup non diventa lista vuota. I controlli/consensi del componente riusato restano invariati. |
 | 7 — accessibilità | Focus h2, aria-current, passi futuri disabilitati, tastiera, pannelli hidden/inert; prova automatica in jsdom. Lettore di schermo reale non provato. |
-| 8 — telefono 390 px | **Non verificato visivamente.** Riutilizzata la barra fissa del workspace, con spazio sopra la navigazione mobile e controlli minimi 44px. Browser integrato non usato per aggirare il precedente rifiuto di accesso all'origine mock. Overflow, tastiera virtuale e anteprima richiedono il collaudo visivo. |
+| 8 — telefono 390 px | **Parzialmente verificato.** Successivo browser applicativo: monoriga a390×844, controllo320×740, nessun overflow laterale e controlli44px. Anteprima PDF vuota anche nella pagina attuale; più articoli verificati in mock, non visivamente. Telefono fisico/tastiera virtuale non provati. Dettagli nel [collaudo mobile](compilazione-schede-collaudo-mobile-20261024.md). |
 | 9 — regressioni | Suite mock completa 898/898 e typecheck/lint/build superati. Asserzioni precedenti conservate, nessun timeout aumentato né retry automatico. |
 
 Le prove riguardano frontend e API simulate. Non dimostrano nuove proprietà della transazione backend: questa viene preservata riusando gli stessi callback, non rieseguita contro un database reale. Gli ulteriori casi documentali della matrice del piano non vengono dichiarati collaudati end-to-end su un browser.
@@ -62,7 +62,11 @@ npm run dev -- --port 5186 --strictPort
 
 La sola API simulata è stata avviata e chiusa per la prova HTTP protetta descritta sopra. La UI non è stata avviata per aggirare il blocco browser già incontrato. Prima del collaudo visivo serve l'accesso esplicito all'origine mock nel browser; non cambiare porta o browser per eludere un rifiuto. Non usare l'utenza reale Roma in questo simulatore.
 
-## Prossimo confronto con il committente
+## Ultimo collaudo e raccomandazione
+
+[Riscontro del 24 ottobre su mobile e più articoli](compilazione-schede-collaudo-mobile-20261024.md): dati caffè confermati dal committente; browser sulla5174 accessibile, percorso monoriga osservato a390px e controllo320px senza overflow orizzontale. Test mirati77/77 verdi, inclusi tre articoli e parità integrale del body; nessuna bozza multi-articolo già disponibile per il giro visivo senza scritture. Anteprima PDF vuota riprodotta anche nella pagina attuale. Audit dati/ledger/migrazioni invariato. Mantenere l'opt-in e il ritorno alla pagina unica; non dichiarare ancora concluso il criterio8 o ritirare il renderer precedente. Screenshot nel solo task, dettagli e limiti nel nuovo report.
+
+## Cronologia del confronto con il committente
 
 ### Aggiornamento frontend del collaudo applicativo, su incarico del committente
 

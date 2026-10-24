@@ -1,5 +1,7 @@
 ## 24 ottobre 2026 — Compilazione a schede in prova
 
+Collaudo successivo: mobile emulato390px e320px sul caffè, ritorni e dati conservati; test mirati multi-articolo77/77. Anteprima PDF vuota riprodotta anche nella pagina unica; nessuna bozza multi-articolo preesistente per il giro visivo senza scritture. Dati/ledger/migrazioni invariati. [Esito e raccomandazione](v5/compilazione-schede-collaudo-mobile-20261024.md): mantenere opt-in e pagina attuale, nessun merge o nuova AI.
+
 Ripristino successivamente autorizzato: cluster esistente e API protetta disponibili, sette worker disabilitati e sole letture/login/logout consentiti. Bozza caffè open e impronte di dati, ledger e migrazioni invariate; predisposta apertura con vista a schede, rendering ancora da verificare dal committente. Nessuna nuova AI, migrazione o salvataggio automatico.
 
 Su successivo incarico, predisposto e avviato soltanto il frontend del collaudo applicativo5174 con le schede opt-in già implementate e proxy fisso all'API protetta3011. API e database non in ascolto: nessuna prova applicativa end-to-end dichiarata. Nessun cambio di renderer predefinito, merge, nuova AI o dato salvato; perimetro e blocco nel report.
