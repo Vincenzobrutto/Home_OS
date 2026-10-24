@@ -43,3 +43,6 @@ Prossimo passo: valutazione del committente sull'esperienza aggiornata; eventual
 
 ## Consegna
 Pubblicazione privata riuscita: https://dimora-esperienza-demo.vincenzo-b.chatgpt.site . Commit fonte Sites 33df57066c5f4edcd3d250ae6d173d6bdf8142ed. Schermata Documenti verificata anche sul sito pubblicato, con le sette sezioni, stati e famiglie aggiornati. Fonte Home_OS del lotto 4f8ba4c; PR #25 aggiornata, nessun merge eseguito.
+
+## Evoluzione successiva
+Il completamento dei Partner e dei passaggi collegati è descritto in prototipo-partner-collegati-20261024.md. Stato corrente 31 viste, 17 test e memorie separate per immobile; i precedenti conteggi e il limite di fixture condivise sono storici.

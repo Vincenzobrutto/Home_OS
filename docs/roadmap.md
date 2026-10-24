@@ -61,3 +61,5 @@ Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a paga
 Prototipo separato dei tre profili implementato, 24 viste e simulazioni. Browser sui percorsi principali e vista mobile verificati; anteprime e limiti nel [report](v5/prototipo-promozionale-20261024.md). Branch codex/prototipo-promozionale-20261024, area prototypes/dimora-promo; nessun file runtime V5 modificato. Demo privata pubblicata; revisione del committente e merge al consolidamento ancora da decidere.
 
 Allineamento prototipo Home completato sul branch della PR #25; revisione/merge al committente. Partner e scenari restano concept espliciti. Matrice: v5/prototipo-allineamento-v5-20261024.md.
+
+Prototipo Partner collegati completato nella PR #25; nuova revisione del committente. 31 viste e passaggi selettivi con Home verificati in simulazione. Report: v5/prototipo-partner-collegati-20261024.md.

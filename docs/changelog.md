@@ -1722,3 +1722,6 @@ Voci e ordine delle sette sezioni dell'app reale ripristinati, Ambienti/Rubrica 
 
 ## 24 ottobre 2026 - Schermate promozionali allineate alla V5
 Home con workflow Documenti, compilazione adattiva, oggetti/ambienti, attività, spese, Rubrica e storia coerenti con il consolidamento 2ab7570. Anteprime Partner separate, palette e navigazione mobile V5. 7/7 test e browser sui percorsi principali. Report: v5/prototipo-allineamento-v5-20261024.md.
+
+## 24 ottobre 2026 - Profili Partner collegati a Home nel prototipo
+Agenzia e Amministratore navigabili con stato di sessione e passaggi selettivi: Gift, invito unità, pubblicazione versionata, proposte personali e segnalazioni/risposte. Memorie personali separate per immobile e nuovo proprietario. 31 viste, 17/17 test, browser sui percorsi principali e mobile. Report: v5/prototipo-partner-collegati-20261024.md. Nessun runtime V5 modificato.
