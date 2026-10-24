@@ -1,5 +1,7 @@
 ## 24 ottobre 2026 — Anteprima PDF nel browser integrato
 
+**Corretto per la compilazione onboarding** nel commit0b9b6fc: riusato il renderer locale PdfPreview anziché OBJECT nativo. Originale visibile a390px, zoom e rotazione verificati; errori di accesso non montano il renderer e il download resta unico. [Report e verifiche](v5/compilazione-schede-pdf-fix-20261024.md). Resta aperto il giro visivo mock multi-articolo per il diniego5186; nessuna modifica alle protezioni. La riproduzione sottostante descrive il comportamento precedente alla correzione.
+
 Durante il [collaudo mobile a schede](v5/compilazione-schede-collaudo-mobile-20261024.md), originale PDF vuoto a390px sia nel nuovo percorso sia nella pagina unica: OBJECT application/pdf con sorgente blob, contenitore apribile/richiudibile. Riproduzione osservata, causa non accertata; non attribuita alle schede e non generalizzata ai browser dei clienti. Diagnosticare compatibilità del visualizzatore senza nuovi invii AI, upload o scritture sui dati. Prova visiva multi-articolo e tastiera virtuale restano distinte. Nessuna correzione di prodotto in questo collaudo.
 
 **Tranche autonoma verificata:** [editor/presentazione R03](v5/fase0-editor-write-presentation-refactor-20261023.md), mock finale 860/860 e backend 496/496 HTTP/DB sintetici. [Chiusura, misure e opportunità residue](v5/fase0-refactor-closure-20261023.md): nessuna promozione del gate AI o nuovo branch impliciti.

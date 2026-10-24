@@ -1,5 +1,7 @@
 ## 24 ottobre 2026 — Compilazione a schede in prova
 
+Corretto l’originale PDF della compilazione standalone riusando PdfPreview locale: nessuna dipendenza dal visualizzatore nativo, stesso accesso ai byte e un solo download. Due regressioni su autorizzazione/assenza di scritture, mirati71/71, typecheck/lint/build e mock completa900/900 in108 file verdi, nessun test saltato e retry0. PDF osservato su mobile con zoom/rotazione; prova visiva mock multi-articolo ancora negata dal browser5186. [Report finale della correzione](v5/compilazione-schede-pdf-fix-20261024.md), nessuna nuova AI o salvataggio sul reale.
+
 Collaudo successivo: mobile emulato390px e320px sul caffè, ritorni e dati conservati; test mirati multi-articolo77/77. Anteprima PDF vuota riprodotta anche nella pagina unica; nessuna bozza multi-articolo preesistente per il giro visivo senza scritture. Dati/ledger/migrazioni invariati. [Esito e raccomandazione](v5/compilazione-schede-collaudo-mobile-20261024.md): mantenere opt-in e pagina attuale, nessun merge o nuova AI.
 
 Ripristino successivamente autorizzato: cluster esistente e API protetta disponibili, sette worker disabilitati e sole letture/login/logout consentiti. Bozza caffè open e impronte di dati, ledger e migrazioni invariate; predisposta apertura con vista a schede, rendering ancora da verificare dal committente. Nessuna nuova AI, migrazione o salvataggio automatico.

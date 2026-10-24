@@ -2,6 +2,8 @@
 
 24 ottobre 2026. Seguito del [report del lotto](compilazione-schede-report-20261024.md), PR #23. Codice di prodotto invariato rispetto a `3ba9835`; aggiornamenti di questa sessione soltanto documentali. Nessun merge.
 
+Aggiornamento successivo a questo riscontro: [anteprima PDF corretta e verificata](compilazione-schede-pdf-fix-20261024.md), mock completa900/900 e controlli statici/build verdi. Il difetto PDF descritto qui è risolto per la compilazione; resta bloccato dal browser il giro visivo mock multi-articolo. I paragrafi sottostanti documentano il collaudo precedente alla correzione.
+
 ## Esito per la decisione
 
 **Mantenere per ora le schede disponibili in prova e la pagina attuale come alternativa. Non dichiarare concluso il collaudo né ritirare definitivamente il renderer precedente.** Il percorso monoriga è stato osservato nel browser mobile emulato, mentre quello con più articoli è verificato nei test mock ma non visivamente. L'anteprima PDF risulta vuota nel browser integrato anche con la pagina attuale: problema riprodotto, non una regressione attribuita alle schede e non ancora diagnosticato nella causa.
