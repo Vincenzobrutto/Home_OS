@@ -24,6 +24,10 @@ Lotto separato [prezzi e date](v5/prezzi-date-20261023.md): implementato e verif
 
 Lotto separato [oggetti e stanze](v5/oggetti-stanze-20261023.md): specificità per occorrenza, varianti generiche del vocabolario e compatibilità dei tipi stanza. Suggerimenti da confermare; nessuna deduzione di marca/modello o ubicazione. Verificati typecheck/lint/build e mock completa 870/870 (105 file); esiti e limiti nel report, PR verso il consolidamento con merge al committente. Esclusi lotti Cestino, AI e DB reale.
 
+## Compilazione del documento a schede
+
+[Proposta UX/UI](v5/compilazione-a-schede-proposta-20261024.md) del 24/10 su richiesta del committente: una decisione per scheda (Documento, Contenuto, Articoli, Spese, Contatti, Riepilogo) al posto della pagina unica, con un solo salvataggio atomico finale. Solo frontend, nessuna API nuova; lotto di implementazione da assegnare dopo l'approvazione.
+
 ## Evolutive proposte, in ordine
 
 1. Cestino ed eliminazione dati: [progetto con le scelte del committente del 22/10](v5/fase0-deletion-design-20261022.md), da dividere in lotti (modello/backend, pagina Cestino, backup). Solo progetto, nessun codice.
