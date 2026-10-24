@@ -2,6 +2,12 @@
 
 24 ottobre 2026, seguito del [collaudo mobile](compilazione-schede-collaudo-mobile-20261024.md). PR #23, nessun merge. Estensione dell'area registrata prima del codice nel commit `b1d3476`; correzione e test nel commit `0b9b6fc`.
 
+## Esito aggiornato — demo manuale confermata dal committente
+
+Il 24 ottobre, dopo aver completato la demo sintetica, il committente ha risposto «sì» alla checklist esplicita: tre schede distinte e dati conservati tornando indietro; esclusione accessorio con riepilogo di due oggetti proposti e nessuna nuova spesa; PDF e pulsanti visibili/utilizzabili anche a finestra stretta. **Demo manuale multi-articolo superata su conferma del committente**, non osservata dal browser automatico di Codex. La misura390/320px resta quella del precedente collaudo monoriga; non attribuita alla finestra manuale una dimensione esatta non rilevata.
+
+Raccomandazione aggiornata: le schede sono adatte a diventare la vista predefinita, mantenendo inizialmente il ritorno alla pagina unica. La conferma della checklist non è interpretata come approvazione della PR23, incarico di cambiare il default o autorizzazione al merge: il codice resta opt-in. Nessun nuovo test automatico necessario per questa sola registrazione; restano900/900 e typecheck/lint/build verdi sul codice0b9b6fc. Nessun nuovo accesso al reale, salvataggio, AI o migrazione in questa sessione documentale. Telefono fisico/tastiera virtuale non provati.
+
 ## Correzione implementata e osservata
 
 L'originale della compilazione standalone usava un elemento OBJECT application/pdf, dipendente dal visualizzatore nativo del browser. Il precedente collaudo aveva osservato il riquadro bianco sia nella pagina unica sia nelle schede. Ora Original in OnboardingPage riusa il componente PdfPreview già presente in Dimora: PDF.js, byte autorizzati e worker/risorse locali. Non modificato il renderer condiviso, né aggiunte librerie, visualizzatori esterni o servizi.
@@ -18,7 +24,7 @@ Due regressioni aggiunte nel router mock: byte PDF autorizzati al renderer local
 
 Mirati OnboardingPage e PdfPreview: **71/71 superati**, due worker, retry0 e guardie offline. Typecheck, lint e build superati; build Vite11,30s. Suite mock completa finale: **900/900 test,108/108 file, nessun test saltato,664,94s, verde** sul codice0b9b6fc. Due worker e retry0; nessuna asserzione o timeout modificati. Asserzioni precedenti invariate; nessun test DB/HTTP reale o migrazione.
 
-## Più articoli nel mock: prova visiva ancora bloccata
+## Cronologia — tentativo automatico sul mock bloccato
 
 Avviati soltanto API simulata3101 e frontend5186, con ambiente sanificato e guardia di rete limitata alle due porte. Il simulatore fornisce tre proposte sintetiche già presenti, senza estrazione, database o fallback reale. Tentata una sola apertura diretta della stessa origine già autorizzata, senza cambiare porta, browser o policy.
 
@@ -32,6 +38,6 @@ Nel successivo collaudo manuale il committente ha segnalato pagina bianca sulla5
 
 Successivo incarico del committente: preparare la prova manuale nel browser, senza un nuovo tentativo di navigazione dell'agente. Riavviati soltanto mock3101 e UI5186 con guardie offline e ambiente sanificato; identità dei processi e ascolto loopback verificati. Codice dalla punta8896dae, nessuna nuova modifica di prodotto. Consegnati account solo sintetico, link diretto e percorso crea/crea/escludi, ritorni, anteprima e riepilogo. I processi mock sono lasciati disponibili per il committente; stato effettivo nel work del task, dati esclusivamente in memoria. **Esito visivo manuale ancora atteso**, nessuna approvazione o sostituzione della pagina attuale dedotta dalla preparazione. Nessun accesso o salvataggio sul reale in questo avvio; nessuna nuova AI.
 
-**Anteprima corretta; non ritirare ancora definitivamente la pagina attuale.** Mantenere l'opt-in e il ritorno alla pagina unica finché la prova visiva multi-articolo richiesta è eseguibile. Il limite residuo non è un difetto dimostrato del flusso a schede: è una verifica incompleta per il diniego del browser. Nessun merge o cambio del default implicito in questa correzione.
+**Raccomandazione corrente dopo la conferma manuale: promuovere le schede a vista predefinita conservando inizialmente il ritorno alla pagina unica.** Il precedente blocco del browser automatico non viene presentato come prova completata da Codex: il giro multi-articolo è stato eseguito e confermato dal committente. Default invariato in questo branch; decisione su modifica e merge al committente. Non proposta la rimozione immediata del renderer precedente.
 
 Audit finale READ ONLY esplicitamente autorizzato dal committente: conteggi e impronte di dati, bozze, job, ledger e migrazioni identici al riferimento precedente. Invariati5 oggetti,9 spese,12 stanze,1 contatto,30 documenti,22 bozze,14 job della casa e71 tentativi del ledger; bozza caffè ancora open. Il primo tentativo di audit era stato rifiutato dalla revisione automatica per accesso al DB reale tramite configurazione esistente: non aggirato; eseguito soltanto dopo il consenso specifico successivo del committente. Runtime con tutti e sette i worker di servizio disattivati e scritture server bloccate salvo login/logout; nessun salvataggio sul reale, nuova AI, modifica .env o migrazione autorizzati da questo lotto.
