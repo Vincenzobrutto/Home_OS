@@ -2,6 +2,8 @@
 
 Diagnosi Samsung v30 del 24 ottobre: [esito offline](v5/samsung-protocollo-diagnosi-20261024.md). Schema nel sottoinsieme documentato controllato, preflight non probanti per la compilazione; 316/316 onboarding, build/lint verdi. Causa del secondo HTTP400 ancora aperta; nessuna modifica speculativa di prodotto o ulteriore AI. Il prossimo passo richiede un metodo diagnostico verificabile, preservando privacy e ledger.
 
+Estensione autonoma completata: [chiusura del collaudo offline e azioni utente](v5/collaudo-chiusura-offline-20261024.md). Nuovi 498/498 HTTP/DB e mock completa 870/870, build/lint/typecheck verdi. Dossier tecnico per il provider pronto, non inviato; il 400 non identifica da solo lo schema come causa e vanno controllati anche i limiti provider. Prova visiva nel browser non eseguita per rifiuto dell'accesso al nuovo mock. Nessun merge, AI o dato reale modificato; verifica remota Samsung e revisione delle proposte reali restano aperte.
+
 Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedente è conservata integralmente nell’[archivio del 23 ottobre](roadmap-history-20261023.md), inclusi checkpoint e decisioni dei diversi agenti. I suoi esiti descrivono la data del singolo lotto. [Stato verificato](project-status.md), [backlog completo](backlog.md), [architettura](architecture.md).
 
 ## Manutenzione autorizzata in corso
