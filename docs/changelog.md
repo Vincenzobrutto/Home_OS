@@ -1,6 +1,6 @@
 ## 24 ottobre 2026 — Schede predefinite, pagina unica disponibile
 
-Su incarico esplicito dopo la demo manuale, la compilazione apre le schede senza parametro di vista. «Torna alla pagina unica» conserva il confronto tramite `vista-compilazione=unica`; cambio e ritorno mantengono campi locali, documento, bozza e modalità senza salvare. Nessuna modifica a conferma, validazioni o payload; quattro confronti integrali con la pagina unica. Typecheck/lint/build e mock completa 910/910 in 108 file verdi, nessun test saltato e retry0. [Report corrente](v5/compilazione-schede-default-20261024.md). Nessuna AI o accesso al DB/API reale; PR #23 aggiornata, nessun merge.
+Su incarico esplicito dopo la demo manuale, la compilazione apre le schede senza parametro di vista. «Torna alla pagina unica» conserva il confronto tramite `vista-compilazione=unica`; cambio e ritorno mantengono campi locali, documento, bozza e modalità senza salvare. Nessuna modifica a conferma, validazioni o payload; quattro confronti integrali con la pagina unica. Typecheck/lint/build e mock completa 910/910 in 108 file verdi, nessun test saltato e retry0. [Report corrente](v5/compilazione-schede-default-20261024.md). Nessuna AI o accesso al DB/API reale; PR #23 approvata dal committente per il merge nel consolidamento; registrazione finale soltanto documentale, prodotto e test invariati.
 
 ### Cronologia del collaudo precedente
 

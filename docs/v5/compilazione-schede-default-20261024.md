@@ -1,6 +1,6 @@
 # Compilazione a schede predefinita, pagina unica disponibile
 
-24 ottobre 2026. Seguito della demo multi-articolo confermata dal committente e del suo incarico esplicito di cambiare la vista predefinita. Stesso lotto e [PR #23](https://github.com/Vincenzobrutto/Home_OS/pull/23), verso `codex/dimora-v5-consolidata-20261023`. Nessun merge. Registrazione preventiva `9179a83`; codice e test `61f4a37a8dc44f07be0493b28fd133b0644cfb18`, ulteriore test di ingresso aggiornato in `9fa80369561b335d3e83be1b2be61eb3af23062c`.
+24 ottobre 2026. Seguito della demo multi-articolo confermata dal committente e del suo incarico esplicito di cambiare la vista predefinita. Stesso lotto e [PR #23](https://github.com/Vincenzobrutto/Home_OS/pull/23), verso `codex/dimora-v5-consolidata-20261023`. Report precedente all’approvazione, aggiornata sotto. Registrazione preventiva `9179a83`; codice e test `61f4a37a8dc44f07be0493b28fd133b0644cfb18`, ulteriore test di ingresso aggiornato in `9fa80369561b335d3e83be1b2be61eb3af23062c`.
 
 ## Comportamento
 
@@ -29,3 +29,7 @@ I comandi sono eseguiti con `cleanEnvironment` e le guardie offline del reposito
 La demo sintetica a tre articoli è stata completata dal committente prima di questa modifica: dati conservati tornando indietro, esclusione accessorio con due oggetti proposti e nessuna nuova spesa, PDF e comandi usabili a finestra stretta. La precedente osservazione Codex riguarda monoriga a 390/320 px e PDF locale con zoom/rotazione. Non viene dichiarata una nuova prova visiva del default né una prova su telefono fisico/tastiera virtuale o lettore di schermo reale. [Dettagli e provenienza delle verifiche](compilazione-schede-pdf-fix-20261024.md).
 
 Nessuna AI, email, lettura o scrittura del database reale, upload, migrazione o modifica di `.env` in questo aggiornamento. Nessun riavvio del reale né alterazione delle protezioni del browser; nessun salvataggio automatico. Main, consolidamento e lotto Claude non modificati. Prossimo passo: valutazione e approvazione del merge da parte del committente; non rimuovere il ritorno alla pagina unica.
+
+## Approvazione e chiusura del lotto
+
+Il 24 ottobre il committente approva la PR #23 e la sua integrazione in codex/dimora-v5-consolidata-20261023. Approvata la punta8200ff8; questa registrazione successiva modifica soltanto stato, roadmap, changelog e report. Nessuna variazione al codice61f4a37 o ai test9fa8036 verificati910/910, quindi nessuna nuova esecuzione necessaria. Merge ordinario su GitHub con controllo della punta e verifica finale tramite git ls-remote; nessun rebase, force push, cancellazione di branch/worktree o intervento su main/dati applicativi. Il lotto si chiude con l’integrazione; il ritorno alla pagina unica resta disponibile. La precedente indicazione di approvazione pendente è storica.
