@@ -10,6 +10,8 @@ import { Banner, cx } from './ui';
 import styles from './AppShell.module.css';
 import { EmailVerificationNotice } from './EmailVerificationNotice';
 import { contactNavigationState } from '../contacts/navigation';
+import { useTrash } from '../documents/trash';
+import trashStyles from '../documents/trash.module.css';
 
 export type SectionId = 'casa' | 'oggetti' | 'ambienti' | 'attivita' | 'documenti' | 'spese' | 'rubrica';
 
@@ -96,6 +98,7 @@ export function AppShell(props: { account: Account; home?: Home; children: React
               La tua casa
             </span>
             <SectionNav home={home} accountId={props.account.id} variant="side" />
+            <TrashLink home={home} accountId={props.account.id} />
             <div className={styles.sideFooter}>
               <strong>{home.name}</strong>
               <Link to="/case">Cambia casa</Link>
@@ -157,6 +160,13 @@ function SectionNav({ home, accountId, variant, onNavigate }: { home: Home; acco
   );
 }
 
+/** Discreet entry: shown only when the caller's own trash is not empty; never in the bottom bar. */
+function TrashLink({ home, accountId, onNavigate }: { home: Home; accountId: string; onNavigate?: () => void }) {
+  const trash = useTrash(accountId, home.id), items = trash.data?.items, count = Array.isArray(items) ? items.length : 0;
+  if (!count) return null;
+  return <Link to={`/home/${encodeURIComponent(home.id)}/cestino`} onClick={onNavigate} className={trashStyles.sideLink}>Cestino ({count})</Link>;
+}
+
 function MobileSectionMenu({id,home,accountId,onClose}:{id:string;home:Home;accountId:string;onClose:()=>void}){
  const panel=useRef<HTMLDivElement>(null),title=useId();
  useEffect(()=>{
@@ -180,6 +190,7 @@ function MobileSectionMenu({id,home,accountId,onClose}:{id:string;home:Home;acco
    <header className={styles.menuHeader}><h2 id={title}>Menu</h2><button type="button" className={styles.logout} onClick={onClose}>Chiudi menu</button></header>
    <p className={styles.menuHome}>{home.name}</p>
    <SectionNav home={home} accountId={accountId} variant="menu" onNavigate={onClose}/>
+   <TrashLink home={home} accountId={accountId} onNavigate={onClose}/>
   </div>
  </div>,document.body);
 }

@@ -54,6 +54,11 @@ type StoredDocument = {
   createdAt: string;
   sha256: string;
   visibility: DocumentVisibility;
+  /** Cestino (lotto 2): nel cestino il documento è invisibile ovunque; purged = eliminato definitivamente. */
+  trashedAt?: string;
+  purgeAfter?: string;
+  purged?: boolean;
+  lifecycleVersion?: number;
 };
 
 export const FAKE_MAX_UPLOAD = 20 * 1024 * 1024;
@@ -286,6 +291,9 @@ export class FakeBackend {
     const capsMatch = /^\/homes\/([^/]+)\/document-search-capabilities$/.exec(path);
     if (capsMatch && method === 'GET') return this.searchCapabilities(account.id, decodeURIComponent(capsMatch[1]!));
 
+    const trashMatch = /^\/homes\/([^/]+)\/(?:documents\/([^/]+)\/trash|trash(?:\/documents\/([^/]+)\/(restore|purge)|\/(empty))?)$/.exec(path.split('?')[0]!);
+    if (trashMatch) return this.routeTrash(req, account.id, decodeURIComponent(trashMatch[1]!), trashMatch);
+
     const docMatch = /^\/homes\/([^/]+)\/documents(?:\/([^/]+))?(\/file)?$/.exec(path.split('?')[0]!);
     if (docMatch) {
       if (!this.documentsEnabled) return err(404, 'not_found', 'Risorsa non trovata.');
@@ -383,6 +391,75 @@ export class FakeBackend {
     return { status: 201, body: { home } };
   }
 
+  // ---- cestino dei documenti (contratto in docs/v5/documents-api-contract.md) ----
+  /** Anteprima d'impatto restituita per documento (default: nessun collegamento). */
+  trashImpact = new Map<string, { expenses: number; objects: number; contacts: number; historyEvents: number; activeShares: number }>();
+  /** Motivo di rifiuto dell'anteprima e dello spostamento (es. analisi in corso). */
+  trashBlocked = new Map<string, string>();
+  private trashRequests = new Map<string, { digest: string; response: FakeResponse }>();
+  /** Orologio del cestino, separato da quello dei caricamenti. */
+  trashNow = () => Date.parse('2026-10-23T10:00:00Z');
+
+  private trashEntry(doc: StoredDocument) {
+    return { kind: 'document' as const, id: doc.id, name: doc.name, trashedAt: doc.trashedAt!, purgeAfter: doc.purgeAfter!, version: doc.lifecycleVersion ?? 1 };
+  }
+
+  private routeTrash(req: FakeRequest, accountId: string, homeId: string, match: RegExpExecArray): FakeResponse {
+    const perms = this.homePerms(accountId, homeId);
+    if (!perms) return err(403, 'forbidden', 'Accesso non consentito.');
+    const [, , previewId, entryId, op, empty] = match;
+    if (req.method === 'GET' && !previewId && !entryId && !empty) {
+      const items = [...this.documents.values()].filter(d => d.homeId === homeId && d.uploaderId === accountId && d.trashedAt && !d.purged)
+        .sort((a, b) => b.trashedAt!.localeCompare(a.trashedAt!)).map(d => this.trashEntry(d));
+      return { status: 200, body: { items } };
+    }
+    if (req.method === 'GET' && previewId) {
+      const doc = this.documents.get(decodeURIComponent(previewId));
+      if (!perms.includes('edit') || !doc || doc.homeId !== homeId || doc.uploaderId !== accountId || doc.trashedAt) return err(403, 'forbidden', 'Accesso non consentito.');
+      const reason = this.trashBlocked.get(doc.id) ?? null;
+      return { status: 200, body: { allowed: !reason, reason, document: { id: doc.id, version: 1 }, impact: this.trashImpact.get(doc.id) ?? { expenses: 0, objects: 0, contacts: 0, historyEvents: 0, activeShares: 0 } } };
+    }
+    if (req.method !== 'POST') return err(404, 'not_found', 'Risorsa non trovata.');
+    if (!perms.includes('edit')) return err(403, 'forbidden', 'Accesso non consentito.');
+    const key = req.headers['idempotency-key'];
+    if (!key) return err(422, 'validation_error', 'Chiave di richiesta non valida.');
+    const operation = previewId ? 'trash' : empty ? 'empty' : op!, target = decodeURIComponent(previewId ?? entryId ?? homeId);
+    const ledger = [accountId, homeId, operation, target, key].join('|'), digest = JSON.stringify(req.body ?? {});
+    const prior = this.trashRequests.get(ledger);
+    if (prior) return prior.digest === digest ? prior.response : err(409, 'idempotency_conflict', 'La chiave è già usata per un’altra richiesta.');
+    const response = this.trashOperation(operation, accountId, homeId, target, req.body as { expectedVersion?: number } | undefined);
+    if (response.status < 400) this.trashRequests.set(ledger, { digest, response });
+    return response;
+  }
+
+  private trashOperation(operation: string, accountId: string, homeId: string, target: string, body: { expectedVersion?: number } | undefined): FakeResponse {
+    const now = this.trashNow();
+    if (operation === 'empty') {
+      const docs = [...this.documents.values()].filter(d => d.homeId === homeId && d.uploaderId === accountId && d.trashedAt && !d.purged);
+      for (const d of docs) d.purged = true;
+      return { status: 200, body: { purged: docs.length } };
+    }
+    const doc = this.documents.get(target);
+    if (!doc || doc.homeId !== homeId || doc.uploaderId !== accountId) return err(403, 'forbidden', 'Accesso non consentito.');
+    if (operation === 'trash') {
+      if (doc.trashedAt) return err(409, 'document_in_trash', 'Il documento è già nel cestino.');
+      if (body?.expectedVersion !== 1) return err(409, 'document_version_conflict', 'Il documento è cambiato. Riapri la sua scheda.');
+      const blocked = this.trashBlocked.get(doc.id);
+      if (blocked) return err(409, 'document_busy', blocked);
+      doc.trashedAt = new Date(now).toISOString(); doc.purgeAfter = new Date(now + 30 * 86_400_000).toISOString(); doc.lifecycleVersion = (doc.lifecycleVersion ?? 1) + 1;
+      return { status: 200, body: { entry: this.trashEntry(doc), revokedShares: this.trashImpact.get(doc.id)?.activeShares ?? 0 } };
+    }
+    if (!doc.trashedAt || doc.purged) return err(409, 'document_not_in_trash', 'Il documento non è nel cestino.');
+    if (body?.expectedVersion !== doc.lifecycleVersion) return err(409, 'trash_version_conflict', 'Il cestino è cambiato. Ricarica la pagina.');
+    if (operation === 'restore') {
+      if (Date.parse(doc.purgeAfter!) <= now) return err(409, 'trash_expired', 'Il documento è scaduto e sta per essere eliminato definitivamente.');
+      doc.trashedAt = undefined; doc.purgeAfter = undefined; doc.lifecycleVersion = (doc.lifecycleVersion ?? 1) + 1;
+      return { status: 200, body: { restored: true, document: { id: doc.id } } };
+    }
+    doc.purged = true;
+    return { status: 200, body: { purged: true, document: { id: doc.id } } };
+  }
+
   // ---- documents-v1 ----
 
   /** Aggiunge un membro con ruolo (per i test di permessi/visibilità). */
@@ -430,7 +507,7 @@ export class FakeBackend {
   }
 
   private canSee(doc: StoredDocument, accountId: string, perms: HomePermission[]) {
-    if (!perms.includes('read')) return false;
+    if (!perms.includes('read') || doc.trashedAt) return false;
     return doc.visibility === 'home' || doc.uploaderId === accountId;
   }
 

@@ -6,6 +6,8 @@ import {AppShell} from './AppShell';
 import {seededBackend} from '../test/harness';
 vi.mock('../session/hooks',()=>({useLogout:()=>({mutate:vi.fn(),isPending:false,isError:false})}));
 vi.mock('./EmailVerificationNotice',()=>({EmailVerificationNotice:()=>null}));
+// Empty trash: the discreet link stays hidden (covered with real queries in documents/Trash.test.tsx).
+vi.mock('../documents/trash',()=>({useTrash:()=>({data:{items:[]}})}));
 const all=['Casa','Oggetti e impianti','Ambienti','Attività','Documenti','Spese','Rubrica'];
 function mount(section='spese'){
  const {a,homeA1:home}=seededBackend();const container=document.createElement('div');container.id='root';document.body.append(container);
