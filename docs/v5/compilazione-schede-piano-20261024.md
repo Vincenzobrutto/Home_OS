@@ -1,6 +1,6 @@
 # Compilazione documento a schede — piano frontend
 
-24 ottobre 2026. **Pianificato, non implementato.** Le verifiche e la PR di questa prima consegna riguardano soltanto documentazione. I test di accettazione sotto sono da eseguire dopo le decisioni del committente, non sono risultati già ottenuti.
+24 ottobre 2026. Piano iniziale conservato come riferimento. Il committente ha poi autorizzato la preparazione del collaudo comparativo: implementazione e risultati effettivi sono nel [report](compilazione-schede-report-20261024.md). La pagina attuale resta predefinita; la sostituzione sarà decisa dopo il confronto. I test sotto sono requisiti del piano, non risultati da presumere già ottenuti.
 
 ## Base, specifica e sovrapposizioni
 
@@ -119,4 +119,4 @@ Sono proposte, non decisioni già approvate:
 2. **Dove mostrare «Solo spesa, nessun oggetto»?** Raccomandazione: solo dove il flusso attuale lo supporta davvero. L'estensione ad altri documenti non viene simulata con un'azione dal significato diverso e, se richiede un contratto nuovo, resta fuori da questo lotto frontend.
 3. **Ritirare o mantenere la pagina unica?** Raccomandazione: mantenerla durante sviluppo/collaudo dietro selezione di renderer; ritirarla dopo approvazione del nuovo percorso. Mantenerla come vista esperta è possibile, ma richiede una decisione esplicita su UI e manutenzione di entrambe.
 
-Il committente ha ricevuto le tre domande. In assenza di risposta, questa consegna si ferma alla pianificazione: nessun codice, test di prodotto o criterio di accettazione viene dichiarato completato. La PR del lotto può essere aperta in bozza per rivedere questo piano; verrà aggiornata sullo stesso branch e resa pronta soltanto con implementazione e risultati effettivi.
+Il successivo incarico autorizza la preparazione del test completo prima di decidere la sostituzione. Per questo confronto si adottano Contatti dedicati e Solo spesa soltanto dove supportato, come comunicato prima del codice. La pagina unica resta predefinita. La PR #23 rimane sullo stesso branch; il report distingue prove automatiche superate e collaudo visivo ancora aperto.

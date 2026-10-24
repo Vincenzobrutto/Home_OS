@@ -1,6 +1,6 @@
-## 24 ottobre 2026 — Piano frontend compilazione a schede
+## 24 ottobre 2026 — Compilazione a schede in prova
 
-Registrato il lotto frontend separato dalla base consolidata `112ad05` e predisposto il [piano](v5/compilazione-schede-piano-20261024.md) sulla specifica Claude PR #22. Conferma e payload correnti da preservare, riuso dei componenti e test di accettazione pianificati. Solo documentazione; nessun codice o test di prodotto eseguito, nessuna API/backend/schema, AI, DB reale o merge. Scelte su contatti, solo spesa e pagina unica da concordare prima dell'implementazione.
+Implementato il percorso sequenziale frontend con scelta opt-in, conservando la pagina attuale predefinita. Stato, conferma, payload e recuperi restano nel proprietario corrente. Schede visitate conservate, controlli per passo, riepilogo modificabile, nessun salvataggio sulla navigazione. Harness browser esteso con proposte sintetiche e replay solo in memoria; prove comparative e limiti nel [report](v5/compilazione-schede-report-20261024.md). La sostituzione della pagina unica e il merge restano al committente dopo il collaudo visivo. Nessuna AI, DB/API/storage reale o modifica a backend/schema/lotti Claude.
 
 ## 24 ottobre 2026 — Protocollo multi-pagina, verifica offline
 
