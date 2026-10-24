@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Schede predefinite con ritorno alla pagina unica
+
+Dopo il collaudo manuale sintetico il committente autorizza la promozione del percorso a schede. L’assenza di una scelta esplicita apre le schede; `vista-compilazione=unica` conserva la pagina unica e il relativo comando di ritorno. Scelta limitata all’URL del documento, nessuna preferenza globale, nessun salvataggio nel cambio di vista. Stesso proprietario dello stato e stessi payload/criteri di conferma; backend e dati esclusi. Il ritiro della pagina unica e il merge restano decisioni separate. [Report e verifiche](v5/compilazione-schede-default-20261024.md).
+
 ## 23 ottobre 2026 — Ordine confermato come acquisto proposto
 
 Su decisione esplicita del committente, un ordine confermato propone l’acquisto alla data dell’ordine; per un solo prodotto il costo può coincidere con il totale, inclusa la spedizione già presente. Fatti estratti e proposta restano distinti (`derived_from_order` nelle nuove bozze); nessuna prova di pagamento/consegna, garanzia o conferma automatica. Non ripartire totali tra prodotti/unità. Ripresa delle vecchie bozze senza AI o backfill, con dichiarazione esplicita al salvataggio. Questa decisione supera, per queste sole proposte, l’ADR precedente «Un ordine non prova acquisto concluso o pagamento»: restano validi separazione del pagamento, fonti e revisione. [Implementazione, prove e limiti](v5/ordini-acquisto-20261023.md).

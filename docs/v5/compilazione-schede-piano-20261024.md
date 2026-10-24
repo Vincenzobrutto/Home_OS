@@ -122,3 +122,7 @@ Sono proposte, non decisioni già approvate:
 Il successivo incarico autorizza la preparazione del test completo prima di decidere la sostituzione. Per questo confronto si adottano Contatti dedicati e Solo spesa soltanto dove supportato, come comunicato prima del codice. La pagina unica resta predefinita. La PR #23 rimane sullo stesso branch; il report distingue prove automatiche superate e collaudo visivo ancora aperto.
 
 Successivo incarico del 24 ottobre: rendere provabile il frontend nell'app attuale. Per questo solo aggiornamento è autorizzato il runtime frontend su5174 con proxy fisso all'API protetta3011; il precedente divieto di aggiornare il frontend Roma non si applica più. Restano esclusi interventi su backend, DB, AI, conferme automatiche e merge. La prova manuale richiede prima API e database disponibili; il solo frontend non costituisce un collaudo end-to-end. Dettagli e stato effettivo nel report.
+
+## Decisione successiva — default autorizzato
+
+Dopo la demo multi-articolo il committente incarica esplicitamente di rendere le schede la vista predefinita, mantenendo il ritorno alla pagina unica. Contatti dedicati solo se proposti e Solo spesa dove supportato restano come nel percorso collaudato. La pagina unica non viene ritirata; scelta locale nell’URL, nessuna preferenza persistita. Implementazione e verifiche nel [report del default](compilazione-schede-default-20261024.md). Nessun merge autorizzato da questo incarico.

@@ -2,7 +2,11 @@
 
 24 ottobre 2026, seguito del [collaudo mobile](compilazione-schede-collaudo-mobile-20261024.md). PR #23, nessun merge. Estensione dell'area registrata prima del codice nel commit `b1d3476`; correzione e test nel commit `0b9b6fc`.
 
-## Esito aggiornato — demo manuale confermata dal committente
+## Aggiornamento successivo
+
+Aggiornamento successivo autorizzato: le schede sono ora la vista predefinita; il comando «Torna alla pagina unica» mantiene il renderer precedente tramite `vista-compilazione=unica`. Stato e verifiche correnti nel [report del default](compilazione-schede-default-20261024.md). Le sezioni seguenti conservano la cronologia del collaudo precedente.
+
+## Cronologia — demo manuale confermata dal committente
 
 Il 24 ottobre, dopo aver completato la demo sintetica, il committente ha risposto «sì» alla checklist esplicita: tre schede distinte e dati conservati tornando indietro; esclusione accessorio con riepilogo di due oggetti proposti e nessuna nuova spesa; PDF e pulsanti visibili/utilizzabili anche a finestra stretta. **Demo manuale multi-articolo superata su conferma del committente**, non osservata dal browser automatico di Codex. La misura390/320px resta quella del precedente collaudo monoriga; non attribuita alla finestra manuale una dimensione esatta non rilevata.
 

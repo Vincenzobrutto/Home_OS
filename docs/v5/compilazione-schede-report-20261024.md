@@ -2,7 +2,11 @@
 
 24 ottobre 2026. Branch `codex/compilazione-schede-20261024`, base consolidata `112ad051aa3c291ab56a88149af1d0beae0d0a63`. [PR #23](https://github.com/Vincenzobrutto/Home_OS/pull/23), nessun merge. Registrazione prima del codice: `cc0034f`; avvio del collaudo autorizzato e registrato in `91c117a`. [Piano e fonte della specifica](compilazione-schede-piano-20261024.md).
 
-## Stato e decisione del committente
+## Stato corrente
+
+Aggiornamento successivo autorizzato: le schede sono ora la vista predefinita; il comando «Torna alla pagina unica» mantiene il renderer precedente tramite `vista-compilazione=unica`. Stato e verifiche correnti nel [report del default](compilazione-schede-default-20261024.md). Le sezioni seguenti conservano la cronologia del collaudo precedente.
+
+## Cronologia — decisione iniziale del committente
 
 Il committente ha chiesto di preparare il test completo della nuova interfaccia e decidere **dopo** se sostituire quella disponibile. La pagina attuale resta quindi predefinita. La nuova presentazione si apre con «Prova la compilazione a schede» oppure `vista-compilazione=schede`; «Torna alla compilazione attuale» elimina solo quel parametro. Gli altri parametri della compilazione restano invariati. Nessun deploy nel collaudo Roma.
 
