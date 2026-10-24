@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — OCR locale limitato, senza invii remoti
+
+Su incarico del committente, le scansioni possono essere lette nel browser tramite worker/WASM e lingua italiana distribuiti con l’app, senza servizi o pagamenti AI. Modello e raster restano in memoria, IndexedDB disabilitato. Affidabilità per parola/cifra, barriere sulle letture incerte e abbinamenti geometrici univoci; nessuna correzione inventata di cifre, pagamento o dati oscurati. Proposte manuali modificabili e stessa conferma canonica. Limiti e annullamento obbligatori; niente OCR su compilazioni già salvate. [Scelte, costi di bundle e prove](v5/bollette-ocr-locale-20261024.md). Browser fisico e aggiornamento dell’app richiedono un passaggio successivo al merge.
+
 ## 24 ottobre 2026 — Proposte locali per bollette testuali
 
 Su incarico del committente, la compilazione propone dati di bolletta anche senza AI usando solo testo PDF locale con SHA coincidente. Sono suggerimenti modificabili, salvati come valori manuali confermati attraverso il flusso esistente; non diventano evidenze AI o candidati server inventati. Compilazioni già salvate ed estrazioni precedenti non vengono sostituite; dati mancanti o discordanti restano da indicare. Nessuna inferenza di pagamento. Il servizio backend onboarding è occupato dal lotto cestino Claude e resta invariato: [ambito, verifiche e limiti OCR](v5/bollette-locali-20261024.md).

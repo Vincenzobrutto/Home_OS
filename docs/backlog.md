@@ -1,6 +1,8 @@
 ## 24 ottobre 2026 — OCR locale e collaudo bollette rasterizzate
 
-La [precompilazione locale](v5/bollette-locali-20261024.md) usa soltanto testo PDF: non è OCR. Il lettore preesistente non ricava testo dalla copia anonimizzata della bolletta già fornita (`pdf_text_unavailable`); nessuna equivalenza dimostrata con il file attualmente caricato, non letto da DB/API/storage reale. Valutare in un lotto distinto OCR locale limitato e verificabile, evidenze per campo e layout a colonne, senza introdurre invii remoti impliciti. Nel frattempo scansioni, loghi privi di testo ed etichette non riconosciute restano da compilare con spiegazione esplicita. Non dichiarare questo caso reale risolto dalla sola suite mock.
+**Seguito implementato sul branch OCR, non ancora distribuito:** [report](v5/bollette-ocr-locale-20261024.md). Lettura locale limitata e verificata offline con motore reale; copia anonimizzata riconosciuta su otto pagine per tre campi economici principali. Restano fornitore/periodo senza evidenza affidabile, prova browser/mobile fisici, pagine ruotate/manoscritte e ibridi con testo nativo ricco. Non dichiarare tutte le scansioni risolte né aggiornamento dell’app.
+
+La [precompilazione testuale precedente](v5/bollette-locali-20261024.md) non ricavava testo dalla copia anonimizzata della bolletta (`pdf_text_unavailable`). Il lotto OCR sopra aggiunge la lettura delle scansioni; restano da verificare browser e distribuzione. Nessuna equivalenza dimostrata con il file attualmente caricato, non letto da DB/API/storage reale. Loghi privi di testo ed etichette non riconosciute restano da compilare con spiegazione esplicita. Non dichiarare questo caso nell’app reale risolto dalla sola suite mock.
 
 ## 24 ottobre 2026 — Anteprima PDF nel browser integrato
 

@@ -39,6 +39,12 @@ it('does not merge two different invoices into one expense',()=>expect(localBill
 it('a contract mentioning billing and consumption is not a bill',()=>expect(localBill(['Contratto energia elettrica\nLa fattura dei consumi kWh arriverà il mese successivo.'])).toBeNull());
 it('commercial information in the footer does not hide a real bill',()=>expect(localBill([text+'\nInformazioni sulla tua offerta commerciale. Richiedi un preventivo per altri servizi.'])).toMatchObject({amount:'115.36',category:'electricity'}));
 it('a customer legal name after the heading is not treated as the supplier',()=>expect(localBill(['Bolletta energia elettrica\nIntestatario\nCliente Commerciale Srl'])?.supplier).toBeUndefined());
+it('an offer box does not hide explicit billing identity, amount and emission',()=>{
+ expect(localBill(['OFFERTA COMMERCIALE\nN. fattura elettronica\nServizio energia elettrica\nEmessa il: 12/09/2026\nTotale da pagare: 63,47 EUR\nCanone incluso nel totale da pagare 9,00 EUR'])).toMatchObject({amount:'63.47',documentDate:'2026-09-12',category:'electricity'});
+ expect(localBill(['OFFERTA COMMERCIALE\nServizio energia elettrica\nPagherai la fattura in seguito.'])).toBeNull();
+});
+it('never truncates a malformed three-decimal total',()=>expect(localBill(['Bolletta energia elettrica\nTotale da pagare: 12,345 EUR'])?.amount).toBeUndefined());
+it('never truncates an OCR date with an extra year digit',()=>expect(localBill(['Bolletta energia elettrica\nData emissione: 12/09/20260'])?.documentDate).toBeUndefined());
 it('existing compilations, decisions, proposals and extracted drafts are never overwritten',()=>{
  const draft={mode:'manual',documentKind:'unsupported',state:'open',review:null,snapshot:{documentId:'own',documentVersion:1,sha256:'a'.repeat(64)},items:[]} as unknown as Draft;
  expect(localBillEligible(draft,'application/pdf')).toBe(true);
