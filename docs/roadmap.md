@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+Cestino frontend: [revisione indipendente su 7586806](v5/cestino-frontend-review-7586806-20261024.md), un P2 da correggere prima del merge. Il perimetro originale è verde (873/873), la riproduzione indipendente dell’avviso è rossa. Dipendenza backend ancora da correggere e aggiornare dal consolidamento a cura di Claude. Nessun merge eseguito.
+
 Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedente è conservata integralmente nell’[archivio del 23 ottobre](roadmap-history-20261023.md), inclusi checkpoint e decisioni dei diversi agenti. I suoi esiti descrivono la data del singolo lotto. [Stato verificato](project-status.md), [backlog completo](backlog.md), [architettura](architecture.md).
 
 ## Manutenzione autorizzata in corso
