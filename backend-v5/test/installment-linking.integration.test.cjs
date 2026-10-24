@@ -22,7 +22,7 @@ test('Acconto/saldo: manual purchase reconciliation, replay, source copies and p
  const manifest=process.env.INSTALLMENT_SOURCE_MANIFEST?JSON.parse(require('node:fs').readFileSync(process.env.INSTALLMENT_SOURCE_MANIFEST,'utf8')):null;
  const sources=[{kind:'acconto',date:'2025-07-23',number:'FE25-37',source:manifest?.find(x=>x.id===10)},{kind:'saldo',date:'2025-07-28',number:'FE25-38',source:manifest?.find(x=>x.id===9)}];
  const names=['Climatizzatore Sensira A','Climatizzatore Sensira B','Climatizzatore Stylish']; // Manual labels, not extracted identities/quantities.
- async function home(){const h=await db.home.create({data:{name:'Offline installment scenario',address:'Test'}});for(const actor of actors)await db.homeMembership.create({data:{accountId:actor.id,homeId:h.id,role:'owner'}});return h.id;}
+ async function home(){const h=await db.home.create({data:{name:'Offline installment scenario',address:'Test'}});for(const actor of actors)await db.homeMembership.create({data:{accountId:actor.id,homeId:h.id,role:'owner',validFrom:new Date('2026-01-01T00:00:00Z')}});return h.id;}
  async function draft(h,s){
   const doc=await db.document.create({data:{homeId:h,uploaderId:a.id,name:'Offline '+s.kind,visibility:'private',original:{create:{originalFilename:'offline.pdf',mimeType:'application/pdf',sha256:s.source?.sha256??hash('offline-'+s.kind),byteSize:s.source?.bytes??1,file:{create:{storageKey:'not-stored-'+randomUUID()}}}}},include:{original:true}});
   let d=(await svc.manualDraft(a.id,h,{documentId:doc.id,documentKind:'purchase_document'},randomUUID())).draft;
