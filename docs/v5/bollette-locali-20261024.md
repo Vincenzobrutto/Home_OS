@@ -36,3 +36,13 @@ Scansioni, fotografie e anonimizzazioni rasterizzate richiedono OCR; ora il perc
 Nessuna AI/email, DB/API/storage reale, migrazione, `.env`, ledger, file orfani o servizio dell’app modificati. Nessun merge, force push, reset, clean o rimozione worktree. La PR richiede revisione e merge del committente prima dell’eventuale aggiornamento dell’app.
 
 I primi giri mirati hanno individuato un prop mancante nella scheda Spese e un ricontrollo fallito che poteva smontare i form: corretti nel prodotto. Corrette inoltre le fixture del nuovo test (newline e label), il reset dei mock e il preload della rotta lazy; nessuna asserzione precedente indebolita né timeout aumentato. Primo tentativo fermato prima dei test da EPERM sulla cache Windows, rieseguito con le stesse guardie offline.
+
+## Merge approvato e aggiornamento dell’app — 24 ottobre 2026
+
+Il committente ha approvato l’integrazione della PR #24 e l’aggiornamento dell’app. Merge `2ab757034e268498819fa8d530cf59f2aab00984` confermato da GitHub e `git ls-remote`; main resta `cdbb318ddb56e764ad4b111a71560e3e71c7a033`. Nessuna modifica backend nel merge. Frontend integrato e frontend del lotto hanno tree identico `4858a60c316d321db8d25e33fc85d45cbbb0fce9`: riutilizzata la build già verificata, nessuna variazione al prodotto dopo i 947/947 mock.
+
+Aggiornato il solo launcher frontend di collaudo per il worktree di questo lotto e riavviato il solo processo Vite identificato: precedente PID37612, nuovo PID27220, loopback5174. API10540 su3011 e PostgreSQL22924 restano attivi con gli stessi orari di avvio. Guardie di rete e modalità interactive-manual-no-ai preservate; nessun .env modificato.
+
+Verifiche READ ONLY senza sessione: root200; moduli OnboardingPage/localBill serviti con il nuovo collegamento; proxy /api/v5/homes401 e header interactive-manual-no-ai/roma-consolidata-112ad05-no-ai. Questi controlli confermano la versione servita, non una precompilazione riuscita sul documento reale. Nessun browser autenticato, query SQL, caricamento, apertura di bozze, conferma, migrazione o AI eseguiti. Il limite OCR resta aperto.
+
+Questa registrazione successiva al merge è documentazione sul branch del lotto; non è un secondo aggiornamento del prodotto nel consolidamento.
