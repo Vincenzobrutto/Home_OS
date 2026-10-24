@@ -64,6 +64,16 @@ La sola API simulata è stata avviata e chiusa per la prova HTTP protetta descri
 
 ## Prossimo confronto con il committente
 
+### Aggiornamento frontend del collaudo applicativo, su incarico del committente
+
+Il 24 ottobre il committente ha chiesto di provare il percorso nell'app attuale anziché aprire una segnalazione all'assistenza. Questo incarico supera il precedente limite del piano che escludeva qualsiasi aggiornamento del collaudo Roma: autorizza il solo frontend di prova, senza promuovere le schede a default o approvare implicitamente il merge della PR #23.
+
+Fetch remoto eseguito; base consolidata ancora `112ad05`, branch del lotto senza divergenze remote. Nessun nuovo codice di prodotto: il renderer opt-in e il comando «Prova la compilazione a schede» sono già nel codice verificato `3ba9835`. Preparata una configurazione runtime locale, fuori dal repository, che serve quel frontend su loopback5174 e inoltra soltanto `/api/v5` all'API protetta3011, senza fallback3001 e senza leggere `.env`. Guardie del processo frontend consentono connessioni solo all'API3011. Pagina unica e ritorno dal percorso a schede conservati; nessuna scrittura durante Avanti/Indietro, nessuna nuova AI o conferma automatica.
+
+All'avvio del lavoro, entrambi i PID precedenti del collaudo erano assenti; nessun listener su5174/3011/55432. Avviato soltanto il frontend, identità del processo e ascolto127.0.0.1:5174 verificati. **Collaudo applicativo non disponibile end-to-end:** API3011 e PostgreSQL55432 non risultano in ascolto; non sono stati avviati o modificati in questo incarico frontend. Nessun servizio altrui arrestato. Il solo avvio Vite non prova l'accesso alla bozza o la persistenza.
+
+Nessun nuovo tentativo del browser dell'agente, nessun uso di un'altra origine per aggirare il precedente diniego5186. La prova manuale sull'applicazione viene affidata al committente dopo il ripristino dei servizi dati. Restano non verificati desktop/390px, anteprima e tastiera virtuale. Typecheck, lint e build ripetuti dopo la preparazione: tutti superati, ambiente sanificato e guardia offline; build Vite11,59s. Suite mock completa non ripetuta in assenza di modifiche al codice: resta l'esito898/898 sul medesimo codice3ba9835. Nessuna nuova suite DB. Nessun merge su consolidamento/main, modifica al lotto Claude, migrazione o dato persistito.
+
 ### Tentativo di apertura dopo il consenso in chat
 
 Il 24 ottobre, dopo il successivo «Ok» del committente, avviati soltanto il mock su loopback 3101 e la UI su loopback 5186, con target fissato al mock, ambiente sanificato e guardia di rete locale. Il browser integrato ha nuovamente rifiutato l'apertura: un permesso salvato o una regola gestita nega l'accesso all'origine `http://127.0.0.1:5186`. Il consenso nella conversazione non ha rimosso quel blocco tecnico.
