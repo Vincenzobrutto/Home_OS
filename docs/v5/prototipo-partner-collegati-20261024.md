@@ -27,7 +27,7 @@ Pagina **Passaggi tra profili** presente in tutti i menu, con mappa navigabile, 
 ## Verifica
 
 - Sintassi `partners.js` e diff check.
-- **17/17 test**, nessun salto: 7 regressioni Home e 10 test Partner. Coperti rendering di tutte le 31 viste, assenza di record personali Home nelle pagine Partner, rifiuto di documenti privati/non esaminati e schede senza fonte, manifesto immutabile/versionato, accettazione idempotente, revoca, separazione immobili, collegamento unità, pubblicazioni/versioni/ritiro, cambio proprietario e Home nuova separata, segnalazione/risposta e conferma del promemoria.
+- **18/18 test**, nessun salto: 7 regressioni Home e 11 test Partner. Coperti rendering di tutte le 31 viste, assenza di record personali Home nelle pagine Partner, rifiuto di documenti privati/non esaminati e schede senza fonte, manifesto immutabile/versionato, accettazione idempotente, revoca, separazione immobili, collegamento unità, pubblicazioni/versioni/ritiro, cambio proprietario e Home nuova separata, segnalazione/risposta e conferma del promemoria.
 - Browser locale: revisione libretto → Gift con due documenti e scheda caldaia → manifesto → invito → Home → accettazione → Documenti con provenienza. Dossier riservato con planimetria selezionata osservato.
 - Browser locale: invito unità → pubblicazione con proposta → accettazione Home → memoria comune e proposta visibili; segnalazione Home → risposta/stato Amministratore → aggiornamento ritrovato in Home.
 - Desktop: ispezione visuale della mappa dei passaggi. Mobile 390×844: menu Partner completo aperto e mappa responsive. Console senza errori nei percorsi osservati. Viewport ripristinato. Nessuna prova su telefono fisico e nessun collaudo esaustivo di ogni combinazione o modale.
@@ -37,3 +37,5 @@ Pagina **Passaggi tra profili** presente in tutti i menu, con mappa navigabile, 
 Dati fittizi e sessione in memoria: refresh azzera il percorso. Nessuna email, consegna, verifica documentale, permesso, revoca o controllo titolarità reale. Un'unità per edificio nella demo; niente CRM, contabilità, riparti, pagamento o pubblicazione su portali. Solo modello dimostrativo di cambio persona, non account reali; archivio precedente conservato nel modello per illustrare la separazione. I test tutelano coerenza della simulazione, non attestano sicurezza/permessi backend. Restano i limiti Home descritti nel report di allineamento V5 (esempio monoarticolo e niente API/AI/file reali).
 
 Prossimo passo: revisione del committente sull'esperienza promozionale, eventuale iterazione nello stesso lotto. Merge PR #25 al committente.
+
+Controllo finale: collegamenti diretti alle nuove pagine risolti al caricamento (non soltanto da menu). Test aggiuntivo su Agenzia/Amministratore Passaggi e Home Consegne; totale corrente 18/18.

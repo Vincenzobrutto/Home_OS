@@ -121,4 +121,4 @@ document.addEventListener('change',e=>{if(e.target.id==='p-property'){pSelect(e.
 const partnerFixture=vFixtureDocument;vFixtureDocument=function(d){const html=partnerFixture(d);return d.gift?html.replace('Fonte: archivio personale · versione 1.','Fonte: '+esc(d.origin)+' · versione '+d.sourceVersion+'.'):html;};
 const partnerForecast=forecast;
 forecast=function(admin){if(admin)state.budget=pProperty().budget;return partnerForecast(admin);};
-render();
+route();
