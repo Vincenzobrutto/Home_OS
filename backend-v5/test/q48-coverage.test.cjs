@@ -7,10 +7,50 @@ const {onboardingSchemaFor,onboardingWireOutput}=require('../dist/object-onboard
 const {automaticPlan}=require('../dist/object-onboarding/automatic-plan');
 const {progressiveComplete}=require('../dist/object-onboarding/reading');
 const {detailed}=require('./quality-v3-measures.cjs');
+
+// Resolve the wire-only indirection before checking the unchanged page contract.
+function expandedSchema(schema){
+ const expand=value=>{
+  if(Array.isArray(value))return value.map(expand);
+  if(!value||typeof value!=='object')return value;
+  if(value.$ref){assert.equal(value.$ref,'#/definitions/invoiceExpense');assert.deepEqual(Object.keys(value),['$ref']);return expand(schema.definitions.invoiceExpense);}
+  return Object.fromEntries(Object.entries(value).filter(([key])=>key!=='definitions').map(([key,child])=>[key,expand(child)]));
+ };
+ return expand(schema);
+}
 test('visual schema requires a separate slot for every sent physical page, including a non-contiguous selection',()=>{
- const schema=onboardingSchemaFor('visual_pdf',[1,3]),slots=schema.properties.invoicePages;
+ const schema=expandedSchema(onboardingSchemaFor('visual_pdf',[1,3])),slots=schema.properties.invoicePages;
  assert(schema.required.includes('invoicePages'));assert.deepEqual(slots.required,['p1','p3']);assert.equal(slots.additionalProperties,false);assert.equal(slots.properties.p1.properties.expenses.items.properties.fields.items.properties.evidence.type,'integer');
  assert(!onboardingSchemaFor('text').properties.invoicePages);assert(!onboardingSchemaFor('image').properties.invoicePages);
+});
+
+test('multipage wire shares one expense definition while preserving the entire expanded legacy schema for 1–20 sent pages',()=>{
+ const {invoicePagesSchema}=require('../dist/object-onboarding/invoice-coverage');
+ for(let length=1;length<=20;length++){
+  const sent=Array.from({length},(_,i)=>i+1),schema=onboardingSchemaFor('visual_pdf',sent);
+  assert(schema.definitions?.invoiceExpense,'one reusable expense grammar is required');
+  const original=onboardingSchemaFor('visual_pdf');
+  original.properties.invoicePages=invoicePagesSchema(original.properties.houseExpenses.items,sent);
+  original.required.splice(original.required.indexOf('sources'),0,'invoicePages');
+  assert.deepEqual(expandedSchema(schema),original);
+  assert.deepEqual(schema.properties.houseExpenses.items,{$ref:'#/definitions/invoiceExpense'});
+  for(const page of sent)assert.deepEqual(schema.properties.invoicePages.properties['p'+page].properties.expenses.items,{$ref:'#/definitions/invoiceExpense'});
+  if(length===20)assert(JSON.stringify(schema).length<JSON.stringify(original).length/2);
+ }
+});
+
+test('shared definition remains strict and cannot leak between preparations or alter single-page/image/text schemas',()=>{
+ for(const kind of ['text','image','visual_pdf'])assert(!onboardingSchemaFor(kind).definitions);
+ const first=onboardingSchemaFor('visual_pdf',[1,3]),second=onboardingSchemaFor('visual_pdf',[1,3]);
+ assert(first.definitions?.invoiceExpense,'shared definition is required');
+ const expense=first.definitions.invoiceExpense;
+ assert.equal(expense.additionalProperties,false);assert.deepEqual(expense.required,['fields','amountCandidates']);
+ assert.equal(expense.properties.fields.items.additionalProperties,false);
+ assert.equal(expense.properties.fields.items.properties.evidence.type,'integer');
+ expense.properties.fields.items.properties.field.enum.push('invented_field');
+ assert(!JSON.stringify(second).includes('invented_field'));
+ assert.deepEqual(expandedSchema(second).properties.invoicePages.required,['p1','p3']);
+ let unions=0;const visit=x=>{if(!x||typeof x!=='object')return;if(x.anyOf||Array.isArray(x.type))unions++;Object.values(x).forEach(visit);};visit(second);assert.equal(unions,0);
 });
 test('both Q48 page slots produce two independent complete proposals matching unchanged gold; review stays mandatory',()=>{
  const f=q48(),out=decode(f),s=detailed(f.original.gold,out,'review');
