@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Revisione indipendente frontend cestino su 7586806
+
+[revisione indipendente su 7586806](v5/cestino-frontend-review-7586806-20261024.md): un P2 aperto sull’avviso che ricompare dopo il cambio pagina, anche dopo il ripristino. Mock originali 873/873; cinque prove indipendenti con quattro positivi e la regressione E1 rossa, senza modifiche ai test dell’autore. Verificati rete assente/503 sul cestino senza bloccare AppShell, focus/tastiera e recupero idempotente. Solo test e documenti; nessuna AI, DB reale o integrazione.
+
 ## 24 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame finale Codex
 
 All'eliminazione definitiva sparisce anche il titolo scelto nell'organizzazione diretta dei caricamenti. Una vecchia revoca non tocca più una condivisione creata dopo un ripristino concorrente. Le nuove ricevute riusano valori confermati la cui fonte è nel cestino. L'export non rilascia metadati di documenti spostati nel cestino durante l'esportazione. Riproduzioni 5/5, riesame 7/7, cestino 16/16, aggregato 513/513. [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-finale-di-codex).
