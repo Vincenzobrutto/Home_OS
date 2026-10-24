@@ -22,11 +22,11 @@ Il percorso monoriga mantiene inizialmente Contenuto, per rendere disponibile la
 
 ## Prove offline e limiti
 
-Versione del codice fissata nel commit `3ba98353859956e376b4b3ce6be22fe18af2b8b6`. Controlli finali sul codice fissato: `npm run typecheck`, `npm run lint` e `npm run build` **superati** con ambiente sanificato e guardia offline. Suite mock completa finale: **in corso**.
+Versione del codice fissata nel commit `3ba98353859956e376b4b3ce6be22fe18af2b8b6`. Controlli finali sul codice fissato: `npm run typecheck`, `npm run lint` e `npm run build` **superati** con ambiente sanificato e guardia offline. Suite mock completa finale: **898/898 test, 108/108 file, verde**, durata 470,12 secondi, due worker e `--retry=0`. Baseline 870 test conservata; 28 test aggiunti. Nessun test saltato nella suite completa.
 
-Quattro confronti deep-equal nel router: tre righe create/link/skip e fattura lavori, bolletta, prestazione senza oggetti con spesa globale/contatti e compilazione manuale. I confronti mirati passano senza eliminare campi dal body. Prova HTTP del simulatore completata con ambiente sanificato e guardia offline: sessione/CSRF, tre proposte, rifiuto job provider, replay della review, replay della conferma e ricevuta; processo di prova chiuso. Non è una prova browser.
+Quattro confronti deep-equal nel router, tutti superati anche nella suite completa: tre righe create/link/skip e fattura lavori, bolletta, prestazione senza oggetti con spesa globale/contatti e compilazione manuale. I confronti mirati passano senza eliminare campi dal body. Prova HTTP del simulatore completata con ambiente sanificato e guardia offline: sessione/CSRF, tre proposte, rifiuto job provider, replay della review, replay della conferma e ricevuta; processo di prova chiuso. Non è una prova browser.
 
-Una prima suite completa durante gli ultimi aggiornamenti ha riportato 889/891 e due fallimenti: il caso nuovo delle righe tutte escluse e il test del promemoria fuori dal lotto. Il primo è verde nella versione finale mirata; la suite finale viene eseguita da capo a sorgenti fermi, senza retry o asserzioni attenuate. Tale prima esecuzione non è usata come esito della consegna.
+Una prima suite completa durante gli ultimi aggiornamenti ha riportato 889/891 e due fallimenti: il caso nuovo delle righe tutte escluse e il test del promemoria fuori dal lotto. Il primo è verde nella versione finale mirata; entrambi sono superati nella successiva suite completa a sorgenti fermi, senza retry automatici o asserzioni attenuate. Tale prima esecuzione non è usata come esito della consegna.
 
 | Criterio | Copertura |
 | --- | --- |
@@ -38,7 +38,7 @@ Una prima suite completa durante gli ultimi aggiornamenti ha riportato 889/891 e
 | 6 — doppioni | Possibile doppione blocca l'avanzamento fino alla scelta; collegamento conserva id/versione. Errore di lookup non diventa lista vuota. I controlli/consensi del componente riusato restano invariati. |
 | 7 — accessibilità | Focus h2, aria-current, passi futuri disabilitati, tastiera, pannelli hidden/inert; prova automatica in jsdom. Lettore di schermo reale non provato. |
 | 8 — telefono 390 px | **Non verificato visivamente.** Riutilizzata la barra fissa del workspace, con spazio sopra la navigazione mobile e controlli minimi 44px. Browser integrato non usato per aggirare il precedente rifiuto di accesso all'origine mock. Overflow, tastiera virtuale e anteprima richiedono il collaudo visivo. |
-| 9 — regressioni | Suite mock completa e controlli statici/build: riportare qui i risultati finali sotto. Asserzioni precedenti conservate, nessun timeout aumentato né retry automatico. |
+| 9 — regressioni | Suite mock completa 898/898 e typecheck/lint/build superati. Asserzioni precedenti conservate, nessun timeout aumentato né retry automatico. |
 
 Le prove riguardano frontend e API simulate. Non dimostrano nuove proprietà della transazione backend: questa viene preservata riusando gli stessi callback, non rieseguita contro un database reale. Gli ulteriori casi documentali della matrice del piano non vengono dichiarati collaudati end-to-end su un browser.
 

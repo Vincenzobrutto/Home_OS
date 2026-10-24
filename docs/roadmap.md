@@ -1,6 +1,6 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
-Compilazione del documento a schede: [piano](v5/compilazione-schede-piano-20261024.md) e [report del collaudo comparativo](v5/compilazione-schede-report-20261024.md), dalla proposta Claude PR #22. Implementazione frontend opt-in e harness simulato, sulla PR #23 in bozza. Pagina unica ancora predefinita: il committente decide la sostituzione dopo il confronto. Risultati automatici nel report; restano collaudo visivo desktop/390px e approvazione del percorso, nessun deploy o merge.
+Compilazione del documento a schede: [piano](v5/compilazione-schede-piano-20261024.md) e [report del collaudo comparativo](v5/compilazione-schede-report-20261024.md), dalla proposta Claude PR #22. Implementazione frontend opt-in e harness simulato, sulla PR #23 in bozza. Pagina unica ancora predefinita: il committente decide la sostituzione dopo il confronto. Typecheck/lint/build e mock completa 898/898 verdi, parità del body verificata in quattro scenari; restano collaudo visivo desktop/390px e approvazione del percorso, nessun deploy o merge.
 
 Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedente è conservata integralmente nell’[archivio del 23 ottobre](roadmap-history-20261023.md), inclusi checkpoint e decisioni dei diversi agenti. I suoi esiti descrivono la data del singolo lotto. [Stato verificato](project-status.md), [backlog completo](backlog.md), [architettura](architecture.md).
 

@@ -1,6 +1,6 @@
 ## 24 ottobre 2026 — Compilazione a schede in prova
 
-Implementato il percorso sequenziale frontend con scelta opt-in, conservando la pagina attuale predefinita. Stato, conferma, payload e recuperi restano nel proprietario corrente. Schede visitate conservate, controlli per passo, riepilogo modificabile, nessun salvataggio sulla navigazione. Harness browser esteso con proposte sintetiche e replay solo in memoria; prove comparative e limiti nel [report](v5/compilazione-schede-report-20261024.md). La sostituzione della pagina unica e il merge restano al committente dopo il collaudo visivo. Nessuna AI, DB/API/storage reale o modifica a backend/schema/lotti Claude.
+Implementato il percorso sequenziale frontend con scelta opt-in, conservando la pagina attuale predefinita. Stato, conferma, payload e recuperi restano nel proprietario corrente. Schede visitate conservate, controlli per passo, riepilogo modificabile, nessun salvataggio sulla navigazione. Harness browser esteso con proposte sintetiche e replay solo in memoria; typecheck/lint/build e mock completa 898/898 in 108 file superati, quattro confronti integrali del body verdi; limiti nel [report](v5/compilazione-schede-report-20261024.md). La sostituzione della pagina unica e il merge restano al committente dopo il collaudo visivo. Nessuna AI, DB/API/storage reale o modifica a backend/schema/lotti Claude.
 
 ## 24 ottobre 2026 — Protocollo multi-pagina, verifica offline
 
