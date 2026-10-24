@@ -1,3 +1,5 @@
+Demo libera semplificata e case Gift: [report e link](v5/prototipo-case-gift-20261024.md). 15 impianti, 1 elettrodomestico, 19 documenti; accettare la Gift aggiunge una casa distinta a Le mie case. 21/21 test e browser desktop/mobile; pubblicata e Casa verificata online. Guidata invariata. Consegnare sempre entrambi i link, come richiesto dal committente.
+
 Percorso promozionale parallelo: [demo guidata](v5/prototipo-percorso-guidato-20261024.md), 12 passi con cambio automatico di profilo e trasferimenti espliciti. Pubblicazione privata riuscita, 12/12 test e browser locale completo desktop/mobile; online protetto da login ChatGPT. Demo libera invariata.
 
 # Roadmap corrente — Dimora V5, 23 ottobre 2026

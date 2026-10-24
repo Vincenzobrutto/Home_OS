@@ -30,3 +30,5 @@ Le sette schermate Home e i percorsi di compilazione sono stati riallineati ai s
 
 ## Tre profili collegati
 Stato corrente: 31 viste, profili Partner navigabili e pagina Passaggi tra profili. Agenzia: checklist, dossier, manifesto Gift con accettazione Home. Amministratore: memoria, invito unità, pubblicazione versionata e risposta a segnalazioni Home. Dati personali separati per immobile; cambio proprietario illustrato con una Home nuova separata. partners.js/partners.css estendono il livello Home. Verifica: node --test prototypes/dimora-promo/tests/fidelity.test.cjs prototypes/dimora-promo/tests/partners.test.cjs (18 test). Il precedente limite di dataset comuni è superato per gli immobili della demo. Il refresh azzera tutti i percorsi. Dettagli e limiti: docs/v5/prototipo-partner-collegati-20261024.md.
+
+Aggiornamento corrente: [Casa semplificata, 15 impianti e Gift che crea una casa disponibile dopo accettazione](../../docs/v5/prototipo-case-gift-20261024.md). A ogni consegna fornire entrambi i link: demo libera https://dimora-esperienza-demo.vincenzo-b.chatgpt.site e guidata https://dimora-percorso-guidato.vincenzo-b.chatgpt.site .
