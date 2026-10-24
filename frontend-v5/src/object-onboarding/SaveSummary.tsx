@@ -1,20 +1,24 @@
+import type { ReactNode } from 'react';
 import type { Draft, Form, HouseForm, ContactInput } from './model';
 import { formatCalendarDate } from '../lib/activities';
 import { billPeriodLabel } from '../lib/billPeriod';
+import { ui } from '../components/ui';
 import styles from './onboarding.module.css';
 
 const euro=(value:string)=>/^\d+(?:[.,]\d{1,2})?$/.test(value)?Number(value.replace(',','.')).toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'Da completare';
 const date=(value:string)=>value?formatCalendarDate(value):'Non indicata';
-export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contacts=[],documentTargetLabel}:{draft:Draft;forms:Record<string,Form>;houseForms?:Record<string,HouseForm>;documentOnly:boolean;title?:string;contacts?:ContactInput[];documentTargetLabel?:string}){
+/** Same text in both layouts. With `edit` (step-by-step compilation) each area becomes a block with its own «Modifica». */
+export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contacts=[],documentTargetLabel,edit}:{draft:Draft;forms:Record<string,Form>;houseForms?:Record<string,HouseForm>;documentOnly:boolean;title?:string;contacts?:ContactInput[];documentTargetLabel?:string;edit?:{go:(step:string)=>void;steps:Set<string>}}){
  const items=draft.items.filter(i=>!i.decision||i.decision.state==='deferred');
  const houses=(draft.houseExpenses??[]).filter(i=>!i.decision||i.decision.state==='deferred');
  const objectForms=items.flatMap(item=>{const form=forms[item.id];return form&&!['skip','document_only'].includes(form.action)?[{item,form}]:[];});
+ const excluded=items.flatMap(item=>forms[item.id]?.action==='skip'?[forms[item.id]!.name||'Articolo senza nome']:[]);
  const selectedContacts=contacts.filter(c=>c.action==='save');
- return <div className={styles.saveSummary}>
-  <h3>Al salvataggio</h3>
-  <p><strong>Documento</strong> · {title||draft.documentInfo?.title.value||draft.document?.name||'Titolo da completare'}</p>
-  {documentOnly?<p>{documentTargetLabel?'Documento collegato a '+documentTargetLabel+'. Nessuna nuova spesa, oggetto o contatto.':'Conservi solo il documento. Nessuna nuova spesa, oggetto o contatto; i collegamenti già presenti restano.'}</p>:<>
-   {houses.map(item=>{const f=houseForms[item.id];if(!f)return <p key={item.id}>Spesa · controlla i dati nel modulo.</p>;
+ const documentPart=<>
+  <p>{!edit&&<><strong>Documento</strong> · </>}{title||draft.documentInfo?.title.value||draft.document?.name||'Titolo da completare'}</p>
+  {documentOnly&&<p>{documentTargetLabel?'Documento collegato a '+documentTargetLabel+'. Nessuna nuova spesa, oggetto o contatto.':'Conservi solo il documento. Nessuna nuova spesa, oggetto o contatto; i collegamenti già presenti restano.'}</p>}
+ </>;
+ const housePart=houses.map(item=>{const f=houseForms[item.id];if(!f)return <p key={item.id}>Spesa · controlla i dati nel modulo.</p>;
     return <section key={item.id} className={styles.summaryExpense} aria-label="Spesa da salvare">
      <h4>{f.mode==='link_existing'?'Collega una spesa esistente':f.mode==='create'?'Nuova spesa':f.mode==='defer'?'Spesa da decidere più avanti':'Spesa esclusa'}</h4>
      {item.invoiceSegment&&<p>Pagina {item.invoiceSegment.page} dell’originale</p>}
@@ -25,7 +29,8 @@ export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contac
      {f.mode==='link_existing'&&<p>{f.expenseId?'Viene collegata quella scelta nel modulo. Non crei una nuova spesa.':'Scegli la spesa da collegare nel modulo.'}</p>}
      {['skip','defer'].includes(f.mode)&&<p>Nessuna spesa verrà registrata.</p>}
     </section>;
-   })}
+   });
+ const objectPart=<>
    {objectForms.map(({item,form:f})=><section key={item.id} className={styles.summaryExpense}>
     <h4>{f.action==='link'?'Collega oggetto esistente':(item.quantity?.value??1)>1?'Crea '+item.quantity!.value+' oggetti':'Crea oggetto'} · {(f.action==='link'?f.targets.map(t=>t.name).join(', '):f.name)||'Nome da completare'}</h4>
     {f.action==='link'&&<p>{f.targets.length?f.targets.map(t=>t.name).join(', '):'Scegli l’oggetto nel modulo.'}</p>}
@@ -33,8 +38,27 @@ export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contac
     {!houses.length&&f.expense==='link'&&<p>Collega la spesa esistente scelta nel modulo. Non crei una nuova spesa.</p>}
    </section>)}
    {!objectForms.length&&!houses.some(i=>houseForms[i.id]?.mode==='create'&&houseForms[i.id]?.objectChoice)&&<p>Nessun nuovo oggetto o collegamento a oggetti.</p>}
-   {!houses.length&&!objectForms.some(x=>x.form.expense!=='skip')&&<p>Nessuna nuova spesa.</p>}
-   {selectedContacts.length>0&&<p>Contatti da salvare in Rubrica: {selectedContacts.length}. Solo quelli che hai scelto. Ognuno viene collegato al documento, alla spesa e agli oggetti salvati con questa conferma.</p>}
+ </>;
+ const noExpense=!houses.length&&!objectForms.some(x=>x.form.expense!=='skip')&&<p>Nessuna nuova spesa.</p>;
+ const contactPart=selectedContacts.length>0&&<p>Contatti da salvare in Rubrica: {selectedContacts.length}. Solo quelli che hai scelto. Ognuno viene collegato al documento, alla spesa e agli oggetti salvati con questa conferma.</p>;
+ if(!edit)return <div className={styles.saveSummary}>
+  <h3>Al salvataggio</h3>
+  {documentPart}
+  {!documentOnly&&<>{housePart}{objectPart}{noExpense}{contactPart}</>}
+ </div>;
+ const block=(name:string,step:string,body:ReactNode)=><section className={styles.summaryBlock} aria-label={name}>
+  <div className={styles.summaryBlockBody}><p className={styles.summaryBlockTitle}>{name}</p>{body}</div>
+  {edit.steps.has(step)&&<button type="button" className={ui.btn} aria-label={'Modifica '+name} onClick={()=>edit.go(step)}>Modifica</button>}
+ </section>;
+ const contentStep=edit.steps.has('contenuto')?'contenuto':'documento';
+ return <div className={styles.saveSummary}>
+  <h3>Al salvataggio</h3>
+  {block('Documento','documento',documentPart)}
+  {!documentOnly&&<>
+   {block('Oggetti',contentStep,objectPart)}
+   {block('Spese',edit.steps.has('spese')?'spese':contentStep,<>{housePart}{noExpense}{!houses.length&&objectForms.some(x=>x.form.expense!=='skip')&&<p>Le spese degli articoli sono indicate sotto ogni oggetto.</p>}</>)}
+   {excluded.length>0&&block('Esclusi',contentStep,<p>{excluded.join(', ')} · nessun oggetto né spesa.</p>)}
+   {contactPart&&block('Contatti','contatti',contactPart)}
   </>}
  </div>;
 }

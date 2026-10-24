@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Schede di compilazione come il prototipo
+
+Una scheda per passaggio con domanda e spiegazione, barra con spunte e passaggi futuri disabilitati, scelte del contenuto a pastiglie, riepilogo a blocchi con «Modifica», originale affiancato nella rotta autonoma, piede fisso su telefono. Solo presentazione: flusso, convalide e payload invariati. [Report](v5/schede-presentazione-report-20261024.md).
+
 ## 24 ottobre 2026 — Bollette testuali, proposte locali senza AI
 
 La compilazione manuale riconosce una possibile bolletta dal testo PDF e propone tipo, categoria, fornitore, totale, periodo, emissione e scadenza quando univoci. Stessa scheda Spese e conferma canonica nelle due viste, nessun oggetto o pagamento dedotto. Compilazioni salvate preservate; importi discordanti non sommati. SHA verificato e limiti locali; scansioni senza testo richiedono OCR e sono segnalate. [Report e limiti](v5/bollette-locali-20261024.md). Mock completa 947/947 in 111 file, nessun test saltato/retry0, typecheck/lint/build verdi. Lotto separato, nessuna modifica a backend/cestino Claude o dati reali; aggiornamento dell’app subordinato al merge.

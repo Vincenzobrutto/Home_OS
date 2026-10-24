@@ -1,3 +1,9 @@
+## 24 ottobre 2026 — Dopo le schede a prototipo
+
+- **Fase B, scheda articolo compatta**: variante di `ItemEditor` per le schede, con i campi essenziali in vista e gli altri in «Altri dati facoltativi», senza ripetere la scelta «Cosa vuoi fare?» già fatta nel Contenuto. Lotto separato, con non regressione sulla pagina unica.
+- **Pagina dell'evidenza nell'originale**: aprire l'anteprima sulla pagina della proposta quando l'evidenza la indica.
+- **Test intermittenti preesistenti**: `src/routes/sharing.test.tsx` («picker: nessuna selezione implicita…») e `src/objects/KeepHouseDocuments.test.tsx` («menu oggetto: riepilogo prima di scrivere…») falliscono a intermittenza anche sul consolidamento `2ab7570`. [Report](v5/schede-presentazione-report-20261024.md).
+
 ## 24 ottobre 2026 — OCR locale e collaudo bollette rasterizzate
 
 La [precompilazione locale](v5/bollette-locali-20261024.md) usa soltanto testo PDF: non è OCR. Il lettore preesistente non ricava testo dalla copia anonimizzata della bolletta già fornita (`pdf_text_unavailable`); nessuna equivalenza dimostrata con il file attualmente caricato, non letto da DB/API/storage reale. Valutare in un lotto distinto OCR locale limitato e verificabile, evidenze per campo e layout a colonne, senza introdurre invii remoti impliciti. Nel frattempo scansioni, loghi privi di testo ed etichette non riconosciute restano da compilare con spiegazione esplicita. Non dichiarare questo caso reale risolto dalla sola suite mock.
