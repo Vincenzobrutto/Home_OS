@@ -1,3 +1,8 @@
+## 24 ottobre 2026 — Diagnosi offline Samsung v30
+
+- Aggiunti soli test del sottoinsieme di protocollo: schemi 1–20 pagine, controesempi e preflight riusciti seguiti da HTTP400 con corpo mai letto e nessun retry. 316/316 onboarding, build e lint superati. [Report](v5/samsung-protocollo-diagnosi-20261024.md).
+- Nessuna correzione runtime o nuova AI: il rifiuto remoto resta di causa sconosciuta; validazioni, gold, ledger, dati e lotto Claude invariati.
+
 ## 24 ottobre 2026 — Protocollo multi-pagina, verifica offline
 
 La struttura di spesa viene definita una sola volta e riusata negli slot fisici tramite riferimenti locali, conservando esattamente lo schema espanso e le validazioni. Nessuna fusione di importi o modifica ai decoder. Identificatore v30; nuovo test del rifiuto HTTP400 con ledger incerto, privacy e replay senza ulteriori invii. La riduzione del payload è verificata offline; l'accettazione Anthropic resta non verificata e Samsung non viene ritentato. Nessuna AI, DB reale, modifica al lotto Claude o deploy. [Report](v5/protocollo-multipagina-offline-20261024.md).

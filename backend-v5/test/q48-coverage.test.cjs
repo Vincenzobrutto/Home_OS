@@ -7,6 +7,56 @@ const {onboardingSchemaFor,onboardingWireOutput}=require('../dist/object-onboard
 const {automaticPlan}=require('../dist/object-onboarding/automatic-plan');
 const {progressiveComplete}=require('../dist/object-onboarding/reading');
 const {detailed}=require('./quality-v3-measures.cjs');
+const {protocolAudit}=require('./protocol-audit.cjs');
+
+test('offline documented-subset audit covers text, image, single-page and every 1–20 page wire schema',t=>{
+ const records=[];
+ for(const [kind,pages] of [['text',[]],['image',[]],['visual_pdf',[]],...Array.from({length:20},(_,i)=>['visual_pdf',Array.from({length:i+1},(_,j)=>j+1)])]){
+  const schema=onboardingSchemaFor(kind,pages),audit=protocolAudit(schema);
+  assert.deepEqual(audit.issues,[]);assert.equal(audit.optional,0);assert.equal(audit.unions,0);
+  assert.equal(audit.remoteAcceptance,'not_proven');
+  if(kind==='visual_pdf'&&pages.length===2)records.push({pages:2,schemaBytes:Buffer.byteLength(JSON.stringify(schema)),...audit});
+ }
+ t.diagnostic(JSON.stringify({event:'offline_protocol_audit',records}));
+});
+
+test('offline audit rejects structural, reference, constraint and documented complexity counterexamples without retaining content',()=>{
+ const closed=properties=>({type:'object',properties,required:Object.keys(properties),additionalProperties:false});
+ const examples=[
+  [{type:'object',properties:{},required:[]},'object_not_closed'],
+  [{$ref:'https://private.example/document'},'nonlocal_reference'],
+  [{$ref:'#/definitions/absent'},'unresolved_reference'],
+  [{type:'string',maxLength:1},'keyword_not_audited'],
+  [{type:'array',items:{type:'string'},minItems:2},'unsupported_min_items'],
+  [{type:'string',enum:[{secret:'PRIVATE'}]},'complex_enum'],
+  [{...closed({safe:{type:'string'}}),required:['missing']},'invalid_required'],
+  [closed(Object.fromEntries(Array.from({length:17},(_,i)=>['f'+i,{anyOf:[{type:'string'},{type:'null'}]}]))),'union_limit_exceeded'],
+  [{...closed(Object.fromEntries(Array.from({length:25},(_,i)=>['f'+i,{type:'string'}]))),required:[]},'optional_limit_exceeded'],
+ ];
+ const recursive={$ref:'#/definitions/loop',definitions:{loop:{$ref:'#/definitions/loop'}}};examples.push([recursive,'recursive_schema']);
+ for(const [schema,issue]of examples){const result=protocolAudit(schema);assert(result.issues.includes(issue));assert(!JSON.stringify(result).includes('PRIVATE'));assert(!JSON.stringify(result).includes('private.example'));}
+});
+
+test('token counting succeeds without checking output grammar, and a subsequent 400 is diagnosed without reading its body or retrying',async()=>{
+ const {ObjectOnboardingAnthropicTransport}=require('../dist/object-onboarding/ai-analysis');
+ const transport=new ObjectOnboardingAnthropicTransport({headers:()=>({})}),calls=[],diagnostics=[];
+ const onFailure=transport.onHttpFailure.bind(transport);
+ transport.onHttpFailure=d=>{diagnostics.push(d);onFailure(d);};
+ let bodyReads=0;
+ transport.fetchImpl=async(url,options)=>{
+  const endpoint=new URL(url).pathname,body=options.body?JSON.parse(options.body):null;calls.push({endpoint,body});
+  if(endpoint.startsWith('/v1/models/'))return new Response(JSON.stringify({id:'claude-sonnet-5-5'}),{status:200});
+  if(endpoint==='/v1/messages/count_tokens')return new Response(JSON.stringify({input_tokens:500}),{status:200});
+  return {ok:false,status:400,headers:new Headers({'request-id':'req_safe_test'}),text:async()=>{bodyReads++;throw Error('PRIVATE');},json:async()=>{bodyReads++;throw Error('PRIVATE');}};
+ };
+ const invalidSchema={type:'object',properties:{amount:{type:'number',minimum:0}},required:['amount'],additionalProperties:false};
+ const prepared=await transport.prepareStructured('claude-sonnet-5-5','Synthetic public instructions',[{role:'user',content:'Synthetic public input'}],invalidSchema,new AbortController().signal);
+ assert.equal(calls.length,2);assert(!Object.hasOwn(calls[1].body,'output_config'));
+ assert.deepEqual(prepared.output_config.format.schema,invalidSchema);
+ await assert.rejects(transport.send(prepared,new AbortController().signal),e=>e.code==='provider_request_rejected');
+ assert.equal(calls.length,3);assert.equal(bodyReads,0);
+ assert.deepEqual(diagnostics,[{status:400,endpoint:'messages',requestId:'req_safe_test'}]);
+});
 
 // Resolve the wire-only indirection before checking the unchanged page contract.
 function expandedSchema(schema){

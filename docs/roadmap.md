@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+Diagnosi Samsung v30 del 24 ottobre: [esito offline](v5/samsung-protocollo-diagnosi-20261024.md). Schema nel sottoinsieme documentato controllato, preflight non probanti per la compilazione; 316/316 onboarding, build/lint verdi. Causa del secondo HTTP400 ancora aperta; nessuna modifica speculativa di prodotto o ulteriore AI. Il prossimo passo richiede un metodo diagnostico verificabile, preservando privacy e ledger.
+
 Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedente è conservata integralmente nell’[archivio del 23 ottobre](roadmap-history-20261023.md), inclusi checkpoint e decisioni dei diversi agenti. I suoi esiti descrivono la data del singolo lotto. [Stato verificato](project-status.md), [backlog completo](backlog.md), [architettura](architecture.md).
 
 ## Manutenzione autorizzata in corso
