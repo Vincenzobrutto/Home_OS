@@ -1,3 +1,11 @@
+## 24 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame finale Codex
+
+All'eliminazione definitiva sparisce anche il titolo scelto nell'organizzazione diretta dei caricamenti. Una vecchia revoca non tocca più una condivisione creata dopo un ripristino concorrente. Le nuove ricevute riusano valori confermati la cui fonte è nel cestino. L'export non rilascia metadati di documenti spostati nel cestino durante l'esportazione. Riproduzioni 5/5, riesame 7/7, cestino 16/16, aggregato 513/513. [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-finale-di-codex).
+
+## 23 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame Codex
+
+Proposte non confermate escluse anche dall'export finché la fonte è nel cestino; valori confermati dell'API ricevute leggibili con fonte indisponibile; ripulitura intake per lotto; il replay di un vecchio cestino non revoca condivisioni create dopo il ripristino. Sei casi del riesame 7/7, aggregato 513/513 (54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL). [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-di-codex).
+
 ## 23 ottobre 2026 — Cestino lotto 2: pagina e azioni nel frontend
 
 «Elimina» sposta nel cestino con anteprima d'impatto e riga sul fornitore AI; avviso «Annulla · Vai al cestino» in vista finché lo chiudi o cambi pagina; pagina Cestino con ripristino, eliminazione subito e svuotamento; link «Cestino (n)» nella barra laterale e nel menu solo se non vuoto. Verificato con test mock e nel browser su backend simulato. [Report](v5/cestino-lotto2-report-20261023.md).
@@ -9,6 +17,12 @@ Le schede confermate restano leggibili anche con la fonte nel cestino o eliminat
 ## 23 ottobre 2026 — Cestino dei documenti, lotto 1 (backend)
 
 Documenti nel cestino per 30 giorni, solo per chi li ha caricati: invisibili ovunque, condivisioni revocate, ripristino versionato, eliminazione definitiva automatica o immediata con segnaposto senza contenuto e registro delle eliminazioni. Migrazione additiva `20261023200000_document_trash`. Verificato offline: 227/227 ordinari, 506/506 HTTP/DB sintetici, ricerca del testo sintetico in tutto il DB dopo lo svuotamento con zero risultati. Frontend nel lotto 2, backup in un lotto separato. [Report](v5/cestino-lotto1-report-20261023.md).
+
+## 23 ottobre 2026 — Classificazione locale di ricevute e negazioni
+
+Riconosciute le forme «ricevuta d'acquisto» con apostrofi e spazi diversi. Le menzioni esplicitamente negate e i riferimenti negativi all'obbligo di emissione non attribuiscono un tipo al documento; una vera fattura nello stesso PDF rimane riconoscibile. Build/lint e 233/233 test ordinari offline superati. Correzione verificata senza AI, accesso DB o modifica al lotto Cestino; integrazione approvata descritta sotto. [Report](v5/ricevute-negazioni-20261023.md).
+
+Successiva integrazione approvata: PR #12 unita a `b74efe9`, API del collaudo isolato ricompilata e riavviata con AI/worker/salvataggi bloccati. Bozza caffè 499 EUR e nessuna spesa; audit dati prima/dopo identici. Nessun DB reale, main o lotto Claude modificato.
 
 ## 23 ottobre 2026 — Ordini confermati: proposte di costo e acquisto
 

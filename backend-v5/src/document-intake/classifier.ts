@@ -21,18 +21,33 @@ const rules: Array<[DocumentKind, RegExp, string]> = [
   ['delivery_notice', /(?:il\s+pacco\s+è\s+in\s+consegna|conferma\s+di\s+(?:spedizione|consegna))/iu, 'Conferma di consegna'],
   ['purchase_order', /(?:conferma\s+(?:dell[’']?|di\s+)?ordine|riepilogo\s+ordine|ordine\s+di\s+acquisto)/iu, 'Ordine di acquisto'],
   ['product_label', /etichetta\s+(?:identificativa|del\s+prodotto|prodotto)/iu, 'Etichetta prodotto'],
-  ['receipt', /scontrino|documento\s+commerciale|ricevuta\s+(?:di\s+acquisto|fiscale)/iu, 'Ricevuta'],
+  ['receipt', /\bscontrino\b|documento\s+commerciale|ricevuta\s+(?:(?:di\s+|d\s*['’ʼ]\s*)acquisto\b|fiscale\b)/iu, 'Ricevuta'],
   ['invoice', /\bfattura\b/iu, 'Fattura'],
   ['warranty', /certificato\s+(?:di\s+)?garanzia|garanzia\s+convenzionale/iu, 'Garanzia'],
   ['manual', /manuale\s+(?:d[’']?uso|di\s+istruzioni|utente)/iu, 'Manuale d’uso'],
   ['utility_bill', /\bbolletta\b|fornitura\s+(?:di\s+)?(?:energia\s+elettrica|gas\s+naturale|acqua)/iu, 'Bolletta'],
 ];
+// A denied mention is not evidence of the document kind. Keep the scope local
+// to the occurrence: a disclaimer must not hide a real heading elsewhere.
+const deniedBefore = [
+  /\bnon\s+(?:è|e['’ʼ]|costituisce|rappresenta|sostituisce)\s+(?:in\s+alcun\s+modo\s+)?(?:(?:un|una|il|la)\s+)?$/iu,
+  /\bnon\s+(?:(?:è|e['’ʼ])\s+)?(?:fiscalmente\s+)?(?:valid[oa]|utilizzabile)\s+(?:come|quale)\s+(?:(?:un|una)\s+)?$/iu,
+  /\bnon\s+(?:si\s+tratta\s+di|ha\s+(?:il\s+)?valore\s+(?:fiscale\s+)?di)\s+(?:(?:un|una)\s+)?$/iu,
+  /\b(?:senza|priv[oa]\s+di)\s+valore\s+(?:fiscale\s+)?di\s+$/iu,
+  /\b(?:non\s+soggett[oa]|esent[ei])\s+(?:all['’ʼ]\s*|dall['’ʼ]\s*|a\s+|da\s+)obbligo\s+di\s+(?:emissione|rilascio|presentazione)\s+(?:(?:della|del|di(?:\s+una?)?)\s+|dell['’ʼ]\s*)$/iu,
+  /\bnessun\s+obbligo\s+di\s+(?:emissione|rilascio|presentazione)\s+(?:(?:della|del|di(?:\s+una?)?)\s+|dell['’ʼ]\s*)$/iu,
+];
+function deniedMention(page: string, index: number) {
+  const prefix = page.slice(Math.max(0, index - 160), index).split(/[.!?;:]/u).at(-1)!;
+  return deniedBefore.some(pattern => pattern.test(prefix));
+}
 export function classifyText(pages: string[]) {
   const matches = rules.flatMap(([kind, pattern, label]) => {
     for (let i = 0; i < pages.length; i++) {
       // Una visura che cita il certificato non diventa essa stessa un certificato.
       if (['agibility', 'habitability'].includes(kind) && /visura\s+(?:di\s+)?agibilit[àa]|non\s+costituisce\s+certificazion/iu.test(pages[i])) continue;
-      const match = pattern.exec(pages[i]);
+      const occurrences = pages[i].matchAll(new RegExp(pattern.source, pattern.flags + 'g'));
+      const match = [...occurrences].find(candidate => !deniedMention(pages[i], candidate.index));
       if (match) {
         const start = Math.max(0, match.index - 40), end = Math.min(pages[i].length, match.index + match[0].length + 100);
         const line = pages[i].slice(0, match.index).split('\n').at(-1)! + pages[i].slice(match.index).split('\n')[0];

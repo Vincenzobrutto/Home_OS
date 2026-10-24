@@ -39,6 +39,34 @@ Un mio test sulla scadenza contava le rimozioni fisiche di tutto il DB. La scade
 
 Branch aggiornato con merge del consolidamento (PR #8 e #10 di Codex, ordini) e della revisione (`codex/cestino-review-20261023`). Build/lint superati; `npm test` 227/227; onboarding 306/306; qualità 24/24; guardie qualità 18/18; guardie runner 10/10; `test:trash-db` 16/16 (cestino e revisione, conteggio Node). Aggregato `test:offline-db` **513/513**: 54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL. Nessuna asserzione dei test di revisione modificata.
 
+## Correzioni dopo il riesame di Codex
+
+[Riesame](cestino-riesame-20261023.md) sulla punta `a132696`: un P1 e tre P2 (B1–B4), riprodotti da sei nuovi casi in `test/document-trash-rereview.integration.test.cjs` (PR #14, `a08335d`). Il file è stato portato nel branch con un merge, insieme al consolidamento aggiornato (PR #12 e #13); asserzioni invariate.
+
+1. **B1 (P1) — export di proposte non confermate.** `readableReceiptProofKeys` ha ora due ambiti. `confirmed` (predefinito) vale per i valori già confermati: conta solo la visibilità, e versione/SHA solo su fonti attive. `proposal` vale per confronti e contenuti non confermati: richiede la fonte attiva e corrente, come `canReadDocument`. L'export personale usa `proposal` per i `ReceiptComparison`, sia nella selezione sia nel ricontrollo prima di rilasciare il file.
+2. **B2 (P2) — valori confermati nell'API ricevute.** `objectFields` usa la regola dei valori confermati per `value` e la fonte attiva per `sources`. Il nuovo campo `sourceAvailable` distingue il valore leggibile dalla fonte non apribile; con la fonte nel cestino gli estratti non vengono restituiti.
+3. **B3 (P2) — pulizia dei registri intake per lotto.** La ripulitura confronta la coppia `(batchId, clientItemId)` e le operazioni `review:`/`duplicate:` dello stesso lotto. I corpi e i digest di altri file restano intatti.
+4. **B4 (P2) — replay di un vecchio cestino.** La revoca dopo il commit avviene solo se il documento è ancora nel cestino nello stesso ciclo di vita descritto dalla risposta salvata (`lifecycleVersion`). Il replay dopo un ripristino non tocca condivisioni nuove. L'ordine `ShareRecord` → `Document` e il recupero della revoca interrotta, nel ripristino, restano invariati.
+
+### Verifiche dopo il riesame
+
+Build/lint superati. `npm test` 236/236 (9 in più dal consolidamento, PR #12); onboarding 306/306; qualità 24/24; guardie qualità 18/18; guardie runner 10/10. `test:trash-db` 16/16. Profilo aggiuntivo `test:cestino-riesame-db` **7/7** (6 casi più il contenitore), escluso dall'aggregato come impostato da Codex. Aggregato `test:offline-db` **513/513 (54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL)**. Due tentativi precedenti non hanno dato esito. Il primo si è fermato prima dei test (`offline_api_not_ready`, log API vuoto) con i test unitari in parallelo. Il secondo è stato interrotto dal limite di 10 minuti del runner (`offline_command_timeout:tests`), con un altro collaudo PostgreSQL attivo sulla macchina, dopo 421 superati e il caso onboarding «single receipt optional cost» fallito; quel profilo rieseguito da solo dà 44/44. Il terzo aggregato, su cluster nuovo, è verde. Log in `tmp/cestino/dimora-offline-RgSwVZ` (interrotto) e `dimora-offline-KKOfgg` (verde).
+
+## Correzioni dopo il riesame finale di Codex
+
+[Riesame finale](cestino-riesame-finale-20261023.md) sulla punta `66c2915`: un P1 e tre P2 (C1–C4), riprodotti da cinque test in `test/document-trash-final-review.integration.test.cjs` (PR #18, `cfcb4a3`), portati nel branch con un merge e lasciati invariati.
+
+1. **C1 (P1) — titolo nel corpo `organize`.** La pulizia dei registri intake riconosce ora le voci del documento anche per id dell'elemento (`items[].id`/`itemId`), oltre che per `clientItemId`, sempre nello stesso lotto. Di quelle voci restano solo identificativi e versioni, con `sourceDeleted: true`: spariscono nome del file, titolo, `selection` e `decision`. Le altre voci, i risultati e il digest restano.
+2. **C2 (P2) — revoca contro ripristino concorrente.** La revoca dopo il commit agisce solo sulle condivisioni bloccate all'inizio della sua transazione e non rilegge più l'elenco. Se all'inizio non c'erano condivisioni, una condivisione nata dopo un ripristino non può essere toccata. Se c'erano, il ripristino deve bloccare le stesse righe prima del documento e aspetta, quindi controllo del ciclo e revoca restano atomici. L'ordine `ShareRecord` → `Document` non cambia. Le anteprime di condivisione scadono ora dentro lo spostamento, dopo il documento: è lo stesso ordine della creazione di una condivisione. Il ripristino continua a completare una revoca interrotta.
+3. **C3 (P2) — riuso dei valori confermati.** Nelle ricevute, `reuse` + `keep_existing` (conferma e salvataggio della revisione) verifica il valore canonico precedente con la regola dei dati confermati (`confirmedProof`), non con la fonte attiva. Le proposte della nuova ricevuta richiedono sempre fonte attiva, versione e SHA. Nessun originale o estratto eliminato viene riaperto.
+4. **C4 (P2) — export concorrente.** Il ricontrollo finale dell'export personale verifica anche che ogni documento di `data.documents` sia ancora attivo, del caricatore e con originale. Altrimenti l'export risponde 403 e non rilascia nomi né metadati. Il resto del ricontrollo è invariato.
+
+### Verifiche dopo il riesame finale
+
+Build e lint superati. `npm test` 236/236; onboarding 306/306; qualità 24/24; guardie qualità 18/18; guardie runner 10/10. Suite DB in sequenza su cluster nuovi: `test:cestino-race-db` **5/5**, `test:cestino-riesame-db` **7/7**, `test:trash-db` **16/16**. Aggregato `test:offline-db`: **513/513** (54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL) alla terza esecuzione.
+
+Le prime due esecuzioni dell'aggregato erano fallite: prima 14 casi, poi 2, solo in `installment-linking` e `generalized-evidence`. Tutti erano un 403 del controllo di appartenenza (`ReviewService.require`) subito dopo la creazione di una casa di prova, in file e percorsi che il lotto non tocca. Gli stessi file da soli passano 88/88; l'aggregato sulla punta precedente `66c2915` passa 513/513 in un'esecuzione; la terza esecuzione sulla nuova punta passa. Li considero un'intermittenza del collaudo, non un difetto del prodotto, ma la causa non è dimostrata. Ipotesi in [backlog](../backlog.md): l'inizio di validità dell'appartenenza è scritto dall'orologio di PostgreSQL e confrontato con quello di Node. Nessuna asserzione, timeout o test modificato per farli passare.
+
 ## Limiti e lavoro residuo
 
 - **Frontend non toccato:** la pagina Cestino, l'avviso «Annulla» e il passaggio del pulsante attuale al cestino sono il lotto 2. `POST documents/:id/removal` resta com'è.

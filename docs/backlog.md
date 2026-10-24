@@ -4,6 +4,10 @@
 
 **R10 completato:** [domini API separati, un solo trasporto](v5/fase0-api-client-domains-refactor-20261023.md), 860/860 mock e 581 confronti offline; entry +7.214 byte, nessun beneficio di velocità dichiarato.
 
+## 24 ottobre 2026 — Collaudo: 403 intermittente su appartenenze appena create
+
+- Due esecuzioni dell'aggregato `test:offline-db` (lotto Cestino, punta successiva a `66c2915`) sono fallite con 403 da `ReviewService.require` subito dopo la creazione di una casa di prova in `installment-linking` e `generalized-evidence`: prima 14 casi, poi 2. I file da soli passano e la terza esecuzione è verde. Ipotesi da verificare: `HomeMembership.validFrom` usa `now()` di PostgreSQL mentre `validMembership` confronta con l'ora di Node, e su Windows le due letture possono differire di qualche millisecondo. Possibili correzioni: data esplicita nei test, oppure tolleranza nel controllo, da decidere. Nessun test modificato. [Report](v5/cestino-lotto1-report-20261023.md#verifiche-dopo-il-riesame-finale).
+
 ## 23 ottobre 2026 — Cestino lotto 1: residui fuori perimetro
 
 - Pagina Cestino, avviso «Annulla» e passaggio del pulsante attuale al cestino (lotto 2, frontend); dichiarare in UI che i documenti già inviati al fornitore AI seguono la sua conservazione. Documenti fonte di una scheda caldaia (AnalysisJob) oggi non spostabili: decidere il trattamento. Verificare che `DocumentIntakeRequest.results` non conservi il nome del file dopo l'eliminazione definitiva. Riapplicazione di `DeletionRecord` dopo un restore e ciclo delle copie di backup: lotto separato. [Report](v5/cestino-lotto1-report-20261023.md).

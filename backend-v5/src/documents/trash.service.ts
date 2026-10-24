@@ -5,7 +5,7 @@ import { digest } from '../security';
 import { object } from '../review/domain';
 import { DocumentPolicy } from './access';
 import { LocalFileStorage } from './storage';
-import { busyReason, lockDocumentShares, moveToTrash, purgeDocument, rejectDeletedReplay, restoreFromTrash, revokeDocumentShares, trashEntry, trashImpact } from './trash';
+import { busyReason, lockDocumentShares, moveToTrash, purgeDocument, rejectDeletedReplay, restoreFromTrash, revokeLockedShares, trashEntry, trashImpact } from './trash';
 
 type Tx = Prisma.TransactionClient;
 const KEY = /^[A-Za-z0-9_-]{16,100}$/;
@@ -57,8 +57,15 @@ export class TrashService implements OnModuleInit, OnModuleDestroy {
   async trash(a: string, h: string, id: string, input: unknown, key?: string) {
     const body = version(input);
     const response = await this.request(a, h, 'document-trash-v1', id, body, key, async (tx, now) => ({ response: await moveToTrash(tx, a, h, id, body.expectedVersion, now), storageKeys: [] }));
-    // Separate transaction, share rows locked first like SharingService; also completes an interrupted earlier attempt.
-    await this.db.$transaction(tx => revokeDocumentShares(tx, h, id, a, this.now()), { timeout: 30000, maxWait: 15000 });
+    // Separate transaction, share rows locked first like SharingService. Only the rows locked here can be revoked:
+    // a restore must lock the same rows before the Document, so it cannot slip between the lifecycle check and the
+    // revocation; a share created after a restore was not in this set and is never touched. A replay completes an
+    // interrupted revocation only while the document is still in the same trash lifecycle.
+    await this.db.$transaction(async tx => {
+      const locked = await lockDocumentShares(tx, h, [id]);
+      const current = await tx.document.findUnique({ where: { id }, select: { trashedAt: true, purgedAt: true, lifecycleVersion: true } });
+      if (current?.trashedAt && !current.purgedAt && current.lifecycleVersion === response.entry.version) await revokeLockedShares(tx, locked, a, this.now());
+    }, { timeout: 30000, maxWait: 15000 });
     return response;
   }
   restore(a: string, h: string, id: string, input: unknown, key?: string) {
