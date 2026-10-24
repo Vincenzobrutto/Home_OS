@@ -44,3 +44,7 @@ Le prime prove avevano scartato il riquadro colorato; binarizzazione automatica 
 Non verificati browser reale/mobile fisico, scansioni ruotate o manoscritte e lingue diverse dall’italiano. Ibridi con molto testo nativo ma singoli valori soltanto in immagini possono non attivare l’OCR: l’assenza di proposta non autorizza inferenze. Per documenti sopra i limiti o risorse/browser non compatibili resta la compilazione manuale. La lettura può essere parziale; l’utente controlla sempre i dati prima del salvataggio. Nessuna prova nel DB reale o aggiornamento dell’app in questo lotto.
 
 Riferimenti tecnici primari: [installazione locale](https://github.com/naptha/tesseract.js/blob/master/docs/local-installation.md), [API e cache](https://github.com/naptha/tesseract.js/blob/master/docs/api.md), [licenza upstream dei dati](https://github.com/naptha/tessdata/blob/gh-pages/LICENSE). Le licenze distribuite sono incluse tra gli asset.
+
+## Consegna
+
+Codice e verifiche nel commit `f826cd70ab8c1de01858708f13c00836a1813ca5`, pubblicato sul solo branch del lotto con hash verificato tramite `git ls-remote`. [PR #26](https://github.com/Vincenzobrutto/Home_OS/pull/26) aperta verso `codex/dimora-v5-consolidata-20261023`; nessun merge o aggiornamento dei servizi. Il seguito documentale registra soltanto la consegna, senza cambiare il prodotto verificato. Prossimo passo: revisione/decisione del committente, quindi collaudo browser controllato prima dell’uso ordinario.
