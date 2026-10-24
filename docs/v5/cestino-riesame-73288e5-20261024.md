@@ -47,3 +47,5 @@ Comandi nuovi, sempre da `backend-v5` con bin PostgreSQL esplicito e scratch cor
 ## Seguito
 
 Correggere D1–D4 mantenendo le nuove asserzioni. Le due PR Claude sono ancora precedenti al consolidamento attuale: dopo le correzioni, merge dal consolidamento a cura dell’autore e nuova verifica di integrazione. Nessun merge da questo riesame; backup e altre tipologie di cestino restano lotti separati.
+
+Consegna: test e report pubblicati nel commit `fb417318809c22c2005337f09da9adebfeab7a07`, push verificato con `git ls-remote`. [PR #28](https://github.com/Vincenzobrutto/Home_OS/pull/28) in bozza verso `claude/cestino-backend-20261023`, con i sei rossi espliciti e il solo fix del setup delle fixture. [Commento sulla PR #9](https://github.com/Vincenzobrutto/Home_OS/pull/9#issuecomment-6389319003). Nessuna integrazione o modifica al codice prodotto nei branch Claude.
