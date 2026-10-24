@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Piano frontend compilazione a schede
+
+Registrato il lotto frontend separato dalla base consolidata `112ad05` e predisposto il [piano](v5/compilazione-schede-piano-20261024.md) sulla specifica Claude PR #22. Conferma e payload correnti da preservare, riuso dei componenti e test di accettazione pianificati. Solo documentazione; nessun codice o test di prodotto eseguito, nessuna API/backend/schema, AI, DB reale o merge. Scelte su contatti, solo spesa e pagina unica da concordare prima dell'implementazione.
+
 ## 24 ottobre 2026 — Protocollo multi-pagina, verifica offline
 
 La struttura di spesa viene definita una sola volta e riusata negli slot fisici tramite riferimenti locali, conservando esattamente lo schema espanso e le validazioni. Nessuna fusione di importi o modifica ai decoder. Identificatore v30; nuovo test del rifiuto HTTP400 con ledger incerto, privacy e replay senza ulteriori invii. La riduzione del payload è verificata offline; l'accettazione Anthropic resta non verificata e Samsung non viene ritentato. Nessuna AI, DB reale, modifica al lotto Claude o deploy. [Report](v5/protocollo-multipagina-offline-20261024.md).
