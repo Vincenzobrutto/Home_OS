@@ -15,6 +15,7 @@ export type PurgeReason = 'expired' | 'user_now' | 'user_empty';
 
 const conflict = (code: string, message: string) => new ConflictException({ code, message });
 const inManifest = (documentId: string) => ({ path: ['items'], array_contains: [{ documentId }] });
+const REDACTION_KEEP = new Set(['id', 'itemId', 'clientItemId', 'expectedVersion', 'expectedOrganizationVersion', 'replaceOrganization', 'byteSize', 'mimeType']);
 
 /**
  * Lock order matches SharingService, which locks ShareRecord before reading the Document:
@@ -25,16 +26,20 @@ export async function lockDocumentShares(tx: Tx, h: string, documentIds: string[
   if (rows.length) await tx.$queryRaw(Prisma.sql`SELECT id FROM "ShareRecord" WHERE id IN (${Prisma.join(rows.map(r => r.id))}) ORDER BY id FOR UPDATE`);
   return rows.map(r => r.id);
 }
-/** Revokes every share still open on the document; revoked shares never come back with a restore. */
-export async function revokeDocumentShares(tx: Tx, h: string, id: string, actorId: string, now: Date) {
-  const locked = await lockDocumentShares(tx, h, [id]);
+/** Revokes the given share rows, which the caller has already locked; never re-queries, so a share created later is untouched. */
+export async function revokeLockedShares(tx: Tx, locked: string[], actorId: string, now: Date) {
   const open = locked.length ? await tx.shareRecord.findMany({ where: { id: { in: locked }, state: { notIn: ['revoked', 'declined'] } }, orderBy: { id: 'asc' } }) : [];
   for (const share of open) {
     const updated = await tx.shareRecord.update({ where: { id: share.id }, data: { state: 'revoked', revokedAt: now, codeHash: null, comparisonCode: null, version: { increment: 1 } } });
     await tx.shareEvent.create({ data: { shareId: share.id, actorId, kind: 'revoke', version: updated.version } });
   }
-  await tx.sharePreview.updateMany({ where: { homeId: h, consumedBy: null, validUntil: { gt: now }, manifest: inManifest(id) }, data: { validUntil: now } });
   return open.length;
+}
+/** Revokes every share still open on the document; revoked shares never come back with a restore. */
+export async function revokeDocumentShares(tx: Tx, h: string, id: string, actorId: string, now: Date) {
+  const revoked = await revokeLockedShares(tx, await lockDocumentShares(tx, h, [id]), actorId, now);
+  await tx.sharePreview.updateMany({ where: { homeId: h, consumedBy: null, validUntil: { gt: now }, manifest: inManifest(id) }, data: { validUntil: now } });
+  return revoked;
 }
 
 /** Only the uploader may move, restore or delete a document; owning the home is not enough. */
@@ -87,6 +92,8 @@ export async function moveToTrash(tx: Tx, a: string, h: string, id: string, expe
   // Shares stop working in this transaction (a trashed document is not an available original) and are
   // marked revoked right after commit: updating share rows after the Document lock could deadlock with a download.
   const shares = await tx.shareRecord.count({ where: { homeId: h, state: { notIn: ['revoked', 'declined'] }, manifest: inManifest(id) } });
+  // Pending previews expire now: sharing creation locks the Document before consuming a preview, the same order as here.
+  await tx.sharePreview.updateMany({ where: { homeId: h, consumedBy: null, validUntil: { gt: now }, manifest: inManifest(id) }, data: { validUntil: now } });
   const moved = await tx.document.update({ where: { id }, data: { trashedAt: now, purgeAfter: new Date(+now + TRASH_RETENTION_DAYS * DAY_MS), lifecycleVersion: { increment: 1 } } });
   return { entry: trashEntry(moved), revokedShares: shares };
 }
@@ -146,14 +153,16 @@ export async function purgeDocument(tx: Tx, h: string, id: string, reason: Purge
   // Intake ledgers: only this document's entries lose file name and review bodies; other files of the batch stay.
   // clientItemId is unique inside one batch only: match the (batchId, clientItemId) pair.
   const pair = (batchId: string, clientItemId: unknown) => JSON.stringify([batchId, clientItemId]);
-  const clientIds = new Set(items.map(i => pair(i.batchId, i.clientItemId))), itemOps = new Set(items.map(i => i.batchId + ':review:' + i.id).concat(items.map(i => i.batchId + ':duplicate:' + i.id)));
+  const clientIds = new Set(items.map(i => pair(i.batchId, i.clientItemId))), itemIds = new Set(items.map(i => pair(i.batchId, i.id))), itemOps = new Set(items.map(i => i.batchId + ':review:' + i.id).concat(items.map(i => i.batchId + ':duplicate:' + i.id)));
   const intake = items.length ? await tx.documentIntakeRequest.findMany({ where: { batchId: { in: [...new Set(items.map(i => i.batchId))] } }, select: { id: true, batchId: true, operation: true, body: true } }) : [];
   for (const row of intake) {
     if (itemOps.has(row.batchId + ':' + row.operation)) { await tx.documentIntakeRequest.update({ where: { id: row.id }, data: { body: SOURCE_DELETED } }); continue; }
     const body = row.body as { items?: Array<Record<string, unknown>> } | null;
-    const own = (item: Record<string, unknown>) => clientIds.has(pair(row.batchId, item.clientItemId));
+    const own = (item: Record<string, unknown>) => clientIds.has(pair(row.batchId, item.clientItemId)) || itemIds.has(pair(row.batchId, item.itemId ?? item.id));
     if (!Array.isArray(body?.items) || !body.items.some(own)) continue;
-    const next = { ...body, items: body.items.map(item => own(item) ? { ...item, filename: 'documento-eliminato' } : item) };
+    // Keep only identifiers and versions of this document's entries: no file name, title, selection or decision.
+    const redact = (item: Record<string, unknown>) => ({ ...Object.fromEntries(Object.entries(item).filter(([key]) => REDACTION_KEEP.has(key))), ...('filename' in item ? { filename: 'documento-eliminato' } : {}), sourceDeleted: true });
+    const next = { ...body, items: body.items.map(item => own(item) ? redact(item) : item) };
     await tx.documentIntakeRequest.update({ where: { id: row.id }, data: { body: next as Prisma.InputJsonValue } });
   }
   // Share manifests keep ids and hashes for audit, not the name. Share rows were locked before the Document.

@@ -12,7 +12,7 @@ import { receiptConfirmation, type ReceiptOrigin, type FieldPlan } from './confi
 import { resolveReceiptField, type ReceiptExtraction, type ReceiptProposal } from './domain';
 import { candidateQuery, candidatePagination, equivalentReceiptDocuments, objectCandidatesSql, expenseCandidatesSql, type CandidateKind, type CandidateAnchor } from './candidates';
 import { reviewedForm, type SavedReceiptSelection } from './review';
-import { readableReceiptObjectIds, readableReceiptProofKeys, receiptProofKey } from './access';
+import { readableReceiptObjectIds, readableReceiptProofKeys, readableReceiptProofs, receiptProofKey } from './access';
 import { ReceiptReleasePolicy } from './release-policy';
 import { ReceiptAiBudget, receiptBilling } from './ai-budget';
 
@@ -205,7 +205,7 @@ export class ReceiptAssistanceService {
       const proposals = draft.fields as ReceiptExtraction['fields'];
       for (const plan of selection.object.fields) {
         const old = await tx.receiptObjectField.findUnique({ where: { objectId_fieldKey: { objectId: target.id, fieldKey: plan.field } } });
-        if (old && (old.accountId !== a || old.homeId !== h || old.documentId && !await this.source(tx, a, h, old.documentId, { documentVersion: old.documentVersion!, documentSha256: old.documentSha256! }))) throw deny();
+        if (old && (old.accountId !== a || old.homeId !== h || !await this.confirmedProof(tx, a, h, old))) throw deny();
         resolveReceiptField(plan.field, old ? { value: old.value, origin: old.origin, sources: old.sources as unknown as ReceiptProposal['sources'] } : null, proposals[plan.field] ?? null, { action: plan.action, ...(plan.value !== undefined ? { value: plan.value } : {}) });
       }
     }
@@ -369,13 +369,21 @@ export class ReceiptAssistanceService {
     await tx.objectEvent.create({ data: { accountId: a, homeId: h, targetKind: 'object', targetId: objectId, kind: 'linked', before: Prisma.JsonNull, after: json({ kind: 'link', row: link, subjectKind: 'object', subjectId: objectId }) } });
   }
 
+  /**
+   * The previous canonical value is confirmed data: it stays usable when its source is in the trash or purged
+   * (visibility frozen at trash time; version/SHA while active). The new receipt's own proposals still need an
+   * active, current source through this.source.
+   */
+  private async confirmedProof(tx: Tx, a: string, h: string, old: { documentId: string | null; documentVersion: number | null; documentSha256: string | null }) {
+    return !old.documentId || readableReceiptProofs(tx, a, h, [{ documentId: old.documentId, documentVersion: old.documentVersion, documentSha256: old.documentSha256 }], 'confirmed');
+  }
   private async decideFields(tx: Tx, a: string, h: string, draft: ReceiptDraft, objectId: string, plans: FieldPlan[]) {
     const proposals = draft.fields as ReceiptExtraction['fields'];
     let filled = false;
     for (const plan of plans) {
       const old = await tx.receiptObjectField.findUnique({ where: { objectId_fieldKey: { objectId, fieldKey: plan.field } } });
       if (old && (old.accountId !== a || old.homeId !== h)) throw deny();
-      if (old?.documentId && !await this.source(tx, a, h, old.documentId, { documentVersion: old.documentVersion!, documentSha256: old.documentSha256! })) throw deny();
+      if (old && !await this.confirmedProof(tx, a, h, old)) throw deny();
       const existing = old ? { value: old.value, origin: old.origin, sources: old.sources as unknown as ReceiptProposal['sources'] } : null;
       const result = resolveReceiptField(plan.field, existing, proposals[plan.field] ?? null, { action: plan.action, ...(plan.value !== undefined ? { value: plan.value } : {}) });
       if (result.state === 'filled') { await this.storeField(tx, a, h, objectId, plan.field, result.value!.value, result.value!, draft); filled = true; }

@@ -107,7 +107,7 @@ export class PersonalExportService {
     };
     const limitations = ['originals_not_included', 'sharing_and_ai_drafts_not_included', 'document_physical_availability_not_checked', ...(projection.refsExcluded || assets.length !== assetCandidates.length || objects.length !== objectCandidates.length || receiptFields.length !== receiptFieldCandidates.length || receiptComparisons.length !== comparisonCandidates.length ? ['some_references_excluded'] : []), ...(projection.historyLimited ? ['some_history_snapshots_unavailable'] : [])];
     if (receiptNames.length) limitations.push('receipt_object_history_uses_current_name');
-    return { envelope: { format: 'dimora-personal-home-export', formatVersion: 1, generatedAt: new Date().toISOString(), scope: { homeId: h, accountId: a }, account, home, data, limitations }, assetIds: [...assetIds], objectIds: [...objectIds], receiptProofs: [...receiptProofs, ...organizationProofs], proposalProofs };
+    return { envelope: { format: 'dimora-personal-home-export', formatVersion: 1, generatedAt: new Date().toISOString(), scope: { homeId: h, accountId: a }, account, home, data, limitations }, assetIds: [...assetIds], objectIds: [...objectIds], documentIds: documents.map(doc => doc.id), receiptProofs: [...receiptProofs, ...organizationProofs], proposalProofs };
   }
   async export(a: string, h: string, authorize: () => Promise<unknown>) {
     if (this.running >= EXPORT_LIMITS.concurrent) throw new ServiceUnavailableException({ code: 'personal_export_busy', message: 'Un’esportazione è già in corso. Riprova più tardi.' });
@@ -125,6 +125,9 @@ export class PersonalExportService {
         if (built.objectIds.some(id => !readableObjects.has(id))) throw new ForbiddenException('Accesso non consentito.');
         if (!await readableReceiptProofs(tx, a, h, built.receiptProofs)) throw new ForbiddenException('Accesso non consentito.');
         if (!await readableReceiptProofs(tx, a, h, built.proposalProofs, 'proposal')) throw new ForbiddenException('Accesso non consentito.');
+        // Document names and original metadata are released only if every listed document is still active.
+        const active = built.documentIds.length ? await tx.document.count({ where: { id: { in: built.documentIds }, homeId: h, uploaderId: a, trashedAt: null, original: { isNot: null } } }) : 0;
+        if (active !== built.documentIds.length) throw new ForbiddenException('Accesso non consentito.');
       }, { timeout: 15000, maxWait: 15000 });
       await authorize();
       await this.policy.require(a, h, 'export');

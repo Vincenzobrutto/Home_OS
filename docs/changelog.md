@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame finale Codex
+
+All'eliminazione definitiva sparisce anche il titolo scelto nell'organizzazione diretta dei caricamenti. Una vecchia revoca non tocca più una condivisione creata dopo un ripristino concorrente. Le nuove ricevute riusano valori confermati la cui fonte è nel cestino. L'export non rilascia metadati di documenti spostati nel cestino durante l'esportazione. Riproduzioni 5/5, riesame 7/7, cestino 16/16, aggregato 513/513. [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-finale-di-codex).
+
 ## 23 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame Codex
 
 Proposte non confermate escluse anche dall'export finché la fonte è nel cestino; valori confermati dell'API ricevute leggibili con fonte indisponibile; ripulitura intake per lotto; il replay di un vecchio cestino non revoca condivisioni create dopo il ripristino. Sei casi del riesame 7/7, aggregato 513/513 (54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL). [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-di-codex).
