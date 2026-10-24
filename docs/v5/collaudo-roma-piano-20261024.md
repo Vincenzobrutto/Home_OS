@@ -73,3 +73,8 @@ La causa specifica del 400 **non è accertata**: la maggiore complessità dello 
 La casa reale è accessibile e due caricamenti autorizzati sono stati eseguiti; il collaudo AI dei quattro documenti è **parziale e interrotto**, non tutto verde. Il collaudo delle conferme canoniche rimane bloccato; potrà essere aperto dopo revisione delle proposte e incarico pertinente. Nessun bypass di login o recupero password, `.env` modificato, migrazione sul reale, dato canonico automatico, AI fuori dal consenso o email.
 
 Documentazione del lotto su branch proprio con PR verso il consolidamento; il merge resta al committente. Gli strumenti di avvio/guardia e gli audit contenenti identificatori locali rimangono nel work del task, con istruzioni di ripresa nella consegna locale. Il controllo mattutino deve rileggere lo stato effettivo e non dedurre disponibilità dalle sole evidenze di questa notte.
+
+## Ricontrollo mattutino — 24 ottobre, finestra delle 08:00
+
+Verificati nuovamente frontend 5174 HTTP200, API3011 con header di protezione e autenticazione obbligatoria (401 senza sessione); gli stessi processi propri sono ancora attivi. La bozza caffè si riapre dal server nel browser autenticato, con 499 EUR, 14/06/2026, modello da verificare e nessuna nuova spesa. Audit READ ONLY: impronte canoniche ancora identiche, 30 documenti, una bozza riuscita; ledger invariato a 0,037809 USD settled più 0,25 USD uncertain. Nessun riavvio, nuovo upload, AI/preflight/retry o conferma durante il controllo. Monitoraggio concluso dopo questa finestra; servizi lasciati disponibili e PR #19 senza merge.
+
