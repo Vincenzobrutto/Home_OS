@@ -47,3 +47,7 @@ Una futura prova sui reali richiede documenti e dati corretti concordati, consen
 ## Vincoli per i prossimi lotti
 
 Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a pagamento o DB reale, modifica .env, reset/clean, force push, rimozione worktree o cancellazione dei 104 StoredFile. Conservare il lavoro legacy e il collaudo dell’utente. Ogni nuova ottimizzazione deve mantenere fonte/versione/SHA, privacy, CSRF, membership e idempotenza.
+
+## Collaudo reale concordato — 24 ottobre
+
+[Preparazione e risultati parziali](v5/collaudo-roma-piano-20261024.md): casa principale accessibile sul consolidamento approvato, 497/497 DB offline e conferme protette. Campagna dei quattro anonimizzati successivamente autorizzata: caffè pronto da rivedere, Samsung HTTP400/uncertain, arresto senza retry né altri invii. Da affrontare in lotto separato la compatibilità/diagnostica del protocollo multi-pagina; verifica umana del codice modello caffè e della stanza ancora necessaria. Nessun merge di Cestino.
