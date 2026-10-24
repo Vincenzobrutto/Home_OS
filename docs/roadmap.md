@@ -55,3 +55,7 @@ Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a paga
 ## Protocollo multi-pagina — lotto offline 24 ottobre
 
 [Schema di spesa condiviso e prove](v5/protocollo-multipagina-offline-20261024.md): contratto espanso identico per 1–20 pagine, senza modifiche a gold, evidenze o conferme. Protocollo v30 distingue la nuova preparazione. Il rifiuto Samsung resta incerto e non ritentato; accettazione remota non verificata. Nessun deploy o AI, PR separata verso il consolidamento e merge al committente.
+
+## Prototipo promozionale — 24 ottobre 2026
+
+Prototipo separato dei tre profili implementato, 24 viste e simulazioni. Browser sui percorsi principali e vista mobile verificati; anteprime e limiti nel [report](v5/prototipo-promozionale-20261024.md). Branch codex/prototipo-promozionale-20261024, area prototypes/dimora-promo; nessun file runtime V5 modificato. Demo privata pubblicata; revisione del committente e merge al consolidamento ancora da decidere.

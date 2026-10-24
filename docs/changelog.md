@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Prototipo promozionale dei tre profili
+
+Landing e 24 viste Home/Agenzia/Amministratore, percorsi guidati e azioni simulate in prototypes/dimora-promo. Pubblicazione privata Sites completata; browser dei percorsi principali e mobile verificati localmente. Nessuna modifica alle app V5. [Report, copertura e limiti](v5/prototipo-promozionale-20261024.md).
+
 ## 24 ottobre 2026 — Bollette testuali, proposte locali senza AI
 
 La compilazione manuale riconosce una possibile bolletta dal testo PDF e propone tipo, categoria, fornitore, totale, periodo, emissione e scadenza quando univoci. Stessa scheda Spese e conferma canonica nelle due viste, nessun oggetto o pagamento dedotto. Compilazioni salvate preservate; importi discordanti non sommati. SHA verificato e limiti locali; scansioni senza testo richiedono OCR e sono segnalate. [Report e limiti](v5/bollette-locali-20261024.md). Mock completa 947/947 in 111 file, nessun test saltato/retry0, typecheck/lint/build verdi. Lotto separato, nessuna modifica a backend/cestino Claude o dati reali; aggiornamento dell’app subordinato al merge.
