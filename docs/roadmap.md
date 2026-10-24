@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+Cestino documenti: [riesame indipendente su 73288e5](v5/cestino-riesame-73288e5-20261024.md), quattro P2 nuovi ancora aperti nonostante 513/513 sul perimetro originale. Nuove riproduzioni consegnate separate dall’aggregato; prima dell’integrazione servono correzioni dell’autore e merge dal consolidamento aggiornato. Nessun merge eseguito.
+
 Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedente è conservata integralmente nell’[archivio del 23 ottobre](roadmap-history-20261023.md), inclusi checkpoint e decisioni dei diversi agenti. I suoi esiti descrivono la data del singolo lotto. [Stato verificato](project-status.md), [backlog completo](backlog.md), [architettura](architecture.md).
 
 ## Manutenzione autorizzata in corso

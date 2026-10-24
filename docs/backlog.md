@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Cestino, nuovi rilievi D1–D4
+
+Quattro P2 ancora da correggere: [riesame indipendente su 73288e5](v5/cestino-riesame-73288e5-20261024.md). Sei riproduzioni rosse esplicite, codice prodotto intatto. Separare visibilità del valore confermato e accesso alla citazione; allineare lock di anteprime/documenti e rendere raggiungibili tutte le voci del cestino. Dopo i fix, merge dal consolidamento a cura di Claude e nuovo collaudo; nessuna autorizzazione implicita a migrare dati reali o integrare.
+
 **Tranche autonoma verificata:** [editor/presentazione R03](v5/fase0-editor-write-presentation-refactor-20261023.md), mock finale 860/860 e backend 496/496 HTTP/DB sintetici. [Chiusura, misure e opportunità residue](v5/fase0-refactor-closure-20261023.md): nessuna promozione del gate AI o nuovo branch impliciti.
 
 **R05 verificato sui candidati:** [317 → 170 statement per 50 candidati](v5/fase0-candidate-query-batching-20261023.md), stessi filtri e lock; 496/496 HTTP/DB sintetici. Altri percorsi restano opportunità distinte da misurare, nessuna cache fra account.
@@ -6,7 +10,7 @@
 
 ## 24 ottobre 2026 — Collaudo: 403 intermittente su appartenenze appena create
 
-- Due esecuzioni dell'aggregato `test:offline-db` (lotto Cestino, punta successiva a `66c2915`) sono fallite con 403 da `ReviewService.require` subito dopo la creazione di una casa di prova in `installment-linking` e `generalized-evidence`: prima 14 casi, poi 2. I file da soli passano e la terza esecuzione è verde. Ipotesi da verificare: `HomeMembership.validFrom` usa `now()` di PostgreSQL mentre `validMembership` confronta con l'ora di Node, e su Windows le due letture possono differire di qualche millisecondo. Possibili correzioni: data esplicita nei test, oppure tolleranza nel controllo, da decidere. Nessun test modificato. [Report](v5/cestino-lotto1-report-20261023.md#verifiche-dopo-il-riesame-finale).
+- Due esecuzioni dell'aggregato `test:offline-db` (lotto Cestino, punta successiva a `66c2915`) sono fallite con 403 da `ReviewService.require` subito dopo la creazione di una casa di prova in `installment-linking` e `generalized-evidence`: prima 14 casi, poi 2. I file da soli passano e la terza esecuzione è verde. Ipotesi riprodotta indipendentemente: 240 campioni, 235 date ancora future al ritorno a Node e 67 rifiuti di ReviewService; differenza osservata da -2 a +2 ms. Con una data di inizio esplicitamente passata, 240/240 controlli passano. Sul branch di revisione è proposta soltanto questa inizializzazione nei due test (61/61 integrazioni), senza cambiare assert o dati economici. Nessuna tolleranza nel prodotto: restano vietate appartenenze future/revocate/scadute. [riesame indipendente su 73288e5](v5/cestino-riesame-73288e5-20261024.md). [Report](v5/cestino-lotto1-report-20261023.md#verifiche-dopo-il-riesame-finale).
 
 ## 23 ottobre 2026 — Cestino lotto 1: residui fuori perimetro
 
