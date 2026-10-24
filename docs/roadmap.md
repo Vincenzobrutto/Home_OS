@@ -55,3 +55,8 @@ Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a paga
 ## Protocollo multi-pagina — lotto offline 24 ottobre
 
 [Schema di spesa condiviso e prove](v5/protocollo-multipagina-offline-20261024.md): contratto espanso identico per 1–20 pagine, senza modifiche a gold, evidenze o conferme. Protocollo v30 distingue la nuova preparazione. Il rifiuto Samsung resta incerto e non ritentato; accettazione remota non verificata. Nessun deploy o AI, PR separata verso il consolidamento e merge al committente.
+
+
+### Aggiornamento Samsung v30 — 24 ottobre
+
+Nuovo singolo invio autorizzato separatamente: HTTP400 dopo due preflight riusciti, nessuna bozza. Diagnosi specifica ancora aperta; dettagli e costi nel [report Roma](v5/collaudo-roma-piano-20261024.md#nuovo-invio-samsung-v30-autorizzato--24-ottobre-0939). Prossimo lavoro proposto solo offline, nessun ulteriore invio o retry autorizzato.
