@@ -38,5 +38,16 @@ export function onboardingSchemaFor(kind:ProductEvidenceContext['kind'],sentInvo
  const sharedEvidence=JSON.parse(JSON.stringify((schema.properties as Record<string,unknown>).purchaseTotal)) as {items:{properties:{evidence:unknown}}};
  const poolSchema=sharedEvidence.items.properties.evidence;
  const reference=(value:unknown)=>{if(!value||typeof value!=='object')return;const row=value as Record<string,unknown>,props=row.properties as Record<string,unknown>|undefined;if(props?.evidence)props.evidence={type:'integer'};for(const child of Object.values(row))reference(child);};reference(schema);
- (schema.properties as Record<string,unknown>).sources={type:'array',items:poolSchema};(schema.required as string[]).push('sources');return schema;
+ const properties=schema.properties as Record<string,unknown>;
+ properties.sources={type:'array',items:poolSchema};(schema.required as string[]).push('sources');
+ if(kind==='visual_pdf'&&sentInvoicePages.length){
+  // The wire shape and page checks stay identical. Share the fully transformed
+  // expense grammar instead of repeating it globally and in every physical slot.
+  const expenses=properties.houseExpenses as {items:unknown};
+  schema.definitions={invoiceExpense:expenses.items};
+  expenses.items={$ref:'#/definitions/invoiceExpense'};
+  const slots=(properties.invoicePages as {properties:Record<string,{properties:{expenses:{items:unknown}}}>}).properties;
+  for(const slot of Object.values(slots))slot.properties.expenses.items={$ref:'#/definitions/invoiceExpense'};
+ }
+ return schema;
 }

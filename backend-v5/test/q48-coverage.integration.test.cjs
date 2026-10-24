@@ -12,6 +12,53 @@ const {createModelAdapter}=require('./quality-v3-model.cjs');
 const {runProgressiveCampaign}=require('./quality-v3-runner.cjs');
 const {MODEL,fakeTransport}=require('./quality-v3-model-fixture.cjs');
 const code=expected=>e=>(e.getResponse?.().code??e.code)===expected;
+
+test('multipage provider rejection persists uncertainty, denies private reads and cannot resend on replay or a new client',async t=>{
+ const rawUrl=process.env.QUALITY_V3_DATABASE_URL;assertQualityDatabase(rawUrl);
+ const db=new PrismaClient({datasources:{db:{url:rawUrl}}});await db.$connect();t.after(()=>db.$disconnect());
+ const {OnboardingAiBudget,OnboardingAiConfig}=require('../dist/object-onboarding/ai-budget');
+ const {OnboardingAiAnalysis,ObjectOnboardingAnthropicTransport}=require('../dist/object-onboarding/ai-analysis');
+ const {ObjectOnboardingAnthropicProvider}=require('../dist/object-onboarding/anthropic-provider');
+ const {OnboardingJobService}=require('../dist/object-onboarding/jobs.service');
+ const {PdfTextExtractor}=require('../dist/review/pdf-text');
+ const f=q48(),a=await db.account.create({data:{name:'Synthetic multipage',email:randomUUID()+'@example.test',passwordHash:'not-login'}}),other=await db.account.create({data:{name:'Synthetic other owner',email:randomUUID()+'@example.test',passwordHash:'not-login'}});
+ const home=await db.home.create({data:{name:'Synthetic multipage rejection',address:'Synthetic only'}}),h=home.id;
+ for(const actor of [a,other])await db.homeMembership.create({data:{accountId:actor.id,homeId:h,role:'owner'}});
+ const doc=await db.document.create({data:{homeId:h,uploaderId:a.id,name:'Synthetic two-page PDF',visibility:'private',original:{create:{originalFilename:'synthetic.pdf',mimeType:'application/pdf',sha256:f.original.sha256,byteSize:f.original.bytes.length,file:{create:{storageKey:'synthetic-multipage-'+randomUUID()}}}}}});
+ const campaign='onboarding-multipage-'+randomUUID();
+ class Config extends OnboardingAiConfig{get environment(){return{ONBOARDING_AI_ENABLED:'true',ANTHROPIC_API_KEY:'offline-only',ONBOARDING_AI_MODEL:MODEL,ONBOARDING_AI_CAMPAIGN_ID:campaign,ONBOARDING_AI_BUDGET_USD:'1',ONBOARDING_AI_MAX_CALLS:'4',ONBOARDING_AI_ALLOWED_SHA256:f.original.sha256};}}
+ const config=new Config(),transport=new ObjectOnboardingAnthropicTransport(config),requests=[],diagnostics=[];let bodyReads=0;
+ transport.logger={warn:value=>diagnostics.push(value)};
+ transport.fetchImpl=async(url,init)=>{
+  const endpoint=url.slice('https://api.anthropic.com/v1/'.length);requests.push(endpoint);
+  if(endpoint==='models/'+MODEL)return Response.json({id:MODEL});
+  if(endpoint==='messages/count_tokens')return Response.json({input_tokens:700});
+  assert.equal(endpoint,'messages');const schema=JSON.parse(init.body).output_config.format.schema;
+  assert(schema.definitions.invoiceExpense);assert.deepEqual(schema.properties.invoicePages.required,['p1','p2']);
+  const response=new Response('PRIVATE document echo must not be read',{status:400,headers:{'request-id':'req_offline_multipage'}});
+  response.text=async()=>{bodyReads++;throw Error('private_body_read');};return response;
+ };
+ const service=client=>{
+  const review=new ReviewService(client,{}),access=new ObjectOnboardingAccess(client,review),objects=new HomeObjectsService(client,review),budget=new OnboardingAiBudget(client,config);
+  const provider=new ObjectOnboardingAnthropicProvider(new PdfTextExtractor(),transport),ai=new OnboardingAiAnalysis(client,provider,transport,budget);
+  return new OnboardingJobService(client,access,{read:async()=>f.original.bytes},ai,objects);
+ };
+ const jobs=service(db),key=randomUUID(),input={documentId:doc.id,provider:'anthropic',consentToProviderTransfer:true};
+ const started=await jobs.start(a.id,h,input,key),claimed=await jobs.claim(started.job.id);assert(claimed);await jobs.run(claimed);
+ const result=(await jobs.get(a.id,h,started.job.id,{})).job;
+ assert.equal(result.state,'uncertain');assert.equal(result.errorCode,'provider_request_rejected');assert.equal(result.draftId,null);
+ assert.equal(result.billing.state,'uncertain');assert.equal(result.billing.actualUsd,null);
+ assert.deepEqual(requests,['models/'+MODEL,'messages/count_tokens','messages']);assert.equal(bodyReads,0);assert(!JSON.stringify(diagnostics).includes('PRIVATE'));
+ const attempt=await db.objectOnboardingAttempt.findUniqueOrThrow({where:{jobId:result.id}});
+ assert.equal(attempt.state,'uncertain');assert.equal(attempt.reservedMicroUsd,250000);assert.equal(attempt.actualMicroUsd,null);assert.equal(attempt.output,null);
+ assert.equal((await jobs.start(a.id,h,input,key)).job.state,'uncertain');assert.equal(await jobs.claim(result.id),null);
+ await assert.rejects(jobs.start(a.id,h,input,randomUUID()),code('analysis_outcome_unknown'));
+ await assert.rejects(jobs.get(other.id,h,result.id,{}));await assert.rejects(jobs.start(other.id,h,input,randomUUID()));
+ const fresh=new PrismaClient({datasources:{db:{url:rawUrl}}});try{const replay=service(fresh);assert.equal((await replay.start(a.id,h,input,key)).job.state,'uncertain');assert.equal(await replay.claim(result.id),null);}finally{await fresh.$disconnect();}
+ assert.equal(requests.length,3);assert.equal(await db.objectOnboardingJob.count({where:{homeId:h}}),1);
+ assert.equal(await db.objectOnboardingAttempt.count({where:{campaignId:campaign}}),1);
+ for(const model of ['objectOnboardingDraft','homeObject','homeExpense','homeContact'])assert.equal(await db[model].count({where:{homeId:h}}),0);
+});
 test('Q48 page coverage persists across prefixes and confirmation; privacy and idempotency remain enforced',async t=>{
  const rawUrl=process.env.QUALITY_V3_DATABASE_URL;assertQualityDatabase(rawUrl);
  const db=new PrismaClient({datasources:{db:{url:rawUrl}}});await db.$connect();t.after(()=>db.$disconnect());
