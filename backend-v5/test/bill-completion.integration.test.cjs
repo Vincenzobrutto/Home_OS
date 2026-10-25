@@ -26,7 +26,7 @@ test('Bill completion: real services on disposable offline DB, canonical type, w
   try{
    const where={homeId:{in:homes}};
    await db.documentIntakeRequest.deleteMany({where:{batch:where}});await db.documentIntakeItem.deleteMany({where:{batch:where}});await db.documentIntakeBatch.deleteMany({where});
-   for(const model of ['objectOnboardingComparison','objectOnboardingBinding','objectOnboardingRequest','objectOnboardingJob','objectOnboardingDraft','expenseHistory','expenseRequest','homeExpense','objectEvent','objectResourceLink','homeObject','documentOrganization'])await db[model].deleteMany({where});
+   for(const model of ['objectOnboardingComparison','objectOnboardingBinding','objectOnboardingRequest','objectOnboardingJob','objectOnboardingDraft','expenseHistory','expenseRequest','homeExpense','objectEvent','objectResourceLink','homeObject','documentOrganization'])await db[model].deleteMany({where:{accountId:{in:accounts}}});
    await db.documentVersion.deleteMany({where:{document:where}});await db.document.deleteMany({where});await db.storedFile.deleteMany({where:{id:{in:fileIds}}});
    await db.homeMembership.deleteMany({where});await db.home.deleteMany({where:{id:{in:homes}}});await db.account.deleteMany({where:{id:{in:accounts}}});
   }finally{await db.$disconnect();}
@@ -66,7 +66,7 @@ test('Bill completion: real services on disposable offline DB, canonical type, w
  });
  await t.test('invalid amount and mismatched source cannot confirm or change the pending state',async()=>{
   await assert.rejects(service.confirm(a,h,draft.id,{...confirmation,source:{...draft.snapshot,sha256:'b'.repeat(64)}},randomUUID()),code('onboarding_source_changed'));
-  const cost=confirmation.houseExpenses[0];await assert.rejects(service.confirm(a,h,draft.id,{...confirmation,houseExpenses:[{...cost,values:{...cost.values,amountCents:0}}]},randomUUID()),status(422));
+  const cost=confirmation.houseExpenses[0];await assert.rejects(async()=>service.confirm(a,h,draft.id,{...confirmation,houseExpenses:[{...cost,values:{...cost.values,amountCents:0}}]},randomUUID()),status(422));
   await pending();assert.deepEqual(await counts(),{objects:0,expenses:0});assert.equal((await service.getDraft(a,h,draft.id,{})).draft.state,'open');
  });
  await t.test('another owner and a different home cannot read, prepare or confirm this private source',async()=>{
