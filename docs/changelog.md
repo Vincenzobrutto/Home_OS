@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Collaudo combinato compilazione
+
+Combinati sul solo branch di prova i cambiamenti delle PR #35 e #36, senza modificare ulteriormente il prodotto. Estesa la matrice archivio alle proposte OCR nelle due viste; asserzioni e timeout invariati. Mock completa 1038/1038 in 120 file, fixture 5/5 e typecheck/lint/build verdi. [Report, esiti e limiti](v5/compilazione-collaudo-combinato-20261025.md). Nessuna AI, dato reale o aggiornamento app.
+
 ## 25 ottobre 2026 — Recupero della compilazione dall’archivio
 
 Un collegamento incompleto a un documento esistente propone «Riprendi compilazione» invece di un nuovo caricamento. Il recupero esplicito conserva bozza, analisi esistente, modalità e filtri; nessuna scrittura all’apertura. Test offline per classificazione Bolletta, conferma della spesa e uscita dalla coda, nelle due viste. 20/20 mirati, 1008/1008 mock in 118 file, typecheck/lint/build verdi; [report e limiti](v5/compilazione-archivio-20261025.md). Nessuna AI, migrazione o scrittura reale; aggiornamento dell’app subordinato al merge.
