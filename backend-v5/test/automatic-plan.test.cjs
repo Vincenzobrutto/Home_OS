@@ -23,5 +23,5 @@ for(const [label,change,message] of [
  ['unverified purchase date',o=>{o.items[0].fields.purchaseDate.source.excerpt='Data ordine: 14/06/2026';},/regime di pagamento/],
  ['missing type',o=>delete o.items[0].objectType,/tipologia/],
  ['uncertain type',o=>{o.items[0].objectType.certainty='uncertain';},/tipologia/],
- ['visual type source',o=>{o.items[0].objectType.source.basis='visual';},/tipologia/],
+ ['visual type source',o=>{o.items[0].objectType.source.basis='provider_observed_image';},/tipologia/],
 ])test('current guard remains blocking: '+label,()=>{const o=product();change(o);assert.throws(()=>automaticPlan(o),e=>e instanceof AutomaticReviewNeeded&&message.test(e.message));});
