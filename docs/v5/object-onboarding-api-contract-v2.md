@@ -167,3 +167,9 @@ Ogni scelta `houseExpenses` di una singola `simple_invoice` non segmentata può 
 `same_purchase` richiede versione corrente e stato attivo della spesa, fonti leggibili con versione/SHA verificabili e identico insieme non vuoto di schede attive collegate ai due documenti. Aggiorna una sola spesa con CAS e storico atomici; nessun nuovo oggetto/costo. Replay ricontrolla tutte le fonti. `onboarding_purchase_objects_review`, `onboarding_purchase_source_review`, `onboarding_purchase_review`, `onboarding_purchase_amount_review`, `onboarding_invoice_object_review` e i conflitti versione/fonte chiedono revisione. L'automatico non può usare questa conferma. Il link ordinario continua a richiedere la stessa fonte.
 
 Con precedenti fatture/costi sulle stesse schede, una nuova spesa è bloccata e resta da riconciliare. Il salvataggio di `houseForms.purchaseMode/purchaseTotal` è solo compilazione; nessun valore salvato autorizza una scrittura economica. [Report, prove e limiti](fase0-installments-fix-offline-20261023.md).
+
+## Mese fattura separato dai servizi — 25 ottobre 2026
+
+La conferma di spese della casa ammette values.invoiceMonth opzionale YYYY-MM, validato come in economy-v1. Le compilazioni incomplete ammettono houseForms[itemId].invoiceMonth come stringa editabile: non conferma il dato. Mese valido senza periodo dei servizi è consentito, intervallo parziale resta invalido. I corpi senza nuovo campo conservano i valori precedenti.
+
+Il lettore locale propone solo il mese esplicito univoco dell'intestazione, non emissione, scadenza o competenza. Nessun nuovo campo nel provider AI o consenso implicito. Fonte/versione/SHA, membership, CAS, idempotenza e conferma finale invariati. [Report](bollette-mese-fattura-20261025.md). Nessuna migrazione o attivazione reale dal lotto.

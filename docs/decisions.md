@@ -1272,3 +1272,7 @@ Si conserva un solo costo canonico per il caso manualmente riconciliato, con ent
 ## 24 ottobre 2026 — Orologi delle fixture, autorizzazioni rigorose
 
 Il [riesame indipendente del cestino](v5/cestino-riesame-73288e5-20261024.md) riproduce i 403 delle appartenenze sintetiche inizializzate dall’orologio DB e subito controllate con quello Node. La correzione proposta riguarda soltanto la data esplicita nel setup dei test; nessuna tolleranza in `validMembership`, nessun retry o timeout aumentato. Restano rigorosi futuro, scadenza e revoca, con controlli positivi separati. Codice prodotto e DB reali invariati.
+
+## 25 ottobre 2026 — Mese fattura distinto dai servizi
+
+Il committente chiarisce che mese di riferimento significa mese esplicito della fattura. Nuovo invoiceMonth separato: competenceFrom/To non vengono riscritti e il mese non si ricava da emissione/scadenza. Intestazione univoca proposta dal lettore locale; assenza/conflitto restano manuali. Riepiloghi utenze sul mese confermato, fallback precedente per righe storiche senza backfill. Un solo totale, nessuna inferenza di pagamento. Persistenza additiva e rilascio coordinato da approvare; nessuna migrazione reale. [Report](v5/bollette-mese-fattura-20261025.md).

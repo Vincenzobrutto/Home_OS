@@ -93,3 +93,7 @@ Nessuna nuova tabella: nel percorso manuale di riconciliazione rimane un solo Ho
 ## Cestino dei documenti — 23 ottobre 2026
 
 Migrazione additiva `20261023200000_document_trash`. `Document` aggiunge `trashedAt`, `purgeAfter` (30 giorni dopo), `purgedAt` e `lifecycleVersion` (versione delle operazioni di cestino); CHECK `Document_trash_lifecycle`: scadenza solo nel cestino, eliminazione definitiva solo da cestino. Dopo l'eliminazione definitiva la riga resta come segnaposto senza contenuto (nome vuoto, versione e `StoredFile` rimossi) per non toccare le chiavi esterne `Restrict` delle schede confermate. `TrashRequest` è il registro idempotente delle operazioni; `DeletionRecord` registra tipo, id, motivo, chiave di storage e `fileRemovedAt` senza contenuto, univoco per risorsa, per la ripetizione della rimozione fisica e la futura riapplicazione dopo restore. [Report](cestino-lotto1-report-20261023.md).
+
+## Mese della fattura — 25 ottobre 2026
+
+HomeExpense.invoiceMonth nullable YYYY-MM è distinto da documentDate, dueOn e competenceFrom/To dei servizi. Validazione API e CHECK SQL additivo, nessun valore dedotto o backfill. Per utenze che lo possiedono è il mese di riferimento dei riepiloghi; costo contato una sola volta. Snapshot/storico/export conservano il campo con gli stessi diritti della spesa. [Report e migrazione solo offline](bollette-mese-fattura-20261025.md).
