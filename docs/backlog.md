@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — Cestino frontend, stato dell’avviso dopo la navigazione
+
+[revisione indipendente su 7586806](v5/cestino-frontend-review-7586806-20261024.md): E1 P2, scartare lo stato dell’avviso al cambio pagina. Sequenza: sposta, ripristina, cambia pagina, torna a Documenti; non deve tornare il vecchio messaggio di spostamento né l’Annulla della versione precedente. Conservare la riproduzione indipendente senza indebolirla. La riga AI resta conforme alla scelta del piano: un eventuale indicatore completo di trasmissione è un seguito distinto, non una modifica imposta da questo riesame.
+
 **Tranche autonoma verificata:** [editor/presentazione R03](v5/fase0-editor-write-presentation-refactor-20261023.md), mock finale 860/860 e backend 496/496 HTTP/DB sintetici. [Chiusura, misure e opportunità residue](v5/fase0-refactor-closure-20261023.md): nessuna promozione del gate AI o nuovo branch impliciti.
 
 **R05 verificato sui candidati:** [317 → 170 statement per 50 candidati](v5/fase0-candidate-query-batching-20261023.md), stessi filtri e lock; 496/496 HTTP/DB sintetici. Altri percorsi restano opportunità distinte da misurare, nessuna cache fra account.

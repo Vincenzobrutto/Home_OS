@@ -19,6 +19,9 @@ export const useTrashNotice = () => useContext(TrashNoticeContext);
 export function TrashNoticeProvider({ homeId, children }: { homeId: string; children: ReactNode }) {
   const { pathname } = useLocation();
   const [notice, setNotice] = useState<Notice | null>(null);
+  // Discard the event, rather than hiding it: returning to the old pathname must
+  // not remount an Undo action for a lifecycle that may already be restored.
+  if (notice && notice.pathname !== pathname) setNotice(null);
   const show = useCallback((entry: TrashEntry) => setNotice({ pathname, entry }), [pathname]);
   const visible = notice && notice.pathname === pathname ? notice : null;
   return <TrashNoticeContext.Provider value={show}>

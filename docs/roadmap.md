@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+Cestino frontend: [correzioni indipendenti E1/D2](v5/cestino-correzioni-ui-20261025.md) implementate e verificate sul solo branch Codex: 882/882 mock, typecheck/lint/build; riproduzioni precedenti invariate. Dipendenza backend corretta e verificata nella [PR #31](https://github.com/Vincenzobrutto/Home_OS/pull/31). Prima dell'integrazione coordinare entrambi i lotti e aggiornare dal consolidamento. Nessun merge eseguito.
+
 Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedente è conservata integralmente nell’[archivio del 23 ottobre](roadmap-history-20261023.md), inclusi checkpoint e decisioni dei diversi agenti. I suoi esiti descrivono la data del singolo lotto. [Stato verificato](project-status.md), [backlog completo](backlog.md), [architettura](architecture.md).
 
 ## Manutenzione autorizzata in corso
