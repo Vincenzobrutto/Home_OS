@@ -1,6 +1,5 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
-<<<<<<< HEAD
 Copertura del collaudo offline e completamento dei documenti: [19 file recuperati, guardia e contratto server](v5/workflow-server-offline-20261025.md), con aggregato 547/547. Distinti test del codice e disponibilità dell'app: [consegna per l'integrazione](v5/consegna-integrazione-20261025.md). Nessun merge o deploy implicito.
 
 Bollette: importi completi e valuta coerente, senza conversione o troncamento; in caso ambiguo mantenere gli altri dati e richiedere conferma del valore. [Report](v5/bollette-importi-prudenti-20261025.md). Il candidato include la PR #38; aggiornamento app e integrazione ancora da approvare.
@@ -20,9 +19,10 @@ OCR precedente PR #26 già integrato a 69d9f00 e frontend5174 attivato su autori
 Bollette testuali senza AI: [lotto frontend separato](v5/bollette-locali-20261024.md), proposte locali modificabili nella compilazione, senza oggetti o deduzione di pagamento. Stesso salvataggio canonico e nessuna modifica al cestino Claude. Seguito per scansioni nel lotto OCR sopra; collaudo browser e verifica del file effettivamente caricato restano aperti, senza aggiornamento dei dati reali in questo lotto.
 
 Compilazione del documento a schede: ora predefinita, dopo il collaudo manuale confermato e l'incarico esplicito del committente. Ritorno alla pagina unica mantenuto, scelte e payload conservati. [Esito corrente](v5/compilazione-schede-default-20261024.md), [piano](v5/compilazione-schede-piano-20261024.md), PR #23. Codice 61f4a37: mock completa 910/910 in 108 file, nessun test saltato, typecheck/lint/build verdi. Nessuna nuova AI o scrittura reale; telefono fisico/tastiera virtuale non provati. Merge della PR #23 approvato dal committente il 24 ottobre; nessun nuovo cambiamento di prodotto richiesto.
-=======
+
 Cestino documenti: D1–D4 corretti e verificati sul [branch indipendente](v5/cestino-correzioni-backend-20261025.md): riproduzioni 6/6, nuove 8/8, aggregato 513/513. Correzioni dirette al branch Claude, nessun merge eseguito. Prima dell'integrazione aggiornare dal consolidamento e coordinare la paginazione UI.
->>>>>>> origin/codex/cestino-correzioni-backend-20261025
+
+Cestino frontend: [correzioni indipendenti E1/D2](v5/cestino-correzioni-ui-20261025.md) implementate e verificate sul solo branch Codex: 882/882 mock, typecheck/lint/build; riproduzioni precedenti invariate. Dipendenza backend corretta e verificata nella [PR #31](https://github.com/Vincenzobrutto/Home_OS/pull/31). Prima dell'integrazione coordinare entrambi i lotti e aggiornare dal consolidamento. Nessun merge eseguito.
 
 Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedente è conservata integralmente nell’[archivio del 23 ottobre](roadmap-history-20261023.md), inclusi checkpoint e decisioni dei diversi agenti. I suoi esiti descrivono la data del singolo lotto. [Stato verificato](project-status.md), [backlog completo](backlog.md), [architettura](architecture.md).
 

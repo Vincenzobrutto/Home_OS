@@ -1,4 +1,5 @@
 import { Fragment, useEffect } from 'react';
+import { TrashNoticeProvider } from '../documents/TrashNotice';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useOutletContext, useParams } from 'react-router';
 import { isApiError } from '../api/errors';
@@ -74,7 +75,9 @@ export function HomeLayout() {
     <AppShell account={account} home={home.data}>
       {/* Stato locale azzerato al cambio di casa: nessuna bozza passa da una casa all'altra. */}
       <Fragment key={home.data.id}>
-        <Outlet context={{ home: home.data } satisfies HomeContext} />
+        <TrashNoticeProvider homeId={home.data.id}>
+          <Outlet context={{ home: home.data } satisfies HomeContext} />
+        </TrashNoticeProvider>
       </Fragment>
     </AppShell>
   );

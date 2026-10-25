@@ -26,6 +26,10 @@ Durante il [collaudo mobile a schede](v5/compilazione-schede-collaudo-mobile-202
 
 Quattro P2 ancora da correggere: [riesame indipendente su 73288e5](v5/cestino-riesame-73288e5-20261024.md). Sei riproduzioni rosse esplicite, codice prodotto intatto. Separare visibilità del valore confermato e accesso alla citazione; allineare lock di anteprime/documenti e rendere raggiungibili tutte le voci del cestino. Dopo i fix, merge dal consolidamento a cura di Claude e nuovo collaudo; nessuna autorizzazione implicita a migrare dati reali o integrare.
 
+## 24 ottobre 2026 — Cestino frontend, stato dell’avviso dopo la navigazione
+
+[revisione indipendente su 7586806](v5/cestino-frontend-review-7586806-20261024.md): E1 P2, scartare lo stato dell’avviso al cambio pagina. Sequenza: sposta, ripristina, cambia pagina, torna a Documenti; non deve tornare il vecchio messaggio di spostamento né l’Annulla della versione precedente. Conservare la riproduzione indipendente senza indebolirla. La riga AI resta conforme alla scelta del piano: un eventuale indicatore completo di trasmissione è un seguito distinto, non una modifica imposta da questo riesame.
+
 **Tranche autonoma verificata:** [editor/presentazione R03](v5/fase0-editor-write-presentation-refactor-20261023.md), mock finale 860/860 e backend 496/496 HTTP/DB sintetici. [Chiusura, misure e opportunità residue](v5/fase0-refactor-closure-20261023.md): nessuna promozione del gate AI o nuovo branch impliciti.
 
 **R05 verificato sui candidati:** [317 → 170 statement per 50 candidati](v5/fase0-candidate-query-batching-20261023.md), stessi filtri e lock; 496/496 HTTP/DB sintetici. Altri percorsi restano opportunità distinte da misurare, nessuna cache fra account.

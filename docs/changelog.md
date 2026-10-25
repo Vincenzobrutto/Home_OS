@@ -73,6 +73,14 @@ Lock delle anteprime coerenti con le condivisioni, continuazione del cestino olt
 
 Riproduzioni C1–C4 superate e aggregato originale 513/513. Sei nuovi test riproducono quattro P2: ordine dei lock con le anteprime di condivisione, elenco limitato a 500 senza continuazione, estratti ancora presentati nelle schede, profili confermati omessi dall’export. [riesame indipendente su 73288e5](v5/cestino-riesame-73288e5-20261024.md). Diagnosi dei 403 dimostrata su cluster offline: date DB in anticipo fino a 2 ms rispetto a Node. Proposta limitata al setup delle fixture, senza tolleranza autorizzativa, modifiche alle asserzioni o codice prodotto. Nessuna AI, DB reale o merge.
 
+## 25 ottobre 2026 — Correzioni indipendenti frontend cestino E1/D2
+
+L'avviso viene scartato quando si lascia la pagina, anche dopo Annulla, e non ricompare al ritorno. Il cestino segue tutte le continuazioni prima di presentare l'elenco e il conteggio per lo svuotamento; un errore successivo non viene presentato come risultato completo. [Report](v5/cestino-correzioni-ui-20261025.md), correzioni sul branch proprio ancora da integrare con la PR backend #31. Nessun dato reale modificato.
+
+## 24 ottobre 2026 — Revisione indipendente frontend cestino su 7586806
+
+[revisione indipendente su 7586806](v5/cestino-frontend-review-7586806-20261024.md): un P2 aperto sull’avviso che ricompare dopo il cambio pagina, anche dopo il ripristino. Mock originali 873/873; cinque prove indipendenti con quattro positivi e la regressione E1 rossa, senza modifiche ai test dell’autore. Verificati rete assente/503 sul cestino senza bloccare AppShell, focus/tastiera e recupero idempotente. Solo test e documenti; nessuna AI, DB reale o integrazione.
+
 ## 24 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame finale Codex
 
 All'eliminazione definitiva sparisce anche il titolo scelto nell'organizzazione diretta dei caricamenti. Una vecchia revoca non tocca più una condivisione creata dopo un ripristino concorrente. Le nuove ricevute riusano valori confermati la cui fonte è nel cestino. L'export non rilascia metadati di documenti spostati nel cestino durante l'esportazione. Riproduzioni 5/5, riesame 7/7, cestino 16/16, aggregato 513/513. [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-finale-di-codex).
@@ -80,6 +88,10 @@ All'eliminazione definitiva sparisce anche il titolo scelto nell'organizzazione 
 ## 23 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame Codex
 
 Proposte non confermate escluse anche dall'export finché la fonte è nel cestino; valori confermati dell'API ricevute leggibili con fonte indisponibile; ripulitura intake per lotto; il replay di un vecchio cestino non revoca condivisioni create dopo il ripristino. Sei casi del riesame 7/7, aggregato 513/513 (54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL). [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-di-codex).
+
+## 23 ottobre 2026 — Cestino lotto 2: pagina e azioni nel frontend
+
+«Elimina» sposta nel cestino con anteprima d'impatto e riga sul fornitore AI; avviso «Annulla · Vai al cestino» in vista finché lo chiudi o cambi pagina; pagina Cestino con ripristino, eliminazione subito e svuotamento; link «Cestino (n)» nella barra laterale e nel menu solo se non vuoto. Verificato con test mock e nel browser su backend simulato. [Report](v5/cestino-lotto2-report-20261023.md).
 
 ## 23 ottobre 2026 — Cestino lotto 1: correzioni dopo la revisione Codex
 

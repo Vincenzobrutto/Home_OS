@@ -7,11 +7,7 @@ const {ReviewService}=require('../dist/review/review.service');
 const {validMembership}=require('../dist/security');
 
 test('observe PostgreSQL-default membership time against Node and keep strict authorization',{timeout:90000},async t=>{
-<<<<<<< HEAD
  require('./offline-policy.cjs').assertOfflineDatabase(process.env.DATABASE_URL);assertDevelopmentDatabase(process.env.DATABASE_URL);
-=======
- assertDevelopmentDatabase(process.env.DATABASE_URL);
->>>>>>> origin/codex/cestino-correzioni-backend-20261025
  const db=new PrismaClient();await db.$connect();t.after(()=>db.$disconnect());
  const a=await db.account.create({data:{name:'Synthetic clock observer',email:randomUUID()+'@example.test',passwordHash:'not-login'}});
  const review=new ReviewService(db,{}),stats={samples:240,futureOnReturn:0,require403:0,explicitPastPass:0,minDeltaMs:Infinity,maxDeltaMs:-Infinity};
