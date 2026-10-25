@@ -8,7 +8,7 @@ export function emptyBillTrace(outcome:BillTrace['outcome']):BillTrace{
  return {version:LOCAL_BILL_READER_VERSION,outcome,fields:Object.fromEntries(BILL_TRACE_FIELDS.map(field=>[field,{state:'not_read',rule:'document_gate'}])) as BillTrace['fields']};
 }
 export function candidateTrace(values:string[],present:boolean,rule:string):BillFieldTrace{
- const count=new Set(values).size;
+ const count=new Set(values.filter(value=>value.trim())).size;
  return {state:count===1?'proposed':count>1?'conflicting':present?'unusable':'not_found',rule};
 }
 export function localBillReadingError(message:string):string{

@@ -65,7 +65,7 @@ export function localBill(pages: string[],layout?:BillLayoutHints,diagnose?:(tra
   const contactSupplier=contactBillSupplier(pages[0]!);
   const supplierValues=[...suppliers,...(layout?.supplier?[layout.supplier]:!suppliers.length&&headingNames.includes(firstLine)?headingNames:[]),...(!suppliers.length&&!layout?.supplier&&!headingNames.includes(firstLine)&&contactSupplier?[contactSupplier]:[])];
   result.supplier = unique(supplierValues);
-  trace.fields.supplier=candidateTrace(supplierValues,/^(?:fornitore|venditore|società\s+di\s+vendita)\s*:/imu.test(text),suppliers.length?'supplier_label':layout?.supplier?'supplier_layout':headingNames.includes(firstLine)?'supplier_header':'supplier_contacts');
+  trace.fields.supplier=candidateTrace(supplierValues,/^(?:fornitore|venditore|società\s+di\s+vendita|ragione\s+sociale\s+del\s+fornitore)\s*:/imu.test(text),suppliers.length?'supplier_label':layout?.supplier?'supplier_layout':headingNames.includes(firstLine)?'supplier_header':'supplier_contacts');
   result.documentDate = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?emissione|data[ \\t]+(?:della[ \\t]+)?fattura|emess[ao][ \\t]+il',value=>{trace.fields.documentDate=value;});
   result.dueOn = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?scadenza|scadenza|da[ \\t]+saldare[ \\t]+entro|pagare[ \\t]+entro',value=>{trace.fields.dueOn=value;});
   const periods: string[] = [];

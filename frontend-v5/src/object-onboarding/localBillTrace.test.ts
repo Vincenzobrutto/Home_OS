@@ -3,6 +3,10 @@ import {localBill,localBillForm} from './localBill';
 import {BILL_TRACE_FIELDS,localBillReadingError,type BillTrace} from './localBillTrace';
 function read(text:string){let trace:BillTrace|undefined;const bill=localBill([text],undefined,value=>{trace=value;});if(!trace)throw Error('missing trace');return {bill,trace};}
 const header='Fattura\nServizi telefonici\n';
+it.each(['Fornitore','Ragione sociale del fornitore'])('an empty %s label is not a proposed supplier',label=>{
+ const text=header+label+':    ',{bill,trace}=read(text);
+ expect(bill).toEqual(localBill([text]));expect(trace.fields.supplier.state).toBe('unusable');
+});
 it.each(['local_ocr_timeout','local_ocr_limits','local_ocr_unavailable','local_ocr_failed','local_ocr_unreliable','local_ocr_cancelled'])('a known read error has a specific safe explanation: %s',code=>{
  expect(localBillReadingError(code)).not.toBe('Lettura locale non disponibile.');expect(localBillReadingError(code)).not.toContain(code);
 });

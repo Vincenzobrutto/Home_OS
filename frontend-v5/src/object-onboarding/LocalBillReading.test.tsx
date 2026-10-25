@@ -13,7 +13,7 @@ function sample():BillTrace{
 it('explains initial proposals and missing/conflicting fields without a save or an AI action',async()=>{
  render(<LocalBillTrace trace={sample()} sha256={'a'.repeat(64)} documentVersion={3}/>);
  await userEvent.click(screen.getByText('Origine dei dati e campi non riconosciuti'));
- expect(screen.getByText(/lettura iniziale: 1 dati proposti/i)).toBeVisible();
+ expect(screen.getByText(/lettura iniziale: 1 dato proposto/i)).toBeVisible();
  expect(screen.getByText(/Sono emerse indicazioni diverse/)).toBeVisible();
  expect(screen.getByText(/Il mese della fattura non viene usato/)).toBeVisible();
  expect(screen.getByText(/non le tue successive correzioni/)).toBeVisible();

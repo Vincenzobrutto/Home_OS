@@ -27,7 +27,7 @@ export function LocalBillTrace({trace,sha256,documentVersion}:{trace:BillTrace;s
  return <section aria-label="Traccia della lettura locale">
   <details className={ui.card}>
    <summary>{readable?'Origine dei dati e campi non riconosciuti':'Perché non sono stati proposti i dati?'}</summary>
-   <p>{readable?`Lettura iniziale: ${proposed} dati proposti, ${BILL_TRACE_FIELDS.length-proposed} non proposti.`:outcomes[trace.outcome==='bill'?'source_mismatch':trace.outcome]}</p>
+   <p>{readable?`Lettura iniziale: ${proposed} ${proposed===1?'dato proposto':'dati proposti'}, ${BILL_TRACE_FIELDS.length-proposed} ${BILL_TRACE_FIELDS.length-proposed===1?'non proposto':'non proposti'}.`:outcomes[trace.outcome==='bill'?'source_mismatch':trace.outcome]}</p>
    <p>{trace.source.pagesRead.length?'È stata letta solo la prima pagina. Un dato non riconosciuto potrebbe essere presente nel documento.':'Nessuna pagina è stata interpretata.'}</p>
    {trace.source.ocr==='failed'&&<p>L’arricchimento OCR non è riuscito. Sono conservati solo i dati leggibili dal PDF.</p>}
    {readable&&<dl className={styles.list}>{BILL_TRACE_FIELDS.map(field=><div key={field}>
