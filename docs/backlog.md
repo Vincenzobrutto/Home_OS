@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Copertura offline e membership sintetiche
+
+**Implementato e verificato sul branch dedicato, non ancora integrato:** [report](v5/workflow-server-offline-20261025.md). Recuperati 19 file esclusi dai profili, con guardia su tutti i test anche annidati; aggregato 547/547. I setup che richiedono membership già attive dichiarano validFrom nel passato: il confronto rigido del prodotto non cambia e date future/revoche/scadenze restano bloccanti. Non sostituire questo setup con tolleranze, attese o retry. Nessuna inferenza sulla qualità AI o sul DB reale dalla suite sintetica.
+
 ## 24 ottobre 2026 — OCR locale e collaudo bollette rasterizzate
 
 **Seguito implementato sul branch OCR, non ancora distribuito:** [report](v5/bollette-ocr-locale-20261024.md). Lettura locale limitata e verificata offline con motore reale; copia anonimizzata riconosciuta su otto pagine per tre campi economici principali. Restano fornitore/periodo senza evidenza affidabile, prova browser/mobile fisici, pagine ruotate/manoscritte e ibridi con testo nativo ricco. Non dichiarare tutte le scansioni risolte né aggiornamento dell’app.

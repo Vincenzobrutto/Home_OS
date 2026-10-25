@@ -10,6 +10,7 @@ npm run test:object-onboarding
 npm run test:quality-v3
 npm run test:quality-v3-live-guards
 npm run test:offline -- --list
+npm run test:document-workflow
 ```
 
 Il profilo live-guards verifica ricevute e limiti con fixture offline; non avvia una campagna. I trasporti provider dei test sono simulati. I comandi non caricano .env.
@@ -29,9 +30,16 @@ Il profilo completo unisce senza duplicati i file delle suite DB registrate e ve
 ```powershell
 npm run test:contacts-db -- --pg-bin "$testPgBin" --scratch-root "$testScratch"
 npm run test:q48-coverage-db -- --pg-bin "$testPgBin" --scratch-root "$testScratch"
+npm run test:document-workflow-db -- --pg-bin "$testPgBin" --scratch-root "$testScratch"
+npm run test:workflow-fixtures-db -- --pg-bin "$testPgBin" --scratch-root "$testScratch"
+npm run test:workflow-clock-db -- --pg-bin "$testPgBin" --scratch-root "$testScratch"
 ```
 
 Gli altri alias esistenti restano disponibili con gli stessi parametri; anche i sette vecchi wrapper PowerShell delegano al medesimo runner. PgBin e ScratchRoot sono ora obbligatori per ogni ingresso DB, incluso il vecchio quality-v3-offline.ps1.
+
+Il gruppo `document-workflow` recupera i test unitari di bozze, suggerimenti, periodo, contatti e guardie di automazione; è incluso anche in `npm test`. Il gruppo DB verifica archivio, famiglie, planimetrie, catalogo, conservazione del solo documento e completamento della bolletta; confluisce in `test:offline-db`. `offline-registration.test.cjs` impedisce di lasciare file di test esclusi da tutti i profili.
+
+`workflow-clock-db` osserva su sole fixture l'eventuale differenza fra il default PostgreSQL e l'ora Node, mantenendo il divieto di membership future, revocate o scadute. Per una fixture che deve essere già attiva dichiarare `validFrom` esplicitamente nel passato: non introdurre tolleranze nell'autorizzazione o attese/retry per far sparire un 403. `workflow-fixtures-db` verifica i tre scenari di ordini, acconto/saldo e varianti generali con questo setup; l'aggregato deduplica i file presenti in più profili.
 
 ## Confini e gestione delle risorse
 
