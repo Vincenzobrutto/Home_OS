@@ -48,3 +48,13 @@ Implementato e verificato offline sul branch proprio, app non aggiornata. [PR #4
 
 
 La prima esecuzione del gruppo di dominio è stata interrotta ancora in corso dopo la revisione del caso Fornitore seguito solo da spazi: non è dichiarata verde. Correzione della sola diagnosi e due test aggiunti, senza alterare i valori restituiti. Log conservato in work/bill-trace-domain-before-refinement.log; ripetizione definitiva in work/bill-trace-domain-final.log.
+
+## Attivazione approvata — 25 ottobre 2026
+
+PR #48 integrata su approvazione del committente nel consolidamento a b6edac5b1b9365150d24f0748cf85ee2dcacf513; hash remoto verificato con git ls-remote. Il solo frontend su http://127.0.0.1:5174 è stato aggiornato da un nuovo worktree runtime alla stessa fonte, dopo build offline riuscita con lockfile e dipendenze locali identici. Albero frontend 93ba786931cbb3c2063cfa0a1e1ace6ab224998d, backend c820d20f7d41320fae8558dfcee7298e3e395256 invariato.
+
+13/13 controlli HTTP statici/anonimi superati: versione del lettore e nuovo pannello effettivamente serviti, moduli precedenti e worker PDF/OCR disponibili; richiesta anonima alle case respinta con401 e header roma-consolidata-dc58ada-no-ai. Non è una prova visiva autenticata né una nuova verifica su documenti reali. Restano valide le verifiche offline sopra, senza dichiarare una nuova suite mock completa.
+
+Sostituito soltanto il frontend identificato per PID, istante di avvio, comando e listener; nuovo PID23604. API7036 e PostgreSQL22924 conservano identità/istanti di avvio e listener loopback3011/55432. Nessuna nuova AI/email, migrazione, query SQL, lettura di originali o salvataggio automatico eseguiti. Main verificato invariato a cdbb318ddb56e764ad4b111a71560e3e71c7a033; branch Claude non toccati. Nessuna misura SQL di invariabilità dei dati è stata eseguita o rivendicata.
+
+Evidenze operative locali: work/bill-trace-release-build.log, bill-trace-release-runtime-proof.json e bill-trace-release-runtime-http-proof.json; metadati canonici roma-runtime.json e schede-app-frontend-runtime.json aggiornati. Per provare: ricaricare l'app, aprire una compilazione locale ancora eleggibile e il pannello «Origine dei dati e campi non riconosciuti». Le compilazioni già salvate non vengono rilette o sovrascritte per ricostruire una traccia.
