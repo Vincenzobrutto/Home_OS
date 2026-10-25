@@ -84,4 +84,3 @@ it('checks read access again after the organization before allowing expense conf
 it.each(['','x'.repeat(121)])('does not truncate or save an invalid document title',async(title)=>{
  const w=await world();await expect(w.prepare(w.snapshot,title)).rejects.toMatchObject({code:'intake_preparation_required'});expect(w.call).not.toHaveBeenCalled();
 });
-

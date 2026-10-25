@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Importi bollette senza conversioni implicite
+
+Il lettore locale rifiuta valute non EUR, numeri troncati e totali incompatibili; conserva fornitore/date/periodo e lascia il valore da confermare. Supporto preservato per etichette spezzate, totale EUR e normali note IVA. Regole generali con nuovi test, nessuna AI o modifica a dati reali. [Report](v5/bollette-importi-prudenti-20261025.md).
+
 ## 25 ottobre 2026 — Resilienza della compilazione
 
 Risposte e callback tardive della scheda precedente non cambiano più documento, errori o stato occupato della scheda corrente; protetto anche il ritorno A→B→A, con chiavi di recupero conservate. Verifiche su cancellazione delle letture locali, campi manuali e tastiera; misura bundle senza refactoring aggiuntivo. [Report e limiti](v5/compilazione-resilienza-20261025.md). Nessuna AI o modifica all’app/dati reali.

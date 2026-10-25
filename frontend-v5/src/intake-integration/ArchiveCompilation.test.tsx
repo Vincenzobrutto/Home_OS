@@ -42,8 +42,3 @@ it.each([{stepped:false,ocr:false},{stepped:true,ocr:false},{stepped:false,ocr:t
  if(stepped){expect(order).toEqual(['kind']);await app.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:'Riepilogo'});expect(order).toEqual(['kind']);}
  const save=await screen.findByRole('button',{name:only?'Salva documento':stepped?'Salva e continua':'Registra spesa'});await waitFor(()=>expect(save).toBeEnabled());await app.user.click(save);await waitFor(()=>expect(order).toEqual(['kind','organize','review','confirm']));expect(paid).toEqual([]);await waitFor(()=>expect(new URLSearchParams(app.router.state.location.search).has('oggetti-documento')).toBe(false));expect(new URLSearchParams(app.router.state.location.search).get('workflow')).toBe('pending');await screen.findByRole('heading',{level:1,name:'Documenti'});await waitFor(()=>expect(screen.queryByText(doc.name)).not.toBeInTheDocument());await app.user.click(screen.getByRole('button',{name:'Vai ai documenti completati'}));expect(await screen.findByText(doc.name)).toBeInTheDocument();expect(screen.getByText('Bolletta')).toBeInTheDocument();app.unmount();
 });
-
-
-
-
-

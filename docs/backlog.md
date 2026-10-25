@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Limiti del parser economico locale
+
+[Importi prudenti](v5/bollette-importi-prudenti-20261025.md): formati internazionali diversi da quelli italiani, conversioni valutarie e documenti con totali incompatibili non diventano importi EUR impliciti. Rimane la conferma manuale del dato mancante. Non estendere i formati senza evidenze e test generali; nessun dato reale corretto da questo lotto.
+
 ## 25 ottobre 2026 — Convergenza degli ingressi di compilazione
 
 **Proposta, non implementata come migrazione generale:** [collaudo degli ingressi](v5/collaudo-completamento-report-20261025.md). Il difetto dimostrato sulle bollette della pagina diretta viene corretto nel lotto dedicato; la PR #35 tratta separatamente i collegamenti di archivio senza lotto. Valutare un unico ingresso di compilazione per le altre famiglie, con titolo/tipo espliciti, salvataggio bozza/uscita e recupero delle ricevute coerenti. Prima servono riproduzioni e parità dei payload: non estendere adattatori o classificazioni implicite dai soli esempi del committente. Restano distinti collaudo browser/mobile e verifica del consolidamento con entrambe le PR integrate; nessun aggiornamento reale autorizzato da questa voce.
