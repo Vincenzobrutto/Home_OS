@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Convergenza degli ingressi di compilazione
+
+**Proposta, non implementata come migrazione generale:** [collaudo degli ingressi](v5/collaudo-completamento-report-20261025.md). Il difetto dimostrato sulle bollette della pagina diretta viene corretto nel lotto dedicato; la PR #35 tratta separatamente i collegamenti di archivio senza lotto. Valutare un unico ingresso di compilazione per le altre famiglie, con titolo/tipo espliciti, salvataggio bozza/uscita e recupero delle ricevute coerenti. Prima servono riproduzioni e parità dei payload: non estendere adattatori o classificazioni implicite dai soli esempi del committente. Restano distinti collaudo browser/mobile e verifica del consolidamento con entrambe le PR integrate; nessun aggiornamento reale autorizzato da questa voce.
+
 ## 24 ottobre 2026 — OCR locale e collaudo bollette rasterizzate
 
 **Seguito implementato sul branch OCR, non ancora distribuito:** [report](v5/bollette-ocr-locale-20261024.md). Lettura locale limitata e verificata offline con motore reale; copia anonimizzata riconosciuta su otto pagine per tre campi economici principali. Restano fornitore/periodo senza evidenza affidabile, prova browser/mobile fisici, pagine ruotate/manoscritte e ibridi con testo nativo ricco. Non dichiarare tutte le scansioni risolte né aggiornamento dell’app.
