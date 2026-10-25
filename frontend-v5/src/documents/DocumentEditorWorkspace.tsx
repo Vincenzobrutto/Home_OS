@@ -1,5 +1,5 @@
 import {PdfPreview} from './PdfPreview';
-import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {useBlocker,useNavigate,useSearchParams} from 'react-router';
 import {useCurrentHome} from '../routes/HomePages';
 import {useAccount,useApi} from '../session/session';
@@ -26,10 +26,15 @@ export function DocumentEditorWorkspace(){
  const rows=orderedIds.length?loadedRows.filter(row=>orderedIds.includes(row.id)&&!completedIds.has(row.id)).sort((a,b)=>orderedIds.indexOf(a.id)-orderedIds.indexOf(b.id)):loadedRows;
  const position=orderedIds.length?orderedIds.indexOf(documentId)+1:rows.findIndex(row=>row.id===documentId)+1;
  const total=orderedIds.length||rows.length;
- const [preview,setPreview]=useState(true),[mobileOriginalId,setMobileOriginalId]=useState<string|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [preview,setPreview]=useState(true),[mobileOriginalId,setMobileOriginalId]=useState<string|null>(null);
+ const scope=useMemo(()=>({documentId}),[documentId]),currentScope=useRef<typeof scope|null>(scope);
+ const [request,setRequest]=useState<{scope:typeof scope;busy:boolean;error:string}|null>(null);
+ const busy=request!==null&&request.scope===scope&&request.busy,error=request?.scope===scope?request.error:'';
+ useLayoutEffect(()=>{currentScope.current=scope;return()=>{currentScope.current=null;};},[scope]);
  const mobileOriginal=mobileOriginalId===documentId;
  const setMobileOriginal=(value:boolean)=>setMobileOriginalId(value?documentId:null);
  const dirty=useRef(false),live=useRef(true),keys=useRef(new Map<string,string>());
+ const isCurrent=()=>live.current&&currentScope.current===scope;
  const client=useMemo(()=>new IntakeClient(api,account.id,home.id),[api,account.id,home.id]);
  useDocumentTitle('Completa i dati del documento · '+home.name);
  useEffect(()=>{live.current=true;return()=>{live.current=false;};},[]);
@@ -42,17 +47,17 @@ export function DocumentEditorWorkspace(){
   if(blocker.state!=='blocked')return;
   if(canLeave()){dirty.current=false;blocker.proceed();}else blocker.reset();
  },[blocker,canLeave]);
- function leave(upload=false){const next=filtersToParams(filters);if(upload)next.set('aggiungi','1');navigate(root+'?'+next.toString());}
+ function leave(upload=false){if(!isCurrent())return;const next=filtersToParams(filters);if(upload)next.set('aggiungi','1');navigate(root+'?'+next.toString());}
  async function select(id:string,confirmed=false,savedId?:string){
-  if(busy||(!confirmed&&!canLeave()))return;setBusy(true);setError('');
-  try{if(!keys.current.has(id))keys.current.set(id,newIdempotencyKey());const batch=await client.prepareExisting([id],keys.current.get(id)!);if(!live.current)return;
+  if(!isCurrent()||busy||(!confirmed&&!canLeave()))return;setRequest({scope,busy:true,error:''});
+  try{if(!keys.current.has(id))keys.current.set(id,newIdempotencyKey());const batch=await client.prepareExisting([id],keys.current.get(id)!);if(!isCurrent())return;
    // A partial archive link can lose its batch without losing the chosen draft.
    // Rebuild that context only on an explicit action; never prepare it on mount.
    const resuming=id===documentId&&!params.get('lotto');
    const next=resuming?new URLSearchParams(params):filtersToParams(filters);next.set('lotto',batch.id);next.set('oggetti-documento',id);if(!resuming||!next.has('compila'))next.set('compila','manuale');if(orderedIds.length){next.set('coda',orderedIds.join(','));next.set('coda-fatti',[...completedIds,...(savedId?[savedId]:[])].filter(Boolean).join(','));}if(savedId)next.set('documento-salvato',savedId);dirty.current=false;navigate(root+'?'+next.toString());
-  }catch(e){if(live.current)setError(userMessage(e));}finally{if(live.current)setBusy(false);}
+  }catch(e){if(isCurrent())setRequest({scope,busy:true,error:userMessage(e)});}finally{if(isCurrent())setRequest(previous=>previous?.scope===scope?{...previous,busy:false}:previous);}
  }
- async function complete(id:string){if(!live.current)return;dirty.current=false;const next=rows.find(row=>row.id!==id&&!['completed','analyzing','attention'].includes(row.workflowState??'to_compile'));if(next){await select(next.id,true,id);}else{const search=filtersToParams(filters);search.set('documento-salvato',id);navigate(root+'?'+search.toString());}}
+ async function complete(id:string){if(!isCurrent()||id!==documentId)return;dirty.current=false;const next=rows.find(row=>row.id!==id&&!['completed','analyzing','attention'].includes(row.workflowState??'to_compile'));if(next){await select(next.id,true,id);}else{const search=filtersToParams(filters);search.set('documento-salvato',id);navigate(root+'?'+search.toString());}}
  return <div className={styles.editor}>
   <button type="button" className={styles.back} onClick={()=>leave()}>Torna a Documenti</button>
   <header className={styles.heading}><h1 tabIndex={-1}>Completa i dati del documento</h1><p>Controlla i dati e salva, un documento alla volta.</p></header>
@@ -69,7 +74,7 @@ export function DocumentEditorWorkspace(){
    <section className={styles.form} aria-label="Scheda del documento" onChangeCapture={()=>{dirty.current=true;}}>
     {document.isPending?<Loading label="Apertura documento…"/>:document.isError?<ErrorState error={document.error}/>:<>
      <header className={styles.documentHead}>{position>0&&total>0&&<p role="status">Documento {position} di {total}</p>}<h2>{document.data.name}</h2><p>Inserisci i dati oppure usa l’AI per precompilarli. Controlla le proposte prima di salvare.</p>{!preview&&<button type="button" className={ui.btn} onClick={()=>setPreview(true)}>Apri anteprima</button>}</header>
-     {!params.get('lotto')?<section className={ui.card}><h2>Riprendi la compilazione del documento</h2><p>Puoi riaprire questo documento conservando il percorso scelto, senza caricare un altro file. Nessun oggetto o spesa viene salvato riaprendolo.</p><button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!home.permissions.includes('edit')} onClick={()=>void select(documentId)}>Riprendi compilazione</button></section>:<DocumentEditorContext.Provider value={{complete,pause:(saved=false)=>{if(saved)dirty.current=false;leave();},showOriginal:()=>{setPreview(true);setMobileOriginal(true);}}}><IntakeContent workspace key={documentId}/></DocumentEditorContext.Provider>}
+     {!params.get('lotto')?<section className={ui.card}><h2>Riprendi la compilazione del documento</h2><p>Puoi riaprire questo documento conservando il percorso scelto, senza caricare un altro file. Nessun oggetto o spesa viene salvato riaprendolo.</p><button type="button" className={`${ui.btn} ${ui.primary}`} disabled={busy||!home.permissions.includes('edit')} onClick={()=>void select(documentId)}>Riprendi compilazione</button></section>:<DocumentEditorContext.Provider value={{complete,pause:(saved=false)=>{if(!isCurrent())return;if(saved)dirty.current=false;leave();},showOriginal:()=>{if(!isCurrent())return;setPreview(true);setMobileOriginal(true);}}}><IntakeContent workspace key={documentId}/></DocumentEditorContext.Provider>}
     </>}
    </section>
    {preview&&<aside className={styles.preview} aria-label="Anteprima del documento"><header><div><h2>Originale</h2><p>{document.data?.originalFilename}</p></div><button type="button" className={styles.back} onClick={()=>setPreview(false)}>Chiudi anteprima</button></header><Original key={documentId} homeId={home.id} documentId={documentId}/></aside>}
