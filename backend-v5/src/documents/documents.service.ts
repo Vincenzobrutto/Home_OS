@@ -7,7 +7,7 @@ import archiver from 'archiver';
 import { Prisma } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { digest, validMembership } from '../security';
-import { DocumentPolicy, canReadDocument, canExport } from './access';
+import { DocumentPolicy, canReadDocument, canExport, activeDocument } from './access';
 import { LocalFileStorage, detectOriginal, safeFilename, storageUnavailable, MAX_EXPORT_BYTES } from './storage';
 import { UploadDocumentDto, SearchDocumentsDto } from './dto';
 import { SEARCH_CAPABILITIES, literalPattern, searchAnchor, searchCursor, searchFilters } from './search';
@@ -17,7 +17,7 @@ import { DOCUMENT_COLLECTIONS } from '../document-intake/domain';
 import { documentRemoval } from './removal';
 const includeOriginal = { original: { include: { file: true } } } as const;
 type OriginalDocument = Prisma.DocumentGetPayload<{ include: typeof includeOriginal }>;
-function readableWhere(accountId: string, homeId: string): Prisma.DocumentWhereInput { return { homeId, OR: [{ visibility: 'home' }, { uploaderId: accountId }] }; }
+function readableWhere(accountId: string, homeId: string): Prisma.DocumentWhereInput { return { homeId, ...activeDocument, OR: [{ visibility: 'home' }, { uploaderId: accountId }] }; }
 export function publicDocument(doc: OriginalDocument, exporting: boolean, detail = false) {
   if (!doc.original) throw storageUnavailable();
   const original = doc.original;
@@ -74,7 +74,7 @@ export class DocumentsService implements OnModuleInit {
       const rows=await tx.$queryRaw<Array<{state:string;count:bigint}>>(Prisma.sql`SELECT x.state,COUNT(*) AS count FROM (
         SELECT ${state} AS state FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
         LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${accountId} AND o."homeId"=${homeId} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256
-        WHERE d."homeId"=${homeId} AND (d.visibility='home' OR d."uploaderId"=${accountId})
+        WHERE d."homeId"=${homeId} AND (d."trashedAt" IS NULL AND (d.visibility='home' OR d."uploaderId"=${accountId}))
       ) x GROUP BY x.state`);
       const counts={to_compile:0,review:0,analyzing:0,attention:0,completed:0};
       for(const row of rows)if(row.state in counts)counts[row.state as keyof typeof counts]=Number(row.count);
@@ -104,7 +104,7 @@ export class DocumentsService implements OnModuleInit {
         SELECT d.id, ${state} AS "workflowState", ${analysisSucceeded} AS "aiAnalysisSucceeded"
         FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
         LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${accountId} AND o."homeId"=${homeId} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256
-        WHERE d."homeId"=${homeId} AND (d.visibility='home' OR d."uploaderId"=${accountId})
+        WHERE d."homeId"=${homeId} AND (d."trashedAt" IS NULL AND (d.visibility='home' OR d."uploaderId"=${accountId}))
         ${filters.workflow==='all'?Prisma.empty:['pending','completed'].includes(filters.workflow)?Prisma.sql`AND ${completed}=${filters.workflow==='completed'}`:Prisma.sql`AND ${state}=${filters.workflow}`}
         ${filters.visibility === 'all' ? Prisma.empty : Prisma.sql`AND d.visibility::text=${filters.visibility}`}
         ${filters.format === 'all' ? Prisma.empty : Prisma.sql`AND v."mimeType"=${mime[filters.format]}`}

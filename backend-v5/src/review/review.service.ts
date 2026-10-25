@@ -75,7 +75,7 @@ export class ReviewService {
       if (operation === 'analysis') {
         const body = input as { documentIds: string[]; targetAssetId?: string };
         for (const id of body.documentIds) {
-          const doc = await tx.document.findUnique({ where: { id }, include: { original: true } });
+          const doc = await tx.document.findUnique({ where: { id }, include: { original: true } }); // trash-checked: sources() uses canReadDocument
           if (!doc?.original) throw new ForbiddenException('Accesso non consentito.');
           await this.sources(tx, accountId, homeId, [{ documentId: id, documentVersion: 1, documentSha256: doc.original.sha256 }]);
         }
@@ -101,7 +101,7 @@ export class ReviewService {
     return this.mutate(accountId, homeId, 'analysis', body.targetAssetId ?? '', key, requestBody, async tx => {
       const snapshots: Snapshot[] = [];
       for (const id of body.documentIds) {
-        const doc = await tx.document.findUnique({ where: { id }, include: { original: true } });
+        const doc = await tx.document.findUnique({ where: { id }, include: { original: true } }); // trash-checked: sources() uses canReadDocument
         snapshots.push({ documentId: id, documentVersion: 1, documentSha256: doc!.original!.sha256 });
       }
       if (provider === 'anthropic') this.config.require();

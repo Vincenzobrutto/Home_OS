@@ -2,7 +2,7 @@ import { ForbiddenException, HttpException, Injectable, ServiceUnavailableExcept
 import { Prisma } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { DocumentPolicy, canReadDocument } from '../documents/access';
-import { EXPORT_LIMITS, ExportBudget, Projection, collect, list, record, scalars, tooLarge } from './projection';
+import { EXPORT_LIMITS, ExportBudget, Projection, collect, list, profileCapturedProofs, record, scalars, tooLarge } from './projection';
 import { readableReceiptObjectIds, readableReceiptProofs, readableReceiptProofKeys, receiptProofKey } from '../receipt-assistance/access';
 import { organizationView } from '../document-intake/organization';
 
@@ -22,7 +22,7 @@ export class PersonalExportService {
   private async readableAssets(tx: Tx, a: string, h: string, assetIds: string[], budget: ExportBudget) {
     const jobs = assetIds.length ? await collect((take, after) => tx.analysisJob.findMany({ where: { assetId: { in: assetIds }, state: 'succeeded', ...pageWhere(after) }, select: { id: true, assetId: true, documents: true }, take, orderBy }), budget) : [];
     const sourceIds = [...new Set(jobs.flatMap(job => list(job.documents).map(value => record(value).documentId).filter((id): id is string => typeof id === 'string')))];
-    const docs = sourceIds.length ? await collect((take, after) => tx.document.findMany({ where: { id: { in: sourceIds, ...(after ? { gt: after } : {}) } }, select: { id: true, homeId: true, uploaderId: true, visibility: true, original: { select: { version: true, sha256: true } } }, take, orderBy }), budget) : [];
+    const docs = sourceIds.length ? await collect((take, after) => tx.document.findMany({ where: { id: { in: sourceIds, ...(after ? { gt: after } : {}) } }, select: { id: true, homeId: true, uploaderId: true, visibility: true, trashedAt: true, original: { select: { version: true, sha256: true } } }, take, orderBy }), budget) : [];
     const sources = new Map(docs.map(doc => [doc.id, doc]));
     const excluded = new Set<string>();
     for (const job of jobs) {
@@ -40,7 +40,7 @@ export class PersonalExportService {
     const home = await tx.home.findUnique({ where: { id: h }, select: { id: true, name: true, address: true } });
     if (!account || !home) throw new ForbiddenException('Accesso non consentito.');
     const budget = new ExportBudget(), own = { accountId: a, homeId: h };
-    const documents = await collect((take, after) => tx.document.findMany({ where: { homeId: h, uploaderId: a, ...pageWhere(after) }, select: { id: true, name: true, visibility: true, createdAt: true, original: { select: { version: true, originalFilename: true, mimeType: true, byteSize: true, sha256: true } } }, take, orderBy }), budget);
+    const documents = await collect((take, after) => tx.document.findMany({ where: { homeId: h, uploaderId: a, trashedAt: null, ...pageWhere(after) }, select: { id: true, name: true, visibility: true, createdAt: true, original: { select: { version: true, originalFilename: true, mimeType: true, byteSize: true, sha256: true } } }, take, orderBy }), budget);
     if (documents.some(doc => !doc.original)) throw unavailable();
     const organizationCandidates = await collect((take, after) => tx.documentOrganization.findMany({ where: { ...own, documentId: { in: documents.map(doc => doc.id) }, ...pageWhere(after) }, take, orderBy }), budget);
     const organizations = new Map(organizationCandidates.filter(org => documents.some(doc => doc.id === org.documentId && doc.original?.version === org.documentVersion && doc.original?.sha256 === org.documentSha256)).map(org => [org.documentId, organizationView(org)]));
@@ -51,13 +51,16 @@ export class PersonalExportService {
     const receiptFieldCandidates = await collect((take, after) => tx.receiptObjectField.findMany({ where: { ...own, objectId: { in: [...objectIds] }, ...pageWhere(after) }, take, orderBy }), budget);
     const comparisonCandidates = await collect((take, after) => tx.receiptComparison.findMany({ where: { ...own, objectId: { in: [...objectIds] }, draft: own, ...pageWhere(after) }, include: { draft: { select: { documentId: true, documentVersion: true, documentSha256: true } } }, take, orderBy }), budget);
     const fieldProofs = receiptFieldCandidates.filter(row => row.origin === 'extraction_confirmed');
-    const proofKeys = await readableReceiptProofKeys(tx, a, h, [...fieldProofs, ...comparisonCandidates.map(row => row.draft)], rows => budget.add(rows));
+    const proofKeys = await readableReceiptProofKeys(tx, a, h, fieldProofs, rows => budget.add(rows));
+    // Comparisons are unconfirmed proposals: a trashed source hides them, as the comparison endpoint does.
+    const proposalKeys = await readableReceiptProofKeys(tx, a, h, comparisonCandidates.map(row => row.draft), rows => budget.add(rows), 'proposal');
     const receiptFields = receiptFieldCandidates.filter(row => row.origin === 'user_declared' || proofKeys.has(receiptProofKey(row)));
-    const receiptComparisons = comparisonCandidates.filter(row => proofKeys.has(receiptProofKey(row.draft)));
+    const receiptComparisons = comparisonCandidates.filter(row => proposalKeys.has(receiptProofKey(row.draft)));
     const receiptNames = receiptFields.filter(row => row.fieldKey === 'name');
     const receiptNameIds = new Set(receiptNames.map(row => row.objectId));
     const currentNames = new Map(objects.filter(row => receiptNameIds.has(row.id)).map(row => [row.id, row.name]));
-    const receiptProofs = [...receiptFields.filter(row => row.origin === 'extraction_confirmed'), ...receiptComparisons.map(row => row.draft)].map(row => ({ documentId: row.documentId, documentVersion: row.documentVersion, documentSha256: row.documentSha256 }));
+    const proof = (row: { documentId: string | null; documentVersion: number | null; documentSha256: string | null }) => ({ documentId: row.documentId, documentVersion: row.documentVersion, documentSha256: row.documentSha256 });
+    const receiptProofs = receiptFields.filter(row => row.origin === 'extraction_confirmed').map(proof), proposalProofs = receiptComparisons.map(row => proof(row.draft));
     const assetCandidates = await collect((take, after) => tx.boilerAsset.findMany({ where: { ...own, ...pageWhere(after) }, take, orderBy }), budget);
     const assetIds = await this.readableAssets(tx, a, h, assetCandidates.map(row => row.id), budget), assets = assetCandidates.filter(row => assetIds.has(row.id));
     const activities = await collect((take, after) => tx.homeActivity.findMany({ where: { ...own, ...pageWhere(after) }, take, orderBy }), budget);
@@ -68,12 +71,14 @@ export class PersonalExportService {
     const roomIds = [...new Set(positions.flatMap(row => list(row.roomIds)).filter((id): id is string => typeof id === 'string'))];
     const rooms = await collect((take, after) => tx.homeRoom.findMany({ where: { homeId: h, id: { in: roomIds, ...(after ? { gt: after } : {}) } }, select: { id: true, name: true, type: true, state: true }, take, orderBy }), budget);
     const links = await collect((take, after) => tx.objectResourceLink.findMany({ where: { ...own, OR: subjects, ...pageWhere(after) }, take, orderBy }), budget);
-    const projection = new Projection(new Map(documents.map(doc => [doc.id, { version: doc.original!.version, sha256: doc.original!.sha256 }])), keys(objects), assetIds, keys(activities), keys(expenses), keys(works), keys(rooms));
     const activityHistory = await collect((take, after) => tx.activityHistory.findMany({ where: { accountId: a, activityId: { in: activities.map(row => row.id) }, ...pageWhere(after) }, take, orderBy }), budget);
     const expenseHistory = await collect((take, after) => tx.expenseHistory.findMany({ where: { accountId: a, expenseId: { in: expenses.map(row => row.id) }, ...pageWhere(after) }, take, orderBy }), budget);
     const workHistory = await collect((take, after) => tx.economicWorkHistory.findMany({ where: { accountId: a, workId: { in: works.map(row => row.id) }, ...pageWhere(after) }, take, orderBy }), budget);
     const objectHistory = await collect((take, after) => tx.objectEvent.findMany({ where: { ...own, OR: [{ targetKind: 'object', targetId: { in: objects.map(row => row.id) } }, { targetKind: 'boiler', targetId: { in: [...assetIds] } }, { targetKind: 'room', targetId: { in: roomIds } }], ...pageWhere(after) }, take, orderBy }), budget);
     const assetHistory = await collect((take, after) => tx.assetHistory.findMany({ where: { assetId: { in: [...assetIds] }, ...pageWhere(after) }, take, orderBy }), budget);
+    const profileProofs = [...objects.flatMap(row => profileCapturedProofs(row.profile)), ...objectHistory.flatMap(row => [row.before, row.after].flatMap(snapshot => profileCapturedProofs(record(record(snapshot).row).profile)))];
+    const confirmedProfileKeys = await readableReceiptProofKeys(tx, a, h, profileProofs, rows => budget.add(rows), 'confirmed');
+    const projection = new Projection(new Map(documents.map(doc => [doc.id, { version: doc.original!.version, sha256: doc.original!.sha256 }])), keys(objects), assetIds, keys(activities), keys(expenses), keys(works), keys(rooms), confirmedProfileKeys);
     const history = [
       ...activityHistory.map(row => ({ ...scalars(row, ['id', 'kind', 'at', 'note']), resource: { kind: 'activity', id: row.activityId }, before: projection.history('activity', row.kind, row.before), after: projection.history('activity', row.kind, row.after) })),
       ...expenseHistory.map(row => ({ ...scalars(row, ['id', 'kind', 'at', 'note']), resource: { kind: 'expense', id: row.expenseId }, before: projection.history('expense', row.kind, row.before), after: projection.history('expense', row.kind, row.after) })),
@@ -104,7 +109,7 @@ export class PersonalExportService {
     };
     const limitations = ['originals_not_included', 'sharing_and_ai_drafts_not_included', 'document_physical_availability_not_checked', ...(projection.refsExcluded || assets.length !== assetCandidates.length || objects.length !== objectCandidates.length || receiptFields.length !== receiptFieldCandidates.length || receiptComparisons.length !== comparisonCandidates.length ? ['some_references_excluded'] : []), ...(projection.historyLimited ? ['some_history_snapshots_unavailable'] : [])];
     if (receiptNames.length) limitations.push('receipt_object_history_uses_current_name');
-    return { envelope: { format: 'dimora-personal-home-export', formatVersion: 1, generatedAt: new Date().toISOString(), scope: { homeId: h, accountId: a }, account, home, data, limitations }, assetIds: [...assetIds], objectIds: [...objectIds], receiptProofs: [...receiptProofs, ...organizationProofs] };
+    return { envelope: { format: 'dimora-personal-home-export', formatVersion: 1, generatedAt: new Date().toISOString(), scope: { homeId: h, accountId: a }, account, home, data, limitations }, assetIds: [...assetIds], objectIds: [...objectIds], documentIds: documents.map(doc => doc.id), receiptProofs: [...receiptProofs, ...organizationProofs, ...projection.retainedProfileProofs], proposalProofs };
   }
   async export(a: string, h: string, authorize: () => Promise<unknown>) {
     if (this.running >= EXPORT_LIMITS.concurrent) throw new ServiceUnavailableException({ code: 'personal_export_busy', message: 'Un’esportazione è già in corso. Riprova più tardi.' });
@@ -121,6 +126,10 @@ export class PersonalExportService {
         const readableObjects = await readableReceiptObjectIds(tx, a, h, built.objectIds);
         if (built.objectIds.some(id => !readableObjects.has(id))) throw new ForbiddenException('Accesso non consentito.');
         if (!await readableReceiptProofs(tx, a, h, built.receiptProofs)) throw new ForbiddenException('Accesso non consentito.');
+        if (!await readableReceiptProofs(tx, a, h, built.proposalProofs, 'proposal')) throw new ForbiddenException('Accesso non consentito.');
+        // Document names and original metadata are released only if every listed document is still active.
+        const active = built.documentIds.length ? await tx.document.count({ where: { id: { in: built.documentIds }, homeId: h, uploaderId: a, trashedAt: null, original: { isNot: null } } }) : 0;
+        if (active !== built.documentIds.length) throw new ForbiddenException('Accesso non consentito.');
       }, { timeout: 15000, maxWait: 15000 });
       await authorize();
       await this.policy.require(a, h, 'export');

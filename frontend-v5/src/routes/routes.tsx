@@ -32,6 +32,7 @@ const RoomDetailPage = lazyPage(() => import('./RoomsPages').then((m) => m.RoomD
 const ObjectsPage = lazyPage(() => import('./ObjectsPages').then((m) => m.ObjectsPage));
 const ObjectDetailPage = lazyPage(() => import('./ObjectsPages').then((m) => m.ObjectDetailPage));
 const SharesPage = lazyPage(() => import('./SharingPages').then((m) => m.SharesPage));
+const TrashPage = lazyPage(() => import('./TrashPage').then((m) => m.TrashPage));
 const NewSharePage = lazyPage(() => import('./SharingPages').then((m) => m.NewSharePage));
 const ShareDetailPage = lazyPage(() => import('./SharingPages').then((m) => m.ShareDetailPage));
 const ReceivedListPage = lazyPage(() => import('./ReceivedPages').then((m) => m.ReceivedListPage));
@@ -100,6 +101,7 @@ export const routes: RouteObject[] = [
               { path: 'ambienti/:roomId', element: <RoomDetailPage /> },
               { path: 'oggetti', element: <ObjectsPage /> },
               { path: 'oggetti/:kind/:objectId', element: <ObjectDetailPage /> },
+              { path: 'cestino', element: <TrashPage /> },
               { path: 'condivisioni', element: <SharesPage /> },
               { path: 'condivisioni/nuova', element: <NewSharePage /> },
               { path: 'condivisioni/:shareId', element: <ShareDetailPage /> },

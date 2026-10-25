@@ -1,0 +1,94 @@
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  /* The row that triggered it may be far down the list, under sticky page toolbars: keep the notice in view at the bottom. */
+  position: fixed;
+  /* Centred on the content area, beside the side navigation. */
+  left: calc(50% + var(--side-width) / 2);
+  bottom: var(--space-5);
+  z-index: 30;
+  width: min(620px, calc(100vw - var(--side-width) - 48px));
+  transform: translateX(-50%);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 18%);
+}
+
+@media (max-width: 800px) {
+  .notice {
+    left: 50%;
+    width: calc(100vw - 32px);
+    bottom: calc(var(--bottom-nav-height) + var(--space-3));
+  }
+}
+
+.notice p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.item h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.panel {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 520px;
+}
+
+.panel h2,
+.panel p {
+  margin: 0;
+}
+
+/* Discreet but readable on the dark navigation (side bar and phone menu), same tap target as section links. */
+.sideLink {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  margin-top: var(--space-3);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-nav-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

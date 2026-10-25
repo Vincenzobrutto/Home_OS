@@ -25,7 +25,7 @@ export function documentViewBase(a:string,h:string,f:Filters,w:{state:Prisma.Sql
      o.id IS NOT NULL AS organized,COALESCE(o."houseDocument",false) AS "houseDocument",${linked} AS linked,${f.view==='archive'?archiveFamilySql():group} AS "groupKey"
    FROM "Document" d LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
    LEFT JOIN "DocumentOrganization" o ON o."documentId"=d.id AND o."accountId"=${a} AND o."homeId"=${h} AND o."documentVersion"=v.version AND o."documentSha256"=v.sha256
-   WHERE d."homeId"=${h} AND (d.visibility='home' OR d."uploaderId"=${a})
+   WHERE d."homeId"=${h} AND (d."trashedAt" IS NULL AND (d.visibility='home' OR d."uploaderId"=${a}))
    ${f.workflow==='all'?Prisma.empty:['pending','completed'].includes(f.workflow)?Prisma.sql`AND ${w.completed}=${f.workflow==='completed'}`:Prisma.sql`AND ${w.state}=${f.workflow}`}
    ${f.visibility==='all'?Prisma.empty:Prisma.sql`AND d.visibility::text=${f.visibility}`}
    ${f.format==='all'?Prisma.empty:Prisma.sql`AND v."mimeType"=${mime[f.format as keyof typeof mime]}`}

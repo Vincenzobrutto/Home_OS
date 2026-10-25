@@ -1,4 +1,5 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
+import { rejectDeletedReplay } from '../documents/trash';
 import { Prisma, type ObjectOnboardingDraft } from '../../generated/client';
 import { ObjectOnboardingAccess } from './access';
 import { OnboardingAiBudget } from './ai-budget';
@@ -40,7 +41,7 @@ export class FloorPlanService {
    const source=await this.source(tx,a,h,d);if(source.original!.version!==snapshot.documentVersion||source.original!.sha256!==snapshot.documentSha256)throw conflict('source_changed','L’originale è cambiato. Riapri la planimetria.');
    const operation=confirm?'floor-plan:confirm':'floor-plan:save',hash=digest(JSON.stringify({b,confirm}));
    const prior=await tx.objectRequest.findUnique({where:{accountId_homeId_operation_target_key:{accountId:a,homeId:h,operation,target:d,key}}});
-   if(prior){if(prior.digest!==hash)throw conflict('idempotency_conflict','Chiave già usata con dati diversi.');return prior.response;}
+   if(prior){if(prior.digest!==hash)throw conflict('idempotency_conflict','Chiave già usata con dati diversi.');rejectDeletedReplay(prior.response);return prior.response;}
    let row=await this.draft(tx,a,h,d,snapshot.documentVersion,snapshot.documentSha256);
    if((row?.version??0)!==expected)throw conflict('floor_plan_version_conflict','La proposta è cambiata. Ricarica prima di continuare.');
    const bindings={...(row?.decisions as Record<string,string>|undefined)};

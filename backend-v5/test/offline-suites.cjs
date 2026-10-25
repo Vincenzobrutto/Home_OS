@@ -130,8 +130,26 @@ const profiles = {
       "test/document-intake.test.cjs",
       "test/intake-classifier.test.cjs",
       "test/contacts.test.cjs",
-      "test/offline-harness.test.cjs"
+      "test/offline-harness.test.cjs",
+      "test/document-trash-guard.test.cjs"
     ]
+  },
+  "test:trash-db": {
+    "database": true,
+    "api": false,
+    "files": [
+      "test/document-trash.integration.test.cjs",
+      "test/document-trash-review.integration.test.cjs"
+    ],
+    "apiFiles": []
+  },
+  "test:cestino-review-db": {
+    "database": true,
+    "api": false,
+    "files": [
+      "test/document-trash-review.integration.test.cjs"
+    ],
+    "apiFiles": []
   },
   "test:personal-export-db": {
     "database": true,
@@ -421,4 +439,18 @@ profiles['test:offline-guards'].files.push('test/offline-registration.test.cjs')
 const databaseProfiles = Object.values(profiles).filter(profile => profile.database);
 const union = key => [...new Set(databaseProfiles.flatMap(profile => profile[key] ?? []))];
 profiles['test:offline-db'] = { database: true, api: true, files: union('files'), apiFiles: union('apiFiles'), restartFiles: union('restartFiles') };
+// Explicit independent review; keep the author's baseline aggregate unchanged.
+profiles['test:cestino-riesame-db'] = { database: true, api: false, files: ['test/document-trash-rereview.integration.test.cjs'], apiFiles: [] };
+profiles['test:cestino-race-db'] = { database: true, api: false, files: ['test/document-trash-final-review.integration.test.cjs'], apiFiles: [] };
+profiles['test:membership-clock-db'] = { database: true, api: false, files: ['test/membership-clock-review.integration.test.cjs'], apiFiles: [] };
+profiles['test:cestino-extra-review-db'] = { database: true, api: false, files: ['test/document-trash-extra-review.integration.test.cjs'], apiFiles: [] };
+profiles['test:membership-fixtures-db'] = { database: true, api: false, files: ['test/installment-linking.integration.test.cjs', 'test/generalized-evidence.integration.test.cjs'], apiFiles: [] };
+profiles['test:cestino-fixes-db'] = { database: true, api: false, files: ['test/document-trash-fixes.integration.test.cjs'], apiFiles: [] };
+// Final integration checks keep the independent review assertions intact and
+// run together on one fresh owned cluster, outside the historical aggregate.
+profiles['test:cestino-completo-db'] = {
+  database: true, api: false,
+  files: [...new Set(['test:trash-db', 'test:cestino-riesame-db', 'test:cestino-race-db', 'test:cestino-extra-review-db', 'test:cestino-fixes-db'].flatMap(name => profiles[name].files))],
+  apiFiles: []
+};
 module.exports = profiles;
