@@ -1,6 +1,6 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
-Bollette ibride e telecomunicazioni: [correzione separata](v5/bollette-lettura-affidabile-20261025.md), 1002/1002 mock, 5/5 fixture, typecheck/lint/build. Intestazione/periodo geometrici e calendario nativo più OCR, senza indebolire confidenze o inventare anni. Riscontro locale sul PDF fornito riuscito; PR da approvare prima di aggiornare l’app.
+Bollette ibride e telecomunicazioni: [correzione separata](v5/bollette-lettura-affidabile-20261025.md), 1002/1002 mock, 5/5 fixture, typecheck/lint/build. Intestazione/periodo geometrici e calendario nativo più OCR, senza indebolire confidenze o inventare anni. Riscontro locale sul PDF fornito riuscito. PR #33 approvata e integrata a 730b93d; frontend5174 attivato e verificato via HTTP, senza cambiare API/PostgreSQL o dati. Verifica manuale del committente in attesa.
 
 OCR precedente PR #26 già integrato a 69d9f00 e frontend5174 attivato su autorizzazione esplicita basata sui test offline. Il collaudo browser resta non eseguito; dettagli operativi nella PR documentale #30. Nessun servizio o dato reale modificato da questo nuovo lotto.
 

@@ -32,6 +32,15 @@ Invocazioni Vitest nell'ambiente depurato unit del runner esistente (guardia off
 
 ## Limiti e consegna
 
-Intestazioni spezzate o senza ruolo legale, colonne ambigue, documenti ruotati e anni assenti possono richiedere conferma manuale. Questa correzione non promette la lettura di qualunque layout. Nessun aggiornamento dell'app da questo branch prima dell'approvazione della PR; la bozza reale non è stata modificata. Rimangono separati i limiti e la prova browser della PR #26.
+Intestazioni spezzate o senza ruolo legale, colonne ambigue, documenti ruotati e anni assenti possono richiedere conferma manuale. Questa correzione non promette la lettura di qualunque layout. Attivazione dopo approvazione descritta sotto; la bozza reale non è stata modificata. Rimangono separati i limiti e la prova browser della PR #26.
 
-[PR #33](https://github.com/Vincenzobrutto/Home_OS/pull/33) verso il consolidamento, prodotto verificato ee21cb9 e documentazione c7f5b3f; push confrontato con git ls-remote, seguito soltanto documentale. Nessun merge eseguito. Dopo approvazione: aggiornamento del solo frontend e verifica manuale delle proposte; le compilazioni già salvate continuano a essere preservate.
+[PR #33](https://github.com/Vincenzobrutto/Home_OS/pull/33) verso il consolidamento, prodotto verificato ee21cb9 e documentazione c7f5b3f; push confrontato con git ls-remote, seguito soltanto documentale. Successivamente integrata su approvazione del committente come descritto sotto; le compilazioni già salvate continuano a essere preservate.
+
+
+## Integrazione e attivazione approvate — 25 ottobre 2026
+
+PR #33 unita nel consolidamento a `730b93dd76be560fd9530005c532cadd9974e2f3`, verificato con git ls-remote; origin/main invariato a cdbb318. Il worktree proprio è stato avanzato senza reset/rebase. Albero frontend `59614cf38da67d8b9b16c19803a63917b909d453`, identico alla punta d2d5f5f già verificata (1002 mock, 85 mirati, 5 fixture, typecheck/lint/build); backend invariato rispetto al precedente consolidamento 69d9f00. Nessuna ripetizione superflua della suite su sorgenti identiche.
+
+Riavviato esclusivamente il frontend identificato sulla porta 5174: nuovo PID32656, sorgente integrata, envDir vuota, guardia di rete e target API3011 invariati. HTTP200 per HTML, parser bollette, lettore PDF, associazione delle date, worker OCR protetto e HEAD della lingua italiana. Nessuna richiesta API o autenticata durante la verifica. API PID10540 e PostgreSQL PID22924 hanno mantenuto processi e porte; nessun avvio/stop del DB, migrazione, AI o scrittura dati. Metadati runtime locali aggiornati.
+
+La prova interattiva resta al committente: ricaricare la pagina, aprire Compila manualmente e attendere la lettura locale prima di verificare le proposte. Nessun caricamento, apertura autenticata o salvataggio eseguito da Codex; le bozze già salvate restano escluse dalla sovrascrittura automatica.
