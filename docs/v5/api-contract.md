@@ -24,7 +24,7 @@ GET `/homes/:homeId/documents/:id` aggiunge `document.workflowState`, con gli st
 
 ## Contesto personale nelle righe Documenti — 21 ottobre 2026
 
-GET `/homes/:homeId/documents` aggiunge a ogni elemento `linkedObjects: Array<{id,kind:'object'|'boiler',name}>` e `savedExpenses: Array<{id,title,amountCents,supplier:string|null,documentNumber:string|null,documentDate:string|null}>`, anche senza `view`. Collezioni vuote se assenti. Dettaglio, cursori e filtri invariati. `linkedObjects` deduplica riferimenti diretti, derivati da spesa attiva e fonti correnti caldaia con la stessa policy fonte del catalogo. `savedExpenses` contiene solo spese attive personali dello stesso account/casa associate al documento accessibile; ordinamento data spesa discendente, ID crescente. Dati confermati, nessuna proposta AI o inferenza. Il frontend mostra i dati della spesa nelle righe classificate Fattura e tollera l’assenza delle due proprietà su API precedenti. [Regole e verifiche](document-row-context-20261021.md).
+GET `/homes/:homeId/documents` aggiunge a ogni elemento `linkedObjects: Array<{id,kind:'object'|'boiler',name}>` e `savedExpenses: Array<{id,title,amountCents,supplier:string|null,documentNumber:string|null,documentDate:string|null,invoiceMonth?:string}>`, anche senza `view`. Collezioni vuote se assenti. Dettaglio, cursori e filtri invariati. `linkedObjects` deduplica riferimenti diretti, derivati da spesa attiva e fonti correnti caldaia con la stessa policy fonte del catalogo. `savedExpenses` contiene solo spese attive personali dello stesso account/casa associate al documento accessibile; ordinamento data spesa discendente, ID crescente. Dati confermati, nessuna proposta AI o inferenza. Il frontend mostra i dati della spesa nelle righe classificate Fattura e tollera l’assenza delle due proprietà su API precedenti. [Regole e verifiche](document-row-context-20261021.md).
 
 ## Viste Documenti e conteggi — 21 ottobre 2026
 
@@ -146,3 +146,7 @@ Nessun nuovo campo o endpoint: economy-v1 usa competenceFrom (quando sono presen
 ## Ricerca documenti: casa, planimetrie e contratti — 19 ottobre 2026
 
 collection accetta inoltre house e floor_plans come viste virtuali, contracts come nuova raccolta reale. Il tipo documentale contract appartiene a contracts. Nessun nuovo endpoint o copia: filtri prima del paging e stesso controllo fonti/permissi. [Regole](house-document-navigation-20261019.md).
+
+### Titoli visuali delle bollette completate (lotto titoli)
+
+L’elenco include invoiceMonth nelle sole spese personali attive che lo possiedono, formato YYYY-MM; se nullo il campo è omesso per compatibilità. Nessuna nuova query per riga, schema o scrittura. Il frontend può mostrare un alias per una sola bolletta completata con unica spesa, fornitore e mese fattura confermati, se il titolo salvato è ancora il filename o il suo stem. Nome e organization.title della risposta restano canonici, senza rinomina/backfill; il dettaglio non riceve nuovi campi. Titoli personalizzati, fonti composite, dati mancanti e risposte API precedenti mantengono la presentazione precedente. Ricerca, ordinamento ed export restano su titolo salvato e filename, non sull’alias visuale. [Report](documenti-titoli-completati-20261025.md).

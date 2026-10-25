@@ -1,5 +1,9 @@
 ## 25 ottobre 2026 — Mese fattura separato dalla competenza dei servizi
 
+## 25 ottobre 2026 — titoli delle bollette completate (branch del lotto)
+
+Alias visuale da fornitore e mese fattura canonici per una sola bolletta completata con unica spesa personale attiva. Titoli personalizzati, filename, dati salvati ed export preservati; niente AI, OCR aggiuntivo, scrittura o backfill. Proiezione personale opzionale del mese con le stesse query aggregate. [Report e limiti](v5/documenti-titoli-completati-20261025.md). Non ancora integrato nell’app. PR #53 rilettura, invece, integrata su approvazione a44cd449 e solo frontend aggiornato,16/16 HTTP anonimi verdi.
+
 ## 25 ottobre 2026 — rilettura locale con confronto (branch del lotto)
 
 Bolletta manuale aperta: nuova rilettura PDF/OCR su richiesta, confronto con i campi correnti e selezione esplicita delle differenze. Applicazione soltanto al form, nessun salvataggio automatico, nuovo documento o spesa. Fonte/versione/SHA, sessione e modifiche durante la lettura protette. [Report e verifiche](v5/bollette-rilettura-locale-20261025.md). Nessuna nuova API, schema, AI o accesso al reale; non ancora integrato nell'app.

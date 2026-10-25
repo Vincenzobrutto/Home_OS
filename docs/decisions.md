@@ -1276,3 +1276,7 @@ Il [riesame indipendente del cestino](v5/cestino-riesame-73288e5-20261024.md) ri
 ## 25 ottobre 2026 — Mese fattura distinto dai servizi
 
 Il committente chiarisce che mese di riferimento significa mese esplicito della fattura. Nuovo invoiceMonth separato: competenceFrom/To non vengono riscritti e il mese non si ricava da emissione/scadenza. Intestazione univoca proposta dal lettore locale; assenza/conflitto restano manuali. Riepiloghi utenze sul mese confermato, fallback precedente per righe storiche senza backfill. Un solo totale, nessuna inferenza di pagamento. Persistenza additiva e rilascio coordinato da approvare; nessuna migrazione reale. [Report](v5/bollette-mese-fattura-20261025.md).
+
+## 25 ottobre 2026 — nome visuale delle bollette completate
+
+Su richiesta del committente, mostrare un nome leggibile usando soltanto fornitore e mese della fattura già confermati, nei soli documenti completati. Implementazione come alias visuale quando il titolo è ancora il filename/stem, non rinomina persistente: titoli personalizzati e originali preservati. Una sola parte bolletta e una sola spesa personale attiva, altrimenti fallback; mai dedurre il mese da servizi, emissione o scadenza. Ricerca/export restano canonici; non introdurre backfill o letture per riga. [Report](v5/documenti-titoli-completati-20261025.md).
