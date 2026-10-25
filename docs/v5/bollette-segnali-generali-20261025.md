@@ -28,8 +28,18 @@ Mirata successiva 202/203: il nuovo caso per unità ha esposto il confine di par
 
 Evidenze locali del task: work/bill-signals-focus.log, work/bill-signals-focus-final.log, work/bill-signals-focus-verified.log, work/bill-signals-focus-definitive.log, work/bill-signals-full-before-rate-guard.log, work/bill-signals-full-before-grammar.log, work/bill-signals-full.json e work/bill-signals-full-definitive.log, work/bill-signals-checks-definitive.log e work/bill-signals-fixtures.json/log. Nessun cluster DB avviato. La prova della scheda Spese usa soltanto il harness: nessun salvataggio o conferma automatica nell'app.
 
+Prima completa conclusa sulla fonte debfcc3: 1225/1226 in 133 file, zero test saltati, durata 1504,21 secondi. Fallisce una sola attesa preesistente in routes/objects.test.tsx: apertura del pulsante per creare un promemoria, prima di qualsiasi conferma; file e codice prodotto Oggetti invariati. Lo stesso file, senza modifiche e isolato, passa 27/27. La causa dell'attesa non è dimostrata; non si attribuisce alla correzione bollette né si dichiara verde quella completa. Ripetizione integrale in corso, un worker/retry0 e nessun'altra suite o controllo statico avviato in parallelo da questo incarico.
+
+Log conservati: work/bill-signals-full-1225-1226.json e work/bill-signals-full-definitive.log; isolato work/bill-signals-objects.json/log; ripetizione work/bill-signals-full-repeat.log e work/bill-signals-full.json.
+
+Controlli statici definitivi sulla fonte debfcc3: typecheck, lint e build verdi; fixture definitive 5/5 verdi. Albero frontend 202ed6ca98f615bb928e9b8e38aeceec4688eace, backend c820d20f7d41320fae8558dfcee7298e3e395256 invariato rispetto all'app. Nessuna modifica di prodotto dopo quella fonte.
+
 ## Stato di consegna
 
 Implementato sul branch proprio, collaudo finale in corso. App invariata sulla fonte integrata 911b0fb; nessuna AI/email, lettura o modifica di DB/API/storage reale, migrazione o riavvio. Dopo i controlli: stato/roadmap/changelog, push verificato e PR verso il consolidamento; merge e aggiornamento app restano al committente. I dati confermati e le compilazioni già salvate non vengono riscritti.
 
 [PR #44](https://github.com/Vincenzobrutto/Home_OS/pull/44) aperta in bozza verso il consolidamento durante la verifica definitiva; pronta solo dopo esito completo. Gli intermedi locali con testo/raster della diagnosi corrente sono stati rimossi, PDF originali preservati.
+
+Esito conclusivo della ripetizione integrale sulla stessa fonte debfcc3: **1226/1226 in 133 file**, zero saltati, retry0, un worker; durata1288,38 secondi, avvio20:03:02. Nessuna asserzione, timeout o codice cambiato fra la completa1225/1226 e questa ripetizione; nessun altro test/statico avviato da questo incarico in parallelo. Log e JSON precedenti preservati. Il timeout preesistente resta nel backlog con causa non dimostrata.
+
+Successivo incarico del committente: solo audit/progettazione del motore bollette, senza altro codice. Questo lotto è verificato offline, non integrato e non attivato; la PR #44 non risolve la distinzione generale fra totale, dovuto e arretrati. Il nuovo audit è nella PR #45 su branch documentale separato. Nessun merge né aggiornamento app.
