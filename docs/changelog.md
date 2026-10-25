@@ -1,6 +1,6 @@
 ## 25 ottobre 2026 — Bollette fase1: origine e campi non riconosciuti
 
-[Traccia della lettura iniziale](v5/bollette-tracciabilita-20261025.md): pagina/metodo/versione e spiegazioni di dati non individuati, non utilizzabili o discordanti; origine PDF/OCR distinta, errori locali sicuri. Un solo importo, nessuna modifica del payload o delle validazioni. Traccia temporanea senza valori/citazioni, nessun salvataggio automatico. Gruppi mock interessati689/689 in47 file e typecheck/lint/build verdi; [PR #48](https://github.com/Vincenzobrutto/Home_OS/pull/48), push verificato. Nessuna AI, DB reale o aggiornamento app; merge al committente.
+[Traccia della lettura iniziale](v5/bollette-tracciabilita-20261025.md): pagina/metodo/versione e spiegazioni di dati non individuati, non utilizzabili o discordanti; origine PDF/OCR distinta, errori locali sicuri. Un solo importo, nessuna modifica del payload o delle validazioni. Traccia temporanea senza valori/citazioni, nessun salvataggio automatico. Gruppi mock interessati689/689 in47 file e typecheck/lint/build verdi; [PR #48](https://github.com/Vincenzobrutto/Home_OS/pull/48), push verificato. PR #48 integrata su approvazione a b6edac5, frontend aggiornato: build e13/13 controlli HTTP statici/anonimi verdi. API/PostgreSQL e main preservati; nessuna nuova AI, migrazione o scrittura automatica.
 
 ## 25 ottobre 2026 — Bollette fase1: generalizzazione del riepilogo
 
