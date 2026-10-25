@@ -11,6 +11,7 @@ it.each([
  {stepped:false,scenario:'confirm'},
  {stepped:true,scenario:'confirm'},
  {stepped:false,scenario:'conflict'},
+ {stepped:false,scenario:'lost-response'},
  {stepped:true,scenario:'revoked'},
  {stepped:true,scenario:'draft'},
  {stepped:true,scenario:'ambiguous'},
@@ -40,7 +41,8 @@ it.each([
    if(url.endsWith('/from-documents'))preparations++;
    if(url.endsWith('/organizations')){
     organizationRequests.push({body:JSON.parse(String(init.body)),key:new Headers(init.headers).get('Idempotency-Key')});
-    if(scenario==='conflict'&&organizationRequests.length===1)return Response.json({error:{code:'organization_version_conflict',message:'Classificazione in conflitto.'}},{status:409});
+    if(scenario==='conflict')return Response.json({error:{code:'organization_version_conflict',message:'Classificazione in conflitto.'}},{status:409});
+    if(scenario==='lost-response'&&organizationRequests.length===1)throw new TypeError('response lost before recording');
     order.push('organize');expect(JSON.parse(String(init.body)).items[0].selection.parts[0].kind).toBe('utility_bill');item.reviewState='confirmed';return Response.json({...wire,results:{[item.id]:{state:'confirmed'}}});
    }
    return Response.json(wire);
@@ -69,9 +71,13 @@ it.each([
  }
  if(scenario==='conflict'){
   await screen.findByText('Classificazione in conflitto.');expect(order).toEqual(['kind']);expect(screen.getByLabelText('Importo della bolletta (€)')).toHaveValue('93.21');expect(screen.getByLabelText('Fornitore')).toHaveValue('Fornitore sintetico');
+  expect(organizationRequests).toHaveLength(1);expect(draft.state).toBe('open');expect(paid).toEqual([]);app.unmount();return;
+ }
+ if(scenario==='lost-response'){
+  await screen.findByText('Il servizio Dimora non è raggiungibile in questo momento. Riprova tra poco.');expect(order).toEqual(['kind']);expect(screen.getByLabelText('Importo della bolletta (€)')).toHaveValue('93.21');expect(screen.getByLabelText('Fornitore')).toHaveValue('Fornitore sintetico');
   await app.user.click(await screen.findByRole('button',{name:'Registra spesa'}));
  }
  await waitFor(()=>expect(order).toEqual(['kind','organize','review','confirm']));expect(draft.state).toBe('confirmed');expect(item.reviewState).toBe('confirmed');expect(preparations).toBe(1);expect(paid).toEqual([]);
- if(scenario==='conflict'){expect(organizationRequests).toHaveLength(2);expect(organizationRequests[1]).toEqual(organizationRequests[0]);}else expect(organizationRequests).toHaveLength(1);
+ if(scenario==='lost-response'){expect(organizationRequests).toHaveLength(2);expect(organizationRequests[1]).toEqual(organizationRequests[0]);}else expect(organizationRequests).toHaveLength(1);
  app.unmount();
 });

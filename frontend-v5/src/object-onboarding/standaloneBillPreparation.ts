@@ -30,7 +30,7 @@ export function createStandaloneBillPreparation({api,accountId,homeId,documentId
   if((await read()).organization)return;
   if(!attempt){
    const item=toUiBatch(batch).items.find(i=>i.documentLink.state==='linked'&&i.documentLink.document?.id===documentId);
-   if(!batch.permissions.includes('edit')||!item?.permissions.review||item.uploadState!=='stored'||item.duplicate||item.selectionStale||item.selection||item.confirmedOrganization||item.organizationVersion||['queued','running','uncertain'].includes(item.analysisState))throw unavailable('Il documento o le scelte salvate sono cambiati. Rivedi la compilazione dall’archivio.');
+   if(!batch.permissions.includes('edit')||!item?.permissions.review||item.uploadState!=='stored'||item.reviewState!=='unreviewed'||item.proposal||item.duplicate||item.selectionStale||item.selection||item.confirmedOrganization||item.organizationVersion||['queued','running','uncertain'].includes(item.analysisState))throw unavailable('Il documento o le scelte salvate sono cambiati. Rivedi la compilazione dall’archivio.');
    attempt={key:newIdempotencyKey(),title:value,payload:{batchId:batch.id,expectedVersion:batch.version,mode:'single',items:[{itemId:item.id,expectedVersion:item.version,expectedOrganizationVersion:0,replaceOrganization:false,selection:{action:'organize',title:value,parts:[{kind:'utility_bill',pageFrom:null,pageTo:null}],target:{kind:'home'}}}]}};
   }
   // A failed response retains this exact body/key; only another explicit click retries it.

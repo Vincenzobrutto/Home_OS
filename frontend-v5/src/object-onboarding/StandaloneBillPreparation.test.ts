@@ -11,7 +11,7 @@ async function world(){
  const batch:BatchWire={id:'batch',homeId:homeA1.id,version:1,state:'open',limits:{maxFiles:20,maxFileBytes:20971520,maxTotalBytes:209715200,acceptedMimeTypes:['application/pdf']},permissions:['read','edit'],items:[{id:'item',clientItemId:source.id,version:1,filename:source.originalFilename,byteSize:source.byteSize,mimeType:source.mimeType,uploadState:'stored',analysisState:'not_started',reviewState:'unreviewed',documentLink:{state:'linked',document:{id:source.id,name:source.name}},pageCount:1,proposal:null,selection:null,organization:null,organizationVersion:0,duplicate:null,error:null,permissions:['read','edit']}]};
  let active=true;
  const read=vi.fn(async()=>structuredClone(source));
- const call=vi.fn(async(path:string,options:{body?:unknown;idempotencyKey?:string;accountId?:string})=>{
+ const call=vi.fn(async(path:string,options:{body?:unknown;idempotencyKey?:string;accountId?:string}):Promise<unknown>=>{
   expect(options.accountId).toBe(a.id);
   if(path.endsWith('/batches/from-documents')){expect(options.body).toEqual({documentIds:[source.id]});return {batch};}
   expect(path).toBe(`/homes/${homeA1.id}/document-intake/batches/batch/organizations`);
@@ -47,13 +47,20 @@ it('does not replace a different confirmed document type',async()=>{
  const w=await world();w.source.organization={version:2,title:'Titolo confermato',parts:[{kind:'invoice',pageFrom:null,pageTo:null}],collections:['purchases'],origin:'user_declared',updatedAt:'2026-01-17T00:00:00.000Z'};
  await expect(w.prepare(w.snapshot,'Bolletta')).rejects.toMatchObject({code:'intake_preparation_required'});expect(w.call).not.toHaveBeenCalled();expect(w.source.organization.title).toBe('Titolo confermato');
 });
-it.each(['unavailable','other-document','readonly','uncertain'] as const)('refuses an unusable batch source: %s',async(reason)=>{
+it.each(['unavailable','other-document','readonly','uncertain','proposal','deferred'] as const)('refuses an unusable batch source: %s',async(reason)=>{
  const w=await world(),item=w.batch.items[0]!;
  if(reason==='unavailable'){item.documentLink={state:'unavailable',document:null};item.filename=null;item.byteSize=null;item.mimeType=null;item.permissions=[];}
  if(reason==='other-document')item.documentLink.document!.id='another-document';
  if(reason==='readonly')item.permissions=['read'];
  if(reason==='uncertain')item.analysisState='uncertain';
+ if(reason==='proposal')item.proposal={title:'Proposta locale da rivedere',parts:[{kind:'invoice',pageFrom:1,pageTo:1}],sources:[]};
+ if(reason==='deferred')item.reviewState='deferred';
  await expect(w.prepare(w.snapshot,'Bolletta')).rejects.toMatchObject({code:'intake_preparation_required'});expect(w.call).toHaveBeenCalledTimes(1);
+});
+it.each(['rejected','missing'] as const)('does not treat a %s organization result as confirmed',async(state)=>{
+ const w=await world(),original=w.call.getMockImplementation()!;
+ w.call.mockImplementation(async(path,options)=>path.endsWith('/organizations')?{batch:w.batch,results:state==='missing'?{}:{item:{state:'rejected'}}}:original(path,options));
+ await expect(w.prepare(w.snapshot,'Bolletta')).rejects.toMatchObject({code:'intake_preparation_required'});expect(w.call).toHaveBeenCalledTimes(2);expect(w.source.organization).toBeUndefined();
 });
 it('retains the exact organization body and key after an uncertain response; never retries itself',async()=>{
  const w=await world(),original=w.call.getMockImplementation()!;let lost=true;
