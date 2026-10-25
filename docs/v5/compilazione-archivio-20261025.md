@@ -30,6 +30,8 @@ Durante lo sviluppo dei nuovi test sono state corrette le fixture: selezione del
 
 ## Consegna e limiti
 
+Pubblicato sul branch proprio, push verificato con `git ls-remote`; [PR #35](https://github.com/Vincenzobrutto/Home_OS/pull/35) verso `codex/dimora-v5-consolidata-20261023`. Il merge non è eseguito.
+
 Prova manuale dopo l’integrazione: aprire la compilazione dall’archivio; se il collegamento è incompleto, usare **Riprendi compilazione** senza caricare un altro PDF. Controllare tipo e campi nelle schede Documento/Spese, poi effettuare la conferma finale. Verificare l’assenza dal filtro dei documenti da completare e la presenza nei completati con tipo **Bolletta**. Con **Salva bozza ed esci**, verificare invece che il documento resti da completare. Sono azioni del committente, non eseguite automaticamente da questo lotto.
 
 Nessuna AI, migrazione, accesso a DB/API/storage reale, modifica a `.env`, salvataggio automatico o riavvio dell’app. Main, consolidamento e branch/worktree Claude preservati. La correzione richiede PR verso il consolidamento e approvazione del committente prima di merge e aggiornamento dell’app; la versione già avviata non viene sostituita da questo lotto. Prova browser non eseguita; verifica nel harness mock.
