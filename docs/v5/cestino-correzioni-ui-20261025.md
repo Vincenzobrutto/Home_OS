@@ -18,6 +18,6 @@ Dipendenze installate dalla sola cache locale con script/audit/fund disabilitati
 
 Browser indipendente ancora bloccato per il permesso salvato dell'origine mock 5186. Nessun tentativo su origini o browser alternativi; il collaudo automatizzato non viene presentato come una prova fisica mobile.
 
-## Consegna prevista
+## Consegna
 
-PR verso `claude/cestino-frontend-20261023`; dipendenze backend e successivo aggiornamento dal consolidamento da coordinare prima del merge. Nessuna modifica alla scelta approvata `aiAnalysisSucceeded` della nota sul fornitore AI. Integrazione del cestino al committente; OCR distinto: PR #26 integrata a 69d9f00 e frontend5174 attivato su successiva autorizzazione basata sui test offline, senza attribuire un esito verde al browser bloccato.
+[PR #32](https://github.com/Vincenzobrutto/Home_OS/pull/32) verso `claude/cestino-frontend-20261023`, include e supera la proposta di soli test della PR #29. Prodotto a4ada4e, documentazione ebc59e2, push verificato con git ls-remote; seguito soltanto documentale. Esito pubblicato come commento sulla PR #16. Dipendenze backend [PR #31](https://github.com/Vincenzobrutto/Home_OS/pull/31) e successivo aggiornamento dal consolidamento da coordinare prima del merge. Nessuna modifica alla scelta approvata `aiAnalysisSucceeded` della nota sul fornitore AI. Integrazione del cestino al committente; OCR distinto: PR #26 integrata a 69d9f00 e frontend5174 attivato su successiva autorizzazione basata sui test offline, senza attribuire un esito verde al browser bloccato.
