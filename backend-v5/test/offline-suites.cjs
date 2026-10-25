@@ -1,5 +1,11 @@
 // Explicit offline profiles. No shell commands or caller-supplied test paths.
 const profiles = {
+  "test:document-workflow-db": {
+    "database": true,
+    "api": false,
+    "files": ["test/document-workspace.integration.test.cjs", "test/bill-completion.integration.test.cjs"],
+    "apiFiles": []
+  },
   "test:object-onboarding": {
     "database": false,
     "api": false,
