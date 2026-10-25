@@ -3,6 +3,7 @@ const state=vi.hoisted(()=>({getDocument:vi.fn(),destroy:vi.fn(async()=>{}),cont
 vi.mock('pdfjs-dist',()=>({GlobalWorkerOptions:{},getDocument:state.getDocument}));
 vi.mock('./localOcr',async()=>{const actual=await vi.importActual<typeof import('./localOcr')>('./localOcr');return {...actual,LocalOcr:class{initialize=state.initialize;recognize=state.recognize;dispose=state.dispose;}};});
 import {localBillPdf} from './localBillPdf';
+import type {BillTrace} from './localBillTrace';
 beforeEach(()=>{
  state.numPages=1;state.destroy.mockClear();state.content.mockReset().mockResolvedValue({items:[{str:'Bolletta energia elettrica',hasEOL:true},{str:'Totale da pagare: 23,00 €',hasEOL:true}]});
  state.initialize.mockReset().mockRejectedValue(new Error('local_ocr_unavailable'));state.recognize.mockReset();state.dispose.mockClear();state.render.mockReset().mockReturnValue({promise:Promise.resolve()});
@@ -10,6 +11,25 @@ beforeEach(()=>{
 });
 const bytes=new TextEncoder().encode('synthetic-pdf-bytes');
 async function input(){const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');return {blob:{size:bytes.length,arrayBuffer:async()=>bytes.buffer} as Blob,hash};}
+it('publishes source-bound native diagnostics without changing the original return value',async()=>{
+ const {blob,hash}=await input();let trace:BillTrace|undefined;
+ const bill=await localBillPdf(blob,hash,new AbortController().signal,undefined,value=>{trace=value;});
+ expect(bill).toMatchObject({amount:'23.00'});expect(bill).not.toHaveProperty('trace');
+ expect(trace?.source).toEqual({sha256:hash,pagesRead:[1],verified:true,ocr:'unused'});
+ expect(trace?.fields.amount).toMatchObject({state:'proposed',method:'pdf'});expect(trace?.fields.period.state).toBe('not_found');
+ expect(JSON.stringify(trace)).not.toContain('23.00');
+});
+it('a mismatching source exposes no interpreted field, and cancellation exposes no trace',async()=>{
+ const {blob,hash}=await input(),callback=vi.fn();
+ await localBillPdf(blob,'0'.repeat(64),new AbortController().signal,undefined,callback);
+ expect(callback).toHaveBeenCalledWith(expect.objectContaining({outcome:'source_mismatch',source:{sha256:'0'.repeat(64),verified:false,pagesRead:[],ocr:'unused'}}));
+ callback.mockClear();const controller=new AbortController();controller.abort();await localBillPdf(blob,hash,controller.signal,undefined,callback);expect(callback).not.toHaveBeenCalled();
+});
+it('failed optional OCR publishes only retained native origins',async()=>{
+ state.content.mockResolvedValue({items:[{str:'Bolletta energia elettrica',hasEOL:true},{str:'Totale fattura: 23,00 EUR',hasEOL:true},{str:'Scadenza',hasEOL:true}]});
+ const {blob,hash}=await input();let trace:BillTrace|undefined;await localBillPdf(blob,hash,new AbortController().signal,undefined,value=>{trace=value;});
+ expect(trace?.source?.ocr).toBe('failed');expect(trace?.fields.amount).toMatchObject({state:'proposed',method:'pdf'});expect(trace?.fields.dueOn.state).toBe('unusable');
+});
 it('only processes matching authorized bytes and destroys the local PDF',async()=>{
  const {blob,hash}=await input();expect(await localBillPdf(blob,hash,new AbortController().signal)).toMatchObject({amount:'23.00',category:'electricity'});
  expect(state.getDocument).toHaveBeenCalledWith(expect.objectContaining({data:expect.any(Uint8Array)}));expect(state.destroy).toHaveBeenCalledOnce();

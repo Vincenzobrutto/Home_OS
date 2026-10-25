@@ -6,15 +6,16 @@ import {expect,it,vi} from 'vitest';
 import type {Draft} from './model';
 import type {LocalBill} from './localBill';
 import {localBill} from './localBill';
+import {emptyBillTrace,type BillTrace} from './localBillTrace';
 import {queryKeys} from '../api/queryKeys';
 
-const state=vi.hoisted(()=>({account:'account-a',home:'home-a',readers:[] as Array<{signal:AbortSignal;resolve:(bill:LocalBill)=>void}>,posts:[] as string[]}));
+const state=vi.hoisted(()=>({account:'account-a',home:'home-a',readers:[] as Array<{signal:AbortSignal;resolve:(bill:LocalBill,trace?:BillTrace)=>void}>,posts:[] as string[]}));
 function reader(index:number){const value=state.readers[index];if(!value)throw Error('Local reader not started');return value;}
 vi.mock('../session/session',()=>({useAccount:()=>({id:state.account}),useApi:()=>api}));
 vi.mock('../routes/HomePages',()=>({useCurrentHome:()=>({id:state.home,name:'Casa sintetica'})}));
 vi.mock('../documents/PdfPreview',()=>({PdfPreview:()=>null}));
-vi.mock('./localBillPdf',()=>({localBillPdf:vi.fn((_blob:Blob,_sha:string,signal:AbortSignal,progress:(text:string)=>void)=>new Promise<LocalBill>(resolve=>{
- state.readers.push({signal,resolve});progress('Lettura sintetica '+state.readers.length);
+vi.mock('./localBillPdf',()=>({localBillPdf:vi.fn((_blob:Blob,_sha:string,signal:AbortSignal,progress:(text:string)=>void,onTrace?:(trace:BillTrace)=>void)=>new Promise<LocalBill>(resolve=>{
+ state.readers.push({signal,resolve:(bill,trace)=>{if(trace)onTrace?.(trace);resolve(bill);}});progress('Lettura sintetica '+state.readers.length);
 }))}));
 function draft(id:string):Draft{return {id:'draft-'+id,version:1,state:'open',mode:'manual',documentKind:'utility_bill',snapshot:{documentId:id,documentVersion:1,sha256:'a'.repeat(64)},document:null,items:[],needsReview:false,purchaseTotal:null,review:null,permissions:['read','edit'],houseExpenses:[{id:'cost',documentKind:'utility_bill',proposedFields:{},amountCandidates:[],amountSelectionRequired:true,decision:null}]};}
 const api={
@@ -37,6 +38,27 @@ function world(){
  const view=render(tree('doc-a'));
  return {...view,cache,beforeConfirm,user,tree};
 }
+
+it('shows local diagnostics without writes and preserves user corrections while opening the trace',async()=>{
+ const w=world();await screen.findByText('Lettura sintetica 1');let trace:BillTrace|undefined;
+ const bill=localBill(['Fattura\nServizi telefonici\nTotale fattura: 34,90 EUR\nFornitore: Reti di prova'],undefined,value=>{trace=value;});
+ trace!.source={sha256:'a'.repeat(64),verified:true,pagesRead:[1],ocr:'unused'};
+ await act(async()=>reader(0).resolve(bill!,trace));await screen.findByRole('heading',{level:2,name:'Documento'});
+ await w.user.click(screen.getByRole('button',{name:'Avanti'}));
+ const amount=await screen.findByLabelText('Importo della bolletta (€)');await w.user.clear(amount);await w.user.type(amount,'36,00');
+ await w.user.click(screen.getByText('Origine dei dati e campi non riconosciuti'));
+ expect(screen.getByText(/Il mese della fattura non viene usato/)).toBeVisible();expect(amount).toHaveValue('36,00');
+ expect(state.posts).toEqual([]);expect(w.beforeConfirm).not.toHaveBeenCalled();w.unmount();
+});
+it('a late trace cannot cross documents, and mismatching traces are not shown',async()=>{
+ const w=world();await screen.findByText('Lettura sintetica 1');w.rerender(w.tree('doc-b'));await screen.findByText('Lettura sintetica 2');
+ const trace=emptyBillTrace('source_mismatch');trace.source={sha256:'a'.repeat(64),verified:false,pagesRead:[],ocr:'unused'};
+ await act(async()=>reader(0).resolve({amount:'999.00'},trace));
+ expect(screen.queryByRole('region',{name:'Traccia della lettura locale'})).not.toBeInTheDocument();expect(screen.getByText('Lettura sintetica 2')).toBeVisible();
+ trace.source.sha256='b'.repeat(64);await act(async()=>reader(1).resolve({category:'electricity',amount:'12.00'},trace));
+ await screen.findByRole('heading',{level:2,name:'Documento'});
+ expect(screen.queryByRole('region',{name:'Traccia della lettura locale'})).not.toBeInTheDocument();expect(state.posts).toEqual([]);w.unmount();
+});
 
 it.each(['document','home','account'] as const)('late local reading cannot cross a change of %s',async(change)=>{
  const w=world();await screen.findByText('Lettura sintetica 1');expect(reader(0).signal.aborted).toBe(false);

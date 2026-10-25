@@ -3,9 +3,17 @@ const state=vi.hoisted(()=>({getDocument:vi.fn(),destroy:vi.fn(async()=>{}),init
 vi.mock('pdfjs-dist',()=>({GlobalWorkerOptions:{},getDocument:state.getDocument}));
 vi.mock('./localOcr',async()=>{const actual=await vi.importActual<typeof import('./localOcr')>('./localOcr');return {...actual,LocalOcr:class{initialize=state.initialize;recognize=state.recognize;dispose=state.dispose;}};});
 import {localBillPdf} from './localBillPdf';
+import type {BillTrace} from './localBillTrace';
 const item=(str:string,x:number,y:number,width=150)=>({str,hasEOL:true as const,width,height:10,transform:[1,0,0,1,x,840-y-10]});
 const bytes=new TextEncoder().encode('synthetic hybrid invoice');
 async function read(){const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');return localBillPdf({size:bytes.length,arrayBuffer:async()=>bytes.buffer} as Blob,hash,new AbortController().signal);}
+it('keeps native total provenance separate from an OCR due date',async()=>{
+ const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');let trace:BillTrace|undefined;
+ await localBillPdf({size:bytes.length,arrayBuffer:async()=>bytes.buffer} as Blob,hash,new AbortController().signal,undefined,value=>{trace=value;});
+ expect(trace?.source?.ocr).toBe('completed');expect(trace?.fields.amount).toMatchObject({state:'proposed',method:'pdf'});
+ expect(trace?.fields.dueOn).toMatchObject({state:'proposed',method:'pdf_ocr'});expect(trace?.fields.period.state).toBe('not_found');
+ expect(JSON.stringify(trace)).not.toContain('37.82');
+});
 beforeEach(()=>{
  state.pages=[[item('Fattura servizi di telecomunicazione',40,150),item('Totale da pagare: 37,82 EUR',40,180),item('Data emissione: 11/04/2027',40,210),item('Scadenza',400,250),item('2027',430,280,50),item('Nuovo Servizio S.p.A. __',300,45),item('S e d e L e g a l e',300,65)],[item('Periodo',380,160,50),item('01 mar 27 – 31 mar 27',330,180,100),item('Dettaglio delle prestazioni e delle condizioni del servizio. '.repeat(4),40,300)]];
  state.destroy.mockClear();state.initialize.mockReset().mockResolvedValue(undefined);state.recognize.mockReset().mockResolvedValue('Scadenza: 20/05/2027');state.dispose.mockClear();state.render.mockReset().mockReturnValue({promise:Promise.resolve()});
