@@ -16,9 +16,9 @@ Il riepilogo nativo è confrontato anche con i totali espliciti nell'OCR: una co
 
 ## Prove locali sui documenti forniti
 
-Prima pagina del nuovo documento telefonico, PDF.js e worker/WASM italiano senza rete: bolletta internet/telefonia, fornitore TIM - S.p.A., totale 24,57 EUR, emissione 16/09/2026 e scadenza 08/10/2026. Il periodo di consumo non è esplicito nella prima pagina e resta da confermare: Fattura settembre non è stato trasformato automaticamente nel periodo di competenza. Nessuna lettura delle cinque pagine successive.
+Prima pagina del nuovo documento telefonico, PDF.js e worker/WASM italiano senza rete: tipo internet/telefonia, fornitore, totale, emissione e scadenza confrontati positivamente con la pagina. I valori effettivi del documento non sono riprodotti in questa consegna; i test usano importi e operatori inventati. Il periodo di consumo non è esplicito nella prima pagina e resta da confermare: il mese nel titolo Fattura non è trasformato nel periodo di competenza. Nessuna lettura delle cinque pagine successive.
 
-Regressione sulla prima pagina Sorgenia: fornitore, 93,93 EUR, emissione 20/05/2026, scadenza 09/06/2026 e periodo aprile invariati. Nessuna lettura delle sette pagine successive. Questi controlli locali non sono un collaudo browser o delle bozze reali. Nessun originale, raster, recapito, identificativo cliente o testo personale aggiunto al repository; le fixture versionate usano operatori e valori inventati.
+Regressione sulla prima pagina della precedente bolletta elettrica: fornitore, importo, emissione, scadenza e periodo invariati. Nessuna lettura delle sette pagine successive. Questi controlli locali non sono un collaudo browser o delle bozze reali. Nessun originale, raster, recapito, identificativo cliente o testo personale aggiunto al repository; le fixture versionate usano operatori e valori inventati.
 
 ## Verifiche e tentativi
 
