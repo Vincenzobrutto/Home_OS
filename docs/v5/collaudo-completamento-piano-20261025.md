@@ -20,7 +20,7 @@ Incarico autonomo del 25 ottobre 2026, finestra indicativa 09:30–14:00 Europe/
 
 ## Perimetro e vincoli
 
-Area riservata: `frontend-v5/src/object-onboarding/OnboardingPage.tsx` e nuovi helper/test di completamento, se necessari. `DocumentEditorWorkspace` e i test della PR #35 non vengono modificati; esclusi inoltre parser/OCR, ItemEditor, model, fakeBackend condiviso, AppShell/cestino e file dei lotti Claude.
+Area riservata: `frontend-v5/src/object-onboarding/OnboardingPage.tsx`, fixture API di `OnboardingPage.test.tsx` (senza cambiarne le asserzioni) e nuovi helper/test di completamento, se necessari. `DocumentEditorWorkspace` e i test della PR #35 non vengono modificati; esclusi inoltre parser/OCR, ItemEditor, model, fakeBackend condiviso, AppShell/cestino e file dei lotti Claude.
 
 Nessuna AI/email a pagamento o preflight; nessun DB/API/storage reale, documento personale aggiuntivo, `.env`, migrazione, salvataggio automatico, riavvio dell’app, main o branch Claude modificato. Nessun reset/clean, force push o rimozione worktree. I test usano esclusivamente il simulatore in memoria, ambiente ripulito e Vite con envDir vuoto; nessun aggiramento del blocco browser precedente.
 
