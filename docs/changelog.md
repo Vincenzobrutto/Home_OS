@@ -5,6 +5,9 @@ Percorso promozionale parallelo: [demo guidata](v5/prototipo-percorso-guidato-20
 ## 24 ottobre 2026 — Prototipo promozionale dei tre profili
 
 Landing e 24 viste Home/Agenzia/Amministratore, percorsi guidati e azioni simulate in prototypes/dimora-promo. Pubblicazione privata Sites completata; browser dei percorsi principali e mobile verificati localmente. Nessuna modifica alle app V5. [Report, copertura e limiti](v5/prototipo-promozionale-20261024.md).
+## 24 ottobre 2026 — OCR locale per bollette scansionate
+
+Nuovo lotto frontend: raster/OCR locale con worker, WASM e lingua italiana inclusi nell’app, nessun CDN o invio di documenti. Progresso/annullamento, limiti di pagine/pixel/tempo e ritorno manuale; dati incerti scartati senza correggere cifre. Etichette e valori nelle colonne associati solo se geometricamente univoci. Stesse proposte modificabili e conferma canonica. [Report e limiti](v5/bollette-ocr-locale-20261024.md). Mock completa 969/969, fixture 5/5, typecheck/lint/build verdi. Nessun backend, DB/API/storage reale, AI remota, merge o aggiornamento dell’app.
 
 ## 24 ottobre 2026 — Bollette testuali, proposte locali senza AI
 
@@ -1729,3 +1732,4 @@ Home con workflow Documenti, compilazione adattiva, oggetti/ambienti, attività,
 
 ## 24 ottobre 2026 - Profili Partner collegati a Home nel prototipo
 Agenzia e Amministratore navigabili con stato di sessione e passaggi selettivi: Gift, invito unità, pubblicazione versionata, proposte personali e segnalazioni/risposte. Memorie personali separate per immobile e nuovo proprietario. 31 viste, 17/17 test, browser sui percorsi principali e mobile. Report: v5/prototipo-partner-collegati-20261024.md. Nessun runtime V5 modificato.
+
