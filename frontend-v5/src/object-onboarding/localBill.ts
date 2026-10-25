@@ -2,7 +2,7 @@ import type { Draft, HouseForm } from './model';
 import { BILL_FULL_DATE_PATTERN, localBillDate } from './localBillDates';
 import {localBillAmount} from './localBillMoney';
 import {contactBillSupplier} from './localBillSupplier';
-import {telecomSubscription} from './localBillSignals';
+import {billServiceText,declaredBillServices,telecomSubscription} from './localBillSignals';
 import type { BillLayoutHints } from './localBillLayout';
 /** Local, conservative proposals. No issuer catalogue, filename rules or payment inference. */
 export type LocalBill = {
@@ -44,7 +44,8 @@ export function localBill(pages: string[],layout?:BillLayoutHints): LocalBill | 
     ['water', /\b(?:servizio\s+idrico|fornitura\s+(?:di\s+)?acqua|acquedotto)\b/iu],
     ['internet_services', /\b(?:telefonia|connessione\s+internet|banda\s+larga|fibra\s+ottica|servizi\s+(?:di\s+)?telecomunicazion[ei])\b/iu],
   ] as const;
-  const found = categories.filter(([kind,pattern]) => pattern.test(text)||kind==='internet_services'&&telecomSubscription(text)).map(([kind]) => kind);
+  const serviceText=billServiceText(text),declared=declaredBillServices(serviceText);
+  const found = categories.filter(([kind,pattern]) => pattern.test(serviceText)||declared.includes(kind)||kind==='internet_services'&&telecomSubscription(serviceText)).map(([kind]) => kind);
   const heading = invoiceHeading.test(text) || /\bperiodo\s+di\s+fatturazione\b/iu.test(text);
   if (!billing || !heading || !found.length) return null;
   const invoiceNumbers = [...new Set([...text.matchAll(/\b(?:numero\s+fattura|fattura\s+(?:n\.?|numero))[ \t:]*([\w/-]+)/giu)].map(m=>m[1]))];
