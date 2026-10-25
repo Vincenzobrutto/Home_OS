@@ -1,0 +1,33 @@
+# Bollette — rilettura locale con confronto
+
+Lotto Codex `codex/bollette-rilettura-locale-20261025`, base remota `7801b80`. Registrazione `7b555fb` prima del codice; implementazione `43dfe8b`, correzione definitiva `0b5d7e0`. Nessuna sovrapposizione con i file dei lotti Claude: modificati soltanto il punto di integrazione in HouseExpenseProposal e nuovi moduli/test frontend. Backend, API/schema, ItemEditor/model e dipendenze invariati.
+
+## Comportamento
+
+Nella scheda Spese di una bolletta manuale ancora aperta, «Rileggi localmente» legge la prima pagina dello stesso originale tramite il lettore PDF/OCR esistente. Non avvia AI, non ricarica file, non crea documenti, lotti, bozze o spese. L'apertura della pagina non avvia questa rilettura aggiuntiva. Il comando non compare per proposte già confermate/escluse, documenti non bolletta, modalità estrazione, bozze chiuse o con conferma pendente. Il tipo PDF viene controllato prima dello scaricamento; altri formati non vengono interpretati.
+
+La proposta rimane in memoria e mostra solo i campi riconosciuti che differiscono dal form attuale. Nessuna casella è preselezionata: valore attuale e proposto affiancati nel testo, selezione individuale e pulsante esplicito di applicazione. Sono confrontabili fornitore, unico importo, categoria, emissione, mese della fattura, periodo dei servizi e scadenza. Le date dei servizi vengono applicate come coppia indivisibile, mai ricavate dal mese fattura. Valori mancanti/ambigui non cancellano quelli presenti.
+
+«Applica i campi selezionati alla schermata» modifica soltanto gli input correnti. Non scrive la bozza salvata e non conferma la spesa; restano separati i comandi esistenti di salvataggio bozza e conferma finale. Titolo, modalità crea/collega, spesa collegata, note, collegamenti, campi non selezionati e dati confermati restano invariati. Se cambia l'importo diventa una correzione manuale, si elimina la precedente selezione candidato e si richiede nuovamente l'eventuale dichiarazione di spesa distinta. La conferma canonica mantiene validazioni, controllo duplicati, fonte/versione/SHA e idempotenza preesistenti.
+
+Non è un comando per sostituire automaticamente i dati persistiti: una nuova compilazione dello stesso documento riaprirebbe la bozza esistente. Questa funzione rende possibile confrontare il risultato aggiornato del lettore senza aggirare quel riuso e senza ricaricare il PDF.
+
+## Accesso, concorrenza e privacy
+
+Componente isolato per account/casa/documento/versione/SHA/bozza/versione/articolo; annullamento e smontaggio abortiscono i lavori in corso. Sessione corrente verificata, metadati dell'originale ricontrollati prima del download, dopo il parsing e prima dell'applicazione. Il lettore verifica anche SHA256 dei byte. Se accesso, fonte o form sono cambiati, nessuna applicazione; una risposta tardiva non ripopola una visita abbandonata. Cambiare qualunque input dopo la lettura rende il confronto scaduto. Nessun risultato, estratto, valore o errore personale viene scritto in cache persistenti, log o repository. Le sole chiamate del comando sono letture autenticate già esistenti; nessuna nuova API.
+
+Il controllo prima dell'applicazione non sostituisce il controllo transazionale del server alla conferma finale. Se l'accesso viene revocato dopo l'ultima lettura, nessuna scrittura può essere autorizzata dal confronto locale.
+
+## Verifiche e limiti
+
+Test nuovi: confronto puro selettivo, campi mancanti, periodo parziale, separazione mese/date, conservazione di link/modalità e invalidazione candidato/ack dell'importo. Test UI: zero chiamate all'apertura, zero scritture, selezione inizialmente vuota, solo mese applicato, annullamento/ripetizione, modifica durante/dopo lettura, revoca, sostituzione fonte, cambio sessione, tipo non PDF, risultato nullo, risposta dopo smontaggio e integrazione nel vero form con bozza salvata e spesa esistente. Le fixture sono sintetiche, nessun documento personale letto nel lotto.
+
+Gruppo mirato finale **111/111 in 10 file**, inclusi **18 nuovi casi** (5 puri e 13 UI). Typecheck, lint e build verdi; build finale7,24s. Prima esecuzione sandbox: nessun test avviato per EPERM nella cache temporanea; ripetizione con le stesse guardie offline nel contesto locale autorizzato. Primo lint ha segnalato accessi ref durante render, corretti con aggiornamento in layout effect e confronto dei props; typecheck ha richiesto cast espliciti delle fixture con versioni oltre il literal storico del tipo API. Nessuna asserzione, soglia, gold o timeout esistenti ridotti. Prima mirata107/107, poi110/110 con ulteriori casi di risposta tardiva.
+
+Prima suite completa sulla fonte43dfe8b interrotta per correggere il selettore del periodo: una proposta con intervallo non mensile deve rimontare il solo selettore, evitando che resti nella modalità Un mese. Aggiunta prova UI nel vero form; nessuna asserzione precedente modificata. Suite mock completa sulla fonte definitiva0b5d7e0: **1437/1437 in139 file**,927,05s, un worker e retry0; zero fallimenti, saltati o todo. Fixture PDF/OCR5/5 (2file,1,73s) verdi, ripetute sulla stessa fonte definitiva. [PR #53](https://github.com/Vincenzobrutto/Home_OS/pull/53) verso il consolidamento; report/stato/roadmap/changelog aggiornati, commit e push verificati con ls-remote. Nessuna prova browser/mobile rivendicata. Nessuna AI/email, DB/API/storage reale, migrazione, aggiornamento dell'app, modifica .env o main. Il merge resta al committente.
+
+## Prossimo lotto distinto: titoli leggibili
+
+Richiesta successiva del committente: valutare per i soli documenti completati un titolo come «Bolletta · fornitore · mese fattura». Usare dati canonici confermati, preservare il filename originale e le modifiche manuali al titolo; nessuna deduzione dal periodo dei servizi o da una lettura OCR non confermata. In caso di fonti multiple o dati mancanti mantenere un titolo prudente. Non implementato da questo lotto: la riga archivio espone il fornitore delle spese salvate, ma non ancora invoiceMonth; servono contratto di proiezione e test dedicati prima dell'intervento. Non aggiungere letture per ciascuna riga né aggiornare titoli storici automaticamente.
+
+Evidenze nel task locale: work/bill-reread-invoice-definitive.log e -invoice.json (111mirati), -checks-source-final.log, -fixtures-final.log e -fixtures.json, -full-final.log e -full.json. La prima completa interrotta resta in work/bill-reread-full.log; non è un esito verde. Il report JSON finale conferma zero saltati/todo; nessuna suite DB eseguita perché backend e API non cambiano. Diff e link controllati, nessun contenuto personale nei nuovi file. Codice prodotto identico alla fonte0b5d7e0 dopo le verifiche; ultime modifiche solo documentali.

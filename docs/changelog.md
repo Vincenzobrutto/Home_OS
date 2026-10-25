@@ -1,5 +1,9 @@
 ## 25 ottobre 2026 — Mese fattura separato dalla competenza dei servizi
 
+## 25 ottobre 2026 — rilettura locale con confronto (branch del lotto)
+
+Bolletta manuale aperta: nuova rilettura PDF/OCR su richiesta, confronto con i campi correnti e selezione esplicita delle differenze. Applicazione soltanto al form, nessun salvataggio automatico, nuovo documento o spesa. Fonte/versione/SHA, sessione e modifiche durante la lettura protette. [Report e verifiche](v5/bollette-rilettura-locale-20261025.md). Nessuna nuova API, schema, AI o accesso al reale; non ancora integrato nell'app.
+
 ## 25 ottobre 2026 — attivazione mese fattura
 
 PR #51 integrata a c749c18 e API/frontend aggiornati con backup verificato e sola migrazione additiva invoiceMonth. Zero migrazioni pendenti e nessun dato preesistente ricompilato; 14 controlli HTTP anonimi verdi. [Esito e limiti](v5/bollette-mese-fattura-20261025.md#rilascio-autorizzato-del-25-ottobre-2026). Nessuna AI o conferma automatica; main preservato.
