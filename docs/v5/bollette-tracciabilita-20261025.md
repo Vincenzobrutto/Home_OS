@@ -36,7 +36,7 @@ La traccia non riporta valori estratti o citazioni. È un riferimento alla lettu
 
 Primi test nuovi/PDF/UI43/43; gruppo mirato successivo330/330 in12 file, un worker/retry0,34,78 secondi. Aggiunti poi sette casi sui messaggi di errore sicuri. Typecheck, lint e build verdi sulla prima fonte7d95d07; ripetuti verdi sulla fonte definitiva e5b26f0, build9,21 secondi. I casi nuovi/PDF/UI definitivi sono52/52, inclusi due casi aggiuntivi di etichetta fornitore vuota. Asserzioni di privacy/idempotenza e gold preesistenti invariate; adattato solo il mock del lettore per poter emettere anche la traccia nei nuovi casi.
 
-Verifica finale estesa dei gruppi mock `object-onboarding` e `intake-integration` in corso; esito da registrare prima della consegna. Non dichiarare una nuova suite mock completa del frontend da questo gruppo di dominio. Nessun test DB, browser reale o telefono in questo lotto.
+Verifica finale estesa dei gruppi mock `object-onboarding` e `intake-integration`: **689/689 in47 file**,276,85 secondi, un worker/retry0, zero saltati, sulla fonte definitiva e5b26f0. Sono tutti i test dei due gruppi interessati, non la suite mock completa dell'intero frontend. Nessun test DB, browser reale o telefono in questo lotto.
 
 Le nuove prove coprono invariabilità di valori/form, diagnostica senza valori/citazioni, totale unico o irrisolto, date invalide e discordanti, periodo non inferito dal mese fattura, fonte non corrispondente, annullamento, origine distinta PDF/OCR e fallback nativo. Nel percorso UI: aprire la traccia non modifica una correzione manuale né avvia POST/conferme; risultato tardivo o SHA diverso non passano al documento successivo. Test sintetici, nessun PDF personale letto/coperto da nuove prove.
 
@@ -44,7 +44,7 @@ Harness mock, configurazione/cache esterne al repository e ambiente ripulito dal
 
 ## Consegna e seguito
 
-Implementato sul branch proprio, app non aggiornata. Chiusura con esito del gruppo esteso, stato/roadmap/changelog, commit e push verificato, PR verso il consolidamento; merge al committente. Rimangono da validare ulteriori layout reali autorizzati indipendenti e uno storico persistente se richiesto. Dettaglio economico e consumi restano rinviati.
+Implementato e verificato offline sul branch proprio, app non aggiornata. [PR #48](https://github.com/Vincenzobrutto/Home_OS/pull/48) verso il consolidamento, commit e push verificato con ls-remote; merge al committente. Worktree pulito alla consegna, main e consolidamento invariati. Rimangono da validare ulteriori layout reali autorizzati indipendenti e uno storico persistente se richiesto. Dettaglio economico e consumi restano rinviati.
 
 
 La prima esecuzione del gruppo di dominio è stata interrotta ancora in corso dopo la revisione del caso Fornitore seguito solo da spazi: non è dichiarata verde. Correzione della sola diagnosi e due test aggiunti, senza alterare i valori restituiti. Log conservato in work/bill-trace-domain-before-refinement.log; ripetizione definitiva in work/bill-trace-domain-final.log.
