@@ -10,6 +10,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
+| Demo easy a tre azioni | Codex | `codex/prototipo-promozionale-20261024` | `prototypes/dimora-promo/`, documentazione | Implementato e verificato: tre azioni per profilo, pochi esempi e benefici chiari. Gift preservata. 21/21 test, browser desktop/mobile; [report e due link](v5/prototipo-easy-20261025.md). Pubblicazione privata riuscita e Casa verificata online. |
 | Demo libera semplificata e case Gift | Codex | `codex/prototipo-promozionale-20261024` | `prototypes/dimora-promo/`, report e documentazione | Implementato e verificato: 15 impianti + 1 elettrodomestico, accessi diretti e nuova casa Gift disponibile dopo accettazione, dati separati. 21/21 test, browser desktop/mobile e Casa online. Pubblicazione privata riuscita. [Report e link di entrambe](v5/prototipo-case-gift-20261024.md). Demo guidata invariata, PR #25. |
 | Demo guidata parallela | Codex | `codex/prototipo-promozionale-20261024` | `prototypes/dimora-guided/`, report e documentazione | Implementato e verificato localmente: 12 passi, 12/12 test e browser desktop/mobile. Nuovo sito privato pubblicato; online verificato il gate di accesso. Demo libera invariata. [Report e limiti](v5/prototipo-percorso-guidato-20261024.md). PR #25, merge al committente. |
 | Partner navigabili e passaggi Home | Codex | `codex/prototipo-promozionale-20261024` | `prototypes/dimora-promo/`, report e documentazione | Implementato e verificato: 31 viste, 18/18 test; browser Gift→Home, pubblicazione→unità, segnalazione/risposta e mobile. [Report e limiti](v5/prototipo-partner-collegati-20261024.md). Pubblicazione privata riuscita e mappa verificata online; PR #25, merge al committente. Nessun runtime V5 modificato. |
@@ -67,4 +68,3 @@ Il collaudo persistito e i suoi servizi temporanei preesistenti non sono un depl
 Prototipo separato dei tre profili implementato, 24 viste e simulazioni. Browser sui percorsi principali e vista mobile verificati; anteprime e limiti nel [report](v5/prototipo-promozionale-20261024.md). Branch codex/prototipo-promozionale-20261024, area prototypes/dimora-promo; nessun file runtime V5 modificato. Demo privata pubblicata; revisione del committente e merge al consolidamento ancora da decidere.
 
 Prototipo promozionale: correzione menu Home su richiesta del committente, 26 viste con Ambienti e Rubrica separati; verifica offline. PR #25 in aggiornamento.
-
