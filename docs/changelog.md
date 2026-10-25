@@ -1,6 +1,6 @@
 ## 25 ottobre 2026 — Tipo documento direttamente nell'archivio
 
-Sul branch del lotto, Correggi tipo apre un menu nella riga con Salva tipo e Annulla, anche per documenti già classificati. Titolo e parti/pagine preservati, nessuna analisi, spesa o nuovo oggetto; gestione di fonte cambiata, revoche e risposta persa. [Report](v5/tipo-documento-inline-20261025.md): 29/29 nuovi test, mock completa1156/1156 in129 file e controlli statici verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) pronta per revisione; non ancora integrato o attivato nell'app.
+Correggi tipo apre un menu nella riga con Salva tipo e Annulla, anche per documenti già classificati. Titolo e parti/pagine preservati, nessuna analisi, spesa o nuovo oggetto; gestione di fonte cambiata, revoche e risposta persa. [Report](v5/tipo-documento-inline-20261025.md): 29/29 nuovi test, mock completa1156/1156 in129 file e controlli statici verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) integrata su approvazione a 49635d8 e solo frontend attivato; hash remoto verificato, build e 7/7 controlli HTTP anonimi verdi. API/PostgreSQL preservati, nessuna nuova AI o scrittura applicativa automatica.
 
 ## 25 ottobre 2026 — Cestino integrato e attivato su autorizzazione
 
