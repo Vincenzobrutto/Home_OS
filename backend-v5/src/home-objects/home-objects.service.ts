@@ -10,7 +10,7 @@ import { readableReceiptObjectIds } from '../receipt-assistance/access';
 import { conflict, invalid, object, uuid, version } from '../review/domain';
 import { createHomeObject, objectAction, objectLimits, objectsQuery, objectTypes, positionBody, roomTypes, subjectKind, updateHomeObject, type SubjectKind } from './domain';
 import { ManufacturerManuals, manualLookup, manualSelection, type ObjectManual } from './manuals';
-import { objectProfileView } from '../object-onboarding/access';
+import { objectProfileForUpdate, objectProfileView } from '../object-onboarding/access';
 import { profileFields, profileValue, type ProfileKey, type ObjectProfile } from '../object-onboarding/profile';
 import { temporal } from '../activities/domain';
 import { applyWarrantySupport, presentWarrantySupport, warrantyDocumentInput } from './warranty';
@@ -219,7 +219,7 @@ export class HomeObjectsService {
     return this.mutate(a, h, 'object:profile', id, { expectedVersion, values: normalized, ...(warrantyDocument !== undefined ? { warrantyDocument } : {}) }, key, async (tx, c) => {
       const before = await this.saveSubject(tx, c, 'object', id); if (before.kind !== 'object') throw deny();
       this.active(before.row.state); this.checkVersion(before.row.version, expectedVersion, 'object');
-      const current = await objectProfileView(tx, a, h, id, before.row.profile); if (current.unavailable) throw deny();
+      const current = await objectProfileForUpdate(tx, a, h, id, before.row.profile); if (current.unavailable) throw deny();
       const fields: ObjectProfile = { ...current.fields };
       for (const [k, value] of Object.entries(normalized)) {
         const field = k as ProfileKey;

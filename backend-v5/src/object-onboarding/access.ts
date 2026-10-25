@@ -3,7 +3,7 @@ import type { Prisma, ObjectOnboardingDraft } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { ReviewService } from '../review/review.service';
 import { canReadDocument } from '../documents/access';
-import { readableReceiptObjectIds, readableReceiptProofKeys, receiptProofKey } from '../receipt-assistance/access';
+import { readableReceiptObjectIds, receiptProofAccess, receiptProofKey } from '../receipt-assistance/access';
 import { uuid } from '../review/domain';
 import type { Snapshot } from '../review/provider';
 import { profileFields, type ObjectProfile, type ProfileField, type ProfileKey } from './profile';
@@ -12,7 +12,7 @@ export const onboardingDenied = () => new ForbiddenException('Accesso non consen
 export type OnboardingTx = Prisma.TransactionClient;
 
 /** Request-local batch: each stored field still needs every captured source proof. */
-export async function objectProfileViews(tx: OnboardingTx, accountId: string, homeId: string, targets: ReadonlyArray<{id:string;profile:unknown}>) {
+async function authorizedObjectProfiles(tx: OnboardingTx, accountId: string, homeId: string, targets: ReadonlyArray<{id:string;profile:unknown}>, presentation: boolean) {
   if (!targets.length) return new Map<string, {fields:ObjectProfile;unavailable:boolean}>();
   const receipt = await tx.receiptObjectField.findMany({ where: { accountId, homeId, objectId: {in:targets.map(target=>target.id)}, fieldKey: { in: ['brand', 'model'] } } });
   const merged = targets.map(target => {
@@ -22,20 +22,35 @@ export async function objectProfileViews(tx: OnboardingTx, accountId: string, ho
     return {id:target.id,fields};
   });
   const proofs = merged.flatMap(target=>Object.values(target.fields).flatMap(field => field?.sources ?? []).map(source => ({ documentId: source.documentId, documentVersion: source.documentVersion, documentSha256: source.sha256 })));
-  const readable = await readableReceiptProofKeys(tx, accountId, homeId, proofs);
+  const readable = await receiptProofAccess(tx, accountId, homeId, proofs);
   return new Map(merged.map(target=>{
     const fields: ObjectProfile = {}; let unavailable = false;
     for (const key of profileFields) {
       const field = target.fields[key]; if (!field) continue;
-      if (field.origin === 'user_declared' || field.sources.length > 0 && field.sources.every(source => readable.has(receiptProofKey({ documentId: source.documentId, documentVersion: source.documentVersion, documentSha256: source.sha256 })))) fields[key] = field;
-      else unavailable = true;
+      const proofKey = (source: ProfileField['sources'][number]) => receiptProofKey({ documentId: source.documentId, documentVersion: source.documentVersion, documentSha256: source.sha256 });
+      if (field.origin === 'user_declared' || field.sources.length > 0 && field.sources.every(source => readable.confirmed.has(proofKey(source)))) {
+        if (!presentation) { fields[key] = field; continue; }
+        const sources = field.sources.filter(source => readable.proposal.has(proofKey(source)));
+        const view = { ...field, sources, sourceAvailable: sources.length === field.sources.length };
+        fields[key] = view;
+      } else unavailable = true;
     }
     return [target.id,{fields,unavailable}] as const;
   }));
 }
 
+export async function objectProfileViews(tx: OnboardingTx, accountId: string, homeId: string, targets: ReadonlyArray<{id:string;profile:unknown}>) {
+  return authorizedObjectProfiles(tx, accountId, homeId, targets, true);
+}
+
 export async function objectProfileView(tx: OnboardingTx, accountId: string, homeId: string, objectId: string, stored: unknown) {
   return (await objectProfileViews(tx,accountId,homeId,[{id:objectId,profile:stored}])).get(objectId)!;
+}
+
+/** Mutation-only canonical state. Never serialize this result: presentation must
+ * filter unavailable citations, but an unrelated edit must not erase provenance. */
+export async function objectProfileForUpdate(tx: OnboardingTx, accountId: string, homeId: string, objectId: string, stored: unknown) {
+  return (await authorizedObjectProfiles(tx, accountId, homeId, [{ id: objectId, profile: stored }], false)).get(objectId)!;
 }
 
 @Injectable()

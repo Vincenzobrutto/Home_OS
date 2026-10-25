@@ -23,6 +23,7 @@
     "test:membership-clock-db": "node test/offline.cjs --suite test:membership-clock-db",
     "test:cestino-extra-review-db": "node test/offline.cjs --suite test:cestino-extra-review-db",
     "test:membership-fixtures-db": "node test/offline.cjs --suite test:membership-fixtures-db",
+    "test:cestino-fixes-db": "node test/offline.cjs --suite test:cestino-fixes-db",
     "test:personal-export-db": "node test/offline.cjs --suite test:personal-export-db",
     "test:sharing-policy": "node test/offline.cjs --suite test:sharing-policy",
     "test:recovery-db": "node test/offline.cjs --suite test:recovery-db",
