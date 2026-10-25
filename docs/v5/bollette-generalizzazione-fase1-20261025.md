@@ -35,3 +35,5 @@ Non è dimostrata copertura universale o accuratezza su fornitori reali: il corp
 Implementato il **primo incremento**, non l'intera fase1. Dopo la generalizzazione proseguire per lotti limitati con spiegazione dei campi assenti, tracciabilità e robustezza; validare con altri documenti autorizzati indipendenti senza AI o copie di originali in Git. Il dettaglio resta rinviato.
 
 Il candidato include la #44: non richiede di integrare due volte le medesime modifiche di prodotto. Audit e scelta di ambito nella [PR #45](https://github.com/Vincenzobrutto/Home_OS/pull/45), separata. Nessuna AI/email, DB/API/storage reale, migrazione, salvataggio o aggiornamento app. Main, consolidamento, Claude e checkout legacy preservati. Merge e rilascio al committente.
+
+[PR #46](https://github.com/Vincenzobrutto/Home_OS/pull/46) aperta verso il consolidamento; push verificato con `git ls-remote`. Worktree del lotto pulito alla consegna; nessun merge o rilascio eseguito.
