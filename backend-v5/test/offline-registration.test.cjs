@@ -2,7 +2,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const suites=require('./offline-suites.cjs');
 test('every backend test file belongs to an explicit protected offline profile',()=>{
- const files=fs.readdirSync(__dirname).filter(name=>name.endsWith('.test.cjs')).map(name=>'test/'+name);
+ const files=[];
+ function visit(directory){for(const entry of fs.readdirSync(directory,{withFileTypes:true})){const file=path.join(directory,entry.name);if(entry.isDirectory())visit(file);else if(entry.isFile()&&entry.name.endsWith('.test.cjs'))files.push('test/'+path.relative(__dirname,file).replaceAll('\\','/'));}}
+ visit(__dirname);
  const registered=new Set(Object.values(suites).flatMap(s=>[...(s.files??[]),...(s.apiFiles??[]),...(s.restartFiles??[])]));
  assert.deepEqual(files.filter(file=>!registered.has(file)),[],'Unregistered tests do not run through npm aliases');
  for(const file of registered)assert(fs.existsSync(path.join(__dirname,'..',file)),file+' must exist');
