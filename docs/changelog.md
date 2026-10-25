@@ -1,3 +1,14 @@
+## 25 ottobre 2026 — Collaudo combinato compilazione
+
+Combinati sul solo branch di prova i cambiamenti delle PR #35 e #36, senza modificare ulteriormente il prodotto. Estesa la matrice archivio alle proposte OCR nelle due viste; asserzioni e timeout invariati. Mock completa 1038/1038 in 120 file, fixture 5/5 e typecheck/lint/build verdi. [Report, esiti e limiti](v5/compilazione-collaudo-combinato-20261025.md). Nessuna AI, dato reale o aggiornamento app.
+
+## 25 ottobre 2026 — Recupero della compilazione dall’archivio
+
+Un collegamento incompleto a un documento esistente propone «Riprendi compilazione» invece di un nuovo caricamento. Il recupero esplicito conserva bozza, analisi esistente, modalità e filtri; nessuna scrittura all’apertura. Test offline per classificazione Bolletta, conferma della spesa e uscita dalla coda, nelle due viste. 20/20 mirati, 1008/1008 mock in 118 file, typecheck/lint/build verdi; [report e limiti](v5/compilazione-archivio-20261025.md). Nessuna AI, migrazione o scrittura reale; aggiornamento dell’app subordinato al merge.
+## 25 ottobre 2026 — Classificazione della bolletta nella pagina diretta
+
+Il collaudo autonomo individua due riproduzioni in cui la spesa viene confermata senza tipo canonico del documento. La pagina diretta ora prepara il tipo Bolletta prima della conferma, con lo stesso protocollo dell’archivio; fonte/versione/SHA e contesto ricontrollati, tipi già confermati preservati. Nessuna modifica a importi, date, parser o backend, nessuna AI o scrittura reale. [Report e limiti](v5/collaudo-completamento-report-20261025.md); 28/28 prove mirate, typecheck/lint/build e suite mock completa 1030/1030 verdi (118 file, nessun test saltato o retry). Nessun merge o aggiornamento dell’app.
+
 ## 25 ottobre 2026 — Bollette ibride: telecomunicazioni, intestazione e calendario
 
 Riconoscimento generale del servizio, intestazione legale e periodo dal layout, OCR selezionato anche sulle pagine con testo e date grafiche. L’anno nativo può completare giorno/mese OCR solo nella stessa zona; contraddizioni e cifre incerte restano vuote. 1002/1002 mock, 5/5 fixture, typecheck/lint/build; [report](v5/bollette-lettura-affidabile-20261025.md). Correzione ancora sul branch separato, nessun salvataggio o aggiornamento reale.
