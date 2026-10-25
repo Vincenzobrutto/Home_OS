@@ -48,3 +48,9 @@ it('spacing, case and euro prefixes cannot hide an unsupported currency or cause
  expect(localBill([document('37,82 EUR USD inclusi')])?.amount).toBeUndefined();
  expect(localBill([document('EUR 37,82 per il periodo indicato')])?.amount).toBe('37.82');
 });
+it.each(['Totale\nda pagare:','Totale della\nfattura:','Importo da\npagare:'])('keeps previously supported wrapped label %s',moneyLabel=>{
+ expect(localBill([header+'\n'+moneyLabel+'\n37,82 EUR'])?.amount).toBe('37.82');
+});
+it.each(['Valuta:\nUSD','Valuta di\nfatturazione:\nCHF','Currency:\nusd'])('a wrapped explicit currency remains binding: %s',statement=>{
+ expect(localBill([document('37,82',statement)])?.amount).toBeUndefined();
+});
