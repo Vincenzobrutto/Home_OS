@@ -49,6 +49,19 @@ test('Document views: complete facets, current references, privacy and category 
   await assert.rejects(service.get(b,h,invoice.id),e=>e.getStatus?.()===403);
   await db.objectResourceLink.deleteMany({where:{documentId:invoice.id}});
  });
+ await t.test('Invoice month is personal canonical context, nullable-compatible and omitted for archived expenses',async()=>{
+  const beforeDoc=await db.document.findUnique({where:{id:invoice.id}}),beforeOrg=await db.documentOrganization.findUnique({where:{accountId_homeId_documentId:{...scope,documentId:invoice.id}}});
+  await db.homeExpense.update({where:{id:expense.id},data:{invoiceMonth:'2026-09'}});
+  await db.homeExpense.updateMany({where:{accountId:b,documentId:invoice.id},data:{invoiceMonth:'2099-12',supplier:'Other private supplier'}});
+  const row=(await list()).items.find(x=>x.id===invoice.id);
+  assert.equal(row.savedExpenses.length,1);assert.equal(row.savedExpenses[0].invoiceMonth,'2026-09');assert.equal(row.savedExpenses[0].id,expense.id);
+  assert(!JSON.stringify(row).includes('2099-12'));assert(!JSON.stringify(row).includes('Other private supplier'));
+  await db.homeExpense.update({where:{id:expense.id},data:{state:'archived'}});assert.deepEqual((await list()).items.find(x=>x.id===invoice.id).savedExpenses,[]);
+  await db.homeExpense.update({where:{id:expense.id},data:{state:'active',invoiceMonth:null}});
+  assert(!('invoiceMonth' in (await list()).items.find(x=>x.id===invoice.id).savedExpenses[0]));
+  assert.deepEqual(await db.document.findUnique({where:{id:invoice.id}}),beforeDoc,'Listing never renames the document');
+  assert.deepEqual(await db.documentOrganization.findUnique({where:{accountId_homeId_documentId:{...scope,documentId:invoice.id}}}),beforeOrg,'Listing never overwrites a saved title');
+ });
  await db.documentOrganization.update({where:{accountId_homeId_documentId:{...scope,documentId:plans[0].id}},data:{parts:[{kind:'floor_plan'},{kind:'ape'}],collections:['building','energy']}});
  await t.test('Facets are global before LIMIT; home overview returns groups, raw/stale stay only in All',async()=>{
   const page=await list();assert.equal(page.items.length,20);assert.deepEqual(page.summary,{views:{all:34,house:29,objects:2},groups:{plans:25,building:1,energy:1,contracts:1,other:1}});

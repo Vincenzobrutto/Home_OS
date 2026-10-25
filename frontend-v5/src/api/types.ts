@@ -44,7 +44,7 @@ export type DocumentWorkflowState = 'to_compile' | 'analyzing' | 'review' | 'com
 export type DocumentSummary = {
   /** Personal read-only context, absent on older API versions and detail responses. */
   linkedObjects?: Array<{id:string;kind:'object'|'boiler';name:string}>;
-  savedExpenses?: Array<{id:string;title:string;amountCents:number;supplier:string|null;documentNumber:string|null;documentDate:string|null}>;
+  savedExpenses?: Array<{invoiceMonth?:string;id:string;title:string;amountCents:number;supplier:string|null;documentNumber:string|null;documentDate:string|null}>;
   /** Personal state for this source/version; provided by the canonical list and detail. */
   workflowState?: DocumentWorkflowState;
   /** Successful extraction for this account and exact source snapshot, independent of confirmation. */
