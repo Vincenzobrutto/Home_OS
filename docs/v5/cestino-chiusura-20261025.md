@@ -50,3 +50,7 @@ Per il collaudo sulla casa Roma occorrono, dopo la revisione del candidato concr
 Checklist del collaudo successivo, su un documento scelto consapevolmente: controllare anteprima e dati confermati; spostare nel cestino; verificare assenza dall'archivio e presenza nel proprio cestino; ripristinare e controllare collegamenti/spesa invariati. Eliminazione definitiva e svuotamento sono prove separate e irreversibili, da eseguire solo su materiale predisposto per la prova. Nessun documento viene scelto, caricato o eliminato automaticamente da questo incarico.
 
 Evidenze nel task: `work/cestino-close-*.log`, JSON Vitest e `work/cestino-invariants.cjs`; log DB nelle cartelle del runner. Nessun originale o contenuto personale nel repository.
+
+## Pubblicazione
+
+[PR #41](https://github.com/Vincenzobrutto/Home_OS/pull/41) unica verso il consolidamento, con push verificato mediante uguaglianza HEAD/git ls-remote. Al fetch di consegna il consolidamento resta390b1cb. Esito aggiunto come commento alle PR #9 e #16, distinguendo le loro punte invariate dalle correzioni presenti nel nuovo candidato. Non occorre approvare separatamente tutti gli antecedenti per valutare questo candidato completo. Nessun merge, migrazione o attivazione reale eseguito dal lotto; il passo operativo richiede ancora una decisione sul candidato concreto e sul perimetro DB.
