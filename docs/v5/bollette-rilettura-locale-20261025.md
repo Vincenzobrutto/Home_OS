@@ -1,6 +1,6 @@
 # Bollette — rilettura locale con confronto
 
-Lotto Codex `codex/bollette-rilettura-locale-20261025`, base remota `7801b80`. Registrazione `7b555fb` prima del codice; implementazione `43dfe8b`. Nessuna sovrapposizione con i file dei lotti Claude: modificati soltanto il punto di integrazione in HouseExpenseProposal e nuovi moduli/test frontend. Backend, API/schema, ItemEditor/model e dipendenze invariati.
+Lotto Codex `codex/bollette-rilettura-locale-20261025`, base remota `7801b80`. Registrazione `7b555fb` prima del codice; implementazione `43dfe8b`, correzione definitiva `0b5d7e0`. Nessuna sovrapposizione con i file dei lotti Claude: modificati soltanto il punto di integrazione in HouseExpenseProposal e nuovi moduli/test frontend. Backend, API/schema, ItemEditor/model e dipendenze invariati.
 
 ## Comportamento
 
@@ -22,9 +22,9 @@ Il controllo prima dell'applicazione non sostituisce il controllo transazionale 
 
 Test nuovi: confronto puro selettivo, campi mancanti, periodo parziale, separazione mese/date, conservazione di link/modalità e invalidazione candidato/ack dell'importo. Test UI: zero chiamate all'apertura, zero scritture, selezione inizialmente vuota, solo mese applicato, annullamento/ripetizione, modifica durante/dopo lettura, revoca, sostituzione fonte, cambio sessione, tipo non PDF, risultato nullo, risposta dopo smontaggio e integrazione nel vero form con bozza salvata e spesa esistente. Le fixture sono sintetiche, nessun documento personale letto nel lotto.
 
-Gruppo mirato finale **110/110 in 10 file**, inclusi **17 nuovi casi** (5 puri e 12 UI). Typecheck, lint e build verdi; build7,19s. Prima esecuzione sandbox: nessun test avviato per EPERM nella cache temporanea; ripetizione con le stesse guardie offline nel contesto locale autorizzato. Primo lint ha segnalato accessi ref durante render, corretti con aggiornamento in layout effect e confronto dei props; typecheck ha richiesto cast espliciti delle fixture con versioni oltre il literal storico del tipo API. Nessuna asserzione, soglia, gold o timeout esistenti ridotti. Prima mirata107/107, poi110/110 con ulteriori casi di risposta tardiva.
+Gruppo mirato finale **111/111 in 10 file**, inclusi **18 nuovi casi** (5 puri e 13 UI). Typecheck, lint e build verdi; build finale7,24s. Prima esecuzione sandbox: nessun test avviato per EPERM nella cache temporanea; ripetizione con le stesse guardie offline nel contesto locale autorizzato. Primo lint ha segnalato accessi ref durante render, corretti con aggiornamento in layout effect e confronto dei props; typecheck ha richiesto cast espliciti delle fixture con versioni oltre il literal storico del tipo API. Nessuna asserzione, soglia, gold o timeout esistenti ridotti. Prima mirata107/107, poi110/110 con ulteriori casi di risposta tardiva.
 
-Suite mock completa sulla fonte43dfe8b in corso; non ancora dichiarata verde. Fixture e consegna da registrare dopo gli esiti. Nessuna prova browser/mobile rivendicata. Nessuna AI/email, DB/API/storage reale, migrazione, aggiornamento dell'app, modifica .env o main. Il merge resta al committente.
+Prima suite completa sulla fonte43dfe8b interrotta per correggere il selettore del periodo: una proposta con intervallo non mensile deve rimontare il solo selettore, evitando che resti nella modalità Un mese. Aggiunta prova UI nel vero form; nessuna asserzione precedente modificata. Nuova completa sulla fonte0b5d7e0 in corso, non ancora dichiarata verde. Fixture PDF/OCR5/5 (2file,1,60s) verdi; PR #53 draft in attesa del risultato completo. Nessuna prova browser/mobile rivendicata. Nessuna AI/email, DB/API/storage reale, migrazione, aggiornamento dell'app, modifica .env o main. Il merge resta al committente.
 
 ## Prossimo lotto distinto: titoli leggibili
 
