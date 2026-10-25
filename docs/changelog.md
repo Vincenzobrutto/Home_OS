@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — PR #46 integrata e frontend aggiornato
+
+Su approvazione del committente, PR #46 integrata nel consolidamento a d0d7d0d con verifica hash remota; include #44. Solo frontend aggiornato dalla fonte integrata, build verde e10/10 controlli HTTP statici/anonimi; API e PostgreSQL con identità/avvio invariati. Nessuna nuova AI/email, migrazione, conferma/salvataggio automatico o modifica a main. [Report operativo](v5/bollette-generalizzazione-fase1-20261025.md#attivazione-autorizzata--25-ottobre-2026).
+
 ## 25 ottobre 2026 — Bollette fase1: generalizzazione del riepilogo
 
 [Primo incremento](v5/bollette-generalizzazione-fase1-20261025.md): formulazioni generali del servizio su righe dichiarative, nomi fornitore esclusi dai soli segnali di tipo; un solo importo, senza dettaglio/consumi. Corpus135 casi e regressione mirata291/291, typecheck/lint/build verdi, asserzioni pregresse invariate. Nessuna AI, DB/API/storage reale o aggiornamento app; candidato separato comprensivo della PR #44, merge al committente.
