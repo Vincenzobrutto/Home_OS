@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Resilienza della compilazione
+
+Risposte e callback tardive della scheda precedente non cambiano più documento, errori o stato occupato della scheda corrente; protetto anche il ritorno A→B→A, con chiavi di recupero conservate. Verifiche su cancellazione delle letture locali, campi manuali e tastiera; misura bundle senza refactoring aggiuntivo. [Report e limiti](v5/compilazione-resilienza-20261025.md). Nessuna AI o modifica all’app/dati reali.
+
 ## 25 ottobre 2026 — Collaudo combinato compilazione
 
 Combinati sul solo branch di prova i cambiamenti delle PR #35 e #36, senza modificare ulteriormente il prodotto. Estesa la matrice archivio alle proposte OCR nelle due viste; asserzioni e timeout invariati. Mock completa 1038/1038 in 120 file, fixture 5/5 e typecheck/lint/build verdi. [Report, esiti e limiti](v5/compilazione-collaudo-combinato-20261025.md). Nessuna AI, dato reale o aggiornamento app.

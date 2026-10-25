@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+Compilazione robusta contro risposte tardive: [isolamento, letture locali, tastiera e misura bundle](v5/compilazione-resilienza-20261025.md). Candidato separato con la combinazione della PR #37; integrazione e aggiornamento app subordinati alla decisione del committente.
+
 Collaudo combinato delle PR #35 e #36 sul branch separato: [matrice e consegna](v5/compilazione-collaudo-combinato-20261025.md). Candidato congiunto da approvare prima di integrare; nessun aggiornamento app o completamento automatico dei documenti reali.
 
 
