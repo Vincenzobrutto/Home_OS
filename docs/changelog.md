@@ -1,6 +1,6 @@
 ## 25 ottobre 2026 — Bollette: segnali del servizio senza elenco fornitori
 
-Classificazione con segnali combinati del contratto; un telefono isolato non basta. Importi in evidenza utilizzabili solo nel riepilogo con numero fattura/emissione e colonna univoca, senza conversioni o prezzi unitari. Periodo di consumo non dedotto dal mese fattura. [Report](v5/bollette-segnali-generali-20261025.md): mirata 203/203 e fixture 5/5 verdi, suite completa e statici finali in corso; app invariata, nessuna AI o scrittura reale.
+Classificazione con segnali combinati del contratto; un telefono isolato non basta. Importi in evidenza utilizzabili solo nel riepilogo con numero fattura/emissione e colonna univoca, senza conversioni o prezzi unitari. Periodo di consumo non dedotto dal mese fattura. [Report](v5/bollette-segnali-generali-20261025.md): mirata 209/209 e fixture 5/5 verdi, suite completa e statici finali in corso; app invariata, nessuna AI o scrittura reale.
 
 ## 25 ottobre 2026 — Bollette: riepilogo della prima pagina
 
