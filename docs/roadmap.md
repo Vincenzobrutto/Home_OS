@@ -1,6 +1,10 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
-Bollette: proposta locale dalla sola prima pagina, marchio clienti corroborato da contatti email/web e OCR per etichette mancanti. [Report](v5/bollette-prima-pagina-20261025.md). Implementazione e verifica del documento locale completate; statici e fixture 5/5 verdi, mock completa 1175/1175 in 131 file, zero saltati/retry0. [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) pronta, push verificato. Nessun aggiornamento app; merge al committente.
+**Fase1 scelta dal committente:** riepilogo e un solo importo per bolletta, prima generalizzazione senza catalogo fornitori, poi tracciabilità e robustezza del flusso. [Primo incremento e corpus](v5/bollette-generalizzazione-fase1-20261025.md). Dettaglio economico, consumi, contratti/tariffe e avvisi avanzati rinviati; non sono prerequisiti per migliorare il riepilogo. Importi incompatibili e dati assenti restano da confermare. Nessun aggiornamento app implicito.
+
+Riconoscimento bollette senza catalogo fornitori: combinazioni di segnali del contratto e riepilogo fiscale univoco, sempre nella prima pagina. [Report](v5/bollette-segnali-generali-20261025.md). Mirata 209/209 e fixture 5/5 verdi; completa/statica finale in corso. App invariata; nessuna AI, modifica DB o inferenza del periodo dal mese della fattura.
+
+Bollette: proposta locale dalla sola prima pagina, marchio clienti corroborato da contatti email/web e OCR per etichette mancanti. [Report](v5/bollette-prima-pagina-20261025.md). Implementazione e verifica del documento locale completate; statici e fixture 5/5 verdi, mock completa 1175/1175 in 131 file, zero saltati/retry0. [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) integrata su approvazione a 911b0fb e solo frontend aggiornato; build e 8/8 controlli HTTP statici/anonimi verdi, API/PostgreSQL preservati. Prova interattiva al committente.
 
 Tipo documento modificabile direttamente nella riga dell'archivio: [lotto frontend e report](v5/tipo-documento-inline-20261025.md). Menu con conferma esplicita, senza nuova compilazione né modifica di titolo, collegamenti o spese; 29/29 nuovi test, mock completa1156/1156 in129 file e typecheck/lint/build verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) integrata su approvazione a 49635d8, hash remoto verificato e solo frontend aggiornato. Build e 7/7 controlli HTTP anonimi verdi; API/PostgreSQL invariati. Prossimo passo: prova del menu dal committente.
 
@@ -81,3 +85,5 @@ Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a paga
 ## Protocollo multi-pagina — lotto offline 24 ottobre
 
 [Schema di spesa condiviso e prove](v5/protocollo-multipagina-offline-20261024.md): contratto espanso identico per 1–20 pagine, senza modifiche a gold, evidenze o conferme. Protocollo v30 distingue la nuova preparazione. Il rifiuto Samsung resta incerto e non ritentato; accettazione remota non verificata. Nessun deploy o AI, PR separata verso il consolidamento e merge al committente.
+
+Chiusura verifica offline del lotto segnali generali: mock completa1226/1226 in133 file, mirata209/209, fixture5/5 e typecheck/lint/build verdi sulla fonte debfcc3. Prima completa1225/1226 e isolato27/27 preservati, nessuna asserzione/timeout modificati. PR #44 senza merge o attivazione; successivo audit e roadmap PR #45 da approvare, senza altro codice. [Report](v5/bollette-segnali-generali-20261025.md).

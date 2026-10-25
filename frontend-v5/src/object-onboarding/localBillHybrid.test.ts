@@ -34,3 +34,12 @@ it('retains ambiguity when OCR contradicts a native total',async()=>{
 it('does not turn an arbitrary date into the missing due date',async()=>{
  state.recognize.mockResolvedValue('Lettura incerta\n20/05/2027');expect((await read())?.dueOn).toBeUndefined();
 });
+it.each([false,true])('unknown provider summary reaches the proposal without reading page two; conflicting OCR=%s',conflict=>{
+ const entry=(str:string,x:number,y:number,width=130,height=10)=>({str,hasEOL:true as const,width,height,transform:[1,0,0,1,x,840-y-height]});
+ state.pages=[[entry('Fattura settembre 2026',200,200,150,13),entry('Numero fattura: DEMO-7',200,230),entry('Data emissione: 16/09/2026',200,245),entry('€',200,275,18,26),entry('48,37',225,275,65,26),entry('Numero telefono: 000000000',30,300),entry('Abbonamenti attivi al 01/09/2026',30,320),entry('Informazioni linea',30,340),entry('Fornitore: Rete Inventata Srl',30,360),entry('Scadenza',400,230)], [entry('Totale da pagare: 999,99 EUR',30,200)]];
+ state.recognize.mockResolvedValue('Scadenza: 08/10/2026'+(conflict?'\nTotale da pagare: 49,00 EUR':''));
+ return read().then(proposal=>{
+  expect(proposal).toMatchObject({category:'internet_services',supplier:'Rete Inventata Srl',documentDate:'2026-09-16',dueOn:'2026-10-08'});
+  expect(proposal?.amount).toBe(conflict?undefined:'48.37');expect(proposal?.competenceFrom).toBeUndefined();expect(state.recognize).toHaveBeenCalledOnce();
+ });
+});

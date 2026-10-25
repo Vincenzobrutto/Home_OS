@@ -73,3 +73,13 @@ it('passes first-page total and corroborated supplier to Expenses without saving
  expect(screen.getByLabelText('Importo della bolletta (€)')).toHaveValue('72,10');expect(screen.getByLabelText('Fornitore')).toHaveValue('LuceNova');
  expect(state.posts).toEqual([]);expect(w.beforeConfirm).not.toHaveBeenCalled();w.unmount();
 });
+it('recognizes a provider-independent line bill and keeps an unknown consumption period to confirm',async()=>{
+ const w=world();await screen.findByText('Lettura sintetica 1');
+ const bill=localBill(['Fattura settembre 2026\nNumero telefono: 000000000\nInformazioni linea\nAbbonamenti attivi al 01/09/2026\nFornitore: Operatore Inventato Srl\nData emissione: 16/09/2026\nScadenza: 08/10/2026'],{periods:[],summaryAmounts:['€ 48,37']});
+ expect(bill).toMatchObject({category:'internet_services',amount:'48.37'});expect(bill?.competenceFrom).toBeUndefined();
+ await act(async()=>reader(0).resolve(bill!));await screen.findByRole('heading',{level:2,name:'Documento'});
+ await w.user.click(screen.getByRole('button',{name:'Avanti'}));
+ expect(await screen.findByLabelText('Fornitore')).toHaveValue('Operatore Inventato Srl');expect(screen.getByLabelText('Importo della bolletta (€)')).toHaveValue('48.37');
+ expect(screen.getByLabelText('Categoria della bolletta')).toHaveValue('internet_services');expect(screen.getByLabelText('Scadenza indicata')).toHaveValue('2026-10-08');
+ expect(state.posts).toEqual([]);expect(w.beforeConfirm).not.toHaveBeenCalled();w.unmount();
+});

@@ -1,7 +1,8 @@
 import { localBillDate } from './localBillDates';
+import {billSummaryAmounts} from './localBillSummary';
 export type BillToken={text:string;x:number;y:number;width:number;height:number};
 export type BillPageLayout={height:number;tokens:BillToken[]};
-export type BillLayoutHints={supplier?:string;periods:Array<{from:string;to:string}>};
+export type BillLayoutHints={supplier?:string;periods:Array<{from:string;to:string}>;summaryAmounts?:string[]};
 const overlaps=(a:BillToken,b:BillToken)=>Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x)>=Math.min(a.width,b.width)*.6;
 /** Native PDF reading order is not spatial order. Restrict issuer hints to an
  * unambiguous legal header, and periods to values under a Periodo column. */
@@ -29,5 +30,6 @@ export function billLayoutHints(pages:BillPageLayout[],issuedOn?:string):BillLay
     }
   }
   const distinct=[...new Set(names)];
-  return {supplier:distinct.length===1?distinct[0]:undefined,periods};
+  const summaryAmounts=billSummaryAmounts(first);
+  return {supplier:distinct.length===1?distinct[0]:undefined,periods,...(summaryAmounts.length?{summaryAmounts}:{})};
 }

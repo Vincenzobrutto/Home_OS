@@ -92,7 +92,7 @@ Nuovi ruoli e colonne riordinate verificati offline negli acquisti. Restano da v
 
 ## 22 ottobre 2026 — Da sistemare emersi in BL-02/BL-03
 
-- **Test sensibili ai tempi**: `documentSearch.test.tsx` e `objects.test.tsx` possono fallire solo con la suite in parallelo (verdi da soli e nelle ripetizioni).
+- **Test sensibili ai tempi**: `documentSearch.test.tsx` e `objects.test.tsx` hanno mostrato attese intermittenti sotto carico (verdi da soli e nelle ripetizioni). Il 25/10 osservata anche una scadenza nell'apertura del promemoria in `objects.test.tsx` con un worker mock e controlli statici concorrenti: completa 1225/1226, file isolato immutato 27/27. Causa non dimostrata: verificare separatamente inizializzazione/caricamento del harness senza togliere asserzioni o aumentare timeout per nascondere il problema. [Esiti e ripetizione integrale](v5/bollette-segnali-generali-20261025.md).
 - **Test di integrazione sul DB dell'app**: le suite HTTP/DB creano account `@example.test` in `dimora_v5_product_dev`; valutare un DB di test dedicato (porta/nome) invece del vincolo unico in `assertDevelopmentDatabase`.
 
 - **Originali mancanti nel DB V5**: 104 `StoredFile` senza file in `storage-private` (63 di case di account `@example.test` create dai test di integrazione sul DB `dimora_v5_product_dev`, 41 orfani senza documento). Nessuno delle case del committente. Decidere pulizia sicura e separare i test di integrazione dal DB usato dall'app; lo script di backup originale si ferma su questi record (copia tollerante in `outputs/Dimora-V5-backup-verify-tolerant.mjs`).

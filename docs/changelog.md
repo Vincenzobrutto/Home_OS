@@ -1,6 +1,14 @@
+## 25 ottobre 2026 — Bollette fase1: generalizzazione del riepilogo
+
+[Primo incremento](v5/bollette-generalizzazione-fase1-20261025.md): formulazioni generali del servizio su righe dichiarative, nomi fornitore esclusi dai soli segnali di tipo; un solo importo, senza dettaglio/consumi. Corpus135 casi e regressione mirata291/291, typecheck/lint/build verdi, asserzioni pregresse invariate. Nessuna AI, DB/API/storage reale o aggiornamento app; candidato separato comprensivo della PR #44, merge al committente.
+
+## 25 ottobre 2026 — Bollette: segnali del servizio senza elenco fornitori
+
+Classificazione con segnali combinati del contratto; un telefono isolato non basta. Importi in evidenza utilizzabili solo nel riepilogo con numero fattura/emissione e colonna univoca, senza conversioni o prezzi unitari. Periodo di consumo non dedotto dal mese fattura. [Report](v5/bollette-segnali-generali-20261025.md): mirata 209/209 e fixture 5/5 verdi, suite completa e statici finali in corso; app invariata, nessuna AI o scrittura reale.
+
 ## 25 ottobre 2026 — Bollette: riepilogo della prima pagina
 
-Lettura e OCR limitati a pagina 1, dati nativi conservati se l'arricchimento fallisce, fornitore proposto soltanto con evidenze testuali concordanti. Nessun catalogo di aziende o modifica alle validazioni economiche. [Report](v5/bollette-prima-pagina-20261025.md); verifica locale positiva, statici e fixture 5/5 verdi, mock completa 1175/1175 in 131 file, zero saltati/retry0. [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) pronta, push verificato. App invariata, nessuna AI, migrazione o scrittura reale.
+Lettura e OCR limitati a pagina 1, dati nativi conservati se l'arricchimento fallisce, fornitore proposto soltanto con evidenze testuali concordanti. Nessun catalogo di aziende o modifica alle validazioni economiche. [Report](v5/bollette-prima-pagina-20261025.md); verifica locale positiva, statici e fixture 5/5 verdi, mock completa 1175/1175 in 131 file, zero saltati/retry0. [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) integrata su approvazione a 911b0fb e frontend attivato, build e 8/8 controlli HTTP statici/anonimi verdi. API/PostgreSQL preservati; nessuna nuova AI, migrazione o scrittura automatica.
 
 ## 25 ottobre 2026 — Tipo documento direttamente nell'archivio
 
@@ -1795,3 +1803,5 @@ Aggiunti collaudo DB isolato e diagnostica in entrambi gli ordini, replay, ricar
 ### 2026-10-23 — acconto/saldo, revisione esplicita e costo unico
 
 Bloccati nuovi oggetti omonimi e seconda spesa non riconciliata nel percorso fattura. Nuova conferma manuale dello stesso acquisto, con costo complessivo inserito esplicitamente e un solo aggiornamento canonico/storico. Ricaricamenti e fonte privata/versione/SHA protetti; importi ambigui lasciati pendenti. [Correzione, test e limiti](v5/fase0-installments-fix-offline-20261023.md).
+
+Chiusura verifica offline del lotto segnali generali: mock completa1226/1226 in133 file, mirata209/209, fixture5/5 e typecheck/lint/build verdi sulla fonte debfcc3. Prima completa1225/1226 e isolato27/27 preservati, nessuna asserzione/timeout modificati. PR #44 senza merge o attivazione; successivo audit e roadmap PR #45 da approvare, senza altro codice. [Report](v5/bollette-segnali-generali-20261025.md).
