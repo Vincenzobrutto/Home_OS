@@ -243,6 +243,7 @@ export function snapshotChanges(e: ExpenseHistoryEvent, caps?: EconomyCapabiliti
   diff('supplier', 'Fornitore');
   diff('documentNumber', 'Numero documento');
   diff('documentDate', 'Data documento');
+  diff('invoiceMonth', 'Mese di riferimento della fattura');
   diff('competenceFrom', 'Competenza dal');
   diff('competenceTo', 'Competenza al');
   diff('dueOn', 'Scadenza');
