@@ -48,8 +48,8 @@ export function confidentOcrText(data:OcrPage,nativeDates:PositionedDateEvidence
 }
 export function needsOcr(text:string){return text.replace(/[^\p{L}\d]/gu,'').length<80;}
 /** Rich native text may still omit a labelled amount or due date drawn as graphics. */
-export function billOcrPages(pages:string[],native:{amount?:string;dueOn?:string}|null){
- return pages.flatMap((text,index)=>needsOcr(text)&&!localBill([text])?.amount||!!native&&(!native.dueOn&&/^[ \t]*(?:scadenza|data\s+(?:di\s+)?scadenza|da\s+saldare\s+entro|pagare\s+entro)\b/imu.test(text)||!native.amount&&/^[ \t]*(?:totale\s+da\s+pagare|importo\s+da\s+pagare)\b/imu.test(text))?[index]:[]);
+export function billOcrPages(pages:string[],native:{amount?:string;dueOn?:string;documentDate?:string;supplier?:string}|null){
+ return pages.flatMap((text,index)=>needsOcr(text)&&!localBill([text])?.amount||!!native&&(!native.dueOn&&/^[ \t]*(?:scadenza|data\s+(?:di\s+)?scadenza|da\s+saldare\s+entro|pagare\s+entro)\b/imu.test(text)||!native.amount&&/^[ \t]*(?:totale\s+da\s+pagare|importo\s+da\s+pagare)\b/imu.test(text)||!native.documentDate&&/(?:^|[ \t])(?:emess[ao]\s+il|data\s+(?:di\s+)?emissione|data\s+fattura)\b/imu.test(text)||!native.supplier&&/^[ \t]*(?:fornitore|venditore|società\s+di\s+vendita)\s*:/imu.test(text))?[index]:[]);
 }
 
 type WorkerReply={workerId:string;jobId:string;action:string;status:string;data:OcrPage};

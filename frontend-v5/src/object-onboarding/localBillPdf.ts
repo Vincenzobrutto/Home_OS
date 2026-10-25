@@ -1,5 +1,5 @@
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-import { localBill } from './localBill';
+import { localBill,type LocalBill } from './localBill';
 import {LocalOcr,billOcrPages,OCR_LIMITS} from './localOcr';
 import {binarizeOcrPixels} from './ocrPixels';
 import {billLayoutHints,type BillPageLayout} from './localBillLayout';
@@ -14,6 +14,7 @@ export async function localBillPdf(blob: Blob, sha256: string, signal: AbortSign
   lib.GlobalWorkerOptions.workerSrc = workerUrl;
   const task = lib.getDocument({data:new Uint8Array(buffer),cMapUrl:'/pdfjs/cmaps/',standardFontDataUrl:'/pdfjs/standard_fonts/'});
   let ocr:LocalOcr|undefined;
+  let nativeFallback:LocalBill|null=null;
   let rejectPending:(reason:Error)=>void=()=>{};
   const cancelled=new Promise<never>((_,reject)=>{rejectPending=reject;});void cancelled.catch(()=>{});
   const bounded=<T,>(work:Promise<T>)=>Promise.race([work,cancelled]);
@@ -26,7 +27,9 @@ export async function localBillPdf(blob: Blob, sha256: string, signal: AbortSign
     const pages: string[] = [];
     const layouts:BillPageLayout[]=[];
     let count = 0;
-    for (let page = 1; page <= pdf.numPages; page++) {
+    // Bills are proposed from the first-page summary only. Later pages may
+    // contain historical totals or other services and are not read or OCRed.
+    for (let page = 1; page <= 1; page++) {
       if (signal.aborted) return null;
       const source = await pdf.getPage(page), content = await source.getTextContent();
       // Keep the PDF's line boundaries: money/date labels must not consume unrelated columns.
@@ -44,6 +47,7 @@ export async function localBillPdf(blob: Blob, sha256: string, signal: AbortSign
       source.cleanup();
     }
     const native=localBill(pages),hints=billLayoutHints(layouts,native?.documentDate);
+    nativeFallback=localBill(pages,hints);
     const scanned=billOcrPages(pages,native);
     if(scanned.length){
       clearTimeout(timer);
@@ -78,5 +82,11 @@ export async function localBillPdf(blob: Blob, sha256: string, signal: AbortSign
     const proposal=localBill(pages,hints);
     if(scanned.length&&!proposal)throw new Error('local_ocr_unreliable');
     return proposal&&scanned.length?{...proposal,method:'ocr' as const}:proposal;
+  } catch(error) {
+    // Optional OCR enrichment must not erase already readable proposals. A
+    // cancelled request never returns stale data, and image-only scans still
+    // surface their error for the manual fallback.
+    if(!signal.aborted&&nativeFallback&&(nativeFallback.amount||nativeFallback.supplier))return nativeFallback;
+    throw error;
   } finally { clearTimeout(timer);signal.removeEventListener('abort',stop);ocr?.dispose();await task.destroy(); }
 }
