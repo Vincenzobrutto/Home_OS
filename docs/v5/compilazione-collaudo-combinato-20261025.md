@@ -59,3 +59,7 @@ Dopo approvazione e integrazione: verificare nell'app la ripresa dall'archivio s
 5. Ricaricare e controllare gli stessi risultati. Se altre bozze/analisi dello stesso originale sono aperte, verificarle prima di interpretare la permanenza fra i documenti da completare come un difetto.
 
 Il branch combinato è un possibile candidato di integrazione delle due PR; non implica la loro approvazione o chiusura. Non integrare anche i medesimi cambiamenti una seconda volta: la scelta fra candidato congiunto e integrazione delle PR singole resta al committente.
+
+## Consegna
+
+[PR #37](https://github.com/Vincenzobrutto/Home_OS/pull/37) verso il consolidamento, aperta senza merge. Push verificato mediante uguaglianza HEAD/git ls-remote sul solo branch proprio. Al fetch finale il consolidamento resta 730b93d e le punte delle PR #35/#36 restano quelle indicate sopra. Lavoro completato prima delle 14:00; nessun monitoraggio o ulteriore intervento reale pianificato.
