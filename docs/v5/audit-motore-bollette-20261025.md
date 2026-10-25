@@ -262,3 +262,5 @@ Ordine raccomandato: approvare P0.4 + P0.1, poi P0.2 e disegno P0.3; misurare pr
 6. **Architettura e lotti:** approvare percorso C incrementale con primo passo B e P0 indicati? Raccomandazione: sì, mantenendo stack, provider e conferma, senza nuovo servizio o catalogo per marchi.
 
 Non richiedono scelte di prodotto: nomenclatura dei file, helper puri, normale validazione ISO/centesimi e protezioni esistenti. Non si chiede di ridiscutere cestino30 giorni, accesso per fonte o rigore dei test. **Fermarsi qui: attendere approvazione della roadmap prima di implementare.**
+
+Aggiornamento finale delle sole evidenze pregresse (§1): la seconda completa della PR #44, già avviata prima di questo audit, è terminata durante la redazione con **1226/1226 in 133 file**, durata1288,38 secondi, un worker/retry0. Nessun codice, test, asserzione o timeout modificato dopo la prima completa. Esito e precedente fallimento conservati nel report #44, commit documentale38600d4 con push verificato; PR ancora senza merge/attivazione. Non è un benchmark del motore universale proposto.
