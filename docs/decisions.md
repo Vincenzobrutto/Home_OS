@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Traccia della lettura locale separata dalla conferma
+
+Per il successivo step della fase1 si mantiene un solo importo e si aggiunge la spiegazione della lettura iniziale. Diagnostica dai medesimi controlli del parser, fonte/versione/pagina e metodo; non confondere dato non riconosciuto, dato assente dal documento e valore verificato. Primo incremento frontend: traccia effimera scoped, senza valori/estratti, distinta dalle correzioni e non inclusa nel payload di conferma. Storico durevole campo-per-campo rimandato a un lotto backend specifico, non simulato con una cache del browser. [Implementazione e limiti](v5/bollette-tracciabilita-20261025.md). Nessuna modifica delle validazioni o inferenza di pagamento.
+
 ## 25 ottobre 2026 — Fase 1 bollette: riepilogo, un importo e generalizzazione
 
 Il committente sceglie un solo importo per bolletta nella fase1, rinviando dettaglio delle componenti e consumi. Prima priorità alla generalizzazione indipendente dal fornitore e a test su lessico/layout diversi; seguono tracciabilità e robustezza del riepilogo. Conservare prima pagina, rigore sui valori, conferma finale e protezione delle correzioni. Importi incompatibili restano da confermare: nessuna somma, ripartizione o prova di pagamento dedotta. [Primo lotto e limiti](v5/bollette-generalizzazione-fase1-20261025.md). Merge e rilascio non impliciti.
