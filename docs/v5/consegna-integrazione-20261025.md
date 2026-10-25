@@ -1,6 +1,18 @@
 # Consegna e decisioni di integrazione — 25 ottobre 2026
 
-## Stato verificato, senza merge
+## Integrazione approvata e app aggiornata — 25 ottobre 2026
+
+Su approvazione esplicita del committente: PR #40 integrata con merge `4594e9179100b147da618da2f138bb3feb91d952`, PR #39 con merge `390b1cbda437c30bba8087f1a00849c875040eed`; punta del consolidamento verificata con git ls-remote. Main invariato a `cdbb318ddb56e764ad4b111a71560e3e71c7a033`. La PR #39 è stata prima aggiornata con merge del consolidamento: conflitti soltanto nei quattro documenti condivisi, mantenendo entrambi i lavori e le tre correzioni di metadata Codex già verificate. Nessuna asserzione o file di prodotto alterato dalla risoluzione.
+
+Frontend integrato e candidato #40 hanno tree identico `23e6061b774e64d1f0c48df84a86c10aaeb32531`. Nuovo checkout runtime separato e detached su `390b1cb`, build offline rifatta con dipendenze già verificate e lock identico. Nessuna nuova suite completa dopo il merge documentale: restano i risultati 1109/1109 mock, 5/5 fixture, 296/296 ordinari, 12/12 guardie e 547/547 DB descritti nei report, senza attribuirli a una nuova esecuzione.
+
+Riavviato soltanto il frontend identificato: da PID32656 a PID24276, loopback5174 e proxy invariato verso3011, ambiente vuoto per Vite e guardia di rete preservati. API10540 e PostgreSQL22924 verificati con identici PID e orari di creazione. Nessun riavvio di questi processi, query SQL, chiamata API autenticata, documento aperto/caricato, AI/email, migrazione o salvataggio. Sei controlli statici HTTP200: root, workspace, onboarding, parser importi, worker OCR e HEAD del modello italiano. Nessuna prova visuale nel browser o sul documento reale dichiarata da questo controllo.
+
+Accesso: http://127.0.0.1:5174/home/c8b6c347-c527-43cb-9808-5d22136c83eb/documenti . Ricaricare la pagina; riprendere la bolletta già presente e controllare i campi prima di scegliere qualsiasi conferma. Dati mancanti o importi ambigui restano da confermare. I branch/file Claude e i file sporchi del checkout master non sono stati toccati. Le PR antecedenti #35–#38 restano invariate; i loro cambiamenti sono inclusi nella #40.
+
+Evidenze locali nel task: work/integrated-app-build.log, work/integrated-app-readiness.json, work/integrated-app-preserved-processes.json e work/roma-runtime.json. Questo resoconto successivo al merge è pubblicato sul branch proprio della PR #39, senza un commit diretto aggiuntivo sul consolidamento.
+
+## Stato verificato prima della decisione di merge
 
 Metadata GitHub riletti il 25 ottobre e commit di merge verificati come antenati di `origin/codex/dimora-v5-consolidata-20261023`, punta `730b93d` al controllo. Questo accerta il codice presente nel branch; non è una nuova verifica dell'app avviata o del suo DB.
 

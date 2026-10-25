@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — PR #39/#40 integrate e frontend aggiornato
+
+Merge approvati 4594e91 e 390b1cb, hash remoti verificati; frontend5174 sulla versione integrata e build rifatta, senza cambiare codice dopo il collaudo. API, PostgreSQL, main e dati preservati; nessuna AI, migrazione o salvataggio automatico. [Resoconto di attivazione](v5/consegna-integrazione-20261025.md#integrazione-approvata-e-app-aggiornata--25-ottobre-2026).
+
 ## 25 ottobre 2026 — Copertura offline e contratto di completamento
 
 Recuperati 19 file di test esclusi dagli alias, con guardia ricorsiva contro nuove omissioni. Il collaudo dei servizi verifica tipo Bolletta, bozza contro conferma, campi, filtri, privacy e replay. Fixture automatic-plan e membership allineate senza cambiare asserzioni, gold, autorizzazioni o timeout; nessuna modifica backend di prodotto. Ordinari 296/296, guardie 12/12, aggregato DB 547/547, build/lint verdi. [Report e tentativi non verdi](v5/workflow-server-offline-20261025.md), [consegna e stato PR](v5/consegna-integrazione-20261025.md). Nessun accesso al DB reale o aggiornamento app.

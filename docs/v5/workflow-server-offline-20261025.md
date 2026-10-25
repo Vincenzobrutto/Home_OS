@@ -83,3 +83,7 @@ Nessuna AI/email a pagamento, DB/API/storage reale, quota/ledger reale, `.env`, 
 [Stato PR verificato e passi di integrazione](consegna-integrazione-20261025.md). Al termine i listener offline 55439/3119 risultano assenti e i log confermano gli arresti dei cluster posseduti. App, API e PostgreSQL reali non sono stati interrogati o riavviati. La mattinata non autorizza merge o aggiornamenti applicativi.
 
 [PR #39](https://github.com/Vincenzobrutto/Home_OS/pull/39) verso il consolidamento, senza merge; push verificato con confronto HEAD/git ls-remote. Le prove del server e dei profili non richiedono modifiche del frontend o del lotto Claude.
+
+## Seguito autorizzato dopo il collaudo
+
+PR #39 e #40 integrate e frontend aggiornato su approvazione del committente; [hash, controlli e limiti della verifica di avvio](consegna-integrazione-20261025.md#integrazione-approvata-e-app-aggiornata--25-ottobre-2026). Nessuna nuova AI, migrazione o scrittura di dati. Il codice frontend integrato è identico al collaudato. Questo paragrafo aggiorna lo stato corrente senza riscrivere le evidenze storiche del lotto.

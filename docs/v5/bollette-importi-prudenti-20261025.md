@@ -37,3 +37,7 @@ Solo test offline e mock, senza AI/email, originali o contenuti personali, DB/AP
 Questo candidato frontend comprende le correzioni della PR #38; non richiede di integrare nuovamente i suoi antecedenti. Il lotto backend offline è indipendente e non è incluso. Merge e successivo aggiornamento dell'app restano decisioni del committente.
 
 [PR #40](https://github.com/Vincenzobrutto/Home_OS/pull/40) verso il consolidamento, senza merge; push verificato con confronto HEAD/git ls-remote. La [PR #39](https://github.com/Vincenzobrutto/Home_OS/pull/39) consegna separatamente le verifiche server. Al fetch finale il consolidamento resta `730b93d`. Le vecchie PR non sono state chiuse o modificate.
+
+## Seguito autorizzato dopo il collaudo
+
+PR #39 e #40 integrate e frontend aggiornato su approvazione del committente; [hash, controlli e limiti della verifica di avvio](consegna-integrazione-20261025.md#integrazione-approvata-e-app-aggiornata--25-ottobre-2026). Nessuna nuova AI, migrazione o scrittura di dati. Il codice frontend integrato è identico al collaudato. Questo paragrafo aggiorna lo stato corrente senza riscrivere le evidenze storiche del lotto.

@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+PR #39/#40 integrate su approvazione; frontend locale aggiornato al consolidamento390b1cb. [Stato corrente e controlli di avvio](v5/consegna-integrazione-20261025.md#integrazione-approvata-e-app-aggiornata--25-ottobre-2026). Prossimo passo: riscontro manuale dei dati della bolletta senza automatizzare la conferma.
+
 Copertura del collaudo offline e completamento dei documenti: [19 file recuperati, guardia e contratto server](v5/workflow-server-offline-20261025.md), con aggregato 547/547. Distinti test del codice e disponibilità dell'app: [consegna per l'integrazione](v5/consegna-integrazione-20261025.md). Nessun merge o deploy implicito.
 
 Bollette: importi completi e valuta coerente, senza conversione o troncamento; in caso ambiguo mantenere gli altri dati e richiedere conferma del valore. [Report](v5/bollette-importi-prudenti-20261025.md). Il candidato include la PR #38; aggiornamento app e integrazione ancora da approvare.
