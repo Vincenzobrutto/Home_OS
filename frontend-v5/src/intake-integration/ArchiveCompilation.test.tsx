@@ -6,7 +6,7 @@ import type {Draft} from '../object-onboarding/model';
 const controls=vi.hoisted(()=>({ocr:false}));
 beforeAll(async()=>{await import('../routes/DocumentsPages');});
 vi.mock('../object-onboarding/localBillPdf',async()=>{const {localBill}=await import('../object-onboarding/localBill');return {localBillPdf:vi.fn(async()=>({...localBill(['Bolletta energia elettrica\nFornitore: Fornitore sintetico\nTotale da pagare: 93,21 €\nData emissione: 17/01/2026\nScadenza: 20/02/2026\nPeriodo di riferimento: dicembre 2025']),...(controls.ocr?{method:'ocr' as const}:{})}))};});
-it.each([{stepped:false,ocr:false},{stepped:true,ocr:false}])('archive recovery completes classification and expense, stepped=$stepped OCR=$ocr',async({stepped,ocr})=>{
+it.each([{stepped:false,ocr:false},{stepped:true,ocr:false},{stepped:false,ocr:true},{stepped:true,ocr:true}])('archive recovery completes classification and expense, stepped=$stepped OCR=$ocr',async({stepped,ocr})=>{
  controls.ocr=ocr;
  const kind=String('utility_bill'),only=false,preselected=false;
  const {backend,homeA1,a}=seededBackend(),control=createFakeFetch(backend),doc=await backend.seedDocument({homeId:homeA1.id,uploaderId:a.id,name:'Bolletta sintetica.pdf'});
