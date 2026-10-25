@@ -81,3 +81,13 @@ it('applies inside the expense form without confirming, linking, saving, or chan
  await waitFor(()=>expect(onReview).toHaveBeenLastCalledWith(expect.objectContaining({form:expect.objectContaining({...form,invoiceMonth:'2026-09'})})));
  expect(confirm).not.toHaveBeenCalled();for(const [,init] of fetch.mock.calls as unknown as [unknown,RequestInit?][])expect(init?.method??'GET').toBe('GET');
 });
+it('explicit service interval replacement switches the real period editor out of the previous monthly mode',async()=>{
+ vi.mocked(localBillPdf).mockResolvedValueOnce({competenceFrom:'2026-09-03',competenceTo:'2026-10-15'});
+ const client=new QueryClient();client.setQueryData(queryKeys.session,{account:{id:'account'}});
+ const api=new ApiClient({fetch:async()=>Response.json({items:[],nextCursor:null})});
+ vi.spyOn(api,'getDocument').mockResolvedValue({id:'doc',version:2,sha256:snapshot.sha256,mimeType:'application/pdf'} as unknown as Awaited<ReturnType<ApiClient['getDocument']>>);vi.spyOn(api,'downloadDocumentFile').mockResolvedValue({blob:new Blob(['pdf'])} as Awaited<ReturnType<ApiClient['downloadDocumentFile']>>);
+ const confirm=vi.fn(),onReview=vi.fn(),draft={id:'draft',version:4,state:'open',mode:'manual',snapshot,items:[],review:null} as unknown as Draft;
+ render(<QueryClientProvider client={client}><MemoryRouter><HouseExpenseProposal item={{id:'bill',documentKind:'utility_bill',decision:null,amountCandidates:[],amountSelectionRequired:true,proposedFields:{}}} draft={draft} api={api} accountId="account" base="/homes/home/object-onboarding" root="/home/home" disabled={false} beforeDocument unified savedForm={{...form,mode:'create',expenseId:''}} confirm={confirm} onReview={onReview}/></MemoryRouter></QueryClientProvider>);
+ const user=userEvent.setup();expect(screen.getByLabelText('Mese dei servizi')).toHaveValue('2026-08');await user.click(screen.getByRole('button',{name:'Rileggi localmente'}));await user.click(await screen.findByRole('checkbox',{name:/Periodo dei servizi/}));await user.click(screen.getByRole('button',{name:'Applica i campi selezionati alla schermata'}));
+ await waitFor(()=>expect(screen.getByLabelText('Dal')).toHaveValue('2026-09-03'));expect(screen.getByLabelText('Al')).toHaveValue('2026-10-15');expect(screen.getByRole('radio',{name:'Un intervallo'})).toBeChecked();expect(screen.getByLabelText('Mese di riferimento della fattura')).toHaveValue('');expect(confirm).not.toHaveBeenCalled();
+});

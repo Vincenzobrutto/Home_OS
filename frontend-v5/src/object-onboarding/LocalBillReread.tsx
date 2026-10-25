@@ -8,6 +8,7 @@ import type {LocalBill} from './localBill';
 import {localBillPdf} from './localBillPdf';
 import {billDifferences,billRereadPatch,type RereadField} from './billReread';
 
+const categories:Record<string,string>={electricity:'Energia elettrica',gas:'Gas',water:'Acqua',internet_services:'Internet e servizi'};
 type Props={api:ApiClient;accountId:string;homeId:string;snapshot:NonNullable<Draft['snapshot']>;form:HouseForm;disabled:boolean;apply:(patch:Partial<HouseForm>)=>void};
 /** Mount with a key scoped to account/home/document/SHA/draft version/item. No writes. */
 export function LocalBillReread(props:Props){
@@ -49,6 +50,7 @@ export function LocalBillReread(props:Props){
   }catch{if(mounted.current&&!controller.signal.aborted){setPreview(null);setSelected([]);setMessage('Confronto scaduto o fonte non disponibile. Rileggi prima di applicare; nessun dato è stato sostituito.');}}
   finally{if(mounted.current&&!controller.signal.aborted)setReading(false);}
  }
+ const display=(field:RereadField,value:string)=>!value?'Vuoto':field==='category'?(categories[value]??value):value;
  const differences=preview?billDifferences(props.form,preview.bill):[];
  const stale=!!preview&&preview.baseline!==JSON.stringify(props.form);
  return <section aria-label="Rilettura locale della bolletta" className={ui.card}>
@@ -57,7 +59,7 @@ export function LocalBillReread(props:Props){
   {message&&<p role="status">{message}</p>}
   {preview&&<fieldset disabled={props.disabled||reading||stale} style={{minWidth:0}}><legend>Confronta le proposte con i dati attuali</legend>
    <p>I campi non riconosciuti restano invariati. Seleziona esplicitamente le differenze da applicare alla schermata.</p>
-   {differences.map(d=><label key={d.field} style={{display:'block',marginBlock:12}}><input type="checkbox" checked={selected.includes(d.field)} onChange={e=>setSelected(prior=>e.target.checked?[...prior,d.field]:prior.filter(f=>f!==d.field))}/> {d.label}: attuale «{d.before||'Vuoto'}» → proposta «{d.after}»</label>)}
+   {differences.map(d=><label key={d.field} style={{display:'block',marginBlock:12}}><input type="checkbox" checked={selected.includes(d.field)} onChange={e=>setSelected(prior=>e.target.checked?[...prior,d.field]:prior.filter(f=>f!==d.field))}/> {d.label}: attuale «{display(d.field,d.before)}» → proposta «{display(d.field,d.after)}»</label>)}
    {!differences.length&&<p>Nessuna differenza utilizzabile.</p>}
    <button type="button" className={ui.btn} disabled={!selected.length} onClick={()=>void apply()}>Applica i campi selezionati alla schermata</button>
   </fieldset>}
