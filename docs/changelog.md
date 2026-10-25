@@ -1,6 +1,6 @@
 ## 25 ottobre 2026 — Bollette ibride: telecomunicazioni, intestazione e calendario
 
-Riconoscimento generale del servizio, intestazione legale e periodo dal layout, OCR selezionato anche sulle pagine con testo e date grafiche. L’anno nativo può completare giorno/mese OCR solo nella stessa zona; contraddizioni e cifre incerte restano vuote. 1002/1002 mock, 5/5 fixture, typecheck/lint/build; [report](v5/bollette-lettura-affidabile-20261025.md). Correzione ancora sul branch separato, nessun salvataggio o aggiornamento reale.
+Riconoscimento generale del servizio, intestazione legale e periodo dal layout, OCR selezionato anche sulle pagine con testo e date grafiche. L’anno nativo può completare giorno/mese OCR solo nella stessa zona; contraddizioni e cifre incerte restano vuote. 1002/1002 mock, 5/5 fixture, typecheck/lint/build; [report](v5/bollette-lettura-affidabile-20261025.md). PR #33 integrata su approvazione a 730b93d; frontend5174 aggiornato e verificato via HTTP. Nessuna AI, migrazione o scrittura dati; API/PostgreSQL preservati.
 
 ## 24 ottobre 2026 — OCR locale per bollette scansionate
 
