@@ -1,6 +1,6 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
-**Rilettura locale delle bollette:** [lotto separato](v5/bollette-rilettura-locale-20261025.md), proposta temporanea con differenze e applicazione esplicita dei soli campi selezionati al form. Nessun nuovo documento/spesa, nessuna sovrascrittura della bozza salvata; lettura e applicazione bloccate se fonte/accesso/form cambiano. Mirata111/111, fixture5/5 e typecheck/lint/build verdi; completa sulla fonte definitiva in corso, PR #53 draft. App invariata, merge al committente.
+**Rilettura locale delle bollette:** [lotto separato](v5/bollette-rilettura-locale-20261025.md), proposta temporanea con differenze e applicazione esplicita dei soli campi selezionati al form. Nessun nuovo documento/spesa, nessuna sovrascrittura della bozza salvata; lettura e applicazione bloccate se fonte/accesso/form cambiano. Mirata111/111, fixture5/5 e typecheck/lint/build verdi; mock completa1437/1437 in139file sulla fonte definitiva0b5d7e0, zero saltati/retry0. [PR #53](https://github.com/Vincenzobrutto/Home_OS/pull/53) pronta per revisione, push verificato. App invariata, merge al committente.
 
 **Prossimo incremento richiesto — titoli dei documenti completati:** titolo leggibile con tipo, fornitore e mese fattura confermati; filename originale e titolo manuale preservati, dati ambigui non dedotti. Pianificato separatamente: la proiezione archivio deve esporre il mese confermato senza letture per singola riga; nessun backfill automatico. Non implementato nel lotto rilettura.
 
