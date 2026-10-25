@@ -56,3 +56,7 @@ Tutti i dati sono sintetici e i server sono simulati in memoria. Le mutazioni de
 3. Valutare in un lotto successivo l’unificazione degli ingressi diretti legacy con il workspace. Questo lotto non estende la classificazione automatica ad altre famiglie e non cambia il comportamento dei recuperi di conferme precedentemente incerti. Evitare di aggiungere adattatori per famiglie sulla base dei soli esempi disponibili.
 
 Il merge e l’aggiornamento dell’app non sono eseguiti da questo incarico autonomo.
+
+## Consegna
+
+[PR #36](https://github.com/Vincenzobrutto/Home_OS/pull/36) verso il consolidamento, senza merge. Push verificato con uguaglianza fra HEAD e git ls-remote sul branch proprio; consolidamento ancora 730b93d. Lavoro chiuso nella mattinata, prima delle 14:00; nessun monitoraggio successivo pianificato.
