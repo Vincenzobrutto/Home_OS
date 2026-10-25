@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Copertura offline e membership sintetiche
+
+**Implementato e verificato sul branch dedicato, non ancora integrato:** [report](v5/workflow-server-offline-20261025.md). Recuperati 19 file esclusi dai profili, con guardia su tutti i test anche annidati; aggregato 547/547. I setup che richiedono membership già attive dichiarano validFrom nel passato: il confronto rigido del prodotto non cambia e date future/revoche/scadenze restano bloccanti. Non sostituire questo setup con tolleranze, attese o retry. Nessuna inferenza sulla qualità AI o sul DB reale dalla suite sintetica.
+
 ## 25 ottobre 2026 — Limiti del parser economico locale
 
 [Importi prudenti](v5/bollette-importi-prudenti-20261025.md): formati internazionali diversi da quelli italiani, conversioni valutarie e documenti con totali incompatibili non diventano importi EUR impliciti. Rimane la conferma manuale del dato mancante. Non estendere i formati senza evidenze e test generali; nessun dato reale corretto da questo lotto.

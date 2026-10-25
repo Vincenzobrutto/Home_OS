@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+Copertura del collaudo offline e completamento dei documenti: [19 file recuperati, guardia e contratto server](v5/workflow-server-offline-20261025.md), con aggregato 547/547. Distinti test del codice e disponibilità dell'app: [consegna per l'integrazione](v5/consegna-integrazione-20261025.md). Nessun merge o deploy implicito.
+
 Bollette: importi completi e valuta coerente, senza conversione o troncamento; in caso ambiguo mantenere gli altri dati e richiedere conferma del valore. [Report](v5/bollette-importi-prudenti-20261025.md). Il candidato include la PR #38; aggiornamento app e integrazione ancora da approvare.
 
 Compilazione robusta contro risposte tardive: [isolamento, letture locali, tastiera e misura bundle](v5/compilazione-resilienza-20261025.md). Candidato separato con la combinazione della PR #37; integrazione e aggiornamento app subordinati alla decisione del committente.

@@ -12,7 +12,7 @@ test('generic layouts preserve exact printed data, privacy and durable confirmat
  const service=client=>{const review=new ReviewService(client,{}),objects=new HomeObjectsService(client,review);return new ObjectOnboardingService(new ObjectOnboardingAccess(client,review),objects,review,{now:()=>new Date('2026-10-23T12:00:00Z')});};const svc=service(db);
  const actors=[];for(let i=0;i<2;i++)actors.push(await db.account.create({data:{name:'Offline role variant',email:randomUUID()+'@example.test',passwordHash:'not-login'}}));const [a,b]=actors;
  for(let i=0;i<3;i++)await t.test('layout '+i,async t=>{
- const h=await db.home.create({data:{name:'Offline generic layout',address:'Test'}});for(const actor of actors)await db.homeMembership.create({data:{accountId:actor.id,homeId:h.id,role:'owner'}});
+ const h=await db.home.create({data:{name:'Offline generic layout',address:'Test'}});for(const actor of actors)await db.homeMembership.create({data:{accountId:actor.id,homeId:h.id,role:'owner',validFrom:new Date('2026-01-01T00:00:00Z')}});
  const name='Elettrodomestico AsterNova modello '+i,brand='AsterNova',amount=3917+i*211,grand=amount+1700,separator=[' | ','\t',';'][i];
  const order=[['description','quantity','total'],['total','description','quantity'],['quantity','total','description']][i],labels={description:'Product',quantity:'Qty.',total:'Line total (EUR)'},values={description:name,quantity:'1',total:(amount/100).toFixed(2)};
  const table=[order.map(k=>labels[k]).join(separator),order.map(k=>values[k]).join(separator)].join('\n'),date=['Purchased on: 2024-03-07','Acquisto effettuato in data 07/03/2024','Data d’acquisto: 7 marzo 2024'][i],total='Grand total EUR '+(grand/100).toFixed(2),ev=excerpt=>({page:1,excerpt,region:null});
