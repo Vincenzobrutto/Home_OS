@@ -16,10 +16,22 @@ Solo le tre righe obsolete di Codex sono aggiornate. Nessuna riscrittura dei ris
 
 ## Candidati della mattinata
 
-1. [PR #38, frontend](https://github.com/Vincenzobrutto/Home_OS/pull/38): contiene già la combinazione #37 e quindi le correzioni #35/#36, più la protezione dalle risposte e callback tardive. 1055/1055 mock, 5/5 fixture, typecheck/lint/build. Un solo candidato include tutta questa sequenza: non occorre integrare prima anche #35, #36 e #37. Nessuna delle PR precedenti è stata modificata o chiusa da questo incarico.
-2. Lotto `codex/workflow-server-offline-20261025`: test del contratto di completamento e recupero di 19 file esclusi dai profili; solo test, fixture, script npm e documentazione, senza codice backend di prodotto o schema. Verifiche finali: ordinari 296/296, guardie 12/12, aggregato 547/547, build/lint verdi. Il successivo lotto frontend sugli importi è ancora in verifica e non va presentato come consegnato da questa PR.
+1. [PR #40, frontend completo](https://github.com/Vincenzobrutto/Home_OS/pull/40): contiene già #38, #37 e quindi le correzioni #35/#36, più la lettura prudente degli importi delle bollette. Ripresa dall'archivio, classificazione nella pagina diretta, isolamento delle risposte/callback tardive, campi manuali e tastiera verificati. Totali in valuta diversa, numeri malformati o incompatibili lasciano il solo importo da confermare. **1109/1109 mock in 124 file**, 5/5 fixture, typecheck/lint/build verdi. Un solo candidato include questa sequenza: non occorre integrare prima anche #35–#38. Nessuna delle PR precedenti è stata modificata o chiusa da questo incarico. [Report frontend](https://github.com/Vincenzobrutto/Home_OS/blob/codex/bollette-importi-prudenti-20261025/docs/v5/bollette-importi-prudenti-20261025.md).
+2. [PR #39, workflow server offline](https://github.com/Vincenzobrutto/Home_OS/pull/39): test del contratto di completamento e recupero di 19 file esclusi dai profili; solo test, fixture, script npm e documentazione, senza codice backend di prodotto o schema. Verifiche finali: ordinari **296/296**, guardie **12/12**, aggregato **547/547**, build/lint verdi. Causa dei 403 nelle fixture dimostrata sul cluster nuovo; timestamp di test corretti, rifiuti di membership futura/scaduta/revocata invariati. Il frontend della PR #40 non è incluso in questo branch.
 
 I due lotti partono dal consolidamento e non richiedono il cestino Claude. Il secondo non cambia il frontend o le API. I file di prodotto non si sovrappongono; se entrambi vengono approvati, gli eventuali conflitti nei documenti condivisi vanno risolti mantenendo entrambe le righe e i resoconti. Non prendere lo stato storico da un solo lato scartando l'altro.
+
+## Programma fino alle 14 — esito dei filoni
+
+| Filone | Esito e limite |
+| --- | --- |
+| Navigazione e recupero della compilazione | Correzioni combinate nella PR #40; nessun cambio automatico di documento da risposte precedenti. |
+| Dati locali, errori e tastiera | Test di isolamento delle letture e dei campi manuali, recupero esplicito e focus; prove DOM, non telefono fisico. |
+| Prezzi delle bollette | 54 nuovi casi generali; altre informazioni conservate quando il totale non è affidabile. Nessuna conversione o ripartizione implicita. |
+| Workflow server, privacy e idempotenza | PR #39: copertura riattivata, completamento bolletta verificato, replay e accessi negati; cluster offline arrestati. |
+| Peso della build e consegna | Entry iniziale invariata; misure dei chunk nei report, senza refactoring speculativo. Stato GitHub riconciliato e due candidati finali con push verificati. |
+
+Chiusura delle attività pianificate prima delle 14, senza occupare il tempo residuo con ripetizioni prive di nuove modifiche o nuovi difetti. Restano le decisioni di merge e il successivo collaudo nell'app: non sono eseguiti implicitamente da questa consegna.
 
 ## Passi dopo la decisione del committente
 
