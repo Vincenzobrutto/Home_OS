@@ -25,6 +25,9 @@ export function billSummaryAmounts(page:BillPageLayout|undefined):string[]{
    return t!==currency&&/^[+-]?[\d.,]+$/u.test(t.text.trim())&&overlap>=Math.min(t.height,currency.height)*.7&&gap>=0&&gap<=currency.height*1.5;
   });
   if(numbers.length!==1||paired.has(numbers[0]!))return ['ambiguous-summary'];
+  const value=numbers[0]!;
+  const extras=column.filter(t=>t!==currency&&t!==value&&Math.min(t.y+t.height,value.y+value.height)-Math.max(t.y,value.y)>=Math.min(t.height,value.height)*.35);
+  if(extras.some(t=>/^[+−–-]$|^\s*[/:%]|\b(?:per|al|ogni)\s+(?:mese|anno|unità|kWh|Smc)\b|^cad\.?$/iu.test(t.text.trim())))return ['ambiguous-summary'];
   paired.add(numbers[0]!);values.push(currency.text.trim()+' '+numbers[0]!.text.trim());
  }
  for(const t of prominent.filter(t=>!paired.has(t)&&!currencies.includes(t))){

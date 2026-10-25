@@ -43,3 +43,7 @@ it('does not use a fiscal summary to bypass contradictory or malformed labelled 
 it('does not turn an invoice month into the consumption period',()=>{
  expect(localBill([bill],billLayoutHints([page()]))?.competenceFrom).toBeUndefined();
 });
+it.each(['-','−','+','/mese','/kWh','al mese','per unità','%','cad.'])('does not drop a separate operator or unit token: %s',extra=>{
+ const p=page();p.tokens.push(token(extra,295,280,35,10));
+ expect(localBill([bill],billLayoutHints([p]))?.amount).toBeUndefined();
+});
