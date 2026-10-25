@@ -33,3 +33,5 @@ Invocazioni Vitest nell'ambiente depurato unit del runner esistente (guardia off
 ## Limiti e consegna
 
 Intestazioni spezzate o senza ruolo legale, colonne ambigue, documenti ruotati e anni assenti possono richiedere conferma manuale. Questa correzione non promette la lettura di qualunque layout. Nessun aggiornamento dell'app da questo branch prima dell'approvazione della PR; la bozza reale non è stata modificata. Rimangono separati i limiti e la prova browser della PR #26.
+
+[PR #33](https://github.com/Vincenzobrutto/Home_OS/pull/33) verso il consolidamento, prodotto verificato ee21cb9 e documentazione c7f5b3f; push confrontato con git ls-remote, seguito soltanto documentale. Nessun merge eseguito. Dopo approvazione: aggiornamento del solo frontend e verifica manuale delle proposte; le compilazioni già salvate continuano a essere preservate.
