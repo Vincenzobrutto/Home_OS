@@ -3,9 +3,10 @@ import {beforeAll,expect,it,vi} from 'vitest';
 import {renderApp,seededBackend,createFakeFetch,PASSWORD_A} from '../test/harness';
 import type {FetchLike} from '../api/client';
 import type {Draft} from './model';
+import type {BillTrace} from './localBillTrace';
 const controls=vi.hoisted(()=>({ambiguous:false}));
 beforeAll(async()=>{await import('../routes/DocumentsPages');});
-vi.mock('./localBillPdf',async()=>{const {localBill}=await import('./localBill');return {localBillPdf:vi.fn(async()=>localBill(['Bolletta energia elettrica\nFornitore: Fornitore sintetico\nTotale da pagare: 93,21 €\n'+(controls.ambiguous?'Totale da pagare: 95,10 €\n':'')+'Data emissione: 17/01/2026\nScadenza: 20/02/2026\nPeriodo di riferimento: dicembre 2025']))};});
+vi.mock('./localBillPdf',async()=>{const {localBill}=await import('./localBill');return {localBillPdf:vi.fn(async(_blob:Blob,sha256:string,_signal:AbortSignal,_progress:unknown,onTrace?:(trace:BillTrace)=>void)=>localBill(['Bolletta energia elettrica\nFornitore: Fornitore sintetico\nTotale da pagare: 93,21 €\n'+(controls.ambiguous?'Totale da pagare: 95,10 €\n':'')+'Data emissione: 17/01/2026\nScadenza: 20/02/2026\nPeriodo di riferimento: dicembre 2025'],undefined,trace=>onTrace?.({...trace,source:{sha256,verified:true,pagesRead:[1],ocr:'unused'}})))};});
 
 it.each([
  {stepped:false,scenario:'confirm'},
@@ -29,9 +30,9 @@ it.each([
   if(url.includes('/expense-candidates')||url.includes('/candidates'))return Response.json({items:[],nextCursor:null});
   if(url.includes('/object-suggestions'))return Response.json({items:[]});
   if(url.endsWith('/document-kind')){expect(JSON.parse(String(init.body))).toEqual({expectedVersion:1,documentKind:'utility_bill'});order.push('kind');draft.version++;draft.documentKind='utility_bill';draft.items=[];draft.houseExpenses=[{id:'bill-cost',documentKind:'utility_bill',proposedFields:{},amountCandidates:[],amountSelectionRequired:true,decision:null}];return Response.json({draft});}
-  if(url.endsWith('/review')){order.push('review');draft.version++;draft.review=JSON.parse(String(init.body)).review;return Response.json({draft});}
+  if(url.endsWith('/review')){expect(JSON.stringify(JSON.parse(String(init.body)))).not.toMatch(/local-bill-summary-trace|pagesRead|onTrace/);order.push('review');draft.version++;draft.review=JSON.parse(String(init.body)).review;return Response.json({draft});}
   if(url.endsWith('/confirmations')){
-   const body=JSON.parse(String(init.body));expect(body.choices).toEqual([]);expect(body.documentOnly).toBeUndefined();
+   const body=JSON.parse(String(init.body));expect(JSON.stringify(body)).not.toMatch(/local-bill-summary-trace|pagesRead|onTrace/);expect(body.choices).toEqual([]);expect(body.documentOnly).toBeUndefined();
    expect(body.houseExpenses).toEqual([expect.objectContaining({itemId:'bill-cost',action:'create',amountSelection:{mode:'manual'},values:{title:'Bolletta',amountCents:9321,spentOn:'2026-01-17',supplier:'Fornitore sintetico',category:'electricity',objectRef:null,documentDate:'2026-01-17',competenceFrom:'2025-12-01',competenceTo:'2025-12-31',dueOn:'2026-02-20'}})]);
    order.push('confirm');draft.state='confirmed';backend.documents.get(doc.id)!.workflowState='completed';return Response.json({draft,result:{newObjects:0,newExpenses:1}});
   }
@@ -57,6 +58,10 @@ it.each([
  if(stepped){await screen.findByRole('heading',{level:2,name:'Documento'});await app.user.click(screen.getByRole('button',{name:'Avanti'}));await screen.findByRole('heading',{level:2,name:'Spese'});}
  expect(await screen.findByLabelText('Importo della bolletta (€)')).toHaveValue(controls.ambiguous?'':'93.21');expect(screen.getByLabelText('Data di emissione')).toHaveValue('2026-01-17');expect(screen.getByLabelText('Fornitore')).toHaveValue('Fornitore sintetico');expect(screen.getByLabelText('Categoria della bolletta')).toHaveValue('electricity');expect(screen.getByLabelText('Scadenza indicata')).toHaveValue('2026-02-20');expect(screen.queryByLabelText('Nome dell’oggetto')).not.toBeInTheDocument();
  expect(order).toEqual(['kind']);expect(preparations).toBe(0);expect(organizationRequests).toEqual([]);
+ await app.user.click(screen.getByText('Origine dei dati e campi non riconosciuti'));
+ expect(screen.getByRole('region',{name:'Traccia della lettura locale'})).toBeVisible();
+ expect(screen.getByText(/Questa traccia descrive la lettura iniziale/)).toBeVisible();
+ expect(order).toEqual(['kind']);expect(organizationRequests).toEqual([]);expect(paid).toEqual([]);
  if(scenario==='ambiguous'){
   await app.user.click(screen.getByRole('button',{name:'Avanti'}));expect(screen.getByRole('heading',{level:2,name:'Spese'})).toBeInTheDocument();expect(screen.queryByRole('heading',{level:2,name:'Riepilogo'})).not.toBeInTheDocument();expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);expect(draft.state).toBe('open');expect(order).toEqual(['kind']);expect(organizationRequests).toEqual([]);expect(paid).toEqual([]);app.unmount();return;
  }
@@ -79,5 +84,10 @@ it.each([
  }
  await waitFor(()=>expect(order).toEqual(['kind','organize','review','confirm']));expect(draft.state).toBe('confirmed');expect(item.reviewState).toBe('confirmed');expect(preparations).toBe(1);expect(paid).toEqual([]);
  if(scenario==='lost-response'){expect(organizationRequests).toHaveLength(2);expect(organizationRequests[1]).toEqual(organizationRequests[0]);}else expect(organizationRequests).toHaveLength(1);
+ expect(order.filter(action=>action==='confirm')).toHaveLength(1);
+ await app.router.navigate(`/home/${homeA1.id}/documenti?workflow=pending&view=archive`);
+ await screen.findByRole('heading',{level:1,name:'Documenti'});
+ await waitFor(()=>expect(screen.queryByText(doc.name)).not.toBeInTheDocument());
+ expect(order.filter(action=>action==='confirm')).toHaveLength(1);expect(paid).toEqual([]);
  app.unmount();
 });

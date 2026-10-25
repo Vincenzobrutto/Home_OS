@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Bollette fase 1: copertura residua
+
+[Collaudo conclusivo offline](v5/bollette-chiusura-fase1-20261025.md): riconoscimento e tracciabilità verificati sui PDF già forniti, senza un nuovo catalogo di fornitori. Il campione reale copre due fornitori e due famiglie, con una copia anonimizzata dello stesso originale: non è una misura di copertura universale. Servono in seguito documenti autorizzati indipendenti per acqua/gas e altri layout; scansioni ruotate, manoscritti e logo senza evidenza testuale restano limiti. Campi oscurati, incerti o discordanti vanno confermati, senza ridurre le soglie OCR o copiare dati dall'originale alla copia anonimizzata. Prova visiva browser/mobile e accettazione del committente distinte dai test DOM/offline; storico durevole separato dalla traccia temporanea. Dettaglio economico, consumi e tariffe restano rinviati.
+
 ## 25 ottobre 2026 — Chiusura corrente del cestino
 
 [Stato corrente](v5/cestino-chiusura-20261025.md): D1–D4/E1 corretti nel candidato integrato, con test originali invariati; regressione DB564/564 e prove specifiche42/42. Le voci di riesame sottostanti descrivono le precedenti punte. Attivazione reale, ciclo backup e restore, eliminazione di schede/case/account e decisione sui file orfani restano distinti; non dichiararli risolti dai test dei documenti.

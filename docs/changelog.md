@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Bollette fase1: collaudo conclusivo offline
+
+[Report di chiusura offline](v5/bollette-chiusura-fase1-20261025.md): verifica del lettore sui soli PDF già forniti, confronto visivo delle prime pagine e controlli negativi, senza originali in Git. Rafforzate le prove mock di traccia, payload invariato, classificazione e singola conferma, uscita dai documenti da completare. Gruppo339/339, mock completa1397/1397 in136 file, fixture5/5 e typecheck/lint/build verdi; zero saltati/retry0. Verifiche offline concluse, [PR #50](https://github.com/Vincenzobrutto/Home_OS/pull/50). Nessun codice prodotto modificato, soglia ridotta, AI, DB/API/storage reale o aggiornamento app. Merge al committente.
+
 ## 25 ottobre 2026 — Bollette fase1: origine e campi non riconosciuti
 
 [Traccia della lettura iniziale](v5/bollette-tracciabilita-20261025.md): pagina/metodo/versione e spiegazioni di dati non individuati, non utilizzabili o discordanti; origine PDF/OCR distinta, errori locali sicuri. Un solo importo, nessuna modifica del payload o delle validazioni. Traccia temporanea senza valori/citazioni, nessun salvataggio automatico. Gruppi mock interessati689/689 in47 file e typecheck/lint/build verdi; [PR #48](https://github.com/Vincenzobrutto/Home_OS/pull/48), push verificato. PR #48 integrata su approvazione a b6edac5, frontend aggiornato: build e13/13 controlli HTTP statici/anonimi verdi. API/PostgreSQL e main preservati; nessuna nuova AI, migrazione o scrittura automatica.
