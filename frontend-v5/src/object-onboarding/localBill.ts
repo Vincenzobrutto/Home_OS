@@ -1,5 +1,6 @@
 import type { Draft, HouseForm } from './model';
 import { BILL_FULL_DATE_PATTERN, localBillDate } from './localBillDates';
+import {localBillAmount} from './localBillMoney';
 import type { BillLayoutHints } from './localBillLayout';
 /** Local, conservative proposals. No issuer catalogue, filename rules or payment inference. */
 export type LocalBill = {
@@ -48,8 +49,7 @@ export function localBill(pages: string[],layout?:BillLayoutHints): LocalBill | 
   if (invoiceNumbers.length > 1) return null;
   const result: LocalBill = { category: unique(found) };
   // Labels are explicit: never use VAT, rates, historical balances or an arbitrary euro value.
-  const money = [...text.matchAll(/^[ \t]*(?:totale\s+(?:da\s+pagare|(?:della\s+)?bolletta|(?:della\s+)?fattura|documento)|importo\s+(?:da\s+pagare|(?:della\s+)?bolletta))[^\S\n]*:?[ \t]*(?:\n[ \t]*)?(?:€|EUR)?[ \t]*((?:\d{1,3}(?:\.\d{3})+|\d+),\d{2})(?!\d)(?:[ \t]*(?:€|EUR))?/gimu)].map(m => m[1]!.replace(/\./g,'').replace(',','.')).filter(v => Number(v)>0 && Number(v)*100<=999999999);
-  result.amount = unique(money);
+  result.amount = localBillAmount(text);
   const suppliers = [...text.matchAll(/^(?:fornitore|venditore|società\s+di\s+vendita|ragione\s+sociale\s+del\s+fornitore)[ \t]*:[ \t]*([^\n]{2,120})$/gimu)].map(m=>m[1]!.trim());
   // A legal name at the top is usable only when unique; no logo/brand lookup.
   const headingNames = pages[0]!.split('\n').slice(0,12).map(line=>line.trim()).filter(line=>/^[\p{L}][\p{L}\d '&’.-]{1,100}\s+(?:S\.?p\.?A\.?|S\.?r\.?l\.?)$/iu.test(line));
