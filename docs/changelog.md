@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Cestino integrato e attivato su autorizzazione
+
+PR #41 integrata a dc58ada e app aggiornata dopo backup verificato di database e originali e sola migrazione document_trash; zero migrazioni pendenti, dati preesistenti e originali invariati. Cestino30giorni, anteprima e ripristino disponibili; nessun documento eliminato nelle verifiche, nessuna nuova AI/email, main e branch Claude invariati. [Esito operativo e limiti](v5/cestino-chiusura-20261025.md#attivazione-autorizzata--25-ottobre-verifica-finale-1511-utc).
+
 ## 25 ottobre 2026 — Candidato integrato del cestino
 
 Riuniti backend/frontend Claude, correzioni D1–D4/E1 e ultimo rilascio sul branch proprio. Nuovo collaudo bolletta confermata → cestino → ripristino, con tipo e singola spesa conservati; tutte le riproduzioni precedenti invariate. [Report corrente](v5/cestino-chiusura-20261025.md). Nessun aggiornamento app, migrazione reale, AI o modifica ai branch Claude.
