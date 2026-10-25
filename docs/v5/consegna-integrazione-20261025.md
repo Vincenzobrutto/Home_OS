@@ -17,7 +17,7 @@ Solo le tre righe obsolete di Codex sono aggiornate. Nessuna riscrittura dei ris
 ## Candidati della mattinata
 
 1. [PR #38, frontend](https://github.com/Vincenzobrutto/Home_OS/pull/38): contiene già la combinazione #37 e quindi le correzioni #35/#36, più la protezione dalle risposte e callback tardive. 1055/1055 mock, 5/5 fixture, typecheck/lint/build. Un solo candidato include tutta questa sequenza: non occorre integrare prima anche #35, #36 e #37. Nessuna delle PR precedenti è stata modificata o chiusa da questo incarico.
-2. Lotto `codex/workflow-server-offline-20261025`: test del contratto di completamento e recupero di 19 file esclusi dai profili; solo test, fixture, script npm e documentazione, senza codice backend di prodotto o schema. PR e risultati definitivi da registrare dopo la chiusura dell'aggregato.
+2. Lotto `codex/workflow-server-offline-20261025`: test del contratto di completamento e recupero di 19 file esclusi dai profili; solo test, fixture, script npm e documentazione, senza codice backend di prodotto o schema. Verifiche finali: ordinari 296/296, guardie 12/12, aggregato 547/547, build/lint verdi. Il successivo lotto frontend sugli importi è ancora in verifica e non va presentato come consegnato da questa PR.
 
 I due lotti partono dal consolidamento e non richiedono il cestino Claude. Il secondo non cambia il frontend o le API. I file di prodotto non si sovrappongono; se entrambi vengono approvati, gli eventuali conflitti nei documenti condivisi vanno risolti mantenendo entrambe le righe e i resoconti. Non prendere lo stato storico da un solo lato scartando l'altro.
 
