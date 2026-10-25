@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Chiusura corrente del cestino
+
+[Stato corrente](v5/cestino-chiusura-20261025.md): D1–D4/E1 corretti nel candidato integrato, con test originali invariati; regressione DB564/564 e prove specifiche42/42. Le voci di riesame sottostanti descrivono le precedenti punte. Attivazione reale, ciclo backup e restore, eliminazione di schede/case/account e decisione sui file orfani restano distinti; non dichiararli risolti dai test dei documenti.
+
 ## 25 ottobre 2026 — Copertura offline e membership sintetiche
 
 **Implementato e verificato sul branch dedicato, non ancora integrato:** [report](v5/workflow-server-offline-20261025.md). Recuperati 19 file esclusi dai profili, con guardia su tutti i test anche annidati; aggregato 547/547. I setup che richiedono membership già attive dichiarano validFrom nel passato: il confronto rigido del prodotto non cambia e date future/revoche/scadenze restano bloccanti. Non sostituire questo setup con tolleranze, attese o retry. Nessuna inferenza sulla qualità AI o sul DB reale dalla suite sintetica.

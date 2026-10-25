@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Candidato integrato del cestino
+
+Riuniti backend/frontend Claude, correzioni D1–D4/E1 e ultimo rilascio sul branch proprio. Nuovo collaudo bolletta confermata → cestino → ripristino, con tipo e singola spesa conservati; tutte le riproduzioni precedenti invariate. [Report corrente](v5/cestino-chiusura-20261025.md). Nessun aggiornamento app, migrazione reale, AI o modifica ai branch Claude.
+
 ## 25 ottobre 2026 — Copertura offline e contratto di completamento
 
 Recuperati 19 file di test esclusi dagli alias, con guardia ricorsiva contro nuove omissioni. Il collaudo dei servizi verifica tipo Bolletta, bozza contro conferma, campi, filtri, privacy e replay. Fixture automatic-plan e membership allineate senza cambiare asserzioni, gold, autorizzazioni o timeout; nessuna modifica backend di prodotto. Ordinari 296/296, guardie 12/12, aggregato DB 547/547, build/lint verdi. [Report e tentativi non verdi](v5/workflow-server-offline-20261025.md), [consegna e stato PR](v5/consegna-integrazione-20261025.md). Nessun accesso al DB reale o aggiornamento app.
