@@ -1,5 +1,13 @@
 # Audit e progetto incrementale del motore bollette — 25 ottobre 2026
 
+## Decisione successiva del committente: fase 1, generalizzazione prima del dettaglio
+
+Il committente sceglie un percorso per step: **un solo importo per bolletta nella fase 1**, senza dettaglio delle voci; generalizzazione come prima priorità. Questa decisione aggiorna l'ordine proposto in §8 e risolve la scelta di ambito in §9.1. Non implica approvazione del merge #44/#45 o di un rilascio.
+
+Fase 1: riconoscimento indipendente dal fornitore e test su lessico/layout diversi; riepilogo con fornitore, importo unico, periodo, emissione e scadenza quando evidenziati; spiegazione delle assenze e protezione delle correzioni. Rimangono prima pagina, conferma finale, controllo SHA, prudenza sugli importi e tutti i vincoli offline. Un unico importo non autorizza a confondere arretrati con costo corrente o a scegliere fra totali incompatibili: incertezza da confermare, nessuna somma/ripartizione o prova di pagamento inventata.
+
+Rinviati: righe economiche, consumi, tasse, quote fisse/variabili, rate/crediti come modelli dedicati, forniture/contratti normalizzati, dashboard e avvisi avanzati. Restano nella roadmap; non sono prerequisiti per la generalizzazione del riepilogo. Tracciabilità e robustezza del flusso attuale proseguono per lotti limitati, senza introdurre infrastruttura o migrazioni.
+
 ## 1. Stato attuale: perimetro, prove e architettura effettiva
 
 **Conclusione:** Dimora possiede una precompilazione locale prudente del riepilogo e un percorso AI con evidenze, budget e conferma. Non possiede ancora un motore normalizzato di fatture, forniture e consumi. Estendere soltanto le regex ai fornitori non soddisfa l'obiettivo. Si raccomanda di riusare la pipeline, aggiungendo prima ruoli economici e tracciabilità, poi interpretazione delle sezioni necessarie. Nessuna riscrittura o implementazione effettuata da questo audit.
