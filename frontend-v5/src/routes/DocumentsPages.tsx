@@ -2,6 +2,7 @@ import {ArchiveFamilies} from '../documents/ArchiveFamilies';
 import {canonicalFamily,familyLabel} from '../documents/families';
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
 import {ChangeHouseFamily} from '../documents/ChangeHouseFamily';
+import {ChangeDocumentType} from '../documents/ChangeDocumentType';
 import {documentExamplesEnabled} from '../documents/exampleEnvironment';
 import {DocumentRowContext} from '../documents/DocumentRowContext';
 import { documentTypeLabels,documentDisplayTitle } from '../documents/presentation';
@@ -411,7 +412,7 @@ function DocumentsArchive(props: {
             key={doc.id}
             doc={doc}
             fileDetailsOpen={restore?.filters===filtersKey(filters)&&restore.openedFiles?.includes(doc.id)||false}
-            showTypeCorrection={!!(house&&filters.group==='other'||archive&&(doc.family==='unclassified'||filters.group==='unclassified'))&&props.canUpload}
+            showTypeCorrection={props.canUpload&&!selecting&&!aiSelecting&&doc.permissions.includes('read')}
             archiveFamily={!!archive}
             inSelectedGroup={!!archive&&filters.group===doc.family}
             canChangeFamily={!!(house||archive)&&props.canUpload&&!selecting&&!aiSelecting}
@@ -595,7 +596,7 @@ function DocumentRow(props: {
         >
           {title}
         </Link>
-        <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>{props.showTypeCorrection&&<Link className={docs.correctType} to={`/home/${encodeURIComponent(props.homeId)}/documenti/${encodeURIComponent(doc.id)}#doc-classificazione`} state={{documentsSearch:props.backSearch,documentsAccountId:account.id}}>Correggi tipo</Link>}{props.archiveFamily&&!props.inSelectedGroup&&<span className={docs.rowFamily}>{familyLabel(doc.family)}</span>}{props.canChangeFamily&&doc.organization&&<ChangeHouseFamily archive={props.archiveFamily} key={doc.id+':'+doc.organization.version} homeId={props.homeId} document={doc} onChanged={props.onFamilyChanged}/>}</div>
+        <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>{props.showTypeCorrection&&<ChangeDocumentType homeId={props.homeId} document={doc} />}{props.archiveFamily&&!props.inSelectedGroup&&<span className={docs.rowFamily}>{familyLabel(doc.family)}</span>}{props.canChangeFamily&&doc.organization&&<ChangeHouseFamily archive={props.archiveFamily} key={doc.id+':'+doc.organization.version} homeId={props.homeId} document={doc} onChanged={props.onFamilyChanged}/>}</div>
         <DocumentRowContext doc={doc} homeId={props.homeId}/>
         {doc.permissions.includes('read') && (
           <DocumentWorkspaceActions homeId={props.homeId} document={doc}/>
