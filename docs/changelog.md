@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Correzioni indipendenti frontend cestino E1/D2
+
+L'avviso viene scartato quando si lascia la pagina, anche dopo Annulla, e non ricompare al ritorno. Il cestino segue tutte le continuazioni prima di presentare l'elenco e il conteggio per lo svuotamento; un errore successivo non viene presentato come risultato completo. [Report](v5/cestino-correzioni-ui-20261025.md), correzioni sul branch proprio ancora da integrare con la PR backend #31. Nessun dato reale modificato.
+
 ## 24 ottobre 2026 — Revisione indipendente frontend cestino su 7586806
 
 [revisione indipendente su 7586806](v5/cestino-frontend-review-7586806-20261024.md): un P2 aperto sull’avviso che ricompare dopo il cambio pagina, anche dopo il ripristino. Mock originali 873/873; cinque prove indipendenti con quattro positivi e la regressione E1 rossa, senza modifiche ai test dell’autore. Verificati rete assente/503 sul cestino senza bloccare AppShell, focus/tastiera e recupero idempotente. Solo test e documenti; nessuna AI, DB reale o integrazione.
