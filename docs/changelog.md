@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Tipo documento direttamente nell'archivio
+
+Sul branch del lotto, Correggi tipo apre un menu nella riga con Salva tipo e Annulla, anche per documenti già classificati. Titolo e parti/pagine preservati, nessuna analisi, spesa o nuovo oggetto; gestione di fonte cambiata, revoche e risposta persa. [Report](v5/tipo-documento-inline-20261025.md): 29/29 nuovi test e controlli statici verdi, mock completa in corso. Non ancora integrato o attivato nell'app.
+
 ## 25 ottobre 2026 — Cestino integrato e attivato su autorizzazione
 
 PR #41 integrata a dc58ada e app aggiornata dopo backup verificato di database e originali e sola migrazione document_trash; zero migrazioni pendenti, dati preesistenti e originali invariati. Cestino30giorni, anteprima e ripristino disponibili; nessun documento eliminato nelle verifiche, nessuna nuova AI/email, main e branch Claude invariati. [Esito operativo e limiti](v5/cestino-chiusura-20261025.md#attivazione-autorizzata--25-ottobre-verifica-finale-1511-utc).
