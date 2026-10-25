@@ -18,6 +18,12 @@ I test nuovi usano solo documenti e dati sintetici nel harness; il simulatore de
 
 ## Verifica e consegna
 
-Controlli statici della punta fc988ac superati: typecheck, lint e build. Prima prova mirata: 60/60 con le 12 prove UI allora presenti, 16 pure e 32 precedenti; aggiunta poi una tredicesima prova UI per revoca durante il salvataggio. Verifica definitiva dei nuovi casi **29/29**, di cui 13 UI e 16 pure, verde; mock completa in corso. App attiva invariata da questo lotto; nessuna prova browser dichiarata e nessun nuovo invio AI/email, accesso DB/API/storage reale, migrazione o modifica .env.
+Controlli statici della punta fc988ac superati: typecheck, lint e build. Prima prova mirata: 60/60 con le 12 prove UI allora presenti, 16 pure e 32 precedenti; aggiunta poi una tredicesima prova UI per revoca durante il salvataggio. Verifica definitiva dei nuovi casi **29/29**, di cui 13 UI e 16 pure, verde; mock completa **1156/1156 in 129 file**, zero fallimenti o test saltati e retry0; durata 1791.2 secondi. App attiva invariata da questo lotto; nessuna prova browser dichiarata e nessun nuovo invio AI/email, accesso DB/API/storage reale, migrazione o modifica .env.
 
 Tentativi precedenti: il sandbox ha impedito la rinomina della cache temporanea Vitest prima dei test; esecuzione nativa con ambiente offline depurato. Una junction delle dipendenze richiedeva il percorso esatto del worker PDF nella sola configurazione locale del runner, fuori Git. Un test nuovo dell'archivio cercava il pulsante durante il caricamento lazy: preparazione esplicita del modulo nel beforeAll, come negli altri test del repository. Nessuna asserzione precedente o timeout modificato; retry0, un worker, nessun cluster DB lanciato.
+
+## Pubblicazione
+
+[PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) verso il consolidamento, pronta per la revisione dopo esito completo verde. Fonte frontend fc988ac invariata durante e dopo il collaudo; tutti i commit successivi sono documentali. Backend identico a dc58ada. Push verificato con git ls-remote; nessun merge o aggiornamento app da questo lotto. Per provarlo nell'app occorrono la decisione di merge del committente e il successivo aggiornamento del solo frontend, preservando API/PostgreSQL e dati.
+
+Evidenze locali nel task: work/inline-type-checks-complete.log, work/inline-type-new.json e work/inline-type-full.json/log. Il profilo completo è stato eseguito una sola volta, con un worker e retry0, senza asserzioni/gold/timeout modificati e senza test DB. I test preesistenti restano invariati. Nessuna prova browser reale aggiunta; la verifica visiva del menu nell'app resta successiva all'integrazione autorizzata.
