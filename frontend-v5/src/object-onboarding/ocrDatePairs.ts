@@ -23,7 +23,7 @@ export function confidentOcrDatePairs(lines:PositionedDateEvidence[]){
   const years=[...new Set(lines.filter(line=>/^\d{4}$/u.test(line.text.trim())&&column(line)).map(line=>line.text.trim()))];
   if(candidates.some(line=>!localBillDate(line.text))&&years.length!==1)continue;
   const dates=[...new Set(candidates.flatMap(line=>localBillDate(line.text)??(years.length===1?localBillDate(line.text.trim()+' '+years[0]):undefined)??[]))];
-  if(dates.length===1){const iso=dates[0]!;result.push(header.text.trim().replace(/[:\s]+$/u,'')+': '+iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4));}
+  if(dates.length===1&&(!years.length||years.length===1&&dates[0]!.startsWith(years[0]+'-'))){const iso=dates[0]!;result.push(header.text.trim().replace(/[:\s]+$/u,'')+': '+iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4));}
  }
  return result;
 }

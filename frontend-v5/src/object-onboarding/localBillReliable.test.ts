@@ -66,6 +66,8 @@ it('combines a native explicit year with a confident graphic day/month on the sa
  expect(localBill([invoice+'\n'+confidentOcrText(data,native)])?.dueOn).toBe('2027-11-09');
  const conflict={blocks:[{paragraphs:[{lines:[...data.blocks[0]!.paragraphs[0]!.lines,line('2028',430,195,50)]}]}]};
  expect(localBill([invoice+'\n'+confidentOcrText(conflict,native)])?.dueOn).toBeUndefined();
+ const fullConflict={blocks:[{paragraphs:[{lines:[line('Scadenza',400,100),line('09/11/2028',400,160)]}]}]};
+ expect(localBill([invoice+'\n'+confidentOcrText(fullConflict,native)])?.dueOn).toBeUndefined();
 });
 it('native context never promotes uncertain OCR digits or a year in another column',()=>{
  const data={blocks:[{paragraphs:[{lines:[line('Scadenza',400,100),line('09 Novembre',400,160,110,89)]}]}]};
