@@ -1,5 +1,11 @@
 // Explicit offline profiles. No shell commands or caller-supplied test paths.
 const profiles = {
+  "test:workflow-fixtures-db": {
+    "database": true,
+    "api": false,
+    "files": ["test/order-roles.integration.test.cjs", "test/installment-linking.integration.test.cjs", "test/generalized-evidence.integration.test.cjs"],
+    "apiFiles": []
+  },
   "test:workflow-clock-db": {
     "database": true,
     "api": false,

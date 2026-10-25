@@ -12,7 +12,7 @@ test('real-order manual cases: isolated storage, canonical dates, privacy and du
  const service=client=>{const review=new ReviewService(client,{}),objects=new HomeObjectsService(client,review);return new ObjectOnboardingService(new ObjectOnboardingAccess(client,review),objects,review,{now:()=>new Date('2026-10-23T12:00:00Z')});};const svc=service(db);
  const a=await db.account.create({data:{name:'Offline order',email:randomUUID()+'@example.test',passwordHash:'not-login'}}),b=await db.account.create({data:{name:'Other owner',email:randomUUID()+'@example.test',passwordHash:'not-login'}});
  await t.test('confirmed coffee proposal: private sourced date, explicit cost, durable replay and reload without duplicates',async()=>{
-  const home=await db.home.create({data:{name:'Synthetic confirmed order',address:'Test'}});for(const account of [a,b])await db.homeMembership.create({data:{accountId:account.id,homeId:home.id,role:'owner'}});
+  const home=await db.home.create({data:{name:'Synthetic confirmed order',address:'Test'}});for(const account of [a,b])await db.homeMembership.create({data:{accountId:account.id,homeId:home.id,role:'owner',validFrom:new Date('2026-01-01T00:00:00Z')}});
   // Manual deidentified observations, not the actual PDF or a new provider result.
   const lines=['Riepilogo dell’ordine','Ordine effettuato il: 14 giugno 2026','De’Longhi Rivelia EXAM440.35.B','Totale: 499,00 €','Costi di spedizione: 0,00 €'];
   const ev=excerpt=>({page:1,excerpt,region:null}),sha=hash(lines.join('\n'));
@@ -34,7 +34,7 @@ test('real-order manual cases: isolated storage, canonical dates, privacy and du
   assert.equal(await db.homeObject.count({where:{homeId:home.id}}),1);assert.equal(await db.homeExpense.count({where:{homeId:home.id}}),1);assert.equal((await db.homeExpense.findFirstOrThrow({where:{homeId:home.id}})).amountCents,49900);
  });
  for(const coffee of [false,true])await t.test(coffee?'coffee':'Samsung',async t=>{
- const h=await db.home.create({data:{name:'Offline order',address:'Test'}});for(const account of [a,b])await db.homeMembership.create({data:{accountId:account.id,homeId:h.id,role:'owner'}});
+ const h=await db.home.create({data:{name:'Offline order',address:'Test'}});for(const account of [a,b])await db.homeMembership.create({data:{accountId:account.id,homeId:h.id,role:'owner',validFrom:new Date('2026-01-01T00:00:00Z')}});
  const name=coffee?'De’Longhi Rivelia EXAM440.35.B':'Frigorifero Combinato da Incasso Samsung',date=coffee?'2026-06-14':'2024-10-13',amount=coffee?49900:84915;
  async function draft(){const doc=await db.document.create({data:{homeId:h.id,uploaderId:a.id,name:'Offline order',visibility:'private',original:{create:{originalFilename:'offline.pdf',mimeType:'application/pdf',sha256:hash('order-case-'+coffee),byteSize:1,file:{create:{storageKey:'not-stored-'+randomUUID()}}}}}});const d=(await svc.manualDraft(a.id,h.id,{documentId:doc.id},randomUUID())).draft;return {doc,d};}
  const {doc,d}=await draft(),choice={itemId:d.items[0].id,action:'create',name,type:'appliance',unitNames:[],roomIds:[],fields:{orderDate:{action:'manual',value:date},...(coffee?{brand:{action:'manual',value:'De’Longhi'},model:{action:'manual',value:'EXAM440.35.B'}}:{brand:{action:'manual',value:'Samsung'}})},manual:null,confirmHouseholdObject:true,expense:{action:'skip'},acknowledgeExistingSource:false},body={expectedVersion:d.version,source:d.snapshot,choices:[choice]},key=randomUUID();
