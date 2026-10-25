@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Audit e progettazione motore bollette (solo proposta)
+
+[Audit tecnico e roadmap](v5/audit-motore-bollette-20261025.md): codice/persistenza/AI, matrice Sorgenia/TIM, dieci esecuzioni diagnostiche pure su due fonti, limiti economici e architettura incrementale con confronto costi A/B/C. Distinti consolidamento e PR #44; nessuna modifica prodotto/test, dipendenza, AI, DB/API/storage reale, migrazione o attivazione. Roadmap da approvare prima di implementare.
+
 ## 25 ottobre 2026 — Bollette: riepilogo della prima pagina
 
 Lettura e OCR limitati a pagina 1, dati nativi conservati se l'arricchimento fallisce, fornitore proposto soltanto con evidenze testuali concordanti. Nessun catalogo di aziende o modifica alle validazioni economiche. [Report](v5/bollette-prima-pagina-20261025.md); verifica locale positiva, statici e fixture 5/5 verdi, mock completa 1175/1175 in 131 file, zero saltati/retry0. [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) pronta, push verificato. App invariata, nessuna AI, migrazione o scrittura reale.

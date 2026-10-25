@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Fase 1 bollette: un importo e generalizzazione
+
+Il committente sceglie di procedere per step: nella fase 1 basta un solo importo per bolletta, senza dettaglio delle componenti. Prima priorità: generalizzazione indipendente dal fornitore, con corpus/layout diversi, rigore sugli importi e dati mancanti espliciti. Dettaglio economico, consumi e modelli tariffari rimandati; nessuna somma o selezione arbitraria in presenza di ambiguità, nessun pagamento dedotto. Restano prima pagina, conferma finale e protezione delle scelte pregresse. [Ambito aggiornato](v5/audit-motore-bollette-20261025.md). Nessuna approvazione implicita di merge, migrazioni, AI o rilascio.
+
 ## 25 ottobre 2026 — Bollette locali dalla sola prima pagina
 
 Su decisione del committente, riconoscimento e proposte locali delle bollette usano soltanto la prima pagina del PDF, anche quando i dati risultano incompleti. Non leggere né OCRizzare le pagine successive per integrare il riepilogo; campi mancanti o ambigui restano da confermare. Conservare limiti, soglie OCR, controlli sugli importi, SHA e protezione delle compilazioni già salvate. Nessuna estensione di questa scelta alle estrazioni AI o ad altri documenti. [Report e verifiche](v5/bollette-prima-pagina-20261025.md).
