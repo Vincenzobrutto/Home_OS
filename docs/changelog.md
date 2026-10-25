@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Recupero della compilazione dall’archivio
+
+Un collegamento incompleto a un documento esistente propone «Riprendi compilazione» invece di un nuovo caricamento. Il recupero esplicito conserva bozza, analisi esistente, modalità e filtri; nessuna scrittura all’apertura. Test offline per classificazione Bolletta, conferma della spesa e uscita dalla coda, nelle due viste. 20/20 mirati, 1008/1008 mock in 118 file, typecheck/lint/build verdi; [report e limiti](v5/compilazione-archivio-20261025.md). Nessuna AI, migrazione o scrittura reale; aggiornamento dell’app subordinato al merge.
+
 ## 25 ottobre 2026 — Bollette ibride: telecomunicazioni, intestazione e calendario
 
 Riconoscimento generale del servizio, intestazione legale e periodo dal layout, OCR selezionato anche sulle pagine con testo e date grafiche. L’anno nativo può completare giorno/mese OCR solo nella stessa zona; contraddizioni e cifre incerte restano vuote. 1002/1002 mock, 5/5 fixture, typecheck/lint/build; [report](v5/bollette-lettura-affidabile-20261025.md). Correzione ancora sul branch separato, nessun salvataggio o aggiornamento reale.

@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+Compilazione dall’archivio: [lotto separato](v5/compilazione-archivio-20261025.md) per recuperare i collegamenti senza lotto, preservando bozza e modalità senza scritture all’apertura. Verifiche su tipo Bolletta e uscita dai documenti da completare solo dopo conferma finale: 20/20 mirati, 1008/1008 mock in 118 file, typecheck/lint/build verdi. Merge e aggiornamento app al committente.
+
 Bollette ibride e telecomunicazioni: [correzione separata](v5/bollette-lettura-affidabile-20261025.md), 1002/1002 mock, 5/5 fixture, typecheck/lint/build. Intestazione/periodo geometrici e calendario nativo più OCR, senza indebolire confidenze o inventare anni. Riscontro locale sul PDF fornito riuscito; PR da approvare prima di aggiornare l’app.
 
 OCR precedente PR #26 già integrato a 69d9f00 e frontend5174 attivato su autorizzazione esplicita basata sui test offline. Il collaudo browser resta non eseguito; dettagli operativi nella PR documentale #30. Nessun servizio o dato reale modificato da questo nuovo lotto.
