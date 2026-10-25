@@ -1,5 +1,13 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+Compilazione robusta contro risposte tardive: [isolamento, letture locali, tastiera e misura bundle](v5/compilazione-resilienza-20261025.md). Candidato separato con la combinazione della PR #37; integrazione e aggiornamento app subordinati alla decisione del committente.
+
+Collaudo combinato delle PR #35 e #36 sul branch separato: [matrice e consegna](v5/compilazione-collaudo-combinato-20261025.md). Candidato congiunto da approvare prima di integrare; nessun aggiornamento app o completamento automatico dei documenti reali.
+
+
+Compilazione dall’archivio: [lotto separato](v5/compilazione-archivio-20261025.md) per recuperare i collegamenti senza lotto, preservando bozza e modalità senza scritture all’apertura. Verifiche su tipo Bolletta e uscita dai documenti da completare solo dopo conferma finale: 20/20 mirati, 1008/1008 mock in 118 file, typecheck/lint/build verdi. Merge e aggiornamento app al committente.
+Completamento delle bollette dalla pagina diretta: [collaudo autonomo e correzione](v5/collaudo-completamento-report-20261025.md). La classificazione canonica precede la spesa anche senza workspace; nessuna classificazione all’apertura e salvataggio della bozza distinto dalla conferma finale. Test specifici su conflitti, fonte revocata/cambiata, idempotenza e importi discordanti; typecheck/lint/build verdi e suite mock completa 1030/1030 (118 file, nessun test saltato o retry). PR #35 separata; nessuna integrazione o modifica all’app reale.
+
 Bollette ibride e telecomunicazioni: [correzione separata](v5/bollette-lettura-affidabile-20261025.md), 1002/1002 mock, 5/5 fixture, typecheck/lint/build. Intestazione/periodo geometrici e calendario nativo più OCR, senza indebolire confidenze o inventare anni. Riscontro locale sul PDF fornito riuscito; PR da approvare prima di aggiornare l’app.
 
 OCR precedente PR #26 già integrato a 69d9f00 e frontend5174 attivato su autorizzazione esplicita basata sui test offline. Il collaudo browser resta non eseguito; dettagli operativi nella PR documentale #30. Nessun servizio o dato reale modificato da questo nuovo lotto.
