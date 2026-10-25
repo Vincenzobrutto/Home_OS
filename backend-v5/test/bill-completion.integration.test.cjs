@@ -45,7 +45,8 @@ test('Bill completion: real services on disposable offline DB, canonical type, w
  const pending=async()=>{assert((await listed('pending')).includes(source.id));assert(!(await listed('completed')).includes(source.id));};
  let draft,confirmation,key,confirmed;
  await t.test('manual bill selection leaves the source pending and creates no canonical data',async()=>{
-  draft=(await service.manualDraft(a,h,{documentId:source.id,documentKind:'utility_bill'},randomUUID())).draft;
+  const initial=(await service.manualDraft(a,h,{documentId:source.id},randomUUID())).draft;assert.equal(initial.documentKind,'unsupported');
+  draft=(await service.changeManualKind(a,h,initial.id,{expectedVersion:initial.version,documentKind:'utility_bill'},randomUUID())).draft;
   assert.equal(draft.documentKind,'utility_bill');assert.equal(draft.items.length,0);assert.equal(draft.houseExpenses.length,1);
   assert.equal((await current()).organization,null);await pending();assert.deepEqual(await counts(),{objects:0,expenses:0});
  });
