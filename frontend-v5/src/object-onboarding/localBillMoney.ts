@@ -33,7 +33,7 @@ function amount(row:string):Candidate{
 }
 
 /** EUR-only proposals from complete labelled values, without conversion or prefix truncation. */
-export function localBillAmount(text:string):string|undefined{
+export function localBillAmount(text:string,summaryAmounts:string[]=[]):string|undefined{
  const values=new Set<string>();
  // Join only a recognized amount label, never arbitrary rows or monetary values.
  const lines=text.replace(new RegExp(label.source,'gimu'),part=>part.replace(/\s*\n\s*/gu,' ')).split('\n');
@@ -50,6 +50,11 @@ export function localBillAmount(text:string):string|undefined{
   const candidate=amount(row);
   if(candidate.kind==='invalid')return undefined;
   if(candidate.kind==='value')values.add(candidate.value);
+ }
+ for(const raw of summaryAmounts){
+  const candidate=amount(raw);
+  if(candidate.kind!=='value')return undefined;
+  values.add(candidate.value);
  }
  return values.size===1?[...values][0]:undefined;
 }

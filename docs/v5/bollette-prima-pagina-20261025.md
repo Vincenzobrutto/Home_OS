@@ -32,3 +32,15 @@ Nessuna AI/email, lettura o scrittura di DB/API/storage reale, migrazione, modif
 Evidenze locali del task: work/bill-first-focus-final.log, work/bill-first-checks.log, work/bill-first-fixtures.json/log, work/bill-first-full.json/log e diagnostica locale della prima pagina. Nessun cluster DB avviato. Nuovo collaudo con un'altra bolletta utile dopo l'integrazione; l'assenza di evidenze sufficienti deve continuare a lasciare i campi da confermare.
 
 Pubblicazione: [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) verso il consolidamento, inizialmente in bozza durante il collaudo e pronta dopo il risultato completo verde. Commit successivi alla fonte 4419b02 solo documentali; push verificato con git ls-remote. App invariata: nessun merge o rilascio da questo lotto.
+
+## Attivazione autorizzata — 25 ottobre, 18:04 UTC
+
+Con «Vai procediamo» il committente approva merge e aggiornamento del solo frontend. PR #43 integrata con merge a 911b0fba29d56db6d4da1da54e241ab44e99af37, hash remoto verificato; main invariato. Le sezioni precedenti descrivono la fase offline e la consegna prima dell'approvazione.
+
+Runtime dedicato Dimora-V5-runtime-bollette-prima-20261025 sulla fonte integrata: albero frontend 5d482edbf405a4aaf8c9908c0c89cebc1b93b33d identico a 4419b02, già verificato dalla mock completa. Backend c820d20f7d41320fae8558dfcee7298e3e395256 identico al runtime API dc58ada. Build del frontend integrato verde, 5,31 secondi. Sostituito soltanto PID16672 con PID10612, avvio 18:04:16.671637 UTC, sulla porta loopback5174.
+
+API PID7036 su loopback3011 e PostgreSQL PID22924 su loopback55432 preservati, identità e tempi di avvio verificati prima e dopo: rispettivamente 25/10 15:09:52.927113 UTC e 24/10 11:35:27.728198 UTC. Nessun riavvio, migrazione o query SQL, modifica .env, nuova AI/email o salvataggio automatico. La sola API richiesta nel controllo è anonima e risponde 401 con X-Dimora-Collaudo roma-consolidata-dc58ada-no-ai; nessuna sessione, originale o dato della casa letto.
+
+Controlli HTTP statici/anonimi 8/8: pagina, lettore prima pagina, helper fornitore e parser, menu tipo precedente, worker PDF/OCR e protezione API. Un primo controllo loopback è stato fermato dal sandbox con EACCES, prima della risposta; stesso controllo eseguito con permesso di rete locale, senza cambiare protezioni. Nessuna prova browser aggiunta. EnvDir frontend vuota, guardia di rete esistente e proxy verso la sola API loopback conservati.
+
+Passaggio operativo nel task: work/roma-runtime.json e work/schede-app-frontend-runtime.json aggiornati; launcher corrente work/bill-first-release-start.cjs, configurazione work/bill-first-release-runtime.vite.config.mts e work/bill-first-release-runtime-proof.json. Evidenze work/bill-first-release-build.log e work/bill-first-release-runtime-http-proof.json. Non usare i precedenti launcher per ripristinare questo frontend. Per il collaudo ricaricare l'app e usare una nuova bolletta o una bozza ancora vuota: dati confermati e compilazioni salvate non vengono riscritti automaticamente.
