@@ -43,6 +43,8 @@ Il gruppo `document-workflow` recupera i test unitari di bozze, suggerimenti, pe
 
 ## Confini e gestione delle risorse
 
+Profili indipendenti del cestino (eseguire in sequenza, con gli stessi PgBin/ScratchRoot): `test:cestino-race-db`, `test:cestino-riesame-db`, `test:cestino-extra-review-db` e `test:cestino-fixes-db`. Quest'ultimo copre continuazione, privacy delle fonti, ricontrollo dell'export e lifecycle delle anteprime. Sono separati dall'aggregato originale; vanno eseguiti esplicitamente, non saltati perché `test:offline-db` è verde. [Correzioni e risultati](../../docs/v5/cestino-correzioni-backend-20261025.md).
+
 - Unico target del runner: quality_test@127.0.0.1:55439/dimora_v5_quality_v3_test. API isolata su 3119. Porte occupate causano un rifiuto, senza stop o riuso di servizi esistenti. Nessun fallback a 55432/3001 o al collaudo 55433/3109.
 - Ogni esecuzione crea una sottocartella dimora-offline-* nuova con marcatore di proprietà. Copia input tracciati da Git, dist appena compilato, client generato e fixture. node_modules è una junction di sola dipendenza; .env, storage e configurazioni locali non vengono copiati. Per nuovi test DB, aggiungere i file all’indice prima del collaudo.
 - Soltanto nella copia temporanea vengono adattati gli indirizzi dei test e il vincolo Prisma compilato; assert, Origin/CSRF, gold e controlli applicativi rimangono. Un formato compilato inatteso fa fallire la preparazione. La risposta di readiness deve riportare il marcatore dell’API appena creata.

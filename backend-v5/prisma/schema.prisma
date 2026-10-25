@@ -12,6 +12,7 @@ enum HomeRole {
   viewer
 }
 model Account {
+  trashRequests TrashRequest[]
   historyEvents HomeHistoryEvent[]
   historyRequests HomeHistoryRequest[]
   contacts HomeContact[]
@@ -96,6 +97,8 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  trashRequests TrashRequest[]
+  deletionRecords DeletionRecord[]
   historyEvents HomeHistoryEvent[]
   historyRequests HomeHistoryRequest[]
   contacts HomeContact[]
@@ -260,12 +263,18 @@ model Document {
   name String
   visibility DocumentVisibility @default(private)
   createdAt DateTime @default(now())
+  trashedAt DateTime?
+  purgeAfter DateTime?
+  purgedAt DateTime?
+  lifecycleVersion Int @default(1)
   home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
   uploader Account @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
   original DocumentVersion?
   requests UploadRequest[]
   expenses HomeExpense[]
   @@index([homeId, createdAt, id])
+  @@index([homeId, uploaderId, trashedAt])
+  @@index([purgeAfter])
 }
 model DocumentVersion {
   fileControlEngine String?
@@ -1243,4 +1252,34 @@ model HomeHistoryRequest {
   account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
   home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
   @@unique([accountId, homeId, operation, target, key])
+}
+// Cestino della casa: registro idempotente di messa nel cestino, ripristino ed eliminazione definitiva.
+model TrashRequest {
+  id String @id @default(uuid())
+  accountId String
+  homeId String
+  operation String
+  target String
+  key String
+  digest String
+  response Json
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  @@unique([accountId, homeId, operation, target, key])
+}
+// Registro delle eliminazioni definitive, senza contenuto: riapplicabile dopo il restore di un backup.
+// fileRemovedAt nullo = originale fisico ancora da rimuovere (ripetizione sicura).
+model DeletionRecord {
+  id String @id @default(uuid())
+  homeId String
+  resourceKind String
+  resourceId String
+  reason String
+  storageKey String?
+  fileRemovedAt DateTime?
+  deletedAt DateTime @default(now())
+  home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
+  @@unique([resourceKind, resourceId])
+  @@index([fileRemovedAt, deletedAt])
 }

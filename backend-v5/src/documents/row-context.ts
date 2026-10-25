@@ -17,7 +17,7 @@ export async function documentRowContexts(tx:Prisma.TransactionClient,a:string,h
   UNION
   SELECT d.id,s.id,s.kind,s.name FROM "AnalysisJob" j JOIN authorized s ON s.kind='boiler' AND s.id=j."assetId"
    CROSS JOIN LATERAL jsonb_array_elements(j.documents) p JOIN "Document" d ON d.id=p->>'documentId' JOIN "DocumentVersion" v ON v."documentId"=d.id
-   WHERE j.state='succeeded' AND p->>'documentVersion'=v.version::text AND p->>'documentSha256'=v.sha256
+   WHERE j.state='succeeded' AND d."trashedAt" IS NULL AND p->>'documentVersion'=v.version::text AND p->>'documentSha256'=v.sha256
  ) SELECT DISTINCT * FROM refs WHERE "documentId" IN (${Prisma.join(ids)}) ORDER BY name,kind,id`);
  for(const {documentId,...ref} of refs)result.get(documentId)!.linkedObjects.push(ref);
  const expenses=await tx.homeExpense.findMany({where:{accountId:a,homeId:h,state:'active',documentId:{in:ids}},orderBy:[{spentOn:'desc'},{id:'asc'}],select:{id:true,documentId:true,title:true,amountCents:true,supplier:true,documentNumber:true,documentDate:true}});

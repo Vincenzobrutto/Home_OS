@@ -29,7 +29,7 @@ export class SharingService {
     await tx.$queryRaw(Prisma.sql`SELECT id FROM "Document" WHERE id IN (${Prisma.join(ids)}) ORDER BY id FOR SHARE`);
     await tx.$queryRaw(Prisma.sql`SELECT id FROM "DocumentVersion" WHERE "documentId" IN (${Prisma.join(ids)}) ORDER BY id FOR SHARE`);
     const rows=await tx.document.findMany({where:{id:{in:ids}},include:{original:true}});
-    const facts:DocumentFact[]=rows.map(r=>({...r,original:r.original?{...r.original,available:true}:null}));
+    const facts:DocumentFact[]=rows.map(r=>({...r,original:r.original?{...r.original,available:!r.trashedAt}:null}));
     return selectedOriginals(ids,facts,a,h);
   }
   private async valid(tx:Tx,r:ShareRecord|SharePreview){
@@ -88,7 +88,7 @@ export class SharingService {
   async recipients(a:string,h:string,q:unknown){object(q,[]);return this.db.$transaction(async tx=>{await this.sender(tx,a,h);const now=this.now();const people=await tx.homeMembership.findMany({where:{homeId:h,accountId:{not:a},revokedAt:null,validFrom:{lte:now},OR:[{validUntil:null},{validUntil:{gt:now}}]},include:{account:{select:{id:true,name:true,email:true}}},orderBy:{accountId:'asc'},take:101});if(people.length>100)throw invalid('Elenco destinatari oltre il limite supportato.');return {items:people.map(p=>({...p.account,identityVerified:false}))};});}
   async documents(a:string,h:string,q:unknown){const p=d.page(q),binding=digest(JSON.stringify(['documents',a,h]));let anchor:{id:string;at:Date}|null=null;
     if(p.cursor){try{const r=object(JSON.parse(Buffer.from(p.cursor,'base64url').toString('utf8')),['b','id','at']);if(r.b!==binding||typeof r.at!=='string'||!Number.isFinite(Date.parse(r.at)))throw invalid();anchor={id:uuid(r.id),at:new Date(r.at)};}catch{throw invalid('Pagina non valida.');}}
-    return this.db.$transaction(async tx=>{await this.sender(tx,a,h);const rows=await tx.document.findMany({where:{AND:[{homeId:h,original:{isNot:null},OR:[{visibility:'home'},{uploaderId:a}]},...(anchor?[{OR:[{createdAt:{lt:anchor.at}},{createdAt:anchor.at,id:{lt:anchor.id}}]}]:[])]},include:{original:true},orderBy:[{createdAt:'desc'},{id:'desc'}],take:p.limit+1}),slice=rows.slice(0,p.limit),last=slice.at(-1);
+    return this.db.$transaction(async tx=>{await this.sender(tx,a,h);const rows=await tx.document.findMany({where:{AND:[{homeId:h,trashedAt:null,original:{isNot:null},OR:[{visibility:'home'},{uploaderId:a}]},...(anchor?[{OR:[{createdAt:{lt:anchor.at}},{createdAt:anchor.at,id:{lt:anchor.id}}]}]:[])]},include:{original:true},orderBy:[{createdAt:'desc'},{id:'desc'}],take:p.limit+1}),slice=rows.slice(0,p.limit),last=slice.at(-1);
       return {items:slice.map(r=>({documentId:r.id,documentVersion:r.original!.version,name:r.name,byteSize:r.original!.byteSize,mimeType:r.original!.mimeType,visibility:r.visibility,eligible:r.uploaderId===a,ineligibleReason:r.uploaderId===a?null:'not_uploader'})),nextCursor:rows.length>p.limit&&last?Buffer.from(JSON.stringify({b:binding,id:last.id,at:last.createdAt.toISOString()})).toString('base64url'):null};
     });
   }

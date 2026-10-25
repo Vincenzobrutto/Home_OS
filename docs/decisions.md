@@ -1257,3 +1257,6 @@ Copertura server da pagine effettivamente inviate e proposte valide; pagina non 
 ## 23 ottobre 2026 — Acconto/saldo: costo complessivo solo dichiarato e confermato
 
 Si conserva un solo costo canonico per il caso manualmente riconciliato, con entrambe le fatture distinte sulle stesse schede. Nessuna somma/differenza dei totali; ambiguità lascia la spesa pendente. La conferma same_purchase richiede fonti/versioni/SHA, identico insieme di schede, CAS e storico; non allenta il link ordinario e non autorizza l'automatico. Conservare anche le fonti aggiuntive in provenienza interna senza creare un registro rate o modificare retroattivamente dati esistenti. Importi e date reali non verificabili richiedono conferma del committente. [Report](v5/fase0-installments-fix-offline-20261023.md).
+## 24 ottobre 2026 — Orologi delle fixture, autorizzazioni rigorose
+
+Il [riesame indipendente del cestino](v5/cestino-riesame-73288e5-20261024.md) riproduce i 403 delle appartenenze sintetiche inizializzate dall’orologio DB e subito controllate con quello Node. La correzione proposta riguarda soltanto la data esplicita nel setup dei test; nessuna tolleranza in `validMembership`, nessun retry o timeout aumentato. Restano rigorosi futuro, scadenza e revoca, con controlli positivi separati. Codice prodotto e DB reali invariati.

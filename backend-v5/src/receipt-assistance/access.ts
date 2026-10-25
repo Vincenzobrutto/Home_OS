@@ -1,4 +1,5 @@
 import { Prisma } from '../../generated/client';
+import { canReadDocument, canSeeConfirmedSource, confirmedSourceVisible } from '../documents/access';
 
 /** Correlated predicate for HomeObject alias o. Apply before search and LIMIT. */
 export function readableReceiptName(a: string, h: string): Prisma.Sql {
@@ -8,9 +9,9 @@ export function readableReceiptName(a: string, h: string): Prisma.Sql {
     LEFT JOIN "DocumentVersion" v ON v."documentId"=d.id
     WHERE f."objectId"=o.id AND f."fieldKey"='name' AND f.origin='extraction_confirmed'
       AND (f."accountId"<>${a} OR f."homeId"<>${h} OR d.id IS NULL OR d."homeId"<>${h}
-        OR (d.visibility::text<>'home' AND d."uploaderId"<>${a})
-        OR v.id IS NULL OR NOT COALESCE(v.version=f."documentVersion",FALSE)
-        OR NOT COALESCE(v.sha256=f."documentSha256",FALSE)))`;
+        OR NOT ${confirmedSourceVisible(a)}
+        OR (d."trashedAt" IS NULL AND (v.id IS NULL OR NOT COALESCE(v.version=f."documentVersion",FALSE)
+        OR NOT COALESCE(v.sha256=f."documentSha256",FALSE)))))`;
 }
 
 /** Caller already checks membership; this adds source proof for generic object names. */
@@ -24,19 +25,32 @@ export async function readableReceiptObjectIds(tx: Prisma.TransactionClient, a: 
 
 export type ReceiptSourceProof = { documentId: string | null; documentVersion: number | null; documentSha256: string | null };
 export const receiptProofKey = (proof: ReceiptSourceProof) => JSON.stringify([proof.documentId, proof.documentVersion, proof.documentSha256]);
-/** Checks captured proofs, rather than current field rows which may have been edited. */
-export async function readableReceiptProofKeys(tx: Prisma.TransactionClient, a: string, h: string, proofs: ReceiptSourceProof[], accountRows?: (rows: unknown[]) => void) {
-  if (!proofs.length) return new Set<string>();
+/**
+ * Checks captured proofs, rather than current field rows which may have been edited.
+ * 'confirmed': values already confirmed stay provable from a trashed or purged source (visibility only).
+ * 'proposal': comparisons and other unconfirmed content need an active, current source.
+ */
+export type ReceiptProofScope = 'confirmed' | 'proposal';
+export async function receiptProofAccess(tx: Prisma.TransactionClient, a: string, h: string, proofs: ReceiptSourceProof[], accountRows?: (rows: unknown[]) => void) {
+  const confirmed = new Set<string>(), proposal = new Set<string>();
+  if (!proofs.length) return { confirmed, proposal };
   const ids = [...new Set(proofs.flatMap(proof => proof.documentId ? [proof.documentId] : []))];
-  const rows = await tx.document.findMany({ where: { id: { in: ids }, homeId: h }, select: { id: true, uploaderId: true, visibility: true, original: { select: { version: true, sha256: true } } } });
+  const rows = await tx.document.findMany({ where: { id: { in: ids }, homeId: h }, select: { id: true, uploaderId: true, visibility: true, trashedAt: true, original: { select: { version: true, sha256: true } } } });
   accountRows?.(rows);
   const docs = new Map(rows.map(row => [row.id, row]));
-  return new Set(proofs.flatMap(proof => {
+  for (const proof of proofs) {
     const doc = proof.documentId ? docs.get(proof.documentId) : undefined;
-    return doc && (doc.visibility === 'home' || doc.uploaderId === a) && doc.original && doc.original.version === proof.documentVersion && doc.original.sha256 === proof.documentSha256 ? [receiptProofKey(proof)] : [];
-  }));
+    const current = !!doc?.original && doc.original.version === proof.documentVersion && doc.original.sha256 === proof.documentSha256;
+    const key = receiptProofKey(proof);
+    if (doc && canSeeConfirmedSource(doc, a) && (!!doc.trashedAt || current)) confirmed.add(key);
+    if (doc && canReadDocument(doc, a) && current) proposal.add(key);
+  }
+  return { confirmed, proposal };
 }
-export async function readableReceiptProofs(tx: Prisma.TransactionClient, a: string, h: string, proofs: ReceiptSourceProof[]) {
-  const readable = await readableReceiptProofKeys(tx, a, h, proofs);
+export async function readableReceiptProofKeys(tx: Prisma.TransactionClient, a: string, h: string, proofs: ReceiptSourceProof[], accountRows?: (rows: unknown[]) => void, scope: ReceiptProofScope = 'confirmed') {
+  return (await receiptProofAccess(tx, a, h, proofs, accountRows))[scope];
+}
+export async function readableReceiptProofs(tx: Prisma.TransactionClient, a: string, h: string, proofs: ReceiptSourceProof[], scope: ReceiptProofScope = 'confirmed') {
+  const readable = await readableReceiptProofKeys(tx, a, h, proofs, undefined, scope);
   return proofs.every(proof => readable.has(receiptProofKey(proof)));
 }

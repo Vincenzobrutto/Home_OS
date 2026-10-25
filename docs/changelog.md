@@ -65,6 +65,30 @@ Il confronto tra alias avviene sulla singola occorrenza: un apparato specifico n
 
 Corrette le evidenze di acquisto/ordine che potevano accettare date dichiarate non disponibili, condizionali o riferite a un'altra occorrenza. Restano ammesse note neutre; calendario, fonti e ruoli economici mantengono i controlli esistenti. Cinque nuovi gruppi generalizzati; build/lint, 311/311 onboarding, 233/233 ordinari e 18/18 guardie superati. Nessuna AI, DB, modifica al lotto Claude o salvataggio canonico; merge soggetto al committente. [Report](v5/prezzi-date-20261023.md).
 
+## 25 ottobre 2026 — Correzioni indipendenti cestino D1–D4
+
+Lock delle anteprime coerenti con le condivisioni, continuazione del cestino oltre 500 documenti, valori confermati conservati con citazioni indisponibili omesse nelle schede e nell'export. Provenienza canonica preservata negli edit. Riproduzioni 6/6, nuove 8/8, aggregato 513/513; [report](v5/cestino-correzioni-backend-20261025.md). Solo branch proprio, integrazione ancora da approvare.
+
+## 24 ottobre 2026 — Riesame indipendente cestino su 73288e5
+
+Riproduzioni C1–C4 superate e aggregato originale 513/513. Sei nuovi test riproducono quattro P2: ordine dei lock con le anteprime di condivisione, elenco limitato a 500 senza continuazione, estratti ancora presentati nelle schede, profili confermati omessi dall’export. [riesame indipendente su 73288e5](v5/cestino-riesame-73288e5-20261024.md). Diagnosi dei 403 dimostrata su cluster offline: date DB in anticipo fino a 2 ms rispetto a Node. Proposta limitata al setup delle fixture, senza tolleranza autorizzativa, modifiche alle asserzioni o codice prodotto. Nessuna AI, DB reale o merge.
+
+## 24 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame finale Codex
+
+All'eliminazione definitiva sparisce anche il titolo scelto nell'organizzazione diretta dei caricamenti. Una vecchia revoca non tocca più una condivisione creata dopo un ripristino concorrente. Le nuove ricevute riusano valori confermati la cui fonte è nel cestino. L'export non rilascia metadati di documenti spostati nel cestino durante l'esportazione. Riproduzioni 5/5, riesame 7/7, cestino 16/16, aggregato 513/513. [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-finale-di-codex).
+
+## 23 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame Codex
+
+Proposte non confermate escluse anche dall'export finché la fonte è nel cestino; valori confermati dell'API ricevute leggibili con fonte indisponibile; ripulitura intake per lotto; il replay di un vecchio cestino non revoca condivisioni create dopo il ripristino. Sei casi del riesame 7/7, aggregato 513/513 (54 esterni, 457 diretti, 2 dopo riavvio PostgreSQL). [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-di-codex).
+
+## 23 ottobre 2026 — Cestino lotto 1: correzioni dopo la revisione Codex
+
+Le schede confermate restano leggibili anche con la fonte nel cestino o eliminata; registri di caricamento e planimetrie ripuliti all'eliminazione definitiva; nessun deadlock fra download condiviso e cestino (condivisioni bloccate prima del documento); replay dopo l'eliminazione con 410 `source_deleted`. 513/513 HTTP/DB sintetici con i cinque test di riproduzione. [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-la-revisione-indipendente-di-codex).
+
+## 23 ottobre 2026 — Cestino dei documenti, lotto 1 (backend)
+
+Documenti nel cestino per 30 giorni, solo per chi li ha caricati: invisibili ovunque, condivisioni revocate, ripristino versionato, eliminazione definitiva automatica o immediata con segnaposto senza contenuto e registro delle eliminazioni. Migrazione additiva `20261023200000_document_trash`. Verificato offline: 227/227 ordinari, 506/506 HTTP/DB sintetici, ricerca del testo sintetico in tutto il DB dopo lo svuotamento con zero risultati. Frontend nel lotto 2, backup in un lotto separato. [Report](v5/cestino-lotto1-report-20261023.md).
+
 ## 23 ottobre 2026 — Classificazione locale di ricevute e negazioni
 
 Riconosciute le forme «ricevuta d'acquisto» con apostrofi e spazi diversi. Le menzioni esplicitamente negate e i riferimenti negativi all'obbligo di emissione non attribuiscono un tipo al documento; una vera fattura nello stesso PDF rimane riconoscibile. Build/lint e 233/233 test ordinari offline superati. Correzione verificata senza AI, accesso DB o modifica al lotto Cestino; integrazione approvata descritta sotto. [Report](v5/ricevute-negazioni-20261023.md).

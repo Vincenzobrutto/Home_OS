@@ -1,3 +1,7 @@
+## Profilo confermato e fonti nel cestino — 25 ottobre 2026
+
+Le letture del profilo mantengono i valori canonici autorizzati da fonti nel cestino o eliminate, con la stessa visibilità della fonte. Ogni campo restituito aggiunge `sourceAvailable`: `sources` contiene soltanto citazioni di originali attivi con versione/SHA correnti. Se una citazione non è disponibile viene omessa, senza restituire il suo estratto; non si modifica il profilo persistito. Le fonti private altrui o fuori casa non autorizzano il valore, neppure dopo il purge. Stessa separazione nell'export personale, con ricontrollo fresco delle prove prima del rilascio. [Correzioni e verifiche](cestino-correzioni-backend-20261025.md).
+
 ## Suggerimenti di ambiente da catalogo — 23 ottobre 2026
 
 Suggerimenti locali facoltativi per schede senza posizione, ricavati dal vocabolario generico v4 e dalle sole stanze attive già lette tramite GET rooms. Nessuna query trasversale alle case, nuova API, persistenza o preselezione automatica. Il clic prepara il menu; «Salva stanza» usa la consueta conferma CAS con roomIds e chiave idempotente. Posizioni confermate non ricevono suggerimenti e sistemi distribuiti richiedono la scelta multiambiente. Errori di lettura non usano stanze in cache per proporre una collocazione. [Report e test](fase0-night-plan-offline-20261023.md).
