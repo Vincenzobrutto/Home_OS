@@ -2,7 +2,7 @@ import { ForbiddenException, HttpException, Injectable, ServiceUnavailableExcept
 import { Prisma } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { DocumentPolicy, canReadDocument } from '../documents/access';
-import { EXPORT_LIMITS, ExportBudget, Projection, collect, list, record, scalars, tooLarge } from './projection';
+import { EXPORT_LIMITS, ExportBudget, Projection, collect, list, profileCapturedProofs, record, scalars, tooLarge } from './projection';
 import { readableReceiptObjectIds, readableReceiptProofs, readableReceiptProofKeys, receiptProofKey } from '../receipt-assistance/access';
 import { organizationView } from '../document-intake/organization';
 
@@ -71,12 +71,14 @@ export class PersonalExportService {
     const roomIds = [...new Set(positions.flatMap(row => list(row.roomIds)).filter((id): id is string => typeof id === 'string'))];
     const rooms = await collect((take, after) => tx.homeRoom.findMany({ where: { homeId: h, id: { in: roomIds, ...(after ? { gt: after } : {}) } }, select: { id: true, name: true, type: true, state: true }, take, orderBy }), budget);
     const links = await collect((take, after) => tx.objectResourceLink.findMany({ where: { ...own, OR: subjects, ...pageWhere(after) }, take, orderBy }), budget);
-    const projection = new Projection(new Map(documents.map(doc => [doc.id, { version: doc.original!.version, sha256: doc.original!.sha256 }])), keys(objects), assetIds, keys(activities), keys(expenses), keys(works), keys(rooms));
     const activityHistory = await collect((take, after) => tx.activityHistory.findMany({ where: { accountId: a, activityId: { in: activities.map(row => row.id) }, ...pageWhere(after) }, take, orderBy }), budget);
     const expenseHistory = await collect((take, after) => tx.expenseHistory.findMany({ where: { accountId: a, expenseId: { in: expenses.map(row => row.id) }, ...pageWhere(after) }, take, orderBy }), budget);
     const workHistory = await collect((take, after) => tx.economicWorkHistory.findMany({ where: { accountId: a, workId: { in: works.map(row => row.id) }, ...pageWhere(after) }, take, orderBy }), budget);
     const objectHistory = await collect((take, after) => tx.objectEvent.findMany({ where: { ...own, OR: [{ targetKind: 'object', targetId: { in: objects.map(row => row.id) } }, { targetKind: 'boiler', targetId: { in: [...assetIds] } }, { targetKind: 'room', targetId: { in: roomIds } }], ...pageWhere(after) }, take, orderBy }), budget);
     const assetHistory = await collect((take, after) => tx.assetHistory.findMany({ where: { assetId: { in: [...assetIds] }, ...pageWhere(after) }, take, orderBy }), budget);
+    const profileProofs = [...objects.flatMap(row => profileCapturedProofs(row.profile)), ...objectHistory.flatMap(row => [row.before, row.after].flatMap(snapshot => profileCapturedProofs(record(record(snapshot).row).profile)))];
+    const confirmedProfileKeys = await readableReceiptProofKeys(tx, a, h, profileProofs, rows => budget.add(rows), 'confirmed');
+    const projection = new Projection(new Map(documents.map(doc => [doc.id, { version: doc.original!.version, sha256: doc.original!.sha256 }])), keys(objects), assetIds, keys(activities), keys(expenses), keys(works), keys(rooms), confirmedProfileKeys);
     const history = [
       ...activityHistory.map(row => ({ ...scalars(row, ['id', 'kind', 'at', 'note']), resource: { kind: 'activity', id: row.activityId }, before: projection.history('activity', row.kind, row.before), after: projection.history('activity', row.kind, row.after) })),
       ...expenseHistory.map(row => ({ ...scalars(row, ['id', 'kind', 'at', 'note']), resource: { kind: 'expense', id: row.expenseId }, before: projection.history('expense', row.kind, row.before), after: projection.history('expense', row.kind, row.after) })),
@@ -107,7 +109,7 @@ export class PersonalExportService {
     };
     const limitations = ['originals_not_included', 'sharing_and_ai_drafts_not_included', 'document_physical_availability_not_checked', ...(projection.refsExcluded || assets.length !== assetCandidates.length || objects.length !== objectCandidates.length || receiptFields.length !== receiptFieldCandidates.length || receiptComparisons.length !== comparisonCandidates.length ? ['some_references_excluded'] : []), ...(projection.historyLimited ? ['some_history_snapshots_unavailable'] : [])];
     if (receiptNames.length) limitations.push('receipt_object_history_uses_current_name');
-    return { envelope: { format: 'dimora-personal-home-export', formatVersion: 1, generatedAt: new Date().toISOString(), scope: { homeId: h, accountId: a }, account, home, data, limitations }, assetIds: [...assetIds], objectIds: [...objectIds], documentIds: documents.map(doc => doc.id), receiptProofs: [...receiptProofs, ...organizationProofs], proposalProofs };
+    return { envelope: { format: 'dimora-personal-home-export', formatVersion: 1, generatedAt: new Date().toISOString(), scope: { homeId: h, accountId: a }, account, home, data, limitations }, assetIds: [...assetIds], objectIds: [...objectIds], documentIds: documents.map(doc => doc.id), receiptProofs: [...receiptProofs, ...organizationProofs, ...projection.retainedProfileProofs], proposalProofs };
   }
   async export(a: string, h: string, authorize: () => Promise<unknown>) {
     if (this.running >= EXPORT_LIMITS.concurrent) throw new ServiceUnavailableException({ code: 'personal_export_busy', message: 'Un’esportazione è già in corso. Riprova più tardi.' });

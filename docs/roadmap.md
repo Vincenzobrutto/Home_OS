@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+Cestino documenti: D1–D4 corretti e verificati sul [branch indipendente](v5/cestino-correzioni-backend-20261025.md): riproduzioni 6/6, nuove 8/8, aggregato 513/513. Correzioni dirette al branch Claude, nessun merge eseguito. Prima dell'integrazione aggiornare dal consolidamento e coordinare la paginazione UI.
+
 Questo indice distingue il lavoro attuale dalla cronologia. La roadmap precedente è conservata integralmente nell’[archivio del 23 ottobre](roadmap-history-20261023.md), inclusi checkpoint e decisioni dei diversi agenti. I suoi esiti descrivono la data del singolo lotto. [Stato verificato](project-status.md), [backlog completo](backlog.md), [architettura](architecture.md).
 
 ## Manutenzione autorizzata in corso

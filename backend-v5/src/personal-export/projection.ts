@@ -1,4 +1,5 @@
 import { PayloadTooLargeException } from '@nestjs/common';
+import { receiptProofKey, type ReceiptSourceProof } from '../receipt-assistance/access';
 
 export const EXPORT_LIMITS = { rows: 10000, bytes: 10 * 1024 * 1024, concurrent: 2, batch: 100 } as const;
 export const tooLarge = () => new PayloadTooLargeException({ code: 'personal_export_too_large', message: 'I dati superano il limite di esportazione.' });
@@ -22,10 +23,22 @@ export function scalars(value: unknown, keys: string[]): Row {
   return result;
 }
 export type DocumentProof = { version: number; sha256: string };
+const PROFILE_KEYS = ['brand','model','reference','serialNumber','powerWatts','voltageVolts','frequencyHz','capacityLitres','orderDate','purchaseDate','deliveredDate','warrantyStart','warrantyEnd'];
+export function profileCapturedProofs(value: unknown): ReceiptSourceProof[] {
+  return PROFILE_KEYS.flatMap(key => {
+    const field = record(record(value)[key]);
+    if (typeof field.value !== 'string' || field.origin === 'user_declared') return [];
+    return list(field.sources).map(raw => {
+      const source = record(raw), sha = source.sha256 ?? source.documentSha256;
+      return { documentId: typeof source.documentId === 'string' ? source.documentId : null, documentVersion: typeof source.documentVersion === 'number' ? source.documentVersion : null, documentSha256: typeof sha === 'string' ? sha : null };
+    });
+  });
+}
 export class Projection {
   refsExcluded = false;
   historyLimited = false;
-  constructor(readonly documents: Map<string, DocumentProof>, readonly objects: Set<string>, readonly assets: Set<string>, readonly activities: Set<string>, readonly expenses: Set<string>, readonly works: Set<string>, readonly rooms: Set<string>) {}
+  readonly retainedProfileProofs: ReceiptSourceProof[] = [];
+  constructor(readonly documents: Map<string, DocumentProof>, readonly objects: Set<string>, readonly assets: Set<string>, readonly activities: Set<string>, readonly expenses: Set<string>, readonly works: Set<string>, readonly rooms: Set<string>, readonly confirmedProfileKeys: Set<string> = new Set()) {}
   ref(value: unknown, allowed: Set<string> | Map<string, unknown>) {
     if (typeof value === 'string' && allowed.has(value)) return value;
     if (value !== null && value !== undefined) this.refsExcluded = true;
@@ -63,10 +76,15 @@ export class Projection {
   }
   profile(value: unknown) {
     const result:Row={};
-    for(const key of ['brand','model','reference','serialNumber','powerWatts','voltageVolts','frequencyHz','capacityLitres','orderDate','purchaseDate','deliveredDate','warrantyStart','warrantyEnd']){
+    for(const key of PROFILE_KEYS){
       const field=record(record(value)[key]); if(typeof field.value!=='string')continue;
       const sources=this.sources(field.sources);
-      if(field.origin!=='user_declared'&&(!sources.length||sources.length!==list(field.sources).length))continue;
+      if(field.origin!=='user_declared') {
+        const captured = profileCapturedProofs({ [key]: field });
+        const confirmed = captured.length > 0 && captured.every(proof => this.confirmedProfileKeys.has(receiptProofKey(proof)));
+        if (!confirmed && (!sources.length || sources.length !== list(field.sources).length)) continue;
+        this.retainedProfileProofs.push(...captured);
+      }
       result[key]={...scalars(field,['value','origin']),sources,...(field.externalSource?{externalSource:scalars(field.externalSource,['url','checkedAt'])}:{})};
     }
     return result;

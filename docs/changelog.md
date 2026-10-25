@@ -1,3 +1,11 @@
+## 25 ottobre 2026 — Correzioni indipendenti cestino D1–D4
+
+Lock delle anteprime coerenti con le condivisioni, continuazione del cestino oltre 500 documenti, valori confermati conservati con citazioni indisponibili omesse nelle schede e nell'export. Provenienza canonica preservata negli edit. Riproduzioni 6/6, nuove 8/8, aggregato 513/513; [report](v5/cestino-correzioni-backend-20261025.md). Solo branch proprio, integrazione ancora da approvare.
+
+## 24 ottobre 2026 — Riesame indipendente cestino su 73288e5
+
+Riproduzioni C1–C4 superate e aggregato originale 513/513. Sei nuovi test riproducono quattro P2: ordine dei lock con le anteprime di condivisione, elenco limitato a 500 senza continuazione, estratti ancora presentati nelle schede, profili confermati omessi dall’export. [riesame indipendente su 73288e5](v5/cestino-riesame-73288e5-20261024.md). Diagnosi dei 403 dimostrata su cluster offline: date DB in anticipo fino a 2 ms rispetto a Node. Proposta limitata al setup delle fixture, senza tolleranza autorizzativa, modifiche alle asserzioni o codice prodotto. Nessuna AI, DB reale o merge.
+
 ## 24 ottobre 2026 — Cestino lotto 1: correzioni dopo il riesame finale Codex
 
 All'eliminazione definitiva sparisce anche il titolo scelto nell'organizzazione diretta dei caricamenti. Una vecchia revoca non tocca più una condivisione creata dopo un ripristino concorrente. Le nuove ricevute riusano valori confermati la cui fonte è nel cestino. L'export non rilascia metadati di documenti spostati nel cestino durante l'esportazione. Riproduzioni 5/5, riesame 7/7, cestino 16/16, aggregato 513/513. [Correzioni](v5/cestino-lotto1-report-20261023.md#correzioni-dopo-il-riesame-finale-di-codex).

@@ -26,6 +26,16 @@ export async function lockDocumentShares(tx: Tx, h: string, documentIds: string[
   if (rows.length) await tx.$queryRaw(Prisma.sql`SELECT id FROM "ShareRecord" WHERE id IN (${Prisma.join(rows.map(r => r.id))}) ORDER BY id FOR UPDATE`);
   return rows.map(r => r.id);
 }
+/** Sharing creation locks a preview before reading its documents. Never acquire
+ * these locks while holding a Document lock; retain this exact set for updates. */
+export async function lockDocumentPreviews(tx: Tx, h: string, documentIds: string[]) {
+  const rows = documentIds.length ? await tx.sharePreview.findMany({ where: { homeId: h, OR: documentIds.map(id => ({ manifest: inManifest(id) })) }, select: { id: true }, orderBy: { id: 'asc' } }) : [];
+  if (rows.length) await tx.$queryRaw(Prisma.sql`SELECT id FROM "SharePreview" WHERE id IN (${Prisma.join(rows.map(r => r.id))}) ORDER BY id FOR UPDATE`);
+  return rows.map(r => r.id);
+}
+export async function expireLockedPreviews(tx: Tx, ids: string[], now: Date) {
+  if (ids.length) await tx.sharePreview.updateMany({ where: { id: { in: ids }, consumedBy: null, validUntil: { gt: now } }, data: { validUntil: now } });
+}
 /** Revokes the given share rows, which the caller has already locked; never re-queries, so a share created later is untouched. */
 export async function revokeLockedShares(tx: Tx, locked: string[], actorId: string, now: Date) {
   const open = locked.length ? await tx.shareRecord.findMany({ where: { id: { in: locked }, state: { notIn: ['revoked', 'declined'] } }, orderBy: { id: 'asc' } }) : [];
@@ -37,8 +47,10 @@ export async function revokeLockedShares(tx: Tx, locked: string[], actorId: stri
 }
 /** Revokes every share still open on the document; revoked shares never come back with a restore. */
 export async function revokeDocumentShares(tx: Tx, h: string, id: string, actorId: string, now: Date) {
-  const revoked = await revokeLockedShares(tx, await lockDocumentShares(tx, h, [id]), actorId, now);
-  await tx.sharePreview.updateMany({ where: { homeId: h, consumedBy: null, validUntil: { gt: now }, manifest: inManifest(id) }, data: { validUntil: now } });
+  const shares = await lockDocumentShares(tx, h, [id]);
+  const previews = await lockDocumentPreviews(tx, h, [id]);
+  const revoked = await revokeLockedShares(tx, shares, actorId, now);
+  await expireLockedPreviews(tx, previews, now);
   return revoked;
 }
 
@@ -92,8 +104,9 @@ export async function moveToTrash(tx: Tx, a: string, h: string, id: string, expe
   // Shares stop working in this transaction (a trashed document is not an available original) and are
   // marked revoked right after commit: updating share rows after the Document lock could deadlock with a download.
   const shares = await tx.shareRecord.count({ where: { homeId: h, state: { notIn: ['revoked', 'declined'] }, manifest: inManifest(id) } });
-  // Pending previews expire now: sharing creation locks the Document before consuming a preview, the same order as here.
-  await tx.sharePreview.updateMany({ where: { homeId: h, consumedBy: null, validUntil: { gt: now }, manifest: inManifest(id) }, data: { validUntil: now } });
+  // The source becomes unavailable atomically here, so even an unexpired preview
+  // cannot be consumed. Persist preview expiry after commit, before taking a
+  // Document lock (SharePreview -> Document is the sharing creation order).
   const moved = await tx.document.update({ where: { id }, data: { trashedAt: now, purgeAfter: new Date(+now + TRASH_RETENTION_DAYS * DAY_MS), lifecycleVersion: { increment: 1 } } });
   return { entry: trashEntry(moved), revokedShares: shares };
 }
@@ -114,12 +127,14 @@ export async function restoreFromTrash(tx: Tx, a: string, h: string, id: string,
  * placeholder so confirmed expenses, objects and fields keep their source as "documento eliminato".
  * Returns the storage key to remove after commit (DeletionRecord.fileRemovedAt tracks retries).
  */
-export async function purgeDocument(tx: Tx, h: string, id: string, reason: PurgeReason, now: Date) {
-  const shareIds = await lockDocumentShares(tx, h, [id]);
+export async function purgeDocument(tx: Tx, h: string, id: string, reason: PurgeReason, now: Date, locked?: { shareIds: string[]; previewIds: string[] }) {
+  const shareIds = locked?.shareIds ?? await lockDocumentShares(tx, h, [id]);
+  const previewIds = locked?.previewIds ?? await lockDocumentPreviews(tx, h, [id]);
   await tx.$queryRaw`SELECT id FROM "Document" WHERE id=${id} FOR UPDATE`;
   const doc = await tx.document.findUnique({ where: { id }, include: { original: { include: { file: true } } } });
   if (!doc || doc.homeId !== h || !doc.trashedAt || doc.purgedAt) return null;
-  await revokeDocumentShares(tx, h, id, doc.uploaderId, now);
+  await revokeLockedShares(tx, shareIds, doc.uploaderId, now);
+  await expireLockedPreviews(tx, previewIds, now);
   const source = { documentId: id };
   const [onboardingDrafts, onboardingJobs, receiptDrafts, receiptJobs, economicDrafts, economicJobs, items] = await Promise.all([
     tx.objectOnboardingDraft.findMany({ where: source, select: { id: true } }), tx.objectOnboardingJob.findMany({ where: source, select: { id: true } }),
@@ -169,7 +184,7 @@ export async function purgeDocument(tx: Tx, h: string, id: string, reason: Purge
   for (const table of ['shareRecord', 'sharePreview'] as const) {
     const rows: Array<{ id: string; manifest: Prisma.JsonValue }> = table === 'shareRecord'
       ? await tx.shareRecord.findMany({ where: { id: { in: shareIds } }, select: { id: true, manifest: true } })
-      : await tx.sharePreview.findMany({ where: { homeId: h, manifest: inManifest(id) }, select: { id: true, manifest: true } });
+      : await tx.sharePreview.findMany({ where: { id: { in: previewIds }, homeId: h, manifest: inManifest(id) }, select: { id: true, manifest: true } });
     for (const row of rows) {
       const manifest = row.manifest as { items: Array<Record<string, unknown>> };
       const next = { ...manifest, items: manifest.items.map(item => item.documentId === id ? { ...item, name: '' } : item) } as Prisma.InputJsonValue;

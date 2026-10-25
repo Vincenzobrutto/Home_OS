@@ -405,4 +405,8 @@ profiles['test:offline-db'] = { database: true, api: true, files: union('files')
 // Explicit independent review; keep the author's baseline aggregate unchanged.
 profiles['test:cestino-riesame-db'] = { database: true, api: false, files: ['test/document-trash-rereview.integration.test.cjs'], apiFiles: [] };
 profiles['test:cestino-race-db'] = { database: true, api: false, files: ['test/document-trash-final-review.integration.test.cjs'], apiFiles: [] };
+profiles['test:membership-clock-db'] = { database: true, api: false, files: ['test/membership-clock-review.integration.test.cjs'], apiFiles: [] };
+profiles['test:cestino-extra-review-db'] = { database: true, api: false, files: ['test/document-trash-extra-review.integration.test.cjs'], apiFiles: [] };
+profiles['test:membership-fixtures-db'] = { database: true, api: false, files: ['test/installment-linking.integration.test.cjs', 'test/generalized-evidence.integration.test.cjs'], apiFiles: [] };
+profiles['test:cestino-fixes-db'] = { database: true, api: false, files: ['test/document-trash-fixes.integration.test.cjs'], apiFiles: [] };
 module.exports = profiles;

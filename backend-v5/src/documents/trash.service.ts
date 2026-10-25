@@ -2,10 +2,10 @@ import { ConflictException, ForbiddenException, Inject, Injectable, OnModuleDest
 import { Prisma } from '../../generated/client';
 import { PrismaService } from '../prisma.service';
 import { digest } from '../security';
-import { object } from '../review/domain';
+import { object, uuid } from '../review/domain';
 import { DocumentPolicy } from './access';
 import { LocalFileStorage } from './storage';
-import { busyReason, lockDocumentShares, moveToTrash, purgeDocument, rejectDeletedReplay, restoreFromTrash, revokeLockedShares, trashEntry, trashImpact } from './trash';
+import { busyReason, expireLockedPreviews, lockDocumentPreviews, lockDocumentShares, moveToTrash, purgeDocument, rejectDeletedReplay, restoreFromTrash, revokeLockedShares, trashEntry, trashImpact } from './trash';
 
 type Tx = Prisma.TransactionClient;
 const KEY = /^[A-Za-z0-9_-]{16,100}$/;
@@ -63,8 +63,16 @@ export class TrashService implements OnModuleInit, OnModuleDestroy {
     // interrupted revocation only while the document is still in the same trash lifecycle.
     await this.db.$transaction(async tx => {
       const locked = await lockDocumentShares(tx, h, [id]);
+      const previews = await lockDocumentPreviews(tx, h, [id]);
+      // No Document lock here: if both captured sets are empty, there is no
+      // side effect to apply to a later lifecycle. Otherwise restore must take
+      // these same locks first. Never re-query new shares/previews after this read.
       const current = await tx.document.findUnique({ where: { id }, select: { trashedAt: true, purgedAt: true, lifecycleVersion: true } });
-      if (current?.trashedAt && !current.purgedAt && current.lifecycleVersion === response.entry.version) await revokeLockedShares(tx, locked, a, this.now());
+      if (current?.trashedAt && !current.purgedAt && current.lifecycleVersion === response.entry.version) {
+        const now = this.now();
+        await revokeLockedShares(tx, locked, a, now);
+        await expireLockedPreviews(tx, previews, now);
+      }
     }, { timeout: 30000, maxWait: 15000 });
     return response;
   }
@@ -88,17 +96,31 @@ export class TrashService implements OnModuleInit, OnModuleDestroy {
     return this.request(a, h, 'trash-empty-v1', h, body, key, async (tx, now) => {
       const rows = await tx.document.findMany({ where: { homeId: h, uploaderId: a, trashedAt: { not: null }, purgedAt: null }, select: { id: true }, orderBy: { id: 'asc' } });
       const storageKeys: string[] = [];
-      await lockDocumentShares(tx, h, rows.map(r => r.id));
-      for (const row of rows) { const purged = await purgeDocument(tx, h, row.id, 'user_empty', now); if (purged?.storageKey) storageKeys.push(purged.storageKey); }
+      // Acquire every share/preview lock before the first Document lock, including
+      // bundles spanning several documents in this empty operation.
+      const shareIds = await lockDocumentShares(tx, h, rows.map(r => r.id));
+      const previewIds = await lockDocumentPreviews(tx, h, rows.map(r => r.id));
+      for (const row of rows) { const purged = await purgeDocument(tx, h, row.id, 'user_empty', now, { shareIds, previewIds }); if (purged?.storageKey) storageKeys.push(purged.storageKey); }
       return { response: { purged: rows.length }, storageKeys };
     });
   }
   async list(a: string, h: string, query: unknown) {
-    object(query, []);
+    const params = object(query, ['cursor']), binding = digest(JSON.stringify(['trash-list-v1', a, h]));
+    let anchor: { id: string; at: Date } | undefined;
+    if (params.cursor !== undefined) {
+      try {
+        if (typeof params.cursor !== 'string' || params.cursor.length > 1000) throw new Error();
+        const cursor = object(JSON.parse(Buffer.from(params.cursor, 'base64url').toString('utf8')), ['b', 'id', 'at']);
+        if (cursor.b !== binding || typeof cursor.at !== 'string' || !Number.isFinite(Date.parse(cursor.at))) throw new Error();
+        anchor = { id: uuid(cursor.id), at: new Date(cursor.at) };
+      } catch { throw new UnprocessableEntityException({ code: 'validation_error', message: 'Pagina del cestino non valida.' }); }
+    }
     return this.db.$transaction(async tx => {
       await this.policy.requireLocked(tx, a, h);
-      const rows = await tx.document.findMany({ where: { homeId: h, uploaderId: a, trashedAt: { not: null }, purgedAt: null }, orderBy: [{ trashedAt: 'desc' }, { id: 'desc' }], take: 500 });
-      return { items: rows.map(trashEntry) };
+      const own = { homeId: h, uploaderId: a, trashedAt: { not: null }, purgedAt: null };
+      const rows = await tx.document.findMany({ where: { AND: [own, ...(anchor ? [{ OR: [{ trashedAt: { lt: anchor.at } }, { trashedAt: anchor.at, id: { lt: anchor.id } }] }] : [])] }, orderBy: [{ trashedAt: 'desc' }, { id: 'desc' }], take: 501 });
+      const page = rows.slice(0, 500), last = page.at(-1);
+      return { items: page.map(trashEntry), total: await tx.document.count({ where: own }), nextCursor: rows.length > 500 && last ? Buffer.from(JSON.stringify({ b: binding, id: last.id, at: last.trashedAt!.toISOString() })).toString('base64url') : null };
     });
   }
 

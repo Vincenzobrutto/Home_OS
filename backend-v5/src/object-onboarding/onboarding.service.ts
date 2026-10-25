@@ -17,7 +17,7 @@ import { ExpensesService } from '../expenses/expenses.service';
 import { ReviewService } from '../review/review.service';
 import { HomeObjectsService } from '../home-objects/home-objects.service';
 import { manualLookup } from '../home-objects/manuals';
-import { ObjectOnboardingAccess, objectProfileView, onboardingDenied, type OnboardingTx } from './access';
+import { ObjectOnboardingAccess, objectProfileForUpdate, objectProfileView, onboardingDenied, type OnboardingTx } from './access';
 import { onboardingConfirmation, requestKey, type OnboardingChoice, type HouseExpenseChoice } from './bodies';
 import { proposedProfile, resolveProfile, type ObjectProfile } from './profile';
 import type { ProductExtraction, ProductItem } from './domain';
@@ -417,7 +417,7 @@ export class ObjectOnboardingService {
             if (target.state !== 'active' || target.version !== choice.targets[unit].expectedVersion) throw conflict('onboarding_target_changed', 'Una scheda è cambiata o è archiviata. Rileggila.');
           }
           if (used.has(target.id)) throw invalid('Controlla l’associazione di più articoli alla stessa scheda.'); used.add(target.id);
-          const current = await objectProfileView(tx, a, h, target.id, target.profile);
+          const current = await objectProfileForUpdate(tx, a, h, target.id, target.profile);
           if (current.unavailable) throw onboardingDenied();
           const resolved = resolveProfile(current.fields, proposals, choice.fields), changed = JSON.stringify(resolved.fields) !== JSON.stringify(current.fields);
           const enriched=output.enrichments?.[item.id];
