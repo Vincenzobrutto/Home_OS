@@ -4,7 +4,7 @@ import {objectsQuery} from '../home-objects/domain';
 
 /** Read-only, personal context for this page. Reuses the catalogue's source policy. */
 export async function documentRowContexts(tx:Prisma.TransactionClient,a:string,h:string,ids:string[]){
- const result=new Map(ids.map(id=>[id,{linkedObjects:[] as Array<{id:string;kind:string;name:string}>,savedExpenses:[] as Array<{id:string;title:string;amountCents:number;supplier:string|null;documentNumber:string|null;documentDate:string|null}>}]));
+ const result=new Map(ids.map(id=>[id,{linkedObjects:[] as Array<{id:string;kind:string;name:string}>,savedExpenses:[] as Array<{invoiceMonth?:string;id:string;title:string;amountCents:number;supplier:string|null;documentNumber:string|null;documentDate:string|null}>}]));
  if(!ids.length)return result;
  const refs=await tx.$queryRaw<Array<{documentId:string;id:string;kind:string;name:string}>>(Prisma.sql`${catalogBase(a,h,objectsQuery({state:'all'}))}, refs AS (
   SELECT l."documentId",s.id,s.kind,s.name FROM "ObjectResourceLink" l JOIN authorized s ON (s.kind='object' AND s.id=l."objectId") OR (s.kind='boiler' AND s.id=l."boilerId")
@@ -20,7 +20,7 @@ export async function documentRowContexts(tx:Prisma.TransactionClient,a:string,h
    WHERE j.state='succeeded' AND d."trashedAt" IS NULL AND p->>'documentVersion'=v.version::text AND p->>'documentSha256'=v.sha256
  ) SELECT DISTINCT * FROM refs WHERE "documentId" IN (${Prisma.join(ids)}) ORDER BY name,kind,id`);
  for(const {documentId,...ref} of refs)result.get(documentId)!.linkedObjects.push(ref);
- const expenses=await tx.homeExpense.findMany({where:{accountId:a,homeId:h,state:'active',documentId:{in:ids}},orderBy:[{spentOn:'desc'},{id:'asc'}],select:{id:true,documentId:true,title:true,amountCents:true,supplier:true,documentNumber:true,documentDate:true}});
- for(const {documentId,...expense} of expenses)result.get(documentId!)!.savedExpenses.push(expense);
+ const expenses=await tx.homeExpense.findMany({where:{accountId:a,homeId:h,state:'active',documentId:{in:ids}},orderBy:[{spentOn:'desc'},{id:'asc'}],select:{id:true,documentId:true,title:true,amountCents:true,supplier:true,documentNumber:true,documentDate:true,invoiceMonth:true}});
+ for(const {documentId,invoiceMonth,...expense} of expenses)result.get(documentId!)!.savedExpenses.push({...expense,...(invoiceMonth?{invoiceMonth}:{})});
  return result;
 }

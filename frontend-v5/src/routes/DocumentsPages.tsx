@@ -603,6 +603,7 @@ function DocumentRow(props: {
         )}
         <details className={docs.fileDetails} data-file-id={doc.id} open={fileOpen} onToggle={e=>setFileOpen(e.currentTarget.open)}><summary aria-label={'Dettagli del file: '+title}>Dettagli del file</summary><dl>
           <div><dt>Nome originale</dt><dd>{doc.originalFilename}</dd></div>
+          {title!==(doc.organization?.title.trim()||doc.name.trim())&&<div><dt>Titolo salvato</dt><dd>{doc.organization?.title||doc.name}</dd><dd>Il nome visualizzato usa fornitore e mese della fattura confermati. La ricerca continua a usare titolo salvato e nome originale.</dd></div>}
           <div><dt>Formato</dt><dd>{formatLabel(doc.mimeType)}</dd></div>
           <div><dt>Dimensione</dt><dd>{formatBytes(doc.byteSize)}</dd></div>
           <div><dt>Caricato il</dt><dd>{formatDate(doc.createdAt)}</dd></div>
