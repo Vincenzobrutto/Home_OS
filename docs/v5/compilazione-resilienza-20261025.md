@@ -54,3 +54,7 @@ Codice prodotto `9da6dc7`, fixture tipizzate `bc1fe45`. Nuovi casi mirati **17/1
 Log/JSON nel task: `work/resilience-navigation-red.json`, `work/resilience-callbacks-red.json`, `work/resilience-focus.json`, `work/resilience-checks-final.log`, `work/resilience-fixtures.json` e `work/resilience-full.json`.
 
 Solo questo branch, frontend e documentazione pertinente. Nessuna AI o email, DB/API/storage reale, `.env`, migrazione, salvataggio reale, riavvio, modifica a main/consolidamento/Claude o aggiramento del blocco browser. Il test server usa un lotto distinto: i suoi risultati non vanno attribuiti alla suite frontend.
+
+## Pubblicazione
+
+[PR #38](https://github.com/Vincenzobrutto/Home_OS/pull/38) verso il consolidamento, senza merge. Include la PR #37 e i suoi antecedenti #35/#36; per integrare questo candidato non serve integrare di nuovo anche gli stessi cambiamenti. PR precedenti non modificate. Push verificato con uguaglianza HEAD/git ls-remote sul branch proprio. Al fetch finale il consolidamento resta 730b93d.
