@@ -6,6 +6,22 @@ export type TrashEntry = { kind: 'document'; id: string; name: string; trashedAt
 export type TrashImpact = { expenses: number; objects: number; contacts: number; historyEvents: number; activeShares: number };
 export type TrashPreview = { allowed: boolean; reason: string | null; document: { id: string; version: number }; impact: TrashImpact };
 export type TrashMove = { entry: TrashEntry; revokedShares: number };
+type TrashPage = { items: TrashEntry[]; nextCursor?: string | null };
+
+/** Publish a complete list only: a failed continuation must not undercount an
+ * Empty confirmation. Older servers without pagination remain compatible. */
+export async function loadTrashPages(homeId: string, read: (path: string) => Promise<TrashPage>) {
+  const items = new Map<string, TrashEntry>(), seen = new Set<string>();
+  let cursor: string | null = null;
+  do {
+    const page = await read(trashPaths.list(homeId) + (cursor ? '?cursor=' + encodeURIComponent(cursor) : ''));
+    for (const entry of page.items) if (!items.has(entry.id) || items.get(entry.id)!.version < entry.version) items.set(entry.id, entry);
+    cursor = page.nextCursor ?? null;
+    if (cursor && seen.has(cursor)) throw new Error('Paginazione del cestino non valida.');
+    if (cursor) seen.add(cursor);
+  } while (cursor);
+  return { items: [...items.values()] };
+}
 
 const DAY_MS = 86_400_000;
 export const trashKey = (accountId: string, homeId: string) => ['account', accountId, 'home', homeId, 'trash'] as const;
@@ -23,7 +39,7 @@ export function useTrash(accountId: string, homeId: string) {
   const api = useApi();
   return useQuery({
     queryKey: trashKey(accountId, homeId),
-    queryFn: ({ signal }) => api.callJson<{ items: TrashEntry[] }>(trashPaths.list(homeId), { accountId, signal }),
+    queryFn: ({ signal }) => loadTrashPages(homeId, path => api.callJson<TrashPage>(path, { accountId, signal })),
     staleTime: 60_000,
     retry: false,
   });
