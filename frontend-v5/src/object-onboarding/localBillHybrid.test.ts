@@ -14,12 +14,18 @@ beforeEach(()=>{
  vi.spyOn(HTMLCanvasElement.prototype,'toBlob').mockImplementation(callback=>callback(new Blob(['synthetic png'])));
 });
 it('combines native table/header and a graphic due date without replacing native evidence',async()=>{
+ // The commissioned flow now reads the summary page only. Keep all the same
+ // expected values, with its reference period in that first-page summary.
+ state.pages[0]!.push(item('Periodo di riferimento',380,160,50),state.pages[1]![1]!);
  expect(await read()).toMatchObject({method:'ocr',supplier:'Nuovo Servizio S.p.A.',category:'internet_services',amount:'37.82',documentDate:'2027-04-11',competenceFrom:'2027-03-01',competenceTo:'2027-03-31',dueOn:'2027-05-20'});
  expect(state.recognize).toHaveBeenCalledOnce();expect(state.destroy).toHaveBeenCalledOnce();expect(state.dispose).toHaveBeenCalledOnce();
  const scale=state.render.mock.calls[0]![0].viewport.width/600;
  expect(state.recognize.mock.calls[0]![1]).toContainEqual({text:'2027',bbox:{x0:430*scale,y0:280*scale,x1:480*scale,y1:290*scale}});
  expect(state.recognize.mock.calls[0]![1]).not.toContainEqual(expect.objectContaining({text:'Periodo'}));
  const canvas=state.render.mock.calls[0]![0].canvas as HTMLCanvasElement;expect(canvas.width).toBe(0);expect(canvas.height).toBe(0);
+});
+it('does not search a later page for a missing reference period',async()=>{
+ const bill=await read();expect(bill?.amount).toBe('37.82');expect(bill?.competenceFrom).toBeUndefined();expect(bill?.competenceTo).toBeUndefined();
 });
 it('retains ambiguity when OCR contradicts a native total',async()=>{
  state.recognize.mockResolvedValue('Scadenza: 20/05/2027\nTotale da pagare: 38,82 EUR');

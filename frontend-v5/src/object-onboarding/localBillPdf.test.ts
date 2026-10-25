@@ -28,7 +28,20 @@ it('a scan is rendered within pixel limits, recognized locally and remains a man
  expect(result).toMatchObject({method:'ocr',amount:'76.53',documentDate:'2026-09-13'});expect(progress).toHaveBeenCalledWith('OCR locale · pagina 1 di 1');
  const canvas=state.render.mock.calls[0]![0].canvas as HTMLCanvasElement;expect(canvas.width).toBe(0);expect(canvas.height).toBe(0);expect(state.dispose).toHaveBeenCalledOnce();
 });
-it('OCR page limits fail before starting a worker',async()=>{state.numPages=11;state.content.mockResolvedValue({items:[]});const {blob,hash}=await input();await expect(localBillPdf(blob,hash,new AbortController().signal)).rejects.toThrow('local_ocr_limits');expect(state.initialize).not.toHaveBeenCalled();expect(state.destroy).toHaveBeenCalledOnce();});
+it('a long PDF still reads only its first page before attempting local OCR',async()=>{state.numPages=11;state.content.mockResolvedValue({items:[]});const {blob,hash}=await input();await expect(localBillPdf(blob,hash,new AbortController().signal)).rejects.toThrow('local_ocr_unavailable');expect(state.content).toHaveBeenCalledOnce();expect(state.initialize).toHaveBeenCalledOnce();expect(state.destroy).toHaveBeenCalledOnce();});
+
+it('reads neither text nor totals of subsequent pages',async()=>{
+ state.numPages=8;
+ const getPage=vi.fn(async(page:number)=>{if(page!==1)throw Error('Later pages must not be read');return {getTextContent:state.content,cleanup:vi.fn(),getViewport:()=>({width:600,height:840}),render:state.render};});
+ state.getDocument.mockReturnValue({destroy:state.destroy,promise:Promise.resolve({numPages:8,getPage})});
+ const {blob,hash}=await input();expect(await localBillPdf(blob,hash,new AbortController().signal)).toMatchObject({amount:'23.00',category:'electricity'});
+ expect(getPage).toHaveBeenCalledOnce();expect(getPage).toHaveBeenCalledWith(1);expect(state.recognize).not.toHaveBeenCalled();
+});
+it('an OCR enrichment failure does not discard a readable native total',async()=>{
+ state.content.mockResolvedValue({items:[{str:'Bolletta energia elettrica',hasEOL:true},{str:'Totale da pagare: 23,00 EUR',hasEOL:true},{str:'Scadenza',hasEOL:true},{str:'[graphic date]',hasEOL:true}]});
+ const {blob,hash}=await input();expect(await localBillPdf(blob,hash,new AbortController().signal)).toMatchObject({amount:'23.00',category:'electricity'});
+ expect(state.initialize).toHaveBeenCalledOnce();expect(state.dispose).toHaveBeenCalledOnce();expect(state.destroy).toHaveBeenCalledOnce();
+});
 it('the total OCR timeout also releases a canvas whose PNG encoding never returns',async()=>{
  let ready:()=>void=()=>{};const encoding=new Promise<void>(resolve=>{ready=resolve;});
  vi.useFakeTimers();state.content.mockResolvedValue({items:[]});state.initialize.mockResolvedValue(undefined);

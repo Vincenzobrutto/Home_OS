@@ -1,6 +1,10 @@
+## 25 ottobre 2026 — Bollette: riepilogo della prima pagina
+
+Lettura e OCR limitati a pagina 1, dati nativi conservati se l'arricchimento fallisce, fornitore proposto soltanto con evidenze testuali concordanti. Nessun catalogo di aziende o modifica alle validazioni economiche. [Report](v5/bollette-prima-pagina-20261025.md); verifica locale positiva, statici e fixture 5/5 verdi, mock completa 1175/1175 in 131 file, zero saltati/retry0. [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) pronta, push verificato. App invariata, nessuna AI, migrazione o scrittura reale.
+
 ## 25 ottobre 2026 — Tipo documento direttamente nell'archivio
 
-Sul branch del lotto, Correggi tipo apre un menu nella riga con Salva tipo e Annulla, anche per documenti già classificati. Titolo e parti/pagine preservati, nessuna analisi, spesa o nuovo oggetto; gestione di fonte cambiata, revoche e risposta persa. [Report](v5/tipo-documento-inline-20261025.md): 29/29 nuovi test, mock completa1156/1156 in129 file e controlli statici verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) pronta per revisione; non ancora integrato o attivato nell'app.
+Correggi tipo apre un menu nella riga con Salva tipo e Annulla, anche per documenti già classificati. Titolo e parti/pagine preservati, nessuna analisi, spesa o nuovo oggetto; gestione di fonte cambiata, revoche e risposta persa. [Report](v5/tipo-documento-inline-20261025.md): 29/29 nuovi test, mock completa1156/1156 in129 file e controlli statici verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) integrata su approvazione a 49635d8 e solo frontend attivato; hash remoto verificato, build e 7/7 controlli HTTP anonimi verdi. API/PostgreSQL preservati, nessuna nuova AI o scrittura applicativa automatica.
 
 ## 25 ottobre 2026 — Cestino integrato e attivato su autorizzazione
 

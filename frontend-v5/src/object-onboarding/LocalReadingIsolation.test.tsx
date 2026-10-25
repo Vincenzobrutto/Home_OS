@@ -5,6 +5,7 @@ import {MemoryRouter} from 'react-router';
 import {expect,it,vi} from 'vitest';
 import type {Draft} from './model';
 import type {LocalBill} from './localBill';
+import {localBill} from './localBill';
 import {queryKeys} from '../api/queryKeys';
 
 const state=vi.hoisted(()=>({account:'account-a',home:'home-a',readers:[] as Array<{signal:AbortSignal;resolve:(bill:LocalBill)=>void}>,posts:[] as string[]}));
@@ -57,4 +58,18 @@ it('manual entries survive a late result after cancelling the local reading',asy
  await w.user.type(amount,'18,90');await w.user.type(supplier,'Scelta manuale');expect(reader(0).signal.aborted).toBe(true);
  await act(async()=>reader(0).resolve({supplier:'NON SOSTITUIRE',amount:'999.99',category:'gas',method:'ocr'}));
  expect(amount).toHaveValue('18,90');expect(supplier).toHaveValue('Scelta manuale');expect(state.posts).toEqual([]);expect(w.beforeConfirm).not.toHaveBeenCalled();w.unmount();
+});
+
+it('passes first-page total and corroborated supplier to Expenses without saving',async()=>{
+ const w=world();await screen.findByText('Lettura sintetica 1');
+ const bill=localBill(['Bolletta energia elettrica\nTotale da pagare: 71,34 EUR\nAPP\nMyLuceNova (Android e iOS)\nE-MAIL\nassistenza @ lucenova.test\nWEB\nhttps://www.lucenova.test/reclami\nPeriodo di riferimento: aprile 2026\nData emissione: 20/05/2026\nScadenza: 09/06/2026']);
+ expect(bill).toMatchObject({supplier:'LuceNova',amount:'71.34'});
+ await act(async()=>reader(0).resolve(bill!));
+ await screen.findByRole('heading',{level:2,name:'Documento'});await w.user.click(screen.getByRole('button',{name:'Avanti'}));
+ expect(await screen.findByLabelText('Fornitore')).toHaveValue('LuceNova');expect(screen.getByLabelText('Importo della bolletta (€)')).toHaveValue('71.34');
+ expect(screen.getByLabelText('Data di emissione')).toHaveValue('2026-05-20');expect(screen.getByLabelText('Scadenza indicata')).toHaveValue('2026-06-09');
+ await w.user.clear(screen.getByLabelText('Importo della bolletta (€)'));await w.user.type(screen.getByLabelText('Importo della bolletta (€)'),'72,10');
+ await w.user.click(screen.getByRole('button',{name:'Indietro'}));await w.user.click(screen.getByRole('button',{name:'Avanti'}));
+ expect(screen.getByLabelText('Importo della bolletta (€)')).toHaveValue('72,10');expect(screen.getByLabelText('Fornitore')).toHaveValue('LuceNova');
+ expect(state.posts).toEqual([]);expect(w.beforeConfirm).not.toHaveBeenCalled();w.unmount();
 });

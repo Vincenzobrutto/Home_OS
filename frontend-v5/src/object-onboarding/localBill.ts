@@ -1,6 +1,7 @@
 import type { Draft, HouseForm } from './model';
 import { BILL_FULL_DATE_PATTERN, localBillDate } from './localBillDates';
 import {localBillAmount} from './localBillMoney';
+import {contactBillSupplier} from './localBillSupplier';
 import type { BillLayoutHints } from './localBillLayout';
 /** Local, conservative proposals. No issuer catalogue, filename rules or payment inference. */
 export type LocalBill = {
@@ -53,7 +54,8 @@ export function localBill(pages: string[],layout?:BillLayoutHints): LocalBill | 
   const suppliers = [...text.matchAll(/^(?:fornitore|venditore|società\s+di\s+vendita|ragione\s+sociale\s+del\s+fornitore)[ \t]*:[ \t]*([^\n]{2,120})$/gimu)].map(m=>m[1]!.trim());
   // A legal name at the top is usable only when unique; no logo/brand lookup.
   const headingNames = pages[0]!.split('\n').slice(0,12).map(line=>line.trim()).filter(line=>/^[\p{L}][\p{L}\d '&’.-]{1,100}\s+(?:S\.?p\.?A\.?|S\.?r\.?l\.?)$/iu.test(line));
-  result.supplier = unique([...suppliers,...(layout?.supplier?[layout.supplier]:!suppliers.length&&headingNames.includes(firstLine)?headingNames:[])]);
+  const contactSupplier=contactBillSupplier(pages[0]!);
+  result.supplier = unique([...suppliers,...(layout?.supplier?[layout.supplier]:!suppliers.length&&headingNames.includes(firstLine)?headingNames:[]),...(!suppliers.length&&!layout?.supplier&&!headingNames.includes(firstLine)&&contactSupplier?[contactSupplier]:[])]);
   result.documentDate = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?emissione|data[ \\t]+(?:della[ \\t]+)?fattura|emess[ao][ \\t]+il');
   result.dueOn = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?scadenza|scadenza|da[ \\t]+saldare[ \\t]+entro|pagare[ \\t]+entro');
   const periods: string[] = [];
