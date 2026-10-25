@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+**Fase1 scelta dal committente:** riepilogo e un solo importo per bolletta, prima generalizzazione senza catalogo fornitori, poi tracciabilità e robustezza del flusso. [Primo incremento e corpus](v5/bollette-generalizzazione-fase1-20261025.md). Dettaglio economico, consumi, contratti/tariffe e avvisi avanzati rinviati; non sono prerequisiti per migliorare il riepilogo. Importi incompatibili e dati assenti restano da confermare. Nessun aggiornamento app implicito.
+
 Riconoscimento bollette senza catalogo fornitori: combinazioni di segnali del contratto e riepilogo fiscale univoco, sempre nella prima pagina. [Report](v5/bollette-segnali-generali-20261025.md). Mirata 209/209 e fixture 5/5 verdi; completa/statica finale in corso. App invariata; nessuna AI, modifica DB o inferenza del periodo dal mese della fattura.
 
 Bollette: proposta locale dalla sola prima pagina, marchio clienti corroborato da contatti email/web e OCR per etichette mancanti. [Report](v5/bollette-prima-pagina-20261025.md). Implementazione e verifica del documento locale completate; statici e fixture 5/5 verdi, mock completa 1175/1175 in 131 file, zero saltati/retry0. [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) integrata su approvazione a 911b0fb e solo frontend aggiornato; build e 8/8 controlli HTTP statici/anonimi verdi, API/PostgreSQL preservati. Prova interattiva al committente.

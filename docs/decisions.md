@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Fase 1 bollette: riepilogo, un importo e generalizzazione
+
+Il committente sceglie un solo importo per bolletta nella fase1, rinviando dettaglio delle componenti e consumi. Prima priorità alla generalizzazione indipendente dal fornitore e a test su lessico/layout diversi; seguono tracciabilità e robustezza del riepilogo. Conservare prima pagina, rigore sui valori, conferma finale e protezione delle correzioni. Importi incompatibili restano da confermare: nessuna somma, ripartizione o prova di pagamento dedotta. [Primo lotto e limiti](v5/bollette-generalizzazione-fase1-20261025.md). Merge e rilascio non impliciti.
+
 ## 25 ottobre 2026 — Bollette locali dalla sola prima pagina
 
 Su decisione del committente, riconoscimento e proposte locali delle bollette usano soltanto la prima pagina del PDF, anche quando i dati risultano incompleti. Non leggere né OCRizzare le pagine successive per integrare il riepilogo; campi mancanti o ambigui restano da confermare. Conservare limiti, soglie OCR, controlli sugli importi, SHA e protezione delle compilazioni già salvate. Nessuna estensione di questa scelta alle estrazioni AI o ad altri documenti. [Report e verifiche](v5/bollette-prima-pagina-20261025.md).

@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Bollette fase1: generalizzazione del riepilogo
+
+[Primo incremento](v5/bollette-generalizzazione-fase1-20261025.md): formulazioni generali del servizio su righe dichiarative, nomi fornitore esclusi dai soli segnali di tipo; un solo importo, senza dettaglio/consumi. Corpus135 casi e regressione mirata291/291, typecheck/lint/build verdi, asserzioni pregresse invariate. Nessuna AI, DB/API/storage reale o aggiornamento app; candidato separato comprensivo della PR #44, merge al committente.
+
 ## 25 ottobre 2026 — Bollette: segnali del servizio senza elenco fornitori
 
 Classificazione con segnali combinati del contratto; un telefono isolato non basta. Importi in evidenza utilizzabili solo nel riepilogo con numero fattura/emissione e colonna univoca, senza conversioni o prezzi unitari. Periodo di consumo non dedotto dal mese fattura. [Report](v5/bollette-segnali-generali-20261025.md): mirata 209/209 e fixture 5/5 verdi, suite completa e statici finali in corso; app invariata, nessuna AI o scrittura reale.
