@@ -1,7 +1,8 @@
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { localBill } from './localBill';
-import {LocalOcr,needsOcr,OCR_LIMITS} from './localOcr';
+import {LocalOcr,billOcrPages,OCR_LIMITS} from './localOcr';
 import {binarizeOcrPixels} from './ocrPixels';
+import {billLayoutHints,type BillPageLayout} from './localBillLayout';
 
 /** Authorized bytes only; bounded text/OCR in memory, no remote model or persistence. */
 export async function localBillPdf(blob: Blob, sha256: string, signal: AbortSignal,progress:(message:string)=>void=()=>{}) {
@@ -23,6 +24,7 @@ export async function localBillPdf(blob: Blob, sha256: string, signal: AbortSign
     const pdf = await task.promise;
     if (pdf.numPages > 20 || signal.aborted) return null;
     const pages: string[] = [];
+    const layouts:BillPageLayout[]=[];
     let count = 0;
     for (let page = 1; page <= pdf.numPages; page++) {
       if (signal.aborted) return null;
@@ -32,9 +34,17 @@ export async function localBillPdf(blob: Blob, sha256: string, signal: AbortSign
       count += text.length;
       if (count > 100000) return null;
       pages.push(text);
+      const viewport=source.getViewport({scale:1});
+      layouts.push({height:viewport.height,tokens:source.rotate%360===0?content.items.flatMap(item=>{
+        if(!('str'in item)||!item.str.trim()||!item.height||!item.width)return [];
+        const [x,y]=viewport.convertToViewportPoint(item.transform[4],item.transform[5]);
+        if(typeof x!=='number'||typeof y!=='number'||!Number.isFinite(x)||!Number.isFinite(y))return [];
+        return [{text:item.str,x,y:y-Math.abs(item.height),width:item.width,height:Math.abs(item.height)}];
+      }):[]});
       source.cleanup();
     }
-    const scanned=pages.flatMap((text,index)=>needsOcr(text)&&!localBill([text])?.amount?[index]:[]);
+    const native=localBill(pages),hints=billLayoutHints(layouts,native?.documentDate);
+    const scanned=billOcrPages(pages,native);
     if(scanned.length){
       clearTimeout(timer);
       if(scanned.length>OCR_LIMITS.pages)throw new Error('local_ocr_limits');
@@ -56,7 +66,8 @@ export async function localBillPdf(blob: Blob, sha256: string, signal: AbortSign
           const raster=context.getImageData(0,0,canvas.width,canvas.height);
           binarizeOcrPixels(raster.data);context.putImageData(raster,0,0);
           const image=await bounded(new Promise<Blob>((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('local_ocr_unavailable')),'image/png')));
-          const text=await bounded(ocr.recognize(image));
+          const nativeDates=layouts[index]!.tokens.map(t=>({text:t.text,bbox:{x0:t.x*scale,y0:t.y*scale,x1:(t.x+t.width)*scale,y1:(t.y+t.height)*scale}}));
+          const text=await bounded(ocr.recognize(image,nativeDates));
           count+=text.length;if(count>OCR_LIMITS.text)throw new Error('local_ocr_limits');
           // Native evidence is retained: contradictions cannot be erased by OCR.
           pages[index]=pages[index]+'\n'+text;
@@ -64,7 +75,7 @@ export async function localBillPdf(blob: Blob, sha256: string, signal: AbortSign
       }
     }
     if(signal.aborted)throw new DOMException('Aborted','AbortError');
-    const proposal=localBill(pages);
+    const proposal=localBill(pages,hints);
     if(scanned.length&&!proposal)throw new Error('local_ocr_unreliable');
     return proposal&&scanned.length?{...proposal,method:'ocr' as const}:proposal;
   } finally { clearTimeout(timer);signal.removeEventListener('abort',stop);ocr?.dispose();await task.destroy(); }

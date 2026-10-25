@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Bollette ibride: telecomunicazioni, intestazione e calendario
+
+Riconoscimento generale del servizio, intestazione legale e periodo dal layout, OCR selezionato anche sulle pagine con testo e date grafiche. L’anno nativo può completare giorno/mese OCR solo nella stessa zona; contraddizioni e cifre incerte restano vuote. 1002/1002 mock, 5/5 fixture, typecheck/lint/build; [report](v5/bollette-lettura-affidabile-20261025.md). Correzione ancora sul branch separato, nessun salvataggio o aggiornamento reale.
+
 ## 24 ottobre 2026 — OCR locale per bollette scansionate
 
 Nuovo lotto frontend: raster/OCR locale con worker, WASM e lingua italiana inclusi nell’app, nessun CDN o invio di documenti. Progresso/annullamento, limiti di pagine/pixel/tempo e ritorno manuale; dati incerti scartati senza correggere cifre. Etichette e valori nelle colonne associati solo se geometricamente univoci. Stesse proposte modificabili e conferma canonica. [Report e limiti](v5/bollette-ocr-locale-20261024.md). Mock completa 969/969, fixture 5/5, typecheck/lint/build verdi. Nessun backend, DB/API/storage reale, AI remota, merge o aggiornamento dell’app.

@@ -1,4 +1,6 @@
 import type { Draft, HouseForm } from './model';
+import { BILL_FULL_DATE_PATTERN, localBillDate } from './localBillDates';
+import type { BillLayoutHints } from './localBillLayout';
 /** Local, conservative proposals. No issuer catalogue, filename rules or payment inference. */
 export type LocalBill = {
   method?:'ocr';
@@ -16,19 +18,13 @@ export function localBillForm(bill: LocalBill): HouseForm {
   return {candidateId:'',manual:true,amount:bill.amount??'',title:'Bolletta',supplier:bill.supplier??'',date:bill.documentDate??'',category:bill.category??'',mode:'create',expenseId:'',ack:false,periodFrom:bill.competenceFrom??'',periodTo:bill.competenceTo??'',dueOn:bill.dueOn??''};
 }
 const months = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
-function date(value: string) {
-  const m = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/.exec(value.trim());
-  if (!m) return undefined;
-  const iso = `${m[3]}-${m[2]!.padStart(2,'0')}-${m[1]!.padStart(2,'0')}`;
-  const parsed = new Date(iso+'T00:00:00Z');
-  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0,10) === iso ? iso : undefined;
-}
+const date=localBillDate;
 const unique = (values: string[]) => { const all = [...new Set(values)]; return all.length === 1 ? all[0] : undefined; };
 const dateToken = '(\\d{1,2}[/.\\-]\\d{1,2}[/.\\-]\\d{4})(?!\\d)';
 function labeledDates(text: string, label: string) {
-  return unique([...text.matchAll(new RegExp('(?:'+label+')[ \\t:]*(?:\\n[ \\t]*)?'+dateToken,'giu'))].flatMap(m => date(m[1]!) ?? []));
+  return unique([...text.matchAll(new RegExp('(?:'+label+')[ \\t:]*(?:il[ \\t]+)?(?:\\n[ \\t]*)?('+BILL_FULL_DATE_PATTERN+')(?!\\d)','giu'))].flatMap(m => date(m[1]!) ?? []));
 }
-export function localBill(pages: string[]): LocalBill | null {
+export function localBill(pages: string[],layout?:BillLayoutHints): LocalBill | null {
   if (!pages.length || pages.length > 20 || pages.join('').length > 100000) return null;
   const text = pages.join('\n').normalize('NFKC').replace(/\r/g,'');
   const firstLine = text.split('\n').find(line=>line.trim())?.trim()??'';
@@ -43,7 +39,7 @@ export function localBill(pages: string[]): LocalBill | null {
     ['electricity', /\b(?:energia\s+elettrica|fornitura\s+elettrica|kWh|POD)\b/iu],
     ['gas', /\b(?:gas\s+naturale|fornitura\s+(?:di\s+)?gas|Smc|PDR)\b/iu],
     ['water', /\b(?:servizio\s+idrico|fornitura\s+(?:di\s+)?acqua|acquedotto)\b/iu],
-    ['internet_services', /\b(?:telefonia|connessione\s+internet|banda\s+larga|fibra\s+ottica)\b/iu],
+    ['internet_services', /\b(?:telefonia|connessione\s+internet|banda\s+larga|fibra\s+ottica|servizi\s+(?:di\s+)?telecomunicazion[ei])\b/iu],
   ] as const;
   const found = categories.filter(([,pattern]) => pattern.test(text)).map(([kind]) => kind);
   const heading = invoiceHeading.test(text) || /\bperiodo\s+di\s+fatturazione\b/iu.test(text);
@@ -57,10 +53,14 @@ export function localBill(pages: string[]): LocalBill | null {
   const suppliers = [...text.matchAll(/^(?:fornitore|venditore|società\s+di\s+vendita|ragione\s+sociale\s+del\s+fornitore)[ \t]*:[ \t]*([^\n]{2,120})$/gimu)].map(m=>m[1]!.trim());
   // A legal name at the top is usable only when unique; no logo/brand lookup.
   const headingNames = pages[0]!.split('\n').slice(0,12).map(line=>line.trim()).filter(line=>/^[\p{L}][\p{L}\d '&’.-]{1,100}\s+(?:S\.?p\.?A\.?|S\.?r\.?l\.?)$/iu.test(line));
-  result.supplier = unique(suppliers.length ? suppliers : headingNames.includes(firstLine) ? headingNames : []);
+  result.supplier = unique([...suppliers,...(layout?.supplier?[layout.supplier]:!suppliers.length&&headingNames.includes(firstLine)?headingNames:[])]);
   result.documentDate = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?emissione|data[ \\t]+(?:della[ \\t]+)?fattura|emess[ao][ \\t]+il');
   result.dueOn = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?scadenza|scadenza|da[ \\t]+saldare[ \\t]+entro|pagare[ \\t]+entro');
   const periods: string[] = [];
+  for(const period of layout?.periods??[]) {
+    const valid=(value:string)=>/^\d{4}-\d{2}-\d{2}$/u.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
+    if(valid(period.from)&&valid(period.to)&&period.from<=period.to)periods.push(period.from+'/'+period.to);
+  }
   const label = '(?:periodo[ \\t]+(?:di[ \\t]+)?(?:riferimento|fatturazione|competenza)|periodo[ \\t]+fatturato)';
   for (const m of text.matchAll(new RegExp(label+'[ \\t:]*\\n?[ \\t]*(?:dal[ \\t]+)?'+dateToken+'[ \\t]*(?:al|[-–])[ \\t]*'+dateToken,'giu'))) {
     const from = date(m[1]!), to = date(m[2]!);

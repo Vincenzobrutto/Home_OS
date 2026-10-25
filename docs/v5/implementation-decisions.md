@@ -127,3 +127,8 @@ Aggiornati mockup proprietario e copia navigabile proposta-Claude: tutte7famigli
 
 ## Spese — macro famiglie come navigazione principale
 14 ottobre2026. Richiesta esplicita committente: sostituire menu Elenco/Peroggetto/Lavori/Riepilogo con famiglie. Proposta navigabile aggiornata: Tutte+7famiglie; modalità secondarie nel select Visualizza, family applicata a elenco/totali/riepilogo/oggetti/lavori; mantenuto scroll orizzontale mobile. Verificati Mutuo570 e Assicurazioni180 con registrazioni giuste, Riepilogo stessa famiglia,320px senza overflow/scrollWidth305; console nessun errore. SintassiJS controllata. Solo copia proposta public e spec, mockup ufficiale/backend invariati da questa modifica. Scelta documentata per successiva integrazione UX ufficiale.
+
+
+## 25 ottobre 2026 — Evidenze native e OCR nelle bollette ibride
+
+La selezione OCR considera anche campi esplicitamente etichettati ma assenti dal testo nativo. Intestazioni legali e colonne Periodo richiedono ruolo e geometria univoci. Un calendario può unire glifi nativi e parole OCR nella stessa pagina/scala, senza fabbricare confidenze né prendere l’anno dall’orologio. Contraddizioni restano ambigue; soglie e limiti invariati. [Report e prove](bollette-lettura-affidabile-20261025.md). Nessuna inferenza del pagamento o modifica della conferma canonica.

@@ -1,6 +1,8 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
-OCR locale bollette scansionate: [lotto separato](v5/bollette-ocr-locale-20261024.md), risorse incluse senza CDN, limiti/annullamento e proposte sottoposte a revisione. Prova offline sul motore reale e su copia anonimizzata riuscita per importo/emissione/scadenza; dati non leggibili lasciati manuali. Browser fisico/mobile e scansioni fuori dai limiti ancora da collaudare. Nessun deploy, DB reale o merge autorizzato in questo lotto.
+Bollette ibride e telecomunicazioni: [correzione separata](v5/bollette-lettura-affidabile-20261025.md), 1002/1002 mock, 5/5 fixture, typecheck/lint/build. Intestazione/periodo geometrici e calendario nativo più OCR, senza indebolire confidenze o inventare anni. Riscontro locale sul PDF fornito riuscito; PR da approvare prima di aggiornare l’app.
+
+OCR precedente PR #26 già integrato a 69d9f00 e frontend5174 attivato su autorizzazione esplicita basata sui test offline. Il collaudo browser resta non eseguito; dettagli operativi nella PR documentale #30. Nessun servizio o dato reale modificato da questo nuovo lotto.
 
 Bollette testuali senza AI: [lotto frontend separato](v5/bollette-locali-20261024.md), proposte locali modificabili nella compilazione, senza oggetti o deduzione di pagamento. Stesso salvataggio canonico e nessuna modifica al cestino Claude. Seguito per scansioni nel lotto OCR sopra; collaudo browser e verifica del file effettivamente caricato restano aperti, senza aggiornamento dei dati reali in questo lotto.
 
