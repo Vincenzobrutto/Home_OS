@@ -1,5 +1,11 @@
 // Explicit offline profiles. No shell commands or caller-supplied test paths.
 const profiles = {
+  "test:workflow-clock-db": {
+    "database": true,
+    "api": false,
+    "files": ["test/membership-clock-review.integration.test.cjs"],
+    "apiFiles": []
+  },
   "test:document-workflow": {
     "database": false,
     "api": false,
