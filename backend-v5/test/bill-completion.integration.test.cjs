@@ -11,6 +11,7 @@ const {ObjectOnboardingService}=require('../dist/object-onboarding/onboarding.se
 const {DocumentPolicy}=require('../dist/documents/access');
 const {DocumentsService}=require('../dist/documents/documents.service');
 const {IntakeBatchesService}=require('../dist/document-intake/batches.service');
+const {TrashService}=require('../dist/documents/trash.service');
 const status=n=>e=>e.getStatus?.()===n;
 const code=name=>e=>(e.getResponse?.().code??e.code)===name;
 
@@ -25,6 +26,7 @@ test('Bill completion: real services on disposable offline DB, canonical type, w
  t.after(async()=>{
   try{
    const where={homeId:{in:homes}};
+   await db.trashRequest.deleteMany({where});
    await db.documentIntakeRequest.deleteMany({where:{batch:where}});await db.documentIntakeItem.deleteMany({where:{batch:where}});await db.documentIntakeBatch.deleteMany({where});
    for(const model of ['objectOnboardingComparison','objectOnboardingBinding','objectOnboardingRequest','objectOnboardingJob','objectOnboardingDraft','expenseHistory','expenseRequest','homeExpense','objectEvent','objectResourceLink','homeObject','documentOrganization'])await db[model].deleteMany({where:{accountId:{in:accounts}}});
    await db.documentVersion.deleteMany({where:{document:where}});await db.document.deleteMany({where});await db.storedFile.deleteMany({where:{id:{in:fileIds}}});
@@ -93,6 +95,26 @@ test('Bill completion: real services on disposable offline DB, canonical type, w
   await db.document.update({where:{id:source.id},data:{visibility:'home'}});
   const visible=(await documents.get(b,h,source.id)).document;assert.equal(visible.organization,null);assert.equal(visible.workflowState,'to_compile');
   await db.homeMembership.update({where:{accountId_homeId:{accountId:b,homeId:h}},data:{revokedAt:new Date()}});await assert.rejects(documents.get(b,h,source.id),status(403));await assert.rejects(documents.list(b,h,{limit:20}),status(403));
+ });
+ await t.test('the released bill workflow survives trash and restore without losing classification or duplicating the confirmed expense',async()=>{
+  const storage={remove:async()=>{storageCalls.push('remove');throw Error('storage_not_allowed');}};
+  const trash=new TrashService(db,storage,policy,{now:()=>new Date()});
+  const expenseBefore=await db.homeExpense.findMany({where:{homeId:h},orderBy:{id:'asc'}});
+  const preview=await trash.preview(a,h,source.id);assert.equal(preview.allowed,true);
+  const key=randomUUID(),body={expectedVersion:preview.document.version};
+  const moved=await trash.trash(a,h,source.id,body,key);assert.equal(moved.entry.version,2);
+  assert.deepEqual(await trash.trash(a,h,source.id,body,key),moved);
+  await assert.rejects(documents.get(a,h,source.id),status(403));
+  assert(!(await listed('completed')).includes(source.id));assert(!(await listed('pending')).includes(source.id));
+  assert.deepEqual(await db.homeExpense.findMany({where:{homeId:h},orderBy:{id:'asc'}}),expenseBefore);
+  const restoreKey=randomUUID(),restoreBody={expectedVersion:moved.entry.version};
+  const restored=await trash.restore(a,h,source.id,restoreBody,restoreKey);
+  assert.deepEqual(await trash.restore(a,h,source.id,restoreBody,restoreKey),restored);
+  const restoredDocument=await current();assert.equal(restoredDocument.workflowState,'completed');assert.equal(restoredDocument.organization.parts[0].kind,'utility_bill');
+  assert((await listed('completed')).includes(source.id));assert(!(await listed('pending')).includes(source.id));
+  assert.deepEqual(await counts(),{objects:0,expenses:1});
+  assert.deepEqual(await db.homeExpense.findMany({where:{homeId:h},orderBy:{id:'asc'}}),expenseBefore);
+  await assert.rejects(trash.preview(b,h,source.id),status(403));
  });
  await t.test('no AI attempt or physical storage operation occurred',async()=>{assert.deepEqual(await ledgers(),beforeLedgers);assert.deepEqual(storageCalls,[]);});
 });

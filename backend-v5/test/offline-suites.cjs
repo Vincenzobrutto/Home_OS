@@ -446,4 +446,11 @@ profiles['test:membership-clock-db'] = { database: true, api: false, files: ['te
 profiles['test:cestino-extra-review-db'] = { database: true, api: false, files: ['test/document-trash-extra-review.integration.test.cjs'], apiFiles: [] };
 profiles['test:membership-fixtures-db'] = { database: true, api: false, files: ['test/installment-linking.integration.test.cjs', 'test/generalized-evidence.integration.test.cjs'], apiFiles: [] };
 profiles['test:cestino-fixes-db'] = { database: true, api: false, files: ['test/document-trash-fixes.integration.test.cjs'], apiFiles: [] };
+// Final integration checks keep the independent review assertions intact and
+// run together on one fresh owned cluster, outside the historical aggregate.
+profiles['test:cestino-completo-db'] = {
+  database: true, api: false,
+  files: [...new Set(['test:trash-db', 'test:cestino-riesame-db', 'test:cestino-race-db', 'test:cestino-extra-review-db', 'test:cestino-fixes-db'].flatMap(name => profiles[name].files))],
+  apiFiles: []
+};
 module.exports = profiles;

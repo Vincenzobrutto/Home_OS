@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:cestino-completo-db": "node test/offline.cjs --suite test:cestino-completo-db",
     "test:workflow-fixtures-db": "node test/offline.cjs --suite test:workflow-fixtures-db",
     "test:workflow-clock-db": "node test/offline.cjs --suite test:workflow-clock-db",
     "test:document-workflow": "node test/offline.cjs --suite test:document-workflow",
