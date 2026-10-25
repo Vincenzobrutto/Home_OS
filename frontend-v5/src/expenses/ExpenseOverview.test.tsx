@@ -19,3 +19,10 @@ it('ordinary expenses retain their expense date and only show document dates whe
  expect(screen.getByText('Data della spesa')).toBeVisible();expect(screen.queryByText('Emissione')).not.toBeInTheDocument();expect(screen.queryByText('Periodo di riferimento')).not.toBeInTheDocument();
  rerender(<ExpenseOverview expense={{...bill,category:'purchase_replacement',competenceFrom:null,competenceTo:null}}/>);expect(screen.getByText('Emissione')).toBeVisible();expect(screen.getByText('Scadenza')).toBeVisible();
 });
+
+it('shows invoice January and service December as different saved facts',()=>{
+ render(<ExpenseOverview expense={{...bill,invoiceMonth:'2026-01'}}/>);
+ expect(screen.getByText('Mese di riferimento della fattura').nextSibling).toHaveTextContent('gennaio 2026');
+ expect(screen.getByText('Periodo dei servizi').nextSibling).toHaveTextContent('dicembre 2025');
+ expect(screen.getByText('Emissione').nextSibling).toHaveTextContent('17 gennaio 2026');
+});

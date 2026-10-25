@@ -63,7 +63,7 @@ it('saves and restores incomplete inputs, metadata and both bill period modes wi
  const amount=await screen.findByLabelText('Importo della bolletta (€)');await w.user.type(amount,'12,');
  await w.user.type(screen.getByLabelText('Fornitore'),'Fornitore fittizio');
  await w.user.clear(screen.getByLabelText('Titolo del documento'));await w.user.type(screen.getByLabelText('Titolo del documento'),'Da finire');
- await w.user.type(screen.getByLabelText('Mese di riferimento'),'2025-12');
+ await w.user.type(screen.getByLabelText('Mese dei servizi'),'2025-12');
  await w.user.click(screen.getByRole('radio',{name:'Un intervallo'}));
  await w.user.clear(screen.getByLabelText('Dal'));await w.user.type(screen.getByLabelText('Dal'),'2025-11-01');
  await w.user.clear(screen.getByLabelText('Al'));
@@ -71,7 +71,7 @@ it('saves and restores incomplete inputs, metadata and both bill period modes wi
  await w.user.click(screen.getByRole('button',{name:'Salva bozza ed esci'}));await waitFor(()=>expect(w.pause).toHaveBeenCalledWith(true));await screen.findByText('Elenco fittizio');
  expect(w.beforeConfirm).not.toHaveBeenCalled();expect(w.wire.state).toBe('open');
  expect(w.wire.review?.compilation).toMatchObject({documentTitle:'Da finire',documentOnly:false,houseForms:{cost:{amount:'12,',supplier:'Fornitore fittizio',periodFrom:'2025-11-01',periodTo:'',periodDraft:{mode:'range',month:'2025-12'}}}});
- cleanup();w.mount();expect(await screen.findByLabelText('Titolo del documento')).toHaveValue('Da finire');expect(await screen.findByLabelText('Importo della bolletta (€)')).toHaveValue('12,');expect(screen.getByLabelText('Dal')).toHaveValue('2025-11-01');expect(screen.getByLabelText('Al')).toHaveValue('');await w.user.click(screen.getByRole('radio',{name:'Un mese'}));expect(screen.getByLabelText('Mese di riferimento')).toHaveValue('2025-12');
+ cleanup();w.mount();expect(await screen.findByLabelText('Titolo del documento')).toHaveValue('Da finire');expect(await screen.findByLabelText('Importo della bolletta (€)')).toHaveValue('12,');expect(screen.getByLabelText('Dal')).toHaveValue('2025-11-01');expect(screen.getByLabelText('Al')).toHaveValue('');await w.user.click(screen.getByRole('radio',{name:'Un mese'}));expect(screen.getByLabelText('Mese dei servizi')).toHaveValue('2025-12');
  expect(mocks.callJson.mock.calls.filter(([,o])=>o?.method==='POST')).toHaveLength(1);
 });
 it.each(['failure','lost'] as const)('keeps inputs on %s and replays the same review with the same key',async(kind)=>{

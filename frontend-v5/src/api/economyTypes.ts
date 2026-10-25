@@ -21,7 +21,7 @@ export interface ExpenseSnapshot {
   title:string;amountCents:number;currency:'EUR';spentOn:CalendarDate;note:string|null;
   origin:'manual'|'document';documentLink:DocumentLink;assetLink:AssetLink;state:'active'|'archived';
   category:Category|null;family:Family;supplier:string|null;documentNumber:string|null;
-  documentDate:CalendarDate|null;competenceFrom:CalendarDate|null;competenceTo:CalendarDate|null;dueOn:CalendarDate|null;
+  invoiceMonth?:string|null;documentDate:CalendarDate|null;competenceFrom:CalendarDate|null;competenceTo:CalendarDate|null;dueOn:CalendarDate|null;
   amountOrigin:'user_declared'|'extraction_confirmed';objectLink:Link<ObjectSummary>;workLink:Link<WorkSummary>;analysisLink:Link<AnalysisSummary>;
 }
 export interface EconomyExpense extends ExpenseSnapshot {
@@ -64,7 +64,7 @@ export interface DraftListItem {
 }
 export interface ExpenseValues {
   title:string;amountCents:number;spentOn:CalendarDate;note?:string|null;category?:Category|null;supplier?:string|null;
-  documentNumber?:string|null;documentDate?:CalendarDate|null;competenceFrom?:CalendarDate|null;competenceTo?:CalendarDate|null;dueOn?:CalendarDate|null;
+  documentNumber?:string|null;invoiceMonth?:string|null;documentDate?:CalendarDate|null;competenceFrom?:CalendarDate|null;competenceTo?:CalendarDate|null;dueOn?:CalendarDate|null;
   objectRef?:ObjectRef|null;workId?:UUID|null;
 }
 export type CreateExpense = ExpenseValues&{documentId?:UUID|null};

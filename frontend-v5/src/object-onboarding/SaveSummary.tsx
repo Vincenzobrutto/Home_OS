@@ -1,6 +1,6 @@
 import type { Draft, Form, HouseForm, ContactInput } from './model';
 import { formatCalendarDate } from '../lib/activities';
-import { billPeriodLabel } from '../lib/billPeriod';
+import { invoiceMonthLabel,billPeriodLabel } from '../lib/billPeriod';
 import styles from './onboarding.module.css';
 
 const euro=(value:string)=>/^\d+(?:[.,]\d{1,2})?$/.test(value)?Number(value.replace(',','.')).toLocaleString('it-IT',{style:'currency',currency:'EUR'}):'Da completare';
@@ -20,7 +20,7 @@ export function SaveSummary({draft,forms,houseForms={},documentOnly,title,contac
      {item.invoiceSegment&&<p>Pagina {item.invoiceSegment.page} dell’originale</p>}
      {f.mode==='create'&&<><p><strong>{euro(f.amount)}</strong> · {f.supplier||'Fornitore non indicato'}</p><dl>
       <div><dt>Titolo</dt><dd>{f.title||'Da completare'}</dd></div><div><dt>Categoria</dt><dd>{({electricity:'Energia elettrica',gas:'Gas',water:'Acqua',internet_services:'Internet e servizi',maintenance:'Manutenzione',repairs_works:'Lavori e riparazioni',purchase_replacement:'Acquisti e sostituzioni'} as Record<string,string>)[f.category]||'Da completare'}</dd></div>
-      {item.documentKind!=='simple_invoice'?<><div><dt>Periodo di riferimento</dt><dd>{f.periodFrom&&f.periodTo&&f.periodFrom<=f.periodTo?billPeriodLabel({category:'electricity',spentOn:f.date,competenceFrom:f.periodFrom,competenceTo:f.periodTo}):'Da completare'}</dd></div><div><dt>Emissione</dt><dd>{date(f.date)}</dd></div><div><dt>Scadenza</dt><dd>{date(f.dueOn)}</dd></div></>:<div><dt>Data della spesa</dt><dd>{date(f.date)}</dd></div>}
+      {item.documentKind!=='simple_invoice'?<>{f.invoiceMonth&&<div><dt>Mese di riferimento della fattura</dt><dd>{invoiceMonthLabel(f.invoiceMonth)}</dd></div>}<div><dt>Periodo dei servizi</dt><dd>{f.periodFrom&&f.periodTo&&f.periodFrom<=f.periodTo?billPeriodLabel({category:'electricity',spentOn:f.date,competenceFrom:f.periodFrom,competenceTo:f.periodTo}):f.invoiceMonth?'Non indicato':'Da completare'}</dd></div><div><dt>Emissione</dt><dd>{date(f.date)}</dd></div><div><dt>Scadenza</dt><dd>{date(f.dueOn)}</dd></div></>:<div><dt>Data della spesa</dt><dd>{date(f.date)}</dd></div>}
      </dl>{item.documentKind==='simple_invoice'&&<p>{f.objectChoice?'Spesa e documento collegati a '+(f.objectLabel||'oggetto o impianto scelto nel modulo')+'. Nessun nuovo oggetto.':'Senza oggetto o impianto collegato.'}</p>}</>}
      {f.mode==='link_existing'&&<p>{f.expenseId?'Viene collegata quella scelta nel modulo. Non crei una nuova spesa.':'Scegli la spesa da collegare nel modulo.'}</p>}
      {['skip','defer'].includes(f.mode)&&<p>Nessuna spesa verrà registrata.</p>}

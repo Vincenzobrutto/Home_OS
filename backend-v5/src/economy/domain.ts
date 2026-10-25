@@ -35,7 +35,7 @@ export function ref(input: unknown): ObjectRef | null {
   if (row.kind !== 'object' && row.kind !== 'boiler') throw invalid();
   return {kind:row.kind,id:uuid(row.id)};
 }
-export const metadataFields = ['category','supplier','documentNumber','documentDate','competenceFrom','competenceTo','dueOn','workId'] as const;
+export const metadataFields = ['category','supplier','documentNumber','documentDate','invoiceMonth','competenceFrom','competenceTo','dueOn','workId'] as const;
 export const valueFields = ['title','amountCents','spentOn','note','documentId','objectRef',...metadataFields];
 export function expenseValues(input: unknown, today: string, update = false) {
   const row = object(input, update ? ['expectedVersion',...valueFields] : valueFields);
@@ -44,6 +44,7 @@ export function expenseValues(input: unknown, today: string, update = false) {
   for (const key of valueFields) {
     if (update && !Object.hasOwn(row,key)) continue;
     const value = row[key];
+    if(key==='invoiceMonth'){if(value!==undefined){if(value!==null&&(typeof value!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)||value.startsWith('0000')))throw invalid();result[key]=value;}continue;}
     if (key === 'title') result.title = text(value,120);
     else if (key === 'amountCents') result.amountCents = amountCents(value);
     else if (key === 'spentOn') result.spentOn = spentOn(value,today);

@@ -1,8 +1,9 @@
 import {ui} from '../components/ui';
 import {BILL_TRACE_FIELDS,type BillTrace,type BillTraceField} from './localBillTrace';
 import styles from './localBillTrace.module.css';
-const labels:Record<BillTraceField,string>={category:'Servizio',supplier:'Fornitore',amount:'Importo della bolletta',documentDate:'Data di emissione',period:'Periodo di riferimento',dueOn:'Scadenza'};
+const labels:Record<BillTraceField,string>={invoiceMonth:'Mese di riferimento della fattura',category:'Servizio',supplier:'Fornitore',amount:'Importo della bolletta',documentDate:'Data di emissione',period:'Periodo dei servizi',dueOn:'Scadenza'};
 const missing:Record<BillTraceField,string>={
+ invoiceMonth:'Non è stato individuato un mese esplicito della fattura. Emissione e periodo dei servizi non vengono usati al suo posto.',
  category:'Non è stato individuato un servizio univoco.',
  supplier:'Non è stato individuato un nome con un ruolo di fornitore sufficientemente chiaro.',
  amount:'Non è stato individuato un totale etichettato o un riepilogo utilizzabile.',

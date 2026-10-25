@@ -418,6 +418,7 @@ export function EconomyExpenseForm(props: {
   const [supplier, setSupplier] = useState(expense?.supplier ?? '');
   const [documentNumber, setDocumentNumber] = useState(expense?.documentNumber ?? '');
   const [documentDate, setDocumentDate] = useState(expense?.documentDate ?? '');
+  const [invoiceMonth,setInvoiceMonth]=useState(expense?.invoiceMonth??'');
   const [competenceFrom, setCompetenceFrom] = useState(expense?.competenceFrom ?? '');
   const [competenceTo, setCompetenceTo] = useState(expense?.competenceTo ?? '');
   const [dueOn, setDueOn] = useState(expense?.dueOn ?? '');
@@ -469,7 +470,8 @@ export function EconomyExpenseForm(props: {
       supplier: validateOptionalText(supplier, 120),
       documentNumber: validateOptionalText(documentNumber, 80),
       documentDate: validateOptionalDate(documentDate),
-      competence: isUtility(category)&&(!expense||category!==expense.category)&&(!competenceFrom||!competenceTo)?'Indica inizio e fine del periodo di riferimento della bolletta.':validateCompetence(competenceFrom, competenceTo),
+      invoiceMonth:invoiceMonth&&(!/^\d{4}-(0[1-9]|1[0-2])$/.test(invoiceMonth)||invoiceMonth.startsWith('0000'))?'Mese della fattura non valido.':undefined,
+      competence: isUtility(category)&&!invoiceMonth&&(!expense||category!==expense.category)&&(!competenceFrom||!competenceTo)?'Indica inizio e fine del periodo di riferimento della bolletta.':validateCompetence(competenceFrom, competenceTo),
       dueOn: validateOptionalDate(dueOn),
     };
     setErrors(errs);
@@ -488,7 +490,7 @@ export function EconomyExpenseForm(props: {
       supplier: optionalText(supplier),
       documentNumber: optionalText(documentNumber),
       documentDate: documentDate || null,
-      competenceFrom: competenceFrom || null,
+      ...(invoiceMonth?{invoiceMonth}:expense?.invoiceMonth?{invoiceMonth:null}:{}),competenceFrom: competenceFrom || null,
       competenceTo: competenceTo || null,
       dueOn: dueOn || null,
       objectRef: parseRef(effObject),
@@ -513,7 +515,7 @@ export function EconomyExpenseForm(props: {
       supplier: expense.supplier,
       documentNumber: expense.documentNumber,
       documentDate: expense.documentDate,
-      competenceFrom: expense.competenceFrom,
+      ...(expense.invoiceMonth?{invoiceMonth:expense.invoiceMonth}:{}),competenceFrom: expense.competenceFrom,
       competenceTo: expense.competenceTo,
       dueOn: expense.dueOn,
       objectRef: initObject,
@@ -646,7 +648,7 @@ export function EconomyExpenseForm(props: {
         </>,
         isUtility(category)?undefined:'Per una polizza richiesta dal mutuo scegli Finanziamento; per la polizza della casa scegli Assicurazione.',
       )}
-      {isUtility(category)&&<><Field id={`${id}-bill-supplier`} label="Fornitore" value={supplier} disabled={disabled} onChange={e=>setSupplier(e.target.value)} error={errors.supplier}/><BillPeriodFields inputId={`${id}-competence`} error={errors.competence} from={competenceFrom} to={competenceTo} disabled={disabled} onChange={({from,to})=>{setCompetenceFrom(from);setCompetenceTo(to);}}/></>}
+      {isUtility(category)&&<><Field id={`${id}-bill-supplier`} label="Fornitore" value={supplier} disabled={disabled} onChange={e=>setSupplier(e.target.value)} error={errors.supplier}/><Field id={`${id}-invoice-month`} label="Mese di riferimento della fattura" type="month" value={invoiceMonth} disabled={disabled} onChange={e=>setInvoiceMonth(e.target.value)} error={errors.invoiceMonth}/><BillPeriodFields servicePeriod inputId={`${id}-competence`} error={errors.competence} from={competenceFrom} to={competenceTo} disabled={disabled} onChange={({from,to})=>{setCompetenceFrom(from);setCompetenceTo(to);}}/></>}
       <div className={ui.field}>
         <details open={!isUtility(category)||!!errors.spentOn}><summary hidden={!isUtility(category)}>Altri dati della spesa</summary>
         <label className={ui.label} htmlFor={`${id}-spentOn`}>

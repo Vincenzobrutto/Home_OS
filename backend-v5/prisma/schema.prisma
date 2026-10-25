@@ -474,6 +474,7 @@ model HomeExpense {
   supplier String?
   documentNumber String?
   documentDate String?
+  invoiceMonth String?
   competenceFrom String?
   competenceTo String?
   dueOn String?

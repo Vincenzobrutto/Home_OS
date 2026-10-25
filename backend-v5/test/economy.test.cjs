@@ -23,3 +23,12 @@ test('S1: calendar comparison, earliest year, leap-day clamping and exact percen
   assert.equal(d.comparisonPeriod('0001-01-01','0001-12-31'),null);assert.deepEqual(d.comparisonPeriod('2024-02-29','2024-03-01'),{from:'2023-02-28',to:'2023-03-01',calendarAdjustment:'leap_day_clamped'});
   assert.equal(d.percent(600n,7400n),'811');assert.equal(d.percent(-1n,20000n),'-1');assert.equal(d.percent(1n,0n),null);assert.equal(d.percent(90071992547409930n,10n),'90071992547409930000');
 });
+
+test('invoice month is optional and separate from service competence',()=>{
+ const input={title:'Bolletta sintetica',amountCents:3670,spentOn:'2026-09-16',category:'internet_services',invoiceMonth:'2026-09',competenceFrom:'2026-08-01',competenceTo:'2026-08-31'};
+ const value=d.expenseValues(input,'2026-10-25');assert.equal(value.invoiceMonth,'2026-09');assert.equal(value.competenceFrom,'2026-08-01');
+ const legacy={...input};delete legacy.invoiceMonth;assert(!Object.hasOwn(d.expenseValues(legacy,'2026-10-25'),'invoiceMonth'));
+ for(const invoiceMonth of ['2026-13','2026-00','0000-09','26-09','2026-9','2026-09-01',202609,{}])assert.throws(()=>d.expenseValues({...input,invoiceMonth},'2026-10-25'));
+ assert.equal(d.expenseValues({expectedVersion:1,invoiceMonth:null},'2026-10-25',true).invoiceMonth,null);
+ assert.throws(()=>d.expenseValues({...input,competenceTo:null},'2026-10-25'));
+});

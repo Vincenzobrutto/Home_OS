@@ -37,7 +37,8 @@ export function houseExpenseReview({
    expenseId, ack, periodFrom, periodTo, dueOn, documentNumber, documentDate, note,
    purchaseMode, purchaseTotal,
  } = form;
- const periodValid = !isBill || !!periodFrom && !!periodTo && periodFrom <= periodTo;
+ const monthValid=!form.invoiceMonth||/^\d{4}-(0[1-9]|1[0-2])$/.test(form.invoiceMonth)&&!form.invoiceMonth.startsWith('0000');
+ const periodValid = !isBill || monthValid&&(periodFrom||periodTo?!!periodFrom&&!!periodTo&&periodFrom<=periodTo:!!form.invoiceMonth);
  const duplicates = candidates.items.filter(x => x.rank > 0);
  const row = candidates.items.find(x => x.id === expenseId);
  const purchaseCents = Math.round(Number(purchaseTotal.replace(',', '.')) * 100);
@@ -69,7 +70,7 @@ export function houseExpenseReview({
        documentNumber: documentNumber || null, documentDate: documentDate || null, note: note || null,
      } : {}),
      ...(isBill ? {
-       documentDate: date, competenceFrom: periodFrom, competenceTo: periodTo, dueOn: dueOn || null,
+       ...(form.invoiceMonth?{invoiceMonth:form.invoiceMonth}:{}),documentDate: date, competenceFrom: periodFrom || null, competenceTo: periodTo || null, dueOn: dueOn || null,
      } : {}),
    };
    return {
@@ -99,7 +100,7 @@ export function houseExpenseReview({
   if(installment&&mode==='create'&&purchaseMode!=='confirmed_total')add('Verifica il costo complessivo oppure lascia la spesa in sospeso.','Conferma del costo');
   if(mode==='link_existing'&&!row)add('Scegli la spesa esistente da collegare.','Spesa da collegare');
   if(mode==='create'){
-   if(!periodValid)add('Indica inizio e fine del periodo di riferimento della bolletta.','Periodo di riferimento');
+   if(!periodValid)add(form.invoiceMonth?'Verifica il mese della fattura e gli estremi del periodo dei servizi.':'Indica il mese della fattura oppure entrambi gli estremi del periodo dei servizi.','Mese di riferimento della fattura');
    if(!title.trim())add('Indica il titolo della spesa.','Titolo della spesa');
    else if([...title].length>120)add('Riduci il titolo a 120 caratteri, compresa l’etichetta acconto o saldo.','Titolo della spesa');
    if(!objectValid)add('Verifica l’oggetto o impianto scelto, oppure lascia la spesa senza collegamento.','Oggetto o impianto');

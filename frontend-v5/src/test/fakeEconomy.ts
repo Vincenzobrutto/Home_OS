@@ -20,6 +20,7 @@ type Meta = {
   supplier: string | null;
   documentNumber: string | null;
   documentDate: string | null;
+  invoiceMonth?: string | null;
   competenceFrom: string | null;
   competenceTo: string | null;
   dueOn: string | null;
@@ -139,6 +140,7 @@ export class FakeEconomy {
     return new Date(Date.parse(`${this.today}T12:00:00Z`) + this.seq * 1000).toISOString();
   }
 
+  private referenceDate(s:{id:string;spentOn:string}) {const m=this.metaOf(s.id);return m.invoiceMonth&&['electricity','gas','water','internet_services'].includes(m.category??'')?m.invoiceMonth+'-01':s.spentOn;}
   private metaOf(id: string): Meta {
     return this.meta.get(id) ?? { category: null, supplier: null, documentNumber: null, documentDate: null, competenceFrom: null, competenceTo: null, dueOn: null, amountOrigin: 'user_declared', workId: null };
   }
@@ -160,7 +162,7 @@ export class FakeEconomy {
       documentLink: s.documentId ? (doc ? { state: 'linked', document: { id: doc.id, name: doc.name } } : { state: 'unavailable', document: null }) : { state: 'none', document: null },
       assetLink: s.assetId ? (obj ? { state: 'linked', asset: { id: s.assetId, name: obj.name } } : { state: 'unavailable', asset: null }) : { state: 'none', asset: null },
       state: s.state, category: m.category, family: familyOf(m.category, m.workId), supplier: m.supplier, documentNumber: m.documentNumber,
-      documentDate: m.documentDate, competenceFrom: m.competenceFrom, competenceTo: m.competenceTo, dueOn: m.dueOn, amountOrigin: m.amountOrigin,
+      ...(m.invoiceMonth?{invoiceMonth:m.invoiceMonth}:{}),documentDate: m.documentDate, competenceFrom: m.competenceFrom, competenceTo: m.competenceTo, dueOn: m.dueOn, amountOrigin: m.amountOrigin,
       objectLink: ref ? (obj ? { state: 'linked', value: obj } : { state: 'unavailable', value: null }) : { state: 'none', value: null },
       workLink: work ? { state: 'linked', value: { id: work.id, name: work.name, state: work.state } } : m.workId ? { state: 'unavailable', value: null } : { state: 'none', value: null },
       analysisLink: { state: 'none', value: null },
@@ -339,8 +341,8 @@ export class FakeEconomy {
     const sel = this.selector(params, accountId, homeId);
     if (typeof sel !== 'function') return sel;
     const rows = this.mine(accountId, homeId)
-      .filter((s) => (state === 'all' || s.state === state) && s.spentOn >= period.from && s.spentOn <= period.to && sel(s))
-      .sort((a, b) => b.spentOn.localeCompare(a.spentOn) || b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+      .filter((s) => (state === 'all' || s.state === state) && this.referenceDate(s) >= period.from && this.referenceDate(s) <= period.to && sel(s))
+      .sort((a, b) => this.referenceDate(b).localeCompare(this.referenceDate(a)) || b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
     const scopeParams = new URLSearchParams(params);
     scopeParams.delete('limit');
     scopeParams.delete('cursor');
@@ -373,7 +375,7 @@ export class FakeEconomy {
     const sel = this.selector(params, accountId, homeId);
     if (typeof sel !== 'function') return sel;
     const active = this.mine(accountId, homeId).filter((s) => s.state === 'active' && sel(s));
-    const inRange = (from: string, to: string) => active.filter((s) => s.spentOn >= from && s.spentOn <= to);
+    const inRange = (from: string, to: string) => active.filter((s) => this.referenceDate(s) >= from && this.referenceDate(s) <= to);
     const rows = inRange(period.from, period.to);
     const cur = this.sums(rows);
     const financing = cur.byFamily.get('financing')?.total ?? 0n;
@@ -437,7 +439,7 @@ export class FakeEconomy {
   }
 
   private parse(body: Record<string, unknown>, accountId: string, homeId: string, creating: boolean) {
-    const allowed = ['title', 'amountCents', 'spentOn', 'note', 'category', 'supplier', 'documentNumber', 'documentDate', 'competenceFrom', 'competenceTo', 'dueOn', 'objectRef', 'workId', 'documentId'];
+    const allowed = ['title', 'amountCents', 'spentOn', 'note', 'category', 'supplier', 'documentNumber', 'documentDate', 'invoiceMonth', 'competenceFrom', 'competenceTo', 'dueOn', 'objectRef', 'workId', 'documentId'];
     const fe: Record<string, string> = {};
     for (const k of Object.keys(body)) if (!allowed.includes(k) && k !== 'expectedVersion') fe[k] = 'Campo non ammesso.';
     const out: Record<string, unknown> = {};
@@ -463,6 +465,7 @@ export class FakeEconomy {
       else if ((body.spentOn as string) > this.today) fe.spentOn = 'La data non può essere futura.';
       else out.spentOn = body.spentOn;
     }
+    if ('invoiceMonth' in body) {if(body.invoiceMonth!==null&&(typeof body.invoiceMonth!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(body.invoiceMonth)||body.invoiceMonth.startsWith('0000')))fe.invoiceMonth='Mese non valido.';else out.invoiceMonth=body.invoiceMonth;}
     for (const k of ['documentDate', 'competenceFrom', 'competenceTo', 'dueOn']) {
       if (!(k in body)) continue;
       if (body[k] === null) out[k] = null;
@@ -535,7 +538,7 @@ export class FakeEconomy {
     const o = p.out;
     const m: Meta = {
       category: (o.category as Category | null) ?? null, supplier: (o.supplier as string | null) ?? null, documentNumber: (o.documentNumber as string | null) ?? null,
-      documentDate: (o.documentDate as string | null) ?? null, competenceFrom: (o.competenceFrom as string | null) ?? null, competenceTo: (o.competenceTo as string | null) ?? null,
+      ...(o.invoiceMonth?{invoiceMonth:o.invoiceMonth as string}:{}),documentDate: (o.documentDate as string | null) ?? null, competenceFrom: (o.competenceFrom as string | null) ?? null, competenceTo: (o.competenceTo as string | null) ?? null,
       dueOn: (o.dueOn as string | null) ?? null, amountOrigin: 'user_declared', workId: (o.workId as string | null) ?? null,
     };
     if (this.competenceError(m)) return err(422, 'validation_error', 'Competenza non valida.', { competenceFrom: 'Intervallo non valido.' });
@@ -587,7 +590,7 @@ export class FakeEconomy {
           if (next && !same && p!.objectConflict) return err(409, 'resource_state_conflict', 'Oggetto archiviato.');
         }
         if ('workId' in o && o.workId !== m.workId && p!.workConflict) return err(409, 'work_state_conflict', 'Lavoro archiviato.');
-        for (const k of ['category', 'supplier', 'documentNumber', 'documentDate', 'competenceFrom', 'competenceTo', 'dueOn', 'workId'] as const) {
+        for (const k of ['category', 'supplier', 'documentNumber', 'documentDate', 'invoiceMonth', 'competenceFrom', 'competenceTo', 'dueOn', 'workId'] as const) {
           if (k in o) (m as Record<string, unknown>)[k] = o[k];
         }
         if (this.competenceError(m)) return err(422, 'validation_error', 'Competenza non valida.', { competenceFrom: 'Intervallo non valido.' });
@@ -906,7 +909,7 @@ export class FakeEconomy {
         this.expenses.items.set(s.id, s);
         this.meta.set(s.id, {
           category: (o.category as Category | null) ?? null, supplier: (o.supplier as string | null) ?? null, documentNumber: (o.documentNumber as string | null) ?? null,
-          documentDate: (o.documentDate as string | null) ?? null, competenceFrom: (o.competenceFrom as string | null) ?? null, competenceTo: (o.competenceTo as string | null) ?? null,
+          ...(o.invoiceMonth?{invoiceMonth:o.invoiceMonth as string}:{}),documentDate: (o.documentDate as string | null) ?? null, competenceFrom: (o.competenceFrom as string | null) ?? null, competenceTo: (o.competenceTo as string | null) ?? null,
           dueOn: (o.dueOn as string | null) ?? null, amountOrigin: cand ? 'extraction_confirmed' : 'user_declared', workId: (o.workId as string | null) ?? null,
         });
         if (ref?.kind === 'object') this.objects.attachExpense(accountId, homeId, ref, s.id);
