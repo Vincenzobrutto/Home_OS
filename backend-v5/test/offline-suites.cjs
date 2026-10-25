@@ -1,9 +1,26 @@
 // Explicit offline profiles. No shell commands or caller-supplied test paths.
 const profiles = {
+  "test:document-workflow": {
+    "database": false,
+    "api": false,
+    "files": [
+      "test/automatic-plan.test.cjs", "test/compilation-draft.test.cjs",
+      "test/contacts-extraction.test.cjs", "test/floor-plan.test.cjs",
+      "test/house-expense-object.test.cjs", "test/lan-origin.test.cjs",
+      "test/object-suggestions.test.cjs", "test/onboarding-no-reanalysis.test.cjs",
+      "test/onboarding-shared-budget.test.cjs", "test/reference-period.test.cjs"
+    ]
+  },
   "test:document-workflow-db": {
     "database": true,
     "api": false,
-    "files": ["test/document-workspace.integration.test.cjs", "test/bill-completion.integration.test.cjs"],
+    "files": [
+      "test/document-workspace.integration.test.cjs", "test/bill-completion.integration.test.cjs",
+      "test/document-archive.integration.test.cjs", "test/document-family.integration.test.cjs",
+      "test/document-only.integration.test.cjs", "test/document-views.integration.test.cjs",
+      "test/floor-plan.integration.test.cjs", "test/house-documents.integration.test.cjs",
+      "test/invoice-object-documents.integration.test.cjs", "test/object-catalog.integration.test.cjs"
+    ],
     "apiFiles": []
   },
   "test:object-onboarding": {
@@ -387,6 +404,8 @@ const profiles = {
     ]
   }
 };
+profiles.test.files = [...new Set([...profiles.test.files, ...profiles['test:document-workflow'].files, 'test/offline-registration.test.cjs'])];
+profiles['test:offline-guards'].files.push('test/offline-registration.test.cjs');
 const databaseProfiles = Object.values(profiles).filter(profile => profile.database);
 const union = key => [...new Set(databaseProfiles.flatMap(profile => profile[key] ?? []))];
 profiles['test:offline-db'] = { database: true, api: true, files: union('files'), apiFiles: union('apiFiles'), restartFiles: union('restartFiles') };
