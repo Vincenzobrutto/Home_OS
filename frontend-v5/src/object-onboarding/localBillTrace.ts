@@ -1,6 +1,6 @@
 /** Local diagnostics only: no field values, excerpts or persistence payload. */
-export const LOCAL_BILL_READER_VERSION='local-bill-summary-trace-v1';
-export const BILL_TRACE_FIELDS=['category','supplier','amount','documentDate','period','dueOn'] as const;
+export const LOCAL_BILL_READER_VERSION='local-bill-summary-trace-v2';
+export const BILL_TRACE_FIELDS=['invoiceMonth','category','supplier','amount','documentDate','period','dueOn'] as const;
 export type BillTraceField=typeof BILL_TRACE_FIELDS[number];
 export type BillFieldTrace={state:'proposed'|'not_found'|'unusable'|'conflicting'|'not_read';rule:string;method?:'pdf'|'pdf_ocr'};
 export type BillTrace={version:typeof LOCAL_BILL_READER_VERSION;outcome:'bill'|'unrecognized'|'excluded'|'multiple_invoices'|'limits'|'source_mismatch';fields:Record<BillTraceField,BillFieldTrace>;source?:{sha256:string;pagesRead:number[];verified:boolean;ocr:'unused'|'completed'|'failed'}};

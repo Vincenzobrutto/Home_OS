@@ -1,3 +1,4 @@
+import {localBillInvoiceMonth} from './localBillInvoiceMonth';
 import type { Draft, HouseForm } from './model';
 import { BILL_FULL_DATE_PATTERN, localBillDate } from './localBillDates';
 import {localBillAmount} from './localBillMoney';
@@ -7,7 +8,7 @@ import type { BillLayoutHints } from './localBillLayout';
 import {candidateTrace,emptyBillTrace,type BillFieldTrace,type BillTrace} from './localBillTrace';
 /** Local, conservative proposals. No issuer catalogue, filename rules or payment inference. */
 export type LocalBill = {
-  method?:'ocr';
+  method?:'ocr'; invoiceMonth?:string;
   supplier?: string; amount?: string; category?: string; documentDate?: string;
   competenceFrom?: string; competenceTo?: string; dueOn?: string;
 };
@@ -19,7 +20,7 @@ export function localBillEligible(draft: Draft | undefined, mimeType: string | u
     !!draft.snapshot && mimeType === 'application/pdf';
 }
 export function localBillForm(bill: LocalBill): HouseForm {
-  return {candidateId:'',manual:true,amount:bill.amount??'',title:'Bolletta',supplier:bill.supplier??'',date:bill.documentDate??'',category:bill.category??'',mode:'create',expenseId:'',ack:false,periodFrom:bill.competenceFrom??'',periodTo:bill.competenceTo??'',dueOn:bill.dueOn??''};
+  return {...(bill.invoiceMonth?{invoiceMonth:bill.invoiceMonth}:{}),candidateId:'',manual:true,amount:bill.amount??'',title:'Bolletta',supplier:bill.supplier??'',date:bill.documentDate??'',category:bill.category??'',mode:'create',expenseId:'',ack:false,periodFrom:bill.competenceFrom??'',periodTo:bill.competenceTo??'',dueOn:bill.dueOn??''};
 }
 const months = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
 const date=localBillDate;
@@ -68,6 +69,8 @@ export function localBill(pages: string[],layout?:BillLayoutHints,diagnose?:(tra
   trace.fields.supplier=candidateTrace(supplierValues,/^(?:fornitore|venditore|società\s+di\s+vendita|ragione\s+sociale\s+del\s+fornitore)\s*:/imu.test(text),suppliers.length?'supplier_label':layout?.supplier?'supplier_layout':headingNames.includes(firstLine)?'supplier_header':'supplier_contacts');
   result.documentDate = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?emissione|data[ \\t]+(?:della[ \\t]+)?fattura|emess[ao][ \\t]+il',value=>{trace.fields.documentDate=value;});
   result.dueOn = labeledDates(text, 'data[ \\t]+(?:di[ \\t]+)?scadenza|scadenza|da[ \\t]+saldare[ \\t]+entro|pagare[ \\t]+entro',value=>{trace.fields.dueOn=value;});
+  const invoice=localBillInvoiceMonth(text);
+  if(invoice.value)result.invoiceMonth=invoice.value;trace.fields.invoiceMonth=invoice.trace;
   const periods: string[] = [];
   for(const period of layout?.periods??[]) {
     const valid=(value:string)=>/^\d{4}-\d{2}-\d{2}$/u.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;

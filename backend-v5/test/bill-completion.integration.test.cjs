@@ -53,18 +53,18 @@ test('Bill completion: real services on disposable offline DB, canonical type, w
   assert.equal((await current()).organization,null);await pending();assert.deepEqual(await counts(),{objects:0,expenses:0});
  });
  await t.test('saving incomplete compilation preserves inputs but never completes or creates an expense',async()=>{
-  const compilation={saved:true,documentTitle:'Synthetic bill',documentKind:'utility_bill',replaceOrganization:false,reuseCopy:false,documentOnly:false,manualTotal:'',contacts:[],houseForms:{[draft.houseExpenses[0].id]:{candidateId:'',amount:'12,',manual:true,title:'Synthetic bill',supplier:'Synthetic supplier',date:'2026-01-17',category:'electricity',mode:'create',expenseId:'',ack:false,periodFrom:'2025-12-01',periodTo:'',dueOn:'2026-02-20'}}};
+  const compilation={saved:true,documentTitle:'Synthetic bill',documentKind:'utility_bill',replaceOrganization:false,reuseCopy:false,documentOnly:false,manualTotal:'',contacts:[],houseForms:{[draft.houseExpenses[0].id]:{invoiceMonth:'2026-01',candidateId:'',amount:'12,',manual:true,title:'Synthetic bill',supplier:'Synthetic supplier',date:'2026-01-17',category:'electricity',mode:'create',expenseId:'',ack:false,periodFrom:'2025-12-01',periodTo:'',dueOn:'2026-02-20'}}};
   draft=(await service.saveReview(a,h,draft.id,{expectedVersion:draft.version,review:{forms:{},compilation}},randomUUID())).draft;
   const restored=(await service.getDraft(a,h,draft.id,{})).draft;
   assert.equal(restored.review.compilation.houseForms[draft.houseExpenses[0].id].amount,'12,');assert.equal(restored.review.compilation.houseForms[draft.houseExpenses[0].id].periodTo,'');
-  assert.equal(restored.state,'open');assert.equal((await current()).organization,null);await pending();assert.deepEqual(await counts(),{objects:0,expenses:0});
+  assert.equal(restored.review.compilation.houseForms[draft.houseExpenses[0].id].invoiceMonth,'2026-01');assert.equal(restored.state,'open');assert.equal((await current()).organization,null);await pending();assert.deepEqual(await counts(),{objects:0,expenses:0});
  });
  await t.test('canonical utility classification alone stays pending while the expense draft is open',async()=>{
   const batch=(await intake.prepareExisting(a,h,{documentIds:[source.id]},randomUUID())).batch,item=batch.items[0];
   const payload={expectedVersion:batch.version,mode:'single',items:[{itemId:item.id,expectedVersion:item.version,expectedOrganizationVersion:0,replaceOrganization:false,selection:{action:'organize',title:'Synthetic bill',parts:[{kind:'utility_bill',pageFrom:null,pageTo:null}],target:{kind:'home'}}}]};
   const result=await intake.organize(a,h,batch.id,payload,randomUUID());assert.equal(result.results[item.id].state,'confirmed');
   assert.deepEqual((await current()).organization.parts,[{kind:'utility_bill',pageFrom:null,pageTo:null}]);await pending();assert.deepEqual(await counts(),{objects:0,expenses:0});
-  confirmation={expectedVersion:draft.version,source:draft.snapshot,choices:[],houseExpenses:[{itemId:draft.houseExpenses[0].id,action:'create',amountSelection:{mode:'manual'},values:{title:'Synthetic bill',category:'electricity',supplier:'Synthetic supplier',amountCents:9321,spentOn:'2026-01-17',documentDate:'2026-01-17',competenceFrom:'2025-12-01',competenceTo:'2025-12-31',dueOn:'2026-02-20',objectRef:null},acknowledgePossibleDuplicate:true}]};key=randomUUID();
+  confirmation={expectedVersion:draft.version,source:draft.snapshot,choices:[],houseExpenses:[{itemId:draft.houseExpenses[0].id,action:'create',amountSelection:{mode:'manual'},values:{invoiceMonth:'2026-01',title:'Synthetic bill',category:'electricity',supplier:'Synthetic supplier',amountCents:9321,spentOn:'2026-01-17',documentDate:'2026-01-17',competenceFrom:'2025-12-01',competenceTo:'2025-12-31',dueOn:'2026-02-20',objectRef:null},acknowledgePossibleDuplicate:true}]};key=randomUUID();
  });
  await t.test('invalid amount and mismatched source cannot confirm or change the pending state',async()=>{
   await assert.rejects(service.confirm(a,h,draft.id,{...confirmation,source:{...draft.snapshot,sha256:'b'.repeat(64)}},randomUUID()),code('onboarding_source_changed'));
@@ -79,7 +79,7 @@ test('Bill completion: real services on disposable offline DB, canonical type, w
  await t.test('final confirmation creates exactly one expense with all seven fields and completes the document',async()=>{
   confirmed=await service.confirm(a,h,draft.id,confirmation,key);assert.equal(confirmed.result.newObjects,0);assert.equal(confirmed.result.newExpenses,1);assert.equal(confirmed.draft.state,'confirmed');
   const expenses=await db.homeExpense.findMany({where:{homeId:h,documentId:source.id}});assert.equal(expenses.length,1);
-  const e=expenses[0];assert.deepEqual({supplier:e.supplier,amountCents:e.amountCents,category:e.category,documentDate:e.documentDate,competenceFrom:e.competenceFrom,competenceTo:e.competenceTo,dueOn:e.dueOn},{supplier:'Synthetic supplier',amountCents:9321,category:'electricity',documentDate:'2026-01-17',competenceFrom:'2025-12-01',competenceTo:'2025-12-31',dueOn:'2026-02-20'});
+  const e=expenses[0];assert.equal(e.invoiceMonth,"2026-01");assert.deepEqual({supplier:e.supplier,amountCents:e.amountCents,category:e.category,documentDate:e.documentDate,competenceFrom:e.competenceFrom,competenceTo:e.competenceTo,dueOn:e.dueOn},{supplier:'Synthetic supplier',amountCents:9321,category:'electricity',documentDate:'2026-01-17',competenceFrom:'2025-12-01',competenceTo:'2025-12-31',dueOn:'2026-02-20'});
   assert.deepEqual(await counts(),{objects:0,expenses:1});assert(!(await listed('pending')).includes(source.id));assert((await listed('completed')).includes(source.id));assert.equal((await current()).workflowState,'completed');assert.equal((await current()).organization.parts[0].kind,'utility_bill');
  });
  await t.test('concurrent same-key replay creates no duplicates and a changed body cannot reuse the key',async()=>{

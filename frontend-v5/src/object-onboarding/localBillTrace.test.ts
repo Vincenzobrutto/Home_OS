@@ -14,7 +14,7 @@ it('unknown errors and prototype property names never expose raw diagnostic cont
  for(const message of ['private/path customer data','toString','__proto__'])expect(localBillReadingError(message)).toBe('Lettura locale non disponibile.');
 });
 it('diagnostics do not change proposals or the confirmation form and contain no extracted values',()=>{
- const text=header+'Fornitore: Società di prova\nTotale fattura: 43,29 EUR\nData emissione: 01/03/2026\nScadenza: 20/03/2026\nPeriodo di riferimento: febbraio 2026';
+ const text=header+'Fattura marzo 2026\nFornitore: Società di prova\nTotale fattura: 43,29 EUR\nData emissione: 01/03/2026\nScadenza: 20/03/2026\nPeriodo di riferimento: febbraio 2026';
  const {bill,trace}=read(text);
  expect(bill).toEqual(localBill([text]));expect(localBillForm(bill!)).toEqual(localBillForm(localBill([text])!));
  expect(BILL_TRACE_FIELDS.every(field=>trace.fields[field].state==='proposed')).toBe(true);

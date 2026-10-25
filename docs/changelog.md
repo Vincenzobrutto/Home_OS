@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Mese fattura separato dalla competenza dei servizi
+
+Il mese esplicito nell'intestazione diventa invoiceMonth opzionale, senza riscrivere le competenze o dedurlo da emissione/scadenza. Form, riepilogo, storico ed export lo mantengono distinto; per utenze con mese noto è il riferimento dei riepiloghi, con un solo totale. [Report](v5/bollette-mese-fattura-20261025.md), [PR #51](https://github.com/Vincenzobrutto/Home_OS/pull/51) pronta: backend301/301, onboarding313/313, DB temporanei18/18 e49/49 verdi; mock completa1419/1419 in137 file, fixture5/5 e typecheck/lint/build verdi, zero saltati/retry0. Migrazione additiva verificata solo offline, nessuna AI o modifica all'app/DB reale. Merge al committente.
+
 ## 25 ottobre 2026 — Bollette fase1: collaudo conclusivo offline
 
 [Report di chiusura offline](v5/bollette-chiusura-fase1-20261025.md): verifica del lettore sui soli PDF già forniti, confronto visivo delle prime pagine e controlli negativi, senza originali in Git. Rafforzate le prove mock di traccia, payload invariato, classificazione e singola conferma, uscita dai documenti da completare. Gruppo339/339, mock completa1397/1397 in136 file, fixture5/5 e typecheck/lint/build verdi; zero saltati/retry0. Verifiche offline concluse, [PR #50](https://github.com/Vincenzobrutto/Home_OS/pull/50). Nessun codice prodotto modificato, soglia ridotta, AI, DB/API/storage reale o aggiornamento app. Merge al committente.

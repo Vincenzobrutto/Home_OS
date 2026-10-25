@@ -60,7 +60,7 @@ export class EconomyPolicy {
     let analysisLink:{state:string;value:null|{draftId:string;documentId:string;documentVersion:number}}={state:'none',value:null};
     if(row.analysisDraftId){analysisLink={state:'unavailable',value:null};const draft=await tx.economicDraft.findFirst({where:{id:row.analysisDraftId,accountId:a,homeId:h}});if(draft){try{await this.access.sources(tx,a,h,[{documentId:draft.documentId,documentVersion:draft.documentVersion as 1,documentSha256:draft.documentSha256}]);analysisLink={state:'linked',value:{draftId:draft.id,documentId:draft.documentId,documentVersion:draft.documentVersion}};}catch(e){if(!(e instanceof ForbiddenException))throw e;}}}
     return {category,family:family(category,row.workId??null),supplier:row.supplier??null,documentNumber:row.documentNumber??null,
-      documentDate:row.documentDate??null,competenceFrom:row.competenceFrom??null,competenceTo:row.competenceTo??null,dueOn:row.dueOn??null,
+      ...(row.invoiceMonth?{invoiceMonth:row.invoiceMonth}:{}),documentDate:row.documentDate??null,competenceFrom:row.competenceFrom??null,competenceTo:row.competenceTo??null,dueOn:row.dueOn??null,
       amountOrigin:row.amountOrigin??'user_declared',objectLink:{state:ref?(subject?'linked':'unavailable'):'none',value:subject},
       workLink:{state:row.workId?(work?'linked':'unavailable'):'none',value:work?{id:work.id,name:work.name,state:work.state}:null},analysisLink};
   }

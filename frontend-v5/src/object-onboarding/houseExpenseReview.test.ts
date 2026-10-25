@@ -118,3 +118,11 @@ describe('house expense review contract', () => {
     expect(value.form.title).toHaveLength(121);
   });
 });
+
+it('invoice month is saved independently, services are optional but never half-filled or replaced',()=>{
+ const value=input();value.form.invoiceMonth='2026-09';
+ let result=houseExpenseReview(value);expect(result.review.choice).toMatchObject({values:{invoiceMonth:'2026-09',competenceFrom:'2026-08-01',competenceTo:'2026-08-31'}});
+ value.form.periodFrom='';value.form.periodTo='';result=houseExpenseReview(value);expect(result.review.choice).toMatchObject({values:{invoiceMonth:'2026-09',competenceFrom:null,competenceTo:null}});
+ value.form.periodFrom='2026-08-01';expect(houseExpenseReview(value).review.choice).toBeNull();
+ value.form.periodTo='2026-08-31';value.form.invoiceMonth='2026-13';expect(houseExpenseReview(value).review.choice).toBeNull();
+});

@@ -9,7 +9,7 @@ export const list = (value: unknown): unknown[] => Array.isArray(value) ? value 
 export const fields = {
   object: ['id', 'name', 'type', 'note', 'state', 'version', 'createdAt', 'updatedAt'],
   activity: ['id', 'title', 'description', 'dueDate', 'state', 'version', 'createdAt', 'updatedAt', 'completedAt', 'cancelledAt'],
-  expense: ['id', 'title', 'amountCents', 'spentOn', 'note', 'state', 'category', 'supplier', 'documentNumber', 'documentDate', 'competenceFrom', 'competenceTo', 'dueOn', 'amountOrigin', 'version', 'createdAt', 'updatedAt', 'archivedAt'],
+  expense: ['id', 'title', 'amountCents', 'spentOn', 'note', 'state', 'category', 'supplier', 'documentNumber', 'documentDate', 'invoiceMonth', 'competenceFrom', 'competenceTo', 'dueOn', 'amountOrigin', 'version', 'createdAt', 'updatedAt', 'archivedAt'],
   work: ['id', 'name', 'note', 'state', 'version', 'createdAt', 'updatedAt', 'archivedAt'],
   room: ['id', 'name', 'type', 'state'],
 };
