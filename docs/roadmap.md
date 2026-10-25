@@ -1,6 +1,6 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
-Priorità cestino: [candidato unico con l’ultimo rilascio](v5/cestino-chiusura-20261025.md), riproduzioni originali, regressione DB564/564 e mock completa1127/1127 verdi. Proposta unica; per il collaudo nella casa reale servono approvazione del candidato e autorizzazione a backup/migrazione/avvio API, senza AI o salvataggi automatici di schede/spese.
+Cestino disponibile nel collaudo applicativo: [PR #41 integrata e attivazione autorizzata](v5/cestino-chiusura-20261025.md), backup verificato, sola migrazione additiva e API/frontend aggiornati a dc58ada. Regressione DB564/564 e mock1127/1127 verdi; dati preesistenti e originali invariati. Prossimo passo: prova interattiva del committente su spostamento e ripristino; nessuna eliminazione o conferma eseguita automaticamente. Ciclo backup separato.
 
 Copertura del collaudo offline e completamento dei documenti: [19 file recuperati, guardia e contratto server](v5/workflow-server-offline-20261025.md), con aggregato 547/547. Distinti test del codice e disponibilità dell'app: [consegna per l'integrazione](v5/consegna-integrazione-20261025.md). Nessun merge o deploy implicito.
 
