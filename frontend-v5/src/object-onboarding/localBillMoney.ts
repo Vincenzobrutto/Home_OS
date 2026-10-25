@@ -5,6 +5,7 @@ const noteWord=/^(?:IVA|VAT|PER|DUE|CON|TAX)$/iu;
 const number=/^((?:\d{1,3}(?:\.\d{3})+|\d+),\d{2})(?!\d)/u;
 const token=/(?:\d{1,3}(?:\.\d{3})+|\d+),\d{2}(?!\d)/gu;
 const normalize=(raw:string)=>raw.replaceAll('.','').replace(',','.');
+import type {BillFieldTrace} from './localBillTrace';
 type Candidate={kind:'ignore'|'invalid'}|{kind:'value';value:string};
 
 function amount(row:string):Candidate{
@@ -33,28 +34,31 @@ function amount(row:string):Candidate{
 }
 
 /** EUR-only proposals from complete labelled values, without conversion or prefix truncation. */
-export function localBillAmount(text:string,summaryAmounts:string[]=[]):string|undefined{
+export function localBillAmount(text:string,summaryAmounts:string[]=[],diagnose?:(trace:BillFieldTrace)=>void):string|undefined{
  const values=new Set<string>();
+ let present=summaryAmounts.length>0;
+ const finish=(state:BillFieldTrace['state'],rule:string,value?:string)=>{diagnose?.({state,rule});return value;};
  // Join only a recognized amount label, never arbitrary rows or monetary values.
  const lines=text.replace(new RegExp(label.source,'gimu'),part=>part.replace(/\s*\n\s*/gu,' ')).split('\n');
  for(const declared of text.matchAll(/^[ \t]*(?:valuta(?:\s+(?:di\s+fatturazione|della\s+fattura|del\s+documento))?|(?:billing\s+)?currency)[ \t]*:[ \t\n]*([a-z]{3,}|\p{Sc})(?=$|[ \t(])/gimu)){
-  if(!euro.test(declared[1]!))return undefined;
+  if(!euro.test(declared[1]!))return finish('unusable','unsupported_currency');
  }
  for(let i=0;i<lines.length;i++){
   const match=label.exec(lines[i]!);if(!match)continue;
+  present=true;
   let row=match[1]!.trim(),last=i;
   if(!row){last++;row=lines[last]?.trim()??'';}
   const next=lines[last+1]?.trim()??'';
   if(currencyOnly.test(row)&&/^[\d., \t]+$/u.test(next))row+=' '+next;
   else if(/^[\d., \t]+$/u.test(row)&&currencyOnly.test(next))row+=' '+next;
   const candidate=amount(row);
-  if(candidate.kind==='invalid')return undefined;
+  if(candidate.kind==='invalid')return finish('unusable','invalid_total');
   if(candidate.kind==='value')values.add(candidate.value);
  }
  for(const raw of summaryAmounts){
   const candidate=amount(raw);
-  if(candidate.kind!=='value')return undefined;
+  if(candidate.kind!=='value')return finish('unusable','unusable_summary');
   values.add(candidate.value);
  }
- return values.size===1?[...values][0]:undefined;
+ return finish(values.size===1?'proposed':values.size>1?'conflicting':present?'unusable':'not_found',summaryAmounts.length?'total_with_layout':'labelled_total',values.size===1?[...values][0]:undefined);
 }

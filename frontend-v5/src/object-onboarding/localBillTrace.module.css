@@ -1,0 +1,3 @@
+.list { display: grid; gap: 1rem; }
+.list dt { font-weight: 600; }
+.list dd { margin: .25rem 0 0; overflow-wrap: anywhere; }
