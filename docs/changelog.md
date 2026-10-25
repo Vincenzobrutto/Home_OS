@@ -1,3 +1,5 @@
+25 ottobre — [Schede complete degli oggetti nella demo](v5/prototipo-schede-oggetti-20261025.md): costi, garanzie commerciali di esempio, interventi, fonti, dati tecnici e assistenza; promemoria da confermare, dettaglio privato escluso dalla Gift. 23/23 test e browser desktop/mobile. Ingresso easy invariato.
+
 25 ottobre — Demo easy a tre azioni per Home, Agenzia e Amministratore: [report e due link](v5/prototipo-easy-20261025.md). Esempi brevi, benefici espliciti e funzioni complete raccolte. Gift che crea la casa preservata. 21/21 test e browser locale desktop/mobile; runtime V5 invariato.
 
 Demo libera semplificata e case Gift: [report e link](v5/prototipo-case-gift-20261024.md). 15 impianti, 1 elettrodomestico, 19 documenti; accettare la Gift aggiunge una casa distinta a Le mie case. 21/21 test e browser desktop/mobile; pubblicata e Casa verificata online. Guidata invariata. Consegnare sempre entrambi i link, come richiesto dal committente.
