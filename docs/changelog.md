@@ -1,3 +1,14 @@
+25 ottobre — [Schede complete degli oggetti nella demo](v5/prototipo-schede-oggetti-20261025.md): costi, garanzie commerciali di esempio, interventi, fonti, dati tecnici e assistenza; promemoria da confermare, dettaglio privato escluso dalla Gift. 23/23 test e browser desktop/mobile. Ingresso easy invariato.
+
+25 ottobre — Demo easy a tre azioni per Home, Agenzia e Amministratore: [report e due link](v5/prototipo-easy-20261025.md). Esempi brevi, benefici espliciti e funzioni complete raccolte. Gift che crea la casa preservata. 21/21 test e browser locale desktop/mobile; runtime V5 invariato.
+
+Demo libera semplificata e case Gift: [report e link](v5/prototipo-case-gift-20261024.md). 15 impianti, 1 elettrodomestico, 19 documenti; accettare la Gift aggiunge una casa distinta a Le mie case. 21/21 test e browser desktop/mobile; pubblicata e Casa verificata online. Guidata invariata. Consegnare sempre entrambi i link, come richiesto dal committente.
+
+Percorso promozionale parallelo: [demo guidata](v5/prototipo-percorso-guidato-20261024.md), 12 passi con cambio automatico di profilo e trasferimenti espliciti. Pubblicazione privata riuscita, 12/12 test e browser locale completo desktop/mobile; online protetto da login ChatGPT. Demo libera invariata.
+
+## 24 ottobre 2026 — Prototipo promozionale dei tre profili
+
+Landing e 24 viste Home/Agenzia/Amministratore, percorsi guidati e azioni simulate in prototypes/dimora-promo. Pubblicazione privata Sites completata; browser dei percorsi principali e mobile verificati localmente. Nessuna modifica alle app V5. [Report, copertura e limiti](v5/prototipo-promozionale-20261024.md).
 ## 24 ottobre 2026 — OCR locale per bollette scansionate
 
 Nuovo lotto frontend: raster/OCR locale con worker, WASM e lingua italiana inclusi nell’app, nessun CDN o invio di documenti. Progresso/annullamento, limiti di pagine/pixel/tempo e ritorno manuale; dati incerti scartati senza correggere cifre. Etichette e valori nelle colonne associati solo se geometricamente univoci. Stesse proposte modificabili e conferma canonica. [Report e limiti](v5/bollette-ocr-locale-20261024.md). Mock completa 969/969, fixture 5/5, typecheck/lint/build verdi. Nessun backend, DB/API/storage reale, AI remota, merge o aggiornamento dell’app.
@@ -1716,3 +1727,12 @@ Aggiunti collaudo DB isolato e diagnostica in entrambi gli ordini, replay, ricar
 ### 2026-10-23 — acconto/saldo, revisione esplicita e costo unico
 
 Bloccati nuovi oggetti omonimi e seconda spesa non riconciliata nel percorso fattura. Nuova conferma manuale dello stesso acquisto, con costo complessivo inserito esplicitamente e un solo aggiornamento canonico/storico. Ricaricamenti e fonte privata/versione/SHA protetti; importi ambigui lasciati pendenti. [Correzione, test e limiti](v5/fase0-installments-fix-offline-20261023.md).
+
+## 24 ottobre 2026 - Menu promozionale Home allineato
+Voci e ordine delle sette sezioni dell'app reale ripristinati, Ambienti/Rubrica separati ed extra demo distinti. Report: v5/prototipo-promozionale-20261024.md.
+
+## 24 ottobre 2026 - Schermate promozionali allineate alla V5
+Home con workflow Documenti, compilazione adattiva, oggetti/ambienti, attività, spese, Rubrica e storia coerenti con il consolidamento 2ab7570. Anteprime Partner separate, palette e navigazione mobile V5. 7/7 test e browser sui percorsi principali. Report: v5/prototipo-allineamento-v5-20261024.md.
+
+## 24 ottobre 2026 - Profili Partner collegati a Home nel prototipo
+Agenzia e Amministratore navigabili con stato di sessione e passaggi selettivi: Gift, invito unità, pubblicazione versionata, proposte personali e segnalazioni/risposte. Memorie personali separate per immobile e nuovo proprietario. 31 viste, 17/17 test, browser sui percorsi principali e mobile. Report: v5/prototipo-partner-collegati-20261024.md. Nessun runtime V5 modificato.

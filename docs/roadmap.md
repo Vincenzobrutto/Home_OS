@@ -1,3 +1,11 @@
+25 ottobre — [Schede complete degli oggetti nella demo](v5/prototipo-schede-oggetti-20261025.md): costi, garanzie commerciali di esempio, interventi, fonti, dati tecnici e assistenza; promemoria da confermare, dettaglio privato escluso dalla Gift. 23/23 test e browser desktop/mobile. Ingresso easy invariato.
+
+25 ottobre — Demo easy a tre azioni per Home, Agenzia e Amministratore: [report e due link](v5/prototipo-easy-20261025.md). Esempi brevi, benefici espliciti e funzioni complete raccolte. Gift che crea la casa preservata. 21/21 test e browser locale desktop/mobile; runtime V5 invariato.
+
+Demo libera semplificata e case Gift: [report e link](v5/prototipo-case-gift-20261024.md). 15 impianti, 1 elettrodomestico, 19 documenti; accettare la Gift aggiunge una casa distinta a Le mie case. 21/21 test e browser desktop/mobile; pubblicata e Casa verificata online. Guidata invariata. Consegnare sempre entrambi i link, come richiesto dal committente.
+
+Percorso promozionale parallelo: [demo guidata](v5/prototipo-percorso-guidato-20261024.md), 12 passi con cambio automatico di profilo e trasferimenti espliciti. Pubblicazione privata riuscita, 12/12 test e browser locale completo desktop/mobile; online protetto da login ChatGPT. Demo libera invariata.
+
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
 OCR locale bollette scansionate: [lotto separato](v5/bollette-ocr-locale-20261024.md), risorse incluse senza CDN, limiti/annullamento e proposte sottoposte a revisione. Prova offline sul motore reale e su copia anonimizzata riuscita per importo/emissione/scadenza; dati non leggibili lasciati manuali. Browser fisico/mobile e scansioni fuori dai limiti ancora da collaudare. Nessun deploy, DB reale o merge autorizzato in questo lotto.
@@ -57,3 +65,11 @@ Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a paga
 ## Protocollo multi-pagina — lotto offline 24 ottobre
 
 [Schema di spesa condiviso e prove](v5/protocollo-multipagina-offline-20261024.md): contratto espanso identico per 1–20 pagine, senza modifiche a gold, evidenze o conferme. Protocollo v30 distingue la nuova preparazione. Il rifiuto Samsung resta incerto e non ritentato; accettazione remota non verificata. Nessun deploy o AI, PR separata verso il consolidamento e merge al committente.
+
+## Prototipo promozionale — 24 ottobre 2026
+
+Prototipo separato dei tre profili implementato, 24 viste e simulazioni. Browser sui percorsi principali e vista mobile verificati; anteprime e limiti nel [report](v5/prototipo-promozionale-20261024.md). Branch codex/prototipo-promozionale-20261024, area prototypes/dimora-promo; nessun file runtime V5 modificato. Demo privata pubblicata; revisione del committente e merge al consolidamento ancora da decidere.
+
+Allineamento prototipo Home completato sul branch della PR #25; revisione/merge al committente. Partner e scenari restano concept espliciti. Matrice: v5/prototipo-allineamento-v5-20261024.md.
+
+Prototipo Partner collegati completato nella PR #25; nuova revisione del committente. 31 viste e passaggi selettivi con Home verificati in simulazione. Report: v5/prototipo-partner-collegati-20261024.md.
