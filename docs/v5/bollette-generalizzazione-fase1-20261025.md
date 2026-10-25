@@ -1,5 +1,17 @@
 # Bollette fase 1 — generalizzazione del riepilogo
 
+## Attivazione autorizzata — 25 ottobre 2026
+
+Il committente ha approvato la PR #46 e il solo aggiornamento necessario a riprovare le bollette, senza AI, migrazioni o salvataggi automatici. Merge GitHub effettuato con controllo sulla punta b07bf61; consolidamento a **d0d7d0dd5ef048455df01b8af30e3c0dc366948f**, verificato con fetch e `git ls-remote`. Include anche la #44; nessun secondo merge necessario. Main rimasto a cdbb318ddb56e764ad4b111a71560e3e71c7a033.
+
+Frontend ricompilato dalla punta integrata in worktree runtime separato, build8,89 secondi verde, albero9a5eaa14427422dad7422f4415317b1ba1852fd5 uguale alla fonte collaudata. Backend c820d20f7d41320fae8558dfcee7298e3e395256 invariato. Sostituito solo il processo frontend identificato10612 con3436, loopback5174. API7036 e PostgreSQL22924 conservano PID e istante di avvio, porte3011/55432; nessun riavvio o operazione sul database.
+
+**10/10 controlli HTTP statici/anonimi verdi**: pagina iniziale, moduli segnali/riepilogo/parser/fornitore/PDF, tipo inline, worker PDF e OCR; `/api/v5/homes` senza credenziali risponde401 con guardia `roma-consolidata-dc58ada-no-ai`. Guardia frontend limitata al proxy3011, nessun invio esterno; guardia API e worker già protetti preservati. Nessuna richiesta autenticata, upload, POST di compilazione/conferma, AI/email, migrazione o lettura di `.env` durante questo rilascio. Nessuna nuova prova UI reale dichiarata: disponibilità verificata, correttezza del nuovo documento da confrontare dal committente.
+
+App disponibile su http://127.0.0.1:5174. Ricaricare la pagina per usare il nuovo frontend; le compilazioni già salvate non vengono sovrascritte automaticamente. Prova successiva: bolletta da compilare, controllo tipo/importo/fornitore/periodo/date e confronto con pagina1 prima di confermare.
+
+Evidenze operative locali: `work/bill-phase1-release-runtime-proof.json`, `work/bill-phase1-release-runtime-http-proof.json`, `work/bill-phase1-release-process-proof.json` e build log. I metadati canonici `roma-runtime.json` e `schede-app-frontend-runtime.json` puntano al nuovo frontend. Nessun originale o contenuto della casa acquisito nelle verifiche.
+
 ## Ambito deciso
 
 Il committente sceglie di lavorare per step: nella fase 1 **un solo importo per bolletta**, senza dettaglio delle voci; prima priorità alla generalizzazione. Il riepilogo propone tipo Bolletta, servizio, fornitore, importo, periodo, emissione e scadenza quando leggibili. Rimangono prima pagina, conferma finale, controllo SHA e protezione delle correzioni.
