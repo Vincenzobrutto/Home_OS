@@ -1,3 +1,7 @@
+## 25 ottobre 2026 — Bollette locali dalla sola prima pagina
+
+Su decisione del committente, riconoscimento e proposte locali delle bollette usano soltanto la prima pagina del PDF, anche quando i dati risultano incompleti. Non leggere né OCRizzare le pagine successive per integrare il riepilogo; campi mancanti o ambigui restano da confermare. Conservare limiti, soglie OCR, controlli sugli importi, SHA e protezione delle compilazioni già salvate. Nessuna estensione di questa scelta alle estrazioni AI o ad altri documenti. [Report e verifiche](v5/bollette-prima-pagina-20261025.md).
+
 ## 24 ottobre 2026 — OCR locale limitato, senza invii remoti
 
 Su incarico del committente, le scansioni possono essere lette nel browser tramite worker/WASM e lingua italiana distribuiti con l’app, senza servizi o pagamenti AI. Modello e raster restano in memoria, IndexedDB disabilitato. Affidabilità per parola/cifra, barriere sulle letture incerte e abbinamenti geometrici univoci; nessuna correzione inventata di cifre, pagamento o dati oscurati. Proposte manuali modificabili e stessa conferma canonica. Limiti e annullamento obbligatori; niente OCR su compilazioni già salvate. [Scelte, costi di bundle e prove](v5/bollette-ocr-locale-20261024.md). Browser fisico e aggiornamento dell’app richiedono un passaggio successivo al merge.
