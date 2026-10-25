@@ -23,3 +23,7 @@ it('retains explicit negative declarations',()=>{
 it('does not equate the invoice month with a labelled reference period',()=>{
  expect(localBill([invoice+service])?.competenceFrom).toBeUndefined();
 });
+it.each(['Abbonamento attivo','Abbonamenti attivi','Servizio di accesso','Servizi di accesso','Canone mensile','Canone di abbonamento'])('accepts general singular/plural service evidence: %s',subscription=>{
+ const text=invoice+'Numero telefono: 000000000\nInformazioni sulla linea\n'+subscription;
+ expect(localBill([text])).toMatchObject({category:'internet_services'});
+});
