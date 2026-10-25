@@ -1,5 +1,9 @@
 ## 25 ottobre 2026 — Mese fattura separato dalla competenza dei servizi
 
+## 25 ottobre 2026 — attivazione mese fattura
+
+PR #51 integrata a c749c18 e API/frontend aggiornati con backup verificato e sola migrazione additiva invoiceMonth. Zero migrazioni pendenti e nessun dato preesistente ricompilato; 14 controlli HTTP anonimi verdi. [Esito e limiti](v5/bollette-mese-fattura-20261025.md#rilascio-autorizzato-del-25-ottobre-2026). Nessuna AI o conferma automatica; main preservato.
+
 Il mese esplicito nell'intestazione diventa invoiceMonth opzionale, senza riscrivere le competenze o dedurlo da emissione/scadenza. Form, riepilogo, storico ed export lo mantengono distinto; per utenze con mese noto è il riferimento dei riepiloghi, con un solo totale. [Report](v5/bollette-mese-fattura-20261025.md), [PR #51](https://github.com/Vincenzobrutto/Home_OS/pull/51) pronta: backend301/301, onboarding313/313, DB temporanei18/18 e49/49 verdi; mock completa1419/1419 in137 file, fixture5/5 e typecheck/lint/build verdi, zero saltati/retry0. Migrazione additiva verificata solo offline, nessuna AI o modifica all'app/DB reale. Merge al committente.
 
 ## 25 ottobre 2026 — Bollette fase1: collaudo conclusivo offline
