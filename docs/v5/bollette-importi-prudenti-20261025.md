@@ -35,3 +35,5 @@ Rispetto alla PR #38, l'entry JS resta **486791 byte**; il chunk OnboardingPage 
 Solo test offline e mock, senza AI/email, originali o contenuti personali, DB/API/storage reale, `.env`, migrazioni, salvataggi automatici o riavvii. Nessun accesso browser alternativo per aggirare il blocco già riscontrato. Test DOM e fixture non equivalgono a una prova su Safari, telefono o lettore di schermo.
 
 Questo candidato frontend comprende le correzioni della PR #38; non richiede di integrare nuovamente i suoi antecedenti. Il lotto backend offline è indipendente e non è incluso. Merge e successivo aggiornamento dell'app restano decisioni del committente.
+
+[PR #40](https://github.com/Vincenzobrutto/Home_OS/pull/40) verso il consolidamento, senza merge; push verificato con confronto HEAD/git ls-remote. La [PR #39](https://github.com/Vincenzobrutto/Home_OS/pull/39) consegna separatamente le verifiche server. Al fetch finale il consolidamento resta `730b93d`. Le vecchie PR non sono state chiuse o modificate.
