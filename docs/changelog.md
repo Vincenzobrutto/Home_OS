@@ -1,6 +1,6 @@
 ## 25 ottobre 2026 — Bollette: riepilogo della prima pagina
 
-Lettura e OCR limitati a pagina 1, dati nativi conservati se l'arricchimento fallisce, fornitore proposto soltanto con evidenze testuali concordanti. Nessun catalogo di aziende o modifica alle validazioni economiche. [Report](v5/bollette-prima-pagina-20261025.md); verifica locale positiva, statici e fixture 5/5 verdi, mock completa in corso. App invariata, nessuna AI, migrazione o scrittura reale.
+Lettura e OCR limitati a pagina 1, dati nativi conservati se l'arricchimento fallisce, fornitore proposto soltanto con evidenze testuali concordanti. Nessun catalogo di aziende o modifica alle validazioni economiche. [Report](v5/bollette-prima-pagina-20261025.md); verifica locale positiva, statici e fixture 5/5 verdi, mock completa 1175/1175 in 131 file, zero saltati/retry0. [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) pronta, push verificato. App invariata, nessuna AI, migrazione o scrittura reale.
 
 ## 25 ottobre 2026 — Tipo documento direttamente nell'archivio
 
