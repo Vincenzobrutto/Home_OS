@@ -1,6 +1,8 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
-Bollette testuali senza AI: [lotto frontend separato](v5/bollette-locali-20261024.md), proposte locali modificabili nella compilazione, senza oggetti o deduzione di pagamento. Stesso salvataggio canonico e nessuna modifica al cestino Claude. OCR per scansioni e verifica del file effettivamente caricato restano aperti; nessun deploy o aggiornamento dei dati reali in questo lotto.
+OCR locale bollette scansionate: [lotto separato](v5/bollette-ocr-locale-20261024.md), risorse incluse senza CDN, limiti/annullamento e proposte sottoposte a revisione. Prova offline sul motore reale e su copia anonimizzata riuscita per importo/emissione/scadenza; dati non leggibili lasciati manuali. Browser fisico/mobile e scansioni fuori dai limiti ancora da collaudare. Nessun deploy, DB reale o merge autorizzato in questo lotto.
+
+Bollette testuali senza AI: [lotto frontend separato](v5/bollette-locali-20261024.md), proposte locali modificabili nella compilazione, senza oggetti o deduzione di pagamento. Stesso salvataggio canonico e nessuna modifica al cestino Claude. Seguito per scansioni nel lotto OCR sopra; collaudo browser e verifica del file effettivamente caricato restano aperti, senza aggiornamento dei dati reali in questo lotto.
 
 Compilazione del documento a schede: ora predefinita, dopo il collaudo manuale confermato e l'incarico esplicito del committente. Ritorno alla pagina unica mantenuto, scelte e payload conservati. [Esito corrente](v5/compilazione-schede-default-20261024.md), [piano](v5/compilazione-schede-piano-20261024.md), PR #23. Codice 61f4a37: mock completa 910/910 in 108 file, nessun test saltato, typecheck/lint/build verdi. Nessuna nuova AI o scrittura reale; telefono fisico/tastiera virtuale non provati. Merge della PR #23 approvato dal committente il 24 ottobre; nessun nuovo cambiamento di prodotto richiesto.
 

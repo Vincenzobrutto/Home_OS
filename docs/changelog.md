@@ -1,3 +1,7 @@
+## 24 ottobre 2026 — OCR locale per bollette scansionate
+
+Nuovo lotto frontend: raster/OCR locale con worker, WASM e lingua italiana inclusi nell’app, nessun CDN o invio di documenti. Progresso/annullamento, limiti di pagine/pixel/tempo e ritorno manuale; dati incerti scartati senza correggere cifre. Etichette e valori nelle colonne associati solo se geometricamente univoci. Stesse proposte modificabili e conferma canonica. [Report e limiti](v5/bollette-ocr-locale-20261024.md). Mock completa 969/969, fixture 5/5, typecheck/lint/build verdi. Nessun backend, DB/API/storage reale, AI remota, merge o aggiornamento dell’app.
+
 ## 24 ottobre 2026 — Bollette testuali, proposte locali senza AI
 
 La compilazione manuale riconosce una possibile bolletta dal testo PDF e propone tipo, categoria, fornitore, totale, periodo, emissione e scadenza quando univoci. Stessa scheda Spese e conferma canonica nelle due viste, nessun oggetto o pagamento dedotto. Compilazioni salvate preservate; importi discordanti non sommati. SHA verificato e limiti locali; scansioni senza testo richiedono OCR e sono segnalate. [Report e limiti](v5/bollette-locali-20261024.md). Mock completa 947/947 in 111 file, nessun test saltato/retry0, typecheck/lint/build verdi. Lotto separato, nessuna modifica a backend/cestino Claude o dati reali; aggiornamento dell’app subordinato al merge.
