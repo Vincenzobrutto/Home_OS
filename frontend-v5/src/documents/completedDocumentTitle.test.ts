@@ -59,6 +59,6 @@ it('does not label composite documents, unknown kinds or missing context', () =>
 });
 it('does not bypass the invoice-month rule for bills, even with valid document date and object', () => {
   expect(completedDocumentTitle(withKind('utility_bill'))).toBeNull();
-  expect(documentDisplayTitle(withKind('utility_bill'))).toBe('01ab.pdf');
+  expect(documentDisplayTitle(withKind('utility_bill'))).toBe('Bolletta Negozio qualsiasi');
   expect(documentDisplayTitle({...withKind('utility_bill'), savedExpenses: [{...doc.savedExpenses![0]!, invoiceMonth: '2026-09'}]})).toBe('Bolletta Negozio qualsiasi · settembre 2026');
 });

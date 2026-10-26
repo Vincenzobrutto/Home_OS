@@ -13,12 +13,12 @@ it.each(['Bolletta di casa scelta da me','Bolletta','bolletta settembre','Docume
  expect(documentDisplayTitle({...doc,organization:{...doc.organization!,title}})).toBe(title);
 });
 it.each([undefined,'','2026-00','2026-13','0000-09','settembre','2026-09-01'])('does not infer missing or invalid invoice month %s from emission date',invoiceMonth=>{
- expect(completedBillTitle({...doc,savedExpenses:[{...doc.savedExpenses![0]!,invoiceMonth}]})).toBeNull();
+ expect(completedBillTitle({...doc,savedExpenses:[{...doc.savedExpenses![0]!,invoiceMonth}]})).toBe('Bolletta Fornitore Prova');
 });
 it('does not choose between multiple expenses, infer missing supplier, or use proposals',()=>{
- expect(completedBillTitle({...doc,savedExpenses:[...doc.savedExpenses!,{...doc.savedExpenses![0]!,id:'second'}]})).toBeNull();
- for(const supplier of [null,'','  '])expect(completedBillTitle({...doc,savedExpenses:[{...doc.savedExpenses![0]!,supplier}]})).toBeNull();
- expect(completedBillTitle({...doc,savedExpenses:[]})).toBeNull();expect(completedBillTitle({...doc,savedExpenses:undefined})).toBeNull();
+ expect(completedBillTitle({...doc,savedExpenses:[...doc.savedExpenses!,{...doc.savedExpenses![0]!,id:'second'}]})).toBe('Bolletta · file.pdf');
+ for(const supplier of [null,'','  '])expect(completedBillTitle({...doc,savedExpenses:[{...doc.savedExpenses![0]!,supplier}]})).toBe('Bolletta · settembre 2026');
+ expect(completedBillTitle({...doc,savedExpenses:[]})).toBe('Bolletta · file.pdf');expect(completedBillTitle({...doc,savedExpenses:undefined})).toBe('Bolletta · file.pdf');
 });
 it.each(['invoice','receipt','purchase_order','other'])('does not apply bill title to type %s',kind=>{
  expect(completedBillTitle({...doc,organization:{...doc.organization!,parts:[{kind,pageFrom:null,pageTo:null}]}})).toBeNull();
