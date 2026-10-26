@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — nomi progressivi delle bollette (lotto separato)
+
+Le bollette completate mostrano anche solo il fornitore o solo il mese fattura; senza dati univoci mostrano Bolletta e filename originale, compresi gli hash. Titoli personalizzati e fonti composite preservati, nessuna inferenza da altre date e nessuna scelta tra più spese. [Report](v5/bollette-nomi-progressivi-20261026.md). Nuovi16/16, regressioni 237/237 in 25 file e typecheck/lint/build verdi. Solo nomi visuali, nessuna AI o modifica ai dati reali; app non aggiornata in questo lotto.
+
 ## 26 ottobre 2026 — nomi parlanti dei documenti completati (lotto separato)
 
 Alias visuali estesi a fatture, ordini, ricevute, manuali, garanzie e altri tipi specifici con contesto confermato sufficiente. Tipo e nomi degli oggetti; dati di una sola spesa soltanto per documenti di acquisto. Nessuna deduzione da filename, pagamenti o periodo servizi; più spese non vengono fuse. Titoli personalizzati, originali e regola mese bollette invariati. Solo frontend, nessuna API o scrittura. [Report](v5/documenti-nomi-parlanti-20261026.md); 221/221 in 23 file regressioni area e typecheck/lint/build verdi. Non ancora attivo nell’app.
