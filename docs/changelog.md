@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — Spese: nomi, date e filtri più leggibili
+
+Vista approvata nella preview, con grafico conservato. Titoli visuali prudenti, importi in colonna, date etichettate; tipo/raggruppamento fuori dai filtri avanzati e avvertenza sul confronto incompleto. Mock completa 1548/1548 in 149 file, 1259.76s, un worker/retry0, nessun test saltato/todo. Typecheck, lint e build verdi. Fonte prodotto 9f2c0fe. Grafico e riepiloghi server, API/backend e calcoli invariati. [Report e limiti](v5/spese-leggibilita-20261026.md). Nessuna AI o accesso reale; candidato in PR, app non aggiornata.
+
 ## 26 ottobre 2026 — uniformare descrizioni generiche e nomi fornitori (lotto separato)
 
 Le bollette completate già caricate con un titolo generico del servizio possono mostrare il fornitore già confermato nella loro unica spesa. Nei soli alias omessi suffissi societari espliciti terminali; nessun nome azienda ricavato dal servizio, nessuna associazione fra documenti. Originali, titoli salvati, valori e ID preservati. [Report](v5/bollette-titoli-servizio-20261026.md); nuovi23/23, regressioni 260/260 in 27 file e statici/build verdi. Diagnosi reale UI in sola lettura distinta dai collaudi mock; nessuna AI o scrittura al DB reale. Candidato non ancora attivo.
