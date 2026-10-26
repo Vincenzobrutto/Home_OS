@@ -177,12 +177,12 @@ export function Distribution(props: {
       </h2>
       {props.family ? (
         <button type="button" className={styles.linkButton} onClick={props.onAllFamilies}>
-          Tutte le famiglie
+          Tutti i gruppi di spesa
         </button>
       ) : (
         <div className={styles.split} role="group" aria-label="Suddividi per">
           <button type="button" aria-pressed={mode === 'family'} onClick={() => props.onModeChange('family')}>
-            Famiglie
+            Gruppi di spesa
           </button>
           <button type="button" aria-pressed={mode === 'category'} onClick={() => props.onModeChange('category')}>
             Categorie
@@ -241,7 +241,7 @@ export function Distribution(props: {
             registrati
           </text>
         </svg>
-        <ul className={styles.legend} aria-label={mode === 'family' ? 'Famiglie con costi registrati' : 'Categorie con costi registrati'}>
+        <ul className={styles.legend} aria-label={mode === 'family' ? 'Gruppi di spesa con costi registrati' : 'Categorie con costi registrati'}>
           {positive.map((s, i) => (
             <li key={s.key}>
               <button
@@ -265,9 +265,9 @@ export function Distribution(props: {
       {sum !== 1000 && <p className={styles.note}>Percentuali arrotondate a un decimale: la loro somma è {formatTenths(sum)}. Gli importi sono esatti.</p>}
       <p className={styles.note}>
         {mode === 'family'
-          ? 'Le famiglie raggruppano le categorie e sono calcolate dal servizio. '
+          ? 'I gruppi di spesa riuniscono le categorie e sono calcolati dal servizio. '
           : props.family === 'unclassified' || positive.some((s) => s.key === 'other' || s.key === 'unclassified')
-            ? '«Altro» e «Non classificata» sono categorie diverse della stessa famiglia. '
+            ? '«Altro» e «Non classificata» sono categorie diverse dello stesso gruppo di spesa. '
             : 'Le categorie mostrano come si distribuiscono i costi registrati. '}
         Tocca una voce per vedere le registrazioni.
       </p>
@@ -683,9 +683,9 @@ export function EconomyExpenseForm(props: {
       </div>
 
       {!isUtility(category)&&<p className={styles.preview} aria-live="polite">
-        Famiglia prevista: <strong>{familyLabel(preview, caps)}</strong>
-        {category === 'repairs_works' ? ' (con un lavoro va in Lavori e acquisti, senza in Manutenzione e riparazioni)' : ''}. La famiglia
-        definitiva la calcola il servizio.
+        Gruppo di spesa previsto: <strong>{familyLabel(preview, caps)}</strong>
+        {category === 'repairs_works' ? ' (con un lavoro va in Lavori e acquisti, senza in Manutenzione e riparazioni)' : ''}. Il gruppo di spesa
+        definitivo lo calcola il servizio.
       </p>}
 
       <details className={styles.details} open={(!isUtility(category)&&!!expense) || !!presets.object || !!presets.workId || !!presets.documentId || Object.keys(errors).some(k=>['object','work','doc','note','documentNumber'].includes(k))}>
