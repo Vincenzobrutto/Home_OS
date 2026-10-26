@@ -1,5 +1,8 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+**Gruppi Spese attivi:** PR #64 integrata su approvazione a ccc8469; API/frontend aggiornati insieme, cluster esistente ripristinato senza migrazioni. Build e34/34 HTTP statici/anonimi verdi; nessuna AI o scrittura applicativa eseguita. [Consegna e limiti](v5/spese-gruppi-rilascio-20261026.md). Verifica finale della pagina Spese al committente.
+
+
 **Spese — gruppi distinti:** Acquisti separato da Manutenzione, riparazioni e lavori; collegamenti a lavori indipendenti dal gruppo. Codici e categorie salvate conservati, subtotali ricalcolati senza migrazione e totale generale invariato. [Report](v5/spese-gruppi-distinti-20261026.md). Verificato offline: backend301/301, DB temporaneo19/19, mock mirati con riesecuzione documentata del timeout, statici/build verdi. PR e merge al committente.
 
 

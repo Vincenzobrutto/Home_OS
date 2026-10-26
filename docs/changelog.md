@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — Attivati i gruppi Spese distinti
+
+**Gruppi Spese attivi:** PR #64 integrata su approvazione a ccc8469; API/frontend aggiornati insieme, cluster esistente ripristinato senza migrazioni. Build e34/34 HTTP statici/anonimi verdi; nessuna AI o scrittura applicativa eseguita. [Consegna e limiti](v5/spese-gruppi-rilascio-20261026.md). Verifica finale della pagina Spese al committente.
+
 ## 26 ottobre 2026 — Separati acquisti e interventi
 
 **Spese — gruppi distinti:** Acquisti separato da Manutenzione, riparazioni e lavori; collegamenti a lavori indipendenti dal gruppo. Codici e categorie salvate conservati, subtotali ricalcolati senza migrazione e totale generale invariato. [Report](v5/spese-gruppi-distinti-20261026.md). In verifica offline; PR e merge al committente.

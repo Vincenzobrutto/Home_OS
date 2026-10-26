@@ -23,3 +23,7 @@ Runner backend offline con dipendenze preesistenti e schema/lock identici. Suite
 Contratto, specifica, decisione, stato, roadmap e changelog aggiornati. PR verso il consolidamento; merge e successiva attivazione coordinata di API/frontend al committente. Non è sufficiente aggiornare il solo frontend perché il gruppo è calcolato dal server. Nessun test visivo autenticato o collaudo con dati personali eseguito.
 
 Attività del committente: approvare la PR; dopo il rilascio controllare i due gruppi nella pagina Spese. Non serve risalvare le registrazioni.
+
+## Rilascio autorizzato
+
+PR #64 integrata e API/frontend attivi a ccc8469, hash remoto verificato; cluster esistente ripristinato, nessuna migrazione. Build e34/34 HTTP statici/anonimi verdi. [Consegna, ripristino e limiti](spese-gruppi-rilascio-20261026.md).
