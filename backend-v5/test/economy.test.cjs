@@ -2,7 +2,9 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 const today='2026-10-14',base={title:'Gas',amountCents:8000,spentOn:'2026-09-30'};
 test('S1: family is derived, single-valued; work archive does not reclassify',()=>{
   for(const c of d.categories)assert(d.families.includes(d.family(c,null)));
-  assert.equal(d.family('repairs_works',null),'maintenance_repairs');assert.equal(d.family('repairs_works','archived-work'),'works_purchases');
+  assert.equal(d.family('repairs_works',null),'maintenance_repairs');assert.equal(d.family('repairs_works','archived-work'),'maintenance_repairs');
+  assert.equal(d.family('purchase_replacement',null),'works_purchases');assert.equal(d.family('purchase_replacement','work'),'works_purchases');
+  assert.equal(d.family('condominium_extraordinary',null),'maintenance_repairs');
   assert.equal(d.family('insurance',null),'taxes_insurance');assert.equal(d.family('financing',null),'financing');assert.equal(d.family(null,null),'unclassified');assert.equal(d.family('other',null),'unclassified');
 });
 test('S1: minimal manual input and boundary validation; no trusted family/payment/provider',()=>{
@@ -17,7 +19,9 @@ test('S1: optional metadata and update competence merged against existing values
 test('S1: filter combinations, nullable category, literal search and period clipping',()=>{
   assert.equal(d.economyQuery({},today).to,today);assert.equal(d.economyQuery({year:'2025'},today).to,'2025-12-31');assert.equal(d.economyQuery({family:'unclassified'},today).family,'unclassified');
   for(const q of [{year:['2026']},{from:'2026-01-01'},{year:'2026',from:'2026-01-01',to:today},{category:'gas',family:'financing'},{objectKind:'object'},{limit:'51'},{source:'paid'},{state:'active'}]){if(q.state)assert.throws(()=>d.economyQuery(q,today,true));else assert.throws(()=>d.economyQuery(q,today));}
-  assert.equal(d.economyQuery({category:'repairs_works',family:'works_purchases',q:'  10%_  '},today).q,'10%_');assert.equal(d.economyQuery({category:'unclassified',family:'unclassified'},today).category,'unclassified');
+  assert.equal(d.economyQuery({category:'repairs_works',family:'maintenance_repairs',q:'  10%_  '},today).q,'10%_');assert.equal(d.economyQuery({category:'unclassified',family:'unclassified'},today).category,'unclassified');
+  assert.throws(()=>d.economyQuery({category:'repairs_works',family:'works_purchases'},today));
+  assert.equal(d.economyQuery({category:'purchase_replacement',family:'works_purchases'},today).family,'works_purchases');
 });
 test('S1: calendar comparison, earliest year, leap-day clamping and exact percentages',()=>{
   assert.equal(d.comparisonPeriod('0001-01-01','0001-12-31'),null);assert.deepEqual(d.comparisonPeriod('2024-02-29','2024-03-01'),{from:'2023-02-28',to:'2023-03-01',calendarAdjustment:'leap_day_clamped'});

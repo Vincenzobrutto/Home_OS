@@ -54,8 +54,8 @@ const JOB_MESSAGES: Record<string, string> = {
 export const CATEGORIES: Category[] =['electricity', 'gas', 'water', 'internet_services', 'condominium_ordinary', 'condominium_extraordinary', 'insurance', 'taxes', 'maintenance', 'repairs_works', 'purchase_replacement', 'financing', 'other'];
 export const FAMILIES: Family[] = ['utilities', 'condominium', 'taxes_insurance', 'maintenance_repairs', 'works_purchases', 'financing', 'unclassified'];
 const FAMILY_LABELS: Record<Family, string> = {
-  utilities: 'Bollette', condominium: 'Condominio', taxes_insurance: 'Tasse e assicurazioni', maintenance_repairs: 'Manutenzione e riparazioni',
-  works_purchases: 'Lavori e acquisti', financing: 'Mutuo e finanziamenti', unclassified: 'Altro / Non classificata',
+  utilities: 'Bollette', condominium: 'Condominio', taxes_insurance: 'Tasse e assicurazioni', maintenance_repairs: 'Manutenzione, riparazioni e lavori',
+  works_purchases: 'Acquisti', financing: 'Mutuo e finanziamenti', unclassified: 'Altro / Non classificata',
 };
 const CATEGORY_LABELS: Record<Category, string> = {
   electricity: 'Energia elettrica', gas: 'Gas', water: 'Acqua', internet_services: 'Internet e servizi', condominium_ordinary: 'Condominio ordinario',
@@ -63,9 +63,10 @@ const CATEGORY_LABELS: Record<Category, string> = {
   repairs_works: 'Riparazioni e lavori', purchase_replacement: 'Acquisti e sostituzioni', financing: 'Finanziamento', other: 'Altro',
 };
 
-export function familyOf(category: Category | null, workId: string | null): Family {
+export function familyOf(category: Category | null, _workId: string | null): Family {
+  void _workId; // Firma compatibile: il collegamento non determina il gruppo.
   if (category === null || category === 'other') return 'unclassified';
-  if (category === 'repairs_works') return workId ? 'works_purchases' : 'maintenance_repairs';
+  if (category === 'repairs_works' || category === 'condominium_extraordinary') return 'maintenance_repairs';
   if (['electricity', 'gas', 'water', 'internet_services'].includes(category)) return 'utilities';
   if (category === 'condominium_ordinary') return 'condominium';
   if (category === 'taxes' || category === 'insurance') return 'taxes_insurance';
@@ -73,7 +74,7 @@ export function familyOf(category: Category | null, workId: string | null): Fami
   if (category === 'financing') return 'financing';
   return 'works_purchases';
 }
-const possibleFamilies = (c: Category): Family[] => (c === 'repairs_works' ? ['maintenance_repairs', 'works_purchases'] : [familyOf(c, null)]);
+const possibleFamilies = (c: Category): Family[] => [familyOf(c, null)];
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const KEY_RE = /^[A-Za-z0-9_-]{16,100}$/;

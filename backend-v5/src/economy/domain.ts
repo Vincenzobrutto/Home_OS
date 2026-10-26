@@ -6,15 +6,16 @@ export const categories = ['electricity','gas','water','internet_services','cond
 export type Category = typeof categories[number];
 export const families = ['utilities','condominium','taxes_insurance','maintenance_repairs','works_purchases','financing','unclassified'] as const;
 export type Family = typeof families[number];
-export const categoryLabels = ['Energia elettrica','Gas','Acqua','Internet e servizi','Condominio ordinario','Condominio straordinario','Assicurazione','Tributi','Manutenzione','Riparazioni e lavori','Acquisti e sostituzioni','Finanziamento','Altro'];
-export const familyLabels = ['Bollette','Condominio','Tasse e assicurazioni','Manutenzione e riparazioni','Lavori e acquisti','Mutuo e finanziamenti','Altro / Non classificata'];
+export const categoryLabels = ['Energia elettrica','Gas','Acqua','Internet e servizi','Condominio ordinario','Condominio straordinario','Assicurazione','Tributi','Manutenzione','Riparazioni e lavori','Acquisti','Finanziamento','Altro'];
+export const familyLabels = ['Bollette','Condominio','Tasse e assicurazioni','Manutenzione, riparazioni e lavori','Acquisti','Mutuo e finanziamenti','Altro / Non classificata'];
 export type ObjectRef = {kind:'object'|'boiler';id:string};
-export function family(category: Category | null, workId: string | null): Family {
+export function family(category: Category | null, _workId: string | null): Family {
+  void _workId; // Firma compatibile: il collegamento non determina il gruppo.
   if (category && ['electricity','gas','water','internet_services'].includes(category)) return 'utilities';
   if (category === 'condominium_ordinary') return 'condominium';
   if (category === 'taxes' || category === 'insurance') return 'taxes_insurance';
-  if (category === 'maintenance' || (category === 'repairs_works' && !workId)) return 'maintenance_repairs';
-  if (category && ['condominium_extraordinary','purchase_replacement','repairs_works'].includes(category)) return 'works_purchases';
+  if (category === 'maintenance' || category === 'repairs_works' || category === 'condominium_extraordinary') return 'maintenance_repairs';
+  if (category === 'purchase_replacement') return 'works_purchases';
   return category === 'financing' ? 'financing' : 'unclassified';
 }
 export function text(input: unknown, max: number, nullable = false): string | null {
@@ -79,7 +80,7 @@ export function economyQuery(input: unknown, today: string, summary = false) {
   const from=year?year+'-01-01':calendar(row.from)!,to=year?(year===today.slice(0,4)?today:year+'-12-31'):calendar(row.to)!;
   if (!from||!to||from>to) throw invalid();
   const cat=queryText(row.category,[...categories,'unclassified']),fam=queryText(row.family,families);
-  if (cat && fam && ![family(cat==='unclassified'?null:cat as Category,null),...(cat==='repairs_works'?['works_purchases']:[])].includes(fam)) throw invalid('Categoria e famiglia non compatibili.');
+  if (cat && fam && family(cat==='unclassified'?null:cat as Category,null)!==fam) throw invalid('Categoria e famiglia non compatibili.');
   if ((row.objectKind===undefined)!==(row.objectId===undefined)) throw invalid();
   const objectKind=queryText(row.objectKind,['object','boiler']);
   return {year,from,to,category:cat,family:fam,source:queryText(row.source,['all','manual','document'])??'all',state:summary?'active':queryText(row.state,['active','archived','all'])??'active',

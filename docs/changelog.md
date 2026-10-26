@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — Separati acquisti e interventi
+
+**Spese — gruppi distinti:** Acquisti separato da Manutenzione, riparazioni e lavori; collegamenti a lavori indipendenti dal gruppo. Codici e categorie salvate conservati, subtotali ricalcolati senza migrazione e totale generale invariato. [Report](v5/spese-gruppi-distinti-20261026.md). In verifica offline; PR e merge al committente.
+
 ## 26 ottobre 2026 — Spese: Acquisti e componenti
 
 **Spese — Acquisti e componenti:** categoria visuale «Acquisti» per oggetti nuovi, anche in sostituzione; aiuto esplicito verso «Riparazioni e lavori» per componenti durante un intervento. Codici e classificazioni salvate invariati, nessuna riclassificazione automatica. [Report](v5/spese-acquisti-20261026.md); verifica offline e PR separata, merge al committente.

@@ -32,7 +32,7 @@ export class EconomyService {
   }
   private encode(b:string,row:{id:string;createdAt?:Date;at?:Date;spentOn?:string}){return Buffer.from(JSON.stringify({b,i:row.id,t:(row.createdAt??row.at)!.toISOString(),...(row.spentOn?{d:row.spentOn}:{})})).toString('base64url');}
   async capabilities(a:string,h:string,input:unknown){object(input,[]);return this.expenses.read(a,h,async(_tx,_edit,context)=>({...context,apiVersion:'economy-v1',enabled:true,isSimulation:false,currency:'EUR',features:{history:true,works:true,documentDrafts:true},limits:{titleMaxCodePoints:120,noteMaxCodePoints:500,amountMaxCents:999999999,maxPageSize:50},
-    categories:categories.map((code,i)=>({code,label:categoryLabels[i],possibleFamilies:code==='repairs_works'?['maintenance_repairs','works_purchases']:[family(code,null)]})),families:families.map((code,i)=>({code,label:familyLabels[i]})),analysis:{enabled:true,disabledReason:null,providers:[{id:'test_fixture_v1',label:'Analisi di test · solo PDF sintetici S1',enabled:true,disabledReason:null,isSimulation:true,model:null},this.ai?await this.ai.descriptor(_tx):{id:'anthropic',label:'Anthropic',enabled:false,disabledReason:'ai_provider_disabled',isSimulation:false,model:null}]}}));}
+    categories:categories.map((code,i)=>({code,label:categoryLabels[i],possibleFamilies:[family(code,null)]})),families:families.map((code,i)=>({code,label:familyLabels[i]})),analysis:{enabled:true,disabledReason:null,providers:[{id:'test_fixture_v1',label:'Analisi di test · solo PDF sintetici S1',enabled:true,disabledReason:null,isSimulation:true,model:null},this.ai?await this.ai.descriptor(_tx):{id:'anthropic',label:'Anthropic',enabled:false,disabledReason:'ai_provider_disabled',isSimulation:false,model:null}]}}));}
   async get(a:string,h:string,id:string,q:unknown){object(q,[]);uuid(id);return this.expenses.read(a,h,async(tx,edit)=>({expense:await this.expenses.project(tx,await this.expenses.record(tx,a,h,id),edit,true)}));}
   create(a:string,h:string,b:unknown,k?:string){return this.expenses.mutate(a,h,'create','',b,k,true);}
   update(a:string,h:string,id:string,b:unknown,k?:string){return this.expenses.mutate(a,h,'update',id,b,k,true);}
@@ -54,7 +54,7 @@ export class EconomyService {
     if(q.state!=='all')parts.push(Prisma.sql`e.state::text=${q.state}`);
     if(q.source==='manual')parts.push(Prisma.sql`e."documentId" IS NULL`);else if(q.source==='document')parts.push(Prisma.sql`e."documentId" IS NOT NULL`);
     if(q.category)parts.push(q.category==='unclassified'?Prisma.sql`e.category IS NULL`:Prisma.sql`e.category=${q.category}`);
-    if(q.family){const codes=categories.filter(c=>family(c,null)===q.family||c==='repairs_works'&&q.family==='works_purchases');const conditions=codes.map(c=>c==='repairs_works'?Prisma.sql`(e.category=${c} AND e."workId" IS ${q.family==='works_purchases'?Prisma.sql`NOT NULL`:Prisma.sql`NULL`})`:Prisma.sql`e.category=${c}`);if(q.family==='unclassified')conditions.push(Prisma.sql`e.category IS NULL`);parts.push(Prisma.sql`(${Prisma.join(conditions,' OR ')})`);}
+    if(q.family){const codes=categories.filter(c=>family(c,null)===q.family);const conditions=codes.map(c=>Prisma.sql`e.category=${c}`);if(q.family==='unclassified')conditions.push(Prisma.sql`e.category IS NULL`);parts.push(Prisma.sql`(${Prisma.join(conditions,' OR ')})`);}
     if(q.q)parts.push(Prisma.sql`(e.title ILIKE ${literal(q.q)} OR e.supplier ILIKE ${literal(q.q)})`);
     if(q.workId)parts.push(Prisma.sql`e."workId"=${q.workId}`);
     if(q.documentId)parts.push(Prisma.sql`e."documentId"=${q.documentId}`);
@@ -64,7 +64,7 @@ export class EconomyService {
     ))`);
     return Prisma.join(parts,' AND ');
   }
-  async list(a:string,h:string,input:unknown){return this.expenses.read(a,h,async(tx,edit,context)=>{const q=economyQuery(input,context.today),b=digest(JSON.stringify([a,h,'economy-expenses-reference-v2',{...q,limit:undefined,cursor:undefined}])),anchor=this.cursor(q.cursor,b,true);await this.references(tx,a,h,q);
+  async list(a:string,h:string,input:unknown){return this.expenses.read(a,h,async(tx,edit,context)=>{const q=economyQuery(input,context.today),b=digest(JSON.stringify([a,h,'economy-expenses-reference-v3',{...q,limit:undefined,cursor:undefined}])),anchor=this.cursor(q.cursor,b,true);await this.references(tx,a,h,q);
     const rows=await tx.$queryRaw<HomeExpense[]>(Prisma.sql`SELECT e.* FROM "HomeExpense" e WHERE ${this.where(a,h,q)} ${anchor?Prisma.sql`AND (${referenceDateSql},e."createdAt",e.id)<(${anchor.d},${anchor.t}::timestamp,${anchor.i})`:Prisma.sql``} ORDER BY ${referenceDateSql} DESC,e."createdAt" DESC,e.id DESC LIMIT ${q.limit+1}`);
     const page=rows.slice(0,q.limit);return {items:await Promise.all(page.map(row=>this.expenses.project(tx,row,edit,true))),nextCursor:rows.length>q.limit?this.encode(b,{...page.at(-1)!,spentOn:referenceDate(page.at(-1)!)}):null};});}
   private async totals(tx:Tx,a:string,h:string,q:Query){

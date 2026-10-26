@@ -48,6 +48,26 @@ async function seedTypical(backend: FakeBackend, acc: string, home: string) {
 }
 
 describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
+  it('acquisti separati dagli interventi con e senza lavoro, senza doppio conteggio', async () => {
+    const {backend,owner,home}=world();
+    const work=(await s1(backend,owner.id,home.id,'works',{name:'Intervento sintetico'})).work!;
+    for(const [title,category,amountCents,workId] of [
+      ['Oggetto nuovo','purchase_replacement',1000,work.id],
+      ['Componente sostituito','repairs_works',2000,work.id],
+      ['Riparazione autonoma','repairs_works',3000,null],
+      ['Lavoro straordinario','condominium_extraordinary',4000,null],
+    ])await s1(backend,owner.id,home.id,'expenses',{title,category,amountCents,workId,spentOn:'2026-09-01'});
+    const app=await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/spese?vista=panoramica`);
+    const legend=await screen.findByRole('list',{name:'Gruppi di spesa con costi registrati'});
+    expect(within(legend).getByRole('button',{name:/^Acquisti: 10,00 €/})).toBeVisible();
+    const interventions=within(legend).getByRole('button',{name:/^Manutenzione, riparazioni e lavori: 90,00 €/});
+    await app.user.click(interventions);
+    expect(await screen.findByRole('link',{name:'Componente sostituito'})).toBeVisible();
+    expect(screen.getByRole('link',{name:'Riparazione autonoma'})).toBeVisible();
+    expect(screen.getByRole('link',{name:'Lavoro straordinario'})).toBeVisible();
+    expect(screen.queryByRole('link',{name:'Oggetto nuovo'})).not.toBeInTheDocument();
+    expect(posts(backend,/\/economy\/expenses/)).toHaveLength(0);
+  });
   it('vista Panoramica esplicita: totale, misura senza finanziamenti, legenda e percentuali dal summary anche oltre la prima pagina', async () => {
     const { backend, owner, home } = world();
     for (let i = 0; i < 25; i++) await s1(backend, owner.id, home.id, 'expenses', { title: `Gas ${i}`, amountCents: 1000, spentOn: '2026-03-01', category: 'gas' });
@@ -269,18 +289,18 @@ describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
     expect(within(form).queryByRole('option', { name: 'Acquisti e sostituzioni' })).not.toBeInTheDocument();
     expect(within(form).getByText(/Per sostituire un componente durante un intervento scegli Riparazioni e lavori/)).toBeVisible();
     fireEvent.change(within(form).getByLabelText('Categoria (facoltativa)'), { target: { value: 'repairs_works' } });
-    expect(within(form).getByText(/Gruppo di spesa previsto/)).toHaveTextContent('Manutenzione e riparazioni');
+    expect(within(form).getByText(/Gruppo di spesa previsto/)).toHaveTextContent('Manutenzione, riparazioni e lavori');
     await waitFor(() => expect(within(within(form).getByLabelText('Lavoro (facoltativo)')).getByRole('option', { name: 'Rifacimento bagno' })).toBeInTheDocument());
     const workOpt = within(within(form).getByLabelText('Lavoro (facoltativo)')).getByRole('option', { name: 'Rifacimento bagno' }) as HTMLOptionElement;
     fireEvent.change(within(form).getByLabelText('Lavoro (facoltativo)'), { target: { value: workOpt.value } });
-    expect(within(form).getByText(/Gruppo di spesa previsto/)).toHaveTextContent('Lavori e acquisti');
+    expect(within(form).getByText(/Gruppo di spesa previsto/)).toHaveTextContent('Manutenzione, riparazioni e lavori');
     await app.user.click(within(form).getByRole('button', { name: 'Registra spesa' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Piastrelle' })).toBeInTheDocument();
     const body = posts(backend, /\/economy\/expenses$/)[0]!.body as Record<string, unknown>;
     expect(body).toMatchObject({ title: 'Piastrelle', amountCents: 103550, spentOn: '2026-09-10', category: 'repairs_works', workId: workOpt.value });
     expect(body).not.toHaveProperty('family');
     expect(posts(backend, /\/economy\/expenses$/)[0]!.headers['idempotency-key']).toMatch(/^[A-Za-z0-9_-]{16,100}$/);
-    expect(screen.getAllByText('Lavori e acquisti').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Manutenzione, riparazioni e lavori').length).toBeGreaterThan(0);
     await app.user.click(screen.getByRole('link', { name: '← Spese' }));
     expect(await screen.findByRole('button', { name: 'Registra una spesa' })).toBeInTheDocument();
     expect(screen.queryByRole('form', { name: 'Registra una spesa' })).not.toBeInTheDocument();

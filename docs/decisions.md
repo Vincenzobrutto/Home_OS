@@ -1,3 +1,8 @@
+## 26 ottobre 2026 — Gruppi Spese: acquisti distinti dagli interventi
+
+Il committente approva Acquisti separato da Manutenzione, riparazioni e lavori. I componenti sostituiti durante un intervento usano repairs_works; nuovi oggetti purchase_replacement. Il gruppo deriva dalla categoria senza dipendere da workId; i lavori condominiali straordinari confluiscono negli interventi, uscendo dal precedente gruppo misto. Codici API mantenuti, nessuna riscrittura delle registrazioni: cambiano proiezione e subtotali per gruppo, non importi o categorie. Contratto corrente in [economic-history-api-contract.md](v5/economic-history-api-contract.md), report [lotto](v5/spese-gruppi-distinti-20261026.md).
+
+
 ## 26 ottobre 2026 — Titoli di servizio generici distinti dai titoli personalizzati
 
 Su richiesta del committente di uniformare a video i documenti già caricati, una descrizione esatta e generica del servizio può usare il fornitore già confermato nella stessa unica spesa personale attiva. Le altre scelte di titolo restano preservate. Non attribuire una descrizione del servizio a una società, né ricavare il fornitore da documenti simili. Per i soli alias si possono omettere suffissi legali espliciti terminali; questa formattazione non stabilisce identità, equivalenze o deduplicazioni societarie. Nessuna scrittura su titoli, originali o spese; nessun OCR o fetch automatico aggiuntivo. [Regola e verifiche](v5/bollette-titoli-servizio-20261026.md).
