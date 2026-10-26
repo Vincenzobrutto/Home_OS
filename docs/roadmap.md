@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+**Uniformare i titoli generici delle bollette già caricate:** [report](v5/bollette-titoli-servizio-20261026.md). Per le sole descrizioni generiche di servizio, usare il fornitore personale confermato; suffissi legali espliciti normalizzati a video, titoli specifici preservati. Nessun cambiamento dei dati o rilettura automatica degli originali. Nuovi23/23, regressioni 260/260 in 27 file e typecheck/lint/build verdi; PR con merge e attivazione al committente.
+
 **Nomi progressivi delle bollette:** [report](v5/bollette-nomi-progressivi-20261026.md). Superato il requisito visuale di fornitore e mese insieme: dati singoli utilizzabili separatamente, fallback Bolletta e filename, titoli personalizzati preservati. Nessuna deduzione da altre date o scelta tra più spese. Nuovi16/16, regressioni 237/237 in 25 file e typecheck/lint/build verdi; solo frontend, app invariata e merge al committente.
 
 **Nomi parlanti estesi ai completati:** [lotto](v5/documenti-nomi-parlanti-20261026.md), fonte verificata67c3fa5. Fatture, ordini, ricevute e documenti specifici possono presentare tipo, oggetti e dati personali confermati già disponibili; bollette, originali e titoli personalizzati preservati. Nuovi35/35, regressioni221/221 in23file e typecheck/lint/build verdi. Solo frontend, nessuna lettura o bonifica reale; app invariata e PR con merge al committente.
