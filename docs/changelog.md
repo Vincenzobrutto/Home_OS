@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — Attivate le etichette Spese
+
+**Rilascio Spese — etichette attive:** PR #61 e #62 integrate su approvazione a3ceb73c, hash remoto verificato. Frontend aggiornato, build e33/33 HTTP statici/anonimi verdi; API/PostgreSQL/main e dati preservati. [Rilascio verificato](v5/spese-etichette-rilascio-20261026.md); nessuna AI o migrazione. Verifica visiva finale al committente.
+
 ## 26 ottobre 2026 — Spese: Acquisti e componenti
 
 **Spese — Acquisti e componenti:** categoria visuale «Acquisti» per oggetti nuovi, anche in sostituzione; aiuto esplicito verso «Riparazioni e lavori» per componenti durante un intervento. Codici e classificazioni salvate invariati, nessuna riclassificazione automatica. [Report](v5/spese-acquisti-20261026.md); verifica offline e PR separata, merge al committente.
