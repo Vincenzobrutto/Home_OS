@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — attivazione dei nomi progressivi delle bollette
+
+PR #58 integrata su approvazione a b1f3953d87a1289a98cfae4b4dbac82edc93f6a5, hash remoto verificato. Solo frontend ricompilato e attivato;21/21 controlli HTTP statici/anonimi verdi, API15744 e PostgreSQL22924 preservati. Nessuna AI/email, migrazione, richiesta autenticata, lettura di originali o salvataggio automatico durante il rilascio. Main remoto invariato a cdbb318. [Report](v5/bollette-nomi-progressivi-20261026.md#rilascio-autorizzato). Consegna documentale insieme al rilascio precedente nella [PR #57](https://github.com/Vincenzobrutto/Home_OS/pull/57).
+
 ## 26 ottobre 2026 — attivazione dei nomi parlanti estesi
 
 PR #56 integrata su approvazione a37e7687e116733fea15472518936e6de00e57997, hash remoto verificato. Solo frontend ricompilato e attivato,20/20 controlli HTTP statici/anonimi verdi; API15744 e PostgreSQL22924 preservati. Nessuna AI/email, migrazione, lettura di originali, richiesta autenticata o salvataggio automatico durante il rilascio. Main remoto invariato a cdbb318. [Report di rilascio](v5/documenti-nomi-parlanti-20261026.md#rilascio-autorizzato).

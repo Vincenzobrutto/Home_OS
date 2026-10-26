@@ -1,6 +1,6 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
-**Nomi progressivi delle bollette:** [report](v5/bollette-nomi-progressivi-20261026.md). Superato il requisito visuale di fornitore e mese insieme: dati singoli utilizzabili separatamente, fallback Bolletta e filename, titoli personalizzati preservati. Nessuna deduzione da altre date o scelta tra più spese. Nuovi16/16, regressioni 237/237 in 25 file e typecheck/lint/build verdi; solo frontend, app invariata e merge al committente.
+**Nomi progressivi delle bollette:** [report](v5/bollette-nomi-progressivi-20261026.md). Superato il requisito visuale di fornitore e mese insieme: dati singoli utilizzabili separatamente, fallback Bolletta e filename, titoli personalizzati preservati. Nessuna deduzione da altre date o scelta tra più spese. Nuovi16/16, regressioni 237/237 in 25 file e typecheck/lint/build verdi; solo frontend. PR #58 integrata su approvazione a b1f3953 e frontend attivato:21/21 controlli statici/anonimi verdi; API/PostgreSQL/main e dati preservati.
 
 **Nomi parlanti estesi ai completati:** [lotto](v5/documenti-nomi-parlanti-20261026.md), fonte verificata67c3fa5. Fatture, ordini, ricevute e documenti specifici possono presentare tipo, oggetti e dati personali confermati già disponibili; bollette, originali e titoli personalizzati preservati. Nuovi35/35, regressioni221/221 in23file e typecheck/lint/build verdi. Solo frontend, nessuna lettura o bonifica reale. PR #56 integrata su approvazione a37e7687 e frontend attivato:20/20 HTTP statici/anonimi verdi; API/PostgreSQL/main e dati preservati.
 
