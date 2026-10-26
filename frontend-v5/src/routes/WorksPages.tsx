@@ -320,7 +320,7 @@ function WorkStateDialog(props: { home: Home; work: EconomyWork; kind: 'archive'
     <Dialog title={label} onClose={props.onClose} dismissDisabled={disabled}>
       <p className={act.meta}>
         {props.kind === 'archive'
-          ? 'I costi già collegati restano nel lavoro e nella loro famiglia. Un lavoro archiviato non accetta nuove assegnazioni.'
+          ? 'I costi già collegati restano nel lavoro e nel loro gruppo di spesa. Un lavoro archiviato non accetta nuove assegnazioni.'
           : 'Il lavoro torna attivo e accetta di nuovo costi.'}
       </p>
       <EconomyFeedback op={op} homeId={props.home.id} title="Operazione non eseguita" onRetry={() => op.retry(props.onClose)} />

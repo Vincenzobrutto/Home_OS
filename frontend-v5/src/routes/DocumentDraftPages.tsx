@@ -935,7 +935,7 @@ function DraftView(props: { home: Home; caps: EconomyCapabilities; draft: Econom
             </select>
             <p className={ui.hint}>Per un oggetto nuovo, anche se sostituisce il precedente, scegli Acquisti. Per sostituire un componente durante un intervento scegli Riparazioni e lavori.</p>
             {proposedNote('category')}
-            <span className={styles.preview}>Famiglia prevista: <strong>{familyLabel(previewFamily(category ? (category as Category) : null, !!workId), caps)}</strong>. La calcola il servizio.</span>
+            <span className={styles.preview}>Gruppo di spesa previsto: <strong>{familyLabel(previewFamily(category ? (category as Category) : null, !!workId), caps)}</strong>. Lo calcola il servizio.</span>
           </div>
 
           <div className={ui.field}>

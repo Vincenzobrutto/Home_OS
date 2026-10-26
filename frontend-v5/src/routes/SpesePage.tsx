@@ -779,7 +779,7 @@ function Summary({ summary, caps }: { summary: NonNullable<ReturnType<typeof use
     <>
       <section className={ui.card} aria-labelledby="spese-riepilogo">
         <h2 id="spese-riepilogo" className={pages.cardTitle}>
-          Riepilogo per famiglia e categoria
+          Riepilogo per gruppo di spesa e categoria
         </h2>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
