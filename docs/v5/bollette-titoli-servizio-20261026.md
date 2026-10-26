@@ -29,3 +29,17 @@ Regressioni area **260/260 in 27 file**, un worker/retry0 e zero fallimenti/salt
 Build finale9,05s. Prima area in `work/service-title-focus.log` e `-focus-before-hardening.json`, area definitiva in `-focus-final.log` e `-focus.json`, entrambe260/260. Nessun test fallito o asserzione precedente modificata in questo lotto. Diff e link locali verificati, push verificato con `git ls-remote`; codice dopo i test invariato. Consegna nella [PR #59](https://github.com/Vincenzobrutto/Home_OS/pull/59), pronta per revisione; nessun merge o aggiornamento app implicito.
 
 Approvare la PR del lotto per merge e attivazione del frontend. La regola si applicherà anche ai documenti già caricati al successivo caricamento della lista: non servono upload, nuove compilazioni, modifiche alle spese o conferme duplicate. Gli altri titoli personalizzati restano preservati; un titolo generico senza fornitore univoco non viene attribuito a un'azienda per somiglianza.
+
+## Rilascio autorizzato
+
+PR #59 integrata su approvazione a e95f8fd4468a89e8015293d24367d1a4d223eb17, hash remoto verificato. Solo frontend ricompilato e attivato; 23/23 controlli HTTP statici/anonimi verdi. Verifica aggiuntiva dell’archivio reale in sola lettura: i due titoli generici consultati mostrano ora «Bolletta Sorgenia»; suffisso societario TIM omesso nel solo alias. API, PostgreSQL, main e dati salvati preservati. Nessuna AI/email, migrazione, upload o salvataggio automatico.
+
+Runtime detached `Dimora-V5-runtime-titoli-servizio-20261026`, fonte e95f8fd, albero frontend identico alla punta approvata 0d3ddf4 e backend identico alla API attiva a8de901. Lock verificato e build verde in 8,72 s. Fermato soltanto il precedente frontend16808 dopo verifica fresca di identità, creazione, comando e listener; nuovo frontend13740 su loopback5174. API15744 su3011 e PostgreSQL22924 su55432 mantenuti con identità e listener invariati. Header `roma-consolidata-a8de901-no-ai` e risposta anonima401 verificati; nessun cambiamento alle guardie. Main remoto invariato a cdbb318ddb56e764ad4b111a71560e3e71c7a033.
+
+I23 controlli statici/anonimi comprendono formatter, alias, dettagli del file, rilettura locale, mese fattura, tracciabilità/classificatore, asset PDF/OCR e API anonima. Separatamente, archivio consultato da una scheda nascosta in sola lettura senza interrompere la pagina del committente: verificata la sostituzione dei titoli generici già esistenti, senza aprire originali o avviare nuove compilazioni. Nessun contenuto personale copiato nel repository. I260/260 test area e typecheck/lint/build della punta approvata restano l’evidenza funzionale offline; suite mock completa non ripetuta in questo rilascio perché il codice verificato è invariato. Evidenze locali `work/service-title-release-build.log`, `-runtime-proof.json`, `-runtime-http-proof.json` e metadata runtime canonici.
+
+PR #57 aggiornata con la sola documentazione dei tre rilasci. Consolidamento riportato nel branch documentale con merge, senza rebase; preservate le consegne precedenti nei conflitti di stato/roadmap/changelog. Nessun altro codice prodotto.
+
+### Attività del committente dopo il rilascio
+
+Aggiornare la pagina Documenti. Non ricaricare file né riconfermare spese o oggetti. Restano preservati i titoli personalizzati; documenti senza fornitore univoco non vengono attribuiti a un’azienda. Rimane soltanto l’approvazione documentale della PR #57, che non condiziona l’app già attiva.

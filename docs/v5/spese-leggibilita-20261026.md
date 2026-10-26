@@ -41,3 +41,17 @@ Log locali `work/spese-new.log/json` (13/13), `spese-focus.log/json` (71/72, fal
 [PR #60](https://github.com/Vincenzobrutto/Home_OS/pull/60) verso il consolidamento; nessun merge. Push verificato con `git ls-remote`, worktree proprio pulito dopo i commit. Ultimo fetch conferma la base e95f8fd e main invariato a cdbb318. Dopo i test soltanto documentazione; codice prodotto identico alla fonte verificata. Le quattro aspettative di nome accessibile del totale nei due test S1c sono state aggiornate al nuovo testo: asserzioni su dati, consensi e mutazioni invariate. Nessun file del cestino o del classificatore cambiato.
 
 Attività del committente: approvare la PR #60 per merge e attivazione del frontend, poi rivedere elenco e grafico desktop/mobile senza creare nuove spese. La PR #57, di sola documentazione dei rilasci precedenti, rimane separata.
+
+## Rilascio autorizzato
+
+PR #60 integrata su approvazione a d5bf35f33b8f8aa406b0183b9b5f421853b8da00, hash remoto verificato. Solo frontend ricompilato e attivato; build12,47s e29/29 controlli statici/anonimi verdi. API15744 e PostgreSQL22924 preservati con identità/listener invariati; main remoto invariato a cdbb318. Nessuna AI/email, migrazione, upload o salvataggio automatico.
+
+Runtime detached `Dimora-V5-runtime-spese-20261026` dalla fonte d5bf35f. Albero frontend identico alla punta approvata eb6ce87 e backend identico alla API attiva a8de901. Lock verificato, ambiente pulito e configurazione esterna, nessun .env. Fermato soltanto il vecchio frontend13740 dopo verifica fresca di PID/creazione/comando/listener; nuovo frontend16596 su loopback5174. API3011 e PostgreSQL55432 mantenuti, header `roma-consolidata-a8de901-no-ai` esatto. Primo controllo subito dopo lo start: connessione rifiutata prima della readiness; successivo controllo29/29 verde, senza riavviare altri servizi. I1548/1548 offline restano evidenza funzionale; non ripetuti perché il codice è identico alla fonte approvata.
+
+Evidenze locali `work/spese-release-build.log`, `-runtime-proof.json`, `-runtime-http-proof.json`, `-frontend.log` e metadata canonici. La PR #57 viene aggiornata con questa consegna, senza altro codice prodotto. Consolidamento riportato nel branch documentale con merge, senza rebase, preservando i tre rilasci precedenti nei conflitti di stato/roadmap/changelog.
+
+Attività del committente: aprire Spese e verificare elenco, date, filtri e grafico. Nessun documento da ricaricare o spesa da riconfermare. Rimane la sola approvazione documentale della PR #57, che non condiziona il frontend già attivo.
+
+### Verifica visiva dopo l’attivazione
+
+App desktop consultata nel browser integrato in sola lettura: nuovi titoli, mese fattura distinto dai servizi quando assente, emissione e scadenza etichettate, importi allineati anche accanto a titoli lunghi. Grafico e legenda visibili a fianco dell’elenco. Nessuna compilazione, apertura di originali, modifica di filtri, upload o salvataggio; soltanto apertura della pagina e scorrimento. Evidenze locali private `outputs/audit-spese-20261026/05-spese-attive.png`, `06-spese-elenco-grafico.png`, `07-spese-grafico.png`; l’ultima mostra elenco e grafico ed è stata riaperta e ispezionata. Immagini e dati non copiati nel repository. Nessuna prova su telefono fisico né certificazione di accessibilità. API e PostgreSQL ricontrollati dopo l’attivazione: identità/creazione/listener invariati.

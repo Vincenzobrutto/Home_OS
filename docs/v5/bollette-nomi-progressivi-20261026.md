@@ -38,3 +38,17 @@ Consegna nella [PR #58](https://github.com/Vincenzobrutto/Home_OS/pull/58), pron
 PR verso il consolidamento dopo i controlli; merge e successiva attivazione frontend al committente. Nessuna attivazione implicita, AI/email, accesso al DB/API/storage reale, migrazione o salvataggio automatico durante questo lotto. Dopo il rilascio basterà aggiornare la pagina Documenti; non occorre ricaricare file o riconfermare spese e oggetti. Documenti multiparte e titoli personalizzati restano distinti dai fallback automatici.
 
 Build finale7,90s. Log prima regressione `work/progressive-title-focus.log` e `-focus-initial.json` (235/237), ripetizione verde `-focus-final.log` e `-focus.json` (237/237); mirata78/78 in `-new.log/json`, statici in `-checks.log`. Nessun timeout aumentato o risultato rosso nascosto.
+
+## Rilascio autorizzato
+
+PR #58 integrata su approvazione a b1f3953d87a1289a98cfae4b4dbac82edc93f6a5, hash remoto verificato. Solo frontend ricompilato e attivato;21/21 controlli HTTP statici/anonimi verdi, API15744 e PostgreSQL22924 preservati. Nessuna AI/email, migrazione, richiesta autenticata, lettura di originali o salvataggio automatico durante il rilascio. Main remoto invariato a cdbb318.
+
+Runtime detached `Dimora-V5-runtime-nomi-progressivi-20261026`, frontend identico alla punta approvata577722d e alla fonte prodotto f0cf664; backend identico alla API attiva a8de901. Lock verificato e build frontend verde6,10s prima del cambio. Fermato soltanto il vecchio frontend35876 dopo verifica di PID, creazione, comando e listener; nuovo frontend16808 su loopback5174. API15744 su3011 e PostgreSQL22924 su55432 mantenuti con identità/creazione/listener invariati; header `roma-consolidata-a8de901-no-ai` verificato. Nessun cambio alle guardie o alla policy interattiva. Nessun nuovo backup o audit SQL necessario per il solo frontend.
+
+21/21 controlli: fallback progressivo e presentazione degli altri documenti, dettagli del file, rilettura locale/mese/traccia/classificatore, asset PDF/OCR e API anonima401 con header esatto. Nessuna prova browser autenticata o verifica dei nomi di documenti reali rivendicata. I237/237 offline restano l’evidenza funzionale, non ripetuta perché gli alberi prodotto sono identici. Evidenze locali `work/progressive-title-release-build.log`, `-runtime-proof.json`, `-runtime-http-proof.json`, log frontend e metadata canonici `roma-runtime.json`/`schede-app-frontend-runtime.json`.
+
+La [PR #57](https://github.com/Vincenzobrutto/Home_OS/pull/57) viene aggiornata con la consegna documentale di entrambi i rilasci #56 e #58, senza nuovo codice prodotto. Il consolidamento è stato riportato nel branch documentale con merge, senza rebase; conflitti soltanto in stato/roadmap/changelog, risolti preservando sia l’evolutiva sia la consegna precedente. Diff finale rispetto al consolidamento soltanto documentale.
+
+### Attività del committente dopo il rilascio
+
+Aggiornare la pagina Documenti e verificare le bollette completate con dati parziali. Non ricaricare file né riconfermare spese/oggetti. I titoli personalizzati e i documenti compositi restano invariati; il nome originale è ancora nei dettagli. Rimane solo l’approvazione documentale della PR #57, che non condiziona l’attivazione già avvenuta.
