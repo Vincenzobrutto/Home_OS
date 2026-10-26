@@ -1,5 +1,10 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+**Spese — dettaglio riparazioni nel Riepilogo:** rimossa la vecchia esclusione di repairs_works e la nota sul raggruppamento per lavoro, superata dalla PR #64. Righe di categoria da byCategory e totali server invariati. Regressione prima rossa e poi verde; gruppo 47/47 offline, typecheck/lint/build verdi; lotto chiuso e area liberata. [Report](v5/spese-riepilogo-riparazioni-20261026.md). App invariata, merge al committente.
+
+**Proposta UX da concordare:** pagina unica con periodo prioritario, anello/riepilogo filtranti e analisi richiudibile; conservare filtri progressivi e registrazione rapida. Confronto basato sulla descrizione Claude, non audit visivo dell’artifact. Supporto backend ulteriore separato; nessun redesign implementato. Dettagli nel report del Riepilogo.
+
+
 **Gruppi Spese attivi:** PR #64 integrata su approvazione a ccc8469; API/frontend aggiornati insieme, cluster esistente ripristinato senza migrazioni. Build e34/34 HTTP statici/anonimi verdi; nessuna AI o scrittura applicativa eseguita. [Consegna e limiti](v5/spese-gruppi-rilascio-20261026.md). Verifica finale della pagina Spese al committente.
 
 
