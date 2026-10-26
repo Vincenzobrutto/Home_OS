@@ -30,4 +30,6 @@ Evidenze nel task locale: `work/readable-document-new.log`, `-new-final.log`, `-
 
 ## Attività del committente
 
+Consegna nella [PR #56](https://github.com/Vincenzobrutto/Home_OS/pull/56), pronta per revisione verso il consolidamento. Push verificato con `git ls-remote`; ultime modifiche soltanto documentali, fonte prodotto invariata67c3fa5. Nessun merge o attivazione implicita.
+
 Approvare la PR per integrazione e successiva attivazione del frontend. Poi controllare nell'archivio un documento completato collegato a oggetti o con una sola spesa: il nome originale deve essere ancora disponibile nei dettagli. I documenti privi dei dati necessari resteranno col nome precedente; non richiedono ricreazione, ricaricamento o conferma duplicata.
