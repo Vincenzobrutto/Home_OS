@@ -21,3 +21,7 @@ Nessuna nuova dipendenza. Runner con ambiente ripulito, envDir vuota, un worker 
 Stato, roadmap e changelog aggiornati; PR verso il consolidamento. Nessun collaudo visivo né attivazione per questo lotto. Merge e rilascio al committente.
 
 Attività del committente: approvare la PR; dopo l’attivazione verificare la distinzione nel selettore delle categorie.
+
+## Rilascio autorizzato
+
+Integrato e attivato nel frontend il 26 ottobre 2026: [esito e limiti del rilascio](spese-etichette-rilascio-20261026.md). Nessuna riclassificazione delle spese salvate.

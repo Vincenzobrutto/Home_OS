@@ -19,3 +19,7 @@ Esecuzione con dipendenze preesistenti e lock identico, ambiente ripulito dal ru
 Candidato verificato soltanto offline; nessun collaudo visivo di questo lotto e nessuna attivazione. Nessuna AI/email, lettura o scrittura su DB/API/storage reale, migrazione, modifica .env o salvataggio automatico. Main, branch Claude e ambiente applicativo preservati. PR verso il consolidamento; merge e successiva attivazione al committente.
 
 Attività del committente: approvare la PR e, dopo il rilascio, verificare le nuove diciture nella pagina Spese.
+
+## Rilascio autorizzato
+
+Integrato e attivato nel frontend il 26 ottobre 2026: [esito e limiti del rilascio](spese-etichette-rilascio-20261026.md). Nessuna riclassificazione delle spese salvate.
