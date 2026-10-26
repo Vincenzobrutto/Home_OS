@@ -412,3 +412,19 @@
 @media(max-width:600px){.header{margin-bottom:12px;gap:8px}.header h1{margin:4px 0}.header>div>p{margin:4px 0}.headerActions{gap:4px}.headerActions :global(button){font-size:13px;padding:8px 12px}.headerActions>p:first-child>a{font-size:13px;min-height:24px;padding:4px 0;border:0;background:none}.hero{padding:10px;gap:4px}.hero .total{gap:0}}
 
 .activeFilters{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.activeFilters button{min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere;font-size:13px;border-radius:20px}.workspace .filtersBox>summary{min-height:44px;align-content:center}.workspace .filterGrid{grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr))}.workspace .filterGrid select{width:100%;min-width:0}.workspace :global(.expense-search){flex-wrap:nowrap}.workspace :global(.expense-search label){min-width:0;flex:1}.workspace :global(.expense-search button){min-height:44px}@media(max-width:600px){.workspace :global(.expense-search){flex-wrap:wrap}.workspace :global(.expense-search label){flex:1 1 180px}.workspace .filterGrid{grid-template-columns:1fr}.workspace .filtersBox{padding:4px 12px}}
+
+/* Lotto leggibilità: importi stabili, date etichettate, nessun cambio dei valori. */
+.expenseHead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start}
+.expenseHead>a{min-width:0;overflow-wrap:anywhere}
+.expenseAmount{font-size:18px;font-weight:750;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--color-ink)}
+.expenseCategory{display:block;color:var(--color-accent);font-size:13px;margin-top:4px}
+.expenseDates{display:flex;flex-wrap:wrap;gap:5px 16px;margin-top:12px;color:var(--color-muted);font-size:14px}
+.expenseContext{display:block;margin-top:7px;color:var(--color-muted);font-size:13px;overflow-wrap:anywhere}
+.dateHelp{font-size:14px;color:var(--color-muted)}
+.dateHelp>summary{cursor:pointer;padding:8px 0;width:fit-content;min-height:44px}
+.dateHelp p{max-width:75ch;margin:4px 0 12px}
+.dateHelp>summary:focus-visible,.quickFilters select:focus-visible,:global(.expense-tabs button:focus-visible){outline:3px solid var(--color-focus);outline-offset:3px}
+.quickFilters{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.quickFilters>label{display:grid;gap:5px;color:var(--color-muted);font-size:14px;min-width:0;flex:1 1 220px;max-width:420px}
+.quickFilters select{width:100%;min-width:0}
+@media(max-width:600px){.expenseHead{gap:10px}.expenseAmount{font-size:16px}.expenseDates{display:grid;gap:5px}.quickFilters{gap:10px}.quickFilters>label{max-width:none;flex-basis:100%}.expenseRow{padding:16px}}

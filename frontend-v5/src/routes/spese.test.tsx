@@ -53,7 +53,7 @@ describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
     for (let i = 0; i < 25; i++) await s1(backend, owner.id, home.id, 'expenses', { title: `Gas ${i}`, amountCents: 1000, spentOn: '2026-03-01', category: 'gas' });
     await s1(backend, owner.id, home.id, 'expenses', { title: 'Rata', amountCents: 25000, spentOn: '2026-04-01', category: 'financing' });
     await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese?vista=panoramica`);
-    const total = await screen.findByRole('region', { name: /Tutte le famiglie/ });
+    const total = await screen.findByRole('region', { name: /Costi registrati nel periodo/ });
     expect(total).toHaveTextContent('500,00 €');
     expect(total).toHaveTextContent('Senza mutuo e finanziamenti: 250,00 €');
     expect(total).toHaveTextContent('26 registrazioni');
@@ -152,7 +152,7 @@ describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
     expect(screen.queryByText('0,00 €')).not.toBeInTheDocument();
     backend.economy.unavailable = false;
     await app.user.click(screen.getByRole('button', { name: 'Riprova' }));
-    expect(await screen.findByRole('region', { name: /Tutte le famiglie/ })).toHaveTextContent('723,00 €');
+    expect(await screen.findByRole('region', { name: /Costi registrati nel periodo/ })).toHaveTextContent('723,00 €');
   });
 });
 
@@ -161,7 +161,7 @@ describe('[mock] S1 Spese — privacy, capabilities e ripiego', () => {
     const { backend, owner, home } = world();
     await seedTypical(backend, owner.id, home.id);
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
-    await screen.findByRole('region', { name: /Tutte le famiglie/ });
+    await screen.findByRole('region', { name: /Costi registrati nel periodo/ });
     const economyKeys = () => app.queryClient.getQueryCache().getAll().filter((q) => q.queryKey.includes('economy') && q.queryKey[1] === owner.id);
     expect(economyKeys().length).toBeGreaterThan(0);
     // Logout via shell e accesso con un altro account.
@@ -174,7 +174,7 @@ describe('[mock] S1 Spese — privacy, capabilities e ripiego', () => {
     await app.user.click(screen.getByRole('button', { name: 'Accedi' }));
     await waitFor(() => expect(app.router.state.location.pathname).toMatch(/^\/(case|home\/)/));
     await app.router.navigate(`/home/${home.id}/spese`);
-    await screen.findByRole('region', { name: /Tutte le famiglie/ });
+    await screen.findByRole('region', { name: /Costi registrati nel periodo/ });
     const app2 = app;
     backend.memberships = backend.memberships.filter((m) => !(m.accountId === owner.id && m.homeId === home.id));
     await app2.router.navigate(`/home/${home.id}/spese?vista=panoramica&anno=2025`);
@@ -419,16 +419,19 @@ describe('[mock] S1 contesto della nuova spesa', () => {
 
 export type { App };
 
-it('compact expense filters apply explicitly, collapse, expose removable chips and preserve search on reset',async()=>{
+it('quick type applies immediately; advanced filters collapse, expose chips and preserve private search on reset',async()=>{
  const {backend,owner,home}=world();await seedTypical(backend,owner.id,home.id);
  const app=await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/spese?vista=elenco`);
  const search=await screen.findByRole('searchbox',{name:'Cerca in descrizione o fornitore'});await app.user.type(search,'Bolletta');await app.user.click(screen.getByRole('button',{name:'Cerca'}));
- expect(screen.getByLabelText('Tipo di spesa').closest('details')).not.toHaveAttribute('open');
- await app.user.click(screen.getByText(/^Filtri(?: · \d+ attiv[oi])?$/));await app.user.selectOptions(screen.getByRole('combobox',{name:'Tipo di spesa'}),'utilities');
- expect(app.router.state.location.search).not.toContain('famiglia=');
- await app.user.click(screen.getByRole('button',{name:'Applica filtri'}));expect(app.router.state.location.search).toContain('famiglia=utilities');expect(screen.getByLabelText('Tipo di spesa').closest('details')).not.toHaveAttribute('open');expect(screen.getByText(/^Filtri(?: · \d+ attiv[oi])?$/).closest('summary')).toHaveFocus();
+ expect(screen.getByLabelText('Tipo di spesa').closest('details')).toBeNull();
+ await app.user.selectOptions(screen.getByRole('combobox',{name:'Tipo di spesa'}),'utilities');
+ expect(app.router.state.location.search).toContain('famiglia=utilities');
+ const filterSummary=screen.getByText(/^Filtri(?: · \d+ attiv[oi])?$/).closest('summary')!;
+ await app.user.click(filterSummary);await app.user.selectOptions(screen.getByRole('combobox',{name:/^Categoria$/}),'electricity');
+ expect(app.router.state.location.search).not.toContain('categoria=');
+ await app.user.click(screen.getByRole('button',{name:'Applica filtri'}));expect(app.router.state.location.search).toContain('categoria=electricity');expect(filterSummary.closest('details')).not.toHaveAttribute('open');expect(filterSummary).toHaveFocus();
  await app.user.click(screen.getByRole('button',{name:'Rimuovi filtro Bollette'}));expect(app.router.state.location.search).not.toContain('famiglia=');expect(search).toHaveValue('Bolletta');
- await app.user.click(screen.getByText(/^Filtri(?: · \d+ attiv[oi])?$/));await app.user.click(screen.getByRole('button',{name:'Azzera filtri'}));expect(search).toHaveValue('Bolletta');expect(posts(backend,/expenses$/)).toHaveLength(0);
+ await app.user.click(filterSummary);await app.user.click(screen.getByRole('button',{name:'Azzera filtri'}));expect(search).toHaveValue('Bolletta');expect(posts(backend,/expenses$/)).toHaveLength(0);
 });
 
 it('saved bill summary is identical in expense and linked document, with no mutations on consultation',async()=>{
