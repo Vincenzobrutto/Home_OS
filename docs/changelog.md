@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — uniformare descrizioni generiche e nomi fornitori (lotto separato)
+
+Le bollette completate già caricate con un titolo generico del servizio possono mostrare il fornitore già confermato nella loro unica spesa. Nei soli alias omessi suffissi societari espliciti terminali; nessun nome azienda ricavato dal servizio, nessuna associazione fra documenti. Originali, titoli salvati, valori e ID preservati. [Report](v5/bollette-titoli-servizio-20261026.md); nuovi23/23, regressioni 260/260 in 27 file e statici/build verdi. Diagnosi reale UI in sola lettura distinta dai collaudi mock; nessuna AI o scrittura al DB reale. Candidato non ancora attivo.
+
 ## 26 ottobre 2026 — nomi progressivi delle bollette (lotto separato)
 
 Le bollette completate mostrano anche solo il fornitore o solo il mese fattura; senza dati univoci mostrano Bolletta e filename originale, compresi gli hash. Titoli personalizzati e fonti composite preservati, nessuna inferenza da altre date e nessuna scelta tra più spese. [Report](v5/bollette-nomi-progressivi-20261026.md). Nuovi16/16, regressioni 237/237 in 25 file e typecheck/lint/build verdi. Solo nomi visuali, nessuna AI o modifica ai dati reali; app non aggiornata in questo lotto.
