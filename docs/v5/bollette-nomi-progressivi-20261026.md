@@ -33,6 +33,8 @@ Regressioni di area **237/237 in 25 file**, un worker/retry0, zero fallimenti o 
 
 ## Consegna e attività del committente
 
+Consegna nella [PR #58](https://github.com/Vincenzobrutto/Home_OS/pull/58), pronta per revisione verso il consolidamento. Push verificato con `git ls-remote`; ultime modifiche solo documentali e prodotto identico a f0cf664.
+
 PR verso il consolidamento dopo i controlli; merge e successiva attivazione frontend al committente. Nessuna attivazione implicita, AI/email, accesso al DB/API/storage reale, migrazione o salvataggio automatico durante questo lotto. Dopo il rilascio basterà aggiornare la pagina Documenti; non occorre ricaricare file o riconfermare spese e oggetti. Documenti multiparte e titoli personalizzati restano distinti dai fallback automatici.
 
 Build finale7,90s. Log prima regressione `work/progressive-title-focus.log` e `-focus-initial.json` (235/237), ripetizione verde `-focus-final.log` e `-focus.json` (237/237); mirata78/78 in `-new.log/json`, statici in `-checks.log`. Nessun timeout aumentato o risultato rosso nascosto.
