@@ -56,18 +56,20 @@ describe('economy-v1: somme come stringhe di centesimi', () => {
 
 describe('economy-v1: famiglie e categorie', () => {
   it('anteprima con lo stesso mapping del contratto; other e null nella stessa famiglia', () => {
-    expect(previewFamily('repairs_works', true)).toBe('works_purchases');
+    expect(previewFamily('purchase_replacement', true)).toBe('works_purchases');
+    expect(previewFamily('purchase_replacement', false)).toBe('works_purchases');
+    expect(previewFamily('repairs_works', true)).toBe('maintenance_repairs');
     expect(previewFamily('repairs_works', false)).toBe('maintenance_repairs');
     expect(previewFamily('insurance', false)).toBe('taxes_insurance');
     expect(previewFamily('financing', false)).toBe('financing');
     expect(previewFamily('other', false)).toBe('unclassified');
     expect(previewFamily(null, false)).toBe('unclassified');
-    expect(previewFamily('condominium_extraordinary', false)).toBe('works_purchases');
+    expect(previewFamily('condominium_extraordinary', false)).toBe('maintenance_repairs');
   });
 
   it('compatibilità categoria/famiglia (evita il 422 del server)', () => {
     expect(categoryFitsFamily('repairs_works', 'maintenance_repairs')).toBe(true);
-    expect(categoryFitsFamily('repairs_works', 'works_purchases')).toBe(true);
+    expect(categoryFitsFamily('repairs_works', 'works_purchases')).toBe(false);
     expect(categoryFitsFamily('gas', 'financing')).toBe(false);
     expect(categoryFitsFamily('unclassified', 'unclassified')).toBe(true);
     expect(categoryFitsFamily('other', 'unclassified')).toBe(true);

@@ -25,8 +25,8 @@ export const FAMILY_LABEL: Record<Family, string> = {
   utilities: 'Bollette',
   condominium: 'Condominio',
   taxes_insurance: 'Tasse e assicurazioni',
-  maintenance_repairs: 'Manutenzione e riparazioni',
-  works_purchases: 'Lavori e acquisti',
+  maintenance_repairs: 'Manutenzione, riparazioni e lavori',
+  works_purchases: 'Acquisti',
   financing: 'Mutuo e finanziamenti',
   unclassified: 'Altro / Non classificata',
 };
@@ -65,15 +65,16 @@ export function categoryLabel(code: Category | null, caps?: EconomyCapabilities)
  * Anteprima della famiglia nel modulo, con lo stesso mapping del contratto. Solo aiuto:
  * la famiglia salvata è sempre quella restituita dal server.
  */
-export function previewFamily(category: Category | null, hasWork: boolean): Family {
+export function previewFamily(category: Category | null, _hasWork: boolean): Family {
+  void _hasWork; // Firma compatibile con i chiamanti esistenti.
   if (category === null || category === 'other') return 'unclassified';
-  if (category === 'repairs_works') return hasWork ? 'works_purchases' : 'maintenance_repairs';
+  if (category === 'repairs_works' || category === 'condominium_extraordinary') return 'maintenance_repairs';
   if (['electricity', 'gas', 'water', 'internet_services'].includes(category)) return 'utilities';
   if (category === 'condominium_ordinary') return 'condominium';
   if (category === 'taxes' || category === 'insurance') return 'taxes_insurance';
   if (category === 'maintenance') return 'maintenance_repairs';
   if (category === 'financing') return 'financing';
-  return 'works_purchases'; // condominium_extraordinary, purchase_replacement
+  return 'works_purchases'; // purchase_replacement
 }
 
 // ---- importi: stringhe di centesimi ----
@@ -280,7 +281,7 @@ export function categoryFitsFamily(category: CategoryFilter, family: Family, cap
   if (category === 'unclassified') return family === 'unclassified';
   const possible = caps?.categories.find((c) => c.code === category)?.possibleFamilies;
   if (possible) return possible.includes(family);
-  return category === 'repairs_works' ? family === 'maintenance_repairs' || family === 'works_purchases' : previewFamily(category, false) === family;
+  return previewFamily(category, false) === family;
 }
 
 export const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];

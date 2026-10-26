@@ -593,7 +593,7 @@ export function EconomyExpenseForm(props: {
       </button>
     ) : null;
 
-  // Categorie raggruppate per famiglia; «Riparazioni e lavori» dipende dal lavoro.
+  // Categorie raggruppate dal servizio; il collegamento a un lavoro non cambia gruppo.
   const byFamily = caps.families.map((f) => ({
     family: f,
     cats: caps.categories.filter((c) => c.possibleFamilies[0] === f.code),
@@ -684,7 +684,7 @@ export function EconomyExpenseForm(props: {
 
       {!isUtility(category)&&<p className={styles.preview} aria-live="polite">
         Gruppo di spesa previsto: <strong>{familyLabel(preview, caps)}</strong>
-        {category === 'repairs_works' ? ' (con un lavoro va in Lavori e acquisti, senza in Manutenzione e riparazioni)' : ''}. Il gruppo di spesa
+        . Il gruppo di spesa
         definitivo lo calcola il servizio.
       </p>}
 
