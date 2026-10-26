@@ -27,3 +27,7 @@ Questo lotto non implementa il redesign né modifica la preview; la convergenza 
 Solo frontend e documentazione, PR verso consolidamento. Nessuna AI/email, DB/API/storage reale, .env, migrazione o aggiornamento app. Nessun collaudo visivo nuovo dichiarato. Stato/roadmap/changelog aggiornati; merge e attivazione al committente.
 
 Attività del committente: approvare la correzione del riepilogo; concordare successivamente la preview convergente a pagina unica. Nessuna correzione dei dati registrati necessaria.
+
+## Rilascio e preview separata
+
+PR #66 integrata su approvazione a e4e24b3, remoto verificato; solo frontend aggiornato, backend/schema invariati e35/35 HTTP statici/anonimi verdi. Servizi precedentemente spenti ripristinati. [Consegna e limiti](spese-riepilogo-rilascio-preview-20261026.md); la preview convergente è solo mock, non il nuovo prodotto.
