@@ -33,3 +33,15 @@ Evidenze nel task locale: `work/readable-document-new.log`, `-new-final.log`, `-
 Consegna nella [PR #56](https://github.com/Vincenzobrutto/Home_OS/pull/56), pronta per revisione verso il consolidamento. Push verificato con `git ls-remote`; ultime modifiche soltanto documentali, fonte prodotto invariata67c3fa5. Nessun merge o attivazione implicita.
 
 Approvare la PR per integrazione e successiva attivazione del frontend. Poi controllare nell'archivio un documento completato collegato a oggetti o con una sola spesa: il nome originale deve essere ancora disponibile nei dettagli. I documenti privi dei dati necessari resteranno col nome precedente; non richiedono ricreazione, ricaricamento o conferma duplicata.
+
+## Rilascio autorizzato
+
+PR #56 integrata su approvazione a37e7687e116733fea15472518936e6de00e57997, hash remoto verificato. Solo frontend ricompilato e attivato,20/20 controlli HTTP statici/anonimi verdi; API15744 e PostgreSQL22924 preservati. Nessuna AI/email, migrazione, lettura di originali, richiesta autenticata o salvataggio automatico durante il rilascio. Main remoto invariato a cdbb318.
+
+Runtime detached `Dimora-V5-runtime-nomi-parlanti-20261026`, frontend identico all’albero approvato0b80db6 e prodotto67c3fa5; backend identico a quello della API attiva a8de901. Lock verificato e build frontend verde6,46s prima del cambio. Fermato soltanto il vecchio frontend24652 dopo verifica di PID/creazione/comando/listener; nuovo frontend35876 su loopback5174. Identità/creazione/listener di API15744 su3011 e PostgreSQL22924 su55432 invariati. Header API `roma-consolidata-a8de901-no-ai` verificato; protezioni e policy interattiva esistenti preservate. Nessun nuovo backup o audit SQL necessario per questo rilascio del solo frontend.
+
+20/20 controlli statici e anonimi: nuovo helper/testo dei dettagli, presentazione precedente, rilettura locale, mese fattura/traccia/classificazione, worker PDF/OCR e API anonima401 con header esatto. Nessuna prova browser autenticata o lettura dei documenti del committente rivendicata. Le verifiche funzionali sono quelle offline già documentate (221/221 area); non ripetute perché gli alberi prodotto sono identici. Evidenze locali `work/readable-document-release-build.log`, `-runtime-proof.json`, `-runtime-http-proof.json`, log frontend e metadata canonici `roma-runtime.json`/`schede-app-frontend-runtime.json`. Nessun contenuto personale copiato nel repository.
+
+### Attività del committente dopo il rilascio
+
+Aggiornare la pagina Documenti e verificare i titoli dei completati con contesto confermato. Non occorre ricaricare file, confermare nuovamente le spese o ricreare gli oggetti. Dove mancano i dati o esiste un titolo personalizzato, il nome resta quello precedente; nome originale e titolo salvato restano nei dettagli. La PR di questa consegna contiene soltanto documentazione del rilascio già attivo.

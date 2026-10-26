@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — attivazione dei nomi parlanti estesi
+
+PR #56 integrata su approvazione a37e7687e116733fea15472518936e6de00e57997, hash remoto verificato. Solo frontend ricompilato e attivato,20/20 controlli HTTP statici/anonimi verdi; API15744 e PostgreSQL22924 preservati. Nessuna AI/email, migrazione, lettura di originali, richiesta autenticata o salvataggio automatico durante il rilascio. Main remoto invariato a cdbb318. [Report di rilascio](v5/documenti-nomi-parlanti-20261026.md#rilascio-autorizzato).
+
 ## 26 ottobre 2026 — nomi parlanti dei documenti completati (lotto separato)
 
 Alias visuali estesi a fatture, ordini, ricevute, manuali, garanzie e altri tipi specifici con contesto confermato sufficiente. Tipo e nomi degli oggetti; dati di una sola spesa soltanto per documenti di acquisto. Nessuna deduzione da filename, pagamenti o periodo servizi; più spese non vengono fuse. Titoli personalizzati, originali e regola mese bollette invariati. Solo frontend, nessuna API o scrittura. [Report](v5/documenti-nomi-parlanti-20261026.md); 221/221 in 23 file regressioni area e typecheck/lint/build verdi. Non ancora attivo nell’app.
