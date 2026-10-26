@@ -124,7 +124,7 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
             {isUtility(expense.category)&&<><dt>Data registrata per la spesa</dt><dd>{formatCalendarDate(expense.spentOn)}</dd></>}
             <dt>Categoria</dt>
             <dd>{categoryLabel(expense.category, caps)}</dd>
-            <dt>Famiglia</dt>
+            <dt>Gruppo di spesa</dt>
             <dd>{familyLabel(expense.family, caps)}</dd>
             <dt>Oggetto</dt>
             <dd>{o.state === 'linked' ? <Link to={objectHref(home.id, o.value.ref)}>{o.value.name}</Link> : o.state === 'unavailable' ? 'Oggetto non più disponibile per il tuo account' : 'Costo non attribuito a un oggetto'}</dd>
@@ -241,7 +241,7 @@ export function snapshotChanges(e: ExpenseHistoryEvent, caps?: EconomyCapabiliti
   diff('amountCents', 'Importo', (v) => formatCents(v as number));
   diff('spentOn', 'Data', (v) => formatCalendarDate(v as string));
   diff('category', 'Categoria', (v) => categoryLabel(v as ExpenseSnapshot['category'], caps));
-  diff('family', 'Famiglia', (v) => familyLabel(v as ExpenseSnapshot['family'], caps));
+  diff('family', 'Gruppo di spesa', (v) => familyLabel(v as ExpenseSnapshot['family'], caps));
   diff('supplier', 'Fornitore');
   diff('documentNumber', 'Numero documento');
   diff('documentDate', 'Data documento');

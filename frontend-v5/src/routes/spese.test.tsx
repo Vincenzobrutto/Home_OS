@@ -57,7 +57,7 @@ describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
     expect(total).toHaveTextContent('500,00 €');
     expect(total).toHaveTextContent('Senza mutuo e finanziamenti: 250,00 €');
     expect(total).toHaveTextContent('26 registrazioni');
-    const legend = screen.getByRole('list', { name: 'Famiglie con costi registrati' });
+    const legend = screen.getByRole('list', { name: 'Gruppi di spesa con costi registrati' });
     const items = within(legend).getAllByRole('button');
     // 25 costi oltre la prima pagina (20): il totale della famiglia viene dal summary, non dalle righe.
     expect(items[0]).toHaveAccessibleName(/^Bollette: 250,00 €, 50,0%, 25 registrazioni/);
@@ -79,7 +79,7 @@ describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
     await app.user.click(await screen.findByRole('button', { name: /^Mutuo e finanziamenti: 450,00 €/ }));
     const back = await screen.findByRole('button', { name: '← Torna alla panoramica' });
     await app.user.click(back);
-    expect(await screen.findByRole('list', { name: 'Famiglie con costi registrati' })).toBeInTheDocument();
+    expect(await screen.findByRole('list', { name: 'Gruppi di spesa con costi registrati' })).toBeInTheDocument();
     expect(app.router.state.location.search).toBe('?vista=panoramica');
   });
 
@@ -207,7 +207,7 @@ describe('[mock] S1 Spese — privacy, capabilities e ripiego', () => {
     backend.economy.enabled = false;
     await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
     expect(await screen.findByRole('heading', { level: 1, name: 'Le tue spese della casa' })).toBeInTheDocument();
-    expect(screen.queryByRole('navigation', { name: 'Famiglie di spesa' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Gruppi di spesa' })).not.toBeInTheDocument();
   });
 
   it('ruolo viewer: consultazione senza azioni di registrazione', async () => {
@@ -266,11 +266,11 @@ describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
     await app.user.type(within(form).getByLabelText('Importo in euro'), '1.035,50');
     fireEvent.change(within(form).getByLabelText(/Data della spesa/), { target: { value: '2026-09-10' } });
     fireEvent.change(within(form).getByLabelText('Categoria (facoltativa)'), { target: { value: 'repairs_works' } });
-    expect(within(form).getByText(/Famiglia prevista/)).toHaveTextContent('Manutenzione e riparazioni');
+    expect(within(form).getByText(/Gruppo di spesa previsto/)).toHaveTextContent('Manutenzione e riparazioni');
     await waitFor(() => expect(within(within(form).getByLabelText('Lavoro (facoltativo)')).getByRole('option', { name: 'Rifacimento bagno' })).toBeInTheDocument());
     const workOpt = within(within(form).getByLabelText('Lavoro (facoltativo)')).getByRole('option', { name: 'Rifacimento bagno' }) as HTMLOptionElement;
     fireEvent.change(within(form).getByLabelText('Lavoro (facoltativo)'), { target: { value: workOpt.value } });
-    expect(within(form).getByText(/Famiglia prevista/)).toHaveTextContent('Lavori e acquisti');
+    expect(within(form).getByText(/Gruppo di spesa previsto/)).toHaveTextContent('Lavori e acquisti');
     await app.user.click(within(form).getByRole('button', { name: 'Registra spesa' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Piastrelle' })).toBeInTheDocument();
     const body = posts(backend, /\/economy\/expenses$/)[0]!.body as Record<string, unknown>;

@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — Spese: gruppi e categorie
+
+**Spese — gruppi e categorie:** etichette uniformate a «Gruppi di spesa» per i raggruppamenti ampi e «Categorie» per il dettaglio, inclusi grafico, moduli e storico. Solo presentazione, chiavi URL/payload e calcoli invariati. [Report e verifiche](v5/spese-gruppi-20261026.md); PR verso consolidamento, app invariata fino all’approvazione.
+
 ## 26 ottobre 2026 — Spese: nomi, date e filtri più leggibili
 
 Vista approvata nella preview, con grafico conservato. Titoli visuali prudenti, importi in colonna, date etichettate; tipo/raggruppamento fuori dai filtri avanzati e avvertenza sul confronto incompleto. Mock completa 1548/1548 in 149 file, 1259.76s, un worker/retry0, nessun test saltato/todo. Typecheck, lint e build verdi. Fonte prodotto 9f2c0fe. Grafico e riepiloghi server, API/backend e calcoli invariati. [Report e limiti](v5/spese-leggibilita-20261026.md). Nessuna AI o accesso reale; candidato in PR, app non aggiornata.

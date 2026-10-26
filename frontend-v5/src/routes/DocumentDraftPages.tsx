@@ -934,7 +934,7 @@ function DraftView(props: { home: Home; caps: EconomyCapabilities; draft: Econom
               {caps.categories.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
             </select>
             {proposedNote('category')}
-            <span className={styles.preview}>Famiglia prevista: <strong>{familyLabel(previewFamily(category ? (category as Category) : null, !!workId), caps)}</strong>. La calcola il servizio.</span>
+            <span className={styles.preview}>Gruppo di spesa previsto: <strong>{familyLabel(previewFamily(category ? (category as Category) : null, !!workId), caps)}</strong>. Lo calcola il servizio.</span>
           </div>
 
           <div className={ui.field}>
