@@ -157,7 +157,7 @@ describe('[mock] S1c — revisione, importi e conferma', () => {
   it('fattura: lordo preselezionato perché il server non chiede scelta; imponibile e IVA distinti; un solo costo e dashboard aggiornata', async () => {
     const { backend, home } = await world();
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
-    await screen.findByRole('region', { name: /Tutte le famiglie/ });
+    await screen.findByRole('region', { name: /Costi registrati nel periodo/ });
     await toDraft(app, home.id, 'invoice.pdf');
     const choices = screen.getByRole('group', { name: 'Quale importo registri?' });
     expect(within(choices).getByRole('radio', { name: /122,00 € · Totale del documento/ })).toBeChecked();
@@ -170,7 +170,7 @@ describe('[mock] S1c — revisione, importi e conferma', () => {
     expect(screen.getByText('Proposto da un documento e confermato da te')).toBeInTheDocument();
     expect(backend.expenses.items.size).toBe(1);
     await app.user.click(screen.getByRole('link', { name: '← Spese' }));
-    await waitFor(() => expect(screen.getByRole('region', { name: /Tutte le famiglie/ })).toHaveTextContent('122,00 €'));
+    await waitFor(() => expect(screen.getByRole('region', { name: /Costi registrati nel periodo/ })).toHaveTextContent('122,00 €'));
   });
 
   it('possibile costo esistente: motivi mostrati, link_existing con expectedExpenseVersion, importo invariato e nessun nuovo costo', async () => {
