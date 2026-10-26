@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — nomi parlanti dei documenti completati (lotto separato)
+
+Alias visuali estesi a fatture, ordini, ricevute, manuali, garanzie e altri tipi specifici con contesto confermato sufficiente. Tipo e nomi degli oggetti; dati di una sola spesa soltanto per documenti di acquisto. Nessuna deduzione da filename, pagamenti o periodo servizi; più spese non vengono fuse. Titoli personalizzati, originali e regola mese bollette invariati. Solo frontend, nessuna API o scrittura. [Report](v5/documenti-nomi-parlanti-20261026.md); 221/221 in 23 file regressioni area e typecheck/lint/build verdi. Non ancora attivo nell’app.
+
 ## 25 ottobre 2026 — attivazione coordinata titoli e rilettura
 
 PR #54 integrata su autorizzazione a a8de901c435f1922e5c59680165ce9b96b4295ea, hash remoto verificato. API e frontend ricompilati e attivati insieme dalla fonte verificata,18/18 controlli HTTP statici/anonimi verdi; PostgreSQL e main preservati. Nessuna migrazione, AI/email, richiesta autenticata, lettura di originali o salvataggio automatico durante il rilascio. I record senza mese confermato mantengono il nome precedente. [Consegna](v5/documenti-titoli-completati-20261025.md#attivazione-coordinata-autorizzata).
