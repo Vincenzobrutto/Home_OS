@@ -117,7 +117,7 @@ function SpeseHeading({ home,actions }: { home: Home;actions?:ReactNode }) {
       <div>
         <Link to={`/home/${encodeURIComponent(home.id)}/casa`}>← Torna alla Casa</Link><p className={pages.eyebrow}>{home.name}</p>
         <h1 tabIndex={-1}>Spese</h1>
-        <p className={pages.lead}>I costi registrati da te, visibili solo a te.</p><p>Bollette per periodo di riferimento; emissione e scadenza separate. Gli intervalli di più mesi sono conteggiati una volta nel mese iniziale. Senza periodo vale la data registrata, finché lo completi.</p>
+        <p className={pages.lead}>I costi registrati da te, visibili solo a te.</p>
       </div>
       {actions && <div className={styles.headerActions}>{actions}</div>}
     </div>
@@ -315,6 +315,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
 
         <PeriodSelect filters={filters} caps={caps} summaryPeriod={summary.data ? periodText(summary.data.period, summary.data.today) : null} onChange={(period) => go({ ...filters, period })} />
         </div>
+        <details className={styles.dateHelp}><summary>Come vengono conteggiate le date?</summary><p>Bollette per mese fattura, se indicato; altrimenti per periodo dei servizi. Emissione e scadenza restano separate. Gli intervalli di più mesi sono conteggiati una volta nel mese iniziale. Senza periodo vale la data registrata, finché lo completi. I costi registrati non certificano un pagamento.</p></details>
         <div className="expense-tabs" role="group" aria-label="Viste delle spese">
           <button type="button" aria-pressed={['elenco','oggetti','lavori'].includes(view)} onClick={()=>setView('elenco')}>Registrazioni</button>
           <button type="button" aria-pressed={['panoramica','riepilogo'].includes(view)} onClick={()=>setView('panoramica')}>Riepilogo</button>
@@ -446,9 +447,6 @@ function RangeForm(props: { filters: EconomyFilters; onApply: (from: string, to:
 function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: EconomyFilters; view: SpeseView; onApply: (f: EconomyFilters, view?:SpeseView) => void }) {
   const { home, caps, filters } = props;
   const panelRef=useRef<HTMLDetailsElement>(null);
-  const [draftView,setDraftView]=useState(props.view);
-  const [previousView,setPreviousView]=useState(props.view);
-  if(previousView!==props.view){setPreviousView(props.view);setDraftView(props.view);}
   const apply=(next:EconomyFilters,nextView=props.view)=>{props.onApply(next,nextView);if(panelRef.current){panelRef.current.open=false;panelRef.current.querySelector('summary')?.focus();}};
   const [draft, setDraft] = useState(filters);
   const [syncedFrom, setSyncedFrom] = useState(filters);
@@ -483,17 +481,20 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
     ) : null;
   return (
     <div>
+    <div className={styles.quickFilters}>
+          <label>Tipo di spesa<select className={act.select} value={filters.family??''} onChange={e=>{const family=(e.target.value||null) as Family|null;props.onApply({...filters,family,category:family&&filters.category&&!categoryFitsFamily(filters.category,family,caps)?null:filters.category});}}><option value="">Tutte</option>{caps.families.map(f=><option key={f.code} value={f.code}>{f.label}</option>)}</select></label>
+          <label>Raggruppa<select className={act.select} value={props.view} onChange={e=>props.onApply(filters,e.target.value as SpeseView)}>{VIEWS.filter(v=>['panoramica','riepilogo'].includes(props.view)?['panoramica','riepilogo'].includes(v.value):['elenco','oggetti','lavori'].includes(v.value)).map(v=><option key={v.value} value={v.value}>{v.value==='elenco'?'Mese di riferimento':v.value==='panoramica'?'Distribuzione e confronto':v.label}</option>)}</select></label>
+    </div>
     <details ref={panelRef} className={cx(ui.card, styles.filtersBox)}>
       <summary>Filtri{active ? ` · ${active} attiv${active === 1 ? 'o' : 'i'}` : ''}</summary>
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          apply(draft,draftView);
+          apply(draft);
         }}
       >
         <div className={styles.filterGrid}>
-          <label>Tipo di spesa<select className={act.select} value={draft.family??''} onChange={e=>{const family=(e.target.value||null) as Family|null;setDraft({...draft,family,category:family&&draft.category&&!categoryFitsFamily(draft.category,family,caps)?null:draft.category});}}><option value="">Tutte</option>{caps.families.map(f=><option key={f.code} value={f.code}>{f.label}</option>)}</select></label>
-          <label>Raggruppa<select className={act.select} value={draftView} onChange={e=>setDraftView(e.target.value as SpeseView)}>{VIEWS.filter(v=>['panoramica','riepilogo'].includes(props.view)?['panoramica','riepilogo'].includes(v.value):['elenco','oggetti','lavori'].includes(v.value)).map(v=><option key={v.value} value={v.value}>{v.value==='elenco'?'Mese di riferimento':v.value==='panoramica'?'Distribuzione e confronto':v.label}</option>)}</select></label>
+
           <label>
             Categoria
             <select className={act.select} value={draft.category ?? ''} onChange={(e) => setDraft({ ...draft, category: (e.target.value || null) as CategoryFilter | null })}>

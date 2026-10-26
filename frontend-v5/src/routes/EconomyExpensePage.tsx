@@ -1,3 +1,4 @@
+import { expenseDisplayTitle } from '../economy/expensePresentation';
 import {expenseDocumentReturn} from '../lib/expenseDocumentReturn';
 import {isUtility} from '../lib/billPeriod';
 import {ExpenseOverview} from '../expenses/ExpenseOverview';
@@ -103,10 +104,10 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
           <span className={pages.eyebrow}>
             {home.name} · {familyLabel(expense.family, caps)}
           </span>
-          <h1 tabIndex={-1}>{expense.title}</h1>
+          <h1 tabIndex={-1}>{expenseDisplayTitle(expense)}</h1>
           <div className={act.actions}>
             <Tag tone="blue">{categoryLabel(expense.category, caps)}</Tag>
-            <Tag>{active ? 'Attivo' : 'Archiviato'}</Tag>
+            <Tag>{active ? 'Registrazione attiva' : 'Registrazione archiviata'}</Tag>
           </div>
         </div>
       </div>
@@ -117,6 +118,7 @@ function ExpenseView(props: { home: Home; caps?: EconomyCapabilities; expense: E
             Dettagli
           </h2>
           <dl className={pages.detailList}>
+            {expenseDisplayTitle(expense) !== expense.title && <><dt>Descrizione originale</dt><dd>{expense.title}</dd></>}
             <dt>Origine dell’importo</dt>
             <dd>{expense.amountOrigin === 'extraction_confirmed' ? 'Proposto da un documento e confermato da te' : 'Dichiarato da te'}</dd>
             {isUtility(expense.category)&&<><dt>Data registrata per la spesa</dt><dd>{formatCalendarDate(expense.spentOn)}</dd></>}

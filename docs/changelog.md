@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — attivazione della nuova vista Spese
+
+PR #60 integrata su approvazione a d5bf35f33b8f8aa406b0183b9b5f421853b8da00, hash remoto verificato. Solo frontend ricompilato e attivato; build12,47s e29/29 controlli statici/anonimi verdi. API15744 e PostgreSQL22924 preservati con identità/listener invariati; main remoto invariato a cdbb318. Nessuna AI/email, migrazione, upload o salvataggio automatico. [Report](v5/spese-leggibilita-20261026.md#rilascio-autorizzato). Consegna documentale dei rilasci #56/#58/#59/#60 nella PR #57.
+
 ## 26 ottobre 2026 — attivazione dei titoli uniformi delle bollette
 
 PR #59 integrata su approvazione a e95f8fd4468a89e8015293d24367d1a4d223eb17, hash remoto verificato. Solo frontend ricompilato e attivato; 23/23 controlli HTTP statici/anonimi verdi. Verifica aggiuntiva dell’archivio reale in sola lettura: i due titoli generici consultati mostrano ora «Bolletta Sorgenia»; suffisso societario TIM omesso nel solo alias. API, PostgreSQL, main e dati salvati preservati. Nessuna AI/email, migrazione, upload o salvataggio automatico. [Report](v5/bollette-titoli-servizio-20261026.md#rilascio-autorizzato). PR #57 aggiornata con la sola documentazione dei rilasci #56, #58 e #59.
@@ -9,6 +13,10 @@ PR #58 integrata su approvazione a b1f3953d87a1289a98cfae4b4dbac82edc93f6a5, has
 ## 26 ottobre 2026 — attivazione dei nomi parlanti estesi
 
 PR #56 integrata su approvazione a37e7687e116733fea15472518936e6de00e57997, hash remoto verificato. Solo frontend ricompilato e attivato,20/20 controlli HTTP statici/anonimi verdi; API15744 e PostgreSQL22924 preservati. Nessuna AI/email, migrazione, lettura di originali, richiesta autenticata o salvataggio automatico durante il rilascio. Main remoto invariato a cdbb318. [Report di rilascio](v5/documenti-nomi-parlanti-20261026.md#rilascio-autorizzato).
+
+## 26 ottobre 2026 — Spese: nomi, date e filtri più leggibili
+
+Vista approvata nella preview, con grafico conservato. Titoli visuali prudenti, importi in colonna, date etichettate; tipo/raggruppamento fuori dai filtri avanzati e avvertenza sul confronto incompleto. Mock completa 1548/1548 in 149 file, 1259.76s, un worker/retry0, nessun test saltato/todo. Typecheck, lint e build verdi. Fonte prodotto 9f2c0fe. Grafico e riepiloghi server, API/backend e calcoli invariati. [Report e limiti](v5/spese-leggibilita-20261026.md). Nessuna AI o accesso reale; candidato in PR, app non aggiornata.
 
 ## 26 ottobre 2026 — uniformare descrizioni generiche e nomi fornitori (lotto separato)
 

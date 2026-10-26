@@ -143,7 +143,7 @@ describe('[mock] consenso provider reale — avvio, rifiuti ed esito ignoto', ()
   it('avvio reale: body con consenso true, job con provider/modello, riserva e costo; il costo API non entra nelle spese', async () => {
     const { backend, home } = await world({ fixture: false });
     const app = await open(backend, `/home/${home.id}/spese`);
-    await screen.findByRole('region', { name: /Tutte le famiglie/ });
+    await screen.findByRole('region', { name: /Costi registrati nel periodo/ });
     // Unico provider: nessuna scelta da fare, ma il consenso resta obbligatorio.
     await app.router.navigate(fromDoc(home.id));
     await app.user.click(await screen.findByRole('radio', { name: /invoice\.pdf/ }));
@@ -170,7 +170,7 @@ describe('[mock] consenso provider reale — avvio, rifiuti ed esito ignoto', ()
     expect(await screen.findByRole('heading', { level: 1, name: 'Fattura riparazione rubinetto' })).toBeInTheDocument();
     expect([...backend.expenses.items.values()].map((e) => e.amountCents)).toEqual([12200]); // solo l'importo del documento
     await app.user.click(screen.getByRole('link', { name: '← Spese' }));
-    const totals = await screen.findByRole('region', { name: /Tutte le famiglie/ });
+    const totals = await screen.findByRole('region', { name: /Costi registrati nel periodo/ });
     await waitFor(() => expect(totals).toHaveTextContent('122,00 €'));
     expect(document.body.textContent).not.toMatch(/USD|0[.,]012345|0[.,]05/);
   });

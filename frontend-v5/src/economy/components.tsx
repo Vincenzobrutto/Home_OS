@@ -1,6 +1,7 @@
+import { expenseDisplayTitle } from './expensePresentation';
 import { BillPeriodFields } from '../components/BillPeriodFields';
 import { ExpenseInstallmentFields } from '../components/ExpenseInstallmentFields';
-import {billPeriodLabel,isUtility} from '../lib/billPeriod';
+import {billPeriodLabel,invoiceMonthLabel,isUtility} from '../lib/billPeriod';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -73,7 +74,7 @@ export function TotalCard(props: { summary: EconomySummary; caps: EconomyCapabil
     <section className={ui.card} aria-labelledby="spese-totale">
       <div className={styles.total}>
         <h2 id="spese-totale" className={styles.totalLabel}>
-          {props.family ? familyLabel(props.family, props.caps) : 'Tutte le famiglie'} · {periodText(summary.period, summary.today)}
+          {props.family ? familyLabel(props.family, props.caps) : 'Costi registrati nel periodo'} · {periodText(summary.period, summary.today)}
         </h2>
         <span className={styles.metric}>{formatBigCents(total)}</span>
         {props.showWithoutFinancing && summary.totalCents !== summary.totalWithoutFinancingCents && (
@@ -96,6 +97,7 @@ export function ComparisonCard({ summary }: { summary: EconomySummary }) {
       <h2 id="spese-confronto" className={act.title}>
         Confronto con lo stesso periodo
       </h2>
+      <p className={styles.note}>Confronto dei dati presenti: lo storico può essere incompleto. La differenza non indica un risparmio o un aumento effettivo delle spese.</p>
       <p>{text.title}</p>
       {text.lines.map((l) => (
         <p key={l} className={styles.compareRow}>
@@ -279,10 +281,9 @@ export function EconomyExpenseRow(props: { expense: EconomyExpense; homeId: stri
   const e = props.expense;
   const location=useLocation();
   const navigate=useNavigate();
+  const bill = isUtility(e.category);
+  const month = invoiceMonthLabel(e.invoiceMonth);
   const meta = [
-    billPeriodLabel(e)??formatCalendarDate(e.spentOn),
-    isUtility(e.category)&&e.documentDate?'Emissione '+formatCalendarDate(e.documentDate):null,
-    categoryLabel(e.category, props.caps),
     e.supplier,
     e.objectLink.state === 'linked' ? e.objectLink.value.name : null,
     e.workLink.state === 'linked' ? e.workLink.value.name : null,
@@ -290,17 +291,26 @@ export function EconomyExpenseRow(props: { expense: EconomyExpense; homeId: stri
     e.state === 'archived' ? 'archiviato' : null,
   ].filter(Boolean);
   return (
-    <li className={act.item}>
-      <div className={act.itemHead}>
+    <li className={cx(act.item, styles.expenseRow)}>
+      <div className={styles.expenseHead}>
         <Link id={'expense-'+e.id} to={economyExpensePath(props.homeId, e.id)} state={props.state} className={act.title}
           onClick={event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();const state=props.state as {accountId?:string;expensePages?:number};const restore={id:e.id,y:window.scrollY,pages:state?.expensePages??1};navigate(location.pathname+location.search,{replace:true,state:{...state,expenseRestore:restore}});navigate(economyExpensePath(props.homeId,e.id),{state:{...state,expenseRestore:restore}});}}>
-          {e.title}
+          {expenseDisplayTitle(e)}
         </Link>
-        <span className={act.meta} style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--color-ink)', whiteSpace: 'nowrap' }}>
+        <span className={styles.expenseAmount}>
           {formatCents(e.amountCents)}
         </span>
       </div>
-      <span className={act.meta}>{meta.join(' · ')}</span>
+      <span className={styles.expenseCategory}>{categoryLabel(e.category, props.caps)}</span>
+      <div className={styles.expenseDates}>
+        {bill ? <>
+          <span>{month ? 'Mese fattura: '+month : 'Mese fattura non indicato'}</span>
+          {!month && <span>Periodo servizi: {e.competenceFrom && e.competenceTo ? billPeriodLabel(e) : 'Non indicato'}</span>}
+          <span>Emissione: {e.documentDate ? formatCalendarDate(e.documentDate) : 'Non indicata'}</span>
+          <span>Scadenza: {e.dueOn ? formatCalendarDate(e.dueOn) : 'Non indicata'}</span>
+        </> : <span>Data della spesa: {formatCalendarDate(e.spentOn)}</span>}
+      </div>
+      {meta.length > 0 && <span className={styles.expenseContext}>{meta.join(' · ')}</span>}
     </li>
   );
 }
