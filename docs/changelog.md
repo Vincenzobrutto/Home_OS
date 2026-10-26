@@ -1,12 +1,16 @@
+## 25 ottobre 2026 — attivazione coordinata titoli e rilettura
+
+PR #54 integrata su autorizzazione a a8de901c435f1922e5c59680165ce9b96b4295ea, hash remoto verificato. API e frontend ricompilati e attivati insieme dalla fonte verificata,18/18 controlli HTTP statici/anonimi verdi; PostgreSQL e main preservati. Nessuna migrazione, AI/email, richiesta autenticata, lettura di originali o salvataggio automatico durante il rilascio. I record senza mese confermato mantengono il nome precedente. [Consegna](v5/documenti-titoli-completati-20261025.md#attivazione-coordinata-autorizzata).
+
 ## 25 ottobre 2026 — Mese fattura separato dalla competenza dei servizi
 
 ## 25 ottobre 2026 — titoli delle bollette completate (branch del lotto)
 
-Alias visuale da fornitore e mese fattura canonici per una sola bolletta completata con unica spesa personale attiva. Titoli personalizzati, filename, dati salvati ed export preservati; niente AI, OCR aggiuntivo, scrittura o backfill. Proiezione personale opzionale del mese con le stesse query aggregate. [Report e limiti](v5/documenti-titoli-completati-20261025.md). Non ancora integrato nell’app. PR #53 rilettura, invece, integrata su approvazione a44cd449 e solo frontend aggiornato,16/16 HTTP anonimi verdi.
+Alias visuale da fornitore e mese fattura canonici per una sola bolletta completata con unica spesa personale attiva. Titoli personalizzati, filename, dati salvati ed export preservati; niente AI, OCR aggiuntivo, scrittura o backfill. Proiezione personale opzionale del mese con le stesse query aggregate. [Report e limiti](v5/documenti-titoli-completati-20261025.md). Successivamente attivato su autorizzazione: vedi rilascio coordinato sopra. PR #53 rilettura, invece, integrata su approvazione a44cd449 e solo frontend aggiornato,16/16 HTTP anonimi verdi.
 
 ## 25 ottobre 2026 — rilettura locale con confronto (branch del lotto)
 
-Bolletta manuale aperta: nuova rilettura PDF/OCR su richiesta, confronto con i campi correnti e selezione esplicita delle differenze. Applicazione soltanto al form, nessun salvataggio automatico, nuovo documento o spesa. Fonte/versione/SHA, sessione e modifiche durante la lettura protette. [Report e verifiche](v5/bollette-rilettura-locale-20261025.md). Nessuna nuova API, schema, AI o accesso al reale; non ancora integrato nell'app.
+Bolletta manuale aperta: nuova rilettura PDF/OCR su richiesta, confronto con i campi correnti e selezione esplicita delle differenze. Applicazione soltanto al form, nessun salvataggio automatico, nuovo documento o spesa. Fonte/versione/SHA, sessione e modifiche durante la lettura protette. [Report e verifiche](v5/bollette-rilettura-locale-20261025.md). Nessuna nuova API, schema, AI o accesso al reale; successivamente attivato su autorizzazione: vedi rilascio coordinato sopra.
 
 ## 25 ottobre 2026 — attivazione mese fattura
 
