@@ -804,30 +804,18 @@ function Summary({ summary, caps }: { summary: NonNullable<ReturnType<typeof use
                     <td className={styles.num}>{fam?.count ?? 0}</td>
                     <td className={styles.num}>{fam ? formatCentsString(fam.totalCents) : '—'}</td>
                   </tr>,
-                  // repairs_works può stare in due famiglie: il dettaglio per categoria resta nel totale per categoria.
-                  ...cats
-                    .filter((r) => r.category !== 'repairs_works')
-                    .map((r) => (
-                      <tr key={`${f.code}-${r.category ?? 'null'}`}>
-                        <td>{categoryLabel(r.category, caps)}</td>
-                        <td className={styles.num}>{r.count}</td>
-                        <td className={styles.num}>{formatCentsString(r.totalCents)}</td>
-                      </tr>
-                    )),
+                  ...cats.map((r) => (
+                    <tr key={`${f.code}-${r.category ?? 'null'}`}>
+                      <td>{categoryLabel(r.category, caps)}</td>
+                      <td className={styles.num}>{r.count}</td>
+                      <td className={styles.num}>{formatCentsString(r.totalCents)}</td>
+                    </tr>
+                  )),
                 ];
               })}
             </tbody>
           </table>
         </div>
-        {(() => {
-          const rw = summary.byCategory.find((r) => r.category === 'repairs_works');
-          return rw && rw.count > 0 ? (
-            <p className={styles.note}>
-              Riparazioni e lavori: {rw.count} {rw.count === 1 ? 'registrazione' : 'registrazioni'}, {formatCentsString(rw.totalCents)}. Vanno in Lavori e acquisti se
-              collegate a un lavoro, altrimenti in Manutenzione e riparazioni.
-            </p>
-          ) : null;
-        })()}
         <p className={styles.note}>
           Totale {formatCentsString(summary.totalCents)}, di cui senza mutuo e finanziamenti {formatCentsString(summary.totalWithoutFinancingCents)}. Ogni costo è contato una sola volta.
         </p>

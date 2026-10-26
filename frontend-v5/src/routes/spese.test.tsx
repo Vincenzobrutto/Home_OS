@@ -48,6 +48,29 @@ async function seedTypical(backend: FakeBackend, acc: string, home: string) {
 }
 
 describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
+  it('riepilogo: riparazioni con e senza lavoro compaiono una volta sotto interventi, con importi integri', async () => {
+    const {backend,owner,home}=world();
+    const work=(await s1(backend,owner.id,home.id,'works',{name:'Intervento demo'})).work!;
+    for(const [title,category,amountCents,workId] of [
+      ['Riparazione collegata','repairs_works',2000,work.id],
+      ['Riparazione autonoma','repairs_works',3000,null],
+      ['Manutenzione','maintenance',1000,null],
+      ['Acquisto','purchase_replacement',4000,work.id],
+    ])await s1(backend,owner.id,home.id,'expenses',{title,category,amountCents,workId,spentOn:'2026-09-01'});
+    await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/spese?vista=riepilogo`);
+    const region=await screen.findByRole('region',{name:'Riepilogo per gruppo di spesa e categoria'});
+    const table=within(region).getByRole('table');
+    const repairs=within(table).getAllByRole('row',{name:/^Riparazioni e lavori 2 50,00 €/});
+    expect(repairs).toHaveLength(1);
+    const group=within(table).getByRole('rowheader',{name:'Manutenzione, riparazioni e lavori'}).closest('tr')!;
+    expect(group).toHaveTextContent('3');expect(group).toHaveTextContent('60,00 €');
+    const allRows=within(table).getAllByRole('row'),start=allRows.indexOf(group),end=allRows.findIndex((row,i)=>i>start&&within(row).queryByRole('rowheader')!==null);
+    expect(allRows.indexOf(repairs[0]!)).toBeGreaterThan(start);
+    expect(allRows.indexOf(repairs[0]!)).toBeLessThan(end);
+    expect(within(region).queryByText(/Vanno in Lavori e acquisti/)).not.toBeInTheDocument();
+    expect(within(region).getByText(/Totale 100,00 €/)).toBeInTheDocument();
+    expect(posts(backend,/\/economy\/expenses/)).toHaveLength(0);
+  });
   it('acquisti separati dagli interventi con e senza lavoro, senza doppio conteggio', async () => {
     const {backend,owner,home}=world();
     const work=(await s1(backend,owner.id,home.id,'works',{name:'Intervento sintetico'})).work!;
