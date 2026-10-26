@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — attivazione dei titoli uniformi delle bollette
+
+PR #59 integrata su approvazione a e95f8fd4468a89e8015293d24367d1a4d223eb17, hash remoto verificato. Solo frontend ricompilato e attivato; 23/23 controlli HTTP statici/anonimi verdi. Verifica aggiuntiva dell’archivio reale in sola lettura: i due titoli generici consultati mostrano ora «Bolletta Sorgenia»; suffisso societario TIM omesso nel solo alias. API, PostgreSQL, main e dati salvati preservati. Nessuna AI/email, migrazione, upload o salvataggio automatico. [Report](v5/bollette-titoli-servizio-20261026.md#rilascio-autorizzato). PR #57 aggiornata con la sola documentazione dei rilasci #56, #58 e #59.
+
 ## 26 ottobre 2026 — attivazione dei nomi progressivi delle bollette
 
 PR #58 integrata su approvazione a b1f3953d87a1289a98cfae4b4dbac82edc93f6a5, hash remoto verificato. Solo frontend ricompilato e attivato;21/21 controlli HTTP statici/anonimi verdi, API15744 e PostgreSQL22924 preservati. Nessuna AI/email, migrazione, richiesta autenticata, lettura di originali o salvataggio automatico durante il rilascio. Main remoto invariato a cdbb318. [Report](v5/bollette-nomi-progressivi-20261026.md#rilascio-autorizzato). Consegna documentale insieme al rilascio precedente nella [PR #57](https://github.com/Vincenzobrutto/Home_OS/pull/57).
@@ -5,6 +9,10 @@ PR #58 integrata su approvazione a b1f3953d87a1289a98cfae4b4dbac82edc93f6a5, has
 ## 26 ottobre 2026 — attivazione dei nomi parlanti estesi
 
 PR #56 integrata su approvazione a37e7687e116733fea15472518936e6de00e57997, hash remoto verificato. Solo frontend ricompilato e attivato,20/20 controlli HTTP statici/anonimi verdi; API15744 e PostgreSQL22924 preservati. Nessuna AI/email, migrazione, lettura di originali, richiesta autenticata o salvataggio automatico durante il rilascio. Main remoto invariato a cdbb318. [Report di rilascio](v5/documenti-nomi-parlanti-20261026.md#rilascio-autorizzato).
+
+## 26 ottobre 2026 — uniformare descrizioni generiche e nomi fornitori (lotto separato)
+
+Le bollette completate già caricate con un titolo generico del servizio possono mostrare il fornitore già confermato nella loro unica spesa. Nei soli alias omessi suffissi societari espliciti terminali; nessun nome azienda ricavato dal servizio, nessuna associazione fra documenti. Originali, titoli salvati, valori e ID preservati. [Report](v5/bollette-titoli-servizio-20261026.md); nuovi23/23, regressioni 260/260 in 27 file e statici/build verdi. Diagnosi reale UI in sola lettura distinta dai collaudi mock; nessuna AI o scrittura al DB reale. Candidato non ancora attivo.
 
 ## 26 ottobre 2026 — nomi progressivi delle bollette (lotto separato)
 

@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — Titoli di servizio generici distinti dai titoli personalizzati
+
+Su richiesta del committente di uniformare a video i documenti già caricati, una descrizione esatta e generica del servizio può usare il fornitore già confermato nella stessa unica spesa personale attiva. Le altre scelte di titolo restano preservate. Non attribuire una descrizione del servizio a una società, né ricavare il fornitore da documenti simili. Per i soli alias si possono omettere suffissi legali espliciti terminali; questa formattazione non stabilisce identità, equivalenze o deduplicazioni societarie. Nessuna scrittura su titoli, originali o spese; nessun OCR o fetch automatico aggiuntivo. [Regola e verifiche](v5/bollette-titoli-servizio-20261026.md).
+
 ## 26 ottobre 2026 — Nomi visuali progressivi per le bollette
 
 Su approvazione del committente, per i completati si supera il requisito di avere insieme fornitore e mese fattura per un alias visuale. Usare separatamente i fatti confermati disponibili nell’unica spesa personale; altrimenti tipo e nome originale. Non dedurre il mese da altre date, scegliere tra più spese o rinominare titoli personalizzati. Nessuna estrazione o validazione dei dati finanziari viene allentata: cambia soltanto la presentazione. Nessuna scrittura/backfill, nuova API, lettura di originali o AI. [Regola e collaudi](v5/bollette-nomi-progressivi-20261026.md).
