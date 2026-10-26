@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — Riepilogo rilasciato e preview convergente separata
+
+**Riepilogo corretto attivo:** PR #66 integrata a e4e24b3 e frontend aggiornato su approvazione; backend/schema invariati, nessuna migrazione,35/35 HTTP statici/anonimi verdi. Preview convergente a pagina unica solo mock, interazioni DOM1440/390 verificate; nessuna verifica visiva browser dichiarata, approvazione UX ancora da dare. [Consegna](v5/spese-riepilogo-rilascio-preview-20261026.md).
+
 ## 26 ottobre 2026 — Riparazioni visibili nel Riepilogo Spese
 
 **Spese — dettaglio riparazioni nel Riepilogo:** rimossa la vecchia esclusione di repairs_works e la nota sul raggruppamento per lavoro, superata dalla PR #64. Righe di categoria da byCategory e totali server invariati. Regressione prima rossa e poi verde; gruppo 47/47 offline, typecheck/lint/build verdi; lotto chiuso e area liberata. [Report](v5/spese-riepilogo-riparazioni-20261026.md). App invariata, merge al committente.
