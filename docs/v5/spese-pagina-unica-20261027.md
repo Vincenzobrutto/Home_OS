@@ -58,3 +58,9 @@ Non è una prova dell’app reale, né di Safari/iPhone fisico o screen reader. 
 ## Consegna e prossimi passi
 
 Merge e successivo aggiornamento dell’app restano al committente. Dopo approvazione: attivazione del solo frontend candidato e verifica manuale nella casa scelta; nessuna migrazione necessaria. Il normale inserimento richiede sempre l’azione esplicita dell’utente.
+
+## Pubblicazione verificata
+
+[PR #68](https://github.com/Vincenzobrutto/Home_OS/pull/68) aperta verso codex/dimora-v5-consolidata-20261023. Fonte prodotto verificata: 2ce6e13f228d19657b3bf4033d3a2fd140755cd5; primo push confermato da git ls-remote. Il commit successivo registra soltanto questa consegna e il link, senza cambiare prodotto o test.
+
+Consolidamento remoto e4e24b322df1c58cf39ccda31f265baf4fd7770f e main cdbb318ddb56e764ad4b111a71560e3e71c7a033 rimasti invariati. Nessun merge o rilascio eseguito. Worktree dedicato pulito dopo la consegna, dipendenze e build locali escluse dai commit.
