@@ -26,6 +26,6 @@ Regressioni area **260/260 in 27 file**, un worker/retry0 e zero fallimenti/salt
 
 ## Attività del committente
 
-Build finale9,05s. Prima area in `work/service-title-focus.log` e `-focus-before-hardening.json`, area definitiva in `-focus-final.log` e `-focus.json`, entrambe260/260. Nessun test fallito o asserzione precedente modificata in questo lotto. Diff e link locali verificati, push da verificare alla consegna; codice dopo i test invariato.
+Build finale9,05s. Prima area in `work/service-title-focus.log` e `-focus-before-hardening.json`, area definitiva in `-focus-final.log` e `-focus.json`, entrambe260/260. Nessun test fallito o asserzione precedente modificata in questo lotto. Diff e link locali verificati, push verificato con `git ls-remote`; codice dopo i test invariato. Consegna nella [PR #59](https://github.com/Vincenzobrutto/Home_OS/pull/59), pronta per revisione; nessun merge o aggiornamento app implicito.
 
 Approvare la PR del lotto per merge e attivazione del frontend. La regola si applicherà anche ai documenti già caricati al successivo caricamento della lista: non servono upload, nuove compilazioni, modifiche alle spese o conferme duplicate. Gli altri titoli personalizzati restano preservati; un titolo generico senza fornitore univoco non viene attribuito a un'azienda per somiglianza.
