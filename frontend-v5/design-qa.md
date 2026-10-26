@@ -1,3 +1,21 @@
+# Design QA — Spese a pagina unica (27 ottobre 2026)
+
+Riferimento scelto: screenshot Claude e preview convergente approvata dal committente. Fonte visuale interna: outputs/spese-convergente-20261026/audit-ux-v2/reference-claude.png,873×805pixel; è un ritaglio della sezione, non una misura nota del viewport dell’app. Implementazione verificata con gli stessi componenti del candidato e FakeBackend in memoria, mai con dati reali. Fonte e catture aperte insieme per confronto: desktop1440×1024 (04-desktop-finale.png), mobile390×844 (03-mobile-finale.png),873×805 (14-reference-finale.png) e320×844 (09-mobile320.png), densità1. Artefatti locali in outputs/spese-implementazione-20261027/. Confronto per regioni e proporzioni del contenuto; nessuna dichiarazione di uguaglianza pixel con il ritaglio.
+
+Nessun P0/P1/P2 visuale aperto negli stati osservati. Periodo compatto, elenco a sinistra e sintesi a destra sul desktop; totale compatto e analisi espandibile dopo l’elenco su mobile. Il layout originale della shell resta: nella larghezza tablet la sua barra laterale lascia meno spazio, quindi il contenuto passa a una colonna anziché comprimere le righe.
+
+Superfici: font e icone canonici Dimora conservati; gerarchia titolo/importo/date, spaziature compatte e bordi/radius12 coerenti con il riferimento; palette petrolio e Acquisti ocra/Interventi scuro. Anello e barre restano grafici di dati server, senza immagini inventate. Testi di ambito, assenza storico e pagamenti non dedotti mantenuti. Dati e quantità della fixture differiscono dal riferimento e non sono dati dell’app reale.
+
+Verifiche mirate delle regioni: Mese/Bollette/Internet da32,90euro (07-desktop-filtri-finale.png), barre e importi del confronto (11-desktop-confronti.png), espansione mobile (06-mobile-analisi.png), ritorno dal dettaglio con focus sulla riga (13-desktop-focus.png). Corretti densità mobile, invasione delle date nella colonna laterale e doppia colonna troppo stretta a873px; ricatture dopo le correzioni. Misure DOM aggiuntive confermano contenimento dei campi nelle righe, nessun overflow orizzontale e nessun errore JavaScript nei percorsi catturati.
+
+Differenze intenzionali: inserimento/dettaglio canonici invece del secondo editor del prototipo; date delle bollette etichettate anche nelle righe; opzioni per oggetto/lavoro/tabella preservate; niente aggregati mensili inventati sulle pagine parziali. P3: ulteriore compattamento possibile dopo prova del committente. Su320px è necessario scorrere per la prima registrazione; nessun controllo irraggiungibile. Safari/iPhone fisico, tastiera virtuale, screen reader e conformità completa di accessibilità non verificati.
+
+Nessuna richiesta di rete al di fuori della sola origine mock5197 e nessun POST di rete: asset serviti da file locali attraverso Playwright, API sostituite dal simulatore in memoria. Nessuna AI, accesso a DB/storage reale o aggiornamento dell’app in uso. Esiti della suite separati nel [report del lotto](../docs/v5/spese-pagina-unica-20261027.md).
+
+final result: passed
+
+---
+
 # Design QA — Dettaglio oggetto compatto
 
 19 ottobre 2026. Target approvato: outputs/dettaglio-oggetto-preview/desktop-mobile.png. Stato reale: oggetto corrente con stanza assegnata, acquisto collegato e garanzia proposta; valori letti dalle fonti autorizzate, senza fixture sostitutive. Sorgente e catture finali desktop.png/mobile.png aperte insieme nello stesso input di confronto; desktop 1440×1024 con cattura pagina completa e mobile 390×844, densità 1. La sorgente è un board di due frame: confronto per regioni, senza affermare uguaglianza pixel fra canvas e viewport.

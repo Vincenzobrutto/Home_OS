@@ -44,7 +44,7 @@ it('elenco e dettaglio distinguono mese fattura, servizi e date senza scrivere o
 
 it('tipo visibile e filtri avanzati espliciti aggiornano elenco e grafico preservando la ricerca privata', async () => {
   const { app, backend, start } = await fixture();
-  const type = screen.getByRole('combobox', { name: 'Tipo di spesa' });
+  const type = screen.getByRole('combobox', { name: 'Gruppo di spesa' });
   expect(type.closest('details')).toBeNull();
   await app.user.selectOptions(type, 'utilities');
   expect(app.router.state.location.search).toContain('famiglia=utilities');

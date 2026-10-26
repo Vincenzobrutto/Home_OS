@@ -1,3 +1,6 @@
+import {SpeseComparisons} from '../economy/SpeseComparisons';
+import {monthPeriod, samePeriod} from '../economy/spesePeriod';
+import layout from '../economy/speseLayout.module.css';
 import {expenseDocumentReturn} from '../lib/expenseDocumentReturn';
 import {expenseReferenceDate} from '../lib/billPeriod';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -31,7 +34,6 @@ import {
   filtersFromParams,
   filtersToParams,
   formatCentsString,
-  hasListFilters,
   isForbiddenError,
   isNotActiveError,
   isUuid,
@@ -49,25 +51,6 @@ import pages from './pages.module.css';
 
 /** Stato di navigazione privato: ricerca e ritorno alla panoramica, legati all'account. */
 type NavState = { accountId?: string; economyQ?: string; overview?: string; returnTo?: { path: string; label: string }; expenseRestore?: {id:string;y:number;pages:number} } | null;
-
-const viewKey = (accountId: string, homeId: string) => `dimora.v5.spese.vista:${accountId}:${homeId}`;
-
-function storedView(accountId: string, homeId: string): SpeseView | null {
-  try {
-    const v = globalThis.sessionStorage?.getItem(viewKey(accountId, homeId));
-    return VIEWS.some((x) => x.value === v) ? (v as SpeseView) : null;
-  } catch {
-    return null;
-  }
-}
-
-function storeView(accountId: string, homeId: string, view: SpeseView) {
-  try {
-    globalThis.sessionStorage?.setItem(viewKey(accountId, homeId), view);
-  } catch {
-    // Archiviazione di sessione non disponibile: la vista resta quella dell'indirizzo.
-  }
-}
 
 /**
  * Spese: un unico ingresso. Con economy-v1 attivo si usa lo storico S1 (capabilities
@@ -113,13 +96,13 @@ export function ExpensesPage() {
 function SpeseHeading({ home,actions }: { home: Home;actions?:ReactNode }) {
   useDocumentTitle(`Spese · ${home.name}`);
   return (
-    <div className={cx(pages.heading,styles.header)}>
+    <div className={cx(pages.heading,styles.header,layout.heading)}>
       <div>
         <Link to={`/home/${encodeURIComponent(home.id)}/casa`}>← Torna alla Casa</Link><p className={pages.eyebrow}>{home.name}</p>
         <h1 tabIndex={-1}>Spese</h1>
         <p className={pages.lead}>I costi registrati da te, visibili solo a te.</p>
       </div>
-      {actions && <div className={styles.headerActions}>{actions}</div>}
+      {actions && <div className={cx(styles.headerActions,layout.headingActions)}>{actions}</div>}
     </div>
   );
 }
@@ -136,27 +119,21 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
   const filters = useMemo<EconomyFilters>(() => ({ ...filtersFromParams(params), q }), [params, q]);
   const canEdit = home.permissions.includes('edit');
 
-  // Vista: indirizzo → filtri verso l'elenco → scelta conservata per account/casa → Panoramica.
+  // I vecchi indirizzi restano leggibili; panoramica ed elenco condividono la pagina.
   const viewParam = params.get('vista');
-  const view: SpeseView = VIEWS.some((v) => v.value === viewParam)
-    ? (viewParam as SpeseView)
-    : hasListFilters(filters)
-      ? 'elenco'
-      : (storedView(account.id, home.id) ?? 'elenco');
+  const view: SpeseView = VIEWS.some(v=>v.value===viewParam) ? viewParam as SpeseView : 'elenco';
   const split = params.get('per') === 'categorie' ? 'category' : 'family';
   const creating = params.get('nuova-spesa') === '1';
 
-  const go = (next: EconomyFilters, opts: { view?: SpeseView; split?: 'family' | 'category'; state?: NavState; replace?: boolean } = {}) => {
+  const go = (next: EconomyFilters, opts: { view?: SpeseView; split?: 'family' | 'category'; state?: NavState; replace?: boolean; month?: string | null } = {}) => {
     const v = opts.view ?? view;
     const p = filtersToParams(next, { view: v, split: (opts.split ?? split) === 'category' && !next.family ? 'categorie' : null });
+    const month=opts.month!==undefined?opts.month:(samePeriod(next.period,filters.period)?params.get('mese'):null);
+    if(month && samePeriod(next.period,monthPeriod(month,caps.today)??{kind:'default'}))p.set('mese',month);
     setParams(p, { replace: opts.replace, state: { accountId: account.id, economyQ: next.q, ...(opts.state ?? {}) } });
   };
-  const setView = (v: SpeseView) => {
-    storeView(account.id, home.id, v);
-    go(filters, { view: v });
-  };
-
-  const summary = useEconomySummary(home.id, filters);
+  const summaryActive=filters.state==='active';
+  const summary = useEconomySummary(home.id, filters,summaryActive);
   const forget = useForgetEconomy(home.id);
   const summaryForbidden = summary.isError && isForbiddenError(summary.error);
   useEffect(() => {
@@ -182,7 +159,10 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
     focusTarget.current = 'back';
     go(next, { view: 'elenco', state: { overview: params.toString() } });
   };
+  const analysisRef=useRef<HTMLDetailsElement>(null);
+  useEffect(()=>{if(!window.matchMedia){if(analysisRef.current)analysisRef.current.open=window.innerWidth>=761;return;}const media=window.matchMedia('(min-width: 761px)');if(analysisRef.current)analysisRef.current.open=media.matches;const update=()=>{if(analysisRef.current)analysisRef.current.open=media.matches;};media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[home.id,summaryActive]);
   const backToOverview = () => {
+    if(analysisRef.current)analysisRef.current.open=true;
     focusTarget.current = 'distribution';
     const p = new URLSearchParams(overview ?? '');
     p.set('vista', 'panoramica');
@@ -217,7 +197,10 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
     for (const k of ['nuova-spesa', 'daDocumento', 'documentId', 'assetId', 'perOggetto', 'perLavoro']) p.delete(k);
     setParams(p, { replace: true, state: location.state });
   };
-  const listState = { accountId: account.id, economyQ: filters.q, expensesSearch: filtersToParams(filters, { view, split: split === 'category' && !filters.family ? 'categorie' : null }).toString() };
+  const listParams=filtersToParams(filters,{view,split:split==='category'&&!filters.family?'categorie':null});
+  const selectedMonth=params.get('mese');
+  if(selectedMonth&&samePeriod(filters.period,monthPeriod(selectedMonth,caps.today)??{kind:'default'}))listParams.set('mese',selectedMonth);
+  const listState = { accountId: account.id, economyQ: filters.q, expensesSearch: listParams.toString() };
 
   const distribution = !summary.isError && summary.data ? (<Distribution
               summary={summary.data}
@@ -267,7 +250,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
           </p>
         )}
       </>}/>
-      <div className={cx(pages.stack, styles.workspace)}>
+      <div className={cx(pages.stack, styles.workspace,layout.workspace)}>
         {!canEdit && <p className={pages.muted}>Con il tuo ruolo puoi consultare i tuoi costi già registrati, non aggiungerne o modificarli.</p>}
 
         {canEdit && creating && (
@@ -298,8 +281,45 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
           </>
         )}
 
-        <div className={styles.hero}>
-        {summary.isPending ? (
+
+        <section className={layout.periodPanel} aria-label="Periodo delle spese">
+          <PeriodSelect filters={filters} caps={caps} summaryPeriod={summary.data ? periodText(summary.data.period, summary.data.today) : null} onChange={(period,month)=>go({...filters,period},{month})} />
+          {(filters.period.kind==='range'&&!params.has('mese')||params.get('periodo')==='intervallo')&&<RangeForm key={JSON.stringify(filters.period)} filters={filters} onApply={(from,to)=>go({...filters,period:{kind:'range',from,to}},{month:null})}/>}
+          <details className={styles.dateHelp}><summary>Come vengono conteggiate le date?</summary><p>Bollette per mese fattura, se indicato; altrimenti per periodo dei servizi. Emissione e scadenza restano separate. Gli intervalli di più mesi sono conteggiati una volta nel mese iniziale. Senza periodo vale la data registrata, finché lo completi. I costi registrati non certificano un pagamento.</p></details>
+        </section>
+        <div className={layout.mobileTotal} aria-live="polite">{summaryActive&&summary.data&&!summary.isError&&<><span>Totale delle spese mostrate</span><strong>{formatCentsString(summary.data.totalCents)}</strong><span>{summary.data.count} registrazioni · non indica pagamenti</span>{!filters.family&&!filters.category&&summary.data.totalCents!==summary.data.totalWithoutFinancingCents&&<span className={layout.mobileSecondary}>Senza mutuo e finanziamenti: {formatCentsString(summary.data.totalWithoutFinancingCents)}</span>}</>}</div>
+        <div className={layout.columns}>
+        <div className={layout.main}>
+          <div className={layout.filters}>
+            <ExpenseSearch key={account.id+home.id+q} value={q} onSearch={value=>go({...filters,q:value})}/>
+            <FiltersBox home={home} caps={caps} filters={filters} view={view} onApply={(next,nextView)=>go(next,{view:nextView})}/>
+          </div>
+        <div className={cx(styles.board,layout.listBoard)}>
+        {(view === 'elenco'||view === 'panoramica') && (
+          <section className={ui.card} aria-labelledby="spese-elenco">
+            {/* La panoramica di partenza può essere l'indirizzo senza parametri (stringa vuota). */}
+            {overview !== null && (
+              <button ref={backButton} type="button" className={styles.linkButton} onClick={backToOverview}>
+                ← Torna alla panoramica
+              </button>
+            )}
+            <h2 id="spese-elenco" tabIndex={-1} className={pages.cardTitle}>
+              Elenco{filters.family ? ` · ${familyLabel(filters.family, caps)}` : ''}
+              {filters.category ? ` · ${filters.category === 'unclassified' ? 'Non classificata' : categoryLabel(filters.category, caps)}` : ''}
+            </h2>
+            <ExpenseList home={home} caps={caps} filters={filters} state={listState} restoreReady={!summaryActive||!summary.isPending} />
+          </section>
+        )}
+
+
+        {view === 'oggetti' && <ByObject home={home} caps={caps} filters={filters} state={listState} onChoose={(object) => go({ ...filters, object })} />}
+        {view === 'lavori' && <ByWork home={home} caps={caps} filters={filters} state={listState} onChoose={(workId) => go({ ...filters, workId })} />}
+        {view === 'riepilogo' && summaryActive && !summary.isError && summary.data && <Summary summary={summary.data} caps={caps} />}
+
+        </div></div>
+        {summaryActive?<details ref={analysisRef} className={layout.insights} >
+          <summary>Grafico e confronti</summary><div className={layout.insightContent}>
+                  {summary.isPending ? (
           <Loading label="Calcolo del riepilogo…" />
         ) : summary.isError ? (
           <ErrorState
@@ -312,51 +332,9 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
         ) : (
           <TotalCard summary={summary.data} caps={caps} family={filters.family} showWithoutFinancing={!filters.family && !filters.category} />
         )}
-
-        <PeriodSelect filters={filters} caps={caps} summaryPeriod={summary.data ? periodText(summary.data.period, summary.data.today) : null} onChange={(period) => go({ ...filters, period })} />
-        </div>
-        <details className={styles.dateHelp}><summary>Come vengono conteggiate le date?</summary><p>Bollette per mese fattura, se indicato; altrimenti per periodo dei servizi. Emissione e scadenza restano separate. Gli intervalli di più mesi sono conteggiati una volta nel mese iniziale. Senza periodo vale la data registrata, finché lo completi. I costi registrati non certificano un pagamento.</p></details>
-        <div className="expense-tabs" role="group" aria-label="Viste delle spese">
-          <button type="button" aria-pressed={['elenco','oggetti','lavori'].includes(view)} onClick={()=>setView('elenco')}>Registrazioni</button>
-          <button type="button" aria-pressed={['panoramica','riepilogo'].includes(view)} onClick={()=>setView('panoramica')}>Riepilogo</button>
-        </div>
-        <ExpenseSearch key={`${account.id}:${home.id}:${q}`} value={q} onSearch={value=>go({...filters,q:value})}/>
-        {filters.period.kind === 'range' || params.get('periodo') === 'intervallo' ? (
-          <RangeForm filters={filters} onApply={(from, to) => go({ ...filters, period: { kind: 'range', from, to } })} />
-        ) : null}
-
-        <FiltersBox home={home} caps={caps} filters={filters} view={view} onApply={(next,nextView) => go(next,{view:nextView})} />
-
-        <div className={styles.board}>
-        {(view === 'panoramica' || view === 'elenco') && !summary.isError && summary.data && (
-          <>
-            {view === 'panoramica' && distribution}
-            {view === 'panoramica' && <ComparisonCard summary={summary.data} />}
-            {view === 'panoramica' && <RecentCard home={home} caps={caps} filters={filters} count={summary.data.count} state={listState} onAll={() => go(filters, { view: 'elenco', state: { overview: params.toString() } })} />}
-          </>
-        )}
-
-        {view === 'elenco' && (
-          <section className={ui.card} aria-labelledby="spese-elenco">
-            {/* La panoramica di partenza può essere l'indirizzo senza parametri (stringa vuota). */}
-            {overview !== null && (
-              <button ref={backButton} type="button" className={styles.linkButton} onClick={backToOverview}>
-                ← Torna alla panoramica
-              </button>
-            )}
-            <h2 id="spese-elenco" tabIndex={-1} className={pages.cardTitle}>
-              Elenco{filters.family ? ` · ${familyLabel(filters.family, caps)}` : ''}
-              {filters.category ? ` · ${filters.category === 'unclassified' ? 'Non classificata' : categoryLabel(filters.category, caps)}` : ''}
-            </h2>
-            <ExpenseList home={home} caps={caps} filters={filters} state={listState} restoreReady={!summary.isPending} />
-          </section>
-        )}
-
-        {view === 'elenco' && distribution}
-        {view === 'oggetti' && <ByObject home={home} caps={caps} filters={filters} state={listState} onChoose={(object) => go({ ...filters, object })} />}
-        {view === 'lavori' && <ByWork home={home} caps={caps} filters={filters} state={listState} onChoose={(workId) => go({ ...filters, workId })} />}
-        {view === 'riepilogo' && summary.data && <Summary summary={summary.data} caps={caps} />}
-
+          {distribution}
+          {!summary.isError&&summary.data&&<><SpeseComparisons homeId={home.id} caps={caps} filters={filters} onPick={family=>filters.family===family?go({...filters,family:null,category:null}):pick({kind:'family',code:family} as Slice)}/><details className={layout.totalComparison}><summary>Confronto del totale filtrato</summary><ComparisonCard summary={summary.data}/></details></>}
+          </div></details>:<aside className={ui.card}><p>Stai consultando anche registrazioni archiviate. Riepiloghi e confronti riguardano solo i costi attivi: torna allo stato Attivi per visualizzarli.</p></aside>}
         </div>
         <p className={cx(pages.small, pages.muted)}>
           Oggi è {formatCalendarDate(caps.today)}. Pagamenti, ricorrenze, budget e previsioni non fanno parte di questa versione.
@@ -372,39 +350,21 @@ function ExpenseSearch({value,onSearch}:{value:string;onSearch:(q:string)=>void}
   return <form role="search" aria-label="Ricerca spese" className="expense-search" onSubmit={e=>{e.preventDefault();onSearch(text.trim());}}><label>Cerca in descrizione o fornitore<input type="search" className={ui.input} maxLength={120} value={text} onChange={e=>setText(e.target.value)}/></label><button type="submit" className={ui.btn}>Cerca</button>{value && <button type="button" className={ui.btn} onClick={()=>{setText('');onSearch('');}}>Cancella ricerca</button>}</form>;
 }
 
-function PeriodSelect(props: { filters: EconomyFilters; caps: EconomyCapabilities; summaryPeriod: string | null; onChange: (p: EconomyFilters['period']) => void }) {
-  const [params, setParams] = useSearchParams();
-  const location = useLocation();
-  const current = Number(props.caps.today.slice(0, 4));
-  const years = Array.from({ length: 10 }, (_, i) => String(current - i).padStart(4, '0'));
-  const p = props.filters.period;
-  if (p.kind === 'year' && !years.includes(p.year)) years.push(p.year);
-  const value = p.kind === 'default' ? '' : p.kind === 'year' ? p.year : 'range';
-  return (
-    <label>
-      Periodo
-      <select
-        className={act.select}
-        value={params.get('periodo') === 'intervallo' && p.kind !== 'range' ? 'range' : value}
-        onChange={(e) => {
-          const v = e.target.value;
-          if (v === 'range') {
-            const next = new URLSearchParams(params);
-            next.set('periodo', 'intervallo');
-            setParams(next, { state: location.state });
-          } else props.onChange(v ? { kind: 'year', year: v } : { kind: 'default' });
-        }}
-      >
-        <option value="">Anno in corso{props.summaryPeriod && p.kind === 'default' ? ` (${props.summaryPeriod})` : ''}</option>
-        {years.map((y) => (
-          <option key={y} value={y}>
-            {y}
-          </option>
-        ))}
-        <option value="range">Intervallo di date…</option>
-      </select>
-    </label>
-  );
+function PeriodSelect(props: { filters: EconomyFilters; caps: EconomyCapabilities; summaryPeriod: string | null; onChange: (p: EconomyFilters['period'],month?:string|null) => void }) {
+  const [params,setParams]=useSearchParams(),location=useLocation();
+  const current=props.caps.today.slice(0,4),p=props.filters.period,month=params.get('mese');
+  const isMonth=!!month&&samePeriod(p,monthPeriod(month,props.caps.today)??{kind:'default'});
+  const mode=params.get('periodo')==='intervallo'?'range':isMonth?'month':p.kind==='range'?'range':'year';
+  const year=p.kind==='year'?p.year:current,years=Array.from({length:10},(_,i)=>String(Number(current)-i).padStart(4,'0'));
+  if(!years.includes(year))years.push(year);
+  const rangeMode=()=>{const next=new URLSearchParams(params);next.delete('mese');next.set('periodo','intervallo');setParams(next,{state:location.state});};
+  return <div className={layout.periodControls}><div role="group" aria-label="Tipo di periodo" className={layout.periodModes}>
+    <button type="button" aria-pressed={mode==='year'} onClick={()=>props.onChange({kind:'default'},null)}>Anno</button>
+    <button type="button" aria-pressed={mode==='month'} onClick={()=>{const m=isMonth?month!:props.caps.today.slice(0,7);props.onChange(monthPeriod(m,props.caps.today)!,m);}}>Mese</button>
+    <button type="button" aria-pressed={mode==='range'} onClick={rangeMode}>Intervallo</button></div>
+    {mode==='year'&&<label>Anno<select className={act.select} value={year} onChange={e=>props.onChange({kind:'year',year:e.target.value},null)}>{years.map(y=><option key={y}>{y}</option>)}</select></label>}
+    {mode==='month'&&<label>Mese della fattura o della spesa<input className={ui.input} type="month" max={props.caps.today.slice(0,7)} value={isMonth?month!:''} onChange={e=>{const next=monthPeriod(e.target.value,props.caps.today);if(next)props.onChange(next,e.target.value);}}/></label>}
+  </div>;
 }
 
 function RangeForm(props: { filters: EconomyFilters; onApply: (from: string, to: string) => void }) {
@@ -480,12 +440,12 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
       </button>
     ) : null;
   return (
-    <div>
-    <div className={styles.quickFilters}>
-          <label>Tipo di spesa<select className={act.select} value={filters.family??''} onChange={e=>{const family=(e.target.value||null) as Family|null;props.onApply({...filters,family,category:family&&filters.category&&!categoryFitsFamily(filters.category,family,caps)?null:filters.category});}}><option value="">Tutte</option>{caps.families.map(f=><option key={f.code} value={f.code}>{f.label}</option>)}</select></label>
-          <label>Raggruppa<select className={act.select} value={props.view} onChange={e=>props.onApply(filters,e.target.value as SpeseView)}>{VIEWS.filter(v=>['panoramica','riepilogo'].includes(props.view)?['panoramica','riepilogo'].includes(v.value):['elenco','oggetti','lavori'].includes(v.value)).map(v=><option key={v.value} value={v.value}>{v.value==='elenco'?'Mese di riferimento':v.value==='panoramica'?'Distribuzione e confronto':v.label}</option>)}</select></label>
+    <div className={layout.filterSet}>
+    <div className={cx(styles.quickFilters,layout.quickGroup)}>
+          <label>Gruppo di spesa<select className={act.select} value={filters.family??''} onChange={e=>{const family=(e.target.value||null) as Family|null;props.onApply({...filters,family,category:family&&filters.category&&!categoryFitsFamily(filters.category,family,caps)?null:filters.category});}}><option value="">Tutte</option>{caps.families.map(f=><option key={f.code} value={f.code}>{f.label}</option>)}</select></label>
+
     </div>
-    <details ref={panelRef} className={cx(ui.card, styles.filtersBox)}>
+    <details ref={panelRef} className={cx(ui.card, styles.filtersBox,layout.advanced)}>
       <summary>Filtri{active ? ` · ${active} attiv${active === 1 ? 'o' : 'i'}` : ''}</summary>
       <form
         onSubmit={(e) => {
@@ -493,7 +453,7 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
           apply(draft);
         }}
       >
-        <div className={styles.filterGrid}>
+        <div className={styles.filterGrid}>          <label>Altre letture<select className={act.select} value={props.view==='panoramica'?'elenco':props.view} onChange={e=>props.onApply(filters,e.target.value as SpeseView)}>{VIEWS.filter(v=>['elenco','oggetti','lavori','riepilogo'].includes(v.value)).map(v=><option key={v.value} value={v.value}>{v.value==='elenco'?'Mese di riferimento':v.value==='panoramica'?'Distribuzione e confronto':v.label}</option>)}</select></label>
 
           <label>
             Categoria
@@ -626,7 +586,7 @@ function ExpenseList(props: { home: Home; caps: EconomyCapabilities; filters: Ec
       <ul className={act.list} aria-label="Costi registrati">
         {items.map((e,i) => [
           (i===0||expenseReferenceDate(e).slice(0,7)!==expenseReferenceDate(items[i-1]!).slice(0,7))?<li role="presentation" key={'month-'+expenseReferenceDate(e).slice(0,7)}><h3>{new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(expenseReferenceDate(e)+'T12:00:00Z'))}</h3></li>:null,
-          <EconomyExpenseRow key={e.id} expense={e} homeId={props.home.id} caps={props.caps} state={{...(props.state as object),expensePages:list.data?.pages.length ?? 1}} />
+          <EconomyExpenseRow compact key={e.id} expense={e} homeId={props.home.id} caps={props.caps} state={{...(props.state as object),expensePages:list.data?.pages.length ?? 1}} />
         ])}
       </ul>
       {!props.single && list.isFetchNextPageError && <ErrorState title="Altri costi non caricati" error={list.error} message={economyErrorMessage(list.error)} />}
@@ -638,25 +598,6 @@ function ExpenseList(props: { home: Home; caps: EconomyCapabilities; filters: Ec
         </p>
       )}
     </>
-  );
-}
-
-/** Ultime registrazioni: prima pagina della lista filtrata, non un elenco completo. */
-function RecentCard(props: { home: Home; caps: EconomyCapabilities; filters: EconomyFilters; count: number; state: unknown; onAll: () => void }) {
-  return (
-    <section className={ui.card} aria-labelledby="spese-ultime">
-      <div className={styles.cardHead}>
-        <h2 id="spese-ultime" className={pages.cardTitle}>
-          Ultime registrazioni
-        </h2>
-      </div>
-      <ExpenseList home={props.home} caps={props.caps} filters={{ ...props.filters, state: 'active' }} state={props.state} limit={5} single />
-      {props.count > 0 && (
-        <button type="button" className={styles.linkButton} onClick={props.onAll}>
-          {props.count === 1 ? 'Vedi la registrazione' : `Vedi tutte le ${props.count} registrazioni`}
-        </button>
-      )}
-    </section>
   );
 }
 

@@ -1,3 +1,7 @@
+## 27 ottobre 2026 — Spese a pagina unica, layout Claude approvato
+
+Il committente approva la preview basata sullo screenshot Claude: periodo compatto in alto, elenco a sinistra e totale/distribuzione/confronti a destra. Su mobile totale compatto e analisi espandibile dopo l’elenco. Totale e confronti devono seguire lo stesso perimetro di filtri; gli aggregati mancanti nel contratto non si ricostruiscono dalle pagine caricate. Mese è un intervallo del filtro server esistente, separato dal periodo dei servizi. Nessun totale delle attive presentato come totale di righe archiviate. Moduli canonici e scritture esplicite preservati. [Implementazione e limiti](v5/spese-pagina-unica-20261027.md). Nessuna autorizzazione al merge o al rilascio implicita nell’incarico di sviluppo.
+
 ## 26 ottobre 2026 — Gruppi Spese: acquisti distinti dagli interventi
 
 Il committente approva Acquisti separato da Manutenzione, riparazioni e lavori. I componenti sostituiti durante un intervento usano repairs_works; nuovi oggetti purchase_replacement. Il gruppo deriva dalla categoria senza dipendere da workId; i lavori condominiali straordinari confluiscono negli interventi, uscendo dal precedente gruppo misto. Codici API mantenuti, nessuna riscrittura delle registrazioni: cambiano proiezione e subtotali per gruppo, non importi o categorie. Contratto corrente in [economic-history-api-contract.md](v5/economic-history-api-contract.md), report [lotto](v5/spese-gruppi-distinti-20261026.md).
