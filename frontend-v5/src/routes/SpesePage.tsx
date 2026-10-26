@@ -502,7 +502,7 @@ function FiltersBox(props: { home: Home; caps: EconomyCapabilities; filters: Eco
               {(!draft.family || draft.family === 'unclassified') && <option value="unclassified">Non classificata</option>}
               {cats.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {c.label}
+                  {categoryLabel(c.code, caps)}
                 </option>
               ))}
             </select>

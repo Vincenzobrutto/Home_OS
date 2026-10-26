@@ -931,8 +931,9 @@ function DraftView(props: { home: Home; caps: EconomyCapabilities; draft: Econom
             <label className={ui.label} htmlFor={`${id}-category`}>Categoria</label>
             <select id={`${id}-category`} className={act.select} value={category} disabled={disabled || !sourceOk} onChange={(e) => touch(setCategory)(e.target.value)}>
               <option value="">Non classificata</option>
-              {caps.categories.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+              {caps.categories.map((c) => <option key={c.code} value={c.code}>{categoryLabel(c.code, caps)}</option>)}
             </select>
+            <p className={ui.hint}>Per un oggetto nuovo, anche se sostituisce il precedente, scegli Acquisti. Per sostituire un componente durante un intervento scegli Riparazioni e lavori.</p>
             {proposedNote('category')}
             <span className={styles.preview}>Gruppo di spesa previsto: <strong>{familyLabel(previewFamily(category ? (category as Category) : null, !!workId), caps)}</strong>. Lo calcola il servizio.</span>
           </div>

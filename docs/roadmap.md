@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+**Spese — Acquisti e componenti:** categoria visuale «Acquisti» per oggetti nuovi, anche in sostituzione; aiuto esplicito verso «Riparazioni e lavori» per componenti durante un intervento. Codici e classificazioni salvate invariati, nessuna riclassificazione automatica. [Report](v5/spese-acquisti-20261026.md); verifica offline e PR separata, merge al committente.
+
 **Spese — gruppi e categorie:** etichette uniformate a «Gruppi di spesa» per i raggruppamenti ampi e «Categorie» per il dettaglio, inclusi grafico, moduli e storico. Solo presentazione, chiavi URL/payload e calcoli invariati. [Report e verifiche](v5/spese-gruppi-20261026.md); PR verso consolidamento, app invariata fino all’approvazione.
 
 

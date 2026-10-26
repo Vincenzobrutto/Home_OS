@@ -322,6 +322,8 @@ describe('[mock] H3a Spese — modifica, archiviazione e storia', () => {
 
 describe('[mock] H3a Spese — documento, caldaia e costo unico', () => {
   it('la spesa collegata mantiene la competenza di dicembre anche nell’anno successivo, senza scritture', async () => {
+    // La compilazione iniziale del modulo lazy non appartiene alla verifica dei dati collegati.
+    await import('./DocumentDetailPage');
     const { backend, owner, home } = world();
     backend.economy.enabled = true;
     const doc = await backend.seedDocument({ homeId: home.id, uploaderId: owner.id, name: 'Bolletta dicembre' });
