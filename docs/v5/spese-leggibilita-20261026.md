@@ -35,3 +35,9 @@ Mock completa 1548/1548 in 149 file, 1259.76s, un worker/retry0, nessun test sal
 Prima completa: 1516 superati, un fallimento in TrashIndependentReview prima della comparsa del documento atteso, più errore di avvio del worker di documentSearch (file non eseguito). Non dichiarata verde. I due file sono poi passati isolati 36/36, invariati. Seconda completa senza build/lint concorrenti, stesso pool, un worker/retry0 e timeout invariati. Il passaggio isolato non viene usato come sostituto del risultato completo; la causa del fallimento del test del cestino non è dimostrata. Nessuna correzione al cestino o alla ricerca né modifica delle loro asserzioni.
 
 Log locali `work/spese-new.log/json` (13/13), `spese-focus.log/json` (71/72, fallimento conservato), `spese-all-first.log/json` (prima completa non verde), `spese-recheck.log/json` (36/36), `spese-all.log/json` (seconda completa finale), `spese-checks-final.log`; configurazione esterna con envDir vuota e ambiente ripulito dal runner offline. Nessuna configurazione .env letta/modificata, nessun servizio reale. Diff e link controllati prima del push.
+
+## Consegna
+
+[PR #60](https://github.com/Vincenzobrutto/Home_OS/pull/60) verso il consolidamento; nessun merge. Push verificato con `git ls-remote`, worktree proprio pulito dopo i commit. Ultimo fetch conferma la base e95f8fd e main invariato a cdbb318. Dopo i test soltanto documentazione; codice prodotto identico alla fonte verificata. Le quattro aspettative di nome accessibile del totale nei due test S1c sono state aggiornate al nuovo testo: asserzioni su dati, consensi e mutazioni invariate. Nessun file del cestino o del classificatore cambiato.
+
+Attività del committente: approvare la PR #60 per merge e attivazione del frontend, poi rivedere elenco e grafico desktop/mobile senza creare nuove spese. La PR #57, di sola documentazione dei rilasci precedenti, rimane separata.
