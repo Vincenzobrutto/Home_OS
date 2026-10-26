@@ -1,5 +1,8 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+**Spese — Acquisti e componenti:** categoria visuale «Acquisti» per oggetti nuovi, anche in sostituzione; aiuto esplicito verso «Riparazioni e lavori» per componenti durante un intervento. Codici e classificazioni salvate invariati, nessuna riclassificazione automatica. [Report](v5/spese-acquisti-20261026.md); verifica offline e PR separata, merge al committente.
+
+
 **Spese — elenco leggibile e filtri:** [report](v5/spese-leggibilita-20261026.md), [PR #60](https://github.com/Vincenzobrutto/Home_OS/pull/60). Titoli visuali delle bollette da dati confermati, importi stabili e date distinte; tipo/raggruppamento accessibili e filtri avanzati preservati. Grafico e somme server invariati. Mock completa1548/1548 in149 file, un worker/retry0, typecheck/lint/build verdi. Primo tentativo non verde conservato nel report; nessuna asserzione di privacy/idempotenza o timeout indeboliti. Solo frontend, nessun accesso ai dati reali o aggiornamento app. Collaudo visivo del candidato ancora da eseguire; merge al committente.
 
 **Uniformare i titoli generici delle bollette già caricate:** [report](v5/bollette-titoli-servizio-20261026.md). Per le sole descrizioni generiche di servizio, usare il fornitore personale confermato; suffissi legali espliciti normalizzati a video, titoli specifici preservati. Nessun cambiamento dei dati o rilettura automatica degli originali. Nuovi23/23, regressioni 260/260 in 27 file e typecheck/lint/build verdi; PR con merge e attivazione al committente.

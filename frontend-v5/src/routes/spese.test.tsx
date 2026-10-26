@@ -265,6 +265,9 @@ describe('[mock] S1 Spese — manuale, CAS, riprova e lavori', () => {
     await app.user.type(within(form).getByLabelText('Descrizione'), 'Piastrelle');
     await app.user.type(within(form).getByLabelText('Importo in euro'), '1.035,50');
     fireEvent.change(within(form).getByLabelText(/Data della spesa/), { target: { value: '2026-09-10' } });
+    expect(within(form).getByRole('option', { name: /^Acquisti$/ })).toHaveValue('purchase_replacement');
+    expect(within(form).queryByRole('option', { name: 'Acquisti e sostituzioni' })).not.toBeInTheDocument();
+    expect(within(form).getByText(/Per sostituire un componente durante un intervento scegli Riparazioni e lavori/)).toBeVisible();
     fireEvent.change(within(form).getByLabelText('Categoria (facoltativa)'), { target: { value: 'repairs_works' } });
     expect(within(form).getByText(/Famiglia prevista/)).toHaveTextContent('Manutenzione e riparazioni');
     await waitFor(() => expect(within(within(form).getByLabelText('Lavoro (facoltativo)')).getByRole('option', { name: 'Rifacimento bagno' })).toBeInTheDocument());

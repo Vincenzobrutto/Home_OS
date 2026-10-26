@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — Spese: Acquisti e componenti
+
+**Spese — Acquisti e componenti:** categoria visuale «Acquisti» per oggetti nuovi, anche in sostituzione; aiuto esplicito verso «Riparazioni e lavori» per componenti durante un intervento. Codici e classificazioni salvate invariati, nessuna riclassificazione automatica. [Report](v5/spese-acquisti-20261026.md); verifica offline e PR separata, merge al committente.
+
 ## 26 ottobre 2026 — Spese: nomi, date e filtri più leggibili
 
 Vista approvata nella preview, con grafico conservato. Titoli visuali prudenti, importi in colonna, date etichettate; tipo/raggruppamento fuori dai filtri avanzati e avvertenza sul confronto incompleto. Mock completa 1548/1548 in 149 file, 1259.76s, un worker/retry0, nessun test saltato/todo. Typecheck, lint e build verdi. Fonte prodotto 9f2c0fe. Grafico e riepiloghi server, API/backend e calcoli invariati. [Report e limiti](v5/spese-leggibilita-20261026.md). Nessuna AI o accesso reale; candidato in PR, app non aggiornata.

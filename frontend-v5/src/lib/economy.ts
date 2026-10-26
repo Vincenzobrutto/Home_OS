@@ -20,7 +20,7 @@ export const FAMILY_CODES: Family[] = [
   'utilities', 'condominium', 'taxes_insurance', 'maintenance_repairs', 'works_purchases', 'financing', 'unclassified',
 ];
 
-/** Etichette di riserva, identiche al contratto: valgono quelle delle capabilities quando presenti. */
+/** Etichette di riserva; categoryLabel applica il nome visuale concordato per gli acquisti. */
 export const FAMILY_LABEL: Record<Family, string> = {
   utilities: 'Bollette',
   condominium: 'Condominio',
@@ -42,7 +42,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   taxes: 'Tributi',
   maintenance: 'Manutenzione',
   repairs_works: 'Riparazioni e lavori',
-  purchase_replacement: 'Acquisti e sostituzioni',
+  purchase_replacement: 'Acquisti',
   financing: 'Finanziamento',
   other: 'Altro',
 };
@@ -56,6 +56,8 @@ export function familyLabel(code: Family, caps?: EconomyCapabilities) {
 
 export function categoryLabel(code: Category | null, caps?: EconomyCapabilities) {
   if (code === null) return UNCLASSIFIED_LABEL;
+  // Alias visuale concordato: il codice storico e le capabilities restano compatibili.
+  if (code === 'purchase_replacement') return CATEGORY_LABEL.purchase_replacement;
   return caps?.categories.find((c) => c.code === code)?.label ?? CATEGORY_LABEL[code];
 }
 

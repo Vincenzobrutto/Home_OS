@@ -649,14 +649,14 @@ export function EconomyExpenseForm(props: {
               <optgroup key={family.code} label={family.label}>
                 {cats.map((c) => (
                   <option key={c.code} value={c.code}>
-                    {c.label}
+                    {categoryLabel(c.code, caps)}
                   </option>
                 ))}
               </optgroup>
             ) : null,
           )}
         </>,
-        isUtility(category)?undefined:'Per una polizza richiesta dal mutuo scegli Finanziamento; per la polizza della casa scegli Assicurazione.',
+        isUtility(category)?undefined:'Per un oggetto nuovo, anche se sostituisce il precedente, scegli Acquisti. Per sostituire un componente durante un intervento scegli Riparazioni e lavori. Per una polizza richiesta dal mutuo scegli Finanziamento; per la polizza della casa scegli Assicurazione.',
       )}
       {isUtility(category)&&<><Field id={`${id}-bill-supplier`} label="Fornitore" value={supplier} disabled={disabled} onChange={e=>setSupplier(e.target.value)} error={errors.supplier}/><Field id={`${id}-invoice-month`} label="Mese di riferimento della fattura" type="month" value={invoiceMonth} disabled={disabled} onChange={e=>setInvoiceMonth(e.target.value)} error={errors.invoiceMonth}/><BillPeriodFields servicePeriod inputId={`${id}-competence`} error={errors.competence} from={competenceFrom} to={competenceTo} disabled={disabled} onChange={({from,to})=>{setCompetenceFrom(from);setCompetenceTo(to);}}/></>}
       <div className={ui.field}>

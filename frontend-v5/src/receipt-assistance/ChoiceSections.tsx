@@ -171,7 +171,7 @@ export function ExpenseSection(props: SectionProps & { expenses: ExpenseRef[]; c
           <ReceiptFieldInput {...props} field="amount" error={errors.amount} disabled={disabled} onValue={setValue} />
           <ReceiptFieldInput {...props} field="date" error={errors.date} disabled={disabled} onValue={setValue} />
           <ReceiptFieldInput {...props} field="supplier" wide error={errors.supplier} disabled={disabled} onValue={setValue} />
-          <p className={cx(styles.note, styles.wide)}>Categoria: Acquisti e sostituzioni. Registrare un costo non equivale a dichiarare un pagamento.</p>
+          <p className={cx(styles.note, styles.wide)}>Categoria: Acquisti. Registrare un costo non equivale a dichiarare un pagamento.</p>
         </div>
       )}
     </section>
