@@ -3,6 +3,7 @@ import {expect,it} from 'vitest';
 import {createFakeFetch,PASSWORD_A,renderApp,seededBackend} from '../test/harness';
 import type {DocumentsPage,DocumentSummary} from '../api/types';
 it('archive displays completed bill alias, preserves originals/custom/pending titles and never writes',async()=>{
+ await import('../routes/DocumentsPages');
  const {backend,a,homeA1:home}=seededBackend(),control=createFakeFetch(backend);
  const completed=await backend.seedDocument({homeId:home.id,uploaderId:a.id,name:'random.pdf',originalFilename:'random.pdf',workflowState:'completed'});
  const pending=await backend.seedDocument({homeId:home.id,uploaderId:a.id,name:'pending.pdf',originalFilename:'pending.pdf',workflowState:'to_compile'});

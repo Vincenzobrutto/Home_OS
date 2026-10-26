@@ -18,7 +18,7 @@ function documentDate(value: string | null): string {
 export function completedDocumentTitle(doc: DocumentTitleContext): string | null {
   if (doc.workflowState !== 'completed' || doc.organization?.parts.length !== 1) return null;
   const kind = doc.organization.parts[0]!.kind;
-  // Bills retain their stricter supplier + invoice-month rule, including when facts are missing.
+  // Bills use their own progressive naming rule, independent of purchase document dates.
   if (kind === 'utility_bill' || kind === 'other' || !Object.hasOwn(KIND_LABEL, kind)) return null;
   const filename = doc.originalFilename?.trim();
   if (!filename) return null;

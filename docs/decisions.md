@@ -1,3 +1,7 @@
+## 26 ottobre 2026 — Nomi visuali progressivi per le bollette
+
+Su approvazione del committente, per i completati si supera il requisito di avere insieme fornitore e mese fattura per un alias visuale. Usare separatamente i fatti confermati disponibili nell’unica spesa personale; altrimenti tipo e nome originale. Non dedurre il mese da altre date, scegliere tra più spese o rinominare titoli personalizzati. Nessuna estrazione o validazione dei dati finanziari viene allentata: cambia soltanto la presentazione. Nessuna scrittura/backfill, nuova API, lettura di originali o AI. [Regola e collaudi](v5/bollette-nomi-progressivi-20261026.md).
+
 ## 25 ottobre 2026 — Traccia della lettura locale separata dalla conferma
 
 Per il successivo step della fase1 si mantiene un solo importo e si aggiunge la spiegazione della lettura iniziale. Diagnostica dai medesimi controlli del parser, fonte/versione/pagina e metodo; non confondere dato non riconosciuto, dato assente dal documento e valore verificato. Primo incremento frontend: traccia effimera scoped, senza valori/estratti, distinta dalle correzioni e non inclusa nel payload di conferma. Storico durevole campo-per-campo rimandato a un lotto backend specifico, non simulato con una cache del browser. [Implementazione e limiti](v5/bollette-tracciabilita-20261025.md). Nessuna modifica delle validazioni o inferenza di pagamento.
