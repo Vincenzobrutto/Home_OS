@@ -42,3 +42,5 @@ Aprire la pagina Spese della casa scelta e aggiornare la scheda del browser. Con
 Gli aggregati mensili completi e la ricerca estesa rimangono nella roadmap: il frontend non ricostruisce totali da pagine parziali. Nessuna migrazione necessaria per questo rilascio.
 
 La PR documentale di consegna è separata dal prodotto già integrato; il suo merge resta al committente.
+
+Consegna documentale: [PR #69](https://github.com/Vincenzobrutto/Home_OS/pull/69), branch codex/rilascio-spese-pagina-unica-20261027; push verificato con git ls-remote. Nessun ulteriore merge o cambiamento del runtime da questa registrazione.
