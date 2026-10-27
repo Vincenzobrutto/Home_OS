@@ -43,7 +43,7 @@ Limiti: nessuna prova su telefono Safari fisico o screen reader reale; nessuna a
 
 ## Consegna
 
-Push della fonte prodotto 3f7044e verificato con git ls-remote; consolidamento dd52a6a e main cdbb318 invariati. PR verso codex/dimora-v5-consolidata-20261023 da aprire dopo il commit documentale finale. Merge e attivazione al committente; nessuna migrazione necessaria. Il committente dovrà rivedere la PR e, dopo eventuale integrazione/attivazione autorizzata, provare i dati della propria casa.
+Push della fonte prodotto 3f7044e verificato con git ls-remote; consolidamento dd52a6a e main cdbb318 invariati. [PR #70](https://github.com/Vincenzobrutto/Home_OS/pull/70) aperta verso codex/dimora-v5-consolidata-20261023 dopo il commit documentale 6f87003, push verificato con git ls-remote. Il commit successivo registra soltanto questo link, senza cambiare prodotto o test. Merge e attivazione al committente; nessuna migrazione necessaria. Il committente dovrà rivedere la PR e, dopo eventuale integrazione/attivazione autorizzata, provare i dati della propria casa.
 
 
 Comandi eseguiti attraverso il runner locale con ambiente ripulito: vitest run --project mock --maxWorkers=1 --retry=0; vitest run --project fixtures --maxWorkers=1 --retry=0; tsc -b --noEmit; eslint .; vite build. Per la junction delle dipendenze usato soltanto un override Vite esterno con il percorso fisico degli asset PDF, come nel precedente lotto, senza cambiare prodotto o validazioni. Log locali work/monthly-all.log, monthly-fixtures.log, monthly-typecheck.log, monthly-lint.log e monthly-build.log nel task; misure browser in outputs/spese-andamento-implementazione-20261027. Nessuna asserzione preesistente modificata.
