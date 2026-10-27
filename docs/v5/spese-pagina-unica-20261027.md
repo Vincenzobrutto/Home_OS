@@ -64,3 +64,7 @@ Merge e successivo aggiornamento dell’app restano al committente. Dopo approva
 [PR #68](https://github.com/Vincenzobrutto/Home_OS/pull/68) aperta verso codex/dimora-v5-consolidata-20261023. Fonte prodotto verificata: 2ce6e13f228d19657b3bf4033d3a2fd140755cd5; primo push confermato da git ls-remote. Il commit successivo registra soltanto questa consegna e il link, senza cambiare prodotto o test.
 
 Consolidamento remoto e4e24b322df1c58cf39ccda31f265baf4fd7770f e main cdbb318ddb56e764ad4b111a71560e3e71c7a033 rimasti invariati. Nessun merge o rilascio eseguito. Worktree dedicato pulito dopo la consegna, dipendenze e build locali escluse dai commit.
+
+## Attivazione approvata
+
+Il committente ha poi approvato integrazione e attivazione: PR #68 unita a68113f566a8b4fd76685398b6fcad8e522d00a42 e solo frontend aggiornato dalla stessa fonte. [Report di rilascio](spese-pagina-unica-rilascio-20261027.md): build e39/39 HTTP statici/anonimi verdi; API/PostgreSQL e guardie preservati, nessuna migrazione, nuova AI o scrittura applicativa. Le indicazioni precedenti di candidato non attivo descrivono la consegna di sviluppo, precedente a questa autorizzazione.
