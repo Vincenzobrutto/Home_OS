@@ -2,7 +2,7 @@
 
 **Spese — andamento mensile, candidato separato:**
 
-Anello principale e tre mesi comparati sotto, drill mensile e dettaglio Acquisti/interventi richiudibile. Riepiloghi completi tramite API summary esistente, mai somme delle pagine; nessun backend o dato reale modificato. Verificato offline: mock1586/1586, nuovi17/17, fixture5/5, typecheck/lint/build e sette scenari browser desktop/tablet/mobile verdi; candidato in PR, merge e rilascio al committente. [Report](v5/spese-andamento-mensile-20261027.md).
+Anello principale e tre mesi comparati sotto, drill mensile e dettaglio Acquisti/interventi richiudibile. Riepiloghi completi tramite API summary esistente, mai somme delle pagine; nessun backend o dato reale modificato. Rifinito dopo riesame: mobile compatto, contesto e focus ripristinati, febbraio spiegato e harness browser nel repository. Verificato offline: mock 1591/1591, nuovi 22/22, fixture 5/5, gruppo 79/79, typecheck/lint/build e browser 1440/873/390/320 verdi; candidato nella PR #70, merge e rilascio al committente. [Report](v5/spese-andamento-mensile-20261027.md).
 
 
 **Spese — dettaglio riparazioni nel Riepilogo:** rimossa la vecchia esclusione di repairs_works e la nota sul raggruppamento per lavoro, superata dalla PR #64. Righe di categoria da byCategory e totali server invariati. Regressione prima rossa e poi verde; gruppo 47/47 offline, typecheck/lint/build verdi; lotto chiuso e area liberata. [Report](v5/spese-riepilogo-riparazioni-20261026.md). App invariata, merge al committente.
