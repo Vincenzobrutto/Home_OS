@@ -1,3 +1,12 @@
+## 27 ottobre 2026 — PR #70: rifiniture dopo il riesame
+
+Vista mobile compatta con anello e tre mesi sempre visibili; espansione sui mesi recenti, contesto del drill mantenuto, secondo clic senza cronologia duplicata e Indietro con focus/dettaglio ripristinati. Confronti di febbraio spiegati senza cambiare il conteggio. Harness browser riproducibile nel repository; verifiche offline in corso, nessun rilascio. [Report](v5/spese-andamento-mensile-20261027.md).
+
+
+## 27 ottobre 2026 — Spese: anello e andamento mensile
+
+Nuovo lotto frontend: layout a due colonne approvato, anello sul periodo selezionato e confronto per mese nei tre mesi più recenti. Espansione del solo grafico, drill con filtri e ricerca preservati, dettaglio Acquisti/interventi apribile. Totali server completi, nessuna nuova API o scrittura dati. [Report e verifiche](v5/spese-andamento-mensile-20261027.md).
+
 ## 27 ottobre 2026 — Attivata la pagina unica Spese
 
 PR #68 integrata nel consolidamento a68113f5 e solo frontend aggiornato dalla stessa fonte. Build e39/39 controlli HTTP statici/anonimi superati; API/PostgreSQL e guardie invariati, nessuna migrazione, AI, .env o salvataggio applicativo. [Report di rilascio](v5/spese-pagina-unica-rilascio-20261027.md).

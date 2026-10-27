@@ -430,3 +430,8 @@
 @media(max-width:600px){.expenseHead{gap:10px}.expenseAmount{font-size:16px}.expenseDates{display:grid;gap:5px}.quickFilters{gap:10px}.quickFilters>label{max-width:none;flex-basis:100%}.expenseRow{padding:16px}}
 .expenseCompact .expenseDates{margin-top:5px;font-size:12px;gap:3px 12px}.expenseCompact .expenseCategory{font-size:12px;margin-top:3px}.expenseCompact .expenseContext{font-size:12px;margin-top:4px}.expenseCompact .expenseAmount{font-size:16px}.expenseCompact .expenseHead{gap:10px}.expenseCompact{line-height:1.5}
 .expenseCompact{grid-template-columns:minmax(0,1fr)}.expenseCompact>*{min-width:0;max-width:100%}.expenseCompact .expenseDates{min-width:0;overflow-wrap:anywhere}.expenseCompact .expenseDates>span{max-width:100%;overflow-wrap:anywhere}
+
+.compactLegend { min-width:0; }
+.compactLegend>summary { cursor:pointer; min-height:36px; padding:8px 0; font-size:12px; color:var(--color-accent); }
+.compactLegend>summary:focus-visible { outline:3px solid var(--color-focus); }
+@media(min-width:1101px) { .compactLegend { display:contents; }.compactLegend>summary { display:none; } }

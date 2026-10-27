@@ -1,12 +1,14 @@
+import {MonthlyTrend, type MonthlyView} from '../economy/MonthlyTrend';
 import {SpeseComparisons} from '../economy/SpeseComparisons';
 import {monthPeriod, samePeriod} from '../economy/spesePeriod';
 import layout from '../economy/speseLayout.module.css';
 import {expenseDocumentReturn} from '../lib/expenseDocumentReturn';
 import {expenseReferenceDate} from '../lib/billPeriod';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {createPortal} from 'react-dom';
 import { formatCalendarDate } from '../lib/activities';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
-import type { EconomyCapabilities, Family } from '../api/economyTypes';
+import { Link, useLocation, useNavigate, useSearchParams, useNavigationType } from 'react-router';
+import type { EconomyCapabilities, Family, Period } from '../api/economyTypes';
 import type { Home } from '../api/types';
 import act from '../activities/activities.module.css';
 import { Icon } from '../components/Icon';
@@ -50,7 +52,7 @@ import { useCurrentHome } from './HomePages';
 import pages from './pages.module.css';
 
 /** Stato di navigazione privato: ricerca e ritorno alla panoramica, legati all'account. */
-type NavState = { accountId?: string; economyQ?: string; overview?: string; returnTo?: { path: string; label: string }; expenseRestore?: {id:string;y:number;pages:number} } | null;
+type NavState = { accountId?: string; economyQ?: string; overview?: string; returnTo?: { path: string; label: string }; expenseRestore?: {id:string;y:number;pages:number}; monthlyScope?: {homeId:string;period:Period;selection:Period} } | null;
 
 /**
  * Spese: un unico ingresso. Con economy-v1 attivo si usa lo storico S1 (capabilities
@@ -113,11 +115,28 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
   const location = useLocation();
   const [params, setParams] = useSearchParams();
   const [entryOpen,setEntryOpen] = useState(false);
+  const [narrow,setNarrow] = useState(()=>window.innerWidth<=1100);
+  const [mobileDetailsTarget,setMobileDetailsTarget] = useState<HTMLDivElement|null>(null);
+  useEffect(()=>{
+    const media=window.matchMedia?.('(max-width: 1100px)');
+    if(!media)return;
+    const update=()=>setNarrow(media.matches);
+    media.addEventListener('change',update);return()=>media.removeEventListener('change',update);
+  },[]);
+  const [monthlyView,setMonthlyView] = useState<MonthlyView>({expanded:false,page:0});
+  const navigationType = useNavigationType();
+  const monthlyHistory = useRef(new Map<string,{accountId:string;homeId:string;month:string;view:MonthlyView;detailOpen:boolean}>());
+  const restoringMonth = useRef<{accountId:string;homeId:string;month:string;detailOpen:boolean}|null>(null);
   const nav = (location.state as NavState) ?? null;
   const sameAccount = nav?.accountId === account.id;
   const q = sameAccount && typeof nav?.economyQ === 'string' ? nav.economyQ : '';
   const filters = useMemo<EconomyFilters>(() => ({ ...filtersFromParams(params), q }), [params, q]);
   const canEdit = home.permissions.includes('edit');
+  const scope = sameAccount && nav?.monthlyScope?.homeId === home.id ? nav.monthlyScope : null;
+  const monthlyContext = scope && filters.period.kind === 'range' && scope.selection?.from === filters.period.from && scope.selection?.to === filters.period.to
+    && typeof scope.period?.from === 'string' && typeof scope.period?.to === 'string'
+    && isValidCalendarDate(scope.period.from) && isValidCalendarDate(scope.period.to)
+    && scope.period.from <= filters.period.from && scope.period.to >= filters.period.to ? scope.period : null;
 
   // I vecchi indirizzi restano leggibili; panoramica ed elenco condividono la pagina.
   const viewParam = params.get('vista');
@@ -130,7 +149,9 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
     const p = filtersToParams(next, { view: v, split: (opts.split ?? split) === 'category' && !next.family ? 'categorie' : null });
     const month=opts.month!==undefined?opts.month:(samePeriod(next.period,filters.period)?params.get('mese'):null);
     if(month && samePeriod(next.period,monthPeriod(month,caps.today)??{kind:'default'}))p.set('mese',month);
-    setParams(p, { replace: opts.replace, state: { accountId: account.id, economyQ: next.q, ...(opts.state ?? {}) } });
+    if (!samePeriod(next.period,filters.period) && !opts.state?.monthlyScope) setMonthlyView({expanded:false,page:0});
+    setParams(p, { replace: opts.replace, state: { accountId: account.id, economyQ: next.q,
+      ...(samePeriod(next.period,filters.period) && monthlyContext ? {monthlyScope:nav?.monthlyScope} : {}), ...(opts.state ?? {}) } });
   };
   const summaryActive=filters.state==='active';
   const summary = useEconomySummary(home.id, filters,summaryActive);
@@ -142,10 +163,37 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
   }, [summaryForbidden]);
 
   const backButton = useRef<HTMLButtonElement>(null);
-  const focusTarget = useRef<'distribution' | 'back' | null>(null);
+  const focusTarget = useRef<'distribution' | 'back' | 'month' | 'restoreMonth' | null>(null);
   useEffect(() => {
-    if (focusTarget.current === 'distribution') document.getElementById('spese-distribuzione')?.focus();
+    if (navigationType !== 'POP') return;
+    const saved=monthlyHistory.current.get(location.key);
+    if (!saved || saved.accountId !== account.id || saved.homeId !== home.id) return;
+    setMonthlyView(saved.view);
+    restoringMonth.current=saved;
+    focusTarget.current='restoreMonth';
+  },[location.key,navigationType,account.id,home.id]);
+  useEffect(() => {
+    if (focusTarget.current === 'restoreMonth') {
+      const saved=restoringMonth.current;
+      if (!saved || saved.accountId !== account.id || saved.homeId !== home.id) { focusTarget.current=null;return; }
+      const button=Array.from(document.querySelectorAll<HTMLButtonElement>('button[data-expense-month]')).find(b=>b.dataset.expenseMonth===saved.month);
+      if (!button || !comparisonRef.current) return;
+      comparisonRef.current.open=saved.detailOpen;
+      button.focus();button.scrollIntoView?.({block:'center',inline:'nearest'});
+      restoringMonth.current=null;
+    }
+    if (focusTarget.current === 'distribution') {
+      const heading=document.getElementById('spese-distribuzione'),details=heading?.closest('details');
+      if(details)details.open=true;
+      heading?.focus();
+    }
     if (focusTarget.current === 'back') backButton.current?.focus();
+    if (focusTarget.current === 'month') {
+      if (!comparisonRef.current) return;
+      comparisonRef.current.open=true;
+      comparisonRef.current.querySelector('summary')?.focus();
+      comparisonRef.current.scrollIntoView?.({block:'center'});
+    }
     focusTarget.current = null;
   });
 
@@ -159,10 +207,8 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
     focusTarget.current = 'back';
     go(next, { view: 'elenco', state: { overview: params.toString() } });
   };
-  const analysisRef=useRef<HTMLDetailsElement>(null);
-  useEffect(()=>{if(!window.matchMedia){if(analysisRef.current)analysisRef.current.open=window.innerWidth>=761;return;}const media=window.matchMedia('(min-width: 761px)');if(analysisRef.current)analysisRef.current.open=media.matches;const update=()=>{if(analysisRef.current)analysisRef.current.open=media.matches;};media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[home.id,summaryActive]);
+  const comparisonRef=useRef<HTMLDetailsElement>(null);
   const backToOverview = () => {
-    if(analysisRef.current)analysisRef.current.open=true;
     focusTarget.current = 'distribution';
     const p = new URLSearchParams(overview ?? '');
     p.set('vista', 'panoramica');
@@ -205,6 +251,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
   const distribution = !summary.isError && summary.data ? (<Distribution
               summary={summary.data}
               caps={caps}
+              compactLegend
               mode={filters.family ? 'category' : split}
               family={filters.family}
               onModeChange={(m) => {
@@ -216,6 +263,8 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
               }}
               onPick={pick}
             />) : null;
+
+  const comparisonPanels=!summary.isError&&summary.data?<div><details ref={comparisonRef} className={layout.monthlyDetail}><summary>Acquisti e interventi · dettaglio del confronto</summary><SpeseComparisons homeId={home.id} caps={caps} filters={filters} onPick={family=>filters.family===family?go({...filters,family:null,category:null}):pick({kind:'family',code:family} as Slice)}/></details><details className={layout.totalComparison}><summary>Confronto del totale filtrato</summary><ComparisonCard summary={summary.data}/></details></div>:null;
 
   return (
     <>
@@ -287,7 +336,6 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
           {(filters.period.kind==='range'&&!params.has('mese')||params.get('periodo')==='intervallo')&&<RangeForm key={JSON.stringify(filters.period)} filters={filters} onApply={(from,to)=>go({...filters,period:{kind:'range',from,to}},{month:null})}/>}
           <details className={styles.dateHelp}><summary>Come vengono conteggiate le date?</summary><p>Bollette per mese fattura, se indicato; altrimenti per periodo dei servizi. Emissione e scadenza restano separate. Gli intervalli di più mesi sono conteggiati una volta nel mese iniziale. Senza periodo vale la data registrata, finché lo completi. I costi registrati non certificano un pagamento.</p></details>
         </section>
-        <div className={layout.mobileTotal} aria-live="polite">{summaryActive&&summary.data&&!summary.isError&&<><span>Totale delle spese mostrate</span><strong>{formatCentsString(summary.data.totalCents)}</strong><span>{summary.data.count} registrazioni · non indica pagamenti</span>{!filters.family&&!filters.category&&summary.data.totalCents!==summary.data.totalWithoutFinancingCents&&<span className={layout.mobileSecondary}>Senza mutuo e finanziamenti: {formatCentsString(summary.data.totalWithoutFinancingCents)}</span>}</>}</div>
         <div className={layout.columns}>
         <div className={layout.main}>
           <div className={layout.filters}>
@@ -316,9 +364,8 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
         {view === 'lavori' && <ByWork home={home} caps={caps} filters={filters} state={listState} onChoose={(workId) => go({ ...filters, workId })} />}
         {view === 'riepilogo' && summaryActive && !summary.isError && summary.data && <Summary summary={summary.data} caps={caps} />}
 
-        </div></div>
-        {summaryActive?<details ref={analysisRef} className={layout.insights} >
-          <summary>Grafico e confronti</summary><div className={layout.insightContent}>
+        </div><div ref={setMobileDetailsTarget} className={layout.mobileDetails}/></div>
+        {summaryActive?<aside className={layout.insights} aria-label="Riepilogo e andamento"><div className={layout.insightContent}>
                   {summary.isPending ? (
           <Loading label="Calcolo del riepilogo…" />
         ) : summary.isError ? (
@@ -333,8 +380,16 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
           <TotalCard summary={summary.data} caps={caps} family={filters.family} showWithoutFinancing={!filters.family && !filters.category} />
         )}
           {distribution}
-          {!summary.isError&&summary.data&&<><SpeseComparisons homeId={home.id} caps={caps} filters={filters} onPick={family=>filters.family===family?go({...filters,family:null,category:null}):pick({kind:'family',code:family} as Slice)}/><details className={layout.totalComparison}><summary>Confronto del totale filtrato</summary><ComparisonCard summary={summary.data}/></details></>}
-          </div></details>:<aside className={ui.card}><p>Stai consultando anche registrazioni archiviate. Riepiloghi e confronti riguardano solo i costi attivi: torna allo stato Attivi per visualizzarli.</p></aside>}
+          {!summary.isError&&summary.data&&<><MonthlyTrend homeId={home.id} filters={filters} period={monthlyContext ?? summary.data.period} view={monthlyView} onViewChange={setMonthlyView} selectedPeriod={filters.period.kind==='range'?filters.period:undefined} onPick={(period,month)=>{
+            if(samePeriod(filters.period,{kind:'range',...period})) {
+              if(comparisonRef.current){comparisonRef.current.setAttribute('open','');comparisonRef.current.querySelector('summary')?.focus();comparisonRef.current.scrollIntoView?.({block:'center'});}return;
+            }
+            monthlyHistory.current.set(location.key,{accountId:account.id,homeId:home.id,month,view:monthlyView,detailOpen:comparisonRef.current?.open??false});
+            if(monthlyHistory.current.size>32)monthlyHistory.current.delete(monthlyHistory.current.keys().next().value!);
+            const context=monthlyContext??summary.data.period;
+            focusTarget.current='month';go({...filters,period:{kind:'range',...period}},{month,view:'elenco',state:{monthlyScope:{homeId:home.id,period:{from:context.from,to:context.to},selection:period}}});
+          }}/>{narrow&&mobileDetailsTarget?createPortal(comparisonPanels,mobileDetailsTarget):comparisonPanels}</>}
+          </div></aside>:<aside className={ui.card}><p>Stai consultando anche registrazioni archiviate. Riepiloghi e confronti riguardano solo i costi attivi: torna allo stato Attivi per visualizzarli.</p></aside>}
         </div>
         <p className={cx(pages.small, pages.muted)}>
           Oggi è {formatCalendarDate(caps.today)}. Pagamenti, ricorrenze, budget e previsioni non fanno parte di questa versione.

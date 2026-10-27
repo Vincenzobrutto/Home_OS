@@ -1,10 +1,15 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+**Spese — andamento mensile, candidato separato:**
+
+Anello principale e tre mesi comparati sotto, drill mensile e dettaglio Acquisti/interventi richiudibile. Riepiloghi completi tramite API summary esistente, mai somme delle pagine; nessun backend o dato reale modificato. Rifinito dopo riesame: mobile compatto, contesto e focus ripristinati, febbraio spiegato e harness browser nel repository. Verificato offline: mock 1591/1591, nuovi 22/22, fixture 5/5, gruppo 79/79, typecheck/lint/build e browser 1440/873/390/320 verdi; candidato nella PR #70, merge e rilascio al committente. [Report](v5/spese-andamento-mensile-20261027.md).
+
+
 **Spese — dettaglio riparazioni nel Riepilogo:** rimossa la vecchia esclusione di repairs_works e la nota sul raggruppamento per lavoro, superata dalla PR #64. Righe di categoria da byCategory e totali server invariati. Regressione prima rossa e poi verde; gruppo 47/47 offline, typecheck/lint/build verdi; lotto chiuso e area liberata. [Report](v5/spese-riepilogo-riparazioni-20261026.md). App invariata, merge al committente.
 
 **Spese — pagina unica attiva:** implementazione frontend del layout scelto dal committente, periodo Anno/Mese/Intervallo, elenco/riepilogo affiancati e analisi mobile espandibile. Aggregati completi del server e confronti per gruppo con gli stessi filtri; nessuna somma di pagine parziali. [Report e verifiche](v5/spese-pagina-unica-20261027.md). PR #68 integrata e frontend attivato a68113f5; build e39/39 HTTP statici/anonimi verdi, API/PostgreSQL e guardie preservati. [Consegna](v5/spese-pagina-unica-rilascio-20261027.md). Verifica finale del committente; nessuna AI o scrittura applicativa durante il rilascio.
 
-**Spese — aggregati successivi separati:** subtotali completi per mese, aggregati per oggetto, filtro bollette senza mese fattura, ricerca estesa oltre descrizione/fornitore e confronto per gruppo in una sola risposta. Da progettare nel backend; non simulati sul dataset parziale del frontend.
+**Spese — aggregati successivi separati:** endpoint unico per mesi (il candidato mensile usa già riepiloghi completi separati), aggregati per oggetto, filtro bollette senza mese fattura, ricerca estesa oltre descrizione/fornitore e confronto per gruppo in una sola risposta. Da progettare nel backend; non simulati sul dataset parziale del frontend.
 
 
 **Gruppi Spese attivi:** PR #64 integrata su approvazione a ccc8469; API/frontend aggiornati insieme, cluster esistente ripristinato senza migrazioni. Build e34/34 HTTP statici/anonimi verdi; nessuna AI o scrittura applicativa eseguita. [Consegna e limiti](v5/spese-gruppi-rilascio-20261026.md). Verifica finale della pagina Spese al committente.
