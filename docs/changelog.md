@@ -1,3 +1,7 @@
+## 27 ottobre 2026 — Spese: pagina unica e periodo prioritario
+
+Layout approvato: elenco e riepilogo affiancati, analisi mobile espandibile, selezione Anno/Mese/Intervallo e confronti Acquisti/Interventi dai riepiloghi server filtrati. Paginazione, ricerca privata, date e moduli canonici preservati; nessun aggregato calcolato su pagine parziali. [Report del lotto](v5/spese-pagina-unica-20261027.md). Solo frontend; app e dati reali invariati, merge al committente.
+
 ## 26 ottobre 2026 — Riparazioni visibili nel Riepilogo Spese
 
 **Spese — dettaglio riparazioni nel Riepilogo:** rimossa la vecchia esclusione di repairs_works e la nota sul raggruppamento per lavoro, superata dalla PR #64. Righe di categoria da byCategory e totali server invariati. Regressione prima rossa e poi verde; gruppo 47/47 offline, typecheck/lint/build verdi; lotto chiuso e area liberata. [Report](v5/spese-riepilogo-riparazioni-20261026.md). App invariata, merge al committente.

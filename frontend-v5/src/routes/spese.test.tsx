@@ -106,13 +106,12 @@ describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
     expect(items[0]).toHaveAccessibleName(/^Bollette: 250,00 €, 50,0%, 25 registrazioni/);
     expect(items[1]).toHaveAccessibleName(/^Mutuo e finanziamenti: 250,00 €, 50,0%/);
     expect(screen.getByText(/Senza costi registrati nel periodo: Condominio/)).toBeInTheDocument();
-    // Ultime registrazioni: solo la prima pagina (5) della lista filtrata.
-    const recent = screen.getByRole('region', { name: 'Ultime registrazioni' });
-    await waitFor(() => expect(within(recent).getAllByRole('listitem')).toHaveLength(5));
-    expect(within(recent).getByRole('button', { name: 'Vedi tutte le 26 registrazioni' })).toBeInTheDocument();
-    expect(gets(backend, /\/economy\/expenses\?limit=5$/)).toHaveLength(1);
-    expect(gets(backend, /\/economy\/summary$/).length).toBeGreaterThan(0);
-    expect(screen.getByLabelText('Raggruppa')).toHaveValue('panoramica');
+    // Pagina unica: prima pagina keyset20, totale/legenda restano dei26record completi.
+    const list=screen.getByRole('list',{name:'Costi registrati'});
+    await waitFor(()=>expect(within(list).getAllByRole('link')).toHaveLength(20));
+    expect(screen.getByRole('button',{name:'Mostra altri costi'})).toBeVisible();
+    expect(gets(backend,/\/economy\/expenses\?limit=20$/)).toHaveLength(1);
+    expect(gets(backend,/\/economy\/summary$/).length).toBeGreaterThan(0);
   });
 
   it('dall’ingresso senza parametri: la legenda apre l’elenco e il ritorno alla panoramica è disponibile', async () => {
@@ -131,7 +130,7 @@ describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
     await seedTypical(backend, owner.id, home.id);
     await s1(backend, owner.id, home.id, 'expenses', { title: 'Gas 2025', amountCents: 9000, spentOn: '2025-05-01', category: 'gas' });
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese`);
-    fireEvent.change(await screen.findByRole('combobox', { name: 'Periodo' }), { target: { value: '2025' } });
+    fireEvent.change(await screen.findByRole('combobox', { name: 'Anno' }), { target: { value: '2025' } });
     const bollette = await screen.findByRole('button', { name: /^Bollette: 90,00 €/ });
     bollette.focus();
     await app.user.keyboard('{Enter}');
@@ -172,13 +171,14 @@ describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
     await s1(backend, owner.id, home.id, 'expenses', { title: 'Gas', amountCents: 12000, spentOn: '2026-02-01', category: 'gas' });
     await s1(backend, owner.id, home.id, 'expenses', { title: 'Gas vecchio', amountCents: 10000, spentOn: '2025-02-01', category: 'gas' });
     const app = await open(backend, 'owner@example.test', PW.owner, `/home/${home.id}/spese?vista=panoramica&anno=2025`);
-    expect(await screen.findByText(/Nessun costo registrato nello stesso periodo dell’anno precedente/)).toBeInTheDocument();
+    await app.user.click(await screen.findByText('Confronto del totale filtrato'));
+    expect(await within(screen.getByRole('region',{name:'Confronto con lo stesso periodo'})).findByText(/Nessun costo registrato nello stesso periodo dell’anno precedente/)).toBeInTheDocument();
     await app.router.navigate(`/home/${home.id}/spese?vista=panoramica&anno=2026`);
     // La card si rimonta col nuovo periodo: la si cerca a ogni tentativo.
     await waitFor(() => expect(screen.getByRole('region', { name: 'Confronto con lo stesso periodo' })).toHaveTextContent('Differenza registrata: +20,00 € (+20,00%)'));
     expect(screen.getByRole('region', { name: 'Confronto con lo stesso periodo' })).toHaveTextContent(/non indicano un risparmio/);
     await app.router.navigate(`/home/${home.id}/spese?vista=panoramica&anno=0001`);
-    expect(await screen.findByText('Confronto non disponibile per questo periodo.')).toBeInTheDocument();
+    await waitFor(()=>expect(screen.getByRole('region',{name:'Confronto con lo stesso periodo'})).toHaveTextContent('Confronto non disponibile per questo periodo.'));
     expect(screen.getByText('Nessun costo registrato nel periodo con questi filtri.')).toBeInTheDocument();
     expect(document.querySelector('svg[role="img"]')).toBeNull();
   });
@@ -469,8 +469,8 @@ it('quick type applies immediately; advanced filters collapse, expose chips and 
  const {backend,owner,home}=world();await seedTypical(backend,owner.id,home.id);
  const app=await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/spese?vista=elenco`);
  const search=await screen.findByRole('searchbox',{name:'Cerca in descrizione o fornitore'});await app.user.type(search,'Bolletta');await app.user.click(screen.getByRole('button',{name:'Cerca'}));
- expect(screen.getByLabelText('Tipo di spesa').closest('details')).toBeNull();
- await app.user.selectOptions(screen.getByRole('combobox',{name:'Tipo di spesa'}),'utilities');
+ expect(screen.getByLabelText('Gruppo di spesa').closest('details')).toBeNull();
+ await app.user.selectOptions(screen.getByRole('combobox',{name:'Gruppo di spesa'}),'utilities');
  expect(app.router.state.location.search).toContain('famiglia=utilities');
  const filterSummary=screen.getByText(/^Filtri(?: · \d+ attiv[oi])?$/).closest('summary')!;
  await app.user.click(filterSummary);await app.user.selectOptions(screen.getByRole('combobox',{name:/^Categoria$/}),'electricity');

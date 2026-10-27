@@ -119,7 +119,7 @@ const FAMILY_COLOR: Record<Family, string> = {
   condominium: '#3d8fa8',
   taxes_insurance: '#8cc9d8',
   maintenance_repairs: '#132e3e',
-  works_purchases: '#5f8496',
+  works_purchases: '#c67b25',
   financing: '#b8a271',
   unclassified: '#9aa9b4',
 };
@@ -277,7 +277,7 @@ export function Distribution(props: {
 
 // ---- righe ----
 
-export function EconomyExpenseRow(props: { expense: EconomyExpense; homeId: string; caps?: EconomyCapabilities; state?: unknown }) {
+export function EconomyExpenseRow(props: { compact?: boolean; expense: EconomyExpense; homeId: string; caps?: EconomyCapabilities; state?: unknown }) {
   const e = props.expense;
   const location=useLocation();
   const navigate=useNavigate();
@@ -291,7 +291,7 @@ export function EconomyExpenseRow(props: { expense: EconomyExpense; homeId: stri
     e.state === 'archived' ? 'archiviato' : null,
   ].filter(Boolean);
   return (
-    <li className={cx(act.item, styles.expenseRow)}>
+    <li className={cx(act.item, styles.expenseRow,props.compact&&styles.expenseCompact)}>
       <div className={styles.expenseHead}>
         <Link id={'expense-'+e.id} to={economyExpensePath(props.homeId, e.id)} state={props.state} className={act.title}
           onClick={event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();const state=props.state as {accountId?:string;expensePages?:number};const restore={id:e.id,y:window.scrollY,pages:state?.expensePages??1};navigate(location.pathname+location.search,{replace:true,state:{...state,expenseRestore:restore}});navigate(economyExpensePath(props.homeId,e.id),{state:{...state,expenseRestore:restore}});}}>
