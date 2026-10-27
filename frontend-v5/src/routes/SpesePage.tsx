@@ -1,3 +1,4 @@
+import {MonthlyTrend} from '../economy/MonthlyTrend';
 import {SpeseComparisons} from '../economy/SpeseComparisons';
 import {monthPeriod, samePeriod} from '../economy/spesePeriod';
 import layout from '../economy/speseLayout.module.css';
@@ -142,10 +143,16 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
   }, [summaryForbidden]);
 
   const backButton = useRef<HTMLButtonElement>(null);
-  const focusTarget = useRef<'distribution' | 'back' | null>(null);
+  const focusTarget = useRef<'distribution' | 'back' | 'month' | null>(null);
   useEffect(() => {
     if (focusTarget.current === 'distribution') document.getElementById('spese-distribuzione')?.focus();
     if (focusTarget.current === 'back') backButton.current?.focus();
+    if (focusTarget.current === 'month') {
+      if (!comparisonRef.current) return;
+      comparisonRef.current.open=true;
+      comparisonRef.current.querySelector('summary')?.focus();
+      comparisonRef.current.scrollIntoView?.({block:'center'});
+    }
     focusTarget.current = null;
   });
 
@@ -159,10 +166,8 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
     focusTarget.current = 'back';
     go(next, { view: 'elenco', state: { overview: params.toString() } });
   };
-  const analysisRef=useRef<HTMLDetailsElement>(null);
-  useEffect(()=>{if(!window.matchMedia){if(analysisRef.current)analysisRef.current.open=window.innerWidth>=761;return;}const media=window.matchMedia('(min-width: 761px)');if(analysisRef.current)analysisRef.current.open=media.matches;const update=()=>{if(analysisRef.current)analysisRef.current.open=media.matches;};media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[home.id,summaryActive]);
+  const comparisonRef=useRef<HTMLDetailsElement>(null);
   const backToOverview = () => {
-    if(analysisRef.current)analysisRef.current.open=true;
     focusTarget.current = 'distribution';
     const p = new URLSearchParams(overview ?? '');
     p.set('vista', 'panoramica');
@@ -287,7 +292,6 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
           {(filters.period.kind==='range'&&!params.has('mese')||params.get('periodo')==='intervallo')&&<RangeForm key={JSON.stringify(filters.period)} filters={filters} onApply={(from,to)=>go({...filters,period:{kind:'range',from,to}},{month:null})}/>}
           <details className={styles.dateHelp}><summary>Come vengono conteggiate le date?</summary><p>Bollette per mese fattura, se indicato; altrimenti per periodo dei servizi. Emissione e scadenza restano separate. Gli intervalli di più mesi sono conteggiati una volta nel mese iniziale. Senza periodo vale la data registrata, finché lo completi. I costi registrati non certificano un pagamento.</p></details>
         </section>
-        <div className={layout.mobileTotal} aria-live="polite">{summaryActive&&summary.data&&!summary.isError&&<><span>Totale delle spese mostrate</span><strong>{formatCentsString(summary.data.totalCents)}</strong><span>{summary.data.count} registrazioni · non indica pagamenti</span>{!filters.family&&!filters.category&&summary.data.totalCents!==summary.data.totalWithoutFinancingCents&&<span className={layout.mobileSecondary}>Senza mutuo e finanziamenti: {formatCentsString(summary.data.totalWithoutFinancingCents)}</span>}</>}</div>
         <div className={layout.columns}>
         <div className={layout.main}>
           <div className={layout.filters}>
@@ -317,8 +321,7 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
         {view === 'riepilogo' && summaryActive && !summary.isError && summary.data && <Summary summary={summary.data} caps={caps} />}
 
         </div></div>
-        {summaryActive?<details ref={analysisRef} className={layout.insights} >
-          <summary>Grafico e confronti</summary><div className={layout.insightContent}>
+        {summaryActive?<aside className={layout.insights} aria-label="Riepilogo e andamento"><div className={layout.insightContent}>
                   {summary.isPending ? (
           <Loading label="Calcolo del riepilogo…" />
         ) : summary.isError ? (
@@ -333,8 +336,8 @@ function EconomySpese({ home, caps }: { home: Home; caps: EconomyCapabilities })
           <TotalCard summary={summary.data} caps={caps} family={filters.family} showWithoutFinancing={!filters.family && !filters.category} />
         )}
           {distribution}
-          {!summary.isError&&summary.data&&<><SpeseComparisons homeId={home.id} caps={caps} filters={filters} onPick={family=>filters.family===family?go({...filters,family:null,category:null}):pick({kind:'family',code:family} as Slice)}/><details className={layout.totalComparison}><summary>Confronto del totale filtrato</summary><ComparisonCard summary={summary.data}/></details></>}
-          </div></details>:<aside className={ui.card}><p>Stai consultando anche registrazioni archiviate. Riepiloghi e confronti riguardano solo i costi attivi: torna allo stato Attivi per visualizzarli.</p></aside>}
+          {!summary.isError&&summary.data&&<><MonthlyTrend homeId={home.id} filters={filters} period={summary.data.period} onPick={(period,month)=>{focusTarget.current='month';go({...filters,period:{kind:'range',...period}},{month,view:'elenco'});}}/><details ref={comparisonRef} className={layout.monthlyDetail}><summary>Acquisti e interventi · dettaglio del confronto</summary><SpeseComparisons homeId={home.id} caps={caps} filters={filters} onPick={family=>filters.family===family?go({...filters,family:null,category:null}):pick({kind:'family',code:family} as Slice)}/></details><details className={layout.totalComparison}><summary>Confronto del totale filtrato</summary><ComparisonCard summary={summary.data}/></details></>}
+          </div></aside>:<aside className={ui.card}><p>Stai consultando anche registrazioni archiviate. Riepiloghi e confronti riguardano solo i costi attivi: torna allo stato Attivi per visualizzarli.</p></aside>}
         </div>
         <p className={cx(pages.small, pages.muted)}>
           Oggi è {formatCalendarDate(caps.today)}. Pagamenti, ricorrenze, budget e previsioni non fanno parte di questa versione.

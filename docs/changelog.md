@@ -1,3 +1,8 @@
+
+## 27 ottobre 2026 — Spese: anello e andamento mensile
+
+Nuovo lotto frontend: layout a due colonne approvato, anello sul periodo selezionato e confronto per mese nei tre mesi più recenti. Espansione del solo grafico, drill con filtri e ricerca preservati, dettaglio Acquisti/interventi apribile. Totali server completi, nessuna nuova API o scrittura dati. [Report e verifiche](v5/spese-andamento-mensile-20261027.md).
+
 ## 27 ottobre 2026 — Attivata la pagina unica Spese
 
 PR #68 integrata nel consolidamento a68113f5 e solo frontend aggiornato dalla stessa fonte. Build e39/39 controlli HTTP statici/anonimi superati; API/PostgreSQL e guardie invariati, nessuna migrazione, AI, .env o salvataggio applicativo. [Report di rilascio](v5/spese-pagina-unica-rilascio-20261027.md).

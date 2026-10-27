@@ -1,3 +1,8 @@
+
+## 27 ottobre 2026 — Spese: anello principale, confronto mensile e dettaglio
+
+Il committente conferma elenco a sinistra e anello a destra, con barre di tre mesi sotto. Totale e anello seguono il filtro selezionato; l’espansione dei mesi non cambia il periodo dell’elenco. Il clic applica il segmento mensile e apre il dettaglio Acquisti/interventi, con conferme e scritture canoniche invariate. Aggregati completi tramite summary esistente: niente somme da pagina e niente fallback mock nella modalità reale. Su mobile anello e barre precedono l’elenco. [Lotto](v5/spese-andamento-mensile-20261027.md). Merge e rilascio restano decisioni distinte.
+
 ## 27 ottobre 2026 — Spese a pagina unica, layout Claude approvato
 
 Il committente approva la preview basata sullo screenshot Claude: periodo compatto in alto, elenco a sinistra e totale/distribuzione/confronti a destra. Su mobile totale compatto e analisi espandibile dopo l’elenco. Totale e confronti devono seguire lo stesso perimetro di filtri; gli aggregati mancanti nel contratto non si ricostruiscono dalle pagine caricate. Mese è un intervallo del filtro server esistente, separato dal periodo dei servizi. Nessun totale delle attive presentato come totale di righe archiviate. Moduli canonici e scritture esplicite preservati. [Implementazione e limiti](v5/spese-pagina-unica-20261027.md). Nessuna autorizzazione al merge o al rilascio implicita nell’incarico di sviluppo.

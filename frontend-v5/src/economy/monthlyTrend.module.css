@@ -1,0 +1,22 @@
+.card { min-width:0; }
+.card h2 { margin:0 0 6px; }
+.hint { color:var(--color-muted); font-size:11px; line-height:1.6; margin:7px 0; overflow-wrap:anywhere; }
+.key { display:flex; gap:18px; flex-wrap:wrap; font-size:12px; }
+.key>span { display:flex; gap:6px; align-items:center; }
+.key i { width:11px; height:11px; background:#086b80; border-radius:2px; }
+.key>span:nth-child(2) i { background:#b39b65; }
+.scroll { overflow-x:auto; max-width:100%; }
+.chart { display:flex; gap:7px; justify-content:space-around; padding:8px 2px; }
+.month { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; border:1px solid transparent; border-radius:8px; padding:6px 2px; color:var(--color-ink); background:transparent; font:inherit; cursor:pointer; }
+.month:hover { background:var(--color-bg); border-color:var(--color-accent); }
+.month:focus-visible,.scroll:focus-visible { outline:3px solid var(--color-focus); outline-offset:-3px; }
+.plots { display:flex; justify-content:center; align-items:end; gap:4px; height:168px; width:100%; border-bottom:1px solid var(--color-border); }
+.column { min-width:0; width:48%; display:flex; flex-direction:column; align-items:center; gap:5px; }
+.value { font-size:10px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.bar { display:block; width:24px; max-width:85%; background:#086b80; border-radius:4px 4px 0 0; }
+.previous { background:#b39b65; }
+.monthName { font-size:11px; margin-top:8px; text-transform:capitalize; }
+.expanded { min-width:900px; }
+.expanded .month { min-width:72px; }
+.pager { display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; }
+@media(max-width:360px) { .value { font-size:9px; }.bar { width:18px; }.monthName { font-size:10px; } }
