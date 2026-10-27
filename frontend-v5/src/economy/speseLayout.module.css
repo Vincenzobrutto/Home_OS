@@ -1,383 +1,113 @@
-.workspace {
-  gap:14px}
-.periodPanel {
-  border:1px solid var(--color-border);
-  background:var(--color-surface);
-  border-radius:12px;
-  padding:12px 16px}
-.periodControls {
-  display:flex;
-  gap:14px;
-  align-items:center;
-  flex-wrap:wrap}
-.periodControls>label {
-  display:flex;
-  gap:8px;
-  align-items:center;
-  font-size:13px}
-.periodControls select,.periodControls input {
-  width:auto;
-  min-width:0}
-.periodModes {
-  display:flex;
-  border:1px solid var(--color-border);
-  border-radius:8px;
-  overflow:hidden}
-.periodModes button {
-  border:0;
-  background:transparent;
-  color:var(--color-ink);
-  font:inherit;
-  font-size:13px;
-  font-weight:650;
-  min-height:40px;
-  padding:8px 12px;
-  cursor:pointer}
-.periodModes button[aria-pressed=true] {
-  background:var(--color-accent);
-  color:var(--color-surface)}
-.periodModes button:focus-visible,.groupButton:focus-visible,.insights>summary:focus-visible {
-  outline:3px solid var(--color-focus);
-  outline-offset:-3px}
-.periodPanel details {
-  font-size:12px;
-  margin-top:4px}
-.periodPanel summary {
-  min-height:32px;
-  padding:5px 0}
-.periodPanel form {
-  margin-top:12px}
-.columns {
-  display:grid;
-  grid-template-columns:minmax(0,1.35fr) minmax(340px,1fr);
-  gap:16px;
-  align-items:start}
-.main,.insights {
-  min-width:0}
-.main .listBoard {
-  display:block;
-  grid-template-columns:minmax(0,1fr)}
-.listBoard>section {
-  margin-top:12px}
-.listBoard h2 {
-  font-size:18px}
-.listBoard h3 {
-  font-size:14px;
-  margin:0;
-  text-transform:capitalize}
-.listBoard :global(ul[aria-label="Costi registrati"]) {
-  border:0;
-  overflow:visible}
-.listBoard :global(li) {
-  min-width:0}
-.listBoard :global(a[id^="expense-"]) {
-  font-size:14px}
-.listBoard :global(ul[aria-label="Costi registrati"]>li) {
-  padding:12px 2px}
-.filters {
-  display:grid;
-  gap:10px}
-.filters :global(.expense-search) {
-  margin:0}
-.filters :global(.expense-search label) {
-  font-size:12px;
-  gap:4px;
-  flex:1;
-  min-width:0}
-.filters :global(.expense-search button) {
-  padding-inline:10px}
-.filters select {
-  font-size:13px}
-.insights {
-  border:0}
-.insights>summary {
-  cursor:pointer;
-  font-size:14px;
-  font-weight:650;
-  min-height:44px;
-  align-content:center}
-.insightContent {
-  display:grid;
-  gap:12px;
-  position:relative}
-.insightContent>section {
-  min-width:0;
-  padding:16px}
-.insightContent h2 {
-  font-size:16px}
-.insightContent :global([aria-labelledby="spese-totale"]) {
-  min-height:158px;
-  padding-right:148px;
-  margin-bottom:-12px;
-  border-bottom:0;
-  border-radius:12px 12px 0 0}
-.insightContent :global([aria-labelledby="spese-distribuzione"]) {
-  border-top:0;
-  border-radius:0 0 12px 12px}
-.insightContent :global([aria-labelledby="spese-totale"] h2) {
-  font-size:12px;
-  line-height:1.6}
-.insightContent :global([aria-labelledby="spese-totale"] span) {
-  overflow-wrap:normal}
-.insightContent :global([aria-labelledby="spese-totale"] span:nth-child(2)) {
-  font-size:30px;
-  white-space:nowrap}
-.insightContent :global([aria-labelledby="spese-totale"] span:last-child) {
-  font-size:12px}
-.insightContent svg[role=img] {
-  position:absolute;
-  top:18px;
-  right:14px;
-  width:132px;
-  height:132px}
-.insightContent :global([aria-label="Gruppi di spesa con costi registrati"]),.insightContent :global([aria-label="Categorie con costi registrati"]) {
-  width:100%}
-.insightContent :global([aria-labelledby="spese-distribuzione"]>div:nth-child(2)) {
-  grid-template-columns:1fr;
-  gap:0}
-.insightContent :global([aria-labelledby="spese-distribuzione"] p) {
-  font-size:11px}
-.insightContent :global([aria-labelledby="spese-distribuzione"] button) {
-  font-size:12px}
-.groupComparison {
-  border-top:1px solid var(--color-border);
-  padding-top:10px;
-  margin-top:12px}
-.groupButton {
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  text-align:left;
-  width:100%;
-  padding:8px 0;
-  border:0;
-  background:transparent;
-  color:var(--color-ink);
-  font:inherit;
-  font-size:13px;
-  cursor:pointer}
-.groupButton strong {
-  white-space:nowrap;
-  font-variant-numeric:tabular-nums}
-.groupButton[aria-pressed=true] {
-  color:var(--color-accent)}
-.hint {
-  font-size:12px;
-  color:var(--color-muted);
-  line-height:1.65;
-  margin:6px 0;
-  overflow-wrap:anywhere}
-.totalComparison>summary {
-  cursor:pointer;
-  min-height:44px;
-  padding:10px 0;
-  font-size:13px}
-.mobileTotal {
-  display:none}
-.filters :global(select) {
-  max-width:100%}
-
-@media(min-width:761px) {
-  .insights>summary {
-  display:none}
-.filters>div>div:first-child {
-  margin-bottom:8px;
-  gap:10px;
-  flex-wrap:nowrap}
-.filters>div>div:first-child>label {
-  min-width:0;
-  font-size:12px;
-  flex:1}
-.filters>div>details {
-  padding:8px 12px}
-.filters>div>details>summary {
-  min-height:36px}
-.listBoard :global([aria-labelledby="spese-elenco"]) {
-  grid-column:1}
-}
-
-@media(min-width:761px) and (max-width:1100px) {
-  .columns {
-  grid-template-columns:minmax(0,1fr) minmax(310px,.9fr)}
-.insightContent :global([aria-labelledby="spese-totale"]) {
-  padding-right:120px}
-.insightContent svg[role=img] {
-  width:110px;
-  height:110px}
-.insightContent :global([aria-labelledby="spese-totale"] span:nth-child(2)) {
-  font-size:25px}
-.groupButton {
-  font-size:12px}
-}
-
-@media(max-width:760px) {
-  .columns {
-  display:flex;
-  flex-direction:column;
-  gap:12px}
-.main,.insights {
-  width:100%}
-.periodPanel {
-  padding:10px 12px}
-.periodControls {
-  gap:9px}
-.periodModes button {
-  font-size:12px;
-  padding:7px 10px}
-.periodControls>label {
-  font-size:12px;
-  flex-wrap:wrap}
-.periodControls input {
-  max-width:100%}
-.periodPanel details {
-  font-size:11px}
-.mobileTotal:not(:empty) {
-  display:grid;
-  border:1px solid var(--color-border);
-  border-radius:10px;
-  background:var(--color-surface);
-  padding:10px 12px;
-  gap:3px}
-.mobileTotal span {
-  font-size:12px;
-  color:var(--color-muted)}
-.mobileTotal strong {
-  font-size:28px;
-  line-height:1.25;
-  white-space:nowrap}
-.insights>summary {
-  border:1px solid var(--color-border);
-  border-radius:10px;
-  padding:10px 12px;
-  background:var(--color-surface)}
-.insightContent {
-  margin-top:12px}
-.insightContent :global([aria-labelledby="spese-totale"]) {
-  display:none}
-.insightContent :global([aria-labelledby="spese-distribuzione"]) {
-  border:1px solid var(--color-border);
-  border-radius:12px}
-.insightContent svg[role=img] {
-  position:static;
-  width:170px;
-  height:170px;
-  margin:10px auto;
-  justify-self:center}
-.filters>div>div:first-child>label {
-  font-size:12px}
-.filters :global(.expense-search) {
-  flex-wrap:wrap}
-.filters :global(.expense-search label) {
-  flex-basis:70%}
-.filters :global(.expense-search input) {
-  min-width:0}
-.listBoard>section {
-  padding:14px}
-.listBoard :global(ul[aria-label="Costi registrati"]>li) {
-  padding:12px 0}
-.groupButton {
-  font-size:12px}
-.hint {
-  font-size:11px}
-}
-
-.filterSet {
-  display:contents}
-.quickGroup {
-  margin:0!important}
-.advanced {
-  grid-column:1/-1}
-.filters {
-  grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);
-  align-items:end}
-.quickGroup {
-  grid-column:2;
-  grid-row:1}
-.filters :global(.expense-search) {
-  grid-column:1;
-  grid-row:1}
-.filterSet>div:last-child:not(.quickGroup) {
-  grid-column:1/-1}
-@media(max-width:600px) {
-  .filters {
-  grid-template-columns:1fr}
-.quickGroup,.filters :global(.expense-search) {
-  grid-column:1;
-  grid-row:auto}
-}
-
-@media(max-width:760px) {
-  .heading {
-  margin-bottom:10px!important;
-  gap:6px!important}
-.heading>div:first-child>a {
-  display:none}
-.heading>div:first-child>p {
-  font-size:11px;
-  line-height:1.4;
-  margin:2px 0!important}
-.heading h1 {
-  font-size:25px;
-  margin:2px 0!important}
-.headingActions :global(button) {
-  min-height:40px!important;
-  padding:8px 10px!important;
-  font-size:12px!important}
-.headingActions>p:first-child {
-  gap:6px}
-.mobileTotal:not(:empty) {
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:3px 12px}
-.mobileTotal strong {
-  grid-column:2;
-  grid-row:1/3;
-  align-self:center;
-  font-size:26px}
-.mobileTotal span {
-  font-size:11px}
-.mobileTotal span:last-child {
-  grid-column:1}
-.filters {
-  grid-template-columns:minmax(0,1fr) auto}
-.filters :global(.expense-search) {
-  grid-column:1/-1;
-  grid-row:1}
-.quickGroup {
-  grid-column:1;
-  grid-row:2}
-.advanced {
-  grid-column:2;
-  grid-row:2;
-  align-self:end}
-.advanced[open] {
-  grid-column:1/-1;
-  grid-row:3}
-.advanced:not([open]) {
-  padding:4px 10px!important}
-.filterSet>div:last-child:not(.quickGroup) {
-  grid-column:1/-1}
-}
-
-.mobileTotal .mobileSecondary { grid-column:1/-1; grid-row:auto; }
-@media(min-width:761px) and (max-width:1100px){.columns{display:flex;flex-direction:column}.main,.insights{width:100%}.insightContent svg[role=img]{position:static;width:160px;height:160px;justify-self:center;margin:10px auto}.insightContent :global([aria-labelledby="spese-totale"]){padding-right:16px;min-height:0}.filters{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}}
-.comparisonBars { display:grid; gap:3px; margin:4px 0 8px; }.comparisonBars>span { display:block; height:7px; border-radius:4px; background:var(--color-bg); overflow:hidden; }.comparisonBars>span>span { display:block; height:100%; border-radius:4px; }
-@media(min-width:761px) and (max-width:1100px){.mobileTotal:not(:empty){display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface);padding:12px 16px}.mobileTotal>span{font-size:12px;color:var(--color-muted)}.mobileTotal>strong{grid-column:2;grid-row:1/3;font-size:28px;align-self:center;white-space:nowrap}.mobileTotal>span:last-child{grid-column:1}.mobileTotal>.mobileSecondary{grid-column:1/-1}.insightContent :global([aria-labelledby="spese-totale"]){display:none}.insights>summary{display:block;border:1px solid var(--color-border);border-radius:10px;padding:10px 12px;background:var(--color-surface)}}
-
-/* Anello principale sempre disponibile; i confronti di gruppo si aprono dal mese. */
+.workspace { gap:14px; }
+.periodPanel { border:1px solid var(--color-border); background:var(--color-surface); border-radius:12px; padding:12px 16px; }
+.periodControls { display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+.periodControls>label { display:flex; gap:8px; align-items:center; font-size:13px; }
+.periodControls select,.periodControls input { width:auto; min-width:0; }
+.periodModes { display:flex; border:1px solid var(--color-border); border-radius:8px; overflow:hidden; }
+.periodModes button { border:0; background:transparent; color:var(--color-ink); font:inherit; font-size:13px; font-weight:650; min-height:40px; padding:8px 12px; cursor:pointer; }
+.periodModes button[aria-pressed=true] { background:var(--color-accent); color:var(--color-surface); }
+.periodModes button:focus-visible,.groupButton:focus-visible { outline:3px solid var(--color-focus); outline-offset:-3px; }
+.periodPanel details { font-size:12px; margin-top:4px; }
+.periodPanel summary { min-height:32px; padding:5px 0; }
+.periodPanel form { margin-top:12px; }
+.columns { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(340px,1fr); gap:16px; align-items:start; }
+.main,.insights { min-width:0; }
+.main .listBoard { display:block; grid-template-columns:minmax(0,1fr); }
+.listBoard>section { margin-top:12px; }
+.listBoard h2 { font-size:18px; }
+.listBoard h3 { font-size:14px; margin:0; text-transform:capitalize; }
+.listBoard :global(ul[aria-label="Costi registrati"]) { border:0; overflow:visible; }
+.listBoard :global(li) { min-width:0; }
+.listBoard :global(a[id^="expense-"]) { font-size:14px; }
+.listBoard :global(ul[aria-label="Costi registrati"]>li) { padding:12px 2px; }
+.filters { display:grid; gap:10px; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); align-items:end; }
+.filters :global(.expense-search) { margin:0; grid-column:1; grid-row:1; }
+.filters :global(.expense-search label) { font-size:12px; gap:4px; flex:1; min-width:0; }
+.filters :global(.expense-search button) { padding-inline:10px; }
+.filters select { font-size:13px; max-width:100%; }
+.filterSet { display:contents; }
+.quickGroup { margin:0!important; grid-column:2; grid-row:1; }
+.advanced,.filterSet>div:last-child:not(.quickGroup) { grid-column:1/-1; }
+.insights { border:0; }
+.insightContent { display:grid; gap:12px; position:relative; }
+.insightContent>section { min-width:0; padding:16px; }
+.insightContent h2 { font-size:16px; }
+.insightContent :global([aria-labelledby="spese-totale"]) { min-height:158px; padding-right:148px; margin-bottom:-12px; border-bottom:0; border-radius:12px 12px 0 0; }
+.insightContent :global([aria-labelledby="spese-distribuzione"]) { border-top:0; border-radius:0 0 12px 12px; }
+.insightContent :global([aria-labelledby="spese-totale"] h2) { font-size:12px; line-height:1.6; }
+.insightContent :global([aria-labelledby="spese-totale"] span) { overflow-wrap:normal; }
+.insightContent :global([aria-labelledby="spese-totale"] span:nth-child(2)) { font-size:30px; white-space:nowrap; }
+.insightContent :global([aria-labelledby="spese-totale"] span:last-child) { font-size:12px; }
+.insightContent svg[role=img] { position:absolute; top:18px; right:14px; width:132px; height:132px; }
+.insightContent :global([aria-label="Gruppi di spesa con costi registrati"]),.insightContent :global([aria-label="Categorie con costi registrati"]) { width:100%; }
+.insightContent :global([data-economy-chart-grid]) { grid-template-columns:1fr; gap:0; }
+.insightContent :global([aria-labelledby="spese-distribuzione"] p) { font-size:11px; }
+.insightContent :global([aria-labelledby="spese-distribuzione"] button) { font-size:12px; }
+.groupComparison { border-top:1px solid var(--color-border); padding-top:10px; margin-top:12px; }
+.groupButton { display:flex; justify-content:space-between; gap:12px; text-align:left; width:100%; padding:8px 0; border:0; background:transparent; color:var(--color-ink); font:inherit; font-size:13px; cursor:pointer; }
+.groupButton strong { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.groupButton[aria-pressed=true] { color:var(--color-accent); }
+.hint { font-size:12px; color:var(--color-muted); line-height:1.65; margin:6px 0; overflow-wrap:anywhere; }
+.totalComparison>summary,.monthlyDetail>summary { cursor:pointer; min-height:44px; padding:10px 0; font-size:13px; }
 .monthlyDetail { min-width:0; }
-.monthlyDetail>summary { cursor:pointer; padding:12px 0; min-height:44px; font-size:13px; color:var(--color-accent); }
+.monthlyDetail>summary { color:var(--color-accent); }
 .monthlyDetail>summary:focus-visible { outline:3px solid var(--color-focus); outline-offset:2px; }
+.comparisonBars { display:grid; gap:3px; margin:4px 0 8px; }
+.comparisonBars>span { display:block; height:7px; border-radius:4px; background:var(--color-bg); overflow:hidden; }
+.comparisonBars>span>span { display:block; height:100%; border-radius:4px; }
+@media(min-width:761px) {
+  .filters>div>div:first-child { margin-bottom:8px; gap:10px; flex-wrap:nowrap; }
+  .filters>div>div:first-child>label { min-width:0; font-size:12px; flex:1; }
+  .filters>div>details { padding:8px 12px; }
+  .filters>div>details>summary { min-height:36px; }
+  .listBoard :global([aria-labelledby="spese-elenco"]) { grid-column:1; }
+}
 @media(max-width:1100px) {
-  .columns { display:flex; flex-direction:column; }
+  .columns { display:flex; flex-direction:column; gap:12px; }
   .insights { order:-1; width:100%; }
   .main { width:100%; }
-  .insightContent { margin-top:0; }
-  .insightContent :global([aria-labelledby="spese-totale"]) { display:block; padding-right:148px; min-height:158px; }
-  .insightContent :global([aria-labelledby="spese-distribuzione"]) { border-top:0; border-radius:0 0 12px 12px; }
-  .insightContent svg[role=img] { position:absolute; top:18px; right:14px; width:132px; height:132px; margin:0; }
+}
+@media(max-width:760px) {
+  .periodPanel { padding:10px 12px; }
+  .periodControls { gap:9px; }
+  .periodModes button { font-size:12px; padding:7px 10px; }
+  .periodControls>label { font-size:12px; flex-wrap:wrap; }
+  .periodControls input { max-width:100%; }
+  .periodPanel details { font-size:11px; }
+  .insightContent { gap:10px; }
+  .insightContent>section { padding:12px; }
+  .insightContent :global([aria-labelledby="spese-totale"]) { padding-right:116px; min-height:112px; margin-bottom:-10px; }
+  .insightContent :global([aria-labelledby="spese-totale"] span:nth-child(2)) { font-size:27px; }
+  .insightContent svg[role=img] { width:100px; height:100px; top:12px; right:12px; }
+  .insightContent :global([aria-labelledby="spese-distribuzione"] h2) { font-size:14px; }
+  .filters { grid-template-columns:minmax(0,1fr) auto; }
+  .filters :global(.expense-search) { flex-wrap:wrap; grid-column:1/-1; grid-row:1; }
+  .filters :global(.expense-search label) { flex-basis:70%; }
+  .filters :global(.expense-search input) { min-width:0; }
+  .quickGroup { grid-column:1; grid-row:2; }
+  .advanced { grid-column:2; grid-row:2; align-self:end; }
+  .advanced[open] { grid-column:1/-1; grid-row:3; }
+  .advanced:not([open]) { padding:4px 10px!important; }
+  .filterSet>div:last-child:not(.quickGroup) { grid-column:1/-1; }
+  .listBoard>section { padding:14px; }
+  .listBoard :global(ul[aria-label="Costi registrati"]>li) { padding:12px 0; }
+  .groupButton { font-size:12px; }
+  .hint { font-size:11px; }
+  .heading { margin-bottom:10px!important; gap:6px!important; }
+  .heading>div:first-child>a { display:none; }
+  .heading>div:first-child>p { font-size:11px; line-height:1.4; margin:2px 0!important; }
+  .heading h1 { font-size:25px; margin:2px 0!important; }
+  .headingActions :global(button) { min-height:40px!important; padding:8px 10px!important; font-size:12px!important; }
+  .headingActions>p:first-child { gap:6px; }
 }
 @media(max-width:360px) {
-  .insightContent :global([aria-labelledby="spese-totale"]) { padding-right:115px; }
-  .insightContent svg[role=img] { width:100px; height:100px; top:26px; right:10px; }
+  .insightContent :global([aria-labelledby="spese-totale"]) { padding-right:105px; }
+  .insightContent svg[role=img] { width:90px; height:90px; right:10px; }
   .insightContent :global([aria-labelledby="spese-totale"] span:nth-child(2)) { font-size:24px; }
 }
+
+.mobileDetails { margin-top:12px; }
+@media(min-width:1101px) { .mobileDetails { display:none; } }
+@media(max-width:760px) { .heading>div:first-child>p:last-child { display:none; }.heading { margin-bottom:5px!important; } }
+
+@media(max-width:360px) { .periodModes button { font-size:11px; padding:7px 6px; }.periodControls { gap:7px; }.headingActions :global(button),.headingActions :global(a) { font-size:11px!important; padding:7px 8px!important; min-height:40px!important; } }

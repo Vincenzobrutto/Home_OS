@@ -24,7 +24,7 @@ it('tre coppie complete dal server, non dalla pagina; espandere non cambia perio
   expect(within(trend).getAllByRole('button',{name:/Apri dettaglio del mese/})).toHaveLength(3);
   expect(screen.getAllByRole('link',{name:/Costo demo/})).toHaveLength(20);
   const route=app.router.state.location.search;
-  await app.user.click(within(trend).getByRole('button',{name:'Mostra tutto l’anno'}));
+  await app.user.click(within(trend).getByRole('button',{name:'Mostra mesi del periodo'}));
   await waitFor(()=>expect(within(trend).getAllByRole('button',{name:/Apri dettaglio del mese/})).toHaveLength(10));
   expect(app.router.state.location.search).toBe(route);
   expect(screen.getByRole('region',{name:/Costi registrati nel periodo/})).toHaveTextContent('250,00 €');
@@ -96,7 +96,7 @@ it('un intervallo parziale si apre con gli stessi estremi, senza estenderlo al m
   expect(new URLSearchParams(app.router.state.location.search).get('dal')).toBe('2026-09-05');
   expect(new URLSearchParams(app.router.state.location.search).get('al')).toBe('2026-09-20');
   expect(new URLSearchParams(app.router.state.location.search).has('mese')).toBe(false);
-  expect(screen.queryByRole('button',{name:'Mostra tutto l’anno'})).not.toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Mostra mesi del periodo'})).not.toBeInTheDocument();
 });
 
 it('403 di un singolo riepilogo mensile rimuove tutte le vecchie barre senza retry automatici',async()=>{
@@ -117,4 +117,44 @@ it('403 di un singolo riepilogo mensile rimuove tutte le vecchie barre senza ret
   expect(within(trend).getByText('Andamento non disponibile')).toBeVisible();
   expect(within(trend).queryByRole('button',{name:/Riprova/})).not.toBeInTheDocument();
   expect(within(trend).queryByRole('button',{name:/Apri dettaglio del mese/})).not.toBeInTheDocument();
+});
+
+it('il drill mantiene tre mesi e il secondo clic non crea una navigazione; Indietro restituisce focus e dettagli',async()=>{
+  const {app}=await setup();
+  const original=app.router.state.location;
+  await app.user.click(screen.getByRole('button',{name:/settembre 2026: 250,00/}));
+  await waitFor(()=>expect(app.router.state.location.search).toContain('mese=2026-09'));
+  const firstKey=app.router.state.location.key;
+  expect(within(screen.getByRole('region',{name:'Andamento per mese'})).getAllByRole('button',{name:/Apri dettaglio del mese/})).toHaveLength(3);
+  expect(screen.getByRole('button',{name:/settembre 2026: 250,00/})).toHaveAttribute('aria-pressed','true');
+  await app.user.click(screen.getByRole('button',{name:/settembre 2026: 250,00/}));
+  expect(app.router.state.location.key).toBe(firstKey);
+  await app.router.navigate(-1);
+  await waitFor(()=>expect(app.router.state.location.key).toBe(original.key));
+  await waitFor(()=>expect(document.activeElement).toHaveAttribute('data-expense-month','2026-09'));
+  expect(screen.getByText('Acquisti e interventi · dettaglio del confronto').closest('details')).not.toHaveAttribute('open');
+});
+
+it('espansione mantenuta al cambio filtro e al ritorno, compreso un dettaglio già aperto',async()=>{
+  const {app}=await setup();
+  await app.user.click(screen.getByRole('button',{name:'Mostra mesi del periodo'}));
+  await app.user.selectOptions(screen.getByRole('combobox',{name:'Gruppo di spesa'}),'works_purchases');
+  await screen.findByRole('button',{name:/settembre 2026: 250,00/});
+  expect(screen.getByRole('button',{name:'Mostra ultimi 3 mesi'})).toHaveAttribute('aria-expanded','true');
+  fireEvent.click(screen.getByText('Acquisti e interventi · dettaglio del confronto'));
+  await app.user.click(screen.getByRole('button',{name:/settembre 2026: 250,00/}));
+  await app.router.navigate(-1);
+  await waitFor(()=>expect(document.activeElement).toHaveAttribute('data-expense-month','2026-09'));
+  expect(screen.getByText('Acquisti e interventi · dettaglio del confronto').closest('details')).toHaveAttribute('open');
+  expect(screen.getByRole('button',{name:'Mostra ultimi 3 mesi'})).toHaveAttribute('aria-expanded','true');
+});
+
+it('febbraio mostra il confronto fino al 28 e spiega l’esclusione del 29',async()=>{
+  const {backend,app,home,owner}=await setup();
+  for(const [spentOn,amountCents] of [['2025-02-10',2000],['2024-02-28',1500],['2024-02-29',9900]] as const) {
+    const r=await backend.economy.handle({method:'POST',path:'',headers:{'idempotency-key':crypto.randomUUID()},body:{title:'Febbraio demo',category:'purchase_replacement',amountCents,spentOn}},owner.id,home.id,'expenses');expect(r.status).toBe(201);
+  }
+  await app.router.navigate(`/home/${home.id}/spese?dal=2025-02-01&al=2025-02-28`);
+  await screen.findByRole('button',{name:/febbraio 2025: 20,00 €; anno precedente: 15,00 €/});
+  expect(screen.getByText(/il 29 febbraio è escluso/)).toHaveTextContent('1 febbraio 2024 al 28 febbraio 2024');
 });

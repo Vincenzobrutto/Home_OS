@@ -15,6 +15,7 @@
     "test": "vitest run --project mock --project fixtures",
     "test:watch": "vitest --project mock",
     "test:integration": "node scripts/run-integration.mjs",
+    "test:spese-browser": "node scripts/spese-browser-check.mjs",
     "mock-api": "node scripts/mock-api.ts"
   },
   "dependencies": {

@@ -1,3 +1,7 @@
+## 27 ottobre 2026 — PR #70: rifiniture dopo il riesame
+
+Vista mobile compatta con anello e tre mesi sempre visibili; espansione sui mesi recenti, contesto del drill mantenuto, secondo clic senza cronologia duplicata e Indietro con focus/dettaglio ripristinati. Confronti di febbraio spiegati senza cambiare il conteggio. Harness browser riproducibile nel repository; verifiche offline in corso, nessun rilascio. [Report](v5/spese-andamento-mensile-20261027.md).
+
 
 ## 27 ottobre 2026 — Spese: anello e andamento mensile
 

@@ -1,3 +1,7 @@
+## 27 ottobre 2026 — Rifiniture Spese dopo il riesame della PR #70
+
+Il committente approva la rifinitura della stessa PR: su telefono anello e tre coppie visibili, legenda/spiegazioni apribili e confronti estesi dopo l’elenco; su desktop disposizione a due colonne preservata. Il drill seleziona il mese per lista e totale, mantenendo il contesto del grafico; secondo clic senza nuova navigazione, Indietro ripristina focus e apertura. Il confronto resta per gli stessi giorni del precedente anno, con spiegazione esplicita del bisestile; nessun cambio monetario o temporale. [Esiti e limiti](v5/spese-andamento-mensile-20261027.md). Merge e rilascio restano separati.
+
 
 ## 27 ottobre 2026 — Spese: anello principale, confronto mensile e dettaglio
 

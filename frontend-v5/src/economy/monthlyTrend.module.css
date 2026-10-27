@@ -1,5 +1,8 @@
-.card { min-width:0; }
+.card { min-width:0; --monthly-bar-height:140px; }
 .card h2 { margin:0 0 6px; }
+.heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.heading h2 { margin:0; }
+.heading button { flex-shrink:0; font-size:11px; padding:7px 9px; min-height:36px; }
 .hint { color:var(--color-muted); font-size:11px; line-height:1.6; margin:7px 0; overflow-wrap:anywhere; }
 .key { display:flex; gap:18px; flex-wrap:wrap; font-size:12px; }
 .key>span { display:flex; gap:6px; align-items:center; }
@@ -10,7 +13,7 @@
 .month { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; border:1px solid transparent; border-radius:8px; padding:6px 2px; color:var(--color-ink); background:transparent; font:inherit; cursor:pointer; }
 .month:hover { background:var(--color-bg); border-color:var(--color-accent); }
 .month:focus-visible,.scroll:focus-visible { outline:3px solid var(--color-focus); outline-offset:-3px; }
-.plots { display:flex; justify-content:center; align-items:end; gap:4px; height:168px; width:100%; border-bottom:1px solid var(--color-border); }
+.plots { display:flex; justify-content:center; align-items:end; gap:4px; height:calc(var(--monthly-bar-height) + 28px); width:100%; border-bottom:1px solid var(--color-border); }
 .column { min-width:0; width:48%; display:flex; flex-direction:column; align-items:center; gap:5px; }
 .value { font-size:10px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
 .bar { display:block; width:24px; max-width:85%; background:#086b80; border-radius:4px 4px 0 0; }
@@ -20,3 +23,7 @@
 .expanded .month { min-width:72px; }
 .pager { display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; }
 @media(max-width:360px) { .value { font-size:9px; }.bar { width:18px; }.monthName { font-size:10px; } }
+
+.month[aria-pressed=true] { border-color:var(--color-accent); background:var(--color-bg); }
+.explanation>summary { cursor:pointer; min-height:32px; padding:6px 0; font-size:11px; color:var(--color-accent); }
+@media(max-width:760px) { .card { --monthly-bar-height:70px; }.hint { margin:4px 0; }.key { margin:8px 0; }.chart { padding:4px 2px; }.heading h2 { font-size:14px; }.month .hint { font-size:10px; } }

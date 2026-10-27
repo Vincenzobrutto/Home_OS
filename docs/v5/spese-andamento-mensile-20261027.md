@@ -1,4 +1,5 @@
 # Spese — andamento mensile e anello principale, 27 ottobre 2026
+**Aggiornamento corrente:** rifiniture autorizzate dopo la revisione indipendente di Claude su b0553b3; vedi la sezione finale «Rifiniture dopo il riesame». Gli esiti precedenti descrivono la prima consegna.
 
 ## Incarico e perimetro
 
@@ -47,3 +48,32 @@ Push della fonte prodotto 3f7044e verificato con git ls-remote; consolidamento d
 
 
 Comandi eseguiti attraverso il runner locale con ambiente ripulito: vitest run --project mock --maxWorkers=1 --retry=0; vitest run --project fixtures --maxWorkers=1 --retry=0; tsc -b --noEmit; eslint .; vite build. Per la junction delle dipendenze usato soltanto un override Vite esterno con il percorso fisico degli asset PDF, come nel precedente lotto, senza cambiare prodotto o validazioni. Log locali work/monthly-all.log, monthly-fixtures.log, monthly-typecheck.log, monthly-lint.log e monthly-build.log nel task; misure browser in outputs/spese-andamento-implementazione-20261027. Nessuna asserzione preesistente modificata.
+
+
+## Rifiniture dopo il riesame
+
+Il committente approva le rifiniture proposte dopo il [commento indipendente di Claude](https://github.com/Vincenzobrutto/Home_OS/pull/70#issuecomment-6439449689), senza rilievi bloccanti su b0553b3. Ripresa dello stesso lotto/PR #70 registrata con commit73ed6e8 prima del codice; nessuna sovrapposizione con altri lotti. Nessuna autorizzazione al merge o al rilascio.
+
+### Comportamento corrente
+
+- Nella disposizione a colonna singola totale e anello restano visibili. Legenda/importi per gruppo e relative spiegazioni sono apribili con un details nativo; i confronti estesi si trovano dopo l’elenco. Il dettaglio è una sola istanza, spostata con un portal React nel contenitore mobile: niente duplicazione di controlli o ID. Su desktop rimane sotto le barre a destra.
+- Tre coppie di barre restano visibili, con altezza ridotta su telefono e testi sintetici; spiegazioni complete apribili. Controlli del periodo e azioni si dispongono su una riga anche a320px. L’elenco sintetico di prova inizia a1062px a390 e1089px a320 (prima misura del nuovo harness:1439px a390). Il limite di1100px nel test non è stato allentato.
+- Espandendo, lo scorrimento parte dai mesi recenti, con gli ultimi mesi già in vista; le finestre lunghe restano limitate a12 mesi. L’espansione sopravvive ai filtri tramite stato UI separato dagli aggregati.
+- Il drill conserva il periodo di contesto del grafico e i tre mesi (o la finestra espansa scelta), evidenziando il segmento selezionato. Totale e lista seguono il mese. Un secondo clic sullo stesso segmento apre il dettaglio senza una navigazione duplicata.
+- Indietro ripristina il focus sulla barra e lo stato precedente di apertura del dettaglio. Le istantanee di sola UI sono limitate a32 e verificate per account/casa; nessun importo è memorizzato in questi record. Il contesto mensile nello stato di navigazione è validato per casa, calendario e selezione; la ricerca resta privata fuori dall’URL.
+- Febbraio2025 mostra esplicitamente il confronto1–28febbraio2024 e l’esclusione del29. L’adattamento inverso del bisestile è spiegato dai metadati server. Importi, periodi e regole del contratto non cambiano.
+- Rimossi i vecchi stili mobileTotal/analisi a scomparsa e consolidati i breakpoint. Selettore della griglia dell’anello reso esplicito, indipendente dalla posizione dei figli DOM. Nessun nuovo endpoint o dipendenza.
+
+### Verifiche della rifinitura
+
+- Test nuovi/rafforzati:22/22, inclusi tre nuovi percorsi UI (contesto/cronologia/Indietro, espansione e dettaglio già aperto, febbraio) e due casi puri sulle note del calendario. Gruppo Spese finale in verifica; precedente gruppo79/79 prima dell’ultima rifinitura responsive.
+- Typecheck, lint, build e fixture5/5 verdi. Il nuovo entry del harness è verificato con tsconfig.browser.json dedicato al JSX; non viene lasciato privo di controllo dei tipi né incluso erroneamente nella configurazione Node.
+- Suite mock completa della fonte rifinita in corso, un worker/retry0; nessun timeout, gold o asserzione storica indebolito.
+- Harness riproducibile ora nel repository: frontend-v5/tests/browser/spese e scripts/spese-browser-check.mjs; comando npm run test:spese-browser con Playwright/Chrome già installati e parametri documentati nel README. Non installa software, non avvia server né DB, non carica configurazione .env. Compila i componenti candidati e soddisfa soltanto asset locali su5197/spese-browser; backend solo in memoria.
+- Verificati1440/873/390/320: anello e tre mesi, espansione sui recenti, filtri, drill da tastiera/secondo clic/Indietro, febbraio,503/403 e righe senza overflow. Zero richieste esterne, errori JS o scritture dopo il seed/login sintetico. Screenshot salvati e ispezionati; ultima ripetizione finale del runner ancora da registrare. Artefatti locali outputs/spese-pr70-rifiniture-20261027 nel task.
+
+Durante la diagnosi: prima compilazione del harness erroneamente inclusa nel progetto TS Node senza JSX, risolta con progetto TS dedicato; prima lint corregge una mutazione DOM nel callback usando il metodo nativo setAttribute. Controlli browser iniziali della distanza dell’elenco rossi a1439/1213px: corretto il layout, mantenendo la soglia. Prova successiva a320 rossa a1170px: compattati i controlli del periodo e le azioni, senza nasconderli. Ispezione screenshot ha rilevato una legenda desktop troppo stretta: corretto il selettore strutturale, ricatturato. Nessuna esclusione delle prove o modifica degli importi.
+
+### Limiti e consegna della rifinitura
+
+Le letture restano tre riepiloghi mensili iniziali, fino a12 nella finestra espansa; un endpoint aggregato unico resta in roadmap. Nessun fallback con dati inventati in modalità reale, snapshot atomica fra mesi, collaudo sul DB reale o prova Safari/telefono/screen reader dichiarati. Main, consolidamento, runtime e dati reali preservati. La PR #70 verrà aggiornata con i risultati finali; merge e attivazione restano al committente.
