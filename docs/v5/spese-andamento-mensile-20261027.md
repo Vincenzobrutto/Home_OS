@@ -82,3 +82,6 @@ Le letture restano tre riepiloghi mensili iniziali, fino a 12 nella finestra esp
 ### Esiti definitivi della rifinitura
 
 Fonte finale 5f8a29e: mock 1591/1591 in 153 file, gruppo Spese 79/79 in 7 file, nuovi 22/22, fixture 5/5; typecheck/lint/build verdi. Completa finale in 1147.02s, un worker/retry 0 e nessun caso saltato. Il runner browser nel repository è verde a 1440/873/390/320, con sette stati catturati per viewport, controlli aggiuntivi della legenda da tastiera e misure di overflow/cronologia/focus. Il primo tentativo completo della rifinitura resta dichiarato interrotto dopo l’aspettativa di visibilità della legenda: nessun errore di calcolo né asserzione monetaria modificata. Nessuna altra variazione di prodotto dopo queste verifiche.
+
+
+Push della rifinitura 5b0c2201bf8df3acd7c204e17c7e85f4d7add4f9 verificato con git ls-remote. Main cdbb318 e consolidamento dd52a6a invariati. Albero frontend finale e444e231b4e6c27c863f73e18f754dd4b1997e94 identico alla fonte testata 5f8a29e; i commit successivi aggiornano soltanto documentazione. Worktree pulito al controllo di consegna, nessuna modifica ai worktree altrui. PR #70 aggiornata, ancora aperta: al committente resta la revisione e l’eventuale approvazione del merge e del rilascio.
