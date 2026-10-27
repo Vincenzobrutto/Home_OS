@@ -1,3 +1,7 @@
+## 27 ottobre 2026 — Attivata la pagina unica Spese
+
+PR #68 integrata nel consolidamento a68113f5 e solo frontend aggiornato dalla stessa fonte. Build e39/39 controlli HTTP statici/anonimi superati; API/PostgreSQL e guardie invariati, nessuna migrazione, AI, .env o salvataggio applicativo. [Report di rilascio](v5/spese-pagina-unica-rilascio-20261027.md).
+
 ## 27 ottobre 2026 — Spese: pagina unica e periodo prioritario
 
 Layout approvato: elenco e riepilogo affiancati, analisi mobile espandibile, selezione Anno/Mese/Intervallo e confronti Acquisti/Interventi dai riepiloghi server filtrati. Paginazione, ricerca privata, date e moduli canonici preservati; nessun aggregato calcolato su pagine parziali. [Report del lotto](v5/spese-pagina-unica-20261027.md). Solo frontend; app e dati reali invariati, merge al committente.

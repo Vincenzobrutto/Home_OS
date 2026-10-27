@@ -2,7 +2,7 @@
 
 **Spese — dettaglio riparazioni nel Riepilogo:** rimossa la vecchia esclusione di repairs_works e la nota sul raggruppamento per lavoro, superata dalla PR #64. Righe di categoria da byCategory e totali server invariati. Regressione prima rossa e poi verde; gruppo 47/47 offline, typecheck/lint/build verdi; lotto chiuso e area liberata. [Report](v5/spese-riepilogo-riparazioni-20261026.md). App invariata, merge al committente.
 
-**Spese — pagina unica approvata:** implementazione frontend del layout scelto dal committente, periodo Anno/Mese/Intervallo, elenco/riepilogo affiancati e analisi mobile espandibile. Aggregati completi del server e confronti per gruppo con gli stessi filtri; nessuna somma di pagine parziali. [Report e verifiche](v5/spese-pagina-unica-20261027.md). App reale invariata, merge al committente.
+**Spese — pagina unica attiva:** implementazione frontend del layout scelto dal committente, periodo Anno/Mese/Intervallo, elenco/riepilogo affiancati e analisi mobile espandibile. Aggregati completi del server e confronti per gruppo con gli stessi filtri; nessuna somma di pagine parziali. [Report e verifiche](v5/spese-pagina-unica-20261027.md). PR #68 integrata e frontend attivato a68113f5; build e39/39 HTTP statici/anonimi verdi, API/PostgreSQL e guardie preservati. [Consegna](v5/spese-pagina-unica-rilascio-20261027.md). Verifica finale del committente; nessuna AI o scrittura applicativa durante il rilascio.
 
 **Spese — aggregati successivi separati:** subtotali completi per mese, aggregati per oggetto, filtro bollette senza mese fattura, ricerca estesa oltre descrizione/fornitore e confronto per gruppo in una sola risposta. Da progettare nel backend; non simulati sul dataset parziale del frontend.
 
