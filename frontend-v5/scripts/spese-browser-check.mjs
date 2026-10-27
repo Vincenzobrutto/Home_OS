@@ -60,6 +60,14 @@ for(const width of [1440,873,390,320]){
       return Array.from(row.querySelectorAll('*')).filter(e=>e.getClientRects().length&&e.getBoundingClientRect().right>limit+1).map(e=>({tag:e.tagName,right:e.getBoundingClientRect().right,limit}));
     }));
     assert.deepEqual(rowOverflow,[]);
+    if(width<=1100){
+      const legend=page.locator('summary').filter({hasText:'Importi e dettagli della distribuzione'});
+      await legend.focus();await page.keyboard.press('Enter');
+      assert.notEqual(await legend.locator('..').getAttribute('open'),null);
+      assert.equal(await page.getByRole('list',{name:'Gruppi di spesa con costi registrati'}).isVisible(),true);
+      await page.keyboard.press('Enter');
+      assert.equal(await legend.locator('..').getAttribute('open'),null);
+    }
     const original=await page.evaluate(()=>({key:window.speseMock.router.state.location.key,search:window.speseMock.router.state.location.search}));
     await trend.getByRole('button',{name:'Mostra mesi del periodo'}).click();
     await page.waitForFunction(()=>document.querySelectorAll('[data-expense-month]').length===10);

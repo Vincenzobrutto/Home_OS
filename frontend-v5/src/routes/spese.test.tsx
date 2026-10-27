@@ -82,6 +82,7 @@ describe('[mock] S1 Spese — panoramica dal riepilogo server', () => {
     ])await s1(backend,owner.id,home.id,'expenses',{title,category,amountCents,workId,spentOn:'2026-09-01'});
     const app=await open(backend,'owner@example.test',PW.owner,`/home/${home.id}/spese?vista=panoramica`);
     const legend=await screen.findByRole('list',{name:'Gruppi di spesa con costi registrati'});
+    if(legend.closest('details')&&!legend.closest('details')!.open)await app.user.click(screen.getByText('Importi e dettagli della distribuzione'));
     expect(within(legend).getByRole('button',{name:/^Acquisti: 10,00 €/})).toBeVisible();
     const interventions=within(legend).getByRole('button',{name:/^Manutenzione, riparazioni e lavori: 90,00 €/});
     await app.user.click(interventions);

@@ -67,7 +67,7 @@ export function MonthlyTrend({ homeId, filters, period, onPick, view, onViewChan
       })}</div>
     </div>}</div>
     {!pending&&!error&&items.map((item,i)=>{const d=data[i],note=d?monthlyComparisonNote(item.period,d.comparison):null;return note?<p key={item.month} className={css.hint}>{monthName(item.month)}: {note}</p>:null;})}
-    <details className={css.explanation}><summary>Come leggere il confronto</summary><p className={css.hint}>{expanded ? 'Mesi del periodo selezionato' : 'Fino a tre mesi, i più recenti del periodo selezionato'}, con gli stessi filtri dell’elenco. Selezionando il mese si apre anche Acquisti e interventi. Importi registrati, non pagamenti. Assenza di registrazioni non significa spesa zero. Il confronto usa gli stessi giorni dell’anno precedente, con l’eventuale adattamento del 29 febbraio indicato sopra.</p></details>
+    <details className={css.explanation}><summary>Come leggere il confronto</summary><p className={css.hint}>{expanded ? 'Mesi del grafico di contesto' : 'Fino a tre mesi, i più recenti del grafico di contesto'}, con gli stessi filtri dell’elenco. Selezionando il mese, elenco e totale si aggiornano e si apre Acquisti e interventi; il grafico conserva il periodo da cui sei partito. Importi registrati, non pagamenti. Assenza di registrazioni non significa spesa zero. Il confronto usa gli stessi giorni dell’anno precedente, con l’eventuale adattamento del 29 febbraio indicato sopra.</p></details>
   </section>;
 }
 
