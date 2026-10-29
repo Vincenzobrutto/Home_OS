@@ -1881,3 +1881,6 @@ Chiusura verifica offline del lotto segnali generali: mock completa1226/1226 in1
 ## 30 ottobre 2026 — Agenzie: nucleo fascicolo locale
 
 Nuovo dominio isolato con accessi Agency/Practice, fonti private/condivise, revisioni immutabili, replay e invalidazione delle dipendenze. Riepilogo filtrato e manifest export selettivo. Non collegato ad AppModule: nessun endpoint o runtime modificato, nessuna migrazione o AI. [Specifica](v5/agency-practices-v1.md), [registro e verifiche](v5/agency-worklog-20261030.md). Demo Alessio invariata. Pubblicazione del branch dedicato autorizzata esplicitamente dal committente; nessun merge o deploy. Sviluppo fino alle09:00.
+
+## 30 ottobre2026 — Agenzie: persistenza isolata
+Schema additivo e adapter interno del fascicolo, senza Home/Document legacy e senza nuove route. Creazione idempotente, lock membership/grant/pratica, CAS, fonti private e snapshot append-only. Collaudo PostgreSQL solo su cluster sintetico nuovo, non sul DB prodotto. [Registro](v5/agency-worklog-20261030.md).

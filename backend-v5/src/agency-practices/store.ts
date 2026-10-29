@@ -1,0 +1,82 @@
+import { createHash, randomUUID } from 'node:crypto';
+import { Prisma, type AgencyPractice, type AgencyMember, type AgencyPracticeGrant } from '../../generated/client';
+import type { PrismaService } from '../prisma.service';
+import { active, applyRequest, exportManifest, newPractice, practiceSummary, PracticeError, requirePractice, type Actor, type AgencyRole, type Practice } from './domain';
+
+function iso(date: Date | null): string | null { return date?.toISOString() ?? null; }
+function membership(row: AgencyMember) { return { agencyId: row.agencyId, accountId: row.accountId, role: row.role as AgencyRole, validFrom: row.validFrom.toISOString(), validUntil: iso(row.validUntil), revokedAt: iso(row.revokedAt) }; }
+function grant(row: AgencyPracticeGrant, agencyId: string) { return { agencyId, practiceId: row.practiceId, accountId: row.accountId, access: row.access as 'read' | 'edit', canExport: row.canExport, validFrom: row.validFrom.toISOString(), validUntil: iso(row.validUntil), revokedAt: iso(row.revokedAt) }; }
+function snapshot(row: AgencyPractice): Practice {
+  const p = row.snapshot as unknown as Practice;
+  if (row.snapshotVersion !== 1 || !p || p.id !== row.id || p.agencyId !== row.agencyId || p.label !== row.label || p.revision !== row.revision || !Array.isArray(p.sources) || !Array.isArray(p.receipts) || !Array.isArray(p.events) || !Array.isArray(p.dependents)) throw new Error('agency_snapshot_invalid');
+  return p;
+}
+const json = (p: Practice): Prisma.InputJsonValue => JSON.parse(JSON.stringify(p));
+
+/** Internal persistence adapter: account comes from the session; no HTTP endpoint accepts file fingerprints. */
+export class AgencyPracticesStore {
+  constructor(private readonly db: Pick<PrismaService, '$transaction'>) {}
+  private async context(tx: Prisma.TransactionClient, accountId: string, agencyId: string, practiceId: string) {
+    // Row locking serializes state+ledger writes. Membership/grant locks make revocation race-safe.
+    await tx.$queryRaw`SELECT id FROM "AgencyMember" WHERE "accountId"=${accountId} AND "agencyId"=${agencyId} FOR SHARE`;
+    await tx.$queryRaw`SELECT id FROM "AgencyPracticeGrant" WHERE "accountId"=${accountId} AND "practiceId"=${practiceId} FOR SHARE`;
+    const [member, assignment] = await Promise.all([
+      tx.agencyMember.findUnique({ where: { agencyId_accountId: { agencyId, accountId } } }),
+      tx.agencyPracticeGrant.findUnique({ where: { practiceId_accountId: { practiceId, accountId } } }),
+    ]);
+    const actor: Actor = { accountId, memberships: member ? [membership(member)] : [], grants: assignment ? [grant(assignment, agencyId)] : [] };
+    requirePractice(actor, { id: practiceId, agencyId }, 'read', new Date().toISOString());
+    await tx.$queryRaw`SELECT id FROM "AgencyPractice" WHERE id=${practiceId} AND "agencyId"=${agencyId} FOR UPDATE`;
+    const row = await tx.agencyPractice.findUnique({ where: { id: practiceId } });
+    if (!row || row.agencyId !== agencyId) throw new PracticeError('access_denied');
+    return { actor, practice: snapshot(row) };
+  }
+  async create(accountId: string, agencyId: string, label: string, key: string) {
+    const practice = newPractice(randomUUID(), agencyId, label);
+    if (typeof key !== 'string' || !key.trim() || key.length > 120) throw new PracticeError('invalid_input');
+    key = key.trim();
+    const digest = createHash('sha256').update(JSON.stringify({ label: practice.label })).digest('hex');
+    return this.db.$transaction(async tx => {
+      // Creation keys are serialized on the creator's agency membership, not the unrelated Home.
+      await tx.$queryRaw`SELECT id FROM "AgencyMember" WHERE "accountId"=${accountId} AND "agencyId"=${agencyId} FOR UPDATE`;
+      const member = await tx.agencyMember.findUnique({ where: { agencyId_accountId: { agencyId, accountId } } });
+      if (!member || !active(membership(member), new Date().toISOString()) || !['admin', 'agent'].includes(member.role)) throw new PracticeError('access_denied');
+      const prior = await tx.agencyCreateRequest.findUnique({ where: { agencyId_accountId_key: { agencyId, accountId, key } } });
+      if (prior) {
+        if (prior.digest !== digest) throw new PracticeError('idempotency_conflict');
+        const context = await this.context(tx, accountId, agencyId, prior.practiceId);
+        return { practice: practiceSummary(context.actor, context.practice, new Date().toISOString()), replay: true };
+      }
+      await tx.agencyPractice.create({ data: { id: practice.id, agencyId, label: practice.label, revision: 1, snapshotVersion: 1, snapshot: json(practice) } });
+      await tx.agencyPracticeGrant.create({ data: { practiceId: practice.id, accountId, access: 'edit', canExport: true, validFrom: new Date() } });
+      await tx.agencyCreateRequest.create({ data: { agencyId, accountId, key, digest, practiceId: practice.id } });
+      const context = await this.context(tx, accountId, agencyId, practice.id);
+      return { practice: practiceSummary(context.actor, context.practice, new Date().toISOString()), replay: false };
+    }, { maxWait: 5000, timeout: 15000 });
+  }
+  async read(accountId: string, agencyId: string, practiceId: string) {
+    return this.db.$transaction(async tx => {
+      const { actor, practice } = await this.context(tx, accountId, agencyId, practiceId);
+      return practiceSummary(actor, practice, new Date().toISOString());
+    }, { maxWait: 5000, timeout: 15000 });
+  }
+  async mutate(accountId: string, agencyId: string, practiceId: string, input: unknown) {
+    return this.db.$transaction(async tx => {
+      const { actor, practice } = await this.context(tx, accountId, agencyId, practiceId);
+      const result = applyRequest(actor, practice, input, new Date().toISOString());
+      if (!result.replay) {
+        const updated = await tx.agencyPractice.updateMany({ where: { id: practiceId, agencyId, revision: practice.revision }, data: { revision: result.practice.revision, snapshot: json(result.practice) } });
+        if (updated.count !== 1) throw new PracticeError('revision_conflict');
+      }
+      // Re-evaluate expiry after work; held membership/grant locks protect concurrent revocation.
+      requirePractice(actor, result.practice, 'edit', new Date().toISOString());
+      return { receipt: result.receipt, replay: result.replay, practice: practiceSummary(actor, result.practice, new Date().toISOString()) };
+    }, { maxWait: 5000, timeout: 15000 });
+  }
+  async manifest(accountId: string, agencyId: string, practiceId: string, selection: unknown) {
+    return this.db.$transaction(async tx => {
+      const { actor, practice } = await this.context(tx, accountId, agencyId, practiceId);
+      return exportManifest(actor, practice, selection, new Date().toISOString());
+    }, { maxWait: 5000, timeout: 15000 });
+  }
+}

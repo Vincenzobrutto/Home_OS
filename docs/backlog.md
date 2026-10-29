@@ -889,3 +889,5 @@ Il caso manuale è corretto: stessi oggetti selezionati, costo unico con totale 
 
 ## Agenzie — lotto autonomo fino alle09:00 del30ottobre
 Persistenza e autorizzazioni con lock/CAS; schema Agency/Practice/fonti; revisione di fatti con prova; coerenza e riapertura; contratti/API e test DB dedicato; UI locale dopo backend. Modello DOCX dell’agenzia ancora da ricevere. Fonte e stato dei task nel [registro](v5/agency-worklog-20261030.md). Push del solo branch dedicato ora autorizzato esplicitamente; nessun merge o deploy.
+
+Agenzie: prima dell’upload HTTP implementare staging e controllo effettivo dei bytes, non accettare hash dichiarato dal browser. Limiti di crescita e normalizzazione futura dell’aggregato JSONB da definire prima del pilota. I dati originali non sono ancora salvati dallo store dei metadati. [Contratto proposto](v5/agency-api-proposal-v1.md).

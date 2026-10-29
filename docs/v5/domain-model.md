@@ -100,3 +100,6 @@ HomeExpense.invoiceMonth nullable YYYY-MM è distinto da documentDate, dueOn e c
 
 ## Agenzie — nucleo di dominio locale,30ottobre2026
 AgencyMembership e PracticeGrant temporali; Practice con Source e SourceVersion append-only, ledger per account/pratica e revisioni; DependentRecord e prove pagina/estratto/versione/SHA. Tipi presenti in src/agency-practices/domain.ts, non ancora nello schema Prisma o in API. Non considerarli tabelle implementate. [Specifica e limiti](agency-practices-v1.md).
+
+### Agenzie — persistenza interna del secondo incremento
+Schema Prisma ora include Agency/AgencyMember/AgencyPractice/AgencyPracticeGrant/AgencyCreateRequest; migrazione20261030001000_agency_practices. Snapshot JSONB versionato e ledger/eventi atomicamente aggiornati sotto lock/CAS; non contiene file. Adapter interno senza controller o AppModule. Nessun DB esistente migrato. [Specifica](agency-practices-v1.md), [esiti nel registro](agency-worklog-20261030.md).

@@ -143,3 +143,6 @@ La selezione OCR considera anche campi esplicitamente etichettati ma assenti dal
 
 ## ADR — Agenzie: dominio separato e sviluppo locale, 30 ottobre2026
 Pratica e fonte di agenzia non riutilizzano autorizzazioni Home. Ogni azione richiede appartenenza e assegnazione; admin non apre originali privati altrui. Versioni fonte append-only; conferme e bozze dipendono da fonte/versione/SHA. Primo incremento puro, non collegato al runtime: permette di collaudare le regole senza cambiare DB o servizi esistenti. Scartato ampliamento implicito di Document.visibility/HomeMembership. Persistenza/schema e adapter restano lotto successivo. [Specifica](agency-practices-v1.md).
+
+## ADR — Persistenza iniziale del fascicolo,30ottobre2026
+Aggregato JSONB versionato per fonti/revisioni/dipendenze/ledger/eventi dentro AgencyPractice, con appartenenze e assegnazioni normalizzate e bloccate lato DB. La transazione conserva le invarianti del nucleo puro; nessun riuso di HomeMembership. Creazione idempotente in tabella dedicata. Scartata persistenza volatile/in-memory e distribuzione prematura di decine di tabelle prima del contratto dei fatti. Snapshot non contiene bytes; upload autenticato e storage restano distinti. Normalizzazione futura richiede migrazione e conservazione dello storico. [Specifica](agency-practices-v1.md).

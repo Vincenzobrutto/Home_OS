@@ -1,6 +1,6 @@
 # Fascicolo Agenzie v1 — nucleo di dominio
 
-30 ottobre2026. Implementazione locale in branch `codex/agenzie-fascicolo-20261030`, base remota `dd52a6a`. Non distribuita. Nessun nuovo endpoint o schema DB in questo primo lotto.
+30 ottobre2026. Implementazione locale in branch `codex/agenzie-fascicolo-20261030`, base remota `dd52a6a`. Non distribuita. Nucleo puro completato; secondo incremento aggiunge schema e adapter interno, senza endpoint HTTP né attivazione sui DB esistenti.
 
 ## Accessi
 
@@ -30,7 +30,19 @@ Questi test dimostrano le transizioni sequenziali e il rifiuto di revisioni obso
 
 Ogni prova collega fonte/versione/SHA, pagina positiva ed estratto non vuoto; il riferimento deve corrispondere alla versione corrente autorizzata. Il nucleo non verifica ancora che il testo sia effettivamente presente nei byte o che pagina e regione siano dentro il PDF. Questi controlli spettano all’estrazione/adattamento, e la conferma umana resta distinta.
 
-Nessuna AI, OCR, verifica di proprietà/conformità, produzione incarico, UI, upload HTTP, migrazione o persistenza aggiunti in questo lotto. Nessun cambiamento alla demo di Alessio. I dati dei test sono sintetici.
+Nessuna AI, OCR, verifica di proprietà/conformità, produzione incarico, UI o upload HTTP aggiunti. Nessun cambiamento alla demo di Alessio. I dati dei test sono sintetici.
+
+## Persistenza interna — secondo incremento
+
+Migrazione additiva `20261030001000_agency_practices`: Agency, AgencyMember, AgencyPractice, AgencyPracticeGrant e AgencyCreateRequest, senza modifica delle tabelle Home/Document. Account riceve soltanto le relazioni ORM inverse. Le FK impediscono cancellazioni a cascata di soggetti e pratiche. CHECK SQL per ruoli, accessi, finestre temporali, revisione e versione snapshot.
+
+AgencyPractice mantiene un aggregato JSONB versionato con fonti/versioni, dipendenze, ricevute ed eventi. È una scelta iniziale deliberata: transizione pura e commit unico sotto lock, senza distribuire il ledger fra tabelle premature. Label/revision/id/agencyId sono verificati contro i campi della riga a ogni lettura. Non è uno storage di file: conserva solo metadati e impronte. Byte, controllo MIME/hash reale, staging e conservazione devono arrivare con l’adapter di upload; nessun endpoint può accettare impronte autoattestate dal client. Separare/indicizzare i componenti dell’aggregato quando i volumi lo richiederanno; non promettere scalabilità illimitata.
+
+AgencyPracticesStore crea una pratica assegnata al creatore attivo admin/agent, con replay protetto da ledger di creazione unico per agenzia/account/chiave. Le mutazioni caricano membership e assegnazione dal DB, ne bloccano la revoca con lock condiviso, bloccano la pratica in scrittura e applicano revisione ottimistica/CAS. Snapshot ed evento/ledger si aggiornano nella stessa transazione; input non valido e conflitto fanno rollback. Il ritorno è una proiezione autorizzata, mai l’aggregato privato.
+
+Il manifest deve essere nuovamente autorizzato al momento della consegna dei byte: l’adapter attuale prepara solo metadati. Nessuna registrazione in AppModule né endpoint di provisioning dell’agenzia. La futura HTTP API riutilizzerà sessione/CSRF e non permetterà al client di costruire Actor o modificare membership liberamente.
+
+Suite dedicata `npm run test:agency-practices-db -- --pg-bin <binari> --scratch-root <cartella nuova>`, registrata nell’aggregato DB protetto. Stato effettivo e risultati nel registro; nessun test sui dati del prodotto.
 
 ## Verifica
 
