@@ -97,3 +97,6 @@ Migrazione additiva `20261023200000_document_trash`. `Document` aggiunge `trashe
 ## Mese della fattura — 25 ottobre 2026
 
 HomeExpense.invoiceMonth nullable YYYY-MM è distinto da documentDate, dueOn e competenceFrom/To dei servizi. Validazione API e CHECK SQL additivo, nessun valore dedotto o backfill. Per utenze che lo possiedono è il mese di riferimento dei riepiloghi; costo contato una sola volta. Snapshot/storico/export conservano il campo con gli stessi diritti della spesa. [Report e migrazione solo offline](bollette-mese-fattura-20261025.md).
+
+## Agenzie — nucleo di dominio locale,30ottobre2026
+AgencyMembership e PracticeGrant temporali; Practice con Source e SourceVersion append-only, ledger per account/pratica e revisioni; DependentRecord e prove pagina/estratto/versione/SHA. Tipi presenti in src/agency-practices/domain.ts, non ancora nello schema Prisma o in API. Non considerarli tabelle implementate. [Specifica e limiti](agency-practices-v1.md).

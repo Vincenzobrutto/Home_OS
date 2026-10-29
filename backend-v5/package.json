@@ -56,7 +56,8 @@
     "test:installments-db": "node test/offline.cjs --suite test:installments-db",
     "test:offline-guards": "node test/offline.cjs --suite test:offline-guards",
     "test:offline": "node test/offline.cjs",
-    "test:offline-db": "node test/offline.cjs --suite test:offline-db"
+    "test:offline-db": "node test/offline.cjs --suite test:offline-db",
+    "test:agency-practices": "node test/offline.cjs --suite test:agency-practices"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",

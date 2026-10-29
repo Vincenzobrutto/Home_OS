@@ -123,3 +123,6 @@ Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a paga
 [Schema di spesa condiviso e prove](v5/protocollo-multipagina-offline-20261024.md): contratto espanso identico per 1–20 pagine, senza modifiche a gold, evidenze o conferme. Protocollo v30 distingue la nuova preparazione. Il rifiuto Samsung resta incerto e non ritentato; accettazione remota non verificata. Nessun deploy o AI, PR separata verso il consolidamento e merge al committente.
 
 Chiusura verifica offline del lotto segnali generali: mock completa1226/1226 in133 file, mirata209/209, fixture5/5 e typecheck/lint/build verdi sulla fonte debfcc3. Prima completa1225/1226 e isolato27/27 preservati, nessuna asserzione/timeout modificati. PR #44 senza merge o attivazione; successivo audit e roadmap PR #45 da approvare, senza altro codice. [Report](v5/bollette-segnali-generali-20261025.md).
+
+## Agenzie — 30 ottobre 2026
+Prima verticale: fascicolo → dati con fonti → confronto → bozza incarico. Nucleo di dominio locale avviato; persistenza/API/UI ancora da fare. [Registro](v5/agency-worklog-20261030.md). Nessuna attivazione implicita sul prodotto o sulla demo Alessio.

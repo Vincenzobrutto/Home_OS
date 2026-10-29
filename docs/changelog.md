@@ -1877,3 +1877,7 @@ Aggiunti collaudo DB isolato e diagnostica in entrambi gli ordini, replay, ricar
 Bloccati nuovi oggetti omonimi e seconda spesa non riconciliata nel percorso fattura. Nuova conferma manuale dello stesso acquisto, con costo complessivo inserito esplicitamente e un solo aggiornamento canonico/storico. Ricaricamenti e fonte privata/versione/SHA protetti; importi ambigui lasciati pendenti. [Correzione, test e limiti](v5/fase0-installments-fix-offline-20261023.md).
 
 Chiusura verifica offline del lotto segnali generali: mock completa1226/1226 in133 file, mirata209/209, fixture5/5 e typecheck/lint/build verdi sulla fonte debfcc3. Prima completa1225/1226 e isolato27/27 preservati, nessuna asserzione/timeout modificati. PR #44 senza merge o attivazione; successivo audit e roadmap PR #45 da approvare, senza altro codice. [Report](v5/bollette-segnali-generali-20261025.md).
+
+## 30 ottobre 2026 — Agenzie: nucleo fascicolo locale
+
+Nuovo dominio isolato con accessi Agency/Practice, fonti private/condivise, revisioni immutabili, replay e invalidazione delle dipendenze. Riepilogo filtrato e manifest export selettivo. Non collegato ad AppModule: nessun endpoint o runtime modificato, nessuna migrazione o AI. [Specifica](v5/agency-practices-v1.md), [registro e verifiche](v5/agency-worklog-20261030.md). Demo Alessio invariata. Pubblicazione remota bloccata dal controllo automatico in attesa di autorizzazione esplicita; sviluppo locale prosegue fino alle09:00.

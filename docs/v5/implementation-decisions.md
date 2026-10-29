@@ -140,3 +140,6 @@ Aggiornati mockup proprietario e copia navigabile proposta-Claude: tutte7famigli
 ## 25 ottobre 2026 — Evidenze native e OCR nelle bollette ibride
 
 La selezione OCR considera anche campi esplicitamente etichettati ma assenti dal testo nativo. Intestazioni legali e colonne Periodo richiedono ruolo e geometria univoci. Un calendario può unire glifi nativi e parole OCR nella stessa pagina/scala, senza fabbricare confidenze né prendere l’anno dall’orologio. Contraddizioni restano ambigue; soglie e limiti invariati. [Report e prove](bollette-lettura-affidabile-20261025.md). Nessuna inferenza del pagamento o modifica della conferma canonica.
+
+## ADR — Agenzie: dominio separato e sviluppo locale, 30 ottobre2026
+Pratica e fonte di agenzia non riutilizzano autorizzazioni Home. Ogni azione richiede appartenenza e assegnazione; admin non apre originali privati altrui. Versioni fonte append-only; conferme e bozze dipendono da fonte/versione/SHA. Primo incremento puro, non collegato al runtime: permette di collaudare le regole senza cambiare DB o servizi esistenti. Scartato ampliamento implicito di Document.visibility/HomeMembership. Persistenza/schema e adapter restano lotto successivo. [Specifica](agency-practices-v1.md).

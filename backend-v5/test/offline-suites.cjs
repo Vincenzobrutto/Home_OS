@@ -453,4 +453,6 @@ profiles['test:cestino-completo-db'] = {
   files: [...new Set(['test:trash-db', 'test:cestino-riesame-db', 'test:cestino-race-db', 'test:cestino-extra-review-db', 'test:cestino-fixes-db'].flatMap(name => profiles[name].files))],
   apiFiles: []
 };
+profiles['test:agency-practices'] = { database: false, api: false, files: ['test/agency-practices.test.cjs'] };
+profiles.test.files.push('test/agency-practices.test.cjs');
 module.exports = profiles;
