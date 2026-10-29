@@ -25,3 +25,9 @@ Test proposti: rettangolo noto, stanza aL, poligono invertito, area nulla, autoi
 ## Priorità concordabile
 
 Inserire come estensione del fascicolo dopo fatti/fonti/revisione, senza bloccare il nucleo atto→incarico. Primo incremento: motore di calibrazione e area con test sintetici e contratto di persistenza. UI di ricalco successiva, senza promettere OCR metrico o riconoscimento delle pareti automatico.
+
+## Prima prova autorizzata — lezioni per lo sviluppo
+
+Due prove su un documento reale, conservato solo fuori dal repository. Prima su PDF intero: riconoscimento semantico plausibile ma estremi della scala sbagliati e contorni sovrapposti. Seconda su dettaglio ingrandito con trasformazione alla pagina e calibrazione verificata localmente: nessuna sovrapposizione evidente nel controllo semplice, ma contorno centrale e altri bordi ancora da correggere; tutte le geometrie dichiarate a bassa certezza. Non è una misura di accuratezza, manca una verità di riferimento annotata. Nessuna metratura utilizzabile automaticamente.
+
+Conclusione implementativa: estrarre e controllare la calibrazione separatamente; AI propone contorni, agente corregge; controlli geometrici bloccano somme inappropriate ma non verificano da soli l’allineamento alle pareti. Balcone ad anello richiede fori/poligoni multipli o ricalco manuale: un poligono pieno comprenderebbe erroneamente l’appartamento. Prototipo privato standalone confronta le risposte e permette correzione, ma non è integrato nel prodotto. Nessun originale, screenshot o coordinate reali committati.
