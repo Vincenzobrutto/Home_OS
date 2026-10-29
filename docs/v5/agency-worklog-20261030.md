@@ -24,9 +24,9 @@ Dipendenze: `backend-v5/node_modules` è junction verso le librerie già install
 
 **Esito finale primo incremento:** build inclusa nel runner; regressione protetta335/335, zero saltati/todo,30.2secondi; lint mirato verde e git diff --check verde.34test nuovi,301preesistenti. Nessun collaudo DB/UI o HTTP del nuovo dominio. Non ripetere identica regressione senza cambiamenti. Prossimo task2: schema/adapter persistente isolato, poi task3fatti/revisione; se mancano binari DB proseguire task3puro e contratti senza dichiarare persistenza verificata.
 
-## Vincolo aggiuntivo: pubblicazione remota
+## Pubblicazione remota autorizzata
 
-Il controllo automatico ha rifiutato `git push` perché l’autorizzazione allo sviluppo non autorizza esplicitamente il trasferimento del codice al repository remoto. Non ritentare push, creazione PR o workaround finché Vincenzo non autorizza esplicitamente GitHub/Vincenzobrutto/Home_OS. Il lavoro locale, i commit locali e i test continuano; questo vincolo prevale sul passaggio di push delle istruzioni repository. Nessun push eseguito. Il checkout isolato contiene già il commit di registrazione0f54126.
+Il primo tentativo di `git push` era stato rifiutato dal controllo automatico per assenza di autorizzazione esplicita al trasferimento remoto. Vincenzo ha ora risposto in questa chat «Sì ti autorizzo» alla richiesta di pubblicare il branch su GitHub/Vincenzobrutto/Home_OS. La pubblicazione del solo branch dedicato è quindi autorizzata, senza merge o deploy. Il commit iniziale è0f54126; il primo incremento verificato èe011377. Registrare hash e verifica remota dopo il push. Questa autorizzazione sostituisce il precedente divieto di ritentare il push.
 
 ## Regole di ripresa
 
