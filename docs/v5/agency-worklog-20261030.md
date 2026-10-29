@@ -14,6 +14,7 @@ Base remota consolidata verificata mediante fetch: `dd52a6af580dedf1641cb2308620
 4. **Da fare:** motore coerenza tipizzato nel prodotto; casi atto/visura/successione/pertinenze, anomalie e risoluzioni motivate.
 5. **Da fare:** UI locale del fascicolo se il contratto backend è pronto; test errori/ripresa e viewport375. Non modificare UI/mockup esistenti.
 6. **Da fare:** validazione input per futura bozza incarico, mapping e manifest fonti; modello reale ancora mancante, non fabbricare clausole.
+6a. **Nuovo steering di Vincenzo:** calcolo superficie tramite ricalco sulla planimetria reale in trasparenza. Legacy individuato in FloorPlan.tsx/geometry.ts; calibrazione e m² non risultano già presenti. Dopo fatti/revisione aggiungere motore offline di calibrazione da quota nota, seconda quota di controllo, poligoni e area; separare netto ricalcato da commerciale. Specifica in agency-plan-measurement-proposal-v1.md. UI V5 isolata solo dopo motore e accessi; niente modifica demo Alessio o servizi legacy.
 7. **Alla fine:** report semplice in outputs; stato/ADR/modello/API aggiornati dove pertinenti, commit e push del solo branch; nessun merge o deploy.
 
 ## Stato verifiche
