@@ -515,7 +515,7 @@ profiles['test:agency-deed-records-db']={database:true,api:false,files:['test/ag
 profiles['test:offline-db'].files.push('test/agency-deed-records.integration.test.cjs');
 
 // Dated manual trial, never part of aggregate suites.
-profiles['test:agency-trial']={database:true,api:false,files:['test/agency-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T10:45:00Z'};
+profiles['test:agency-trial']={database:true,api:false,files:['test/agency-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T15:15:00Z'};
 
 profiles['test:agency-deed-http-db']={database:true,api:false,files:['test/agency-deed-http.integration.test.cjs'],apiFiles:[]};
 profiles['test:offline-db'].files.push('test/agency-deed-http.integration.test.cjs');

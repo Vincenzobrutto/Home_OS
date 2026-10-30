@@ -1971,3 +1971,6 @@ Ingresso esplicito e client reali per dati/fonti, associazione e finding, readon
 ## Agenzie — unità e dati dichiarati
 
 Pannello manuale montato nel fascicolo con unità IDserver, proposta senza prove fittizie, privacy iniziale privata e decisione distinta.14nuovi casi, gruppo116/116, typecheck/lint verdi; browser/API/DBmontati ancora da provare, porte altrui preservate. Restano confronti e selectorprovecompleto, stageatti/modelloapprovato. [Report](v5/agency-declarations-ui-v1.md).
+
+## 30 ottobre 2026 — Primo collaudo web della planimetria reale
+Decoder PDF: codec locali bundled per immagini CCITT/JBIG2/JPEG2000 e rifiuto delle pagine con errore di decodifica, senza rete nel subprocess. Tre regressioni sintetiche nuove,571/571 backend e lint mirato verdi. Analisi effettiva in browser dopo un primo esito inutilizzabile:10geometrie persistite, balcone/caminetto presenti, disimpegno ovest da separare e computo134,53m2 solo parziale. Due prove distinte, tre generazioni, costo calcolato0,073620USD nel tetto originario; nessun retry incerto o aumento plafond. [Report](v5/agency-plan-live-20261030.md). Originali, raster e coordinate reali esclusi daGit; nessuna modifica demo Alessio, merge o deploy.

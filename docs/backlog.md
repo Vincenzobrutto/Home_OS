@@ -958,3 +958,9 @@ Ingresso esplicito e client reali per dati/fonti, associazione e finding, readon
 ## Agenzie — unità e dati dichiarati
 
 Pannello manuale montato nel fascicolo con unità IDserver, proposta senza prove fittizie, privacy iniziale privata e decisione distinta.14nuovi casi, gruppo116/116, typecheck/lint verdi; browser/API/DBmontati ancora da provare, porte altrui preservate. Restano confronti e selectorprovecompleto, stageatti/modelloapprovato. [Report](v5/agency-declarations-ui-v1.md).
+
+## Agenzie — seguito della prova PDF reale del30ottobre
+- Separare soggiorno/disimpegno ovest nelle aperture: ipotesi da verificare su porte e componenti raster connesse, nessuna toppa basata sui punti di questo caso. Verificare altri documenti prima di promettere poche correzioni.
+- Relazione tra seed non risolto e copertura da altre regioni connesse (balcone), con prova geometrica, evitando chiusure automatiche arbitrarie.
+- Distinguere output geometrico inutilizzabile con costo contabilizzato da consegna provider incerta, conservando il blocco dei retry automatici.
+- Anteprima e controlli del PDF prima dell'invio a pagamento; il decoder ora blocca le immagini corrotte/omesse tramite codec locali e tre regressioni sintetiche. [Esito e limiti](v5/agency-plan-live-20261030.md).
