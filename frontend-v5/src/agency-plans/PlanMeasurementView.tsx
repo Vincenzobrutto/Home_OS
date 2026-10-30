@@ -41,4 +41,3 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   <p className={styles.note}>Conferma scala, perimetro e regole sui muri prima del computo. Il risultato è una misura sul documento, non un rilievo certificato.</p>
  </section>;
 }
-

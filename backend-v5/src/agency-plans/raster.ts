@@ -48,4 +48,3 @@ export function segmentPlan(r:Raster,spaces:SeedSpace[],symbols:SymbolRequest[],
  }
  return {regions,issues,duplicates,config:structuredClone(config)};
 }
-

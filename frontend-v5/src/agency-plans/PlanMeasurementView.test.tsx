@@ -15,4 +15,3 @@ describe('agency plan room and commercial views',()=>{
  it('shows unresolved symbols instead of hiding them',()=>{render(<PlanMeasurementView {...props()} issues={['Caminetto da verificare']}/>);expect(screen.getByRole('status')).toHaveTextContent('Caminetto da verificare');});
  it('allows internal hole editing independently of outer ring',()=>{const p=props();p.rooms[0]!.holes=[[[2,2],[4,2],[4,4],[2,4]]];render(<PlanMeasurementView {...p}/>);fireEvent.change(screen.getByRole('combobox',{name:'Contorno'}),{target:{value:'1'}});fireEvent.click(screen.getByRole('button',{name:'Aggiungi punto su un lato'}));fireEvent.click(screen.getByRole('button',{name:'Inserisci punto sul lato 1'}));const [view,s]=vi.mocked(p.onChange).mock.calls[0]!;expect(view).toBe('rooms');expect(s.points).toHaveLength(4);expect(s.holes[0]!).toHaveLength(5);});
 });
-
