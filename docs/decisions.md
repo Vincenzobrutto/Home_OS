@@ -1297,3 +1297,7 @@ Il committente chiarisce che mese di riferimento significa mese esplicito della 
 ## 25 ottobre 2026 — nome visuale delle bollette completate
 
 Su richiesta del committente, mostrare un nome leggibile usando soltanto fornitore e mese della fattura già confermati, nei soli documenti completati. Implementazione come alias visuale quando il titolo è ancora il filename/stem, non rinomina persistente: titoli personalizzati e originali preservati. Una sola parte bolletta e una sola spesa personale attiva, altrimenti fallback; mai dedurre il mese da servizi, emissione o scadenza. Ricerca/export restano canonici; non introdurre backfill o letture per riga. [Report](v5/documenti-titoli-completati-20261025.md).
+
+## 2026-10-30 — Dati incarico prima del modello
+
+Il pacchetto dati per il futuro incarico e una selezione esplicita e autorizzata di fatti confermati, non una certificazione o generazione di contratto. In assenza di modello e mapping approvati dall'agenzia, canGenerateDraft resta false, anche senza campi mancanti. Dati dichiarati mantengono tale origine; successione, titolarita e difformita non sono inferite dalla selezione. La funzione pura iniziale non valuta completezza o finding e lo espone esplicitamente. Decisione tecnica implementata; requisiti dell'agenzia ancora da validare. Report v5/agency-mandate-packet-v1.md.
