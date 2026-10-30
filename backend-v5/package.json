@@ -60,7 +60,9 @@
     "test:agency-practices": "node test/offline.cjs --suite test:agency-practices",
     "test:agency-practices-db": "node test/offline.cjs --suite test:agency-practices-db",
     "test:agency-review": "node test/offline.cjs --suite test:agency-review",
-    "test:agency-coherence": "node test/offline.cjs --suite test:agency-coherence"
+    "test:agency-coherence": "node test/offline.cjs --suite test:agency-coherence",
+    "test:agency-plans": "node test/offline.cjs --suite test:agency-plans",
+    "test:agency-plans-db": "node test/offline.cjs --suite test:agency-plans-db"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",

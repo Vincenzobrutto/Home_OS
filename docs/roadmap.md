@@ -126,3 +126,6 @@ Chiusura verifica offline del lotto segnali generali: mock completa1226/1226 in1
 
 ## Agenzie — 30 ottobre 2026
 Prima verticale: fascicolo → dati con fonti → confronto → bozza incarico. Dominio, persistenza metadati e revisione umana verificati offline; confronto puro verificato; prossimi risoluzioni persistenti, storage bytes e API/UI. [Registro](v5/agency-worklog-20261030.md). Nessuna attivazione implicita sul prodotto o sulla demo Alessio.
+
+### Agenzie — planimetrie, steering30ottobre
+Nucleo raster/AI/commerciale e componente doppia vista verificati nel branch; prossimo upload/storage bytes, job/ledger e cablaggio API/UI. Nessun rilascio. [Stato](v5/agency-plan-integration-v1.md).

@@ -895,3 +895,6 @@ Agenzie: prima dell’upload HTTP implementare staging e controllo effettivo dei
 Agenzie: revisione proposta/conferma implementata e verificata. Restano coerenza tra unità/soggetti/epoche, estrazione che verifichi realmente pagina/estratto nei bytes, storage autenticato e mapping incarico. La struttura della prova non certifica il contenuto del PDF.
 
 Agenzie coerenza: motore puro verificato; prossimi gruppi persistenti, decisioni motivate sul fingerprint corrente e riapertura. Difformità interna come osservazione manuale con verifica tecnica, non inferita dalla sola superficie. [Caso sintetico](v5/agency-coherence-v1.md).
+
+### Agenzie — P1 integrazione end-to-end delle planimetrie
+Nucleo nuovo pronto a essere cablato; completare storage bytes/rasterizzazione agenzia, job/lease/ledger e trasporto provider, DTO/API/CSRF, navigazione pratica/form computo, definizione iniziale del perimetro e fasce dei muri. Dataset autorizzato ulteriore e regole simboli/limite25cm da concordare. Non usare demo Alessio o ledger sperimentale per prove live. [Report](v5/agency-plan-integration-v1.md).

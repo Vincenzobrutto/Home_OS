@@ -39,3 +39,7 @@ POST proposto `/:practiceId/review` con Idempotency-Key e `{expectedRevision,com
 * decide: factId, expectedFactVersion, action confirm/correct/reject; correct richiede value e reason. Nessun campo status=confirmed accettato dal client o da risposta AI.
 
 Il nucleo chiama il target `id`; il futuro DTO HTTP mapperà esplicitamente factId/id senza accettare l’aggregato o Actor. Il gruppo analisi/worker è ancora assente: un browser non deve autoattestare l’origine extracted o le citazioni. Separare i comandi di proposta validata dal provider dai comandi manuali consentiti all’agente al momento di creare i controller. Non esporre direttamente lo store al trasporto senza questo confine.
+
+## Planimetrie — metodi interni, nessuna route attiva
+
+Store.savePlan/readPlans/editPlan disponibili internamente con CAS, idempotenza e accessi. Il risultato AI non è un payload accettabile dal browser. Endpoint futuri richiedono DTO esatti, limiti payload, sessione/CSRF e worker con ledger durevole. Non registrati controller o moduli. [Report](agency-plan-integration-v1.md).

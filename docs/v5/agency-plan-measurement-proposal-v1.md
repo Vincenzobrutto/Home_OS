@@ -37,3 +37,7 @@ Conclusione implementativa: estrarre e controllare la calibrazione separatamente
 L’agente deve poter inserire un punto su qualunque lato, compreso quello ultimo→primo, per spezzarlo e seguire rientranze. Il nuovo punto iniziale giace sul segmento e non modifica l’area finché non viene spostato; evitare duplicazione dei vertici. Eliminazione con minimo3punti, undo, denominazione vani e modifica dei vuoti interni. Gli interventi manuali devono restare distinguibili dalle proposte AI.
 
 Un poligono valido e senza sovrapposizioni non prova che tutta la casa sia stata coperta. Il feedback segnala corridoio e balcone omessi: il prodotto deve aiutare a individuare parti non assegnate e chiedere revisione, senza chiamare “superficie della casa” la somma parziale. La bozza privata attuale segnala i tipi mancanti noti di questo caso e propone ricalchi manuali separati; non implementa ancora segmentazione automatica degli spazi residui. Balcone concavo aC o anello con fori: rappresentazione capace di escludere l’interno e calcolo distinto dalle superfici interne. Copertura, validità geometrica e coerenza con l’originale sono tre verifiche separate.
+
+## Evoluzione implementata nel branch
+
+La strategia AI-che-propone-poligoni è superata dalla procedura semi AI + segmentazione raster. Motore commerciale e doppia vista implementati ma non ancora cablati nel runtime. Stato, regole, verifiche e limiti in [agency-plan-integration-v1](agency-plan-integration-v1.md). Non estendere le prove di questo documento a un rilascio attivo.

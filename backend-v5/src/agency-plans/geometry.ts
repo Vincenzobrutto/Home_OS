@@ -1,0 +1,23 @@
+export type Point = [number, number];
+export type Polygon = { points: Point[]; holes: Point[][] };
+export class PlanError extends Error { constructor(public readonly code: string) { super(code); } }
+export function assert(value: unknown, code = 'invalid_plan_input'): asserts value { if (!value) throw new PlanError(code); }
+const cross = (a: Point, b: Point, c: Point) => (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+export const signedArea = (p: Point[]) => p.reduce((s,a,i)=>{const b=p[(i+1)%p.length];return s+a[0]*b[1]-b[0]*a[1];},0)/2;
+export function onSegment(p:Point,a:Point,b:Point) {return Math.abs(cross(a,b,p))<1e-8&&p[0]>=Math.min(a[0],b[0])-1e-8&&p[0]<=Math.max(a[0],b[0])+1e-8&&p[1]>=Math.min(a[1],b[1])-1e-8&&p[1]<=Math.max(a[1],b[1])+1e-8;}
+export function inside(p: Point, ring: Point[]) { if(ring.some((a,i)=>onSegment(p,a,ring[(i+1)%ring.length])))return false;let yes=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],b=ring[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes; }
+const intersects=(a:Point,b:Point,c:Point,d:Point)=>cross(a,b,c)*cross(a,b,d)<-1e-10&&cross(c,d,a)*cross(c,d,b)<-1e-10;
+function ringsCross(a:Point[],b:Point[]){return a.some((p,i)=>b.some((q,j)=>intersects(p,a[(i+1)%a.length],q,b[(j+1)%b.length])));}
+function validRing(p:Point[]){if(!Array.isArray(p)||p.length<3||p.length>2000||p.some(q=>!Array.isArray(q)||q.length!==2||q.some(v=>!Number.isFinite(v)))||Math.abs(signedArea(p))<1e-8)return false;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];if(a[0]===b[0]&&a[1]===b[1])return false;for(let j=i+1;j<p.length;j++){if(j===i+1||i===0&&j===p.length-1)continue;const c=p[j],d=p[(j+1)%p.length];if(intersects(a,b,c,d)||onSegment(a,c,d)||onSegment(b,c,d)||onSegment(c,a,b)||onSegment(d,a,b))return false;}}return true;}
+export function validPolygon(s:Polygon){if(!s||!validRing(s.points)||!Array.isArray(s.holes)||s.holes.length>100||s.holes.some(h=>!validRing(h)||h.some(p=>!inside(p,s.points))||ringsCross(h,s.points)))return false;for(let i=0;i<s.holes.length;i++)for(let j=i+1;j<s.holes.length;j++)if(ringsCross(s.holes[i],s.holes[j])||inside(s.holes[i][0],s.holes[j])||inside(s.holes[j][0],s.holes[i]))return false;return polygonArea(s)>0;}
+export const polygonArea=(s:Polygon)=>Math.abs(signedArea(s.points))-s.holes.reduce((a,h)=>a+Math.abs(signedArea(h)),0);
+export const filled=(p:Point,s:Polygon)=>inside(p,s.points)&&!s.holes.some(h=>inside(p,h)||h.some((a,i)=>onSegment(p,a,h[(i+1)%h.length])));
+export function overlaps(a:Polygon,b:Polygon){const ar=[a.points,...a.holes],br=[b.points,...b.holes];if(ar.some(p=>br.some(q=>ringsCross(p,q)))||a.points.some(p=>filled(p,b))||b.points.some(p=>filled(p,a)))return true;
+ // Coincident/partially coincident rectangles have no strictly interior vertices.
+ for(const p of [a,b])for(let i=0;i<p.points.length;i++){const v=p.points[i],w=p.points[(i+1)%p.points.length],dx=w[0]-v[0],dy=w[1]-v[1],len=Math.hypot(dx,dy);const sign=Math.sign(signedArea(p.points)),eps=Math.min(1e-5,len/1000),q:Point=[(v[0]+w[0])/2-dy/len*sign*eps,(v[1]+w[1])/2+dx/len*sign*eps];if(filled(q,a)&&filled(q,b))return true;}return false;}
+export function within(shape:Polygon,container:Polygon){const allowed=(p:Point)=>inside(p,container.points)||container.points.some((a,i)=>onSegment(p,a,container.points[(i+1)%container.points.length]));if(shape.points.some((a,i)=>{const b=shape.points[(i+1)%shape.points.length];return !allowed(a)||!allowed([(a[0]+b[0])/2,(a[1]+b[1])/2]);})||ringsCross(shape.points,container.points))return false;return !container.holes.some(h=>overlaps(shape,{points:h,holes:[]}));}
+export type Calibration={start:Point;end:Point;metres:number;confirmed:boolean;check?:{start:Point;end:Point;metres:number};maxRelativeError:number};
+export function metresPerUnit(c:Calibration){assert(c&&c.confirmed===true&&[...c.start,...c.end,c.metres,c.maxRelativeError].every(Number.isFinite)&&c.metres>0&&c.maxRelativeError>=0&&c.maxRelativeError<=.1,'scale_not_confirmed');const d=Math.hypot(c.start[0]-c.end[0],c.start[1]-c.end[1]);assert(d>0,'invalid_scale');const m=c.metres/d;if(c.check){const k=c.check;assert([...k.start,...k.end,k.metres].every(Number.isFinite)&&k.metres>0,'invalid_scale');assert(Math.abs(Math.hypot(k.start[0]-k.end[0],k.start[1]-k.end[1])*m/k.metres-1)<=c.maxRelativeError,'scale_disagreement');}return m;}
+export function insertVertex(p:Point[],edge:number){assert(Number.isInteger(edge)&&edge>=0&&edge<p.length);const a=p[edge],b=p[(edge+1)%p.length];p.splice(edge+1,0,[(a[0]+b[0])/2,(a[1]+b[1])/2]);}
+export function removeVertex(p:Point[],index:number){assert(p.length>3&&Number.isInteger(index)&&index>=0&&index<p.length);p.splice(index,1);}
+

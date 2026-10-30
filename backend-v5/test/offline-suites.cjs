@@ -462,3 +462,10 @@ profiles.test.files.push("test/agency-review.test.cjs");
 module.exports = profiles;
 profiles['test:agency-coherence'] = { database:false, api:false, files:['test/agency-coherence.test.cjs'] };
 profiles.test.files.push('test/agency-coherence.test.cjs');
+
+profiles['test:agency-plans'] = { database:false, api:false, files:['test/agency-plans.test.cjs'] };
+profiles.test.files.push('test/agency-plans.test.cjs');
+
+profiles['test:agency-plans-db'] = { database:true, api:false, files:['test/agency-practices.integration.test.cjs','test/agency-plans.integration.test.cjs'], apiFiles:[] };
+profiles['test:offline-db'].files.push('test/agency-plans.integration.test.cjs');
+

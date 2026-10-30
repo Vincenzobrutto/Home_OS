@@ -1891,3 +1891,7 @@ Unità esplicite, fatti con fonte/versione/SHA, decisioni umane e correzioni con
 
 ## 30 ottobre2026 — Agenzie: confronto documentale offline
 Motore puro per confronti esplicitamente circoscritti con prove, differenze da rivedere, stati non valutabili e fingerprint.19nuovi test,375/375 ordinari. Nessuna persistenza dei confronti o route ancora attiva. [Report](v5/agency-coherence-v1.md).
+
+## 30 ottobre 2026 — Agenzie: nucleo planimetrie e computo commerciale nel branch
+
+Segmentazione raster da semi AI, controllo a due fasi, persistenza derivati privata, calcolo commerciale configurabile e componente con viste vani/perimetro.419/419 backend,21/21 DB sintetici combinati,8/8 frontend e controlli desktop/375. Nessuna attivazione, AI live o modifica demo Alessio. Integrazione runtime ancora incompleta: [report](v5/agency-plan-integration-v1.md).

@@ -2,6 +2,10 @@
 
 [Chiusura della tranche di refactoring e limiti](v5/fase0-refactor-closure-20261023.md). I 98 checkpoint precedenti restano nell’[archivio dello stato](project-status-history-20261023.md); sono evidenze datate. [Architettura](architecture.md), [roadmap corrente](roadmap.md), [backlog completo](backlog.md), [decisioni V5](v5/implementation-decisions.md).
 
+## Integrazione planimetrie agenzie — in corso
+
+Su incarico di Vincenzo: procedura semi AI + segmentazione raster e computo commerciale configurabile. Area nuova backend-v5/src/agency-plans, frontend-v5/src/agency-plans e test dedicati, sul branch agenzie già registrato. Nucleo e store verificati:419/419 ordinari,21/21 DB combinati,8/8 UI, desktop/375. Nessuna route attiva; cablaggio end-to-end ancora incompleto. Report: docs/v5/agency-plan-integration-v1.md. Nessun dato reale nel repository, nessun nuovo consumo AI o deploy; demo Alessio invariata. Stato e prossimi passi in docs/v5/agency-worklog-20261030.md.
+
 ## Branch e vincoli
 
 Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commit collaudato **fef9d96faeed1d932507f3527e24b76ff706fa95** ([registrazione](v5/dimora-v5-consolidation-branch-20261023.md)), con il commit documentale di registrazione riportato dalla Fase 0. Lavorata nel worktree dedicato `Home_OS-v5-consolidata`; il checkout `Home_OS` resta su Fase 0 con i file legacy sporchi e gli untracked estranei, esclusi dai commit. Nessuna modifica/integrazione su main. Flusso di lavoro fra agenti in [AGENTS.md](../AGENTS.md#flusso-delle-evolutive-deciso-dal-committente-il-23-ottobre-2026).

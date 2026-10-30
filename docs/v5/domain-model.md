@@ -106,3 +106,7 @@ Schema Prisma ora include Agency/AgencyMember/AgencyPractice/AgencyPracticeGrant
 
 ### Agenzie — fatti e revisione
 Lo snapshotv1 ammette ora units/facts/reviewReceipts opzionali per compatibilità: proposte extracted/declared, prove e decisioni append-only separate dal valore originale; proiezione del valore confermato soltanto con fonte corrente e autorizzata. Nessuna migrazione, provider o route. [Specifica](agency-practices-v1.md).
+
+## Analisi planimetrie agenzia — snapshot opzionale
+
+AgencyPractice.snapshot può contenere planAnalyses e planReceipts: prova fonte/versione/SHA/pagina, raster SHA/dimensioni, geometrie/vuoti, perimetro separato, versioni e storia modifiche, motivazioni e computo commerciale. Righe e criteri non sono fatti confermati automaticamente. Fonte sostituita rende obsoleta la vista e nasconde geometrie correnti; mutazione geometria invalida il computo. Privacy ereditata dalla fonte, nessun accesso implicito admin. Bytes e prenotazioni job non inclusi in questo snapshot. [Contratto](agency-plan-integration-v1.md).

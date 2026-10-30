@@ -152,3 +152,7 @@ Nel dominio Agenzie conservare valore proposto, origine, prove e decisioni come 
 
 ## Agenzie — confronto esplicito, nessuna equivalenza implicita
 Il primo motore confronta solo gruppi scelti con unità, soggetto, campo e contesto temporale dichiarato. Quest'ultimo è un'etichetta umana, non data automaticamente verificata. Identità storiche, diritti e regolarità tecnica non sono deducibili da uguaglianza di stringhe o superfici. Le risoluzioni future dovranno riferirsi al fingerprint corrente, non soltanto all'id del confronto. [Limiti](agency-coherence-v1.md).
+
+## ADR — Planimetrie: interpretazione AI e geometria raster, due basi di computo
+
+L'AI individua spazi/semi/simboli; il codice ricava contorni dai pixel e misura dopo calibrazione. Due fasi, budget e autorizzazioni correnti; risultato sempre proposto. Non usare coordinate di poligoni inventate dall'AI come fonte principale. La revisione non deve degradare senza avviso un simbolo precedentemente valido. Singoli vani e perimetro lordo sono viste indipendenti: il secondo comprende già muri interni e non somma i primi; pertinenze separate. Coefficienti del committente come profilo commerciale versionato, non algoritmo catastale DPR138/98. Intervalli e base del limite25cm espliciti; incognite bloccano il totale. [Implementazione e residui](agency-plan-integration-v1.md). Nessuna attivazione runtime.
