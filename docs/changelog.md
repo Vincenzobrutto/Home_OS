@@ -1,3 +1,7 @@
+## Agenzie — collaudo persistente A4, 30 ottobre 2026
+
+Verificati salvataggio/ricarica, scala100→200→100 e due viste su pratica sintetica con API/DB reali e provider simulato. 18/18 DB-HTTP-worker, 13/13 guardie, 58/58 UI, build/lint; desktop/375 con miglioramento tabella mobile. Ambienti nuovi arrestati, nessuna AI pagata/demo Alessio/deploy. [Report](v5/agency-paper-browser-validation-20261030.md).
+
 ## Agenzie — A4 e scala dichiarata, 30 ottobre 2026
 
 Calibrazione da foglio presunto, provenienza persistente e verifiche server, sempre stima con totale verificato sospeso; barra/misura nota conservate. 649/649 backend, 58/58 UI, build/lint verdi; nessun nuovo DB/browser o spesa AI. [Report](v5/agency-paper-calibration-20261030.md).

@@ -525,3 +525,8 @@ profiles['test:agency-review-trial']={database:true,api:false,files:['test/agenc
 
 // Dated surface-adoption browser trial, no product/provider fallback.
 profiles['test:agency-surfaces-trial']={database:true,api:false,files:['test/agency-surfaces-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T22:19:01.871Z'};
+
+// A4 calibration browser trial, explicitly isolated and time bounded.
+profiles['test:agency-paper-trial']={database:true,api:false,files:['test/agency-paper-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T23:10:00.000Z'};
+profiles['test:agency-paper-db']={database:true,api:false,files:['test/agency-paper-http.integration.test.cjs','test/agency-plans.integration.test.cjs','test/agency-worker.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-paper-http.integration.test.cjs');

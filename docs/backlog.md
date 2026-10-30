@@ -1038,3 +1038,7 @@ Implementati prospetti e selezione contorno. Da valutare: calibrazione verificat
 ### Agenzie — limiti calibrazione da foglio, 30 ottobre 2026
 
 Implementata ipotesi A4/scala dichiarata con provenance e controlli server. Restano rilevamento affidabile dei bordi/pagina, rettifica prospettica, scala letta automaticamente e confronto con PDF originale/riferimento noto; nessuno è implicito nel controllo aspect ratio. Nuovo collaudo DB/HTTP/browser e conferma con agente reale restano da svolgere. [Report](v5/agency-paper-calibration-20261030.md).
+
+### Aggiornamento collaudo A4, 30 ottobre 2026
+
+Completato il collaudo HTTP/DB/browser che mancava nella voce precedente, con sorgente e provider sintetici: [evidenze](v5/agency-paper-browser-validation-20261030.md). Non completa bordi/prospettiva/OCRscala, rinomina o scala indipendente dalle classificazioni. Prossimo corpus indipendente con misure note, poi prova agente reale.

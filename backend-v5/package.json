@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:agency-paper-trial": "node test/offline.cjs --suite test:agency-paper-trial",
+    "test:agency-paper-db": "node test/offline.cjs --suite test:agency-paper-db",
     "test:cestino-completo-db": "node test/offline.cjs --suite test:cestino-completo-db",
     "test:workflow-fixtures-db": "node test/offline.cjs --suite test:workflow-fixtures-db",
     "test:workflow-clock-db": "node test/offline.cjs --suite test:workflow-clock-db",

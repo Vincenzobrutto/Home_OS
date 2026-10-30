@@ -56,3 +56,7 @@ Per la chiusura integrata, `npm run test:cestino-completo-db -- --pg-bin <PgBin>
 - Su successo o errore il runner arresta soltanto API/processi figli e cluster posseduti. Ogni comando ha un limite di dieci minuti; Ctrl+C/SIGTERM porta al cleanup delle risorse possedute. Log, cluster fermo e file temporanei restano sul disco; nessuna cancellazione ricorsiva. Per API/PG vedere api.log, postgres.log e stop-postgres.log; i risultati sono in http-tests.log, tests.log e restart-tests.log.
 
 Le guardie coprono i trasporti Node e i client Prisma delle suite registrate. Il runner esegue codice di test fidato del repository, senza cambiare firewall o configurazione del sistema. Non è un ingresso per comandi arbitrari, documenti personali o campagne AI.
+
+## Calibrazione planimetrie da foglio presunto
+
+Il profilo nominale npm run test:agency-paper-db, con gli stessi argomenti obbligatori --pg-bin e --scratch-root, crea un cluster nuovo e riprova HTTP A4, snapshot e worker. Il file HTTP è incluso nell'aggregato DB. test:agency-paper-trial è un collaudo browser datato separato dagli aggregati, provider esclusivamente sintetico e scadenza fissa, non un server prodotto o un test AI pagato. [Esito e limiti](../../docs/v5/agency-paper-browser-validation-20261030.md).
