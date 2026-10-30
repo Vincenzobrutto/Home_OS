@@ -110,3 +110,11 @@ DTO profondo esatto per geometry/measure/resolve_issue con cap vertici, enum, co
 10nuovi unitari parser, mirata10/10, regressione496/496 e lint mirato verdi. HTTP/DB22/22 in dimora-offline-WF1649 (16precedenti+6nuovi), server e cluster fermati. Test con seed analisi sintetica interna, non provider: correzione/replay, stale, computo incompleto total null, perimetro separato e lordo196senza sommare vani120, sostituzione invalida geometria corrente. Nessuna asserzione allentata o test AI live. Report agency-plan-edit-http-v1.md.
 
 Prossimo task: cablaggio UI pratica e form calibrazione/coefficienti con client API e mock esplicito separato; disegno iniziale perimetro e gestione conflitti. Modulo API ancora NON importato in AppModule, nessun servizio o DB esistente avviato/toccato, demo Alessio invariata. Dopo verticale riprendere coerenza persistente e mapping incarico senza modello inventato.
+
+### Ripresa07:00 — allineamento anteprima e client UI
+
+Prima del workspace rilevata lacuna: PDF originale non utilizzabile come image SVG e DPI diverso può disallineare i vertici. Worker/pipeline ora conservano DPI/transform/versione renderer nel fingerprint v2-rendering e nel piano. GET opt-in /plans/:id/image ricostruisce soltanto i pixel esatti autorizzati e confronta SHA/dimensioni/transform; niente immagine indovinata per record vecchi senza provenienza. Client frontend agencyPlanApi usa ApiTransport condiviso per cookie/context/CSRF/idempotenza, senza fallback mock. Report agency-plan-preview-v1.md.
+
+Verifiche backend496/496 e lint mirato verdi; profilo DB worker+HTTP+plan store34/34 in dimora-offline-Kv4eQi, cluster fermato. Include provenance persistita, PNG reale del decoder su fixture e rifiuto hash alterato, route stale. Frontend13/13 (8editor+5client nuovi), typecheck app con cache privata e lint verdi. Primo avvio Vitest sandbox negava rename nella cache temporanea e non eseguiva test: ripetuto con permessi sui soli file cache, senza installare librerie o cambiare assert.
+
+Workspace/form NON ancora collegati: prossimo task immediato UI pratica, calibrazione/coefficenti e disegno iniziale perimetro. Non dichiarare UI integrata da questo client. Nessuna AI/rete reale, originale personale o demo Alessio modificati. Modulo API ancora inattivo in AppModule, nessun servizio esistente.

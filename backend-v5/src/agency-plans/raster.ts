@@ -1,5 +1,6 @@
 import { assert, signedArea, validPolygon, type Point, type Polygon } from './geometry';
-export type Raster={width:number;height:number;gray:Uint8Array};
+export type RasterRendering={dpi:number;transform:number[];renderer:'agency-render-v1'};
+export type Raster={width:number;height:number;gray:Uint8Array;rendering?:RasterRendering};
 export type SeedSpace={id:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony'|'excluded';label:string;seeds:Point[]};
 export type SymbolRequest={id:string;parentId:string;decision:'include'|'exclude'|'unresolved';reason:string;seeds:Point[]};
 export type RasterConfig={version:string;threshold:number;closingRadius:number;minRegionPixels:number;maxRegionFraction:number;simplifyPixels:number;fillTextHolesUpToPixels:number};

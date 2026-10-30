@@ -6,6 +6,9 @@ import { assertRaster, type Raster } from './raster';
 import type { AgencyPracticesStore } from '../agency-practices/store';
 import type { AgencyFileVault } from '../agency-practices/files';
 import type { PlanProof } from './pipeline';
+import { png } from './provider';
+import { PracticeError } from '../agency-practices/domain';
+import { PlanError } from './geometry';
 
 export type RenderedPlan = { raster: Raster; pageCount: number; transform: number[]; sourceSHA256: string; rasterSHA256: string; page: number; dpi: number; renderer: 'agency-render-v1' };
 export class AgencyPlanRasterizer {
@@ -41,4 +44,14 @@ export async function loadAuthorizedPlanRaster(store: AgencyPracticesStore, vaul
   const file = await current(), result = await renderer.render(file, { page: proof.page, dpi });
   await current(); // Revocation/replacement during decoding discards the raster.
   return result;
+}
+/** Re-render only the exact pixels used by the analysis; never guess PDF scaling. */
+export async function authorizedPlanImage(store:AgencyPracticesStore,vault:AgencyFileVault,scope:{accountId:string;agencyId:string;practiceId:string},id:string){
+ const view=await store.readPlans(scope.accountId,scope.agencyId,scope.practiceId),plan=view.plans.find(p=>p.id===id);
+ if(!plan)throw new PracticeError('access_denied');
+ if(!('rasterSize' in plan))throw new PracticeError('source_changed');
+ if(!plan.rendering)throw new PlanError('plan_preview_unavailable');
+ const r=await loadAuthorizedPlanRaster(store,vault,scope,plan.proof,plan.rendering.dpi);
+ if(r.raster.width!==plan.rasterSize.width||r.raster.height!==plan.rasterSize.height||r.rasterSHA256!==plan.rasterSHA256||r.renderer!==plan.rendering.renderer||JSON.stringify(r.transform)!==JSON.stringify(plan.rendering.transform))throw new PlanError('plan_rendering_changed');
+ return png(r.raster);
 }

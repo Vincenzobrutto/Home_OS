@@ -1919,3 +1919,6 @@ Modulo separato con sessione/CSRF, upload limitato, fonti private, review manual
 
 ## 30 ottobre2026 — Agenzie: edit e computo via modulo opt-in
 DTO profondi, correzione geometria, computo e sostituzione originale versionata; metadata autorizzati con SHA server.496/496 ordinari,22/22 HTTP+DB e lint verdi. Nessuna attivazione del modulo o AI. [Report](v5/agency-plan-edit-http-v1.md).
+
+## 30 ottobre2026 — Agenzie: PNG allineato e client UI
+Provenienza raster persistita e anteprima autorizzata con confronto dei pixel; client frontend su trasporto V5 senza fallback.496/496 ordinari,34/34 DB mirati e13/13 frontend, typecheck/lint verdi. Workspace ancora da cablare. [Report](v5/agency-plan-preview-v1.md).

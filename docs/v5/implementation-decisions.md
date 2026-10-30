@@ -180,3 +180,6 @@ Identità da SessionsService, CSRF/Origin esistenti e preflight AgencyPractice p
 
 ## Agenzie — DTO commerciale non conferma implicita
 Parser HTTP ricostruisce tutte le strutture consentite con ordine canonico; coefficienti mancanti rimangono mancanti e conferme richiedono booleani. Snapshot del server per file/versioni, geometrie manuali senza raster/AI dal browser. Perimetro lordo indipendente, mai generato dalla somma dei vani. [Report](agency-plan-edit-http-v1.md).
+
+## Agenzie — mostrare soltanto il raster originale verificato
+DPI/transform/versione rendering entrano nel fingerprint e nel piano; il PNG UI deve corrispondere a dimensioni e SHA grayscale usati per i contorni. Mancanza di provenienza o pixel diversi bloccano l'overlay, nessuna stima della scala di rendering. Client riusa trasporto sessione/CSRF e non ha fallback sintetico. [Report](agency-plan-preview-v1.md).

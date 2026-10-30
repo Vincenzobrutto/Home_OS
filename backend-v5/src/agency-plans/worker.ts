@@ -30,7 +30,7 @@ export async function runAgencyPlanJob(store:AgencyPracticesStore,vault:AgencyFi
  try{
   const analysis=await analyzePlan({
    context,
-   loadRaster:async proof=>(await loadAuthorizedPlanRaster(store,vault,scope,proof,input.dpi)).raster,
+   loadRaster:async proof=>{const r=await loadAuthorizedPlanRaster(store,vault,scope,proof,input.dpi);return {...r.raster,rendering:{dpi:r.dpi,transform:r.transform,renderer:r.renderer}};},
    reserve:async(id,phase,fingerprint,maxUSD)=>{if(id!==runId||Math.round(maxUSD*1000000)!==maxMicros)throw new Error('plan_scope_changed');await store.planJobCommand(scope.accountId,scope.agencyId,scope.practiceId,runId,token,{operation:'reserve',phase,fingerprint,maxMicros});lastPhase=phase;},
    settle:async(id,phase,usage)=>{if(id!==runId)throw new Error('plan_scope_changed');const receipt=await store.accountPlanPhase(scope.agencyId,scope.practiceId,runId,token,phase,{input:usage.input,output:usage.output,requestId:usage.requestId});if(receipt.costMicros===null||Math.abs(usage.costUSD-receipt.costMicros/1000000)>0.000001)throw new Error('provider_price_mismatch');},
    markUncertain:async(id,phase)=>{if(id!==runId)throw new Error('plan_scope_changed');await store.accountPlanPhase(scope.agencyId,scope.practiceId,runId,token,phase,null);},ai,

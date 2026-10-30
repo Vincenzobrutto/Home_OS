@@ -10,6 +10,7 @@ import { AgencyPracticesStore } from './store';
 import { AgencyFileVault } from './files';
 import { parsePlanEdit } from '../agency-plans/edit-dto';
 import { PlanError } from '../agency-plans/geometry';
+import { authorizedPlanImage } from '../agency-plans/renderer';
 
 function object(v:unknown,keys:string[]){if(!v||typeof v!=='object'||Array.isArray(v)||Object.getPrototypeOf(v)!==Object.prototype&&Object.getPrototypeOf(v)!==null||Object.keys(v).some(k=>!keys.includes(k)))throw new PracticeError('invalid_input');return v as Record<string,unknown>;}
 function key(v:unknown){if(typeof v!=='string'||!v.trim()||v.length>120||Array.from(v).some(c=>c.charCodeAt(0)<32))throw new PracticeError('invalid_input');return v.trim();}
@@ -33,6 +34,7 @@ export class AgencyPracticesController{
  @Get(':practiceId') read(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){object(q,[]);return this.store.read(r.agencyAccountId,g,p);}
  @Get(':practiceId/review') review(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){object(q,[]);return this.store.readReview(r.agencyAccountId,g,p);}
  @Get(':practiceId/plans') plans(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){object(q,[]);return this.store.readPlans(r.agencyAccountId,g,p);}
+ @Get(':practiceId/plans/:planId/image') async planImage(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Param('planId')id:string,@Query()q:unknown,@Res()res:Response){object(q,[]);const image=await authorizedPlanImage(this.store,this.vault,{accountId:r.agencyAccountId,agencyId:g,practiceId:p},source(id));res.set({'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Type':'image/png'});res.send(image);}
  @Post(':practiceId/plans/:planId/edits') editPlan(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Param('planId')id:string,@Body()input:unknown,@Headers('idempotency-key')k:unknown){return this.store.editPlan(r.agencyAccountId,g,p,parsePlanEdit(input,key(k),id));}
  @Get(':practiceId/sources/:sourceId') details(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Param('sourceId')s:string,@Query()q:unknown){object(q,[]);return this.store.sourceDetails(r.agencyAccountId,g,p,source(s));}
  @Post(':practiceId/review') decide(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Body()input:unknown,@Headers('idempotency-key')raw:unknown){

@@ -61,3 +61,6 @@ Lista/creazione/lettura pratiche, upload/classificazione/ritiro/download, review
 
 ## Edit e prova fonte ora disponibili nel modulo opt-in
 GET /sources/:id, POST /sources/:id/replacements e POST /plans/:id/edits con DTO profondi e versioni; nessuna route AI/spesa. [Contratto e limiti](agency-plan-edit-http-v1.md).
+
+## Anteprima piano
+GET /plans/:id/image nel modulo opt-in: PNG ricostruito solo con provenienza/DPI del worker e hash pixel coincidente; privata, no-store, nessun parametro di scala dal browser. Fonte stale o anteprima non verificabile impediscono l'overlay. [Report](agency-plan-preview-v1.md).

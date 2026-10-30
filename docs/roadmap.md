@@ -145,3 +145,5 @@ Agenzie: trasporto dedicato verificato486/486 con fetch simulata, non collegato 
 Agenzie: modulo HTTP opt-in verificato16/16 HTTP+DB; prossimi DTO edit e UI pratica. Nessun collegamento ai servizi esistenti. [Report](v5/agency-http-v1.md).
 
 Agenzie: trasporto edit/sostituzione verificato496/496+22/22 HTTP; prossima UI pratica/form scala e coefficienti. [Report](v5/agency-plan-edit-http-v1.md).
+
+Agenzie: anteprima raster allineata/client API verificati; prossimo workspace/form. [Report](v5/agency-plan-preview-v1.md). Nessuna integrazione completa o AI live dichiarata.

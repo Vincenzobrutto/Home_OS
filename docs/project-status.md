@@ -4,7 +4,7 @@
 
 ## Integrazione planimetrie agenzie — in corso
 
-Su incarico di Vincenzo: procedura semi AI + segmentazione raster e computo commerciale configurabile. Area nuova backend-v5/src/agency-plans, frontend-v5/src/agency-plans e test dedicati, sul branch agenzie già registrato. Nucleo e store verificati:419/419 ordinari,21/21 DB combinati,8/8 UI, desktop/375. Bytes e decoder PDF/PNG interni verificati444/444 ordinari; ledger job per-run verificato466/466+8/8 DB; budget/autorizzazioni globali verificati466/466+20/20 DB; coordinatore interno verificato472/472+24/24 DB; trasporto inattivo verificato486/486 con fetch finta; API opt-in verificata16/16 HTTP+DB; edit/sostituzione verificati496/496+22/22 HTTP; UI prossimo task. Nessuna route attiva; cablaggio end-to-end ancora incompleto. Report: docs/v5/agency-plan-integration-v1.md. Nessun dato reale nel repository, nessun nuovo consumo AI o deploy; demo Alessio invariata. Stato e prossimi passi in docs/v5/agency-worklog-20261030.md.
+Su incarico di Vincenzo: nucleo planimetrie, bytes/raster, ledger/budget, coordinatore e API opt-in implementati nel branch dedicato. Verifiche correnti:496/496 ordinari,34/34 DB mirati worker/HTTP/store,13/13 frontend (editor+client), typecheck/lint verdi. Nessuna route caricata in AppModule o AI attivata; frontend client pronto, workspace/form ancora da collegare. Demo Alessio invariata. Report corrente: docs/v5/agency-plan-preview-v1.md; continuità e limiti in docs/v5/agency-worklog-20261030.md.
 
 ## Branch e vincoli
 

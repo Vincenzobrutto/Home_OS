@@ -498,3 +498,5 @@ profiles['test:offline-db'].files.push('test/agency-http.integration.test.cjs');
 
 profiles['test:agency-edit-dto']={database:false,api:false,files:['test/agency-edit-dto.test.cjs']};
 profiles.test.files.push('test/agency-edit-dto.test.cjs');
+
+profiles['test:agency-preview-db']={database:true,api:false,files:['test/agency-worker.integration.test.cjs','test/agency-http.integration.test.cjs','test/agency-plans.integration.test.cjs'],apiFiles:[]};

@@ -31,7 +31,8 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  const ctx=await authorized(ports,input.proof),scope={accountId:ctx.actor.accountId,agencyId:ctx.practice.agencyId,practiceId:ctx.practice.id};
  const raster=await ports.loadRaster(input.proof);assertRaster(raster);await authorized(ports,input.proof,scope);
  const rasterSHA256=createHash('sha256').update(raster.gray).digest('hex'),rasterSize={width:raster.width,height:raster.height};
- const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,pipeline:'raster-seeds-v1'})).digest('hex');
+ const rendering=raster.rendering?structuredClone(raster.rendering):null;
+ const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v2-rendering'})).digest('hex');
  const calls:Array<{phase:string;requestId:string;input:number;output:number;costUSD:number}>=[];
  async function call(phase:'inventory'|'review',previous:SeedProposal|null,segmentation:Segmentation|null){
   await authorized(ports,input.proof,scope);await ports.reserve(input.runId,phase,fingerprint,input.maxUSDPerCall);await authorized(ports,input.proof,scope);
@@ -52,5 +53,5 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  await authorized(ports,input.proof,scope);
  const warnings=[...first.warnings,...review.warnings,...retainedSymbols.map(id=>'retained_previous_symbol:'+id)];
  // AI review never certifies coverage: agent confirms scope/scale/symbols and computation separately.
- return {runId:input.runId,fingerprint,rasterSize,rasterSHA256,proof:structuredClone(input.proof),scope,initial,final,proposal:merged,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:final.issues.length?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};
+ return {runId:input.runId,fingerprint,rasterSize,rasterSHA256,rendering,proof:structuredClone(input.proof),scope,initial,final,proposal:merged,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:final.issues.length?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};
 }
