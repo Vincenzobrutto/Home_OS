@@ -1,5 +1,6 @@
 import { deflateSync } from 'node:zlib';
 import {annexCensus} from './recognition-rules';
+import {reviewFocus,reviewDiagnostics} from './review-focus';
 import { assert } from './geometry';
 import type { PlanPorts } from './pipeline';
 import { assertRaster, type Raster, type Segmentation } from './raster';
@@ -23,7 +24,9 @@ export function createPlanProvider(transport:PlanProviderTransport,options:{mode
  return async request=>{
   const image=(buffer:Buffer)=>({type:'image',source:{type:'base64',media_type:'image/png',data:buffer.toString('base64')}});
   const content:unknown[]=[image(png(request.raster))];if(request.segmentation)content.push(image(png(request.raster,request.segmentation)));
-  content.push({type:'text',text:JSON.stringify({phase:request.phase,imageSize:[request.raster.width,request.raster.height],previous:request.previous,annexReviewCandidates:annexCensus(request.previous?.spaces||[]),diagnostics:request.segmentation,userRules:options.userRules})});
+  const focus=request.phase==='review'?reviewFocus(request.raster,request.previous,request.segmentation):[];
+  for(const crop of focus){content.push({type:'text',text:JSON.stringify({focusId:crop.id,originInOriginalPixels:crop.origin,magnification:crop.scale,coordinateRule:'original = origin + crop pixel / magnification; return ORIGINAL coordinates only. This is a view, not an asserted door or room.'})});content.push(image(png(crop.raster)));}
+  content.push({type:'text',text:JSON.stringify({phase:request.phase,imageSize:[request.raster.width,request.raster.height],previous:request.previous,annexReviewCandidates:annexCensus(request.previous?.spaces||[]),diagnostics:reviewDiagnostics(request.segmentation),userRules:options.userRules})});
   content.push({type:'text',text:request.phase==='inventory'?task:task+' Audit original and overlay. Closed regions can be parapets, not walkable surfaces. Correct missing/wrong seeds, retaining supported interior regions. Audit all circulation routes again, especially narrow or unlabelled passages next to large rooms. Compare the space census with diagnostics/duplicates: never treat a duplicate mask as proof that two semantic spaces are one room. Keep correct existing rooms stable and report any required manual partition; do not invent walls or discard an inconvenient space. Report unresolved regions. Do not silently remove symbols or alter a valid symbol without evidence.'});
   const messages=[{role:'user',content}],count=await transport.post('messages/count_tokens',{model:options.model,system,messages}) as {input_tokens?:number};
   assert(Number.isSafeInteger(count?.input_tokens)&&count.input_tokens!>=0,'provider_token_count_invalid');

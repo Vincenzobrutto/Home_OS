@@ -1345,3 +1345,7 @@ Arco sostituito solo nella catena ancorata; annotazioni interne non erodono un i
 ## 2026-10-30 — Evidenza visiva guida, pixel verificano, recupero resta proposto
 
 La freccia non basta: osservazione visiva più appoggi murari e stipiti verificati. Recupero su copia solo con conservazione geometrie preesistenti/esclusioni e guardia overlap. Censimento e componente continua distinti; soglie ed esito persistiti scoped, nessuna conferma automatica o terza chiamata AI. [Report](v5/agency-opening-recovery-20261030.md).
+
+## 2026-10-30 — Isolare una componente non prova la soglia corretta
+
+Fallback locale solo da indizio visivo, con assi murari dominanti e stipiti verificati, preservazione vani/esclusioni ed un'unica alternativa valida. Più soluzioni o limite raggiunto restano ambigui. Crop dalla propostaAI e mappe origine/scala, nessuna coordinata gold nel prompt. Censimento e componente continua restano distinti. [Report](v5/agency-focus-local-recovery-20261030.md).

@@ -1010,3 +1010,7 @@ Nuove planimetrie senza interventi preventivi: misurare omissioni AI, falsi stip
 ## Benchmark autonomo porte fallito
 
 La zona della freccia è riconosciuta ma la coppia stipiti proposta non chiude il vano. Valutare crop locale automatico nella revisione già prevista e alternative pixel verificate; distinguere fonte visiva, coppia candidata ed isolamento. Servizi/arco ancora dipendenti da selezione tecnica negli esperimenti precedenti. Audit pre-dispatch: errore budget noto prima di messages viene marcato uncertain genericamente; rendere distinta la prova di mancato invio senza abilitare retry delle richieste effettivamente inviate. [Evidenza](v5/agency-opening-autonomous-benchmark-20261030.md).
+
+## Dopo il recupero automatico ingresso
+
+Servizi erosi, arco interno e balcone ancora incompleti; automatizzare selezione involucri su evidenze senza mascherare vuoti. Test indipendenti: muri obliqui non dominanti, assenza regioni di riferimento, più soglie necessarie insieme, ambiguita e perdita supporto per scansioni deboli. Verificare timeout/worker del limite8prove su immagini grandi e visualizzazione soglie nel workspace. Budgetprudenziale4,4985su4,50EUR: nessun altro invio disponibile. [Evidenze](v5/agency-focus-local-recovery-20261030.md).

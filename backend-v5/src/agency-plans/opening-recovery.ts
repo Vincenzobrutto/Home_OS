@@ -1,10 +1,10 @@
 import {assert,filled,overlaps,type Point} from './geometry';
 import {assertRaster,segmentPlan,type Raster,type RasterConfig,type SeedSpace,type SymbolRequest,type Segmentation} from './raster';
-import {proposeThresholds,previewVirtualThresholds,type OpeningObservation} from './recognition-rules';
+import {detectOpeningGaps,proposeThresholds,previewVirtualThresholds,type OpeningObservation} from './recognition-rules';
 
 /** Untrusted visual observations, not geometry or a human confirmation. */
 export type OpeningHint={id:string;spaceId:string;nearStart:Point;nearEnd:Point;inside:Point;outside:Point;signal:'arrow'|'door_arc'|'door_leaf';context:'inside_to_common'|'between_rooms'};
-export type OpeningRecovery={id:string;spaceId:string;state:'needs_review'|'proposed_recovery';reasons:string[];threshold:OpeningObservation|null;hintSource:'ai'|'human';endpointSource:'pixel_refinement'|null};
+export type OpeningRecovery={id:string;spaceId:string;state:'needs_review'|'proposed_recovery';reasons:string[];threshold:OpeningObservation|null;hintSource:'ai'|'human';endpointSource:'pixel_refinement'|'pixel_neighborhood_search'|null;search?:{tested:number;candidateCount:number;initialReasons:string[]}};
 const distance=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function validPoint(r:Raster,p:Point){return Array.isArray(p)&&p.length===2&&p.every(Number.isFinite)&&p[0]>=0&&p[1]>=0&&p[0]<r.width&&p[1]<r.height;}
 function dark(r:Raster,p:Point,threshold:number,radius=0){for(let y=-radius;y<=radius;y++)for(let x=-radius;x<=radius;x++){const xx=Math.round(p[0])+x,yy=Math.round(p[1])+y;if(xx>=0&&yy>=0&&xx<r.width&&yy<r.height&&r.gray[yy*r.width+xx]<=threshold)return true;}return false;}
@@ -35,9 +35,9 @@ export function refineOpening(r:Raster,h:OpeningHint,threshold=180,hintSource:'a
 }
 
 /** Bounded automatic draft recovery. Every accepted cut remains an explicit review item. */
-export function recoverOpenings(r:Raster,spaces:SeedSpace[],symbols:SymbolRequest[],config:RasterConfig,hints:OpeningHint[],hintSource:'ai'|'human'='ai'){
+function recoverOpeningHints(r:Raster,spaces:SeedSpace[],symbols:SymbolRequest[],config:RasterConfig,hints:OpeningHint[],hintSource:'ai'|'human'='ai',baseline?:Segmentation){
  assertRaster(r);assert(Array.isArray(hints)&&hints.length<=12&&new Set(hints.map(h=>h.id)).size===hints.length);
- let raster=r,segmentation=segmentPlan(r,spaces,symbols,config);const reviews:OpeningRecovery[]=[];
+ let raster=r,segmentation=baseline?structuredClone(baseline):segmentPlan(r,spaces,symbols,config);const reviews:OpeningRecovery[]=[];
  for(const hint of hints){
   const target=spaces.find(s=>s.id===hint.spaceId&&s.kind!=='excluded');
   if(!target){reviews.push({id:hint.id,spaceId:hint.spaceId,state:'needs_review',reasons:['opening_target_unavailable'],threshold:null,hintSource,endpointSource:null});continue;}
@@ -56,4 +56,29 @@ export function recoverOpenings(r:Raster,spaces:SeedSpace[],symbols:SymbolReques
  }
  for(const review of reviews.filter(v=>v.state==='proposed_recovery'&&v.threshold)){const hint=hints.find(h=>h.id===review.id)!;const region=segmentation.regions.find(v=>filled(hint.inside,v));if(region?.boundary){region.boundary.virtualThresholdIds??=[];region.boundary.virtualThresholdIds.push(review.id);}}
  return {segmentation,reviews,applied:reviews.filter(v=>v.state==='proposed_recovery'&&v.threshold).map(v=>v.id),confirmed:false as const,originalUnchanged:true as const};
+}
+
+/** Alternative endpoints require majority wall-axis evidence AND a unique isolated opening.
+ * Thin arrow strokes may interrupt a scan line; they are never erased from the source. */
+export function recoverOpenings(r:Raster,spaces:SeedSpace[],symbols:SymbolRequest[],config:RasterConfig,hints:OpeningHint[],hintSource:'ai'|'human'='ai'){
+ const out=recoverOpeningHints(r,spaces,symbols,config,hints,hintSource);let tested=0;
+ for(const review of out.reviews){
+  if(review.state==='proposed_recovery'||!review.reasons.some(v=>['opening_does_not_isolate_target','opening_jambs_not_supported','opening_jambs_ambiguous'].includes(v)))continue;
+  const hint=hints.find(h=>h.id===review.id)!;if(![hint.nearStart,hint.nearEnd,hint.inside,hint.outside].every(p=>validPoint(r,p)))continue;
+  let a=0,b=0,total=0;for(const room of out.segmentation.regions)for(let i=0;i<room.points.length;i++){const p=room.points[i],q=room.points[(i+1)%room.points.length],length=distance(p,q);if(length<12)continue;const angle=Math.atan2(q[1]-p[1],q[0]-p[0]);a+=length*Math.cos(angle*4);b+=length*Math.sin(angle*4);total+=length;}
+  if(!total||Math.hypot(a,b)/total<.5)continue;const axis=Math.atan2(b,a)/4;
+  const span=distance(hint.nearStart,hint.nearEnd),center:Point=[(hint.nearStart[0]+hint.nearEnd[0])/2,(hint.nearStart[1]+hint.nearEnd[1])/2],radius=Math.min(140,Math.max(60,Math.ceil(span*3))),x=Math.max(0,Math.floor(center[0]-radius)),y=Math.max(0,Math.floor(center[1]-radius));
+  const active=out.reviews.filter(v=>v.state==='proposed_recovery'&&v.threshold).map(v=>v.threshold!);const current=previewVirtualThresholds(r,proposeThresholds(r,active,config.threshold),active.map(v=>v.id),config.threshold).raster;
+  const gaps=detectOpeningGaps(r,{x,y,width:Math.min(r.width-x,radius*2),height:Math.min(r.height-y,radius*2)},{threshold:config.threshold,minimumFlankPixels:8,limit:100,bridgeAnnotations:true});
+  const alternatives:Array<{hint:OpeningHint;refined:OpeningRecovery}>=[];
+  for(const g of gaps){const length=distance(g.start,g.end),angle=Math.atan2(g.end[1]-g.start[1],g.end[0]-g.start[0]);if(length<6||length>span*2||Math.cos(4*(angle-axis))<Math.cos(48*Math.PI/180))continue;const h={...hint,nearStart:g.start,nearEnd:g.end},refined=refineOpening(r,h,config.threshold,hintSource);if(!refined.threshold)continue;
+   if(alternatives.some(v=>Math.min(distance(v.refined.threshold!.start,refined.threshold!.start)+distance(v.refined.threshold!.end,refined.threshold!.end),distance(v.refined.threshold!.start,refined.threshold!.end)+distance(v.refined.threshold!.end,refined.threshold!.start))<4))continue;alternatives.push({hint:h,refined});
+  }
+  review.search={tested:0,candidateCount:alternatives.length,initialReasons:[...review.reasons]};const matches:Array<ReturnType<typeof recoverOpeningHints>>=[];
+  let incomplete=false;for(const alternative of alternatives){if(tested>=8){incomplete=true;break;}tested++;review.search.tested++;const trial=recoverOpeningHints(current,spaces,symbols,config,[alternative.hint],hintSource,out.segmentation);if(trial.applied.length)matches.push(trial);}
+  // Multiple different wall cuts or an incomplete search remain uncertain, regardless of room count.
+  if(incomplete||matches.length!==1){if(incomplete||matches.length>1)review.reasons=['opening_alternatives_ambiguous'];continue;}
+  const chosen=matches[0];out.segmentation=chosen.segmentation;const search=review.search;Object.assign(review,chosen.reviews[0],{endpointSource:'pixel_neighborhood_search',search});review.reasons.push('alternative_jambs_require_review');out.applied.push(review.id);
+ }
+ return out;
 }

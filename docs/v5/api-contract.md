@@ -154,3 +154,5 @@ L’elenco include invoiceMonth nelle sole spese personali attive che lo possied
 ### Planimetrie — evidenze delle soglie virtuali proposte
 
 La lettura scoped esistente dei piani può includere openingReviews (id,spaceId,state,reasons,threshold,hintSource,endpointSource), mai conferma. Le regioni derivate possono avere boundary.virtualThresholdIds. Nessun nuovo endpoint o input HTTP di risultato AI. Le issue opening_recovery_requires_review/opening_requires_review restano bloccanti come le altre verifiche. Fonte non leggibile/stale continua a oscurare le derivazioni. [Contratto e limiti](agency-opening-recovery-20261030.md).
+
+La provenienza delle aperture può indicare endpointSource:pixel_neighborhood_search e search:{tested,candidateCount,initialReasons}; il filtro fonte/privacy è invariato. È ricerca locale di una bozza da verificare, non conferma umana. Nessun nuovo input HTTP. [Dettagli](agency-focus-local-recovery-20261030.md).
