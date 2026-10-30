@@ -1,5 +1,10 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+## Agenzie — superfici integrate e recupero dei tratti chiari
+
+Nuova immagine: profilo precedente0contorni, adattamento ottico automatico come proposta pending9contorni,2balconi/2bagni, zerooverlap e nessun seed estraneo incluso. Ingresso/vano adiacente ancora comunicanti; niente coordinate manuali o altre chiamate dopo le due fasi iniziali. Pipelinev8 conserva fonte/profilo e richiede adozione/revisione.643/643backend e44/44UI Agenzie, typecheck/build/lint verdi. La variante ottica non ha un nuovo collaudo DB/browser; integrazione precedente38/38DB-HTTP-worker e browser desktop/375 rimangono evidenze distinte. [Prova nuova e limiti](v5/agency-third-plan-contrast-20261030.md), [integrazione](v5/agency-surface-integration-20261030.md). Demo Alessio invariata, nessun deploy.
+
+
 ## Agenzie — proposte superfici integrate nel flusso reale
 
 Analisi salva una proposta distinta dai contorni base; UI confronta in sola lettura, agente adotta con spunta/motivo, backend sostituisce il pacchetto atomicamente con fonte corrente/CAS/digest canonico e storico. Computo invalidato, perimetro preservato; modifica manuale e ricarica verificate.639/639backend,38/38DB-HTTP-worker,43/43UI Agenzie, build/typecheck/lint verdi. Browser desktop/375 su dati/provider sintetici; foto reale replay offline8→10proposti senza nuovaAI. [Report corrente e limiti](v5/agency-surface-integration-20261030.md). Nessun deploy/merge o modifica demo Alessio.

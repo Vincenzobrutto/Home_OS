@@ -1357,3 +1357,7 @@ Una cavita curva non basta: fitcircolare, cerniera vicina e continuazioni murari
 ## 2026-10-30 — Adottare una proposta geometrica non conferma il computo
 
 Pacchetto server distinto e digest canonico su fonte/fingerprint/base geometrica; client invia soltanto digest/revisioni/motivo. Adozione atomica mantiene storico/perimetro e invalida computo, lasciando verifiche aperte. Correzione manuale cancella provenienza automatica del contorno modificato. JSONB riordina chiavi: canonizzare ricorsivamente oggetti, preservare array. Nessun nuovo schema o route. [Contratto e verifica](v5/agency-surface-integration-20261030.md).
+
+## 2026-10-30 — Una calibrazione ottica è una proposta, non un cambio silenzioso del profilo
+
+Se la scansione pallida non produce regioni, istogramma locale suggerisce soglia candidata senza massimizzare il numero di vani. Originale/profilo canonico invariati, seed esclusi non inglobati, metadato incluso nel digest e contrast_requires_review prima dell'adozione. Aperture incerte conservate. [Evidenza e limiti](v5/agency-third-plan-contrast-20261030.md).

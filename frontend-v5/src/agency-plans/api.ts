@@ -4,7 +4,7 @@ import type { PlanShape } from './PlanMeasurementView';
 export type AgencyScope={accountId:string;agencyId:string;practiceId:string};
 export type SourceProof={sourceId:string;version:number;sha256:string;page:number};
 export type AgencyPractice={id:string;label:string;revision:number;documents:Array<{id:string;kind:string;visibility:string;version:number;filename:string}>};
-export type SurfaceProposal={digest:string;state:"pending"|"applied"|"stale";baseGeometryRevision:number;rooms:PlanShape[];issues:Array<{id:string;code:string}>;summary:{doorArcs:number;serviceCells:number;exteriorStrips:number}};
+export type SurfaceProposal={contrast?:{requiresReview:true;originalThreshold:number;proposedThreshold:number};digest:string;state:"pending"|"applied"|"stale";baseGeometryRevision:number;rooms:PlanShape[];issues:Array<{id:string;code:string}>;summary:{doorArcs:number;serviceCells:number;exteriorStrips:number}};
 export type AgencyPlan={id:string;version:number;status:string;proof:SourceProof;rooms:PlanShape[]|null;surfaceProposal?:SurfaceProposal|null;mainPerimeter?:Pick<PlanShape,'points'|'holes'>|null;rasterSize?:{width:number;height:number};rendering?:{dpi:number;transform:number[];renderer:string}|null;geometryRevision?:number;measurementConfiguration?:MeasurementConfiguration|null;issues?:Array<{id:string;code:string}>;measurement?:{totalM2:number|null;partialM2:number;issues:string[];status:string;certification:false;surfaces?:Array<{id:string;measuredM2:number;weightedM2:number|null}>}|null};
 export type PlansResponse={revision:number;plans:AgencyPlan[]};
 export type PlanEditBody={expectedRevision:number;expectedPlanVersion:number;reason:string;command:Record<string,unknown>};

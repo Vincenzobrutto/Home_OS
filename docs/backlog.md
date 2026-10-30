@@ -1026,3 +1026,7 @@ Detector proposto richiede componente chiusa, allungamento e almeno due vani sul
 ## Superfici — gate dopo integrazione locale
 
 Accettazione scoped worker/UI ora implementata e verificata: il residuo principale è corpus indipendente senza hint umani, incluse risoluzioni diverse e spazi ambigui. Nessuna misura di accuratezza generale dal campione noto. Trial sintetico a scadenza23:19Rome, nessun deploy. Verificare in seguito profili di latenza su raster grandi, identificatori servizio al limite100caratteri, fasce esterne corte/monovano, e gestione del rigetto esplicito della proposta senza rifare AI. [Stato e limiti](v5/agency-surface-integration-20261030.md).
+
+## Dopo il nuovo campione pallido
+
+Validare proposta ottica su altri documenti indipendenti; il campione nuovo ha guidato la correzione e non misura la generalizzazionev8. Separare ingresso/vano comunicante solo con evidenze; ripulire microvuoti delle scritte senza cancellare cavedi/strutture. Nuova prova reale della variante optica nel workflow DB/browser ancora da fare; nessun totale dalla sola scala1:100. [Report](v5/agency-third-plan-contrast-20261030.md).

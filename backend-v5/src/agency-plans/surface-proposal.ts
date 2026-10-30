@@ -5,10 +5,11 @@ import {detectRectangularWallEnvelopes,inferWallOrientation,previewRoomSurfaces,
 import {selectServiceSurfaces} from './service-surfaces';
 import {detectExteriorStrips} from './exterior-strips';
 import type {Raster,RasterConfig,SeedSpace,SymbolRequest,Segmentation} from './raster';
+import type {proposeInkThreshold} from './contrast';
 
-export type SurfaceProposal={digest:string;state:'pending'|'applied'|'stale';sourceFingerprint:string;baseGeometryRevision:number;baseGeometryDigest:string;baseIssues:Segmentation['issues'];rooms:PreviewSurfaceRegion[];issues:Segmentation['issues'];summary:{doorArcs:number;serviceCells:number;exteriorStrips:number};acceptedAt?:string;acceptedBy?:string};
+export type SurfaceProposal={digest:string;state:'pending'|'applied'|'stale';sourceFingerprint:string;baseGeometryRevision:number;baseGeometryDigest:string;baseIssues:Segmentation['issues'];rooms:PreviewSurfaceRegion[];issues:Segmentation['issues'];summary:{doorArcs:number;serviceCells:number;exteriorStrips:number};contrast?:NonNullable<ReturnType<typeof proposeInkThreshold>>;acceptedAt?:string;acceptedBy?:string};
 export function roomGeometryDigest(rooms:Array<Polygon&{id:string;label:string;kind:string}>){return createHash('sha256').update(JSON.stringify(rooms.map(v=>({id:v.id,label:v.label,kind:v.kind,points:v.points,holes:v.holes})))).digest('hex');}
-export function surfaceProposalDigest(p:Omit<SurfaceProposal,'digest'>|SurfaceProposal){return createHash('sha256').update(JSON.stringify({version:'surface-proposal-v1',sourceFingerprint:p.sourceFingerprint,baseGeometryRevision:p.baseGeometryRevision,baseGeometryDigest:p.baseGeometryDigest,baseIssues:p.baseIssues,rooms:p.rooms,issues:p.issues,summary:p.summary},(_key,value)=>value&&typeof value==='object'&&!Array.isArray(value)?Object.fromEntries(Object.keys(value).sort().map(key=>[key,value[key]])):value)).digest('hex');}
+export function surfaceProposalDigest(p:Omit<SurfaceProposal,'digest'>|SurfaceProposal){return createHash('sha256').update(JSON.stringify({version:'surface-proposal-v1',sourceFingerprint:p.sourceFingerprint,baseGeometryRevision:p.baseGeometryRevision,baseGeometryDigest:p.baseGeometryDigest,baseIssues:p.baseIssues,rooms:p.rooms,issues:p.issues,summary:p.summary,contrast:p.contrast},(_key,value)=>value&&typeof value==='object'&&!Array.isArray(value)?Object.fromEntries(Object.keys(value).sort().map(key=>[key,value[key]])):value)).digest('hex');}
 
 /** Server-only local proposal: never adopts or confirms geometry during analysis. */
 export function createSurfaceProposal(r:Raster,spaces:SeedSpace[],symbols:SymbolRequest[],config:RasterConfig,baseline:Segmentation,sourceFingerprint:string):SurfaceProposal|null{
