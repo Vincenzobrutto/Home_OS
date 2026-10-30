@@ -1,3 +1,4 @@
+import {applyFinding,findingsView} from './findings';
 import { createHash, randomUUID } from 'node:crypto';
 import { Prisma, type AgencyPractice, type AgencyMember, type AgencyPracticeGrant } from '../../generated/client';
 import type { PrismaService } from '../prisma.service';
@@ -21,6 +22,8 @@ const json = (p: Practice): Prisma.InputJsonValue => JSON.parse(JSON.stringify(p
 /** Internal persistence adapter: account comes from the session; no HTTP endpoint accepts file fingerprints. */
 export class AgencyPracticesStore {
   constructor(private readonly db: Pick<PrismaService, '$transaction'>) {}
+  async readFindings(accountId:string,agencyId:string,practiceId:string){return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);return findingsView(actor,practice,new Date().toISOString());},{maxWait:5000,timeout:15000});}
+  async finding(accountId:string,agencyId:string,practiceId:string,input:unknown){return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId),r=applyFinding(actor,practice,input,new Date().toISOString());if(!r.replay){const updated=await tx.agencyPractice.updateMany({where:{id:practiceId,agencyId,revision:practice.revision},data:{revision:r.practice.revision,snapshot:json(r.practice)}});if(updated.count!==1)throw new PracticeError('revision_conflict');}requirePractice(actor,r.practice,'edit',new Date().toISOString());return {replay:r.replay,findings:findingsView(actor,r.practice,new Date().toISOString())};},{maxWait:5000,timeout:15000});}
   async authorize(accountId:string,agencyId:string,practiceId:string,action:'read'|'edit'){
     await this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);requirePractice(actor,practice,action,new Date().toISOString());},{maxWait:5000,timeout:15000});
   }

@@ -47,7 +47,7 @@ export function evaluateCoherence(actor: Actor, practice: Practice, input: unkno
     const values = usable ? facts.map(f => ({ factId: f.id, version: f.version, status: f.status, value: f.status === 'confirmed' ? f.confirmedValue! : f.proposedValue, evidence: f.evidence })) : [];
     const equal = usable && values.every(v => comparable(group.field, v.value) === comparable(group.field, values[0].value));
     const status = !usable ? 'not_evaluable' : !equal ? 'difference_to_review' : allConfirmed ? 'matching_confirmed_values' : 'matching_proposals';
-    const fingerprint = createHash('sha256').update(JSON.stringify({ practiceId: practice.id, group, facts: facts.map(f => ({ id: f.id, version: f.version, status: f.status, proposedValue: f.proposedValue, confirmedValue: f.confirmedValue, evidence: f.evidence })) })).digest('hex');
+    const fingerprint = createHash('sha256').update(JSON.stringify({ practiceId: practice.id, group, facts: facts.map(f => ({ id: f.id, version: f.version, status: f.status, proposedValue: f.proposedValue, confirmedValue: f.confirmedValue, evidence: f.evidence.map(e=>[e.sourceId,e.version,e.sha256,e.page,e.excerpt]) })) })).digest('hex');
     return { ...group, status, allConfirmed, fingerprint, values, certification: false as const };
   });
 }

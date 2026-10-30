@@ -1925,3 +1925,6 @@ Provenienza raster persistita e anteprima autorizzata con confronto dei pixel; c
 
 ## 30 ottobre2026 — Agenzie: workspace pratica e form di computo
 Contenitore API con editor, perimetro/muri manuali, calibrazione e criteri espliciti, errori/privacy e configurazione persistita.26/26 frontend,496/496 backend,34/34 DB mirati; typecheck/lint e browser desktop/375 verdi sui limiti descritti. Nessuna navigazione/attivazione prodotto o AI live. [Report](v5/agency-plan-workspace-v1.md).
+
+## 30 ottobre2026 — Agenzie: registro coerenza persistente
+Confronti e note successione/distribuzione con esiti motivati, privacy e riapertura.13nuovi test,509/509 ordinari,31/31 finding+HTTP e lint verdi; cluster fermato. API sempre opt-in, nessuna AI o compliance automatica. [Report](v5/agency-findings-v1.md).

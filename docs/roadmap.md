@@ -149,3 +149,5 @@ Agenzie: trasporto edit/sostituzione verificato496/496+22/22 HTTP; prossima UI p
 Agenzie: anteprima raster allineata/client API verificati; prossimo workspace/form. [Report](v5/agency-plan-preview-v1.md). Nessuna integrazione completa o AI live dichiarata.
 
 Agenzie: workspace opt-in verificato su API simulate, non attivo nel prodotto. Prima del pilota navigazione/provisioning e prove browser→API. Riprendere coerenza persistente e mapping incarico. [Report](v5/agency-plan-workspace-v1.md).
+
+Agenzie: finding persistenti e API opt-in verificati509/509+31/31DB/HTTP; prossimo readiness mapping incarico, con modello reale ancora mancante. [Report](v5/agency-findings-v1.md).

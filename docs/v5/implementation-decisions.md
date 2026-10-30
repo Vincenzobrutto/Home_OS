@@ -186,3 +186,6 @@ DPI/transform/versione rendering entrano nel fingerprint e nel piano; il PNG UI 
 
 ## Agenzie — retry esplicito e scelta metrica non dedotta
 Workspace con salvataggio manuale motivato: 503preserva payload/key,409richiede ricarica,422riabilita correzione,revoca nasconde dati. La barra richiede estremi e lunghezza letta, perimetro e fasce muro sono disegnati esplicitamente, intervalli e conferme non precompilati. Configurazione conservata col piano e invalidata da geometrie nuove. Harness non è fallback prodotto. [Report](agency-plan-workspace-v1.md).
+
+## Agenzie — risolvere un quesito non modifica un fatto
+Confronti/observazioni e storia persistiti separatamente; risoluzione richiede motivo e fingerprint corrente. Cambio prove/fatti/risposta tecnica riapre, nessuna certificazione. Storia privata filtrata: una decisione con prova privata non chiude un quesito pubblico per chi non legge tale prova. Fingerprint canonico anche dopo JSONB. [Report](agency-findings-v1.md).

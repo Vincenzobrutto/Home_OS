@@ -43,11 +43,11 @@ Nuovo profilo `test:agency-practices-db` aggiunto anche all’aggregato DB; migr
 
 Prima di nuove modifiche: ora UTC, git status/log, istruzioni repository, tabella lotti. Conservare modifiche e risultati; aggiornare ogni voce con implementato/verificato/non verificato. Proseguire su test o contratto se l’input umano manca. Nessun messaggio ad altre chat senza autorizzazione.
 
-### Ripresa02:00 — fatti e revisione umana
+### Ripresa01:00 Europe/Rome — fatti e revisione umana
 
 Concluso task3: proposte estratte e dichiarate restano distinte dalle decisioni; correzioni conservano valore originale e prove. Confermato significa decisione umana corrente, non certificazione. Fonte sostituita rende il fatto obsoleto; fonti private nascondono anche i derivati. Output espone origine del valore confermato, autore e data. Estratti multilinea preservati, date impossibili rifiutate. Regressione finale356/356 (301preesistenti+34dominio+21revisione), build e lint mirato verdi. PostgreSQL13/13 nel run dimora-offline-qQL7Zh, cluster fermato; quel run precede il solo affinamento della proiezione confermato e parser multilinea, verificati nella regressione finale. Nessun endpoint, estrattore o UI aggiunto. Prossimo task4: coerenza tipizzata, usando solo fatti leggibili e correnti con unità e soggetti espliciti.
 
-### Ripresa02:30 — confronto circoscritto
+### Ripresa01:30 Europe/Rome — confronto circoscritto
 
 Motore puro di confronto tra fatti selezionati esplicitamente per unità/soggetto/campo/epoca dichiarata. Nessuna inferenza automatica sui ruoli storici; nessuna certificazione. Test nuovi19/19 e regressione375/375. Lint inizialmente rilevava regex con caratteri di controllo, sostituita con scansione charCode; lint e mirata finali verdi. La regressione precede questa sola riscrittura equivalente della validazione. Nessun nuovo collaudo DB: il motore è puro e lo store invariato. Prossimo task incompleto: persistere gruppi e risoluzioni motivate, invalidarle su fingerprint cambiato; aggiungere osservazioni manuali per difformità interna. Limiti e caso successione nel report agency-coherence-v1.md. Demo Alessio invariata.
 
@@ -63,39 +63,39 @@ Replay privato del nuovo motore usando output AI già ricevuti:11regioni, balcon
 
 Riprendere da questo task sui nuovi moduli, conservando il task coerenza/risoluzioni precedente ancora incompleto. Fixture sintetiche, nessuna AI live, file personale, merge o deploy. Fonte cambiata invalida computo; fonti private nascondono i derivati anche agli admin. Pubblicare soltanto branch dedicato autorizzato e verificare hash.
 
-### Ripresa03:00 — fondazione bytes
+### Ripresa02:00 Europe/Rome — fondazione bytes
 
 Implementati vault filesystem dedicato e metodi interni upload/readFile: SHA/size/MIME derivati dai bytes, oggetti immutabili, CAS/replay, privacy e controllo versione corrente. Nessuna root applicativa configurata o endpoint attivato.10/10 nuovi unitari e regressione429/429; lint mirato verde. Il primo run unitario sandbox falliva5test per hard link Windows negato: ripetuto con permesso sulle sole directory temporanee, senza cambiare assert. DB dedicato9/9 (parent+8) nel run dimora-offline-T1DeH4, stop-postgres.log conferma arresto. I21DB precedenti restano evidenza storica, non sono stati rilanciati in questo incremento. Report agency-files-v1.md: restano orfani dopo rollback/crash da riconciliare, quote/retention/fsync e trasporto streaming da implementare. Prossimo task immediato: rasterizzatore fidato dai bytes autorizzati, poi ledger job durevole; non dichiarare planimetrie cablate da questo solo incremento.
 
-### Ripresa03:30 — raster autorizzato
+### Ripresa02:30 Europe/Rome — raster autorizzato
 
 Rasterizzatore PDF/PNG da bytes verificati in processo figlio dedicato e ponte loadAuthorizedPlanRaster con verifica accessi/snapshot prima e dopo il rendering. Limiti pagina/DPI/pixel/timeout/output, trasformazione PDF esplicita e SHA pixel; PNG resta in pixel originali. JPEG esplicitamente unsupported, non ignorato.15test nuovi del decoder/ponte inclusi nella regressione444/444; lint mirato verde. Nessun nuovo DB test: store invariato,9/9 ultimo storage e21/21 precedenti sono evidenze datate. Nessun endpoint/AI attivato. Non è sandbox OS completa: memoria nativa, quote processi e corpus ostile non verificati. Canvas già presente1.0.11, nessuna installazione nella junction. Report agency-renderer-v1.md. Prossimo task: ledger job/lease persistenti con prenotazione run+fase e costi/esiti incerti, poi trasporto e UI.
 
-### Ripresa04:00 — job e ledger per run
+### Ripresa03:00 Europe/Rome — job e ledger per run
 
 Implementato stato persistente per job nel JSONB pratica: enqueue/replay, lease singola5min, prenotazione unica run+fase prima dell'invio, cap microUSD e prezzi immutabili, accounting e incerti. Capability hash nel DB, viste senza segreti. Accounting stretto può registrare spesa dopo revoca senza leggere originali. Nessun provider o scheduler attivo.22unitari nuovi, regressione finale466/466 e lint mirato verdi. DB finale8/8 nel run dimora-offline-G1YPh1, cluster fermato. Primo run7clDmI falliva replay enqueue perché stringify dipendeva dall'ordine JSONB; corretto l'identificatore canonico e aggiunto test riordino, senza cambiare assert DB. Regressione precedente465/465 precedeva il fix e il nuovo test. Primo build segnalava narrowing TS su helper fail arrow; trasformato in funzione never esplicita senza cast per sopprimere errori.
 
 NON completo: cap solo per run, authorizationId unico nella pratica ma non globale, niente broker/recovery capability, intermedi o risultato atomico. Prossimo task prioritario PRIMA del provider: registro server di autorizzazioni spendibili uniche fra pratiche e budget globale con lock, poi coordinatore pipeline/job e completamento insieme a risultato validato. Nessun consenso/budget reale desunto dai test. Conservare no-retry su incerti e no-handover lease senza fencing. Report agency-plan-jobs-v1.md. Demo Alessio invariata.
 
-### Ripresa04:30 — budget globale e autorizzazioni uniche
+### Ripresa03:30 Europe/Rome — budget globale e autorizzazioni uniche
 
 Schema additivo AgencyAiBudget/AgencyPlanAuthorization, BIGINT microUSD e trigger immutabilità. Store enqueue richiede autorizzazione server per pratica/account/prova/prezzi; stesso commit riserva cap sul budget condiviso e crea job. Accounting aggiorna spesa una volta anche dopo revoca, registra sforamenti, chiusura nota rilascia solo quota inutilizzata. Receipt e runId unici globalmente; nessun provisioning o consenso reale generato.
 
 Verifiche:466/466 ordinari, lint mirato e client Prisma privato rigenerato. DB combinato finale20/20 nel run dimora-offline-wF5mLE, cluster fermato:12nuovi budget+8job aggiornati a provisioning esplicito. Primo run RXYaap18/18 precedeva i due nuovi casi sforamento e budget altra agenzia; entrambi cluster fermati. Migrazione applicata soltanto nei cluster nuovi del runner, nessun DB esistente. Report agency-ai-budget-v1.md. Prossimo task: coordinatore worker con capability recuperabile, collegamento raster/pipeline/ledger e salvataggio atomico risultato+job; trasporto provider testato offline, poi HTTP/sessione/CSRF e UI. Nessuna AI live, nuova spesa, merge/deploy o modifica demo Alessio.
 
-### Ripresa05:00 — coordinatore e risultato atomico
+### Ripresa04:00 Europe/Rome — coordinatore e risultato atomico
 
 Implementati worker interno con capability HMAC recuperabile da chiave server, contesti correnti e ponte completo bytes→raster→pipeline→ledger→risultato. Factory provider usa modello/prezzi persistiti; test solo fake. completePlanJob confronta prova/fingerprint/ricevute e salva geometria, job e chiusura budget insieme. Vecchio finish dello store senza risultato rimosso.6nuovi unitari,472/472 ordinari e lint mirato verdi. DB combinato finale24/24 in dimora-offline-qqFkOe (20precedenti+4nuovo worker), cluster fermato. Primo run lB6QAF24/24 precedeva l'asserzione aggiuntiva di rollback della geometria invalida, ripetuto con assert immutati. Prove: due chiamate fake, PNG sintetico realmente decodificato, risultato unico e replay senza invii; costo invalido/revoca durante chiamata conservano contabilizzazione ma non geometria.
 
 Non completo: nessun trasporto live, scheduler, provisioning reale di budget/chiave, endpoint o navigazione. Intermedi non ricostruibili dopo crash: no retry automatico; errori prima di prenotare mantengono lease/impegno per gestione esplicita. Prossimo task: trasporto provider offline e confine API/sessione/CSRF/DTO, poi cablaggio UI pratica/form scala e coefficienti, senza modificare demo Alessio. Report agency-plan-worker-v1.md. Nessuna nuova spesa o documento personale, nessun servizio/DB esistente modificato.
 
-### Ripresa05:30 — trasporto provider verificato senza rete
+### Ripresa04:30 Europe/Rome — trasporto provider verificato senza rete
 
 Porta HTTP dedicata con flag/credential/authorize/fetch iniettati, endpoint fissi, no redirect/retry, timeout e cap streaming2MiB; errori senza body/testi grezzi. Riautorizza sia count sia messaggio e non eredita consenso M4.14nuovi test, mirata14/14 e regressione486/486, build/lint mirato verdi. Primo test positivo falliva perché Response della fixture aveva Content-Type text/plain: corretto fixture a application/json senza allentare il trasporto. Un tentativo di sostituzione PowerShell aveva quoting invalido e non ha modificato file; corretto usando quoting letterale. Nessun nuovo DB test necessario: schema/store invariati,24/24 precedenti sono evidenza storica.
 
 Non istanziata in AppModule o worker prodotto; fetch sempre falsa nel collaudo. Nessuna chiave/env letta, nessuna richiesta o spesa reale. Report agency-plan-transport-v1.md. Prossimo task: API AgencyPractice/sessione/CSRF/DTO stretti e HTTP offline, poi UI pratica/form scala e coefficienti. Demo Alessio invariata; niente merge/deploy o servizi esistenti.
 
-### Ripresa06:00 — modulo HTTP opt-in
+### Ripresa05:00 Europe/Rome — modulo HTTP opt-in
 
 Implementati modulo HTTP separato (NON AppModule), sessionguard/CSRF con preflight edit prima del multipart, lista assegnata, creazione/lettura, upload bytes/replay, classificazione/ritiro/download corrente, review manuale e GET piani. Nessuna route di spesa/job o proposta extracted dal browser. Root vault esplicita, output filtrati, nessun HomeMembership. Report agency-http-v1.md.
 
@@ -103,7 +103,7 @@ HTTP+DB16/16 finali in dimora-offline-kEN1SR, cluster fermato e listener effimer
 
 Prossimi: trasporto degli edit planimetria con DTO stretti, sostituzione fonte e cablaggio UI pratica/form scala e coefficienti; modulo rimane inattivo nel prodotto. Nessun AI/provider reale, budget/chiave reali o servizi/DB esistenti modificati. Demo Alessio invariata.
 
-### Ripresa06:30 — edit/computo e sostituzione HTTP
+### Ripresa05:30 Europe/Rome — edit/computo e sostituzione HTTP
 
 DTO profondo esatto per geometry/measure/resolve_issue con cap vertici, enum, conferme booleane e ordine canonico per replay; nessuna media degli intervalli o SHA/AI autoattestati. Rotte opt-in per edit e sostituzione bytes; GET metadata/prova corrente autorizzata risolve l'esigenza del client di usare lo SHA server. PlanError mappato422, privacy/invalidation del nucleo conservate.
 
@@ -111,7 +111,7 @@ DTO profondo esatto per geometry/measure/resolve_issue con cap vertici, enum, co
 
 Prossimo task: cablaggio UI pratica e form calibrazione/coefficienti con client API e mock esplicito separato; disegno iniziale perimetro e gestione conflitti. Modulo API ancora NON importato in AppModule, nessun servizio o DB esistente avviato/toccato, demo Alessio invariata. Dopo verticale riprendere coerenza persistente e mapping incarico senza modello inventato.
 
-### Ripresa07:00 — allineamento anteprima e client UI
+### Ripresa06:00 Europe/Rome — allineamento anteprima e client UI
 
 Prima del workspace rilevata lacuna: PDF originale non utilizzabile come image SVG e DPI diverso può disallineare i vertici. Worker/pipeline ora conservano DPI/transform/versione renderer nel fingerprint v2-rendering e nel piano. GET opt-in /plans/:id/image ricostruisce soltanto i pixel esatti autorizzati e confronta SHA/dimensioni/transform; niente immagine indovinata per record vecchi senza provenienza. Client frontend agencyPlanApi usa ApiTransport condiviso per cookie/context/CSRF/idempotenza, senza fallback mock. Report agency-plan-preview-v1.md.
 
@@ -119,7 +119,7 @@ Verifiche backend496/496 e lint mirato verdi; profilo DB worker+HTTP+plan store3
 
 Workspace/form NON ancora collegati: prossimo task immediato UI pratica, calibrazione/coefficenti e disegno iniziale perimetro. Non dichiarare UI integrata da questo client. Nessuna AI/rete reale, originale personale o demo Alessio modificati. Modulo API ancora inattivo in AppModule, nessun servizio esistente.
 
-### Ripresa07:30 — workspace/form della pratica
+### Ripresa06:30 Europe/Rome — workspace/form della pratica
 
 Implementato AgencyPracticePlanWorkspace su client API, selezione documento/piano, PNG autorizzato, correzioni/versioni, disegno iniziale perimetro e fasce muro, scelta estremi barra con quota reale e controllo, categorie/intervalli/qualificazioni e criteri muri espliciti. Nessuna conferma o coefficiente di intervallo inventati; totale incompleto distinto. Esiti delle verifiche con motivo. Configurazione di misura salvata nello snapshot e azzerata se cambia geometria/risoluzione; la UI non deve ricostruirla da un totale.
 
@@ -128,3 +128,11 @@ Privacy/errori: scope smontato e Blob revocato, 403nasconde dati,409congela,422c
 Verifiche:26/26 frontend (13nuovi workspace/form, oltre13precedenti), typecheck app con tsBuildInfo privato e lint mirato verdi. Backend496/496, DB mirato34/34 in dimora-offline-5y4uHq con persistenza/config reset verificati, cluster fermato. Browser desktop/375: disegno/perimetro separato, scelta barra, salvataggio parziale e no overflow osservati;0errori console. Picker mobile inizialmente fuori vista: corretto in dialog nativo e riprovato. Screenshot outputs/Dimora-workspace-mobile-375.png e desktop.png; solo fixture. Due tentativi di sostituzione PowerShell con apostrofi tipografici fallivano il parsing senza modifiche, corretti con quoting adeguato. Porta preview5357 negata da Windows, usata34871loopback nuova, poi fermata e assenza listener verificata. Viewport ripristinato e tab di test chiusa.
 
 Limiti precisi: nessuna navigazione prodotto/AppModule, upload/atto/mandato o AI avviati dalla schermata; nuovi vani/vuoti ancora non aggiungibili. Non test browser contro API reale o telefono fisico. Report agency-plan-workspace-v1.md. Prossimo task indipendente: coerenza persistente/risoluzioni, poi readiness mapping incarico senza fabbricare un modello; integrare navigazione completa solo con contratto/provisioning definito. Demo Alessio invariata, nessuna spesa o file personale, merge/deploy o servizio esistente.
+
+### Ripresa 06:00 UTC / 07:00 Europe/Rome — registro finding persistente
+
+Implementati confronti persistenti e osservazioni manuali successione/difformità, risoluzioni motivate sul fingerprint corrente, riapertura su fonti/fatti/risposte tecniche cambiate e storia senza alterare valori. Privacy per note e decisioni; prova privata non chiude il quesito per chi non può leggerla. Corretto fingerprint prove per indipendenza dall'ordine JSONB. Store con lock/CAS/replay, GET/POST findings nel modulo opt-in e ID nuovi dal server. Nessuna certificazione, rilevamento difformità automatico o completezza attestata.
+
+Verifiche13nuovi puri,509/509 ordinari e lint mirato verdi. DB finding+HTTP31/31 nel run dimora-offline-7LZPh8, cluster e listener fermati;8findingpersistenza+23HTTP. Test: concorrenza/replay, privati/admin, catena successione come nota e parete spostata come osservazione, risposta tecnica separata e riapertura. Tutto sintetico. Report agency-findings-v1.md. Nessuna UI registro o retarget/versionamento dei quesiti implementati: nuovi fatti richiedono nuovo confronto, vecchio non valutabile resta nello storico.
+
+Nota orari: normalizzate le intestazioni dei nuovi incrementi in Europe/Rome UTC+1 (30ottobre, dopo fine ora legale), prima etichettate un'ora avanti. I timestamp Git e i log delle prove erano corretti; il termine è sempre08:00UTC/09:00EuropeRome. Nessuno sviluppo è stato effettuato oltre il termine. Prossimo task: readiness dati per mapping incarico senza generare un modello inventato. Demo Alessio e servizi esistenti invariati, nessuna AI live o spesa.

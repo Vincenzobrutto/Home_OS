@@ -500,3 +500,8 @@ profiles['test:agency-edit-dto']={database:false,api:false,files:['test/agency-e
 profiles.test.files.push('test/agency-edit-dto.test.cjs');
 
 profiles['test:agency-preview-db']={database:true,api:false,files:['test/agency-worker.integration.test.cjs','test/agency-http.integration.test.cjs','test/agency-plans.integration.test.cjs'],apiFiles:[]};
+
+profiles['test:agency-findings']={database:false,api:false,files:['test/agency-findings.test.cjs']};
+profiles.test.files.push('test/agency-findings.test.cjs');
+profiles['test:agency-findings-db']={database:true,api:false,files:['test/agency-findings.integration.test.cjs','test/agency-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-findings.integration.test.cjs');

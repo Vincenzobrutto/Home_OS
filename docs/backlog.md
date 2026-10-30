@@ -912,3 +912,5 @@ Agenzie: coordinatore interno collega bytes/raster/pipeline/ledger e risultato a
 Agenzie trasporto: porta HTTP implementata e verificata con fetch finta, non attivata. Restano config/secret/consensi nel prodotto e verifica del contratto live su incarico distinto. Prossimi API/sessione/CSRF/DTO e UI pratica; nessun uso automatico del budget prova reale. [Report](v5/agency-plan-transport-v1.md).
 
 Workspace agenzie: port API e form verificati, ancora da collegare a navigazione e provisioning prodotto. Nuovi vani/vuoti, upload/analisi dall'interfaccia, pagine fascicolo/atto/mandato e browser contro API reale rimangono da completare. Profilo percentuali frontend duplicato dalla specifica, server sempre autorevole: futura capability versionata per evitare drift. [Limiti](v5/agency-plan-workspace-v1.md).
+
+Coerenza persistente verificata; restano retarget/versionamento delle domande, archivio/assegnatario/scadenze, UI registro e controllo materiale delle citazioni nei bytes. Nessun fascicolo completo dedotto dall'assenza di finding. [Report](v5/agency-findings-v1.md).

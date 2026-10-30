@@ -59,6 +59,8 @@
     "test:offline-db": "node test/offline.cjs --suite test:offline-db",
     "test:agency-practices": "node test/offline.cjs --suite test:agency-practices",
     "test:agency-practices-db": "node test/offline.cjs --suite test:agency-practices-db",
+    "test:agency-findings-db": "node test/offline.cjs --suite test:agency-findings-db",
+    "test:agency-findings": "node test/offline.cjs --suite test:agency-findings",
     "test:agency-edit-dto": "node test/offline.cjs --suite test:agency-edit-dto",
     "test:agency-preview-db": "node test/offline.cjs --suite test:agency-preview-db",
     "test:agency-http-db": "node test/offline.cjs --suite test:agency-http-db",

@@ -64,3 +64,6 @@ GET /sources/:id, POST /sources/:id/replacements e POST /plans/:id/edits con DTO
 
 ## Anteprima piano
 GET /plans/:id/image nel modulo opt-in: PNG ricostruito solo con provenienza/DPI del worker e hash pixel coincidente; privata, no-store, nessun parametro di scala dal browser. Fonte stale o anteprima non verificabile impediscono l'overlay. [Report](agency-plan-preview-v1.md).
+
+## Registro coerenza
+GET/POST /findings con ID nuovi generati dal server, confronto esplicito o nota manuale, esito sul fingerprint corrente e motivo. Nessuna conferma di fatti, certificazione o UI implicita. [Report](agency-findings-v1.md).
