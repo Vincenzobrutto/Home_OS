@@ -978,3 +978,7 @@ Aggiunta manuale e separazione con anteprima implementate; rimane da misurare la
 ## Planimetrie — blocco qualità osservato sul secondo campione
 
 Guardia overlap obbligatoria sui poligoni finali dopo semplificazione: rilevata una coppia sovrapposta malgrado maschere distinte. Da implementare con test sintetico, senza usare geometrie personali in Git. Anche diagnosi differenziata dei seed irrisolti, prudente trattamento dei gap e censimento pertinenze separate/balcone. Replay offline delle risposte già registrate prima di altre chiamate AI. Nessun m2 da scala nominale1:100 priva di riferimento fisico. [Evidenza](v5/agency-second-plan-benchmark-20261030.md).
+
+## Planimetrie — aggiornamento guardia conclusa
+
+Guardia poligoni dopo semplificazione e alla registrazione implementata:5contorni mantenuti e overlap1→0 sul replay. La precedente voce di implementazione della guardia è superata. Restano ripristino locale dei tratti, gestione soglia/risoluzione senza accettare frammenti, censimento/associazione pertinenze e benchmark indipendente. I sei confronti morfologici sono soltanto esperimenti privati, non un recupero completo validato. [Report corrente](v5/agency-boundary-cleanup-20261030.md).

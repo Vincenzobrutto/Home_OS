@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Planimetrie — controllo finale e diagnosi implementati
+
+Controllo overlap dei poligoni dopo semplificazione, rifinitura dei soli bordi coinvolti dai pixel originali e doppia guardia prima della registrazione; conflitti persistenti esclusi. Diagnosi seed dettagliata e metadati storici scoped per fonte. Replay della seconda immagine:5contorni conservati, overlap1→0, tre contorni estranei identici. Restano quattro issue/omissioni; esperimenti di chiusura tratti/soglia restano separati e non promossi.55/55 mirati,584/584 ordinari,21/21 DB nuovo, build/lint verdi. Prompt pertinenze migliorato ma non ancora verificato con nuova AI; nessuna nuova spesa o demo Alessio modificata. Trial web precedente scaduto16:15, nessun nuovo collaudo browser/deploy. [Report](v5/agency-boundary-cleanup-20261030.md).
+
 ## Seconda planimetria — benchmark automatico non superato
 
 Nuova immagine autorizzata:5contorni proposti su9spazi non esclusi dal censimento AI, quattro issue, cantina erroneamente esclusa e balcone non censito. Corridoio riconosciuto ma non delimitato; controllo finale rileva una coppia di poligoni sovrapposta. Nessuna correzione manuale o metratura inventata; scala1:100 senza barra/risoluzione fisica verificabile. Due generazioni,0,035710USD, bound aggregato3,911EUR entro4 con riserve conservate. Prova isolata della stessa pipeline, non upload/API web; nessun codice prodotto o demo Alessio modificati. Priorità: guardia overlap sui poligoni semplificati e diagnosi delle regioni non risolte, poi censimento pertinenze. [Report](v5/agency-second-plan-benchmark-20261030.md).

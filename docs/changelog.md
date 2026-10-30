@@ -1,3 +1,7 @@
+## 30 ottobre 2026 — Poligoni finali: rifinitura e controllo sovrapposizioni
+
+Controllo dopo semplificazione e prima della registrazione; rifinitura dai pixel originali dei soli bordi coinvolti, senza accettare conflitti residui. Diagnostica seed, provenienza boundary e fingerprint v3. Replay gratuito della seconda immagine:5contorni mantenuti, overlap1→0; copertura ancora incompleta.55/55 mirati,584/584 ordinari,21/21 DB nuovo e lint/build verdi. [Report](v5/agency-boundary-cleanup-20261030.md).
+
 ## 30 ottobre 2026 — Planimetrie: aggiunta e separazione manuale dei vani
 
 Disegno di un vano mancante o ritaglio da un vano esistente, anteprima non mutante e salvataggio atomico con storico/CAS; niente sovrapposizioni o doppio conteggio. Prompt di censimento corridoi e segnalazione spazi accorpati migliorati, ancora da misurare con AI reale. Backend578/578, HTTP25/25, guardie13/13, UI41/41; nessuna nuova spesa o modifica demo Alessio. [Report](v5/agency-manual-rooms-20261030.md).

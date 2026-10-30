@@ -1329,3 +1329,7 @@ Store atti riusa lock e contesto AgencyPractice esistenti, persiste risultato/li
 ## 2026-10-30 — Recupero manuale dei vani senza duplicazione della superficie
 
 Uno spazio semantico non coincide sempre con un componente bianco connesso: i passaggi omessi/accorpati devono emergere come verifica, non essere occultati. Nuovo vano distinto oppure intersezione/sottrazione dal parent con area conservata e anteprima non persistente; altre geometrie e perimetro preservati. Provenienza manuale esplicita, nessun seed AI fabbricato, computo invalidato. Risultati disconnessi rifiutati anziché perdere isole. Efficacia dei nuovi prompt non ancora misurata con AI reale. Report [vani manuali](v5/agency-manual-rooms-20261030.md).
+
+## 2026-10-30 — La separazione deve valere sui poligoni, non solo sui pixel
+
+Controllo finale dopo semplificazione e seconda guardia alla registrazione. Se due bordi confliggono, ridurre soltanto la loro semplificazione ripartendo dai pixel originali; non inventare un separatore o spostare i vani estranei. Conflitto residuo rifiutato. Metadati indicano tolleranza effettiva; edit manuale cancella provenienza automatica, diagnosi dell'analisi rimane storica e scoped per fonte. Chiusura globale dei tratti e riduzione indiscriminata della soglia minima non promosse dai soli conteggi di regioni. [Report](v5/agency-boundary-cleanup-20261030.md).

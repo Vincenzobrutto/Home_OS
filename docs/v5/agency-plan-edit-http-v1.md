@@ -17,3 +17,7 @@ Il dominio rimane responsabile di sovrapposizioni, appartenenza al perimetro, ve
 Verifiche: parser contro campi contraffatti, ordine oggetti, geometria, conferme, coefficienti mancanti, muri e calibrazione. HTTP/DB: metadata privati, seed analisi **sintetica interna** (non provider), correzione/replay, versione obsoleta, DTO contraffatto, computo incompleto, perimetro separato, lordo confermato, sostituzione e invalidazione. Il seed non prova estrazione live: serve a verificare edit e persistito.
 
 Restano UI pratica e form, disegno iniziale del perimetro, consenso/approval nel prodotto e attivazione esplicita del modulo. Nessun documento personale, AI a pagamento o demo Alessio toccati. Il cap DTO è una guardia applicativa, non prova di resistenza a ogni carico ostile; quote e collaudi prestazionali restano da completare.
+
+### Aggiornamento30ottobre — metadati di analisi dei contorni
+
+Le letture planimetrie possono restituire analysisDiagnostics opzionale del risultato iniziale e room.boundary opzionale {simplifyPixels,refinedForOverlap}. Nessuna nuova route o campo scrivibile dal client: parser edit invariato. Fonte privata/superata mantiene i filtri esistenti; metadati diagnostici non certificano correttezza o copertura. [Dettagli](agency-boundary-cleanup-20261030.md).

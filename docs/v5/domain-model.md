@@ -128,3 +128,7 @@ Modulo interno deed-records definisce deedRecords/deedReceipts opzionali dell'ag
 ### Planimetrie — origine manuale dei vani
 
 StoredRegion conserva seed/component/pixelArea nullabili e origine manuale esplicita; derivedFrom identifica il vano suddiviso. Aggiunta/ritaglio mantengono snapshot precedente nella storia, incrementano versione/revisione geometrica e invalidano il computo. Nessuna migration nuova. [Regole](agency-manual-rooms-20261030.md).
+
+### Planimetrie — diagnostica e bordi finali
+
+StoredPlan.analysisDiagnostics opzionale conserva la diagnostica dell'analisi iniziale per seed/esclusioni/rifiniture. Room.boundary opzionale conserva simplifyPixels effettivo e refinedForOverlap; un edit manuale lo rimuove e azzera seed/component/pixelArea con origin manuale. Snapshot JSON, nessuna migration nuova. Sono metadati scoped per fonte, omessi insieme alla geometria quando la fonte è superata/non leggibile. [Regole e limiti](agency-boundary-cleanup-20261030.md).

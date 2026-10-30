@@ -32,7 +32,7 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  const raster=await ports.loadRaster(input.proof);assertRaster(raster);await authorized(ports,input.proof,scope);
  const rasterSHA256=createHash('sha256').update(raster.gray).digest('hex'),rasterSize={width:raster.width,height:raster.height};
  const rendering=raster.rendering?structuredClone(raster.rendering):null;
- const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v2-rendering'})).digest('hex');
+ const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v3-boundary-guards'})).digest('hex');
  const calls:Array<{phase:string;requestId:string;input:number;output:number;costUSD:number}>=[];
  async function call(phase:'inventory'|'review',previous:SeedProposal|null,segmentation:Segmentation|null){
   await authorized(ports,input.proof,scope);await ports.reserve(input.runId,phase,fingerprint,input.maxUSDPerCall);await authorized(ports,input.proof,scope);

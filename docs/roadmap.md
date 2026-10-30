@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+**Guardia contorni conclusa:** replay seconda planimetria5contorni, zero overlap, tre contorni non coinvolti immutati. Diagnosi cause e controllo alla registrazione implementati/verificati; non ancora risolta la copertura completa. Prossima fase: ripristino locale verificabile dei tratti aperti, soglie adeguate alla risoluzione e associazione delle pertinenze. Varianti morfologiche sperimentali non applicate automaticamente. [Report](v5/agency-boundary-cleanup-20261030.md).
+
 **Gate qualità seconda planimetria non superato:**5contorni, quattro issue, omissioni pertinenze e una coppia di poligoni sovrapposta nonostante maschere distinte. Prima di nuovi invii: guardia overlap dopo semplificazione e replay offline, diagnostica gap/seed e censimento pertinenze separate. Nessuna scala metrica ricavata dalla sola scritta1:100. [Benchmark senza ritocchi](v5/agency-second-plan-benchmark-20261030.md).
 
 **Vani mancanti, 30 ottobre:** disponibile aggiunta manuale e separazione con anteprima, conservazione area, controllo overlap e invalidazione computo. Censimento AI dei passaggi rafforzato ma non ancora verificato con nuovi invii reali. Prossimo gate: identificazione visiva del corridoio con il committente e benchmark della copertura/partizione su documenti indipendenti autorizzati. [Verifiche e limiti](v5/agency-manual-rooms-20261030.md).
