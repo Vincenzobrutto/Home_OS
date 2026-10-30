@@ -922,3 +922,7 @@ Coerenza persistente verificata; restano retarget/versionamento delle domande, a
 ## 30 ottobre 2026 — Atti dopo il contratto offline
 
 Adapter lessicale implementato separatamente dal cablaggio: decoder atti fidato e testo da PDF sintetici ancora da collegare; poi persistenza proposte e binding umano esplicito. Date italiane/quote/diritti e dati contrattuali non convertiti dal contratto iniziale. Nessuna promozione automatica, citazione presente non prova valore semanticamente corretto. UI dati/fonti e finding restano priorita del ciclo diurno. Report v5/agency-deed-extraction-contract-v1.md.
+
+## 30 ottobre 2026 — Dopo decoder atti locale
+
+[Decoder e doppia autorizzazione](v5/agency-deed-decoder-v1.md) implementati con PDF sintetici realmente decodificati, senza AI. Prossimi: binding/persistenza di proposte non associate e UI controllata dati/fonti/finding in nuovi file indipendenti. Scansioni/pagine vuote senza OCR, conversione date italiane e quote/diritti restano aperti. Il registro diurno separato v5/agency-day-worklog-20261030.md preserva worklog/roadmap/changelog concorrenti non committati; nessun merge/deploy implicito.

@@ -1305,3 +1305,7 @@ Il pacchetto dati per il futuro incarico e una selezione esplicita e autorizzata
 ## 2026-10-30 — Le citazioni degli atti verificano presenza, non significato
 
 Il nuovo adapter offline confronta citazione e valore letterali con testo pagina ottenuto da una porta server fidata. Il risultato resta proposta non associata a persone/unita della pratica: lexicalEvidenceVerified non implica semanticEvidenceVerified, titolarita attuale o dato confermato. Nessun ruolo current_owner del modello e nessuna conversione data/identita impliciti. Parser reale e binding umano sono task separati; nessuna AI reale autorizzata da questo contratto. Report v5/agency-deed-extraction-contract-v1.md.
+
+## 2026-10-30 — Decoder atti locale, separato da estrazione AI
+
+Il testo fidato per gli atti proviene dai byte verificati nello storage Agenzie e dal parser PDF locale esistente, senza snapshot Home o provider inventati. Doppia lettura autorizzata prima/dopo processo, scope/prova catturati e copie dei byte; revoca o nuova versione scartano il testo. Nessun OCR implicito per scansioni o pagine vuote, nessuna persistenza o nuova route nell'incremento. Report v5/agency-deed-decoder-v1.md; continuita in v5/agency-day-worklog-20261030.md per evitare sovrapposizione al registro concorrente.

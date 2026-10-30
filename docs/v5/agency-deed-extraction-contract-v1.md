@@ -47,3 +47,5 @@ Verifiche finali: regressione ordinaria 535/535, build e lint mirato verdi. Il p
 Base di sviluppo aggiornata in detached sul commit già pubblicato `f2495854221a6fb3bb71ed34d92867be3a091a6b`, discendente del checkpoint notturno. È il cablaggio concorrente, con propri limiti e regressione frontend non conclusa nel [suo handoff](agency-navigation-handoff-20261030.md). Questo incremento non ne cambia i file e non ne dichiara conclusa la validazione. Nessun merge/rebase del lavoro concorrente.
 
 Prossimo passo: decoder atti fidato e test di citazioni con testo realmente derivato da fixture PDF; poi binding umano esplicito verso il dominio review. API/UI e trasporto provider degli atti restano da progettare/collegare, con consenso e budget dedicati prima di qualsiasi invio reale.
+
+Aggiornamento successivo: [decoder atti locale](agency-deed-decoder-v1.md) ora collegato ai byte PDF e verificato su fixture sintetiche realmente parse. Restano invariati i limiti lessicale/semantico e l'assenza di binding/persistenza/API delle proposte. Continuita nel registro diurno agency-day-worklog-20261030.md.
