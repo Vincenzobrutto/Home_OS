@@ -926,3 +926,7 @@ Adapter lessicale implementato separatamente dal cablaggio: decoder atti fidato 
 ## 30 ottobre 2026 — Dopo decoder atti locale
 
 [Decoder e doppia autorizzazione](v5/agency-deed-decoder-v1.md) implementati con PDF sintetici realmente decodificati, senza AI. Prossimi: binding/persistenza di proposte non associate e UI controllata dati/fonti/finding in nuovi file indipendenti. Scansioni/pagine vuote senza OCR, conversione date italiane e quote/diritti restano aperti. Il registro diurno separato v5/agency-day-worklog-20261030.md preserva worklog/roadmap/changelog concorrenti non committati; nessun merge/deploy implicito.
+
+## 30 ottobre2026 — Dopo UI dati/fonti indipendente
+
+ReviewWorkspace e client route review verificati in isolamento, ancora non montati nella navigazione; contenitore originale e labels soggetti autorizzati da fornire. Storico autori/motivi da esporre senza duplicare il registro server. Prossimo UI finding/risoluzioni, quindi persistenza/binding umano delle proposte dell'adapter atti. Nessun modello contratto o OCR aggiunti. Report v5/agency-review-ui-v1.md; registro v5/agency-day-worklog-20261030.md.

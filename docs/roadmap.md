@@ -161,3 +161,7 @@ Agenzie: finding persistenti e API opt-in verificati509/509+31/31DB/HTTP; prossi
 ## 30 ottobre 2026 — Ciclo diurno Agenzie fino alle18:00
 
 Priorita documento > dati verificabili > pacchetto incarico: [contratto atti offline](v5/agency-deed-extraction-contract-v1.md), poi decoder su fixture PDF reali sintetiche e binding umano, UI revisioni/fonti/finding, readiness sul modello reale dell'agenzia. Il contratto non e OCR o servizio AI e non crea fatti. Cablaggio gia pubblicato f249585 ereditato come base, validazione e limiti restano distinti dal nuovo adapter; nessun merge o deploy.
+
+## 30 ottobre2026 — UI revisione dati/fonti pronta come componente
+
+[Componente/client indipendenti](v5/agency-review-ui-v1.md):18/18 nuovi test, typecheck/lint e browser desktop/375su harness sintetico, non ancora nella navigazione prodotto. Prossimi registro finding e binding/persistenza proposte; mantenere distincti collaudo del componente e backend reale. Nessuna nuova AI, estrazione live o generazione incarico.

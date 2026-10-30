@@ -1939,3 +1939,7 @@ Aggiunto adapter puro per schema risposta, accesso fonte corrente, pagine/citazi
 ## 30 ottobre 2026 — Collaudo navigazione Agenzie e riapertura perimetro
 
 Ripresa autorizzata dopo il checkpoint notturno: aggiornati test della nuova navigazione, callback di revisione dopo salvataggio confermato e adattamento geometria API/identita editor per il perimetro persistito. Percorso browser reale verificato desktop e 375 px con solo provider AI sintetico, computo 95,36 m2 salvato e ritrovato. Nessun merge/deploy o modifica demo Alessio. Verifiche finali e limiti nel [report](v5/agency-navigation-validation-20261030.md).
+
+## 30 ottobre2026 — Decisioni esplicite su dati e fonti Agenzie
+
+Nuovo ReviewWorkspace con valori/prove, conferma/correzione/rifiuto, readonly/stale,403/409/422 e retry manuale identico dopo esito incerto. Client V5 condiviso sessione/CSRF/account,18/18 e statici verdi; harness browser sintetico375/Desktop. Router e API esistenti invariati, nessun fallback nel prodotto. Report v5/agency-review-ui-v1.md.

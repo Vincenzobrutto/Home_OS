@@ -2,7 +2,11 @@
 
 [Chiusura della tranche di refactoring e limiti](v5/fase0-refactor-closure-20261023.md). I 98 checkpoint precedenti restano nell’[archivio dello stato](project-status-history-20261023.md); sono evidenze datate. [Architettura](architecture.md), [roadmap corrente](roadmap.md), [backlog completo](backlog.md), [decisioni V5](v5/implementation-decisions.md).
 
-## Integrazione planimetrie agenzie — in corso
+## Agenzie — ciclo diurno del30ottobre, stato corrente
+
+Nucleo documentale, registro finding e planimetrie nel branch dedicato; [decoder atti locale](v5/agency-deed-decoder-v1.md) e [contratto proposte](v5/agency-deed-extraction-contract-v1.md) verificati su PDF sintetici, senza AI reale o binding automatici. Backend547/547 sul decoder, build/lint verdi. Nuova [UI dati/fonti](v5/agency-review-ui-v1.md) con client delle route review esistenti,18/18 nuovi test, typecheck/lint e browser375/Desktop su harness sintetico: componente ancora NON collegato alla navigazione. Il [collaudo navigazione precedente91075c0](v5/agency-navigation-validation-20261030.md) ha proprie evidenze frontend1609/1609 e browser reale, distinte dai nuovi test e senza provider effettivo. Nessun totale sommato o nuovo deploy. [Registro diurno](v5/agency-day-worklog-20261030.md), termine18:00EuropeRome. Prossimi: UI finding e persistenza/binding umano proposte; modello incarico reale assente, nessun contratto generato. Demo Alessio invariata.
+
+## Integrazione planimetrie agenzie — checkpoint precedente
 
 API opt-in caricate in AppModule e navigazione autenticata Agenzie -> Pratiche -> Planimetrie implementate nel branch dedicato. Nel nuovo collaudo isolato il verticale upload/analisi sintetica/revisione vani/perimetro/calibrazione/computo/ricarica funziona su desktop e 375 px. Corrette sincronizzazione revisione e modifica del perimetro grezzo riaperto. Regressione finale frontend 1609/1609 (retry massimo 1), typecheck/lint/build verdi; dettagli nel [report corrente](v5/agency-navigation-validation-20261030.md). API/DB reali nel trial, provider AI simulato, nessun addebito o deploy. Demo Alessio invariata. Finding e contratto atti hanno verifiche separate nel [registro](v5/agency-worklog-20261030.md); non sommare conteggi di snapshot diversi.
 

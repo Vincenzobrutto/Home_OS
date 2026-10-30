@@ -1309,3 +1309,7 @@ Il nuovo adapter offline confronta citazione e valore letterali con testo pagina
 ## 2026-10-30 — Decoder atti locale, separato da estrazione AI
 
 Il testo fidato per gli atti proviene dai byte verificati nello storage Agenzie e dal parser PDF locale esistente, senza snapshot Home o provider inventati. Doppia lettura autorizzata prima/dopo processo, scope/prova catturati e copie dei byte; revoca o nuova versione scartano il testo. Nessun OCR implicito per scansioni o pagine vuote, nessuna persistenza o nuova route nell'incremento. Report v5/agency-deed-decoder-v1.md; continuita in v5/agency-day-worklog-20261030.md per evitare sovrapposizione al registro concorrente.
+
+## 2026-10-30 — Decisioni dati soltanto dopo risposta server
+
+La nuova UI Agenzie non conferma all'apertura o prima della risposta. Retry incerto mantiene payload/key identici e richiede azione esplicita; conflitto impone reload e403nasconde valori/prove. Scope e porta API sono parte della proprieta della vista, con generazione delle risposte asincrone. Citazioni come testo, apertura originali via callback autorizzato del contenitore. Componente/client indipendenti dal router, nessun fallback sintetico nel prodotto. Report v5/agency-review-ui-v1.md.
