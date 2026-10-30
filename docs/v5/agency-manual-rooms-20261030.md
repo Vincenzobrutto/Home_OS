@@ -38,3 +38,13 @@ Per HTTP test: nuovo cluster sintetico sulla seconda porta fissa55440 tramite `t
 ## Prossimo passo
 
 Verificare visivamente con Vincenzo quale passaggio aggiungere e salvarne il contorno; poi benchmark indipendente su planimetrie autorizzate per misurare copertura e separazione dei percorsi. Nuovo invio AI solo con verifica preventiva del ledger attuale, mai retry del run incerto.
+
+## Prova reale successiva — 16:06 Europe/Rome
+
+Su conferma esplicita del committente eseguito il recupero nella pratica reale. Rettifica della diagnosi preliminare: il corridoio ovest costituisce una componente separata omessa, non una parte del soggiorno. Punto interno scelto manualmente; stesso algoritmo locale di segmentazione sui pixel dell'originale produce un contorno di28vertici, senza AI. Inserito tramite campi XY del disegno manuale, anteprima server, conferma e reload reale:11vani presenti. Non presentare questa prova come riconoscimento AI autonomo o nuova funzione di selezione seed nell'interfaccia.
+
+Controllo successivo strettamente limitato alla singola pratica autorizzata: dieci room record precedenti identici, perimetro identico, nuovo vano origine manuale con seed nullo e nessuna sovrapposizione. Nessuna esportazione di account/sessioni/permessi/documenti; diagnostica privata locale, nessuna geometria reale suGit.
+
+Scala invariata10m sulla stessa barra. Corridoio6,344496958m2. Ricalcolo da UI con identiche categorie della prova precedente e nuovo corridoio principale: interni127,918615m2, balcone scoperto51,816910m2 al25%=12,954227m2; parziale140,872842m2, rispetto al precedente134,528346m2. Le fasce dei muri non sono state inventate o confermate: stato incomplete, totalM2=null e sette verifiche aperte. Persistenza del nuovo parziale verificata dopo ulteriore reload.
+
+Screenshot del corridoio selezionato sull'originale negli output privati della chat. Nessuna nuova chiamata AI/spesa o modifica demo Alessio. Fine trial invariata16:15. Prossimo: benchmark dei prompt su altro documento autorizzato e completamento esplicito di perimetro/muri/simboli/criterio, non chiusura automatica delle verifiche.
