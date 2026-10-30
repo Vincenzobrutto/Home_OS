@@ -151,3 +151,7 @@ Agenzie: anteprima raster allineata/client API verificati; prossimo workspace/fo
 Agenzie: workspace opt-in verificato su API simulate, non attivo nel prodotto. Prima del pilota navigazione/provisioning e prove browser→API. Riprendere coerenza persistente e mapping incarico. [Report](v5/agency-plan-workspace-v1.md).
 
 Agenzie: finding persistenti e API opt-in verificati509/509+31/31DB/HTTP; prossimo readiness mapping incarico, con modello reale ancora mancante. [Report](v5/agency-findings-v1.md).
+
+## 30 ottobre 2026 — Agenzie: prossimo ciclo dopo il nucleo documentale
+
+[Checkpoint proprio e limiti](v5/agency-checkpoint-20261030.md): fascicolo/fonti/fatti, finding persistenti e planimetrie verificati sul branch dedicato; pacchetto dati incarico interno implementato, nessun modello approvato o DOCX generato. Prossimo ordine: verifica cablaggio concorrente separato; estrazione atti con prove/consenso; UI finding; modello reale e mapping; operativita storage/worker e disegno nuovi vani/vuoti. Nessun merge, deploy o nuova AI impliciti. Demo Alessio invariata.

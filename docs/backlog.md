@@ -914,3 +914,7 @@ Agenzie trasporto: porta HTTP implementata e verificata con fetch finta, non att
 Workspace agenzie: port API e form verificati, ancora da collegare a navigazione e provisioning prodotto. Nuovi vani/vuoti, upload/analisi dall'interfaccia, pagine fascicolo/atto/mandato e browser contro API reale rimangono da completare. Profilo percentuali frontend duplicato dalla specifica, server sempre autorevole: futura capability versionata per evitare drift. [Limiti](v5/agency-plan-workspace-v1.md).
 
 Coerenza persistente verificata; restano retarget/versionamento delle domande, archivio/assegnatario/scadenze, UI registro e controllo materiale delle citazioni nei bytes. Nessun fascicolo completo dedotto dall'assenza di finding. [Report](v5/agency-findings-v1.md).
+
+## 30 ottobre 2026 — Agenzie: lacune dopo il checkpoint notturno
+
+[Ordine e criteri di pilot](v5/agency-checkpoint-20261030.md). Ancora aperti: navigazione concorrente da verificare separatamente; estrazione AI atti e controllo citazioni; UI registro finding e retarget/versionamento quesiti; modello incarico approvato e tipi identita/date/durata/provvigioni; readiness completo e persistenza pacchetto; nuovi vani/vuoti; provisioning agenzie, quote/scansione/orfani storage e recupero job incerti. Non presentare pacchetto interno come contratto o esito conforme. Nessuna nuova spesa o deploy autorizzati da questa lista.

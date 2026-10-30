@@ -1928,3 +1928,7 @@ Contenitore API con editor, perimetro/muri manuali, calibrazione e criteri espli
 
 ## 30 ottobre2026 — Agenzie: registro coerenza persistente
 Confronti e note successione/distribuzione con esiti motivati, privacy e riapertura.13nuovi test,509/509 ordinari,31/31 finding+HTTP e lint verdi; cluster fermato. API sempre opt-in, nessuna AI o compliance automatica. [Report](v5/agency-findings-v1.md).
+
+## 30 ottobre 2026 — Nucleo documentale Agenzie, checkpoint verificato
+
+[Stato e prove](v5/agency-checkpoint-20261030.md): registro persistente di confronti/osservazioni successione-difformita e risoluzioni con riapertura; pacchetto interno per dati incarico, binding espliciti e soli confermati con prove, senza generazione contratto. Backend519/519 e mirato finale26/26, DBfinding/HTTP31/31 su cluster fermato, frontend precedente26/26; profili distinti. Solo branch dedicato, cablaggio concorrente escluso; nessun merge/deploy, AI reale o modifica demo Alessio.
