@@ -1,0 +1,33 @@
+import {useEffect,useMemo,useRef,useState} from 'react';
+import type {ApiTransport} from '../api/transport';
+import {ApiError} from '../api/errors';
+import {agencyReviewApi,type ReviewEvidence,type ReviewSnapshot} from './api';
+import {agencyFindingsApi} from './findings-api';
+import {agencyDeedApi} from './deed-api';
+import {ReviewWorkspace} from './ReviewWorkspace';
+import {FindingsWorkspace} from './FindingsWorkspace';
+import {DeedWorkspace} from './DeedWorkspace';
+import styles from './review.module.css';
+type Scope={accountId:string;agencyId:string;practiceId:string};
+type Props={transport:Pick<ApiTransport,'callJson'|'callBinary'>;scope:Scope;readOnly:boolean};
+/** Lazy explicit entry; collapsed panels stay mounted to preserve uncertain requests. */
+export function PracticeReviewSection(p:Props){const key=p.scope.accountId+':'+p.scope.agencyId+':'+p.scope.practiceId;return <Section key={key} {...p} scopeKey={key}/>;}
+function Section(p:Props&{scopeKey:string}){
+ const [opened,setOpened]=useState(false),[denied,setDenied]=useState(false),[context,setContext]=useState<{owner:object;review:ReviewSnapshot}|null>(null),[notice,setNotice]=useState(''),[source,setSource]=useState<{owner:object;url:string;filename:string;page:number}|null>(null),[sourceBusy,setSourceBusy]=useState(false);
+ const active=useRef<object|null>(null),live=useRef(true),sourceFlight=useRef(false),request=useRef<AbortController|null>(null);
+ const identity=useMemo(()=>({transport:p.transport,accountId:p.scope.accountId,agencyId:p.scope.agencyId,practiceId:p.scope.practiceId}),[p.transport,p.scope.accountId,p.scope.agencyId,p.scope.practiceId]);
+ const ports=useMemo(()=>{const scope={accountId:p.scope.accountId,agencyId:p.scope.agencyId,practiceId:p.scope.practiceId},review=agencyReviewApi(p.transport,scope),findings=agencyFindingsApi(p.transport,scope),deed=agencyDeedApi(p.transport,scope);
+  async function guarded<T>(work:()=>Promise<T>):Promise<T>{try{return await work();}catch(e){if(live.current&&active.current===identity&&e instanceof ApiError&&[401,403,404].includes(e.status)){setDenied(true);setSource(null);request.current?.abort();}throw e;}}
+  const changed=()=>{if(live.current&&active.current===identity)setNotice('Pratica aggiornata. Ricarica le altre schede prima di usarne i dati; un conflitto richiede una nuova lettura.');};
+  return {scope,review:{read:(signal?:AbortSignal)=>guarded(()=>review.read(signal)),decide:async(...args:Parameters<typeof review.decide>)=>{const r=await guarded(()=>review.decide(...args));changed();return r;}},findings:{read:(signal?:AbortSignal)=>guarded(()=>findings.read(signal)),write:async(...args:Parameters<typeof findings.write>)=>{const r=await guarded(()=>findings.write(...args));changed();return r;}},deed:{read:(signal?:AbortSignal)=>guarded(()=>deed.read(signal)),bind:async(...args:Parameters<typeof deed.bind>)=>{const r=await guarded(()=>deed.bind(...args));changed();return r;}}};
+ },[p.transport,p.scope.accountId,p.scope.agencyId,p.scope.practiceId,identity]);
+ useEffect(()=>{live.current=true;return()=>{live.current=false;request.current?.abort();};},[]);
+ useEffect(()=>{active.current=identity;return()=>{request.current?.abort();};},[ports,identity]);
+ useEffect(()=>{if(!opened)return;const c=new AbortController();ports.review.read(c.signal).then(review=>{if(!c.signal.aborted){setContext({owner:identity,review});setNotice('');}}).catch(()=>{if(!c.signal.aborted)setNotice('Contesto di revisione non disponibile. Riapri la pratica per riprovare.');});return()=>c.abort();},[opened,ports,identity]);
+ useEffect(()=>()=>{if(source)URL.revokeObjectURL(source.url);},[source]);
+ async function openSource(e:ReviewEvidence){if(sourceFlight.current)return;sourceFlight.current=true;setSourceBusy(true);setSource(null);const c=new AbortController();request.current=c;try{const root='/agencies/'+encodeURIComponent(ports.scope.agencyId)+'/practices/'+encodeURIComponent(ports.scope.practiceId),file=await p.transport.callBinary(root+'/sources/'+encodeURIComponent(e.sourceId)+'/file?version='+e.version+'&sha256='+encodeURIComponent(e.sha256),c.signal,ports.scope.accountId);if(!live.current||c.signal.aborted||active.current!==identity)return;setSource({owner:identity,url:URL.createObjectURL(file.blob),filename:file.filename||'documento',page:e.page});}catch(error){if(!live.current||c.signal.aborted)return;if(error instanceof ApiError&&[401,403,404].includes(error.status))setDenied(true);setNotice('Originale non disponibile. Verifica accesso e versione della fonte.');}finally{sourceFlight.current=false;if(live.current)setSourceBusy(false);}}
+ const ready=context?.owner===identity?context.review:null;
+ if(denied)return <section className={styles.workspace} role="alert">Accesso alla revisione non disponibile. Riapri la pratica con una sessione autorizzata.</section>;
+ const evidence=ready?.facts.filter(f=>f.status!=='stale').flatMap(f=>f.evidence)||[],unique=new Map(evidence.map(e=>[JSON.stringify(e),e]));
+ return <section className={styles.workspace} aria-label="Revisione fascicolo"><h2>Dati, fonti e verifiche</h2>{!opened?<button type="button" onClick={()=>setOpened(true)}>Apri dati e verifiche</button>:<>{notice&&<p role="status">{notice}</p>}{sourceBusy&&<p role="status">Recupero originale autorizzato…</p>}{source?.owner===identity&&<p>Originale della fonte · pagina di riferimento {source.page}. <a href={source.url} download={source.filename}>Scarica originale</a></p>}{!ready?<p>Caricamento contesto pratica…</p>:<><p>Le schede conservano gli invii in corso quando vengono richiuse. Le conferme non certificano conformità o titolarità. L’analisi automatica degli atti non è ancora attivata.</p><details><summary>Proposte dal documento</summary><DeedWorkspace api={ports.deed} scopeKey={p.scopeKey} readOnly={p.readOnly} onOpenSource={openSource}/></details><details><summary>Dati e fonti</summary><ReviewWorkspace api={ports.review} scopeKey={p.scopeKey} readOnly={p.readOnly} onOpenSource={openSource}/></details><details><summary>Punti da verificare</summary><FindingsWorkspace api={ports.findings} scopeKey={p.scopeKey} readOnly={p.readOnly} units={ready.units} evidenceChoices={Array.from(unique,([id,evidence])=>({id,label:'Fonte '+evidence.sourceId+' · v'+evidence.version+' · pagina '+evidence.page,evidence}))} onOpenSource={openSource}/></details></>}</>}</section>;
+}

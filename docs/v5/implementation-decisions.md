@@ -197,3 +197,7 @@ GET proposte e POST binding usano sessione/grant e DTO esatto; il browser scegli
 ## Agenzie — associare senza inferire identità
 
 UI nuova richiede unità esplicita, riferimento soggetto e riconoscimento ruolo documentale; non tratta riferimenti AI come identità correnti. POST crea soltanto proposta, decisione successiva separata. GET parallele review/proposte devono avere stessa revisione; readonly blocca anche retry incerto. Componente indipendente prima del montaggio autorizzato. [Report](agency-deed-ui-v1.md).
+
+## Agenzie — pannelli montati senza perdere invii incerti
+
+Contenitore lazy nella pratica; details conserva le istanze, nessun remount forzato dopo mutazioni. Le altre viste ricaricano esplicitamente, CAS blocca snapshot superati. Diniego accesso in una vista nasconde tutta la revisione; originali soltanto tramite download autorizzato con prova esatta e blob revocabile. [Report](agency-review-mount-v1.md).
