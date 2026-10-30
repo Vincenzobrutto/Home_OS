@@ -113,3 +113,6 @@ AgencyPractice.snapshot può contenere planAnalyses e planReceipts: prova fonte/
 
 ### AgencyPractice planJobs (snapshot opzionale)
 Job interno limitato100/pratica: prova immutabile, creatore, riferimento autorizzazione server, tariffe/versione/modello, tetto microUSD, hash capability, lease, stato e prenotazioni fase+fingerprint+uso/costo. Budget globale e autorizzazioni pubbliche restano separati. [Contratto e limiti](agency-plan-jobs-v1.md).
+
+### AgencyAiBudget / AgencyPlanAuthorization
+Budget d'agenzia e autorizzazione per pratica/account/prova con receipt e runId globalmente unici. Tetti/impegni/spese BIGINT microUSD, prezzi immutabili, scadenze/revoche; lock transazionali anche fra pratiche. Relazioni additive senza modificare Home/Document. Provisioning solo nelle fixture, nessuna route di approvazione ancora attiva. [Report](agency-ai-budget-v1.md).

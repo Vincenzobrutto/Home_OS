@@ -165,3 +165,6 @@ Il raster deriva dai bytes correnti letti con permessi AgencyPractice, non da un
 
 ## Agenzie — contabilizzare anche dopo revoca, senza riaprire documenti
 Le fasi nuove richiedono accesso edit e fonte corrente; settlement usa una capability worker limitata e può contabilizzare l'uso già inviato dopo revoca. Ritorna solo costo/replay, nessun aggregate. MicroUSD interi e prezzi immutabili; nessun retry di prenotazione duplicata/incerta. Lease scaduta non viene ceduta senza fencing. Registro autorizzazioni/budget globale ancora necessario prima del trasporto reale. [Report](agency-plan-jobs-v1.md).
+
+## Agenzie — impegno globale prima del job
+Enqueue richiede un'autorizzazione server già provisionata e riserva il cap del run sul budget condiviso nella stessa transazione. Lock pratica→budget→autorizzazione; il replay non raddoppia l'impegno. Accounting revocato rimane possibile, usa BIGINT e conserva gli sforamenti; il completamento noto rilascia solo la quota inutilizzata. Nessun provisioning prodotto né consenso dedotto dall'automazione. [Report](agency-ai-budget-v1.md).

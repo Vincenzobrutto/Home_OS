@@ -904,3 +904,5 @@ Agenzie storage: bytes interni verificati, ancora da completare rasterizzatore f
 Agenzie raster: PDF/PNG implementati; prima del pilota OS sandbox/quote native/processi, corpus ostile e riproducibilità binari canvas. JPEG/EXIF e ritagli con trasformazioni ancora da implementare. Prossima priorità job/lease/ledger persistente, nessun retry automatico di una chiamata incerta. [Report](v5/agency-renderer-v1.md).
 
 Agenzie job: registro per-run e accounting persistiti; prima del provider reale serve autorizzazione spendibile unica fra pratiche e budget globale transazionale, recupero capability nel worker, risultato/intermedi persistenti e completamento atomico con geometria validata. Nessun consenso è dedotto dai fixture. No handover lease senza fencing. [Report](v5/agency-plan-jobs-v1.md).
+
+Agenzie: registro budget/autorizzazioni globale implementato; restano provisioning/consenso reale, capability recuperabile, coordinatore che persista risultato e job insieme, transport provider offline/HTTP e UI. Non trattare fixture finanziarie come credito o consenso. [Report](v5/agency-ai-budget-v1.md).

@@ -27,3 +27,6 @@ Lo snapshot JSONB è una prima implementazione limitata, non coda ad alto volume
 ## Verifiche
 
 Test puri: autorizzazioni/capability, claim concorrente logico, scadenza, fasi/duplicati, tetto e fingerprint, prezzi/microUSD, replay/costi oltre riserva, accounting tardivo e revocato, completamento e privacy. PostgreSQL dedicato verifica replay enqueue, claim concorrenti, prenotazione riletta, contabilizzazione concorrente e dopo revoca, capability errata senza scritture e stato incerto persistente. Tutti i token, prezzi e requestId nei test sono sintetici; nessuna rete provider.
+
+## Aggiornamento successivo — registro globale implementato
+Il limite descritto sopra sul solo cap per-run è ora affiancato da AgencyAiBudget/AgencyPlanAuthorization: enqueue dello store richiede il binding server e impegna il budget condiviso, accounting/completamento aggiornano entrambi nella stessa transazione. Restano provisioning/consenso applicativo e coordinatore worker da cablare; nessun provider attivo. Fa fede il report agency-ai-budget-v1.md per questo incremento.

@@ -49,3 +49,6 @@ Lo store upload/readFile deriva identità dai bytes e applica lock/CAS/permessi.
 
 ## Job interni, non DTO di spesa del browser
 Enqueue/claim/reserve/finish e accounting worker sono interni. Mai esporre capability, prezzi o authorizationId liberamente scrivibili dal browser. L'accounting dopo revoca ha accesso soltanto al ledger del run e risponde con costo/replay; non riapre le fonti. Prima di collegare il provider serve registro globale di autorizzazioni e budget, poi il coordinatore risultato/job. [Limiti](agency-plan-jobs-v1.md).
+
+## Binding globale ora obbligatorio nello store
+Enqueue rifiuta authorizationId inesistente, di altra pratica/agenzia o con prova/prezzi/cap diversi. Budget e autorizzazioni hanno cap/revoche/scadenze immutabili e receipt unico globale. Nessuna route di provisioning attiva: la futura conferma umana deve emettere la riga server, non accettare prezzi o receipt autoattestati. [Report](agency-ai-budget-v1.md).

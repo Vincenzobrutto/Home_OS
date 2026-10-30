@@ -6,7 +6,7 @@ import { applyReview, reviewView } from './review';
 import { editPlan, planViews, registerPlan } from '../agency-plans/records';
 import { AgencyFileVault, inspectAgencyFile } from './files';
 import { sourceReadable } from './domain';
-import { enqueuePlanJob, claimPlanJob, reservePlanPhase, settlePlanPhase, markPlanUncertain, finishPlanJob, planJobViews, type Phase } from '../agency-plans/jobs';
+import { enqueuePlanJob, claimPlanJob, reservePlanPhase, settlePlanPhase, markPlanUncertain, finishPlanJob, planJobViews, type Phase, type PlanJob } from '../agency-plans/jobs';
 
 function iso(date: Date | null): string | null { return date?.toISOString() ?? null; }
 function membership(row: AgencyMember) { return { agencyId: row.agencyId, accountId: row.accountId, role: row.role as AgencyRole, validFrom: row.validFrom.toISOString(), validUntil: iso(row.validUntil), revokedAt: iso(row.revokedAt) }; }
@@ -21,11 +21,30 @@ const json = (p: Practice): Prisma.InputJsonValue => JSON.parse(JSON.stringify(p
 /** Internal persistence adapter: account comes from the session; no HTTP endpoint accepts file fingerprints. */
 export class AgencyPracticesStore {
   constructor(private readonly db: Pick<PrismaService, '$transaction'>) {}
+  private async jobBudget(tx:Prisma.TransactionClient,practice:Practice,id:string,active:boolean){
+    const j=(practice as Practice&{planJobs?:PlanJob[]}).planJobs?.find(j=>j.id===id);if(!j)throw new PracticeError('access_denied');
+    const found=await tx.agencyPlanAuthorization.findUnique({where:{id:j.authorizationId}});if(!found)throw new PracticeError('access_denied');
+    // All operations lock practice -> budget -> authorization, including accounting.
+    await tx.$queryRaw`SELECT id FROM "AgencyAiBudget" WHERE id=${found.budgetId} FOR UPDATE`;
+    await tx.$queryRaw`SELECT id FROM "AgencyPlanAuthorization" WHERE id=${found.id} FOR UPDATE`;
+    const authorization=await tx.agencyPlanAuthorization.findUnique({where:{id:found.id}}),budget=await tx.agencyAiBudget.findUnique({where:{id:found.budgetId}});
+    if(!authorization||!budget||authorization.budgetId!==found.budgetId||budget.agencyId!==practice.agencyId||authorization.practiceId!==practice.id||authorization.accountId!==j.creatorId||authorization.capMicros!==BigInt(j.capMicros)||authorization.model!==j.model||authorization.priceVersion!==j.priceVersion||authorization.inputMicrosPerMillion!==j.inputMicrosPerMillion||authorization.outputMicrosPerMillion!==j.outputMicrosPerMillion||!authorization.approvalReceipt.trim())throw new PracticeError('access_denied');
+    const proof=authorization.proof as unknown as PlanJob['proof'];
+    if(!proof||proof.sourceId!==j.proof.sourceId||proof.version!==j.proof.version||proof.sha256!==j.proof.sha256||proof.page!==j.proof.page||authorization.runId!==null&&authorization.runId!==j.id)throw new PracticeError('access_denied');
+    if(active&&(authorization.revokedAt||budget.revokedAt||authorization.expiresAt.getTime()<=Date.now()||budget.expiresAt.getTime()<=Date.now()||budget.committedMicros>budget.capMicros))throw new PracticeError('access_denied');
+    return {authorization,budget,j};
+  }
   /** Server-only authorization/capability; never map this directly from a browser DTO. */
   async enqueuePlanJob(accountId: string, agencyId: string, practiceId: string, input: Parameters<typeof enqueuePlanJob>[2], token: string) {
     return this.db.$transaction(async tx => {
       const { actor, practice } = await this.context(tx,accountId,agencyId,practiceId), r = enqueuePlanJob(actor,practice,input,token,new Date().toISOString());
-      if (!r.replay) await tx.agencyPractice.update({ where:{id:practiceId},data:{revision:r.practice.revision,snapshot:json(r.practice)} });
+      const {authorization,budget}=await this.jobBudget(tx,r.practice,input.id,!r.replay);
+      if (!r.replay) {
+        if(authorization.state!=='issued'||authorization.runId!==null||budget.committedMicros+authorization.capMicros>budget.capMicros)throw new PracticeError('invalid_input');
+        await tx.agencyAiBudget.update({where:{id:budget.id},data:{committedMicros:{increment:authorization.capMicros}}});
+        await tx.agencyPlanAuthorization.update({where:{id:authorization.id},data:{state:'bound',runId:input.id,committedMicros:authorization.capMicros}});
+        await tx.agencyPractice.update({ where:{id:practiceId},data:{revision:r.practice.revision,snapshot:json(r.practice)} });
+      }else if(authorization.runId!==input.id)throw new PracticeError('idempotency_conflict');
       requirePractice(actor,r.practice,'edit',new Date().toISOString());
       return { replay:r.replay, jobs:planJobViews(actor,r.practice,new Date().toISOString()) };
     }, {maxWait:5000,timeout:15000});
@@ -33,11 +52,17 @@ export class AgencyPracticesStore {
   async planJobCommand(accountId: string, agencyId: string, practiceId: string, id: string, token: string, command: {operation:'claim'|'finish'} | {operation:'reserve';phase:Phase;fingerprint:string;maxMicros:number}) {
     return this.db.$transaction(async tx => {
       const { actor, practice } = await this.context(tx,accountId,agencyId,practiceId), now=new Date().toISOString();
+      const {authorization,budget}=await this.jobBudget(tx,practice,id,command.operation!=='finish');
+      if(authorization.runId!==id||authorization.state!=='bound')throw new PracticeError('access_denied');
       let next:Practice, acquired:boolean|undefined;
       if(command.operation==='claim'){const r=claimPlanJob(actor,practice,id,token,now);next=r.practice;acquired=r.acquired;}
       else if(command.operation==='reserve')next=reservePlanPhase(actor,practice,id,token,command.phase,command.fingerprint,command.maxMicros,now);
       else if(command.operation==='finish')next=finishPlanJob(actor,practice,id,token,now);
       else throw new PracticeError('invalid_input');
+      if(command.operation==='finish'){
+        await tx.agencyAiBudget.update({where:{id:budget.id},data:{committedMicros:{decrement:authorization.committedMicros-authorization.spentMicros}}});
+        await tx.agencyPlanAuthorization.update({where:{id:authorization.id},data:{state:'closed',committedMicros:authorization.spentMicros}});
+      }
       await tx.agencyPractice.update({where:{id:practiceId},data:{revision:next.revision,snapshot:json(next)}});
       requirePractice(actor,next,'edit',new Date().toISOString());
       return {acquired,jobs:planJobViews(actor,next,new Date().toISOString())};
@@ -50,7 +75,16 @@ export class AgencyPracticesStore {
       await tx.$queryRaw`SELECT id FROM "AgencyPractice" WHERE id=${practiceId} AND "agencyId"=${agencyId} FOR UPDATE`;
       const row=await tx.agencyPractice.findUnique({where:{id:practiceId}});if(!row||row.agencyId!==agencyId)throw new PracticeError('access_denied');
       const original=snapshot(row),now=new Date().toISOString(),r=usage?settlePlanPhase(original,id,token,phase,usage,now):{practice:markPlanUncertain(original,id,token,phase,now),replay:false,costMicros:null};
-      if(!r.replay)await tx.agencyPractice.update({where:{id:practiceId},data:{revision:r.practice.revision,snapshot:json(r.practice)}});
+      const {authorization,budget}=await this.jobBudget(tx,original,id,false);
+      if(authorization.runId!==id||authorization.state==='issued')throw new PracticeError('access_denied');
+      if(!r.replay){
+        if(r.costMicros!==null){
+          const delta=BigInt(r.costMicros),spent=authorization.spentMicros+delta,committed=spent>authorization.committedMicros?spent:authorization.committedMicros,extra=committed-authorization.committedMicros;
+          await tx.agencyPlanAuthorization.update({where:{id:authorization.id},data:{spentMicros:spent,committedMicros:committed}});
+          await tx.agencyAiBudget.update({where:{id:budget.id},data:{spentMicros:{increment:delta},committedMicros:{increment:extra}}});
+        }
+        await tx.agencyPractice.update({where:{id:practiceId},data:{revision:r.practice.revision,snapshot:json(r.practice)}});
+      }
       return {replay:r.replay,costMicros:r.costMicros};
     },{maxWait:5000,timeout:15000});
   }

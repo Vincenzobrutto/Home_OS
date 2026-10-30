@@ -1904,3 +1904,6 @@ Decoder isolato per i bytes autorizzati e ponte con ricontrollo delle fonti dopo
 
 ## 30 ottobre2026 — Agenzie: job e accounting persistenti per run
 Lease singola e prenotazioni uniche, microUSD, replay e accounting dopo revoca tramite capability limitata.22nuovi test,466/466 ordinari e8/8 DB dedicati; cluster fermato. Nessun provider/scheduler: registro globale autorizzazioni/budget ancora necessario. [Report](v5/agency-plan-jobs-v1.md).
+
+## 30 ottobre2026 — Agenzie: budget e autorizzazioni globali
+Enqueue vincolato a consenso server provisionato e budget condiviso fra pratiche, accounting BIGINT e vincoli immutabili.466/466 ordinari,20/20 DB combinati, cluster fermato. Nessun provisioning prodotto o provider attivato. [Report](v5/agency-ai-budget-v1.md).

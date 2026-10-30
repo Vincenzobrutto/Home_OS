@@ -135,3 +135,5 @@ Agenzie: fondazione bytes interna verificata (429/429 ordinari,9/9 DB), ancora s
 Agenzie: rendering interno PDF/PNG e ricontrollo fonti verificati444/444 ordinari. Prossimo ledger durevole e poi trasporto/UI, nessuna integrazione completa dichiarata. [Report](v5/agency-renderer-v1.md).
 
 Agenzie: job per-run e accounting verificati466/466 ordinari+8/8 DB. Prossima priorità autorizzazioni/budget globali, poi coordinatore e trasporto/UI. [Report](v5/agency-plan-jobs-v1.md).
+
+Agenzie: budget globale/approval uniche verificati466/466+20/20 DB; prossimi coordinatore con risultati atomici e trasporto offline, poi HTTP/UI. [Report](v5/agency-ai-budget-v1.md).
