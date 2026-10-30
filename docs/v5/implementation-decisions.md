@@ -201,3 +201,7 @@ UI nuova richiede unità esplicita, riferimento soggetto e riconoscimento ruolo 
 ## Agenzie — pannelli montati senza perdere invii incerti
 
 Contenitore lazy nella pratica; details conserva le istanze, nessun remount forzato dopo mutazioni. Le altre viste ricaricano esplicitamente, CAS blocca snapshot superati. Diniego accesso in una vista nasconde tutta la revisione; originali soltanto tramite download autorizzato con prova esatta e blob revocabile. [Report](agency-review-mount-v1.md).
+
+## Agenzie — una dichiarazione manuale resta proposta
+
+Nuovo pannello usa unit/declare esistenti, senza ID/prova/origine estratta forniti dal browser. Quote/diritti come testo dichiarato, identificativi testuali e superfici numeriche; non inserisce clausole o colma titolarità. IDunità dalla risposta server aggiorna contesto note, conferme restano separate. [Report](agency-declarations-ui-v1.md).

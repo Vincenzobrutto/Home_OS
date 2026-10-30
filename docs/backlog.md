@@ -954,3 +954,7 @@ Nuovo componente indipendente e client HTTP,20nuovi test/gruppo58/58, typecheck/
 ## Agenzie — revisione collegata alla pratica
 
 Ingresso esplicito e client reali per dati/fonti, associazione e finding, readonly server, download originale autorizzato e diniego globale.9nuovi casi, gruppo102/102, typecheck/lint verdi. Browser montato contro API/DB reali resta prossimo gate, senza riutilizzare servizi esistenti. UI unita/confronti/contesto prove e stageattiora incompleti. [Report](v5/agency-review-mount-v1.md).
+
+## Agenzie — unità e dati dichiarati
+
+Pannello manuale montato nel fascicolo con unità IDserver, proposta senza prove fittizie, privacy iniziale privata e decisione distinta.14nuovi casi, gruppo116/116, typecheck/lint verdi; browser/API/DBmontati ancora da provare, porte altrui preservate. Restano confronti e selectorprovecompleto, stageatti/modelloapprovato. [Report](v5/agency-declarations-ui-v1.md).
