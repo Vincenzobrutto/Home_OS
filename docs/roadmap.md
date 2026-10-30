@@ -177,3 +177,7 @@ Priorita documento > dati verificabili > pacchetto incarico: [contratto atti off
 ## 30 ottobre2026 — Adapter persistente atti verificato
 
 [Store record e binding](v5/agency-deed-persistence-v1.md): JSONB/lock/CAS, viste filtrate e proposta mai confermata implicitamente.14/14 DB su cluster nuovo poi fermato, ordinari568/568 e statici verdi. Nessuna nuova route; prossimo contratto read/bind HTTP autorizzato, poi UI associazione/revisioni. Provider e modello incarico reali ancora separati.
+
+## Agenzie — lettura proposte e binding via HTTP
+
+Nuove route sessione/CSRF e15/15 test HTTP su cluster dedicato fermato; import ancora proposto, privacy e prove derivate server. Prossimo gate UI associazione e montaggio revisioni, poi orchestration estrazione atti; modello incarico reale ancora necessario. Nessun deploy. [Report](v5/agency-deed-http-v1.md).

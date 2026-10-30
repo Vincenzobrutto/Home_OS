@@ -79,7 +79,8 @@
     "test:agency-plans": "node test/offline.cjs --suite test:agency-plans",
     "test:agency-plans-db": "node test/offline.cjs --suite test:agency-plans-db",
     "test:agency-navigation-db": "node test/offline.cjs --suite test:agency-navigation-db",
-    "test:agency-trial": "node test/offline.cjs --suite test:agency-trial"
+    "test:agency-trial": "node test/offline.cjs --suite test:agency-trial",
+    "test:agency-deed-http-db": "node test/offline.cjs --suite test:agency-deed-http-db"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",

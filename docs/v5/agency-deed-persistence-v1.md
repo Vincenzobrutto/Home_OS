@@ -47,3 +47,7 @@ Build e lint mirato verdi; regressione ordinaria finale568/568, incluse le guard
 Nessuna route stage/read/bind nuova, nessun contenitore UI collegato a questi metodi. API di lettura e binding richiedono ancora sessione/CSRF e DTO esatti; stage non va esposto come caricamento di risultato AI client. Provider atti/job/consenso/budget distinti restano da implementare prima di qualsiasi invio reale. Le UI dati/finding esistenti restano componenti separati dalla navigazione.
 
 Prossimo passo: GET record e POST binding su endpoint autorizzati, senza parametro di valore o testo fidato; test HTTP con sessione/CSRF, prove private, errori e replay. Poi UI di associazione e montaggio delle revisioni nel percorso pratica. Modello incarico reale ancora assente e canGenerateDraft false.
+
+## Incremento successivo: trasporto read/bind
+
+GET record e POST binding ora implementati e verificati separatamente: [contratto e15/15 HTTP](agency-deed-http-v1.md). Stage resta interno e la UI è ancora da collegare; le assenze del checkpoint sopra vanno lette a quella data.

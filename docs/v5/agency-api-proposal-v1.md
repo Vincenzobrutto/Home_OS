@@ -67,3 +67,7 @@ GET /plans/:id/image nel modulo opt-in: PNG ricostruito solo con provenienza/DPI
 
 ## Registro coerenza
 GET/POST /findings con ID nuovi generati dal server, confronto esplicito o nota manuale, esito sul fingerprint corrente e motivo. Nessuna conferma di fatti, certificazione o UI implicita. [Report](agency-findings-v1.md).
+
+## Atti — GET e binding ora implementati
+
+Il contratto corrente delle due nuove route /deed-proposals e /deed-proposals/:recordId/bindings è nel [report HTTP](agency-deed-http-v1.md). Sessione/CSRF/DTO, privacy, CAS e replay verificati su nuovo cluster posseduto. Binding crea un fatto proposto, non conferma né titolarità. Nessuna route stage/testo fidato/candidati dal browser; stage resta interno. Le sezioni precedenti descrivono checkpoint storici, non lo stato attuale del cablaggio.

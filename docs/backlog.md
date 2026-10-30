@@ -942,3 +942,7 @@ Registro note/confronti, chiusure motivate, prove e storico come componenti veri
 ## 30 ottobre2026 — Dopo adapter persistente record atti
 
 read/stage/bind interni verificati su DB nuovo con PDF sintetico reale,14/14 e568/568 ordinari. Prossimo GET record e POST binding su API sessione/CSRF, DTO senza override valore o testo fidato; stage resta server-only fino a job/provider e consenso/budget dedicati. Poi UI associazione e cablaggio revisioni, non un nuovo servizio AI gia pronto. Report v5/agency-deed-persistence-v1.md.
+
+## Agenzie — dopo HTTP atti del30ottobre
+
+Read/bind ora disponibili e15/15 HTTP verificati su cluster nuovo fermato. Prossimo: UI associazione esplicita a unità/subjectKey e montaggio dati/fonti/finding nella pratica, senza inferire persone attuali. Stage/provider atti/consenso/budget dedicati ancora da implementare. Nessun modello incarico approvato: canGenerateDraft resta false. [Limiti](v5/agency-deed-http-v1.md).

@@ -1955,3 +1955,7 @@ Stage dei risultati e binding umano con CAS/replay, privacy ereditaria e invalid
 ## 30 ottobre2026 — Record atti persistenti e associazione atomica
 
 Metodi store read/stage/bind con lock, CAS, privacy e replay corrente.14/14 DB sintetici con PDF realmente decodificato, cluster fermato; ordinari568/568 e lint/build verdi. Nessun nuovo schema/endpoint o invio AI. Report v5/agency-deed-persistence-v1.md.
+
+## 30 ottobre2026 — HTTP proposte da atto
+
+GET record autorizzati e POST associazione umana con fingerprint/CAS e key, fatto ancora proposto. Nessuna autoattestazione testo/candidati del browser o conferma automatica.15/15 HTTP su PostgreSQL nuovo fermato, build/lint verdi; nessuna AI o deploy. [Report](v5/agency-deed-http-v1.md).

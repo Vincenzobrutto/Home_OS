@@ -189,3 +189,7 @@ Workspace con salvataggio manuale motivato: 503preserva payload/key,409richiede 
 
 ## Agenzie — risolvere un quesito non modifica un fatto
 Confronti/observazioni e storia persistiti separatamente; risoluzione richiede motivo e fingerprint corrente. Cambio prove/fatti/risposta tecnica riapre, nessuna certificazione. Storia privata filtrata: una decisione con prova privata non chiude un quesito pubblico per chi non legge tale prova. Fingerprint canonico anche dopo JSONB. [Report](agency-findings-v1.md).
+
+## Agenzie — esporre solo read/bind dei record da atto
+
+GET proposte e POST binding usano sessione/grant e DTO esatto; il browser sceglie destinazione e riconosce ruolo, non riscrive valore/prova/visibilità. Nessuna route stage con TrustedDeedText: l'attestazione resta server-only. No-store/nosniff sulle nuove risposte riuscite, conferma separata via review. [Contratto e verifiche](agency-deed-http-v1.md).
