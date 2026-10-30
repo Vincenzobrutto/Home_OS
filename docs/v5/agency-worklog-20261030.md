@@ -195,3 +195,7 @@ Nuovo recognition-rules: classificazione lessicale proposta, BOX ambiguo, associ
 ### Porte e servizi — seguito interattivo autorizzato
 
 Correzione locale arco e due involucri servizi proposti, selezione tecnica Codex non AI autonoma. Replay 7→9, zero overlap, originale e tre vani estranei identici, sei verifiche e totale null.606/606 ordinari,77 planimetrie;21/21 DB nuovo Fabpup fermato prima dell'ultimo affinamento numerico; build/lint e laboratorio tsc/esbuild/browser verdi. Nessuna nuova AI, dato privato su Git, demo Alessio, merge o deploy. Lab loopback fino18:08Rome, nessun DB/API riavviato. Report agency-room-surfaces-20261030.md. Prossimo: evidenze automatiche e revisione scoped nel workspace; worker/mobile aperti.
+
+### Aperture automatiche — nuova richiesta interattiva
+
+Implementato contratto openings opzionale nelle due chiamate esistenti, raffinamento pixel stipiti, recupero draft conservativo, provenienze hint/endpoint, openingReviews persistite nel normale snapshot e issue UI leggibili. Pipeline fingerprintv5. Replay approssimazioni umane positivo: non prova dell'AI autonoma. Backend completo618/618, mirato finale90/90 con soglia grigio non standard, DB nuovo cn0Gp4 21/21 arrestato, UI mock15/15, typecheck/lint verdi. Tentativi sandbox bloccati su link/cache/listener, stessi runner protetti rieseguiti fuori sandbox; assert invariati. Nessuna AI/spesa/credenziale/demoAlessio/deploy/merge. Report agency-opening-recovery-20261030.md, prossimo campione indipendente fornito dall'utente; HTML precedente distinto, trial reale non riavviato.

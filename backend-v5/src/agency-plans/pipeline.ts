@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
 import {annexCensus,recoverAnnexInventory} from './recognition-rules';
+import {recoverOpenings,type OpeningHint} from './opening-recovery';
 import { evidenceCurrent, requirePractice, type Actor, type Evidence, type Practice } from '../agency-practices/domain';
 import { assert, type Point } from './geometry';
 import { assertRaster, segmentPlan, type Raster, type RasterConfig, type SeedSpace, type Segmentation, type SymbolRequest } from './raster';
-export type SeedProposal={spaces:SeedSpace[];symbols:SymbolRequest[];warnings:string[]};
+export type SeedProposal={spaces:SeedSpace[];symbols:SymbolRequest[];warnings:string[];openings?:OpeningHint[]};
 export type PlanProof=Pick<Evidence,'sourceId'|'version'|'sha256'|'page'>;
 export type PlanContext={actor:Actor;practice:Practice;now:string};
 export type PlanPorts={
@@ -24,7 +25,8 @@ function text(v:unknown,max=200){assert(typeof v==='string'&&v.trim()&&v.length<
 export function parseSeedProposal(input:unknown):SeedProposal{const v=object(input);assert(Array.isArray(v.spaces)&&v.spaces.length>0&&v.spaces.length<=100&&Array.isArray(v.symbols)&&v.symbols.length<=100&&Array.isArray(v.warnings)&&v.warnings.length<=100);
  const spaces=v.spaces.map(x=>{const s=object(x);assert(['room','bathroom','kitchen','corridor','balcony','excluded'].includes(String(s.kind))&&Array.isArray(s.seeds)&&s.seeds.length>=1&&s.seeds.length<=3);return {id:text(s.id,100),label:text(s.label),kind:s.kind as SeedSpace['kind'],seeds:s.seeds.map(point)};});
  const symbols=v.symbols.map(x=>{const s=object(x);assert(['include','exclude','unresolved'].includes(String(s.decision))&&Array.isArray(s.seeds)&&s.seeds.length<=8);return {id:text(s.id,100),parentId:text(s.parentId,100),decision:s.decision as SymbolRequest['decision'],reason:text(s.reason,1000),seeds:s.seeds.map(point)};});
- assert(new Set(spaces.map(s=>s.id)).size===spaces.length&&new Set(symbols.map(s=>s.id)).size===symbols.length&&symbols.every(s=>spaces.some(p=>p.id===s.parentId)));return {spaces,symbols,warnings:v.warnings.map(w=>text(w,1000))};
+ let openings:OpeningHint[]|undefined;if(v.openings!==undefined){assert(Array.isArray(v.openings)&&v.openings.length<=12);openings=v.openings.map(x=>{const h=object(x);assert(['arrow','door_arc','door_leaf'].includes(String(h.signal))&&['inside_to_common','between_rooms'].includes(String(h.context)));return {id:text(h.id,100),spaceId:text(h.spaceId,100),nearStart:point(h.nearStart),nearEnd:point(h.nearEnd),inside:point(h.inside),outside:point(h.outside),signal:h.signal as OpeningHint['signal'],context:h.context as OpeningHint['context']};});assert(new Set(openings.map(h=>h.id)).size===openings.length&&openings.every(h=>spaces.some(s=>s.id===h.spaceId)));}
+ assert(new Set(spaces.map(s=>s.id)).size===spaces.length&&new Set(symbols.map(s=>s.id)).size===symbols.length&&symbols.every(s=>spaces.some(p=>p.id===s.parentId)));return {spaces,symbols,warnings:v.warnings.map(w=>text(w,1000)),...(openings?{openings}:{})};
 }
 async function authorized(ports:PlanPorts,proof:PlanProof,scope?:{accountId:string;agencyId:string;practiceId:string}){const ctx=await ports.context();requirePractice(ctx.actor,ctx.practice,'edit',ctx.now);if(scope)assert(scope.accountId===ctx.actor.accountId&&scope.agencyId===ctx.practice.agencyId&&scope.practiceId===ctx.practice.id,'plan_scope_changed');assert(evidenceCurrent(ctx.actor,ctx.practice,{...proof,excerpt:'Plan analysis source'},ctx.now),'plan_source_unavailable');const source=ctx.practice.sources.find(s=>s.id===proof.sourceId)!;assert(source.kind==='floor_plan','source_not_floor_plan');return ctx;}
 export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:PlanProof;config:RasterConfig;maxUSDPerCall:number}){
@@ -33,7 +35,7 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  const raster=await ports.loadRaster(input.proof);assertRaster(raster);await authorized(ports,input.proof,scope);
  const rasterSHA256=createHash('sha256').update(raster.gray).digest('hex'),rasterSize={width:raster.width,height:raster.height};
  const rendering=raster.rendering?structuredClone(raster.rendering):null;
- const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v4-annex-candidates'})).digest('hex');
+ const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v5-opening-recovery'})).digest('hex');
  const calls:Array<{phase:string;requestId:string;input:number;output:number;costUSD:number}>=[];
  async function call(phase:'inventory'|'review',previous:SeedProposal|null,segmentation:Segmentation|null){
   await authorized(ports,input.proof,scope);await ports.reserve(input.runId,phase,fingerprint,input.maxUSDPerCall);await authorized(ports,input.proof,scope);
@@ -51,9 +53,11 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
   if(current&&prior?.status==='included'&&current.decision==='include'&&after?.status==='unresolved'&&merged.spaces.some(s=>s.id===symbol.parentId)){merged.symbols[merged.symbols.findIndex(s=>s.id===symbol.id)]=structuredClone(symbol);retainedSymbols.push(symbol.id);}
  }
  if(retainedSymbols.length)final=segmentPlan(raster,recoverAnnexInventory(merged.spaces),merged.symbols,input.config);
+ const openingRecovery=recoverOpenings(raster,recoverAnnexInventory(merged.spaces),merged.symbols,input.config,merged.openings||[]);final=openingRecovery.segmentation;
+ for(const opening of openingRecovery.reviews)final.issues.push({id:opening.id,code:opening.state==='proposed_recovery'?'opening_recovery_requires_review':'opening_requires_review'});
  await authorized(ports,input.proof,scope);
  const annexInventory=annexCensus(merged.spaces,final.regions.map(r=>r.id));
  const warnings=[...annexInventory.filter(a=>a.reviewExclusion).map(a=>'annex_exclusion_requires_review:'+a.id),...first.warnings,...review.warnings,...retainedSymbols.map(id=>'retained_previous_symbol:'+id)];
  // AI review never certifies coverage: agent confirms scope/scale/symbols and computation separately.
- return {runId:input.runId,fingerprint,rasterSize,rasterSHA256,rendering,proof:structuredClone(input.proof),scope,initial,final,proposal:merged,annexInventory,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:final.issues.length||annexInventory.some(a=>a.reviewExclusion)?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};
+ return {runId:input.runId,fingerprint,rasterSize,rasterSHA256,rendering,proof:structuredClone(input.proof),scope,initial,final,proposal:merged,annexInventory,openingReviews:openingRecovery.reviews,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:final.issues.length||annexInventory.some(a=>a.reviewExclusion)?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};
 }

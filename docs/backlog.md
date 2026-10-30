@@ -1002,3 +1002,7 @@ Definito [contratto implementativo AI atti](v5/agency-deed-orchestration-contrac
 ## Planimetrie — prossimo gate porte e servizi
 
 Automatizzare proposte di ancoraggi/verso porta e selezione involucri con evidenze; misurare falsi positivi su fixture indipendenti. Poi revisione/commit fonte/versione/SHA/CAS. Worker e mobile ancora aperti; due spazi e balcone della seconda foto non risolti. [Incremento](v5/agency-room-surfaces-20261030.md).
+
+## Aperture — validazione indipendente
+
+Nuove planimetrie senza interventi preventivi: misurare omissioni AI, falsi stipiti, finestre scambiate per porte, recuperi impropri, componenti accorpate e casi con più soglie necessarie insieme. Verificare frecce che attraversano il varco e scansioni deboli; nessun bypass del controllo ink. Worker/browser e375px del nuovo risultato ancora da provare; nessun nuovo invio con budget precedente quasi esaurito. [Implementato e limiti](v5/agency-opening-recovery-20261030.md).

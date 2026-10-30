@@ -1341,3 +1341,7 @@ Etichetta esplicita di accessorio consente recupero di un contorno candidato da 
 ## 2026-10-30 — Un segno interno non equivale a superficie esclusa
 
 Arco sostituito solo nella catena ancorata; annotazioni interne non erodono un involucro selezionato. Vuoti espliciti preservati, simboli incerti ancora aperti. Anteprima distinta dai risultati AI, senza seed/componenti inventati o salvataggio automatico. [Report](v5/agency-room-surfaces-20261030.md).
+
+## 2026-10-30 — Evidenza visiva guida, pixel verificano, recupero resta proposto
+
+La freccia non basta: osservazione visiva più appoggi murari e stipiti verificati. Recupero su copia solo con conservazione geometrie preesistenti/esclusioni e guardia overlap. Censimento e componente continua distinti; soglie ed esito persistiti scoped, nessuna conferma automatica o terza chiamata AI. [Report](v5/agency-opening-recovery-20261030.md).

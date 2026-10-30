@@ -150,3 +150,7 @@ collection accetta inoltre house e floor_plans come viste virtuali, contracts co
 ### Titoli visuali delle bollette completate (lotto titoli)
 
 L’elenco include invoiceMonth nelle sole spese personali attive che lo possiedono, formato YYYY-MM; se nullo il campo è omesso per compatibilità. Nessuna nuova query per riga, schema o scrittura. Il frontend può mostrare un alias per una sola bolletta completata con unica spesa, fornitore e mese fattura confermati, se il titolo salvato è ancora il filename o il suo stem. Nome e organization.title della risposta restano canonici, senza rinomina/backfill; il dettaglio non riceve nuovi campi. Titoli personalizzati, fonti composite, dati mancanti e risposte API precedenti mantengono la presentazione precedente. Ricerca, ordinamento ed export restano su titolo salvato e filename, non sull’alias visuale. [Report](documenti-titoli-completati-20261025.md).
+
+### Planimetrie — evidenze delle soglie virtuali proposte
+
+La lettura scoped esistente dei piani può includere openingReviews (id,spaceId,state,reasons,threshold,hintSource,endpointSource), mai conferma. Le regioni derivate possono avere boundary.virtualThresholdIds. Nessun nuovo endpoint o input HTTP di risultato AI. Le issue opening_recovery_requires_review/opening_requires_review restano bloccanti come le altre verifiche. Fonte non leggibile/stale continua a oscurare le derivazioni. [Contratto e limiti](agency-opening-recovery-20261030.md).

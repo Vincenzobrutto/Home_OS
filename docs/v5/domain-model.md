@@ -136,3 +136,7 @@ StoredPlan.analysisDiagnostics opzionale conserva la diagnostica dell'analisi in
 ### Censimento accessori proposti
 
 StoredPlan.annexInventory opzionale conserva id/tipo candidato/status/motivo/associazione non verificata/reviewExclusion/geometryAvailable, derivati dalle etichette disponibili e dalle geometrie ottenute. Inventario AI grezzo non viene riscritto. Snapshot scoped per fonte, nessuna migration e nessuna associazione catastale/commerciale automatica. Soglie virtuali non persistite nel prodotto in questo incremento. [Regole](agency-annex-threshold-rules-20261030.md).
+
+### Soglie proposte — snapshot planimetria
+
+openingReviews è metadato opzionale nello snapshot JSON già esistente, distinto da conferma umana; origine evidenza visiva e raffinamento pixel separati. boundary.virtualThresholdIds indica contorni derivati. Nessuna migrazione, tabella o file personale nel repository. [Report](agency-opening-recovery-20261030.md).

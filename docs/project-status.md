@@ -1,5 +1,10 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Planimetrie — recupero automatico proposto delle aperture
+
+Osservazioni AI nella stessa coppia di chiamate; ricerca stipiti sui pixel, soglia temporanea e recupero soltanto senza alterare vani precedenti, invadere seed esclusi o creare overlap. Evidenze scoped persistite e verifiche sempre aperte. Replay geometrico positivo su indicazioni approssimative Codex: efficacia dell'AI autonoma ancora non misurata. [Report, test e limiti](v5/agency-opening-recovery-20261030.md). Demo Alessio invariata, nessuna nuova AI o deploy.
+
+
 ## Planimetrie — porte e servizi, anteprima proposta
 
 Arco interno corretto localmente e involucri sostenuti dai muri, senza erosione da sanitari; vuoti e revisioni preservati. Replay 7→9 contorni, zero overlap, sei verifiche: selezione tecnica Codex, non riconoscimento autonomo. Nessuna nuova route/persistenza. 606/606 backend, 21/21 DB adapter esistente, laboratorio e browser verificati. Nessuna nuova AI o modifica demo Alessio. [Report e limiti](v5/agency-room-surfaces-20261030.md).
