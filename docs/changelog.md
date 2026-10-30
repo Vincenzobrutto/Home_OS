@@ -1913,3 +1913,6 @@ Worker interno collega bytes autorizzati, raster, pipeline e ledger; risultato/j
 
 ## 30 ottobre2026 — Agenzie: porta HTTP provider inattiva
 Trasporto dedicato con configurazione esplicita, riautorizzazione e limiti streaming, senza retry.14nuovi test con fetch finta;486/486 ordinari e lint verdi. Nessuna rete provider o configurazione reale attivate. [Report](v5/agency-plan-transport-v1.md).
+
+## 30 ottobre2026 — Agenzie: API opt-in collaudata offline
+Modulo separato con sessione/CSRF, upload limitato, fonti private, review manuale e letture piani.16/16 HTTP+DB su server/cluster temporanei;486/486 ordinari. Non importato in AppModule, nessuna API o spesa attivata nel prodotto. [Report](v5/agency-http-v1.md).

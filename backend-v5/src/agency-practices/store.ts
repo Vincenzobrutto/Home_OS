@@ -21,6 +21,20 @@ const json = (p: Practice): Prisma.InputJsonValue => JSON.parse(JSON.stringify(p
 /** Internal persistence adapter: account comes from the session; no HTTP endpoint accepts file fingerprints. */
 export class AgencyPracticesStore {
   constructor(private readonly db: Pick<PrismaService, '$transaction'>) {}
+  async authorize(accountId:string,agencyId:string,practiceId:string,action:'read'|'edit'){
+    await this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);requirePractice(actor,practice,action,new Date().toISOString());},{maxWait:5000,timeout:15000});
+  }
+  async list(accountId:string,agencyId:string,after?:string){
+    return this.db.$transaction(async tx=>{
+      await tx.$queryRaw`SELECT id FROM "AgencyMember" WHERE "accountId"=${accountId} AND "agencyId"=${agencyId} FOR SHARE`;
+      const member=await tx.agencyMember.findUnique({where:{agencyId_accountId:{agencyId,accountId}}});
+      if(!member||!active(membership(member),new Date().toISOString())||!['admin','agent','viewer'].includes(member.role))throw new PracticeError('access_denied');
+      await tx.$queryRaw`SELECT g.id FROM "AgencyPracticeGrant" g JOIN "AgencyPractice" p ON p.id=g."practiceId" WHERE g."accountId"=${accountId} AND p."agencyId"=${agencyId} FOR SHARE OF g`;
+      const now=new Date(),rows=await tx.agencyPractice.findMany({where:{agencyId,...(after?{id:{gt:after}}:{}),grants:{some:{accountId,revokedAt:null,validFrom:{lte:now},OR:[{validUntil:null},{validUntil:{gt:now}}]}}},include:{grants:{where:{accountId}}},orderBy:{id:'asc'},take:51});
+      for(const row of rows)requirePractice({accountId,memberships:[membership(member)],grants:row.grants.map(g=>grant(g,agencyId))},row,'read',new Date().toISOString());
+      return {practices:rows.slice(0,50).map(p=>({id:p.id,label:p.label,revision:p.revision})),nextAfter:rows.length>50?rows[49].id:null};
+    },{maxWait:5000,timeout:15000});
+  }
   /** Trusted worker-only state. Never expose Actor/Practice/tokenHash via HTTP. */
   async planWorkerContext(accountId:string,agencyId:string,practiceId:string,id:string,token:string){
     return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId),now=new Date().toISOString(),job=authorizedPlanJob(actor,practice,id,token,now);const {authorization}=await this.jobBudget(tx,practice,id,job.status!=='completed');if(authorization.runId!==id)throw new PracticeError('access_denied');return {actor,practice,now,job};},{maxWait:5000,timeout:15000});

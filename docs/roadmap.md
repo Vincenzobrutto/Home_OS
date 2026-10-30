@@ -141,3 +141,5 @@ Agenzie: budget globale/approval uniche verificati466/466+20/20 DB; prossimi coo
 Agenzie: coordinatore interno verificato472/472+24/24 DB; prossimo confine trasporto/provider offline e HTTP/sessione/CSRF/DTO, poi UI pratica. [Report](v5/agency-plan-worker-v1.md).
 
 Agenzie: trasporto dedicato verificato486/486 con fetch simulata, non collegato al runtime. Prossimo API/sessione/CSRF/DTO e HTTP offline, poi UI pratica. [Report](v5/agency-plan-transport-v1.md).
+
+Agenzie: modulo HTTP opt-in verificato16/16 HTTP+DB; prossimi DTO edit e UI pratica. Nessun collegamento ai servizi esistenti. [Report](v5/agency-http-v1.md).

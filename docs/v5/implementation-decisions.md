@@ -174,3 +174,6 @@ Nessun finish dello store senza geometria validata: completePlanJob confronta pr
 
 ## Agenzie — trasporto separato e consenso dedicato
 Porta HTTP provider con flag/credential/authorize/fetch iniettati, nessun riuso della configurazione M4. Riautorizzazione per conteggio e dispatch, destinazione HTTPS fissa, nessun retry o redirect, output streaming limitato ed errori senza body grezzi. Non registrata in runtime; solo fetch simulata nei test. [Report](agency-plan-transport-v1.md).
+
+## Agenzie — modulo HTTP separato e attribuzione dal cookie
+Identità da SessionsService, CSRF/Origin esistenti e preflight AgencyPractice prima di buffer multipart; nuova verifica transazionale dopo upload. Nessuna eredità HomeMembership. Browser può dichiarare dati e decidere, mai autoattestare origine extracted/citazioni o pagamenti. Modulo richiede root esplicita e non è registrato in AppModule. [Report](agency-http-v1.md).

@@ -94,3 +94,11 @@ Non completo: nessun trasporto live, scheduler, provisioning reale di budget/chi
 Porta HTTP dedicata con flag/credential/authorize/fetch iniettati, endpoint fissi, no redirect/retry, timeout e cap streaming2MiB; errori senza body/testi grezzi. Riautorizza sia count sia messaggio e non eredita consenso M4.14nuovi test, mirata14/14 e regressione486/486, build/lint mirato verdi. Primo test positivo falliva perché Response della fixture aveva Content-Type text/plain: corretto fixture a application/json senza allentare il trasporto. Un tentativo di sostituzione PowerShell aveva quoting invalido e non ha modificato file; corretto usando quoting letterale. Nessun nuovo DB test necessario: schema/store invariati,24/24 precedenti sono evidenza storica.
 
 Non istanziata in AppModule o worker prodotto; fetch sempre falsa nel collaudo. Nessuna chiave/env letta, nessuna richiesta o spesa reale. Report agency-plan-transport-v1.md. Prossimo task: API AgencyPractice/sessione/CSRF/DTO stretti e HTTP offline, poi UI pratica/form scala e coefficienti. Demo Alessio invariata; niente merge/deploy o servizi esistenti.
+
+### Ripresa06:00 — modulo HTTP opt-in
+
+Implementati modulo HTTP separato (NON AppModule), sessionguard/CSRF con preflight edit prima del multipart, lista assegnata, creazione/lettura, upload bytes/replay, classificazione/ritiro/download corrente, review manuale e GET piani. Nessuna route di spesa/job o proposta extracted dal browser. Root vault esplicita, output filtrati, nessun HomeMembership. Report agency-http-v1.md.
+
+HTTP+DB16/16 finali in dimora-offline-kEN1SR, cluster fermato e listener effimero chiuso. Primo run r5dZIZ falliva upload per limite contenitore multipart2parti: aumentato margine terminazione a3, mantenendo1file/1campo/20MiB/metadata4096 e assert; il primo errore causava le verifiche successive dipendenti. Tutti16verdi nel run finale. Regressione486/486 e lint mirato verdi; ordinaria precede la sola correzione del cap multipart, collaudata in HTTP finale con build. Nessuna nuova unità aggiunta,16sono test HTTP/DB separati, non sommati agli ordinari.
+
+Prossimi: trasporto degli edit planimetria con DTO stretti, sostituzione fonte e cablaggio UI pratica/form scala e coefficienti; modulo rimane inattivo nel prodotto. Nessun AI/provider reale, budget/chiave reali o servizi/DB esistenti modificati. Demo Alessio invariata.

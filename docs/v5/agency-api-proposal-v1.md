@@ -55,3 +55,6 @@ Enqueue rifiuta authorizationId inesistente, di altra pratica/agenzia o con prov
 
 ## Coordinatore interno disponibile
 Worker/server soltanto: planWorkerContext contiene Actor/Practice e non è serializzabile al client. planJobCommand consente claim/reserve, non finish; completePlanJob registra risultato e chiude job/budget insieme. Mai accettare risultato AI dal browser. Trasporto HTTP/sessione/CSRF e provisioning restano da implementare. [Report](agency-plan-worker-v1.md).
+
+## Prima superficie HTTP implementata, non attiva
+Lista/creazione/lettura pratiche, upload/classificazione/ritiro/download, review manuale e GET piani nel modulo opt-in. Sessione/CSRF e DTO esatti collaudati su server sintetico; nessuna route di spesa o risultato AI dal client. Fanno fede percorso e limiti del report agency-http-v1.md; sostituzione/edit e integrazione prodotto ancora da completare.
