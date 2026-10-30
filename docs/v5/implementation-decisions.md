@@ -171,3 +171,6 @@ Enqueue richiede un'autorizzazione server già provisionata e riserva il cap del
 
 ## Agenzie — risultato e chiusura indivisibili
 Nessun finish dello store senza geometria validata: completePlanJob confronta prova/fingerprint e ricevute con il ledger, poi salva risultato, completa job e chiude budget atomicamente. Worker HMAC scoped alla pratica/run permette ricostruzione della capability con una chiave server iniettata; nessun segreto nel payload coda/browser. Nessuna ripresa automatica di fasi inviate. [Report](agency-plan-worker-v1.md).
+
+## Agenzie — trasporto separato e consenso dedicato
+Porta HTTP provider con flag/credential/authorize/fetch iniettati, nessun riuso della configurazione M4. Riautorizzazione per conteggio e dispatch, destinazione HTTPS fissa, nessun retry o redirect, output streaming limitato ed errori senza body grezzi. Non registrata in runtime; solo fetch simulata nei test. [Report](agency-plan-transport-v1.md).

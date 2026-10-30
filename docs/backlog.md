@@ -908,3 +908,5 @@ Agenzie job: registro per-run e accounting persistiti; prima del provider reale 
 Agenzie: registro budget/autorizzazioni globale implementato; restano provisioning/consenso reale, capability recuperabile, coordinatore che persista risultato e job insieme, transport provider offline/HTTP e UI. Non trattare fixture finanziarie come credito o consenso. [Report](v5/agency-ai-budget-v1.md).
 
 Agenzie: coordinatore interno collega bytes/raster/pipeline/ledger e risultato atomico con provider falso verificato. Prossimi trasporto provider offline e API/sessione/CSRF/DTO, provisioning consenso nel prodotto, UI pratica e form scala/coefficienti. Intermedi/broker/fencing e gestione fallimenti prima della prenotazione ancora aperti. [Report](v5/agency-plan-worker-v1.md).
+
+Agenzie trasporto: porta HTTP implementata e verificata con fetch finta, non attivata. Restano config/secret/consensi nel prodotto e verifica del contratto live su incarico distinto. Prossimi API/sessione/CSRF/DTO e UI pratica; nessun uso automatico del budget prova reale. [Report](v5/agency-plan-transport-v1.md).

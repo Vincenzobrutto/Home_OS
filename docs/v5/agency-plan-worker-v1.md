@@ -21,3 +21,6 @@ Non persiste proposte intermedie complete per ricostruire un run interrotto: non
 ## Verifiche
 
 Unitari su derivazione scope/chiave, chiave debole, replay completed senza provider, rifiuto leased/uncertain e diniego iniziale. PostgreSQL con bytes PNG sintetici realmente caricati e decodificati, provider in memoria: due fasi, segmentazione, risultato/job/budget conclusi insieme; riapertura senza richieste; output fatturato invalido conserva costo e cap senza geometria; revoca durante chiamata registra costo e scarta risultato. Il profilo combinato riprova anche job/budget e rollback della chiusura con geometria invalida. Nessuna AI, documento personale o DB esistente utilizzato.
+
+## Aggiornamento trasporto
+Porta HTTP dedicata ora implementata e verificata con fetch simulata; non istanziata nel worker prodotto e nessun consenso/configurazione reale attivo. [Report](agency-plan-transport-v1.md).

@@ -1910,3 +1910,6 @@ Enqueue vincolato a consenso server provisionato e budget condiviso fra pratiche
 
 ## 30 ottobre2026 — Agenzie: coordinatore offline con risultato atomico
 Worker interno collega bytes autorizzati, raster, pipeline e ledger; risultato/job/budget conclusi in una transazione.6nuovi unitari,472/472 ordinari e24/24 DB combinati, lint verde. Solo provider falso, nessuna route o AI attiva. [Report](v5/agency-plan-worker-v1.md).
+
+## 30 ottobre2026 — Agenzie: porta HTTP provider inattiva
+Trasporto dedicato con configurazione esplicita, riautorizzazione e limiti streaming, senza retry.14nuovi test con fetch finta;486/486 ordinari e lint verdi. Nessuna rete provider o configurazione reale attivate. [Report](v5/agency-plan-transport-v1.md).
