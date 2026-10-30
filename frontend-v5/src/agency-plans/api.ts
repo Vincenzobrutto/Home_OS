@@ -8,6 +8,7 @@ export type AgencyPlan={id:string;version:number;status:string;proof:SourceProof
 export type PlansResponse={revision:number;plans:AgencyPlan[]};
 export type PlanEditBody={expectedRevision:number;expectedPlanVersion:number;reason:string;command:Record<string,unknown>};
 export interface AgencyPlanPort{
+ preview?(planId:string,body:PlanEditBody,key:string):Promise<{plans:PlansResponse}>;
  practice(signal?:AbortSignal):Promise<AgencyPractice>;
  plans(signal?:AbortSignal):Promise<PlansResponse>;
  image(planId:string,signal?:AbortSignal):Promise<Blob>;
@@ -17,6 +18,7 @@ export interface AgencyPlanPort{
 export function agencyPlanApi(transport:Pick<ApiTransport,'callJson'|'callBinary'>,scope:AgencyScope):AgencyPlanPort{
  const root='/agencies/'+encodeURIComponent(scope.agencyId)+'/practices/'+encodeURIComponent(scope.practiceId),accountId=scope.accountId;
  return {
+  preview:(id,body,idempotencyKey)=>transport.callJson(root+'/plans/'+encodeURIComponent(id)+'/edit-preview',{method:'POST',body,idempotencyKey,accountId}),
   practice:signal=>transport.callJson(root,{accountId,signal}),
   plans:signal=>transport.callJson(root+'/plans',{accountId,signal}),
   image:async(id,signal)=>{const data=await transport.callBinary(root+'/plans/'+encodeURIComponent(id)+'/image',signal,accountId);if(!data.contentType.toLowerCase().startsWith('image/png'))throw new Error('Anteprima non disponibile.');return data.blob;},

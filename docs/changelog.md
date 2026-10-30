@@ -1,3 +1,7 @@
+## 30 ottobre 2026 — Planimetrie: aggiunta e separazione manuale dei vani
+
+Disegno di un vano mancante o ritaglio da un vano esistente, anteprima non mutante e salvataggio atomico con storico/CAS; niente sovrapposizioni o doppio conteggio. Prompt di censimento corridoi e segnalazione spazi accorpati migliorati, ancora da misurare con AI reale. Backend578/578, HTTP25/25, guardie13/13, UI41/41; nessuna nuova spesa o modifica demo Alessio. [Report](v5/agency-manual-rooms-20261030.md).
+
 ## 27 ottobre 2026 — Attivata la pagina unica Spese
 
 PR #68 integrata nel consolidamento a68113f5 e solo frontend aggiornato dalla stessa fonte. Build e39/39 controlli HTTP statici/anonimi superati; API/PostgreSQL e guardie invariati, nessuna migrazione, AI, .env o salvataggio applicativo. [Report di rilascio](v5/spese-pagina-unica-rilascio-20261027.md).

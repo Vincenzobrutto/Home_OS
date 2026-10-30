@@ -124,3 +124,7 @@ AgencyPractice: comparisons/observations/findingReceipts opzionali nel JSONB. Do
 ### Agenzie — risultati atti e binding, metadati persistenti
 
 Modulo interno deed-records definisce deedRecords/deedReceipts opzionali dell'aggregato: fonte/versione/SHA, creatore/visibilita, fingerprint risultato/candidati, collegamenti umani a unita/subjectKey/fatto, actor/time/ruolo riconosciuto/motivo e receipt. Invalidazione tramite dipendenza con citazione reale; fatti importati sempre proposti con privacy del record e prova fonte.20record/2000receipt/2MiB per i metadati nuovi. Metodi interni AgencyPracticesStore ora persistono/leggono/associano questi metadati con lock/CAS e viste filtrate; nessuno schema Prisma o migration nuovi. [Contratto dominio](agency-deed-records-domain-v1.md), [adapter e14/14DB](agency-deed-persistence-v1.md).
+
+### Planimetrie — origine manuale dei vani
+
+StoredRegion conserva seed/component/pixelArea nullabili e origine manuale esplicita; derivedFrom identifica il vano suddiviso. Aggiunta/ritaglio mantengono snapshot precedente nella storia, incrementano versione/revisione geometrica e invalidano il computo. Nessuna migration nuova. [Regole](agency-manual-rooms-20261030.md).

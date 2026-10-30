@@ -970,3 +970,7 @@ Pannello manuale montato nel fascicolo con unità IDserver, proposta senza prove
 ## Agenzie — creazione confronto circoscritto
 
 Pannello montato con scelta ambito/periodo/fatti espliciti e privacy iniziale privata; riusa findings, nessuna nuova API o conferma.14nuovi casi, gruppo130/130, typecheck/lint verdi. Browser/DBmontati prossimo gate; selectorprovecompleto e anagrafica verificabile ancora aperti. [Report](v5/agency-comparison-ui-v1.md).
+
+## Planimetrie — copertura e partizione dei passaggi
+
+Aggiunta manuale e separazione con anteprima implementate; rimane da misurare la copertura dei prompt aggiornati su campioni autorizzati indipendenti e risolvere automaticamente spazi comunicanti senza inventare pareti. Ritagli multi-componente attualmente rifiutati; nuovo supporto richiede contratto e UI espliciti. Nessuna promessa di assenza di correzioni, nessun nuovo invio AI implicito. [Stato](v5/agency-manual-rooms-20261030.md).

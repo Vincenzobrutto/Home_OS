@@ -1,5 +1,7 @@
 # Agenzie — edit planimetrie e sostituzione via HTTP
 
+Aggiornamento30ottobre: anche comando `add_room` e `POST /plans/:planId/edit-preview` con stesso DTO esatto e guardie di `/edits`; anteprima senza persistenza, conferma sullo snapshot originale. `add_room` richiede id/label/kind/geometry e parentId opzionale; nuovo vano distinto oppure ritaglio/sottrazione atomici dal parent. Origine manuale, storico e invalidazione computo. [Contratto completo e limiti](agency-manual-rooms-20261030.md).
+
 Estensione del modulo **opt-in**, sempre assente da AppModule. Aggiunti GET fonte corrente, upload sostitutivo e POST edit del piano. Nessuna route di spesa/analisi live, nessun caricamento dei servizi esistenti.
 
 GET `/sources/:sourceId` restituisce metadata/prova correnti (versione/SHA/MIME/dimensione), filtrati dagli stessi permessi degli originali. Il client può usare il fingerprint del server per richiedere il download: non deve inventarlo o autoattestarlo. Nessuna versione precedente restituita da questa route.

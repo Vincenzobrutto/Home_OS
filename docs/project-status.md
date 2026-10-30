@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Planimetrie — vani mancanti e ritaglio manuale, 30 ottobre
+
+Implementati prompt per censimento passaggi e segnalazione di maschere accorpate, aggiunta manuale con anteprima server e separazione da vano esistente senza doppia superficie. Storico e altri vani/perimetro preservati, computo invalidato. Backend578/578, HTTP isolato25/25, guardie finali13/13, frontend41/41, typecheck/lint mirati verdi. Nel browser reale aperti comando/dialog/ricalco; nessuna nuova geometria reale salvata e nessun nuovo invio AI: efficacia del prompt ancora da misurare. Trial privato aggiornato in loco con AI disabilitata, fine invariata16:15. Demo Alessio invariata, nessun merge/deploy. [Report e limiti](v5/agency-manual-rooms-20261030.md).
+
 [Chiusura della tranche di refactoring e limiti](v5/fase0-refactor-closure-20261023.md). I 98 checkpoint precedenti restano nell’[archivio dello stato](project-status-history-20261023.md); sono evidenze datate. [Architettura](architecture.md), [roadmap corrente](roadmap.md), [backlog completo](backlog.md), [decisioni V5](v5/implementation-decisions.md).
 
 ## Prova interattiva planimetria reale — 30 ottobre

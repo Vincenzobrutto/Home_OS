@@ -7,6 +7,12 @@ const { parseArgs, assertFreePort } = require('./offline.cjs');
 const suites = require('./offline-suites.cjs');
 const child = (code, env = cleanEnvironment(process.env, 'unit')) => spawnSync(process.execPath, ['-e', code], { env, cwd: path.resolve(__dirname, '..'), encoding: 'utf8', windowsHide: true, timeout: 15000 });
 
+test('secondary geometry runner retains one exact owned test target, never the active trial or remote DB',()=>{
+ const env=cleanEnvironment(process.env,'unit');env.DIMORA_OFFLINE_SECONDARY='agency-manual-room';
+ const r=child(`const assert=require('node:assert/strict'),p=require('./test/offline-policy.cjs');assert.equal(p.DB_PORT,55440);p.assertOfflineDatabase(p.DB_URL);for(const v of [p.DB_URL.replace('55440','55439'),p.DB_URL.replace('127.0.0.1','remote.invalid'),p.DB_URL+'?schema=public'])assert.throws(()=>p.assertOfflineDatabase(v),/offline_database_forbidden/);const clean=p.cleanEnvironment({ANTHROPIC_API_KEY:'forbidden',DATABASE_URL:'forbidden'},'db','owned','token');assert.equal(clean.DIMORA_OFFLINE_SECONDARY,'agency-manual-room');assert.equal(clean.ANTHROPIC_API_KEY,undefined);assert.equal(clean.DATABASE_URL,p.DB_URL);assert.throws(()=>p.assertOwnedRun(undefined,undefined),/offline_run_required/);`,env);
+ assert.equal(r.status,0,r.stderr);
+});
+
 test('offline database accepts one explicit synthetic URL; real, remote, alternate and ambiguous targets fail before connection', () => {
  assertOfflineDatabase(DB_URL);
  for (const value of [undefined, '', 'postgresql://dimora_v5_app@127.0.0.1:55432/dimora_v5_product_dev', DB_URL.replace('127.0.0.1', 'localhost'), DB_URL.replace('127.0.0.1', 'db.example.test'), DB_URL + '?schema=public', DB_URL + '#fragment', DB_URL.replace('quality_test@', 'quality_test:secret@'), DB_URL.replace('55439', '55432'), DB_URL.replace('_test', '_campaign')]) assert.throws(() => assertOfflineDatabase(value), /offline_database_forbidden/);

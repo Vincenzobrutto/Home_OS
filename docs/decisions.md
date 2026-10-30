@@ -1325,3 +1325,7 @@ Record atti immutabili e fonte/versione/fingerprint separati dai fatti. Solo sce
 ## 2026-10-30 — Commit atomico di proposte e associazioni
 
 Store atti riusa lock e contesto AgencyPractice esistenti, persiste risultato/link/fatto/receipt con CAS e restituisce soltanto viste filtrate. Decoder fuori dalla transazione, nuova autorizzazione e fonte corrente allo stage: un cambiamento fra le fasi scarta il testo. Nessun parametro TrustedDeedText da HTTP e nessuna nuova tabella o route nell'incremento. Record condiviso non prevale sul file privato. Report v5/agency-deed-persistence-v1.md.
+
+## 2026-10-30 — Recupero manuale dei vani senza duplicazione della superficie
+
+Uno spazio semantico non coincide sempre con un componente bianco connesso: i passaggi omessi/accorpati devono emergere come verifica, non essere occultati. Nuovo vano distinto oppure intersezione/sottrazione dal parent con area conservata e anteprima non persistente; altre geometrie e perimetro preservati. Provenienza manuale esplicita, nessun seed AI fabbricato, computo invalidato. Risultati disconnessi rifiutati anziché perdere isole. Efficacia dei nuovi prompt non ancora misurata con AI reale. Report [vani manuali](v5/agency-manual-rooms-20261030.md).
