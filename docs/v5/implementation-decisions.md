@@ -220,3 +220,7 @@ Il collaudo reale ha trovato metadati fonte ancora cached fuori dal pannello dop
 ## Agenzie — preparazione interna distinta da esportazione incarico
 
 Con modello non disponibile la nuova vista sceglie solo fatti confermati e mostra questioni, senza salvare/esportare un contratto. Identità, righe e campi obbligatori dipendono dal futuro mapping approvato; nessuna inferenza storica→conferente. ClientGETreview/findings rifiuta revisioni miste, selezione legata a porta/revisione e bozza bloccata. [Report](agency-mandate-selection-ui-v1.md).
+
+## Agenzie — autorizzazione analisi atti separata dalle planimetrie
+
+Contratto futuro DEED_EXTRACT con offerta/consenso legati a fonte/versione/SHA/pagine/finalità e ledger durevole. Count e dispatch richiedono consenso, incerto non libera cap o autorizza retry. Stage resta server-only; costo conservato anche dopo scarto/revoca. È una specifica, non un provider/job attivo. [Contratto](agency-deed-orchestration-contract-v1.md).

@@ -215,3 +215,7 @@ Trial nuovi eVftg7/72vzkO, dati/PDFsintetici e AI disabilitata: associazioneprop
 ## Agenzie — preparazione dati per incarico senza modello
 
 Su scelta esplicita del committente, nuovo pannello di selezione locale dei dati confermati con fonti/questioni aperte. Nessun incarico generato o campo obbligatorio inventato: modello ancora da ricevere.13nuovi casi/gruppo150/150/staticiverdi; browserdesktop375su harnesssintetico, non nuova prova API/DB. Restano orchestrationanalisiatti e modello/mapping/validazioneserver/export. [Report](v5/agency-mandate-selection-ui-v1.md).
+
+## Agenzie — prossimo incremento del percorso completo
+
+Definito [contratto implementativo AI atti](v5/agency-deed-orchestration-contract-v1.md), ancora da realizzare: schema/adapter consenso-job-budget, coordinatore decoder/provider/stage, DTO/API e UI offerta/pagine.18casi sono pianificati, non test già eseguiti. Nessuna spesa autorizzata dal documento; modello incarico non ancora disponibile e generazione bloccata. Preparazione dati confermati già presente.

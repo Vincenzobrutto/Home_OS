@@ -1,6 +1,14 @@
-# API Agenzie — proposta di contratto v1
+# API Agenzie — stato implementato e proposte successive
 
-30 ottobre2026. **Non implementata e non registrata in AppModule.** Lo store interno è implementato e collaudato separatamente; queste route non sono disponibili sul prodotto.
+30 ottobre 2026. **Documento cumulativo con checkpoint storici.** Le route di fascicolo, review, findings, planimetrie e read/bind delle proposte da atto sono ora implementate nel modulo V5 opt-in, con navigazione autenticata; nessun deploy eseguito da questa automazione. Per stato e prove correnti leggere project-status e i report collegati. Le sezioni sotto che indicano trasporto assente descrivono la fase iniziale, non lo stato attuale. L’orchestrazione AI degli atti rimane una proposta distinta.
+
+## Indice dello stato corrente
+
+- Fascicolo/review: agency-http-v1.md e agency-review-browser-validation-20261030.md.
+- Findings: agency-findings-v1.md e agency-comparison-ui-v1.md.
+- Proposte atti read/bind: agency-deed-http-v1.md; stage resta solo server.
+- Preparazione interna incarico senza modello: agency-mandate-selection-ui-v1.md; nessuna generazione.
+- Orchestrazione AI atti futura: agency-deed-orchestration-contract-v1.md; nessuna route o spesa attivata.
 
 ## Identità e confini
 

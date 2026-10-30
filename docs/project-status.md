@@ -26,6 +26,9 @@ Provati nel browser visibile il file sintetico e poi il PDF autorizzato con AI e
 
 ## Agenzie — ciclo diurno del30ottobre, stato corrente
 
+Il [contratto del prossimo collegamento AI atti](v5/agency-deed-orchestration-contract-v1.md) ora specifica consenso/job/ledger e18casi pianificati. Non è implementazione o autorizzazione di spesa; con modello agenzia ancora assente la bozza resta bloccata.
+
+
 **Steering successivo:** [preparazione dati incarico](v5/agency-mandate-selection-ui-v1.md) ora montata: selezione locale dei soli fatti confermati con prove/questioni aperte e bozza sempre bloccata. Vincenzo conferma modello non ancora disponibile.13nuovi casi, gruppo150/150/staticiverdi, browserdesktop375su harnesssintetico. Il percorso completo non è concluso: orchestrationAIatti/OCR e modello/mapping/exportserver restano da completare. Nessuna nuova spesa o contratto generato.
 
 

@@ -994,3 +994,7 @@ Su scelta esplicita del committente, nuovo pannello di selezione locale dei dati
 ## Planimetrie — regole accessori/soglie, seguito
 
 Censimento e recupero geometrico di pertinenze esplicitamente etichettate implementati come proposte, associazione non confermata. Laboratorio di aperture tratteggiate selezionabili/modificabili disponibile. Restano riconoscimento semantico del glifo freccia, artefatti del glifo che interseca un bordo, pertinenze senza etichetta/seed, falsi tagli da linee collineari e integrazione decisioni nel workspace con prova/versione/SHA/CAS/worker. Vietata selezione automatica dal solo numero di contorni; BOX ambiguo e parti comuni richiedono revisione. [Stato](v5/agency-annex-threshold-rules-20261030.md).
+
+## Agenzie — prossimo incremento del percorso completo
+
+Definito [contratto implementativo AI atti](v5/agency-deed-orchestration-contract-v1.md), ancora da realizzare: schema/adapter consenso-job-budget, coordinatore decoder/provider/stage, DTO/API e UI offerta/pagine.18casi sono pianificati, non test già eseguiti. Nessuna spesa autorizzata dal documento; modello incarico non ancora disponibile e generazione bloccata. Preparazione dati confermati già presente.
