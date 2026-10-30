@@ -982,3 +982,7 @@ Guardia overlap obbligatoria sui poligoni finali dopo semplificazione: rilevata 
 ## Planimetrie — aggiornamento guardia conclusa
 
 Guardia poligoni dopo semplificazione e alla registrazione implementata:5contorni mantenuti e overlap1→0 sul replay. La precedente voce di implementazione della guardia è superata. Restano ripristino locale dei tratti, gestione soglia/risoluzione senza accettare frammenti, censimento/associazione pertinenze e benchmark indipendente. I sei confronti morfologici sono soltanto esperimenti privati, non un recupero completo validato. [Report corrente](v5/agency-boundary-cleanup-20261030.md).
+
+## Agenzie — limiti emersi nel collaudo fascicolo reale
+
+Percorso positivo browser/API/DB e revoca ora provati con fixture sintetiche, desktop/375. Corretto cache genitore su diniego. Ancora aperti: UI genericadocumenti (atto deed appare Da classificare/Usacomeplanimetria), anagrafica/etichette soggetti, aggiornamento coordinato snapshot senza perdere inviiincerti e selettoreprovecompleto. Stage/OCR/provideratti/modelloincarico approvato mancanti. [Report](v5/agency-review-browser-validation-20261030.md).

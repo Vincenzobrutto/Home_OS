@@ -205,3 +205,7 @@ Pannello manuale montato nel fascicolo con unità IDserver, proposta senza prove
 ## Agenzie — creazione confronto circoscritto
 
 Pannello montato con scelta ambito/periodo/fatti espliciti e privacy iniziale privata; riusa findings, nessuna nuova API o conferma.14nuovi casi, gruppo130/130, typecheck/lint verdi. Browser/DBmontati prossimo gate; selectorprovecompleto e anagrafica verificabile ancora aperti. [Report](v5/agency-comparison-ui-v1.md).
+
+## Agenzie — fascicolo montato collaudato con API/DB reali
+
+Trial nuovi eVftg7/72vzkO, dati/PDFsintetici e AI disabilitata: associazioneproposta,confermaseparata,downloadSHA,unita/dichiarazione,confronto/nota,persistenza375 e revoca. Corretto diniego genitore: metadati cached rimossi.137/137frontendmirati/staticiverdi; dueclusterfermati, nessundeploy. [Report e limiti](v5/agency-review-browser-validation-20261030.md).

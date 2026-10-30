@@ -212,3 +212,7 @@ Il renderer PDF usa esclusivamente la directory wasm della dipendenza gia instal
 ## Agenzie — confronto scelto dall’agente, esito dal server
 
 Nuovo pannello permette2–20fatti attuali, stesso unit/subject/field e periodo esplicito riconosciuto dall’agente. Nessun accoppiamento automatico storico/attuale o conversione fra tipi di superficie. POST invia solo domanda e visibilità; server crea ID/esito, conferme dei fatti restano distinte. [Report](agency-comparison-ui-v1.md).
+
+## Agenzie — diniego della revisione invalida anche la pagina pratica
+
+Il collaudo reale ha trovato metadati fonte ancora cached fuori dal pannello dopo revoca. Il contenitore ora notifica il genitore e forza una nuova lettura autorizzata;403elimina anche elenco/titolo pratica dal rendering. Quote e originali già scaricati legittimamente non sono cancellabili retroattivamente. Secondo cluster e verifica browser dedicata confermano filename/citazione assenti. [Report](agency-review-browser-validation-20261030.md).
