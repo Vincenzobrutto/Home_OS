@@ -4,7 +4,7 @@
 
 ## Integrazione planimetrie agenzie — in corso
 
-Su incarico di Vincenzo: nucleo planimetrie, bytes/raster, ledger/budget, coordinatore e API opt-in implementati nel branch dedicato. Verifiche correnti:496/496 ordinari,34/34 DB mirati worker/HTTP/store,13/13 frontend (editor+client), typecheck/lint verdi. Nessuna route caricata in AppModule o AI attivata; frontend client pronto, workspace/form ancora da collegare. Demo Alessio invariata. Report corrente: docs/v5/agency-plan-preview-v1.md; continuità e limiti in docs/v5/agency-worklog-20261030.md.
+Su incarico di Vincenzo: nucleo planimetrie, bytes/raster, ledger/budget, coordinatore e API opt-in implementati nel branch dedicato. Verifiche correnti:496/496 ordinari,34/34 DB mirati worker/HTTP/store,26/26 frontend (editor+client+workspace), typecheck/lint verdi. Nessuna route caricata in AppModule o AI attivata; workspace/form collegati al port API, ma non alla navigazione prodotto. Demo Alessio invariata. Report corrente: docs/v5/agency-plan-workspace-v1.md; continuità e limiti in docs/v5/agency-worklog-20261030.md.
 
 ## Branch e vincoli
 

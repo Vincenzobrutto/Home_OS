@@ -147,3 +147,5 @@ Agenzie: modulo HTTP opt-in verificato16/16 HTTP+DB; prossimi DTO edit e UI prat
 Agenzie: trasporto edit/sostituzione verificato496/496+22/22 HTTP; prossima UI pratica/form scala e coefficienti. [Report](v5/agency-plan-edit-http-v1.md).
 
 Agenzie: anteprima raster allineata/client API verificati; prossimo workspace/form. [Report](v5/agency-plan-preview-v1.md). Nessuna integrazione completa o AI live dichiarata.
+
+Agenzie: workspace opt-in verificato su API simulate, non attivo nel prodotto. Prima del pilota navigazione/provisioning e prove browser→API. Riprendere coerenza persistente e mapping incarico. [Report](v5/agency-plan-workspace-v1.md).

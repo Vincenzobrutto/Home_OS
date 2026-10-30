@@ -183,3 +183,6 @@ Parser HTTP ricostruisce tutte le strutture consentite con ordine canonico; coef
 
 ## Agenzie — mostrare soltanto il raster originale verificato
 DPI/transform/versione rendering entrano nel fingerprint e nel piano; il PNG UI deve corrispondere a dimensioni e SHA grayscale usati per i contorni. Mancanza di provenienza o pixel diversi bloccano l'overlay, nessuna stima della scala di rendering. Client riusa trasporto sessione/CSRF e non ha fallback sintetico. [Report](agency-plan-preview-v1.md).
+
+## Agenzie — retry esplicito e scelta metrica non dedotta
+Workspace con salvataggio manuale motivato: 503preserva payload/key,409richiede ricarica,422riabilita correzione,revoca nasconde dati. La barra richiede estremi e lunghezza letta, perimetro e fasce muro sono disegnati esplicitamente, intervalli e conferme non precompilati. Configurazione conservata col piano e invalidata da geometrie nuove. Harness non è fallback prodotto. [Report](agency-plan-workspace-v1.md).

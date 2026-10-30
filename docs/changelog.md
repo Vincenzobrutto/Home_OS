@@ -1922,3 +1922,6 @@ DTO profondi, correzione geometria, computo e sostituzione originale versionata;
 
 ## 30 ottobre2026 — Agenzie: PNG allineato e client UI
 Provenienza raster persistita e anteprima autorizzata con confronto dei pixel; client frontend su trasporto V5 senza fallback.496/496 ordinari,34/34 DB mirati e13/13 frontend, typecheck/lint verdi. Workspace ancora da cablare. [Report](v5/agency-plan-preview-v1.md).
+
+## 30 ottobre2026 — Agenzie: workspace pratica e form di computo
+Contenitore API con editor, perimetro/muri manuali, calibrazione e criteri espliciti, errori/privacy e configurazione persistita.26/26 frontend,496/496 backend,34/34 DB mirati; typecheck/lint e browser desktop/375 verdi sui limiti descritti. Nessuna navigazione/attivazione prodotto o AI live. [Report](v5/agency-plan-workspace-v1.md).

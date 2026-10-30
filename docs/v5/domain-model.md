@@ -116,3 +116,5 @@ Job interno limitato100/pratica: prova immutabile, creatore, riferimento autoriz
 
 ### AgencyAiBudget / AgencyPlanAuthorization
 Budget d'agenzia e autorizzazione per pratica/account/prova con receipt e runId globalmente unici. Tetti/impegni/spese BIGINT microUSD, prezzi immutabili, scadenze/revoche; lock transazionali anche fra pratiche. Relazioni additive senza modificare Home/Document. Provisioning solo nelle fixture, nessuna route di approvazione ancora attiva. [Report](agency-ai-budget-v1.md).
+
+Piani agenzia: measurementConfiguration opzionale conserva la configurazione manuale oltre al report, ricostruibile al reload. Modifiche geometriche/risoluzioni la invalidano insieme al computo, evitando riuso di conferme obsolete. [Workspace e limiti](agency-plan-workspace-v1.md).
