@@ -1,6 +1,6 @@
 # Proposte da atto e associazione umana — dominio interno
 
-30 ottobre2026, ciclo diurno fino18:00Europe/Rome. **Implementato nel dominio, non ancora collegato a store DB/API/UI.** Non è una nuova estrazione AI o un incarico pronto.
+30 ottobre2026, ciclo diurno fino18:00Europe/Rome. **Dominio implementato; [adapter DB aggiunto successivamente](agency-deed-persistence-v1.md), API/UI di quel passaggio ancora da collegare.** Non è una nuova estrazione AI o un incarico pronto.
 
 ## Due passaggi distinti
 
@@ -26,7 +26,7 @@ CAS pratica, receipt per account/key e digest canonici, replay esatto senza dupl
 
 Limiti:20record,2000receipt e2MiB UTF-8 complessivi per i metadati deedRecords/deedReceipts, oltre ai limiti del contratto e ai1000fatti del dominio review. Superamento rifiutato su una copia, aggregato originale invariato. Nessun budget/spesa AI viene gestito o autorizzato qui.
 
-Le funzioni sono interne: TrustedDeedText deve provenire dal decoder autorizzato, mai da un body HTTP. Il futuro adapter deve caricare contesto aggiornato sotto lock, applicare la mutazione e persistere atomicamente; non restituire il Practice grezzo al browser. Al momento i record vivono soltanto nell’aggregato restituito: nessun nuovo metodo store, route o migration.
+Le funzioni sono interne: TrustedDeedText deve provenire dal decoder autorizzato, mai da un body HTTP. L’adapter deve caricare contesto aggiornato sotto lock, applicare la mutazione e persistere atomicamente; non restituire il Practice grezzo al browser. Al checkpoint di questo report i record vivevano soltanto nell’aggregato restituito; il successivo adapter persistente è documentato separatamente, senza nuove tabelle/migration o route.
 
 ## Verifiche
 

@@ -1951,3 +1951,7 @@ Nuovo FindingsWorkspace/client: esito/motivo/fingerprint, prova tecnica selezion
 ## 30 ottobre2026 — Dominio per proposte atti e associazione esplicita
 
 Stage dei risultati e binding umano con CAS/replay, privacy ereditaria e invalidazione; fatto nuovo sempre proposto e generazione contratto assente. Mirato72/72, ordinari568/568 e statici backend verdi. Solo funzioni interne, non nuova persistenza o endpoint. Report v5/agency-deed-records-domain-v1.md.
+
+## 30 ottobre2026 — Record atti persistenti e associazione atomica
+
+Metodi store read/stage/bind con lock, CAS, privacy e replay corrente.14/14 DB sintetici con PDF realmente decodificato, cluster fermato; ordinari568/568 e lint/build verdi. Nessun nuovo schema/endpoint o invio AI. Report v5/agency-deed-persistence-v1.md.

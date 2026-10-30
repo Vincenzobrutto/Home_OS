@@ -510,5 +510,9 @@ profiles['test:offline-db'].files.push('test/agency-findings.integration.test.cj
 profiles['test:agency-navigation-db']={database:true,api:false,files:['test/agency-navigation.integration.test.cjs','test/agency-http.integration.test.cjs','test/agency-worker.integration.test.cjs'],apiFiles:[]};
 profiles['test:offline-db'].files.push('test/agency-navigation.integration.test.cjs');
 
+// Dedicated deed persistence profile, included in the protected DB aggregate.
+profiles['test:agency-deed-records-db']={database:true,api:false,files:['test/agency-deed-records.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-deed-records.integration.test.cjs');
+
 // Dated manual trial, never part of aggregate suites.
 profiles['test:agency-trial']={database:true,api:false,files:['test/agency-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T10:45:00Z'};

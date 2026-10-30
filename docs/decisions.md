@@ -1321,3 +1321,7 @@ UI findings distingue aperto/verifica registrata/da rivedere, senza conformita o
 ## 2026-10-30 — Associare un candidato non equivale a confermare un dato
 
 Record atti immutabili e fonte/versione/fingerprint separati dai fatti. Solo scelta umana esplicita di unita/subjectKey e riconoscimento ruolo documentale crea un nuovo fatto ancora proposto; niente override valore o identita/diritto inferiti. Visibilita del record ereditata senza ampliamento, fonte privata sempre prevalente. Record superati non riattivati da replay, input TrustedDeedText solo server e nessuna route in questo incremento. Report v5/agency-deed-records-domain-v1.md.
+
+## 2026-10-30 — Commit atomico di proposte e associazioni
+
+Store atti riusa lock e contesto AgencyPractice esistenti, persiste risultato/link/fatto/receipt con CAS e restituisce soltanto viste filtrate. Decoder fuori dalla transazione, nuova autorizzazione e fonte corrente allo stage: un cambiamento fra le fasi scarta il testo. Nessun parametro TrustedDeedText da HTTP e nessuna nuova tabella o route nell'incremento. Record condiviso non prevale sul file privato. Report v5/agency-deed-persistence-v1.md.

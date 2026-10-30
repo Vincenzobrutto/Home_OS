@@ -7,6 +7,8 @@ import { editPlan, planViews, registerPlan } from '../agency-plans/records';
 import { AgencyFileVault, inspectAgencyFile } from './files';
 import { sourceReadable } from './domain';
 import {applyFinding,findingsView} from './findings';
+import {deedProposalsView,stageDeedProposals as stageDeed,bindDeedProposal as bindDeed} from './deed-records';
+import type {TrustedDeedText} from './deed-extraction';
 import { enqueuePlanJob, failPlanBeforeDispatch, claimPlanJob, reservePlanPhase, settlePlanPhase, markPlanUncertain, finishPlanJob, planJobViews, authorizedPlanJob, type Phase, type PlanJob } from '../agency-plans/jobs';
 
 function iso(date: Date | null): string | null { return date?.toISOString() ?? null; }
@@ -39,6 +41,27 @@ export class AgencyPracticesStore {
       await tx.agencyPlanAuthorization.create({data:{id:server.authorizationId,budgetId:budget.id,practiceId,accountId,approvalReceipt:'ui-plan:'+createHash('sha256').update(JSON.stringify([accountId,practiceId,input.id,proof,input.instructions])).digest('hex'),proof:proof as Prisma.InputJsonValue,capMicros:BigInt(server.capMicros),model:server.model,priceVersion:server.priceVersion,inputMicrosPerMillion:server.inputMicrosPerMillion,outputMicrosPerMillion:server.outputMicrosPerMillion,expiresAt:new Date(Math.min(budget.expiresAt.getTime(),Date.now()+3600000))}});
       const queued=enqueuePlanJob(actor,practice,{id:input.id,authorizationId:server.authorizationId,proof,capMicros:server.capMicros,model:server.model,priceVersion:server.priceVersion,inputMicrosPerMillion:server.inputMicrosPerMillion,outputMicrosPerMillion:server.outputMicrosPerMillion,instructions:input.instructions},server.token,now);
       await tx.agencyAiBudget.update({where:{id:budget.id},data:{committedMicros:{increment:server.capMicros}}});await tx.agencyPlanAuthorization.update({where:{id:server.authorizationId},data:{state:'bound',runId:input.id,committedMicros:BigInt(server.capMicros)}});await tx.agencyPractice.update({where:{id:practiceId},data:{revision:queued.practice.revision,snapshot:json(queued.practice)}});return {id:input.id,status:'queued',replay:false};
+    },{maxWait:5000,timeout:15000});
+  }
+  async readDeedProposals(accountId:string,agencyId:string,practiceId:string):Promise<ReturnType<typeof deedProposalsView>>{
+    return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);return deedProposalsView(actor,practice,new Date().toISOString());},{maxWait:5000,timeout:15000});
+  }
+  /** Internal server port: trusted text must come from the authorized decoder, not HTTP. */
+  async stageDeedProposals(accountId:string,agencyId:string,practiceId:string,trusted:TrustedDeedText,candidates:unknown,input:unknown):Promise<{replay:boolean;recordId:string;proposals:ReturnType<typeof deedProposalsView>}>{
+    return this.db.$transaction(async tx=>{
+      const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId),r=stageDeed(actor,practice,trusted,candidates,input,new Date().toISOString());
+      if(!r.replay){const updated=await tx.agencyPractice.updateMany({where:{id:practiceId,agencyId,revision:practice.revision},data:{revision:r.practice.revision,snapshot:json(r.practice)}});if(updated.count!==1)throw new PracticeError('revision_conflict');}
+      requirePractice(actor,r.practice,'edit',new Date().toISOString());
+      return {replay:r.replay,recordId:r.receipt.recordId,proposals:deedProposalsView(actor,r.practice,new Date().toISOString())};
+    },{maxWait:5000,timeout:15000});
+  }
+  async bindDeedProposal(accountId:string,agencyId:string,practiceId:string,input:unknown):Promise<{replay:boolean;recordId:string;factId:string;proposals:ReturnType<typeof deedProposalsView>;review:ReturnType<typeof reviewView>}>{
+    return this.db.$transaction(async tx=>{
+      const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId),r=bindDeed(actor,practice,input,new Date().toISOString());
+      if(!r.receipt.factId)throw new Error('agency_deed_binding_invalid');
+      if(!r.replay){const updated=await tx.agencyPractice.updateMany({where:{id:practiceId,agencyId,revision:practice.revision},data:{revision:r.practice.revision,snapshot:json(r.practice)}});if(updated.count!==1)throw new PracticeError('revision_conflict');}
+      requirePractice(actor,r.practice,'edit',new Date().toISOString());
+      return {replay:r.replay,recordId:r.receipt.recordId,factId:r.receipt.factId,proposals:deedProposalsView(actor,r.practice,new Date().toISOString()),review:reviewView(actor,r.practice,new Date().toISOString())};
     },{maxWait:5000,timeout:15000});
   }
   async readFindings(accountId:string,agencyId:string,practiceId:string){return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);return findingsView(actor,practice,new Date().toISOString());},{maxWait:5000,timeout:15000});}

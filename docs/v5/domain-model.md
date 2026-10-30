@@ -121,6 +121,6 @@ Piani agenzia: measurementConfiguration opzionale conserva la configurazione man
 
 AgencyPractice: comparisons/observations/findingReceipts opzionali nel JSONB. Domande e note manuali separate dai valori; decisioni con snapshot fingerprint e prove, riapertura derivata, visibilità per fonte e nota. Nessuna attestazione completezza. [Report](agency-findings-v1.md).
 
-### Agenzie — risultati atti e binding, dominio non ancora persistito
+### Agenzie — risultati atti e binding, metadati persistenti
 
-Modulo interno deed-records definisce deedRecords/deedReceipts opzionali dell'aggregato: fonte/versione/SHA, creatore/visibilita, fingerprint risultato/candidati, collegamenti umani a unita/subjectKey/fatto, actor/time/ruolo riconosciuto/motivo e receipt. Invalidazione tramite dipendenza con citazione reale; fatti importati sempre proposti con privacy del record e prova fonte.20record/2000receipt/2MiB per i metadati nuovi. Nessun nuovo metodo store, schema Prisma o migration attivati; adapter DB e successivo incremento. [Contratto](agency-deed-records-domain-v1.md).
+Modulo interno deed-records definisce deedRecords/deedReceipts opzionali dell'aggregato: fonte/versione/SHA, creatore/visibilita, fingerprint risultato/candidati, collegamenti umani a unita/subjectKey/fatto, actor/time/ruolo riconosciuto/motivo e receipt. Invalidazione tramite dipendenza con citazione reale; fatti importati sempre proposti con privacy del record e prova fonte.20record/2000receipt/2MiB per i metadati nuovi. Metodi interni AgencyPracticesStore ora persistono/leggono/associano questi metadati con lock/CAS e viste filtrate; nessuno schema Prisma o migration nuovi. [Contratto dominio](agency-deed-records-domain-v1.md), [adapter e14/14DB](agency-deed-persistence-v1.md).

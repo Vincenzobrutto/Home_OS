@@ -938,3 +938,7 @@ Registro note/confronti, chiusure motivate, prove e storico come componenti veri
 ## 30 ottobre2026 — Dopo dominio record atti/binding
 
 [Dominio](v5/agency-deed-records-domain-v1.md) verificato, non ancora DB/API/UI. Prossimo store stage/read/bind con lock/CAS/viste filtrate e cluster nuovo posseduto; verificare PDF realmente decodificato, persistenza, doppia richiesta e revoca/cambio fonte durante decoder. Solo dopo HTTP e UI, niente TrustedDeedText o risultato attestato dal client. Nessuna fusione/deduplica fra analisi diverse, registro anagrafico o proprieta attuale dedotti.
+
+## 30 ottobre2026 — Dopo adapter persistente record atti
+
+read/stage/bind interni verificati su DB nuovo con PDF sintetico reale,14/14 e568/568 ordinari. Prossimo GET record e POST binding su API sessione/CSRF, DTO senza override valore o testo fidato; stage resta server-only fino a job/provider e consenso/budget dedicati. Poi UI associazione e cablaggio revisioni, non un nuovo servizio AI gia pronto. Report v5/agency-deed-persistence-v1.md.
