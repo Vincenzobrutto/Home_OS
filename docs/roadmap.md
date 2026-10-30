@@ -1,3 +1,7 @@
+## Agenzie — prospetti delle due viste, 30 ottobre 2026
+
+Implementati dettaglio netto per vano e riepilogo commerciale appartamento/pertinenze/muri, con valori server e sospensione delle misure obsolete. 54/54 UI, build/lint e browser isolato desktop/375; nessun nuovo backend/DB/API end-to-end, AI o deploy. [Report](v5/agency-dual-view-summary-20261030.md).
+
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
 ## Agenzie — superfici integrate e recupero dei tratti chiari
@@ -94,7 +98,7 @@ Riconoscimento bollette senza catalogo fornitori: combinazioni di segnali del co
 
 Bollette: proposta locale dalla sola prima pagina, marchio clienti corroborato da contatti email/web e OCR per etichette mancanti. [Report](v5/bollette-prima-pagina-20261025.md). Implementazione e verifica del documento locale completate; statici e fixture 5/5 verdi, mock completa 1175/1175 in 131 file, zero saltati/retry0. [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) integrata su approvazione a 911b0fb e solo frontend aggiornato; build e 8/8 controlli HTTP statici/anonimi verdi, API/PostgreSQL preservati. Prova interattiva al committente.
 
-Tipo documento modificabile direttamente nella riga dell'archivio: [lotto frontend e report](v5/tipo-documento-inline-20261025.md). Menu con conferma esplicita, senza nuova compilazione né modifica di titolo, collegamenti o spese; 29/29 nuovi test, mock completa1156/1156 in129 file e typecheck/lint/build verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) integrata su approvazione a 49635d8, hash remoto verificato e solo frontend aggiornato. Build e 7/7 controlli HTTP anonimi verdi; API/PostgreSQL invariati. Prossimo passo: prova del menu dal committente.
+Tipo documento modificabile direttamente nella riga dell'archivio: [lotto frontend e report](v5/tipo-documento-inline-20261025.md). Menu con conferma esplicita, senza nuova compilazione né modifica di titolo, collegamenti o spese; 29/210 nuovi test, mock completa1156/1156 in129 file e typecheck/lint/build verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) integrata su approvazione a 49635d8, hash remoto verificato e solo frontend aggiornato. Build e 7/7 controlli HTTP anonimi verdi; API/PostgreSQL invariati. Prossimo passo: prova del menu dal committente.
 
 Cestino disponibile nel collaudo applicativo: [PR #41 integrata e attivazione autorizzata](v5/cestino-chiusura-20261025.md), backup verificato, sola migrazione additiva e API/frontend aggiornati a dc58ada. Regressione DB564/564 e mock1127/1127 verdi; dati preesistenti e originali invariati. Prossimo passo: prova interattiva del committente su spostamento e ripristino; nessuna eliminazione o conferma eseguita automaticamente. Ciclo backup separato.
 

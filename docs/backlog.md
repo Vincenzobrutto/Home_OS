@@ -1030,3 +1030,7 @@ Accettazione scoped worker/UI ora implementata e verificata: il residuo principa
 ## Dopo il nuovo campione pallido
 
 Validare proposta ottica su altri documenti indipendenti; il campione nuovo ha guidato la correzione e non misura la generalizzazionev8. Separare ingresso/vano comunicante solo con evidenze; ripulire microvuoti delle scritte senza cancellare cavedi/strutture. Nuova prova reale della variante optica nel workflow DB/browser ancora da fare; nessun totale dalla sola scala1:100. [Report](v5/agency-third-plan-contrast-20261030.md).
+
+### Agenzie — residui delle due viste, 30 ottobre 2026
+
+Implementati prospetti e selezione contorno. Da valutare: calibrazione verificata salvabile senza completare prima tutte le classificazioni commerciali; comando di rinomina dei vani con audit; nuovo collaudo completo su documento indipendente con scala attendibile, muri e pertinenze, salvataggio e reload. Nessuna di queste tre attività è dichiarata implementata dal solo riepilogo UI. [Report](v5/agency-dual-view-summary-20261030.md).

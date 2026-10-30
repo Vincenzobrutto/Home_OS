@@ -1,3 +1,7 @@
+## Agenzie — prospetti delle due viste, 30 ottobre 2026
+
+Implementati dettaglio netto per vano e riepilogo commerciale appartamento/pertinenze/muri, con valori server e sospensione delle misure obsolete. 54/54 UI, build/lint e browser isolato desktop/375; nessun nuovo backend/DB/API end-to-end, AI o deploy. [Report](v5/agency-dual-view-summary-20261030.md).
+
 ## 30 ottobre 2026 — Censimento accessori e laboratorio soglie
 
 ## Agenzie — superfici integrate e recupero dei tratti chiari
@@ -136,7 +140,7 @@ Lettura e OCR limitati a pagina 1, dati nativi conservati se l'arricchimento fal
 
 ## 25 ottobre 2026 — Tipo documento direttamente nell'archivio
 
-Correggi tipo apre un menu nella riga con Salva tipo e Annulla, anche per documenti già classificati. Titolo e parti/pagine preservati, nessuna analisi, spesa o nuovo oggetto; gestione di fonte cambiata, revoche e risposta persa. [Report](v5/tipo-documento-inline-20261025.md): 29/29 nuovi test, mock completa1156/1156 in129 file e controlli statici verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) integrata su approvazione a 49635d8 e solo frontend attivato; hash remoto verificato, build e 7/7 controlli HTTP anonimi verdi. API/PostgreSQL preservati, nessuna nuova AI o scrittura applicativa automatica.
+Correggi tipo apre un menu nella riga con Salva tipo e Annulla, anche per documenti già classificati. Titolo e parti/pagine preservati, nessuna analisi, spesa o nuovo oggetto; gestione di fonte cambiata, revoche e risposta persa. [Report](v5/tipo-documento-inline-20261025.md): 29/210 nuovi test, mock completa1156/1156 in129 file e controlli statici verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) integrata su approvazione a 49635d8 e solo frontend attivato; hash remoto verificato, build e 7/7 controlli HTTP anonimi verdi. API/PostgreSQL preservati, nessuna nuova AI o scrittura applicativa automatica.
 
 ## 25 ottobre 2026 — Cestino integrato e attivato su autorizzazione
 

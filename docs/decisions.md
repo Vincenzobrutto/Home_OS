@@ -1361,3 +1361,7 @@ Pacchetto server distinto e digest canonico su fonte/fingerprint/base geometrica
 ## 2026-10-30 — Una calibrazione ottica è una proposta, non un cambio silenzioso del profilo
 
 Se la scansione pallida non produce regioni, istogramma locale suggerisce soglia candidata senza massimizzare il numero di vani. Originale/profilo canonico invariati, seed esclusi non inglobati, metadato incluso nel digest e contrast_requires_review prima dell'adozione. Aperture incerte conservate. [Evidenza e limiti](v5/agency-third-plan-contrast-20261030.md).
+
+### Agenzie — presentare due basi senza ricomputare nel client, 30 ottobre 2026
+
+Vani e perimetro commerciale rimangono viste della stessa fonte ma geometrie distinte. Il riepilogo usa soltanto il report autorizzato del server: netto per vano, base principale raggruppata, pertinenze e rettifiche dei muri. Nessun totale da somma di pixel nel browser; parziale non equivale a totale. Associazione delle pertinenze dalla configurazione salvata, non dal nome; le loro correzioni usano rooms anche nella vista commerciale. Misure sospese durante modifiche o revisione geometrica diversa. [Verifiche e limiti](v5/agency-dual-view-summary-20261030.md).
