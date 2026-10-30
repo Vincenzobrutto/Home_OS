@@ -966,3 +966,7 @@ Pannello manuale montato nel fascicolo con unità IDserver, proposta senza prove
 - Anteprima e controlli del PDF prima dell'invio a pagamento; il decoder ora blocca le immagini corrotte/omesse tramite codec locali e tre regressioni sintetiche. [Esito e limiti](v5/agency-plan-live-20261030.md).
 
 - Recupero manuale di ambienti accorpati o mancanti: l'editor attuale modifica i vertici dei vani esistenti e il perimetro, ma non divide un vano e non crea un nuovo ambiente. La sola aggiunta di punti non completa la separazione del disimpegno ovest: prevedere Dividi vano/Aggiungi ambiente con consistenza API, senza inventare una correzione di questo caso.
+
+## Agenzie — creazione confronto circoscritto
+
+Pannello montato con scelta ambito/periodo/fatti espliciti e privacy iniziale privata; riusa findings, nessuna nuova API o conferma.14nuovi casi, gruppo130/130, typecheck/lint verdi. Browser/DBmontati prossimo gate; selectorprovecompleto e anagrafica verificabile ancora aperti. [Report](v5/agency-comparison-ui-v1.md).

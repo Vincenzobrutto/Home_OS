@@ -208,3 +208,7 @@ Nuovo pannello usa unit/declare esistenti, senza ID/prova/origine estratta forni
 
 ### 30 ottobre — Decodifica immagini planimetria e prove live isolate
 Il renderer PDF usa esclusivamente la directory wasm della dipendenza gia installata, senza percorsi del chiamante o rete. Un warning di immagine non decodificata blocca il raster: cornice leggibile non equivale a pagina completa. Codec/scanned PDF testati con fixture CCITT e JP2 sintetiche; hash/trasformazione del raster continuano a vincolare l'anteprima. Pilot reale esplicitamente distinto dai test offline, con fonte/pagina autorizzate e cap server, senza modificarne le guardie. Esito geometrico non utilizzabile con usage noto richiede ancora migliore classificazione UI, non retry automatici. [Report](agency-plan-live-20261030.md).
+
+## Agenzie — confronto scelto dall’agente, esito dal server
+
+Nuovo pannello permette2–20fatti attuali, stesso unit/subject/field e periodo esplicito riconosciuto dall’agente. Nessun accoppiamento automatico storico/attuale o conversione fra tipi di superficie. POST invia solo domanda e visibilità; server crea ID/esito, conferme dei fatti restano distinte. [Report](agency-comparison-ui-v1.md).
