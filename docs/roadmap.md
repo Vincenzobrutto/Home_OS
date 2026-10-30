@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+**Gate qualità seconda planimetria non superato:**5contorni, quattro issue, omissioni pertinenze e una coppia di poligoni sovrapposta nonostante maschere distinte. Prima di nuovi invii: guardia overlap dopo semplificazione e replay offline, diagnostica gap/seed e censimento pertinenze separate. Nessuna scala metrica ricavata dalla sola scritta1:100. [Benchmark senza ritocchi](v5/agency-second-plan-benchmark-20261030.md).
+
 **Vani mancanti, 30 ottobre:** disponibile aggiunta manuale e separazione con anteprima, conservazione area, controllo overlap e invalidazione computo. Censimento AI dei passaggi rafforzato ma non ancora verificato con nuovi invii reali. Prossimo gate: identificazione visiva del corridoio con il committente e benchmark della copertura/partizione su documenti indipendenti autorizzati. [Verifiche e limiti](v5/agency-manual-rooms-20261030.md).
 
 **Planimetria reale, 30 ottobre:** primo percorso con AI effettiva e risultato persistito nel browser. Fix decoder PDF CCITT/codec locali verificato571/571 backend; bozza10geometrie, disimpegno ovest ancora accorpato. Prossima priorita qualita: separazione semantica dei passaggi in presenza di aperture, copertura balcone e simboli; benchmark su altri documenti autorizzati. Computo attuale solo parziale, nessuna promessa di zero correzioni. [Prova, costi e limiti](v5/agency-plan-live-20261030.md). Nessun nuovo invio automatico, merge/deploy o modifica demo Alessio.

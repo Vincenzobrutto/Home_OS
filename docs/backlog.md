@@ -974,3 +974,7 @@ Pannello montato con scelta ambito/periodo/fatti espliciti e privacy iniziale pr
 ## Planimetrie — copertura e partizione dei passaggi
 
 Aggiunta manuale e separazione con anteprima implementate; rimane da misurare la copertura dei prompt aggiornati su campioni autorizzati indipendenti e risolvere automaticamente spazi comunicanti senza inventare pareti. Ritagli multi-componente attualmente rifiutati; nuovo supporto richiede contratto e UI espliciti. Nessuna promessa di assenza di correzioni, nessun nuovo invio AI implicito. [Stato](v5/agency-manual-rooms-20261030.md).
+
+## Planimetrie — blocco qualità osservato sul secondo campione
+
+Guardia overlap obbligatoria sui poligoni finali dopo semplificazione: rilevata una coppia sovrapposta malgrado maschere distinte. Da implementare con test sintetico, senza usare geometrie personali in Git. Anche diagnosi differenziata dei seed irrisolti, prudente trattamento dei gap e censimento pertinenze separate/balcone. Replay offline delle risposte già registrate prima di altre chiamate AI. Nessun m2 da scala nominale1:100 priva di riferimento fisico. [Evidenza](v5/agency-second-plan-benchmark-20261030.md).

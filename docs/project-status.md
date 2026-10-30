@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Seconda planimetria — benchmark automatico non superato
+
+Nuova immagine autorizzata:5contorni proposti su9spazi non esclusi dal censimento AI, quattro issue, cantina erroneamente esclusa e balcone non censito. Corridoio riconosciuto ma non delimitato; controllo finale rileva una coppia di poligoni sovrapposta. Nessuna correzione manuale o metratura inventata; scala1:100 senza barra/risoluzione fisica verificabile. Due generazioni,0,035710USD, bound aggregato3,911EUR entro4 con riserve conservate. Prova isolata della stessa pipeline, non upload/API web; nessun codice prodotto o demo Alessio modificati. Priorità: guardia overlap sui poligoni semplificati e diagnosi delle regioni non risolte, poi censimento pertinenze. [Report](v5/agency-second-plan-benchmark-20261030.md).
+
 ## Planimetrie — vani mancanti e ritaglio manuale, 30 ottobre
 
 Aggiornamento16:06Europe/Rome, su conferma del committente: corridoio ovest aggiunto realmente via UI e ricarica verificata. Era omesso, non accorpato al soggiorno: punto interno scelto manualmente e contorno recuperato localmente dai pixel, poi inserito come origine manuale.11vani, dieci precedenti e perimetro verificati identici, nessun overlap. Incremento6,3445m2 e parziale140,8728m2; totale commerciale ancora null con sette verifiche. Nessun nuovo invio AI/costo. [Esito della prova](v5/agency-manual-rooms-20261030.md#prova-reale-successiva--1606-europerome).
