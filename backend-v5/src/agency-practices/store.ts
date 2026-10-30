@@ -6,7 +6,7 @@ import { applyReview, reviewView } from './review';
 import { editPlan, planViews, registerPlan } from '../agency-plans/records';
 import { AgencyFileVault, inspectAgencyFile } from './files';
 import { sourceReadable } from './domain';
-import { enqueuePlanJob, claimPlanJob, reservePlanPhase, settlePlanPhase, markPlanUncertain, finishPlanJob, planJobViews, type Phase, type PlanJob } from '../agency-plans/jobs';
+import { enqueuePlanJob, claimPlanJob, reservePlanPhase, settlePlanPhase, markPlanUncertain, finishPlanJob, planJobViews, authorizedPlanJob, type Phase, type PlanJob } from '../agency-plans/jobs';
 
 function iso(date: Date | null): string | null { return date?.toISOString() ?? null; }
 function membership(row: AgencyMember) { return { agencyId: row.agencyId, accountId: row.accountId, role: row.role as AgencyRole, validFrom: row.validFrom.toISOString(), validUntil: iso(row.validUntil), revokedAt: iso(row.revokedAt) }; }
@@ -21,6 +21,27 @@ const json = (p: Practice): Prisma.InputJsonValue => JSON.parse(JSON.stringify(p
 /** Internal persistence adapter: account comes from the session; no HTTP endpoint accepts file fingerprints. */
 export class AgencyPracticesStore {
   constructor(private readonly db: Pick<PrismaService, '$transaction'>) {}
+  /** Trusted worker-only state. Never expose Actor/Practice/tokenHash via HTTP. */
+  async planWorkerContext(accountId:string,agencyId:string,practiceId:string,id:string,token:string){
+    return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId),now=new Date().toISOString(),job=authorizedPlanJob(actor,practice,id,token,now);const {authorization}=await this.jobBudget(tx,practice,id,job.status!=='completed');if(authorization.runId!==id)throw new PracticeError('access_denied');return {actor,practice,now,job};},{maxWait:5000,timeout:15000});
+  }
+  /** Store validated result, complete job and release known unused budget atomically. */
+  async completePlanJob(accountId:string,agencyId:string,practiceId:string,id:string,token:string,analysis:Parameters<typeof registerPlan>[2]){
+    return this.db.$transaction(async tx=>{
+      const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId),now=new Date().toISOString(),job=authorizedPlanJob(actor,practice,id,token,now),{authorization,budget}=await this.jobBudget(tx,practice,id,false);
+      if(authorization.runId!==id||analysis.runId!==id||analysis.fingerprint!==job.reservations[0]?.fingerprint||analysis.proof.sourceId!==job.proof.sourceId||analysis.proof.version!==job.proof.version||analysis.proof.sha256!==job.proof.sha256||analysis.proof.page!==job.proof.page||analysis.calls.length!==2)throw new PracticeError('invalid_input');
+      for(const r of job.reservations){const c=analysis.calls.find(c=>c.phase===r.phase);if(!r.usage||!c||c.requestId!==r.usage.requestId||c.input!==r.usage.input||c.output!==r.usage.output||!Number.isFinite(c.costUSD)||Math.abs(c.costUSD-r.costMicros!/1000000)>0.000001)throw new PracticeError('invalid_input');}
+      const registered=registerPlan(actor,practice,analysis,practice.revision,now);
+      if(job.status==='completed'){if(!registered.replay||authorization.state!=='closed')throw new PracticeError('idempotency_conflict');return {replay:true,plans:planViews(actor,practice,now)};}
+      if(authorization.state!=='bound')throw new PracticeError('access_denied');
+      const next=finishPlanJob(actor,registered.practice,id,token,now);
+      await tx.agencyAiBudget.update({where:{id:budget.id},data:{committedMicros:{decrement:authorization.committedMicros-authorization.spentMicros}}});
+      await tx.agencyPlanAuthorization.update({where:{id:authorization.id},data:{state:'closed',committedMicros:authorization.spentMicros}});
+      await tx.agencyPractice.update({where:{id:practiceId},data:{revision:next.revision,snapshot:json(next)}});
+      requirePractice(actor,next,'edit',new Date().toISOString());
+      return {replay:false,plans:planViews(actor,next,new Date().toISOString())};
+    },{maxWait:5000,timeout:15000});
+  }
   private async jobBudget(tx:Prisma.TransactionClient,practice:Practice,id:string,active:boolean){
     const j=(practice as Practice&{planJobs?:PlanJob[]}).planJobs?.find(j=>j.id===id);if(!j)throw new PracticeError('access_denied');
     const found=await tx.agencyPlanAuthorization.findUnique({where:{id:j.authorizationId}});if(!found)throw new PracticeError('access_denied');
@@ -49,20 +70,15 @@ export class AgencyPracticesStore {
       return { replay:r.replay, jobs:planJobViews(actor,r.practice,new Date().toISOString()) };
     }, {maxWait:5000,timeout:15000});
   }
-  async planJobCommand(accountId: string, agencyId: string, practiceId: string, id: string, token: string, command: {operation:'claim'|'finish'} | {operation:'reserve';phase:Phase;fingerprint:string;maxMicros:number}) {
+  async planJobCommand(accountId: string, agencyId: string, practiceId: string, id: string, token: string, command: {operation:'claim'} | {operation:'reserve';phase:Phase;fingerprint:string;maxMicros:number}) {
     return this.db.$transaction(async tx => {
       const { actor, practice } = await this.context(tx,accountId,agencyId,practiceId), now=new Date().toISOString();
-      const {authorization,budget}=await this.jobBudget(tx,practice,id,command.operation!=='finish');
+      const {authorization}=await this.jobBudget(tx,practice,id,true);
       if(authorization.runId!==id||authorization.state!=='bound')throw new PracticeError('access_denied');
       let next:Practice, acquired:boolean|undefined;
       if(command.operation==='claim'){const r=claimPlanJob(actor,practice,id,token,now);next=r.practice;acquired=r.acquired;}
       else if(command.operation==='reserve')next=reservePlanPhase(actor,practice,id,token,command.phase,command.fingerprint,command.maxMicros,now);
-      else if(command.operation==='finish')next=finishPlanJob(actor,practice,id,token,now);
       else throw new PracticeError('invalid_input');
-      if(command.operation==='finish'){
-        await tx.agencyAiBudget.update({where:{id:budget.id},data:{committedMicros:{decrement:authorization.committedMicros-authorization.spentMicros}}});
-        await tx.agencyPlanAuthorization.update({where:{id:authorization.id},data:{state:'closed',committedMicros:authorization.spentMicros}});
-      }
       await tx.agencyPractice.update({where:{id:practiceId},data:{revision:next.revision,snapshot:json(next)}});
       requirePractice(actor,next,'edit',new Date().toISOString());
       return {acquired,jobs:planJobViews(actor,next,new Date().toISOString())};

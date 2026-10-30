@@ -80,3 +80,5 @@ export function planJobViews(actor: Actor, p: Practice, now: string) {
   requirePractice(actor, p, 'read', now);
   return ((p as State).planJobs || []).filter(j => { try { authorized(actor,p,j,now); return true; } catch { return false; } }).map(j => ({ id: j.id, status: j.status === 'leased' && at(now) >= Date.parse(j.leaseUntil!) ? 'expired' : j.status, capMicros: j.capMicros, spentMicros: j.reservations.reduce((s,r) => s + (r.costMicros || 0),0), committedMicros: j.reservations.reduce((s,r) => s + (r.costMicros ?? r.maxMicros),0), priceVersion: j.priceVersion, model: j.model }));
 }
+/** Internal worker context only; callers must never serialize the full aggregate. */
+export function authorizedPlanJob(actor:Actor,p:Practice,id:string,token:string,now:string){const j=job(p as State,id,token);authorized(actor,p,j,now);return structuredClone(j);}

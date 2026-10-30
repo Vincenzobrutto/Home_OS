@@ -30,3 +30,6 @@ Test puri: autorizzazioni/capability, claim concorrente logico, scadenza, fasi/d
 
 ## Aggiornamento successivo — registro globale implementato
 Il limite descritto sopra sul solo cap per-run è ora affiancato da AgencyAiBudget/AgencyPlanAuthorization: enqueue dello store richiede il binding server e impegna il budget condiviso, accounting/completamento aggiornano entrambi nella stessa transazione. Restano provisioning/consenso applicativo e coordinatore worker da cablare; nessun provider attivo. Fa fede il report agency-ai-budget-v1.md per questo incremento.
+
+## Aggiornamento coordinatore
+Capability recuperabile tramite HMAC server e completePlanJob atomico con risultato ora implementati. Il vecchio planJobCommand finish è stato rimosso: le due fasi contabilizzate da sole non chiudono più lo store. Restano broker, provisioning reale, intermedi e trasporto/API. [Report](agency-plan-worker-v1.md).

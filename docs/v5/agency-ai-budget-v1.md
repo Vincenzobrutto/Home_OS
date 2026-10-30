@@ -25,3 +25,6 @@ Restano capability recuperabile nel worker, coordinatore che colleghi raster/pip
 ## Casi di prova
 
 Gara fra pratiche per un budget insufficiente a entrambe, rollback completo del perdente, replay senza doppio impegno, vincolo pratica/agenzia/prezzi, receipt unico globale, settlement duplicato, rilascio dopo completamento noto, blocco dopo revoca/scadenza con accounting tardivo ancora possibile, sforamento effettivo registrato e blocco dei nuovi run. Profilo DB combinato include anche le verifiche del job precedente con autorizzazioni provisionate esplicitamente.
+
+## Aggiornamento coordinatore
+La chiusura del budget nello store ora avviene con completePlanJob e registrazione del risultato nella stessa transazione. Il percorso finish senza risultato è rimosso. Budget e consensi applicativi non sono provisionati, nessuna AI attiva. [Report](agency-plan-worker-v1.md).

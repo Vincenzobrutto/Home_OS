@@ -168,3 +168,6 @@ Le fasi nuove richiedono accesso edit e fonte corrente; settlement usa una capab
 
 ## Agenzie — impegno globale prima del job
 Enqueue richiede un'autorizzazione server già provisionata e riserva il cap del run sul budget condiviso nella stessa transazione. Lock pratica→budget→autorizzazione; il replay non raddoppia l'impegno. Accounting revocato rimane possibile, usa BIGINT e conserva gli sforamenti; il completamento noto rilascia solo la quota inutilizzata. Nessun provisioning prodotto né consenso dedotto dall'automazione. [Report](agency-ai-budget-v1.md).
+
+## Agenzie — risultato e chiusura indivisibili
+Nessun finish dello store senza geometria validata: completePlanJob confronta prova/fingerprint e ricevute con il ledger, poi salva risultato, completa job e chiude budget atomicamente. Worker HMAC scoped alla pratica/run permette ricostruzione della capability con una chiave server iniettata; nessun segreto nel payload coda/browser. Nessuna ripresa automatica di fasi inviate. [Report](agency-plan-worker-v1.md).

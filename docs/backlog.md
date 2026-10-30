@@ -906,3 +906,5 @@ Agenzie raster: PDF/PNG implementati; prima del pilota OS sandbox/quote native/p
 Agenzie job: registro per-run e accounting persistiti; prima del provider reale serve autorizzazione spendibile unica fra pratiche e budget globale transazionale, recupero capability nel worker, risultato/intermedi persistenti e completamento atomico con geometria validata. Nessun consenso è dedotto dai fixture. No handover lease senza fencing. [Report](v5/agency-plan-jobs-v1.md).
 
 Agenzie: registro budget/autorizzazioni globale implementato; restano provisioning/consenso reale, capability recuperabile, coordinatore che persista risultato e job insieme, transport provider offline/HTTP e UI. Non trattare fixture finanziarie come credito o consenso. [Report](v5/agency-ai-budget-v1.md).
+
+Agenzie: coordinatore interno collega bytes/raster/pipeline/ledger e risultato atomico con provider falso verificato. Prossimi trasporto provider offline e API/sessione/CSRF/DTO, provisioning consenso nel prodotto, UI pratica e form scala/coefficienti. Intermedi/broker/fencing e gestione fallimenti prima della prenotazione ancora aperti. [Report](v5/agency-plan-worker-v1.md).

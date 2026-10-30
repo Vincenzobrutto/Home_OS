@@ -52,3 +52,6 @@ Enqueue/claim/reserve/finish e accounting worker sono interni. Mai esporre capab
 
 ## Binding globale ora obbligatorio nello store
 Enqueue rifiuta authorizationId inesistente, di altra pratica/agenzia o con prova/prezzi/cap diversi. Budget e autorizzazioni hanno cap/revoche/scadenze immutabili e receipt unico globale. Nessuna route di provisioning attiva: la futura conferma umana deve emettere la riga server, non accettare prezzi o receipt autoattestati. [Report](agency-ai-budget-v1.md).
+
+## Coordinatore interno disponibile
+Worker/server soltanto: planWorkerContext contiene Actor/Practice e non è serializzabile al client. planJobCommand consente claim/reserve, non finish; completePlanJob registra risultato e chiude job/budget insieme. Mai accettare risultato AI dal browser. Trasporto HTTP/sessione/CSRF e provisioning restano da implementare. [Report](agency-plan-worker-v1.md).
