@@ -4,6 +4,8 @@
 
 Calibrazione A4 e due viste collaudate su pratica sintetica con API/worker/storage/PostgreSQL reali e provider simulato: salvataggio, reload, scala100→200→100, geometrie immutate e superfici quadruplicate. Stima e verifiche murarie restano aperte. 18/18 DB-HTTP-worker, 13/13 guardie e 58/58 UI, build/lint verdi. Browser desktop/375; correzione leggibilità e scorrimento tabella mobile. Entrambi i cluster nuovi arrestati, nessun link locale pubblicato. [Report corrente](v5/agency-paper-browser-validation-20261030.md), [contratto A4](v5/agency-paper-calibration-20261030.md). Precedente regressione backend649/649 distinta, non ripetuta. Restano validazione su documenti indipendenti e limiti ottici noti. Demo Alessio invariata; nessuna nuova AI o deploy.
 
+Regressione sull'originale PDF nuovamente allegato (stesso file noto): raster identico, risposte AI cached e profilo prodotto attuale,10contorni/0overlap, corridoio ovest ancora assente dal censimento storico e simboli aperti. Scala1:200/barra10m: A4 differisce−0,24% sulle aree dei medesimi contorni, non rispetto a misure reali. Nessuna nuova AI, codice, API/DB/browser o totale commerciale. [Prova e limiti](v5/agency-original-pdf-regression-20261030.md).
+
 ## Planimetrie — balcone aggiunto in anteprima
 
 Fascia esterna recuperata dai componenti dei pixel, allungata e adiacente a più vani sullo stesso lato della facciata.10contorni/0overlap, i nove precedenti identici; nessun seed o ricalco umano e nessuna nuovaAI. Uso/associazione ancora da verificare. Funzione backend e anteprima tecnica, non final canonico/accettazione persistente. [Risultato e limiti](v5/agency-exterior-strip-preview-20261030.md). Demo Alessio invariata.

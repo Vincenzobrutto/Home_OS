@@ -1042,3 +1042,7 @@ Implementata ipotesi A4/scala dichiarata con provenance e controlli server. Rest
 ### Aggiornamento collaudo A4, 30 ottobre 2026
 
 Completato il collaudo HTTP/DB/browser che mancava nella voce precedente, con sorgente e provider sintetici: [evidenze](v5/agency-paper-browser-validation-20261030.md). Non completa bordi/prospettiva/OCRscala, rinomina o scala indipendente dalle classificazioni. Prossimo corpus indipendente con misure note, poi prova agente reale.
+
+### Censimento corridoi — conferma su PDF noto, 30 ottobre 2026
+
+Replay senza nuova AI sul PDF originale: il corridoio ovest non compare nelle risposte storiche, quindi il solo recupero di seed/contorni non risolve l'omissione semantica. L'ultimo prompt non è stato rieseguito in questa prova. Verificare con campioni indipendenti, senza confondere l'issue del candidato Balcone nord con il corridoio. [Report](v5/agency-original-pdf-regression-20261030.md).
