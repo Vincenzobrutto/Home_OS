@@ -131,3 +131,5 @@ Prima verticale: fascicolo → dati con fonti → confronto → bozza incarico. 
 Nucleo raster/AI/commerciale e componente doppia vista verificati nel branch; prossimo upload/storage bytes, job/ledger e cablaggio API/UI. Nessun rilascio. [Stato](v5/agency-plan-integration-v1.md).
 
 Agenzie: fondazione bytes interna verificata (429/429 ordinari,9/9 DB), ancora senza route. Prossimi rasterizzatore dai bytes correnti e ledger job, poi endpoint/UI. [Report](v5/agency-files-v1.md).
+
+Agenzie: rendering interno PDF/PNG e ricontrollo fonti verificati444/444 ordinari. Prossimo ledger durevole e poi trasporto/UI, nessuna integrazione completa dichiarata. [Report](v5/agency-renderer-v1.md).

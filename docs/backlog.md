@@ -900,3 +900,5 @@ Agenzie coerenza: motore puro verificato; prossimi gruppi persistenti, decisioni
 Nucleo nuovo pronto a essere cablato; completare storage bytes/rasterizzazione agenzia, job/lease/ledger e trasporto provider, DTO/API/CSRF, navigazione pratica/form computo, definizione iniziale del perimetro e fasce dei muri. Dataset autorizzato ulteriore e regole simboli/limite25cm da concordare. Non usare demo Alessio o ledger sperimentale per prove live. [Report](v5/agency-plan-integration-v1.md).
 
 Agenzie storage: bytes interni verificati, ancora da completare rasterizzatore fidato, garbage collection degli oggetti orfani, quote/retention, durabilità filesystem e streaming multipart autenticato con cap durante la ricezione. Non esporre mutate metadata-only come upload. [Report](v5/agency-files-v1.md).
+
+Agenzie raster: PDF/PNG implementati; prima del pilota OS sandbox/quote native/processi, corpus ostile e riproducibilità binari canvas. JPEG/EXIF e ritagli con trasformazioni ancora da implementare. Prossima priorità job/lease/ledger persistente, nessun retry automatico di una chiamata incerta. [Report](v5/agency-renderer-v1.md).

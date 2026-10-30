@@ -1898,3 +1898,6 @@ Segmentazione raster da semi AI, controllo a due fasi, persistenza derivati priv
 
 ## 30 ottobre2026 — Agenzie: originali immutabili interni
 Upload bytes interno con impronta server-side e download autorizzato dello snapshot corrente. Vault separato da Home/Document, nessuna route attiva.429/429 ordinari e9/9 DB dedicati, cluster fermato. [Stato e limiti](v5/agency-files-v1.md).
+
+## 30 ottobre2026 — Agenzie: raster PDF/PNG
+Decoder isolato per i bytes autorizzati e ponte con ricontrollo delle fonti dopo rendering.15nuovi test inclusi nella regressione444/444, lint verde. Nessun endpoint o provider attivo; JPEG rinviato. [Report e limiti](v5/agency-renderer-v1.md).

@@ -159,3 +159,6 @@ L'AI individua spazi/semi/simboli; il codice ricava contorni dai pixel e misura 
 
 ## Agenzie — bytes prima del riferimento DB
 Vault dedicato content-addressed, pubblicazione con link esclusivo e verifica SHA, mai sovrascrittura. Upload autorizzato salva bytes prima del commit metadati; in rollback è ammesso un oggetto orfano, non un riferimento a bytes incompleti. Riconciliazione/retention ancora da implementare, nessuna cancellazione in-request. Solo file buffer limitato e firma media, non validazione strutturale. [Dettagli](agency-files-v1.md).
+
+## Agenzie — raster autorevole, parser separato
+Il raster deriva dai bytes correnti letti con permessi AgencyPractice, non da un'immagine/hash del browser. Rendering in figlio usa-e-getta senza credenziali e con limiti applicativi, accessi ricontrollati prima del ritorno. Nessuna equivalenza tra DPI e scala metrica. Isolamento OS e memoria nativa ancora da collaudare prima del pilota. [Report](agency-renderer-v1.md).
