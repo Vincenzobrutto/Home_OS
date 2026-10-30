@@ -902,3 +902,5 @@ Nucleo nuovo pronto a essere cablato; completare storage bytes/rasterizzazione a
 Agenzie storage: bytes interni verificati, ancora da completare rasterizzatore fidato, garbage collection degli oggetti orfani, quote/retention, durabilità filesystem e streaming multipart autenticato con cap durante la ricezione. Non esporre mutate metadata-only come upload. [Report](v5/agency-files-v1.md).
 
 Agenzie raster: PDF/PNG implementati; prima del pilota OS sandbox/quote native/processi, corpus ostile e riproducibilità binari canvas. JPEG/EXIF e ritagli con trasformazioni ancora da implementare. Prossima priorità job/lease/ledger persistente, nessun retry automatico di una chiamata incerta. [Report](v5/agency-renderer-v1.md).
+
+Agenzie job: registro per-run e accounting persistiti; prima del provider reale serve autorizzazione spendibile unica fra pratiche e budget globale transazionale, recupero capability nel worker, risultato/intermedi persistenti e completamento atomico con geometria validata. Nessun consenso è dedotto dai fixture. No handover lease senza fencing. [Report](v5/agency-plan-jobs-v1.md).

@@ -110,3 +110,6 @@ Lo snapshotv1 ammette ora units/facts/reviewReceipts opzionali per compatibilit�
 ## Analisi planimetrie agenzia — snapshot opzionale
 
 AgencyPractice.snapshot può contenere planAnalyses e planReceipts: prova fonte/versione/SHA/pagina, raster SHA/dimensioni, geometrie/vuoti, perimetro separato, versioni e storia modifiche, motivazioni e computo commerciale. Righe e criteri non sono fatti confermati automaticamente. Fonte sostituita rende obsoleta la vista e nasconde geometrie correnti; mutazione geometria invalida il computo. Privacy ereditata dalla fonte, nessun accesso implicito admin. Bytes e prenotazioni job non inclusi in questo snapshot. [Contratto](agency-plan-integration-v1.md).
+
+### AgencyPractice planJobs (snapshot opzionale)
+Job interno limitato100/pratica: prova immutabile, creatore, riferimento autorizzazione server, tariffe/versione/modello, tetto microUSD, hash capability, lease, stato e prenotazioni fase+fingerprint+uso/costo. Budget globale e autorizzazioni pubbliche restano separati. [Contratto e limiti](agency-plan-jobs-v1.md).

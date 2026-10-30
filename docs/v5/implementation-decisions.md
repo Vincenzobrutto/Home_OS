@@ -162,3 +162,6 @@ Vault dedicato content-addressed, pubblicazione con link esclusivo e verifica SH
 
 ## Agenzie — raster autorevole, parser separato
 Il raster deriva dai bytes correnti letti con permessi AgencyPractice, non da un'immagine/hash del browser. Rendering in figlio usa-e-getta senza credenziali e con limiti applicativi, accessi ricontrollati prima del ritorno. Nessuna equivalenza tra DPI e scala metrica. Isolamento OS e memoria nativa ancora da collaudare prima del pilota. [Report](agency-renderer-v1.md).
+
+## Agenzie — contabilizzare anche dopo revoca, senza riaprire documenti
+Le fasi nuove richiedono accesso edit e fonte corrente; settlement usa una capability worker limitata e può contabilizzare l'uso già inviato dopo revoca. Ritorna solo costo/replay, nessun aggregate. MicroUSD interi e prezzi immutabili; nessun retry di prenotazione duplicata/incerta. Lease scaduta non viene ceduta senza fencing. Registro autorizzazioni/budget globale ancora necessario prima del trasporto reale. [Report](agency-plan-jobs-v1.md).

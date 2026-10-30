@@ -133,3 +133,5 @@ Nucleo raster/AI/commerciale e componente doppia vista verificati nel branch; pr
 Agenzie: fondazione bytes interna verificata (429/429 ordinari,9/9 DB), ancora senza route. Prossimi rasterizzatore dai bytes correnti e ledger job, poi endpoint/UI. [Report](v5/agency-files-v1.md).
 
 Agenzie: rendering interno PDF/PNG e ricontrollo fonti verificati444/444 ordinari. Prossimo ledger durevole e poi trasporto/UI, nessuna integrazione completa dichiarata. [Report](v5/agency-renderer-v1.md).
+
+Agenzie: job per-run e accounting verificati466/466 ordinari+8/8 DB. Prossima priorità autorizzazioni/budget globali, poi coordinatore e trasporto/UI. [Report](v5/agency-plan-jobs-v1.md).

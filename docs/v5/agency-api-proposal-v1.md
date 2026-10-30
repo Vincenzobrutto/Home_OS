@@ -46,3 +46,6 @@ Store.savePlan/readPlans/editPlan disponibili internamente con CAS, idempotenza 
 
 ## Confine bytes ora disponibile internamente
 Lo store upload/readFile deriva identità dai bytes e applica lock/CAS/permessi. Il trasporto resta proposto: non accettare Actor, SHA, MIME o path dal browser come attestazioni. Limite ricezione20MiB, header download sicuri ed error mapping generico da implementare nel controller; firma media non equivale a decoder. [Limiti storage](agency-files-v1.md).
+
+## Job interni, non DTO di spesa del browser
+Enqueue/claim/reserve/finish e accounting worker sono interni. Mai esporre capability, prezzi o authorizationId liberamente scrivibili dal browser. L'accounting dopo revoca ha accesso soltanto al ledger del run e risponde con costo/replay; non riapre le fonti. Prima di collegare il provider serve registro globale di autorizzazioni e budget, poi il coordinatore risultato/job. [Limiti](agency-plan-jobs-v1.md).

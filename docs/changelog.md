@@ -1901,3 +1901,6 @@ Upload bytes interno con impronta server-side e download autorizzato dello snaps
 
 ## 30 ottobre2026 — Agenzie: raster PDF/PNG
 Decoder isolato per i bytes autorizzati e ponte con ricontrollo delle fonti dopo rendering.15nuovi test inclusi nella regressione444/444, lint verde. Nessun endpoint o provider attivo; JPEG rinviato. [Report e limiti](v5/agency-renderer-v1.md).
+
+## 30 ottobre2026 — Agenzie: job e accounting persistenti per run
+Lease singola e prenotazioni uniche, microUSD, replay e accounting dopo revoca tramite capability limitata.22nuovi test,466/466 ordinari e8/8 DB dedicati; cluster fermato. Nessun provider/scheduler: registro globale autorizzazioni/budget ancora necessario. [Report](v5/agency-plan-jobs-v1.md).

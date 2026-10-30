@@ -476,3 +476,8 @@ profiles['test:offline-db'].files.push('test/agency-files.integration.test.cjs')
 
 profiles['test:agency-renderer'] = {database:false,api:false,files:['test/agency-renderer.test.cjs']};
 profiles.test.files.push('test/agency-renderer.test.cjs');
+
+profiles['test:agency-jobs'] = {database:false,api:false,files:['test/agency-jobs.test.cjs']};
+profiles.test.files.push('test/agency-jobs.test.cjs');
+profiles['test:agency-jobs-db'] = {database:true,api:false,files:['test/agency-jobs.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-jobs.integration.test.cjs');

@@ -6,6 +6,7 @@ import { applyReview, reviewView } from './review';
 import { editPlan, planViews, registerPlan } from '../agency-plans/records';
 import { AgencyFileVault, inspectAgencyFile } from './files';
 import { sourceReadable } from './domain';
+import { enqueuePlanJob, claimPlanJob, reservePlanPhase, settlePlanPhase, markPlanUncertain, finishPlanJob, planJobViews, type Phase } from '../agency-plans/jobs';
 
 function iso(date: Date | null): string | null { return date?.toISOString() ?? null; }
 function membership(row: AgencyMember) { return { agencyId: row.agencyId, accountId: row.accountId, role: row.role as AgencyRole, validFrom: row.validFrom.toISOString(), validUntil: iso(row.validUntil), revokedAt: iso(row.revokedAt) }; }
@@ -20,6 +21,39 @@ const json = (p: Practice): Prisma.InputJsonValue => JSON.parse(JSON.stringify(p
 /** Internal persistence adapter: account comes from the session; no HTTP endpoint accepts file fingerprints. */
 export class AgencyPracticesStore {
   constructor(private readonly db: Pick<PrismaService, '$transaction'>) {}
+  /** Server-only authorization/capability; never map this directly from a browser DTO. */
+  async enqueuePlanJob(accountId: string, agencyId: string, practiceId: string, input: Parameters<typeof enqueuePlanJob>[2], token: string) {
+    return this.db.$transaction(async tx => {
+      const { actor, practice } = await this.context(tx,accountId,agencyId,practiceId), r = enqueuePlanJob(actor,practice,input,token,new Date().toISOString());
+      if (!r.replay) await tx.agencyPractice.update({ where:{id:practiceId},data:{revision:r.practice.revision,snapshot:json(r.practice)} });
+      requirePractice(actor,r.practice,'edit',new Date().toISOString());
+      return { replay:r.replay, jobs:planJobViews(actor,r.practice,new Date().toISOString()) };
+    }, {maxWait:5000,timeout:15000});
+  }
+  async planJobCommand(accountId: string, agencyId: string, practiceId: string, id: string, token: string, command: {operation:'claim'|'finish'} | {operation:'reserve';phase:Phase;fingerprint:string;maxMicros:number}) {
+    return this.db.$transaction(async tx => {
+      const { actor, practice } = await this.context(tx,accountId,agencyId,practiceId), now=new Date().toISOString();
+      let next:Practice, acquired:boolean|undefined;
+      if(command.operation==='claim'){const r=claimPlanJob(actor,practice,id,token,now);next=r.practice;acquired=r.acquired;}
+      else if(command.operation==='reserve')next=reservePlanPhase(actor,practice,id,token,command.phase,command.fingerprint,command.maxMicros,now);
+      else if(command.operation==='finish')next=finishPlanJob(actor,practice,id,token,now);
+      else throw new PracticeError('invalid_input');
+      await tx.agencyPractice.update({where:{id:practiceId},data:{revision:next.revision,snapshot:json(next)}});
+      requirePractice(actor,next,'edit',new Date().toISOString());
+      return {acquired,jobs:planJobViews(actor,next,new Date().toISOString())};
+    },{maxWait:5000,timeout:15000});
+  }
+  /** Worker capability only: account usage even if the user's grant was revoked.
+   * This cannot authorize dispatch, disclose originals or return the aggregate. */
+  async accountPlanPhase(agencyId:string,practiceId:string,id:string,token:string,phase:Phase,usage:Parameters<typeof settlePlanPhase>[4]|null){
+    return this.db.$transaction(async tx=>{
+      await tx.$queryRaw`SELECT id FROM "AgencyPractice" WHERE id=${practiceId} AND "agencyId"=${agencyId} FOR UPDATE`;
+      const row=await tx.agencyPractice.findUnique({where:{id:practiceId}});if(!row||row.agencyId!==agencyId)throw new PracticeError('access_denied');
+      const original=snapshot(row),now=new Date().toISOString(),r=usage?settlePlanPhase(original,id,token,phase,usage,now):{practice:markPlanUncertain(original,id,token,phase,now),replay:false,costMicros:null};
+      if(!r.replay)await tx.agencyPractice.update({where:{id:practiceId},data:{revision:r.practice.revision,snapshot:json(r.practice)}});
+      return {replay:r.replay,costMicros:r.costMicros};
+    },{maxWait:5000,timeout:15000});
+  }
   /** Internal upload boundary: file identity is derived from bytes, never a browser assertion. */
   async upload(accountId: string, agencyId: string, practiceId: string, input: unknown, bytes: Buffer, vault: AgencyFileVault) {
     if (!input || typeof input !== 'object' || Array.isArray(input) || Object.getPrototypeOf(input) !== Object.prototype || Object.keys(input).some(k => !['key', 'expectedRevision', 'command'].includes(k))) throw new PracticeError('invalid_input');
