@@ -998,3 +998,7 @@ Censimento e recupero geometrico di pertinenze esplicitamente etichettate implem
 ## Agenzie — prossimo incremento del percorso completo
 
 Definito [contratto implementativo AI atti](v5/agency-deed-orchestration-contract-v1.md), ancora da realizzare: schema/adapter consenso-job-budget, coordinatore decoder/provider/stage, DTO/API e UI offerta/pagine.18casi sono pianificati, non test già eseguiti. Nessuna spesa autorizzata dal documento; modello incarico non ancora disponibile e generazione bloccata. Preparazione dati confermati già presente.
+
+## Planimetrie — prossimo gate porte e servizi
+
+Automatizzare proposte di ancoraggi/verso porta e selezione involucri con evidenze; misurare falsi positivi su fixture indipendenti. Poi revisione/commit fonte/versione/SHA/CAS. Worker e mobile ancora aperti; due spazi e balcone della seconda foto non risolti. [Incremento](v5/agency-room-surfaces-20261030.md).

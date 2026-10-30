@@ -1,5 +1,10 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Planimetrie — porte e servizi, anteprima proposta
+
+Arco interno corretto localmente e involucri sostenuti dai muri, senza erosione da sanitari; vuoti e revisioni preservati. Replay 7→9 contorni, zero overlap, sei verifiche: selezione tecnica Codex, non riconoscimento autonomo. Nessuna nuova route/persistenza. 606/606 backend, 21/21 DB adapter esistente, laboratorio e browser verificati. Nessuna nuova AI o modifica demo Alessio. [Report e limiti](v5/agency-room-surfaces-20261030.md).
+
+
 ## Planimetrie — accessori e soglie virtuali
 
 Regole lessicali conservano le pertinenze separate e possono recuperarne contorni candidati senza confermare associazione o proprietà; inventario AI originale preservato, censimento scoped persistente e review alimentata. Soglie virtuali proposte, esplicitamente selezionabili/correggibili solo nel laboratorio offline; nessuna applicazione automatica o route prodotto. Seconda foto:5→6contorni con cantina candidata,7con soglia interna scelta nel collaudo;3issue e ingresso principale ancora irrisolto.596/596 ordinari,21/21 DB per censimento, build/lint backend e typecheck/build laboratorio verdi. Falsi positivi impediscono selezione automatica. Nessuna nuova AI/spesa o modifica demo Alessio. [Regole, prove e limiti](v5/agency-annex-threshold-rules-20261030.md).

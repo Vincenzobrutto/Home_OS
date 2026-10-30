@@ -1,5 +1,10 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+## Planimetrie — porte e servizi, anteprima proposta
+
+Arco interno corretto localmente e involucri sostenuti dai muri, senza erosione da sanitari; vuoti e revisioni preservati. Replay 7→9 contorni, zero overlap, sei verifiche: selezione tecnica Codex, non riconoscimento autonomo. Nessuna nuova route/persistenza. 606/606 backend, 21/21 DB adapter esistente, laboratorio e browser verificati. Nessuna nuova AI o modifica demo Alessio. [Report e limiti](v5/agency-room-surfaces-20261030.md).
+
+
 **Accessori/soglie:** censimento e recupero geometrico proposto di accessori esplicitamente etichettati implementati, associazione sempre da verificare. Laboratorio di soglie temporanee selezionabili con replay sintetico/reale disponibile; secondo caso fino7contorni con selezione tecnica, copertura incompleta. Riconoscimento automatico freccia/ingresso, verifica semantica dei falsi tagli e integrazione nel workspace con worker/CAS restano gate aperti. [Report](v5/agency-annex-threshold-rules-20261030.md).
 
 **Guardia contorni conclusa:** replay seconda planimetria5contorni, zero overlap, tre contorni non coinvolti immutati. Diagnosi cause e controllo alla registrazione implementati/verificati; non ancora risolta la copertura completa. Prossima fase: ripristino locale verificabile dei tratti aperti, soglie adeguate alla risoluzione e associazione delle pertinenze. Varianti morfologiche sperimentali non applicate automaticamente. [Report](v5/agency-boundary-cleanup-20261030.md).

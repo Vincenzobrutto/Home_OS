@@ -1,5 +1,10 @@
 ## 30 ottobre 2026 — Censimento accessori e laboratorio soglie
 
+## Planimetrie — porte e servizi, anteprima proposta
+
+Arco interno corretto localmente e involucri sostenuti dai muri, senza erosione da sanitari; vuoti e revisioni preservati. Replay 7→9 contorni, zero overlap, sei verifiche: selezione tecnica Codex, non riconoscimento autonomo. Nessuna nuova route/persistenza. 606/606 backend, 21/21 DB adapter esistente, laboratorio e browser verificati. Nessuna nuova AI o modifica demo Alessio. [Report e limiti](v5/agency-room-surfaces-20261030.md).
+
+
 Pertinenze separate mantenute nel censimento; contorno candidato recuperabile da esclusione con etichetta esplicita, mai proprietà/coefficiente automatici. Soglie virtuali verificabili in prototipo offline, non attive nel worker prodotto.596/596 ordinari,21/21 DB censimento e verifiche laboratorio verdi; nessuna nuova AI. [Report](v5/agency-annex-threshold-rules-20261030.md).
 
 ## 30 ottobre 2026 — Poligoni finali: rifinitura e controllo sovrapposizioni
