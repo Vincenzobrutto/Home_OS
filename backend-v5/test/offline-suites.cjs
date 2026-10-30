@@ -519,3 +519,6 @@ profiles['test:agency-trial']={database:true,api:false,files:['test/agency-trial
 
 profiles['test:agency-deed-http-db']={database:true,api:false,files:['test/agency-deed-http.integration.test.cjs'],apiFiles:[]};
 profiles['test:offline-db'].files.push('test/agency-deed-http.integration.test.cjs');
+
+// Dated browser review trial; excluded from aggregate suites.
+profiles['test:agency-review-trial']={database:true,api:false,files:['test/agency-review-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T16:00:00Z'};
