@@ -1301,3 +1301,7 @@ Su richiesta del committente, mostrare un nome leggibile usando soltanto fornito
 ## 2026-10-30 — Dati incarico prima del modello
 
 Il pacchetto dati per il futuro incarico e una selezione esplicita e autorizzata di fatti confermati, non una certificazione o generazione di contratto. In assenza di modello e mapping approvati dall'agenzia, canGenerateDraft resta false, anche senza campi mancanti. Dati dichiarati mantengono tale origine; successione, titolarita e difformita non sono inferite dalla selezione. La funzione pura iniziale non valuta completezza o finding e lo espone esplicitamente. Decisione tecnica implementata; requisiti dell'agenzia ancora da validare. Report v5/agency-mandate-packet-v1.md.
+
+## 2026-10-30 — Le citazioni degli atti verificano presenza, non significato
+
+Il nuovo adapter offline confronta citazione e valore letterali con testo pagina ottenuto da una porta server fidata. Il risultato resta proposta non associata a persone/unita della pratica: lexicalEvidenceVerified non implica semanticEvidenceVerified, titolarita attuale o dato confermato. Nessun ruolo current_owner del modello e nessuna conversione data/identita impliciti. Parser reale e binding umano sono task separati; nessuna AI reale autorizzata da questo contratto. Report v5/agency-deed-extraction-contract-v1.md.

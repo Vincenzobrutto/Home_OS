@@ -1932,3 +1932,7 @@ Confronti e note successione/distribuzione con esiti motivati, privacy e riapert
 ## 30 ottobre 2026 — Nucleo documentale Agenzie, checkpoint verificato
 
 [Stato e prove](v5/agency-checkpoint-20261030.md): registro persistente di confronti/osservazioni successione-difformita e risoluzioni con riapertura; pacchetto interno per dati incarico, binding espliciti e soli confermati con prove, senza generazione contratto. Backend519/519 e mirato finale26/26, DBfinding/HTTP31/31 su cluster fermato, frontend precedente26/26; profili distinti. Solo branch dedicato, cablaggio concorrente escluso; nessun merge/deploy, AI reale o modifica demo Alessio.
+
+## 30 ottobre 2026 — Contratto atti con proposte non associate
+
+Aggiunto adapter puro per schema risposta, accesso fonte corrente, pagine/citazioni/valori letterali, ruoli documentali proposti e fingerprint. Nessuna conferma o binding identita automatici; errori di pagina/testo/citazione espliciti. Non e una nuova estrazione AI o OCR. Prove sintetiche e risultati nel report v5/agency-deed-extraction-contract-v1.md; nessun endpoint o schema DB modificato.

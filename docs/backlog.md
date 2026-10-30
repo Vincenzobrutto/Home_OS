@@ -918,3 +918,7 @@ Coerenza persistente verificata; restano retarget/versionamento delle domande, a
 ## 30 ottobre 2026 — Agenzie: lacune dopo il checkpoint notturno
 
 [Ordine e criteri di pilot](v5/agency-checkpoint-20261030.md). Ancora aperti: navigazione concorrente da verificare separatamente; estrazione AI atti e controllo citazioni; UI registro finding e retarget/versionamento quesiti; modello incarico approvato e tipi identita/date/durata/provvigioni; readiness completo e persistenza pacchetto; nuovi vani/vuoti; provisioning agenzie, quote/scansione/orfani storage e recupero job incerti. Non presentare pacchetto interno come contratto o esito conforme. Nessuna nuova spesa o deploy autorizzati da questa lista.
+
+## 30 ottobre 2026 — Atti dopo il contratto offline
+
+Adapter lessicale implementato separatamente dal cablaggio: decoder atti fidato e testo da PDF sintetici ancora da collegare; poi persistenza proposte e binding umano esplicito. Date italiane/quote/diritti e dati contrattuali non convertiti dal contratto iniziale. Nessuna promozione automatica, citazione presente non prova valore semanticamente corretto. UI dati/fonti e finding restano priorita del ciclo diurno. Report v5/agency-deed-extraction-contract-v1.md.

@@ -149,3 +149,13 @@ Prossimo: modello reale dell'agenzia e semantica dati mancanti, readiness con re
 
 ### Consegna navigazione al termine delle 09:00 Europe/Rome
 API/AppModule e rotte Agenzie collegati, entrambe le viste preservate. Collaudo incompleto: 36/36 HTTP/DB e 33/33 UI mirati; frontend completo 1605/1607 con due vecchi assert di assenza Agenzie da aggiornare. Browser reale login/agenzia/pratica riusciti, upload bloccato durante tool e trial arrestato automaticamente al termine: nessun E2E o 375 px del verticale reale dichiarato. Nessuno sviluppo proseguito dopo il termine. Report e prossimi passi: [agency-navigation-handoff-20261030](agency-navigation-handoff-20261030.md). Demo Alessio pulita invariata, nessuna AI live, merge o deploy.
+
+### Ciclo diurno09:00UTC /10:00EuropeRome — contratto atti offline
+
+Autorizzazione estesa da Vincenzo fino18:00EuropeRome /17:00UTC; piano outputs/Dimora-Agenzie-piano-diurno-20261030.txt, automazione dedicata attiva. Ora controllata, nessuno sviluppo oltre il vecchio termine notturno prima della nuova autorizzazione.
+
+Base remota avanzata da altro incarico a f249585: acquisito metadati e handoff, worktree separato pulito passato detached al discendente gia pubblicato, senza merge/rebase o modifiche ai suoi file. Il suo frontend completo resta con due aspettative da aggiornare e collaudo browser incompleto; non attribuire questi limiti al nuovo adapter o dichiararli risolti. Checkout originale e residui concorrenti preservati.
+
+Nuovo reviewDeedExtraction puro: envelope e fonte corrente autorizzata, testo pagina da porta server fidata, citazione e valore letterali con confini, ruoli documentali proposti senza current_owner, candidati non associati a soggetti/unita pratica. Matching lessicale non prova significato o titolarita; proposte senza conferma/import automatico. Data soltanto ISO letterale, niente quote/diritti/superfici inventati. Schema/limiti/hash testo/fingerprint e motivi esclusione; nessuna AI, OCR o parser atti collegati. Report agency-deed-extraction-contract-v1.md.
+
+Verifiche finali535/535 ordinari, build/lint mirato verdi.13nuovi casi in profilo findings, incluso ultimo caso pagine malformate. Primo mirato37/38: sostituzione resettava classificazione e mascherava source_changed, corretto ordine validazione; poi38/38. Run intermedio534/534 prima del controllo pagine fidate; finale535/535 e quello pertinente. Nessun cluster DB necessario per funzione pura, nessun servizio/file personale/spesa o demo Alessio. Prossimo: decoder fidato con PDF sintetico e binding umano, poi UI controllata revisioni/fonti/finding in file indipendenti.

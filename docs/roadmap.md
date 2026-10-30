@@ -155,3 +155,7 @@ Agenzie: finding persistenti e API opt-in verificati509/509+31/31DB/HTTP; prossi
 ## 30 ottobre 2026 — Agenzie: prossimo ciclo dopo il nucleo documentale
 
 [Checkpoint proprio e limiti](v5/agency-checkpoint-20261030.md): fascicolo/fonti/fatti, finding persistenti e planimetrie verificati sul branch dedicato; pacchetto dati incarico interno implementato, nessun modello approvato o DOCX generato. Prossimo ordine: verifica cablaggio concorrente separato; estrazione atti con prove/consenso; UI finding; modello reale e mapping; operativita storage/worker e disegno nuovi vani/vuoti. Nessun merge, deploy o nuova AI impliciti. Demo Alessio invariata.
+
+## 30 ottobre 2026 — Ciclo diurno Agenzie fino alle18:00
+
+Priorita documento > dati verificabili > pacchetto incarico: [contratto atti offline](v5/agency-deed-extraction-contract-v1.md), poi decoder su fixture PDF reali sintetiche e binding umano, UI revisioni/fonti/finding, readiness sul modello reale dell'agenzia. Il contratto non e OCR o servizio AI e non crea fatti. Cablaggio gia pubblicato f249585 ereditato come base, validazione e limiti restano distinti dal nuovo adapter; nessun merge o deploy.
