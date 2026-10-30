@@ -193,3 +193,7 @@ Confronti/observazioni e storia persistiti separatamente; risoluzione richiede m
 ## Agenzie — esporre solo read/bind dei record da atto
 
 GET proposte e POST binding usano sessione/grant e DTO esatto; il browser sceglie destinazione e riconosce ruolo, non riscrive valore/prova/visibilità. Nessuna route stage con TrustedDeedText: l'attestazione resta server-only. No-store/nosniff sulle nuove risposte riuscite, conferma separata via review. [Contratto e verifiche](agency-deed-http-v1.md).
+
+## Agenzie — associare senza inferire identità
+
+UI nuova richiede unità esplicita, riferimento soggetto e riconoscimento ruolo documentale; non tratta riferimenti AI come identità correnti. POST crea soltanto proposta, decisione successiva separata. GET parallele review/proposte devono avere stessa revisione; readonly blocca anche retry incerto. Componente indipendente prima del montaggio autorizzato. [Report](agency-deed-ui-v1.md).

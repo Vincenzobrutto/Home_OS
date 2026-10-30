@@ -181,3 +181,7 @@ Priorita documento > dati verificabili > pacchetto incarico: [contratto atti off
 ## Agenzie — lettura proposte e binding via HTTP
 
 Nuove route sessione/CSRF e15/15 test HTTP su cluster dedicato fermato; import ancora proposto, privacy e prove derivate server. Prossimo gate UI associazione e montaggio revisioni, poi orchestration estrazione atti; modello incarico reale ancora necessario. Nessun deploy. [Report](v5/agency-deed-http-v1.md).
+
+## Agenzie — UI associazione da atto
+
+Nuovo componente indipendente e client HTTP,20nuovi test/gruppo58/58, typecheck/lint e browser desktop375su harness sintetico. Scelte unita/soggetto/ruolo esplicite, import proposto, fonte e CAS; ancora da montare nella pratica e provare contro API/DB. Nessun backend o demo Alessio modificati. [Report](v5/agency-deed-ui-v1.md).

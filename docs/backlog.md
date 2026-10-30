@@ -946,3 +946,7 @@ read/stage/bind interni verificati su DB nuovo con PDF sintetico reale,14/14 e56
 ## Agenzie — dopo HTTP atti del30ottobre
 
 Read/bind ora disponibili e15/15 HTTP verificati su cluster nuovo fermato. Prossimo: UI associazione esplicita a unità/subjectKey e montaggio dati/fonti/finding nella pratica, senza inferire persone attuali. Stage/provider atti/consenso/budget dedicati ancora da implementare. Nessun modello incarico approvato: canGenerateDraft resta false. [Limiti](v5/agency-deed-http-v1.md).
+
+## Agenzie — UI associazione da atto
+
+Nuovo componente indipendente e client HTTP,20nuovi test/gruppo58/58, typecheck/lint e browser desktop375su harness sintetico. Scelte unita/soggetto/ruolo esplicite, import proposto, fonte e CAS; ancora da montare nella pratica e provare contro API/DB. Nessun backend o demo Alessio modificati. [Report](v5/agency-deed-ui-v1.md).

@@ -1959,3 +1959,7 @@ Metodi store read/stage/bind con lock, CAS, privacy e replay corrente.14/14 DB s
 ## 30 ottobre2026 — HTTP proposte da atto
 
 GET record autorizzati e POST associazione umana con fingerprint/CAS e key, fatto ancora proposto. Nessuna autoattestazione testo/candidati del browser o conferma automatica.15/15 HTTP su PostgreSQL nuovo fermato, build/lint verdi; nessuna AI o deploy. [Report](v5/agency-deed-http-v1.md).
+
+## Agenzie — UI associazione da atto
+
+Nuovo componente indipendente e client HTTP,20nuovi test/gruppo58/58, typecheck/lint e browser desktop375su harness sintetico. Scelte unita/soggetto/ruolo esplicite, import proposto, fonte e CAS; ancora da montare nella pratica e provare contro API/DB. Nessun backend o demo Alessio modificati. [Report](v5/agency-deed-ui-v1.md).
