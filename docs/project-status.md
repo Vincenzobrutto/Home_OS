@@ -1,5 +1,10 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Planimetrie — archi e servizi ricostruiti in anteprima
+
+Rilevatore geometrico di quarti di cerchio e selezione di celle sostenute dai muri: replay locale9contorni/0overlap, due archi e due servizi, nessuna coordinata manuale o nuovaAI. Vuoti e revisioni conservati; vicini riallocati dove occupavano aree errate. Funzioni backend e anteprima tecnica, non ancora final canonico/nuova route di accettazione. [Prova e limiti](v5/agency-door-service-surfaces-20261030.md). Demo Alessio invariata.
+
+
 ## Planimetrie — ingresso recuperato da ricerca locale automatica
 
 Dopo il benchmark fallito: crop automatici e diagnostica compatta; la revisione AI da sola non corregge la soglia. Ricerca locale con assi murari, stipiti e isolamento trova una sola alternativa valida su3prove.8regioni/0overlap,7precedenti identiche, nessuna coordinata/contorno umano. Ingresso e stanza comunicanti non ancora separati semanticamente; servizi/balcone/arco incompleti. [Esito, costo e limiti](v5/agency-focus-local-recovery-20261030.md). Demo Alessio invariata.

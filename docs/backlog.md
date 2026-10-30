@@ -1014,3 +1014,7 @@ La zona della freccia è riconosciuta ma la coppia stipiti proposta non chiude i
 ## Dopo il recupero automatico ingresso
 
 Servizi erosi, arco interno e balcone ancora incompleti; automatizzare selezione involucri su evidenze senza mascherare vuoti. Test indipendenti: muri obliqui non dominanti, assenza regioni di riferimento, più soglie necessarie insieme, ambiguita e perdita supporto per scansioni deboli. Verificare timeout/worker del limite8prove su immagini grandi e visualizzazione soglie nel workspace. Budgetprudenziale4,4985su4,50EUR: nessun altro invio disponibile. [Evidenze](v5/agency-focus-local-recovery-20261030.md).
+
+## Archi e servizi — gate dopo anteprima positiva
+
+Collegare proposte superfici al worker/revisione con accettazione atomica fonte/versione/SHA/CAS e invalidazione computo. Verificare scala dei pixel, sanitari spessi e pareti sottili, porte scorrevoli e nicchie curve; evitare selezioni multiple incompatibili su uno stesso vano. Nuova anteprima9contorni, non integrazione completata. [Report](v5/agency-door-service-surfaces-20261030.md).

@@ -1349,3 +1349,7 @@ La freccia non basta: osservazione visiva più appoggi murari e stipiti verifica
 ## 2026-10-30 — Isolare una componente non prova la soglia corretta
 
 Fallback locale solo da indizio visivo, con assi murari dominanti e stipiti verificati, preservazione vani/esclusioni ed un'unica alternativa valida. Più soluzioni o limite raggiunto restano ambigui. Crop dalla propostaAI e mappe origine/scala, nessuna coordinata gold nel prompt. Censimento e componente continua restano distinti. [Report](v5/agency-focus-local-recovery-20261030.md).
+
+## 2026-10-30 — Arco, cerniera e muri prima di riallocare una superficie
+
+Una cavita curva non basta: fitcircolare, cerniera vicina e continuazioni murarie allineate prima di sostituire la sola catena. Sanitari non delimitano automaticamente una stanza; selezione involucri su evidenze e revisioni obbligatorie. La preview non conferma superfici e non sostituisce l'accettazione scoped ancora da integrare. [Report](v5/agency-door-service-surfaces-20261030.md).

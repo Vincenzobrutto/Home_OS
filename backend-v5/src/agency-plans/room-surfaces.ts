@@ -17,9 +17,9 @@ export function repairInwardDoorBoundary(room:{id:string;label:string}&Polygon,h
 }
 export function inferWallOrientation(regions:Polygon[]){let a=0,b=0;for(const r of regions)for(let i=0;i<r.points.length;i++){const p=r.points[i],q=r.points[(i+1)%r.points.length],length=Math.hypot(q[0]-p[0],q[1]-p[1]);if(length<12)continue;const angle=Math.atan2(q[1]-p[1],q[0]-p[0]);a+=length*Math.cos(angle*4);b+=length*Math.sin(angle*4);}assert(Math.hypot(a,b)>0,'wall_orientation_unresolved');return Math.atan2(b,a)*45/Math.PI;}
 /** Candidates supported by four local wall bands, NOT a convex hull of white floor pixels. */
-export function detectRectangularWallEnvelopes(r:Raster,input:{center:Point;angleDegrees:number;halfWidth:number;halfHeight:number;threshold?:number;limit?:number}):SurfaceEnvelope[]{
+export function detectRectangularWallEnvelopes(r:Raster,input:{center:Point;angleDegrees:number;halfWidth:number;halfHeight:number;threshold?:number;limit?:number;minimumDividerBandPixels?:number}):SurfaceEnvelope[]{
  assertRaster(r);assert(input.center.length===2&&input.center.every(Number.isFinite)&&input.center[0]>=0&&input.center[1]>=0&&input.center[0]<r.width&&input.center[1]<r.height&&Number.isFinite(input.angleDegrees)&&Math.abs(input.angleDegrees)<=360&&[input.halfWidth,input.halfHeight].every(v=>Number.isInteger(v)&&v>=20&&v<=250));
- const threshold=input.threshold??180,limit=input.limit??12;assert(Number.isInteger(threshold)&&threshold>=1&&threshold<=254&&Number.isInteger(limit)&&limit>=1&&limit<=30);
+ const threshold=input.threshold??180,limit=input.limit??12,divider=input.minimumDividerBandPixels??1;assert(Number.isInteger(threshold)&&threshold>=1&&threshold<=254&&Number.isInteger(limit)&&limit>=1&&limit<=30&&Number.isInteger(divider)&&divider>=1&&divider<=5);
  const w=input.halfWidth*2+1,h=input.halfHeight*2+1,mask=new Uint8Array(w*h),a=input.angleDegrees*Math.PI/180,c=Math.cos(a),s=Math.sin(a),point=(x:number,y:number):Point=>[input.center[0]+(x-input.halfWidth)*c-(y-input.halfHeight)*s,input.center[1]+(x-input.halfWidth)*s+(y-input.halfHeight)*c];
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const p=point(x,y),px=Math.round(p[0]),py=Math.round(p[1]);mask[y*w+x]=px>=0&&py>=0&&px<r.width&&py<r.height&&r.gray[py*r.width+px]<=threshold?1:0;}
  function bands(axis:'u'|'v'){const scores=new Array<number>(axis==='u'?w:h).fill(0);for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++)if(mask[y*w+x]&&(axis==='u'?mask[y*w+x-1]&&mask[y*w+x+1]:mask[(y-1)*w+x]&&mask[(y+1)*w+x]))scores[axis==='u'?x:y]++;
@@ -29,7 +29,7 @@ export function detectRectangularWallEnvelopes(r:Raster,input:{center:Point;angl
  const candidates:SurfaceEnvelope[]=[];for(let i=0;i<u.length;i++)for(let j=i+1;j<u.length;j++)for(let k=0;k<v.length;k++)for(let l=k+1;l<v.length;l++){
   const left=u[i].end+1.5,right=u[j].start-1.5,top=v[k].end+1.5,bottom=v[l].start-1.5;if(right-left<18||bottom-top<18)continue;
   const evidence=[support('u',u[i].end,top,bottom),support('u',u[j].start,top,bottom),support('v',v[k].end,left,right),support('v',v[l].start,left,right)];if(evidence.some(v=>v<.5))continue;
-  if(u.slice(i+1,j).some(b=>support('u',(b.start+b.end)/2,top,bottom)>.75)||v.slice(k+1,l).some(b=>support('v',(b.start+b.end)/2,left,right)>.75))continue;
+  if(u.slice(i+1,j).some(b=>b.end-b.start+1>=divider&&support('u',(b.start+b.end)/2,top,bottom)>.75)||v.slice(k+1,l).some(b=>b.end-b.start+1>=divider&&support('v',(b.start+b.end)/2,left,right)>.75))continue;
   const geometry={points:[point(left,top),point(right,top),point(right,bottom),point(left,bottom)],holes:[]};if(!validPolygon(geometry)||geometry.points.some(p=>p[0]<0||p[1]<0||p[0]>=r.width||p[1]>=r.height))continue;
   candidates.push({id:'wall-envelope-'+(candidates.length+1),label:'Perimetro interno candidato',geometry,source:'wall_detector',state:'proposed',wallSupport:evidence,requiresInteriorReview:true});
  }
