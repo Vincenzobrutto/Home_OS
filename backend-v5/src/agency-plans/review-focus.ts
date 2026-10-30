@@ -22,4 +22,3 @@ export function reviewDiagnostics(segmentation:Segmentation|null){
  if(!segmentation)return null;
  return {regions:segmentation.regions.map(v=>({id:v.id,kind:v.kind,seed:v.seed,pixelArea:v.pixelArea,bounds:[Math.min(...v.points.map(p=>p[0])),Math.min(...v.points.map(p=>p[1])),Math.max(...v.points.map(p=>p[0])),Math.max(...v.points.map(p=>p[1]))],symbols:v.symbols})),issues:segmentation.issues,duplicates:segmentation.duplicates,diagnostics:segmentation.diagnostics||[]};
 }
-
