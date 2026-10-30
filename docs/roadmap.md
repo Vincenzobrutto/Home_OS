@@ -165,3 +165,7 @@ Priorita documento > dati verificabili > pacchetto incarico: [contratto atti off
 ## 30 ottobre2026 — UI revisione dati/fonti pronta come componente
 
 [Componente/client indipendenti](v5/agency-review-ui-v1.md):18/18 nuovi test, typecheck/lint e browser desktop/375su harness sintetico, non ancora nella navigazione prodotto. Prossimi registro finding e binding/persistenza proposte; mantenere distincti collaudo del componente e backend reale. Nessuna nuova AI, estrazione live o generazione incarico.
+
+## 30 ottobre2026 — Registro verifiche come componente indipendente
+
+[UI finding](v5/agency-findings-ui-v1.md): note manuali successione/difformita, confronti, motivo/prove, riapertura e storico;38/38 nel gruppo revisione e statici verdi, browser sintetico375/Desktop. Non montato nel router e nessun backend cambiato. Prossimo persistenza/binding umano delle proposte atti, poi cablaggio revisioni pratica.

@@ -1943,3 +1943,7 @@ Ripresa autorizzata dopo il checkpoint notturno: aggiornati test della nuova nav
 ## 30 ottobre2026 — Decisioni esplicite su dati e fonti Agenzie
 
 Nuovo ReviewWorkspace con valori/prove, conferma/correzione/rifiuto, readonly/stale,403/409/422 e retry manuale identico dopo esito incerto. Client V5 condiviso sessione/CSRF/account,18/18 e statici verdi; harness browser sintetico375/Desktop. Router e API esistenti invariati, nessun fallback nel prodotto. Report v5/agency-review-ui-v1.md.
+
+## 30 ottobre2026 — UI per note e risoluzioni Agenzie
+
+Nuovo FindingsWorkspace/client: esito/motivo/fingerprint, prova tecnica selezionata e limite5, stato riaperto, storico, nuova nota privata per unita esplicita; retry clonato, conflitti e privacy.20nuovi test, gruppo revisione38/38, typecheck/lint e browser sintetico verdi. Report v5/agency-findings-ui-v1.md. Nessun nuovo endpoint/router, AI reale o deploy.

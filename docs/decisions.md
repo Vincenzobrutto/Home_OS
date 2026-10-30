@@ -1313,3 +1313,7 @@ Il testo fidato per gli atti proviene dai byte verificati nello storage Agenzie 
 ## 2026-10-30 — Decisioni dati soltanto dopo risposta server
 
 La nuova UI Agenzie non conferma all'apertura o prima della risposta. Retry incerto mantiene payload/key identici e richiede azione esplicita; conflitto impone reload e403nasconde valori/prove. Scope e porta API sono parte della proprieta della vista, con generazione delle risposte asincrone. Citazioni come testo, apertura originali via callback autorizzato del contenitore. Componente/client indipendenti dal router, nessun fallback sintetico nel prodotto. Report v5/agency-review-ui-v1.md.
+
+## 2026-10-30 — Una verifica non certifica e una prova tecnica va selezionata
+
+UI findings distingue aperto/verifica registrata/da rivedere, senza conformita o titolarita automatiche. Motivazione sempre necessaria; documento tecnico ricevuto richiede riferimento corrente selezionato (massimo5), fingerprint/CAS server. Nuove note manuali per unita/tipo espliciti, default privata. Payload clonato prima dell'async e retry con stessa key, mai reinterpretato da props mutate. Contenitore fornisce solo prove/labels autorizzate; UI non inventa fonti. Report v5/agency-findings-ui-v1.md.

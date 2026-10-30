@@ -930,3 +930,7 @@ Adapter lessicale implementato separatamente dal cablaggio: decoder atti fidato 
 ## 30 ottobre2026 — Dopo UI dati/fonti indipendente
 
 ReviewWorkspace e client route review verificati in isolamento, ancora non montati nella navigazione; contenitore originale e labels soggetti autorizzati da fornire. Storico autori/motivi da esporre senza duplicare il registro server. Prossimo UI finding/risoluzioni, quindi persistenza/binding umano delle proposte dell'adapter atti. Nessun modello contratto o OCR aggiunti. Report v5/agency-review-ui-v1.md; registro v5/agency-day-worklog-20261030.md.
+
+## 30 ottobre2026 — Dopo UI finding indipendente
+
+Registro note/confronti, chiusure motivate, prove e storico come componenti verificati; non ancora nella navigazione. Creazione guidata confronti, caricamento prove e autori/date storico rimangono aperti. Prossimo persistenza adapter atti e binding umano, poi cablaggio delle due UI di revisione. Report v5/agency-findings-ui-v1.md; nessuna nuova AI o modello incarico autorizzato da queste voci.
