@@ -44,6 +44,18 @@ Il manifest deve essere nuovamente autorizzato al momento della consegna dei byt
 
 Suite dedicata `npm run test:agency-practices-db -- --pg-bin <binari> --scratch-root <cartella nuova>`, registrata nell’aggregato DB protetto. Stato effettivo e risultati nel registro; nessun test sui dati del prodotto.
 
+## Fatti, unità e decisioni — terzo incremento
+
+Lo snapshot può ora conservare unità esplicitamente dichiarate, fatti proposti e registro di revisione. Campi in allowlist: identificativi catastali, dati/ruoli/diritti delle parti, data atto, superfici distinte e condizioni manuali dell’incarico. I valori hanno tipi vincolati; data impossibile o campo inatteso sono rifiutati. Non vengono collegate persone per somiglianza del nome né dedotti ruoli attuali da un atto storico.
+
+`applyReview` crea proposte con origine extracted o declared, mai conferme automatiche. Extracted richiede almeno una prova con fonte/versione/SHA, pagina ed estratto; declared non accetta prove artificiose e registra il creatore. Le prove sono strutturalmente e contestualmente validate, non controllate nei bytes del PDF da questo modulo: il futuro estrattore deve verificarne l’effettiva presenza. Le unità devono esistere nella pratica. Candidati alternativi dello stesso campo restano distinti per il futuro confronto.
+
+Conferma, correzione motivata e rifiuto sono decisioni separate, versionate, con autore e istante. La correzione non sovrascrive il valore estratto né la citazione originale; il valore confermato attuale viene proiettato dall’ultima decisione. Anche un dato dichiarato richiede conferma. Nessun giudizio professionale nasce da questa azione.
+
+Fonti cambiate/riclassificate invalidano il fatto dipendente: reviewView lo indica come stale e non espone un valore confermato attuale. Originali ritirati o non accessibili nascondono anche i derivati e le prove. Un fatto dichiarato privato resta privato al creatore. La verifica di visibilità precede la validazione del valore di una correzione, evitando che errori tipologici rivelino l’esistenza di fatti privati.
+
+`readReview` e `review` nello store usano gli stessi lock/permessi e CAS del fascicolo. Decisioni e relativo ledger sono salvati nello stesso commit dello snapshot. Le vecchie pratiche prive dei nuovi array restano leggibili; non è richiesta una migrazione. Questo incremento non introduce ancora estrazione AI/PDF reale, HTTP o UI del prodotto. Le quote tecniche iniziali sono100unità,1000fatti e100decisioni per fatto: errore esplicito al superamento, nessun troncamento silenzioso.
+
 ## Verifica
 
 Comando protetto `npm run test:agency-practices` nella cartella backend-v5; il profilo è registrato anche nell’aggregato ordinario. ESLint mirato sul nuovo dominio e test. Gli esiti esatti aggiornati sono nel registro di lavoro.

@@ -27,3 +27,15 @@ La preparazione del manifest non è autorizzazione permanente al download. Nient
 ## Group successivi
 
 Analisi con consenso e budget, proposta dei fatti con evidenze, decisioni e correzioni versionate, esiti di coerenza e risoluzioni, bozza incarico. Contratti da dettagliare dopo il nucleo di revisione. Non aggiungere chiamate AI a pagamento o compilazione automatica dei ruoli finché il relativo incremento non è autorizzato e collaudato.
+
+## Revisione — nucleo implementato, trasporto ancora proposto
+
+Lo store interno dispone di readReview/review, non di route attive. Il futuro GET `/:practiceId/review` restituisce solo fatti e prove leggibili, revisione della pratica e unità. Per ogni fatto: valore proposto, origine, stato/versione, eventuale valore confermato con confirmedOrigin/confirmedBy/confirmedAt, prove originali e decisioni. Correzione manuale etichettata manual_correction; fonte obsoleta azzera il valore confermato corrente, non la storia.
+
+POST proposto `/:practiceId/review` con Idempotency-Key e `{expectedRevision,command}`. Il key del nucleo interno viene aggiunto dal server, non duplicato dal browser nel body. Comandi iniziali:
+
+* unit: id server, label; nessun matching automatico per nome.
+* propose: id server, unitId, subjectKey interno, field in allowlist, value scalare tipizzato, origin extracted/declared, visibility private/practice, evidence. Extracted richiede fonte/versione/SHA/pagina/estratto, declared nessuna prova artificiale.
+* decide: factId, expectedFactVersion, action confirm/correct/reject; correct richiede value e reason. Nessun campo status=confirmed accettato dal client o da risposta AI.
+
+Il nucleo chiama il target `id`; il futuro DTO HTTP mapperà esplicitamente factId/id senza accettare l’aggregato o Actor. Il gruppo analisi/worker è ancora assente: un browser non deve autoattestare l’origine extracted o le citazioni. Separare i comandi di proposta validata dal provider dai comandi manuali consentiti all’agente al momento di creare i controller. Non esporre direttamente lo store al trasporto senza questo confine.

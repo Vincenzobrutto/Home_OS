@@ -1884,3 +1884,7 @@ Nuovo dominio isolato con accessi Agency/Practice, fonti private/condivise, revi
 
 ## 30 ottobre2026 — Agenzie: persistenza isolata
 Schema additivo e adapter interno del fascicolo, senza Home/Document legacy e senza nuove route. Creazione idempotente, lock membership/grant/pratica, CAS, fonti private e snapshot append-only. Collaudo PostgreSQL solo su cluster sintetico nuovo, non sul DB prodotto. [Registro](v5/agency-worklog-20261030.md).
+
+## 30 ottobre2026 — Agenzie: proposte e conferme
+
+Unità esplicite, fatti con fonte/versione/SHA, decisioni umane e correzioni con cronologia. Proiezioni filtrate e invalidazione dopo sostituzione della fonte. Store transazionale interno esteso; nessuna route o estrazione AI attivata.356/356 ordinari e13/13 DB sintetici; dettagli e limiti nel registro.

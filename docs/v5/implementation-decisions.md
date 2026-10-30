@@ -146,3 +146,6 @@ Pratica e fonte di agenzia non riutilizzano autorizzazioni Home. Ogni azione ric
 
 ## ADR — Persistenza iniziale del fascicolo,30ottobre2026
 Aggregato JSONB versionato per fonti/revisioni/dipendenze/ledger/eventi dentro AgencyPractice, con appartenenze e assegnazioni normalizzate e bloccate lato DB. La transazione conserva le invarianti del nucleo puro; nessun riuso di HomeMembership. Creazione idempotente in tabella dedicata. Scartata persistenza volatile/in-memory e distribuzione prematura di decine di tabelle prima del contratto dei fatti. Snapshot non contiene bytes; upload autenticato e storage restano distinti. Normalizzazione futura richiede migrazione e conservazione dello storico. [Specifica](agency-practices-v1.md).
+
+## ADR — Proposta, decisione e conferma correnti separate,30ottobre2026
+Nel dominio Agenzie conservare valore proposto, origine, prove e decisioni come fatti distinti. La correzione umana aggiunge una decisione motivata, non riscrive il dato estratto. Fonte cambiata/ritirata revoca l’utilizzabilità corrente senza cancellare lo storico; derivati ereditano la riservatezza della fonte. Campi dichiarati richiedono conferma e non possono portare prove inventate. Scartati flag unico confermato sul documento e sovrascrittura automatica dei campi. [Specifica](agency-practices-v1.md).

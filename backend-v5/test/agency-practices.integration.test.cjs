@@ -64,4 +64,18 @@ test('agency practice persistence: isolated PostgreSQL, replay, privacy and conc
  await t.test('fresh Prisma client reads persisted state; no process-local store',async()=>{
   const second=new PrismaClient();try{const another=new AgencyPracticesStore(second);assert.equal((await another.read(A.id,agency.id,p.id)).revision,6);}finally{await second.$disconnect();}
  });
+ await t.test('proposals and human decisions persist separately; private source proof stays private',async()=>{
+  const request=async command=>({key:randomUUID(),expectedRevision:(await store.read(A.id,agency.id,p.id)).revision,command});
+  await store.review(A.id,agency.id,p.id,await request({operation:'unit',id:'unit-demo',label:'Abitazione DEMO'}));
+  const evidence={sourceId:'source-1',version:2,sha256:'b'.repeat(64),page:3,excerpt:'Identificativo sintetico12'};
+  const propose={operation:'propose',id:'fact-demo',unitId:'unit-demo',subjectKey:'property',field:'cadastral.subaltern',value:'12',origin:'extracted',visibility:'practice',evidence:[evidence]};
+  const created=await store.review(A.id,agency.id,p.id,await request(propose));assert.equal(created.review.facts[0].confirmedValue,null);
+  const confirm=await request({operation:'decide',id:'fact-demo',expectedFactVersion:1,action:'confirm'});const [one,two]=await Promise.all([store.review(A.id,agency.id,p.id,confirm),store.review(A.id,agency.id,p.id,confirm)]);assert.notEqual(one.replay,two.replay);assert.equal(one.review.facts[0].confirmedValue,'12');assert.equal((await store.readReview(A.id,agency.id,p.id)).facts[0].decisions.length,1);
+  await store.review(A.id,agency.id,p.id,await request({...propose,id:'private-fact',evidence:[{...evidence,sourceId:'private-1',version:1,sha256:'a'.repeat(64)}]}));
+  const viewer=await store.readReview(V.id,agency.id,p.id);assert.equal(viewer.facts.length,1);assert.doesNotMatch(JSON.stringify(viewer),/private-fact|private-1/);
+ });
+ await t.test('source replacement invalidates confirmed facts in the persisted aggregate',async()=>{
+  await store.mutate(A.id,agency.id,p.id,{key:randomUUID(),expectedRevision:(await store.read(A.id,agency.id,p.id)).revision,command:{operation:'replace',sourceId:'source-1',expectedSourceVersion:2,file:{sha256:'c'.repeat(64),originalFilename:'v3.pdf',mimeType:'application/pdf',byteSize:140}}});
+  const review=await store.readReview(A.id,agency.id,p.id),f=review.facts.find(f=>f.id==='fact-demo');assert.equal(f.status,'stale');assert.equal(f.confirmedValue,null);assert.equal(f.decisions.length,1);
+ });
 });

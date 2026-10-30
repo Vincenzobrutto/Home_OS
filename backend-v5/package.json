@@ -58,7 +58,8 @@
     "test:offline": "node test/offline.cjs",
     "test:offline-db": "node test/offline.cjs --suite test:offline-db",
     "test:agency-practices": "node test/offline.cjs --suite test:agency-practices",
-    "test:agency-practices-db": "node test/offline.cjs --suite test:agency-practices-db"
+    "test:agency-practices-db": "node test/offline.cjs --suite test:agency-practices-db",
+    "test:agency-review": "node test/offline.cjs --suite test:agency-review"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",

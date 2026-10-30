@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { Prisma, type AgencyPractice, type AgencyMember, type AgencyPracticeGrant } from '../../generated/client';
 import type { PrismaService } from '../prisma.service';
 import { active, applyRequest, exportManifest, newPractice, practiceSummary, PracticeError, requirePractice, type Actor, type AgencyRole, type Practice } from './domain';
+import { applyReview, reviewView } from './review';
 
 function iso(date: Date | null): string | null { return date?.toISOString() ?? null; }
 function membership(row: AgencyMember) { return { agencyId: row.agencyId, accountId: row.accountId, role: row.role as AgencyRole, validFrom: row.validFrom.toISOString(), validUntil: iso(row.validUntil), revokedAt: iso(row.revokedAt) }; }
@@ -79,4 +80,6 @@ export class AgencyPracticesStore {
       return exportManifest(actor, practice, selection, new Date().toISOString());
     }, { maxWait: 5000, timeout: 15000 });
   }
+  async readReview(accountId:string,agencyId:string,practiceId:string){return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);return reviewView(actor,practice,new Date().toISOString());},{maxWait:5000,timeout:15000});}
+  async review(accountId:string,agencyId:string,practiceId:string,input:unknown){return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);const r=applyReview(actor,practice,input,new Date().toISOString());if(!r.replay){const updated=await tx.agencyPractice.updateMany({where:{id:practiceId,agencyId,revision:practice.revision},data:{revision:r.practice.revision,snapshot:json(r.practice)}});if(updated.count!==1)throw new PracticeError('revision_conflict');}requirePractice(actor,r.practice,'edit',new Date().toISOString());return {receipt:r.receipt,replay:r.replay,review:reviewView(actor,r.practice,new Date().toISOString())};},{maxWait:5000,timeout:15000});}
 }

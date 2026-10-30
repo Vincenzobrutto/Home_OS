@@ -12,7 +12,9 @@ export type Source = { id: string; practiceId: string; agencyId: string; uploade
 export type DependentRecord = { id: string; state: 'current' | 'stale'; sources: Evidence[] };
 export type Receipt = { accountId: string; key: string; digest: string; revision: number; sourceId: string };
 export type Event = { id: number; actorId: string; at: string; operation: string; sourceId: string; revision: number };
-export type Practice = { id: string; agencyId: string; label: string; revision: number; sources: Source[]; dependents: DependentRecord[]; receipts: Receipt[]; events: Event[] };
+export type FactDecision = { actorId: string; at: string; action: 'confirm' | 'correct' | 'reject'; value?: string | number | boolean; reason: string | null };
+export type PracticeFact = { id: string; unitId: string; subjectKey: string; field: string; proposedValue: string | number | boolean; origin: 'extracted' | 'declared'; creatorId: string; visibility: 'private' | 'practice'; evidence: Evidence[]; version: number; status: 'proposed' | 'confirmed' | 'rejected'; decisions: FactDecision[] };
+export type Practice = { id: string; agencyId: string; label: string; revision: number; sources: Source[]; dependents: DependentRecord[]; receipts: Receipt[]; events: Event[]; units?: Array<{id:string;label:string}>; facts?: PracticeFact[]; reviewReceipts?: Array<{accountId:string;key:string;digest:string;revision:number;targetId:string}> };
 export class PracticeError extends Error {
   constructor(public readonly code: 'access_denied' | 'invalid_input' | 'revision_conflict' | 'idempotency_conflict' | 'source_changed') { super(code); }
 }

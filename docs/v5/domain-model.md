@@ -103,3 +103,6 @@ AgencyMembership e PracticeGrant temporali; Practice con Source e SourceVersion 
 
 ### Agenzie — persistenza interna del secondo incremento
 Schema Prisma ora include Agency/AgencyMember/AgencyPractice/AgencyPracticeGrant/AgencyCreateRequest; migrazione20261030001000_agency_practices. Snapshot JSONB versionato e ledger/eventi atomicamente aggiornati sotto lock/CAS; non contiene file. Adapter interno senza controller o AppModule. Nessun DB esistente migrato. [Specifica](agency-practices-v1.md), [esiti nel registro](agency-worklog-20261030.md).
+
+### Agenzie — fatti e revisione
+Lo snapshotv1 ammette ora units/facts/reviewReceipts opzionali per compatibilità: proposte extracted/declared, prove e decisioni append-only separate dal valore originale; proiezione del valore confermato soltanto con fonte corrente e autorizzata. Nessuna migrazione, provider o route. [Specifica](agency-practices-v1.md).

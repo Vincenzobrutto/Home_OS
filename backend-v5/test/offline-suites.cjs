@@ -457,4 +457,6 @@ profiles['test:agency-practices'] = { database: false, api: false, files: ['test
 profiles.test.files.push('test/agency-practices.test.cjs');
 profiles["test:agency-practices-db"] = { database: true, api: false, files: ["test/agency-practices.integration.test.cjs"], apiFiles: [] };
 profiles["test:offline-db"].files.push("test/agency-practices.integration.test.cjs");
+profiles["test:agency-review"] = { database:false, api:false, files:["test/agency-review.test.cjs"] };
+profiles.test.files.push("test/agency-review.test.cjs");
 module.exports = profiles;
