@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Planimetrie — accessori e soglie virtuali
+
+Regole lessicali conservano le pertinenze separate e possono recuperarne contorni candidati senza confermare associazione o proprietà; inventario AI originale preservato, censimento scoped persistente e review alimentata. Soglie virtuali proposte, esplicitamente selezionabili/correggibili solo nel laboratorio offline; nessuna applicazione automatica o route prodotto. Seconda foto:5→6contorni con cantina candidata,7con soglia interna scelta nel collaudo;3issue e ingresso principale ancora irrisolto.596/596 ordinari,21/21 DB per censimento, build/lint backend e typecheck/build laboratorio verdi. Falsi positivi impediscono selezione automatica. Nessuna nuova AI/spesa o modifica demo Alessio. [Regole, prove e limiti](v5/agency-annex-threshold-rules-20261030.md).
+
 ## Planimetrie — controllo finale e diagnosi implementati
 
 Controllo overlap dei poligoni dopo semplificazione, rifinitura dei soli bordi coinvolti dai pixel originali e doppia guardia prima della registrazione; conflitti persistenti esclusi. Diagnosi seed dettagliata e metadati storici scoped per fonte. Replay della seconda immagine:5contorni conservati, overlap1→0, tre contorni estranei identici. Restano quattro issue/omissioni; esperimenti di chiusura tratti/soglia restano separati e non promossi.55/55 mirati,584/584 ordinari,21/21 DB nuovo, build/lint verdi. Prompt pertinenze migliorato ma non ancora verificato con nuova AI; nessuna nuova spesa o demo Alessio modificata. Trial web precedente scaduto16:15, nessun nuovo collaudo browser/deploy. [Report](v5/agency-boundary-cleanup-20261030.md).

@@ -1,5 +1,7 @@
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
 
+**Accessori/soglie:** censimento e recupero geometrico proposto di accessori esplicitamente etichettati implementati, associazione sempre da verificare. Laboratorio di soglie temporanee selezionabili con replay sintetico/reale disponibile; secondo caso fino7contorni con selezione tecnica, copertura incompleta. Riconoscimento automatico freccia/ingresso, verifica semantica dei falsi tagli e integrazione nel workspace con worker/CAS restano gate aperti. [Report](v5/agency-annex-threshold-rules-20261030.md).
+
 **Guardia contorni conclusa:** replay seconda planimetria5contorni, zero overlap, tre contorni non coinvolti immutati. Diagnosi cause e controllo alla registrazione implementati/verificati; non ancora risolta la copertura completa. Prossima fase: ripristino locale verificabile dei tratti aperti, soglie adeguate alla risoluzione e associazione delle pertinenze. Varianti morfologiche sperimentali non applicate automaticamente. [Report](v5/agency-boundary-cleanup-20261030.md).
 
 **Gate qualità seconda planimetria non superato:**5contorni, quattro issue, omissioni pertinenze e una coppia di poligoni sovrapposta nonostante maschere distinte. Prima di nuovi invii: guardia overlap dopo semplificazione e replay offline, diagnostica gap/seed e censimento pertinenze separate. Nessuna scala metrica ricavata dalla sola scritta1:100. [Benchmark senza ritocchi](v5/agency-second-plan-benchmark-20261030.md).

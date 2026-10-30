@@ -990,3 +990,7 @@ Percorso positivo browser/API/DB e revoca ora provati con fixture sintetiche, de
 ## Agenzie — preparazione dati per incarico senza modello
 
 Su scelta esplicita del committente, nuovo pannello di selezione locale dei dati confermati con fonti/questioni aperte. Nessun incarico generato o campo obbligatorio inventato: modello ancora da ricevere.13nuovi casi/gruppo150/150/staticiverdi; browserdesktop375su harnesssintetico, non nuova prova API/DB. Restano orchestrationanalisiatti e modello/mapping/validazioneserver/export. [Report](v5/agency-mandate-selection-ui-v1.md).
+
+## Planimetrie — regole accessori/soglie, seguito
+
+Censimento e recupero geometrico di pertinenze esplicitamente etichettate implementati come proposte, associazione non confermata. Laboratorio di aperture tratteggiate selezionabili/modificabili disponibile. Restano riconoscimento semantico del glifo freccia, artefatti del glifo che interseca un bordo, pertinenze senza etichetta/seed, falsi tagli da linee collineari e integrazione decisioni nel workspace con prova/versione/SHA/CAS/worker. Vietata selezione automatica dal solo numero di contorni; BOX ambiguo e parti comuni richiedono revisione. [Stato](v5/agency-annex-threshold-rules-20261030.md).

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import {annexCensus,recoverAnnexInventory} from './recognition-rules';
 import { evidenceCurrent, requirePractice, type Actor, type Evidence, type Practice } from '../agency-practices/domain';
 import { assert, type Point } from './geometry';
 import { assertRaster, segmentPlan, type Raster, type RasterConfig, type SeedSpace, type Segmentation, type SymbolRequest } from './raster';
@@ -32,7 +33,7 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  const raster=await ports.loadRaster(input.proof);assertRaster(raster);await authorized(ports,input.proof,scope);
  const rasterSHA256=createHash('sha256').update(raster.gray).digest('hex'),rasterSize={width:raster.width,height:raster.height};
  const rendering=raster.rendering?structuredClone(raster.rendering):null;
- const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v3-boundary-guards'})).digest('hex');
+ const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v4-annex-candidates'})).digest('hex');
  const calls:Array<{phase:string;requestId:string;input:number;output:number;costUSD:number}>=[];
  async function call(phase:'inventory'|'review',previous:SeedProposal|null,segmentation:Segmentation|null){
   await authorized(ports,input.proof,scope);await ports.reserve(input.runId,phase,fingerprint,input.maxUSDPerCall);await authorized(ports,input.proof,scope);
@@ -42,16 +43,17 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
   // Settle even if semantic output is invalid, authorization expires or reported spend exceeds reservation.
   const usage={requestId:result.requestId,input:result.inputTokens,output:result.outputTokens,costUSD:result.costUSD};await ports.settle(input.runId,phase,usage);calls.push({phase,...usage});await authorized(ports,input.proof,scope);assert(result.costUSD<=input.maxUSDPerCall,'provider_cost_exceeded');return parseSeedProposal(result.proposal);
  }
- const first=await call('inventory',null,null),initial=segmentPlan(raster,first.spaces,first.symbols,input.config),review=await call('review',first,initial);
- let final=segmentPlan(raster,review.spaces,review.symbols,input.config);const retainedSymbols:string[]=[];
+ const first=await call('inventory',null,null),initial=segmentPlan(raster,recoverAnnexInventory(first.spaces),first.symbols,input.config),review=await call('review',first,initial);
+ let final=segmentPlan(raster,recoverAnnexInventory(review.spaces),review.symbols,input.config);const retainedSymbols:string[]=[];
  // Prevent observed regression: retain a valid, same-id/same-parent symbol proposal if review fails it.
  const merged=structuredClone(review);
  for(const symbol of first.symbols){const current=review.symbols.find(s=>s.id===symbol.id&&s.parentId===symbol.parentId);const prior=initial.regions.find(r=>r.id===symbol.parentId)?.symbols.find(s=>s.id===symbol.id);const after=final.regions.find(r=>r.id===symbol.parentId)?.symbols.find(s=>s.id===symbol.id);
   if(current&&prior?.status==='included'&&current.decision==='include'&&after?.status==='unresolved'&&merged.spaces.some(s=>s.id===symbol.parentId)){merged.symbols[merged.symbols.findIndex(s=>s.id===symbol.id)]=structuredClone(symbol);retainedSymbols.push(symbol.id);}
  }
- if(retainedSymbols.length)final=segmentPlan(raster,merged.spaces,merged.symbols,input.config);
+ if(retainedSymbols.length)final=segmentPlan(raster,recoverAnnexInventory(merged.spaces),merged.symbols,input.config);
  await authorized(ports,input.proof,scope);
- const warnings=[...first.warnings,...review.warnings,...retainedSymbols.map(id=>'retained_previous_symbol:'+id)];
+ const annexInventory=annexCensus(merged.spaces,final.regions.map(r=>r.id));
+ const warnings=[...annexInventory.filter(a=>a.reviewExclusion).map(a=>'annex_exclusion_requires_review:'+a.id),...first.warnings,...review.warnings,...retainedSymbols.map(id=>'retained_previous_symbol:'+id)];
  // AI review never certifies coverage: agent confirms scope/scale/symbols and computation separately.
- return {runId:input.runId,fingerprint,rasterSize,rasterSHA256,rendering,proof:structuredClone(input.proof),scope,initial,final,proposal:merged,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:final.issues.length?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};
+ return {runId:input.runId,fingerprint,rasterSize,rasterSHA256,rendering,proof:structuredClone(input.proof),scope,initial,final,proposal:merged,annexInventory,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:final.issues.length||annexInventory.some(a=>a.reviewExclusion)?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};
 }

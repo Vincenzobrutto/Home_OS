@@ -1333,3 +1333,7 @@ Uno spazio semantico non coincide sempre con un componente bianco connesso: i pa
 ## 2026-10-30 — La separazione deve valere sui poligoni, non solo sui pixel
 
 Controllo finale dopo semplificazione e seconda guardia alla registrazione. Se due bordi confliggono, ridurre soltanto la loro semplificazione ripartendo dai pixel originali; non inventare un separatore o spostare i vani estranei. Conflitto residuo rifiutato. Metadati indicano tolleranza effettiva; edit manuale cancella provenienza automatica, diagnosi dell'analisi rimane storica e scoped per fonte. Chiusura globale dei tratti e riduzione indiscriminata della soglia minima non promosse dai soli conteggi di regioni. [Report](v5/agency-boundary-cleanup-20261030.md).
+
+## 2026-10-30 — Pertinenza separata e barriera tecnica non sono proprietà o muri confermati
+
+Etichetta esplicita di accessorio consente recupero di un contorno candidato da inventario escluso, preservando l'esclusione grezza e richiedendo associazione umana; comuni/altra unità, negazioni e ambiguità non recuperati automaticamente. BOX isolato rimane ambiguo. Una soglia modifica solo una copia temporanea selezionata, non l'originale né una dichiarazione di muro. Freccia richiede contesto e appoggi ai muri: il rilevatore geometrico non riconosce il glifo. Nessuna promozione dal solo incremento del numero di contorni. [Regole e limiti](v5/agency-annex-threshold-rules-20261030.md).

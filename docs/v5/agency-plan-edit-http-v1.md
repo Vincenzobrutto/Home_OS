@@ -21,3 +21,7 @@ Restano UI pratica e form, disegno iniziale del perimetro, consenso/approval nel
 ### Aggiornamento30ottobre — metadati di analisi dei contorni
 
 Le letture planimetrie possono restituire analysisDiagnostics opzionale del risultato iniziale e room.boundary opzionale {simplifyPixels,refinedForOverlap}. Nessuna nuova route o campo scrivibile dal client: parser edit invariato. Fonte privata/superata mantiene i filtri esistenti; metadati diagnostici non certificano correttezza o copertura. [Dettagli](agency-boundary-cleanup-20261030.md).
+
+### Aggiornamento30ottobre — inventario accessori
+
+Le letture possono restituire annexInventory opzionale di candidati con id, kind/candidates, status, association, reason, reviewExclusion, geometryAvailable. Dati derivati scoped alla fonte, omessi dalle letture stale/private negate; nessun nuovo parametro scrivibile o endpoint per soglie virtuali. La preview del laboratorio non è una route autenticata del prodotto né una decisione persistente. [Contratto e limiti](agency-annex-threshold-rules-20261030.md).

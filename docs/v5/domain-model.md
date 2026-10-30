@@ -132,3 +132,7 @@ StoredRegion conserva seed/component/pixelArea nullabili e origine manuale espli
 ### Planimetrie — diagnostica e bordi finali
 
 StoredPlan.analysisDiagnostics opzionale conserva la diagnostica dell'analisi iniziale per seed/esclusioni/rifiniture. Room.boundary opzionale conserva simplifyPixels effettivo e refinedForOverlap; un edit manuale lo rimuove e azzera seed/component/pixelArea con origin manuale. Snapshot JSON, nessuna migration nuova. Sono metadati scoped per fonte, omessi insieme alla geometria quando la fonte è superata/non leggibile. [Regole e limiti](agency-boundary-cleanup-20261030.md).
+
+### Censimento accessori proposti
+
+StoredPlan.annexInventory opzionale conserva id/tipo candidato/status/motivo/associazione non verificata/reviewExclusion/geometryAvailable, derivati dalle etichette disponibili e dalle geometrie ottenute. Inventario AI grezzo non viene riscritto. Snapshot scoped per fonte, nessuna migration e nessuna associazione catastale/commerciale automatica. Soglie virtuali non persistite nel prodotto in questo incremento. [Regole](agency-annex-threshold-rules-20261030.md).

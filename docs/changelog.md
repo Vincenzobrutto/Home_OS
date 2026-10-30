@@ -1,3 +1,7 @@
+## 30 ottobre 2026 — Censimento accessori e laboratorio soglie
+
+Pertinenze separate mantenute nel censimento; contorno candidato recuperabile da esclusione con etichetta esplicita, mai proprietà/coefficiente automatici. Soglie virtuali verificabili in prototipo offline, non attive nel worker prodotto.596/596 ordinari,21/21 DB censimento e verifiche laboratorio verdi; nessuna nuova AI. [Report](v5/agency-annex-threshold-rules-20261030.md).
+
 ## 30 ottobre 2026 — Poligoni finali: rifinitura e controllo sovrapposizioni
 
 Controllo dopo semplificazione e prima della registrazione; rifinitura dai pixel originali dei soli bordi coinvolti, senza accettare conflitti residui. Diagnostica seed, provenienza boundary e fingerprint v3. Replay gratuito della seconda immagine:5contorni mantenuti, overlap1→0; copertura ancora incompleta.55/55 mirati,584/584 ordinari,21/21 DB nuovo e lint/build verdi. [Report](v5/agency-boundary-cleanup-20261030.md).
