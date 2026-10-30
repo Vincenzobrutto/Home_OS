@@ -216,3 +216,7 @@ Nuovo pannello permette2–20fatti attuali, stesso unit/subject/field e periodo 
 ## Agenzie — diniego della revisione invalida anche la pagina pratica
 
 Il collaudo reale ha trovato metadati fonte ancora cached fuori dal pannello dopo revoca. Il contenitore ora notifica il genitore e forza una nuova lettura autorizzata;403elimina anche elenco/titolo pratica dal rendering. Quote e originali già scaricati legittimamente non sono cancellabili retroattivamente. Secondo cluster e verifica browser dedicata confermano filename/citazione assenti. [Report](agency-review-browser-validation-20261030.md).
+
+## Agenzie — preparazione interna distinta da esportazione incarico
+
+Con modello non disponibile la nuova vista sceglie solo fatti confermati e mostra questioni, senza salvare/esportare un contratto. Identità, righe e campi obbligatori dipendono dal futuro mapping approvato; nessuna inferenza storica→conferente. ClientGETreview/findings rifiuta revisioni miste, selezione legata a porta/revisione e bozza bloccata. [Report](agency-mandate-selection-ui-v1.md).

@@ -22,6 +22,9 @@ Provati nel browser visibile il file sintetico e poi il PDF autorizzato con AI e
 
 ## Agenzie — ciclo diurno del30ottobre, stato corrente
 
+**Steering successivo:** [preparazione dati incarico](v5/agency-mandate-selection-ui-v1.md) ora montata: selezione locale dei soli fatti confermati con prove/questioni aperte e bozza sempre bloccata. Vincenzo conferma modello non ancora disponibile.13nuovi casi, gruppo150/150/staticiverdi, browserdesktop375su harnesssintetico. Il percorso completo non è concluso: orchestrationAIatti/OCR e modello/mapping/exportserver restano da completare. Nessuna nuova spesa o contratto generato.
+
+
 **Aggiornamento16:40EuropeRome:** [fascicolo montato provato con API/DB reali](v5/agency-review-browser-validation-20261030.md) su due nuovi cluster sintetici poi fermati, AI disabilitata. Desktop/375: proposta→associazione→conferma distinta, downloadSHA,unita/dichiarazione,confronto/note e persistenzadoporeload. Corretto diniego anche nel genitore, filename/citazione non più visibili.137/137frontendmirati/staticiverdi. Le indicazioni sotto di browser ancora dafare sono checkpoint precedenti superati da questo collaudo; nessuna certificazione/estrazioneAIatti o contratto generato. Limiti UX catalogazione/soggetti/reload e modello approvato ancora aperti.
 
 

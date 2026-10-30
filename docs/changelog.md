@@ -1990,3 +1990,7 @@ Pannello montato con scelta ambito/periodo/fatti espliciti e privacy iniziale pr
 ## Agenzie — fascicolo montato collaudato con API/DB reali
 
 Trial nuovi eVftg7/72vzkO, dati/PDFsintetici e AI disabilitata: associazioneproposta,confermaseparata,downloadSHA,unita/dichiarazione,confronto/nota,persistenza375 e revoca. Corretto diniego genitore: metadati cached rimossi.137/137frontendmirati/staticiverdi; dueclusterfermati, nessundeploy. [Report e limiti](v5/agency-review-browser-validation-20261030.md).
+
+## Agenzie — preparazione dati per incarico senza modello
+
+Su scelta esplicita del committente, nuovo pannello di selezione locale dei dati confermati con fonti/questioni aperte. Nessun incarico generato o campo obbligatorio inventato: modello ancora da ricevere.13nuovi casi/gruppo150/150/staticiverdi; browserdesktop375su harnesssintetico, non nuova prova API/DB. Restano orchestrationanalisiatti e modello/mapping/validazioneserver/export. [Report](v5/agency-mandate-selection-ui-v1.md).

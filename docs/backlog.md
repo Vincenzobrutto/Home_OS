@@ -986,3 +986,7 @@ Guardia poligoni dopo semplificazione e alla registrazione implementata:5contorn
 ## Agenzie — limiti emersi nel collaudo fascicolo reale
 
 Percorso positivo browser/API/DB e revoca ora provati con fixture sintetiche, desktop/375. Corretto cache genitore su diniego. Ancora aperti: UI genericadocumenti (atto deed appare Da classificare/Usacomeplanimetria), anagrafica/etichette soggetti, aggiornamento coordinato snapshot senza perdere inviiincerti e selettoreprovecompleto. Stage/OCR/provideratti/modelloincarico approvato mancanti. [Report](v5/agency-review-browser-validation-20261030.md).
+
+## Agenzie — preparazione dati per incarico senza modello
+
+Su scelta esplicita del committente, nuovo pannello di selezione locale dei dati confermati con fonti/questioni aperte. Nessun incarico generato o campo obbligatorio inventato: modello ancora da ricevere.13nuovi casi/gruppo150/150/staticiverdi; browserdesktop375su harnesssintetico, non nuova prova API/DB. Restano orchestrationanalisiatti e modello/mapping/validazioneserver/export. [Report](v5/agency-mandate-selection-ui-v1.md).
