@@ -32,7 +32,8 @@ it('[mock] Casa mette le azioni prima dei dettagli e aprire il ruolo non scrive 
   await screen.findByText('Nessuna attività aperta.', { exact: false });
   const rooms = screen.getByRole('heading', { name: 'Esplora la casa' });
   expect(rooms.compareDocumentPosition(screen.getByRole('heading', { name: 'Condivisioni' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(screen.queryByText('Agenzie')).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Area Agenzie' })).toHaveAttribute('href', '/agenzie');
+  expect(within(explore).queryByRole('link', { name: /Agenzie/ })).not.toBeInTheDocument();
   const summary = screen.getByText('Dettagli della casa e del tuo ruolo');
   const details = summary.closest('details')!;
   expect(details).not.toHaveAttribute('open');

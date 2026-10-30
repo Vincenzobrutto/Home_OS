@@ -1936,3 +1936,6 @@ Confronti e note successione/distribuzione con esiti motivati, privacy e riapert
 ## 30 ottobre 2026 — Contratto atti con proposte non associate
 
 Aggiunto adapter puro per schema risposta, accesso fonte corrente, pagine/citazioni/valori letterali, ruoli documentali proposti e fingerprint. Nessuna conferma o binding identita automatici; errori di pagina/testo/citazione espliciti. Non e una nuova estrazione AI o OCR. Prove sintetiche e risultati nel report v5/agency-deed-extraction-contract-v1.md; nessun endpoint o schema DB modificato.
+## 30 ottobre 2026 — Collaudo navigazione Agenzie e riapertura perimetro
+
+Ripresa autorizzata dopo il checkpoint notturno: aggiornati test della nuova navigazione, callback di revisione dopo salvataggio confermato e adattamento geometria API/identita editor per il perimetro persistito. Percorso browser reale verificato desktop e 375 px con solo provider AI sintetico, computo 95,36 m2 salvato e ritrovato. Nessun merge/deploy o modifica demo Alessio. Verifiche finali e limiti nel [report](v5/agency-navigation-validation-20261030.md).

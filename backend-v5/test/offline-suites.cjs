@@ -511,4 +511,4 @@ profiles['test:agency-navigation-db']={database:true,api:false,files:['test/agen
 profiles['test:offline-db'].files.push('test/agency-navigation.integration.test.cjs');
 
 // Dated manual trial, never part of aggregate suites.
-profiles['test:agency-trial']={database:true,api:false,files:['test/agency-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T08:00:00Z'};
+profiles['test:agency-trial']={database:true,api:false,files:['test/agency-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T10:45:00Z'};
