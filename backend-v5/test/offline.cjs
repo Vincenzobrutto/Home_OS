@@ -34,9 +34,9 @@ function patchExactly(file, pairs) {
  }
  fs.writeFileSync(file, content);
 }
-function copyInputs(destination) {
+function copyInputs(destination, includeFrontend = false) {
  const root = path.dirname(backend);
- const tracked = spawnSync('git', ['-C', root, 'ls-files', '-z', '--', 'backend-v5/src', 'backend-v5/test', 'backend-v5/prisma', 'docs/v5/fixtures', 'docs/v5/fase0-quality-v3-authorization-20261022.json', 'docs/v5/fase0-quality-v24-authorization-20261023.json', 'docs/v5/fase0-document-family-matrix-v4-20261023.json'], { encoding: 'utf8', windowsHide: true, env: cleanEnvironment(process.env, 'unit') });
+ const tracked = spawnSync('git', ['-C', root, 'ls-files', '-z', '--', 'backend-v5/src', 'backend-v5/test', 'backend-v5/prisma', 'docs/v5/fixtures', 'docs/v5/fase0-quality-v3-authorization-20261022.json', 'docs/v5/fase0-quality-v24-authorization-20261023.json', 'docs/v5/fase0-document-family-matrix-v4-20261023.json',...(includeFrontend?['frontend-v5/src','frontend-v5/scripts','frontend-v5/public','frontend-v5/index.html','frontend-v5/package.json','frontend-v5/package-lock.json','frontend-v5/tsconfig.app.json']:[])], { encoding: 'utf8', windowsHide: true, env: cleanEnvironment(process.env, 'unit') });
  if (tracked.status !== 0) throw Error('offline_inputs_unavailable');
  for (const relative of tracked.stdout.split('\0').filter(Boolean)) {
   if (/(?:^|[/\\])\.env(?:\.|$)|recovery-mail\.local|\.build|\.data/.test(relative)) throw Error('offline_input_forbidden');
@@ -47,6 +47,7 @@ function copyInputs(destination) {
  const copy = path.join(destination, 'backend-v5');
  for (const folder of ['dist', 'generated']) fs.cpSync(path.join(backend, folder), path.join(copy, folder), { recursive: true });
  fs.symlinkSync(path.join(backend, 'node_modules'), path.join(copy, 'node_modules'), 'junction');
+ if(includeFrontend)fs.symlinkSync(path.join(root,'frontend-v5/node_modules'),path.join(destination,'frontend-v5/node_modules'),'junction');
  patchExactly(path.join(copy, 'dist/prisma.service.js'), [["'55432'", "'" + DB_PORT + "'"], ["'/dimora_v5_product_dev'", "'/dimora_v5_quality_v3_test'"], ["'dimora_v5_app'", "'quality_test'"]]);
  patchExactly(path.join(copy, 'dist/main.js'), [["app.setGlobalPrefix('api/v5');", "app.setGlobalPrefix('api/v5'); app.use((_req, res, next) => { res.setHeader('X-Dimora-Offline-Run', process.env.DIMORA_OFFLINE_TOKEN); next(); });"], ['app.listen(3001,', 'app.listen(' + API_PORT + ','], ['127.0.0.1:3001/api/v5', '127.0.0.1:' + API_PORT + '/api/v5']]);
  // Only addresses in the isolated test copy change. Assertions and source guards
@@ -88,7 +89,8 @@ async function run(options) {
    active = spawn(executable, args, { cwd, env: commandEnv, windowsHide: true, stdio: out === null ? 'inherit' : ['ignore', out, out] });
    const child = active;
    let expired = false;
-   const timer = setTimeout(() => { expired = true; stopChild(child); }, 600000);
+   const duration=label==='tests'&&suite.interactiveUntil?Math.max(1000,Math.min(7200000,Date.parse(suite.interactiveUntil)-Date.now()+30000)):600000;
+   const timer = setTimeout(() => { expired = true; stopChild(child); }, duration);
    let status;
    try { status = await new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', resolve); }); }
    finally { clearTimeout(timer); }
@@ -131,7 +133,7 @@ async function run(options) {
   }
   await command(process.execPath, [path.join(backend, 'node_modules/typescript/bin/tsc'), '-p', path.join(backend, 'tsconfig.json')], 'build', backend);
   if (database) {
-   copy = copyInputs(path.join(runDir, 'repo'));
+   copy = copyInputs(path.join(runDir, 'repo'),!!suite.interactiveUntil);
    Object.assign(env, cleanEnvironment(process.env, 'db', runDir, token));
    await command(pg('initdb'), ['-D', path.join(runDir, 'pgdata'), '-U', 'quality_test', '-A', 'trust', '--encoding=UTF8', '--no-locale'], 'initdb', runDir);
    // No reuse and no attachment to an existing server. postmaster.pid in our

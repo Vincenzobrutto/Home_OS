@@ -14,7 +14,7 @@ export interface AgencyPlanPort{
  edit(planId:string,body:PlanEditBody,key:string):Promise<{replay:boolean;plans:PlansResponse}>;
 }
 /** Shares V5 session/CSRF transport. No local fallback, mock or stored token. */
-export function agencyPlanApi(transport:ApiTransport,scope:AgencyScope):AgencyPlanPort{
+export function agencyPlanApi(transport:Pick<ApiTransport,'callJson'|'callBinary'>,scope:AgencyScope):AgencyPlanPort{
  const root='/agencies/'+encodeURIComponent(scope.agencyId)+'/practices/'+encodeURIComponent(scope.practiceId),accountId=scope.accountId;
  return {
   practice:signal=>transport.callJson(root,{accountId,signal}),

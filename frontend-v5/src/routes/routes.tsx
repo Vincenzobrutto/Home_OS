@@ -41,9 +41,12 @@ const ReceivedDetailPage = lazyPage(() => import('./ReceivedPages').then((m) => 
 const RecoveryRequestPage = lazyPage(() => import('./RecoveryPages').then((m) => m.RecoveryRequestPage));
 const RecoveryLinkPage = lazyPage(() => import('./RecoveryPages').then((m) => m.RecoveryLinkPage));
 const VerificationLinkPage = lazyPage(() => import('./RecoveryPages').then((m) => m.VerificationLinkPage));
+const AgenciesPage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgenciesPage));
+const AgencyPracticesPage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgencyPracticesPage));
+const AgencyPracticePage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgencyPracticePage));
 
 // Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3/M4, caso Caldaia), activities-v1 (H1), expenses-v1 (H3a), home-objects-v1 (G1), economy-v1 (S1a/b, con ripiego H3a).
-// Agenzie e Amministratori non hanno rotte: non sono ancora assegnate.
+// Agenzie usa scope separati dalle case; la configurazione API resta esplicita.
 export const routes: RouteObject[] = [
   {
     element: <RootLayout />,
@@ -65,6 +68,9 @@ export const routes: RouteObject[] = [
           { index: true, element: <HomeEntry /> },
           { path: 'case', element: <HomesPage /> },
           { path: 'case/nuova', element: <CreateHomePage /> },
+          { path:'agenzie',element:<AgenciesPage/> },
+          { path:'agenzie/:agencyId',element:<AgencyPracticesPage/> },
+          { path:'agenzie/:agencyId/pratiche/:practiceId',element:<AgencyPracticePage/> },
           // sharing-v1: consegne ricevute a livello account, anche senza case.
           { path: 'consegne', element: <ReceivedListPage /> },
           { path: 'consegne/codice', element: <ClaimCodePage /> },

@@ -15,7 +15,7 @@ export function planJobCapability(secret:Buffer,scope:Scope,runId:string){
 type Pricing=Pick<PlanJob,'model'|'priceVersion'|'inputMicrosPerMillion'|'outputMicrosPerMillion'>;
 /** Internal coordinator, inert until called. Tests inject a provider without network.
  * The factory must use these persisted prices/model; never accept it from HTTP. */
-export async function runAgencyPlanJob(store:AgencyPracticesStore,vault:AgencyFileVault,input:{scope:Scope;runId:string;dpi:number;config:RasterConfig},ports:{workerSecret:Buffer;provider:(pricing:Pricing)=>PlanPorts['ai']}){
+export async function runAgencyPlanJob(store:AgencyPracticesStore,vault:AgencyFileVault,input:{scope:Scope;runId:string;dpi:number;config:RasterConfig},ports:{workerSecret:Buffer;provider:(pricing:Pricing,instructions:string)=>PlanPorts['ai']}){
  const {scope,runId}=input,token=planJobCapability(ports.workerSecret,scope,runId);
  const context=()=>store.planWorkerContext(scope.accountId,scope.agencyId,scope.practiceId,runId,token);
  const initial=await context();
@@ -25,7 +25,7 @@ export async function runAgencyPlanJob(store:AgencyPracticesStore,vault:AgencyFi
  if(!claimed.acquired)throw new Error('plan_job_not_dispatchable');
  const maxMicros=Math.min(1_000_000,Math.floor(initial.job.capMicros/2));
  if(maxMicros<1)throw new Error('plan_budget_insufficient');
- const ai=ports.provider({model:initial.job.model,priceVersion:initial.job.priceVersion,inputMicrosPerMillion:initial.job.inputMicrosPerMillion,outputMicrosPerMillion:initial.job.outputMicrosPerMillion});
+ const ai=ports.provider({model:initial.job.model,priceVersion:initial.job.priceVersion,inputMicrosPerMillion:initial.job.inputMicrosPerMillion,outputMicrosPerMillion:initial.job.outputMicrosPerMillion},initial.job.instructions||"");
  let lastPhase:Phase|null=null;
  try{
   const analysis=await analyzePlan({
@@ -39,6 +39,8 @@ export async function runAgencyPlanJob(store:AgencyPracticesStore,vault:AgencyFi
  }catch(error){
   // Reservations survive any failure. Known billed output may still be unusable.
   if(lastPhase!==null)await store.accountPlanPhase(scope.agencyId,scope.practiceId,runId,token,lastPhase,null);
+  else try{await store.failPlanBeforeDispatch(scope.agencyId,scope.practiceId,runId,token);}catch{/* A committed/uncertain reservation must never be released here. */}
   throw error;
  }
 }
+
