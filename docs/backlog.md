@@ -1034,3 +1034,7 @@ Validare proposta ottica su altri documenti indipendenti; il campione nuovo ha g
 ### Agenzie — residui delle due viste, 30 ottobre 2026
 
 Implementati prospetti e selezione contorno. Da valutare: calibrazione verificata salvabile senza completare prima tutte le classificazioni commerciali; comando di rinomina dei vani con audit; nuovo collaudo completo su documento indipendente con scala attendibile, muri e pertinenze, salvataggio e reload. Nessuna di queste tre attività è dichiarata implementata dal solo riepilogo UI. [Report](v5/agency-dual-view-summary-20261030.md).
+
+### Agenzie — limiti calibrazione da foglio, 30 ottobre 2026
+
+Implementata ipotesi A4/scala dichiarata con provenance e controlli server. Restano rilevamento affidabile dei bordi/pagina, rettifica prospettica, scala letta automaticamente e confronto con PDF originale/riferimento noto; nessuno è implicito nel controllo aspect ratio. Nuovo collaudo DB/HTTP/browser e conferma con agente reale restano da svolgere. [Report](v5/agency-paper-calibration-20261030.md).

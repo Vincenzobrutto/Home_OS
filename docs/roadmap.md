@@ -1,3 +1,7 @@
+## Agenzie — A4 e scala dichiarata, 30 ottobre 2026
+
+Calibrazione da foglio presunto, provenienza persistente e verifiche server, sempre stima con totale verificato sospeso; barra/misura nota conservate. 649/649 backend, 58/58 UI, build/lint verdi; nessun nuovo DB/browser o spesa AI. [Report](v5/agency-paper-calibration-20261030.md).
+
 ## Agenzie — prospetti delle due viste, 30 ottobre 2026
 
 Implementati dettaglio netto per vano e riepilogo commerciale appartamento/pertinenze/muri, con valori server e sospensione delle misure obsolete. 54/54 UI, build/lint e browser isolato desktop/375; nessun nuovo backend/DB/API end-to-end, AI o deploy. [Report](v5/agency-dual-view-summary-20261030.md).

@@ -19,7 +19,7 @@ export function commercialReport(input:CommercialInput){
  assert(input&&typeof input.policyVersion==='string'&&input.policyVersion.trim()&&input.policyVersion.length<=120&&Number.isSafeInteger(input.geometryRevision)&&input.geometryRevision>0);
  assert(Array.isArray(input.surfaces)&&input.surfaces.length>0&&input.surfaces.length<=100&&Array.isArray(input.walls)&&input.walls.length<=300&&Array.isArray(input.unresolvedSymbols)&&input.unresolvedSymbols.length<=100);
  assert(['physical_thickness','credited_thickness'].includes(input.commonWallCapBasis));
- const m=metresPerUnit(input.calibration),issues:string[]=[];
+ const m=metresPerUnit(input.calibration),issues:string[]=input.calibration.paper?['paper_scale_estimated']:[];
  const shapes=[...input.surfaces,...input.walls];assert(new Set(shapes.map(s=>s.id)).size===shapes.length&&shapes.every(s=>typeof s.id==='string'&&s.id.trim()&&s.id.length<=100&&validPolygon(s.geometry)));
  for(let i=0;i<shapes.length;i++)for(let j=i+1;j<shapes.length;j++)if(overlaps(shapes[i].geometry,shapes[j].geometry))issues.push('overlap:'+shapes[i].id+':'+shapes[j].id);
  const surfaces=input.surfaces.map(s=>{

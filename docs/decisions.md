@@ -1365,3 +1365,7 @@ Se la scansione pallida non produce regioni, istogramma locale suggerisce soglia
 ### Agenzie — presentare due basi senza ricomputare nel client, 30 ottobre 2026
 
 Vani e perimetro commerciale rimangono viste della stessa fonte ma geometrie distinte. Il riepilogo usa soltanto il report autorizzato del server: netto per vano, base principale raggruppata, pertinenze e rettifiche dei muri. Nessun totale da somma di pixel nel browser; parziale non equivale a totale. Associazione delle pertinenze dalla configurazione salvata, non dal nome; le loro correzioni usano rooms anche nella vista commerciale. Misure sospese durante modifiche o revisione geometrica diversa. [Verifiche e limiti](v5/agency-dual-view-summary-20261030.md).
+
+### Agenzie — A4 predefinito come ipotesi tracciata, 30 ottobre 2026
+
+Su indicazione del committente il formato iniziale è A4, modificabile. La sola scala stampata con un'immagine non fornisce dimensioni assolute: si assume il foglio intero, si controllano proporzioni e si conserva provenienza paper, senza dichiararla scala verificata. Nessuna correzione prospettica implicita; ritagli compatibili col formato rimangono possibili. Superfici stimate disponibili, totale verificato sospeso fino a riferimento metrico. [Implementazione](v5/agency-paper-calibration-20261030.md).

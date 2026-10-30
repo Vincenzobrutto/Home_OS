@@ -64,6 +64,7 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   plan.geometryRevision++;plan.measurement=null;plan.measurementConfiguration=null;plan.status='needs_review';plan.warnings.push('manual_geometry_change:'+input.reason);
  }else if(command.operation==='measure'){
   const c=command.configuration;plan.measurementConfiguration=structuredClone(c);assert(c&&['rooms_and_walls','gross_perimeter'].includes(c.base)&&Array.isArray(c.assignments)&&c.assignments.length===plan.rooms.length&&new Set(c.assignments.map(a=>a.id)).size===c.assignments.length&&Array.isArray(c.mainRegionIds)&&new Set(c.mainRegionIds).size===c.mainRegionIds.length&&c.mainRegionIds.every(id=>plan.rooms.some(r=>r.id===id)));
+  if(c.calibration.paper)assert(c.calibration.paper.widthUnits===plan.rasterSize.width&&c.calibration.paper.heightUnits===plan.rasterSize.height,'paper_raster_mismatch');
   const calibrationPoints=[c.calibration.start,c.calibration.end,...(c.calibration.check?[c.calibration.check.start,c.calibration.check.end]:[])];assert(calibrationPoints.every(p=>p[0]>=0&&p[1]>=0&&p[0]<=plan.rasterSize.width&&p[1]<=plan.rasterSize.height));
   const surfaces=c.assignments.map(a=>{const room=plan.rooms.find(r=>r.id===a.id);assert(room);return {...a,geometry:{points:room.points,holes:room.holes}};});
   const common={...c,geometryRevision:plan.geometryRevision,unresolvedSymbols:plan.issues.map(i=>i.id+':'+i.code)};
