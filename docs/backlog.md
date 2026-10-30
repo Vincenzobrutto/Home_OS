@@ -1018,3 +1018,7 @@ Servizi erosi, arco interno e balcone ancora incompleti; automatizzare selezione
 ## Archi e servizi — gate dopo anteprima positiva
 
 Collegare proposte superfici al worker/revisione con accettazione atomica fonte/versione/SHA/CAS e invalidazione computo. Verificare scala dei pixel, sanitari spessi e pareti sottili, porte scorrevoli e nicchie curve; evitare selezioni multiple incompatibili su uno stesso vano. Nuova anteprima9contorni, non integrazione completata. [Report](v5/agency-door-service-surfaces-20261030.md).
+
+## Fasce esterne — copertura e accettazione
+
+Detector proposto richiede componente chiusa, allungamento e almeno due vani sullo stesso lato: balconi corti/monovano/aperti e logge rimangono fuori copertura; corridoi comuni esterni possono essere ambigui. Conferma uso/associazione distinta dal contorno. Collegare al worker/accettazione atomica delle proposte superfici senza modificare vani precedenti. [Prova nota e limiti](v5/agency-exterior-strip-preview-20261030.md).

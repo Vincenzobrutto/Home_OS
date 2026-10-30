@@ -1,5 +1,10 @@
 ## 30 ottobre 2026 — Censimento accessori e laboratorio soglie
 
+## Planimetrie — balcone aggiunto in anteprima
+
+Fascia esterna recuperata dai componenti dei pixel, allungata e adiacente a più vani sullo stesso lato della facciata.10contorni/0overlap, i nove precedenti identici; nessun seed o ricalco umano e nessuna nuovaAI. Uso/associazione ancora da verificare. Funzione backend e anteprima tecnica, non final canonico/accettazione persistente. [Risultato e limiti](v5/agency-exterior-strip-preview-20261030.md). Demo Alessio invariata.
+
+
 ## Planimetrie — archi e servizi ricostruiti in anteprima
 
 Rilevatore geometrico di quarti di cerchio e selezione di celle sostenute dai muri: replay locale9contorni/0overlap, due archi e due servizi, nessuna coordinata manuale o nuovaAI. Vuoti e revisioni conservati; vicini riallocati dove occupavano aree errate. Funzioni backend e anteprima tecnica, non ancora final canonico/nuova route di accettazione. [Prova e limiti](v5/agency-door-service-surfaces-20261030.md). Demo Alessio invariata.
