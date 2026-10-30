@@ -934,3 +934,7 @@ ReviewWorkspace e client route review verificati in isolamento, ancora non monta
 ## 30 ottobre2026 — Dopo UI finding indipendente
 
 Registro note/confronti, chiusure motivate, prove e storico come componenti verificati; non ancora nella navigazione. Creazione guidata confronti, caricamento prove e autori/date storico rimangono aperti. Prossimo persistenza adapter atti e binding umano, poi cablaggio delle due UI di revisione. Report v5/agency-findings-ui-v1.md; nessuna nuova AI o modello incarico autorizzato da queste voci.
+
+## 30 ottobre2026 — Dopo dominio record atti/binding
+
+[Dominio](v5/agency-deed-records-domain-v1.md) verificato, non ancora DB/API/UI. Prossimo store stage/read/bind con lock/CAS/viste filtrate e cluster nuovo posseduto; verificare PDF realmente decodificato, persistenza, doppia richiesta e revoca/cambio fonte durante decoder. Solo dopo HTTP e UI, niente TrustedDeedText o risultato attestato dal client. Nessuna fusione/deduplica fra analisi diverse, registro anagrafico o proprieta attuale dedotti.

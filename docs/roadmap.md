@@ -169,3 +169,7 @@ Priorita documento > dati verificabili > pacchetto incarico: [contratto atti off
 ## 30 ottobre2026 — Registro verifiche come componente indipendente
 
 [UI finding](v5/agency-findings-ui-v1.md): note manuali successione/difformita, confronti, motivo/prove, riapertura e storico;38/38 nel gruppo revisione e statici verdi, browser sintetico375/Desktop. Non montato nel router e nessun backend cambiato. Prossimo persistenza/binding umano delle proposte atti, poi cablaggio revisioni pratica.
+
+## 30 ottobre2026 — Risultati atti e import proposto
+
+[Record immutabili e binding umano](v5/agency-deed-records-domain-v1.md): dominio puro,21nuovi casi e568/568 ordinari verdi. Import separato dalla conferma, privacy e invalidazione, nessun store/API/DB ancora. Prossimo persistenza transazionale e prove isolate, poi cablaggio UI pratica; nessuna AI reale o modello incarico inventato.

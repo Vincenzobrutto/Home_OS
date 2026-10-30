@@ -1317,3 +1317,7 @@ La nuova UI Agenzie non conferma all'apertura o prima della risposta. Retry ince
 ## 2026-10-30 — Una verifica non certifica e una prova tecnica va selezionata
 
 UI findings distingue aperto/verifica registrata/da rivedere, senza conformita o titolarita automatiche. Motivazione sempre necessaria; documento tecnico ricevuto richiede riferimento corrente selezionato (massimo5), fingerprint/CAS server. Nuove note manuali per unita/tipo espliciti, default privata. Payload clonato prima dell'async e retry con stessa key, mai reinterpretato da props mutate. Contenitore fornisce solo prove/labels autorizzate; UI non inventa fonti. Report v5/agency-findings-ui-v1.md.
+
+## 2026-10-30 — Associare un candidato non equivale a confermare un dato
+
+Record atti immutabili e fonte/versione/fingerprint separati dai fatti. Solo scelta umana esplicita di unita/subjectKey e riconoscimento ruolo documentale crea un nuovo fatto ancora proposto; niente override valore o identita/diritto inferiti. Visibilita del record ereditata senza ampliamento, fonte privata sempre prevalente. Record superati non riattivati da replay, input TrustedDeedText solo server e nessuna route in questo incremento. Report v5/agency-deed-records-domain-v1.md.

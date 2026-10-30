@@ -1947,3 +1947,7 @@ Nuovo ReviewWorkspace con valori/prove, conferma/correzione/rifiuto, readonly/st
 ## 30 ottobre2026 — UI per note e risoluzioni Agenzie
 
 Nuovo FindingsWorkspace/client: esito/motivo/fingerprint, prova tecnica selezionata e limite5, stato riaperto, storico, nuova nota privata per unita esplicita; retry clonato, conflitti e privacy.20nuovi test, gruppo revisione38/38, typecheck/lint e browser sintetico verdi. Report v5/agency-findings-ui-v1.md. Nessun nuovo endpoint/router, AI reale o deploy.
+
+## 30 ottobre2026 — Dominio per proposte atti e associazione esplicita
+
+Stage dei risultati e binding umano con CAS/replay, privacy ereditaria e invalidazione; fatto nuovo sempre proposto e generazione contratto assente. Mirato72/72, ordinari568/568 e statici backend verdi. Solo funzioni interne, non nuova persistenza o endpoint. Report v5/agency-deed-records-domain-v1.md.
