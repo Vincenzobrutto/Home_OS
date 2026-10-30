@@ -1,8 +1,10 @@
 import { createHash } from 'node:crypto';
 import {annexCensus,recoverAnnexInventory} from './recognition-rules';
 import {recoverOpenings,type OpeningHint} from './opening-recovery';
+import {createSurfaceProposal,type SurfaceProposal} from './surface-proposal';
+import {previewVirtualThresholds,proposeThresholds} from './recognition-rules';
 import { evidenceCurrent, requirePractice, type Actor, type Evidence, type Practice } from '../agency-practices/domain';
-import { assert, type Point } from './geometry';
+import { assert, PlanError, type Point } from './geometry';
 import { assertRaster, segmentPlan, type Raster, type RasterConfig, type SeedSpace, type Segmentation, type SymbolRequest } from './raster';
 export type SeedProposal={spaces:SeedSpace[];symbols:SymbolRequest[];warnings:string[];openings?:OpeningHint[]};
 export type PlanProof=Pick<Evidence,'sourceId'|'version'|'sha256'|'page'>;
@@ -35,7 +37,7 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  const raster=await ports.loadRaster(input.proof);assertRaster(raster);await authorized(ports,input.proof,scope);
  const rasterSHA256=createHash('sha256').update(raster.gray).digest('hex'),rasterSize={width:raster.width,height:raster.height};
  const rendering=raster.rendering?structuredClone(raster.rendering):null;
- const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v6-focus-local-openings'})).digest('hex');
+ const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v7-reviewable-surfaces'})).digest('hex');
  const calls:Array<{phase:string;requestId:string;input:number;output:number;costUSD:number}>=[];
  async function call(phase:'inventory'|'review',previous:SeedProposal|null,segmentation:Segmentation|null){
   await authorized(ports,input.proof,scope);await ports.reserve(input.runId,phase,fingerprint,input.maxUSDPerCall);await authorized(ports,input.proof,scope);
@@ -58,6 +60,9 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  await authorized(ports,input.proof,scope);
  const annexInventory=annexCensus(merged.spaces,final.regions.map(r=>r.id));
  const warnings=[...annexInventory.filter(a=>a.reviewExclusion).map(a=>'annex_exclusion_requires_review:'+a.id),...first.warnings,...review.warnings,...retainedSymbols.map(id=>'retained_previous_symbol:'+id)];
+ let surfaceProposal:SurfaceProposal|null=null;const cuts=openingRecovery.reviews.filter(v=>v.state==='proposed_recovery'&&v.threshold).map(v=>v.threshold!);
+ try{const copy=previewVirtualThresholds(raster,proposeThresholds(raster,cuts,input.config.threshold),cuts.map(v=>v.id),input.config.threshold).raster;surfaceProposal=createSurfaceProposal(copy,recoverAnnexInventory(merged.spaces),merged.symbols,input.config,final,fingerprint);}catch(error){if(!(error instanceof PlanError))throw error;warnings.push('surface_proposal_unresolved:'+error.code);final.issues.push({id:'surface-proposal',code:'surface_proposal_unresolved'});}
+ await authorized(ports,input.proof,scope);
  // AI review never certifies coverage: agent confirms scope/scale/symbols and computation separately.
- return {runId:input.runId,fingerprint,rasterSize,rasterSHA256,rendering,proof:structuredClone(input.proof),scope,initial,final,proposal:merged,annexInventory,openingReviews:openingRecovery.reviews,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:final.issues.length||annexInventory.some(a=>a.reviewExclusion)?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};
+ return {runId:input.runId,fingerprint,rasterSize,rasterSHA256,rendering,proof:structuredClone(input.proof),scope,initial,final,surfaceProposal,proposal:merged,annexInventory,openingReviews:openingRecovery.reviews,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:surfaceProposal||final.issues.length||annexInventory.some(a=>a.reviewExclusion)?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};
 }

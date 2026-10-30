@@ -522,3 +522,6 @@ profiles['test:offline-db'].files.push('test/agency-deed-http.integration.test.c
 
 // Dated browser review trial; excluded from aggregate suites.
 profiles['test:agency-review-trial']={database:true,api:false,files:['test/agency-review-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T16:00:00Z'};
+
+// Dated surface-adoption browser trial, no product/provider fallback.
+profiles['test:agency-surfaces-trial']={database:true,api:false,files:['test/agency-surfaces-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T22:19:01.871Z'};

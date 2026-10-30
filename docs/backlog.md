@@ -1022,3 +1022,7 @@ Collegare proposte superfici al worker/revisione con accettazione atomica fonte/
 ## Fasce esterne — copertura e accettazione
 
 Detector proposto richiede componente chiusa, allungamento e almeno due vani sullo stesso lato: balconi corti/monovano/aperti e logge rimangono fuori copertura; corridoi comuni esterni possono essere ambigui. Conferma uso/associazione distinta dal contorno. Collegare al worker/accettazione atomica delle proposte superfici senza modificare vani precedenti. [Prova nota e limiti](v5/agency-exterior-strip-preview-20261030.md).
+
+## Superfici — gate dopo integrazione locale
+
+Accettazione scoped worker/UI ora implementata e verificata: il residuo principale è corpus indipendente senza hint umani, incluse risoluzioni diverse e spazi ambigui. Nessuna misura di accuratezza generale dal campione noto. Trial sintetico a scadenza23:19Rome, nessun deploy. Verificare in seguito profili di latenza su raster grandi, identificatori servizio al limite100caratteri, fasce esterne corte/monovano, e gestione del rigetto esplicito della proposta senza rifare AI. [Stato e limiti](v5/agency-surface-integration-20261030.md).

@@ -140,3 +140,7 @@ StoredPlan.annexInventory opzionale conserva id/tipo candidato/status/motivo/ass
 ### Soglie proposte — snapshot planimetria
 
 openingReviews è metadato opzionale nello snapshot JSON già esistente, distinto da conferma umana; origine evidenza visiva e raffinamento pixel separati. boundary.virtualThresholdIds indica contorni derivati. Nessuna migrazione, tabella o file personale nel repository. [Report](agency-opening-recovery-20261030.md).
+
+### Proposta superfici e adozione
+
+Metadato surfaceProposal nello snapshot JSON esistente, nessuna migrazione: pending/applied/stale, digest canonico, binding all'analisi e alla geometria base, contorni/issues/summary, acceptedAt/acceptedBy dopo adozione. Cambi geometrici invalidano una proposta pending. Origine geometry_proposal distinta da manual, storico preservato e computo invalidato. sourceReadable/evidenceCurrent continuano a proteggere tutto il derivato. [Report corrente](agency-surface-integration-20261030.md).

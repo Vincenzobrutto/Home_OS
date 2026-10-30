@@ -81,7 +81,8 @@
     "test:agency-navigation-db": "node test/offline.cjs --suite test:agency-navigation-db",
     "test:agency-trial": "node test/offline.cjs --suite test:agency-trial",
     "test:agency-deed-http-db": "node test/offline.cjs --suite test:agency-deed-http-db",
-    "test:agency-review-trial": "node test/offline.cjs --suite test:agency-review-trial"
+    "test:agency-review-trial": "node test/offline.cjs --suite test:agency-review-trial",
+    "test:agency-surfaces-trial": "node test/offline.cjs --suite test:agency-surfaces-trial"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",

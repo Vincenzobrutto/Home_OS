@@ -1353,3 +1353,7 @@ Fallback locale solo da indizio visivo, con assi murari dominanti e stipiti veri
 ## 2026-10-30 — Arco, cerniera e muri prima di riallocare una superficie
 
 Una cavita curva non basta: fitcircolare, cerniera vicina e continuazioni murarie allineate prima di sostituire la sola catena. Sanitari non delimitano automaticamente una stanza; selezione involucri su evidenze e revisioni obbligatorie. La preview non conferma superfici e non sostituisce l'accettazione scoped ancora da integrare. [Report](v5/agency-door-service-surfaces-20261030.md).
+
+## 2026-10-30 — Adottare una proposta geometrica non conferma il computo
+
+Pacchetto server distinto e digest canonico su fonte/fingerprint/base geometrica; client invia soltanto digest/revisioni/motivo. Adozione atomica mantiene storico/perimetro e invalida computo, lasciando verifiche aperte. Correzione manuale cancella provenienza automatica del contorno modificato. JSONB riordina chiavi: canonizzare ricorsivamente oggetti, preservare array. Nessun nuovo schema o route. [Contratto e verifica](v5/agency-surface-integration-20261030.md).

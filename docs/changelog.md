@@ -1,5 +1,10 @@
 ## 30 ottobre 2026 — Censimento accessori e laboratorio soglie
 
+## Agenzie — proposte superfici integrate nel flusso reale
+
+Analisi salva una proposta distinta dai contorni base; UI confronta in sola lettura, agente adotta con spunta/motivo, backend sostituisce il pacchetto atomicamente con fonte corrente/CAS/digest canonico e storico. Computo invalidato, perimetro preservato; modifica manuale e ricarica verificate.639/639backend,38/38DB-HTTP-worker,43/43UI Agenzie, build/typecheck/lint verdi. Browser desktop/375 su dati/provider sintetici; foto reale replay offline8→10proposti senza nuovaAI. [Report corrente e limiti](v5/agency-surface-integration-20261030.md). Nessun deploy/merge o modifica demo Alessio.
+
+
 ## Planimetrie — balcone aggiunto in anteprima
 
 Fascia esterna recuperata dai componenti dei pixel, allungata e adiacente a più vani sullo stesso lato della facciata.10contorni/0overlap, i nove precedenti identici; nessun seed o ricalco umano e nessuna nuovaAI. Uso/associazione ancora da verificare. Funzione backend e anteprima tecnica, non final canonico/accettazione persistente. [Risultato e limiti](v5/agency-exterior-strip-preview-20261030.md). Demo Alessio invariata.
