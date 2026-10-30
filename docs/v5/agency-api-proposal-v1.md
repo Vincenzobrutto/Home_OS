@@ -43,3 +43,6 @@ Il nucleo chiama il target `id`; il futuro DTO HTTP mapperà esplicitamente fact
 ## Planimetrie — metodi interni, nessuna route attiva
 
 Store.savePlan/readPlans/editPlan disponibili internamente con CAS, idempotenza e accessi. Il risultato AI non è un payload accettabile dal browser. Endpoint futuri richiedono DTO esatti, limiti payload, sessione/CSRF e worker con ledger durevole. Non registrati controller o moduli. [Report](agency-plan-integration-v1.md).
+
+## Confine bytes ora disponibile internamente
+Lo store upload/readFile deriva identità dai bytes e applica lock/CAS/permessi. Il trasporto resta proposto: non accettare Actor, SHA, MIME o path dal browser come attestazioni. Limite ricezione20MiB, header download sicuri ed error mapping generico da implementare nel controller; firma media non equivale a decoder. [Limiti storage](agency-files-v1.md).

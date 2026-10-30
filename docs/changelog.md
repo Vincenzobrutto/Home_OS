@@ -1895,3 +1895,6 @@ Motore puro per confronti esplicitamente circoscritti con prove, differenze da r
 ## 30 ottobre 2026 — Agenzie: nucleo planimetrie e computo commerciale nel branch
 
 Segmentazione raster da semi AI, controllo a due fasi, persistenza derivati privata, calcolo commerciale configurabile e componente con viste vani/perimetro.419/419 backend,21/21 DB sintetici combinati,8/8 frontend e controlli desktop/375. Nessuna attivazione, AI live o modifica demo Alessio. Integrazione runtime ancora incompleta: [report](v5/agency-plan-integration-v1.md).
+
+## 30 ottobre2026 — Agenzie: originali immutabili interni
+Upload bytes interno con impronta server-side e download autorizzato dello snapshot corrente. Vault separato da Home/Document, nessuna route attiva.429/429 ordinari e9/9 DB dedicati, cluster fermato. [Stato e limiti](v5/agency-files-v1.md).

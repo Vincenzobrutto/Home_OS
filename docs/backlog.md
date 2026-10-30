@@ -898,3 +898,5 @@ Agenzie coerenza: motore puro verificato; prossimi gruppi persistenti, decisioni
 
 ### Agenzie — P1 integrazione end-to-end delle planimetrie
 Nucleo nuovo pronto a essere cablato; completare storage bytes/rasterizzazione agenzia, job/lease/ledger e trasporto provider, DTO/API/CSRF, navigazione pratica/form computo, definizione iniziale del perimetro e fasce dei muri. Dataset autorizzato ulteriore e regole simboli/limite25cm da concordare. Non usare demo Alessio o ledger sperimentale per prove live. [Report](v5/agency-plan-integration-v1.md).
+
+Agenzie storage: bytes interni verificati, ancora da completare rasterizzatore fidato, garbage collection degli oggetti orfani, quote/retention, durabilità filesystem e streaming multipart autenticato con cap durante la ricezione. Non esporre mutate metadata-only come upload. [Report](v5/agency-files-v1.md).

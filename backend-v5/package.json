@@ -59,6 +59,8 @@
     "test:offline-db": "node test/offline.cjs --suite test:offline-db",
     "test:agency-practices": "node test/offline.cjs --suite test:agency-practices",
     "test:agency-practices-db": "node test/offline.cjs --suite test:agency-practices-db",
+    "test:agency-files-db": "node test/offline.cjs --suite test:agency-files-db",
+    "test:agency-files": "node test/offline.cjs --suite test:agency-files",
     "test:agency-review": "node test/offline.cjs --suite test:agency-review",
     "test:agency-coherence": "node test/offline.cjs --suite test:agency-coherence",
     "test:agency-plans": "node test/offline.cjs --suite test:agency-plans",
