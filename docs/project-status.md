@@ -26,6 +26,9 @@ Provati nel browser visibile il file sintetico e poi il PDF autorizzato con AI e
 
 ## Agenzie — ciclo diurno del30ottobre, stato corrente
 
+**Chiusura verifiche17:30EuropeRome:** [checkpoint e consegna diurna](v5/agency-day-checkpoint-20261030.md), frontend completo mock1719/1719in169file,2worker/retry0, typecheck/buildfinaliverdi. Nessun deploy; trial propri fermati. Modello assente, jobAIatti e vera bozza ancora da completare. Le prove runtime e mock sono distinte nel report.
+
+
 Il [contratto del prossimo collegamento AI atti](v5/agency-deed-orchestration-contract-v1.md) ora specifica consenso/job/ledger e18casi pianificati. Non è implementazione o autorizzazione di spesa; con modello agenzia ancora assente la bozza resta bloccata.
 
 

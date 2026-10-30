@@ -2002,3 +2002,7 @@ Su scelta esplicita del committente, nuovo pannello di selezione locale dei dati
 ## Agenzie — contratto futuro e chiarimento documentazione API
 
 Specificato il collegamento AI atti con consenso/ledger e18casi di accettazione, senza attivare provider o route. Header API cumulativo aggiornato per distinguere route implementate e sezioni storiche. Nessun nuovo comportamento prodotto o spesa. [Contratto](v5/agency-deed-orchestration-contract-v1.md).
+
+## Agenzie — checkpoint diurno finale delle verifiche
+
+Frontend completo mock1719/1719in169file,2worker/retry0;typecheck/buildfinaliverdi, nessundeploy. Fascicolomontato con API/DBreali provato su fixture; preparazioneincarico solo selezioneinternasenzamodello, noncontrattogenerato. Residui e confini nel [checkpoint diurno](v5/agency-day-checkpoint-20261030.md).
