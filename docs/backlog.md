@@ -1006,3 +1006,7 @@ Automatizzare proposte di ancoraggi/verso porta e selezione involucri con eviden
 ## Aperture — validazione indipendente
 
 Nuove planimetrie senza interventi preventivi: misurare omissioni AI, falsi stipiti, finestre scambiate per porte, recuperi impropri, componenti accorpate e casi con più soglie necessarie insieme. Verificare frecce che attraversano il varco e scansioni deboli; nessun bypass del controllo ink. Worker/browser e375px del nuovo risultato ancora da provare; nessun nuovo invio con budget precedente quasi esaurito. [Implementato e limiti](v5/agency-opening-recovery-20261030.md).
+
+## Benchmark autonomo porte fallito
+
+La zona della freccia è riconosciuta ma la coppia stipiti proposta non chiude il vano. Valutare crop locale automatico nella revisione già prevista e alternative pixel verificate; distinguere fonte visiva, coppia candidata ed isolamento. Servizi/arco ancora dipendenti da selezione tecnica negli esperimenti precedenti. Audit pre-dispatch: errore budget noto prima di messages viene marcato uncertain genericamente; rendere distinta la prova di mancato invio senza abilitare retry delle richieste effettivamente inviate. [Evidenza](v5/agency-opening-autonomous-benchmark-20261030.md).

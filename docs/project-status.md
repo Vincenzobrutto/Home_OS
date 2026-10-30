@@ -1,5 +1,10 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Planimetrie — prova autonoma ingresso NON superata
+
+Provider reale e immagine originale, nessun suggerimento o ritocco manuale:7contorni/0overlap, soglia AI rifiutata perché non isola il vano; ingresso/stanza ovest ancora aperti e servizi incompleti. Il precedente successo geometrico su hint umani non equivale ad automazione completa. Due generazioni effettive,0,050196USD, bound4,411EUR entro nuovo tetto4,50; inventario riusato dopo stop preventivo review, nessun reinvio di generazioni già inviate. [Benchmark e limiti](v5/agency-opening-autonomous-benchmark-20261030.md). Demo Alessio invariata.
+
+
 ## Planimetrie — recupero automatico proposto delle aperture
 
 Osservazioni AI nella stessa coppia di chiamate; ricerca stipiti sui pixel, soglia temporanea e recupero soltanto senza alterare vani precedenti, invadere seed esclusi o creare overlap. Evidenze scoped persistite e verifiche sempre aperte. Replay geometrico positivo su indicazioni approssimative Codex: efficacia dell'AI autonoma ancora non misurata. [Report, test e limiti](v5/agency-opening-recovery-20261030.md). Demo Alessio invariata, nessuna nuova AI o deploy.
