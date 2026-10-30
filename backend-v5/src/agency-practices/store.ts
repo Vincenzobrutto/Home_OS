@@ -24,6 +24,9 @@ export class AgencyPracticesStore {
   async authorize(accountId:string,agencyId:string,practiceId:string,action:'read'|'edit'){
     await this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);requirePractice(actor,practice,action,new Date().toISOString());},{maxWait:5000,timeout:15000});
   }
+  async sourceDetails(accountId:string,agencyId:string,practiceId:string,sourceId:string){
+    return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId),s=practice.sources.find(s=>s.id===sourceId);if(!s||!sourceReadable(actor,practice,s,new Date().toISOString()))throw new PracticeError('access_denied');return {sourceId:s.id,kind:s.kind,visibility:s.visibility,...structuredClone(s.versions.at(-1)!)};},{maxWait:5000,timeout:15000});
+  }
   async list(accountId:string,agencyId:string,after?:string){
     return this.db.$transaction(async tx=>{
       await tx.$queryRaw`SELECT id FROM "AgencyMember" WHERE "accountId"=${accountId} AND "agencyId"=${agencyId} FOR SHARE`;

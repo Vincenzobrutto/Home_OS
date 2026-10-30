@@ -102,3 +102,11 @@ Implementati modulo HTTP separato (NON AppModule), sessionguard/CSRF con preflig
 HTTP+DB16/16 finali in dimora-offline-kEN1SR, cluster fermato e listener effimero chiuso. Primo run r5dZIZ falliva upload per limite contenitore multipart2parti: aumentato margine terminazione a3, mantenendo1file/1campo/20MiB/metadata4096 e assert; il primo errore causava le verifiche successive dipendenti. Tutti16verdi nel run finale. Regressione486/486 e lint mirato verdi; ordinaria precede la sola correzione del cap multipart, collaudata in HTTP finale con build. Nessuna nuova unità aggiunta,16sono test HTTP/DB separati, non sommati agli ordinari.
 
 Prossimi: trasporto degli edit planimetria con DTO stretti, sostituzione fonte e cablaggio UI pratica/form scala e coefficienti; modulo rimane inattivo nel prodotto. Nessun AI/provider reale, budget/chiave reali o servizi/DB esistenti modificati. Demo Alessio invariata.
+
+### Ripresa06:30 — edit/computo e sostituzione HTTP
+
+DTO profondo esatto per geometry/measure/resolve_issue con cap vertici, enum, conferme booleane e ordine canonico per replay; nessuna media degli intervalli o SHA/AI autoattestati. Rotte opt-in per edit e sostituzione bytes; GET metadata/prova corrente autorizzata risolve l'esigenza del client di usare lo SHA server. PlanError mappato422, privacy/invalidation del nucleo conservate.
+
+10nuovi unitari parser, mirata10/10, regressione496/496 e lint mirato verdi. HTTP/DB22/22 in dimora-offline-WF1649 (16precedenti+6nuovi), server e cluster fermati. Test con seed analisi sintetica interna, non provider: correzione/replay, stale, computo incompleto total null, perimetro separato e lordo196senza sommare vani120, sostituzione invalida geometria corrente. Nessuna asserzione allentata o test AI live. Report agency-plan-edit-http-v1.md.
+
+Prossimo task: cablaggio UI pratica e form calibrazione/coefficienti con client API e mock esplicito separato; disegno iniziale perimetro e gestione conflitti. Modulo API ancora NON importato in AppModule, nessun servizio o DB esistente avviato/toccato, demo Alessio invariata. Dopo verticale riprendere coerenza persistente e mapping incarico senza modello inventato.

@@ -177,3 +177,6 @@ Porta HTTP provider con flag/credential/authorize/fetch iniettati, nessun riuso 
 
 ## Agenzie — modulo HTTP separato e attribuzione dal cookie
 Identità da SessionsService, CSRF/Origin esistenti e preflight AgencyPractice prima di buffer multipart; nuova verifica transazionale dopo upload. Nessuna eredità HomeMembership. Browser può dichiarare dati e decidere, mai autoattestare origine extracted/citazioni o pagamenti. Modulo richiede root esplicita e non è registrato in AppModule. [Report](agency-http-v1.md).
+
+## Agenzie — DTO commerciale non conferma implicita
+Parser HTTP ricostruisce tutte le strutture consentite con ordine canonico; coefficienti mancanti rimangono mancanti e conferme richiedono booleani. Snapshot del server per file/versioni, geometrie manuali senza raster/AI dal browser. Perimetro lordo indipendente, mai generato dalla somma dei vani. [Report](agency-plan-edit-http-v1.md).

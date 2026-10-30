@@ -1916,3 +1916,6 @@ Trasporto dedicato con configurazione esplicita, riautorizzazione e limiti strea
 
 ## 30 ottobre2026 — Agenzie: API opt-in collaudata offline
 Modulo separato con sessione/CSRF, upload limitato, fonti private, review manuale e letture piani.16/16 HTTP+DB su server/cluster temporanei;486/486 ordinari. Non importato in AppModule, nessuna API o spesa attivata nel prodotto. [Report](v5/agency-http-v1.md).
+
+## 30 ottobre2026 — Agenzie: edit e computo via modulo opt-in
+DTO profondi, correzione geometria, computo e sostituzione originale versionata; metadata autorizzati con SHA server.496/496 ordinari,22/22 HTTP+DB e lint verdi. Nessuna attivazione del modulo o AI. [Report](v5/agency-plan-edit-http-v1.md).

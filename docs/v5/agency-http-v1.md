@@ -27,3 +27,6 @@ JSON parser, cookie/no-store e limite body globale dovranno seguire il bootstrap
 ## Collaudo
 
 Sessioni reali sul DB sintetico, CSRF/account-context, lista assegnata, upload/replay, admin su fonte privata, attachment esatto, snapshot sbagliato, input extra/estratto AI contraffatto, viewer, cap20MiB, revisione concorrente obsoleta, proposta/decisione manuale, revoca e ritiro. Nessuna rete provider o AI. Prossimo task: completare trasporto degli edit e cablaggio UI pratica/form scala e coefficienti, mantenendo modulo inattivo sul prodotto fino a integrazione autorizzata.
+
+## Estensione successiva
+Metadata fonte corrente, sostituzione multipart e edit planimetria con parser profondo ora implementati e collaudati. Il modulo resta opt-in e inattivo nei servizi esistenti. [Report](agency-plan-edit-http-v1.md).

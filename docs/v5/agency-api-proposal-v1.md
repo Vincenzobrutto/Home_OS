@@ -58,3 +58,6 @@ Worker/server soltanto: planWorkerContext contiene Actor/Practice e non è seria
 
 ## Prima superficie HTTP implementata, non attiva
 Lista/creazione/lettura pratiche, upload/classificazione/ritiro/download, review manuale e GET piani nel modulo opt-in. Sessione/CSRF e DTO esatti collaudati su server sintetico; nessuna route di spesa o risultato AI dal client. Fanno fede percorso e limiti del report agency-http-v1.md; sostituzione/edit e integrazione prodotto ancora da completare.
+
+## Edit e prova fonte ora disponibili nel modulo opt-in
+GET /sources/:id, POST /sources/:id/replacements e POST /plans/:id/edits con DTO profondi e versioni; nessuna route AI/spesa. [Contratto e limiti](agency-plan-edit-http-v1.md).
