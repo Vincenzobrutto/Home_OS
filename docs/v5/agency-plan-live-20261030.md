@@ -51,3 +51,5 @@ Screenshot privati negli outputs della chat: prova sintetica, PDF reale e balcon
 ## Seguito prioritario
 
 Separazione semantica soggiorno/disimpegno in presenza di aperture, verifica copertura del balcone e gestione dei simboli. Distinguere nell'interfaccia fallimento geometrico con costo noto da esito di trasporto incerto, senza introdurre retry automatici. Benchmark su altri documenti autorizzati prima di promettere una bozza con pochi o nessun intervento.
+
+Limite dell'editor osservato dal contratto corrente: corregge i vertici di regioni esistenti e il perimetro, ma non offre Dividi vano o Aggiungi ambiente. La separazione completa del disimpegno accorpato richiede anche questo recupero manuale o una nuova segmentazione; non dichiararla risolvibile con la sola aggiunta di un punto.

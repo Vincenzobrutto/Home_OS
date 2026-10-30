@@ -964,3 +964,5 @@ Pannello manuale montato nel fascicolo con unità IDserver, proposta senza prove
 - Relazione tra seed non risolto e copertura da altre regioni connesse (balcone), con prova geometrica, evitando chiusure automatiche arbitrarie.
 - Distinguere output geometrico inutilizzabile con costo contabilizzato da consegna provider incerta, conservando il blocco dei retry automatici.
 - Anteprima e controlli del PDF prima dell'invio a pagamento; il decoder ora blocca le immagini corrotte/omesse tramite codec locali e tre regressioni sintetiche. [Esito e limiti](v5/agency-plan-live-20261030.md).
+
+- Recupero manuale di ambienti accorpati o mancanti: l'editor attuale modifica i vertici dei vani esistenti e il perimetro, ma non divide un vano e non crea un nuovo ambiente. La sola aggiunta di punti non completa la separazione del disimpegno ovest: prevedere Dividi vano/Aggiungi ambiente con consistenza API, senza inventare una correzione di questo caso.
