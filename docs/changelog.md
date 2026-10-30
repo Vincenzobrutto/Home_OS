@@ -1888,3 +1888,6 @@ Schema additivo e adapter interno del fascicolo, senza Home/Document legacy e se
 ## 30 ottobre2026 — Agenzie: proposte e conferme
 
 Unità esplicite, fatti con fonte/versione/SHA, decisioni umane e correzioni con cronologia. Proiezioni filtrate e invalidazione dopo sostituzione della fonte. Store transazionale interno esteso; nessuna route o estrazione AI attivata.356/356 ordinari e13/13 DB sintetici; dettagli e limiti nel registro.
+
+## 30 ottobre2026 — Agenzie: confronto documentale offline
+Motore puro per confronti esplicitamente circoscritti con prove, differenze da rivedere, stati non valutabili e fingerprint.19nuovi test,375/375 ordinari. Nessuna persistenza dei confronti o route ancora attiva. [Report](v5/agency-coherence-v1.md).

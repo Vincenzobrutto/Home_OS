@@ -460,3 +460,5 @@ profiles["test:offline-db"].files.push("test/agency-practices.integration.test.c
 profiles["test:agency-review"] = { database:false, api:false, files:["test/agency-review.test.cjs"] };
 profiles.test.files.push("test/agency-review.test.cjs");
 module.exports = profiles;
+profiles['test:agency-coherence'] = { database:false, api:false, files:['test/agency-coherence.test.cjs'] };
+profiles.test.files.push('test/agency-coherence.test.cjs');

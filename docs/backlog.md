@@ -893,3 +893,5 @@ Persistenza e autorizzazioni con lock/CAS; schema Agency/Practice/fonti; revisio
 Agenzie: prima dell’upload HTTP implementare staging e controllo effettivo dei bytes, non accettare hash dichiarato dal browser. Limiti di crescita e normalizzazione futura dell’aggregato JSONB da definire prima del pilota. I dati originali non sono ancora salvati dallo store dei metadati. [Contratto proposto](v5/agency-api-proposal-v1.md).
 
 Agenzie: revisione proposta/conferma implementata e verificata. Restano coerenza tra unità/soggetti/epoche, estrazione che verifichi realmente pagina/estratto nei bytes, storage autenticato e mapping incarico. La struttura della prova non certifica il contenuto del PDF.
+
+Agenzie coerenza: motore puro verificato; prossimi gruppi persistenti, decisioni motivate sul fingerprint corrente e riapertura. Difformità interna come osservazione manuale con verifica tecnica, non inferita dalla sola superficie. [Caso sintetico](v5/agency-coherence-v1.md).

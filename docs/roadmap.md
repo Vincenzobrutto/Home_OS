@@ -125,4 +125,4 @@ Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a paga
 Chiusura verifica offline del lotto segnali generali: mock completa1226/1226 in133 file, mirata209/209, fixture5/5 e typecheck/lint/build verdi sulla fonte debfcc3. Prima completa1225/1226 e isolato27/27 preservati, nessuna asserzione/timeout modificati. PR #44 senza merge o attivazione; successivo audit e roadmap PR #45 da approvare, senza altro codice. [Report](v5/bollette-segnali-generali-20261025.md).
 
 ## Agenzie — 30 ottobre 2026
-Prima verticale: fascicolo → dati con fonti → confronto → bozza incarico. Dominio, persistenza metadati e revisione umana verificati offline; prossimi coerenza, storage bytes e API/UI. [Registro](v5/agency-worklog-20261030.md). Nessuna attivazione implicita sul prodotto o sulla demo Alessio.
+Prima verticale: fascicolo → dati con fonti → confronto → bozza incarico. Dominio, persistenza metadati e revisione umana verificati offline; confronto puro verificato; prossimi risoluzioni persistenti, storage bytes e API/UI. [Registro](v5/agency-worklog-20261030.md). Nessuna attivazione implicita sul prodotto o sulla demo Alessio.

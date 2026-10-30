@@ -149,3 +149,6 @@ Aggregato JSONB versionato per fonti/revisioni/dipendenze/ledger/eventi dentro A
 
 ## ADR — Proposta, decisione e conferma correnti separate,30ottobre2026
 Nel dominio Agenzie conservare valore proposto, origine, prove e decisioni come fatti distinti. La correzione umana aggiunge una decisione motivata, non riscrive il dato estratto. Fonte cambiata/ritirata revoca l’utilizzabilità corrente senza cancellare lo storico; derivati ereditano la riservatezza della fonte. Campi dichiarati richiedono conferma e non possono portare prove inventate. Scartati flag unico confermato sul documento e sovrascrittura automatica dei campi. [Specifica](agency-practices-v1.md).
+
+## Agenzie — confronto esplicito, nessuna equivalenza implicita
+Il primo motore confronta solo gruppi scelti con unità, soggetto, campo e contesto temporale dichiarato. Quest'ultimo è un'etichetta umana, non data automaticamente verificata. Identità storiche, diritti e regolarità tecnica non sono deducibili da uguaglianza di stringhe o superfici. Le risoluzioni future dovranno riferirsi al fingerprint corrente, non soltanto all'id del confronto. [Limiti](agency-coherence-v1.md).
