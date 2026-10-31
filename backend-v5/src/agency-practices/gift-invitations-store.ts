@@ -2,6 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {Prisma,type AgencyGiftInvitation} from '../../generated/client';
 import type {PrismaService} from '../prisma.service';
 import {AgencyPracticesStore} from './store';
+import {readGiftAcceptancePreparation,giftAcceptanceDigest} from './gift-acceptance-preparation';
 import {requirePractice,type Actor,type Practice} from './domain';
 import {prepareGiftFromRegistry} from './gift-registry';
 import {assertGiftInvitationRecord,claimGiftInvitation,createGiftInvitation,giftInvitationCreationDigest,giftInvitationLanding,giftInvitationSourceFingerprint,GiftInvitationError,newGiftInvitationSecret,parseGiftInvitationCommand,revokeGiftInvitation,type GiftInvitation} from './gift-invitations';
@@ -41,22 +42,37 @@ export class GiftInvitationsStore{
   giftInvitationLanding(record,secret,new Date().toISOString());this.current(actor,practice,record);
   return {actor,practice,row,record};
  }
- /** Internal acceptance prerequisite: identity is read under lock, never asserted by the caller. */
- async acceptanceContext(tx:Prisma.TransactionClient,accountId:string,id:string,secret:unknown,expectedVersion:number){
-  const context=await this.credentialContext(tx,id,secret),r=context.record;
+ private async acceptanceIdentity(tx:Prisma.TransactionClient,accountId:string,context:{actor:Actor;practice:Practice;row:AgencyGiftInvitation;record:GiftInvitation},expectedVersion:number){
+  const r=context.record;
   await tx.$queryRaw`SELECT id FROM "Account" WHERE id=${accountId} FOR SHARE`;
-  const account=await tx.account.findUnique({where:{id:accountId},select:{id:true,email:true,emailVerifiedAt:true}});
-  const now=new Date();
+  const account=await tx.account.findUnique({where:{id:accountId},select:{id:true,email:true,emailVerifiedAt:true}}),now=new Date();
   if(!account||!account.emailVerifiedAt||account.emailVerifiedAt>now||account.email.trim().toLowerCase()!==r.recipientEmail||r.state!=='claimed'||r.claim?.accountId!==accountId)unavailable();
   if(r.version!==expectedVersion)throw new GiftInvitationError('revision_conflict');
   requirePractice(context.actor,context.practice,'export',now.toISOString());live(r,now.toISOString());
   return context;
+ }
+ /** Internal acceptance prerequisite: identity is read under lock, never asserted by the browser. */
+ async acceptanceContext(tx:Prisma.TransactionClient,accountId:string,id:string,secret:unknown,expectedVersion:number){
+  return this.acceptanceIdentity(tx,accountId,await this.credentialContext(tx,id,secret),expectedVersion);
+ }
+ /** Worker-only revalidation. Caller must hold a verified durable job; this is not a public credential. */
+ async claimedAcceptanceContext(tx:Prisma.TransactionClient,jobId:string){
+  if(typeof jobId!=='string'||!/^[a-f0-9-]{36}$/iu.test(jobId))unavailable();
+  const job=await tx.agencyGiftAcceptanceJob.findUnique({where:{id:jobId}});if(!job)unavailable();
+  const items=await tx.agencyGiftAcceptanceItem.findMany({where:{jobId},orderBy:{ordinal:'asc'}}),prepared=readGiftAcceptancePreparation(job,items);
+  const peek=await tx.agencyGiftInvitation.findUnique({where:{id:job.invitationId}});if(!peek)unavailable();const initial=snapshot(peek);live(initial,new Date().toISOString());
+  const {actor,practice}=await this.practices.giftInvitationContext(tx,initial.issuerAccountId,initial.agencyId,initial.practiceId);
+  const {row,record}=await this.locked(tx,job.invitationId);
+  if(record.agencyId!==initial.agencyId||record.practiceId!==job.practiceId||record.issuerAccountId!==initial.issuerAccountId||record.seal!==job.invitationSeal||record.sourceFingerprint!==job.sourceFingerprint||giftAcceptanceDigest(prepared.manifest)!==giftAcceptanceDigest({packet:record.packet,annualBenefit:record.annualBenefit}))unavailable();
+  live(record,new Date().toISOString());this.current(actor,practice,record);
+  return this.acceptanceIdentity(tx,job.accountId,{actor,practice,row,record},job.invitationVersion);
  }
  async create(accountId:string,agencyId:string,practiceId:string,input:unknown){
   const b=parseGiftInvitationCommand(input),creationDigest=giftInvitationCreationDigest(b);
   return this.db.$transaction(async tx=>{
    const {actor,practice}=await this.practices.giftInvitationContext(tx,accountId,agencyId,practiceId);
    requirePractice(actor,practice,'edit',new Date().toISOString());
+   if(await tx.agencyGiftAcceptanceReceipt.findUnique({where:{practiceId}}))unavailable();
    const prior=await tx.agencyGiftInvitation.findUnique({where:{practiceId_issuerAccountId_creationKey:{practiceId,issuerAccountId:accountId,creationKey:b.key}}});
    if(prior){
     if(prior.creationDigest!==creationDigest)throw new GiftInvitationError('idempotency_conflict');

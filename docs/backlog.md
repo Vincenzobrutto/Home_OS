@@ -1,5 +1,9 @@
 ## 31 ottobre 2026 — dopo integrazione del codice Agenzie
 
+## Gift v1 — collegamento applicativo dopo il copier
+
+[Copier interno verificato](v5/agency-gift-copier-20261031.md): il precedente task worker/ricevuta/grant è concluso nel codice interno. Restano API con sessione/Origin/CSRF e filtro errori, poller limitato, reissue atomico, ripresa del job, UI con token solo in memoria e normale verifica email, producer metadati finali autorizzato, QA HTTP/browser375px. Nessun nuovo limite free o catalogo commerciale blocca il diritto annuale. Non attivare fallback simulati nell'app.
+
 ## Gift v1 — prossimo incremento dopo la prenotazione
 
 [Prenotazione interna verificata](v5/agency-gift-acceptance-reservation-20261031.md). Restano worker lease/fencing,staging con StoredFile protetto dal cleanup,pubblicazione atomica Home/documenti/ricevuta/anno opzionale,replay indipendente da Agency e poi route/UI normali.Mantenere un account e full-access per12mesi dall'accettazione,senza attendere i futuri limiti free.Nessuna Home/grant/beneficio creati da begin/claim;accepted ancora fail-closed.

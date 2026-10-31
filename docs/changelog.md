@@ -1,5 +1,9 @@
 ## 31 ottobre2026 — primo contratto Gift interno
 
+## 31 ottobre 2026 — Gift: copier e anno completo verificati
+
+Successivo alla prenotazione: backend interno con lease, copia indipendente, pubblicazione atomica Home/documenti/ricevuta/anno opzionale, recupero e cancellazione selettiva. Nessun grant Agency. 789/789 ordinari e 78/78 DB su nuovo cluster arrestato, statici verdi. API, poller e UI dal link ancora da collegare; nessun invio o deploy. [Report](v5/agency-gift-copier-20261031.md).
+
 ## 31 ottobre 2026 — Gift: prenotazione dell'accettazione
 
 Job/item e begin/get interni verificati:una pratica riservata,replay dello stesso comando,conferma Home esplicita e stato minimo privato.Helper12mesi full-access UTC con29febbraio corretto;nessun diritto ancora attivato.756/756backend,57/57DBGift su nuovo cluster arrestato,statici verdi.Frontend invariato.Non è ancora copia o invio.[Report](v5/agency-gift-acceptance-reservation-20261031.md).

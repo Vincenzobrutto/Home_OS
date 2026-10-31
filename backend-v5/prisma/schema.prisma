@@ -12,6 +12,8 @@ enum HomeRole {
   viewer
 }
 model Account {
+  giftAcceptanceReceipts AgencyGiftAcceptanceReceipt[]
+  giftBenefits AccountGiftBenefit[]
   giftAcceptanceJobs AgencyGiftAcceptanceJob[]
   issuedGiftInvitations AgencyGiftInvitation[] @relation("GiftIssuer")
   claimedGiftInvitations AgencyGiftInvitation[] @relation("GiftClaimant")
@@ -1474,4 +1476,34 @@ model AgencyGiftAcceptanceItem {
   job AgencyGiftAcceptanceJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
   @@unique([jobId,ordinal])
   @@unique([jobId,sourceId])
+}
+// Accepted owner receipt is independent of Agency/source and Home/document retention.
+model AgencyGiftAcceptanceReceipt {
+  id String @id
+  practiceId String @unique
+  invitationId String @unique
+  jobId String @unique
+  accountId String
+  requestKey String
+  commandDigest String
+  sourceFingerprint String
+  homeId String
+  acceptedAt DateTime
+  snapshot Json
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  benefit AccountGiftBenefit?
+  @@unique([accountId,invitationId,requestKey])
+}
+
+model AccountGiftBenefit {
+  id String @id
+  receiptId String @unique
+  accountId String
+  offerId String
+  offerVersion Int
+  startsAt DateTime
+  endsAt DateTime
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  receipt AgencyGiftAcceptanceReceipt @relation(fields:[receiptId],references:[id],onDelete:Restrict)
+  @@index([accountId,startsAt,endsAt])
 }

@@ -1392,3 +1392,8 @@ Gift v1,singolo account e anno opzionale:decisione del committente31ottobre2026,
 Scelta tecnica:prenotazione durevole per pratica prima di qualsiasi copia,con ID server e nessuna Home parziale;job e manifesto potranno essere ripuliti dopo la futura ricevuta per non duplicare i metadati eliminati dal proprietario.Get espone solo progresso all'account associato,senza dipendere dall'export Agency per questa vista minima.Claim/begin non equivalgono ad accettazione.
 
 Anno completo approvato dal committente:12mesi di calendario UTC dall'accettazione,29febbraio→28febbraio allo stesso orario,intervallo[inizio,fine).L'helper è verificato,ma attivazione/persistenza del diritto restano nel prossimo copier.Nessun rinnovo,pagamento o mutazione di abbonamenti già presenti.[Report](v5/agency-gift-acceptance-reservation-20261031.md).
+## Gift v1 — accettazione indipendente e diritto sull'account, 31 ottobre2026
+
+Il commit di pubblicazione comprende Home, documenti, ricevuta e anno opzionale; il claim o la prenotazione non attivano nulla. La ricevuta è letta prima di invito/token/Agency e non richiede che esistano ancora i singoli documenti: il purge resta definitivo. La vista della ricevuta richiede l'account destinatario e accesso corrente alla Home; il diritto annuale è invece dell'account e non dipende dalla successiva membership Home o dai permessi Agency. Questo non concede accessi ai dati e non definisce il piano free.
+
+Staging e pubblicazione usano storage indipendenti e IO/scanner fuori SQL. Fencing, riserva StoredFile e lettura della ricevuta gestiscono processi concorrenti e commit dall'esito perso senza cancellare copie già pubblicate. Backend verificato con fixture; API/poller/UI ancora assenti. [Report](v5/agency-gift-copier-20261031.md).
