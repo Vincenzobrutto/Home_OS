@@ -83,3 +83,13 @@ Prossimo:lavoro indipendente sulla revisione/congelamento della selezione o sull
 Aggiunto [modello delle minacce e piano di recupero](agency-gift-threats-and-recovery-20261031.md):distingue export interno da rilascio a destinatari,metadato finale da diritto di distribuzione e ricevuta di registro da ricevuta di copia.18casi di abuso con stato/evidenza,12punti di guasto da collaudare e6ticket ordinati con dipendenze/criteri d'uscita. Identità/autorità/visibilità senza account restano decisioni aperte;raccomandazioni non attivate.
 
 Solo specifica/documentazione,nessun comportamento nuovo o test eseguito per la copia. Nessuna suite verde ripetuta per documentazione;controllati link locali/diff. Non confondere i casi futuri con i28backend/20UIeseguiti sul pacchetto interno. Prossimo indipendente:review dei punti del registro e del contenitore ancora non coperti o lettura critica del contratto;non sviluppare una presa in carico arbitraria mentre manca la decisione di autorità.
+
+## Settimo incremento — ricevuta di replay legata al record
+
+La revisione ha individuato un caso di stato persistito incoerente:il dominio restituiva replay=true per una ricevuta con digest corretto anche quando mancava il relativo record metadati. Non era una consegna Gift,ma un falso successo di registrazione. Riprodotto con test rosso prima della correzione.
+
+Ora il replay verifica schema della ricevuta,unicità account/key,record presente e unico,versione/revisione coerenti,attore e descrittore canonico uguali alla registrazione originaria. La ricevuta non può avanzare oltre la revisione della pratica. Un replay legittimo della versione1dopo una successiva versione2rimane valido e non ripristina i vecchi metadati. Nessuna nuova autorità,route o certificazione:il digest resta non firmato e non difende da chi può riscrivere record e hash insieme.
+
+Aggiunti casi per ricevuta orfana/duplicata/malformata e replay storico. La prova DBsimula incoerenza solo nel cluster sintetico posseduto,rifiuta il falso successo e verifica stesso receipt/IDdopo ripristino dello snapshot originale. Non è un test di crash di processo o copier Home. Il primo build della correzione ha rilevato un nome funzione in conflitto con una variabile locale;rinominato il parser,senza cambiare guardie o asserzioni.
+
+Verifiche finali dopo correzione:30/30mirati,689/689backend ordinari,13/13DB(12sottocasi+contenitore) su nuovo cluster posseduto dimora-offline-L2EI74,arrestato e verificato stop-postgres.log. Build/lint verdi,zero falliti/saltati. Log gift-receipt-green-2.log,backend-receipt-regression.log,gift-receipt-db.log. UI20/20e buildharness restano le precedenti verifiche,non ripetute perché payload e codice frontend invariati.

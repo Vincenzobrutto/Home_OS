@@ -85,3 +85,16 @@ test('missing registry, duplicates or uncontrolled version updates cannot synthe
  const p=register(f).practice;p.giftDocuments.push(structuredClone(p.giftDocuments[0]));
  error(()=>R.giftDocumentMetadataView(f.actor,p,now),'invalid_input');
 });
+
+test('replay refuses orphaned, duplicated or malformed persisted receipts instead of reporting success',()=>{
+ for(const corrupt of [p=>delete p.giftDocuments,p=>p.giftMetadataReceipts[0].recordId='b'.repeat(64),p=>p.giftMetadataReceipts[0].metadataVersion=2,p=>p.giftMetadataReceipts[0].revision++,p=>p.giftMetadataReceipts[0].unknown=true,p=>p.giftMetadataReceipts.push(structuredClone(p.giftMetadataReceipts[0]))]){
+  const f=fixture();f.practice=register(f).practice;corrupt(f.practice);const before=structuredClone(f.practice);
+  error(()=>register(f),'invalid_input');assert.deepEqual(f.practice,before);
+ }
+});
+
+test('a valid historical registration receipt replays after a later metadata version without reverting it',()=>{
+ const f=fixture(),first=register(f);f.practice=R.registerGiftDocumentDescriptor(f.actor,first.practice,{...f.descriptor,metadataVersion:2,title:'Second version'},{key:'second',expectedRevision:2,expectedMetadataVersion:1},now).practice;
+ const result=register(f);assert.equal(result.replay,true);assert.deepEqual(result.receipt,first.receipt);assert.equal(result.practice.revision,3);
+ assert.equal(R.giftDocumentMetadataView(f.actor,result.practice,now).documents[0].descriptor.title,'Second version');
+});

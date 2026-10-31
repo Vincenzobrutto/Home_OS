@@ -40,6 +40,14 @@ test('Gift metadata persistence on a new owned synthetic cluster',{timeout:18000
   const replay=await new AgencyPracticesStore(db).registerGiftMetadata(a.id,agency.id,f.p.id,f.descriptor,input);assert.equal(replay.replay,true);assert.equal((await f.snapshot()).giftDocuments.length,1);assert.equal((await f.snapshot()).giftMetadataReceipts.length,1);
   await assert.rejects(()=>f.register({...f.descriptor,title:'Changed'},input),e=>e.code==='idempotency_conflict');
  });
+ await t.test('orphaned persisted receipt cannot report replay success and recovery retains original IDs',async()=>{
+  const f=await fixture(),input=await f.command(),saved=await f.register(f.descriptor,input),before=await f.snapshot(),corrupt=structuredClone(before);corrupt.giftDocuments=[];
+  await db.agencyPractice.update({where:{id:f.p.id},data:{snapshot:corrupt}});
+  await assert.rejects(()=>new AgencyPracticesStore(db).registerGiftMetadata(a.id,agency.id,f.p.id,f.descriptor,input),e=>e.code==='invalid_input');
+  assert.deepEqual(await f.snapshot(),corrupt);
+  await db.agencyPractice.update({where:{id:f.p.id},data:{snapshot:before}});
+  const replay=await new AgencyPracticesStore(db).registerGiftMetadata(a.id,agency.id,f.p.id,f.descriptor,input);assert.equal(replay.replay,true);assert.deepEqual(replay.receipt,saved.receipt);assert.deepEqual(await f.snapshot(),before);
+ });
  await t.test('competing commands cannot overwrite a winner at the same revision',async()=>{
   const f=await fixture(),input=await f.command(),rs=await Promise.allSettled([f.register(f.descriptor,input),f.register({...f.descriptor,title:'Competing'},{...input,key:randomUUID()})]);
   assert.equal(rs.filter(r=>r.status==='fulfilled').length,1);assert.equal(rs.find(r=>r.status==='rejected').reason.code,'revision_conflict');assert.equal((await f.snapshot()).giftDocuments.length,1);

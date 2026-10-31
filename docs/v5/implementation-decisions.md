@@ -236,3 +236,7 @@ Il primo adapter conserva metadati/storico/ricevute nello snapshotVersion1 della
 ## Agenzie — anteprima Gift separata dalla presa in carico
 
 Il componente iniziale è controllato dal contenitore e non ha trasporto/delivery propri. Le fixture restano nel harness esplicito,mai fallback in app. Scope/revisione/accesso non coerenti nascondono subito i dati;la futura sessione/route deve ricontrollare l'autorità server. La copia indipendente verso Home resta un contratto proposto finché autorità,ledger,byte e receipt non siano implementati. [Contratto](agency-gift-home-copy-contract-20261031.md).
+
+## Agenzie — replay del registro Gift richiede il record originario
+
+Una ricevuta di registrazione metadati non basta senza il record cui si riferisce. Replay verifica struttura,unicità account/key,versione/revisione,attore e descrittore canonico;una vecchia versione può essere riconosciuta senza riscrivere la versione attuale. Incoerenza persistita viene rifiutata e non riparata automaticamente. Non è una ricevuta di consegna né una firma. [Riproduzione e prove](agency-gift-contract-20261031.md).

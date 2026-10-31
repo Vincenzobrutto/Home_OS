@@ -38,6 +38,18 @@ function record(input:unknown,practice:Practice):GiftDocumentRecord {
     r.fingerprint!==recordFingerprint(d,by,at)||id!==digest([practice.id,d.sourceId,d.metadataVersion]))fail('invalid_input');
   return {id,descriptor:d,recordedBy:by,recordedAt:at,fingerprint:r.fingerprint as string};
 }
+function parseReceipt(input:unknown):GiftMetadataReceipt {
+  const r=object(input,['accountId','key','digest','recordId','metadataVersion','revision']);
+  const hash=(v:unknown)=>{if(typeof v!=='string'||!/^[a-f0-9]{64}$/u.test(v))fail('invalid_input');return v;};
+  return {accountId:text(r.accountId,100),key:text(r.key),digest:hash(r.digest),recordId:hash(r.recordId),metadataVersion:positive(r.metadataVersion),revision:positive(r.revision)};
+}
+function verifyReplayRecord(practice:GiftMetadataState,prior:GiftMetadataReceipt,d:GiftDocumentDescriptor,actor:Actor,expectedRevision:number) {
+  if(!Array.isArray(practice.giftDocuments??[]))fail('invalid_input');
+  const entries=(practice.giftDocuments??[]).filter(r=>r?.id===prior.recordId);
+  if(entries.length!==1||prior.metadataVersion!==d.metadataVersion||prior.revision!==expectedRevision+1||prior.revision>practice.revision)fail('invalid_input');
+  const entry=record(entries[0],practice);
+  if(entry.recordedBy!==actor.accountId||digest(entry.descriptor)!==digest(d))fail('invalid_input');
+}
 function latest(practice:GiftMetadataState,sourceId:string):GiftDocumentRecord|undefined {
   if(!Array.isArray(practice.giftDocuments??[]))fail('invalid_input');
   const matching=(practice.giftDocuments??[]).filter(r=>r.descriptor?.sourceId===sourceId).map(r=>record(r,practice));
@@ -59,9 +71,12 @@ export function registerGiftDocumentDescriptor(
   const expectedMetadataVersion=r.expectedMetadataVersion===null?null:positive(r.expectedMetadataVersion);
   const commandDigest=digest([original.id,actor.accountId,key,expectedRevision,expectedMetadataVersion,d]);
   if(!Array.isArray(original.giftMetadataReceipts??[]))fail('invalid_input');
-  const prior=(original.giftMetadataReceipts??[]).find(p=>p.accountId===actor.accountId&&p.key===key);
+  const matching=(original.giftMetadataReceipts??[]).map(parseReceipt).filter(p=>p.accountId===actor.accountId&&p.key===key);
+  if(matching.length>1)fail('invalid_input');
+  const prior=matching[0];
   if(prior){
     if(prior.digest!==commandDigest)fail('idempotency_conflict');
+    verifyReplayRecord(original,prior,d,actor,expectedRevision);
     return {practice:structuredClone(original),receipt:structuredClone(prior),replay:true};
   }
   if(original.revision!==expectedRevision)fail('revision_conflict');
