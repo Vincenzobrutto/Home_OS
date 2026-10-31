@@ -1,5 +1,7 @@
 # Agenzie — modulo HTTP opt-in
 
+> Checkpoint storico. Il cablaggio successivo è presente in `AppModule` tramite `agencyApplicationImports`: capabilities disponibili con sessione; modulo Agenzie attivo solo con storage root esplicita. Navigazione `/agenzie`, directory, pratica, analisi planimetrie e revisione sono implementate. Le indicazioni sotto «non importato»/«da aggiungere» descrivono il primo incremento. Stato di integrazione e verifiche: [report corrente](agency-consolidation-20261031.md). Nessun deploy o migrazione del DB prodotto in questo lotto.
+
 ## Superficie implementata
 
 `AgencyPracticesModule.register(storageRoot)` definisce controller/guard/filter e richiede infrastruttura V5 e root vault esplicita. **Non importato in AppModule**: nessuna nuova route nei servizi esistenti. Nei test il modulo vive in un'app Nest separata su loopback/porta effimera, con sole sessioni e dati sintetici del cluster temporaneo.

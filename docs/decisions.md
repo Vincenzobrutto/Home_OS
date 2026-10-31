@@ -1376,3 +1376,7 @@ La copertura dipende dalle componenti effettivamente ricostruite, non dal solo e
 
 ### 31/10/2026 — Fasce murarie come indizio, scelta umana per candidata
 Non eliminare automaticamente componenti sottili: possono essere passaggi reali. Segnalazione relativa alla geometria, tutte incluse inizialmente, scarto esplicito limitato alle nuove candidate firmate, audit e proposta originale preservati. Nessuna rimozione di vani canonici attraverso l'adozione. [Report](v5/agency-candidate-selection-20261031.md).
+
+## 31 ottobre 2026 — Agenzie come modulo integrato, rami brevi
+
+Il committente approva integrazione dell'intera PR71nel ramo comune codex/dimora-v5-consolidata-20261023, senza deploy o modifica main. Agenzie mantiene scope/ruoli/workflow distinti ma riusa infrastruttura V5; i futuri incrementi partono dalla base comune aggiornata e confluiscono frequentemente dopo verifica. Integrazione codice, configurazione/abilitazione e rilascio sono passaggi separati; nessuna attivazione implicita di provider, budget, storage o migrazioni prodotto. La demo pubblica di Alessio resta indipendente. Modello incarico approvato assente: la nuova analisi/catalogo negli outputs non costituisce generazione contrattuale implementata. [Report](v5/agency-consolidation-20261031.md).

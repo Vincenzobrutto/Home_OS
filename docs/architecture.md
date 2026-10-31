@@ -21,3 +21,7 @@ Non dedurre produzione pronta, OCR universale o completamento di tutti i bluepri
 - Client frontend: facciata ApiClient compatibile, otto moduli di dominio e un solo ApiTransport per istanza, che possiede sessione/CSRF/fetch e controlli JSON/binari. [R10 e costo del bundle](v5/fase0-api-client-domains-refactor-20261023.md). Controller editor: [scritture pendenti separate dalla presentazione](v5/fase0-editor-write-presentation-refactor-20261023.md), stesse chiavi/recupero e key di contesto; stato e verifiche in [project-status](project-status.md); nessuna deduzione di deploy dalla presenza del sorgente.
 
 Le configurazioni e i comandi legacy nell’archivio sono evidenza storica. Non costituiscono istruzioni per avviare test sulla V5 o sul DB reale.
+
+## Agenzie — cablaggio nel candidato del31ottobre2026
+
+Il modulo usa scope Agency/Practice separati dalle case, riutilizzando sessione/Origin/CSRF e infrastruttura V5. `AppModule` include `agencyApplicationImports`: capabilities autenticate e modulo applicativo solo con `DIMORA_AGENCY_STORAGE_ROOT` esplicita; provider planimetrie con abilitazione e credenziali dedicate, mai fallback simulato nel prodotto. Navigazione autenticata `/agenzie` e `/agenzie/:agencyId/pratiche/:practiceId`, con fascicolo/revisione e workspace vani/superficie commerciale distinti. Migrazioni additive presenti nel codice, non applicate al DB dell'app da questo lotto. Modello d'incarico approvato e orchestrazione AI degli atti ancora mancanti. [Stato dell'integrazione](v5/agency-consolidation-20261031.md).
