@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Integrazione Agenzie — 31 ottobre 2026, in verifica
+
+Su autorizzazione del committente, candidato `codex/agenzie-integrazione-20261031` dalla base remota `dd52a6a` con l'intera PR #71 (`7b02700`, 67 commit). Unione senza conflitti; codice backend/frontend identico alla punta della PR. Verifiche post-unione in corso su checkout/cache/client generato privati e nuovi cluster offline; nessun aggiornamento del ramo comune remoto o runtime, main e demo Alessio invariati. [Registro integrazione](v5/agency-consolidation-20261031.md).
+
 ## Agenzie — scelta delle aree proposte
 
 Implementati indizio fascia muraria e scarto selettivo pre-adozione con audit, proposta originale preservata e confronto tratteggiato. Nessuna eliminazione automatica: passaggi stretti restano mantenibili. Backend658/UI60 e DB-HTTP-worker20/20 verdi, replay dei tre casi noti senza nuove AI. Demo Alessio invariata, nessun deploy. [Report corrente](v5/agency-candidate-selection-20261031.md).
@@ -191,3 +195,4 @@ Il collaudo persistito e i suoi servizi temporanei preesistenti non sono un depl
 
 ## Consegna corrente navigazione Agenzie — 30 ottobre, fine finestra
 Il precedente stato NON collegato e storico: AppModule opt-in, ingresso autenticato e verticale API sono ora implementati nel branch dedicato, non integrati/deployati. Collaudo complessivo ancora aperto: 36/36 HTTP/DB, 33/33 UI mirati; frontend completo 1605/1607 (due assert obsoleti di assenza Agenzie). Browser reale solo login/elenco/creazione; upload e desktop/mobile end-to-end non conclusi prima dello stop automatico alle 09:00. Nessun servizio trial attivo da usare. [Consegna e passi residui](v5/agency-navigation-handoff-20261030.md). Demo Alessio invariata.
+
