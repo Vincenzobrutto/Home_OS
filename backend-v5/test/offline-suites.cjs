@@ -560,3 +560,11 @@ profiles['test:offline-db'].files.push('test/agency-gift-document-release.integr
 
 // Nominal-only fresh cluster: the live poller must not dispatch other suites' queued fixtures.
 profiles['test:agency-gift-runner-db']={database:true,api:false,files:['test/agency-gift-runner.integration.test.cjs'],apiFiles:[]};
+// Gift application recovery and rate limiting stay in the dedicated offline clusters.
+profiles['test:agency-gift-packet'].files.push('test/agency-gift-reissue.test.cjs','test/agency-gift-throttle.test.cjs');
+profiles.test.files.push('test/agency-gift-reissue.test.cjs','test/agency-gift-throttle.test.cjs');
+profiles['test:agency-gift-db'].files.push('test/agency-gift-reissue.integration.test.cjs');
+profiles['test:offline-db'].files.push('test/agency-gift-reissue.integration.test.cjs');
+
+// Dated, nominal Gift browser collaudo: never enter ordinary or aggregate suites.
+profiles['test:agency-gift-browser-trial']={database:true,api:false,files:['test/agency-gift-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T00:30:00.000Z'};

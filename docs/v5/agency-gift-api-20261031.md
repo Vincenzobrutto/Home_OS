@@ -1,6 +1,6 @@
 # Gift v1 — API, rilascio documenti e coda applicativa
 
-31 ottobre 2026. Ramo `codex/agency-gift-contract-20261031`, PR draft72. Backend e client di protocollo implementati e verificati; schermate Gift ancora da collegare. Nessun deploy o invio reale. Il precedente limite delle23 è superato per autorizzazione di Vincenzo.
+31 ottobre 2026. Ramo `codex/agency-gift-contract-20261031`, PR draft72. Checkpoint API verificato; successivo collegamento UI/rigenerazione/rate limit nel [report corrente](agency-gift-app-20261101.md). Nessun deploy o invio reale. Il precedente limite delle23 è superato per autorizzazione di Vincenzo.
 
 ## Collegamento applicativo
 
@@ -18,7 +18,7 @@ Per un nuovo documento ricevuto l'autore è dichiarato non verificato; per la pr
 
 ## Contratto HTTP
 
-Tutti i percorsi sono sotto `/api/v5`. Le mutazioni richiedono sessione, Origin e CSRF; landing ammette anche una sessione anonima con CSRF. `Idempotency-Key` è obbligatoria per release, creazione e accettazione. Query aggiuntive vengono rifiutate. Risposte ed errori Gift: `no-store`, `nosniff`, `Referrer-Policy:no-referrer`.
+Tutti i percorsi sono sotto `/api/v5`. Le mutazioni richiedono sessione, Origin e CSRF; landing ammette anche una sessione anonima con CSRF. `Idempotency-Key` è obbligatoria per release, creazione, rigenerazione e accettazione. Query aggiuntive vengono rifiutate. Risposte ed errori Gift: `no-store`, `nosniff`, `Referrer-Policy:no-referrer`.
 
 | Metodo e percorso | Contenuto/autorità |
 | --- | --- |
@@ -26,6 +26,7 @@ Tutti i percorsi sono sotto `/api/v5`. Le mutazioni richiedono sessione, Origin 
 | GET `/agencies/:agencyId/practices/:practiceId/gift-documents` | Fonti visibili/esportabili, stato metadati missing/current/stale; nessuna storia privata o descrizione superata. |
 | POST `/agencies/:agencyId/practices/:practiceId/sources/:sourceId/gift-release` | Agente edit/export; corpo limitato a expectedRevision, expectedSourceVersion, expectedSha256, title, origin, finalDocumentConfirmed:true, releaseApproved:true. |
 | GET/POST `/agencies/:agencyId/practices/:practiceId/gift-invitations` | Elenco senza segreti o dati fonte; creazione con selezione finale e destinatario unico. Segreto soltanto nella prima risposta. |
+| POST `/agencies/:agencyId/practices/:practiceId/gift-invitations/:id/reissue` | Edit/export, expectedRevision e expectedVersion; sostituzione atomica, scadenza7giorni e segreto solo alla prima risposta. |
 | POST `/agencies/:agencyId/practices/:practiceId/gift-invitations/:id/revoke` | Edit/export; expectedVersion; non revoca una Home già accettata. |
 | POST `/gift-invitations/:id/landing` | `{secret}` nel corpo; versione corrente e necessità di account, nessun documento o email. |
 | POST `/gift-invitations/:id/preview` | Secret nel corpo; solo destinatario con email verificata; proiezione nominativa, nessun originale o percorso. |
@@ -50,3 +51,4 @@ Le prime prove hanno corretto soltanto il collaudo: variante annuale false senza
 
 Nel frontend esistono tipi/parser e `GiftApi` sul trasporto V5 condiviso, ancora senza façade/router/viste Gift. La verifica email normale ora consente allo stesso account connesso di inviare il token; richiede logout solo quando il server lo indica. Il reset password mantiene il suo vincolo precedente. Nessuna verifica o login vengono simulati dall'interfaccia.
 Frontend applicativo non ancora collegato: esistono helper token/next e client Gift, verificati; le schermate non li consumano ancora. Nessuna QA browser o375px nuova. Registrazione/verifica email normali restano obbligatorie; nessun bypass per account locali non verificati. Reissue atomico, rate limit e UI di preparazione/accettazione restano da completare prima di presentare il flusso come finito. La demo pubblica Alessio e il vecchio collaudo utente rimangono invariati.
+Il successivo incremento UI introduce throttle persistente perIP/account e rigenerazione atomica: [flusso, contratto e verifiche](agency-gift-app-20261101.md). I numeri sopra descrivono il checkpoint API precedente.

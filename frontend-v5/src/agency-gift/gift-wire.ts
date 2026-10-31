@@ -6,6 +6,7 @@ export type GiftDocuments={practiceId:string;revision:number;documents:GiftDocum
 export type GiftRelease={replay:boolean;metadata:GiftDocuments};
 export type GiftInvitationState='invited'|'claimed'|'revoked';
 export type GiftInvitationCreated={id:string;version:number;state:'invited'|'claimed';secret:string|null;replay:boolean;requiresReissue:boolean};
+export type GiftReissued=Omit<GiftInvitationCreated,'state'>&{state:GiftInvitationState};
 export type GiftInvitations={practiceId:string;accepted:boolean;invitations:{id:string;version:number;state:GiftInvitationState;createdAt:string;expiresAt:string;recipientEmail:string}[]};
 export type GiftCapabilities={enabled:boolean;requiresVerifiedEmail:true};
 export type GiftBenefits={fullAccess:boolean;scope:'all_owner_features';validUntil:string|null};
@@ -91,6 +92,10 @@ export const parseGiftDocuments=(input:unknown):GiftDocuments=>parse(()=>documen
 export const parseGiftRelease=(input:unknown):GiftRelease=>parse(()=>{const r=object(input,['replay','metadata']);return {replay:boolean(r.replay),metadata:documents(r.metadata)};});
 export const parseGiftInvitationCreated=(input:unknown):GiftInvitationCreated=>parse(()=>{
  const r=object(input,['id','version','state','secret','replay','requiresReissue']),replay=boolean(r.replay),version=integer(r.version),state=oneOf(r.state,['invited','claimed'] as const);if(replay?(r.secret!==null||r.requiresReissue!==true):(r.requiresReissue!==false||state!=='invited'||version!==1))invalid();
+ return {id:uuid(r.id),version,state,secret:replay?null:token(r.secret),replay,requiresReissue:replay};
+});
+export const parseGiftReissued=(input:unknown):GiftReissued=>parse(()=>{
+ const r=object(input,['id','version','state','secret','replay','requiresReissue']),replay=boolean(r.replay),version=integer(r.version),state=oneOf(r.state,['invited','claimed','revoked'] as const);if(replay?(r.secret!==null||r.requiresReissue!==true):(r.requiresReissue!==false||state!=='invited'||version!==1))invalid();
  return {id:uuid(r.id),version,state,secret:replay?null:token(r.secret),replay,requiresReissue:replay};
 });
 export const parseGiftInvitations=(input:unknown):GiftInvitations=>parse(()=>{

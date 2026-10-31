@@ -252,3 +252,10 @@ Su conferma utente riprodotti due casi già disponibili con b16e211 invariato, s
 Implementata pipeline v10 advisory, nessuna eliminazione automatica; Scarta selettivo con audit e originale firmato preservato. Backend658/658, UI60/60, build/typecheck e lint mirati verdi. Replay privati dei tre casi precedenti: geometrie invariate, zero overlap, corridoio conservato, fasce sospette segnalate. Nessun nuovo modello AI/browser/deploy o modifica demo Alessio. Primo cluster SY2mng19/20: nuovo test scarto passato; test concorrenza preesistente assumeva vincente primo input, corretto verificando il vincitore effettivo senza indebolire CAS. Esito secondo cluster registrato sotto. [Report](agency-candidate-selection-20261031.md).
 
 Finale: cluster ECINDe20/20, build e lint verdi; entrambi i cluster arrestati. Nessun server esistente toccato.
+
+
+## 1 novembre2026 — Gift collegata all’app sul ramo dedicato
+
+Su autorizzazione di prosecuzione oltre23, UI Agency→link→normali accesso/registrazione/verifica email→accettazione→Home/Documenti collegata, con un solo account e anno opzionale completo. Rilascio dei documenti finali esplicito, rigenerazione atomica, replay senza segreto, throttle persistente. Provenienza e qualifiche nelle schermate Documenti normali. Backend863/863(inclusi204Gift),DBHTTP126/126su nuovo okUXtn e poller6/6su K2PNgn, cluster arrestati;frontend1924/1924in184file,statici/build verdi.14/14guardie runner dopo profilo browser nominale. [Report corrente e limiti](agency-gift-app-20261101.md).
+
+Errore fixture reissue nel primo8Ggfjj(124/126):impronta letta dalla colonna anziché dallo snapshot, test corretto senza allentare prodotto; cluster arrestato. Frontend primo1923/1924soloasserzione del titolo nuovo, aggiornata mantenendo tutti i controlli. Browser non ancora verificato:primo launcher MkZHb5arrestato su fallbackSPA nella cache privata, nuova partenza distinta. Nessun vecchio trial ripristinato,servizio esistente/email/AI/documento personale/demoAlessio/merge/deploy. Prossimo:desktop/375px,unico nuovohostname locale per isolare cookie,con scanner/email stub dichiarati.

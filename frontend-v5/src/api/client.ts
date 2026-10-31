@@ -10,6 +10,7 @@ import { ObjectsApi } from './objects-api';
 import { ExpensesApi } from './expenses-api';
 import { EconomyApi } from './economy-api';
 import { FloorPlanApi } from './floor-plan-api';
+import { GiftApi } from '../agency-gift/gift-api';
 /** Public API façade. Every domain shares one authenticated transport. */
 export class ApiClient {
 private readonly transport: ApiTransport;
@@ -21,6 +22,7 @@ private readonly objectsApi: ObjectsApi;
 private readonly expensesApi: ExpensesApi;
 private readonly economyApi: EconomyApi;
 private readonly floorPlanApi: FloorPlanApi;
+readonly gift: GiftApi;
 constructor(opts: { fetch?: FetchLike; base?: string } = {}) {
 this.transport = new ApiTransport(opts);
 this.homesApi = new HomesApi(this.transport);
@@ -31,6 +33,7 @@ this.objectsApi = new ObjectsApi(this.transport);
 this.expensesApi = new ExpensesApi(this.transport);
 this.economyApi = new EconomyApi(this.transport);
 this.floorPlanApi = new FloorPlanApi(this.transport);
+this.gift = new GiftApi(this.transport);
 }
 get currentCsrfToken() { return this.transport.currentCsrfToken; }
 forgetCsrfToken() { return this.transport.forgetCsrfToken(); }

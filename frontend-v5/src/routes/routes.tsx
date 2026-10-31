@@ -41,6 +41,7 @@ const ReceivedDetailPage = lazyPage(() => import('./ReceivedPages').then((m) => 
 const RecoveryRequestPage = lazyPage(() => import('./RecoveryPages').then((m) => m.RecoveryRequestPage));
 const RecoveryLinkPage = lazyPage(() => import('./RecoveryPages').then((m) => m.RecoveryLinkPage));
 const VerificationLinkPage = lazyPage(() => import('./RecoveryPages').then((m) => m.VerificationLinkPage));
+const GiftLinkPage = lazyPage(() => import('../agency-gift/GiftLinkPage').then(m=>m.GiftLinkPage));
 const AgenciesPage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgenciesPage));
 const AgencyPracticesPage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgencyPracticesPage));
 const AgencyPracticePage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgencyPracticePage));
@@ -54,6 +55,7 @@ export const routes: RouteObject[] = [
       { path:'recupera-accesso',element:<RecoveryRequestPage /> },
       { path:'recupera-password',element:<RecoveryLinkPage /> },
       { path:'verifica-email',element:<VerificationLinkPage /> },
+      { path:'gift/:invitationId',element:<GiftLinkPage /> },
       {
         element: <AnonymousOnly />,
         children: [

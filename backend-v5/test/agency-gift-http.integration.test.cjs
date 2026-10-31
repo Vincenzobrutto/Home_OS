@@ -5,6 +5,7 @@ const {Module,Global,ValidationPipe,UnprocessableEntityException}=require('@nest
 const {assertOfflineDatabase,assertOwnedRun}=require('./offline-policy.cjs');
 const {PrismaClient}=require('../generated/client'),{PrismaService,assertDevelopmentDatabase}=require('../dist/prisma.service'),{SessionsService,digest,COOKIE}=require('../dist/security');
 const {GiftAccountModule,GiftDeliveryModule}=require('../dist/agency-practices/gift-http'),{GiftAcceptanceWorker}=require('../dist/agency-practices/gift-acceptance-worker');
+const {GiftThrottle}=require('../dist/agency-practices/gift-throttle');
 const {AgencyPracticesStore}=require('../dist/agency-practices/store'),{AgencyFileVault}=require('../dist/agency-practices/files');
 const {LocalFileStorage}=require('../dist/documents/storage'),{WindowsDefenderScanner}=require('../dist/documents/file-control'),{HomesModule}=require('../dist/homes/homes.module');
 const {png,pdf}=require('./document-fixtures.cjs');
@@ -30,6 +31,7 @@ test('Gift HTTP uses genuine sessions, explicit release and owned file admission
  app.use((_req,res,next)=>{res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');next();});
  app.useGlobalPipes(new ValidationPipe({transform:true,whitelist:true,forbidNonWhitelisted:true,exceptionFactory:errors=>new UnprocessableEntityException({message:'Controlla i dati inseriti.',fieldErrors:Object.fromEntries(errors.map(e=>[e.property,Object.values(e.constraints||{})[0]||'Valore non valido.']))})}));
  app.useGlobalFilters(new ApiErrorFilter());
+ const throttleClock=new Date();app.get(GiftThrottle).clock=()=>new Date(throttleClock);
  const storage=app.get(LocalFileStorage),scanner=app.get(WindowsDefenderScanner),scans=[];storage.root=homeRoot;
  // Override the existing DI scanner before module initialization/listen. No real antivirus command runs.
  scanner.scan=async(stage,expectedSha)=>{assert.equal(expectedSha,sha256);assert.deepEqual(await readFile(stage),png);assert.ok(stage.endsWith('.bin.part'));const relative=path.relative(homeRoot,stage);assert.ok(relative&&!relative.startsWith('..')&&!path.isAbsolute(relative));scans.push({stage,sha256:expectedSha});return {engine:'microsoft_defender',checkedAt:new Date(),signatureVersion:'synthetic-http-no-real-av'};};
@@ -136,4 +138,26 @@ test('Gift HTTP uses genuine sessions, explicit release and owned file admission
   const f=await fixture({annualBenefit:true});await invite(f);await claim(f);const job=await begin(f),route='/gift-acceptances/'+job.jobId+'/cancel';assert.equal((await post(route,{},outsider)).status,404);assert.equal((await post(route,{},f.recipient,randomUUID(),{'x-csrf-token':null})).status,403);assert.equal((await post(route,{homeId:randomUUID()},f.recipient)).status,422);
   const response=await post(route,{},f.recipient);assert.equal(response.status,200);privacy(response);const data=await response.json();assert.deepEqual(data,{jobId:job.jobId,state:'cancelled',replay:false});noSecrets(data,f);assert.equal((await (await post(route,{},f.recipient)).json()).replay,true);assert.equal((await (await request('/gift-acceptances/'+job.jobId,{},f.recipient)).json()).state,'cancelled');await noDelivery(f);assert.equal(scans.length,f.scanStart);
  });
+ await t.test('HTTP reissue atomically replaces the link and replay never re-exposes a secret',async()=>{
+  const f=await fixture({annualBenefit:true});await invite(f);const revision=(await store.read(issuer.id,agency.id,f.p.id)).revision;
+  const route=f.root+'/gift-invitations/'+f.invitation.id+'/reissue',body={expectedRevision:revision,expectedVersion:1},key=randomUUID();
+  assert.equal((await post(route,body,issuer,key,{origin:'https://other.example.test'})).status,403);
+  assert.equal((await post(route,{...body,secret:'injected'},issuer,key)).status,422);
+  const response=await post(route,body,issuer,key);assert.equal(response.status,201);privacy(response);const result=await response.json();
+  assert.deepEqual(Object.keys(result).sort(),['id','version','state','secret','replay','requiresReissue'].sort());assert.notEqual(result.id,f.invitation.id);assert.match(result.secret,/^[A-Za-z0-9_-]{43}$/);assert.equal(result.replay,false);
+  assert.equal((await post('/gift-invitations/'+f.invitation.id+'/landing',{secret:f.invitation.secret},guest)).status,404);
+  assert.equal((await post('/gift-invitations/'+result.id+'/landing',{secret:result.secret},guest)).status,200);
+  const replay=await post(route,body,issuer,key);assert.equal(replay.status,201);const replayBody=await replay.json();assert.equal(replayBody.id,result.id);assert.equal(replayBody.secret,null);assert.equal(replayBody.requiresReissue,true);assert.equal(replayBody.replay,true);
+  assert.equal((await store.read(issuer.id,agency.id,f.p.id)).revision,revision+1);await noDelivery(f);
+ });
+ await t.test('durable HTTP landing limits ignore forwarded-header spoofing and denied attempts stay counted',async()=>{
+  const route='/gift-invitations/'+randomUUID()+'/landing';let denied;
+  for(let i=0;i<61;i++){const response=await post(route,{secret:'Z'.repeat(43)},guest);if(response.status===429){denied=response;break;}assert.equal(response.status,404);}
+  assert.ok(denied,'a fixed-window landing limit must apply');privacy(denied);assert.equal((await denied.json()).error.code,'rate_limited');
+  const before=await db.authThrottle.findMany({where:{key:{startsWith:'gift:v1:'}},orderBy:{key:'asc'}});
+  const repeated=await post(route,{secret:'Y'.repeat(43)},guest,null,{'x-forwarded-for':'203.0.113.99'});assert.equal(repeated.status,429);privacy(repeated);
+  const after=await db.authThrottle.findMany({where:{key:{startsWith:'gift:v1:'}},orderBy:{key:'asc'}});assert.deepEqual(after,before);
+  assert.equal(JSON.stringify(after).includes('203.0.113.99'),false);assert.equal(JSON.stringify(after).includes('Z'.repeat(43)),false);
+ });
+
 });

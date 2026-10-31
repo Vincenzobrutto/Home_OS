@@ -57,3 +57,8 @@ export function parseGiftCreateBody(input:unknown,keyHeader:unknown){
   const requestKey=key(keyHeader),selected=documents(body.documents);
   return canonical(()=>parseGiftInvitationCommand({key:requestKey,expectedRevision:body.expectedRevision,documents:selected,recipientEmail:body.recipientEmail,stipulationCompleted:body.stipulationCompleted,releaseApproved:body.releaseApproved,annualBenefit:body.annualBenefit}));
 }
+/** Reissue changes only a personal link: recipient, manifest, destination and offer stay server-owned. */
+export function parseGiftReissueBody(input:unknown,keyHeader:unknown){
+  const body=exact(input,['expectedRevision','expectedVersion']);
+  return {key:key(keyHeader),expectedRevision:version(body.expectedRevision),expectedVersion:version(body.expectedVersion)};
+}

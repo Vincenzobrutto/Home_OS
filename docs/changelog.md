@@ -1,3 +1,7 @@
+## 1 novembre2026 — Gift: interfaccia, rigenerazione e limiti tecnici
+
+Collegate la pratica e la consegna alla normale app: selezione finale, link personale in memoria, accesso/registrazione/verifica email, ripresa del job, Home e archivio con provenienza e anno opzionale. Rigenerazione atomica con replay hash-only; contatori persistenti perIP/account, indipendenti dal piano free. Corretti path Gift codificati, retry landing temporanea e ritorno dopo la verifica. Backend863/DB126/poller6verdi, frontend1924/1924e statici/build verdi; [collaudo browser in corso](v5/agency-gift-app-20261101.md). Nessun deploy o servizio reale attivato.
+
 ## 31 ottobre2026 — primo contratto Gift interno
 
 ## 1 novembre 2026 — Gift: API, coda e verifica email

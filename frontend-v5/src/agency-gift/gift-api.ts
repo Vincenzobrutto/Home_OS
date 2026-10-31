@@ -1,9 +1,10 @@
 import type {ApiTransport} from '../api/transport';
 import {serviceError} from '../api/errors';
-import {parseGiftCapabilities,parseGiftBenefits,parseGiftDocuments,parseGiftRelease,parseGiftInvitations,parseGiftInvitationCreated,parseGiftRevocation,parseGiftLanding,parseGiftPreview,parseGiftClaim,parseGiftAcceptance,parseGiftResume,parseGiftCancellation,type GiftDocuments,type GiftAcceptance,type GiftResume} from './gift-wire';
+import {parseGiftCapabilities,parseGiftBenefits,parseGiftDocuments,parseGiftRelease,parseGiftInvitations,parseGiftInvitationCreated,parseGiftReissued,parseGiftRevocation,parseGiftLanding,parseGiftPreview,parseGiftClaim,parseGiftAcceptance,parseGiftResume,parseGiftCancellation,type GiftDocuments,type GiftAcceptance,type GiftResume} from './gift-wire';
 export type GiftAgencyScope={accountId:string;agencyId:string;practiceId:string};
 export type GiftReleaseInput={expectedRevision:number;expectedSourceVersion:number;expectedSha256:string;title:string;origin:'received'|'agency_generated';finalDocumentConfirmed:true;releaseApproved:true};
 export type GiftCreateInput={expectedRevision:number;documents:{sourceId:string;version:number;sha256:string}[];recipientEmail:string;stipulationCompleted:true;releaseApproved:true;annualBenefit:boolean};
+export type GiftReissueInput={expectedRevision:number;expectedVersion:number};
 export type GiftBeginInput={secret:string;expectedInvitationVersion:number;home:{name:string;address:string}};
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/iu;
 function invalid():never{throw new TypeError('Invalid Gift request');}
@@ -50,6 +51,7 @@ export class GiftApi{
   const selected=out.metadata.documents.find(item=>item.sourceId===id);if(!selected||selected.state!=='current'||selected.sourceVersion!==command.expectedSourceVersion||selected.sha256!==command.expectedSha256)throw serviceError(200);return out;
  }
  async createInvitation(input:GiftAgencyScope,body:GiftCreateInput,idempotencyKey:string,signal?:AbortSignal){const s=scope(input),command=createInput(body),requestKey=key(idempotencyKey);return parseGiftInvitationCreated(await this.transport.callJson<unknown>(root(s)+'/gift-invitations',{method:'POST',accountId:s.accountId,body:command,idempotencyKey:requestKey,signal}));}
+ async reissueInvitation(input:GiftAgencyScope,invitationId:string,body:GiftReissueInput,idempotencyKey:string,signal?:AbortSignal){const s=scope(input),id=uuid(invitationId),r=object(body,['expectedRevision','expectedVersion']),command={expectedRevision:positive(r.expectedRevision),expectedVersion:positive(r.expectedVersion)},requestKey=key(idempotencyKey);return parseGiftReissued(await this.transport.callJson<unknown>(root(s)+'/gift-invitations/'+encodeURIComponent(id)+'/reissue',{method:'POST',accountId:s.accountId,body:command,idempotencyKey:requestKey,signal}));}
  async revokeInvitation(input:GiftAgencyScope,invitationId:string,expectedVersion:number,signal?:AbortSignal){const s=scope(input),id=uuid(invitationId),version=positive(expectedVersion),out=parseGiftRevocation(await this.transport.callJson<unknown>(root(s)+'/gift-invitations/'+encodeURIComponent(id)+'/revoke',{method:'POST',accountId:s.accountId,body:{expectedVersion:version},signal}));same(out.id,id);return out;}
  async landing(invitationId:string,credential:string,signal?:AbortSignal){const id=uuid(invitationId),token=secret(credential),out=parseGiftLanding(await this.transport.mutate<unknown>(invitationPath(id)+'/landing',{body:{secret:token},signal}));same(out.id,id);return out;}
  async preview(accountId:string,invitationId:string,credential:string,signal?:AbortSignal){const account=uuid(accountId),id=uuid(invitationId),token=secret(credential),out=parseGiftPreview(await this.transport.callJson<unknown>(invitationPath(id)+'/preview',{method:'POST',accountId:account,body:{secret:token},signal}));same(out.id,id);return out;}

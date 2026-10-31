@@ -1,3 +1,7 @@
+## Gift v1 — collaudo del collegamento all’app, 1 novembre2026
+
+UI Agency/destinatario, normali accesso/registrazione/verifica email, provenienza nei Documenti, anno account, rigenerazione atomica e throttle sono implementati. Backend863/DBHTTP126/poller6verdi su fixture e cluster nuovi arrestati; statici/build app verdi. Frontend1924/1924completo verde. Resta browser desktop/375px nel nuovo ambiente sintetico. [Stato preciso](v5/agency-gift-app-20261101.md). Le tappe sotto sono cronologia e non nuovi blocchi. Modello incarico e producer PDF automatici separati, attivazione ambiente prodotto/merge/deploy non autorizzati; limiti free e multiutenza rimandati.
+
 ## 31 ottobre 2026 — dopo integrazione del codice Agenzie
 
 ## Gift v1 — prossima UI dopo le API verificate

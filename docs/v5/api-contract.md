@@ -177,3 +177,6 @@ apply_surface_proposal accetta excludedCandidateIds opzionale, massimo12 ID unic
 ## Gift v1 (1 novembre2026)
 
 Nuovi endpoint e DTO nel [contratto Gift](agency-gift-api-20261031.md). Token solo nel corpo dei POST; Origin/CSRF anche per landing anonima, nessuna query extra. Claim/inizio richiedono account corrispondente con email verificata dal DB anche per account legacy; non creano Home. Accettazione202 e polling autenticano la stessa sessione. Ricevuta già accettata e beneficio si leggono senza token/Agency e non ricreano originali eliminati. Il frontend non conserva token in URL query, browser storage o cache Query. Schermate Gift ancora da collegare nel checkpoint API.
+### Gift — rigenerazione e throttle (1 novembre2026)
+
+`POST /agencies/:agencyId/practices/:practiceId/gift-invitations/:id/reissue` con `Idempotency-Key` e `{expectedRevision,expectedVersion}` sostituisce atomicamente il link, mantenendo manifest/destinatario/offerta e rifiutando accettazioni prenotate/accettate. Replay con secret:null; nuovo segreto solo al primo commit, nuova scadenza7giorni. Le API Gift applicano429persistente perIP/account dopo l’autenticazione/CSRF; non è un limite commerciale. [Contratto, UI e prove](agency-gift-app-20261101.md).

@@ -13,9 +13,10 @@ import {GiftInvitationError} from './gift-invitations';
 import {GiftInvitationsStore} from './gift-invitations-store';
 import {GiftAcceptanceStore} from './gift-acceptance-store';
 import {GiftAcceptanceWorker} from './gift-acceptance-worker';
+import {GiftThrottle} from './gift-throttle';
 import {GiftBenefitsStore} from './gift-benefits-store';
 import {GiftDocumentReleaseStore} from './gift-document-release';
-import {parseGiftLandingBody,parseGiftClaimBody,parseGiftAcceptanceBody,parseGiftCreateBody,parseGiftVersionBody} from './gift-http-contracts';
+import {parseGiftLandingBody,parseGiftClaimBody,parseGiftAcceptanceBody,parseGiftCreateBody,parseGiftVersionBody,parseGiftReissueBody} from './gift-http-contracts';
 import {GiftJobsRunner,giftDeliveryConfigured,type GiftRuntime} from './gift-runner';
 
 type AgencyRequest=Request&{agencyAccountId:string};
@@ -45,47 +46,49 @@ export class GiftErrorFilter implements ExceptionFilter{
 
 @Controller() @UseFilters(GiftErrorFilter)
 export class GiftAccountController{
- constructor(private readonly sessions:SessionsService,@Inject(GiftAcceptanceStore)private readonly acceptances:GiftAcceptanceStore,@Inject(GiftBenefitsStore)private readonly benefits:GiftBenefitsStore){}
+ constructor(private readonly sessions:SessionsService,@Inject(GiftAcceptanceStore)private readonly acceptances:GiftAcceptanceStore,@Inject(GiftBenefitsStore)private readonly benefits:GiftBenefitsStore,@Inject(GiftThrottle)private readonly throttle:GiftThrottle){}
  @Get('gift-capabilities') @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async capabilities(@Req()r:Request,@Query()q:unknown){noQuery(q);await this.sessions.require(r);return {enabled:giftDeliveryConfigured(process.env),requiresVerifiedEmail:true};}
+ async capabilities(@Req()r:Request,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r);await this.throttle.check('read',{ip:r.ip??'',accountId:session.accountId});return {enabled:giftDeliveryConfigured(process.env),requiresVerifiedEmail:true};}
  @Get('gift-benefits') @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async accountBenefits(@Req()r:Request,@Query()q:unknown){noQuery(q);return this.benefits.capabilities((await this.sessions.require(r)).accountId);}
+ async accountBenefits(@Req()r:Request,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r);await this.throttle.check('read',{ip:r.ip??'',accountId:session.accountId});return this.benefits.capabilities(session.accountId);}
  @Get('gift-invitations/:invitationId/my-acceptance') @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async resume(@Req()r:Request,@Param('invitationId')invitationId:string,@Query()q:unknown){noQuery(q);return this.acceptances.forInvitation((await this.sessions.require(r)).accountId,id(invitationId));}
+ async resume(@Req()r:Request,@Param('invitationId')invitationId:string,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r);await this.throttle.check('read',{ip:r.ip??'',accountId:session.accountId});return this.acceptances.forInvitation(session.accountId,id(invitationId));}
  @Get('gift-acceptances/:jobId') @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async status(@Req()r:Request,@Param('jobId')jobId:string,@Query()q:unknown){noQuery(q);return this.acceptances.get((await this.sessions.require(r)).accountId,id(jobId));}
+ async status(@Req()r:Request,@Param('jobId')jobId:string,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r);await this.throttle.check('read',{ip:r.ip??'',accountId:session.accountId});return this.acceptances.get(session.accountId,id(jobId));}
 }
-@Module({controllers:[GiftAccountController],providers:[{provide:GiftAcceptanceStore,useFactory:(db:PrismaService)=>new GiftAcceptanceStore(db),inject:[PrismaService]},{provide:GiftBenefitsStore,useFactory:(db:PrismaService)=>new GiftBenefitsStore(db),inject:[PrismaService]}],exports:[GiftAcceptanceStore,GiftBenefitsStore]})
+@Module({controllers:[GiftAccountController],providers:[{provide:GiftThrottle,useFactory:(db:PrismaService)=>new GiftThrottle(db),inject:[PrismaService]},{provide:GiftAcceptanceStore,useFactory:(db:PrismaService)=>new GiftAcceptanceStore(db),inject:[PrismaService]},{provide:GiftBenefitsStore,useFactory:(db:PrismaService)=>new GiftBenefitsStore(db),inject:[PrismaService]}],exports:[GiftAcceptanceStore,GiftBenefitsStore,GiftThrottle]})
 export class GiftAccountModule{}
 
 @Controller('agencies/:agencyId/practices/:practiceId') @UseGuards(AgencySessionGuard) @UseFilters(GiftErrorFilter)
 export class AgencyGiftController{
- constructor(@Inject(GiftInvitationsStore)private readonly invitations:GiftInvitationsStore,@Inject(GiftDocumentReleaseStore)private readonly documents:GiftDocumentReleaseStore){}
+ constructor(@Inject(GiftInvitationsStore)private readonly invitations:GiftInvitationsStore,@Inject(GiftDocumentReleaseStore)private readonly documents:GiftDocumentReleaseStore,@Inject(GiftThrottle)private readonly throttle:GiftThrottle){}
  @Get('gift-documents') @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- listDocuments(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){noQuery(q);return this.documents.list(r.agencyAccountId,g,p);}
+ async listDocuments(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){noQuery(q);await this.throttle.check('read',{ip:r.ip??'',accountId:r.agencyAccountId});return this.documents.list(r.agencyAccountId,g,p);}
  @Post('sources/:sourceId/gift-release') @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async release(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Param('sourceId')sourceId:string,@Body()input:unknown,@Headers('idempotency-key')key:unknown,@Query()q:unknown){noQuery(q);const b=object(input,['expectedRevision','expectedSourceVersion','expectedSha256','title','origin','finalDocumentConfirmed','releaseApproved']),out=await this.documents.release(r.agencyAccountId,g,p,sourceId,{...b,key});return {replay:out.replay,metadata:out.metadata};}
+ async release(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Param('sourceId')sourceId:string,@Body()input:unknown,@Headers('idempotency-key')key:unknown,@Query()q:unknown){noQuery(q);await this.throttle.check('mutation',{ip:r.ip??'',accountId:r.agencyAccountId});const b=object(input,['expectedRevision','expectedSourceVersion','expectedSha256','title','origin','finalDocumentConfirmed','releaseApproved']),out=await this.documents.release(r.agencyAccountId,g,p,sourceId,{...b,key});return {replay:out.replay,metadata:out.metadata};}
  @Get('gift-invitations') @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- listInvitations(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){noQuery(q);return this.invitations.list(r.agencyAccountId,g,p);}
+ async listInvitations(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){noQuery(q);await this.throttle.check('read',{ip:r.ip??'',accountId:r.agencyAccountId});return this.invitations.list(r.agencyAccountId,g,p);}
  @Post('gift-invitations') @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async create(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Body()input:unknown,@Headers('idempotency-key')key:unknown,@Query()q:unknown){noQuery(q);return publicInvitation(await this.invitations.create(r.agencyAccountId,g,p,parseGiftCreateBody(input,key)));}
+ async create(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Body()input:unknown,@Headers('idempotency-key')key:unknown,@Query()q:unknown){noQuery(q);await this.throttle.check('mutation',{ip:r.ip??'',accountId:r.agencyAccountId});return publicInvitation(await this.invitations.create(r.agencyAccountId,g,p,parseGiftCreateBody(input,key)));}
+ @Post('gift-invitations/:invitationId/reissue') @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
+ async reissue(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Param('invitationId')invitationId:string,@Body()input:unknown,@Headers('idempotency-key')key:unknown,@Query()q:unknown){noQuery(q);await this.throttle.check('mutation',{ip:r.ip??'',accountId:r.agencyAccountId});const result=await this.invitations.reissue(r.agencyAccountId,g,p,id(invitationId),parseGiftReissueBody(input,key));return {id:result.id,version:result.version,state:result.state,secret:result.secret,replay:result.replay,requiresReissue:result.requiresReissue};}
  @Post('gift-invitations/:invitationId/revoke') @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async revoke(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Param('invitationId')invitationId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);const b=parseGiftVersionBody(input),result=await this.invitations.revoke(r.agencyAccountId,g,p,id(invitationId),b.expectedVersion);return {id:result.id,version:result.version,state:result.state,replay:result.replay};}
+ async revoke(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Param('invitationId')invitationId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);await this.throttle.check('mutation',{ip:r.ip??'',accountId:r.agencyAccountId});const b=parseGiftVersionBody(input),result=await this.invitations.revoke(r.agencyAccountId,g,p,id(invitationId),b.expectedVersion);return {id:result.id,version:result.version,state:result.state,replay:result.replay};}
 }
 
 @Controller() @UseFilters(GiftErrorFilter)
 export class GiftDeliveryController{
- constructor(private readonly sessions:SessionsService,@Inject(GiftInvitationsStore)private readonly invitations:GiftInvitationsStore,@Inject(GiftAcceptanceStore)private readonly acceptances:GiftAcceptanceStore,@Inject(GiftAcceptanceWorker)private readonly worker:GiftAcceptanceWorker,@Inject(GiftJobsRunner)private readonly runner:GiftJobsRunner){}
+ constructor(private readonly sessions:SessionsService,@Inject(GiftInvitationsStore)private readonly invitations:GiftInvitationsStore,@Inject(GiftAcceptanceStore)private readonly acceptances:GiftAcceptanceStore,@Inject(GiftAcceptanceWorker)private readonly worker:GiftAcceptanceWorker,@Inject(GiftJobsRunner)private readonly runner:GiftJobsRunner,@Inject(GiftThrottle)private readonly throttle:GiftThrottle){}
  @Post('gift-invitations/:invitationId/landing') @HttpCode(200) @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async landing(@Req()r:Request,@Param('invitationId')invitationId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);await this.sessions.requireCsrf(r);return this.invitations.landingStatus(id(invitationId),parseGiftLandingBody(input).secret);}
+ async landing(@Req()r:Request,@Param('invitationId')invitationId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);await this.sessions.requireCsrf(r);await this.throttle.check('landing',{ip:r.ip??''});return this.invitations.landingStatus(id(invitationId),parseGiftLandingBody(input).secret);}
  @Post('gift-invitations/:invitationId/preview') @HttpCode(200) @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async preview(@Req()r:Request,@Param('invitationId')invitationId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r,true);return this.invitations.recipientPreview(session.accountId,id(invitationId),parseGiftLandingBody(input).secret);}
+ async preview(@Req()r:Request,@Param('invitationId')invitationId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r,true);await this.throttle.check('mutation',{ip:r.ip??'',accountId:session.accountId});return this.invitations.recipientPreview(session.accountId,id(invitationId),parseGiftLandingBody(input).secret);}
  @Post('gift-invitations/:invitationId/claim') @HttpCode(200) @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async claim(@Req()r:Request,@Param('invitationId')invitationId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r,true),b=parseGiftClaimBody(input),out=await this.invitations.claim(session.accountId,id(invitationId),b.secret,b.expectedVersion);return {id:out.id,version:out.version,state:out.state,replay:out.replay};}
+ async claim(@Req()r:Request,@Param('invitationId')invitationId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r,true);await this.throttle.check('mutation',{ip:r.ip??'',accountId:session.accountId});const b=parseGiftClaimBody(input),out=await this.invitations.claim(session.accountId,id(invitationId),b.secret,b.expectedVersion);return {id:out.id,version:out.version,state:out.state,replay:out.replay};}
  @Post('gift-invitations/:invitationId/acceptances') @HttpCode(202) @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async begin(@Req()r:Request,@Param('invitationId')invitationId:string,@Body()input:unknown,@Headers('idempotency-key')key:unknown,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r,true),b=parseGiftAcceptanceBody(input,key),out=await this.acceptances.begin(session.accountId,id(invitationId),b.secret,b.command);if(out.state!=='accepted')this.runner.wake();return out;}
+ async begin(@Req()r:Request,@Param('invitationId')invitationId:string,@Body()input:unknown,@Headers('idempotency-key')key:unknown,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r,true);await this.throttle.check('mutation',{ip:r.ip??'',accountId:session.accountId});const b=parseGiftAcceptanceBody(input,key),out=await this.acceptances.begin(session.accountId,id(invitationId),b.secret,b.command);if(out.state!=='accepted')this.runner.wake();return out;}
  @Post('gift-acceptances/:jobId/cancel') @HttpCode(200) @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
- async cancel(@Req()r:Request,@Param('jobId')jobId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);object(input,[]);return this.worker.cancel((await this.sessions.require(r,true)).accountId,id(jobId));}
+ async cancel(@Req()r:Request,@Param('jobId')jobId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);object(input,[]);const session=await this.sessions.require(r,true);await this.throttle.check('mutation',{ip:r.ip??'',accountId:session.accountId});return this.worker.cancel(session.accountId,id(jobId));}
 }
 
 @Module({})

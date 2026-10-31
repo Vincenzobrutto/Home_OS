@@ -87,3 +87,22 @@ it('Home confirmation preserves valid Unicode joiners like the canonical backend
  const call=c.fetch.mock.calls.find(([path])=>path.endsWith('/acceptances'));expect(call).toBeDefined();
  expect(body(call!).home).toEqual({name:'Casa 👨‍👩‍👧',address:'Via DEMO‌ 1'});
 });
+describe('atomic Gift link reissue transport',()=>{
+ it('uses the shared CSRF/account transport, exact revisions and stable key without sending a secret',async()=>{
+  const c=client({id:id(10),version:1,state:'invited',secret,replay:false,requiresReissue:false});
+  const signal=new AbortController().signal,out=await c.api.reissueInvitation(scope(),invitation,{expectedRevision:5,expectedVersion:2},key,signal);
+  expect(out.id).toBe(id(10));const call=c.fetch.mock.calls.at(-1)!;expect(call[0]).toBe('/api/v5'+root+'/gift-invitations/'+invitation+'/reissue');
+  expect(body(call)).toEqual({expectedRevision:5,expectedVersion:2});const headers=new Headers(call[1].headers);expect(headers.get('idempotency-key')).toBe(key);expect(headers.get('x-account-context')).toBe(account);expect(headers.get('x-csrf-token')).toBe(csrf);expect(call[1].signal).toBe(signal);
+ });
+ it('preserves historical replacement state but never manufactures a replay secret',async()=>{
+  const c=client({id:id(10),version:2,state:'revoked',secret:null,replay:true,requiresReissue:true});const out=await c.api.reissueInvitation(scope(),invitation,{expectedRevision:5,expectedVersion:2},key);expect(out).toMatchObject({state:'revoked',secret:null,replay:true});
+ });
+ it('rejects body overrides or invalid versions before any request',async()=>{
+  const c=client({});for(const value of [{expectedRevision:0,expectedVersion:1},{expectedRevision:1,expectedVersion:2,secret},{expectedRevision:1,expectedVersion:'2'}])await expect(c.api.reissueInvitation(scope(),invitation,value as never,key)).rejects.toThrow();expect(c.fetch).not.toHaveBeenCalled();
+ });
+ it('rejects fresh revoked output or leaked replay credentials',async()=>{
+  for(const result of [{id:id(10),version:2,state:'revoked',secret,replay:false,requiresReissue:false},{id:id(10),version:1,state:'invited',secret,replay:true,requiresReissue:true}]){
+   const c=client(result);await expect(c.api.reissueInvitation(scope(),invitation,{expectedRevision:5,expectedVersion:2},key)).rejects.toMatchObject({kind:'service'});
+  }
+ });
+});

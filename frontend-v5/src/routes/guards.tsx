@@ -5,6 +5,9 @@ import { ErrorState, Loading } from '../components/ui';
 import { safeNextPath } from '../lib/validation';
 import { AccountProvider, useAuthSignals, useSession } from '../session/session';
 import styles from './pages.module.css';
+import { safeGiftNext } from '../agency-gift/gift-link-memory';
+import { GiftLinkProvider } from '../agency-gift/GiftLinkProvider';
+import { isGiftRoutePath } from '../agency-gift/gift-route-path';
 
 /**
  * A ogni cambio di rotta (non al primo caricamento) sposta il focus sul titolo
@@ -40,7 +43,7 @@ export function RootLayout() {
       window.clearTimeout(timer);
     };
   }, [location.pathname]);
-  return <Outlet />;
+  return <GiftLinkProvider><Outlet /></GiftLinkProvider>;
 }
 
 function SessionProblem(props: { error: unknown; onRetry: () => void; retrying: boolean }) {
@@ -110,7 +113,8 @@ export function AnonymousOnly() {
     );
   }
   if (session.data?.account) {
-    return <Navigate to={safeNextPath(params.get('next'))} replace />;
+    const next=params.get('next');
+    return <Navigate to={next&&(isGiftRoutePath(next)||/^\/gift(?:\/|$)/iu.test(next))?safeGiftNext(next):safeNextPath(next)} replace />;
   }
   return <Outlet />;
 }
