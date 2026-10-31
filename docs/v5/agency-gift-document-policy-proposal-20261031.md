@@ -1,5 +1,8 @@
 # Gift: selezione dei documenti e continuità della casa
 
+> Aggiornamento confermato da Vincenzo: la v1 usa un solo account destinatario;multiutenza e casi a più intestatari sono rimandati. Il percorso è link personale → registrazione/accesso → accettazione → casa con documenti,con anno a pagamento opzionale dall'accettazione. Fa fede il contratto Gift v1;le sezioni multiutente sotto sono ipotesi future,non requisiti della v1.
+
+
 31 ottobre2026. **Proposta di policy di prodotto da validare con un'agenzia reale. Non implementata.** La distinzione ricevuto/prodotto esiste nel pacchetto interno;le categorie e i suggerimenti qui sotto non sono nuovi enum,regole automatiche o autorizzazioni attive.
 
 ## Regola di base

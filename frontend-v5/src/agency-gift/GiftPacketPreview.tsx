@@ -28,13 +28,13 @@ export function GiftPacketPreview({scope,access,packet,onOpenSource}:Props){
   if(packet.schemaVersion!=='agency-gift-preparation-v1'||packet.purpose!=='internal_preview'||
     packet.canDeliver!==false||packet.createsHome!==false||packet.grantsAccess!==false||
     packet.certification!==false||packet.homeDestinationAuthorized!==false||packet.recipientIdentityVerified!==false||
-    !packet.documents.length||packet.documents.some(d=>!['final','signed'].includes(d.lifecycle)||d.signatureVerification!=='not_assessed'))
+    packet.recipients.length!==1||!packet.documents.length||packet.documents.some(d=>!['final','signed'].includes(d.lifecycle)||d.signatureVerification!=='not_assessed'))
     return <section className={styles.panel} role="alert">Pacchetto non compatibile con questa anteprima interna.</section>;
   return <section className={styles.panel} aria-label="Anteprima interna Gift">
     <header><p className={styles.eyebrow}>Dalla pratica alla casa</p><h2>Documenti per la futura Gift</h2>
       <p className={styles.notice}>Anteprima interna. Consegna e presa in carico non sono ancora attive; nessuna casa o autorizzazione viene creata.</p></header>
     <div className={styles.target}><div><h3>Una sola casa di destinazione</h3><p className={styles.reference}>{packet.requestedHomeId}</p><p>Destinazione selezionata, accesso alla casa ancora da autorizzare.</p></div>
-      <div><h3>Riferimenti destinatari da verificare</h3><ul>{packet.recipients.map(r=><li key={r.subjectRef} className={styles.reference}>{r.subjectRef}</li>)}</ul><p>Questi riferimenti non attestano identità o intestazione attuale.</p></div></div>
+      <div><h3>Account destinatario da associare</h3><ul>{packet.recipients.map(r=><li key={r.subjectRef} className={styles.reference}>{r.subjectRef}</li>)}</ul><p>Il riferimento selezionato non attesta identità o intestazione attuale.</p></div></div>
     <h3>Documenti selezionati · {packet.documents.length}</h3>
     <ul className={styles.documents}>{packet.documents.map(d=><li key={d.sourceId} className={styles.document}>
       <div className={styles.documentHeader}><h4>{d.title}</h4><span className={styles.badge}>{d.origin==='agency_generated'?'Prodotto dall’agenzia':'Ricevuto dall’agenzia'}</span></div>

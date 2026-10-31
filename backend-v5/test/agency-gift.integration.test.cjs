@@ -21,7 +21,7 @@ test('Gift metadata persistence on a new owned synthetic cluster',{timeout:18000
   const descriptor={agencyId:agency.id,practiceId:p.id,sourceId:'document',sourceVersion:1,sha256,metadataVersion:1,origin:'agency_generated',lifecycle,author:'Synthetic agency producer',title:'Synthetic final schedule',surface:{kind:'commercial',qualification:'estimated',method:'Assumed A4',geometryRevision:1,caveats:['Paper size not verified']}};
   const command=async()=>({key:randomUUID(),expectedRevision:await revision(),expectedMetadataVersion:null});
   const register=(d,input)=>store.registerGiftMetadata(a.id,agency.id,p.id,d,input);
-  const select=async()=>({expectedRevision:await revision(),requestedHomeId:'synthetic-destination',recipients:[{subjectRef:'holder-a'},{subjectRef:'holder-b'}],documents:[{sourceId:'document',version:1,sha256}]});
+  const select=async()=>({expectedRevision:await revision(),requestedHomeId:'synthetic-destination',recipients:[{subjectRef:'holder-a'}],documents:[{sourceId:'document',version:1,sha256}]});
   const snapshot=async()=>(await db.agencyPractice.findUnique({where:{id:p.id}})).snapshot;
   return {p,revision,descriptor,command,register,select,snapshot};
  }
@@ -29,7 +29,7 @@ test('Gift metadata persistence on a new owned synthetic cluster',{timeout:18000
   const f=await fixture(),saved=await f.register(f.descriptor,await f.command()),other=new AgencyPracticesStore(db);
   const view=await other.readGiftMetadata(a.id,agency.id,f.p.id);assert.equal(view.documents[0].state,'current');assert.equal(view.documents[0].descriptor.origin,'agency_generated');assert.equal('practice'in saved,false);
   const before=await f.snapshot(),homes=await db.home.count(),grants=await db.agencyPracticeGrant.count(),packet=await other.prepareGiftPacket(a.id,agency.id,f.p.id,await f.select());
-  assert.equal(packet.recipients.length,2);assert.equal(packet.documents[0].surface.qualification,'estimated');assert.deepEqual(packet.documents[0].surface.caveats,['Paper size not verified']);
+  assert.equal(packet.recipients.length,1);assert.equal(packet.documents[0].surface.qualification,'estimated');assert.deepEqual(packet.documents[0].surface.caveats,['Paper size not verified']);
   for(const flag of ['canDeliver','createsHome','grantsAccess','certification','homeDestinationAuthorized','recipientIdentityVerified'])assert.equal(packet[flag],false);
   assert.deepEqual(await f.snapshot(),before);assert.equal(await db.home.count(),homes);assert.equal(await db.agencyPracticeGrant.count(),grants);
   view.documents[0].descriptor.title='Caller mutation';assert.equal((await other.readGiftMetadata(a.id,agency.id,f.p.id)).documents[0].descriptor.title,f.descriptor.title);
@@ -87,6 +87,10 @@ test('Gift metadata persistence on a new owned synthetic cluster',{timeout:18000
  });
  await t.test('bad trusted descriptor rolls back without consuming command key',async()=>{
   const f=await fixture(),input=await f.command(),before=await f.snapshot();await assert.rejects(()=>f.register({...f.descriptor,sha256:'b'.repeat(64)},input),e=>e.code==='source_changed');assert.deepEqual(await f.snapshot(),before);assert.equal((await f.register(f.descriptor,input)).replay,false);
+ });
+ await t.test('v1 refuses a second account without writing practice or Home',async()=>{
+  const f=await fixture();await f.register(f.descriptor,await f.command());const selection=await f.select(),before=await f.snapshot(),homes=await db.home.count();selection.recipients.push({subjectRef:'second-account'});
+  await assert.rejects(()=>store.prepareGiftPacket(a.id,agency.id,f.p.id,selection),e=>e.code==='invalid_input');assert.deepEqual(await f.snapshot(),before);assert.equal(await db.home.count(),homes);
  });
  await t.test('draft can be registered but not delivered; client metadata injection rejected',async()=>{
   const f=await fixture('practice','draft');await f.register(f.descriptor,await f.command());const selection=await f.select(),before=await f.snapshot();

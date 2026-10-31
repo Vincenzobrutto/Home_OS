@@ -3,12 +3,12 @@ import {describe,it,expect,vi} from 'vitest';
 import {render,screen,fireEvent} from '@testing-library/react';
 import {GiftPacketPreview,type GiftPreviewPacket} from './GiftPacketPreview';
 const scope={agencyId:'agency',practiceId:'practice',revision:4,accountId:'agent'};
-const packet=():GiftPreviewPacket=>({schemaVersion:'agency-gift-preparation-v1',purpose:'internal_preview',agencyId:'agency',practiceId:'practice',practiceRevision:4,preparedBy:'agent',requestedHomeId:'one-home',recipients:[{subjectRef:'holder-a'},{subjectRef:'holder-b'}],canDeliver:false,createsHome:false,grantsAccess:false,certification:false,homeDestinationAuthorized:false,recipientIdentityVerified:false,documents:[{sourceId:'generated',version:2,sha256:'a'.repeat(64),metadataVersion:1,title:'Prospetto DEMO',author:'Agenzia DEMO',origin:'agency_generated',lifecycle:'final',signatureVerification:'not_assessed',surface:{kind:'commercial',qualification:'estimated',method:'A4 presunto',geometryRevision:3,caveats:['Formato carta non verificato']}},{sourceId:'received',version:1,sha256:'b'.repeat(64),metadataVersion:2,title:'Atto DEMO',author:'Autore dichiarato DEMO',origin:'received',lifecycle:'signed',signatureVerification:'not_assessed'}]});
+const packet=():GiftPreviewPacket=>({schemaVersion:'agency-gift-preparation-v1',purpose:'internal_preview',agencyId:'agency',practiceId:'practice',practiceRevision:4,preparedBy:'agent',requestedHomeId:'one-home',recipients:[{subjectRef:'holder-a'}],canDeliver:false,createsHome:false,grantsAccess:false,certification:false,homeDestinationAuthorized:false,recipientIdentityVerified:false,documents:[{sourceId:'generated',version:2,sha256:'a'.repeat(64),metadataVersion:1,title:'Prospetto DEMO',author:'Agenzia DEMO',origin:'agency_generated',lifecycle:'final',signatureVerification:'not_assessed',surface:{kind:'commercial',qualification:'estimated',method:'A4 presunto',geometryRevision:3,caveats:['Formato carta non verificato']}},{sourceId:'received',version:1,sha256:'b'.repeat(64),metadataVersion:2,title:'Atto DEMO',author:'Autore dichiarato DEMO',origin:'received',lifecycle:'signed',signatureVerification:'not_assessed'}]});
 describe('internal Gift packet preview — no delivery or Home authority',()=>{
- it('shows one destination, distinct recipients and received/agency-produced provenance',()=>{
+ it('shows one destination, one recipient and received/agency-produced provenance',()=>{
   render(<GiftPacketPreview scope={scope} access="allowed" packet={packet()}/>);
   expect(screen.getByRole('heading',{name:'Una sola casa di destinazione'})).toBeInTheDocument();expect(screen.getByText('one-home')).toBeInTheDocument();
-  expect(screen.getByText('holder-a')).toBeInTheDocument();expect(screen.getByText('holder-b')).toBeInTheDocument();
+  expect(screen.getByText('holder-a')).toBeInTheDocument();expect(screen.queryByText('holder-b')).not.toBeInTheDocument();
   expect(screen.getByText('Prodotto dall’agenzia')).toBeInTheDocument();expect(screen.getByText('Ricevuto dall’agenzia')).toBeInTheDocument();
   expect(screen.getByText(/nessuna casa o autorizzazione viene creata/)).toBeInTheDocument();
  });
@@ -56,7 +56,13 @@ it('renders the canonical backend-produced packet used by the isolated harness',
  const p=JSON.parse(sharedPacketJson) as GiftPreviewPacket;
  const fromServer={agencyId:p.agencyId,practiceId:p.practiceId,revision:p.practiceRevision,accountId:p.preparedBy};
  render(<GiftPacketPreview scope={fromServer} access="allowed" packet={p}/>);
- expect(screen.getByText('CASA-DEMO-001')).toBeInTheDocument();expect(screen.getByText('INT-DEMO-A')).toBeInTheDocument();expect(screen.getByText('INT-DEMO-B')).toBeInTheDocument();
+ expect(screen.getByText('CASA-DEMO-001')).toBeInTheDocument();expect(screen.getByText('INT-DEMO-A')).toBeInTheDocument();expect(screen.queryByText('INT-DEMO-B')).not.toBeInTheDocument();
  expect(screen.getByRole('heading',{name:'Documenti selezionati · 2'})).toBeInTheDocument();expect(screen.getByRole('heading',{name:'Superficie commerciale · Stima'})).toBeInTheDocument();
  expect(screen.getByText('Formato della pagina non verificato.')).toBeInTheDocument();expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+it('v1 refuses multiple recipients instead of implying multi-user onboarding',()=>{
+ const p=packet();p.recipients.push({subjectRef:'second-account'});
+ render(<GiftPacketPreview scope={scope} access="allowed" packet={p}/>);
+ expect(screen.getByRole('alert')).toHaveTextContent('Pacchetto non compatibile');expect(screen.queryByText('holder-a')).not.toBeInTheDocument();
 });

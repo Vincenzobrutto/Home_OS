@@ -68,7 +68,7 @@ export function prepareAgencyGiftPacket(
   const revision = positive(r.expectedRevision);
   if (revision !== practice.revision) throw new PracticeError('revision_conflict');
   const requestedHomeId = text(r.requestedHomeId,100);
-  if (!Array.isArray(r.recipients) || r.recipients.length < 1 || r.recipients.length > 20) invalid();
+  if (!Array.isArray(r.recipients) || r.recipients.length !== 1) invalid();
   const recipients = r.recipients.map(value => {
     const p = object(value, ['subjectRef']);
     return { subjectRef:text(p.subjectRef,100) };

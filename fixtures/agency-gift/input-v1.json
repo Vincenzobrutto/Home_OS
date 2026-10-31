@@ -1,11 +1,11 @@
 {
   "notice": "Synthetic contract fixture only; no personal data, real PDF or authority.",
-  "now": "2026-10-31T15:00:00.000Z",
+  "now": "2026-10-31T15:00:00Z",
   "actor": {
     "accountId": "agent-demo",
     "memberships": [
       {
-        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validFrom": "2026-01-01T00:00:00Z",
         "validUntil": null,
         "revokedAt": null,
         "agencyId": "agency-demo",
@@ -15,7 +15,7 @@
     ],
     "grants": [
       {
-        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validFrom": "2026-01-01T00:00:00Z",
         "validUntil": null,
         "revokedAt": null,
         "agencyId": "agency-demo",
@@ -47,7 +47,7 @@
             "originalFilename": "received-DEMO.pdf",
             "mimeType": "application/pdf",
             "byteSize": 100,
-            "receivedAt": "2026-10-31T15:00:00.000Z",
+            "receivedAt": "2026-10-31T15:00:00Z",
             "receivedBy": "agent-demo"
           }
         ]
@@ -67,7 +67,7 @@
             "originalFilename": "generated-DEMO.pdf",
             "mimeType": "application/pdf",
             "byteSize": 101,
-            "receivedAt": "2026-10-31T15:00:00.000Z",
+            "receivedAt": "2026-10-31T15:00:00Z",
             "receivedBy": "agent-demo"
           }
         ]
@@ -117,9 +117,6 @@
     "expectedRevision": 4,
     "requestedHomeId": "CASA-DEMO-001",
     "recipients": [
-      {
-        "subjectRef": "INT-DEMO-B"
-      },
       {
         "subjectRef": "INT-DEMO-A"
       }

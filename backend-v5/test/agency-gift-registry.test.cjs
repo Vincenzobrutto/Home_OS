@@ -10,7 +10,7 @@ function fixture(){
  return {actor,practice,descriptor,input};
 }
 const register=f=>R.registerGiftDocumentDescriptor(f.actor,f.practice,f.descriptor,f.input,now);
-const select=p=>({expectedRevision:p.revision,requestedHomeId:'one-home',recipients:[{subjectRef:'owner-a'},{subjectRef:'owner-b'}],documents:[{sourceId:'source',version:1,sha256:hash}]});
+const select=p=>({expectedRevision:p.revision,requestedHomeId:'one-home',recipients:[{subjectRef:'owner-a'}],documents:[{sourceId:'source',version:1,sha256:hash}]});
 const error=(fn,code)=>assert.throws(fn,e=>e.code===code);
 test('registry stamps source-bound provenance, actor and receipt without changing caller state',()=>{
  const f=fixture(),before=structuredClone(f),out=register(f),entry=out.practice.giftDocuments[0];
@@ -19,7 +19,7 @@ test('registry stamps source-bound provenance, actor and receipt without changin
 });
 test('server-only adapter prepares from stored metadata, never caller-supplied producer fields',()=>{
  const f=fixture(),p=register(f).practice,packet=R.prepareGiftFromRegistry(f.actor,p,select(p),now);
- assert.equal(packet.documents[0].title,'Prospetto demo');assert.equal(packet.recipients.length,2);assert.equal(packet.canDeliver,false);assert.equal(packet.homeDestinationAuthorized,false);
+ assert.equal(packet.documents[0].title,'Prospetto demo');assert.equal(packet.recipients.length,1);assert.equal(packet.canDeliver,false);assert.equal(packet.homeDestinationAuthorized,false);
  const injected={...select(p),descriptors:[f.descriptor]};error(()=>R.prepareGiftFromRegistry(f.actor,p,injected,now),'invalid_input');
 });
 test('replay after JSON roundtrip is idempotent; changed body with same key conflicts',()=>{

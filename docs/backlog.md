@@ -1068,3 +1068,13 @@ Pacchetto/registro/adapter interno e anteprima isolata implementati. Prima di in
 Gift: ticket GIFT-01..06con dipendenze e prove future nel [modello minacce/recupero](v5/agency-gift-threats-and-recovery-20261031.md). Export corrente non autorizza automaticamente rilascio a terzi;canDeliverrestafalse.
 
 Gift/GIFT-01: validare la [policy documenti proposta](v5/agency-gift-document-policy-proposal-20261031.md),compresi derivati da fonti escluse e distinzione documento ricevuto/valore adottato nella scheda.17tipi e5domande pronti,nessuna policy attivata.
+
+## Gift v1 — piano aggiornato dopo decisione di Vincenzo
+
+Ordine di implementazione:
+1. Invito personale dopo stipula:manifesto congelato,un destinatario,link revocabile/scadibile e associazione sicura all'account normale;registrazione o login esistente.Account errato/retry/revoca testati.
+2. Accettazione e copia indipendente nella Home:ricevuta idempotente,byte verificati,nessun duplicato né grant Agency inverso;non usare C1a come copia.
+3. Beneficio annuale opzionale:scelta agenzia nel manifesto,un anno dall'accettazione,diritto persistito una sola volta;Gift senza premium funzionante.Costo/features/rinnovo/conflitto con piano esistente da definire prima di attivare il servizio.
+4. Collegamento UI e collaudo nuovo cliente/cliente esistente,revoca,timeout e scadenza benefit;documenti restano all'utente.
+
+Multiutenza e più intestatari FUORI dalla v1,compresi i precedenti ticket/casi concorrenti fra destinatari distinti.Il guard del pacchetto/anteprima ora deve accettare un solo riferimento.[Contratto corrente](v5/agency-gift-home-copy-contract-20261031.md).Nessun link reale inviato o addebito attivato.

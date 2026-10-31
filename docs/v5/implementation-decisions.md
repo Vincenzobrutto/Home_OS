@@ -240,3 +240,9 @@ Il componente iniziale è controllato dal contenitore e non ha trasporto/deliver
 ## Agenzie — replay del registro Gift richiede il record originario
 
 Una ricevuta di registrazione metadati non basta senza il record cui si riferisce. Replay verifica struttura,unicità account/key,versione/revisione,attore e descrittore canonico;una vecchia versione può essere riconosciuta senza riscrivere la versione attuale. Incoerenza persistita viene rifiutata e non riparata automaticamente. Non è una ricevuta di consegna né una firma. [Riproduzione e prove](agency-gift-contract-20261031.md).
+
+## Gift v1 — decisione del committente: un account e anno opzionale
+
+Confermato da Vincenzo in chat il31ottobre2026:alla stipula l'agente seleziona documenti e opzionalmente un anno a pagamento;condivide un link personale.Il nuovo proprietario si registra o accede all'account esistente,accetta e usa Dimora come normale utente con la casa e i documenti ricevuti.L'anno opzionale decorre dall'accettazione;alla scadenza casa/documenti restano.Multiutenza,cointestatari e inviti aggiuntivi rimandati:un solo account destinatario nella v1.Nessun accesso Agency implicito alle aggiunte del cliente.
+
+Decisione di prodotto confermata,non flusso già implementato.Invito/copia/entitlement restano da sviluppare.Costo agenzia,features avanzate,rinnovo e account già premium da definire.Il contratto aggiornato supera le precedenti ipotesi multi-destinatario.[Gift v1](agency-gift-home-copy-contract-20261031.md).

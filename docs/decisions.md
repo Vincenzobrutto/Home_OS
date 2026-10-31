@@ -1384,3 +1384,5 @@ Il committente approva integrazione dell'intera PR71nel ramo comune codex/dimora
 ## 31 ottobre2026 — pacchetto Gift interno
 
 Gift accettata indipendente resta la decisione ADR-V5-04. La prima implementazione prepara soltanto una selezione interna da fonti correnti autorizzate,con descrittori di produttore da registro server ancora da collegare. Non confondere fingerprint deterministico con ricevuta/idempotenza durevole di consegna. Nessuna route pubblica,scrittura Home,proprietà confermata o firma validata dal pacchetto. [Contratto e limiti](v5/agency-gift-contract-20261031.md).
+
+Gift v1,singolo account e anno opzionale:decisione del committente31ottobre2026,vedi [ADR V5](v5/implementation-decisions.md) e [contratto](v5/agency-gift-home-copy-contract-20261031.md).Supera le ipotesi multi-destinatario della prima preparazione interna.

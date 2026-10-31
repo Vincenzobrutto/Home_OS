@@ -6,14 +6,14 @@ function fixture(){
  const actor={accountId:'agent',memberships:[{...window(),agencyId:'agency',accountId:'agent',role:'agent'}],grants:[{...window(),agencyId:'agency',practiceId:'practice',accountId:'agent',access:'edit',canExport:true}]};
  const practice={id:'practice',agencyId:'agency',label:'Synthetic',revision:3,sources:[{id:'source',agencyId:'agency',practiceId:'practice',uploaderId:'agent',visibility:'private',withdrawnAt:null,kind:'floor_plan',versions:[{version:1,sha256:hash,originalFilename:'synthetic.png',mimeType:'image/png',byteSize:123,receivedAt:now,receivedBy:'agent'}]}],dependents:[],receipts:[],events:[]};
  const descriptors=[{agencyId:'agency',practiceId:'practice',sourceId:'source',sourceVersion:1,sha256:hash,metadataVersion:1,origin:'agency_generated',lifecycle:'final',author:'Agenzia demo',title:'Prospetto sintetico',surface:{kind:'commercial',qualification:'estimated',method:'assumed A4, declared scale',geometryRevision:2,caveats:['Scala stimata, non misura verificata']}}];
- const input={expectedRevision:3,requestedHomeId:'home-selected',recipients:[{subjectRef:'owner-b'},{subjectRef:'owner-a'}],documents:[{sourceId:'source',version:1,sha256:hash}]};
+ const input={expectedRevision:3,requestedHomeId:'home-selected',recipients:[{subjectRef:'owner-a'}],documents:[{sourceId:'source',version:1,sha256:hash}]};
  return {actor,practice,descriptors,input};
 }
 const run=f=>prepare(f.actor,f.practice,f.descriptors,f.input,now);
 const rejected=(f,code='invalid_input')=>assert.throws(()=>run(f),e=>e.code===code);
-test('two selected recipients have one requested destination; preparation grants nothing',()=>{
+test('one selected recipient has one requested destination; preparation grants nothing',()=>{
  const f=fixture(),before=structuredClone(f),p=run(f);
- assert.equal(p.requestedHomeId,'home-selected');assert.deepEqual(p.recipients,[{subjectRef:'owner-a'},{subjectRef:'owner-b'}]);
+ assert.equal(p.requestedHomeId,'home-selected');assert.deepEqual(p.recipients,[{subjectRef:'owner-a'}]);
  for(const key of ['canDeliver','createsHome','grantsAccess','confirmsFacts','certification','recipientIdentityVerified','homeDestinationAuthorized'])assert.equal(p[key],false);
  assert.equal(p.purpose,'internal_preview');assert.deepEqual(f,before);assert.doesNotMatch(JSON.stringify(p),/tokenHash|storageKey|memberships|receipts/);
 });
@@ -85,7 +85,11 @@ test('ordering of several selected originals and metadata does not alter canonic
 test('synthetic shared packet stays compatible with frontend harness without exposing actor or registry state',()=>{
  const f=require('../../fixtures/agency-gift/input-v1.json'),expected=require('../../frontend-v5/tests/fixtures/agency-gift/packet-v1.json');
  const result=prepare(f.actor,f.practice,f.descriptors,f.input,f.now);
- assert.deepEqual(result,expected);assert.equal(result.documents.length,2);assert.equal(result.recipients.length,2);
+ assert.deepEqual(result,expected);assert.equal(result.documents.length,2);assert.equal(result.recipients.length,1);
  assert.equal(result.documents.find(d=>d.origin==='agency_generated').surface.qualification,'estimated');
  assert.doesNotMatch(JSON.stringify(result),/memberships|grants"|giftMetadataReceipts|storageKey|tokenHash/);
+});
+
+test('v1 rejects two distinct accounts rather than silently keeping the first',()=>{
+ const f=fixture();f.input.recipients.push({subjectRef:'second-account'});rejected(f);
 });

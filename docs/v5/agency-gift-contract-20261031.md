@@ -1,16 +1,24 @@
 # Agency → Gift → Home — incremento31ottobre2026
 
-## Quadro corrente per la revisione — 31 ottobre,20UTCcirca
+## Quadro corrente per la revisione — Gift v1 a singolo account
 
 Ramo dedicato `codex/agency-gift-contract-20261031`, PR draft72 verso la base comune cbddcf0;nessun merge o deploy. Implementati pacchetto interno,registro metadati,adapter transazionale e anteprima controllata isolata. Ultima correzione runtime:8fbc976,replay legato al record originario. Export sintetico autosufficiente riproducibile con gli script del frontend;non collegato all'app e non sostituisce il collaudo planimetrie scaduto.
 
-Verificato:30/30backend mirati,689/689ordinari,13/13DBsu nuovo cluster arrestato,20/20UI;build/lint e typecheck mirati verdi. Export controllato in DOM sintetico senza rete. Non verificato:nuovo browser/375px,file://reale,crash recovery o trasferimento Home. Revisioni e controlli descritti sono self-review dell'autore,non audit indipendente.
+Verificato:31/31backend mirati,690/690ordinari,14/14DBsu nuovo cluster arrestato,21/21UI;build/lint e typecheck mirati verdi. Export controllato in DOM sintetico senza rete. Non verificato:nuovo browser/375px,file://reale,crash recovery o trasferimento Home. Revisioni e controlli descritti sono self-review dell'autore,non audit indipendente.
 
 Non disponibile:producer documentale collegato,route Gift,consegna,presa in carico,copia indipendente Home,nuovi accessi o aggiornatore documenti del proprietario. Nessun modello incarico approvato. Le funzioni interne non certificano identità,fonte/firma,conformità o completezza e non consentono invio. Non basta porre canDeliver=true.
 
 Per proseguire:validare [copia e autorità](agency-gift-home-copy-contract-20261031.md),[minacce/recupero e ticket](agency-gift-threats-and-recovery-20261031.md),[selezione documenti proposta](agency-gift-document-policy-proposal-20261031.md). Nessuna di queste proposte è stata confermata da un'agenzia reale. L'aggiunta dei documenti del proprietario senza accesso Agency implicito è requisito fondamentale da provare quando la copia sarà realizzata,non un nuovo test end-to-end già eseguito.
 
-La cronologia seguente conserva i conteggi storici per incremento;il quadro sopra è il riferimento corrente. Non sommare le suite mirate ai totali ordinari che già le includono,né chiamare13test DBtredici casi indipendenti:il numero comprende12sottocasi e il contenitore.
+La cronologia seguente conserva i conteggi storici per incremento;il quadro sopra è il riferimento corrente. Non sommare le suite mirate ai totali ordinari che già le includono,né chiamare14test DBquattordici casi indipendenti:il numero comprende13sottocasi e il contenitore.
+
+## Decisione successiva confermata dal committente — Gift v1
+
+Il [contratto corrente](agency-gift-home-copy-contract-20261031.md) è ora approvato come percorso prodotto:un solo account destinatario;dopo stipula l'agente sceglie documenti ed eventuale anno a pagamento,condivide link personale;cliente si registra/accede e accetta;la casa con i documenti diventa parte del normale account Dimora.L'anno opzionale decorre dall'accettazione;alla scadenza documenti/casa restano.Multiutenza e più intestatari rimandati,superando le ipotesi precedenti nella cronologia.
+
+Implementato in questo aggiornamento:guard backend e anteprima per esattamente un destinatario,fixture canonica/HTMLoffline allineati,contratto/ADR/backlog aggiornati.Invito,registrazione dal link,copia Home,beneficio/pagamenti NON implementati.Costo,features avanzate,rinnovo e piano già esistente restano da definire,non si attiva nessun servizio reale.
+
+Verifiche:690/690ordinari backend (inclusi31Giftmirati),14/14DB(13sottocasi+contenitore) su NUOVO cluster IY0FXt,arrestato e stoplog verificato;21/21UI,typecheck/lint/buildharness verdi.Log gift-v1-regression.log,gift-v1-db.log,gift-v1-ui.log,gift-v1-build.log.Una seconda persona è rifiutata e non viene ignorata silenziosamente.Nessun browser/mobile nuovo.
 
 ## Stato iniziale e perimetro
 

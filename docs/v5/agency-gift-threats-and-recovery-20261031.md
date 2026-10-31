@@ -1,5 +1,8 @@
 # Gift → Home: confini, rischi e piano di collaudo
 
+> Aggiornamento confermato da Vincenzo: la v1 usa un solo account destinatario;multiutenza e casi a più intestatari sono rimandati. Il percorso è link personale → registrazione/accesso → accettazione → casa con documenti,con anno a pagamento opzionale dall'accettazione. Fa fede il contratto Gift v1;le sezioni multiutente sotto sono ipotesi future,non requisiti della v1.
+
+
 31 ottobre2026. Proposta tecnica del lotto serale. Nessun endpoint o copier viene attivato da questo documento. Stato implementato/verificato nel [report](agency-gift-contract-20261031.md); continuità prevista nel [contratto](agency-gift-home-copy-contract-20261031.md).
 
 ## Confini di fiducia da mantenere distinti

@@ -8,9 +8,6 @@
   "recipients": [
     {
       "subjectRef": "INT-DEMO-A"
-    },
-    {
-      "subjectRef": "INT-DEMO-B"
     }
   ],
   "documents": [
@@ -53,8 +50,8 @@
       "signatureVerification": "not_assessed"
     }
   ],
-  "preparedAt": "2026-10-31T15:00:00.000Z",
-  "fingerprint": "aa921a1c8ebc663956d82ae37f1850a3e12fcb0c289784bc8b3e9de139d6ebeb",
+  "preparedAt": "2026-10-31T15:00:00Z",
+  "fingerprint": "7cb4ad19af8b7c62d14114e18b2e917e5b98f17cac56750a5d39e37769f7f6f8",
   "purpose": "internal_preview",
   "recipientIdentityVerified": false,
   "homeDestinationAuthorized": false,
