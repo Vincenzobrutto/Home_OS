@@ -101,3 +101,11 @@ Aggiunti config Vite dedicata scripts/agency-gift-preview.config.ts e script scr
 Comandi dalla cartella frontend-v5:node node_modules/vite/bin/vite.js build --config scripts/agency-gift-preview.config.ts --configLoader runner;poi node scripts/export-agency-gift-preview.mjs. Build non svuota output arbitrari:cartelle cache/output derivate dal checkout,symlink/junction rifiutati prima del build. Export legge solo file dentro il build verificato.
 
 Verifiche eseguite:build harness,frontend node-typecheck e lint script/config verdi. Smoke manuale del bundle in DOM sintetico con rete negata:render,accesso negato e revisione superata corretti. Non è un collaudo browser reale,file://o375px;non dichiararlo. Un file HTML autosufficiente è stato copiato negli outputs della chat per ispezione locale,con SHA nel log gift-standalone-export.json. Non sostituisce o proroga il collaudo planimetrie scaduto. Non ripetuti backend/DB/UIgià verdi perché codice runtime/payload invariati.
+
+## Nono incremento — selezione documentale per la casa
+
+Aggiunta [proposta di policy documenti](agency-gift-document-policy-proposal-20261031.md):17tipi con origine,suggerimento di revisione e controllo concreto,distinguendo documenti casa,negoziali e interni. Include documenti prodotti dall'agenzia,prospetti/schede con fonti,documenti tecnici e caso successione/difformità. Nessun nuovo enum/default/automatismo o modello contrattuale attivato.
+
+Gap esplicitato:una scheda prodotta dall'agenzia non deve aggirare l'esclusione di una fonte copiandone indirettamente i dati. Dipendenze/ambito di rilascio devono essere definiti nella futura policy producer/GIFT-01,non dedotti dal solo flag agency_generated o dalla conferma di un dato. Valore nella scheda Home e documento ricevuto restano adozioni distinte,senza sovrascritture del proprietario.
+
+Cinque domande pratiche pronte per l'agenzia;risposte ancora da raccogliere,non confermate. Solo documentazione:link/diffcontrollati,nessuna suite o collaudo nuovo necessario. Prossimo consolidare consegna/decisioni aperte e rivedere i contratti senza introdurre nuove funzioni non definite.

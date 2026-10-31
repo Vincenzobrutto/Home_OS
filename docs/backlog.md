@@ -1066,3 +1066,5 @@ Implementato scarto selettivo pre-adozione e indizio fascia muraria; restano ric
 Pacchetto/registro/adapter interno e anteprima isolata implementati. Prima di invio/copier:validare autorità di presa in carico e dati visibili senza account;poi ledger delivery/recipient,staging byte recuperabile,receipt/concorrenza e nuova UI/APIcollegata. Nessun grant inverso Agency sulle aggiunte del proprietario. [Contratto proposto e prove ancora da eseguire](v5/agency-gift-home-copy-contract-20261031.md); [stato verificato](v5/agency-gift-contract-20261031.md). Non usare sharing C1a come sostituto di Gift accettata indipendente.
 
 Gift: ticket GIFT-01..06con dipendenze e prove future nel [modello minacce/recupero](v5/agency-gift-threats-and-recovery-20261031.md). Export corrente non autorizza automaticamente rilascio a terzi;canDeliverrestafalse.
+
+Gift/GIFT-01: validare la [policy documenti proposta](v5/agency-gift-document-policy-proposal-20261031.md),compresi derivati da fonti escluse e distinzione documento ricevuto/valore adottato nella scheda.17tipi e5domande pronti,nessuna policy attivata.

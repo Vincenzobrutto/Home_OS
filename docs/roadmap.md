@@ -311,3 +311,5 @@ Gift: dettagliati confini di rilascio,minacce e recupero,solo proposta;nessun en
 Gift: corretto falso successo replay con ricevuta orfana;ora schema/unicità/record/versione/attore coerenti. Nessuna consegna o copia nuova. [Report](v5/agency-gift-contract-20261031.md).
 
 Gift: export standalone del solo harness sintetico,senza API/server;build e smokeDOMverdi,nessun browser/mobile nuovo. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: proposta selezione documenti ricevuti/prodotti e dati da conservare nella casa;solo specifica da validare,nessun nuovo default. [Policy](v5/agency-gift-document-policy-proposal-20261031.md).
