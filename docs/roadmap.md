@@ -1,3 +1,7 @@
+## Agenzie — aree non censite, 31 ottobre 2026
+
+Ricerca locale indipendente, diagnostica della seconda revisione e proposta esplicita: corridoio noto intercettato più area porta dubbia, 10 contorni precedenti invariati. 654/654 backend, 59/59 UI, 19/19 DB-HTTP-worker e build/lint; nessuna nuova AI/browser/deploy. È il primo controllo di componenti chiuse, non una garanzia di completezza. [Report](v5/agency-unassigned-areas-20261031.md).
+
 ## Agenzie — regressione PDF noto, 30 ottobre 2026
 
 Verifica locale senza nuove AI o codice: A4 e barra del PDF1:200 differiscono circa0,24% sulle aree;10contorni senza overlap ma corridoio omesso nel censimento cached e simboli aperti. Non campione indipendente o collaudo nuovo del prompt. [Evidenze](v5/agency-original-pdf-regression-20261030.md).

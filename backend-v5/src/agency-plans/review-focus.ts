@@ -5,6 +5,7 @@ import type {SeedProposal} from './pipeline';
 /** Deterministic view windows from model observations; no case-specific coordinates. */
 export function reviewFocus(r:Raster,previous:SeedProposal|null,segmentation:Segmentation|null){
  assertRaster(r);const anchors:Array<{id:string;center:Point;radius:number}>=[];
+ for(const c of segmentation?.coverage?.candidates||[]){const p=c.region.points,x=p.map(v=>v[0]),y=p.map(v=>v[1]);anchors.push({id:c.region.id,center:[(Math.min(...x)+Math.max(...x))/2,(Math.min(...y)+Math.max(...y))/2],radius:Math.min(140,Math.max(70,Math.ceil(Math.max(Math.max(...x)-Math.min(...x),Math.max(...y)-Math.min(...y))/2+20)))});}
  for(const h of previous?.openings||[]){const span=Math.hypot(h.nearEnd[0]-h.nearStart[0],h.nearEnd[1]-h.nearStart[1]);anchors.push({id:h.id,center:[(h.nearStart[0]+h.nearEnd[0])/2,(h.nearStart[1]+h.nearEnd[1])/2],radius:Math.min(140,Math.max(70,Math.ceil(span*3)))});}
  for(const space of previous?.spaces||[]){if(space.kind==='bathroom'||segmentation?.issues.some(i=>i.id===space.id)){const p=space.seeds[0];if(p)anchors.push({id:space.id,center:p,radius:90});}}
  const result:Array<{id:string;origin:Point;scale:number;raster:Raster}>=[];
@@ -20,5 +21,5 @@ export function reviewFocus(r:Raster,previous:SeedProposal|null,segmentation:Seg
 /** Image overlay carries contours; text carries compact facts, not thousands of vertices. */
 export function reviewDiagnostics(segmentation:Segmentation|null){
  if(!segmentation)return null;
- return {regions:segmentation.regions.map(v=>({id:v.id,kind:v.kind,seed:v.seed,pixelArea:v.pixelArea,bounds:[Math.min(...v.points.map(p=>p[0])),Math.min(...v.points.map(p=>p[1])),Math.max(...v.points.map(p=>p[0])),Math.max(...v.points.map(p=>p[1]))],symbols:v.symbols})),issues:segmentation.issues,duplicates:segmentation.duplicates,diagnostics:segmentation.diagnostics||[]};
+ return {unassignedAreas:segmentation.coverage?{complete:false,truncated:segmentation.coverage.truncated,candidates:segmentation.coverage.candidates.map(c=>({id:c.region.id,seed:c.region.seed,pixelArea:c.region.pixelArea,neighbors:c.neighbors,requiresReview:true}))}:null,regions:segmentation.regions.map(v=>({id:v.id,kind:v.kind,seed:v.seed,pixelArea:v.pixelArea,bounds:[Math.min(...v.points.map(p=>p[0])),Math.min(...v.points.map(p=>p[1])),Math.max(...v.points.map(p=>p[0])),Math.max(...v.points.map(p=>p[1]))],symbols:v.symbols})),issues:segmentation.issues,duplicates:segmentation.duplicates,diagnostics:segmentation.diagnostics||[]};
 }

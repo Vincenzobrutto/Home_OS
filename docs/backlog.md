@@ -1046,3 +1046,7 @@ Completato il collaudo HTTP/DB/browser che mancava nella voce precedente, con so
 ### Censimento corridoi — conferma su PDF noto, 30 ottobre 2026
 
 Replay senza nuova AI sul PDF originale: il corridoio ovest non compare nelle risposte storiche, quindi il solo recupero di seed/contorni non risolve l'omissione semantica. L'ultimo prompt non è stato rieseguito in questa prova. Verificare con campioni indipendenti, senza confondere l'issue del candidato Balcone nord con il corridoio. [Report](v5/agency-original-pdf-regression-20261030.md).
+
+### Aree non censite — incremento chiuso, 31 ottobre 2026
+
+Intercettazione del corridoio tramite componente non assegnata, proposta/persistenza/revisione implementate. Resta da validare su documenti indipendenti e con revisione AI effettiva; l'area presso la porta è ancora dubbia. Non ancora implementati grafo completo dei percorsi, separazione semantica nella stessa componente, copertura degli accessori esterni all'inviluppo e garanzia universale. Il corridoio aveva un seed alternativo di un altro disimpegno, non un ID autonomo: precisazione della precedente diagnosi di omissione. [Evidenze](v5/agency-unassigned-areas-20261031.md).

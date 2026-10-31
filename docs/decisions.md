@@ -1369,3 +1369,7 @@ Vani e perimetro commerciale rimangono viste della stessa fonte ma geometrie dis
 ### Agenzie — A4 predefinito come ipotesi tracciata, 30 ottobre 2026
 
 Su indicazione del committente il formato iniziale è A4, modificabile. La sola scala stampata con un'immagine non fornisce dimensioni assolute: si assume il foglio intero, si controllano proporzioni e si conserva provenienza paper, senza dichiararla scala verificata. Nessuna correzione prospettica implicita; ritagli compatibili col formato rimangono possibili. Superfici stimate disponibili, totale verificato sospeso fino a riferimento metrico. [Implementazione](v5/agency-paper-calibration-20261030.md).
+
+### Agenzie — geometrie senza assegnazione non equivalgono a stanze confermate, 31 ottobre 2026
+
+La copertura dipende dalle componenti effettivamente ricostruite, non dal solo elenco o dalle alternative dei semi AI. Il motore propone regioni chiuse plausibili con seed dai pixel, senza inferire proprietà/destinazione o modificare i vani canonici. Rapporto complete:false e adozione esplicita con verifiche ancora aperte; diagnostica/immagini entrano nella revisione esistente. L'inviluppo convesso e i vicini sono euristiche geometriche, non perimetro legale o prova di esaustività. [Implementazione e limiti](v5/agency-unassigned-areas-20261031.md).

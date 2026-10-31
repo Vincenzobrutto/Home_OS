@@ -1,3 +1,4 @@
+import {discoverUnassignedAreas} from './coverage';
 import { createHash } from 'node:crypto';
 import {annexCensus,recoverAnnexInventory} from './recognition-rules';
 import {recoverOpenings,type OpeningHint} from './opening-recovery';
@@ -5,7 +6,7 @@ import {createSurfaceProposal,surfaceProposalDigest,roomGeometryDigest,type Surf
 import {proposeInkThreshold} from './contrast';
 import {previewVirtualThresholds,proposeThresholds} from './recognition-rules';
 import { evidenceCurrent, requirePractice, type Actor, type Evidence, type Practice } from '../agency-practices/domain';
-import { assert, filled, PlanError, type Point } from './geometry';
+import { assert, filled, overlaps, PlanError, type Point } from './geometry';
 import { assertRaster, segmentPlan, type Raster, type RasterConfig, type SeedSpace, type Segmentation, type SymbolRequest } from './raster';
 export type SeedProposal={spaces:SeedSpace[];symbols:SymbolRequest[];warnings:string[];openings?:OpeningHint[]};
 export type PlanProof=Pick<Evidence,'sourceId'|'version'|'sha256'|'page'>;
@@ -38,7 +39,7 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  const raster=await ports.loadRaster(input.proof);assertRaster(raster);await authorized(ports,input.proof,scope);
  const rasterSHA256=createHash('sha256').update(raster.gray).digest('hex'),rasterSize={width:raster.width,height:raster.height};
  const rendering=raster.rendering?structuredClone(raster.rendering):null;
- const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v8-contrast-proposal'})).digest('hex');
+ const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v9-coverage'})).digest('hex');
  const calls:Array<{phase:string;requestId:string;input:number;output:number;costUSD:number}>=[];
  async function call(phase:'inventory'|'review',previous:SeedProposal|null,segmentation:Segmentation|null){
   await authorized(ports,input.proof,scope);await ports.reserve(input.runId,phase,fingerprint,input.maxUSDPerCall);await authorized(ports,input.proof,scope);
@@ -48,7 +49,7 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
   // Settle even if semantic output is invalid, authorization expires or reported spend exceeds reservation.
   const usage={requestId:result.requestId,input:result.inputTokens,output:result.outputTokens,costUSD:result.costUSD};await ports.settle(input.runId,phase,usage);calls.push({phase,...usage});await authorized(ports,input.proof,scope);assert(result.costUSD<=input.maxUSDPerCall,'provider_cost_exceeded');return parseSeedProposal(result.proposal);
  }
- const first=await call('inventory',null,null),initial=segmentPlan(raster,recoverAnnexInventory(first.spaces),first.symbols,input.config),review=await call('review',first,initial);
+ const first=await call('inventory',null,null),initial=segmentPlan(raster,recoverAnnexInventory(first.spaces),first.symbols,input.config);initial.coverage=discoverUnassignedAreas(raster,first.spaces,first.symbols,input.config,initial.regions);const review=await call('review',first,initial);
  let final=segmentPlan(raster,recoverAnnexInventory(review.spaces),review.symbols,input.config);const retainedSymbols:string[]=[];
  // Prevent observed regression: retain a valid, same-id/same-parent symbol proposal if review fails it.
  const merged=structuredClone(review);
@@ -59,6 +60,9 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  const openingRecovery=recoverOpenings(raster,recoverAnnexInventory(merged.spaces),merged.symbols,input.config,merged.openings||[]);final=openingRecovery.segmentation;
  for(const opening of openingRecovery.reviews)final.issues.push({id:opening.id,code:opening.state==='proposed_recovery'?'opening_recovery_requires_review':'opening_requires_review'});
  await authorized(ports,input.proof,scope);
+ final.coverage=discoverUnassignedAreas(raster,merged.spaces,merged.symbols,input.config,final.regions);
+ if(final.coverage.candidates.length)final.issues.push({id:'coverage',code:'coverage_candidate_pending'});
+ if(final.coverage.truncated)final.issues.push({id:'coverage',code:'coverage_search_limited'});
  const annexInventory=annexCensus(merged.spaces,final.regions.map(r=>r.id));
  const warnings=[...annexInventory.filter(a=>a.reviewExclusion).map(a=>'annex_exclusion_requires_review:'+a.id),...first.warnings,...review.warnings,...retainedSymbols.map(id=>'retained_previous_symbol:'+id)];
  let surfaceProposal:SurfaceProposal|null=null;const cuts=openingRecovery.reviews.filter(v=>v.state==='proposed_recovery'&&v.threshold).map(v=>v.threshold!);
@@ -69,6 +73,13 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
   const safe=adapted.regions.length>0&&!adapted.issues.some(i=>i.code==='region_overlap')&&!adapted.regions.some(region=>excluded.some(s=>s.seeds.some(seed=>filled(seed,region))));
   if(safe){surfaceProposal={digest:'',state:'pending',sourceFingerprint:fingerprint,baseGeometryRevision:1,baseGeometryDigest:roomGeometryDigest(final.regions),baseIssues:structuredClone(final.issues),rooms:adapted.regions,issues:[...adapted.issues,...final.issues.filter(issue=>issue.code.startsWith('opening_')),{id:'contrast',code:'contrast_requires_review'}],summary:{doorArcs:0,serviceCells:0,exteriorStrips:0},contrast};surfaceProposal.digest=surfaceProposalDigest(surfaceProposal);}else warnings.push('contrast_proposal_unresolved');
  }}
+ if(final.coverage.candidates.length){
+  const current=surfaceProposal?.rooms||final.regions,additions=final.coverage.candidates.filter(c=>!current.some(v=>overlaps(v,c.region))).slice(0,Math.max(0,100-current.length));
+  if(additions.length){const rooms=[...structuredClone(current),...additions.map(c=>structuredClone(c.region))],issues=(surfaceProposal?.issues||final.issues).filter(v=>v.code!=='coverage_candidate_pending');
+   for(const c of final.coverage.candidates)issues.push({id:c.region.id,code:additions.some(v=>v.region.id===c.region.id)?'coverage_area_requires_review':'coverage_area_conflict'});
+   const coverage={candidateIds:additions.map(v=>v.region.id),truncated:final.coverage.truncated};surfaceProposal={...(surfaceProposal||{}),digest:'',state:'pending',sourceFingerprint:fingerprint,baseGeometryRevision:1,baseGeometryDigest:roomGeometryDigest(final.regions),baseIssues:structuredClone(final.issues),rooms,issues,summary:{...(surfaceProposal?.summary||{doorArcs:0,serviceCells:0,exteriorStrips:0}),unassignedAreas:additions.length},coverage};surfaceProposal.digest=surfaceProposalDigest(surfaceProposal);
+  }
+ }
  await authorized(ports,input.proof,scope);
  // AI review never certifies coverage: agent confirms scope/scale/symbols and computation separately.
  return {runId:input.runId,fingerprint,rasterSize,rasterSHA256,rendering,proof:structuredClone(input.proof),scope,initial,final,surfaceProposal,proposal:merged,annexInventory,openingReviews:openingRecovery.reviews,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:surfaceProposal||final.issues.length||annexInventory.some(a=>a.reviewExclusion)?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};

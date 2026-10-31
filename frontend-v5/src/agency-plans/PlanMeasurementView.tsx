@@ -5,7 +5,7 @@ import {PlanSurfaceSummary} from './PlanSurfaceSummary';
 import styles from './plan-measurement.module.css';
 export type Point=[number,number];
 export type PlanShape={id:string;label:string;points:Point[];holes:Point[][]};
-export type PlanMeasurementProps={scopeKey:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];perimeter:PlanShape|null;issues:string[];onChange:(view:'rooms'|'perimeter',shape:PlanShape)=>void;onCreatePerimeter:()=>void;readOnly?:boolean;configuration?:MeasurementConfiguration|null;measurement?:PlanMeasurementReport|null;measurementsOutdated?:boolean};
+export type PlanMeasurementProps={scopeKey:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];perimeter:PlanShape|null;issues:string[];onChange:(view:'rooms'|'perimeter',shape:PlanShape)=>void;onCreatePerimeter:()=>void;readOnly?:boolean;configuration?:MeasurementConfiguration|null;measurement?:PlanMeasurementReport|null;measurementsOutdated?:boolean;candidateIds?:string[]};
 const path=(s:PlanShape)=>[s.points,...s.holes].map(p=>'M'+p.map(v=>v.join(',')).join('L')+'Z').join('');
 /** Controlled editor: source URL is supplied only after source authorization; no localStorage or live API side effects. */
 export function PlanMeasurementView(props:PlanMeasurementProps){return <PlanMeasurementEditor key={props.scopeKey} {...props}/>;}
@@ -23,6 +23,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
    <button type="button" role="tab" aria-selected={view==='rooms'} onClick={()=>mode('rooms')}>Singoli vani</button>
    <button type="button" role="tab" aria-selected={view==='perimeter'} onClick={()=>mode('perimeter')}>Perimetro commerciale</button>
   </div>
+  {!!props.candidateIds?.length&&<p>Arancione: aree non censite da verificare, non vani confermati.</p>}
   <p>{view==='rooms'?'Vani e pertinenze restano distinti. Le geometrie sono proposte da controllare.':'Il perimetro lordo comprende i muri interni: il dettaglio dei vani resta disponibile e non viene sommato di nuovo. Balconi e altre pertinenze si computano separatamente.'}</p>
   {props.issues.length>0&&<div role="status" className={styles.warning}><strong>Da verificare</strong><ul>{props.issues.map((issue,i)=><li key={i}>{issue}</li>)}</ul></div>}
   {view==='perimeter'&&!props.perimeter&&<div className={styles.warning}><p>Il perimetro lordo non è ancora disponibile. La somma degli interni non lo sostituisce.</p><button type="button" disabled={props.readOnly} onClick={props.onCreatePerimeter}>Definisci perimetro</button></div>}
@@ -37,7 +38,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
    onPointerMove={e=>{if(dragging===null||!selected||props.readOnly)return;const matrix=e.currentTarget.getScreenCTM();if(!matrix)return;const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(matrix.inverse()),next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points;points[dragging]=[Math.max(0,Math.min(props.width,p.x)),Math.max(0,Math.min(props.height,p.y))];change(next,false);}}
    onPointerUp={()=>setDragging(null)} onPointerCancel={()=>setDragging(null)}>
    <image href={props.sourceUrl} x="0" y="0" width={props.width} height={props.height}/>
-   {showLines&&shapes.map(s=><path key={s.id} data-testid={`shape-${s.id}`} d={path(s)} fill="rgba(0,125,154,.08)" fillRule="evenodd" stroke={s.id===selected?.id?'#006d80':'#c73572'} strokeWidth={Math.max(props.width/800,1)} onClick={()=>{setSelection(s.id);setRingIndex(0);setVertex(null);}}/>)}
+   {showLines&&shapes.map(s=><path key={s.id} data-testid={`shape-${s.id}`} d={path(s)} fill={props.candidateIds?.includes(s.id)?'rgba(255,155,0,.2)':'rgba(0,125,154,.08)'} fillRule="evenodd" stroke={props.candidateIds?.includes(s.id)?'#b76b00':s.id===selected?.id?'#006d80':'#c73572'} strokeWidth={Math.max(props.width/800,1)} onClick={()=>{setSelection(s.id);setRingIndex(0);setVertex(null);}}/>)}
    {showLines&&selected&&!props.readOnly&&ring.map((p,i)=><g key={i}>
     {insert&&<circle role="button" aria-label={`Inserisci punto sul lato ${i+1}`} tabIndex={0} cx={(p[0]+ring[(i+1)%ring.length]![0])/2} cy={(p[1]+ring[(i+1)%ring.length]![1])/2} r={props.width/150} fill="#ffa620" onClick={()=>add(i)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();add(i);}}}/>}
     <circle role="button" aria-label={`Vertice ${i+1}`} tabIndex={0} cx={p[0]} cy={p[1]} r={props.width/200} fill={vertex===i?'#ffa620':'white'} stroke="#006d80" strokeWidth={props.width/800} onPointerDown={e=>{e.preventDefault();setVertex(i);setDragging(i);setUndo(u=>[...u.slice(-49),{view:shapeView,shape:structuredClone(selected)}]);e.currentTarget.ownerSVGElement?.setPointerCapture(e.pointerId);}} onClick={()=>setVertex(i)} onKeyDown={e=>{if(e.key==='Enter')setVertex(i);}}/>
