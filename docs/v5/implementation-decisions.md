@@ -246,3 +246,7 @@ Una ricevuta di registrazione metadati non basta senza il record cui si riferisc
 Confermato da Vincenzo in chat il31ottobre2026:alla stipula l'agente seleziona documenti e opzionalmente un anno a pagamento;condivide un link personale.Il nuovo proprietario si registra o accede all'account esistente,accetta e usa Dimora come normale utente con la casa e i documenti ricevuti.L'anno opzionale decorre dall'accettazione;alla scadenza casa/documenti restano.Multiutenza,cointestatari e inviti aggiuntivi rimandati:un solo account destinatario nella v1.Nessun accesso Agency implicito alle aggiunte del cliente.
 
 Decisione di prodotto confermata,non flusso già implementato.Invito/copia/entitlement restano da sviluppare.Costo agenzia,features avanzate,rinnovo e account già premium da definire.Il contratto aggiornato supera le precedenti ipotesi multi-destinatario.[Gift v1](agency-gift-home-copy-contract-20261031.md).
+
+## Gift v1 — claim distinto da accettazione e beneficio
+
+Il dominio invito associa un account verificato singolo,ma non crea Home,membership,copia o diritto premium. Landing anonima non espone documenti/email/Home. Segreto hashato;manifesto e scelta beneficio congelati. Il resolver account e fingerprint fonti sono porte server,mai campi autorevoli del browser. sourceFingerprint non include la revisione generale della pratica per evitare auto-invalidazione al salvataggio dell'invito. Persistenza/ledger inviti ancora da implementare.[Primo incremento](agency-gift-invitations-v1-20261031.md).

@@ -1078,3 +1078,5 @@ Ordine di implementazione:
 4. Collegamento UI e collaudo nuovo cliente/cliente esistente,revoca,timeout e scadenza benefit;documenti restano all'utente.
 
 Multiutenza e più intestatari FUORI dalla v1,compresi i precedenti ticket/casi concorrenti fra destinatari distinti.Il guard del pacchetto/anteprima ora deve accettare un solo riferimento.[Contratto corrente](v5/agency-gift-home-copy-contract-20261031.md).Nessun link reale inviato o addebito attivato.
+
+Gift v1,prossimo:ledger inviti persistito con idempotenza creazione,riemissione dopo risposta persa senza segreto salvato in chiaro,adapter auth/fonte corrente e testDBisolati.Il dominio claim non equivale ad accettazione.[Stato](v5/agency-gift-invitations-v1-20261031.md).
