@@ -1,6 +1,6 @@
 # Integrazione Agenzie nel consolidamento — 31 ottobre 2026
 
-Stato: candidato verificato, pronto all'aggiornamento autorizzato del ramo comune; nessun deploy. Il riscontro remoto è registrato nella sezione Pubblicazione dopo il push.
+Stato: intera PR #71 integrata e riscontro remoto verificato sul ramo comune; nessun deploy. Le verifiche sono quelle del candidato descritto sotto, con codice di prodotto invariato.
 
 ## Origine e conservazione del lavoro
 
@@ -47,3 +47,9 @@ AppModule usa `agencyApplicationImports`. Capabilities richiedono sessione; modu
 ## Prossimo sviluppo
 
 Il committente ha concordato modulo Agenzie distinto nella stessa architettura, con incrementi brevi dalla base comune aggiornata e integrazione frequente. Prima di nuovo codice verificare remoto e lotti concorrenti. Rilascio/configurazione e modello d'incarico rimangono decisioni separate; questo lotto non li autorizza implicitamente.
+
+## Pubblicazione verificata
+
+Aggiornato con push ordinario il solo ramo `codex/dimora-v5-consolidata-20261023`, da `dd52a6af580dedf1641cb2308620c338f2184ae0` a `aaf8f024ffafe75afcfdb455d85ef7fc1499b31a`, verificato con ls-remote dopo il push. GitHub conferma PR71chiusa/merged; merge della PR `a2d2cac1e6538834cc27fd243ee9ee148935d30a`. Questo successivo commit è solo registrazione della pubblicazione.
+
+Sorgente Agenzie resta `7b02700e0e7beb98c8e62d5660ca1bd969f6b903`; main resta `cdbb318ddb56e764ad4b111a71560e3e71c7a033`, entrambi verificati dopo la pubblicazione. Nessun aggiornamento dei checkout storici o runtime. Le successive lavorazioni useranno la punta remota del consolidamento, non il suo vecchio checkout locale.

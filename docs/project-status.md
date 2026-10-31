@@ -1,8 +1,8 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
-## Integrazione Agenzie — 31 ottobre 2026, in verifica
+## Integrazione Agenzie — 31 ottobre 2026, conclusa
 
-Candidato verificato `codex/agenzie-integrazione-20261031` dalla base remota `dd52a6a`, intera PR #71 (`7b02700`, 67 commit), senza conflitti o modifiche al codice prodotto della PR. Backend658/658, frontend1743/1743(172file), DB/API700/700 e cestino42/42 su due cluster nuovi arrestati, statici/build verdi. Pronto all'aggiornamento autorizzato del ramo comune; nessun deploy o migrazione prodotto, main/demo Alessio invariati. [Registro integrazione e limiti](v5/agency-consolidation-20261031.md).
+Candidato verificato `codex/agenzie-integrazione-20261031` dalla base remota `dd52a6a`, intera PR #71 (`7b02700`, 67 commit), senza conflitti o modifiche al codice prodotto della PR. Backend658/658, frontend1743/1743(172file), DB/API700/700 e cestino42/42 su due cluster nuovi arrestati, statici/build verdi. Integrato nel ramo comune: push aaf8f02verificato e PR71merged; nessun deploy o migrazione prodotto, main/demo Alessio invariati. [Registro integrazione e limiti](v5/agency-consolidation-20261031.md).
 
 ## Agenzie — scelta delle aree proposte
 
