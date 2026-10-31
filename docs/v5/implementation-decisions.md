@@ -250,3 +250,7 @@ Decisione di prodotto confermata,non flusso già implementato.Invito/copia/entit
 ## Gift v1 — claim distinto da accettazione e beneficio
 
 Il dominio invito associa un account verificato singolo,ma non crea Home,membership,copia o diritto premium. Landing anonima non espone documenti/email/Home. Segreto hashato;manifesto e scelta beneficio congelati. Il resolver account e fingerprint fonti sono porte server,mai campi autorevoli del browser. sourceFingerprint non include la revisione generale della pratica per evitare auto-invalidazione al salvataggio dell'invito. Persistenza/ledger inviti ancora da implementare.[Primo incremento](agency-gift-invitations-v1-20261031.md).
+
+## Gift v1 — persistenza e permessi delle mutazioni invito
+
+Creazione/revoca richiedono edit+export;landing/claim di un invito esistente ricontrollano export dell'emittente e fonti correnti. Account verificato letto dal DB,sotto lock;nessuna prova dal client. Ledger relazionale separato,snapshot confrontato alle colonne e digest comando ricostruito dal manifesto. Segreto solo nel primo esito dopo commit,mai nel DB o nel replay. Dati dichiarati di stipula/rilascio attribuiti e conservati. Riemissione esplicita e copier restano futuri.[Report](agency-gift-invitation-persistence-20261031.md).

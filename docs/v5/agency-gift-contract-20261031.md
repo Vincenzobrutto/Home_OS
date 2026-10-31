@@ -133,3 +133,7 @@ Cinque domande pratiche pronte per l'agenzia;risposte ancora da raccogliere,non 
 ## Avvio implementazione autorizzata inviti
 
 Primo [dominio inviti](agency-gift-invitations-v1-20261031.md) implementato:47mirati/706ordinari,build/lint verdi. Candidato interno e claim senza Home/beneficio,persistenza e route ancora assenti. Il piano operativo corrente è negli outputs della chat,Dimora-Gift-v1-piano-implementazione-20261031.txt. Prossimo:registro inviti durevole e adapter auth/fonti con testDBnuovi.
+
+## Ledger inviti persistente
+
+Completato il secondo incremento:modello/migrazione Gift dedicati,create/landing/claim/revoke interni,identità DB,edit+export sulle mutazioni e source currentness;47mirati/706ordinari/33DBverdi.Nessuna APIo copia.[Report](agency-gift-invitation-persistence-20261031.md).

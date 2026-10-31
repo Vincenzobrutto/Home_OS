@@ -536,7 +536,9 @@ profiles.test.files.push('test/agency-gift-packet.test.cjs');
 
 profiles.test.files.push('test/agency-gift-registry.test.cjs');
 
-profiles['test:agency-gift-db']={database:true,api:false,files:['test/agency-gift.integration.test.cjs'],apiFiles:[]};
+profiles['test:agency-gift-db']={database:true,api:false,files:['test/agency-gift.integration.test.cjs','test/agency-gift-invitations.integration.test.cjs'],apiFiles:[]};
 profiles['test:offline-db'].files.push('test/agency-gift.integration.test.cjs');
 
 profiles.test.files.push('test/agency-gift-invitations.test.cjs');
+
+profiles['test:offline-db'].files.push('test/agency-gift-invitations.integration.test.cjs');

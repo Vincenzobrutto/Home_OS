@@ -25,3 +25,5 @@ Le configurazioni e i comandi legacy nell’archivio sono evidenza storica. Non 
 ## Agenzie — cablaggio nel candidato del31ottobre2026
 
 Il modulo usa scope Agency/Practice separati dalle case, riutilizzando sessione/Origin/CSRF e infrastruttura V5. `AppModule` include `agencyApplicationImports`: capabilities autenticate e modulo applicativo solo con `DIMORA_AGENCY_STORAGE_ROOT` esplicita; provider planimetrie con abilitazione e credenziali dedicate, mai fallback simulato nel prodotto. Navigazione autenticata `/agenzie` e `/agenzie/:agencyId/pratiche/:practiceId`, con fascicolo/revisione e workspace vani/superficie commerciale distinti. Migrazioni additive presenti nel codice, non applicate al DB dell'app da questo lotto. Modello d'incarico approvato e orchestrazione AI degli atti ancora mancanti. [Stato dell'integrazione](v5/agency-consolidation-20261031.md).
+
+Gift v1 ha un ledger inviti interno separato dalla condivisione C1a;riusa contesto/lock Agency e identità Account,senza creare Home dal claim.[Persistenza](v5/agency-gift-invitation-persistence-20261031.md).

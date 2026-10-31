@@ -29,3 +29,7 @@ L'invito non crea membership né trasferisce originali. Prima di accettazione re
 Prossimo task:persistenza degli inviti e prova di creazione/claim/revoca su nuovo cluster posseduto,senza accesso a servizi esistenti. Modulo corrente agency-practices/gift-invitations.ts;test agency-gift-invitations.test.cjs incluso nel runner offline standard.
 
 Regressione ordinaria dopo integrazione nel runner:706/706verdi,zero falliti/saltati (include47Giftmirati).Log gift-invitations-regression.log. Primo tentativo build ha richiesto dichiarazione funzione never per il narrowing TypeScript;lint regex controlli corretto con charCodeAt,senza indebolire le verifiche.
+
+## Incremento successivo completato
+
+Ledger relazionale e adapter auth/fonti ora implementati e collaudati:33DBGiftcomplessivi (14metadata+19inviti),706ordinari,47mirativerdi.Nessuna route,copiaHome o premium attivi.[Stato corrente](agency-gift-invitation-persistence-20261031.md).

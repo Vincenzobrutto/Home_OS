@@ -144,3 +144,7 @@ openingReviews è metadato opzionale nello snapshot JSON già esistente, distint
 ### Proposta superfici e adozione
 
 Metadato surfaceProposal nello snapshot JSON esistente, nessuna migrazione: pending/applied/stale, digest canonico, binding all'analisi e alla geometria base, contorni/issues/summary, acceptedAt/acceptedBy dopo adozione. Cambi geometrici invalidano una proposta pending. Origine geometry_proposal distinta da manual, storico preservato e computo invalidato. sourceReadable/evidenceCurrent continuano a proteggere tutto il derivato. [Report corrente](agency-surface-integration-20261030.md).
+
+## Gift v1 — ledger inviti separato dal fascicolo
+
+AgencyGiftInvitation persiste manifesto/hash,chiave+digest creazione,scope,versione/stato/scadenza e account associato;unique pratica/emittente/key,tokenHash univoco,FK e controlli stato/claim. Il segreto non è persistito;claim non crea Home o entitlement. Snapshot e colonne sono verificati insieme. Migrazione solo collaudata su cluster nuovi. [Report](agency-gift-invitation-persistence-20261031.md).

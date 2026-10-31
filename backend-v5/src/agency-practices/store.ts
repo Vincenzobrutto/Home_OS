@@ -230,6 +230,12 @@ export class AgencyPracticesStore {
       return { bytes, mimeType: file.mimeType, originalFilename: file.originalFilename, sha256: file.sha256, version: file.version };
     }, { maxWait: 5000, timeout: 15000 });
   }
+  /** Internal transaction port for the Gift ledger; never exposed as an HTTP operation. */
+  async giftInvitationContext(tx:Prisma.TransactionClient,accountId:string,agencyId:string,practiceId:string){
+    const result=await this.context(tx,accountId,agencyId,practiceId);
+    requirePractice(result.actor,result.practice,'export',new Date().toISOString());
+    return result;
+  }
   private async context(tx: Prisma.TransactionClient, accountId: string, agencyId: string, practiceId: string) {
     // Row locking serializes state+ledger writes. Membership/grant locks make revocation race-safe.
     await tx.$queryRaw`SELECT id FROM "AgencyMember" WHERE "accountId"=${accountId} AND "agencyId"=${agencyId} FOR SHARE`;

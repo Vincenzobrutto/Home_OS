@@ -12,6 +12,8 @@ enum HomeRole {
   viewer
 }
 model Account {
+  issuedGiftInvitations AgencyGiftInvitation[] @relation("GiftIssuer")
+  claimedGiftInvitations AgencyGiftInvitation[] @relation("GiftClaimant")
   agencyMembers AgencyMember[]
   agencyGrants AgencyPracticeGrant[]
   agencyCreateRequests AgencyCreateRequest[]
@@ -73,6 +75,7 @@ model Account {
 }
 
 model Agency {
+  giftInvitations AgencyGiftInvitation[]
   id String @id @default(uuid())
   name String
   createdAt DateTime @default(now())
@@ -132,6 +135,7 @@ model AgencyMember {
 }
 
 model AgencyPractice {
+  giftInvitations AgencyGiftInvitation[]
   id String @id @default(uuid())
   agencyId String
   label String
@@ -1389,4 +1393,29 @@ model DeletionRecord {
   home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
   @@unique([resourceKind, resourceId])
   @@index([fileRemovedAt, deletedAt])
+}
+
+// Internal Gift v1 ledger. No raw invitation secret or automatic Home entitlement.
+model AgencyGiftInvitation {
+  id String @id
+  agencyId String
+  practiceId String
+  issuerAccountId String
+  creationKey String
+  creationDigest String
+  tokenHash String @unique
+  version Int
+  state String
+  expiresAt DateTime
+  claimedAccountId String?
+  snapshot Json
+  createdAt DateTime
+  updatedAt DateTime @updatedAt
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  issuer Account @relation("GiftIssuer",fields:[issuerAccountId],references:[id],onDelete:Restrict)
+  claimant Account? @relation("GiftClaimant",fields:[claimedAccountId],references:[id],onDelete:Restrict)
+  @@unique([practiceId,issuerAccountId,creationKey])
+  @@index([agencyId,practiceId,state])
+  @@index([expiresAt,id])
 }

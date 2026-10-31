@@ -317,3 +317,5 @@ Gift: proposta selezione documenti ricevuti/prodotti e dati da conservare nella 
 Gift v1 confermata:un account,link→registrazione/accesso→accettazione→casa,anno opzionale. Multiutenza rimandata.Guard/preview e fixture allineati,690backend/14DB/21UIverdi;invito/copia/entitlement ancora backlog.[Contratto](v5/agency-gift-home-copy-contract-20261031.md).
 
 Gift v1:primo dominio invito/claim/revoca,16nuovi casi e47mirati verdi,nessuna Home/premium/route o persistenza inviti attivi.[Report](v5/agency-gift-invitations-v1-20261031.md).
+
+Gift v1:ledger inviti persistente,auth DB,edit+export e controlli fonti/claim,47mirati/706ordinari/33DBverdi su nuovo cluster arrestato.Nessuna API,copia Home o benefit attivi.[Report](v5/agency-gift-invitation-persistence-20261031.md).

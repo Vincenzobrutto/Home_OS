@@ -1080,3 +1080,5 @@ Ordine di implementazione:
 Multiutenza e più intestatari FUORI dalla v1,compresi i precedenti ticket/casi concorrenti fra destinatari distinti.Il guard del pacchetto/anteprima ora deve accettare un solo riferimento.[Contratto corrente](v5/agency-gift-home-copy-contract-20261031.md).Nessun link reale inviato o addebito attivato.
 
 Gift v1,prossimo:ledger inviti persistito con idempotenza creazione,riemissione dopo risposta persa senza segreto salvato in chiaro,adapter auth/fonte corrente e testDBisolati.Il dominio claim non equivale ad accettazione.[Stato](v5/agency-gift-invitations-v1-20261031.md).
+
+Gift:ledger inviti completato come porta interna;prossimo copier con nome/indirizzo Home approvati e provenienza Gift esplicita (Documentoggi manual_upload),receipt recuperabile e poi API/UI.Riemissione token dopo risposta persa da collegare;offerta premium ancora indisponibile.[Stato](v5/agency-gift-invitation-persistence-20261031.md).
