@@ -1,5 +1,17 @@
 # Agency → Gift → Home — incremento31ottobre2026
 
+## Quadro corrente per la revisione — 31 ottobre,20UTCcirca
+
+Ramo dedicato `codex/agency-gift-contract-20261031`, PR draft72 verso la base comune cbddcf0;nessun merge o deploy. Implementati pacchetto interno,registro metadati,adapter transazionale e anteprima controllata isolata. Ultima correzione runtime:8fbc976,replay legato al record originario. Export sintetico autosufficiente riproducibile con gli script del frontend;non collegato all'app e non sostituisce il collaudo planimetrie scaduto.
+
+Verificato:30/30backend mirati,689/689ordinari,13/13DBsu nuovo cluster arrestato,20/20UI;build/lint e typecheck mirati verdi. Export controllato in DOM sintetico senza rete. Non verificato:nuovo browser/375px,file://reale,crash recovery o trasferimento Home. Revisioni e controlli descritti sono self-review dell'autore,non audit indipendente.
+
+Non disponibile:producer documentale collegato,route Gift,consegna,presa in carico,copia indipendente Home,nuovi accessi o aggiornatore documenti del proprietario. Nessun modello incarico approvato. Le funzioni interne non certificano identità,fonte/firma,conformità o completezza e non consentono invio. Non basta porre canDeliver=true.
+
+Per proseguire:validare [copia e autorità](agency-gift-home-copy-contract-20261031.md),[minacce/recupero e ticket](agency-gift-threats-and-recovery-20261031.md),[selezione documenti proposta](agency-gift-document-policy-proposal-20261031.md). Nessuna di queste proposte è stata confermata da un'agenzia reale. L'aggiunta dei documenti del proprietario senza accesso Agency implicito è requisito fondamentale da provare quando la copia sarà realizzata,non un nuovo test end-to-end già eseguito.
+
+La cronologia seguente conserva i conteggi storici per incremento;il quadro sopra è il riferimento corrente. Non sommare le suite mirate ai totali ordinari che già le includono,né chiamare13test DBtredici casi indipendenti:il numero comprende12sottocasi e il contenitore.
+
 ## Stato iniziale e perimetro
 
 Registrato prima del codice;base comune cbddcf0884cdc17cfeff41daf7ba6cbe4ccd999e. Ramo codex/agency-gift-contract-20261031, checkout dedicato. Piano autorizzato fino23Europe/Rome:contratto,dominio puro di preparazione e adapter,prove sintetiche,poi anteprima o persistenza solo se verificate e circoscritte. Nessuna Gift pubblicata o owner membership creata dalla preparazione. Push del ramo e PRdraft;nessun merge/deploy automatico.
