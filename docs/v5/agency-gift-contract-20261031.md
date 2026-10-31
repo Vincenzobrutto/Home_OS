@@ -77,3 +77,9 @@ Aggiunte fixture sintetiche:input in fixtures/agency-gift/input-v1.json e pacche
 Verifiche dopo questo incremento:28/28backend mirati,20/20UI,typecheck e lint mirati,build harness verdi. Nessun codice runtime backend modificato e nessun test DB/ordinario completo ripetuto:686/686ordinari e12/12DBrestano gli esiti storici del terzo incremento,non dichiarare687test ordinari eseguiti. Primo import fixture fuori dal root frontend è stato rifiutato da Vite:spostato il payload dentro tests/fixtures,senza estendere filesystem allowlist o disabilitare guardie. Lint ha segnalato un escape superfluo nella regex del test,corretto a pari significato. Nessun collaudo browser o trasferimento Home nuovo.
 
 Prossimo:lavoro indipendente sulla revisione/congelamento della selezione o sulle minacce/casi di copia. Non creare endpoint di accettazione,link pubblici o nuovi grant finché identità e autorità della presa in carico non sono definite. Conservare il checkpoint e non ripetere suite già verdi senza modifiche.
+
+## Sesto incremento — confini di rilascio e recupero
+
+Aggiunto [modello delle minacce e piano di recupero](agency-gift-threats-and-recovery-20261031.md):distingue export interno da rilascio a destinatari,metadato finale da diritto di distribuzione e ricevuta di registro da ricevuta di copia.18casi di abuso con stato/evidenza,12punti di guasto da collaudare e6ticket ordinati con dipendenze/criteri d'uscita. Identità/autorità/visibilità senza account restano decisioni aperte;raccomandazioni non attivate.
+
+Solo specifica/documentazione,nessun comportamento nuovo o test eseguito per la copia. Nessuna suite verde ripetuta per documentazione;controllati link locali/diff. Non confondere i casi futuri con i28backend/20UIeseguiti sul pacchetto interno. Prossimo indipendente:review dei punti del registro e del contenitore ancora non coperti o lettura critica del contratto;non sviluppare una presa in carico arbitraria mentre manca la decisione di autorità.
