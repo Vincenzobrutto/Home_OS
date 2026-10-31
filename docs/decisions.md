@@ -1373,3 +1373,6 @@ Su indicazione del committente il formato iniziale è A4, modificabile. La sola 
 ### Agenzie — geometrie senza assegnazione non equivalgono a stanze confermate, 31 ottobre 2026
 
 La copertura dipende dalle componenti effettivamente ricostruite, non dal solo elenco o dalle alternative dei semi AI. Il motore propone regioni chiuse plausibili con seed dai pixel, senza inferire proprietà/destinazione o modificare i vani canonici. Rapporto complete:false e adozione esplicita con verifiche ancora aperte; diagnostica/immagini entrano nella revisione esistente. L'inviluppo convesso e i vicini sono euristiche geometriche, non perimetro legale o prova di esaustività. [Implementazione e limiti](v5/agency-unassigned-areas-20261031.md).
+
+### 31/10/2026 — Fasce murarie come indizio, scelta umana per candidata
+Non eliminare automaticamente componenti sottili: possono essere passaggi reali. Segnalazione relativa alla geometria, tutte incluse inizialmente, scarto esplicito limitato alle nuove candidate firmate, audit e proposta originale preservati. Nessuna rimozione di vani canonici attraverso l'adozione. [Report](v5/agency-candidate-selection-20261031.md).

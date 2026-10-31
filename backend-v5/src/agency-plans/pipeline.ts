@@ -39,7 +39,7 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  const raster=await ports.loadRaster(input.proof);assertRaster(raster);await authorized(ports,input.proof,scope);
  const rasterSHA256=createHash('sha256').update(raster.gray).digest('hex'),rasterSize={width:raster.width,height:raster.height};
  const rendering=raster.rendering?structuredClone(raster.rendering):null;
- const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v9-coverage'})).digest('hex');
+ const fingerprint=createHash('sha256').update(JSON.stringify({scope,proof:input.proof,config:input.config,rasterSize,rasterSHA256,rendering,pipeline:'raster-seeds-v10-candidate-choice'})).digest('hex');
  const calls:Array<{phase:string;requestId:string;input:number;output:number;costUSD:number}>=[];
  async function call(phase:'inventory'|'review',previous:SeedProposal|null,segmentation:Segmentation|null){
   await authorized(ports,input.proof,scope);await ports.reserve(input.runId,phase,fingerprint,input.maxUSDPerCall);await authorized(ports,input.proof,scope);
@@ -77,7 +77,7 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
   const current=surfaceProposal?.rooms||final.regions,additions=final.coverage.candidates.filter(c=>!current.some(v=>overlaps(v,c.region))).slice(0,Math.max(0,100-current.length));
   if(additions.length){const rooms=[...structuredClone(current),...additions.map(c=>structuredClone(c.region))],issues=(surfaceProposal?.issues||final.issues).filter(v=>v.code!=='coverage_candidate_pending');
    for(const c of final.coverage.candidates)issues.push({id:c.region.id,code:additions.some(v=>v.region.id===c.region.id)?'coverage_area_requires_review':'coverage_area_conflict'});
-   const coverage={candidateIds:additions.map(v=>v.region.id),truncated:final.coverage.truncated};surfaceProposal={...(surfaceProposal||{}),digest:'',state:'pending',sourceFingerprint:fingerprint,baseGeometryRevision:1,baseGeometryDigest:roomGeometryDigest(final.regions),baseIssues:structuredClone(final.issues),rooms,issues,summary:{...(surfaceProposal?.summary||{doorArcs:0,serviceCells:0,exteriorStrips:0}),unassignedAreas:additions.length},coverage};surfaceProposal.digest=surfaceProposalDigest(surfaceProposal);
+   const possibleWallIds=additions.filter(v=>v.shapeHint==='wall_band').map(v=>v.region.id),coverage={candidateIds:additions.map(v=>v.region.id),truncated:final.coverage.truncated,...(possibleWallIds.length?{possibleWallIds}:{})};surfaceProposal={...(surfaceProposal||{}),digest:'',state:'pending',sourceFingerprint:fingerprint,baseGeometryRevision:1,baseGeometryDigest:roomGeometryDigest(final.regions),baseIssues:structuredClone(final.issues),rooms,issues,summary:{...(surfaceProposal?.summary||{doorArcs:0,serviceCells:0,exteriorStrips:0}),unassignedAreas:additions.length},coverage};surfaceProposal.digest=surfaceProposalDigest(surfaceProposal);
   }
  }
  await authorized(ports,input.proof,scope);

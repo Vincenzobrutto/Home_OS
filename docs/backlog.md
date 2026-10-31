@@ -1054,3 +1054,6 @@ Intercettazione del corridoio tramite componente non assegnata, proposta/persist
 ### Benchmark v9 congelato — priorità successive, 31 ottobre 2026
 
 A: una fascia presumibilmente muraria proposta come area e due conflitti con geometrie già corrette; distinguere muri/grafica da pavimento e usare la copertura effettiva delle correzioni pendenti. B: base vuota prima del contrasto, poi9geometrie con ingresso unito; portare il controllo anche sulla proposta ottica e separare la componente con evidenze di aperture. Nessuna modifica alle regole effettuata durante il confronto, dati negativi conservati. [Report](v5/agency-unassigned-secondary-benchmark-20261031.md).
+
+### Agenzie — residui dopo selezione candidate (31/10)
+Implementato scarto selettivo pre-adozione e indizio fascia muraria; restano ricerca di copertura sulle proposte di contrasto, separazione di ambienti comunicanti e valutazione di eliminazione esplicita dei vani già adottati. Nessuna promessa di completezza. [Report](v5/agency-candidate-selection-20261031.md).

@@ -247,3 +247,8 @@ Nuovo coverage: componenti chiuse non usate, seed a massima distanza dai tratti,
 ### 31 ottobre — due altre immagini, rilevatore congelato
 
 Su conferma utente riprodotti due casi già disponibili con b16e211 invariato, stesso profilo e proposte AI cached, hash raster verificato e nessuna spesa. A inclinata:8base/11proposta,3candidate,1aggiunta probabilmente fascia muraria e2coverage_area_conflict su correzioni già proposte. B chiara:0base/9proposta,0candidate, ingresso/vano ancora uniti. Contorni canonici e geometrie precedenti della proposta identici in entrambi, zerooverlap. Tempi locali20s/1,4s non universali. Nessuna taratura per migliorare l'esito, né nuova suite generica/AI/DB/browser/codice/demoAlessio/merge/deploy. Report agency-unassigned-secondary-benchmark-20261031.md e immagini private. Priorità: filtro fasce murarie, copertura anche sul contrasto/proposte e separazione ambienti comunicanti.
+
+## 31/10 — Selezione candidate e indizio fascia muraria
+Implementata pipeline v10 advisory, nessuna eliminazione automatica; Scarta selettivo con audit e originale firmato preservato. Backend658/658, UI60/60, build/typecheck e lint mirati verdi. Replay privati dei tre casi precedenti: geometrie invariate, zero overlap, corridoio conservato, fasce sospette segnalate. Nessun nuovo modello AI/browser/deploy o modifica demo Alessio. Primo cluster SY2mng19/20: nuovo test scarto passato; test concorrenza preesistente assumeva vincente primo input, corretto verificando il vincitore effettivo senza indebolire CAS. Esito secondo cluster registrato sotto. [Report](agency-candidate-selection-20261031.md).
+
+Finale: cluster ECINDe20/20, build e lint verdi; entrambi i cluster arrestati. Nessun server esistente toccato.

@@ -2070,3 +2070,6 @@ Specificato il collegamento AI atti con consenso/ledger e18casi di accettazione,
 ## Agenzie — checkpoint diurno finale delle verifiche
 
 Frontend completo mock1719/1719in169file,2worker/retry0;typecheck/buildfinaliverdi, nessundeploy. Fascicolomontato con API/DBreali provato su fixture; preparazioneincarico solo selezioneinternasenzamodello, noncontrattogenerato. Residui e confini nel [checkpoint diurno](v5/agency-day-checkpoint-20261030.md).
+
+## 31/10/2026 — Agenzie, selezione delle aree
+Indizio prudenziale per fasce sottili e checkbox Scarta prima dell'adozione; originali firmati conservati e selezione persistente. Backend658/UI60 verdi, zero nuove AI; demo Alessio invariata. [Report](v5/agency-candidate-selection-20261031.md).
