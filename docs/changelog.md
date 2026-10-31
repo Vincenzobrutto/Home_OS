@@ -1,3 +1,7 @@
+## Agenzie — benchmark v9 su altre due immagini, 31 ottobre 2026
+
+Regole congelate e letture cached: evidenziati falso candidato murario/conflitti e limite sugli ambienti uniti. Nessun parametro, codice o spesa modificato; contorni precedenti invariati e zero overlap. [Esiti conservati e priorità](v5/agency-unassigned-secondary-benchmark-20261031.md).
+
 ## Agenzie — aree non censite, 31 ottobre 2026
 
 Ricerca locale indipendente, diagnostica della seconda revisione e proposta esplicita: corridoio noto intercettato più area porta dubbia, 10 contorni precedenti invariati. 654/654 backend, 59/59 UI, 19/19 DB-HTTP-worker e build/lint; nessuna nuova AI/browser/deploy. È il primo controllo di componenti chiuse, non una garanzia di completezza. [Report](v5/agency-unassigned-areas-20261031.md).

@@ -1050,3 +1050,7 @@ Replay senza nuova AI sul PDF originale: il corridoio ovest non compare nelle ri
 ### Aree non censite — incremento chiuso, 31 ottobre 2026
 
 Intercettazione del corridoio tramite componente non assegnata, proposta/persistenza/revisione implementate. Resta da validare su documenti indipendenti e con revisione AI effettiva; l'area presso la porta è ancora dubbia. Non ancora implementati grafo completo dei percorsi, separazione semantica nella stessa componente, copertura degli accessori esterni all'inviluppo e garanzia universale. Il corridoio aveva un seed alternativo di un altro disimpegno, non un ID autonomo: precisazione della precedente diagnosi di omissione. [Evidenze](v5/agency-unassigned-areas-20261031.md).
+
+### Benchmark v9 congelato — priorità successive, 31 ottobre 2026
+
+A: una fascia presumibilmente muraria proposta come area e due conflitti con geometrie già corrette; distinguere muri/grafica da pavimento e usare la copertura effettiva delle correzioni pendenti. B: base vuota prima del contrasto, poi9geometrie con ingresso unito; portare il controllo anche sulla proposta ottica e separare la componente con evidenze di aperture. Nessuna modifica alle regole effettuata durante il confronto, dati negativi conservati. [Report](v5/agency-unassigned-secondary-benchmark-20261031.md).
