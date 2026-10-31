@@ -2085,3 +2085,5 @@ Indizio prudenziale per fasce sottili e checkbox Scarta prima dell'adozione; ori
 Registro Gift offline aggiunto: metadati append-only, replay/CAS e risoluzione server delle selezioni,27/27mirati; persistenza/route/Home ancora assenti. [Report](v5/agency-gift-contract-20261031.md).
 
 Gift: porte interne transazionali per registro e preparazione aggiunte,12/12DBsu cluster nuovo arrestato. Nessuna route o copia Home attiva. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: anteprima controllata e harness sintetico separato,19/19UI,typecheck/lint/buildharness verdi;nessuna route o consegna. Copia indipendente Home descritta come proposta con gap espliciti. [Report](v5/agency-gift-contract-20261031.md).

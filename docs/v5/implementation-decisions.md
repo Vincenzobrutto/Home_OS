@@ -232,3 +232,7 @@ La selezione del client non può attestare produttore, finalità, stato finale o
 ## Agenzie — registro Gift nello snapshot della pratica
 
 Il primo adapter conserva metadati/storico/ricevute nello snapshotVersion1 della pratica e nella stessa transazione CAS del fascicolo;nessuna tabella o migrazione aggiuntiva per questo incremento. Le letture precedenti senza attributi Gift restano valide. Il producer interno deve essere collegato in seguito:non si espone un endpoint che accetta descrittori arbitrari. La ricevuta persistita riguarda la registrazione metadati,non consegna/accettazione Gift. Una futura copia Home richiede una ricevuta e un'autorizzazione proprie. [Evidenze](agency-gift-contract-20261031.md).
+
+## Agenzie — anteprima Gift separata dalla presa in carico
+
+Il componente iniziale è controllato dal contenitore e non ha trasporto/delivery propri. Le fixture restano nel harness esplicito,mai fallback in app. Scope/revisione/accesso non coerenti nascondono subito i dati;la futura sessione/route deve ricontrollare l'autorità server. La copia indipendente verso Home resta un contratto proposto finché autorità,ledger,byte e receipt non siano implementati. [Contratto](agency-gift-home-copy-contract-20261031.md).
