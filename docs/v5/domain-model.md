@@ -150,3 +150,7 @@ Metadato surfaceProposal nello snapshot JSON esistente, nessuna migrazione: pend
 AgencyGiftInvitation persiste manifesto/hash,chiave+digest creazione,scope,versione/stato/scadenza e account associato;unique pratica/emittente/key,tokenHash univoco,FK e controlli stato/claim. Il segreto non è persistito;claim non crea Home o entitlement. Snapshot e colonne sono verificati insieme. Migrazione solo collaudata su cluster nuovi. [Report](agency-gift-invitation-persistence-20261031.md).
 
 Document.giftProvenance è snapshot nullable della fonte Gift selezionata,non un grant o una certificazione;sourceVersion distinta dalla versione locale,parser/SHA coerenti e clear al purge.[Report](agency-gift-copy-prerequisites-20261031.md).
+
+### Gift v1 — job di prenotazione (31 ottobre)
+
+`AgencyGiftAcceptanceJob` congela comando/digest,invito/versione/seal,fonte fingerprint,Home confermata e manifesto;ID futuri sono logici,non FK alla Home/documenti ancora inesistenti.`AgencyGiftAcceptanceItem` riserva ID e prova fonte/versione/SHA.Indice univoco parziale per pratica in queued/staging/ready/retryable/blocked_review/accepted;chiave richiesta unica per account/invito.`get` filtra per account prima della validazione e restituisce solo stato/progresso.Pubblicazione,lease operative,ricevuta e beneficio persistito NON implementati in questo incremento.[Report](agency-gift-acceptance-reservation-20261031.md).

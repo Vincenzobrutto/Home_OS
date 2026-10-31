@@ -12,6 +12,7 @@ enum HomeRole {
   viewer
 }
 model Account {
+  giftAcceptanceJobs AgencyGiftAcceptanceJob[]
   issuedGiftInvitations AgencyGiftInvitation[] @relation("GiftIssuer")
   claimedGiftInvitations AgencyGiftInvitation[] @relation("GiftClaimant")
   agencyMembers AgencyMember[]
@@ -135,6 +136,7 @@ model AgencyMember {
 }
 
 model AgencyPractice {
+  giftAcceptanceJobs AgencyGiftAcceptanceJob[]
   giftInvitations AgencyGiftInvitation[]
   id String @id @default(uuid())
   agencyId String
@@ -1398,6 +1400,7 @@ model DeletionRecord {
 
 // Internal Gift v1 ledger. No raw invitation secret or automatic Home entitlement.
 model AgencyGiftInvitation {
+  acceptanceJobs AgencyGiftAcceptanceJob[]
   id String @id
   agencyId String
   practiceId String
@@ -1419,4 +1422,56 @@ model AgencyGiftInvitation {
   @@unique([practiceId,issuerAccountId,creationKey])
   @@index([agencyId,practiceId,state])
   @@index([expiresAt,id])
+}
+
+// Internal durable reservation. Acceptance/publication is a separate worker increment.
+model AgencyGiftAcceptanceJob {
+  id String @id
+  practiceId String
+  invitationId String
+  accountId String
+  requestKey String
+  commandDigest String
+  invitationVersion Int
+  invitationSeal String
+  sourceFingerprint String
+  homeId String
+  homeInput Json?
+  manifest Json?
+  preparationDigest String
+  state String @default("queued")
+  version Int @default(1)
+  leaseEpoch Int @default(0)
+  leaseTokenHash String?
+  leaseUntil DateTime?
+  attempts Int @default(0)
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  invitation AgencyGiftInvitation @relation(fields:[invitationId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  items AgencyGiftAcceptanceItem[]
+  @@unique([accountId,invitationId,requestKey])
+  @@index([practiceId,state])
+  @@index([state,leaseUntil,id])
+}
+
+model AgencyGiftAcceptanceItem {
+  id String @id
+  jobId String
+  ordinal Int
+  sourceId String
+  sourceVersion Int
+  sourceSha256 String
+  documentId String @unique
+  documentVersionId String @unique
+  storedFileId String @unique
+  state String @default("pending")
+  storageKey String? @unique
+  control Json?
+  admittedEpoch Int?
+  job AgencyGiftAcceptanceJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
+  @@unique([jobId,ordinal])
+  @@unique([jobId,sourceId])
 }

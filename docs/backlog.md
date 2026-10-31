@@ -1,5 +1,9 @@
 ## 31 ottobre 2026 — dopo integrazione del codice Agenzie
 
+## Gift v1 — prossimo incremento dopo la prenotazione
+
+[Prenotazione interna verificata](v5/agency-gift-acceptance-reservation-20261031.md). Restano worker lease/fencing,staging con StoredFile protetto dal cleanup,pubblicazione atomica Home/documenti/ricevuta/anno opzionale,replay indipendente da Agency e poi route/UI normali.Mantenere un account e full-access per12mesi dall'accettazione,senza attendere i futuri limiti free.Nessuna Home/grant/beneficio creati da begin/claim;accepted ancora fail-closed.
+
 Integrazione tecnica e attivazione sono separate: nessuna migrazione del DB prodotto, configurazione storage/provider/budget o riavvio autorizzati da questo lotto. Dopo le verifiche leggere [report](v5/agency-consolidation-20261031.md) per hash e limiti. Restano: validazione su campione indipendente, ambienti comunicanti/coverage su contrasto, revisione delle superfici da parte dell'agente, orchestrazione AI atti, modello agenzia e mapping approvati per vera bozza. Catalogo comune del31ottobre negli outputs è specifica, non170campi implementati. I futuri incrementi partono dal consolidamento aggiornato e preservano la demo Alessio.
 ## 25 ottobre 2026 — Bollette fase 1: copertura residua
 

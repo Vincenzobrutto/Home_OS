@@ -1,5 +1,9 @@
 ## 31 ottobre2026 — primo contratto Gift interno
 
+## Gift v1 — prossimo incremento dopo la prenotazione
+
+[Prenotazione interna verificata](v5/agency-gift-acceptance-reservation-20261031.md). Restano worker lease/fencing,staging con StoredFile protetto dal cleanup,pubblicazione atomica Home/documenti/ricevuta/anno opzionale,replay indipendente da Agency e poi route/UI normali.Mantenere un account e full-access per12mesi dall'accettazione,senza attendere i futuri limiti free.Nessuna Home/grant/beneficio creati da begin/claim;accepted ancora fail-closed.
+
 Preparazione da fonti correnti autorizzate,versioni e produttore;stima superfici conservata,destinatari/destinazione selezionati senza grant.13nuovi casi,671/671backendordinari e lint/build verdi. Non consegna Gift o copia Home:prossimo registro/adapter server.[Report](v5/agency-gift-contract-20261031.md).
 
 ## 31 ottobre 2026 — Agenzie integrato nel consolidamento

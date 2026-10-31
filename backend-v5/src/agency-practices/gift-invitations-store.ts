@@ -41,6 +41,17 @@ export class GiftInvitationsStore{
   giftInvitationLanding(record,secret,new Date().toISOString());this.current(actor,practice,record);
   return {actor,practice,row,record};
  }
+ /** Internal acceptance prerequisite: identity is read under lock, never asserted by the caller. */
+ async acceptanceContext(tx:Prisma.TransactionClient,accountId:string,id:string,secret:unknown,expectedVersion:number){
+  const context=await this.credentialContext(tx,id,secret),r=context.record;
+  await tx.$queryRaw`SELECT id FROM "Account" WHERE id=${accountId} FOR SHARE`;
+  const account=await tx.account.findUnique({where:{id:accountId},select:{id:true,email:true,emailVerifiedAt:true}});
+  const now=new Date();
+  if(!account||!account.emailVerifiedAt||account.emailVerifiedAt>now||account.email.trim().toLowerCase()!==r.recipientEmail||r.state!=='claimed'||r.claim?.accountId!==accountId)unavailable();
+  if(r.version!==expectedVersion)throw new GiftInvitationError('revision_conflict');
+  requirePractice(context.actor,context.practice,'export',now.toISOString());live(r,now.toISOString());
+  return context;
+ }
  async create(accountId:string,agencyId:string,practiceId:string,input:unknown){
   const b=parseGiftInvitationCommand(input),creationDigest=giftInvitationCreationDigest(b);
   return this.db.$transaction(async tx=>{

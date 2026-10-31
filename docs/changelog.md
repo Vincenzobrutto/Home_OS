@@ -1,5 +1,9 @@
 ## 31 ottobre2026 — primo contratto Gift interno
 
+## 31 ottobre 2026 — Gift: prenotazione dell'accettazione
+
+Job/item e begin/get interni verificati:una pratica riservata,replay dello stesso comando,conferma Home esplicita e stato minimo privato.Helper12mesi full-access UTC con29febbraio corretto;nessun diritto ancora attivato.756/756backend,57/57DBGift su nuovo cluster arrestato,statici verdi.Frontend invariato.Non è ancora copia o invio.[Report](v5/agency-gift-acceptance-reservation-20261031.md).
+
 Preparazione da fonti correnti autorizzate,versioni e produttore;stima superfici conservata,destinatari/destinazione selezionati senza grant.13nuovi casi,671/671backendordinari e lint/build verdi. Non consegna Gift o copia Home:prossimo registro/adapter server.[Report](v5/agency-gift-contract-20261031.md).
 
 ## 31 ottobre 2026 — Agenzie integrato nel consolidamento

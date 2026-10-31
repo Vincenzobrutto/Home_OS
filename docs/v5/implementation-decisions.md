@@ -262,3 +262,9 @@ Vincenzo conferma:per ora il flag dell'agenzia offre un anno con tutte le funzio
 ## Gift v1 — conferma Home,ammissione e provenienza
 
 Il proprietario conferma esplicitamente nome/indirizzo;il server sceglie HomeId/account/beneficio. Nuovo file indipendente passa da writeVerified,non dalla sola firma AgencyVault. Staging va referenziato prima della pubblicazione;errori sconosciuti non espongono diagnostica. Document.giftProvenance esplicita origine/metodo/qualifica,con SHA coerente e versione Agency separata;nessun potere aggiuntivo. Soft trash conserva,purge definitivo cancella. Job/copia/receipt restano da implementare.[Report](agency-gift-copy-prerequisites-20261031.md).
+
+## Gift v1 — prenotazione e anniversario UTC,31 ottobre2026
+
+Scelta tecnica:prenotazione durevole per pratica prima di qualsiasi copia,con ID server e nessuna Home parziale;job e manifesto potranno essere ripuliti dopo la futura ricevuta per non duplicare i metadati eliminati dal proprietario.Get espone solo progresso all'account associato,senza dipendere dall'export Agency per questa vista minima.Claim/begin non equivalgono ad accettazione.
+
+Anno completo approvato dal committente:12mesi di calendario UTC dall'accettazione,29febbraio→28febbraio allo stesso orario,intervallo[inizio,fine).L'helper è verificato,ma attivazione/persistenza del diritto restano nel prossimo copier.Nessun rinnovo,pagamento o mutazione di abbonamenti già presenti.[Report](agency-gift-acceptance-reservation-20261031.md).

@@ -531,12 +531,12 @@ profiles['test:agency-paper-trial']={database:true,api:false,files:['test/agency
 profiles['test:agency-paper-db']={database:true,api:false,files:['test/agency-paper-http.integration.test.cjs','test/agency-plans.integration.test.cjs','test/agency-worker.integration.test.cjs'],apiFiles:[]};
 profiles['test:offline-db'].files.push('test/agency-paper-http.integration.test.cjs');
 
-profiles['test:agency-gift-packet']={database:false,api:false,files:['test/agency-gift-packet.test.cjs','test/agency-gift-registry.test.cjs','test/agency-gift-invitations.test.cjs','test/agency-gift-acceptance-command.test.cjs','test/agency-gift-file-admission.test.cjs','test/gift-provenance.test.cjs']};
+profiles['test:agency-gift-packet']={database:false,api:false,files:['test/agency-gift-packet.test.cjs','test/agency-gift-registry.test.cjs','test/agency-gift-invitations.test.cjs','test/agency-gift-acceptance-command.test.cjs','test/agency-gift-file-admission.test.cjs','test/gift-provenance.test.cjs','test/agency-gift-benefit.test.cjs']};
 profiles.test.files.push('test/agency-gift-packet.test.cjs');
 
 profiles.test.files.push('test/agency-gift-registry.test.cjs');
 
-profiles['test:agency-gift-db']={database:true,api:false,files:['test/agency-gift.integration.test.cjs','test/agency-gift-invitations.integration.test.cjs','test/gift-provenance.integration.test.cjs'],apiFiles:[]};
+profiles['test:agency-gift-db']={database:true,api:false,files:['test/agency-gift.integration.test.cjs','test/agency-gift-invitations.integration.test.cjs','test/gift-provenance.integration.test.cjs','test/agency-gift-acceptance.integration.test.cjs'],apiFiles:[]};
 profiles['test:offline-db'].files.push('test/agency-gift.integration.test.cjs');
 
 profiles.test.files.push('test/agency-gift-invitations.test.cjs');
@@ -546,3 +546,6 @@ profiles['test:offline-db'].files.push('test/agency-gift-invitations.integration
 profiles.test.files.push('test/agency-gift-acceptance-command.test.cjs','test/agency-gift-file-admission.test.cjs','test/gift-provenance.test.cjs');
 
 profiles['test:offline-db'].files.push('test/gift-provenance.integration.test.cjs');
+
+profiles.test.files.push('test/agency-gift-benefit.test.cjs');
+profiles['test:offline-db'].files.push('test/agency-gift-acceptance.integration.test.cjs');

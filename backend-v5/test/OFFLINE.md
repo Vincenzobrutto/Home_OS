@@ -68,3 +68,5 @@ Il profilo nominale `test:agency-gift-db` verifica il registro metadati/preparaz
 Il profilo Gift ora include anche agency-gift-invitations.integration.test.cjs:ledger/claim/revoca con identità DB e sorgenti correnti. Rimane senza API e crea sempre un cluster nuovo protetto;non verifica ancora copia Home o entitlement.
 
 Gift:profilo DB include ora gift-provenance.integration.test.cjs con metadati e purge reali su fixture;unit includono acceptance-command/file-admission/provenance.Scanner e storage dei nuovi unit sono stub dichiarati,non controlli antivirus reali o trasferimenti Home.
+
+Gift:profilo DB include ora agency-gift-acceptance.integration.test.cjs con prenotazione interna,non copia;unit include agency-gift-benefit.test.cjs per anniversario UTC senza attivazione.

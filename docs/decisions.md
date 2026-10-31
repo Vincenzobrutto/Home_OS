@@ -1386,3 +1386,9 @@ Il committente approva integrazione dell'intera PR71nel ramo comune codex/dimora
 Gift accettata indipendente resta la decisione ADR-V5-04. La prima implementazione prepara soltanto una selezione interna da fonti correnti autorizzate,con descrittori di produttore da registro server ancora da collegare. Non confondere fingerprint deterministico con ricevuta/idempotenza durevole di consegna. Nessuna route pubblica,scrittura Home,proprietà confermata o firma validata dal pacchetto. [Contratto e limiti](v5/agency-gift-contract-20261031.md).
 
 Gift v1,singolo account e anno opzionale:decisione del committente31ottobre2026,vedi [ADR V5](v5/implementation-decisions.md) e [contratto](v5/agency-gift-home-copy-contract-20261031.md).Supera le ipotesi multi-destinatario della prima preparazione interna.
+
+## Gift v1 — prenotazione e anniversario UTC,31 ottobre2026
+
+Scelta tecnica:prenotazione durevole per pratica prima di qualsiasi copia,con ID server e nessuna Home parziale;job e manifesto potranno essere ripuliti dopo la futura ricevuta per non duplicare i metadati eliminati dal proprietario.Get espone solo progresso all'account associato,senza dipendere dall'export Agency per questa vista minima.Claim/begin non equivalgono ad accettazione.
+
+Anno completo approvato dal committente:12mesi di calendario UTC dall'accettazione,29febbraio→28febbraio allo stesso orario,intervallo[inizio,fine).L'helper è verificato,ma attivazione/persistenza del diritto restano nel prossimo copier.Nessun rinnovo,pagamento o mutazione di abbonamenti già presenti.[Report](v5/agency-gift-acceptance-reservation-20261031.md).
