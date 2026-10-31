@@ -2083,3 +2083,5 @@ Frontend completo mock1719/1719in169file,2worker/retry0;typecheck/buildfinaliver
 Indizio prudenziale per fasce sottili e checkbox Scarta prima dell'adozione; originali firmati conservati e selezione persistente. Backend658/UI60 verdi, zero nuove AI; demo Alessio invariata. [Report](v5/agency-candidate-selection-20261031.md).
 
 Registro Gift offline aggiunto: metadati append-only, replay/CAS e risoluzione server delle selezioni,27/27mirati; persistenza/route/Home ancora assenti. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: porte interne transazionali per registro e preparazione aggiunte,12/12DBsu cluster nuovo arrestato. Nessuna route o copia Home attiva. [Report](v5/agency-gift-contract-20261031.md).

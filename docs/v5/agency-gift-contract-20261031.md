@@ -45,3 +45,17 @@ Implementato gift-registry.ts: storico append-only per fonte con metadataVersion
 Verifiche mirate:27/27 (13pacchetto +14registro), build runner e lint dei due moduli/test verdi. Inclusi round-trip e riordino chiavi JSONB, history/CAS/replay, revoca e fonte modificata, assenza/bozze, manipolazione DTO e record. Nessun DB o collaudo utente toccato. Prossimo task: adapter transazionale interno in AgencyPracticesStore e test nominale su cluster nuovo secondario protetto; solo dopo valutare anteprima. Nessuna scrittura Home o Gift accettata implementata.
 
 Regressione ordinaria dopo il registro:685/685verdi,zero falliti/saltati,runner offline senza DB;log backend-registry-regression.log. Il totale include i27casi Gift.
+
+## Terzo incremento — persistenza interna verificata
+
+AgencyPracticesStore ora espone tre porte interne: registerGiftMetadata, readGiftMetadata, prepareGiftPacket. I descrittori restano parametri del producer server, non campi di una route pubblica. Riusa context con lock su membership/grant e pratica, CAS revisione e transazione unica per snapshot/storico/ricevuta; controlla nuovamente edit/export prima del commit. Nessuna migrazione: attributi opzionali nel medesimo snapshotVersion1 già usato dal fascicolo. Vecchie pratiche senza registro danno metadati missing; non vengono migrate né dichiarate pronte.
+
+Collaudo su cluster nuovo e posseduto dimora-offline-kJJ1aM,loopback55440:12/12test DB (11sottocasi +contenitore),zero falliti/saltati. Dati/sorgenti sintetici,round-trip reale PostgreSQL JSONB,seconda istanza store,replay concorrenti,conflitto fra comandi,CAS metadata/history,privacy admin/viewer,fonte sostituita/ritirata,revoca export e rollback. La preparazione non cambia snapshot né numero Home/grant. Cluster arrestato dal runner,stop-postgres.log confermato. Il conteggio non rappresenta un riavvio completo del processo/PostgreSQL:verifica una nuova istanza dello store e ricevuta persistita,non un test di crash recovery.
+
+Nuovo profilo nominale test:agency-gift-db incluso nella suite DB completa. Runner secondario autorizza solo questo e il preesistente test:agency-http-db,con identici target rigidi,ownership token,URL e network guard. Una prova negativa rifiuta gli altri profili prima della creazione di un cluster. Nessun servizio/DB/collaudo utente è stato usato o fermato. Build e lint mirato verdi.
+
+Comando: node backend-v5/test/offline-secondary.cjs --suite test:agency-gift-db --pg-bin <binari PostgreSQL locali> --scratch-root <work/agency-gift-db-20261031>. Log launcher in work/agency-gift-evidence-20261031/gift-db-1.log della chat. Esecuzione diretta dall'app ancora assente:nessun controller/route,niente trasferimento o copia di originali nella Home,consegna/accettazione indipendente e gestione degli intestatari ancora da collegare. Prossimo incremento:anteprima controllata sintetica sul contratto verificato e contratto della copia indipendente compatibile con ADR-V5-04;non chiamare sharing C1a Gift.
+
+Prima regressione ordinaria:685/686,unico errore guardia per alias npm mancante del nuovo profilo. Corretto package.json con alias standard node test/offline.cjs --suite test:agency-gift-db;asserzione e protezioni invariate. Riesecuzione registrata separatamente.
+
+Riesecuzione finale:686/686ordinari verdi,zero falliti/saltati;include nuova guardia nominale,nessuna protezione indebolita. Log backend-store-regression-2.log. Non ripetuto DBdopo solo aggiunta alias npm/documentazione/testguardia;12/12DBprecedenti restano riferiti al medesimo adapter.

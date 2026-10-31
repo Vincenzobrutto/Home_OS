@@ -535,3 +535,6 @@ profiles['test:agency-gift-packet']={database:false,api:false,files:['test/agenc
 profiles.test.files.push('test/agency-gift-packet.test.cjs');
 
 profiles.test.files.push('test/agency-gift-registry.test.cjs');
+
+profiles['test:agency-gift-db']={database:true,api:false,files:['test/agency-gift.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-gift.integration.test.cjs');

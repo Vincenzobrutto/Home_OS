@@ -228,3 +228,7 @@ Contratto futuro DEED_EXTRACT con offerta/consenso legati a fonte/versione/SHA/p
 ## Agenzie — metadati Gift con provenienza dichiarata e registro server
 
 La selezione del client non può attestare produttore, finalità, stato finale o firma. Il producer server registra descrittori versionati con attribuzione e controlli sulla fonte; l'adapter prepara dalle versioni correnti del registro. Tale registrazione non certifica la verità del metadato o la firma del documento. Hash canonico non equivale a firma o idempotenza durevole di consegna. Incremento attuale puro: adapter DB, route e indipendenza della copia Home ancora da realizzare. [Contratto e verifiche](agency-gift-contract-20261031.md).
+
+## Agenzie — registro Gift nello snapshot della pratica
+
+Il primo adapter conserva metadati/storico/ricevute nello snapshotVersion1 della pratica e nella stessa transazione CAS del fascicolo;nessuna tabella o migrazione aggiuntiva per questo incremento. Le letture precedenti senza attributi Gift restano valide. Il producer interno deve essere collegato in seguito:non si espone un endpoint che accetta descrittori arbitrari. La ricevuta persistita riguarda la registrazione metadati,non consegna/accettazione Gift. Una futura copia Home richiede una ricevuta e un'autorizzazione proprie. [Evidenze](agency-gift-contract-20261031.md).

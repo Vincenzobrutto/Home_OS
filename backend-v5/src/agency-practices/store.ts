@@ -9,6 +9,7 @@ import { sourceReadable } from './domain';
 import {applyFinding,findingsView} from './findings';
 import {deedProposalsView,stageDeedProposals as stageDeed,bindDeedProposal as bindDeed} from './deed-records';
 import type {TrustedDeedText} from './deed-extraction';
+import { registerGiftDocumentDescriptor, giftDocumentMetadataView, prepareGiftFromRegistry } from './gift-registry';
 import { enqueuePlanJob, failPlanBeforeDispatch, claimPlanJob, reservePlanPhase, settlePlanPhase, markPlanUncertain, finishPlanJob, planJobViews, authorizedPlanJob, type Phase, type PlanJob } from '../agency-plans/jobs';
 
 function iso(date: Date | null): string | null { return date?.toISOString() ?? null; }
@@ -41,6 +42,32 @@ export class AgencyPracticesStore {
       await tx.agencyPlanAuthorization.create({data:{id:server.authorizationId,budgetId:budget.id,practiceId,accountId,approvalReceipt:'ui-plan:'+createHash('sha256').update(JSON.stringify([accountId,practiceId,input.id,proof,input.instructions])).digest('hex'),proof:proof as Prisma.InputJsonValue,capMicros:BigInt(server.capMicros),model:server.model,priceVersion:server.priceVersion,inputMicrosPerMillion:server.inputMicrosPerMillion,outputMicrosPerMillion:server.outputMicrosPerMillion,expiresAt:new Date(Math.min(budget.expiresAt.getTime(),Date.now()+3600000))}});
       const queued=enqueuePlanJob(actor,practice,{id:input.id,authorizationId:server.authorizationId,proof,capMicros:server.capMicros,model:server.model,priceVersion:server.priceVersion,inputMicrosPerMillion:server.inputMicrosPerMillion,outputMicrosPerMillion:server.outputMicrosPerMillion,instructions:input.instructions},server.token,now);
       await tx.agencyAiBudget.update({where:{id:budget.id},data:{committedMicros:{increment:server.capMicros}}});await tx.agencyPlanAuthorization.update({where:{id:server.authorizationId},data:{state:'bound',runId:input.id,committedMicros:BigInt(server.capMicros)}});await tx.agencyPractice.update({where:{id:practiceId},data:{revision:queued.practice.revision,snapshot:json(queued.practice)}});return {id:input.id,status:'queued',replay:false};
+    },{maxWait:5000,timeout:15000});
+  }
+  /** Internal producer port; no HTTP route accepts trusted Gift descriptors. */
+  async registerGiftMetadata(accountId:string,agencyId:string,practiceId:string,trustedDescriptor:unknown,input:unknown){
+    return this.db.$transaction(async tx=>{
+      const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);
+      const result=registerGiftDocumentDescriptor(actor,practice,trustedDescriptor,input,new Date().toISOString());
+      if(!result.replay){
+        const updated=await tx.agencyPractice.updateMany({where:{id:practiceId,agencyId,revision:practice.revision},data:{revision:result.practice.revision,snapshot:json(result.practice)}});
+        if(updated.count!==1)throw new PracticeError('revision_conflict');
+      }
+      requirePractice(actor,result.practice,'edit',new Date().toISOString());
+      requirePractice(actor,result.practice,'export',new Date().toISOString());
+      return {receipt:result.receipt,replay:result.replay,metadata:giftDocumentMetadataView(actor,result.practice,new Date().toISOString())};
+    },{maxWait:5000,timeout:15000});
+  }
+  async readGiftMetadata(accountId:string,agencyId:string,practiceId:string){
+    return this.db.$transaction(async tx=>{
+      const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);
+      return giftDocumentMetadataView(actor,practice,new Date().toISOString());
+    },{maxWait:5000,timeout:15000});
+  }
+  async prepareGiftPacket(accountId:string,agencyId:string,practiceId:string,input:unknown){
+    return this.db.$transaction(async tx=>{
+      const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);
+      return prepareGiftFromRegistry(actor,practice,input,new Date().toISOString());
     },{maxWait:5000,timeout:15000});
   }
   async readDeedProposals(accountId:string,agencyId:string,practiceId:string):Promise<ReturnType<typeof deedProposalsView>>{
