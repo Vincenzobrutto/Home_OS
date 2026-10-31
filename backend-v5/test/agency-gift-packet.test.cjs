@@ -81,3 +81,11 @@ test('ordering of several selected originals and metadata does not alter canonic
  f.input.documents.push({sourceId:'source-2',version:1,sha256:hash});f.descriptors.push({...structuredClone(f.descriptors[0]),sourceId:'source-2',title:'Second synthetic document'});
  const expected=run(f).fingerprint;f.input.documents.reverse();f.descriptors.reverse();assert.equal(run(f).fingerprint,expected);
 });
+
+test('synthetic shared packet stays compatible with frontend harness without exposing actor or registry state',()=>{
+ const f=require('../../fixtures/agency-gift/input-v1.json'),expected=require('../../frontend-v5/tests/fixtures/agency-gift/packet-v1.json');
+ const result=prepare(f.actor,f.practice,f.descriptors,f.input,f.now);
+ assert.deepEqual(result,expected);assert.equal(result.documents.length,2);assert.equal(result.recipients.length,2);
+ assert.equal(result.documents.find(d=>d.origin==='agency_generated').surface.qualification,'estimated');
+ assert.doesNotMatch(JSON.stringify(result),/memberships|grants"|giftMetadataReceipts|storageKey|tokenHash/);
+});

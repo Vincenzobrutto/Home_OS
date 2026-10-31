@@ -1,3 +1,4 @@
+import sharedPacketJson from '../../tests/fixtures/agency-gift/packet-v1.json?raw';
 import {describe,it,expect,vi} from 'vitest';
 import {render,screen,fireEvent} from '@testing-library/react';
 import {GiftPacketPreview,type GiftPreviewPacket} from './GiftPacketPreview';
@@ -49,4 +50,13 @@ describe('internal Gift packet preview — no delivery or Home authority',()=>{
  it('renders document titles as text rather than executable markup',()=>{
   const p=packet();p.documents[0]!.title='<img src=x onerror=alert(1)>';const v=render(<GiftPacketPreview scope={scope} access="allowed" packet={p}/>);expect(v.container.querySelector('img')).toBeNull();expect(screen.getByText('<img src=x onerror=alert(1)>')).toBeInTheDocument();
  });
+});
+
+it('renders the canonical backend-produced packet used by the isolated harness',()=>{
+ const p=JSON.parse(sharedPacketJson) as GiftPreviewPacket;
+ const fromServer={agencyId:p.agencyId,practiceId:p.practiceId,revision:p.practiceRevision,accountId:p.preparedBy};
+ render(<GiftPacketPreview scope={fromServer} access="allowed" packet={p}/>);
+ expect(screen.getByText('CASA-DEMO-001')).toBeInTheDocument();expect(screen.getByText('INT-DEMO-A')).toBeInTheDocument();expect(screen.getByText('INT-DEMO-B')).toBeInTheDocument();
+ expect(screen.getByRole('heading',{name:'Documenti selezionati · 2'})).toBeInTheDocument();expect(screen.getByRole('heading',{name:'Superficie commerciale · Stima'})).toBeInTheDocument();
+ expect(screen.getByText('Formato della pagina non verificato.')).toBeInTheDocument();expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
