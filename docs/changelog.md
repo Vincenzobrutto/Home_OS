@@ -2081,3 +2081,5 @@ Frontend completo mock1719/1719in169file,2worker/retry0;typecheck/buildfinaliver
 
 ## 31/10/2026 — Agenzie, selezione delle aree
 Indizio prudenziale per fasce sottili e checkbox Scarta prima dell'adozione; originali firmati conservati e selezione persistente. Backend658/UI60 verdi, zero nuove AI; demo Alessio invariata. [Report](v5/agency-candidate-selection-20261031.md).
+
+Registro Gift offline aggiunto: metadati append-only, replay/CAS e risoluzione server delle selezioni,27/27mirati; persistenza/route/Home ancora assenti. [Report](v5/agency-gift-contract-20261031.md).

@@ -2,7 +2,7 @@
 
 ## Agency → Gift → Home — lotto serale31ottobre, in corso
 
-Codex lavora sul ramo breve `codex/agency-gift-contract-20261031`, base comune `cbddcf0`, fino alle23Europe/Rome. Primo modulo puro di preparazione Gift implementato:13nuovi casi e671/671backend ordinari verdi,lint/build verdi. Non è una consegna o grant Home. Prossimo:registro/adapter metadati server;eventuale anteprima solo dopo contratto verificato. Non alterare sharing/Home esistenti senza prima dimostrare la compatibilità. Gift accettata indipendente è principio già fissato da ADR-V5-04, non nuovo prodotto separato. [Contratto e registro del lotto](v5/agency-gift-contract-20261031.md). Nessuna AI reale, invio, deploy o migrazione prodotto; collaudo utente separato da preservare.
+Codex lavora sul ramo breve `codex/agency-gift-contract-20261031`, base comune `cbddcf0`, fino alle23Europe/Rome. Primo modulo puro di preparazione Gift implementato:13nuovi casi e671/671backend ordinari verdi,lint/build verdi. Non è una consegna o grant Home. Registro metadati e adapter di preparazione puri ora implementati:27/27mirati,build/lint verdi. Nessun adapter DB o route;prossimo persistenza transazionale e test isolato,poi eventuale anteprima. Non alterare sharing/Home esistenti senza prima dimostrare la compatibilità. Gift accettata indipendente è principio già fissato da ADR-V5-04, non nuovo prodotto separato. [Contratto e registro del lotto](v5/agency-gift-contract-20261031.md). Nessuna AI reale, invio, deploy o migrazione prodotto; collaudo utente separato da preservare.
 
 ## Integrazione Agenzie — 31 ottobre 2026, conclusa
 

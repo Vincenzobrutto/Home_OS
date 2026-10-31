@@ -531,5 +531,7 @@ profiles['test:agency-paper-trial']={database:true,api:false,files:['test/agency
 profiles['test:agency-paper-db']={database:true,api:false,files:['test/agency-paper-http.integration.test.cjs','test/agency-plans.integration.test.cjs','test/agency-worker.integration.test.cjs'],apiFiles:[]};
 profiles['test:offline-db'].files.push('test/agency-paper-http.integration.test.cjs');
 
-profiles['test:agency-gift-packet']={database:false,api:false,files:['test/agency-gift-packet.test.cjs']};
+profiles['test:agency-gift-packet']={database:false,api:false,files:['test/agency-gift-packet.test.cjs','test/agency-gift-registry.test.cjs']};
 profiles.test.files.push('test/agency-gift-packet.test.cjs');
+
+profiles.test.files.push('test/agency-gift-registry.test.cjs');

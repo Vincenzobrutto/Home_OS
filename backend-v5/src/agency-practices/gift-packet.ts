@@ -35,7 +35,7 @@ function sha(v: unknown): string {
   if (typeof v !== 'string' || !/^[a-f0-9]{64}$/u.test(v)) invalid();
   return v;
 }
-function descriptor(input: unknown): GiftDocumentDescriptor {
+export function parseGiftDocumentDescriptor(input: unknown): GiftDocumentDescriptor {
   const d = object(input, ['agencyId','practiceId','sourceId','sourceVersion','sha256','metadataVersion','origin','lifecycle','author','title','surface']);
   if (!['received','agency_generated'].includes(String(d.origin)) ||
       !['draft','final','signed'].includes(String(d.lifecycle))) invalid();
@@ -78,7 +78,7 @@ export function prepareAgencyGiftPacket(
   const originals = exportManifest(actor, practice, r.documents, now)
     .sort((a,b) => a.sourceId === b.sourceId ? 0 : a.sourceId < b.sourceId ? -1 : 1);
   if (!Array.isArray(trustedDescriptors) || trustedDescriptors.length > 50) invalid();
-  const descriptors = trustedDescriptors.map(descriptor);
+  const descriptors = trustedDescriptors.map(parseGiftDocumentDescriptor);
   if (new Set(descriptors.map(d => d.sourceId)).size !== descriptors.length ||
       descriptors.length !== originals.length) invalid();
   const documents = originals.map(original => {
@@ -102,4 +102,3 @@ export function prepareAgencyGiftPacket(
     confirmsFacts:false as const,certification:false as const,completenessAssessed:false as const,
     nextSteps:['verify_current_recipients','authorize_home_destination','persist_delivery_receipt','copy_accepted_documents_independently'] };
 }
-

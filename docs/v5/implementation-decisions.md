@@ -224,3 +224,7 @@ Con modello non disponibile la nuova vista sceglie solo fatti confermati e mostr
 ## Agenzie — autorizzazione analisi atti separata dalle planimetrie
 
 Contratto futuro DEED_EXTRACT con offerta/consenso legati a fonte/versione/SHA/pagine/finalità e ledger durevole. Count e dispatch richiedono consenso, incerto non libera cap o autorizza retry. Stage resta server-only; costo conservato anche dopo scarto/revoca. È una specifica, non un provider/job attivo. [Contratto](agency-deed-orchestration-contract-v1.md).
+
+## Agenzie — metadati Gift con provenienza dichiarata e registro server
+
+La selezione del client non può attestare produttore, finalità, stato finale o firma. Il producer server registra descrittori versionati con attribuzione e controlli sulla fonte; l'adapter prepara dalle versioni correnti del registro. Tale registrazione non certifica la verità del metadato o la firma del documento. Hash canonico non equivale a firma o idempotenza durevole di consegna. Incremento attuale puro: adapter DB, route e indipendenza della copia Home ancora da realizzare. [Contratto e verifiche](agency-gift-contract-20261031.md).

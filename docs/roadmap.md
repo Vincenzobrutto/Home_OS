@@ -297,3 +297,5 @@ Definito [contratto implementativo AI atti](v5/agency-deed-orchestration-contrac
 Frontend completo mock1719/1719in169file,2worker/retry0;typecheck/buildfinaliverdi, nessundeploy. Fascicolomontato con API/DBreali provato su fixture; preparazioneincarico solo selezioneinternasenzamodello, noncontrattogenerato. Residui e confini nel [checkpoint diurno](v5/agency-day-checkpoint-20261030.md).
 
 - 31/10 Agenzie: implementati indizio fascia muraria e scarto singola candidata prima dell'adozione, con confronto e audit. Nessun deploy. [Report](v5/agency-candidate-selection-20261031.md).
+
+Registro Gift offline aggiunto: metadati append-only, replay/CAS e risoluzione server delle selezioni,27/27mirati; persistenza/route/Home ancora assenti. [Report](v5/agency-gift-contract-20261031.md).
