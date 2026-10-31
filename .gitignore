@@ -4,6 +4,7 @@
 
 .DS_Store
 Thumbs.db
+frontend-v5/.agency-cache/
 *.log
 .vscode/*
 !.vscode/extensions.json

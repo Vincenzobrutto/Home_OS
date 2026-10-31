@@ -1297,3 +1297,82 @@ Il committente chiarisce che mese di riferimento significa mese esplicito della 
 ## 25 ottobre 2026 — nome visuale delle bollette completate
 
 Su richiesta del committente, mostrare un nome leggibile usando soltanto fornitore e mese della fattura già confermati, nei soli documenti completati. Implementazione come alias visuale quando il titolo è ancora il filename/stem, non rinomina persistente: titoli personalizzati e originali preservati. Una sola parte bolletta e una sola spesa personale attiva, altrimenti fallback; mai dedurre il mese da servizi, emissione o scadenza. Ricerca/export restano canonici; non introdurre backfill o letture per riga. [Report](v5/documenti-titoli-completati-20261025.md).
+
+## 2026-10-30 — Dati incarico prima del modello
+
+Il pacchetto dati per il futuro incarico e una selezione esplicita e autorizzata di fatti confermati, non una certificazione o generazione di contratto. In assenza di modello e mapping approvati dall'agenzia, canGenerateDraft resta false, anche senza campi mancanti. Dati dichiarati mantengono tale origine; successione, titolarita e difformita non sono inferite dalla selezione. La funzione pura iniziale non valuta completezza o finding e lo espone esplicitamente. Decisione tecnica implementata; requisiti dell'agenzia ancora da validare. Report v5/agency-mandate-packet-v1.md.
+
+## 2026-10-30 — Le citazioni degli atti verificano presenza, non significato
+
+Il nuovo adapter offline confronta citazione e valore letterali con testo pagina ottenuto da una porta server fidata. Il risultato resta proposta non associata a persone/unita della pratica: lexicalEvidenceVerified non implica semanticEvidenceVerified, titolarita attuale o dato confermato. Nessun ruolo current_owner del modello e nessuna conversione data/identita impliciti. Parser reale e binding umano sono task separati; nessuna AI reale autorizzata da questo contratto. Report v5/agency-deed-extraction-contract-v1.md.
+
+## 2026-10-30 — Decoder atti locale, separato da estrazione AI
+
+Il testo fidato per gli atti proviene dai byte verificati nello storage Agenzie e dal parser PDF locale esistente, senza snapshot Home o provider inventati. Doppia lettura autorizzata prima/dopo processo, scope/prova catturati e copie dei byte; revoca o nuova versione scartano il testo. Nessun OCR implicito per scansioni o pagine vuote, nessuna persistenza o nuova route nell'incremento. Report v5/agency-deed-decoder-v1.md; continuita in v5/agency-day-worklog-20261030.md per evitare sovrapposizione al registro concorrente.
+
+## 2026-10-30 — Decisioni dati soltanto dopo risposta server
+
+La nuova UI Agenzie non conferma all'apertura o prima della risposta. Retry incerto mantiene payload/key identici e richiede azione esplicita; conflitto impone reload e403nasconde valori/prove. Scope e porta API sono parte della proprieta della vista, con generazione delle risposte asincrone. Citazioni come testo, apertura originali via callback autorizzato del contenitore. Componente/client indipendenti dal router, nessun fallback sintetico nel prodotto. Report v5/agency-review-ui-v1.md.
+
+## 2026-10-30 — Una verifica non certifica e una prova tecnica va selezionata
+
+UI findings distingue aperto/verifica registrata/da rivedere, senza conformita o titolarita automatiche. Motivazione sempre necessaria; documento tecnico ricevuto richiede riferimento corrente selezionato (massimo5), fingerprint/CAS server. Nuove note manuali per unita/tipo espliciti, default privata. Payload clonato prima dell'async e retry con stessa key, mai reinterpretato da props mutate. Contenitore fornisce solo prove/labels autorizzate; UI non inventa fonti. Report v5/agency-findings-ui-v1.md.
+
+## 2026-10-30 — Associare un candidato non equivale a confermare un dato
+
+Record atti immutabili e fonte/versione/fingerprint separati dai fatti. Solo scelta umana esplicita di unita/subjectKey e riconoscimento ruolo documentale crea un nuovo fatto ancora proposto; niente override valore o identita/diritto inferiti. Visibilita del record ereditata senza ampliamento, fonte privata sempre prevalente. Record superati non riattivati da replay, input TrustedDeedText solo server e nessuna route in questo incremento. Report v5/agency-deed-records-domain-v1.md.
+
+## 2026-10-30 — Commit atomico di proposte e associazioni
+
+Store atti riusa lock e contesto AgencyPractice esistenti, persiste risultato/link/fatto/receipt con CAS e restituisce soltanto viste filtrate. Decoder fuori dalla transazione, nuova autorizzazione e fonte corrente allo stage: un cambiamento fra le fasi scarta il testo. Nessun parametro TrustedDeedText da HTTP e nessuna nuova tabella o route nell'incremento. Record condiviso non prevale sul file privato. Report v5/agency-deed-persistence-v1.md.
+
+## 2026-10-30 — Recupero manuale dei vani senza duplicazione della superficie
+
+Uno spazio semantico non coincide sempre con un componente bianco connesso: i passaggi omessi/accorpati devono emergere come verifica, non essere occultati. Nuovo vano distinto oppure intersezione/sottrazione dal parent con area conservata e anteprima non persistente; altre geometrie e perimetro preservati. Provenienza manuale esplicita, nessun seed AI fabbricato, computo invalidato. Risultati disconnessi rifiutati anziché perdere isole. Efficacia dei nuovi prompt non ancora misurata con AI reale. Report [vani manuali](v5/agency-manual-rooms-20261030.md).
+
+## 2026-10-30 — La separazione deve valere sui poligoni, non solo sui pixel
+
+Controllo finale dopo semplificazione e seconda guardia alla registrazione. Se due bordi confliggono, ridurre soltanto la loro semplificazione ripartendo dai pixel originali; non inventare un separatore o spostare i vani estranei. Conflitto residuo rifiutato. Metadati indicano tolleranza effettiva; edit manuale cancella provenienza automatica, diagnosi dell'analisi rimane storica e scoped per fonte. Chiusura globale dei tratti e riduzione indiscriminata della soglia minima non promosse dai soli conteggi di regioni. [Report](v5/agency-boundary-cleanup-20261030.md).
+
+## 2026-10-30 — Pertinenza separata e barriera tecnica non sono proprietà o muri confermati
+
+Etichetta esplicita di accessorio consente recupero di un contorno candidato da inventario escluso, preservando l'esclusione grezza e richiedendo associazione umana; comuni/altra unità, negazioni e ambiguità non recuperati automaticamente. BOX isolato rimane ambiguo. Una soglia modifica solo una copia temporanea selezionata, non l'originale né una dichiarazione di muro. Freccia richiede contesto e appoggi ai muri: il rilevatore geometrico non riconosce il glifo. Nessuna promozione dal solo incremento del numero di contorni. [Regole e limiti](v5/agency-annex-threshold-rules-20261030.md).
+
+## 2026-10-30 — Un segno interno non equivale a superficie esclusa
+
+Arco sostituito solo nella catena ancorata; annotazioni interne non erodono un involucro selezionato. Vuoti espliciti preservati, simboli incerti ancora aperti. Anteprima distinta dai risultati AI, senza seed/componenti inventati o salvataggio automatico. [Report](v5/agency-room-surfaces-20261030.md).
+
+## 2026-10-30 — Evidenza visiva guida, pixel verificano, recupero resta proposto
+
+La freccia non basta: osservazione visiva più appoggi murari e stipiti verificati. Recupero su copia solo con conservazione geometrie preesistenti/esclusioni e guardia overlap. Censimento e componente continua distinti; soglie ed esito persistiti scoped, nessuna conferma automatica o terza chiamata AI. [Report](v5/agency-opening-recovery-20261030.md).
+
+## 2026-10-30 — Isolare una componente non prova la soglia corretta
+
+Fallback locale solo da indizio visivo, con assi murari dominanti e stipiti verificati, preservazione vani/esclusioni ed un'unica alternativa valida. Più soluzioni o limite raggiunto restano ambigui. Crop dalla propostaAI e mappe origine/scala, nessuna coordinata gold nel prompt. Censimento e componente continua restano distinti. [Report](v5/agency-focus-local-recovery-20261030.md).
+
+## 2026-10-30 — Arco, cerniera e muri prima di riallocare una superficie
+
+Una cavita curva non basta: fitcircolare, cerniera vicina e continuazioni murarie allineate prima di sostituire la sola catena. Sanitari non delimitano automaticamente una stanza; selezione involucri su evidenze e revisioni obbligatorie. La preview non conferma superfici e non sostituisce l'accettazione scoped ancora da integrare. [Report](v5/agency-door-service-surfaces-20261030.md).
+
+## 2026-10-30 — Adottare una proposta geometrica non conferma il computo
+
+Pacchetto server distinto e digest canonico su fonte/fingerprint/base geometrica; client invia soltanto digest/revisioni/motivo. Adozione atomica mantiene storico/perimetro e invalida computo, lasciando verifiche aperte. Correzione manuale cancella provenienza automatica del contorno modificato. JSONB riordina chiavi: canonizzare ricorsivamente oggetti, preservare array. Nessun nuovo schema o route. [Contratto e verifica](v5/agency-surface-integration-20261030.md).
+
+## 2026-10-30 — Una calibrazione ottica è una proposta, non un cambio silenzioso del profilo
+
+Se la scansione pallida non produce regioni, istogramma locale suggerisce soglia candidata senza massimizzare il numero di vani. Originale/profilo canonico invariati, seed esclusi non inglobati, metadato incluso nel digest e contrast_requires_review prima dell'adozione. Aperture incerte conservate. [Evidenza e limiti](v5/agency-third-plan-contrast-20261030.md).
+
+### Agenzie — presentare due basi senza ricomputare nel client, 30 ottobre 2026
+
+Vani e perimetro commerciale rimangono viste della stessa fonte ma geometrie distinte. Il riepilogo usa soltanto il report autorizzato del server: netto per vano, base principale raggruppata, pertinenze e rettifiche dei muri. Nessun totale da somma di pixel nel browser; parziale non equivale a totale. Associazione delle pertinenze dalla configurazione salvata, non dal nome; le loro correzioni usano rooms anche nella vista commerciale. Misure sospese durante modifiche o revisione geometrica diversa. [Verifiche e limiti](v5/agency-dual-view-summary-20261030.md).
+
+### Agenzie — A4 predefinito come ipotesi tracciata, 30 ottobre 2026
+
+Su indicazione del committente il formato iniziale è A4, modificabile. La sola scala stampata con un'immagine non fornisce dimensioni assolute: si assume il foglio intero, si controllano proporzioni e si conserva provenienza paper, senza dichiararla scala verificata. Nessuna correzione prospettica implicita; ritagli compatibili col formato rimangono possibili. Superfici stimate disponibili, totale verificato sospeso fino a riferimento metrico. [Implementazione](v5/agency-paper-calibration-20261030.md).
+
+### Agenzie — geometrie senza assegnazione non equivalgono a stanze confermate, 31 ottobre 2026
+
+La copertura dipende dalle componenti effettivamente ricostruite, non dal solo elenco o dalle alternative dei semi AI. Il motore propone regioni chiuse plausibili con seed dai pixel, senza inferire proprietà/destinazione o modificare i vani canonici. Rapporto complete:false e adozione esplicita con verifiche ancora aperte; diagnostica/immagini entrano nella revisione esistente. L'inviluppo convesso e i vicini sono euristiche geometriche, non perimetro legale o prova di esaustività. [Implementazione e limiti](v5/agency-unassigned-areas-20261031.md).
+
+### 31/10/2026 — Fasce murarie come indizio, scelta umana per candidata
+Non eliminare automaticamente componenti sottili: possono essere passaggi reali. Segnalazione relativa alla geometria, tutte incluse inizialmente, scarto esplicito limitato alle nuove candidate firmate, audit e proposta originale preservati. Nessuna rimozione di vani canonici attraverso l'adozione. [Report](v5/agency-candidate-selection-20261031.md).

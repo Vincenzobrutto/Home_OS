@@ -453,4 +453,80 @@ profiles['test:cestino-completo-db'] = {
   files: [...new Set(['test:trash-db', 'test:cestino-riesame-db', 'test:cestino-race-db', 'test:cestino-extra-review-db', 'test:cestino-fixes-db'].flatMap(name => profiles[name].files))],
   apiFiles: []
 };
+profiles['test:agency-practices'] = { database: false, api: false, files: ['test/agency-practices.test.cjs'] };
+profiles.test.files.push('test/agency-practices.test.cjs');
+profiles["test:agency-practices-db"] = { database: true, api: false, files: ["test/agency-practices.integration.test.cjs"], apiFiles: [] };
+profiles["test:offline-db"].files.push("test/agency-practices.integration.test.cjs");
+profiles["test:agency-review"] = { database:false, api:false, files:["test/agency-review.test.cjs"] };
+profiles.test.files.push("test/agency-review.test.cjs");
 module.exports = profiles;
+profiles['test:agency-coherence'] = { database:false, api:false, files:['test/agency-coherence.test.cjs'] };
+profiles.test.files.push('test/agency-coherence.test.cjs');
+
+profiles['test:agency-plans'] = { database:false, api:false, files:['test/agency-plans.test.cjs'] };
+profiles.test.files.push('test/agency-plans.test.cjs');
+
+profiles['test:agency-plans-db'] = { database:true, api:false, files:['test/agency-practices.integration.test.cjs','test/agency-plans.integration.test.cjs'], apiFiles:[] };
+profiles['test:offline-db'].files.push('test/agency-plans.integration.test.cjs');
+
+profiles['test:agency-files'] = {database:false,api:false,files:['test/agency-files.test.cjs']};
+profiles.test.files.push('test/agency-files.test.cjs');
+profiles['test:agency-files-db'] = {database:true,api:false,files:['test/agency-files.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-files.integration.test.cjs');
+
+profiles['test:agency-renderer'] = {database:false,api:false,files:['test/agency-renderer.test.cjs']};
+profiles.test.files.push('test/agency-renderer.test.cjs');
+
+profiles['test:agency-jobs'] = {database:false,api:false,files:['test/agency-jobs.test.cjs']};
+profiles.test.files.push('test/agency-jobs.test.cjs');
+profiles['test:agency-jobs-db'] = {database:true,api:false,files:['test/agency-jobs.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-jobs.integration.test.cjs');
+
+profiles['test:agency-budget-db']={database:true,api:false,files:['test/agency-jobs.integration.test.cjs','test/agency-budget.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-budget.integration.test.cjs');
+
+profiles['test:agency-worker']={database:false,api:false,files:['test/agency-worker.test.cjs']};
+profiles.test.files.push('test/agency-worker.test.cjs');
+profiles['test:agency-worker-db']={database:true,api:false,files:['test/agency-jobs.integration.test.cjs','test/agency-budget.integration.test.cjs','test/agency-worker.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-worker.integration.test.cjs');
+
+profiles['test:agency-transport']={database:false,api:false,files:['test/agency-transport.test.cjs']};
+profiles.test.files.push('test/agency-transport.test.cjs');
+
+profiles['test:agency-http-db']={database:true,api:false,files:['test/agency-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-http.integration.test.cjs');
+
+profiles['test:agency-edit-dto']={database:false,api:false,files:['test/agency-edit-dto.test.cjs']};
+profiles.test.files.push('test/agency-edit-dto.test.cjs');
+
+profiles['test:agency-preview-db']={database:true,api:false,files:['test/agency-worker.integration.test.cjs','test/agency-http.integration.test.cjs','test/agency-plans.integration.test.cjs'],apiFiles:[]};
+
+profiles['test:agency-findings']={database:false,api:false,files:['test/agency-findings.test.cjs']};
+profiles.test.files.push('test/agency-findings.test.cjs');
+
+profiles['test:agency-findings-db']={database:true,api:false,files:['test/agency-findings.integration.test.cjs','test/agency-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-findings.integration.test.cjs');
+
+profiles['test:agency-navigation-db']={database:true,api:false,files:['test/agency-navigation.integration.test.cjs','test/agency-http.integration.test.cjs','test/agency-worker.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-navigation.integration.test.cjs');
+
+// Dedicated deed persistence profile, included in the protected DB aggregate.
+profiles['test:agency-deed-records-db']={database:true,api:false,files:['test/agency-deed-records.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-deed-records.integration.test.cjs');
+
+// Dated manual trial, never part of aggregate suites.
+profiles['test:agency-trial']={database:true,api:false,files:['test/agency-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T15:15:00Z'};
+
+profiles['test:agency-deed-http-db']={database:true,api:false,files:['test/agency-deed-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-deed-http.integration.test.cjs');
+
+// Dated browser review trial; excluded from aggregate suites.
+profiles['test:agency-review-trial']={database:true,api:false,files:['test/agency-review-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T16:00:00Z'};
+
+// Dated surface-adoption browser trial, no product/provider fallback.
+profiles['test:agency-surfaces-trial']={database:true,api:false,files:['test/agency-surfaces-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T22:19:01.871Z'};
+
+// A4 calibration browser trial, explicitly isolated and time bounded.
+profiles['test:agency-paper-trial']={database:true,api:false,files:['test/agency-paper-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T23:10:00.000Z'};
+profiles['test:agency-paper-db']={database:true,api:false,files:['test/agency-paper-http.integration.test.cjs','test/agency-plans.integration.test.cjs','test/agency-worker.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-paper-http.integration.test.cjs');

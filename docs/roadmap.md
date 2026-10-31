@@ -1,4 +1,80 @@
+## Agenzie — benchmark v9 su altre due immagini, 31 ottobre 2026
+
+Regole congelate e letture cached: evidenziati falso candidato murario/conflitti e limite sugli ambienti uniti. Nessun parametro, codice o spesa modificato; contorni precedenti invariati e zero overlap. [Esiti conservati e priorità](v5/agency-unassigned-secondary-benchmark-20261031.md).
+
+## Agenzie — aree non censite, 31 ottobre 2026
+
+Ricerca locale indipendente, diagnostica della seconda revisione e proposta esplicita: corridoio noto intercettato più area porta dubbia, 10 contorni precedenti invariati. 654/654 backend, 59/59 UI, 19/19 DB-HTTP-worker e build/lint; nessuna nuova AI/browser/deploy. È il primo controllo di componenti chiuse, non una garanzia di completezza. [Report](v5/agency-unassigned-areas-20261031.md).
+
+## Agenzie — regressione PDF noto, 30 ottobre 2026
+
+Verifica locale senza nuove AI o codice: A4 e barra del PDF1:200 differiscono circa0,24% sulle aree;10contorni senza overlap ma corridoio omesso nel censimento cached e simboli aperti. Non campione indipendente o collaudo nuovo del prompt. [Evidenze](v5/agency-original-pdf-regression-20261030.md).
+
+## Agenzie — collaudo persistente A4, 30 ottobre 2026
+
+Verificati salvataggio/ricarica, scala100→200→100 e due viste su pratica sintetica con API/DB reali e provider simulato. 18/18 DB-HTTP-worker, 13/13 guardie, 58/58 UI, build/lint; desktop/375 con miglioramento tabella mobile. Ambienti nuovi arrestati, nessuna AI pagata/demo Alessio/deploy. [Report](v5/agency-paper-browser-validation-20261030.md).
+
+## Agenzie — A4 e scala dichiarata, 30 ottobre 2026
+
+Calibrazione da foglio presunto, provenienza persistente e verifiche server, sempre stima con totale verificato sospeso; barra/misura nota conservate. 649/649 backend, 58/58 UI, build/lint verdi; nessun nuovo DB/browser o spesa AI. [Report](v5/agency-paper-calibration-20261030.md).
+
+## Agenzie — prospetti delle due viste, 30 ottobre 2026
+
+Implementati dettaglio netto per vano e riepilogo commerciale appartamento/pertinenze/muri, con valori server e sospensione delle misure obsolete. 54/54 UI, build/lint e browser isolato desktop/375; nessun nuovo backend/DB/API end-to-end, AI o deploy. [Report](v5/agency-dual-view-summary-20261030.md).
+
 # Roadmap corrente — Dimora V5, 23 ottobre 2026
+
+## Agenzie — superfici integrate e recupero dei tratti chiari
+
+Nuova immagine: profilo precedente0contorni, adattamento ottico automatico come proposta pending9contorni,2balconi/2bagni, zerooverlap e nessun seed estraneo incluso. Ingresso/vano adiacente ancora comunicanti; niente coordinate manuali o altre chiamate dopo le due fasi iniziali. Pipelinev8 conserva fonte/profilo e richiede adozione/revisione.643/643backend e44/44UI Agenzie, typecheck/build/lint verdi. La variante ottica non ha un nuovo collaudo DB/browser; integrazione precedente38/38DB-HTTP-worker e browser desktop/375 rimangono evidenze distinte. [Prova nuova e limiti](v5/agency-third-plan-contrast-20261030.md), [integrazione](v5/agency-surface-integration-20261030.md). Demo Alessio invariata, nessun deploy.
+
+
+## Agenzie — proposte superfici integrate nel flusso reale
+
+Analisi salva una proposta distinta dai contorni base; UI confronta in sola lettura, agente adotta con spunta/motivo, backend sostituisce il pacchetto atomicamente con fonte corrente/CAS/digest canonico e storico. Computo invalidato, perimetro preservato; modifica manuale e ricarica verificate.639/639backend,38/38DB-HTTP-worker,43/43UI Agenzie, build/typecheck/lint verdi. Browser desktop/375 su dati/provider sintetici; foto reale replay offline8→10proposti senza nuovaAI. [Report corrente e limiti](v5/agency-surface-integration-20261030.md). Nessun deploy/merge o modifica demo Alessio.
+
+
+## Planimetrie — balcone aggiunto in anteprima
+
+Fascia esterna recuperata dai componenti dei pixel, allungata e adiacente a più vani sullo stesso lato della facciata.10contorni/0overlap, i nove precedenti identici; nessun seed o ricalco umano e nessuna nuovaAI. Uso/associazione ancora da verificare. Funzione backend e anteprima tecnica, non final canonico/accettazione persistente. [Risultato e limiti](v5/agency-exterior-strip-preview-20261030.md). Demo Alessio invariata.
+
+
+## Planimetrie — archi e servizi ricostruiti in anteprima
+
+Rilevatore geometrico di quarti di cerchio e selezione di celle sostenute dai muri: replay locale9contorni/0overlap, due archi e due servizi, nessuna coordinata manuale o nuovaAI. Vuoti e revisioni conservati; vicini riallocati dove occupavano aree errate. Funzioni backend e anteprima tecnica, non ancora final canonico/nuova route di accettazione. [Prova e limiti](v5/agency-door-service-surfaces-20261030.md). Demo Alessio invariata.
+
+
+## Planimetrie — ingresso recuperato da ricerca locale automatica
+
+Dopo il benchmark fallito: crop automatici e diagnostica compatta; la revisione AI da sola non corregge la soglia. Ricerca locale con assi murari, stipiti e isolamento trova una sola alternativa valida su3prove.8regioni/0overlap,7precedenti identiche, nessuna coordinata/contorno umano. Ingresso e stanza comunicanti non ancora separati semanticamente; servizi/balcone/arco incompleti. [Esito, costo e limiti](v5/agency-focus-local-recovery-20261030.md). Demo Alessio invariata.
+
+
+## Planimetrie — prova autonoma ingresso NON superata
+
+Provider reale e immagine originale, nessun suggerimento o ritocco manuale:7contorni/0overlap, soglia AI rifiutata perché non isola il vano; ingresso/stanza ovest ancora aperti e servizi incompleti. Il precedente successo geometrico su hint umani non equivale ad automazione completa. Due generazioni effettive,0,050196USD, bound4,411EUR entro nuovo tetto4,50; inventario riusato dopo stop preventivo review, nessun reinvio di generazioni già inviate. [Benchmark e limiti](v5/agency-opening-autonomous-benchmark-20261030.md). Demo Alessio invariata.
+
+
+## Planimetrie — recupero automatico proposto delle aperture
+
+Osservazioni AI nella stessa coppia di chiamate; ricerca stipiti sui pixel, soglia temporanea e recupero soltanto senza alterare vani precedenti, invadere seed esclusi o creare overlap. Evidenze scoped persistite e verifiche sempre aperte. Replay geometrico positivo su indicazioni approssimative Codex: efficacia dell'AI autonoma ancora non misurata. [Report, test e limiti](v5/agency-opening-recovery-20261030.md). Demo Alessio invariata, nessuna nuova AI o deploy.
+
+
+## Planimetrie — porte e servizi, anteprima proposta
+
+Arco interno corretto localmente e involucri sostenuti dai muri, senza erosione da sanitari; vuoti e revisioni preservati. Replay 7→9 contorni, zero overlap, sei verifiche: selezione tecnica Codex, non riconoscimento autonomo. Nessuna nuova route/persistenza. 606/606 backend, 21/21 DB adapter esistente, laboratorio e browser verificati. Nessuna nuova AI o modifica demo Alessio. [Report e limiti](v5/agency-room-surfaces-20261030.md).
+
+
+**Accessori/soglie:** censimento e recupero geometrico proposto di accessori esplicitamente etichettati implementati, associazione sempre da verificare. Laboratorio di soglie temporanee selezionabili con replay sintetico/reale disponibile; secondo caso fino7contorni con selezione tecnica, copertura incompleta. Riconoscimento automatico freccia/ingresso, verifica semantica dei falsi tagli e integrazione nel workspace con worker/CAS restano gate aperti. [Report](v5/agency-annex-threshold-rules-20261030.md).
+
+**Guardia contorni conclusa:** replay seconda planimetria5contorni, zero overlap, tre contorni non coinvolti immutati. Diagnosi cause e controllo alla registrazione implementati/verificati; non ancora risolta la copertura completa. Prossima fase: ripristino locale verificabile dei tratti aperti, soglie adeguate alla risoluzione e associazione delle pertinenze. Varianti morfologiche sperimentali non applicate automaticamente. [Report](v5/agency-boundary-cleanup-20261030.md).
+
+**Gate qualità seconda planimetria non superato:**5contorni, quattro issue, omissioni pertinenze e una coppia di poligoni sovrapposta nonostante maschere distinte. Prima di nuovi invii: guardia overlap dopo semplificazione e replay offline, diagnostica gap/seed e censimento pertinenze separate. Nessuna scala metrica ricavata dalla sola scritta1:100. [Benchmark senza ritocchi](v5/agency-second-plan-benchmark-20261030.md).
+
+**Vani mancanti, 30 ottobre:** disponibile aggiunta manuale e separazione con anteprima, conservazione area, controllo overlap e invalidazione computo. Censimento AI dei passaggi rafforzato ma non ancora verificato con nuovi invii reali. Prossimo gate: identificazione visiva del corridoio con il committente e benchmark della copertura/partizione su documenti indipendenti autorizzati. [Verifiche e limiti](v5/agency-manual-rooms-20261030.md).
+
+**Planimetria reale, 30 ottobre:** primo percorso con AI effettiva e risultato persistito nel browser. Fix decoder PDF CCITT/codec locali verificato571/571 backend; bozza10geometrie, disimpegno ovest ancora accorpato. Prossima priorita qualita: separazione semantica dei passaggi in presenza di aperture, copertura balcone e simboli; benchmark su altri documenti autorizzati. Computo attuale solo parziale, nessuna promessa di zero correzioni. [Prova, costi e limiti](v5/agency-plan-live-20261030.md). Nessun nuovo invio automatico, merge/deploy o modifica demo Alessio.
+
+**Agenzie, ripresa del 30 ottobre:** verticale planimetria collegato a API e navigazione, provato nel browser desktop/375 con AI sintetica e database dedicato. Entrambe le viste preservate e computo persistito. Corrette revisione genitore e identita del perimetro riaperto; regressione finale frontend 1609/1609 (un retry massimo), typecheck/lint/build verdi. Prossimi gate: riconciliazione budget preesistente, prova con planimetria reale/provider dedicato, poi decisione di integrazione del committente. Nessun deploy o modifica demo Alessio. [Report corrente](v5/agency-navigation-validation-20261030.md).
 
 **Spese — dettaglio riparazioni nel Riepilogo:** rimossa la vecchia esclusione di repairs_works e la nota sul raggruppamento per lavoro, superata dalla PR #64. Righe di categoria da byCategory e totali server invariati. Regressione prima rossa e poi verde; gruppo 47/47 offline, typecheck/lint/build verdi; lotto chiuso e area liberata. [Report](v5/spese-riepilogo-riparazioni-20261026.md). App invariata, merge al committente.
 
@@ -42,7 +118,7 @@ Riconoscimento bollette senza catalogo fornitori: combinazioni di segnali del co
 
 Bollette: proposta locale dalla sola prima pagina, marchio clienti corroborato da contatti email/web e OCR per etichette mancanti. [Report](v5/bollette-prima-pagina-20261025.md). Implementazione e verifica del documento locale completate; statici e fixture 5/5 verdi, mock completa 1175/1175 in 131 file, zero saltati/retry0. [PR #43](https://github.com/Vincenzobrutto/Home_OS/pull/43) integrata su approvazione a 911b0fb e solo frontend aggiornato; build e 8/8 controlli HTTP statici/anonimi verdi, API/PostgreSQL preservati. Prova interattiva al committente.
 
-Tipo documento modificabile direttamente nella riga dell'archivio: [lotto frontend e report](v5/tipo-documento-inline-20261025.md). Menu con conferma esplicita, senza nuova compilazione né modifica di titolo, collegamenti o spese; 29/29 nuovi test, mock completa1156/1156 in129 file e typecheck/lint/build verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) integrata su approvazione a 49635d8, hash remoto verificato e solo frontend aggiornato. Build e 7/7 controlli HTTP anonimi verdi; API/PostgreSQL invariati. Prossimo passo: prova del menu dal committente.
+Tipo documento modificabile direttamente nella riga dell'archivio: [lotto frontend e report](v5/tipo-documento-inline-20261025.md). Menu con conferma esplicita, senza nuova compilazione né modifica di titolo, collegamenti o spese; 29/210 nuovi test, mock completa1156/1156 in129 file e typecheck/lint/build verdi. [PR #42](https://github.com/Vincenzobrutto/Home_OS/pull/42) integrata su approvazione a 49635d8, hash remoto verificato e solo frontend aggiornato. Build e 7/7 controlli HTTP anonimi verdi; API/PostgreSQL invariati. Prossimo passo: prova del menu dal committente.
 
 Cestino disponibile nel collaudo applicativo: [PR #41 integrata e attivazione autorizzata](v5/cestino-chiusura-20261025.md), backup verificato, sola migrazione additiva e API/frontend aggiornati a dc58ada. Regressione DB564/564 e mock1127/1127 verdi; dati preesistenti e originali invariati. Prossimo passo: prova interattiva del committente su spostamento e ripristino; nessuna eliminazione o conferma eseguita automaticamente. Ciclo backup separato.
 
@@ -123,3 +199,93 @@ Solo backend-v5/frontend-v5 e documentazione pertinente. Nessuna AI/email a paga
 [Schema di spesa condiviso e prove](v5/protocollo-multipagina-offline-20261024.md): contratto espanso identico per 1–20 pagine, senza modifiche a gold, evidenze o conferme. Protocollo v30 distingue la nuova preparazione. Il rifiuto Samsung resta incerto e non ritentato; accettazione remota non verificata. Nessun deploy o AI, PR separata verso il consolidamento e merge al committente.
 
 Chiusura verifica offline del lotto segnali generali: mock completa1226/1226 in133 file, mirata209/209, fixture5/5 e typecheck/lint/build verdi sulla fonte debfcc3. Prima completa1225/1226 e isolato27/27 preservati, nessuna asserzione/timeout modificati. PR #44 senza merge o attivazione; successivo audit e roadmap PR #45 da approvare, senza altro codice. [Report](v5/bollette-segnali-generali-20261025.md).
+
+## Agenzie — 30 ottobre 2026
+Prima verticale: fascicolo → dati con fonti → confronto → bozza incarico. Dominio, persistenza metadati e revisione umana verificati offline; confronto puro verificato; prossimi risoluzioni persistenti, storage bytes e API/UI. [Registro](v5/agency-worklog-20261030.md). Nessuna attivazione implicita sul prodotto o sulla demo Alessio.
+
+### Agenzie — planimetrie, steering30ottobre
+Nucleo raster/AI/commerciale e componente doppia vista verificati nel branch; prossimo upload/storage bytes, job/ledger e cablaggio API/UI. Nessun rilascio. [Stato](v5/agency-plan-integration-v1.md).
+
+Agenzie: fondazione bytes interna verificata (429/429 ordinari,9/9 DB), ancora senza route. Prossimi rasterizzatore dai bytes correnti e ledger job, poi endpoint/UI. [Report](v5/agency-files-v1.md).
+
+Agenzie: rendering interno PDF/PNG e ricontrollo fonti verificati444/444 ordinari. Prossimo ledger durevole e poi trasporto/UI, nessuna integrazione completa dichiarata. [Report](v5/agency-renderer-v1.md).
+
+Agenzie: job per-run e accounting verificati466/466 ordinari+8/8 DB. Prossima priorità autorizzazioni/budget globali, poi coordinatore e trasporto/UI. [Report](v5/agency-plan-jobs-v1.md).
+
+Agenzie: budget globale/approval uniche verificati466/466+20/20 DB; prossimi coordinatore con risultati atomici e trasporto offline, poi HTTP/UI. [Report](v5/agency-ai-budget-v1.md).
+
+Agenzie: coordinatore interno verificato472/472+24/24 DB; prossimo confine trasporto/provider offline e HTTP/sessione/CSRF/DTO, poi UI pratica. [Report](v5/agency-plan-worker-v1.md).
+
+Agenzie: trasporto dedicato verificato486/486 con fetch simulata, non collegato al runtime. Prossimo API/sessione/CSRF/DTO e HTTP offline, poi UI pratica. [Report](v5/agency-plan-transport-v1.md).
+
+Agenzie: modulo HTTP opt-in verificato16/16 HTTP+DB; prossimi DTO edit e UI pratica. Nessun collegamento ai servizi esistenti. [Report](v5/agency-http-v1.md).
+
+Agenzie: trasporto edit/sostituzione verificato496/496+22/22 HTTP; prossima UI pratica/form scala e coefficienti. [Report](v5/agency-plan-edit-http-v1.md).
+
+Agenzie: anteprima raster allineata/client API verificati; prossimo workspace/form. [Report](v5/agency-plan-preview-v1.md). Nessuna integrazione completa o AI live dichiarata.
+
+Agenzie: workspace opt-in verificato su API simulate, non attivo nel prodotto. Prima del pilota navigazione/provisioning e prove browser→API. Riprendere coerenza persistente e mapping incarico. [Report](v5/agency-plan-workspace-v1.md).
+
+Agenzie: finding persistenti e API opt-in verificati509/509+31/31DB/HTTP; prossimo readiness mapping incarico, con modello reale ancora mancante. [Report](v5/agency-findings-v1.md).
+
+## 30 ottobre 2026 — Agenzie: prossimo ciclo dopo il nucleo documentale
+
+[Checkpoint proprio e limiti](v5/agency-checkpoint-20261030.md): fascicolo/fonti/fatti, finding persistenti e planimetrie verificati sul branch dedicato; pacchetto dati incarico interno implementato, nessun modello approvato o DOCX generato. Prossimo ordine: verifica cablaggio concorrente separato; estrazione atti con prove/consenso; UI finding; modello reale e mapping; operativita storage/worker e disegno nuovi vani/vuoti. Nessun merge, deploy o nuova AI impliciti. Demo Alessio invariata.
+
+## 30 ottobre 2026 — Ciclo diurno Agenzie fino alle18:00
+
+Priorita documento > dati verificabili > pacchetto incarico: [contratto atti offline](v5/agency-deed-extraction-contract-v1.md), poi decoder su fixture PDF reali sintetiche e binding umano, UI revisioni/fonti/finding, readiness sul modello reale dell'agenzia. Il contratto non e OCR o servizio AI e non crea fatti. Cablaggio gia pubblicato f249585 ereditato come base, validazione e limiti restano distinti dal nuovo adapter; nessun merge o deploy.
+
+## 30 ottobre2026 — UI revisione dati/fonti pronta come componente
+
+[Componente/client indipendenti](v5/agency-review-ui-v1.md):18/18 nuovi test, typecheck/lint e browser desktop/375su harness sintetico, non ancora nella navigazione prodotto. Prossimi registro finding e binding/persistenza proposte; mantenere distincti collaudo del componente e backend reale. Nessuna nuova AI, estrazione live o generazione incarico.
+
+## 30 ottobre2026 — Registro verifiche come componente indipendente
+
+[UI finding](v5/agency-findings-ui-v1.md): note manuali successione/difformita, confronti, motivo/prove, riapertura e storico;38/38 nel gruppo revisione e statici verdi, browser sintetico375/Desktop. Non montato nel router e nessun backend cambiato. Prossimo persistenza/binding umano delle proposte atti, poi cablaggio revisioni pratica.
+
+## 30 ottobre2026 — Risultati atti e import proposto
+
+[Record immutabili e binding umano](v5/agency-deed-records-domain-v1.md): dominio puro,21nuovi casi e568/568 ordinari verdi. Import separato dalla conferma, privacy e invalidazione, nessun store/API/DB ancora. Prossimo persistenza transazionale e prove isolate, poi cablaggio UI pratica; nessuna AI reale o modello incarico inventato.
+
+## 30 ottobre2026 — Adapter persistente atti verificato
+
+[Store record e binding](v5/agency-deed-persistence-v1.md): JSONB/lock/CAS, viste filtrate e proposta mai confermata implicitamente.14/14 DB su cluster nuovo poi fermato, ordinari568/568 e statici verdi. Nessuna nuova route; prossimo contratto read/bind HTTP autorizzato, poi UI associazione/revisioni. Provider e modello incarico reali ancora separati.
+
+## Agenzie — lettura proposte e binding via HTTP
+
+Nuove route sessione/CSRF e15/15 test HTTP su cluster dedicato fermato; import ancora proposto, privacy e prove derivate server. Prossimo gate UI associazione e montaggio revisioni, poi orchestration estrazione atti; modello incarico reale ancora necessario. Nessun deploy. [Report](v5/agency-deed-http-v1.md).
+
+## Agenzie — UI associazione da atto
+
+Nuovo componente indipendente e client HTTP,20nuovi test/gruppo58/58, typecheck/lint e browser desktop375su harness sintetico. Scelte unita/soggetto/ruolo esplicite, import proposto, fonte e CAS; ancora da montare nella pratica e provare contro API/DB. Nessun backend o demo Alessio modificati. [Report](v5/agency-deed-ui-v1.md).
+
+## Agenzie — revisione collegata alla pratica
+
+Ingresso esplicito e client reali per dati/fonti, associazione e finding, readonly server, download originale autorizzato e diniego globale.9nuovi casi, gruppo102/102, typecheck/lint verdi. Browser montato contro API/DB reali resta prossimo gate, senza riutilizzare servizi esistenti. UI unita/confronti/contesto prove e stageattiora incompleti. [Report](v5/agency-review-mount-v1.md).
+
+## Agenzie — unità e dati dichiarati
+
+Pannello manuale montato nel fascicolo con unità IDserver, proposta senza prove fittizie, privacy iniziale privata e decisione distinta.14nuovi casi, gruppo116/116, typecheck/lint verdi; browser/API/DBmontati ancora da provare, porte altrui preservate. Restano confronti e selectorprovecompleto, stageatti/modelloapprovato. [Report](v5/agency-declarations-ui-v1.md).
+
+## Agenzie — creazione confronto circoscritto
+
+Pannello montato con scelta ambito/periodo/fatti espliciti e privacy iniziale privata; riusa findings, nessuna nuova API o conferma.14nuovi casi, gruppo130/130, typecheck/lint verdi. Browser/DBmontati prossimo gate; selectorprovecompleto e anagrafica verificabile ancora aperti. [Report](v5/agency-comparison-ui-v1.md).
+
+## Agenzie — fascicolo montato collaudato con API/DB reali
+
+Trial nuovi eVftg7/72vzkO, dati/PDFsintetici e AI disabilitata: associazioneproposta,confermaseparata,downloadSHA,unita/dichiarazione,confronto/nota,persistenza375 e revoca. Corretto diniego genitore: metadati cached rimossi.137/137frontendmirati/staticiverdi; dueclusterfermati, nessundeploy. [Report e limiti](v5/agency-review-browser-validation-20261030.md).
+
+## Agenzie — preparazione dati per incarico senza modello
+
+Su scelta esplicita del committente, nuovo pannello di selezione locale dei dati confermati con fonti/questioni aperte. Nessun incarico generato o campo obbligatorio inventato: modello ancora da ricevere.13nuovi casi/gruppo150/150/staticiverdi; browserdesktop375su harnesssintetico, non nuova prova API/DB. Restano orchestrationanalisiatti e modello/mapping/validazioneserver/export. [Report](v5/agency-mandate-selection-ui-v1.md).
+
+## Agenzie — prossimo incremento del percorso completo
+
+Definito [contratto implementativo AI atti](v5/agency-deed-orchestration-contract-v1.md), ancora da realizzare: schema/adapter consenso-job-budget, coordinatore decoder/provider/stage, DTO/API e UI offerta/pagine.18casi sono pianificati, non test già eseguiti. Nessuna spesa autorizzata dal documento; modello incarico non ancora disponibile e generazione bloccata. Preparazione dati confermati già presente.
+
+## Agenzie — checkpoint diurno finale delle verifiche
+
+Frontend completo mock1719/1719in169file,2worker/retry0;typecheck/buildfinaliverdi, nessundeploy. Fascicolomontato con API/DBreali provato su fixture; preparazioneincarico solo selezioneinternasenzamodello, noncontrattogenerato. Residui e confini nel [checkpoint diurno](v5/agency-day-checkpoint-20261030.md).
+
+- 31/10 Agenzie: implementati indizio fascia muraria e scarto singola candidata prima dell'adozione, con confronto e audit. Nessun deploy. [Report](v5/agency-candidate-selection-20261031.md).

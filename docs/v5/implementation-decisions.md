@@ -140,3 +140,87 @@ Aggiornati mockup proprietario e copia navigabile proposta-Claude: tutte7famigli
 ## 25 ottobre 2026 — Evidenze native e OCR nelle bollette ibride
 
 La selezione OCR considera anche campi esplicitamente etichettati ma assenti dal testo nativo. Intestazioni legali e colonne Periodo richiedono ruolo e geometria univoci. Un calendario può unire glifi nativi e parole OCR nella stessa pagina/scala, senza fabbricare confidenze né prendere l’anno dall’orologio. Contraddizioni restano ambigue; soglie e limiti invariati. [Report e prove](bollette-lettura-affidabile-20261025.md). Nessuna inferenza del pagamento o modifica della conferma canonica.
+
+## ADR — Agenzie: dominio separato e sviluppo locale, 30 ottobre2026
+Pratica e fonte di agenzia non riutilizzano autorizzazioni Home. Ogni azione richiede appartenenza e assegnazione; admin non apre originali privati altrui. Versioni fonte append-only; conferme e bozze dipendono da fonte/versione/SHA. Primo incremento puro, non collegato al runtime: permette di collaudare le regole senza cambiare DB o servizi esistenti. Scartato ampliamento implicito di Document.visibility/HomeMembership. Persistenza/schema e adapter restano lotto successivo. [Specifica](agency-practices-v1.md).
+
+## ADR — Persistenza iniziale del fascicolo,30ottobre2026
+Aggregato JSONB versionato per fonti/revisioni/dipendenze/ledger/eventi dentro AgencyPractice, con appartenenze e assegnazioni normalizzate e bloccate lato DB. La transazione conserva le invarianti del nucleo puro; nessun riuso di HomeMembership. Creazione idempotente in tabella dedicata. Scartata persistenza volatile/in-memory e distribuzione prematura di decine di tabelle prima del contratto dei fatti. Snapshot non contiene bytes; upload autenticato e storage restano distinti. Normalizzazione futura richiede migrazione e conservazione dello storico. [Specifica](agency-practices-v1.md).
+
+## ADR — Proposta, decisione e conferma correnti separate,30ottobre2026
+Nel dominio Agenzie conservare valore proposto, origine, prove e decisioni come fatti distinti. La correzione umana aggiunge una decisione motivata, non riscrive il dato estratto. Fonte cambiata/ritirata revoca l’utilizzabilità corrente senza cancellare lo storico; derivati ereditano la riservatezza della fonte. Campi dichiarati richiedono conferma e non possono portare prove inventate. Scartati flag unico confermato sul documento e sovrascrittura automatica dei campi. [Specifica](agency-practices-v1.md).
+
+## Agenzie — confronto esplicito, nessuna equivalenza implicita
+Il primo motore confronta solo gruppi scelti con unità, soggetto, campo e contesto temporale dichiarato. Quest'ultimo è un'etichetta umana, non data automaticamente verificata. Identità storiche, diritti e regolarità tecnica non sono deducibili da uguaglianza di stringhe o superfici. Le risoluzioni future dovranno riferirsi al fingerprint corrente, non soltanto all'id del confronto. [Limiti](agency-coherence-v1.md).
+
+## ADR — Planimetrie: interpretazione AI e geometria raster, due basi di computo
+
+L'AI individua spazi/semi/simboli; il codice ricava contorni dai pixel e misura dopo calibrazione. Due fasi, budget e autorizzazioni correnti; risultato sempre proposto. Non usare coordinate di poligoni inventate dall'AI come fonte principale. La revisione non deve degradare senza avviso un simbolo precedentemente valido. Singoli vani e perimetro lordo sono viste indipendenti: il secondo comprende già muri interni e non somma i primi; pertinenze separate. Coefficienti del committente come profilo commerciale versionato, non algoritmo catastale DPR138/98. Intervalli e base del limite25cm espliciti; incognite bloccano il totale. [Implementazione e residui](agency-plan-integration-v1.md). Nessuna attivazione runtime.
+
+## Agenzie — bytes prima del riferimento DB
+Vault dedicato content-addressed, pubblicazione con link esclusivo e verifica SHA, mai sovrascrittura. Upload autorizzato salva bytes prima del commit metadati; in rollback è ammesso un oggetto orfano, non un riferimento a bytes incompleti. Riconciliazione/retention ancora da implementare, nessuna cancellazione in-request. Solo file buffer limitato e firma media, non validazione strutturale. [Dettagli](agency-files-v1.md).
+
+## Agenzie — raster autorevole, parser separato
+Il raster deriva dai bytes correnti letti con permessi AgencyPractice, non da un'immagine/hash del browser. Rendering in figlio usa-e-getta senza credenziali e con limiti applicativi, accessi ricontrollati prima del ritorno. Nessuna equivalenza tra DPI e scala metrica. Isolamento OS e memoria nativa ancora da collaudare prima del pilota. [Report](agency-renderer-v1.md).
+
+## Agenzie — contabilizzare anche dopo revoca, senza riaprire documenti
+Le fasi nuove richiedono accesso edit e fonte corrente; settlement usa una capability worker limitata e può contabilizzare l'uso già inviato dopo revoca. Ritorna solo costo/replay, nessun aggregate. MicroUSD interi e prezzi immutabili; nessun retry di prenotazione duplicata/incerta. Lease scaduta non viene ceduta senza fencing. Registro autorizzazioni/budget globale ancora necessario prima del trasporto reale. [Report](agency-plan-jobs-v1.md).
+
+## Agenzie — impegno globale prima del job
+Enqueue richiede un'autorizzazione server già provisionata e riserva il cap del run sul budget condiviso nella stessa transazione. Lock pratica→budget→autorizzazione; il replay non raddoppia l'impegno. Accounting revocato rimane possibile, usa BIGINT e conserva gli sforamenti; il completamento noto rilascia solo la quota inutilizzata. Nessun provisioning prodotto né consenso dedotto dall'automazione. [Report](agency-ai-budget-v1.md).
+
+## Agenzie — risultato e chiusura indivisibili
+Nessun finish dello store senza geometria validata: completePlanJob confronta prova/fingerprint e ricevute con il ledger, poi salva risultato, completa job e chiude budget atomicamente. Worker HMAC scoped alla pratica/run permette ricostruzione della capability con una chiave server iniettata; nessun segreto nel payload coda/browser. Nessuna ripresa automatica di fasi inviate. [Report](agency-plan-worker-v1.md).
+
+## Agenzie — trasporto separato e consenso dedicato
+Porta HTTP provider con flag/credential/authorize/fetch iniettati, nessun riuso della configurazione M4. Riautorizzazione per conteggio e dispatch, destinazione HTTPS fissa, nessun retry o redirect, output streaming limitato ed errori senza body grezzi. Non registrata in runtime; solo fetch simulata nei test. [Report](agency-plan-transport-v1.md).
+
+## Agenzie — modulo HTTP separato e attribuzione dal cookie
+Identità da SessionsService, CSRF/Origin esistenti e preflight AgencyPractice prima di buffer multipart; nuova verifica transazionale dopo upload. Nessuna eredità HomeMembership. Browser può dichiarare dati e decidere, mai autoattestare origine extracted/citazioni o pagamenti. Modulo richiede root esplicita e non è registrato in AppModule. [Report](agency-http-v1.md).
+
+## Agenzie — DTO commerciale non conferma implicita
+Parser HTTP ricostruisce tutte le strutture consentite con ordine canonico; coefficienti mancanti rimangono mancanti e conferme richiedono booleani. Snapshot del server per file/versioni, geometrie manuali senza raster/AI dal browser. Perimetro lordo indipendente, mai generato dalla somma dei vani. [Report](agency-plan-edit-http-v1.md).
+
+## Agenzie — mostrare soltanto il raster originale verificato
+DPI/transform/versione rendering entrano nel fingerprint e nel piano; il PNG UI deve corrispondere a dimensioni e SHA grayscale usati per i contorni. Mancanza di provenienza o pixel diversi bloccano l'overlay, nessuna stima della scala di rendering. Client riusa trasporto sessione/CSRF e non ha fallback sintetico. [Report](agency-plan-preview-v1.md).
+
+## Agenzie — retry esplicito e scelta metrica non dedotta
+Workspace con salvataggio manuale motivato: 503preserva payload/key,409richiede ricarica,422riabilita correzione,revoca nasconde dati. La barra richiede estremi e lunghezza letta, perimetro e fasce muro sono disegnati esplicitamente, intervalli e conferme non precompilati. Configurazione conservata col piano e invalidata da geometrie nuove. Harness non è fallback prodotto. [Report](agency-plan-workspace-v1.md).
+
+## Agenzie — risolvere un quesito non modifica un fatto
+Confronti/observazioni e storia persistiti separatamente; risoluzione richiede motivo e fingerprint corrente. Cambio prove/fatti/risposta tecnica riapre, nessuna certificazione. Storia privata filtrata: una decisione con prova privata non chiude un quesito pubblico per chi non legge tale prova. Fingerprint canonico anche dopo JSONB. [Report](agency-findings-v1.md).
+
+## Agenzie — esporre solo read/bind dei record da atto
+
+GET proposte e POST binding usano sessione/grant e DTO esatto; il browser sceglie destinazione e riconosce ruolo, non riscrive valore/prova/visibilità. Nessuna route stage con TrustedDeedText: l'attestazione resta server-only. No-store/nosniff sulle nuove risposte riuscite, conferma separata via review. [Contratto e verifiche](agency-deed-http-v1.md).
+
+## Agenzie — associare senza inferire identità
+
+UI nuova richiede unità esplicita, riferimento soggetto e riconoscimento ruolo documentale; non tratta riferimenti AI come identità correnti. POST crea soltanto proposta, decisione successiva separata. GET parallele review/proposte devono avere stessa revisione; readonly blocca anche retry incerto. Componente indipendente prima del montaggio autorizzato. [Report](agency-deed-ui-v1.md).
+
+## Agenzie — pannelli montati senza perdere invii incerti
+
+Contenitore lazy nella pratica; details conserva le istanze, nessun remount forzato dopo mutazioni. Le altre viste ricaricano esplicitamente, CAS blocca snapshot superati. Diniego accesso in una vista nasconde tutta la revisione; originali soltanto tramite download autorizzato con prova esatta e blob revocabile. [Report](agency-review-mount-v1.md).
+
+## Agenzie — una dichiarazione manuale resta proposta
+
+Nuovo pannello usa unit/declare esistenti, senza ID/prova/origine estratta forniti dal browser. Quote/diritti come testo dichiarato, identificativi testuali e superfici numeriche; non inserisce clausole o colma titolarità. IDunità dalla risposta server aggiorna contesto note, conferme restano separate. [Report](agency-declarations-ui-v1.md).
+
+### 30 ottobre — Decodifica immagini planimetria e prove live isolate
+Il renderer PDF usa esclusivamente la directory wasm della dipendenza gia installata, senza percorsi del chiamante o rete. Un warning di immagine non decodificata blocca il raster: cornice leggibile non equivale a pagina completa. Codec/scanned PDF testati con fixture CCITT e JP2 sintetiche; hash/trasformazione del raster continuano a vincolare l'anteprima. Pilot reale esplicitamente distinto dai test offline, con fonte/pagina autorizzate e cap server, senza modificarne le guardie. Esito geometrico non utilizzabile con usage noto richiede ancora migliore classificazione UI, non retry automatici. [Report](agency-plan-live-20261030.md).
+
+## Agenzie — confronto scelto dall’agente, esito dal server
+
+Nuovo pannello permette2–20fatti attuali, stesso unit/subject/field e periodo esplicito riconosciuto dall’agente. Nessun accoppiamento automatico storico/attuale o conversione fra tipi di superficie. POST invia solo domanda e visibilità; server crea ID/esito, conferme dei fatti restano distinte. [Report](agency-comparison-ui-v1.md).
+
+## Agenzie — diniego della revisione invalida anche la pagina pratica
+
+Il collaudo reale ha trovato metadati fonte ancora cached fuori dal pannello dopo revoca. Il contenitore ora notifica il genitore e forza una nuova lettura autorizzata;403elimina anche elenco/titolo pratica dal rendering. Quote e originali già scaricati legittimamente non sono cancellabili retroattivamente. Secondo cluster e verifica browser dedicata confermano filename/citazione assenti. [Report](agency-review-browser-validation-20261030.md).
+
+## Agenzie — preparazione interna distinta da esportazione incarico
+
+Con modello non disponibile la nuova vista sceglie solo fatti confermati e mostra questioni, senza salvare/esportare un contratto. Identità, righe e campi obbligatori dipendono dal futuro mapping approvato; nessuna inferenza storica→conferente. ClientGETreview/findings rifiuta revisioni miste, selezione legata a porta/revisione e bozza bloccata. [Report](agency-mandate-selection-ui-v1.md).
+
+## Agenzie — autorizzazione analisi atti separata dalle planimetrie
+
+Contratto futuro DEED_EXTRACT con offerta/consenso legati a fonte/versione/SHA/pagine/finalità e ledger durevole. Count e dispatch richiedono consenso, incerto non libera cap o autorizza retry. Stage resta server-only; costo conservato anche dopo scarto/revoca. È una specifica, non un provider/job attivo. [Contratto](agency-deed-orchestration-contract-v1.md).

@@ -437,3 +437,6 @@ Endpoint invariati. JSON delle proposte articoli esteso con purchaseAmount facol
 
 ### Onboarding V5 —18 ottobre 2026
 Confirmations: costo dichiarato esplicitamente ammesso anche per bozza mode=manual/documentKind=unsupported, con medesimi controlli canonici e transazione oggetto+spesa. Nessuna nuova API, schema Prisma o modifica quote. Il wire esterno V8 usa array0/1; i DTO applicativi e le bozze mantengono oggetti nullable.
+
+## Agenzie — contratto ancora proposto,30ottobre2026
+Nessuna route Agenzie disponibile nel runtime attuale. Store interno e persistenza sono distinti da autenticazione/trasporto/upload HTTP. [Proposta API](v5/agency-api-proposal-v1.md), [stato verificato](v5/agency-worklog-20261030.md).

@@ -12,6 +12,10 @@ enum HomeRole {
   viewer
 }
 model Account {
+  agencyMembers AgencyMember[]
+  agencyGrants AgencyPracticeGrant[]
+  agencyCreateRequests AgencyCreateRequest[]
+  agencyPlanAuthorizations AgencyPlanAuthorization[]
   trashRequests TrashRequest[]
   historyEvents HomeHistoryEvent[]
   historyRequests HomeHistoryRequest[]
@@ -66,6 +70,108 @@ model Account {
   objectLinks ObjectResourceLink[]
   objectEvents ObjectEvent[]
   objectRequests ObjectRequest[]
+}
+
+model Agency {
+  id String @id @default(uuid())
+  name String
+  createdAt DateTime @default(now())
+  members AgencyMember[]
+  practices AgencyPractice[]
+  createRequests AgencyCreateRequest[]
+  aiBudgets AgencyAiBudget[]
+}
+
+// Provisioned explicitly by the server/operator, never by a provider callback.
+model AgencyAiBudget {
+  id String @id @default(uuid())
+  agencyId String
+  capMicros BigInt
+  committedMicros BigInt @default(0)
+  spentMicros BigInt @default(0)
+  expiresAt DateTime
+  revokedAt DateTime?
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  authorizations AgencyPlanAuthorization[]
+}
+
+model AgencyPlanAuthorization {
+  id String @id @default(uuid())
+  budgetId String
+  practiceId String
+  accountId String
+  approvalReceipt String @unique
+  proof Json
+  capMicros BigInt
+  committedMicros BigInt @default(0)
+  spentMicros BigInt @default(0)
+  priceVersion String
+  model String
+  inputMicrosPerMillion Int
+  outputMicrosPerMillion Int
+  expiresAt DateTime
+  revokedAt DateTime?
+  runId String? @unique
+  state String @default("issued")
+  budget AgencyAiBudget @relation(fields:[budgetId],references:[id],onDelete:Restrict)
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+}
+
+model AgencyMember {
+  id String @id @default(uuid())
+  agencyId String
+  accountId String
+  role String
+  validFrom DateTime @default(now())
+  validUntil DateTime?
+  revokedAt DateTime?
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  @@unique([agencyId,accountId])
+}
+
+model AgencyPractice {
+  id String @id @default(uuid())
+  agencyId String
+  label String
+  revision Int @default(1)
+  snapshotVersion Int @default(1)
+  snapshot Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  grants AgencyPracticeGrant[]
+  createRequests AgencyCreateRequest[]
+  planAuthorizations AgencyPlanAuthorization[]
+  @@index([agencyId,createdAt,id])
+}
+
+model AgencyPracticeGrant {
+  id String @id @default(uuid())
+  practiceId String
+  accountId String
+  access String
+  canExport Boolean @default(false)
+  validFrom DateTime @default(now())
+  validUntil DateTime?
+  revokedAt DateTime?
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  @@unique([practiceId,accountId])
+}
+
+model AgencyCreateRequest {
+  id String @id @default(uuid())
+  agencyId String
+  accountId String
+  key String
+  digest String
+  practiceId String
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  @@unique([agencyId,accountId,key])
 }
 model AuthChallenge {
   id String @id @default(uuid())

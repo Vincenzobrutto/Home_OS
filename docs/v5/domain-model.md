@@ -97,3 +97,50 @@ Migrazione additiva `20261023200000_document_trash`. `Document` aggiunge `trashe
 ## Mese della fattura — 25 ottobre 2026
 
 HomeExpense.invoiceMonth nullable YYYY-MM è distinto da documentDate, dueOn e competenceFrom/To dei servizi. Validazione API e CHECK SQL additivo, nessun valore dedotto o backfill. Per utenze che lo possiedono è il mese di riferimento dei riepiloghi; costo contato una sola volta. Snapshot/storico/export conservano il campo con gli stessi diritti della spesa. [Report e migrazione solo offline](bollette-mese-fattura-20261025.md).
+
+## Agenzie — nucleo di dominio locale,30ottobre2026
+AgencyMembership e PracticeGrant temporali; Practice con Source e SourceVersion append-only, ledger per account/pratica e revisioni; DependentRecord e prove pagina/estratto/versione/SHA. Tipi presenti in src/agency-practices/domain.ts, non ancora nello schema Prisma o in API. Non considerarli tabelle implementate. [Specifica e limiti](agency-practices-v1.md).
+
+### Agenzie — persistenza interna del secondo incremento
+Schema Prisma ora include Agency/AgencyMember/AgencyPractice/AgencyPracticeGrant/AgencyCreateRequest; migrazione20261030001000_agency_practices. Snapshot JSONB versionato e ledger/eventi atomicamente aggiornati sotto lock/CAS; non contiene file. Adapter interno senza controller o AppModule. Nessun DB esistente migrato. [Specifica](agency-practices-v1.md), [esiti nel registro](agency-worklog-20261030.md).
+
+### Agenzie — fatti e revisione
+Lo snapshotv1 ammette ora units/facts/reviewReceipts opzionali per compatibilità: proposte extracted/declared, prove e decisioni append-only separate dal valore originale; proiezione del valore confermato soltanto con fonte corrente e autorizzata. Nessuna migrazione, provider o route. [Specifica](agency-practices-v1.md).
+
+## Analisi planimetrie agenzia — snapshot opzionale
+
+AgencyPractice.snapshot può contenere planAnalyses e planReceipts: prova fonte/versione/SHA/pagina, raster SHA/dimensioni, geometrie/vuoti, perimetro separato, versioni e storia modifiche, motivazioni e computo commerciale. Righe e criteri non sono fatti confermati automaticamente. Fonte sostituita rende obsoleta la vista e nasconde geometrie correnti; mutazione geometria invalida il computo. Privacy ereditata dalla fonte, nessun accesso implicito admin. Bytes e prenotazioni job non inclusi in questo snapshot. [Contratto](agency-plan-integration-v1.md).
+
+### AgencyPractice planJobs (snapshot opzionale)
+Job interno limitato100/pratica: prova immutabile, creatore, riferimento autorizzazione server, tariffe/versione/modello, tetto microUSD, hash capability, lease, stato e prenotazioni fase+fingerprint+uso/costo. Budget globale e autorizzazioni pubbliche restano separati. [Contratto e limiti](agency-plan-jobs-v1.md).
+
+### AgencyAiBudget / AgencyPlanAuthorization
+Budget d'agenzia e autorizzazione per pratica/account/prova con receipt e runId globalmente unici. Tetti/impegni/spese BIGINT microUSD, prezzi immutabili, scadenze/revoche; lock transazionali anche fra pratiche. Relazioni additive senza modificare Home/Document. Provisioning solo nelle fixture, nessuna route di approvazione ancora attiva. [Report](agency-ai-budget-v1.md).
+
+Piani agenzia: measurementConfiguration opzionale conserva la configurazione manuale oltre al report, ricostruibile al reload. Modifiche geometriche/risoluzioni la invalidano insieme al computo, evitando riuso di conferme obsolete. [Workspace e limiti](agency-plan-workspace-v1.md).
+
+AgencyPractice: comparisons/observations/findingReceipts opzionali nel JSONB. Domande e note manuali separate dai valori; decisioni con snapshot fingerprint e prove, riapertura derivata, visibilità per fonte e nota. Nessuna attestazione completezza. [Report](agency-findings-v1.md).
+
+### Agenzie — risultati atti e binding, metadati persistenti
+
+Modulo interno deed-records definisce deedRecords/deedReceipts opzionali dell'aggregato: fonte/versione/SHA, creatore/visibilita, fingerprint risultato/candidati, collegamenti umani a unita/subjectKey/fatto, actor/time/ruolo riconosciuto/motivo e receipt. Invalidazione tramite dipendenza con citazione reale; fatti importati sempre proposti con privacy del record e prova fonte.20record/2000receipt/2MiB per i metadati nuovi. Metodi interni AgencyPracticesStore ora persistono/leggono/associano questi metadati con lock/CAS e viste filtrate; nessuno schema Prisma o migration nuovi. [Contratto dominio](agency-deed-records-domain-v1.md), [adapter e14/14DB](agency-deed-persistence-v1.md).
+
+### Planimetrie — origine manuale dei vani
+
+StoredRegion conserva seed/component/pixelArea nullabili e origine manuale esplicita; derivedFrom identifica il vano suddiviso. Aggiunta/ritaglio mantengono snapshot precedente nella storia, incrementano versione/revisione geometrica e invalidano il computo. Nessuna migration nuova. [Regole](agency-manual-rooms-20261030.md).
+
+### Planimetrie — diagnostica e bordi finali
+
+StoredPlan.analysisDiagnostics opzionale conserva la diagnostica dell'analisi iniziale per seed/esclusioni/rifiniture. Room.boundary opzionale conserva simplifyPixels effettivo e refinedForOverlap; un edit manuale lo rimuove e azzera seed/component/pixelArea con origin manuale. Snapshot JSON, nessuna migration nuova. Sono metadati scoped per fonte, omessi insieme alla geometria quando la fonte è superata/non leggibile. [Regole e limiti](agency-boundary-cleanup-20261030.md).
+
+### Censimento accessori proposti
+
+StoredPlan.annexInventory opzionale conserva id/tipo candidato/status/motivo/associazione non verificata/reviewExclusion/geometryAvailable, derivati dalle etichette disponibili e dalle geometrie ottenute. Inventario AI grezzo non viene riscritto. Snapshot scoped per fonte, nessuna migration e nessuna associazione catastale/commerciale automatica. Soglie virtuali non persistite nel prodotto in questo incremento. [Regole](agency-annex-threshold-rules-20261030.md).
+
+### Soglie proposte — snapshot planimetria
+
+openingReviews è metadato opzionale nello snapshot JSON già esistente, distinto da conferma umana; origine evidenza visiva e raffinamento pixel separati. boundary.virtualThresholdIds indica contorni derivati. Nessuna migrazione, tabella o file personale nel repository. [Report](agency-opening-recovery-20261030.md).
+
+### Proposta superfici e adozione
+
+Metadato surfaceProposal nello snapshot JSON esistente, nessuna migrazione: pending/applied/stale, digest canonico, binding all'analisi e alla geometria base, contorni/issues/summary, acceptedAt/acceptedBy dopo adozione. Cambi geometrici invalidano una proposta pending. Origine geometry_proposal distinta da manual, storico preservato e computo invalidato. sourceReadable/evidenceCurrent continuano a proteggere tutto il derivato. [Report corrente](agency-surface-integration-20261030.md).
