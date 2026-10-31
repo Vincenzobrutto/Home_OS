@@ -148,3 +148,5 @@ Metadato surfaceProposal nello snapshot JSON esistente, nessuna migrazione: pend
 ## Gift v1 — ledger inviti separato dal fascicolo
 
 AgencyGiftInvitation persiste manifesto/hash,chiave+digest creazione,scope,versione/stato/scadenza e account associato;unique pratica/emittente/key,tokenHash univoco,FK e controlli stato/claim. Il segreto non è persistito;claim non crea Home o entitlement. Snapshot e colonne sono verificati insieme. Migrazione solo collaudata su cluster nuovi. [Report](agency-gift-invitation-persistence-20261031.md).
+
+Document.giftProvenance è snapshot nullable della fonte Gift selezionata,non un grant o una certificazione;sourceVersion distinta dalla versione locale,parser/SHA coerenti e clear al purge.[Report](agency-gift-copy-prerequisites-20261031.md).

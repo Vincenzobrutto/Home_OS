@@ -2105,3 +2105,5 @@ Gift v1:primo dominio invito/claim/revoca,16nuovi casi e47mirati verdi,nessuna H
 Gift v1:ledger inviti persistente,auth DB,edit+export e controlli fonti/claim,47mirati/706ordinari/33DBverdi su nuovo cluster arrestato.Nessuna API,copia Home o benefit attivi.[Report](v5/agency-gift-invitation-persistence-20261031.md).
 
 Gift:flag annuale ora congela full-access v1 confermato,tutte le features proprietario per12mesi dall'accettazione.Free futuro non blocca la scelta;claim non attiva beneficio o pagamenti.[Contratto](v5/agency-gift-home-copy-contract-20261031.md).
+
+Gift:prerequisiti copia,conferma Home,ammissione verificata e provenienza Document/client;purge cancella la provenienza.742backend/39DB/1773frontendverdi,nessun copier/Home/entitlement ancora attivo.[Report](v5/agency-gift-copy-prerequisites-20261031.md).

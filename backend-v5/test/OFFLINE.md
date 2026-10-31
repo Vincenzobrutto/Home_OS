@@ -66,3 +66,5 @@ Il profilo nominale npm run test:agency-paper-db, con gli stessi argomenti obbli
 Il profilo nominale `test:agency-gift-db` verifica il registro metadati/preparazione nel database temporaneo;non consegna Gift. Si può avviare con `node test/offline-secondary.cjs --suite test:agency-gift-db --pg-bin <percorso> --scratch-root <percorso>`. Il secondario usa esclusivamente loopback55440 e accetta solo questo profilo e `test:agency-http-db`;rifiuta un target occupato,non riusa o arresta database esistenti. Ownership/network guard e arresto del cluster creato rimangono obbligatori. È incluso anche in `test:offline-db` sul target ordinario di quel runner.
 
 Il profilo Gift ora include anche agency-gift-invitations.integration.test.cjs:ledger/claim/revoca con identità DB e sorgenti correnti. Rimane senza API e crea sempre un cluster nuovo protetto;non verifica ancora copia Home o entitlement.
+
+Gift:profilo DB include ora gift-provenance.integration.test.cjs con metadati e purge reali su fixture;unit includono acceptance-command/file-admission/provenance.Scanner e storage dei nuovi unit sono stub dichiarati,non controlli antivirus reali o trasferimenti Home.

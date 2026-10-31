@@ -355,6 +355,7 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  giftProvenance Json?
   onboardingComparisons ObjectOnboardingComparison[]
   onboardingDrafts ObjectOnboardingDraft[]
   onboardingJobs ObjectOnboardingJob[]

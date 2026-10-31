@@ -1,3 +1,4 @@
+import {parseGiftDocumentProvenance} from './gift-provenance';
 import {archiveFamily} from './families';
 import {documentViewBase,documentViewSummary,documentViewWhere} from './views';
 import {changeHouseFamily} from './house-family';
@@ -21,7 +22,9 @@ function readableWhere(accountId: string, homeId: string): Prisma.DocumentWhereI
 export function publicDocument(doc: OriginalDocument, exporting: boolean, detail = false) {
   if (!doc.original) throw storageUnavailable();
   const original = doc.original;
-  return { id: doc.id, homeId: doc.homeId, name: doc.name, originalFilename: original.originalFilename, mimeType: original.mimeType, byteSize: original.byteSize, createdAt: doc.createdAt.toISOString(), version: original.version, source: 'manual_upload', status: 'stored', visibility: doc.visibility, permissions: exporting ? ['read', 'export'] : ['read'], ...(detail ? { sha256: original.sha256 } : {}) };
+  const giftProvenance=parseGiftDocumentProvenance((doc as OriginalDocument & {giftProvenance?:unknown}).giftProvenance);
+  if(giftProvenance&&giftProvenance.sourceSha256!==original.sha256)throw storageUnavailable();
+  return { id: doc.id, homeId: doc.homeId, name: doc.name, originalFilename: original.originalFilename, mimeType: original.mimeType, byteSize: original.byteSize, createdAt: doc.createdAt.toISOString(), version: original.version, source: giftProvenance?'agency_gift':'manual_upload', status: 'stored', visibility: doc.visibility, permissions: exporting ? ['read', 'export'] : ['read'], ...(detail ? { sha256: original.sha256,...(giftProvenance?{giftProvenance}:{}) } : {}) };
 }
 @Injectable()
 export class DocumentsService implements OnModuleInit {

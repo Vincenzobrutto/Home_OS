@@ -4,13 +4,13 @@
 
 Ramo dedicato `codex/agency-gift-contract-20261031`, PR draft72 verso la base comune cbddcf0;nessun merge o deploy. Implementati pacchetto interno,registro metadati,adapter transazionale e anteprima controllata isolata. Ultima correzione runtime:8fbc976,replay legato al record originario. Export sintetico autosufficiente riproducibile con gli script del frontend;non collegato all'app e non sostituisce il collaudo planimetrie scaduto.
 
-Verificato:31/31backend mirati,690/690ordinari,14/14DBsu nuovo cluster arrestato,21/21UI;build/lint e typecheck mirati verdi. Export controllato in DOM sintetico senza rete. Non verificato:nuovo browser/375px,file://reale,crash recovery o trasferimento Home. Revisioni e controlli descritti sono self-review dell'autore,non audit indipendente.
+Verificato:742/742ordinari backend (83Gift),39/39DBsu nuovo cluster arrestato,1773/1773frontend(174file);build/lint e typecheck mirati verdi. Export controllato in DOM sintetico senza rete. Non verificato:nuovo browser/375px,file://reale,crash recovery o trasferimento Home. Revisioni e controlli descritti sono self-review dell'autore,non audit indipendente.
 
 Non disponibile:producer documentale collegato,route Gift,consegna,presa in carico,copia indipendente Home,nuovi accessi o aggiornatore documenti del proprietario. Nessun modello incarico approvato. Le funzioni interne non certificano identità,fonte/firma,conformità o completezza e non consentono invio. Non basta porre canDeliver=true.
 
 Per proseguire:validare [copia e autorità](agency-gift-home-copy-contract-20261031.md),[minacce/recupero e ticket](agency-gift-threats-and-recovery-20261031.md),[selezione documenti proposta](agency-gift-document-policy-proposal-20261031.md). Nessuna di queste proposte è stata confermata da un'agenzia reale. L'aggiunta dei documenti del proprietario senza accesso Agency implicito è requisito fondamentale da provare quando la copia sarà realizzata,non un nuovo test end-to-end già eseguito.
 
-La cronologia seguente conserva i conteggi storici per incremento;il quadro sopra è il riferimento corrente. Non sommare le suite mirate ai totali ordinari che già le includono,né chiamare14test DBquattordici casi indipendenti:il numero comprende13sottocasi e il contenitore.
+La cronologia seguente conserva i conteggi storici per incremento;il quadro sopra è il riferimento corrente. Non sommare le suite mirate ai totali ordinari che già le includono,e tenere distinti i sottocasi DBdai loro contenitori.
 
 ## Decisione successiva confermata dal committente — Gift v1
 
@@ -141,3 +141,7 @@ Completato il secondo incremento:modello/migrazione Gift dedicati,create/landing
 ## Decisione full-access annuale
 
 Flag dell'agenzia true:offerta dimora-full-access-v1/versione1,un anno con tutte le funzioni Dimora dell'account proprietario dall'accettazione;false:nessun nuovo beneficio,documenti/casa comunque consegnabili.La futura definizione del free non blocca Gift o flag.Questo aggiornamento supera le note storiche sul catalogo/offerta non disponibile.Il ledger registra la promessa;claim non la attiva e copier/entitlement restano da collegare.Non estende permessi su dati/ruoli altrui né attiva invii o pagamenti automaticamente.
+
+## Prerequisiti copier verificati
+
+Conferma esplicita nome/indirizzo,ammissione del nuovo originale con scan/readback e provenienza Gift Document/client implementati.Purge cancella la provenienza e gli errori non espongono dettagli privati.742backend/39DB/1773frontend e build app verdi;nessun copier/receipt/entitlement o API dal link ancora collegati.Vincenzo autorizza proseguire oltre le23.[Report](agency-gift-copy-prerequisites-20261031.md).

@@ -258,3 +258,7 @@ Creazione/revoca richiedono edit+export;landing/claim di un invito esistente ric
 ## Gift v1 — flag annuale full-access, decisione confermata
 
 Vincenzo conferma:per ora il flag dell'agenzia offre un anno con tutte le funzionalità dell'account proprietario;limitazioni free da decidere dopo.Il flag opzionale è indipendente dalla consegna documenti.Offerta interna dimora-full-access-v1/versione1,12mesi dall'accettazione.Invito/claim la congelano senza attivarla.Rimuove il precedente blocco di registrazione per catalogo features non definito.Prezzi/rinnovo/account già abbonato restano policy successive,nessun addebito attivato.
+
+## Gift v1 — conferma Home,ammissione e provenienza
+
+Il proprietario conferma esplicitamente nome/indirizzo;il server sceglie HomeId/account/beneficio. Nuovo file indipendente passa da writeVerified,non dalla sola firma AgencyVault. Staging va referenziato prima della pubblicazione;errori sconosciuti non espongono diagnostica. Document.giftProvenance esplicita origine/metodo/qualifica,con SHA coerente e versione Agency separata;nessun potere aggiuntivo. Soft trash conserva,purge definitivo cancella. Job/copia/receipt restano da implementare.[Report](agency-gift-copy-prerequisites-20261031.md).

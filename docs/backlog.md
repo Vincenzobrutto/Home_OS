@@ -1084,3 +1084,5 @@ Gift v1,prossimo:ledger inviti persistito con idempotenza creazione,riemissione 
 Gift:ledger inviti completato come porta interna;prossimo copier con nome/indirizzo Home approvati e provenienza Gift esplicita (Documentoggi manual_upload),receipt recuperabile e poi API/UI.Riemissione token dopo risposta persa da collegare;offerta premium ancora indisponibile.[Stato](v5/agency-gift-invitation-persistence-20261031.md).
 
 Gift,nuova decisione Vincenzo:beneficio flag=true è full-access per12mesi dall’accettazione,free futuro da definire.Non attenderecatalogofeaturespercongelarel’offerta;implementare entitlement con offerta dimora-full-access-v1.Costi/rinnovo/accountgiàabbonato non autorizzano sovrascritture o addebiti impliciti.
+
+Gift:prerequisiti copia verificati;prossimo job/staging e commit atomico Home/doc/receipt,coordinato con cleanup e purge.Solo dopo attivazione anno/APIUI.[Stato](v5/agency-gift-copy-prerequisites-20261031.md).
