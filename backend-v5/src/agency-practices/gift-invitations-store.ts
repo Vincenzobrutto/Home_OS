@@ -42,11 +42,12 @@ export class GiftInvitationsStore{
   giftInvitationLanding(record,secret,new Date().toISOString());this.current(actor,practice,record);
   return {actor,practice,row,record};
  }
- private async acceptanceIdentity(tx:Prisma.TransactionClient,accountId:string,context:{actor:Actor;practice:Practice;row:AgencyGiftInvitation;record:GiftInvitation},expectedVersion:number){
+ private async acceptanceIdentity(tx:Prisma.TransactionClient,accountId:string,context:{actor:Actor;practice:Practice;row:AgencyGiftInvitation;record:GiftInvitation},expectedVersion:number,allowInvited=false){
   const r=context.record;
   await tx.$queryRaw`SELECT id FROM "Account" WHERE id=${accountId} FOR SHARE`;
   const account=await tx.account.findUnique({where:{id:accountId},select:{id:true,email:true,emailVerifiedAt:true}}),now=new Date();
-  if(!account||!account.emailVerifiedAt||account.emailVerifiedAt>now||account.email.trim().toLowerCase()!==r.recipientEmail||r.state!=='claimed'||r.claim?.accountId!==accountId)unavailable();
+  const stateAllowed=r.state==='claimed'&&r.claim?.accountId===accountId||allowInvited&&r.state==='invited';
+  if(!account||!account.emailVerifiedAt||account.emailVerifiedAt>now||account.email.trim().toLowerCase()!==r.recipientEmail||!stateAllowed)unavailable();
   if(r.version!==expectedVersion)throw new GiftInvitationError('revision_conflict');
   requirePractice(context.actor,context.practice,'export',now.toISOString());live(r,now.toISOString());
   return context;
@@ -87,6 +88,42 @@ export class GiftInvitationsStore{
    requirePractice(actor,practice,'edit',new Date().toISOString());requirePractice(actor,practice,'export',new Date().toISOString());live(record,new Date().toISOString());
    await tx.agencyGiftInvitation.create({data:{id:record.id,agencyId,practiceId,issuerAccountId:accountId,creationKey:b.key,creationDigest,tokenHash:record.tokenHash,version:record.version,state:record.state,expiresAt:new Date(record.expiresAt),snapshot:json(record),createdAt:new Date(record.createdAt)}});
    return {...summary(record),secret,replay:false,requiresReissue:false};
+  },{maxWait:5000,timeout:15000});
+ }
+ /** Agency-authorized management list: no source payload, token hashes or claimant identity. */
+ async list(accountId:string,agencyId:string,practiceId:string){
+  return this.db.$transaction(async tx=>{
+   const {actor,practice}=await this.practices.giftInvitationContext(tx,accountId,agencyId,practiceId);
+   const rows=await tx.agencyGiftInvitation.findMany({where:{agencyId,practiceId},orderBy:[{createdAt:'desc'},{id:'desc'}]});
+   const invitations=rows.map(row=>{
+    if(row.agencyId!==agencyId||row.practiceId!==practiceId)unavailable();
+    const r=snapshot(row);return {id:r.id,version:r.version,state:r.state,createdAt:r.createdAt,expiresAt:r.expiresAt,recipientEmail:r.recipientEmail};
+   });
+   const accepted=await tx.agencyGiftAcceptanceReceipt.findUnique({where:{practiceId},select:{id:true}});
+   requirePractice(actor,practice,'export',new Date().toISOString());
+   return {practiceId,accepted:accepted!==null,invitations};
+  },{maxWait:5000,timeout:15000});
+ }
+ /** Version-aware anonymous landing; legacy landing remains unchanged. */
+ async landingStatus(id:string,secret:unknown){
+  return this.db.$transaction(async tx=>{
+   const {actor,practice,record}=await this.credentialContext(tx,id,secret);
+   this.current(actor,practice,record);const now=new Date().toISOString();requirePractice(actor,practice,'export',now);giftInvitationLanding(record,secret,now);
+   return {id:record.id,version:record.version,requiresAccount:true as const};
+  },{maxWait:5000,timeout:15000});
+ }
+ /** Authenticated recipient-only manifest preview, before or after its own claim. No state is changed. */
+ async recipientPreview(accountId:string,id:string,secret:unknown){
+  if(typeof accountId!=='string'||!/^[a-f0-9-]{36}$/iu.test(accountId))unavailable();
+  return this.db.$transaction(async tx=>{
+   const context=await this.credentialContext(tx,id,secret);
+   await this.acceptanceIdentity(tx,accountId,context,context.record.version,true);
+   const {actor,practice,record}=context,agency=await tx.agency.findUnique({where:{id:record.agencyId},select:{id:true,name:true}});
+   if(!agency||agency.id!==practice.agencyId)unavailable();
+   if(record.state!=='invited'&&record.state!=='claimed')unavailable();const state=record.state;
+   const documents=record.packet.documents.map(d=>({title:d.title,author:d.author,origin:d.origin,lifecycle:d.lifecycle,signatureVerification:d.signatureVerification,...(d.surface?{surface:structuredClone(d.surface)}:{})}));
+   this.current(actor,practice,record);const now=new Date().toISOString();requirePractice(actor,practice,'export',now);live(record,now);
+   return {id:record.id,version:record.version,state,agencyName:agency.name,documents,annualBenefit:structuredClone(record.annualBenefit)};
   },{maxWait:5000,timeout:15000});
  }
  async landing(id:string,secret:unknown){

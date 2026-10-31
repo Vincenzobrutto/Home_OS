@@ -18,8 +18,11 @@ test('secondary wrapper refuses non-nominal suites before creating a cluster',()
   const result=spawnSync(process.execPath,['test/offline-secondary.cjs','--suite',suite],{env:cleanEnvironment(process.env,'unit'),cwd:path.resolve(__dirname,'..'),encoding:'utf8',windowsHide:true,timeout:15000});
   assert.notEqual(result.status,0);assert.match(result.stderr,/secondary_suite_forbidden/);
  }
- assert.deepEqual(suites['test:agency-gift-db'].files,['test/agency-gift.integration.test.cjs','test/agency-gift-invitations.integration.test.cjs','test/gift-provenance.integration.test.cjs','test/agency-gift-acceptance.integration.test.cjs','test/agency-gift-worker.integration.test.cjs']);
+ assert.deepEqual(suites['test:agency-gift-db'].files,['test/agency-gift.integration.test.cjs','test/agency-gift-invitations.integration.test.cjs','test/gift-provenance.integration.test.cjs','test/agency-gift-acceptance.integration.test.cjs','test/agency-gift-worker.integration.test.cjs','test/agency-gift-document-release.integration.test.cjs','test/agency-gift-http.integration.test.cjs']);
  assert.equal(suites['test:agency-gift-db'].database,true);assert.equal(suites['test:agency-gift-db'].api,false);
+ assert.deepEqual(suites['test:agency-gift-runner-db'],{database:true,api:false,files:['test/agency-gift-runner.integration.test.cjs'],apiFiles:[]});
+ assert.equal(suites['test:agency-gift-db'].files.includes('test/agency-gift-runner.integration.test.cjs'),false);
+ assert.equal(suites['test:offline-db'].files.includes('test/agency-gift-runner.integration.test.cjs'),false);
 });
 test('offline database accepts one explicit synthetic URL; real, remote, alternate and ambiguous targets fail before connection', () => {
  assertOfflineDatabase(DB_URL);

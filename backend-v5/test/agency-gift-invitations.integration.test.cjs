@@ -15,12 +15,12 @@ test('Gift invitations persist only on a new owned synthetic cluster',{timeout:1
  await db.agencyMember.create({data:{agencyId:agency.id,accountId:issuer.id,role:'admin',validFrom:past}});
  const vault=await AgencyFileVault.open(path.join(owned.directory,'gift-invites-vault-'+randomUUID()));
  const bytes=Buffer.from('%PDF-1.4\nGift invitation synthetic original\n%%EOF\n'),sha256=createHash('sha256').update(bytes).digest('hex');
- async function fixture({verified=true,visibility='practice'}={}){
+ async function fixture({verified=true,visibility='practice',surface=false}={}){
   const recipient=await db.account.create({data:{name:'Recipient DEMO',email:randomUUID()+'@example.test',passwordHash:'synthetic',emailVerifiedAt:verified?past:null}});
   const p=(await practices.create(issuer.id,agency.id,'Gift invitation DEMO '+randomUUID(),randomUUID())).practice;
   const revision=async()=>(await practices.read(issuer.id,agency.id,p.id)).revision;
   await practices.upload(issuer.id,agency.id,p.id,{key:randomUUID(),expectedRevision:await revision(),command:{operation:'attach',sourceId:'gift-document',visibility,originalFilename:'gift-invitation-DEMO.pdf'}},bytes,vault);
-  await practices.registerGiftMetadata(issuer.id,agency.id,p.id,{agencyId:agency.id,practiceId:p.id,sourceId:'gift-document',sourceVersion:1,sha256,metadataVersion:1,origin:'agency_generated',lifecycle:'final',author:'Agency DEMO',title:'Gift synthetic document'},{key:randomUUID(),expectedRevision:await revision(),expectedMetadataVersion:null});
+  await practices.registerGiftMetadata(issuer.id,agency.id,p.id,{agencyId:agency.id,practiceId:p.id,sourceId:'gift-document',sourceVersion:1,sha256,metadataVersion:1,origin:'agency_generated',lifecycle:'final',author:'Agency DEMO',title:'Gift synthetic document',...(surface?{surface:{kind:'commercial',qualification:'estimated',method:'Barra metrica DEMO',geometryRevision:1,caveats:['Contorno da verificare DEMO']}}:{})},{key:randomUUID(),expectedRevision:await revision(),expectedMetadataVersion:null});
   const command={key:randomUUID(),expectedRevision:await revision(),documents:[{sourceId:'gift-document',version:1,sha256}],recipientEmail:' '+recipient.email.toUpperCase()+' ',stipulationCompleted:true,releaseApproved:true,annualBenefit:false};
   const create=()=>invites.create(issuer.id,agency.id,p.id,command);
   const snapshot=async()=>(await db.agencyPractice.findUnique({where:{id:p.id}})).snapshot;
@@ -148,6 +148,48 @@ test('Gift invitations persist only on a new owned synthetic cluster',{timeout:1
   assert.deepEqual(await db.agencyGiftInvitation.findUnique({where:{id:created.id}}),before);assert.equal(await db.agencyGiftInvitation.count({where:{practiceId:f.p.id}}),1);
   assert.deepEqual(await invites.landing(created.id,created.secret),{id:created.id,requiresAccount:true,canAccept:false});
   assert.equal((await invites.claim(f.recipient.id,created.id,created.secret,1)).state,'claimed');assert.equal(await db.home.count(),homes);
+ });
+ await t.test('agency list stays within its practice and exposes only management metadata',async()=>{
+  const f=await fixture(),created=await f.create(),other=await fixture(),otherInvite=await other.create();
+  const list=await invites.list(issuer.id,agency.id,f.p.id);assert.equal(list.practiceId,f.p.id);assert.equal(list.accepted,false);assert.equal(list.invitations.length,1);const item=list.invitations[0];
+  assert.deepEqual(Object.keys(item).sort(),['id','version','state','createdAt','expiresAt','recipientEmail'].sort());assert.equal(item.id,created.id);assert.equal(item.version,1);assert.equal(item.state,'invited');assert.equal(item.recipientEmail,f.recipient.email);assert.match(item.createdAt,/Z$/);assert.match(item.expiresAt,/Z$/);
+  const encoded=JSON.stringify(list);for(const hidden of [created.secret,f.recipient.id,otherInvite.id,'tokenHash','packet','sourceId','sha256','homeId','claimAccountId'])assert.equal(encoded.includes(hidden),false);
+  await assert.rejects(()=>invites.list(f.recipient.id,agency.id,f.p.id),denied('access_denied'));
+  await invites.revoke(issuer.id,agency.id,f.p.id,created.id,1);const after=await invites.list(issuer.id,agency.id,f.p.id);assert.equal(after.invitations[0].state,'revoked');assert.equal(after.invitations[0].version,2);
+ });
+ await t.test('version-aware guest landing returns only its version while legacy landing stays unchanged',async()=>{
+  const f=await fixture(),created=await f.create(),before=await db.agencyGiftInvitation.findUnique({where:{id:created.id}});
+  assert.deepEqual(await invites.landingStatus(created.id,created.secret),{id:created.id,version:1,requiresAccount:true});
+  assert.deepEqual(await invites.landing(created.id,created.secret),{id:created.id,requiresAccount:true,canAccept:false});assert.deepEqual(await db.agencyGiftInvitation.findUnique({where:{id:created.id}}),before);
+  await invites.claim(f.recipient.id,created.id,created.secret,1);assert.deepEqual(await new GiftInvitationsStore(db).landingStatus(created.id,created.secret),{id:created.id,version:2,requiresAccount:true});
+  await assert.rejects(()=>invites.landingStatus(created.id,'bad-secret'),denied('unavailable'));
+ });
+ await t.test('verified recipient previews released content and estimates before or after own claim without side effects',async()=>{
+  const f=await fixture({surface:true}),created=await invites.create(issuer.id,agency.id,f.p.id,{...f.command,annualBenefit:true}),before=await db.agencyGiftInvitation.findUnique({where:{id:created.id}}),practice=await f.snapshot(),homes=await db.home.count();
+  const preview=await invites.recipientPreview(f.recipient.id,created.id,created.secret);assert.deepEqual(Object.keys(preview).sort(),['id','version','state','agencyName','documents','annualBenefit'].sort());assert.equal(preview.id,created.id);assert.equal(preview.version,1);assert.equal(preview.state,'invited');assert.equal(preview.agencyName,agency.name);
+  assert.deepEqual(preview.documents,[{title:'Gift synthetic document',author:'Agency DEMO',origin:'agency_generated',lifecycle:'final',signatureVerification:'not_assessed',surface:{kind:'commercial',qualification:'estimated',method:'Barra metrica DEMO',geometryRevision:1,caveats:['Contorno da verificare DEMO']}}]);
+  assert.deepEqual(preview.annualBenefit,{requested:true,offerId:'dimora-full-access-v1',offerVersion:1,activated:false});
+  for(const hidden of [created.secret,f.recipient.email,f.recipient.id,'sourceId','sha256','originalFilename','storageKey','tokenHash','homeId','canAccept','createsHome','claimAccountId'])assert.equal(JSON.stringify(preview).includes(hidden),false);
+  assert.deepEqual(await db.agencyGiftInvitation.findUnique({where:{id:created.id}}),before);assert.deepEqual(await f.snapshot(),practice);assert.equal(await db.home.count(),homes);
+  preview.documents[0].surface.caveats.push('caller mutation');preview.annualBenefit.requested=false;
+  assert.deepEqual((await invites.recipientPreview(f.recipient.id,created.id,created.secret)).documents[0].surface.caveats,['Contorno da verificare DEMO']);
+  await invites.claim(f.recipient.id,created.id,created.secret,1);const claimedBefore=await db.agencyGiftInvitation.findUnique({where:{id:created.id}}),after=await new GiftInvitationsStore(db).recipientPreview(f.recipient.id,created.id,created.secret);
+  assert.equal(after.version,2);assert.equal(after.state,'claimed');assert.deepEqual(after.documents,before.snapshot.packet.documents.map(d=>({title:d.title,author:d.author,origin:d.origin,lifecycle:d.lifecycle,signatureVerification:d.signatureVerification,surface:d.surface})));assert.deepEqual(await db.agencyGiftInvitation.findUnique({where:{id:created.id}}),claimedBefore);assert.equal(await db.home.count(),homes);
+ });
+ await t.test('wrong, unverified or a different claimed account cannot preview released content',async()=>{
+  const f=await fixture(),created=await f.create(),wrong=await db.account.create({data:{name:'Wrong preview DEMO',email:randomUUID()+'@example.test',passwordHash:'synthetic',emailVerifiedAt:past}});
+  await assert.rejects(()=>invites.recipientPreview(wrong.id,created.id,created.secret),denied('unavailable'));
+  const unverified=await fixture({verified:false}),pending=await unverified.create();await assert.rejects(()=>invites.recipientPreview(unverified.recipient.id,pending.id,pending.secret),denied('unavailable'));
+  await invites.claim(f.recipient.id,created.id,created.secret,1);await db.account.update({where:{id:f.recipient.id},data:{email:randomUUID()+'@example.test'}});
+  const reassigned=await db.account.create({data:{name:'Same email different account DEMO',email:f.recipient.email,passwordHash:'synthetic',emailVerifiedAt:past}}),before=await db.agencyGiftInvitation.findUnique({where:{id:created.id}});
+  await assert.rejects(()=>invites.recipientPreview(reassigned.id,created.id,created.secret),denied('unavailable'));assert.deepEqual(await db.agencyGiftInvitation.findUnique({where:{id:created.id}}),before);
+ });
+ await t.test('withdrawn source or issuer export revocation denies status and preview without modifying invitation',async()=>{
+  const f=await fixture(),created=await f.create(),before=await db.agencyGiftInvitation.findUnique({where:{id:created.id}});
+  await practices.mutate(issuer.id,agency.id,f.p.id,{key:randomUUID(),expectedRevision:await f.revision(),command:{operation:'withdraw',sourceId:'gift-document',expectedSourceVersion:1}});
+  await assert.rejects(()=>invites.landingStatus(created.id,created.secret),denied('unavailable','access_denied','source_changed'));await assert.rejects(()=>invites.recipientPreview(f.recipient.id,created.id,created.secret),denied('unavailable','access_denied','source_changed'));assert.deepEqual(await db.agencyGiftInvitation.findUnique({where:{id:created.id}}),before);
+  const g=await fixture(),issued=await g.create(),original=await db.agencyGiftInvitation.findUnique({where:{id:issued.id}});await db.agencyPracticeGrant.update({where:{practiceId_accountId:{practiceId:g.p.id,accountId:issuer.id}},data:{canExport:false}});
+  await assert.rejects(()=>invites.list(issuer.id,agency.id,g.p.id),denied('access_denied'));await assert.rejects(()=>invites.landingStatus(issued.id,issued.secret),denied('unavailable','access_denied'));await assert.rejects(()=>invites.recipientPreview(g.recipient.id,issued.id,issued.secret),denied('unavailable','access_denied'));assert.deepEqual(await db.agencyGiftInvitation.findUnique({where:{id:issued.id}}),original);
  });
  await t.test('agency flag persists one year full-access promise without activating it at claim',async()=>{
   const f=await fixture(),command={...f.command,annualBenefit:true},homes=await db.home.count();

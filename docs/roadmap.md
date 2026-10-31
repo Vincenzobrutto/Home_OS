@@ -1,5 +1,9 @@
 ## 31 ottobre2026 — primo contratto Gift interno
 
+## Gift v1 — prossima UI dopo le API verificate
+
+[API e polling verificati](v5/agency-gift-api-20261031.md). Rilascio documenti e producer manuale sono conclusi; client di protocollo e memoria token pronti. Collegare façade, provider sopra il router per account, viste Agency/proprietario, ritorno login/register e notice dell'anno;poi browser desktop/375px con sola fixture. Completare reissue atomico/rate limit e relative eccezioni. Non allentare verifica email o inventare metadati/modelli/fallback per arrivare alla consegna. Incoming Gift richiede configurazione esplicita; diritti e Home già accettati restano indipendenti.
+
 ## Gift v1 — collegamento applicativo dopo il copier
 
 [Copier interno verificato](v5/agency-gift-copier-20261031.md): il precedente task worker/ricevuta/grant è concluso nel codice interno. Restano API con sessione/Origin/CSRF e filtro errori, poller limitato, reissue atomico, ripresa del job, UI con token solo in memoria e normale verifica email, producer metadati finali autorizzato, QA HTTP/browser375px. Nessun nuovo limite free o catalogo commerciale blocca il diritto annuale. Non attivare fallback simulati nell'app.

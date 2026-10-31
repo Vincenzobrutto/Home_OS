@@ -161,19 +161,29 @@ export class GiftAcceptanceWorker{
   }
   return {jobId,state:'cancelled',replay:result.replay};
  }
- async runNext(jobId:string){
+ private async yieldLease(lease:Lease){
+  return this.db.$transaction(async tx=>{
+   const {job,items}=await this.lock(tx,lease.job.id);this.fence(job,lease);readGiftAcceptancePreparation(job,items);
+   const state=items.every(i=>i.state==='admitted')?'ready':'queued';
+   await tx.agencyGiftAcceptanceJob.update({where:{id:job.id},data:{state,version:{increment:1},leaseTokenHash:null,leaseUntil:null}});
+   return {jobId:job.id,state,replay:false};
+  },{maxWait:5000,timeout:15000});
+ }
+ async runNext(jobId:string,continueWork:()=>boolean=()=>true){
   if(!validId(jobId))fail();
   const taken=await this.take(jobId);if(taken.result)return taken.result;const lease=taken.lease!;
   try{
    await this.vault.assertGiftDestination(this.storage.root);
    // Renew after every admitted file: no transaction or SQL lock is held during scanning.
    for(const item of (await this.authorized(lease)).items){
+    if(!continueWork())return this.yieldLease(lease);
     if(item.state==='admitted')continue;
     const current=await this.authorized(lease),d=current.manifest.packet.documents[item.ordinal];
     const staged=await stageGiftOriginal(()=>this.vault.read(d.sha256,d.byteSize),d,this.storage);
     // On an uncertain persistence outcome do not compensate by deleting a possibly reserved object.
     await this.admit(lease,item,staged);
    }
+   if(!continueWork())return this.yieldLease(lease);
    return await this.publish(lease);
   }catch(error){
    return this.db.$transaction(async tx=>{

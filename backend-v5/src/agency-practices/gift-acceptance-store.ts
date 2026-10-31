@@ -54,6 +54,17 @@ export class GiftAcceptanceStore{
    },{maxWait:5000,timeout:15000});
   }
  }
+ /** Token-free authenticated resume; absence never reveals another account's invitation or work. */
+ async forInvitation(accountId:string,invitationId:string){
+  if(!validId(accountId)||!validId(invitationId))fail();
+  const result=await this.db.$transaction(async tx=>{
+   const receipt=await tx.agencyGiftAcceptanceReceipt.findFirst({where:{accountId,invitationId}});
+   if(receipt)return acceptedGiftSummary(await readAcceptedGift(tx,receipt,accountId),true);
+   const job=await tx.agencyGiftAcceptanceJob.findFirst({where:{accountId,invitationId},orderBy:{createdAt:'desc'},select:{id:true}});
+   return job?.id??null;
+  },{maxWait:5000,timeout:15000});
+  return typeof result==='string'?this.get(accountId,result):result??{state:'not_started' as const};
+ }
  async get(accountId:string,jobId:string){
   if(!validId(accountId)||!validId(jobId))fail();
   return this.db.$transaction(async tx=>{

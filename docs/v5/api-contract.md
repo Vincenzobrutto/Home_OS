@@ -173,3 +173,7 @@ Nelle stesse risposte plans, coverage opzionale contiene scope closed_components
 
 ### Scarto selettivo candidate di copertura (31/10)
 apply_surface_proposal accetta excludedCandidateIds opzionale, massimo12 ID unici appartenenti a surfaceProposal.coverage.candidateIds e assenti dai vani canonici. Nessuna coordinata client. coverage può contenere possibleWallIds firmati; coverage.candidates espone shapeHint wall_band e shapeEvidence opzionali. La risposta applicata conserva acceptedExcludedCandidateIds e la proposta firmata integrale; scelte e motivo sono tracciati. Campo omesso mantiene il comportamento precedente. Nessuna nuova route/schema. [Report](agency-candidate-selection-20261031.md).
+
+## Gift v1 (1 novembre2026)
+
+Nuovi endpoint e DTO nel [contratto Gift](agency-gift-api-20261031.md). Token solo nel corpo dei POST; Origin/CSRF anche per landing anonima, nessuna query extra. Claim/inizio richiedono account corrispondente con email verificata dal DB anche per account legacy; non creano Home. Accettazione202 e polling autenticano la stessa sessione. Ricevuta già accettata e beneficio si leggono senza token/Agency e non ricreano originali eliminati. Il frontend non conserva token in URL query, browser storage o cache Query. Schermate Gift ancora da collegare nel checkpoint API.

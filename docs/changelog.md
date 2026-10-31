@@ -1,5 +1,9 @@
 ## 31 ottobre2026 — primo contratto Gift interno
 
+## 1 novembre 2026 — Gift: API, coda e verifica email
+
+Collegati rilascio esplicito dei file, inviti/preview/claim, accettazione202, ripresa/stato/cancel e diritto account. Poller SQL configurato, letture indipendenti anche senza ingresso/vault Agency. Aggiunti parser/client frontend; verifica email in sessione corretta senza bypass o cambio del reset.842/842backend,111/111DBGift+6/6poller su cluster nuovi arrestati,1829/1829frontend e build verdi. Schermate Gift ancora da collegare. [Report](v5/agency-gift-api-20261031.md).
+
 ## 31 ottobre 2026 — Gift: copier e anno completo verificati
 
 Successivo alla prenotazione: backend interno con lease, copia indipendente, pubblicazione atomica Home/documenti/ricevuta/anno opzionale, recupero e cancellazione selettiva. Nessun grant Agency. 789/789 ordinari e 78/78 DB su nuovo cluster arrestato, statici verdi. API, poller e UI dal link ancora da collegare; nessun invio o deploy. [Report](v5/agency-gift-copier-20261031.md).

@@ -86,7 +86,8 @@
     "test:agency-review-trial": "node test/offline.cjs --suite test:agency-review-trial",
     "test:agency-surfaces-trial": "node test/offline.cjs --suite test:agency-surfaces-trial",
     "test:agency-gift-db": "node test/offline.cjs --suite test:agency-gift-db",
-    "test:agency-gift-packet": "node test/offline.cjs --suite test:agency-gift-packet"
+    "test:agency-gift-packet": "node test/offline.cjs --suite test:agency-gift-packet",
+    "test:agency-gift-runner-db": "node test/offline.cjs --suite test:agency-gift-runner-db"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",
