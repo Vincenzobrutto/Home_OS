@@ -1,3 +1,7 @@
+## 31 ottobre2026 — primo contratto Gift interno
+
+Preparazione da fonti correnti autorizzate,versioni e produttore;stima superfici conservata,destinatari/destinazione selezionati senza grant.13nuovi casi,671/671backendordinari e lint/build verdi. Non consegna Gift o copia Home:prossimo registro/adapter server.[Report](v5/agency-gift-contract-20261031.md).
+
 ## 31 ottobre 2026 — Agenzie integrato nel consolidamento
 
 Intera PR71integrata e merged, push aaf8f02verificato, senza conflitti; backend658/frontend1743/DB700/cestino42verdi, due cluster nuovi arrestati. Nessun codice prodotto modificato oltre al branch Agenzie, nessun deploy o attivazione provider. [Report e limiti](v5/agency-consolidation-20261031.md). Futuri incrementi brevi dalla base comune aggiornata; modello incarico e validazione indipendente restano aperti.
@@ -293,3 +297,11 @@ Definito [contratto implementativo AI atti](v5/agency-deed-orchestration-contrac
 Frontend completo mock1719/1719in169file,2worker/retry0;typecheck/buildfinaliverdi, nessundeploy. Fascicolomontato con API/DBreali provato su fixture; preparazioneincarico solo selezioneinternasenzamodello, noncontrattogenerato. Residui e confini nel [checkpoint diurno](v5/agency-day-checkpoint-20261030.md).
 
 - 31/10 Agenzie: implementati indizio fascia muraria e scarto singola candidata prima dell'adozione, con confronto e audit. Nessun deploy. [Report](v5/agency-candidate-selection-20261031.md).
+
+Registro Gift offline aggiunto: metadati append-only, replay/CAS e risoluzione server delle selezioni,27/27mirati; persistenza/route/Home ancora assenti. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: porte interne transazionali per registro e preparazione aggiunte,12/12DBsu cluster nuovo arrestato. Nessuna route o copia Home attiva. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: anteprima controllata e harness sintetico separato,19/19UI,typecheck/lint/buildharness verdi;nessuna route o consegna. Copia indipendente Home descritta come proposta con gap espliciti. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: backend e harness condividono payload sintetico canonico,28/28mirati e20/20UIverdi;nessun endpoint o copia aggiunti. [Report](v5/agency-gift-contract-20261031.md).

@@ -1060,3 +1060,7 @@ A: una fascia presumibilmente muraria proposta come area e due conflitti con geo
 
 ### Agenzie — residui dopo selezione candidate (31/10)
 Implementato scarto selettivo pre-adozione e indizio fascia muraria; restano ricerca di copertura sulle proposte di contrasto, separazione di ambienti comunicanti e valutazione di eliminazione esplicita dei vani già adottati. Nessuna promessa di completezza. [Report](v5/agency-candidate-selection-20261031.md).
+
+## Gift → Home — prosecuzione del lotto31ottobre2026
+
+Pacchetto/registro/adapter interno e anteprima isolata implementati. Prima di invio/copier:validare autorità di presa in carico e dati visibili senza account;poi ledger delivery/recipient,staging byte recuperabile,receipt/concorrenza e nuova UI/APIcollegata. Nessun grant inverso Agency sulle aggiunte del proprietario. [Contratto proposto e prove ancora da eseguire](v5/agency-gift-home-copy-contract-20261031.md); [stato verificato](v5/agency-gift-contract-20261031.md). Non usare sharing C1a come sostituto di Gift accettata indipendente.

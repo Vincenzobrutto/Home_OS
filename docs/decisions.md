@@ -1380,3 +1380,7 @@ Non eliminare automaticamente componenti sottili: possono essere passaggi reali.
 ## 31 ottobre 2026 — Agenzie come modulo integrato, rami brevi
 
 Il committente approva integrazione dell'intera PR71nel ramo comune codex/dimora-v5-consolidata-20261023, senza deploy o modifica main. Agenzie mantiene scope/ruoli/workflow distinti ma riusa infrastruttura V5; i futuri incrementi partono dalla base comune aggiornata e confluiscono frequentemente dopo verifica. Integrazione codice, configurazione/abilitazione e rilascio sono passaggi separati; nessuna attivazione implicita di provider, budget, storage o migrazioni prodotto. La demo pubblica di Alessio resta indipendente. Modello incarico approvato assente: la nuova analisi/catalogo negli outputs non costituisce generazione contrattuale implementata. [Report](v5/agency-consolidation-20261031.md).
+
+## 31 ottobre2026 — pacchetto Gift interno
+
+Gift accettata indipendente resta la decisione ADR-V5-04. La prima implementazione prepara soltanto una selezione interna da fonti correnti autorizzate,con descrittori di produttore da registro server ancora da collegare. Non confondere fingerprint deterministico con ricevuta/idempotenza durevole di consegna. Nessuna route pubblica,scrittura Home,proprietà confermata o firma validata dal pacchetto. [Contratto e limiti](v5/agency-gift-contract-20261031.md).

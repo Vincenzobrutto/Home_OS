@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "agency-gift-preparation-v1",
+  "agencyId": "agency-demo",
+  "practiceId": "practice-demo",
+  "practiceRevision": 4,
+  "preparedBy": "agent-demo",
+  "requestedHomeId": "CASA-DEMO-001",
+  "recipients": [
+    {
+      "subjectRef": "INT-DEMO-A"
+    },
+    {
+      "subjectRef": "INT-DEMO-B"
+    }
+  ],
+  "documents": [
+    {
+      "sourceId": "generated",
+      "version": 2,
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "originalFilename": "generated-DEMO.pdf",
+      "mimeType": "application/pdf",
+      "byteSize": 101,
+      "metadataVersion": 1,
+      "origin": "agency_generated",
+      "title": "Prospetto superfici DEMO",
+      "author": "Agenzia DEMO",
+      "lifecycle": "final",
+      "signatureVerification": "not_assessed",
+      "surface": {
+        "kind": "commercial",
+        "qualification": "estimated",
+        "method": "Foglio A4 presunto e scala dichiarata",
+        "geometryRevision": 3,
+        "caveats": [
+          "Formato della pagina non verificato.",
+          "Coefficienti e perimetro da rivedere con l’agente."
+        ]
+      }
+    },
+    {
+      "sourceId": "received",
+      "version": 1,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "originalFilename": "received-DEMO.pdf",
+      "mimeType": "application/pdf",
+      "byteSize": 100,
+      "metadataVersion": 1,
+      "origin": "received",
+      "title": "Atto di provenienza DEMO",
+      "author": "Autore dichiarato DEMO",
+      "lifecycle": "signed",
+      "signatureVerification": "not_assessed"
+    }
+  ],
+  "preparedAt": "2026-10-31T15:00:00.000Z",
+  "fingerprint": "aa921a1c8ebc663956d82ae37f1850a3e12fcb0c289784bc8b3e9de139d6ebeb",
+  "purpose": "internal_preview",
+  "recipientIdentityVerified": false,
+  "homeDestinationAuthorized": false,
+  "canDeliver": false,
+  "createsHome": false,
+  "grantsAccess": false,
+  "confirmsFacts": false,
+  "certification": false,
+  "completenessAssessed": false,
+  "nextSteps": [
+    "verify_current_recipients",
+    "authorize_home_destination",
+    "persist_delivery_receipt",
+    "copy_accepted_documents_independently"
+  ]
+}

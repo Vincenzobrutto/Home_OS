@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Agency → Gift → Home — lotto serale31ottobre, in corso
+
+Codex lavora sul ramo breve `codex/agency-gift-contract-20261031`, base comune `cbddcf0`, PR draft72, fino alle23Europe/Rome. Pacchetto, registro metadati e adapter transazionale interno implementati:28/28mirati (fixture contratto aggiunta) e12/12DBsu cluster nuovo arrestato,build/lint verdi. Fonti/versioni/qualifiche conservate,bozze escluse dalla preparazione. Nessuna route,consegna,accettazione,copia o grant Home;Anteprima controllata e harness sintetico ora presenti:20/20UI,typecheck/lint/buildharness verdi,nessun collaudo browser nuovo. Copia indipendente ancora proposta:prima definire autorità e visibilità senza account. Registrazione non certifica provenienza/firma. Gift accettata indipendente è principio già fissato da ADR-V5-04. [Contratto,verifiche e limiti](v5/agency-gift-contract-20261031.md). Nessuna AI reale,invio,deploy o migrazione prodotto;collaudo utente separato e mai usato per sviluppo.
+
 ## Integrazione Agenzie — 31 ottobre 2026, conclusa
 
 Candidato verificato `codex/agenzie-integrazione-20261031` dalla base remota `dd52a6a`, intera PR #71 (`7b02700`, 67 commit), senza conflitti o modifiche al codice prodotto della PR. Backend658/658, frontend1743/1743(172file), DB/API700/700 e cestino42/42 su due cluster nuovi arrestati, statici/build verdi. Integrato nel ramo comune: push aaf8f02verificato e PR71merged; nessun deploy o migrazione prodotto, main/demo Alessio invariati. [Registro integrazione e limiti](v5/agency-consolidation-20261031.md).

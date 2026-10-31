@@ -224,3 +224,15 @@ Con modello non disponibile la nuova vista sceglie solo fatti confermati e mostr
 ## Agenzie — autorizzazione analisi atti separata dalle planimetrie
 
 Contratto futuro DEED_EXTRACT con offerta/consenso legati a fonte/versione/SHA/pagine/finalità e ledger durevole. Count e dispatch richiedono consenso, incerto non libera cap o autorizza retry. Stage resta server-only; costo conservato anche dopo scarto/revoca. È una specifica, non un provider/job attivo. [Contratto](agency-deed-orchestration-contract-v1.md).
+
+## Agenzie — metadati Gift con provenienza dichiarata e registro server
+
+La selezione del client non può attestare produttore, finalità, stato finale o firma. Il producer server registra descrittori versionati con attribuzione e controlli sulla fonte; l'adapter prepara dalle versioni correnti del registro. Tale registrazione non certifica la verità del metadato o la firma del documento. Hash canonico non equivale a firma o idempotenza durevole di consegna. Incremento attuale puro: adapter DB, route e indipendenza della copia Home ancora da realizzare. [Contratto e verifiche](agency-gift-contract-20261031.md).
+
+## Agenzie — registro Gift nello snapshot della pratica
+
+Il primo adapter conserva metadati/storico/ricevute nello snapshotVersion1 della pratica e nella stessa transazione CAS del fascicolo;nessuna tabella o migrazione aggiuntiva per questo incremento. Le letture precedenti senza attributi Gift restano valide. Il producer interno deve essere collegato in seguito:non si espone un endpoint che accetta descrittori arbitrari. La ricevuta persistita riguarda la registrazione metadati,non consegna/accettazione Gift. Una futura copia Home richiede una ricevuta e un'autorizzazione proprie. [Evidenze](agency-gift-contract-20261031.md).
+
+## Agenzie — anteprima Gift separata dalla presa in carico
+
+Il componente iniziale è controllato dal contenitore e non ha trasporto/delivery propri. Le fixture restano nel harness esplicito,mai fallback in app. Scope/revisione/accesso non coerenti nascondono subito i dati;la futura sessione/route deve ricontrollare l'autorità server. La copia indipendente verso Home resta un contratto proposto finché autorità,ledger,byte e receipt non siano implementati. [Contratto](agency-gift-home-copy-contract-20261031.md).

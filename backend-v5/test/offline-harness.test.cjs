@@ -13,6 +13,14 @@ test('secondary geometry runner retains one exact owned test target, never the a
  assert.equal(r.status,0,r.stderr);
 });
 
+test('secondary wrapper refuses non-nominal suites before creating a cluster',()=>{
+ for(const suite of ['test','test:offline-db','test:agency-deed-records-db']){
+  const result=spawnSync(process.execPath,['test/offline-secondary.cjs','--suite',suite],{env:cleanEnvironment(process.env,'unit'),cwd:path.resolve(__dirname,'..'),encoding:'utf8',windowsHide:true,timeout:15000});
+  assert.notEqual(result.status,0);assert.match(result.stderr,/secondary_suite_forbidden/);
+ }
+ assert.deepEqual(suites['test:agency-gift-db'].files,['test/agency-gift.integration.test.cjs']);
+ assert.equal(suites['test:agency-gift-db'].database,true);assert.equal(suites['test:agency-gift-db'].api,false);
+});
 test('offline database accepts one explicit synthetic URL; real, remote, alternate and ambiguous targets fail before connection', () => {
  assertOfflineDatabase(DB_URL);
  for (const value of [undefined, '', 'postgresql://dimora_v5_app@127.0.0.1:55432/dimora_v5_product_dev', DB_URL.replace('127.0.0.1', 'localhost'), DB_URL.replace('127.0.0.1', 'db.example.test'), DB_URL + '?schema=public', DB_URL + '#fragment', DB_URL.replace('quality_test@', 'quality_test:secret@'), DB_URL.replace('55439', '55432'), DB_URL.replace('_test', '_campaign')]) assert.throws(() => assertOfflineDatabase(value), /offline_database_forbidden/);

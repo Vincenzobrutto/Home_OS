@@ -1,0 +1,140 @@
+{
+  "notice": "Synthetic contract fixture only; no personal data, real PDF or authority.",
+  "now": "2026-10-31T15:00:00.000Z",
+  "actor": {
+    "accountId": "agent-demo",
+    "memberships": [
+      {
+        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validUntil": null,
+        "revokedAt": null,
+        "agencyId": "agency-demo",
+        "accountId": "agent-demo",
+        "role": "agent"
+      }
+    ],
+    "grants": [
+      {
+        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validUntil": null,
+        "revokedAt": null,
+        "agencyId": "agency-demo",
+        "practiceId": "practice-demo",
+        "accountId": "agent-demo",
+        "access": "edit",
+        "canExport": true
+      }
+    ]
+  },
+  "practice": {
+    "id": "practice-demo",
+    "agencyId": "agency-demo",
+    "label": "SUC-DEMO-001 synthetic",
+    "revision": 4,
+    "sources": [
+      {
+        "id": "received",
+        "agencyId": "agency-demo",
+        "practiceId": "practice-demo",
+        "uploaderId": "agent-demo",
+        "visibility": "practice",
+        "withdrawnAt": null,
+        "kind": "succession",
+        "versions": [
+          {
+            "version": 1,
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "originalFilename": "received-DEMO.pdf",
+            "mimeType": "application/pdf",
+            "byteSize": 100,
+            "receivedAt": "2026-10-31T15:00:00.000Z",
+            "receivedBy": "agent-demo"
+          }
+        ]
+      },
+      {
+        "id": "generated",
+        "agencyId": "agency-demo",
+        "practiceId": "practice-demo",
+        "uploaderId": "agent-demo",
+        "visibility": "practice",
+        "withdrawnAt": null,
+        "kind": "other",
+        "versions": [
+          {
+            "version": 2,
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "originalFilename": "generated-DEMO.pdf",
+            "mimeType": "application/pdf",
+            "byteSize": 101,
+            "receivedAt": "2026-10-31T15:00:00.000Z",
+            "receivedBy": "agent-demo"
+          }
+        ]
+      }
+    ],
+    "dependents": [],
+    "receipts": [],
+    "events": []
+  },
+  "descriptors": [
+    {
+      "agencyId": "agency-demo",
+      "practiceId": "practice-demo",
+      "sourceId": "received",
+      "sourceVersion": 1,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "metadataVersion": 1,
+      "origin": "received",
+      "lifecycle": "signed",
+      "author": "Autore dichiarato DEMO",
+      "title": "Atto di provenienza DEMO"
+    },
+    {
+      "agencyId": "agency-demo",
+      "practiceId": "practice-demo",
+      "sourceId": "generated",
+      "sourceVersion": 2,
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "metadataVersion": 1,
+      "origin": "agency_generated",
+      "lifecycle": "final",
+      "author": "Agenzia DEMO",
+      "title": "Prospetto superfici DEMO",
+      "surface": {
+        "kind": "commercial",
+        "qualification": "estimated",
+        "method": "Foglio A4 presunto e scala dichiarata",
+        "geometryRevision": 3,
+        "caveats": [
+          "Formato della pagina non verificato.",
+          "Coefficienti e perimetro da rivedere con l’agente."
+        ]
+      }
+    }
+  ],
+  "input": {
+    "expectedRevision": 4,
+    "requestedHomeId": "CASA-DEMO-001",
+    "recipients": [
+      {
+        "subjectRef": "INT-DEMO-B"
+      },
+      {
+        "subjectRef": "INT-DEMO-A"
+      }
+    ],
+    "documents": [
+      {
+        "sourceId": "received",
+        "version": 1,
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "sourceId": "generated",
+        "version": 2,
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ]
+  }
+}
