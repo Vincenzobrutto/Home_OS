@@ -2093,3 +2093,5 @@ Gift: backend e harness condividono payload sintetico canonico,28/28mirati e20/2
 Gift: dettagliati confini di rilascio,minacce e recupero,solo proposta;nessun endpoint/copier nuovo. [Piano](v5/agency-gift-threats-and-recovery-20261031.md).
 
 Gift: corretto falso successo replay con ricevuta orfana;ora schema/unicità/record/versione/attore coerenti. Nessuna consegna o copia nuova. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: export standalone del solo harness sintetico,senza API/server;build e smokeDOMverdi,nessun browser/mobile nuovo. [Report](v5/agency-gift-contract-20261031.md).
