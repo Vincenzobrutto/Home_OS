@@ -137,3 +137,7 @@ Primo [dominio inviti](agency-gift-invitations-v1-20261031.md) implementato:47mi
 ## Ledger inviti persistente
 
 Completato il secondo incremento:modello/migrazione Gift dedicati,create/landing/claim/revoke interni,identità DB,edit+export sulle mutazioni e source currentness;47mirati/706ordinari/33DBverdi.Nessuna APIo copia.[Report](agency-gift-invitation-persistence-20261031.md).
+
+## Decisione full-access annuale
+
+Flag dell'agenzia true:offerta dimora-full-access-v1/versione1,un anno con tutte le funzioni Dimora dell'account proprietario dall'accettazione;false:nessun nuovo beneficio,documenti/casa comunque consegnabili.La futura definizione del free non blocca Gift o flag.Questo aggiornamento supera le note storiche sul catalogo/offerta non disponibile.Il ledger registra la promessa;claim non la attiva e copier/entitlement restano da collegare.Non estende permessi su dati/ruoli altrui né attiva invii o pagamenti automaticamente.

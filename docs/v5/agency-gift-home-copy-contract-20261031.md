@@ -21,13 +21,18 @@ Il link personale dovrà avere un segreto casuale,hash persistito,scadenza,revoc
 
 Account già esistente:accesso allo stesso account,nessun duplicato. Account errato in sessione:consentire cambio account prima dell'accettazione,senza associare automaticamente la casa. Invito scaduto/revocato:nessuna nuova copia o beneficio. Due richieste simultanee o retry della stessa accettazione devono produrre la medesima Home/documenti/ricevuta,non duplicati. Le copie accettate mantengono l'indipendenza prevista da ADR-V5-04.
 
-## Beneficio annuale opzionale
+## Beneficio annuale opzionale — accesso completo
 
-Consegna documenti e beneficio sono scelte distinte:la Gift funziona anche senza anno a pagamento. L'attivazione decisa dall'agenzia è una promessa da rappresentare nel manifesto approvato,non un flag che il browser può aggiungere all'accettazione.
+Vincenzo ha confermato che per la prima versione l'anno offerto abilita tutte le funzionalità Dimora dell'account proprietario. Non serve definire prima eventuali limitazioni del piano free. Il controllo dell'agenzia resta un solo flag:
 
-Il futuro diritto d'uso deve registrare account beneficiario,origine Gift/agenzia,offerta/versione del piano,istante server di accettazione,inizio/scadenza e ricevuta idempotente. Non chiamarlo attivo prima che l'accettazione sia completata. Il retry non prolunga l'anno e non crea un secondo beneficio. Il diritto del cliente e l'eventuale addebito all'agenzia sono registrazioni distinte;nessun nuovo servizio a pagamento o pagamento reale è attivato da questo contratto.
+- Flag spento:consegna della casa/documenti senza aggiungere il beneficio annuale. Un eventuale piano già posseduto dal cliente non viene modificato.
+- Flag acceso:un anno di accesso completo incluso nella Gift,con decorrenza dall'accettazione. Scelta congelata nel manifesto,non aggiungibile dal browser del destinatario.
 
-Da definire prima dell'implementazione commerciale:costo e modalità di acquisto per l'agenzia,lista delle features avanzate,regole di rinnovo e comportamento se l'account ha già un piano a pagamento. Non inventare oggi sovrascritture,proroghe o addebiti. L'anno parte dall'accettazione;il calcolo esatto della scadenza e i casi di calendario vanno fissati e testati nel modulo entitlement.
+L'offerta interna è dimora-full-access-v1,versione1:12mesi di accesso completo,da attivare soltanto quando la Gift è accettata. L'invito e il claim conservano activated=false. Il retry non riavvia l'anno e non genera un secondo diritto. Il server registra account beneficiario,origine Gift/agenzia,offerta/versione,inizio/scadenza e ricevuta.
+
+Alla scadenza casa e documenti restano all'utente;le funzionalità seguiranno le regole allora definite. Eventuali limiti del free si decideranno successivamente senza cambiare il significato del flag o applicare una riduzione anticipata all'anno incluso.
+
+Costo per l'agenzia,rinnovo,regole per un account già abbonato e calcolo di calendario della scadenza restano da definire prima del relativo modulo commerciale. Non bloccano la registrazione della scelta full-access nell'invito e non autorizzano pagamenti o proroghe automatiche di un piano esistente. Non si attiva alcun servizio a pagamento durante lo sviluppo.
 
 ## Documenti e continuità
 

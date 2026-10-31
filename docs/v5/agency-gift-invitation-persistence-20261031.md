@@ -18,7 +18,7 @@ Landing e claim restituiscono dati minimi, mai record/documenti/email o riferime
 
 Il segreto casuale viene restituito soltanto dal primo create dopo il commit. Nel DB rimane solo l'hash. Replay della creazione: secret=null,requiresReissue=true; non si recupera un segreto in chiaro dal ledger. Riemissione/rotazione del link è ancora da collegare al futuro trasporto. Durata interna predefinita:7giorni,con limite dominio30;prima di UI pubblica rendere la scadenza visibile e validare la policy.
 
-Il nuovo homeId è allocato dal server e non sovrascrive una casa del client. È solo un riferimento futuro: create/claim non creano Home, Document o benefit. Offerta commerciale reale intenzionalmente assente: richiedere il beneficio restituisce benefit_unavailable, senza downgrade silenzioso o addebito.
+Il nuovo homeId è allocato dal server e non sovrascrive una casa del client. È solo un riferimento futuro: create/claim non creano Home, Document o benefit. Offerta full-access v1 ora confermata:flag true registra id/versione e activated=false;nessun downgrade silenzioso,attivazione o addebito al claim.
 
 ## Verifiche e revisione
 
@@ -37,3 +37,8 @@ Prima della copia reale servono dati espliciti per creare la Home (nome/indirizz
 Poi:ricevuta di accettazione/copia recuperabile,byte/SHA e provenienza indipendenti,nessun grant inverso,stesse date/ID al replay. Infine controller con sessione/Origin/CSRF e UI registrazione/accesso dal link. Nessuna accettazione,link pubblico,Home o anno premium disponibili da questo incremento. Il modello d'incarico resta non approvato.
 
 La ricognizione del copier ha verificato anche il controllo file:LocalFileStorage.writeVerified usa scanner e receipt di ammissione,mentre AgencyVault verifica firma/hash ma non antivirus.Non riutilizzare un controllo inesistente.Le scansioni possono superare la transazione da15secondi:serve staging/job durevole prima del commit atomico Home/documenti/receipt.Il cleanup a24ore dei file non referenziati deve rispettare lo staging.Le proiezioni source manual_upload vanno aggiornate con provenienza Gift vera,non sovrascritte da un semplice nomefile.
+
+## Decisione successiva: anno con tutte le funzioni
+
+Vincenzo conferma full-access per12mesi dall'accettazione,flag opzionale dell'agenzia e piano free da decidere più avanti.La registrazione del beneficio non è più bloccata dall'assenza di catalogo features.La scelta e l'offerta server sono immutabili al replay;claim non attiva il piano e non crea Home.I controlli di identità/permessi/consenso e le protezioni operative già presenti nei servizi non vengono sostituiti da un ruolo amministratore o da invii AI automatici.
+Verifiche dopo full-access:706/706ordinari e33/33DBGiftverdi (nuovo cluster vhDusB arrestato e stoplog verificato),lint/build verdi.Flag true/offer v1 persistiti,claim e replay mantengono activated=false,stesso key con flag diverso confligge.Nessun frontend o API nuovo.Log gift-full-access-regression.log e gift-full-access-db.log.

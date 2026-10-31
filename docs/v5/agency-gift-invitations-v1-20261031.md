@@ -20,7 +20,7 @@ Registro e ricevute della CREAZIONE invito non ancora persistiti. creationKey è
 
 Nessun abbinamento a dati auto-dichiarati del browser:il futuro adapter auth deve leggere Account/emailVerifiedAt corrente,il resolver fonti deve ricontrollare permessi/versioni e il controller deve applicare sessione/Origin/CSRF. Nuovi campi server devono restare fuori dal DTO. Una validazione di email o il link non provano da soli proprietà della casa.
 
-L'invito non crea membership né trasferisce originali. Prima di accettazione reale:staging e copia indipendente byte/SHA,ledger,ricevuta e transazione Home,con test di concorrenza/guasti. C1a non è il copier. Beneficio annuale disattivato finché manca catalogo/offerta validata e policy per account già premium.
+L'invito non crea membership né trasferisce originali. Prima di accettazione reale:staging e copia indipendente byte/SHA,ledger,ricevuta e transazione Home,con test di concorrenza/guasti. C1a non è il copier. La scelta annuale registra l'offerta full-access v1 confermata;attivazione ancora da collegare alla futura accettazione.
 
 ## Prove
 
@@ -33,3 +33,7 @@ Regressione ordinaria dopo integrazione nel runner:706/706verdi,zero falliti/sal
 ## Incremento successivo completato
 
 Ledger relazionale e adapter auth/fonti ora implementati e collaudati:33DBGiftcomplessivi (14metadata+19inviti),706ordinari,47mirativerdi.Nessuna route,copiaHome o premium attivi.[Stato corrente](agency-gift-invitation-persistence-20261031.md).
+
+## Aggiornamento full-access confermato
+
+Il ledger operativo non usa più offer:null:il flag true congela dimora-full-access-v1/versione1,un anno con tutte le funzionalità dell'account proprietario.activated resta false fino all'accettazione;non servono limiti free o catalogo features definiti per registrare la scelta.Le prove pure server.offer=null restano guardie generiche,non un blocco dell'offerta v1.

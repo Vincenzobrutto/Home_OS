@@ -6,6 +6,8 @@ import {requirePractice,type Actor,type Practice} from './domain';
 import {prepareGiftFromRegistry} from './gift-registry';
 import {assertGiftInvitationRecord,claimGiftInvitation,createGiftInvitation,giftInvitationCreationDigest,giftInvitationLanding,giftInvitationSourceFingerprint,GiftInvitationError,newGiftInvitationSecret,parseGiftInvitationCommand,revokeGiftInvitation,type GiftInvitation} from './gift-invitations';
 function unavailable():never{throw new GiftInvitationError('unavailable');}
+// Product decision: one full-access year, activated only by future Gift acceptance.
+const FULL_ACCESS_GIFT_OFFER=Object.freeze({id:'dimora-full-access-v1',version:1});
 const json=(r:GiftInvitation):Prisma.InputJsonValue=>JSON.parse(JSON.stringify(r));
 function snapshot(row:AgencyGiftInvitation):GiftInvitation{
  const r=row.snapshot as unknown as GiftInvitation;assertGiftInvitationRecord(r);
@@ -53,8 +55,8 @@ export class GiftInvitationsStore{
    }
    if(await tx.agencyGiftInvitation.count({where:{practiceId}})>=100)throw new GiftInvitationError('invalid_input');
    const now=new Date().toISOString(),secret=newGiftInvitationSecret();
-   // Real offers are intentionally unavailable until catalogue/commercial rules are defined.
-   const {record}=createGiftInvitation(actor,practice,b,{id:randomUUID(),homeId:randomUUID(),secret,expiresAt:new Date(Date.parse(now)+7*86400000).toISOString(),offer:null},now);
+   // The agency flag freezes the approved full-access offer; claim does not activate it.
+   const {record}=createGiftInvitation(actor,practice,b,{id:randomUUID(),homeId:randomUUID(),secret,expiresAt:new Date(Date.parse(now)+7*86400000).toISOString(),offer:FULL_ACCESS_GIFT_OFFER},now);
    requirePractice(actor,practice,'edit',new Date().toISOString());requirePractice(actor,practice,'export',new Date().toISOString());live(record,new Date().toISOString());
    await tx.agencyGiftInvitation.create({data:{id:record.id,agencyId,practiceId,issuerAccountId:accountId,creationKey:b.key,creationDigest,tokenHash:record.tokenHash,version:record.version,state:record.state,expiresAt:new Date(record.expiresAt),snapshot:json(record),createdAt:new Date(record.createdAt)}});
    return {...summary(record),secret,replay:false,requiresReissue:false};

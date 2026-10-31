@@ -254,3 +254,7 @@ Il dominio invito associa un account verificato singolo,ma non crea Home,members
 ## Gift v1 — persistenza e permessi delle mutazioni invito
 
 Creazione/revoca richiedono edit+export;landing/claim di un invito esistente ricontrollano export dell'emittente e fonti correnti. Account verificato letto dal DB,sotto lock;nessuna prova dal client. Ledger relazionale separato,snapshot confrontato alle colonne e digest comando ricostruito dal manifesto. Segreto solo nel primo esito dopo commit,mai nel DB o nel replay. Dati dichiarati di stipula/rilascio attribuiti e conservati. Riemissione esplicita e copier restano futuri.[Report](agency-gift-invitation-persistence-20261031.md).
+
+## Gift v1 — flag annuale full-access, decisione confermata
+
+Vincenzo conferma:per ora il flag dell'agenzia offre un anno con tutte le funzionalità dell'account proprietario;limitazioni free da decidere dopo.Il flag opzionale è indipendente dalla consegna documenti.Offerta interna dimora-full-access-v1/versione1,12mesi dall'accettazione.Invito/claim la congelano senza attivarla.Rimuove il precedente blocco di registrazione per catalogo features non definito.Prezzi/rinnovo/account già abbonato restano policy successive,nessun addebito attivato.

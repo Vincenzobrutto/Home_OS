@@ -149,8 +149,15 @@ test('Gift invitations persist only on a new owned synthetic cluster',{timeout:1
   assert.deepEqual(await invites.landing(created.id,created.secret),{id:created.id,requiresAccount:true,canAccept:false});
   assert.equal((await invites.claim(f.recipient.id,created.id,created.secret,1)).state,'claimed');assert.equal(await db.home.count(),homes);
  });
- await t.test('benefit request without a server offer fails before persisting an invitation',async()=>{
-  const f=await fixture();await assert.rejects(()=>invites.create(issuer.id,agency.id,f.p.id,{...f.command,annualBenefit:true}),denied('benefit_unavailable'));
-  assert.equal(await db.agencyGiftInvitation.count({where:{practiceId:f.p.id}}),0);
+ await t.test('agency flag persists one year full-access promise without activating it at claim',async()=>{
+  const f=await fixture(),command={...f.command,annualBenefit:true},homes=await db.home.count();
+  const created=await invites.create(issuer.id,agency.id,f.p.id,command),stored=await db.agencyGiftInvitation.findUnique({where:{id:created.id}});
+  assert.equal(stored.snapshot.annualBenefit.requested,true);assert.equal(stored.snapshot.annualBenefit.offerId,'dimora-full-access-v1');assert.equal(stored.snapshot.annualBenefit.offerVersion,1);assert.equal(stored.snapshot.annualBenefit.activated,false);
+  const replay=await new GiftInvitationsStore(db).create(issuer.id,agency.id,f.p.id,command);assert.equal(replay.id,created.id);assert.equal(replay.replay,true);assert.equal(replay.secret,null);assert.equal(replay.requiresReissue,true);assert.deepEqual(await db.agencyGiftInvitation.findUnique({where:{id:created.id}}),stored);
+  const claimed=await invites.claim(f.recipient.id,created.id,created.secret,1);assert.equal(claimed.state,'claimed');assert.equal(claimed.canAccept,false);
+  const afterClaim=await db.agencyGiftInvitation.findUnique({where:{id:created.id}});assert.deepEqual(afterClaim.snapshot.annualBenefit,stored.snapshot.annualBenefit);assert.equal(afterClaim.snapshot.annualBenefit.activated,false);assert.equal(await db.home.count(),homes);
+  const replayAfterClaim=await new GiftInvitationsStore(db).create(issuer.id,agency.id,f.p.id,command);assert.equal(replayAfterClaim.id,created.id);assert.equal(replayAfterClaim.secret,null);assert.equal(replayAfterClaim.replay,true);
+  await assert.rejects(()=>invites.create(issuer.id,agency.id,f.p.id,{...command,annualBenefit:false}),denied('idempotency_conflict'));
+  assert.deepEqual(await db.agencyGiftInvitation.findUnique({where:{id:created.id}}),afterClaim);assert.equal(await db.agencyGiftInvitation.count({where:{practiceId:f.p.id}}),1);
  });
 });
