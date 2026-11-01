@@ -1,10 +1,10 @@
 # Ambienti: planimetria e trascinamento degli elettrodomestici
-1 novembre2026, stato corrente08:40UTC. Lotto `codex/ambienti-mappa-drag-20261101`, codice prodotto `2fab688`, test/profilo `0ba46852c13a95c9f4667c2a4b6c350764704ca4`, push verificato. [PR draft74](https://github.com/Vincenzobrutto/Home_OS/pull/74) verso consolidamento, dipendenza diretta PR73 c3f9956 e PR72; base comune cbddcf0 invariata. Nessun merge/deploy o modifica demo Alessio.
+1 novembre2026, stato corrente13:02UTC. Lotto `codex/ambienti-mappa-drag-20261101`, codice prodotto `2fab688`, test/profilo `0ba46852c13a95c9f4667c2a4b6c350764704ca4`, push verificato. [PR draft74](https://github.com/Vincenzobrutto/Home_OS/pull/74) verso consolidamento, dipendenza diretta PR73 c3f9956 e PR72; base comune cbddcf0 invariata. Nessun merge/deploy o modifica demo Alessio.
 
 ## Esito corrente
 Funzionalità e collaudo mirato conclusi: **42/42 componenti mappa aggiornati,17/17DB-HTTP,18/18guardie**; typecheck/lint e build verdi. Backend878/878 e frontend78/78 sono la precedente regressione, non una nuova suite completa sul seguito. Nuovo browser **VeuBZj** sul codice aggiornato: desktop e375px, drag con cambio stanza/reload e normale conteggio,91segnaposti distinti nel caso stress, selezione da tastiera/campi e successivo drag mobile. Nessun errore console. Viewport ripristinato.
 
-Prova locale nuova attiva fino1nov14:00Rome/13:00UTC con arresto proprietario automatico; non è ancora arrestata, la verifica finale dello stop resta pendente. Gli altri due cluster dei nuovi testDB sono arrestati e verificati. Le sezioni datate sotto conservano i checkpoint precedenti; lo stato corrente è questo.
+Prova locale terminata automaticamente1nov14:00Rome/13:00UTC; arresto finale verificato alle13:02UTC. Il link locale è scaduto. Gli altri due cluster dei nuovi testDB sono arrestati e verificati. Le sezioni datate sotto conservano i checkpoint precedenti; lo stato corrente è questo.
 
 
 ## Implementato
@@ -60,3 +60,8 @@ Desktop: drag Frigorifero Cucina→Balcone, normale Schede mostra1oggetto nel Ba
 Lo stress90icone in un solo vano mostra ancora **sovrapposizione visuale delle etichette e hit-area molto vicine** a zoom minimo; coordinate distinte non significano che90icone siano tutte leggibili in uno spazio piccolo. Zoom e selettori posizione sono disponibili e verificati. L'ulteriore organizzazione visiva ad altissima densità resta backlog, senza inventare nuove funzioni in questo lotto. I casi normali non hanno questo affollamento. Screenshot osservati nella traccia CUA, nessun file immagine salvato/inventato.
 
 Build del nominale516,90kB/gzip157,46kB; la build privata con sourcemap era517,11/gzip157,57: configurazioni diverse, warning500kBpreservato in entrambe. Il nominale serve una copia isolata del codice0ba4685, non file aggiornati dentro un trial vecchio. Tab21lasciata sul caso standard, già autenticato; guida privata negli outputs. MHo0Ha e cNnivm non usati o fermati.
+
+## Chiusura del nominale,1novembre13:02UTC
+VeuBZj ha raggiunto il termine senza stop anticipato: status reason=deadline alle13:00:00.093UTC, log TRIAL_STOPPING/TRIAL_STOPPED, harness nominale1/1verde e runner96473concluso con exit0. stop-postgres.log conferma arresto; postmaster.pid assente e nessun listener sulle porte49170(HTTP) e55439(DBdelcollaudo). Nessun riavvio, ripristino, modifica di processo altrui o test ripetuto. I file del run sono conservati, il link è scaduto e non è una demo pubblicata.
+
+Solo documentazione aggiornata dopo le14:00; codiceprodotto2fab688 e verifiche precedenti invariati. PR74rimane draft, nessun merge/deploy/main/demoAlessio modificati. Automazione di controllo da rimuovere dopo questa consegna, senza archiviare la chat.
