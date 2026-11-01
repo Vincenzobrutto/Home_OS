@@ -1,3 +1,6 @@
+## 1novembre — chiusura del seguito Ambienti/mappa
+Ancore indicative adattive e più efficienti, pin confermati preservati; lifecycle HTTP17/17, componenti42/42, guardie18/18 e browser sul seguito desktop/375verdi. Nuovo collaudo sinteticoVeuBZj attivo fino14:00Rome, verifica arresto finale pendente. Restano leggibilità ad altissima densità (90icone/vano), touch fisico e cataloghi grandi; non nuove funzioni da implementare senza priorità concordata. [Esito e limiti precisi](v5/ambienti-map-drag-20261101.md). Nessun merge/deploy o modifica demo Alessio.
+
 ## 1 novembre2026 — Ambienti: schede e planimetria collegate
 
 Implementata e verificata sul lotto dedicato la vista Planimetria dentro Ambienti: segnaposti indicativi per oggetti già associati, drag che salva coordinate e aggiorna atomicamente la stanza, normale scheda e conteggi coerenti. Backend878/DB13/frontend mirato78/guardie16 e browser desktop/375 verdi; nessun nuovo schema in questo lotto. Dipende dalle PR73/72 non ancora integrate. Restano prove su mappe dense/cataloghi grandi e touch hardware, multipiano e computo Home fuori scope. [Report e limiti](v5/ambienti-map-drag-20261101.md). Nessuna nuova AI, demo Alessio invariata, nessun merge/deploy.

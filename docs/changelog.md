@@ -1,3 +1,6 @@
+## 1novembre — chiusura del seguito Ambienti/mappa
+Ancore indicative adattive e più efficienti, pin confermati preservati; lifecycle HTTP17/17, componenti42/42, guardie18/18 e browser sul seguito desktop/375verdi. Nuovo collaudo sinteticoVeuBZj attivo fino14:00Rome, verifica arresto finale pendente. Restano leggibilità ad altissima densità (90icone/vano), touch fisico e cataloghi grandi; non nuove funzioni da implementare senza priorità concordata. [Esito e limiti precisi](v5/ambienti-map-drag-20261101.md). Nessun merge/deploy o modifica demo Alessio.
+
 ## 1 novembre — ancore indicative senza coincidenze per esaurimento del pool
 Corretto il difetto riprodotto su250oggetti/2vani e120oggetti in vano concavo con vuoto: ancore adattive verificate, distanze precalcolate/aggiornate, nessun ricampionamento dei pin proprietario o scrittura automatica.42/42componenti mappa e statici verdi; DB lifecycle e browser della correzione pendenti. [Prosecuzione e limiti](v5/ambienti-map-drag-20261101.md).
 
