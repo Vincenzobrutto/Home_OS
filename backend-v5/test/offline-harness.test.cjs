@@ -130,3 +130,19 @@ test('Ambienti drag suites remain exact nominal profiles with owned secondary is
  assert.deepEqual(suites['test:ambienti-map-browser-trial'],{database:true,api:false,files:['test/ambienti-map-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T09:00:00.000Z'});
  for(const profile of ['test','test:offline-db','test:home-map-drag-db'])assert.equal(suites[profile].files.includes('test/ambienti-map-browser-trial.integration.test.cjs'),false);
 });
+
+test('Ambienti followup browser trial has its own fixed deadline and is never aggregated',()=>{
+ assert.deepEqual(suites['test:ambienti-map-followup-trial'],{database:true,api:false,files:['test/ambienti-map-followup-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T13:00:00.000Z'});
+ for(const name of ['test','test:offline-db','test:home-map-drag-db','test:ambienti-map-browser-trial'])assert.equal(suites[name].files.includes('test/ambienti-map-followup-trial.integration.test.cjs'),false);
+ const source=fs.readFileSync(path.join(__dirname,'ambienti-map-followup-trial.integration.test.cjs'),'utf8');assert.match(source,/PROFILE='test:ambienti-map-followup-trial',UNTIL='2026-11-01T13:00:00.000Z'/);
+});
+
+test('only the authorized dated followup receives enough time for 14:00 and never extends beyond its deadline grace',()=>{
+ const {commandDuration}=require('./offline.cjs'),now=Date.parse('2026-11-01T08:30:00.000Z'),profile=suites['test:ambienti-map-followup-trial'];
+ assert.equal(commandDuration('test:ambienti-map-followup-trial',profile,'tests',now),16230000);
+ assert.equal(commandDuration('other',profile,'tests',now),7200000);
+ assert.equal(commandDuration('test:ambienti-map-followup-trial',{interactiveUntil:'2026-11-02T13:00:00.000Z'},'tests',now),7200000);
+ assert.equal(commandDuration('test:ambienti-map-followup-trial',profile,'build',now),600000);
+ assert.equal(commandDuration('test:ambienti-map-followup-trial',profile,'tests',Date.parse('2026-11-01T12:59:00.000Z')),90000);
+ assert.equal(commandDuration('test:ambienti-map-followup-trial',profile,'tests',Date.parse('2026-11-01T13:01:00.000Z')),1000);
+});

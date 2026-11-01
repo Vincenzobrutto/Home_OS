@@ -145,4 +145,41 @@ test('Digital plan Agency -> Gift -> Home -> object placement on fresh owned clu
   const bad=await post(route()+'/pins',{expectedVersion:next.version,objectId:obj.id,regionId:'corridor',x:70,y:20,expectedPositionVersion:obj.positionVersion},recipient);assert.equal(bad.status,422);assert.equal((await read()).pins.some(p=>p.objectId===obj.id),false);
  });
 
+ await t.test('normal card room changes invalidate the old physical pin without moving it or accepting a stale drag',async()=>{
+  const before=await read(),obj=before.objects.find(o=>o.id===objectId),target=before.rooms.find(r=>r.id==='kitchen'),oldPin=before.pins.find(p=>p.objectId===objectId);
+  const r=await post('/homes/'+homeId+'/objects/object/'+objectId+'/position',{expectedVersion:obj.positionVersion,roomIds:[target.roomId]},recipient);assert.equal(r.status,200,await r.clone().text());
+  const next=await read(),moved=next.objects.find(o=>o.id===objectId),pin=next.pins.find(p=>p.objectId===objectId);
+  assert.equal(next.version,before.version);assert.deepEqual(moved.roomIds,[target.roomId]);assert.equal(moved.positionVersion,obj.positionVersion+1);
+  assert.equal(pin.needsReview,true);assert.equal(pin.regionId,oldPin.regionId);assert.equal(pin.x,oldPin.x);assert.equal(pin.y,oldPin.y);
+  const stale=await post(route()+'/pins',{expectedVersion:before.version,objectId,regionId:'balcony',x:71,y:21,expectedPositionVersion:obj.positionVersion},recipient);assert.equal(stale.status,409);
+  assert.deepEqual((await read()).objects.find(o=>o.id===objectId).roomIds,[target.roomId]);
+  const fresh=await post(route()+'/pins',{expectedVersion:next.version,objectId,regionId:'kitchen',x:22,y:22,expectedPositionVersion:moved.positionVersion},recipient);assert.equal(fresh.status,200);assert.equal((await read()).pins.find(p=>p.objectId===objectId).needsReview,false);
+ });
+ await t.test('normal room rename and archive are reflected by the map; archived destination rejects writes until restored',async()=>{
+  const before=await read(),room=before.rooms.find(r=>r.id==='kitchen'),roomPath='/homes/'+homeId+'/rooms/'+room.roomId;
+  let r=await request(roomPath,{},recipient);assert.equal(r.status,200);const original=(await r.json()).room;
+  r=await post(roomPath+'/updates',{expectedVersion:original.version,name:'Cucina abitabile DEMO'},recipient);assert.equal(r.status,200,await r.clone().text());const renamed=(await r.json()).room;
+  let current=await read();assert.equal(current.rooms.find(v=>v.id==='kitchen').name,'Cucina abitabile DEMO');assert.equal(current.version,before.version);
+  r=await post(roomPath+'/archive',{expectedVersion:renamed.version},recipient);assert.equal(r.status,200);const archived=(await r.json()).room;
+  current=await read();assert.equal(current.rooms.find(v=>v.id==='kitchen').state,'archived');assert.equal(current.pins.find(v=>v.objectId===objectId).needsReview,true);
+  const obj=current.objects.find(v=>v.id===objectId),write=await post(route()+'/pins',{expectedVersion:current.version,objectId,regionId:'kitchen',x:23,y:23,expectedPositionVersion:obj.positionVersion},recipient);assert.equal(write.status,409);
+  r=await post(roomPath+'/restore',{expectedVersion:archived.version},recipient);assert.equal(r.status,200);current=await read();assert.equal(current.rooms.find(v=>v.id==='kitchen').state,'active');assert.equal(current.pins.find(v=>v.objectId===objectId).x,22);assert.equal(current.pins.find(v=>v.objectId===objectId).needsReview,false);
+ });
+ await t.test('archiving an owner object removes its marker data; restoring preserves the chosen position without duplication',async()=>{
+  const before=await read(),pin=before.pins.find(v=>v.objectId===objectId),objectPath='/homes/'+homeId+'/objects/object/'+objectId;
+  let r=await request(objectPath,{},recipient);assert.equal(r.status,200);const object=(await r.json()).object;
+  r=await post(objectPath+'/archive',{expectedVersion:object.version},recipient);assert.equal(r.status,200);const archived=(await r.json()).object;
+  const hidden=await read();assert.equal(hidden.objects.some(v=>v.id===objectId),false);assert.equal(hidden.pins.some(v=>v.objectId===objectId),false);assert.equal(JSON.stringify(hidden).includes('Frigorifero DEMO'),false);
+  r=await post(objectPath+'/restore',{expectedVersion:archived.version},recipient);assert.equal(r.status,200);const restored=await read();assert.equal(restored.objects.filter(v=>v.id===objectId).length,1);assert.deepEqual(restored.pins.filter(v=>v.objectId===objectId),[pin]);
+ });
+ await t.test('normal trash and restore of the original hide and recover the map without bypassing source access',async()=>{
+  const before=await read(),docPath='/homes/'+homeId+'/documents/'+before.document.id;
+  let r=await request(docPath+'/trash',{},recipient);assert.equal(r.status,200);const preview=await r.json();assert.equal(preview.allowed,true);
+  r=await post(docPath+'/trash',{expectedVersion:preview.document.version},recipient);assert.equal(r.status,200,await r.clone().text());const moved=await r.json();
+  r=await request(route(),{},recipient);assert.equal(r.status,403);const denied=await r.text();assert.equal(denied.includes('Cucina abitabile DEMO'),false);assert.equal(denied.includes('Frigorifero DEMO'),false);
+  r=await request(maps(),{},recipient);assert.equal(r.status,200);assert.deepEqual((await r.json()).items,[]);
+  const obj=before.objects.find(v=>v.id===objectId);r=await post(route()+'/pins',{expectedVersion:before.version,objectId,regionId:'kitchen',x:23,y:23,expectedPositionVersion:obj.positionVersion},recipient);assert.equal(r.status,403);
+  r=await post('/homes/'+homeId+'/trash/documents/'+before.document.id+'/restore',{expectedVersion:moved.entry.version},recipient);assert.equal(r.status,200);assert.equal((await r.json()).restored,true);
+  const after=await read();assert.deepEqual(after.pins,before.pins);assert.deepEqual(after.objects,before.objects);assert.equal(after.version,before.version);
+ });
 });

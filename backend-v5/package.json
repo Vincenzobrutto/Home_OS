@@ -92,7 +92,8 @@
     "test:home-map-db": "node test/offline.cjs --suite test:home-map-db",
     "test:home-map-browser-trial": "node test/offline.cjs --suite test:home-map-browser-trial",
     "test:home-map-drag-db": "node test/offline.cjs --suite test:home-map-drag-db",
-    "test:ambienti-map-browser-trial": "node test/offline.cjs --suite test:ambienti-map-browser-trial"
+    "test:ambienti-map-browser-trial": "node test/offline.cjs --suite test:ambienti-map-browser-trial",
+    "test:ambienti-map-followup-trial": "node test/offline.cjs --suite test:ambienti-map-followup-trial"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",
