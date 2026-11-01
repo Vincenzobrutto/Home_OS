@@ -26,6 +26,7 @@ const FromDocumentPage = lazyPage(() => import('./DocumentDraftPages').then((m) 
 const AnalysisJobPage = lazyPage(() => import('./DocumentDraftPages').then((m) => m.AnalysisJobPage));
 const DraftsPage = lazyPage(() => import('./DocumentDraftPages').then((m) => m.DraftsPage));
 const DraftPage = lazyPage(() => import('./DocumentDraftPages').then((m) => m.DraftPage));
+const MapPage = lazyPage(() => import('../home-maps/MapPage').then(m => m.MapPage));
 const FloorPlanPage = lazyPage(() => import('../floor-plan/FloorPlanPage').then(m => m.FloorPlanPage));
 const RoomsPage = lazyPage(() => import('./RoomsPages').then((m) => m.RoomsPage));
 const RoomDetailPage = lazyPage(() => import('./RoomsPages').then((m) => m.RoomDetailPage));
@@ -104,6 +105,8 @@ export const routes: RouteObject[] = [
               { path: 'spese/lavori/:workId', element: <WorkDetailPage /> },
               { path: 'spese/:expenseId', element: <ExpenseDetailRoute /> },
               { path: 'ambienti', element: <RoomsPage /> },
+              { path:'mappa',element:<MapPage/> },
+              { path:'mappa/:mapId',element:<MapPage/> },
               { path: 'ambienti/da-planimetria', element: <FloorPlanPage /> },
               { path: 'ambienti/da-planimetria/:documentId', element: <FloorPlanPage /> },
               { path: 'ambienti/:roomId', element: <RoomDetailPage /> },

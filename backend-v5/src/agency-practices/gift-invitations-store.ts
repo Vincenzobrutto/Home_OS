@@ -1,3 +1,4 @@
+import {digitalPlanSummary} from '../home-maps/snapshot';
 import {randomUUID} from 'node:crypto';
 import {Prisma,type AgencyGiftInvitation} from '../../generated/client';
 import type {PrismaService} from '../prisma.service';
@@ -231,7 +232,7 @@ export class GiftInvitationsStore{
    const {actor,practice,record}=context,agency=await tx.agency.findUnique({where:{id:record.agencyId},select:{id:true,name:true}});
    if(!agency||agency.id!==practice.agencyId)unavailable();
    if(record.state!=='invited'&&record.state!=='claimed')unavailable();const state=record.state;
-   const documents=record.packet.documents.map(d=>({title:d.title,author:d.author,origin:d.origin,lifecycle:d.lifecycle,signatureVerification:d.signatureVerification,...(d.surface?{surface:structuredClone(d.surface)}:{})}));
+   const documents=record.packet.documents.map(d=>({title:d.title,author:d.author,origin:d.origin,lifecycle:d.lifecycle,signatureVerification:d.signatureVerification,...(d.digitalPlan?{digitalPlan:digitalPlanSummary(d.digitalPlan)}:{}),...(d.surface?{surface:structuredClone(d.surface)}:{})}));
    this.current(actor,practice,record);const now=new Date().toISOString();requirePractice(actor,practice,'export',now);live(record,now);
    return {id:record.id,version:record.version,state,agencyName:agency.name,documents,annualBenefit:structuredClone(record.annualBenefit)};
   },{maxWait:5000,timeout:15000});

@@ -1,8 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
-## Planimetria digitale → Gift → mappa proprietario — in corso (1 novembre)
+## Planimetria digitale → Gift → mappa proprietario — implementata e collaudata (1 novembre)
+Lotto `codex/gift-plan-handoff-20261101`, dipendenza PR72 `b6efba3`, base comune `cbddcf0`. Rilascio esplicito del piano canonico, snapshot fonte/scala/geometrie, copia atomica nella Home con ambienti, mappa indipendente e segnaposti sugli oggetti normali. Aggiunta vertici, misure invalidate e pin da riconfermare senza spostamenti. Nessuna AI nuova, demo Alessio invariata.
 
-Lotto Codex codex/gift-plan-handoff-20261101, worktree isolato dalla base comune remota cbddcf0 e dipendenza esplicita Gift PR72 b6efba3 (non integrata). Area: contratto snapshot planimetria, rilascio Gift/copia atomica, modello mappa Home e posizioni oggetti, API/UI e test sintetici. Preservare la demo Alessio e gli altri checkout. Nessun merge sul consolidamento, deploy o AI a pagamento. Stato: avviato, nessuna nuova funzione verificata.
+Backend877/877, Gift+map217/217, DB mappa10/10 e Gift127/127 su cluster nuovi arrestati; frontend immediato88/88, gruppo esteso213/214 con file invariato11/11 alla riesecuzione, statici/build verdi. Browser reale desktop/375px completato con fixture, challenge email e scanner stub dichiarati. Nuovo collaudo locale `cNnivm` attivo solo per la prova, stop automatico1nov09:30Europe/Rome; nessun servizio esistente riavviato. [Report corrente e limiti](v5/gift-digital-plan-20261101.md). Nessun merge o deploy; decisione sul consolidamento al committente.
 
 ## Agency → Gift → Home — flusso collegato e collaudato in locale (1 novembre)
 

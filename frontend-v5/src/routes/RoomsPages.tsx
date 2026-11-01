@@ -152,6 +152,7 @@ function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) 
             <Icon name="plus" />
             Aggiungi ambiente
           </button>
+          <Link className={ui.btn} to={`/home/${home.id}/mappa`}>Mappa ricevuta dall’agenzia</Link>
           <Link className={ui.btn} to={`/home/${home.id}/ambienti/da-planimetria`}><Blueprint size={18} aria-hidden="true" />Da planimetria</Link>
         </>}
       </div>

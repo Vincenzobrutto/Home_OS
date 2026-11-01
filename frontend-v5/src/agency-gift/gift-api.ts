@@ -2,7 +2,7 @@ import type {ApiTransport} from '../api/transport';
 import {serviceError} from '../api/errors';
 import {parseGiftCapabilities,parseGiftBenefits,parseGiftDocuments,parseGiftRelease,parseGiftInvitations,parseGiftInvitationCreated,parseGiftReissued,parseGiftRevocation,parseGiftLanding,parseGiftPreview,parseGiftClaim,parseGiftAcceptance,parseGiftResume,parseGiftCancellation,type GiftDocuments,type GiftAcceptance,type GiftResume} from './gift-wire';
 export type GiftAgencyScope={accountId:string;agencyId:string;practiceId:string};
-export type GiftReleaseInput={expectedRevision:number;expectedSourceVersion:number;expectedSha256:string;title:string;origin:'received'|'agency_generated';finalDocumentConfirmed:true;releaseApproved:true};
+export type GiftReleaseInput={digitalPlan?:{planId:string;expectedPlanVersion:number;reviewed:true};expectedRevision:number;expectedSourceVersion:number;expectedSha256:string;title:string;origin:'received'|'agency_generated';finalDocumentConfirmed:true;releaseApproved:true};
 export type GiftCreateInput={expectedRevision:number;documents:{sourceId:string;version:number;sha256:string}[];recipientEmail:string;stipulationCompleted:true;releaseApproved:true;annualBenefit:boolean};
 export type GiftReissueInput={expectedRevision:number;expectedVersion:number};
 export type GiftBeginInput={secret:string;expectedInvitationVersion:number;home:{name:string;address:string}};
@@ -25,8 +25,9 @@ function scope(input:GiftAgencyScope){const r=object(input,['accountId','agencyI
 function root(s:GiftAgencyScope){return '/agencies/'+encodeURIComponent(s.agencyId)+'/practices/'+encodeURIComponent(s.practiceId);}
 function invitationPath(id:string){return '/gift-invitations/'+encodeURIComponent(id);}
 function jobPath(id:string){return '/gift-acceptances/'+encodeURIComponent(id);}
+function releaseMap(input:NonNullable<GiftReleaseInput['digitalPlan']>){const p=object(input,['planId','expectedPlanVersion','reviewed']);if(p.reviewed!==true)invalid();return {planId:source(p.planId),expectedPlanVersion:positive(p.expectedPlanVersion),reviewed:true as const};}
 function releaseInput(input:GiftReleaseInput):GiftReleaseInput{
- const r=object(input,['expectedRevision','expectedSourceVersion','expectedSha256','title','origin','finalDocumentConfirmed','releaseApproved']);if(r.finalDocumentConfirmed!==true||r.releaseApproved!==true||r.origin!=='received'&&r.origin!=='agency_generated')invalid();return {expectedRevision:positive(r.expectedRevision),expectedSourceVersion:positive(r.expectedSourceVersion),expectedSha256:hash(r.expectedSha256),title:text(r.title,300),origin:r.origin,finalDocumentConfirmed:true,releaseApproved:true};
+ const r=object(input,['expectedRevision','expectedSourceVersion','expectedSha256','title','origin','finalDocumentConfirmed','releaseApproved',...(input.digitalPlan?['digitalPlan']:[])]);if(r.finalDocumentConfirmed!==true||r.releaseApproved!==true||r.origin!=='received'&&r.origin!=='agency_generated')invalid();return {expectedRevision:positive(r.expectedRevision),expectedSourceVersion:positive(r.expectedSourceVersion),expectedSha256:hash(r.expectedSha256),title:text(r.title,300),origin:r.origin,finalDocumentConfirmed:true,releaseApproved:true,...(input.digitalPlan?{digitalPlan:releaseMap(input.digitalPlan)}:{})};
 }
 function createInput(input:GiftCreateInput):GiftCreateInput{
  const r=object(input,['expectedRevision','documents','recipientEmail','stipulationCompleted','releaseApproved','annualBenefit']);if(r.stipulationCompleted!==true||r.releaseApproved!==true||typeof r.annualBenefit!=='boolean'||!Array.isArray(r.documents)||Object.getPrototypeOf(r.documents)!==Array.prototype||r.documents.length<1||r.documents.length>50||Reflect.ownKeys(r.documents).length!==r.documents.length+1)invalid();

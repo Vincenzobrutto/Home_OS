@@ -568,3 +568,10 @@ profiles['test:offline-db'].files.push('test/agency-gift-reissue.integration.tes
 
 // Dated, nominal Gift browser collaudo: never enter ordinary or aggregate suites.
 profiles['test:agency-gift-browser-trial']={database:true,api:false,files:['test/agency-gift-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T07:00:00.000Z'};
+
+profiles.test.files.push('test/home-map.test.cjs');
+profiles['test:agency-gift-packet'].files.push('test/home-map.test.cjs');
+profiles['test:home-map-db']={database:true,api:false,files:['test/home-map.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/home-map.integration.test.cjs');
+
+profiles['test:home-map-browser-trial']={database:true,api:false,files:['test/home-map-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T08:30:00.000Z'};

@@ -180,3 +180,14 @@ Nuovi endpoint e DTO nel [contratto Gift](agency-gift-api-20261031.md). Token so
 ### Gift — rigenerazione e throttle (1 novembre2026)
 
 `POST /agencies/:agencyId/practices/:practiceId/gift-invitations/:id/reissue` con `Idempotency-Key` e `{expectedRevision,expectedVersion}` sostituisce atomicamente il link, mantenendo manifest/destinatario/offerta e rifiutando accettazioni prenotate/accettate. Replay con secret:null; nuovo segreto solo al primo commit, nuova scadenza7giorni. Le API Gift applicano429persistente perIP/account dopo l’autenticazione/CSRF; non è un limite commerciale. [Contratto, UI e prove](agency-gift-app-20261101.md).
+
+
+## Mappe digitali ricevute con Gift (1 novembre2026)
+Rilascio Gift: campo opzionale `digitalPlan:{planId,expectedPlanVersion,reviewed:true}`, soltanto riferimento/dichiarazione; DTO esatto, geometrie client rifiutate. Listing documenti aggiunge opzionalmente `digitalPlans` (ID/versione/revisione/conteggio/pending); descriptor e preview espongono solo sommario della mappa inclusa. [Contratto e prove](gift-digital-plan-20261101.md).
+
+API Home normali sotto /api/v5, guard sessione/Origin/CSRF/membership e prova fonte:
+- GET /homes/:homeId/digital-plans: elenco mappe leggibili dell’account; nessuna dipendenza dall’Agency o anno.
+- GET /homes/:homeId/digital-plans/:id: documento/qualifiche, geometrie, mapping ambienti, oggetti privati autorizzati, pin e needsReview.
+- POST /homes/:homeId/digital-plans/:id/pins: Idempotency-Key; expectedVersion, objectId, regionId, x, y, expectedPositionVersion. Coordinate raster pagina intera, origine alto sinistra. Aggiornamento atomico pin + collocazione canonica nel singolo ambiente; punto strettamente dentro il vano e fuori dai vuoti.
+- POST /homes/:homeId/digital-plans/:id/geometry: Idempotency-Key; expectedVersion, regionId, geometry:{points,holes}. Nessun overlap; nuova revisione, calibrazione/perimetro operativo invalidati, pin non spostati e da riconfermare.
+Query extra e body extra rifiutati;403 fonte/ambito non autorizzato,409 revisioni o chiave concorrenti,422 geometria/valori non validi. Nessun endpoint importa snapshot privilegiati o attiva AI.

@@ -2123,3 +2123,7 @@ Gift v1:ledger inviti persistente,auth DB,edit+export e controlli fonti/claim,47
 Gift:flag annuale ora congela full-access v1 confermato,tutte le features proprietario per12mesi dall'accettazione.Free futuro non blocca la scelta;claim non attiva beneficio o pagamenti.[Contratto](v5/agency-gift-home-copy-contract-20261031.md).
 
 Gift:prerequisiti copia,conferma Home,ammissione verificata e provenienza Document/client;purge cancella la provenienza.742backend/39DB/1773frontendverdi,nessun copier/Home/entitlement ancora attivo.[Report](v5/agency-gift-copy-prerequisites-20261031.md).
+
+
+## 1 novembre2026 — Mappa digitale Agency/Gift/Home
+Ramo dedicato: scelta esplicita del piano revisionato nella Gift, copia indipendente con ambienti alla pubblicazione, pagina Home Mappa con posizioni persistenti sugli oggetti personali e correzione contorni con nuovi punti. Modifiche geometriche invalidano misure e richiedono riconferma pin. [Report, test e limiti](v5/gift-digital-plan-20261101.md); nessun merge/deploy o modifica demo Alessio.

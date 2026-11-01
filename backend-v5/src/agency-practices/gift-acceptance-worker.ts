@@ -1,3 +1,4 @@
+import {publishGiftMap} from '../home-maps/publication';
 import {createHash,randomBytes,randomUUID} from 'node:crypto';
 import {HttpException} from '@nestjs/common';
 import {Prisma,type AgencyGiftAcceptanceJob,type AgencyGiftAcceptanceItem} from '../../generated/client';
@@ -120,6 +121,7 @@ export class GiftAcceptanceWorker{
     const d=prepared.manifest.packet.documents[item.ordinal],scan=control(item,job);
     const provenance=parseGiftDocumentProvenance({schemaVersion:1,kind:'agency_gift',invitationId:job.invitationId,agencyId:prepared.manifest.packet.agencyId,practiceId:job.practiceId,sourceId:d.sourceId,sourceVersion:d.version,sourceSha256:d.sha256,metadataVersion:d.metadataVersion,origin:d.origin,author:d.author,title:d.title,...(d.surface?{surface:d.surface}:{})});if(!provenance)fail();
     await tx.document.create({data:{id:item.documentId,homeId:job.homeId,uploaderId:job.accountId,name:d.title,visibility:'private',giftProvenance:json(provenance),original:{create:{id:item.documentVersionId,version:1,originalFilename:safeFilename(d.originalFilename),mimeType:d.mimeType,byteSize:d.byteSize,sha256:d.sha256,fileId:item.storedFileId,fileControlEngine:scan.engine,fileControlCheckedAt:scan.checkedAt,fileControlSignature:scan.signatureVersion}}}});
+    if(d.digitalPlan)await publishGiftMap(tx,{accountId:job.accountId,homeId:job.homeId,documentId:item.documentId,sha256:d.sha256,snapshot:d.digitalPlan});
    }
    const receiptId=randomUUID(),offer=prepared.manifest.annualBenefit;
    const benefit=offer.requested?makeGiftBenefit({id:randomUUID(),receiptId,accountId:job.accountId,acceptedAt,offerId:offer.offerId,offerVersion:offer.offerVersion}):null;

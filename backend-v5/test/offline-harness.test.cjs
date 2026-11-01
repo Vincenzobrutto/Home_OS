@@ -119,3 +119,8 @@ test('Prisma native-engine constructors cannot bypass offline mode with an expli
  const result = child(code, cleanEnvironment(process.env, 'db', dir, 'owned'));
  assert.equal(result.status, 0, result.stderr);
 });
+
+test('digital map browser collaudo is dated nominal-only and never an ordinary/aggregate test',()=>{
+ assert.deepEqual(suites['test:home-map-browser-trial'],{database:true,api:false,files:['test/home-map-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T08:30:00.000Z'});
+ for(const name of ['test','test:offline-db','test:home-map-db','test:agency-gift-db'])assert.equal(suites[name].files.includes('test/home-map-browser-trial.integration.test.cjs'),false);
+});

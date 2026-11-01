@@ -339,3 +339,7 @@ Gift v1:ledger inviti persistente,auth DB,edit+export e controlli fonti/claim,47
 Gift:flag annuale ora congela full-access v1 confermato,tutte le features proprietario per12mesi dall'accettazione.Free futuro non blocca la scelta;claim non attiva beneficio o pagamenti.[Contratto](v5/agency-gift-home-copy-contract-20261031.md).
 
 Gift:prerequisiti copia,conferma Home,ammissione verificata e provenienza Document/client;purge cancella la provenienza.742backend/39DB/1773frontendverdi,nessun copier/Home/entitlement ancora attivo.[Report](v5/agency-gift-copy-prerequisites-20261031.md).
+
+
+## Incremento Gift mappa — 1 novembre2026
+Implementato e collaudato nel ramo dedicato con dipendenza PR72: mappa/ambienti dalla planimetria Agency alla Home, pin sugli oggetti normali, correzione vertici e invalidazioni. Review/merge/attivazione al committente. Prossimi: prova agenzia reale con documenti/budget autorizzati, modello mandato approvato, guida su mappe dense e profilo multipiano se necessario. [Risultati e limiti](v5/gift-digital-plan-20261101.md).

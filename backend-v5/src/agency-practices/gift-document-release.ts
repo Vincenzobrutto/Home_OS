@@ -1,3 +1,5 @@
+import {giftDigitalPlan,digitalPlanSummary,assertCurrentDigitalPlan} from '../home-maps/snapshot';
+import type {StoredPlan} from '../agency-plans/records';
 import {Prisma} from '../../generated/client';
 import type {PrismaService} from '../prisma.service';
 import {AgencyPracticesStore} from './store';
@@ -7,6 +9,7 @@ import {parseGiftDocumentDescriptor,type GiftDocumentDescriptor} from './gift-pa
 import {safeFilename} from '../documents/storage';
 
 export type GiftDocumentRelease={
+  digitalPlan?:{planId:string;expectedPlanVersion:number;reviewed:true};
   key:string;expectedRevision:number;expectedSourceVersion:number;expectedSha256:string;
   title:string;origin:'received'|'agency_generated';finalDocumentConfirmed:true;releaseApproved:true;
 };
@@ -47,14 +50,21 @@ function scope(accountId:unknown,agencyId:unknown,practiceId:unknown):void{
 }
 /** Agent declarations only: provenance, signatures, surface qualifications and scope remain server-owned. */
 export function parseGiftDocumentRelease(input:unknown):GiftDocumentRelease{
-  const body=object(input,['key','expectedRevision','expectedSourceVersion','expectedSha256','title','origin','finalDocumentConfirmed','releaseApproved']);
+  const body=object(input,['key','expectedRevision','expectedSourceVersion','expectedSha256','title','origin','finalDocumentConfirmed','releaseApproved',...(input&&typeof input==='object'&&Object.hasOwn(input,'digitalPlan')?['digitalPlan']:[])]);
   if(body.finalDocumentConfirmed!==true||body.releaseApproved!==true||body.origin!=='received'&&body.origin!=='agency_generated')fail();
   return {
+    ...(body.digitalPlan!==undefined?{digitalPlan:planSelection(body.digitalPlan)}:{}),
     key:text(body.key,120),expectedRevision:positive(body.expectedRevision),
     expectedSourceVersion:positive(body.expectedSourceVersion),expectedSha256:sha(body.expectedSha256),
     title:text(body.title,300),origin:body.origin,finalDocumentConfirmed:true,releaseApproved:true
   };
 }
+
+function planSelection(v:unknown):NonNullable<GiftDocumentRelease['digitalPlan']>{
+ const p=object(v,['planId','expectedPlanVersion','reviewed']);if(p.reviewed!==true)fail();
+ return {planId:text(p.planId,120),expectedPlanVersion:positive(p.expectedPlanVersion),reviewed:true};
+}
+
 const json=(value:Practice):Prisma.InputJsonValue=>JSON.parse(JSON.stringify(value));
 function proof(sourceId:string,command:GiftDocumentRelease){
   return {sourceId,version:command.expectedSourceVersion,sha256:command.expectedSha256};
@@ -71,11 +81,15 @@ function listing(actor:Actor,practice:GiftMetadataState){
     const source=practice.sources.find(s=>s.id===item.sourceId);
     if(!source||!sourceReadable(actor,practice,source,now,'export'))fail('access_denied');
     const current=source.versions.at(-1);if(!current)fail();
+    const plans=((practice as Practice&{planAnalyses?:StoredPlan[]}).planAnalyses??[]).filter(p=>p.proof.sourceId===item.sourceId&&p.proof.version===current.version&&p.proof.sha256===current.sha256).map(p=>({id:p.id,version:p.version,geometryRevision:p.geometryRevision,roomCount:p.rooms.length,pending:p.surfaceProposal?.state==='pending'}));
     const base={sourceId:item.sourceId,sourceVersion:item.sourceVersion,sha256:item.sha256,
-      filename:safeFilename(current.originalFilename),state:item.state};
+      filename:safeFilename(current.originalFilename),state:item.state,
+      ...(plans.length?{digitalPlans:plans}:{})};
     // No historical title/descriptor/version or audit receipts escape through stale/missing rows.
+    if(item.state==='current'&&item.descriptor.digitalPlan){try{assertCurrentDigitalPlan(practice,item.descriptor.digitalPlan);}catch{return {...base,state:'stale' as const};}}
+    const {digitalPlan,...descriptor}=item.state==='current'?item.descriptor:{digitalPlan:undefined};
     return item.state==='current'?{...base,state:'current' as const,metadataVersion:item.metadataVersion,
-      descriptor:structuredClone(item.descriptor)}:base;
+      descriptor:{...structuredClone(descriptor),...(digitalPlan?{digitalPlan:digitalPlanSummary(digitalPlan)}:{})}}:base;
   });
   const clock=new Date().toISOString();requirePractice(actor,practice,'export',clock);
   for(const item of documents){
@@ -133,11 +147,13 @@ export class GiftDocumentReleaseStore{
       const currentBasis=basis&&basis.sourceId===sourceId&&basis.sourceVersion===command.expectedSourceVersion&&basis.sha256===command.expectedSha256
         ?basis:undefined;
       const surface=currentBasis?.surface;
+      if(prior&&(prior.descriptor.digitalPlan?.planId!==command.digitalPlan?.planId||prior.descriptor.digitalPlan?.planVersion!==command.digitalPlan?.expectedPlanVersion))fail('idempotency_conflict');
+      const digitalPlan=command.digitalPlan?(prior?.descriptor.digitalPlan??giftDigitalPlan(practice,sourceId,command.digitalPlan,accountId,new Date().toISOString())):undefined;
       const descriptor:GiftDocumentDescriptor={
         agencyId,practiceId,sourceId,sourceVersion:command.expectedSourceVersion,sha256:command.expectedSha256,
         metadataVersion,origin:command.origin,lifecycle:currentBasis?.lifecycle==='signed'?'signed':'final',
         author:currentBasis?.author??AUTHORS[command.origin],title:command.title,
-        ...(surface?{surface:structuredClone(surface)}:{})
+        ...(surface?{surface:structuredClone(surface)}:{}),...(digitalPlan?{digitalPlan}:{})
       };
       const result=registerGiftDocumentDescriptor(actor,state,descriptor,{
         key:command.key,expectedRevision:command.expectedRevision,expectedMetadataVersion

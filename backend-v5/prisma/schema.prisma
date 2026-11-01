@@ -12,6 +12,7 @@ enum HomeRole {
   viewer
 }
 model Account {
+  digitalPlans HomeDigitalPlan[]
   giftAcceptanceReceipts AgencyGiftAcceptanceReceipt[]
   giftBenefits AccountGiftBenefit[]
   giftAcceptanceJobs AgencyGiftAcceptanceJob[]
@@ -211,6 +212,7 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  digitalPlans HomeDigitalPlan[]
   trashRequests TrashRequest[]
   deletionRecords DeletionRecord[]
   historyEvents HomeHistoryEvent[]
@@ -1506,4 +1508,23 @@ model AccountGiftBenefit {
   account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
   receipt AgencyGiftAcceptanceReceipt @relation(fields:[receiptId],references:[id],onDelete:Restrict)
   @@index([accountId,startsAt,endsAt])
+}
+model HomeDigitalPlan {
+ id String @id @default(uuid())
+ accountId String
+ homeId String
+ documentId String @unique
+ documentVersion Int
+ documentSha256 String
+ version Int @default(1)
+ geometryRevision Int @default(1)
+ received Json
+ layout Json
+ roomBindings Json
+ pins Json @default("[]")
+ createdAt DateTime @default(now())
+ updatedAt DateTime @default(now())
+ account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+ home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+ @@index([accountId,homeId])
 }

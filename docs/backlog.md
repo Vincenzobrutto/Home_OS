@@ -1102,3 +1102,7 @@ Gift:ledger inviti completato come porta interna;prossimo copier con nome/indiri
 Gift,nuova decisione Vincenzo:beneficio flag=true è full-access per12mesi dall’accettazione,free futuro da definire.Non attenderecatalogofeaturespercongelarel’offerta;implementare entitlement con offerta dimora-full-access-v1.Costi/rinnovo/accountgiàabbonato non autorizzano sovrascritture o addebiti impliciti.
 
 Gift:prerequisiti copia verificati;prossimo job/staging e commit atomico Home/doc/receipt,coordinato con cleanup e purge.Solo dopo attivazione anno/APIUI.[Stato](v5/agency-gift-copy-prerequisites-20261031.md).
+
+
+## Residui del collegamento mappa Gift (1 novembre2026)
+Non bloccano il percorso sintetico verificato: multi-pagina/multi-mappa e riconciliazione con vani preesistenti; nuova calibrazione e computo commerciale editabile Home; paging/batch dei cataloghi grandi; affinamento stroke/etichette e interazione touch sulle piante dense. Analisi AI reale richiede consenso/budget specifici. Modello incarico approvato e producer documentali restano assenti. [Perimetro consegnato](v5/gift-digital-plan-20261101.md).

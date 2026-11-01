@@ -88,7 +88,9 @@
     "test:agency-gift-db": "node test/offline.cjs --suite test:agency-gift-db",
     "test:agency-gift-packet": "node test/offline.cjs --suite test:agency-gift-packet",
     "test:agency-gift-runner-db": "node test/offline.cjs --suite test:agency-gift-runner-db",
-    "test:agency-gift-browser-trial": "node test/offline.cjs --suite test:agency-gift-browser-trial"
+    "test:agency-gift-browser-trial": "node test/offline.cjs --suite test:agency-gift-browser-trial",
+    "test:home-map-db": "node test/offline.cjs --suite test:home-map-db",
+    "test:home-map-browser-trial": "node test/offline.cjs --suite test:home-map-browser-trial"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",

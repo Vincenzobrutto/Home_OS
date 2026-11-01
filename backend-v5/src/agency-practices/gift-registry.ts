@@ -1,3 +1,4 @@
+import {assertCurrentDigitalPlan} from '../home-maps/snapshot';
 import { createHash } from 'node:crypto';
 import { exportManifest, PracticeError, requirePractice, sourceReadable, type Actor, type Practice } from './domain';
 import { parseGiftDocumentDescriptor, prepareAgencyGiftPacket, type GiftDocumentDescriptor } from './gift-packet';
@@ -118,6 +119,7 @@ export function prepareGiftFromRegistry(actor:Actor,practice:GiftMetadataState,i
   const descriptors=originals.map(s=>{
     const entry=latest(practice,s.sourceId);if(!entry)fail('invalid_input');
     if(entry.descriptor.sourceVersion!==s.version||entry.descriptor.sha256!==s.sha256)fail('source_changed');
+    if(entry.descriptor.digitalPlan)assertCurrentDigitalPlan(practice,entry.descriptor.digitalPlan);
     return entry.descriptor;
   });
   return prepareAgencyGiftPacket(actor,practice,descriptors,input,now);

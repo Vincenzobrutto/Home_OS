@@ -1,3 +1,4 @@
+import {parseDigitalPlan,type DigitalPlanSnapshot} from '../home-maps/snapshot';
 import { createHash } from 'node:crypto';
 import { exportManifest, PracticeError, requirePractice, type Actor, type Practice } from './domain';
 
@@ -10,6 +11,7 @@ export type GiftDocumentDescriptor = {
   agencyId: string; practiceId: string; sourceId: string; sourceVersion: number; sha256: string;
   metadataVersion: number; origin: 'received' | 'agency_generated';
   lifecycle: 'draft' | 'final' | 'signed'; author: string; title: string;
+  digitalPlan?:DigitalPlanSnapshot;
   surface?: {
     kind: 'net' | 'cadastral' | 'commercial';
     qualification: 'estimated' | 'reviewed' | 'unverified';
@@ -36,7 +38,7 @@ function sha(v: unknown): string {
   return v;
 }
 export function parseGiftDocumentDescriptor(input: unknown): GiftDocumentDescriptor {
-  const d = object(input, ['agencyId','practiceId','sourceId','sourceVersion','sha256','metadataVersion','origin','lifecycle','author','title','surface']);
+  const d = object(input, ['agencyId','practiceId','sourceId','sourceVersion','sha256','metadataVersion','origin','lifecycle','author','title','surface','digitalPlan']);
   if (!['received','agency_generated'].includes(String(d.origin)) ||
       !['draft','final','signed'].includes(String(d.lifecycle))) invalid();
   let surface: GiftDocumentDescriptor['surface'];
@@ -57,7 +59,7 @@ export function parseGiftDocumentDescriptor(input: unknown): GiftDocumentDescrip
     agencyId:text(d.agencyId,100),practiceId:text(d.practiceId,100),sourceId:text(d.sourceId,100),
     sourceVersion:positive(d.sourceVersion),sha256:sha(d.sha256),metadataVersion:positive(d.metadataVersion),
     origin:d.origin as GiftDocumentDescriptor['origin'],lifecycle:d.lifecycle as GiftDocumentDescriptor['lifecycle'],
-    author:text(d.author,200),title:text(d.title,300),...(surface ? {surface} : {})
+    author:text(d.author,200),title:text(d.title,300),...(d.digitalPlan!==undefined?{digitalPlan:parseDigitalPlan(d.digitalPlan)}:{}),...(surface ? {surface} : {})
   };
 }
 export function prepareAgencyGiftPacket(
@@ -87,10 +89,13 @@ export function prepareAgencyGiftPacket(
     if (meta.sourceVersion !== original.version || meta.sha256 !== original.sha256)
       throw new PracticeError('source_changed');
     if (meta.lifecycle === 'draft') invalid();
+    if(meta.digitalPlan&&(meta.digitalPlan.source.sourceId!==original.sourceId||meta.digitalPlan.source.version!==original.version||meta.digitalPlan.source.sha256!==original.sha256))invalid();
     return { ...original,metadataVersion:meta.metadataVersion,origin:meta.origin,title:meta.title,
       author:meta.author,lifecycle:meta.lifecycle,signatureVerification:'not_assessed' as const,
+      ...(meta.digitalPlan ? {digitalPlan:structuredClone(meta.digitalPlan)} : {}),
       ...(meta.surface ? {surface:structuredClone(meta.surface)} : {}) };
   });
+  if(documents.filter(d=>d.digitalPlan).length>1)invalid(); // One dwelling map per Gift v1.
   const content = { schemaVersion:'agency-gift-preparation-v1' as const,
     agencyId:practice.agencyId,practiceId:practice.id,practiceRevision:revision,preparedBy:actor.accountId,
     requestedHomeId,recipients,documents };

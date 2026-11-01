@@ -1,7 +1,8 @@
 import {serviceError} from '../api/errors';
+export type DigitalPlanSummary={planId:string;geometryRevision:number;page:number;roomCount:number;qualification:'estimated'|'reviewed'|'unverified';caveats:string[]};
 export type GiftSurface={kind:'net'|'cadastral'|'commercial';qualification:'estimated'|'reviewed'|'unverified';method:string;geometryRevision:number;caveats:string[]};
-export type GiftDescriptor={agencyId:string;practiceId:string;sourceId:string;sourceVersion:number;sha256:string;metadataVersion:number;origin:'received'|'agency_generated';lifecycle:'draft'|'final'|'signed';author:string;title:string;surface?:GiftSurface};
-export type GiftDocumentRow={sourceId:string;sourceVersion:number;sha256:string;filename:string}&({state:'missing'|'stale'}|{state:'current';metadataVersion:number;descriptor:GiftDescriptor});
+export type GiftDescriptor={agencyId:string;practiceId:string;sourceId:string;sourceVersion:number;sha256:string;metadataVersion:number;origin:'received'|'agency_generated';lifecycle:'draft'|'final'|'signed';author:string;title:string;surface?:GiftSurface;digitalPlan?:DigitalPlanSummary};
+export type GiftDocumentRow={sourceId:string;sourceVersion:number;sha256:string;filename:string;digitalPlans?:{id:string;version:number;geometryRevision:number;roomCount:number;pending:boolean}[]}&({state:'missing'|'stale'}|{state:'current';metadataVersion:number;descriptor:GiftDescriptor});
 export type GiftDocuments={practiceId:string;revision:number;documents:GiftDocumentRow[];certification:false};
 export type GiftRelease={replay:boolean;metadata:GiftDocuments};
 export type GiftInvitationState='invited'|'claimed'|'revoked';
@@ -12,7 +13,7 @@ export type GiftCapabilities={enabled:boolean;requiresVerifiedEmail:true};
 export type GiftBenefits={fullAccess:boolean;scope:'all_owner_features';validUntil:string|null};
 export type GiftLanding={id:string;version:number;requiresAccount:true};
 export type GiftAnnualBenefit={requested:false}|{requested:true;offerId:'dimora-full-access-v1';offerVersion:1;activated:false};
-export type GiftPreviewDocument={title:string;author:string;origin:'received'|'agency_generated';lifecycle:'final'|'signed';signatureVerification:'not_assessed';surface?:GiftSurface};
+export type GiftPreviewDocument={title:string;author:string;origin:'received'|'agency_generated';lifecycle:'final'|'signed';signatureVerification:'not_assessed';surface?:GiftSurface;digitalPlan?:DigitalPlanSummary};
 export type GiftPreview={id:string;version:number;state:'invited'|'claimed';agencyName:string;documents:GiftPreviewDocument[];annualBenefit:GiftAnnualBenefit};
 export type GiftClaim={id:string;version:number;state:'claimed';replay:boolean};
 export type GiftRevocation={id:string;version:number;state:'revoked';replay:boolean};
@@ -51,14 +52,15 @@ function surface(input:unknown):GiftSurface{
  const r=object(input,['kind','qualification','method','geometryRevision','caveats']),qualification=oneOf(r.qualification,['estimated','reviewed','unverified'] as const),caveats=array(r.caveats,0,30,value=>text(value,500));unique(caveats);if(qualification==='estimated'&&!caveats.length)invalid();
  return {kind:oneOf(r.kind,['net','cadastral','commercial'] as const),qualification,method:text(r.method,200),geometryRevision:integer(r.geometryRevision),caveats};
 }
+function mapSummary(input:unknown):DigitalPlanSummary{const p=object(input,['planId','geometryRevision','page','roomCount','qualification','caveats']);return {planId:text(p.planId,120),geometryRevision:integer(p.geometryRevision),page:integer(p.page,1,20),roomCount:integer(p.roomCount,1,100),qualification:oneOf(p.qualification,['estimated','reviewed','unverified'] as const),caveats:array(p.caveats,1,220,v=>text(v,500))};}
 function descriptor(input:unknown):GiftDescriptor{
- const r=object(input,['agencyId','practiceId','sourceId','sourceVersion','sha256','metadataVersion','origin','lifecycle','author','title'],['surface']);
- return {agencyId:uuid(r.agencyId),practiceId:uuid(r.practiceId),sourceId:text(r.sourceId,100),sourceVersion:integer(r.sourceVersion),sha256:hash(r.sha256),metadataVersion:integer(r.metadataVersion),origin:oneOf(r.origin,['received','agency_generated'] as const),lifecycle:oneOf(r.lifecycle,['draft','final','signed'] as const),author:text(r.author,200),title:text(r.title,300),...(Object.hasOwn(r,'surface')?{surface:surface(r.surface)}:{})};
+ const r=object(input,['agencyId','practiceId','sourceId','sourceVersion','sha256','metadataVersion','origin','lifecycle','author','title'],['surface','digitalPlan']);
+ return {agencyId:uuid(r.agencyId),practiceId:uuid(r.practiceId),sourceId:text(r.sourceId,100),sourceVersion:integer(r.sourceVersion),sha256:hash(r.sha256),metadataVersion:integer(r.metadataVersion),origin:oneOf(r.origin,['received','agency_generated'] as const),lifecycle:oneOf(r.lifecycle,['draft','final','signed'] as const),author:text(r.author,200),title:text(r.title,300),...(Object.hasOwn(r,'surface')?{surface:surface(r.surface)}:{}),...(r.digitalPlan?{digitalPlan:mapSummary(r.digitalPlan)}:{})};
 }
 function documents(input:unknown):GiftDocuments{
  const r=object(input,['practiceId','revision','documents','certification']),practiceId=uuid(r.practiceId);if(r.certification!==false)invalid();
  const items=array(r.documents,0,Number.MAX_SAFE_INTEGER,value=>{
-  const row=object(value,['sourceId','sourceVersion','sha256','filename','state'],['metadataVersion','descriptor']),state=oneOf(row.state,['missing','stale','current'] as const),base={sourceId:text(row.sourceId,100),sourceVersion:integer(row.sourceVersion),sha256:hash(row.sha256),filename:text(row.filename,4096)};
+  const row=object(value,['sourceId','sourceVersion','sha256','filename','state'],['metadataVersion','descriptor','digitalPlans']),state=oneOf(row.state,['missing','stale','current'] as const),base={sourceId:text(row.sourceId,100),sourceVersion:integer(row.sourceVersion),sha256:hash(row.sha256),filename:text(row.filename,4096),...(row.digitalPlans?{digitalPlans:array(row.digitalPlans,0,100,v=>{const p=object(v,['id','version','geometryRevision','roomCount','pending']);return {id:text(p.id,120),version:integer(p.version),geometryRevision:integer(p.geometryRevision),roomCount:integer(p.roomCount,0,100),pending:boolean(p.pending)};})}:{})};
   if(state!=='current'){if(Object.hasOwn(row,'descriptor')||Object.hasOwn(row,'metadataVersion'))invalid();return {...base,state};}
   const d=descriptor(row.descriptor),metadataVersion=integer(row.metadataVersion);if(d.practiceId!==practiceId||d.sourceId!==base.sourceId||d.sourceVersion!==base.sourceVersion||d.sha256!==base.sha256||d.metadataVersion!==metadataVersion)invalid();return {...base,state,metadataVersion,descriptor:d};
  });unique(items.map(item=>item.sourceId));return {practiceId,revision:integer(r.revision),documents:items,certification:false};
@@ -103,7 +105,7 @@ export const parseGiftInvitations=(input:unknown):GiftInvitations=>parse(()=>{
 });
 export const parseGiftLanding=(input:unknown):GiftLanding=>parse(()=>{const r=object(input,['id','version','requiresAccount']);if(r.requiresAccount!==true)invalid();return {id:uuid(r.id),version:integer(r.version),requiresAccount:true};});
 export const parseGiftPreview=(input:unknown):GiftPreview=>parse(()=>{
- const r=object(input,['id','version','state','agencyName','documents','annualBenefit']),items=array(r.documents,1,50,value=>{const d=object(value,['title','author','origin','lifecycle','signatureVerification'],['surface']);if(d.signatureVerification!=='not_assessed')invalid();return {title:text(d.title,300),author:text(d.author,200),origin:oneOf(d.origin,['received','agency_generated'] as const),lifecycle:oneOf(d.lifecycle,['final','signed'] as const),signatureVerification:'not_assessed' as const,...(Object.hasOwn(d,'surface')?{surface:surface(d.surface)}:{})};});
+ const r=object(input,['id','version','state','agencyName','documents','annualBenefit']),items=array(r.documents,1,50,value=>{const d=object(value,['title','author','origin','lifecycle','signatureVerification'],['surface','digitalPlan']);if(d.signatureVerification!=='not_assessed')invalid();return {title:text(d.title,300),author:text(d.author,200),origin:oneOf(d.origin,['received','agency_generated'] as const),lifecycle:oneOf(d.lifecycle,['final','signed'] as const),signatureVerification:'not_assessed' as const,...(Object.hasOwn(d,'surface')?{surface:surface(d.surface)}:{}),...(d.digitalPlan?{digitalPlan:mapSummary(d.digitalPlan)}:{})};});
  return {id:uuid(r.id),version:integer(r.version),state:oneOf(r.state,['invited','claimed'] as const),agencyName:text(r.agencyName,200),documents:items,annualBenefit:annual(r.annualBenefit)};
 });
 export const parseGiftClaim=(input:unknown):GiftClaim=>parse(()=>{const r=object(input,['id','version','state','replay']);if(r.state!=='claimed')invalid();return {id:uuid(r.id),version:integer(r.version),state:'claimed',replay:boolean(r.replay)};});

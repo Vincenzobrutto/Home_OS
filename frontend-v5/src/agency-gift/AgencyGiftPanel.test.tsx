@@ -108,3 +108,12 @@ describe('Agency Gift panel uses explicit server-backed preparation and invitati
   const api=mockApi(),gate=deferred<GiftInvitationCreated>(),{user}=mounted(api);await prepareCreate(user);await user.click(screen.getByRole('button',{name:'Crea link personale'}));await screen.findByLabelText('Link personale Gift');api.listInvitations.mockResolvedValue({...invitations(),invitations:[{id:id(5),version:1,state:'invited',createdAt:'2026-11-01T10:00:00.000Z',expiresAt:'2026-11-08T10:00:00.000Z',recipientEmail:'owner@example.test'}]});await user.click(screen.getByRole('button',{name:'Aggiorna elenchi'}));api.reissueInvitation.mockReturnValue(gate.promise);await user.click(await screen.findByRole('button',{name:'Rigenera link per owner@example.test'}));expect(screen.queryByLabelText('Link personale Gift')).not.toBeInTheDocument();expect(document.body.textContent).not.toContain(secret);await act(async()=>gate.resolve(created({id:id(9),secret:'T'.repeat(43)})));expect(await screen.findByLabelText('Link personale Gift')).toHaveValue(window.location.origin+'/gift/'+id(9)+'#token='+'T'.repeat(43));
  });
 });
+
+it('digital plan is included only after explicit contour/name/scale review, using server plan reference',async()=>{
+ const api=mockApi(),documents=docs();documents.documents[1]!.digitalPlans=[{id:'plan-DEMO',version:3,geometryRevision:2,roomCount:3,pending:false}];api.documents.mockResolvedValue(documents);
+ const {user}=mounted(api);await prepareRelease(user);await user.selectOptions(screen.getByLabelText('Mappa digitale da consegnare'),'plan-DEMO');
+ expect(screen.getByRole('button',{name:'Rilascia documento'})).toBeDisabled();
+ await user.click(screen.getByRole('checkbox',{name:/Ho controllato sull’originale/}));await user.click(screen.getByRole('button',{name:'Rilascia documento'}));
+ await waitFor(()=>expect(api.releaseDocument).toHaveBeenCalledOnce());expect(api.releaseDocument.mock.calls[0]![2].digitalPlan).toEqual({planId:'plan-DEMO',expectedPlanVersion:3,reviewed:true});
+ expect(api.releaseDocument.mock.calls[0]![2].digitalPlan).not.toHaveProperty('rooms');
+});

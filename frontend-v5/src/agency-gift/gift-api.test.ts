@@ -106,3 +106,9 @@ describe('atomic Gift link reissue transport',()=>{
   }
  });
 });
+
+it('sends optional digital plan reference without dropping it at the strict transport boundary',async()=>{
+ const {api,fetch,transport}=client({replay:false,metadata:documents()});await transport.getSession();
+ await api.releaseDocument(scope(),'source/demo?#',{...release(),digitalPlan:{planId:'plan-DEMO',expectedPlanVersion:3,reviewed:true}},key);
+ const sent=JSON.parse(String(fetch.mock.calls.at(-1)![1]!.body));expect(sent.digitalPlan).toEqual({planId:'plan-DEMO',expectedPlanVersion:3,reviewed:true});expect(sent).not.toHaveProperty('rooms');
+});
