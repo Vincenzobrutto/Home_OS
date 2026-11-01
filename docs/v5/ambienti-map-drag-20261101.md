@@ -1,5 +1,5 @@
 # Ambienti: planimetria e trascinamento degli elettrodomestici
-1 novembre 2026. Lotto `codex/ambienti-mappa-drag-20261101`, base diretta PR73 `c3f9956cb656ecf3e15d7b9be57435b604fa7968`, con dipendenza PR72. Base comune remota `cbddcf0` invariata. Nessun merge, deploy, nuova AI o modifica della demo Alessio.
+1 novembre 2026. Lotto `codex/ambienti-mappa-drag-20261101`, base diretta PR73 `c3f9956cb656ecf3e15d7b9be57435b604fa7968`, con dipendenza PR72. Base comune remota `cbddcf0` invariata. Codice `92d6a47ef715990a54d4183edb1e1fd9c55ef4ce`, push verificato; [PR draft74](https://github.com/Vincenzobrutto/Home_OS/pull/74) verso consolidamento, esplicitamente dipendente dalle PR73/72. Nessun merge, deploy, nuova AI o modifica della demo Alessio.
 
 ## Implementato
 Nella normale pagina Ambienti rimangono le schede come vista iniziale; il selettore **Schede / Planimetria** apre la mappa nella stessa pagina (`?vista=planimetria`). Ricerca e filtro delle schede sono conservati. Se manca la mappa si può proseguire con schede e documenti, senza un piano sintetico di ripiego. Il percorso precedente /mappa resta compatibile.
