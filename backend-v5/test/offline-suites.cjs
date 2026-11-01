@@ -567,4 +567,4 @@ profiles['test:agency-gift-db'].files.push('test/agency-gift-reissue.integration
 profiles['test:offline-db'].files.push('test/agency-gift-reissue.integration.test.cjs');
 
 // Dated, nominal Gift browser collaudo: never enter ordinary or aggregate suites.
-profiles['test:agency-gift-browser-trial']={database:true,api:false,files:['test/agency-gift-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T00:30:00.000Z'};
+profiles['test:agency-gift-browser-trial']={database:true,api:false,files:['test/agency-gift-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T07:00:00.000Z'};

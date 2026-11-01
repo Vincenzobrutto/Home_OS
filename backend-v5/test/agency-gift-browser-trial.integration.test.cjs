@@ -6,7 +6,7 @@ const fs=require('node:fs/promises'),{createRequire}=require('node:module'),{spa
 const {randomUUID,randomBytes,createHash}=require('node:crypto'),{setTimeout:pause}=require('node:timers/promises');
 const {NestFactory}=require('@nestjs/core'),{ValidationPipe,UnprocessableEntityException}=require('@nestjs/common'),cookieParser=require('cookie-parser'),express=require('express');
 const {assertOfflineDatabase,assertOwnedRun}=require('./offline-policy.cjs');
-const PROFILE='test:agency-gift-browser-trial',UNTIL='2026-11-01T00:30:00.000Z';
+const PROFILE='test:agency-gift-browser-trial',UNTIL='2026-11-01T07:00:00.000Z';
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 
 function contained(parent,child){
@@ -49,7 +49,7 @@ test('bounded owned Gift browser trial — actual application, synthetic scanner
   if(process.platform==='win32')spawnSync('taskkill.exe',['/PID',String(child.pid),'/T','/F'],{windowsHide:true,stdio:'ignore',timeout:10000,env:process.env});
   else child.kill();
  }
- t.after(async()=>{stopOwnedChild(buildChild);if(app)await app.close();await mailWrites.catch(()=>{});});
+ t.after(async()=>{stopOwnedChild(buildChild);if(app){console.log('TRIAL_STOPPING');app.getHttpServer().closeAllConnections?.();await app.close();console.log('TRIAL_STOPPED');}await mailWrites.catch(()=>{});});
  const banner='<aside role="note" data-gift-browser-trial="true" style="padding:12px 16px;background:#fff0ca;color:#332710;font:15px/1.5 system-ui;overflow-wrap:anywhere">COLLAUDO LOCALE ISOLATO · Solo persone e documenti sintetici. Email e scanner simulati: nessun invio reale, nessuna chiamata AI o spesa. API, sessioni e copia nella casa sono reali nel nuovo database di prova. Termine automatico: '+UNTIL+'.</aside>';
  const frontendRequire=createRequire(path.join(frontend,'package.json')),pdfRoot=path.dirname(frontendRequire.resolve('pdfjs-dist/package.json')),privateWorker=path.join(workerDirectory,'pdf.worker.min.mjs');
  await fs.copyFile(path.join(pdfRoot,'build/pdf.worker.min.mjs'),privateWorker);

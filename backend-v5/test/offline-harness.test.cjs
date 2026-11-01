@@ -23,7 +23,7 @@ test('secondary wrapper refuses non-nominal suites before creating a cluster',()
  assert.deepEqual(suites['test:agency-gift-runner-db'],{database:true,api:false,files:['test/agency-gift-runner.integration.test.cjs'],apiFiles:[]});
  assert.equal(suites['test:agency-gift-db'].files.includes('test/agency-gift-runner.integration.test.cjs'),false);
  assert.equal(suites['test:offline-db'].files.includes('test/agency-gift-runner.integration.test.cjs'),false);
- assert.deepEqual(suites['test:agency-gift-browser-trial'],{database:true,api:false,files:['test/agency-gift-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T00:30:00.000Z'});
+ assert.deepEqual(suites['test:agency-gift-browser-trial'],{database:true,api:false,files:['test/agency-gift-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T07:00:00.000Z'});
  for(const profile of ['test','test:offline-db','test:agency-gift-db','test:agency-gift-runner-db'])assert.equal(suites[profile].files.includes('test/agency-gift-browser-trial.integration.test.cjs'),false);
 });
 test('offline database accepts one explicit synthetic URL; real, remote, alternate and ambiguous targets fail before connection', () => {

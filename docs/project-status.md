@@ -1,10 +1,10 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
-## Agency → Gift → Home — UI collegata, collaudo finale in corso (1 novembre)
+## Agency → Gift → Home — flusso collegato e collaudato in locale (1 novembre)
 
 Ramo `codex/agency-gift-contract-20261031`, base comune `cbddcf0`, PR draft72; prosecuzione oltre le23 autorizzata. L’interfaccia della pratica rilascia e seleziona i documenti finali e crea/rigenera un link personale. `/gift/:id` usa accesso/registrazione e verifica email normali, poi conferma Home, accettazione durevole e normale archivio proprietario con provenienza. Un account,12mesi opzionali di funzioni proprietario complete dall’accettazione; limiti free rimandati. Nessun grant Agency alla Home.
 
-Rigenerazione atomica, rate limit persistenti, ripresa senza token e letture indipendenti verificati:863/863 backend ordinari (204unit Gift inclusi),126/126DBHTTPGift sul nuovo cluster `okUXtn`,6/6poller sul nuovo `K2PNgn`, entrambi arrestati. Frontend1924/1924(184file),typecheck/lint/build app verdi;14/14guardie runner dopo il nuovo profilo nominale. Browser desktop/375px ancora da completare sul nuovo collaudo sintetico nominale; scanner/email dei test stub espliciti, nessun uso reale certificato. [Report corrente](v5/agency-gift-app-20261101.md), [contratto API](v5/agency-gift-api-20261031.md).
+Rigenerazione atomica, rate limit persistenti, ripresa senza token e letture indipendenti verificati:863/863 backend ordinari (204unit Gift inclusi),127/127DBHTTPGift sul nuovo cluster `A03Vvn`,6/6poller sul nuovo `K2PNgn`, entrambi arrestati. Frontend1924/1924(184file),typecheck/lint/build app verdi;14/14guardie runner dopo il nuovo profilo nominale. Browser desktop/375px completato su due nuovi collaudi sintetici; scanner/email dei test stub espliciti, nessun uso reale certificato. [Report corrente](v5/agency-gift-app-20261101.md), [contratto API](v5/agency-gift-api-20261031.md).
 
 Token soltanto in memoria, rimossi anche dai path Gift codificati; next canonico e senza segreti; esiti incerti non creano nuove richieste. Modello incarico approvato e producer automatici restano da completare. Nessun merge, deploy, email, AI reale o modifica demo Alessio/vecchio trial utente. Il nuovo collaudo browser usa un hostname locale unico, dati sintetici e arresto proprietario; non è il vecchio trial riavviato.
 
