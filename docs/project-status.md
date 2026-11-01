@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Ambienti — planimetria e trascinamento elettrodomestici — in corso (1 novembre)
+
+Lotto Codex codex/ambienti-mappa-drag-20261101, checkout isolato, dipendenza PR73 c3f9956 e PR72; base comune remota cbddcf0 invariata. Schede esistenti preservate, vista planimetrica dentro Ambienti; oggetti associati ai vani con disposizione iniziale indicativa e trascinamento con cambio stanza atomico. Nessuna modifica della demo Alessio, nuova AI, merge o deploy. Il precedente collaudo utente cNnivm non viene usato o fermato.
+
 ## Planimetria digitale → Gift → mappa proprietario — implementata e collaudata (1 novembre)
 Lotto `codex/gift-plan-handoff-20261101`, PR draft73, codice `d779335`, push verificato; dipendenza PR72 `b6efba3`, base comune `cbddcf0`. Rilascio esplicito del piano canonico, snapshot fonte/scala/geometrie, copia atomica nella Home con ambienti, mappa indipendente e segnaposti sugli oggetti normali. Aggiunta vertici, misure invalidate e pin da riconfermare senza spostamenti. Nessuna AI nuova, demo Alessio invariata.
 
@@ -117,6 +121,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
+| Ambienti — mappa e trascinamento | Codex | codex/ambienti-mappa-drag-20261101 | frontend home-maps/RoomsPages; backend home-maps; test e contratti | In corso, dipendenza PR73/72; nessuna verifica nuova dichiarata. |
 | Agenzie — fascicolo v1 | Codex | codex/agenzie-fascicolo-20261030 | Dominio, persistenza, API/UI Agenzie; indizi di fasce murarie e scarto per singola candidata implementati; controllo delle aree non censite già integrato. | 658/658 backend, 60/60 UI, 20/20 DB-HTTP-worker, build/typecheck/lint verdi; [report corrente](v5/agency-candidate-selection-20261031.md). Replay reale offline senza AI nuova; classificazione e completezza non confermate. Cluster nuovi arrestati, nessun nuovo browser, merge/deploy o modifica demo Alessio. |
 
 | Rilascio Spese — pagina unica | Codex | codex/rilascio-spese-pagina-unica-20261027 | Solo report/stato/roadmap/changelog; nessun file prodotto o Claude. | Consegna verificata: PR #68 integrata e attiva a68113f5, frontend PID14664; API30836/PostgreSQL19804 e relative creazioni preservati. Albero frontend identico alla fonte testata, backend e guardie invariati; build e39/39 HTTP statici/anonimi verdi. [Report rilascio](v5/spese-pagina-unica-rilascio-20261027.md). Nessuna AI, migrazione, .env o richiesta applicativa mutativa/autenticata. [PR #69](https://github.com/Vincenzobrutto/Home_OS/pull/69) di sola documentazione, push verificato; merge al committente. |
