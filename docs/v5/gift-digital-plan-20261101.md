@@ -1,5 +1,5 @@
 # Planimetria digitale Agency → Gift → Home → oggetti
-1 novembre 2026. Lotto `codex/gift-plan-handoff-20261101`, dipendenza esplicita PR72 a `b6efba3`. Base comune remota verificata `cbddcf0`. Checkout isolato; nessun merge/deploy, modifica a main o alla demo Alessio, documento personale o nuova AI a pagamento.
+1 novembre 2026. Lotto `codex/gift-plan-handoff-20261101`, PR draft73 (https://github.com/Vincenzobrutto/Home_OS/pull/73), codice d779335; dipendenza esplicita PR72 a `b6efba3`. Base comune remota verificata `cbddcf0`. Checkout isolato; nessun merge/deploy, modifica a main o alla demo Alessio, documento personale o nuova AI a pagamento.
 
 ## Comportamento implementato
 Nel rilascio Gift del documento planimetria l’agente sceglie **Solo file originale** oppure uno dei piani canonici correnti. La copia digitale richiede una conferma distinta di controllo di contorni, nomi e limiti della scala. Proposte geometriche ancora pendenti non sono trasferibili. Il browser invia solo ID/versione del piano e la dichiarazione: niente poligoni, autoria, qualifiche o prova di lettura forniti dal client.
