@@ -124,3 +124,9 @@ test('digital map browser collaudo is dated nominal-only and never an ordinary/a
  assert.deepEqual(suites['test:home-map-browser-trial'],{database:true,api:false,files:['test/home-map-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T08:30:00.000Z'});
  for(const name of ['test','test:offline-db','test:home-map-db','test:agency-gift-db'])assert.equal(suites[name].files.includes('test/home-map-browser-trial.integration.test.cjs'),false);
 });
+
+test('Ambienti drag suites remain exact nominal profiles with owned secondary isolation',()=>{
+ assert.deepEqual(suites['test:home-map-drag-db'],{database:true,api:false,files:['test/home-map.integration.test.cjs'],apiFiles:[]});
+ assert.deepEqual(suites['test:ambienti-map-browser-trial'],{database:true,api:false,files:['test/ambienti-map-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T09:00:00.000Z'});
+ for(const profile of ['test','test:offline-db','test:home-map-drag-db'])assert.equal(suites[profile].files.includes('test/ambienti-map-browser-trial.integration.test.cjs'),false);
+});

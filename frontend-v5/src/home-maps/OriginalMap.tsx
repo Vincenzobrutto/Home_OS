@@ -2,7 +2,7 @@ import {useEffect,useRef,useState,type ReactNode} from 'react';
 import type {PDFDocumentProxy,RenderTask} from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import styles from './map.module.css';
-export function OriginalMap({blob,mime,page,width,height,children,onPoint}:{blob:Blob;mime:string;page:number;width:number;height:number;children:ReactNode;onPoint:(x:number,y:number)=>void}){
+export function OriginalMap({blob,mime,page,width,height,children,onPoint,overlay}:{blob:Blob;mime:string;page:number;width:number;height:number;children:ReactNode;overlay?:ReactNode;onPoint:(x:number,y:number)=>void}){
  const canvas=useRef<HTMLCanvasElement>(null),[ready,setReady]=useState(false),[error,setError]=useState(false);
  useEffect(()=>{let live=true,doc:PDFDocumentProxy|undefined,render:RenderTask|undefined,cleanup=()=>{};
  void(async()=>{try{
@@ -13,5 +13,5 @@ export function OriginalMap({blob,mime,page,width,height,children,onPoint}:{blob
  }catch(e){if(live&&(e as Error).name!=='RenderingCancelledException')setError(true);}})();
  return()=>{live=false;render?.cancel();cleanup();};
  },[blob,mime,page,width,height]);
- return <>{error?<p role="alert">Originale non visualizzabile. Nessuna posizione può essere salvata dal disegno.</p>:<>{!ready&&<p role="status">Preparazione originale…</p>}<div className={styles.map} style={{aspectRatio:width+'/'+height}}><canvas ref={canvas} aria-label="Planimetria originale"/>{ready&&<svg viewBox={'0 0 '+width+' '+height} aria-label="Vani e posizioni sulla mappa" onClick={e=>{const b=e.currentTarget.getBoundingClientRect();onPoint((e.clientX-b.left)/b.width*width,(e.clientY-b.top)/b.height*height);}}>{children}</svg>}</div></>}</>;
+ return <>{error?<p role="alert">Originale non visualizzabile. Nessuna posizione può essere salvata dal disegno.</p>:<>{!ready&&<p role="status">Preparazione originale…</p>}<div className={styles.map} style={{aspectRatio:width+'/'+height}}><canvas ref={canvas} aria-label="Planimetria originale"/>{ready&&<svg viewBox={'0 0 '+width+' '+height} aria-label="Vani e posizioni sulla mappa" onClick={e=>{const b=e.currentTarget.getBoundingClientRect();onPoint((e.clientX-b.left)/b.width*width,(e.clientY-b.top)/b.height*height);}}>{children}</svg>}{ready&&overlay}</div></>}</>;
 }

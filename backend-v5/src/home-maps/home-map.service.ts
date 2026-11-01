@@ -33,7 +33,7 @@ export class HomeMapService{
   const pins=(row.pins as unknown as Pin[]).filter(p=>allowed.some(o=>o.id===p.objectId)).map(p=>{const room=rooms.find(v=>v.id===bindings[p.regionId]),pos=positions.find(v=>v.objectId===p.objectId);
    return {...p,needsReview:p.geometryRevision!==row.geometryRevision||!room||room.state!=='active'||!(pos?.roomIds as string[]|undefined)?.includes(room.id)};});
   return {id:row.id,version:row.version,geometryRevision:row.geometryRevision,document:{id:doc.id,name:doc.name,mimeType:doc.original!.mimeType},layout,rooms:layout.rooms.map(r=>({...r,roomId:bindings[r.id],name:rooms.find(v=>v.id===bindings[r.id])?.name??r.name,state:rooms.find(v=>v.id===bindings[r.id])?.state??'unavailable'})),
-   objects:allowed.map(o=>({id:o.id,name:o.name,type:o.type,positionVersion:positions.find(p=>p.objectId===o.id)?.version??0})),pins,canEdit};
+   objects:allowed.map(o=>({id:o.id,name:o.name,type:o.type,positionVersion:positions.find(p=>p.objectId===o.id)?.version??0,roomIds:(positions.find(p=>p.objectId===o.id)?.roomIds??[]) as string[]})),pins,canEdit};
  });}
  mutate(a:string,h:string,id:string,input:unknown,key:string|undefined,geometry:boolean){
   if(!key||!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw invalid();

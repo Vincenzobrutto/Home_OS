@@ -122,4 +122,27 @@ test('Digital plan Agency -> Gift -> Home -> object placement on fresh owned clu
   const view=await read();assert.equal(view.pins.length,1);assert.equal(view.rooms.length,3);assert.equal(view.objects[0].id,objectId);
   assert.equal((await db.agencyGiftAcceptanceReceipt.findUniqueOrThrow({where:{id:accepted.id}})).homeId,homeId);
  });
+ await t.test('dragging across rooms atomically updates pin, canonical association and catalog counts; replay does not duplicate',async()=>{
+  const before=await read(),target=before.rooms.find(r=>r.id==='balcony'),obj=before.objects.find(o=>o.id===objectId);
+  assert.deepEqual(obj.roomIds,[before.rooms.find(r=>r.id==='kitchen').roomId]);
+  const body={expectedVersion:before.version,objectId,regionId:'balcony',x:70,y:20,expectedPositionVersion:obj.positionVersion},key=randomUUID();
+  for(let i=0;i<2;i++){const r=await post(route()+'/pins',body,recipient,key);assert.equal(r.status,200,await r.clone().text());}
+  const next=await read();assert.equal(next.pins.length,1);assert.equal(next.pins[0].regionId,'balcony');assert.equal(next.pins[0].needsReview,false);assert.deepEqual(next.objects.find(o=>o.id===objectId).roomIds,[target.roomId]);
+  const r=await request('/homes/'+homeId+'/objects',{},recipient);assert.equal(r.status,200);const catalog=await r.json();
+  assert.equal(catalog.facets.rooms.find(r=>r.id===target.roomId).count,1);assert.equal(catalog.facets.rooms.find(r=>r.id===before.rooms.find(r=>r.id==='kitchen').roomId).count,0);
+  assert.equal(next.objects.find(o=>o.id===objectId).positionVersion,obj.positionVersion+1);
+ });
+ await t.test('drag in the same room preserves association and a stale concurrent drag cannot overwrite the new position',async()=>{
+  const before=await read(),obj=before.objects.find(o=>o.id===objectId),body={expectedVersion:before.version,objectId,regionId:'balcony',x:72,y:22,expectedPositionVersion:obj.positionVersion};
+  assert.equal((await post(route()+'/pins',body,recipient)).status,200);
+  assert.equal((await post(route()+'/pins',{...body,x:73},recipient)).status,409);
+  const next=await read();assert.equal(next.pins[0].x,72);assert.equal(next.pins[0].y,22);assert.deepEqual(next.objects.find(o=>o.id===objectId).roomIds,obj.roomIds);
+ });
+ await t.test('a normally room-associated appliance is returned for display without fabricating a physical map pin',async()=>{
+  const before=await read(),room=before.rooms.find(r=>r.id==='corridor');
+  const r=await post('/homes/'+homeId+'/objects',{name:'Aspirapolvere DEMO',type:'appliance',roomIds:[room.roomId]},recipient);assert.equal(r.status,201);const created=await r.json();
+  const next=await read(),obj=next.objects.find(o=>o.id===created.object.ref.id);assert.deepEqual(obj.roomIds,[room.roomId]);assert.equal(obj.positionVersion,1);assert.equal(next.pins.some(p=>p.objectId===obj.id),false);
+  const bad=await post(route()+'/pins',{expectedVersion:next.version,objectId:obj.id,regionId:'corridor',x:70,y:20,expectedPositionVersion:obj.positionVersion},recipient);assert.equal(bad.status,422);assert.equal((await read()).pins.some(p=>p.objectId===obj.id),false);
+ });
+
 });

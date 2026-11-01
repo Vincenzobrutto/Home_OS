@@ -1,3 +1,7 @@
+## 1 novembre2026 — Ambienti: schede e planimetria collegate
+
+Implementata e verificata sul lotto dedicato la vista Planimetria dentro Ambienti: segnaposti indicativi per oggetti già associati, drag che salva coordinate e aggiorna atomicamente la stanza, normale scheda e conteggi coerenti. Backend878/DB13/frontend mirato78/guardie16 e browser desktop/375 verdi; nessun nuovo schema in questo lotto. Dipende dalle PR73/72 non ancora integrate. Restano prove su mappe dense/cataloghi grandi e touch hardware, multipiano e computo Home fuori scope. [Report e limiti](v5/ambienti-map-drag-20261101.md). Nessuna nuova AI, demo Alessio invariata, nessun merge/deploy.
+
 ## Gift v1 — collaudo del collegamento all’app, 1 novembre2026
 
 UI Agency/destinatario, normali accesso/registrazione/verifica email, provenienza nei Documenti, anno account, rigenerazione atomica e throttle sono implementati e collaudati in locale. Backend863/DBHTTP127/poller6verdi su fixture e cluster nuovi arrestati; statici/build app verdi. Frontend1924/1924completo e browser desktop/375px verificati su due ambienti sintetici nuovi. Continuità del proprietario verificata anche con il normale upload HTTP. [Stato preciso](v5/agency-gift-app-20261101.md). Le tappe sotto sono cronologia e non nuovi blocchi. Modello incarico e producer PDF automatici separati, attivazione ambiente prodotto/merge/deploy non autorizzati; limiti free e multiutenza rimandati.

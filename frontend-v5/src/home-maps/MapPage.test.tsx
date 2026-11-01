@@ -4,7 +4,7 @@ import {describe,it,expect,vi} from 'vitest';
 import {Workspace} from './MapPage';
 import {parseMap,type MapView} from './api';
 vi.mock('../documents/hooks',()=>({useDocumentFile:()=>({isPending:false,isError:false,data:{blob:new Blob(['synthetic']),mimeType:'image/png'}})}));
-vi.mock('./OriginalMap',()=>({OriginalMap:({children,onPoint}:{children:React.ReactNode;onPoint:(x:number,y:number)=>void})=><div><svg>{children}</svg><button onClick={()=>onPoint(20,20)}>Punto sintetico sulla mappa</button></div>}));
+vi.mock('./OriginalMap',()=>({OriginalMap:({children,onPoint,overlay}:{children:React.ReactNode;overlay?:React.ReactNode;onPoint:(x:number,y:number)=>void})=><div><svg>{children}</svg>{overlay}<button onClick={()=>onPoint(20,20)}>Punto sintetico sulla mappa</button></div>}));
 const room:MapView['rooms'][number]={id:'kitchen',name:'Cucina',type:'kitchen',points:[[5,5],[45,5],[45,45],[5,45]],holes:[],roomId:'room',state:'active'};
 function fixture():MapView{return {id:'map',version:2,geometryRevision:3,document:{id:'doc',name:'Planimetria DEMO',mimeType:'image/png'},layout:{source:{page:1},frame:{width:100,height:100},rooms:[structuredClone(room)],qualification:'estimated',caveats:['Formato A4 presunto: verificare']},rooms:[structuredClone(room)],objects:[{id:'fridge',name:'Frigorifero DEMO',type:'appliance',positionVersion:0}],pins:[],canEdit:true};}
 function mount(data=fixture(),send=vi.fn().mockResolvedValue({}),refresh=vi.fn().mockResolvedValue(undefined)){render(<MemoryRouter><Workspace data={data} homeId="home" send={send} refresh={refresh}/></MemoryRouter>);return {send,refresh};}

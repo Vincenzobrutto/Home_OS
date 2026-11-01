@@ -19,3 +19,5 @@ frontend-v5/.agency-cache/
 
 # Private owned map test evidence, never application data
 .map-test-runs/
+
+.drag-test-runs/

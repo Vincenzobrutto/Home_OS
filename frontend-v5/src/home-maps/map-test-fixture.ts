@@ -1,0 +1,4 @@
+import type {MapRoom,MapView} from './api';
+export const kitchen:MapRoom={id:'kitchen',roomId:'room-kitchen',name:'Cucina',type:'kitchen',state:'active',points:[[5,5],[45,5],[45,45],[5,45]],holes:[]};
+export const balcony:MapRoom={id:'balcony',roomId:'room-balcony',name:'Balcone',type:'balcony',state:'active',points:[[50,5],[95,5],[95,45],[50,45]],holes:[]};
+export function mapFixture():MapView{return {id:'map-demo',version:5,geometryRevision:2,document:{id:'doc-demo',name:'Planimetria sintetica',mimeType:'image/png'},layout:{source:{page:1},frame:{width:100,height:100},rooms:[structuredClone(kitchen),structuredClone(balcony)],qualification:'reviewed',caveats:['Nessuna misura certificata']},rooms:[structuredClone(kitchen),structuredClone(balcony)],objects:[{id:'fridge',name:'Frigorifero DEMO',type:'appliance',positionVersion:3,roomIds:['room-kitchen']}],pins:[],canEdit:true};}

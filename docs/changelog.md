@@ -1,3 +1,7 @@
+## 1 novembre2026 — Ambienti: schede e planimetria collegate
+
+Implementata e verificata sul lotto dedicato la vista Planimetria dentro Ambienti: segnaposti indicativi per oggetti già associati, drag che salva coordinate e aggiorna atomicamente la stanza, normale scheda e conteggi coerenti. Backend878/DB13/frontend mirato78/guardie16 e browser desktop/375 verdi; nessun nuovo schema in questo lotto. Dipende dalle PR73/72 non ancora integrate. Restano prove su mappe dense/cataloghi grandi e touch hardware, multipiano e computo Home fuori scope. [Report e limiti](v5/ambienti-map-drag-20261101.md). Nessuna nuova AI, demo Alessio invariata, nessun merge/deploy.
+
 ## 1 novembre2026 — Gift: interfaccia, rigenerazione e limiti tecnici
 
 Collegate la pratica e la consegna alla normale app: selezione finale, link personale in memoria, accesso/registrazione/verifica email, ripresa del job, Home e archivio con provenienza e anno opzionale. Rigenerazione atomica con replay hash-only; contatori persistenti perIP/account, indipendenti dal piano free. Corretti path Gift codificati, retry landing temporanea e ritorno dopo la verifica. Backend863/DB127/poller6verdi, frontend1924/1924e statici/build verdi; [collaudo browser concluso](v5/agency-gift-app-20261101.md). Nessun deploy o servizio reale attivato.
