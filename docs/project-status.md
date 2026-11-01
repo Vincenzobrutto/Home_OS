@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Planimetria digitale → Gift → mappa proprietario — in corso (1 novembre)
+
+Lotto Codex codex/gift-plan-handoff-20261101, worktree isolato dalla base comune remota cbddcf0 e dipendenza esplicita Gift PR72 b6efba3 (non integrata). Area: contratto snapshot planimetria, rilascio Gift/copia atomica, modello mappa Home e posizioni oggetti, API/UI e test sintetici. Preservare la demo Alessio e gli altri checkout. Nessun merge sul consolidamento, deploy o AI a pagamento. Stato: avviato, nessuna nuova funzione verificata.
+
 ## Agency → Gift → Home — flusso collegato e collaudato in locale (1 novembre)
 
 Ramo `codex/agency-gift-contract-20261031`, base comune `cbddcf0`, PR draft72; prosecuzione oltre le23 autorizzata. L’interfaccia della pratica rilascia e seleziona i documenti finali e crea/rigenera un link personale. `/gift/:id` usa accesso/registrazione e verifica email normali, poi conferma Home, accettazione durevole e normale archivio proprietario con provenienza. Un account,12mesi opzionali di funzioni proprietario complete dall’accettazione; limiti free rimandati. Nessun grant Agency alla Home.
