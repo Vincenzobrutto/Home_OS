@@ -30,3 +30,8 @@ Branch `codex/gift-selezione-semplice-20261103`, checkout dedicato dalla PR74 al
 Solo persone, file e geometrie sintetici; email/scanner fixture, nessuna AI o spesa. Build e API locali reali, nessun deploy o modifica della demo pubblica Alessio. La registrazione/challenge già esistente non è stata ricollaudata in questo lotto: usato destinatario fixture verificato. L'anno senza flag, trascinamento e lifecycle conservano le verifiche dei lotti precedenti, non nuove prove complete qui.
 
 L'archivio proprietario classifica ancora questi file sintetici come «Da classificare / Da compilare»: ricevuti correttamente e leggibili, ma il mapping della classificazione dal fascicolo all'archivio è un seguito separato. Non aggiunta classificazione automatica o AI. Non sono completati integrazione nel consolidamento, invio email reale o generazione di incarichi senza modello approvato.
+
+
+## Pubblicazione
+
+Codice 9f16073bc83f1c77cbf1cecc3d32c3a1a445b08b, push verificato con ls-remote. [PR draft75](https://github.com/Vincenzobrutto/Home_OS/pull/75), stack PR74/73/72 verso il consolidamento, nessun merge. Screenshot della selezione salvato soltanto negli outputs privati della chat. Trial nuovo ancora attivo fino al termine nominale; arresto finale non ancora verificato.

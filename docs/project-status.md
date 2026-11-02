@@ -131,7 +131,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
-| Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | Implementato e collaudato, pronto per PR draft; dipende da PR74/73/72. Nessun merge. |
+| Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | Implementato e collaudato, PR draft75; dipende da PR74/73/72. Codice9f16073 pushed/hash verificato. Nessun merge. |
 | Ambienti — mappa e trascinamento | Codex | codex/ambienti-mappa-drag-20261101 | frontend home-maps/RoomsPages; backend home-maps; test e contratti | QA conclusa; PR draft74, codice2fab688/test0ba4685; frontend42/DB17/guardie18 e browserdesktop375verdi. Nominale14:00terminato automaticamente,1/1 e stopDBverificati,linkscaduto; dipendenza PR73/72; verifiche precedenti distinte nel report ambienti-map-drag-20261101.md. Nessun merge/deploy. |
 | Agenzie — fascicolo v1 | Codex | codex/agenzie-fascicolo-20261030 | Dominio, persistenza, API/UI Agenzie; indizi di fasce murarie e scarto per singola candidata implementati; controllo delle aree non censite già integrato. | 658/658 backend, 60/60 UI, 20/20 DB-HTTP-worker, build/typecheck/lint verdi; [report corrente](v5/agency-candidate-selection-20261031.md). Replay reale offline senza AI nuova; classificazione e completezza non confermate. Cluster nuovi arrestati, nessun nuovo browser, merge/deploy o modifica demo Alessio. |
 
