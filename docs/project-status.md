@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Gift semplice nella pratica — in corso,3novembre2026
+
+Lotto codex/gift-selezione-semplice-20261103,checkout separato,base8f1ba91dellaPR74con dipendenze73/72; comune remoto cbddcf0. Su correzione esplicita del committente: checklist documenti della pratica, destinatario e anno opzionale, una sola consegna; nessun editor/rilascio separato per ogni file. Controlli su versioni/fonti/proposte e gestione esiti incerti preservati. UI agency-gift e cablaggio pratica, test mirati; nessuna modifica al trialutente b55HFe, demo Alessio, main/merge/deploy o AI.
+
 ## Riprova locale Agenzie/Gift/Ambienti — 2 novembre2026
 
 Su richiesta del committente è attivo un nuovo nominale sintetico dalla PR74, senza riaprire vecchi cluster o modificare prodotto/demoAlessio. Nuovo profilo datato test:ambienti-user-trial-20261102, termine3nov00:30UTC/01:30Rome; guardie19/19, build, readiness/API/statici verdi. Nuovo runb55HFe attivo; nessun nuovo collaudo UI dichiarato (resta quello del1novembre). Un ingresso proprietario già popolato e una pratica Agency ancora da consegnare, a un accountdemo già verificato. Branch dedicato esistente codex/ambienti-mappa-drag-20261101, dipendenze PR73/72; comune/main invariati.
@@ -127,6 +131,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
+| Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | In corso, basePR74/73/72, nessuna nuova verifica dichiarata; trialutente preservato. |
 | Ambienti — mappa e trascinamento | Codex | codex/ambienti-mappa-drag-20261101 | frontend home-maps/RoomsPages; backend home-maps; test e contratti | QA conclusa; PR draft74, codice2fab688/test0ba4685; frontend42/DB17/guardie18 e browserdesktop375verdi. Nominale14:00terminato automaticamente,1/1 e stopDBverificati,linkscaduto; dipendenza PR73/72; verifiche precedenti distinte nel report ambienti-map-drag-20261101.md. Nessun merge/deploy. |
 | Agenzie — fascicolo v1 | Codex | codex/agenzie-fascicolo-20261030 | Dominio, persistenza, API/UI Agenzie; indizi di fasce murarie e scarto per singola candidata implementati; controllo delle aree non censite già integrato. | 658/658 backend, 60/60 UI, 20/20 DB-HTTP-worker, build/typecheck/lint verdi; [report corrente](v5/agency-candidate-selection-20261031.md). Replay reale offline senza AI nuova; classificazione e completezza non confermate. Cluster nuovi arrestati, nessun nuovo browser, merge/deploy o modifica demo Alessio. |
 
