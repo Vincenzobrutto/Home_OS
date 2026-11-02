@@ -277,3 +277,6 @@ Correzione2fab688: pool esaurito riprodotto da2test rossi, ancore adattive/dista
 
 ## 1novembre13:02UTC — arresto finale verificato
 NominaleVeuBZj al termine13:00:00.093UTC(reasondeadline),TRIAL_STOPPED,harness1/1verde,runner96473exit0;stopPostgreSQLverificato,postmaster.pidassente,nessunlistener49170/55439. Nessun arrestoanticipato/riavvio o processoaltrui toccato. Linkscaduto,runconservato. Solo report/stato/guida aggiornati,nessun nuovo sviluppo o test ripetuto dopo14:00. Automazione di verifica da cancellare a consegna senza archiviare. Codice2fab688/test0ba4685 e PR74draft invariati; nessun merge/deploy/main/demoAlessio/AI o dati personali.
+
+## 2novembre — nuova prova richiesta dal committente
+Nuovo profilo test:ambienti-user-trial-20261102 fino3nov00:30UTC/01:30Rome, nuovo runb55HFe/session42889 e hostname, zero restore/riavvii. Case/oggetti già pronti per proprietari con/senza anno e terza pratica journey ancora da consegnare a desktopaccount verificato.19/19guardie, build/readiness/API/statici verdi; apertura pannello queued, nessun nuovo login/browserQA dichiarato. Codice prodotto invariato, suite/browser1nov storici. Trialattivo, stopfinalenonancoraverificato. Guida negli outputs e [report](ambienti-user-trial-20261102.md). Nessuna AI/email/spesa/documento personale o demo Alessio/main/merge/deploy.

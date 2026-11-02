@@ -581,3 +581,5 @@ profiles['test:home-map-drag-db']={database:true,api:false,files:['test/home-map
 profiles['test:ambienti-map-browser-trial']={database:true,api:false,files:['test/ambienti-map-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T09:00:00.000Z'};
 
 profiles['test:ambienti-map-followup-trial']={database:true,api:false,files:['test/ambienti-map-followup-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T13:00:00.000Z'};
+
+profiles['test:ambienti-user-trial-20261102']={database:true,api:false,files:['test/ambienti-user-trial-20261102.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T00:30:00.000Z'};

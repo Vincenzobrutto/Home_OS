@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Riprova locale Agenzie/Gift/Ambienti — 2 novembre2026
+
+Su richiesta del committente è attivo un nuovo nominale sintetico dalla PR74, senza riaprire vecchi cluster o modificare prodotto/demoAlessio. Nuovo profilo datato test:ambienti-user-trial-20261102, termine3nov00:30UTC/01:30Rome; guardie19/19, build, readiness/API/statici verdi. Nuovo runb55HFe attivo; nessun nuovo collaudo UI dichiarato (resta quello del1novembre). Un ingresso proprietario già popolato e una pratica Agency ancora da consegnare, a un accountdemo già verificato. Branch dedicato esistente codex/ambienti-mappa-drag-20261101, dipendenze PR73/72; comune/main invariati.
+
 ## Ambienti — planimetria e trascinamento elettrodomestici — implementato e verificato (1 novembre)
 
 Lotto `codex/ambienti-mappa-drag-20261101`, codice2fab688, test/profilo0ba4685, push verificati, [PR draft74](https://github.com/Vincenzobrutto/Home_OS/pull/74), dipendenza PR73/72, base comune cbddcf0 invariata. Schede preservate e Planimetria nella stessa pagina; ancore indicative adattive senza scritture, drag con cambio stanza/coordinate canonici atomici e normale conteggio/reload. Pin confermati invariati. Lifecycle incluse fonte/cestino17/17HTTP su nuovo v3Rjg9arrestato, dopo16/16C9Cs5oarrestato; componenti aggiornati42/42, guardie18/18, statici/build verdi. Backend878/frontend78sono precedenti verifiche, non nuove suite complete.
