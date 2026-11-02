@@ -1,3 +1,7 @@
+## 3 novembre — Gift semplice dalla pratica conclusa
+
+Implementata e collaudata la consegna con flag documenti/mappa, email, anno opzionale e un solo comando. I documenti conclusivi non richiedono un nuovo editor di preparazione. Restano integrazione delle PR dipendenti e configurazione prodotto; classificazione dei file ricevuti nell'archivio da trattare separatamente. [Report e verifiche](v5/gift-simple-delivery-20261103.md). Nessun merge/deploy.
+
 ## 1novembre — chiusura del seguito Ambienti/mappa
 Ancore indicative adattive e più efficienti, pin confermati preservati; lifecycle HTTP17/17, componenti42/42, guardie18/18 e browser sul seguito desktop/375verdi. Nuovo collaudo sinteticoVeuBZj attivo fino14:00Rome, verifica arresto finale pendente. Restano leggibilità ad altissima densità (90icone/vano), touch fisico e cataloghi grandi; non nuove funzioni da implementare senza priorità concordata. [Esito e limiti precisi](v5/ambienti-map-drag-20261101.md). Nessun merge/deploy o modifica demo Alessio.
 

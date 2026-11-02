@@ -194,3 +194,7 @@ Query extra e body extra rifiutati;403 fonte/ambito non autorizzato,409 revision
 
 ### Ambienti — associazioni canoniche sulla mappa (1 novembre2026)
 GET /homes/:homeId/digital-plans/:id aggiunge objects[].roomIds: array delle associazioni canoniche autorizzate, insieme a positionVersion. Una lettura non crea pin fisici. Il frontend dispone provvisoriamente gli oggetti dentro i vani associati con indicazione esplicita; senza stanza non la indovina. Il POST pins esistente rimane identico e sostituisce le precedenti associazioni con il solo vano scelto, atomicamente alle coordinate e con CAS/idempotenza. Nessun endpoint o schema nuovo. Client precedente compatibile; client nuovo senza roomIds può mostrare i pin espliciti ma non inventa le associazioni. [Report](ambienti-map-drag-20261101.md).
+
+## Gift — orchestrazione frontend della consegna semplice, 3 novembre 2026
+
+Nessun nuovo endpoint, DTO o schema: la CTA della pratica usa le API Gift già documentate per lettura, rilascio dei soli file selezionati mancanti e creazione dell'invito. Il click Crea link Gift autorizza la consegna dopo la stipula dei finali selezionati; le conferme del contratto esistente sono trasmesse in quell'azione, senza un secondo editor UI. Descrittori e caveat già presenti non vengono riscritti. Sessione/Origin/CSRF, membership, revisioni e fonte/versione/SHA restano verificati dal server. Nuove selezioni mappa vincolate a id/versione canonici, nessuna adozione di proposte. Gestione incerti e limiti nel [report](gift-simple-delivery-20261103.md).

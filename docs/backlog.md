@@ -1,3 +1,7 @@
+## 3 novembre — seguito Gift dalla pratica
+
+Consegna semplice implementata e collaudata; nessun ulteriore step tecnico da chiedere all'agente per i documenti finali. Resta da valutare il mapping della classificazione dei file Gift all'archivio proprietario: nel collaudo i3file ricevuti sono corretti, ma ancora Da classificare/Da compilare. Non inferire automaticamente contenuti/certificazioni per nascondere il gap. Integrazione stackPR74/73/72 e invio email prodotto separati, non autorizzati dal presente lotto. [Esito](v5/gift-simple-delivery-20261103.md).
+
 ## 1novembre — chiusura del seguito Ambienti/mappa
 Ancore indicative adattive e più efficienti, pin confermati preservati; lifecycle HTTP17/17, componenti42/42, guardie18/18 e browser sul seguito desktop/375verdi. Nuovo collaudo sinteticoVeuBZj attivo fino14:00Rome, verifica arresto finale pendente. Restano leggibilità ad altissima densità (90icone/vano), touch fisico e cataloghi grandi; non nuove funzioni da implementare senza priorità concordata. [Esito e limiti precisi](v5/ambienti-map-drag-20261101.md). Nessun merge/deploy o modifica demo Alessio.
 

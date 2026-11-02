@@ -1,8 +1,8 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
-## Gift semplice nella pratica — in corso,3novembre2026
+## Gift semplice nella pratica — implementato e collaudato, 3 novembre 2026
 
-Lotto codex/gift-selezione-semplice-20261103,checkout separato,base8f1ba91dellaPR74con dipendenze73/72; comune remoto cbddcf0. Su correzione esplicita del committente: checklist documenti della pratica, destinatario e anno opzionale, una sola consegna; nessun editor/rilascio separato per ogni file. Controlli su versioni/fonti/proposte e gestione esiti incerti preservati. UI agency-gift e cablaggio pratica, test mirati; nessuna modifica al trialutente b55HFe, demo Alessio, main/merge/deploy o AI.
+Lotto `codex/gift-selezione-semplice-20261103`, base PR74 `8f1ba91` con dipendenze PR73/72; comune remoto `cbddcf0` invariato. Dalla pratica conclusa: **Consegna al proprietario → flag documenti/mappa → email e anno opzionale → Crea link Gift**. Nessun editor/rilascio separato per ogni file. API e protezioni esistenti orchestrate internamente; nessun backend/schema nuovo. Nuovi test21/21, regressione Gift/mappa231/231, navigazione7/7, guardie20/20, typecheck/lint e build verdi. Browser su cluster nuovo: creazione unica, accettazione e Home con3documenti scelti, nota esclusa, mappa3ambienti e anno incluso; UI agente375px utilizzabile. Destinatario fixture già verificato, scanner/email stub. Nuova prova locale separata fino3nov02:00Rome, pratica utente intatta; vecchio trial preservato. [Report, limiti e seguito](v5/gift-simple-delivery-20261103.md). Nessuna AI/spesa, demo Alessio, merge/main/deploy.
 
 ## Riprova locale Agenzie/Gift/Ambienti — 2 novembre2026
 
@@ -131,7 +131,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
-| Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | In corso, basePR74/73/72, nessuna nuova verifica dichiarata; trialutente preservato. |
+| Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | Implementato e collaudato, pronto per PR draft; dipende da PR74/73/72. Nessun merge. |
 | Ambienti — mappa e trascinamento | Codex | codex/ambienti-mappa-drag-20261101 | frontend home-maps/RoomsPages; backend home-maps; test e contratti | QA conclusa; PR draft74, codice2fab688/test0ba4685; frontend42/DB17/guardie18 e browserdesktop375verdi. Nominale14:00terminato automaticamente,1/1 e stopDBverificati,linkscaduto; dipendenza PR73/72; verifiche precedenti distinte nel report ambienti-map-drag-20261101.md. Nessun merge/deploy. |
 | Agenzie — fascicolo v1 | Codex | codex/agenzie-fascicolo-20261030 | Dominio, persistenza, API/UI Agenzie; indizi di fasce murarie e scarto per singola candidata implementati; controllo delle aree non censite già integrato. | 658/658 backend, 60/60 UI, 20/20 DB-HTTP-worker, build/typecheck/lint verdi; [report corrente](v5/agency-candidate-selection-20261031.md). Replay reale offline senza AI nuova; classificazione e completezza non confermate. Cluster nuovi arrestati, nessun nuovo browser, merge/deploy o modifica demo Alessio. |
 

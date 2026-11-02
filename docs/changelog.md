@@ -1,3 +1,7 @@
+## 3 novembre — seleziona i documenti della pratica e crea la Gift
+
+CTA Consegna al proprietario, flag file/mappa, destinatario e anno opzionale: rimosso dal percorso pratica l'editor di rilascio documento per documento. Protezioni esistenti preservate nell'orchestrazione interna; gestione esplicita di esiti incerti. Test nuovi21/21, regressione231/231, navigazione7/7, guardie20/20 e statici/build verdi; browser reale su fixture fino a Home/documenti/mappa/anno, UI agente375px. [Report](v5/gift-simple-delivery-20261103.md). Nessun deploy.
+
 ## 1novembre — chiusura del seguito Ambienti/mappa
 Ancore indicative adattive e più efficienti, pin confermati preservati; lifecycle HTTP17/17, componenti42/42, guardie18/18 e browser sul seguito desktop/375verdi. Nuovo collaudo sinteticoVeuBZj attivo fino14:00Rome, verifica arresto finale pendente. Restano leggibilità ad altissima densità (90icone/vano), touch fisico e cataloghi grandi; non nuove funzioni da implementare senza priorità concordata. [Esito e limiti precisi](v5/ambienti-map-drag-20261101.md). Nessun merge/deploy o modifica demo Alessio.
 

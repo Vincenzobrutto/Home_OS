@@ -2,3 +2,5 @@
 @media(max-width:540px){.panel{padding:14px;gap:14px}.panel h2{font-size:1.25rem}.document{padding:12px}.header>button,.actions>button{width:100%}.actions{align-items:stretch}.actions .check{width:100%}.badge{max-width:100%}.invitations button{width:100%}.form fieldset{gap:14px}}
 
 .invitationActions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}.invitations li>.invitationActions{flex:0 1 auto}@media(max-width:540px){.invitations li>.invitationActions{flex:1 1 100%;justify-content:stretch}}
+
+.panel{scroll-margin-top:24px}.panel summary{cursor:pointer}.panel details>p{margin-top:6px}.panel .form>fieldset:disabled{opacity:.85}
