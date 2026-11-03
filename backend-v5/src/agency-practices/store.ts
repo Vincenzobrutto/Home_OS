@@ -25,6 +25,12 @@ const json = (p: Practice): Prisma.InputJsonValue => JSON.parse(JSON.stringify(p
 /** Internal persistence adapter: account comes from the session; no HTTP endpoint accepts file fingerprints. */
 export class AgencyPracticesStore {
   constructor(private readonly db: Pick<PrismaService, '$transaction'>) {}
+  /** Internal document-job port. The caller owns the transaction; export is not required. */
+  async documentAnalysisContext(tx:Prisma.TransactionClient,accountId:string,agencyId:string,practiceId:string){
+    const context=await this.context(tx,accountId,agencyId,practiceId);
+    requirePractice(context.actor,context.practice,'edit',new Date().toISOString());
+    return context;
+  }
   async agencies(accountId:string){return this.db.$transaction(async tx=>{const now=new Date(),members=await tx.agencyMember.findMany({where:{accountId,revokedAt:null,validFrom:{lte:now},OR:[{validUntil:null},{validUntil:{gt:now}}]},include:{agency:true},orderBy:{agencyId:'asc'},take:100});return {agencies:members.filter(m=>active(membership(m),new Date().toISOString())).map(m=>({id:m.agencyId,name:m.agency.name,role:m.role}))};});}
   async createAgency(accountId:string,name:string,id:string){
     if(typeof name!=='string'||!name.trim()||name.length>200||Array.from(name).some(c=>c.charCodeAt(0)<32))throw new PracticeError('invalid_input');name=name.trim();
