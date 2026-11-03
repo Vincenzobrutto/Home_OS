@@ -1,3 +1,7 @@
+## 3 novembre — analisi documentale nativa Agenzie
+
+Collegati offerta/consenso, job persistente e ledger dedicato DOCUMENT_EXTRACT, trasporto provider esplicito, API protette e UI verso le proposte citate esistenti. Nessuna conferma automatica, nuovo invio incerto o riuso del budget planimetrie. Atti e visure rispettano matrici diverse; PDF non testuali fermati senza fallback. Recupero dopo navigazione/reload via GET, purge al logout, binding e decisione separati. Verificato con fixture: backend930/DB37/UI88 e browser desktop375; [report](v5/agency-document-analysis-20261103.md). Runtime reale e vera bozza incarico non attivati.
+
 ## 3 novembre — classificazione ricevuta e catalogazione Agenzie
 
 Nuove Gift con snapshot sigillato della classificazione server, organizzazione privata canonica e origine agency_gift; le vecchie consegne restano invariate. Famiglie/tipi/filtri persistono nella casa, senza completare automaticamente il lavoro del proprietario. Selettore dei7tipi nella pratica, con salvataggio esplicito e protezioni su versione/revisione; pannello Gift aggiornato dopo catalogazione/upload. [Verifiche e pubblicazione](v5/gift-consolidation-20261103.md).

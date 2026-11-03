@@ -1,3 +1,7 @@
+## 3 novembre — verticale documentale nativo collegato
+
+Pratica → documento/pagine → condizioni/consenso → job persistente → citazioni → associazione → conferma separata. Primo incremento per atto/successione/visura in PDF nativo, collaudato con provider sintetico e runtime reale disabilitato. Backend930/930, DB/API37/37, UI88/88 e browser desktop/375 px; [report e prossimi passi](v5/agency-document-analysis-20261103.md). A seguire OCR e collaudo reale autorizzato, campi estesi e modello incarico approvato. Gift e mappe restano nel comune; questo lotto è una PR separata senza deploy.
+
 ## 3 novembre — Gift consolidata e primo collegamento del fascicolo
 
 Candidato dalla base comune cbddcf0: integra lo stack PR72–75, conserva tipo/famiglia dichiarati dall'agenzia nelle nuove Gift e distingue la classificazione ricevuta dalla compilazione personale. Nella pratica sono selezionabili Atto, Visura, APE, Successione e gli altri tipi reali. Corretto il refresh della consegna dopo il salvataggio del tipo. [Report e stato di integrazione](v5/gift-consolidation-20261103.md).

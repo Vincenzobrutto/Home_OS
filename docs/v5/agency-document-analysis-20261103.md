@@ -4,7 +4,7 @@
 
 Lotto `codex/agency-document-analysis-20261103`, successivo all'integrazione Gift PR76. Collegare atto, successione e visura del fascicolo a condizioni/consenso, job durevole, lettura testuale autorizzata, proposte citate e revisione esistente. Nessuna AI reale o spesa autorizzata da questo lotto; nessun deploy, main, demo Alessio o servizio esistente modificato.
 
-**In lavorazione:** moduli, persistenza, API e interfaccia scritti; verifiche complete di integrazione ancora da eseguire. La prima esecuzione pura ha superato 29/29 casi prima degli ultimi irrigidimenti e degli otto test HTTP. Non presentarli come collaudo finale del lotto.
+**Implementato e verificato con fixture:** prodotto 737cdc9, riallineato al comune 3335ea9; backend finale 930/930, DB/API 37/37, frontend mirato 88/88, statici/build e browser desktop/375 px verdi. Runtime reale non attivato né collaudato. Il ramo dedicato viene pubblicato come PR di revisione; Gift PR72–76 è già nel comune, questo lotto nativo resta separato.
 
 ## Esperienza nell'app
 
@@ -44,6 +44,14 @@ Il contratto riusa i sei campi letterali esistenti per atto/successione; visura 
 
 Trasporto HTTP predisposto e verificabile con fetch iniettato, senza chiamate esterne di collaudo. Attivazione reale richiede configurazione server, budget attuale, consenso specifico e successivo collaudo autorizzato. Generazione incarico resta bloccata senza modello dell'agenzia approvato.
 
-## Verifiche da concludere
+## Verifiche concluse e risultati riproducibili
 
-Suite pure aggiornate, nuovo DB/API isolato e arresto, UI con perdita risposta/ricarica/consenso e collaudo browser desktop/375 px. Risultati e hash finali saranno registrati qui, distinguendo qualsiasi failure e successiva riesecuzione.
+- Backend finale: **930/930**, zero skip/fail, tramite runner offline. Primo run 929/930 per un alias mancante del nuovo profilo browser: registrazione corretta, suite completa rieseguita 930/930. I 40 casi puri del nuovo modulo sono inclusi, non sommati una seconda volta.
+- Nuovo cluster **n7iVln**: **37/37** (23 ledger +12 HTTP e due contenitori), senza provider reale. Copre consenso/quote, chiavi e lookup dopo riavvio Nest, sessione/Origin/CSRF, privacy e canExport:false, PDF/pagine, associazione/conferma, revoca/configurazione, concorrenza, rollback e risposte tardive. Migrazioni soltanto nel nuovo cluster; runner 62849 exit0, stop PostgreSQL, pid e listener assenti verificati.
+- Frontend mirato: **88/88 in otto file**, inclusi API/DTO/pending/workspace, binding e sessione/cache; logout normale elimina solo gli envelope dell'account, senza toccare storage Gift estraneo. Nessuna seconda suite frontend completa dichiarata per questo lotto. La regressione ampia Gift e le relative riesecuzioni sono nel report precedente.
+- Typecheck backend e frontend app/node, lint mirato e build finali verdi. Bundle principale 523,96 kB con warning Vite preservato. Cache/generated privati, nessuna installazione nelle junction.
+- Browser **6YeuAC**, codice prodotto identico a 737cdc9: accesso normale del fixture agente, scan/misto fermato senza invio, consenso annullato al cambio pagine, atto pagine1–2, apertura citazioni/fonti, associazione del subalterno ancora proposto, reload e recupero dello stesso risultato. Visura della sola pagina2 a375×812: secondo record distinto, ruolo irrisolto, nessuna data atto inventata. ScrollWidth360 su viewport375, console senza errori; non telefono fisico.
+- Due job completed_with_proposals, quattro sole fasi fixture (count/generate per documento), nessun invio dalla ricarica o dal PDF non leggibile. Scanner/SMTP/AI esterna non esercitati; le persone/documenti sono sintetici, il provider è vincolato agli SHA del manifest test-only. Accuratezza di un modello reale non misurata.
+- Primo nominale **MBV0LH** fermato dopo aver rilevato 404 della SPA nel server di collaudo; corretti ordine/filtro statici e readiness SPA/asset/API nel solo harness. Non è un collaudo browser verde. Nuovo nominale6YeuAC con nuovo database e hostname, niente riuso o restore. Dopo QA: viewport ripristinato, solo tab creati chiusi, marker proprietario, runner94729 exit0, harness1/1 e arresto PostgreSQL/pid/listener verificati. Il vecchio trial utente non è stato modificato o fermato.
+
+Screenshot privati negli outputs della chat: proposte-citate-desktop.png e analisi-mobile.png. Nessun link personale o token in Git. Le UI di esito incerto bloccano conservativamente nuovi avvii fino alla riconciliazione: nessuna console operativa di risoluzione inventata.

@@ -2,7 +2,7 @@
 
 ## Analisi documentale nativa — lotto avviato il3novembre
 
-Branch `codex/agency-document-analysis-20261103`, codice 737cdc9 e aggiornamento al comune 3335ea9. Collegati offerta/consenso, ledger documentale, coordinatore/provider, API e UI verso proposte citate. Nuovo DB/API 37/37 sul cluster n7iVln arrestato; frontend mirato 88/88, test HTTP puri 8/8 e statici verdi. Suite backend finale e browser desktop/375 px ancora da concludere. Provider sintetico soltanto in test; runtime senza configurazione/budget indisponibile, nessuna AI reale o spesa. Modello agenzia assente: bozza bloccata. [Report e limiti](v5/agency-document-analysis-20261103.md). Prova utente e demo Alessio invariati.
+Branch `codex/agency-document-analysis-20261103`, codice 737cdc9 e aggiornamento al comune 3335ea9. Collegati offerta/consenso, ledger documentale, coordinatore/provider, API e UI verso proposte citate. Backend finale 930/930, nuovo DB/API 37/37 sul cluster n7iVln arrestato, frontend mirato 88/88, statici/build verdi. Browser desktop/375 px sul nuovo6YeuAC concluso: due job distinti, citazioni/binding/reload e pagine fisiche, nessun overflow o errore console; cluster arrestato e viewport ripristinato. Primo harness corretto dopo 404, verifiche e limiti distinti nel [report](v5/agency-document-analysis-20261103.md). PR di revisione separata: nessuna attivazione/provider reale o spesa. Modello agenzia assente, bozza bloccata; prova utente e demo Alessio invariati.
 
 ## Consolidamento Gift e classificazione ricevuta — 3 novembre, autorizzato
 
@@ -145,7 +145,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
-| Agenzie — analisi documentale nativa | Codex | codex/agency-document-analysis-20261103 | Modulo ledger/job/coordinatore/API/UI, store context e test isolati | Implementato 737cdc9, comune 3335 riunito; DB/API 37/37 e UI 88/88, QA finale in corso. Nessun provider reale/spesa. |
+| Agenzie — analisi documentale nativa | Codex | codex/agency-document-analysis-20261103 | Modulo ledger/job/coordinatore/API/UI, store context e test isolati | Implementato 737cdc9, comune3335 riunito; backend930/DB37/UI88, statici/build e browser desktop375 verdi su fixture, nuovi cluster arrestati. PR separata, nessuna AI reale/spesa. |
 | Gift — consolidamento e classificazione | Codex | codex/gift-consolidamento-20261103 | Gift packet/worker, organizzazione/workflow e UI catalogazione; report integrazione | Integrato nel comune a3a172e, PR76 merged; risultati e riesecuzioni distinti nel report. Nessun deploy. |
 | Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | Implementato e collaudato, PR draft75; dipende da PR74/73/72. Codice9f16073 pushed/hash verificato. Nessun merge. |
 | Ambienti — mappa e trascinamento | Codex | codex/ambienti-mappa-drag-20261101 | frontend home-maps/RoomsPages; backend home-maps; test e contratti | QA conclusa; PR draft74, codice2fab688/test0ba4685; frontend42/DB17/guardie18 e browserdesktop375verdi. Nominale14:00terminato automaticamente,1/1 e stopDBverificati,linkscaduto; dipendenza PR73/72; verifiche precedenti distinte nel report ambienti-map-drag-20261101.md. Nessun merge/deploy. |

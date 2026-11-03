@@ -1,4 +1,8 @@
-## 3 novembre — seguito del nucleo Agenzie dopo Gift
+## 3 novembre — residui dopo il collegamento nativo documentale
+
+Job/offerte/consenso/ledger, provider port, API e UI sono implementati e verificati con fixture: [report corrente](v5/agency-document-analysis-20261103.md). Non rifarli né ricreare il catalogo di170campi. Restano: attivazione e collaudo AI reale con configurazione/budget nuovi autorizzati; OCR fidato per scansioni e PDF misti con citazioni fisiche; ampliamento dei campi e normalizzazioni su un benchmark indipendente; operatività degli esiti incerti; modello incarico dell'agenzia approvato per la vera generazione. Il pannello storico può distinguere più chiaramente i documenti dei job quando si cambia selezione; nessun reinvio da introdurre per semplificarlo. Questo lotto non abilita il provider o nuove spese.
+
+## 3 novembre — seguito del nucleo Agenzie dopo Gift (piano precedente)
 
 La perdita della classificazione è corretta per le nuove consegne sotto policy1; nessun backfill su file già ricevuti. I tipi non conosciuti restano onestamente non classificati. La famiglia dichiarata non attesta validità o completezza e non equivale a compilazione personale. Catalogazione dei7tipi collegata alla pratica, nessuna estrazione automatica aggiunta.
 
