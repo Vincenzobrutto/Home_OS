@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Casa reale Roma — importazione planimetria da backoffice, 3 novembre
+
+Richiesta esplicita del committente: aggiungere alla casa di Roma dell'utenza reale la digitalizzazione di PLN_APPARTAMENTO.pdf, account e fonte confermati in chat. Lotto `codex/home-plan-backoffice-20261103` dalla punta remota3335ea9, checkout isolato. Preparare importazione controllata su casa esistente, associazioni esplicite ai suoi ambienti e preservazione di oggetti/collocazioni; nessun riuso del publisher Gift che crea stanze nuove. Dati personali, geometrie e manifesti di applicazione soltanto locali e privati, fuori Git. Nessuna AI o spesa nuova, main o demo Alessio. Identificare e salvare l'ambiente locale prodotto prima di attivazione o scritture; prove soltanto su nuovi cluster sintetici. Importazione reale non ancora eseguita.
+
 ## Consolidamento Gift e classificazione ricevuta — 3 novembre, autorizzato
 
 **Integrato nel comune il 3 novembre alle 10:50 UTC:** `a3a172e3c6fb19fc743a504dfaf353895f50744c`, PR76 merged, hash e albero verificati. Lo stack PR72–75 è incluso per intero; le rispettive voci successive sono registrazioni storiche. `main` resta `cdbb318`, nessun deploy o aggiornamento del checkout/servizio utente. Prosegue separatamente il lotto `codex/agency-document-analysis-20261103`.
