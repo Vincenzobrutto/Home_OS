@@ -1,6 +1,6 @@
-## 3 novembre — candidato integrato documenti e mappa
+## 3 novembre — integrazione documenti e mappa nel comune
 
-Candidato concluso nella PR draft79: PR77/78 riunite, continuità fra proposte, dati confermati, confronti e preparazione incarico. Letture coordinate con bozze preservate e fonte autorizzata sulla pagina citata, senza coordinate di evidenza inventate. Backend935/935, DB/API77/77 e frontend completo2163/2163 in201file; statici/build e browser desktop/375px verdi, tutti i cluster creati arrestati. [Risultati, tentativi e limiti](v5/agency-documents-integration-20261103.md). Prossimo passo: decisione sul candidato, distinta dall'attivazione AI reale autorizzata, OCR, campi estesi e modello incarico approvato. Nessun merge nel comune/main o deploy automatico.
+Integrazione nel comune autorizzata tramite PR79: PR77/78 riunite, continuità fra proposte, dati confermati, confronti e preparazione incarico. Letture coordinate con bozze preservate e fonte autorizzata sulla pagina citata, senza coordinate di evidenza inventate. Backend935/935, DB/API77/77 e frontend completo2163/2163 in201file; statici/build e browser desktop/375px verdi, tutti i cluster creati arrestati. [Risultati, tentativi e limiti](v5/agency-documents-integration-20261103.md). Restano separati l'aggiornamento dell'app locale, l'attivazione AI reale autorizzata, OCR, campi estesi e modello incarico approvato. Nessuna modifica a main o deploy automatico.
 
 ## 3 novembre — mappa a larghezza piena e oggetti da collocare
 

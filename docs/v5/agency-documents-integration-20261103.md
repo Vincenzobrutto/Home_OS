@@ -64,8 +64,14 @@ Provider reale non attivato e nessuna chiamata AI o spesa. Fixture limitate al t
 
 ## Consegna e percorso di prova
 
-Candidato concluso nella [PR draft79](https://github.com/Vincenzobrutto/Home_OS/pull/79), verso il comune3335ea9. Prodotto e6b2509; suite finale sulla fonte0080b6c. La PR conserva i genitori completi delle PR77/78 e resta draft: nessun merge o deploy eseguito.
+Il committente ha autorizzato l'integrazione della [PR79](https://github.com/Vincenzobrutto/Home_OS/pull/79) nel ramo comune, la cui punta precedente è3335ea9. Candidato verificato923a036, prodotto e6b2509 e suite finale sulla fonte0080b6c. La PR conserva i genitori completi delle PR77/78 e Gift72–75. L'integrazione del codice è distinta dall'aggiornamento dell'app locale; nessun deploy o intervento sui servizi esistenti.
 
 Nell'app del candidato: **Area Agenzie → pratica → Dati, fonti e verifiche → Apri dati e verifiche**. Da qui: analisi di atto/visura con pagine e consenso → proposte citate → associazione esplicita → conferma in Dati e fonti → confronto → Punti da verificare → Prepara dati incarico. L'anteprima della fonte si apre sulla pagina citata; la generazione resta disabilitata senza modello approvato.
 
 I due collaudi sintetici sono conclusi e arrestati: i relativi URL temporanei non sono ingressi attivi. Per una nuova prova serve un nuovo nominale isolato previsto dal runner, senza riavviare quelli scaduti o aggiornare l'app reale. Guida e screenshot sintetici nella cartella chat `outputs/Dimora-Agenzie-candidato-20261103`, inclusi `fonte-finale-desktop.png`, `fonte-finale-mobile.png` e il dettaglio desktop. La chiusura non avvia un nuovo collaudo o altro sviluppo.
+
+## Integrazione autorizzata nel comune
+
+Il 3 novembre Vincenzo ha richiesto «Integriamo la pr79». Fetch e riesame indipendente: comune3335ea9 antenato del candidato923a036, divergenza0/32, maincdbb318 invariato, worktree e indice puliti. PR79 senza conflitti; PR77/78 e Gift72–75 presenti integralmente. Backend e frontend coincidono esattamente con la fonte dell'aggregato2163/2163; sorgenti prodotto e schema coincidono con il codice e6 collaudato nel browser. Dopo la suite sono cambiati soltanto documentazione e setup dei test già registrati.
+
+Questo aggiornamento registra l'integrazione autorizzata senza cambiare prodotto o schema. Il merge GitHub conserva i genitori e l'identità del contenuto già verificato viene controllata dopo l'operazione; hash remoto e stato della PR sono riportati nella ricevuta degli outputs. Non si ripetono suite verdi per un'integrazione a contenuto invariato. Nessun aggiornamento di main, runtime locale, DB esistente, provider o demo Alessio, nessuna nuova spesa. Le limitazioni AI/OCR/modello incarico restano quelle sopra descritte.
