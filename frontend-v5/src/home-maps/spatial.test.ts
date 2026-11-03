@@ -16,4 +16,17 @@ describe('posizioni indicative e coordinate della mappa',()=>{
  it('detects exact drop room and rejects wall, hole, outside or ambiguous regions',()=>{const data=mapFixture();expect(roomAt(data.rooms,[70,20])?.id).toBe('balcony');for(const p of [[48,20],[5,20],[101,20]] as [number,number][])expect(roomAt(data.rooms,p)).toBeNull();data.rooms.push(structuredClone(data.rooms[0]!));expect(roomAt(data.rooms,[20,20])).toBeNull();});
  it('maps scrolled and zoomed client coordinates into the same full-page reference',()=>{expect(fromClient(800,250,{left:100,top:50,width:1000,height:1000},{width:100,height:100})).toEqual([70,20]);expect(fromClient(800,250,{left:-600,top:-150,width:2000,height:2000},{width:100,height:100})).toEqual([70,20]);expect(fromClient(1,1,{left:0,top:0,width:0,height:1},{width:100,height:100})).toBeNull();});
  it('gesture fence binds geometry revision and current room placement version',()=>{const data=mapFixture(),before=sceneFence(data);data.objects[0]!.positionVersion++;expect(sceneFence(data)).not.toBe(before);const next=sceneFence(data);data.geometryRevision++;expect(sceneFence(data)).not.toBe(next);});
+ it('converts explicit client vectors on every non-square display orientation back to canonical coordinates',()=>{
+  const f={width:100,height:200};
+  expect(fromClient(450,150,{left:100,top:50,width:500,height:1000},f,0)).toEqual([70,20]);
+  expect(fromClient(1000,400,{left:100,top:50,width:1000,height:500},f,1)).toEqual([70,20]);
+  expect(fromClient(250,950,{left:100,top:50,width:500,height:1000},f,2)).toEqual([70,20]);
+  expect(fromClient(200,200,{left:100,top:50,width:1000,height:500},f,3)).toEqual([70,20]);
+ });
+ it('retains inverse rotation after zoom/scroll and does not clamp invalid display points into a room',()=>{
+  const f={width:100,height:200};
+  expect(fromClient(1200,550,{left:-600,top:-150,width:2000,height:1000},f,1)).toEqual([70,20]);
+  expect(fromClient(1000,575,{left:100,top:50,width:1000,height:500},f,1)).toEqual([105,20]);
+  expect(fromClient(1000,400,{left:100,top:50,width:0,height:500},f,1)).toBeNull();
+ });
 });

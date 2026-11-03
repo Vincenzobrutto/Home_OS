@@ -1,6 +1,7 @@
 import {render,screen,fireEvent,waitFor} from '@testing-library/react';
 import {afterEach,describe,it,expect,vi} from 'vitest';
 import {OriginalMap} from './OriginalMap';
+import type {MapTurn} from './orientation';
 
 const initialDecode=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,'decode');
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();if(initialDecode)Object.defineProperty(HTMLImageElement.prototype,'decode',initialDecode);else Reflect.deleteProperty(HTMLImageElement.prototype,'decode');});
@@ -29,5 +30,18 @@ describe('original background visibility',()=>{
   raster(200);render(<OriginalMap blob={new Blob(['synthetic'])} mime="image/png" page={1} width={100} height={100} showOriginal={false} onPoint={vi.fn()} overlay={<a href="#device">Oggetto sintetico</a>}><path d="M0 0H100V100Z"/></OriginalMap>);
   await waitFor(()=>expect(screen.getByRole('alert')).toHaveTextContent('Originale non visualizzabile'));
   expect(screen.queryByLabelText('Vani e posizioni sulla mappa')).not.toBeInTheDocument();expect(screen.queryByRole('link')).not.toBeInTheDocument();
+ });
+ it('rotates a nonsquare page and overlay together while preserving canonical clicks and raster identity',async()=>{
+  const draw=raster(200),blob=new Blob(['synthetic']),onPoint=vi.fn();
+  const view=(turn:MapTurn,showOriginal=true)=><OriginalMap blob={blob} mime="image/png" page={1} width={200} height={100} turn={turn} showOriginal={showOriginal} onPoint={onPoint} overlay={<a href="#device">Oggetto sintetico</a>}><path d="M40 30H60V50Z"/></OriginalMap>;
+  const {rerender}=render(view(0));const svg=await screen.findByLabelText('Vani e posizioni sulla mappa'),canvas=screen.getByLabelText('Planimetria originale');
+  const vectors=[{turn:1 as const,x:220,y:140,matrix:'matrix(0 1 -1 0 100 0)'},{turn:2 as const,x:250,y:440,matrix:'matrix(-1 0 0 -1 200 100)'},{turn:3 as const,x:100,y:500,matrix:'matrix(0 -1 1 0 0 200)'}];
+  for(const v of vectors){
+   rerender(view(v.turn));vi.spyOn(svg,'getBoundingClientRect').mockReturnValue({left:10,top:20,width:300,height:600} as DOMRect);
+   expect(svg.querySelector('g')).toHaveAttribute('transform',v.matrix);fireEvent.click(svg,{clientX:v.x,clientY:v.y});expect(onPoint).toHaveBeenLastCalledWith(40,30);
+   expect(screen.getByLabelText('Planimetria originale')).toBe(canvas);expect(canvas).toHaveStyle({transform:'rotate('+v.turn*90+'deg)'});expect(screen.getByRole('link')).toBeVisible();
+  }
+  rerender(view(1,false));expect(canvas).not.toBeVisible();expect(svg).toHaveAttribute('viewBox','0 0 100 200');expect(canvas.parentElement).toHaveStyle({aspectRatio:'100/200'});
+  rerender(view(0));expect(canvas).toBeVisible();expect(svg).toHaveAttribute('viewBox','0 0 200 100');expect(draw).toHaveBeenCalledOnce();
  });
 });

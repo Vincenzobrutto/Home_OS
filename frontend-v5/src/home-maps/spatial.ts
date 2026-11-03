@@ -1,10 +1,11 @@
 import type {MapRoom,MapView,Point} from './api';
+import {displayFrame,fromDisplayPoint,type MapTurn} from './orientation';
 type Shape=Pick<MapRoom,'points'|'holes'>;
 const edge=(p:Point,a:Point,b:Point)=>Math.abs((b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]))<1e-8&&p[0]>=Math.min(a[0],b[0])-1e-8&&p[0]<=Math.max(a[0],b[0])+1e-8&&p[1]>=Math.min(a[1],b[1])-1e-8&&p[1]<=Math.max(a[1],b[1])+1e-8;
 function inside(p:Point,ring:Point[]){if(ring.some((a,i)=>edge(p,a,ring[(i+1)%ring.length]!)))return false;let yes=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i]!,b=ring[j]!;if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;}
 export function contains(shape:Shape,p:Point){return inside(p,shape.points)&&!shape.holes.some(r=>inside(p,r)||r.some((a,i)=>edge(p,a,r[(i+1)%r.length]!)));}
 export function roomAt(rooms:MapRoom[],p:Point){const hits=rooms.filter(r=>r.state==='active'&&contains(r,p));return hits.length===1?hits[0]:null;}
-export function fromClient(x:number,y:number,bounds:Pick<DOMRect,'left'|'top'|'width'|'height'>,frame:{width:number;height:number}):Point|null{if(!Number.isFinite(x)||!Number.isFinite(y)||bounds.width<=0||bounds.height<=0)return null;return [(x-bounds.left)/bounds.width*frame.width,(y-bounds.top)/bounds.height*frame.height];}
+export function fromClient(x:number,y:number,bounds:Pick<DOMRect,'left'|'top'|'width'|'height'>,frame:{width:number;height:number},turn:MapTurn=0):Point|null{if(!Number.isFinite(x)||!Number.isFinite(y)||bounds.width<=0||bounds.height<=0)return null;const view=displayFrame(frame,turn);return fromDisplayPoint([(x-bounds.left)/bounds.width*view.width,(y-bounds.top)/bounds.height*view.height],frame,turn);}
 export const polygonPath=(r:Shape)=>[r.points,...r.holes].map(p=>'M '+p.map(v=>v.join(',')).join(' L ')+' Z').join(' ');
 function boundaryDistance(r:Shape,p:Point){let distance=Infinity;for(const ring of [r.points,...r.holes])for(let i=0;i<ring.length;i++){const a=ring[i]!,b=ring[(i+1)%ring.length]!,dx=b[0]-a[0],dy=b[1]-a[1],length=dx*dx+dy*dy,t=length?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/length)):0;distance=Math.min(distance,Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy));}return distance;}
 function bounds(r:Shape){return {left:Math.min(...r.points.map(v=>v[0])),right:Math.max(...r.points.map(v=>v[0])),top:Math.min(...r.points.map(v=>v[1])),bottom:Math.max(...r.points.map(v=>v[1]))};}

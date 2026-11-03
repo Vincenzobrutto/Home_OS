@@ -13,6 +13,13 @@ describe('mappa indipendente della casa',()=>{
   const data=fixture();data.layout.qualification='unverified';data.layout.caveats=['Bozza importata da backoffice: contorni e ambienti da verificare.','Computo non completo.'];mount(data);
   expect(screen.getByRole('note')).toHaveTextContent(data.layout.caveats[0]!);expect(screen.getByText('Misure e limiti · scala da verificare').closest('details')).not.toHaveAttribute('open');expect(screen.queryByText(/digitalizzati dall’agenzia/)).not.toBeInTheDocument();
  });
+ it('rotates either way without saving or resetting zoom, object selection and pending canonical coordinates',()=>{
+  const {send,refresh}=mount();fireEvent.click(screen.getByRole('button',{name:'Ingrandisci'}));fireEvent.change(screen.getByLabelText('Il tuo elettrodomestico'),{target:{value:'fridge'}});fireEvent.click(screen.getByText('Punto sintetico sulla mappa'));
+  fireEvent.click(screen.getByRole('button',{name:'Ruota a destra'}));expect(screen.getByLabelText('Orientamento della vista')).toHaveTextContent('90°');
+  expect(screen.getByLabelText('Posizione X')).toHaveValue(20);expect(screen.getByLabelText('Posizione Y')).toHaveValue(20);expect(screen.getByLabelText('Il tuo elettrodomestico')).toHaveValue('fridge');expect(screen.getByRole('button',{name:'Riduci'})).toBeEnabled();
+  fireEvent.click(screen.getByLabelText('Mostra planimetria originale'));fireEvent.click(screen.getByRole('button',{name:'Ruota a sinistra'}));expect(screen.getByLabelText('Orientamento della vista')).toHaveTextContent('0°');expect(screen.getByLabelText('Mostra planimetria originale')).not.toBeChecked();
+  fireEvent.click(screen.getByRole('button',{name:'Ruota a sinistra'}));expect(screen.getByLabelText('Orientamento della vista')).toHaveTextContent('270°');expect(screen.getByLabelText('Posizione X')).toHaveValue(20);expect(send).not.toHaveBeenCalled();expect(refresh).not.toHaveBeenCalled();
+ });
  it('places an existing fridge only after explicit save, with plan and canonical placement revisions',async()=>{
   const {send,refresh}=mount();fireEvent.change(screen.getByLabelText('Il tuo elettrodomestico'),{target:{value:'fridge'}});expect(send).not.toHaveBeenCalled();fireEvent.click(screen.getByText('Punto sintetico sulla mappa'));expect(send).not.toHaveBeenCalled();fireEvent.click(screen.getByText('Salva posizione nella stanza'));
   await waitFor(()=>expect(refresh).toHaveBeenCalledOnce());expect(send).toHaveBeenCalledWith('pins',{expectedVersion:2,objectId:'fridge',regionId:'kitchen',x:20,y:20,expectedPositionVersion:0},expect.any(String));

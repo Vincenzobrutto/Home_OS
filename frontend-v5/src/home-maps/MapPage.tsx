@@ -10,6 +10,7 @@ import {OriginalMap} from './OriginalMap';
 import {DeviceLayer} from './DeviceLayer';
 import {deviceScene,polygonPath} from './spatial';
 import type {MapView,Point} from './api';
+import type {MapTurn} from './orientation';
 import styles from './map.module.css';
 
 export function MapPage(){
@@ -29,6 +30,7 @@ export function HomeMapEditor({id,embedded=false}:{id:string;embedded?:boolean})
 export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string;send:(op:'pins'|'geometry',body:unknown,key:string)=>Promise<unknown>;refresh:()=>Promise<void>}){
  const [regionId,setRegion]=useState(data.rooms[0]?.id??''),[objectId,setObject]=useState(''),[point,setPoint]=useState<Point|null>(null),[points,setPoints]=useState<Point[]|null>(null);
  const [showOriginal,setShowOriginal]=useState(true);
+ const [turn,setTurn]=useState<MapTurn>(0);
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[uncertain,setUncertain]=useState(false),[needsRefresh,setNeedsRefresh]=useState(false),[denied,setDenied]=useState(false),[zoom,setZoom]=useState(1),[pointsBase,setPointsBase]=useState(data.version);
  const inputId=useId(),lock=useRef(false),alive=useRef(true);
  const request=useRef<{op:'pins'|'geometry';body:unknown;key:string;success:string}|null>(null);
@@ -75,12 +77,13 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
   <div className={styles.columns}>
    <section className={ui.card}>
     <div className={styles.toolbar}><h2>Planimetria · pagina {data.layout.source.page}</h2><button className={ui.btn} onClick={()=>setZoom(z=>Math.max(1,z-.5))} disabled={zoom===1||busy}>Riduci</button><button className={ui.btn} onClick={()=>setZoom(z=>Math.min(3,z+.5))} disabled={zoom===3||busy}>Ingrandisci</button></div>
+    <div className={styles.toolbar}><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+3)%4 as MapTurn)}>Ruota a sinistra</button><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+1)%4 as MapTurn)}>Ruota a destra</button><span role="status" aria-label="Orientamento della vista">{turn*90}°</span></div>
     <label className={styles.backgroundToggle}><input type="checkbox" checked={showOriginal} onChange={e=>setShowOriginal(e.target.checked)}/>Mostra planimetria originale</label>
     <div className={styles.scroll} data-map-viewport><div style={{width:zoom*100+'%'}}>
      {file.isPending?<Loading label="Caricamento mappa…"/>:file.isError?<ErrorState error={file.error} onRetry={()=>void file.refetch()}/>:<OriginalMap
-      blob={file.data.blob} mime={data.document.mimeType} page={data.layout.source.page} width={f.width} height={f.height} showOriginal={showOriginal}
+      blob={file.data.blob} mime={data.document.mimeType} page={data.layout.source.page} width={f.width} height={f.height} showOriginal={showOriginal} turn={turn}
       onPoint={(x,y)=>{if(data.canEdit&&!blocked&&objectId&&!points)setPoint([x,y]);}}
-      overlay={<DeviceLayer data={data} markers={scene.markers} homeId={homeId} canMove={data.canEdit&&!blocked&&!points}
+      overlay={<DeviceLayer data={data} markers={scene.markers} homeId={homeId} canMove={data.canEdit&&!blocked&&!points} turn={turn}
        onDrop={(body,message)=>run('pins',body,message)} onMessage={setNotice}
        onChoose={marker=>{setRegion(marker.regionId);setObject(marker.objectId);setPoint(marker.point);setPoints(null);setNotice('Usa i campi posizione e premi Salva posizione nella stanza per confermare.');}}/>}>
       {data.rooms.map(r=><path key={r.id} d={polygonPath(r.id===regionId&&points?{points,holes:r.holes}:r)} fillRule="evenodd" className={r.id===regionId?styles.selected:styles.region} onClick={()=>{if(!blocked&&!objectId&&!points)select(r.id);}}/>)}
