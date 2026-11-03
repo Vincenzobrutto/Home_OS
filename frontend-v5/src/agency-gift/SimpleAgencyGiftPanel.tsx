@@ -7,8 +7,9 @@ import {advanceDelivery,deliveryJournal,reissueJournal,DeliveryProblem,giftTitle
 import {buildGiftLink} from './gift-link-memory';
 import styles from './AgencyGiftPanel.module.css';
 
-export function SimpleAgencyGiftPanel(props:AgencyGiftPanelProps){return <DeliveryPanel key={[props.scope.accountId,props.scope.agencyId,props.scope.practiceId].join(':')} {...props}/>;}
-function DeliveryPanel({api,scope,readOnly,onChanged}:AgencyGiftPanelProps){
+type SimpleAgencyGiftPanelProps=AgencyGiftPanelProps&{practiceRevision?:number};
+export function SimpleAgencyGiftPanel(props:SimpleAgencyGiftPanelProps){return <DeliveryPanel key={[props.scope.accountId,props.scope.agencyId,props.scope.practiceId].join(':')} {...props}/>;}
+function DeliveryPanel({api,scope,readOnly,onChanged,practiceRevision}:SimpleAgencyGiftPanelProps){
  const bound=useMemo(()=>({accountId:scope.accountId,agencyId:scope.agencyId,practiceId:scope.practiceId}),[scope.accountId,scope.agencyId,scope.practiceId]);
  const [documents,setDocuments]=useState<GiftDocuments|null>(null),[invitations,setInvitations]=useState<GiftInvitations|null>(null);
  const [selected,setSelected]=useState<DeliveryChoice[]>([]),[maps,setMaps]=useState<Record<string,{id:string;version:number}>>({});
@@ -16,6 +17,7 @@ function DeliveryPanel({api,scope,readOnly,onChanged}:AgencyGiftPanelProps){
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[needsRefresh,setNeedsRefresh]=useState(false),[paused,setPaused]=useState(false),[reconciled,setReconciled]=useState(false);
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[rowError,setRowError]=useState<string|null>(null),[link,setLink]=useState<string|null>(null),[linkUnavailable,setLinkUnavailable]=useState(false);
  const previousReadOnly=useRef(readOnly),readGeneration=useRef(0);
+ const previousPracticeRevision=useRef(practiceRevision),documentRevision=documents?.revision;
  const alive=useRef(true),lock=useRef(false),run=useRef<DeliveryJournal|null>(null),requests=useRef(new Set<AbortController>());
  const controller=()=>{const c=new AbortController();requests.current.add(c);return c;};
  const valid=(c:AbortController)=>alive.current&&!c.signal.aborted;
@@ -36,6 +38,11 @@ function DeliveryPanel({api,scope,readOnly,onChanged}:AgencyGiftPanelProps){
  },[api,bound]);
  useEffect(()=>{alive.current=true;let mounted=true;queueMicrotask(()=>{if(mounted)void read();});const active=requests.current;return()=>{mounted=false;alive.current=false;for(const c of active)c.abort();active.clear();run.current=null;};},[read]);
  useEffect(()=>{const lost=readOnly&&!previousReadOnly.current;previousReadOnly.current=readOnly;if(lost){setLink(null);setLinkUnavailable(false);run.current=null;setPaused(false);for(const c of requests.current)c.abort();lock.current=false;setBusy(false);void read();}},[readOnly,read]);
+ useEffect(()=>{
+  if(practiceRevision===undefined||practiceRevision===previousPracticeRevision.current||busy||paused||readOnly||lock.current)return;
+  if(documentRevision!==undefined&&documentRevision>=practiceRevision){previousPracticeRevision.current=practiceRevision;return;}
+  let active=true;queueMicrotask(()=>{if(!active||lock.current)return;previousPracticeRevision.current=practiceRevision;setLoading(true);void read();});return()=>{active=false;};
+ },[practiceRevision,documentRevision,busy,paused,readOnly,read]);
  async function send(){
   if(lock.current||!run.current||readOnly)return;lock.current=true;setBusy(true);setError('');setRowError(null);setPaused(false);setReconciled(false);const c=controller(),journal=run.current;
   try{
@@ -58,7 +65,8 @@ function DeliveryPanel({api,scope,readOnly,onChanged}:AgencyGiftPanelProps){
   catch(e){if(valid(c)){setNeedsRefresh(true);fail(e);}}finally{requests.current.delete(c);lock.current=false;if(alive.current)setBusy(false);}
  }
  async function copy(){if(!link)return;try{await navigator.clipboard.writeText(link);if(alive.current)setNotice('Link copiato. Condividilo con il proprietario.');}catch{if(alive.current)setNotice('Seleziona e copia il link dal campo qui sotto.');}}
- const blocked=busy||loading||needsRefresh||paused,openInvitation=invitations?.invitations.some(i=>i.state!=='revoked'),accepted=!!invitations?.accepted;
+ const revisionPending=practiceRevision!==undefined&&(documentRevision===undefined||documentRevision<practiceRevision);
+ const blocked=busy||loading||needsRefresh||paused||revisionPending,openInvitation=invitations?.invitations.some(i=>i.state!=='revoked'),accepted=!!invitations?.accepted;
  return <section id="consegna-gift" className={styles.panel} aria-label="Consegna Gift" tabIndex={-1}>
   <header className={styles.header}><div><h2>Consegna la casa al proprietario</h2><p>Scegli cosa troverà nella sua casa Dimora quando accetterà la Gift.</p></div><button type="button" className={ui.btn} disabled={busy||loading} onClick={()=>{setLoading(true);void read();}}>{paused?'Verifica stato':'Aggiorna elenco'}</button></header>
   {error&&<Banner tone="error" role="alert" title="Consegna da controllare"><p>{error}</p></Banner>}
