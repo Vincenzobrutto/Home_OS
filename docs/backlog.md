@@ -1,3 +1,7 @@
+## 3 novembre — residui dell'importazione nella casa esistente
+
+Importatore, primo intervento reale, runtime web locale e UI desktop autenticata verificati: [report corrente](v5/home-plan-backoffice-20261103.md). Il proprietario deve ancora controllare contorni e nomi, separati dalla qualifica della scala; l'oggetto già privo di stanza rimane Da collocare, senza associazioni inventate. Nessun drag reale o nuovo collaudo dell'utenza reale a375px dichiarato. La bozza non dichiara misure o copertura complete; candidate automatiche non adottate restano fuori dalla mappa importata. Il servizio è interno: nessun pannello amministrativo pubblico o importatore browser da considerare già realizzato. Eventuali flussi generalizzati per altre case richiedono identità, fonte corrente e binding espliciti, senza fuzzy matching o sostituzione di mappe esistenti.
+
 ## 3 novembre — seguito del nucleo Agenzie dopo Gift
 
 La perdita della classificazione è corretta per le nuove consegne sotto policy1; nessun backfill su file già ricevuti. I tipi non conosciuti restano onestamente non classificati. La famiglia dichiarata non attesta validità o completezza e non equivale a compilazione personale. Catalogazione dei7tipi collegata alla pratica, nessuna estrazione automatica aggiunta.

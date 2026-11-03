@@ -1,3 +1,7 @@
+## 3 novembre — importazione controllata della planimetria in una casa esistente
+
+Aggiunto importatore interno con anteprima/fingerprint, controlli owner/fonte fisica, collegamento esplicito ai vani esistenti e ricevuta/audit atomici. Nessuna creazione implicita di stanze o modifica a oggetti e collocazioni. Bozza distinta da una Gift e da una revisione dell'agenzia; nessun nuovo endpoint/schema proprio. Intervento reale richiesto eseguito con11regioni su11stanze già presenti e dati precedenti verificati. Backend894/DB33/frontend43, statici/build e guardie8 verdi. Runtime locale e **UI desktop autenticata verificati**, con sorgente/overlay/caveat e reload:5attivi disponibili,4segnaposti indicativi e1Da collocare. Nessun trascinamento reale o nuovo collaudo mobile reale; blocchi AI/email/Gift preservati. [Report](v5/home-plan-backoffice-20261103.md).
+
 ## 3 novembre — classificazione ricevuta e catalogazione Agenzie
 
 Nuove Gift con snapshot sigillato della classificazione server, organizzazione privata canonica e origine agency_gift; le vecchie consegne restano invariate. Famiglie/tipi/filtri persistono nella casa, senza completare automaticamente il lavoro del proprietario. Selettore dei7tipi nella pratica, con salvataggio esplicito e protezioni su versione/revisione; pannello Gift aggiornato dopo catalogazione/upload. [Verifiche e pubblicazione](v5/gift-consolidation-20261103.md).
