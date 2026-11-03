@@ -41,11 +41,14 @@ test('native document browser trial is bounded, isolated and synthetic',{timeout
  }
  await store.review(actor.id,agency.id,practice.id,{key:randomUUID(),expectedRevision:await revision(),command:{operation:'unit',id:'unit-demo',label:'Abitazione sintetica'}});
  await ledger.provisionBudget({agencyId:agency.id,configuration,capMicros:0,expiresAt:new Date(until)});
- await app.init();const server=app.getHttpAdapter().getInstance();server.use('/api/v5',(_req,res)=>res.status(404).json({error:{code:'not_found'}}));server.use(express.static(build,{index:false}));server.use((req,res,next)=>req.method==='GET'?res.sendFile(path.join(build,'index.html')):next());
+ const staticFiles=express.static(build,{index:false,redirect:false,dotfiles:'deny'}),indexHtml=await fs.readFile(path.join(build,'index.html'),'utf8');
+ app.use((req,res,next)=>req.path.startsWith('/api/v5')?next():staticFiles(req,res,next));
+ app.use((req,res,next)=>{const html=typeof req.headers.accept==='string'&&req.headers.accept.includes('text/html');if(['GET','HEAD'].includes(req.method)&&html&&!req.path.startsWith('/api/v5')&&!/^\/(?:assets|pdfjs|ocr)(?:\/|$)/u.test(req.path)&&!path.extname(req.path))res.type('html').send(indexHtml);else next();});
  await app.listen(0,'127.0.0.1');const port=app.getHttpServer().address().port,origin='http://document-'+randomUUID().replaceAll('-','').slice(0,16)+'.localhost:'+port;process.env.FRONTEND_ORIGIN=origin;
  const url=origin+'/agenzie/'+agency.id+'/pratiche/'+practice.id,readyFile=path.join(run,'document-browser-ready.json'),stopFile=path.join(run,'document-browser-stop.json'),statusFile=path.join(run,'document-browser-status.json');
  const write=async(file,value)=>fs.writeFile(file,JSON.stringify(value,null,2),{mode:0o600});
  const readiness=await fetch('http://127.0.0.1:'+port+'/api/v5/session');assert.equal(readiness.status,200);assert.equal(readiness.headers.get('x-dimora-offline-run'),owned.token);
+ const spa=await fetch('http://127.0.0.1:'+port+'/agenzie/'+agency.id+'/pratiche/'+practice.id,{headers:{accept:'text/html'}});assert.equal(spa.status,200);const html=await spa.text();assert.match(html,/Collaudo isolato/);const asset=/<script[^>]*src="([^"]+)"/u.exec(html)?.[1];assert.ok(asset?.startsWith('/assets/'));assert.equal((await fetch('http://127.0.0.1:'+port+asset)).status,200);assert.equal((await fetch('http://127.0.0.1:'+port+'/api/v5/not-a-route',{headers:{accept:'application/json'}})).status,404);
  await write(readyFile,{profile:PROFILE,origin,url,email,password,until:UNTIL,stopFile,statusFile,stopToken:owned.token,agencyId:agency.id,practiceId:practice.id,synthetic:true,provider:'hash-bound fixture only',externalCalls:0});
  console.log('DOCUMENT_BROWSER_READY '+JSON.stringify({origin,readyFile,until:UNTIL}));let reason='deadline';
  while(Date.now()<until){try{const stop=JSON.parse(await fs.readFile(stopFile,'utf8'));if(stop.token===owned.token&&stop.profile===PROFILE){reason='owned-stop-marker';break;}}catch(error){if(error.code!=='ENOENT'&&!(error instanceof SyntaxError))throw error;}await new Promise(resolve=>setTimeout(resolve,500));}
