@@ -4,7 +4,7 @@
 
 Proseguire in autonomia fino a un candidato coerente e verificato: revisione della mappa PR78 e riunione con analisi documentale PR77, quindi correzioni circoscritte al percorso fonti → proposte citate → associazione → conferma → confronti/finding → preparazione incarico. La generazione resta bloccata senza modello approvato; nessuna AI reale o spesa, deploy/main, demo Alessio, dati personali o servizi/DB esistenti.
 
-Base comune3335ea94af353d8e232508169024e531ab6d22b2; PR78 a89fbd55dd051393e54f583939b377688b4cfd302 e PR77 a7cae566d5d8e60850378eb9ade059e72efb25533. Nuovo ramo `codex/agenzie-documenti-consolidamento-20261103`, worktree separato. I risultati storici dei rami non costituiscono QA di questo candidato.
+Base comune `3335ea94af353d8e232508169024e531ab6d22b2`; PR78 a `89fbd55dd051393e54f583939b377688b4cfd302` e PR77 a `7cae566d5d8e60850378eb9ade059e72efb25533`. Nuovo ramo `codex/agenzie-documenti-consolidamento-20261103`, worktree separato. I risultati storici dei rami non costituiscono QA di questo candidato.
 
 ## Sequenza e criteri di chiusura
 
@@ -37,7 +37,18 @@ Il riesame ha individuato anche la perdita di una bozza sorella dopo un'associaz
 - Preparazione incarico: helper interno sui fatti confermati persistiti, espressamente distinto da un endpoint di generazione. Valori proposti esclusi, modello mancante e `canGenerateDraft:false`, problemi aperti non certificati automaticamente.
 - Registrazione profili aggiornata e controllo diretto2/2; typecheck app e lint mirato finali verdi. Prima verifica app aveva un solo errore di indice opzionale nel MIME dell'anteprima, corretto senza cambiare i controlli della fonte.
 - Gruppo revisione122/122 e anteprima17/17 verdi nelle verifiche intermedie. Seguiti fonte/confronto19/19 e ruolo storico19/19; app/node TypeScript, lint e build finale del prodotto e6 verdi, avviso chunk524,10kB preesistente.
-- Primo aggregato frontend: **2162/2163** in201file, un solo errore nel primo caso Onboarding, prima dell'apertura del PDF. Lo stack mostra ancora “Caricamento della sezione”, non il renderer (che quel test sostituisce integralmente). Diagnostica del solo caso1/1 verde; introdotto nel solo test il preload del modulo differito, coerente con gli altri harness, senza cambiare asserzioni/timeout/retry. Intero file **74/74** verde. Nuovo aggregato completo sulla fonte congelata ee9ca59 ancora in esecuzione; non è dichiarato verde dal risultato del solo file.
+- Frontend completo finale: **2163/2163 in 201 file**, zero errori o skip, sessione81648 exit0, fonte congelata `0080b6c45e7d6bba52c84da9ad3e1fba75edd1c0`. Durata2576,39s, progetti mock+fixtures con un worker; log privato `.agency-cache/integrated-frontend-closure-v2-full.log`. Gli avvisi jsdom su `window.scrollTo` non sono errori del browser; le due QA nel browser con fixture non hanno errori console.
+
+### Esecuzioni diagnostiche e correzioni dei soli test
+
+| Esecuzione completa | Esito | Evidenza e correzione |
+| --- | --- | --- |
+| Prima | 2162/2163, 201 file | Primo caso Onboarding ancora nel fallback differito, prima del PDF interamente mockato. Preload del solo modulo nel test (`ee9ca59`), file74/74 verde. |
+| Seconda | 2161/2163, 201 file | Spese leggeva il link Riparazione già presente in Casa; routing navigava prima che finisse il redirect del login. Attese della pagina effettiva in due test (`0e0bba7`), file15/15 verdi. |
+| Terza | 2162/2163, 201 file | Il messaggio locale di registrazione unità precedeva il GET di refresh del registro. Attesa asincrona delle stesse asserzioni su select e ID server `new-unit` (`0080b6c`), file13/13 verde. |
+| Finale | **2163/2163, 201 file** | Intero aggregato sulla fonte congelata comprensiva di tutte le correzioni; nessuna somma di risultati parziali. |
+
+Gli stack finali sono stati letti prima di intervenire. Nessuna asserzione, valore atteso, timeout o retry allentato, nessun test saltato e nessun nuovo mock. Lint e TypeScript app verdi dopo gli ultimi cambiamenti. Il prodotto resta e6b2509: le correzioni successive riguardano esclusivamente la sincronizzazione dei test, quindi non sono stati ripetuti backend/DB/browser/build già verdi senza un nuovo difetto.
 
 ### Collaudo visivo in due fasi
 
@@ -50,3 +61,11 @@ Nuovo cluster iiAsNV, fonte e6, senza riusare il primo: anteprima della pagina2 
 ## Limiti preservati
 
 Provider reale non attivato e nessuna chiamata AI o spesa. Fixture limitate al test e vincolate ai byte/SHA; nessun fallback simulato nel runtime. Prima versione solo PDF con testo nativo; OCR, accuratezza di un modello reale e catalogo esteso non sono verificati da questo candidato. Modello incarico approvato ancora assente. UI mappa della casa reale e relativi dati lasciati invariati; screenshot/report sintetici restano negli outputs. Nessun deploy, main o modifica della demo Alessio; pubblicazione del candidato e decisione sul comune sono passi distinti.
+
+## Consegna e percorso di prova
+
+Candidato concluso nella [PR draft79](https://github.com/Vincenzobrutto/Home_OS/pull/79), verso il comune3335ea9. Prodotto e6b2509; suite finale sulla fonte0080b6c. La PR conserva i genitori completi delle PR77/78 e resta draft: nessun merge o deploy eseguito.
+
+Nell'app del candidato: **Area Agenzie → pratica → Dati, fonti e verifiche → Apri dati e verifiche**. Da qui: analisi di atto/visura con pagine e consenso → proposte citate → associazione esplicita → conferma in Dati e fonti → confronto → Punti da verificare → Prepara dati incarico. L'anteprima della fonte si apre sulla pagina citata; la generazione resta disabilitata senza modello approvato.
+
+I due collaudi sintetici sono conclusi e arrestati: i relativi URL temporanei non sono ingressi attivi. Per una nuova prova serve un nuovo nominale isolato previsto dal runner, senza riavviare quelli scaduti o aggiornare l'app reale. Guida e screenshot sintetici nella cartella chat `outputs/Dimora-Agenzie-candidato-20261103`, inclusi `fonte-finale-desktop.png`, `fonte-finale-mobile.png` e il dettaglio desktop. La chiusura non avvia un nuovo collaudo o altro sviluppo.
