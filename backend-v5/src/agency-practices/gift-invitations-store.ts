@@ -74,7 +74,7 @@ export class GiftInvitationsStore{
  private readonly practices:AgencyPracticesStore;
  constructor(private readonly db:Pick<PrismaService,'$transaction'>){this.practices=new AgencyPracticesStore(db);}
  private current(actor:Actor,practice:Practice,r:GiftInvitation){
-  const packet=prepareGiftFromRegistry(actor,practice,{expectedRevision:practice.revision,requestedHomeId:r.packet.requestedHomeId,recipients:r.packet.recipients,documents:r.packet.documents.map(d=>({sourceId:d.sourceId,version:d.version,sha256:d.sha256}))},new Date().toISOString());
+  const packet=prepareGiftFromRegistry(actor,practice,{expectedRevision:practice.revision,requestedHomeId:r.packet.requestedHomeId,recipients:r.packet.recipients,documents:r.packet.documents.map(d=>({sourceId:d.sourceId,version:d.version,sha256:d.sha256}))},new Date().toISOString(),r.packet.classificationPolicyVersion);
   if(giftInvitationSourceFingerprint(packet)!==r.sourceFingerprint)unavailable();
  }
  private async locked(tx:Prisma.TransactionClient,id:string){
@@ -180,7 +180,7 @@ export class GiftInvitationsStore{
     documents:previous.packet.documents.map(d=>({sourceId:d.sourceId,version:d.version,sha256:d.sha256})),
     recipientEmail:previous.recipientEmail,stipulationCompleted:true,releaseApproved:true,annualBenefit:previous.annualBenefit.requested});
    const offer=previous.annualBenefit.requested?{id:previous.annualBenefit.offerId,version:previous.annualBenefit.offerVersion}:null;
-   const {record}=createGiftInvitation(actor,practice,createCommand,{id:randomUUID(),homeId:previous.packet.requestedHomeId,secret,expiresAt:new Date(Date.parse(now)+7*86400000).toISOString(),offer},now);
+   const {record}=createGiftInvitation(actor,practice,createCommand,{id:randomUUID(),homeId:previous.packet.requestedHomeId,secret,expiresAt:new Date(Date.parse(now)+7*86400000).toISOString(),offer},now,previous.packet.classificationPolicyVersion??null);
    if(record.sourceFingerprint!==previous.sourceFingerprint||giftAcceptanceDigest(record.annualBenefit)!==giftAcceptanceDigest(previous.annualBenefit))unavailable();
    const revoked=revokeGiftInvitation(previous,actor,practice,command.expectedVersion,now);
    fresh();live(record,new Date().toISOString());

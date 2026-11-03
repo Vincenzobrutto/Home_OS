@@ -36,3 +36,9 @@ test('estimate loses neither method nor explanation and sparse/non-text caveats 
 test('copied bytes must agree with the source SHA before any Gift metadata is projected',()=>{
  const d=doc(origin());d.original.sha256='b'.repeat(64);unavailable(()=>publicDocument(d,true,true));unavailable(()=>publicDocument(d,true));
 });
+
+test('frozen declared classification survives provenance without becoming owner-declared or certified',()=>{
+ const classification={policyVersion:1,sourceKind:'deed',documentKind:null,family:'property'},stored={...origin(),classification};
+ const out=parse(stored);assert.deepEqual(out.classification,classification);out.classification.family='building';assert.equal(stored.classification.family,'property');
+ for(const change of [{policyVersion:2},{documentKind:'contract'},{family:'building'},{sourceKind:'unknown'},{ownerConfirmed:true}])unavailable(()=>parse({...stored,classification:{...classification,...change}}));
+});

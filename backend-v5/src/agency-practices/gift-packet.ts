@@ -1,5 +1,6 @@
 import {parseDigitalPlan,type DigitalPlanSnapshot} from '../home-maps/snapshot';
 import { createHash } from 'node:crypto';
+import {giftClassification} from './gift-classification';
 import { exportManifest, PracticeError, requirePractice, type Actor, type Practice } from './domain';
 
 /**
@@ -63,9 +64,11 @@ export function parseGiftDocumentDescriptor(input: unknown): GiftDocumentDescrip
   };
 }
 export function prepareAgencyGiftPacket(
-  actor: Actor, practice: Practice, trustedDescriptors: unknown, input: unknown, now: string
+  actor: Actor, practice: Practice, trustedDescriptors: unknown, input: unknown, now: string,
+  classificationPolicyVersion?:1
 ) {
   requirePractice(actor, practice, 'export', now);
+  if(classificationPolicyVersion!==undefined&&classificationPolicyVersion!==1)invalid();
   const r = object(input, ['expectedRevision','requestedHomeId','recipients','documents']);
   const revision = positive(r.expectedRevision);
   if (revision !== practice.revision) throw new PracticeError('revision_conflict');
@@ -92,11 +95,13 @@ export function prepareAgencyGiftPacket(
     if(meta.digitalPlan&&(meta.digitalPlan.source.sourceId!==original.sourceId||meta.digitalPlan.source.version!==original.version||meta.digitalPlan.source.sha256!==original.sha256))invalid();
     return { ...original,metadataVersion:meta.metadataVersion,origin:meta.origin,title:meta.title,
       author:meta.author,lifecycle:meta.lifecycle,signatureVerification:'not_assessed' as const,
+      ...(classificationPolicyVersion===1?{classification:giftClassification(practice.sources.find(s=>s.id===original.sourceId)!.kind)}:{}),
       ...(meta.digitalPlan ? {digitalPlan:structuredClone(meta.digitalPlan)} : {}),
       ...(meta.surface ? {surface:structuredClone(meta.surface)} : {}) };
   });
   if(documents.filter(d=>d.digitalPlan).length>1)invalid(); // One dwelling map per Gift v1.
   const content = { schemaVersion:'agency-gift-preparation-v1' as const,
+    ...(classificationPolicyVersion===1?{classificationPolicyVersion:1 as const}:{}),
     agencyId:practice.agencyId,practiceId:practice.id,practiceRevision:revision,preparedBy:actor.accountId,
     requestedHomeId,recipients,documents };
   return { ...content,preparedAt:now,

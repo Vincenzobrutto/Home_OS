@@ -1259,6 +1259,7 @@ model DocumentIntakeAnalysis {
 
 // Personal overlay: never changes the original or the shared document title.
 model DocumentOrganization {
+  classificationOrigin String @default("user_declared")
   id String @id @default(uuid())
   accountId String
   homeId String

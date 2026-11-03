@@ -70,3 +70,18 @@ test('creation refuses sources without metadata or current permission and excess
  const f=fixture();f.practice.giftDocuments=[];error(f.create,'invalid_input');const g=fixture();g.actor.grants[0].canExport=false;error(g.create,'access_denied');
  const h=fixture();h.server.expiresAt='2026-12-01T00:00:00.000Z';error(h.create,'invalid_input');
 });
+
+test('new invitation freezes classification while explicitly recreated legacy records retain their old fingerprint',()=>{
+ const f=fixture(),record=f.create().record;
+ assert.equal(record.packet.classificationPolicyVersion,1);assert.ok(record.packet.documents.every(d=>d.classification?.policyVersion===1));
+ const selected=record.packet.documents[0],source=f.practice.sources.find(s=>s.id===selected.sourceId),before=source.kind;
+ source.kind=before==='other'?'unclassified':'other';
+ const selection={expectedRevision:f.practice.revision,requestedHomeId:record.packet.requestedHomeId,recipients:record.packet.recipients,documents:f.command.documents};
+ const current=R.prepareGiftFromRegistry(f.actor,f.practice,selection,now,1);
+ assert.notEqual(I.giftInvitationSourceFingerprint(current),record.sourceFingerprint);
+ error(()=>I.claimGiftInvitation(record,secret,f.account,I.giftInvitationSourceFingerprint(current),record.version,now),'unavailable');
+ const legacy=I.createGiftInvitation(f.actor,f.practice,f.command,f.server,now,null).record;
+ assert.equal(Object.hasOwn(legacy.packet,'classificationPolicyVersion'),false);assert.ok(legacy.packet.documents.every(d=>!Object.hasOwn(d,'classification')));
+ const legacyCurrent=R.prepareGiftFromRegistry(f.actor,f.practice,selection,now);
+ assert.equal(I.giftInvitationSourceFingerprint(legacyCurrent),legacy.sourceFingerprint);assert.equal(claim(f,legacy).record.state,'claimed');
+});

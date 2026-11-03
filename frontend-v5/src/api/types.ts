@@ -46,6 +46,7 @@ export type GiftDocumentProvenance={
   schemaVersion:1;kind:'agency_gift';invitationId:string;agencyId:string;practiceId:string;
   sourceId:string;sourceVersion:number;sourceSha256:string;metadataVersion:number;
   origin:'received'|'agency_generated';author:string;title:string;
+  classification?:{policyVersion:1;sourceKind:'unclassified'|'deed'|'cadastral'|'floor_plan'|'succession'|'ape'|'other';documentKind:'floor_plan'|'ape'|null;family:'property'|'building'|'energy'|'unclassified'};
   surface?:{kind:'net'|'cadastral'|'commercial';qualification:'estimated'|'reviewed'|'unverified';method:string;geometryRevision:number;caveats:string[]};
 };
 export type DocumentSummary = {
@@ -57,7 +58,7 @@ export type DocumentSummary = {
   /** Successful extraction for this account and exact source snapshot, independent of confirmation. */
   aiAnalysisSucceeded?: boolean;
   family?:DocumentGroup;
-  organization?: { houseFamily?:DocumentGroup|null; documentVersion?:number; documentSha256?:string; version: number; title: string; parts: Array<{ kind: string; pageFrom: number | null; pageTo: number | null }>; collections: DocumentCollection[]; origin: 'user_declared'; updatedAt: string } | null;
+  organization?: { houseFamily?:DocumentGroup|null; documentVersion?:number; documentSha256?:string; version: number; title: string; parts: Array<{ kind: string; pageFrom: number | null; pageTo: number | null }>; collections: DocumentCollection[]; origin: 'user_declared'|'agency_gift'; updatedAt: string } | null;
   id: string;
   homeId: string;
   name: string;

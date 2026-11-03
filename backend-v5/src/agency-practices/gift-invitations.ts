@@ -1,6 +1,7 @@
 import {createHash,randomBytes,timingSafeEqual} from 'node:crypto';
 import {requirePractice,type Actor,type Practice} from './domain';
 import {prepareGiftFromRegistry,type GiftMetadataState} from './gift-registry';
+import {parseGiftClassification} from './gift-classification';
 
 type Packet=ReturnType<typeof prepareGiftFromRegistry>;
 export class GiftInvitationError extends Error {
@@ -25,7 +26,7 @@ export const newGiftInvitationSecret=()=>randomBytes(32).toString('base64url');
 
 /** Excludes broad practice revision/time; source or metadata changes still invalidate the invitation. */
 export function giftInvitationSourceFingerprint(packet:Packet){
- return digest({agencyId:packet.agencyId,practiceId:packet.practiceId,requestedHomeId:packet.requestedHomeId,recipients:packet.recipients,documents:packet.documents});
+ return digest({agencyId:packet.agencyId,practiceId:packet.practiceId,requestedHomeId:packet.requestedHomeId,recipients:packet.recipients,documents:packet.documents,...(packet.classificationPolicyVersion!==undefined?{classificationPolicyVersion:packet.classificationPolicyVersion}:{})});
 }
 export function parseGiftInvitationCommand(input:unknown){
  const b=object(input,['key','expectedRevision','documents','recipientEmail','stipulationCompleted','releaseApproved','annualBenefit']);
@@ -50,6 +51,11 @@ function validate(r:GiftInvitation){
    !/^[a-f0-9]{64}$/u.test(r.tokenHash)||r.seal!==seal(r)||r.sourceFingerprint!==giftInvitationSourceFingerprint(r.packet)||
    r.packet.agencyId!==r.agencyId||r.packet.practiceId!==r.practiceId||r.packet.preparedBy!==r.issuerAccountId||r.packet.recipients.length!==1||
    time(r.expiresAt)<=time(r.createdAt)||email(r.recipientEmail)!==r.recipientEmail)fail('invalid_input');
+ if(r.packet.classificationPolicyVersion!==undefined&&r.packet.classificationPolicyVersion!==1)fail('invalid_input');
+ for(const d of r.packet.documents){
+  if(r.packet.classificationPolicyVersion===1){try{parseGiftClassification(d.classification);}catch{fail('invalid_input');}}
+  else if(d.classification!==undefined)fail('invalid_input');
+ }
  if(!r.declarations||r.declarations.stipulationCompleted!==true||r.declarations.releaseApproved!==true||r.declarations.actorId!==r.issuerAccountId||r.declarations.at!==r.createdAt)fail('invalid_input');
  if(r.state==='invited'&&(r.claim!==null||r.revokedAt!==null)||r.state==='claimed'&&(!r.claim||r.revokedAt!==null)||r.state==='revoked'&&!r.revokedAt)fail('invalid_input');
  if(r.claim){text(r.claim.accountId);if(time(r.claim.claimedAt)<time(r.createdAt)||time(r.claim.claimedAt)>=time(r.expiresAt))fail('invalid_input');}
@@ -61,11 +67,11 @@ function credential(r:GiftInvitation,secret:unknown,now:string){
 }
 
 /** Internal candidate only: adapter must persist before a link can be issued. No HTTP accepts server fields. */
-export function createGiftInvitation(actor:Actor,practice:GiftMetadataState,input:unknown,server:ServerCreation,now:string){
+export function createGiftInvitation(actor:Actor,practice:GiftMetadataState,input:unknown,server:ServerCreation,now:string,classificationPolicyVersion:1|null=1){
  const b=parseGiftInvitationCommand(input);
  if(!/^[A-Za-z0-9_-]{43}$/u.test(server.secret)||time(server.expiresAt)<=time(now)||time(server.expiresAt)>time(now)+30*86400000)fail('invalid_input');
  const recipientEmail=email(b.recipientEmail),id=text(server.id),key=text(b.key,120);
- const packet=prepareGiftFromRegistry(actor,practice,{expectedRevision:b.expectedRevision,requestedHomeId:text(server.homeId),recipients:[{subjectRef:'gift-recipient'}],documents:b.documents},now);
+ const packet=prepareGiftFromRegistry(actor,practice,{expectedRevision:b.expectedRevision,requestedHomeId:text(server.homeId),recipients:[{subjectRef:'gift-recipient'}],documents:b.documents},now,classificationPolicyVersion??undefined);
  let annualBenefit:GiftInvitation['annualBenefit']={requested:false};
  if(b.annualBenefit){if(!server.offer||!Number.isSafeInteger(server.offer.version)||server.offer.version<1)fail('benefit_unavailable');annualBenefit={requested:true,offerId:text(server.offer.id),offerVersion:server.offer.version,activated:false};}
  const record:GiftInvitation={schemaVersion:1,id,agencyId:practice.agencyId,practiceId:practice.id,issuerAccountId:actor.accountId,creationKey:key,createdAt:now,expiresAt:server.expiresAt,recipientEmail,tokenHash:secretHash(server.secret),packet,sourceFingerprint:giftInvitationSourceFingerprint(packet),declarations:{stipulationCompleted:true,releaseApproved:true,actorId:actor.accountId,at:now},seal:'',version:1,state:'invited',claim:null,revokedAt:null,annualBenefit};

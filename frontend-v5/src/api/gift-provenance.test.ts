@@ -38,4 +38,9 @@ describe('Gift document wire provenance',()=>{
  it('returns fresh nested metadata instead of mutable aliases to the response',()=>{
   const d=document(),out=validateGiftDocumentWire(d,true);out.giftProvenance!.surface!.caveats.push('changed');expect(d.giftProvenance!.surface!.caveats).toEqual(['Scala da verificare']);
  });
+ it('accepts frozen Agency classification and rejects invented canonical types or certification',()=>{
+  const p=provenance();p.classification={policyVersion:1,sourceKind:'cadastral',documentKind:null,family:'building'};
+  const out=parseGiftDocumentProvenance(p);expect(out.classification).toEqual(p.classification);out.classification!.family='property';expect(p.classification.family).toBe('building');
+  for(const change of [{policyVersion:2},{documentKind:'floor_plan'},{family:'property'},{sourceKind:'unknown'},{ownerConfirmed:true}])expect(()=>parseGiftDocumentProvenance({...p,classification:{...p.classification,...change}})).toThrow();
+ });
 });

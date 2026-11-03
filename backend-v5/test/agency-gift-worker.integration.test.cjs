@@ -6,6 +6,9 @@ const {assertOfflineDatabase,assertOwnedRun}=require('./offline-policy.cjs');
 const {PrismaClient}=require('../generated/client'),{assertDevelopmentDatabase}=require('../dist/prisma.service');
 const {AgencyPracticesStore}=require('../dist/agency-practices/store'),{AgencyFileVault}=require('../dist/agency-practices/files');
 const {GiftInvitationsStore}=require('../dist/agency-practices/gift-invitations-store');
+const {createGiftInvitation,giftInvitationCreationDigest,parseGiftInvitationCommand,newGiftInvitationSecret}=require('../dist/agency-practices/gift-invitations');
+const {giftClassification}=require('../dist/agency-practices/gift-classification');
+const {IntakeBatchesService}=require('../dist/document-intake/batches.service');
 const {GiftAcceptanceStore}=require('../dist/agency-practices/gift-acceptance-store');
 const {GiftAcceptanceWorker}=require('../dist/agency-practices/gift-acceptance-worker');
 const {GiftBenefitsStore}=require('../dist/agency-practices/gift-benefits-store');
@@ -23,7 +26,7 @@ test('Gift copier accepts synthetic bytes on a new owned cluster; independent Ho
  const practices=new AgencyPracticesStore(db),invites=new GiftInvitationsStore(db),jobs=new GiftAcceptanceStore(db),past=new Date('2026-01-01T00:00:00.000Z');
  const agency=await db.agency.create({data:{name:'Gift copier Agency DEMO'}}),issuer=await db.account.create({data:{name:'Gift copier issuer DEMO',email:randomUUID()+'@example.test',passwordHash:'synthetic'}});
  await db.agencyMember.create({data:{agencyId:agency.id,accountId:issuer.id,role:'admin',validFrom:past}});
- async function fixture({annualBenefit=false,scannerFails=false,afterScan}={}){
+ async function fixture({annualBenefit=false,scannerFails=false,afterScan,sourceKind='unclassified',legacy=false}={}){
   const recipient=await db.account.create({data:{name:'Gift copier recipient DEMO',email:randomUUID()+'@example.test',passwordHash:'synthetic',emailVerifiedAt:past}});
   const p=(await practices.create(issuer.id,agency.id,'Gift copier practice DEMO '+randomUUID(),randomUUID())).practice;
   const revision=async()=>(await practices.read(issuer.id,agency.id,p.id)).revision;
@@ -33,9 +36,19 @@ test('Gift copier accepts synthetic bytes on a new owned cluster; independent Ho
   // The delivered Home has its own version 1, even when the selected Agency source is version 3.
   for(const sourceVersion of [1,2])await practices.upload(issuer.id,agency.id,p.id,{key:randomUUID(),expectedRevision:await revision(),command:{operation:'replace',sourceId,expectedSourceVersion:sourceVersion,originalFilename:'gift-worker-DEMO.png'}},sourceBytes[sourceVersion],vault);
   await practices.upload(issuer.id,agency.id,p.id,{key:randomUUID(),expectedRevision:await revision(),command:{operation:'attach',sourceId:'gift-unselected-source',visibility:'practice',originalFilename:'not-selected-DEMO.pdf'}},pdf,vault);
+  if(sourceKind!=='unclassified')await practices.mutate(issuer.id,agency.id,p.id,{key:randomUUID(),expectedRevision:await revision(),command:{operation:'classify',sourceId,expectedSourceVersion:3,kind:sourceKind}});
   const surface={kind:'commercial',qualification:'estimated',method:'Assumed A4',geometryRevision:7,caveats:['Paper size unverified','Owner must review measured outlines']};
   await practices.registerGiftMetadata(issuer.id,agency.id,p.id,{agencyId:agency.id,practiceId:p.id,sourceId,sourceVersion:3,sha256,metadataVersion:1,origin:'agency_generated',lifecycle:'final',author:'Agency author DEMO',title:'Selected surface schedule DEMO',surface},{key:randomUUID(),expectedRevision:await revision(),expectedMetadataVersion:null});
-  const invitation=await invites.create(issuer.id,agency.id,p.id,{key:randomUUID(),expectedRevision:await revision(),documents:[{sourceId,version:3,sha256}],recipientEmail:recipient.email,stipulationCompleted:true,releaseApproved:true,annualBenefit});
+  const createCommand={key:randomUUID(),expectedRevision:await revision(),documents:[{sourceId,version:3,sha256}],recipientEmail:recipient.email,stipulationCompleted:true,releaseApproved:true,annualBenefit};
+  let invitation;
+  if(legacy){
+   const secret=newGiftInvitationSecret(),now=new Date().toISOString(),window={validFrom:past.toISOString(),validUntil:null,revokedAt:null};
+   const actor={accountId:issuer.id,memberships:[{...window,agencyId:agency.id,accountId:issuer.id,role:'admin'}],grants:[{...window,agencyId:agency.id,practiceId:p.id,accountId:issuer.id,access:'edit',canExport:true}]};
+   const practice=(await db.agencyPractice.findUniqueOrThrow({where:{id:p.id}})).snapshot;
+   const {record}=createGiftInvitation(actor,practice,createCommand,{id:randomUUID(),homeId:randomUUID(),secret,expiresAt:new Date(Date.parse(now)+7*86400000).toISOString(),offer:{id:'dimora-full-access-v1',version:1}},now,null);
+   await db.agencyGiftInvitation.create({data:{id:record.id,agencyId:agency.id,practiceId:p.id,issuerAccountId:issuer.id,creationKey:record.creationKey,creationDigest:giftInvitationCreationDigest(parseGiftInvitationCommand(createCommand)),tokenHash:record.tokenHash,version:record.version,state:record.state,expiresAt:new Date(record.expiresAt),createdAt:new Date(record.createdAt),snapshot:record}});
+   invitation={id:record.id,version:record.version,secret};
+  }else invitation=await invites.create(issuer.id,agency.id,p.id,createCommand);
   const association=await invites.claim(recipient.id,invitation.id,invitation.secret,invitation.version);
   const command={key:randomUUID(),expectedInvitationVersion:association.version,home:{name:' Casa ricevuta DEMO ',address:' Via ricevuta DEMO 1 '}};
   const scans=[],storage=new LocalFileStorage({scan:async(stage,expectedSha)=>{
@@ -77,7 +90,7 @@ test('Gift copier accepts synthetic bytes on a new owned cluster; independent Ho
   const doc=await db.document.findUniqueOrThrow({where:{id:status.documents[0].documentId},include:{original:{include:{file:true}}}});
   assert.equal(await db.document.count({where:{homeId:home.id}}),1);assert.equal(doc.homeId,home.id);assert.equal(doc.uploaderId,f.recipient.id);assert.equal(doc.visibility,'private');assert.equal(doc.original.version,1);assert.equal(doc.original.sha256,f.sha256);assert.equal(status.documents[0].sha256,f.sha256);
   assert.equal(doc.original.fileControlEngine,'microsoft_defender');assert.equal(doc.original.fileControlSignature,'synthetic-gift-worker-no-real-av');assert.ok(doc.original.fileControlCheckedAt instanceof Date);
-  assert.deepEqual(doc.giftProvenance,{schemaVersion:1,kind:'agency_gift',invitationId:f.invitation.id,agencyId:agency.id,practiceId:f.p.id,sourceId:f.sourceId,sourceVersion:3,sourceSha256:f.sha256,metadataVersion:1,origin:'agency_generated',author:'Agency author DEMO',title:'Selected surface schedule DEMO',surface:f.surface});
+  assert.deepEqual(doc.giftProvenance,{schemaVersion:1,kind:'agency_gift',invitationId:f.invitation.id,agencyId:agency.id,practiceId:f.p.id,sourceId:f.sourceId,sourceVersion:3,sourceSha256:f.sha256,metadataVersion:1,origin:'agency_generated',author:'Agency author DEMO',title:'Selected surface schedule DEMO',classification:giftClassification('unclassified'),surface:f.surface});
   assert.deepEqual(await f.storage.read(doc.original.file.storageKey),f.bytes);
   const documents=new DocumentsService(db,f.storage,new DocumentPolicy(db)),opened=await documents.get(f.recipient.id,home.id,doc.id);assert.equal(opened.document.source,'agency_gift');assert.equal(opened.document.version,1);assert.deepEqual(opened.document.giftProvenance.surface.caveats,f.surface.caveats);
   await assert.rejects(()=>documents.get(issuer.id,home.id,doc.id),error=>error.getStatus()===403);await assert.rejects(()=>jobs.get(issuer.id,status.jobId),denied('unavailable'));noPrivateResult(status,f);
@@ -88,6 +101,52 @@ test('Gift copier accepts synthetic bytes on a new owned cluster; independent Ho
   const expectedEnd=new Date(benefit.startsAt);expectedEnd.setUTCFullYear(expectedEnd.getUTCFullYear()+1);assert.equal(benefit.endsAt,expectedEnd.toISOString());
   const persisted=await db.accountGiftBenefit.findUniqueOrThrow({where:{receiptId:benefit.receiptId}});assert.equal(persisted.id,benefit.id);assert.equal(persisted.accountId,f.recipient.id);assert.equal(persisted.startsAt.toISOString(),benefit.startsAt);assert.equal(persisted.endsAt.toISOString(),benefit.endsAt);assert.equal(await db.accountGiftBenefit.count({where:{accountId:f.recipient.id}}),1);
   const receipt=await db.agencyGiftAcceptanceReceipt.findUniqueOrThrow({where:{jobId:status.jobId}});assert.equal(receipt.id,benefit.receiptId);assert.equal(receipt.acceptedAt.toISOString(),status.acceptedAt);noPrivateResult(status,f);
+ });
+ await t.test('explicit kinds populate canonical private archive groups without completing owner workflow or guessing unknown types',async()=>{
+  for(const sourceKind of ['floor_plan','ape','deed','succession','cadastral','unclassified','other']){
+   const f=await fixture({sourceKind}),{queued,status}=await accepted(f),id=status.documents[0].documentId,classification=giftClassification(sourceKind);
+   const documents=new DocumentsService(db,f.storage,new DocumentPolicy(db)),opened=(await documents.get(f.recipient.id,status.homeId,id)).document;
+   assert.deepEqual(opened.giftProvenance.classification,classification);assert.deepEqual(opened.giftProvenance.surface,f.surface);assert.equal(opened.workflowState,'to_compile');
+   const org=await db.documentOrganization.findUnique({where:{accountId_homeId_documentId:{accountId:f.recipient.id,homeId:status.homeId,documentId:id}}});
+   if(classification.family==='unclassified'){assert.equal(org,null);assert.equal(opened.organization,null);}
+   else{
+    assert.equal(org.classificationOrigin,'agency_gift');assert.equal(opened.organization.origin,'agency_gift');assert.equal(org.documentVersion,1);assert.equal(org.documentSha256,f.sha256);assert.equal(org.houseDocument,true);assert.equal(org.houseFamily,classification.family);
+    assert.deepEqual(org.parts,[{kind:classification.documentKind??'other',pageFrom:null,pageTo:null}]);
+   }
+   const archive=await documents.list(f.recipient.id,status.homeId,{limit:20,view:'archive',group:classification.family});
+   assert.equal(archive.items.length,1);assert.equal(archive.items[0].id,id);assert.equal(archive.items[0].family,classification.family);assert.equal(archive.items[0].workflowState,'to_compile');assert.equal(archive.summary.groups[classification.family],1);
+   assert.deepEqual((await documents.workflowSummary(f.recipient.id,status.homeId,{})).counts,{to_compile:1,review:0,analyzing:0,attention:0,completed:0});
+   assert.equal((await documents.list(f.recipient.id,status.homeId,{limit:20,collection:'floor_plans'})).items.length,sourceKind==='floor_plan'?1:0);
+   assert.equal(await db.objectOnboardingDraft.count({where:{homeId:status.homeId}}),0);assert.equal(await db.homeExpense.count({where:{homeId:status.homeId}}),0);
+   await f.worker.runNext(queued.jobId);assert.equal(await db.documentOrganization.count({where:{homeId:status.homeId}}),org?1:0);
+  }
+ });
+ await t.test('a family-only edit preserves Agency origin; explicit same-parts owner organization adopts it once',async()=>{
+  const f=await fixture({sourceKind:'floor_plan'}),{status}=await accepted(f),id=status.documents[0].documentId,documents=new DocumentsService(db,f.storage,new DocumentPolicy(db));
+  const before=await db.document.findUniqueOrThrow({where:{id},include:{original:true}});
+  const moved=await documents.changeHouseFamily(f.recipient.id,status.homeId,id,{expectedOrganizationVersion:1,documentVersion:1,sha256:f.sha256,family:'property',scope:'archive'},randomUUID());
+  assert.equal(moved.organization.origin,'agency_gift');assert.equal((await documents.get(f.recipient.id,status.homeId,id)).document.workflowState,'to_compile');
+  const intake=new IntakeBatchesService(db,new DocumentPolicy(db)),{batch}=await intake.prepareExisting(f.recipient.id,status.homeId,{documentIds:[id]},randomUUID()),item=batch.items[0];
+  const body={expectedVersion:batch.version,mode:'single',items:[{itemId:item.id,expectedVersion:item.version,expectedOrganizationVersion:moved.organization.version,replaceOrganization:false,selection:{action:'organize',title:moved.organization.title,parts:moved.organization.parts,target:{kind:'home'}}}]},key=randomUUID();
+  const saved=await intake.organize(f.recipient.id,status.homeId,batch.id,body,key);assert.equal(saved.results[item.id].state,'confirmed');
+  const opened=(await documents.get(f.recipient.id,status.homeId,id)).document;assert.equal(opened.organization.origin,'user_declared');assert.equal(opened.workflowState,'completed');assert.equal(opened.organization.version,moved.organization.version+1);
+  assert.equal(opened.organization.houseFamily,'property');assert.deepEqual(opened.giftProvenance,before.giftProvenance);
+  await intake.organize(f.recipient.id,status.homeId,batch.id,body,key);assert.equal((await documents.get(f.recipient.id,status.homeId,id)).document.organization.version,opened.organization.version);
+  assert.deepEqual(await db.document.findUniqueOrThrow({where:{id},include:{original:true}}),before);
+ });
+ await t.test('classification drift after a queued acceptance blocks publication, even when both raw kinds lack a Home type',async()=>{
+  const f=await fixture({sourceKind:'other'}),queued=await f.begin();
+  await practices.mutate(issuer.id,agency.id,f.p.id,{key:randomUUID(),expectedRevision:await f.revision(),command:{operation:'classify',sourceId:f.sourceId,expectedSourceVersion:3,kind:'unclassified'}});
+  const result=await f.worker.runNext(queued.jobId);assert.equal(result.state,'blocked_review');await assertNoHome(f,queued.jobId);assert.equal(f.scans.length,0);
+ });
+ await t.test('legacy sealed invitations and reissued links retain old manifests without classification backfill',async()=>{
+  const f=await fixture({sourceKind:'floor_plan',legacy:true}),{queued,status}=await accepted(f),id=status.documents[0].documentId;
+  const opened=(await new DocumentsService(db,f.storage,new DocumentPolicy(db)).get(f.recipient.id,status.homeId,id)).document;
+  assert.equal(opened.organization,null);assert.equal(Object.hasOwn(opened.giftProvenance,'classification'),false);assert.equal(opened.workflowState,'to_compile');
+  assert.equal(await db.documentOrganization.count({where:{homeId:status.homeId}}),0);assert.equal((await f.worker.runNext(queued.jobId)).replay,true);
+  const g=await fixture({sourceKind:'ape',legacy:true}),replacement=await invites.reissue(issuer.id,agency.id,g.p.id,g.invitation.id,{key:randomUUID(),expectedRevision:await g.revision(),expectedVersion:g.association.version});
+  const row=await db.agencyGiftInvitation.findUniqueOrThrow({where:{id:replacement.id}});assert.equal(Object.hasOwn(row.snapshot.packet,'classificationPolicyVersion'),false);assert.ok(row.snapshot.packet.documents.every(d=>!Object.hasOwn(d,'classification')));
+  assert.equal((await invites.claim(g.recipient.id,replacement.id,replacement.secret,replacement.version)).state,'claimed');
  });
  await t.test('accepted Home bytes stay independent after removal of owned Agency source bytes and issuer export revocation',async()=>{
   const f=await fixture(),{status}=await accepted(f),doc=await db.document.findUniqueOrThrow({where:{id:status.documents[0].documentId},include:{original:{include:{file:true}}}}),sourcePath=path.join(f.vaultRoot,'object-'+f.sha256);

@@ -13,6 +13,7 @@ import {makeGiftAcceptanceReceipt} from './gift-acceptance-receipt';
 import {makeGiftBenefit} from './gift-benefit';
 import {readAcceptedGift} from './gift-acceptance-read';
 import {parseGiftDocumentProvenance} from '../documents/gift-provenance';
+import {collectionsFor,type ClassificationPart} from '../document-intake/domain';
 import {safeFilename,type LocalFileStorage} from '../documents/storage';
 
 type Storage=Pick<LocalFileStorage,'root'|'read'|'writeVerified'|'remove'>;
@@ -119,8 +120,13 @@ export class GiftAcceptanceWorker{
    await tx.home.create({data:{id:job.homeId,name:prepared.command.home.name,address:prepared.command.home.address,memberships:{create:{accountId:job.accountId,role:'owner',validFrom:now}}}});
    for(const item of items){
     const d=prepared.manifest.packet.documents[item.ordinal],scan=control(item,job);
-    const provenance=parseGiftDocumentProvenance({schemaVersion:1,kind:'agency_gift',invitationId:job.invitationId,agencyId:prepared.manifest.packet.agencyId,practiceId:job.practiceId,sourceId:d.sourceId,sourceVersion:d.version,sourceSha256:d.sha256,metadataVersion:d.metadataVersion,origin:d.origin,author:d.author,title:d.title,...(d.surface?{surface:d.surface}:{})});if(!provenance)fail();
+    const provenance=parseGiftDocumentProvenance({schemaVersion:1,kind:'agency_gift',invitationId:job.invitationId,agencyId:prepared.manifest.packet.agencyId,practiceId:job.practiceId,sourceId:d.sourceId,sourceVersion:d.version,sourceSha256:d.sha256,metadataVersion:d.metadataVersion,origin:d.origin,author:d.author,title:d.title,...(d.classification?{classification:d.classification}:{}),...(d.surface?{surface:d.surface}:{})});if(!provenance)fail();
     await tx.document.create({data:{id:item.documentId,homeId:job.homeId,uploaderId:job.accountId,name:d.title,visibility:'private',giftProvenance:json(provenance),original:{create:{id:item.documentVersionId,version:1,originalFilename:safeFilename(d.originalFilename),mimeType:d.mimeType,byteSize:d.byteSize,sha256:d.sha256,fileId:item.storedFileId,fileControlEngine:scan.engine,fileControlCheckedAt:scan.checkedAt,fileControlSignature:scan.signatureVersion}}}});
+    const classification=provenance.classification;
+    if(classification&&classification.family!=='unclassified'){
+     const parts:ClassificationPart[]=[{kind:classification.documentKind??'other',pageFrom:null,pageTo:null}];
+     await tx.documentOrganization.create({data:{accountId:job.accountId,homeId:job.homeId,documentId:item.documentId,documentVersion:1,documentSha256:d.sha256,title:d.title,parts:json(parts),collections:collectionsFor(parts),houseDocument:true,houseFamily:classification.family,classificationOrigin:'agency_gift'}});
+    }
     if(d.digitalPlan)await publishGiftMap(tx,{accountId:job.accountId,homeId:job.homeId,documentId:item.documentId,sha256:d.sha256,snapshot:d.digitalPlan});
    }
    const receiptId=randomUUID(),offer=prepared.manifest.annualBenefit;

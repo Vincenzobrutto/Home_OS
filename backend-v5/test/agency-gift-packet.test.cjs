@@ -10,6 +10,7 @@ function fixture(){
  return {actor,practice,descriptors,input};
 }
 const run=f=>prepare(f.actor,f.practice,f.descriptors,f.input,now);
+const classified=f=>prepare(f.actor,f.practice,f.descriptors,f.input,now,1);
 const rejected=(f,code='invalid_input')=>assert.throws(()=>run(f),e=>e.code===code);
 test('one selected recipient has one requested destination; preparation grants nothing',()=>{
  const f=fixture(),before=structuredClone(f),p=run(f);
@@ -92,4 +93,39 @@ test('synthetic shared packet stays compatible with frontend harness without exp
 
 test('v1 rejects two distinct accounts rather than silently keeping the first',()=>{
  const f=fixture();f.input.recipients.push({subjectRef:'second-account'});rejected(f);
+});
+
+test('classification policy snapshots explicit Agency kinds with exact Home types and declared family-only groups',()=>{
+ const expected={floor_plan:['floor_plan','building'],ape:['ape','energy'],deed:[null,'property'],succession:[null,'property'],cadastral:[null,'building'],unclassified:[null,'unclassified'],other:[null,'unclassified']};
+ for(const [sourceKind,[documentKind,family]] of Object.entries(expected)){
+  const f=fixture();f.practice.sources[0].kind=sourceKind;
+  f.practice.sources[0].versions[0].originalFilename='APE-rogito-planimetria.pdf';f.descriptors[0].title='APE rogito planimetria';
+  const packet=classified(f);assert.equal(packet.classificationPolicyVersion,1);
+  assert.deepEqual(packet.documents[0].classification,{policyVersion:1,sourceKind,documentKind,family});
+  assert.equal(packet.confirmsFacts,false);assert.equal(packet.certification,false);
+ }
+});
+
+test('classification policy fingerprints all raw kinds, including unsupported or unclassified sources',()=>{
+ const fingerprints=new Set();
+ for(const kind of ['unclassified','other','deed','succession','cadastral','floor_plan','ape']){
+  const f=fixture();f.practice.sources[0].kind=kind;fingerprints.add(classified(f).fingerprint);
+ }
+ assert.equal(fingerprints.size,7);
+ const legacy=run(fixture());assert.equal(Object.hasOwn(legacy,'classificationPolicyVersion'),false);assert.equal(Object.hasOwn(legacy.documents[0],'classification'),false);
+});
+
+test('classification remains server-owned, scoped to current source proof and absent for private excluded originals',()=>{
+ const f=fixture();f.input.classificationPolicyVersion=1;rejected(f);
+ const g=fixture();g.actor.memberships[0].role='admin';g.practice.sources[0].uploaderId='other';
+ assert.throws(()=>classified(g),e=>e.code==='access_denied');
+ const h=fixture();h.practice.sources[0].versions[0].version=2;assert.throws(()=>classified(h),e=>e.code==='source_changed');
+ const x=fixture();x.practice.sources[0].kind='contract';assert.throws(()=>classified(x),e=>e.code==='invalid_input');
+});
+
+test('classification parser refuses invented mappings, policy versions and accessor payloads',()=>{
+ const {giftClassification,parseGiftClassification}=require('../dist/agency-practices/gift-classification');
+ for(const change of [{family:'property'},{documentKind:'contract'},{policyVersion:2},{sourceKind:'Floor_Plan'},{sourceKind:''},{sourceKind:'__proto__'},{certification:true}])assert.throws(()=>parseGiftClassification({...giftClassification('floor_plan'),...change}),e=>e.code==='invalid_input');
+ let reads=0;const input=giftClassification('ape');Object.defineProperty(input,'sourceKind',{enumerable:true,get(){reads++;return 'ape';}});
+ assert.throws(()=>parseGiftClassification(input),e=>e.code==='invalid_input');assert.equal(reads,0);
 });

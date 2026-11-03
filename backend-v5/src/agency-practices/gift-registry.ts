@@ -112,7 +112,7 @@ export function giftDocumentMetadataView(actor:Actor,practice:GiftMetadataState,
 }
 
 /** Server resolves stored descriptors; no descriptor field belongs to the selection DTO. */
-export function prepareGiftFromRegistry(actor:Actor,practice:GiftMetadataState,input:unknown,now:string) {
+export function prepareGiftFromRegistry(actor:Actor,practice:GiftMetadataState,input:unknown,now:string,classificationPolicyVersion?:1) {
   requirePractice(actor,practice,'export',now);
   const r=object(input,['expectedRevision','requestedHomeId','recipients','documents']);
   const originals=exportManifest(actor,practice,r.documents,now);
@@ -122,5 +122,5 @@ export function prepareGiftFromRegistry(actor:Actor,practice:GiftMetadataState,i
     if(entry.descriptor.digitalPlan)assertCurrentDigitalPlan(practice,entry.descriptor.digitalPlan);
     return entry.descriptor;
   });
-  return prepareAgencyGiftPacket(actor,practice,descriptors,input,now);
+  return prepareAgencyGiftPacket(actor,practice,descriptors,input,now,classificationPolicyVersion);
 }
