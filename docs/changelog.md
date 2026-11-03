@@ -1,3 +1,37 @@
+## 3 novembre — seleziona i documenti della pratica e crea la Gift
+
+CTA Consegna al proprietario, flag file/mappa, destinatario e anno opzionale: rimosso dal percorso pratica l'editor di rilascio documento per documento. Protezioni esistenti preservate nell'orchestrazione interna; gestione esplicita di esiti incerti. Test nuovi21/21, regressione231/231, navigazione7/7, guardie20/20 e statici/build verdi; browser reale su fixture fino a Home/documenti/mappa/anno, UI agente375px. [Report](v5/gift-simple-delivery-20261103.md). Nessun deploy.
+
+## 1novembre — chiusura del seguito Ambienti/mappa
+Ancore indicative adattive e più efficienti, pin confermati preservati; lifecycle HTTP17/17, componenti42/42, guardie18/18 e browser sul seguito desktop/375verdi. Nuovo collaudo sinteticoVeuBZj attivo fino14:00Rome, verifica arresto finale pendente. Restano leggibilità ad altissima densità (90icone/vano), touch fisico e cataloghi grandi; non nuove funzioni da implementare senza priorità concordata. [Esito e limiti precisi](v5/ambienti-map-drag-20261101.md). Nessun merge/deploy o modifica demo Alessio.
+
+## 1 novembre — ancore indicative senza coincidenze per esaurimento del pool
+Corretto il difetto riprodotto su250oggetti/2vani e120oggetti in vano concavo con vuoto: ancore adattive verificate, distanze precalcolate/aggiornate, nessun ricampionamento dei pin proprietario o scrittura automatica.42/42componenti mappa e statici verdi; DB lifecycle e browser della correzione pendenti. [Prosecuzione e limiti](v5/ambienti-map-drag-20261101.md).
+
+## 1 novembre2026 — Ambienti: schede e planimetria collegate
+
+Implementata e verificata sul lotto dedicato la vista Planimetria dentro Ambienti: segnaposti indicativi per oggetti già associati, drag che salva coordinate e aggiorna atomicamente la stanza, normale scheda e conteggi coerenti. Backend878/DB13/frontend mirato78/guardie16 e browser desktop/375 verdi; nessun nuovo schema in questo lotto. Dipende dalle PR73/72 non ancora integrate. Restano prove su mappe dense/cataloghi grandi e touch hardware, multipiano e computo Home fuori scope. [Report e limiti](v5/ambienti-map-drag-20261101.md). Nessuna nuova AI, demo Alessio invariata, nessun merge/deploy.
+
+## 1 novembre2026 — Gift: interfaccia, rigenerazione e limiti tecnici
+
+Collegate la pratica e la consegna alla normale app: selezione finale, link personale in memoria, accesso/registrazione/verifica email, ripresa del job, Home e archivio con provenienza e anno opzionale. Rigenerazione atomica con replay hash-only; contatori persistenti perIP/account, indipendenti dal piano free. Corretti path Gift codificati, retry landing temporanea e ritorno dopo la verifica. Backend863/DB127/poller6verdi, frontend1924/1924e statici/build verdi; [collaudo browser concluso](v5/agency-gift-app-20261101.md). Nessun deploy o servizio reale attivato.
+
+## 31 ottobre2026 — primo contratto Gift interno
+
+## 1 novembre 2026 — Gift: API, coda e verifica email
+
+Collegati rilascio esplicito dei file, inviti/preview/claim, accettazione202, ripresa/stato/cancel e diritto account. Poller SQL configurato, letture indipendenti anche senza ingresso/vault Agency. Aggiunti parser/client frontend; verifica email in sessione corretta senza bypass o cambio del reset.842/842backend,111/111DBGift+6/6poller su cluster nuovi arrestati,1829/1829frontend e build verdi. Schermate Gift ancora da collegare. [Report](v5/agency-gift-api-20261031.md).
+
+## 31 ottobre 2026 — Gift: copier e anno completo verificati
+
+Successivo alla prenotazione: backend interno con lease, copia indipendente, pubblicazione atomica Home/documenti/ricevuta/anno opzionale, recupero e cancellazione selettiva. Nessun grant Agency. 789/789 ordinari e 78/78 DB su nuovo cluster arrestato, statici verdi. API, poller e UI dal link ancora da collegare; nessun invio o deploy. [Report](v5/agency-gift-copier-20261031.md).
+
+## 31 ottobre 2026 — Gift: prenotazione dell'accettazione
+
+Job/item e begin/get interni verificati:una pratica riservata,replay dello stesso comando,conferma Home esplicita e stato minimo privato.Helper12mesi full-access UTC con29febbraio corretto;nessun diritto ancora attivato.756/756backend,57/57DBGift su nuovo cluster arrestato,statici verdi.Frontend invariato.Non è ancora copia o invio.[Report](v5/agency-gift-acceptance-reservation-20261031.md).
+
+Preparazione da fonti correnti autorizzate,versioni e produttore;stima superfici conservata,destinatari/destinazione selezionati senza grant.13nuovi casi,671/671backendordinari e lint/build verdi. Non consegna Gift o copia Home:prossimo registro/adapter server.[Report](v5/agency-gift-contract-20261031.md).
+
 ## 31 ottobre 2026 — Agenzie integrato nel consolidamento
 
 Intera PR71integrata e merged, push aaf8f02verificato, senza conflitti; backend658/frontend1743/DB700/cestino42verdi, due cluster nuovi arrestati. Nessun codice prodotto modificato oltre al branch Agenzie, nessun deploy o attivazione provider. [Report e limiti](v5/agency-consolidation-20261031.md). Futuri incrementi brevi dalla base comune aggiornata; modello incarico e validazione indipendente restano aperti.
@@ -2077,3 +2111,33 @@ Frontend completo mock1719/1719in169file,2worker/retry0;typecheck/buildfinaliver
 
 ## 31/10/2026 — Agenzie, selezione delle aree
 Indizio prudenziale per fasce sottili e checkbox Scarta prima dell'adozione; originali firmati conservati e selezione persistente. Backend658/UI60 verdi, zero nuove AI; demo Alessio invariata. [Report](v5/agency-candidate-selection-20261031.md).
+
+Registro Gift offline aggiunto: metadati append-only, replay/CAS e risoluzione server delle selezioni,27/27mirati; persistenza/route/Home ancora assenti. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: porte interne transazionali per registro e preparazione aggiunte,12/12DBsu cluster nuovo arrestato. Nessuna route o copia Home attiva. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: anteprima controllata e harness sintetico separato,19/19UI,typecheck/lint/buildharness verdi;nessuna route o consegna. Copia indipendente Home descritta come proposta con gap espliciti. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: backend e harness condividono payload sintetico canonico,28/28mirati e20/20UIverdi;nessun endpoint o copia aggiunti. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: dettagliati confini di rilascio,minacce e recupero,solo proposta;nessun endpoint/copier nuovo. [Piano](v5/agency-gift-threats-and-recovery-20261031.md).
+
+Gift: corretto falso successo replay con ricevuta orfana;ora schema/unicità/record/versione/attore coerenti. Nessuna consegna o copia nuova. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: export standalone del solo harness sintetico,senza API/server;build e smokeDOMverdi,nessun browser/mobile nuovo. [Report](v5/agency-gift-contract-20261031.md).
+
+Gift: proposta selezione documenti ricevuti/prodotti e dati da conservare nella casa;solo specifica da validare,nessun nuovo default. [Policy](v5/agency-gift-document-policy-proposal-20261031.md).
+
+Gift v1 confermata:un account,link→registrazione/accesso→accettazione→casa,anno opzionale. Multiutenza rimandata.Guard/preview e fixture allineati,690backend/14DB/21UIverdi;invito/copia/entitlement ancora backlog.[Contratto](v5/agency-gift-home-copy-contract-20261031.md).
+
+Gift v1:primo dominio invito/claim/revoca,16nuovi casi e47mirati verdi,nessuna Home/premium/route o persistenza inviti attivi.[Report](v5/agency-gift-invitations-v1-20261031.md).
+
+Gift v1:ledger inviti persistente,auth DB,edit+export e controlli fonti/claim,47mirati/706ordinari/33DBverdi su nuovo cluster arrestato.Nessuna API,copia Home o benefit attivi.[Report](v5/agency-gift-invitation-persistence-20261031.md).
+
+Gift:flag annuale ora congela full-access v1 confermato,tutte le features proprietario per12mesi dall'accettazione.Free futuro non blocca la scelta;claim non attiva beneficio o pagamenti.[Contratto](v5/agency-gift-home-copy-contract-20261031.md).
+
+Gift:prerequisiti copia,conferma Home,ammissione verificata e provenienza Document/client;purge cancella la provenienza.742backend/39DB/1773frontendverdi,nessun copier/Home/entitlement ancora attivo.[Report](v5/agency-gift-copy-prerequisites-20261031.md).
+
+
+## 1 novembre2026 — Mappa digitale Agency/Gift/Home
+Ramo dedicato: scelta esplicita del piano revisionato nella Gift, copia indipendente con ambienti alla pubblicazione, pagina Home Mappa con posizioni persistenti sugli oggetti personali e correzione contorni con nuovi punti. Modifiche geometriche invalidano misure e richiedono riconferma pin. [Report, test e limiti](v5/gift-digital-plan-20261101.md); nessun merge/deploy o modifica demo Alessio.

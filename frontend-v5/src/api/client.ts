@@ -1,3 +1,4 @@
+import {HomeMapsApi} from '../home-maps/api';
 import type { ActivitiesPage, ActivityAction, ActivityFilters, CatalogFilters, CreateExpense, CreateObject, CreateRoom, G1ResourceType, ObjectRef, RoomFilters, UpdateObject, UpdateRoom, ExpenseAction, ExpenseFilters, UpdateExpense, CreateActivity, UpdateActivity, FollowUpActivity, Account, AnalysisJob, BinaryPayload, ConfirmationsInput, ManualConfirmationsInput, StartAnalysisInput, CreateHomeInput, DocumentDetail, DocumentSearchCapabilities, DocumentSearchFilters, DocumentsPage, Home, LoginInput, RegisterInput, SessionResponse, UploadDocumentInput } from './types';
 import type { ConfirmDraft, Provider, CreateExpense as EconomyCreateExpense, UpdateExpense as EconomyUpdateExpense } from './economyTypes';
 import { ApiTransport, type FetchLike } from './transport';
@@ -10,6 +11,7 @@ import { ObjectsApi } from './objects-api';
 import { ExpensesApi } from './expenses-api';
 import { EconomyApi } from './economy-api';
 import { FloorPlanApi } from './floor-plan-api';
+import { GiftApi } from '../agency-gift/gift-api';
 /** Public API façade. Every domain shares one authenticated transport. */
 export class ApiClient {
 private readonly transport: ApiTransport;
@@ -21,6 +23,8 @@ private readonly objectsApi: ObjectsApi;
 private readonly expensesApi: ExpensesApi;
 private readonly economyApi: EconomyApi;
 private readonly floorPlanApi: FloorPlanApi;
+readonly gift: GiftApi;
+readonly homeMaps:HomeMapsApi;
 constructor(opts: { fetch?: FetchLike; base?: string } = {}) {
 this.transport = new ApiTransport(opts);
 this.homesApi = new HomesApi(this.transport);
@@ -31,6 +35,8 @@ this.objectsApi = new ObjectsApi(this.transport);
 this.expensesApi = new ExpensesApi(this.transport);
 this.economyApi = new EconomyApi(this.transport);
 this.floorPlanApi = new FloorPlanApi(this.transport);
+this.gift = new GiftApi(this.transport);
+this.homeMaps = new HomeMapsApi(this.transport);
 }
 get currentCsrfToken() { return this.transport.currentCsrfToken; }
 forgetCsrfToken() { return this.transport.forgetCsrfToken(); }

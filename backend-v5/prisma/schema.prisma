@@ -12,6 +12,12 @@ enum HomeRole {
   viewer
 }
 model Account {
+  digitalPlans HomeDigitalPlan[]
+  giftAcceptanceReceipts AgencyGiftAcceptanceReceipt[]
+  giftBenefits AccountGiftBenefit[]
+  giftAcceptanceJobs AgencyGiftAcceptanceJob[]
+  issuedGiftInvitations AgencyGiftInvitation[] @relation("GiftIssuer")
+  claimedGiftInvitations AgencyGiftInvitation[] @relation("GiftClaimant")
   agencyMembers AgencyMember[]
   agencyGrants AgencyPracticeGrant[]
   agencyCreateRequests AgencyCreateRequest[]
@@ -73,6 +79,7 @@ model Account {
 }
 
 model Agency {
+  giftInvitations AgencyGiftInvitation[]
   id String @id @default(uuid())
   name String
   createdAt DateTime @default(now())
@@ -132,6 +139,8 @@ model AgencyMember {
 }
 
 model AgencyPractice {
+  giftAcceptanceJobs AgencyGiftAcceptanceJob[]
+  giftInvitations AgencyGiftInvitation[]
   id String @id @default(uuid())
   agencyId String
   label String
@@ -203,6 +212,7 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  digitalPlans HomeDigitalPlan[]
   trashRequests TrashRequest[]
   deletionRecords DeletionRecord[]
   historyEvents HomeHistoryEvent[]
@@ -351,6 +361,7 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  giftProvenance Json?
   onboardingComparisons ObjectOnboardingComparison[]
   onboardingDrafts ObjectOnboardingDraft[]
   onboardingJobs ObjectOnboardingJob[]
@@ -1389,4 +1400,131 @@ model DeletionRecord {
   home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
   @@unique([resourceKind, resourceId])
   @@index([fileRemovedAt, deletedAt])
+}
+
+// Internal Gift v1 ledger. No raw invitation secret or automatic Home entitlement.
+model AgencyGiftInvitation {
+  acceptanceJobs AgencyGiftAcceptanceJob[]
+  id String @id
+  agencyId String
+  practiceId String
+  issuerAccountId String
+  creationKey String
+  creationDigest String
+  tokenHash String @unique
+  version Int
+  state String
+  expiresAt DateTime
+  claimedAccountId String?
+  snapshot Json
+  createdAt DateTime
+  updatedAt DateTime @updatedAt
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  issuer Account @relation("GiftIssuer",fields:[issuerAccountId],references:[id],onDelete:Restrict)
+  claimant Account? @relation("GiftClaimant",fields:[claimedAccountId],references:[id],onDelete:Restrict)
+  @@unique([practiceId,issuerAccountId,creationKey])
+  @@index([agencyId,practiceId,state])
+  @@index([expiresAt,id])
+}
+
+// Internal durable reservation. Acceptance/publication is a separate worker increment.
+model AgencyGiftAcceptanceJob {
+  id String @id
+  practiceId String
+  invitationId String
+  accountId String
+  requestKey String
+  commandDigest String
+  invitationVersion Int
+  invitationSeal String
+  sourceFingerprint String
+  homeId String
+  homeInput Json?
+  manifest Json?
+  preparationDigest String
+  state String @default("queued")
+  version Int @default(1)
+  leaseEpoch Int @default(0)
+  leaseTokenHash String?
+  leaseUntil DateTime?
+  attempts Int @default(0)
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  invitation AgencyGiftInvitation @relation(fields:[invitationId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  items AgencyGiftAcceptanceItem[]
+  @@unique([accountId,invitationId,requestKey])
+  @@index([practiceId,state])
+  @@index([state,leaseUntil,id])
+}
+
+model AgencyGiftAcceptanceItem {
+  id String @id
+  jobId String
+  ordinal Int
+  sourceId String
+  sourceVersion Int
+  sourceSha256 String
+  documentId String @unique
+  documentVersionId String @unique
+  storedFileId String @unique
+  state String @default("pending")
+  storageKey String? @unique
+  control Json?
+  admittedEpoch Int?
+  job AgencyGiftAcceptanceJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
+  @@unique([jobId,ordinal])
+  @@unique([jobId,sourceId])
+}
+// Accepted owner receipt is independent of Agency/source and Home/document retention.
+model AgencyGiftAcceptanceReceipt {
+  id String @id
+  practiceId String @unique
+  invitationId String @unique
+  jobId String @unique
+  accountId String
+  requestKey String
+  commandDigest String
+  sourceFingerprint String
+  homeId String
+  acceptedAt DateTime
+  snapshot Json
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  benefit AccountGiftBenefit?
+  @@unique([accountId,invitationId,requestKey])
+}
+
+model AccountGiftBenefit {
+  id String @id
+  receiptId String @unique
+  accountId String
+  offerId String
+  offerVersion Int
+  startsAt DateTime
+  endsAt DateTime
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  receipt AgencyGiftAcceptanceReceipt @relation(fields:[receiptId],references:[id],onDelete:Restrict)
+  @@index([accountId,startsAt,endsAt])
+}
+model HomeDigitalPlan {
+ id String @id @default(uuid())
+ accountId String
+ homeId String
+ documentId String @unique
+ documentVersion Int
+ documentSha256 String
+ version Int @default(1)
+ geometryRevision Int @default(1)
+ received Json
+ layout Json
+ roomBindings Json
+ pins Json @default("[]")
+ createdAt DateTime @default(now())
+ updatedAt DateTime @default(now())
+ account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+ home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+ @@index([accountId,homeId])
 }

@@ -8,6 +8,7 @@ import { useLogout } from '../session/hooks';
 import { refreshSession, useApi, useSession } from '../session/session';
 import { clearPrivateCache } from '../session/queryClient';
 import styles from './pages.module.css';
+import {useGiftLinks} from '../agency-gift/GiftLinkProvider';
 const recoveryMessage = (error:unknown) => isApiError(error)&&error.code==='recovery_unavailable'?'Il recupero dell’accesso non è disponibile in questo momento. Riprova più tardi.':userMessage(error);
 
 export function RecoveryRequestPage() {
@@ -30,9 +31,10 @@ export function RecoveryRequestPage() {
 
 export function RecoveryLinkPage({verification=false}:{verification?:boolean}) {
   useDocumentTitle(verification?'Verifica email':'Scegli una nuova password');
+  const giftNext=useGiftLinks().next;
   const location=useLocation(),navigate=useNavigate(),api=useApi(),session=useSession(),logout=useLogout(),queryClient=useQueryClient();
   const [token,setToken]=useState(()=>new URLSearchParams(location.hash.slice(1)).get('token')??'');
-  const [password,setPassword]=useState(''),[visible,setVisible]=useState(false),[pending,setPending]=useState(false),[done,setDone]=useState(false),[error,setError]=useState(''),[invalid,setInvalid]=useState(!/^[A-Za-z0-9_-]{43}$/.test(token));
+  const [password,setPassword]=useState(''),[visible,setVisible]=useState(false),[pending,setPending]=useState(false),[done,setDone]=useState(false),[error,setError]=useState(''),[invalid,setInvalid]=useState(!/^[A-Za-z0-9_-]{43}$/.test(token)),[logoutRequiredFor,setLogoutRequiredFor]=useState<string|null>(null);
   const passwordRef=useRef<HTMLInputElement>(null);
   // Remove the secret from the URL/history before the page can be interacted with.
   // It remains only in this component's memory and is cleared after success/unmount.
@@ -40,12 +42,12 @@ export function RecoveryLinkPage({verification=false}:{verification?:boolean}) {
   const submit=async(event:FormEvent)=>{event.preventDefault();if(pending||!token)return;setError('');if(!verification&&([...password].length<12||[...password].length>128)){setError('Usa da 12 a 128 caratteri. Gli spazi contano.');passwordRef.current?.focus();return;}setPending(true);try{
     if(verification)await api.completeEmailVerification(token);else await api.completeRecovery(token,password);
     setToken('');setPassword('');clearPrivateCache(queryClient);api.forgetCsrfToken();await refreshSession(queryClient,api);setDone(true);
-  }catch(e){if(isApiError(e)&&e.code==='recovery_invalid')setInvalid(true);else setError(isApiError(e)&&e.kind==='service'?'Esito non confermato: l’operazione potrebbe essere riuscita. Riprova; se il link non è più valido, prova ad accedere con la nuova password.':recoveryMessage(e));}finally{setPending(false);}};
+  }catch(e){if(isApiError(e)&&e.code==='recovery_invalid')setInvalid(true);else if(isApiError(e)&&(e.code==='recovery_logout_required'||e.code==='logout_required'))setLogoutRequiredFor(account?.id??null);else setError(isApiError(e)&&e.kind==='service'?'Esito non confermato: l’operazione potrebbe essere riuscita. Riprova; se il link non è più valido, prova ad accedere con la nuova password.':recoveryMessage(e));}finally{setPending(false);}};
   const account=session.data?.account;
   return <PublicShell><div className={styles.authWrap}><h1>{done?(verification?'Email confermata':'Password aggiornata'):invalid?'Link non più valido':verification?'Conferma il tuo indirizzo email':'Scegli una nuova password'}</h1>
-    {done?<><p>{verification?'Il recapito è stato confermato. Il link non crea un nuovo accesso.':'La nuova password è attiva. Abbiamo chiuso l’accesso su tutti i dispositivi.'}</p><Link to={verification&&account?'/case':'/accedi'}>{verification&&account?'Vai alle tue case':'Vai all’accesso'}</Link></>:invalid?<><p>Il link è scaduto, è già stato usato oppure non è completo. Se hai già cambiato la password, prova ad accedere con quella nuova.</p><Link to={verification?'/case':'/recupera-accesso'}>{verification?'Accedi e chiedi un nuovo link':'Chiedi un nuovo link'}</Link></>:<>
+    {done?<><p>{verification?'Il recapito è stato confermato. Il link non crea un nuovo accesso.':'La nuova password è attiva. Abbiamo chiuso l’accesso su tutti i dispositivi.'}</p><Link to={verification&&account?'/case':'/accedi'}>{verification&&account?'Vai alle tue case':'Vai all’accesso'}</Link>{verification&&(giftNext?<p><Link className={ui.btn} to={giftNext}>Torna alla Gift</Link></p>:<p>Se stai ricevendo una Gift, torna alla scheda della consegna e premi “Ho già confermato l’email”, oppure riapri il link personale dell’agenzia.</p>)}</>:invalid?<><p>Il link è scaduto, è già stato usato oppure non è completo. Se hai già cambiato la password, prova ad accedere con quella nuova.</p><Link to={verification?'/case':'/recupera-accesso'}>{verification?'Accedi e chiedi un nuovo link':'Chiedi un nuovo link'}</Link></>:<>
       {error&&<Banner tone="error" role="alert" title="Operazione non completata"><p>{error}</p></Banner>}
-      {!session.data?(session.isError?<Banner tone="error" role="alert" title="Sessione non disponibile"><p>{userMessage(session.error)}</p><button className={ui.btn} onClick={()=>void session.refetch()}>Riprova</button></Banner>:<p>Controllo della sessione…</p>):account?<><p>Sei connesso come {account.name}. Per usare questo link, esci prima dall’account corrente. Il link non viene consumato.</p><button className={ui.btn} disabled={logout.isPending} onClick={()=>logout.mutate()}>Esci e continua</button>{logout.isError&&<p role="alert">{userMessage(logout.error)}</p>}<p><Link to="/case">Resta connesso</Link></p></>:<form className={styles.form} onSubmit={submit} noValidate>
+      {!session.data?(session.isError?<Banner tone="error" role="alert" title="Sessione non disponibile"><p>{userMessage(session.error)}</p><button className={ui.btn} onClick={()=>void session.refetch()}>Riprova</button></Banner>:<p>Controllo della sessione…</p>):account&&(!verification||logoutRequiredFor===account.id)?<><p>Sei connesso come {account.name}. Per usare questo link, esci prima dall’account corrente. Il link non viene consumato.</p><button className={ui.btn} disabled={logout.isPending} onClick={()=>logout.mutate()}>Esci e continua</button>{logout.isError&&<p role="alert">{userMessage(logout.error)}</p>}<p><Link to="/case">Resta connesso</Link></p></>:<form className={styles.form} onSubmit={submit} noValidate>
         {!verification&&<><label>Nuova password<input ref={passwordRef} name="password" type={visible?'text':'password'} autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} /></label><button type="button" className={ui.btn} aria-pressed={visible} onClick={()=>setVisible(v=>!v)}>{visible?'Nascondi':'Mostra'}</button><p>Da 12 a 128 caratteri. Gli spazi vengono conservati. Chiuderemo l’accesso su tutti i dispositivi.</p></>}
         <button className={cx(ui.btn,ui.primary)} disabled={pending}>{pending?'Conferma in corso…':verification?'Conferma email':'Salva nuova password'}</button>
       </form>}

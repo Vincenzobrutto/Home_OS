@@ -13,6 +13,19 @@ test('secondary geometry runner retains one exact owned test target, never the a
  assert.equal(r.status,0,r.stderr);
 });
 
+test('secondary wrapper refuses non-nominal suites before creating a cluster',()=>{
+ for(const suite of ['test','test:offline-db','test:agency-deed-records-db']){
+  const result=spawnSync(process.execPath,['test/offline-secondary.cjs','--suite',suite],{env:cleanEnvironment(process.env,'unit'),cwd:path.resolve(__dirname,'..'),encoding:'utf8',windowsHide:true,timeout:15000});
+  assert.notEqual(result.status,0);assert.match(result.stderr,/secondary_suite_forbidden/);
+ }
+ assert.deepEqual(suites['test:agency-gift-db'].files,['test/agency-gift.integration.test.cjs','test/agency-gift-invitations.integration.test.cjs','test/gift-provenance.integration.test.cjs','test/agency-gift-acceptance.integration.test.cjs','test/agency-gift-worker.integration.test.cjs','test/agency-gift-document-release.integration.test.cjs','test/agency-gift-http.integration.test.cjs','test/agency-gift-reissue.integration.test.cjs']);
+ assert.equal(suites['test:agency-gift-db'].database,true);assert.equal(suites['test:agency-gift-db'].api,false);
+ assert.deepEqual(suites['test:agency-gift-runner-db'],{database:true,api:false,files:['test/agency-gift-runner.integration.test.cjs'],apiFiles:[]});
+ assert.equal(suites['test:agency-gift-db'].files.includes('test/agency-gift-runner.integration.test.cjs'),false);
+ assert.equal(suites['test:offline-db'].files.includes('test/agency-gift-runner.integration.test.cjs'),false);
+ assert.deepEqual(suites['test:agency-gift-browser-trial'],{database:true,api:false,files:['test/agency-gift-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T07:00:00.000Z'});
+ for(const profile of ['test','test:offline-db','test:agency-gift-db','test:agency-gift-runner-db'])assert.equal(suites[profile].files.includes('test/agency-gift-browser-trial.integration.test.cjs'),false);
+});
 test('offline database accepts one explicit synthetic URL; real, remote, alternate and ambiguous targets fail before connection', () => {
  assertOfflineDatabase(DB_URL);
  for (const value of [undefined, '', 'postgresql://dimora_v5_app@127.0.0.1:55432/dimora_v5_product_dev', DB_URL.replace('127.0.0.1', 'localhost'), DB_URL.replace('127.0.0.1', 'db.example.test'), DB_URL + '?schema=public', DB_URL + '#fragment', DB_URL.replace('quality_test@', 'quality_test:secret@'), DB_URL.replace('55439', '55432'), DB_URL.replace('_test', '_campaign')]) assert.throws(() => assertOfflineDatabase(value), /offline_database_forbidden/);
@@ -105,4 +118,53 @@ test('Prisma native-engine constructors cannot bypass offline mode with an expli
  fs.writeFileSync(path.join(dir, 'offline-owner.json'), JSON.stringify({ directory: path.resolve(dir), token: 'owned', databaseUrl: DB_URL }));
  const result = child(code, cleanEnvironment(process.env, 'db', dir, 'owned'));
  assert.equal(result.status, 0, result.stderr);
+});
+
+test('digital map browser collaudo is dated nominal-only and never an ordinary/aggregate test',()=>{
+ assert.deepEqual(suites['test:home-map-browser-trial'],{database:true,api:false,files:['test/home-map-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T08:30:00.000Z'});
+ for(const name of ['test','test:offline-db','test:home-map-db','test:agency-gift-db'])assert.equal(suites[name].files.includes('test/home-map-browser-trial.integration.test.cjs'),false);
+});
+
+test('Ambienti drag suites remain exact nominal profiles with owned secondary isolation',()=>{
+ assert.deepEqual(suites['test:home-map-drag-db'],{database:true,api:false,files:['test/home-map.integration.test.cjs'],apiFiles:[]});
+ assert.deepEqual(suites['test:ambienti-map-browser-trial'],{database:true,api:false,files:['test/ambienti-map-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T09:00:00.000Z'});
+ for(const profile of ['test','test:offline-db','test:home-map-drag-db'])assert.equal(suites[profile].files.includes('test/ambienti-map-browser-trial.integration.test.cjs'),false);
+});
+
+test('Ambienti followup browser trial has its own fixed deadline and is never aggregated',()=>{
+ assert.deepEqual(suites['test:ambienti-map-followup-trial'],{database:true,api:false,files:['test/ambienti-map-followup-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T13:00:00.000Z'});
+ for(const name of ['test','test:offline-db','test:home-map-drag-db','test:ambienti-map-browser-trial'])assert.equal(suites[name].files.includes('test/ambienti-map-followup-trial.integration.test.cjs'),false);
+ const source=fs.readFileSync(path.join(__dirname,'ambienti-map-followup-trial.integration.test.cjs'),'utf8');assert.match(source,/PROFILE='test:ambienti-map-followup-trial',UNTIL='2026-11-01T13:00:00.000Z'/);
+});
+
+test('only the authorized dated followup receives enough time for 14:00 and never extends beyond its deadline grace',()=>{
+ const {commandDuration}=require('./offline.cjs'),now=Date.parse('2026-11-01T08:30:00.000Z'),profile=suites['test:ambienti-map-followup-trial'];
+ assert.equal(commandDuration('test:ambienti-map-followup-trial',profile,'tests',now),16230000);
+ assert.equal(commandDuration('other',profile,'tests',now),7200000);
+ assert.equal(commandDuration('test:ambienti-map-followup-trial',{interactiveUntil:'2026-11-02T13:00:00.000Z'},'tests',now),7200000);
+ assert.equal(commandDuration('test:ambienti-map-followup-trial',profile,'build',now),600000);
+ assert.equal(commandDuration('test:ambienti-map-followup-trial',profile,'tests',Date.parse('2026-11-01T12:59:00.000Z')),90000);
+ assert.equal(commandDuration('test:ambienti-map-followup-trial',profile,'tests',Date.parse('2026-11-01T13:01:00.000Z')),1000);
+});
+
+test('November 2 user trial is isolated, dated and cannot be aggregated or extend ordinary time limits',()=>{
+ const name='test:ambienti-user-trial-20261102',profile=suites[name];
+ assert.deepEqual(profile,{database:true,api:false,files:['test/ambienti-user-trial-20261102.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T00:30:00.000Z'});
+ for(const n of ['test','test:offline-db','test:home-map-drag-db'])assert.equal(suites[n].files.includes(profile.files[0]),false);
+ const source=fs.readFileSync(path.join(__dirname,'ambienti-user-trial-20261102.integration.test.cjs'),'utf8');assert.match(source,/PROFILE='test:ambienti-user-trial-20261102',UNTIL='2026-11-03T00:30:00.000Z'/);
+ const {commandDuration}=require('./offline.cjs');assert.equal(commandDuration(name,profile,'tests',Date.parse('2026-11-02T23:00:00.000Z')),5430000);assert.equal(commandDuration(name,profile,'tests',Date.parse('2026-11-02T20:00:00.000Z')),7200000);
+});
+
+test('simple Gift trial uses a new nominal deadline without joining aggregates or changing the two-hour cap',()=>{
+ const name='test:gift-simple-browser-20261103',profile=suites[name];assert.deepEqual(profile,{database:true,api:false,files:['test/gift-simple-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T01:00:00.000Z'});
+ for(const n of ['test','test:offline-db','test:agency-gift-db'])assert.equal(suites[n].files.includes(profile.files[0]),false);
+ const source=fs.readFileSync(path.join(__dirname,'gift-simple-browser-20261103.integration.test.cjs'),'utf8');assert.match(source,/PROFILE='test:gift-simple-browser-20261103',UNTIL='2026-11-03T01:00:00.000Z'/);
+ const {commandDuration}=require('./offline.cjs');assert.equal(commandDuration(name,profile,'tests',Date.parse('2026-11-02T23:30:00.000Z')),5430000);assert.equal(commandDuration(name,profile,'tests',Date.parse('2026-11-02T20:00:00.000Z')),7200000);
+});
+
+test('November 3 guided Gift trial has its own fixed deadline and cannot join ordinary suites',()=>{
+ const name='test:gift-simple-user-trial-20261103',profile=suites[name];assert.deepEqual(profile,{database:true,api:false,files:['test/gift-simple-user-trial-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T11:30:00.000Z'});
+ for(const n of ['test','test:offline-db','test:agency-gift-db'])assert.equal(suites[n].files.includes(profile.files[0]),false);
+ const source=fs.readFileSync(path.join(__dirname,'gift-simple-user-trial-20261103.integration.test.cjs'),'utf8');assert.match(source,/PROFILE='test:gift-simple-user-trial-20261103',UNTIL='2026-11-03T11:30:00.000Z'/);
+ const {commandDuration}=require('./offline.cjs');assert.equal(commandDuration(name,profile,'tests',Date.parse('2026-11-03T10:00:00.000Z')),5430000);assert.equal(commandDuration(name,profile,'tests',Date.parse('2026-11-03T07:00:00.000Z')),7200000);
 });

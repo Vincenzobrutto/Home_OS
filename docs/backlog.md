@@ -1,4 +1,31 @@
+## 3 novembre — seguito Gift dalla pratica
+
+Consegna semplice implementata e collaudata; nessun ulteriore step tecnico da chiedere all'agente per i documenti finali. Resta da valutare il mapping della classificazione dei file Gift all'archivio proprietario: nel collaudo i3file ricevuti sono corretti, ma ancora Da classificare/Da compilare. Non inferire automaticamente contenuti/certificazioni per nascondere il gap. Integrazione stackPR74/73/72 e invio email prodotto separati, non autorizzati dal presente lotto. [Esito](v5/gift-simple-delivery-20261103.md).
+
+## 1novembre — chiusura del seguito Ambienti/mappa
+Ancore indicative adattive e più efficienti, pin confermati preservati; lifecycle HTTP17/17, componenti42/42, guardie18/18 e browser sul seguito desktop/375verdi. Nuovo collaudo sinteticoVeuBZj attivo fino14:00Rome, verifica arresto finale pendente. Restano leggibilità ad altissima densità (90icone/vano), touch fisico e cataloghi grandi; non nuove funzioni da implementare senza priorità concordata. [Esito e limiti precisi](v5/ambienti-map-drag-20261101.md). Nessun merge/deploy o modifica demo Alessio.
+
+## 1 novembre2026 — Ambienti: schede e planimetria collegate
+
+Implementata e verificata sul lotto dedicato la vista Planimetria dentro Ambienti: segnaposti indicativi per oggetti già associati, drag che salva coordinate e aggiorna atomicamente la stanza, normale scheda e conteggi coerenti. Backend878/DB13/frontend mirato78/guardie16 e browser desktop/375 verdi; nessun nuovo schema in questo lotto. Dipende dalle PR73/72 non ancora integrate. Restano prove su mappe dense/cataloghi grandi e touch hardware, multipiano e computo Home fuori scope. [Report e limiti](v5/ambienti-map-drag-20261101.md). Nessuna nuova AI, demo Alessio invariata, nessun merge/deploy.
+
+## Gift v1 — collaudo del collegamento all’app, 1 novembre2026
+
+UI Agency/destinatario, normali accesso/registrazione/verifica email, provenienza nei Documenti, anno account, rigenerazione atomica e throttle sono implementati e collaudati in locale. Backend863/DBHTTP127/poller6verdi su fixture e cluster nuovi arrestati; statici/build app verdi. Frontend1924/1924completo e browser desktop/375px verificati su due ambienti sintetici nuovi. Continuità del proprietario verificata anche con il normale upload HTTP. [Stato preciso](v5/agency-gift-app-20261101.md). Le tappe sotto sono cronologia e non nuovi blocchi. Modello incarico e producer PDF automatici separati, attivazione ambiente prodotto/merge/deploy non autorizzati; limiti free e multiutenza rimandati.
+
 ## 31 ottobre 2026 — dopo integrazione del codice Agenzie
+
+## Gift v1 — prossima UI dopo le API verificate
+
+[API e polling verificati](v5/agency-gift-api-20261031.md). Rilascio documenti e producer manuale sono conclusi; client di protocollo e memoria token pronti. Collegare façade, provider sopra il router per account, viste Agency/proprietario, ritorno login/register e notice dell'anno;poi browser desktop/375px con sola fixture. Completare reissue atomico/rate limit e relative eccezioni. Non allentare verifica email o inventare metadati/modelli/fallback per arrivare alla consegna. Incoming Gift richiede configurazione esplicita; diritti e Home già accettati restano indipendenti.
+
+## Gift v1 — collegamento applicativo dopo il copier
+
+[Copier interno verificato](v5/agency-gift-copier-20261031.md): il precedente task worker/ricevuta/grant è concluso nel codice interno. Restano API con sessione/Origin/CSRF e filtro errori, poller limitato, reissue atomico, ripresa del job, UI con token solo in memoria e normale verifica email, producer metadati finali autorizzato, QA HTTP/browser375px. Nessun nuovo limite free o catalogo commerciale blocca il diritto annuale. Non attivare fallback simulati nell'app.
+
+## Gift v1 — prossimo incremento dopo la prenotazione
+
+[Prenotazione interna verificata](v5/agency-gift-acceptance-reservation-20261031.md). Restano worker lease/fencing,staging con StoredFile protetto dal cleanup,pubblicazione atomica Home/documenti/ricevuta/anno opzionale,replay indipendente da Agency e poi route/UI normali.Mantenere un account e full-access per12mesi dall'accettazione,senza attendere i futuri limiti free.Nessuna Home/grant/beneficio creati da begin/claim;accepted ancora fail-closed.
 
 Integrazione tecnica e attivazione sono separate: nessuna migrazione del DB prodotto, configurazione storage/provider/budget o riavvio autorizzati da questo lotto. Dopo le verifiche leggere [report](v5/agency-consolidation-20261031.md) per hash e limiti. Restano: validazione su campione indipendente, ambienti comunicanti/coverage su contrasto, revisione delle superfici da parte dell'agente, orchestrazione AI atti, modello agenzia e mapping approvati per vera bozza. Catalogo comune del31ottobre negli outputs è specifica, non170campi implementati. I futuri incrementi partono dal consolidamento aggiornato e preservano la demo Alessio.
 ## 25 ottobre 2026 — Bollette fase 1: copertura residua
@@ -1060,3 +1087,33 @@ A: una fascia presumibilmente muraria proposta come area e due conflitti con geo
 
 ### Agenzie — residui dopo selezione candidate (31/10)
 Implementato scarto selettivo pre-adozione e indizio fascia muraria; restano ricerca di copertura sulle proposte di contrasto, separazione di ambienti comunicanti e valutazione di eliminazione esplicita dei vani già adottati. Nessuna promessa di completezza. [Report](v5/agency-candidate-selection-20261031.md).
+
+## Gift → Home — prosecuzione del lotto31ottobre2026
+
+Pacchetto/registro/adapter interno e anteprima isolata implementati. Prima di invio/copier:validare autorità di presa in carico e dati visibili senza account;poi ledger delivery/recipient,staging byte recuperabile,receipt/concorrenza e nuova UI/APIcollegata. Nessun grant inverso Agency sulle aggiunte del proprietario. [Contratto proposto e prove ancora da eseguire](v5/agency-gift-home-copy-contract-20261031.md); [stato verificato](v5/agency-gift-contract-20261031.md). Non usare sharing C1a come sostituto di Gift accettata indipendente.
+
+Gift: ticket GIFT-01..06con dipendenze e prove future nel [modello minacce/recupero](v5/agency-gift-threats-and-recovery-20261031.md). Export corrente non autorizza automaticamente rilascio a terzi;canDeliverrestafalse.
+
+Gift/GIFT-01: validare la [policy documenti proposta](v5/agency-gift-document-policy-proposal-20261031.md),compresi derivati da fonti escluse e distinzione documento ricevuto/valore adottato nella scheda.17tipi e5domande pronti,nessuna policy attivata.
+
+## Gift v1 — piano aggiornato dopo decisione di Vincenzo
+
+Ordine di implementazione:
+1. Invito personale dopo stipula:manifesto congelato,un destinatario,link revocabile/scadibile e associazione sicura all'account normale;registrazione o login esistente.Account errato/retry/revoca testati.
+2. Accettazione e copia indipendente nella Home:ricevuta idempotente,byte verificati,nessun duplicato né grant Agency inverso;non usare C1a come copia.
+3. Beneficio annuale opzionale:scelta agenzia nel manifesto,un anno dall'accettazione,diritto persistito una sola volta;Gift senza premium funzionante.Costo/features/rinnovo/conflitto con piano esistente da definire prima di attivare il servizio.
+4. Collegamento UI e collaudo nuovo cliente/cliente esistente,revoca,timeout e scadenza benefit;documenti restano all'utente.
+
+Multiutenza e più intestatari FUORI dalla v1,compresi i precedenti ticket/casi concorrenti fra destinatari distinti.Il guard del pacchetto/anteprima ora deve accettare un solo riferimento.[Contratto corrente](v5/agency-gift-home-copy-contract-20261031.md).Nessun link reale inviato o addebito attivato.
+
+Gift v1,prossimo:ledger inviti persistito con idempotenza creazione,riemissione dopo risposta persa senza segreto salvato in chiaro,adapter auth/fonte corrente e testDBisolati.Il dominio claim non equivale ad accettazione.[Stato](v5/agency-gift-invitations-v1-20261031.md).
+
+Gift:ledger inviti completato come porta interna;prossimo copier con nome/indirizzo Home approvati e provenienza Gift esplicita (Documentoggi manual_upload),receipt recuperabile e poi API/UI.Riemissione token dopo risposta persa da collegare;offerta premium ancora indisponibile.[Stato](v5/agency-gift-invitation-persistence-20261031.md).
+
+Gift,nuova decisione Vincenzo:beneficio flag=true è full-access per12mesi dall’accettazione,free futuro da definire.Non attenderecatalogofeaturespercongelarel’offerta;implementare entitlement con offerta dimora-full-access-v1.Costi/rinnovo/accountgiàabbonato non autorizzano sovrascritture o addebiti impliciti.
+
+Gift:prerequisiti copia verificati;prossimo job/staging e commit atomico Home/doc/receipt,coordinato con cleanup e purge.Solo dopo attivazione anno/APIUI.[Stato](v5/agency-gift-copy-prerequisites-20261031.md).
+
+
+## Residui del collegamento mappa Gift (1 novembre2026)
+Non bloccano il percorso sintetico verificato: multi-pagina/multi-mappa e riconciliazione con vani preesistenti; nuova calibrazione e computo commerciale editabile Home; paging/batch dei cataloghi grandi; affinamento stroke/etichette e interazione touch sulle piante dense. Analisi AI reale richiede consenso/budget specifici. Modello incarico approvato e producer documentali restano assenti. [Perimetro consegnato](v5/gift-digital-plan-20261101.md).

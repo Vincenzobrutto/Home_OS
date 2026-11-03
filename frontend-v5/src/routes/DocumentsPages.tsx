@@ -1,3 +1,4 @@
+import {GiftDocumentBadge} from '../agency-gift/GiftDocumentOrigin';
 import {ArchiveFamilies} from '../documents/ArchiveFamilies';
 import {canonicalFamily,familyLabel} from '../documents/families';
 import { DocumentEditorWorkspace } from '../documents/DocumentEditorWorkspace';
@@ -596,7 +597,7 @@ function DocumentRow(props: {
         >
           {title}
         </Link>
-        <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>{props.showTypeCorrection&&<ChangeDocumentType homeId={props.homeId} document={doc} />}{props.archiveFamily&&!props.inSelectedGroup&&<span className={docs.rowFamily}>{familyLabel(doc.family)}</span>}{props.canChangeFamily&&doc.organization&&<ChangeHouseFamily archive={props.archiveFamily} key={doc.id+':'+doc.organization.version} homeId={props.homeId} document={doc} onChanged={props.onFamilyChanged}/>}</div>
+        <div className={docs.rowInfo}><span className={docs.rowType}>{types.join(' · ')||'Tipo non indicato'}</span><Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag><GiftDocumentBadge source={doc.source}/>{props.showTypeCorrection&&<ChangeDocumentType homeId={props.homeId} document={doc} />}{props.archiveFamily&&!props.inSelectedGroup&&<span className={docs.rowFamily}>{familyLabel(doc.family)}</span>}{props.canChangeFamily&&doc.organization&&<ChangeHouseFamily archive={props.archiveFamily} key={doc.id+':'+doc.organization.version} homeId={props.homeId} document={doc} onChanged={props.onFamilyChanged}/>}</div>
         <DocumentRowContext doc={doc} homeId={props.homeId}/>
         {doc.permissions.includes('read') && (
           <DocumentWorkspaceActions homeId={props.homeId} document={doc}/>
@@ -606,7 +607,7 @@ function DocumentRow(props: {
           {title!==(doc.organization?.title.trim()||doc.name.trim())&&<div><dt>Titolo salvato</dt><dd>{doc.organization?.title||doc.name}</dd><dd>Il nome visualizzato usa i dati confermati e gli oggetti collegati. La ricerca continua a usare titolo salvato e nome originale.</dd></div>}
           <div><dt>Formato</dt><dd>{formatLabel(doc.mimeType)}</dd></div>
           <div><dt>Dimensione</dt><dd>{formatBytes(doc.byteSize)}</dd></div>
-          <div><dt>Caricato il</dt><dd>{formatDate(doc.createdAt)}</dd></div>
+          <div><dt>{doc.source==='agency_gift'?'Ricevuto in Dimora il':'Caricato il'}</dt><dd>{formatDate(doc.createdAt)}</dd></div>
         </dl></details>
       </div>
     </li>

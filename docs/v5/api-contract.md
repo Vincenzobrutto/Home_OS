@@ -173,3 +173,28 @@ Nelle stesse risposte plans, coverage opzionale contiene scope closed_components
 
 ### Scarto selettivo candidate di copertura (31/10)
 apply_surface_proposal accetta excludedCandidateIds opzionale, massimo12 ID unici appartenenti a surfaceProposal.coverage.candidateIds e assenti dai vani canonici. Nessuna coordinata client. coverage può contenere possibleWallIds firmati; coverage.candidates espone shapeHint wall_band e shapeEvidence opzionali. La risposta applicata conserva acceptedExcludedCandidateIds e la proposta firmata integrale; scelte e motivo sono tracciati. Campo omesso mantiene il comportamento precedente. Nessuna nuova route/schema. [Report](agency-candidate-selection-20261031.md).
+
+## Gift v1 (1 novembre2026)
+
+Nuovi endpoint e DTO nel [contratto Gift](agency-gift-api-20261031.md). Token solo nel corpo dei POST; Origin/CSRF anche per landing anonima, nessuna query extra. Claim/inizio richiedono account corrispondente con email verificata dal DB anche per account legacy; non creano Home. Accettazione202 e polling autenticano la stessa sessione. Ricevuta già accettata e beneficio si leggono senza token/Agency e non ricreano originali eliminati. Il frontend non conserva token in URL query, browser storage o cache Query. Schermate Gift ancora da collegare nel checkpoint API.
+### Gift — rigenerazione e throttle (1 novembre2026)
+
+`POST /agencies/:agencyId/practices/:practiceId/gift-invitations/:id/reissue` con `Idempotency-Key` e `{expectedRevision,expectedVersion}` sostituisce atomicamente il link, mantenendo manifest/destinatario/offerta e rifiutando accettazioni prenotate/accettate. Replay con secret:null; nuovo segreto solo al primo commit, nuova scadenza7giorni. Le API Gift applicano429persistente perIP/account dopo l’autenticazione/CSRF; non è un limite commerciale. [Contratto, UI e prove](agency-gift-app-20261101.md).
+
+
+## Mappe digitali ricevute con Gift (1 novembre2026)
+Rilascio Gift: campo opzionale `digitalPlan:{planId,expectedPlanVersion,reviewed:true}`, soltanto riferimento/dichiarazione; DTO esatto, geometrie client rifiutate. Listing documenti aggiunge opzionalmente `digitalPlans` (ID/versione/revisione/conteggio/pending); descriptor e preview espongono solo sommario della mappa inclusa. [Contratto e prove](gift-digital-plan-20261101.md).
+
+API Home normali sotto /api/v5, guard sessione/Origin/CSRF/membership e prova fonte:
+- GET /homes/:homeId/digital-plans: elenco mappe leggibili dell’account; nessuna dipendenza dall’Agency o anno.
+- GET /homes/:homeId/digital-plans/:id: documento/qualifiche, geometrie, mapping ambienti, oggetti privati autorizzati, pin e needsReview.
+- POST /homes/:homeId/digital-plans/:id/pins: Idempotency-Key; expectedVersion, objectId, regionId, x, y, expectedPositionVersion. Coordinate raster pagina intera, origine alto sinistra. Aggiornamento atomico pin + collocazione canonica nel singolo ambiente; punto strettamente dentro il vano e fuori dai vuoti.
+- POST /homes/:homeId/digital-plans/:id/geometry: Idempotency-Key; expectedVersion, regionId, geometry:{points,holes}. Nessun overlap; nuova revisione, calibrazione/perimetro operativo invalidati, pin non spostati e da riconfermare.
+Query extra e body extra rifiutati;403 fonte/ambito non autorizzato,409 revisioni o chiave concorrenti,422 geometria/valori non validi. Nessun endpoint importa snapshot privilegiati o attiva AI.
+
+### Ambienti — associazioni canoniche sulla mappa (1 novembre2026)
+GET /homes/:homeId/digital-plans/:id aggiunge objects[].roomIds: array delle associazioni canoniche autorizzate, insieme a positionVersion. Una lettura non crea pin fisici. Il frontend dispone provvisoriamente gli oggetti dentro i vani associati con indicazione esplicita; senza stanza non la indovina. Il POST pins esistente rimane identico e sostituisce le precedenti associazioni con il solo vano scelto, atomicamente alle coordinate e con CAS/idempotenza. Nessun endpoint o schema nuovo. Client precedente compatibile; client nuovo senza roomIds può mostrare i pin espliciti ma non inventa le associazioni. [Report](ambienti-map-drag-20261101.md).
+
+## Gift — orchestrazione frontend della consegna semplice, 3 novembre 2026
+
+Nessun nuovo endpoint, DTO o schema: la CTA della pratica usa le API Gift già documentate per lettura, rilascio dei soli file selezionati mancanti e creazione dell'invito. Il click Crea link Gift autorizza la consegna dopo la stipula dei finali selezionati; le conferme del contratto esistente sono trasmesse in quell'azione, senza un secondo editor UI. Descrittori e caveat già presenti non vengono riscritti. Sessione/Origin/CSRF, membership, revisioni e fonte/versione/SHA restano verificati dal server. Nuove selezioni mappa vincolate a id/versione canonici, nessuna adozione di proposte. Gestione incerti e limiti nel [report](gift-simple-delivery-20261103.md).

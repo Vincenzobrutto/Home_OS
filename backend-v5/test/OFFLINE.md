@@ -60,3 +60,19 @@ Le guardie coprono i trasporti Node e i client Prisma delle suite registrate. Il
 ## Calibrazione planimetrie da foglio presunto
 
 Il profilo nominale npm run test:agency-paper-db, con gli stessi argomenti obbligatori --pg-bin e --scratch-root, crea un cluster nuovo e riprova HTTP A4, snapshot e worker. Il file HTTP è incluso nell'aggregato DB. test:agency-paper-trial è un collaudo browser datato separato dagli aggregati, provider esclusivamente sintetico e scadenza fissa, non un server prodotto o un test AI pagato. [Esito e limiti](../../docs/v5/agency-paper-browser-validation-20261030.md).
+
+## Gift Agenzie — collaudo interno su cluster nuovo
+
+Il profilo nominale `test:agency-gift-db` verifica il registro metadati/preparazione nel database temporaneo;non consegna Gift. Si può avviare con `node test/offline-secondary.cjs --suite test:agency-gift-db --pg-bin <percorso> --scratch-root <percorso>`. Il secondario usa esclusivamente loopback55440 e accetta solo questo profilo e `test:agency-http-db`;rifiuta un target occupato,non riusa o arresta database esistenti. Ownership/network guard e arresto del cluster creato rimangono obbligatori. È incluso anche in `test:offline-db` sul target ordinario di quel runner.
+
+Il profilo Gift ora include anche agency-gift-invitations.integration.test.cjs:ledger/claim/revoca con identità DB e sorgenti correnti. Rimane senza API e crea sempre un cluster nuovo protetto;non verifica ancora copia Home o entitlement.
+
+Gift:profilo DB include ora gift-provenance.integration.test.cjs con metadati e purge reali su fixture;unit includono acceptance-command/file-admission/provenance.Scanner e storage dei nuovi unit sono stub dichiarati,non controlli antivirus reali o trasferimenti Home.
+
+Gift:profilo DB include ora agency-gift-acceptance.integration.test.cjs con prenotazione interna,non copia;unit include agency-gift-benefit.test.cjs per anniversario UTC senza attivazione.
+
+Gift:il profilo DB include ora agency-gift-worker.integration.test.cjs (copie filesystem sintetiche e scanner stub dichiarato);unit includono receipt e benefits-store. Nessun poller/endpoint o AV reale viene avviato da questa suite.
+
+## Gift — API e poller in cluster separati
+
+`test:agency-gift-db` comprende release/HTTP e copier con poller disattivato nel collaudo. `test:agency-gift-runner-db` è nominale e richiede un cluster nuovo vuoto:non è incluso nell'aggregato DB né nel gruppo Gift,per evitare che il worker avvii code create da altri test con vault differenti. Guardie/ownership/rete rimangono invariate. Entrambi possono usare `node test/offline-secondary.cjs --suite <nome_esatto> --pg-bin <binari> --scratch-root <cartella>` sul solo target secondario55440;sono rifiutati nomi arbitrari o DB esistenti. Il profilo poller verifica avvio/riscoperta e una nuova app account-only senza provider di storage;scanner sempre stub dichiarato,nessuna AI/email/AV reale.

@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { lstat, mkdir, readFile, readdir, realpath, writeFile, link, unlink } from 'node:fs/promises';
-import { isAbsolute, join, resolve } from 'node:path';
+import { isAbsolute, join, resolve, relative, sep } from 'node:path';
 import { PracticeError } from './domain';
 
 const MARKER = '.dimora-agency-vault-v1';
@@ -34,6 +34,15 @@ export class AgencyFileVault {
     const marker = join(root, MARKER);
     if ((await lstat(marker)).isSymbolicLink() || await readFile(marker, 'utf8') !== OWNER) throw new Error('agency_storage_root_unowned');
     return new AgencyFileVault(root);
+  }
+  /** A copied Home must survive removal of the Agency vault; shared/nested roots are forbidden. */
+  async assertGiftDestination(destinationRoot:string){
+    if(typeof destinationRoot!=='string'||!isAbsolute(destinationRoot))throw new Error('agency_gift_storage_invalid');
+    const target=resolve(destinationRoot);await mkdir(target,{recursive:true,mode:0o700});
+    const source=resolve(await realpath(this.root)),destination=resolve(await realpath(target));
+    if((await lstat(this.root)).isSymbolicLink()||(await lstat(target)).isSymbolicLink()||source.toLowerCase()!==this.root.toLowerCase()||destination.toLowerCase()!==target.toLowerCase())throw new Error('agency_gift_storage_invalid');
+    const within=(parent:string,child:string)=>{const r=relative(parent.toLowerCase(),child.toLowerCase());return r===''||r!=='..'&&!r.startsWith('..'+sep)&&!isAbsolute(r);};
+    if(within(source,destination)||within(destination,source))throw new Error('agency_gift_storage_invalid');
   }
   private async checkedPath(hash: string) {
     if (!/^[a-f0-9]{64}$/u.test(hash)) throw new PracticeError('invalid_input');

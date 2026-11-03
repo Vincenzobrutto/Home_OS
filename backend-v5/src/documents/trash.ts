@@ -194,7 +194,7 @@ export async function purgeDocument(tx: Tx, h: string, id: string, reason: Purge
   }
   const storageKey = doc.original?.file.storageKey ?? null;
   if (doc.original) { await tx.documentVersion.delete({ where: { documentId: id } }); await tx.storedFile.delete({ where: { id: doc.original.fileId } }); }
-  await tx.document.update({ where: { id }, data: { name: '', purgedAt: now, lifecycleVersion: { increment: 1 } } });
+  await tx.document.update({ where: { id }, data: { name: '', giftProvenance: Prisma.DbNull, purgedAt: now, lifecycleVersion: { increment: 1 } } });
   await tx.deletionRecord.create({ data: { homeId: h, resourceKind: 'document', resourceId: id, reason, storageKey, deletedAt: now, fileRemovedAt: storageKey ? null : now } });
   return { storageKey };
 }

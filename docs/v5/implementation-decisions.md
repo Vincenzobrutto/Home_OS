@@ -224,3 +224,57 @@ Con modello non disponibile la nuova vista sceglie solo fatti confermati e mostr
 ## Agenzie — autorizzazione analisi atti separata dalle planimetrie
 
 Contratto futuro DEED_EXTRACT con offerta/consenso legati a fonte/versione/SHA/pagine/finalità e ledger durevole. Count e dispatch richiedono consenso, incerto non libera cap o autorizza retry. Stage resta server-only; costo conservato anche dopo scarto/revoca. È una specifica, non un provider/job attivo. [Contratto](agency-deed-orchestration-contract-v1.md).
+
+## Agenzie — metadati Gift con provenienza dichiarata e registro server
+
+La selezione del client non può attestare produttore, finalità, stato finale o firma. Il producer server registra descrittori versionati con attribuzione e controlli sulla fonte; l'adapter prepara dalle versioni correnti del registro. Tale registrazione non certifica la verità del metadato o la firma del documento. Hash canonico non equivale a firma o idempotenza durevole di consegna. Incremento attuale puro: adapter DB, route e indipendenza della copia Home ancora da realizzare. [Contratto e verifiche](agency-gift-contract-20261031.md).
+
+## Agenzie — registro Gift nello snapshot della pratica
+
+Il primo adapter conserva metadati/storico/ricevute nello snapshotVersion1 della pratica e nella stessa transazione CAS del fascicolo;nessuna tabella o migrazione aggiuntiva per questo incremento. Le letture precedenti senza attributi Gift restano valide. Il producer interno deve essere collegato in seguito:non si espone un endpoint che accetta descrittori arbitrari. La ricevuta persistita riguarda la registrazione metadati,non consegna/accettazione Gift. Una futura copia Home richiede una ricevuta e un'autorizzazione proprie. [Evidenze](agency-gift-contract-20261031.md).
+
+## Agenzie — anteprima Gift separata dalla presa in carico
+
+Il componente iniziale è controllato dal contenitore e non ha trasporto/delivery propri. Le fixture restano nel harness esplicito,mai fallback in app. Scope/revisione/accesso non coerenti nascondono subito i dati;la futura sessione/route deve ricontrollare l'autorità server. La copia indipendente verso Home resta un contratto proposto finché autorità,ledger,byte e receipt non siano implementati. [Contratto](agency-gift-home-copy-contract-20261031.md).
+
+## Agenzie — replay del registro Gift richiede il record originario
+
+Una ricevuta di registrazione metadati non basta senza il record cui si riferisce. Replay verifica struttura,unicità account/key,versione/revisione,attore e descrittore canonico;una vecchia versione può essere riconosciuta senza riscrivere la versione attuale. Incoerenza persistita viene rifiutata e non riparata automaticamente. Non è una ricevuta di consegna né una firma. [Riproduzione e prove](agency-gift-contract-20261031.md).
+
+## Gift v1 — decisione del committente: un account e anno opzionale
+
+Confermato da Vincenzo in chat il31ottobre2026:alla stipula l'agente seleziona documenti e opzionalmente un anno a pagamento;condivide un link personale.Il nuovo proprietario si registra o accede all'account esistente,accetta e usa Dimora come normale utente con la casa e i documenti ricevuti.L'anno opzionale decorre dall'accettazione;alla scadenza casa/documenti restano.Multiutenza,cointestatari e inviti aggiuntivi rimandati:un solo account destinatario nella v1.Nessun accesso Agency implicito alle aggiunte del cliente.
+
+Decisione di prodotto confermata,non flusso già implementato.Invito/copia/entitlement restano da sviluppare.Costo agenzia,features avanzate,rinnovo e account già premium da definire.Il contratto aggiornato supera le precedenti ipotesi multi-destinatario.[Gift v1](agency-gift-home-copy-contract-20261031.md).
+
+## Gift v1 — claim distinto da accettazione e beneficio
+
+Il dominio invito associa un account verificato singolo,ma non crea Home,membership,copia o diritto premium. Landing anonima non espone documenti/email/Home. Segreto hashato;manifesto e scelta beneficio congelati. Il resolver account e fingerprint fonti sono porte server,mai campi autorevoli del browser. sourceFingerprint non include la revisione generale della pratica per evitare auto-invalidazione al salvataggio dell'invito. Persistenza/ledger inviti ancora da implementare.[Primo incremento](agency-gift-invitations-v1-20261031.md).
+
+## Gift v1 — persistenza e permessi delle mutazioni invito
+
+Creazione/revoca richiedono edit+export;landing/claim di un invito esistente ricontrollano export dell'emittente e fonti correnti. Account verificato letto dal DB,sotto lock;nessuna prova dal client. Ledger relazionale separato,snapshot confrontato alle colonne e digest comando ricostruito dal manifesto. Segreto solo nel primo esito dopo commit,mai nel DB o nel replay. Dati dichiarati di stipula/rilascio attribuiti e conservati. Riemissione esplicita e copier restano futuri.[Report](agency-gift-invitation-persistence-20261031.md).
+
+## Gift v1 — flag annuale full-access, decisione confermata
+
+Vincenzo conferma:per ora il flag dell'agenzia offre un anno con tutte le funzionalità dell'account proprietario;limitazioni free da decidere dopo.Il flag opzionale è indipendente dalla consegna documenti.Offerta interna dimora-full-access-v1/versione1,12mesi dall'accettazione.Invito/claim la congelano senza attivarla.Rimuove il precedente blocco di registrazione per catalogo features non definito.Prezzi/rinnovo/account già abbonato restano policy successive,nessun addebito attivato.
+
+## Gift v1 — conferma Home,ammissione e provenienza
+
+Il proprietario conferma esplicitamente nome/indirizzo;il server sceglie HomeId/account/beneficio. Nuovo file indipendente passa da writeVerified,non dalla sola firma AgencyVault. Staging va referenziato prima della pubblicazione;errori sconosciuti non espongono diagnostica. Document.giftProvenance esplicita origine/metodo/qualifica,con SHA coerente e versione Agency separata;nessun potere aggiuntivo. Soft trash conserva,purge definitivo cancella. Job/copia/receipt restano da implementare.[Report](agency-gift-copy-prerequisites-20261031.md).
+
+## Gift v1 — prenotazione e anniversario UTC,31 ottobre2026
+
+Scelta tecnica:prenotazione durevole per pratica prima di qualsiasi copia,con ID server e nessuna Home parziale;job e manifesto potranno essere ripuliti dopo la futura ricevuta per non duplicare i metadati eliminati dal proprietario.Get espone solo progresso all'account associato,senza dipendere dall'export Agency per questa vista minima.Claim/begin non equivalgono ad accettazione.
+
+Anno completo approvato dal committente:12mesi di calendario UTC dall'accettazione,29febbraio→28febbraio allo stesso orario,intervallo[inizio,fine).L'helper è verificato,ma attivazione/persistenza del diritto restano nel prossimo copier.Nessun rinnovo,pagamento o mutazione di abbonamenti già presenti.[Report](agency-gift-acceptance-reservation-20261031.md).
+## Gift v1 — accettazione indipendente e diritto sull'account, 31 ottobre2026
+
+Il commit di pubblicazione comprende Home, documenti, ricevuta e anno opzionale; il claim o la prenotazione non attivano nulla. La ricevuta è letta prima di invito/token/Agency e non richiede che esistano ancora i singoli documenti: il purge resta definitivo. La vista della ricevuta richiede l'account destinatario e accesso corrente alla Home; il diritto annuale è invece dell'account e non dipende dalla successiva membership Home o dai permessi Agency. Questo non concede accessi ai dati e non definisce il piano free.
+
+Staging e pubblicazione usano storage indipendenti e IO/scanner fuori SQL. Fencing, riserva StoredFile e lettura della ricevuta gestiscono processi concorrenti e commit dall'esito perso senza cancellare copie già pubblicate. Backend verificato con fixture; API/poller/UI ancora assenti. [Report](agency-gift-copier-20261031.md).
+## Gift v1 — rilascio esplicito e modulo letture indipendente,1 novembre2026
+
+L'agente può rendere eleggibile un file già caricato con conferme esplicite, revisione e prova fonte correnti. Il server deriva scope/attore/versione/autore non verificato o produzione dichiarata; sul medesimo originale conserva metadati e qualifiche del producer. Nessun campo client può attestare autore/firma/superficie. Questo rende consegnabili documenti ricevuti senza inventare un modello incarico.
+
+Ingresso nuove Gift e poller sono abilitati soltanto da configurazione esplicita; il modulo account di letture/ripresa/beneficio non dipende da quella configurazione o dal vault Agency. Le nuove API si appoggiano alla sessione normale. La verifica email frontend non presume un account diverso dal token: invia e rispetta l'esito server; reset e prove backend invariati. [Contratto](agency-gift-api-20261031.md).

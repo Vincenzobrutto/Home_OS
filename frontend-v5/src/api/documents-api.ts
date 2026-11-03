@@ -1,3 +1,4 @@
+import {validateGiftDocumentWire} from './gift-provenance';
 import { serviceError } from './errors';
 import type { BinaryPayload, DocumentDetail, DocumentSearchCapabilities, DocumentSearchFilters, DocumentsPage, UploadDocumentInput } from './types';
 import { homePath } from './paths';
@@ -31,7 +32,7 @@ async listDocuments(
       accountId,
     });
     if (!data || !Array.isArray(data.items) || !('nextCursor' in data)) throw serviceError(200);
-    return data;
+    return {...data,items:data.items.map(doc=>validateGiftDocumentWire(doc,false))};
   }
 
 async getDocumentSearchCapabilities(
@@ -60,7 +61,7 @@ async getDocument(
       { signal, accountId },
     );
     if (!data || !data.document) throw serviceError(200);
-    return data.document;
+    return validateGiftDocumentWire(data.document,true);
   }
 
 async uploadDocument(
@@ -79,7 +80,7 @@ async uploadDocument(
       accountId,
     });
     if (!data || !data.document) throw serviceError(201);
-    return data.document;
+    return validateGiftDocumentWire(data.document,true);
   }
 
 downloadDocumentFile(

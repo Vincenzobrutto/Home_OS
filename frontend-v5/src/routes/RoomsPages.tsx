@@ -1,3 +1,5 @@
+import {lazy,Suspense} from 'react';
+const RoomsPlanView=lazy(()=>import('../home-maps/RoomsPlanView'));
 import { useAccount } from '../session/session';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
@@ -85,6 +87,9 @@ const STATE_OPTIONS: Array<{ value: RoomFilters['state']; label: string }> = [
 
 export function RoomsPage() {
   const home = useCurrentHome();
+  const [viewParams,setViewParams]=useSearchParams();
+  const creating=viewParams.get('nuovo')==='1',planView=viewParams.get('vista')==='planimetria'&&!creating;
+  const changeView=(plan:boolean)=>{const next=new URLSearchParams(viewParams);if(plan)next.set('vista','planimetria');else next.delete('vista');setViewParams(next);};
   useDocumentTitle(`Ambienti · ${home.name}`);
   const heading = (
     <>
@@ -100,7 +105,7 @@ export function RoomsPage() {
       </div>
     </>
   );
-  return <ObjectsGate home={home} heading={heading}>{(caps) => <><>{heading}</><RoomsContent home={home} caps={caps} /></>}</ObjectsGate>;
+  return <ObjectsGate home={home} heading={heading}>{(caps) => <><>{heading}</><div role="group" aria-label="Vista degli ambienti" className={roomStyles.viewPicker}><button className={cx(ui.btn,!planView&&ui.primary)} aria-pressed={!planView} onClick={()=>changeView(false)}>Schede</button><button className={cx(ui.btn,planView&&ui.primary)} aria-pressed={planView} disabled={creating} onClick={()=>changeView(true)}>Planimetria</button></div>{planView?<Suspense fallback={<Loading label="Caricamento della planimetria…"/>}><RoomsPlanView/></Suspense>:<RoomsContent home={home} caps={caps} />}</>}</ObjectsGate>;
 }
 
 function RoomsContent({ home, caps }: { home: Home; caps: ObjectCapabilities }) {
