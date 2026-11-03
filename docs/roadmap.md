@@ -1,3 +1,9 @@
+## 3 novembre — Gift consolidata e primo collegamento del fascicolo
+
+Candidato dalla base comune cbddcf0: integra lo stack PR72–75, conserva tipo/famiglia dichiarati dall'agenzia nelle nuove Gift e distingue la classificazione ricevuta dalla compilazione personale. Nella pratica sono selezionabili Atto, Visura, APE, Successione e gli altri tipi reali. Corretto il refresh della consegna dopo il salvataggio del tipo. [Report e stato di integrazione](v5/gift-consolidation-20261103.md).
+
+Il prossimo verticale è il job documentale nativo, non un nuovo catalogo campi: [piano operativo](v5/agency-document-analysis-next-20261103.md). Analisi AI atto/visura e vera bozza incarico restano da collegare; nessuna chiamata o autorizzazione economica aggiunta da questo lotto.
+
 ## 3 novembre — Gift semplice dalla pratica conclusa
 
 Implementata e collaudata la consegna con flag documenti/mappa, email, anno opzionale e un solo comando. I documenti conclusivi non richiedono un nuovo editor di preparazione. Restano integrazione delle PR dipendenti e configurazione prodotto; classificazione dei file ricevuti nell'archivio da trattare separatamente. [Report e verifiche](v5/gift-simple-delivery-20261103.md). Nessun merge/deploy.
