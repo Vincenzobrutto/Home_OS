@@ -1,3 +1,19 @@
+## 3 novembre — icone da collocare dentro la planimetria
+
+Rimossa la spalla destra: mappa a tutta larghezza, riquadro di icone “Da collocare” in alto a destra, trascinamento diretto nel vano e controlli manuali opzionali sotto. Inquadratura sull'immobile senza modificare il documento completo; rotazione e sfondo facoltativo preservati. Gruppo mappe136/136, statici/build, runtime e schermata desktop locale verificati. Nessuna modifica backend o salvataggio reale dell'operatore. [Contratto e limiti](v5/home-plan-backoffice-20261103.md#oggetti-da-collocare-dentro-la-mappa).
+
+## 3 novembre — rotazione della vista planimetrica
+
+Comandi a sinistra/destra di 90°: originale, contorni e posizioni visuali ruotano insieme, con nomi degli oggetti diritti e ingombro adattato. Spostamenti convertiti nel riferimento canonico e gesto annullato se cambia orientamento. Nessuna scrittura per ruotare; gruppo mappe 70/70, statici/build e verifica visiva locale verdi. [Report](v5/home-plan-backoffice-20261103.md#rotazione-della-vista).
+
+## 3 novembre — sfondo originale della planimetria disattivabile
+
+Comando “Mostra planimetria originale” nella mappa della casa: nasconde solo lo sfondo, conservando frame, contorni, oggetti e zoom. Attivo inizialmente, scelta limitata alla vista corrente. Frontend 45/45, statici/build e verifica visiva locale spegni/riaccendi con zoom verdi; backend e dati invariati. [Report](v5/home-plan-backoffice-20261103.md#sfondo-originale-facoltativo).
+
+## 3 novembre — importazione controllata della planimetria in una casa esistente
+
+Aggiunto importatore interno con anteprima/fingerprint, controlli owner/fonte fisica, collegamento esplicito ai vani esistenti e ricevuta/audit atomici. Nessuna creazione implicita di stanze o modifica a oggetti e collocazioni. Bozza distinta da una Gift e da una revisione dell'agenzia; nessun nuovo endpoint/schema proprio. Intervento reale richiesto eseguito con11regioni su11stanze già presenti e dati precedenti verificati. Backend894/DB33/frontend43, statici/build e guardie8 verdi. Runtime locale e **UI desktop autenticata verificati**, con sorgente/overlay/caveat e reload:5attivi disponibili,4segnaposti indicativi e1Da collocare. Nessun trascinamento reale o nuovo collaudo mobile reale; blocchi AI/email/Gift preservati. [Report](v5/home-plan-backoffice-20261103.md).
+
 ## 3 novembre — classificazione ricevuta e catalogazione Agenzie
 
 Nuove Gift con snapshot sigillato della classificazione server, organizzazione privata canonica e origine agency_gift; le vecchie consegne restano invariate. Famiglie/tipi/filtri persistono nella casa, senza completare automaticamente il lavoro del proprietario. Selettore dei7tipi nella pratica, con salvataggio esplicito e protezioni su versione/revisione; pannello Gift aggiornato dopo catalogazione/upload. [Verifiche e pubblicazione](v5/gift-consolidation-20261103.md).
