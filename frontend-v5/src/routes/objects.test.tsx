@@ -5,6 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { FakeBackend } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
 import type { renderApp as RenderApp } from '../test/harness';
+// These tests measure navigation, focus and writes, not cold Vite transforms.
+// Keep production routes lazy; load their modules before timed UI assertions.
+import './RoomsPages';
+import './ObjectsPages';
+import './DocumentDetailPage';
 
 type App = ReturnType<typeof RenderApp>;
 const PW = { owner: 'password-owner-001', member: 'password-member-01', viewer: 'password-viewer-01', other: 'password-other-001' };
