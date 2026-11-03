@@ -587,3 +587,10 @@ profiles['test:ambienti-user-trial-20261102']={database:true,api:false,files:['t
 profiles['test:gift-simple-browser-20261103']={database:true,api:false,files:['test/gift-simple-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T01:00:00.000Z'};
 
 profiles['test:gift-simple-user-trial-20261103']={database:true,api:false,files:['test/gift-simple-user-trial-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T11:30:00.000Z'};
+
+// Native agency document analysis: synthetic/injected providers only, independent of plan budget.
+profiles['test:agency-document-analysis']={database:false,api:false,files:['test/agency-document-analysis-domain.test.cjs','test/agency-document-provider.test.cjs','test/agency-document-coordinator.test.cjs','test/agency-document-analysis-http.test.cjs']};
+profiles.test.files.push(...profiles['test:agency-document-analysis'].files);
+profiles['test:agency-document-analysis-db']={database:true,api:false,files:['test/agency-document-analysis-store.integration.test.cjs','test/agency-document-analysis-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push(...profiles['test:agency-document-analysis-db'].files);
+profiles['test:agency-document-browser-20261103']={database:true,api:false,files:['test/agency-document-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T12:30:00.000Z'};

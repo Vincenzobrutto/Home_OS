@@ -26,9 +26,9 @@ const json = (p: Practice): Prisma.InputJsonValue => JSON.parse(JSON.stringify(p
 export class AgencyPracticesStore {
   constructor(private readonly db: Pick<PrismaService, '$transaction'>) {}
   /** Internal document-job port. The caller owns the transaction; export is not required. */
-  async documentAnalysisContext(tx:Prisma.TransactionClient,accountId:string,agencyId:string,practiceId:string){
+  async documentAnalysisContext(tx:Prisma.TransactionClient,accountId:string,agencyId:string,practiceId:string,access:'read'|'edit'='edit'){
     const context=await this.context(tx,accountId,agencyId,practiceId);
-    requirePractice(context.actor,context.practice,'edit',new Date().toISOString());
+    requirePractice(context.actor,context.practice,access,new Date().toISOString());
     return context;
   }
   async agencies(accountId:string){return this.db.$transaction(async tx=>{const now=new Date(),members=await tx.agencyMember.findMany({where:{accountId,revokedAt:null,validFrom:{lte:now},OR:[{validUntil:null},{validUntil:{gt:now}}]},include:{agency:true},orderBy:{agencyId:'asc'},take:100});return {agencies:members.filter(m=>active(membership(m),new Date().toISOString())).map(m=>({id:m.agencyId,name:m.agency.name,role:m.role}))};});}
