@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Analisi documentale nativa — lotto avviato il3novembre
+
+Branch codex/agency-document-analysis-20261103, worktree isolato dalla base remota cbddcf0 con dipendenza esplicita dal candidato Gift b396a00. Il comune aggiornato sarà riunito prima della pubblicazione di questo lotto. Implementare job/offerta/consenso/ledger documentali distinti dalle planimetrie, coordinatore con porta provider, API e UI reali verso proposte citate. Provider sintetico solo in test; runtime senza configurazione indisponibile, nessuna AI reale o spesa. Modello agenzia assente: bozza bloccata. Prova utente e candidato Gift in collaudo restano invariati.
+
 ## Consolidamento Gift e classificazione ricevuta — 3 novembre, autorizzato
 
 Su approvazione esplicita del committente: chiudere Gift, correggere classificazione ricevuta, integrare PR72–75 nel consolidamento e avviare il verticale fascicolo AI. Nuovo candidato codex/gift-consolidamento-20261103 dalla punta remota cbddcf0, merge locale4dd8469 dell'intero stack finof961f47 senza conflitti. Nessun push al consolidamento prima di controlli post-integrazione; main/deploy e prova lAunc8 invariati. Backend classificazione/provenienza/organizzazione e UI catalogazione documenti su file distinti; review indipendente in sola lettura. Nessuna nuova AI/spesa o bozza incarico senza modello approvato.
@@ -139,6 +143,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
+| Agenzie — analisi documentale nativa | Codex | codex/agency-document-analysis-20261103 | Nuovo modulo ledger/job/coordinatore/API/UI, store context e test isolati | In corso, dipendenza Gift b396 da riunire al comune prima della pubblicazione; nessun provider reale/spesa. |
 | Gift — consolidamento e classificazione | Codex | codex/gift-consolidamento-20261103 | Gift packet/worker, organizzazione/workflow e UI catalogazione; report integrazione | In corso su autorizzazione3nov; candidato isolato, test post-integrazione e review prima del push comune. |
 | Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | Implementato e collaudato, PR draft75; dipende da PR74/73/72. Codice9f16073 pushed/hash verificato. Nessun merge. |
 | Ambienti — mappa e trascinamento | Codex | codex/ambienti-mappa-drag-20261101 | frontend home-maps/RoomsPages; backend home-maps; test e contratti | QA conclusa; PR draft74, codice2fab688/test0ba4685; frontend42/DB17/guardie18 e browserdesktop375verdi. Nominale14:00terminato automaticamente,1/1 e stopDBverificati,linkscaduto; dipendenza PR73/72; verifiche precedenti distinte nel report ambienti-map-drag-20261101.md. Nessun merge/deploy. |
