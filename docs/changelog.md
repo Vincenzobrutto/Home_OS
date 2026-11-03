@@ -1,3 +1,7 @@
+## 3 novembre — icone da collocare dentro la planimetria
+
+Rimossa la spalla destra: mappa a tutta larghezza, riquadro di icone “Da collocare” in alto a destra, trascinamento diretto nel vano e controlli manuali opzionali sotto. Inquadratura sull'immobile senza modificare il documento completo; rotazione e sfondo facoltativo preservati. Gruppo mappe136/136, statici/build, runtime e schermata desktop locale verificati. Nessuna modifica backend o salvataggio reale dell'operatore. [Contratto e limiti](v5/home-plan-backoffice-20261103.md#oggetti-da-collocare-dentro-la-mappa).
+
 ## 3 novembre — rotazione della vista planimetrica
 
 Comandi a sinistra/destra di 90°: originale, contorni e posizioni visuali ruotano insieme, con nomi degli oggetti diritti e ingombro adattato. Spostamenti convertiti nel riferimento canonico e gesto annullato se cambia orientamento. Nessuna scrittura per ruotare; gruppo mappe 70/70, statici/build e verifica visiva locale verdi. [Report](v5/home-plan-backoffice-20261103.md#rotazione-della-vista).

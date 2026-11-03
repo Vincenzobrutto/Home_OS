@@ -1,3 +1,7 @@
+## 3 novembre — mappa a larghezza piena e oggetti da collocare
+
+Completata e attiva localmente l'inquadratura dell'immobile e la vista senza spalla: icone degli oggetti non posizionati nell'angolo alto destro della mappa, trascinamento nei vani e controlli opzionali sotto. Nessun nuovo backend/schema, documento completo e coordinate canoniche conservati. Gruppo mappe136/136 e verifica visiva desktop completati; nuovo collaudo mobile non eseguito in questo seguito. [Report](v5/home-plan-backoffice-20261103.md#oggetti-da-collocare-dentro-la-mappa).
+
 ## 3 novembre — orientamento della planimetria
 
 Completati e attivi localmente i comandi di rotazione della vista a passi di 90°. Originale e modello digitale restano allineati; payload e geometrie canoniche invariati, nessuna nuova API o schema. [Verifiche e limiti](v5/home-plan-backoffice-20261103.md#rotazione-della-vista).
