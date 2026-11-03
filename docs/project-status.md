@@ -2,7 +2,9 @@
 
 ## Casa esistente — planimetria importata da backoffice, 3 novembre
 
-Seguito in corso sullo stesso lotto/PR78: inquadratura della sola area digitalizzata con margine, senza modificare PDF o geometrie. Include tutti i vani visibili, anche staccati; durante la correzione dei contorni si conserva il foglio completo. Verificare coordinate canoniche con ritaglio, zoom e rotazione.
+Nuovo seguito autorizzato nello stesso lotto/PR78: fila separata di oggetti non posizionati, trascinabili nei vani; gestione avanzata richiudibile e mappa a larghezza piena per default. Crop già attivo, verifica visiva combinata da completare. Nessuna modifica al backend o ai dati reali prevista per il collaudo.
+
+Inquadratura dell'area digitalizzata implementata nello stesso lotto/PR78, prodotto frontend `b8bea2e`: unione di tutti i vani resi con margine, originale e geometrie invariati; foglio completo durante la correzione dei contorni. Gruppo mappe **101/101**, typecheck/lint/build e runtime HTTP verdi. Verifica visiva autenticata ancora da completare mentre l'utente interagisce con la scheda. [Contratto](v5/home-plan-backoffice-20261103.md#inquadratura-dellimmobile-digitalizzato).
 
 Rotazione della vista completata sullo stesso lotto/PR78: comandi a sinistra/destra a passi di 90°, originale/contorni/segnaposti allineati e nomi degli oggetti diritti. Frontend prodotto `b5f4924`, gruppo mappe **70/70**, typecheck/lint/build e verifica visiva locale verdi; API e PostgreSQL preservati. Coordinate salvate canoniche, nessuna scrittura per ruotare; gesto annullato se l'orientamento cambia durante un trascinamento. [Contratto e verifiche](v5/home-plan-backoffice-20261103.md#rotazione-della-vista).
 

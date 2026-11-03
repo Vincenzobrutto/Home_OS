@@ -32,6 +32,7 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
  const [regionId,setRegion]=useState(data.rooms[0]?.id??''),[objectId,setObject]=useState(''),[point,setPoint]=useState<Point|null>(null),[points,setPoints]=useState<Point[]|null>(null);
  const [showOriginal,setShowOriginal]=useState(true);
  const [turn,setTurn]=useState<MapTurn>(0);
+ const [managementOpen,setManagementOpen]=useState(false),[trayTarget,setTrayTarget]=useState<HTMLDivElement|null>(null);
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[uncertain,setUncertain]=useState(false),[needsRefresh,setNeedsRefresh]=useState(false),[denied,setDenied]=useState(false),[zoom,setZoom]=useState(1),[pointsBase,setPointsBase]=useState(data.version);
  const inputId=useId(),lock=useRef(false),alive=useRef(true);
  const request=useRef<{op:'pins'|'geometry';body:unknown;key:string;success:string}|null>(null);
@@ -69,7 +70,7 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
  const blocked=busy||uncertain||needsRefresh||denied;
  if(denied)return <ErrorState message="Accesso alla mappa non disponibile. Nessuna modifica viene ripetuta." error={null}/>;
  return <div className={styles.page}>
-  <p>Trascina un elettrodomestico per sistemarlo sulla planimetria. Se lo porti in un’altra stanza, anche la sua associazione all’ambiente viene aggiornata.</p>
+  <p>Trascina un oggetto nella stanza desiderata. Lo spostamento aggiorna anche la sua associazione all’ambiente.</p>
   {scene.markers.some(m=>m.indicative)&&<p className={styles.legend}><span className={styles.legendDot}/>I segnaposti tratteggiati sono disposti in modo indicativo nella stanza già associata, non indicano la posizione reale. Trascinali per precisarla.</p>}
   {scene.markers.some(m=>m.multipleRooms)&&<p>Un oggetto associato a più ambienti può comparire in ciascuno. Trascinandolo viene assegnato al solo ambiente di arrivo.</p>}
   <p><Link to={'/home/'+homeId+'/documenti/'+data.document.id}>Apri originale e provenienza</Link> · <Link to={'/home/'+homeId+'/oggetti'}>Aggiungi o gestisci un elettrodomestico</Link></p>
@@ -77,26 +78,28 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
   <details><summary>Misure e limiti · {data.layout.qualification==='estimated'?'scala stimata':data.layout.qualification==='reviewed'?'scala revisionata':'scala da verificare'}</summary><ul>{data.layout.caveats.slice(1).map((v,i)=><li key={i}>{v}</li>)}</ul></details>
   {notice&&<p role="status" className={styles.notice}>{notice}</p>}{error&&<p role="alert">{error}</p>}
   {(uncertain||needsRefresh)&&<div className={styles.toolbar}>{uncertain&&<button className={ui.btn} disabled={busy} onClick={()=>void dispatch()}>Riprova lo stesso invio</button>}<button className={ui.btn} disabled={busy} onClick={()=>void updateView()}>{uncertain?'Verifica dati sul server':'Aggiorna dati'}</button></div>}
-  <div className={styles.columns}>
+  <div className={[styles.columns,managementOpen?'':styles.mapOnly].join(' ')}>
    <section className={ui.card}>
     <div className={styles.toolbar}><h2>Planimetria · pagina {data.layout.source.page}</h2><button className={ui.btn} onClick={()=>setZoom(z=>Math.max(1,z-.5))} disabled={zoom===1||busy}>Riduci</button><button className={ui.btn} onClick={()=>setZoom(z=>Math.min(3,z+.5))} disabled={zoom===3||busy}>Ingrandisci</button></div>
-    <div className={styles.toolbar}><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+3)%4 as MapTurn)}>Ruota a sinistra</button><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+1)%4 as MapTurn)}>Ruota a destra</button><span role="status" aria-label="Orientamento della vista">{turn*90}°</span></div>
+    <div className={styles.toolbar}><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+3)%4 as MapTurn)}>Ruota a sinistra</button><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+1)%4 as MapTurn)}>Ruota a destra</button><span role="status" aria-label="Orientamento della vista">{turn*90}°</span><button className={ui.btn} aria-expanded={managementOpen} aria-controls={inputId+'-management'} onClick={()=>setManagementOpen(v=>!v)}>{managementOpen?'Chiudi gestione':'Gestisci vani e oggetti'}</button></div>
     <label className={styles.backgroundToggle}><input type="checkbox" checked={showOriginal} onChange={e=>setShowOriginal(e.target.checked)}/>Mostra planimetria originale</label>
     {editingContour&&<p>Durante la correzione del contorno vedi il foglio completo.</p>}
+    {!!scene.unplaced.length&&<section className={styles.trayPanel} aria-label="Da posizionare sulla planimetria"><h3>Da posizionare</h3><p>Trascina questi oggetti sulla mappa. Puoi anche selezionarli per scegliere stanza e posizione con i controlli.</p><div ref={setTrayTarget}/></section>}
     <div className={styles.scroll} data-map-viewport><div style={{width:zoom*100+'%'}}>
      {file.isPending?<Loading label="Caricamento mappa…"/>:file.isError?<ErrorState error={file.error} onRetry={()=>void file.refetch()}/>:<OriginalMap
       blob={file.data.blob} mime={data.document.mimeType} page={data.layout.source.page} width={f.width} height={f.height} showOriginal={showOriginal} turn={turn} viewport={viewport}
       onPoint={(x,y)=>{if(data.canEdit&&!blocked&&objectId&&!points)setPoint([x,y]);}}
-      overlay={<DeviceLayer data={data} markers={scene.markers} homeId={homeId} canMove={data.canEdit&&!blocked&&!points} turn={turn} viewport={viewport}
+      overlay={<DeviceLayer data={data} markers={scene.markers} homeId={homeId} canMove={data.canEdit&&!blocked&&!points} turn={turn} viewport={viewport} trayTarget={trayTarget} unplaced={scene.unplaced}
        onDrop={(body,message)=>run('pins',body,message)} onMessage={setNotice}
-       onChoose={marker=>{setRegion(marker.regionId);setObject(marker.objectId);setPoint(marker.point);setPoints(null);setNotice('Usa i campi posizione e premi Salva posizione nella stanza per confermare.');}}/>}>
+       onChoose={marker=>{setManagementOpen(true);setRegion(marker.regionId);setObject(marker.objectId);setPoint(marker.point);setPoints(null);setNotice('Usa i campi posizione e premi Salva posizione nella stanza per confermare.');}}
+       onChooseUnplaced={obj=>{setManagementOpen(true);setObject(obj.id);setPoint(null);setPoints(null);setNotice('Scegli una stanza e indica il punto sulla planimetria, poi premi Salva posizione nella stanza.');}}/>}>
       {data.rooms.map(r=><path key={r.id} d={polygonPath(r.id===regionId&&points?{points,holes:r.holes}:r)} fillRule="evenodd" className={r.id===regionId?styles.selected:styles.region} onClick={()=>{if(!blocked&&!objectId&&!points)select(r.id);}}/>)}
       {point&&<circle cx={point[0]} cy={point[1]} r={f.width*.013} className={styles.pending}/>}
      </OriginalMap>}
     </div></div>
-    <p>Un clic sul segnaposto apre la scheda dell’oggetto. Puoi anche usare i controlli posizione qui sotto; dalla tastiera, spazio sul segnaposto li seleziona.</p>
+    <p>Un clic sul segnaposto apre la scheda dell’oggetto. Per le correzioni puoi aprire Gestisci vani e oggetti; dalla tastiera, spazio sul segnaposto apre i controlli posizione.</p>
    </section>
-   <section className={ui.card}>
+   {managementOpen&&<section className={ui.card} id={inputId+'-management'}>
     <h2>Vani e oggetti</h2>
     <fieldset disabled={blocked||!data.canEdit}>
      <label htmlFor={inputId+'-room'}>Ambiente</label><select id={inputId+'-room'} value={regionId} onChange={e=>select(e.target.value)}>{data.rooms.map(r=><option key={r.id} value={r.id} disabled={r.state!=='active'}>{r.name}</option>)}</select>
@@ -107,8 +110,7 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
     </fieldset>
     <h3>Oggetti sulla mappa</h3>
     {scene.markers.map(m=><p key={m.key}><Link to={'/home/'+homeId+'/oggetti/object/'+m.objectId}>{m.name}</Link> · {m.roomName}{m.indicative?' · posizione indicativa':''}{m.needsReview?' · posizione da riconfermare':''}</p>)}
-    {!!scene.unplaced.length&&<><h3>Da collocare sulla planimetria</h3><p>Questi oggetti non hanno una stanza rappresentata sulla mappa. Scegli ambiente e posizione dai controlli; nessuna stanza viene indovinata.</p>{scene.unplaced.map(o=><p key={o.id}><Link to={'/home/'+homeId+'/oggetti/object/'+o.id}>{o.name}</Link></p>)}</>}
-   </section>
+   </section>}
   </div>
  </div>;
 }
