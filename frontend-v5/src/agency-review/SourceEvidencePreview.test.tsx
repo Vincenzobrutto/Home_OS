@@ -1,4 +1,5 @@
-import {render,screen} from '@testing-library/react';
+import {render,screen,within} from '@testing-library/react';
+import {useState} from 'react';
 import userEvent from '@testing-library/user-event';
 import {beforeEach,expect,it,vi} from 'vitest';
 const calls=vi.hoisted(()=>({preview:vi.fn()}));
@@ -36,4 +37,29 @@ it('offers the original download without a misleading PDF preview for unsupporte
  expect(calls.preview).not.toHaveBeenCalled();
  expect(screen.getByRole('link',{name:'Scarica originale'})).toHaveAttribute('href',source.url);
  expect(screen.getByRole('heading',{name:'Fonte originale · pagina 5'})).toBeInTheDocument();
+});
+it('focuses and scrolls a newly opened preview, then returns to the connected trigger on close',async()=>{
+ const source=props(),user=userEvent.setup(),scroll=vi.fn(),old=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'scrollIntoView');
+ Object.defineProperty(HTMLElement.prototype,'scrollIntoView',{configurable:true,writable:true,value:scroll});
+ try{
+  function Harness(){const [open,setOpen]=useState(false);return <><button type="button" onClick={()=>setOpen(true)}>Apri fonte · pagina 5</button>{open&&<SourceEvidencePreview {...source} onClose={()=>setOpen(false)}/>}</>;}
+  render(<Harness/>);const trigger=screen.getByRole('button',{name:'Apri fonte · pagina 5'});
+  await user.click(trigger);const preview=screen.getByRole('region',{name:'Fonte originale della citazione'});
+  expect(preview).toHaveAttribute('tabindex','-1');expect(preview).toHaveFocus();expect(scroll).toHaveBeenCalledWith({block:'start'});
+  await user.click(within(preview).getByRole('button',{name:'Chiudi anteprima fonte'}));
+  expect(screen.queryByRole('region',{name:'Fonte originale della citazione'})).toBeNull();expect(trigger).toHaveFocus();
+ }finally{if(old)Object.defineProperty(HTMLElement.prototype,'scrollIntoView',old);else Reflect.deleteProperty(HTMLElement.prototype,'scrollIntoView');}
+});
+it('does not steal focus back from an interaction outside the preview when it unmounts',()=>{
+ const source=props();const trigger=document.createElement('button'),outside=document.createElement('button');document.body.append(trigger,outside);trigger.focus();
+ try{const view=render(<SourceEvidencePreview {...source}/>);expect(screen.getByRole('region',{name:'Fonte originale della citazione'})).toHaveFocus();outside.focus();view.unmount();expect(outside).toHaveFocus();}finally{trigger.remove();outside.remove();}
+});
+it('does not attempt to focus a trigger removed while its source preview is open',()=>{
+ const source=props(),trigger=document.createElement('button');document.body.append(trigger);trigger.focus();
+ const view=render(<SourceEvidencePreview {...source}/>);expect(screen.getByRole('region',{name:'Fonte originale della citazione'})).toHaveFocus();
+ trigger.remove();const focus=vi.spyOn(trigger,'focus');view.unmount();expect(focus).not.toHaveBeenCalled();expect(document.body).toHaveFocus();
+});
+it('keeps current preview focus and view on rerender instead of refocusing after another interaction',()=>{
+ const source=props(),outside=document.createElement('button');document.body.append(outside);
+ try{const view=render(<SourceEvidencePreview {...source}/>);outside.focus();view.rerender(<SourceEvidencePreview {...source} excerpt="Citazione sintetica aggiornata"/>);expect(outside).toHaveFocus();view.unmount();expect(outside).toHaveFocus();}finally{outside.remove();}
 });
