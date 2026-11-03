@@ -6,6 +6,11 @@ import { PracticeError, requirePractice, sourceReadable, type Actor, type Practi
 export type TrustedDeedText = { sourceId:string; version:number; sha256:string; parserVersion:string; pages:Array<{page:number;text:string}> };
 const FIELDS = ['party.name','cadastral.municipality','cadastral.sheet','cadastral.parcel','cadastral.subaltern','deed.date'] as const;
 const ROLES = ['historical_owner','acquirer_in_deed','deceased','declared_heir','unresolved'] as const;
+/** Shared by the provider schema and the final literal-evidence validator. */
+export function deedFieldContract(kind:string){
+  if(!['deed','succession','cadastral'].includes(kind))throw new PracticeError('invalid_input');
+  return {fields:kind==='cadastral'?FIELDS.filter(f=>f!=='deed.date'): [...FIELDS],roles:kind==='cadastral'?['unresolved'] as const:ROLES};
+}
 function invalid():never { throw new PracticeError('invalid_input'); }
 function object(v:unknown,keys:string[]) {
   if (!v || typeof v!=='object' || Array.isArray(v) || Object.getPrototypeOf(v)!==Object.prototype || Object.keys(v).some(k=>!keys.includes(k))) invalid();
@@ -34,7 +39,7 @@ export function reviewDeedExtraction(actor:Actor,practice:Practice,trusted:Trust
   if(!source||!sourceReadable(actor,practice,source,now)) throw new PracticeError('access_denied');
   const current=source.versions.at(-1)!;
   if(current.version!==trusted.version||current.sha256!==trusted.sha256) throw new PracticeError('source_changed');
-  if(!['deed','succession'].includes(source.kind)) invalid();
+  const contract=deedFieldContract(source.kind);
   const parserVersion=text(trusted.parserVersion,100);
   if(!Array.isArray(trusted.pages)||trusted.pages.length>50) invalid();
   const pages=trusted.pages.map(p=>{
@@ -50,7 +55,7 @@ export function reviewDeedExtraction(actor:Actor,practice:Practice,trusted:Trust
   const candidates=r.candidates.map(value=>{
     const c=object(value,['id','field','value','subjectRef','unitRef','role','page','excerpt']);
     const id=text(c.id,100),field=text(c.field,100),proposedValue=text(c.value,500),subjectRef=text(c.subjectRef,100),unitRef=text(c.unitRef,100),role=text(c.role,100),page=positive(c.page),excerpt=text(c.excerpt,4000,true);
-    if(!FIELDS.includes(field as typeof FIELDS[number])||!ROLES.includes(role as typeof ROLES[number])) invalid();
+    if(!contract.fields.includes(field as typeof FIELDS[number])||!contract.roles.some(r=>r===role)) invalid();
     if(field!=='party.name'&&role!=='unresolved') invalid();
     return {id,field,proposedValue,subjectRef,unitRef,role,page,excerpt};
   }).sort((a,b)=>a.id.localeCompare(b.id));
