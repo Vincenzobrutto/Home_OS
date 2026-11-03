@@ -1,12 +1,12 @@
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import type {PDFDocumentProxy,RenderTask} from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-import {displayFrame,orientationTransform,type MapTurn} from './orientation';
+import {displayFrame,orientationMatrix,orientationTransform,type MapTurn,type ViewFrame} from './orientation';
 import {fromClient} from './spatial';
 import styles from './map.module.css';
-export function OriginalMap({blob,mime,page,width,height,children,onPoint,overlay,showOriginal=true,turn=0}:{blob:Blob;mime:string;page:number;width:number;height:number;children:ReactNode;overlay?:ReactNode;showOriginal?:boolean;turn?:MapTurn;onPoint:(x:number,y:number)=>void}){
+export function OriginalMap({blob,mime,page,width,height,children,onPoint,overlay,showOriginal=true,turn=0,viewport}:{blob:Blob;mime:string;page:number;width:number;height:number;children:ReactNode;overlay?:ReactNode;showOriginal?:boolean;turn?:MapTurn;viewport?:ViewFrame;onPoint:(x:number,y:number)=>void}){
  const canvas=useRef<HTMLCanvasElement>(null),[ready,setReady]=useState(false),[error,setError]=useState(false);
- const frame={width,height},view=displayFrame(frame,turn);
+ const frame=viewport??{width,height},view=displayFrame(frame,turn),matrix=orientationMatrix(frame,turn);
  useEffect(()=>{let live=true,doc:PDFDocumentProxy|undefined,render:RenderTask|undefined,cleanup=()=>{};
  void(async()=>{try{
   const target=canvas.current!;let source:HTMLImageElement|HTMLCanvasElement;
@@ -16,5 +16,5 @@ export function OriginalMap({blob,mime,page,width,height,children,onPoint,overla
  }catch(e){if(live&&(e as Error).name!=='RenderingCancelledException')setError(true);}})();
  return()=>{live=false;render?.cancel();cleanup();};
  },[blob,mime,page,width,height]);
- return <>{error?<p role="alert">Originale non visualizzabile. Nessuna posizione può essere salvata dal disegno.</p>:<>{!ready&&<p role="status">Preparazione originale…</p>}<div className={styles.map} style={{aspectRatio:view.width+'/'+view.height}}><canvas ref={canvas} aria-label="Planimetria originale" aria-hidden={!showOriginal} style={{visibility:showOriginal?'visible':'hidden',position:'absolute',left:turn===1||turn===2?'100%':0,top:turn===2||turn===3?'100%':0,width:width/view.width*100+'%',height:height/view.height*100+'%',transformOrigin:'0 0',transform:'rotate('+turn*90+'deg)'}}/>{ready&&<svg viewBox={'0 0 '+view.width+' '+view.height} aria-label="Vani e posizioni sulla mappa" onClick={e=>{const p=fromClient(e.clientX,e.clientY,e.currentTarget.getBoundingClientRect(),frame,turn);if(p)onPoint(p[0],p[1]);}}><g transform={orientationTransform(frame,turn)}>{children}</g></svg>}{ready&&overlay}</div></>}</>;
+ return <>{error?<p role="alert">Originale non visualizzabile. Nessuna posizione può essere salvata dal disegno.</p>:<>{!ready&&<p role="status">Preparazione originale…</p>}<div className={styles.map} style={{aspectRatio:view.width+'/'+view.height}}><div className={styles.originalClip}><canvas ref={canvas} aria-label="Planimetria originale" aria-hidden={!showOriginal} style={{visibility:showOriginal?'visible':'hidden',position:'absolute',left:matrix[4]/view.width*100+'%',top:matrix[5]/view.height*100+'%',width:width/view.width*100+'%',height:height/view.height*100+'%',transformOrigin:'0 0',transform:'rotate('+turn*90+'deg)'}}/></div>{ready&&<svg viewBox={'0 0 '+view.width+' '+view.height} aria-label="Vani e posizioni sulla mappa" onClick={e=>{const p=fromClient(e.clientX,e.clientY,e.currentTarget.getBoundingClientRect(),frame,turn);if(p)onPoint(p[0],p[1]);}}><g transform={orientationTransform(frame,turn)}>{children}</g></svg>}{ready&&overlay}</div></>}</>;
 }

@@ -2,6 +2,8 @@
 
 ## Casa esistente — planimetria importata da backoffice, 3 novembre
 
+Seguito in corso sullo stesso lotto/PR78: inquadratura della sola area digitalizzata con margine, senza modificare PDF o geometrie. Include tutti i vani visibili, anche staccati; durante la correzione dei contorni si conserva il foglio completo. Verificare coordinate canoniche con ritaglio, zoom e rotazione.
+
 Rotazione della vista completata sullo stesso lotto/PR78: comandi a sinistra/destra a passi di 90°, originale/contorni/segnaposti allineati e nomi degli oggetti diritti. Frontend prodotto `b5f4924`, gruppo mappe **70/70**, typecheck/lint/build e verifica visiva locale verdi; API e PostgreSQL preservati. Coordinate salvate canoniche, nessuna scrittura per ruotare; gesto annullato se l'orientamento cambia durante un trascinamento. [Contratto e verifiche](v5/home-plan-backoffice-20261103.md#rotazione-della-vista).
 
 Seguito richiesto dal proprietario completato su [PR78](https://github.com/Vincenzobrutto/Home_OS/pull/78): checkbox “Mostra planimetria originale”, attivo inizialmente, nasconde solo il raster mantenendo vani, oggetti e zoom. Frontend prodotto `f243516`, gruppo mappe 45/45, typecheck/lint/build verdi; attivazione frontend locale e verifica visiva spegni/riaccendi con zoom riuscite. API, PostgreSQL e sessione preservati, nessuna scrittura sui dati della casa. [Dettagli e limiti](v5/home-plan-backoffice-20261103.md#sfondo-originale-facoltativo).

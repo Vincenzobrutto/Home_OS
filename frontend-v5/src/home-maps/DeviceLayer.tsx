@@ -2,13 +2,13 @@ import {useRef,useState,type PointerEvent} from 'react';
 import {Link} from 'react-router';
 import type {MapView,Point} from './api';
 import {fromClient,roomAt,polygonPath,sceneFence,type DeviceMarker} from './spatial';
-import {displayFrame,toDisplayPoint,orientationTransform,type MapTurn} from './orientation';
+import {displayFrame,toDisplayPoint,orientationTransform,type MapTurn,type ViewFrame} from './orientation';
 import styles from './map.module.css';
 export type DeviceDrop={expectedVersion:number;objectId:string;regionId:string;x:number;y:number;expectedPositionVersion:number};
 type Gesture={pointerId:number;marker:DeviceMarker;start:Point;point:Point;fence:string;moved:boolean;version:number};
-export function DeviceLayer({data,markers,homeId,canMove,onDrop,onMessage,onChoose,turn=0}:{data:MapView;markers:DeviceMarker[];homeId:string;canMove:boolean;turn?:MapTurn;onDrop:(body:DeviceDrop,message:string)=>void|Promise<void>;onMessage:(s:string)=>void;onChoose:(marker:DeviceMarker)=>void}){
+export function DeviceLayer({data,markers,homeId,canMove,onDrop,onMessage,onChoose,turn=0,viewport}:{data:MapView;markers:DeviceMarker[];homeId:string;canMove:boolean;turn?:MapTurn;viewport?:ViewFrame;onDrop:(body:DeviceDrop,message:string)=>void|Promise<void>;onMessage:(s:string)=>void;onChoose:(marker:DeviceMarker)=>void}){
  const layer=useRef<HTMLDivElement>(null),gesture=useRef<Gesture|null>(null),suppressClick=useRef(false),[preview,setPreview]=useState<{key:string;point:Point}|null>(null);
- const f=data.layout.frame,view=displayFrame(f,turn),fence=sceneFence(data)+':orientation:'+turn,destination=preview?roomAt(data.rooms,preview.point):null;
+ const f:ViewFrame=viewport??data.layout.frame,view=displayFrame(f,turn),fence=sceneFence(data)+':view:'+JSON.stringify([turn,f.x??0,f.y??0,f.width,f.height]),destination=preview?roomAt(data.rooms,preview.point):null;
  function cancel(message:string){if(gesture.current?.moved)suppressClick.current=true;gesture.current=null;setPreview(null);if(message)onMessage(message);}
  function move(e:PointerEvent<HTMLAnchorElement>){const g=gesture.current;if(!g||g.pointerId!==e.pointerId)return;
   if(!canMove||g.fence!==fence){cancel('La mappa o gli ambienti sono cambiati: riprendi lo spostamento dai dati aggiornati.');return;}

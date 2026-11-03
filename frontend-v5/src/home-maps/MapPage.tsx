@@ -11,6 +11,7 @@ import {DeviceLayer} from './DeviceLayer';
 import {deviceScene,polygonPath} from './spatial';
 import type {MapView,Point} from './api';
 import type {MapTurn} from './orientation';
+import {propertyViewport} from './viewport';
 import styles from './map.module.css';
 
 export function MapPage(){
@@ -37,6 +38,8 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
  const region=data.rooms.find(r=>r.id===regionId),object=data.objects.find(o=>o.id===objectId),f=data.layout.frame;
  const file=useDocumentFile(homeId,data.document.id,true),scene=useMemo(()=>deviceScene(data),[data]);
+ const editingContour=points!==null;
+ const viewport=useMemo(()=>editingContour?{x:0,y:0,...f}:propertyViewport(f,data.rooms),[editingContour,f,data.rooms]);
  async function updateView(){try{await refresh();if(alive.current){setNeedsRefresh(false);setError('');}}catch{if(alive.current){setNeedsRefresh(true);setError('Non riesco ad aggiornare i dati. Ricarica prima di altre modifiche.');}}}
  async function dispatch(){
   if(lock.current||!request.current||!data.canEdit)return;lock.current=true;setBusy(true);setError('');
@@ -79,11 +82,12 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
     <div className={styles.toolbar}><h2>Planimetria · pagina {data.layout.source.page}</h2><button className={ui.btn} onClick={()=>setZoom(z=>Math.max(1,z-.5))} disabled={zoom===1||busy}>Riduci</button><button className={ui.btn} onClick={()=>setZoom(z=>Math.min(3,z+.5))} disabled={zoom===3||busy}>Ingrandisci</button></div>
     <div className={styles.toolbar}><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+3)%4 as MapTurn)}>Ruota a sinistra</button><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+1)%4 as MapTurn)}>Ruota a destra</button><span role="status" aria-label="Orientamento della vista">{turn*90}°</span></div>
     <label className={styles.backgroundToggle}><input type="checkbox" checked={showOriginal} onChange={e=>setShowOriginal(e.target.checked)}/>Mostra planimetria originale</label>
+    {editingContour&&<p>Durante la correzione del contorno vedi il foglio completo.</p>}
     <div className={styles.scroll} data-map-viewport><div style={{width:zoom*100+'%'}}>
      {file.isPending?<Loading label="Caricamento mappa…"/>:file.isError?<ErrorState error={file.error} onRetry={()=>void file.refetch()}/>:<OriginalMap
-      blob={file.data.blob} mime={data.document.mimeType} page={data.layout.source.page} width={f.width} height={f.height} showOriginal={showOriginal} turn={turn}
+      blob={file.data.blob} mime={data.document.mimeType} page={data.layout.source.page} width={f.width} height={f.height} showOriginal={showOriginal} turn={turn} viewport={viewport}
       onPoint={(x,y)=>{if(data.canEdit&&!blocked&&objectId&&!points)setPoint([x,y]);}}
-      overlay={<DeviceLayer data={data} markers={scene.markers} homeId={homeId} canMove={data.canEdit&&!blocked&&!points} turn={turn}
+      overlay={<DeviceLayer data={data} markers={scene.markers} homeId={homeId} canMove={data.canEdit&&!blocked&&!points} turn={turn} viewport={viewport}
        onDrop={(body,message)=>run('pins',body,message)} onMessage={setNotice}
        onChoose={marker=>{setRegion(marker.regionId);setObject(marker.objectId);setPoint(marker.point);setPoints(null);setNotice('Usa i campi posizione e premi Salva posizione nella stanza per confermare.');}}/>}>
       {data.rooms.map(r=><path key={r.id} d={polygonPath(r.id===regionId&&points?{points,holes:r.holes}:r)} fillRule="evenodd" className={r.id===regionId?styles.selected:styles.region} onClick={()=>{if(!blocked&&!objectId&&!points)select(r.id);}}/>)}

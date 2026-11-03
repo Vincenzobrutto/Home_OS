@@ -11,8 +11,9 @@ const error=(status:number)=>new ApiError({kind:'http',status,code:'map_version_
 function mount(send=vi.fn().mockResolvedValue({}),refresh=vi.fn().mockResolvedValue(undefined)){
  const data=mapFixture(),view=render(<MemoryRouter><Workspace data={data} homeId="home" send={send} refresh={refresh}/></MemoryRouter>);
  const layer=view.container.querySelector('[aria-label="Elettrodomestici sulla planimetria"]')!;
- vi.spyOn(layer,'getBoundingClientRect').mockReturnValue({left:0,top:0,width:1000,height:1000,right:1000,bottom:1000,x:0,y:0,toJSON:()=>({})});
- const viewport=view.container.querySelector('[data-map-viewport]')!;vi.spyOn(viewport,'getBoundingClientRect').mockReturnValue({left:0,top:0,width:1000,height:1000,right:1000,bottom:1000,x:0,y:0,toJSON:()=>({})});
+ // The fixture now displays a 100×69 property frame; canonical drop assertions stay unchanged.
+ vi.spyOn(layer,'getBoundingClientRect').mockReturnValue({left:0,top:0,width:1000,height:690,right:1000,bottom:690,x:0,y:0,toJSON:()=>({})});
+ const viewport=view.container.querySelector('[data-map-viewport]')!;vi.spyOn(viewport,'getBoundingClientRect').mockReturnValue({left:0,top:0,width:1000,height:690,right:1000,bottom:690,x:0,y:0,toJSON:()=>({})});
  return {data,view,send,refresh};
 }
 function drag(){const el=screen.getByRole('link',{name:'Apri Frigorifero DEMO'});fireEvent.pointerDown(el,{pointerId:1,button:0,clientX:200,clientY:200});fireEvent.pointerMove(el,{pointerId:1,button:0,clientX:700,clientY:200});fireEvent.pointerUp(el,{pointerId:1,button:0,clientX:700,clientY:200});}

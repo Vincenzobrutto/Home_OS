@@ -92,3 +92,61 @@ describe('canonical appliance movement through a rotated non-square plan',()=>{
   expect(v.onDrop).not.toHaveBeenCalled();expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('cambiate'));expect(screen.getByLabelText('route')).toHaveTextContent('/');
  });
 });
+
+const croppedCases:{turn:MapTurn;start:[number,number];within:[number,number];cross:[number,number];invalid:[number,number][]}[]=[
+ {turn:0,start:[250,200],within:[300,250],cross:[750,200],invalid:[[530,200],[350,300],[1100,200]]},
+ {turn:1,start:[400,200],within:[350,250],cross:[400,700],invalid:[[400,480],[300,300],[400,1050]]},
+ {turn:2,start:[850,350],within:[800,300],cross:[350,350],invalid:[[570,350],[750,250],[0,350]]},
+ {turn:3,start:[250,800],within:[300,750],cross:[250,300],invalid:[[250,520],[350,700],[250,-50]]},
+];
+type TestCrop={x:number;y:number;width:number;height:number};
+function mountCropped(turn:MapTurn,crop:TestCrop={x:5,y:5,width:90,height:45},withHole=false){
+ const data=mapFixture();data.pins=[{objectId:'fridge',regionId:'kitchen',x:20,y:20,geometryRevision:2,needsReview:false}];
+ if(withHole)data.rooms[0]!.holes=[[[25,25],[35,25],[35,35],[25,35]]];
+ const onDrop=vi.fn<(body:DeviceDrop,message:string)=>void>(),onMessage=vi.fn(),onChoose=vi.fn();
+ const component=(viewport:TestCrop)=><MemoryRouter><Location/><DeviceLayer data={data} markers={deviceScene(data).markers} homeId="home" canMove turn={turn} viewport={viewport} onDrop={onDrop} onMessage={onMessage} onChoose={onChoose}/></MemoryRouter>;
+ const view=render(component(crop)),layer=view.container.querySelector('[aria-label="Elettrodomestici sulla planimetria"]')!,parent=layer.parentElement!;
+ parent.setAttribute('data-map-viewport','');
+ const bounds=(viewport:TestCrop)=>{const width=(turn%2?viewport.height:viewport.width)*10,height=(turn%2?viewport.width:viewport.height)*10;return {left:100,top:50,width,height,right:100+width,bottom:50+height,x:100,y:50,toJSON:()=>({})};};
+ const layerRect=vi.spyOn(layer,'getBoundingClientRect').mockReturnValue(bounds(crop)),clipRect=vi.spyOn(parent,'getBoundingClientRect').mockReturnValue(bounds(crop));
+ return {...view,data,onDrop,onMessage,rerenderCrop:(next:TestCrop)=>{layerRect.mockReturnValue(bounds(next));clipRect.mockReturnValue(bounds(next));view.rerender(component(next));}};
+}
+describe('canonical movement from a cropped and rotated property viewport',()=>{
+ for(const sample of croppedCases){
+  it('saves the same canonical in-room coordinates from cropped turn '+sample.turn,async()=>{
+   const v=mountCropped(sample.turn),before=structuredClone(v.data),link=screen.getByRole('link',{name:'Apri Frigorifero DEMO'});
+   rotatedPointer(link,'Down',sample.start);rotatedPointer(link,'Move',sample.within);rotatedPointer(link,'Up',sample.within);
+   await waitFor(()=>expect(v.onDrop).toHaveBeenCalledOnce());
+   expect(v.onDrop).toHaveBeenCalledWith({expectedVersion:5,objectId:'fridge',regionId:'kitchen',x:25,y:25,expectedPositionVersion:3},expect.stringContaining('Cucina'));expect(v.data).toEqual(before);
+  });
+  it('keeps cross-room coordinates in the full original frame from cropped turn '+sample.turn,async()=>{
+   const v=mountCropped(sample.turn),link=screen.getByRole('link',{name:'Apri Frigorifero DEMO'});
+   rotatedPointer(link,'Down',sample.start);rotatedPointer(link,'Move',sample.cross);expect(screen.getByText('Rilascia in Balcone')).toBeInTheDocument();rotatedPointer(link,'Up',sample.cross);
+   await waitFor(()=>expect(v.onDrop).toHaveBeenCalledOnce());expect(v.onDrop).toHaveBeenCalledWith({expectedVersion:5,objectId:'fridge',regionId:'balcony',x:70,y:20,expectedPositionVersion:3},expect.stringContaining('associazione'));
+  });
+  it('rejects wall, hole and outside original-frame drops from cropped turn '+sample.turn,()=>{
+   const v=mountCropped(sample.turn,undefined,true),link=screen.getByRole('link',{name:'Apri Frigorifero DEMO'});
+   for(const point of sample.invalid){rotatedPointer(link,'Down',sample.start);rotatedPointer(link,'Move',point);rotatedPointer(link,'Up',point);}
+   expect(v.onDrop).not.toHaveBeenCalled();expect(v.onMessage).toHaveBeenCalledTimes(3);expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('annullato'));
+  });
+ }
+ it('rejects a valid canonical room hidden beyond the chosen crop',()=>{
+  const v=mountCropped(1,{x:5,y:5,width:60,height:45}),link=screen.getByRole('link',{name:'Apri Frigorifero DEMO'});
+  // Start (20,20) is visible; destination (80,20) is in Balcone but outside crop x<=65.
+  rotatedPointer(link,'Down',[400,200]);rotatedPointer(link,'Move',[400,800]);expect(screen.getByText('Rilascia in Balcone')).toBeInTheDocument();rotatedPointer(link,'Up',[400,800]);
+  expect(v.onDrop).not.toHaveBeenCalled();expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('parte visibile'));
+ });
+ it('retains occlusion checks over a cropped rotated destination',()=>{
+  const own=Object.hasOwn(document,'elementFromPoint'),before=document.elementFromPoint;Object.defineProperty(document,'elementFromPoint',{configurable:true,value:()=>document.body});
+  try{const v=mountCropped(3),link=screen.getByRole('link',{name:'Apri Frigorifero DEMO'});rotatedPointer(link,'Down',[250,800]);rotatedPointer(link,'Move',[250,300]);rotatedPointer(link,'Up',[250,300]);expect(v.onDrop).not.toHaveBeenCalled();expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('parte visibile'));}
+  finally{if(own)Object.defineProperty(document,'elementFromPoint',{configurable:true,value:before});else Reflect.deleteProperty(document,'elementFromPoint');}
+ });
+ it('cancels if the crop origin changes between pointer-down and movement',()=>{
+  const v=mountCropped(0),link=screen.getByRole('link',{name:'Apri Frigorifero DEMO'});rotatedPointer(link,'Down',[250,200]);v.rerenderCrop({x:0,y:5,width:90,height:45});rotatedPointer(link,'Move',[750,200]);rotatedPointer(link,'Up',[750,200]);
+  expect(v.onDrop).not.toHaveBeenCalled();expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('cambiati'));
+ });
+ it('cancels if the crop changes between movement and release even with unchanged geometry revisions',()=>{
+  const v=mountCropped(1),link=screen.getByRole('link',{name:'Apri Frigorifero DEMO'});rotatedPointer(link,'Down',[400,200]);rotatedPointer(link,'Move',[400,700]);v.rerenderCrop({x:5,y:10,width:80,height:45});rotatedPointer(link,'Up',[400,700]);fireEvent.click(link);
+  expect(v.onDrop).not.toHaveBeenCalled();expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('cambiate'));expect(screen.getByLabelText('route')).toHaveTextContent('/');
+ });
+});
