@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Riprova guidata Gift — 3 novembre, mattina
+
+Richiesta nuova prova dall'agenzia al proprietario. Nominale separato test:gift-simple-user-trial-20261103 fino alle12:30Rome/11:30UTC, su nuovo cluster protetto; nessun riavvio del collaudo scaduto o modifica prodotto. Nuovo run lAunc8 attivo, build/readiness/API/statici verdi; accesso agente e checklist verificati nel browser, nessuna selezione o consegna eseguita al posto del committente. Guardie dirette19/19 e syntax check verdi. Stesso ramo dedicatoPR75, codice prodotto invariato.
+
 ## Gift semplice nella pratica — implementato e collaudato, 3 novembre 2026
 
 Lotto `codex/gift-selezione-semplice-20261103`, base PR74 `8f1ba91` con dipendenze PR73/72; comune remoto `cbddcf0` invariato. Dalla pratica conclusa: **Consegna al proprietario → flag documenti/mappa → email e anno opzionale → Crea link Gift**. Nessun editor/rilascio separato per ogni file. API e protezioni esistenti orchestrate internamente; nessun backend/schema nuovo. Nuovi test21/21, regressione Gift/mappa231/231, navigazione7/7, guardie20/20, typecheck/lint e build verdi. Browser su cluster nuovo: creazione unica, accettazione e Home con3documenti scelti, nota esclusa, mappa3ambienti e anno incluso; UI agente375px utilizzabile. Destinatario fixture già verificato, scanner/email stub. Nuova prova locale separata fino3nov02:00Rome, pratica utente intatta; vecchio trial preservato. [Report, limiti e seguito](v5/gift-simple-delivery-20261103.md). Nessuna AI/spesa, demo Alessio, merge/main/deploy.

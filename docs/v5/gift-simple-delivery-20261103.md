@@ -35,3 +35,10 @@ L'archivio proprietario classifica ancora questi file sintetici come «Da classi
 ## Pubblicazione
 
 Codice 9f16073bc83f1c77cbf1cecc3d32c3a1a445b08b, push verificato con ls-remote. [PR draft75](https://github.com/Vincenzobrutto/Home_OS/pull/75), stack PR74/73/72 verso il consolidamento, nessun merge. Screenshot della selezione salvato soltanto negli outputs privati della chat. Trial nuovo ancora attivo fino al termine nominale; arresto finale non ancora verificato.
+
+## Riprova guidata del 3 novembre, mattina
+
+Il precedente bLJISV è terminato al proprio limite: status deadline, stop PostgreSQL alle01:00:00.500UTC, pid assente e nessun listener55440 o processo del run alla verifica09:30UTC. Anche il vecchio b55HFe ha log di arresto riuscito alle00:30UTC. Nessuno dei due è stato ripristinato o riavviato.
+
+Su nuova richiesta di prova guidata è registrato il nominale separato `test:gift-simple-user-trial-20261103`, termine3nov11:30UTC/12:30Europe/Rome. Solo nuovo cluster/snapshot/hostname, stesse fixture e codice prodotto invariato. Guardie dirette offline-harness19/19 (incluso il nuovo caso datato), syntax check verde; non sono la suite completa di guardie storicamente riportata come20. Nessun aumento del limite2ore o ingresso negli aggregati ordinari. Il collaudo utente è distinto dalla QA browser storica; non dichiararlo completato prima del riscontro.
+Nuovo run lAunc8 attivo: build/readiness/API/statici verdi; accesso normale agente e checklist browser verificati. La pratica journey è intatta, nessun invito o selezione creati al posto del committente. Scadenza12:30Rome; arresto del nuovo run ancora da verificare. URL/credenziali solo negli outputs privati.

@@ -161,3 +161,10 @@ test('simple Gift trial uses a new nominal deadline without joining aggregates o
  const source=fs.readFileSync(path.join(__dirname,'gift-simple-browser-20261103.integration.test.cjs'),'utf8');assert.match(source,/PROFILE='test:gift-simple-browser-20261103',UNTIL='2026-11-03T01:00:00.000Z'/);
  const {commandDuration}=require('./offline.cjs');assert.equal(commandDuration(name,profile,'tests',Date.parse('2026-11-02T23:30:00.000Z')),5430000);assert.equal(commandDuration(name,profile,'tests',Date.parse('2026-11-02T20:00:00.000Z')),7200000);
 });
+
+test('November 3 guided Gift trial has its own fixed deadline and cannot join ordinary suites',()=>{
+ const name='test:gift-simple-user-trial-20261103',profile=suites[name];assert.deepEqual(profile,{database:true,api:false,files:['test/gift-simple-user-trial-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T11:30:00.000Z'});
+ for(const n of ['test','test:offline-db','test:agency-gift-db'])assert.equal(suites[n].files.includes(profile.files[0]),false);
+ const source=fs.readFileSync(path.join(__dirname,'gift-simple-user-trial-20261103.integration.test.cjs'),'utf8');assert.match(source,/PROFILE='test:gift-simple-user-trial-20261103',UNTIL='2026-11-03T11:30:00.000Z'/);
+ const {commandDuration}=require('./offline.cjs');assert.equal(commandDuration(name,profile,'tests',Date.parse('2026-11-03T10:00:00.000Z')),5430000);assert.equal(commandDuration(name,profile,'tests',Date.parse('2026-11-03T07:00:00.000Z')),7200000);
+});

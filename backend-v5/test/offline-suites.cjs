@@ -585,3 +585,5 @@ profiles['test:ambienti-map-followup-trial']={database:true,api:false,files:['te
 profiles['test:ambienti-user-trial-20261102']={database:true,api:false,files:['test/ambienti-user-trial-20261102.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T00:30:00.000Z'};
 
 profiles['test:gift-simple-browser-20261103']={database:true,api:false,files:['test/gift-simple-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T01:00:00.000Z'};
+
+profiles['test:gift-simple-user-trial-20261103']={database:true,api:false,files:['test/gift-simple-user-trial-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T11:30:00.000Z'};
