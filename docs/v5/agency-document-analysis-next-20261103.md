@@ -1,5 +1,7 @@
 # Analisi documentale Agenzie — prossimo verticale, 3 novembre 2026
 
+> Piano storico precedente al collegamento nativo. Job, ledger, provider/API/UI e proposte citate sono ora implementati nel ramo PR77; stato e limiti nel [report nativo](agency-document-analysis-20261103.md). La riunione con PR78 e il successivo aggiornamento delle viste sono nel [report del candidato](agency-documents-integration-20261103.md). Le sezioni seguenti conservano il piano originario, non descrivono le lacune attuali.
+
 ## Stato effettivo e avanzamento immediato
 
 L'inventario comune già prodotto il31ottobre (170campi/20entità, P1di47campi) non viene rifatto. Esistono upload e catalogazione dominio, decoder PDF locale con autorizzazioni prima/dopo, verifica letterale delle citazioni, stage persistente interno, letture/binding/revisione/confronti/finding e preparazione dati incarico. Non esiste ancora un avvio AI atto/visura dall'app, né una generazione sul modello approvato dell'agenzia.

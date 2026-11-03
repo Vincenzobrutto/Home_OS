@@ -5,6 +5,7 @@
 .DS_Store
 Thumbs.db
 frontend-v5/.agency-cache/
+backend-v5/.agency-cache/
 *.log
 .vscode/*
 !.vscode/extensions.json
@@ -23,3 +24,4 @@ frontend-v5/.agency-cache/
 .drag-test-runs/
 
 .simple-gift-runs/
+.document-analysis-runs/

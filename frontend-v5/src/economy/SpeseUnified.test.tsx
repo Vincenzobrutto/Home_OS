@@ -18,8 +18,13 @@ async function setup(){
  }
  const app=renderApp({backend,path:'/accedi'});
  await app.user.type(await screen.findByLabelText('Email'),owner.email);await app.user.type(screen.getByLabelText('Password'),'password-unified-001');await app.user.click(screen.getByRole('button',{name:'Accedi'}));
- await waitFor(()=>expect(app.router.state.location.pathname).toMatch(/^\/(case|home\/)/));
- const start=backend.log.length;await app.router.navigate(`/home/${home.id}/spese`);await screen.findByRole('link',{name:'Riparazione'});
+ // Il riepilogo Casa contiene già "Riparazione": attende il redirect completo
+ // e poi il titolo della sezione, non un link presente in entrambe le pagine.
+ await waitFor(()=>expect(app.router.state.location.pathname).toBe(`/home/${home.id}/casa`));
+ await screen.findByRole('heading',{level:1,name:home.name});
+ const start=backend.log.length;await app.router.navigate(`/home/${home.id}/spese`);
+ await screen.findByRole('heading',{level:1,name:'Spese'});
+ await screen.findByRole('link',{name:'Riparazione'});
  return {app,backend,home,start};
 }
 

@@ -587,3 +587,19 @@ profiles['test:ambienti-user-trial-20261102']={database:true,api:false,files:['t
 profiles['test:gift-simple-browser-20261103']={database:true,api:false,files:['test/gift-simple-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T01:00:00.000Z'};
 
 profiles['test:gift-simple-user-trial-20261103']={database:true,api:false,files:['test/gift-simple-user-trial-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T11:30:00.000Z'};
+
+profiles['test:home-map-operator']={database:false,api:false,files:['test/home-map-operator-import.test.cjs']};
+profiles.test.files.push(...profiles['test:home-map-operator'].files);
+profiles['test:home-map-operator-db']={database:true,api:false,files:['test/home-map-operator-import.integration.test.cjs','test/home-map.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/home-map-operator-import.integration.test.cjs');
+// Native agency document analysis: synthetic/injected providers only, independent of plan budget.
+profiles['test:agency-document-analysis']={database:false,api:false,files:['test/agency-document-analysis-domain.test.cjs','test/agency-document-provider.test.cjs','test/agency-document-coordinator.test.cjs','test/agency-document-analysis-http.test.cjs']};
+profiles.test.files.push(...profiles['test:agency-document-analysis'].files);
+profiles['test:agency-document-analysis-db']={database:true,api:false,files:['test/agency-document-analysis-store.integration.test.cjs','test/agency-document-analysis-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push(...profiles['test:agency-document-analysis-db'].files);
+profiles['test:agency-document-browser-20261103']={database:true,api:false,files:['test/agency-document-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T12:30:00.000Z'};
+
+// Combined candidate: both original DB groups plus a synthetic succession/discrepancy journey.
+profiles['test:agency-documents-integration-db']={database:true,api:false,files:[...new Set([...profiles['test:agency-document-analysis-db'].files,...profiles['test:home-map-operator-db'].files,'test/agency-documents-journey.integration.test.cjs'])],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-documents-journey.integration.test.cjs');
+profiles['test:agency-documents-integration-browser-20261103']={database:true,api:false,files:['test/agency-documents-integration-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T17:00:00.000Z'};

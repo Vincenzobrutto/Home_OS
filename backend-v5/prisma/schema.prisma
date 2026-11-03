@@ -12,6 +12,8 @@ enum HomeRole {
   viewer
 }
 model Account {
+  documentAnalysisOffers AgencyDocumentAnalysisOffer[]
+  documentAnalysisJobs AgencyDocumentAnalysisJob[]
   digitalPlans HomeDigitalPlan[]
   giftAcceptanceReceipts AgencyGiftAcceptanceReceipt[]
   giftBenefits AccountGiftBenefit[]
@@ -79,6 +81,7 @@ model Account {
 }
 
 model Agency {
+  documentAiBudgets AgencyDocumentAiBudget[]
   giftInvitations AgencyGiftInvitation[]
   id String @id @default(uuid())
   name String
@@ -139,6 +142,8 @@ model AgencyMember {
 }
 
 model AgencyPractice {
+  documentAnalysisOffers AgencyDocumentAnalysisOffer[]
+  documentAnalysisJobs AgencyDocumentAnalysisJob[]
   giftAcceptanceJobs AgencyGiftAcceptanceJob[]
   giftInvitations AgencyGiftInvitation[]
   id String @id @default(uuid())
@@ -1528,4 +1533,92 @@ model HomeDigitalPlan {
  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
  home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
  @@index([accountId,homeId])
+}
+
+// Document extraction has its own purpose, currency and explicit server provisioning.
+model AgencyDocumentAiBudget {
+ id String @id @default(uuid())
+ agencyId String
+ purpose String @default("DOCUMENT_EXTRACT")
+ configDigest String
+ currency String
+ capMicros BigInt
+ committedMicros BigInt @default(0)
+ spentMicros BigInt @default(0)
+ expiresAt DateTime
+ revokedAt DateTime?
+ createdAt DateTime @default(now())
+ agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+ jobs AgencyDocumentAnalysisJob[]
+ @@index([agencyId,configDigest,expiresAt])
+}
+model AgencyDocumentAnalysisOffer {
+ id String @id @default(uuid())
+ accountId String
+ practiceId String
+ agencyId String
+ snapshot Json
+ digest String
+ expiresAt DateTime
+ createdAt DateTime @default(now())
+ account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+ practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+ job AgencyDocumentAnalysisJob?
+ @@index([accountId,practiceId,expiresAt])
+}
+model AgencyDocumentAnalysisJob {
+ id String @id @default(uuid())
+ accountId String
+ practiceId String
+ agencyId String
+ offerId String @unique
+ budgetId String
+ requestKey String
+ commandDigest String
+ proof Json
+ configuration Json
+ consentReceipt String @unique
+ approvedAt DateTime
+ activeProofKey String? @unique
+ state String @default("queued")
+ version Int @default(1)
+ leaseEpoch Int @default(0)
+ leaseTokenHash String?
+ leaseUntil DateTime?
+ countedInputTokens Int?
+ recordId String?
+ capMicros BigInt
+ committedMicros BigInt
+ spentMicros BigInt @default(0)
+ currency String
+ reason String?
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+ practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+ offer AgencyDocumentAnalysisOffer @relation(fields:[offerId],references:[id],onDelete:Restrict)
+ budget AgencyDocumentAiBudget @relation(fields:[budgetId],references:[id],onDelete:Restrict)
+ dispatches AgencyDocumentAnalysisDispatch[]
+ @@unique([accountId,practiceId,requestKey])
+ @@index([state,leaseUntil,createdAt])
+ @@index([practiceId,accountId,createdAt])
+}
+model AgencyDocumentAnalysisDispatch {
+ id String @id @default(uuid())
+ jobId String
+ phase String
+ epoch Int
+ capabilityHash String
+ payloadDigest String
+ state String @default("dispatched")
+ providerRequestId String?
+ receiptIdentity String? @unique
+ inputTokens Int?
+ outputTokens Int?
+ countedInputTokens Int?
+ costMicros BigInt?
+ dispatchedAt DateTime @default(now())
+ settledAt DateTime?
+ job AgencyDocumentAnalysisJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
+ @@unique([jobId,phase])
 }

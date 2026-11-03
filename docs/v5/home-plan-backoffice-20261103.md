@@ -1,0 +1,125 @@
+# Planimetria digitale su una casa esistente — 3 novembre 2026
+
+## Risultato e perimetro
+
+Su richiesta esplicita del proprietario è stata aggiunta la planimetria digitale alla sua casa reale già presente nell'ambiente locale. Account, casa e originale sono stati identificati e verificati prima dell'intervento; i relativi identificativi, documenti, geometrie, impronte personali e manifesti rimangono esclusivamente nelle evidenze private locali.
+
+Lotto `codex/home-plan-backoffice-20261103`, base comune `3335ea9`, prodotto verificato `d42459cc533f90e73db171408f4a530ba0783bff`. L'importatore è un'operazione interna controllata: **nessun nuovo endpoint pubblico, ruolo amministrativo o schema proprio**. Riusa la tabella HomeDigitalPlan e gli accessi/audit già presenti nel comune. Non esegue una Gift, non crea una nuova casa e non attiva benefici o servizi AI.
+
+**Importazione reale, delta, runtime web e UI autenticata desktop verificati.** Nessun trascinamento reale o nuovo collaudo mobile reale effettuato durante questo intervento.
+
+## Collegamento alla casa e dati preservati
+
+- **11 regioni digitali associate esplicitamente a 11 stanze esistenti.** Nessuna stanza creata, rinominata o sostituita dall'importazione.
+- Conservate tutte le **12 stanze** e i **6 oggetti** già presenti: 5 attivi e 1 archiviato. La stanza non rappresentata da un contorno rimane disponibile nelle normali schede.
+- I **5 oggetti attivi** sono disponibili nel modello: **4 mostrano segnaposti indicativi** perché già associati a stanze rappresentate; **1 resta “Da collocare”** perché privo di una precedente associazione a stanza. L'oggetto archiviato è escluso dalla mappa. Non sono stati creati cinque pin né assegnata automaticamente la stanza mancante.
+- Collocazioni canoniche degli oggetti invariate. Non vengono inventate coordinate fisiche o spostati gli elettrodomestici durante l'importazione; gli eventuali segnaposti indicativi continuano a essere letture del normale modello Ambienti.
+- Fonte ammessa mediante il **normale caricamento e un controllo Windows Defender effettivo**, non uno scanner simulato. La mappa è vincolata al documento locale corrente, alla sua versione e all'impronta dei byte.
+- Per le **68 tabelle preesistenti** sono state verificate le impronte delle righe e colonne precedenti; **329 originali preesistenti** mantengono le proprie impronte. Il controllo dopo l'avvio conferma anche stanze, oggetti e collocazioni. Nel controllo prima del successivo login, la normale lettura della sessione aveva creato una sola sessione ospite: le righe Session precedenti sono state confrontate separatamente e risultavano invariate. L'accesso successivo usa il normale flusso di autenticazione, distinto dall'importazione. Nessun backfill dei dati personali.
+- Il delta previsto comprende un documento con versione, file e ricevuta di caricamento, un audit e una ricevuta dell'importazione e una mappa. Nessuna scrittura aggiuntiva su stanze, oggetti o collocazioni.
+
+## Qualifica della planimetria
+
+È una **ricostruzione in bozza, non verificata**: conserva i contorni disponibili e ricostruisce un corridoio documentato nello storico locale. Non viene presentata come esportazione esatta del precedente salvataggio né come nuova inferenza AI. Le ulteriori candidate automatiche non adottate non sono promosse implicitamente a vani confermati.
+
+Il layout importato mantiene `qualification:unverified`, `calibration:null` e `mainPerimeter:null`. Non dichiara una scala o superficie verificata, un totale commerciale, completezza o conformità. La precedente evidenza della barra metrica resta distinta dalla revisione dei contorni. I caveat indicano l'importazione tecnica e il controllo ancora necessario di contorni e ambienti; non viene fabbricata una revisione dell'agenzia o una ricevuta Gift.
+
+## Contratto dell'importatore interno
+
+Implementazione: `backend-v5/src/home-maps/operator-import.ts`, classe HomePlanOperatorImporter.
+
+- `preview(accountId, homeId, input)` produce il fingerprint dell'anteprima e il riepilogo dei collegamenti, senza scritture.
+- `apply(accountId, homeId, input, expectedFingerprint, key)` applica lo stesso manifesto soltanto se il contesto è ancora corrente.
+- Il manifesto esatto contiene account atteso, documento/versione/impronta, snapshot digitale, binding espliciti per ogni regione, motivo e provenienza della ricostruzione. Nessuna associazione fuzzy o desunta automaticamente dal nome.
+- Ogni regione usa una stanza attiva della stessa casa, una sola volta, oppure una creazione esplicitamente dichiarata. La possibilità di creare una stanza è coperta dai test; nell'intervento reale non è stata usata.
+- Owner e account atteso, membership corrente, visibilità della fonte, tipo PDF, versione e byte fisici sono ricontrollati anche prima di restituire un replay. Essere owner non concede lettura dei documenti privati caricati da altri.
+- Il fingerprint include fonte e snapshot, scelte, contesto della casa e inventari pertinenti di stanze, oggetti, collocazioni e mappe. Un cambiamento richiede una nuova anteprima.
+- Riusa i lock canonici della casa. Mappa, eventuali nuove stanze, audit e ricevuta sono atomici; stanze e oggetti esistenti non sono aggiornati. La fonte viene ricontrollata anche dopo le scritture, prima del commit.
+- ObjectRequest fornisce idempotenza scoped per attore/casa/documento/operazione; la stessa chiave con contenuto diverso è un conflitto. Una chiave diversa non sostituisce né duplica una mappa esistente. ObjectEvent registra una importazione tecnica con provenienza e qualifica di bozza.
+- Gli ID di regione riservati `__proto__`, `constructor`, `prototype` sono rifiutati prima di qualsiasi accesso DB: la serializzazione JSON non garantisce la conservazione di queste chiavi. Il contratto DigitalPlan generale resta invariato.
+
+## Preparazione e aggiornamento locale
+
+Prima di avviare o aggiornare il prodotto sono state verificate una copia fisica fredda del cluster, una copia logica con controllo di leggibilità e una copia degli originali con verifica delle impronte. L'eventuale recupero WAL ordinario resta distinto da un ripristino o da un reset del database; nessun ambiente dimostrativo scaduto è stato ripristinato come utenza reale.
+
+Applicate **8 migrazioni già presenti nel ramo comune**, senza riscrivere lo storico di Prisma. Due vecchie migrazioni avevano terminatori misti: sono state recuperate le copie storiche con byte esattamente corrispondenti alle impronte applicate e verificata l'identità SQL dopo la sola normalizzazione dei terminatori. Nessuna differenza semantica, modifica di `_prisma_migrations`, risoluzione forzata o azzeramento dello storico.
+
+Il runtime locale è attivo dalla fonte verificata `d42459c`, in un checkout di rilascio detached, con API loopback3011 e frontend5174. Verificati manifesti e impronte di **216 file compilati, 27 file generati e 383 asset**, identità dei processi e risposte frontend200/proxy401. Le sonde delle operazioni AI, email e Gift sono respinte con403.
+
+La modalità manuale conserva le normali operazioni Home e mappa con autenticazione e CSRF. Durante l'intervento e il collaudo sono sospesi tutti i worker, la coda locale e le pulizie automatiche; nessun lavoro arretrato è avviato implicitamente. Nessuna nuova chiamata AI, spesa o email per questo intervento. Nessuna modifica a main o alla demo pubblica Alessio.
+
+Un primo preflight si è fermato sulla rappresentazione delle date nei manifesti: il lettore è stato corretto prima dell'avvio e le8guardie pure rieseguite. La prima sonda HTTP senza richiesta HTML riceveva404; è stato corretto il verificatore distinguendo pagina HTML e proxy API, senza cambiare il server attivo. Il controllo successivo all'importazione presumeva erroneamente sei oggetti attivi: la lettura ha confermato cinque attivi e uno già archiviato. L'importazione era già committata e **non è stata ripetuta**.
+
+## Verifiche eseguite
+
+| Verifica | Esito | Ambito |
+| --- | --- | --- |
+| Backend ordinari | **894/894** | Include i 5 casi puri dell'importatore |
+| DB/API mappa e importatore | **33/33** | Nuovo cluster sintetico `m9qhWO`, poi arrestato |
+| Frontend interessato | **43/43** | Mappa e integrazione Ambienti; non una nuova suite frontend completa |
+| Typecheck, lint e build | **Verdi** | Fonte prodotto verificata |
+| Guardie operative pure | **8/8** | Programmi privati; nessuna connessione o scrittura reale da questi test |
+| Delta reale | **Verificato** | Collegamenti e dati preesistenti preservati come sopra |
+| Runtime web locale | **Verificato** | Manifesti/processi/proxy, frontend200 e blocchi403; modalità manuale |
+| UI autenticata della casa | **Desktop verificato** | Schede12, mappa11regioni, PDF/overlay/caveat e ricarica;4segnaposti indicativi e1oggetto da collocare |
+| Trascinamento e mobile reali | **Non eseguiti** | Nessuna modifica di collocazioni o nuova prova reale a375px durante questo intervento |
+
+I test DB usano esclusivamente cluster nuovi posseduti; l'ambiente reale è stato usato per l'intervento richiesto e la verifica del relativo delta, non come banco di prova. Le regressioni coprono riuso/creazione esplicita, versione fonte superiore a uno, permessi e fonte privata, inventario cambiato, replay/concorrenza, conflitti, file mancante o alterato e rollback imposto.
+
+Il primo run DB ha evidenziato fixture non conformi ai contratti reali di ruolo, cestino e rifiuto sincrono: corrette preservando le asserzioni. Il secondo ha rilevato la perdita della chiave riservata nella serializzazione: il manifesto è stato irrigidito e sono state aggiunte regressioni di rifiuto senza scritture. Non presentare questi tentativi come suite verdi; il risultato finale è quello della tabella.
+
+## Collaudo UI desktop concluso
+
+L'accesso è riuscito attraverso il normale pulsante Accedi, usando credenziali già disponibili nel browser, senza leggere la password, creare nuove credenziali o fabbricare una sessione di bypass.
+
+Verificate la normale vista Schede con **12 ambienti**, la planimetria con **11 vani**, il PDF sorgente con sovrapposizione visivamente allineata e il caveat di bozza visibile. I cinque oggetti attivi restano disponibili: quattro hanno un segnaposto indicativo nelle stanze già associate; quello senza stanza resta “Da collocare”. L'archiviato non è esposto sulla mappa. Nessuna associazione fuzzy o posizione è stata scritta per completare il disegno.
+
+Una ricarica riapre la mappa conservando gli stessi conteggi e collegamenti. Screenshot conservato soltanto nelle evidenze private fuori Git. Il controllo visivo non certifica correttezza o completezza dei contorni; la qualifica della bozza resta invariata.
+
+Non sono stati eseguiti trascinamenti o spostamenti reali, né una nuova prova dell'utenza reale a375px. I test sintetici di spostamento e le verifiche frontend restano distinti da questo collaudo desktop autenticato.
+
+## Sfondo originale facoltativo
+
+Seguito richiesto dal proprietario, stessa [PR78](https://github.com/Vincenzobrutto/Home_OS/pull/78), frontend prodotto `f243516da63874b6545f1c208b59ec8e580f5cd6`: il comando “Mostra planimetria originale” è attivo all'apertura. Disattivandolo si nasconde soltanto il canvas raster; frame, contorni, oggetti e controlli restano montati, senza cambiare zoom, coordinate o associazioni. La scelta vale per la vista corrente e torna attiva riaprendo la mappa. Nessuna preferenza, geometria o posizione viene scritta sul server.
+
+Il caricamento e la verifica del rapporto della pagina restano obbligatori anche con sfondo nascosto. Nascondere il raster non aggira errori di lettura o di frame e non avvia una nuova rasterizzazione quando lo si riattiva.
+
+Verifiche del seguito: **45/45 test del gruppo mappe**, compresi due casi sul componente reale per frame/coordinate invarianti, identità del canvas e mancata ripetizione del rendering; errori di frame continuano a bloccare il disegno anche da nascosto. Typecheck, lint mirato e build verdi. Il primo setup dei nuovi casi non prevedeva `Image.decode` assente in JSDOM: corretto il solo adattatore sintetico. Nessun nuovo test backend o DB necessario/eseguito per questa modifica visiva; i conteggi precedenti rimangono distinti.
+
+Aggiornato soltanto il frontend locale con build e fonte congelate, mantenendo API `d42459c`, processo PostgreSQL, sessioni e guardie originali. Verificati HTML, asset e proxy e preservati i blocchi AI/email/Gift. Controllo visivo nella casa autenticata: sfondo inizialmente visibile, disattivazione, zoom, ripristino dell'originale allo stesso zoom e nuova disattivazione; contorni e quattro segnaposti restano visibili. Nessun salvataggio di oggetti o geometria. Nessuna nuova verifica a 375 px dichiarata. Il controllo browser dedicato era temporaneamente indisponibile; la verifica è stata completata tramite la superficie nativa della stessa app, con screenshot privato fuori Git.
+
+## Rotazione della vista
+
+Ulteriore seguito richiesto, frontend prodotto `b5f4924e47c80ca6655914a4f65155c7bf453d22`: pulsanti “Ruota a sinistra” e “Ruota a destra” a passi di 90°, con indicazione dell'orientamento. La vista parte da 0° e la scelta resta locale al componente; non modifica documento, scala, geometria o collocazioni. A 90°/270° larghezza e altezza si scambiano, adattando l'ingombro visuale. Zoom e selezioni correnti sono conservati.
+
+Canvas originale, SVG dei contorni e anteprima del vano di destinazione condividono la stessa trasformazione. I segnaposti seguono le posizioni ruotate mentre icone e nomi rimangono diritti. Puntatori e trascinamenti applicano l'inversa della rotazione prima di controllare il vano e inviare coordinate canoniche al backend; muri, vuoti, clipping e occlusioni continuano a bloccare il rilascio. Il fence del gesto include l'orientamento: ruotare durante un trascinamento annulla l'invio. I campi manuali X/Y e i punti del contorno restano nel riferimento originale.
+
+La verifica del rapporto pagina e il rendering del raster usano sempre dimensioni e fonte originali: ruotare o nascondere lo sfondo non ripete la rasterizzazione e non aggira errori della fonte. Un riesame indipendente delle matrici CSS/SVG, delle inverse e del fence non ha individuato blocker.
+
+**70/70 test in 7 file del gruppo mappe**, typecheck, lint mirato e build verdi. Le 25 regressioni aggiunte rispetto al seguito precedente coprono matrici e angoli di frame non quadrati, punti interni/esterni, inverse client, click SVG e identità del canvas, stato della vista, payload di spostamenti nella stessa stanza/fra stanze, vuoti/muri, clipping/occlusione e cambio orientamento durante il gesto. Nessun nuovo backend o test DB necessario/eseguito: i risultati precedenti sono storici e distinti.
+
+Attivato il solo frontend congelato; API `d42459c`, PostgreSQL e sessione normale sono preservati. Controlli HTTP e identità di processi/asset/guardie verdi. Nella casa reale autenticata sono stati verificati i due pulsanti, il ritorno fra orientamenti, l'allineamento di originale e contorni a 90°/270°, lo sfondo nascosto e la leggibilità diritta dei nomi degli oggetti. Nessun trascinamento reale salvato, modifica geometrica o nuova verifica a 375 px. Screenshot e manifesti operativi rimangono privati fuori Git; demo Alessio, main e ramo comune invariati.
+
+## Inquadratura dell'immobile digitalizzato
+
+Seguito richiesto dal proprietario, frontend `b8bea2e41fc18c0af8458039b240b81c7ae0f393`: la consultazione usa il riquadro dell'unione dei contorni esterni di tutti i vani resi, compresi terrazzi e corridoi staccati. Il margine è il maggiore fra 24 unità della fonte e il 6% del lato maggiore del riquadro, limitato ai bordi della pagina. In assenza di un'area valida, o con vertici non finiti/fuori frame, si torna prudentemente al foglio completo. Non si scartano vertici difettosi per stringere artificialmente il riquadro.
+
+È un'inquadratura visuale: PDF, versione, byte, scala e geometria restano invariati. “Apri originale e provenienza” conserva l'accesso al documento completo. Durante la correzione manuale dei contorni si vede l'intero foglio, evitando di nascondere punti spostati oltre il riquadro iniziale; annullando o completando la correzione torna l'inquadratura dei vani adottati.
+
+Il viewport canonico contiene origine e dimensioni. Canvas originale, SVG, segnaposti e anteprima condividono la stessa matrice affine; un contenitore dedicato ritaglia solamente il raster completo. I click e i trascinamenti riaggiungono l'origine dopo l'inversa della rotazione, mantenendo canonici i payload. Origine e dimensioni entrano nel fence del gesto: un cambio del riquadro durante il trascinamento annulla l'invio. Verifica del rapporto e rasterizzazione continuano a usare la pagina completa; ruotare, inquadrare o nascondere non ripetono il rendering.
+
+**101/101 test in 8 file del gruppo mappe**, typecheck, lint mirato e build verdi. Rispetto ai precedenti 70 sono aggiunti 31 casi su unione/margine/fallback/immutabilità, matrici con offset, canvas e fonte completa, editor a foglio intero e gesti con ritaglio/rotazione/zoom/clipping. Il primo aggregato era 100/101: il rettangolo sintetico di un test integrato rappresentava ancora un foglio quadrato invece del nuovo viewport 100×69; corretto il solo rettangolo di test, conservando le asserzioni sui payload canonici. Corretto inoltre il tipo esplicito ViewFrame usato dal layer. Nessun nuovo test o modifica backend/DB.
+
+Attivato soltanto il frontend congelato, mantenendo API `d42459c`, PostgreSQL, sessione e guardie precedenti. Controlli HTTP e identità superati. La verifica visiva, inizialmente sospesa per l'interazione dell'utente, è stata completata insieme al seguito `cc682d4`: immobile ingrandito, originale e contorni allineati, nessun foglio completo nella normale consultazione.
+
+## Oggetti da collocare dentro la mappa
+
+Seguito corretto su indicazione esplicita del proprietario, frontend `cc682d41ac765d04dd4b894feb54d666888f3877`. La vista usa sempre una sola colonna. Non esistono una spalla destra né una fila esterna di oggetti. Il piccolo riquadro “Da collocare” è sovrapposto in alto a destra alla superficie della mappa: icone con nome breve e nome accessibile completo, trascinabili nel vano scelto. Il riquadro resta diritto e fermo mentre il modello ruota o viene ingrandito; la sua lista è scorrevole quando serve. “Gestisci vani e oggetti” apre soltanto i controlli opzionali sotto la mappa, senza restringerla. Selezione da tastiera/tap e modifica del contorno restano disponibili; chiudere i controlli non perde la bozza locale.
+
+Le icone sono renderizzate dal medesimo layer degli oggetti tramite un target DOM esterno alla mappa canonica e al suo contenitore scorrevole, ma interno alla superficie visiva. Rilasciare sul riquadro non attraversa il pannello per salvare su una stanza sottostante. La fonte di un oggetto non collocato non inventa coordinate o un ambiente precedente. Durante il trascinamento viene mostrata un'anteprima; soltanto un rilascio valido invia il normale comando `pins` con versione mappa, versione collocazione e coordinate canoniche. Conferma del server e refresh autorevole precedono la rimozione dell'icona dal riquadro; errore, conflitto o esito incerto conservano le protezioni/idempotenza precedenti.
+
+Crop, rotazione, zoom, clipping, muri e vuoti sono rispettati; cambio dei dati, del viewport o del rettangolo fisico della mappa durante il gesto annulla l'invio. La gestione opzionale conserva i campi manuali X/Y nel sistema originale. Nessun nuovo endpoint, schema, libreria, AI o dato sintetico nel percorso reale.
+
+**136/136 test in 9 file del gruppo mappe**, typecheck, lint mirato e build verdi. Coperti primo posizionamento e spostamenti esistenti nelle quattro rotazioni, crop/zoom, dock fisico occludente, cattura/annullamento, variazione del rettangolo, sola lettura, accesso revocato, conflitti, retry idempotente, errori/refresh incerti, conservazione delle bozze e controlli sotto la mappa. L'avviso build sul chunk principale oltre500kB era già presente. Nessuna nuova suite backend o DB necessaria/eseguita per questo seguito frontend.
+
+Attivato il build finale da fonte congelata, verificati hash asset, HTML, routing, proxy e identità dei processi: solo frontend sostituito; API `d42459c`, PostgreSQL, sessione normale e8worker sospesi invariati. Blocchi AI/email/Gift preservati. Schermata desktop autenticata verificata in sola lettura: riquadro di icone nell'angolo della mappa ingrandita, originale/contorni allineati e nessuna spalla. L'utente ha continuato a provare l'app durante il controllo: le sue nuove collocazioni non sono state ripetute, annullate o attribuite al collaudo dell'operatore. Nessuna nuova prova browser a375px o trascinamento reale salvato dall'operatore; i gesti validi sono verificati con fixture offline. Screenshot e manifesti operativi restano privati fuori Git. Main, consolidamento e demo Alessio invariati; nessun deploy.

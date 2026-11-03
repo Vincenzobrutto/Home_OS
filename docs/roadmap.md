@@ -1,8 +1,32 @@
+## 3 novembre — integrazione documenti e mappa nel comune
+
+Integrazione nel comune autorizzata tramite PR79: PR77/78 riunite, continuità fra proposte, dati confermati, confronti e preparazione incarico. Letture coordinate con bozze preservate e fonte autorizzata sulla pagina citata, senza coordinate di evidenza inventate. Backend935/935, DB/API77/77 e frontend completo2163/2163 in201file; statici/build e browser desktop/375px verdi, tutti i cluster creati arrestati. [Risultati, tentativi e limiti](v5/agency-documents-integration-20261103.md). Restano separati l'aggiornamento dell'app locale, l'attivazione AI reale autorizzata, OCR, campi estesi e modello incarico approvato. Nessuna modifica a main o deploy automatico.
+
+## 3 novembre — mappa a larghezza piena e oggetti da collocare
+
+Completata e attiva localmente l'inquadratura dell'immobile e la vista senza spalla: icone degli oggetti non posizionati nell'angolo alto destro della mappa, trascinamento nei vani e controlli opzionali sotto. Nessun nuovo backend/schema, documento completo e coordinate canoniche conservati. Gruppo mappe136/136 e verifica visiva desktop completati; nuovo collaudo mobile non eseguito in questo seguito. [Report](v5/home-plan-backoffice-20261103.md#oggetti-da-collocare-dentro-la-mappa).
+
+## 3 novembre — orientamento della planimetria
+
+Completati e attivi localmente i comandi di rotazione della vista a passi di 90°. Originale e modello digitale restano allineati; payload e geometrie canoniche invariati, nessuna nuova API o schema. [Verifiche e limiti](v5/home-plan-backoffice-20261103.md#rotazione-della-vista).
+
+## 3 novembre — vista digitale senza sfondo originale
+
+Completato il seguito di presentazione: originale disattivabile e riattivabile, senza modifiche a misure, contorni, zoom o oggetti. Verificato e attivo nell'ambiente locale; nessun nuovo backend o dato persistente. [Report](v5/home-plan-backoffice-20261103.md#sfondo-originale-facoltativo).
+
+## 3 novembre — planimetria digitale nella casa già esistente
+
+Importatore interno con anteprima, binding espliciti e audit: collega una bozza alla casa conservando stanze, oggetti e collocazioni. Primo intervento reale richiesto dal proprietario eseguito dopo backup e controlli:11regioni riusano11stanze, nessuna stanza nuova; dati precedenti preservati. Backend894/DB33/frontend43 e guardie8 verdi; runtime web locale e UI desktop autenticata verificati in modalità manuale, compresa ricarica. Cinque oggetti attivi disponibili, quattro segnaposti indicativi e uno ancora Da collocare; nessun trascinamento reale o nuovo collaudo mobile reale. [Report e limiti](v5/home-plan-backoffice-20261103.md). Nessuna AI nuova o migrazione propria. Il controllo di contorni e scala resta un passo distinto, senza promuovere candidate non adottate o misure non verificate.
+
+## 3 novembre — verticale documentale nativo collegato
+
+Pratica → documento/pagine → condizioni/consenso → job persistente → citazioni → associazione → conferma separata. Primo incremento per atto/successione/visura in PDF nativo, collaudato con provider sintetico e runtime reale disabilitato. Backend930/930, DB/API37/37, UI88/88 e browser desktop/375 px; [report e prossimi passi](v5/agency-document-analysis-20261103.md). A seguire OCR e collaudo reale autorizzato, campi estesi e modello incarico approvato. Gift e mappe restano nel comune; questo lotto è una PR separata senza deploy.
+
 ## 3 novembre — Gift consolidata e primo collegamento del fascicolo
 
 Candidato dalla base comune cbddcf0: integra lo stack PR72–75, conserva tipo/famiglia dichiarati dall'agenzia nelle nuove Gift e distingue la classificazione ricevuta dalla compilazione personale. Nella pratica sono selezionabili Atto, Visura, APE, Successione e gli altri tipi reali. Corretto il refresh della consegna dopo il salvataggio del tipo. [Report e stato di integrazione](v5/gift-consolidation-20261103.md).
 
-Il prossimo verticale è il job documentale nativo, non un nuovo catalogo campi: [piano operativo](v5/agency-document-analysis-next-20261103.md). Analisi AI atto/visura e vera bozza incarico restano da collegare; nessuna chiamata o autorizzazione economica aggiunta da questo lotto.
+Questo checkpoint precedeva il verticale documentale nativo, ora implementato nel candidato: [stato aggiornato](v5/agency-documents-integration-20261103.md). Restano attivazione e prova AI reale autorizzate, OCR/campi estesi e vera bozza sul modello approvato; nessuna chiamata o autorizzazione economica aggiunta da questi lotti.
 
 ## 3 novembre — Gift semplice dalla pratica conclusa
 

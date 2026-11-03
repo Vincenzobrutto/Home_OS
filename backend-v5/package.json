@@ -96,7 +96,14 @@
     "test:ambienti-map-followup-trial": "node test/offline.cjs --suite test:ambienti-map-followup-trial",
     "test:ambienti-user-trial-20261102": "node test/offline.cjs --suite test:ambienti-user-trial-20261102",
     "test:gift-simple-browser-20261103": "node test/offline.cjs --suite test:gift-simple-browser-20261103",
-    "test:gift-simple-user-trial-20261103": "node test/offline.cjs --suite test:gift-simple-user-trial-20261103"
+    "test:gift-simple-user-trial-20261103": "node test/offline.cjs --suite test:gift-simple-user-trial-20261103",
+    "test:home-map-operator": "node test/offline.cjs --suite test:home-map-operator",
+    "test:home-map-operator-db": "node test/offline.cjs --suite test:home-map-operator-db",
+    "test:agency-document-analysis": "node test/offline.cjs --suite test:agency-document-analysis",
+    "test:agency-document-analysis-db": "node test/offline.cjs --suite test:agency-document-analysis-db",
+    "test:agency-document-browser-20261103": "node test/offline.cjs --suite test:agency-document-browser-20261103",
+    "test:agency-documents-integration-db": "node test/offline.cjs --suite test:agency-documents-integration-db",
+    "test:agency-documents-integration-browser-20261103": "node test/offline.cjs --suite test:agency-documents-integration-browser-20261103"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",
