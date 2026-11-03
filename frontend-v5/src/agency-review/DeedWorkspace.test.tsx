@@ -1,4 +1,4 @@
-import {act,cleanup,fireEvent,render,screen} from '@testing-library/react';
+import {act,cleanup,fireEvent,render,screen,within} from '@testing-library/react';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {ApiError} from '../api/errors';
 import {DeedWorkspace} from './DeedWorkspace';
@@ -30,5 +30,14 @@ describe('deed association workspace',()=>{
  it('new read-only permission blocks retry of an uncertain earlier request',async()=>{const api=port();api.bind.mockRejectedValueOnce(error(503));const v=render(<DeedWorkspace scopeKey="permission" api={api}/>);await screen.findByText('Elena Verdi');fill();submit();await screen.findByText(/Esito non disponibile/);v.rerender(<DeedWorkspace scopeKey="permission" api={api} readOnly/>);expect(screen.getByRole('button',{name:'Riprova lo stesso invio'})).toBeDisabled();expect(api.bind).toHaveBeenCalledTimes(1);});
  it('new analysis results refresh an idle binding view without remounting the scope',async()=>{const api=port(),view=render(<DeedWorkspace scopeKey="analysis" api={api} refreshToken={0}/>);await screen.findByText('Elena Verdi');const next=snapshot();next.proposals.revision=6;next.proposals.records[0]!.result!.proposals[0]!.proposedValue='Marco Rossi';api.read.mockResolvedValue(next);view.rerender(<DeedWorkspace scopeKey="analysis" api={api} refreshToken={1}/>);await screen.findByText('Marco Rossi');expect(api.read).toHaveBeenCalledTimes(2);expect(api.bind).not.toHaveBeenCalled();});
  it('a new analysis refresh waits for an uncertain binding and preserves its original retry',async()=>{const api=port();api.bind.mockRejectedValueOnce(error(503));const view=render(<DeedWorkspace scopeKey="analysis-pending" api={api} refreshToken={0} createKey={()=>'binding-key'}/>);await screen.findByText('Elena Verdi');fill();submit();await screen.findByText(/Esito non disponibile/);const original=structuredClone(api.bind.mock.calls[0]);view.rerender(<DeedWorkspace scopeKey="analysis-pending" api={api} refreshToken={1} createKey={()=>'binding-key'}/>);expect(api.read).toHaveBeenCalledTimes(1);fireEvent.click(screen.getByRole('button',{name:'Riprova lo stesso invio'}));await screen.findByText('Elena Verdi');expect(api.bind.mock.calls[1]).toEqual(original);expect(api.bind).toHaveBeenCalledTimes(2);});
+
+ it('keeps another candidate draft when one binding succeeds in the same record',async()=>{
+  const api=port(),initial=snapshot(),next=result(),second={...initial.proposals.records[0]!.result!.proposals[0]!,candidateId:'second',proposedValue:'Lucia Neri'};
+  initial.proposals.records[0]!.result!.proposals.push(second);next.proposals.records[0]!.result!.proposals.push(second);api.read.mockResolvedValue(initial);api.bind.mockResolvedValue(next);await loaded(api);
+  const cards=screen.getAllByRole('article',{name:'Nome della parte'}),first=within(cards[0]!),other=within(cards[1]!);
+  fireEvent.change(other.getByLabelText('Riferimento soggetto nella pratica'),{target:{value:'bozza-secondo-soggetto'}});fireEvent.change(other.getByLabelText('Motivo dell’associazione (facoltativo)'),{target:{value:'Motivo ancora da completare'}});
+  fireEvent.change(first.getByLabelText('Unità della pratica'),{target:{value:'u'}});fireEvent.change(first.getByLabelText('Riferimento soggetto nella pratica'),{target:{value:'historical-party'}});fireEvent.click(first.getByRole('checkbox'));fireEvent.click(first.getByRole('button',{name:'Associa come dato proposto'}));await screen.findByText(/Associazione salvata/);
+  const untouched=screen.getAllByRole('article',{name:'Nome della parte'}).find(c=>within(c).queryByText('Lucia Neri'))!;expect(within(untouched).getByLabelText('Riferimento soggetto nella pratica')).toHaveValue('bozza-secondo-soggetto');expect(within(untouched).getByLabelText('Motivo dell’associazione (facoltativo)')).toHaveValue('Motivo ancora da completare');expect(api.bind).toHaveBeenCalledOnce();
+ });
 
 });
