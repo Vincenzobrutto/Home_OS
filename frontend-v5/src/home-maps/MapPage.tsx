@@ -19,7 +19,7 @@ export function MapPage(){
 export function MapLinks(){
  const home=useCurrentHome(),account=useAccount(),api=useApi();
  const query=useQuery({queryKey:['account',account.id,'home',home.id,'digital-maps'],queryFn:({signal})=>api.homeMaps.list(home.id,account.id,signal),retry:false});
- return <section className={ui.card}><h2>La mappa della tua casa</h2>{query.isPending?<Loading label="Caricamento mappa…"/>:query.isError?<ErrorState error={query.error} onRetry={()=>void query.refetch()}/>:query.data.items.length?<><p>I vani digitalizzati dall’agenzia sono già qui: puoi aggiungere i tuoi elettrodomestici senza ripetere l’analisi AI.</p>{query.data.items.map(p=><p key={p.id}><Link className={ui.btn} to={'/home/'+home.id+'/mappa/'+p.id}>{p.name} · {p.roomCount} vani</Link></p>)}</>:<p>Nessuna mappa digitale ricevuta. Le planimetrie originali restano nell’archivio Documenti.</p>}</section>;
+ return <section className={ui.card}><h2>La mappa della tua casa</h2>{query.isPending?<Loading label="Caricamento mappa…"/>:query.isError?<ErrorState error={query.error} onRetry={()=>void query.refetch()}/>:query.data.items.length?<><p>I vani digitalizzati della casa sono già qui: puoi aggiungere i tuoi elettrodomestici senza ripetere l’analisi AI.</p>{query.data.items.map(p=><p key={p.id}><Link className={ui.btn} to={'/home/'+home.id+'/mappa/'+p.id}>{p.name} · {p.roomCount} vani</Link></p>)}</>:<p>Nessuna mappa digitale disponibile. Le planimetrie originali restano nell’archivio Documenti.</p>}</section>;
 }
 export function HomeMapEditor({id,embedded=false}:{id:string;embedded?:boolean}){
  const home=useCurrentHome(),account=useAccount(),api=useApi(),cache=useQueryClient(),key=['account',account.id,'home',home.id,'digital-map',id];
@@ -67,7 +67,8 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
   {scene.markers.some(m=>m.indicative)&&<p className={styles.legend}><span className={styles.legendDot}/>I segnaposti tratteggiati sono disposti in modo indicativo nella stanza già associata, non indicano la posizione reale. Trascinali per precisarla.</p>}
   {scene.markers.some(m=>m.multipleRooms)&&<p>Un oggetto associato a più ambienti può comparire in ciascuno. Trascinandolo viene assegnato al solo ambiente di arrivo.</p>}
   <p><Link to={'/home/'+homeId+'/documenti/'+data.document.id}>Apri originale e provenienza</Link> · <Link to={'/home/'+homeId+'/oggetti'}>Aggiungi o gestisci un elettrodomestico</Link></p>
-  <details><summary>Misure e limiti · {data.layout.qualification==='estimated'?'scala stimata':data.layout.qualification==='reviewed'?'scala revisionata':'scala da verificare'}</summary><ul>{data.layout.caveats.map((v,i)=><li key={i}>{v}</li>)}</ul></details>
+  <p role="note">{data.layout.caveats[0]}</p>
+  <details><summary>Misure e limiti · {data.layout.qualification==='estimated'?'scala stimata':data.layout.qualification==='reviewed'?'scala revisionata':'scala da verificare'}</summary><ul>{data.layout.caveats.slice(1).map((v,i)=><li key={i}>{v}</li>)}</ul></details>
   {notice&&<p role="status" className={styles.notice}>{notice}</p>}{error&&<p role="alert">{error}</p>}
   {(uncertain||needsRefresh)&&<div className={styles.toolbar}>{uncertain&&<button className={ui.btn} disabled={busy} onClick={()=>void dispatch()}>Riprova lo stesso invio</button>}<button className={ui.btn} disabled={busy} onClick={()=>void updateView()}>{uncertain?'Verifica dati sul server':'Aggiorna dati'}</button></div>}
   <div className={styles.columns}>

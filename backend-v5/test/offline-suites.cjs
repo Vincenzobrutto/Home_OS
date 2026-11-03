@@ -587,3 +587,8 @@ profiles['test:ambienti-user-trial-20261102']={database:true,api:false,files:['t
 profiles['test:gift-simple-browser-20261103']={database:true,api:false,files:['test/gift-simple-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T01:00:00.000Z'};
 
 profiles['test:gift-simple-user-trial-20261103']={database:true,api:false,files:['test/gift-simple-user-trial-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T11:30:00.000Z'};
+
+profiles['test:home-map-operator']={database:false,api:false,files:['test/home-map-operator-import.test.cjs']};
+profiles.test.files.push(...profiles['test:home-map-operator'].files);
+profiles['test:home-map-operator-db']={database:true,api:false,files:['test/home-map-operator-import.integration.test.cjs','test/home-map.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/home-map-operator-import.integration.test.cjs');

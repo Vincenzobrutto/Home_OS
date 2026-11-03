@@ -9,6 +9,10 @@ const room:MapView['rooms'][number]={id:'kitchen',name:'Cucina',type:'kitchen',p
 function fixture():MapView{return {id:'map',version:2,geometryRevision:3,document:{id:'doc',name:'Planimetria DEMO',mimeType:'image/png'},layout:{source:{page:1},frame:{width:100,height:100},rooms:[structuredClone(room)],qualification:'estimated',caveats:['Formato A4 presunto: verificare']},rooms:[structuredClone(room)],objects:[{id:'fridge',name:'Frigorifero DEMO',type:'appliance',positionVersion:0}],pins:[],canEdit:true};}
 function mount(data=fixture(),send=vi.fn().mockResolvedValue({}),refresh=vi.fn().mockResolvedValue(undefined)){render(<MemoryRouter><Workspace data={data} homeId="home" send={send} refresh={refresh}/></MemoryRouter>);return {send,refresh};}
 describe('mappa indipendente della casa',()=>{
+ it('keeps an imported draft caveat visible before the collapsed measurement details',()=>{
+  const data=fixture();data.layout.qualification='unverified';data.layout.caveats=['Bozza importata da backoffice: contorni e ambienti da verificare.','Computo non completo.'];mount(data);
+  expect(screen.getByRole('note')).toHaveTextContent(data.layout.caveats[0]!);expect(screen.getByText('Misure e limiti · scala da verificare').closest('details')).not.toHaveAttribute('open');expect(screen.queryByText(/digitalizzati dall’agenzia/)).not.toBeInTheDocument();
+ });
  it('places an existing fridge only after explicit save, with plan and canonical placement revisions',async()=>{
   const {send,refresh}=mount();fireEvent.change(screen.getByLabelText('Il tuo elettrodomestico'),{target:{value:'fridge'}});expect(send).not.toHaveBeenCalled();fireEvent.click(screen.getByText('Punto sintetico sulla mappa'));expect(send).not.toHaveBeenCalled();fireEvent.click(screen.getByText('Salva posizione nella stanza'));
   await waitFor(()=>expect(refresh).toHaveBeenCalledOnce());expect(send).toHaveBeenCalledWith('pins',{expectedVersion:2,objectId:'fridge',regionId:'kitchen',x:20,y:20,expectedPositionVersion:0},expect.any(String));
