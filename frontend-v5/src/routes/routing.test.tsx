@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { PASSWORD_A, PASSWORD_B, renderApp, seededBackend } from '../test/harness';
 import type { FakeBackend } from '../test/fakeBackend';
 import type { renderApp as RenderApp } from '../test/harness';
+// Resolve the account route chunk before timing navigation assertions. Production stays lazy.
+import '../agency-plans/AgencyPages';
 
 async function loginAs(app: ReturnType<typeof RenderApp>, email: string, password: string) {
   await screen.findByRole('heading', { name: 'Accedi' });

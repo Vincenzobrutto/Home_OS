@@ -1,3 +1,9 @@
+## 3 novembre — seguito del nucleo Agenzie dopo Gift
+
+La perdita della classificazione è corretta per le nuove consegne sotto policy1; nessun backfill su file già ricevuti. I tipi non conosciuti restano onestamente non classificati. La famiglia dichiarata non attesta validità o completezza e non equivale a compilazione personale. Catalogazione dei7tipi collegata alla pratica, nessuna estrazione automatica aggiunta.
+
+Priorità successiva: job/consenso/ledger dedicati all'analisi documentale, porta provider con fixture solo nei test, supporto esplicito visura e UI avvio/stato sul record citato esistente. P1/campi già inventariati, non rifare cataloghi. Prova AI reale richiede autorizzazione e budget attuali; modello approvato blocca la bozza, non il coordinatore. [Piano residuo concreto](v5/agency-document-analysis-next-20261103.md).
+
 ## 3 novembre — seguito Gift dalla pratica
 
 Consegna semplice implementata e collaudata; nessun ulteriore step tecnico da chiedere all'agente per i documenti finali. Resta da valutare il mapping della classificazione dei file Gift all'archivio proprietario: nel collaudo i3file ricevuti sono corretti, ma ancora Da classificare/Da compilare. Non inferire automaticamente contenuti/certificazioni per nascondere il gap. Integrazione stackPR74/73/72 e invio email prodotto separati, non autorizzati dal presente lotto. [Esito](v5/gift-simple-delivery-20261103.md).

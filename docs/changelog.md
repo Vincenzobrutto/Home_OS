@@ -1,3 +1,7 @@
+## 3 novembre — classificazione ricevuta e catalogazione Agenzie
+
+Nuove Gift con snapshot sigillato della classificazione server, organizzazione privata canonica e origine agency_gift; le vecchie consegne restano invariate. Famiglie/tipi/filtri persistono nella casa, senza completare automaticamente il lavoro del proprietario. Selettore dei7tipi nella pratica, con salvataggio esplicito e protezioni su versione/revisione; pannello Gift aggiornato dopo catalogazione/upload. [Verifiche e pubblicazione](v5/gift-consolidation-20261103.md).
+
 ## 3 novembre — seleziona i documenti della pratica e crea la Gift
 
 CTA Consegna al proprietario, flag file/mappa, destinatario e anno opzionale: rimosso dal percorso pratica l'editor di rilascio documento per documento. Protezioni esistenti preservate nell'orchestrazione interna; gestione esplicita di esiti incerti. Test nuovi21/21, regressione231/231, navigazione7/7, guardie20/20 e statici/build verdi; browser reale su fixture fino a Home/documenti/mappa/anno, UI agente375px. [Report](v5/gift-simple-delivery-20261103.md). Nessun deploy.
