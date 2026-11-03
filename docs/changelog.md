@@ -1,3 +1,7 @@
+## 3 novembre — app locale allineata al comune PR79
+
+Rilasciati backend/frontend cfff252 sulla stessa origine e DB locali, con backup attuale, una migrazione additiva e verifica delle81 tabelle/sessioni e330 originali precedenti. UI autenticata della mappa e controlli runtime verdi; restrizioni su Agenzie/Gift/AI/email e operazioni automatiche conservate, nessuna attivazione dedotta dall'attesa della risposta. [Report](v5/local-common-runtime-20261103.md). Nessun main o deploy pubblico; configurazione operativa Agenzie/Gift distinta dall'installazione del codice.
+
 ## 3 novembre — integrazione della revisione documentale Agenzie
 
 Integrazione della PR79 nel comune autorizzata dal committente, con PR77/78 riunite e con mappa/Gift preservate. Dopo una modifica i pannelli si aggiornano con letture protette, differite quando ci sono bozze o invii pendenti. Apri fonte mostra pagina fisica e citazione autorizzate; confronto fra fonti e ruolo nel documento senza dedurre il venditore attuale. Percorso sintetico completo con successione, subalterni discordanti, nota di difformità e incarico bloccato senza modello. Chiusura verificata: backend935/935, DB/API77/77, frontend completo2163/2163 in201file, statici/build e browser desktop/375px verdi. Le attese dei soli test sono state corrette dagli stack senza ridurre controlli, timeout o retry; [report](v5/agency-documents-integration-20261103.md) con tutti i tentativi. Tutti i cluster creati arrestati. Nessun provider reale, spesa, modifica al runtime utente, main o deploy.
