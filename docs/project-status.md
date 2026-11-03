@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Consolidamento Gift e classificazione ricevuta — 3 novembre, autorizzato
+
+Su approvazione esplicita del committente: chiudere Gift, correggere classificazione ricevuta, integrare PR72–75 nel consolidamento e avviare il verticale fascicolo AI. Nuovo candidato codex/gift-consolidamento-20261103 dalla punta remota cbddcf0, merge locale4dd8469 dell'intero stack finof961f47 senza conflitti. Nessun push al consolidamento prima di controlli post-integrazione; main/deploy e prova lAunc8 invariati. Backend classificazione/provenienza/organizzazione e UI catalogazione documenti su file distinti; review indipendente in sola lettura. Nessuna nuova AI/spesa o bozza incarico senza modello approvato.
+
 ## Riprova guidata Gift — 3 novembre, mattina
 
 Richiesta nuova prova dall'agenzia al proprietario. Nominale separato test:gift-simple-user-trial-20261103 fino alle12:30Rome/11:30UTC, su nuovo cluster protetto; nessun riavvio del collaudo scaduto o modifica prodotto. Nuovo run lAunc8 attivo, build/readiness/API/statici verdi; accesso agente e checklist verificati nel browser, nessuna selezione o consegna eseguita al posto del committente. Guardie dirette19/19 e syntax check verdi. Stesso ramo dedicatoPR75, codice prodotto invariato.
@@ -135,6 +139,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
+| Gift — consolidamento e classificazione | Codex | codex/gift-consolidamento-20261103 | Gift packet/worker, organizzazione/workflow e UI catalogazione; report integrazione | In corso su autorizzazione3nov; candidato isolato, test post-integrazione e review prima del push comune. |
 | Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | Implementato e collaudato, PR draft75; dipende da PR74/73/72. Codice9f16073 pushed/hash verificato. Nessun merge. |
 | Ambienti — mappa e trascinamento | Codex | codex/ambienti-mappa-drag-20261101 | frontend home-maps/RoomsPages; backend home-maps; test e contratti | QA conclusa; PR draft74, codice2fab688/test0ba4685; frontend42/DB17/guardie18 e browserdesktop375verdi. Nominale14:00terminato automaticamente,1/1 e stopDBverificati,linkscaduto; dipendenza PR73/72; verifiche precedenti distinte nel report ambienti-map-drag-20261101.md. Nessun merge/deploy. |
 | Agenzie — fascicolo v1 | Codex | codex/agenzie-fascicolo-20261030 | Dominio, persistenza, API/UI Agenzie; indizi di fasce murarie e scarto per singola candidata implementati; controllo delle aree non censite già integrato. | 658/658 backend, 60/60 UI, 20/20 DB-HTTP-worker, build/typecheck/lint verdi; [report corrente](v5/agency-candidate-selection-20261031.md). Replay reale offline senza AI nuova; classificazione e completezza non confermate. Cluster nuovi arrestati, nessun nuovo browser, merge/deploy o modifica demo Alessio. |
