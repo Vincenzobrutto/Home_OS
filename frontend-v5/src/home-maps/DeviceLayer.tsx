@@ -9,29 +9,35 @@ export type DeviceDrop={expectedVersion:number;objectId:string;regionId:string;x
 type TrayObject=MapView['objects'][number];
 type SourceBase={key:string;objectId:string;name:string;positionVersion:number};
 type DragSource=SourceBase&({kind:'marker';regionId:string;roomName:string;point:Point}|{kind:'tray'});
-type Gesture={pointerId:number;source:DragSource;start:Point;point:Point|null;fence:string;moved:boolean;version:number};
+type LayerRect=Pick<DOMRect,'left'|'top'|'width'|'height'>;
+type Gesture={pointerId:number;source:DragSource;start:Point;point:Point|null;fence:string;bounds:LayerRect;moved:boolean;version:number};
 type Preview={source:DragSource;point:Point};
 export function DeviceLayer({data,markers,homeId,canMove,onDrop,onMessage,onChoose,turn=0,viewport,trayTarget,unplaced=[],onChooseUnplaced}:{data:MapView;markers:DeviceMarker[];homeId:string;canMove:boolean;turn?:MapTurn;viewport?:ViewFrame;trayTarget?:HTMLElement|null;unplaced?:MapView['objects'];onChooseUnplaced?:(object:TrayObject)=>void;onDrop:(body:DeviceDrop,message:string)=>void|Promise<void>;onMessage:(s:string)=>void;onChoose:(marker:DeviceMarker)=>void}){
  const layer=useRef<HTMLDivElement>(null),gesture=useRef<Gesture|null>(null),suppressClick=useRef<string|null>(null),[preview,setPreview]=useState<Preview|null>(null);
  const f:ViewFrame=viewport??data.layout.frame,view=displayFrame(f,turn),fence=sceneFence(data)+':view:'+JSON.stringify([turn,f.x??0,f.y??0,f.width,f.height]),destination=preview?roomAt(data.rooms,preview.point):null;
  const trayObjects=unplaced.flatMap(candidate=>{const current=data.objects.find(o=>o.id===candidate.id);return current?[current]:[];});
- function cancel(message:string){if(gesture.current?.moved)suppressClick.current=gesture.current.source.key;gesture.current=null;setPreview(null);if(message)onMessage(message);}
+ function readBounds():LayerRect|null{const b=layer.current?.getBoundingClientRect();return b&&[b.left,b.top,b.width,b.height].every(Number.isFinite)&&b.width>0&&b.height>0?{left:b.left,top:b.top,width:b.width,height:b.height}:null;}
+ function unchangedBounds(before:LayerRect,now:LayerRect|null){return !!now&&(['left','top','width','height'] as const).every(key=>Math.abs(before[key]-now[key])<=.5);}
+ function cancel(message:string,forceSuppress=false){if(gesture.current&&(gesture.current.moved||forceSuppress))suppressClick.current=gesture.current.source.key;gesture.current=null;setPreview(null);if(message)onMessage(message);}
  function begin(e:PointerEvent<HTMLElement>,source:DragSource){
   suppressClick.current=null;if(!canMove||e.button!==0||e.ctrlKey||e.metaKey||e.altKey||gesture.current)return;
-  gesture.current={pointerId:e.pointerId,source,start:[e.clientX,e.clientY],point:source.kind==='marker'?source.point:null,fence,moved:false,version:data.version};
+  const bounds=readBounds();if(!bounds){onMessage('Planimetria non pronta: riprova lo spostamento quando è visibile.');return;}
+  gesture.current={pointerId:e.pointerId,source,start:[e.clientX,e.clientY],point:source.kind==='marker'?source.point:null,fence,bounds,moved:false,version:data.version};
   try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* Capture may be unavailable in synthetic DOM tests. No automatic write. */}
  }
  function consumeClick(e:{preventDefault:()=>void;stopPropagation:()=>void},key:string){if(suppressClick.current!==key)return false;e.preventDefault();e.stopPropagation();suppressClick.current=null;return true;}
  function move(e:PointerEvent<HTMLElement>){const g=gesture.current;if(!g||g.pointerId!==e.pointerId)return;
   if(!canMove||g.fence!==fence){cancel('La mappa o gli ambienti sono cambiati: riprendi lo spostamento dai dati aggiornati.');return;}
+  const bounds=readBounds();if(!unchangedBounds(g.bounds,bounds)){cancel('Inquadratura cambiata: riprendi lo spostamento nella vista aggiornata.',true);return;}
   if(Math.hypot(e.clientX-g.start[0],e.clientY-g.start[1])<6&&!g.moved)return;
-  const point=layer.current?fromClient(e.clientX,e.clientY,layer.current.getBoundingClientRect(),f,turn):null;if(!point)return;g.moved=true;g.point=point;suppressClick.current=g.source.key;setPreview({source:g.source,point});e.preventDefault();
+  const point=fromClient(e.clientX,e.clientY,bounds!,f,turn);if(!point)return;g.moved=true;g.point=point;suppressClick.current=g.source.key;setPreview({source:g.source,point});e.preventDefault();
  }
  async function end(e:PointerEvent<HTMLElement>){const g=gesture.current;if(!g||g.pointerId!==e.pointerId)return;gesture.current=null;
   if(g.moved)suppressClick.current=g.source.key;
   if(!g.moved){setPreview(null);return;}e.preventDefault();
   if(!canMove||g.fence!==fence){setPreview(null);onMessage('La mappa o la posizione sono cambiate: ricarica prima di spostare l’oggetto.');return;}
-  const point=layer.current?fromClient(e.clientX,e.clientY,layer.current.getBoundingClientRect(),f,turn):g.point;
+  const bounds=readBounds();if(!unchangedBounds(g.bounds,bounds)){setPreview(null);onMessage('Inquadratura cambiata: riprendi lo spostamento nella vista aggiornata.');return;}
+  const point=fromClient(e.clientX,e.clientY,bounds!,f,turn);
   const target=point?roomAt(data.rooms,point):null;
   if(!target||!point){setPreview(null);onMessage('Spostamento annullato: rilascia l’oggetto dentro una stanza, fuori dai muri e dai vuoti.');return;}
   const root=layer.current,map=root?.parentElement,viewport=map?.closest('[data-map-viewport]'),clip=viewport?.getBoundingClientRect();

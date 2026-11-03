@@ -82,4 +82,30 @@ describe('unplaced objects outside the map',()=>{
   const v=mount({canMove:false}),button=source();expect(button).toBeDisabled();drag(button);fireEvent.click(button);fireEvent.keyDown(button,{key:'Enter'});fireEvent.keyDown(button,{key:' '});
   expect(v.onDrop).not.toHaveBeenCalled();expect(v.onChooseUnplaced).not.toHaveBeenCalled();
  });
+ for(const field of ['left','top','width','height'] as const){
+  it('cancels a tray gesture if map '+field+' changes before movement',()=>{
+   const v=mount(),button=source(),before=v.layer.getBoundingClientRect();pointer(button,'Down',200,1100);
+   vi.mocked(v.layer.getBoundingClientRect).mockReturnValue({...before,[field]:before[field]+1} as DOMRect);
+   pointer(button,'Move',750,200);pointer(button,'Up',750,200);fireEvent.click(button);
+   expect(v.onDrop).not.toHaveBeenCalled();expect(v.onChooseUnplaced).not.toHaveBeenCalled();expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('Inquadratura cambiata'));expect(v.layer.querySelector('[data-tray-ghost]')).toBeNull();
+  });
+ }
+ it('cancels an existing marker drop if the physical frame changes after movement',()=>{
+  const v=mount(),marker=screen.getByRole('link',{name:'Apri Frigorifero DEMO'}),before=v.layer.getBoundingClientRect();pointer(marker,'Down',250,200);pointer(marker,'Move',750,200);
+  vi.mocked(v.layer.getBoundingClientRect).mockReturnValue({...before,width:before.width-200} as DOMRect);pointer(marker,'Up',750,200);fireEvent.click(marker);
+  expect(v.onDrop).not.toHaveBeenCalled();expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('Inquadratura cambiata'));expect(screen.getByLabelText('route')).toHaveTextContent('/');
+ });
+ it('allows subpixel layout noise within half a CSS pixel',async()=>{
+  const v=mount(),button=source(),before=v.layer.getBoundingClientRect();pointer(button,'Down',200,1100);
+  vi.mocked(v.layer.getBoundingClientRect).mockReturnValue({...before,left:before.left+.25,top:before.top+.25} as DOMRect);
+  pointer(button,'Move',750.25,200.25);pointer(button,'Up',750.25,200.25);await waitFor(()=>expect(v.onDrop).toHaveBeenCalledOnce());
+  expect(v.onDrop).toHaveBeenCalledWith(expect.objectContaining({objectId:'oven',regionId:'balcony',x:70,y:20}),expect.any(String));expect(v.onMessage).not.toHaveBeenCalled();
+ });
+ it('refuses to start either source without a finite positive map rectangle',()=>{
+  const v=mount(),button=source(),marker=screen.getByRole('link',{name:'Apri Frigorifero DEMO'}),before=v.layer.getBoundingClientRect();
+  for(const invalid of [null,{...before,left:NaN},{...before,top:Infinity},{...before,width:0},{...before,height:-1}]){
+   vi.mocked(v.layer.getBoundingClientRect).mockReturnValue(invalid as unknown as DOMRect);drag(button);pointer(marker,'Down',250,200);pointer(marker,'Move',750,200);pointer(marker,'Up',750,200);
+  }
+  expect(v.onDrop).not.toHaveBeenCalled();expect(v.onChooseUnplaced).not.toHaveBeenCalled();expect(v.layer.querySelector('[data-tray-ghost]')).toBeNull();expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('Planimetria non pronta'));
+ });
 });
