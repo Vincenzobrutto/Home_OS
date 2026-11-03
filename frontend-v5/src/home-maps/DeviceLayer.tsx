@@ -64,11 +64,11 @@ export function DeviceLayer({data,markers,homeId,canMove,onDrop,onMessage,onChoo
  })}
  {ghost&&preview&&<span className={[styles.device,styles.dragging,styles.trayGhost].join(' ')} aria-hidden="true" data-tray-ghost style={{left:ghost[0]/view.width*100+'%',top:ghost[1]/view.height*100+'%',pointerEvents:'none'}}><span className={styles.deviceIcon}><svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M6 10h12M9 6v2m0 5v3"/></svg></span><span className={styles.deviceName} data-align={ghost[0]>view.width*.7?'right':ghost[0]<view.width*.3?'left':'center'}>{preview.source.name}</span></span>}
  {preview&&<span className={styles.dropHint} role="status">{!canMove?'Salvataggio della posizione…':destination?'Rilascia in '+destination.name:'Rilascia dentro una stanza'}</span>}
- </div>{trayTarget&&createPortal(<div className={styles.trayItems} role="list" aria-label="Oggetti da posizionare">{trayObjects.map(object=>{
+ </div>{trayTarget&&createPortal(<div className={styles.trayItems} role="list" aria-label="Oggetti da collocare">{trayObjects.map(object=>{
   const source:DragSource={kind:'tray',key:'tray:'+object.id,objectId:object.id,name:object.name,positionVersion:object.positionVersion};
   return <div role="listitem" key={object.id}><button type="button" disabled={!canMove} className={[styles.trayItem,preview?.source.key===source.key?styles.trayDragging:''].join(' ')} aria-label={'Posiziona '+object.name} title="Trascina nella stanza oppure seleziona per usare i controlli posizione" draggable={false}
    onDragStart={e=>e.preventDefault()} onPointerDown={e=>begin(e,source)} onPointerMove={move} onPointerUp={end} onPointerCancel={()=>cancel('Spostamento annullato.')} onLostPointerCapture={()=>{if(gesture.current)cancel('Spostamento annullato.');}}
    onClick={e=>{if(!consumeClick(e,source.key)&&canMove)onChooseUnplaced?.(object);}}
-   onKeyDown={e=>{if(e.key==='Escape'&&gesture.current){e.preventDefault();cancel('Spostamento annullato.');}else if((e.key===' '||e.key==='Enter')&&canMove&&!gesture.current){e.preventDefault();onChooseUnplaced?.(object);}}}>{object.name}</button></div>;
+   onKeyDown={e=>{if(e.key==='Escape'&&gesture.current){e.preventDefault();cancel('Spostamento annullato.');}else if((e.key===' '||e.key==='Enter')&&canMove&&!gesture.current){e.preventDefault();onChooseUnplaced?.(object);}}}><span className={styles.deviceIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M6 10h12M9 6v2m0 5v3"/></svg></span><span className={styles.trayName}>{object.name}</span></button></div>;
  })}</div>,trayTarget)}</>;
 }

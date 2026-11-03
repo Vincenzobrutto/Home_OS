@@ -78,13 +78,14 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
   <details><summary>Misure e limiti · {data.layout.qualification==='estimated'?'scala stimata':data.layout.qualification==='reviewed'?'scala revisionata':'scala da verificare'}</summary><ul>{data.layout.caveats.slice(1).map((v,i)=><li key={i}>{v}</li>)}</ul></details>
   {notice&&<p role="status" className={styles.notice}>{notice}</p>}{error&&<p role="alert">{error}</p>}
   {(uncertain||needsRefresh)&&<div className={styles.toolbar}>{uncertain&&<button className={ui.btn} disabled={busy} onClick={()=>void dispatch()}>Riprova lo stesso invio</button>}<button className={ui.btn} disabled={busy} onClick={()=>void updateView()}>{uncertain?'Verifica dati sul server':'Aggiorna dati'}</button></div>}
-  <div className={[styles.columns,managementOpen?'':styles.mapOnly].join(' ')}>
+  <div className={styles.columns}>
    <section className={ui.card}>
     <div className={styles.toolbar}><h2>Planimetria · pagina {data.layout.source.page}</h2><button className={ui.btn} onClick={()=>setZoom(z=>Math.max(1,z-.5))} disabled={zoom===1||busy}>Riduci</button><button className={ui.btn} onClick={()=>setZoom(z=>Math.min(3,z+.5))} disabled={zoom===3||busy}>Ingrandisci</button></div>
     <div className={styles.toolbar}><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+3)%4 as MapTurn)}>Ruota a sinistra</button><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+1)%4 as MapTurn)}>Ruota a destra</button><span role="status" aria-label="Orientamento della vista">{turn*90}°</span><button className={ui.btn} aria-expanded={managementOpen} aria-controls={inputId+'-management'} onClick={()=>setManagementOpen(v=>!v)}>{managementOpen?'Chiudi gestione':'Gestisci vani e oggetti'}</button></div>
     <label className={styles.backgroundToggle}><input type="checkbox" checked={showOriginal} onChange={e=>setShowOriginal(e.target.checked)}/>Mostra planimetria originale</label>
     {editingContour&&<p>Durante la correzione del contorno vedi il foglio completo.</p>}
-    {!!scene.unplaced.length&&<section className={styles.trayPanel} aria-label="Da posizionare sulla planimetria"><h3>Da posizionare</h3><p>Trascina questi oggetti sulla mappa. Puoi anche selezionarli per scegliere stanza e posizione con i controlli.</p><div ref={setTrayTarget}/></section>}
+    <div className={styles.mapSurface} data-map-surface>
+    {!!scene.unplaced.length&&<section className={styles.unplacedDock} data-unplaced-dock aria-label="Da collocare sulla planimetria"><h3>Da collocare</h3><div ref={setTrayTarget}/></section>}
     <div className={styles.scroll} data-map-viewport><div style={{width:zoom*100+'%'}}>
      {file.isPending?<Loading label="Caricamento mappa…"/>:file.isError?<ErrorState error={file.error} onRetry={()=>void file.refetch()}/>:<OriginalMap
       blob={file.data.blob} mime={data.document.mimeType} page={data.layout.source.page} width={f.width} height={f.height} showOriginal={showOriginal} turn={turn} viewport={viewport}
@@ -96,7 +97,7 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
       {data.rooms.map(r=><path key={r.id} d={polygonPath(r.id===regionId&&points?{points,holes:r.holes}:r)} fillRule="evenodd" className={r.id===regionId?styles.selected:styles.region} onClick={()=>{if(!blocked&&!objectId&&!points)select(r.id);}}/>)}
       {point&&<circle cx={point[0]} cy={point[1]} r={f.width*.013} className={styles.pending}/>}
      </OriginalMap>}
-    </div></div>
+    </div></div></div>
     <p>Un clic sul segnaposto apre la scheda dell’oggetto. Per le correzioni puoi aprire Gestisci vani e oggetti; dalla tastiera, spazio sul segnaposto apre i controlli posizione.</p>
    </section>
    {managementOpen&&<section className={ui.card} id={inputId+'-management'}>

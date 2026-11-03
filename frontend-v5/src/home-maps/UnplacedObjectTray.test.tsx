@@ -17,7 +17,7 @@ function mount(options:{data?:MapView;turn?:MapTurn;viewport?:ViewFrame;canMove?
  let data=options.data??fixture(),turn=options.turn??0,viewport=options.viewport??{x:5,y:5,width:90,height:45};
  const tray=document.createElement('section');tray.setAttribute('aria-label','Fila esterna');document.body.append(tray);targets.push(tray);
  const onDrop=options.onDrop??vi.fn(),onChooseUnplaced=vi.fn(),onChoose=vi.fn(),onMessage=vi.fn();
- const content=()=><MemoryRouter><Location/><div data-map-viewport><div data-testid="map-surface"><DeviceLayer data={data} markers={deviceScene(data).markers} homeId="home" canMove={options.canMove??true} onDrop={onDrop} onMessage={onMessage} onChoose={onChoose} turn={turn} viewport={viewport} trayTarget={tray} unplaced={deviceScene(data).unplaced} onChooseUnplaced={onChooseUnplaced}/></div></div></MemoryRouter>;
+ const content=()=><MemoryRouter><Location/><div data-testid="visual-map-surface"><div data-map-viewport><div data-testid="map-surface"><DeviceLayer data={data} markers={deviceScene(data).markers} homeId="home" canMove={options.canMove??true} onDrop={onDrop} onMessage={onMessage} onChoose={onChoose} turn={turn} viewport={viewport} trayTarget={tray} unplaced={deviceScene(data).unplaced} onChooseUnplaced={onChooseUnplaced}/></div></div></div></MemoryRouter>;
  const view=render(content()),layer=view.container.querySelector('[aria-label="Elettrodomestici sulla planimetria"]')!,clip=view.container.querySelector('[data-map-viewport]')!;
  const bounds=()=>{const width=(turn%2?viewport.height:viewport.width)*10,height=(turn%2?viewport.width:viewport.height)*10;return {left:100,top:50,width,height,right:100+width,bottom:50+height,x:100,y:50,toJSON:()=>({})};};
  vi.spyOn(layer,'getBoundingClientRect').mockImplementation(bounds);vi.spyOn(clip,'getBoundingClientRect').mockImplementation(bounds);
@@ -31,6 +31,7 @@ const drag=(element:HTMLElement,x=750,y=200)=>{pointer(element,'Down',200,1100);
 describe('unplaced objects outside the map',()=>{
  it('portals the source row outside the map and never invents an initial room or point',()=>{
   const v=mount(),button=source();expect(v.tray).toContainElement(button);expect(v.container).not.toContainElement(button);expect(v.layer).not.toContainElement(button);
+  expect(screen.getByRole('list',{name:'Oggetti da collocare'})).toContainElement(button);expect(button.querySelector('svg')).toBeInTheDocument();expect(button).toHaveTextContent('Forno da posizionare');
   expect(v.layer.querySelector('[data-tray-ghost]')).toBeNull();pointer(button,'Down',200,1100);pointer(button,'Up',200,1100);expect(v.onDrop).not.toHaveBeenCalled();expect(v.onChooseUnplaced).not.toHaveBeenCalled();
  });
  for(const sample of [{turn:0 as const,x:750,y:200},{turn:1 as const,x:400,y:700},{turn:2 as const,x:350,y:350},{turn:3 as const,x:250,y:300}]){
@@ -54,6 +55,12 @@ describe('unplaced objects outside the map',()=>{
  it('does not treat the portal source or another panel as a map drop target',()=>{
   const v=mount(),button=source();Object.defineProperty(document,'elementFromPoint',{configurable:true,value:()=>button});drag(button);
   expect(v.onDrop).not.toHaveBeenCalled();expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('parte visibile'));expect(source()).toBeInTheDocument();
+ });
+ it('rejects release over a dock that is visually inside the surface but a sibling of the map viewport',()=>{
+  const v=mount(),button=source(),surface=screen.getByTestId('visual-map-surface'),scroll=v.container.querySelector('[data-map-viewport]')!;surface.append(v.tray);
+  expect(surface).toContainElement(button);expect(scroll).not.toContainElement(button);expect(v.layer.parentElement).not.toContainElement(button);
+  Object.defineProperty(document,'elementFromPoint',{configurable:true,value:()=>button});drag(button,750,200);
+  expect(v.onDrop).not.toHaveBeenCalled();expect(v.onChooseUnplaced).not.toHaveBeenCalled();expect(v.onMessage).toHaveBeenCalledWith(expect.stringContaining('parte visibile'));expect(source()).toBeInTheDocument();
  });
  it('cancels pointer cancellation, lost capture and Escape without choosing or saving',()=>{
   const v=mount(),button=source();
