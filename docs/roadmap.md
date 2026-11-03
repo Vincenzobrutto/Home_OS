@@ -1,3 +1,7 @@
+## 3 novembre — vista digitale senza sfondo originale
+
+Completato il seguito di presentazione: originale disattivabile e riattivabile, senza modifiche a misure, contorni, zoom o oggetti. Verificato e attivo nell'ambiente locale; nessun nuovo backend o dato persistente. [Report](v5/home-plan-backoffice-20261103.md#sfondo-originale-facoltativo).
+
 ## 3 novembre — planimetria digitale nella casa già esistente
 
 Importatore interno con anteprima, binding espliciti e audit: collega una bozza alla casa conservando stanze, oggetti e collocazioni. Primo intervento reale richiesto dal proprietario eseguito dopo backup e controlli:11regioni riusano11stanze, nessuna stanza nuova; dati precedenti preservati. Backend894/DB33/frontend43 e guardie8 verdi; runtime web locale e UI desktop autenticata verificati in modalità manuale, compresa ricarica. Cinque oggetti attivi disponibili, quattro segnaposti indicativi e uno ancora Da collocare; nessun trascinamento reale o nuovo collaudo mobile reale. [Report e limiti](v5/home-plan-backoffice-20261103.md). Nessuna AI nuova o migrazione propria. Il controllo di contorni e scala resta un passo distinto, senza promuovere candidate non adottate o misure non verificate.

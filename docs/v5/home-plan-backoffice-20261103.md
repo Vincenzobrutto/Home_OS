@@ -77,3 +77,13 @@ Verificate la normale vista Schede con **12 ambienti**, la planimetria con **11 
 Una ricarica riapre la mappa conservando gli stessi conteggi e collegamenti. Screenshot conservato soltanto nelle evidenze private fuori Git. Il controllo visivo non certifica correttezza o completezza dei contorni; la qualifica della bozza resta invariata.
 
 Non sono stati eseguiti trascinamenti o spostamenti reali, né una nuova prova dell'utenza reale a375px. I test sintetici di spostamento e le verifiche frontend restano distinti da questo collaudo desktop autenticato.
+
+## Sfondo originale facoltativo
+
+Seguito richiesto dal proprietario, stessa [PR78](https://github.com/Vincenzobrutto/Home_OS/pull/78), frontend prodotto `f243516da63874b6545f1c208b59ec8e580f5cd6`: il comando “Mostra planimetria originale” è attivo all'apertura. Disattivandolo si nasconde soltanto il canvas raster; frame, contorni, oggetti e controlli restano montati, senza cambiare zoom, coordinate o associazioni. La scelta vale per la vista corrente e torna attiva riaprendo la mappa. Nessuna preferenza, geometria o posizione viene scritta sul server.
+
+Il caricamento e la verifica del rapporto della pagina restano obbligatori anche con sfondo nascosto. Nascondere il raster non aggira errori di lettura o di frame e non avvia una nuova rasterizzazione quando lo si riattiva.
+
+Verifiche del seguito: **45/45 test del gruppo mappe**, compresi due casi sul componente reale per frame/coordinate invarianti, identità del canvas e mancata ripetizione del rendering; errori di frame continuano a bloccare il disegno anche da nascosto. Typecheck, lint mirato e build verdi. Il primo setup dei nuovi casi non prevedeva `Image.decode` assente in JSDOM: corretto il solo adattatore sintetico. Nessun nuovo test backend o DB necessario/eseguito per questa modifica visiva; i conteggi precedenti rimangono distinti.
+
+Aggiornato soltanto il frontend locale con build e fonte congelate, mantenendo API `d42459c`, processo PostgreSQL, sessioni e guardie originali. Verificati HTML, asset e proxy e preservati i blocchi AI/email/Gift. Controllo visivo nella casa autenticata: sfondo inizialmente visibile, disattivazione, zoom, ripristino dell'originale allo stesso zoom e nuova disattivazione; contorni e quattro segnaposti restano visibili. Nessun salvataggio di oggetti o geometria. Nessuna nuova verifica a 375 px dichiarata. Il controllo browser dedicato era temporaneamente indisponibile; la verifica è stata completata tramite la superficie nativa della stessa app, con screenshot privato fuori Git.

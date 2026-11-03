@@ -1,3 +1,7 @@
+## 3 novembre — sfondo originale della planimetria disattivabile
+
+Comando “Mostra planimetria originale” nella mappa della casa: nasconde solo lo sfondo, conservando frame, contorni, oggetti e zoom. Attivo inizialmente, scelta limitata alla vista corrente. Frontend 45/45, statici/build e verifica visiva locale spegni/riaccendi con zoom verdi; backend e dati invariati. [Report](v5/home-plan-backoffice-20261103.md#sfondo-originale-facoltativo).
+
 ## 3 novembre — importazione controllata della planimetria in una casa esistente
 
 Aggiunto importatore interno con anteprima/fingerprint, controlli owner/fonte fisica, collegamento esplicito ai vani esistenti e ricevuta/audit atomici. Nessuna creazione implicita di stanze o modifica a oggetti e collocazioni. Bozza distinta da una Gift e da una revisione dell'agenzia; nessun nuovo endpoint/schema proprio. Intervento reale richiesto eseguito con11regioni su11stanze già presenti e dati precedenti verificati. Backend894/DB33/frontend43, statici/build e guardie8 verdi. Runtime locale e **UI desktop autenticata verificati**, con sorgente/overlay/caveat e reload:5attivi disponibili,4segnaposti indicativi e1Da collocare. Nessun trascinamento reale o nuovo collaudo mobile reale; blocchi AI/email/Gift preservati. [Report](v5/home-plan-backoffice-20261103.md).
