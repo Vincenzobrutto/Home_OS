@@ -598,3 +598,8 @@ profiles.test.files.push(...profiles['test:agency-document-analysis'].files);
 profiles['test:agency-document-analysis-db']={database:true,api:false,files:['test/agency-document-analysis-store.integration.test.cjs','test/agency-document-analysis-http.integration.test.cjs'],apiFiles:[]};
 profiles['test:offline-db'].files.push(...profiles['test:agency-document-analysis-db'].files);
 profiles['test:agency-document-browser-20261103']={database:true,api:false,files:['test/agency-document-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T12:30:00.000Z'};
+
+// Combined candidate: both original DB groups plus a synthetic succession/discrepancy journey.
+profiles['test:agency-documents-integration-db']={database:true,api:false,files:[...new Set([...profiles['test:agency-document-analysis-db'].files,...profiles['test:home-map-operator-db'].files,'test/agency-documents-journey.integration.test.cjs'])],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-documents-journey.integration.test.cjs');
+profiles['test:agency-documents-integration-browser-20261103']={database:true,api:false,files:['test/agency-documents-integration-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T17:00:00.000Z'};
