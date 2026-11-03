@@ -160,3 +160,7 @@ Document.giftProvenance è snapshot nullable della fonte Gift selezionata,non un
 
 ## HomeDigitalPlan (1 novembre2026)
 Copia indipendente di una planimetria Agency consegnata con Gift: FK account/Home, documentId locale unico come prova senza FK restrittivo sul purge; versione/SHA originali, versione layout e revisione geometria, received immutabile, layout corrente, roomBindings, pins e timestamp. Nessun FK Agency. Snapshot comprende fonte/pagina, raster/trasformazione, vani/vuoti, calibrazione/qualifica, caveat e perimetro separato. HomeRooms nuovi alla pubblicazione, senza elettrodomestici del venditore; pin su HomeObject privati dello stesso account/Home con collocazione canonica aggiornata nella stessa transazione. [Report e invarianti](gift-digital-plan-20261101.md).
+
+## Gift: origine della classificazione personale (3 novembre 2026)
+
+DocumentOrganization aggiunge classificationOrigin, default user_declared, constraint user_declared/agency_gift. Non concede accessi: account/home/documento/versione/SHA restano quelli canonici. Il copier di nuove Gift con policy1 crea l'organizzazione insieme alla copia; l'owner può adottarla tramite il normale salvataggio. Inviti e documenti legacy restano senza classificazione importata, nessun backfill. La classificazione originale immutabile resta nella provenienza Gift anche dopo modifiche personali. Migrazione20261103120000_gift_classification_origin, applicata solo a nuovi cluster di prova in questo lotto.

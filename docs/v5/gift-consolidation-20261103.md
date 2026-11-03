@@ -19,3 +19,8 @@ Usare solo Source.kind già classificato esplicitamente, con snapshot/versione/f
 ## Verifiche e pubblicazione
 
 In corso, nessun risultato storico presentato come nuovo. Dependency/cache/generated privati del candidato; node_modules junction read-only. DB solo nuovi cluster protetti, seriali sul primario libero55439; usertrial55440 invariato. Risultati finali e hash saranno registrati dopo i controlli.
+## Candidato implementato e primi controlli
+
+Prodotto `80680b53b797864f87aaa8f7ee5d001d8f75d5ee`: classificazione Gift policy1/provenienza/organizzazione personale e selettore dei7tipi nella pratica. Prisma client privato generato, nuova migrazione additiva pronta. Backend ordinari889/889 senza skip; frontend mirato60/60 su navigazione/workspace/revisione e parser provenienza10/10; typecheck/lint mirati e build frontend verdi. Bundle principale517,71kB, warning Vite mantenuto.
+
+Review indipendente in sola lettura: nessun blocker su sessione/Origin/CSRF, copia atomica/fence/receipt, indipendenza Home, segreti/retry e classificazione sigillata. Non sostituisce verifiche runtime. Regressione frontend completa e DB/API completi sono in corso: un errore nel test preesistente objects.test.tsx sulla creazione attività/focus è da diagnosticare al termine, non classificato ancora come flake. Nessuna asserzione o timeout allentati e nessun push al consolidamento prima della risoluzione.
