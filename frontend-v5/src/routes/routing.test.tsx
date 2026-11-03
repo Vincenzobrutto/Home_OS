@@ -118,7 +118,10 @@ describe('[mock] routing e contesto casa via URL', () => {
     const { backend } = seededBackend();
     const app = renderApp({ path: '/accedi', backend });
     await loginAs(app, 'a@example.test', PASSWORD_A);
-    await screen.findByRole('heading', { level: 1 });
+    // Il titolo provvisorio e il link della shell precedono il redirect a /case.
+    // La navigazione esplicita parte quando l'ingresso post-login è concluso.
+    await screen.findByRole('list', { name: 'Case disponibili' });
+    expect(app.router.state.location.pathname).toBe('/case');
     expect(await screen.findByRole('link', { name: 'Area Agenzie' })).toHaveAttribute('href', '/agenzie');
     expect(screen.queryByRole('link', { name: /Amministratori/ })).not.toBeInTheDocument();
     await app.router.navigate('/agenzie');
