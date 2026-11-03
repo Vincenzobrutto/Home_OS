@@ -1,3 +1,7 @@
+## 3 novembre — orientamento della planimetria
+
+Completati e attivi localmente i comandi di rotazione della vista a passi di 90°. Originale e modello digitale restano allineati; payload e geometrie canoniche invariati, nessuna nuova API o schema. [Verifiche e limiti](v5/home-plan-backoffice-20261103.md#rotazione-della-vista).
+
 ## 3 novembre — vista digitale senza sfondo originale
 
 Completato il seguito di presentazione: originale disattivabile e riattivabile, senza modifiche a misure, contorni, zoom o oggetti. Verificato e attivo nell'ambiente locale; nessun nuovo backend o dato persistente. [Report](v5/home-plan-backoffice-20261103.md#sfondo-originale-facoltativo).

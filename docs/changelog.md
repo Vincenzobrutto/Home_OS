@@ -1,3 +1,7 @@
+## 3 novembre — rotazione della vista planimetrica
+
+Comandi a sinistra/destra di 90°: originale, contorni e posizioni visuali ruotano insieme, con nomi degli oggetti diritti e ingombro adattato. Spostamenti convertiti nel riferimento canonico e gesto annullato se cambia orientamento. Nessuna scrittura per ruotare; gruppo mappe 70/70, statici/build e verifica visiva locale verdi. [Report](v5/home-plan-backoffice-20261103.md#rotazione-della-vista).
+
 ## 3 novembre — sfondo originale della planimetria disattivabile
 
 Comando “Mostra planimetria originale” nella mappa della casa: nasconde solo lo sfondo, conservando frame, contorni, oggetti e zoom. Attivo inizialmente, scelta limitata alla vista corrente. Frontend 45/45, statici/build e verifica visiva locale spegni/riaccendi con zoom verdi; backend e dati invariati. [Report](v5/home-plan-backoffice-20261103.md#sfondo-originale-facoltativo).
