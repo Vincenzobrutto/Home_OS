@@ -2,6 +2,8 @@
 
 ## Consolidamento Gift e classificazione ricevuta — 3 novembre, autorizzato
 
+**Integrato nel comune il 3 novembre alle 10:50 UTC:** `a3a172e3c6fb19fc743a504dfaf353895f50744c`, PR76 merged, hash e albero verificati. Lo stack PR72–75 è incluso per intero; le rispettive voci successive sono registrazioni storiche. `main` resta `cdbb318`, nessun deploy o aggiornamento del checkout/servizio utente. Prosegue separatamente il lotto `codex/agency-document-analysis-20261103`.
+
 Su approvazione esplicita del committente: stack PR72–75 riunito e corretto nel candidato `codex/gift-consolidamento-20261103`, PR76. Tipo/famiglia ricevuti sono conservati sotto policy1; classificazione dell'agenzia distinta dalla compilazione personale. Corretto anche il refresh Gift dopo catalogazione. Backend 889/889; nuovo DB 792/792, HTTP 54/54, restart 2/2, cluster arrestato; frontend completo 2.009/2.010 e intero file routing 10/10 alla riesecuzione, poi 10/10 con preload test-only. Nessun risultato completo verde inventato. Statici/build e browser desktop/375 px verdi. [Report e limiti](v5/gift-consolidation-20261103.md). Integrazione autorizzata nel comune dopo verifica degli hash, senza deploy/main o modifica del collaudo utente. Verticale AI nativo in un lotto successivo separato, senza spesa o modello incarico inventato.
 
 ## Riprova guidata Gift — 3 novembre, mattina
@@ -139,7 +141,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
-| Gift — consolidamento e classificazione | Codex | codex/gift-consolidamento-20261103 | Gift packet/worker, organizzazione/workflow e UI catalogazione; report integrazione | Candidato verificato, PR76; risultati e riesecuzioni distinti nel report. Integrazione comune autorizzata, hash finale da registrare dopo push. |
+| Gift — consolidamento e classificazione | Codex | codex/gift-consolidamento-20261103 | Gift packet/worker, organizzazione/workflow e UI catalogazione; report integrazione | Integrato nel comune a3a172e, PR76 merged; risultati e riesecuzioni distinti nel report. Nessun deploy. |
 | Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | Implementato e collaudato, PR draft75; dipende da PR74/73/72. Codice9f16073 pushed/hash verificato. Nessun merge. |
 | Ambienti — mappa e trascinamento | Codex | codex/ambienti-mappa-drag-20261101 | frontend home-maps/RoomsPages; backend home-maps; test e contratti | QA conclusa; PR draft74, codice2fab688/test0ba4685; frontend42/DB17/guardie18 e browserdesktop375verdi. Nominale14:00terminato automaticamente,1/1 e stopDBverificati,linkscaduto; dipendenza PR73/72; verifiche precedenti distinte nel report ambienti-map-drag-20261101.md. Nessun merge/deploy. |
 | Agenzie — fascicolo v1 | Codex | codex/agenzie-fascicolo-20261030 | Dominio, persistenza, API/UI Agenzie; indizi di fasce murarie e scarto per singola candidata implementati; controllo delle aree non censite già integrato. | 658/658 backend, 60/60 UI, 20/20 DB-HTTP-worker, build/typecheck/lint verdi; [report corrente](v5/agency-candidate-selection-20261031.md). Replay reale offline senza AI nuova; classificazione e completezza non confermate. Cluster nuovi arrestati, nessun nuovo browser, merge/deploy o modifica demo Alessio. |
