@@ -98,7 +98,8 @@
     "test:gift-simple-browser-20261103": "node test/offline.cjs --suite test:gift-simple-browser-20261103",
     "test:gift-simple-user-trial-20261103": "node test/offline.cjs --suite test:gift-simple-user-trial-20261103",
     "test:agency-document-analysis": "node test/offline.cjs --suite test:agency-document-analysis",
-    "test:agency-document-analysis-db": "node test/offline.cjs --suite test:agency-document-analysis-db"
+    "test:agency-document-analysis-db": "node test/offline.cjs --suite test:agency-document-analysis-db",
+    "test:agency-document-browser-20261103": "node test/offline.cjs --suite test:agency-document-browser-20261103"
   },
   "dependencies": {
     "@nestjs/common": "11.1.28",
