@@ -6,7 +6,7 @@ import styles from './review.module.css';
 import {deferredRefreshMessage,useDeferredRefresh,useDraftRegistry,useDraftSignal} from './refresh';
 type Props={refreshToken?:number;scopeKey:string;api:AgencyDeedPort;readOnly?:boolean;onOpenSource?:(e:ReviewEvidence)=>void;createKey?:()=>string};
 type Pending={recordId:string;body:DeedBindingBody;key:string};
-const roles:Record<DocumentRole,string>={historical_owner:'Venditore nell’atto storico',acquirer_in_deed:'Acquirente nell’atto',deceased:'Persona deceduta indicata',declared_heir:'Erede dichiarato nel documento',unresolved:'Ruolo non determinato'};
+const roles:Record<DocumentRole,string>={historical_owner:'Proprietario indicato nel documento storico',acquirer_in_deed:'Acquirente nell’atto',deceased:'Persona deceduta indicata',declared_heir:'Erede dichiarato nel documento',unresolved:'Ruolo non determinato'};
 const fields:Record<string,string>={'party.name':'Nome della parte','cadastral.municipality':'Comune catastale','cadastral.sheet':'Foglio','cadastral.parcel':'Particella','cadastral.subaltern':'Subalterno','deed.date':'Data dell’atto'};
 export function DeedWorkspace(p:Props){return <Workspace key={p.scopeKey} {...p}/>;}
 function Workspace(p:Props){
