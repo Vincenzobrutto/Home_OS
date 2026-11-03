@@ -144,3 +144,23 @@ openingReviews è metadato opzionale nello snapshot JSON già esistente, distint
 ### Proposta superfici e adozione
 
 Metadato surfaceProposal nello snapshot JSON esistente, nessuna migrazione: pending/applied/stale, digest canonico, binding all'analisi e alla geometria base, contorni/issues/summary, acceptedAt/acceptedBy dopo adozione. Cambi geometrici invalidano una proposta pending. Origine geometry_proposal distinta da manual, storico preservato e computo invalidato. sourceReadable/evidenceCurrent continuano a proteggere tutto il derivato. [Report corrente](agency-surface-integration-20261030.md).
+
+## Gift v1 — ledger inviti separato dal fascicolo
+
+AgencyGiftInvitation persiste manifesto/hash,chiave+digest creazione,scope,versione/stato/scadenza e account associato;unique pratica/emittente/key,tokenHash univoco,FK e controlli stato/claim. Il segreto non è persistito;claim non crea Home o entitlement. Snapshot e colonne sono verificati insieme. Migrazione solo collaudata su cluster nuovi. [Report](agency-gift-invitation-persistence-20261031.md).
+
+Document.giftProvenance è snapshot nullable della fonte Gift selezionata,non un grant o una certificazione;sourceVersion distinta dalla versione locale,parser/SHA coerenti e clear al purge.[Report](agency-gift-copy-prerequisites-20261031.md).
+
+### Gift v1 — job di prenotazione (31 ottobre)
+
+`AgencyGiftAcceptanceJob` congela comando/digest,invito/versione/seal,fonte fingerprint,Home confermata e manifesto;ID futuri sono logici,non FK alla Home/documenti ancora inesistenti.`AgencyGiftAcceptanceItem` riserva ID e prova fonte/versione/SHA.Indice univoco parziale per pratica in queued/staging/ready/retryable/blocked_review/accepted;chiave richiesta unica per account/invito.`get` filtra per account prima della validazione e restituisce solo stato/progresso.Pubblicazione,lease operative,ricevuta e beneficio persistito NON implementati in questo incremento.[Report](agency-gift-acceptance-reservation-20261031.md).
+### Gift v1 — ricevuta, copier e anno completo (31 ottobre)
+
+`AgencyGiftAcceptanceReceipt` è unica per pratica/invito/job e conserva riferimenti logici senza FK a Agency/Home/Document/StoredFile. `AccountGiftBenefit` è unico per ricevuta, riferito all'account e all'offerta full-access; non modifica altri abbonamenti. Worker con epoch/lease, staging prenotato in StoredFile, controllo fonti corrente e commit unico. Alla pubblicazione job.homeInput/manifest e item.control/storageKey vengono svuotati; StoredFile resta collegato a DocumentVersion. Cancel opera solo su staging non pubblicato e senza lease attiva. [Esiti e limiti](agency-gift-copier-20261031.md).
+
+## HomeDigitalPlan (1 novembre2026)
+Copia indipendente di una planimetria Agency consegnata con Gift: FK account/Home, documentId locale unico come prova senza FK restrittivo sul purge; versione/SHA originali, versione layout e revisione geometria, received immutabile, layout corrente, roomBindings, pins e timestamp. Nessun FK Agency. Snapshot comprende fonte/pagina, raster/trasformazione, vani/vuoti, calibrazione/qualifica, caveat e perimetro separato. HomeRooms nuovi alla pubblicazione, senza elettrodomestici del venditore; pin su HomeObject privati dello stesso account/Home con collocazione canonica aggiornata nella stessa transazione. [Report e invarianti](gift-digital-plan-20261101.md).
+
+## Gift: origine della classificazione personale (3 novembre 2026)
+
+DocumentOrganization aggiunge classificationOrigin, default user_declared, constraint user_declared/agency_gift. Non concede accessi: account/home/documento/versione/SHA restano quelli canonici. Il copier di nuove Gift con policy1 crea l'organizzazione insieme alla copia; l'owner può adottarla tramite il normale salvataggio. Inviti e documenti legacy restano senza classificazione importata, nessun backfill. La classificazione originale immutabile resta nella provenienza Gift anche dopo modifiche personali. Migrazione20261103120000_gift_classification_origin, applicata solo a nuovi cluster di prova in questo lotto.

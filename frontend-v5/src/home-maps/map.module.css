@@ -1,0 +1,19 @@
+.page{min-width:0}.columns{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:16px;margin-top:16px}.columns section{min-width:0}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.map{position:relative;width:100%;background:#fff}.map canvas{display:block;width:100%;height:100%}.map > svg{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}.region{fill:#88a89a35;stroke:#537b6b;stroke-width:1.5}.selected{fill:#f2c65c60;stroke:#8e650c;stroke-width:2}.pin circle{fill:#236958;stroke:white;stroke-width:2}.pin text,.stale text{font-size:14px;paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round;fill:#173a30}.stale circle{fill:#a16419;stroke:#fff;stroke-width:2;stroke-dasharray:3 2}.pending{fill:#155bc2;stroke:#fff;stroke-width:2}.scroll{overflow:auto;max-width:100%}.coords{display:flex;gap:8px}.coords label{min-width:0;flex:1}.page label{display:block;margin:12px 0}.page input,.page select{display:block;width:100%;max-width:100%;box-sizing:border-box;min-height:44px}.page button{min-height:44px;white-space:normal}.page fieldset{border:0;padding:0;margin:0;min-width:0}.page ol{padding-left:24px}.page a{overflow-wrap:anywhere}@media(max-width:700px){.columns{grid-template-columns:minmax(0,1fr)}.coords{flex-wrap:wrap}.page{overflow-wrap:anywhere}}
+
+.region,.selected{vector-effect:non-scaling-stroke}
+.deviceLayer{position:absolute;inset:0;pointer-events:none;overflow:clip}
+.device{position:absolute;display:grid;place-items:center;width:44px;height:44px;transform:translate(-50%,-50%);z-index:2;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;text-decoration:none;color:#173a30}
+.device:focus-visible{outline:3px solid #175ec1;outline-offset:2px;border-radius:50%;z-index:5}
+.deviceIcon{display:grid;place-items:center;background:#fff;border:2px solid #236958;border-radius:50%;width:30px;height:30px;box-shadow:0 1px 4px #122d3330}
+.deviceIcon svg{position:static;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;cursor:inherit}
+.indicative .deviceIcon{border-style:dashed;background:#fff9e8}
+.reviewMarker .deviceIcon{border-color:#a16419;color:#865112}
+.dragging{z-index:8;cursor:grabbing}
+.dragging .deviceIcon{background:#e4f2ff;border-color:#175ec1;box-shadow:0 2px 8px #12335555}
+.deviceName{position:absolute;top:calc(100% - 7px);left:50%;transform:translateX(-50%);background:#fffffff0;padding:2px 5px;border-radius:4px;font-size:12px;line-height:1.3;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none}
+.deviceName[data-align=left]{left:12px;transform:none}
+.deviceName[data-align=right]{left:auto;right:12px;transform:none}
+.dropOverlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.dropRoom{fill:#2584d444;stroke:#175ec1;stroke-width:2;vector-effect:non-scaling-stroke}
+.dropHint{position:absolute;left:8px;top:8px;max-width:calc(100% - 16px);padding:6px 10px;border-radius:6px;background:#173a30;color:white;font-size:14px}
+.legend{font-size:14px}.legendDot{display:inline-block;width:13px;height:13px;border:2px dashed #236958;border-radius:50%;margin-right:8px;vertical-align:middle}.notice{background:#e4f2eb;padding:10px;border-radius:6px}

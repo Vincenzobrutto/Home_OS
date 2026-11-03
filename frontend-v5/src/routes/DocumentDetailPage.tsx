@@ -1,3 +1,4 @@
+import {GiftDocumentBadge,GiftDocumentOrigin} from '../agency-gift/GiftDocumentOrigin';
 import { ContactsPanel } from '../contacts/components';
 import {DocumentWorkflowStatus} from '../documents/DocumentWorkflowStatus';
 import {PdfPreview} from '../documents/PdfPreview';
@@ -129,7 +130,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
           <span className={styles.eyebrow}>{homeName}</span>
           <h1 tabIndex={-1}>{doc.name}</h1>
           <div className={docs.tags}>
-            <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag>
+            <Tag>{VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}</Tag><GiftDocumentBadge source={doc.source}/>
           </div>
           <DocumentWorkflowStatus state={doc.workflowState}/>
             <div className={`${styles.spaced} ${styles.formActions}`}>
@@ -153,6 +154,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
       {canRead && !house && <section className={ui.card}><DocumentBillEntry homeId={props.home.id} documentId={doc.id} documentKind={doc.organization?.parts[0]?.kind} bill={bill} allowPrepare /></section>}
       {!bill&&<details><summary>Altri strumenti di analisi</summary>{props.analyzeHref&&<Link to={props.analyzeHref} className={ui.btn}>Analizza questo documento</Link>}<ReceiptEntry documentId={doc.id} /></details>}
 
+      {doc.source==='agency_gift'&&<GiftDocumentOrigin provenance={doc.giftProvenance}/>}
       <div className={docs.detailGrid}>
         <section className={cx(ui.card, docs.preview)} aria-labelledby="doc-anteprima">
           <h2 id="doc-anteprima" tabIndex={-1} className={`${styles.cardTitle} ${docs.originalAnchor}`}>
@@ -180,10 +182,10 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
             <dd>{formatLabel(doc.mimeType)}</dd>
             <dt>Dimensione</dt>
             <dd>{formatBytes(doc.byteSize)}</dd>
-            <dt>Caricato il</dt>
+            <dt>{doc.source==='agency_gift'?'Ricevuto in Dimora il':'Caricato il'}</dt>
             <dd>{formatDate(doc.createdAt)}</dd>
             <dt>Fonte</dt>
-            <dd>{SOURCE_LABEL}</dd>
+            <dd>{doc.source==='agency_gift'?'Gift dell’agenzia':SOURCE_LABEL}</dd>
             <dt>Chi può vederlo</dt>
             <dd>
               {VISIBILITY_LABEL[doc.visibility] ?? doc.visibility}
@@ -191,7 +193,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
               <span className={docs.note}>{VISIBILITY_HINT[doc.visibility]}</span>
             </dd>
             <dt>File originale</dt>
-            <dd>Caricato e conservato. Lo stato in alto riguarda la compilazione.</dd>
+            <dd>{doc.source==='agency_gift'?'Ricevuto con Gift e conservato. Lo stato in alto riguarda la compilazione.':'Caricato e conservato. Lo stato in alto riguarda la compilazione.'}</dd>
 
           </dl>
           <details className={styles.spaced}>
@@ -202,7 +204,7 @@ function DocumentView(props: { doc: DocumentDetail; home: Home; back: ReactNode;
               <dt>Impronta SHA-256</dt><dd className={docs.hash}>{doc.sha256}</dd>
             </dl>
           <p className={cx(docs.note, styles.spaced)}>
-            L’originale è conservato byte per byte. Caricarlo o scaricarlo non conferma i dati e non certifica
+            L’originale è conservato byte per byte. {doc.source==='agency_gift'?'Riceverlo':'Caricarlo'} o scaricarlo non conferma i dati e non certifica
             contenuto, proprietà o validità tecnica.
           </p>
           </details>

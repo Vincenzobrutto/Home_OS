@@ -41,6 +41,14 @@ export type DocumentMimeType = 'application/pdf' | 'image/jpeg' | 'image/png';
 export type DocumentPermission = 'read' | 'export';
 
 export type DocumentWorkflowState = 'to_compile' | 'analyzing' | 'review' | 'completed' | 'attention';
+/** Immutable origin of a source copied through an accepted Agency Gift. */
+export type GiftDocumentProvenance={
+  schemaVersion:1;kind:'agency_gift';invitationId:string;agencyId:string;practiceId:string;
+  sourceId:string;sourceVersion:number;sourceSha256:string;metadataVersion:number;
+  origin:'received'|'agency_generated';author:string;title:string;
+  classification?:{policyVersion:1;sourceKind:'unclassified'|'deed'|'cadastral'|'floor_plan'|'succession'|'ape'|'other';documentKind:'floor_plan'|'ape'|null;family:'property'|'building'|'energy'|'unclassified'};
+  surface?:{kind:'net'|'cadastral'|'commercial';qualification:'estimated'|'reviewed'|'unverified';method:string;geometryRevision:number;caveats:string[]};
+};
 export type DocumentSummary = {
   /** Personal read-only context, absent on older API versions and detail responses. */
   linkedObjects?: Array<{id:string;kind:'object'|'boiler';name:string}>;
@@ -50,7 +58,7 @@ export type DocumentSummary = {
   /** Successful extraction for this account and exact source snapshot, independent of confirmation. */
   aiAnalysisSucceeded?: boolean;
   family?:DocumentGroup;
-  organization?: { houseFamily?:DocumentGroup|null; documentVersion?:number; documentSha256?:string; version: number; title: string; parts: Array<{ kind: string; pageFrom: number | null; pageTo: number | null }>; collections: DocumentCollection[]; origin: 'user_declared'; updatedAt: string } | null;
+  organization?: { houseFamily?:DocumentGroup|null; documentVersion?:number; documentSha256?:string; version: number; title: string; parts: Array<{ kind: string; pageFrom: number | null; pageTo: number | null }>; collections: DocumentCollection[]; origin: 'user_declared'|'agency_gift'; updatedAt: string } | null;
   id: string;
   homeId: string;
   name: string;
@@ -59,13 +67,13 @@ export type DocumentSummary = {
   byteSize: number;
   createdAt: string;
   version: 1;
-  source: 'manual_upload';
+  source: 'manual_upload'|'agency_gift';
   status: 'stored';
   visibility: DocumentVisibility;
   permissions: DocumentPermission[];
 };
 
-export type DocumentDetail = DocumentSummary & { sha256: string };
+export type DocumentDetail = DocumentSummary & { sha256: string; giftProvenance?:GiftDocumentProvenance };
 
 export type DocumentView='all'|'house'|'objects'|'archive';
 export type DocumentGroup='plans'|'building'|'energy'|'contracts'|'other'|'property'|'condo'|'utilities'|'works'|'tax'|'insurance'|'warranty'|'safety'|'unclassified';

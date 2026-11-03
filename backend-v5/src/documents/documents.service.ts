@@ -1,3 +1,4 @@
+import {parseGiftDocumentProvenance} from './gift-provenance';
 import {archiveFamily} from './families';
 import {documentViewBase,documentViewSummary,documentViewWhere} from './views';
 import {changeHouseFamily} from './house-family';
@@ -21,7 +22,9 @@ function readableWhere(accountId: string, homeId: string): Prisma.DocumentWhereI
 export function publicDocument(doc: OriginalDocument, exporting: boolean, detail = false) {
   if (!doc.original) throw storageUnavailable();
   const original = doc.original;
-  return { id: doc.id, homeId: doc.homeId, name: doc.name, originalFilename: original.originalFilename, mimeType: original.mimeType, byteSize: original.byteSize, createdAt: doc.createdAt.toISOString(), version: original.version, source: 'manual_upload', status: 'stored', visibility: doc.visibility, permissions: exporting ? ['read', 'export'] : ['read'], ...(detail ? { sha256: original.sha256 } : {}) };
+  const giftProvenance=parseGiftDocumentProvenance((doc as OriginalDocument & {giftProvenance?:unknown}).giftProvenance);
+  if(giftProvenance&&giftProvenance.sourceSha256!==original.sha256)throw storageUnavailable();
+  return { id: doc.id, homeId: doc.homeId, name: doc.name, originalFilename: original.originalFilename, mimeType: original.mimeType, byteSize: original.byteSize, createdAt: doc.createdAt.toISOString(), version: original.version, source: giftProvenance?'agency_gift':'manual_upload', status: 'stored', visibility: doc.visibility, permissions: exporting ? ['read', 'export'] : ['read'], ...(detail ? { sha256: original.sha256,...(giftProvenance?{giftProvenance}:{}) } : {}) };
 }
 @Injectable()
 export class DocumentsService implements OnModuleInit {
@@ -227,7 +230,7 @@ function workflowSql(accountId:string,homeId:string){
       NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p.mode<>'floor_plan' AND p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='open')
       AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j.purpose='products' AND j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND (j.state IN ('queued','running') OR (j.state='uncertain' AND NOT EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" c WHERE c.mode<>'floor_plan' AND c."accountId"=j."accountId" AND c."documentId"=d.id AND c."documentVersion"=v.version AND c."documentSha256"=v.sha256 AND c.state='confirmed' AND c."updatedAt">=j."updatedAt"))))
       AND (EXISTS(SELECT 1 FROM "ObjectOnboardingDraft" p WHERE p.mode<>'floor_plan' AND p."accountId"=${accountId} AND p."homeId"=${homeId} AND p."documentId"=d.id AND p."documentVersion"=v.version AND p."documentSha256"=v.sha256 AND p.state='confirmed')
-      OR (o.id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(o.parts) p WHERE p->>'kind' IN ('invoice','receipt','utility_bill','purchase_document','purchase_order','product_label','delivery_notice'))))
+      OR (o.id IS NOT NULL AND o."classificationOrigin"='user_declared' AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(o.parts) p WHERE p->>'kind' IN ('invoice','receipt','utility_bill','purchase_document','purchase_order','product_label','delivery_notice'))))
     )`;
 const analysisSucceeded=Prisma.sql`(
  EXISTS(SELECT 1 FROM "ObjectOnboardingJob" j WHERE j.purpose='products' AND j."accountId"=${accountId} AND j."homeId"=${homeId} AND j."documentId"=d.id AND j."documentVersion"=v.version AND j."documentSha256"=v.sha256 AND j.state='succeeded')

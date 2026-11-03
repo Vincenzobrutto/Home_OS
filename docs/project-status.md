@@ -1,5 +1,40 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Consolidamento Gift e classificazione ricevuta — 3 novembre, autorizzato
+
+Su approvazione esplicita del committente: chiudere Gift, correggere classificazione ricevuta, integrare PR72–75 nel consolidamento e avviare il verticale fascicolo AI. Nuovo candidato codex/gift-consolidamento-20261103 dalla punta remota cbddcf0, merge locale4dd8469 dell'intero stack finof961f47 senza conflitti. Nessun push al consolidamento prima di controlli post-integrazione; main/deploy e prova lAunc8 invariati. Backend classificazione/provenienza/organizzazione e UI catalogazione documenti su file distinti; review indipendente in sola lettura. Nessuna nuova AI/spesa o bozza incarico senza modello approvato.
+
+## Riprova guidata Gift — 3 novembre, mattina
+
+Richiesta nuova prova dall'agenzia al proprietario. Nominale separato test:gift-simple-user-trial-20261103 fino alle12:30Rome/11:30UTC, su nuovo cluster protetto; nessun riavvio del collaudo scaduto o modifica prodotto. Nuovo run lAunc8 attivo, build/readiness/API/statici verdi; accesso agente e checklist verificati nel browser, nessuna selezione o consegna eseguita al posto del committente. Guardie dirette19/19 e syntax check verdi. Stesso ramo dedicatoPR75, codice prodotto invariato.
+
+## Gift semplice nella pratica — implementato e collaudato, 3 novembre 2026
+
+Lotto `codex/gift-selezione-semplice-20261103`, base PR74 `8f1ba91` con dipendenze PR73/72; comune remoto `cbddcf0` invariato. Dalla pratica conclusa: **Consegna al proprietario → flag documenti/mappa → email e anno opzionale → Crea link Gift**. Nessun editor/rilascio separato per ogni file. API e protezioni esistenti orchestrate internamente; nessun backend/schema nuovo. Nuovi test21/21, regressione Gift/mappa231/231, navigazione7/7, guardie20/20, typecheck/lint e build verdi. Browser su cluster nuovo: creazione unica, accettazione e Home con3documenti scelti, nota esclusa, mappa3ambienti e anno incluso; UI agente375px utilizzabile. Destinatario fixture già verificato, scanner/email stub. Nuova prova locale separata fino3nov02:00Rome, pratica utente intatta; vecchio trial preservato. [Report, limiti e seguito](v5/gift-simple-delivery-20261103.md). Nessuna AI/spesa, demo Alessio, merge/main/deploy.
+
+## Riprova locale Agenzie/Gift/Ambienti — 2 novembre2026
+
+Su richiesta del committente è attivo un nuovo nominale sintetico dalla PR74, senza riaprire vecchi cluster o modificare prodotto/demoAlessio. Nuovo profilo datato test:ambienti-user-trial-20261102, termine3nov00:30UTC/01:30Rome; guardie19/19, build, readiness/API/statici verdi. Nuovo runb55HFe attivo; nessun nuovo collaudo UI dichiarato (resta quello del1novembre). Un ingresso proprietario già popolato e una pratica Agency ancora da consegnare, a un accountdemo già verificato. Branch dedicato esistente codex/ambienti-mappa-drag-20261101, dipendenze PR73/72; comune/main invariati.
+
+## Ambienti — planimetria e trascinamento elettrodomestici — implementato e verificato (1 novembre)
+
+Lotto `codex/ambienti-mappa-drag-20261101`, codice2fab688, test/profilo0ba4685, push verificati, [PR draft74](https://github.com/Vincenzobrutto/Home_OS/pull/74), dipendenza PR73/72, base comune cbddcf0 invariata. Schede preservate e Planimetria nella stessa pagina; ancore indicative adattive senza scritture, drag con cambio stanza/coordinate canonici atomici e normale conteggio/reload. Pin confermati invariati. Lifecycle incluse fonte/cestino17/17HTTP su nuovo v3Rjg9arrestato, dopo16/16C9Cs5oarrestato; componenti aggiornati42/42, guardie18/18, statici/build verdi. Backend878/frontend78sono precedenti verifiche, non nuove suite complete.
+
+Browser sul seguitoVeuBZj desktop/375px completato: drag/reload/conteggio,91marker distinti nel caso90oggetti/Cucina, Space+campi e drag mobile; nessun errore console/overflow, viewport ripristinato. Il caso estremo conserva sovrapposizione visuale delle etichette a zoom minimo: backlog dichiarato, nessuna promessa di leggibilità di90icone su telefono. Nuovo collaudo locale sintetico terminato automaticamente1nov14:00Rome: VeuBZj1/1,runnerexit0,stopPostgreSQL e assenza listener/pid verificati. Link locale scaduto; trial precedenti preservati. [Report corrente](v5/ambienti-map-drag-20261101.md). Funzionalità/QA concluse prima del termine autorizzato: non avviare nuove funzioni per riempire il tempo. Nessuna nuova AI, merge/deploy o modifica demo Alessio.
+
+## Planimetria digitale → Gift → mappa proprietario — implementata e collaudata (1 novembre)
+Lotto `codex/gift-plan-handoff-20261101`, PR draft73, codice `d779335`, push verificato; dipendenza PR72 `b6efba3`, base comune `cbddcf0`. Rilascio esplicito del piano canonico, snapshot fonte/scala/geometrie, copia atomica nella Home con ambienti, mappa indipendente e segnaposti sugli oggetti normali. Aggiunta vertici, misure invalidate e pin da riconfermare senza spostamenti. Nessuna AI nuova, demo Alessio invariata.
+
+Backend877/877, Gift+map217/217, DB mappa10/10 e Gift127/127 su cluster nuovi arrestati; frontend immediato88/88, gruppo esteso213/214 con file invariato11/11 alla riesecuzione, statici/build verdi. Browser reale desktop/375px completato con fixture, challenge email e scanner stub dichiarati. Nuovo collaudo locale `cNnivm` attivo solo per la prova, stop automatico1nov09:30Europe/Rome; nessun servizio esistente riavviato. [Report corrente e limiti](v5/gift-digital-plan-20261101.md). Nessun merge o deploy; decisione sul consolidamento al committente.
+
+## Agency → Gift → Home — flusso collegato e collaudato in locale (1 novembre)
+
+Ramo `codex/agency-gift-contract-20261031`, base comune `cbddcf0`, PR draft72; prosecuzione oltre le23 autorizzata. L’interfaccia della pratica rilascia e seleziona i documenti finali e crea/rigenera un link personale. `/gift/:id` usa accesso/registrazione e verifica email normali, poi conferma Home, accettazione durevole e normale archivio proprietario con provenienza. Un account,12mesi opzionali di funzioni proprietario complete dall’accettazione; limiti free rimandati. Nessun grant Agency alla Home.
+
+Rigenerazione atomica, rate limit persistenti, ripresa senza token e letture indipendenti verificati:863/863 backend ordinari (204unit Gift inclusi),127/127DBHTTPGift sul nuovo cluster `A03Vvn`,6/6poller sul nuovo `K2PNgn`, entrambi arrestati. Frontend1924/1924(184file),typecheck/lint/build app verdi;14/14guardie runner dopo il nuovo profilo nominale. Browser desktop/375px completato su due nuovi collaudi sintetici; scanner/email dei test stub espliciti, nessun uso reale certificato. [Report corrente](v5/agency-gift-app-20261101.md), [contratto API](v5/agency-gift-api-20261031.md).
+
+Token soltanto in memoria, rimossi anche dai path Gift codificati; next canonico e senza segreti; esiti incerti non creano nuove richieste. Modello incarico approvato e producer automatici restano da completare. Nessun merge, deploy, email, AI reale o modifica demo Alessio/vecchio trial utente. Il nuovo collaudo browser usa un hostname locale unico, dati sintetici e arresto proprietario; non è il vecchio trial riavviato.
+
 ## Integrazione Agenzie — 31 ottobre 2026, conclusa
 
 Candidato verificato `codex/agenzie-integrazione-20261031` dalla base remota `dd52a6a`, intera PR #71 (`7b02700`, 67 commit), senza conflitti o modifiche al codice prodotto della PR. Backend658/658, frontend1743/1743(172file), DB/API700/700 e cestino42/42 su due cluster nuovi arrestati, statici/build verdi. Integrato nel ramo comune: push aaf8f02verificato e PR71merged; nessun deploy o migrazione prodotto, main/demo Alessio invariati. [Registro integrazione e limiti](v5/agency-consolidation-20261031.md).
@@ -104,6 +139,9 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
+| Gift — consolidamento e classificazione | Codex | codex/gift-consolidamento-20261103 | Gift packet/worker, organizzazione/workflow e UI catalogazione; report integrazione | In corso su autorizzazione3nov; candidato isolato, test post-integrazione e review prima del push comune. |
+| Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | Implementato e collaudato, PR draft75; dipende da PR74/73/72. Codice9f16073 pushed/hash verificato. Nessun merge. |
+| Ambienti — mappa e trascinamento | Codex | codex/ambienti-mappa-drag-20261101 | frontend home-maps/RoomsPages; backend home-maps; test e contratti | QA conclusa; PR draft74, codice2fab688/test0ba4685; frontend42/DB17/guardie18 e browserdesktop375verdi. Nominale14:00terminato automaticamente,1/1 e stopDBverificati,linkscaduto; dipendenza PR73/72; verifiche precedenti distinte nel report ambienti-map-drag-20261101.md. Nessun merge/deploy. |
 | Agenzie — fascicolo v1 | Codex | codex/agenzie-fascicolo-20261030 | Dominio, persistenza, API/UI Agenzie; indizi di fasce murarie e scarto per singola candidata implementati; controllo delle aree non censite già integrato. | 658/658 backend, 60/60 UI, 20/20 DB-HTTP-worker, build/typecheck/lint verdi; [report corrente](v5/agency-candidate-selection-20261031.md). Replay reale offline senza AI nuova; classificazione e completezza non confermate. Cluster nuovi arrestati, nessun nuovo browser, merge/deploy o modifica demo Alessio. |
 
 | Rilascio Spese — pagina unica | Codex | codex/rilascio-spese-pagina-unica-20261027 | Solo report/stato/roadmap/changelog; nessun file prodotto o Claude. | Consegna verificata: PR #68 integrata e attiva a68113f5, frontend PID14664; API30836/PostgreSQL19804 e relative creazioni preservati. Albero frontend identico alla fonte testata, backend e guardie invariati; build e39/39 HTTP statici/anonimi verdi. [Report rilascio](v5/spese-pagina-unica-rilascio-20261027.md). Nessuna AI, migrazione, .env o richiesta applicativa mutativa/autenticata. [PR #69](https://github.com/Vincenzobrutto/Home_OS/pull/69) di sola documentazione, push verificato; merge al committente. |

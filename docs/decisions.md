@@ -1380,3 +1380,50 @@ Non eliminare automaticamente componenti sottili: possono essere passaggi reali.
 ## 31 ottobre 2026 — Agenzie come modulo integrato, rami brevi
 
 Il committente approva integrazione dell'intera PR71nel ramo comune codex/dimora-v5-consolidata-20261023, senza deploy o modifica main. Agenzie mantiene scope/ruoli/workflow distinti ma riusa infrastruttura V5; i futuri incrementi partono dalla base comune aggiornata e confluiscono frequentemente dopo verifica. Integrazione codice, configurazione/abilitazione e rilascio sono passaggi separati; nessuna attivazione implicita di provider, budget, storage o migrazioni prodotto. La demo pubblica di Alessio resta indipendente. Modello incarico approvato assente: la nuova analisi/catalogo negli outputs non costituisce generazione contrattuale implementata. [Report](v5/agency-consolidation-20261031.md).
+
+## 31 ottobre2026 — pacchetto Gift interno
+
+Gift accettata indipendente resta la decisione ADR-V5-04. La prima implementazione prepara soltanto una selezione interna da fonti correnti autorizzate,con descrittori di produttore da registro server ancora da collegare. Non confondere fingerprint deterministico con ricevuta/idempotenza durevole di consegna. Nessuna route pubblica,scrittura Home,proprietà confermata o firma validata dal pacchetto. [Contratto e limiti](v5/agency-gift-contract-20261031.md).
+
+Gift v1,singolo account e anno opzionale:decisione del committente31ottobre2026,vedi [ADR V5](v5/implementation-decisions.md) e [contratto](v5/agency-gift-home-copy-contract-20261031.md).Supera le ipotesi multi-destinatario della prima preparazione interna.
+
+## Gift v1 — prenotazione e anniversario UTC,31 ottobre2026
+
+Scelta tecnica:prenotazione durevole per pratica prima di qualsiasi copia,con ID server e nessuna Home parziale;job e manifesto potranno essere ripuliti dopo la futura ricevuta per non duplicare i metadati eliminati dal proprietario.Get espone solo progresso all'account associato,senza dipendere dall'export Agency per questa vista minima.Claim/begin non equivalgono ad accettazione.
+
+Anno completo approvato dal committente:12mesi di calendario UTC dall'accettazione,29febbraio→28febbraio allo stesso orario,intervallo[inizio,fine).L'helper è verificato,ma attivazione/persistenza del diritto restano nel prossimo copier.Nessun rinnovo,pagamento o mutazione di abbonamenti già presenti.[Report](v5/agency-gift-acceptance-reservation-20261031.md).
+## Gift v1 — accettazione indipendente e diritto sull'account, 31 ottobre2026
+
+Il commit di pubblicazione comprende Home, documenti, ricevuta e anno opzionale; il claim o la prenotazione non attivano nulla. La ricevuta è letta prima di invito/token/Agency e non richiede che esistano ancora i singoli documenti: il purge resta definitivo. La vista della ricevuta richiede l'account destinatario e accesso corrente alla Home; il diritto annuale è invece dell'account e non dipende dalla successiva membership Home o dai permessi Agency. Questo non concede accessi ai dati e non definisce il piano free.
+
+Staging e pubblicazione usano storage indipendenti e IO/scanner fuori SQL. Fencing, riserva StoredFile e lettura della ricevuta gestiscono processi concorrenti e commit dall'esito perso senza cancellare copie già pubblicate. Backend verificato con fixture; API/poller/UI ancora assenti. [Report](v5/agency-gift-copier-20261031.md).
+## Gift v1 — rilascio esplicito e modulo letture indipendente,1 novembre2026
+
+L'agente può rendere eleggibile un file già caricato con conferme esplicite, revisione e prova fonte correnti. Il server deriva scope/attore/versione/autore non verificato o produzione dichiarata; sul medesimo originale conserva metadati e qualifiche del producer. Nessun campo client può attestare autore/firma/superficie. Questo rende consegnabili documenti ricevuti senza inventare un modello incarico.
+
+Ingresso nuove Gift e poller sono abilitati soltanto da configurazione esplicita; il modulo account di letture/ripresa/beneficio non dipende da quella configurazione o dal vault Agency. Le nuove API si appoggiano alla sessione normale. La verifica email frontend non presume un account diverso dal token: invia e rispetta l'esito server; reset e prove backend invariati. [Contratto](v5/agency-gift-api-20261031.md).
+## 1 novembre 2026 — Gift: continuità di accesso e recupero del link
+
+Il segreto personale vive solo in memoria sopra il router autenticato; guest→primo accesso lo conserva, cambio di account/logout lo cancella. Il ritorno da accesso/registrazione è soltanto il path Gift canonico e senza query/frammenti; il matching reale riconosce anche path codificati per rimuovere le credenziali. Dopo begin la ripresa usa il lavoro autenticato e non richiede il segreto. Verifica email normale, nessuna attivazione Home/anno da claim o da bozza.
+
+La rigenerazione sostituisce il vecchio invito atomicamente mantenendo selezione/destinatario/offerta, con una nuova finestra7giorni; le prenotazioni attive la bloccano finché il proprietario non annulla. Replay hash-only senza recuperare il segreto. Nessuna rigenerazione dopo accettazione. Contatori Gift persistenti e pseudonimi sono distinti dai futuri limiti free. [Implementazione e prove](v5/agency-gift-app-20261101.md).
+
+
+## ADR-V5 — Planimetria Gift indipendente e pin proprietario (1 novembre2026)
+Accettata nello sviluppo del lotto gift-plan-handoff. Una mappa canonica revisionata per Gift v1; selezione esplicita dell’agente e normale accettazione proprietario. Proposte AI pendenti non si trasferiscono. Pubblicazione atomica di documenti, ambienti e copia modificabile della mappa; received immutabile separato dal layout corrente. Nessun grant Agency né dipendenza dall’anno opzionale, nessuna seconda analisi AI. Segnaposto proprietario e collocazione oggetto sono un unico aggiornamento con versioni; geometria cambiata invalida misure e richiede riconferma dei pin senza spostarli. Originale cestinato/sostituito non autorizza sovrapposizioni nuove. [Dettagli](v5/gift-digital-plan-20261101.md).
+
+## ADR-V5 — Ambienti, disposizione indicativa e collocazione esplicita (1 novembre2026)
+Vista Schede predefinita e Planimetria integrata nella stessa pagina. Un oggetto con ambiente canonico ma senza coordinate riceve soltanto un segnaposto indicativo in lettura, tratteggiato; nessuna posizione fisica o stanza è inferita e persistita. Il trascinamento è una scelta esplicita: coordinate e singolo ambiente di arrivo aggiornati atomicamente dal POST pins già esistente, con versioni e replay. Se più ambienti erano associati, la scelta li sostituisce: avviso visibile, nessuna copia dell’oggetto. Drop su aree nascoste, muri/vuoti, dati mutati o esito incerto non genera nuove scritture automatiche. Mappa/documenti ereditano l’indipendenza Gift/Home già stabilita; niente nuova AI o vincolo annuale. [Report](v5/ambienti-map-drag-20261101.md).
+
+## ADR-V5 — Gift: un'azione dalla pratica conclusa (3 novembre 2026)
+
+La Gift si prepara dopo la stipula, con i documenti conclusivi già nella pratica. L'agente sceglie file, mappa eventualmente inclusa, destinatario e anno opzionale; Crea link Gift esprime la consegna dei selezionati. Nessun nuovo editor o conferma per ogni documento. I descrittori finali già presenti vengono riusati; per i file selezionati che ne sono privi, il controller completa il rilascio tramite le API esistenti prima dell'invito, senza inventare autore, firma, certificazione o nuova geometria. Provenienza e caveat del producer restano invariati. Una copia è fissata per il destinatario; il caso normale non prevede cambiamenti ai documenti.
+
+Journal solo in memoria, scope account/agenzia/pratica, richieste con chiave e corpo congelati; dopo esito incerto lettura e ripresa manuale dello stesso passo, nessun retry con nuova chiave. Preparazione metadati sequenziale, non transazione batch; nessun invito finché tutti i selezionati non sono pronti. Pubblicazione atomica Home/receipt/anno invariata. Eccezioni bozze/stale/proposte pendenti rimangono circoscritte. [Implementazione e prove](v5/gift-simple-delivery-20261103.md).
+## ADR-V5 — classificazione Agenzie ricevuta con Gift (3 novembre 2026)
+
+Le nuove consegne fissano Source.kind già dichiarato nel fascicolo sotto classificationPolicyVersion1, insieme a fonte/versione/SHA e fingerprint/seal. Nessun filename o risultato AI viene usato per indovinare il tipo. La policy raggruppa atto/successione in Proprietà, documenti catastali/planimetria in Catasto e pratiche edilizie, APE in Energia; un tipo canonico Home è assegnato solo per floor_plan e ape. Unclassified/other restano tali. Questo è ordinamento, non accertamento di contenuti, conformità, provenienza giuridica o completezza.
+
+Il copier pubblica organizzazione personale e provenienza nella stessa transazione di Home/documenti/receipt/anno. DocumentOrganization.classificationOrigin distingue agency_gift da user_declared. La catalogazione ricevuta non completa da sola il lavoro personale; un'organizzazione esplicitamente salvata dal proprietario diventa user_declared anche se le parti sono identiche. Il solo cambio famiglia preserva l'origine. Fonte/versione/SHA e account continuano a limitare l'organizzazione corrente.
+
+La policy entra nell'impronta anche per tipi non mappati, così una riclassificazione pendente non viene assorbita silenziosamente. Inviti legacy e relativa rigenerazione usano la policy originale assente, senza backfill; i documenti già ricevuti non vengono modificati. Nuova colonna additiva con default user_declared e constraint dei due valori. Serve rilascio coordinato migrazione/backend/frontend; questo lotto integra solo codice e non migra servizi esistenti. [Report](v5/gift-consolidation-20261103.md).

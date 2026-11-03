@@ -16,3 +16,10 @@ frontend-v5/.agency-cache/
 # da condividere. .claude/launch.json invece è config di dev server
 # condivisibile e resta tracciato.
 .claude/settings.local.json
+
+# Private owned map test evidence, never application data
+.map-test-runs/
+
+.drag-test-runs/
+
+.simple-gift-runs/

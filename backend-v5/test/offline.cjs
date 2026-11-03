@@ -26,6 +26,12 @@ async function assertFreePort(port) {
  });
  await new Promise(resolve => server.close(resolve));
 }
+function commandDuration(suiteName,suite,label,now=Date.now()) {
+ if(label!=='tests'||!suite.interactiveUntil)return 600000;
+ // One explicitly authorized dated collaudo may run until 14:00 Rome; all other caps stay unchanged.
+ const cap=suiteName==='test:ambienti-map-followup-trial'&&suite.interactiveUntil==='2026-11-01T13:00:00.000Z'?18000000:7200000;
+ return Math.max(1000,Math.min(cap,Date.parse(suite.interactiveUntil)-now+30000));
+}
 function patchExactly(file, pairs) {
  let content = fs.readFileSync(file, 'utf8');
  for (const [from, to] of pairs) {
@@ -89,7 +95,7 @@ async function run(options) {
    active = spawn(executable, args, { cwd, env: commandEnv, windowsHide: true, stdio: out === null ? 'inherit' : ['ignore', out, out] });
    const child = active;
    let expired = false;
-   const duration=label==='tests'&&suite.interactiveUntil?Math.max(1000,Math.min(7200000,Date.parse(suite.interactiveUntil)-Date.now()+30000)):600000;
+   const duration=commandDuration(options.suite,suite,label);
    const timer = setTimeout(() => { expired = true; stopChild(child); }, duration);
    let status;
    try { status = await new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', resolve); }); }
@@ -182,4 +188,4 @@ async function main() {
  if (options.list) console.log(Object.keys(suites).join('\n')); else await run(options);
 }
 if (require.main === module) main().catch(error => { console.error(error.message?.startsWith('offline_') ? error.message : 'offline_runner_failed'); process.exitCode = 1; });
-module.exports = { isolateTestAddresses, parseArgs, assertFreePort, patchExactly, run };
+module.exports = { commandDuration, isolateTestAddresses, parseArgs, assertFreePort, patchExactly, run };
