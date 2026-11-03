@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Agenzie — candidato integrato documenti e mappa, 3 novembre
+
+Incarico autonomo del committente: revisione delle PR77/78 e candidato che conserva mappa/Gift e completa la continuità della revisione documentale. Ramo `codex/agenzie-documenti-consolidamento-20261103`, nuovo worktree dalla base comune3335ea9; nessun cambiamento al runtime reale. [Piano e criteri](v5/agency-documents-integration-20261103.md). Stato iniziale: revisione indipendente e riunione dei rami in corso, verifiche del candidato ancora da eseguire; risultati delle PR restano storici.
+
 ## Consolidamento Gift e classificazione ricevuta — 3 novembre, autorizzato
 
 **Integrato nel comune il 3 novembre alle 10:50 UTC:** `a3a172e3c6fb19fc743a504dfaf353895f50744c`, PR76 merged, hash e albero verificati. Lo stack PR72–75 è incluso per intero; le rispettive voci successive sono registrazioni storiche. `main` resta `cdbb318`, nessun deploy o aggiornamento del checkout/servizio utente. Prosegue separatamente il lotto `codex/agency-document-analysis-20261103`.
@@ -141,6 +145,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
+| Agenzie — candidato documenti e mappa | Codex | codex/agenzie-documenti-consolidamento-20261103 | Riunione PR77/78, revisione incrociata dei pannelli documentali, regressioni e report | Autorizzato, avviato dal comune3335ea9; nessuna modifica a main/runtime reale o AI a pagamento. |
 | Gift — consolidamento e classificazione | Codex | codex/gift-consolidamento-20261103 | Gift packet/worker, organizzazione/workflow e UI catalogazione; report integrazione | Integrato nel comune a3a172e, PR76 merged; risultati e riesecuzioni distinti nel report. Nessun deploy. |
 | Gift — selezione semplice dalla pratica | Codex | codex/gift-selezione-semplice-20261103 | agency-gift controller/UI, cablaggio pratica e test/contratti | Implementato e collaudato, PR draft75; dipende da PR74/73/72. Codice9f16073 pushed/hash verificato. Nessun merge. |
 | Ambienti — mappa e trascinamento | Codex | codex/ambienti-mappa-drag-20261101 | frontend home-maps/RoomsPages; backend home-maps; test e contratti | QA conclusa; PR draft74, codice2fab688/test0ba4685; frontend42/DB17/guardie18 e browserdesktop375verdi. Nominale14:00terminato automaticamente,1/1 e stopDBverificati,linkscaduto; dipendenza PR73/72; verifiche precedenti distinte nel report ambienti-map-drag-20261101.md. Nessun merge/deploy. |
