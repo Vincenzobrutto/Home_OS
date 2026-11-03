@@ -1,3 +1,7 @@
+## 3 novembre — candidato integrato documenti e mappa
+
+PR draft79 riunisce PR77/78 e completa continuità fra proposte, dati confermati, confronti e preparazione incarico. Letture coordinate senza perdere bozze; fonte autorizzata sulla pagina citata e confronto esplicito, senza coordinate di evidenza inventate. Backend935/935 eDB/API77/77 sul nuovo cluster arrestato; browser completo06eb desktop/375px verificato. Seguiti395/e6 su focus e ruolo storico con test mirati/statici/build verdi, QA finale e6 desktop/375px verificata su nuovo iiAsNV arrestato, aggregato frontend in corso. [Stato preciso](v5/agency-documents-integration-20261103.md). Nessun merge nel comune, attivazione reale, main o deploy; OCR, campi estesi, collaudo AI reale autorizzato e modello incarico rimangono separati.
+
 ## 3 novembre — mappa a larghezza piena e oggetti da collocare
 
 Completata e attiva localmente l'inquadratura dell'immobile e la vista senza spalla: icone degli oggetti non posizionati nell'angolo alto destro della mappa, trascinamento nei vani e controlli opzionali sotto. Nessun nuovo backend/schema, documento completo e coordinate canoniche conservati. Gruppo mappe136/136 e verifica visiva desktop completati; nuovo collaudo mobile non eseguito in questo seguito. [Report](v5/home-plan-backoffice-20261103.md#oggetti-da-collocare-dentro-la-mappa).
@@ -22,7 +26,7 @@ Pratica → documento/pagine → condizioni/consenso → job persistente → cit
 
 Candidato dalla base comune cbddcf0: integra lo stack PR72–75, conserva tipo/famiglia dichiarati dall'agenzia nelle nuove Gift e distingue la classificazione ricevuta dalla compilazione personale. Nella pratica sono selezionabili Atto, Visura, APE, Successione e gli altri tipi reali. Corretto il refresh della consegna dopo il salvataggio del tipo. [Report e stato di integrazione](v5/gift-consolidation-20261103.md).
 
-Il prossimo verticale è il job documentale nativo, non un nuovo catalogo campi: [piano operativo](v5/agency-document-analysis-next-20261103.md). Analisi AI atto/visura e vera bozza incarico restano da collegare; nessuna chiamata o autorizzazione economica aggiunta da questo lotto.
+Questo checkpoint precedeva il verticale documentale nativo, ora implementato nel candidato: [stato aggiornato](v5/agency-documents-integration-20261103.md). Restano attivazione e prova AI reale autorizzate, OCR/campi estesi e vera bozza sul modello approvato; nessuna chiamata o autorizzazione economica aggiunta da questi lotti.
 
 ## 3 novembre — Gift semplice dalla pratica conclusa
 

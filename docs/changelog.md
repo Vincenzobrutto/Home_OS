@@ -1,3 +1,7 @@
+## 3 novembre — candidato integrato per la revisione documentale Agenzie
+
+PR77/78 riunite nella PR draft79, con mappa/Gift preservate. Dopo una modifica i pannelli si aggiornano con letture protette, differite quando ci sono bozze o invii pendenti. Apri fonte mostra pagina fisica e citazione autorizzate; confronto fra fonti e ruolo nel documento senza dedurre il venditore attuale. Percorso sintetico completo con successione, subalterni discordanti, nota di difformità e incarico bloccato senza modello. Backend935/935, DB/API77/77 e browser completo06eb desktop/375px verificati; seguiti focus/testi395/e6 testati con19+19casi e statici/build verdi, QA finale e6 desktop/375px verificata su nuovo iiAsNV arrestato, aggregato frontend ancora in corso. [Report e limiti](v5/agency-documents-integration-20261103.md). Nessun provider reale, spesa, modifica al runtime utente, merge nel comune/main o deploy.
+
 ## 3 novembre — icone da collocare dentro la planimetria
 
 Rimossa la spalla destra: mappa a tutta larghezza, riquadro di icone “Da collocare” in alto a destra, trascinamento diretto nel vano e controlli manuali opzionali sotto. Inquadratura sull'immobile senza modificare il documento completo; rotazione e sfondo facoltativo preservati. Gruppo mappe136/136, statici/build, runtime e schermata desktop locale verificati. Nessuna modifica backend o salvataggio reale dell'operatore. [Contratto e limiti](v5/home-plan-backoffice-20261103.md#oggetti-da-collocare-dentro-la-mappa).
