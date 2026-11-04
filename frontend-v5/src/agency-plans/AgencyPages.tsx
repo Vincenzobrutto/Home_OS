@@ -65,9 +65,9 @@ function PracticeOverview({practice,plans}:{practice:AgencyPractice;plans:PlansR
    <Link className={styles.primaryAction} to={'?area='+area}>{area==='planimetria'?'Vai alla planimetria':'Apri il fascicolo'}</Link>
   </section>
   <div className={styles.overviewCards}>
-   <section className={styles.panel}><h2>Fascicolo</h2><p>{practice.documents.length} {practice.documents.length===1?'documento disponibile':'documenti disponibili'}.</p><Link to="?area=fascicolo">Consulta documenti e verifiche</Link></section>
-   <section className={styles.panel}><h2>Planimetria e annuncio</h2><p>{plan?(requiresReview?'Planimetria da completare.':'Contorni disponibili.'):plans?(floorPlan?'Documento di planimetria presente.':'Planimetria da acquisire.'):'Stato della planimetria in verifica.'}</p><Link to="?area=planimetria">Apri planimetria e annuncio</Link></section>
-   <section className={styles.panel}><h2>Trattativa e stipula</h2><p>Consulta il passaggio alla fase di consegna.</p><Link to="?area=trattativa">Vai a trattativa e stipula</Link></section>
+   <section className={styles.panel}><h2>Fascicolo</h2><p>{practice.documents.length} {practice.documents.length===1?'documento disponibile':'documenti disponibili'}.</p></section>
+   <section className={styles.panel}><h2>Planimetria e annuncio</h2><p>{plan?(requiresReview?'Planimetria da completare.':'Contorni disponibili.'):plans?(floorPlan?'Documento di planimetria presente.':'Planimetria da acquisire.'):'Stato della planimetria in verifica.'}</p></section>
+   <section className={styles.panel}><h2>Trattativa e stipula</h2><p>Consulta il passaggio alla fase di consegna.</p></section>
   </div>
  </>;
 }
