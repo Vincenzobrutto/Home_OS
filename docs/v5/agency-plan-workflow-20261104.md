@@ -1,5 +1,7 @@
 # Planimetria nella pratica Agenzie
 
+La pratica si apre su Panoramica. La prossima azione è ricavata dai documenti e dalle planimetrie visibili all’agente. Se una mappa richiede verifiche, Panoramica mostra i vani salvati e il numero delle verifiche aperte e porta alla revisione. Fascicolo, Planimetria e annuncio e Trattativa e stipula sono aree raggiungibili con link della stessa pratica. L’ultima area introduce la fase di consegna senza attribuire uno stato di stipula che il fascicolo non registra.
+
 La pratica espone l’esito della digitalizzazione e il numero di contorni ricostruiti. Le verifiche aperte sono raggruppate e l’editor offre «Disegna il primo vano» quando la mappa è vuota.
 
 Una modifica dei contorni invalida il risultato del computo. Il sistema conserva la scala, il criterio, le categorie dei vani ancora presenti e le fasce dei muri da rivedere. Chiede una nuova conferma di copertura dei vani e dei muri dopo un cambio di geometria. L’agente assegna una categoria ai nuovi vani e usa «Ricalcola». Un documento sostituito continua a richiedere una nuova verifica della fonte.
