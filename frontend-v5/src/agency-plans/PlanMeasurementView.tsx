@@ -26,7 +26,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   {!!props.candidateIds?.length&&<p>Arancione: aree non censite da verificare, non vani confermati.</p>}
   {!!props.excludedCandidateIds?.length&&<p>Tratteggio grigio: aree scartate, mantenute visibili solo per il confronto.</p>}
   <p>{view==='rooms'?'Vani e pertinenze restano distinti. Le geometrie sono proposte da controllare.':'Il perimetro lordo comprende i muri interni: il dettaglio dei vani resta disponibile e non viene sommato di nuovo. Balconi e altre pertinenze si computano separatamente.'}</p>
-  {props.issues.length>0&&<div role="status" className={styles.warning}><strong>Da verificare</strong><ul>{props.issues.map((issue,i)=><li key={i}>{issue}</li>)}</ul></div>}
+  {props.issues.length>0&&<details className={styles.warning}><summary>{props.issues.length} {props.issues.length===1?'verifica aperta':'verifiche aperte'} sui contorni</summary><ul>{[...new Set(props.issues)].map(issue=><li key={issue}>{issue}</li>)}</ul></details>}
   {view==='perimeter'&&!props.perimeter&&<div className={styles.warning}><p>Il perimetro lordo non è ancora disponibile. La somma degli interni non lo sostituisce.</p><button type="button" disabled={props.readOnly} onClick={props.onCreatePerimeter}>Definisci perimetro</button></div>}
   <div className={styles.controls}>
    {shapes.length>0&&<label>Geometria<select aria-label="Geometria" value={selected?.id||''} onChange={e=>{setSelection(e.target.value);setRingIndex(0);setVertex(null);}}>{shapes.map(s=><option value={s.id} key={s.id}>{s.label}</option>)}</select></label>}

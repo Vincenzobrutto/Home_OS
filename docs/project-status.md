@@ -1,5 +1,7 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+Il lotto locale `codex/agency-plan-workflow-20261104` semplifica esito della digitalizzazione, ricalcolo, export annuncio e passaggio alla consegna della stessa pratica. [Flusso e decisioni](v5/agency-plan-workflow-20261104.md).
+
 ## Agenzie — documenti e mappa nel ramo comune, 3 novembre
 
 Integrazione autorizzata dal committente nella [PR79](https://github.com/Vincenzobrutto/Home_OS/pull/79), da `codex/agenzie-documenti-consolidamento-20261103` al comune `codex/dimora-v5-consolidata-20261023`, precedente punta3335ea9. Codice prodotto `e6b2509`: PR77/78 riunite conservando tutti i genitori, mappa/Gift preservate e pannelli documentali sincronizzati mediante letture protette, senza perdere le bozze locali. Citazioni apribili sulla pagina fisica dell'originale autorizzato; binding e conferma restano distinti. **935/935 backend ordinari e77/77 DB/API**, percorso sintetico browser desktop/375px e cluster arrestati verificati. [Report, ricevuta d'integrazione e limiti](v5/agency-documents-integration-20261103.md).
