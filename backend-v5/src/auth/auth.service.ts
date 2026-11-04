@@ -5,7 +5,7 @@ import type { Request, Response } from 'express';
 import { LoginDto, RegisterDto } from '../dto';
 import { RecoveryConfig } from './recovery-config';
 
-const publicAccount = (a: { id: string; name: string; email: string; emailVerifiedAt?: Date | null; requiresEmailVerification?: boolean }) => ({ id: a.id, name: a.name, email: a.email, emailVerifiedAt:a.emailVerifiedAt?.toISOString()??null, requiresEmailVerification:a.requiresEmailVerification??false });
+export const publicAccount = (a: { id: string; name: string; email: string; emailVerifiedAt?: Date | null; requiresEmailVerification?: boolean }) => ({ id: a.id, name: a.name, email: a.email, emailVerifiedAt:a.emailVerifiedAt?.toISOString()??null, requiresEmailVerification:a.requiresEmailVerification??false });
 @Injectable()
 export class AuthService {
   private readonly attempts = new Map<string, { count: number; until: number }>();

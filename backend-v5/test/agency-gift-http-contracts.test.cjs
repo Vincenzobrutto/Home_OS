@@ -1,6 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const H=require('../dist/agency-practices/gift-http-contracts'),I=require('../dist/agency-practices/gift-invitations'),A=require('../dist/agency-practices/gift-acceptance-command');
 const {PracticeError}=require('../dist/agency-practices/domain');
+const {giftRegistrationProof,matchesGiftRegistrationProof}=require('../dist/agency-practices/gift-registration');
 const secret='A'.repeat(43),header='request-key-DEMO';
 const create=()=>({expectedRevision:4,documents:[{sourceId:' b ',version:2,sha256:'b'.repeat(64)},{sourceId:'a',version:1,sha256:'a'.repeat(64)}],recipientEmail:' Recipient@Example.test ',stipulationCompleted:true,releaseApproved:true,annualBenefit:true});
 const accept=()=>({secret,expectedInvitationVersion:2,home:{name:' Casa DEMO ',address:' Via DEMO 12 '}});
@@ -10,6 +11,31 @@ function replace(module,key,replacement,check){const original=module[key];module
 
 test('landing, claim and version body parsers return only their transport fields',()=>{
  assert.deepEqual(H.parseGiftLandingBody({secret}),{secret});assert.deepEqual(H.parseGiftClaimBody({secret,expectedVersion:2}),{secret,expectedVersion:2});assert.deepEqual(H.parseGiftVersionBody({expectedVersion:2}),{expectedVersion:2});
+});
+test('Gift registration accepts mailbox proof and a bounded password without client-supplied identity',()=>{
+ const proof='B'.repeat(43),password=' '+ '🧱'.repeat(11);
+ assert.deepEqual(H.parseGiftRegistrationContextBody({secret,proof}),{secret,proof});
+ assert.deepEqual(H.parseGiftRegistrationBody({secret,proof,password}),{secret,proof,password});
+ for(const value of [null,'🧱'.repeat(11),'🧱'.repeat(129)])invalid(()=>H.parseGiftRegistrationBody({secret,proof,password:value}));
+ for(const extra of [{email:'other@example.test'},{emailVerifiedAt:'2026-11-04'},{name:'Forged name'},{accountId:'forged'}]){
+  invalid(()=>H.parseGiftRegistrationContextBody({secret,proof,...extra}));
+  invalid(()=>H.parseGiftRegistrationBody({secret,proof,password,...extra}));
+ }
+ invalid(()=>H.parseGiftRegistrationBody({secret,password}));
+ invalid(()=>H.parseGiftRegistrationContextBody({secret,proof:'invalid'}));
+});
+test('mailbox proof is bound to invitation version, recipient, original secret and recent time windows',()=>{
+ const invite={id:'gift-demo',version:1,recipientEmail:'owner@example.test'},key='a'.repeat(64),window=15*60*1000,issued=10*window;
+ const proof=giftRegistrationProof(invite,secret,key,issued);
+ assert.match(proof,/^[A-Za-z0-9_-]{43}$/u);
+ assert.equal(matchesGiftRegistrationProof(invite,{secret,proof},key,issued),true);
+ assert.equal(matchesGiftRegistrationProof(invite,{secret,proof},key,issued+2*window-1),true);
+ assert.equal(matchesGiftRegistrationProof(invite,{secret,proof},key,issued+2*window),false);
+ for(const change of [{id:'another-gift'},{version:2},{recipientEmail:'other@example.test'}]){
+  assert.equal(matchesGiftRegistrationProof({...invite,...change},{secret,proof},key,issued),false);
+ }
+ assert.equal(matchesGiftRegistrationProof(invite,{secret:'Z'.repeat(43),proof},key,issued),false);
+ assert.equal(matchesGiftRegistrationProof(invite,{secret,proof},'b'.repeat(64),issued),false);
 });
 test('create obtains key only from header and applies canonical invitation normalization',()=>{
  const input=create(),before=structuredClone(input),parsed=H.parseGiftCreateBody(input,' '+header+' ');assert.deepEqual(input,before);

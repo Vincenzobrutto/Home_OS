@@ -32,6 +32,21 @@ test('Provider failures sanitized and never retried automatically',async()=>{
     await assert.rejects(mail.send('reset_password',recipient,token),error=>error.code===code&&!error.message.includes(token)&&!error.message.includes('offline-secret'));assert.equal(calls,1);
   }
 });
+test('Gift registration mail constructs its own same-origin route with the two credentials only in the fragment',async()=>{
+ const calls=[],mail=new BrevoRecoveryMail(config(),async(url,options)=>{calls.push({url,options});return Response.json({messageId:'offline-gift'},{status:201});});
+ const gift={invitationId:'00000000-0000-4000-8000-000000000001',secret:token,proof:'B'.repeat(43)};
+ await assert.rejects(mail.send('gift_registration',recipient,{...gift,invitationId:'https://outside.example.test'}),hasCode('mail_input_invalid'));
+ await assert.rejects(mail.send('gift_registration',recipient,{...gift,proof:'invalid'}),hasCode('mail_input_invalid'));
+ assert.equal(calls.length,0);
+ assert.deepEqual(await mail.send('gift_registration',recipient,gift),{messageId:'offline-gift'});
+ const body=JSON.parse(calls[0].options.body),url=new URL(body.textContent.split('\n').find(line=>line.startsWith('https:')));
+ assert.equal(url.origin,config().publicOrigin);
+ assert.equal(url.pathname,'/gift/'+gift.invitationId);
+ assert.equal(url.search,'');
+ assert.deepEqual(Object.fromEntries(new URLSearchParams(url.hash.slice(1))),{token:gift.secret,signup:gift.proof});
+ assert.deepEqual(body.to,[{email:recipient}]);
+ assert.equal('attachment'in body,false);
+});
 test('Unknown delivery after network error or invalid success body remains uncertain',async()=>{
   for(const transport of [async()=>{throw Error('offline-secret '+token);},async()=>new Response('invalid',{status:201}),async()=>Response.json({},{status:201})])await assert.rejects(new BrevoRecoveryMail(config(),transport).send('verify_email',recipient,token),hasCode('mail_delivery_uncertain'));
 });

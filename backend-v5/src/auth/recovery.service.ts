@@ -3,7 +3,7 @@ import { createHmac, randomBytes } from 'node:crypto';
 import type { Request, Response } from 'express';
 import { PrismaService } from '../prisma.service';
 import { digest, hashPassword, SessionsService } from '../security';
-import { BrevoRecoveryMail, type RecoveryMailPurpose } from './recovery-mail';
+import { BrevoRecoveryMail, type GiftRegistrationMail, type RecoveryMailPurpose } from './recovery-mail';
 import { RecoveryConfig, type RecoverySettings } from './recovery-config';
 import type { CompleteRecoveryDto, CompleteVerificationDto } from './recovery.dto';
 const invalid = () => new UnprocessableEntityException({ code: 'recovery_invalid', message: 'Link non più valido. Chiedi un nuovo link oppure prova ad accedere.' });
@@ -20,6 +20,20 @@ export class RecoveryService {
   }
   private async ipLimit(settings: RecoverySettings, req: Request, scope: string) {
     if (await this.throttle(settings, scope, req.ip || 'loopback') > 20) throw new HttpException({ code: 'recovery_rate_limited', message: 'Troppe richieste da questa connessione. Attendi qualche minuto.' },429);
+  }
+  /** Recipient and proof come from the locked Gift invitation, never from a request email field. */
+  async requestGiftRegistration(settings: RecoverySettings, recipient: string, gift: GiftRegistrationMail, req: Request) {
+    await this.ipLimit(settings, req, 'gift_registration:request');
+    const limited = await this.throttle(settings, 'gift_registration:email', recipient) > 3;
+    await this.db.authThrottle.deleteMany({ where: { expiresAt: { lt: new Date(Date.now() - 86400000) } } });
+    if (!limited) {
+      setImmediate(() => { void this.deliverGiftRegistration(settings, recipient, gift); });
+    }
+    return { message: 'Se puoi proseguire, riceverai le istruzioni per creare il tuo account.' };
+  }
+  private async deliverGiftRegistration(settings: RecoverySettings, recipient: string, gift: GiftRegistrationMail) {
+    try { await this.mail(settings).send('gift_registration', recipient, gift); }
+    catch { /* Keep delivery status private and leave a new attempt to the user. */ }
   }
   async request(purpose: RecoveryMailPurpose, email: string | null, req: Request) {
     const settings = this.config.settings();
