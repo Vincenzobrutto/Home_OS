@@ -20,3 +20,8 @@
 .nextAction h2, .nextAction p { margin: 0 0 8px; }
 .overviewCards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 12px; }
 .overviewCards .panel { margin: 12px 0 0; }
+.planEditor { margin: 18px 0; }
+.planEditor h2 { margin-bottom: 4px; }
+.planTasks { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.planTasks button[aria-pressed="true"] { color: #fff; background: #006476; border-color: #006476; }
+.planEditor details > summary { cursor: pointer; }
