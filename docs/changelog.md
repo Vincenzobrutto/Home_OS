@@ -1,3 +1,7 @@
+## 4 novembre — attivazione locale Agenzie e Gift
+
+Abilitati fascicolo Agenzie, link Gift manuale e worker di accettazione su `cfff2527` con un vault separato. Configurazione API soltanto. Verificate le capability con sessione normale, le route protette, lo scanner su file sintetico e i blocchi su AI a pagamento e invio email. [Report](v5/local-common-runtime-20261103.md#4-novembre--agenzie-e-gift-attive-nel-runtime-locale).
+
 ## 3 novembre — app locale allineata al comune PR79
 
 Rilasciati backend/frontend cfff252 sulla stessa origine e DB locali, con backup attuale, una migrazione additiva e verifica delle81 tabelle/sessioni e330 originali precedenti. UI autenticata della mappa e controlli runtime verdi; restrizioni su Agenzie/Gift/AI/email e operazioni automatiche conservate, nessuna attivazione dedotta dall'attesa della risposta. [Report](v5/local-common-runtime-20261103.md). Nessun main o deploy pubblico; configurazione operativa Agenzie/Gift distinta dall'installazione del codice.

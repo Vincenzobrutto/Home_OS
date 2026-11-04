@@ -1,8 +1,12 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## App locale — Agenzie e Gift attive, 4 novembre
+
+Attivate su scelta del committente con la stessa fonte `cfff2527` e un nuovo profilo API. Verificati area Agenzie con sessione esistente, capability Gift, route protette, scanner reale su file sintetico e blocchi AI/email. Un solo worker Gift attivo, frontend e PostgreSQL conservati. Il primo spazio agenzia si crea dall'app. Il link si copia manualmente e richiede un destinatario locale già verificato. [Configurazione, prove e limiti](v5/local-common-runtime-20261103.md#4-novembre--agenzie-e-gift-attive-nel-runtime-locale).
+
 ## App locale — versione comune PR79 attiva, 3 novembre
 
-API e frontend aggiornati alla fonte congelata `cfff25277039d39ee47c063b8bee1f4e2160c190` su richiesta del committente. Backup fresco e migrazione solo additiva verificati:81 tabelle precedenti, sessioni e330 originali invariati; quattro nuove tabelle vuote. Build, manifesti/processi/proxy e UI desktop autenticata della mappa verdi, nessun errore console. Ripristino del codice predisposto e non usato. **Agenzie/Gift mantengono i blocchi operativi precedenti, in attesa della scelta di configurazione; AI/email/queue/pulizie restano disabilitate.** Nessuna modifica a main o demo Alessio. [Report, verifiche e limiti](v5/local-common-runtime-20261103.md).
+API e frontend aggiornati alla fonte congelata `cfff25277039d39ee47c063b8bee1f4e2160c190` su richiesta del committente. Backup fresco e migrazione solo additiva verificati su 81 tabelle precedenti, sessioni e 330 originali. Quattro nuove tabelle vuote. Build, manifesti, processi, proxy e UI desktop autenticata della mappa verdi. Il rilascio del 3 novembre ha mantenuto i blocchi precedenti in attesa della scelta di configurazione del 4 novembre. [Report, verifiche e limiti](v5/local-common-runtime-20261103.md).
 
 ## Agenzie — documenti e mappa nel ramo comune, 3 novembre
 
