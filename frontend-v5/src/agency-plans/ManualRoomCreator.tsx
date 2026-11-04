@@ -13,26 +13,41 @@ export function ManualRoomCreator(p:{api:AgencyPlanPort;plan:AgencyPlan;revision
  const locked=busy||!!pending||conflict;
  function invalidate(){setPreview(null);setError('');}
  function failure(e:unknown){if(!alive.current)return;if(e instanceof ApiError&&[401,403].includes(e.status)){p.onDenied(e);return;}if(e instanceof ApiError&&e.status===409){setConflict(true);setError('La pratica è cambiata. Ricarica prima di continuare.');return;}const code=e instanceof ApiError?e.code:'';setError(code==='region_overlap'?'Il contorno si sovrappone a un vano. Scegli “Ricava da…” per separarlo.':code==='manual_room_multiple_components'?'Il ritaglio crea più parti separate. Ridisegna una sola zona connessa.':code==='manual_room_empty'?'La zona non intercetta il vano di origine oppure lo occupa interamente. Rivedi il contorno.':'Operazione non conclusa. Controlla il contorno o riprova.');}
- async function showPreview(geometryToPreview=geometry){if(!geometryToPreview||!kind||!label.trim()||!p.api.preview)return;setBusy(true);setError('');const request={key:crypto.randomUUID(),body:{expectedRevision:p.revision,expectedPlanVersion:p.plan.version,reason:reason.trim()||'Vano ricalcato sul documento originale',command:{operation:'add_room',id:roomId,label:label.trim(),kind,geometry:{points:geometryToPreview.points,holes:geometryToPreview.holes},...(parentId?{parentId}:{})}}};try{const r=await p.api.preview(p.plan.id,request.body,request.key),plan=r.plans.plans.find(s=>s.id===p.plan.id);if(!plan)throw Error('Missing preview');if(alive.current)setPreview({request,plan});}catch(e){failure(e);}finally{if(alive.current)setBusy(false);}}
+ function makeRequest(shape:PlanShape|null):Request|null{
+  if(!shape||!kind||!label.trim())return null;
+  return {key:crypto.randomUUID(),body:{expectedRevision:p.revision,expectedPlanVersion:p.plan.version,reason:reason.trim()||'Vano ricalcato sul documento originale',command:{operation:'add_room',id:roomId,label:label.trim(),kind,geometry:{points:shape.points,holes:shape.holes},...(parentId?{parentId}:{})}}};
+ }
+ async function showPreview(shape=geometry){
+  const request=makeRequest(shape);
+  if(!request||!p.api.preview)return;
+  setBusy(true);setError('');
+  try{const r=await p.api.preview(p.plan.id,request.body,request.key),plan=r.plans.plans.find(s=>s.id===p.plan.id);if(!plan)throw Error('Missing preview');if(alive.current)setPreview({request,plan});}catch(e){failure(e);}finally{if(alive.current)setBusy(false);}}
  async function commit(request:Request){setBusy(true);setError('');setPending(request);try{const r=await p.api.edit(p.plan.id,request.body,request.key);if(alive.current)p.onSaved(r.plans,roomId);}catch(e){if(e instanceof ApiError&&e.status===422)setPending(null);failure(e);}finally{if(alive.current)setBusy(false);}}
  const previewRooms=preview?.plan.rooms||[],newRoom=previewRooms.find(r=>r.id===roomId);
  return <dialog ref={dialog} tabIndex={-1} className={`${styles.panel} ${styles.builderDialog}`} aria-label="Aggiungi vano manualmente" onCancel={e=>{e.preventDefault();if(!locked)p.onClose();}}>
-  <h3>Disegna / aggiungi vano</h3><p>Ricalca lo spazio sull’originale. Prima del salvataggio vedrai il risultato effettivo.</p>
+  <h3>Aggiungi vano</h3>
   {error&&<p role="alert">{error}</p>}
   <fieldset disabled={locked||drawing}>
    <label>Nome del nuovo vano<input maxLength={200} value={label} onChange={e=>{setLabel(e.target.value);invalidate();}} placeholder="Es. Corridoio"/></label>
    <label>Tipo di vano<select value={kind} onChange={e=>{setKind(e.target.value);invalidate();}}><option value="">Scegli tipo</option>{Object.entries(kinds).map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
+   <details open={parentId?true:undefined}><summary>Altre opzioni</summary>
    <label>Come aggiungere il vano<select value={parentId} onChange={e=>{setParentId(e.target.value);invalidate();}}><option value="">Nuovo spazio non riconosciuto</option>{p.plan.rooms?.map(r=><option key={r.id} value={r.id}>Ricava da {r.label}</option>)}</select></label>
-   <p>{parentId?'Disegna la zona da separare. Verrà ritagliata entro il vano scelto e sottratta da esso: gli altri vani restano invariati.':'Il nuovo contorno deve essere distinto dagli altri vani. Se lo spazio è già accorpato, scegli “Ricava da…”.'}</p>
+   <label>Nota facoltativa<textarea maxLength={1000} value={reason} onChange={e=>{setReason(e.target.value);invalidate();}}/></label>
+   </details>
    <button type="button" onClick={()=>setDrawing(true)}>{geometry?'Ridisegna nuovo vano':'Disegna contorno del nuovo vano'}</button>
-   {geometry&&<p>Contorno pronto: {geometry.points.length} punti. Non ancora salvato.</p>}
-   <details><summary>Aggiungi una nota</summary><label>Motivo dell’aggiunta<textarea maxLength={1000} value={reason} onChange={e=>{setReason(e.target.value);invalidate();}}/></label></details>
+   {geometry&&<p>Contorno pronto per il salvataggio.</p>}
    <button type="button" disabled={!geometry||!kind||!label.trim()} onClick={()=>void showPreview()}>Controlla anteprima</button>
   </fieldset>
   {drawing&&p.plan.rasterSize&&<PolygonBuilder sourceUrl={p.sourceUrl} width={p.plan.rasterSize.width} height={p.plan.rasterSize.height} initial={null} referenceShapes={p.plan.rooms||[]} onCancel={()=>setDrawing(false)} onDone={(shape,closedOnStart)=>{setGeometry(shape);setDrawing(false);invalidate();if(closedOnStart)void showPreview(shape);}}/>}
-  {preview&&newRoom&&p.plan.rasterSize&&<section aria-label="Anteprima nuovo vano"><h4>Anteprima non salvata</h4><p>{parentId?'La zona selezionata è stata limitata al vano di origine. Controlla sia il nuovo vano sia il contorno rimanente.':'Controlla il contorno prima di aggiungerlo.'} Il computo precedente verrà invalidato e richiederà nuova verifica.</p><PlanMeasurementView readOnly scopeKey={preview.request.key} sourceUrl={p.sourceUrl} width={p.plan.rasterSize.width} height={p.plan.rasterSize.height} rooms={[newRoom,...previewRooms.filter(r=>r.id!==roomId)]} perimeter={null} issues={[]} onChange={()=>{}} onCreatePerimeter={()=>{}}/><button type="button" disabled={locked} onClick={()=>void commit(preview.request)}>Salva nuovo vano</button></section>}
+  {preview&&newRoom&&p.plan.rasterSize&&<section aria-label="Anteprima nuovo vano"><h4>Anteprima non salvata</h4><p>{parentId?'La zona selezionata è stata limitata al vano di origine. Controlla sia il nuovo vano sia il contorno rimanente.':'Controlla il contorno prima di aggiungerlo.'} Il computo precedente verrà invalidato e richiederà nuova verifica.</p><PlanMeasurementView readOnly scopeKey={preview.request.key} sourceUrl={p.sourceUrl} width={p.plan.rasterSize.width} height={p.plan.rasterSize.height} rooms={[newRoom,...previewRooms.filter(r=>r.id!==roomId)]} perimeter={null} issues={[]} onChange={()=>{}} onCreatePerimeter={()=>{}}/></section>}
   {pending&&!busy&&!conflict&&<button type="button" onClick={()=>void commit(pending)}>Riprova lo stesso salvataggio del vano</button>}
   {conflict&&<button type="button" onClick={p.onReload}>Chiudi e ricarica pratica</button>}
-  <button type="button" disabled={locked} onClick={p.onClose}>Annulla aggiunta</button>
+  <div className={styles.roomActions}>
+   <button type="button" disabled={locked} onClick={p.onClose}>Annulla aggiunta</button>
+   <button className={styles.primaryAction} type="button" disabled={locked||drawing||!geometry||!kind||!label.trim()} onClick={()=>{
+    const request=preview?.request??makeRequest(geometry);
+    if(request)void commit(request);
+   }}>Salva nuovo vano</button>
+  </div>
  </dialog>;
 }
