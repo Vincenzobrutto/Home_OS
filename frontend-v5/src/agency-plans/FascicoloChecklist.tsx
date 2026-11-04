@@ -70,12 +70,33 @@ export function FascicoloChecklist({documents,canEdit,simulation=false}:{documen
  const simulatedPlan=acquisition==='received';
  const hasPlan=received.has('floor_plan')||simulatedPlan;
  const receivedCount=received.size+Number(simulatedPlan&&!received.has('floor_plan'));
- const request=entries.filter(e=>selected.includes(e.id)&&!received.has(e.id)&&!(e.id==='floor_plan'&&hasPlan));
+ const available=entries.filter(e=>e.id!=='mandate'&&!received.has(e.id)&&!(e.id==='floor_plan'&&(hasPlan||acquisition==='pending')));
+ const request=available.filter(e=>selected.includes(e.id));
  const questions=situations.map(s=>({...s,evidence:documents.find(d=>s.hint.test(normalized(d.filename))||(s.id==='succession'&&d.kind==='succession'))}));
  const reviewCount=questions.filter(s=>s.evidence&&(!answers[s.id]||answers[s.id]==='check')).length;
  return <section className={styles.panel} aria-label="Checklist del fascicolo">
   <h2>Checklist del fascicolo</h2>
   <p>{receivedCount} di {entries.length} voci ricevute · {reviewCount} {reviewCount===1?'situazione da confermare':'situazioni da confermare'}</p>
+  {canEdit&&<details className={styles.panel}>
+   <summary>Richiedi documenti al venditore</summary>
+   {available.length?<fieldset>
+    <legend>Seleziona i documenti da chiedere</legend>
+    {available.map(entry=><label key={entry.id}>
+     <input type="checkbox" checked={selected.includes(entry.id)} onChange={e=>{
+      const checked=e.target.checked;
+      setSelected(current=>checked?[...current,entry.id]:current.filter(id=>id!==entry.id));
+      setDraft('');
+      setNotice('');
+     }}/> {entry.label}{waiting.includes(entry.id)&&' · Già richiesto'}
+    </label>)}
+   </fieldset>:<p>Tutti i documenti richiedibili sono già disponibili o in acquisizione.</p>}
+   <button type="button" disabled={!request.length} onClick={()=>{setDraft('Buongiorno, per il fascicolo della vendita può inviarci questi documenti?\n\n'+request.map(e=>'• '+e.label).join('\n')+'\n\nGrazie.');setNotice('');}}>Prepara richiesta</button>
+   {draft&&<section aria-label="Richiesta al proprietario">
+    <label>Messaggio al proprietario<textarea value={draft} onChange={e=>setDraft(e.target.value)}/></label>
+    <button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(draft);setNotice('Richiesta copiata.');}catch{setNotice('Seleziona il testo del messaggio per copiarlo.');}}}>Copia richiesta</button>
+    <button type="button" disabled={!request.length} onClick={()=>{setWaiting(current=>[...new Set([...current,...request.map(e=>e.id)])]);setSelected([]);setDraft('');setNotice('Documenti segnati in attesa.');}}>Segna come richiesti</button>
+   </section>}
+  </details>}
   <div className={styles.checklistScroll}><table className={styles.checklistTable}>
    <thead><tr><th>Documento</th><th>Quando serve</th><th>Stato e azioni</th></tr></thead>
    <tbody>{entries.map(entry=>{
@@ -88,7 +109,6 @@ export function FascicoloChecklist({documents,canEdit,simulation=false}:{documen
       {delivered&&<div><a href="/planimetria-fascicolo-simulata.svg" target="_blank" rel="noreferrer">Apri planimetria dimostrativa</a> · Da verificare</div>}
      </>:pending?<strong>In acquisizione simulata</strong>:<>
       <span>{waiting.includes(entry.id)?'In attesa':'Da acquisire'}</span>
-      {canEdit&&entry.id!=='mandate'&&<label><input type="checkbox" checked={selected.includes(entry.id)} onChange={e=>setSelected(current=>e.target.checked?[...current,entry.id]:current.filter(id=>id!==entry.id))}/> Includi nella richiesta per {entry.label.toLowerCase()}</label>}
       {simulation&&canEdit&&isPlan&&<button type="button" onClick={()=>setAcquisition('confirm')}>Acquista tramite Dimora · simulazione</button>}
      </>}
     </td></tr>;
@@ -108,12 +128,7 @@ export function FascicoloChecklist({documents,canEdit,simulation=false}:{documen
     <label>Documento aggiuntivo<input value={newLabel} maxLength={120} onChange={e=>setNewLabel(e.target.value)}/></label>
     <button type="submit" disabled={!newLabel.trim()}>Aggiungi voce</button>
    </form>
-   <button type="button" disabled={!request.length} onClick={()=>{setDraft('Buongiorno, per il fascicolo della vendita può inviarci questi documenti?\n\n'+request.map(e=>'• '+e.label).join('\n')+'\n\nGrazie.');setNotice('');}}>Prepara richiesta</button>
-   {draft&&<section aria-label="Richiesta al proprietario">
-    <label>Messaggio al proprietario<textarea value={draft} onChange={e=>setDraft(e.target.value)}/></label>
-    <button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(draft);setNotice('Richiesta copiata.');}catch{setNotice('Seleziona il testo del messaggio per copiarlo.');}}}>Copia richiesta</button>
-    <button type="button" disabled={!request.length} onClick={()=>{setWaiting(current=>[...new Set([...current,...request.map(e=>e.id)])]);setSelected([]);setDraft('');setNotice('Documenti segnati in attesa.');}}>Segna come richiesti</button>
-   </section>}
+
   </>}
   {notice&&<p role="status">{notice}</p>}
   <section><h3>Situazioni da confermare</h3>
