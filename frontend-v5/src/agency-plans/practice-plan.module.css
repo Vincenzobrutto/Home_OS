@@ -25,3 +25,5 @@
 .planTasks { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
 .planTasks button[aria-pressed="true"] { color: #fff; background: #006476; border-color: #006476; }
 .planEditor details > summary { cursor: pointer; }
+
+.builderScroll{overflow:auto;max-height:58dvh;min-width:0}
