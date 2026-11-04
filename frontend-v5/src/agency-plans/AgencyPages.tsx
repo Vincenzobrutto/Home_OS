@@ -57,19 +57,14 @@ function PracticeOverview({practice,plans}:{practice:AgencyPractice;plans:PlansR
   : !plan && floorPlan && plans ? 'Aprire la planimetria'
   : 'Controllare il fascicolo';
  const area = requiresReview || nextAction==='Aggiornare il computo' || nextAction==='Aprire la planimetria' ? 'planimetria' : 'fascicolo';
- return <>
-  <section className={styles.nextAction} aria-labelledby="practice-next-action">
+ return <section className={styles.nextAction} aria-labelledby="practice-next-action">
    <p>Prossima azione</p>
    <h2 id="practice-next-action">{nextAction}</h2>
+   <p>{practice.documents.length} {practice.documents.length===1?'documento disponibile':'documenti disponibili'}.</p>
+   <p>{plan?(requiresReview?'Planimetria da completare.':'Contorni disponibili.'):plans?(floorPlan?'Documento di planimetria presente.':'Planimetria da acquisire.'):'Stato della planimetria in verifica.'}</p>
    {plan&&<p>{rooms} {rooms===1?'vano salvato':'vani salvati'} · {issues} {issues===1?'verifica aperta':'verifiche aperte'}.</p>}
    <Link className={styles.primaryAction} to={'?area='+area}>{area==='planimetria'?'Vai alla planimetria':'Apri il fascicolo'}</Link>
-  </section>
-  <div className={styles.overviewCards}>
-   <section className={styles.panel}><h2>Fascicolo</h2><p>{practice.documents.length} {practice.documents.length===1?'documento disponibile':'documenti disponibili'}.</p></section>
-   <section className={styles.panel}><h2>Planimetria e annuncio</h2><p>{plan?(requiresReview?'Planimetria da completare.':'Contorni disponibili.'):plans?(floorPlan?'Documento di planimetria presente.':'Planimetria da acquisire.'):'Stato della planimetria in verifica.'}</p></section>
-   <section className={styles.panel}><h2>Trattativa e stipula</h2><p>Consulta il passaggio alla fase di consegna.</p></section>
-  </div>
- </>;
+  </section>;
 }
 
 function AgencyPractice(p:{agencyId:string;practiceId:string}){useDocumentTitle("Pratica agenzia");

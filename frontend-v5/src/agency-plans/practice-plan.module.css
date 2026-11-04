@@ -18,8 +18,6 @@
 .areaNavigation a:focus-visible, .primaryAction:focus-visible { outline: 3px solid #df7c00; outline-offset: 3px; }
 .nextAction { padding: 18px; border: 1px solid #8ab7bc; border-radius: 12px; background: #ecf8f8; }
 .nextAction h2, .nextAction p { margin: 0 0 8px; }
-.overviewCards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 12px; }
-.overviewCards .panel { margin: 12px 0 0; }
 .planEditor { margin: 18px 0; }
 .planEditor h2 { margin-bottom: 4px; }
 .planTasks { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
