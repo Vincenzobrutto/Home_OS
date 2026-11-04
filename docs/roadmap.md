@@ -1,3 +1,11 @@
+## 4 novembre — Agenzie e Gift abilitate in locale
+
+Disponibili la creazione dello spazio agenzia e il flusso di consegna manuale per destinatari locali già verificati. Il prossimo uso con destinatari remoti o nuovi account dipende da un'origine raggiungibile e dalla configurazione della verifica email. [Stato operativo](v5/local-common-runtime-20261103.md#4-novembre--agenzie-e-gift-attive-nel-runtime-locale).
+
+## 3 novembre — app locale allineata al comune PR79
+
+Rilasciati backend/frontend cfff252 sulla stessa origine e DB locali, con backup attuale, una migrazione additiva e verifica delle81 tabelle/sessioni e330 originali precedenti. UI autenticata della mappa e controlli runtime verdi; restrizioni su Agenzie/Gift/AI/email e operazioni automatiche conservate, nessuna attivazione dedotta dall'attesa della risposta. [Report](v5/local-common-runtime-20261103.md). Nessun main o deploy pubblico; configurazione operativa Agenzie/Gift distinta dall'installazione del codice.
+
 ## 3 novembre — integrazione documenti e mappa nel comune
 
 Integrazione nel comune autorizzata tramite PR79: PR77/78 riunite, continuità fra proposte, dati confermati, confronti e preparazione incarico. Letture coordinate con bozze preservate e fonte autorizzata sulla pagina citata, senza coordinate di evidenza inventate. Backend935/935, DB/API77/77 e frontend completo2163/2163 in201file; statici/build e browser desktop/375px verdi, tutti i cluster creati arrestati. [Risultati, tentativi e limiti](v5/agency-documents-integration-20261103.md). Restano separati l'aggiornamento dell'app locale, l'attivazione AI reale autorizzata, OCR, campi estesi e modello incarico approvato. Nessuna modifica a main o deploy automatico.
