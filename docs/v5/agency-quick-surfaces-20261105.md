@@ -39,3 +39,5 @@ Riconoscere una barra valida non garantisce accuratezza della scansione. Foglio 
 ## Accesso diretto alla calibrazione manuale
 
 La stima rapida espone «Definisci scala sulla mappa» o «Ricalibra sulla mappa» quando esiste già un riferimento. Il comando riusa il disegno a due punti sul documento. La scelta manuale entra in vigore alla conferma degli estremi e la stima si aggiorna con la lunghezza reale. Annullare il disegno conserva il riferimento corrente. «Torna alla scala automatica» ripristina il riferimento automatico o già salvato. Verificati 54 test mirati, typecheck e build.
+
+Il comando è visibile anche nella schermata iniziale, sopra la mappa. La conferma dei due estremi apre il calcolo con il riferimento manuale selezionato. Il test della pagina verifica il passaggio fino alla superficie netta.

@@ -4,15 +4,18 @@ import type {MeasurementConfiguration} from './measurement-types';
 import {quickSurfaces,suggestedCoefficient,type ScaleDetection,type ScaleReference} from './scaleDetection';
 import styles from './practice-plan.module.css';
 
-type Props={active:boolean;sourceUrl:string;width:number;height:number;rooms:PlanShape[];configuration?:MeasurementConfiguration|null;busy:boolean;advanced:ReactNode;requestSegment:(done:(a:Point,b:Point)=>void)=>void};
+export type ScaleSelection={mode:'auto'|'paper'|'manual';segment:[Point,Point]|null};
+type Props={active:boolean;sourceUrl:string;width:number;height:number;rooms:PlanShape[];configuration?:MeasurementConfiguration|null;busy:boolean;advanced:ReactNode;selection:ScaleSelection;onSelection:(selection:ScaleSelection)=>void;requestSegment:(done:(a:Point,b:Point)=>void)=>void};
 const number=(n:number)=>n.toLocaleString('it-IT',{maximumFractionDigits:1,minimumFractionDigits:1});
 export function QuickSurfaceEstimate(p:Props){
  const [advancedVisited,setAdvancedVisited]=useState(false);
  const saved=p.configuration?.calibration;
  const savedBar:ScaleReference|null=saved&&!saved.paper&&saved.metres>0?{start:saved.start,end:saved.end,metres:saved.metres,method:'saved'}:null;
  const [reading,setReading]=useState(false),[detection,setDetection]=useState<ScaleDetection|null>(null),[failed,setFailed]=useState(false);
- const [mode,setMode]=useState<'auto'|'paper'|'manual'>('auto'),[format,setFormat]=useState<string>(saved?.paper?.format??''),[ratio,setRatio]=useState<string|null>(saved?.paper?String(saved.paper.denominator):null);
- const [segment,setSegment]=useState<[Point,Point]|null>(null),[metres,setMetres]=useState('');
+ const {mode,segment}=p.selection;
+ const setMode=(mode:ScaleSelection['mode'])=>p.onSelection({mode,segment});
+ const [format,setFormat]=useState<string>(saved?.paper?.format??''),[ratio,setRatio]=useState<string|null>(saved?.paper?String(saved.paper.denominator):null);
+ const [metres,setMetres]=useState('');
  const [wallPercent,setWallPercent]=useState(10),[coefficients,setCoefficients]=useState<Record<string,number>>({});
  useEffect(()=>{
   if(!p.active||detection||failed||saved)return;
@@ -43,8 +46,7 @@ export function QuickSurfaceEstimate(p:Props){
   </div>}
   <div className={styles.row}>
    <button type="button" disabled={p.busy} onClick={()=>p.requestSegment((start,end)=>{
-    setSegment([start,end]);
-    setMode('manual');
+    p.onSelection({mode:'manual',segment:[start,end]});
    })}>{bar||report?'Ricalibra sulla mappa':'Definisci scala sulla mappa'}</button>
    {mode==='manual'&&<button type="button" disabled={p.busy} onClick={()=>setMode('auto')}>Torna alla scala automatica</button>}
   </div>
