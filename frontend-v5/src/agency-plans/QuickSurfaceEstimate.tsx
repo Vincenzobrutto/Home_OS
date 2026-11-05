@@ -41,7 +41,14 @@ export function QuickSurfaceEstimate(p:Props){
    <label>Scala sul documento · 1:<input type="number" min="1" max="10000" value={denominator} onChange={e=>setRatio(e.target.value)} placeholder="Es. 100"/></label>
    <label>Formato del foglio scansionato<select value={format} onChange={e=>{setFormat(e.target.value);setMode('paper');}}><option value="">Scegli formato</option><option value="A4">A4 · 21 × 29,7 cm</option><option value="A3">A3 · 29,7 × 42 cm</option><option value="A2">A2 · 42 × 59,4 cm</option><option value="A1">A1 · 59,4 × 84,1 cm</option></select></label>
   </div>}
-  {mode==='manual'&&<div><p>Segna i due estremi di una lunghezza che conosci.</p><button type="button" disabled={p.busy} onClick={()=>p.requestSegment((a,b)=>setSegment([a,b]))}>{segment?'Cambia estremi':'Indica estremi sulla pianta'}</button><label>Lunghezza reale in metri<input type="number" min="0.01" step="any" value={metres} onChange={e=>setMetres(e.target.value)}/></label></div>}
+  <div className={styles.row}>
+   <button type="button" disabled={p.busy} onClick={()=>p.requestSegment((start,end)=>{
+    setSegment([start,end]);
+    setMode('manual');
+   })}>{bar||report?'Ricalibra sulla mappa':'Definisci scala sulla mappa'}</button>
+   {mode==='manual'&&<button type="button" disabled={p.busy} onClick={()=>setMode('auto')}>Torna alla scala automatica</button>}
+  </div>
+  {mode==='manual'&&<label>Lunghezza reale in metri<input type="number" min="0.01" step="any" value={metres} onChange={e=>setMetres(e.target.value)}/></label>}
   {error&&<p role="alert">{error}</p>}
   {report&&<>
    <p>{basis}</p>
