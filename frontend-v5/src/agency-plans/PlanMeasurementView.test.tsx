@@ -24,3 +24,16 @@ describe('agency plan room and commercial views',()=>{
 });
 
 it('commercial accessories remain separate from apartment rooms and edit the room geometry channel',()=>{const p=props();p.configuration={base:'gross_perimeter',calibration:{start:[0,0],end:[10,0],metres:1,confirmed:true,maxRelativeError:.01},mainRegionIds:['room-1'],assignments:[{id:'room-1',kind:'principal'},{id:'room-2',kind:'uncovered_balcony'}],walls:[],policyVersion:'synthetic',commonWallCapBasis:'physical_thickness',coverageConfirmed:true,wallCoverageConfirmed:true,policyConfirmed:true};render(<PlanMeasurementView {...p}/>);fireEvent.click(screen.getByRole('tab',{name:'Perimetro commerciale'}));expect(screen.queryByTestId('shape-room-1')).not.toBeInTheDocument();expect(screen.getByTestId('shape-room-2')).toBeInTheDocument();expect(screen.getByTestId('shape-gross')).toBeInTheDocument();fireEvent.change(screen.getByRole('combobox',{name:'Geometria'}),{target:{value:'room-2'}});fireEvent.click(screen.getByRole('button',{name:'Aggiungi punto su un lato'}));fireEvent.click(screen.getByRole('button',{name:'Inserisci punto sul lato 1'}));expect(p.onChange).toHaveBeenCalledWith('rooms',expect.objectContaining({id:'room-2'}));});
+
+it('simple map shows contextual editing only after selecting a room, and offers independent zoom',async()=>{
+ const user=userEvent.setup(),p=props();render(<PlanMeasurementView {...p} drawingOnly simple onAddRoom={vi.fn()} onSaveGeometry={vi.fn()}/>);
+ expect(screen.queryByRole('combobox',{name:'Geometria'})).not.toBeInTheDocument();
+ expect(screen.queryByRole('button',{name:'Aggiungi punto su un lato'})).not.toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'Salva modifiche'})).toBeDisabled();
+ await user.click(screen.getByRole('button',{name:'Seleziona vano room-2'}));
+ expect(screen.getByRole('group',{name:'Correzione del vano selezionato'})).toBeVisible();
+ expect(screen.getAllByRole('button',{name:/^Vertice /})).toHaveLength(4);
+ await user.click(screen.getByRole('button',{name:'Aumenta zoom'}));expect(screen.getByRole('group',{name:'Zoom planimetria'})).toHaveTextContent('125%');
+ await user.click(screen.getByRole('button',{name:'Seleziona'}));
+ expect(screen.queryByRole('button',{name:'Aggiungi punto su un lato'})).not.toBeInTheDocument();
+});

@@ -42,7 +42,7 @@ describe('real routes wired to agency API client (mock transport only)',()=>{
   expect(screen.queryByRole('heading',{name:'Documenti della pratica'})).toBeNull();
   await user.click(screen.getByRole('link',{name:'Vai alla planimetria'}));
   expect(router.state.location.search).toBe('?area=planimetria');
-  expect(await screen.findByRole('button',{name:'Disegna / aggiungi vano'})).toBeVisible();
+  expect(await screen.findByRole('button',{name:'Aggiungi vano'})).toBeVisible();
   await user.click(screen.getByRole('link',{name:'Panoramica'}));
   expect(screen.getByRole('heading',{name:'Sistemare la planimetria'})).toBeVisible();
   expect(f.calls.filter(call=>call.method==='POST')).toHaveLength(0);
