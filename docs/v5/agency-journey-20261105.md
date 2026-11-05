@@ -54,3 +54,8 @@ Screenshot locali negli outputs/Dimora-Agenzie-percorso-20261105; nessun origina
 ### Ripresa
 
 Aprire `/agenzie/:agencyId`: elenco delle pratiche accessibili. «Nuova pratica» avvia il percorso incarico; aprire la pratica esistente per le nuove aree. Ogni pannello operativo ha il proprio salvataggio esplicito. Una pratica preesistente non ha dati di incarico inventati: «Dati della pratica» in Panoramica consente di dichiararli. Prima di riabilitare provider o estrazioni estese servono autorizzazione specifica e il relativo lotto; il modello agenzia resta indispensabile per generare la vera bozza.
+
+
+### Pubblicazione per revisione
+
+[PR81 in bozza](https://github.com/Vincenzobrutto/Home_OS/pull/81), ramo dedicato pubblicato e hash59d763e verificato. La PR include anche gli incrementi locali precedenti alla base7128375 (15commit/66file al momento dell’apertura). GitHub segnala mergeable=false rispetto al comune remoto cfff252: la riconciliazione con il lavoro concorrente nel comune NON è eseguita né autorizzata da questa attivazione locale. Non interpretare l’app locale aggiornata come avvenuto merge nel comune o main. Per integrare, rileggere stato/branch e risolvere le sovrapposizioni in un lotto autorizzato, senza sovrascrivere altri lavori.
