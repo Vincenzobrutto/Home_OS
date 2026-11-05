@@ -384,3 +384,8 @@ Gift:prerequisiti copia,conferma Home,ammissione verificata e provenienza Docume
 
 ## Incremento Gift mappa — 1 novembre2026
 Implementato e collaudato nel ramo dedicato con dipendenza PR72: mappa/ambienti dalla planimetria Agency alla Home, pin sugli oggetti normali, correzione vertici e invalidazioni. Review/merge/attivazione al committente. Prossimi: prova agenzia reale con documenti/budget autorizzati, modello mandato approvato, guida su mappe dense e profilo multipiano se necessario. [Risultati e limiti](v5/gift-digital-plan-20261101.md).
+
+
+### Agenzie — percorso approvato del 5 novembre
+
+Nuova pratica da incarico con conferma esplicita, checklist/situazioni e richiesta documenti persistite, analisi per passaggi, annuncio e trattativa/stipula separati. Consegna Gift dopo la fase conclusa; richieste d’acquisto dimostrative senza finti originali. Collaudo e attivazione locale nel [report](v5/agency-journey-20261105.md); lettore incarico locale e conservativo, AI reale/fornitori/portali non estesi in questo lotto.

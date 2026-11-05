@@ -33,6 +33,12 @@ export class AgencyPracticesController{
  @Get() list(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Query()q:unknown){const b=object(q,['after']);if(b.after!==undefined&&(typeof b.after!=='string'||!isUUID(b.after)))throw new PracticeError('invalid_input');return this.store.list(r.agencyAccountId,g,b.after as string|undefined);}
  @Post() create(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Body()input:unknown,@Headers('idempotency-key')k:unknown){const b=object(input,['label']);return this.store.create(r.agencyAccountId,g,b.label as string,key(k));}
  @Get(':practiceId') read(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){object(q,[]);return this.store.read(r.agencyAccountId,g,p);}
+ @Get(':practiceId/journey') @Header('Cache-Control','no-store')
+ journey(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){object(q,[]);return this.store.readJourney(r.agencyAccountId,g,p);}
+ @Post(':practiceId/journey')
+ saveJourney(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Body()input:unknown,@Headers('idempotency-key')k:unknown){
+  const b=object(input,['expectedRevision','command']);return this.store.saveJourney(r.agencyAccountId,g,p,{...b,key:key(k)});
+ }
  @Get(':practiceId/review') review(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){object(q,[]);return this.store.readReview(r.agencyAccountId,g,p);}
  @Get(':practiceId/plans') plans(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){object(q,[]);return this.store.readPlans(r.agencyAccountId,g,p);}
  @Get(':practiceId/analysis-options') options(@Req()r:AgencyRequest,@Param('agencyId')g:string,@Param('practiceId')p:string,@Query()q:unknown){object(q,[]);return this.analysis.options(r.agencyAccountId,g,p);}

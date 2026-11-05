@@ -3,7 +3,8 @@ require('reflect-metadata');
 const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID,randomBytes,createHash}=require('node:crypto'),path=require('node:path'),{readFile}=require('node:fs/promises');
 const {Module,Global,ValidationPipe,UnprocessableEntityException}=require('@nestjs/common'),{NestFactory}=require('@nestjs/core'),cookieParser=require('cookie-parser');
 const {assertOfflineDatabase,assertOwnedRun}=require('./offline-policy.cjs');
-const {PrismaClient}=require('../generated/client'),{PrismaService,assertDevelopmentDatabase}=require('../dist/prisma.service'),{SessionsService,digest,COOKIE}=require('../dist/security');
+const {PrismaClient}=require('../generated/client'),{PrismaService,assertDevelopmentDatabase}=require('../dist/prisma.service'),{SessionsService,digest,verifyPassword,COOKIE}=require('../dist/security');
+const {RecoveryConfig}=require('../dist/auth/recovery-config'),{RecoveryService}=require('../dist/auth/recovery.service'),{BrevoRecoveryMail}=require('../dist/auth/recovery-mail');
 const {GiftAccountModule,GiftDeliveryModule}=require('../dist/agency-practices/gift-http'),{GiftAcceptanceWorker}=require('../dist/agency-practices/gift-acceptance-worker');
 const {GiftThrottle}=require('../dist/agency-practices/gift-throttle');
 const {AgencyPracticesStore}=require('../dist/agency-practices/store'),{AgencyFileVault}=require('../dist/agency-practices/files');
@@ -100,6 +101,78 @@ test('Gift HTTP uses genuine sessions, explicit release and owned file admission
   const f=await fixture();await invite(f);const route='/gift-invitations/'+f.invitation.id+'/landing';assert.equal((await post(route,{secret:f.invitation.secret},null)).status,403);
   const response=await post(route,{secret:f.invitation.secret},guest);assert.equal(response.status,200);privacy(response);const data=await response.json();assert.deepEqual(data,{id:f.invitation.id,version:1,requiresAccount:true});noSecrets(data,f);const wire=JSON.stringify(data);for(const privateValue of [f.recipient.email,agency.name,'Documento Gift DEMO',f.sourceId,sha256])assert.equal(wire.includes(privateValue),false);
   const wrong=await post(route,{secret:'Z'.repeat(43)},guest);assert.equal(wrong.status,404);privacy(wrong);noSecrets(await wrong.json(),f);assert.equal((await post(route+'?secret='+f.invitation.secret,{secret:f.invitation.secret},guest)).status,422);
+ });
+ await t.test('Gift registration creates verified credentials only after mailbox proof and rotates the normal session',async t=>{
+  const publicOrigin='https://dimora.example.test',outbox=[];
+  t.mock.method(app.get(RecoveryConfig),'settings',()=>({
+   enabled:true,apiKey:'synthetic-only',senderEmail:'sender@example.test',senderName:'Dimora DEMO',
+   publicOrigin,throttleSecret:'a'.repeat(64),
+  }));
+  t.mock.method(app.get(RecoveryService),'mail',settings=>new BrevoRecoveryMail(settings,async(_url,options)=>{
+   outbox.push(JSON.parse(options.body));
+   return Response.json({messageId:'synthetic-gift'},{status:201});
+  }));
+  const f=await fixture(),email=randomUUID()+'@example.test',signupGuest=await session();
+  await release(f);
+  const invitationResponse=await post(f.root+'/gift-invitations',{...await f.createBody(),recipientEmail:email});
+  assert.equal(invitationResponse.status,201);
+  f.invitation=await invitationResponse.json();
+  const route='/gift-invitations/'+f.invitation.id,secret=f.invitation.secret;
+  const send=await post(route+'/registration-email',{secret},signupGuest);
+  assert.equal(send.status,202);privacy(send);
+  const notice=await send.json();
+  assert.deepEqual(Object.keys(notice),['message']);
+  assert.equal(JSON.stringify(notice).includes(email),false);
+  noSecrets(notice,f);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(outbox.length,1);
+  assert.deepEqual(outbox[0].to,[{email}]);
+  const link=new URL(outbox[0].textContent.split('\n').find(line=>line.startsWith(publicOrigin)));
+  assert.equal(link.pathname,'/gift/'+f.invitation.id);
+  assert.equal(link.search,'');
+  const params=new URLSearchParams(link.hash.slice(1)),proof=params.get('signup');
+  assert.equal(params.get('token'),secret);
+  assert.match(proof,/^[A-Za-z0-9_-]{43}$/u);
+  assert.equal(await db.account.findUnique({where:{email}}),null);
+
+  const password='synthetic-password-for-gift';
+  const invalidProof={secret,proof:'Z'.repeat(43)};
+  for(const [suffix,body] of [['registration-context',invalidProof],['register',{...invalidProof,password}]]){
+   const rejected=await post(route+'/'+suffix,body,signupGuest);
+   assert.equal(rejected.status,404);privacy(rejected);
+   const error=await rejected.json();
+   assert.deepEqual(Object.keys(error),['error']);
+   assert.equal(JSON.stringify(error).includes(email),false);
+   noSecrets(error,f);
+  }
+  assert.equal(await db.account.findUnique({where:{email}}),null);
+  assert.equal((await post(route+'/register',{secret,proof,password},null)).status,403);
+  const context=await post(route+'/registration-context',{secret,proof},signupGuest);
+  assert.equal(context.status,200);privacy(context);
+  assert.deepEqual(await context.json(),{recipientEmail:email});
+  const created=await post(route+'/register',{secret,proof,password},signupGuest);
+  assert.equal(created.status,201);privacy(created);
+  const {account:publicAccount}=await created.json(),saved=await db.account.findUniqueOrThrow({where:{email}});
+  assert.equal(publicAccount.name,'Proprietario');
+  assert.equal(publicAccount.email,email);
+  assert.equal(publicAccount.emailVerifiedAt,saved.emailVerifiedAt.toISOString());
+  assert.equal(await verifyPassword(password,saved.passwordHash),true);
+  assert.equal(await db.session.findUnique({where:{id:digest(signupGuest.raw)}}),null);
+  const cookie=created.headers.get('set-cookie');
+  assert.match(cookie,/HttpOnly/iu);
+  const raw=cookie.split(';')[0].slice(COOKIE.length+1);
+  const sessionResponse=await request('/session',{}, {raw});
+  const signed=await sessionResponse.json();
+  assert.deepEqual(signed.account,publicAccount);
+  const preview=await post(route+'/preview',{secret},{id:publicAccount.id,raw,csrf:signed.csrfToken});
+  assert.equal(preview.status,200);
+  assert.equal((await preview.json()).documents.length,1);
+  assert.equal(await db.homeMembership.count({where:{accountId:saved.id}}),0);
+
+  const duplicate=await post(route+'/register',{secret,proof,password:'different-synthetic-password'},await session());
+  assert.equal(duplicate.status,409);privacy(duplicate);
+  assert.equal((await duplicate.json()).error.code,'registration_unavailable');
+  assert.equal((await db.account.findUniqueOrThrow({where:{email}})).passwordHash,saved.passwordHash);
  });
  await t.test('only the matching currently verified account can preview the manifest; no source proof or files escape to other users',async()=>{
   const unverified=await fixture({verified:false});await invite(unverified);const deniedRoute='/gift-invitations/'+unverified.invitation.id+'/preview',deniedBody={secret:unverified.invitation.secret};assert.equal((await post(deniedRoute,deniedBody,guest)).status,401);assert.equal((await post(deniedRoute,deniedBody,outsider)).status,404);assert.equal((await post(deniedRoute,deniedBody,unverified.recipient)).status,404);assert.equal((await db.account.findUniqueOrThrow({where:{id:unverified.recipient.id}})).emailVerifiedAt,null);await noDelivery(unverified);

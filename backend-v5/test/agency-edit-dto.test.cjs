@@ -15,3 +15,8 @@ test('issue resolution cannot inject new statuses or arbitrary data',()=>{const 
 
 test('manual room DTO is exact, canonical and accepts only explicit semantic kinds',()=>{const b={...body(),command:{operation:'add_room',id:'manual',label:'Hall',kind:'corridor',parentId:'r',geometry:geometry()}};assert.equal(parse(b).command.parentId,'r');for(const field of ['confirmed','origin','sourceId'])assert.throws(()=>parse({...b,command:{...b.command,[field]:true}}));assert.throws(()=>parse({...b,command:{...b.command,kind:'excluded'}}));});
 test('adoption DTO accepts only a server proposal digest, never injected shapes or confirmation flags',()=>{const b={...body(),command:{operation:'apply_surface_proposal',proposalDigest:'a'.repeat(64)}};assert.equal(parse(b).command.proposalDigest,'a'.repeat(64));for(const patch of[{geometry:geometry()},{rooms:[]},{confirmed:true},{proposalDigest:'invalid'}])assert.throws(()=>parse({...b,command:{...b.command,...patch}}));});
+test('room removal accepts only the operation and a room ID',()=>{
+ const command={operation:'remove_room',id:'r'};
+ assert.deepEqual(parse({...body(),command}).command,command);
+ assert.throws(()=>parse({...body(),command:{...command,geometry:geometry()}}));
+});

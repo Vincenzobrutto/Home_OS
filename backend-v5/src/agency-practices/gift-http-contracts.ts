@@ -40,6 +40,17 @@ function documents(input:unknown){
 export function parseGiftLandingBody(input:unknown){
   const body=exact(input,['secret']);return {secret:secret(body.secret)};
 }
+export function parseGiftRegistrationContextBody(input: unknown) {
+  const body = exact(input, ['secret', 'proof']);
+  return { secret: secret(body.secret), proof: secret(body.proof) };
+}
+export function parseGiftRegistrationBody(input: unknown) {
+  const body = exact(input, ['secret', 'proof', 'password']);
+  if (typeof body.password !== 'string') invalid();
+  const length = [...body.password].length;
+  if (length < 12 || length > 128) invalid();
+  return { secret: secret(body.secret), proof: secret(body.proof), password: body.password };
+}
 export function parseGiftClaimBody(input:unknown){
   const body=exact(input,['secret','expectedVersion']);return {secret:secret(body.secret),expectedVersion:version(body.expectedVersion)};
 }

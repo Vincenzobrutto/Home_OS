@@ -1,5 +1,7 @@
 import type {ApiTransport} from '../api/transport';
 import {serviceError} from '../api/errors';
+import {validateNewPassword} from '../lib/validation';
+import {parseGiftRegistrationEmail,parseGiftRegistrationContext,parseGiftRegistration} from './gift-wire';
 import {parseGiftCapabilities,parseGiftBenefits,parseGiftDocuments,parseGiftRelease,parseGiftInvitations,parseGiftInvitationCreated,parseGiftReissued,parseGiftRevocation,parseGiftLanding,parseGiftPreview,parseGiftClaim,parseGiftAcceptance,parseGiftResume,parseGiftCancellation,type GiftDocuments,type GiftAcceptance,type GiftResume} from './gift-wire';
 export type GiftAgencyScope={accountId:string;agencyId:string;practiceId:string};
 export type GiftReleaseInput={digitalPlan?:{planId:string;expectedPlanVersion:number;reviewed:true};expectedRevision:number;expectedSourceVersion:number;expectedSha256:string;title:string;origin:'received'|'agency_generated';finalDocumentConfirmed:true;releaseApproved:true};
@@ -55,6 +57,16 @@ export class GiftApi{
  async reissueInvitation(input:GiftAgencyScope,invitationId:string,body:GiftReissueInput,idempotencyKey:string,signal?:AbortSignal){const s=scope(input),id=uuid(invitationId),r=object(body,['expectedRevision','expectedVersion']),command={expectedRevision:positive(r.expectedRevision),expectedVersion:positive(r.expectedVersion)},requestKey=key(idempotencyKey);return parseGiftReissued(await this.transport.callJson<unknown>(root(s)+'/gift-invitations/'+encodeURIComponent(id)+'/reissue',{method:'POST',accountId:s.accountId,body:command,idempotencyKey:requestKey,signal}));}
  async revokeInvitation(input:GiftAgencyScope,invitationId:string,expectedVersion:number,signal?:AbortSignal){const s=scope(input),id=uuid(invitationId),version=positive(expectedVersion),out=parseGiftRevocation(await this.transport.callJson<unknown>(root(s)+'/gift-invitations/'+encodeURIComponent(id)+'/revoke',{method:'POST',accountId:s.accountId,body:{expectedVersion:version},signal}));same(out.id,id);return out;}
  async landing(invitationId:string,credential:string,signal?:AbortSignal){const id=uuid(invitationId),token=secret(credential),out=parseGiftLanding(await this.transport.mutate<unknown>(invitationPath(id)+'/landing',{body:{secret:token},signal}));same(out.id,id);return out;}
+ async requestRegistrationEmail(invitationId:string,credential:string,signal?:AbortSignal){
+  return parseGiftRegistrationEmail(await this.transport.mutate<unknown>(invitationPath(uuid(invitationId))+'/registration-email',{body:{secret:secret(credential)},signal}));
+ }
+ async registrationContext(invitationId:string,credential:string,proof:string,signal?:AbortSignal){
+  return parseGiftRegistrationContext(await this.transport.mutate<unknown>(invitationPath(uuid(invitationId))+'/registration-context',{body:{secret:secret(credential),proof:secret(proof)},signal}));
+ }
+ async register(invitationId:string,credential:string,proof:string,password:string,signal?:AbortSignal){
+  if(typeof password!=='string'||validateNewPassword(password))invalid();
+  return parseGiftRegistration(await this.transport.mutate<unknown>(invitationPath(uuid(invitationId))+'/register',{body:{secret:secret(credential),proof:secret(proof),password},signal}));
+ }
  async preview(accountId:string,invitationId:string,credential:string,signal?:AbortSignal){const account=uuid(accountId),id=uuid(invitationId),token=secret(credential),out=parseGiftPreview(await this.transport.callJson<unknown>(invitationPath(id)+'/preview',{method:'POST',accountId:account,body:{secret:token},signal}));same(out.id,id);return out;}
  async claim(accountId:string,invitationId:string,credential:string,expectedVersion:number,signal?:AbortSignal){const account=uuid(accountId),id=uuid(invitationId),token=secret(credential),version=positive(expectedVersion),out=parseGiftClaim(await this.transport.callJson<unknown>(invitationPath(id)+'/claim',{method:'POST',accountId:account,body:{secret:token,expectedVersion:version},signal}));same(out.id,id);return out;}
  async begin(accountId:string,invitationId:string,body:GiftBeginInput,idempotencyKey:string,signal?:AbortSignal){const account=uuid(accountId),id=uuid(invitationId),command=beginInput(body),requestKey=key(idempotencyKey);return owner(parseGiftAcceptance(await this.transport.callJson<unknown>(invitationPath(id)+'/acceptances',{method:'POST',accountId:account,body:command,idempotencyKey:requestKey,signal})),account);}

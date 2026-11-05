@@ -45,6 +45,7 @@ const VerificationLinkPage = lazyPage(() => import('./RecoveryPages').then((m) =
 const GiftLinkPage = lazyPage(() => import('../agency-gift/GiftLinkPage').then(m=>m.GiftLinkPage));
 const AgenciesPage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgenciesPage));
 const AgencyPracticesPage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgencyPracticesPage));
+const AgencyDeliveryPage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgencyDeliveryPage));
 const AgencyPracticePage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgencyPracticePage));
 
 // Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3/M4, caso Caldaia), activities-v1 (H1), expenses-v1 (H3a), home-objects-v1 (G1), economy-v1 (S1a/b, con ripiego H3a).
@@ -74,6 +75,7 @@ export const routes: RouteObject[] = [
           { path:'agenzie',element:<AgenciesPage/> },
           { path:'agenzie/:agencyId',element:<AgencyPracticesPage/> },
           { path:'agenzie/:agencyId/pratiche/:practiceId',element:<AgencyPracticePage/> },
+          { path:'agenzie/:agencyId/pratiche/:practiceId/consegna',element:<AgencyDeliveryPage/> },
           // sharing-v1: consegne ricevute a livello account, anche senza case.
           { path: 'consegne', element: <ReceivedListPage /> },
           { path: 'consegne/codice', element: <ClaimCodePage /> },

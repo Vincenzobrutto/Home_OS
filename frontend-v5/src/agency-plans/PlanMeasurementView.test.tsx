@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { PlanMeasurementView, type PlanMeasurementProps, type PlanShape } from './PlanMeasurementView';
 const shape=(id:string,x=0):PlanShape=>({id,label:id,points:[[x,0],[x+10,0],[x+10,10],[x,10]],holes:[]});
@@ -12,7 +13,13 @@ describe('agency plan room and commercial views',()=>{
  it('manual perimeter change leaves individual rooms intact',()=>{render(<Controlled/>);fireEvent.click(screen.getByRole('tab',{name:'Perimetro commerciale'}));fireEvent.click(screen.getByRole('button',{name:'Aggiungi punto su un lato'}));fireEvent.click(screen.getByRole('button',{name:'Inserisci punto sul lato 1'}));expect(screen.getAllByRole('button',{name:/^Vertice /})).toHaveLength(5);fireEvent.click(screen.getByRole('tab',{name:'Singoli vani'}));expect(screen.getAllByRole('button',{name:/^Vertice /})).toHaveLength(4);});
  it('source scope change clears undo and selected commercial mode',()=>{const p=props(),view=render(<PlanMeasurementView {...p}/>);fireEvent.click(screen.getByRole('tab',{name:'Perimetro commerciale'}));view.rerender(<PlanMeasurementView {...p} scopeKey="another-source"/>);expect(screen.getByRole('tab',{name:'Singoli vani'})).toHaveAttribute('aria-selected','true');expect(screen.getByRole('button',{name:'Annulla modifica'})).toBeDisabled();});
  it('read-only user can compare original without edit actions',()=>{render(<PlanMeasurementView {...props()} readOnly/>);expect(screen.queryByRole('button',{name:'Aggiungi punto su un lato'})).not.toBeInTheDocument();fireEvent.click(screen.getByLabelText('Mostra contorni'));expect(screen.queryByTestId('shape-room-1')).not.toBeInTheDocument();});
- it('shows unresolved symbols instead of hiding them',()=>{render(<PlanMeasurementView {...props()} issues={['Caminetto da verificare']}/>);expect(screen.getByRole('status')).toHaveTextContent('Caminetto da verificare');});
+ it('groups repeated warnings and reveals the detail when opened',async()=>{
+  const user=userEvent.setup();
+  render(<PlanMeasurementView {...props()} issues={['Caminetto da verificare','Caminetto da verificare']}/>);
+  const summary=screen.getByText('2 verifiche aperte sui contorni');
+  await user.click(summary);
+  expect(screen.getByText('Caminetto da verificare')).toBeVisible();
+ });
  it('allows internal hole editing independently of outer ring',()=>{const p=props();p.rooms[0]!.holes=[[[2,2],[4,2],[4,4],[2,4]]];render(<PlanMeasurementView {...p}/>);fireEvent.change(screen.getByRole('combobox',{name:'Contorno'}),{target:{value:'1'}});fireEvent.click(screen.getByRole('button',{name:'Aggiungi punto su un lato'}));fireEvent.click(screen.getByRole('button',{name:'Inserisci punto sul lato 1'}));const [view,s]=vi.mocked(p.onChange).mock.calls[0]!;expect(view).toBe('rooms');expect(s.points).toHaveLength(4);expect(s.holes[0]!).toHaveLength(5);});
 });
 

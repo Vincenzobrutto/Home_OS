@@ -4,7 +4,7 @@ import {useSession} from '../session/session';
 import {createGiftLinkMemory,safeGiftNext} from './gift-link-memory';
 import {isGiftRoutePath} from './gift-route-path';
 
-type Links={next:string|null;get(id:string):string|null;forget(id:string):void};
+type Links={next:string|null;revision:number;get(id:string):string|null;signupProof(id:string):string|null;forget(id:string):void;forgetSignup(id:string):void};
 type PendingNext={path:string;owner:string|null};
 const Context=createContext<Links|null>(null);
 function createCustody(){
@@ -33,13 +33,15 @@ export function GiftLinkProvider({children}:{children:ReactNode}){
    changed=(canonical!=='/'&&memory.capture(location.pathname.slice(6),location.hash))||changed;
    void navigate({pathname:location.pathname,search:'',hash:''},{replace:true});
   }
+  if(account)changed=memory.forgetSignup()||changed;
   if(changed)setRevision(v=>v+1);
  },[account,location.pathname,location.hash,location.key,memory,navigate]);
  const value=useMemo<Links>(()=>{
-  void revision; // Publish changes to the in-memory custody after URL/session synchronization.
   const pending=memory.pending(),next=pending&&(account===undefined||pending.owner===null||pending.owner===account)?pending.path:null;
-  return {next,
+  return {next,revision,
    get(id){return previous.current!=null&&account!==undefined&&previous.current!==account?null:memory.get(id);},
+   signupProof(id){return account===null?memory.signupProof(id):null;},
+   forgetSignup(id){if(memory.forgetSignup(id))setRevision(v=>v+1);},
    forget(id){if(memory.get(id)!==null){memory.clear(id);setRevision(v=>v+1);}},
   };
  },[memory,account,revision]);
