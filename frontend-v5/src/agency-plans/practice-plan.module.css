@@ -48,3 +48,5 @@
 .row[hidden]{display:none}
 .documentTools{margin:8px 0;color:#45676b}.documentTools>summary{cursor:pointer;min-height:44px;display:list-item;padding:10px 0}.documentTools[open]{padding:12px;border:1px solid #d1dfdf;border-radius:10px;background:white}
 .nextPlanSteps{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0;padding-top:12px;border-top:1px solid #d1dfdf}
+
+@media(max-width:650px){.mapNavigation{flex-wrap:nowrap;overflow-x:auto;padding-bottom:5px;margin:10px 0}.mapNavigation a{flex:0 0 auto;white-space:nowrap}.mapPage .practiceHeader p{display:none}.mapPage .practiceHeader h1{font-size:20px;margin:8px 0}.mapPage{margin-top:10px}}

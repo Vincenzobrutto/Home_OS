@@ -139,7 +139,7 @@ function AgencyPractice(p:{agencyId:string;practiceId:string}){const navigate=us
   finally{classificationFlight.current=false;if(alive.current)setBusy(false);}
  }
  async function analyze(){if(!practice||classificationPending||classificationConflict||(!approved&&!analysisPending))return;let request=analysisPending;if(!request){const document=practice.documents.find(d=>d.id===selected);if(!document)return;analysisKey.current??=crypto.randomUUID();request={key:analysisKey.current,body:{sourceId:document.id,version:document.version,page,expectedRevision:practice.revision,instructions,expectedCapMicros:options?.capMicros??0,priceVersion:options?.priceVersion||'',approved:true}};setAnalysisPending(request);}setBusy(true);setError('');try{await api.callJson(root+'/analysis-jobs',{method:'POST',accountId:account.id,idempotencyKey:request.key,body:request.body});if(alive.current){setAnalysisPending(null);setApproved(false);analysisKey.current=null;setReload(v=>v+1);}}catch(e){if(alive.current){if(e instanceof ApiError&&e.status===422){setAnalysisPending(null);analysisKey.current=null;}setError(message(e));if(e instanceof ApiError&&[401,403].includes(e.status)){setPractice(null);setOptions(null);}}}finally{if(alive.current)setBusy(false);}}
- return <AppShell account={account}><div className={styles.workspace}>
+ return <AppShell account={account}><div className={area==='planimetria'?styles.workspace+' '+styles.mapPage:styles.workspace}>
   <Link to={'/agenzie/'+p.agencyId}>Torna alle pratiche</Link>
   <header className={styles.practiceHeader}>
    <p>Pratica di compravendita</p>
@@ -148,7 +148,7 @@ function AgencyPractice(p:{agencyId:string;practiceId:string}){const navigate=us
   {error&&<p role="alert">{error}</p>}
   {!practice&&!error&&<p role="status">Caricamento pratica…</p>}
   {practice&&<>
-   <nav className={styles.areaNavigation} aria-label="Aree della pratica">
+   <nav className={area==='planimetria'?styles.areaNavigation+' '+styles.mapNavigation:styles.areaNavigation} aria-label="Aree della pratica">
     {practiceAreas.map(item=><Link key={item.id} to={item.id==='panoramica'?'?':'?area='+item.id} aria-current={area===item.id?'page':undefined}>{item.label}</Link>)}
    </nav>
    {journey.notice&&<p role="status" className={styles.toast}>{journey.notice}</p>}

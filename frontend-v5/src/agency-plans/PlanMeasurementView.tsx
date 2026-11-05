@@ -35,10 +35,10 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
    <div className={styles.editorToolbar} role="group" aria-label="Strumenti della mappa">
     <button type="button" aria-pressed={!selected} disabled={props.hasUnsavedChanges} onClick={()=>{setSelection(null);setVertex(null);setInsert(false);}}>Seleziona</button>
     {props.onAddRoom&&<button type="button" disabled={props.readOnly||props.hasUnsavedChanges} onClick={props.onAddRoom}>Aggiungi vano</button>}
-    {props.onRemoveRoom&&<button type="button" disabled={props.readOnly||!selected||props.hasUnsavedChanges} onClick={()=>selected&&setRemoveId(selected.id)}>Elimina vano selezionato</button>}
+    {props.onRemoveRoom&&<button type="button" aria-label="Elimina vano selezionato" disabled={props.readOnly||!selected||props.hasUnsavedChanges} onClick={()=>selected&&setRemoveId(selected.id)}>Elimina</button>}
     {props.onSaveGeometry&&<button className={styles.saveAction} type="button" disabled={props.readOnly||!props.hasUnsavedChanges} onClick={props.onSaveGeometry}>Salva modifiche</button>}
    </div>
-   <p className={styles.editHint}>{selected?<><strong>{selected.label}</strong> · {props.hasUnsavedChanges?'Modifiche da salvare.':'Trascina i punti per correggere il contorno.'}</>:'Clicca un vano sulla mappa per modificarlo, oppure aggiungine uno.'}</p>
+   <p className={styles.editHint}>{selected?<><strong>{selected.label}</strong> · {props.hasUnsavedChanges?'Modifiche da salvare.':(props.readOnly?'Solo consultazione.':'Trascina i punti per correggere il contorno.')}</>:(props.readOnly?'Seleziona un vano per consultarlo.':'Tocca un vano per modificarlo.')}</p>
   </>}
   <div className={styles.controls} hidden={!!props.simple||(!!props.readOnly&&!!props.drawingOnly)}>
    {shapes.length>0&&<label>Geometria<select aria-label="Geometria" value={selected?.id||''} onChange={e=>{setRemoveId(null);setSelection(e.target.value);setRingIndex(0);setVertex(null);}}>{shapes.map(s=><option value={s.id} key={s.id}>{s.label}</option>)}</select></label>}
@@ -56,7 +56,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   </div>}
   {props.simple&&<div className={styles.zoomTools} role="group" aria-label="Zoom planimetria"><button type="button" aria-label="Riduci zoom" disabled={zoom<=1} onClick={()=>setZoom(v=>Math.max(1,v-.25))}>−</button><output aria-live="polite">{Math.round(zoom*100)}%</output><button type="button" aria-label="Aumenta zoom" disabled={zoom>=4} onClick={()=>setZoom(v=>Math.min(4,v+.25))}>+</button><button type="button" disabled={zoom===1} onClick={()=>setZoom(1)}>Adatta</button></div>}
   {!props.readOnly&&selected&&removeId===selected.id&&<div role="group" aria-label="Conferma eliminazione vano"><p>Eliminare {selected.label} dalla mappa? Il computo va verificato di nuovo.</p><button type="button" onClick={()=>{setRemoveId(null);props.onRemoveRoom?.(selected);}}>Conferma eliminazione</button><button type="button" onClick={()=>setRemoveId(null)}>Annulla eliminazione</button></div>}
-  <div className={styles.scroll}><svg role="img" aria-label={view==='rooms'?'Contorni dei singoli vani':'Perimetro lordo commerciale'} viewBox={`0 0 ${props.width} ${props.height}`} style={{width:`${zoom*100}%`}}
+  <div className={props.simple?styles.scroll+' '+styles.simpleScroll:styles.scroll}><svg role="img" aria-label={view==='rooms'?'Contorni dei singoli vani':'Perimetro lordo commerciale'} viewBox={`0 0 ${props.width} ${props.height}`} style={{width:props.simple?`min(${zoom*100}%, ${zoom*65*props.width/props.height}vh)`:`${zoom*100}%`}}
    onPointerMove={e=>{if(dragging===null||!selected||props.readOnly)return;const matrix=e.currentTarget.getScreenCTM();if(!matrix)return;const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(matrix.inverse()),next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points;points[dragging]=[Math.max(0,Math.min(props.width,p.x)),Math.max(0,Math.min(props.height,p.y))];change(next,false);}}
    onPointerUp={()=>setDragging(null)} onPointerCancel={()=>setDragging(null)}>
    <image href={props.sourceUrl} x="0" y="0" width={props.width} height={props.height}/>
