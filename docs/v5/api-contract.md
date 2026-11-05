@@ -214,3 +214,10 @@ Route montate anche con provider disabilitato; sessione normale, membership/gran
 - Il record concluso è letto e associato tramite le route esistenti deed-proposals/bindings/review. Nessun fatto è confermato dall'AI; nessun endpoint genera incarichi senza modello approvato.
 
 Default senza configurazione/provider/budget attuali: unavailable o 503 per l'avvio, senza fallback simulato. PDF scansiti/misti privi di testo: indisponibili in questa versione, senza invio. L'envelope di recupero UI contiene solo chiave/body tecnici, è scoped e purgato al logout/cambio account; reload/navigazione riconciliano via GET, nessun POST automatico. [Policy, motivazioni, prove e limiti](agency-document-analysis-20261103.md).
+
+
+## Agency Journey — 5 novembre 2026
+
+GET e POST `/agencies/:agencyId/practices/:practiceId/journey`: sessione/membership/grant; POST con Origin/CSRF e Idempotency-Key. GET no-store ritorna `{revision,state,profileStale}`. POST strict `{expectedRevision,command}`; command ammette solo una sezione fra profile, checklist, stage, listing e transaction; risposta include replay. Dati nel JSON snapshot opzionale, CAS sulla revisione unica della pratica, ricevuta per account+chiave. L’elenco pratiche aggiunge `stage`, default preparation per le pratiche preesistenti.
+
+Il profilo può legarsi solo a fonte condivisa nella pratica, leggibile e versione corrente, oppure essere dichiarato manualmente con sourceId/version null. Invalidation/versione/revoca mascherano il profilo nelle nuove letture. Checklist filtra assegnazioni a fonti non leggibili; acquisti simulati sono sole richieste, non fonti ricevute. Nessun endpoint genera documenti giuridici o abilita AI. [Schema, limiti e verifiche](agency-journey-20261105.md).

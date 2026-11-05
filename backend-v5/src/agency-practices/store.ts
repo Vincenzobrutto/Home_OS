@@ -1,3 +1,4 @@
+import {journeyView,updateJourney} from './journey';
 import { createHash, randomUUID } from 'node:crypto';
 import { Prisma, type AgencyPractice, type AgencyMember, type AgencyPracticeGrant } from '../../generated/client';
 import type { PrismaService } from '../prisma.service';
@@ -113,7 +114,7 @@ export class AgencyPracticesStore {
       await tx.$queryRaw`SELECT g.id FROM "AgencyPracticeGrant" g JOIN "AgencyPractice" p ON p.id=g."practiceId" WHERE g."accountId"=${accountId} AND p."agencyId"=${agencyId} FOR SHARE OF g`;
       const now=new Date(),rows=await tx.agencyPractice.findMany({where:{agencyId,...(after?{id:{gt:after}}:{}),grants:{some:{accountId,revokedAt:null,validFrom:{lte:now},OR:[{validUntil:null},{validUntil:{gt:now}}]}}},include:{grants:{where:{accountId}}},orderBy:{id:'asc'},take:51});
       for(const row of rows)requirePractice({accountId,memberships:[membership(member)],grants:row.grants.map(g=>grant(g,agencyId))},row,'read',new Date().toISOString());
-      return {practices:rows.slice(0,50).map(p=>({id:p.id,label:p.label,revision:p.revision})),nextAfter:rows.length>50?rows[49].id:null};
+      return {practices:rows.slice(0,50).map(p=>({id:p.id,label:p.label,revision:p.revision,stage:(snapshot(p) as Practice&{journey?:{stage:string}}).journey?.stage??'preparation'})),nextAfter:rows.length>50?rows[49].id:null};
     },{maxWait:5000,timeout:15000});
   }
   /** Trusted worker-only state. Never expose Actor/Practice/tokenHash via HTTP. */
@@ -304,6 +305,24 @@ export class AgencyPracticesStore {
       const { actor, practice } = await this.context(tx, accountId, agencyId, practiceId);
       return exportManifest(actor, practice, selection, new Date().toISOString());
     }, { maxWait: 5000, timeout: 15000 });
+  }
+  async readJourney(accountId:string,agencyId:string,practiceId:string){
+    return this.db.$transaction(async tx=>{
+      const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);
+      return journeyView(actor,practice,new Date().toISOString());
+    },{maxWait:5000,timeout:15000});
+  }
+  async saveJourney(accountId:string,agencyId:string,practiceId:string,input:unknown){
+    return this.db.$transaction(async tx=>{
+      const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);
+      const result=updateJourney(actor,practice,input,new Date().toISOString());
+      if(!result.replay){
+        const updated=await tx.agencyPractice.updateMany({where:{id:practiceId,agencyId,revision:practice.revision},data:{revision:result.practice.revision,snapshot:json(result.practice)}});
+        if(updated.count!==1)throw new PracticeError('revision_conflict');
+      }
+      requirePractice(actor,result.practice,'edit',new Date().toISOString());
+      return {...journeyView(actor,result.practice,new Date().toISOString()),replay:result.replay};
+    },{maxWait:5000,timeout:15000});
   }
   async readReview(accountId:string,agencyId:string,practiceId:string){return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);return reviewView(actor,practice,new Date().toISOString());},{maxWait:5000,timeout:15000});}
   async review(accountId:string,agencyId:string,practiceId:string,input:unknown){return this.db.$transaction(async tx=>{const {actor,practice}=await this.context(tx,accountId,agencyId,practiceId);const r=applyReview(actor,practice,input,new Date().toISOString());if(!r.replay){const updated=await tx.agencyPractice.updateMany({where:{id:practiceId,agencyId,revision:practice.revision},data:{revision:r.practice.revision,snapshot:json(r.practice)}});if(updated.count!==1)throw new PracticeError('revision_conflict');}requirePractice(actor,r.practice,'edit',new Date().toISOString());return {receipt:r.receipt,replay:r.replay,review:reviewView(actor,r.practice,new Date().toISOString())};},{maxWait:5000,timeout:15000});}

@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import type {AgencyPractice} from './api';
+import type {ChecklistState} from './journey';
 import styles from './practice-plan.module.css';
 
 type Document = AgencyPractice['documents'][number];
@@ -47,15 +48,17 @@ const situations=[
  ]},
 ];
 type Answer='yes'|'no'|'check';
-export function FascicoloChecklist({documents,canEdit,simulation=false}:{documents:Document[];canEdit:boolean;simulation?:boolean}) {
- const [answers,setAnswers]=useState<Record<string,Answer>>({});
- const [custom,setCustom]=useState<Entry[]>([]);
+export function FascicoloChecklist({documents,canEdit,simulation=false,initial,onSave,saving=false}:{documents:Document[];canEdit:boolean;simulation?:boolean;initial?:ChecklistState;onSave?:(state:ChecklistState)=>Promise<boolean>;saving?:boolean}) {
+ const [answers,setAnswers]=useState<Record<string,Answer>>(initial?.answers??{});
+ const [custom,setCustom]=useState<Entry[]>(initial?.custom??[]);
  const [newLabel,setNewLabel]=useState('');
- const [assignments,setAssignments]=useState<Record<string,string>>({});
+ const [assignments,setAssignments]=useState<Record<string,string>>(initial?.assignments??{});
  const [selected,setSelected]=useState<string[]>([]);
- const [waiting,setWaiting]=useState<string[]>([]);
+ const [waiting,setWaiting]=useState<string[]>(initial?.waiting??[]);
  const [draft,setDraft]=useState('');
  const [notice,setNotice]=useState('');
+ const [purchaseRequests,setPurchaseRequests]=useState<NonNullable<ChecklistState['purchaseRequests']>>(initial?.purchaseRequests??[]);
+ const [purchase,setPurchase]=useState<'floor_plan'|'cadastral'|null>(null);
  const [showAll,setShowAll]=useState(false);
  const [acquisition,setAcquisition]=useState<'idle'|'confirm'|'pending'|'received'>('idle');
  const entries=[...base,...situations.filter(s=>answers[s.id]==='yes').flatMap(s=>s.entries),...custom];
@@ -76,6 +79,7 @@ export function FascicoloChecklist({documents,canEdit,simulation=false}:{documen
  const reviewCount=questions.filter(s=>s.evidence&&(!answers[s.id]||answers[s.id]==='check')).length;
  return <section className={styles.panel} aria-label="Checklist del fascicolo">
   <h2>Checklist del fascicolo</h2>
+  <fieldset disabled={!canEdit||saving} className={styles.checklistFieldset}>
   <p>{receivedCount} di {entries.length} voci ricevute · {reviewCount} {reviewCount===1?'situazione da confermare':'situazioni da confermare'}</p>
   {canEdit&&<details className={styles.panel}>
    <summary>Richiedi documenti al venditore</summary>
@@ -108,12 +112,14 @@ export function FascicoloChecklist({documents,canEdit,simulation=false}:{documen
      {files.length||delivered?<><strong>✓ Ricevuto</strong>{files.map(file=><div key={file.id}>{file.filename}</div>)}
       {delivered&&<div><a href="/planimetria-fascicolo-simulata.svg" target="_blank" rel="noreferrer">Apri planimetria dimostrativa</a> · Da verificare</div>}
      </>:pending?<strong>In acquisizione simulata</strong>:<>
-      <span>{waiting.includes(entry.id)?'In attesa':'Da acquisire'}</span>
+      <span>{purchaseRequests.includes(entry.id as 'floor_plan'|'cadastral')?'Acquisto simulato richiesto':waiting.includes(entry.id)?'In attesa':'Da acquisire'}</span>
+      {!simulation&&canEdit&&['floor_plan','cadastral'].includes(entry.id)&&!purchaseRequests.includes(entry.id as 'floor_plan'|'cadastral')&&<button type="button" onClick={()=>setPurchase(entry.id as 'floor_plan'|'cadastral')}>{isPlan?'Compra planimetria · simulazione':'Compra visura · simulazione'}</button>}
       {simulation&&canEdit&&isPlan&&<button type="button" onClick={()=>setAcquisition('confirm')}>Acquista tramite Dimora · simulazione</button>}
      </>}
     </td></tr>;
    })}</tbody>
   </table></div>
+  {purchase&&<section aria-label="Richiesta acquisto simulato"><h3>{purchase==='floor_plan'?'Planimetria catastale':'Visura catastale'}</h3><p>Simulazione senza addebito. Fornitore e costo da definire; nessun documento viene recuperato. La voce resta da acquisire finché non carichi il file.</p><button type="button" onClick={()=>{setPurchaseRequests([...purchaseRequests,purchase]);setPurchase(null);setNotice('Richiesta simulata preparata. Salva la checklist per conservarla.');}}>Conferma richiesta simulata</button><button type="button" onClick={()=>setPurchase(null)}>Annulla</button></section>}
   {acquisition==='confirm'&&!hasPlan&&<section aria-label="Conferma acquisto simulato">
    <h3>Planimetria catastale · Appartamento demo</h3>
    <p>Foglio 12, particella 345, subalterno 6. Acquisto simulato, senza addebito.</p>
@@ -139,6 +145,12 @@ export function FascicoloChecklist({documents,canEdit,simulation=false}:{documen
    </fieldset>)}
    <button type="button" onClick={()=>setShowAll(v=>!v)}>{showAll?'Mostra solo le situazioni rilevate':'Vedi tutte le situazioni'}</button>
   </section>
-  <p>Dimora propone le associazioni dai tipi già classificati e dai nomi dei file. Le scelte della checklist valgono per questa sessione.</p>
+  {onSave&&<button type="button" onClick={async()=>{
+   const saved=await onSave({answers,custom,assignments,waiting,...(purchaseRequests.length?{purchaseRequests}:{})});
+   if(saved)setNotice('Checklist salvata nella pratica.');
+  }}>{saving?'Salvataggio…':'Salva checklist'}</button>}
+  </fieldset>
+  <p>Le associazioni automatiche usano il tipo del documento e il nome del file. Controlla il contenuto prima di considerarlo verificato.</p>
+  {!onSave&&<p>Le scelte di questa prova valgono fino alla ricarica.</p>}
  </section>;
 }

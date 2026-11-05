@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Agenzie — percorso approvato del 5 novembre, in lavorazione
+
+Lotto `codex/agency-journey-20261105` nel checkout `work/agency-journey-20261105`, seguito locale della base7128375. Adeguamento ai mockup approvati: elenco pratiche, apertura da incarico con conferma, fascicolo persistito, analisi per passaggi, annuncio e trattativa/stipula; Gift nella consegna. Backend snapshot e UI in questo lotto; nessuna migrazione, modello incarico inventato, AI reale o modifica demo Alessio. Test e attivazione locale ancora da concludere.
+
 Il lotto locale `codex/agency-plan-workflow-20261104` semplifica esito della digitalizzazione, ricalcolo, export annuncio e passaggio alla consegna della stessa pratica. [Flusso e decisioni](v5/agency-plan-workflow-20261104.md).
 
 ## Agenzie — documenti e mappa nel ramo comune, 3 novembre

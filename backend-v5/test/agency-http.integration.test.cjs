@@ -35,4 +35,25 @@ test('opt-in agency HTTP module uses real sessions, CSRF and a new owned Postgre
  await t.test('manual finding HTTP requires current fingerprint and explicit justified resolution',async()=>{let r=await post('/'+p.id+'/findings',{expectedRevision:await revision(),command:{operation:'observation',unitId,kind:'internal_layout',description:'Sopralluogo DEMO: distribuzione da verificare.',visibility:'practice',evidence:[]}});assert.ok(r.ok,await r.clone().text());let data=await r.json(),o=data.findings.observations[0];assert.equal(o.state,'open');const command={operation:'resolve',target:'observation',targetId:o.id,expectedFingerprint:'a'.repeat(64),outcome:'not_applicable',reason:'Verifica manuale sintetica, ipotesi non pertinente',evidence:[]};assert.equal((await post('/'+p.id+'/findings',{expectedRevision:await revision(),command})).status,409);command.expectedFingerprint=o.fingerprint;r=await post('/'+p.id+'/findings',{expectedRevision:await revision(),command});assert.ok(r.ok);data=await r.json();assert.equal(data.findings.observations[0].state,'resolved');assert.equal(data.findings.certification,false);assert.equal((await request('/'+p.id+'/findings')).status,200);});
  await t.test('revoked grant and malformed scope deny reads',async()=>{await db.agencyPracticeGrant.update({where:{practiceId_accountId:{practiceId:p.id,accountId:b.id}},data:{revokedAt:new Date()}});assert.equal((await request('/'+p.id,{},b)).status,403);assert.equal((await request('/not-a-uuid')).status,422);});
  await t.test('withdrawal blocks original and hides it from current summary',async()=>{const r=await post('/'+p.id+'/sources/'+sourceId+'/withdraw',{expectedRevision:await revision(),expectedSourceVersion:sourceVersion});assert.ok(r.ok);assert.equal((await request('/'+p.id+'/sources/'+sourceId+'/file?version=1&sha256='+sha)).status,403);const current=await (await request('/'+p.id)).json();assert.equal(current.visibleDocumentCount,0);});
+ await t.test('journey persists checklist and stage with session, CAS, replay and viewer boundaries',async()=>{
+  const created=await post('',{label:'Journey synthetic only'}),jp=(await created.json()).practice;
+  await db.agencyPracticeGrant.create({data:{practiceId:jp.id,accountId:v.id,access:'read',validFrom:new Date('2026-01-01')}});
+  const path='/'+jp.id+'/journey',initial=await request(path);
+  assert.equal(initial.status,200);assert.equal(initial.headers.get('cache-control'),'no-store');
+  const state=await initial.json();assert.equal(state.revision,1);assert.equal(state.state.stage,'preparation');
+  const checklist={answers:{condo:'yes',mortgage:'check'},custom:[{id:'custom-1',label:'Documento sintetico',when:'Da concordare'}],assignments:{},waiting:['ape']};
+  const key=randomUUID(),body={expectedRevision:1,command:{operation:'checklist',checklist}};
+  const saved=await post(path,body,a,key);assert.equal(saved.status,201,await saved.clone().text());assert.equal((await saved.json()).revision,2);
+  const replay=await post(path,body,a,key);assert.equal((await replay.json()).replay,true);
+  assert.equal((await post(path,{...body,command:{operation:'stage',stage:'completed'}},a,key)).status,409);
+  assert.equal((await post(path,{expectedRevision:1,command:{operation:'stage',stage:'completed'}})).status,409);
+  assert.equal((await post(path,{expectedRevision:2,command:{operation:'stage',stage:'completed'}},v)).status,403);
+  assert.equal((await post(path,{expectedRevision:2,command:{operation:'stage',stage:'negotiation'}})).status,201);
+  const reopened=await (await request(path)).json();assert.deepEqual(reopened.state.checklist,checklist);assert.equal(reopened.state.stage,'negotiation');assert.equal(reopened.revision,3);
+  const listing=await (await request()).json();assert.equal(listing.practices.find(p=>p.id===jp.id).stage,'negotiation');
+  const bad=await request(path,{method:'POST',headers:{'content-type':'application/json','idempotency-key':randomUUID(),'x-csrf-token':'invalid'},body:JSON.stringify({expectedRevision:3,command:{operation:'stage',stage:'completed'}})});assert.equal(bad.status,403);
+  await db.agencyPracticeGrant.update({where:{practiceId_accountId:{practiceId:jp.id,accountId:a.id}},data:{revokedAt:new Date()}});
+  assert.equal((await request(path)).status,403);assert.equal((await post(path,body,a,key)).status,403);
+ });
+
 });

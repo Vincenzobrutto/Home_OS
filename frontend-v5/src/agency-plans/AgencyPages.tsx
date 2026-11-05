@@ -10,6 +10,10 @@ import styles from './practice-plan.module.css';
 import {FascicoloChecklist} from './FascicoloChecklist';
 import {SimpleAgencyGiftPanel} from '../agency-gift/SimpleAgencyGiftPanel';
 import {PracticeReviewSection} from '../agency-review/PracticeReviewSection';
+import {NewPractice} from './NewPractice';
+import {ListingPlanExport} from './ListingPlanExport';
+import {useJourney,stageLabels} from './journey';
+import {PracticeProfile,PracticeListing,PracticeTransaction} from './PracticeJourneyPanels';
 type Agency={id:string;name:string;role:string};
 type Job={id:string;status:string;capMicros:number;spentMicros:number};
 const sourceKinds={unclassified:'Da classificare',deed:'Atto',cadastral:'Visura',floor_plan:'Planimetria',succession:'Successione',ape:'APE',other:'Altro'} as const;
@@ -28,43 +32,84 @@ export function AgenciesPage(){useDocumentTitle("Agenzie");
  return <AppShell account={account}><div className={styles.workspace}><h1>Agenzie</h1><p>Fascicoli immobiliari e analisi delle planimetrie.</p>{error&&<p role="alert">{error}</p>}{enabled===false?<p>Area Agenzie non configurata in questo ambiente. Nessun dato dimostrativo viene caricato al suo posto.</p>:agencies===null?<p>Caricamento agenzie…</p>:<><ul>{agencies.map(a=><li key={a.id}><Link to={'/agenzie/'+a.id}>{a.name}</Link> · {a.role==='viewer'?'Consultazione':'Gestione pratiche'}</li>)}</ul>{!agencies.length&&<p>Nessuna agenzia assegnata. Puoi creare il tuo spazio agenzia.</p>}<form onSubmit={e=>{e.preventDefault();void create();}}><label>Nome agenzia<input value={name} maxLength={200} required disabled={busy} onChange={e=>{setName(e.target.value);key.current=null;}}/></label><button disabled={busy||!name.trim()}>Crea spazio agenzia</button></form></>}</div></AppShell>;
 }
 export function AgencyPracticesPage(){const {agencyId=''}=useParams(),account=useAccount();return <PracticeList key={account.id+':'+agencyId} agencyId={agencyId}/>;}
-function PracticeList({agencyId}:{agencyId:string}){useDocumentTitle("Pratiche agenzia");
- const account=useAccount(),api=useApi(),navigate=useNavigate(),[data,setData]=useState<{agency:Agency;practices:Array<{id:string;label:string}>;nextAfter:string|null}|null>(null),[label,setLabel]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),key=useRef<string|null>(null);
+function PracticeList({agencyId}:{agencyId:string}) {
+ useDocumentTitle("Pratiche agenzia");
+ const account=useAccount(),api=useApi(),navigate=useNavigate();
+ const [data,setData]=useState<{agency:Agency;practices:Array<{id:string;label:string;stage?:keyof typeof stageLabels}>;nextAfter:string|null}|null>(null);
+ const [query,setQuery]=useState(''),[creating,setCreating]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const root='/agencies/'+encodeURIComponent(agencyId)+'/practices';
- useEffect(()=>{const c=new AbortController();Promise.all([api.callJson<{agencies:Agency[]}>('/agencies',{accountId:account.id,signal:c.signal}),api.callJson<{practices:Array<{id:string;label:string}>;nextAfter:string|null}>(root,{accountId:account.id,signal:c.signal})]).then(([all,p])=>{const agency=all.agencies.find(a=>a.id===agencyId);if(!agency)throw Error('scope');if(!c.signal.aborted)setData({agency,...p});}).catch(e=>{if(!c.signal.aborted)setError(message(e));});return()=>c.abort();},[api,account.id,agencyId,root]);
- async function create(){setBusy(true);key.current??=crypto.randomUUID();try{const r=await api.callJson<{practice:{id:string}}>(root,{method:'POST',accountId:account.id,idempotencyKey:key.current,body:{label}});navigate('/agenzie/'+agencyId+'/pratiche/'+r.practice.id);}catch(e){setError(message(e));}finally{setBusy(false);}}
- async function more(){if(!data?.nextAfter)return;setBusy(true);try{const r=await api.callJson<{practices:Array<{id:string;label:string}>;nextAfter:string|null}>(root+'?after='+encodeURIComponent(data.nextAfter),{accountId:account.id});setData(v=>v?{...v,practices:[...v.practices,...r.practices],nextAfter:r.nextAfter}:v);}catch(e){setError(message(e));}finally{setBusy(false);}}
- return <AppShell account={account}><div className={styles.workspace}><Link to="/agenzie">Tutte le agenzie</Link><h1>{data?.agency.name||'Pratiche agenzia'}</h1>{error&&<p role="alert">{error}</p>}{data?<><ul>{data.practices.map(p=><li key={p.id}><Link to={'/agenzie/'+agencyId+'/pratiche/'+p.id}>{p.label}</Link>{data.agency.role!=='viewer'&&<> · <Link to={'/agenzie/'+agencyId+'/pratiche/'+p.id+'/consegna'}>Fase dopo la stipula</Link></>}</li>)}</ul>{!data.practices.length&&<p>Nessuna pratica assegnata.</p>}{data.nextAfter&&<button disabled={busy} onClick={()=>void more()}>Altre pratiche</button>}{data.agency.role!=='viewer'&&<form onSubmit={e=>{e.preventDefault();void create();}}><label>Nome o riferimento immobile<input required maxLength={200} value={label} disabled={busy} onChange={e=>{setLabel(e.target.value);key.current=null;}}/></label><button disabled={busy||!label.trim()}>Crea pratica</button></form>}</>:!error&&<p>Caricamento pratiche…</p>}</div></AppShell>;
+ useEffect(()=>{
+  const c=new AbortController();
+  Promise.all([
+   api.callJson<{agencies:Agency[]}>('/agencies',{accountId:account.id,signal:c.signal}),
+   api.callJson<{practices:Array<{id:string;label:string;stage?:keyof typeof stageLabels}>;nextAfter:string|null}>(root,{accountId:account.id,signal:c.signal}),
+  ]).then(([all,result])=>{
+   const agency=all.agencies.find(a=>a.id===agencyId);
+   if(!agency)throw Error('scope');
+   if(!c.signal.aborted)setData({agency,...result});
+  }).catch(e=>{if(!c.signal.aborted)setError(message(e));});
+  return()=>c.abort();
+ },[api,account.id,agencyId,root]);
+ async function more(){
+  if(!data?.nextAfter||busy)return;
+  setBusy(true);setError('');
+  try{
+   const result=await api.callJson<{practices:Array<{id:string;label:string;stage?:keyof typeof stageLabels}>;nextAfter:string|null}>(root+'?after='+encodeURIComponent(data.nextAfter),{accountId:account.id});
+   setData(v=>v?{...v,practices:[...v.practices,...result.practices],nextAfter:result.nextAfter}:v);
+  }catch(e){setError(message(e));}finally{setBusy(false);}
+ }
+ const matches=data?.practices.filter(p=>p.label.toLocaleLowerCase('it').includes(query.toLocaleLowerCase('it')));
+ return <AppShell account={account}><div className={styles.workspace}>
+  <Link to="/agenzie">Spazi agenzia</Link>
+  <header className={styles.practiceTools}><div><p>{data?.agency.name}</p><h1>Pratiche di vendita</h1></div>
+   {data&&data.agency.role!=='viewer'&&!creating&&<button type="button" onClick={()=>setCreating(true)}>Nuova pratica</button>}
+  </header>
+  {error&&<p role="alert">{error}</p>}
+  {creating?<NewPractice api={api} accountId={account.id} agencyId={agencyId} onCancel={()=>setCreating(false)} onCreated={id=>navigate('/agenzie/'+agencyId+'/pratiche/'+id+'?area=fascicolo')}/>:
+   data?<><label>Cerca pratica per immobile o riferimento<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Indirizzo o nome pratica"/></label>
+    <p>{data.practices.length} pratiche caricate{data.nextAfter?' · Altre disponibili':''}</p>
+    <div className={styles.checklistScroll}><table className={styles.practiceTable}><thead><tr><th>Immobile / riferimento</th><th>Fase</th><th>Apri</th></tr></thead><tbody>
+     {matches?.map(practice=><tr key={practice.id}><th scope="row"><Link to={'/agenzie/'+agencyId+'/pratiche/'+practice.id}>{practice.label}</Link></th><td>{stageLabels[practice.stage??'preparation']??'Da verificare'}</td><td><Link to={'/agenzie/'+agencyId+'/pratiche/'+practice.id+'?area=fascicolo'}>Fascicolo</Link></td></tr>)}
+    </tbody></table></div>
+    {!matches?.length&&<p>{query?'Nessuna corrispondenza nelle pratiche caricate.':'Nessuna pratica assegnata.'}</p>}
+    {data.nextAfter&&<button disabled={busy} onClick={()=>void more()}>Carica altre pratiche</button>}
+   </>:!error&&<p>Caricamento pratiche…</p>}
+ </div></AppShell>;
 }
 export function AgencyPracticePage(){const {agencyId='',practiceId=''}=useParams(),account=useAccount();return <AgencyPractice key={account.id+':'+agencyId+':'+practiceId} agencyId={agencyId} practiceId={practiceId}/>;}
 const practiceAreas = [
  {id:'panoramica', label:'Panoramica'},
  {id:'fascicolo', label:'Fascicolo'},
- {id:'planimetria', label:'Planimetria e annuncio'},
- {id:'trattativa', label:'Trattativa e stipula'},
+ {id:'analisi', label:'Analisi documenti'},
+ {id:'planimetria', label:'Planimetria'},
+ {id:'annuncio', label:'Annuncio'},
+ {id:'trattativa', label:'Trattativa'},
+ {id:'stipula', label:'Stipula'},
 ] as const;
 type PracticeArea = typeof practiceAreas[number]['id'];
 
-function PracticeOverview({practice,plans}:{practice:AgencyPractice;plans:PlansResponse['plans']|null}) {
+function PracticeOverview({practice,plans,stage='preparation'}:{practice:AgencyPractice;plans:PlansResponse['plans']|null;stage?:keyof typeof stageLabels}) {
  const currentPlans = plans?.filter(plan=>plan.rooms!==null);
  const plan = currentPlans?.[0];
  const rooms = plan?.rooms?.length ?? 0;
  const issues = plan?.issues?.length ?? 0;
  const floorPlan = practice.documents.some(document=>document.kind==='floor_plan');
  const requiresReview = plan && (!rooms || issues || plan.surfaceProposal?.state==='pending');
- const nextAction = requiresReview ? 'Sistemare la planimetria'
+ const phaseAction=stage==='completed'?'Prepara la consegna al proprietario':stage==='closing'?'Prepara la stipula':stage==='negotiation'?'Segui la trattativa':stage==='marketing'?'Completa l’annuncio':null;
+ const nextAction = phaseAction || (requiresReview ? 'Sistemare la planimetria'
   : !practice.documents.length ? 'Aggiungere i documenti'
   : plan?.measurementConfiguration && !plan.measurement ? 'Aggiornare il computo'
   : !plan && floorPlan && plans ? 'Aprire la planimetria'
-  : 'Controllare il fascicolo';
- const area = requiresReview || nextAction==='Aggiornare il computo' || nextAction==='Aprire la planimetria' ? 'planimetria' : 'fascicolo';
+  : 'Controllare il fascicolo');
+ const phaseArea=stage==='completed'||stage==='closing'?'stipula':stage==='negotiation'?'trattativa':stage==='marketing'?'annuncio':null;
+ const area = phaseArea || (requiresReview || nextAction==='Aggiornare il computo' || nextAction==='Aprire la planimetria' ? 'planimetria' : 'fascicolo');
  return <section className={styles.nextAction} aria-labelledby="practice-next-action">
    <p>Prossima azione</p>
    <h2 id="practice-next-action">{nextAction}</h2>
    <p>{practice.documents.length} {practice.documents.length===1?'documento disponibile':'documenti disponibili'}.</p>
    <p>{plan?(requiresReview?'Planimetria da completare.':'Contorni disponibili.'):plans?(floorPlan?'Documento di planimetria presente.':'Planimetria da acquisire.'):'Stato della planimetria in verifica.'}</p>
    {plan&&<p>{rooms} {rooms===1?'vano salvato':'vani salvati'} · {issues} {issues===1?'verifica aperta':'verifiche aperte'}.</p>}
-   <Link className={styles.primaryAction} to={'?area='+area}>{area==='planimetria'?'Vai alla planimetria':'Apri il fascicolo'}</Link>
+   <Link className={styles.primaryAction} to={'?area='+area}>{area==='planimetria'?'Vai alla planimetria':area==='fascicolo'?'Apri il fascicolo':area==='stipula'?'Vai alla stipula':area==='trattativa'?'Vai alla trattativa':'Apri annuncio'}</Link>
   </section>;
 }
 
@@ -73,6 +118,7 @@ function AgencyPractice(p:{agencyId:string;practiceId:string}){useDocumentTitle(
  const planApi=useMemo(()=>agencyPlanApi(api,{accountId:account.id,agencyId:p.agencyId,practiceId:p.practiceId}),[api,account.id,p.agencyId,p.practiceId]);
  const [practice,setPractice]=useState<AgencyPractice|null>(null),[options,setOptions]=useState<{available:boolean;enabled:boolean;canEdit:boolean;budgetAvailable:boolean;capMicros:number;priceVersion:string}|null>(null),[jobs,setJobs]=useState<Job[]>([]),[reload,setReload]=useState(0),[error,setError]=useState(''),[busy,setBusy]=useState(false),[file,setFile]=useState<File|null>(null),[visibility,setVisibility]=useState('private'),[selected,setSelected]=useState(''),[page,setPage]=useState(1),[instructions,setInstructions]=useState(''),[approved,setApproved]=useState(false),[workspaceKey,setWorkspaceKey]=useState(0),[newPlans,setNewPlans]=useState(false);
  const refreshScope=useCallback(()=>setReload(v=>v+1),[]);
+ const journey=useJourney(api,root,account.id,refreshScope);
  const [analysisPlans,setAnalysisPlans]=useState<PlansResponse['plans']|null>(null);
  const [search]=useSearchParams();
  const area:PracticeArea = practiceAreas.find(item=>item.id===search.get('area'))?.id ?? 'panoramica';
@@ -105,22 +151,28 @@ function AgencyPractice(p:{agencyId:string;practiceId:string}){useDocumentTitle(
    <nav className={styles.areaNavigation} aria-label="Aree della pratica">
     {practiceAreas.map(item=><Link key={item.id} to={item.id==='panoramica'?'?':'?area='+item.id} aria-current={area===item.id?'page':undefined}>{item.label}</Link>)}
    </nav>
-   {area==='panoramica'&&<PracticeOverview practice={practice} plans={analysisPlans}/>}
+   {journey.notice&&<p role="status" className={styles.toast}>{journey.notice}</p>}
+   {journey.error&&<div role="alert"><p>{journey.error}</p>{journey.uncertain&&<button type="button" disabled={journey.busy} onClick={()=>void journey.retry()}>Riprova lo stesso salvataggio</button>}<button type="button" disabled={journey.busy} onClick={journey.refresh}>Ricarica dati della pratica</button></div>}
+   {journey.snapshot&&<div className={styles.journeyTrack} aria-label="Fasi della vendita">{Object.entries(stageLabels).map(([id,label])=><span key={id} aria-current={journey.snapshot?.state.stage===id?'step':undefined}>{label}</span>)}</div>}
+   {area==='panoramica'&&<>
+    <PracticeOverview practice={practice} plans={analysisPlans} stage={journey.snapshot?.state.stage}/>
+    {journey.snapshot&&<PracticeProfile key={JSON.stringify(journey.snapshot.state.profile)} state={journey.snapshot.state} save={journey.save} stale={journey.snapshot.profileStale} disabled={!options?.canEdit||journey.busy||journey.uncertain}/>}
+   </>}
    {(area==='fascicolo'||area==='planimetria')&&<button type="button" disabled={busy} onClick={()=>{setUploadPending(null);setAnalysisPending(null);setClassificationPending(null);setClassificationConflict(false);setPractice(null);uploadKey.current=null;analysisKey.current=null;setFile(null);setApproved(false);setError('');setWorkspaceKey(v=>v+1);setReload(v=>v+1);}}>Ricarica pratica e scarta modifiche locali</button>}
    <div hidden={area!=='fascicolo'}>
-    <FascicoloChecklist documents={practice.documents} canEdit={!!options?.canEdit}/>
-    <section className={styles.panel}><h2>Documenti della pratica</h2><label>Documento PDF o PNG<input type="file" accept="application/pdf,image/png" disabled={busy||!!uploadPending||!!analysisPending||!!classificationPending||classificationConflict||!options?.canEdit} onChange={e=>{setFile(e.target.files?.[0]||null);uploadKey.current=null;}}/></label><label>Visibilità<select value={visibility} disabled={busy||!!uploadPending||!!analysisPending||!!classificationPending||classificationConflict||!options?.canEdit} onChange={e=>{setVisibility(e.target.value);uploadKey.current=null;}}><option value="private">Privato, visibile solo a me</option><option value="practice">Condiviso nella pratica</option></select></label><button type="button" disabled={busy||!!analysisPending||!!classificationPending||classificationConflict||!file||!options?.canEdit} onClick={()=>void upload()}>{uploadPending?'Riprova lo stesso caricamento':'Carica documento nella pratica'}</button>{classificationPending&&<p role="status">Il tipo scelto è in attesa di esito. Puoi riprovare lo stesso invio oppure ricaricare la pratica.</p>}{classificationPending&&!busy&&<button type="button" disabled={!options?.canEdit} onClick={()=>void classify(classificationPending.sourceId,classificationPending.body.expectedSourceVersion,classificationPending.body.kind)}>Riprova lo stesso tipo</button>}<ul>{practice.documents.map(d=><li key={d.id}>{d.filename} · {Object.hasOwn(sourceKinds,d.kind)?sourceKinds[d.kind as SourceKind]:'Tipo non riconosciuto'}<SourceTypeForm key={d.id+':'+d.version+':'+d.kind} document={d} disabled={busy||!!uploadPending||!!analysisPending||!!classificationPending||classificationConflict||!options?.canEdit} save={kind=>void classify(d.id,d.version,kind)}/></li>)}</ul></section>
-    <PracticeReviewSection documents={practice.documents} practiceRevision={practice.revision} onChanged={refreshScope} onAccessDenied={refreshScope} transport={api} scope={{accountId:account.id,agencyId:p.agencyId,practiceId:p.practiceId}} readOnly={!options?.canEdit||!!analysisPending||!!uploadPending||!!classificationPending||classificationConflict}/>
+    {journey.snapshot?<FascicoloChecklist key={JSON.stringify(journey.snapshot.state.checklist)} documents={practice.documents} canEdit={!!options?.canEdit&&!journey.uncertain} initial={journey.snapshot.state.checklist} saving={journey.busy} onSave={checklist=>journey.save({operation:'checklist',checklist})}/>:<p>Caricamento checklist salvata…</p>}
+    <nav className={styles.planTasks} aria-label="Azioni del fascicolo"><a className={styles.primaryAction} href="#carica-documenti">Carica documenti</a><Link className={styles.primaryAction} to="?area=analisi">Analizza documenti</Link></nav>
+    <section id="carica-documenti" className={styles.panel}><h2>Documenti della pratica</h2><label>Documento PDF o PNG<input type="file" accept="application/pdf,image/png" disabled={busy||!!uploadPending||!!analysisPending||!!classificationPending||classificationConflict||!options?.canEdit} onChange={e=>{setFile(e.target.files?.[0]||null);uploadKey.current=null;}}/></label><label>Visibilità<select value={visibility} disabled={busy||!!uploadPending||!!analysisPending||!!classificationPending||classificationConflict||!options?.canEdit} onChange={e=>{setVisibility(e.target.value);uploadKey.current=null;}}><option value="private">Privato, visibile solo a me</option><option value="practice">Condiviso nella pratica</option></select></label><button type="button" disabled={busy||!!analysisPending||!!classificationPending||classificationConflict||!file||!options?.canEdit} onClick={()=>void upload()}>{uploadPending?'Riprova lo stesso caricamento':'Carica documento nella pratica'}</button>{classificationPending&&<p role="status">Il tipo scelto è in attesa di esito. Puoi riprovare lo stesso invio oppure ricaricare la pratica.</p>}{classificationPending&&!busy&&<button type="button" disabled={!options?.canEdit} onClick={()=>void classify(classificationPending.sourceId,classificationPending.body.expectedSourceVersion,classificationPending.body.kind)}>Riprova lo stesso tipo</button>}<ul>{practice.documents.map(d=><li key={d.id}>{d.filename} · {journey.snapshot?.state.checklist.assignments[d.id]==='mandate'?'Incarico di vendita':Object.hasOwn(sourceKinds,d.kind)?sourceKinds[d.kind as SourceKind]:'Tipo non riconosciuto'}{journey.snapshot?.state.checklist.assignments[d.id]!=='mandate'&&<SourceTypeForm key={d.id+':'+d.version+':'+d.kind} document={d} disabled={busy||!!uploadPending||!!analysisPending||!!classificationPending||classificationConflict||!options?.canEdit} save={kind=>void classify(d.id,d.version,kind)}/>}</li>)}</ul></section>
    </div>
+   <div hidden={area!=='analisi'} id="analisi-documenti"><PracticeReviewSection journeyMode documents={practice.documents} practiceRevision={practice.revision} onChanged={refreshScope} onAccessDenied={refreshScope} transport={api} scope={{accountId:account.id,agencyId:p.agencyId,practiceId:p.practiceId}} readOnly={!options?.canEdit||!!analysisPending||!!uploadPending||!!classificationPending||classificationConflict}/></div>
    <div hidden={area!=='planimetria'}>
+
     <AgencyPracticePlanWorkspace embedded onSaved={refreshScope} key={workspaceKey} api={planApi} scopeKey={scope+':'+workspaceKey} readOnly={!options?.canEdit||!!analysisPending||!!uploadPending||!!classificationPending||classificationConflict}/>
     <details className={styles.panel} open={!(analysisPlans?.length)||undefined}><summary>Analisi del documento</summary><h2>Analizza la planimetria</h2><label>Documento<select value={selected} disabled={busy||!!analysisPending||!!uploadPending||!!classificationPending||classificationConflict} onChange={e=>{setSelected(e.target.value);analysisKey.current=null;setApproved(false);}}><option value="">Scegli una planimetria</option>{practice.documents.filter(d=>d.kind==='floor_plan').map(d=><option key={d.id} value={d.id}>{d.filename} · v{d.version}</option>)}</select></label><label>Pagina<input type="number" min="1" max="20" value={page} disabled={busy||!!analysisPending||!!uploadPending||!!classificationPending||classificationConflict} onChange={e=>{setPage(Number(e.target.value));analysisKey.current=null;setApproved(false);}}/></label><label>Indicazioni per l’analisi, facoltative<textarea value={instructions} maxLength={4000} disabled={busy||!!analysisPending||!!uploadPending||!!classificationPending||classificationConflict} onChange={e=>{setInstructions(e.target.value);analysisKey.current=null;setApproved(false);}}/></label>{analysisPending&&<button type="button" disabled={busy} onClick={()=>void analyze()}>Riprova lo stesso avvio</button>}{options?.available?<><p>La pagina selezionata viene inviata ad Anthropic (Claude Sonnet 5.5) per lettura e controllo; Dimora ricava i contorni localmente. Limite massimo per questa analisi: {(options.capMicros/1000000).toLocaleString('it-IT')} USD, dal budget dell’agenzia. Il risultato richiede controllo.</p><label><input type="checkbox" checked={approved} disabled={busy||!!analysisPending||!!uploadPending||!!classificationPending||classificationConflict} onChange={e=>setApproved(e.target.checked)}/>Autorizzo l’analisi di questo documento con il budget indicato.</label><button disabled={busy||!!analysisPending||!!uploadPending||!!classificationPending||classificationConflict||!selected||!approved||!Number.isInteger(page)||page<1||page>20} onClick={()=>void analyze()}>Analizza planimetria</button></>:<p>{!options?.enabled?'Analisi AI non configurata in questo ambiente.':'Analisi non disponibile: serve un budget attivo e l’accesso in modifica.'} I piani già presenti rimangono consultabili.</p>}<ul>{jobs.map(j=><li key={j.id}>{j.status==='completed'?analysisOutcome(analysisPlans?.find(plan=>plan.id===j.id)):status[j.status]||'Stato da verificare'} · costo registrato {(j.spentMicros/1000000).toLocaleString('it-IT')} USD</li>)}</ul>{newPlans&&<div role="status"><p>L’analisi è terminata. Apri la planimetria per controllare il risultato. Le modifiche locali non salvate verranno scartate.</p><button type="button" onClick={()=>{setWorkspaceKey(v=>v+1);setNewPlans(false);}}>Apri risultato dell’analisi</button></div>}</details>
    </div>
-   {area==='trattativa'&&<section className={styles.panel}>
-    <h2>Trattativa e stipula</h2>
-    <p>Se la stipula si è conclusa, apri la fase dedicata per preparare la consegna al nuovo proprietario.</p>
-    <Link to={'/agenzie/'+p.agencyId+'/pratiche/'+p.practiceId+'/consegna'}>Apri la fase dopo la stipula</Link>
-   </section>}
+   {area==='annuncio'&&<>{journey.snapshot&&<PracticeListing key={JSON.stringify(journey.snapshot.state.listing)} state={journey.snapshot.state} save={journey.save} disabled={!options?.canEdit||journey.busy||journey.uncertain}/>}<section className={styles.panel}><h2>Pianta per l’annuncio</h2>{analysisPlans?.filter(plan=>plan.rooms?.length).map(plan=><ListingPlanExport key={plan.id+':'+plan.geometryRevision} rooms={plan.rooms!} disabled={!options?.canEdit}/>)}{!analysisPlans?.some(plan=>plan.rooms?.length)&&<p>Salva almeno un vano nella planimetria per esportare la pianta.</p>}</section></>}
+   {(area==='trattativa'||area==='stipula')&&journey.snapshot&&<PracticeTransaction closing={area==='stipula'} key={JSON.stringify(journey.snapshot.state.transaction)} state={journey.snapshot.state} save={journey.save} disabled={!options?.canEdit||journey.busy||journey.uncertain} delivery={'/agenzie/'+p.agencyId+'/pratiche/'+p.practiceId+'/consegna'}/>}
+
   </>}
  </div></AppShell>;
 }
