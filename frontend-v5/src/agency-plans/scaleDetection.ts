@@ -53,3 +53,7 @@ export function quickSurfaces(rooms:PlanShape[],xMetresPerPixel:number,yMetresPe
  const principal=rows.filter(r=>r.coefficient===1).reduce((n,r)=>n+r.area,0),wallAllowance=principal*wallPercent/100;
  return {rows,net:rows.reduce((n,r)=>n+r.area,0),wallAllowance,commercial:rows.reduce((n,r)=>n+r.weighted,0)+wallAllowance};
 }
+
+export function originalPoint(point:Point,rotation:0|90|270,width:number,height:number,xFactor:number,yFactor:number):Point{
+ const [x,y]=point;return rotation===90?[y/xFactor,(height-x)/yFactor]:rotation===270?[(width-y)/xFactor,x/yFactor]:[x/xFactor,y/yFactor];
+}

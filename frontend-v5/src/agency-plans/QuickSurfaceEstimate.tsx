@@ -37,7 +37,7 @@ export function QuickSurfaceEstimate(p:Props){
   {reading&&<p role="status">Cerco la barra metrica e la scala sul documento, senza invii esterni…</p>}
   {bar&&<p><strong>{basis}</strong> · stima da verificare</p>}
   {usePaper&&!bar&&<div className={styles.fieldGrid}>
-   <p>{reading?'Puoi indicare il foglio anche mentre controllo il documento.':detection?.ambiguous?'Riferimenti non concordi: indica la scala corretta.':'Barra non riconosciuta con sicurezza. Usa scala e formato del foglio.'}</p>
+   <p>{reading?'Puoi indicare il foglio anche mentre controllo il documento.':failed?'Lettura automatica non disponibile in questa sessione. Usa scala e formato del foglio.':detection?.ambiguous?'Riferimenti non concordi: indica la scala corretta.':'Barra non riconosciuta con sicurezza. Usa scala e formato del foglio.'}</p>
    <label>Scala sul documento · 1:<input type="number" min="1" max="10000" value={denominator} onChange={e=>setRatio(e.target.value)} placeholder="Es. 100"/></label>
    <label>Formato del foglio scansionato<select value={format} onChange={e=>{setFormat(e.target.value);setMode('paper');}}><option value="">Scegli formato</option><option value="A4">A4 · 21 × 29,7 cm</option><option value="A3">A3 · 29,7 × 42 cm</option><option value="A2">A2 · 42 × 59,4 cm</option><option value="A1">A1 · 59,4 × 84,1 cm</option></select></label>
   </div>}
