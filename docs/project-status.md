@@ -1,8 +1,8 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
-## Agenzie — percorso approvato del 5 novembre, in lavorazione
+## Agenzie — percorso approvato del 5 novembre, attivo localmente
 
-Lotto `codex/agency-journey-20261105` nel checkout `work/agency-journey-20261105`, seguito locale della base7128375. Adeguamento ai mockup approvati: elenco pratiche, apertura da incarico con conferma, fascicolo persistito, analisi per passaggi, annuncio e trattativa/stipula; Gift nella consegna. Backend snapshot e UI in questo lotto; nessuna migrazione, modello incarico inventato, AI reale o modifica demo Alessio. Test e attivazione locale ancora da concludere.
+Lotto `codex/agency-journey-20261105` nel checkout `work/agency-journey-20261105`, seguito locale della base7128375. Adeguamento ai mockup approvati: elenco pratiche, apertura da incarico con conferma, fascicolo persistito, analisi per passaggi, annuncio e trattativa/stipula; Gift nella consegna. Backend snapshot e UI in questo lotto; nessuna migrazione, modello incarico inventato, AI reale o modifica demo Alessio. Codice `2ed008d`, locale aggiornato e verificato. 148/148 test puri mirati,26/26 API/DB su nuovo cluster r7YmeL arrestato,65/65 interfaccia e25/25 rieseguiti dopo anteprima incarico; typecheck/lint/build verdi. Nuovo browser sintetico pnCbtC: incarico→conferma→fascicolo, richiesta simulata, annuncio/reload e Gift dopo stipula; arresto verificato. Verifica finale reale senza scritture: elenco, lettura locale PDF sintetico e fonte pagina2,375px senza overflow/errori. PostgreSQL preservato, nessuna migrazione o AI reale. [Report e limiti](v5/agency-journey-20261105.md).
 
 Il lotto locale `codex/agency-plan-workflow-20261104` semplifica esito della digitalizzazione, ricalcolo, export annuncio e passaggio alla consegna della stessa pratica. [Flusso e decisioni](v5/agency-plan-workflow-20261104.md).
 
@@ -169,6 +169,7 @@ Base delle evolutive: **codex/dimora-v5-consolidata-20261023**, creata dal commi
 
 | Lotto | Agente | Branch | Area/file | Stato |
 | --- | --- | --- | --- | --- |
+| Agenzie — nuovo percorso | Codex | codex/agency-journey-20261105 | Journey snapshot/API, apertura da incarico, checklist, aree, annuncio e stipula | Implementato e attivo localmente al codice2ed008d;148puri/26DB/65UI,25UI finali, statici e browser desktop375 verdi. Nessuna migrazione/AI reale; limiti nel report. |
 | Agenzie — documenti e mappa | Codex | codex/agenzie-documenti-consolidamento-20261103 | Riunione PR77/78, continuità dei pannelli, fonti su pagina fisica, regressioni e report | Integrazione nel comune autorizzata tramite PR79; prodotto e6b2509, test finali0080b6c. Backend935/935, DB/API77/77, frontend2163/2163; statici/build e browser desktop/375 verdi, cluster arrestati. Runtime reale, main e provider AI invariati. |
 | Casa esistente — planimetria da backoffice | Codex | codex/home-plan-backoffice-20261103 | Importatore interno HomeMap, binding espliciti e audit; testi mappa e test | Prodotto d42459c, import/delta/runtime e UI desktop autenticata verificati; backend894/DB33/frontend43 e guardie8 verdi. Nuovo cluster arrestato. 5attivi disponibili,4segnaposti indicativi e1Da collocare; nessun drag o nuovo mobile reale. Bozza non verificata, nessuna nuova AI. |
 | Agenzie — analisi documentale nativa | Codex | codex/agency-document-analysis-20261103 | Modulo ledger/job/coordinatore/API/UI, store context e test isolati | Implementato 737cdc9, comune3335 riunito; backend930/DB37/UI88, statici/build e browser desktop375 verdi su fixture, nuovi cluster arrestati. PR separata, nessuna AI reale/spesa. |
