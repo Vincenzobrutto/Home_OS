@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Agenzie — semplificazione del disegno planimetria, 5 novembre
+
+Seguito richiesto dal committente nel checkout `work/agency-plan-simple-20261105`, branch `codex/agency-plan-simple-20261105`, dipendente dal lotto PR81. Solo frontend: mappa e salvataggio evidenti, selezione grafica con controlli contestuali, dettagli chiusi e calcolo/annuncio separati. Verifiche e aggiornamento locale in corso; API/DB e parti precedenti preservati.
+
 ## Agenzie — percorso approvato del 5 novembre, attivo localmente
 
 Lotto `codex/agency-journey-20261105` nel checkout `work/agency-journey-20261105`, seguito locale della base7128375. Adeguamento ai mockup approvati: elenco pratiche, apertura da incarico con conferma, fascicolo persistito, analisi per passaggi, annuncio e trattativa/stipula; Gift nella consegna. Backend snapshot e UI in questo lotto; nessuna migrazione, modello incarico inventato, AI reale o modifica demo Alessio. Codice `2ed008d`, locale aggiornato e verificato. 148/148 test puri mirati,26/26 API/DB su nuovo cluster r7YmeL arrestato,65/65 interfaccia e25/25 rieseguiti dopo anteprima incarico; typecheck/lint/build verdi. Nuovo browser sintetico pnCbtC: incarico→conferma→fascicolo, richiesta simulata, annuncio/reload e Gift dopo stipula; arresto verificato. Verifica finale reale senza scritture: elenco, lettura locale PDF sintetico e fonte pagina2,375px senza overflow/errori. PostgreSQL preservato, nessuna migrazione o AI reale. [Report e limiti](v5/agency-journey-20261105.md).

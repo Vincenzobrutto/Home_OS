@@ -44,3 +44,7 @@
 @media(max-width:650px){.fieldGrid{grid-template-columns:1fr}.practiceTable th,.practiceTable td{padding:8px;font-size:13px}}
 
 .mandateReview{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}.mandateReview>section{min-width:0}.mandateReview .fieldGrid{grid-template-columns:1fr}.mandateReview small button{font-size:12px;padding:2px 6px;min-height:30px}@media(max-width:800px){.mandateReview{grid-template-columns:minmax(0,1fr)}}
+
+.row[hidden]{display:none}
+.documentTools{margin:8px 0;color:#45676b}.documentTools>summary{cursor:pointer;min-height:44px;display:list-item;padding:10px 0}.documentTools[open]{padding:12px;border:1px solid #d1dfdf;border-radius:10px;background:white}
+.nextPlanSteps{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0;padding-top:12px;border-top:1px solid #d1dfdf}
