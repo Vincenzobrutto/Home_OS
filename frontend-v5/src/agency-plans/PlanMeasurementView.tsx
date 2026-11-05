@@ -4,7 +4,7 @@ import type {MeasurementConfiguration} from './measurement-types';
 import {PlanSurfaceSummary} from './PlanSurfaceSummary';
 import styles from './plan-measurement.module.css';
 export type Point=[number,number];
-export type PlanShape={id:string;label:string;points:Point[];holes:Point[][]};
+export type PlanShape={kind?:string;id:string;label:string;points:Point[];holes:Point[][]};
 export type PlanMeasurementProps={scopeKey:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];perimeter:PlanShape|null;issues:string[];onChange:(view:'rooms'|'perimeter',shape:PlanShape)=>void;onCreatePerimeter:()=>void;readOnly?:boolean;drawingOnly?:boolean;simple?:boolean;onAddRoom?:()=>void;onSaveGeometry?:()=>void;hasUnsavedChanges?:boolean;onRemoveRoom?:(shape:PlanShape)=>void;configuration?:MeasurementConfiguration|null;measurement?:PlanMeasurementReport|null;measurementsOutdated?:boolean;candidateIds?:string[];excludedCandidateIds?:string[]};
 const path=(s:PlanShape)=>[s.points,...s.holes].map(p=>'M'+p.map(v=>v.join(',')).join('L')+'Z').join('');
 /** Controlled editor: source URL is supplied only after source authorization; no localStorage or live API side effects. */
