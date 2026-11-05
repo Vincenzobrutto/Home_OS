@@ -2,7 +2,7 @@
 
 ## Agenzie — semplificazione del disegno planimetria, 5 novembre
 
-Seguito richiesto dal committente nel checkout `work/agency-plan-simple-20261105`, branch `codex/agency-plan-simple-20261105`, dipendente dal lotto PR81. Solo frontend: mappa e salvataggio evidenti, selezione grafica con controlli contestuali, dettagli chiusi e calcolo/annuncio separati. Verifiche e aggiornamento locale in corso; API/DB e parti precedenti preservati.
+Seguito richiesto dal committente nel checkout `work/agency-plan-simple-20261105`, branch `codex/agency-plan-simple-20261105`, dipendente dal lotto PR81. Solo frontend: mappa e salvataggio evidenti, selezione grafica con controlli contestuali, dettagli chiusi e calcolo/annuncio separati. Codice finale72ade15 attivo localmente nel profilo app-agency-plan-simple-final-20261105. 65/65 test del gruppo e32/32 responsive, typecheck/lint/build e browser desktop375 verdi; nessuna scrittura di prova sui dati reali, API/DB invariati. [Report e limiti](v5/agency-plan-simple-20261105.md).
 
 ## Agenzie — percorso approvato del 5 novembre, attivo localmente
 

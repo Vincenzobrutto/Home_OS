@@ -2174,3 +2174,8 @@ Ramo dedicato: scelta esplicita del piano revisionato nella Gift, copia indipend
 ### Agenzie — percorso approvato del 5 novembre
 
 Nuova pratica da incarico con conferma esplicita, checklist/situazioni e richiesta documenti persistite, analisi per passaggi, annuncio e trattativa/stipula separati. Consegna Gift dopo la fase conclusa; richieste d’acquisto dimostrative senza finti originali. Collaudo e attivazione locale nel [report](v5/agency-journey-20261105.md); lettore incarico locale e conservativo, AI reale/fornitori/portali non estesi in questo lotto.
+
+
+### Planimetria agenzia semplificata — 5 novembre
+
+Disegno con quattro comandi principali, selezione grafica e strumenti contestuali; dettagli chiusi, calcolo/annuncio separati. Navigazione compatta375px e foglio contenuto nel riquadro iniziale con zoom. Codice72ade15,65UI/32responsive e statici/build/browser verdi; aggiornato solo frontend locale. [Report e limiti](v5/agency-plan-simple-20261105.md). Nessuna nuova analisi o scrittura di prova sugli originali.
