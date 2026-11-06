@@ -3,7 +3,7 @@ import type { ApiTransport } from '../api/transport';
 import type { PlanShape } from './PlanMeasurementView';
 export type AgencyScope={accountId:string;agencyId:string;practiceId:string};
 export type SourceProof={sourceId:string;version:number;sha256:string;page:number};
-export type AgencyPractice={id:string;label:string;revision:number;documents:Array<{id:string;kind:string;visibility:string;version:number;filename:string}>};
+export type AgencyPractice={id:string;label:string;revision:number;documents:Array<{id:string;kind:string;visibility:string;version:number;filename:string;mimeType?:string;sha256?:string}>};
 export type SurfaceProposal={coverage?:{candidateIds:string[];truncated:boolean;possibleWallIds?:string[]};acceptedExcludedCandidateIds?:string[];contrast?:{requiresReview:true;originalThreshold:number;proposedThreshold:number};digest:string;state:"pending"|"applied"|"stale";baseGeometryRevision:number;rooms:PlanShape[];issues:Array<{id:string;code:string}>;summary:{doorArcs:number;serviceCells:number;exteriorStrips:number;unassignedAreas?:number}};
 /** Existing server report; the client only presents these values, never recomputes geometry. */
 export type PlanMeasurementReport={totalM2:number|null;partialM2:number;issues:string[];status:string;certification:false;geometryRevision?:number;base?:'gross_perimeter';policyVersion?:string;surfaces?:Array<{id:string;kind?:string;measuredM2:number;coefficient?:number|null;weightedM2:number|null}>;roomBreakdown?:Array<{id:string;netM2:number}>;walls?:Array<{id:string;kind:string;measuredM2:number;weightedM2:number}>;wallAdjustments?:Array<{id:string;kind:string;measuredM2:number;deductionM2:number}>};

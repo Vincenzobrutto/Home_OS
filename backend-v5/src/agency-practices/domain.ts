@@ -41,7 +41,13 @@ export function visibleSources(actor: Actor, practice: Practice, now: string): S
 }
 export function practiceSummary(actor: Actor, practice: Practice, now: string) {
   const sources = visibleSources(actor, practice, now);
-  return { id: practice.id, agencyId: practice.agencyId, label: practice.label, revision: practice.revision, visibleDocumentCount: sources.length, documents: sources.map(s => ({ id: s.id, kind: s.kind, visibility: s.visibility, version: s.versions.at(-1)!.version, filename: s.versions.at(-1)!.originalFilename })) };
+  return { id: practice.id, agencyId: practice.agencyId, label: practice.label, revision: practice.revision, visibleDocumentCount: sources.length, documents: sources.map(s => {
+    const file = s.versions.at(-1)!;
+    return {
+      id: s.id, kind: s.kind, visibility: s.visibility, version: file.version, filename: file.originalFilename,
+      ...(s.kind === 'floor_plan' ? { mimeType: file.mimeType, sha256: file.sha256 } : {}),
+    };
+  }) };
 }
 export function exportManifest(actor: Actor, practice: Practice, input: unknown, now: string) {
   requirePractice(actor, practice, 'export', now);
