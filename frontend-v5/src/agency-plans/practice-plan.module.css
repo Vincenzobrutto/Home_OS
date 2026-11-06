@@ -52,3 +52,5 @@
 @media(max-width:650px){.mapNavigation{flex-wrap:nowrap;overflow-x:auto;padding-bottom:5px;margin:10px 0}.mapNavigation a{flex:0 0 auto;white-space:nowrap}.mapPage .practiceHeader p{display:none}.mapPage .practiceHeader h1{font-size:20px;margin:8px 0}.mapPage{margin-top:10px}}
 
 .surfaceTotal{display:grid;gap:5px;background:#e5f3ee;border:1px solid #9cbbb1;border-radius:12px;padding:18px;margin:16px 0}.surfaceTotal strong{font-size:32px;color:#005767}.surfaceTotal small{color:#45676b}.scaleReference{width:100%;max-width:500px;max-height:150px;background:white;border:1px solid #bdcdcc}.checklistTable caption{text-align:left;font-weight:650;margin-bottom:8px}
+
+.issueLocation { display: block; width: 100%; max-width: 460px; max-height: 260px; margin: 8px 0; background: white; border: 1px solid #bdcdcc; }

@@ -26,7 +26,25 @@ describe('practice plan workspace',()=>{
  it('access revocation hides private data and editor',async()=>{const api=port();api.edit.mockRejectedValueOnce(error(403,'access_denied'));await loaded(api);dirtyGeometry();fireEvent.click(screen.getByRole('button',{name:'Salva correzione contorno'}));await screen.findByText(/Accesso non disponibile/);expect(screen.queryByText(/sintetica.pdf/)).not.toBeInTheDocument();expect(screen.queryByRole('img',{name:'Contorni dei singoli vani'})).not.toBeInTheDocument();});
  it('stale source cannot request an image or offer measurement controls',async()=>{const api=port();api.plans.mockResolvedValue({revision:5,plans:[{...plans().plans[0]!,status:'stale',rooms:null}]});render(<AgencyPracticePlanWorkspace api={api} scopeKey="stale"/>);await screen.findByText(/analisi precedente non è più utilizzabile/);expect(api.image).not.toHaveBeenCalled();expect(screen.queryByRole('form',{name:'Calibrazione e computo'})).not.toBeInTheDocument();});
  it('gross perimeter starts empty and requires an explicit drawn boundary',async()=>{await loaded();fireEvent.click(screen.getByRole('tab',{name:'Perimetro commerciale'}));fireEvent.click(screen.getByRole('button',{name:'Definisci perimetro'}));expect(screen.getByText('0 vertici')).toBeInTheDocument();expect(screen.getByRole('button',{name:'Usa questo contorno'})).toBeDisabled();expect(screen.queryByTestId('shape-gross')).not.toBeInTheDocument();});
- it('an unresolved symbol requires an explicit outcome and documented reason',async()=>{const api=port(),state=plans();state.plans[0]!.issues=[{id:'r',code:'symbol_unresolved'}];api.plans.mockResolvedValue(state);await loaded(api);expect(screen.getByRole('button',{name:'Registra verifica 1'})).toBeDisabled();fireEvent.change(screen.getByLabelText('Esito verifica 1'),{target:{value:'excluded_from_computation'}});fireEvent.change(screen.getByLabelText('Motivo della modifica o del computo'),{target:{value:'Esclusione sintetica motivata'}});fireEvent.click(screen.getByRole('button',{name:'Registra verifica 1'}));await screen.findByText('Modifiche salvate nella pratica.');expect(api.edit.mock.calls[0]![1].command).toEqual({operation:'resolve_issue',issueId:'r',code:'symbol_unresolved',resolution:'excluded_from_computation'});});
+ it('shows the affected room and removes a verification after saving its outcome',async()=>{
+  const api=port(),state=plans(),plan=state.plans[0]!;
+  plan.issues=[{id:'symbol',code:'symbol_unresolved'}];
+  plan.rooms![0]!.symbols=[{id:'symbol',reason:'Simbolo vicino alla parete',point:[5,5]}];
+  api.plans.mockResolvedValue(state);
+  api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,issues:[]}]}});
+  await loaded(api);
+  fireEvent.click(screen.getByText('Controlla le verifiche aperte · 1'));
+  fireEvent.click(screen.getByText('Verifica 1 · Stanza'));
+  expect(screen.getByRole('img',{name:'Posizione della verifica · Stanza'})).toBeInTheDocument();
+  expect(screen.getByText('Simbolo vicino alla parete')).toBeVisible();
+  expect(screen.getByRole('button',{name:'Registra verifica 1'})).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Esito verifica 1'),{target:{value:'excluded_from_computation'}});
+  fireEvent.change(screen.getByLabelText('Motivo verifica 1'),{target:{value:'Esclusione sintetica motivata'}});
+  fireEvent.click(screen.getByRole('button',{name:'Registra verifica 1'}));
+  await screen.findByText('Modifiche salvate nella pratica.');
+  expect(screen.queryByText('Controlla le verifiche aperte · 1')).not.toBeInTheDocument();
+  expect(api.edit.mock.calls[0]![1]).toMatchObject({reason:'Esclusione sintetica motivata',command:{operation:'resolve_issue',issueId:'symbol',code:'symbol_unresolved',resolution:'excluded_from_computation'}});
+ });
 });
 describe('measurement choices',()=>{
  const props=()=>({rooms:[shape],hasPerimeter:false,busy:false,requestPolygon:vi.fn<RequestPolygon>(),requestSegment:vi.fn<(done:(a:[number,number],b:[number,number])=>void)=>void>(),onDirty:vi.fn(),onSave:vi.fn<(c:MeasurementConfiguration)=>void>()});
