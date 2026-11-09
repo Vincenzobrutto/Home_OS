@@ -36,6 +36,39 @@ it('inserts an 80 cm door from the document bar without a saved scale',async()=>
  expect(onApply.mock.calls[0]?.[0].openings).toEqual([{kind:'door',start:[37,10],end:[53,10],fixed:true}]);
 });
 
+it('sets a manual scale on the full original and saves it with the new door',()=>{
+ const rooms:PlanShape[]=[{id:'room',label:'Soggiorno',points:[[10,10],[80,10],[80,80],[10,80]],holes:[]}];
+ const onApply=vi.fn();
+ render(<ListingPlanReview sourceUrl="/plan.png" width={100} height={100} rooms={rooms}
+  disabled={false} onClose={()=>{}} onApply={onApply}/>);
+ const map=planMap();
+ fireEvent.click(screen.getByRole('button',{name:'Imposta scala'}));
+ expect(map).toHaveAttribute('viewBox','0 0 100 100');
+ fireEvent.click(map,{clientX:0,clientY:95});
+ fireEvent.click(map,{clientX:100,clientY:95});
+ fireEvent.change(screen.getByLabelText('Distanza reale (m)'),{target:{value:'5,0'}});
+ fireEvent.click(screen.getByRole('button',{name:'Usa questa scala'}));
+ expect(screen.getByText(/porta da 80 cm/)).toBeInTheDocument();
+ expect(detectPlanScale).not.toHaveBeenCalled();
+ fireEvent.click(map,{clientX:45,clientY:10});
+ fireEvent.click(screen.getByRole('button',{name:'Salva dettagli per l’annuncio'}));
+ expect(onApply.mock.calls[0]?.[0]).toMatchObject({
+  scale:{mode:'manual',start:[0,95],end:[100,95],metres:5},
+  openings:[{kind:'door',start:[37,10],end:[53,10],fixed:true}],
+ });
+});
+
+it('reuses the saved scale immediately when adding a door',()=>{
+ const rooms:PlanShape[]=[{id:'room',label:'Soggiorno',points:[[10,10],[80,10],[80,80],[10,80]],holes:[]}];
+ render(<ListingPlanReview sourceUrl="/plan.png" width={100} height={100} rooms={rooms}
+  metresPerPixel={[.05,.05]} scaleLabel="Scala salvata in Calcola superfici" disabled={false}
+  onClose={()=>{}} onApply={()=>{}}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Aggiungi porta'}));
+ expect(screen.getByText(/porta da 80 cm/)).toBeInTheDocument();
+ expect(screen.getByText('Scala salvata in Calcola superfici')).toBeInTheDocument();
+ expect(detectPlanScale).not.toHaveBeenCalled();
+});
+
 it('shows a guide when Shift is held mid-drag and saves the snapped vertex',()=>{
  const rooms:PlanShape[]=[
   {id:'room',label:'Soggiorno',points:[[10,10],[50,10],[49,41],[10,40]],holes:[]},

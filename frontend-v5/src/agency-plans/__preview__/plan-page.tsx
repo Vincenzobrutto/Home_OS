@@ -1,6 +1,6 @@
 import {createRoot} from 'react-dom/client';
 import {AgencyPracticePlanWorkspace} from '../AgencyPracticePlanWorkspace';
-import type {AgencyPlan,AgencyPlanPort,PlansResponse} from '../api';
+import type {AgencyPlan,AgencyPlanPort,ListingPlanDraft,PlansResponse} from '../api';
 import type {PlanShape,Point} from '../PlanMeasurementView';
 import {ApiError} from '../../api/errors';
 import styles from '../practice-plan.module.css';
@@ -84,7 +84,8 @@ function apply(plan:AgencyPlan,command:Record<string,unknown>){
   plan.balconyCovers=[...saved.values()];
   plan.quickEstimate={...(command.scale?{scale:structuredClone(command.scale) as NonNullable<AgencyPlan['quickEstimate']>['scale']}:{}),...(command.parameters?{parameters:structuredClone(command.parameters) as NonNullable<AgencyPlan['quickEstimate']>['parameters']}:{}),savedAt:new Date().toISOString(),geometryRevision:plan.geometryRevision||1};
  }else if(command.operation==='save_listing_details'){
-  const {openings,alignments,contours}=command as Omit<NonNullable<AgencyPlan['listingDetails']>,'geometryRevision'>;
+  const {openings,alignments,contours,scale}=command as ListingPlanDraft;
+  if(scale)plan.quickEstimate={...plan.quickEstimate,scale:structuredClone(scale),savedAt:new Date().toISOString(),geometryRevision:plan.geometryRevision??1};
   plan.listingDetails=structuredClone({geometryRevision:plan.geometryRevision??1,openings,alignments,contours});
  }else if(command.operation==='measure'){
   plan.measurementConfiguration=structuredClone(command.configuration) as AgencyPlan['measurementConfiguration'];

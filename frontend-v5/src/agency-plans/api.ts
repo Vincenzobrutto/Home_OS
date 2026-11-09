@@ -17,6 +17,7 @@ export type ListingOpening={kind:'door'|'window';start:Point;end:Point;fixed?:bo
 export type ListingWallRef={roomId:string;start:Point;end:Point};
 export type ListingAlignment={target:ListingWallRef;reference:ListingWallRef};
 export type ListingDetails={geometryRevision:number;openings:ListingOpening[];alignments:ListingAlignment[];contours?:Array<{id:string;geometry:Pick<PlanShape,'points'|'holes'>}>};
+export type ListingPlanDraft=Omit<ListingDetails,'geometryRevision'>&{scale?:QuickEstimateScale&{mode:'manual'}};
 export type AgencyPlan={edits?:Array<{rooms:PlanShape[]}>;id:string;version:number;status:string;proof:SourceProof;rooms:PlanShape[]|null;surfaceProposal?:SurfaceProposal|null;mainPerimeter?:Pick<PlanShape,'points'|'holes'>|null;perimeterProposal?:Pick<PlanShape,'points'|'holes'>;rasterSize?:{width:number;height:number};rendering?:{dpi:number;transform:number[];renderer:string}|null;geometryRevision?:number;measurementConfiguration?:MeasurementConfiguration|null;issues?:Array<{id:string;code:string;number?:number}>;balconyCovers?:BalconyCover[];quickEstimate?:QuickEstimate;listingDetails?:ListingDetails;openingReviews?:Array<{threshold:{start:Point;end:Point}|null}>;measurement?:PlanMeasurementReport|null};
 export type PlansResponse={revision:number;plans:AgencyPlan[]};
 export type PlanEditBody={expectedRevision:number;expectedPlanVersion:number;reason:string;command:Record<string,unknown>};

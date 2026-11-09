@@ -1,19 +1,19 @@
 import {useEffect,useMemo,useRef,useState,type KeyboardEvent,type MouseEvent,type PointerEvent} from 'react';
 import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
-import type {ListingDetails,ListingOpening} from './api';
+import type {ListingDetails,ListingOpening,ListingPlanDraft} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
 import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDoorOpposite,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening,placeScaledListingDoor} from './listingGeometry';
 import {detectListingOpenings,distinctOpenings} from './listingOpeningDetection';
 import {listingRoomFill} from './listingStyle';
 import styles from './practice-plan.module.css';
 
-type Draft=Omit<ListingDetails,'geometryRevision'>;
+type Draft=ListingPlanDraft;
 type Row={opening:ListingOpening;confirmed:boolean};
 type Subject={room:string;vertex:number}|{room:string;edge:number}|{row:number;part:'body'|'start'|'end'};
 type RoomSubject=Extract<Subject,{room:string}>;
 type Drag={id:number;origin:Point;point:Point;unitsPerPixel:number;shift:boolean;subject:Subject};
 type Props={sourceUrl:string;width:number;height:number;rooms:PlanShape[];saved?:ListingDetails;
- metresPerPixel?:Point|null;hints?:ListingOpening[];disabled:boolean;onClose:()=>void;onApply:(details:Draft)=>void};
+ metresPerPixel?:Point|null;scaleLabel?:string;hints?:ListingOpening[];disabled:boolean;onClose:()=>void;onApply:(details:Draft)=>void};
 const mid=(a:Point,b:Point):Point=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
 const length=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const path=(room:PlanShape)=>[room.points,...room.holes].map(ring=>'M '+ring.map(point=>point.join(' ')).join(' L ')+' Z').join(' ');
@@ -26,10 +26,17 @@ export function ListingPlanReview(p:Props){
  const [rows,setRows]=useState<Row[]>(()=>p.saved?.openings.map(opening=>({opening,confirmed:true}))??[]);
  const [roomId,setRoom]=useState('');
  const [selected,setSelected]=useState(-1);
- const [tool,setTool]=useState<'select'|ListingOpening['kind']>('select');
+ const [tool,setTool]=useState<'select'|'scale'|ListingOpening['kind']>('select');
+ const [referencePoints,setReferencePoints]=useState<Point[]>([]);
+ const [referenceMetres,setReferenceMetres]=useState('');
+ const [manualScale,setManualScale]=useState<Draft['scale']>();
  const [detectedScale,setDetectedScale]=useState<{metresPerPixel:Point|null}|null>(null);
  const [manualDoor,setManualDoor]=useState(false);
- const doorScale=p.metresPerPixel??detectedScale?.metresPerPixel;
+ const factor=manualScale?manualScale.metres/length(manualScale.start,manualScale.end):null;
+ const doorScale:Point|null|undefined=factor?[factor,factor]:p.metresPerPixel??detectedScale?.metresPerPixel;
+ const calibrating=tool==='scale';
+ const realMetres=Number(referenceMetres.trim().replace(',','.'));
+ const validReference=referencePoints.length===2&&realMetres>0&&realMetres<=1e6;
  const readingScale=tool==='door'&&!manualDoor&&!doorScale&&!detectedScale;
  useEffect(()=>{
   if(!readingScale)return;
@@ -83,7 +90,7 @@ export function ListingPlanReview(p:Props){
   const matrix=mapRef.current?.getScreenCTM?.();
   if(!matrix)return null;
   const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
-  return clamp(point.x,point.y);
+  return calibrating?[Math.max(0,Math.min(p.width,point.x)),Math.max(0,Math.min(p.height,point.y))] as Point:clamp(point.x,point.y);
  }
  function chooseOpening(index:number){setSelected(index);setRoom('');setNotice('');}
  function focusOpening(index:number){
@@ -112,9 +119,19 @@ export function ListingPlanReview(p:Props){
   setRows(current=>current.map((row,i)=>i===index?{...row,opening}:row));
  }
  function add(event:MouseEvent){
-  if(busy||readingScale||tool==='select'||rows.length>=100)return;
+  if(busy||readingScale||tool==='select')return;
   const point=position(event);
   if(!point)return;
+  if(tool==='scale'){
+   if(referencePoints.length===1&&length(referencePoints[0]!,point)<1){
+    setNotice('Scegli un secondo punto distinto.');
+    return;
+   }
+   setReferencePoints(referencePoints.length===1?[referencePoints[0]!,point]:[point]);
+   setNotice('');
+   return;
+  }
+  if(rows.length>=100)return;
   const scaled=tool==='door'&&!manualDoor&&doorScale;
   if(!scaled&&!start){setStart(point);setNotice('');return;}
   const opening=scaled?placeScaledListingDoor(point,walls,span*.018,scaled,drawing,span*.035)
@@ -205,7 +222,14 @@ export function ListingPlanReview(p:Props){
  }
  function activate(event:KeyboardEvent<SVGElement>,select:()=>void){if(event.key==='Enter'||event.key===' '){event.preventDefault();select();}}
  function chooseRoom(id:string){if(tool==='select'&&!busy){setRoom(id);setSelected(-1);setNotice('');}}
- function pickTool(next:typeof tool){setManualDoor(false);setTool(next);setStart(null);setNotice('');if(next!=='select'){setRoom('');setSelected(-1);}}
+ function pickTool(next:typeof tool){
+  if(next==='scale'){setReferencePoints([]);setReferenceMetres('');setZoom(1);}
+  setManualDoor(false);setTool(next);setStart(null);setNotice('');if(next!=='select'){setRoom('');setSelected(-1);}}
+ function applyReference(){
+  if(!validReference)return;
+  setManualScale({mode:'manual',start:referencePoints[0]!,end:referencePoints[1]!,metres:realMetres});
+  pickTool('door');
+ }
  const shown=active?(draggedOpening??shownOpening(active)):null;
  return <dialog className={`${styles.panel} ${styles.builderDialog} ${styles.listingReviewDialog}`} ref={dialog} aria-label="Editor pianta per annuncio" onCancel={e=>{e.preventDefault();p.onClose();}}>
   <h3>Modifica pianta per l’annuncio</h3>
@@ -213,17 +237,26 @@ export function ListingPlanReview(p:Props){
    <button type="button" disabled={busy} aria-pressed={tool==='select'} onClick={()=>pickTool('select')}>Seleziona</button>
    {(['door','window'] as const).map(kind=><button key={kind} type="button" disabled={busy||rows.length>=100} aria-pressed={tool===kind}
     onClick={()=>pickTool(kind)}>{kind==='door'?'Aggiungi porta':'Aggiungi finestra'}</button>)}
+   <button type="button" disabled={busy||isDragging} aria-pressed={calibrating} onClick={()=>pickTool('scale')}>{doorScale?'Cambia scala':'Imposta scala'}</button>
    <button type="button" disabled={busy} onClick={()=>void detect()}>{working?'Ricerca in corso…':'Cerca porte e finestre'}</button>
    <label><input type="checkbox" checked={ortho} disabled={busy||!!drag} onChange={e=>setOrtho(e.target.checked)}/> Orto <kbd>Shift</kbd></label>
    <label><input type="checkbox" checked={original} onChange={e=>setOriginal(e.target.checked)}/> Mostra originale</label>
    <label>Zoom <input aria-label="Zoom pianta" type="range" min="1" max={MAX_PLAN_ZOOM} step=".25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
   </div>
   <div className={styles.listingReviewControls} aria-live="polite">
-   {tool!=='select'?<>
+   {calibrating?<>
+    <span>{referencePoints.length===0?'Seleziona il primo punto sul documento originale.':referencePoints.length===1?'Seleziona il secondo punto.':'Indica la distanza reale tra i due punti.'}</span>
+    {referencePoints.length===2&&<label>Distanza reale (m)
+     <input type="text" inputMode="decimal" value={referenceMetres} onChange={e=>setReferenceMetres(e.target.value)}
+      onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();applyReference();}}}/>
+    </label>}
+    <button type="button" disabled={busy||!validReference} onClick={applyReference}>Usa questa scala</button>
+    <button type="button" onClick={()=>pickTool('select')}>Annulla misura</button>
+   </>:tool!=='select'?<>
     <span>{readingScale?'Cerco la barra metrica nella planimetria…'
      :tool==='door'&&!manualDoor&&doorScale?'Fai clic sul muro per posizionare una porta da 80 cm.'
      :start?'Fai clic sul secondo estremo sullo stesso muro.'
-     :tool==='door'&&!manualDoor?'Barra metrica non riconosciuta. Puoi indicare due estremi qui oppure impostare la scala in Calcola superfici.'
+     :tool==='door'&&!manualDoor?'Barra metrica non riconosciuta. Scegli Imposta scala oppure indica a mano i due estremi della porta.'
      :'Fai clic sul primo estremo dell’apertura.'}</span>
     {readingScale&&<button type="button" onClick={()=>setManualDoor(true)}>Indica due estremi</button>}
    </>:active?<>
@@ -234,25 +267,26 @@ export function ListingPlanReview(p:Props){
     <button type="button" disabled={busy} onClick={()=>{setRows(rows.filter((_,i)=>i!==selected));setSelected(-1);}}>Scarta</button>
    </>:<span>{activeRoom?activeRoom.label+' · Trascina un lato per spostare la parete o un punto per correggere il contorno.'+(ortho?' Orto allinea i punti vicini in orizzontale o verticale.':''):'Seleziona un vano per spostare pareti e punti, oppure fai clic su un’apertura.'}</span>}
    {pending.length>0&&tool==='select'&&<button type="button" disabled={busy} onClick={()=>focusOpening(pending.find(i=>i>selected)??pending[0]!)}>Prossima da verificare · {pending.length}</button>}
+   {!calibrating&&doorScale&&<span>{manualScale?'Nuova scala · salva i dettagli per conservarla':p.metresPerPixel?p.scaleLabel??'Scala salvata':'Scala da barra metrica'}</span>}
    {notice&&<span role="status">{notice}</span>}
   </div>
   <div ref={scrollRef} className={styles.listingReviewMap}><svg ref={mapRef} className={styles.builder} style={{width:`${zoom*100}%`,height:`${zoom*100}%`}}
-   viewBox={[left,top,right-left,bottom-top].join(' ')} aria-label="Pianta illustrativa modificabile" onClick={add}
+   viewBox={(calibrating?[0,0,p.width,p.height]:[left,top,right-left,bottom-top]).join(' ')} aria-label="Pianta illustrativa modificabile" onClick={add}
    onPointerMove={e=>{
     if(drag?.id!==e.pointerId)return;
     const point=position(e);
     if(point)setDrag({...drag,point,shift:e.shiftKey});
    }}
    onPointerUp={finish} onPointerCancel={()=>setDrag(null)} onLostPointerCapture={()=>setDrag(null)}>
-   {original&&<image href={p.sourceUrl} width={p.width} height={p.height} pointerEvents="none"/>}
-   {drawing.map(room=>{
+   {(original||calibrating)&&<image href={p.sourceUrl} width={p.width} height={p.height} pointerEvents="none"/>}
+   {!calibrating&&drawing.map(room=>{
     const shape=draggedRoom?.id===room.id?draggedRoom:room,isSelected=roomId===room.id;
     return <path key={room.id} d={path(shape)} fill={listingRoomFill(room)} fillRule="evenodd" fillOpacity={original ? .24 : 1}
      stroke={isSelected?'#00819a':'#253130'} strokeWidth={isSelected?3:2} vectorEffect="non-scaling-stroke"
      role="button" tabIndex={tool==='select'&&!busy?0:-1} aria-label={room.label+' · modifica muri'} aria-pressed={isSelected}
      onClick={()=>chooseRoom(room.id)} onKeyDown={e=>activate(e,()=>chooseRoom(room.id))}/>;
    })}
-   {drawing.map(room=>{
+   {!calibrating&&drawing.map(room=>{
     const xs=room.points.map(p=>p[0]),ys=room.points.map(p=>p[1]);
     return <text key={room.id} x={(Math.min(...xs)+Math.max(...xs))/2} y={(Math.min(...ys)+Math.max(...ys))/2}
      fontSize={span/45} textAnchor="middle" pointerEvents="none">{room.label}</text>;
@@ -292,12 +326,17 @@ export function ListingPlanReview(p:Props){
    </g>
    {tool==='select'&&activeRoom&&(draggedRoom??activeRoom).points.map((point,i)=>handle(point,`Punto ${i+1} · ${activeRoom.label}`,{room:activeRoom.id,vertex:i}))}
    {tool==='select'&&shown&&(['start','end'] as const).map((part,i)=>handle(shown[part],`Estremo ${i+1} dell’apertura`,{row:selected,part}))}
+   {calibrating&&<g aria-hidden="true" pointerEvents="none">
+    {referencePoints.length===2&&<line x1={referencePoints[0]![0]} y1={referencePoints[0]![1]}
+     x2={referencePoints[1]![0]} y2={referencePoints[1]![1]} className={styles.listingAlignmentGuide} vectorEffect="non-scaling-stroke"/>}
+    {referencePoints.map(([x,y],i)=><circle key={i} cx={x} cy={y} r={Math.max(p.width,p.height)/(250*zoom)} fill="#a91e69"/>)}
+   </g>}
    {start&&<circle cx={start[0]} cy={start[1]} r={span/(190*zoom)} fill="#b54900" stroke="#b54900" strokeWidth="6" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
   </svg></div>
   <div className={styles.listingReviewFooter}>
    <span>{rows.length-pending.length} aperture confermate{pending.length>0?' · le proposte non confermate non compaiono nel PNG':''}</span>
    <button type="button" onClick={p.onClose}>Chiudi</button>
-   <button type="button" disabled={busy||!!start||!!drag} onClick={()=>p.onApply({openings:rows.filter(row=>row.confirmed).map(row=>row.opening),alignments:alignments??[],contours})}>Salva dettagli per l’annuncio</button>
+   <button type="button" disabled={busy||calibrating||!!start||!!drag} onClick={()=>p.onApply({...(manualScale?{scale:manualScale}:{}),openings:rows.filter(row=>row.confirmed).map(row=>row.opening),alignments:alignments??[],contours})}>Salva dettagli per l’annuncio</button>
   </div>
  </dialog>;
 }

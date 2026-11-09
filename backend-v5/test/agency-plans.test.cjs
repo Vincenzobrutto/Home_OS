@@ -253,11 +253,18 @@ test('listing details persist against the current geometry without changing room
   operation:'save_listing_details',openings:[opening],alignments:[{target,reference}],
  }};
   const contours=[{id:room.id,geometry:{points:room.points.map(([x,y])=>[x+.1,y]),holes:room.holes}}];
- const input=parsePlanEdit({...body,command:{...body.command,contours}},'listing',plan.id);
+ const parameters={wallPercent:12,coefficients:[]};
+ plan.quickEstimate={parameters,savedAt:f.ctx.now,geometryRevision:plan.geometryRevision};
+ const scale={mode:'manual',start:[10,10],end:[20,10],metres:1};
+ const input=parsePlanEdit({...body,command:{...body.command,contours,scale}},'listing',plan.id);
  const saved=Records.editPlan(f.ctx.actor,practice,input,f.ctx.now).practice;
  const reopened=Records.planViews(f.ctx.actor,JSON.parse(JSON.stringify(saved)),f.ctx.now).plans[0];
  assert.deepEqual(reopened.listingDetails,{geometryRevision:plan.geometryRevision,openings:[opening],alignments:[{target,reference}],contours});
   assert.throws(()=>Records.editPlan(f.ctx.actor,practice,parsePlanEdit({...body,command:{...body.command,contours:[{...contours[0],id:'foreign'}]}},'foreign',plan.id),f.ctx.now));
+ assert.deepEqual(reopened.quickEstimate?.scale,scale);
+ assert.deepEqual(reopened.quickEstimate?.parameters,parameters);
+ assert.deepEqual(reopened.balconyCovers,plan.balconyCovers??[]);
+ assert.throws(()=>Records.editPlan(f.ctx.actor,practice,parsePlanEdit({...body,command:{...body.command,scale:{...scale,end:scale.start}}},'invalid-scale',plan.id),f.ctx.now));
  assert.deepEqual(reopened.rooms,plan.rooms);
  assert.equal(reopened.measurement,plan.measurement);
  assert.equal(reopened.geometryRevision,plan.geometryRevision);

@@ -52,7 +52,7 @@ export function registerPlan(actor:Actor,original:Practice,analysis:Analysis,exp
 }
 export type MeasurementConfiguration=Omit<CommercialInput,'surfaces'|'geometryRevision'|'unresolvedSymbols'>&{base:'rooms_and_walls'|'gross_perimeter';mainRegionIds:string[];assignments:Array<Omit<SurfaceLine,'geometry'>&{id:string}>};
 type GeometryEdit={view:'rooms'|'perimeter';id:string;geometry:Polygon};
-export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|({operation:'geometry'}&GeometryEdit)|{operation:'save_quick_estimate';covers:BalconyCover[];scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;outline?:GeometryEdit}|({operation:'save_listing_details'}&Omit<ListingDetails,'geometryRevision'>)|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
+export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|({operation:'geometry'}&GeometryEdit)|{operation:'save_quick_estimate';covers:BalconyCover[];scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;outline?:GeometryEdit}|({operation:'save_listing_details';scale?:QuickEstimateScale&{mode:'manual'}}&Omit<ListingDetails,'geometryRevision'>)|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
 /** Internal typed application command; HTTP layer still needs an exact DTO/parser before being exposed. */
 export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string){
  requirePractice(actor,original,'edit',now);assert(input&&typeof input.key==='string'&&input.key.trim()&&input.key.length<=120&&typeof input.reason==='string'&&input.reason.trim()&&input.reason.length<=1000&&Number.isSafeInteger(input.expectedRevision)&&Number.isSafeInteger(input.expectedPlanVersion));
@@ -118,7 +118,7 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   plan.balconyCovers=[...saved.values()];
   plan.quickEstimate={...(scale?{scale:structuredClone(scale)}:{}),...(parameters?{parameters:structuredClone(parameters)}:{}),savedAt:now,geometryRevision:plan.geometryRevision};
  }else if(command.operation==='save_listing_details'){
-  const {openings,alignments,contours}=command;
+  const {openings,alignments,contours,scale}=command;
   const segmentValid=({start,end}:{start:Point;end:Point})=>[start,end].every(([x,y])=>
    Number.isFinite(x)&&Number.isFinite(y)&&x>=0&&y>=0&&x<=plan.rasterSize.width&&y<=plan.rasterSize.height
   )&&Math.hypot(end[0]-start[0],end[1]-start[1])>0;
@@ -129,6 +129,10 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   if(contours){
    assert(contours.length<=100&&new Set(contours.map(c=>c.id)).size===contours.length);
    assert(contours.every(({id,geometry})=>plan.rooms.some(room=>room.id===id)&&validPolygon(geometry)&&[geometry.points,...geometry.holes].flat().every(([x,y])=>x>=0&&y>=0&&x<=plan.rasterSize.width&&y<=plan.rasterSize.height)));
+  }
+  if(scale){
+   assert(scale.mode==='manual'&&segmentValid(scale)&&Number.isFinite(scale.metres)&&scale.metres>0&&scale.metres<=1e6);
+   plan.quickEstimate={...plan.quickEstimate,scale:structuredClone(scale),savedAt:now,geometryRevision:plan.geometryRevision};
   }
   plan.listingDetails={geometryRevision:plan.geometryRevision,openings:structuredClone(openings),alignments:structuredClone(alignments),...(contours?{contours:structuredClone(contours)}:{})};
  }else if(command.operation==='measure'){

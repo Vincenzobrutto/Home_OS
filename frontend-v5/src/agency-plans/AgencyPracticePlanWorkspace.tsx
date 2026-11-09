@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
-import type {QuickEstimateInput} from './api';
+import type {ListingPlanDraft,QuickEstimateInput} from './api';
 import {ApiError} from '../api/errors';
 import type {AgencyPlanPort,AgencyPractice,PlanEditBody,PlansResponse} from './api';
 import {PlanMeasurementView,type PlanShape} from './PlanMeasurementView';
@@ -52,7 +52,7 @@ function Workspace(p:WorkspaceProps){
  const planId=plan?.id;
  const rasterSize=plan?.rasterSize;
  useEffect(()=>{if(!imageKey||!planId)return;let active=true,url:string|undefined;const c=new AbortController();p.api.image(planId,c.signal).then(blob=>{if(active){url=URL.createObjectURL(blob);setImage({key:imageKey,url});}}).catch(e=>{if(active)failure(e);});return()=>{active=false;c.abort();if(url)URL.revokeObjectURL(url);};},[p.api,imageKey,reload,planId,failure]);
- const scaleKey=plan?plan.id+':'+plan.proof.version+':'+plan.proof.sha256+':'+JSON.stringify(plan.measurementConfiguration?.calibration):'';
+ const scaleKey=plan?plan.id+':'+plan.proof.version+':'+plan.proof.sha256+':'+JSON.stringify([plan.measurementConfiguration?.calibration,plan.quickEstimate?.scale]):'';
  const savedQuickScale=plan?.quickEstimate?.scale;
  const scaleSelection:ScaleSelection=quickScale?.key===scaleKey?quickScale.selection:savedQuickScale?.mode==='manual'?{mode:'manual',segment:[savedQuickScale.start,savedQuickScale.end]}:savedQuickScale?.mode==='paper'?{mode:'paper',segment:null}:{mode:'auto',segment:null};
  const sourceUrl=image?.key===imageKey?image.url:'';
@@ -115,7 +115,7 @@ function Workspace(p:WorkspaceProps){
    sourceUrl,width:rasterSize.width,height:rasterSize.height,
    scale:plan.quickEstimate?.scale,calibration:plan.measurementConfiguration?.calibration,
    hints:plan.openingReviews?.flatMap(({threshold})=>threshold?[{kind:'door' as const,start:threshold.start,end:threshold.end}]:[]),
-   onSave:(details:Omit<NonNullable<typeof plan.listingDetails>,'geometryRevision'>)=>save({operation:'save_listing_details',...details},'Revisione dettagli della planimetria per annuncio'),
+   onSave:(details:ListingPlanDraft)=>save({operation:'save_listing_details',...details},'Revisione dettagli della planimetria per annuncio'),
   }:undefined;
   const map=sourceUrl?<PlanMeasurementView
    key={measuring?'commercial':'rooms'}

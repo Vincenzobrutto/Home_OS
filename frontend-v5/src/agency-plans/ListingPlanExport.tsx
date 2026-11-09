@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import type {ListingDetails,ListingOpening,QuickEstimateScale} from './api';
+import type {ListingDetails,ListingOpening,ListingPlanDraft,QuickEstimateScale} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
 import {isBalcony,paperMetresPerPixel} from './scaleDetection';
 import type {MeasurementConfiguration} from './measurement-types';
@@ -147,7 +147,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
 
 type ListingExportProps={
  rooms:PlanShape[];disabled:boolean;autoPreview?:boolean;details?:ListingDetails;
- review?:{sourceUrl:string;width:number;height:number;scale?:QuickEstimateScale;calibration?:MeasurementConfiguration['calibration'];hints?:ListingOpening[];onSave:(details:Omit<ListingDetails,'geometryRevision'>)=>void};
+ review?:{sourceUrl:string;width:number;height:number;scale?:QuickEstimateScale;calibration?:MeasurementConfiguration['calibration'];hints?:ListingOpening[];onSave:(details:ListingPlanDraft)=>void};
 };
 function listingScale({scale,calibration,width,height}:NonNullable<ListingExportProps['review']>):Point|null{
  const paper=scale?.mode==='paper'?scale:scale?undefined:calibration?.paper;
@@ -183,7 +183,7 @@ export function ListingPlanExport({rooms,disabled,autoPreview=false,details,revi
   <button type="button" disabled={disabled} onClick={open}>Anteprima annuncio</button></>}
   {autoPreview&&!rooms.length&&<p>Salva almeno un vano per preparare l’immagine dell’annuncio.</p>}
   {review&&<button type="button" disabled={disabled} onClick={()=>setReviewing(true)}>Modifica pianta per l’annuncio</button>}
-  {review&&reviewing&&<ListingPlanReview {...review} metresPerPixel={listingScale(review)} rooms={rooms} saved={details} disabled={disabled}
+  {review&&reviewing&&<ListingPlanReview {...review} metresPerPixel={listingScale(review)} scaleLabel={review.scale?'Scala salvata in Calcola superfici':'Scala del computo'} rooms={rooms} saved={details} disabled={disabled}
    onClose={()=>setReviewing(false)} onApply={draft=>{review.onSave(draft);setReviewing(false);}}/>}
   {error&&<p role="alert">Impossibile creare l’immagine della planimetria.</p>}
   {preview&&<div>
