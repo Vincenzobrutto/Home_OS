@@ -11,24 +11,23 @@
 .editHint{margin:10px 0;font-size:14px;color:#45676b}
 .vertexTools,.zoomTools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
 .vertexTools{
- position:sticky;
- bottom:8px;
- z-index:6;
+ flex:1 1 100%;
+ min-width:0;
  margin:0;
- padding:8px;
+ padding:6px;
  background:#eef6f6;
- border:1px solid #bcd1cf;
- border-radius:0 0 8px 8px;
- box-shadow:0 -2px 8px #19363e14;
+ border-top:1px solid #bcd1cf;
+ border-radius:6px;
 }
-.vertexTools label{display:flex;align-items:center;gap:6px;max-width:100%}
+.vertexTools label{display:flex;align-items:center;gap:6px;margin:0;max-width:100%}
+.vertexTools select{width:auto}
 .vertexTools button{font-size:14px}
 .zoomTools{justify-content:flex-end}.zoomTools output{min-width:48px;text-align:center}
 .workspace :focus-visible{outline:3px solid #df7c00;outline-offset:3px}
 @media(max-width:500px){.editorToolbar{gap:5px;padding:7px}.editorToolbar button{padding:8px;font-size:13px}.editorToolbar .saveAction{margin-left:0}.vertexTools button{font-size:13px}}
 
 .simpleScroll svg{min-width:0;margin:0 auto}
-@media(max-width:500px){.editorToolbar button{flex:1 1 calc(50% - 10px);margin:0}.editorToolbar .saveAction{margin:0}}
+@media(max-width:500px){.editorToolbar button{margin:0}.editorToolbar .saveAction{margin:0}}
 .editorToolbar .zoomTools{margin:0 0 0 auto;gap:4px}.editorToolbar .zoomTools button{min-width:44px;padding:8px}
 .editorToolbar .zoomTools+.saveAction,.editorToolbar .zoomTools~.saveAction{margin-left:0}
 @media(max-width:500px){.editorToolbar .zoomTools{margin:0;flex:1 1 100%;justify-content:flex-start}.editorToolbar .zoomTools button{flex:0 0 auto}}

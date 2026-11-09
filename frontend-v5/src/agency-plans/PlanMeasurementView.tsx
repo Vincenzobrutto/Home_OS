@@ -130,6 +130,13 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
     <div className={styles.zoomTools} role="group" aria-label="Zoom planimetria"><button type="button" aria-label="Riduci zoom" disabled={zoom<=1} onClick={()=>setZoom(v=>Math.max(1,v-.25))}>−</button><output aria-live="polite">{Math.round(zoom*100)}%</output><button type="button" aria-label="Aumenta zoom" disabled={zoom>=MAX_PLAN_ZOOM} onClick={()=>setZoom(v=>Math.min(MAX_PLAN_ZOOM,v+.25))}>+</button><button type="button" aria-label="Adatta al riquadro" disabled={zoom===1} onClick={()=>setZoom(1)}>1:1</button></div>
     {props.onDiscard&&props.hasUnsavedChanges&&<button type="button" disabled={props.readOnly} onClick={()=>{props.onDiscard?.();setVertex(null);setUndo([]);}}>Scarta modifiche</button>}
     {props.onSaveGeometry&&<button className={styles.saveAction} type="button" disabled={props.readOnly||!props.hasUnsavedChanges} onClick={props.onSaveGeometry}>Salva modifiche</button>}
+    {selected&&!props.readOnly&&<div className={styles.vertexTools} role="group" aria-label="Correzione del vano selezionato">
+     {selected.holes.length>0&&<label>Contorno<select aria-label="Contorno" value={ringIndex} onChange={e=>{setRingIndex(Number(e.target.value));setVertex(null);setInsert(false);}}><option value={0}>Esterno</option>{selected.holes.map((_,i)=><option key={i} value={i+1}>Vuoto {i+1}</option>)}</select></label>}
+     {ringIndex>0&&selected.holes[ringIndex-1]&&<button type="button" onClick={includeSelectedHole}>Includi area nel vano</button>}
+     <button type="button" aria-pressed={insert} onClick={()=>setInsert(v=>!v)}>Aggiungi punto su un lato</button>
+     <button type="button" disabled={vertex===null||ring.length<=3} onClick={remove}>Elimina punto</button>
+     <button type="button" disabled={!undo.length} onClick={()=>{const previous=undo.at(-1);if(previous){props.onChange(previous.view,previous.shape);setUndo(u=>u.slice(0,-1));setVertex(null);}}}>Annulla modifica</button>
+    </div>}
    </div>
    <p className={styles.editHint}>{selected?<><strong>{selected.label}</strong> · {props.hasUnsavedChanges?'Modifiche da salvare.':(props.readOnly?'Solo consultazione.':ringIndex>0?'Modifica i punti del vuoto o includi tutta l’area nel vano.':'Trascina i punti, oppure selezionali con Tab e spostali con le frecce.')}</>:(props.readOnly?'Seleziona un vano per consultarlo.':'Tocca un vano per modificarlo.')}</p>
   </>}
@@ -154,13 +161,6 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
    </g>)}
    {marker&&<circle data-testid="focus-marker" aria-hidden="true" cx={marker[0]} cy={marker[1]} r=".1" fill="none" stroke="#d14900" strokeWidth="26" strokeOpacity=".55" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
   </svg></div>
-  {props.simple&&selected&&!props.readOnly&&<div className={styles.vertexTools} role="group" aria-label="Correzione del vano selezionato">
-   {selected.holes.length>0&&<label>Contorno<select aria-label="Contorno" value={ringIndex} onChange={e=>{setRingIndex(Number(e.target.value));setVertex(null);setInsert(false);}}><option value={0}>Esterno</option>{selected.holes.map((_,i)=><option key={i} value={i+1}>Vuoto {i+1}</option>)}</select></label>}
-   {ringIndex>0&&selected.holes[ringIndex-1]&&<button type="button" onClick={includeSelectedHole}>Includi area nel vano</button>}
-   <button type="button" aria-pressed={insert} onClick={()=>setInsert(v=>!v)}>Aggiungi punto su un lato</button>
-   <button type="button" disabled={vertex===null||ring.length<=3} onClick={remove}>Elimina punto</button>
-   <button type="button" disabled={!undo.length} onClick={()=>{const previous=undo.at(-1);if(previous){props.onChange(previous.view,previous.shape);setUndo(u=>u.slice(0,-1));setVertex(null);}}}>Annulla modifica</button>
-  </div>}
   {!props.drawingOnly&&!props.simple&&!(props.hideRoomSummary&&view==='rooms')&&<><PlanSurfaceSummary view={view} rooms={props.rooms.filter(r=>!props.excludedCandidateIds?.includes(r.id))} configuration={props.configuration} measurement={props.measurement} measurementsOutdated={props.measurementsOutdated} onSelect={id=>{if(!shapes.some(s=>s.id===id))setView('rooms');setSelection(id);setRingIndex(0);setVertex(null);setInsert(false);}}/>
   <p className={styles.note}>Conferma scala, perimetro e regole sui muri prima del computo. Il risultato è una misura sul documento, non un rilievo certificato.</p></>}
  </section>;
