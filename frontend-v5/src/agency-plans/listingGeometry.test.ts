@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
-import {carryListingOpening, changeListingVertex, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
+import {carryListingOpening, changeListingVertex, listingAlignmentGuides, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -119,6 +119,15 @@ it('translates an entire wall, carries its opening and blocks entry into a neigh
  expect(carryListingOpening(opening,shape,moved)).toMatchObject({start:[48,8],end:[48,16]});
  expect(moveListingWall([shape,neighbour],'A',1,[14,0])).toBeNull();
  expect(moveListingWall([shape],'A',1,[0,13])).toBeNull();
+});
+
+it('extends a wall guide to the closest aligned reference and ignores a parallel wall farther away',()=>{
+ const shape=room('A',[[0,0],[40,0],[40,30],[0,30]]);
+ const reference=room('B',[[60,8],[90,8],[90,24],[60,24]]);
+ const moved=moveListingWall([shape,reference],'A',0,[0,8])!;
+ expect(listingAlignmentGuides([shape,reference],shape,moved,{edge:0},1)).toEqual([[[0,8],[90,8]]]);
+ const farther=moveListingWall([shape,reference],'A',0,[0,11])!;
+ expect(listingAlignmentGuides([shape,reference],shape,farther,{edge:0},1)).toEqual([]);
 });
 
 it('moves an opening to a new wall without shortening it or accepting a drop in empty space',()=>{

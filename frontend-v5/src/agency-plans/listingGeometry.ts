@@ -356,6 +356,37 @@ export function changeListingVertex(drawing:PlanShape[],id:string,index:number,p
  return changeListingPoints(drawing,room,new Map([[index,snapped]]));
 }
 
+type GuideAxis=0|1;
+
+export function listingAlignmentGuides(drawing:PlanShape[],before:PlanShape,after:PlanShape,
+ subject:{vertex:number}|{edge:number},tolerance:number){
+ const size=after.points.length;
+ const moving='edge' in subject?[after.points[subject.edge]!,after.points[(subject.edge+1)%size]!]:[after.points[subject.vertex]!];
+ const references=drawing.flatMap(room=>edges(room.points).filter(([a,b],i)=>
+  room.id!==before.id||(samePoint(a,after.points[i]!)&&samePoint(b,after.points[(i+1)%size]!))));
+ const guides:Segment[]=[];
+ for(const axis of [0,1] as const){
+  const along:GuideAxis=axis===0?1:0;
+  const movingFrom=Math.min(...moving.map(point=>point[along]));
+  const movingTo=Math.max(...moving.map(point=>point[along]));
+  let best:Segment|undefined,bestOffset=Infinity,bestGap=Infinity;
+  for(const [a,b] of references){
+   if(Math.abs(a[axis]-b[axis])>EPSILON||Math.abs(a[along]-b[along])<EPSILON)continue;
+   const offset=Math.max(...moving.map(point=>Math.abs(point[axis]-a[axis])));
+   if(offset>tolerance||offset>bestOffset)continue;
+   const refFrom=Math.min(a[along],b[along]),refTo=Math.max(a[along],b[along]);
+   const gap=Math.max(0,refFrom-movingTo,movingFrom-refTo);
+   if(offset===bestOffset&&gap>=bestGap)continue;
+   const start=Math.min(refFrom,movingFrom),end=Math.max(refTo,movingTo);
+   best=axis===0?[[a[0],start],[a[0],end]]:[[start,a[1]],[end,a[1]]];
+   bestOffset=offset;
+   bestGap=gap;
+  }
+  if(best)guides.push(best);
+ }
+ return guides;
+}
+
 /** Move both endpoints by the same perpendicular offset, preserving the wall's direction. */
 export function moveListingWall(drawing:PlanShape[],id:string,index:number,delta:Point){
  const room=drawing.find(item=>item.id===id);

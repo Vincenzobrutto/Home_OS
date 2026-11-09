@@ -2,7 +2,7 @@ import {useEffect,useMemo,useRef,useState,type KeyboardEvent,type MouseEvent,typ
 import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
 import type {ListingDetails,ListingOpening} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
-import {carryListingOpening,changeListingVertex,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening} from './listingGeometry';
+import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening} from './listingGeometry';
 import {detectListingOpenings,distinctOpenings} from './listingOpeningDetection';
 import {listingRoomFill} from './listingStyle';
 import styles from './practice-plan.module.css';
@@ -11,7 +11,7 @@ type Draft=Omit<ListingDetails,'geometryRevision'>;
 type Row={opening:ListingOpening;confirmed:boolean};
 type Subject={room:string;vertex:number}|{room:string;edge:number}|{row:number;part:'body'|'start'|'end'};
 type RoomSubject=Extract<Subject,{room:string}>;
-type Drag={id:number;origin:Point;point:Point;snap:number;subject:Subject};
+type Drag={id:number;origin:Point;point:Point;unitsPerPixel:number;shift:boolean;subject:Subject};
 type Props={sourceUrl:string;width:number;height:number;rooms:PlanShape[];saved?:ListingDetails;
  hints?:ListingOpening[];disabled:boolean;onClose:()=>void;onApply:(details:Draft)=>void};
 const mid=(a:Point,b:Point):Point=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
@@ -31,6 +31,22 @@ export function ListingPlanReview(p:Props){
  const [ortho,setOrtho]=useState(false);
  const [start,setStart]=useState<Point|null>(null);
  const [drag,setDrag]=useState<Drag|null>(null);
+ const isDragging=drag!==null;
+ useEffect(()=>{
+  if(!isDragging)return;
+  function updateShift(event:globalThis.KeyboardEvent){
+   if(event.key==='Shift')setDrag(current=>current&&{...current,shift:event.shiftKey});
+  }
+  function resetShift(){setDrag(current=>current&&{...current,shift:false});}
+  window.addEventListener('keydown',updateShift);
+  window.addEventListener('keyup',updateShift);
+  window.addEventListener('blur',resetShift);
+  return ()=>{
+   window.removeEventListener('keydown',updateShift);
+   window.removeEventListener('keyup',updateShift);
+   window.removeEventListener('blur',resetShift);
+  };
+ },[isDragging]);
  const [working,setWorking]=useState(false);
  const [notice,setNotice]=useState('');
  const {zoom,setZoom,scrollRef,mapRef}=usePlanZoom({requireControl:true});
@@ -105,9 +121,8 @@ export function ListingPlanReview(p:Props){
    ),snap);
   return after?.points.every(([x,y])=>x>=left&&x<=right&&y>=top&&y<=bottom)?after:null;
  }
- function snapDistance(){
-  const matrix=mapRef.current?.getScreenCTM?.();
-  return ortho&&matrix?12/Math.hypot(matrix.a,matrix.b):0;
+ function snapDistance(unitsPerPixel:number,shift:boolean){
+  return ortho||shift?12*unitsPerPixel:0;
  }
  function apply(subject:Subject,point:Point,origin:Point,snap=0){
   if('room' in subject){
@@ -134,13 +149,15 @@ export function ListingPlanReview(p:Props){
   event.stopPropagation();
   if('row' in subject)chooseOpening(subject.row);
   mapRef.current?.setPointerCapture?.(event.pointerId);
-  setDrag({id:event.pointerId,subject,origin:point,point,snap:snapDistance()});
+  const matrix=mapRef.current?.getScreenCTM?.();
+  const scale=matrix?Math.hypot(matrix.a,matrix.b):0;
+  setDrag({id:event.pointerId,subject,origin:point,point,unitsPerPixel:scale?1/scale:0,shift:event.shiftKey});
  }
  function finish(event:PointerEvent){
   if(!drag||drag.id!==event.pointerId)return;
   const point=position(event);
   setDrag(null);
-  if(point&&length(point,drag.origin)>.001)apply(drag.subject,point,drag.origin,drag.snap);
+  if(point&&length(point,drag.origin)>.001)apply(drag.subject,point,drag.origin,snapDistance(drag.unitsPerPixel,event.shiftKey));
  }
  function arrow(event:KeyboardEvent<SVGElement>,point:Point,subject:Subject){
   const directions:Record<string,Point>={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
@@ -151,7 +168,10 @@ export function ListingPlanReview(p:Props){
   apply(subject,clamp(point[0]+step*direction[0],point[1]+step*direction[1]),point);
  }
  const draggedOpening=drag&&'row' in drag.subject?editedOpening(drag.subject.row,drag.subject.part,drag.point):null;
- const draggedRoom=drag&&'room' in drag.subject?roomEdit(drag.subject,drag.point,drag.origin,drag.snap):null;
+ const draggedRoom=drag&&'room' in drag.subject
+  ?roomEdit(drag.subject,drag.point,drag.origin,snapDistance(drag.unitsPerPixel,drag.shift)):null;
+ const guides=drag&&'room' in drag.subject&&activeRoom&&draggedRoom
+  ?listingAlignmentGuides(drawing,activeRoom,draggedRoom,drag.subject,2*drag.unitsPerPixel):[];
  function previewOpening(row:Row){
   const opening=shownOpening(row);
   return draggedRoom&&activeRoom?carryListingOpening(opening,activeRoom,draggedRoom):opening;
@@ -171,7 +191,7 @@ export function ListingPlanReview(p:Props){
    {(['door','window'] as const).map(kind=><button key={kind} type="button" disabled={busy||rows.length>=100} aria-pressed={tool===kind}
     onClick={()=>pickTool(kind)}>{kind==='door'?'Aggiungi porta':'Aggiungi finestra'}</button>)}
    <button type="button" disabled={busy} onClick={()=>void detect()}>{working?'Ricerca in corso…':'Cerca porte e finestre'}</button>
-   <label><input type="checkbox" checked={ortho} disabled={busy||!!drag} onChange={e=>setOrtho(e.target.checked)}/> Orto</label>
+   <label><input type="checkbox" checked={ortho} disabled={busy||!!drag} onChange={e=>setOrtho(e.target.checked)}/> Orto <kbd>Shift</kbd></label>
    <label><input type="checkbox" checked={original} onChange={e=>setOriginal(e.target.checked)}/> Mostra originale</label>
    <label>Zoom <input aria-label="Zoom pianta" type="range" min="1" max={MAX_PLAN_ZOOM} step=".25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
   </div>
@@ -188,7 +208,11 @@ export function ListingPlanReview(p:Props){
   </div>
   <div ref={scrollRef} className={styles.listingReviewMap}><svg ref={mapRef} className={styles.builder} style={{width:`${zoom*100}%`,height:`${zoom*100}%`}}
    viewBox={[left,top,right-left,bottom-top].join(' ')} aria-label="Pianta illustrativa modificabile" onClick={add}
-   onPointerMove={e=>{if(drag?.id===e.pointerId){const point=position(e);if(point)setDrag({...drag,point});}}}
+   onPointerMove={e=>{
+    if(drag?.id!==e.pointerId)return;
+    const point=position(e);
+    if(point)setDrag({...drag,point,shift:e.shiftKey});
+   }}
    onPointerUp={finish} onPointerCancel={()=>setDrag(null)} onLostPointerCapture={()=>setDrag(null)}>
    {original&&<image href={p.sourceUrl} width={p.width} height={p.height} pointerEvents="none"/>}
    {drawing.map(room=>{
@@ -225,6 +249,10 @@ export function ListingPlanReview(p:Props){
       onKeyDown={e=>{activate(e,()=>chooseOpening(i));arrow(e,mid(a,b),{row:i,part:'body'});}}/>
     </g>;
    })}
+   <g aria-hidden="true" pointerEvents="none">
+    {guides.map(([a,b],i)=><line key={i} className={styles.listingAlignmentGuide}
+     x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} vectorEffect="non-scaling-stroke"/>)}
+   </g>
    {tool==='select'&&activeRoom&&(draggedRoom??activeRoom).points.map((point,i)=>handle(point,`Punto ${i+1} · ${activeRoom.label}`,{room:activeRoom.id,vertex:i}))}
    {tool==='select'&&shown&&(['start','end'] as const).map((part,i)=>handle(shown[part],`Estremo ${i+1} dell’apertura`,{row:selected,part}))}
    {start&&<circle cx={start[0]} cy={start[1]} r={span/(190*zoom)} fill="#b54900" stroke="#b54900" strokeWidth="6" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}

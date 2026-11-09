@@ -124,4 +124,5 @@
 .listingWallHit{stroke:transparent;pointer-events:stroke;cursor:grab;touch-action:none}
 .listingWallHit:hover,.listingWallHit:focus-visible,.listingWallHit[data-moving]{stroke:#00819a55;outline:none}
 .listingWallHit[data-moving]{cursor:grabbing}
+.listingAlignmentGuide{stroke:#a91e69;stroke-width:2px;stroke-dasharray:7 5}
 @media(max-width:600px){.listingReviewMap{height:43dvh}}
