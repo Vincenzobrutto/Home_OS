@@ -18,7 +18,7 @@ function listingImage(rooms: PlanShape[]) {
  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) throw new Error('invalid_plan_bounds');
 
  const margin = 48, footer = 30, scale = 1440 / Math.max(width, height);
- const drawing = simplifyListingRooms(rooms, 3.2 / scale);
+ const drawing = simplifyListingRooms(rooms, 9 / scale);
  const canvas = document.createElement('canvas');
  canvas.width = Math.ceil(width * scale) + margin * 2;
  canvas.height = Math.ceil(height * scale) + margin * 2 + footer;

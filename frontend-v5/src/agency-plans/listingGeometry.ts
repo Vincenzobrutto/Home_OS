@@ -1,4 +1,5 @@
 import type {PlanShape, Point} from './PlanMeasurementView';
+import {insideShape} from './scaleDetection';
 
 type Segment = [Point, Point];
 
@@ -26,23 +27,27 @@ function segmentsConflict([a,b]: Segment, [c,d]: Segment) {
 function withinTolerance(start: Point, end: Point, samples: Point[], tolerance: number) {
  const dx = end[0]-start[0], dy = end[1]-start[1], length = Math.hypot(dx,dy);
  if (length < EPSILON) return false;
+ // A short offset at the end of a long straight run should not tilt that wall.
+ const path = [start,...samples,end];
+ for (let i=1;i<path.length;i++) {
+  const a=path[i-1]!, b=path[i]!;
+  const horizontal = Math.abs(b[0]-a[0]), vertical = Math.abs(b[1]-a[1]);
+  if ((vertical<EPSILON && horizontal>length*.55 && Math.abs(dy)>tolerance*.25) ||
+      (horizontal<EPSILON && vertical>length*.55 && Math.abs(dx)>tolerance*.25)) return false;
+ }
  let previous = 0;
  return samples.every(point => {
   const distanceAlong = ((point[0]-start[0])*dx+(point[1]-start[1])*dy)/length;
-  if (distanceAlong+EPSILON < previous || distanceAlong > length+EPSILON ||
+  if (distanceAlong < -EPSILON || distanceAlong+tolerance < previous || distanceAlong > length+EPSILON ||
       Math.abs(cross(start,end,point))/length > tolerance) return false;
-  previous = distanceAlong;
+  previous = Math.max(previous,distanceAlong);
   return true;
  });
 }
 
-function insideTriangle(point: Point, a: Point, b: Point, c: Point) {
- const signs = [cross(a,b,point),cross(b,c,point),cross(c,a,point)];
- return signs.every(n => n > EPSILON) || signs.every(n => n < -EPSILON);
-}
-
 export function simplifyListingRooms(rooms: PlanShape[], tolerance: number): PlanShape[] {
  const originals = rooms.flatMap(room => [room.points,...room.holes]);
+ const holes = new Set(rooms.flatMap(room => room.holes));
  // Bound the cost of the geometric checks for unusually detailed surveys.
  if (originals.reduce((total, ring) => total + ring.length, 0) > 2000) return rooms;
  const current = originals.map(ring => [...ring]);
@@ -51,7 +56,7 @@ export function simplifyListingRooms(rooms: PlanShape[], tolerance: number): Pla
   if (ring.length < 4) return;
   const xs = ring.map(([x]) => x), ys = ring.map(([,y]) => y);
   const shortSpan = Math.min(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
-  const ringTolerance = Math.min(tolerance,shortSpan*.03);
+  const ringTolerance = Math.min(tolerance,shortSpan*(holes.has(original) ? .03 : .07));
   let signedArea = edges(ring).reduce((total,[a,b]) => total+cross([0,0],a,b),0);
   if (Math.abs(signedArea)<EPSILON) return;
   const retained = original.map((_,index) => index);
@@ -59,31 +64,46 @@ export function simplifyListingRooms(rooms: PlanShape[], tolerance: number): Pla
   let changed = true;
   while (changed && ring.length > 3) {
    changed = false;
-   for (let i = ring.length-1; i >= 0 && ring.length > 3; i--) {
-    const before = (i+ring.length-1)%ring.length, after = (i+1)%ring.length;
-    const start = ring[before]!, vertex = ring[i]!, end = ring[after]!;
-    const samples: Point[] = [];
-    for (let j = (retained[before]!+1)%original.length; j !== retained[after]; j = (j+1)%original.length) {
-     samples.push(original[j]!);
+   for (let startIndex = ring.length-1; startIndex >= 0 && ring.length > 3; startIndex--) {
+    // Work on several consecutive segments at once so a stair-step can become one wall.
+    const maxSpan = Math.min(24,ring.length-2);
+    for (let span=maxSpan; span>=2; span--) {
+     const endIndex = (startIndex+span)%ring.length;
+     const start = ring[startIndex]!, end = ring[endIndex]!;
+     const samples: Point[] = [];
+     for (let j=(retained[startIndex]!+1)%original.length;j!==retained[endIndex];j=(j+1)%original.length) {
+      samples.push(original[j]!);
+     }
+     const localTolerance = Math.min(ringTolerance,Math.hypot(end[0]-start[0],end[1]-start[1])/8);
+     if (!withinTolerance(start,end,samples,localTolerance)) continue;
+
+     const removed = new Set(Array.from({length:span-1},(_,i)=>(startIndex+i+1)%ring.length));
+     const swept = Array.from({length:span+1},(_,i)=>ring[(startIndex+i)%ring.length]!);
+     const sweptArea = edges(swept).reduce((total,[a,b])=>total+cross([0,0],a,b),0);
+     const nextArea = signedArea-sweptArea;
+     if (Math.abs(nextArea)<EPSILON || Math.sign(nextArea)!==Math.sign(signedArea)) continue;
+     const replacement: Segment = [start,end];
+     const insideSweep = (point: Point) => !samePoint(point,start) && !samePoint(point,end) &&
+      insideShape(point,{points:swept,holes:[]});
+     if (edges(ring).some((edge,i)=>i!==startIndex&&!removed.has(i)&&segmentsConflict(replacement,edge))) continue;
+     if (ring.some((point,i)=>!removed.has(i)&&insideSweep(point))) continue;
+     const oldPath = [start,...samples,end];
+     const oldEdges = oldPath.slice(1).map((point,i): Segment=>[oldPath[i]!,point]);
+     if (otherEdges.some(edge =>
+      segmentsConflict(replacement,edge) ||
+      oldEdges.some(originalEdge=>segmentsConflict(originalEdge,edge)) ||
+      edge.some(point=>samples.some(sample=>samePoint(point,sample))||insideSweep(point))
+     )) continue;
+
+     for (const index of [...removed].sort((a,b)=>b-a)) {
+      ring.splice(index,1);
+      retained.splice(index,1);
+     }
+     signedArea = nextArea;
+     changed = true;
+     startIndex = Math.min(startIndex,ring.length);
+     break;
     }
-    const nextArea = signedArea-cross(start,vertex,end);
-    if (Math.abs(nextArea)<EPSILON || Math.sign(nextArea)!==Math.sign(signedArea) ||
-        !withinTolerance(start,end,samples,ringTolerance)) continue;
-    const replacement: Segment = [start,end];
-    const oldPath = [start,...samples,end];
-    const ownEdges = edges(ring).filter((_,edge) => edge !== before && edge !== i);
-    if (ownEdges.some(edge => segmentsConflict(replacement,edge))) continue;
-    const oldEdges = oldPath.slice(1).map((point,j): Segment => [oldPath[j]!,point]);
-    if (otherEdges.some(edge =>
-     segmentsConflict(replacement,edge) ||
-     oldEdges.some(originalEdge => segmentsConflict(originalEdge,edge)) ||
-     edge.some(point => samePoint(point,vertex) || insideTriangle(point,start,vertex,end))
-    )) continue;
-    if (ring.some(point => insideTriangle(point,start,vertex,end))) continue;
-    ring.splice(i,1);
-    retained.splice(i,1);
-    signedArea = nextArea;
-    changed = true;
    }
   }
  });

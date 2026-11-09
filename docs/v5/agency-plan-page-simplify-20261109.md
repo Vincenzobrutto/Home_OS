@@ -89,3 +89,5 @@ In modalità Aggiungi punto, il clic inserisce il vertice nel punto corrisponden
 Le future evoluzioni dell’export seguono lo [standard di prodotto per la planimetria da annuncio](agency-listing-floor-plan-standard.md).
 
 La resa illustrativa semplifica i contorni entro una tolleranza proporzionata, protegge i confini tra vani e disegna una volta sola i tratti coincidenti. Balconi e terrazzi riconosciuti hanno un riempimento dedicato. Il bordo è più marcato sui lati esterni identificabili agli estremi del disegno. Verificati 37 test mirati, typecheck, lint e build. Sulla copia della stessa pratica con 11 vani, il PNG scaricato in Chrome coincide byte per byte con l’anteprima. Il cambio di zoom dell’editor produce lo stesso PNG.
+
+L’illustrazione semplifica anche gruppi di segmenti corti su un unico allineamento. Il limite di deviazione si riduce nei vani stretti e nei vuoti. Rientranze profonde, tratti condivisi e cambi di direzione già netti mantengono i loro confini. Il nuovo PNG della stessa pratica elimina la sequenza di scalini sul lato lungo del terrazzo e coincide con l’anteprima. Verificati 39 test mirati, typecheck, lint e build.

@@ -33,3 +33,17 @@ describe('listing illustration',()=>{
   expect(simplifyListingRooms([a,b],3)[0]?.points).toContainEqual([50,2]);
  });
 });
+
+it('straightens a sequence of short steps and preserves a deeper recess on the same edge',()=>{
+ const terrace = room('Terrazzo',[
+  [0,0],[20,0],[20,2],[40,2],[40,4],[60,4],[60,6],[80,6],[80,8],[100,8],
+  [100,70],[68,70],[68,56],[46,56],[46,70],[0,70],
+ ]);
+ const drawing = simplifyListingRooms([terrace],3);
+ expect(drawing[0]?.points).toEqual([[0,0],[100,8],[100,70],[68,70],[68,56],[46,56],[46,70],[0,70]]);
+});
+
+it('keeps a long vertical wall straight next to a short offset',()=>{
+ const shape = room('Vano',[[0,0],[70,0],[70,20],[68,20],[68,80],[0,80]]);
+ expect(simplifyListingRooms([shape],3)[0]?.points).toContainEqual([68,20]);
+});
