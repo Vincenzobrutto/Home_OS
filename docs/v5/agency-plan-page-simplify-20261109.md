@@ -87,3 +87,5 @@ La barra sopra la mappa include i comandi dei vertici quando si seleziona un con
 In modalità Aggiungi punto, il clic inserisce il vertice nel punto corrispondente sul lato. Il mouse può scorrere la planimetria, mentre Ctrl + rotellina ingrandisce o riduce attorno al cursore anche nel dialogo di disegno. Ai limiti dello zoom il gesto modificato resta sulla mappa.
 
 Le future evoluzioni dell’export seguono lo [standard di prodotto per la planimetria da annuncio](agency-listing-floor-plan-standard.md).
+
+La resa illustrativa semplifica i contorni entro una tolleranza proporzionata, protegge i confini tra vani e disegna una volta sola i tratti coincidenti. Balconi e terrazzi riconosciuti hanno un riempimento dedicato. Il bordo è più marcato sui lati esterni identificabili agli estremi del disegno. Verificati 37 test mirati, typecheck, lint e build. Sulla copia della stessa pratica con 11 vani, il PNG scaricato in Chrome coincide byte per byte con l’anteprima. Il cambio di zoom dell’editor produce lo stesso PNG.

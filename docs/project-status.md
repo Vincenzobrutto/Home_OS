@@ -6,7 +6,7 @@ Claude, ramo `claude/agency-plan-page-20261109` creato dal checkout `work/agency
 
 Seguito Codex su PR #84: dalle verifiche **Modifica contorno** apre l’editor del vano salvato anche partendo dal confronto. Verificati 45 test mirati, typecheck e build; sulla copia di collaudo, spostamento di un vertice e ripristino senza salvare. Seguito sulla stessa PR per selezione, trascinamento ed eliminazione con il mouse.
 
-Per l’export da annuncio vale lo [standard di prodotto della planimetria illustrativa](v5/agency-listing-floor-plan-standard.md). Specifica registrata, semplificazione automatica da implementare.
+Per l’export da annuncio vale lo [standard di prodotto della planimetria illustrativa](v5/agency-listing-floor-plan-standard.md). Semplificazione automatica in anteprima e download implementata. Verificati 37 test mirati e la stessa pratica di collaudo con 11 vani. Il PNG scaricato coincide con l’anteprima.
 
 ## Agenzie — superfici immediate con riferimento automatico, attive localmente
 
