@@ -72,10 +72,17 @@ function apply(plan:AgencyPlan,command:Record<string,unknown>){
  }else if(command.operation==='resolve_issue'){
   plan.issues=plan.issues?.filter(i=>!(i.id===command.issueId&&i.code===command.code));
  }else if(command.operation==='save_quick_estimate'){
+  const outline=command.outline as {view:'rooms'|'perimeter';id:string;geometry:{points:Point[];holes:Point[][]}}|undefined;
+  if(outline){
+   if(outline.view==='perimeter')plan.mainPerimeter=outline.geometry;
+   else plan.rooms=plan.rooms!.map(room=>room.id===outline.id?{...room,...outline.geometry}:room);
+   plan.geometryRevision=(plan.geometryRevision||1)+1;
+   plan.measurement=null;
+  }
   const saved=new Map((plan.balconyCovers??[]).map(c=>[c.id,c]));
   for(const entry of command.covers as NonNullable<AgencyPlan['balconyCovers']>)saved.set(entry.id,entry);
   plan.balconyCovers=[...saved.values()];
-  plan.quickEstimate={...(command.scale?{scale:structuredClone(command.scale) as NonNullable<AgencyPlan['quickEstimate']>['scale']}:{}),savedAt:new Date().toISOString(),geometryRevision:plan.geometryRevision||1};
+  plan.quickEstimate={...(command.scale?{scale:structuredClone(command.scale) as NonNullable<AgencyPlan['quickEstimate']>['scale']}:{}),...(command.parameters?{parameters:structuredClone(command.parameters) as NonNullable<AgencyPlan['quickEstimate']>['parameters']}:{}),savedAt:new Date().toISOString(),geometryRevision:plan.geometryRevision||1};
  }else if(command.operation==='measure'){
   plan.measurementConfiguration=structuredClone(command.configuration) as AgencyPlan['measurementConfiguration'];
   plan.measurement={totalM2:null,partialM2:0,issues:['synthetic_preview_always_incomplete'],status:'incomplete',certification:false};

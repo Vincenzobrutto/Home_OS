@@ -16,14 +16,14 @@ export function parsePlanEdit(body:unknown,headerKey:string,planId:string):PlanE
  function ring(v:unknown){const r=list(v,2000);if(r.length<3)fail();vertices+=r.length;if(vertices>4096)fail();return r.map(point);}
  function polygon(v:unknown):Polygon{const p=obj(v,['points','holes']),shape={points:ring(p.points),holes:list(p.holes,100).map(ring)};if(!validPolygon(shape))fail();return shape;}
  function calibration(v:unknown):Calibration{const c=obj(v,['start','end','metres','confirmed','check','maxRelativeError','paper']);const r:Calibration={start:point(c.start),end:point(c.end),metres:num(c.metres,Number.MIN_VALUE,1e6),confirmed:bool(c.confirmed),maxRelativeError:num(c.maxRelativeError,0,.1)};if(c.paper!==undefined){const p=obj(c.paper,['format','orientation','denominator','widthUnits','heightUnits']);r.paper={format:choice(p.format,['A4','A3']),orientation:choice(p.orientation,['portrait','landscape']),denominator:num(p.denominator,1,10000),widthUnits:integer(p.widthUnits),heightUnits:integer(p.heightUnits)};}if(c.check!==undefined){const k=obj(c.check,['start','end','metres']);r.check={start:point(k.start),end:point(k.end),metres:num(k.metres,Number.MIN_VALUE,1e6)};}return r;}
- const c=obj(b.command,['operation','view','id','geometry','configuration','issueId','code','resolution','label','kind','parentId','proposalDigest','excludedCandidateIds','covers','scale']);let command:PlanEdit['command'];
+ const c=obj(b.command,['operation','view','id','geometry','configuration','issueId','code','resolution','label','kind','parentId','proposalDigest','excludedCandidateIds','covers','scale','parameters','outline']);let command:PlanEdit['command'];
  if(c.operation==='apply_surface_proposal'){obj(c,['operation','proposalDigest','excludedCandidateIds']);const digest=text(c.proposalDigest,64);if(!/^[a-f0-9]{64}$/u.test(digest))fail();const excluded=c.excludedCandidateIds===undefined?undefined:list(c.excludedCandidateIds,12).map(v=>text(v));if(excluded&&new Set(excluded).size!==excluded.length)fail();command={operation:'apply_surface_proposal',proposalDigest:digest,...(excluded?{excludedCandidateIds:excluded}:{})};}
  else if(c.operation==='add_room'){obj(c,['operation','id','label','kind','geometry','parentId']);command={operation:'add_room',id:text(c.id),label:text(c.label,200),kind:choice(c.kind,['room','bathroom','kitchen','corridor','balcony']),geometry:polygon(c.geometry),...(c.parentId!==undefined?{parentId:text(c.parentId)}:{})};}
  else if(c.operation==='remove_room'){obj(c,['operation','id']);command={operation:'remove_room',id:text(c.id)};}
  else if(c.operation==='geometry'){obj(c,['operation','view','id','geometry']);command={operation:'geometry',view:choice(c.view,['rooms','perimeter']),id:text(c.id),geometry:polygon(c.geometry)};}
  else if(c.operation==='resolve_issue'){obj(c,['operation','issueId','code','resolution']);command={operation:'resolve_issue',issueId:text(c.issueId),code:text(c.code),resolution:choice(c.resolution,['included_in_geometry','excluded_from_computation','not_applicable'])};}
  else if(c.operation==='save_quick_estimate'){
-  obj(c,['operation','covers','scale']);
+  obj(c,['operation','covers','scale','parameters','outline']);
   const covers=list(c.covers,100).map(value=>{
    const entry=obj(value,['id','cover']);
    return {id:text(entry.id),cover:choice(entry.cover,['covered','uncovered','unset'])};
@@ -35,7 +35,19 @@ export function parsePlanEdit(body:unknown,headerKey:string,planId:string):PlanE
    else if(s.mode==='manual'||s.mode==='bar'){obj(s,['mode','start','end','metres']);scale={mode:s.mode,start:point(s.start),end:point(s.end),metres:num(s.metres,Number.MIN_VALUE,1e6)};}
    else fail();
   }
-  command={operation:'save_quick_estimate',covers,...(scale?{scale}:{})};
+  let parameters,outline;
+  if(c.parameters!==undefined){
+   const p=obj(c.parameters,['wallPercent','coefficients']);
+   parameters={wallPercent:num(p.wallPercent,0,30),coefficients:list(p.coefficients,100).map(value=>{
+    const entry=obj(value,['id','coefficient']);
+    return {id:text(entry.id),coefficient:num(entry.coefficient,0,1)};
+   })};
+  }
+  if(c.outline!==undefined){
+   const o=obj(c.outline,['view','id','geometry']);
+   outline={view:choice(o.view,['rooms','perimeter']),id:text(o.id),geometry:polygon(o.geometry)};
+  }
+  command={operation:'save_quick_estimate',covers,...(scale?{scale}:{}),...(parameters?{parameters}:{}),...(outline?{outline}:{})};
  }
  else if(c.operation==='measure'){
   obj(c,['operation','configuration']);const m=obj(c.configuration,['base','calibration','policyVersion','mainRegionIds','assignments','walls','coverageConfirmed','wallCoverageConfirmed','policyConfirmed','commonWallCapBasis']);

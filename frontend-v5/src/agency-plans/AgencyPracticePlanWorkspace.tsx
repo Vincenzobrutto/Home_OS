@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
-import type {BalconyCover,QuickEstimateScale} from './api';
+import type {QuickEstimateInput} from './api';
 import {ApiError} from '../api/errors';
 import type {AgencyPlanPort,AgencyPractice,PlanEditBody,PlansResponse} from './api';
 import {PlanMeasurementView,type PlanShape} from './PlanMeasurementView';
@@ -60,7 +60,7 @@ function Workspace(p:WorkspaceProps){
  const excludedIds=candidateChoices.key===proposalKey?candidateChoices.excluded:[];
  const locked=!!p.readOnly||busy||!!pending||conflict;
  function refresh(){setQuickScale(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setBuilder(null);setPending(null);setConflict(false);setError('');setNotice('');setLoading(true);setReload(v=>v+1);}
- async function send(request:Pending){setBusy(true);setError('');try{const r=await p.api.edit(request.id,request.body,request.key);if(!alive.current)return;setData(v=>v?{...v,plans:carryIssueNumbers(r.plans,v.plans)}:v);setPending(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setReason('');setNotice(r.replay?'Salvataggio già ricevuto dal server.':'Modifiche salvate nella pratica.');p.onSaved?.();}catch(e){if(e instanceof ApiError&&e.status===422){setPending(null);setError('Controlla scala, contorni e conferme: nessuna modifica è stata salvata.');}else failure(e);}finally{if(alive.current)setBusy(false);}}
+ async function send(request:Pending){setBusy(true);setError('');try{const r=await p.api.edit(request.id,request.body,request.key);if(!alive.current)return;setData(v=>v?{...v,plans:carryIssueNumbers(r.plans,v.plans)}:v);setPending(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setReason('');setNotice(r.replay?'Salvataggio già ricevuto dal server.':request.body.command.operation==='save_quick_estimate'?'Stima salvata nella pratica.':'Modifiche salvate nella pratica.');p.onSaved?.();}catch(e){if(e instanceof ApiError&&e.status===422){setPending(null);setError('Controlla scala, contorni e conferme: nessuna modifica è stata salvata.');}else failure(e);}finally{if(alive.current)setBusy(false);}}
  function save(command:Record<string,unknown>,reviewReason?:string){if(!data||!plan||locked||(showProposal&&command.operation!=='apply_surface_proposal'))return;const editReason=reviewReason||reason.trim()||(command.operation==='measure'?'Calcolo della superficie commerciale':command.operation==='geometry'?'Correzione del contorno sul documento originale':command.operation==='remove_room'?'Vano rimosso durante la revisione grafica':'');if(!editReason){setError('Indica il motivo della modifica.');return;}const request={key:crypto.randomUUID(),id:plan.id,body:{expectedRevision:data.plans.revision,expectedPlanVersion:plan.version,reason:editReason,command}};setPending(request);void send(request);}
  function change(view:Change['view'],shape:PlanShape){if(locked||showProposal)return;if(draft&&(draft.view!==view||draft.shape.id!==shape.id)){setError('Salva il contorno corrente prima di modificare un altro vano.');return;}setDraft({view,shape});setNotice('');}
  function polygon(initial:PlanShape|null,done:(s:PlanShape)=>void,mode:'polygon'|'segment'='polygon'){if(locked||draft||showProposal)return;setBuilder({initial,mode,done:s=>{setConfigDirty(true);done(s);}});}
@@ -87,30 +87,10 @@ function Workspace(p:WorkspaceProps){
   if(!plan.issues?.length&&plan.rooms.length&&plan.mainPerimeter&&!proposalAvailable)setTask('measure');
  }
  const gross:GrossOutline|null=draft?.view==='perimeter'?{shape:draft.shape,status:'draft'}:plan?.mainPerimeter?{shape:{...plan.mainPerimeter,id:'gross',label:'Perimetro lordo'},status:'saved'}:suggestedPerimeter?{shape:{...suggestedPerimeter,label:'Perimetro lordo proposto'},status:'proposed'}:null;
- async function sendSequence(steps:Array<{command:Record<string,unknown>;reason:string}>,done:string){
-  if(!data||!plan||locked||showProposal)return;
-  setBusy(true);setError('');setNotice('');
-  let revision=data.plans.revision,version=plan.version;
-  try{
-   for(const step of steps){
-    const request={key:crypto.randomUUID(),id:plan.id,body:{expectedRevision:revision,expectedPlanVersion:version,reason:step.reason,command:step.command}};
-    setPending(request);
-    const r=await p.api.edit(request.id,request.body,request.key);
-    if(!alive.current)return;
-    revision=r.plans.revision;version=r.plans.plans.find(item=>item.id===plan.id)?.version??version+1;
-    setData(v=>v?{...v,plans:carryIssueNumbers(r.plans,v.plans)}:v);setPending(null);
-    if(step.command.operation==='geometry')setDraft(null);
-   }
-   setNotice(done);p.onSaved?.();
-  }catch(e){if(e instanceof ApiError&&e.status===422){setPending(null);setError('Controlla scala e contorni: il salvataggio non è stato completato.');}else failure(e);}
-  finally{if(alive.current)setBusy(false);}
- }
- function saveEstimate(payload:{covers:BalconyCover[];scale?:QuickEstimateScale}){
-  const steps:Array<{command:Record<string,unknown>;reason:string}>=[];
-  if(draft)steps.push({command:{operation:'geometry',view:draft.view,id:draft.shape.id,geometry:{points:draft.shape.points,holes:draft.shape.holes}},reason:draft.view==='perimeter'?'Perimetro lordo corretto sulla mappa':'Contorno corretto sulla mappa'});
-  else if(gross?.status==='proposed')steps.push({command:{operation:'geometry',view:'perimeter',id:'gross',geometry:{points:gross.shape.points,holes:gross.shape.holes}},reason:'Perimetro lordo proposto confermato sulla mappa'});
-  steps.push({command:{operation:'save_quick_estimate',covers:payload.covers,...(payload.scale?{scale:payload.scale}:{})},reason:'Stima rapida delle superfici'});
-  void sendSequence(steps,'Stima salvata nella pratica.');
+ function saveEstimate(payload:QuickEstimateInput){
+  const editedOutline=draft??(gross?.status==='proposed'?{view:'perimeter',shape:gross.shape}:null);
+  const outline=editedOutline?{view:editedOutline.view,id:editedOutline.shape.id,geometry:{points:editedOutline.shape.points,holes:editedOutline.shape.holes}}:undefined;
+  save({operation:'save_quick_estimate',...payload,...(outline?{outline}:{})},'Stima rapida delle superfici');
  }
  function resolveIssue(issue:{id:string;code:string},resolution:Resolution,reviewReason:string){save({operation:'resolve_issue',issueId:issue.id,code:issue.code,resolution},reviewReason);}
  function adoptProposal(){if(proposal)save({operation:'apply_surface_proposal',proposalDigest:proposal.digest,...(excludedIds.length?{excludedCandidateIds:excludedIds}:{})});}

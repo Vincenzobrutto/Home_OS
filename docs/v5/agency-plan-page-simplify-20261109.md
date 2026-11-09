@@ -67,3 +67,10 @@ Quando l'OCR unisce l'ultima etichetta e l'unità («4m»), il centro dell'etich
 - I coefficienti dei balconi (35% / 25%) restano quelli già presenti nel codice: ipotesi di lavoro da confermare con il committente, non regola normativa.
 - Su 375 px «Salva stima» è subito sotto la mappa, non fisso a schermo: dopo una correzione sulla mappa serve uno scorrimento breve.
 - Il ramo legacy non embedded del workspace (anteprima interna `__preview__/workspace.tsx`) non è stato ridisegnato.
+
+
+## Revisione Codex della PR 84
+
+Il rapporto letto tramite OCR è una proposta da confermare o correggere prima di calcolare. La stima rapida salva in un unico comando scala, coperture, maggiorazione, coefficienti personalizzati ed eventuale correzione del contorno. La stima si ricalcola dopo la riapertura con gli stessi parametri.
+
+Il test HTTP/DB verifica una scrittura unica, la rilettura con un nuovo client, l'idempotenza e la mancata scrittura del contorno se la scala è respinta. Collaudo nel browser su una copia isolata della stessa planimetria e dei contorni già analizzati, con AI disabilitata: dopo salvataggio e ricarica, misura manuale di prova, balcone coperto e totale coincidono. La misura di prova non rappresenta un rilievo reale.

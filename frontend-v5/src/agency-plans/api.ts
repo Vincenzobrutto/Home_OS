@@ -10,7 +10,9 @@ export type PlanMeasurementReport={totalM2:number|null;partialM2:number;issues:s
 export type BalconyCover={id:string;cover:'covered'|'uncovered'|'unset'};
 /** Saved quick-estimate inputs. Areas are always recomputed on screen from current geometry. */
 export type QuickEstimateScale={mode:'paper';format:'A4'|'A3'|'A2'|'A1';denominator:number}|{mode:'manual'|'bar';start:[number,number];end:[number,number];metres:number};
-export type QuickEstimate={scale?:QuickEstimateScale;savedAt:string;geometryRevision:number};
+export type QuickEstimateParameters={wallPercent:number;coefficients:Array<{id:string;coefficient:number}>};
+export type QuickEstimateInput={covers:BalconyCover[];scale?:QuickEstimateScale;parameters:QuickEstimateParameters};
+export type QuickEstimate={scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;savedAt:string;geometryRevision:number};
 export type AgencyPlan={edits?:Array<{rooms:PlanShape[]}>;id:string;version:number;status:string;proof:SourceProof;rooms:PlanShape[]|null;surfaceProposal?:SurfaceProposal|null;mainPerimeter?:Pick<PlanShape,'points'|'holes'>|null;perimeterProposal?:Pick<PlanShape,'points'|'holes'>;rasterSize?:{width:number;height:number};rendering?:{dpi:number;transform:number[];renderer:string}|null;geometryRevision?:number;measurementConfiguration?:MeasurementConfiguration|null;issues?:Array<{id:string;code:string;number?:number}>;balconyCovers?:BalconyCover[];quickEstimate?:QuickEstimate;measurement?:PlanMeasurementReport|null};
 export type PlansResponse={revision:number;plans:AgencyPlan[]};
 export type PlanEditBody={expectedRevision:number;expectedPlanVersion:number;reason:string;command:Record<string,unknown>};

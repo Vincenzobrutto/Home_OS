@@ -1,5 +1,5 @@
 import {useEffect,useState,type ReactNode} from 'react';
-import type {BalconyCover,QuickEstimate,QuickEstimateScale} from './api';
+import type {BalconyCover,QuickEstimate,QuickEstimateInput,QuickEstimateScale} from './api';
 import type {Point,PlanShape} from './PlanMeasurementView';
 import type {MeasurementConfiguration} from './measurement-types';
 import {isAppurtenance,isBalcony,netArea,overlapArea,suggestedCoefficient,type ScaleDetection,type ScaleReference} from './scaleDetection';
@@ -15,13 +15,19 @@ type Props={
  balconyCovers?:BalconyCover[];saved?:QuickEstimate|null;configuration?:MeasurementConfiguration|null;
  busy:boolean;selection:ScaleSelection;onSelection:(selection:ScaleSelection)=>void;
  requestSegment:(done:(a:Point,b:Point)=>void)=>void;
- onSave:(payload:{covers:BalconyCover[];scale?:QuickEstimateScale})=>void;
+ onSave:(payload:QuickEstimateInput)=>void;
  onFocus:(id:string)=>void;onAddBalcony?:()=>void;onDrawPerimeter?:()=>void;
  advanced:ReactNode;
 };
 const number=(n:number)=>n.toLocaleString('it-IT',{maximumFractionDigits:1,minimumFractionDigits:1});
 const SHEETS={A4:[.210,.297],A3:[.297,.420],A2:[.420,.594],A1:[.594,.841]} as const;
 const COVER_COEFFICIENT={covered:.35,uncovered:.25};
+function scaleSignature(scale:QuickEstimateScale|undefined){
+ if(!scale)return '';
+ return scale.mode==='paper'
+  ?JSON.stringify([scale.mode,scale.format,scale.denominator])
+  :JSON.stringify([scale.mode,scale.start,scale.end,scale.metres]);
+}
 /** Rooms valued below 100% whose outline overlaps the gross outline by more than 5% risk being counted twice. */
 export function doubleCountIds(rooms:PlanShape[],gross:PlanShape|null){
  if(!gross)return [];
@@ -38,7 +44,9 @@ export function QuickSurfaceEstimate(p:Props){
  const [ratio,setRatio]=useState<string|null>(savedScale?.mode==='paper'?String(savedScale.denominator):p.configuration?.calibration.paper?String(p.configuration.calibration.paper.denominator):null);
  const [metres,setMetres]=useState(savedScale?.mode==='manual'?String(savedScale.metres):'');
  const [covers,setCovers]=useState<Record<string,Cover>>({});
- const [wallPercent,setWallPercent]=useState(10),[coefficients,setCoefficients]=useState<Record<string,number>>({});
+ const savedParameters=p.saved?.parameters;
+ const [wallPercent,setWallPercent]=useState(savedParameters?.wallPercent??10);
+ const [coefficients,setCoefficients]=useState<Record<string,number>>(()=>Object.fromEntries((savedParameters?.coefficients??[]).map(({id,coefficient})=>[id,coefficient])));
  const [advancedOpened,setAdvancedOpened]=useState(false);
  const knownScale=!!savedScale||!!savedBar;
  useEffect(()=>{
@@ -53,12 +61,13 @@ export function QuickSurfaceEstimate(p:Props){
  const bar=manual&&manual.metres>0?manual:mode==='auto'?(savedQuickBar??savedBar??detection?.bar??null):null;
  const denominator=ratio??(detection?.denominator?String(detection.denominator):'');
  const usePaper=mode==='paper'||mode==='auto'&&!bar;
+ const unconfirmedRatio=usePaper&&ratio===null&&!!detection?.denominator;
  let scaleX=0,scaleY=0,scaleError='',basis='';
  if(bar){
   const distance=Math.hypot(bar.end[0]-bar.start[0],bar.end[1]-bar.start[1]);
   if(distance>0&&Number.isFinite(bar.metres)){scaleX=scaleY=bar.metres/distance;basis=bar.method==='detected_bar'?`Barra metrica del documento · ${bar.metres} m`:bar.method==='saved'?'Riferimento del computo dettagliato':`Misura su due punti · ${bar.metres} m`;}
   else scaleError='I due punti devono essere distinti e la lunghezza valida.';
- }else if(usePaper&&format&&Number(denominator)>0){
+ }else if(usePaper&&!unconfirmedRatio&&format&&Number(denominator)>=1){
   const sheet=SHEETS[format as keyof typeof SHEETS];let [w,h]=sheet?[...sheet]:[0,0];if(p.width>p.height)[w,h]=[h,w];
   if(!sheet||Number(denominator)>10000||Math.abs((p.width/p.height)/(w/h)-1)>.03)scaleError='Il foglio non corrisponde al formato scelto: potrebbe essere ritagliato. Usa due punti di una misura nota.';
   else{scaleX=w*Number(denominator)/p.width;scaleY=h*Number(denominator)/p.height;basis=`Scala 1:${denominator} su foglio ${format} intero`;}
@@ -85,12 +94,21 @@ export function QuickSurfaceEstimate(p:Props){
  const missingCover=rows.filter(row=>row.balcony&&!row.type);
 
  // What Salva will persist.
- const scalePayload:QuickEstimateScale|undefined=manual&&manual.metres>0?{mode:'manual',start:manual.start,end:manual.end,metres:manual.metres}:bar?.method==='detected_bar'?{mode:'bar',start:bar.start,end:bar.end,metres:bar.metres}:usePaper&&!bar&&hasScale?{mode:'paper',format:format as 'A4',denominator:Number(denominator)}:undefined;
+ const scalePayload:QuickEstimateScale|undefined=manual&&manual.metres>0?{mode:'manual',start:manual.start,end:manual.end,metres:manual.metres}:bar&&(bar.method==='detected_bar'||bar.method==='saved')?{mode:'bar',start:bar.start,end:bar.end,metres:bar.metres}:usePaper&&!bar&&hasScale?{mode:'paper',format:format as 'A4',denominator:Number(denominator)}:undefined;
  const coverPayload:BalconyCover[]=rows.filter(row=>row.balcony).map(row=>({id:row.room.id,cover:row.type||'unset'}));
+ const parameters={
+  wallPercent,
+  coefficients:p.rooms.flatMap(room=>coefficients[room.id]===undefined?[]:[{id:room.id,coefficient:coefficients[room.id]!}]),
+ };
+ const savedCoefficients=new Map(savedParameters?.coefficients.map(({id,coefficient})=>[id,coefficient]));
+ const parametersChanged=parameters.wallPercent!==(savedParameters?.wallPercent??10)
+  ||parameters.coefficients.length!==savedCoefficients.size
+  ||parameters.coefficients.some(({id,coefficient})=>savedCoefficients.get(id)!==coefficient);
  const pending=[
+  ...(parametersChanged?['parametri di calcolo']:[]),
   ...(p.gross&&p.gross.status!=='saved'?[p.gross.status==='proposed'?'conferma del perimetro':'perimetro corretto']:[]),
   ...(rows.some(row=>row.balcony&&row.type!==row.savedType)?['copertura dei balconi']:[]),
-  ...(JSON.stringify(scalePayload??null)!==JSON.stringify(savedScale??null)&&(scalePayload||p.saved)?['scala']:[]),
+  ...(scaleSignature(scalePayload)!==scaleSignature(savedScale)&&(scalePayload||p.saved)?['scala']:[]),
  ];
  const dirty=pending.length>0||!p.saved;
  const savedAt=p.saved?new Date(p.saved.savedAt).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'}):'';
@@ -106,7 +124,7 @@ export function QuickSurfaceEstimate(p:Props){
    {missingCover.length>0&&hasScale&&<p className={styles.muted}>Scegli Coperto o Scoperto per {missingCover.map(row=>row.room.label).join(', ')}: finché manca, il balcone non entra nel totale.</p>}
    {overlapIds.length>0&&<p role="alert" className={styles.inlineWarning}>Rischio di doppio conteggio: {rows.filter(row=>row.overlap).map(row=>row.room.label).join(', ')} si sovrappone al perimetro lordo. Controlla il perimetro sulla mappa: il contorno a rischio è in arancione.</p>}
    <div className={styles.saveRow}>
-    <button type="button" className={styles.primaryButton} disabled={p.busy||!dirty} onClick={()=>p.onSave({covers:coverPayload,...(scalePayload?{scale:scalePayload}:{})})}>{p.saved&&!dirty?'Stima salvata':'Salva stima'}</button>
+    <button type="button" className={styles.primaryButton} disabled={p.busy||!dirty||unconfirmedRatio||!!scaleError} onClick={()=>p.onSave({covers:coverPayload,parameters,...(scalePayload?{scale:scalePayload}:{})})}>{p.saved&&!dirty?'Stima salvata':'Salva stima'}</button>
     <p className={styles.muted}>{dirty?(pending.length?'Da salvare: '+pending.join(', ')+'.':'Stima non ancora salvata nella pratica.'):`Stima salvata il ${savedAt}. Si ricalcola dai contorni attuali.`} Stima sul documento, non computo dettagliato né misura certificata.</p>
    </div>
   </div>
@@ -118,9 +136,10 @@ export function QuickSurfaceEstimate(p:Props){
    {bar&&bar.method!=='manual'&&<svg className={styles.scaleReference} role="img" aria-label="Riferimento usato per la scala" viewBox={`${Math.max(0,Math.min(bar.start[0],bar.end[0])-40)} ${Math.max(0,Math.min(bar.start[1],bar.end[1])-50)} ${Math.abs(bar.end[0]-bar.start[0])+80} ${Math.abs(bar.end[1]-bar.start[1])+100}`}><image href={p.sourceUrl} width={p.width} height={p.height}/><line x1={bar.start[0]} y1={bar.start[1]} x2={bar.end[0]} y2={bar.end[1]} stroke="#006476" strokeWidth="3"/></svg>}
    {mode==='manual'&&segment&&<label>Lunghezza reale tra i due punti (m)<input type="number" min="0.01" step="any" value={metres} onChange={e=>setMetres(e.target.value)}/></label>}
    {usePaper&&!bar&&<>
-    <p>{reading?'Puoi indicare il foglio mentre leggo il documento.':failed?'Lettura automatica non disponibile.':detection?.ambiguous?'Riferimenti non concordi sul documento.':denominator?`Barra metrica non trovata: scala dichiarata 1:${denominator}. Indica il formato del foglio scansionato.`:'Scala non trovata sul documento. Indica scala e formato del foglio, oppure misura due punti noti sulla mappa.'}</p>
+    <p>{reading?'Puoi indicare il foglio mentre leggo il documento.':failed?'Lettura automatica non disponibile.':detection?.ambiguous?'Riferimenti non concordi sul documento.':unconfirmedRatio?`Lettura OCR da verificare · 1:${denominator}. Confrontala con la planimetria, poi confermala o correggila.`:denominator?'Indica il formato del foglio scansionato.':'Scala non trovata sul documento. Indica scala e formato del foglio, oppure misura due punti noti sulla mappa.'}</p>
     <div className={styles.fieldGrid}>
      <label>Scala dichiarata · 1:<input type="number" min="1" max="10000" value={denominator} onChange={e=>setRatio(e.target.value)} placeholder="Es. 100"/></label>
+     {unconfirmedRatio&&<button type="button" disabled={p.busy} onClick={()=>setRatio(denominator)}>Conferma scala 1:{denominator}</button>}
      <label>Formato del foglio<select value={format} onChange={e=>{setFormat(e.target.value);setMode('paper');}}><option value="">Scegli formato</option><option value="A4">A4 · 21 × 29,7 cm</option><option value="A3">A3 · 29,7 × 42 cm</option><option value="A2">A2 · 42 × 59,4 cm</option><option value="A1">A1 · 59,4 × 84,1 cm</option></select></label>
     </div>
    </>}

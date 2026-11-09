@@ -118,8 +118,7 @@ it('corrects the proposed gross outline on the calculation map and confirms it w
  const api=port(),state=plans(),plan=state.plans[0]!;
  plan.perimeterProposal={points:[[0,0],[18,0],[18,18],[0,18]],holes:[]};
  api.plans.mockResolvedValue(state);
- api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,version:2,mainPerimeter:{points:[[0,0],[9,0],[18,0],[18,18],[0,18]],holes:[]}}]}});
- api.edit.mockResolvedValueOnce({replay:false,plans:{revision:6,plans:[{...plan,version:3,mainPerimeter:{points:[[0,0],[9,0],[18,0],[18,18],[0,18]],holes:[]},quickEstimate:{savedAt:'2026-11-09T08:00:00.000Z',geometryRevision:2}}]}});
+ api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,version:2,mainPerimeter:{points:[[0,0],[9,0],[18,0],[18,18],[0,18]],holes:[]},quickEstimate:{savedAt:'2026-11-09T08:00:00.000Z',geometryRevision:2}}]}});
  render(<AgencyPracticePlanWorkspace api={api} scopeKey="gross-review" embedded/>);
  fireEvent.click(await screen.findByRole('button',{name:'Calcola superfici'}));
  expect(screen.getByRole('img',{name:'Perimetro lordo e pertinenze'})).toBeInTheDocument();
@@ -134,9 +133,8 @@ it('corrects the proposed gross outline on the calculation map and confirms it w
  expect(screen.getByRole('button',{name:'Modifica pianta'})).toBeDisabled();
  fireEvent.click(screen.getByRole('button',{name:'Salva stima'}));
  await screen.findByText('Stima salvata nella pratica.');
- expect(api.edit).toHaveBeenCalledTimes(2);
- expect(api.edit.mock.calls[0]![1]).toMatchObject({expectedRevision:4,expectedPlanVersion:1,command:{operation:'geometry',view:'perimeter',id:'gross',geometry:{points:[[0,0],[9,0],[18,0],[18,18],[0,18]]}}});
- expect(api.edit.mock.calls[1]![1]).toMatchObject({expectedRevision:5,expectedPlanVersion:2,command:{operation:'save_quick_estimate',covers:[]}});
+ expect(api.edit).toHaveBeenCalledTimes(1);
+ expect(api.edit.mock.calls[0]![1]).toMatchObject({expectedRevision:4,expectedPlanVersion:1,command:{operation:'save_quick_estimate',covers:[],outline:{view:'perimeter',id:'gross',geometry:{points:[[0,0],[9,0],[18,0],[18,18],[0,18]],holes:[]}}}});
  expect(screen.queryByText('Ambienti e superfici nette')).not.toBeInTheDocument();
 });
 

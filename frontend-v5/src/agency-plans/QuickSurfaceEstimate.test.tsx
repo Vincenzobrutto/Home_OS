@@ -30,14 +30,16 @@ it('shows scale, gross, appurtenances and total together from a detected bar, wi
  expect(screen.queryByText('Modulo dettagliato')).not.toBeInTheDocument();
 });
 
-it('asks only for the sheet format when just a printed scale is found, never assuming A4',async()=>{
+it('requires explicit confirmation of the OCR ratio even after the sheet format is chosen',async()=>{
  vi.mocked(detectPlanScale).mockResolvedValue({bar:null,denominator:100,ambiguous:false});
  const user=userEvent.setup();render(<Estimate {...props()}/>);
  await waitFor(()=>expect(screen.getByLabelText('Scala dichiarata · 1:')).toHaveValue(100));
- expect(screen.getByText(/Barra metrica non trovata: scala dichiarata 1:100/)).toBeVisible();
+ expect(screen.getByText(/Lettura OCR da verificare · 1:100/)).toBeVisible();
  expect(screen.getByLabelText('Formato del foglio')).toHaveValue('');
  expect(total()).toBe('—');
  await user.selectOptions(screen.getByLabelText('Formato del foglio'),'A4');
+ expect(total()).toBe('—');
+ await user.click(screen.getByRole('button',{name:'Conferma scala 1:100'}));
  expect(summary()).toHaveTextContent('Scala 1:100 su foglio A4 intero');
  expect(total()).toBe('1,1 m²');
 });
@@ -102,7 +104,7 @@ it('saves covers and the scale in use in one action, then reads the saved choice
  await user.click(screen.getByRole('radio',{name:'Coperto'}));
  expect(screen.getByText(/Da salvare: copertura dei balconi, scala/)).toBeVisible();
  await user.click(screen.getByRole('button',{name:'Salva stima'}));
- const payload={covers:[{id:'balcony',cover:'covered'}],scale:{mode:'bar',start:[0,0],end:[100,0],metres:10}};
+ const payload={covers:[{id:'balcony',cover:'covered'}],scale:{mode:'bar',start:[0,0],end:[100,0],metres:10},parameters:{wallPercent:10,coefficients:[]}};
  expect(options.onSave).toHaveBeenCalledWith(payload);
  rerender(<Estimate {...options} rooms={[room,balcony]} balconyCovers={[{id:'balcony',cover:'covered'}]} saved={{scale:payload.scale as never,savedAt:'2026-11-09T08:00:00.000Z',geometryRevision:1}}/>);
  expect(screen.getByRole('button',{name:'Stima salvata'})).toBeDisabled();
@@ -125,4 +127,26 @@ it('keeps specialist settings and the detailed computation in one optional secti
  await user.click(screen.getByText('Impostazioni avanzate · facoltative'));
  expect(screen.getByLabelText('Maggiorazione muri senza perimetro lordo (%)')).toBeVisible();
  expect(screen.getByText('Modulo dettagliato')).toBeVisible();
+});
+
+it('reproduces the total on a fresh mount using saved wall and room coefficients',async()=>{
+ vi.mocked(detectPlanScale).mockResolvedValue(bar);
+ const user=userEvent.setup(),options=props();
+ const view=render(<Estimate {...options} rooms={[room,balcony]}/>);
+ await waitFor(()=>expect(total()).not.toBe('—'));
+ await user.click(screen.getByText('Impostazioni avanzate · facoltative'));
+ await user.click(screen.getByRole('radio',{name:'Coperto'}));
+ const walls=screen.getByLabelText('Maggiorazione muri senza perimetro lordo (%)');
+ await user.clear(walls);await user.type(walls,'12');
+ const roomCoefficient=screen.getByLabelText('Coefficiente di Cucina (%)');
+ await user.clear(roomCoefficient);await user.type(roomCoefficient,'90');
+ const before=total();
+ await user.click(screen.getByRole('button',{name:'Salva stima'}));
+ const payload=options.onSave.mock.calls[0]![0];
+ expect(payload.parameters).toEqual({wallPercent:12,coefficients:[{id:room.id,coefficient:.9}]});
+ view.unmount();
+ render(<Estimate {...options} rooms={[room,balcony]} balconyCovers={payload.covers} saved={{scale:{metres:10,end:[100,0],mode:'bar',start:[0,0]},parameters:payload.parameters,savedAt:'2026-11-09T08:00:00.000Z',geometryRevision:1}}/>);
+ expect(screen.getByRole('radio',{name:'Coperto'})).toBeChecked();
+ expect(total()).toBe(before);
+ expect(screen.getByRole('button',{name:'Stima salvata'})).toBeDisabled();
 });
