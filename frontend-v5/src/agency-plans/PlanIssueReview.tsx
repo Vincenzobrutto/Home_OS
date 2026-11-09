@@ -11,7 +11,7 @@ const outcomes:Record<Resolution,string>={
 /** One open check, linked to its room name and map point. Registering an outcome removes it from the open list server-side. */
 export function PlanIssueReview(p:{
  issue:{id:string;code:string};index:number;roomLabel?:string;description:string;symbolReason?:string;
- onShow?:()=>void;disabled:boolean;geometryEdited:boolean;
+ onShow?:()=>void;showLabel?:string;showDisabled?:boolean;disabled:boolean;geometryEdited:boolean;
  onResolve:(issue:{id:string;code:string},resolution:Resolution,reason:string)=>void;
 }){
  const [resolution,setResolution]=useState<Resolution|''>(''),[reason,setReason]=useState('');
@@ -21,7 +21,7 @@ export function PlanIssueReview(p:{
   <p>{p.description}</p>
   {p.symbolReason&&<p className={styles.muted}>{p.symbolReason}</p>}
   <div className={styles.issueActions}>
-   {p.onShow?<button type="button" onClick={p.onShow}>Mostra sulla mappa</button>:<span className={styles.muted}>Posizione non disponibile: confronta l’originale.</span>}
+   {p.onShow?<button type="button" disabled={p.showDisabled} onClick={p.onShow}>{p.showLabel??'Mostra sulla mappa'}</button>:<span className={styles.muted}>Posizione non disponibile: confronta l’originale.</span>}
    <label>Esito {label}<select value={resolution} disabled={p.disabled} onChange={e=>setResolution(e.target.value as Resolution|'')}>
     <option value="">Scegli esito</option>
     {(Object.keys(outcomes) as Resolution[]).map(id=><option key={id} value={id} disabled={id==='included_in_geometry'&&!p.geometryEdited}>{outcomes[id]}</option>)}

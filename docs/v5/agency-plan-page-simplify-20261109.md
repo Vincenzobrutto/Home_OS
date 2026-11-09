@@ -74,3 +74,7 @@ Quando l'OCR unisce l'ultima etichetta e l'unità («4m»), il centro dell'etich
 Il rapporto letto tramite OCR è una proposta da confermare o correggere prima di calcolare. La stima rapida salva in un unico comando scala, coperture, maggiorazione, coefficienti personalizzati ed eventuale correzione del contorno. La stima si ricalcola dopo la riapertura con gli stessi parametri.
 
 Il test HTTP/DB verifica una scrittura unica, la rilettura con un nuovo client, l'idempotenza e la mancata scrittura del contorno se la scala è respinta. Collaudo nel browser su una copia isolata della stessa planimetria e dei contorni già analizzati, con AI disabilitata: dopo salvataggio e ricarica, misura manuale di prova, balcone coperto e totale coincidono. La misura di prova non rappresenta un rilievo reale.
+
+## Modifica diretta durante le verifiche
+
+Per un vano già presente, Modifica contorno esce dal confronto in sola lettura, seleziona il vano e rende visibili i vertici sulla stessa mappa. La modifica si salva esplicitamente prima di registrare l’esito. Verificati 45 test mirati, typecheck e build; sulla copia della pratica è stato spostato un vertice e poi scartata la modifica, senza scritture.

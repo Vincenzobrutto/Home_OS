@@ -36,7 +36,7 @@ describe('practice plan workspace',()=>{
   api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,version:2,geometryRevision:2,rooms:[{...room,holes:[]}]}]}});
   render(<AgencyPracticePlanWorkspace api={api} scopeKey="include-hole" embedded/>);
   await screen.findByRole('img',{name:'Contorni dei singoli vani'});
-  fireEvent.click(screen.getByRole('button',{name:'Mostra sulla mappa'}));
+  fireEvent.click(screen.getByRole('button',{name:'Modifica contorno'}));
   expect(screen.getByRole('combobox',{name:'Contorno'})).toHaveDisplayValue('Vuoto 1');
   fireEvent.click(screen.getByRole('button',{name:'Includi area nel vano'}));
   expect(api.edit).not.toHaveBeenCalled();
@@ -44,6 +44,29 @@ describe('practice plan workspace',()=>{
   await screen.findByText('Modifiche salvate nella pratica.');
   expect(api.edit.mock.calls[0]![1].command).toMatchObject({operation:'geometry',view:'rooms',id:room.id,geometry:{points:room.points,holes:[]}});
   expect(screen.getByRole('option',{name:'Ho incluso l’elemento nel contorno'})).toBeEnabled();
+ });
+ it('opens the editable saved contour straight from a check during proposal comparison',async()=>{
+  const api=port(),state=plans(),plan=state.plans[0]!,room=plan.rooms![0]!;
+  plan.issues=[{id:room.id,code:'coverage_area_requires_review'}];
+  plan.surfaceProposal={digest:'e'.repeat(64),state:'pending',baseGeometryRevision:1,rooms:[{...room,label:'Solo in anteprima'}],issues:[],summary:{doorArcs:0,serviceCells:0,exteriorStrips:0}};
+  api.plans.mockResolvedValue(state);
+  render(<AgencyPracticePlanWorkspace api={api} scopeKey="edit-from-check" embedded/>);
+  await screen.findByRole('img',{name:'Contorni dei singoli vani'});
+  fireEvent.click(screen.getByRole('button',{name:'Confronta i contorni proposti'}));
+  expect(screen.getByRole('button',{name:'Seleziona vano Solo in anteprima'})).toBeVisible();
+  fireEvent.click(screen.getByRole('button',{name:'Modifica contorno'}));
+  expect(screen.queryByRole('button',{name:'Seleziona vano Solo in anteprima'})).not.toBeInTheDocument();
+  const vertex=screen.getByRole('button',{name:'Vertice 1'});
+  fireEvent.keyDown(vertex,{key:'ArrowRight'});
+  fireEvent.click(screen.getByRole('button',{name:'Aggiungi punto su un lato'}));
+  fireEvent.click(screen.getByRole('button',{name:'Inserisci punto sul lato 1'}));
+  expect(screen.getAllByRole('button',{name:/^Vertice /})).toHaveLength(5);
+  fireEvent.click(screen.getByRole('button',{name:'Vertice 3'}));
+  fireEvent.click(screen.getByRole('button',{name:'Elimina punto'}));
+  expect(api.edit).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button',{name:'Salva modifiche'}));
+  await screen.findByText('Modifiche salvate nella pratica.');
+  expect(api.edit.mock.calls[0]![1].command).toMatchObject({operation:'geometry',id:room.id,geometry:{points:[[20/600,0],[(20/600+10)/2,0],[10,10],[0,10]],holes:[]}});
  });
  it('links each open check to its room on the map and removes it once its outcome is saved',async()=>{
   const api=port(),state=plans(),plan=state.plans[0]!;
@@ -56,7 +79,7 @@ describe('practice plan workspace',()=>{
   expect(screen.getByRole('heading',{name:'Verifiche aperte · 2'})).toBeVisible();
   expect(screen.getByText('Simbolo vicino alla parete')).toBeVisible();
   expect(screen.queryByTestId('focus-marker')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button',{name:'Mostra sulla mappa'}));
+  fireEvent.click(screen.getByRole('button',{name:'Modifica contorno'}));
   expect(screen.getByTestId('focus-marker')).toHaveAttribute('cx','5');
   expect(screen.getAllByRole('button',{name:/^Vertice /})).toHaveLength(4);
   fireEvent.change(screen.getByLabelText('Esito Stanza · verifica 1'),{target:{value:'excluded_from_computation'}});

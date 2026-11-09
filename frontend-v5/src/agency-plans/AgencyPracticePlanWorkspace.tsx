@@ -101,11 +101,11 @@ function Workspace(p:WorkspaceProps){
   const entries=[...new Map(issues.map(issue=>[JSON.stringify([issue.id,issue.code]),issue])).values()].map((issue,index)=>{
    const room=rooms.find(item=>item.id===issue.id||item.symbols?.some(symbol=>symbol.id===issue.id))??proposal?.rooms.find(item=>item.id===issue.id);
    const symbol=room?.symbols?.find(item=>item.id===issue.id);
-   return {issue,room,symbol,number:issue.number??index+1};
+   return {issue,room,symbol,canEdit:!!room&&rooms.some(item=>item.id===room.id)&&!p.readOnly,number:issue.number??index+1};
   });
   const switchBlocked=manualOpen||!!builder||!!draft||configDirty||!!pending||busy;
   const accessories=rooms.filter(isAppurtenance),principals=rooms.filter(room=>!isAppurtenance(room));
-  const drawStep=!rooms.length?'Aggiungi il primo vano sulla mappa.':entries.length?`Controlla ${entries.length===1?'la verifica aperta':`le ${entries.length} verifiche aperte`}: «Mostra sulla mappa» porta al punto da guardare.`:'Nessuna verifica aperta: passa a Calcola superfici.';
+  const drawStep=!rooms.length?'Aggiungi il primo vano sulla mappa.':entries.length?`Controlla ${entries.length===1?'la verifica aperta':`le ${entries.length} verifiche aperte`}: «Modifica contorno» apre i punti del vano sulla mappa.`:'Nessuna verifica aperta: passa a Calcola superfici.';
   const measureStep=!gross?'Nessun perimetro proposto: disegnalo sulla mappa, oppure usa la stima dai vani.':gross.status==='proposed'?'Controlla il perimetro proposto sulla mappa, scegli la copertura dei balconi e premi Salva stima.':gross.status==='draft'?'Perimetro modificato: premi Salva stima per confermarlo.':plan.quickEstimate?'Stima salvata. Selezionando un contorno puoi correggerlo: la stima si aggiorna da sola.':'Scegli la copertura dei balconi e premi Salva stima.';
   const nextStep=task==='draw'?drawStep:task==='measure'?measureStep:'Controlla l’anteprima, conferma che la pianta è completa e scarica l’immagine.';
   const tasks=[['draw','Modifica pianta'],['measure','Calcola superfici'],['listing','Pianta per annuncio']] as const;
@@ -161,10 +161,11 @@ function Workspace(p:WorkspaceProps){
       <section className={styles.panelSection} aria-labelledby="issues-heading"><h4 id="issues-heading">Verifiche aperte · {entries.length}</h4>
        {!entries.length?<p>Nessuna verifica aperta.</p>:<>
         {draft&&<p className={styles.muted}>Salva il contorno in modifica per chiudere le verifiche.</p>}
-        <ul className={styles.issueList}>{entries.map(({issue,room,symbol,number})=><PlanIssueReview key={JSON.stringify([plan.id,issue.id,issue.code])} index={number}
+        <ul className={styles.issueList}>{entries.map(({issue,room,symbol,canEdit,number})=><PlanIssueReview key={JSON.stringify([plan.id,issue.id,issue.code])} index={number}
          roomLabel={room?.label} symbolReason={symbol?.reason}
          description={issueLabels[issue.code]||'Una zona richiede controllo manuale.'}
-         onShow={room&&sourceUrl?()=>show(room.id,symbol?.point,!!symbol):undefined}
+         onShow={room&&sourceUrl&&(canEdit||!showProposal||proposal?.rooms.some(item=>item.id===room.id))?()=>{if(canEdit&&showProposal){setPreviewKey('');setReviewedKey('');}show(room.id,symbol?.point,!!symbol);}:undefined}
+         showLabel={canEdit?'Modifica contorno':undefined} showDisabled={canEdit&&(locked||switchBlocked)}
          disabled={locked||!!draft||configDirty||showProposal||!!builder||manualOpen}
          geometryEdited={(plan.geometryRevision||1)>1}
          issue={issue} onResolve={resolveIssue}/>)}</ul>
