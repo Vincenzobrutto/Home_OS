@@ -1,9 +1,40 @@
 import {fireEvent,render,screen,within} from '@testing-library/react';
 import {afterEach,expect,it,vi} from 'vitest';
 import {ListingPlanReview} from './ListingPlanReview';
+import {detectPlanScale} from './detectPlanScale';
 import type {PlanShape} from './PlanMeasurementView';
 
-afterEach(()=>vi.unstubAllGlobals());
+vi.mock('./detectPlanScale',()=>({detectPlanScale:vi.fn()}));
+afterEach(()=>{vi.unstubAllGlobals();vi.resetAllMocks();});
+
+function planMap(){
+ const map=screen.getByLabelText('Pianta illustrativa modificabile');
+ Object.defineProperty(map,'getScreenCTM',{value:()=>({a:1,b:0,inverse:()=>null})});
+ vi.stubGlobal('DOMPoint',class {
+  x:number;
+  y:number;
+  constructor(x:number,y:number){this.x=x;this.y=y;}
+  matrixTransform(){return this;}
+ });
+ return map;
+}
+
+it('inserts an 80 cm door from the document bar without a saved scale',async()=>{
+ vi.mocked(detectPlanScale).mockResolvedValue({
+  bar:{start:[0,0],end:[100,0],metres:5,method:'detected_bar'},denominator:null,ambiguous:false,
+ });
+ const rooms:PlanShape[]=[{id:'room',label:'Soggiorno',points:[[10,10],[80,10],[80,80],[10,80]],holes:[]}];
+ const onApply=vi.fn();
+ render(<ListingPlanReview sourceUrl="/plan.png" width={100} height={100} rooms={rooms}
+  disabled={false} onClose={()=>{}} onApply={onApply}/>);
+ const map=planMap();
+ fireEvent.click(screen.getByRole('button',{name:'Aggiungi porta'}));
+ expect(screen.getByText(/Cerco la barra metrica/)).toBeInTheDocument();
+ await screen.findByText(/porta da 80 cm/);
+ fireEvent.click(map,{clientX:45,clientY:10});
+ fireEvent.click(screen.getByRole('button',{name:'Salva dettagli per l’annuncio'}));
+ expect(onApply.mock.calls[0]?.[0].openings).toEqual([{kind:'door',start:[37,10],end:[53,10],fixed:true}]);
+});
 
 it('shows a guide when Shift is held mid-drag and saves the snapped vertex',()=>{
  const rooms:PlanShape[]=[
@@ -14,14 +45,7 @@ it('shows a guide when Shift is held mid-drag and saves the snapped vertex',()=>
  render(<ListingPlanReview sourceUrl="/plan.png" width={100} height={100} rooms={rooms}
   saved={{geometryRevision:1,openings:[],alignments:[],contours:rooms.map(({id,points,holes})=>({id,geometry:{points,holes}}))}}
   disabled={false} onClose={()=>{}} onApply={onApply}/>);
- const map=screen.getByLabelText('Pianta illustrativa modificabile');
- Object.defineProperty(map,'getScreenCTM',{value:()=>({a:1,b:0,inverse:()=>null})});
- vi.stubGlobal('DOMPoint',class {
-  x:number;
-  y:number;
-  constructor(x:number,y:number){this.x=x;this.y=y;}
-  matrixTransform(){return this;}
- });
+ const map=planMap();
  const room=within(map).getByRole('button',{name:'Soggiorno · modifica muri'});
  fireEvent.click(room);
  const vertex=within(map).getByRole('button',{name:'Punto 3 · Soggiorno'});

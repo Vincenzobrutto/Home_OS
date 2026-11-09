@@ -27,6 +27,23 @@ export function ListingPlanReview(p:Props){
  const [roomId,setRoom]=useState('');
  const [selected,setSelected]=useState(-1);
  const [tool,setTool]=useState<'select'|ListingOpening['kind']>('select');
+ const [detectedScale,setDetectedScale]=useState<{metresPerPixel:Point|null}|null>(null);
+ const [manualDoor,setManualDoor]=useState(false);
+ const doorScale=p.metresPerPixel??detectedScale?.metresPerPixel;
+ const readingScale=tool==='door'&&!manualDoor&&!doorScale&&!detectedScale;
+ useEffect(()=>{
+  if(!readingScale)return;
+  const controller=new AbortController();
+  void import('./detectPlanScale').then(({detectPlanScale})=>detectPlanScale(p.sourceUrl,controller.signal))
+   .then(({bar,ambiguous})=>{
+    if(controller.signal.aborted)return;
+    const factor=bar&&!ambiguous?bar.metres/Math.hypot(bar.end[0]-bar.start[0],bar.end[1]-bar.start[1]):0;
+    setDetectedScale({metresPerPixel:Number.isFinite(factor)&&factor>0?[factor,factor]:null});
+   }).catch(()=>{
+    if(!controller.signal.aborted)setDetectedScale({metresPerPixel:null});
+   });
+  return()=>controller.abort();
+ },[p.sourceUrl,readingScale]);
  const [original,setOriginal]=useState(false);
  const [ortho,setOrtho]=useState(false);
  const [start,setStart]=useState<Point|null>(null);
@@ -95,14 +112,14 @@ export function ListingPlanReview(p:Props){
   setRows(current=>current.map((row,i)=>i===index?{...row,opening}:row));
  }
  function add(event:MouseEvent){
-  if(busy||tool==='select'||rows.length>=100)return;
+  if(busy||readingScale||tool==='select'||rows.length>=100)return;
   const point=position(event);
   if(!point)return;
-  const scaled=tool==='door'&&p.metresPerPixel;
+  const scaled=tool==='door'&&!manualDoor&&doorScale;
   if(!scaled&&!start){setStart(point);setNotice('');return;}
   const opening=scaled?placeScaledListingDoor(point,walls,span*.018,scaled,drawing,span*.035)
    :start?placeListingOpening({kind:tool,start,end:point},walls,span*.018):null;
-  if(!opening||length(opening.start,opening.end)<span*.002){
+  if(!opening||(!scaled&&length(opening.start,opening.end)<span*.002)){
    setNotice(scaled?'Scegli un tratto di muro adatto alla porta.':'Scegli due punti distinti sullo stesso muro.');
    return;
   }
@@ -188,7 +205,7 @@ export function ListingPlanReview(p:Props){
  }
  function activate(event:KeyboardEvent<SVGElement>,select:()=>void){if(event.key==='Enter'||event.key===' '){event.preventDefault();select();}}
  function chooseRoom(id:string){if(tool==='select'&&!busy){setRoom(id);setSelected(-1);setNotice('');}}
- function pickTool(next:typeof tool){setTool(next);setStart(null);setNotice('');if(next!=='select'){setRoom('');setSelected(-1);}}
+ function pickTool(next:typeof tool){setManualDoor(false);setTool(next);setStart(null);setNotice('');if(next!=='select'){setRoom('');setSelected(-1);}}
  const shown=active?(draggedOpening??shownOpening(active)):null;
  return <dialog className={`${styles.panel} ${styles.builderDialog} ${styles.listingReviewDialog}`} ref={dialog} aria-label="Editor pianta per annuncio" onCancel={e=>{e.preventDefault();p.onClose();}}>
   <h3>Modifica pianta per l’annuncio</h3>
@@ -202,7 +219,14 @@ export function ListingPlanReview(p:Props){
    <label>Zoom <input aria-label="Zoom pianta" type="range" min="1" max={MAX_PLAN_ZOOM} step=".25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
   </div>
   <div className={styles.listingReviewControls} aria-live="polite">
-   {tool!=='select'?<span>{tool==='door'&&p.metresPerPixel?'Fai clic sul muro per posizionare una porta da 80 cm.':start?'Fai clic sul secondo estremo sullo stesso muro.':'Fai clic sul primo estremo dell’apertura.'}</span>:active?<>
+   {tool!=='select'?<>
+    <span>{readingScale?'Cerco la barra metrica nella planimetria…'
+     :tool==='door'&&!manualDoor&&doorScale?'Fai clic sul muro per posizionare una porta da 80 cm.'
+     :start?'Fai clic sul secondo estremo sullo stesso muro.'
+     :tool==='door'&&!manualDoor?'Barra metrica non riconosciuta. Puoi indicare due estremi qui oppure impostare la scala in Calcola superfici.'
+     :'Fai clic sul primo estremo dell’apertura.'}</span>
+    {readingScale&&<button type="button" onClick={()=>setManualDoor(true)}>Indica due estremi</button>}
+   </>:active?<>
     <strong>{active.opening.kind==='door'?'Porta':'Finestra'} {selected+1} di {rows.length}</strong>
     <span>Trascina il simbolo per spostarlo o un estremo per ridimensionarlo.</span>
     {!active.confirmed&&<button type="button" disabled={busy} onClick={()=>setRows(rows.map((row,i)=>i===selected?{...row,confirmed:true}:row))}>Conferma</button>}
