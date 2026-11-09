@@ -2,7 +2,7 @@ import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 
 export const MAX_PLAN_ZOOM=6;
 
-export function usePlanZoom<MapElement extends Element=SVGSVGElement>({disabled=false,min=1}={}){
+export function usePlanZoom<MapElement extends Element=SVGSVGElement>({disabled=false,min=1,requireControl=false}={}){
  const [zoom,setZoom]=useState(1);
  const scrollRef=useRef<HTMLDivElement>(null);
  const mapRef=useRef<MapElement>(null);
@@ -21,12 +21,16 @@ export function usePlanZoom<MapElement extends Element=SVGSVGElement>({disabled=
   const scroll=scrollRef.current,map=mapRef.current;
   if(disabled||!scroll||!map)return;
   const wheel=(event:WheelEvent)=>{
-   if(event.ctrlKey||event.metaKey||event.deltaY===0||!map.contains(event.target as Node))return;
+   if(event.deltaY===0||!map.contains(event.target as Node))return;
+   const zoomGesture=requireControl?event.ctrlKey:!event.ctrlKey&&!event.metaKey;
+   if(!zoomGesture)return;
+   // Keep Ctrl+wheel inside the map even when the zoom is already at its limit.
+   if(requireControl)event.preventDefault();
    const next=Math.min(MAX_PLAN_ZOOM,Math.max(min,zoom+(event.deltaY<0?0.25:-0.25)));
    if(next===zoom)return;
    const box=map.getBoundingClientRect();
    if(!box.width||!box.height)return;
-   event.preventDefault();
+   if(!requireControl)event.preventDefault();
    anchor.current={x:(event.clientX-box.left)/box.width,y:(event.clientY-box.top)/box.height,clientX:event.clientX,clientY:event.clientY};
    setZoom(next);
   };

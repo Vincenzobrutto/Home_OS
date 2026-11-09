@@ -38,19 +38,28 @@ it('simple map shows contextual editing only after selecting a room, and offers 
  expect(screen.queryByRole('button',{name:'Aggiungi punto su un lato'})).not.toBeInTheDocument();
 });
 
-it('zooms on the map around the pointer and stops at 600%',()=>{
+it('zooms around the pointer only with Ctrl+wheel and consumes the gesture at both limits',()=>{
  render(<PlanMeasurementView {...props()} drawingOnly simple/>);
  const map=screen.getByRole('img',{name:'Contorni dei singoli vani'}),viewport=map.parentElement!;
  const controls=screen.getByRole('group',{name:'Zoom planimetria'});
  const box=()=>{const width=Number(controls.textContent?.match(/(\d+)%/)?.[1]??100);return {width,height:width,left:-viewport.scrollLeft,top:-viewport.scrollTop} as DOMRect;};
  vi.spyOn(map,'getBoundingClientRect').mockImplementation(box);
- fireEvent.wheel(map,{deltaY:-100,clientX:40,clientY:60});
+ const wheel=(deltaY:number,ctrlKey=false)=>fireEvent(map,new WheelEvent('wheel',{
+  bubbles:true,cancelable:true,deltaY,ctrlKey,clientX:40,clientY:60,
+ }));
+ expect(wheel(-100)).toBe(true);
+ expect(controls).toHaveTextContent('100%');
+ expect(wheel(100,true)).toBe(false);
+ expect(wheel(-100,true)).toBe(false);
  expect(controls).toHaveTextContent('125%');
  expect(viewport.scrollLeft).toBe(10);
  expect(viewport.scrollTop).toBe(15);
- for(let i=0;i<25;i++)fireEvent.wheel(map,{deltaY:-100,clientX:40,clientY:60});
+ for(let i=0;i<19;i++)wheel(-100,true);
  expect(controls).toHaveTextContent('600%');
  expect(screen.getByRole('button',{name:'Aumenta zoom'})).toBeDisabled();
+ expect(wheel(-100,true)).toBe(false);
+ expect(wheel(100)).toBe(true);
+ expect(controls).toHaveTextContent('600%');
 });
 
 it('moves a focused vertex with the arrow keys and keeps context outlines out of the interactive map',()=>{

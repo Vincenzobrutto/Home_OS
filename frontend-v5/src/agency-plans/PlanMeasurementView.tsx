@@ -18,7 +18,7 @@ export function PlanMeasurementView(props:PlanMeasurementProps){return <PlanMeas
 function PlanMeasurementEditor(props:PlanMeasurementProps){
  const [removeId,setRemoveId]=useState<string|null>(null);
  const [selectedView,setView]=useState<'rooms'|'perimeter'>(props.initialView??'rooms'),[selection,setSelection]=useState<string|null>(null),[ringIndex,setRingIndex]=useState(0),[showLines,setShowLines]=useState(true),[insert,setInsert]=useState(false),[vertex,setVertex]=useState<number|null>(null),[undo,setUndo]=useState<Array<{view:'rooms'|'perimeter';shape:PlanShape}>>([]);
- const {zoom,setZoom,scrollRef,mapRef}=usePlanZoom();
+ const {zoom,setZoom,scrollRef,mapRef}=usePlanZoom({requireControl:true});
  const [mapScale,setMapScale]=useState<number>();
  const drag=useRef<{pointerId:number;index:number;start:DOMPoint;original:Point;moved:boolean}|null>(null);
  useEffect(()=>{
@@ -84,8 +84,10 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   event.currentTarget.setPointerCapture(event.pointerId);
  }
  function moveVertex(event:PointerEvent<SVGSVGElement>){
-  const active=drag.current,matrix=event.currentTarget.getScreenCTM();
-  if(!active||active.pointerId!==event.pointerId||!selected||props.readOnly||!matrix)return;
+  const active=drag.current;
+  if(!active||active.pointerId!==event.pointerId||!selected||props.readOnly)return;
+  const matrix=event.currentTarget.getScreenCTM();
+  if(!matrix)return;
   const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
   const dx=point.x-active.start.x,dy=point.y-active.start.y;
   if(!active.moved&&Math.hypot(dx,dy)*Math.abs(matrix.a)<3)return;
@@ -101,7 +103,26 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   if(drag.current?.pointerId===event.pointerId)drag.current=null;
  }
  function mode(next:'rooms'|'perimeter'){setView(next);setSelection(null);setRingIndex(0);setVertex(null);drag.current=null;setInsert(false);}
- function add(edge:number){if(!selected||props.readOnly)return;const next=structuredClone(selected),p=[next.points,...next.holes][ringIndex]||next.points,a=p[edge]!,b=p[(edge+1)%p.length]!;p.splice(edge+1,0,[(a[0]+b[0])/2,(a[1]+b[1])/2]);change(next);setVertex(edge+1);}
+ function add(edge:number,click?:{x:number;y:number}){
+  if(!selected||props.readOnly)return;
+  const next=structuredClone(selected);
+  const points=[next.points,...next.holes][ringIndex]||next.points;
+  const start=points[edge]!,end=points[(edge+1)%points.length]!;
+  const dx=end[0]-start[0],dy=end[1]-start[1];
+  const lengthSquared=dx*dx+dy*dy;
+  if(!lengthSquared)return;
+  let fraction=.5;
+  if(click){
+   const matrix=mapRef.current?.getScreenCTM();
+   if(!matrix)return;
+   const point=new DOMPoint(click.x,click.y).matrixTransform(matrix.inverse());
+   fraction=((point.x-start[0])*dx+(point.y-start[1])*dy)/lengthSquared;
+   if(fraction<=0||fraction>=1)return;
+  }
+  points.splice(edge+1,0,[start[0]+fraction*dx,start[1]+fraction*dy]);
+  change(next);
+  setVertex(edge+1);
+ }
  function remove(){if(!selected||vertex===null||ring.length<=3||props.readOnly)return;const next=structuredClone(selected),p=[next.points,...next.holes][ringIndex]||next.points;p.splice(vertex,1);change(next);setVertex(null);}
  function includeSelectedHole(){
   if(props.readOnly||!selected||ringIndex===0||!selected.holes[ringIndex-1])return;
@@ -127,7 +148,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
     {props.onAddRoom&&<button type="button" disabled={props.readOnly||props.hasUnsavedChanges} onClick={props.onAddRoom}>Aggiungi vano</button>}
     {props.toolbarActions}
     {props.onRemoveRoom&&<button type="button" aria-label="Elimina vano selezionato" disabled={props.readOnly||!selected||selected.id===props.perimeter?.id||props.hasUnsavedChanges} onClick={()=>selected&&setRemoveId(selected.id)}>Elimina</button>}
-    <div className={styles.zoomTools} role="group" aria-label="Zoom planimetria"><button type="button" aria-label="Riduci zoom" disabled={zoom<=1} onClick={()=>setZoom(v=>Math.max(1,v-.25))}>−</button><output aria-live="polite">{Math.round(zoom*100)}%</output><button type="button" aria-label="Aumenta zoom" disabled={zoom>=MAX_PLAN_ZOOM} onClick={()=>setZoom(v=>Math.min(MAX_PLAN_ZOOM,v+.25))}>+</button><button type="button" aria-label="Adatta al riquadro" disabled={zoom===1} onClick={()=>setZoom(1)}>1:1</button></div>
+    <div className={styles.zoomTools} role="group" aria-label="Zoom planimetria" title="Ctrl + rotellina sulla mappa"><button type="button" aria-label="Riduci zoom" disabled={zoom<=1} onClick={()=>setZoom(v=>Math.max(1,v-.25))}>−</button><output aria-live="polite">{Math.round(zoom*100)}%</output><button type="button" aria-label="Aumenta zoom" disabled={zoom>=MAX_PLAN_ZOOM} onClick={()=>setZoom(v=>Math.min(MAX_PLAN_ZOOM,v+.25))}>+</button><button type="button" aria-label="Adatta al riquadro" disabled={zoom===1} onClick={()=>setZoom(1)}>1:1</button></div>
     {props.onDiscard&&props.hasUnsavedChanges&&<button type="button" disabled={props.readOnly} onClick={()=>{props.onDiscard?.();setVertex(null);setUndo([]);}}>Scarta modifiche</button>}
     {props.onSaveGeometry&&<button className={styles.saveAction} type="button" disabled={props.readOnly||!props.hasUnsavedChanges} onClick={props.onSaveGeometry}>Salva modifiche</button>}
     {selected&&!props.readOnly&&<div className={styles.vertexTools} role="group" aria-label="Correzione del vano selezionato">
@@ -138,7 +159,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
      <button type="button" disabled={!undo.length} onClick={()=>{const previous=undo.at(-1);if(previous){props.onChange(previous.view,previous.shape);setUndo(u=>u.slice(0,-1));setVertex(null);}}}>Annulla modifica</button>
     </div>}
    </div>
-   <p className={styles.editHint}>{selected?<><strong>{selected.label}</strong> · {props.hasUnsavedChanges?'Modifiche da salvare.':(props.readOnly?'Solo consultazione.':ringIndex>0?'Modifica i punti del vuoto o includi tutta l’area nel vano.':'Trascina i punti, oppure selezionali con Tab e spostali con le frecce.')}</>:(props.readOnly?'Seleziona un vano per consultarlo.':'Tocca un vano per modificarlo.')}</p>
+   <p className={styles.editHint}>{selected?<><strong>{selected.label}</strong> · {insert?'Fai clic sul contorno per aggiungere un punto.':props.hasUnsavedChanges?'Modifiche da salvare.':(props.readOnly?'Solo consultazione.':ringIndex>0?'Modifica i punti del vuoto o includi tutta l’area nel vano.':'Trascina i punti, oppure selezionali con Tab e spostali con le frecce.')}</>:(props.readOnly?'Seleziona un vano per consultarlo.':'Tocca un vano per modificarlo.')} Zoom con Ctrl + rotellina.</p>
   </>}
   <div className={styles.controls} hidden={!!props.simple||(!!props.readOnly&&!!props.drawingOnly)}>
    {shapes.length>0&&<label>Geometria<select aria-label="Geometria" value={selected?.id||''} onChange={e=>{setRemoveId(null);setSelection(e.target.value);setRingIndex(0);setVertex(null);}}>{shapes.map(s=><option value={s.id} key={s.id}>{s.label}</option>)}</select></label>}
@@ -154,9 +175,16 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
    <image href={props.sourceUrl} x="0" y="0" width={props.width} height={props.height}/>
    {showLines&&props.contextShapes?.map(s=><path key={'context-'+s.id} data-testid={`context-${s.id}`} d={path(s)} fill="none" stroke="#7d8f8c" strokeDasharray="5 4" strokeWidth={Math.max(props.width/1200,1)} pointerEvents="none"/>)}
    {showLines&&shapes.map(s=><path key={s.id} data-testid={`shape-${s.id}`} d={path(s)} fill={props.excludedCandidateIds?.includes(s.id)?'none':props.candidateIds?.includes(s.id)||props.warnIds?.includes(s.id)?'rgba(255,155,0,.2)':'rgba(0,125,154,.08)'} fillRule="evenodd" strokeDasharray={props.excludedCandidateIds?.includes(s.id)?'6 4':undefined} stroke={props.excludedCandidateIds?.includes(s.id)?'#87948f':props.candidateIds?.includes(s.id)||props.warnIds?.includes(s.id)?'#b76b00':s.id===selected?.id?'#006d80':'#c73572'} strokeWidth={Math.max(props.width/800,1)} role={props.simple?'button':undefined} aria-label={props.simple?'Seleziona vano '+s.label:undefined} tabIndex={props.simple?0:undefined} onClick={()=>selectShape(s.id)} onKeyDown={e=>{if(props.simple&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selectShape(s.id);}}}/>)}
+   {showLines&&selected&&!props.readOnly&&insert&&ring.map(([x,y],i)=>{
+    const [nextX,nextY]=ring[(i+1)%ring.length]!;
+    return <line key={i} role="button" aria-label={`Inserisci punto sul lato ${i+1}`} tabIndex={0}
+     x1={x} y1={y} x2={nextX} y2={nextY} className={styles.insertEdge}
+     strokeWidth="14" vectorEffect="non-scaling-stroke" pointerEvents="stroke"
+     onClick={event=>add(i,event.detail===0?undefined:{x:event.clientX,y:event.clientY})}
+     onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();add(i);}}}/>;
+   })}
    {showLines&&selected&&!props.readOnly&&ring.map((p,i)=><g key={i}>
-    {insert&&<circle role="button" aria-label={`Inserisci punto sul lato ${i+1}`} tabIndex={0} cx={(p[0]+ring[(i+1)%ring.length]![0])/2} cy={(p[1]+ring[(i+1)%ring.length]![1])/2} r=".1" fill="none" stroke="#b45b00" strokeWidth="6" vectorEffect="non-scaling-stroke" onClick={()=>add(i)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();add(i);}}}/>}
-    <circle role="button" aria-label={`Vertice ${i+1}`} tabIndex={0} cx={p[0]} cy={p[1]} r={hitRadius} fill="transparent" pointerEvents="fill" style={{touchAction:'none',cursor:'grab'}} onPointerDown={event=>startDrag(event,i)} onClick={event=>{if(event.detail===0)setVertex(i);}} onKeyDown={e=>{const step=Math.max(props.width,props.height)/(e.shiftKey?60:600),moves:Record<string,[number,number]>={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};if(e.key==='Enter')setVertex(i);else if(moves[e.key]){e.preventDefault();nudge(i,...moves[e.key]!);}else if((e.key==='Delete'||e.key==='Backspace')&&ring.length>3){e.preventDefault();setVertex(i);const next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points;points.splice(i,1);change(next);setVertex(null);}}}/>
+    <circle role="button" aria-label={`Vertice ${i+1}`} tabIndex={0} cx={p[0]} cy={p[1]} r={hitRadius} fill="transparent" pointerEvents={insert?"none":"fill"} style={{touchAction:'none',cursor:'grab'}} onPointerDown={event=>startDrag(event,i)} onClick={event=>{if(event.detail===0)setVertex(i);}} onKeyDown={e=>{const step=Math.max(props.width,props.height)/(e.shiftKey?60:600),moves:Record<string,[number,number]>={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};if(e.key==='Enter')setVertex(i);else if(moves[e.key]){e.preventDefault();nudge(i,...moves[e.key]!);}else if((e.key==='Delete'||e.key==='Backspace')&&ring.length>3){e.preventDefault();setVertex(i);const next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points;points.splice(i,1);change(next);setVertex(null);}}}/>
     <circle aria-hidden="true" cx={p[0]} cy={p[1]} r=".1" fill="none" stroke={vertex===i?'#b45b00':'#006d80'} strokeWidth="5" vectorEffect="non-scaling-stroke" pointerEvents="none"/>
    </g>)}
    {marker&&<circle data-testid="focus-marker" aria-hidden="true" cx={marker[0]} cy={marker[1]} r=".1" fill="none" stroke="#d14900" strokeWidth="26" strokeOpacity=".55" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}

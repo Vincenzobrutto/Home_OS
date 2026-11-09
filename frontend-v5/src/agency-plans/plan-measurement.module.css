@@ -32,3 +32,6 @@
 .editorToolbar .zoomTools+.saveAction,.editorToolbar .zoomTools~.saveAction{margin-left:0}
 @media(max-width:500px){.editorToolbar .zoomTools{margin:0;flex:1 1 100%;justify-content:flex-start}.editorToolbar .zoomTools button{flex:0 0 auto}}
 @media(max-width:500px){.editorToolbar>button{flex:1 1 auto}}
+
+.insertEdge{stroke:transparent;cursor:crosshair}
+.insertEdge:hover,.insertEdge:focus-visible{stroke:#b45b0066}
