@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Agenzie — Planimetria con una mappa e tre attività, 9 novembre (implementato, PR impilata su #83)
+
+Claude, ramo `claude/agency-plan-page-20261109` creato dal checkout `work/agency-quick-surfaces-20261105` (include i 6 commit locali di Codex non pubblicati su #83), sopra le modifiche locali già presenti (conservate). Una sola mappa con Modifica pianta / Calcola superfici / Pianta per annuncio; verifiche aperte accanto alla mappa e collegate al vano/punto; riepilogo scala–lordo–pertinenze–totale con Salva stima; balconi Coperto/Scoperto con rischio di doppio conteggio; nuovo comando `save_quick_estimate` (coperture + scala, nessuna migrazione). Verificati: backend agency-plans 133/133, frontend agenzie 99/99 + scala 10/10, typecheck/lint/build, browser sintetico desktop e 375 px. Non verificati: runtime reale, HTTP/DB del nuovo comando, OCR in browser visibile. Commit e PR verso `codex/agency-quick-surfaces-20261105`; nessun merge. [Report e limiti](v5/agency-plan-page-simplify-20261109.md).
+
 ## Agenzie — superfici immediate con riferimento automatico, attive localmente
 
 Richiesta del committente: niente form tecnico obbligatorio per ottenere le superfici. Lotto `codex/agency-quick-surfaces-20261105`, checkout separato, basePR82. Riconoscimento locale OCR/pixel della barra e scala, alternativa formato foglio; stima dei soli vani presenti con ipotesi esplicite. Computo rigoroso/salvato conservato nei dettagli opzionali. Solo frontend, nessuna AI esterna o modifica ai dati originali. Codice ba984f6 attivo localmente, API/PG preservati. 93/93 gruppo iniziale, 10/10 finali nei due moduli modificati, typecheck/lint/build e browser desktop375 verdi. Sulla pratica reale rilevata scala1:200, richiesta soltanto formato; nessun salvataggio o invio AI. Stima temporanea non persistita. [Report e limiti](v5/agency-quick-surfaces-20261105.md).

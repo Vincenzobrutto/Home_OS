@@ -60,10 +60,12 @@ function listingImage(rooms: PlanShape[]) {
  return canvas.toDataURL('image/png');
 }
 
-export function ListingPlanExport({rooms,disabled}:{rooms:PlanShape[];disabled:boolean}) {
- const [preview,setPreview] = useState('');
+export function ListingPlanExport({rooms,disabled,autoPreview=false}:{rooms:PlanShape[];disabled:boolean;autoPreview?:boolean}) {
+ // In the listing task the image is drawn on entry: the component is keyed by geometry revision.
+ const [initial] = useState(()=>{if(!autoPreview||!rooms.length)return {preview:'',error:false};try{return {preview:listingImage(rooms),error:false};}catch{return {preview:'',error:true};}});
+ const [preview,setPreview] = useState(initial.preview);
  const [complete,setComplete] = useState(false);
- const [error,setError] = useState(false);
+ const [error,setError] = useState(initial.error);
 
  function open() {
   try {
@@ -76,8 +78,9 @@ export function ListingPlanExport({rooms,disabled}:{rooms:PlanShape[];disabled:b
  }
 
  return <section className={styles.panel} aria-label="Pianta per l’annuncio">
-  <h3>Pianta per l’annuncio</h3>
-  <button type="button" disabled={disabled} onClick={open}>Anteprima annuncio</button>
+  {!autoPreview&&<><h3>Pianta per l’annuncio</h3>
+  <button type="button" disabled={disabled} onClick={open}>Anteprima annuncio</button></>}
+  {autoPreview&&!rooms.length&&<p>Salva almeno un vano per preparare l’immagine dell’annuncio.</p>}
   {error&&<p role="alert">Impossibile creare l’immagine della planimetria.</p>}
   {preview&&<div>
    <p>{rooms.length} {rooms.length===1?'vano salvato':'vani salvati'}. Controlla che la pianta mostri tutti gli ambienti da pubblicare.</p>

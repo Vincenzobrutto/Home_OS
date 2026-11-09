@@ -1,17 +1,35 @@
 import type {CoverageReport} from './coverage';
 import { createHash } from 'node:crypto';
 import { evidenceCurrent, requirePractice, sourceReadable, PracticeError, type Actor, type Practice } from '../agency-practices/domain';
-import { assert, overlaps, validPolygon, type Polygon } from './geometry';
+import { assert, overlaps, validPolygon, type Point, type Polygon } from './geometry';
 import type { analyzePlan, PlanProof } from './pipeline';
 import type { Region, RasterRendering, SegmentationDiagnostic } from './raster';
 import {roomGeometryDigest,surfaceProposalDigest,type SurfaceProposal} from './surface-proposal';
 import {carveManualRoom} from './manual-room';
 import { commercialReport, commercialPerimeterReport, type CommercialInput, type SurfaceLine } from './commercial';
 type Analysis=Awaited<ReturnType<typeof analyzePlan>>;
+type NumberedIssue=Analysis['final']['issues'][number]&{number?:number};
+export type BalconyCover={id:string;cover:'covered'|'uncovered'|'unset'};
+/** Quick estimate inputs only. Areas are recomputed from current geometry on every read; never a certified or detailed computation. */
+export type QuickEstimateScale={mode:'paper';format:'A4'|'A3'|'A2'|'A1';denominator:number}|{mode:'manual'|'bar';start:Point;end:Point;metres:number};
+export type QuickEstimate={scale?:QuickEstimateScale;savedAt:string;geometryRevision:number};
 type StoredRegion=Omit<Region,'seed'|'component'|'pixelArea'>&{seed:Region['seed']|null;component:number|null;pixelArea:number|null;origin?:'manual'|'geometry_proposal';surfaceProposalDigest?:string;surfaceBasis?:'wall_envelope'|'reallocated_to_wall_envelope';derivedFrom?:string};
-export type StoredPlan={id:string;creatorId:string;proof:PlanProof;fingerprint:string;rasterSize:{width:number;height:number};rasterSHA256:string;rendering?:RasterRendering|null;resultDigest:string;version:number;createdAt:string;geometryRevision:number;rooms:StoredRegion[];issues:Analysis['final']['issues'];warnings:string[];retainedSymbols:string[];annexInventory?:Analysis['annexInventory'];openingReviews?:Analysis['openingReviews'];surfaceProposal?:SurfaceProposal|null;analysisDiagnostics?:SegmentationDiagnostic[];coverage?:CoverageReport|null;calls:Analysis['calls'];status:'draft'|'needs_review';confirmed:false;mainPerimeter:Polygon|null;measurementConfiguration?:MeasurementConfiguration|null;measurement?:ReturnType<typeof commercialReport>|ReturnType<typeof commercialPerimeterReport>|null;edits?:Array<{at:string;actorId:string;reason:string;geometryRevision:number;rooms:StoredRegion[];mainPerimeter:Polygon|null}>};
+export type StoredPlan={id:string;creatorId:string;proof:PlanProof;fingerprint:string;rasterSize:{width:number;height:number};rasterSHA256:string;rendering?:RasterRendering|null;resultDigest:string;version:number;createdAt:string;geometryRevision:number;rooms:StoredRegion[];issues:NumberedIssue[];lastIssueNumber?:number;balconyCovers?:BalconyCover[];quickEstimate?:QuickEstimate;warnings:string[];retainedSymbols:string[];annexInventory?:Analysis['annexInventory'];openingReviews?:Analysis['openingReviews'];surfaceProposal?:SurfaceProposal|null;analysisDiagnostics?:SegmentationDiagnostic[];coverage?:CoverageReport|null;calls:Analysis['calls'];status:'draft'|'needs_review';confirmed:false;mainPerimeter:Polygon|null;perimeterProposal?:Polygon;measurementConfiguration?:MeasurementConfiguration|null;measurement?:ReturnType<typeof commercialReport>|ReturnType<typeof commercialPerimeterReport>|null;edits?:Array<{at:string;actorId:string;reason:string;geometryRevision:number;rooms:StoredRegion[];mainPerimeter:Polygon|null}>};
 type WithPlans=Practice&{planAnalyses?:StoredPlan[];planReceipts?:Array<{key:string;accountId:string;digest:string;id:string}>};
-export function planViews(actor:Actor,practice:Practice,now:string){requirePractice(actor,practice,'read',now);return {revision:practice.revision,plans:((practice as WithPlans).planAnalyses||[]).filter(plan=>{const source=practice.sources.find(s=>s.id===plan.proof.sourceId);return source&&sourceReadable(actor,practice,source,now);}).map(plan=>{const current=evidenceCurrent(actor,practice,{...plan.proof,excerpt:'Plan source'},now);return current?structuredClone(plan):{id:plan.id,proof:structuredClone(plan.proof),version:plan.version,status:'stale' as const,confirmed:false as const,rooms:null,mainPerimeter:null};})};}
+function numberIssues(plan:StoredPlan,previous:readonly NumberedIssue[]=plan.issues){
+ const key=(issue:NumberedIssue)=>JSON.stringify([issue.id,issue.code]);
+ const known=new Map(previous.filter(issue=>issue.number!==undefined).map(issue=>[key(issue),issue.number!]));
+ let next=Math.max(plan.lastIssueNumber??0,...known.values());
+ plan.issues=plan.issues.map(issue=>{
+  const id=key(issue);
+  let number=known.get(id);
+  if(number===undefined){number=++next;known.set(id,number);}
+  return {...issue,number};
+ });
+ plan.lastIssueNumber=next;
+ return plan;
+}
+export function planViews(actor:Actor,practice:Practice,now:string){requirePractice(actor,practice,'read',now);return {revision:practice.revision,plans:((practice as WithPlans).planAnalyses||[]).filter(plan=>{const source=practice.sources.find(s=>s.id===plan.proof.sourceId);return source&&sourceReadable(actor,practice,source,now);}).map(plan=>{const current=evidenceCurrent(actor,practice,{...plan.proof,excerpt:'Plan source'},now);return current?numberIssues(structuredClone({...plan,balconyCovers:plan.balconyCovers??[]})):{id:plan.id,proof:structuredClone(plan.proof),version:plan.version,status:'stale' as const,confirmed:false as const,rooms:null,mainPerimeter:null};})};}
 /** Internal pipeline completion only. Never expose this method as a client-submittable AI result. */
 export function registerPlan(actor:Actor,original:Practice,analysis:Analysis,expectedRevision:number,now:string){
  requirePractice(actor,original,'edit',now);assert(analysis&&analysis.scope.accountId===actor.accountId&&analysis.scope.agencyId===original.agencyId&&analysis.scope.practiceId===original.id,'plan_scope_changed');
@@ -23,13 +41,13 @@ export function registerPlan(actor:Actor,original:Practice,analysis:Analysis,exp
  assert(analysis.final.regions.length<=100&&analysis.final.regions.every(r=>validPolygon(r))&&analysis.final.issues.length<=200&&analysis.warnings.length<=200&&analysis.calls.length===2);
  for(let i=0;i<analysis.final.regions.length;i++)for(let j=i+1;j<analysis.final.regions.length;j++)assert(!overlaps(analysis.final.regions[i],analysis.final.regions[j]),'region_overlap');
  if(analysis.surfaceProposal)assert(analysis.surfaceProposal.state==='pending'&&analysis.surfaceProposal.sourceFingerprint===analysis.fingerprint&&analysis.surfaceProposal.baseGeometryDigest===roomGeometryDigest(analysis.final.regions)&&analysis.surfaceProposal.digest===surfaceProposalDigest(analysis.surfaceProposal),'surface_proposal_invalid');
- const snapshot:Omit<StoredPlan,'createdAt'|'version'>={id:analysis.runId,creatorId:actor.accountId,proof:structuredClone(analysis.proof),fingerprint:analysis.fingerprint,rasterSize:structuredClone(analysis.rasterSize),rasterSHA256:analysis.rasterSHA256,rendering:analysis.rendering?structuredClone(analysis.rendering):null,resultDigest:'',geometryRevision:1,rooms:structuredClone(analysis.final.regions),surfaceProposal:analysis.surfaceProposal?structuredClone(analysis.surfaceProposal):null,openingReviews:structuredClone(analysis.openingReviews||[]),analysisDiagnostics:structuredClone(analysis.final.diagnostics||[]),...(analysis.final.coverage?{coverage:structuredClone(analysis.final.coverage)}:{}),annexInventory:structuredClone(analysis.annexInventory||[]),issues:structuredClone(analysis.final.issues),warnings:structuredClone(analysis.warnings),retainedSymbols:structuredClone(analysis.retainedSymbols),calls:structuredClone(analysis.calls),status:analysis.status,confirmed:false,mainPerimeter:null};
+ const snapshot:Omit<StoredPlan,'createdAt'|'version'>={id:analysis.runId,creatorId:actor.accountId,proof:structuredClone(analysis.proof),fingerprint:analysis.fingerprint,rasterSize:structuredClone(analysis.rasterSize),rasterSHA256:analysis.rasterSHA256,rendering:analysis.rendering?structuredClone(analysis.rendering):null,resultDigest:'',geometryRevision:1,rooms:structuredClone(analysis.final.regions),surfaceProposal:analysis.surfaceProposal?structuredClone(analysis.surfaceProposal):null,openingReviews:structuredClone(analysis.openingReviews||[]),analysisDiagnostics:structuredClone(analysis.final.diagnostics||[]),...(analysis.final.coverage?{coverage:structuredClone(analysis.final.coverage)}:{}),annexInventory:structuredClone(analysis.annexInventory||[]),issues:structuredClone(analysis.final.issues),warnings:structuredClone(analysis.warnings),retainedSymbols:structuredClone(analysis.retainedSymbols),calls:structuredClone(analysis.calls),status:analysis.status,confirmed:false,mainPerimeter:null,...(analysis.perimeterProposal?{perimeterProposal:structuredClone(analysis.perimeterProposal)}:{})};
  const digest=createHash('sha256').update(JSON.stringify(snapshot)).digest('hex'),prior=(original as WithPlans).planAnalyses?.find(p=>p.id===analysis.runId);
  if(prior){if(prior.creatorId!==actor.accountId||prior.resultDigest!==digest)throw new PracticeError('idempotency_conflict');return {practice:structuredClone(original),id:prior.id,replay:true};}
  if(expectedRevision!==original.revision)throw new PracticeError('revision_conflict');const practice=structuredClone(original) as WithPlans;practice.planAnalyses??=[];assert(practice.planAnalyses.length<100,'plan_limit');snapshot.resultDigest=digest;practice.planAnalyses.push({...snapshot,createdAt:now,version:1});practice.revision++;practice.dependents.push({id:'plan:'+snapshot.id,state:'current',sources:[{...analysis.proof,excerpt:'Plan source'}]});practice.events.push({id:practice.events.length+1,actorId:actor.accountId,at:now,operation:'plan:register',sourceId:analysis.proof.sourceId,revision:practice.revision});return {practice,id:snapshot.id,replay:false};
 }
 export type MeasurementConfiguration=Omit<CommercialInput,'surfaces'|'geometryRevision'|'unresolvedSymbols'>&{base:'rooms_and_walls'|'gross_perimeter';mainRegionIds:string[];assignments:Array<Omit<SurfaceLine,'geometry'>&{id:string}>};
-export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|{operation:'geometry';view:'rooms'|'perimeter';id:string;geometry:Polygon}|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
+export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|{operation:'geometry';view:'rooms'|'perimeter';id:string;geometry:Polygon}|{operation:'save_quick_estimate';covers:BalconyCover[];scale?:QuickEstimateScale}|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
 /** Internal typed application command; HTTP layer still needs an exact DTO/parser before being exposed. */
 export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string){
  requirePractice(actor,original,'edit',now);assert(input&&typeof input.key==='string'&&input.key.trim()&&input.key.length<=120&&typeof input.reason==='string'&&input.reason.trim()&&input.reason.length<=1000&&Number.isSafeInteger(input.expectedRevision)&&Number.isSafeInteger(input.expectedPlanVersion));
@@ -38,6 +56,7 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
  if(prior){if(prior.digest!==digest)throw new PracticeError('idempotency_conflict');return {practice:structuredClone(original),replay:true,id:prior.id};}
  if(original.revision!==input.expectedRevision||target.version!==input.expectedPlanVersion)throw new PracticeError('revision_conflict');
  const practice=structuredClone(original) as WithPlans,plan=practice.planAnalyses!.find(p=>p.id===target.id)!,command=input.command;
+ const numberedBefore=numberIssues(plan).issues;
  if(command.operation==='apply_surface_proposal'){
   const proposal=plan.surfaceProposal;assert(proposal&&proposal.state==='pending'&&proposal.digest===command.proposalDigest&&proposal.sourceFingerprint===plan.fingerprint,'surface_proposal_unavailable');
   assert(proposal.baseGeometryRevision===plan.geometryRevision&&proposal.baseGeometryDigest===roomGeometryDigest(plan.rooms),'surface_proposal_stale');assert(surfaceProposalDigest(proposal)===proposal.digest,'surface_proposal_invalid');
@@ -72,6 +91,16 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   if(command.view==='perimeter')plan.mainPerimeter=structuredClone(command.geometry);
   else {const region=plan.rooms.find(r=>r.id===command.id);assert(region);for(const other of plan.rooms)if(other.id!==region.id)assert(!overlaps(command.geometry,other),'region_overlap');region.points=structuredClone(command.geometry.points);region.holes=structuredClone(command.geometry.holes);region.origin='manual';delete region.boundary;delete region.surfaceProposalDigest;delete region.surfaceBasis;region.seed=null;region.component=null;region.pixelArea=null;}
   plan.geometryRevision++;plan.measurement=null;plan.status='needs_review';plan.warnings.push('manual_geometry_change:'+input.reason);
+ }else if(command.operation==='save_quick_estimate'){
+  const {covers,scale}=command;
+  assert(Array.isArray(covers)&&new Set(covers.map(entry=>entry.id)).size===covers.length);
+  assert(covers.every(entry=>['covered','uncovered','unset'].includes(entry.cover)&&plan.rooms.some(room=>room.id===entry.id&&room.kind!=='excluded'&&(room.kind==='balcony'||/balcon/i.test(room.label)))));
+  if(scale&&scale.mode!=='paper')assert(scale.start.every(Number.isFinite)&&scale.end.every(Number.isFinite)&&Math.hypot(scale.end[0]-scale.start[0],scale.end[1]-scale.start[1])>0&&scale.metres>0);
+  if(scale?.mode==='paper')assert(['A4','A3','A2','A1'].includes(scale.format)&&scale.denominator>=1&&scale.denominator<=10000);
+  const saved=new Map((plan.balconyCovers??[]).map(entry=>[entry.id,entry]));
+  for(const entry of covers)saved.set(entry.id,entry);
+  plan.balconyCovers=[...saved.values()];
+  plan.quickEstimate={...(scale?{scale:structuredClone(scale)}:{}),savedAt:now,geometryRevision:plan.geometryRevision};
  }else if(command.operation==='measure'){
   const c=command.configuration;plan.measurementConfiguration=structuredClone(c);assert(c&&['rooms_and_walls','gross_perimeter'].includes(c.base)&&Array.isArray(c.assignments)&&c.assignments.length===plan.rooms.length&&new Set(c.assignments.map(a=>a.id)).size===c.assignments.length&&Array.isArray(c.mainRegionIds)&&new Set(c.mainRegionIds).size===c.mainRegionIds.length&&c.mainRegionIds.every(id=>plan.rooms.some(r=>r.id===id)));
   if(c.calibration.paper)assert(c.calibration.paper.widthUnits===plan.rasterSize.width&&c.calibration.paper.heightUnits===plan.rasterSize.height,'paper_raster_mismatch');
@@ -92,5 +121,7 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   configuration.wallCoverageConfirmed = false;
  }
  if((['geometry','add_room','remove_room'].includes(command.operation))&&plan.surfaceProposal?.state==='pending')plan.surfaceProposal.state='stale';
+ numberIssues(plan,numberedBefore);
+ if(plan.balconyCovers)plan.balconyCovers=plan.balconyCovers.filter(entry=>plan.rooms.some(room=>room.id===entry.id));
  plan.version++;practice.revision++;practice.planReceipts??=[];assert(practice.planReceipts.length<10000,'plan_receipt_limit');practice.planReceipts.push({accountId:actor.accountId,key:input.key,digest,id:plan.id});practice.events.push({id:practice.events.length+1,actorId:actor.accountId,at:now,operation:'plan:'+command.operation,sourceId:plan.proof.sourceId,revision:practice.revision});return {practice,replay:false,id:plan.id};
 }

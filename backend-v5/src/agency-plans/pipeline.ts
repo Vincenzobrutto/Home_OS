@@ -6,9 +6,9 @@ import {createSurfaceProposal,surfaceProposalDigest,roomGeometryDigest,type Surf
 import {proposeInkThreshold} from './contrast';
 import {previewVirtualThresholds,proposeThresholds} from './recognition-rules';
 import { evidenceCurrent, requirePractice, type Actor, type Evidence, type Practice } from '../agency-practices/domain';
-import { assert, filled, overlaps, PlanError, type Point } from './geometry';
+import { assert, filled, overlaps, PlanError, validPolygon, type Point } from './geometry';
 import { assertRaster, segmentPlan, type Raster, type RasterConfig, type SeedSpace, type Segmentation, type SymbolRequest } from './raster';
-export type SeedProposal={spaces:SeedSpace[];symbols:SymbolRequest[];warnings:string[];openings?:OpeningHint[]};
+export type SeedProposal={spaces:SeedSpace[];symbols:SymbolRequest[];warnings:string[];openings?:OpeningHint[];exteriorOutline?:Point[]};
 export type PlanProof=Pick<Evidence,'sourceId'|'version'|'sha256'|'page'>;
 export type PlanContext={actor:Actor;practice:Practice;now:string};
 export type PlanPorts={
@@ -30,7 +30,9 @@ export function parseSeedProposal(input:unknown):SeedProposal{const v=object(inp
  const spaces=v.spaces.map(x=>{const s=object(x);assert(['room','bathroom','kitchen','corridor','balcony','excluded'].includes(String(s.kind))&&Array.isArray(s.seeds)&&s.seeds.length>=1&&s.seeds.length<=3);return {id:text(s.id,100),label:text(s.label),kind:s.kind as SeedSpace['kind'],seeds:s.seeds.map(point)};});
  const symbols=v.symbols.map(x=>{const s=object(x);assert(['include','exclude','unresolved'].includes(String(s.decision))&&Array.isArray(s.seeds)&&s.seeds.length<=8);return {id:text(s.id,100),parentId:text(s.parentId,100),decision:s.decision as SymbolRequest['decision'],reason:text(s.reason,1000),seeds:s.seeds.map(point)};});
  let openings:OpeningHint[]|undefined;if(v.openings!==undefined){assert(Array.isArray(v.openings)&&v.openings.length<=12);openings=v.openings.map(x=>{const h=object(x);assert(['arrow','door_arc','door_leaf'].includes(String(h.signal))&&['inside_to_common','between_rooms'].includes(String(h.context)));return {id:text(h.id,100),spaceId:text(h.spaceId,100),nearStart:point(h.nearStart),nearEnd:point(h.nearEnd),inside:point(h.inside),outside:point(h.outside),signal:h.signal as OpeningHint['signal'],context:h.context as OpeningHint['context']};});assert(new Set(openings.map(h=>h.id)).size===openings.length&&openings.every(h=>spaces.some(s=>s.id===h.spaceId)));}
- assert(new Set(spaces.map(s=>s.id)).size===spaces.length&&new Set(symbols.map(s=>s.id)).size===symbols.length&&symbols.every(s=>spaces.some(p=>p.id===s.parentId)));return {spaces,symbols,warnings:v.warnings.map(w=>text(w,1000)),...(openings?{openings}:{})};
+ const outline=v.exteriorOutline;
+ const exteriorOutline=Array.isArray(outline)&&outline.length>=3&&outline.length<=80&&outline.every(p=>Array.isArray(p)&&p.length===2&&p.every(n=>typeof n==='number'&&Number.isFinite(n)))?outline.map(point):undefined;
+ assert(new Set(spaces.map(s=>s.id)).size===spaces.length&&new Set(symbols.map(s=>s.id)).size===symbols.length&&symbols.every(s=>spaces.some(p=>p.id===s.parentId)));return {spaces,symbols,warnings:v.warnings.map(w=>text(w,1000)),...(openings?{openings}:{}),...(exteriorOutline?{exteriorOutline}:{})};
 }
 async function authorized(ports:PlanPorts,proof:PlanProof,scope?:{accountId:string;agencyId:string;practiceId:string}){const ctx=await ports.context();requirePractice(ctx.actor,ctx.practice,'edit',ctx.now);if(scope)assert(scope.accountId===ctx.actor.accountId&&scope.agencyId===ctx.practice.agencyId&&scope.practiceId===ctx.practice.id,'plan_scope_changed');assert(evidenceCurrent(ctx.actor,ctx.practice,{...proof,excerpt:'Plan analysis source'},ctx.now),'plan_source_unavailable');const source=ctx.practice.sources.find(s=>s.id===proof.sourceId)!;assert(source.kind==='floor_plan','source_not_floor_plan');return ctx;}
 export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:PlanProof;config:RasterConfig;maxUSDPerCall:number}){
@@ -82,5 +84,8 @@ export async function analyzePlan(ports:PlanPorts,input:{runId:string;proof:Plan
  }
  await authorized(ports,input.proof,scope);
  // AI review never certifies coverage: agent confirms scope/scale/symbols and computation separately.
- return {runId:input.runId,fingerprint,rasterSize,rasterSHA256,rendering,proof:structuredClone(input.proof),scope,initial,final,surfaceProposal,proposal:merged,annexInventory,openingReviews:openingRecovery.reviews,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:surfaceProposal||final.issues.length||annexInventory.some(a=>a.reviewExclusion)?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};
+ const points=merged.exteriorOutline;
+ const outline=points?{points,holes:[]}:null;
+ const perimeterProposal=outline&&outline.points.every(([x,y])=>x>=0&&x<=raster.width&&y>=0&&y<=raster.height)&&validPolygon(outline)?outline:null;
+ return {runId:input.runId,perimeterProposal,fingerprint,rasterSize,rasterSHA256,rendering,proof:structuredClone(input.proof),scope,initial,final,surfaceProposal,proposal:merged,annexInventory,openingReviews:openingRecovery.reviews,retainedSymbols,warnings,calls,totalCostUSD:calls.reduce((s,c)=>s+c.costUSD,0),status:surfaceProposal||final.issues.length||annexInventory.some(a=>a.reviewExclusion)?'needs_review' as const:'draft' as const,confirmed:false as const,coverageConfirmed:false as const};
 }

@@ -37,3 +37,29 @@ it('simple map shows contextual editing only after selecting a room, and offers 
  await user.click(screen.getByRole('button',{name:'Seleziona'}));
  expect(screen.queryByRole('button',{name:'Aggiungi punto su un lato'})).not.toBeInTheDocument();
 });
+
+it('zooms on the map around the pointer and stops at 600%',()=>{
+ render(<PlanMeasurementView {...props()} drawingOnly simple/>);
+ const map=screen.getByRole('img',{name:'Contorni dei singoli vani'}),viewport=map.parentElement!;
+ const controls=screen.getByRole('group',{name:'Zoom planimetria'});
+ const box=()=>{const width=Number(controls.textContent?.match(/(\d+)%/)?.[1]??100);return {width,height:width,left:-viewport.scrollLeft,top:-viewport.scrollTop} as DOMRect;};
+ vi.spyOn(map,'getBoundingClientRect').mockImplementation(box);
+ fireEvent.wheel(map,{deltaY:-100,clientX:40,clientY:60});
+ expect(controls).toHaveTextContent('125%');
+ expect(viewport.scrollLeft).toBe(10);
+ expect(viewport.scrollTop).toBe(15);
+ for(let i=0;i<25;i++)fireEvent.wheel(map,{deltaY:-100,clientX:40,clientY:60});
+ expect(controls).toHaveTextContent('600%');
+ expect(screen.getByRole('button',{name:'Aumenta zoom'})).toBeDisabled();
+});
+
+it('moves a focused vertex with the arrow keys and keeps context outlines out of the interactive map',()=>{
+ const p=props(),onChange=vi.fn();
+ render(<PlanMeasurementView {...p} onChange={onChange} simple contextShapes={[shape('context',40)]} rooms={[shape('room-1')]} perimeter={null}/>);
+ expect(screen.getByTestId('context-context')).toHaveAttribute('pointer-events','none');
+ expect(screen.queryByRole('button',{name:'Seleziona vano context'})).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Seleziona vano room-1'}));
+ fireEvent.keyDown(screen.getByRole('button',{name:'Vertice 2'}),{key:'ArrowLeft',shiftKey:true});
+ const [view,next]=onChange.mock.calls.at(-1)!;
+ expect(view).toBe('rooms');expect(next.points[1][0]).toBeLessThan(10);expect(next.points[1][1]).toBe(0);
+});

@@ -26,24 +26,27 @@ describe('practice plan workspace',()=>{
  it('access revocation hides private data and editor',async()=>{const api=port();api.edit.mockRejectedValueOnce(error(403,'access_denied'));await loaded(api);dirtyGeometry();fireEvent.click(screen.getByRole('button',{name:'Salva correzione contorno'}));await screen.findByText(/Accesso non disponibile/);expect(screen.queryByText(/sintetica.pdf/)).not.toBeInTheDocument();expect(screen.queryByRole('img',{name:'Contorni dei singoli vani'})).not.toBeInTheDocument();});
  it('stale source cannot request an image or offer measurement controls',async()=>{const api=port();api.plans.mockResolvedValue({revision:5,plans:[{...plans().plans[0]!,status:'stale',rooms:null}]});render(<AgencyPracticePlanWorkspace api={api} scopeKey="stale"/>);await screen.findByText(/analisi precedente non è più utilizzabile/);expect(api.image).not.toHaveBeenCalled();expect(screen.queryByRole('form',{name:'Calibrazione e computo'})).not.toBeInTheDocument();});
  it('gross perimeter starts empty and requires an explicit drawn boundary',async()=>{await loaded();fireEvent.click(screen.getByRole('tab',{name:'Perimetro commerciale'}));fireEvent.click(screen.getByRole('button',{name:'Definisci perimetro'}));expect(screen.getByText('0 vertici')).toBeInTheDocument();expect(screen.getByRole('button',{name:'Usa questo contorno'})).toBeDisabled();expect(screen.queryByTestId('shape-gross')).not.toBeInTheDocument();});
- it('shows the affected room and removes a verification after saving its outcome',async()=>{
+ it('links each open check to its room on the map and removes it once its outcome is saved',async()=>{
   const api=port(),state=plans(),plan=state.plans[0]!;
-  plan.issues=[{id:'symbol',code:'symbol_unresolved'}];
+  plan.issues=[{id:'symbol',code:'symbol_unresolved',number:1},{id:'coverage',code:'coverage_search_limited',number:2}];
   plan.rooms![0]!.symbols=[{id:'symbol',reason:'Simbolo vicino alla parete',point:[5,5]}];
   api.plans.mockResolvedValue(state);
-  api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,issues:[]}]}});
-  await loaded(api);
-  fireEvent.click(screen.getByText('Controlla le verifiche aperte · 1'));
-  fireEvent.click(screen.getByText('Verifica 1 · Stanza'));
-  expect(screen.getByRole('img',{name:'Posizione della verifica · Stanza'})).toBeInTheDocument();
+  api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,version:2,issues:[plan.issues[1]!]}]}});
+  render(<AgencyPracticePlanWorkspace api={api} scopeKey="issues" embedded/>);
+  await screen.findByRole('img',{name:'Contorni dei singoli vani'});
+  expect(screen.getByRole('heading',{name:'Verifiche aperte · 2'})).toBeVisible();
   expect(screen.getByText('Simbolo vicino alla parete')).toBeVisible();
-  expect(screen.getByRole('button',{name:'Registra verifica 1'})).toBeDisabled();
-  fireEvent.change(screen.getByLabelText('Esito verifica 1'),{target:{value:'excluded_from_computation'}});
-  fireEvent.change(screen.getByLabelText('Motivo verifica 1'),{target:{value:'Esclusione sintetica motivata'}});
-  fireEvent.click(screen.getByRole('button',{name:'Registra verifica 1'}));
+  expect(screen.queryByTestId('focus-marker')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Mostra sulla mappa'}));
+  expect(screen.getByTestId('focus-marker')).toHaveAttribute('cx','5');
+  expect(screen.getAllByRole('button',{name:/^Vertice /})).toHaveLength(4);
+  fireEvent.change(screen.getByLabelText('Esito Stanza · verifica 1'),{target:{value:'excluded_from_computation'}});
+  fireEvent.click(screen.getByRole('button',{name:'Chiudi verifica 1'}));
   await screen.findByText('Modifiche salvate nella pratica.');
-  expect(screen.queryByText('Controlla le verifiche aperte · 1')).not.toBeInTheDocument();
-  expect(api.edit.mock.calls[0]![1]).toMatchObject({reason:'Esclusione sintetica motivata',command:{operation:'resolve_issue',issueId:'symbol',code:'symbol_unresolved',resolution:'excluded_from_computation'}});
+  expect(screen.getByRole('heading',{name:'Verifiche aperte · 1'})).toBeVisible();
+  expect(screen.queryByText('Simbolo vicino alla parete')).not.toBeInTheDocument();
+  expect(screen.getByText('n. 2')).toBeInTheDocument();
+  expect(api.edit.mock.calls[0]![1]).toMatchObject({reason:'Ho verificato che resta fuori dal computo',command:{operation:'resolve_issue',issueId:'symbol',code:'symbol_unresolved',resolution:'excluded_from_computation'}});
  });
 });
 describe('measurement choices',()=>{
@@ -109,4 +112,70 @@ it('simple drawing starts without vertices and saves through the visible toolbar
  await screen.findByText('Modifiche salvate nella pratica.');
  expect(api.edit).toHaveBeenCalledOnce();
  expect(api.edit.mock.calls[0]![1]).toMatchObject({expectedRevision:4,expectedPlanVersion:1,command:{operation:'geometry',view:'rooms',id:'r',geometry:{points:[[0,0],[5,0],[10,0],[10,10],[0,10]],holes:[]}}});
+});
+
+it('corrects the proposed gross outline on the calculation map and confirms it with the estimate in one save',async()=>{
+ const api=port(),state=plans(),plan=state.plans[0]!;
+ plan.perimeterProposal={points:[[0,0],[18,0],[18,18],[0,18]],holes:[]};
+ api.plans.mockResolvedValue(state);
+ api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,version:2,mainPerimeter:{points:[[0,0],[9,0],[18,0],[18,18],[0,18]],holes:[]}}]}});
+ api.edit.mockResolvedValueOnce({replay:false,plans:{revision:6,plans:[{...plan,version:3,mainPerimeter:{points:[[0,0],[9,0],[18,0],[18,18],[0,18]],holes:[]},quickEstimate:{savedAt:'2026-11-09T08:00:00.000Z',geometryRevision:2}}]}});
+ render(<AgencyPracticePlanWorkspace api={api} scopeKey="gross-review" embedded/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Calcola superfici'}));
+ expect(screen.getByRole('img',{name:'Perimetro lordo e pertinenze'})).toBeInTheDocument();
+ expect(screen.getByTestId('shape-gross')).toBeInTheDocument();
+ expect(screen.getByTestId('context-r')).toBeInTheDocument();
+ expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+ expect(screen.getByText(/Proposto da Dimora/)).toBeVisible();
+ fireEvent.click(screen.getByRole('button',{name:'Seleziona vano Perimetro lordo proposto'}));
+ fireEvent.click(screen.getByRole('button',{name:'Aggiungi punto su un lato'}));
+ fireEvent.click(screen.getByRole('button',{name:'Inserisci punto sul lato 1'}));
+ expect(screen.getByText('Perimetro modificato: premi Salva stima per confermarlo.')).toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'Modifica pianta'})).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:'Salva stima'}));
+ await screen.findByText('Stima salvata nella pratica.');
+ expect(api.edit).toHaveBeenCalledTimes(2);
+ expect(api.edit.mock.calls[0]![1]).toMatchObject({expectedRevision:4,expectedPlanVersion:1,command:{operation:'geometry',view:'perimeter',id:'gross',geometry:{points:[[0,0],[9,0],[18,0],[18,18],[0,18]]}}});
+ expect(api.edit.mock.calls[1]![1]).toMatchObject({expectedRevision:5,expectedPlanVersion:2,command:{operation:'save_quick_estimate',covers:[]}});
+ expect(screen.queryByText('Ambienti e superfici nette')).not.toBeInTheDocument();
+});
+
+it('opens a ready plan on the calculation, with saved balcony cover and sheet scale restored',async()=>{
+ const api=port(),state=plans(),plan=state.plans[0]!;
+ plan.rasterSize={width:210,height:297};
+ plan.rooms=[{...shape},{id:'b',label:'Balcone',kind:'balcony',points:[[10,0],[30,0],[30,10],[10,10]],holes:[]}];
+ plan.mainPerimeter={points:[[0,0],[10,0],[10,10],[0,10]],holes:[]};
+ plan.balconyCovers=[{id:'b',cover:'uncovered'}];
+ plan.quickEstimate={scale:{mode:'paper',format:'A4',denominator:100},savedAt:'2026-11-09T08:00:00.000Z',geometryRevision:1};
+ api.plans.mockResolvedValue(state);
+ render(<AgencyPracticePlanWorkspace api={api} scopeKey="reopen" embedded/>);
+ expect(await screen.findByRole('img',{name:'Perimetro lordo e pertinenze'})).toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'Calcola superfici'})).toHaveAttribute('aria-pressed','true');
+ expect(screen.getByRole('radio',{name:'Scoperto'})).toBeChecked();
+ const summary=screen.getByRole('group',{name:'Stima della superficie commerciale'});
+ expect(summary).toHaveTextContent('Scala 1:100 su foglio A4 intero');
+ expect(summary).toHaveTextContent('Lordo appartamento1,0 m²');
+ expect(summary).toHaveTextContent('Totale stimato1,5 m²');
+ expect(screen.getByRole('button',{name:'Stima salvata'})).toBeDisabled();
+});
+
+it('keeps unsaved map changes visible, blocks switching task and can discard them',async()=>{
+ const api=port();render(<AgencyPracticePlanWorkspace api={api} scopeKey="dirty" embedded/>);
+ await screen.findByRole('img',{name:'Contorni dei singoli vani'});
+ fireEvent.click(screen.getByRole('button',{name:'Seleziona vano Stanza'}));
+ fireEvent.keyDown(screen.getByRole('button',{name:'Vertice 1'}),{key:'ArrowRight'});
+ expect(screen.getByText('Modifiche da salvare: salva o scarta prima di cambiare attività.')).toBeVisible();
+ expect(screen.getByRole('button',{name:'Calcola superfici'})).toBeDisabled();
+ expect(screen.getByRole('button',{name:'Pianta per annuncio'})).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:'Scarta modifiche'}));
+ expect(screen.getByRole('button',{name:'Calcola superfici'})).toBeEnabled();
+ expect(screen.getByTestId('shape-r')).toHaveAttribute('d','M0,0L10,0L10,10L0,10Z');
+ expect(api.edit).not.toHaveBeenCalled();
+});
+
+it('prepares the listing image from saved outlines inside the page',async()=>{
+ const api=port();render(<AgencyPracticePlanWorkspace api={api} scopeKey="listing" embedded/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Pianta per annuncio'}));
+ expect(screen.getByText(/solo i contorni e i nomi dei vani salvati/)).toBeVisible();
+ expect(screen.queryByRole('img',{name:'Contorni dei singoli vani'})).not.toBeInTheDocument();
 });

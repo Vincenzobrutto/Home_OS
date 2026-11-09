@@ -54,3 +54,49 @@
 .surfaceTotal{display:grid;gap:5px;background:#e5f3ee;border:1px solid #9cbbb1;border-radius:12px;padding:18px;margin:16px 0}.surfaceTotal strong{font-size:32px;color:#005767}.surfaceTotal small{color:#45676b}.scaleReference{width:100%;max-width:500px;max-height:150px;background:white;border:1px solid #bdcdcc}.checklistTable caption{text-align:left;font-weight:650;margin-bottom:8px}
 
 .issueLocation { display: block; width: 100%; max-width: 460px; max-height: 260px; margin: 8px 0; background: white; border: 1px solid #bdcdcc; }
+
+/* Planimetria: one working map with three tasks and a contextual side panel. */
+.planStatus{margin:0 0 8px;color:#45676b}
+.planModes{display:flex;gap:0;flex-wrap:wrap;border:1px solid #8caeb0;border-radius:10px;overflow:hidden;width:max-content;max-width:100%;background:#fff}
+.planModes button{margin:0!important;border:0!important;border-right:1px solid #c5d6d6!important;border-radius:0!important;background:#fff!important;color:#005767!important;min-height:44px;padding:8px 16px!important;font-weight:600}
+.planModes button:last-child{border-right:0!important}
+.planModes button[aria-pressed="true"]{background:#006476!important;color:#fff!important}
+.nextStep{margin:10px 0 12px;padding:10px 12px;background:#ecf8f8;border-left:4px solid #006476;border-radius:6px}
+.planLayout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+.planMapColumn,.planSide{min-width:0}
+@media(min-width:960px){.planLayout{grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr)}.planMapColumn{position:sticky;top:8px}}
+.panelSection{border:1px solid #cbd9d9;background:#fff;border-radius:12px;padding:14px;margin:0 0 12px}
+.panelSection h4{margin:0 0 8px;font-size:16px}
+.panelSection p{margin:6px 0}
+.muted{color:#50676d;font-size:14px}
+.primaryButton{background:#006476!important;color:#fff!important;border-color:#006476!important;font-weight:650}
+.primaryButton:disabled{background:#7c9fa5!important}
+.issueList{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.issueItem{border:1px solid #e0c48f;background:#fffaf0;border-radius:10px;padding:10px 12px}
+.issueTitle{display:flex;justify-content:space-between;gap:8px;margin:0}
+.issueTitle span{color:#7a5a1d;font-size:13px}
+.issueActions{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.issueActions label{flex:1 1 180px;margin:4px 0!important}
+.surfacePanel{display:block}
+.estimateCard{border:1px solid #9cbbb1;background:#e9f5f1;border-radius:12px;padding:14px;margin:0 0 12px}
+.estimateRows{margin:0;display:grid;gap:4px}
+.estimateRows>div{display:flex;justify-content:space-between;gap:12px;align-items:baseline;border-bottom:1px solid #cfe2dc;padding:4px 0}
+.estimateRows dt{color:#3c5d5f}
+.estimateRows dd{margin:0;font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.estimateRows .estimateTotal{border-bottom:0}
+.estimateTotal dt{font-weight:700;color:#19363e}
+.estimateTotal dd{font-size:28px;color:#005767}
+.saveRow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px}
+.saveRow p{flex:1 1 200px;margin:0}
+.inlineWarning{background:#fff1dc;border-left:4px solid #c26a00;padding:8px 10px;border-radius:6px;margin:8px 0}
+.appurtenanceList{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:10px}
+.appurtenanceList>li{border:1px solid #d6e3e2;border-radius:10px;padding:10px}
+.appurtenanceList>li.overlapRow{border-color:#c26a00}
+.linkButton{background:none!important;border:0!important;padding:0!important;min-height:32px!important;color:#005767!important;font-weight:700;text-decoration:underline}
+.coverChoice{display:flex;gap:6px;flex-wrap:wrap;border:0!important;padding:0!important;margin:6px 0!important}
+.coverChoice legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.coverChoice label{display:inline-flex!important;align-items:center;gap:6px;margin:0!important;border:1px solid #8caeb0;border-radius:8px;padding:8px 12px;min-height:44px;cursor:pointer}
+.coverChoice label:has(input:checked){background:#006476;color:#fff;border-color:#006476}
+.coverChoice label:has(input:focus-visible){outline:3px solid #df7c00;outline-offset:2px}
+.coverChoice input{margin:0!important}
+@media(max-width:500px){.planModes{width:100%}.planModes button{flex:1 1 0;padding:8px 6px!important;font-size:14px}.estimateTotal dd{font-size:24px}}

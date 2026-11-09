@@ -1,3 +1,7 @@
+## 9 novembre — Planimetria Agenzie semplificata (proposta implementata, da approvare)
+
+Prossimi passi: prova su pratica reale in browser visibile (OCR barra), test HTTP/DB di `save_quick_estimate`, conferma dei coefficienti balconi, commit e PR verso il consolidamento su decisione del committente. [Report](v5/agency-plan-page-simplify-20261109.md).
+
 ## 5 novembre — superfici immediate senza modulo tecnico obbligatorio
 
 Lotto `codex/agency-quick-surfaces-20261105`, seguitoPR82, codice ba984f6 attivo localmente. OCR/pixel locali per barra e scala, formato foglio solo quando necessario, netto per vano e commerciale provvisoria con ipotesi modificabili nei dettagli. Computo rigoroso invariato e facoltativo. 93/93 iniziali e10/10 finali dei moduli modificati, statici/build e browser desktop375 verdi; pratica reale scala1:200 rilevata senza AI esterna/salvataggi. Stima in memoria, non persistita o certificata. [Report](v5/agency-quick-surfaces-20261105.md).

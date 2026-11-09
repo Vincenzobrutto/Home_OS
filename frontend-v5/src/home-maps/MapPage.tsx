@@ -1,3 +1,4 @@
+import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
 import {useState,useRef,useEffect,useMemo,useId} from 'react';
 import {Link,useParams} from 'react-router';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
@@ -33,7 +34,8 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
  const [showOriginal,setShowOriginal]=useState(true);
  const [turn,setTurn]=useState<MapTurn>(0);
  const [managementOpen,setManagementOpen]=useState(false),[trayTarget,setTrayTarget]=useState<HTMLDivElement|null>(null);
- const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[uncertain,setUncertain]=useState(false),[needsRefresh,setNeedsRefresh]=useState(false),[denied,setDenied]=useState(false),[zoom,setZoom]=useState(1),[pointsBase,setPointsBase]=useState(data.version);
+ const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[uncertain,setUncertain]=useState(false),[needsRefresh,setNeedsRefresh]=useState(false),[denied,setDenied]=useState(false),[pointsBase,setPointsBase]=useState(data.version);
+ const {zoom,setZoom,scrollRef,mapRef}=usePlanZoom<HTMLDivElement>({disabled:busy});
  const inputId=useId(),lock=useRef(false),alive=useRef(true);
  const request=useRef<{op:'pins'|'geometry';body:unknown;key:string;success:string}|null>(null);
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
@@ -80,13 +82,13 @@ export function Workspace({data,homeId,send,refresh}:{data:MapView;homeId:string
   {(uncertain||needsRefresh)&&<div className={styles.toolbar}>{uncertain&&<button className={ui.btn} disabled={busy} onClick={()=>void dispatch()}>Riprova lo stesso invio</button>}<button className={ui.btn} disabled={busy} onClick={()=>void updateView()}>{uncertain?'Verifica dati sul server':'Aggiorna dati'}</button></div>}
   <div className={styles.columns}>
    <section className={ui.card}>
-    <div className={styles.toolbar}><h2>Planimetria · pagina {data.layout.source.page}</h2><button className={ui.btn} onClick={()=>setZoom(z=>Math.max(1,z-.5))} disabled={zoom===1||busy}>Riduci</button><button className={ui.btn} onClick={()=>setZoom(z=>Math.min(3,z+.5))} disabled={zoom===3||busy}>Ingrandisci</button></div>
+    <div className={styles.toolbar}><h2>Planimetria · pagina {data.layout.source.page}</h2><button className={ui.btn} onClick={()=>setZoom(z=>Math.max(1,z-.5))} disabled={zoom===1||busy}>Riduci</button><button className={ui.btn} onClick={()=>setZoom(z=>Math.min(MAX_PLAN_ZOOM,z+.5))} disabled={zoom===MAX_PLAN_ZOOM||busy}>Ingrandisci</button><output aria-label="Zoom planimetria">{Math.round(zoom*100)}%</output></div>
     <div className={styles.toolbar}><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+3)%4 as MapTurn)}>Ruota a sinistra</button><button className={ui.btn} disabled={busy} onClick={()=>setTurn(t=>(t+1)%4 as MapTurn)}>Ruota a destra</button><span role="status" aria-label="Orientamento della vista">{turn*90}°</span><button className={ui.btn} aria-expanded={managementOpen} aria-controls={inputId+'-management'} onClick={()=>setManagementOpen(v=>!v)}>{managementOpen?'Chiudi gestione':'Gestisci vani e oggetti'}</button></div>
     <label className={styles.backgroundToggle}><input type="checkbox" checked={showOriginal} onChange={e=>setShowOriginal(e.target.checked)}/>Mostra planimetria originale</label>
     {editingContour&&<p>Durante la correzione del contorno vedi il foglio completo.</p>}
     <div className={styles.mapSurface} data-map-surface>
     {!!scene.unplaced.length&&<section className={styles.unplacedDock} data-unplaced-dock aria-label="Da collocare sulla planimetria"><h3>Da collocare</h3><div ref={setTrayTarget}/></section>}
-    <div className={styles.scroll} data-map-viewport><div style={{width:zoom*100+'%'}}>
+    <div ref={scrollRef} className={styles.scroll} data-map-viewport><div ref={mapRef} style={{width:zoom*100+'%'}}>
      {file.isPending?<Loading label="Caricamento mappa…"/>:file.isError?<ErrorState error={file.error} onRetry={()=>void file.refetch()}/>:<OriginalMap
       blob={file.data.blob} mime={data.document.mimeType} page={data.layout.source.page} width={f.width} height={f.height} showOriginal={showOriginal} turn={turn} viewport={viewport}
       onPoint={(x,y)=>{if(data.canEdit&&!blocked&&objectId&&!points)setPoint([x,y]);}}

@@ -185,3 +185,58 @@ test('room removal snapshots the old geometry, invalidates computation and is id
  assert.equal(Records.editPlan(f.ctx.actor,result.practice,input,f.ctx.now).replay,true);
  assert.throws(()=>Records.editPlan(f.ctx.actor,practice,{...input,command:{operation:'remove_room',id:'unknown'}},f.ctx.now),e=>e.code==='manual_room_missing');
 });
+
+test('resolving earlier checks preserves the original number on the next read',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input);
+ analysis.final.issues=['one','two','three'].map(id=>({id,code:'synthetic_review'}));
+ let practice=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const read=()=>Records.planViews(f.ctx.actor,practice,f.ctx.now).plans[0];
+ assert.deepEqual(read().issues.map(issue=>issue.number),[1,2,3]);
+ for(const issueId of ['one','two']){
+  const plan=read();
+  practice=Records.editPlan(f.ctx.actor,practice,{key:issueId,planId:plan.id,expectedRevision:practice.revision,expectedPlanVersion:plan.version,reason:'Checked',command:{operation:'resolve_issue',issueId,code:'synthetic_review',resolution:'not_applicable'}},f.ctx.now).practice;
+ }
+ assert.deepEqual(read().issues,[{id:'three',code:'synthetic_review',number:3}]);
+});
+
+test('the analysis retains a valid exterior outline only as a reviewable proposal',async()=>{
+ const outline=[[0,0],[5,0],[5,5],[0,5]];
+ for(const [points,expected] of [[outline,{points:outline,holes:[]}],[[[0,0],[100000,0],[0,5]],null]]){
+  const f=ports(),respond=f.adapter.ai;
+  f.adapter.ai=async request=>{
+   const result=await respond(request);
+   if(request.phase==='review')result.proposal.exteriorOutline=points;
+   return result;
+  };
+  const analysis=await P.analyzePlan(f.adapter,f.input);
+  assert.deepEqual(analysis.perimeterProposal,expected);
+  const stored=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice.planAnalyses[0];
+  assert.equal(stored.mainPerimeter,null);
+  assert.deepEqual(stored.perimeterProposal,expected??undefined);
+ }
+});
+
+test('quick estimate keeps balcony cover and sheet scale without requiring a detailed commercial measurement',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input);
+ const practice=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const plan=practice.planAnalyses[0],room=plan.rooms[0];
+ room.kind='balcony';
+ const input={key:'cover',planId:plan.id,expectedRevision:practice.revision,expectedPlanVersion:plan.version,reason:'Balcony cover',command:{operation:'save_quick_estimate',covers:[{id:room.id,cover:'covered'}],scale:{mode:'paper',format:'A3',denominator:100}}};
+ const saved=Records.editPlan(f.ctx.actor,practice,input,f.ctx.now).practice;
+ const reopened=Records.planViews(f.ctx.actor,JSON.parse(JSON.stringify(saved)),f.ctx.now).plans[0];
+ assert.deepEqual(reopened.balconyCovers,[{id:room.id,cover:'covered'}]);
+ assert.deepEqual(reopened.quickEstimate,{scale:{mode:'paper',format:'A3',denominator:100},savedAt:f.ctx.now,geometryRevision:plan.geometryRevision});
+ assert.equal(reopened.measurement,undefined);
+ const other=plan.rooms.find(r=>r.id!==room.id);
+ if(other)assert.throws(()=>Records.editPlan(f.ctx.actor,saved,{...input,key:'not-balcony',expectedRevision:saved.revision,expectedPlanVersion:plan.version+1,command:{operation:'save_quick_estimate',covers:[{id:other.id,cover:'covered'}]}},f.ctx.now));
+ assert.equal(Records.editPlan(f.ctx.actor,saved,input,f.ctx.now).replay,true);
+});
+
+test('quick estimate DTO accepts only covers and a bounded paper or two-point scale',()=>{
+ const D=require('../dist/agency-plans/edit-dto'),body=command=>({expectedRevision:1,expectedPlanVersion:1,reason:'Quick estimate',command});
+ assert.deepEqual(D.parsePlanEdit(body({operation:'save_quick_estimate',covers:[{id:'b',cover:'uncovered'}]}),'k','plan').command,{operation:'save_quick_estimate',covers:[{id:'b',cover:'uncovered'}]});
+ for(const mode of ['manual','bar'])assert.deepEqual(D.parsePlanEdit(body({operation:'save_quick_estimate',covers:[],scale:{mode,start:[0,0],end:[10,0],metres:4}}),'k','plan').command.scale,{mode,start:[0,0],end:[10,0],metres:4});
+ for(const scale of [{mode:'paper',format:'A5',denominator:100},{mode:'paper',format:'A4',denominator:0},{mode:'paper',format:'A4',denominator:100,verified:true},{mode:'manual',start:[0,0],end:[1,0]},{mode:'bar',start:[0,0],end:[1,0],metres:0},{mode:'auto'}])assert.throws(()=>D.parsePlanEdit(body({operation:'save_quick_estimate',covers:[],scale}),'k','plan'));
+ assert.throws(()=>D.parsePlanEdit(body({operation:'save_quick_estimate',covers:[{id:'b',cover:'maybe'}]}),'k','plan'));
+ assert.throws(()=>D.parsePlanEdit(body({operation:'save_balcony_covers',covers:[]}),'k','plan'));
+});

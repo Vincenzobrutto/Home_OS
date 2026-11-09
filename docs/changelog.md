@@ -1,3 +1,7 @@
+## 9 novembre — Planimetria Agenzie: una mappa, tre attività
+
+Pagina Planimetria riorganizzata su una sola mappa (Modifica pianta, Calcola superfici, Pianta per annuncio), verifiche collegate alla mappa, riepilogo unico della stima con Salva, coperture e scala salvate con `save_quick_estimate`, correzione OCR per etichette «4m». Ramo `claude/agency-plan-page-20261109`, PR impilata su #83. [Report](v5/agency-plan-page-simplify-20261109.md).
+
 ## 5 novembre — superfici immediate senza modulo tecnico obbligatorio
 
 Lotto `codex/agency-quick-surfaces-20261105`, seguitoPR82, codice ba984f6 attivo localmente. OCR/pixel locali per barra e scala, formato foglio solo quando necessario, netto per vano e commerciale provvisoria con ipotesi modificabili nei dettagli. Computo rigoroso invariato e facoltativo. 93/93 iniziali e10/10 finali dei moduli modificati, statici/build e browser desktop375 verdi; pratica reale scala1:200 rilevata senza AI esterna/salvataggi. Stima in memoria, non persistita o certificata. [Report](v5/agency-quick-surfaces-20261105.md).
