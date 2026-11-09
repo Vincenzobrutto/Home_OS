@@ -1,4 +1,5 @@
 import type {PlanShape, Point} from './PlanMeasurementView';
+import type {ListingAlignment, ListingWallRef} from './api';
 import {insideShape} from './scaleDetection';
 
 type Segment = [Point, Point];
@@ -187,6 +188,51 @@ function alignFacingWalls(rooms: PlanShape[], tolerance: number) {
   }
  }
  return rooms;
+}
+
+/** Align the chosen edge to the direction of a reference while holding its midpoint. */
+export function alignListingWall(rooms: PlanShape[], alignment: ListingAlignment): PlanShape[] | null {
+ const locate=(wall:ListingWallRef)=>{
+  const room=rooms.find(item=>item.id===wall.roomId);
+  const index=room?.points.findIndex((point,i)=>samePoint(point,wall.start)&&samePoint(room.points[(i+1)%room.points.length]!,wall.end))??-1;
+  return room&&index>=0?{room,index}:null;
+ };
+ const target=locate(alignment.target),reference=locate(alignment.reference);
+ if(!target||!reference||(target.room===reference.room&&target.index===reference.index))return null;
+ const {start,end}=alignment.target, guide=alignment.reference;
+ const length=Math.hypot(guide.end[0]-guide.start[0],guide.end[1]-guide.start[1]);
+ if(length<EPSILON)return null;
+ const normal:Point=[(guide.start[1]-guide.end[1])/length,(guide.end[0]-guide.start[0])/length];
+ const shift=((end[0]-start[0])*normal[0]+(end[1]-start[1])*normal[1])/2;
+ const targetLength=Math.hypot(end[0]-start[0],end[1]-start[1]);
+ if(Math.abs(shift)>targetLength*.23)return null;
+ const next=(target.index+1)%target.room.points.length;
+ const candidate=target.room.points.map((point,i):Point=>{
+  const amount=i===target.index?shift:i===next?-shift:0;
+  return amount?[point[0]+normal[0]*amount,point[1]+normal[1]*amount]:point;
+ });
+ const area=signedArea(candidate);
+ if(Math.abs(area)<EPSILON||Math.sign(area)!==Math.sign(signedArea(target.room.points)))return null;
+ const beforeEdges=edges(target.room.points),afterEdges=edges(candidate);
+ const changedIndices=[(target.index+candidate.length-1)%candidate.length,target.index,next];
+ const foreign=rooms.flatMap(room=>[...(room===target.room?[]:edges(room.points)),...room.holes.flatMap(edges)]);
+ for(const i of changedIndices){
+  const before=beforeEdges[i]!,after=afterEdges[i]!;
+  if(samePoint(...after)||afterEdges.some((other,j)=>j!==i&&segmentsConflict(after,other)))return null;
+  if(foreign.some(other=>segmentsConflict(after,other)||
+   (segmentsConflict(before,other)&&other.every(point=>Math.abs(cross(...before,point))<EPSILON))))return null;
+  const swept=[before[0],before[1],after[1],after[0]];
+  if(foreign.some(edge=>edge.some(point=>!swept.some(corner=>samePoint(point,corner))&&insideShape(point,{points:swept,holes:[]}))))return null;
+ }
+ return rooms.map(room=>room===target.room?{...room,points:candidate}:room);
+}
+
+export function listingDrawing(rooms: PlanShape[], alignments: ListingAlignment[] = []) {
+ const points=rooms.flatMap(room=>room.points);
+ const xs=points.map(([x])=>x),ys=points.map(([,y])=>y);
+ const span=Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
+ return alignments.reduce((drawing,alignment)=>alignListingWall(drawing,alignment)??drawing,
+  simplifyListingRooms(rooms,9*span/1440));
 }
 
 export function listingWalls(rooms: PlanShape[]) {

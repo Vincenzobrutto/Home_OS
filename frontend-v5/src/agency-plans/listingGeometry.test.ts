@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
-import {listingWalls, simplifyListingRooms} from './listingGeometry';
+import {alignListingWall, listingWalls, simplifyListingRooms} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -68,4 +68,15 @@ it('keeps nonparallel walls with a deliberate larger angle',()=>{
  const a=room('A',[[0,0],[100,0],[100,20],[0,20]]);
  const b=room('B',[[12,23],[82,38],[82,55],[12,55]]);
  expect(simplifyListingRooms([a,b],3)[1]?.points).toEqual(b.points);
+});
+
+it('aligns a chosen wall to a reference and rejects a correction that crosses another room',()=>{
+ const guide=room('Disimpegno',[[0,0],[100,0],[100,20],[0,20]]);
+ const target=room('Bagno',[[12,24],[82,28],[82,55],[12,55]]);
+ const wall=(shape:PlanShape,i:number)=>({roomId:shape.id,start:shape.points[i]!,end:shape.points[(i+1)%shape.points.length]!});
+ const alignment={target:wall(target,0),reference:wall(guide,2)};
+ expect(alignListingWall([guide,target],alignment)?.[1]?.points.slice(0,2)).toEqual([[12,26],[82,26]]);
+ expect(target.points.slice(0,2)).toEqual([[12,24],[82,28]]);
+ const obstacle=room('Nicchia',[[68,24],[76,24],[76,27],[68,27]]);
+ expect(alignListingWall([guide,target,obstacle],alignment)).toBeNull();
 });

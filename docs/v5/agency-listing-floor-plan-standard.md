@@ -8,3 +8,9 @@
 - **Ambito.** Applica le regole a ogni ingresso che produce una planimetria per annuncio. Usa lo stesso disegno per anteprima e download. La geometria illustrativa vive solo nell’esportazione e i contorni salvati restano la fonte dell’editor e dei computi.
 
 Per accettare l’implementazione, verifica almeno un vano con piccoli scatti lungo una parete, una diagonale, una rientranza, un vuoto interno, una parete condivisa e una pertinenza. Confronta anteprima e download e verifica che il disegno sia ripetibile a parità di contorni, indipendentemente dallo zoom dell’editor. Il Disimpegno della pratica di collaudo è un esempio di verifica, con casi di prova separati per gli altri tipi di geometria.
+
+## Revisione dei dettagli per l’annuncio
+
+La ricerca locale sull’originale propone porte e finestre da verificare. L’agente può correggere il tipo o i due estremi, aggiungere un’apertura mancante e scartare le proposte. L’immagine mostra solo le aperture confermate. La porta è rappresentata con un simbolo neutro quando il verso di apertura non è disponibile.
+
+L’agente può allineare un lato della pianta illustrativa scegliendo una parete di riferimento. Il salvataggio conserva dettagli e allineamenti nella pratica e li associa alla revisione geometrica usata per verificarli. Anteprima e PNG usano la stessa resa.

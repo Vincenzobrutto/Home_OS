@@ -16,7 +16,7 @@ export function parsePlanEdit(body:unknown,headerKey:string,planId:string):PlanE
  function ring(v:unknown){const r=list(v,2000);if(r.length<3)fail();vertices+=r.length;if(vertices>4096)fail();return r.map(point);}
  function polygon(v:unknown):Polygon{const p=obj(v,['points','holes']),shape={points:ring(p.points),holes:list(p.holes,100).map(ring)};if(!validPolygon(shape))fail();return shape;}
  function calibration(v:unknown):Calibration{const c=obj(v,['start','end','metres','confirmed','check','maxRelativeError','paper']);const r:Calibration={start:point(c.start),end:point(c.end),metres:num(c.metres,Number.MIN_VALUE,1e6),confirmed:bool(c.confirmed),maxRelativeError:num(c.maxRelativeError,0,.1)};if(c.paper!==undefined){const p=obj(c.paper,['format','orientation','denominator','widthUnits','heightUnits']);r.paper={format:choice(p.format,['A4','A3']),orientation:choice(p.orientation,['portrait','landscape']),denominator:num(p.denominator,1,10000),widthUnits:integer(p.widthUnits),heightUnits:integer(p.heightUnits)};}if(c.check!==undefined){const k=obj(c.check,['start','end','metres']);r.check={start:point(k.start),end:point(k.end),metres:num(k.metres,Number.MIN_VALUE,1e6)};}return r;}
- const c=obj(b.command,['operation','view','id','geometry','configuration','issueId','code','resolution','label','kind','parentId','proposalDigest','excludedCandidateIds','covers','scale','parameters','outline']);let command:PlanEdit['command'];
+ const c=obj(b.command,['operation','view','id','geometry','configuration','issueId','code','resolution','label','kind','parentId','proposalDigest','excludedCandidateIds','covers','scale','parameters','outline','openings','alignments']);let command:PlanEdit['command'];
  if(c.operation==='apply_surface_proposal'){obj(c,['operation','proposalDigest','excludedCandidateIds']);const digest=text(c.proposalDigest,64);if(!/^[a-f0-9]{64}$/u.test(digest))fail();const excluded=c.excludedCandidateIds===undefined?undefined:list(c.excludedCandidateIds,12).map(v=>text(v));if(excluded&&new Set(excluded).size!==excluded.length)fail();command={operation:'apply_surface_proposal',proposalDigest:digest,...(excluded?{excludedCandidateIds:excluded}:{})};}
  else if(c.operation==='add_room'){obj(c,['operation','id','label','kind','geometry','parentId']);command={operation:'add_room',id:text(c.id),label:text(c.label,200),kind:choice(c.kind,['room','bathroom','kitchen','corridor','balcony']),geometry:polygon(c.geometry),...(c.parentId!==undefined?{parentId:text(c.parentId)}:{})};}
  else if(c.operation==='remove_room'){obj(c,['operation','id']);command={operation:'remove_room',id:text(c.id)};}
@@ -48,6 +48,17 @@ export function parsePlanEdit(body:unknown,headerKey:string,planId:string):PlanE
    outline={view:choice(o.view,['rooms','perimeter']),id:text(o.id),geometry:polygon(o.geometry)};
   }
   command={operation:'save_quick_estimate',covers,...(scale?{scale}:{}),...(parameters?{parameters}:{}),...(outline?{outline}:{})};
+ }
+ else if(c.operation==='save_listing_details'){
+  obj(c,['operation','openings','alignments']);
+  const wall=(v:unknown)=>{const w=obj(v,['roomId','start','end']);return {roomId:text(w.roomId),start:point(w.start),end:point(w.end)};};
+  command={operation:'save_listing_details',openings:list(c.openings,100).map(v=>{
+   const o=obj(v,['kind','start','end']);
+   return {kind:choice(o.kind,['door','window']),start:point(o.start),end:point(o.end)};
+  }),alignments:list(c.alignments,60).map(v=>{
+   const a=obj(v,['target','reference']);
+   return {target:wall(a.target),reference:wall(a.reference)};
+  })};
  }
  else if(c.operation==='measure'){
   obj(c,['operation','configuration']);const m=obj(c.configuration,['base','calibration','policyVersion','mainRegionIds','assignments','walls','coverageConfirmed','wallCoverageConfirmed','policyConfirmed','commonWallCapBasis']);

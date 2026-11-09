@@ -240,3 +240,26 @@ test('quick estimate DTO accepts only covers and a bounded paper or two-point sc
  assert.throws(()=>D.parsePlanEdit(body({operation:'save_quick_estimate',covers:[{id:'b',cover:'maybe'}]}),'k','plan'));
  assert.throws(()=>D.parsePlanEdit(body({operation:'save_balcony_covers',covers:[]}),'k','plan'));
 });
+
+test('listing details persist against the current geometry without changing rooms or measurements',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input);
+ const practice=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const plan=practice.planAnalyses[0],room=plan.rooms[0];
+ const opening={kind:'window',start:[10,10],end:[20,10]};
+ const target={roomId:room.id,start:room.points[0],end:room.points[1]};
+ const reference={roomId:room.id,start:room.points[1],end:room.points[2]};
+ const {parsePlanEdit}=require('../dist/agency-plans/edit-dto');
+ const body={expectedRevision:practice.revision,expectedPlanVersion:plan.version,reason:'Illustrative plan',command:{
+  operation:'save_listing_details',openings:[opening],alignments:[{target,reference}],
+ }};
+ const input=parsePlanEdit(body,'listing',plan.id);
+ const saved=Records.editPlan(f.ctx.actor,practice,input,f.ctx.now).practice;
+ const reopened=Records.planViews(f.ctx.actor,JSON.parse(JSON.stringify(saved)),f.ctx.now).plans[0];
+ assert.deepEqual(reopened.listingDetails,{geometryRevision:plan.geometryRevision,openings:[opening],alignments:[{target,reference}]});
+ assert.deepEqual(reopened.rooms,plan.rooms);
+ assert.equal(reopened.measurement,plan.measurement);
+ assert.equal(reopened.geometryRevision,plan.geometryRevision);
+ const invalid=parsePlanEdit({...body,command:{...body.command,openings:[{...opening,end:[5000,10]}]}},'invalid',plan.id);
+ assert.throws(()=>Records.editPlan(f.ctx.actor,practice,invalid,f.ctx.now));
+ assert.throws(()=>parsePlanEdit({...body,command:{...body.command,openings:[{...opening,kind:'unknown'}]}},'invalid',plan.id));
+});

@@ -1,6 +1,6 @@
 import type {MeasurementConfiguration} from './measurement-types';
 import type { ApiTransport } from '../api/transport';
-import type { PlanShape } from './PlanMeasurementView';
+import type { PlanShape,Point } from './PlanMeasurementView';
 export type AgencyScope={accountId:string;agencyId:string;practiceId:string};
 export type SourceProof={sourceId:string;version:number;sha256:string;page:number};
 export type AgencyPractice={id:string;label:string;revision:number;documents:Array<{id:string;kind:string;visibility:string;version:number;filename:string;mimeType?:string;sha256?:string}>};
@@ -13,7 +13,11 @@ export type QuickEstimateScale={mode:'paper';format:'A4'|'A3'|'A2'|'A1';denomina
 export type QuickEstimateParameters={wallPercent:number;coefficients:Array<{id:string;coefficient:number}>};
 export type QuickEstimateInput={covers:BalconyCover[];scale?:QuickEstimateScale;parameters:QuickEstimateParameters};
 export type QuickEstimate={scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;savedAt:string;geometryRevision:number};
-export type AgencyPlan={edits?:Array<{rooms:PlanShape[]}>;id:string;version:number;status:string;proof:SourceProof;rooms:PlanShape[]|null;surfaceProposal?:SurfaceProposal|null;mainPerimeter?:Pick<PlanShape,'points'|'holes'>|null;perimeterProposal?:Pick<PlanShape,'points'|'holes'>;rasterSize?:{width:number;height:number};rendering?:{dpi:number;transform:number[];renderer:string}|null;geometryRevision?:number;measurementConfiguration?:MeasurementConfiguration|null;issues?:Array<{id:string;code:string;number?:number}>;balconyCovers?:BalconyCover[];quickEstimate?:QuickEstimate;measurement?:PlanMeasurementReport|null};
+export type ListingOpening={kind:'door'|'window';start:Point;end:Point};
+export type ListingWallRef={roomId:string;start:Point;end:Point};
+export type ListingAlignment={target:ListingWallRef;reference:ListingWallRef};
+export type ListingDetails={geometryRevision:number;openings:ListingOpening[];alignments:ListingAlignment[]};
+export type AgencyPlan={edits?:Array<{rooms:PlanShape[]}>;id:string;version:number;status:string;proof:SourceProof;rooms:PlanShape[]|null;surfaceProposal?:SurfaceProposal|null;mainPerimeter?:Pick<PlanShape,'points'|'holes'>|null;perimeterProposal?:Pick<PlanShape,'points'|'holes'>;rasterSize?:{width:number;height:number};rendering?:{dpi:number;transform:number[];renderer:string}|null;geometryRevision?:number;measurementConfiguration?:MeasurementConfiguration|null;issues?:Array<{id:string;code:string;number?:number}>;balconyCovers?:BalconyCover[];quickEstimate?:QuickEstimate;listingDetails?:ListingDetails;openingReviews?:Array<{threshold:{start:Point;end:Point}|null}>;measurement?:PlanMeasurementReport|null};
 export type PlansResponse={revision:number;plans:AgencyPlan[]};
 export type PlanEditBody={expectedRevision:number;expectedPlanVersion:number;reason:string;command:Record<string,unknown>};
 export interface AgencyPlanPort{

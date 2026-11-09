@@ -1,7 +1,9 @@
 import {useState} from 'react';
-import type {PlanShape} from './PlanMeasurementView';
+import type {ListingDetails,ListingOpening} from './api';
+import type {PlanShape,Point} from './PlanMeasurementView';
 import {isBalcony} from './scaleDetection';
-import {listingWalls, simplifyListingRooms} from './listingGeometry';
+import {listingDrawing, listingWalls} from './listingGeometry';
+import {ListingPlanReview} from './ListingPlanReview';
 import styles from './practice-plan.module.css';
 
 function roomFill(room: PlanShape) {
@@ -14,7 +16,7 @@ function roomFill(room: PlanShape) {
  return '#f0f1ee';
 }
 
-function listingImage(rooms: PlanShape[]) {
+function listingImage(rooms: PlanShape[],details?:ListingDetails) {
  let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
  for (const room of rooms) {
   for (const [x,y] of room.points) {
@@ -28,7 +30,8 @@ function listingImage(rooms: PlanShape[]) {
  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) throw new Error('invalid_plan_bounds');
 
  const margin = 48, footer = 30, scale = 1440 / Math.max(width, height);
- const drawing = simplifyListingRooms(rooms, 9 / scale);
+ const drawing = listingDrawing(rooms,details?.alignments);
+ const walls = details?.openings.length ? listingWalls(drawing) : [];
  const canvas = document.createElement('canvas');
  canvas.width = Math.ceil(width * scale) + margin * 2;
  canvas.height = Math.ceil(height * scale) + margin * 2 + footer;
@@ -80,6 +83,45 @@ function listingImage(rooms: PlanShape[]) {
  context.lineWidth = 8;
  context.stroke(perimeter);
 
+ for (const opening of details?.openings??[]) {
+  let start=position(opening.start),end=position(opening.end);
+  const length=Math.hypot(end[0]-start[0],end[1]-start[1]);
+  if(length<3)continue;
+  const dx=(end[0]-start[0])/length,dy=(end[1]-start[1])/length;
+  // Move the symbol onto the closest wall face when the raster mark is nearby.
+  let best=18;
+  let snapped:[Point,Point]|undefined;
+  for(const [a,b] of walls){
+   const [ax,ay]=position(a),[bx,by]=position(b),span=Math.hypot(bx-ax,by-ay);
+   if(span<length*.55)continue;
+   const ux=(bx-ax)/span,uy=(by-ay)/span;
+   if(Math.abs(ux*dx+uy*dy)<.95)continue;
+   const project=([x,y]:Point)=>Math.max(0,Math.min(span,(x-ax)*ux+(y-ay)*uy));
+   const u=project(start),v=project(end);
+   if(Math.abs(u-v)<length*.55)continue;
+   const offset=Math.abs((start[0]+end[0]-2*ax)*uy-(start[1]+end[1]-2*ay)*ux)/2;
+   if(offset>=best)continue;
+   best=offset;snapped=[[ax+u*ux,ay+u*uy],[ax+v*ux,ay+v*uy]];
+  }
+  if(snapped)[start,end]=snapped;
+  const line=(a:Point,b:Point)=>{context.beginPath();context.moveTo(...a);context.lineTo(...b);context.stroke();};
+  const span=Math.hypot(end[0]-start[0],end[1]-start[1]);
+  const nx=(start[1]-end[1])/span,ny=(end[0]-start[0])/span;
+  const shift=([x,y]:Point,d:number):Point=>[x+nx*d,y+ny*d];
+  context.save();
+  context.lineCap='butt';context.strokeStyle='#fff';context.lineWidth=16;
+  line(start,end);
+  context.strokeStyle='#3c5453';context.lineWidth=2;
+  for(const point of [start,end])line(shift(point,-8),shift(point,8));
+  if(opening.kind==='window'){
+   line(shift(start,-3),shift(end,-3));line(shift(start,3),shift(end,3));
+  }else{
+   context.setLineDash([5,3]);line(start,end);
+  }
+  context.restore();
+ }
+
+
  for (const {room,outline} of outlines) {
   const points = room.points.map(position);
   const xs = points.map(([x])=>x), ys = points.map(([,y])=>y);
@@ -110,16 +152,21 @@ function listingImage(rooms: PlanShape[]) {
  return canvas.toDataURL('image/png');
 }
 
-export function ListingPlanExport({rooms,disabled,autoPreview=false}:{rooms:PlanShape[];disabled:boolean;autoPreview?:boolean}) {
+type ListingExportProps={
+ rooms:PlanShape[];disabled:boolean;autoPreview?:boolean;details?:ListingDetails;
+ review?:{sourceUrl:string;width:number;height:number;hints?:ListingOpening[];onSave:(details:Omit<ListingDetails,'geometryRevision'>)=>void};
+};
+export function ListingPlanExport({rooms,disabled,autoPreview=false,details,review}:ListingExportProps) {
+ const [reviewing,setReviewing]=useState(false);
  // In the listing task the image is drawn on entry: the component is keyed by geometry revision.
- const [initial] = useState(()=>{if(!autoPreview||!rooms.length)return {preview:'',error:false};try{return {preview:listingImage(rooms),error:false};}catch{return {preview:'',error:true};}});
+ const [initial] = useState(()=>{if(!autoPreview||!rooms.length)return {preview:'',error:false};try{return {preview:listingImage(rooms,details),error:false};}catch{return {preview:'',error:true};}});
  const [preview,setPreview] = useState(initial.preview);
  const [complete,setComplete] = useState(false);
  const [error,setError] = useState(initial.error);
 
  function open() {
   try {
-   setPreview(listingImage(rooms));
+   setPreview(listingImage(rooms,details));
    setError(false);
   } catch {
    setPreview('');
@@ -131,6 +178,9 @@ export function ListingPlanExport({rooms,disabled,autoPreview=false}:{rooms:Plan
   {!autoPreview&&<><h3>Pianta per l’annuncio</h3>
   <button type="button" disabled={disabled} onClick={open}>Anteprima annuncio</button></>}
   {autoPreview&&!rooms.length&&<p>Salva almeno un vano per preparare l’immagine dell’annuncio.</p>}
+  {review&&<button type="button" disabled={disabled} onClick={()=>setReviewing(true)}>Porte, finestre e pareti</button>}
+  {review&&reviewing&&<ListingPlanReview {...review} rooms={rooms} saved={details} disabled={disabled}
+   onClose={()=>setReviewing(false)} onApply={draft=>{review.onSave(draft);setReviewing(false);}}/>}
   {error&&<p role="alert">Impossibile creare l’immagine della planimetria.</p>}
   {preview&&<div>
    <p>{rooms.length} {rooms.length===1?'vano salvato':'vani salvati'}. Controlla che la pianta mostri tutti gli ambienti da pubblicare.</p>

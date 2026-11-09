@@ -110,6 +110,12 @@ function Workspace(p:WorkspaceProps){
   const nextStep=task==='draw'?drawStep:task==='measure'?measureStep:'Controlla l’anteprima, conferma che la pianta è completa e scarica l’immagine.';
   const tasks=[['draw','Modifica pianta'],['measure','Calcola superfici'],['listing','Pianta per annuncio']] as const;
   const measuring=task==='measure';
+  const listingDetails=plan.listingDetails?.geometryRevision===plan.geometryRevision?plan.listingDetails:undefined;
+  const listingReview=sourceUrl?{
+   sourceUrl,width:rasterSize.width,height:rasterSize.height,
+   hints:plan.openingReviews?.flatMap(({threshold})=>threshold?[{kind:'door' as const,start:threshold.start,end:threshold.end}]:[]),
+   onSave:(details:Omit<NonNullable<typeof plan.listingDetails>,'geometryRevision'>)=>save({operation:'save_listing_details',...details},'Revisione dettagli della planimetria per annuncio'),
+  }:undefined;
   const map=sourceUrl?<PlanMeasurementView
    key={measuring?'commercial':'rooms'}
    simple drawingOnly={!measuring}
@@ -143,7 +149,7 @@ function Workspace(p:WorkspaceProps){
    <p className={styles.nextStep} aria-live="polite">{draft&&task==='draw'?'Modifiche da salvare: salva o scarta prima di cambiare attività.':nextStep}</p>
    <div className={styles.planLayout}>
     <div className={styles.planMapColumn}>
-     {task==='listing'?<ListingPlanExport key={plan.id+':'+plan.geometryRevision} rooms={plan.rooms} disabled={locked||!!draft} autoPreview/>:map}
+     {task==='listing'?<ListingPlanExport key={plan.id+':'+plan.version} rooms={plan.rooms} details={listingDetails} review={listingReview} disabled={locked||!!draft} autoPreview/>:map}
     </div>
     <aside className={styles.planSide} aria-label={task==='draw'?'Verifiche e correzioni':task==='measure'?'Superfici':'Annuncio'}>
      {task==='draw'&&<>
