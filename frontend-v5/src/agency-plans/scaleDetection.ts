@@ -40,6 +40,16 @@ export function detectScale(words:ScaleWord[],gray:Uint8Array,width:number,heigh
  return {bar:ambiguous?null:candidates.sort((a,b)=>b.metres-a.metres)[0]??null,denominator:ratios.size===1?[...ratios][0]!:null,ambiguous:ambiguous||ratios.size>1};
 }
 
+const SHEETS={A4:[.210,.297],A3:[.297,.420],A2:[.420,.594],A1:[.594,.841]} as const;
+
+export function paperMetresPerPixel(format:string,denominator:number,width:number,height:number):Point|null{
+ const sheet=Object.hasOwn(SHEETS,format)?SHEETS[format as keyof typeof SHEETS]:null;
+ if(!sheet||!(denominator>=1&&denominator<=10000)||!(width>0&&height>0))return null;
+ const [w,h]=width>height?[sheet[1],sheet[0]]:sheet;
+ if(Math.abs((width/height)/(w/h)-1)>.03)return null;
+ return [w*denominator/width,h*denominator/height];
+}
+
 export function netArea(shape:PlanShape){const ring=(points:Point[])=>Math.abs(points.reduce((sum,a,i)=>{const b=points[(i+1)%points.length]!;return sum+a[0]*b[1]-b[0]*a[1];},0)/2);return ring(shape.points)-shape.holes.reduce((sum,h)=>sum+ring(h),0);}
 export function isBalcony(room:PlanShape){
  return room.kind!=='excluded'&&(room.kind==='balcony'||/balcon/i.test(room.label));

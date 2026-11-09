@@ -17,7 +17,9 @@ it('shows a guide when Shift is held mid-drag and saves the snapped vertex',()=>
  const map=screen.getByLabelText('Pianta illustrativa modificabile');
  Object.defineProperty(map,'getScreenCTM',{value:()=>({a:1,b:0,inverse:()=>null})});
  vi.stubGlobal('DOMPoint',class {
-  constructor(public x:number,public y:number){}
+  x:number;
+  y:number;
+  constructor(x:number,y:number){this.x=x;this.y=y;}
   matrixTransform(){return this;}
  });
  const room=within(map).getByRole('button',{name:'Soggiorno · modifica muri'});

@@ -2,7 +2,7 @@ import {useEffect,useState,type ReactNode} from 'react';
 import type {BalconyCover,QuickEstimate,QuickEstimateInput,QuickEstimateScale} from './api';
 import type {Point,PlanShape} from './PlanMeasurementView';
 import type {MeasurementConfiguration} from './measurement-types';
-import {isAppurtenance,isBalcony,netArea,overlapArea,suggestedCoefficient,type ScaleDetection,type ScaleReference} from './scaleDetection';
+import {isAppurtenance,isBalcony,netArea,overlapArea,paperMetresPerPixel,suggestedCoefficient,type ScaleDetection,type ScaleReference} from './scaleDetection';
 import styles from './practice-plan.module.css';
 
 export type ScaleSelection={mode:'auto'|'paper'|'manual';segment:[Point,Point]|null};
@@ -20,7 +20,6 @@ type Props={
  advanced:ReactNode;
 };
 const number=(n:number)=>n.toLocaleString('it-IT',{maximumFractionDigits:1,minimumFractionDigits:1});
-const SHEETS={A4:[.210,.297],A3:[.297,.420],A2:[.420,.594],A1:[.594,.841]} as const;
 const COVER_COEFFICIENT={covered:.35,uncovered:.25};
 function scaleSignature(scale:QuickEstimateScale|undefined){
  if(!scale)return '';
@@ -69,9 +68,9 @@ export function QuickSurfaceEstimate(p:Props){
   if(distance>0&&Number.isFinite(bar.metres)){scaleX=scaleY=bar.metres/distance;basis=bar.method==='detected_bar'?`Barra metrica del documento · ${bar.metres} m`:bar.method==='saved'?'Riferimento del computo dettagliato':`Misura su due punti · ${bar.metres} m`;}
   else scaleError='I due punti devono essere distinti e la lunghezza valida.';
  }else if(usePaper&&!unconfirmedRatio&&format&&Number(denominator)>=1){
-  const sheet=SHEETS[format as keyof typeof SHEETS];let [w,h]=sheet?[...sheet]:[0,0];if(p.width>p.height)[w,h]=[h,w];
-  if(!sheet||Number(denominator)>10000||Math.abs((p.width/p.height)/(w/h)-1)>.03)scaleError='Il foglio non corrisponde al formato scelto: potrebbe essere ritagliato. Usa due punti di una misura nota.';
-  else{scaleX=w*Number(denominator)/p.width;scaleY=h*Number(denominator)/p.height;basis=`Scala 1:${denominator} su foglio ${format} intero`;}
+  const scale=paperMetresPerPixel(format,Number(denominator),p.width,p.height);
+  if(!scale)scaleError='Il foglio non corrisponde al formato scelto: potrebbe essere ritagliato. Usa due punti di una misura nota.';
+  else{[scaleX,scaleY]=scale;basis=`Scala 1:${denominator} su foglio ${format} intero`;}
  }
  const toM2=(shape:PlanShape)=>netArea(shape)*scaleX*scaleY;
  const hasScale=scaleX>0&&scaleY>0;

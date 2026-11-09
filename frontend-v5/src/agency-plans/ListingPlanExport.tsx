@@ -1,8 +1,9 @@
 import {useState} from 'react';
-import type {ListingDetails,ListingOpening} from './api';
+import type {ListingDetails,ListingOpening,QuickEstimateScale} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
-import {isBalcony} from './scaleDetection';
-import {listingIllustration, listingOpeningOnDrawing, listingWalls} from './listingGeometry';
+import {isBalcony,paperMetresPerPixel} from './scaleDetection';
+import type {MeasurementConfiguration} from './measurement-types';
+import {listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, listingWalls} from './listingGeometry';
 import {ListingPlanReview} from './ListingPlanReview';
 import styles from './practice-plan.module.css';
 
@@ -81,6 +82,8 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
  for (const opening of details?.openings??[]) {
   const placed=listingOpeningOnDrawing(opening,walls,originalSpan);
   const start=position(placed.start),end=position(placed.end);
+  const opposite=listingDoorOpposite(placed,drawing,originalSpan*.035);
+  const oppositePixels=opposite?[position(opposite[0]),position(opposite[1])] as const:null;
   if(Math.hypot(end[0]-start[0],end[1]-start[1])<3)continue;
   const line=(a:Point,b:Point)=>{context.beginPath();context.moveTo(...a);context.lineTo(...b);context.stroke();};
   const span=Math.hypot(end[0]-start[0],end[1]-start[1]);
@@ -89,8 +92,20 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
   context.save();
   context.lineCap='butt';context.strokeStyle='#fff';context.lineWidth=16;
   line(start,end);
+  if(oppositePixels){
+   const [farStart,farEnd]=oppositePixels;
+   context.fillStyle='#fff';
+   context.beginPath();
+   context.moveTo(...start);context.lineTo(...end);context.lineTo(...farEnd);context.lineTo(...farStart);
+   context.closePath();context.fill();
+   line(farStart,farEnd);
+  }
   context.strokeStyle='#3c5453';context.lineWidth=2;
-  for(const point of [start,end])line(shift(point,-8),shift(point,8));
+  for(const [i,point] of [start,end].entries()){
+   const far=oppositePixels?.[i];
+   if(!far||Math.hypot(far[0]-point[0],far[1]-point[1])<1)line(shift(point,-8),shift(point,8));
+   else line(point,far);
+  }
   if(opening.kind==='window'){
    line(shift(start,-3),shift(end,-3));line(shift(start,3),shift(end,3));
   }else{
@@ -132,8 +147,19 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
 
 type ListingExportProps={
  rooms:PlanShape[];disabled:boolean;autoPreview?:boolean;details?:ListingDetails;
- review?:{sourceUrl:string;width:number;height:number;hints?:ListingOpening[];onSave:(details:Omit<ListingDetails,'geometryRevision'>)=>void};
+ review?:{sourceUrl:string;width:number;height:number;scale?:QuickEstimateScale;calibration?:MeasurementConfiguration['calibration'];hints?:ListingOpening[];onSave:(details:Omit<ListingDetails,'geometryRevision'>)=>void};
 };
+function listingScale({scale,calibration,width,height}:NonNullable<ListingExportProps['review']>):Point|null{
+ const paper=scale?.mode==='paper'?scale:scale?undefined:calibration?.paper;
+ if(paper)return paperMetresPerPixel(paper.format,paper.denominator,width,height);
+ const reference=scale?.mode==='paper'?null:scale??(calibration?.confirmed?calibration:null);
+ if(!reference)return null;
+ const pixels=Math.hypot(reference.end[0]-reference.start[0],reference.end[1]-reference.start[1]);
+ if(!(pixels>0&&reference.metres>0))return null;
+ const factor=reference.metres/pixels;
+ return [factor,factor];
+}
+
 export function ListingPlanExport({rooms,disabled,autoPreview=false,details,review}:ListingExportProps) {
  const [reviewing,setReviewing]=useState(false);
  // In the listing task the image is drawn on entry: the component is keyed by geometry revision.
@@ -157,7 +183,7 @@ export function ListingPlanExport({rooms,disabled,autoPreview=false,details,revi
   <button type="button" disabled={disabled} onClick={open}>Anteprima annuncio</button></>}
   {autoPreview&&!rooms.length&&<p>Salva almeno un vano per preparare l’immagine dell’annuncio.</p>}
   {review&&<button type="button" disabled={disabled} onClick={()=>setReviewing(true)}>Modifica pianta per l’annuncio</button>}
-  {review&&reviewing&&<ListingPlanReview {...review} rooms={rooms} saved={details} disabled={disabled}
+  {review&&reviewing&&<ListingPlanReview {...review} metresPerPixel={listingScale(review)} rooms={rooms} saved={details} disabled={disabled}
    onClose={()=>setReviewing(false)} onApply={draft=>{review.onSave(draft);setReviewing(false);}}/>}
   {error&&<p role="alert">Impossibile creare l’immagine della planimetria.</p>}
   {preview&&<div>

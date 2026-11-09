@@ -341,6 +341,83 @@ export function placeListingOpening(opening:ListingOpening,walls:Segment[],limit
  return result;
 }
 
+export const DEFAULT_LISTING_DOOR_METRES=.8;
+
+export function placeScaledListingDoor(point:Point,walls:Segment[],limit:number,metresPerPixel:Point,
+ drawing:PlanShape[]=[],maxGap=0):ListingOpening|null{
+ let best=limit,opening:ListingOpening|null=null;
+ let placement:{wall:Segment;centre:number;halfWidth:number}|null=null;
+ for(const wall of walls){
+  const [a,b]=wall;
+  const metres=Math.hypot((b[0]-a[0])*metresPerPixel[0],(b[1]-a[1])*metresPerPixel[1]);
+  if(metres<DEFAULT_LISTING_DOOR_METRES)continue;
+  const projected=unit(fraction(point,wall));
+  const gap=distance(point,at(wall,projected));
+  if(gap>best)continue;
+  const halfWidth=DEFAULT_LISTING_DOOR_METRES/(2*metres);
+  const centre=Math.max(halfWidth,Math.min(1-halfWidth,projected));
+  opening=doorAt(wall,centre,halfWidth);
+  placement={wall,centre,halfWidth};
+  best=gap;
+ }
+ if(!opening||!placement||!drawing.length||listingDoorOpposite(opening,drawing,maxGap))return opening;
+
+ // Near a junction, fit the whole opening inside the section shared by both walls.
+ const {wall,centre,halfWidth}=placement;
+ let closest=halfWidth;
+ for(const room of drawing)for(const point of room.points){
+  const end=fraction(point,wall);
+  for(const candidate of [end-halfWidth,end+halfWidth]){
+   const shift=Math.abs(centre-candidate);
+   if(shift>=closest||candidate<halfWidth||candidate>1-halfWidth)continue;
+   const fitted=doorAt(wall,candidate,halfWidth);
+   if(!listingDoorOpposite(fitted,drawing,maxGap))continue;
+   opening=fitted;
+   closest=shift;
+  }
+ }
+ return opening;
+}
+
+function doorAt(wall:Segment,centre:number,halfWidth:number):ListingOpening{
+ return {kind:'door',start:at(wall,centre-halfWidth),end:at(wall,centre+halfWidth),fixed:true};
+}
+
+/** Find the facing room contour so both faces share one opening. */
+export function listingDoorOpposite(opening:ListingOpening,drawing:PlanShape[],maxGap:number):Segment|null{
+ if(opening.kind!=='door')return null;
+ const {start,end}=opening;
+ const width=distance(start,end);
+ if(width<EPSILON)return null;
+ const direction:Point=[(end[0]-start[0])/width,(end[1]-start[1])/width];
+ const faces=drawing.filter(room=>room.kind!=='excluded').flatMap(room=>{
+  const winding=Math.sign(signedArea(room.points));
+  return edges(room.points).flatMap(wall=>{
+   const [a,b]=wall,length=distance(a,b);
+   if(length<EPSILON)return [];
+   const dx=(b[0]-a[0])/length,dy=(b[1]-a[1])/length;
+   if(Math.abs(dx*direction[0]+dy*direction[1])<.985)return [];
+   const u=fraction(start,wall),v=fraction(end,wall);
+   if(Math.min(u,v)<-EPSILON||Math.max(u,v)>1+EPSILON)return [];
+   const segment:Segment=[at(wall,unit(u)),at(wall,unit(v))];
+   return [{id:room.id,segment,inward:[-dy*winding,dx*winding] as Point,
+    gap:Math.max(distance(start,segment[0]),distance(end,segment[1]))}];
+  });
+ });
+ const anchor=faces.find(face=>face.gap<EPSILON);
+ if(!anchor)return null;
+ let nearest=Math.min(maxGap,width*.7),opposite:Segment|null=null;
+ for(const face of faces){
+  if(face.id===anchor.id||face.gap>nearest)continue;
+  if(face.inward[0]*anchor.inward[0]+face.inward[1]*anchor.inward[1]>-.985)continue;
+  const shift:Point=[face.segment[0][0]-start[0],face.segment[0][1]-start[1]];
+  if(shift[0]*anchor.inward[0]+shift[1]*anchor.inward[1]>EPSILON)continue;
+  nearest=face.gap;
+  opposite=face.segment;
+ }
+ return opposite;
+}
+
 export function changeListingVertex(drawing:PlanShape[],id:string,index:number,point:Point,snapDistance=0){
  const room=drawing.find(item=>item.id===id);
  if(!room?.points[index])return null;

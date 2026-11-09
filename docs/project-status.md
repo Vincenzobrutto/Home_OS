@@ -1,6 +1,6 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
-L’[editor grafico per l’annuncio](v5/agency-listing-graphic-editor-20261109.md) permette di trascinare i vertici e aggiungere o spostare porte e finestre sulla proposta, con originale opzionale. Il 10 novembre sono stati aggiunti Orto sui vertici, la scorciatoia Shift, le guide di allineamento e il trascinamento delle pareti con aperture agganciate. Verificati in browser su pratica sintetica con salvataggio e riapertura. Computi e geometria della casa restano separati.
+L’[editor grafico per l’annuncio](v5/agency-listing-graphic-editor-20261109.md) permette di trascinare i vertici e aggiungere o spostare porte e finestre sulla proposta, con originale opzionale. Il 10 novembre sono stati aggiunti Orto sui vertici, la scorciatoia Shift, le guide di allineamento e il trascinamento delle pareti con aperture agganciate. Le porte inserite con la scala salvata partono da 80 cm e aprono entrambi i contorni quando i lati affacciati lo consentono. Verificati in browser su pratica sintetica con salvataggio e riapertura. Computi e geometria della casa restano separati.
 
 
 ## Agenzie — Planimetria con una mappa e tre attività, 9 novembre (implementato, PR impilata su #83)

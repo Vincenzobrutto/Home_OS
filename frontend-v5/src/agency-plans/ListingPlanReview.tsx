@@ -2,7 +2,7 @@ import {useEffect,useMemo,useRef,useState,type KeyboardEvent,type MouseEvent,typ
 import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
 import type {ListingDetails,ListingOpening} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
-import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening} from './listingGeometry';
+import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDoorOpposite,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening,placeScaledListingDoor} from './listingGeometry';
 import {detectListingOpenings,distinctOpenings} from './listingOpeningDetection';
 import {listingRoomFill} from './listingStyle';
 import styles from './practice-plan.module.css';
@@ -13,7 +13,7 @@ type Subject={room:string;vertex:number}|{room:string;edge:number}|{row:number;p
 type RoomSubject=Extract<Subject,{room:string}>;
 type Drag={id:number;origin:Point;point:Point;unitsPerPixel:number;shift:boolean;subject:Subject};
 type Props={sourceUrl:string;width:number;height:number;rooms:PlanShape[];saved?:ListingDetails;
- hints?:ListingOpening[];disabled:boolean;onClose:()=>void;onApply:(details:Draft)=>void};
+ metresPerPixel?:Point|null;hints?:ListingOpening[];disabled:boolean;onClose:()=>void;onApply:(details:Draft)=>void};
 const mid=(a:Point,b:Point):Point=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
 const length=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const path=(room:PlanShape)=>[room.points,...room.holes].map(ring=>'M '+ring.map(point=>point.join(' ')).join(' L ')+' Z').join(' ');
@@ -98,9 +98,14 @@ export function ListingPlanReview(p:Props){
   if(busy||tool==='select'||rows.length>=100)return;
   const point=position(event);
   if(!point)return;
-  if(!start){setStart(point);setNotice('');return;}
-  const opening=placeListingOpening({kind:tool,start,end:point},walls,span*.018);
-  if(!opening||length(opening.start,opening.end)<span*.002){setNotice('Scegli due punti distinti sullo stesso muro.');return;}
+  const scaled=tool==='door'&&p.metresPerPixel;
+  if(!scaled&&!start){setStart(point);setNotice('');return;}
+  const opening=scaled?placeScaledListingDoor(point,walls,span*.018,scaled,drawing,span*.035)
+   :start?placeListingOpening({kind:tool,start,end:point},walls,span*.018):null;
+  if(!opening||length(opening.start,opening.end)<span*.002){
+   setNotice(scaled?'Scegli un tratto di muro adatto alla porta.':'Scegli due punti distinti sullo stesso muro.');
+   return;
+  }
   setRows([...rows,{opening,confirmed:true}]);chooseOpening(rows.length);setTool('select');setStart(null);
  }
  function editedOpening(index:number,part:'body'|'start'|'end',point:Point){
@@ -170,6 +175,7 @@ export function ListingPlanReview(p:Props){
  const draggedOpening=drag&&'row' in drag.subject?editedOpening(drag.subject.row,drag.subject.part,drag.point):null;
  const draggedRoom=drag&&'room' in drag.subject
   ?roomEdit(drag.subject,drag.point,drag.origin,snapDistance(drag.unitsPerPixel,drag.shift)):null;
+ const previewDrawing=draggedRoom?drawing.map(room=>room.id===draggedRoom.id?draggedRoom:room):drawing;
  const guides=drag&&'room' in drag.subject&&activeRoom&&draggedRoom
   ?listingAlignmentGuides(drawing,activeRoom,draggedRoom,drag.subject,2*drag.unitsPerPixel):[];
  function previewOpening(row:Row){
@@ -196,7 +202,7 @@ export function ListingPlanReview(p:Props){
    <label>Zoom <input aria-label="Zoom pianta" type="range" min="1" max={MAX_PLAN_ZOOM} step=".25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
   </div>
   <div className={styles.listingReviewControls} aria-live="polite">
-   {tool!=='select'?<span>{start?'Fai clic sul secondo estremo sullo stesso muro.':'Fai clic sul primo estremo dell’apertura.'}</span>:active?<>
+   {tool!=='select'?<span>{tool==='door'&&p.metresPerPixel?'Fai clic sul muro per posizionare una porta da 80 cm.':start?'Fai clic sul secondo estremo sullo stesso muro.':'Fai clic sul primo estremo dell’apertura.'}</span>:active?<>
     <strong>{active.opening.kind==='door'?'Porta':'Finestra'} {selected+1} di {rows.length}</strong>
     <span>Trascina il simbolo per spostarlo o un estremo per ridimensionarlo.</span>
     {!active.confirmed&&<button type="button" disabled={busy} onClick={()=>setRows(rows.map((row,i)=>i===selected?{...row,confirmed:true}:row))}>Conferma</button>}
@@ -237,16 +243,23 @@ export function ListingPlanReview(p:Props){
      onPointerDown={e=>begin(e,subject)} onKeyDown={e=>arrow(e,mid(a,b),subject)}/>;
    })}
    {tool==='select'&&rows.map((row,i)=>{
-    const {start:a,end:b,kind}=selected===i&&draggedOpening?draggedOpening:previewOpening(row);
+    const opening=selected===i&&draggedOpening?draggedOpening:previewOpening(row);
+    const {start:a,end:b,kind}=opening;
+    const opposite=listingDoorOpposite(opening,previewDrawing,span*.035);
     const color=selected===i?'#007e81':row.confirmed?'#304e53':'#b36a00';
     const coords={x1:a[0],y1:a[1],x2:b[0],y2:b[1]};
-    return <g key={i}>
+    const subject={row:i,part:'body' as const};
+    return <g key={i} onPointerDown={e=>begin(e,subject)} onClick={()=>{if(!busy)chooseOpening(i);}}>
      <line {...coords} stroke="white" strokeWidth="7" vectorEffect="non-scaling-stroke" pointerEvents="none"/>
+     {opposite&&<g>
+      <polygon className={styles.listingDoorHit} points={[a,b,opposite[1],opposite[0]].map(point=>point.join(',')).join(' ')} fill="white"/>
+      <line x1={opposite[0][0]} y1={opposite[0][1]} x2={opposite[1][0]} y2={opposite[1][1]} stroke="white" strokeWidth="7" vectorEffect="non-scaling-stroke"/>
+      {[a,b].map((point,j)=><line key={j} x1={point[0]} y1={point[1]} x2={opposite[j]![0]} y2={opposite[j]![1]} stroke={color} vectorEffect="non-scaling-stroke"/>)}
+     </g>}
      <line {...coords} stroke={color} strokeWidth={kind==='window'?3:2} strokeDasharray={kind==='door'?'4 2':undefined} vectorEffect="non-scaling-stroke" pointerEvents="none"/>
      <line {...coords} stroke="transparent" strokeWidth="19" vectorEffect="non-scaling-stroke"
       className={styles.listingOpeningHit} role="button" tabIndex={busy?-1:0} aria-label={(kind==='door'?'Porta ':'Finestra ')+(i+1)}
-      onPointerDown={e=>begin(e,{row:i,part:'body'})} onClick={()=>{if(!busy)chooseOpening(i);}}
-      onKeyDown={e=>{activate(e,()=>chooseOpening(i));arrow(e,mid(a,b),{row:i,part:'body'});}}/>
+      onKeyDown={e=>{activate(e,()=>chooseOpening(i));arrow(e,mid(a,b),subject);}}/>
     </g>;
    })}
    <g aria-hidden="true" pointerEvents="none">

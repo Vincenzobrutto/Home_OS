@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
-import {carryListingOpening, changeListingVertex, listingAlignmentGuides, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
+import {carryListingOpening, changeListingVertex, listingAlignmentGuides, listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, placeScaledListingDoor, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -128,6 +128,26 @@ it('extends a wall guide to the closest aligned reference and ignores a parallel
  expect(listingAlignmentGuides([shape,reference],shape,moved,{edge:0},1)).toEqual([[[0,8],[90,8]]]);
  const farther=moveListingWall([shape,reference],'A',0,[0,11])!;
  expect(listingAlignmentGuides([shape,reference],shape,farther,{edge:0},1)).toEqual([]);
+});
+
+it('sizes a door from the plan scale and projects its opening onto the facing room only',()=>{
+ const left=room('A',[[0,0],[40,0],[40,30],[0,30]]);
+ const right=room('B',[[44,0],[80,0],[80,30],[44,30]]);
+ const opening=placeScaledListingDoor([42,15],listingWalls([left]),4,[.05,.04])!;
+ expect(opening.start[0]).toBe(40);
+ expect(Math.abs(opening.end[1]-opening.start[1])*.04).toBeCloseTo(.8);
+ const opposite=listingDoorOpposite(opening,[left,right],6)!;
+ expect(opposite[0][0]).toBe(44);
+ expect(opposite[0][1]).toBeCloseTo(opening.start[1]);
+ expect(opposite[1][1]).toBeCloseTo(opening.end[1]);
+ expect(listingDoorOpposite(opening,[left,right],2)).toBeNull();
+ expect(listingDoorOpposite({...opening,kind:'window'},[left,right],6)).toBeNull();
+
+ const short=room('C',[[44,6],[80,6],[80,30],[44,30]]);
+ const fitted=placeScaledListingDoor([41,15],listingWalls([left]),4,[.05,.04],[left,short],6)!;
+ expect(fitted.start[1]).toBeCloseTo(6);
+ expect(fitted.end[1]).toBeCloseTo(26);
+ expect(listingDoorOpposite(fitted,[left,short],6)).not.toBeNull();
 });
 
 it('moves an opening to a new wall without shortening it or accepting a drop in empty space',()=>{

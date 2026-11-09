@@ -113,6 +113,7 @@ function Workspace(p:WorkspaceProps){
   const listingDetails=plan.listingDetails?.geometryRevision===plan.geometryRevision?plan.listingDetails:undefined;
   const listingReview=sourceUrl?{
    sourceUrl,width:rasterSize.width,height:rasterSize.height,
+   scale:plan.quickEstimate?.scale,calibration:plan.measurementConfiguration?.calibration,
    hints:plan.openingReviews?.flatMap(({threshold})=>threshold?[{kind:'door' as const,start:threshold.start,end:threshold.end}]:[]),
    onSave:(details:Omit<NonNullable<typeof plan.listingDetails>,'geometryRevision'>)=>save({operation:'save_listing_details',...details},'Revisione dettagli della planimetria per annuncio'),
   }:undefined;
