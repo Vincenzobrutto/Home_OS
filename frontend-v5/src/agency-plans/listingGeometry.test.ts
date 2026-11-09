@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
-import {alignListingWall, listingWalls, simplifyListingRooms} from './listingGeometry';
+import {alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -79,4 +79,14 @@ it('aligns a chosen wall to a reference and rejects a correction that crosses an
  expect(target.points.slice(0,2)).toEqual([[12,24],[82,28]]);
  const obstacle=room('Nicchia',[[68,24],[76,24],[76,27],[68,27]]);
  expect(alignListingWall([guide,target,obstacle],alignment)).toBeNull();
+});
+
+it('suggests a nearby overlapping reference and skips distant parallel-looking walls',()=>{
+ const targetRoom=room('Bagno',[[12,24],[82,28],[82,55],[12,55]]);
+ const guide=room('Disimpegno',[[0,0],[100,0],[100,20],[0,20]]);
+ const distant=room('Camera',[[0,100],[100,100],[100,140],[0,140]]);
+ const target={roomId:targetRoom.id,start:targetRoom.points[0]!,end:targetRoom.points[1]!};
+ const suggestions=suggestListingAlignments([targetRoom,guide,distant],target);
+ expect(suggestions.map(item=>item.reference.roomId)).toEqual(['Disimpegno']);
+ expect(alignListingWall([targetRoom,guide,distant],suggestions[0]!)?.[0]?.points.slice(0,2)).toEqual([[12,26],[82,26]]);
 });

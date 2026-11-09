@@ -11,6 +11,6 @@ Per accettare l’implementazione, verifica almeno un vano con piccoli scatti lu
 
 ## Revisione dei dettagli per l’annuncio
 
-La ricerca locale sull’originale propone porte e finestre da verificare. L’agente può correggere il tipo o i due estremi, aggiungere un’apertura mancante e scartare le proposte. L’immagine mostra solo le aperture confermate. La porta è rappresentata con un simbolo neutro quando il verso di apertura non è disponibile.
+La ricerca locale sull’originale propone porte e finestre da verificare. La mappa mette a fuoco una proposta per volta e presenta sul posto i comandi per confermare, scartare, correggere il tipo o i due estremi. Dopo conferma o scarto passa alla prossima proposta. L’agente può aggiungere un’apertura mancante. L’immagine mostra solo le aperture confermate. La porta è rappresentata con un simbolo neutro quando il verso di apertura non è disponibile.
 
-L’agente può allineare un lato della pianta illustrativa scegliendo una parete di riferimento. Il salvataggio conserva dettagli e allineamenti nella pratica e li associa alla revisione geometrica usata per verificarli. Anteprima e PNG usano la stessa resa.
+Quando l’agente seleziona un lato della pianta illustrativa, Dimora propone una parete vicina compatibile e mostra l’allineamento in anteprima. L’agente può applicarlo o esaminare un’altra direzione compatibile. Il salvataggio conserva dettagli e allineamenti nella pratica e li associa alla revisione geometrica usata per verificarli. Anteprima e PNG usano la stessa resa.

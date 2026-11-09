@@ -227,6 +227,38 @@ export function alignListingWall(rooms: PlanShape[], alignment: ListingAlignment
  return rooms.map(room=>room===target.room?{...room,points:candidate}:room);
 }
 
+/** Rank nearby walls which overlap in projection and can safely guide the chosen side. */
+export function suggestListingAlignments(rooms: PlanShape[], target: ListingWallRef) {
+ const [a,b]=[target.start,target.end], length=Math.hypot(b[0]-a[0],b[1]-a[1]);
+ if(length<EPSILON)return [];
+ const dx=(b[0]-a[0])/length,dy=(b[1]-a[1])/length;
+ const along=([x,y]:Point)=>(x-a[0])*dx+(y-a[1])*dy;
+ const across=([x,y]:Point)=>(y-a[1])*dx-(x-a[0])*dy;
+ const choices=rooms.flatMap(room=>edges(room.points).flatMap(([start,end])=>{
+  if(room.id===target.roomId || room.kind==='excluded'||room.kind==='balcony'||/balcon|terraz|giardin/i.test(room.label))return [];
+  const span=Math.hypot(end[0]-start[0],end[1]-start[1]);
+  if(span<length*.2)return [];
+  const angle=Math.abs(across(end)-across(start))/span;
+  if(angle<.008||angle>.22)return [];
+  const u=along(start),v=along(end);
+  const overlap=Math.min(length,Math.max(u,v))-Math.max(0,Math.min(u,v));
+  const gap=Math.abs((across(start)+across(end))/2);
+  if(overlap<Math.min(length,span)*.35||gap>Math.max(length,span)*.28)return [];
+  const alignment={target,reference:{roomId:room.id,start,end}};
+  const direction:Point=[(end[0]-start[0])/span,(end[1]-start[1])/span];
+  return [{alignment,direction,score:gap/Math.min(length,span)+angle+(1-overlap/Math.min(length,span))*.15}];
+ }));
+ const alternatives:typeof choices=[];
+ for(const item of choices.sort((a,b)=>a.score-b.score)){
+  const [x,y]=item.direction;
+  if(alternatives.some(({direction:[u,v]})=>Math.abs(x*v-y*u)<.006))continue;
+  if(!alignListingWall(rooms,item.alignment))continue;
+  alternatives.push(item);
+  if(alternatives.length===3)break;
+ }
+ return alternatives.map(item=>item.alignment);
+}
+
 export function listingDrawing(rooms: PlanShape[], alignments: ListingAlignment[] = []) {
  const points=rooms.flatMap(room=>room.points);
  const xs=points.map(([x])=>x),ys=points.map(([,y])=>y);

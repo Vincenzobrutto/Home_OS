@@ -103,3 +103,14 @@
 
 .tableEstimateField { display: grid; gap: 4px; font-size: .85rem; }
 .tableEstimateField input { width: 100%; min-width: 4rem; max-width: 6rem; }
+
+.listingReviewDialog{max-width:1040px}
+.listingReviewDialog h3{margin:0 0 6px}
+.listingReviewTools,.listingReviewControls,.listingReviewFooter{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+.listingReviewTools label,.listingReviewControls label{display:flex;align-items:center;gap:6px;margin:0}
+.listingReviewControls{background:#eef6f6;border-radius:8px;padding:6px 10px;min-height:48px}
+.listingReviewControls select{width:auto}
+.listingReviewMap{overflow:auto;height:48dvh;min-height:160px;margin-top:6px;border:1px solid #d3dede;background:white}
+.listingReviewFooter{justify-content:flex-end;margin-top:6px}
+.listingReviewFooter span{margin-right:auto;font-size:.875rem}
+@media(max-width:600px){.listingReviewMap{height:37dvh}.listingReviewTools button,.listingReviewControls button,.listingReviewFooter button{padding:6px 9px;font-size:.875rem}}
