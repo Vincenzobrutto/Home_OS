@@ -6,6 +6,8 @@ Claude, ramo `claude/agency-plan-page-20261109` creato dal checkout `work/agency
 
 Seguito Codex su PR #84: dalle verifiche **Modifica contorno** apre l’editor del vano salvato anche partendo dal confronto. Verificati 45 test mirati, typecheck e build; sulla copia di collaudo, spostamento di un vertice e ripristino senza salvare. Seguito sulla stessa PR per selezione, trascinamento ed eliminazione con il mouse.
 
+Per l’export da annuncio vale lo [standard di prodotto della planimetria illustrativa](v5/agency-listing-floor-plan-standard.md). Specifica registrata, semplificazione automatica da implementare.
+
 ## Agenzie — superfici immediate con riferimento automatico, attive localmente
 
 Richiesta del committente: niente form tecnico obbligatorio per ottenere le superfici. Lotto `codex/agency-quick-surfaces-20261105`, checkout separato, basePR82. Riconoscimento locale OCR/pixel della barra e scala, alternativa formato foglio; stima dei soli vani presenti con ipotesi esplicite. Computo rigoroso/salvato conservato nei dettagli opzionali. Solo frontend, nessuna AI esterna o modifica ai dati originali. Codice ba984f6 attivo localmente, API/PG preservati. 93/93 gruppo iniziale, 10/10 finali nei due moduli modificati, typecheck/lint/build e browser desktop375 verdi. Sulla pratica reale rilevata scala1:200, richiesta soltanto formato; nessun salvataggio o invio AI. Stima temporanea non persistita. [Report e limiti](v5/agency-quick-surfaces-20261105.md).

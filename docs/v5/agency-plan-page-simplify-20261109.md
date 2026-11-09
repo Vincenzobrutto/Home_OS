@@ -85,3 +85,5 @@ Nel collaudo sulla stessa pratica, un clic ha selezionato il vertice senza alter
 La barra sopra la mappa include i comandi dei vertici quando si seleziona un contorno modificabile. Verificata sulla pratica di collaudo con la verifica Disimpegno n. 3, a zoom 500% su desktop e a 390 px. Build e 34 test del workspace passati.
 
 In modalità Aggiungi punto, il clic inserisce il vertice nel punto corrispondente sul lato. Il mouse può scorrere la planimetria, mentre Ctrl + rotellina ingrandisce o riduce attorno al cursore anche nel dialogo di disegno. Ai limiti dello zoom il gesto modificato resta sulla mappa.
+
+Le future evoluzioni dell’export seguono lo [standard di prodotto per la planimetria da annuncio](agency-listing-floor-plan-standard.md).
