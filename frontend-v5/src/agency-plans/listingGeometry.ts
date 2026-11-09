@@ -1,5 +1,5 @@
 import type {PlanShape, Point} from './PlanMeasurementView';
-import type {ListingAlignment, ListingWallRef} from './api';
+import type {ListingAlignment, ListingDetails, ListingOpening, ListingWallRef} from './api';
 import {insideShape} from './scaleDetection';
 
 type Segment = [Point, Point];
@@ -295,4 +295,87 @@ export function listingWalls(rooms: PlanShape[]) {
   const pointAt = (position: number): Point => [origin[0]+direction[0]*position,origin[1]+direction[1]*position];
   return merged.map(([start,end]): Segment => [pointAt(start),pointAt(end)]);
  });
+}
+
+export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetails,'alignments'|'contours'>){
+ const overrides=new Map(details?.contours?.map(entry=>[entry.id,entry.geometry]));
+ return listingDrawing(rooms,details?.alignments).map(room=>{
+  const geometry=overrides.get(room.id);
+  return geometry?{...room,...geometry}:room;
+ });
+}
+
+const distance=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const at=([a,b]:Segment,t:number):Point=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+const fraction=(p:Point,[a,b]:Segment)=>((p[0]-a[0])*(b[0]-a[0])+(p[1]-a[1])*(b[1]-a[1]))/distance(a,b)**2;
+const unit=(t:number)=>Math.min(1,Math.max(0,t));
+
+/** Place a resized or moved opening on one wall, without independently snapping its ends. */
+export function placeListingOpening(opening:ListingOpening,walls:Segment[],limit:number,near?:Point):ListingOpening|null{
+ const {start,end}=opening,length=distance(start,end);
+ if(length<EPSILON)return null;
+ let best=limit, result:ListingOpening|null=null;
+ for(const wall of walls){
+  const span=distance(...wall);
+  if(span<EPSILON)continue;
+  if(near){
+   if(length>span+EPSILON)continue;
+   const half=length/span/2;
+   const t=Math.max(half,Math.min(1-half,fraction(near,wall)));
+   const offset=distance(near,at(wall,t));
+   if(offset>best)continue;
+   best=offset;
+   result={...opening,start:at(wall,t-half),end:at(wall,t+half),fixed:true};
+  }else{
+   const parallel=Math.abs((end[0]-start[0])*(wall[1][0]-wall[0][0])+(end[1]-start[1])*(wall[1][1]-wall[0][1]))/(length*span);
+   if(parallel<.95)continue;
+   const u=unit(fraction(start,wall)),v=unit(fraction(end,wall));
+   if(Math.abs(u-v)*span<length*.55)continue;
+   const a=at(wall,u),b=at(wall,v);
+   const offset=Math.max(distance(a,start),distance(b,end));
+   if(offset>best)continue;
+   best=offset;
+   result={...opening,start:a,end:b,fixed:true};
+  }
+ }
+ return result;
+}
+
+export function changeListingVertex(drawing:PlanShape[],id:string,index:number,point:Point){
+ const room=drawing.find(item=>item.id===id);
+ if(!room?.points[index])return null;
+ const points=room.points.map((current,i)=>i===index?point:current);
+ const before=edges(room.points),after=edges(points);
+ const affected=[(index+points.length-1)%points.length,index];
+ const neighbours=drawing.filter(other=>other!==room);
+ if(Math.sign(signedArea(points))!==Math.sign(signedArea(room.points)))return null;
+ if(affected.some(i=>{
+  const edge=after[i]!;
+  return samePoint(...edge)||after.some((other,j)=>i!==j&&segmentsConflict(edge,other))||
+   room.holes.some(hole=>edges(hole).some(other=>segmentsConflict(edge,other)))||
+   neighbours.some(other=>edges(other.points).some(side=>segmentsConflict(edge,side)&&!segmentsConflict(before[i]!,side)));
+ }))return null;
+ if(room.holes.some(hole=>hole.some(p=>!insideShape(p,{points,holes:[]}))))return null;
+ if(neighbours.some(other=>other.kind!=='excluded'&&(
+  (insideShape(point,other)&&!edges(other.points).some(side=>distance(point,at(side,unit(fraction(point,side))))<EPSILON)&&!insideShape(room.points[index]!,other))||
+  other.points.some(p=>insideShape(p,{points,holes:room.holes})&&!after.some(side=>distance(p,at(side,unit(fraction(p,side))))<EPSILON)&&!insideShape(p,room))
+ )))return null;
+ return {...room,points};
+}
+
+/** Keep a manually placed opening on its wall when an endpoint of that wall moves. */
+export function carryListingOpening(opening:ListingOpening,before:PlanShape,after:PlanShape){
+ if(!opening.fixed)return opening;
+ for(const [i,wall] of edges(before.points).entries()){
+  if(distance(...wall)<EPSILON)continue;
+  const u=fraction(opening.start,wall),v=fraction(opening.end,wall);
+  if([u,v].some(t=>t< -EPSILON||t>1+EPSILON)||distance(opening.start,at(wall,u))>EPSILON||distance(opening.end,at(wall,v))>EPSILON)continue;
+  const changed:Segment=[after.points[i]!,after.points[(i+1)%after.points.length]!];
+  return {...opening,start:at(changed,unit(u)),end:at(changed,unit(v))};
+ }
+ return opening;
+}
+
+export function listingOpeningOnDrawing(opening:ListingOpening,walls:Segment[],drawingSpan:number){
+ return opening.fixed?opening:placeListingOpening(opening,walls,18*drawingSpan/1440)??opening;
 }

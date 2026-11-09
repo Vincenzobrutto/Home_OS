@@ -2,23 +2,16 @@ import {useState} from 'react';
 import type {ListingDetails,ListingOpening} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
 import {isBalcony} from './scaleDetection';
-import {listingDrawing, listingWalls} from './listingGeometry';
+import {listingIllustration, listingOpeningOnDrawing, listingWalls} from './listingGeometry';
 import {ListingPlanReview} from './ListingPlanReview';
 import styles from './practice-plan.module.css';
 
-function roomFill(room: PlanShape) {
- if (room.kind !== 'excluded' && (isBalcony(room) || /terraz|giardin/i.test(room.label))) return '#d2e2d4';
- if (/bagno|servizi/i.test(room.label)) return '#dbe9e8';
- if (/camera/i.test(room.label)) return '#e1e5ec';
- if (/cucina/i.test(room.label)) return '#f2e1cd';
- if (/soggiorno|salone/i.test(room.label)) return '#eee0d5';
- if (/disimpegno|corridoio/i.test(room.label)) return '#eeeae0';
- return '#f0f1ee';
-}
+import {listingRoomFill} from './listingStyle';
 
 function listingImage(rooms: PlanShape[],details?:ListingDetails) {
  let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
- for (const room of rooms) {
+ const drawing = listingIllustration(rooms,details);
+ for (const room of drawing) {
   for (const [x,y] of room.points) {
    left = Math.min(left, x);
    top = Math.min(top, y);
@@ -30,7 +23,9 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) throw new Error('invalid_plan_bounds');
 
  const margin = 48, footer = 30, scale = 1440 / Math.max(width, height);
- const drawing = listingDrawing(rooms,details?.alignments);
+
+ const xs=rooms.flatMap(room=>room.points.map(([x])=>x)),ys=rooms.flatMap(room=>room.points.map(([,y])=>y));
+ const originalSpan=Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
  const walls = details?.openings.length ? listingWalls(drawing) : [];
  const canvas = document.createElement('canvas');
  canvas.width = Math.ceil(width * scale) + margin * 2;
@@ -55,7 +50,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
    });
    outline.closePath();
   }
-  context.fillStyle = roomFill(room);
+  context.fillStyle = listingRoomFill(room);
   context.fill(outline,'evenodd');
   return {room,outline};
  });
@@ -84,26 +79,9 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
  context.stroke(perimeter);
 
  for (const opening of details?.openings??[]) {
-  let start=position(opening.start),end=position(opening.end);
-  const length=Math.hypot(end[0]-start[0],end[1]-start[1]);
-  if(length<3)continue;
-  const dx=(end[0]-start[0])/length,dy=(end[1]-start[1])/length;
-  // Move the symbol onto the closest wall face when the raster mark is nearby.
-  let best=18;
-  let snapped:[Point,Point]|undefined;
-  for(const [a,b] of walls){
-   const [ax,ay]=position(a),[bx,by]=position(b),span=Math.hypot(bx-ax,by-ay);
-   if(span<length*.55)continue;
-   const ux=(bx-ax)/span,uy=(by-ay)/span;
-   if(Math.abs(ux*dx+uy*dy)<.95)continue;
-   const project=([x,y]:Point)=>Math.max(0,Math.min(span,(x-ax)*ux+(y-ay)*uy));
-   const u=project(start),v=project(end);
-   if(Math.abs(u-v)<length*.55)continue;
-   const offset=Math.abs((start[0]+end[0]-2*ax)*uy-(start[1]+end[1]-2*ay)*ux)/2;
-   if(offset>=best)continue;
-   best=offset;snapped=[[ax+u*ux,ay+u*uy],[ax+v*ux,ay+v*uy]];
-  }
-  if(snapped)[start,end]=snapped;
+  const placed=listingOpeningOnDrawing(opening,walls,originalSpan);
+  const start=position(placed.start),end=position(placed.end);
+  if(Math.hypot(end[0]-start[0],end[1]-start[1])<3)continue;
   const line=(a:Point,b:Point)=>{context.beginPath();context.moveTo(...a);context.lineTo(...b);context.stroke();};
   const span=Math.hypot(end[0]-start[0],end[1]-start[1]);
   const nx=(start[1]-end[1])/span,ny=(end[0]-start[0])/span;
@@ -178,7 +156,7 @@ export function ListingPlanExport({rooms,disabled,autoPreview=false,details,revi
   {!autoPreview&&<><h3>Pianta per l’annuncio</h3>
   <button type="button" disabled={disabled} onClick={open}>Anteprima annuncio</button></>}
   {autoPreview&&!rooms.length&&<p>Salva almeno un vano per preparare l’immagine dell’annuncio.</p>}
-  {review&&<button type="button" disabled={disabled} onClick={()=>setReviewing(true)}>Porte, finestre e pareti</button>}
+  {review&&<button type="button" disabled={disabled} onClick={()=>setReviewing(true)}>Modifica pianta per l’annuncio</button>}
   {review&&reviewing&&<ListingPlanReview {...review} rooms={rooms} saved={details} disabled={disabled}
    onClose={()=>setReviewing(false)} onApply={draft=>{review.onSave(draft);setReviewing(false);}}/>}
   {error&&<p role="alert">Impossibile creare l’immagine della planimetria.</p>}

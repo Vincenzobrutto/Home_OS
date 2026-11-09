@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
-import {alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
+import {carryListingOpening, changeListingVertex, listingIllustration, listingOpeningOnDrawing, placeListingOpening, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -89,4 +89,23 @@ it('suggests a nearby overlapping reference and skips distant parallel-looking w
  const suggestions=suggestListingAlignments([targetRoom,guide,distant],target);
  expect(suggestions.map(item=>item.reference.roomId)).toEqual(['Disimpegno']);
  expect(alignListingWall([targetRoom,guide,distant],suggestions[0]!)?.[0]?.points.slice(0,2)).toEqual([[12,26],[82,26]]);
+});
+
+it('moves an illustration vertex, carrying the attached opening without changing the source',()=>{
+ const room:PlanShape={id:'a',label:'Bagno',points:[[0,0],[40,0],[40,30],[0,30]],holes:[]};
+ const opening=placeListingOpening({kind:'window',start:[8,1],end:[16,1]},listingWalls([room]),2)!;
+ const moved=changeListingVertex([room],'a',1,[40,5])!;
+ const carried=carryListingOpening(opening,room,moved);
+ expect(carried).toMatchObject({start:[8,1],end:[16,2],fixed:true});
+ expect(listingOpeningOnDrawing(carried,listingWalls([moved]),40)).toEqual(carried);
+ expect(listingIllustration([room],{alignments:[],contours:[{id:'a',geometry:moved}]})[0]?.points).toEqual(moved.points);
+ expect(room.points[1]).toEqual([40,0]);
+ expect(changeListingVertex([room],'a',1,[-10,40])).toBeNull();
+});
+
+it('moves an opening to a new wall without shortening it or accepting a drop in empty space',()=>{
+ const opening={kind:'door' as const,start:[4,0] as Point,end:[10,0] as Point};
+ const walls:[[Point,Point],[Point,Point]]=[[[0,0],[20,0]],[[20,0],[20,20]]];
+ expect(placeListingOpening(opening,walls,2,[19,12])).toMatchObject({start:[20,9],end:[20,15],fixed:true});
+ expect(placeListingOpening(opening,walls,2,[10,10])).toBeNull();
 });

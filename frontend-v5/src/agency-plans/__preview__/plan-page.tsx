@@ -83,6 +83,9 @@ function apply(plan:AgencyPlan,command:Record<string,unknown>){
   for(const entry of command.covers as NonNullable<AgencyPlan['balconyCovers']>)saved.set(entry.id,entry);
   plan.balconyCovers=[...saved.values()];
   plan.quickEstimate={...(command.scale?{scale:structuredClone(command.scale) as NonNullable<AgencyPlan['quickEstimate']>['scale']}:{}),...(command.parameters?{parameters:structuredClone(command.parameters) as NonNullable<AgencyPlan['quickEstimate']>['parameters']}:{}),savedAt:new Date().toISOString(),geometryRevision:plan.geometryRevision||1};
+ }else if(command.operation==='save_listing_details'){
+  const {openings,alignments,contours}=command as Omit<NonNullable<AgencyPlan['listingDetails']>,'geometryRevision'>;
+  plan.listingDetails=structuredClone({geometryRevision:plan.geometryRevision??1,openings,alignments,contours});
  }else if(command.operation==='measure'){
   plan.measurementConfiguration=structuredClone(command.configuration) as AgencyPlan['measurementConfiguration'];
   plan.measurement={totalM2:null,partialM2:0,issues:['synthetic_preview_always_incomplete'],status:'incomplete',certification:false};

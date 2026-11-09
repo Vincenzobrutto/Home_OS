@@ -1,5 +1,8 @@
 ## 9 novembre — Planimetria Agenzie semplificata (proposta implementata, da approvare)
 
+L’[editor grafico per l’annuncio](v5/agency-listing-graphic-editor-20261109.md) permette di trascinare i vertici e aggiungere o spostare porte e finestre sulla proposta, con originale opzionale. Verificato su pratica sintetica con salvataggio e riapertura del PNG. Computi e geometria della casa restano separati.
+
+
 Prossimi passi: prova su pratica reale in browser visibile (OCR barra), test HTTP/DB di `save_quick_estimate`, conferma dei coefficienti balconi, commit e PR verso il consolidamento su decisione del committente. [Report](v5/agency-plan-page-simplify-20261109.md).
 
 La correzione dei contorni è ora accessibile dalle verifiche della PR #84. Resta la prova utente sulla stessa pratica.

@@ -114,3 +114,11 @@
 .listingReviewFooter{justify-content:flex-end;margin-top:6px}
 .listingReviewFooter span{margin-right:auto;font-size:.875rem}
 @media(max-width:600px){.listingReviewMap{height:37dvh}.listingReviewTools button,.listingReviewControls button,.listingReviewFooter button{padding:6px 9px;font-size:.875rem}}
+
+.listingReviewDialog{max-width:1200px}
+.listingReviewMap{height:55dvh}
+.listingHandle{stroke:#00819a;stroke-width:9px;vector-effect:non-scaling-stroke;cursor:grab;touch-action:none;pointer-events:stroke}
+.listingHandle:focus-visible{stroke:#ba5800;stroke-width:13px;outline:none}
+.listingOpeningHit{cursor:grab;touch-action:none;pointer-events:stroke}
+.listingOpeningHit:focus-visible{stroke:#00819a55}
+@media(max-width:600px){.listingReviewMap{height:43dvh}}
