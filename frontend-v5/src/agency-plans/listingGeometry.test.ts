@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
-import {carryListingOpening, changeListingVertex, listingIllustration, listingOpeningOnDrawing, placeListingOpening, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
+import {carryListingOpening, changeListingVertex, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -101,6 +101,24 @@ it('moves an illustration vertex, carrying the attached opening without changing
  expect(listingIllustration([room],{alignments:[],contours:[{id:'a',geometry:moved}]})[0]?.points).toEqual(moved.points);
  expect(room.points[1]).toEqual([40,0]);
  expect(changeListingVertex([room],'a',1,[-10,40])).toBeNull();
+});
+
+it('snaps a corner to adjacent axes only when the point is close enough',()=>{
+ const shape=room('A',[[0,0],[40,0],[38,32],[0,30]]);
+ expect(changeListingVertex([shape],'A',2,[39,31],2)?.points[2]).toEqual([40,30]);
+ expect(changeListingVertex([shape],'A',2,[35,34],2)?.points[2]).toEqual([35,34]);
+ expect(changeListingVertex([shape],'A',2,[39,31])?.points[2]).toEqual([39,31]);
+});
+
+it('translates an entire wall, carries its opening and blocks entry into a neighbouring room',()=>{
+ const shape=room('A',[[0,0],[40,0],[40,30],[0,30]]);
+ const neighbour=room('B',[[52,0],[92,0],[92,30],[52,30]]);
+ const moved=moveListingWall([shape,neighbour],'A',1,[8,13])!;
+ expect(moved.points).toEqual([[0,0],[48,0],[48,30],[0,30]]);
+ const opening={kind:'door' as const,start:[40,8] as Point,end:[40,16] as Point,fixed:true};
+ expect(carryListingOpening(opening,shape,moved)).toMatchObject({start:[48,8],end:[48,16]});
+ expect(moveListingWall([shape,neighbour],'A',1,[14,0])).toBeNull();
+ expect(moveListingWall([shape],'A',1,[0,13])).toBeNull();
 });
 
 it('moves an opening to a new wall without shortening it or accepting a drop in empty space',()=>{

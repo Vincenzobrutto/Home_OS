@@ -341,15 +341,43 @@ export function placeListingOpening(opening:ListingOpening,walls:Segment[],limit
  return result;
 }
 
-export function changeListingVertex(drawing:PlanShape[],id:string,index:number,point:Point){
+export function changeListingVertex(drawing:PlanShape[],id:string,index:number,point:Point,snapDistance=0){
  const room=drawing.find(item=>item.id===id);
  if(!room?.points[index])return null;
- const points=room.points.map((current,i)=>i===index?point:current);
+ const previous=room.points[(index+room.points.length-1)%room.points.length]!;
+ const next=room.points[(index+1)%room.points.length]!;
+ const x=Math.abs(previous[0]-point[0])<=Math.abs(next[0]-point[0])?previous:next;
+ const y=Math.abs(previous[1]-point[1])<=Math.abs(next[1]-point[1])?previous:next;
+ const dx=Math.abs(x[0]-point[0]),dy=Math.abs(y[1]-point[1]);
+ const snapped:Point=[
+  dx<=snapDistance&&(x!==y||dy>snapDistance||dx<=dy)?x[0]:point[0],
+  dy<=snapDistance&&(x!==y||dx>snapDistance||dy<dx)?y[1]:point[1],
+ ];
+ return changeListingPoints(drawing,room,new Map([[index,snapped]]));
+}
+
+/** Move both endpoints by the same perpendicular offset, preserving the wall's direction. */
+export function moveListingWall(drawing:PlanShape[],id:string,index:number,delta:Point){
+ const room=drawing.find(item=>item.id===id);
+ if(!room?.points[index])return null;
+ const next=(index+1)%room.points.length;
+ const a=room.points[index]!,b=room.points[next]!;
+ const length=distance(a,b);
+ if(length<EPSILON)return null;
+ const normal:Point=[(a[1]-b[1])/length,(b[0]-a[0])/length];
+ const offset=delta[0]*normal[0]+delta[1]*normal[1];
+ if(Math.abs(offset)<EPSILON)return null;
+ const shift=([x,y]:Point):Point=>[x+offset*normal[0],y+offset*normal[1]];
+ return changeListingPoints(drawing,room,new Map([[index,shift(a)],[next,shift(b)]]));
+}
+
+function changeListingPoints(drawing:PlanShape[],room:PlanShape,changes:Map<number,Point>){
+ const points=room.points.map((current,i)=>changes.get(i)??current);
  const before=edges(room.points),after=edges(points);
- const affected=[(index+points.length-1)%points.length,index];
+ const affected=new Set([...changes.keys()].flatMap(i=>[(i+points.length-1)%points.length,i]));
  const neighbours=drawing.filter(other=>other!==room);
  if(Math.sign(signedArea(points))!==Math.sign(signedArea(room.points)))return null;
- if(affected.some(i=>{
+ if([...affected].some(i=>{
   const edge=after[i]!;
   return samePoint(...edge)||after.some((other,j)=>i!==j&&segmentsConflict(edge,other))||
    room.holes.some(hole=>edges(hole).some(other=>segmentsConflict(edge,other)))||
@@ -357,7 +385,7 @@ export function changeListingVertex(drawing:PlanShape[],id:string,index:number,p
  }))return null;
  if(room.holes.some(hole=>hole.some(p=>!insideShape(p,{points,holes:[]}))))return null;
  if(neighbours.some(other=>other.kind!=='excluded'&&(
-  (insideShape(point,other)&&!edges(other.points).some(side=>distance(point,at(side,unit(fraction(point,side))))<EPSILON)&&!insideShape(room.points[index]!,other))||
+  [...changes].some(([index,point])=>insideShape(point,other)&&!edges(other.points).some(side=>distance(point,at(side,unit(fraction(point,side))))<EPSILON)&&!insideShape(room.points[index]!,other))||
   other.points.some(p=>insideShape(p,{points,holes:room.holes})&&!after.some(side=>distance(p,at(side,unit(fraction(p,side))))<EPSILON)&&!insideShape(p,room))
  )))return null;
  return {...room,points};
@@ -371,6 +399,7 @@ export function carryListingOpening(opening:ListingOpening,before:PlanShape,afte
   const u=fraction(opening.start,wall),v=fraction(opening.end,wall);
   if([u,v].some(t=>t< -EPSILON||t>1+EPSILON)||distance(opening.start,at(wall,u))>EPSILON||distance(opening.end,at(wall,v))>EPSILON)continue;
   const changed:Segment=[after.points[i]!,after.points[(i+1)%after.points.length]!];
+  if(samePoint(wall[0],changed[0])&&samePoint(wall[1],changed[1]))continue;
   return {...opening,start:at(changed,unit(u)),end:at(changed,unit(v))};
  }
  return opening;

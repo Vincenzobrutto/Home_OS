@@ -2,15 +2,16 @@ import {useEffect,useMemo,useRef,useState,type KeyboardEvent,type MouseEvent,typ
 import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
 import type {ListingDetails,ListingOpening} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
-import {carryListingOpening,changeListingVertex,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,placeListingOpening} from './listingGeometry';
+import {carryListingOpening,changeListingVertex,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening} from './listingGeometry';
 import {detectListingOpenings,distinctOpenings} from './listingOpeningDetection';
 import {listingRoomFill} from './listingStyle';
 import styles from './practice-plan.module.css';
 
 type Draft=Omit<ListingDetails,'geometryRevision'>;
 type Row={opening:ListingOpening;confirmed:boolean};
-type Subject={room:string;vertex:number}|{row:number;part:'body'|'start'|'end'};
-type Drag={id:number;origin:Point;point:Point;subject:Subject};
+type Subject={room:string;vertex:number}|{room:string;edge:number}|{row:number;part:'body'|'start'|'end'};
+type RoomSubject=Extract<Subject,{room:string}>;
+type Drag={id:number;origin:Point;point:Point;snap:number;subject:Subject};
 type Props={sourceUrl:string;width:number;height:number;rooms:PlanShape[];saved?:ListingDetails;
  hints?:ListingOpening[];disabled:boolean;onClose:()=>void;onApply:(details:Draft)=>void};
 const mid=(a:Point,b:Point):Point=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
@@ -27,6 +28,7 @@ export function ListingPlanReview(p:Props){
  const [selected,setSelected]=useState(-1);
  const [tool,setTool]=useState<'select'|ListingOpening['kind']>('select');
  const [original,setOriginal]=useState(false);
+ const [ortho,setOrtho]=useState(false);
  const [start,setStart]=useState<Point|null>(null);
  const [drag,setDrag]=useState<Drag|null>(null);
  const [working,setWorking]=useState(false);
@@ -91,10 +93,26 @@ export function ListingPlanReview(p:Props){
   const opening=shownOpening(row);
   return part==='body'?placeListingOpening(opening,walls,span*.025,point):placeListingOpening({...opening,[part]:point},walls,span*.025);
  }
- function apply(subject:Subject,point:Point){
+ function roomEdit(subject:RoomSubject,point:Point,origin:Point,snap=0){
+  const delta:Point=[point[0]-origin[0],point[1]-origin[1]];
+  if(Math.hypot(...delta)<.001)return null;
+  const room=drawing.find(room=>room.id===subject.room);
+  if(!room)return null;
+  const after='edge' in subject
+   ?moveListingWall(drawing,room.id,subject.edge,delta)
+   :changeListingVertex(drawing,room.id,subject.vertex,clamp(
+    room.points[subject.vertex]![0]+delta[0],room.points[subject.vertex]![1]+delta[1],
+   ),snap);
+  return after?.points.every(([x,y])=>x>=left&&x<=right&&y>=top&&y<=bottom)?after:null;
+ }
+ function snapDistance(){
+  const matrix=mapRef.current?.getScreenCTM?.();
+  return ortho&&matrix?12/Math.hypot(matrix.a,matrix.b):0;
+ }
+ function apply(subject:Subject,point:Point,origin:Point,snap=0){
   if('room' in subject){
-   const before=drawing.find(room=>room.id===subject.room),after=changeListingVertex(drawing,subject.room,subject.vertex,point);
-   if(!before||!after){setNotice('Il punto incrocerebbe un altro contorno.');return;}
+   const before=drawing.find(room=>room.id===subject.room),after=roomEdit(subject,point,origin,snap);
+   if(!before||!after){setNotice('Lo spostamento uscirebbe dalla mappa o incrocerebbe un contorno.');return;}
    const next=[...contours.filter(c=>c.id!==after.id),{id:after.id,geometry:{points:after.points,holes:after.holes}}];
    if(next.reduce((sum,{geometry})=>sum+geometry.points.length+geometry.holes.reduce((n,ring)=>n+ring.length,0),0)>4096){setNotice('Limite di punti modificabili raggiunto.');return;}
    setContours(next);
@@ -116,13 +134,13 @@ export function ListingPlanReview(p:Props){
   event.stopPropagation();
   if('row' in subject)chooseOpening(subject.row);
   mapRef.current?.setPointerCapture?.(event.pointerId);
-  setDrag({id:event.pointerId,subject,origin:point,point});
+  setDrag({id:event.pointerId,subject,origin:point,point,snap:snapDistance()});
  }
  function finish(event:PointerEvent){
   if(!drag||drag.id!==event.pointerId)return;
   const point=position(event);
   setDrag(null);
-  if(point&&length(point,drag.origin)>.001)apply(drag.subject,point);
+  if(point&&length(point,drag.origin)>.001)apply(drag.subject,point,drag.origin,drag.snap);
  }
  function arrow(event:KeyboardEvent<SVGElement>,point:Point,subject:Subject){
   const directions:Record<string,Point>={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
@@ -130,10 +148,14 @@ export function ListingPlanReview(p:Props){
   if(!direction||busy)return;
   event.preventDefault();
   const step=Math.max(1,span/500)*(event.shiftKey?5:1);
-  apply(subject,clamp(point[0]+step*direction[0],point[1]+step*direction[1]));
+  apply(subject,clamp(point[0]+step*direction[0],point[1]+step*direction[1]),point);
  }
  const draggedOpening=drag&&'row' in drag.subject?editedOpening(drag.subject.row,drag.subject.part,drag.point):null;
- const draggedRoom=drag&&'room' in drag.subject?changeListingVertex(drawing,drag.subject.room,drag.subject.vertex,drag.point):null;
+ const draggedRoom=drag&&'room' in drag.subject?roomEdit(drag.subject,drag.point,drag.origin,drag.snap):null;
+ function previewOpening(row:Row){
+  const opening=shownOpening(row);
+  return draggedRoom&&activeRoom?carryListingOpening(opening,activeRoom,draggedRoom):opening;
+ }
  function handle(point:Point,label:string,subject:Subject){
   return <circle key={label} cx={point[0]} cy={point[1]} r={span/(190*zoom)} role="button" tabIndex={busy?-1:0} aria-label={label}
    className={styles.listingHandle} onPointerDown={e=>begin(e,subject)} onKeyDown={e=>arrow(e,point,subject)}/>;
@@ -149,6 +171,7 @@ export function ListingPlanReview(p:Props){
    {(['door','window'] as const).map(kind=><button key={kind} type="button" disabled={busy||rows.length>=100} aria-pressed={tool===kind}
     onClick={()=>pickTool(kind)}>{kind==='door'?'Aggiungi porta':'Aggiungi finestra'}</button>)}
    <button type="button" disabled={busy} onClick={()=>void detect()}>{working?'Ricerca in corso…':'Cerca porte e finestre'}</button>
+   <label><input type="checkbox" checked={ortho} disabled={busy||!!drag} onChange={e=>setOrtho(e.target.checked)}/> Orto</label>
    <label><input type="checkbox" checked={original} onChange={e=>setOriginal(e.target.checked)}/> Mostra originale</label>
    <label>Zoom <input aria-label="Zoom pianta" type="range" min="1" max={MAX_PLAN_ZOOM} step=".25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
   </div>
@@ -159,7 +182,7 @@ export function ListingPlanReview(p:Props){
     {!active.confirmed&&<button type="button" disabled={busy} onClick={()=>setRows(rows.map((row,i)=>i===selected?{...row,confirmed:true}:row))}>Conferma</button>}
     <label>Tipo <select value={active.opening.kind} disabled={busy} onChange={e=>writeOpening(selected,{...active.opening,kind:e.target.value as ListingOpening['kind']})}><option value="door">Porta</option><option value="window">Finestra</option></select></label>
     <button type="button" disabled={busy} onClick={()=>{setRows(rows.filter((_,i)=>i!==selected));setSelected(-1);}}>Scarta</button>
-   </>:<span>{activeRoom?activeRoom.label+' · Trascina i punti blu per spostare i muri.':'Seleziona un vano per spostare i suoi punti, oppure fai clic su un’apertura.'}</span>}
+   </>:<span>{activeRoom?activeRoom.label+' · Trascina un lato per spostare la parete o un punto per correggere il contorno.'+(ortho?' Orto allinea i punti vicini in orizzontale o verticale.':''):'Seleziona un vano per spostare pareti e punti, oppure fai clic su un’apertura.'}</span>}
    {pending.length>0&&tool==='select'&&<button type="button" disabled={busy} onClick={()=>focusOpening(pending.find(i=>i>selected)??pending[0]!)}>Prossima da verificare · {pending.length}</button>}
    {notice&&<span role="status">{notice}</span>}
   </div>
@@ -180,8 +203,17 @@ export function ListingPlanReview(p:Props){
     return <text key={room.id} x={(Math.min(...xs)+Math.max(...xs))/2} y={(Math.min(...ys)+Math.max(...ys))/2}
      fontSize={span/45} textAnchor="middle" pointerEvents="none">{room.label}</text>;
    })}
+   {tool==='select'&&activeRoom&&!busy&&(draggedRoom??activeRoom).points.map((a,i,points)=>{
+    const b=points[(i+1)%points.length]!;
+    const subject={room:activeRoom.id,edge:i};
+    const draggingWall=drag&&'edge' in drag.subject&&drag.subject.edge===i;
+    return <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} strokeWidth="16" vectorEffect="non-scaling-stroke"
+     className={styles.listingWallHit} data-moving={draggingWall?'true':undefined} role="button" tabIndex={0}
+     aria-label={`Parete ${i+1} · ${activeRoom.label}`}
+     onPointerDown={e=>begin(e,subject)} onKeyDown={e=>arrow(e,mid(a,b),subject)}/>;
+   })}
    {tool==='select'&&rows.map((row,i)=>{
-    const {start:a,end:b,kind}=selected===i&&draggedOpening?draggedOpening:shownOpening(row);
+    const {start:a,end:b,kind}=selected===i&&draggedOpening?draggedOpening:previewOpening(row);
     const color=selected===i?'#007e81':row.confirmed?'#304e53':'#b36a00';
     const coords={x1:a[0],y1:a[1],x2:b[0],y2:b[1]};
     return <g key={i}>

@@ -121,4 +121,7 @@
 .listingHandle:focus-visible{stroke:#ba5800;stroke-width:13px;outline:none}
 .listingOpeningHit{cursor:grab;touch-action:none;pointer-events:stroke}
 .listingOpeningHit:focus-visible{stroke:#00819a55}
+.listingWallHit{stroke:transparent;pointer-events:stroke;cursor:grab;touch-action:none}
+.listingWallHit:hover,.listingWallHit:focus-visible,.listingWallHit[data-moving]{stroke:#00819a55;outline:none}
+.listingWallHit[data-moving]{cursor:grabbing}
 @media(max-width:600px){.listingReviewMap{height:43dvh}}

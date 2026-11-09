@@ -5,7 +5,7 @@ L’[editor grafico per l’annuncio](v5/agency-listing-graphic-editor-20261109.
 
 Prossimi passi: prova su pratica reale in browser visibile (OCR barra), test HTTP/DB di `save_quick_estimate`, conferma dei coefficienti balconi, commit e PR verso il consolidamento su decisione del committente. [Report](v5/agency-plan-page-simplify-20261109.md).
 
-La correzione dei contorni è ora accessibile dalle verifiche della PR #84. Resta la prova utente sulla stessa pratica.
+L’editor per annuncio include Orto e trascinamento di una parete con le aperture agganciate. La correzione dei contorni è ora accessibile dalle verifiche della PR #84. Resta la prova utente sulla stessa pratica.
 
 ## 5 novembre — superfici immediate senza modulo tecnico obbligatorio
 
