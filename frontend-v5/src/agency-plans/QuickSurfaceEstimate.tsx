@@ -48,6 +48,7 @@ export function QuickSurfaceEstimate(p:Props){
  const [wallPercent,setWallPercent]=useState(savedParameters?.wallPercent??10);
  const [coefficients,setCoefficients]=useState<Record<string,number>>(()=>Object.fromEntries((savedParameters?.coefficients??[]).map(({id,coefficient})=>[id,coefficient])));
  const [advancedOpened,setAdvancedOpened]=useState(false);
+ const [editingTable,setEditingTable]=useState(false);
  const knownScale=!!savedScale||!!savedBar;
  useEffect(()=>{
   if(!p.active||detection||failed||knownScale)return;
@@ -146,6 +147,7 @@ export function QuickSurfaceEstimate(p:Props){
    {scaleError&&<p role="alert" className={styles.inlineWarning}>{scaleError}</p>}
    <div className={styles.row}>
     <button type="button" disabled={p.busy} onClick={()=>p.requestSegment((start,end)=>{p.onSelection({mode:'manual',segment:[start,end]});})}>{hasScale?'Correggi con due punti sulla mappa':'Misura due punti sulla mappa'}</button>
+    {!usePaper&&<button type="button" disabled={p.busy} onClick={()=>setMode('paper')}>Usa scala e formato del foglio</button>}
     {mode!=='auto'&&<button type="button" disabled={p.busy} onClick={()=>setMode('auto')}>Torna alla scala del documento</button>}
    </div>
   </section>
@@ -174,15 +176,47 @@ export function QuickSurfaceEstimate(p:Props){
    {p.onAddBalcony&&<button type="button" disabled={p.busy} onClick={p.onAddBalcony}>Aggiungi balcone</button>}
   </section>
 
-  {hasScale&&p.rooms.length>0&&<div className={styles.checklistScroll} tabIndex={0}><table className={styles.checklistTable}><caption>Superfici dei vani</caption><thead><tr><th scope="col">Vano</th><th scope="col">Netta</th><th scope="col">Nel totale</th></tr></thead><tbody>{p.rooms.map(room=>{const row=rows.find(item=>item.room.id===room.id);return <tr key={room.id}><th scope="row">{room.label}</th><td>{number(toM2(room))} m²</td><td>{row?(row.balcony&&!row.type?'Copertura da scegliere':`Pertinenza ${Math.round(row.coefficient*100)}%`):p.gross?'Compreso nel lordo':`${Math.round(coefficientOf(room)*100)}% + muri`}</td></tr>;})}</tbody></table></div>}
+  {hasScale&&p.rooms.length>0&&<section className={styles.panelSection} aria-label="Superfici e correzioni della stima">
+   {(!p.gross||rows.some(row=>!row.balcony))&&<button type="button" aria-expanded={editingTable} onClick={()=>setEditingTable(current=>!current)}>
+    {editingTable?'Nascondi correzioni':'Correggi parametri · facoltativo'}
+   </button>}
+   <div className={styles.checklistScroll} tabIndex={0}>
+    <table className={styles.checklistTable}>
+     <caption>Superfici dei vani</caption>
+     <thead><tr><th scope="col">Vano</th><th scope="col">Netta</th><th scope="col">Nel totale</th></tr></thead>
+     <tbody>{p.rooms.map(room=>{
+      const row=rows.find(item=>item.room.id===room.id);
+      const canEdit=room.kind!=='excluded'&&!isBalcony(room)&&(!p.gross||!!row);
+      const contribution=room.kind==='excluded'?'Escluso':row
+       ?row.balcony&&!row.type?'Copertura da scegliere':`Pertinenza ${Math.round(row.coefficient*100)}%`
+       :p.gross?'Compreso nel lordo':`${Math.round(coefficientOf(room)*100)}% + muri`;
+      return <tr key={room.id}>
+       <th scope="row">{room.label}</th>
+       <td>{number(toM2(room))} m²</td>
+       <td>{editingTable&&canEdit?<label className={styles.tableEstimateField}>Coefficiente (%)
+        <input aria-label={`Coefficiente di ${room.label} (%)`} type="number" min="0" max="100" step="any"
+         disabled={p.busy} value={Math.round(coefficientOf(room)*10000)/100}
+         onChange={event=>{
+          const coefficient=Math.max(0,Math.min(100,Number(event.target.value)))/100;
+          setCoefficients(current=>({...current,[room.id]:coefficient}));
+         }}/>
+       </label>:contribution}</td>
+      </tr>;
+     })}</tbody>
+     {editingTable&&!p.gross&&<tfoot><tr>
+      <th scope="row" colSpan={2}>Maggiorazione muri</th>
+      <td><label className={styles.tableEstimateField}>Aggiunta (%)
+       <input aria-label="Maggiorazione muri senza perimetro lordo (%)" type="number" min="0" max="30" step="any"
+        disabled={p.busy} value={wallPercent} onChange={event=>setWallPercent(Math.max(0,Math.min(30,Number(event.target.value))))}/>
+      </label></td>
+     </tr></tfoot>}
+    </table>
+   </div>
+   {editingTable&&<p className={styles.muted}>Le correzioni aggiornano il totale stimato. Premi Salva stima per conservarle.</p>}
+  </section>}
   {!p.rooms.length&&<p>Aggiungi almeno un vano alla mappa per ottenere le superfici.</p>}
 
-  <details className={styles.documentTools} onToggle={e=>{if(e.currentTarget.open)setAdvancedOpened(true);}}><summary>Impostazioni avanzate · facoltative</summary>
-   <label>Riferimento per la scala<select value={mode} onChange={e=>setMode(e.target.value as typeof mode)}><option value="auto">Dal documento</option><option value="paper">Scala e formato foglio</option><option value="manual">Due punti sulla mappa</option></select></label>
-   {!p.gross&&<label>Maggiorazione muri senza perimetro lordo (%)<input type="number" min="0" max="30" value={wallPercent} onChange={e=>setWallPercent(Math.max(0,Math.min(30,Number(e.target.value))))}/></label>}
-   {p.rooms.filter(room=>!isBalcony(room)&&(!p.gross||isAppurtenance(room))).map(room=><label key={room.id}>Coefficiente di {room.label} (%)<input type="number" min="0" max="100" value={Math.round(coefficientOf(room)*100)} onChange={e=>setCoefficients({...coefficients,[room.id]:Number(e.target.value)/100})}/></label>)}
-   <p className={styles.muted}>Coefficienti e maggiorazione sono ipotesi di lavoro modificabili, non regole normative. Balcone coperto {COVER_COEFFICIENT.covered*100}%, scoperto {COVER_COEFFICIENT.uncovered*100}%.</p>
-   <h4>Computo dettagliato</h4>
+  <details className={styles.documentTools} onToggle={e=>{if(e.currentTarget.open)setAdvancedOpened(true);}}><summary>Computo dettagliato · facoltativo</summary>
    <p className={styles.muted}>Separato dalla stima: richiede criterio, muri e conferme e produce un prospetto verificabile.</p>
    {advancedOpened&&p.advanced}
   </details>

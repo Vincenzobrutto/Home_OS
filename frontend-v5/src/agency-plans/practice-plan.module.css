@@ -100,3 +100,6 @@
 .coverChoice label:has(input:focus-visible){outline:3px solid #df7c00;outline-offset:2px}
 .coverChoice input{margin:0!important}
 @media(max-width:500px){.planModes{width:100%}.planModes button{flex:1 1 0;padding:8px 6px!important;font-size:14px}.estimateTotal dd{font-size:24px}}
+
+.tableEstimateField { display: grid; gap: 4px; font-size: .85rem; }
+.tableEstimateField input { width: 100%; min-width: 4rem; max-width: 6rem; }

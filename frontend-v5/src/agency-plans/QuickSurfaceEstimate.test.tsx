@@ -120,12 +120,14 @@ it('restores a saved cover and sheet scale on reopening without reading the docu
  expect(detectPlanScale).not.toHaveBeenCalled();
 });
 
-it('keeps specialist settings and the detailed computation in one optional section',async()=>{
+it('shows optional corrections in the surface table and keeps detailed computation separate',async()=>{
  vi.mocked(detectPlanScale).mockResolvedValue(bar);
  const user=userEvent.setup();render(<Estimate {...props()}/>);
- expect(screen.queryByLabelText('Maggiorazione muri senza perimetro lordo (%)')).not.toBeVisible();
- await user.click(screen.getByText('Impostazioni avanzate · facoltative'));
- expect(screen.getByLabelText('Maggiorazione muri senza perimetro lordo (%)')).toBeVisible();
+ expect(screen.queryByLabelText('Maggiorazione muri senza perimetro lordo (%)')).not.toBeInTheDocument();
+ await user.click(await screen.findByRole('button',{name:'Correggi parametri · facoltativo'}));
+ expect(screen.getByRole('table',{name:'Superfici dei vani'})).toContainElement(screen.getByLabelText('Maggiorazione muri senza perimetro lordo (%)'));
+ expect(screen.queryByText('Modulo dettagliato')).not.toBeInTheDocument();
+ await user.click(screen.getByText('Computo dettagliato · facoltativo'));
  expect(screen.getByText('Modulo dettagliato')).toBeVisible();
 });
 
@@ -134,7 +136,7 @@ it('reproduces the total on a fresh mount using saved wall and room coefficients
  const user=userEvent.setup(),options=props();
  const view=render(<Estimate {...options} rooms={[room,balcony]}/>);
  await waitFor(()=>expect(total()).not.toBe('—'));
- await user.click(screen.getByText('Impostazioni avanzate · facoltative'));
+ await user.click(screen.getByRole('button',{name:'Correggi parametri · facoltativo'}));
  await user.click(screen.getByRole('radio',{name:'Coperto'}));
  const walls=screen.getByLabelText('Maggiorazione muri senza perimetro lordo (%)');
  await user.clear(walls);await user.type(walls,'12');
