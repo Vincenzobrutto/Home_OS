@@ -47,3 +47,25 @@ it('keeps a long vertical wall straight next to a short offset',()=>{
  const shape = room('Vano',[[0,0],[70,0],[70,20],[68,20],[68,80],[0,80]]);
  expect(simplifyListingRooms([shape],3)[0]?.points).toContainEqual([68,20]);
 });
+
+it('removes short rectangular returns while preserving a deeper recess',()=>{
+ const terrace=room('Terrazzo',[[0,0],[32,0],[32,5],[40,5],[40,0],[76,0],[76,13],[94,13],[94,0],[125,0],[125,70],[0,70]]);
+ const drawing=simplifyListingRooms([terrace],3);
+ expect(drawing[0]?.points).not.toContainEqual([32,5]);
+ expect(drawing[0]?.points).toContainEqual([76,13]);
+});
+
+it('makes close facing interior walls parallel while keeping a gap',()=>{
+ const a=room('Disimpegno',[[0,0],[100,0],[100,20],[0,20]]);
+ const b=room('Bagno',[[12,24],[82,28],[82,55],[12,55]]);
+ const drawing=simplifyListingRooms([a,b],3);
+ expect(drawing[0]?.points).toEqual(a.points);
+ expect(drawing[1]?.points.slice(0,2)).toEqual([[12,26],[82,26]]);
+ expect(b.points.slice(0,2)).toEqual([[12,24],[82,28]]);
+});
+
+it('keeps nonparallel walls with a deliberate larger angle',()=>{
+ const a=room('A',[[0,0],[100,0],[100,20],[0,20]]);
+ const b=room('B',[[12,23],[82,38],[82,55],[12,55]]);
+ expect(simplifyListingRooms([a,b],3)[1]?.points).toEqual(b.points);
+});

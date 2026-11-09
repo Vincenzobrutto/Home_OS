@@ -4,6 +4,16 @@ import {isBalcony} from './scaleDetection';
 import {listingWalls, simplifyListingRooms} from './listingGeometry';
 import styles from './practice-plan.module.css';
 
+function roomFill(room: PlanShape) {
+ if (room.kind !== 'excluded' && (isBalcony(room) || /terraz|giardin/i.test(room.label))) return '#d2e2d4';
+ if (/bagno|servizi/i.test(room.label)) return '#dbe9e8';
+ if (/camera/i.test(room.label)) return '#e1e5ec';
+ if (/cucina/i.test(room.label)) return '#f2e1cd';
+ if (/soggiorno|salone/i.test(room.label)) return '#eee0d5';
+ if (/disimpegno|corridoio/i.test(room.label)) return '#eeeae0';
+ return '#f0f1ee';
+}
+
 function listingImage(rooms: PlanShape[]) {
  let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
  for (const room of rooms) {
@@ -42,14 +52,18 @@ function listingImage(rooms: PlanShape[]) {
    });
    outline.closePath();
   }
-  const outdoor = room.kind !== 'excluded' && (isBalcony(room) || /terraz/i.test(room.label));
-  context.fillStyle = outdoor ? '#e0ece6' : '#f4f6f5';
+  context.fillStyle = roomFill(room);
   context.fill(outline,'evenodd');
   return {room,outline};
  });
 
- const perimeter = new Path2D(), partitions = new Path2D();
- for (const [a,b] of listingWalls(drawing)) {
+ const perimeter = new Path2D(), partitions = new Path2D(), outdoorWalls = new Path2D();
+ const outdoor = drawing.filter(room=>room.kind!=='excluded'&&(isBalcony(room)||/terraz|giardin/i.test(room.label)));
+ for (const [a,b] of listingWalls(outdoor)) {
+  outdoorWalls.moveTo(...position(a));
+  outdoorWalls.lineTo(...position(b));
+ }
+ for (const [a,b] of listingWalls(drawing.filter(room=>!outdoor.includes(room)))) {
   const onBounds = ([axis,value]: [number,number]) =>
    Math.abs(a[axis]!-value)<1e-6 && Math.abs(b[axis]!-value)<1e-6;
   const bounds: Array<[number,number]> = [[0,left],[0,right],[1,top],[1,bottom]];
@@ -57,10 +71,13 @@ function listingImage(rooms: PlanShape[]) {
   line.moveTo(...position(a));
   line.lineTo(...position(b));
  }
- context.strokeStyle = '#183438';
+ context.strokeStyle = '#53695e';
  context.lineWidth = 3.5;
+ context.stroke(outdoorWalls);
+ context.strokeStyle = '#253130';
+ context.lineWidth = 6.5;
  context.stroke(partitions);
- context.lineWidth = 5;
+ context.lineWidth = 8;
  context.stroke(perimeter);
 
  for (const {room,outline} of outlines) {
@@ -71,7 +88,7 @@ function listingImage(rooms: PlanShape[]) {
   const positions = offsets.flatMap(dy => offsets.map(dx => [
    (x0+x1)/2+dx*(x1-x0),(y0+y1)/2+dy*(y1-y0),
   ] as const));
-  for (const size of [28,23,18]) {
+  for (const size of [28,23,18,15]) {
    context.font = `${size}px sans-serif`;
    const halfWidth = context.measureText(room.label).width/2+3;
    const halfHeight = size*.55;

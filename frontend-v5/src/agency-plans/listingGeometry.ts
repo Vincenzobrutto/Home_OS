@@ -32,8 +32,9 @@ function withinTolerance(start: Point, end: Point, samples: Point[], tolerance: 
  for (let i=1;i<path.length;i++) {
   const a=path[i-1]!, b=path[i]!;
   const horizontal = Math.abs(b[0]-a[0]), vertical = Math.abs(b[1]-a[1]);
-  if ((vertical<EPSILON && horizontal>length*.55 && Math.abs(dy)>tolerance*.25) ||
-      (horizontal<EPSILON && vertical>length*.55 && Math.abs(dx)>tolerance*.25)) return false;
+  const nearlyAxial = vertical<horizontal*.005 || horizontal<vertical*.005;
+  const perpendicularDrift = Math.abs(cross(start,end,b)-cross(start,end,a))/length;
+  if (nearlyAxial && Math.hypot(horizontal,vertical)>length*.55 && perpendicularDrift>tolerance*.2) return false;
  }
  let previous = 0;
  return samples.every(point => {
@@ -43,6 +44,16 @@ function withinTolerance(start: Point, end: Point, samples: Point[], tolerance: 
   previous = Math.max(previous,distanceAlong);
   return true;
  });
+}
+
+function isShortStep(start: Point, end: Point, samples: Point[], tolerance: number) {
+ const dx=end[0]-start[0],dy=end[1]-start[1],length=Math.hypot(dx,dy);
+ if (length<5*tolerance) return false;
+ const raised=samples.filter(point=>Math.abs(cross(start,end,point))/length>tolerance*.3);
+ if (!raised.length || raised.length===samples.length) return false;
+ const along=raised.map(point=>((point[0]-start[0])*dx+(point[1]-start[1])*dy)/length);
+ return Math.max(...along)-Math.min(...along)<=3.2*tolerance &&
+  withinTolerance(start,end,samples,tolerance*1.8);
 }
 
 export function simplifyListingRooms(rooms: PlanShape[], tolerance: number): PlanShape[] {
@@ -75,7 +86,8 @@ export function simplifyListingRooms(rooms: PlanShape[], tolerance: number): Pla
       samples.push(original[j]!);
      }
      const localTolerance = Math.min(ringTolerance,Math.hypot(end[0]-start[0],end[1]-start[1])/8);
-     if (!withinTolerance(start,end,samples,localTolerance)) continue;
+     if (!withinTolerance(start,end,samples,localTolerance) &&
+         (holes.has(original)||!isShortStep(start,end,samples,ringTolerance))) continue;
 
      const removed = new Set(Array.from({length:span-1},(_,i)=>(startIndex+i+1)%ring.length));
      const swept = Array.from({length:span+1},(_,i)=>ring[(startIndex+i)%ring.length]!);
@@ -108,7 +120,73 @@ export function simplifyListingRooms(rooms: PlanShape[], tolerance: number): Pla
   }
  });
  let index = 0;
- return rooms.map(room => ({...room,points:current[index++]!,holes:room.holes.map(() => current[index++]!)}));
+ const drawing = rooms.map(room => ({...room,points:current[index++]!,holes:room.holes.map(() => current[index++]!)}));
+ return alignFacingWalls(drawing,tolerance);
+}
+
+type Wall = {room: number; index: number; start: Point; end: Point; length: number; winding: number};
+const signedArea = (ring: Point[]) => edges(ring).reduce((total,[a,b])=>total+cross([0,0],a,b),0);
+
+function alignFacingWalls(rooms: PlanShape[], tolerance: number) {
+ const walls: Wall[] = rooms.flatMap((room,index) => {
+  if (room.kind==='excluded'||room.kind==='balcony'||/balcon|terraz/i.test(room.label)) return [];
+  const winding=Math.sign(signedArea(room.points));
+  return edges(room.points).map(([start,end],i)=>({
+   room:index,index:i,start,end,length:Math.hypot(end[0]-start[0],end[1]-start[1]),winding,
+  })).filter(wall=>wall.length>=3*tolerance && winding!==0);
+ }).sort((a,b)=>b.length-a.length);
+ const moved=new Set<Point>();
+ const dot=([x,y]:Point,[dx,dy]:Point)=>x*dx+y*dy;
+ const pair=(wall:Wall,reference:Wall): Point[] | undefined=>{
+  if (wall.room===reference.room) return;
+  const direction: Point = [(reference.end[0]-reference.start[0])/reference.length,
+   (reference.end[1]-reference.start[1])/reference.length];
+  const normal: Point = [-direction[1],direction[0]];
+  const delta: Point = [wall.end[0]-wall.start[0],wall.end[1]-wall.start[1]];
+  const projection = dot(delta,direction);
+  // Only opposite interior sides can be the faces of one wall.
+  if (projection*wall.winding*reference.winding>=0 || Math.abs(projection)<wall.length*.98) return;
+  const base=dot(reference.start,direction), a=dot(wall.start,direction)-base,b=dot(wall.end,direction)-base;
+  if (Math.min(reference.length,Math.max(a,b))-Math.max(0,Math.min(a,b))<wall.length*.45) return;
+  const referenceOffset=dot(reference.start,normal);
+  const offsetA=dot(wall.start,normal)-referenceOffset,offsetB=dot(wall.end,normal)-referenceOffset;
+  const gap=(offsetA+offsetB)/2, shift=(offsetB-offsetA)/2;
+  if (gap*reference.winding>=0 || Math.abs(gap)<tolerance*.2 ||
+      Math.abs(gap)>tolerance*2.5 || Math.abs(shift)<tolerance*.09 || Math.abs(shift)>tolerance*.9) return;
+  return [[wall.start[0]+normal[0]*shift,wall.start[1]+normal[1]*shift],
+   [wall.end[0]-normal[0]*shift,wall.end[1]-normal[1]*shift]];
+ };
+
+ for (let i=1;i<walls.length;i++) {
+  const wall=walls[i]!, room=rooms[wall.room]!;
+  if (moved.has(wall.start)||moved.has(wall.end)) continue;
+  const endIndex=(wall.index+1)%room.points.length;
+  const changedEdges=new Set([(wall.index+room.points.length-1)%room.points.length,wall.index,endIndex]);
+  const originalEdges=edges(room.points);
+  for (const reference of walls.slice(0,i)) {
+   if (moved.has(reference.start)||moved.has(reference.end)) continue;
+   const aligned=pair(wall,reference);
+   if (!aligned) continue;
+   const candidate=room.points.map((point,j)=>j===wall.index?aligned[0]!:j===endIndex?aligned[1]!:point);
+   if (Math.sign(signedArea(candidate))!==wall.winding) continue;
+   const candidateEdges=edges(candidate);
+   const changed=[...changedEdges].map(j=>candidateEdges[j]!);
+   if (changed.some(edge=>candidateEdges.some(other=>other!==edge&&segmentsConflict(edge,other)))) continue;
+   const foreign=rooms.flatMap((other,j)=>[...(j===wall.room?[]:edges(other.points)),...other.holes.flatMap(edges)]);
+   // Never open a wall already shared along a segment or create a new crossing.
+   if (foreign.some(edge=>[...changedEdges].some(j=>{
+    const prior=originalEdges[j]!;
+    const shared=segmentsConflict(prior,edge)&&edge.every(point=>Math.abs(cross(...prior,point))<EPSILON);
+    return shared||segmentsConflict(candidateEdges[j]!,edge);
+   }))) continue;
+   const sweep=[wall.start,wall.end,aligned[1]!,aligned[0]!];
+   if (foreign.some(edge=>edge.some(point=>insideShape(point,{points:sweep,holes:[]})))) continue;
+   room.points=candidate;
+   moved.add(wall.start);moved.add(wall.end);
+   break;
+  }
+ }
+ return rooms;
 }
 
 export function listingWalls(rooms: PlanShape[]) {
