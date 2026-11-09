@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import type {PlanMeasurementReport} from './api';
 import type {MeasurementConfiguration} from './measurement-types';
 import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
-import {isBalcony} from './scaleDetection';
+import {insideShape,isBalcony} from './scaleDetection';
 import {PlanSurfaceSummary} from './PlanSurfaceSummary';
 import styles from './plan-measurement.module.css';
 export type Point=[number,number];
@@ -11,7 +11,7 @@ export type PlanMeasurementProps={scopeKey:string;sourceUrl:string;width:number;
  /** Simple map only: faint, non-interactive outlines shown for context (e.g. rooms under the gross perimeter). */
  contextShapes?:PlanShape[];warnIds?:string[];mapLabel?:string;toolbarActions?:ReactNode;onDiscard?:()=>void;
  /** Changing `key` selects the shape, brings it into view and marks `point` when known. */
- focus?:{id:string;point?:Point;key:number}|null};
+ focus?:{id:string;point?:Point;preferSingleHole?:boolean;key:number}|null};
 const path=(s:PlanShape)=>[s.points,...s.holes].map(p=>'M'+p.map(v=>v.join(',')).join('L')+'Z').join('');
 /** Controlled editor: source URL is supplied only after source authorization; no localStorage or live API side effects. */
 export function PlanMeasurementView(props:PlanMeasurementProps){return <PlanMeasurementEditor key={props.scopeKey} {...props}/>;}
@@ -26,11 +26,22 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
  function selectShape(id:string){if(props.simple&&props.hasUnsavedChanges&&selected?.id!==id)return;setRemoveId(null);setSelection(id);setRingIndex(0);setVertex(null);setInsert(false);}
  function change(next:PlanShape,record=true){if(props.readOnly)return;if(record&&selected)setUndo(u=>[...u.slice(-49),{view:shapeView,shape:structuredClone(selected)}]);props.onChange(shapeView,next);}
  const focusKey=props.focus?.key;
- const [seenFocus,setSeenFocus]=useState(focusKey);
+ const [seenFocus,setSeenFocus]=useState<number>();
  if(focusKey!==seenFocus){
   setSeenFocus(focusKey);
   const target=props.focus;
-  if(target&&shapes.some(s=>s.id===target.id)&&!(props.hasUnsavedChanges&&selected?.id!==target.id)){setRemoveId(null);setSelection(target.id);setRingIndex(0);setVertex(null);setInsert(false);}
+  const targetShape=target&&shapes.find(shape=>shape.id===target.id);
+  if(targetShape&&!(props.hasUnsavedChanges&&selected?.id!==targetShape.id)){
+   const point=target?.point;
+   const holeIndex=point
+    ?targetShape.holes.findIndex(points=>insideShape(point,{points,holes:[]}))
+    :target?.preferSingleHole&&targetShape.holes.length===1?0:-1;
+   setRemoveId(null);
+   setSelection(targetShape.id);
+   setRingIndex(holeIndex+1);
+   setVertex(null);
+   setInsert(false);
+  }
  }
  useEffect(()=>{
   const target=props.focus,scroll=scrollRef.current,map=mapRef.current;
@@ -46,6 +57,14 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
  function mode(next:'rooms'|'perimeter'){setView(next);setSelection(null);setRingIndex(0);setVertex(null);setDragging(null);setInsert(false);}
  function add(edge:number){if(!selected||props.readOnly)return;const next=structuredClone(selected),p=[next.points,...next.holes][ringIndex]||next.points,a=p[edge]!,b=p[(edge+1)%p.length]!;p.splice(edge+1,0,[(a[0]+b[0])/2,(a[1]+b[1])/2]);change(next);setVertex(edge+1);}
  function remove(){if(!selected||vertex===null||ring.length<=3||props.readOnly)return;const next=structuredClone(selected),p=[next.points,...next.holes][ringIndex]||next.points;p.splice(vertex,1);change(next);setVertex(null);}
+ function includeSelectedHole(){
+  if(props.readOnly||!selected||ringIndex===0||!selected.holes[ringIndex-1])return;
+  const holes=selected.holes.filter((_,index)=>index!==ringIndex-1);
+  change({...selected,holes});
+  setRingIndex(0);
+  setVertex(null);
+  setInsert(false);
+ }
  return <section className={styles.workspace} aria-label="Analisi della planimetria">
   {!props.drawingOnly&&!props.simple&&<div className={styles.tabs} role="tablist" aria-label="Vista della planimetria">
    <button type="button" role="tab" aria-selected={view==='rooms'} onClick={()=>mode('rooms')}>Singoli vani</button>
@@ -66,7 +85,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
     {props.onDiscard&&props.hasUnsavedChanges&&<button type="button" disabled={props.readOnly} onClick={()=>{props.onDiscard?.();setVertex(null);setUndo([]);}}>Scarta modifiche</button>}
     {props.onSaveGeometry&&<button className={styles.saveAction} type="button" disabled={props.readOnly||!props.hasUnsavedChanges} onClick={props.onSaveGeometry}>Salva modifiche</button>}
    </div>
-   <p className={styles.editHint}>{selected?<><strong>{selected.label}</strong> · {props.hasUnsavedChanges?'Modifiche da salvare.':(props.readOnly?'Solo consultazione.':'Trascina i punti, oppure selezionali con Tab e spostali con le frecce.')}</>:(props.readOnly?'Seleziona un vano per consultarlo.':'Tocca un vano per modificarlo.')}</p>
+   <p className={styles.editHint}>{selected?<><strong>{selected.label}</strong> · {props.hasUnsavedChanges?'Modifiche da salvare.':(props.readOnly?'Solo consultazione.':ringIndex>0?'Modifica i punti del vuoto o includi tutta l’area nel vano.':'Trascina i punti, oppure selezionali con Tab e spostali con le frecce.')}</>:(props.readOnly?'Seleziona un vano per consultarlo.':'Tocca un vano per modificarlo.')}</p>
   </>}
   <div className={styles.controls} hidden={!!props.simple||(!!props.readOnly&&!!props.drawingOnly)}>
    {shapes.length>0&&<label>Geometria<select aria-label="Geometria" value={selected?.id||''} onChange={e=>{setRemoveId(null);setSelection(e.target.value);setRingIndex(0);setVertex(null);}}>{shapes.map(s=><option value={s.id} key={s.id}>{s.label}</option>)}</select></label>}
@@ -78,6 +97,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   </div>
   {props.simple&&selected&&!props.readOnly&&<div className={styles.vertexTools} role="group" aria-label="Correzione del vano selezionato">
    {selected.holes.length>0&&<label>Contorno<select aria-label="Contorno" value={ringIndex} onChange={e=>{setRingIndex(Number(e.target.value));setVertex(null);}}><option value={0}>Esterno</option>{selected.holes.map((_,i)=><option key={i} value={i+1}>Vuoto {i+1}</option>)}</select></label>}
+   {ringIndex>0&&selected.holes[ringIndex-1]&&<button type="button" onClick={includeSelectedHole}>Includi area nel vano</button>}
    <button type="button" aria-pressed={insert} onClick={()=>setInsert(v=>!v)}>Aggiungi punto su un lato</button>
    <button type="button" disabled={vertex===null||ring.length<=3} onClick={remove}>Elimina punto</button>
    <button type="button" disabled={!undo.length} onClick={()=>{const previous=undo.at(-1);if(previous){props.onChange(previous.view,previous.shape);setUndo(u=>u.slice(0,-1));setVertex(null);}}}>Annulla modifica</button>

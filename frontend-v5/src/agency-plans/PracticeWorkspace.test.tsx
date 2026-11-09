@@ -26,6 +26,25 @@ describe('practice plan workspace',()=>{
  it('access revocation hides private data and editor',async()=>{const api=port();api.edit.mockRejectedValueOnce(error(403,'access_denied'));await loaded(api);dirtyGeometry();fireEvent.click(screen.getByRole('button',{name:'Salva correzione contorno'}));await screen.findByText(/Accesso non disponibile/);expect(screen.queryByText(/sintetica.pdf/)).not.toBeInTheDocument();expect(screen.queryByRole('img',{name:'Contorni dei singoli vani'})).not.toBeInTheDocument();});
  it('stale source cannot request an image or offer measurement controls',async()=>{const api=port();api.plans.mockResolvedValue({revision:5,plans:[{...plans().plans[0]!,status:'stale',rooms:null}]});render(<AgencyPracticePlanWorkspace api={api} scopeKey="stale"/>);await screen.findByText(/analisi precedente non è più utilizzabile/);expect(api.image).not.toHaveBeenCalled();expect(screen.queryByRole('form',{name:'Calibrazione e computo'})).not.toBeInTheDocument();});
  it('gross perimeter starts empty and requires an explicit drawn boundary',async()=>{await loaded();fireEvent.click(screen.getByRole('tab',{name:'Perimetro commerciale'}));fireEvent.click(screen.getByRole('button',{name:'Definisci perimetro'}));expect(screen.getByText('0 vertici')).toBeInTheDocument();expect(screen.getByRole('button',{name:'Usa questo contorno'})).toBeDisabled();expect(screen.queryByTestId('shape-gross')).not.toBeInTheDocument();});
+
+ it('includes the sole internal area from its check and preserves the outside contour on save',async()=>{
+  const api=port(),state=plans(),plan=state.plans[0]!,room=plan.rooms![0]!;
+  room.holes=[[[3,3],[7,3],[7,7],[3,7]]];
+  room.symbols=[{id:'symbol',reason:'Area con una X'}];
+  plan.issues=[{id:'symbol',code:'symbol_unresolved'}];
+  api.plans.mockResolvedValue(state);
+  api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,version:2,geometryRevision:2,rooms:[{...room,holes:[]}]}]}});
+  render(<AgencyPracticePlanWorkspace api={api} scopeKey="include-hole" embedded/>);
+  await screen.findByRole('img',{name:'Contorni dei singoli vani'});
+  fireEvent.click(screen.getByRole('button',{name:'Mostra sulla mappa'}));
+  expect(screen.getByRole('combobox',{name:'Contorno'})).toHaveDisplayValue('Vuoto 1');
+  fireEvent.click(screen.getByRole('button',{name:'Includi area nel vano'}));
+  expect(api.edit).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button',{name:'Salva modifiche'}));
+  await screen.findByText('Modifiche salvate nella pratica.');
+  expect(api.edit.mock.calls[0]![1].command).toMatchObject({operation:'geometry',view:'rooms',id:room.id,geometry:{points:room.points,holes:[]}});
+  expect(screen.getByRole('option',{name:'Ho incluso l’elemento nel contorno'})).toBeEnabled();
+ });
  it('links each open check to its room on the map and removes it once its outcome is saved',async()=>{
   const api=port(),state=plans(),plan=state.plans[0]!;
   plan.issues=[{id:'symbol',code:'symbol_unresolved',number:1},{id:'coverage',code:'coverage_search_limited',number:2}];

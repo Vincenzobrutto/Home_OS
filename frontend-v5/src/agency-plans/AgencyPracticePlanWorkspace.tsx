@@ -40,7 +40,7 @@ function Workspace(p:WorkspaceProps){
  const manualOpen=!!manualMode;
  const [task,setTask]=useState<'draw'|'measure'|'listing'>(p.embedded?'draw':'measure');
  const [taskChosen,setTaskChosen]=useState(false);
- const [focus,setFocus]=useState<{id:string;point?:Point;key:number}|null>(null);
+ const [focus,setFocus]=useState<{id:string;point?:Point;preferSingleHole?:boolean;key:number}|null>(null);
  const [candidateChoices,setCandidateChoices]=useState<{key:string;excluded:string[]}>({key:'',excluded:[]});
  const [previewKey,setPreviewKey]=useState(''),[reviewedKey,setReviewedKey]=useState('');
  const [data,setData]=useState<{practice:AgencyPractice;plans:PlansResponse}|null>(null),[loading,setLoading]=useState(true),[reload,setReload]=useState(0),[selected,setSelected]=useState(''),[image,setImage]=useState<{key:string;url:string}|null>(null),[error,setError]=useState(''),[draft,setDraft]=useState<Change|null>(null),[configDirty,setConfigDirty]=useState(false),[builder,setBuilder]=useState<Builder|null>(null),[reason,setReason]=useState(''),[pending,setPending]=useState<Pending|null>(null),[busy,setBusy]=useState(false),[conflict,setConflict]=useState(false),[notice,setNotice]=useState('');
@@ -94,7 +94,7 @@ function Workspace(p:WorkspaceProps){
  }
  function resolveIssue(issue:{id:string;code:string},resolution:Resolution,reviewReason:string){save({operation:'resolve_issue',issueId:issue.id,code:issue.code,resolution},reviewReason);}
  function adoptProposal(){if(proposal)save({operation:'apply_surface_proposal',proposalDigest:proposal.digest,...(excludedIds.length?{excludedCandidateIds:excludedIds}:{})});}
- function show(id:string,point?:Point){setFocus(current=>({id,...(point?{point}:{}),key:(current?.key??0)+1}));}
+ function show(id:string,point?:Point,preferSingleHole=false){setFocus(current=>({id,point,preferSingleHole,key:(current?.key??0)+1}));}
  function embeddedPage(){
   if(!data||!plan||!rasterSize||!plan.rooms)return null;
   const issues=plan.issues??[];
@@ -151,6 +151,7 @@ function Workspace(p:WorkspaceProps){
        <p>Dimora propone contorni corretti{proposal!.summary.unassignedAreas?` e ${proposal!.summary.unassignedAreas} aree non censite`:''}. Confrontali con l’originale prima di adottarli.</p>
        <button type="button" disabled={busy||!!pending||conflict||!!draft||configDirty||!!builder||manualOpen} onClick={()=>{setPreviewKey(showProposal?'':proposalKey);setReviewedKey('');}}>{showProposal?'Torna ai contorni salvati':'Confronta i contorni proposti'}</button>
        {showProposal&&<>
+        <p>Per modificare un vano, torna ai contorni salvati.</p>
         {!!proposal!.coverage?.candidateIds.length&&<fieldset disabled={locked}><legend>Aree da scartare</legend>{proposal!.coverage!.candidateIds.map(id=>{const area=proposal!.rooms.find(r=>r.id===id);return area?<label key={id}><input type="checkbox" checked={excludedIds.includes(id)} onChange={e=>{setCandidateChoices({key:proposalKey,excluded:e.target.checked?[...new Set([...excludedIds,id])]:excludedIds.filter(v=>v!==id)});setReviewedKey('');}}/> Scarta {area.label}</label>:null;})}</fieldset>}
         <label><input type="checkbox" checked={reviewedKey===proposalKey} disabled={locked} onChange={e=>setReviewedKey(e.target.checked?proposalKey:'')}/> Ho confrontato i contorni con l’originale</label>
         <label>Motivo<input value={reason} disabled={locked} maxLength={1000} onChange={e=>setReason(e.target.value)}/></label>
@@ -163,7 +164,7 @@ function Workspace(p:WorkspaceProps){
         <ul className={styles.issueList}>{entries.map(({issue,room,symbol,number})=><PlanIssueReview key={JSON.stringify([plan.id,issue.id,issue.code])} index={number}
          roomLabel={room?.label} symbolReason={symbol?.reason}
          description={issueLabels[issue.code]||'Una zona richiede controllo manuale.'}
-         onShow={room&&sourceUrl?()=>show(room.id,symbol?.point):undefined}
+         onShow={room&&sourceUrl?()=>show(room.id,symbol?.point,!!symbol):undefined}
          disabled={locked||!!draft||configDirty||showProposal||!!builder||manualOpen}
          geometryEdited={(plan.geometryRevision||1)>1}
          issue={issue} onResolve={resolveIssue}/>)}</ul>
