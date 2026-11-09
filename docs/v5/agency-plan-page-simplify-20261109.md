@@ -78,3 +78,6 @@ Il test HTTP/DB verifica una scrittura unica, la rilettura con un nuovo client, 
 ## Modifica diretta durante le verifiche
 
 Per un vano già presente, Modifica contorno esce dal confronto in sola lettura, seleziona il vano e rende visibili i vertici sulla stessa mappa. La modifica si salva esplicitamente prima di registrare l’esito. Verificati 45 test mirati, typecheck e build; sulla copia della pratica è stato spostato un vertice e poi scartata la modifica, senza scritture.
+
+I vertici hanno un bersaglio di dimensione costante sullo schermo. Quando i bersagli si sovrappongono, il clic seleziona il punto più vicino. Il trascinamento preserva la posizione relativa alla presa e il clic semplice abilita l’eliminazione senza spostare il punto. Ogni trascinamento registra un solo passaggio annullabile.
+Nel collaudo sulla stessa pratica, un clic ha selezionato il vertice senza alterare il contorno, il trascinamento ha spostato il punto scelto e l’eliminazione ha ridotto il vuoto del Soggiorno da quattro a tre vertici. La prova è stata scartata. Typecheck, lint, build e 45 test mirati passati.

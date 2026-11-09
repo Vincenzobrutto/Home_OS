@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import type {PlanMeasurementReport} from './api';
 import type {MeasurementConfiguration} from './measurement-types';
 import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
@@ -17,8 +17,24 @@ const path=(s:PlanShape)=>[s.points,...s.holes].map(p=>'M'+p.map(v=>v.join(','))
 export function PlanMeasurementView(props:PlanMeasurementProps){return <PlanMeasurementEditor key={props.scopeKey} {...props}/>;}
 function PlanMeasurementEditor(props:PlanMeasurementProps){
  const [removeId,setRemoveId]=useState<string|null>(null);
- const [selectedView,setView]=useState<'rooms'|'perimeter'>(props.initialView??'rooms'),[selection,setSelection]=useState<string|null>(null),[ringIndex,setRingIndex]=useState(0),[showLines,setShowLines]=useState(true),[insert,setInsert]=useState(false),[vertex,setVertex]=useState<number|null>(null),[dragging,setDragging]=useState<number|null>(null),[undo,setUndo]=useState<Array<{view:'rooms'|'perimeter';shape:PlanShape}>>([]);
+ const [selectedView,setView]=useState<'rooms'|'perimeter'>(props.initialView??'rooms'),[selection,setSelection]=useState<string|null>(null),[ringIndex,setRingIndex]=useState(0),[showLines,setShowLines]=useState(true),[insert,setInsert]=useState(false),[vertex,setVertex]=useState<number|null>(null),[undo,setUndo]=useState<Array<{view:'rooms'|'perimeter';shape:PlanShape}>>([]);
  const {zoom,setZoom,scrollRef,mapRef}=usePlanZoom();
+ const [mapScale,setMapScale]=useState<number>();
+ const drag=useRef<{pointerId:number;index:number;start:DOMPoint;original:Point;moved:boolean}|null>(null);
+ useEffect(()=>{
+  const map=mapRef.current;
+  if(!map)return;
+  const measure=()=>{
+   const matrix=map.getScreenCTM?.();
+   if(matrix?.a)setMapScale(Math.abs(matrix.a));
+  };
+  measure();
+  if(typeof ResizeObserver==='undefined')return;
+  const observer=new ResizeObserver(measure);
+  observer.observe(map);
+  return ()=>observer.disconnect();
+ },[mapRef,props.width,props.height]);
+ const hitRadius=mapScale?9/mapScale:props.width/80;
  const view=props.drawingOnly?'rooms':selectedView;
  const accessories=props.rooms.filter(room=>isBalcony(room)||props.configuration?.base==='gross_perimeter'&&!props.configuration.mainRegionIds.includes(room.id));
  const shapes=props.simple?[...(props.perimeter?[props.perimeter]:[]),...props.rooms]:view==='rooms'?props.rooms:[...(props.perimeter?[props.perimeter]:[]),...accessories],selected=shapes.find(s=>s.id===selection)||(props.simple?undefined:shapes[0]),ring=selected?[selected.points,...selected.holes][ringIndex]||selected.points:[];
@@ -55,7 +71,36 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
  },[focusKey]);
  const marker=props.focus?.point??null;
  function nudge(index:number,dx:number,dy:number){if(!selected||props.readOnly)return;const next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points,p=points[index];if(!p)return;points[index]=[Math.max(0,Math.min(props.width,p[0]+dx)),Math.max(0,Math.min(props.height,p[1]+dy))];change(next);setVertex(index);}
- function mode(next:'rooms'|'perimeter'){setView(next);setSelection(null);setRingIndex(0);setVertex(null);setDragging(null);setInsert(false);}
+ function startDrag(event:PointerEvent<SVGCircleElement>,index:number){
+  const matrix=mapRef.current?.getScreenCTM();
+  if(event.button!==0||!event.isPrimary||!matrix||!ring[index])return;
+  const start=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
+  const distance=([x,y]:Point)=>Math.hypot(x-start.x,y-start.y);
+  // Adjacent hit targets can overlap at low zoom. Use the nearest visible point.
+  const nearest=ring.reduce((best,point,i)=>distance(point)<distance(ring[best]!)?i:best,index);
+  event.preventDefault();
+  setVertex(nearest);
+  drag.current={pointerId:event.pointerId,index:nearest,start,original:ring[nearest]!,moved:false};
+  event.currentTarget.setPointerCapture(event.pointerId);
+ }
+ function moveVertex(event:PointerEvent<SVGSVGElement>){
+  const active=drag.current,matrix=event.currentTarget.getScreenCTM();
+  if(!active||active.pointerId!==event.pointerId||!selected||props.readOnly||!matrix)return;
+  const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
+  const dx=point.x-active.start.x,dy=point.y-active.start.y;
+  if(!active.moved&&Math.hypot(dx,dy)*Math.abs(matrix.a)<3)return;
+  const next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points;
+  points[active.index]=[
+   Math.max(0,Math.min(props.width,active.original[0]+dx)),
+   Math.max(0,Math.min(props.height,active.original[1]+dy)),
+  ];
+  change(next,!active.moved);
+  active.moved=true;
+ }
+ function stopDrag(event:PointerEvent<SVGSVGElement>){
+  if(drag.current?.pointerId===event.pointerId)drag.current=null;
+ }
+ function mode(next:'rooms'|'perimeter'){setView(next);setSelection(null);setRingIndex(0);setVertex(null);drag.current=null;setInsert(false);}
  function add(edge:number){if(!selected||props.readOnly)return;const next=structuredClone(selected),p=[next.points,...next.holes][ringIndex]||next.points,a=p[edge]!,b=p[(edge+1)%p.length]!;p.splice(edge+1,0,[(a[0]+b[0])/2,(a[1]+b[1])/2]);change(next);setVertex(edge+1);}
  function remove(){if(!selected||vertex===null||ring.length<=3||props.readOnly)return;const next=structuredClone(selected),p=[next.points,...next.holes][ringIndex]||next.points;p.splice(vertex,1);change(next);setVertex(null);}
  function includeSelectedHole(){
@@ -105,14 +150,13 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   </div>}
   {!props.readOnly&&selected&&removeId===selected.id&&<div role="group" aria-label="Conferma eliminazione vano"><p>Eliminare {selected.label} dalla mappa? Il computo va verificato di nuovo.</p><button type="button" onClick={()=>{setRemoveId(null);props.onRemoveRoom?.(selected);}}>Conferma eliminazione</button><button type="button" onClick={()=>setRemoveId(null)}>Annulla eliminazione</button></div>}
   <div ref={scrollRef} className={props.simple?styles.scroll+' '+styles.simpleScroll:styles.scroll}><svg ref={mapRef} role="img" aria-label={props.mapLabel??(view==='rooms'?'Contorni dei singoli vani':'Perimetro lordo commerciale')} viewBox={`0 0 ${props.width} ${props.height}`} style={{width:props.simple?`min(${zoom*100}%, ${zoom*65*props.width/props.height}vh)`:`${zoom*100}%`}}
-   onPointerMove={e=>{if(dragging===null||!selected||props.readOnly)return;const matrix=e.currentTarget.getScreenCTM();if(!matrix)return;const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(matrix.inverse()),next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points;points[dragging]=[Math.max(0,Math.min(props.width,p.x)),Math.max(0,Math.min(props.height,p.y))];change(next,false);}}
-   onPointerUp={()=>setDragging(null)} onPointerCancel={()=>setDragging(null)}>
+   onPointerMove={moveVertex} onPointerUp={stopDrag} onPointerCancel={stopDrag} onLostPointerCapture={stopDrag}>
    <image href={props.sourceUrl} x="0" y="0" width={props.width} height={props.height}/>
    {showLines&&props.contextShapes?.map(s=><path key={'context-'+s.id} data-testid={`context-${s.id}`} d={path(s)} fill="none" stroke="#7d8f8c" strokeDasharray="5 4" strokeWidth={Math.max(props.width/1200,1)} pointerEvents="none"/>)}
    {showLines&&shapes.map(s=><path key={s.id} data-testid={`shape-${s.id}`} d={path(s)} fill={props.excludedCandidateIds?.includes(s.id)?'none':props.candidateIds?.includes(s.id)||props.warnIds?.includes(s.id)?'rgba(255,155,0,.2)':'rgba(0,125,154,.08)'} fillRule="evenodd" strokeDasharray={props.excludedCandidateIds?.includes(s.id)?'6 4':undefined} stroke={props.excludedCandidateIds?.includes(s.id)?'#87948f':props.candidateIds?.includes(s.id)||props.warnIds?.includes(s.id)?'#b76b00':s.id===selected?.id?'#006d80':'#c73572'} strokeWidth={Math.max(props.width/800,1)} role={props.simple?'button':undefined} aria-label={props.simple?'Seleziona vano '+s.label:undefined} tabIndex={props.simple?0:undefined} onClick={()=>selectShape(s.id)} onKeyDown={e=>{if(props.simple&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selectShape(s.id);}}}/>)}
    {showLines&&selected&&!props.readOnly&&ring.map((p,i)=><g key={i}>
     {insert&&<circle role="button" aria-label={`Inserisci punto sul lato ${i+1}`} tabIndex={0} cx={(p[0]+ring[(i+1)%ring.length]![0])/2} cy={(p[1]+ring[(i+1)%ring.length]![1])/2} r=".1" fill="none" stroke="#b45b00" strokeWidth="6" vectorEffect="non-scaling-stroke" onClick={()=>add(i)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();add(i);}}}/>}
-    <circle role="button" aria-label={`Vertice ${i+1}`} tabIndex={0} cx={p[0]} cy={p[1]} r=".1" fill="none" stroke="transparent" strokeWidth="15" pointerEvents="stroke" vectorEffect="non-scaling-stroke" onPointerDown={e=>{e.preventDefault();setVertex(i);setDragging(i);setUndo(u=>[...u.slice(-49),{view:shapeView,shape:structuredClone(selected)}]);e.currentTarget.ownerSVGElement?.setPointerCapture(e.pointerId);}} onClick={()=>setVertex(i)} onKeyDown={e=>{const step=Math.max(props.width,props.height)/(e.shiftKey?60:600),moves:Record<string,[number,number]>={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};if(e.key==='Enter')setVertex(i);else if(moves[e.key]){e.preventDefault();nudge(i,...moves[e.key]!);}else if((e.key==='Delete'||e.key==='Backspace')&&ring.length>3){e.preventDefault();setVertex(i);const next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points;points.splice(i,1);change(next);setVertex(null);}}}/>
+    <circle role="button" aria-label={`Vertice ${i+1}`} tabIndex={0} cx={p[0]} cy={p[1]} r={hitRadius} fill="transparent" pointerEvents="fill" style={{touchAction:'none',cursor:'grab'}} onPointerDown={event=>startDrag(event,i)} onClick={event=>{if(event.detail===0)setVertex(i);}} onKeyDown={e=>{const step=Math.max(props.width,props.height)/(e.shiftKey?60:600),moves:Record<string,[number,number]>={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};if(e.key==='Enter')setVertex(i);else if(moves[e.key]){e.preventDefault();nudge(i,...moves[e.key]!);}else if((e.key==='Delete'||e.key==='Backspace')&&ring.length>3){e.preventDefault();setVertex(i);const next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points;points.splice(i,1);change(next);setVertex(null);}}}/>
     <circle aria-hidden="true" cx={p[0]} cy={p[1]} r=".1" fill="none" stroke={vertex===i?'#b45b00':'#006d80'} strokeWidth="5" vectorEffect="non-scaling-stroke" pointerEvents="none"/>
    </g>)}
    {marker&&<circle data-testid="focus-marker" aria-hidden="true" cx={marker[0]} cy={marker[1]} r=".1" fill="none" stroke="#d14900" strokeWidth="26" strokeOpacity=".55" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
