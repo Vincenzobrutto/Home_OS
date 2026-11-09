@@ -81,3 +81,5 @@ Per un vano già presente, Modifica contorno esce dal confronto in sola lettura,
 
 I vertici hanno un bersaglio di dimensione costante sullo schermo. Quando i bersagli si sovrappongono, il clic seleziona il punto più vicino. Il trascinamento preserva la posizione relativa alla presa e il clic semplice abilita l’eliminazione senza spostare il punto. Ogni trascinamento registra un solo passaggio annullabile.
 Nel collaudo sulla stessa pratica, un clic ha selezionato il vertice senza alterare il contorno, il trascinamento ha spostato il punto scelto e l’eliminazione ha ridotto il vuoto del Soggiorno da quattro a tre vertici. La prova è stata scartata. Typecheck, lint, build e 45 test mirati passati.
+
+La barra per i vertici è sotto la mappa e resta visibile al bordo inferiore durante la modifica. Verificata sulla pratica di collaudo a 1280 e 390 px, anche durante lo scorrimento. Build e 34 test del workspace passati.
