@@ -78,6 +78,8 @@ export function QuickSurfaceEstimate(p:Props){
  // Apartment gross area: saved/proposed outline (walls included) or rooms plus a wall allowance.
  const appurtenances=p.rooms.filter(isAppurtenance),principals=p.rooms.filter(room=>!isAppurtenance(room));
  const coefficientOf=(room:PlanShape)=>coefficients[room.id]??suggestedCoefficient(room);
+ const apartmentRooms=principals.filter(room=>room.kind!=='excluded');
+ const apartmentNet=apartmentRooms.reduce((sum,room)=>sum+toM2(room),0);
  const principalNet=principals.reduce((sum,room)=>sum+toM2(room)*coefficientOf(room),0);
  const gross=p.gross?toM2(p.gross.shape):principalNet*(1+wallPercent/100);
  const overlapIds=doubleCountIds(p.rooms,p.gross?.shape??null);
@@ -182,15 +184,20 @@ export function QuickSurfaceEstimate(p:Props){
    </li>)}</ul>
   </section>
 
-  {hasScale&&p.rooms.length>0&&<section className={styles.panelSection} aria-label="Superfici e correzioni della stima">
-   {(!p.gross||rows.some(row=>!row.balcony))&&<button type="button" aria-expanded={editingTable} onClick={()=>setEditingTable(current=>!current)}>
+  {(p.gross||apartmentRooms.length>0||rows.some(row=>!row.balcony))&&<section className={styles.panelSection} aria-labelledby="apartment-surfaces-heading">
+   <h4 id="apartment-surfaces-heading">Misure dell’appartamento</h4>
+   {hasScale?<dl className={styles.estimateRows}>
+    <div><dt>Superficie lorda<small>{p.gross?'Da perimetro lordo':`Dai vani + ${wallPercent}% per i muri`}</small></dt><dd>{number(gross)} m²</dd></div>
+    {apartmentRooms.length>0&&<div><dt>Superficie netta dei vani rilevati</dt><dd>{number(apartmentNet)} m²</dd></div>}
+   </dl>:<p>Imposta la scala per visualizzare le misure in m².</p>}
+   {hasScale&&(!p.gross||rows.some(row=>!row.balcony))&&<button type="button" aria-expanded={editingTable} onClick={()=>setEditingTable(current=>!current)}>
     {editingTable?'Nascondi correzioni':'Correggi parametri · facoltativo'}
    </button>}
-   <div className={styles.checklistScroll} tabIndex={0}>
+   {hasScale&&(apartmentRooms.length>0||editingTable)&&<div className={styles.checklistScroll} tabIndex={0}>
     <table className={styles.checklistTable}>
      <caption>Superfici dei vani</caption>
      <thead><tr><th scope="col">Vano</th><th scope="col">Netta</th><th scope="col">Nel totale</th></tr></thead>
-     <tbody>{p.rooms.map(room=>{
+     <tbody>{(editingTable?p.rooms:apartmentRooms).map(room=>{
       const row=rows.find(item=>item.room.id===room.id);
       const canEdit=room.kind!=='excluded'&&!isBalcony(room)&&(!p.gross||!!row);
       const contribution=room.kind==='excluded'?'Escluso':row
@@ -217,8 +224,8 @@ export function QuickSurfaceEstimate(p:Props){
       </label></td>
      </tr></tfoot>}
     </table>
-   </div>
-   {editingTable&&<p className={styles.muted}>Le correzioni aggiornano il totale stimato. Premi Salva stima per conservarle.</p>}
+   </div>}
+   {hasScale&&editingTable&&<p className={styles.muted}>Le correzioni aggiornano il totale stimato. Premi Salva stima per conservarle.</p>}
   </section>}
   {!p.rooms.length&&<p>Aggiungi almeno un vano alla mappa per ottenere le superfici.</p>}
 

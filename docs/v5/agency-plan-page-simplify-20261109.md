@@ -102,6 +102,8 @@ La revisione mette a fuoco una sola apertura sulla mappa e tiene conferma, modif
 
 Il comando guidato di allineamento è sostituito dall’[editor grafico](agency-listing-graphic-editor-20261109.md): vertici e aperture si modificano sulla proposta. Il salvataggio è separato dal computo.
 
+Sotto Balconi e pertinenze, Misure dell’appartamento mostra il lordo e la sua origine, la somma netta dei vani rilevati e il dettaglio per vano.
+
 Quando il nuovo contorno si sovrappone a un vano esistente, Aggiungi area al calcolo lo indica per nome. Se il vano è una pertinenza, si può tornare al suo contorno già presente. Un rifiuto generico del server indica come rivedere il disegno.
 
 In Calcola superfici, Aggiungi area al calcolo permette di scegliere Balcone o Cantina e tracciare un contorno separato. Una cantina nuova contribuisce al 25%; per un balcone si sceglie coperto (35%) o scoperto (25%). Il riepilogo si aggiorna sulla geometria salvata e chiede di confermare la stima aggiornata.

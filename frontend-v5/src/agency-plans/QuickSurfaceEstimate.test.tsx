@@ -85,6 +85,10 @@ it('adds an existing balcony with its cover, coefficient and contribution, and n
  await user.click(screen.getByRole('radio',{name:'Coperto'}));
  expect(total()).toBe('101,4 m²');
  expect(summary()).toHaveTextContent('AppartamentoPerimetro lordo100,0 m²');
+ const apartment=screen.getByRole('region',{name:'Misure dell’appartamento'});
+ expect(apartment).toHaveTextContent('Superficie lordaDa perimetro lordo100,0 m²');
+ expect(apartment).toHaveTextContent('Superficie netta dei vani rilevati100,0 m²');
+ expect(apartment).not.toHaveTextContent('Balcone');
  expect(screen.getByRole('table',{name:'Superfici dei vani'})).toHaveTextContent('Compreso nel lordo');
  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
