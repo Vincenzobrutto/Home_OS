@@ -9,6 +9,8 @@ Prossimi passi: prova su pratica reale in browser visibile (OCR barra), test HTT
 
 L’editor per annuncio include Orto e trascinamento di una parete con le aperture agganciate. La correzione dei contorni è ora accessibile dalle verifiche della PR #84. Resta la prova utente sulla stessa pratica.
 
+Se due vani vicini indicano la stessa facciata, la pianta illustrativa può allineare una piccola sporgenza della veranda. Il balcone adiacente segue la correzione senza cambiare larghezza né distanza dal nuovo bordo.
+
 La pianta illustrativa allinea automaticamente i gruppi di facce contrapposte su entrambi gli assi, anche quando una parete lunga confina con più vani. Usa un distacco comune per i tramezzi compatibili e scarta le correzioni che altererebbero incroci, contatti o distacchi reali.
 
 La normalizzazione dei distacchi vale anche per i contorni già salvati nell’annuncio. Si applica alla resa illustrativa e mantiene le protezioni per aperture confermate, allineamenti espliciti e vuoti.

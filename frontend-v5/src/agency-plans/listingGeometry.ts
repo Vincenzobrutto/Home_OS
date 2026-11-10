@@ -1,6 +1,6 @@
 import type {PlanShape, Point} from './PlanMeasurementView';
 import type {ListingAlignment, ListingDetails, ListingOpening, ListingWallRef} from './api';
-import {insideShape,isAppurtenance} from './scaleDetection';
+import {insideShape,isAppurtenance,isBalcony} from './scaleDetection';
 
 type Segment = [Point, Point];
 
@@ -320,7 +320,67 @@ export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetai
  // Keep manually drawn angles, but allow already straight facing sides to
  // share the same visual gap in the exported illustration.
  const squared=orthogonalListingRooms(drawing,span,new Set([...protectedRooms,...overrides.keys()]));
- return suggestInternalWallThickness(squared,protectedRooms)?.drawing??squared;
+ const spaced=suggestInternalWallThickness(squared,protectedRooms)?.drawing??squared;
+ return alignVerandaFacade(spaced,protectedRooms);
+}
+
+function alignVerandaFacade(drawing:PlanShape[],protectedRooms:ReadonlySet<string>){
+ const isVeranda=(room:PlanShape)=>/\bverand[ae]\b/i.test(room.label);
+ const interior=drawing.filter(room=>!isAppurtenance(room)&&room.kind!=='excluded'&&!isVeranda(room));
+ const points=interior.flatMap(room=>room.points);
+ if(!points.length)return drawing;
+ const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(p=>p[axis]))-Math.min(...points.map(p=>p[axis]))));
+ const sides=(room:PlanShape,axis:0|1,direction:number)=>{
+  const along=axis===0?1:0;
+  const extreme=Math.max(...room.points.map(point=>point[axis]*direction));
+  return edges(room.points).flatMap(([a,b],index)=>{
+   if(Math.abs(a[axis]*direction-extreme)>=EPSILON||Math.abs(b[axis]*direction-extreme)>=EPSILON)return [];
+   return [{index,offset:extreme*direction,from:Math.min(a[along],b[along]),to:Math.max(a[along],b[along])}];
+  });
+ };
+ let result=drawing;
+ for(const veranda of drawing.filter(room=>isVeranda(room)&&room.kind!=='excluded'&&!room.holes.length&&!protectedRooms.has(room.id))){
+  const candidates=([0,1] as const).flatMap(axis=>[-1,1].flatMap(direction=>sides(veranda,axis,direction).flatMap(face=>{
+   const length=face.to-face.from;
+   const depth=face.offset*direction-Math.min(...veranda.points.map(point=>point[axis]*direction));
+   if(length<span*.06)return [];
+   const references=interior.flatMap(room=>sides(room,axis,direction).map(side=>({side,id:room.id,alongGap:Math.max(0,side.from-face.to,face.from-side.to)})))
+    .filter(({side,alongGap})=>{
+     const shift=(face.offset-side.offset)*direction;
+     return shift>EPSILON&&shift<=Math.min(span*.035,depth*.3)&&alongGap<=length*1.5&&side.to-side.from>=length*.4;
+    }).sort((a,b)=>a.alongGap-b.alongGap);
+   const closest=references[0];
+   if(!closest||!references.some(ref=>ref.id!==closest.id&&Math.abs(ref.side.offset-closest.side.offset)<=span*.008))return [];
+   return [{axis,direction,face,target:closest.side.offset,alongGap:closest.alongGap}];
+  }))).sort((a,b)=>a.alongGap-b.alongGap);
+  const match=candidates[0];
+  if(!match)continue;
+  const {axis,direction,face,target}=match;
+  const shift=target-face.offset;
+  const balconies=result.filter(isBalcony).flatMap(room=>sides(room,axis,-direction).flatMap(side=>{
+   const gap=(side.offset-face.offset)*direction;
+   const overlap=Math.min(side.to,face.to)-Math.max(side.from,face.from);
+   return gap>=-EPSILON&&gap<=span*.045&&overlap>=Math.min(side.to-side.from,face.to-face.from)*.25?[{room,gap}]:[];
+  })).sort((a,b)=>a.gap-b.gap);
+  const balcony=balconies[0]?.room;
+  if(balcony&&(protectedRooms.has(balcony.id)||balcony.holes.length))continue;
+  const current=result.find(room=>room.id===veranda.id)!;
+  const moved=changeListingPoints(result,current,new Map([face.index,(face.index+1)%current.points.length].map(index=>{
+   const point:Point=[...current.points[index]!];
+   point[axis]=target;
+   return [index,point];
+  })),true);
+  if(!moved)continue;
+  const step=result.map(room=>room===current?moved:room);
+  if(!balcony){result=step;continue;}
+  const carried=changeListingPoints(step,balcony,new Map(balcony.points.map((original,index)=>{
+   const point:Point=[...original];
+   point[axis]+=shift;
+   return [index,point];
+  })),true);
+  if(carried)result=step.map(room=>room===balcony?carried:room);
+ }
+ return result;
 }
 
 function orthogonalListingRooms(drawing:PlanShape[],span:number,protectedRooms:Set<string>){

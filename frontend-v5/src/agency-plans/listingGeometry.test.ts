@@ -27,11 +27,12 @@ describe('listing illustration',()=>{
    room('Stanza',[[612,289],[993,289],[993,630],[612,630]]),
    room('Veranda',[[146,462],[260,462],[260,630],[146,630]]),
    room('Cantina',[[211,1367],[430,1367],[430,1488],[211,1488]]),
+   {...room('Balcone',[[48,326],[126,326],[126,553],[48,553]]),kind:'balcony'},
   ];
   if(saved)outlines[1]!.symbols=[{id:'reviewed-symbol',reason:'Synthetic reviewed detail'}];
   const details=saved?{alignments:[],contours:outlines.map(({id,points,holes})=>({id,geometry:{points,holes}}))}:undefined;
   const before=structuredClone(details);
-  const [living,bath,kitchen,bedroom,veranda,cellar]=listingIllustration(outlines,details);
+  const [living,bath,kitchen,bedroom,veranda,cellar,balcony]=listingIllustration(outlines,details);
   const vertical=living!.points[6]![0]-bath!.points[1]![0];
   const horizontal=bath!.points[1]![1]-living!.points[6]![1];
   expect(vertical).toBeCloseTo(horizontal,0);
@@ -40,6 +41,10 @@ describe('listing illustration',()=>{
   expect(vertical).toBeCloseTo(bedroom!.points[0]![0]-living!.points[4]![0],0);
   expect(vertical).toBeCloseTo(bedroom!.points[0]![0]-kitchen!.points[1]![0],0);
   expect(vertical).toBeCloseTo(kitchen!.points[0]![0]-veranda!.points[1]![0],0);
+  expect(veranda!.points[0]![0]).toBe(bath!.points[0]![0]);
+  expect(veranda!.points[3]![0]).toBe(bath!.points[0]![0]);
+  expect(veranda!.points[0]![0]-balcony!.points[1]![0]).toBe(20);
+  expect(balcony!.points[1]![0]-balcony!.points[0]![0]).toBe(78);
   expect(cellar!.points).toEqual(outlines[5]!.points);
   expect(details).toEqual(before);
  });
