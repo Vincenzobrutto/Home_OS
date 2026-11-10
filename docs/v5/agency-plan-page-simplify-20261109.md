@@ -102,6 +102,8 @@ La revisione mette a fuoco una sola apertura sulla mappa e tiene conferma, modif
 
 Il comando guidato di allineamento è sostituito dall’[editor grafico](agency-listing-graphic-editor-20261109.md): vertici e aperture si modificano sulla proposta. Il salvataggio è separato dal computo.
 
+In Calcola superfici, Aggiungi area al calcolo permette di scegliere Balcone o Cantina e tracciare un contorno separato. Una cantina nuova contribuisce al 25%; per un balcone si sceglie coperto (35%) o scoperto (25%). Il riepilogo si aggiorna sulla geometria salvata e chiede di confermare la stima aggiornata.
+
 Gli avvisi di sovrapposizione in Calcola superfici portano alla pertinenza sulla mappa. Il comando Correggi perimetro apre i vertici del lordo nella stessa zona anche mentre quel perimetro è in modifica.
 
 Calcola superfici inquadra prima l’appartamento e distingue i vani interni e il perimetro lordo dalle pertinenze. Il riepilogo esplicita la base di calcolo dell’appartamento, poi mostra pertinenze ponderate e totale. La scala usata è visibile e i controlli sono sotto Modifica scala.

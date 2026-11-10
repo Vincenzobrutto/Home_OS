@@ -234,6 +234,45 @@ it('opens the gross vertices from an overlap warning and clears it when the outl
  expect(api.edit).not.toHaveBeenCalled();
 });
 
+it('adds cellar and balcony contours from the calculation and shows their weighted contributions',async()=>{
+ const state=plans(),plan=state.plans[0]!;
+ plan.rasterSize={width:60,height:60};
+ plan.mainPerimeter={points:shape.points,holes:[]};
+ plan.quickEstimate={scale:{mode:'manual',start:[0,0],end:[10,0],metres:10},savedAt:'2026-11-09T08:00:00.000Z',geometryRevision:1};
+ const api={...port(),preview:vi.fn<NonNullable<AgencyPlanPort['preview']>>()};
+ api.plans.mockResolvedValue(state);
+ api.edit.mockImplementation(async(_id,{command})=>{
+  const geometry=command.geometry as Pick<typeof shape,'points'|'holes'>;
+  const next=state.plans[0]!;
+  state.plans[0]={...next,version:next.version+1,geometryRevision:next.geometryRevision+1,rooms:[...next.rooms!,{id:String(command.id),label:String(command.label),kind:String(command.kind),...geometry}]};
+  return {replay:false,plans:{...state,revision:++state.revision}};
+ });
+ render(<AgencyPracticePlanWorkspace api={api} scopeKey="add-estimate-areas" embedded/>);
+ for(const [type,left] of [['cellar',12],['balcony',25]] as const){
+  fireEvent.click(await screen.findByRole('button',{name:'Aggiungi area al calcolo'}));
+  fireEvent.change(screen.getByLabelText('Tipo di area'),{target:{value:type}});
+  fireEvent.click(screen.getByRole('button',{name:'Disegna contorno'}));
+  fireEvent.click(screen.getByText('Coordinate (facoltative)'));
+  for(const [x,y] of [[left,0],[left+5,0],[left+5,10],[left,10]]){
+   fireEvent.change(screen.getByLabelText('Nuovo vertice X'),{target:{value:x}});
+   fireEvent.change(screen.getByLabelText('Nuovo vertice Y'),{target:{value:y}});
+   fireEvent.click(screen.getByRole('button',{name:'Aggiungi vertice'}));
+  }
+  fireEvent.click(screen.getByRole('button',{name:'Usa questo contorno'}));
+  fireEvent.click(screen.getByRole('button',{name:'Aggiungi alla stima'}));
+  await screen.findByRole('button',{name:type==='cellar'?'Cantina':'Balcone',exact:true});
+ }
+ expect(api.edit.mock.calls.map(([,body])=>body.command)).toMatchObject([
+  {operation:'add_room',kind:'room',label:'Cantina'},
+  {operation:'add_room',kind:'balcony',label:'Balcone'},
+ ]);
+ const summary=screen.getByRole('group',{name:'Stima della superficie commerciale'});
+ expect(summary).toHaveTextContent('Totale stimato112,5 m²');
+ expect(screen.getByRole('button',{name:'Salva stima'})).toBeEnabled();
+ fireEvent.click(screen.getByRole('radio',{name:'Coperto'}));
+ expect(summary).toHaveTextContent('Totale stimato130,0 m²');
+});
+
 it('opens a ready plan on the calculation, with saved balcony cover and sheet scale restored',async()=>{
  const api=port(),state=plans(),plan=state.plans[0]!;
  plan.rasterSize={width:210,height:297};

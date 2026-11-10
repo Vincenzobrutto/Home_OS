@@ -12,11 +12,11 @@ type Props={
  active:boolean;sourceUrl:string;width:number;height:number;
  /** Every room currently on the map (unsaved corrections included). */
  rooms:PlanShape[];gross:GrossOutline|null;
- balconyCovers?:BalconyCover[];saved?:QuickEstimate|null;configuration?:MeasurementConfiguration|null;
+ balconyCovers?:BalconyCover[];saved?:QuickEstimate|null;geometryRevision?:number;configuration?:MeasurementConfiguration|null;
  busy:boolean;selection:ScaleSelection;onSelection:(selection:ScaleSelection)=>void;
  requestSegment:(done:(a:Point,b:Point)=>void)=>void;
  onSave:(payload:QuickEstimateInput)=>void;
- onFocus:(id:string)=>void;onReviewOverlap?:(id:string)=>void;onAddBalcony?:()=>void;onDrawPerimeter?:()=>void;
+ onFocus:(id:string)=>void;onReviewOverlap?:(id:string)=>void;onDrawPerimeter?:()=>void;
  advanced:ReactNode;
 };
 const number=(n:number)=>n.toLocaleString('it-IT',{maximumFractionDigits:1,minimumFractionDigits:1});
@@ -106,6 +106,7 @@ export function QuickSurfaceEstimate(p:Props){
   ||parameters.coefficients.length!==savedCoefficients.size
   ||parameters.coefficients.some(({id,coefficient})=>savedCoefficients.get(id)!==coefficient);
  const pending=[
+  ...(p.saved&&p.geometryRevision!==undefined&&p.saved.geometryRevision!==p.geometryRevision?['contorni aggiornati']:[]),
   ...(parametersChanged?['parametri di calcolo']:[]),
   ...(p.gross&&p.gross.status!=='saved'?[p.gross.status==='proposed'?'conferma del perimetro':'perimetro corretto']:[]),
   ...(rows.some(row=>row.balcony&&row.type!==row.savedType)?['copertura dei balconi']:[]),
@@ -170,7 +171,7 @@ export function QuickSurfaceEstimate(p:Props){
 
   <section aria-labelledby="appurtenances-heading" className={styles.panelSection}>
    <h4 id="appurtenances-heading">Balconi e pertinenze</h4>
-   {!rows.length&&<p>Nessun balcone tra i vani. Se la pianta ne mostra uno, aggiungilo.</p>}
+   {!rows.length&&<p>Nessuna pertinenza nel calcolo. Usa Aggiungi area al calcolo per disegnarne una.</p>}
    <ul className={styles.appurtenanceList}>{rows.map(row=><li key={row.room.id} className={row.overlap?styles.overlapRow:undefined}>
     <button type="button" className={styles.linkButton} onClick={()=>p.onFocus(row.room.id)}>{row.room.label}</button>
     {row.balcony?<fieldset className={styles.coverChoice} disabled={p.busy}><legend>Copertura {row.room.label}</legend>
@@ -179,7 +180,6 @@ export function QuickSurfaceEstimate(p:Props){
     <p>{row.area===null?'Superficie dopo la scala':`${number(row.area)} m² × ${Math.round(row.coefficient*100)}% = `}{row.area!==null&&<strong>{number(row.contribution!)} m²</strong>}{row.balcony&&!row.type&&row.area!==null&&' · copertura da scegliere'}</p>
     {row.overlap&&<p className={styles.inlineWarning}>Si sovrappone al perimetro lordo: rischio di contarlo due volte.</p>}
    </li>)}</ul>
-   {p.onAddBalcony&&<button type="button" disabled={p.busy} onClick={p.onAddBalcony}>Aggiungi balcone</button>}
   </section>
 
   {hasScale&&p.rooms.length>0&&<section className={styles.panelSection} aria-label="Superfici e correzioni della stima">
