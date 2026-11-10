@@ -736,6 +736,49 @@ export function listingFacadeFill(walls:FacadeBand[]){
  return polygons;
 }
 
+/** Close the rim against the nearest room even when the outer edge has a
+ * short step or the room edge is too oblique for the usual facade pairing. */
+export function listingPerimeterBacking(perimeter:PlanShape,rooms:PlanShape[]):FacadeBand[]{
+ const faces=rooms.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>edges(room.points));
+ const points=perimeter.points;
+ const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(p=>p[axis]))-Math.min(...points.map(p=>p[axis]))));
+ const limit=Math.min(36,Math.max(18,span*.045));
+ return [perimeter.points,...perimeter.holes].flatMap((ring,index)=>{
+  const winding=Math.sign(signedArea(ring))*(index===0?1:-1);
+  return edges(ring).flatMap(([a,b])=>{
+   const length=distance(a,b);
+   if(length<EPSILON)return [];
+   const direction:Point=[(b[0]-a[0])/length,(b[1]-a[1])/length];
+   const normal:Point=[-direction[1]*winding,direction[0]*winding];
+   const origin=dot(a,direction),base=dot(a,normal);
+   const candidates=faces.flatMap(([start,end])=>{
+    const u=dot(start,direction)-origin,v=dot(end,direction)-origin;
+    if(Math.abs(v-u)<EPSILON)return [];
+    let from=Math.max(0,Math.min(u,v)),to=Math.min(length,Math.max(u,v));
+    const first=dot(start,normal)-base,last=dot(end,normal)-base;
+    const slope=(last-first)/(v-u);
+    if(Math.abs(slope)<EPSILON){
+     if(first< -EPSILON||first>limit)return [];
+    }else{
+     const zero=u-first/slope,max=u+(limit-first)/slope;
+     from=Math.max(from,Math.min(zero,max));
+     to=Math.min(to,Math.max(zero,max));
+    }
+    return to-from>EPSILON?[{from,to,depth:(position:number)=>Math.max(0,first+slope*(position-u))}]:[];
+   });
+   const breaks=[...new Set(candidates.flatMap(({from,to})=>[from,to]))].sort((x,y)=>x-y);
+   const point=(u:number,v:number):Point=>[a[0]+direction[0]*u+normal[0]*v,a[1]+direction[1]*u+normal[1]*v];
+   return breaks.slice(1).flatMap((to,i)=>{
+    const from=breaks[i]!,middle=(from+to)/2;
+    const nearest=candidates.reduce<(typeof candidates)[number]|null>((best,next)=>
+     next.from<=from&&next.to>=to&&(!best||next.depth(middle)<best.depth(middle))?next:best,null);
+    if(!nearest||nearest.depth(middle)<EPSILON)return [];
+    return [{outer:[a,b],projected:[point(from,0),point(to,0)],inner:[point(from,nearest.depth(from)),point(to,nearest.depth(to))]}];
+   });
+  });
+ });
+}
+
 export function listingFacadeOpposite(opening:ListingOpening,walls:FacadeBand[]):Segment|null{
  for(const {inner,projected} of walls){
   for(const [near,far] of [[inner,projected],[projected,inner]] as const){

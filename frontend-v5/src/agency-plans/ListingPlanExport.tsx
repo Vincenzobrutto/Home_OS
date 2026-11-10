@@ -4,7 +4,7 @@ import type {ListingDetails,ListingOpening,ListingPlanDraft,QuickEstimateScale,W
 import type {PlanShape,Point} from './PlanMeasurementView';
 import {insideShape,isBalcony,paperMetresPerPixel} from './scaleDetection';
 import type {MeasurementConfiguration} from './measurement-types';
-import {listingDoorOpposite, listingFacadeFill, listingFacadeOpposite, listingIllustration, listingOpeningOnDrawing, listingPublicationSegments, listingPublicationWalls, listingWalls, wallReviewReference} from './listingGeometry';
+import {listingDoorOpposite, listingFacadeFill, listingFacadeOpposite, listingIllustration, listingOpeningOnDrawing, listingPerimeterBacking, listingPublicationSegments, listingPublicationWalls, listingWalls, wallReviewReference} from './listingGeometry';
 import {ListingPlanReview} from './ListingPlanReview';
 import styles from './practice-plan.module.css';
 
@@ -78,6 +78,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
  const wallLayout=gross||covered.size?interior.map(room=>listingPublicationSegments(room,wallSource.find(source=>source.id===room.id),covered,gross,drawing)):null;
  const remaining=wallLayout?wallLayout.flatMap(part=>part.segments):listingWalls(interior);
  const facadeWalls=wallLayout?.flatMap(part=>part.walls)??[];
+ const backing=gross?listingPerimeterBacking(gross,drawing):[];
  for (const [a,b] of remaining) {
   const onBounds = ([axis,value]: [number,number]) =>
    Math.abs(a[axis]!-value)<1e-6 && Math.abs(b[axis]!-value)<1e-6;
@@ -103,7 +104,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
   context.save();
   context.clip(outlinePath(gross),'evenodd');
   const mass=new Path2D();
-  const facadePolygons=[...listingFacadeFill(facadeWalls),...(wallLayout?.flatMap(part=>part.corners)??[])];
+  const facadePolygons=[...listingFacadeFill(facadeWalls),...(wallLayout?.flatMap(part=>part.corners)??[]),...backing.map(({inner,projected})=>[...inner,projected[1],projected[0]])];
   for(const polygon of facadePolygons){
    const area=polygon.reduce((sum,[x,y],i)=>{
     const [nextX,nextY]=polygon[(i+1)%polygon.length]!;
@@ -123,7 +124,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
  for (const [index,opening] of (details?.openings??[]).entries()) {
   const placed=listingOpeningOnDrawing(opening,walls,originalSpan);
   const start=position(placed.start),end=position(placed.end);
-  const facadeSide=listingFacadeOpposite(placed,facadeWalls);
+  const facadeSide=listingFacadeOpposite(placed,facadeWalls)??listingFacadeOpposite(placed,backing);
   const opposite=facadeSide??listingDoorOpposite(placed,drawing,originalSpan*.035);
   const oppositePixels=opposite?[position(opposite[0]),position(opposite[1])] as const:null;
   if(Math.hypot(end[0]-start[0],end[1]-start[1])<3)continue;

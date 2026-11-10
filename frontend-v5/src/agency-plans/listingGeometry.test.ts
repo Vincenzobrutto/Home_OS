@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
 import {carryListingOpening, changeListingVertex, listingAlignmentGuides, listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, placeScaledListingDoor, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
-import {joinedSharedWallBands, listingFacadeFill, listingFacadeOpposite, listingPublicationSegments, listingPublicationWalls, proposeSharedPlanWalls, recordWallReview, suggestInternalWallThickness} from './listingGeometry';
+import {joinedSharedWallBands, listingFacadeFill, listingFacadeOpposite, listingPerimeterBacking, listingPublicationSegments, listingPublicationWalls, proposeSharedPlanWalls, recordWallReview, suggestInternalWallThickness} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -136,6 +136,19 @@ it('fills the veranda facade up to a balcony touching the outside edge',()=>{
  const layout=listingPublicationSegments(veranda,veranda,new Map(),outline,[veranda,balcony]);
  expect(layout.walls).toContainEqual({outer:[[4,96],[4,4]],inner:[[10,80],[10,10]],projected:[[4,80],[4,10]]});
  expect(listingPublicationSegments(balcony,balcony,new Map(),outline,[veranda,balcony]).walls).toEqual([]);
+});
+
+it('fills the rim against an oblique veranda beside a step and preserves the opening across it',()=>{
+ const veranda=room('veranda',[[10,10],[48,10],[48,80],[22,80]]);
+ const outline=room('gross',[[4,4],[54,4],[54,96],[4,96],[4,55],[2,55],[2,35],[4,35]]);
+ const backing=listingPerimeterBacking(outline,[veranda]);
+ const step=backing.find(({projected})=>projected.every(([x])=>x===2));
+ expect(step?.projected).toEqual([[2,55],[2,35]]);
+ expect(step?.inner[0]?.[0]).toBeGreaterThan(17);
+ const opening={kind:'window' as const,start:[16,45] as Point,end:[17,51] as Point};
+ expect(listingFacadeOpposite(opening,backing)?.[0]?.[0]).toBe(2);
+ const far=room('room',[[30,15],[48,15],[48,80],[30,80]]);
+ expect(listingPerimeterBacking(outline,[far]).some(({projected})=>projected.every(([x])=>x<=4))).toBe(false);
 });
 
 describe('listing illustration',()=>{
