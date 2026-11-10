@@ -4,7 +4,7 @@ export type ScaleWord={text:string;confidence:number;box:{x0:number;y0:number;x1
 export type ScaleReference={start:Point;end:Point;metres:number;method:'detected_bar'|'saved'|'manual'};
 export type ScaleDetection={bar:ScaleReference|null;denominator:number|null;ambiguous:boolean};
 /** Text anchors alone are not a ruler: a metric caption, linear labels and actual dark bar/ticks must agree. */
-export function detectScale(words:ScaleWord[],gray:Uint8Array,width:number,height:number):ScaleDetection{
+export function detectScale(words:ScaleWord[],gray:Uint8Array,width:number,height:number):ScaleDetection&{barConflict?:true}{
  const safe=words.filter(w=>w.confidence>=80&&Object.values(w.box).every(Number.isFinite));
  const ratios=new Set<number>();
  for(const w of safe)for(const match of w.text.matchAll(/\b1\s*[:/]\s*(\d{2,5})\b/gu)){const n=Number(match[1]);if(n<=10000)ratios.add(n);}
@@ -37,7 +37,7 @@ export function detectScale(words:ScaleWord[],gray:Uint8Array,width:number,heigh
  }
  const scales=candidates.map(c=>c.metres/Math.hypot(c.end[0]-c.start[0],c.end[1]-c.start[1]));
  const ambiguous=scales.length>1&&Math.max(...scales)/Math.min(...scales)>1.08;
- return {bar:ambiguous?null:candidates.sort((a,b)=>b.metres-a.metres)[0]??null,denominator:ratios.size===1?[...ratios][0]!:null,ambiguous:ambiguous||ratios.size>1};
+ return {bar:ambiguous?null:candidates.sort((a,b)=>b.metres-a.metres)[0]??null,denominator:ratios.size===1?[...ratios][0]!:null,ambiguous:ambiguous||ratios.size>1,...(ambiguous?{barConflict:true as const}:{})};
 }
 
 const SHEETS={A4:[.210,.297],A3:[.297,.420],A2:[.420,.594],A1:[.594,.841]} as const;

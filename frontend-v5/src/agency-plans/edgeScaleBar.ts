@@ -42,7 +42,7 @@ export function edgeBars(gray:Uint8Array,width:number,height:number):EdgeBar[]{
  return found;
 }
 
-export function edgeBarCaption(gray:Uint8Array,width:number,height:number,bar:EdgeBar,side:-1|1){
+export function edgeBarCaption(gray:Uint8Array,width:number,height:number,bar:EdgeBar,side:-1|1,bridgeRule=true){
  const span=bar.end[0]-bar.start[0],center=(bar.start[0]+bar.end[0])/2,row=bar.start[1];
  const half=Math.round(Math.max(22,Math.min(100,span*.22))),depth=Math.round(Math.max(18,Math.min(34,span*.079)));
  const x0=Math.max(0,Math.round(center-half)),x1=Math.min(width,Math.round(center+half));
@@ -57,7 +57,7 @@ export function edgeBarCaption(gray:Uint8Array,width:number,height:number,bar:Ed
  for(let y=0;y<h;y++){
   if(!rule(y))continue;let end=y+1;while(end<h&&rule(end))end++;
   for(let j=y;j<end;j++)for(let x=0;x<w;x++)
-   pixels[j*w+x]=y>0&&end<h?Math.min(pixels[(y-1)*w+x]!,pixels[end*w+x]!):255;
+   pixels[j*w+x]=bridgeRule&&y>0&&end<h?Math.min(pixels[(y-1)*w+x]!,pixels[end*w+x]!):255;
   y=end-1;
  }
  return {width:w,height:h,pixels};

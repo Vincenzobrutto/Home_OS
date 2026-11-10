@@ -38,7 +38,7 @@ export async function detectPlanScale(sourceUrl:string,signal:AbortSignal):Promi
    const blob=await blobOf(canvas);
    const layout=await bounded(ocr.recognizeLayout(blob));
    const words:ScaleWord[]=lines(layout).flatMap(line=>line.words.flatMap(w=>w.bbox?[{text:w.text,confidence:w.confidence,box:w.bbox}]:[])).slice(0,3000);
-   const result=detectScale(words,gray,canvas.width,canvas.height);ambiguous ||= result.ambiguous;
+   const result=detectScale(words,gray,canvas.width,canvas.height);ambiguous ||= !!result.barConflict;
    if(result.denominator)ratios.add(result.denominator);
    if(result.bar)addBar(result.bar);
    const edgeCandidates=edgeBars(gray,canvas.width,canvas.height);
@@ -46,20 +46,22 @@ export async function detectPlanScale(sourceUrl:string,signal:AbortSignal):Promi
    await bounded(ocr.setPageSegmentation('7'));
    for(const candidate of edgeCandidates){
     for(const side of [-1,1] as const){
-     const crop=edgeBarCaption(gray,canvas.width,canvas.height,candidate,side);if(!crop)continue;
-     const enlargement=3;
-     cropCanvas.width=crop.width*enlargement;cropCanvas.height=crop.height*enlargement;
-     const ctx=cropCanvas.getContext('2d');if(!ctx)throw Error('scale_image_unavailable');
-     const data=ctx.createImageData(cropCanvas.width,cropCanvas.height);
-     for(let j=0;j<cropCanvas.height;j++)for(let i=0;i<cropCanvas.width;i++){
-      const shade=crop.pixels[Math.floor(j/enlargement)*crop.width+Math.floor(i/enlargement)]!,offset=(j*cropCanvas.width+i)*4;
-      data.data[offset]=data.data[offset+1]=data.data[offset+2]=shade;data.data[offset+3]=255;
+     for(const bridge of [true,false]){
+      const crop=edgeBarCaption(gray,canvas.width,canvas.height,candidate,side,bridge);if(!crop)break;
+      const enlargement=3;
+      cropCanvas.width=crop.width*enlargement;cropCanvas.height=crop.height*enlargement;
+      const ctx=cropCanvas.getContext('2d');if(!ctx)throw Error('scale_image_unavailable');
+      const data=ctx.createImageData(cropCanvas.width,cropCanvas.height);
+      for(let j=0;j<cropCanvas.height;j++)for(let i=0;i<cropCanvas.width;i++){
+       const shade=crop.pixels[Math.floor(j/enlargement)*crop.width+Math.floor(i/enlargement)]!,offset=(j*cropCanvas.width+i)*4;
+       data.data[offset]=data.data[offset+1]=data.data[offset+2]=shade;data.data[offset+3]=255;
+      }
+      ctx.putImageData(data,0,0);
+      const caption=lines(await bounded(ocr.recognizeLayout(await blobOf(cropCanvas))));
+      const tokens=caption.flatMap(line=>line.words);
+      const bar=caption.length===1&&tokens.length>0&&tokens.every(word=>word.confidence>=85)?labeledEdgeBar(candidate,tokens.map(word=>word.text).join(' ')):null;
+      if(bar){addBar(bar);break;}
      }
-     ctx.putImageData(data,0,0);
-     const caption=lines(await bounded(ocr.recognizeLayout(await blobOf(cropCanvas))));
-     const tokens=caption.flatMap(line=>line.words);
-     const bar=caption.length===1&&tokens.length>0&&tokens.every(word=>word.confidence>=85)?labeledEdgeBar(candidate,tokens.map(word=>word.text).join(' ')):null;
-     if(bar)addBar(bar);
     }
    }
    await bounded(ocr.setPageSegmentation('11'));
@@ -67,7 +69,8 @@ export async function detectPlanScale(sourceUrl:string,signal:AbortSignal):Promi
   if(controller.signal.aborted)throw Error('scale_read_cancelled');
   const scales=bars.map(b=>b.metres/Math.hypot(b.end[0]-b.start[0],b.end[1]-b.start[1]));
   const conflict=scales.length>1&&Math.max(...scales)/Math.min(...scales)>1.08;
-  return {bar:conflict?null:bars[0]??null,denominator:ratios.size===1?[...ratios][0]!:null,ambiguous:ambiguous||conflict||ratios.size>1};
+  // Printed ratios need paper dimensions and are separate from the observed ruler.
+  return {bar:ambiguous||conflict?null:bars[0]??null,denominator:ratios.size===1?[...ratios][0]!:null,ambiguous:ambiguous||conflict||!bars.length&&ratios.size>1};
 
  }finally{clearTimeout(timer);signal.removeEventListener('abort',stop);controller.signal.removeEventListener('abort',abort);ocr?.dispose();image.src='';canvas.width=0;canvas.height=0;}
 }

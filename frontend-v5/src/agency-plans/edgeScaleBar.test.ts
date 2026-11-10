@@ -31,6 +31,8 @@ describe('metric bars printed on the edge of a PDF page',()=>{
   const crop=edgeBarCaption(raster(),w,h,candidate,-1)!;
   expect(crop.pixels.filter(value=>value<170).length).toBeLessThan(crop.width);
   expect(crop.pixels.filter(value=>value<170).length).toBeGreaterThan(1);
+  const erased=edgeBarCaption(raster(),w,h,candidate,-1,false)!;
+  expect(erased.pixels.filter(value=>value<170).length).toBeLessThan(crop.pixels.filter(value=>value<170).length);
   for(const text of ['1:200','10','lO metri','Particella 10 metri','0 metri'])expect(labeledEdgeBar(candidate,text)).toBeNull();
   expect(labeledEdgeBar(candidate,'2,5 m')?.metres).toBe(2.5);
  });
