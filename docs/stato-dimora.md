@@ -1,7 +1,7 @@
 # Stato di Dimora
 *10 novembre 2026*
 
-Il ramo di riferimento è **`codex/dimora-v5-consolidata-20261023`**. Il ramo comune include le PR 81–84 di Agenzie. L’app sul PC segue il suo rilascio locale e va aggiornata separatamente. Il pilota con utenti reali resta in attesa della prova AI, delle tutele sui dati e della verifica operativa di recupero e ripristino. Le prove sintetiche usano documenti e account di collaudo.
+Il ramo di riferimento è **`codex/dimora-v5-consolidata-20261023`**. Il ramo comune include le PR 81–84 di Agenzie e l’andamento mensile di Spese. L’app sul PC segue il suo rilascio locale e va aggiornata separatamente. Il pilota con utenti reali resta in attesa della prova AI, delle tutele sui dati e della verifica operativa di recupero e ripristino. Le prove sintetiche usano documenti e account di collaudo.
 
 ## Cosa c’è oggi
 
@@ -9,7 +9,7 @@ Il ramo di riferimento è **`codex/dimora-v5-consolidata-20261023`**. Il ramo co
 | --- | --- | --- | --- |
 | Casa / Home | Navigazione, riepilogo e schede della casa | Percorso completo con un nuovo proprietario nel pilota | Uscita controllata dalla casa, compresi i dati collegati |
 | Documenti | Archivio, ricerca, raccolte, caricamento e revisione delle proposte | Qualità dell’estrazione e della compilazione con un campione reale | Conversione HEIC, rinviata |
-| Spese e bollette | Riepilogo e gruppi di spesa, lettura locale di bollette testuali e revisione | Prova BL-04 su telefono, tenuta su formati e immagini diverse | Andamento mensile nel comune, in revisione nella PR 70 |
+| Spese e bollette | Riepilogo, gruppi e andamento mensile nel comune, lettura locale di bollette testuali e revisione | Prova BL-04 su telefono, tenuta su formati e immagini diverse | Copertura più ampia delle bollette raster |
 | Oggetti e Ambienti | Schede collegate alla mappa, trascinamento verificato in collaudo, vista con rotazione e sfondo facoltativo | Touch su telefono, mappe dense e validazione della scala e dei contorni importati | Multipiano e computo Home, da pianificare |
 | Attività e promemoria | Creazione e gestione nel prodotto, con prove API | Affidabilità del percorso quotidiano nel pilota | Consegna dei promemoria fuori dall’app da definire |
 | Storia della casa | Cronologia degli eventi e collegamenti alle schede | Utilità e copertura nella prova d’uso | Casi ulteriori da scegliere dopo il pilota |
@@ -50,7 +50,7 @@ Il lavoro residuo è ordinato nei [prossimi passi](prossimi-passi.md).
 
 | PR | Proposta | Motivo |
 | --- | --- | --- |
-| [70](https://github.com/Vincenzobrutto/Home_OS/pull/70) | Aggiornare | L’andamento mensile ha prove verdi sul ramo di origine. La PR è in conflitto con il comune e richiede un nuovo collaudo dopo l’allineamento. |
+| [70](https://github.com/Vincenzobrutto/Home_OS/pull/70) | Integrata | Andamento mensile verificato con 131 test mirati e browser a 1440, 873, 390 e 320 px. Typecheck, lint e build verdi. |
 | [67](https://github.com/Vincenzobrutto/Home_OS/pull/67) | Chiudere conservando il rapporto nella PR | Il codice del riepilogo è già nel comune. La PR registra la vecchia preview e confligge con i registri correnti. |
 | [63](https://github.com/Vincenzobrutto/Home_OS/pull/63) | Chiudere conservando il rapporto nella PR | Le etichette sono già nel comune. La PR conserva il rapporto operativo dell’epoca e confligge con i registri correnti. |
 | [80](https://github.com/Vincenzobrutto/Home_OS/pull/80) | Unire come ricevuta di rilascio quando la base lo consente | Documenta il rilascio locale già verificato. I conflitti con il comune riguardano solo i registri. Riportare la ricevuta in una proposta documentale aggiornata, conservando le registrazioni Agenzie. |
