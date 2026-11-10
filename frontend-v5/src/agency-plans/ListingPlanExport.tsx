@@ -8,7 +8,7 @@ import {listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, listi
 import {ListingPlanReview} from './ListingPlanReview';
 import styles from './practice-plan.module.css';
 
-import {listingRoomFill} from './listingStyle';
+import {LISTING_DRAWING_PIXELS,LISTING_OUTER_STROKE,LISTING_PARTITION_STROKE,listingRoomFill} from './listingStyle';
 
 function listingImage(rooms: PlanShape[],details?:ListingDetails) {
  let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
@@ -24,7 +24,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
  const width = right - left, height = bottom - top;
  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) throw new Error('invalid_plan_bounds');
 
- const margin = 48, footer = 30, scale = 1440 / Math.max(width, height);
+ const margin = 48, footer = 30, scale = LISTING_DRAWING_PIXELS / Math.max(width, height);
 
  const xs=rooms.flatMap(room=>room.points.map(([x])=>x)),ys=rooms.flatMap(room=>room.points.map(([,y])=>y));
  const originalSpan=Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
@@ -75,9 +75,9 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
  context.lineWidth = 3.5;
  context.stroke(outdoorWalls);
  context.strokeStyle = '#253130';
- context.lineWidth = 6.5;
+ context.lineWidth = LISTING_PARTITION_STROKE;
  context.stroke(partitions);
- context.lineWidth = 8;
+ context.lineWidth = LISTING_OUTER_STROKE;
  context.stroke(perimeter);
 
  for (const opening of details?.openings??[]) {

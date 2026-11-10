@@ -1,6 +1,7 @@
 import type {PlanShape, Point} from './PlanMeasurementView';
 import type {ListingAlignment, ListingDetails, ListingOpening, ListingWallRef} from './api';
 import {insideShape,isAppurtenance,isBalcony} from './scaleDetection';
+import {LISTING_DRAWING_PIXELS,LISTING_MIN_PARTITION_GAP} from './listingStyle';
 
 type Segment = [Point, Point];
 
@@ -320,12 +321,13 @@ export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetai
  // Keep manually drawn angles, but allow already straight facing sides to
  // share the same visual gap in the exported illustration.
  const squared=orthogonalListingRooms(drawing,span,new Set([...protectedRooms,...overrides.keys()]));
- const axial=suggestInternalWallThickness(squared,protectedRooms);
- const spaced=normalizeObliquePartitions(axial?.drawing??squared,span,protectedRooms,axial?.nominal);
+ const minimumGap=span*LISTING_MIN_PARTITION_GAP/LISTING_DRAWING_PIXELS;
+ const axial=suggestInternalWallThickness(squared,protectedRooms,minimumGap);
+ const spaced=normalizeObliquePartitions(axial?.drawing??squared,span,protectedRooms,Math.max(minimumGap,axial?.nominal??0));
  return alignVerandaFacade(spaced,protectedRooms);
 }
 
-function normalizeObliquePartitions(drawing:PlanShape[],span:number,protectedRooms:ReadonlySet<string>,referenceGap?:number){
+function normalizeObliquePartitions(drawing:PlanShape[],span:number,protectedRooms:ReadonlySet<string>,referenceGap:number){
  const dot=([x,y]:Point,[u,v]:Point)=>x*u+y*v;
  const faces=drawing.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>{
   const winding=Math.sign(signedArea(room.points));
@@ -361,7 +363,7 @@ function normalizeObliquePartitions(drawing:PlanShape[],span:number,protectedRoo
  }));
  if(!pairs.length)return drawing;
  const ordered=pairs.map(pair=>pair.gap).sort((a,b)=>a-b);
- const gap=referenceGap??ordered[Math.floor((ordered.length-1)/2)]!;
+ const gap=Math.max(referenceGap,ordered[Math.floor((ordered.length-1)/2)]!);
  const used=new Set<string>();
  let result=drawing;
  for(const {a,b,normal,middle} of pairs){
@@ -656,7 +658,7 @@ export function moveListingWall(drawing:PlanShape[],id:string,index:number,delta
 
 /** Propose one common thickness for comparable, facing interior walls.
  * Only unambiguous straight pairs are moved; the centre of each wall stays put. */
-export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?:ReadonlySet<string>){
+export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?:ReadonlySet<string>,minimumGap=0){
  const points=drawing.flatMap(room=>room.points);
  if(!points.length||points.length>4096)return null;
  const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(p=>p[axis]))-Math.min(...points.map(p=>p[axis]))));
@@ -690,7 +692,8 @@ export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?
  if(candidates.length<2)return null;
  const ordered=candidates.map(pair=>pair.gap).sort((a,b)=>a-b);
  const lowerMiddle=ordered[Math.floor((ordered.length-1)/2)]!;
- const nominal=protectedRooms&&ordered.length>2?lowerMiddle:(lowerMiddle+ordered[Math.floor(ordered.length/2)]!)/2;
+ const typicalGap=protectedRooms&&ordered.length>2?lowerMiddle:(lowerMiddle+ordered[Math.floor(ordered.length/2)]!)/2;
+ const nominal=Math.max(minimumGap,typicalGap);
  if(!(nominal>0))return null;
  if(protectedRooms)return normalizeWallGroups(drawing,faces,pairs,nominal,protectedRooms);
  let result=drawing,adjusted=0;
