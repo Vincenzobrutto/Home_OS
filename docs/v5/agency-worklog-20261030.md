@@ -317,3 +317,8 @@ Quarta esecuzione completa su0080b6c:201file e2163test tutti verdi,2576,39s, log
 ### 3 novembre — integrazione PR79 autorizzata
 
 Su richiesta esplicita del committente, integrazione PR79 nel comune precedente3335ea9. Candidato923a036 con indice/albero puliti, nessuna divergenza del comune e tutti i genitori PR77/78/Gift72–75 presenti; riesame indipendente senza blocker. Contenuto backend/frontend identico alla suite finale0080b6c e sorgenti/schema identici alla QA e6. Aggiornamento documentale prima del merge, controllo del contenuto e degli hash dopo il merge, ricevuta negli outputs. Nessuna nuova suite ripetuta senza variazioni di codice, nessun deploy/riavvio, main, DB utente, AI reale/spesa o demo Alessio.
+
+
+## 5 novembre — percorso operativo approvato
+
+Lotto `codex/agency-journey-20261105`, seguito7128375, prodotto2ed008d. Apertura da incarico nativo con originale/pagine e conferma; JSON journey CAS/receipt/sessione/CSRF; checklist persistita e acquisti solo richieste simulate; analisi per passaggi e aree annuncio/trattativa/stipula, Gift successiva. 148puri/26DB/65UI e25UI finali, statici/build e browser desktop375 verdi; cluster r7YmeL/pnCbtC nuovi arrestati. Locale API/front aggiornati senza migrazione o stop del PostgreSQL; verifica reale solo letture e lettura locale di PDF sintetico prima di annullare, nessuna modifica ai dati. [Report, limiti e ripresa](agency-journey-20261105.md). Nessun merge nel comune/main, deploy, AI reale o modifica demo Alessio.

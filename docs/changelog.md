@@ -2169,3 +2169,8 @@ Gift:prerequisiti copia,conferma Home,ammissione verificata e provenienza Docume
 
 ## 1 novembre2026 — Mappa digitale Agency/Gift/Home
 Ramo dedicato: scelta esplicita del piano revisionato nella Gift, copia indipendente con ambienti alla pubblicazione, pagina Home Mappa con posizioni persistenti sugli oggetti personali e correzione contorni con nuovi punti. Modifiche geometriche invalidano misure e richiedono riconferma pin. [Report, test e limiti](v5/gift-digital-plan-20261101.md); nessun merge/deploy o modifica demo Alessio.
+
+
+### Agenzie — percorso approvato del 5 novembre
+
+Nuova pratica da incarico con conferma esplicita, checklist/situazioni e richiesta documenti persistite, analisi per passaggi, annuncio e trattativa/stipula separati. Consegna Gift dopo la fase conclusa; richieste d’acquisto dimostrative senza finti originali. Collaudo e attivazione locale nel [report](v5/agency-journey-20261105.md); lettore incarico locale e conservativo, AI reale/fornitori/portali non estesi in questo lotto.

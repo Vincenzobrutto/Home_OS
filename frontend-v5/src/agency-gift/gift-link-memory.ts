@@ -7,16 +7,25 @@ function giftToken(input:unknown):input is string{return typeof input==='string'
 
 /** Personal-link credentials live only in this instance and are lost on reload. */
 export function createGiftLinkMemory(){
- const tokens=new Map<string,string>();
+ const tokens=new Map<string,{token:string;proof?:string}>();
  const clearAll=()=>{tokens.clear();};
  return {
   capture(invitationId:unknown,fragment:unknown):boolean{
    const id=giftId(invitationId);
-   if(!id||typeof fragment!=='string'||fragment.length!==50||!fragment.startsWith('#token='))return false;
-   const token=fragment.slice(7);if(!giftToken(token))return false;
-   tokens.set(id,token);return true;
+   if(!id||typeof fragment!=='string'||(fragment.length!==50&&fragment.length!==101))return false;
+   const match=/^#token=([A-Za-z0-9_-]{43})(?:&signup=([A-Za-z0-9_-]{43}))?$/u.exec(fragment);
+   if(!match)return false;
+   tokens.set(id,{token:match[1]!,...(match[2]?{proof:match[2]}:{})});return true;
   },
-  get(invitationId:unknown):string|null{const id=giftId(invitationId);return id?tokens.get(id)??null:null;},
+  get(invitationId:unknown):string|null{const id=giftId(invitationId);return id?tokens.get(id)?.token??null:null;},
+  signupProof(invitationId:unknown):string|null{const id=giftId(invitationId);return id?tokens.get(id)?.proof??null:null;},
+  forgetSignup(invitationId?:string):boolean{
+   let changed=false;
+   for(const [id,entry] of tokens){
+    if(entry.proof&&(invitationId===undefined||id===giftId(invitationId))){delete entry.proof;changed=true;}
+   }
+   return changed;
+  },
   clear(invitationId?:unknown):void{if(invitationId===undefined){clearAll();return;}const id=giftId(invitationId);if(id)tokens.delete(id);},
   clearAll,
  };

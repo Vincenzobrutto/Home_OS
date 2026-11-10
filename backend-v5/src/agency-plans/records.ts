@@ -29,7 +29,7 @@ export function registerPlan(actor:Actor,original:Practice,analysis:Analysis,exp
  if(expectedRevision!==original.revision)throw new PracticeError('revision_conflict');const practice=structuredClone(original) as WithPlans;practice.planAnalyses??=[];assert(practice.planAnalyses.length<100,'plan_limit');snapshot.resultDigest=digest;practice.planAnalyses.push({...snapshot,createdAt:now,version:1});practice.revision++;practice.dependents.push({id:'plan:'+snapshot.id,state:'current',sources:[{...analysis.proof,excerpt:'Plan source'}]});practice.events.push({id:practice.events.length+1,actorId:actor.accountId,at:now,operation:'plan:register',sourceId:analysis.proof.sourceId,revision:practice.revision});return {practice,id:snapshot.id,replay:false};
 }
 export type MeasurementConfiguration=Omit<CommercialInput,'surfaces'|'geometryRevision'|'unresolvedSymbols'>&{base:'rooms_and_walls'|'gross_perimeter';mainRegionIds:string[];assignments:Array<Omit<SurfaceLine,'geometry'>&{id:string}>};
-export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'geometry';view:'rooms'|'perimeter';id:string;geometry:Polygon}|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
+export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|{operation:'geometry';view:'rooms'|'perimeter';id:string;geometry:Polygon}|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
 /** Internal typed application command; HTTP layer still needs an exact DTO/parser before being exposed. */
 export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string){
  requirePractice(actor,original,'edit',now);assert(input&&typeof input.key==='string'&&input.key.trim()&&input.key.length<=120&&typeof input.reason==='string'&&input.reason.trim()&&input.reason.length<=1000&&Number.isSafeInteger(input.expectedRevision)&&Number.isSafeInteger(input.expectedPlanVersion));
@@ -48,7 +48,7 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   const before=plan.rooms;plan.rooms=proposal.rooms.filter(r=>!excluded.includes(r.id)).map(r=>{const old=before.find(v=>v.id===r.id);if(old&&roomGeometryDigest([old])===roomGeometryDigest([r]))return structuredClone(old);const adopted={...structuredClone(r),origin:'geometry_proposal' as const,surfaceProposalDigest:proposal.digest,seed:null,component:null,pixelArea:null};delete adopted.boundary;return adopted;});
   plan.issues=structuredClone(proposal.issues.filter(issue=>!(excluded.includes(issue.id)&&['coverage_area_requires_review','coverage_area_conflict'].includes(issue.code))).filter(issue=>!proposal.baseIssues.some(b=>b.id===issue.id&&b.code===issue.code)||plan.issues.some(v=>v.id===issue.id&&v.code===issue.code)));
   if(excluded.length){proposal.acceptedExcludedCandidateIds=[...excluded];plan.warnings.push('human_coverage_candidates_excluded:'+excluded.join(',')+':'+input.reason);}
-  proposal.state='applied';proposal.acceptedAt=now;proposal.acceptedBy=actor.accountId;plan.geometryRevision++;plan.measurement=null;plan.measurementConfiguration=null;plan.status='needs_review';plan.warnings.push('human_surface_adoption:'+proposal.digest+':'+input.reason);
+  proposal.state='applied';proposal.acceptedAt=now;proposal.acceptedBy=actor.accountId;plan.geometryRevision++;plan.measurement=null;plan.status='needs_review';plan.warnings.push('human_surface_adoption:'+proposal.digest+':'+input.reason);
  }else if(command.operation==='add_room'){
   assert(plan.rooms.length<100&&typeof command.id==='string'&&command.id.trim()&&command.id.length<=100&&!plan.rooms.some(r=>r.id===command.id),'manual_room_invalid_id');
   assert(typeof command.label==='string'&&command.label.trim()&&command.label.length<=200&&['room','bathroom','kitchen','corridor','balcony'].includes(command.kind));
@@ -59,12 +59,19 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   plan.edits??=[];assert(plan.edits.length<50,'plan_edit_history_limit');plan.edits.push({at:now,actorId:actor.accountId,reason:input.reason,geometryRevision:plan.geometryRevision,rooms:structuredClone(plan.rooms),mainPerimeter:structuredClone(plan.mainPerimeter)});
   if(parent&&partition){assert(bounded(partition.remaining));parent.points=partition.remaining.points;parent.holes=partition.remaining.holes;parent.origin='manual';delete parent.boundary;delete parent.surfaceProposalDigest;delete parent.surfaceBasis;parent.seed=null;parent.component=null;parent.pixelArea=null;for(const symbol of parent.symbols)if(!plan.issues.some(i=>i.id===symbol.id&&i.code==='symbol_unresolved'))plan.issues.push({id:symbol.id,code:'symbol_unresolved'});}
   plan.rooms.push({...geometry,id:command.id,label:command.label.trim(),kind:command.kind,seed:null,component:null,pixelArea:null,symbols:[],origin:'manual',...(parent?{derivedFrom:parent.id}:{})});
-  plan.geometryRevision++;plan.measurement=null;plan.measurementConfiguration=null;plan.status='needs_review';plan.warnings.push('manual_room_added:'+command.id+':'+input.reason);
+  plan.geometryRevision++;plan.measurement=null;plan.status='needs_review';plan.warnings.push('manual_room_added:'+command.id+':'+input.reason);
+ }else if(command.operation==='remove_room'){
+  assert(plan.rooms.some(room=>room.id===command.id),'manual_room_missing');
+  plan.edits??=[];assert(plan.edits.length<50,'plan_edit_history_limit');
+  plan.edits.push({at:now,actorId:actor.accountId,reason:input.reason,geometryRevision:plan.geometryRevision,rooms:structuredClone(plan.rooms),mainPerimeter:structuredClone(plan.mainPerimeter)});
+  plan.rooms=plan.rooms.filter(room=>room.id!==command.id);
+  plan.geometryRevision++;plan.measurement=null;plan.status='needs_review';
+  plan.warnings.push('manual_room_removed:'+command.id+':'+input.reason);
  }else if(command.operation==='geometry'){
   assert(validPolygon(command.geometry)&&['rooms','perimeter'].includes(command.view)&&[command.geometry.points,...command.geometry.holes].every(r=>r.every(p=>p[0]>=0&&p[1]>=0&&p[0]<=plan.rasterSize.width&&p[1]<=plan.rasterSize.height)));plan.edits??=[];assert(plan.edits.length<50,'plan_edit_history_limit');plan.edits.push({at:now,actorId:actor.accountId,reason:input.reason,geometryRevision:plan.geometryRevision,rooms:structuredClone(plan.rooms),mainPerimeter:structuredClone(plan.mainPerimeter)});
   if(command.view==='perimeter')plan.mainPerimeter=structuredClone(command.geometry);
   else {const region=plan.rooms.find(r=>r.id===command.id);assert(region);for(const other of plan.rooms)if(other.id!==region.id)assert(!overlaps(command.geometry,other),'region_overlap');region.points=structuredClone(command.geometry.points);region.holes=structuredClone(command.geometry.holes);region.origin='manual';delete region.boundary;delete region.surfaceProposalDigest;delete region.surfaceBasis;region.seed=null;region.component=null;region.pixelArea=null;}
-  plan.geometryRevision++;plan.measurement=null;plan.measurementConfiguration=null;plan.status='needs_review';plan.warnings.push('manual_geometry_change:'+input.reason);
+  plan.geometryRevision++;plan.measurement=null;plan.status='needs_review';plan.warnings.push('manual_geometry_change:'+input.reason);
  }else if(command.operation==='measure'){
   const c=command.configuration;plan.measurementConfiguration=structuredClone(c);assert(c&&['rooms_and_walls','gross_perimeter'].includes(c.base)&&Array.isArray(c.assignments)&&c.assignments.length===plan.rooms.length&&new Set(c.assignments.map(a=>a.id)).size===c.assignments.length&&Array.isArray(c.mainRegionIds)&&new Set(c.mainRegionIds).size===c.mainRegionIds.length&&c.mainRegionIds.every(id=>plan.rooms.some(r=>r.id===id)));
   if(c.calibration.paper)assert(c.calibration.paper.widthUnits===plan.rasterSize.width&&c.calibration.paper.heightUnits===plan.rasterSize.height,'paper_raster_mismatch');
@@ -74,8 +81,16 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   if(c.base==='gross_perimeter'){assert(plan.mainPerimeter,'perimeter_required');assert(c.assignments.filter(a=>c.mainRegionIds.includes(a.id)).every(a=>a.kind==='principal'&&(a.coefficient===undefined||a.coefficient===1)),'mixed_main_coefficients_require_rooms_base');plan.measurement=commercialPerimeterReport({...common,mainPerimeter:plan.mainPerimeter,roomBreakdown:plan.rooms.filter(r=>c.mainRegionIds.includes(r.id)).map(r=>({id:r.id,geometry:r})),accessories:surfaces.filter(s=>!c.mainRegionIds.includes(s.id))});}
   else plan.measurement=commercialReport({...common,surfaces});
  }else if(command.operation==='resolve_issue'){
-  assert(['included_in_geometry','excluded_from_computation','not_applicable'].includes(command.resolution));const index=plan.issues.findIndex(i=>i.id===command.issueId&&i.code===command.code);assert(index>=0);if(command.resolution==='included_in_geometry')assert(plan.geometryRevision>1,'manual_geometry_required');plan.issues.splice(index,1);plan.measurement=null;plan.measurementConfiguration=null;plan.warnings.push('human_resolution:'+command.issueId+':'+command.resolution+':'+input.reason);
+  assert(['included_in_geometry','excluded_from_computation','not_applicable'].includes(command.resolution));const index=plan.issues.findIndex(i=>i.id===command.issueId&&i.code===command.code);assert(index>=0);if(command.resolution==='included_in_geometry')assert(plan.geometryRevision>1,'manual_geometry_required');plan.issues.splice(index,1);plan.measurement=null;plan.warnings.push('human_resolution:'+command.issueId+':'+command.resolution+':'+input.reason);
  }else assert(false);
- if((command.operation==='geometry'||command.operation==='add_room')&&plan.surfaceProposal?.state==='pending')plan.surfaceProposal.state='stale';
+ if (plan.measurementConfiguration && ['geometry', 'add_room', 'remove_room', 'apply_surface_proposal'].includes(command.operation)) {
+  const configuration = plan.measurementConfiguration;
+  const roomIds = new Set(plan.rooms.map(room => room.id));
+  configuration.assignments = configuration.assignments.filter(assignment => roomIds.has(assignment.id));
+  configuration.mainRegionIds = configuration.mainRegionIds.filter(id => roomIds.has(id));
+  configuration.coverageConfirmed = false;
+  configuration.wallCoverageConfirmed = false;
+ }
+ if((['geometry','add_room','remove_room'].includes(command.operation))&&plan.surfaceProposal?.state==='pending')plan.surfaceProposal.state='stale';
  plan.version++;practice.revision++;practice.planReceipts??=[];assert(practice.planReceipts.length<10000,'plan_receipt_limit');practice.planReceipts.push({accountId:actor.accountId,key:input.key,digest,id:plan.id});practice.events.push({id:practice.events.length+1,actorId:actor.accountId,at:now,operation:'plan:'+command.operation,sourceId:plan.proof.sourceId,revision:practice.revision});return {practice,replay:false,id:plan.id};
 }

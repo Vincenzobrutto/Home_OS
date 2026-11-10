@@ -18,7 +18,7 @@ function publicEnvelope(result,status,code){
 }
 
 test('Gift failures map to documented statuses with private headers and minimal envelopes',()=>{
- for(const [code,status] of [['unavailable',404],['invalid_input',422],['revision_conflict',409],['idempotency_conflict',409],['benefit_unavailable',503]]){
+ for(const [code,status] of [['unavailable',404],['invalid_input',422],['revision_conflict',409],['idempotency_conflict',409],['registration_unavailable',409],['benefit_unavailable',503]]){
   const error=new GiftInvitationError(code);error.message=privateMarker;error.detail={token:privateMarker};publicEnvelope(filtered(error),status,code);
  }
 });
