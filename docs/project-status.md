@@ -9,6 +9,8 @@ Nella PR #84 l’editor grafico è condiviso con **Modifica pianta**. Solo lì i
 
 Claude, ramo `claude/agency-plan-page-20261109` creato dal checkout `work/agency-quick-surfaces-20261105` (include i 6 commit locali di Codex non pubblicati su #83), sopra le modifiche locali già presenti (conservate). Una sola mappa con Modifica pianta / Calcola superfici / Pianta per annuncio; verifiche aperte accanto alla mappa e collegate al vano/punto; riepilogo scala–lordo–pertinenze–totale con Salva stima; balconi Coperto/Scoperto con rischio di doppio conteggio; nuovo comando `save_quick_estimate` (coperture + scala, nessuna migrazione). Verificati: backend agency-plans 133/133, frontend agenzie 99/99 + scala 10/10, typecheck/lint/build, browser sintetico desktop e 375 px. Non verificati: runtime reale, HTTP/DB del nuovo comando, OCR in browser visibile. Commit e PR verso `codex/agency-quick-surfaces-20261105`; nessun merge. [Report e limiti](v5/agency-plan-page-simplify-20261109.md).
 
+La barra della planimetria resta visibile durante lo scorrimento in Modifica pianta, Calcola superfici e Pianta per annuncio. Nella vista Annuncio include modifica, conferma di completezza e download PNG. Nella finestra dell’editor grafico gli strumenti restano in alto e il salvataggio in basso.
+
 Le conferme di salvataggio della pratica e della planimetria si chiudono con ×. Scorrono insieme alla pagina e lasciano visibili i comandi della mappa.
 
 Seguito Codex su PR #84: dalle verifiche **Modifica contorno** apre l’editor del vano salvato anche partendo dal confronto. Verificati 45 test mirati, typecheck e build; sulla copia di collaudo, spostamento di un vertice e ripristino senza salvare. Seguito sulla stessa PR per selezione, trascinamento ed eliminazione con il mouse.

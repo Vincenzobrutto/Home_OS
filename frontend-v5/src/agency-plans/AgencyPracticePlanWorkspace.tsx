@@ -199,7 +199,7 @@ function Workspace(p:WorkspaceProps){
    <div className={styles.planLayout}>
     <div className={styles.planMapColumn}>
     {task==='draw'&&graphics&&sourceUrl&&<ListingPlanReview key={plan.id} sourceUrl={sourceUrl} width={rasterSize.width} height={rasterSize.height} hints={openingHints} editPlan saveError={error} rooms={plan.rooms} saved={listingDetails} metresPerPixel={listingScale(scaleInputs)} scaleLabel={scaleInputs.scale?'Scala salvata in Calcola superfici':'Scala del computo'} disabled={locked} onClose={()=>setGraphics(false)} onApply={saveGraphics}/>}
-    {task==='listing'?<ListingPlanExport key={plan.id+':'+plan.version} rooms={plan.rooms} details={listingDetails} review={listingReview} onSave={saveListing} disabled={locked||!!draft} autoPreview/>:map}
+    {task==='listing'?<ListingPlanExport key={plan.id+':'+plan.version} rooms={plan.rooms} details={listingDetails} review={listingReview} onSave={saveListing} disabled={locked||!!draft} autoPreview toolbarHost={toolbarHost}/>:map}
     </div>
     <aside className={styles.planSide} aria-label={task==='draw'?'Verifiche e correzioni':task==='measure'?'Superfici':'Annuncio'}>
      {task==='draw'&&<>

@@ -249,6 +249,10 @@ it('keeps unsaved map changes visible, blocks switching task and can discard the
 it('prepares the listing image from saved outlines inside the page',async()=>{
  const api=port();render(<AgencyPracticePlanWorkspace api={api} scopeKey="listing" embedded/>);
  fireEvent.click(await screen.findByRole('button',{name:'Pianta per annuncio'}));
+ const activities=screen.getByRole('group',{name:'Attività sulla planimetria'});
+ const commands=await screen.findByRole('group',{name:'Comandi pianta per annuncio'});
+ expect(activities.parentElement).toContainElement(commands);
+ expect(commands).toContainElement(screen.getByRole('button',{name:'Modifica pianta per l’annuncio'}));
  expect(screen.getByText(/solo i contorni e i nomi dei vani salvati/)).toBeVisible();
  expect(screen.queryByRole('img',{name:'Contorni dei singoli vani'})).not.toBeInTheDocument();
 });

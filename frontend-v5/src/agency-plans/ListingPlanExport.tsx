@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {createPortal} from 'react-dom';
 import type {ListingDetails,ListingOpening,ListingPlanDraft,QuickEstimateScale} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
 import {isBalcony,paperMetresPerPixel} from './scaleDetection';
@@ -146,7 +147,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
 }
 
 type ListingExportProps={
- rooms:PlanShape[];disabled:boolean;autoPreview?:boolean;details?:ListingDetails;
+ rooms:PlanShape[];disabled:boolean;autoPreview?:boolean;details?:ListingDetails;toolbarHost?:HTMLElement|null;
  review?:{sourceUrl:string;width:number;height:number;scale?:QuickEstimateScale;calibration?:MeasurementConfiguration['calibration'];hints?:ListingOpening[]};
  onSave?:(details:ListingPlanDraft)=>void;
 };
@@ -161,7 +162,7 @@ export function listingScale({scale,calibration,width,height}:Pick<NonNullable<L
  return [factor,factor];
 }
 
-export function ListingPlanExport({rooms,disabled,autoPreview=false,details,review,onSave}:ListingExportProps) {
+export function ListingPlanExport({rooms,disabled,autoPreview=false,details,review,onSave,toolbarHost}:ListingExportProps) {
  const [reviewing,setReviewing]=useState(false);
  // In the listing task the image is drawn on entry: the component is keyed by geometry revision.
  const [initial] = useState(()=>{if(!autoPreview||!rooms.length)return {preview:'',error:false};try{return {preview:listingImage(rooms,details),error:false};}catch{return {preview:'',error:true};}});
@@ -179,19 +180,29 @@ export function ListingPlanExport({rooms,disabled,autoPreview=false,details,revi
   }
  }
 
+ const editAction=review&&onSave&&<button type="button" disabled={disabled} onClick={()=>setReviewing(true)}>Modifica pianta per l’annuncio</button>;
+ const downloadActions=<>
+  <label><input type="checkbox" checked={complete} disabled={disabled} onChange={event=>setComplete(event.target.checked)}/> La pianta è completa per l’annuncio</label>
+  {complete&&!disabled?<a href={preview} download="planimetria-annuncio.png">Scarica immagine PNG</a>:<button type="button" disabled>Scarica immagine PNG</button>}
+ </>;
+ const toolbar=(editAction||preview)?<div className={styles.listingToolbar} role="group" aria-label="Comandi pianta per annuncio">
+  {editAction}
+  {preview&&downloadActions}
+ </div>:null;
+
  return <section className={styles.panel} aria-label="Pianta per l’annuncio">
+  {toolbarHost&&createPortal(toolbar,toolbarHost)}
   {!autoPreview&&<><h3>Pianta per l’annuncio</h3>
   <button type="button" disabled={disabled} onClick={open}>Anteprima annuncio</button></>}
   {autoPreview&&!rooms.length&&<p>Salva almeno un vano per preparare l’immagine dell’annuncio.</p>}
-  {review&&onSave&&<button type="button" disabled={disabled} onClick={()=>setReviewing(true)}>Modifica pianta per l’annuncio</button>}
+  {!toolbarHost&&editAction}
   {review&&onSave&&reviewing&&<ListingPlanReview {...review} metresPerPixel={listingScale(review)} scaleLabel={review.scale?'Scala salvata in Calcola superfici':'Scala del computo'} rooms={rooms} saved={details} disabled={disabled}
    onClose={()=>setReviewing(false)} onApply={draft=>{onSave(draft);setReviewing(false);}}/>}
   {error&&<p role="alert">Impossibile creare l’immagine della planimetria.</p>}
   {preview&&<div>
    <p>{rooms.length} {rooms.length===1?'vano salvato':'vani salvati'}. Controlla che la pianta mostri tutti gli ambienti da pubblicare.</p>
    <img className={styles.listingPreview} src={preview} alt="Anteprima della planimetria illustrativa per l’annuncio"/>
-   <label><input type="checkbox" checked={complete} disabled={disabled} onChange={event=>setComplete(event.target.checked)}/> La pianta è completa per l’annuncio</label>
-   {complete&&!disabled?<a href={preview} download="planimetria-annuncio.png">Scarica immagine PNG</a>:<button type="button" disabled>Scarica immagine PNG</button>}
+   {!toolbarHost&&downloadActions}
   </div>}
  </section>;
 }

@@ -8,6 +8,8 @@ Pagina Planimetria riorganizzata su una sola mappa (Modifica pianta, Calcola sup
 
 Nelle verifiche collegate a un vano, **Modifica contorno** apre i vertici modificabili sulla stessa mappa.
 
+La barra della planimetria resta visibile durante lo scorrimento in Modifica pianta, Calcola superfici e Pianta per annuncio. Nella vista Annuncio include modifica, conferma di completezza e download PNG. Nella finestra dell’editor grafico gli strumenti restano in alto e il salvataggio in basso.
+
 Le conferme di salvataggio della pratica e della planimetria si chiudono con ×. Scorrono insieme alla pagina e lasciano visibili i comandi della mappa.
 
 ## 5 novembre — superfici immediate senza modulo tecnico obbligatorio

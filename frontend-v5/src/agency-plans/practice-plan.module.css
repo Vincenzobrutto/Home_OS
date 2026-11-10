@@ -115,7 +115,12 @@
 .tableEstimateField { display: grid; gap: 4px; font-size: .85rem; }
 .tableEstimateField input { width: 100%; min-width: 4rem; max-width: 6rem; }
 
+.listingToolbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;padding:6px 10px;border:1px solid #cbd9d9;border-radius:10px;background:#fff}
+.workspace .listingToolbar label,.workspace .listingToolbar button{margin:0}
+.listingToolbar a{display:inline-flex;align-items:center;min-height:44px;color:#005767;font-weight:600}
 .listingReviewDialog{max-width:1040px}
+.listingReviewTools{position:sticky;top:0;z-index:2;padding:4px 0;background:#fff}
+.listingReviewFooter{position:sticky;bottom:0;z-index:2;background:#fff}
 .listingReviewDialog h3{margin:0 0 6px}
 .listingReviewTools,.listingReviewControls,.listingReviewFooter{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
 .listingReviewTools label,.listingReviewControls label{display:flex;align-items:center;gap:6px;margin:0}

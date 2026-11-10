@@ -9,6 +9,8 @@ Prossimi passi: prova su pratica reale in browser visibile (OCR barra), test HTT
 
 L’editor per annuncio include Orto e trascinamento di una parete con le aperture agganciate. La correzione dei contorni è ora accessibile dalle verifiche della PR #84. Resta la prova utente sulla stessa pratica.
 
+La barra della planimetria resta visibile durante lo scorrimento in Modifica pianta, Calcola superfici e Pianta per annuncio. Nella vista Annuncio include modifica, conferma di completezza e download PNG. Nella finestra dell’editor grafico gli strumenti restano in alto e il salvataggio in basso.
+
 Le conferme di salvataggio della pratica e della planimetria si chiudono con ×. Scorrono insieme alla pagina e lasciano visibili i comandi della mappa.
 
 ## 5 novembre — superfici immediate senza modulo tecnico obbligatorio
