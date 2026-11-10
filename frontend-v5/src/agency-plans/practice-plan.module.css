@@ -57,14 +57,17 @@
 
 /* Planimetria: one working map with three tasks and a contextual side panel. */
 .planStatus{margin:0 0 8px;color:#45676b}
-.planModes{display:flex;gap:0;flex-wrap:wrap;border:1px solid #8caeb0;border-radius:10px;overflow:hidden;width:max-content;max-width:100%;background:#fff}
+.planCommands{position:sticky;top:0;z-index:8;display:grid;gap:6px;padding:6px 0;background:#f1f6f6;max-height:45dvh;overflow:auto;overscroll-behavior:contain}
+.planToolbarHost:empty{display:none}
+.planModes{display:flex;gap:0;flex-wrap:nowrap;border:1px solid #8caeb0;border-radius:10px;overflow-x:auto;width:max-content;max-width:100%;background:#fff}
 .planModes button{margin:0!important;border:0!important;border-right:1px solid #c5d6d6!important;border-radius:0!important;background:#fff!important;color:#005767!important;min-height:44px;padding:8px 16px!important;font-weight:600}
+.planModes button{flex-shrink:0;white-space:nowrap}
 .planModes button:last-child{border-right:0!important}
 .planModes button[aria-pressed="true"]{background:#006476!important;color:#fff!important}
 .nextStep{margin:10px 0 12px;padding:10px 12px;background:#ecf8f8;border-left:4px solid #006476;border-radius:6px}
 .planLayout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
 .planMapColumn,.planSide{min-width:0}
-@media(min-width:960px){.planLayout{grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr)}.planMapColumn{position:sticky;top:8px}}
+@media(min-width:960px){.planLayout{grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr)}.planMapColumn{position:sticky;top:calc(var(--plan-command-height,0px) + 8px)}}
 .panelSection{border:1px solid #cbd9d9;background:#fff;border-radius:12px;padding:14px;margin:0 0 12px}
 .panelSection h4{margin:0 0 8px;font-size:16px}
 .panelSection p{margin:6px 0}

@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useRef,useState} from 'react';
 import type {ListingPlanDraft,QuickEstimateInput} from './api';
 import {ApiError} from '../api/errors';
 import type {AgencyPlanPort,AgencyPractice,PlanEditBody,PlansResponse} from './api';
@@ -42,6 +42,17 @@ function Workspace(p:WorkspaceProps){
  const [task,setTask]=useState<'draw'|'measure'|'listing'>(p.embedded?'draw':'measure');
  const [taskChosen,setTaskChosen]=useState(false);
  const [graphics,setGraphics]=useState(false);
+ const [toolbarHost,setToolbarHost]=useState<HTMLDivElement|null>(null);
+ useLayoutEffect(()=>{
+  const commands=toolbarHost?.parentElement;
+  const editor=commands?.parentElement;
+  if(!commands||!editor)return;
+  const updateHeight=()=>editor.style.setProperty('--plan-command-height',commands.offsetHeight+'px');
+  updateHeight();
+  const observer=typeof ResizeObserver==='undefined'?null:new ResizeObserver(updateHeight);
+  observer?.observe(commands);
+  return ()=>{observer?.disconnect();editor.style.removeProperty('--plan-command-height');};
+ },[toolbarHost]);
  const [focus,setFocus]=useState<{id:string;point?:Point;preferSingleHole?:boolean;key:number;issueKey?:string;number?:number;wholePage?:boolean}|null>(null);
  const [candidateChoices,setCandidateChoices]=useState<{key:string;excluded:string[]}>({key:'',excluded:[]});
  const [previewKey,setPreviewKey]=useState(''),[reviewedKey,setReviewedKey]=useState('');
@@ -168,21 +179,24 @@ function Workspace(p:WorkspaceProps){
    onDiscard={()=>{setDraft(null);setError('');}}
    onAddRoom={!measuring&&p.api.preview?()=>setManualOpen(true):undefined}
    onSaveGeometry={measuring?undefined:saveGeometry}
+   toolbarHost={toolbarHost}
    toolbarActions={measuring?<>
     {p.api.preview&&<button type="button" disabled={scaleBusy} onClick={()=>setManualOpen('balcony')}>Aggiungi balcone</button>}
     {!gross&&<button type="button" disabled={scaleBusy} onClick={createPerimeter}>Disegna perimetro</button>}
-   </>:undefined}
+   </>:rooms.length>0?<button type="button" disabled={locked||switchBlocked||showProposal} onClick={()=>{setError('');setGraphics(true);}}>Apri editor grafico</button>:undefined}
   />:<p>Anteprima allineata non disponibile. Nessun contorno viene sovrapposto a un’immagine non verificata.</p>;
   return <>
    <p className={styles.planStatus}>{rooms.length} {rooms.length===1?'vano':'vani'} · {entries.length} {entries.length===1?'verifica aperta':'verifiche aperte'}{plan.quickEstimate?' · stima salvata':''}{data.plans.plans.length>1?` · pagina ${plan.proof.page}`:''}</p>
    {data.plans.plans.length>1&&<label>Planimetria<select value={plan.id} disabled={switchBlocked||showProposal} onChange={e=>{setSelected(e.target.value);setFocus(null);setError('');}}>{data.plans.plans.map((s,i)=><option key={s.id} value={s.id}>Planimetria {i+1} · pagina {s.proof.page}</option>)}</select></label>}
+   <div className={styles.planCommands}>
    <div className={styles.planModes} role="group" aria-label="Attività sulla planimetria">
     {tasks.map(([id,label])=><button key={id} type="button" aria-pressed={task===id} disabled={task!==id&&(switchBlocked||showProposal&&id!=='draw')} onClick={()=>{setTask(id);setFocus(null);}}>{label}</button>)}
+   </div>
+   <div className={styles.planToolbarHost} ref={setToolbarHost}/>
    </div>
    <p className={styles.nextStep} aria-live="polite">{draft&&task==='draw'?'Modifiche da salvare: salva o scarta prima di cambiare attività.':nextStep}</p>
    <div className={styles.planLayout}>
     <div className={styles.planMapColumn}>
-     {task==='draw'&&sourceUrl&&rooms.length>0&&<button type="button" disabled={locked||switchBlocked||showProposal} onClick={()=>{setError('');setGraphics(true);}}>Apri editor grafico</button>}
     {task==='draw'&&graphics&&sourceUrl&&<ListingPlanReview key={plan.id} sourceUrl={sourceUrl} width={rasterSize.width} height={rasterSize.height} hints={openingHints} editPlan saveError={error} rooms={plan.rooms} saved={listingDetails} metresPerPixel={listingScale(scaleInputs)} scaleLabel={scaleInputs.scale?'Scala salvata in Calcola superfici':'Scala del computo'} disabled={locked} onClose={()=>setGraphics(false)} onApply={saveGraphics}/>}
     {task==='listing'?<ListingPlanExport key={plan.id+':'+plan.version} rooms={plan.rooms} details={listingDetails} review={listingReview} onSave={saveListing} disabled={locked||!!draft} autoPreview/>:map}
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import {createPortal} from 'react-dom';
 import type {PlanMeasurementReport} from './api';
 import type {MeasurementConfiguration} from './measurement-types';
 import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
@@ -9,7 +10,7 @@ export type Point=[number,number];
 export type PlanShape={kind?:string;id:string;label:string;points:Point[];holes:Point[][];symbols?:Array<{id:string;reason:string;point?:Point}>};
 export type PlanMeasurementProps={scopeKey:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];perimeter:PlanShape|null;issues:string[];hideRoomSummary?:boolean;initialView?:'rooms'|'perimeter';onChange:(view:'rooms'|'perimeter',shape:PlanShape)=>void;onCreatePerimeter:()=>void;readOnly?:boolean;drawingOnly?:boolean;simple?:boolean;onAddRoom?:()=>void;onSaveGeometry?:()=>void;hasUnsavedChanges?:boolean;onRemoveRoom?:(shape:PlanShape)=>void;configuration?:MeasurementConfiguration|null;measurement?:PlanMeasurementReport|null;measurementsOutdated?:boolean;candidateIds?:string[];excludedCandidateIds?:string[];
  /** Simple map only: faint, non-interactive outlines shown for context (e.g. rooms under the gross perimeter). */
- contextShapes?:PlanShape[];warnIds?:string[];mapLabel?:string;toolbarActions?:ReactNode;onDiscard?:()=>void;
+ contextShapes?:PlanShape[];warnIds?:string[];mapLabel?:string;toolbarActions?:ReactNode;toolbarHost?:HTMLElement|null;onDiscard?:()=>void;
  /** Changing `key` selects the shape, brings it into view and marks `point` when known. */
  focus?:{id:string;point?:Point;preferSingleHole?:boolean;key:number;number?:number;wholePage?:boolean}|null};
 const path=(s:PlanShape)=>[s.points,...s.holes].map(p=>'M'+p.map(v=>v.join(',')).join('L')+'Z').join('');
@@ -149,18 +150,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   setVertex(null);
   setInsert(false);
  }
- return <section className={styles.workspace} aria-label="Analisi della planimetria">
-  {!props.drawingOnly&&!props.simple&&<div className={styles.tabs} role="tablist" aria-label="Vista della planimetria">
-   <button type="button" role="tab" aria-selected={view==='rooms'} onClick={()=>mode('rooms')}>Singoli vani</button>
-   <button type="button" role="tab" aria-selected={view==='perimeter'} onClick={()=>mode('perimeter')}>Perimetro commerciale</button>
-  </div>}
-  {!!props.candidateIds?.length&&<p>Arancione: aree non censite da verificare, non vani confermati.</p>}
-  {!!props.excludedCandidateIds?.length&&<p>Tratteggio grigio: aree scartate, mantenute visibili solo per il confronto.</p>}
-  {!props.drawingOnly&&!props.simple&&<p>{view==='rooms'?'Vani e pertinenze restano distinti. Le geometrie sono proposte da controllare.':'Il perimetro lordo comprende i muri interni: il dettaglio dei vani resta disponibile e non viene sommato di nuovo. Balconi e altre pertinenze si computano separatamente.'}</p>}
-  {!props.drawingOnly&&!props.simple&&props.issues.length>0&&<details className={styles.warning}><summary>{props.issues.length} {props.issues.length===1?'verifica aperta':'verifiche aperte'} sui contorni</summary><ul>{[...new Set(props.issues)].map(issue=><li key={issue}>{issue}</li>)}</ul></details>}
-  {!props.simple&&view==='perimeter'&&!props.perimeter&&<div className={styles.warning}><p>Il perimetro lordo non è ancora disponibile. La somma degli interni non lo sostituisce.</p><button type="button" disabled={props.readOnly} onClick={props.onCreatePerimeter}>Definisci perimetro</button></div>}
-  {props.simple&&<>
-   <div className={styles.editorToolbar} role="group" aria-label="Strumenti della mappa">
+ const toolbar=props.simple&&<div className={styles.editorToolbar} role="group" aria-label="Strumenti della mappa">
     <button type="button" aria-pressed={!selected} disabled={props.hasUnsavedChanges} onClick={()=>{setSelection(null);setVertex(null);setInsert(false);}}>Seleziona</button>
     {props.onAddRoom&&<button type="button" disabled={props.readOnly||props.hasUnsavedChanges} onClick={props.onAddRoom}>Aggiungi vano</button>}
     {props.toolbarActions}
@@ -175,7 +165,19 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
      <button type="button" disabled={vertex===null||ring.length<=3} onClick={remove}>Elimina punto</button>
      <button type="button" disabled={!undo.length} onClick={()=>{const previous=undo.at(-1);if(previous){props.onChange(previous.view,previous.shape);setUndo(u=>u.slice(0,-1));setVertex(null);}}}>Annulla modifica</button>
     </div>}
-   </div>
+   </div>;
+ return <section className={styles.workspace} aria-label="Analisi della planimetria">
+  {!props.drawingOnly&&!props.simple&&<div className={styles.tabs} role="tablist" aria-label="Vista della planimetria">
+   <button type="button" role="tab" aria-selected={view==='rooms'} onClick={()=>mode('rooms')}>Singoli vani</button>
+   <button type="button" role="tab" aria-selected={view==='perimeter'} onClick={()=>mode('perimeter')}>Perimetro commerciale</button>
+  </div>}
+  {!!props.candidateIds?.length&&<p>Arancione: aree non censite da verificare, non vani confermati.</p>}
+  {!!props.excludedCandidateIds?.length&&<p>Tratteggio grigio: aree scartate, mantenute visibili solo per il confronto.</p>}
+  {!props.drawingOnly&&!props.simple&&<p>{view==='rooms'?'Vani e pertinenze restano distinti. Le geometrie sono proposte da controllare.':'Il perimetro lordo comprende i muri interni: il dettaglio dei vani resta disponibile e non viene sommato di nuovo. Balconi e altre pertinenze si computano separatamente.'}</p>}
+  {!props.drawingOnly&&!props.simple&&props.issues.length>0&&<details className={styles.warning}><summary>{props.issues.length} {props.issues.length===1?'verifica aperta':'verifiche aperte'} sui contorni</summary><ul>{[...new Set(props.issues)].map(issue=><li key={issue}>{issue}</li>)}</ul></details>}
+  {!props.simple&&view==='perimeter'&&!props.perimeter&&<div className={styles.warning}><p>Il perimetro lordo non è ancora disponibile. La somma degli interni non lo sostituisce.</p><button type="button" disabled={props.readOnly} onClick={props.onCreatePerimeter}>Definisci perimetro</button></div>}
+  {props.simple&&<>
+   {props.toolbarHost?createPortal(toolbar,props.toolbarHost):toolbar}
    <p className={styles.editHint}>{selected?<><strong>{selected.label}</strong> · {insert?'Fai clic sul contorno per aggiungere un punto.':props.hasUnsavedChanges?'Modifiche da salvare.':(props.readOnly?'Solo consultazione.':ringIndex>0?'Modifica i punti del vuoto o includi tutta l’area nel vano.':'Trascina i punti, oppure selezionali con Tab e spostali con le frecce.')}</>:(props.readOnly?'Seleziona un vano per consultarlo.':'Tocca un vano per modificarlo.')} Zoom con Ctrl + rotellina.</p>
   </>}
   <div className={styles.controls} hidden={!!props.simple||(!!props.readOnly&&!!props.drawingOnly)}>
