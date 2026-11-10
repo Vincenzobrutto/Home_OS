@@ -5,7 +5,7 @@ export type Raster={width:number;height:number;gray:Uint8Array;rendering?:Raster
 export type SeedSpace={id:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony'|'excluded';label:string;seeds:Point[]};
 export type SymbolRequest={id:string;parentId:string;decision:'include'|'exclude'|'unresolved';reason:string;seeds:Point[]};
 export type RasterConfig={version:string;threshold:number;closingRadius:number;minRegionPixels:number;maxRegionFraction:number;simplifyPixels:number;fillTextHolesUpToPixels:number};
-export type Region=Polygon&{id:string;label:string;kind:SeedSpace['kind'];seed:Point;component:number;pixelArea:number;symbols:Array<{id:string;status:'included'|'excluded'|'unresolved';reason:string}>;boundary?:{simplifyPixels:number;refinedForOverlap:boolean;virtualThresholdIds?:string[]}};
+export type Region=Polygon&{id:string;label:string;kind:SeedSpace['kind'];seed:Point;component:number;pixelArea:number;symbols:Array<{id:string;status:'included'|'excluded'|'unresolved';reason:string;point?:Point}>;boundary?:{simplifyPixels:number;refinedForOverlap:boolean;virtualThresholdIds?:string[]}};
 export type SegmentationDiagnostic={id:string;code:'invalid_seed'|'outside_image'|'on_ink'|'open_to_border'|'too_small'|'too_large'|'seed_accepted'|'proposal_excluded'|'boundary_refined'|'boundary_overlap_rejected';seedIndex?:number;componentPixels?:number;simplifyPixels?:number};
 export type Segmentation={regions:Region[];issues:Array<{id:string;code:string}>;duplicates:Array<{id:string;sameAs:string}>;config:RasterConfig;diagnostics?:SegmentationDiagnostic[];coverage?:CoverageReport};
 export function assertRaster(r:Raster){assert(r&&Number.isInteger(r.width)&&r.width>=8&&r.width<=5000&&Number.isInteger(r.height)&&r.height>=8&&r.height<=5000&&r.width*r.height<=4000000&&r.gray instanceof Uint8Array&&r.gray.length===r.width*r.height);}
@@ -33,10 +33,11 @@ export function segmentPlan(r:Raster,spaces:SeedSpace[],symbols:SymbolRequest[],
   let mask:Uint8Array=new Uint8Array(w*h);for(let i=0;i<mask.length;i++)mask[i]=labels[i]===component?1:0;mask=close(mask,w,h,config.closingRadius);const symbolResults:Region['symbols']=[];
   for(const symbol of symbols.filter(v=>v.parentId===s.id)){
    if(symbol.decision==='exclude'){symbolResults.push({id:symbol.id,status:'excluded',reason:symbol.reason});continue;}
-   const ids=symbol.seeds.map(componentAt);if(symbol.decision==='unresolved'||!ids.length||ids.some(id=>!id||id===component||components[id].border||components[id].size>config.minRegionPixels*10)){symbolResults.push({id:symbol.id,status:'unresolved',reason:symbol.reason});issues.push({id:symbol.id,code:'symbol_unresolved'});continue;}
+   const point=symbol.seeds.find(p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite)&&p[0]>=0&&p[1]>=0&&p[0]<w&&p[1]<h);
+   const ids=symbol.seeds.map(componentAt);if(symbol.decision==='unresolved'||!ids.length||ids.some(id=>!id||id===component||components[id].border||components[id].size>config.minRegionPixels*10)){symbolResults.push({id:symbol.id,status:'unresolved',reason:symbol.reason,...(point?{point:[...point] as Point}:{})});issues.push({id:symbol.id,code:'symbol_unresolved'});continue;}
    // Explicit include decision: combine selected symbol subregions, never infer X=void/fireplace.
    let minx=w,miny=h,maxx=0,maxy=0;for(let i=0;i<labels.length;i++)if(ids.includes(labels[i])){minx=Math.min(minx,i%w);maxx=Math.max(maxx,i%w);miny=Math.min(miny,Math.floor(i/w));maxy=Math.max(maxy,Math.floor(i/w));}
-   if((maxx-minx)*(maxy-miny)>w*h*.02){issues.push({id:symbol.id,code:'symbol_extent_unresolved'});symbolResults.push({id:symbol.id,status:'unresolved',reason:symbol.reason});continue;}
+   if((maxx-minx)*(maxy-miny)>w*h*.02){issues.push({id:symbol.id,code:'symbol_extent_unresolved'});symbolResults.push({id:symbol.id,status:'unresolved',reason:symbol.reason,...(point?{point:[...point] as Point}:{})});continue;}
    for(let y=Math.max(0,miny-2);y<=Math.min(h-1,maxy+2);y++)for(let x=Math.max(0,minx-2);x<=Math.min(w-1,maxx+2);x++)mask[y*w+x]=1;mask=close(mask,w,h,config.closingRadius);symbolResults.push({id:symbol.id,status:'included',reason:symbol.reason});
   }
   let rings=traceMask(mask,w,h);if(!rings.length){issues.push({id:s.id,code:'raster_topology_unresolved'});continue;}

@@ -185,3 +185,166 @@ test('room removal snapshots the old geometry, invalidates computation and is id
  assert.equal(Records.editPlan(f.ctx.actor,result.practice,input,f.ctx.now).replay,true);
  assert.throws(()=>Records.editPlan(f.ctx.actor,practice,{...input,command:{operation:'remove_room',id:'unknown'}},f.ctx.now),e=>e.code==='manual_room_missing');
 });
+
+test('resolving earlier checks preserves the original number on the next read',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input);
+ analysis.final.issues=['one','two','three'].map(id=>({id,code:'synthetic_review'}));
+ let practice=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const read=()=>Records.planViews(f.ctx.actor,practice,f.ctx.now).plans[0];
+ assert.deepEqual(read().issues.map(issue=>issue.number),[1,2,3]);
+ for(const issueId of ['one','two']){
+  const plan=read();
+  practice=Records.editPlan(f.ctx.actor,practice,{key:issueId,planId:plan.id,expectedRevision:practice.revision,expectedPlanVersion:plan.version,reason:'Checked',command:{operation:'resolve_issue',issueId,code:'synthetic_review',resolution:'not_applicable'}},f.ctx.now).practice;
+ }
+ assert.deepEqual(read().issues,[{id:'three',code:'synthetic_review',number:3}]);
+});
+
+test('the analysis retains a valid exterior outline only as a reviewable proposal',async()=>{
+ const outline=[[0,0],[5,0],[5,5],[0,5]];
+ for(const [points,expected] of [[outline,{points:outline,holes:[]}],[[[0,0],[100000,0],[0,5]],null]]){
+  const f=ports(),respond=f.adapter.ai;
+  f.adapter.ai=async request=>{
+   const result=await respond(request);
+   if(request.phase==='review')result.proposal.exteriorOutline=points;
+   return result;
+  };
+  const analysis=await P.analyzePlan(f.adapter,f.input);
+  assert.deepEqual(analysis.perimeterProposal,expected);
+  const stored=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice.planAnalyses[0];
+  assert.equal(stored.mainPerimeter,null);
+  assert.deepEqual(stored.perimeterProposal,expected??undefined);
+ }
+});
+
+test('quick estimate keeps balcony cover and sheet scale without requiring a detailed commercial measurement',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input);
+ const practice=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const plan=practice.planAnalyses[0],room=plan.rooms[0];
+ room.kind='balcony';
+ const input={key:'cover',planId:plan.id,expectedRevision:practice.revision,expectedPlanVersion:plan.version,reason:'Balcony cover',command:{operation:'save_quick_estimate',covers:[{id:room.id,cover:'covered'}],scale:{mode:'paper',format:'A3',denominator:100}}};
+ const saved=Records.editPlan(f.ctx.actor,practice,input,f.ctx.now).practice;
+ const reopened=Records.planViews(f.ctx.actor,JSON.parse(JSON.stringify(saved)),f.ctx.now).plans[0];
+ assert.deepEqual(reopened.balconyCovers,[{id:room.id,cover:'covered'}]);
+ assert.deepEqual(reopened.quickEstimate,{scale:{mode:'paper',format:'A3',denominator:100},savedAt:f.ctx.now,geometryRevision:plan.geometryRevision});
+ assert.equal(reopened.measurement,undefined);
+ const other=plan.rooms.find(r=>r.id!==room.id);
+ if(other)assert.throws(()=>Records.editPlan(f.ctx.actor,saved,{...input,key:'not-balcony',expectedRevision:saved.revision,expectedPlanVersion:plan.version+1,command:{operation:'save_quick_estimate',covers:[{id:other.id,cover:'covered'}]}},f.ctx.now));
+ assert.equal(Records.editPlan(f.ctx.actor,saved,input,f.ctx.now).replay,true);
+});
+
+test('quick estimate DTO accepts only covers and a bounded paper or two-point scale',()=>{
+ const D=require('../dist/agency-plans/edit-dto'),body=command=>({expectedRevision:1,expectedPlanVersion:1,reason:'Quick estimate',command});
+ assert.deepEqual(D.parsePlanEdit(body({operation:'save_quick_estimate',covers:[{id:'b',cover:'uncovered'}]}),'k','plan').command,{operation:'save_quick_estimate',covers:[{id:'b',cover:'uncovered'}]});
+ for(const mode of ['manual','bar'])assert.deepEqual(D.parsePlanEdit(body({operation:'save_quick_estimate',covers:[],scale:{mode,start:[0,0],end:[10,0],metres:4}}),'k','plan').command.scale,{mode,start:[0,0],end:[10,0],metres:4});
+ for(const scale of [{mode:'paper',format:'A5',denominator:100},{mode:'paper',format:'A4',denominator:0},{mode:'paper',format:'A4',denominator:100,verified:true},{mode:'manual',start:[0,0],end:[1,0]},{mode:'bar',start:[0,0],end:[1,0],metres:0},{mode:'auto'}])assert.throws(()=>D.parsePlanEdit(body({operation:'save_quick_estimate',covers:[],scale}),'k','plan'));
+ assert.throws(()=>D.parsePlanEdit(body({operation:'save_quick_estimate',covers:[{id:'b',cover:'maybe'}]}),'k','plan'));
+ assert.throws(()=>D.parsePlanEdit(body({operation:'save_balcony_covers',covers:[]}),'k','plan'));
+});
+
+test('listing details persist against the current geometry without changing rooms or measurements',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input);
+ const practice=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const plan=practice.planAnalyses[0],room=plan.rooms[0];
+ const opening={kind:'window',start:[10,10],end:[20,10],fixed:true};
+ const target={roomId:room.id,start:room.points[0],end:room.points[1]};
+ const reference={roomId:room.id,start:room.points[1],end:room.points[2]};
+ const {parsePlanEdit}=require('../dist/agency-plans/edit-dto');
+ const body={expectedRevision:practice.revision,expectedPlanVersion:plan.version,reason:'Illustrative plan',command:{
+  operation:'save_listing_details',openings:[opening],alignments:[{target,reference}],
+ }};
+  const contours=[{id:room.id,geometry:{points:room.points.map(([x,y])=>[x+.1,y]),holes:room.holes}}];
+ const parameters={wallPercent:12,coefficients:[]};
+ plan.quickEstimate={parameters,savedAt:f.ctx.now,geometryRevision:plan.geometryRevision};
+ const scale={mode:'manual',start:[10,10],end:[20,10],metres:1};
+ const input=parsePlanEdit({...body,command:{...body.command,contours,scale}},'listing',plan.id);
+ const saved=Records.editPlan(f.ctx.actor,practice,input,f.ctx.now).practice;
+ const reopened=Records.planViews(f.ctx.actor,JSON.parse(JSON.stringify(saved)),f.ctx.now).plans[0];
+ assert.deepEqual(reopened.listingDetails,{geometryRevision:plan.geometryRevision,openings:[opening],alignments:[{target,reference}],contours});
+  assert.throws(()=>Records.editPlan(f.ctx.actor,practice,parsePlanEdit({...body,command:{...body.command,contours:[{...contours[0],id:'foreign'}]}},'foreign',plan.id),f.ctx.now));
+ assert.deepEqual(reopened.quickEstimate?.scale,scale);
+ assert.deepEqual(reopened.quickEstimate?.parameters,parameters);
+ assert.deepEqual(reopened.balconyCovers,plan.balconyCovers??[]);
+ assert.throws(()=>Records.editPlan(f.ctx.actor,practice,parsePlanEdit({...body,command:{...body.command,scale:{...scale,end:scale.start}}},'invalid-scale',plan.id),f.ctx.now));
+ assert.deepEqual(reopened.rooms,plan.rooms);
+ assert.equal(reopened.measurement,plan.measurement);
+ assert.equal(reopened.geometryRevision,plan.geometryRevision);
+ const invalid=parsePlanEdit({...body,command:{...body.command,openings:[{...opening,end:[5000,10]}]}},'invalid',plan.id);
+ assert.throws(()=>Records.editPlan(f.ctx.actor,practice,invalid,f.ctx.now));
+ assert.throws(()=>parsePlanEdit({...body,command:{...body.command,openings:[{...opening,kind:'unknown'}]}},'invalid',plan.id));
+});
+
+test('wall reviews are idempotent, visible on reopening and independent of the perimeter and listing',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input),original=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const plan=original.planAnalyses[0];
+ const face=(room,index)=>({id:room.id,start:room.points[index],end:room.points[(index+1)%room.points.length]});
+ const wallReviews=[
+  {status:'confirmed',faces:plan.rooms.map(room=>face(room,0)),axis:[[10,10],[10,30]]},
+  {status:'discarded',faces:plan.rooms.map(room=>face(room,1))},
+ ];
+ const {parsePlanEdit}=require('../dist/agency-plans/edit-dto');
+ const body={expectedRevision:2,expectedPlanVersion:1,reason:'Synthetic wall review',command:{operation:'save_plan_graphics',openings:[],alignments:[],wallReviews}};
+ const input=parsePlanEdit(body,'wall-test',plan.id);
+ const saved=Records.editPlan(f.ctx.actor,original,input,f.ctx.now).practice;
+ const reopened=Records.planViews(f.ctx.actor,saved,f.ctx.now).plans[0];
+ assert.deepEqual(reopened.wallReviews,wallReviews);
+ assert.deepEqual(reopened.rooms,plan.rooms);
+ assert.equal(reopened.geometryRevision,1);
+ assert.equal(Records.editPlan(f.ctx.actor,saved,input,f.ctx.now).replay,true);
+ assert.throws(()=>parsePlanEdit({...body,command:{...body.command,operation:'save_listing_details'}},'bad-listing',plan.id));
+ const invalid={...input,key:'invalid-wall',command:{...input.command,wallReviews:[{...wallReviews[0],axis:[[0,0],[5000,30]]}]}};
+ assert.throws(()=>Records.editPlan(f.ctx.actor,original,invalid,f.ctx.now),e=>e.code==='invalid_wall_review');
+ const perimeter=Records.editPlan(f.ctx.actor,saved,parsePlanEdit({expectedRevision:3,expectedPlanVersion:2,reason:'Perimeter',command:{operation:'geometry',view:'perimeter',id:'gross',geometry:rect(0,0,75,50)}},'wall-perimeter',plan.id),f.ctx.now).practice;
+ assert.deepEqual(Records.planViews(f.ctx.actor,perimeter,f.ctx.now).plans[0].wallReviews,wallReviews);
+});
+
+test('graphic plan saves openings and canonical contours atomically, without overwriting the gross outline or scale',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input),original=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const plan=original.planAnalyses[0],room=plan.rooms[0],geometry=rect(7,7,20,30);
+ plan.mainPerimeter=rect(1,1,75,55);
+ const scale={mode:'bar',start:[1,1],end:[1,51],metres:5};
+ plan.quickEstimate={scale,savedAt:f.ctx.now,geometryRevision:1};
+ plan.measurement={geometryRevision:1};
+ const opening={kind:'door',start:[10,7],end:[20,7],fixed:true};
+ const {parsePlanEdit}=require('../dist/agency-plans/edit-dto');
+ const body={expectedRevision:2,expectedPlanVersion:1,reason:'Synthetic graphics review',command:{operation:'save_plan_graphics',alignments:[],openings:[opening],contours:[{id:room.id,geometry}]}};
+ const command=parsePlanEdit(body,'graphic-test',analysis.runId);
+ const result=Records.editPlan(f.ctx.actor,original,command,f.ctx.now).practice.planAnalyses[0];
+ assert.deepEqual(result.rooms[0].points,geometry.points);
+ assert.deepEqual(result.rooms[1],plan.rooms[1]);
+ assert.deepEqual(result.mainPerimeter,plan.mainPerimeter);
+ assert.equal(result.geometryRevision,2);
+ assert.equal(result.measurement,null);
+ assert.deepEqual(result.quickEstimate.scale,scale);
+ assert.deepEqual(result.listingDetails,{geometryRevision:2,openings:[opening],alignments:[]});
+ const overlap={...command,key:'bad-graphic-test',command:{...command.command,contours:[{id:room.id,geometry:rect(7,7,52,30)}]}};
+ assert.throws(()=>Records.editPlan(f.ctx.actor,original,overlap,f.ctx.now),e=>e.code==='region_overlap');
+ assert.deepEqual(original.planAnalyses[0].measurement,{geometryRevision:1});
+});
+
+test('new unresolved room checks retain only a usable analysis point and label',async()=>{
+ const f=ports();
+ f.adapter.ai=async ({phase})=>({
+  proposal:{spaces:[...spaces(),{id:'missing',label:'Ripostiglio',kind:'room',seeds:[[-1,7],[0,0]]}],symbols:[],warnings:[]},
+  inputTokens:10,outputTokens:10,costUSD:.001,requestId:phase,
+ });
+ const analysis=await P.analyzePlan(f.adapter,f.input);
+ assert.ok(analysis.final.issues.some(issue=>issue.id==='missing'&&issue.code==='seed_region_unresolved'));
+ const saved=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const [view]=Records.planViews(f.ctx.actor,saved,f.ctx.now).plans;
+ assert.deepEqual(view.reviewLocations,[{id:'missing',label:'Ripostiglio',point:[0,0]}]);
+ assert.equal(view.rooms.some(room=>room.id==='missing'),false);
+});
+
+test('manual issue location is stored without changing geometry or closing the check',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input);
+ analysis.final.issues.push({id:'legacy',code:'seed_region_unresolved'});
+ const original=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const {parsePlanEdit}=require('../dist/agency-plans/edit-dto');
+ const input=parsePlanEdit({expectedRevision:2,expectedPlanVersion:1,reason:'Compared with document',command:{operation:'locate_issue',issueId:'legacy',code:'seed_region_unresolved',point:[12,14]}},'locate',analysis.runId);
+ const saved=Records.editPlan(f.ctx.actor,original,input,f.ctx.now).practice;
+ const [view]=Records.planViews(f.ctx.actor,saved,f.ctx.now).plans;
+ assert.deepEqual(view.issues.find(issue=>issue.id==='legacy').manualPoint,[12,14]);
+ assert.equal(view.geometryRevision,1);
+ assert.deepEqual(view.rooms,original.planAnalyses[0].rooms);
+ assert.throws(()=>Records.editPlan(f.ctx.actor,original,{...input,command:{...input.command,point:[1000,1000]}},f.ctx.now));
+});

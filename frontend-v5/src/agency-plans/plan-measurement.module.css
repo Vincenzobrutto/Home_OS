@@ -4,16 +4,43 @@
 .mobileHint{display:none}.tableScroll:focus-visible{outline:2px solid #006d80;outline-offset:3px}@media(max-width:500px){.mobileHint{display:block;font-size:13px;color:#45645b}.summary th:first-child{min-width:120px}.summary td{white-space:nowrap}}
 
 .controls[hidden]{display:none}
-.editorToolbar{position:sticky;top:8px;z-index:6;display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:white;border:1px solid #bcd1cf;border-radius:10px;box-shadow:0 3px 10px #19363e0c}
+.editorToolbar{display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:white;border:1px solid #bcd1cf;border-radius:10px;box-shadow:0 3px 10px #19363e0c}
 .editorToolbar button,.vertexTools button,.zoomTools button{font:inherit;border:1px solid #8caeb0;border-radius:7px;background:white;color:#005767;min-height:44px;padding:8px 12px;cursor:pointer}
+.estimateSaveSlot{display:contents}
 .editorToolbar .saveAction{margin-left:auto;background:#006476;color:#fff;border-color:#006476;font-weight:650}
 .editorToolbar button:disabled,.vertexTools button:disabled,.zoomTools button:disabled{opacity:.5;cursor:default}
 .editHint{margin:10px 0;font-size:14px;color:#45676b}
 .vertexTools,.zoomTools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
-.vertexTools{padding:8px;background:#eef6f6;border-radius:8px}.vertexTools button{font-size:14px}
+.vertexTools{
+ flex:1 1 100%;
+ min-width:0;
+ margin:0;
+ padding:6px;
+ background:#eef6f6;
+ border-top:1px solid #bcd1cf;
+ border-radius:6px;
+}
+.vertexTools label{display:flex;align-items:center;gap:6px;margin:0;max-width:100%}
+.vertexTools select{width:auto}
+.vertexTools button{font-size:14px}
 .zoomTools{justify-content:flex-end}.zoomTools output{min-width:48px;text-align:center}
 .workspace :focus-visible{outline:3px solid #df7c00;outline-offset:3px}
 @media(max-width:500px){.editorToolbar{gap:5px;padding:7px}.editorToolbar button{padding:8px;font-size:13px}.editorToolbar .saveAction{margin-left:0}.vertexTools button{font-size:13px}}
 
+.simpleScroll{container-type:inline-size;scroll-margin-top:calc(var(--plan-command-height,0px) + 8px)}
 .simpleScroll svg{min-width:0;margin:0 auto}
-@media(max-width:500px){.editorToolbar button{flex:1 1 calc(50% - 10px);margin:0}.editorToolbar .saveAction{margin:0}}
+.apartmentRoom{fill:#00748635;stroke:#136575;stroke-dasharray:none;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.apartmentPerimeter{fill:#0074860c;stroke:#006476;stroke-width:3;vector-effect:non-scaling-stroke}
+.appurtenance{fill:#7553a222;stroke:#74529b;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.appurtenance[data-selected]{stroke-width:3}
+.mapStage{display:flow-root;width:max-content;min-width:100%;box-sizing:content-box}
+/* Give the map room to pan by half a viewport even at the edges of the sheet. */
+.mapStage[data-review-focus=true]{padding:32.5vh 50cqw}
+@media(max-width:500px){.editorToolbar button{margin:0}.editorToolbar .saveAction{margin:0}}
+.editorToolbar .zoomTools{margin:0 0 0 auto;gap:4px}.editorToolbar .zoomTools button{min-width:44px;padding:8px}
+.editorToolbar .zoomTools+.saveAction,.editorToolbar .zoomTools~.saveAction{margin-left:0}
+@media(max-width:500px){.editorToolbar .zoomTools{margin:0;flex:1 1 100%;justify-content:flex-start}.editorToolbar .zoomTools button{flex:0 0 auto}}
+@media(max-width:500px){.editorToolbar>button{flex:1 1 auto}}
+
+.insertEdge{stroke:transparent;cursor:crosshair}
+.insertEdge:hover,.insertEdge:focus-visible{stroke:#b45b0066}
