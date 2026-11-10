@@ -101,3 +101,5 @@ La revisione mette a fuoco una sola apertura sulla mappa e tiene conferma, modif
 ## Editor grafico dell’annuncio
 
 Il comando guidato di allineamento è sostituito dall’[editor grafico](agency-listing-graphic-editor-20261109.md): vertici e aperture si modificano sulla proposta. Il salvataggio è separato dal computo.
+
+Le conferme di salvataggio della pratica e della planimetria si chiudono con ×. Scorrono insieme alla pagina e lasciano visibili i comandi della mappa.

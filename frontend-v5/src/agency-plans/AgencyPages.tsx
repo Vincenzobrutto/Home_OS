@@ -7,6 +7,7 @@ import {ApiError} from '../api/errors';
 import {agencyPlanApi,type AgencyPractice,type PlansResponse} from './api';
 import {pdfPageCount} from './pdfPageCount';
 import {AgencyPracticePlanWorkspace} from './AgencyPracticePlanWorkspace';
+import {PracticeSaveNotice} from './PracticeSaveNotice';
 import styles from './practice-plan.module.css';
 import {FascicoloChecklist} from './FascicoloChecklist';
 import {SimpleAgencyGiftPanel} from '../agency-gift/SimpleAgencyGiftPanel';
@@ -179,7 +180,7 @@ function AgencyPractice(p:{agencyId:string;practiceId:string}){useDocumentTitle(
    <nav className={area==='planimetria'?styles.areaNavigation+' '+styles.mapNavigation:styles.areaNavigation} aria-label="Aree della pratica">
     {practiceAreas.map(item=><Link key={item.id} to={item.id==='panoramica'?'?':'?area='+item.id} aria-current={area===item.id?'page':undefined}>{item.label}</Link>)}
    </nav>
-   {journey.notice&&<p role="status" className={styles.toast}>{journey.notice}</p>}
+   <PracticeSaveNotice message={journey.notice} onDismiss={journey.dismissNotice}/>
    {journey.error&&<div role="alert"><p>{journey.error}</p>{journey.uncertain&&<button type="button" disabled={journey.busy} onClick={()=>void journey.retry()}>Riprova lo stesso salvataggio</button>}<button type="button" disabled={journey.busy} onClick={journey.refresh}>Ricarica dati della pratica</button></div>}
    {journey.snapshot&&area!=='planimetria'&&<div className={styles.journeyTrack} aria-label="Fasi della vendita">{Object.entries(stageLabels).map(([id,label])=><span key={id} aria-current={journey.snapshot?.state.stage===id?'step':undefined}>{label}</span>)}</div>}
    {area==='panoramica'&&<>

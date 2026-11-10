@@ -48,5 +48,5 @@ export function useJourney(api:Pick<ApiTransport,'callJson'>,root:string,account
   }finally{flight.current=false;if(live.current)setBusy(false);}
  }
  function refresh(){if(flight.current)return;pending.current=null;setUncertain(false);setReload(v=>v+1);}
- return {snapshot,error,notice,busy,save,refresh,retry:()=>pending.current?save(pending.current.body.command):Promise.resolve(false),uncertain};
+ return {snapshot,error,notice,dismissNotice:()=>setNotice(''),busy,save,refresh,retry:()=>pending.current?save(pending.current.body.command):Promise.resolve(false),uncertain};
 }
