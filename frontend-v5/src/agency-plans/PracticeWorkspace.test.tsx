@@ -163,7 +163,7 @@ it('corrects the proposed gross outline on the calculation map and confirms it w
  api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,version:2,mainPerimeter:{points:[[0,0],[9,0],[18,0],[18,18],[0,18]],holes:[]},quickEstimate:{savedAt:'2026-11-09T08:00:00.000Z',geometryRevision:2}}]}});
  render(<AgencyPracticePlanWorkspace api={api} scopeKey="gross-review" embedded/>);
  fireEvent.click(await screen.findByRole('button',{name:'Calcola superfici'}));
- expect(screen.getByRole('img',{name:'Perimetro lordo e pertinenze'})).toBeInTheDocument();
+ expect(await screen.findByRole('img',{name:'Perimetro lordo e pertinenze'})).toBeInTheDocument();
  expect(screen.getByTestId('shape-gross')).toBeInTheDocument();
  expect(screen.getByTestId('context-r')).toBeInTheDocument();
  expect(screen.queryByRole('tab')).not.toBeInTheDocument();

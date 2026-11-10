@@ -34,6 +34,7 @@ export function ListingPlanReview(p:Props){
  const [detectedScale,setDetectedScale]=useState<{metresPerPixel:Point|null;bar?:ScaleReference}|null>(null);
  const [manualDoor,setManualDoor]=useState(false);
  const [readingReference,setReadingReference]=useState(false);
+ const [notice,setNotice]=useState('');
  const factor=manualScale?manualScale.metres/length(manualScale.start,manualScale.end):null;
  const doorScale:Point|null|undefined=factor?[factor,factor]:p.metresPerPixel??detectedScale?.metresPerPixel;
  const calibrating=tool==='scale';
@@ -81,7 +82,6 @@ export function ListingPlanReview(p:Props){
   };
  },[isDragging]);
  const [working,setWorking]=useState(false);
- const [notice,setNotice]=useState('');
  const {zoom,setZoom,scrollRef,mapRef}=usePlanZoom({requireControl:true});
  const drawing=useMemo(()=>{
   if(!p.editPlan)return listingIllustration(p.rooms,{alignments:alignments??[],contours});

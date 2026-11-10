@@ -147,9 +147,10 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
 
 type ListingExportProps={
  rooms:PlanShape[];disabled:boolean;autoPreview?:boolean;details?:ListingDetails;
- review?:{sourceUrl:string;width:number;height:number;scale?:QuickEstimateScale;calibration?:MeasurementConfiguration['calibration'];hints?:ListingOpening[];onSave:(details:ListingPlanDraft)=>void};
+ review?:{sourceUrl:string;width:number;height:number;scale?:QuickEstimateScale;calibration?:MeasurementConfiguration['calibration'];hints?:ListingOpening[]};
+ onSave?:(details:ListingPlanDraft)=>void;
 };
-export function listingScale({scale,calibration,width,height}:NonNullable<ListingExportProps['review']>):Point|null{
+export function listingScale({scale,calibration,width,height}:Pick<NonNullable<ListingExportProps['review']>,'scale'|'calibration'|'width'|'height'>):Point|null{
  const paper=scale?.mode==='paper'?scale:scale?undefined:calibration?.paper;
  if(paper)return paperMetresPerPixel(paper.format,paper.denominator,width,height);
  const reference=scale?.mode==='paper'?null:scale??(calibration?.confirmed?calibration:null);
@@ -160,7 +161,7 @@ export function listingScale({scale,calibration,width,height}:NonNullable<Listin
  return [factor,factor];
 }
 
-export function ListingPlanExport({rooms,disabled,autoPreview=false,details,review}:ListingExportProps) {
+export function ListingPlanExport({rooms,disabled,autoPreview=false,details,review,onSave}:ListingExportProps) {
  const [reviewing,setReviewing]=useState(false);
  // In the listing task the image is drawn on entry: the component is keyed by geometry revision.
  const [initial] = useState(()=>{if(!autoPreview||!rooms.length)return {preview:'',error:false};try{return {preview:listingImage(rooms,details),error:false};}catch{return {preview:'',error:true};}});
@@ -182,9 +183,9 @@ export function ListingPlanExport({rooms,disabled,autoPreview=false,details,revi
   {!autoPreview&&<><h3>Pianta per l’annuncio</h3>
   <button type="button" disabled={disabled} onClick={open}>Anteprima annuncio</button></>}
   {autoPreview&&!rooms.length&&<p>Salva almeno un vano per preparare l’immagine dell’annuncio.</p>}
-  {review&&<button type="button" disabled={disabled} onClick={()=>setReviewing(true)}>Modifica pianta per l’annuncio</button>}
-  {review&&reviewing&&<ListingPlanReview {...review} metresPerPixel={listingScale(review)} scaleLabel={review.scale?'Scala salvata in Calcola superfici':'Scala del computo'} rooms={rooms} saved={details} disabled={disabled}
-   onClose={()=>setReviewing(false)} onApply={draft=>{review.onSave(draft);setReviewing(false);}}/>}
+  {review&&onSave&&<button type="button" disabled={disabled} onClick={()=>setReviewing(true)}>Modifica pianta per l’annuncio</button>}
+  {review&&onSave&&reviewing&&<ListingPlanReview {...review} metresPerPixel={listingScale(review)} scaleLabel={review.scale?'Scala salvata in Calcola superfici':'Scala del computo'} rooms={rooms} saved={details} disabled={disabled}
+   onClose={()=>setReviewing(false)} onApply={draft=>{onSave(draft);setReviewing(false);}}/>}
   {error&&<p role="alert">Impossibile creare l’immagine della planimetria.</p>}
   {preview&&<div>
    <p>{rooms.length} {rooms.length===1?'vano salvato':'vani salvati'}. Controlla che la pianta mostri tutti gli ambienti da pubblicare.</p>

@@ -62,8 +62,8 @@ function Workspace(p:WorkspaceProps){
  const excludedIds=candidateChoices.key===proposalKey?candidateChoices.excluded:[];
  const locked=!!p.readOnly||busy||!!pending||conflict;
  function refresh(){setQuickScale(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setBuilder(null);setPending(null);setConflict(false);setError('');setNotice('');setLoading(true);setReload(v=>v+1);}
- async function send(request:Pending){setBusy(true);setError('');try{const r=await p.api.edit(request.id,request.body,request.key);if(!alive.current)return;setData(v=>v?{...v,plans:carryIssueNumbers(r.plans,v.plans)}:v);setPending(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setReason('');setNotice(r.replay?'Salvataggio già ricevuto dal server.':request.body.command.operation==='save_quick_estimate'?'Stima salvata nella pratica.':'Modifiche salvate nella pratica.');p.onSaved?.();return true;}catch(e){if(e instanceof ApiError&&e.status===422){setPending(null);setError('Controlla scala, contorni e conferme: nessuna modifica è stata salvata.');}else failure(e);return false;}finally{if(alive.current)setBusy(false);}}
- function save(command:Record<string,unknown>,reviewReason?:string){if(!data||!plan||locked||(showProposal&&command.operation!=='apply_surface_proposal'))return;const editReason=reviewReason||reason.trim()||(command.operation==='measure'?'Calcolo della superficie commerciale':command.operation==='geometry'?'Correzione del contorno sul documento originale':command.operation==='remove_room'?'Vano rimosso durante la revisione grafica':'');if(!editReason){setError('Indica il motivo della modifica.');return;}const request={key:crypto.randomUUID(),id:plan.id,body:{expectedRevision:data.plans.revision,expectedPlanVersion:plan.version,reason:editReason,command}};setPending(request);return send(request);}
+ async function send(request:Pending){setBusy(true);setError('');try{const r=await p.api.edit(request.id,request.body,request.key);if(!alive.current)return;setData(v=>v?{...v,plans:carryIssueNumbers(r.plans,v.plans)}:v);setPending(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setReason('');setNotice(r.replay?'Salvataggio già ricevuto dal server.':request.body.command.operation==='save_quick_estimate'?'Stima salvata nella pratica.':'Modifiche salvate nella pratica.');if(request.body.command.operation==='save_plan_graphics')setGraphics(false);p.onSaved?.();}catch(e){if(e instanceof ApiError&&e.status===422){setPending(null);setError('Controlla scala, contorni e conferme: nessuna modifica è stata salvata.');}else failure(e);}finally{if(alive.current)setBusy(false);}}
+ function save(command:Record<string,unknown>,reviewReason?:string){if(!data||!plan||locked||(showProposal&&command.operation!=='apply_surface_proposal'))return;const editReason=reviewReason||reason.trim()||(command.operation==='measure'?'Calcolo della superficie commerciale':command.operation==='geometry'?'Correzione del contorno sul documento originale':command.operation==='remove_room'?'Vano rimosso durante la revisione grafica':'');if(!editReason){setError('Indica il motivo della modifica.');return;}const request={key:crypto.randomUUID(),id:plan.id,body:{expectedRevision:data.plans.revision,expectedPlanVersion:plan.version,reason:editReason,command}};setPending(request);void send(request);}
  function change(view:Change['view'],shape:PlanShape){if(locked||showProposal)return;if(draft&&(draft.view!==view||draft.shape.id!==shape.id)){setError('Salva il contorno corrente prima di modificare un altro vano.');return;}setDraft({view,shape});setNotice('');}
  function polygon(initial:PlanShape|null,done:(s:PlanShape)=>void,mode:'polygon'|'segment'='polygon'){if(locked||draft||showProposal)return;setBuilder({initial,mode,done:s=>{setConfigDirty(true);done(s);}});}
  const rooms=plan?.rooms?.map(r=>draft?.view==='rooms'&&draft.shape.id===r.id?draft.shape:r)||[],perimeter=draft?.view==='perimeter'?draft.shape:plan?.mainPerimeter?{...plan.mainPerimeter,id:'gross',label:'Perimetro lordo'}:null;
@@ -97,6 +97,12 @@ function Workspace(p:WorkspaceProps){
  function resolveIssue(issue:{id:string;code:string},resolution:Resolution,reviewReason:string){save({operation:'resolve_issue',issueId:issue.id,code:issue.code,resolution},reviewReason);}
  function adoptProposal(){if(proposal)save({operation:'apply_surface_proposal',proposalDigest:proposal.digest,...(excludedIds.length?{excludedCandidateIds:excludedIds}:{})});}
  function show(id:string,point?:Point,preferSingleHole=false){setFocus(current=>({id,point,preferSingleHole,key:(current?.key??0)+1}));}
+ function saveListing(details:ListingPlanDraft){
+  save({operation:'save_listing_details',...details},'Revisione dettagli della planimetria per annuncio');
+ }
+ function saveGraphics(details:ListingPlanDraft){
+  save({operation:'save_plan_graphics',...details},'Revisione grafica della planimetria');
+ }
  function embeddedPage(){
   if(!data||!plan||!rasterSize||!plan.rooms)return null;
   const issues=plan.issues??[];
@@ -113,11 +119,10 @@ function Workspace(p:WorkspaceProps){
   const tasks=[['draw','Modifica pianta'],['measure','Calcola superfici'],['listing','Pianta per annuncio']] as const;
   const measuring=task==='measure';
   const listingDetails=plan.listingDetails?.geometryRevision===plan.geometryRevision?plan.listingDetails:undefined;
+  const scaleInputs={width:rasterSize.width,height:rasterSize.height,scale:plan.quickEstimate?.scale,calibration:plan.measurementConfiguration?.calibration};
+  const openingHints=plan.openingReviews?.flatMap(({threshold})=>threshold?[{kind:'door' as const,start:threshold.start,end:threshold.end}]:[]);
   const listingReview=sourceUrl?{
-   sourceUrl,width:rasterSize.width,height:rasterSize.height,
-   scale:plan.quickEstimate?.scale,calibration:plan.measurementConfiguration?.calibration,
-   hints:plan.openingReviews?.flatMap(({threshold})=>threshold?[{kind:'door' as const,start:threshold.start,end:threshold.end}]:[]),
-   onSave:(details:ListingPlanDraft)=>save({operation:'save_listing_details',...details},'Revisione dettagli della planimetria per annuncio'),
+   sourceUrl,...scaleInputs,hints:openingHints,
   }:undefined;
   const map=sourceUrl?<PlanMeasurementView
    key={measuring?'commercial':'rooms'}
@@ -152,9 +157,9 @@ function Workspace(p:WorkspaceProps){
    <p className={styles.nextStep} aria-live="polite">{draft&&task==='draw'?'Modifiche da salvare: salva o scarta prima di cambiare attività.':nextStep}</p>
    <div className={styles.planLayout}>
     <div className={styles.planMapColumn}>
-     {task==='draw'&&listingReview&&rooms.length>0&&<button type="button" disabled={locked||switchBlocked||showProposal} onClick={()=>{setError('');setGraphics(true);}}>Apri editor grafico</button>}
-    {task==='draw'&&graphics&&listingReview&&<ListingPlanReview key={plan.id} {...listingReview} editPlan saveError={error} rooms={plan.rooms} saved={listingDetails} metresPerPixel={listingScale(listingReview)} scaleLabel={listingReview.scale?'Scala salvata in Calcola superfici':'Scala del computo'} disabled={locked} onClose={()=>setGraphics(false)} onApply={details=>{void save({operation:'save_plan_graphics',...details},'Revisione grafica della planimetria')?.then(ok=>{if(ok)setGraphics(false);});}}/>}
-    {task==='listing'?<ListingPlanExport key={plan.id+':'+plan.version} rooms={plan.rooms} details={listingDetails} review={listingReview} disabled={locked||!!draft} autoPreview/>:map}
+     {task==='draw'&&sourceUrl&&rooms.length>0&&<button type="button" disabled={locked||switchBlocked||showProposal} onClick={()=>{setError('');setGraphics(true);}}>Apri editor grafico</button>}
+    {task==='draw'&&graphics&&sourceUrl&&<ListingPlanReview key={plan.id} sourceUrl={sourceUrl} width={rasterSize.width} height={rasterSize.height} hints={openingHints} editPlan saveError={error} rooms={plan.rooms} saved={listingDetails} metresPerPixel={listingScale(scaleInputs)} scaleLabel={scaleInputs.scale?'Scala salvata in Calcola superfici':'Scala del computo'} disabled={locked} onClose={()=>setGraphics(false)} onApply={saveGraphics}/>}
+    {task==='listing'?<ListingPlanExport key={plan.id+':'+plan.version} rooms={plan.rooms} details={listingDetails} review={listingReview} onSave={saveListing} disabled={locked||!!draft} autoPreview/>:map}
     </div>
     <aside className={styles.planSide} aria-label={task==='draw'?'Verifiche e correzioni':task==='measure'?'Superfici':'Annuncio'}>
      {task==='draw'&&<>
