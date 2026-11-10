@@ -44,7 +44,7 @@ Il lavoro residuo è ordinato nei [prossimi passi](prossimi-passi.md).
 - Base del ramo comune a inizio inventario `cfff252`. I sei commit della PR 83, da `64ee004` a `9edb30d`, sono antenati della PR 84.
 
 - Pubblicazione Agenzie `9fd85ca`. Backend 955/955, frontend mock e fixture 2.257/2.257, database 857/857, HTTP 54/54, riavvio 2/2. Typecheck, lint e build superati. Il test Condivisione falliva anche sulla base comune per il caricamento iniziale della scheda documento. Il test ora precarica il modulo, con asserzioni e timeout invariati. La prima suite DB sotto carico ha raggiunto il limite del runner e segnalato un errore Gift. La ripetizione isolata e la suite completa eseguita da sola sono verdi. I cluster temporanei sono stati arrestati.
-- GitHub mostra la PR 81 integrata. Le PR 82–84 puntano ancora ai rispettivi rami intermedi. Le loro punte sono tutte incluse nel ramo comune.
+- GitHub mostra la PR 81 integrata. Le PR 82–84 sono chiuse. Tutti i loro commit e i rapporti sono nel ramo comune e i rami originali restano disponibili.
 
 ### Pull request precedenti
 
