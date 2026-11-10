@@ -2,8 +2,8 @@ import {useEffect,useMemo,useRef,useState,type KeyboardEvent,type MouseEvent,typ
 import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
 import type {ListingDetails,ListingOpening,ListingPlanDraft} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
-import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDoorOpposite,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening,placeScaledListingDoor,suggestInternalWallThickness} from './listingGeometry';
-import {detectListingOpenings,distinctOpenings} from './listingOpeningDetection';
+import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDoorOpposite,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening,placeScaledListingDoor,proposeSharedPlanWall,suggestInternalWallThickness} from './listingGeometry';
+import {detectListingOpenings,distinctOpenings,readListingRaster} from './listingOpeningDetection';
 import type {ScaleReference} from './scaleDetection';
 import {listingRoomFill} from './listingStyle';
 import styles from './practice-plan.module.css';
@@ -27,7 +27,7 @@ export function ListingPlanReview(p:Props){
  const [rows,setRows]=useState<Row[]>(()=>p.saved?.openings.map(opening=>({opening,confirmed:true}))??[]);
  const [roomId,setRoom]=useState('');
  const [selected,setSelected]=useState(-1);
- const [tool,setTool]=useState<'select'|'scale'|ListingOpening['kind']>('select');
+ const [tool,setTool]=useState<'select'|'scale'|'wall'|ListingOpening['kind']>('select');
  const [referencePoints,setReferencePoints]=useState<Point[]>([]);
  const [referenceMetres,setReferenceMetres]=useState('');
  const [manualScale,setManualScale]=useState<Draft['scale']>();
@@ -35,6 +35,7 @@ export function ListingPlanReview(p:Props){
  const [manualDoor,setManualDoor]=useState(false);
  const [readingReference,setReadingReference]=useState(false);
  const [notice,setNotice]=useState('');
+ const [wallProposal,setWallProposal]=useState<ReturnType<typeof proposeSharedPlanWall>>(null);
  const factor=manualScale?manualScale.metres/length(manualScale.start,manualScale.end):null;
  const doorScale:Point|null|undefined=factor?[factor,factor]:p.metresPerPixel??detectedScale?.metresPerPixel;
  const calibrating=tool==='scale';
@@ -115,6 +116,7 @@ export function ListingPlanReview(p:Props){
   viewport.scrollTop+=screen.y-box.top-viewport.clientHeight/2;
  }
  async function detect(){
+  if(tool==='wall')return;
   setWorking(true);setNotice('');
   try{
    const candidates=await detectListingOpenings(p.sourceUrl,p.editPlan?drawing:listingDrawing(p.rooms),p.hints??[]);
@@ -132,7 +134,7 @@ export function ListingPlanReview(p:Props){
   setRows(current=>current.map((row,i)=>i===index?{...row,opening}:row));
  }
  function add(event:MouseEvent){
-  if(busy||readingScale||tool==='select')return;
+  if(busy||readingScale||tool==='select'||tool==='wall')return;
   const point=position(event);
   if(!point)return;
   if(tool==='scale'){
@@ -236,12 +238,41 @@ export function ListingPlanReview(p:Props){
  function activate(event:KeyboardEvent<SVGElement>,select:()=>void){if(event.key==='Enter'||event.key===' '){event.preventDefault();select();}}
  function chooseRoom(id:string){if(tool==='select'&&!busy){setRoom(id);setSelected(-1);setNotice('');}}
  function pickTool(next:typeof tool){
+  if(wallProposal)return;
   if(next==='scale'){setReferencePoints([]);setReferenceMetres('');setZoom(1);}
-  setManualDoor(false);setTool(next);setStart(null);setNotice('');if(next!=='select'){setRoom('');setSelected(-1);}}
+  setManualDoor(false);setTool(next);setStart(null);setNotice('');if(next!=='select'&&next!=='wall'){setRoom('');setSelected(-1);}}
  function applyReference(){
   if(!validReference)return;
   setManualScale({mode:'manual',start:referencePoints[0]!,end:referencePoints[1]!,metres:realMetres});
   pickTool('door');
+ }
+ async function reviewWall(index:number){
+  if(busy||wallProposal||!activeRoom)return;
+  setWorking(true);setNotice('Cerco entrambi i bordi sul documento originale…');
+  try{
+   const proposal=proposeSharedPlanWall(drawing,activeRoom.id,index,await readListingRaster(p.sourceUrl));
+   setWallProposal(proposal);
+   setNotice(proposal?'':'Il documento non mostra una correzione affidabile per entrambi i vani. Prova un altro lato.');
+  }catch{setNotice('Impossibile leggere i bordi dal documento originale.');}
+  finally{setWorking(false);}
+ }
+ function acceptWall(){
+  if(!wallProposal||busy)return;
+  const changed=wallProposal.rooms;
+  const next=[...contours.filter(c=>!changed.some(room=>room.id===c.id)),...changed.map(room=>({id:room.id,geometry:{points:room.points,holes:room.holes}}))];
+  if(next.reduce((n,{geometry})=>n+geometry.points.length+geometry.holes.reduce((sum,ring)=>sum+ring.length,0),0)>4096){setNotice('Limite di punti modificabili raggiunto.');return;}
+  setContours(next);
+  setRows(rows.map(row=>{
+   const opening=shownOpening(row);
+   for(const after of changed){
+    const carried=carryListingOpening(opening,drawing.find(room=>room.id===after.id)!,after);
+    if(carried!==opening)return {...row,opening:carried};
+   }
+   return row;
+  }));
+  setWallProposal(null);
+  setTool('select');
+  setNotice('Correzione applicata alla bozza. Premi Salva modifiche alla planimetria per confermarla.');
  }
  function suggestWalls(){
   const suggestion=suggestInternalWallThickness(drawing);
@@ -278,18 +309,24 @@ export function ListingPlanReview(p:Props){
   <h3>{p.editPlan?'Modifica la planimetria':'Modifica pianta per l’annuncio'}</h3>
   {p.saveError&&<p role="alert">{p.saveError}</p>}
   <div className={styles.listingReviewTools}>
-   <button type="button" disabled={busy} aria-pressed={tool==='select'} onClick={()=>pickTool('select')}>Seleziona</button>
-   {(['door','window'] as const).map(kind=><button key={kind} type="button" disabled={busy||rows.length>=100} aria-pressed={tool===kind}
+   <button type="button" disabled={busy||!!wallProposal} aria-pressed={tool==='select'} onClick={()=>pickTool('select')}>Seleziona</button>
+   {(['door','window'] as const).map(kind=><button key={kind} type="button" disabled={busy||tool==='wall'||rows.length>=100} aria-pressed={tool===kind}
     onClick={()=>pickTool(kind)}>{kind==='door'?'Aggiungi porta':'Aggiungi finestra'}</button>)}
-   <button type="button" disabled={busy||isDragging} aria-pressed={calibrating} onClick={()=>pickTool('scale')}>{doorScale?'Cambia scala':'Imposta scala'}</button>
-   <button type="button" disabled={busy} onClick={()=>void detect()}>{working?'Ricerca in corso…':'Cerca porte e finestre'}</button>
-   <button type="button" disabled={busy||tool!=='select'||isDragging} onClick={suggestWalls}>Uniforma muri interni</button>
+   <button type="button" disabled={busy||tool==='wall'||isDragging} aria-pressed={calibrating} onClick={()=>pickTool('scale')}>{doorScale?'Cambia scala':'Imposta scala'}</button>
+   <button type="button" disabled={busy||tool==='wall'} onClick={()=>void detect()}>{working?'Ricerca in corso…':'Cerca porte e finestre'}</button>
+   {p.editPlan?<button type="button" disabled={busy||!activeRoom||tool!=='select'||isDragging} onClick={()=>{setOriginal(true);pickTool('wall');}}>Verifica parete condivisa</button>:<button type="button" disabled={busy||tool!=='select'||isDragging} onClick={suggestWalls}>Uniforma muri interni</button>}
    <label><input type="checkbox" checked={ortho} disabled={busy||!!drag} onChange={e=>setOrtho(e.target.checked)}/> Orto <kbd>Shift</kbd></label>
-   <label><input type="checkbox" checked={original} onChange={e=>setOriginal(e.target.checked)}/> Mostra originale</label>
+   <label><input type="checkbox" checked={original} disabled={tool==='wall'} onChange={e=>setOriginal(e.target.checked)}/> Mostra originale</label>
    <label>Zoom <input aria-label="Zoom pianta" type="range" min="1" max={MAX_PLAN_ZOOM} step=".25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
   </div>
   <div className={styles.listingReviewControls} aria-live="polite">
-   {calibrating?<>
+   {tool==='wall'?<>
+    {wallProposal?<><strong>Proposta per {wallProposal.rooms.map(room=>room.label).join(' e ')}</strong>
+     <span>Confronta i due bordi evidenziati con la tavola originale. Usa la proposta solo se seguono la parete.</span>
+     <button type="button" disabled={busy} onClick={acceptWall}>Usa correzione</button>
+    </>:<span>Seleziona il lato del vano {activeRoom?.label} lungo la parete da verificare.</span>}
+    <button type="button" disabled={busy} onClick={()=>{setWallProposal(null);setTool('select');setNotice('');}}>{wallProposal?'Scarta proposta':'Annulla verifica'}</button>
+   </>:calibrating?<>
     <span>{referencePoints.length===0?'Seleziona il primo punto sul documento originale.':referencePoints.length===1?'Seleziona il secondo punto.':'Indica la distanza reale tra i due punti.'}</span>
     {referencePoints.length===2&&<label>Distanza reale (m)
      <input type="text" inputMode="decimal" value={referenceMetres} onChange={e=>setReferenceMetres(e.target.value)}
@@ -337,15 +374,19 @@ export function ListingPlanReview(p:Props){
     return <text key={room.id} x={(Math.min(...xs)+Math.max(...xs))/2} y={(Math.min(...ys)+Math.max(...ys))/2}
      fontSize={span/45} textAnchor="middle" pointerEvents="none">{room.label}</text>;
    })}
-   {tool==='select'&&activeRoom&&!busy&&(draggedRoom??activeRoom).points.map((a,i,points)=>{
+   {(tool==='select'||tool==='wall')&&activeRoom&&!busy&&!wallProposal&&(draggedRoom??activeRoom).points.map((a,i,points)=>{
     const b=points[(i+1)%points.length]!;
     const subject={room:activeRoom.id,edge:i};
     const draggingWall=drag&&'edge' in drag.subject&&drag.subject.edge===i;
     return <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} strokeWidth="16" vectorEffect="non-scaling-stroke"
-     className={styles.listingWallHit} data-moving={draggingWall?'true':undefined} role="button" tabIndex={0}
+     className={styles.listingWallHit} data-moving={draggingWall||tool==='wall'?'true':undefined} role="button" tabIndex={0}
      aria-label={`Parete ${i+1} · ${activeRoom.label}`}
-     onPointerDown={e=>begin(e,subject)} onKeyDown={e=>arrow(e,mid(a,b),subject)}/>;
+     onPointerDown={e=>begin(e,subject)} onClick={tool==='wall'?()=>void reviewWall(i):undefined}
+     onKeyDown={e=>tool==='wall'?activate(e,()=>void reviewWall(i)):arrow(e,mid(a,b),subject)}/>;
    })}
+   {wallProposal&&<g aria-label="Contorni proposti sulla tavola originale" pointerEvents="none">
+    {wallProposal.sides.map(([a,b],i)=><line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#a34c06" strokeWidth="3" vectorEffect="non-scaling-stroke"/>)}
+   </g>}
    {tool==='select'&&rows.map((row,i)=>{
     const opening=selected===i&&draggedOpening?draggedOpening:previewOpening(row);
     const {start:a,end:b,kind}=opening;
@@ -382,7 +423,7 @@ export function ListingPlanReview(p:Props){
   <div className={styles.listingReviewFooter}>
    <span>{rows.length-pending.length} aperture confermate{pending.length>0?' · le proposte non confermate non compaiono nel PNG':''}</span>
    <button type="button" onClick={p.onClose}>Chiudi</button>
-   <button type="button" disabled={busy||calibrating||!!start||!!drag} onClick={saveDetails}>{p.editPlan?'Salva modifiche alla planimetria':'Salva dettagli per l’annuncio'}</button>
+   <button type="button" disabled={busy||tool==='wall'||calibrating||!!start||!!drag} onClick={saveDetails}>{p.editPlan?'Salva modifiche alla planimetria':'Salva dettagli per l’annuncio'}</button>
   </div>
  </dialog>;
 }

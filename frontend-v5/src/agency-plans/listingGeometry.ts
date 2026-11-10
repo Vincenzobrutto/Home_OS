@@ -345,6 +345,84 @@ function moveObliqueSide(drawing:PlanShape[],room:PlanShape,index:number,normal:
  return changeListingPoints(drawing,room,changes,true);
 }
 
+export function proposeSharedPlanWall(drawing:PlanShape[],roomId:string,index:number,raster:{width:number;height:number;ink:(x:number,y:number,radius:number)=>boolean}){
+ const room=drawing.find(item=>item.id===roomId);
+ if(!room||isAppurtenance(room)||room.kind==='excluded')return null;
+ const edge=edges(room.points)[index];
+ if(!edge)return null;
+ const [a,b]=edge,length=distance(a,b);
+ if(length<20)return null;
+ const direction:Point=[(b[0]-a[0])/length,(b[1]-a[1])/length];
+ const side=Math.sign(signedArea(room.points));
+ const normal:Point=[-direction[1]*side,direction[0]*side];
+ const origin=dot(a,direction),base=dot(a,normal);
+ const candidates=drawing.filter(other=>other!==room&&!isAppurtenance(other)&&other.kind!=='excluded').flatMap(other=>
+  edges(other.points).flatMap(([c,d],edgeIndex)=>{
+   const otherLength=distance(c,d),projection=dot(d,direction)-dot(c,direction);
+   if(otherLength<20||projection*side*Math.sign(signedArea(other.points))>-.99*otherLength)return [];
+   const range=[dot(c,direction)-origin,dot(d,direction)-origin].sort((x,y)=>x-y);
+   const from=Math.max(0,range[0]!),to=Math.min(length,range[1]!);
+   const offsets=[dot(c,normal)-base,dot(d,normal)-base];
+   const gap=-(offsets[0]!+offsets[1]!)/2;
+   if(to-from<Math.max(16,Math.min(length,otherLength)*.6)||offsets.some(offset=>offset>0)||gap<3||gap>Math.min(48,length*.2))return [];
+   const centre=base-gap/2;
+   if([.2,.5,.8].some(t=>{
+    const u=origin+from+(to-from)*t;
+    return drawing.some(item=>item!==room&&item!==other&&insideShape([direction[0]*u+normal[0]*centre,direction[1]*u+normal[1]*centre],item));
+   }))return [];
+   return [{other,edgeIndex,from,to,gap}];
+  })).sort((first,second)=>first.gap-second.gap);
+ const match=candidates[0];
+ if(!match||candidates[1]&&candidates[1].gap<match.gap+2)return null;
+
+ const {other,edgeIndex,from,to,gap}=match;
+ const middle=(from+to)/2;
+ const range=Math.min(10,gap*.4);
+ const boundaryScore=(offset:number,slope:number,inward:number)=>{
+  let hits=0;
+  for(let i=0;i<12;i++){
+   const u=from+(to-from)*(i+1)/13;
+   const v=offset+(u-middle)*slope;
+   const x=a[0]+direction[0]*u+normal[0]*v,y=a[1]+direction[1]*u+normal[1]*v;
+   const ink=(d:number)=>raster.ink(x+normal[0]*d,y+normal[1]*d,0);
+   if(!ink(inward*1.5)&&(ink(-inward*.75)||ink(-inward*1.5))){
+    hits++;
+    if(!ink(inward*.55)&&ink(-inward*.55))hits+=.4;
+   }
+  }
+  return hits;
+ };
+ const fit=(expected:number,slope:number,inward:number)=>{
+  let best={offset:expected,score:0};
+  for(let delta=-Math.floor(range*2)/2;delta<=range;delta+=.5){
+   const offset=expected+delta;
+   const score=boundaryScore(offset,slope,inward)-Math.abs(delta)*.025;
+   if(score>best.score)best={offset,score};
+  }
+  return best;
+ };
+ let best:{slope:number;first:number;second:number;score:number}|null=null;
+ for(const slope of [0,-.01,.01,-.02,.02,-.03,.03,-.04,.04]){
+  const first=fit(0,slope,1),second=fit(-gap,slope,-1);
+  const score=first.score+second.score-Math.abs(slope);
+  if(first.score>=10&&second.score>=10&&first.offset-second.offset>=2&&(!best||score>best.score)){
+   best={slope,first:first.offset,second:second.offset,score};
+  }
+ }
+ if(!best)return null;
+ const factor=Math.hypot(1,best.slope);
+ const fittedNormal:Point=[(normal[0]-direction[0]*best.slope)/factor,(normal[1]-direction[1]*best.slope)/factor];
+ const reference:Point=[a[0]+direction[0]*middle,a[1]+direction[1]*middle];
+ const baseline=dot(reference,fittedNormal);
+ const first=moveObliqueSide(drawing,room,index,fittedNormal,baseline+best.first/factor,range*2);
+ if(!first)return null;
+ const step=drawing.map(item=>item===room?first:item);
+ const second=moveObliqueSide(step,other,edgeIndex,fittedNormal,baseline+best.second/factor,range*2);
+ if(!second||[first,second].some(item=>item.points.some(([x,y])=>x<0||y<0||x>raster.width||y>raster.height)))return null;
+ if([first,second].every((item,i)=>item.points.every((point,j)=>samePoint(point,[room,other][i]!.points[j]!))))return null;
+ return {rooms:[first,second],sides:[edges(first.points)[index]!,edges(second.points)[edgeIndex]!]};
+}
+
 function alignTerraceFrontage(drawing:PlanShape[],span:number,protectedRooms:ReadonlySet<string>){
  const terraces=drawing.filter(room=>room.kind!=='excluded'&&/\bterrazz/i.test(room.label));
  const interior=drawing.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)&&!protectedRooms.has(room.id));

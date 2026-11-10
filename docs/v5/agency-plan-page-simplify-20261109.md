@@ -102,6 +102,8 @@ La revisione mette a fuoco una sola apertura sulla mappa e tiene conferma, modif
 
 Il comando guidato di allineamento è sostituito dall’[editor grafico](agency-listing-graphic-editor-20261109.md): vertici e aperture si modificano sulla proposta. Il salvataggio è separato dal computo.
 
+In Modifica pianta, Verifica parete condivisa confronta due facce con il raster della tavola originale. Se rileva entrambi i bordi, mostra la correzione. Usa correzione la porta nella bozza e Salva modifiche alla planimetria conferma insieme i due contorni. In assenza di riscontro, resta disponibile la correzione manuale.
+
 Quando due vani affacciano sullo stesso lungo lato obliquo del terrazzo, la pianta illustrativa può allineare i fronti alla sua inclinazione. Nella prova Roma, soggiorno, studio e terrazzo condividono un angolo di 6,573 gradi.
 
 Il distacco illustrativo può regolarizzare anche il perimetro esterno dei vani con vuoti interni, che restano protetti dai controlli geometrici. Su Roma, soggiorno–studio misura 6 pixel nei quattro punti controllati; i corridoi restano a 5–6 pixel.

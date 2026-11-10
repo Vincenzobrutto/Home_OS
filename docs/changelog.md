@@ -8,6 +8,8 @@ Pagina Planimetria riorganizzata su una sola mappa (Modifica pianta, Calcola sup
 
 Nelle verifiche collegate a un vano, **Modifica contorno** apre i vertici modificabili sulla stessa mappa.
 
+In Modifica pianta, Verifica parete condivisa confronta due facce con il raster della tavola originale. Se rileva entrambi i bordi, mostra la correzione. Usa correzione la porta nella bozza e Salva modifiche alla planimetria conferma insieme i due contorni. In assenza di riscontro, resta disponibile la correzione manuale.
+
 Quando due vani affacciano sullo stesso lungo lato obliquo del terrazzo, la pianta illustrativa può allineare i fronti alla sua inclinazione. Nella prova Roma, soggiorno, studio e terrazzo condividono un angolo di 6,573 gradi.
 
 Il distacco illustrativo può regolarizzare anche il perimetro esterno dei vani con vuoti interni, che restano protetti dai controlli geometrici. Su Roma, soggiorno–studio misura 6 pixel nei quattro punti controllati; i corridoi restano a 5–6 pixel.

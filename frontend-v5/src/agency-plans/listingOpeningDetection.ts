@@ -14,8 +14,7 @@ export function distinctOpenings(items:ListingOpening[]) {
  return result;
 }
 
-/** Local symbol proposals, sampled from the original aligned raster around the room edges. */
-export async function detectListingOpenings(url:string,rooms:PlanShape[],known:ListingOpening[]) {
+export async function readListingRaster(url:string){
  const image=new Image();
  image.src=url;
  await image.decode();
@@ -26,10 +25,6 @@ export async function detectListingOpenings(url:string,rooms:PlanShape[],known:L
  if(!ctx||canvas.width*canvas.height>4_000_000)throw Error('raster_unavailable');
  ctx.drawImage(image,0,0);
  const {data,width,height}=ctx.getImageData(0,0,canvas.width,canvas.height);
- const bounds=rooms.flatMap(room=>room.points);
- const xs=bounds.map(([x])=>x),ys=bounds.map(([,y])=>y);
- const span=Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
- if(!Number.isFinite(span)||span<30)return distinctOpenings(known);
  const ink=(x:number,y:number,r=1)=>{
   for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
    const col=Math.round(x)+dx,row=Math.round(y)+dy;
@@ -39,6 +34,16 @@ export async function detectListingOpenings(url:string,rooms:PlanShape[],known:L
   }
   return false;
  };
+ return {width,height,ink};
+}
+
+/** Local symbol proposals, sampled from the original aligned raster around the room edges. */
+export async function detectListingOpenings(url:string,rooms:PlanShape[],known:ListingOpening[]) {
+ const {ink}=await readListingRaster(url);
+ const bounds=rooms.flatMap(room=>room.points);
+ const xs=bounds.map(([x])=>x),ys=bounds.map(([,y])=>y);
+ const span=Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
+ if(!Number.isFinite(span)||span<30)return distinctOpenings(known);
  const matches:Array<{opening:ListingOpening;score:number}>=[];
  const interior=rooms.filter(room=>room.kind!=='excluded'&&room.kind!=='balcony'&&!/balcon|terraz|giardin/i.test(room.label));
  for(const room of interior){

@@ -2,9 +2,11 @@ import {fireEvent,render,screen,within} from '@testing-library/react';
 import {afterEach,expect,it,vi} from 'vitest';
 import {ListingPlanReview} from './ListingPlanReview';
 import {detectPlanScale} from './detectPlanScale';
+import {readListingRaster} from './listingOpeningDetection';
 import type {PlanShape} from './PlanMeasurementView';
 
 vi.mock('./detectPlanScale',()=>({detectPlanScale:vi.fn()}));
+vi.mock('./listingOpeningDetection',async importOriginal=>({...await importOriginal<typeof import('./listingOpeningDetection')>(),readListingRaster:vi.fn()}));
 afterEach(()=>{vi.unstubAllGlobals();vi.resetAllMocks();});
 
 function planMap(){
@@ -53,6 +55,36 @@ it('uses the same wall controls on original geometry and keeps listing-only over
  fireEvent.keyDown(within(map).getByRole('button',{name:'Parete 2 · Cucina'}),{key:'ArrowRight'});
  fireEvent.click(screen.getByRole('button',{name:'Salva modifiche alla planimetria'}));
  expect(onApply).toHaveBeenCalledWith({openings:[],alignments:[],contours:[{id:'a',geometry:{points:[[10,10],[91,10],[91,90],[10,90]],holes:[]}}]});
+});
+
+it('checks both faces against source ink and requires review before saving the pair',async()=>{
+ const rooms:PlanShape[]=[
+  {id:'k',label:'Cucina',points:[[10,10],[50,10],[50,90],[10,90]],holes:[]},
+  {id:'b',label:'Bagno',points:[[55,10],[110,10],[110,90],[55,90]],holes:[]},
+ ];
+ vi.mocked(readListingRaster).mockResolvedValueOnce({width:120,height:100,ink:()=>false});
+ vi.mocked(readListingRaster).mockResolvedValue({width:120,height:100,ink:x=>Math.round(x)>=48&&Math.round(x)<=57});
+ const onApply=vi.fn();
+ render(<ListingPlanReview editPlan sourceUrl="/plan.png" width={120} height={100} rooms={rooms}
+  disabled={false} onClose={()=>{}} onApply={onApply}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Cucina · modifica muri'}));
+ fireEvent.click(screen.getByRole('button',{name:'Verifica parete condivisa'}));
+ fireEvent.click(screen.getByRole('button',{name:'Parete 2 · Cucina'}));
+ await screen.findByText(/non mostra una correzione affidabile/);
+ expect(screen.queryByRole('button',{name:'Usa correzione'})).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Parete 2 · Cucina'}));
+ await screen.findByText('Proposta per Cucina e Bagno');
+ const save=screen.getByRole('button',{name:'Salva modifiche alla planimetria'});
+ expect(save).toBeDisabled();
+ expect(screen.getByLabelText('Contorni proposti sulla tavola originale').querySelectorAll('line')).toHaveLength(2);
+ expect(onApply).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'Usa correzione'}));
+ expect(onApply).not.toHaveBeenCalled();
+ fireEvent.click(save);
+ expect(onApply).toHaveBeenCalledWith(expect.objectContaining({contours:[
+  {id:'k',geometry:{points:[[10,10],[48,10],[48,90],[10,90]],holes:[]}},
+  {id:'b',geometry:{points:[[57,10],[110,10],[110,90],[57,90]],holes:[]}},
+ ]}));
 });
 
 it('sets a manual scale on the full original and saves it with the new door',()=>{
