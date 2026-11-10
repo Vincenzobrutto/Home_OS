@@ -553,13 +553,13 @@ export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?
   return blocked?[]:[{a,b,gap}];
  }));
  const clear=pairs.filter(({a,b})=>pairs.filter(pair=>pair.a===a||pair.b===a||pair.a===b||pair.b===b).length===1);
- if(clear.length<2)return null;
- // A long wall can border several rooms. Its gaps inform the reference even when
- // that wall cannot safely be edited as one unambiguous pair.
- const ordered=(protectedRooms?pairs:clear).map(pair=>pair.gap).sort((a,b)=>a-b);
+ const candidates=protectedRooms?pairs:clear;
+ if(candidates.length<2)return null;
+ const ordered=candidates.map(pair=>pair.gap).sort((a,b)=>a-b);
  const lowerMiddle=ordered[Math.floor((ordered.length-1)/2)]!;
  const nominal=protectedRooms&&ordered.length>2?lowerMiddle:(lowerMiddle+ordered[Math.floor(ordered.length/2)]!)/2;
  if(!(nominal>0))return null;
+ if(protectedRooms)return normalizeWallGroups(drawing,faces,pairs,nominal,protectedRooms);
  let result=drawing,adjusted=0;
  const used=new Set<string>();
  // A corner can move once on each axis without undoing the perpendicular correction.
@@ -569,15 +569,14 @@ export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?
   return [prefix+face.index,prefix+end];
  };
  for(const {a,b,gap} of clear){
-  if(protectedRooms?.has(a.id)||protectedRooms?.has(b.id)||gap<EPSILON)continue;
-  if((Math.abs(gap-nominal)<(protectedRooms?EPSILON:.2)&&a.spread+b.spread<.2)||Math.abs(gap-nominal)+(a.spread+b.spread)/2>nominal*(protectedRooms ? .4 : .25)||
+  if((Math.abs(gap-nominal)<.2&&a.spread+b.spread<.2)||Math.abs(gap-nominal)+(a.spread+b.spread)/2>nominal*.25||
      [...keys(a),...keys(b)].some(key=>used.has(key)))continue;
   const delta=(b.offset-a.offset-nominal*Math.sign(b.offset-a.offset))/2;
   const move=(rooms:PlanShape[],face:typeof a,offset:number)=>{
    const room=rooms.find(r=>r.id===face.id)!;
    return changeListingPoints(rooms,room,new Map([face.index,(face.index+1)%room.points.length].map(i=>{
     const point:Point=[...room.points[i]!];point[face.axis]=offset;return [i,point];
-   })),!!protectedRooms);
+   })));
   };
   const first=move(result,a,a.offset+delta);if(!first)continue;
   const step=result.map(room=>room.id===first.id?first:room);
@@ -587,6 +586,74 @@ export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?
   adjusted++;
  }
  return adjusted?{drawing:result,adjusted,nominal}:null;
+}
+
+type WallFace={id:string;index:number;axis:0|1;offset:number;inward:number};
+
+function normalizeWallGroups(drawing:PlanShape[],faces:WallFace[],pairs:Array<{a:WallFace;b:WallFace}>,gap:number,protectedRooms:ReadonlySet<string>){
+ const neighbours=new Map<WallFace,WallFace[]>();
+ for(const {a,b} of pairs){
+  neighbours.set(a,[...(neighbours.get(a)??[]),b]);
+  neighbours.set(b,[...(neighbours.get(b)??[]),a]);
+ }
+ const visited=new Set<WallFace>(),fixedOffsets=new Map<string,number>();
+ let result=drawing,adjusted=0;
+ for(const seed of faces){
+  if(visited.has(seed)||!neighbours.has(seed))continue;
+  const group=[seed];
+  visited.add(seed);
+  for(const face of group){
+   for(const adjacent of neighbours.get(face)??[]){
+    if(visited.has(adjacent))continue;
+    group.push(adjacent);
+    visited.add(adjacent);
+   }
+  }
+  if(group.some(face=>protectedRooms.has(face.id)))continue;
+  // Each facing pair contributes a target centre. The midpoint of their
+  // range limits the largest displacement when several faces share a wall.
+  const centres=group.map(face=>face.offset-face.inward*gap/2);
+  const centre=(Math.min(...centres)+Math.max(...centres))/2;
+  const axis=seed.axis;
+  const changes=new Map<string,Map<number,Point>>();
+  const offsets=new Map<string,number>();
+  let safe=true;
+  for(const face of group){
+   const offset=centre+face.inward*gap/2;
+   const room=result.find(item=>item.id===face.id)!;
+   const updates=changes.get(room.id)??new Map<number,Point>();
+   for(const index of [face.index,(face.index+1)%room.points.length]){
+    const point=room.points[index]!;
+    const key=room.id+':'+axis+':'+index;
+    const previous=offsets.get(key)??fixedOffsets.get(key);
+    if(Math.abs(point[axis]-offset)>gap*.55||(previous!==undefined&&Math.abs(previous-offset)>=EPSILON)){
+     safe=false;
+     break;
+    }
+    offsets.set(key,offset);
+    if(Math.abs(point[axis]-offset)>=EPSILON){
+     const next:Point=[...point];
+     next[axis]=offset;
+     updates.set(index,next);
+    }
+   }
+   if(!safe)break;
+   if(updates.size)changes.set(room.id,updates);
+  }
+  if(!safe)continue;
+  let candidate=result;
+  for(const [id,updates] of changes){
+   const room=candidate.find(item=>item.id===id)!;
+   const changed=changeListingPoints(candidate,room,updates,true);
+   if(!changed){safe=false;break;}
+   candidate=candidate.map(item=>item.id===id?changed:item);
+  }
+  if(!safe)continue;
+  result=candidate;
+  for(const [key,offset] of offsets)fixedOffsets.set(key,offset);
+  if(changes.size)adjusted++;
+ }
+ return adjusted?{drawing:result,adjusted,nominal:gap}:null;
 }
 
 function changeListingPoints(drawing:PlanShape[],room:PlanShape,changes:Map<number,Point>,preserveShared=false){

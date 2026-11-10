@@ -31,11 +31,16 @@ describe('listing illustration',()=>{
   if(saved)outlines[1]!.symbols=[{id:'reviewed-symbol',reason:'Synthetic reviewed detail'}];
   const details=saved?{alignments:[],contours:outlines.map(({id,points,holes})=>({id,geometry:{points,holes}}))}:undefined;
   const before=structuredClone(details);
-  const [living,bath,kitchen]=listingIllustration(outlines,details);
+  const [living,bath,kitchen,bedroom,veranda,cellar]=listingIllustration(outlines,details);
   const vertical=living!.points[6]![0]-bath!.points[1]![0];
   const horizontal=bath!.points[1]![1]-living!.points[6]![1];
   expect(vertical).toBeCloseTo(horizontal,0);
   expect(vertical).toBeCloseTo(kitchen!.points[0]![1]-bath!.points[2]![1],0);
+  expect(vertical).toBeCloseTo(kitchen!.points[0]![1]-living!.points[5]![1],0);
+  expect(vertical).toBeCloseTo(bedroom!.points[0]![0]-living!.points[4]![0],0);
+  expect(vertical).toBeCloseTo(bedroom!.points[0]![0]-kitchen!.points[1]![0],0);
+  expect(vertical).toBeCloseTo(kitchen!.points[0]![0]-veranda!.points[1]![0],0);
+  expect(cellar!.points).toEqual(outlines[5]!.points);
   expect(details).toEqual(before);
  });
 
