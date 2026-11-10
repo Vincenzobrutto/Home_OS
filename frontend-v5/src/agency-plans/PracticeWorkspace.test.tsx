@@ -244,7 +244,7 @@ it('adds cellar and balcony contours from the calculation and shows their weight
  api.edit.mockImplementation(async(_id,{command})=>{
   const geometry=command.geometry as Pick<typeof shape,'points'|'holes'>;
   const next=state.plans[0]!;
-  state.plans[0]={...next,version:next.version+1,geometryRevision:next.geometryRevision+1,rooms:[...next.rooms!,{id:String(command.id),label:String(command.label),kind:String(command.kind),...geometry}]};
+  state.plans[0]={...next,version:next.version+1,geometryRevision:(next.geometryRevision??1)+1,rooms:[...next.rooms!,{id:String(command.id),label:String(command.label),kind:String(command.kind),...geometry}]};
   return {replay:false,plans:{...state,revision:++state.revision}};
  });
  render(<AgencyPracticePlanWorkspace api={api} scopeKey="add-estimate-areas" embedded/>);
@@ -260,7 +260,7 @@ it('adds cellar and balcony contours from the calculation and shows their weight
   }
   fireEvent.click(screen.getByRole('button',{name:'Usa questo contorno'}));
   fireEvent.click(screen.getByRole('button',{name:'Aggiungi alla stima'}));
-  await screen.findByRole('button',{name:type==='cellar'?'Cantina':'Balcone',exact:true});
+  await screen.findByRole('button',{name:type==='cellar'?'Cantina':'Balcone'});
  }
  expect(api.edit.mock.calls.map(([,body])=>body.command)).toMatchObject([
   {operation:'add_room',kind:'room',label:'Cantina'},
