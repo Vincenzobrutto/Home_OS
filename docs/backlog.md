@@ -1,3 +1,5 @@
+> **Storico.** Per lo stato corrente vedi [Stato di Dimora](stato-dimora.md) e [Prossimi passi](prossimi-passi.md).
+
 ## 3 novembre — candidato integrato: continuità della revisione documentale
 
 **Implementati e verificati nel candidato PR79:** rilettura coordinata dei pannelli con soli GET e bozze preservate, fonte autorizzata sulla pagina fisica citata, confronto delle fonti e ruolo storico senza inferire il venditore attuale. Il caso sintetico successione/due eredi/difformità attraversa upload, job, binding, conferma, confronto e note tecniche. Backend935/935, DB/API77/77, frontend completo2163/2163, statici/build e browser desktop/375px verdi, inclusa QA finale della fonte; cluster arrestati. [Report con risultati e tentativi](v5/agency-documents-integration-20261103.md). Il candidato è concluso e l'integrazione nel comune è stata autorizzata tramite PR79; aggiornamento dell'app e provider reale restano separati.

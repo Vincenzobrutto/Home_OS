@@ -1,3 +1,5 @@
+> **Storico.** Per lo stato corrente vedi [Stato di Dimora](stato-dimora.md) e [Prossimi passi](prossimi-passi.md).
+
 ## Fase 0 — terzo invio caffè riuscito, proposta da confermare, 23 ottobre 2026 (Codex)
 
 **Verificato live nel collaudo isolato**: nuovo consenso per una sola precompilazione del PDF anonimizzato caffè ad Anthropic, massimo 0,25 USD. Chiamata riuscita, costo settled **0,038369 USD**, nessun retry; totale storico tre invii 0,115147 USD. Proposti nome breve De’Longhi Rivelia, marca/modello e data ordine 14/06/2026 coerenti con il PDF; totale documento 499 EUR e spedizione zero. **1 documento, 0 oggetti, 0 spese**, bozza AI aperta per il committente. [Esito, confronto e limiti](v5/fase0-coffee-third-attempt-20261023.md).

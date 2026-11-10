@@ -1,3 +1,5 @@
+> **Storico.** Per lo stato corrente vedi [Stato di Dimora](stato-dimora.md) e [Prossimi passi](prossimi-passi.md).
+
 # Product Backlog — Epiche
 
 12 epiche che coprono la visione completa di HomeOS/Dimora (vedi `vision.md`), dallo stato attuale fino a differenziatori a lungo termine. Non tutte sono pianificate: `stato` indica cosa esiste oggi, `dipendenze` cosa serve prima di poter iniziare le epiche non ancora avviate. Per il lavoro operativo non ancora fatto vedi `backlog.md`; per le decisioni già prese vedi `decisions.md`.

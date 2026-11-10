@@ -1,3 +1,5 @@
+> **Storico.** Per lo stato corrente vedi [Stato di Dimora](../stato-dimora.md) e [Prossimi passi](../prossimi-passi.md).
+
 # Dimora — piano di lavoro offline e attuazione, 23 ottobre 2026
 
 Proposta del 23 ottobre 2026, successiva alle correzioni offline Q15, Q22 e copertura Q48. Le durate sono stime di lavoro, non scadenze garantite. Il committente ha poi autorizzato l’attuazione autonoma offline: i cinque blocchi sono attuati nei limiti descritti nel [report di consegna](fase0-night-plan-offline-20261023.md). Nessuna campagna AI o automazione avviata. Le 5–8 ore erano una stima iniziale, non una misura del tempo impiegato. Obiettivo: rendere riconoscibili le estrazioni incomplete, affinare le famiglie documentali, la classificazione di oggetti/impianti e i suggerimenti di ambiente, e preparare una verifica ripetibile prima dell’uso reale.

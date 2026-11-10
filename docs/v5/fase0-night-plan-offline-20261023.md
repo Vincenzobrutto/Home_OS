@@ -1,3 +1,5 @@
+> **Storico.** Per lo stato corrente vedi [Stato di Dimora](../stato-dimora.md) e [Prossimi passi](../prossimi-passi.md).
+
 # Fase 0 — attuazione autonoma del piano offline, 23 ottobre 2026
 
 Attuati i cinque blocchi del [piano](fase0-next-hours-plan-20261023.md) sul branch `codex/fase0-ai-quality-v3`. Nessuna chiamata AI, neppure metadata/conteggi, email o accesso a originali reali. Il codice è verificato offline; **il gate AI storico resta NON SUPERATO**. Nessuna nuova misura di accuratezza del modello è dichiarata e nessun servizio dell’app è stato riavviato o riconfigurato.

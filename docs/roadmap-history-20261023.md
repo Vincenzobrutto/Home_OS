@@ -1,3 +1,5 @@
+> **Storico.** Per lo stato corrente vedi [Stato di Dimora](stato-dimora.md) e [Prossimi passi](prossimi-passi.md).
+
 **Seguito R08:** [protocollo provider separato](v5/fase0-provider-protocol-refactor-20261023.md), prompt/schema e richieste equivalenti; 300 onboarding, 24 qualità, 16 guardie offline. Nessuna nuova chiamata AI.
 
 **Seguito R04:** [conferma transazionale separata per fasi](v5/fase0-confirmation-orchestration-refactor-20261023.md), stessa transazione/ordine/errori; 495/495 HTTP/DB sintetici.

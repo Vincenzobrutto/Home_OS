@@ -1,3 +1,5 @@
+> **Storico.** Per lo stato corrente vedi [Stato di Dimora](stato-dimora.md) e [Prossimi passi](prossimi-passi.md).
+
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
 ## Agenzie — documenti e mappa nel ramo comune, 3 novembre
