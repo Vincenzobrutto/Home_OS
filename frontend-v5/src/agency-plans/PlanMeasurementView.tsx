@@ -76,8 +76,8 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
    const matrix=map.getScreenCTM?.();
    if(matrix){
     const viewport=scroll.getBoundingClientRect();
-    scroll.scrollLeft+=matrix.e+point[0]*matrix.a-viewport.left-scroll.clientWidth/2;
-    scroll.scrollTop+=matrix.f+point[1]*matrix.d-viewport.top-scroll.clientHeight/2;
+    scroll.scrollLeft+=matrix.e+point[0]*matrix.a-viewport.left-scroll.clientLeft-scroll.clientWidth/2;
+    scroll.scrollTop+=matrix.f+point[1]*matrix.d-viewport.top-scroll.clientTop-scroll.clientHeight/2;
    }
   }
   scroll?.scrollIntoView?.({block:'nearest',behavior:'smooth'});
@@ -187,7 +187,9 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
    {!props.readOnly&&<><button type="button" disabled={!selected} aria-pressed={insert} onClick={()=>setInsert(v=>!v)}>Aggiungi punto su un lato</button><button type="button" disabled={vertex===null||ring.length<=3} onClick={remove}>Elimina punto</button><button type="button" disabled={!undo.length} onClick={()=>{const previous=undo.at(-1);if(previous){props.onChange(previous.view,previous.shape);setUndo(u=>u.slice(0,-1));setVertex(null);}}}>Annulla modifica</button></>}
   </div>
   {!props.readOnly&&selected&&removeId===selected.id&&<div role="group" aria-label="Conferma eliminazione vano"><p>Eliminare {selected.label} dalla mappa? Il computo va verificato di nuovo.</p><button type="button" onClick={()=>{setRemoveId(null);props.onRemoveRoom?.(selected);}}>Conferma eliminazione</button><button type="button" onClick={()=>setRemoveId(null)}>Annulla eliminazione</button></div>}
-  <div ref={scrollRef} className={props.simple?styles.scroll+' '+styles.simpleScroll:styles.scroll}><svg ref={mapRef} role="img" aria-label={props.mapLabel??(view==='rooms'?'Contorni dei singoli vani':'Perimetro lordo commerciale')} viewBox={`0 0 ${props.width} ${props.height}`} style={{width:props.simple?`min(${zoom*100}%, ${zoom*65*props.width/props.height}vh)`:`${zoom*100}%`}}
+  <div ref={scrollRef} className={props.simple?styles.scroll+' '+styles.simpleScroll:styles.scroll}>
+   <div className={props.simple?styles.mapStage:undefined} data-review-focus={props.simple&&zoom>1&&issueNumber!==undefined&&!!marker||undefined}>
+   <svg ref={mapRef} role="img" aria-label={props.mapLabel??(view==='rooms'?'Contorni dei singoli vani':'Perimetro lordo commerciale')} viewBox={`0 0 ${props.width} ${props.height}`} style={{width:props.simple?`min(${zoom*100}cqw, ${zoom*65*props.width/props.height}vh)`:`${zoom*100}%`}}
    onPointerMove={moveVertex} onPointerUp={stopDrag} onPointerCancel={stopDrag} onLostPointerCapture={stopDrag}>
    <image href={props.sourceUrl} x="0" y="0" width={props.width} height={props.height}/>
    {showLines&&props.contextShapes?.map(s=><path key={'context-'+s.id} data-testid={`context-${s.id}`} d={path(s)} fill="none" stroke="#7d8f8c" strokeDasharray="5 4" strokeWidth={Math.max(props.width/1200,1)} pointerEvents="none"/>)}
@@ -209,7 +211,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
     <circle data-testid="focus-marker" cx={marker[0]} cy={marker[1]} r={15*markerScale} fill="#a34c06" stroke="white" strokeWidth="2" vectorEffect="non-scaling-stroke"/>
     {issueNumber!==undefined&&<text x={marker[0]} y={marker[1]} textAnchor="middle" dominantBaseline="central" fill="white" fontWeight="700" fontSize={13*markerScale}>{issueNumber}</text>}
    </g>}
-  </svg></div>
+   </svg></div></div>
   {!props.drawingOnly&&!props.simple&&!(props.hideRoomSummary&&view==='rooms')&&<><PlanSurfaceSummary view={view} rooms={props.rooms.filter(r=>!props.excludedCandidateIds?.includes(r.id))} configuration={props.configuration} measurement={props.measurement} measurementsOutdated={props.measurementsOutdated} onSelect={id=>{if(!shapes.some(s=>s.id===id))setView('rooms');setSelection(id);setRingIndex(0);setVertex(null);setInsert(false);}}/>
   <p className={styles.note}>Conferma scala, perimetro e regole sui muri prima del computo. Il risultato è una misura sul documento, non un rilievo certificato.</p></>}
  </section>;

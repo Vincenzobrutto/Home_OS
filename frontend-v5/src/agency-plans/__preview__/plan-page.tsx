@@ -30,6 +30,7 @@ function initialState():PlansResponse{
  const plan:AgencyPlan={id:'synthetic-plan',version:1,status:'needs_review',proof:{sourceId:'synthetic-source',version:1,sha256:'b'.repeat(64),page:1},rasterSize:{width:W,height:H},geometryRevision:1,rooms,mainPerimeter:null,
   ...(scenario==='noproposal'?{}:{perimeterProposal:proposal}),
   issues:[{id:'bagno-simbolo',code:'symbol_unresolved',number:1},{id:'disimpegno',code:'opening_recovery_requires_review',number:2}],balconyCovers:[],measurementConfiguration:null,measurement:null};
+ if(scenario==='fresh')plan.issues?.push({id:'check-edge',code:'seed_region_unresolved',number:3});
  if(scenario==='ready'){plan.mainPerimeter={points:rect(100,120,900,640),holes:[]};plan.issues=[];plan.balconyCovers=[{id:'balcone',cover:'covered'}];plan.version=4;plan.geometryRevision=2;}
  return {revision:plan.version,plans:[plan]};
 }
@@ -69,6 +70,10 @@ function apply(plan:AgencyPlan,command:Record<string,unknown>){
   plan.rooms=[...plan.rooms!,{id:String(command.id),label:String(command.label),kind:String(command.kind),points:geometry.points,holes:geometry.holes}];plan.geometryRevision=(plan.geometryRevision||1)+1;plan.measurement=null;
  }else if(command.operation==='remove_room'){
   plan.rooms=plan.rooms!.filter(r=>r.id!==command.id);plan.balconyCovers=plan.balconyCovers?.filter(c=>c.id!==command.id);plan.geometryRevision=(plan.geometryRevision||1)+1;plan.measurement=null;
+ }else if(command.operation==='locate_issue'){
+  const issue=plan.issues?.find(item=>item.id===command.issueId&&item.code===command.code);
+  if(!issue)throw new ApiError({kind:'http',status:422,code:'invalid_input',message:'Fixture'});
+  issue.manualPoint=structuredClone(command.point) as Point;
  }else if(command.operation==='resolve_issue'){
   plan.issues=plan.issues?.filter(i=>!(i.id===command.issueId&&i.code===command.code));
  }else if(command.operation==='save_quick_estimate'){
