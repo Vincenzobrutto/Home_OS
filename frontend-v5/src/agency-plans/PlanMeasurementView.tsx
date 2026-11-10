@@ -8,11 +8,11 @@ import {PlanSurfaceSummary} from './PlanSurfaceSummary';
 import styles from './plan-measurement.module.css';
 export type Point=[number,number];
 export type PlanShape={kind?:string;id:string;label:string;points:Point[];holes:Point[][];symbols?:Array<{id:string;reason:string;point?:Point}>};
-export type PlanMeasurementProps={scopeKey:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];perimeter:PlanShape|null;issues:string[];hideRoomSummary?:boolean;initialView?:'rooms'|'perimeter';onChange:(view:'rooms'|'perimeter',shape:PlanShape)=>void;onCreatePerimeter:()=>void;readOnly?:boolean;drawingOnly?:boolean;simple?:boolean;onAddRoom?:()=>void;onSaveGeometry?:()=>void;hasUnsavedChanges?:boolean;onRemoveRoom?:(shape:PlanShape)=>void;configuration?:MeasurementConfiguration|null;measurement?:PlanMeasurementReport|null;measurementsOutdated?:boolean;candidateIds?:string[];excludedCandidateIds?:string[];
+export type PlanMeasurementProps={scopeKey:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];perimeter:PlanShape|null;issues:string[];hideRoomSummary?:boolean;initialView?:'rooms'|'perimeter';onChange:(view:'rooms'|'perimeter',shape:PlanShape)=>void;onCreatePerimeter:()=>void;readOnly?:boolean;drawingOnly?:boolean;simple?:boolean;onAddRoom?:()=>void;onSaveGeometry?:()=>void;hasUnsavedChanges?:boolean;draftShapeId?:string;onRemoveRoom?:(shape:PlanShape)=>void;configuration?:MeasurementConfiguration|null;measurement?:PlanMeasurementReport|null;measurementsOutdated?:boolean;candidateIds?:string[];excludedCandidateIds?:string[];
  /** Simple map only: non-interactive outlines for the apartment rooms. */
  contextShapes?:PlanShape[];frameApartment?:boolean;warnIds?:string[];mapLabel?:string;toolbarActions?:ReactNode;toolbarHost?:HTMLElement|null;onDiscard?:()=>void;
  /** Changing `key` selects the shape, brings it into view and marks `point` when known. */
- focus?:{id:string;point?:Point;preferSingleHole?:boolean;key:number;number?:number;wholePage?:boolean}|null};
+ focus?:{id:string;point?:Point;preferSingleHole?:boolean;key:number;number?:number;wholePage?:boolean;frameShapeId?:string}|null};
 const path=(s:PlanShape)=>[s.points,...s.holes].map(p=>'M'+p.map(v=>v.join(',')).join('L')+'Z').join('');
 /** Controlled editor: source URL is supplied only after source authorization; no localStorage or live API side effects. */
 export function PlanMeasurementView(props:PlanMeasurementProps){return <PlanMeasurementEditor key={props.scopeKey} {...props}/>;}
@@ -40,7 +40,8 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
  const accessories=props.rooms.filter(room=>isBalcony(room)||props.configuration?.base==='gross_perimeter'&&!props.configuration.mainRegionIds.includes(room.id));
  const shapes=props.simple?[...(props.perimeter?[props.perimeter]:[]),...props.rooms]:view==='rooms'?props.rooms:[...(props.perimeter?[props.perimeter]:[]),...accessories],selected=shapes.find(s=>s.id===selection)||(props.simple?undefined:shapes[0]),ring=selected?[selected.points,...selected.holes][ringIndex]||selected.points:[];
  const shapeView=selected&&selected.id!==props.perimeter?.id?'rooms':'perimeter';
- function selectShape(id:string){if(props.simple&&props.hasUnsavedChanges&&selected?.id!==id)return;setRemoveId(null);setSelection(id);setRingIndex(0);setVertex(null);setInsert(false);}
+ const draftShapeId=props.draftShapeId??selected?.id;
+ function selectShape(id:string){if(props.simple&&props.hasUnsavedChanges&&draftShapeId!==id)return;setRemoveId(null);setSelection(id);setRingIndex(0);setVertex(null);setInsert(false);}
  function change(next:PlanShape,record=true){if(props.readOnly)return;if(record&&selected)setUndo(u=>[...u.slice(-49),{view:shapeView,shape:structuredClone(selected)}]);props.onChange(shapeView,next);}
  const focusKey=props.focus?.key;
  const [seenFocus,setSeenFocus]=useState<number>();
@@ -51,7 +52,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   else if(target?.number!==undefined)setZoom(current=>Math.max(current,3));
   const targetShape=target&&shapes.find(shape=>shape.id===target.id);
   if(props.frameApartment&&target?.id==='gross'&&!targetShape&&!props.hasUnsavedChanges){setSelection(null);setRemoveId(null);setVertex(null);setInsert(false);}
-  if(targetShape&&!(props.hasUnsavedChanges&&selected?.id!==targetShape.id)){
+  if(targetShape&&!(props.hasUnsavedChanges&&draftShapeId!==targetShape.id)){
    const point=target?.point;
    const holeIndex=point
     ?targetShape.holes.findIndex(points=>insideShape(point,{points,holes:[]}))
@@ -92,7 +93,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   const request=target?`${target.id}:${target.key}`:'apartment';
   const scroll=scrollRef.current,map=mapRef.current;
   if((frame.current?.request===request&&frame.current.complete)||!scroll||!map||!scroll.clientWidth||!scroll.clientHeight)return;
-  const subject=target&&props.rooms.find(room=>room.id===target.id);
+  const subject=target&&props.rooms.find(room=>room.id===(target.frameShapeId??target.id));
   const points=subject?.points??props.perimeter?.points??props.contextShapes?.flatMap(room=>room.points);
   if(!points?.length)return;
   const xs=points.map(([x])=>x),ys=points.map(([,y])=>y);

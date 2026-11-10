@@ -9,6 +9,8 @@ Prossimi passi: prova su pratica reale in browser visibile (OCR barra), test HTT
 
 L’editor per annuncio include Orto e trascinamento di una parete con le aperture agganciate. La correzione dei contorni è ora accessibile dalle verifiche della PR #84. Resta la prova utente sulla stessa pratica.
 
+Gli avvisi di sovrapposizione in Calcola superfici portano alla pertinenza sulla mappa. Il comando Correggi perimetro apre i vertici del lordo nella stessa zona anche mentre quel perimetro è in modifica.
+
 Calcola superfici inquadra prima l’appartamento e distingue i vani interni e il perimetro lordo dalle pertinenze. Il riepilogo esplicita la base di calcolo dell’appartamento, poi mostra pertinenze ponderate e totale. La scala usata è visibile e i controlli sono sotto Modifica scala.
 
 La barra della planimetria resta visibile durante lo scorrimento in Modifica pianta, Calcola superfici e Pianta per annuncio. Nella vista Annuncio include modifica, conferma di completezza e download PNG. Nella finestra dell’editor grafico gli strumenti restano in alto e il salvataggio in basso.

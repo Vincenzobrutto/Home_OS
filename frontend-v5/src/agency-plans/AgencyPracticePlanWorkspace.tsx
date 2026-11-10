@@ -54,7 +54,7 @@ function Workspace(p:WorkspaceProps){
   observer?.observe(commands);
   return ()=>{observer?.disconnect();editor.style.removeProperty('--plan-command-height');};
  },[toolbarHost]);
- const [focus,setFocus]=useState<{id:string;point?:Point;preferSingleHole?:boolean;key:number;issueKey?:string;number?:number;wholePage?:boolean}|null>(null);
+ const [focus,setFocus]=useState<{id:string;point?:Point;preferSingleHole?:boolean;key:number;issueKey?:string;number?:number;wholePage?:boolean;frameShapeId?:string}|null>(null);
  const [candidateChoices,setCandidateChoices]=useState<{key:string;excluded:string[]}>({key:'',excluded:[]});
  const [previewKey,setPreviewKey]=useState(''),[reviewedKey,setReviewedKey]=useState('');
  const [data,setData]=useState<{practice:AgencyPractice;plans:PlansResponse}|null>(null),[loading,setLoading]=useState(true),[reload,setReload]=useState(0),[selected,setSelected]=useState(''),[image,setImage]=useState<{key:string;url:string}|null>(null),[error,setError]=useState(''),[draft,setDraft]=useState<Change|null>(null),[configDirty,setConfigDirty]=useState(false),[builder,setBuilder]=useState<Builder|null>(null),[reason,setReason]=useState(''),[pending,setPending]=useState<Pending|null>(null),[busy,setBusy]=useState(false),[conflict,setConflict]=useState(false),[notice,setNotice]=useState('');
@@ -108,7 +108,7 @@ function Workspace(p:WorkspaceProps){
  }
  function resolveIssue(issue:{id:string;code:string},resolution:Resolution,reviewReason:string){setFocus(null);save({operation:'resolve_issue',issueId:issue.id,code:issue.code,resolution},reviewReason);}
  function adoptProposal(){if(proposal)save({operation:'apply_surface_proposal',proposalDigest:proposal.digest,...(excludedIds.length?{excludedCandidateIds:excludedIds}:{})});}
- function show(id:string,point?:Point,preferSingleHole=false,review?:{issueKey:string;number:number;wholePage?:boolean}){
+ function show(id:string,point?:Point,preferSingleHole=false,review?:{issueKey?:string;number?:number;wholePage?:boolean;frameShapeId?:string}){
   setFocus(current=>({id,point,preferSingleHole,key:(current?.key??0)+1,...review}));
  }
  function locateIssue(issue:{id:string;code:string},issueKey:string,number:number){
@@ -174,7 +174,7 @@ function Workspace(p:WorkspaceProps){
    candidateIds={showProposal?proposal!.coverage?.candidateIds:undefined} excludedCandidateIds={showProposal?excludedIds:undefined}
    issues={[]} focus={focus}
    readOnly={locked||showProposal||configDirty||!!builder}
-   hasUnsavedChanges={!!draft}
+   hasUnsavedChanges={!!draft} draftShapeId={draft?.shape.id}
    onChange={change} onCreatePerimeter={createPerimeter}
    onRemoveRoom={removeRoom}
    onDiscard={()=>{setDraft(null);setError('');}}
@@ -248,6 +248,7 @@ function Workspace(p:WorkspaceProps){
       busy={locked||showProposal||!!builder||manualOpen}
       requestSegment={done=>{if(locked||showProposal)return;setBuilder({initial:null,mode:'segment',done:s=>{if(s.points[0]&&s.points[1])done(s.points[0],s.points[1]);}});}}
       onSave={saveEstimate} onFocus={id=>show(id)}
+      onReviewOverlap={configDirty||draft?.view==='rooms'?undefined:id=>show('gross',undefined,false,{frameShapeId:id})}
       onAddBalcony={p.api.preview?()=>setManualOpen('balcony'):undefined}
       onDrawPerimeter={createPerimeter}
       advanced={<MeasurementForm key={`${plan.id}:${plan.geometryRevision}:${plan.measurementConfiguration?'configured':'empty'}`} rooms={rooms} rasterSize={rasterSize} hasPerimeter={!!plan.mainPerimeter} configuration={plan.measurementConfiguration} needsRecalculation={!!plan.measurementConfiguration&&!plan.measurement} busy={locked||showProposal||!!draft||!!builder} onDirty={()=>setConfigDirty(true)} requestPolygon={(initial,done)=>polygon(initial,done)} requestSegment={done=>polygon(null,s=>{if(s.points[0]&&s.points[1])done(s.points[0],s.points[1]);},'segment')} onSave={configuration=>save({operation:'measure',configuration})}/>}

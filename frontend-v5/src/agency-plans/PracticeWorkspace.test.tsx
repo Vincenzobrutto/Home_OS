@@ -213,6 +213,27 @@ it('corrects the proposed gross outline on the calculation map and confirms it w
  expect(screen.queryByText('Ambienti e superfici nette')).not.toBeInTheDocument();
 });
 
+it('opens the gross vertices from an overlap warning and clears it when the outlines separate',async()=>{
+ const api=port(),state=plans(),plan=state.plans[0]!;
+ plan.rasterSize={width:60,height:60};
+ plan.rooms=[shape,{id:'b',label:'Balcone',kind:'balcony',points:[[10,0],[15,0],[15,10],[10,10]],holes:[]}];
+ plan.mainPerimeter={points:[[0,0],[11,0],[11,10],[0,10]],holes:[]};
+ api.plans.mockResolvedValue(state);
+ render(<AgencyPracticePlanWorkspace api={api} scopeKey="review-overlap" embedded/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Mostra sulla mappa · Balcone'}));
+ expect(screen.getByTestId('shape-b')).toHaveAttribute('data-selected','true');
+ const correct=screen.getByRole('button',{name:'Correggi perimetro · Balcone'});
+ fireEvent.click(correct);
+ expect(screen.getByTestId('shape-gross')).toHaveAttribute('data-selected','true');
+ fireEvent.keyDown(screen.getByRole('button',{name:'Vertice 2'}),{key:'ArrowLeft',shiftKey:true});
+ expect(correct).toBeEnabled();
+ fireEvent.click(correct);
+ fireEvent.keyDown(screen.getByRole('button',{name:'Vertice 3'}),{key:'ArrowLeft',shiftKey:true});
+ expect(screen.queryByText(/Rischio di doppio conteggio: Balcone/)).not.toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'Salva stima'})).toBeEnabled();
+ expect(api.edit).not.toHaveBeenCalled();
+});
+
 it('opens a ready plan on the calculation, with saved balcony cover and sheet scale restored',async()=>{
  const api=port(),state=plans(),plan=state.plans[0]!;
  plan.rasterSize={width:210,height:297};

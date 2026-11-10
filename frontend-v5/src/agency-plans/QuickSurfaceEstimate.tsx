@@ -16,7 +16,7 @@ type Props={
  busy:boolean;selection:ScaleSelection;onSelection:(selection:ScaleSelection)=>void;
  requestSegment:(done:(a:Point,b:Point)=>void)=>void;
  onSave:(payload:QuickEstimateInput)=>void;
- onFocus:(id:string)=>void;onAddBalcony?:()=>void;onDrawPerimeter?:()=>void;
+ onFocus:(id:string)=>void;onReviewOverlap?:(id:string)=>void;onAddBalcony?:()=>void;onDrawPerimeter?:()=>void;
  advanced:ReactNode;
 };
 const number=(n:number)=>n.toLocaleString('it-IT',{maximumFractionDigits:1,minimumFractionDigits:1});
@@ -92,6 +92,7 @@ export function QuickSurfaceEstimate(p:Props){
  });
  const appurtenanceTotal=rows.reduce((sum,row)=>sum+(row.contribution??0),0);
  const missingCover=rows.filter(row=>row.balcony&&!row.type);
+ const overlappingRows=rows.filter(row=>row.overlap);
 
  // What Salva will persist.
  const scalePayload:QuickEstimateScale|undefined=manual&&manual.metres>0?{mode:'manual',start:manual.start,end:manual.end,metres:manual.metres}:bar&&(bar.method==='detected_bar'||bar.method==='saved')?{mode:'bar',start:bar.start,end:bar.end,metres:bar.metres}:usePaper&&!bar&&hasScale?{mode:'paper',format:format as 'A4',denominator:Number(denominator)}:undefined;
@@ -122,7 +123,13 @@ export function QuickSurfaceEstimate(p:Props){
    </dl>
    <p className={styles.muted}>Scala usata · {hasScale?basis:reading?'Lettura del documento…':'Da indicare'}</p>
    {missingCover.length>0&&hasScale&&<p className={styles.muted}>Scegli Coperto o Scoperto per {missingCover.map(row=>row.room.label).join(', ')}: finché manca, il balcone non entra nel totale.</p>}
-   {overlapIds.length>0&&<p role="alert" className={styles.inlineWarning}>Rischio di doppio conteggio: {rows.filter(row=>row.overlap).map(row=>row.room.label).join(', ')} si sovrappone al perimetro lordo. Controlla il perimetro sulla mappa: il contorno a rischio è in arancione.</p>}
+   {overlappingRows.length>0&&<div className={styles.inlineWarning}>
+    <p role="alert">Rischio di doppio conteggio: {overlappingRows.map(row=>row.room.label).join(', ')}. Confronta il bordo blu dell’appartamento con la pertinenza in arancione. Se il bordo entra nella pertinenza, sposta i punti per seguire il filo esterno dei muri.</p>
+    {overlappingRows.map(({room})=><div key={room.id} className={styles.row}>
+     <button type="button" onClick={()=>p.onFocus(room.id)}>Mostra sulla mappa · {room.label}</button>
+     {p.onReviewOverlap&&<button type="button" disabled={p.busy} onClick={()=>p.onReviewOverlap?.(room.id)}>Correggi perimetro · {room.label}</button>}
+    </div>)}
+   </div>}
    <div className={styles.saveRow}>
     <button type="button" className={styles.primaryButton} disabled={p.busy||!dirty||unconfirmedRatio||!!scaleError} onClick={()=>p.onSave({covers:coverPayload,parameters,...(scalePayload?{scale:scalePayload}:{})})}>{p.saved&&!dirty?'Stima salvata':'Salva stima'}</button>
     <p className={styles.muted}>{dirty?(pending.length?'Da salvare: '+pending.join(', ')+'.':'Stima non ancora salvata nella pratica.'):`Stima salvata il ${savedAt}. Si ricalcola dai contorni attuali.`} Stima sul documento, non computo dettagliato né misura certificata.</p>

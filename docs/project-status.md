@@ -9,6 +9,8 @@ Nella PR #84 l’editor grafico è condiviso con **Modifica pianta**. Solo lì i
 
 Claude, ramo `claude/agency-plan-page-20261109` creato dal checkout `work/agency-quick-surfaces-20261105` (include i 6 commit locali di Codex non pubblicati su #83), sopra le modifiche locali già presenti (conservate). Una sola mappa con Modifica pianta / Calcola superfici / Pianta per annuncio; verifiche aperte accanto alla mappa e collegate al vano/punto; riepilogo scala–lordo–pertinenze–totale con Salva stima; balconi Coperto/Scoperto con rischio di doppio conteggio; nuovo comando `save_quick_estimate` (coperture + scala, nessuna migrazione). Verificati: backend agency-plans 133/133, frontend agenzie 99/99 + scala 10/10, typecheck/lint/build, browser sintetico desktop e 375 px. Non verificati: runtime reale, HTTP/DB del nuovo comando, OCR in browser visibile. Commit e PR verso `codex/agency-quick-surfaces-20261105`; nessun merge. [Report e limiti](v5/agency-plan-page-simplify-20261109.md).
 
+Gli avvisi di sovrapposizione in Calcola superfici portano alla pertinenza sulla mappa. Il comando Correggi perimetro apre i vertici del lordo nella stessa zona anche mentre quel perimetro è in modifica.
+
 Calcola superfici inquadra prima l’appartamento e distingue i vani interni e il perimetro lordo dalle pertinenze. Il riepilogo esplicita la base di calcolo dell’appartamento, poi mostra pertinenze ponderate e totale. La scala usata è visibile e i controlli sono sotto Modifica scala.
 
 La barra della planimetria resta visibile durante lo scorrimento in Modifica pianta, Calcola superfici e Pianta per annuncio. Nella vista Annuncio include modifica, conferma di completezza e download PNG. Nella finestra dell’editor grafico gli strumenti restano in alto e il salvataggio in basso.

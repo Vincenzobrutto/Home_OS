@@ -102,6 +102,8 @@ La revisione mette a fuoco una sola apertura sulla mappa e tiene conferma, modif
 
 Il comando guidato di allineamento è sostituito dall’[editor grafico](agency-listing-graphic-editor-20261109.md): vertici e aperture si modificano sulla proposta. Il salvataggio è separato dal computo.
 
+Gli avvisi di sovrapposizione in Calcola superfici portano alla pertinenza sulla mappa. Il comando Correggi perimetro apre i vertici del lordo nella stessa zona anche mentre quel perimetro è in modifica.
+
 Calcola superfici inquadra prima l’appartamento e distingue i vani interni e il perimetro lordo dalle pertinenze. Il riepilogo esplicita la base di calcolo dell’appartamento, poi mostra pertinenze ponderate e totale. La scala usata è visibile e i controlli sono sotto Modifica scala.
 
 La barra della planimetria resta visibile durante lo scorrimento in Modifica pianta, Calcola superfici e Pianta per annuncio. Nella vista Annuncio include modifica, conferma di completezza e download PNG. Nella finestra dell’editor grafico gli strumenti restano in alto e il salvataggio in basso.
