@@ -85,3 +85,9 @@ Fonte finale 5f8a29e: mock 1591/1591 in 153 file, gruppo Spese 79/79 in 7 file, 
 
 
 Push della rifinitura 5b0c2201bf8df3acd7c204e17c7e85f4d7add4f9 verificato con git ls-remote. Main cdbb318 e consolidamento dd52a6a invariati. Albero frontend finale e444e231b4e6c27c863f73e18f754dd4b1997e94 identico alla fonte testata 5f8a29e; i commit successivi aggiornano soltanto documentazione. Worktree pulito al controllo di consegna, nessuna modifica ai worktree altrui. PR #70 aggiornata, ancora aperta: al committente resta la revisione e l’eventuale approvazione del merge e del rilascio.
+
+## 10 novembre 2026 — riallineamento al ramo comune
+
+La PR 70 è stata riallineata al comune dopo Agenzie. I tre conflitti erano nel changelog, nello stato tecnico e nella roadmap. Sono state conservate le voci di entrambi i rami. Il backend e lo schema restano identici al comune.
+
+Il primo gruppo mirato ha evidenziato tre attese fragili nei mock. Le fixture ora preparano le rotte lazy e il test di provenienza aspetta la navigazione, con asserzioni e timeout invariati. Il collaudo browser a 320 px ha evidenziato un overflow della barra superiore. Gli spazi della barra sono stati ridotti fino a 360 px, preservando le dimensioni dei pulsanti. Il collaudo originale è poi passato a 1440, 873, 390 e 320 px. Nessun errore JavaScript, overflow di riga, richiesta esterna o mutazione dopo il seed sintetico. Gruppo Spese, API client e layout Casa 131/131 in 14 file.
