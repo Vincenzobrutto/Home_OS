@@ -47,6 +47,13 @@ Le conferme di salvataggio della pratica e della planimetria si chiudono con ×.
 ## 5 novembre — superfici immediate senza modulo tecnico obbligatorio
 
 Lotto `codex/agency-quick-surfaces-20261105`, seguitoPR82, codice ba984f6 attivo localmente. OCR/pixel locali per barra e scala, formato foglio solo quando necessario, netto per vano e commerciale provvisoria con ipotesi modificabili nei dettagli. Computo rigoroso invariato e facoltativo. 93/93 iniziali e10/10 finali dei moduli modificati, statici/build e browser desktop375 verdi; pratica reale scala1:200 rilevata senza AI esterna/salvataggi. Stima in memoria, non persistita o certificata. [Report](v5/agency-quick-surfaces-20261105.md).
+## 4 novembre — attivazione locale Agenzie e Gift
+
+Abilitati fascicolo Agenzie, link Gift manuale e worker di accettazione su `cfff2527` con un vault separato. Configurazione API soltanto. Verificate le capability con sessione normale, le route protette, lo scanner su file sintetico e i blocchi su AI a pagamento e invio email. [Report](v5/local-common-runtime-20261103.md#4-novembre--agenzie-e-gift-attive-nel-runtime-locale).
+
+## 3 novembre — app locale allineata al comune PR79
+
+Rilasciati backend/frontend cfff252 sulla stessa origine e DB locali, con backup attuale, una migrazione additiva e verifica delle81 tabelle/sessioni e330 originali precedenti. UI autenticata della mappa e controlli runtime verdi; restrizioni su Agenzie/Gift/AI/email e operazioni automatiche conservate, nessuna attivazione dedotta dall'attesa della risposta. [Report](v5/local-common-runtime-20261103.md). Nessun main o deploy pubblico; configurazione operativa Agenzie/Gift distinta dall'installazione del codice.
 
 ## 3 novembre — integrazione della revisione documentale Agenzie
 

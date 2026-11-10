@@ -62,6 +62,13 @@ Seguito richiesto dal committente nel checkout `work/agency-plan-simple-20261105
 Lotto `codex/agency-journey-20261105` nel checkout `work/agency-journey-20261105`, seguito locale della base7128375. Adeguamento ai mockup approvati: elenco pratiche, apertura da incarico con conferma, fascicolo persistito, analisi per passaggi, annuncio e trattativa/stipula; Gift nella consegna. Backend snapshot e UI in questo lotto; nessuna migrazione, modello incarico inventato, AI reale o modifica demo Alessio. Codice `2ed008d`, locale aggiornato e verificato. 148/148 test puri mirati,26/26 API/DB su nuovo cluster r7YmeL arrestato,65/65 interfaccia e25/25 rieseguiti dopo anteprima incarico; typecheck/lint/build verdi. Nuovo browser sintetico pnCbtC: incarico→conferma→fascicolo, richiesta simulata, annuncio/reload e Gift dopo stipula; arresto verificato. Verifica finale reale senza scritture: elenco, lettura locale PDF sintetico e fonte pagina2,375px senza overflow/errori. PostgreSQL preservato, nessuna migrazione o AI reale. [Report e limiti](v5/agency-journey-20261105.md).
 
 Il lotto locale `codex/agency-plan-workflow-20261104` semplifica esito della digitalizzazione, ricalcolo, export annuncio e passaggio alla consegna della stessa pratica. [Flusso e decisioni](v5/agency-plan-workflow-20261104.md).
+## App locale — Agenzie e Gift attive, 4 novembre
+
+Attivate su scelta del committente con la stessa fonte `cfff2527` e un nuovo profilo API. Verificati area Agenzie con sessione esistente, capability Gift, route protette, scanner reale su file sintetico e blocchi AI/email. Un solo worker Gift attivo, frontend e PostgreSQL conservati. Il primo spazio agenzia si crea dall'app. Il link si copia manualmente e richiede un destinatario locale già verificato. [Configurazione, prove e limiti](v5/local-common-runtime-20261103.md#4-novembre--agenzie-e-gift-attive-nel-runtime-locale).
+
+## App locale — versione comune PR79 attiva, 3 novembre
+
+API e frontend aggiornati alla fonte congelata `cfff25277039d39ee47c063b8bee1f4e2160c190` su richiesta del committente. Backup fresco e migrazione solo additiva verificati su 81 tabelle precedenti, sessioni e 330 originali. Quattro nuove tabelle vuote. Build, manifesti, processi, proxy e UI desktop autenticata della mappa verdi. Il rilascio del 3 novembre ha mantenuto i blocchi precedenti in attesa della scelta di configurazione del 4 novembre. [Report, verifiche e limiti](v5/local-common-runtime-20261103.md).
 
 ## Agenzie — documenti e mappa nel ramo comune, 3 novembre
 
