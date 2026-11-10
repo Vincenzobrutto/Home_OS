@@ -9,7 +9,7 @@ Prossimi passi: prova su pratica reale in browser visibile (OCR barra), test HTT
 
 L’editor per annuncio include Orto e trascinamento di una parete con le aperture agganciate. La correzione dei contorni è ora accessibile dalle verifiche della PR #84. Resta la prova utente sulla stessa pratica.
 
-In Modifica pianta, Proponi pareti comuni esegue una sola scansione della tavola e presenta una fascia per ciascun tratto verificabile. Usa correzioni aggiorna la bozza. Salva modifiche alla planimetria conferma i contorni distinti dei vani.
+In Modifica pianta, Proponi pareti comuni distingue i tratti riscontrati sul PDF da quelli da verificare, suggeriti dai contorni contrapposti e indicati con tratteggio. Solo i tratti riscontrati possono modificare la geometria. Dopo la conferma, ogni tratto appare nell’editor come una fascia piena blu petrolio che copre le due linee dei vani. Salva modifiche alla planimetria conferma i contorni distinti dei vani.
 
 Quando due vani affacciano sullo stesso lungo lato obliquo del terrazzo, la pianta illustrativa può allineare i fronti alla sua inclinazione. Nella prova Roma, soggiorno, studio e terrazzo condividono un angolo di 6,573 gradi.
 

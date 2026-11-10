@@ -70,8 +70,11 @@ it('finds both shared walls together and shows a single band per wall before sav
   disabled={false} onClose={()=>{}} onApply={onApply}/>);
  const scan=screen.getByRole('button',{name:'Proponi pareti comuni'});
  fireEvent.click(scan);
- await screen.findByText(/non offre riscontro sufficiente/);
+ await screen.findByText('2 pareti da verificare');
  expect(screen.queryByRole('button',{name:'Usa correzioni'})).not.toBeInTheDocument();
+ expect(screen.getByLabelText('Pareti comuni sulla tavola').querySelectorAll('polygon[stroke-dasharray]')).toHaveLength(2);
+ fireEvent.click(screen.getByRole('button',{name:'Conferma verifica'}));
+ expect(onApply).not.toHaveBeenCalled();
  fireEvent.click(scan);
  await screen.findByText('2 pareti comuni riconosciute');
  const save=screen.getByRole('button',{name:'Salva modifiche alla planimetria'});
@@ -79,6 +82,11 @@ it('finds both shared walls together and shows a single band per wall before sav
  expect(screen.getByLabelText('Pareti comuni sulla tavola').querySelectorAll('polygon')).toHaveLength(2);
  expect(onApply).not.toHaveBeenCalled();
  fireEvent.click(screen.getByRole('button',{name:'Usa correzioni'}));
+ const accepted=screen.getByLabelText('Pareti comuni sulla tavola');
+ expect(accepted).toHaveAttribute('stroke','#005867');
+ expect(accepted).toHaveAttribute('stroke-width','6');
+ expect(accepted).toHaveAttribute('opacity','1');
+ expect(accepted.querySelectorAll('polygon:not([stroke-dasharray])')).toHaveLength(2);
  expect(onApply).not.toHaveBeenCalled();
  fireEvent.click(save);
  expect(onApply).toHaveBeenCalledWith(expect.objectContaining({contours:[

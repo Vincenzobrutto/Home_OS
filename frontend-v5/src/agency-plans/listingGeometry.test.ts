@@ -1,9 +1,23 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
 import {carryListingOpening, changeListingVertex, listingAlignmentGuides, listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, placeScaledListingDoor, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
-import {suggestInternalWallThickness} from './listingGeometry';
+import {proposeSharedPlanWalls, suggestInternalWallThickness} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
+
+it('suggests both portions of a long wall facing two rooms without changing unsupported contours',async()=>{
+ const drawing=[
+  room('corridor',[[10,10],[30,10],[30,100],[10,100]]),
+  room('kitchen',[[32,10],[70,10],[70,43],[32,43]]),
+  room('bathroom',[[32,50],[70,50],[70,100],[32,100]]),
+ ];
+ const result=await proposeSharedPlanWalls(drawing,{width:80,height:110,ink:()=>false});
+ expect(result.rooms).toEqual([]);
+ expect(result.walls).toEqual([]);
+ expect(result.unchecked).toContainEqual([{id:'corridor',edge:1},{id:'kitchen',edge:3}]);
+ expect(result.unchecked).toContainEqual([{id:'corridor',edge:1},{id:'bathroom',edge:3}]);
+ expect(result.unchecked).toHaveLength(3);
+});
 
 describe('listing illustration',()=>{
  it('squares slightly tilted sides and evens comparable interior gaps without moving a balcony',()=>{

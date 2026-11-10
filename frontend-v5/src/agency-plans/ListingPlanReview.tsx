@@ -255,9 +255,10 @@ export function ListingPlanReview(p:Props){
   setWorking(true);setNotice('Cerco le pareti comuni sulla tavola originale…');
   try{
    const proposal=await proposeSharedPlanWalls(drawing,await readListingRaster(p.sourceUrl));
-   setWallProposal(proposal.walls.length?proposal:null);
-   if(proposal.walls.length){setNotice('');}
-   else {setTool('select');setNotice('La tavola non offre riscontro sufficiente per proporre pareti comuni.');}
+   const found=proposal.walls.length+proposal.unchecked.length;
+   setWallProposal(found?proposal:null);
+   if(found){setNotice('');}
+   else {setTool('select');setNotice('Non ho trovato pareti comuni tra i contorni dei vani.');}
   }catch{setTool('select');setNotice('Impossibile leggere i bordi dal documento originale.');}
   finally{setWorking(false);}
  }
@@ -275,10 +276,10 @@ export function ListingPlanReview(p:Props){
    }
    return row;
   }));
-  setSharedWalls(wallProposal.walls);
+  setSharedWalls([...wallProposal.walls,...wallProposal.unchecked]);
   setWallProposal(null);
   setTool('select');
-  setNotice(changed.length?'Correzioni applicate alla bozza. Premi Salva modifiche alla planimetria per confermarle.':'I contorni seguono già le pareti riconosciute sulla tavola.');
+  setNotice(changed.length?'Correzioni applicate alla bozza. Premi Salva modifiche alla planimetria per confermarle.':'Pareti evidenziate sulla mappa. I contorni dei vani sono invariati.');
  }
  function suggestWalls(){
   const suggestion=suggestInternalWallThickness(drawing);
@@ -327,8 +328,10 @@ export function ListingPlanReview(p:Props){
   </div>
   <div className={styles.listingReviewControls} aria-live="polite">
    {tool==='wall'?<>
-    {wallProposal&&<><strong>{wallProposal.walls.length} {wallProposal.walls.length===1?'parete comune riconosciuta':'pareti comuni riconosciute'}</strong>
-     <span>Ogni fascia arancione mostra un muro. Confrontale con la tavola originale prima di confermare.</span>
+    {wallProposal&&<>
+     {wallProposal.walls.length>0&&<strong>{wallProposal.walls.length} {wallProposal.walls.length===1?'parete comune riconosciuta':'pareti comuni riconosciute'}</strong>}
+     {wallProposal.unchecked.length>0&&<strong>{wallProposal.unchecked.length} {wallProposal.unchecked.length===1?'parete da verificare':'pareti da verificare'}</strong>}
+     <span>Confronta le fasce arancioni con l’originale. Le fasce tratteggiate sono suggerite dai contorni e non li modificano.</span>
      <button type="button" disabled={busy} onClick={acceptWall}>{wallProposal.rooms.length?'Usa correzioni':'Conferma verifica'}</button>
      <button type="button" disabled={busy} onClick={()=>{setWallProposal(null);setTool('select');setNotice('');}}>Scarta proposta</button>
     </>}
@@ -390,10 +393,12 @@ export function ListingPlanReview(p:Props){
      onPointerDown={e=>begin(e,subject)} onKeyDown={e=>arrow(e,mid(a,b),subject)}/>;
    })}
    {(wallProposal||sharedWalls.length>0)&&!calibrating&&<g aria-label="Pareti comuni sulla tavola" pointerEvents="none"
-    fill={wallProposal?'#be6618':'#253130'} stroke={wallProposal?'#be6618':'#253130'} opacity={original ? .75 : 1} strokeWidth="2">
-    {(wallProposal?.walls??sharedWalls).map((wall,i)=>{
+    fill={wallProposal?'#be6618':'#005867'} stroke={wallProposal?'#be6618':'#005867'} opacity={wallProposal&&original ? .75 : 1} strokeWidth={wallProposal?2:6}>
+    {(wallProposal?[...wallProposal.walls,...wallProposal.unchecked]:sharedWalls).map((wall,i)=>{
      const band=sharedWallBand(previewDrawing,wall);
-     return band&&<polygon key={i} points={band.map(point=>point.join(',')).join(' ')} vectorEffect="non-scaling-stroke"/>;
+     const unchecked=wallProposal&&i>=wallProposal.walls.length;
+     return band&&<polygon key={i} points={band.map(point=>point.join(',')).join(' ')} vectorEffect="non-scaling-stroke"
+      fill={unchecked?'none':undefined} strokeDasharray={unchecked?'5 3':undefined}/>;
     })}
    </g>}
    {tool==='select'&&rows.map((row,i)=>{

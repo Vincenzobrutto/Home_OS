@@ -348,37 +348,36 @@ function moveObliqueSide(drawing:PlanShape[],room:PlanShape,index:number,normal:
 type PlanWallRaster={width:number;height:number;ink:(x:number,y:number,radius:number)=>boolean};
 type SharedPlanWall=[{id:string;edge:number},{id:string;edge:number}];
 
-function proposeSharedPlanWall(drawing:PlanShape[],roomId:string,index:number,raster:PlanWallRaster){
- const room=drawing.find(item=>item.id===roomId);
- if(!room||isAppurtenance(room)||room.kind==='excluded')return null;
- const edge=edges(room.points)[index];
- if(!edge)return null;
+function sharedWallCandidates(drawing:PlanShape[],room:PlanShape,index:number){
+ if(isAppurtenance(room)||room.kind==='excluded')return [];
+ const edge=edges(room.points)[index]!;
  const [a,b]=edge,length=distance(a,b);
- if(length<20)return null;
+ if(length<12)return [];
  const direction:Point=[(b[0]-a[0])/length,(b[1]-a[1])/length];
  const side=Math.sign(signedArea(room.points));
  const normal:Point=[-direction[1]*side,direction[0]*side];
  const origin=dot(a,direction),base=dot(a,normal);
- const candidates=drawing.filter(other=>other!==room&&!isAppurtenance(other)&&other.kind!=='excluded').flatMap(other=>
+ return drawing.filter(other=>other!==room&&!isAppurtenance(other)&&other.kind!=='excluded').flatMap(other=>
   edges(other.points).flatMap(([c,d],edgeIndex)=>{
    const otherLength=distance(c,d),projection=dot(d,direction)-dot(c,direction);
-   if(otherLength<20||projection*side*Math.sign(signedArea(other.points))>-.99*otherLength)return [];
+   if(otherLength<12||projection*side*Math.sign(signedArea(other.points))>-.985*otherLength)return [];
    const range=[dot(c,direction)-origin,dot(d,direction)-origin].sort((x,y)=>x-y);
    const from=Math.max(0,range[0]!),to=Math.min(length,range[1]!);
    const offsets=[dot(c,normal)-base,dot(d,normal)-base];
    const gap=-(offsets[0]!+offsets[1]!)/2;
-   if(to-from<Math.max(16,Math.min(length,otherLength)*.6)||offsets.some(offset=>offset>0)||gap<3||gap>Math.min(48,length*.2))return [];
+   if(to-from<Math.max(10,Math.min(length,otherLength)*.55)||offsets.some(offset=>offset>0)||gap<1||gap>Math.min(48,(to-from)*.25))return [];
    const centre=base-gap/2;
    if([.2,.5,.8].some(t=>{
     const u=origin+from+(to-from)*t;
     return drawing.some(item=>item!==room&&item!==other&&insideShape([direction[0]*u+normal[0]*centre,direction[1]*u+normal[1]*centre],item));
    }))return [];
-   return [{other,edgeIndex,from,to,gap}];
+   const wall:SharedPlanWall=[{id:room.id,edge:index},{id:other.id,edge:edgeIndex}];
+   return [{other,edgeIndex,from,to,gap,wall,a,direction,normal}];
   })).sort((first,second)=>first.gap-second.gap);
- const match=candidates[0];
- if(!match||candidates[1]&&candidates[1].gap<match.gap+2)return null;
+}
 
- const {other,edgeIndex,from,to,gap}=match;
+function fitSharedPlanWall(drawing:PlanShape[],room:PlanShape,index:number,raster:PlanWallRaster,match:ReturnType<typeof sharedWallCandidates>[number]){
+ const {other,edgeIndex,from,to,gap,wall,a,direction,normal}=match;
  const middle=(from+to)/2;
  const range=Math.min(10,gap*.4);
  const boundaryScore=(offset:number,slope:number,inward:number)=>{
@@ -408,7 +407,7 @@ function proposeSharedPlanWall(drawing:PlanShape[],roomId:string,index:number,ra
  for(const slope of [0,-.01,.01,-.02,.02,-.03,.03,-.04,.04]){
   const first=fit(0,slope,1),second=fit(-gap,slope,-1);
   const score=first.score+second.score-Math.abs(slope);
-  if(first.score>=10&&second.score>=10&&first.offset-second.offset>=2&&(!best||score>best.score)){
+  if(first.score>=8&&second.score>=8&&first.offset-second.offset>=2&&(!best||score>best.score)){
    best={slope,first:first.offset,second:second.offset,score};
   }
  }
@@ -422,7 +421,6 @@ function proposeSharedPlanWall(drawing:PlanShape[],roomId:string,index:number,ra
  const step=drawing.map(item=>item===room?first:item);
  const second=moveObliqueSide(step,other,edgeIndex,fittedNormal,baseline+best.second/factor,range*2);
  if(!second||[first,second].some(item=>item.points.some(([x,y])=>x<0||y<0||x>raster.width||y>raster.height)))return null;
- const wall:SharedPlanWall=[{id:room.id,edge:index},{id:other.id,edge:edgeIndex}];
  return {rooms:[first,second],wall};
 }
 
@@ -434,7 +432,11 @@ export async function proposeSharedPlanWalls(drawing:PlanShape[],raster:PlanWall
   await new Promise(resolve=>setTimeout(resolve,0));
   for(let edge=0;edge<room.points.length;edge++){
    if(visited.has(JSON.stringify([room.id,edge])))continue;
-   const proposal=proposeSharedPlanWall(result,room.id,edge,raster);
+   const current=result.find(item=>item.id===room.id)!;
+   const candidates=sharedWallCandidates(result,current,edge);
+   const match=candidates[0];
+   const ambiguous=match&&candidates.slice(1).some(other=>other.gap<match.gap+2&&Math.min(match.to,other.to)>Math.max(match.from,other.from));
+   const proposal=match&&!ambiguous&&fitSharedPlanWall(result,current,edge,raster,match);
    if(!proposal)continue;
    // A long face can be reused by another room if its fitted edge stays fixed.
    if(proposal.wall.some(({id,edge})=>{
@@ -449,7 +451,32 @@ export async function proposeSharedPlanWalls(drawing:PlanShape[],raster:PlanWall
   }
  }
  const rooms=result.filter((room,i)=>room.points.some((point,j)=>!samePoint(point,drawing[i]!.points[j]!)));
- return {walls,rooms};
+ // Faint scans and openings can hide the ink on a wall. Offer opposing
+ // room faces for visual review, without changing their measured contours.
+ const occupied=new Map<string,[number,number][]>();
+ const reserve=(wall:SharedPlanWall,required:boolean)=>{
+  const band=sharedWallBand(result,wall);
+  if(!band)return false;
+  const spans=wall.map(({id,edge})=>{
+   const side=edges(result.find(room=>room.id===id)!.points)[edge]!;
+   const fractions=band.slice(wall[0].id===id?0:2,wall[0].id===id?2:4).map(point=>fraction(point,side));
+   return {key:JSON.stringify([id,edge]),from:Math.min(...fractions),to:Math.max(...fractions)};
+  });
+  if(!required&&spans.some(({key,from,to})=>occupied.get(key)?.some(([a,b])=>Math.min(b,to)-Math.max(a,from)>EPSILON)))return false;
+  for(const {key,from,to} of spans)occupied.set(key,[...(occupied.get(key)??[]),[from,to]]);
+  return true;
+ };
+ for(const wall of walls)reserve(wall,true);
+ const unchecked:SharedPlanWall[]=[];
+ for(const room of result){
+  await new Promise(resolve=>setTimeout(resolve,0));
+  for(let edge=0;edge<room.points.length;edge++){
+   for(const {wall} of sharedWallCandidates(result,room,edge)){
+    if(reserve(wall,false))unchecked.push(wall);
+   }
+  }
+ }
+ return {walls,unchecked,rooms};
 }
 
 /** Fill only the overlapping run, leaving the turns at the ends visible. */
