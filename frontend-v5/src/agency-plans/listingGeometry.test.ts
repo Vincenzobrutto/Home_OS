@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
 import {carryListingOpening, changeListingVertex, listingAlignmentGuides, listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, placeScaledListingDoor, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
-import {joinedSharedWallBands, listingFacadeFill, listingFacadeOpposite, listingPerimeterBacking, listingPublicationSegments, listingPublicationWalls, proposeSharedPlanWalls, recordWallReview, suggestInternalWallThickness} from './listingGeometry';
+import {joinedSharedWallBands, listingFacadeFill, listingFacadeOpposite, listingPerimeterBacking, listingPerimeterCorners, listingPublicationSegments, listingPublicationWalls, proposeSharedPlanWalls, recordWallReview, suggestInternalWallThickness} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -145,6 +145,11 @@ it('fills the rim against an oblique veranda beside a step and preserves the ope
  const step=backing.find(({projected})=>projected.every(([x])=>x===2));
  expect(step?.projected).toEqual([[2,55],[2,35]]);
  expect(step?.inner[0]?.[0]).toBeGreaterThan(17);
+ const corner=listingPerimeterCorners(outline,backing).find(polygon=>polygon[0]![0]===4&&polygon[0]![1]===96);
+ expect(corner?.slice(0,3)).toEqual([[4,96],[4,80],[22,80]]);
+ expect(corner?.[3]?.[1]).toBe(78);
+ expect(corner?.[4]?.[1]).toBe(96);
+ expect(corner?.[4]?.[0]).toBeCloseTo(21.657,3);
  const opening={kind:'window' as const,start:[16,45] as Point,end:[17,51] as Point};
  expect(listingFacadeOpposite(opening,backing)?.[0]?.[0]).toBe(2);
  const far=room('room',[[30,15],[48,15],[48,80],[30,80]]);

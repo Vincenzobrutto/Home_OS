@@ -4,7 +4,7 @@ import type {ListingDetails,ListingOpening,ListingPlanDraft,QuickEstimateScale,W
 import type {PlanShape,Point} from './PlanMeasurementView';
 import {insideShape,isBalcony,paperMetresPerPixel} from './scaleDetection';
 import type {MeasurementConfiguration} from './measurement-types';
-import {listingDoorOpposite, listingFacadeFill, listingFacadeOpposite, listingIllustration, listingOpeningOnDrawing, listingPerimeterBacking, listingPublicationSegments, listingPublicationWalls, listingWalls, wallReviewReference} from './listingGeometry';
+import {listingDoorOpposite, listingFacadeFill, listingFacadeOpposite, listingIllustration, listingOpeningOnDrawing, listingPerimeterBacking, listingPerimeterCorners, listingPublicationSegments, listingPublicationWalls, listingWalls, wallReviewReference} from './listingGeometry';
 import {ListingPlanReview} from './ListingPlanReview';
 import styles from './practice-plan.module.css';
 
@@ -104,7 +104,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
   context.save();
   context.clip(outlinePath(gross),'evenodd');
   const mass=new Path2D();
-  const facadePolygons=[...listingFacadeFill(facadeWalls),...(wallLayout?.flatMap(part=>part.corners)??[]),...backing.map(({inner,projected})=>[...inner,projected[1],projected[0]])];
+  const facadePolygons=[...listingFacadeFill(facadeWalls),...(wallLayout?.flatMap(part=>part.corners)??[]),...backing.map(({inner,projected})=>[...inner,projected[1],projected[0]]),...listingPerimeterCorners(gross,backing)];
   for(const polygon of facadePolygons){
    const area=polygon.reduce((sum,[x,y],i)=>{
     const [nextX,nextY]=polygon[(i+1)%polygon.length]!;

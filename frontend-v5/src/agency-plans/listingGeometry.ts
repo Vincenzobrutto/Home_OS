@@ -625,6 +625,7 @@ export function listingPublicationWalls(rooms:PlanShape[],reviews:WallReview[],p
 }
 
 type FacadeBand={outer:Segment;inner:Segment;projected:Segment};
+type PerimeterBacking=FacadeBand&{roomId:string};
 
 export function listingPublicationSegments(room:PlanShape,original:PlanShape|undefined,covered:Map<string,Segment[]>,perimeter?:PlanShape,rooms:PlanShape[]=[]){
  const outside=perimeter&&!isAppurtenance(room)&&room.kind!=='excluded'?[perimeter.points,...perimeter.holes].flatMap(edges):[];
@@ -738,8 +739,8 @@ export function listingFacadeFill(walls:FacadeBand[]){
 
 /** Close the rim against the nearest room even when the outer edge has a
  * short step or the room edge is too oblique for the usual facade pairing. */
-export function listingPerimeterBacking(perimeter:PlanShape,rooms:PlanShape[]):FacadeBand[]{
- const faces=rooms.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>edges(room.points));
+export function listingPerimeterBacking(perimeter:PlanShape,rooms:PlanShape[]):PerimeterBacking[]{
+ const faces=rooms.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>edges(room.points).map(edge=>({edge,roomId:room.id})));
  const points=perimeter.points;
  const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(p=>p[axis]))-Math.min(...points.map(p=>p[axis]))));
  const limit=Math.min(36,Math.max(18,span*.045));
@@ -751,7 +752,7 @@ export function listingPerimeterBacking(perimeter:PlanShape,rooms:PlanShape[]):F
    const direction:Point=[(b[0]-a[0])/length,(b[1]-a[1])/length];
    const normal:Point=[-direction[1]*winding,direction[0]*winding];
    const origin=dot(a,direction),base=dot(a,normal);
-   const candidates=faces.flatMap(([start,end])=>{
+   const candidates=faces.flatMap(({edge:[start,end],roomId})=>{
     const u=dot(start,direction)-origin,v=dot(end,direction)-origin;
     if(Math.abs(v-u)<EPSILON)return [];
     let from=Math.max(0,Math.min(u,v)),to=Math.min(length,Math.max(u,v));
@@ -764,7 +765,7 @@ export function listingPerimeterBacking(perimeter:PlanShape,rooms:PlanShape[]):F
      from=Math.max(from,Math.min(zero,max));
      to=Math.min(to,Math.max(zero,max));
     }
-    return to-from>EPSILON?[{from,to,depth:(position:number)=>Math.max(0,first+slope*(position-u))}]:[];
+    return to-from>EPSILON?[{roomId,from,to,depth:(position:number)=>Math.max(0,first+slope*(position-u))}]:[];
    });
    const breaks=[...new Set(candidates.flatMap(({from,to})=>[from,to]))].sort((x,y)=>x-y);
    const point=(u:number,v:number):Point=>[a[0]+direction[0]*u+normal[0]*v,a[1]+direction[1]*u+normal[1]*v];
@@ -773,10 +774,34 @@ export function listingPerimeterBacking(perimeter:PlanShape,rooms:PlanShape[]):F
     const nearest=candidates.reduce<(typeof candidates)[number]|null>((best,next)=>
      next.from<=from&&next.to>=to&&(!best||next.depth(middle)<best.depth(middle))?next:best,null);
     if(!nearest||nearest.depth(middle)<EPSILON)return [];
-    return [{outer:[a,b],projected:[point(from,0),point(to,0)],inner:[point(from,nearest.depth(from)),point(to,nearest.depth(to))]}];
+    return [{roomId:nearest.roomId,outer:[a,b],projected:[point(from,0),point(to,0)],inner:[point(from,nearest.depth(from)),point(to,nearest.depth(to))]}];
    });
   });
  });
+}
+
+/** Close the missing corner between two nearby wall strips of the same room. */
+export function listingPerimeterCorners(perimeter:PlanShape,backing:PerimeterBacking[]){
+ const bySide=new Map<string,PerimeterBacking[]>();
+ for(const band of backing){
+  const key=JSON.stringify(band.outer);
+  bySide.set(key,[...(bySide.get(key)??[]),band]);
+ }
+ return [perimeter.points,...perimeter.holes].flatMap(ring=>ring.flatMap((vertex,i)=>{
+  const previous=bySide.get(JSON.stringify([ring[(i+ring.length-1)%ring.length],vertex]))??[];
+  const next=bySide.get(JSON.stringify([vertex,ring[(i+1)%ring.length]]))??[];
+  const candidates=previous.flatMap(before=>next.flatMap(after=>{
+   if(before.roomId!==after.roomId)return [];
+   const start=before.projected[1],end=after.projected[0],innerStart=before.inner[1],innerEnd=after.inner[0];
+   const depthBefore=distance(start,innerStart),depthAfter=distance(end,innerEnd);
+   const reachBefore=distance(vertex,start),reachAfter=distance(vertex,end);
+   if(depthBefore<EPSILON||depthAfter<EPSILON||
+    reachBefore>depthAfter*1.25+2||reachAfter>depthBefore*1.25+2||
+    distance(innerStart,innerEnd)>Math.max(4,Math.min(depthBefore,depthAfter)*.5))return [];
+   return [{reach:reachBefore+reachAfter,points:[vertex,end,innerEnd,innerStart,start]}];
+  })).sort((a,b)=>a.reach-b.reach);
+  return candidates.length?[candidates[0]!.points]:[];
+ }));
 }
 
 export function listingFacadeOpposite(opening:ListingOpening,walls:FacadeBand[]):Segment|null{
