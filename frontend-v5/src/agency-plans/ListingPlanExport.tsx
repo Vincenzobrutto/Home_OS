@@ -10,6 +10,9 @@ import styles from './practice-plan.module.css';
 
 import {LISTING_DRAWING_PIXELS,LISTING_OUTER_STROKE,LISTING_PARTITION_STROKE,listingRoomFill} from './listingStyle';
 
+type PreviewOpening={index:number;kind:ListingOpening['kind'];start:Point;end:Point;far?:readonly [Point,Point]};
+type ListingImage={url:string;width:number;height:number;openings:PreviewOpening[]};
+
 function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShape,reviews:WallReview[]=[]) {
  let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
  const useReviewedGeometry=reviews.some(review=>wallReviewReference(rooms,review));
@@ -116,13 +119,15 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
  context.lineWidth = gross?LISTING_OUTER_STROKE+4:LISTING_OUTER_STROKE;
  context.stroke(gross?outlinePath(gross):perimeter);
 
- for (const opening of details?.openings??[]) {
+ const openings:PreviewOpening[]=[];
+ for (const [index,opening] of (details?.openings??[]).entries()) {
   const placed=listingOpeningOnDrawing(opening,walls,originalSpan);
   const start=position(placed.start),end=position(placed.end);
   const facadeSide=listingFacadeOpposite(placed,facadeWalls);
   const opposite=facadeSide??listingDoorOpposite(placed,drawing,originalSpan*.035);
   const oppositePixels=opposite?[position(opposite[0]),position(opposite[1])] as const:null;
   if(Math.hypot(end[0]-start[0],end[1]-start[1])<3)continue;
+  openings.push({index,kind:opening.kind,start,end,far:oppositePixels??undefined});
   const line=(a:Point,b:Point)=>{context.beginPath();context.moveTo(...a);context.lineTo(...b);context.stroke();};
   const span=Math.hypot(end[0]-start[0],end[1]-start[1]);
   const nx=(start[1]-end[1])/span,ny=(end[0]-start[0])/span;
@@ -183,7 +188,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
  context.font = '22px sans-serif';
  context.fillStyle = '#506463';
  context.fillText('Planimetria illustrativa',canvas.width/2,canvas.height-margin);
- return canvas.toDataURL('image/png');
+ return {url:canvas.toDataURL('image/png'),width:canvas.width,height:canvas.height,openings};
 }
 
 type ListingExportProps={
@@ -205,9 +210,10 @@ export function listingScale({scale,calibration,width,height}:Pick<NonNullable<L
 
 export function ListingPlanExport({rooms,disabled,autoPreview=false,details,review,onSave,toolbarHost,perimeter,wallReviews}:ListingExportProps) {
  const gross=perimeter?{...perimeter,id:'gross',label:'Perimetro lordo'}:undefined;
- const [reviewing,setReviewing]=useState(false);
+ const [reviewing,setReviewing]=useState<number|null>(null);
+ const [selectingOpening,setSelectingOpening]=useState(false);
  // In the listing task the image is drawn on entry: the component is keyed by geometry revision.
- const [initial] = useState(()=>{if(!autoPreview||!rooms.length)return {preview:'',error:false};try{return {preview:listingImage(rooms,details,gross,wallReviews),error:false};}catch{return {preview:'',error:true};}});
+ const [initial] = useState<{preview:ListingImage|null;error:boolean}>(()=>{if(!autoPreview||!rooms.length)return {preview:null,error:false};try{return {preview:listingImage(rooms,details,gross,wallReviews),error:false};}catch{return {preview:null,error:true};}});
  const [preview,setPreview] = useState(initial.preview);
  const [complete,setComplete] = useState(false);
  const [error,setError] = useState(initial.error);
@@ -217,18 +223,21 @@ export function ListingPlanExport({rooms,disabled,autoPreview=false,details,revi
    setPreview(listingImage(rooms,details,gross,wallReviews));
    setError(false);
   } catch {
-   setPreview('');
+   setPreview(null);
    setError(true);
   }
  }
 
- const editAction=review&&onSave&&<button type="button" disabled={disabled} onClick={()=>setReviewing(true)}>Modifica pianta per l’annuncio</button>;
+ const editAction=review&&onSave&&<button type="button" disabled={disabled} onClick={()=>setReviewing(-1)}>Modifica pianta per l’annuncio</button>;
+ const openingAction=review&&onSave&&!!preview?.openings.length&&<button type="button" disabled={disabled} aria-pressed={selectingOpening}
+  onClick={()=>setSelectingOpening(value=>!value)}>Ripristina un muro</button>;
  const downloadActions=<>
   <label><input type="checkbox" checked={complete} disabled={disabled} onChange={event=>setComplete(event.target.checked)}/> La pianta è completa per l’annuncio</label>
-  {complete&&!disabled?<a href={preview} download="planimetria-annuncio.png">Scarica immagine PNG</a>:<button type="button" disabled>Scarica immagine PNG</button>}
+  {complete&&!disabled?<a href={preview?.url} download="planimetria-annuncio.png">Scarica immagine PNG</a>:<button type="button" disabled>Scarica immagine PNG</button>}
  </>;
  const toolbar=(editAction||preview)?<div className={styles.listingToolbar} role="group" aria-label="Comandi pianta per annuncio">
   {editAction}
+  {openingAction}
   {preview&&downloadActions}
  </div>:null;
 
@@ -237,13 +246,25 @@ export function ListingPlanExport({rooms,disabled,autoPreview=false,details,revi
   {!autoPreview&&<><h3>Pianta per l’annuncio</h3>
   <button type="button" disabled={disabled} onClick={open}>Anteprima annuncio</button></>}
   {autoPreview&&!rooms.length&&<p>Salva almeno un vano per preparare l’immagine dell’annuncio.</p>}
-  {!toolbarHost&&editAction}
-  {review&&onSave&&reviewing&&<ListingPlanReview {...review} metresPerPixel={listingScale(review)} scaleLabel={review.scale?'Scala salvata in Calcola superfici':'Scala del computo'} rooms={rooms} saved={details} perimeter={gross?{shape:gross,status:'saved'}:null} wallReviews={wallReviews} disabled={disabled}
-   onClose={()=>setReviewing(false)} onApply={draft=>{onSave(draft);setReviewing(false);}}/>}
+  {!toolbarHost&&<>{editAction}{openingAction}</>}
+  {review&&onSave&&reviewing!==null&&<ListingPlanReview {...review} initialOpening={reviewing} metresPerPixel={listingScale(review)} scaleLabel={review.scale?'Scala salvata in Calcola superfici':'Scala del computo'} rooms={rooms} saved={details} perimeter={gross?{shape:gross,status:'saved'}:null} wallReviews={wallReviews} disabled={disabled}
+   onClose={()=>setReviewing(null)} onApply={draft=>{onSave(draft);setReviewing(null);setSelectingOpening(false);}}/>}
   {error&&<p role="alert">Impossibile creare l’immagine della planimetria.</p>}
   {preview&&<div>
    <p>{rooms.length} {rooms.length===1?'vano salvato':'vani salvati'}. Controlla che la pianta mostri tutti gli ambienti da pubblicare.</p>
-   <img className={styles.listingPreview} src={preview} alt="Anteprima della planimetria illustrativa per l’annuncio"/>
+   {selectingOpening&&<p>Seleziona sulla pianta l’apertura da chiudere. Puoi controllarla prima di salvare.</p>}
+   <div className={styles.listingPreviewMap}>
+    <img className={styles.listingPreview} src={preview.url} alt="Anteprima della planimetria illustrativa per l’annuncio"/>
+    {selectingOpening&&!disabled&&<svg className={styles.listingOpeningOverlay} viewBox={`0 0 ${preview.width} ${preview.height}`} aria-label="Aperture dell’anteprima">
+     {preview.openings.map(({index,kind,start,end,far})=>{
+      const select=()=>setReviewing(index);
+      return <polygon key={index} points={[start,end,...(far?[far[1],far[0]]:[])].map(point=>point.join(',')).join(' ')}
+       className={styles.listingOpeningMarker} vectorEffect="non-scaling-stroke"
+       role="button" tabIndex={0} aria-label={`Seleziona ${kind==='door'?'porta':'finestra'} ${index+1}`}
+       onClick={select} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}}}/>;
+     })}
+    </svg>}
+   </div>
    {!toolbarHost&&downloadActions}
   </div>}
  </section>;

@@ -17,7 +17,7 @@ type Row={opening:ListingOpening;confirmed:boolean};
 type RoomSubject={room:string;perimeter?:true}&({vertex:number}|{edge:number});
 type Subject=RoomSubject|{row:number;part:'body'|'start'|'end'};
 type Drag={id:number;origin:Point;point:Point;unitsPerPixel:number;shift:boolean;subject:Subject};
-type Props={editPlan?:boolean;saveError?:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];saved?:ListingDetails;
+type Props={editPlan?:boolean;initialOpening?:number;saveError?:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];saved?:ListingDetails;
  wallReviews?:WallReview[];perimeter?:GrossOutline|null;onSavePerimeter?:(shape:PlanShape,onSaved:()=>void)=>void;
  metresPerPixel?:Point|null;scaleLabel?:string;hints?:ListingOpening[];disabled:boolean;onClose:()=>void;onApply:(details:Draft)=>void};
 const mid=(a:Point,b:Point):Point=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
@@ -37,7 +37,7 @@ export function ListingPlanReview(p:Props){
  const perimeter=perimeterDraft??p.perimeter?.shape;
  const perimeterPending=!!perimeterDraft||p.perimeter?.status==='proposed';
  const [roomId,setRoom]=useState('');
- const [selected,setSelected]=useState(-1);
+ const [selected,setSelected]=useState(p.initialOpening??-1);
  const [tool,setTool]=useState<'select'|'scale'|'wall'|ListingOpening['kind']>('select');
  const [referencePoints,setReferencePoints]=useState<Point[]>([]);
  const [referenceMetres,setReferenceMetres]=useState('');
@@ -419,7 +419,7 @@ export function ListingPlanReview(p:Props){
     <span>Trascina il simbolo per spostarlo o un estremo per ridimensionarlo.</span>
     {!active.confirmed&&<button type="button" disabled={busy} onClick={()=>setRows(rows.map((row,i)=>i===selected?{...row,confirmed:true}:row))}>Conferma</button>}
     <label>Tipo <select value={active.opening.kind} disabled={busy} onChange={e=>writeOpening(selected,{...active.opening,kind:e.target.value as ListingOpening['kind']})}><option value="door">Porta</option><option value="window">Finestra</option></select></label>
-    <button type="button" disabled={busy} onClick={()=>{setRows(rows.filter((_,i)=>i!==selected));setSelected(-1);}}>Scarta</button>
+    <button type="button" disabled={busy} onClick={()=>{setRows(rows.filter((_,i)=>i!==selected));setSelected(-1);setNotice(active.confirmed?'Muro ripristinato in bozza. Salva per aggiornare l’annuncio.':'');}}>{active.confirmed?'Ripristina muro':'Scarta'}</button>
    </>:<span>{activeShape?activeShape.label+' · Trascina un lato per spostare la parete o un punto per correggere il contorno.'+(ortho?' Orto allinea i punti vicini in orizzontale o verticale.':''):'Seleziona un vano per spostare pareti e punti, oppure fai clic su un’apertura.'}</span>}
    {pending.length>0&&tool==='select'&&<button type="button" disabled={busy} onClick={()=>focusOpening(pending.find(i=>i>selected)??pending[0]!)}>Prossima da verificare · {pending.length}</button>}
    {!calibrating&&doorScale&&<span>{manualScale?'Nuova scala · salva i dettagli per conservarla':p.metresPerPixel?p.scaleLabel??'Scala salvata':'Scala da barra metrica'}</span>}

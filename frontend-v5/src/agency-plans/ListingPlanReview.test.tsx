@@ -170,6 +170,22 @@ it('edits a saved perimeter with Shift and parallel wall translation, then saves
  expect(onApply).not.toHaveBeenCalled();
 });
 
+it('restores only the wall selected from the listing preview and waits for save',()=>{
+ const room:PlanShape={id:'a',label:'Cucina',points:[[10,10],[90,10],[90,90],[10,90]],holes:[]};
+ const windows=[
+  {kind:'window' as const,start:[20,10] as [number,number],end:[40,10] as [number,number],fixed:true},
+  {kind:'window' as const,start:[90,20] as [number,number],end:[90,40] as [number,number],fixed:true},
+ ];
+ const onApply=vi.fn();
+ render(<ListingPlanReview initialOpening={1} sourceUrl="/plan.png" width={100} height={100} rooms={[room]}
+  saved={{geometryRevision:1,openings:windows,alignments:[]}} disabled={false} onClose={()=>{}} onApply={onApply}/>);
+ expect(screen.getByText('Finestra 2 di 2')).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Ripristina muro',exact:true}));
+ expect(onApply).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'Salva dettagli per l’annuncio'}));
+ expect(onApply).toHaveBeenCalledWith(expect.objectContaining({openings:[windows[0]]}));
+});
+
 it('sets a manual scale on the full original and saves it with the new door',()=>{
  const rooms:PlanShape[]=[{id:'room',label:'Soggiorno',points:[[10,10],[80,10],[80,80],[10,80]],holes:[]}];
  const onApply=vi.fn();
