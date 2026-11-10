@@ -1,5 +1,5 @@
 import type {PlanShape, Point} from './PlanMeasurementView';
-import type {ListingAlignment, ListingDetails, ListingOpening, ListingWallRef} from './api';
+import type {ListingAlignment, ListingDetails, ListingOpening, ListingWallRef, WallReview} from './api';
 import {insideShape,isAppurtenance,isBalcony} from './scaleDetection';
 import {LISTING_DRAWING_PIXELS,LISTING_MIN_PARTITION_GAP} from './listingStyle';
 
@@ -346,7 +346,7 @@ function moveObliqueSide(drawing:PlanShape[],room:PlanShape,index:number,normal:
 }
 
 type PlanWallRaster={width:number;height:number;ink:(x:number,y:number,radius:number)=>boolean};
-type SharedPlanWall=[{id:string;edge:number},{id:string;edge:number}];
+export type SharedPlanWall=[{id:string;edge:number},{id:string;edge:number}];
 
 function sharedWallCandidates(drawing:PlanShape[],room:PlanShape,index:number){
  if(isAppurtenance(room)||room.kind==='excluded')return [];
@@ -424,7 +424,28 @@ function fitSharedPlanWall(drawing:PlanShape[],room:PlanShape,index:number,raste
  return {rooms:[first,second],wall};
 }
 
-export async function proposeSharedPlanWalls(drawing:PlanShape[],raster:PlanWallRaster){
+export function wallReviewReference(drawing:PlanShape[],{faces}:WallReview):SharedPlanWall|null{
+ const refs=faces.map(({id,start,end})=>{
+  const room=drawing.find(item=>item.id===id);
+  const edge=room?edges(room.points).findIndex(([a,b])=>samePoint(a,start)&&samePoint(b,end)||samePoint(a,end)&&samePoint(b,start)):-1;
+  return {id,edge};
+ });
+ return refs.every(ref=>ref.edge>=0)?refs as SharedPlanWall:null;
+}
+
+export function recordWallReview(drawing:PlanShape[],wall:SharedPlanWall,status:WallReview['status'],axis?:[Point,Point]):WallReview{
+ const faces=wall.map(({id,edge})=>{
+  const points=drawing.find(room=>room.id===id)!.points;
+  return {id,start:points[edge]!,end:points[(edge+1)%points.length]!};
+ }) as WallReview['faces'];
+ return {faces,status,...(axis?{axis}:{})};
+}
+
+export async function proposeSharedPlanWalls(drawing:PlanShape[],raster:PlanWallRaster,reviewed:SharedPlanWall[]=[]){
+ const faceKey=({id,edge}:SharedPlanWall[number])=>JSON.stringify([id,edge]);
+ const pairKey=(wall:SharedPlanWall)=>JSON.stringify(wall.map(faceKey).sort());
+ const reviewedPairs=new Set(reviewed.map(pairKey));
+ const protectedFaces=new Set(reviewed.flatMap(wall=>wall.map(faceKey)));
  const visited=new Set<string>();
  const walls:SharedPlanWall[]=[];
  let result=drawing;
@@ -433,11 +454,15 @@ export async function proposeSharedPlanWalls(drawing:PlanShape[],raster:PlanWall
   for(let edge=0;edge<room.points.length;edge++){
    if(visited.has(JSON.stringify([room.id,edge])))continue;
    const current=result.find(item=>item.id===room.id)!;
-   const candidates=sharedWallCandidates(result,current,edge);
+   const candidates=sharedWallCandidates(result,current,edge).filter(candidate=>!reviewedPairs.has(pairKey(candidate.wall)));
    const match=candidates[0];
    const ambiguous=match&&candidates.slice(1).some(other=>other.gap<match.gap+2&&Math.min(match.to,other.to)>Math.max(match.from,other.from));
    const proposal=match&&!ambiguous&&fitSharedPlanWall(result,current,edge,raster,match);
-   if(!proposal)continue;
+   if(!proposal||proposal.rooms.some(room=>{
+    const prior=result.find(item=>item.id===room.id)!;
+    return edges(room.points).some(([a,b],i)=>protectedFaces.has(faceKey({id:room.id,edge:i}))&&
+     (!samePoint(a,prior.points[i]!)||!samePoint(b,prior.points[(i+1)%prior.points.length]!)));
+   }))continue;
    // A long face can be reused by another room if its fitted edge stays fixed.
    if(proposal.wall.some(({id,edge})=>{
     if(!visited.has(JSON.stringify([id,edge])))return false;
@@ -472,7 +497,7 @@ export async function proposeSharedPlanWalls(drawing:PlanShape[],raster:PlanWall
   await new Promise(resolve=>setTimeout(resolve,0));
   for(let edge=0;edge<room.points.length;edge++){
    for(const {wall} of sharedWallCandidates(result,room,edge)){
-    if(reserve(wall,false))unchecked.push(wall);
+    if(!reviewedPairs.has(pairKey(wall))&&reserve(wall,false))unchecked.push(wall);
    }
   }
  }

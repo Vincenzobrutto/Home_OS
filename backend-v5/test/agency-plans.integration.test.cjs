@@ -16,6 +16,31 @@ test('plan snapshots persist with source privacy, replay and invalidation on an 
  await t.test('fresh client sees geometry persisted in database',async()=>{const second=new PrismaClient();try{const view=await new AgencyPracticesStore(second).readPlans(a.id,agency.id,p.id);assert.equal(view.plans[0].rooms[0].pixelArea,100);assert.equal(view.plans[0].confirmed,false);assert.deepEqual(view.plans[0].annexInventory,analysis.annexInventory);assert.deepEqual(view.plans[0].openingReviews,analysis.openingReviews);}finally{await second.$disconnect();}});
  await t.test('stale revision and altered replay leave snapshot untouched',async()=>{const before=await db.agencyPractice.findUnique({where:{id:p.id}});await assert.rejects(()=>store.savePlan(a.id,agency.id,p.id,{...analysis,runId:'new-run'},3),e=>e.code==='revision_conflict');await assert.rejects(()=>store.savePlan(a.id,agency.id,p.id,{...analysis,warnings:['different']},4),e=>e.code==='idempotency_conflict');assert.deepEqual((await db.agencyPractice.findUnique({where:{id:p.id}})).snapshot,before.snapshot);});
  await t.test('commercial report and both geometry views persist; geometry edit invalidates computation',async()=>{const command={key:randomUUID(),expectedRevision:4,expectedPlanVersion:1,planId:analysis.runId,reason:'Synthetic measurement configuration',command:{operation:'measure',configuration:{base:'rooms_and_walls',calibration:{start:[0,0],end:[10,0],metres:10,confirmed:true,maxRelativeError:.01},policyVersion:'synthetic-v1',assignments:[{id:'r1',kind:'principal'}],mainRegionIds:['r1'],walls:[],coverageConfirmed:true,wallCoverageConfirmed:false,policyConfirmed:true,commonWallCapBasis:'physical_thickness'}}};const one=await store.editPlan(a.id,agency.id,p.id,command);assert.equal(one.plans.plans[0].measurement.totalM2,null);assert.equal(one.plans.plans[0].measurement.partialM2,100);const edit={key:randomUUID(),expectedRevision:5,expectedPlanVersion:2,planId:analysis.runId,reason:'Synthetic gross perimeter',command:{operation:'geometry',view:'perimeter',id:'gross',geometry:{points:[[0,0],[12,0],[12,12],[0,12]],holes:[]}}};const changed=await store.editPlan(a.id,agency.id,p.id,edit);assert.equal(changed.plans.plans[0].rooms[0].points[1][0],10);assert.equal(changed.plans.plans[0].mainPerimeter.points[1][0],12);assert.equal(changed.plans.plans[0].measurement,null);assert.equal(changed.plans.plans[0].edits.length,1);assert.equal((await store.editPlan(a.id,agency.id,p.id,edit)).replay,true);});
+ await t.test('shared wall decisions survive an independent database read',async()=>{
+  let view=await store.readPlans(a.id,agency.id,p.id);
+  const save=async command=>{
+   const edit={key:randomUUID(),expectedRevision:view.revision,expectedPlanVersion:view.plans[0].version,planId:analysis.runId,reason:'Synthetic wall decisions',command};
+   view=(await store.editPlan(a.id,agency.id,p.id,edit)).plans;
+   return edit;
+  };
+  for(const [id,x] of [['r2',14],['r3',28]])await save({operation:'add_room',id,label:id,kind:'room',geometry:{points:[[x,0],[x+10,0],[x+10,10],[x,10]],holes:[]}});
+  const before=view.plans[0];
+  const face=(room,edge)=>({id:room.id,start:room.points[edge],end:room.points[(edge+1)%room.points.length]});
+  const [one,two,three]=before.rooms;
+  const wallReviews=[
+   {faces:[face(one,1),face(two,3)],status:'confirmed',axis:[[12,1],[12,9]]},
+   {faces:[face(two,1),face(three,3)],status:'discarded'},
+  ];
+  const edit=await save({operation:'save_plan_graphics',openings:[],alignments:[],wallReviews});
+  assert.equal((await store.editPlan(a.id,agency.id,p.id,edit)).replay,true);
+  const fresh=new PrismaClient();
+  try{
+   const reopened=(await new AgencyPracticesStore(fresh).readPlans(a.id,agency.id,p.id)).plans[0];
+   assert.deepEqual(reopened.wallReviews,wallReviews);
+   assert.equal(reopened.geometryRevision,before.geometryRevision);
+   assert.deepEqual(reopened.rooms,before.rooms);
+  }finally{await fresh.$disconnect();}
+ });
  await t.test('source replacement marks plan stale and removes geometry from current view',async()=>{await store.mutate(a.id,agency.id,p.id,{key:randomUUID(),expectedRevision:(await store.read(a.id,agency.id,p.id)).revision,command:{operation:'replace',sourceId:'plan-source',expectedSourceVersion:1,file:{sha256:'b'.repeat(64),originalFilename:'synthetic-v2.pdf',mimeType:'application/pdf',byteSize:100}}});const view=await store.readPlans(a.id,agency.id,p.id);assert.equal(view.plans[0].status,'stale');assert.equal(view.plans[0].rooms,null);await assert.rejects(()=>store.savePlan(a.id,agency.id,p.id,analysis,5),e=>e.code==='source_changed');});
  await t.test('revoked assignment blocks all plan reads',async()=>{await db.agencyPracticeGrant.update({where:{practiceId_accountId:{practiceId:p.id,accountId:a.id}},data:{revokedAt:new Date()}});await assert.rejects(()=>store.readPlans(a.id,agency.id,p.id),e=>e.code==='access_denied');});
 });

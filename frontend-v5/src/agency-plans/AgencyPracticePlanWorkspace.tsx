@@ -203,7 +203,7 @@ function Workspace(p:WorkspaceProps){
      {(gross||principals.length>0)&&<button type="button" disabled={!!draft||!!builder} onClick={()=>show('gross')}><span data-map-key="apartment" aria-hidden="true"/>Inquadra appartamento</button>}
      {accessories.length>0&&<span><i data-map-key="accessory" aria-hidden="true"/>Pertinenze</span>}
     </div>}
-    {task==='draw'&&graphics&&sourceUrl&&<ListingPlanReview key={plan.id} sourceUrl={sourceUrl} width={rasterSize.width} height={rasterSize.height} hints={openingHints} editPlan saveError={error} rooms={plan.rooms} saved={listingDetails} perimeter={gross}
+    {task==='draw'&&graphics&&sourceUrl&&<ListingPlanReview key={plan.id} sourceUrl={sourceUrl} width={rasterSize.width} height={rasterSize.height} hints={openingHints} editPlan saveError={error} rooms={plan.rooms} saved={listingDetails} wallReviews={plan.wallReviews} perimeter={gross}
       onSavePerimeter={(shape,done)=>save({operation:'geometry',view:'perimeter',id:'gross',geometry:{points:shape.points,holes:shape.holes}},'Perimetro lordo ricalcato sul documento originale',done)} metresPerPixel={listingScale(scaleInputs)} scaleLabel={scaleInputs.scale?'Scala salvata in Calcola superfici':'Scala del computo'} disabled={locked} onClose={()=>setGraphics(false)} onApply={saveGraphics}/>}
     {task==='listing'?<ListingPlanExport key={plan.id+':'+plan.version} rooms={plan.rooms} details={listingDetails} review={listingReview} onSave={saveListing} disabled={locked||!!draft} autoPreview toolbarHost={toolbarHost}/>:map}
     </div>

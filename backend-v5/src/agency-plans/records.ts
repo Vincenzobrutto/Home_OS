@@ -16,9 +16,10 @@ export type QuickEstimateParameters={wallPercent:number;coefficients:Array<{id:s
 export type QuickEstimate={scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;savedAt:string;geometryRevision:number};
 export type ListingOpening={kind:'door'|'window';start:Point;end:Point;fixed?:boolean};
 export type ListingWallRef={roomId:string;start:Point;end:Point};
+export type WallReview={faces:[{id:string;start:Point;end:Point},{id:string;start:Point;end:Point}];status:'confirmed'|'discarded';axis?:[Point,Point]};
 export type ListingDetails={geometryRevision:number;openings:ListingOpening[];alignments:Array<{target:ListingWallRef;reference:ListingWallRef}>;contours?:Array<{id:string;geometry:Polygon}>};
 type StoredRegion=Omit<Region,'seed'|'component'|'pixelArea'>&{seed:Region['seed']|null;component:number|null;pixelArea:number|null;origin?:'manual'|'geometry_proposal';surfaceProposalDigest?:string;surfaceBasis?:'wall_envelope'|'reallocated_to_wall_envelope';derivedFrom?:string};
-export type StoredPlan={id:string;creatorId:string;proof:PlanProof;fingerprint:string;rasterSize:{width:number;height:number};rasterSHA256:string;rendering?:RasterRendering|null;resultDigest:string;version:number;createdAt:string;geometryRevision:number;rooms:StoredRegion[];issues:NumberedIssue[];lastIssueNumber?:number;balconyCovers?:BalconyCover[];quickEstimate?:QuickEstimate;listingDetails?:ListingDetails;warnings:string[];retainedSymbols:string[];annexInventory?:Analysis['annexInventory'];openingReviews?:Analysis['openingReviews'];surfaceProposal?:SurfaceProposal|null;analysisDiagnostics?:SegmentationDiagnostic[];reviewLocations?:ReviewLocation[];coverage?:CoverageReport|null;calls:Analysis['calls'];status:'draft'|'needs_review';confirmed:false;mainPerimeter:Polygon|null;perimeterProposal?:Polygon;measurementConfiguration?:MeasurementConfiguration|null;measurement?:ReturnType<typeof commercialReport>|ReturnType<typeof commercialPerimeterReport>|null;edits?:Array<{at:string;actorId:string;reason:string;geometryRevision:number;rooms:StoredRegion[];mainPerimeter:Polygon|null}>};
+export type StoredPlan={id:string;creatorId:string;proof:PlanProof;fingerprint:string;rasterSize:{width:number;height:number};rasterSHA256:string;rendering?:RasterRendering|null;resultDigest:string;version:number;createdAt:string;geometryRevision:number;rooms:StoredRegion[];issues:NumberedIssue[];lastIssueNumber?:number;balconyCovers?:BalconyCover[];quickEstimate?:QuickEstimate;listingDetails?:ListingDetails;wallReviews?:WallReview[];warnings:string[];retainedSymbols:string[];annexInventory?:Analysis['annexInventory'];openingReviews?:Analysis['openingReviews'];surfaceProposal?:SurfaceProposal|null;analysisDiagnostics?:SegmentationDiagnostic[];reviewLocations?:ReviewLocation[];coverage?:CoverageReport|null;calls:Analysis['calls'];status:'draft'|'needs_review';confirmed:false;mainPerimeter:Polygon|null;perimeterProposal?:Polygon;measurementConfiguration?:MeasurementConfiguration|null;measurement?:ReturnType<typeof commercialReport>|ReturnType<typeof commercialPerimeterReport>|null;edits?:Array<{at:string;actorId:string;reason:string;geometryRevision:number;rooms:StoredRegion[];mainPerimeter:Polygon|null}>};
 type ReviewLocation={id:string;point:Point;label:string};
 function reviewLocations(analysis:Analysis):ReviewLocation[]{
  const issues=new Set([...analysis.final.issues,...(analysis.surfaceProposal?.issues??[])].map(issue=>issue.id));
@@ -64,7 +65,7 @@ export function registerPlan(actor:Actor,original:Practice,analysis:Analysis,exp
 }
 export type MeasurementConfiguration=Omit<CommercialInput,'surfaces'|'geometryRevision'|'unresolvedSymbols'>&{base:'rooms_and_walls'|'gross_perimeter';mainRegionIds:string[];assignments:Array<Omit<SurfaceLine,'geometry'>&{id:string}>};
 type GeometryEdit={view:'rooms'|'perimeter';id:string;geometry:Polygon};
-export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|({operation:'geometry'}&GeometryEdit)|{operation:'save_quick_estimate';covers:BalconyCover[];scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;outline?:GeometryEdit}|({operation:'save_listing_details'|'save_plan_graphics';scale?:QuickEstimateScale&{mode:'manual'|'bar'}}&Omit<ListingDetails,'geometryRevision'>)|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'locate_issue';issueId:string;code:string;point:Point}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
+export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|({operation:'geometry'}&GeometryEdit)|{operation:'save_quick_estimate';covers:BalconyCover[];scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;outline?:GeometryEdit}|({operation:'save_listing_details'|'save_plan_graphics';wallReviews?:WallReview[];scale?:QuickEstimateScale&{mode:'manual'|'bar'}}&Omit<ListingDetails,'geometryRevision'>)|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'locate_issue';issueId:string;code:string;point:Point}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
 /** Internal typed application command; HTTP layer still needs an exact DTO/parser before being exposed. */
 export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string){
  requirePractice(actor,original,'edit',now);assert(input&&typeof input.key==='string'&&input.key.trim()&&input.key.length<=120&&typeof input.reason==='string'&&input.reason.trim()&&input.reason.length<=1000&&Number.isSafeInteger(input.expectedRevision)&&Number.isSafeInteger(input.expectedPlanVersion));
@@ -80,6 +81,14 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   else {const region=plan.rooms.find(r=>r.id===edit.id);assert(region);for(const other of plan.rooms)if(other.id!==region.id)assert(!overlaps(edit.geometry,other),'region_overlap');region.points=structuredClone(edit.geometry.points);region.holes=structuredClone(edit.geometry.holes);region.origin='manual';delete region.boundary;delete region.surfaceProposalDigest;delete region.surfaceBasis;region.seed=null;region.component=null;region.pixelArea=null;}
   plan.geometryRevision++;plan.measurement=null;plan.status='needs_review';plan.warnings.push('manual_geometry_change:'+input.reason);
  }
+ const wallReviewCurrent=(review:WallReview)=>review.faces.every(({id,start,end})=>{
+  const points=plan.rooms.find(room=>room.id===id)?.points;
+  const same=(a:Point,b:Point)=>a[0]===b[0]&&a[1]===b[1];
+  return points?.some((point,i)=>{
+   const next=points[(i+1)%points.length]!;
+   return same(point,start)&&same(next,end)||same(point,end)&&same(next,start);
+  });
+ });
  const geometryChanged=command.operation==='save_plan_graphics'&&!!command.contours?.length||command.operation==='geometry'||command.operation==='add_room'||command.operation==='remove_room'||command.operation==='save_quick_estimate'&&!!command.outline;
  if(command.operation==='apply_surface_proposal'){
   const proposal=plan.surfaceProposal;assert(proposal&&proposal.state==='pending'&&proposal.digest===command.proposalDigest&&proposal.sourceFingerprint===plan.fingerprint,'surface_proposal_unavailable');
@@ -165,6 +174,19 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
     plan.geometryRevision++;plan.measurement=null;plan.status='needs_review';plan.warnings.push('manual_geometry_change:'+input.reason);
     if(plan.quickEstimate)plan.quickEstimate.geometryRevision=plan.geometryRevision;
    }
+   if(command.wallReviews){
+    assert(command.wallReviews.length<=500,'wall_review_limit');
+    const key=({faces}:WallReview)=>JSON.stringify(faces.map(({id,start,end})=>[id,[start,end].sort()] as const).sort(([a],[b])=>a.localeCompare(b)));
+    assert(new Set(command.wallReviews.map(key)).size===command.wallReviews.length,'duplicate_wall_review');
+    const reviews=new Map((plan.wallReviews??[]).filter(wallReviewCurrent).map(review=>[key(review),review]));
+    for(const review of command.wallReviews){
+     assert((review.status==='confirmed'||review.status==='discarded')&&review.faces.length===2&&review.faces[0].id!==review.faces[1].id&&wallReviewCurrent(review),'invalid_wall_review');
+     assert(!review.axis||review.status==='confirmed'&&segmentValid({start:review.axis[0],end:review.axis[1]}),'invalid_wall_review');
+     reviews.set(key(review),structuredClone(review));
+    }
+    assert(reviews.size<=500,'wall_review_limit');
+    plan.wallReviews=[...reviews.values()];
+   }
    const prior=plan.listingDetails?.geometryRevision===plan.geometryRevision?plan.listingDetails:undefined;
    plan.listingDetails={geometryRevision:plan.geometryRevision,openings:structuredClone(openings),alignments:prior?.alignments??[],...(prior?.contours?{contours:prior.contours}:{})};
   }else plan.listingDetails={geometryRevision:plan.geometryRevision,openings:structuredClone(openings),alignments:structuredClone(alignments),...(contours?{contours:structuredClone(contours)}:{})};
@@ -193,6 +215,7 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   configuration.wallCoverageConfirmed = false;
  }
  if(geometryChanged&&plan.surfaceProposal?.state==='pending')plan.surfaceProposal.state='stale';
+ if(plan.wallReviews&&(geometryChanged||command.operation==='apply_surface_proposal'))plan.wallReviews=plan.wallReviews.filter(wallReviewCurrent);
  numberIssues(plan,numberedBefore);
  if(plan.balconyCovers)plan.balconyCovers=plan.balconyCovers.filter(entry=>plan.rooms.some(room=>room.id===entry.id));
  plan.version++;practice.revision++;practice.planReceipts??=[];assert(practice.planReceipts.length<10000,'plan_receipt_limit');practice.planReceipts.push({accountId:actor.accountId,key:input.key,digest,id:plan.id});practice.events.push({id:practice.events.length+1,actorId:actor.accountId,at:now,operation:'plan:'+command.operation,sourceId:plan.proof.sourceId,revision:practice.revision});return {practice,replay:false,id:plan.id};

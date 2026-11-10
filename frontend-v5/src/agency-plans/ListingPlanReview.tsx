@@ -1,8 +1,8 @@
 import {useEffect,useMemo,useRef,useState,type KeyboardEvent,type MouseEvent,type PointerEvent} from 'react';
 import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
-import type {ListingDetails,ListingOpening,ListingPlanDraft} from './api';
+import type {ListingDetails,ListingOpening,ListingPlanDraft,WallReview} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
-import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDoorOpposite,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening,placeScaledListingDoor,proposeSharedPlanWalls,joinedSharedWallBands,suggestInternalWallThickness} from './listingGeometry';
+import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDoorOpposite,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening,placeScaledListingDoor,proposeSharedPlanWalls,joinedSharedWallBands,recordWallReview,suggestInternalWallThickness,wallReviewReference} from './listingGeometry';
 import {detectListingOpenings,distinctOpenings,readListingRaster} from './listingOpeningDetection';
 import type {ScaleReference} from './scaleDetection';
 import {listingRoomFill} from './listingStyle';
@@ -12,13 +12,13 @@ import styles from './practice-plan.module.css';
 
 type Draft=ListingPlanDraft;
 type WallProposal=Awaited<ReturnType<typeof proposeSharedPlanWalls>>;
-type WallReview={wall:WallProposal['walls'][number];axis?:[Point,Point]};
+type ReviewedBand={wall:WallProposal['walls'][number];status:WallReview['status'];axis?:[Point,Point]};
 type Row={opening:ListingOpening;confirmed:boolean};
 type Subject={room:string;vertex:number}|{room:string;edge:number}|{row:number;part:'body'|'start'|'end'};
 type RoomSubject=Extract<Subject,{room:string}>;
 type Drag={id:number;origin:Point;point:Point;unitsPerPixel:number;shift:boolean;subject:Subject};
 type Props={editPlan?:boolean;saveError?:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];saved?:ListingDetails;
- perimeter?:GrossOutline|null;onSavePerimeter?:(shape:PlanShape,onSaved:()=>void)=>void;
+ wallReviews?:WallReview[];perimeter?:GrossOutline|null;onSavePerimeter?:(shape:PlanShape,onSaved:()=>void)=>void;
  metresPerPixel?:Point|null;scaleLabel?:string;hints?:ListingOpening[];disabled:boolean;onClose:()=>void;onApply:(details:Draft)=>void};
 const mid=(a:Point,b:Point):Point=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
 const length=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
@@ -45,8 +45,8 @@ export function ListingPlanReview(p:Props){
  const [manualDoor,setManualDoor]=useState(false);
  const [readingReference,setReadingReference]=useState(false);
  const [notice,setNotice]=useState('');
- const [wallProposal,setWallProposal]=useState<(WallProposal&{confirmed:WallReview[]})|null>(null);
- const [sharedWalls,setSharedWalls]=useState<WallReview[]>([]);
+ const [wallProposal,setWallProposal]=useState<(WallProposal&{decisions:ReviewedBand[]})|null>(null);
+ const [pendingReviews,setPendingReviews]=useState<WallReview[]>([]);
  const [selectedWall,setSelectedWall]=useState<number|null>(null);
  const [wallEdit,setWallEdit]=useState<Point[]|null>(null);
  const factor=manualScale?manualScale.metres/length(manualScale.start,manualScale.end):null;
@@ -204,7 +204,6 @@ export function ListingPlanReview(p:Props){
    const next=[...contours.filter(c=>c.id!==after.id),{id:after.id,geometry:{points:after.points,holes:after.holes}}];
    if(next.reduce((sum,{geometry})=>sum+geometry.points.length+geometry.holes.reduce((n,ring)=>n+ring.length,0),0)>4096){setNotice('Limite di punti modificabili raggiunto.');return;}
    setContours(next);
-   setSharedWalls([]);
    setRows(rows.map(row=>{
     const drawn=shownOpening(row),moved=carryListingOpening(drawn,before,after);
     return moved===drawn?row:{...row,opening:moved};
@@ -248,11 +247,15 @@ export function ListingPlanReview(p:Props){
   :draggedRoom?drawing.map(room=>room.id===draggedRoom.id?draggedRoom:room):drawing;
  const editedAxis:[Point,Point]|undefined=wallEdit?.length===2?[wallEdit[0]!,wallEdit[1]!]:undefined;
  const selectedFaces=selectedWall===null?undefined:wallProposal?.unchecked[selectedWall];
- const wallBands=wallProposal?[
-  ...wallProposal.walls.map(wall=>({wall,axis:undefined,pending:undefined,confirmed:false})),
-  ...wallProposal.confirmed.map(item=>({...item,pending:undefined,confirmed:true})),
-  ...wallProposal.unchecked.map((wall,index)=>({wall,axis:index===selectedWall?editedAxis:undefined,pending:index,confirmed:false})),
- ]:sharedWalls.map(item=>({...item,pending:undefined,confirmed:true}));
+ const reviewedBands=[...(p.wallReviews??[]),...pendingReviews].flatMap(review=>{
+  const wall=wallReviewReference(previewDrawing,review);
+  return wall?[{wall,status:review.status,axis:review.axis}]:[];
+ });
+ const wallBands=[
+  ...[...reviewedBands,...(wallProposal?.decisions??[])].filter(item=>item.status==='confirmed').map(item=>({...item,pending:undefined,confirmed:true})),
+  ...(wallProposal?.walls??[]).map(wall=>({wall,axis:undefined,pending:undefined,confirmed:false})),
+  ...(wallProposal?.unchecked??[]).map((wall,index)=>({wall,axis:index===selectedWall?editedAxis:undefined,pending:index,confirmed:false})),
+ ];
  const guides=drag&&'room' in drag.subject&&activeRoom&&draggedRoom
   ?listingAlignmentGuides(drawing,activeRoom,draggedRoom,drag.subject,2*drag.unitsPerPixel):[];
  function previewOpening(row:Row){
@@ -279,11 +282,11 @@ export function ListingPlanReview(p:Props){
   setOriginal(true);pickTool('wall');
   setWorking(true);setNotice('Cerco le pareti comuni sulla tavola originale…');
   try{
-   const proposal=await proposeSharedPlanWalls(drawing,await readListingRaster(p.sourceUrl));
+   const proposal=await proposeSharedPlanWalls(drawing,await readListingRaster(p.sourceUrl),reviewedBands.map(item=>item.wall));
    const found=proposal.walls.length+proposal.unchecked.length;
-   setWallProposal(found?{...proposal,confirmed:[]}:null);
+   setWallProposal(found?{...proposal,decisions:[]}:null);
    if(found){setNotice('');}
-   else {setTool('select');setNotice('Non ho trovato pareti comuni tra i contorni dei vani.');}
+   else {setTool('select');setNotice(reviewedBands.length?'Nessuna nuova parete comune da verificare.':'Non ho trovato pareti comuni tra i contorni dei vani.');}
   }catch{setTool('select');setNotice('Impossibile leggere i bordi dal documento originale.');}
   finally{setWorking(false);}
  }
@@ -293,7 +296,7 @@ export function ListingPlanReview(p:Props){
  function resolveWall(confirmed:boolean){
   if(!wallProposal||selectedWall===null||!selectedFaces||busy)return;
   setWallProposal({...wallProposal,unchecked:wallProposal.unchecked.filter((_,i)=>i!==selectedWall),
-   confirmed:confirmed?[...wallProposal.confirmed,{wall:selectedFaces,axis:editedAxis}]:wallProposal.confirmed});
+   decisions:[...wallProposal.decisions,{wall:selectedFaces,status:confirmed?'confirmed':'discarded',axis:confirmed?editedAxis:undefined}]});
   selectWall(null);
  }
  function acceptWall(){
@@ -310,10 +313,11 @@ export function ListingPlanReview(p:Props){
    }
    return row;
   }));
-  setSharedWalls([...wallProposal.walls.map(wall=>({wall})),...wallProposal.confirmed]);
+  setPendingReviews([...pendingReviews,...wallProposal.walls.map(wall=>recordWallReview(previewDrawing,wall,'confirmed')),
+   ...wallProposal.decisions.map(({wall,status,axis})=>recordWallReview(previewDrawing,wall,status,axis))]);
   setWallProposal(null);
   setTool('select');
-  setNotice(changed.length?'Correzioni applicate alla bozza. Premi Salva modifiche alla planimetria per confermarle.':'Pareti evidenziate sulla mappa. I contorni dei vani sono invariati.');
+  setNotice(changed.length?'Correzioni applicate alla bozza. Premi Salva modifiche alla planimetria per confermarle.':'Verifica pronta. Premi Salva modifiche alla planimetria per conservare le decisioni.');
  }
  function suggestWalls(){
   const suggestion=suggestInternalWallThickness(drawing);
@@ -343,7 +347,8 @@ export function ListingPlanReview(p:Props){
    const geometry={points,holes};
    return explicitIds.has(id)||JSON.stringify(geometry)!==JSON.stringify({points:before?.points,holes:before?.holes})?[{id,geometry}]:[];
   });
-  p.onApply({...(scaleToSave?{scale:scaleToSave}:{}),openings:rows.filter(row=>row.confirmed).map(row=>row.opening),alignments:alignments??[],contours:savedContours});
+  const wallReviews=pendingReviews.filter(review=>wallReviewReference(drawing,review));
+  p.onApply({...(wallReviews.length?{wallReviews}:{}),...(scaleToSave?{scale:scaleToSave}:{}),openings:rows.filter(row=>row.confirmed).map(row=>row.opening),alignments:alignments??[],contours:savedContours});
  }
  const shown=active?(draggedOpening??shownOpening(active)):null;
  return <><dialog className={`${styles.panel} ${styles.builderDialog} ${styles.listingReviewDialog}`} ref={dialog} aria-label={p.editPlan?'Editor grafico della planimetria':'Editor pianta per annuncio'} onCancel={e=>{e.preventDefault();if(wallEdit){setWallEdit(null);return;}p.onClose();}}>
@@ -436,7 +441,7 @@ export function ListingPlanReview(p:Props){
      aria-label={`Parete ${i+1} · ${activeRoom.label}`}
      onPointerDown={e=>begin(e,subject)} onKeyDown={e=>arrow(e,mid(a,b),subject)}/>;
    })}
-   {(wallProposal||sharedWalls.length>0)&&!calibrating&&<g aria-label="Pareti comuni sulla tavola" pointerEvents="none"
+   {wallBands.length>0&&!calibrating&&<g aria-label="Pareti comuni sulla tavola" pointerEvents="none"
     fill={wallProposal?'#be6618':'#005867'} stroke={wallProposal?'#be6618':'#005867'} opacity={1} strokeWidth={wallProposal?2:6}>
     {joinedSharedWallBands(previewDrawing,wallBands.map(item=>item.wall),showPerimeter?perimeter:undefined,wallBands.map(item=>item.axis)).map((band,i)=>{
      const {pending,confirmed,wall}=wallBands[i]!;

@@ -273,6 +273,30 @@ test('listing details persist against the current geometry without changing room
  assert.throws(()=>parsePlanEdit({...body,command:{...body.command,openings:[{...opening,kind:'unknown'}]}},'invalid',plan.id));
 });
 
+test('wall reviews are idempotent, visible on reopening and independent of the perimeter and listing',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input),original=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const plan=original.planAnalyses[0];
+ const face=(room,index)=>({id:room.id,start:room.points[index],end:room.points[(index+1)%room.points.length]});
+ const wallReviews=[
+  {status:'confirmed',faces:plan.rooms.map(room=>face(room,0)),axis:[[10,10],[10,30]]},
+  {status:'discarded',faces:plan.rooms.map(room=>face(room,1))},
+ ];
+ const {parsePlanEdit}=require('../dist/agency-plans/edit-dto');
+ const body={expectedRevision:2,expectedPlanVersion:1,reason:'Synthetic wall review',command:{operation:'save_plan_graphics',openings:[],alignments:[],wallReviews}};
+ const input=parsePlanEdit(body,'wall-test',plan.id);
+ const saved=Records.editPlan(f.ctx.actor,original,input,f.ctx.now).practice;
+ const reopened=Records.planViews(f.ctx.actor,saved,f.ctx.now).plans[0];
+ assert.deepEqual(reopened.wallReviews,wallReviews);
+ assert.deepEqual(reopened.rooms,plan.rooms);
+ assert.equal(reopened.geometryRevision,1);
+ assert.equal(Records.editPlan(f.ctx.actor,saved,input,f.ctx.now).replay,true);
+ assert.throws(()=>parsePlanEdit({...body,command:{...body.command,operation:'save_listing_details'}},'bad-listing',plan.id));
+ const invalid={...input,key:'invalid-wall',command:{...input.command,wallReviews:[{...wallReviews[0],axis:[[0,0],[5000,30]]}]}};
+ assert.throws(()=>Records.editPlan(f.ctx.actor,original,invalid,f.ctx.now),e=>e.code==='invalid_wall_review');
+ const perimeter=Records.editPlan(f.ctx.actor,saved,parsePlanEdit({expectedRevision:3,expectedPlanVersion:2,reason:'Perimeter',command:{operation:'geometry',view:'perimeter',id:'gross',geometry:rect(0,0,75,50)}},'wall-perimeter',plan.id),f.ctx.now).practice;
+ assert.deepEqual(Records.planViews(f.ctx.actor,perimeter,f.ctx.now).plans[0].wallReviews,wallReviews);
+});
+
 test('graphic plan saves openings and canonical contours atomically, without overwriting the gross outline or scale',async()=>{
  const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input),original=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
  const plan=original.planAnalyses[0],room=plan.rooms[0],geometry=rect(7,7,20,30);

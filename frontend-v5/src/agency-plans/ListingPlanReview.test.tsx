@@ -81,7 +81,7 @@ it('finds both shared walls together and shows a single band per wall before sav
  fireEvent.click(screen.getByRole('button',{name:'Scarta parete'}));
  expect(screen.getByLabelText('Pareti comuni sulla tavola').querySelectorAll('polygon')).toHaveLength(1);
  expect(screen.getByLabelText('Pareti comuni sulla tavola').querySelector('polygon')).not.toHaveAttribute('stroke-dasharray');
- fireEvent.click(finish);
+ fireEvent.click(screen.getByRole('button',{name:'Scarta proposta'}));
  expect(onApply).not.toHaveBeenCalled();
  fireEvent.click(scan);
  await screen.findByText('2 pareti comuni riconosciute');
@@ -104,16 +104,17 @@ it('finds both shared walls together and shows a single band per wall before sav
  ]}));
 });
 
-it('corrects a dashed wall on the map and joins the confirmed axis to the perimeter',async()=>{
+it('restores a corrected wall and respects a saved discard on a new scan',async()=>{
  const rooms:PlanShape[]=[
   {id:'a',label:'Cucina',points:[[10,10],[50,10],[50,90],[10,90]],holes:[]},
   {id:'b',label:'Bagno',points:[[55,10],[95,10],[95,90],[55,90]],holes:[]},
+  {id:'c',label:'Camera',points:[[100,10],[135,10],[135,90],[100,90]],holes:[]},
  ];
  const onApply=vi.fn();
- vi.mocked(readListingRaster).mockResolvedValue({width:110,height:100,ink:()=>false});
- const shape:PlanShape={id:'gross',label:'Perimetro',points:[[5,5],[100,5],[100,95],[5,95]],holes:[]};
- render(<ListingPlanReview editPlan sourceUrl="/plan.png" width={110} height={100} rooms={rooms}
-  perimeter={{shape,status:'saved'}} disabled={false} onClose={()=>{}} onApply={onApply}/>);
+ vi.mocked(readListingRaster).mockResolvedValue({width:145,height:100,ink:()=>false});
+ const shape:PlanShape={id:'gross',label:'Perimetro',points:[[5,5],[140,5],[140,95],[5,95]],holes:[]};
+ const props={editPlan:true,sourceUrl:'/plan.png',width:145,height:100,rooms,perimeter:{shape,status:'saved' as const},disabled:false,onClose:()=>{},onApply};
+ const {unmount}=render(<ListingPlanReview {...props}/>);
  const map=planMap(true);
  fireEvent.click(screen.getByRole('button',{name:'Proponi pareti comuni'}));
  fireEvent.click(await screen.findByRole('button',{name:/Verifica parete · Cucina · Bagno/}));
@@ -127,10 +128,23 @@ it('corrects a dashed wall on the map and joins the confirmed axis to the perime
  const band=screen.getByLabelText('Pareti comuni sulla tavola').querySelector('polygon');
  expect(band?.getAttribute('points')?.split(' ').sort()).toEqual(['51.5,5','51.5,95','56.5,5','56.5,95']);
  expect(band).toHaveAttribute('fill','#005867');
+ fireEvent.click(screen.getByRole('button',{name:/Verifica parete · Bagno · Camera/}));
+ fireEvent.click(screen.getByRole('button',{name:'Scarta parete'}));
  fireEvent.click(screen.getByRole('button',{name:'Termina verifica'}));
  expect(onApply).not.toHaveBeenCalled();
  fireEvent.click(screen.getByRole('button',{name:'Salva modifiche alla planimetria'}));
- expect(onApply).toHaveBeenCalledWith(expect.objectContaining({contours:[]}));
+ expect(onApply).toHaveBeenCalledWith(expect.objectContaining({contours:[],wallReviews:[
+  expect.objectContaining({status:'confirmed',axis:[[54,11],[54,89]]}),expect.objectContaining({status:'discarded'}),
+ ]}));
+ const reviews=structuredClone(onApply.mock.calls[0]![0].wallReviews);
+ unmount();
+ render(<ListingPlanReview {...props} wallReviews={reviews}/>);
+ const reopened=screen.getByLabelText('Pareti comuni sulla tavola');
+ expect(reopened.querySelectorAll('polygon')).toHaveLength(1);
+ expect(reopened.querySelector('polygon')).toHaveAttribute('points',band?.getAttribute('points'));
+ fireEvent.click(screen.getByRole('button',{name:'Proponi pareti comuni'}));
+ await screen.findByText('Nessuna nuova parete comune da verificare.');
+ expect(reopened.querySelectorAll('polygon')).toHaveLength(1);
 });
 
 it('sets a manual scale on the full original and saves it with the new door',()=>{
