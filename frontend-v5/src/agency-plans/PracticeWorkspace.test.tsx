@@ -65,6 +65,7 @@ it('removes a selected room only after confirmation and shows the returned geome
  api.edit.mockResolvedValue({replay:false,plans:{revision:5,plans:[{...plans().plans[0]!,version:2,rooms:[]}]}});
  render(<AgencyPracticePlanWorkspace api={api} scopeKey="a:g:p" embedded/>);
  await screen.findByRole('img',{name:'Contorni dei singoli vani'});
+ fireEvent.click(screen.getByTestId('shape-r'));
  fireEvent.click(screen.getByRole('button',{name:'Elimina vano selezionato'}));
  expect(api.edit).not.toHaveBeenCalled();
  fireEvent.click(screen.getByRole('button',{name:'Annulla eliminazione'}));
@@ -74,4 +75,20 @@ it('removes a selected room only after confirmation and shows the returned geome
  await screen.findByText('Modifiche salvate nella pratica.');
  expect(api.edit.mock.calls[0]![1]).toMatchObject({expectedRevision:4,expectedPlanVersion:1,command:{operation:'remove_room',id:'r'}});
  expect(screen.queryByTestId('shape-r')).not.toBeInTheDocument();
+});
+
+it('simple drawing starts without vertices and saves through the visible toolbar using the protected edit request',async()=>{
+ const api=port();render(<AgencyPracticePlanWorkspace api={api} scopeKey="simple" embedded/>);
+ await screen.findByRole('img',{name:'Contorni dei singoli vani'});
+ expect(screen.queryByRole('button',{name:'Vertice 1'})).not.toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'Salva modifiche'})).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:'Seleziona vano Stanza'}));
+ fireEvent.click(screen.getByRole('button',{name:'Aggiungi punto su un lato'}));
+ fireEvent.click(screen.getByRole('button',{name:'Inserisci punto sul lato 1'}));
+ expect(screen.getByRole('button',{name:'Salva modifiche'})).toBeEnabled();
+ expect(screen.getByRole('button',{name:'Calcola superfici'})).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:'Salva modifiche'}));
+ await screen.findByText('Modifiche salvate nella pratica.');
+ expect(api.edit).toHaveBeenCalledOnce();
+ expect(api.edit.mock.calls[0]![1]).toMatchObject({expectedRevision:4,expectedPlanVersion:1,command:{operation:'geometry',view:'rooms',id:'r',geometry:{points:[[0,0],[5,0],[10,0],[10,10],[0,10]],holes:[]}}});
 });

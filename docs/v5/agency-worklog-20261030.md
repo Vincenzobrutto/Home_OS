@@ -322,3 +322,8 @@ Su richiesta esplicita del committente, integrazione PR79 nel comune precedente3
 ## 5 novembre — percorso operativo approvato
 
 Lotto `codex/agency-journey-20261105`, seguito7128375, prodotto2ed008d. Apertura da incarico nativo con originale/pagine e conferma; JSON journey CAS/receipt/sessione/CSRF; checklist persistita e acquisti solo richieste simulate; analisi per passaggi e aree annuncio/trattativa/stipula, Gift successiva. 148puri/26DB/65UI e25UI finali, statici/build e browser desktop375 verdi; cluster r7YmeL/pnCbtC nuovi arrestati. Locale API/front aggiornati senza migrazione o stop del PostgreSQL; verifica reale solo letture e lettura locale di PDF sintetico prima di annullare, nessuna modifica ai dati. [Report, limiti e ripresa](agency-journey-20261105.md). Nessun merge nel comune/main, deploy, AI reale o modifica demo Alessio.
+
+
+## 5 novembre — seguito UX della pagina Planimetria
+
+Riscontro esplicito: pagine ancora più articolate dei mockup. Branch codex/agency-plan-simple-20261105, basePR81c85eb80, frontend finale72ade15. Barra Seleziona/Aggiungi/Elimina/Salva, contesto solo dopo selezione, dettagli chiusi, coordinate opzionali e calcolo/annuncio separati; seguito375 con navigazione compatta e foglio fit.65/65 UI,32/32 responsive, typecheck/lint/build verdi. Browser reale senza salvataggi: selezione e punto locale poi ricarica, viewport375 senza overflow/errori; dati conservati. Frontend solo aggiornato, API4380/PG35664 preservati. [Report e ripresa](agency-plan-simple-20261105.md). Nessuna AI, spesa, deploy o merge.

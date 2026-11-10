@@ -2,3 +2,18 @@
 .summary{margin:20px 0;padding:16px;border:1px solid #d5e2de;border-radius:10px;background:#fff}.summary h3{margin-top:0}.summary p{line-height:1.5}.tableScroll{overflow-x:auto;max-width:100%}.summary table{border-collapse:collapse;width:100%;font-size:14px}.summary caption{text-align:left;font-weight:600;padding:10px 0}.summary th,.summary td{border-bottom:1px solid #d5e2de;padding:10px;text-align:left;vertical-align:top}.summary td{font-variant-numeric:tabular-nums}.summary small{display:block;font-weight:400;margin-top:4px;color:#45645b}.selectShape{font:inherit;color:#006d80;background:transparent;border:0;text-decoration:underline;text-align:left;cursor:pointer;padding:4px 0;min-height:32px;overflow-wrap:anywhere}.selectShape:focus-visible{outline:2px solid #006d80;outline-offset:3px}@media(max-width:500px){.summary{padding:10px}.summary th,.summary td{padding:8px 5px}.summary table{font-size:13px}.summary small{max-width:140px}}
 
 .mobileHint{display:none}.tableScroll:focus-visible{outline:2px solid #006d80;outline-offset:3px}@media(max-width:500px){.mobileHint{display:block;font-size:13px;color:#45645b}.summary th:first-child{min-width:120px}.summary td{white-space:nowrap}}
+
+.controls[hidden]{display:none}
+.editorToolbar{position:sticky;top:8px;z-index:6;display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:white;border:1px solid #bcd1cf;border-radius:10px;box-shadow:0 3px 10px #19363e0c}
+.editorToolbar button,.vertexTools button,.zoomTools button{font:inherit;border:1px solid #8caeb0;border-radius:7px;background:white;color:#005767;min-height:44px;padding:8px 12px;cursor:pointer}
+.editorToolbar .saveAction{margin-left:auto;background:#006476;color:#fff;border-color:#006476;font-weight:650}
+.editorToolbar button:disabled,.vertexTools button:disabled,.zoomTools button:disabled{opacity:.5;cursor:default}
+.editHint{margin:10px 0;font-size:14px;color:#45676b}
+.vertexTools,.zoomTools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+.vertexTools{padding:8px;background:#eef6f6;border-radius:8px}.vertexTools button{font-size:14px}
+.zoomTools{justify-content:flex-end}.zoomTools output{min-width:48px;text-align:center}
+.workspace :focus-visible{outline:3px solid #df7c00;outline-offset:3px}
+@media(max-width:500px){.editorToolbar{gap:5px;padding:7px}.editorToolbar button{padding:8px;font-size:13px}.editorToolbar .saveAction{margin-left:0}.vertexTools button{font-size:13px}}
+
+.simpleScroll svg{min-width:0;margin:0 auto}
+@media(max-width:500px){.editorToolbar button{flex:1 1 calc(50% - 10px);margin:0}.editorToolbar .saveAction{margin:0}}
