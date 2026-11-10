@@ -145,6 +145,9 @@
 .listingWallHit{stroke:transparent;pointer-events:stroke;cursor:grab;touch-action:none}
 .listingWallHit:hover,.listingWallHit:focus-visible,.listingWallHit[data-moving]{stroke:#00819a55;outline:none}
 .listingWallHit[data-moving]{cursor:grabbing}
+.wallReviewActions{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;width:100%}
+.wallReviewHit{cursor:pointer;pointer-events:all}
+.wallReviewHit:hover,.wallReviewHit:focus-visible{stroke-width:4;outline:none}
 .listingAlignmentGuide{stroke:#a91e69;stroke-width:2px;stroke-dasharray:7 5}
 .listingDoorHit{cursor:grab;touch-action:none}
 @media(max-width:600px){.listingReviewMap{height:43dvh}}

@@ -494,12 +494,13 @@ export function sharedWallBand(drawing:PlanShape[],wall:SharedPlanWall):Point[]|
 }
 
 /** Clean up the wall overlay independently of the contours used for measurement. */
-export function joinedSharedWallBands(drawing:PlanShape[],walls:SharedPlanWall[],perimeter?:PlanShape){
- const bands=walls.map(wall=>{
+export function joinedSharedWallBands(drawing:PlanShape[],walls:SharedPlanWall[],perimeter?:PlanShape,axes:readonly (Segment|undefined)[]=[]){
+ const bands=walls.map((wall,index)=>{
   const band=sharedWallBand(drawing,wall);
   if(!band)return null;
   const [a,b,c,d]=band as [Point,Point,Point,Point];
-  const start:Point=[(a[0]+d[0])/2,(a[1]+d[1])/2],end:Point=[(b[0]+c[0])/2,(b[1]+c[1])/2];
+  const axisEdit=axes[index];
+  const [start,end]=axisEdit??[[(a[0]+d[0])/2,(a[1]+d[1])/2],[(b[0]+c[0])/2,(b[1]+c[1])/2]];
   const run=distance(start,end),width=(distance(a,d)+distance(b,c))/2;
   if(run<EPSILON||width<EPSILON)return null;
   const direction:Point=[(end[0]-start[0])/run,(end[1]-start[1])/run];
@@ -507,14 +508,15 @@ export function joinedSharedWallBands(drawing:PlanShape[],walls:SharedPlanWall[]
   const axial:Point=axis===0?[Math.sign(direction[0]),0]:[0,Math.sign(direction[1])];
   // Only correct small angular drift that stays close to the original faces.
   const drift=Math.abs(direction[1-axis]!);
-  const tangent=drift<.044&&drift*run/2<=Math.max(1,width*.35)?axial:direction;
+  const tangent=!axisEdit&&drift<.044&&drift*run/2<=Math.max(1,width*.35)?axial:direction;
   const normal:Point=[-tangent[1],tangent[0]];
-  const offsets=[[a,b],[d,c]].map(face=>face.reduce((sum,point)=>sum+dot(point,normal),0)/2);
+  const centre=dot(start,normal);
+  const offsets=axisEdit?[centre-width/2,centre+width/2]:[[a,b],[d,c]].map(face=>face.reduce((sum,point)=>sum+dot(point,normal),0)/2);
   const atOffset=(along:number,offset:number):Point=>[tangent[0]*along+normal[0]*offset,tangent[1]*along+normal[1]*offset];
   const from=dot(start,tangent),to=dot(end,tangent);
   const straight:Point[]=[atOffset(from,offsets[0]!),atOffset(to,offsets[0]!),atOffset(to,offsets[1]!),atOffset(from,offsets[1]!)];
   const nearFaces=straight.every((point,i)=>distance(point,band[i]!)<=Math.max(2,width*.55));
-  return {wall,band:nearFaces?straight:band,tangent,width};
+  return {wall,band:axisEdit||nearFaces?straight:band,tangent,width};
  });
  const exterior=perimeter?[perimeter.points,...perimeter.holes].flatMap(edges):[];
  return bands.map(item=>{

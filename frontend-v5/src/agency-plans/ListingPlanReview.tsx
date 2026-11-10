@@ -11,6 +11,8 @@ import type {GrossOutline} from './QuickSurfaceEstimate';
 import styles from './practice-plan.module.css';
 
 type Draft=ListingPlanDraft;
+type WallProposal=Awaited<ReturnType<typeof proposeSharedPlanWalls>>;
+type WallReview={wall:WallProposal['walls'][number];axis?:[Point,Point]};
 type Row={opening:ListingOpening;confirmed:boolean};
 type Subject={room:string;vertex:number}|{room:string;edge:number}|{row:number;part:'body'|'start'|'end'};
 type RoomSubject=Extract<Subject,{room:string}>;
@@ -43,8 +45,10 @@ export function ListingPlanReview(p:Props){
  const [manualDoor,setManualDoor]=useState(false);
  const [readingReference,setReadingReference]=useState(false);
  const [notice,setNotice]=useState('');
- const [wallProposal,setWallProposal]=useState<Awaited<ReturnType<typeof proposeSharedPlanWalls>>|null>(null);
- const [sharedWalls,setSharedWalls]=useState<Awaited<ReturnType<typeof proposeSharedPlanWalls>>['walls']>([]);
+ const [wallProposal,setWallProposal]=useState<(WallProposal&{confirmed:WallReview[]})|null>(null);
+ const [sharedWalls,setSharedWalls]=useState<WallReview[]>([]);
+ const [selectedWall,setSelectedWall]=useState<number|null>(null);
+ const [wallEdit,setWallEdit]=useState<Point[]|null>(null);
  const factor=manualScale?manualScale.metres/length(manualScale.start,manualScale.end):null;
  const doorScale:Point|null|undefined=factor?[factor,factor]:p.metresPerPixel??detectedScale?.metresPerPixel;
  const calibrating=tool==='scale';
@@ -144,9 +148,14 @@ export function ListingPlanReview(p:Props){
   setRows(current=>current.map((row,i)=>i===index?{...row,opening}:row));
  }
  function add(event:MouseEvent){
-  if(busy||readingScale||tool==='select'||tool==='wall')return;
+  if(busy||readingScale||tool==='select')return;
+  if(tool==='wall'&&(!wallEdit||wallEdit.length===2))return;
   const point=position(event);
   if(!point)return;
+  if(tool==='wall'&&wallEdit){
+   if(wallEdit[0]&&length(wallEdit[0],point)<2){setNotice('Scegli due estremi distinti.');return;}
+   setWallEdit([...wallEdit,point]);setNotice('');return;
+  }
   if(tool==='scale'){
    if(referencePoints.length===1&&length(referencePoints[0]!,point)<1){
     setNotice('Scegli un secondo punto distinto.');
@@ -156,7 +165,7 @@ export function ListingPlanReview(p:Props){
    setNotice('');
    return;
   }
-  if(rows.length>=100)return;
+  if(tool==='wall'||rows.length>=100)return;
   const scaled=tool==='door'&&!manualDoor&&doorScale;
   if(!scaled&&!start){setStart(point);setNotice('');return;}
   const opening=scaled?placeScaledListingDoor(point,walls,span*.018,scaled,drawing,span*.035)
@@ -237,6 +246,13 @@ export function ListingPlanReview(p:Props){
   ?roomEdit(drag.subject,drag.point,drag.origin,snapDistance(drag.unitsPerPixel,drag.shift)):null;
  const previewDrawing=wallProposal?drawing.map(room=>wallProposal.rooms.find(next=>next.id===room.id)??room)
   :draggedRoom?drawing.map(room=>room.id===draggedRoom.id?draggedRoom:room):drawing;
+ const editedAxis:[Point,Point]|undefined=wallEdit?.length===2?[wallEdit[0]!,wallEdit[1]!]:undefined;
+ const selectedFaces=selectedWall===null?undefined:wallProposal?.unchecked[selectedWall];
+ const wallBands=wallProposal?[
+  ...wallProposal.walls.map(wall=>({wall,axis:undefined,pending:undefined,confirmed:false})),
+  ...wallProposal.confirmed.map(item=>({...item,pending:undefined,confirmed:true})),
+  ...wallProposal.unchecked.map((wall,index)=>({wall,axis:index===selectedWall?editedAxis:undefined,pending:index,confirmed:false})),
+ ]:sharedWalls.map(item=>({...item,pending:undefined,confirmed:true}));
  const guides=drag&&'room' in drag.subject&&activeRoom&&draggedRoom
   ?listingAlignmentGuides(drawing,activeRoom,draggedRoom,drag.subject,2*drag.unitsPerPixel):[];
  function previewOpening(row:Row){
@@ -265,14 +281,23 @@ export function ListingPlanReview(p:Props){
   try{
    const proposal=await proposeSharedPlanWalls(drawing,await readListingRaster(p.sourceUrl));
    const found=proposal.walls.length+proposal.unchecked.length;
-   setWallProposal(found?proposal:null);
+   setWallProposal(found?{...proposal,confirmed:[]}:null);
    if(found){setNotice('');}
    else {setTool('select');setNotice('Non ho trovato pareti comuni tra i contorni dei vani.');}
   }catch{setTool('select');setNotice('Impossibile leggere i bordi dal documento originale.');}
   finally{setWorking(false);}
  }
+ function selectWall(index:number|null){
+  setSelectedWall(index);setWallEdit(null);setNotice('');
+ }
+ function resolveWall(confirmed:boolean){
+  if(!wallProposal||selectedWall===null||!selectedFaces||busy)return;
+  setWallProposal({...wallProposal,unchecked:wallProposal.unchecked.filter((_,i)=>i!==selectedWall),
+   confirmed:confirmed?[...wallProposal.confirmed,{wall:selectedFaces,axis:editedAxis}]:wallProposal.confirmed});
+  selectWall(null);
+ }
  function acceptWall(){
-  if(!wallProposal||busy)return;
+  if(!wallProposal||wallProposal.unchecked.length||busy)return;
   const changed=wallProposal.rooms;
   const next=[...contours.filter(c=>!changed.some(room=>room.id===c.id)),...changed.map(room=>({id:room.id,geometry:{points:room.points,holes:room.holes}}))];
   if(next.reduce((n,{geometry})=>n+geometry.points.length+geometry.holes.reduce((sum,ring)=>sum+ring.length,0),0)>4096){setNotice('Limite di punti modificabili raggiunto.');return;}
@@ -285,7 +310,7 @@ export function ListingPlanReview(p:Props){
    }
    return row;
   }));
-  setSharedWalls([...wallProposal.walls,...wallProposal.unchecked]);
+  setSharedWalls([...wallProposal.walls.map(wall=>({wall})),...wallProposal.confirmed]);
   setWallProposal(null);
   setTool('select');
   setNotice(changed.length?'Correzioni applicate alla bozza. Premi Salva modifiche alla planimetria per confermarle.':'Pareti evidenziate sulla mappa. I contorni dei vani sono invariati.');
@@ -321,7 +346,7 @@ export function ListingPlanReview(p:Props){
   p.onApply({...(scaleToSave?{scale:scaleToSave}:{}),openings:rows.filter(row=>row.confirmed).map(row=>row.opening),alignments:alignments??[],contours:savedContours});
  }
  const shown=active?(draggedOpening??shownOpening(active)):null;
- return <><dialog className={`${styles.panel} ${styles.builderDialog} ${styles.listingReviewDialog}`} ref={dialog} aria-label={p.editPlan?'Editor grafico della planimetria':'Editor pianta per annuncio'} onCancel={e=>{e.preventDefault();p.onClose();}}>
+ return <><dialog className={`${styles.panel} ${styles.builderDialog} ${styles.listingReviewDialog}`} ref={dialog} aria-label={p.editPlan?'Editor grafico della planimetria':'Editor pianta per annuncio'} onCancel={e=>{e.preventDefault();if(wallEdit){setWallEdit(null);return;}p.onClose();}}>
   <h3>{p.editPlan?'Modifica la planimetria':'Modifica pianta per l’annuncio'}</h3>
   {p.saveError&&<p role="alert">{p.saveError}</p>}
   <div className={styles.listingReviewTools}>
@@ -343,9 +368,16 @@ export function ListingPlanReview(p:Props){
     {wallProposal&&<>
      {wallProposal.walls.length>0&&<strong>{wallProposal.walls.length} {wallProposal.walls.length===1?'parete comune riconosciuta':'pareti comuni riconosciute'}</strong>}
      {wallProposal.unchecked.length>0&&<strong>{wallProposal.unchecked.length} {wallProposal.unchecked.length===1?'parete da verificare':'pareti da verificare'}</strong>}
-     <span>Confronta le fasce arancioni con l’originale. Le fasce tratteggiate sono suggerite dai contorni e non li modificano.</span>
-     <button type="button" disabled={busy} onClick={acceptWall}>{wallProposal.rooms.length?'Usa correzioni':'Conferma verifica'}</button>
-     <button type="button" disabled={busy} onClick={()=>{setWallProposal(null);setTool('select');setNotice('');}}>Scarta proposta</button>
+     {selectedFaces?<div className={styles.wallReviewActions}>
+      <strong>{selectedFaces.map(face=>drawing.find(room=>room.id===face.id)?.label).join(' · ')}</strong>
+      {wallEdit&&<span>{editedAxis?'Controlla la fascia corretta sulla mappa.':wallEdit.length?'Indica il secondo estremo al centro del muro.':'Indica il primo estremo al centro del muro.'}</span>}
+      <button type="button" disabled={busy||!!wallEdit&&!editedAxis} onClick={()=>resolveWall(true)}>Conferma parete</button>
+      <button type="button" disabled={busy} onClick={()=>{setWallEdit([]);setNotice('');}}>{wallEdit?'Ridisegna asse':'Correggi parete'}</button>
+      <button type="button" disabled={busy} onClick={()=>resolveWall(false)}>Scarta parete</button>
+      <button type="button" onClick={()=>selectWall(null)}>Annulla selezione</button>
+     </div>:<span>{wallProposal.unchecked.length?'Fai clic su una fascia tratteggiata per verificarla sul PDF.':'Verifica completata. Applica la proposta alla bozza.'}</span>}
+     <button type="button" disabled={busy||wallProposal.unchecked.length>0} onClick={acceptWall}>{wallProposal.rooms.length?'Usa correzioni':'Termina verifica'}</button>
+     <button type="button" disabled={busy} onClick={()=>{setWallProposal(null);setTool('select');selectWall(null);}}>Scarta proposta</button>
     </>}
    </>:calibrating?<>
     <span>{referencePoints.length===0?'Seleziona il primo punto sul documento originale.':referencePoints.length===1?'Seleziona il secondo punto.':'Indica la distanza reale tra i due punti.'}</span>
@@ -405,11 +437,20 @@ export function ListingPlanReview(p:Props){
      onPointerDown={e=>begin(e,subject)} onKeyDown={e=>arrow(e,mid(a,b),subject)}/>;
    })}
    {(wallProposal||sharedWalls.length>0)&&!calibrating&&<g aria-label="Pareti comuni sulla tavola" pointerEvents="none"
-    fill={wallProposal?'#be6618':'#005867'} stroke={wallProposal?'#be6618':'#005867'} opacity={wallProposal&&original ? .75 : 1} strokeWidth={wallProposal?2:6}>
-    {joinedSharedWallBands(previewDrawing,wallProposal?[...wallProposal.walls,...wallProposal.unchecked]:sharedWalls,showPerimeter?perimeter:undefined).map((band,i)=>{
-     const unchecked=wallProposal&&i>=wallProposal.walls.length;
-     return band&&<polygon key={i} points={band.map(point=>point.join(',')).join(' ')} vectorEffect="non-scaling-stroke"
-      fill={unchecked?'none':undefined} strokeDasharray={unchecked?'5 3':undefined}/>;
+    fill={wallProposal?'#be6618':'#005867'} stroke={wallProposal?'#be6618':'#005867'} opacity={1} strokeWidth={wallProposal?2:6}>
+    {joinedSharedWallBands(previewDrawing,wallBands.map(item=>item.wall),showPerimeter?perimeter:undefined,wallBands.map(item=>item.axis)).map((band,i)=>{
+     const {pending,confirmed,wall}=wallBands[i]!;
+     const unchecked=pending!==undefined;
+     const canSelect=unchecked&&!busy&&(!wallEdit||!!editedAxis);
+     const isSelected=unchecked&&selectedWall===pending;
+     const label=unchecked?'Verifica parete · '+wall.map(face=>drawing.find(room=>room.id===face.id)?.label).join(' · '):undefined;
+     return band&&<polygon key={JSON.stringify(wall)} points={band.map(point=>point.join(',')).join(' ')} vectorEffect="non-scaling-stroke"
+      fill={unchecked?'none':confirmed?'#005867':undefined} stroke={confirmed?'#005867':undefined}
+      strokeWidth={confirmed?6:isSelected?4:undefined} strokeDasharray={unchecked?'5 3':undefined}
+      opacity={!confirmed&&original ? .75 : 1} className={canSelect?styles.wallReviewHit:undefined}
+      role={unchecked?'button':undefined} aria-label={label} aria-pressed={unchecked?isSelected:undefined} tabIndex={canSelect?0:undefined}
+      onClick={canSelect&&!isSelected?()=>selectWall(pending):undefined}
+      onKeyDown={canSelect&&!isSelected?e=>activate(e,()=>selectWall(pending)):undefined}/>;
     })}
    </g>}
    {showPerimeter&&perimeter&&!calibrating&&<path aria-label={perimeterDraft?'Muri perimetrali in bozza':perimeterPending?'Muri perimetrali proposti':'Muri perimetrali salvati'}
@@ -446,6 +487,8 @@ export function ListingPlanReview(p:Props){
      x2={referencePoints[1]![0]} y2={referencePoints[1]![1]} className={styles.listingAlignmentGuide} vectorEffect="non-scaling-stroke"/>}
     {referencePoints.map(([x,y],i)=><circle key={i} cx={x} cy={y} r={Math.max(p.width,p.height)/(250*zoom)} fill="#a91e69"/>)}
    </g>}
+   {tool==='wall'&&wallEdit?.length===1&&<circle cx={wallEdit[0]![0]} cy={wallEdit[0]![1]} r={span/(190*zoom)}
+    fill="#be6618" stroke="#be6618" strokeWidth="4" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
    {start&&<circle cx={start[0]} cy={start[1]} r={span/(190*zoom)} fill="#b54900" stroke="#b54900" strokeWidth="6" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
   </svg></div>
   <div className={styles.listingReviewFooter}>

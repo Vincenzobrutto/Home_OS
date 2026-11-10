@@ -9,8 +9,8 @@ vi.mock('./detectPlanScale',()=>({detectPlanScale:vi.fn()}));
 vi.mock('./listingOpeningDetection',async importOriginal=>({...await importOriginal<typeof import('./listingOpeningDetection')>(),readListingRaster:vi.fn()}));
 afterEach(()=>{vi.unstubAllGlobals();vi.resetAllMocks();});
 
-function planMap(){
- const map=screen.getByLabelText('Pianta illustrativa modificabile');
+function planMap(editPlan=false){
+ const map=screen.getByLabelText(editPlan?'Planimetria modificabile':'Pianta illustrativa modificabile');
  Object.defineProperty(map,'getScreenCTM',{value:()=>({a:1,b:0,inverse:()=>null})});
  vi.stubGlobal('DOMPoint',class {
   x:number;
@@ -73,7 +73,15 @@ it('finds both shared walls together and shows a single band per wall before sav
  await screen.findByText('2 pareti da verificare');
  expect(screen.queryByRole('button',{name:'Usa correzioni'})).not.toBeInTheDocument();
  expect(screen.getByLabelText('Pareti comuni sulla tavola').querySelectorAll('polygon[stroke-dasharray]')).toHaveLength(2);
- fireEvent.click(screen.getByRole('button',{name:'Conferma verifica'}));
+ const finish=screen.getByRole('button',{name:'Termina verifica'});
+ expect(finish).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:/Verifica parete · Cucina · Bagno/}));
+ fireEvent.click(screen.getByRole('button',{name:'Conferma parete'}));
+ fireEvent.keyDown(screen.getByRole('button',{name:/Verifica parete · Bagno · Camera/}),{key:'Enter'});
+ fireEvent.click(screen.getByRole('button',{name:'Scarta parete'}));
+ expect(screen.getByLabelText('Pareti comuni sulla tavola').querySelectorAll('polygon')).toHaveLength(1);
+ expect(screen.getByLabelText('Pareti comuni sulla tavola').querySelector('polygon')).not.toHaveAttribute('stroke-dasharray');
+ fireEvent.click(finish);
  expect(onApply).not.toHaveBeenCalled();
  fireEvent.click(scan);
  await screen.findByText('2 pareti comuni riconosciute');
@@ -94,6 +102,35 @@ it('finds both shared walls together and shows a single band per wall before sav
   {id:'b',geometry:{points:[[57,10],[90,10],[90,90],[57,90]],holes:[]}},
   {id:'c',geometry:{points:[[99,10],[135,10],[135,90],[99,90]],holes:[]}},
  ]}));
+});
+
+it('corrects a dashed wall on the map and joins the confirmed axis to the perimeter',async()=>{
+ const rooms:PlanShape[]=[
+  {id:'a',label:'Cucina',points:[[10,10],[50,10],[50,90],[10,90]],holes:[]},
+  {id:'b',label:'Bagno',points:[[55,10],[95,10],[95,90],[55,90]],holes:[]},
+ ];
+ const onApply=vi.fn();
+ vi.mocked(readListingRaster).mockResolvedValue({width:110,height:100,ink:()=>false});
+ const shape:PlanShape={id:'gross',label:'Perimetro',points:[[5,5],[100,5],[100,95],[5,95]],holes:[]};
+ render(<ListingPlanReview editPlan sourceUrl="/plan.png" width={110} height={100} rooms={rooms}
+  perimeter={{shape,status:'saved'}} disabled={false} onClose={()=>{}} onApply={onApply}/>);
+ const map=planMap(true);
+ fireEvent.click(screen.getByRole('button',{name:'Proponi pareti comuni'}));
+ fireEvent.click(await screen.findByRole('button',{name:/Verifica parete · Cucina · Bagno/}));
+ fireEvent.click(screen.getByRole('button',{name:'Correggi parete'}));
+ const confirm=screen.getByRole('button',{name:'Conferma parete'});
+ expect(confirm).toBeDisabled();
+ fireEvent.click(map,{clientX:54,clientY:11});
+ fireEvent.click(map,{clientX:54,clientY:89});
+ expect(confirm).toBeEnabled();
+ fireEvent.click(confirm);
+ const band=screen.getByLabelText('Pareti comuni sulla tavola').querySelector('polygon');
+ expect(band?.getAttribute('points')?.split(' ').sort()).toEqual(['51.5,5','51.5,95','56.5,5','56.5,95']);
+ expect(band).toHaveAttribute('fill','#005867');
+ fireEvent.click(screen.getByRole('button',{name:'Termina verifica'}));
+ expect(onApply).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'Salva modifiche alla planimetria'}));
+ expect(onApply).toHaveBeenCalledWith(expect.objectContaining({contours:[]}));
 });
 
 it('sets a manual scale on the full original and saves it with the new door',()=>{
