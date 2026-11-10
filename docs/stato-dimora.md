@@ -1,7 +1,7 @@
 # Stato di Dimora
 *10 novembre 2026*
 
-Il ramo di riferimento è **`codex/dimora-v5-consolidata-20261023`**. La base pubblicata comprende la PR 79. Il pilota con utenti reali resta in attesa della prova AI, delle tutele sui dati e della verifica operativa di recupero e ripristino. Le prove sintetiche usano documenti e account di collaudo.
+Il ramo di riferimento è **`codex/dimora-v5-consolidata-20261023`**. La base pubblicata comprende la PR 79. Le PR 81–84 sono state riunite in un candidato separato. La pubblicazione è sospesa per un test backend fallito. Il pilota con utenti reali resta in attesa della prova AI, delle tutele sui dati e della verifica operativa di recupero e ripristino. Le prove sintetiche usano documenti e account di collaudo.
 
 ## Cosa c’è oggi
 
@@ -42,6 +42,8 @@ Il lavoro residuo è ordinato nei [prossimi passi](prossimi-passi.md).
 ## Appendice tecnica
 
 - Base del ramo comune a inizio inventario `cfff252`. I sei commit della PR 83, da `64ee004` a `9edb30d`, sono antenati della PR 84.
+
+- Candidato Agenzie `58ea680`. Backend 954/955. Manca il comando npm del profilo di collaudo Agenzie registrato dal runner. Tipi backend e frontend, build backend e 54 prove HTTP su database temporaneo superati.
 
 ### Pull request precedenti
 
