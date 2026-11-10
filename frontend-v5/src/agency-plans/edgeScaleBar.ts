@@ -44,7 +44,7 @@ export function edgeBars(gray:Uint8Array,width:number,height:number):EdgeBar[]{
 
 export function edgeBarCaption(gray:Uint8Array,width:number,height:number,bar:EdgeBar,side:-1|1,bridgeRule=true){
  const span=bar.end[0]-bar.start[0],center=(bar.start[0]+bar.end[0])/2,row=bar.start[1];
- const half=Math.round(Math.max(22,Math.min(100,span*.22))),depth=Math.round(Math.max(18,Math.min(34,span*.079)));
+ const half=Math.round(Math.max(22,Math.min(100,span*.22))),depth=Math.round(Math.max(28,Math.min(34,span*.079)));
  const x0=Math.max(0,Math.round(center-half)),x1=Math.min(width,Math.round(center+half));
  const y0=Math.max(0,side<0?row-depth:row+5),y1=Math.min(height,side<0?row-4:row+depth+1);
  const w=x1-x0,h=y1-y0;if(w<12||h<10)return null;
