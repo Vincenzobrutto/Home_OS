@@ -180,7 +180,7 @@ it('restores only the wall selected from the listing preview and waits for save'
  render(<ListingPlanReview initialOpening={1} sourceUrl="/plan.png" width={100} height={100} rooms={[room]}
   saved={{geometryRevision:1,openings:windows,alignments:[]}} disabled={false} onClose={()=>{}} onApply={onApply}/>);
  expect(screen.getByText('Finestra 2 di 2')).toBeInTheDocument();
- fireEvent.click(screen.getByRole('button',{name:'Ripristina muro',exact:true}));
+ fireEvent.click(screen.getByRole('button',{name:/^Ripristina muro$/}));
  expect(onApply).not.toHaveBeenCalled();
  fireEvent.click(screen.getByRole('button',{name:'Salva dettagli per l’annuncio'}));
  expect(onApply).toHaveBeenCalledWith(expect.objectContaining({openings:[windows[0]]}));
