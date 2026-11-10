@@ -1,6 +1,6 @@
 import type {PlanShape, Point} from './PlanMeasurementView';
 import type {ListingAlignment, ListingDetails, ListingOpening, ListingWallRef} from './api';
-import {insideShape} from './scaleDetection';
+import {insideShape,isAppurtenance} from './scaleDetection';
 
 type Segment = [Point, Point];
 
@@ -477,6 +477,63 @@ export function moveListingWall(drawing:PlanShape[],id:string,index:number,delta
  if(Math.abs(offset)<EPSILON)return null;
  const shift=([x,y]:Point):Point=>[x+offset*normal[0],y+offset*normal[1]];
  return changeListingPoints(drawing,room,new Map([[index,shift(a)],[next,shift(b)]]));
+}
+
+/** Propose one common thickness for comparable, facing interior walls.
+ * Only unambiguous straight pairs are moved; the centre of each wall stays put. */
+export function suggestInternalWallThickness(drawing:PlanShape[]){
+ const points=drawing.flatMap(room=>room.points);
+ if(!points.length||points.length>4096)return null;
+ const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(p=>p[axis]))-Math.min(...points.map(p=>p[axis]))));
+ const faces=drawing.filter(room=>!room.holes.length&&!room.symbols?.length&&room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>{
+  const winding=Math.sign(signedArea(room.points));
+  return edges(room.points).flatMap(([a,b],index)=>{
+   const axis=Math.abs(a[0]-b[0])<Math.abs(a[1]-b[1])?0:1;
+   const along=axis===0?1:0,spread=Math.abs(a[axis]-b[axis]);
+   if(distance(a,b)<span*.06||spread>Math.abs(a[along]-b[along])*.025)return [];
+   const inward=(axis===0?-1:1)*Math.sign(b[along]-a[along])*winding;
+   return [{id:room.id,index,axis,offset:(a[axis]+b[axis])/2,spread,inward,from:Math.min(a[along],b[along]),to:Math.max(a[along],b[along])}];
+  });
+ });
+ if(faces.length>300)return null;
+ const pairs=faces.flatMap((a,i)=>faces.slice(i+1).flatMap(b=>{
+  if(a.id===b.id||a.axis!==b.axis||a.inward===b.inward||(b.offset-a.offset)*a.inward>=0)return [];
+  const gap=Math.abs(b.offset-a.offset),start=Math.max(a.from,b.from),end=Math.min(a.to,b.to);
+  if(gap>span*.035||end-start<.85*Math.max(a.to-a.from,b.to-b.from))return [];
+  const middle=(a.offset+b.offset)/2;
+  const blocked=[.2,.5,.8].some(t=>{
+   const along=start+(end-start)*t;
+   const point:Point=a.axis===0?[middle,along]:[along,middle];
+   return drawing.some(room=>room.id!==a.id&&room.id!==b.id&&insideShape(point,room));
+  });
+  return blocked?[]:[{a,b,gap}];
+ }));
+ const clear=pairs.filter(({a,b})=>pairs.filter(pair=>pair.a===a||pair.b===a||pair.a===b||pair.b===b).length===1);
+ if(clear.length<2)return null;
+ const ordered=clear.map(pair=>pair.gap).sort((a,b)=>a-b);
+ const nominal=(ordered[Math.floor((ordered.length-1)/2)]!+ordered[Math.floor(ordered.length/2)]!)/2;
+ if(!(nominal>0))return null;
+ let result=drawing,adjusted=0;
+ const used=new Set<string>();
+ const keys=(face:typeof faces[number])=>[face.id+':'+face.index,face.id+':'+(face.index+1)%drawing.find(room=>room.id===face.id)!.points.length];
+ for(const {a,b,gap} of clear){
+  if((Math.abs(gap-nominal)<.2&&a.spread+b.spread<.2)||Math.abs(gap-nominal)+(a.spread+b.spread)/2>nominal*.25||
+     [...keys(a),...keys(b)].some(key=>used.has(key)))continue;
+  const delta=(b.offset-a.offset-nominal*Math.sign(b.offset-a.offset))/2;
+  const move=(rooms:PlanShape[],face:typeof a,offset:number)=>{
+   const room=rooms.find(r=>r.id===face.id)!;
+   return changeListingPoints(rooms,room,new Map([face.index,(face.index+1)%room.points.length].map(i=>{
+    const point:Point=[...room.points[i]!];point[face.axis]=offset;return [i,point];
+   })));
+  };
+  const first=move(result,a,a.offset+delta);if(!first)continue;
+  const step=result.map(room=>room.id===first.id?first:room);
+  const second=move(step,b,b.offset-delta);if(!second)continue;
+  result=step.map(room=>room.id===second.id?second:room);
+  for(const key of [...keys(a),...keys(b)])used.add(key);
+  adjusted++;
+ }
+ return adjusted?{drawing:result,adjusted,nominal}:null;
 }
 
 function changeListingPoints(drawing:PlanShape[],room:PlanShape,changes:Map<number,Point>){

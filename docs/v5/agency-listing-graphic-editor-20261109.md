@@ -13,3 +13,11 @@ Il salvataggio aggiorna soltanto l’illustrazione associata alla revisione geom
 Verifica del 10 novembre: 14 test di geometria, controllo TypeScript e lint mirato. Nel browser sulla pratica sintetica sono stati verificati l’aggancio Orto, lo spostamento della parete con una finestra e la riapertura delle posizioni salvate.
 
 Verifica del 9 novembre: suite planimetrie backend 134/134 e frontend Agenzie 124/124. Browser desktop su pratica sintetica: trascinamento di un vertice, aggiunta e spostamento di una finestra, riapertura con gli stessi contorni/aperture e confronto del PNG con l’anteprima. Non è un collaudo sulla pratica reale; nessuna chiamata AI, migrazione o deploy.
+
+## 10 novembre — editor condiviso e lettura della barra a bordo pagina
+
+In **Modifica pianta → Apri editor grafico** si lavora sui contorni usati per le superfici, con l’originale attivo all’apertura. Condivide con l’annuncio trascinamento di pareti e vertici, Orto/Shift, guide, zoom, calibrazione e revisione delle aperture. Le correzioni in **Pianta per annuncio** rimangono illustrative. Il salvataggio tecnico aggiorna vani e aperture insieme, conserva il lordo e la scala e invalida il computo precedente quando cambiano i contorni. La porta da 80 cm della prova è stata salvata con la scala allora presente e verificata riaprendo l’editor.
+
+**Uniforma muri interni** propone lo spessore mediano dei tramezzi comparabili, lasciando il centro della parete in posizione. Cerca facce quasi allineate e opposte con ampia sovrapposizione; salta coppie ambigue, pertinenze e vani con simboli o vuoti. Correzioni sostanziali, muri obliqui reali e casi irregolari restano manuali. La proposta si vede prima del salvataggio e non certifica lo spessore reale.
+
+Il lettore locale riconosce il segmento evidenziato tra tacche, con una quota in metri centrata anche quando è verticale. Verificati la geometria e l’OCR italiano sul PDF di prova renderizzato localmente; l’originale non è incluso nel repository. **Cambia scala → Rileggi barra metrica** propone gli estremi sull’intero originale senza sovrascrivere la scala già salvata. La lettura può astenersi se geometria e testo non sono leggibili o se le misure sono in conflitto. Nessuna nuova chiamata AI a pagamento.

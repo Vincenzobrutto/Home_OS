@@ -33,7 +33,26 @@ it('inserts an 80 cm door from the document bar without a saved scale',async()=>
  await screen.findByText(/porta da 80 cm/);
  fireEvent.click(map,{clientX:45,clientY:10});
  fireEvent.click(screen.getByRole('button',{name:'Salva dettagli per l’annuncio'}));
- expect(onApply.mock.calls[0]?.[0].openings).toEqual([{kind:'door',start:[37,10],end:[53,10],fixed:true}]);
+ expect(onApply.mock.calls[0]?.[0]).toMatchObject({
+  scale:{mode:'bar',start:[0,0],end:[100,0],metres:5},
+  openings:[{kind:'door',start:[37,10],end:[53,10],fixed:true}],
+ });
+});
+
+it('uses the same wall controls on original geometry and keeps listing-only overrides out',()=>{
+ const room:PlanShape={id:'a',label:'Cucina',points:[[10,10],[90,10],[90,90],[10,90]],holes:[]};
+ const onApply=vi.fn();
+ render(<ListingPlanReview editPlan sourceUrl="/plan.png" width={120} height={120} rooms={[room]}
+  saved={{geometryRevision:1,openings:[],alignments:[],contours:[{id:'a',geometry:{...room,points:[[11,11],[85,11],[85,85],[11,85]]}}]}}
+  disabled={false} onClose={()=>{}} onApply={onApply}/>);
+ const map=screen.getByLabelText('Planimetria modificabile');
+ expect(screen.getByRole('checkbox',{name:'Mostra originale'})).toBeChecked();
+ const target=within(map).getByRole('button',{name:'Cucina · modifica muri'});
+ expect(target).toHaveAttribute('d',expect.stringContaining('90 90'));
+ fireEvent.click(target);
+ fireEvent.keyDown(within(map).getByRole('button',{name:'Parete 2 · Cucina'}),{key:'ArrowRight'});
+ fireEvent.click(screen.getByRole('button',{name:'Salva modifiche alla planimetria'}));
+ expect(onApply).toHaveBeenCalledWith({openings:[],alignments:[],contours:[{id:'a',geometry:{points:[[10,10],[91,10],[91,90],[10,90]],holes:[]}}]});
 });
 
 it('sets a manual scale on the full original and saves it with the new door',()=>{

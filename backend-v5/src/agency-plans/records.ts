@@ -52,7 +52,7 @@ export function registerPlan(actor:Actor,original:Practice,analysis:Analysis,exp
 }
 export type MeasurementConfiguration=Omit<CommercialInput,'surfaces'|'geometryRevision'|'unresolvedSymbols'>&{base:'rooms_and_walls'|'gross_perimeter';mainRegionIds:string[];assignments:Array<Omit<SurfaceLine,'geometry'>&{id:string}>};
 type GeometryEdit={view:'rooms'|'perimeter';id:string;geometry:Polygon};
-export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|({operation:'geometry'}&GeometryEdit)|{operation:'save_quick_estimate';covers:BalconyCover[];scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;outline?:GeometryEdit}|({operation:'save_listing_details';scale?:QuickEstimateScale&{mode:'manual'}}&Omit<ListingDetails,'geometryRevision'>)|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
+export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|({operation:'geometry'}&GeometryEdit)|{operation:'save_quick_estimate';covers:BalconyCover[];scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;outline?:GeometryEdit}|({operation:'save_listing_details'|'save_plan_graphics';scale?:QuickEstimateScale&{mode:'manual'|'bar'}}&Omit<ListingDetails,'geometryRevision'>)|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
 /** Internal typed application command; HTTP layer still needs an exact DTO/parser before being exposed. */
 export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string){
  requirePractice(actor,original,'edit',now);assert(input&&typeof input.key==='string'&&input.key.trim()&&input.key.length<=120&&typeof input.reason==='string'&&input.reason.trim()&&input.reason.length<=1000&&Number.isSafeInteger(input.expectedRevision)&&Number.isSafeInteger(input.expectedPlanVersion));
@@ -68,7 +68,7 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   else {const region=plan.rooms.find(r=>r.id===edit.id);assert(region);for(const other of plan.rooms)if(other.id!==region.id)assert(!overlaps(edit.geometry,other),'region_overlap');region.points=structuredClone(edit.geometry.points);region.holes=structuredClone(edit.geometry.holes);region.origin='manual';delete region.boundary;delete region.surfaceProposalDigest;delete region.surfaceBasis;region.seed=null;region.component=null;region.pixelArea=null;}
   plan.geometryRevision++;plan.measurement=null;plan.status='needs_review';plan.warnings.push('manual_geometry_change:'+input.reason);
  }
- const geometryChanged=command.operation==='geometry'||command.operation==='add_room'||command.operation==='remove_room'||command.operation==='save_quick_estimate'&&!!command.outline;
+ const geometryChanged=command.operation==='save_plan_graphics'&&!!command.contours?.length||command.operation==='geometry'||command.operation==='add_room'||command.operation==='remove_room'||command.operation==='save_quick_estimate'&&!!command.outline;
  if(command.operation==='apply_surface_proposal'){
   const proposal=plan.surfaceProposal;assert(proposal&&proposal.state==='pending'&&proposal.digest===command.proposalDigest&&proposal.sourceFingerprint===plan.fingerprint,'surface_proposal_unavailable');
   assert(proposal.baseGeometryRevision===plan.geometryRevision&&proposal.baseGeometryDigest===roomGeometryDigest(plan.rooms),'surface_proposal_stale');assert(surfaceProposalDigest(proposal)===proposal.digest,'surface_proposal_invalid');
@@ -117,7 +117,7 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   for(const entry of covers)saved.set(entry.id,entry);
   plan.balconyCovers=[...saved.values()];
   plan.quickEstimate={...(scale?{scale:structuredClone(scale)}:{}),...(parameters?{parameters:structuredClone(parameters)}:{}),savedAt:now,geometryRevision:plan.geometryRevision};
- }else if(command.operation==='save_listing_details'){
+ }else if(command.operation==='save_listing_details'||command.operation==='save_plan_graphics'){
   const {openings,alignments,contours,scale}=command;
   const segmentValid=({start,end}:{start:Point;end:Point})=>[start,end].every(([x,y])=>
    Number.isFinite(x)&&Number.isFinite(y)&&x>=0&&y>=0&&x<=plan.rasterSize.width&&y<=plan.rasterSize.height
@@ -131,10 +131,31 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
    assert(contours.every(({id,geometry})=>plan.rooms.some(room=>room.id===id)&&validPolygon(geometry)&&[geometry.points,...geometry.holes].flat().every(([x,y])=>x>=0&&y>=0&&x<=plan.rasterSize.width&&y<=plan.rasterSize.height)));
   }
   if(scale){
-   assert(scale.mode==='manual'&&segmentValid(scale)&&Number.isFinite(scale.metres)&&scale.metres>0&&scale.metres<=1e6);
+   assert(['manual','bar'].includes(scale.mode)&&segmentValid(scale)&&Number.isFinite(scale.metres)&&scale.metres>0&&scale.metres<=1e6);
    plan.quickEstimate={...plan.quickEstimate,scale:structuredClone(scale),savedAt:now,geometryRevision:plan.geometryRevision};
   }
-  plan.listingDetails={geometryRevision:plan.geometryRevision,openings:structuredClone(openings),alignments:structuredClone(alignments),...(contours?{contours:structuredClone(contours)}:{})};
+  if(command.operation==='save_plan_graphics'){
+   assert(!alignments.length);
+   if(geometryChanged){
+    const edited=new Map(contours!.map(c=>[c.id,c.geometry]));
+    const next=plan.rooms.map(room=>({...room,...edited.get(room.id)}));
+    for(let i=0;i<next.length;i++)for(let j=i+1;j<next.length;j++){
+     const a=next[i]!,b=next[j]!;
+     if(edited.has(a.id)||edited.has(b.id))assert(!overlaps(a,b),'region_overlap');
+    }
+    plan.edits??=[];assert(plan.edits.length<50,'plan_edit_history_limit');
+    plan.edits.push({at:now,actorId:actor.accountId,reason:input.reason,geometryRevision:plan.geometryRevision,rooms:structuredClone(plan.rooms),mainPerimeter:structuredClone(plan.mainPerimeter)});
+    for(const room of plan.rooms){
+     const geometry=edited.get(room.id);if(!geometry)continue;
+     Object.assign(room,structuredClone(geometry),{origin:'manual',seed:null,component:null,pixelArea:null});
+     delete room.boundary;delete room.surfaceProposalDigest;delete room.surfaceBasis;
+    }
+    plan.geometryRevision++;plan.measurement=null;plan.status='needs_review';plan.warnings.push('manual_geometry_change:'+input.reason);
+    if(plan.quickEstimate)plan.quickEstimate.geometryRevision=plan.geometryRevision;
+   }
+   const prior=plan.listingDetails?.geometryRevision===plan.geometryRevision?plan.listingDetails:undefined;
+   plan.listingDetails={geometryRevision:plan.geometryRevision,openings:structuredClone(openings),alignments:prior?.alignments??[],...(prior?.contours?{contours:prior.contours}:{})};
+  }else plan.listingDetails={geometryRevision:plan.geometryRevision,openings:structuredClone(openings),alignments:structuredClone(alignments),...(contours?{contours:structuredClone(contours)}:{})};
  }else if(command.operation==='measure'){
   const c=command.configuration;plan.measurementConfiguration=structuredClone(c);assert(c&&['rooms_and_walls','gross_perimeter'].includes(c.base)&&Array.isArray(c.assignments)&&c.assignments.length===plan.rooms.length&&new Set(c.assignments.map(a=>a.id)).size===c.assignments.length&&Array.isArray(c.mainRegionIds)&&new Set(c.mainRegionIds).size===c.mainRegionIds.length&&c.mainRegionIds.every(id=>plan.rooms.some(r=>r.id===id)));
   if(c.calibration.paper)assert(c.calibration.paper.widthUnits===plan.rasterSize.width&&c.calibration.paper.heightUnits===plan.rasterSize.height,'paper_raster_mismatch');

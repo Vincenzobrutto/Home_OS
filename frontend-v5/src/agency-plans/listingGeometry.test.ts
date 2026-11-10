@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
 import {carryListingOpening, changeListingVertex, listingAlignmentGuides, listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, placeScaledListingDoor, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
+import {suggestInternalWallThickness} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -155,4 +156,15 @@ it('moves an opening to a new wall without shortening it or accepting a drop in 
  const walls:[[Point,Point],[Point,Point]]=[[[0,0],[20,0]],[[20,0],[20,20]]];
  expect(placeListingOpening(opening,walls,2,[19,12])).toMatchObject({start:[20,9],end:[20,15],fixed:true});
  expect(placeListingOpening(opening,walls,2,[10,10])).toBeNull();
+});
+it('uniforms comparable facing partitions while leaving the balcony and wall centres intact',()=>{
+ const rectangle=(id:string,x:number,width:number,kind?:PlanShape['kind']):PlanShape=>({id,label:id,kind,points:[[x,0],[x+width,0],[x+width,80],[x,80]],holes:[]});
+ const drawing=[rectangle('a',0,100),rectangle('b',104,100),rectangle('c',210,100),rectangle('Balcone',315,80,'balcony')];
+ const proposal=suggestInternalWallThickness(drawing);
+ expect(proposal?.adjusted).toBe(2);
+ expect(proposal?.nominal).toBe(5);
+ const [a,b,c,balcony]=proposal!.drawing;
+ expect([a!.points[1]![0],b!.points[0]![0],b!.points[1]![0],c!.points[0]![0]]).toEqual([99.5,104.5,204.5,209.5]);
+ expect(balcony).toBe(drawing[3]);
+ expect(suggestInternalWallThickness(drawing.slice(0,2))).toBeNull();
 });

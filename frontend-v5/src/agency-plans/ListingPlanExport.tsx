@@ -149,7 +149,7 @@ type ListingExportProps={
  rooms:PlanShape[];disabled:boolean;autoPreview?:boolean;details?:ListingDetails;
  review?:{sourceUrl:string;width:number;height:number;scale?:QuickEstimateScale;calibration?:MeasurementConfiguration['calibration'];hints?:ListingOpening[];onSave:(details:ListingPlanDraft)=>void};
 };
-function listingScale({scale,calibration,width,height}:NonNullable<ListingExportProps['review']>):Point|null{
+export function listingScale({scale,calibration,width,height}:NonNullable<ListingExportProps['review']>):Point|null{
  const paper=scale?.mode==='paper'?scale:scale?undefined:calibration?.paper;
  if(paper)return paperMetresPerPixel(paper.format,paper.denominator,width,height);
  const reference=scale?.mode==='paper'?null:scale??(calibration?.confirmed?calibration:null);

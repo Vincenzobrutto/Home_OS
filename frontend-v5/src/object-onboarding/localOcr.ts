@@ -84,6 +84,7 @@ export class LocalOcr {
  async recognize(image:Blob,nativeDates:PositionedDateEvidence[]=[]){
   return confidentOcrText(await this.recognizeLayout(image),nativeDates);
  }
+ async setPageSegmentation(mode:'7'|'11'){await this.send('setParameters',{params:{tessedit_pageseg_mode:mode}});}
  async recognizeLayout(image:Blob){const bytes=new Uint8Array(await image.arrayBuffer());return this.send('recognize',{image:bytes,options:{},output:{blocks:true,text:false}});}
  dispose(reason='local_ocr_finished'){
   if(this.dead)return;this.dead=true;this.signal.removeEventListener('abort',this.abort);

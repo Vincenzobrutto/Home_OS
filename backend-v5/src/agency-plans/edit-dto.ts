@@ -49,11 +49,11 @@ export function parsePlanEdit(body:unknown,headerKey:string,planId:string):PlanE
   }
   command={operation:'save_quick_estimate',covers,...(scale?{scale}:{}),...(parameters?{parameters}:{}),...(outline?{outline}:{})};
  }
- else if(c.operation==='save_listing_details'){
+ else if(c.operation==='save_listing_details'||c.operation==='save_plan_graphics'){
   obj(c,['operation','openings','alignments','contours','scale']);
   const scale=c.scale===undefined?undefined:obj(c.scale,['mode','start','end','metres']);
   const wall=(v:unknown)=>{const w=obj(v,['roomId','start','end']);return {roomId:text(w.roomId),start:point(w.start),end:point(w.end)};};
-  command={operation:'save_listing_details',...(scale?{scale:{mode:choice(scale.mode,['manual']),start:point(scale.start),end:point(scale.end),metres:num(scale.metres,Number.MIN_VALUE,1e6)}}:{}),openings:list(c.openings,100).map(v=>{
+  command={operation:c.operation,...(scale?{scale:{mode:choice(scale.mode,['manual','bar']),start:point(scale.start),end:point(scale.end),metres:num(scale.metres,Number.MIN_VALUE,1e6)}}:{}),openings:list(c.openings,100).map(v=>{
    const o=obj(v,['kind','start','end','fixed']);
    return {kind:choice(o.kind,['door','window']),start:point(o.start),end:point(o.end),...(o.fixed!==undefined?{fixed:bool(o.fixed)}:{})};
   }),alignments:list(c.alignments,60).map(v=>{

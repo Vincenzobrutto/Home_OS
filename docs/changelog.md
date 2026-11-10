@@ -1,3 +1,7 @@
+## 10 novembre — Editor grafico condiviso e barra metrica verticale
+
+Gli strumenti grafici dell’annuncio sono disponibili anche per i vani del computo; proposta di spessore uniforme per i soli tramezzi comparabili e riconoscimento locale della quota verticale sul bordo. [Report](v5/agency-listing-graphic-editor-20261109.md).
+
 ## 9 novembre — Planimetria Agenzie: una mappa, tre attività
 
 Pagina Planimetria riorganizzata su una sola mappa (Modifica pianta, Calcola superfici, Pianta per annuncio), verifiche collegate alla mappa, riepilogo unico della stima con Salva, coperture e scala salvate con `save_quick_estimate`, correzione OCR per etichette «4m». Ramo `claude/agency-plan-page-20261109`, PR impilata su #83. [Report](v5/agency-plan-page-simplify-20261109.md).

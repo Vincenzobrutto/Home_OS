@@ -1,3 +1,5 @@
+L’editor condiviso e la lettura della barra metrica sul bordo sono nel candidato #84. Resta il collaudo su altre scansioni e su planimetrie con muri obliqui o profili complessi. [Report](v5/agency-listing-graphic-editor-20261109.md).
+
 ## 9 novembre — Planimetria Agenzie semplificata (proposta implementata, da approvare)
 
 L’[editor grafico per l’annuncio](v5/agency-listing-graphic-editor-20261109.md) permette di trascinare i vertici e aggiungere o spostare porte e finestre sulla proposta, con originale opzionale. Verificato su pratica sintetica con salvataggio e riapertura del PNG. Computi e geometria della casa restano separati.

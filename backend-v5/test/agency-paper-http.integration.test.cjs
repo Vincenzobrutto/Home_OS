@@ -54,5 +54,20 @@ test('A4 estimate persists through HTTP and fresh Prisma reload on a new owned c
   const get=await request('/plans');assert.equal(get.status,200);assert.deepEqual(await get.json(),saved);
   const fresh=new PrismaClient();try{assert.deepEqual(await new AgencyPracticesStore(fresh).readPlans(a.id,agency.id,p.id),saved);}finally{await fresh.$disconnect();}
  });
-
+ await t.test('graphic room and opening edits persist in one HTTP write and preserve the saved scale',async()=>{
+  const current=await (await request('/plans')).json(),plan=current.plans[0];
+  const geometry={points:[[12,10],[110,10],[110,110],[12,110]],holes:[]};
+  const openings=[{kind:'door',start:[40,10],end:[55,10],fixed:true}];
+  const body={expectedRevision:current.revision,expectedPlanVersion:plan.version,reason:'Synthetic graphic edit',command:{operation:'save_plan_graphics',openings,alignments:[],contours:[{id:'r',geometry}]}};
+  const key=randomUUID(),r=await post(body,key);assert.equal(r.status,201,await r.clone().text());
+  const saved=(await r.json()).plans;
+  assert.equal((await (await post(body,key)).json()).replay,true);
+  assert.equal((await post(body)).status,409);
+  const reopened=await (await request('/plans')).json();assert.deepEqual(reopened,saved);
+  const edited=reopened.plans[0];
+  assert.deepEqual(edited.rooms[0].points,geometry.points);
+  assert.deepEqual(edited.quickEstimate.scale,plan.quickEstimate.scale);
+  assert.deepEqual(edited.listingDetails,{geometryRevision:plan.geometryRevision+1,openings,alignments:[]});
+  assert.deepEqual(edited.mainPerimeter,plan.mainPerimeter);
+ });
 });

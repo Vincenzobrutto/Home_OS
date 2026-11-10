@@ -272,3 +272,27 @@ test('listing details persist against the current geometry without changing room
  assert.throws(()=>Records.editPlan(f.ctx.actor,practice,invalid,f.ctx.now));
  assert.throws(()=>parsePlanEdit({...body,command:{...body.command,openings:[{...opening,kind:'unknown'}]}},'invalid',plan.id));
 });
+
+test('graphic plan saves openings and canonical contours atomically, without overwriting the gross outline or scale',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input),original=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const plan=original.planAnalyses[0],room=plan.rooms[0],geometry=rect(7,7,20,30);
+ plan.mainPerimeter=rect(1,1,75,55);
+ const scale={mode:'bar',start:[1,1],end:[1,51],metres:5};
+ plan.quickEstimate={scale,savedAt:f.ctx.now,geometryRevision:1};
+ plan.measurement={geometryRevision:1};
+ const opening={kind:'door',start:[10,7],end:[20,7],fixed:true};
+ const {parsePlanEdit}=require('../dist/agency-plans/edit-dto');
+ const body={expectedRevision:2,expectedPlanVersion:1,reason:'Synthetic graphics review',command:{operation:'save_plan_graphics',alignments:[],openings:[opening],contours:[{id:room.id,geometry}]}};
+ const command=parsePlanEdit(body,'graphic-test',analysis.runId);
+ const result=Records.editPlan(f.ctx.actor,original,command,f.ctx.now).practice.planAnalyses[0];
+ assert.deepEqual(result.rooms[0].points,geometry.points);
+ assert.deepEqual(result.rooms[1],plan.rooms[1]);
+ assert.deepEqual(result.mainPerimeter,plan.mainPerimeter);
+ assert.equal(result.geometryRevision,2);
+ assert.equal(result.measurement,null);
+ assert.deepEqual(result.quickEstimate.scale,scale);
+ assert.deepEqual(result.listingDetails,{geometryRevision:2,openings:[opening],alignments:[]});
+ const overlap={...command,key:'bad-graphic-test',command:{...command.command,contours:[{id:room.id,geometry:rect(7,7,52,30)}]}};
+ assert.throws(()=>Records.editPlan(f.ctx.actor,original,overlap,f.ctx.now),e=>e.code==='region_overlap');
+ assert.deepEqual(original.planAnalyses[0].measurement,{geometryRevision:1});
+});
