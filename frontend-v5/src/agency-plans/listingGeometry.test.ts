@@ -19,6 +19,22 @@ describe('listing illustration',()=>{
   expect(terrace!.points).toEqual(balcony.points);
   expect(original).toEqual(copy);
  });
+ it('evens horizontal and vertical gaps around an L-shaped living room',()=>{
+  const outlines=[
+   room('Soggiorno',[[164,48],[659,48],[659,278],[595,278],[595,448],[446,448],[446,295],[164,295]]),
+   room('Bagno',[[167,307],[437,307],[437,449],[167,449]]),
+   room('Cucina',[[278,461],[600,461],[600,630],[278,630]]),
+   room('Stanza',[[612,289],[993,289],[993,630],[612,630]]),
+   room('Veranda',[[146,462],[260,462],[260,630],[146,630]]),
+   room('Cantina',[[211,1367],[430,1367],[430,1488],[211,1488]]),
+  ];
+  const [living,bath,kitchen]=listingIllustration(outlines);
+  const vertical=living!.points[6]![0]-bath!.points[1]![0];
+  const horizontal=bath!.points[1]![1]-living!.points[6]![1];
+  expect(vertical).toBeCloseTo(horizontal,0);
+  expect(vertical).toBeCloseTo(kitchen!.points[0]![1]-bath!.points[2]![1],0);
+ });
+
  it('keeps meaningful diagonals and sides associated with saved openings',()=>{
   const a=room('Studio',[[0,0],[100,.5],[100,75],[75,100],[0,100]]);
   const result=listingIllustration([a])[0]!;

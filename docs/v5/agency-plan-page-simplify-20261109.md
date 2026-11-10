@@ -102,6 +102,8 @@ La revisione mette a fuoco una sola apertura sulla mappa e tiene conferma, modif
 
 Il comando guidato di allineamento è sostituito dall’[editor grafico](agency-listing-graphic-editor-20261109.md): vertici e aperture si modificano sulla proposta. Il salvataggio è separato dal computo.
 
+Nei tramezzi che si incontrano ad angolo, la pianta per annuncio può regolare lo stesso vertice sui due assi. Le distanze dei tratti vicini contribuiscono allo spessore di riferimento anche quando il tratto non può essere spostato in sicurezza.
+
 La pianta per annuncio raddrizza automaticamente i lati quasi orizzontali o verticali e rende uniforme il distacco tra tramezzi comparabili. Mantiene le separazioni reali, le diagonali evidenti e i dettagli già confermati. La resa si applica all’illustrazione e al PNG.
 
 Quando un contorno è in bozza in Calcola superfici, Salva modifiche nella barra della mappa registra il contorno e la stima insieme. Dopo la conferma, chiude la selezione e riabilita il cambio di attività.

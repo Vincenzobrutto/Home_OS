@@ -540,7 +540,7 @@ export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?
   if(a.id===b.id||a.axis!==b.axis||a.inward===b.inward||(b.offset-a.offset)*a.inward>=0)return [];
   const gap=Math.abs(b.offset-a.offset),start=Math.max(a.from,b.from),end=Math.min(a.to,b.to);
   const lengths=[a.to-a.from,b.to-b.from];
-  const minimumOverlap=protectedRooms?Math.max(span*.035,.65*Math.min(...lengths)):.85*Math.max(...lengths);
+  const minimumOverlap=protectedRooms?Math.max(span*.035,.55*Math.min(...lengths)):.85*Math.max(...lengths);
   if(gap<EPSILON||gap>span*.035||end-start<minimumOverlap)return [];
   const middle=(a.offset+b.offset)/2;
   const blocked=[.2,.5,.8].some(t=>{
@@ -552,12 +552,20 @@ export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?
  }));
  const clear=pairs.filter(({a,b})=>pairs.filter(pair=>pair.a===a||pair.b===a||pair.a===b||pair.b===b).length===1);
  if(clear.length<2)return null;
- const ordered=clear.map(pair=>pair.gap).sort((a,b)=>a-b);
- const nominal=(ordered[Math.floor((ordered.length-1)/2)]!+ordered[Math.floor(ordered.length/2)]!)/2;
+ // A long wall can border several rooms. Its gaps inform the reference even when
+ // that wall cannot safely be edited as one unambiguous pair.
+ const ordered=(protectedRooms?pairs:clear).map(pair=>pair.gap).sort((a,b)=>a-b);
+ const lowerMiddle=ordered[Math.floor((ordered.length-1)/2)]!;
+ const nominal=protectedRooms&&ordered.length>2?lowerMiddle:(lowerMiddle+ordered[Math.floor(ordered.length/2)]!)/2;
  if(!(nominal>0))return null;
  let result=drawing,adjusted=0;
  const used=new Set<string>();
- const keys=(face:typeof faces[number])=>[face.id+':'+face.index,face.id+':'+(face.index+1)%drawing.find(room=>room.id===face.id)!.points.length];
+ // A corner can move once on each axis without undoing the perpendicular correction.
+ const keys=(face:typeof faces[number])=>{
+  const prefix=face.id+':'+face.axis+':';
+  const end=(face.index+1)%drawing.find(room=>room.id===face.id)!.points.length;
+  return [prefix+face.index,prefix+end];
+ };
  for(const {a,b,gap} of clear){
   if(protectedRooms?.has(a.id)||protectedRooms?.has(b.id)||gap<EPSILON)continue;
   if((Math.abs(gap-nominal)<(protectedRooms?EPSILON:.2)&&a.spread+b.spread<.2)||Math.abs(gap-nominal)+(a.spread+b.spread)/2>nominal*(protectedRooms ? .4 : .25)||
