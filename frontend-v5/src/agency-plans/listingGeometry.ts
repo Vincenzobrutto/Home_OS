@@ -493,6 +493,63 @@ export function sharedWallBand(drawing:PlanShape[],wall:SharedPlanWall):Point[]|
  return [start,end,at(second,unit(fraction(end,second))),at(second,unit(fraction(start,second)))];
 }
 
+/** Clean up the wall overlay independently of the contours used for measurement. */
+export function joinedSharedWallBands(drawing:PlanShape[],walls:SharedPlanWall[],perimeter?:PlanShape){
+ const bands=walls.map(wall=>{
+  const band=sharedWallBand(drawing,wall);
+  if(!band)return null;
+  const [a,b,c,d]=band as [Point,Point,Point,Point];
+  const start:Point=[(a[0]+d[0])/2,(a[1]+d[1])/2],end:Point=[(b[0]+c[0])/2,(b[1]+c[1])/2];
+  const run=distance(start,end),width=(distance(a,d)+distance(b,c))/2;
+  if(run<EPSILON||width<EPSILON)return null;
+  const direction:Point=[(end[0]-start[0])/run,(end[1]-start[1])/run];
+  const axis=Math.abs(direction[0])>=Math.abs(direction[1])?0:1;
+  const axial:Point=axis===0?[Math.sign(direction[0]),0]:[0,Math.sign(direction[1])];
+  // Only correct small angular drift that stays close to the original faces.
+  const drift=Math.abs(direction[1-axis]!);
+  const tangent=drift<.044&&drift*run/2<=Math.max(1,width*.35)?axial:direction;
+  const normal:Point=[-tangent[1],tangent[0]];
+  const offsets=[[a,b],[d,c]].map(face=>face.reduce((sum,point)=>sum+dot(point,normal),0)/2);
+  const atOffset=(along:number,offset:number):Point=>[tangent[0]*along+normal[0]*offset,tangent[1]*along+normal[1]*offset];
+  const from=dot(start,tangent),to=dot(end,tangent);
+  const straight:Point[]=[atOffset(from,offsets[0]!),atOffset(to,offsets[0]!),atOffset(to,offsets[1]!),atOffset(from,offsets[1]!)];
+  const nearFaces=straight.every((point,i)=>distance(point,band[i]!)<=Math.max(2,width*.55));
+  return {wall,band:nearFaces?straight:band,tangent,width};
+ });
+ const exterior=perimeter?[perimeter.points,...perimeter.holes].flatMap(edges):[];
+ return bands.map(item=>{
+  if(!item)return null;
+  const {band,tangent,width,wall}=item;
+  const neighbours=bands.flatMap(other=>other&&other!==item&&wall.some(face=>other.wall.some(ref=>ref.id===face.id))?edges(other.band):[]);
+  function join(first:Point,second:Point,direction:Point):[Point,Point]{
+   const limit=Math.min(24,Math.max(4,width*1.8));
+   const nearest:[number,number]=[Infinity,Infinity];
+   let paired:[number,number]=[Infinity,Infinity];
+   function tryJoin([a,b]:Segment,slack:number){
+    const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
+    const determinant=direction[0]*dy-direction[1]*dx;
+    if(length<EPSILON||Math.abs(determinant)<length*.35)return;
+    const intersections=[first,second].map(point=>{
+     const x=a[0]-point[0],y=a[1]-point[1];
+     return {advance:(x*dy-y*dx)/determinant,across:(x*direction[1]-y*direction[0])/determinant*length};
+    });
+    const advances=intersections.map(({advance,across})=>
+     advance>=-slack&&advance<=limit&&across>=-slack&&across<=length+slack?Math.max(0,advance):Infinity) as [number,number];
+    advances.forEach((advance,i)=>{nearest[i]=Math.min(nearest[i]!,advance);});
+    if(Math.max(...advances)<Math.max(...paired))paired=advances;
+   }
+   for(const edge of exterior)tryJoin(edge,0);
+   for(const edge of neighbours)tryJoin(edge,Math.min(2,width*.4));
+   const [a,b]=Math.abs(nearest[0]-nearest[1])<=1||!Number.isFinite(paired[0]+paired[1])?nearest:paired;
+   if(!Number.isFinite(a+b)||Math.abs(a-b)>limit*.7)return [first,second];
+   return [[first[0]+direction[0]*a,first[1]+direction[1]*a],[second[0]+direction[0]*b,second[1]+direction[1]*b]];
+  }
+  const [startFirst,startSecond]=join(band[0]!,band[3]!,[-tangent[0],-tangent[1]]);
+  const [endFirst,endSecond]=join(band[1]!,band[2]!,tangent);
+  return [startFirst,endFirst,endSecond,startSecond];
+ });
+}
+
 function alignTerraceFrontage(drawing:PlanShape[],span:number,protectedRooms:ReadonlySet<string>){
  const terraces=drawing.filter(room=>room.kind!=='excluded'&&/\bterrazz/i.test(room.label));
  const interior=drawing.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)&&!protectedRooms.has(room.id));

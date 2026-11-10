@@ -2,7 +2,7 @@ import {useEffect,useMemo,useRef,useState,type KeyboardEvent,type MouseEvent,typ
 import {MAX_PLAN_ZOOM,usePlanZoom} from '../components/usePlanZoom';
 import type {ListingDetails,ListingOpening,ListingPlanDraft} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
-import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDoorOpposite,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening,placeScaledListingDoor,proposeSharedPlanWalls,sharedWallBand,suggestInternalWallThickness} from './listingGeometry';
+import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDoorOpposite,listingDrawing,listingIllustration,listingOpeningOnDrawing,listingWalls,moveListingWall,placeListingOpening,placeScaledListingDoor,proposeSharedPlanWalls,joinedSharedWallBands,suggestInternalWallThickness} from './listingGeometry';
 import {detectListingOpenings,distinctOpenings,readListingRaster} from './listingOpeningDetection';
 import type {ScaleReference} from './scaleDetection';
 import {listingRoomFill} from './listingStyle';
@@ -406,8 +406,7 @@ export function ListingPlanReview(p:Props){
    })}
    {(wallProposal||sharedWalls.length>0)&&!calibrating&&<g aria-label="Pareti comuni sulla tavola" pointerEvents="none"
     fill={wallProposal?'#be6618':'#005867'} stroke={wallProposal?'#be6618':'#005867'} opacity={wallProposal&&original ? .75 : 1} strokeWidth={wallProposal?2:6}>
-    {(wallProposal?[...wallProposal.walls,...wallProposal.unchecked]:sharedWalls).map((wall,i)=>{
-     const band=sharedWallBand(previewDrawing,wall);
+    {joinedSharedWallBands(previewDrawing,wallProposal?[...wallProposal.walls,...wallProposal.unchecked]:sharedWalls,showPerimeter?perimeter:undefined).map((band,i)=>{
      const unchecked=wallProposal&&i>=wallProposal.walls.length;
      return band&&<polygon key={i} points={band.map(point=>point.join(',')).join(' ')} vectorEffect="non-scaling-stroke"
       fill={unchecked?'none':undefined} strokeDasharray={unchecked?'5 3':undefined}/>;

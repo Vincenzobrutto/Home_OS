@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
 import {carryListingOpening, changeListingVertex, listingAlignmentGuides, listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, placeScaledListingDoor, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
-import {proposeSharedPlanWalls, suggestInternalWallThickness} from './listingGeometry';
+import {joinedSharedWallBands, proposeSharedPlanWalls, suggestInternalWallThickness} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -17,6 +17,47 @@ it('suggests both portions of a long wall facing two rooms without changing unsu
  expect(result.unchecked).toContainEqual([{id:'corridor',edge:1},{id:'kitchen',edge:3}]);
  expect(result.unchecked).toContainEqual([{id:'corridor',edge:1},{id:'bathroom',edge:3}]);
  expect(result.unchecked).toHaveLength(3);
+});
+
+it('closes short wall gaps at a split T and the perimeter without changing the room geometry',()=>{
+ const drawing=[
+  room('top',[[10,10],[90,10],[90,37],[10,37]]),
+  room('left',[[10,43],[48,43],[48,85],[10,85]]),
+  room('right',[[54,43],[90,43],[90,85],[54,85]]),
+ ];
+ const before=structuredClone(drawing);
+ const perimeter=room('gross',[[5,5],[96,5],[96,91],[5,91]]);
+ const [left,right,stem]=joinedSharedWallBands(drawing,[
+  [{id:'top',edge:2},{id:'left',edge:0}],
+  [{id:'top',edge:2},{id:'right',edge:0}],
+  [{id:'left',edge:1},{id:'right',edge:3}],
+ ],perimeter);
+ expect(left).toContainEqual([5,37]);
+ expect(right).toContainEqual([96,37]);
+ expect(stem).toContainEqual([48,43]);
+ expect(stem).toContainEqual([54,43]);
+ expect(stem).toContainEqual([48,91]);
+ const outerEdge=(band:Point[])=>band.filter(([,y])=>y===37).map(([x])=>x);
+ expect(Math.max(...outerEdge(left!))).toBeGreaterThanOrEqual(Math.min(...outerEdge(right!)));
+ expect(drawing).toEqual(before);
+});
+
+it('straightens small angular drift and keeps distinctly sloped walls and wider gaps',()=>{
+ const angles=(rise:number)=>{
+  const drawing=[
+   room('top',[[10,10],[90,10],[90,37+rise],[10,37]]),
+   room('bottom',[[10,43],[90,43+rise],[90,85],[10,85]]),
+  ];
+  const [band]=joinedSharedWallBands(drawing,[[{id:'top',edge:2},{id:'bottom',edge:0}]],room('gross',[[-15,5],[115,5],[115,95],[-15,95]]));
+  return band!;
+ };
+ const level=angles(2);
+ expect(level[0]![1]).toBeCloseTo(level[1]![1]);
+ expect(level[2]![1]).toBeCloseTo(level[3]![1]);
+ expect(Math.min(...level.map(([x])=>x))).toBeCloseTo(10,0);
+ expect(Math.max(...level.map(([x])=>x))).toBeCloseTo(90,0);
+ const slope=angles(10);
+ expect(Math.abs(slope[0]![1]-slope[1]![1])).toBeGreaterThan(9);
 });
 
 describe('listing illustration',()=>{
