@@ -310,3 +310,17 @@ test('new unresolved room checks retain only a usable analysis point and label',
  assert.deepEqual(view.reviewLocations,[{id:'missing',label:'Ripostiglio',point:[0,0]}]);
  assert.equal(view.rooms.some(room=>room.id==='missing'),false);
 });
+
+test('manual issue location is stored without changing geometry or closing the check',async()=>{
+ const f=ports(),analysis=await P.analyzePlan(f.adapter,f.input);
+ analysis.final.issues.push({id:'legacy',code:'seed_region_unresolved'});
+ const original=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const {parsePlanEdit}=require('../dist/agency-plans/edit-dto');
+ const input=parsePlanEdit({expectedRevision:2,expectedPlanVersion:1,reason:'Compared with document',command:{operation:'locate_issue',issueId:'legacy',code:'seed_region_unresolved',point:[12,14]}},'locate',analysis.runId);
+ const saved=Records.editPlan(f.ctx.actor,original,input,f.ctx.now).practice;
+ const [view]=Records.planViews(f.ctx.actor,saved,f.ctx.now).plans;
+ assert.deepEqual(view.issues.find(issue=>issue.id==='legacy').manualPoint,[12,14]);
+ assert.equal(view.geometryRevision,1);
+ assert.deepEqual(view.rooms,original.planAnalyses[0].rooms);
+ assert.throws(()=>Records.editPlan(f.ctx.actor,original,{...input,command:{...input.command,point:[1000,1000]}},f.ctx.now));
+});

@@ -14,8 +14,8 @@ import {PlanIssueReview,type Resolution} from './PlanIssueReview';
 import {PolygonBuilder} from './PolygonBuilder';
 import styles from './practice-plan.module.css';
 type Change={view:'rooms'|'perimeter';shape:PlanShape};
-type Builder={initial:PlanShape|null;mode:'polygon'|'segment';done:(shape:PlanShape)=>void};
-type Pending={key:string;id:string;body:PlanEditBody};
+type Builder={initial:PlanShape|null;mode:'polygon'|'segment'|'point';pointLabel?:string;done:(shape:PlanShape)=>void};
+type Pending={key:string;id:string;body:PlanEditBody;afterSave?:()=>void};
 function carryIssueNumbers(next:PlansResponse,previous?:PlansResponse):PlansResponse{
  return {...next,plans:next.plans.map(plan=>{
   if(!plan.issues?.some(issue=>issue.number===undefined))return plan;
@@ -62,8 +62,8 @@ function Workspace(p:WorkspaceProps){
  const excludedIds=candidateChoices.key===proposalKey?candidateChoices.excluded:[];
  const locked=!!p.readOnly||busy||!!pending||conflict;
  function refresh(){setFocus(null);setQuickScale(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setBuilder(null);setPending(null);setConflict(false);setError('');setNotice('');setLoading(true);setReload(v=>v+1);}
- async function send(request:Pending){setBusy(true);setError('');try{const r=await p.api.edit(request.id,request.body,request.key);if(!alive.current)return;setData(v=>v?{...v,plans:carryIssueNumbers(r.plans,v.plans)}:v);setPending(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setReason('');setNotice(r.replay?'Salvataggio già ricevuto dal server.':request.body.command.operation==='save_quick_estimate'?'Stima salvata nella pratica.':'Modifiche salvate nella pratica.');if(request.body.command.operation==='save_plan_graphics')setGraphics(false);p.onSaved?.();}catch(e){if(e instanceof ApiError&&e.status===422){setPending(null);setError('Controlla scala, contorni e conferme: nessuna modifica è stata salvata.');}else failure(e);}finally{if(alive.current)setBusy(false);}}
- function save(command:Record<string,unknown>,reviewReason?:string){if(!data||!plan||locked||(showProposal&&command.operation!=='apply_surface_proposal'))return;const editReason=reviewReason||reason.trim()||(command.operation==='measure'?'Calcolo della superficie commerciale':command.operation==='geometry'?'Correzione del contorno sul documento originale':command.operation==='remove_room'?'Vano rimosso durante la revisione grafica':'');if(!editReason){setError('Indica il motivo della modifica.');return;}const request={key:crypto.randomUUID(),id:plan.id,body:{expectedRevision:data.plans.revision,expectedPlanVersion:plan.version,reason:editReason,command}};setPending(request);void send(request);}
+ async function send(request:Pending){setBusy(true);setError('');try{const r=await p.api.edit(request.id,request.body,request.key);if(!alive.current)return;setData(v=>v?{...v,plans:carryIssueNumbers(r.plans,v.plans)}:v);setPending(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setReason('');request.afterSave?.();setNotice(r.replay?'Salvataggio già ricevuto dal server.':request.body.command.operation==='save_quick_estimate'?'Stima salvata nella pratica.':'Modifiche salvate nella pratica.');if(request.body.command.operation==='save_plan_graphics')setGraphics(false);p.onSaved?.();}catch(e){if(e instanceof ApiError&&e.status===422){setPending(null);setError('Controlla scala, contorni e conferme: nessuna modifica è stata salvata.');}else failure(e);}finally{if(alive.current)setBusy(false);}}
+ function save(command:Record<string,unknown>,reviewReason?:string,afterSave?:()=>void){if(!data||!plan||locked||(showProposal&&command.operation!=='apply_surface_proposal'))return;const editReason=reviewReason||reason.trim()||(command.operation==='measure'?'Calcolo della superficie commerciale':command.operation==='geometry'?'Correzione del contorno sul documento originale':command.operation==='remove_room'?'Vano rimosso durante la revisione grafica':'');if(!editReason){setError('Indica il motivo della modifica.');return;}const request={key:crypto.randomUUID(),id:plan.id,afterSave,body:{expectedRevision:data.plans.revision,expectedPlanVersion:plan.version,reason:editReason,command}};setPending(request);void send(request);}
  function change(view:Change['view'],shape:PlanShape){if(locked||showProposal)return;if(draft&&(draft.view!==view||draft.shape.id!==shape.id)){setError('Salva il contorno corrente prima di modificare un altro vano.');return;}setDraft({view,shape});setNotice('');}
  function polygon(initial:PlanShape|null,done:(s:PlanShape)=>void,mode:'polygon'|'segment'='polygon'){if(locked||draft||showProposal)return;setBuilder({initial,mode,done:s=>{setConfigDirty(true);done(s);}});}
  const rooms=plan?.rooms?.map(r=>draft?.view==='rooms'&&draft.shape.id===r.id?draft.shape:r)||[],perimeter=draft?.view==='perimeter'?draft.shape:plan?.mainPerimeter?{...plan.mainPerimeter,id:'gross',label:'Perimetro lordo'}:null;
@@ -120,11 +120,11 @@ function Workspace(p:WorkspaceProps){
    const threshold=opening?.threshold;
    const precisePoint=symbol?.point??(threshold?[(threshold.start[0]+threshold.end[0])/2,(threshold.start[1]+threshold.end[1])/2] as Point:undefined);
    const candidatePoint=candidate?.region.seed??undefined;
-   const point=precisePoint??candidatePoint??location?.point;
+   const point=issue.manualPoint??precisePoint??candidatePoint??location?.point;
    const canEdit=!!savedRoom&&!p.readOnly;
    const visibleRoom=showProposal&&!canEdit?proposedRoom:savedRoom;
    const issueKey=JSON.stringify([plan.id,issue.id,issue.code]);
-   return {issue,issueKey,roomLabel:room?.label??location?.label,symbol,visibleRoom,point,approximate:!precisePoint&&!candidatePoint&&!!location,canEdit,number:issue.number??index+1};
+   return {issue,issueKey,roomLabel:room?.label??location?.label,symbol,visibleRoom,point,approximate:!issue.manualPoint&&!precisePoint&&!candidatePoint&&!!location,canEdit,number:issue.number??index+1};
   });
   const switchBlocked=manualOpen||!!builder||!!draft||configDirty||!!pending||busy;
   const accessories=rooms.filter(isAppurtenance),principals=rooms.filter(room=>!isAppurtenance(room));
@@ -192,18 +192,30 @@ function Workspace(p:WorkspaceProps){
       <section className={styles.panelSection} aria-labelledby="issues-heading"><h4 id="issues-heading">Verifiche aperte · {entries.length}</h4>
        {!entries.length?<p>Nessuna verifica aperta.</p>:<>
         {draft&&<p className={styles.muted}>Salva il contorno in modifica per chiudere le verifiche.</p>}
-        <ul className={styles.issueList}>{entries.map(({issue,issueKey,roomLabel,symbol,visibleRoom,point,approximate,canEdit,number})=><PlanIssueReview key={issueKey} index={number}
-         roomLabel={roomLabel} symbolReason={symbol?.reason} approximate={approximate} active={focus?.issueKey===issueKey}
-         description={issueLabels[issue.code]||'Una zona richiede controllo manuale.'}
-         wholePage={!visibleRoom&&!point}
-         onShow={sourceUrl?()=>{
+        <ul className={styles.issueList}>{entries.map(({issue,issueKey,roomLabel,symbol,visibleRoom,point,approximate,canEdit,number})=>{
+         const lacksLocation=!visibleRoom&&!point;
+         const canLocate=lacksLocation&&!locked&&!showProposal;
+         function openCheck(){
+          if(canLocate){
+           setBuilder({initial:null,mode:'point',pointLabel:'Posiziona verifica '+number,done:shape=>{
+            const picked=shape.points[0];
+            if(picked)save({operation:'locate_issue',issueId:issue.id,code:issue.code,point:picked},'Posizione della verifica sulla tavola',
+             ()=>show(issue.id,picked,false,{issueKey,number}));
+           }});
+           return;
+          }
           if(canEdit&&showProposal){setPreviewKey('');setReviewedKey('');}
-          show(visibleRoom?.id??issue.id,point,!!symbol,{issueKey,number,wholePage:!visibleRoom&&!point});
-         }:undefined}
-         showLabel={canEdit?'Modifica contorno':visibleRoom||point?undefined:'Apri la tavola originale'} showDisabled={switchBlocked||conflict}
-         disabled={locked||!!draft||configDirty||showProposal||!!builder||manualOpen}
-         geometryEdited={(plan.geometryRevision||1)>1}
-         issue={issue} onResolve={resolveIssue}/>)}</ul>
+          show(visibleRoom?.id??issue.id,point,!!symbol,{issueKey,number,wholePage:lacksLocation});
+         }
+         const showLabel=canEdit?'Modifica contorno':canLocate?'Posiziona verifica '+number:lacksLocation?'Apri la tavola originale':undefined;
+         return <PlanIssueReview key={issueKey} index={number}
+          roomLabel={roomLabel} symbolReason={symbol?.reason} approximate={approximate} active={focus?.issueKey===issueKey}
+          description={issueLabels[issue.code]||'Una zona richiede controllo manuale.'}
+          wholePage={lacksLocation} onShow={sourceUrl?openCheck:undefined} showLabel={showLabel} showDisabled={switchBlocked||conflict}
+          disabled={locked||!!draft||configDirty||showProposal||!!builder||manualOpen}
+          geometryEdited={(plan.geometryRevision||1)>1}
+          issue={issue} onResolve={resolveIssue}/>;
+        })}</ul>
        </>}
       </section>
       {proposal?.state==='applied'&&<p role="status">Correzioni adottate. Verifica gli elementi interni prima del computo.</p>}
@@ -226,7 +238,7 @@ function Workspace(p:WorkspaceProps){
     </aside>
    </div>
    {manualOpen&&sourceUrl&&<ManualRoomCreator initialKind={manualMode==='balcony'?'balcony':undefined} api={p.api} plan={plan} revision={data.plans.revision} sourceUrl={sourceUrl} onClose={()=>setManualOpen(false)} onReload={()=>{setManualOpen(false);refresh();}} onDenied={failure} onSaved={(plans,id)=>{setData(v=>v?{...v,plans:carryIssueNumbers(plans,v.plans)}:v);setManualOpen(false);setNotice(manualMode==='balcony'?'Balcone aggiunto: scegli Coperto o Scoperto.':'Nuovo vano salvato nella pratica.');show(id);p.onSaved?.();}}/>}
-   {builder&&sourceUrl&&<PolygonBuilder key={builder.initial?.id||builder.mode} sourceUrl={sourceUrl} width={rasterSize.width} height={rasterSize.height} initial={builder.initial} mode={builder.mode} referenceShapes={builder.mode==='polygon'?rooms:undefined} onCancel={()=>setBuilder(null)} onDone={s=>{builder.done(s);setBuilder(null);}}/>}
+   {builder&&sourceUrl&&<PolygonBuilder key={builder.initial?.id||builder.mode} sourceUrl={sourceUrl} width={rasterSize.width} height={rasterSize.height} initial={builder.initial} mode={builder.mode} pointLabel={builder.pointLabel} referenceShapes={builder.mode==='segment'?undefined:rooms} onCancel={()=>setBuilder(null)} onDone={s=>{builder.done(s);setBuilder(null);}}/>}
   </>;
  }
  if(p.embedded)return <section aria-label="Planimetria" className={styles.planEditor}>

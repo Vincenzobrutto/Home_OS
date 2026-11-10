@@ -62,11 +62,15 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
    setInsert(false);
   }
  }
+ const focusedShape=props.focus&&(shapes.find(s=>s.id===props.focus?.id)??props.contextShapes?.find(s=>s.id===props.focus?.id));
+ const focusPoint:Point|null=props.focus?.point??(focusedShape?.points.length?[
+  (Math.min(...focusedShape.points.map(([x])=>x))+Math.max(...focusedShape.points.map(([x])=>x)))/2,
+  (Math.min(...focusedShape.points.map(([,y])=>y))+Math.max(...focusedShape.points.map(([,y])=>y)))/2,
+ ]:null);
  useEffect(()=>{
   const target=props.focus,scroll=scrollRef.current,map=mapRef.current;
   if(!target)return;
-  const shape=shapes.find(s=>s.id===target.id)??props.contextShapes?.find(s=>s.id===target.id);
-  const point=target.point??(shape?[(Math.min(...shape.points.map(p=>p[0]))+Math.max(...shape.points.map(p=>p[0])))/2,(Math.min(...shape.points.map(p=>p[1]))+Math.max(...shape.points.map(p=>p[1])))/2] as Point:null);
+  const point=focusPoint;
   if(scroll&&target.wholePage){scroll.scrollLeft=0;scroll.scrollTop=0;}
   else if(scroll&&map&&point){
    const matrix=map.getScreenCTM?.();
@@ -79,7 +83,9 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   scroll?.scrollIntoView?.({block:'nearest',behavior:'smooth'});
   // eslint-disable-next-line react-hooks/exhaustive-deps
  },[focusKey]);
- const marker=props.focus?.point??null;
+ const issueNumber=props.focus?.number;
+ const marker=props.focus?.wholePage?null:issueNumber===undefined?props.focus?.point:focusPoint;
+ const markerScale=1/(mapScale??(500/props.width));
  const highlighted=props.focus?.number!==undefined&&shapes.find(shape=>shape.id===props.focus?.id);
  function nudge(index:number,dx:number,dy:number){if(!selected||props.readOnly)return;const next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points,p=points[index];if(!p)return;points[index]=[Math.max(0,Math.min(props.width,p[0]+dx)),Math.max(0,Math.min(props.height,p[1]+dy))];change(next);setVertex(index);}
  function startDrag(event:PointerEvent<SVGCircleElement>,index:number){
@@ -199,7 +205,10 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
     <circle aria-hidden="true" cx={p[0]} cy={p[1]} r=".1" fill="none" stroke={vertex===i?'#b45b00':'#006d80'} strokeWidth="5" vectorEffect="non-scaling-stroke" pointerEvents="none"/>
    </g>)}
    {highlighted&&<path data-testid="focus-outline" d={path(highlighted)} fill="none" stroke="#a34c06" strokeWidth="3" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
-   {marker&&<circle data-testid="focus-marker" aria-hidden="true" cx={marker[0]} cy={marker[1]} r=".1" fill="none" stroke="#d14900" strokeWidth="26" strokeOpacity=".55" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
+   {marker&&<g pointerEvents="none" aria-hidden="true">
+    <circle data-testid="focus-marker" cx={marker[0]} cy={marker[1]} r={15*markerScale} fill="#a34c06" stroke="white" strokeWidth="2" vectorEffect="non-scaling-stroke"/>
+    {issueNumber!==undefined&&<text x={marker[0]} y={marker[1]} textAnchor="middle" dominantBaseline="central" fill="white" fontWeight="700" fontSize={13*markerScale}>{issueNumber}</text>}
+   </g>}
   </svg></div>
   {!props.drawingOnly&&!props.simple&&!(props.hideRoomSummary&&view==='rooms')&&<><PlanSurfaceSummary view={view} rooms={props.rooms.filter(r=>!props.excludedCandidateIds?.includes(r.id))} configuration={props.configuration} measurement={props.measurement} measurementsOutdated={props.measurementsOutdated} onSelect={id=>{if(!shapes.some(s=>s.id===id))setView('rooms');setSelection(id);setRingIndex(0);setVertex(null);setInsert(false);}}/>
   <p className={styles.note}>Conferma scala, perimetro e regole sui muri prima del computo. Il risultato è una misura sul documento, non un rilievo certificato.</p></>}

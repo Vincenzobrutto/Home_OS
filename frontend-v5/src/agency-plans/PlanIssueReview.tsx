@@ -28,8 +28,8 @@ export function PlanIssueReview(p:{
    aria-label={action} aria-describedby={summaryId} aria-pressed={!!p.active}>
    <span id={summaryId} className={styles.issueSummary}>{summary}</span>
    <span className={styles.issueLinkText}>{action}</span>
-  </button>:<div className={styles.issueSummary}>{summary}<span className={styles.muted}>Questa verifica non ha una posizione salvata. Controlla la tavola originale.</span></div>}
-  {p.onShow&&p.wholePage&&<p className={styles.muted}>Questa verifica non ha una posizione salvata. Controlla la tavola originale.</p>}
+  </button>:<div className={styles.issueSummary}>{summary}<span className={styles.muted}>Questa verifica non ha ancora una posizione salvata.</span></div>}
+  {p.onShow&&p.wholePage&&<p className={styles.muted}>Questa verifica non ha ancora una posizione salvata.</p>}
   {p.active&&p.approximate&&<p className={styles.muted}>Il segnaposto indica il punto da cui è partita l’analisi. Controlla l’area intorno.</p>}
   <div className={styles.issueActions}>
    <label>Esito {label}<select value={resolution} disabled={p.disabled} onChange={e=>setResolution(e.target.value as Resolution|'')}>

@@ -80,10 +80,26 @@ describe('practice plan workspace',()=>{
   expect(screen.getByTestId('focus-marker')).toHaveAttribute('cx','14');
   expect(screen.getByTestId('focus-marker')).toHaveAttribute('cy','16');
   expect(screen.queryByTestId('focus-outline')).not.toBeInTheDocument();
-  expect(screen.getByText(/non ha una posizione salvata/)).toBeVisible();
-  fireEvent.click(screen.getByRole('button',{name:'Apri la tavola originale'}));
-  expect(screen.queryByTestId('focus-marker')).not.toBeInTheDocument();
+  expect(screen.getByText(/non ha ancora una posizione salvata/)).toBeVisible();
+  expect(screen.getByRole('button',{name:'Posiziona verifica 4'})).toBeVisible();
   expect(api.edit).not.toHaveBeenCalled();
+ });
+ it('saves a position for an older check and uses it on the next card click',async()=>{
+  const api=port(),state=plans(),plan=state.plans[0]!;
+  plan.issues=[{id:'legacy',code:'seed_region_unresolved',number:4}];
+  api.plans.mockResolvedValue(state);
+  api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,version:2,issues:[{...plan.issues[0]!,manualPoint:[14,16]}]}]}});
+  render(<AgencyPracticePlanWorkspace api={api} scopeKey="place-legacy-check" embedded/>);
+  await screen.findByRole('img',{name:'Contorni dei singoli vani'});
+  fireEvent.click(screen.getByRole('button',{name:'Posiziona verifica 4'}));
+  fireEvent.change(screen.getByLabelText('Nuovo vertice X'),{target:{value:'14'}});
+  fireEvent.change(screen.getByLabelText('Nuovo vertice Y'),{target:{value:'16'}});
+  fireEvent.click(screen.getByRole('button',{name:'Aggiungi vertice'}));
+  fireEvent.click(screen.getByRole('button',{name:'Salva punto'}));
+  await screen.findByRole('button',{name:'Mostra sulla mappa'});
+  fireEvent.click(screen.getByRole('button',{name:'Mostra sulla mappa'}));
+  expect(screen.getByTestId('focus-marker')).toHaveAttribute('cx','14');
+  expect(api.edit.mock.calls[0]![1].command).toEqual({operation:'locate_issue',issueId:'legacy',code:'seed_region_unresolved',point:[14,16]});
  });
  it('links each open check to its room on the map and removes it once its outcome is saved',async()=>{
   const api=port(),state=plans(),plan=state.plans[0]!;

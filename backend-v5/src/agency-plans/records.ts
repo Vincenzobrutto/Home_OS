@@ -8,7 +8,7 @@ import {roomGeometryDigest,surfaceProposalDigest,type SurfaceProposal} from './s
 import {carveManualRoom} from './manual-room';
 import { commercialReport, commercialPerimeterReport, type CommercialInput, type SurfaceLine } from './commercial';
 type Analysis=Awaited<ReturnType<typeof analyzePlan>>;
-type NumberedIssue=Analysis['final']['issues'][number]&{number?:number};
+type NumberedIssue=Analysis['final']['issues'][number]&{number?:number;manualPoint?:Point};
 export type BalconyCover={id:string;cover:'covered'|'uncovered'|'unset'};
 /** Quick estimate inputs only. Areas are recomputed from current geometry on every read; never a certified or detailed computation. */
 export type QuickEstimateScale={mode:'paper';format:'A4'|'A3'|'A2'|'A1';denominator:number}|{mode:'manual'|'bar';start:Point;end:Point;metres:number};
@@ -32,13 +32,15 @@ function reviewLocations(analysis:Analysis):ReviewLocation[]{
 type WithPlans=Practice&{planAnalyses?:StoredPlan[];planReceipts?:Array<{key:string;accountId:string;digest:string;id:string}>};
 function numberIssues(plan:StoredPlan,previous:readonly NumberedIssue[]=plan.issues){
  const key=(issue:NumberedIssue)=>JSON.stringify([issue.id,issue.code]);
- const known=new Map(previous.filter(issue=>issue.number!==undefined).map(issue=>[key(issue),issue.number!]));
- let next=Math.max(plan.lastIssueNumber??0,...known.values());
+ const known=new Map(previous.map(issue=>[key(issue),issue]));
+ let next=Math.max(plan.lastIssueNumber??0,...previous.map(issue=>issue.number??0));
  plan.issues=plan.issues.map(issue=>{
   const id=key(issue);
-  let number=known.get(id);
-  if(number===undefined){number=++next;known.set(id,number);}
-  return {...issue,number};
+  const prior=known.get(id);
+  const number=prior?.number??++next;
+  const manualPoint=issue.manualPoint??prior?.manualPoint;
+  known.set(id,{...issue,number,manualPoint});
+  return {...issue,number,...(manualPoint?{manualPoint}:{})};
  });
  plan.lastIssueNumber=next;
  return plan;
@@ -62,7 +64,7 @@ export function registerPlan(actor:Actor,original:Practice,analysis:Analysis,exp
 }
 export type MeasurementConfiguration=Omit<CommercialInput,'surfaces'|'geometryRevision'|'unresolvedSymbols'>&{base:'rooms_and_walls'|'gross_perimeter';mainRegionIds:string[];assignments:Array<Omit<SurfaceLine,'geometry'>&{id:string}>};
 type GeometryEdit={view:'rooms'|'perimeter';id:string;geometry:Polygon};
-export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|({operation:'geometry'}&GeometryEdit)|{operation:'save_quick_estimate';covers:BalconyCover[];scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;outline?:GeometryEdit}|({operation:'save_listing_details'|'save_plan_graphics';scale?:QuickEstimateScale&{mode:'manual'|'bar'}}&Omit<ListingDetails,'geometryRevision'>)|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
+export type PlanEdit={key:string;expectedRevision:number;expectedPlanVersion:number;planId:string;reason:string;command:{operation:'apply_surface_proposal';proposalDigest:string;excludedCandidateIds?:string[]}|{operation:'add_room';id:string;label:string;kind:'room'|'bathroom'|'kitchen'|'corridor'|'balcony';geometry:Polygon;parentId?:string}|{operation:'remove_room';id:string}|({operation:'geometry'}&GeometryEdit)|{operation:'save_quick_estimate';covers:BalconyCover[];scale?:QuickEstimateScale;parameters?:QuickEstimateParameters;outline?:GeometryEdit}|({operation:'save_listing_details'|'save_plan_graphics';scale?:QuickEstimateScale&{mode:'manual'|'bar'}}&Omit<ListingDetails,'geometryRevision'>)|{operation:'measure';configuration:MeasurementConfiguration}|{operation:'locate_issue';issueId:string;code:string;point:Point}|{operation:'resolve_issue';issueId:string;code:string;resolution:'included_in_geometry'|'excluded_from_computation'|'not_applicable'}};
 /** Internal typed application command; HTTP layer still needs an exact DTO/parser before being exposed. */
 export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string){
  requirePractice(actor,original,'edit',now);assert(input&&typeof input.key==='string'&&input.key.trim()&&input.key.length<=120&&typeof input.reason==='string'&&input.reason.trim()&&input.reason.length<=1000&&Number.isSafeInteger(input.expectedRevision)&&Number.isSafeInteger(input.expectedPlanVersion));
@@ -174,6 +176,11 @@ export function editPlan(actor:Actor,original:Practice,input:PlanEdit,now:string
   const common={...c,geometryRevision:plan.geometryRevision,unresolvedSymbols:plan.issues.map(i=>i.id+':'+i.code)};
   if(c.base==='gross_perimeter'){assert(plan.mainPerimeter,'perimeter_required');assert(c.assignments.filter(a=>c.mainRegionIds.includes(a.id)).every(a=>a.kind==='principal'&&(a.coefficient===undefined||a.coefficient===1)),'mixed_main_coefficients_require_rooms_base');plan.measurement=commercialPerimeterReport({...common,mainPerimeter:plan.mainPerimeter,roomBreakdown:plan.rooms.filter(r=>c.mainRegionIds.includes(r.id)).map(r=>({id:r.id,geometry:r})),accessories:surfaces.filter(s=>!c.mainRegionIds.includes(s.id))});}
   else plan.measurement=commercialReport({...common,surfaces});
+ }else if(command.operation==='locate_issue'){
+  const issue=plan.issues.find(item=>item.id===command.issueId&&item.code===command.code);
+  const [x,y]=command.point;
+  assert(issue&&Number.isFinite(x)&&Number.isFinite(y)&&x>=0&&x<=plan.rasterSize.width&&y>=0&&y<=plan.rasterSize.height);
+  issue.manualPoint=[x,y];
  }else if(command.operation==='resolve_issue'){
   assert(['included_in_geometry','excluded_from_computation','not_applicable'].includes(command.resolution));const index=plan.issues.findIndex(i=>i.id===command.issueId&&i.code===command.code);assert(index>=0);if(command.resolution==='included_in_geometry')assert(plan.geometryRevision>1,'manual_geometry_required');plan.issues=plan.issues.filter(i=>i.id!==command.issueId||i.code!==command.code);plan.measurement=null;plan.warnings.push('human_resolution:'+command.issueId+':'+command.resolution+':'+input.reason);
  }else assert(false);
