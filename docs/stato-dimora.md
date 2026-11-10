@@ -1,7 +1,7 @@
 # Stato di Dimora
 *10 novembre 2026*
 
-Il ramo di riferimento è **`codex/dimora-v5-consolidata-20261023`**. La base pubblicata comprende la PR 79. Le PR 81–84 sono state riunite in un candidato separato. La pubblicazione è sospesa per un test backend fallito. Il pilota con utenti reali resta in attesa della prova AI, delle tutele sui dati e della verifica operativa di recupero e ripristino. Le prove sintetiche usano documenti e account di collaudo.
+Il ramo di riferimento è **`codex/dimora-v5-consolidata-20261023`**. Il ramo comune include le PR 81–84 di Agenzie. L’app sul PC segue il suo rilascio locale e va aggiornata separatamente. Il pilota con utenti reali resta in attesa della prova AI, delle tutele sui dati e della verifica operativa di recupero e ripristino. Le prove sintetiche usano documenti e account di collaudo.
 
 ## Cosa c’è oggi
 
@@ -16,8 +16,8 @@ Il ramo di riferimento è **`codex/dimora-v5-consolidata-20261023`**. La base pu
 | Rubrica | Schede contatto e collegamenti, con consenso separato per le proposte | Uso reale con più persone e ruoli | Estensioni da scegliere dopo la prova |
 | Cestino | Cestino documenti, ripristino e cancellazione definitiva con controlli | Percorso di assistenza su casi pilota | Eliminazione di schede, casa, account e gestione delle copie di backup |
 | Condivisione | Inviti e permessi verificati in ambiente di prova | Inviti, revoca e accessi residui nel percorso pilota | Configurazione operativa del canale email |
-| Agenzie | Pratica, documenti, mappa e revisione con prove sintetiche fino alla PR 79 | Percorso e nuovo editor della catena PR 81–84, accuratezza AI e OCR con casi indipendenti | Modello d’incarico approvato e criteri per la stima commerciale |
-| Gift | Invito, accettazione, copia di documenti e mappa con provenienza, verificati su dati sintetici | Uso con destinatari reali e aggiornamenti della registrazione nello stack Agenzie | Attivazione operativa e produzione automatica degli allegati finali |
+| Agenzie | Pratica, documenti, mappa, editor planimetrie e percorso di consegna verificati su dati sintetici | Accuratezza AI e OCR con casi indipendenti e prova operativa | Modello d’incarico approvato e criteri per la stima commerciale |
+| Gift | Invito, accettazione, copia di documenti e mappa con provenienza, verificati su dati sintetici | Uso con destinatari reali, inclusa la nuova registrazione | Attivazione operativa e produzione automatica degli allegati finali |
 | Fase 0 | Cestino documenti, percorsi tecnici di recupero ed export personale con prove isolate | Recupero via assistenza ed email, fruibilità dell’export, ripristino completo da backup | Soglia AI superata, prova con documenti reali ed eliminazione completa |
 
 ## Condizioni per il pilota
@@ -43,7 +43,8 @@ Il lavoro residuo è ordinato nei [prossimi passi](prossimi-passi.md).
 
 - Base del ramo comune a inizio inventario `cfff252`. I sei commit della PR 83, da `64ee004` a `9edb30d`, sono antenati della PR 84.
 
-- Candidato Agenzie `58ea680`. Backend 954/955. Manca il comando npm del profilo di collaudo Agenzie registrato dal runner. Tipi, lint e build di backend e frontend superati, con avvisi frontend. Passate anche 54 prove HTTP su database temporaneo. Dopo il blocco sono state interrotte le suite complete DB e frontend mock. Il database temporaneo è stato arrestato.
+- Pubblicazione Agenzie `9fd85ca`. Backend 955/955, frontend mock e fixture 2.257/2.257, database 857/857, HTTP 54/54, riavvio 2/2. Typecheck, lint e build superati. Il test Condivisione falliva anche sulla base comune per il caricamento iniziale della scheda documento. Il test ora precarica il modulo, con asserzioni e timeout invariati. La prima suite DB sotto carico ha raggiunto il limite del runner e segnalato un errore Gift. La ripetizione isolata e la suite completa eseguita da sola sono verdi. I cluster temporanei sono stati arrestati.
+- GitHub mostra la PR 81 integrata. Le PR 82–84 puntano ancora ai rispettivi rami intermedi. Le loro punte sono tutte incluse nel ramo comune.
 
 ### Pull request precedenti
 
@@ -52,6 +53,6 @@ Il lavoro residuo è ordinato nei [prossimi passi](prossimi-passi.md).
 | [70](https://github.com/Vincenzobrutto/Home_OS/pull/70) | Aggiornare | L’andamento mensile ha prove verdi sul ramo di origine. La PR è in conflitto con il comune e richiede un nuovo collaudo dopo l’allineamento. |
 | [67](https://github.com/Vincenzobrutto/Home_OS/pull/67) | Chiudere conservando il rapporto nella PR | Il codice del riepilogo è già nel comune. La PR registra la vecchia preview e confligge con i registri correnti. |
 | [63](https://github.com/Vincenzobrutto/Home_OS/pull/63) | Chiudere conservando il rapporto nella PR | Le etichette sono già nel comune. La PR conserva il rapporto operativo dell’epoca e confligge con i registri correnti. |
-| [80](https://github.com/Vincenzobrutto/Home_OS/pull/80) | Unire come ricevuta di rilascio quando la base lo consente | Documenta il rilascio locale già verificato. È compatibile con la base PR 79, ma tocca gli stessi registri dello stack Agenzie. |
+| [80](https://github.com/Vincenzobrutto/Home_OS/pull/80) | Unire come ricevuta di rilascio quando la base lo consente | Documenta il rilascio locale già verificato. I conflitti con il comune riguardano solo i registri. Riportare la ricevuta in una proposta documentale aggiornata, conservando le registrazioni Agenzie. |
 
 I checkout e i rami già contenuti nel comune sono candidati alla dismissione dopo il controllo delle modifiche locali e delle PR collegate. Le alternative storiche che contengono commit solo locali restano conservate.
