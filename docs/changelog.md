@@ -8,7 +8,7 @@ Pagina Planimetria riorganizzata su una sola mappa (Modifica pianta, Calcola sup
 
 Nelle verifiche collegate a un vano, **Modifica contorno** apre i vertici modificabili sulla stessa mappa.
 
-In Modifica pianta, Proponi pareti comuni distingue i tratti riscontrati sul PDF da quelli da verificare, suggeriti dai contorni contrapposti e indicati con tratteggio. Solo i tratti riscontrati possono modificare la geometria. Dopo la conferma, ogni tratto appare nell’editor come una fascia piena blu petrolio che copre le due linee dei vani. Salva modifiche alla planimetria conferma i contorni distinti dei vani.
+In Modifica pianta, Proponi pareti comuni distingue i tratti riscontrati sul PDF da quelli da verificare, suggeriti dai contorni contrapposti e indicati con tratteggio. Solo i tratti riscontrati possono modificare la geometria. Dopo la conferma, ogni tratto appare nell’editor come una fascia piena blu petrolio che copre le due linee dei vani. Salva modifiche alla planimetria conferma i contorni distinti dei vani. Nell’editor grafico il perimetro lordo compare come una linea blu scuro, con tratteggio per proposte e bozze. L’agente può ricalcarlo sul PDF e salvarlo separatamente come perimetro lordo, con riuso in Calcola superfici.
 
 Quando due vani affacciano sullo stesso lungo lato obliquo del terrazzo, la pianta illustrativa può allineare i fronti alla sua inclinazione. Nella prova Roma, soggiorno, studio e terrazzo condividono un angolo di 6,573 gradi.
 

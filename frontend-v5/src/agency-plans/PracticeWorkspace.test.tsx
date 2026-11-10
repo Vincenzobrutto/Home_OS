@@ -1,4 +1,4 @@
-import {act,fireEvent,render,screen} from '@testing-library/react';
+import {act,fireEvent,render,screen,within} from '@testing-library/react';
 import {afterAll,beforeAll,describe,it,expect,vi} from 'vitest';
 import {AgencyPracticePlanWorkspace} from './AgencyPracticePlanWorkspace';
 import {MeasurementForm} from './MeasurementForm';
@@ -26,6 +26,31 @@ describe('practice plan workspace',()=>{
  it('access revocation hides private data and editor',async()=>{const api=port();api.edit.mockRejectedValueOnce(error(403,'access_denied'));await loaded(api);dirtyGeometry();fireEvent.click(screen.getByRole('button',{name:'Salva correzione contorno'}));await screen.findByText(/Accesso non disponibile/);expect(screen.queryByText(/sintetica.pdf/)).not.toBeInTheDocument();expect(screen.queryByRole('img',{name:'Contorni dei singoli vani'})).not.toBeInTheDocument();});
  it('stale source cannot request an image or offer measurement controls',async()=>{const api=port();api.plans.mockResolvedValue({revision:5,plans:[{...plans().plans[0]!,status:'stale',rooms:null}]});render(<AgencyPracticePlanWorkspace api={api} scopeKey="stale"/>);await screen.findByText(/analisi precedente non è più utilizzabile/);expect(api.image).not.toHaveBeenCalled();expect(screen.queryByRole('form',{name:'Calibrazione e computo'})).not.toBeInTheDocument();});
  it('gross perimeter starts empty and requires an explicit drawn boundary',async()=>{await loaded();fireEvent.click(screen.getByRole('tab',{name:'Perimetro commerciale'}));fireEvent.click(screen.getByRole('button',{name:'Definisci perimetro'}));expect(screen.getByText('0 vertici')).toBeInTheDocument();expect(screen.getByRole('button',{name:'Usa questo contorno'})).toBeDisabled();expect(screen.queryByTestId('shape-gross')).not.toBeInTheDocument();});
+
+ it('traces and saves the gross perimeter separately from the room contours in the graphical editor',async()=>{
+  const api=port(),state=plans(),plan=state.plans[0]!;
+  const outline={points:[[0,0],[15,0],[15,15],[0,15]] as [number,number][],holes:[]};
+  api.edit.mockResolvedValueOnce({replay:false,plans:{revision:5,plans:[{...plan,version:2,geometryRevision:2,mainPerimeter:outline}]}});
+  render(<AgencyPracticePlanWorkspace api={api} scopeKey="draw-perimeter" embedded/>);
+  await screen.findByRole('img',{name:'Contorni dei singoli vani'});
+  fireEvent.click(screen.getByRole('button',{name:'Apri editor grafico'}));
+  fireEvent.click(screen.getByRole('button',{name:'Disegna muri perimetrali'}));
+  const builder=within(screen.getByRole('dialog',{name:'Disegna contorno'}));
+  for(const [x,y] of outline.points){
+   fireEvent.change(builder.getByLabelText('Nuovo vertice X'),{target:{value:String(x)}});
+   fireEvent.change(builder.getByLabelText('Nuovo vertice Y'),{target:{value:String(y)}});
+   fireEvent.click(builder.getByRole('button',{name:'Aggiungi vertice'}));
+  }
+  fireEvent.click(builder.getByRole('button',{name:'Usa questo contorno'}));
+  expect(screen.getByLabelText('Muri perimetrali in bozza')).toHaveAttribute('stroke-dasharray');
+  expect(api.edit).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button',{name:'Salva perimetro'}));
+  expect(await screen.findByLabelText('Muri perimetrali salvati')).not.toHaveAttribute('stroke-dasharray');
+  expect(api.edit).toHaveBeenCalledTimes(1);
+  expect(api.edit.mock.calls[0]![1].command).toEqual({operation:'geometry',view:'perimeter',id:'gross',geometry:outline});
+  fireEvent.click(screen.getByRole('checkbox',{name:'Muri perimetrali'}));
+  expect(screen.queryByLabelText('Muri perimetrali salvati')).not.toBeInTheDocument();
+ });
 
  it('includes the sole internal area from its check and preserves the outside contour on save',async()=>{
   const api=port(),state=plans(),plan=state.plans[0]!,room=plan.rooms![0]!;

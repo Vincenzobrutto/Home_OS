@@ -6,6 +6,8 @@ import {carryListingOpening,changeListingVertex,listingAlignmentGuides,listingDo
 import {detectListingOpenings,distinctOpenings,readListingRaster} from './listingOpeningDetection';
 import type {ScaleReference} from './scaleDetection';
 import {listingRoomFill} from './listingStyle';
+import {PolygonBuilder} from './PolygonBuilder';
+import type {GrossOutline} from './QuickSurfaceEstimate';
 import styles from './practice-plan.module.css';
 
 type Draft=ListingPlanDraft;
@@ -14,6 +16,7 @@ type Subject={room:string;vertex:number}|{room:string;edge:number}|{row:number;p
 type RoomSubject=Extract<Subject,{room:string}>;
 type Drag={id:number;origin:Point;point:Point;unitsPerPixel:number;shift:boolean;subject:Subject};
 type Props={editPlan?:boolean;saveError?:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];saved?:ListingDetails;
+ perimeter?:GrossOutline|null;onSavePerimeter?:(shape:PlanShape,onSaved:()=>void)=>void;
  metresPerPixel?:Point|null;scaleLabel?:string;hints?:ListingOpening[];disabled:boolean;onClose:()=>void;onApply:(details:Draft)=>void};
 const mid=(a:Point,b:Point):Point=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
 const length=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
@@ -25,6 +28,11 @@ export function ListingPlanReview(p:Props){
  const alignments=p.editPlan?undefined:p.saved?.alignments;
  const [contours,setContours]=useState(p.editPlan?[]:p.saved?.contours??[]);
  const [rows,setRows]=useState<Row[]>(()=>p.saved?.openings.map(opening=>({opening,confirmed:true}))??[]);
+ const [perimeterDraft,setPerimeterDraft]=useState<PlanShape|null>(null);
+ const [drawingPerimeter,setDrawingPerimeter]=useState(false);
+ const [showPerimeter,setShowPerimeter]=useState(true);
+ const perimeter=perimeterDraft??p.perimeter?.shape;
+ const perimeterPending=!!perimeterDraft||p.perimeter?.status==='proposed';
  const [roomId,setRoom]=useState('');
  const [selected,setSelected]=useState(-1);
  const [tool,setTool]=useState<'select'|'scale'|'wall'|ListingOpening['kind']>('select');
@@ -91,7 +99,8 @@ export function ListingPlanReview(p:Props){
   return baseline.map(room=>({...room,...edits.get(room.id)}));
  },[baseline,contours]);
  const walls=useMemo(()=>listingWalls(drawing),[drawing]);
- const xs=p.rooms.flatMap(room=>room.points.map(([x])=>x)),ys=p.rooms.flatMap(room=>room.points.map(([,y])=>y));
+ const framePoints=p.rooms.flatMap(room=>room.points).concat(perimeter?.points??[]);
+ const xs=framePoints.map(([x])=>x),ys=framePoints.map(([,y])=>y);
  const span=Math.max(1,Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
  const padding=span*.07;
  const left=xs.length?Math.max(0,Math.min(...xs)-padding):0,top=ys.length?Math.max(0,Math.min(...ys)-padding):0;
@@ -312,7 +321,7 @@ export function ListingPlanReview(p:Props){
   p.onApply({...(scaleToSave?{scale:scaleToSave}:{}),openings:rows.filter(row=>row.confirmed).map(row=>row.opening),alignments:alignments??[],contours:savedContours});
  }
  const shown=active?(draggedOpening??shownOpening(active)):null;
- return <dialog className={`${styles.panel} ${styles.builderDialog} ${styles.listingReviewDialog}`} ref={dialog} aria-label={p.editPlan?'Editor grafico della planimetria':'Editor pianta per annuncio'} onCancel={e=>{e.preventDefault();p.onClose();}}>
+ return <><dialog className={`${styles.panel} ${styles.builderDialog} ${styles.listingReviewDialog}`} ref={dialog} aria-label={p.editPlan?'Editor grafico della planimetria':'Editor pianta per annuncio'} onCancel={e=>{e.preventDefault();p.onClose();}}>
   <h3>{p.editPlan?'Modifica la planimetria':'Modifica pianta per l’annuncio'}</h3>
   {p.saveError&&<p role="alert">{p.saveError}</p>}
   <div className={styles.listingReviewTools}>
@@ -322,11 +331,14 @@ export function ListingPlanReview(p:Props){
    <button type="button" disabled={busy||tool==='wall'||isDragging} aria-pressed={calibrating} onClick={()=>pickTool('scale')}>{doorScale?'Cambia scala':'Imposta scala'}</button>
    <button type="button" disabled={busy||tool==='wall'} onClick={()=>void detect()}>{working?'Ricerca in corso…':'Cerca porte e finestre'}</button>
    {p.editPlan?<button type="button" disabled={busy||tool!=='select'||isDragging} onClick={()=>void reviewWalls()}>Proponi pareti comuni</button>:<button type="button" disabled={busy||tool!=='select'||isDragging} onClick={suggestWalls}>Uniforma muri interni</button>}
+   {p.onSavePerimeter&&<button type="button" disabled={busy||tool!=='select'||isDragging||!!perimeterDraft} onClick={()=>setDrawingPerimeter(true)}>{perimeter?'Ridisegna perimetro':'Disegna muri perimetrali'}</button>}
+   {perimeter&&<label><input type="checkbox" checked={showPerimeter} onChange={e=>setShowPerimeter(e.target.checked)}/> Muri perimetrali</label>}
    <label><input type="checkbox" checked={ortho} disabled={busy||!!drag} onChange={e=>setOrtho(e.target.checked)}/> Orto <kbd>Shift</kbd></label>
    <label><input type="checkbox" checked={original} disabled={tool==='wall'} onChange={e=>setOriginal(e.target.checked)}/> Mostra originale</label>
    <label>Zoom <input aria-label="Zoom pianta" type="range" min="1" max={MAX_PLAN_ZOOM} step=".25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
   </div>
   <div className={styles.listingReviewControls} aria-live="polite">
+   {perimeterDraft&&<span>Perimetro ricalcato. Salvalo per aggiornare il contorno lordo.</span>}
    {tool==='wall'?<>
     {wallProposal&&<>
      {wallProposal.walls.length>0&&<strong>{wallProposal.walls.length} {wallProposal.walls.length===1?'parete comune riconosciuta':'pareti comuni riconosciute'}</strong>}
@@ -401,6 +413,9 @@ export function ListingPlanReview(p:Props){
       fill={unchecked?'none':undefined} strokeDasharray={unchecked?'5 3':undefined}/>;
     })}
    </g>}
+   {showPerimeter&&perimeter&&!calibrating&&<path aria-label={perimeterDraft?'Muri perimetrali in bozza':perimeterPending?'Muri perimetrali proposti':'Muri perimetrali salvati'}
+    d={path(perimeter)} fill="none" stroke={perimeterPending?'#be6618':'#173957'} strokeWidth={perimeterPending?4:7}
+    strokeDasharray={perimeterPending?'7 4':undefined} strokeLinejoin="round" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
    {tool==='select'&&rows.map((row,i)=>{
     const opening=selected===i&&draggedOpening?draggedOpening:previewOpening(row);
     const {start:a,end:b,kind}=opening;
@@ -436,8 +451,19 @@ export function ListingPlanReview(p:Props){
   </svg></div>
   <div className={styles.listingReviewFooter}>
    <span>{rows.length-pending.length} aperture confermate{pending.length>0?' · le proposte non confermate non compaiono nel PNG':''}</span>
+   {perimeterDraft&&<>
+    <button type="button" disabled={busy||tool!=='select'||isDragging} onClick={()=>setPerimeterDraft(null)}>Scarta perimetro</button>
+    <button type="button" disabled={busy||tool!=='select'||isDragging} onClick={()=>p.onSavePerimeter?.(perimeterDraft,()=>{setPerimeterDraft(null);setNotice('Perimetro salvato nella pratica.');})}>Salva perimetro</button>
+   </>}
    <button type="button" onClick={p.onClose}>Chiudi</button>
-   <button type="button" disabled={busy||tool==='wall'||calibrating||!!start||!!drag} onClick={saveDetails}>{p.editPlan?'Salva modifiche alla planimetria':'Salva dettagli per l’annuncio'}</button>
+   <button type="button" disabled={busy||tool==='wall'||calibrating||!!start||!!drag||!!perimeterDraft} onClick={saveDetails}>{p.editPlan?'Salva modifiche alla planimetria':'Salva dettagli per l’annuncio'}</button>
   </div>
- </dialog>;
+ </dialog>
+ {drawingPerimeter&&<PolygonBuilder sourceUrl={p.sourceUrl} width={p.width} height={p.height} initial={null} graphical
+  referenceShapes={perimeter?[...drawing,perimeter]:drawing} onCancel={()=>setDrawingPerimeter(false)} onDone={shape=>{
+   setPerimeterDraft({...shape,id:'gross',label:'Perimetro lordo',holes:perimeter?.holes??[]});
+   setShowPerimeter(true);
+   setDrawingPerimeter(false);
+  }}/>}
+ </>;
 }
