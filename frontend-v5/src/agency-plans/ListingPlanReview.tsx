@@ -459,7 +459,7 @@ export function ListingPlanReview(p:Props){
     })}
    </g>}
    {showPerimeter&&perimeter&&!calibrating&&<path aria-label={perimeterDraft?'Muri perimetrali in bozza':perimeterPending?'Muri perimetrali proposti':'Muri perimetrali salvati'}
-    d={path(perimeter)} fill="none" stroke={perimeterPending?'#be6618':'#173957'} strokeWidth={perimeterPending?4:7}
+    d={path(perimeter)} fill="none" stroke={perimeterPending?'#be6618':'#173957'} strokeWidth={perimeterPending?4:11}
     strokeDasharray={perimeterPending?'7 4':undefined} strokeLinejoin="round" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
    {tool==='select'&&rows.map((row,i)=>{
     const opening=selected===i&&draggedOpening?draggedOpening:previewOpening(row);

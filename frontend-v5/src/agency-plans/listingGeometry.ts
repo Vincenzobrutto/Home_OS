@@ -549,26 +549,37 @@ export function joinedSharedWallBands(drawing:PlanShape[],walls:SharedPlanWall[]
   const {band,tangent,width,wall}=item;
   const neighbours=bands.flatMap(other=>other&&other!==item&&wall.some(face=>other.wall.some(ref=>ref.id===face.id))?edges(other.band):[]);
   function join(first:Point,second:Point,direction:Point):[Point,Point]{
-   const limit=Math.min(24,Math.max(4,width*1.8));
-   const nearest:[number,number]=[Infinity,Infinity];
-   let paired:[number,number]=[Infinity,Infinity];
-   function tryJoin([a,b]:Segment,slack:number){
-    const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
-    const determinant=direction[0]*dy-direction[1]*dx;
-    if(length<EPSILON||Math.abs(determinant)<length*.35)return;
-    const intersections=[first,second].map(point=>{
-     const x=a[0]-point[0],y=a[1]-point[1];
-     return {advance:(x*dy-y*dx)/determinant,across:(x*direction[1]-y*direction[0])/determinant*length};
-    });
-    const advances=intersections.map(({advance,across})=>
-     advance>=-slack&&advance<=limit&&across>=-slack&&across<=length+slack?Math.max(0,advance):Infinity) as [number,number];
-    advances.forEach((advance,i)=>{nearest[i]=Math.min(nearest[i]!,advance);});
-    if(Math.max(...advances)<Math.max(...paired))paired=advances;
+   function findJoin(targets:Segment[],limit:number,slack:number,minimumAngle:number){
+    const nearest:[number,number]=[Infinity,Infinity];
+    let paired:[number,number]=[Infinity,Infinity];
+    for(const [a,b] of targets){
+     const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
+     const determinant=direction[0]*dy-direction[1]*dx;
+     if(length<EPSILON||Math.abs(determinant)<length*minimumAngle)continue;
+     const intersections=[first,second].map(point=>{
+      const x=a[0]-point[0],y=a[1]-point[1];
+      return {advance:(x*dy-y*dx)/determinant,across:(x*direction[1]-y*direction[0])/determinant*length};
+     });
+     const advances=intersections.map(({advance,across})=>
+      advance>=-slack&&advance<=limit&&across>=-slack&&across<=length+slack?Math.max(0,advance):Infinity) as [number,number];
+     advances.forEach((advance,i)=>{nearest[i]=Math.min(nearest[i]!,advance);});
+     if(Math.max(...advances)<Math.max(...paired))paired=advances;
+    }
+    const [a,b]=Math.abs(nearest[0]-nearest[1])<=1||!Number.isFinite(paired[0]+paired[1])?nearest:paired;
+    return Number.isFinite(a+b)&&Math.abs(a-b)<=limit*.7?[a,b] as const:null;
    }
-   for(const edge of exterior)tryJoin(edge,0);
-   for(const edge of neighbours)tryJoin(edge,Math.min(2,width*.4));
-   const [a,b]=Math.abs(nearest[0]-nearest[1])<=1||!Number.isFinite(paired[0]+paired[1])?nearest:paired;
-   if(!Number.isFinite(a+b)||Math.abs(a-b)>limit*.7)return [first,second];
+   const internal=findJoin(neighbours,Math.min(24,Math.max(4,width*1.8)),Math.min(2,width*.4),.35);
+   // The outer face of a perimeter wall is usually farther from the room ends
+   // than the faces of an internal partition. Keep the two searches separate.
+   const external=findJoin(exterior,Math.min(36,Math.max(18,width*3)),0,.2);
+   const centre:Point=[(first[0]+second[0])/2,(first[1]+second[1])/2];
+   const advance=external?(external[0]+external[1])/2:0;
+   const end:Point=[centre[0]+direction[0]*advance,centre[1]+direction[1]*advance];
+   const crossesRoom=advance>EPSILON&&drawing.some(room=>!wall.some(face=>face.id===room.id)&&
+    (insideShape(centre,room)||edges(room.points).some(side=>segmentsConflict([centre,end],side))));
+   const join=external&&!crossesRoom&&(!internal||Math.max(...external)<=Math.max(...internal))?external:internal;
+   if(!join)return [first,second];
+   const [a,b]=join;
    return [[first[0]+direction[0]*a,first[1]+direction[1]*a],[second[0]+direction[0]*b,second[1]+direction[1]*b]];
   }
   const [startFirst,startSecond]=join(band[0]!,band[3]!,[-tangent[0],-tangent[1]]);

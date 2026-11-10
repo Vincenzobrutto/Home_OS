@@ -42,6 +42,22 @@ it('closes short wall gaps at a split T and the perimeter without changing the r
  expect(drawing).toEqual(before);
 });
 
+it('joins a narrow interior wall to the outside face beyond the internal joint tolerance',()=>{
+ const drawing=[
+  room('kitchen',[[10,10],[48,10],[48,80],[10,80]]),
+  room('bedroom',[[52,10],[90,10],[90,80],[52,80]]),
+ ];
+ const outline=room('gross',[[4,4],[96,4],[96,96],[4,96]]);
+ const wall:[{id:string;edge:number},{id:string;edge:number}]=[{id:'kitchen',edge:1},{id:'bedroom',edge:3}];
+ const [joined]=joinedSharedWallBands(drawing,[wall],outline);
+ expect(joined).toContainEqual([48,96]);
+ expect(joined).toContainEqual([52,96]);
+ const crossing=room('passage',[[40,84],[60,84],[60,91],[40,91]]);
+ const [open]=joinedSharedWallBands([...drawing,crossing],[wall],outline);
+ expect(open).toContainEqual([48,80]);
+ expect(open).toContainEqual([52,80]);
+});
+
 it('straightens small angular drift and keeps distinctly sloped walls and wider gaps',()=>{
  const angles=(rise:number)=>{
   const drawing=[
